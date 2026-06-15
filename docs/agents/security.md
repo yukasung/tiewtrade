@@ -91,6 +91,17 @@ Check:
 - Corrupted license file.
 - Unsupported license file.
 
+## Shared Security Logic
+
+Verify:
+
+- Security validation is centralized.
+- Credential validation is not duplicated.
+- License validation is not duplicated.
+- Security-sensitive logic is reused consistently.
+- Redaction logic is shared rather than copied across modules.
+- Authentication, authorization, and permission checks use shared services or helpers when repeated.
+
 ## Trading Safety
 
 Verify:

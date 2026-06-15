@@ -81,6 +81,18 @@ Verify:
 - Edge cases.
 - Failure cases.
 
+## Shared Abstraction Testing
+
+Verify:
+
+- Refactored logic behaves identically.
+- Shared services produce expected results.
+- Utility functions behave consistently.
+- Shared functions produce deterministic outputs.
+- Helpers preserve existing behavior.
+- Base classes preserve subclass lifecycle and behavior.
+- Edge cases from previous duplicated implementations are covered.
+
 ## Integration Testing
 
 Required when implementation interacts with:

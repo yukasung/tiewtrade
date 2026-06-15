@@ -144,6 +144,33 @@ Rules:
 4. Do not over-engineer.
 5. Preserve existing behavior.
 
+## Shared Abstraction Refactoring
+
+Identify:
+
+- Duplicate logic.
+- Repeated calculations.
+- Repeated validators.
+- Repeated API handling.
+- Repeated configuration logic.
+- Repeated logging logic.
+- Repeated recovery logic.
+- Repeated synchronization logic.
+
+Refactor into the correct shared abstraction:
+
+- Shared Function in `src/shared/functions/` for pure calculations with no state and no dependencies.
+- Utility Function in `src/shared/utils/` for formatting, conversion, parsing, or transformation.
+- Helper in `src/shared/helpers/` for small stateless support logic.
+- Service in `src/shared/services/` for business logic, domain logic, application logic, or external integrations.
+- Base Class in `src/shared/base/` for shared lifecycle, behavior, or runtime responsibilities.
+
+Preserve behavior.
+
+Do not add features.
+
+Do not change public interfaces unless the current refactor explicitly requires it and downstream usage remains compatible.
+
 ## Performance Review
 
 Review:

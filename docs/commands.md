@@ -1,159 +1,108 @@
-# TiewTrade - Codex Commands
+# TiewTrade - Commands
 
-## Important Rule
+## Rule
 
-Always read:
+Always follow:
 
-- `docs/project-overview.md`
 - `docs/product-decisions.md`
 - `docs/architecture.md`
 - `docs/database.md`
 - `docs/task-breakdown.md`
 - `docs/status.md`
 
-before implementing any task.
-
-Do not violate `product-decisions.md`.
-
 Do not implement future tasks.
 
 When documents conflict, `docs/product-decisions.md` is authoritative.
 
-## Start Session
+## Architecture Rule
+
+When logic is reused:
+
+- Extract to Shared Function.
+- Extract to Utility Function.
+- Extract to Helper.
+- Extract to Shared Service.
+- Extract to Base Class.
+
+Use standard shared locations:
+
+- `src/shared/functions/`
+- `src/shared/utils/`
+- `src/shared/helpers/`
+- `src/shared/services/`
+- `src/shared/base/`
+
+Avoid copy-paste implementations.
+
+Always search for reusable abstractions before creating new code.
+
+Duplicate business logic is not allowed.
+
+## Start
 
 ```text
-Read:
-
-- docs/project-overview.md
-- docs/product-decisions.md
-- docs/task-breakdown.md
-- docs/status.md
-
-Identify current task.
-
-Summarize:
-
-- Current phase
-- Current task
-- Remaining tasks
-- Risks
+Read docs/commands.md
+Read docs/status.md
+Tell me the current task and recommended next action.
 ```
 
-## Implement Current Task
+## Implement
 
 ```text
-Read:
-
-- docs/project-overview.md
-- docs/product-decisions.md
-- docs/architecture.md
-- docs/database.md
-- docs/task-breakdown.md
-- docs/status.md
-
-Implement current task only.
-
-Requirements:
-
-- Follow architecture.md
-- Follow database.md
-- Follow product-decisions.md
-- Avoid duplicate logic
-- Create reusable services when appropriate
-
-Do not implement future tasks.
+Read docs/agents/implement.md
 ```
 
-## Review Current Task
+## Review
 
 ```text
-Review implementation.
-
-Verify:
-
-- Architecture compliance
-- Database compliance
-- No duplicate logic
-- Proper separation of layers
-- Error handling
-- Recovery handling
-- Logging
+Read docs/agents/review.md
 ```
 
-## Test Current Task
+## Test
 
 ```text
-Create test checklist.
-
-Verify:
-
-- Happy path
-- Error path
-- Recovery path
-- Edge cases
+Read docs/agents/test.md
 ```
 
-## Security Review
+## Security
 
 ```text
-Review:
-
-- API Key handling
-- License handling
-- Secure storage usage
-- Sensitive data exposure
-- Logging redaction
+Read docs/agents/security.md
 ```
 
-## Complete Current Task
+## Refactor
 
 ```text
-Create:
-
-docs/task-report.md
-
-Include:
-
-- Completed work
-- Files changed
-- Technical decisions
-- Open issues
-- Next task
-
-Update:
-
-- docs/status.md
+Read docs/agents/refactor.md
 ```
 
-## Review Project Status
+## Complete Task
 
 ```text
-Read:
-
-- docs/task-breakdown.md
-- docs/status.md
-
-Summarize:
-
-- Current phase
-- Completed tasks
-- Remaining tasks
-- Recommended next task
+Read docs/agents/task-complete.md
 ```
 
-## Generate Next Task Prompt
+## Full Task Workflow
 
 ```text
-Read:
+Read docs/agents/implement.md
+Then read docs/agents/review.md
+Then read docs/agents/test.md
+Then read docs/agents/security.md
+Then read docs/agents/task-complete.md
+```
 
-- docs/task-breakdown.md
+## Project Status
 
-Generate implementation prompt for the next task.
+```text
+Read docs/status.md
+Summarize current phase, current task, completed tasks, remaining tasks, and next recommended task.
+```
 
-Include:
+## Next Task Prompt
 
-- Scope
-- Requirements
-- Deliverables
-- Exclusions
+```text
+Read docs/task-breakdown.md
+Read docs/status.md
+Generate the Codex prompt for the next task only.
 ```

@@ -68,6 +68,40 @@ Codex must not:
 - Call Binance directly from UI code.
 - Put persistence logic directly inside UI code.
 
+## Code Reuse Rules
+
+Before implementing new code, Codex must search for existing reusable abstractions.
+
+Verify before implementation:
+
+- Existing Shared Function in `src/shared/functions/`.
+- Existing Utility Function in `src/shared/utils/`.
+- Existing Helper in `src/shared/helpers/`.
+- Existing Service in `src/shared/services/`.
+- Existing Base Class in `src/shared/base/`.
+
+Use the appropriate abstraction:
+
+- Shared Function: pure calculations with no state and no dependencies.
+- Utility Function: formatting, conversion, parsing, or transformation.
+- Helper: small stateless support logic used repeatedly.
+- Shared Service: business logic, domain logic, application logic, or external integration logic.
+- Base Class: shared lifecycle, behavior, or runtime responsibilities.
+
+If reusable logic exists:
+
+- Reuse it.
+
+If logic will be reused:
+
+- Extract it to the correct shared abstraction.
+
+Do not duplicate logic.
+
+Do not copy-paste code.
+
+Duplicate business logic is not allowed.
+
 ## Layering Rules
 
 Implementation must respect the layered architecture:
@@ -148,6 +182,8 @@ Before considering a task complete, Codex must verify:
 - Architecture boundaries were respected.
 - Database ownership and persistence rules were respected.
 - No duplicate logic was introduced.
+- Existing shared abstractions were searched before new logic was created.
+- Shared functions, utilities, helpers, services, or base classes were used where appropriate.
 - Reusable services were used where appropriate.
 - Errors are handled.
 - Logs avoid sensitive data.

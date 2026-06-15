@@ -56,6 +56,32 @@ Verify:
 - `docs/task-report.md` was created or updated.
 - `docs/status.md` was updated when the task was completed.
 
+## Shared Abstraction Review
+
+Verify:
+
+- No duplicate logic.
+- No repeated calculations.
+- No repeated validation.
+- No repeated Binance API handling.
+- No repeated configuration handling.
+- No repeated logging logic.
+- No repeated recovery logic.
+
+Verify proper use of:
+
+- Shared Function in `src/shared/functions/`.
+- Utility Function in `src/shared/utils/`.
+- Helper in `src/shared/helpers/`.
+- Service in `src/shared/services/`.
+- Base Class in `src/shared/base/`.
+
+If duplicate business logic exists:
+
+- Verdict must not be PASS.
+- Findings must explain where duplication exists.
+- Findings must recommend the correct shared abstraction.
+
 ## TiewTrade Specific Review Checks
 
 ### Trading Architecture
@@ -126,6 +152,7 @@ Codex must not approve a task if:
 - The implementation violates `docs/product-decisions.md`.
 - The implementation includes future-scope work.
 - The current task deliverables are incomplete.
+- Major duplicate business logic exists.
 - Sensitive data can be logged or persisted unsafely.
 - Trading behavior can create duplicate orders.
 - Bot startup can bypass license, account, configuration, or risk validation.

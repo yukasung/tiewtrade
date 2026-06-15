@@ -180,6 +180,21 @@ Verify:
 - Known limitations documented.
 - Risks documented.
 
+## 11. Shared Abstraction Verification
+
+Verify:
+
+- No duplicate logic introduced.
+- Shared abstractions used correctly.
+- Code reuse rules followed.
+- Repeated calculations use shared functions where appropriate.
+- Repeated formatting, parsing, conversion, or transformation uses utility functions where appropriate.
+- Repeated support logic uses helpers where appropriate.
+- Repeated business, domain, application, or integration logic uses shared services where appropriate.
+- Shared lifecycle or runtime behavior uses base classes where appropriate.
+
+Task cannot be marked COMPLETE if major duplication exists.
+
 ## Completion Decision
 
 If all checks pass, mark task:
@@ -257,6 +272,7 @@ A task is complete only when:
 - Review passed.
 - Testing passed.
 - Security passed.
+- Shared abstraction verification passed.
 - Documentation updated.
 - Status updated.
 
