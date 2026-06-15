@@ -1,9 +1,23 @@
-# TiewTrade - Commands
+# TiewTrade - Codex Commands
 
-## Rule
+## Purpose
+
+This file provides simple shortcut commands for working with Codex.
+
+Detailed workflows are defined in:
+
+- `docs/agents/implement.md`
+- `docs/agents/review.md`
+- `docs/agents/test.md`
+- `docs/agents/security.md`
+- `docs/agents/refactor.md`
+- `docs/agents/task-complete.md`
+
+## Project Rules
 
 Always follow:
 
+- `docs/project-overview.md`
 - `docs/product-decisions.md`
 - `docs/architecture.md`
 - `docs/database.md`
@@ -12,38 +26,22 @@ Always follow:
 
 Do not implement future tasks.
 
+Follow current task scope only.
+
 When documents conflict, `docs/product-decisions.md` is authoritative.
 
-## Architecture Rule
-
-When logic is reused:
-
-- Extract to Shared Function.
-- Extract to Utility Function.
-- Extract to Helper.
-- Extract to Shared Service.
-- Extract to Base Class.
-
-Use standard shared locations:
-
-- `src/shared/functions/`
-- `src/shared/utils/`
-- `src/shared/helpers/`
-- `src/shared/services/`
-- `src/shared/base/`
-
-Avoid copy-paste implementations.
-
-Always search for reusable abstractions before creating new code.
-
-Duplicate business logic is not allowed.
-
-## Start
+## Start Session
 
 ```text
-Read docs/commands.md
 Read docs/status.md
-Tell me the current task and recommended next action.
+
+Summarize:
+
+- Current Phase
+- Current Task
+- Completed Tasks
+- Remaining Tasks
+- Recommended Next Action
 ```
 
 ## Implement
@@ -82,27 +80,64 @@ Read docs/agents/refactor.md
 Read docs/agents/task-complete.md
 ```
 
-## Full Task Workflow
+## Full Workflow
 
 ```text
 Read docs/agents/implement.md
-Then read docs/agents/review.md
-Then read docs/agents/test.md
-Then read docs/agents/security.md
-Then read docs/agents/task-complete.md
+
+After implementation:
+
+Read docs/agents/review.md
+
+After review:
+
+Read docs/agents/test.md
+
+After testing:
+
+Read docs/agents/security.md
+
+After security review:
+
+Read docs/agents/task-complete.md
 ```
 
 ## Project Status
 
 ```text
 Read docs/status.md
-Summarize current phase, current task, completed tasks, remaining tasks, and next recommended task.
+
+Summarize:
+
+- Current Phase
+- Current Task
+- Completed Tasks
+- Remaining Tasks
+- Open Issues
+- Recommended Next Task
 ```
 
-## Next Task Prompt
+## Generate Next Task
 
 ```text
 Read docs/task-breakdown.md
 Read docs/status.md
-Generate the Codex prompt for the next task only.
+
+Generate implementation prompt for the next task only.
+```
+
+## Emergency Architecture Review
+
+```text
+Review:
+
+- docs/architecture.md
+- docs/database.md
+- docs/product-decisions.md
+
+Identify:
+
+- Architecture violations
+- Database violations
+- Product decision violations
 ```
