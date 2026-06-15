@@ -9,6 +9,7 @@ Always read:
 - `docs/architecture.md`
 - `docs/database.md`
 - `docs/task-breakdown.md`
+- `docs/status.md`
 
 before implementing any task.
 
@@ -26,6 +27,7 @@ Read:
 - docs/project-overview.md
 - docs/product-decisions.md
 - docs/task-breakdown.md
+- docs/status.md
 
 Identify current task.
 
@@ -47,6 +49,7 @@ Read:
 - docs/architecture.md
 - docs/database.md
 - docs/task-breakdown.md
+- docs/status.md
 
 Implement current task only.
 
@@ -116,6 +119,10 @@ Include:
 - Technical decisions
 - Open issues
 - Next task
+
+Update:
+
+- docs/status.md
 ```
 
 ## Review Project Status
@@ -124,6 +131,7 @@ Include:
 Read:
 
 - docs/task-breakdown.md
+- docs/status.md
 
 Summarize:
 
