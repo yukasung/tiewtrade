@@ -216,3 +216,29 @@ Testing is complete only when:
 - Test report created.
 
 End of workflow.
+
+## Execution Instructions
+
+After reading this document:
+
+1. Read all required context.
+2. Execute the testing workflow described in this document.
+3. Perform all required testing actions.
+4. Create all required reports.
+5. Update all required files only when the testing workflow explicitly requires it.
+6. Return the testing verdict.
+7. Stop when testing is complete.
+
+Testing-specific execution:
+
+1. Identify the latest implemented task from `docs/status.md` and `docs/task-report.md`.
+2. Determine the applicable functional, unit, integration, recovery, regression, trading safety, futures, and license checks for that task.
+3. Run or document the applicable tests for the implemented task only.
+4. Do not implement fixes.
+5. Create `docs/testing/test-{task-name}.md`.
+6. Return the testing verdict.
+7. Stop after the testing report is created.
+
+Do not summarize this document.
+Do not explain the workflow.
+Execute testing.

@@ -165,9 +165,9 @@ Codex must also update:
 
 The status update must reflect:
 
-- Completed task.
-- New current task.
-- Updated phase if applicable.
+- Current task implementation status.
+- Review, testing, security, or completion status if pending.
+- Current phase.
 - Remaining tasks.
 - Risks.
 - Open issues.
@@ -208,3 +208,31 @@ A task is not complete until:
 - `docs/task-report.md` is created.
 - `docs/status.md` is updated.
 - Any remaining open issues are documented.
+
+## Execution Instructions
+
+After reading this document:
+
+1. Read all required context.
+2. Execute the implementation workflow described in this document.
+3. Perform all required implementation actions for the current task only.
+4. Create all required reports.
+5. Update all required files.
+6. Return implementation results.
+7. Stop when implementation is complete.
+
+Implementation-specific execution:
+
+1. Read `docs/status.md`.
+2. Identify the current phase and current task.
+3. Read the current task requirements from `docs/task-breakdown.md`.
+4. Verify task scope and dependencies before editing.
+5. Search the existing codebase and shared abstractions before creating new logic.
+6. Implement the current task only.
+7. Create `docs/task-report.md`.
+8. Update `docs/status.md`.
+9. Stop after implementation, report creation, and status update.
+
+Do not summarize this document.
+Do not explain the workflow.
+Execute the workflow.

@@ -284,3 +284,29 @@ Security review is complete only when:
 - Security report created.
 
 End of workflow.
+
+## Execution Instructions
+
+After reading this document:
+
+1. Read all required context.
+2. Execute the security review workflow described in this document.
+3. Perform all required security review actions.
+4. Create all required reports.
+5. Update all required files only when the security workflow explicitly requires it.
+6. Return the security verdict.
+7. Stop when security review is complete.
+
+Security-specific execution:
+
+1. Identify the latest implementation from `docs/status.md` and `docs/task-report.md`.
+2. Review only files modified in the latest implementation.
+3. Perform credential, license, trading safety, Binance integration, database, logging, recovery, application, and shared security checks.
+4. Do not implement fixes.
+5. Create `docs/reviews/security-{task-name}.md`.
+6. Return the security verdict.
+7. Stop after the security report is created.
+
+Do not summarize this document.
+Do not explain the workflow.
+Execute security review.

@@ -132,16 +132,28 @@ Verify:
 
 ## Review Output
 
-The review response must include:
+Create:
 
-- Approved or Changes Required.
+- `docs/reviews/review-{task-name}.md`
+
+The review report and response must include:
+
+- Verdict.
 - Summary of what was reviewed.
+- Files reviewed.
 - Findings ordered by severity.
 - Architecture compliance notes.
 - Database compliance notes.
 - Product decision compliance notes.
+- Shared abstraction compliance notes.
 - Testing or verification gaps.
 - Required fixes before task completion.
+
+Verdict:
+
+- PASS
+- PASS WITH MINOR FIXES
+- FAIL
 
 If no issues are found, state that clearly and mention any remaining residual risk.
 
@@ -158,3 +170,29 @@ Codex must not approve a task if:
 - Bot startup can bypass license, account, configuration, or risk validation.
 - Stop Bot can close or liquidate positions unexpectedly.
 - Required documentation updates are missing.
+
+## Execution Instructions
+
+After reading this document:
+
+1. Read all required context.
+2. Execute the review workflow described in this document.
+3. Perform all required review actions.
+4. Create all required reports.
+5. Update all required files only when the review workflow explicitly requires it.
+6. Return the review verdict.
+7. Stop when review is complete.
+
+Review-specific execution:
+
+1. Identify the latest implementation from `docs/status.md` and `docs/task-report.md`.
+2. Identify changed files for the latest implementation.
+3. Review changed files only.
+4. Verify task scope, architecture, database, product decision, security, trading safety, and shared abstraction compliance.
+5. Create `docs/reviews/review-{task-name}.md`.
+6. Return the review verdict.
+7. Stop after the review report is created.
+
+Do not summarize this document.
+Do not explain the workflow.
+Execute the review.

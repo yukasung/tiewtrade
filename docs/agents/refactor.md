@@ -268,3 +268,30 @@ Refactoring is complete only when:
 - Documentation remains accurate.
 
 End of workflow.
+
+## Execution Instructions
+
+After reading this document:
+
+1. Read all required context.
+2. Execute the refactor workflow described in this document.
+3. Perform all required refactor actions.
+4. Create all required reports.
+5. Update all required files only when behavior-preserving refactoring is required.
+6. Return the refactor verdict.
+7. Stop when refactor workflow is complete.
+
+Refactor-specific execution:
+
+1. Identify the latest implemented task from `docs/status.md` and `docs/task-report.md`.
+2. Review only existing code relevant to that task.
+3. Identify duplicate logic, repeated calculations, repeated validation, repeated API handling, repeated configuration logic, repeated recovery logic, and shared abstraction opportunities.
+4. Refactor only when the workflow requires behavior-preserving improvement within the current task scope.
+5. Do not introduce features, change business rules, or start the next task.
+6. Create `docs/reviews/refactor-{task-name}.md`.
+7. Return the refactor verdict.
+8. Stop after the refactor report is created.
+
+Do not summarize this document.
+Do not explain the workflow.
+Execute refactor workflow.

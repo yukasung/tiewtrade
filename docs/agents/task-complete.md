@@ -277,3 +277,33 @@ A task is complete only when:
 - Status updated.
 
 End of workflow.
+
+## Execution Instructions
+
+After reading this document:
+
+1. Read all required context.
+2. Execute the completion workflow described in this document.
+3. Perform all required verification actions.
+4. Create all required reports.
+5. Update all required files when completion checks pass.
+6. Return the completion verdict.
+7. Stop when completion workflow is complete.
+
+Task-complete-specific execution:
+
+1. Identify the current task from `docs/status.md`.
+2. Verify implementation is completed.
+3. Verify `docs/task-report.md` exists and matches the current task.
+4. Verify review report exists in `docs/reviews/` and has an allowed verdict.
+5. Verify testing report exists in `docs/testing/` and has an allowed verdict.
+6. Verify security report exists in `docs/reviews/` and has an allowed verdict.
+7. Verify status, scope, architecture, database, product decision, trading safety, and shared abstraction compliance.
+8. If all checks pass, mark the task `COMPLETE` in `docs/status.md`, move it to completed tasks, and update the next task.
+9. Create `docs/completion/task-complete-{task-name}.md`.
+10. Return the completion verdict.
+11. Stop after completion verification and required status updates.
+
+Do not summarize this document.
+Do not explain the workflow.
+Execute completion workflow.
