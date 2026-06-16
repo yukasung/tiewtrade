@@ -15,7 +15,7 @@ The document is intended to support later Architecture Design and Database Desig
 
 Version 1 includes:
 
-- Lifetime license activation.
+- Offline License File validation.
 - First-run setup wizard.
 - Binance Spot and Binance Futures support.
 - Binance Main Account and Sub Account support.
@@ -55,7 +55,7 @@ Mermaid diagrams are included where they clarify branching or recovery behavior.
 
 The application should expose simple, understandable states to the user:
 
-- `License Required`: The app cannot be used until a valid license is activated.
+- `License Required`: The app cannot be used until a valid Offline License File is selected and validated locally.
 - `Setup Required`: The app is licensed, but required bot configuration is incomplete.
 - `Stopped`: Configuration exists and the bot is not trading.
 - `Starting`: The user started the bot and the app is preparing live operation.
@@ -88,7 +88,7 @@ Stop Bot or Adjust Settings While Stopped
 ```mermaid
 flowchart TD
     A["Open Application"] --> B{"Valid License?"}
-    B -- "No" --> C["License Activation"]
+    B -- "No" --> C["License File Validation"]
     C --> B
     B -- "Yes" --> D{"Setup Complete?"}
     D -- "No" --> E["First-Run Wizard"]
@@ -130,7 +130,7 @@ App Launch / Loading Screen
 ↓
 License Validation
 ↓
-License Activation if required
+License File Validation if required
 ↓
 First-Run Welcome Screen
 ↓
@@ -155,7 +155,7 @@ Main Dashboard
 flowchart TD
     A["Open App"] --> B["Check License"]
     B --> C{"License Valid?"}
-    C -- "No" --> D["Activate License"]
+    C -- "No" --> D["Validate License File"]
     D --> C
     C -- "Yes" --> E["Welcome"]
     E --> F["Connect Binance Account"]
@@ -180,7 +180,7 @@ flowchart TD
 
 ### Error Flow
 
-- Invalid license redirects to License Activation Flow.
+- Invalid license redirects to Offline License File Validation Flow.
 - Invalid API credentials keep the user on Connect Binance Account.
 - Missing Binance permissions keep the user on the relevant step with a plain-language correction message.
 - Unsupported trading pair keeps the user on Select Trading Pair.
@@ -193,21 +193,21 @@ flowchart TD
 - The user reaches the Dashboard.
 - Bot status is either `Running`, `Starting`, or `Stopped` depending on the final user choice.
 
-## 2. License Activation Flow
+## 2. Offline License File Validation Flow
 
 ### Flow Name
 
-License Activation Flow
+Offline License File Validation Flow
 
 ### Goal
 
-Validate the user's one-time purchase lifetime license before allowing product access.
+Validate the user's Offline License File locally before allowing product access.
 
 ### Preconditions
 
 - The application is installed.
-- The user has access to a license key or activation method.
-- The app can perform license validation, either online or through the defined license process.
+- The user has access to an Offline License File.
+- The app can read the selected local license file.
 
 ### Main Flow
 
@@ -218,39 +218,40 @@ License Validation
 ↓
 No Valid License Found
 ↓
-License Activation Screen
+License File Validation Screen
 ↓
-User Enters License Key
+User Selects Offline License File
 ↓
-Validate License
+Validate License File Locally
 ↓
-License Accepted
+License File Accepted
 ↓
 Continue to Setup or Dashboard
 ```
 
 ```mermaid
 flowchart TD
-    A["License Activation Screen"] --> B["Enter License Key"]
-    B --> C["Activate"]
-    C --> D{"License Accepted?"}
+    A["License File Validation Screen"] --> B["Select Offline License File"]
+    B --> C["Validate Locally"]
+    C --> D{"License File Accepted?"}
     D -- "Yes, setup incomplete" --> E["First-Run Welcome"]
     D -- "Yes, setup complete" --> F["Dashboard"]
-    D -- "No" --> G["Show Activation Error"]
+    D -- "No" --> G["Show License File Error"]
     G --> B
 ```
 
 ### Alternative Flow
 
-- User has already activated: application skips activation and routes to setup or Dashboard.
-- User changes license key from License Management: application returns to License Activation Screen.
-- User exits activation: application closes or remains blocked from trading features.
+- User already has a valid local license file state: application skips license file selection and routes to setup or Dashboard.
+- User changes license file from License Management: application returns to License File Validation Screen.
+- User exits validation: application closes or remains blocked from product access.
 
 ### Error Flow
 
-- Invalid key: show correction message and allow retry.
-- Network failure: show retry option and explain that license validation could not be completed.
-- License already used, expired, revoked, or unsupported: show a clear message and support path.
+- Missing file: ask the user to select a valid Offline License File.
+- Invalid file: show correction message and allow selecting another file.
+- Expired, corrupted, or unsupported license file: show a clear message and support path.
+- File read failure: show a local file access error and allow retry or file replacement.
 
 ### Success Outcome
 
@@ -272,7 +273,7 @@ Route returning users to the correct application state and restore safe bot visi
 
 - The application is installed.
 - A local application state may or may not exist.
-- A license may or may not already be activated.
+- A valid Offline License File may or may not already be available locally.
 
 ### Main Flow
 
@@ -296,7 +297,7 @@ Open Dashboard
 flowchart TD
     A["Open App"] --> B["Load Local State"]
     B --> C{"Valid License?"}
-    C -- "No" --> D["License Activation"]
+    C -- "No" --> D["License File Validation"]
     C -- "Yes" --> E{"Setup Complete?"}
     E -- "No" --> F["First-Run Welcome"]
     E -- "Yes" --> G{"Sync Needed?"}
@@ -310,12 +311,12 @@ flowchart TD
 - Setup incomplete: route to First-Run Welcome or the last incomplete wizard step.
 - Bot was stopped before exit: Dashboard opens with `Stopped` status.
 - Bot was running before exit: application enters `Sync Required` before showing normal running state.
-- License validation is temporarily unavailable: application displays a recoverable license or connection state according to business rules.
+- License file is missing or invalid: application routes to License File Validation Screen.
 
 ### Error Flow
 
 - Corrupted or unreadable configuration: route to Error / Connection Issue Screen with recovery options.
-- License invalid: route to License Activation Screen.
+- License invalid: route to License File Validation Screen.
 - Binance connection unavailable: open Dashboard in `Disconnected` or `Sync Required` state with Retry.
 
 ### Success Outcome
@@ -379,7 +380,7 @@ flowchart TD
 ### Error Flow
 
 - If a screen cannot load current data, show an inline error and preserve navigation.
-- If license becomes invalid, route to License Activation Screen.
+- If license becomes invalid, route to License File Validation Screen.
 - If account connection fails, keep navigation available but show `Disconnected` status.
 
 ### Success Outcome
@@ -784,6 +785,8 @@ Set Bot Status to Stopping
 ↓
 Stop New Strategy Actions
 ↓
+Do Not Close Existing Positions
+↓
 Synchronize Current Position and Orders
 ↓
 Set Bot Status to Stopped
@@ -802,8 +805,9 @@ flowchart TD
     F -- "No" --> G["Return to Previous Screen"]
     F -- "Yes" --> H["Bot Stopping"]
     H --> I["Stop New Bot Actions"]
-    I --> J["Sync Orders and Position"]
-    J --> K["Bot Stopped"]
+    I --> J["Do Not Close Existing Positions"]
+    J --> K["Sync Orders and Position"]
+    K --> L["Bot Stopped"]
 ```
 
 ### Alternative Flow
@@ -816,13 +820,14 @@ flowchart TD
 
 - Stop action cannot complete due to network failure: status becomes `Disconnected` with recovery instructions.
 - Binance API failure prevents order or position confirmation: status becomes `Sync Required` or `Error`.
-- Open position behavior is unresolved: display only approved product behavior once finalized.
+- Existing Spot holdings or Futures positions remain under user control and are not automatically closed or liquidated.
 
 ### Success Outcome
 
 - Bot no longer initiates new trading actions.
 - Dashboard shows `Stopped`.
 - User understands whether any open position still exists.
+- Any existing position remains visible and under user control.
 
 ## 11. Trading Execution Flow
 
@@ -1098,13 +1103,13 @@ flowchart TD
 
 - User views settings without changing anything: return to Dashboard.
 - Bot is running: account and risk edits are blocked or read-only until bot is stopped.
-- User changes license key: route to License Activation Flow.
+- User changes license file: route to Offline License File Validation Flow.
 
 ### Error Flow
 
 - Invalid account changes follow account error flows.
 - Invalid risk settings follow Invalid Configuration flow.
-- License validation failure routes to License Activation Screen.
+- License file validation failure routes to License File Validation Screen.
 
 ### Success Outcome
 
@@ -1286,11 +1291,11 @@ Network Connection Failure Flow
 
 ### Goal
 
-Keep the user informed when the application cannot reach required online services.
+Keep the user informed when the application cannot reach Binance or other required exchange/network services.
 
 ### Preconditions
 
-- The app attempts license validation, Binance validation, market data access, order placement, or synchronization.
+- The app attempts Binance validation, market data access, order placement, or synchronization.
 - Network connectivity is unavailable or unstable.
 
 ### Main Flow
@@ -1647,7 +1652,7 @@ flowchart TD
 ### Error Flow
 
 - Local state cannot be read: show recovery message and require setup review.
-- License invalid: route to License Activation.
+- License invalid: route to License File Validation Screen.
 - Exchange unavailable: show `Disconnected` or `Sync Required`.
 
 ### Success Outcome
@@ -1994,7 +1999,7 @@ Save Last Safe State
 ### Error Flow
 
 - App closes unexpectedly: use System Crash Recovery flow on next launch.
-- License becomes invalid during session: block trading features and route to License Activation.
+- License becomes invalid during session: block trading features and route to License File Validation Screen.
 
 ### Success Outcome
 
@@ -2109,7 +2114,7 @@ flowchart TD
 
 ### Error Flow
 
-- License fails: route to License Activation.
+- License fails: route to License File Validation Screen.
 - Configuration fails: route to Invalid Configuration flow.
 - Position or order sync fails: remain in `Sync Required` or `Disconnected`.
 
@@ -2140,9 +2145,9 @@ flowchart TD
 
 ## Open Product Decisions
 
-- Exact license activation method is not yet defined.
+- Offline License File validation is finalized and performed locally.
 - Exact risk setting fields are not yet defined.
-- Exact Stop Bot behavior with open positions is not yet finalized.
+- Stop Bot behavior is finalized: it stops automated trading activity but does not close positions or force liquidation.
 - Whether bot can continue after specific order rejections requires product and risk policy definition.
 - Whether repeated Binance API failures pause, stop, or only disconnect the bot requires product policy definition.
 - Whether partial setup progress is saved between launches requires product policy definition.

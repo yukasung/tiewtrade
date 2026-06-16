@@ -21,7 +21,7 @@ The goal is to define the user experience surface area before UI mockups, archit
 Version 1 requires the following screens:
 
 1. App Launch / Loading Screen
-2. License Activation Screen
+2. License File Validation Screen
 3. First-Run Welcome Screen
 4. Wizard Step 1: Connect Binance Account
 5. Wizard Step 2: Select Spot or Futures
@@ -77,43 +77,43 @@ Confirm that the desktop application is opening, check basic local readiness, an
 
 ### Navigation Flow
 
-- If no valid license exists, navigate to License Activation Screen.
+- If no valid license file exists, navigate to License File Validation Screen.
 - If a valid license exists but no setup configuration exists, navigate to First-Run Welcome Screen.
 - If a valid license and setup configuration exist, navigate to Main Dashboard.
 - If a blocking connection or local app issue occurs, navigate to Error / Connection Issue Screen.
 
-## 2. License Activation Screen
+## 2. License File Validation Screen
 
 ### Screen Name
 
-License Activation Screen
+License File Validation Screen
 
 ### Purpose
 
-Allow users to activate or validate their lifetime license before accessing the product.
+Allow users to select and locally validate their Offline License File before accessing the product.
 
 ### Main Components
 
-- License key input.
+- License file selection control.
 - License status message.
-- Activate button.
-- Retry activation option.
+- Validate License File button.
+- Retry validation option.
 - Plain-language explanation that a valid license is required.
 - Support or help link placeholder.
 
 ### User Actions
 
-- Enter license key.
-- Activate license.
+- Select an Offline License File.
+- Validate the license file locally.
 - Retry validation.
-- View help if activation fails.
+- View help if validation fails.
 - Exit the application.
 
 ### Navigation Flow
 
-- If activation succeeds and setup is incomplete, navigate to First-Run Welcome Screen.
-- If activation succeeds and setup is complete, navigate to Main Dashboard.
-- If activation fails, remain on this screen and show a clear error.
+- If license file validation succeeds and setup is incomplete, navigate to First-Run Welcome Screen.
+- If license file validation succeeds and setup is complete, navigate to Main Dashboard.
+- If license file validation fails, remain on this screen and show a clear error.
 - From the main application, users can return to license details through License Management Screen.
 
 ## 3. First-Run Welcome Screen
@@ -369,7 +369,7 @@ Start Bot
 
 ### Purpose
 
-Let users make the final activation decision after reviewing setup and risk information.
+Let users make the final start decision after reviewing setup and risk information.
 
 ### Main Components
 
@@ -379,13 +379,13 @@ Let users make the final activation decision after reviewing setup and risk info
 - Primary Start Bot button.
 - Secondary Start Later option.
 - Back control.
-- Starting status message after activation begins.
+- Starting status message after bot startup begins.
 
 ### User Actions
 
 - Acknowledge risk.
 - Start the bot.
-- Start later without activating the bot.
+- Start later without starting the bot.
 - Go back to review configuration.
 
 ### Navigation Flow
@@ -393,7 +393,7 @@ Let users make the final activation decision after reviewing setup and risk info
 - Back returns to Wizard Step 6: Review Configuration.
 - Start Bot navigates to Main Dashboard with bot status shown as starting or running.
 - Start Later navigates to Main Dashboard with bot status shown as stopped.
-- If activation fails, navigate to Error / Connection Issue Screen or show an inline error with a clear recovery path.
+- If startup fails, navigate to Error / Connection Issue Screen or show an inline error with a clear recovery path.
 
 ## 11. Main Dashboard
 
@@ -663,15 +663,15 @@ License Management Screen
 
 ### Purpose
 
-Allow users to view their license status and handle license validation issues after activation.
+Allow users to view their license status and handle Offline License File validation issues.
 
 ### Main Components
 
 - Current license status.
 - License type: lifetime license.
-- Activation status.
+- Local validation status.
 - Recheck License button.
-- Change License Key action if needed.
+- Change License File action if needed.
 - Support or help link placeholder.
 - Clear message if the license becomes invalid.
 
@@ -679,16 +679,16 @@ Allow users to view their license status and handle license validation issues af
 
 - View license state.
 - Recheck license.
-- Change or reactivate license.
+- Change or revalidate license file.
 - Return to Dashboard.
 
 ### Navigation Flow
 
 - Dashboard license status navigates to this screen.
 - Recheck License remains on this screen and updates status.
-- Change License Key navigates to License Activation Screen.
+- Change License File navigates to License File Validation Screen.
 - Valid license state allows return to Main Dashboard.
-- Invalid license state blocks bot operation and routes users to License Activation Screen.
+- Invalid license state blocks bot operation and routes users to License File Validation Screen.
 
 ## Required Empty States
 
@@ -714,10 +714,10 @@ The following actions should require explicit confirmation or acknowledgment:
 
 ## Assumptions And Open UX Decisions
 
-- License activation is required before setup, but the exact activation method is not yet defined.
+- Offline License File validation is required before setup and is performed locally.
 - The exact risk setting fields are not yet finalized.
 - The exact supported desktop operating systems are not yet finalized.
-- Stop Bot behavior with open positions is not yet finalized and must be defined before UI copy is finalized.
+- Stop Bot behavior is finalized: it stops automated trading activity but does not close existing positions or force liquidation.
 - Account replacement may reuse the first wizard account connection screen or use a separate account form.
 - Trade detail may be handled through inline expansion, a side panel, or a separate detail screen in later UX design.
 - This document intentionally excludes UI mockups, visual layout, architecture, database design, and implementation details.

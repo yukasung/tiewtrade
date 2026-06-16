@@ -49,7 +49,7 @@ The following decisions are confirmed for Version 1 conceptual design.
 | Account modeling | `Account` is the canonical account context for both Main Account and Sub Account usage. |
 | Sub Account modeling | `Sub Account` is modeled as a specialized account context/profile related to a parent Main Account when known. Bot records reference one canonical Account Context only. |
 | Bot account relationship | A Bot Instance references exactly one Account Context. It must not separately reference unrelated Main and Sub Account records. |
-| Multiple bots | Multiple Bot Instances are supported, but only one active or running bot may use the same Account Context, market mode, and trading pair at the same time. |
+| Bot instance boundary | Bot Instance is modeled as the ownership boundary for the single Version 1 bot experience. The model may remain future-ready, but Version 1 must not expose multiple bot creation, switching, archiving, or concurrent bot execution. |
 | Strategy model | Version 1 supports one built-in proprietary strategy only. Users configure parameters but do not create or modify strategy logic. |
 | Configuration history | Orders, trades, and recovery records reference immutable Configuration Snapshots instead of relying only on mutable active settings. |
 | Order execution modeling | Order Execution / Fill is a first-class child entity of Order. Trade remains the user-facing history summary. |
@@ -205,7 +205,7 @@ Owns Binance account metadata, Main Account and Sub Account identity, permission
 
 ### Bot Context
 
-Owns Bot Instance lifecycle, runtime state, bot status, start and stop state, capital allocation, bot state history, and multi-bot resource coordination.
+Owns Bot Instance lifecycle, runtime state, bot status, start and stop state, capital allocation, bot state history, and duplicate runtime prevention.
 
 ### Strategy And Risk Context
 
@@ -221,7 +221,7 @@ Owns restart recovery, crash recovery, exchange reconnection, open position sync
 
 ### Licensing Context
 
-Owns lifetime license activation, local entitlement state, validation state, grace policy state, and license validation history.
+Owns Offline License File metadata, local validation state, redacted license references, and license validation history.
 
 ### Diagnostics Context
 
@@ -437,7 +437,7 @@ Represents one configured automated trading bot runtime.
 - Own active Configuration Snapshot.
 - Own runtime state required for start, stop, and recovery.
 - Own order, position, trade, and recovery relationships.
-- Support multiple bot instances while preventing unsafe overlap.
+- Act as a future-ready ownership boundary while Version 1 supports one configured bot experience and prevents duplicate active runtimes.
 
 ### Important Attributes
 
@@ -564,7 +564,7 @@ Stores risk settings used to validate bot startup and trading actions.
 
 - Define user-configured risk controls.
 - Support Spot and Futures risk validation.
-- Support account-level exposure checks across multiple Bot Instances.
+- Support account-level exposure checks for the active Bot Instance and selected Account Context.
 - Prevent bot start when risk settings are invalid.
 - Provide input to Configuration Snapshots.
 - Preserve risk versioning for historical orders and trades.
@@ -647,12 +647,12 @@ Represents an immutable record of the effective bot configuration used for start
 
 ### Purpose
 
-Represents capital allocated or reserved for a Bot Instance to prevent multi-bot balance contention.
+Represents capital allocated or reserved for the active Bot Instance to prevent the configured bot allocation from exceeding account resources.
 
 ### Responsibilities
 
 - Track bot-level capital allocation.
-- Support multiple bots on one Account Context.
+- Support one active bot allocation for the selected Account Context in Version 1.
 - Prevent configured allocations from exceeding account resources.
 - Support startup validation.
 - Support runtime risk checks.
@@ -1095,17 +1095,17 @@ Stores local application preferences and global application state that are not s
 
 ### Purpose
 
-Represents local license activation and validation state for the one-time purchase lifetime license model.
+Represents local Offline License File validation state for the one-time purchase lifetime license model.
 
 ### Responsibilities
 
-- Track activation status.
-- Track local entitlement status.
+- Track offline license file validation status.
+- Track redacted license file reference state.
 - Support startup routing.
 - Support License Management screen.
 - Block bot startup when invalid.
-- Preserve validation and grace state.
-- Avoid storing full license keys or sensitive entitlement tokens.
+- Preserve local validation history without requiring network access.
+- Avoid storing full license file content, full license keys, or sensitive license material.
 
 ### Important Attributes
 
@@ -1659,7 +1659,7 @@ SQLite is the durable local database for non-secret product state. It supports:
 - Bot lifecycle restoration.
 - Multiple account metadata.
 - Main Account and Sub Account contexts.
-- Multiple Bot Instances.
+- One active Bot Instance boundary for Version 1, with future-ready identity and state history.
 - Configuration snapshots.
 - Capital reservations.
 - Trade history.
@@ -1704,7 +1704,7 @@ All writes should pass through a persistence coordination layer.
 Reasons:
 
 - Bot workers run outside the UI thread.
-- Multiple Bot Instances may run concurrently.
+- Bot workers, recovery, synchronization, and UI-triggered saves may contend for writes even when Version 1 has one active bot.
 - SQLite allows many readers but limited concurrent writes.
 - Trading state must remain consistent for recovery.
 - Order intent, order result, execution facts, position changes, and trade history must not drift apart.
@@ -1734,7 +1734,7 @@ Database design should preserve atomic boundaries for:
 - Recovery detail creation.
 - Recovery completion.
 - Error record creation and resolution.
-- License activation update.
+- Offline license file validation update.
 - License validation history creation.
 - Application settings update.
 
@@ -2121,14 +2121,14 @@ Diagnostic Export requires:
 The conceptual design is ready for physical database design after the team confirms:
 
 - Exact Version 1 risk parameters exposed to users.
-- Exact capital allocation rules for multiple Bot Instances.
-- Whether the Version 1 UI exposes multiple bots or only supports them internally.
+- Exact Version 1 capital allocation fields and validation thresholds.
+- Future multiple-bot expansion rules are deferred and must not affect Version 1 physical design beyond preserving Bot Instance identity.
 - Exact supported Binance order types for Spot and Futures.
-- Final Futures policy for margin mode, leverage, one-way mode, and long-side behavior.
+- Final Futures policy for margin mode, leverage, one-way mode, and long/short risk limits.
 - Exact Trade History filters required in Version 1.
 - Diagnostic export scope for Version 1.
 - Supported operating systems and secure storage providers.
-- License validation and grace policy details.
+- Offline license file format, validation rules, and redacted storage details.
 
 ## Final Readiness Statement
 
@@ -2138,7 +2138,7 @@ This final database design supports:
 - Binance Sub Account.
 - Binance Spot trading.
 - Binance Futures trading.
-- Multiple Bot Instances.
+- One configured Bot Instance experience for Version 1, with future-ready Bot Instance ownership boundaries.
 - Bot start and stop flows.
 - Position recovery.
 - Order tracking.

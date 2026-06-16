@@ -9,8 +9,11 @@ It translates the product scope, screen list, and user flows into a layered modu
 ## Source Documents
 
 - `/docs/project-overview.md`
+- `/docs/product-decisions.md`
 - `/docs/screen-list.md`
 - `/docs/user-flow.md`
+- `/docs/database.md`
+- `/docs/task-breakdown.md`
 
 ## Technology Stack
 
@@ -21,7 +24,7 @@ It translates the product scope, screen list, and user flows into a layered modu
 
 ## Architectural Constraints
 
-The application must use a layered modular architecture.
+The application must use a Modular Layered Architecture with MVVM in the Presentation Layer and Ports & Adapters at infrastructure and persistence boundaries.
 
 The application must not use:
 
@@ -36,11 +39,316 @@ The application must support:
 - Binance Futures.
 - Binance Main Account.
 - Binance Sub Account.
-- Multiple bot instances.
+- One Version 1 bot runtime per account context, with duplicate bot runtime prevention and future-ready boundaries for later multi-bot expansion.
 - Recovery after restart.
 - License management.
 - Trade history.
 - Risk management.
+
+## Architecture Style And Boundary Rules
+
+TiewTrade uses a **Modular Layered Architecture with MVVM and Ports & Adapters**:
+
+- Modular Layered Architecture is the main structure.
+- MVVM is used only inside the Presentation Layer.
+- The trading core is domain-centric and framework-independent.
+- Ports & Adapters isolate Binance, SQLite, secure storage, licensing, logging, and time.
+- Shared abstractions are allowed only when ownership and reuse are clear.
+
+### Required Architecture Decisions
+
+- MVVM is a Presentation Layer pattern only.
+- Trading logic belongs in the Domain Layer.
+- Application Layer coordinates user workflows and use cases.
+- Infrastructure implements external adapters.
+- Persistence implements SQLite storage behind repositories.
+- Domain must remain independent from PySide6, SQLite, Binance SDKs, and operating system APIs.
+- Binance access must go through exchange ports.
+- SQLite access must go through repository ports and repository services.
+- Offline license file validation must go through `LicensePort`.
+- One Account = One Bot for Version 1 user-facing behavior.
+- Multiple Bot Instances are not supported in Version 1, but runtime coordination must prevent accidental duplicate bot creation.
+
+### Layer Dependency Rules
+
+Allowed dependency direction:
+
+```text
+Presentation -> Application -> Domain
+Application -> Ports
+Domain -> Ports
+Infrastructure -> Ports
+Persistence -> Ports
+Shared -> no project layer dependency
+```
+
+Rules:
+
+- Presentation may depend on Application contracts and view models.
+- Application may depend on Domain and ports.
+- Domain may define or depend on stable ports, policies, value objects, and domain services.
+- Infrastructure and Persistence may implement ports but must not be called directly by Presentation or Domain through concrete classes.
+- Shared modules must not become a shortcut around layer boundaries.
+
+### Presentation Layer MVVM Rules
+
+Presentation is organized as:
+
+- Views: PySide6 widgets, windows, dialogs, screen composition, user events, and visual feedback.
+- ViewModels: UI state, presentation commands, lightweight presentation validation, loading state, and error display state.
+- Components: reusable PySide6 UI components with no trading behavior.
+
+Views must:
+
+- Render UI state.
+- Forward user intent to ViewModels.
+- Avoid business decisions.
+- Avoid direct service, Binance, or SQLite calls.
+
+ViewModels must:
+
+- Hold screen state and command state.
+- Convert Application Layer responses into user-readable presentation state.
+- Call Application Services only.
+- Avoid trading logic, Binance calls, SQLite reads/writes, order placement, position decisions, and secret handling.
+
+### Application Layer Rules
+
+Application owns use cases and workflow orchestration:
+
+- Startup.
+- License checks.
+- Setup wizard flow.
+- Account validation.
+- Start Bot.
+- Stop Bot.
+- Recovery.
+- Settings changes.
+- Dashboard and history queries.
+
+Application may call:
+
+- Domain services.
+- Domain policies.
+- Application ports.
+- Repository ports.
+- Exchange ports.
+- License and secure storage ports.
+
+Application must not:
+
+- Import PySide6 widgets.
+- Contain strategy internals.
+- Bypass domain risk and order policies.
+- Call Binance SDKs or SQLite implementations directly.
+
+### Domain Layer Rules
+
+Domain owns core trading decisions:
+
+- Bot lifecycle.
+- Strategy decisions.
+- Risk decisions.
+- Order intent and idempotency.
+- Position and exposure interpretation.
+- Recovery decisions.
+- Futures-specific trading safety decisions.
+
+Domain must not import:
+
+- PySide6.
+- SQLite adapters.
+- Binance SDKs or concrete Binance adapters.
+- OS-specific secure storage libraries.
+- UI navigation or presentation classes.
+
+### Infrastructure Layer Rules
+
+Infrastructure implements external integrations behind ports:
+
+- Binance Spot.
+- Binance Futures.
+- Secure credential storage.
+- Offline license file access and validation support.
+- OS services.
+- Python logging integration.
+- Network status and time providers.
+
+Infrastructure must translate external failures into application/domain-safe error results and must not call UI components.
+
+### Persistence Layer Rules
+
+Persistence owns SQLite-backed storage behind repository ports:
+
+- Account metadata.
+- Bot configuration and lifecycle state.
+- Strategy and risk configuration.
+- Order intents and order correlation.
+- Position state.
+- Trade history.
+- License state needed for local validation.
+- Settings, logs, and recovery state.
+
+Persistence must not store raw API secrets and must not be accessed directly from Views or ViewModels.
+
+### Shared Layer Rules
+
+Shared modules are allowed for reusable, clearly owned abstractions:
+
+- Shared Functions: pure calculations with no state or dependencies.
+- Utilities: formatting, conversion, parsing, and transformation.
+- Helpers: small stateless support logic.
+- Shared Services: reusable business, domain, application, or integration logic.
+- Base Classes: shared lifecycle or runtime behavior.
+
+Shared must not become a dumping ground. Duplicate business logic, duplicate validation, duplicate Binance handling, duplicate configuration handling, duplicate recovery logic, and copy-paste implementations are forbidden.
+
+### Required Ports
+
+| Port | Purpose | Primary Implementer |
+|---|---|---|
+| `ExchangePort` | Exchange-neutral market, account, and order operations | Binance exchange adapters |
+| `SpotExchangePort` | Spot-specific balances, order behavior, and holdings | `BinanceSpotAdapter` |
+| `FuturesExchangePort` | Futures-specific positions, margin, leverage, reduce-only, long/short behavior | `BinanceFuturesAdapter` |
+| `MarketDataPort` | Market data and symbol capability access | Binance market data adapters |
+| `OrderExecutionPort` | Safe order submission, cancellation, and status lookup | Binance order adapters |
+| `AccountValidationPort` | Account, permission, Main Account, and Sub Account validation | Binance account adapters |
+| `SecureStoragePort` | Credential create, update, read, and delete operations | OS secure storage adapter |
+| `LicensePort` | Offline license file validation and local entitlement checks | Offline license file adapter |
+| `RepositoryPort` | Durable storage boundary for local application state | SQLite repository adapters |
+| `ClockPort` | Time source for deterministic testing and timestamps | System clock adapter |
+| `LoggerPort` | Structured logging with redaction | Python logging adapter |
+
+### Required Adapters
+
+| Adapter | Responsibility |
+|---|---|
+| `BinanceSpotAdapter` | Implements Spot account, balance, market data, order, holding, and trade operations behind ports. |
+| `BinanceFuturesAdapter` | Implements Futures account, margin, leverage, long/short position, reduce-only, market data, order, and trade operations behind ports. |
+| `SQLiteRepositoryAdapter` | Implements repository ports using SQLite. |
+| `OSKeychainSecureStorageAdapter` | Implements credential storage using macOS Keychain, Windows Credential Manager, Linux Secret Service, or equivalent supported provider. |
+| `OfflineLicenseFileAdapter` | Implements local offline license file validation behind `LicensePort`. |
+| `PythonLoggerAdapter` | Implements structured local logging, redaction, rotation, and diagnostic export support behind `LoggerPort`. |
+
+### Anti-Pattern Rules
+
+The following are forbidden:
+
+- View or ViewModel calls Binance directly.
+- ViewModel reads or writes SQLite directly.
+- Domain imports PySide6.
+- Domain imports Binance SDKs or concrete Binance adapters.
+- Domain imports SQLite implementation details.
+- Infrastructure or Persistence calls UI components.
+- Trading, risk, order, position, or recovery logic is implemented in UI classes.
+- Copy-paste duplicate logic is introduced instead of shared functions, utilities, helpers, services, or base classes.
+
+### Trading Safety Boundary Rules
+
+- No duplicate bot runtime creation.
+- No duplicate order submission.
+- Every exchange order must begin as a local order intent.
+- Unknown exchange order status must trigger synchronization before another order is submitted for the same bot action.
+- Stop Bot must not close Spot holdings or Futures positions automatically.
+- Recovery synchronization must complete before trading resumes after restart, crash, reconnect, or unknown order state.
+- Risk validation must pass before bot start.
+- Futures risk validation must pass before every Futures order placement.
+- Long and short Futures behavior must use the same core strategy while applying exchange-specific Futures safety validation.
+
+### Testability Rules
+
+- Domain services must be testable without PySide6, SQLite, Binance, or OS secure storage.
+- Application use cases must be testable with fake ports.
+- ViewModels must be testable without real PySide6 windows where practical.
+- Binance adapters must be isolated behind ports for integration tests.
+- SQLite repositories must be tested separately from domain trading rules.
+- Clock and logging must be replaceable through ports where deterministic behavior or redaction verification is required.
+
+### Recommended Folder Structure
+
+```text
+src/
+├── presentation/
+│   ├── views/
+│   ├── viewmodels/
+│   └── components/
+├── application/
+│   ├── use_cases/
+│   ├── services/
+│   └── ports/
+├── domain/
+│   ├── bot/
+│   ├── strategy/
+│   ├── risk/
+│   ├── order/
+│   ├── position/
+│   └── recovery/
+├── infrastructure/
+│   ├── binance/
+│   ├── license/
+│   ├── secure_storage/
+│   └── logging/
+├── persistence/
+│   ├── sqlite/
+│   └── repositories/
+└── shared/
+    ├── functions/
+    ├── utils/
+    ├── helpers/
+    ├── services/
+    └── base/
+```
+
+This structure is a recommended implementation target. Exact package names may be adjusted during implementation if they preserve the same ownership and dependency boundaries.
+
+### MVVM Presentation Flow
+
+```mermaid
+flowchart LR
+    User["User"] --> View["PySide6 View"]
+    View --> VM["ViewModel<br/>state and commands"]
+    VM --> App["Application Service<br/>use case"]
+    App --> Domain["Domain Service<br/>trading decisions"]
+    App --> Ports["Application Ports"]
+    Ports --> VM
+    VM --> View
+```
+
+### Ports And Adapters Boundary
+
+```mermaid
+flowchart TB
+    subgraph Core["Core Application"]
+        App["Application Use Cases"]
+        Domain["Domain Trading Core"]
+        Ports["Ports<br/>Exchange, Repository, License, Storage, Clock, Logger"]
+        App --> Domain
+        App --> Ports
+        Domain --> Ports
+    end
+
+    subgraph Adapters["Adapters"]
+        Spot["BinanceSpotAdapter"]
+        Futures["BinanceFuturesAdapter"]
+        SQLite["SQLiteRepositoryAdapter"]
+        Secure["OSKeychainSecureStorageAdapter"]
+        License["OfflineLicenseFileAdapter"]
+        Logger["PythonLoggerAdapter"]
+    end
+
+    Ports --> Spot
+    Ports --> Futures
+    Ports --> SQLite
+    Ports --> Secure
+    Ports --> License
+    Ports --> Logger
+
+    Spot --> Binance["Binance Spot API"]
+    Futures --> BinanceF["Binance Futures API"]
+    SQLite --> DB["SQLite"]
+    Secure --> OS["OS Secure Storage"]
+    License --> File["Offline License File"]
+```
 
 ## Finalized Architecture Decisions
 
@@ -49,11 +357,12 @@ The following decisions resolve the gaps identified in `/docs/architecture-revie
 ### Trading And Bot Operation Decisions
 
 - Version 1 uses one built-in proprietary strategy only.
-- Version 1 runtime supports multiple bot instances, even if the initial UI exposes a simplified single-bot setup.
-- A bot instance is the ownership boundary for configuration, risk settings, orders, positions or exposure, trade history, logs, and recovery.
-- Two running bots must not use the same account, market mode, and trading pair at the same time.
-- Multiple bots may use the same account only when each bot has an explicit capital allocation and the account-level risk checks pass.
-- Spot and Futures bots may coexist only when they use separate market contexts and pass account-level exposure checks.
+- Version 1 exposes one active bot for one selected account context.
+- One Account = One Bot for Version 1 user-facing behavior.
+- Multiple Bot Instances are not supported in Version 1.
+- A bot instance remains the ownership boundary for configuration, risk settings, orders, positions or exposure, trade history, logs, and recovery.
+- The runtime must prevent duplicate bot creation for the same account context.
+- Future multi-bot expansion may reuse the bot ownership boundary only after a product decision explicitly enables it.
 - Bot startup must be idempotent: repeated Start Bot clicks or repeated startup requests must not create duplicate runtime workers or duplicate order activity.
 
 ### Stop Bot Policy
@@ -76,7 +385,8 @@ Version 1 Futures support is intentionally conservative:
 
 - One-way Futures position mode is supported.
 - Hedge mode is not supported in Version 1.
-- Long-side strategy behavior is supported; short-side strategy behavior is not included unless separately approved.
+- Long and short Futures position behavior are supported in Version 1.
+- Spot and Futures use the same built-in proprietary strategy logic, with Futures-specific risk validation before order placement.
 - Isolated margin is the default supported margin mode.
 - Cross margin must be blocked unless the product owner explicitly approves it before implementation.
 - The app does not change Futures leverage automatically in Version 1.
@@ -96,12 +406,12 @@ Version 1 Futures support is intentionally conservative:
 
 ### License Enforcement Decisions
 
-- A valid lifetime license is required for product access and bot startup.
-- License activation may produce a local device-bound entitlement used for startup decisions.
-- Temporary license validation network failure must not abruptly submit new stop or close orders while a bot is running.
-- If license validation is temporarily unavailable during an active session, the bot may continue only within the configured local grace policy and must show a warning state.
-- Explicit invalid, revoked, or expired license status blocks new bot starts and stops new strategy actions after safe synchronization.
-- License failures must be logged with redacted identifiers only.
+- A valid Offline License File is required for product access and bot startup.
+- Version 1 license validation is performed locally from an Offline License File and has no network dependency.
+- The License Application Service validates the selected license file through `LicensePort`.
+- `OfflineLicenseFileAdapter` performs local file loading, parsing, integrity checks, and validation.
+- Missing, invalid, expired, corrupted, or unsupported license files block product access and bot startup.
+- License failures must be logged with redacted identifiers only and must not expose full license material.
 
 ### Secure Storage Decisions
 
@@ -130,25 +440,22 @@ The bot runtime must never block the UI thread. Long-running market monitoring, 
 
 ```mermaid
 flowchart TB
-    User["User"] --> UI["Presentation Layer<br/>PySide6 Screens and View Models"]
+    User["User"] --> Views["Presentation Layer<br/>PySide6 Views"]
+    Views --> ViewModels["Presentation Layer<br/>ViewModels"]
+    ViewModels --> App["Application Layer<br/>Use Cases and Services"]
+    App --> Domain["Domain Layer<br/>Trading Core"]
+    App --> Ports["Ports<br/>Exchange, Repository, License, Storage, Logger"]
+    Domain --> Ports
 
-    UI --> App["Application Layer<br/>Use Cases, Coordinators, Controllers"]
-    App --> Domain["Domain Layer<br/>Bot, Strategy, Risk, Orders, Positions"]
-
-    App --> Persist["Persistence Layer<br/>SQLite Repositories"]
-    Domain --> Persist
-
-    App --> Infra["Infrastructure Layer"]
-    Domain --> Infra
+    Ports --> Infra["Infrastructure Adapters<br/>Binance, License, Secure Storage, Logging"]
+    Ports --> Persist["Persistence Adapters<br/>SQLite Repositories"]
 
     Infra --> Binance["Binance API<br/>Spot and Futures"]
-    Infra --> License["License Validation"]
-    Infra --> SecureStore["Secure Credential Storage"]
-    Infra --> OS["Desktop OS Services"]
+    Infra --> License["Offline License File"]
+    Infra --> SecureStore["OS Secure Credential Storage"]
+    Persist --> SQLite["SQLite"]
 
-    App --> Logging["Logging and Diagnostics"]
-    Domain --> Logging
-    Infra --> Logging
+    Infra --> Logs["Local Logs and Diagnostics"]
 ```
 
 ### Runtime Model Diagram
@@ -156,23 +463,15 @@ flowchart TB
 ```mermaid
 flowchart LR
     UIThread["PySide6 UI Thread"] --> AppCoordinator["Application Coordinator"]
-    AppCoordinator --> BotManager["Bot Instance Manager"]
+    AppCoordinator --> BotManager["Bot Runtime Manager"]
 
-    BotManager --> BotA["Bot Instance A<br/>Worker"]
-    BotManager --> BotB["Bot Instance B<br/>Worker"]
-    BotManager --> BotN["Bot Instance N<br/>Worker"]
+    BotManager --> Guard["Duplicate Runtime Guard"]
+    Guard --> Bot["Active Bot Instance<br/>Worker"]
 
-    BotA --> ExchangeA["Exchange Adapter"]
-    BotB --> ExchangeB["Exchange Adapter"]
-    BotN --> ExchangeN["Exchange Adapter"]
+    Bot --> Exchange["Exchange Port<br/>Spot or Futures Adapter"]
+    Bot --> Repository["Repository Port<br/>SQLite Adapter"]
+    Bot --> StateBus["Application State Updates"]
 
-    BotA --> SQLite["SQLite Persistence"]
-    BotB --> SQLite
-    BotN --> SQLite
-
-    BotA --> StateBus["Application State Updates"]
-    BotB --> StateBus
-    BotN --> StateBus
     StateBus --> UIThread
 ```
 
@@ -228,12 +527,16 @@ The architecture may allow future modules, more exchange adapters, or more built
 
 Technology: PySide6.
 
+Pattern: MVVM for presentation concerns only.
+
 Responsibilities:
 
 - Display all Version 1 screens.
+- Organize screens into Views, ViewModels, and reusable UI components.
 - Manage screen navigation.
 - Collect user input.
 - Show validation messages and bot status.
+- Manage presentation state and UI commands through ViewModels.
 - Render dashboard, account, risk, position, trade history, license, and error states.
 - Translate application state into user-readable UI.
 - Keep bot status visible across primary screens.
@@ -243,8 +546,10 @@ The presentation layer must not:
 - Call Binance directly.
 - Read or write SQLite directly.
 - Execute trading strategy logic.
+- Execute risk, order, position, or recovery decisions.
 - Store secrets directly.
 - Decide whether an order should be placed.
+- Depend on concrete infrastructure or persistence adapters.
 
 ### Application Layer
 
@@ -252,6 +557,7 @@ Responsibilities:
 
 - Coordinate use cases from user actions.
 - Validate preconditions before delegating to domain services.
+- Call domain services and ports to complete workflows.
 - Manage application startup and routing.
 - Coordinate wizard setup flow.
 - Coordinate account lifecycle operations.
@@ -259,6 +565,8 @@ Responsibilities:
 - Coordinate recovery flows.
 - Coordinate persistence writes through repositories.
 - Convert domain and infrastructure errors into user-facing application states.
+
+The application layer must not import PySide6 widgets, call Binance SDKs directly, read or write SQLite implementation details directly, or bypass domain trading safety rules.
 
 Example application services:
 
@@ -285,10 +593,12 @@ Responsibilities:
 - Represent order, position, trade, account, and configuration concepts in implementation-neutral terms.
 - Determine recovery decisions such as whether synchronization is required.
 
+The domain layer must stay framework-independent. It must not import PySide6, Binance SDKs, concrete Binance adapters, SQLite adapters, OS secure storage libraries, or UI navigation classes.
+
 Example domain components:
 
 - Bot Instance.
-- Bot Instance Manager.
+- Bot Runtime Manager.
 - Bot State Machine.
 - Strategy Engine.
 - Risk Engine.
@@ -309,10 +619,12 @@ Responsibilities:
 - Integrate with external systems and operating system capabilities.
 - Communicate with Binance Spot and Futures APIs.
 - Validate API credentials and permissions.
-- Perform license validation using the selected licensing mechanism.
+- Perform offline license file validation using `LicensePort`.
 - Protect secrets using secure storage.
 - Provide time, networking, and environment services.
 - Translate external API failures into application-level error types.
+
+Infrastructure implements ports defined by the application/domain boundary. Infrastructure must not call UI components or own trading decisions.
 
 Example infrastructure components:
 
@@ -323,7 +635,7 @@ Example infrastructure components:
 - Binance Order Adapter.
 - Binance Exchange Capability Adapter.
 - Binance Rate Limit Coordinator.
-- License Provider.
+- Offline License File Adapter.
 - Secure Storage Provider.
 - Network Status Provider.
 - Clock Provider.
@@ -345,7 +657,7 @@ Responsibilities:
 - Persist order and position state required for recovery.
 - Persist synchronization markers and recovery state.
 
-The persistence layer must expose repositories or data access services to the application and domain layers. This document intentionally does not define SQLite schemas.
+The persistence layer must expose repositories or data access services through repository ports. It must not be accessed directly by Views or ViewModels. This document intentionally does not define SQLite schemas.
 
 ### Cross-Cutting Layer
 
@@ -391,6 +703,14 @@ flowchart TB
         LicenseApp["License Use Cases"]
     end
 
+    subgraph Ports["Port Contracts"]
+        ExchangePort["Exchange Ports"]
+        RepoPort["Repository Ports"]
+        LicensePort["License Port"]
+        StoragePort["Secure Storage Port"]
+        LoggerPort["Logger Port"]
+    end
+
     subgraph Domain["Domain Modules"]
         BotDomain["Bot Runtime Domain"]
         Strategy["Built-In Strategy"]
@@ -408,7 +728,7 @@ flowchart TB
         BinanceFutures["Binance Futures Adapter"]
         BinanceCapability["Binance Capability Adapter"]
         RateLimit["Binance Rate Limit Coordinator"]
-        LicenseProvider["License Provider"]
+        OfflineLicense["Offline License File Adapter"]
         SecretStore["Secure Storage Provider"]
         Network["Network Provider"]
         Logging["Logging Provider"]
@@ -420,13 +740,16 @@ flowchart TB
 
     Presentation --> Application
     Application --> Domain
-    Application --> Persistence
-    Domain --> Persistence
-    Application --> Infrastructure
-    Domain --> Infrastructure
+    Application --> Ports
+    Domain --> Ports
+    ExchangePort --> BinanceSpot
+    ExchangePort --> BinanceFutures
+    RepoPort --> Repos
+    LicensePort --> OfflineLicense
+    StoragePort --> SecretStore
+    LoggerPort --> Logging
     Infrastructure --> Logging
-    Application --> Logging
-    Domain --> Logging
+    Persistence --> Logging
 ```
 
 ### Presentation Modules
@@ -469,7 +792,7 @@ Shows completed, failed, canceled, and rejected bot activity.
 
 #### License Screens
 
-Support license activation, license status, recheck, and license replacement.
+Support offline license file selection, local validation, license status, recheck, and license file replacement.
 
 #### Error Screen
 
@@ -509,7 +832,7 @@ This is not CQRS. The query module is a simple read service within the same laye
 
 #### License Use Cases Module
 
-Coordinates activation, validation, recheck, and license-invalid routing.
+Coordinates offline license file selection, local validation, recheck, replacement, and license-invalid routing.
 
 ### Domain Modules
 
@@ -537,7 +860,7 @@ Risk Management is responsible for:
 - Pre-order validation.
 - Runtime exposure monitoring.
 - DCA limit enforcement.
-- Account-level exposure checks across multiple bot instances.
+- Account-level exposure checks for the active bot account context.
 - Futures leverage, margin mode, position mode, and liquidation-risk checks.
 - Blocking bot startup or order submission when risk state is invalid.
 
@@ -545,16 +868,17 @@ Version 1 does not assume a user-configurable strategy, but it does require user
 
 #### Bot Resource Coordination Module
 
-Coordinates shared resources across bot instances.
+Coordinates active bot resources and prevents duplicate runtime conflicts.
 
 Responsibilities:
 
-- Enforce one running bot per account, market mode, and trading pair.
-- Track per-bot capital allocation.
+- Enforce One Account = One Bot for Version 1 user-facing behavior.
+- Block duplicate running bot runtimes for the same account context.
+- Track the active bot capital allocation.
 - Coordinate account-level available balance and margin checks.
-- Prevent overlapping capital allocations from exceeding available account resources.
+- Prevent the active bot allocation from exceeding available account resources.
 - Coordinate Binance API usage through the Rate Limit Coordinator.
-- Identify affected bots when an account is removed, replaced, disconnected, or invalidated.
+- Identify the affected bot when an account is removed, replaced, disconnected, or invalidated.
 
 #### Account Context Module
 
@@ -645,11 +969,19 @@ Fetches and normalizes Binance Spot and Futures exchange capability information 
 
 #### Binance Rate Limit Coordinator
 
-Coordinates Binance API usage across account validation, market data polling, order submission, recovery synchronization, and multiple bot instances. The coordinator prevents independent workers from overwhelming Binance API limits.
+Coordinates Binance API usage across account validation, market data polling, order submission, recovery synchronization, and background workers. The coordinator prevents independent workers from overwhelming Binance API limits.
 
-#### License Provider
+#### Offline License File Adapter
 
-Validates the one-time purchase lifetime license using the selected license mechanism.
+Implements `LicensePort` for the Version 1 Offline License File model.
+
+Responsibilities:
+
+- Load the user-selected or configured local license file.
+- Validate license file structure, integrity, expiry, and supported license format locally.
+- Return license status without requiring network access.
+- Provide redacted license references for UI, logs, and diagnostics.
+- Reject missing, invalid, expired, corrupted, or unsupported license files.
 
 #### Secure Storage Provider
 
@@ -683,16 +1015,16 @@ Handles persistence format versioning as the product evolves. This module must p
 | Startup Coordinator | Validate license and restore state on launch | Place orders |
 | Setup Wizard Service | Validate setup progression | Execute strategy logic |
 | Account Service | Add, edit, test, and remove account connections | Store raw secrets outside secure storage |
-| License Service | Activate and validate license state | Manage Binance credentials |
-| Bot Control Service | Start, stop, and supervise bot instances | Render UI widgets |
-| Bot Instance Manager | Track and coordinate multiple bot instances | Know PySide6 widget details |
+| License Service | Validate offline license file and manage license state | Manage Binance credentials |
+| Bot Control Service | Start, stop, and supervise the active bot instance | Render UI widgets |
+| Bot Runtime Manager | Track the active bot instance and prevent duplicate runtime creation | Know PySide6 widget details |
 | Bot Instance | Run one configured bot lifecycle | Directly show UI messages |
-| Bot Resource Coordinator | Enforce account, pair, capital, and rate-limit coordination across bot instances | Place orders directly |
+| Bot Resource Coordinator | Enforce One Account = One Bot, capital, risk, and rate-limit coordination for the active account context | Place orders directly |
 | Strategy Engine | Evaluate built-in strategy signals | Accept user-defined strategies |
 | Risk Engine | Approve or block trading actions | Place orders directly |
 | Exchange Gateway | Provide exchange-neutral trading operations | Decide product UI behavior |
 | Exchange Capability Model | Represent Binance symbol, precision, order, permission, and market-mode constraints | Store raw exchange credentials |
-| Rate Limit Coordinator | Coordinate Binance API usage across bot instances | Decide strategy signals |
+| Rate Limit Coordinator | Coordinate Binance API usage across background workers | Decide strategy signals |
 | Binance Adapters | Implement Binance Spot and Futures calls | Store long-term app state |
 | Order Manager | Track order intent, status, and synchronization | Hide rejected or unknown orders |
 | Order Idempotency Policy | Prevent duplicate submissions and correlate local intents with Binance orders | Retry unknown orders blindly |
@@ -770,7 +1102,7 @@ flowchart TD
 The application uses a PySide6-compatible background worker model:
 
 - The PySide6 UI thread owns widgets, navigation, and rendering only.
-- Each running bot instance is supervised by the Bot Instance Manager.
+- The active bot instance is supervised by the Bot Runtime Manager.
 - Long-running bot monitoring runs in dedicated Qt-compatible workers.
 - Exchange calls, market polling, synchronization, and order status checks run outside the UI thread.
 - Worker state updates must return to the UI through Qt-safe signals or an equivalent application state dispatcher.
@@ -795,7 +1127,7 @@ The following operations must be treated as atomic architecture-level persistenc
 - Record order result and trade history update together.
 - Update position or exposure state and related trade history together.
 - Complete recovery reconciliation for orders, positions, and bot state.
-- Save license activation or license validation state.
+- Save offline license file validation state.
 
 ### Order Lifecycle And Idempotency Flow
 
@@ -862,11 +1194,11 @@ stateDiagram-v2
     Stopped --> [*]
 ```
 
-### Multiple Bot Instance Support
+### Version 1 Bot Runtime Support
 
-Version 1 architecture must support multiple bot instances even if the first UI release exposes a simplified single-bot experience.
+Version 1 supports one active bot for one selected account context. The architecture must still model the bot as a clear runtime boundary so startup, stop, recovery, logs, trade history, and future expansion remain safe.
 
-Each bot instance should have:
+The active bot instance should have:
 
 - Unique local identity.
 - Account context.
@@ -884,26 +1216,27 @@ Each bot instance should have:
 
 ### Bot Instance Isolation Rules
 
-- One bot instance must not share mutable runtime state with another instance.
-- One bot instance must only trade against its configured account context and market mode.
-- One account, market mode, and trading pair combination may have only one running bot instance.
-- Multiple bots sharing one account must have non-overlapping capital allocations.
-- Account-level exposure checks must pass before any bot sharing that account can start or place an order.
-- Bot instance workers must have independent lifecycle state and cancellation handling.
-- Account removal or credential replacement must stop or invalidate affected bot instances.
-- Risk setting changes must apply only to the intended bot instance or explicitly selected shared configuration.
-- Trade history must identify which bot instance produced each activity.
-- Recovery must run per bot instance and then reconcile account-level exposure.
+Version 1 isolation focuses on preventing accidental duplicate runtime activity:
+
+- The active bot instance must only trade against its configured account context and market mode.
+- One account context may have only one running bot runtime in Version 1.
+- Duplicate Start Bot requests must return the existing startup/running state rather than creating another worker.
+- Account-level exposure checks must pass before the active bot can start or place an order.
+- The bot worker must have explicit lifecycle state and cancellation handling.
+- Account removal or credential replacement must stop or invalidate the active bot.
+- Risk setting changes must apply only while the bot is stopped unless a later task explicitly allows live changes.
+- Trade history must identify which bot instance identity produced each activity.
+- Recovery must run for the active bot instance and reconcile account-level exposure before trading resumes.
 
 ### Bot Resource Coordination Rules
 
-The Bot Resource Coordinator is responsible for preventing multi-bot conflicts:
+The Bot Resource Coordinator is responsible for enforcing Version 1 runtime safety:
 
-- Block duplicate running bots for the same account, market mode, and trading pair.
-- Block startup if configured capital would exceed available account balance or margin after existing bot allocations.
+- Block duplicate running bot runtimes for the same account, market mode, and trading pair.
+- Block startup if configured capital would exceed available account balance or margin.
 - Block startup if account-level exposure limits would be exceeded.
-- Coordinate Binance API rate-limit usage across all running bot instances.
-- Invalidate affected bots when account credentials, permissions, or market capability rules change.
+- Coordinate Binance API rate-limit usage across account validation, recovery, market data, and order workers.
+- Invalidate the active bot when account credentials, permissions, or market capability rules change.
 - Ensure bot start and stop requests are idempotent.
 
 ### Bot Start Preconditions
@@ -986,7 +1319,7 @@ The account architecture must distinguish:
 
 ### Main Account Flow Support
 
-Main Account credentials are validated through the Account Service and the Binance adapter. Once validated, the account context can be used by one or more bot instances according to product rules.
+Main Account credentials are validated through the Account Service and the Binance adapter. Once validated, the account context can be used by the Version 1 active bot according to One Account = One Bot rules.
 
 ### Sub Account Flow Support
 
@@ -1125,7 +1458,7 @@ Retries should be applied cautiously:
 | Error Class | Bot State Impact | Retry Policy | Trading Blocked | Recovery Required | Trade History |
 |---|---|---|---|---|---|
 | License invalid | Stop new strategy actions after safe sync | Manual license action | Yes | Maybe | No, unless bot was active |
-| License validation network failure | Warning or grace state | Automatic or manual according to license policy | New starts blocked after grace | No unless active bot affected | No |
+| License file missing, invalid, expired, corrupted, or unsupported | Product access blocked or bot startup blocked | User selects a valid offline license file | Yes | No | No |
 | Invalid API key | Account invalid | Manual correction | Yes | No | No |
 | Invalid secret key | Account invalid | Manual correction | Yes | No | No |
 | Missing exchange permission | Account permission missing | Manual correction | Yes | No | No |
@@ -1177,7 +1510,7 @@ If any of these checks fail, the bot must remain `Stopped`, `Disconnected`, `Syn
 flowchart TD
     Start["Application Starts or Reconnects"] --> Load["Load Local State"]
     Load --> License{"License Valid?"}
-    License -- "No" --> LicenseScreen["License Activation"]
+    License -- "No" --> LicenseScreen["License File Validation"]
     License -- "Yes" --> Config{"Configuration Valid?"}
     Config -- "No" --> Setup["Setup Required or Invalid Configuration"]
     Config -- "Yes" --> LastState{"Last Bot State"}
@@ -1309,35 +1642,36 @@ flowchart LR
 
 ### License Security
 
-License activation and validation must:
+Offline license file validation must:
 
 - Avoid exposing full license keys in logs.
 - Store only the minimum local license state needed for startup decisions.
-- Route invalid license states to License Activation.
+- Route missing, invalid, expired, corrupted, or unsupported license file states to License Management or the license file validation screen.
 - Block bot startup when license is invalid.
+- Require no network access.
 
 ### License Enforcement Flow
 
 ```mermaid
 flowchart TD
-    Start["App Startup or Bot Start"] --> Local["Check Local Entitlement"]
-    Local --> ValidLocal{"Local License Valid?"}
-    ValidLocal -- "No" --> Activation["License Activation"]
-    ValidLocal -- "Yes" --> Online{"Online Validation Available?"}
-    Online -- "Yes" --> Result["Validate With License Provider"]
-    Online -- "No" --> Grace{"Within Grace Policy?"}
-    Grace -- "Yes" --> Warn["Allow Session With Warning"]
-    Grace -- "No" --> Block["Block New Bot Starts"]
-    Result --> Status{"License Accepted?"}
-    Status -- "Yes" --> Continue["Continue"]
-    Status -- "No" --> Invalid["Block Trading Features"]
+    Start["App Startup or Bot Start"] --> File["Locate Offline License File"]
+    File --> Exists{"License File Found?"}
+    Exists -- "No" --> Select["Request License File"]
+    Exists -- "Yes" --> Validate["Validate License Locally"]
+    Select --> Validate
+    Validate --> Status{"License File Valid?"}
+    Status -- "Yes" --> Persist["Persist Redacted Local License State"]
+    Persist --> Continue["Continue"]
+    Status -- "No" --> Block["Block Product Access and Bot Startup"]
+    Block --> Recovery["Show Clear Recovery Path"]
 ```
 
 License enforcement rules:
 
-- Bot startup requires a valid local entitlement and any required online validation result.
-- Existing active bots may continue during temporary license-network failure only inside the approved grace policy.
-- Explicit invalid or revoked license status blocks new bot starts and stops new strategy actions after safe synchronization.
+- Product access requires a valid Offline License File.
+- Bot startup requires a valid locally validated license state.
+- License validation must not require internet access.
+- Missing, invalid, expired, corrupted, or unsupported license files block product access and bot startup.
 - License status changes must be reflected in License Management and Dashboard state.
 
 ### Logging Redaction
@@ -1422,7 +1756,7 @@ This document does not define migration scripts or schemas.
 ### Log Categories
 
 - Application startup and shutdown.
-- License activation and validation result.
+- Offline license file validation result.
 - Account validation result.
 - Setup completion.
 - Bot lifecycle state changes.
@@ -1477,9 +1811,9 @@ The architecture should allow growth without changing the Version 1 architecture
 
 ### Multiple Bot Instances
 
-The Bot Instance Manager should support multiple bot instances with isolated configuration, state, position tracking, order tracking, and trade history.
+Multiple Bot Instances are intentionally deferred beyond Version 1.
 
-Future UI versions may expose multiple bot management more fully, but the runtime should avoid assuming only one bot exists.
+The Version 1 Bot Runtime Manager should prevent duplicate runtime creation. Internal boundaries should keep bot identity, configuration, state, position tracking, order tracking, and trade history explicit enough that future UI versions can introduce multiple bot management only after a product decision approves it.
 
 ### Additional Exchange Adapters
 
@@ -1509,7 +1843,7 @@ Future scalability should preserve the local layered desktop architecture unless
 
 ## Required Sequence Diagrams
 
-## Start Bot Sequence
+## Bot Start Sequence
 
 ```mermaid
 sequenceDiagram
@@ -1522,7 +1856,7 @@ sequenceDiagram
     participant Risk as Risk Engine
     participant Resources as Bot Resource Coordinator
     participant Recovery as Recovery Coordinator
-    participant BotManager as Bot Instance Manager
+    participant BotManager as Bot Runtime Manager
     participant Bot as Bot Instance
     participant Exchange as Binance Adapter
     participant Store as SQLite Repositories
@@ -1539,7 +1873,7 @@ sequenceDiagram
     Account-->>BotControl: Account ready
     BotControl->>Risk: Validate capital and risk settings
     Risk-->>BotControl: Risk approved
-    BotControl->>Resources: Reserve capital and check duplicate bot conflicts
+    BotControl->>Resources: Reserve capital and check duplicate runtime conflicts
     Resources-->>BotControl: Resource reservation approved
     BotControl->>Store: Persist Starting state
     BotControl->>Recovery: Synchronize positions and orders
@@ -1547,7 +1881,7 @@ sequenceDiagram
     Exchange-->>Recovery: Current exchange state
     Recovery->>Store: Persist synchronized state
     Recovery-->>BotControl: Safe to start
-    BotControl->>BotManager: Start bot instance
+    BotControl->>BotManager: Start active bot instance
     BotManager->>Bot: Begin monitoring loop
     BotControl->>Store: Persist Running state
     BotControl-->>UI: Bot status Running
@@ -1561,7 +1895,7 @@ sequenceDiagram
     actor User
     participant UI as PySide6 Dashboard or Position Screen
     participant BotControl as Bot Control Service
-    participant BotManager as Bot Instance Manager
+    participant BotManager as Bot Runtime Manager
     participant Bot as Bot Instance
     participant Orders as Order Manager
     participant Recovery as Recovery Coordinator
@@ -1587,6 +1921,44 @@ sequenceDiagram
     BotControl->>Store: Persist Stopped state
     BotControl-->>UI: Bot status Stopped
     UI-->>User: Show stopped dashboard and position status
+```
+
+## Order Execution Sequence
+
+```mermaid
+sequenceDiagram
+    participant Bot as Active Bot Instance
+    participant Risk as Risk Engine
+    participant Orders as Order Manager
+    participant Store as Repository Port
+    participant Exchange as OrderExecutionPort
+    participant Adapter as Binance Spot or Futures Adapter
+    participant Sync as Order Synchronization
+    participant History as Trade History Service
+
+    Bot->>Risk: Validate candidate order
+    Risk-->>Bot: Approved or blocked
+    alt Blocked
+        Bot->>History: Record blocked trading action
+    else Approved
+        Bot->>Orders: Create local order intent
+        Orders->>Store: Persist local order intent
+        Orders->>Exchange: Submit order with stable client reference
+        Exchange->>Adapter: Place Spot or Futures order
+        Adapter-->>Exchange: Exchange result, rejection, timeout, or unknown
+        Exchange-->>Orders: Normalized order result
+        alt Filled, partially filled, rejected, canceled, or failed
+            Orders->>Store: Persist final or current order state
+            Orders->>History: Record user-visible trade activity
+        else Unknown
+            Orders->>Store: Persist unknown order state
+            Orders->>Sync: Require order synchronization before retry
+            Sync->>Exchange: Fetch order by client reference or exchange id
+            Exchange-->>Sync: Reconciled exchange state
+            Sync->>Store: Persist reconciled order state
+            Sync->>History: Record recovery-corrected activity
+        end
+    end
 ```
 
 ## Trading Execution Sequence
@@ -1635,7 +2007,7 @@ sequenceDiagram
     end
 ```
 
-## Recovery Process Sequence
+## Recovery Sequence
 
 ```mermaid
 sequenceDiagram
