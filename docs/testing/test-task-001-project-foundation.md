@@ -2,7 +2,9 @@
 
 ## 1. Summary
 
-Tested TASK-001 Project Foundation after implementation review passed.
+Testing workflow executed for the latest implemented task identified from `docs/task-report.md`: `TASK-001 Project Foundation`.
+
+`docs/status.md` currently lists `TASK-002 License Module` as `READY - NOT STARTED`, so no TASK-002 implementation was tested.
 
 Scope tested:
 
@@ -11,11 +13,11 @@ Scope tested:
 - Logging setup and redaction.
 - Application entry points.
 - Shared foundation services.
-- Regression coverage for review findings.
+- Regression coverage for prior TASK-001 review findings.
 
 Out of scope for TASK-001:
 
-- License validation.
+- Offline License File validation.
 - Binance account connection.
 - Binance Spot or Futures API calls.
 - SQLite persistence.
@@ -28,7 +30,7 @@ Out of scope for TASK-001:
 
 Result: PASS
 
-Checks performed:
+Commands:
 
 ```text
 PYTHONPATH=src python3 -m tiewtrade --version
@@ -39,12 +41,12 @@ Results:
 
 - Version command returned `0.1.0`.
 - Bootstrap check initialized configuration and logging successfully.
-- Bootstrap created local data and log directories when explicit environment overrides were provided.
-- Example TOML configuration loaded successfully.
+- Bootstrap used explicit local data and log directory overrides.
+- Application reported `TiewTrade foundation initialized`.
 
 Not applicable for TASK-001:
 
-- User-facing license flows.
+- User-facing license file validation flows.
 - Account connection flows.
 - Bot start or stop flows.
 - Trade history and position monitoring.
@@ -62,7 +64,7 @@ PYTHONPATH=src python3 -m unittest discover -s tests
 Result:
 
 ```text
-Ran 6 tests in 0.004s
+Ran 6 tests in 0.003s
 OK
 ```
 
@@ -88,7 +90,7 @@ Applicable integration checks performed:
 - Example TOML configuration is readable by the configuration service.
 - Logging handlers write redacted records to the configured log file.
 
-Additional command:
+Example configuration command:
 
 ```text
 PYTHONPATH=src python3 -c 'from pathlib import Path; from tiewtrade.shared.services.configuration import load_app_config; cfg=load_app_config(config_path=Path("config/app.example.toml"), environ={}); print(cfg.environment, cfg.log_level, cfg.log_file.name)'
@@ -112,16 +114,10 @@ Applicable foundation recovery checks performed:
 - Existing directories do not cause bootstrap failure.
 - Configuration remains deterministic when an explicit empty environment mapping is provided.
 
-Recovery probe result:
+Repeated bootstrap probe result:
 
 ```text
 True True True True
-```
-
-Empty environment mapping probe result:
-
-```text
-development
 ```
 
 ## 6. Regression Test Results
@@ -130,7 +126,7 @@ Result: PASS
 
 Regression checks performed:
 
-- Structured logging no longer leaks raw secret values.
+- Structured logging does not leak raw secret values.
 - Sensitive dictionary keys are redacted.
 - Nested dictionaries and lists are redacted.
 - Tuple args and mapping-format logging args are redacted.
@@ -156,15 +152,17 @@ Result: PASS
 - Full editable package installation was not tested in this workflow.
 - External dependencies such as PySide6 and Binance connector were not imported or exercised because TASK-001 does not implement UI or exchange integration.
 - Platform-specific desktop packaging behavior is not covered in TASK-001.
+- License, database, Binance, bot lifecycle, trading safety, futures behavior, and recovery logic remain pending future tasks.
 
 ## 8. Recommendations
 
-- Run dependency installation during a release-preparation or environment-validation task.
+- Run dependency installation during an environment-validation or release-preparation task.
 - Keep logging redaction tests as mandatory regression coverage before implementing credential storage, license handling, or Binance integration.
 - Continue using explicit local `TIEWTRADE_DATA_DIR` and `TIEWTRADE_LOG_DIR` overrides in sandboxed test runs.
+- Start TASK-002 only through the implementation workflow; this testing run did not implement or test the pending License Module.
 
 ## 9. Verdict
 
 PASS WITH MINOR ISSUES
 
-TASK-001 behavior passed all applicable tests. The minor issue is limited to unverified full dependency installation in the current environment; no source-code test failure was found.
+TASK-001 passed all applicable functional, unit, integration, recovery, and regression tests. The only minor issue is that full editable dependency installation remains unverified in the current environment; no source-code test failure was found.
