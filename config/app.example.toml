@@ -1,8 +1,0 @@
-[app]
-environment = "development"
-data_dir = ""
-
-[logging]
-level = "INFO"
-log_dir = ""
-file_name = "tiewtrade.log"

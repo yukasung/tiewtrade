@@ -1,1 +1,0 @@
-"""Shared pure functions."""
