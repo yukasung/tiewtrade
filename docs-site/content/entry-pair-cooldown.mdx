@@ -27,10 +27,10 @@ flowchart LR
 stateDiagram-v2
     [*] --> PairOpen
     PairOpen --> SingleEntry: first Entry Fill
-    SingleEntry --> SingleEntry: UTC month changes
+    SingleEntry --> SingleEntry: processed completed Candle enters a new UTC month
     SingleEntry --> PairComplete: second Entry Fill
-    PairComplete --> CooldownMonth: next UTC month begins
-    CooldownMonth --> NextPair: following UTC month begins
+    PairComplete --> CooldownMonth: processed Candle month follows Pair completion month
+    CooldownMonth --> NextPair: processed Candle month follows Cooldown Month
     NextPair --> PairOpen
     PairOpen --> [*]: Basket closes
     SingleEntry --> [*]: Basket closes
@@ -38,7 +38,7 @@ stateDiagram-v2
     CooldownMonth --> [*]: Basket closes
 ```
 
-แผนภาพแยกข้อยกเว้นสำคัญ: Entry เดี่ยวสามารถรอ Entry คู่ของตนข้ามสิ้นเดือน UTC ได้ แต่เมื่อ Pair ครบและ Basket ยังไม่ปิด เดือน UTC ถัดไปทั้งเดือนจะเป็น Cooldown Month ก่อนเปิด Pair ถัดไป
+แผนภาพแยกข้อยกเว้นสำคัญโดยใช้เดือน UTC ของ completed Candle ที่กำลังประมวลผล ไม่ใช่เวลานาฬิกาของเครื่อง: Entry เดี่ยวสามารถรอ Entry คู่ของตนข้ามสิ้นเดือน UTC ได้ แต่เมื่อ Pair ครบและ Basket ยังไม่ปิด completed Candles ของเดือน UTC ถัดไปอยู่ใน Cooldown Month ก่อนเปิด Pair ถัดไป
 
 ตัวอย่าง: Entry 1 Fill วันที่ 31 มกราคม และ Entry 2 Fill วันที่ 2 กุมภาพันธ์ ถือว่า Pair 1 ครบในเดือนกุมภาพันธ์ เดือนมีนาคมเป็น Cooldown Month และ Pair 2 เริ่มได้ตั้งแต่เดือนเมษายน หาก Basket ยังไม่ปิด
 
@@ -50,4 +50,4 @@ stateDiagram-v2
 
 ## การประเมินสิทธิ์ Entry
 
-ก่อนอนุมัติ Entry Intent ระบบตรวจตามลำดับว่า Bot Session รับ Entry ใหม่ได้, Basket ยังไม่ครบ 10 Entries, ไม่มี Intent รอ Fill, Pair ปัจจุบันรับ Entry ได้ และเวลาปัจจุบันไม่อยู่ใน Cooldown Month หลังจากนั้นจึงคำนวณขนาดจาก [Capital Allocation](/capital-allocation)
+ก่อนอนุมัติ Entry Intent ระบบตรวจตามลำดับว่า Bot Session รับ Entry ใหม่ได้, Basket ยังไม่ครบ 10 Entries, ไม่มี Intent รอ Fill, Pair ปัจจุบันรับ Entry ได้ และเดือน UTC ของ completed Candle ที่กำลังประมวลผลไม่ใช่ Cooldown Month หลังจากนั้นจึงคำนวณขนาดจาก [Capital Allocation](/capital-allocation)

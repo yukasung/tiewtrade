@@ -67,7 +67,7 @@ export const pages = {
   }
 }
 
-const forbidden = /\bLinear\b|linear\.app|\bDEV-\d+\b|Source file|Last reviewed date|Main Issue|Sub-?issues?|docs\/superpowers\//i
+const forbidden = /\bLinear\b|linear\.app|\bDEV-\d+\b|Source file|Last reviewed date|Main Issue|Sub-?issues?|\b(?:PRODUCT|CONTEXT|ARCHITECTURE|PROJECT_PLAN)\.md\b|\.superpowers\/|docs\/superpowers\/|docs\/adr\//i
 const unicodeLetterOrNumber = /[\p{L}\p{N}]/u
 
 function hasMeaningfulText(node) {

@@ -46,15 +46,15 @@ sequenceDiagram
 
     E->>B: Confirm Fill
     B->>B: Add Entry and recalculate weighted average
-    B->>T: Replace target using latest ATR
-    T->>E: Exit execution request
-    E->>B: Take Profit Fill
+    B->>T: Calculate target using latest completed Candle ATR
+    T->>E: Place or replace Take Profit Order
+    E->>B: Take Profit Order Fill at target
     B->>B: Close all Entries and calculate realized PnL
     B->>D: Persist Basket, Fill, fees and lifecycle reset
     D-->>U: Show closed Basket and new state
 ```
 
-แผนภาพแสดงว่า Basket เปลี่ยนหลังได้รับ Fill จริงเท่านั้น ทุก Entry Fill ทำให้ weighted average และ Take Profit ถูกคำนวณใหม่ เมื่อ exit Fill สำเร็จ Entries ทั้งหมดปิดพร้อมกันและ Basket ใหม่เริ่มได้ทันที
+แผนภาพแสดงว่า Basket เปลี่ยนหลังได้รับ Fill จริงเท่านั้น ทุก Entry Fill ทำให้ weighted average และ Take Profit ถูกคำนวณใหม่ แล้ววางหรือแทนที่ Take Profit Order เมื่อ Order นั้น Fill ที่ target Entries ทั้งหมดปิดพร้อมกันและ Basket ใหม่เริ่มได้ทันที
 
 Take Profit ใช้ `weighted_average_entry_price + ATR(14) × 3` จาก ATR ล่าสุด ณ Fill แล้วปัดตาม tick size ของ BTCUSDT Target ครอบคลุม quantity ที่ Bot เป็นเจ้าของทั้งหมด ค่าธรรมเนียมไม่เพิ่มเข้า target แต่ถูกหักใน realized PnL
 

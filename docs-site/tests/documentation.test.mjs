@@ -132,7 +132,13 @@ for (const forbiddenContent of [
   'DEV-82',
   'Main Issue',
   'Sub-issue',
-  'docs/superpowers/example.md'
+  'PRODUCT.md',
+  'CONTEXT.md',
+  'ARCHITECTURE.md',
+  'PROJECT_PLAN.md',
+  '.superpowers/example.md',
+  'docs/superpowers/example.md',
+  'docs/adr/0001-example.md'
 ]) {
   test(`documentation validator rejects forbidden reader-facing content: ${forbiddenContent}`, async () => {
     const root = await mkdtemp(path.join(tmpdir(), 'tiewtrade-docs-'))
@@ -144,3 +150,11 @@ for (const forbiddenContent of [
     ])
   })
 }
+
+test('documentation validator allows ordinary prose using product and architecture terms', async () => {
+  const root = await mkdtemp(path.join(tmpdir(), 'tiewtrade-docs-'))
+  await mkdir(path.join(root, 'content'))
+  await writeFile(path.join(root, 'content', 'guide.mdx'), 'Product context และ architecture decisions อธิบาย project plan สำหรับผู้อ่าน\n')
+  const contract = { 'content/guide.mdx': { headings: [], diagrams: 0 } }
+  assert.deepEqual(await validateDocumentation(root, contract), [])
+})

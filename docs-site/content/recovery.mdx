@@ -23,7 +23,7 @@ sequenceDiagram
     E-->>S: Continue tracking existing Order
 ```
 
-แผนภาพอธิบาย safe shutdown: Stop Session หยุดการสร้าง Entry ใหม่และบันทึก state แต่ไม่บังคับปิด Basket และไม่ยกเลิก Take Profit ที่ปกป้อง Position อยู่
+แผนภาพอธิบาย safe shutdown: Stop Session หยุดการสร้าง Entry ใหม่และบันทึก state แต่ไม่บังคับปิด Basket และไม่ยกเลิก Take Profit ซึ่งยังคง active เพื่อปิด Basket ที่ target
 
 UI ต้องแสดงว่า Bot Session หยุดรับ Entry ใหม่แล้ว พร้อม Basket และ Order ที่ยังเปิดอยู่ งาน persistence ต้องเสร็จแบบตรวจสอบได้ก่อน application ปิด
 
@@ -33,29 +33,35 @@ UI ต้องแสดงว่า Bot Session หยุดรับ Entry ใ
 flowchart TD
     A[Start Application] --> B[Load Session, Basket, Entry, Order and Fill]
     B --> C{Live Session?}
-    C -->|No| D[Validate persisted state]
+    C -->|No, Paper| D[Validate persisted state]
     C -->|Yes| E[Fetch exchange state]
     E --> F[Reconcile local and exchange state]
-    D --> G{State valid?}
-    F --> G
-    G -->|Yes| H[Resume]
-    G -->|No| I[Block new Entries and show mismatch]
-    I --> J[User resolves mismatch]
-    J --> F
+    D --> G{Persisted state valid?}
+    G -->|Yes| H[Resume Paper]
+    G -->|No| I[Block new Entries and show validation error]
+    I --> J[User corrects persisted state]
+    J --> D
+    F --> K{Local and exchange state match?}
+    K -->|Yes| L[Resume Live]
+    K -->|No| M[Block new Entries and show mismatch]
+    M --> N[User resolves mismatch]
+    N --> E
 ```
 
-แผนภาพแสดงลำดับ startup ที่โหลด durable state ก่อน สำหรับ Live จะดึง exchange facts มาเปรียบเทียบ แล้ว Resume เฉพาะเมื่อ state ตรงกัน หากไม่ตรง ระบบเข้าสู่ Blocked และรอผู้ใช้แก้ไข
+แผนภาพแยก Recovery ตาม Mode หลังโหลด durable state: Paper ตรวจ persisted state และวนกลับมาตรวจใหม่หลังผู้ใช้แก้ validation error โดยไม่ดึง exchange state ส่วน Live ดึง exchange facts, Reconcile และวนกลับไปดึงข้อมูลใหม่หลังผู้ใช้แก้ mismatch ทั้งสองเส้นทาง Resume เมื่อ validation ของตนผ่านเท่านั้น
 
 ข้อมูลที่โหลดรวม Bot Session configuration, Basket, Entry Pair, Entry Intent, Order, Fill, PnL และ operational audit events ทุก record ต้องผูก Account Profile กับ Bot Session ถูกต้อง
 
 ## Mismatch Handling
 
-Mismatch อาจเป็น Order ที่ local คิดว่าเปิดแต่ exchange ไม่พบ, Fill ที่ exchange มีแต่ local ยังไม่บันทึก, quantity ไม่ตรง, Position ต่างกัน หรือ symbol/margin facts เปลี่ยน ระบบแสดงรายละเอียดที่ตรวจพบโดยไม่เลือกความจริงให้เอง
+Paper validation error อาจเป็น record ที่อ้าง Bot Session ไม่ตรงกัน, lifecycle state ไม่ครบ หรือความสัมพันธ์ระหว่าง Basket, Entry, Order และ Fill ไม่ถูกต้อง ระบบแสดงรายละเอียดและรอผู้ใช้แก้ persisted state ก่อนตรวจซ้ำ โดยไม่เรียก exchange
 
-ระหว่าง Recovery ห้ามยกเลิก Order, เปิด Basket ใหม่ หรือ rewrite state อัตโนมัติ การแก้ไขต้องเป็น action ที่ผู้ใช้รับรู้และทิ้ง audit trail หลังแก้ไขแล้วต้อง Reconcile ใหม่ตั้งแต่ต้น
+Live mismatch อาจเป็น Order ที่ local คิดว่าเปิดแต่ exchange ไม่พบ, Fill ที่ exchange มีแต่ local ยังไม่บันทึก, quantity ไม่ตรง, Position ต่างกัน หรือ symbol/margin facts เปลี่ยน ระบบแสดงรายละเอียดที่ตรวจพบโดยไม่เลือกความจริงให้เอง
+
+ระหว่าง Recovery ห้ามยกเลิก Order, เปิด Basket ใหม่ หรือ rewrite state อัตโนมัติ การแก้ไขต้องเป็น action ที่ผู้ใช้รับรู้และทิ้ง audit trail หลังแก้ Paper state ต้อง Validate ใหม่ ส่วน Live ต้องดึง exchange state และ Reconcile ใหม่
 
 ## Resume Conditions
 
 Resume Entry generation ได้เมื่อ persisted state ผ่าน validation, completed Candles ต่อเนื่องหลัง backfill และ deduplication, ไม่มี stale data, local state ตรงกับ exchange สำหรับ Live และ idempotency state พร้อมติดตาม request เดิม
 
-Take Profit ที่มีอยู่ยังถูกติดตามระหว่าง blocked recovery เพราะการหยุด Entry ใหม่ไม่ควรลบการป้องกันทางออกของ Basket ดู connection path ที่ [Live Safety](/live-safety)
+Take Profit ที่มีอยู่ยังถูกติดตามระหว่าง blocked recovery และยังคง active เพื่อปิด Basket ที่ target ขณะที่ Entry ใหม่ถูกระงับ ดู connection path ที่ [Live Safety](/live-safety)
