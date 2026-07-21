@@ -1,22 +1,40 @@
 ---
 title: Product
-description: ขอบเขต Internal Alpha ของ TiewTrade V2
+description: ขอบเขต Internal Alpha และลำดับเปิดใช้งาน TiewTrade V2
 ---
 
 # Product
 
-> Source file: `PRODUCT.md`  
-> Last reviewed date: 2026-07-21
+TiewTrade V2 เป็น local single-user desktop application สำหรับเจ้าของผลิตภัณฑ์และผู้ทดสอบภายในกลุ่มเล็ก macOS คือแพลตฟอร์มแรก แต่ขอบเขตสถาปัตยกรรมไม่ปิดทาง Windows และ Linux ในอนาคต เป้าหมายสำคัญกว่าจำนวนฟีเจอร์คือผลลัพธ์ที่ตรวจสอบย้อนหลังได้ กู้คืนได้ และไม่สร้าง Order ซ้ำ
 
-TiewTrade V2 รองรับ BTCUSDT completed candle 5 นาที โดยส่งมอบตามลำดับ Paper Trading, Live Spot และ Live USDⓈ-M Futures
+## ขอบเขต Internal Alpha
 
-## Internal Alpha
+ระบบรองรับ BTCUSDT เพียง Symbol เดียว, completed candle 5 นาที, เวลา UTC และ RSI Step Grid จาก Versioned Preset หนึ่งกลยุทธ์ รองรับ Paper Spot, Paper USDⓈ-M Futures, Live Spot และ Live USDⓈ-M Futures ตาม Delivery Gates ที่กำหนด
 
-- macOS เป็นแพลตฟอร์มแรก
-- RSI Step Grid พร้อม Versioned Preset เพียงกลยุทธ์เดียว
-- สูงสุด 5 Account Profiles และหนึ่ง Active Bot Session ต่อ Profile
-- Local single-user ไม่มี Login, License หรือ Cloud Sync
+ผู้ใช้สร้าง Account Profiles จาก Binance Sub-account ที่มีอยู่แล้วได้สูงสุด 5 รายการ แต่ละ Account Profile มี credentials แยกกันและมี Active Bot Session ได้สูงสุดหนึ่ง Session UI เป็นภาษาอังกฤษและต้องแยก Paper กับ Live ให้เห็นชัด
 
-## Delivery gates
+ขอบเขตนี้รวม market data, Strategy, Basket, Order และ Fill, SQLite persistence, Operations UI, Stop Session, Recovery และ Reconciliation เพราะแต่ละ milestone ต้องเป็น vertical slice ที่ใช้งานและตรวจสอบได้ครบเส้นทาง
 
-Live Spot เริ่มได้หลัง Paper acceptance ผ่าน และ Live Futures เริ่มได้หลัง Live Spot acceptance ผ่านเท่านั้น
+## Delivery Gates
+
+```mermaid
+flowchart LR
+    A[Paper Trading Complete] -->|quality gate| B[Live Spot]
+    B -->|quality gate| C[Live Futures]
+```
+
+ลำดับนี้เป็น gate แบบสะสม: Live Spot เริ่มได้เมื่อ Paper ครบทุก acceptance criterion และ Live Futures เริ่มได้เมื่อ Live Spot ผ่านแล้วเท่านั้น ทั้งสองขั้น Live ยังต้องได้รับการอนุมัติอย่างชัดแจ้งจากผู้ใช้
+
+Paper Trading Complete ต้องพิสูจน์ completed Candle ที่ต่อเนื่อง, Strategy และ lifecycle ที่ถูกต้อง, deterministic replay, fee/slippage/funding, Recovery ที่ไม่สร้าง Entry หรือ Order ซ้ำ, การแยก Account Profile และ UI ที่แสดง state สำคัญ
+
+Live Spot เพิ่ม Preflight, idempotency, Reconciliation และ safe shutdown โดยทดสอบกับ fake adapter ก่อน ส่วน Live Futures เพิ่ม Cross Margin, leverage cap, Collateral Buffer, funding และข้อเท็จจริงที่เกี่ยวกับ liquidation
+
+## Risk Policy
+
+Internal Alpha แสดง PnL และ Drawdown เพื่อเฝ้าระวัง แต่ยังไม่มี Stop Loss, Maximum Drawdown hard limit, Max Daily Loss หรือ Consecutive-loss stop ระบบจึงไม่บังคับปิด Position จากตัวเลขเหล่านี้ อย่างไรก็ตาม capital allocation, maximum 10 Entries และ Futures leverage ไม่เกิน 5x เป็นข้อบังคับเสมอ
+
+## สิ่งที่ไม่อยู่ในขอบเขต
+
+รุ่นนี้ไม่รองรับ Symbol อื่น, หลายกลยุทธ์, Strategy Plugin System, Master Account API, Binance Testnet, manual order terminal, advanced chart tools, Backtest UI, automatic loss limits, Login, ระบบสมาชิก, License, Cloud Sync, Web application หรือ Mobile application
+
+การเปลี่ยน business rule, risk policy หรือ Live Gate ต้องเกิดขึ้นอย่างเปิดเผย และเมื่อกระทบ Strategy Session ต้องสร้าง Preset version ใหม่โดยไม่เปลี่ยนพฤติกรรมของ Session เดิมย้อนหลัง

@@ -1,0 +1,46 @@
+---
+title: Paper Trading
+description: Conservative fill, deterministic replay และการป้องกัน look-ahead bias
+---
+
+# Paper Trading
+
+Paper Trading ใช้ conservative candle fill เพื่อให้ผลลัพธ์ทำซ้ำได้และไม่สมมติลำดับราคาภายใน Candle ที่ข้อมูล OHLC ไม่ได้บอก Session ตรึง Preset version, fee, slippage และ funding configuration ไว้ตลอดรอบ
+
+## Candle Timing
+
+```mermaid
+sequenceDiagram
+    participant N as Signal Candle N
+    participant N1 as Candle N+1
+    participant N2 as Candle N+2 or later
+    participant B as Basket
+
+    N->>B: Create Entry Intent with ATR
+    N1->>B: Fill Entry at open with slippage and fee
+    B->>B: Recalculate weighted average and Take Profit
+    N1-->>B: Take Profit is not eligible in Fill Candle
+    N2->>B: Fill Take Profit if range touches target
+```
+
+แผนภาพแสดง timing ที่ตัด look-ahead bias: สัญญาณเกิดหลัง Candle N ปิด, Entry Fill ที่ราคาเปิด Candle N+1 และ Take Profit เริ่มมีสิทธิ์ Fill ตั้งแต่ Candle ถัดจาก Entry Fill แม้ช่วงราคาของ Candle N+1 จะคร่อม target ก็ตาม
+
+Buy Fill รวม slippage ตาม configuration แล้วปัด quantity ตาม step size ตรวจ minimum notional และคำนวณ fee ด้วย Decimal ATR ที่ผูกกับ signal Candle เป็นค่าล่าสุดที่ทราบ ณ ราคาเปิด N+1 และใช้สร้าง Take Profit หลัง Fill
+
+## Execution Costs
+
+Spot บันทึก entry fee, exit fee และ slippage Futures เพิ่ม funding rate กับ funding timestamp จากข้อมูล Binance ที่ระบบบันทึกไว้ Replay ต้องใช้ funding dataset ชุดเดิม ไม่ดึงค่าปัจจุบันมาปนกับอดีต
+
+Execution costs เป็นส่วนของ immutable Bot Session configuration ค่าติดลบไม่ถูกยอมรับ และการแก้ configuration ต้องเริ่ม Session ใหม่เพื่อไม่ให้ผลลัพธ์ช่วงเดียวกันเปลี่ยนกลางทาง
+
+## Deterministic Replay
+
+Replay รับ completed Candles ที่เรียงต่อเนื่องแบบ UTC ผ่าน loader ที่แปลงราคาและจำนวนเป็น Decimal Input market data, Preset version, Session configuration และ funding dataset เดิมต้องให้ Entry Intents, Fills, closed Baskets, realized PnL และ JSON summary เดิมทุกครั้ง
+
+Determinism อาศัย stable ordering, deterministic identifiers, การไม่ประมวลผล Candle ซ้ำ และการไม่อ่านเวลาปัจจุบันหรือ network state ระหว่าง replay หากพบ gap ต้องหยุดแทนการเดาข้อมูลที่หาย
+
+## Boundaries
+
+Paper adapter ไม่มี credentials และไม่ส่ง Live Order Strategy, capital, Basket และ Entry Pair policies เป็นชุดเดียวกับ Live แต่ Fill model แยกจาก Live execution อย่างชัดเจน Paper Futures จำลอง funding จากข้อมูลที่บันทึก ไม่ใช้ Testnet เป็นตัวแทน safety
+
+Replay ที่ปิด Basket ได้เป็นหลักฐานของ vertical slice ด้าน Strategy และ execution timing แต่ Paper Trading Complete ยังรวม persistence, Recovery, Account Profile isolation, Paper Futures และ UI ด้วย

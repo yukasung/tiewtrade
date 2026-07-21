@@ -1,0 +1,60 @@
+---
+title: Domain
+description: คำศัพท์และกฎโดเมนที่ใช้ร่วมกันใน TiewTrade V2
+---
+
+# Domain
+
+คำศัพท์หน้านี้ใช้เป็นภาษากลางระหว่าง Product, Engineering และ Operations ชื่อภาษาอังกฤษที่กำหนดไว้ควรถูกใช้ตรงกันใน UI, audit trail และเอกสาร เพื่อไม่ให้ state เดียวกันถูกตีความเป็นคนละความหมาย
+
+## Identity และ Configuration
+
+| คำศัพท์ | ความหมาย |
+| --- | --- |
+| **Account Profile** | metadata ของ Binance Sub-account หนึ่งบัญชีและการอ้างอิง credentials ใน OS Keyring รองรับสูงสุด 5 รายการ และแต่ละรายการมี Active Bot Session ได้ไม่เกินหนึ่ง Session |
+| **Bot Session** | การทำงานหนึ่งรอบที่ตรึง Account Profile, Market Type, Mode, Preset version, Available Capital และ execution costs ไว้ด้วยกัน |
+| **Preset** | ชุดพารามิเตอร์ Strategy แบบ immutable และมี version การแก้ค่าต้องสร้าง version ใหม่โดยไม่เปลี่ยน Session ที่เริ่มไปแล้ว |
+
+Account Profile ระบุว่า Bot ทำงานในขอบเขตบัญชีใด ส่วน Bot Session ระบุ configuration ที่ใช้ตัดสินใจในช่วงเวลาหนึ่ง ทุก trading record ต้องย้อนกลับไปยังทั้งสองรายการได้
+
+## Market และ Decision
+
+| คำศัพท์ | ความหมาย |
+| --- | --- |
+| **Candle** | ข้อมูล OHLC และ volume ของ BTCUSDT ช่วง 5 นาทีที่เปิดตรงขอบเวลา UTC Strategy รับเฉพาะ completed Candle |
+| **Entry Intent** | ผลการตัดสินใจแบบ deterministic ว่าจะเปิด Entry ลำดับใดจาก signal Candle และ ATR ใด พร้อม idempotency key ก่อน execution |
+| **Entry** | ส่วนหนึ่งของ Position ที่ Bot เปิดจาก Entry Intent และได้รับการยืนยันด้วย Fill หนึ่ง Basket มีได้สูงสุด 10 Entries |
+| **Fill** | ข้อเท็จจริงว่า Order ถูกจับคู่แล้ว พร้อมราคา quantity, fee และเวลาที่ใช้ปรับ state |
+
+Entry Intent ยังไม่ใช่ Entry ที่เกิดขึ้นจริง การเปลี่ยน state ต้องอาศัย Fill เพื่อป้องกันการนับ Position จากเพียงความพยายามส่ง Order
+
+## Basket และ Lifecycle
+
+| คำศัพท์ | ความหมาย |
+| --- | --- |
+| **Basket** | กลุ่ม Entries ของรอบการสะสม Position เดียวกัน มี weighted average, quantity รวม และ Take Profit ร่วมกัน |
+| **Take Profit** | Limit สำหรับปิด Position ที่ Bot เป็นเจ้าของทั้งหมดใน Basket เมื่อ Fill แล้ว Entries ทั้งหมดปิดพร้อมกัน |
+| **Entry Pair** | การจัด Entries เป็นคู่ตามลำดับ 1–2, 3–4, 5–6, 7–8 และ 9–10 เพื่อควบคุมจังหวะเพิ่ม Position |
+| **Cooldown Month** | เดือน UTC หลัง Entry Pair ครบและ Basket ยังไม่ปิด ซึ่งห้ามเพิ่ม Entry แต่ Take Profit ยังทำงาน |
+
+Entry เดี่ยวของ Pair สามารถรอ Entry ที่สองข้ามเดือนได้ เมื่อ Pair ครบแล้วจึงเริ่มกฎ Cooldown Month การปิด Basket จะ reset Entry Pair และ Cooldown state ทำให้ Basket ใหม่เริ่มได้ทันทีแม้อยู่ในเดือน UTC เดิม
+
+## Capital และ Execution
+
+| คำศัพท์ | ความหมาย |
+| --- | --- |
+| **Trading Capital** | ส่วนของ Available Capital ที่ใช้คำนวณขนาด Entries ทั้ง 10 รายการ: Spot 80% และ Futures 50% |
+| **Reserve** | 20% ของ Spot Available Capital ที่ไม่ใช้คำนวณขนาด Entry |
+| **Collateral Buffer** | 50% ของ Futures Available Capital ที่ไม่ใช้สร้าง Entry ใหม่ แต่เป็นเงินที่ผู้ใช้ยอมเสี่ยงเพื่อเลื่อน liquidation |
+| **Paper** | Mode ที่ใช้ conservative candle fill และข้อมูลที่ตรึงไว้เพื่อ replay ผลลัพธ์เดิมโดยไม่ส่งคำสั่งจริง |
+| **Live** | Mode ที่ส่งคำสั่งผ่าน adapter เฉพาะ Spot หรือ Futures หลัง Preflight และการยืนยันจากผู้ใช้ |
+
+Business policies เหมือนกันระหว่าง Paper และ Live ความต่างอยู่ที่ execution adapter และข้อกำหนด safety รอบการเชื่อมต่อ exchange
+
+## Recovery และ Reconciliation
+
+**Recovery** คือกระบวนการเปิดโปรแกรมแล้วโหลด Bot Session, Basket, Entry, Order และ Fill จาก SQLite ก่อนตัดสินใจว่าจะ Resume ได้หรือไม่
+
+**Reconciliation** คือการเปรียบเทียบ local state กับ exchange state สำหรับ Live Session หากข้อมูลไม่ตรงกัน ระบบบล็อก Entry ใหม่และรอให้ผู้ใช้แก้ไข โดยไม่ยกเลิก Order หรือ rewrite state อัตโนมัติ
+
+Recovery จัดการการกลับมาจาก state ที่บันทึกไว้ ส่วน Reconciliation พิสูจน์ว่า state นั้นสอดคล้องกับ exchange ทั้งสองคำจึงสัมพันธ์กันแต่ไม่ใช้แทนกัน

@@ -1,20 +1,43 @@
 ---
 title: Overview
-description: จุดเริ่มต้นสำหรับเอกสารอ้างอิง TiewTrade V2
+description: ภาพรวมระบบและเส้นทางอ่านเอกสาร TiewTrade V2
 ---
 
-# TiewTrade V2 Reference
+# TiewTrade V2
 
-เอกสารสำหรับ Product และ Engineering ของ Binance Trading Bot แบบ Paper-first ในช่วง Internal Alpha
+TiewTrade V2 คือ Desktop Binance Trading Bot สำหรับ Internal Alpha ที่เน้นความถูกต้อง การตรวจสอบย้อนหลัง การกู้คืน และการป้องกันคำสั่งซ้ำ ระบบรองรับ BTCUSDT จาก completed candle 5 นาทีแบบ UTC และเริ่มพิสูจน์พฤติกรรมทั้งหมดใน Paper ก่อนเปิด Live ตามลำดับที่ควบคุมได้
 
-> Source file: `PRODUCT.md`  
-> Last reviewed date: 2026-07-21
+## ภาพรวมระบบ
 
-## เริ่มอ่านจากที่ใด
+```mermaid
+flowchart LR
+    A[Completed Candle 5m] --> B[RSI Step Grid]
+    B --> C[Entry Intent]
+    C --> D[Policy Checks]
+    D --> E[Execution Adapter]
+    E --> F[Fill and Basket]
+    F --> G[Take Profit]
+    G --> H[Persistence and UI]
+    H -. Recovery .-> D
+```
 
-- [Product](/product) — ขอบเขตและสิ่งที่ไม่ทำ
-- [Documentation Roadmap](/work-plan) — ขอบเขต หัวข้อเอกสาร และลำดับการส่งมอบ
-- Domain — คำศัพท์ที่ใช้ร่วมกัน (DEV-83)
-- Architecture — module ownership และ dependency rules (DEV-84)
-- Strategy และ Safety — กฎการเทรดและ safety policies (DEV-85)
-- Delivery และ Decisions — milestones และ ADR (DEV-86)
+แผนภาพแสดงเส้นทางหลักตั้งแต่รับ Candle ที่ปิดสมบูรณ์ ไปจนถึงการสร้าง Entry, อัปเดต Basket และแสดงผล โดย state ที่บันทึกไว้จะถูกนำกลับมาตรวจสอบก่อน Resume หลังเปิดโปรแกรมใหม่
+
+ข้อมูลตลาดต้องต่อเนื่องและไม่ซ้ำก่อนถึง Strategy เมื่อเกิดสัญญาณ ระบบยังต้องผ่าน capital, Entry Pair, Cooldown Month และ safety policies ก่อนเรียก execution adapter ทุกผลลัพธ์สำคัญผูกกับ Account Profile และ Bot Session เพื่ออธิบายย้อนหลังได้
+
+## เส้นทางการอ่าน
+
+- เริ่มจาก [Product](/product) เพื่อเข้าใจขอบเขตและ Delivery Gates
+- อ่าน [Domain](/domain) ก่อนเอกสารเชิงเทคนิคเพื่อใช้คำศัพท์ชุดเดียวกัน
+- อ่าน [Architecture](/architecture) และ [Trading Process](/trading-process) เพื่อเห็น ownership และลำดับการทำงานครบเส้นทาง
+- เจาะ business rules ที่ [Strategy](/strategy), [Basket Lifecycle](/basket-lifecycle), [Entry Pair & Cooldown](/entry-pair-cooldown) และ [Capital Allocation](/capital-allocation)
+- เปรียบเทียบ execution และ safety ที่ [Paper Trading](/paper-trading), [Live Safety](/live-safety) และ [Recovery](/recovery)
+- ปิดท้ายด้วย [Delivery](/delivery) และ [Decisions](/decisions) เพื่อเข้าใจลำดับส่งมอบและเหตุผลของข้อกำหนดสำคัญ
+
+ถ้าต้องการตามรอยคำสั่งซื้อขายหนึ่งรายการ ให้อ่าน Trading Process แล้วตามลิงก์ไปยัง Strategy, Basket และ execution mode ที่เกี่ยวข้อง ถ้าต้องการประเมินความพร้อมก่อนเปิด Live ให้เริ่มที่ Product, Live Safety, Recovery และ Delivery
+
+## หลักความปลอดภัย
+
+Paper และ Live ใช้ strategy, capital และ lifecycle policies ชุดเดียวกัน แต่แยก execution adapters ออกจากกันอย่างชัดเจน ไม่มีการเปลี่ยนเป็น Live อัตโนมัติ และไม่มีการใช้ Testnet แทนการพิสูจน์ safety
+
+เมื่อข้อมูลไม่สดหรือ state ระหว่างเครื่องกับ exchange ไม่ตรงกัน ระบบหยุดสร้าง Entry ใหม่แบบ fail closed แต่ไม่ยกเลิก Take Profit หรือแก้ state เอง การ Resume เกิดขึ้นได้หลังข้อมูลต่อเนื่องและ Reconciliation ผ่านเท่านั้น

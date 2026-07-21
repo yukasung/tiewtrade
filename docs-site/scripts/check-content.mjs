@@ -8,9 +8,66 @@ import remarkMdx from 'remark-mdx'
 const siteRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const markdownParser = unified().use(remarkParse).use(remarkMdx)
 
-export const pages = {}
+export const pages = {
+  'content/index.mdx': {
+    headings: ['ภาพรวมระบบ', 'เส้นทางการอ่าน', 'หลักความปลอดภัย'],
+    diagrams: 1
+  },
+  'content/product.mdx': {
+    headings: ['ขอบเขต Internal Alpha', 'Delivery Gates', 'Risk Policy', 'สิ่งที่ไม่อยู่ในขอบเขต'],
+    diagrams: 1
+  },
+  'content/domain.mdx': {
+    headings: ['Identity และ Configuration', 'Market และ Decision', 'Basket และ Lifecycle', 'Capital และ Execution', 'Recovery และ Reconciliation'],
+    diagrams: 0
+  },
+  'content/architecture.mdx': {
+    headings: ['Module Ownership', 'Dependency Direction', 'Paper และ Live Boundaries', 'Persistence และ UI'],
+    diagrams: 2
+  },
+  'content/trading-process.mdx': {
+    headings: ['จาก Candle ถึง Entry Intent', 'จาก Fill ถึง Basket Take Profit', 'Persistence และ Audit Trail', 'Fail-closed Paths'],
+    diagrams: 2
+  },
+  'content/strategy.mdx': {
+    headings: ['Versioned Preset', 'Signal Lifecycle', 'Deterministic Entry Intent', 'Completed Candle Contract'],
+    diagrams: 1
+  },
+  'content/basket-lifecycle.mdx': {
+    headings: ['Weighted Average', 'Take Profit', 'State Transitions', 'หลัง Basket ปิด'],
+    diagrams: 1
+  },
+  'content/entry-pair-cooldown.mdx': {
+    headings: ['Pair Sequence', 'UTC Month Boundary', 'ระหว่าง Cooldown Month', 'การประเมินสิทธิ์ Entry'],
+    diagrams: 2
+  },
+  'content/capital-allocation.mdx': {
+    headings: ['Spot 80/20', 'Futures 50/50', 'ตัวอย่าง 200,000 USDT', 'Policy Checks'],
+    diagrams: 1
+  },
+  'content/paper-trading.mdx': {
+    headings: ['Candle Timing', 'Execution Costs', 'Deterministic Replay', 'Boundaries'],
+    diagrams: 1
+  },
+  'content/live-safety.mdx': {
+    headings: ['Live Activation', 'Execution Boundaries', 'Stale Data Fail Closed', 'Operational Guardrails'],
+    diagrams: 2
+  },
+  'content/recovery.mdx': {
+    headings: ['Stop Session', 'Startup Recovery', 'Mismatch Handling', 'Resume Conditions'],
+    diagrams: 2
+  },
+  'content/delivery.mdx': {
+    headings: ['Delivery Order', 'Paper Trading Complete', 'Live Spot', 'Live Futures', 'Vertical-slice Quality Gates'],
+    diagrams: 1
+  },
+  'content/decisions.mdx': {
+    headings: ['Paper-first Desktop Product', 'Feature-first Modular Monolith', 'Consumer-owned Interfaces', 'Shared Policies, Separate Execution', 'Completed Candle และ UTC', 'Conservative Paper Fill', 'Durable State และ Secret Boundary', 'Fail Closed on Uncertainty'],
+    diagrams: 0
+  }
+}
 
-const forbidden = /linear\.app|\bDEV-\d+\b|Source file:|Last reviewed date:|Main Issue|Sub-issues/i
+const forbidden = /\bLinear\b|linear\.app|\bDEV-\d+\b|Source file|Last reviewed date|Main Issue|Sub-?issues?|docs\/superpowers\//i
 const unicodeLetterOrNumber = /[\p{L}\p{N}]/u
 
 function hasMeaningfulText(node) {

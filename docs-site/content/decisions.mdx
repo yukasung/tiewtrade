@@ -1,0 +1,72 @@
+---
+title: Decisions
+description: การตัดสินใจหลักและเหตุผลของ TiewTrade V2
+---
+
+# Decisions
+
+หน้านี้สรุปการตัดสินใจที่กำหนดรูปแบบระบบปัจจุบัน เพื่อให้ผู้อ่านเข้าใจเหตุผลและผลตามมา ไม่ได้เพิ่มสถานะหรือเอกสารการตัดสินใจที่ไม่มีอยู่
+
+## Paper-first Desktop Product
+
+**การตัดสินใจ:** ส่งมอบ local desktop application สำหรับ Internal Alpha โดยทำ Paper Trading ให้ครบก่อน Live Spot และ Live Futures
+
+**เหตุผล:** ผู้ใช้กลุ่มเล็กต้องการ auditability และ Recovery มากกว่าความกว้างของฟีเจอร์ Paper ช่วยพิสูจน์ business rules และ end-to-end flow โดยไม่ส่ง Order จริง
+
+**ผลตามมา:** macOS เป็นแพลตฟอร์มแรก, UI ภาษาอังกฤษ, ไม่มี Web/Mobile/Cloud Sync และ Live ทุกระดับมี gate กับการอนุมัติแยก
+
+## Feature-first Modular Monolith
+
+**การตัดสินใจ:** ใช้ application เดียวที่แบ่ง module ตาม product capability และ ownership
+
+**เหตุผล:** ระบบรองรับ Binance, BTCUSDT และ Strategy เดียวในช่วงนี้ Monolith ลด operational complexity ขณะที่ module boundaries ยังทำให้ policies ทดสอบและเปลี่ยน adapter ได้
+
+**ผลตามมา:** ไม่แบ่ง service ตาม technical layer และไม่สร้าง generic registry, factory หรือ base class ก่อนมี consumer จริงอย่างน้อยสองแบบ
+
+## Consumer-owned Interfaces
+
+**การตัดสินใจ:** Interface อยู่ใน module ที่ใช้ capability และ integration เป็นผู้ implement
+
+**เหตุผล:** Consumer รู้ contract ขั้นต่ำที่ business flow ต้องการ วิธีนี้กันรายละเอียด SDK, database และ UI ออกจาก policies
+
+**ผลตามมา:** Paper, fake, Binance และ SQLite adapters พึ่ง contract ด้านใน Dependency ไม่ไหลจาก business rules ไปหา integration
+
+## Shared Policies, Separate Execution
+
+**การตัดสินใจ:** Paper และ Live ใช้ Strategy, capital, Basket และ lifecycle policies ชุดเดียวกัน แต่ใช้ execution adapters แยก และแยก Spot จาก Futures
+
+**เหตุผล:** ผล Paper ต้องสะท้อนกฎเดียวกับ Live ขณะเดียวกัน Fill model, account facts และ failure modes แตกต่างกัน
+
+**ผลตามมา:** Testnet ไม่ถูกใช้แทน Live safety และ fake adapters ต้องพิสูจน์ Preflight, idempotency, Reconciliation กับ shutdown ก่อนเปิด Live
+
+## Completed Candle และ UTC
+
+**การตัดสินใจ:** Strategy รับเฉพาะ completed Candle 5 นาที และใช้ UTC กับ Candle, Entry Pair และ Cooldown Month
+
+**เหตุผล:** กำจัดความกำกวมจาก Candle ที่ยังเปลี่ยนค่าและ timezone ของเครื่อง ทำให้ replay กับ lifecycle deterministic
+
+**ผลตามมา:** Market Data ต้อง backfill gap, deduplicate และหยุด Entry ใหม่เมื่อข้อมูลไม่ต่อเนื่อง
+
+## Conservative Paper Fill
+
+**การตัดสินใจ:** Signal ที่ Candle N Fill Entry ที่เปิดของ N+1 และ Take Profit เริ่มมีสิทธิ์หลัง Fill Candle
+
+**เหตุผล:** OHLC ไม่บอกลำดับราคา intrabar การไม่ยอมให้ Entry กับ Take Profit Fill ใน Candle เดียวกันลด look-ahead bias
+
+**ผลตามมา:** Replay อาจ conservative กว่าตลาดจริง แต่ทำซ้ำและตรวจสอบได้จาก dataset เดิม
+
+## Durable State และ Secret Boundary
+
+**การตัดสินใจ:** เก็บ non-secret operational state ใน SQLite และเก็บ API key/secret ใน OS Keyring เท่านั้น
+
+**เหตุผล:** Recovery ต้องมี durable audit trail แต่ secret ไม่ควรปรากฏใน database, logs หรือ source control
+
+**ผลตามมา:** ทุก trading record ผูก Account Profile กับ Bot Session ขณะที่ persistence เก็บเพียง credential reference ไม่เก็บค่า secret
+
+## Fail Closed on Uncertainty
+
+**การตัดสินใจ:** เมื่อ market data ไม่สดหรือ Reconciliation ไม่ผ่าน ระบบบล็อก Entry ใหม่และรอการแก้ไขจากผู้ใช้
+
+**เหตุผล:** การเดาหรือแก้ state อัตโนมัติอาจสร้าง Order ซ้ำหรือทำให้ local Position ต่างจาก exchange
+
+**ผลตามมา:** Take Profit เดิมยังคงทำงาน แต่ Recovery ห้ามยกเลิก Order, เปิด Basket หรือ rewrite state เอง

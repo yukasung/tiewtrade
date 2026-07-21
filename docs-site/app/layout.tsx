@@ -22,7 +22,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <Layout
           navbar={<Navbar logo={<strong>TiewTrade Reference</strong>} />}
           pageMap={await getPageMap()}
-          docsRepositoryBase="https://github.com/yukasung/tiewtrade/tree/main/docs-site"
           footer={<Footer>TiewTrade Internal Alpha</Footer>}
         >
           {children}

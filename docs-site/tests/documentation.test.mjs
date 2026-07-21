@@ -1,9 +1,53 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { mkdtemp, mkdir, writeFile } from 'node:fs/promises'
+import { mkdtemp, mkdir, readFile, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
-import { validateDocumentation } from '../scripts/check-content.mjs'
+import { pages, validateDocumentation } from '../scripts/check-content.mjs'
+
+const expectedPages = [
+  'content/index.mdx',
+  'content/product.mdx',
+  'content/domain.mdx',
+  'content/architecture.mdx',
+  'content/trading-process.mdx',
+  'content/strategy.mdx',
+  'content/basket-lifecycle.mdx',
+  'content/entry-pair-cooldown.mdx',
+  'content/capital-allocation.mdx',
+  'content/paper-trading.mdx',
+  'content/live-safety.mdx',
+  'content/recovery.mdx',
+  'content/delivery.mdx',
+  'content/decisions.mdx'
+]
+
+test('production documentation registers every page and satisfies its content contract', async () => {
+  assert.deepEqual(Object.keys(pages), expectedPages)
+  assert.deepEqual(await validateDocumentation(), [])
+})
+
+test('navigation lists all documentation routes in process order', async () => {
+  const meta = await readFile(new URL('../content/_meta.ts', import.meta.url), 'utf8')
+  const navigationKeys = [...meta.matchAll(/^  (?:'([^']+)'|([a-z-]+)):/gm)]
+    .map((match) => match[1] ?? match[2])
+
+  assert.deepEqual(navigationKeys, expectedPages.map((page) => path.basename(page, '.mdx')))
+})
+
+test('package commands use the content gate and README documents the local workflow', async () => {
+  const packageJson = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8'))
+  assert.equal(packageJson.scripts.build, 'npm run check:content && next build')
+  assert.equal(packageJson.scripts['check:references'], undefined)
+
+  const layout = await readFile(new URL('../app/layout.tsx', import.meta.url), 'utf8')
+  assert.doesNotMatch(layout, /docsRepositoryBase/)
+
+  const readme = await readFile(new URL('../README.md', import.meta.url), 'utf8')
+  for (const command of ['npm install', 'npm run dev', 'npm test', 'npm run check:content', 'npm run build']) {
+    assert.match(readme, new RegExp(command.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')))
+  }
+})
 
 test('documentation validator accepts a complete reader-facing page', async () => {
   const root = await mkdtemp(path.join(tmpdir(), 'tiewtrade-docs-'))
@@ -80,12 +124,23 @@ for (const [description, block] of [
   })
 }
 
-test('documentation validator rejects tracker and source metadata', async () => {
-  const root = await mkdtemp(path.join(tmpdir(), 'tiewtrade-docs-'))
-  await mkdir(path.join(root, 'content'))
-  await writeFile(path.join(root, 'content', 'guide.mdx'), 'Source file: `PRODUCT.md`\n')
-  const contract = { 'content/guide.mdx': { headings: [], diagrams: 0 } }
-  assert.deepEqual(await validateDocumentation(root, contract), [
-    'content/guide.mdx: contains forbidden tracker or source metadata'
-  ])
-})
+for (const forbiddenContent of [
+  'Source file: `PRODUCT.md`',
+  'Last reviewed date: 2026-07-21',
+  'Linear',
+  'https://linear.app/example',
+  'DEV-82',
+  'Main Issue',
+  'Sub-issue',
+  'docs/superpowers/example.md'
+]) {
+  test(`documentation validator rejects forbidden reader-facing content: ${forbiddenContent}`, async () => {
+    const root = await mkdtemp(path.join(tmpdir(), 'tiewtrade-docs-'))
+    await mkdir(path.join(root, 'content'))
+    await writeFile(path.join(root, 'content', 'guide.mdx'), `${forbiddenContent}\n`)
+    const contract = { 'content/guide.mdx': { headings: [], diagrams: 0 } }
+    assert.deepEqual(await validateDocumentation(root, contract), [
+      'content/guide.mdx: contains forbidden tracker or source metadata'
+    ])
+  })
+}
