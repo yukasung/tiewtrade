@@ -34,6 +34,18 @@ test('overview and product link readers to the domain glossary', async () => {
   assert.match(product, /\]\(\/domain\)/)
 })
 
+test('architecture, delivery, and decisions cross-link their reference pages', async () => {
+  const architecture = await readFile(new URL('../content/architecture.mdx', import.meta.url), 'utf8')
+  const delivery = await readFile(new URL('../content/delivery.mdx', import.meta.url), 'utf8')
+  const decisions = await readFile(new URL('../content/decisions.mdx', import.meta.url), 'utf8')
+  assert.match(architecture, /\]\(\/domain\)/)
+  assert.match(architecture, /\]\(\/decisions\)/)
+  assert.match(delivery, /\]\(\/architecture\)/)
+  assert.match(delivery, /\]\(\/product\)/)
+  assert.match(decisions, /\]\(\/architecture\)/)
+  assert.match(decisions, /\]\(\/product\)/)
+})
+
 test('navigation lists all documentation routes in process order', async () => {
   const meta = await readFile(new URL('../content/_meta.ts', import.meta.url), 'utf8')
   const navigationKeys = [...meta.matchAll(/^  (?:'([^']+)'|([a-z-]+)):/gm)]

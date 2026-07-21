@@ -1,11 +1,11 @@
 ---
 title: Architecture
-description: Module ownership และ dependency rules ของ TiewTrade V2
+description: Module ownership และ dependency rules ของ TiewTrade
 ---
 
 # Architecture
 
-TiewTrade V2 ใช้ feature-first modular monolith: deploy เป็น desktop application เดียว แต่แบ่ง module ตามความสามารถของผลิตภัณฑ์ แต่ละ module เป็นเจ้าของกฎและ state ของตนเองอย่างชัดเจน แนวทางนี้เหมาะกับ Internal Alpha ที่รองรับ Binance และกลยุทธ์เดียว เพราะลด distributed-system failure modes โดยยังรักษาขอบเขตสำหรับการทดสอบและเปลี่ยน adapter
+TiewTrade ใช้ feature-first modular monolith: deploy เป็น desktop application เดียว แต่แบ่ง module ตามความสามารถของผลิตภัณฑ์ แต่ละ module เป็นเจ้าของกฎและ state ของตนเองอย่างชัดเจน แนวทางนี้เหมาะกับ Internal Alpha ที่รองรับ Binance และกลยุทธ์เดียว เพราะลด distributed-system failure modes โดยยังรักษาขอบเขตสำหรับการทดสอบและเปลี่ยน adapter
 
 ## Module Ownership
 
@@ -37,6 +37,8 @@ flowchart TB
 แผนภาพเน้น ownership ของ flow: Market Data รับผิดชอบความต่อเนื่องของ Candle, Strategy สร้าง Entry Intent, Trading Lifecycle บังคับ capital/Basket/Entry Pair, Execution จัดการ Order และ Fill, Persistence เก็บ audit trail และ Recovery ตัดสินเงื่อนไข Resume
 
 Module ไม่ควรอ่าน table หรือแก้ state ของ module อื่นโดยตรง การสื่อสารข้ามขอบเขตใช้ API หรือ type ที่มีความหมายในโดเมน เช่น completed Candle, Entry Intent, execution request และ Fill
+
+คำศัพท์ของ boundary เหล่านี้อ้างอิง [Domain Reference](/domain) และเหตุผลของการเลือก modular monolith อยู่ใน [Decisions](/decisions)
 
 ## Dependency Direction
 
