@@ -9,7 +9,7 @@ export const metadata: Metadata = {
     default: 'TiewTrade Reference',
     template: '%s — TiewTrade Reference'
   },
-  description: 'Internal product and engineering reference for TiewTrade V2'
+  description: 'Internal product and engineering reference for TiewTrade'
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {

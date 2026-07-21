@@ -1,7 +1,7 @@
 {
   "name": "tiewtrade-docs",
   "version": "1.0.0",
-  "description": "Internal product and engineering reference for TiewTrade V2",
+  "description": "Internal product and engineering reference for TiewTrade",
   "private": true,
   "scripts": {
     "dev": "next dev",
