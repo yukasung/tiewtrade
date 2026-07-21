@@ -27,6 +27,13 @@ test('production documentation registers every page and satisfies its content co
   assert.deepEqual(await validateDocumentation(), [])
 })
 
+test('overview and product link readers to the domain glossary', async () => {
+  const overview = await readFile(new URL('../content/index.mdx', import.meta.url), 'utf8')
+  const product = await readFile(new URL('../content/product.mdx', import.meta.url), 'utf8')
+  assert.match(overview, /\]\(\/domain\)/)
+  assert.match(product, /\]\(\/domain\)/)
+})
+
 test('navigation lists all documentation routes in process order', async () => {
   const meta = await readFile(new URL('../content/_meta.ts', import.meta.url), 'utf8')
   const navigationKeys = [...meta.matchAll(/^  (?:'([^']+)'|([a-z-]+)):/gm)]
