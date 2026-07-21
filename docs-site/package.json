@@ -1,0 +1,30 @@
+{
+  "name": "tiewtrade-docs",
+  "version": "1.0.0",
+  "description": "Internal product and engineering reference for TiewTrade V2",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "npm run check:references && next build",
+    "start": "next start",
+    "test": "node --test tests/*.test.mjs",
+    "check:references": "node scripts/check-source-references.mjs"
+  },
+  "dependencies": {
+    "next": "^16.2.10",
+    "nextra": "^4.6.1",
+    "nextra-theme-docs": "^4.6.1",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7"
+  },
+  "devDependencies": {
+    "@types/mdx": "^2.0.14",
+    "@types/node": "^26.1.1",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "typescript": "^6.0.3"
+  },
+  "overrides": {
+    "zod": "4.1.12"
+  }
+}
