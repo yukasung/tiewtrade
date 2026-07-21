@@ -16,14 +16,14 @@ test('documentation roadmap organizes every Linear reference by topic', async ()
   }
 
   for (const heading of [
-    'เป้าหมายและขอบเขต',
-    'Foundation และ Product Overview',
+    'Goals and Scope',
+    'Foundation and Product Overview',
     'Domain Reference',
     'Architecture Reference',
-    'Strategy และ Trading Safety',
-    'Delivery และ Decisions',
+    'Strategy and Trading Safety',
+    'Delivery and Decisions',
     'Final Verification',
-    'ลำดับการส่งมอบ'
+    'Delivery Order'
   ]) {
     assert.match(content, new RegExp(`## ${heading}`))
   }
