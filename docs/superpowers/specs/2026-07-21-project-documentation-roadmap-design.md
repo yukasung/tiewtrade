@@ -27,9 +27,15 @@
 
 ### Overview
 
-อธิบาย Product Vision, Internal Alpha scope, Paper-first delivery และแผนที่การอ่านเอกสารทั้งหมด
+อธิบายวัตถุประสงค์ของ Project Documentation และแผนที่การอ่านเอกสารทั้งหมด
 
 Diagram: high-level system flow จาก completed candle ไปสู่ execution, persistence และ UI
+
+### Product Overview
+
+อธิบาย Product Vision, Internal Alpha scope, supported markets, Account Profile และ Paper-first delivery gates
+
+Table: supported scope และสิ่งที่ยังไม่อยู่ใน Internal Alpha
 
 ### System Architecture
 
@@ -103,15 +109,16 @@ Diagram: recovery state machine และ reconciliation sequence
 Navigation เรียงตาม mental model ของผู้อ่าน:
 
 1. Overview
-2. System Architecture
-3. Trading Process
-4. RSI Step Grid Strategy
-5. Basket Lifecycle
-6. Entry Pair and Cooldown Month
-7. Capital Allocation
-8. Paper Trading
-9. Live Trading Safety
-10. Recovery and Reconciliation
+2. Product Overview
+3. System Architecture
+4. Trading Process
+5. RSI Step Grid Strategy
+6. Basket Lifecycle
+7. Entry Pair and Cooldown Month
+8. Capital Allocation
+9. Paper Trading
+10. Live Trading Safety
+11. Recovery and Reconciliation
 
 Overview แสดง recommended reading paths สำหรับ Product, Tester และ Developer โดยทุกหน้ามีลิงก์ไปหัวข้อก่อนหน้าและหัวข้อถัดไปตามความเกี่ยวข้อง
 
