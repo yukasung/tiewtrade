@@ -118,9 +118,22 @@ function isWorkflowValue(value) {
   return workflowValues.has(normalizedText(value).toLocaleLowerCase('en'))
 }
 
+function isStatusLabel(value) {
+  return statusLabels.has(normalizedText(value)) || normalizedText(value).toLocaleLowerCase('en') === 'status'
+}
+
+function hasWorkflowStatusParagraph(document) {
+  return document.children.some((node) => {
+    if (node.type !== 'paragraph') return false
+    const text = normalizedText(nodeText(node))
+    const match = text.match(/^(status|สถานะ)\s*:\s*(.+)$/iu)
+    return Boolean(match && isWorkflowValue(match[2]))
+  })
+}
+
 function hasWorkflowStatusHeading(document) {
   return document.children.some((node, index) => {
-    if (node.type !== 'heading' || !statusLabels.has(normalizedText(nodeText(node)))) return false
+    if (node.type !== 'heading' || !isStatusLabel(nodeText(node))) return false
     const followingBlock = document.children[index + 1]
     return followingBlock?.type === 'paragraph' && isWorkflowValue(nodeText(followingBlock))
   })
@@ -144,9 +157,12 @@ function isTableDelimiter(cells) {
 }
 
 function hasWorkflowStatusTable(content, document) {
-  const codeLines = document.children
-    .filter((node) => node.type === 'code')
-    .map((node) => [node.position?.start.line, node.position?.end.line])
+  const codeLines = []
+  const collectCodeRanges = (node) => {
+    if (node?.type === 'code') codeLines.push([node.position?.start.line, node.position?.end.line])
+    if (Array.isArray(node?.children)) node.children.forEach(collectCodeRanges)
+  }
+  collectCodeRanges(document)
   const isCodeLine = (lineNumber) => codeLines.some(([start, end]) => start <= lineNumber && lineNumber <= end)
   const lines = content.split(/\r?\n/)
 
@@ -155,7 +171,7 @@ function hasWorkflowStatusTable(content, document) {
     const headers = splitTableRow(lines[index])
     const delimiter = splitTableRow(lines[index + 1])
     if (!headers || !delimiter || headers.length !== delimiter.length || !isTableDelimiter(delimiter)) continue
-    const statusColumn = headers.findIndex((cell) => statusLabels.has(cellText(cell)))
+    const statusColumn = headers.findIndex((cell) => isStatusLabel(cellText(cell)))
     if (statusColumn < 0) continue
 
     for (let rowIndex = index + 2; rowIndex < lines.length; rowIndex += 1) {
@@ -210,7 +226,7 @@ export async function validateDocumentation(root = siteRoot, contracts = pages) 
     const parsed = documents.get(page)
     if (!parsed) continue
     const { content, document } = parsed
-    if (forbidden.test(content) || hasWorkflowStatusHeading(document) || hasWorkflowStatusTable(content, document)) {
+    if (forbidden.test(content) || hasWorkflowStatusHeading(document) || hasWorkflowStatusParagraph(document) || hasWorkflowStatusTable(content, document)) {
       failures.push(`${page}: contains forbidden tracker or source metadata`)
     }
     for (const url of findLinks(document)) {

@@ -232,6 +232,9 @@ test('documentation validator allows ordinary prose using product and architectu
 for (const [label, content] of [
   ['English workflow heading', '## Status\n\nIn Progress\n'],
   ['Thai workflow heading', '## สถานะ\n\nเสร็จแล้ว\n'],
+  ['English workflow paragraph', 'Status: Done\n'],
+  ['Thai workflow paragraph', 'สถานะ: เสร็จแล้ว\n'],
+  ['Case-insensitive workflow paragraph', 'status: done\n'],
   ['workflow status table', '| Item | Status |\n| --- | --- |\n| Documentation | Done |\n']
 ]) {
   test(`documentation validator rejects ${label}`, async () => {
@@ -244,6 +247,14 @@ for (const [label, content] of [
     ])
   })
 }
+
+test('documentation validator ignores workflow-looking tables inside nested code', async () => {
+  const root = await mkdtemp(path.join(tmpdir(), 'tiewtrade-docs-'))
+  await mkdir(path.join(root, 'content'))
+  await writeFile(path.join(root, 'content', 'guide.mdx'), '> ```text\n> | Item | Status |\n> | --- | --- |\n> | Documentation | Done |\n> ```\n')
+  const contract = { 'content/guide.mdx': { headings: [], diagrams: 0 } }
+  assert.deepEqual(await validateDocumentation(root, contract), [])
+})
 
 test('documentation validator allows domain status prose and qualified headings', async () => {
   const root = await mkdtemp(path.join(tmpdir(), 'tiewtrade-docs-'))
