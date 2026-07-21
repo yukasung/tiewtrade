@@ -27,16 +27,10 @@ function hasCodeIndentation(content, node) {
   return indentation.includes('\t') || indentation.length >= 4
 }
 
-function hasFollowingProseParagraph(content, diagram) {
-  const diagramBody = content.slice(diagram.index + diagram[0].length)
-  const closingFence = diagramBody.match(/^```[ \t]*$/m)
-  if (!closingFence) return false
-
-  const followingContent = diagramBody.slice(closingFence.index + closingFence[0].length)
-  const firstBlock = markdownParser.parse(followingContent).children[0]
-  return firstBlock?.type === 'paragraph' &&
-    !hasCodeIndentation(followingContent, firstBlock) &&
-    hasMeaningfulText(firstBlock)
+function isExplanatoryParagraph(content, node) {
+  return node?.type === 'paragraph' &&
+    !hasCodeIndentation(content, node) &&
+    hasMeaningfulText(node)
 }
 
 export async function validateDocumentation(root = siteRoot, contracts = pages) {
@@ -50,14 +44,18 @@ export async function validateDocumentation(root = siteRoot, contracts = pages) 
       continue
     }
     const content = await readFile(absolutePath, 'utf8')
+    const document = markdownParser.parse(content)
     if (forbidden.test(content)) failures.push(`${page}: contains forbidden tracker or source metadata`)
     for (const heading of contract.headings) {
       if (!content.includes(`## ${heading}`)) failures.push(`${page}: missing heading ${heading}`)
     }
-    const diagrams = [...content.matchAll(/^```mermaid[^\r\n]*\r?$/gm)]
+    const diagrams = document.children
+      .map((node, siblingIndex) => ({ node, siblingIndex }))
+      .filter(({ node }) => node.type === 'code' && node.lang === 'mermaid')
     if (diagrams.length < contract.diagrams) failures.push(`${page}: expected ${contract.diagrams} Mermaid diagrams, found ${diagrams.length}`)
     for (const [index, diagram] of diagrams.entries()) {
-      if (!hasFollowingProseParagraph(content, diagram)) {
+      const followingBlock = document.children[diagram.siblingIndex + 1]
+      if (!isExplanatoryParagraph(content, followingBlock)) {
         failures.push(`${page}: Mermaid diagram ${index + 1} must be followed by an explanatory prose paragraph`)
       }
     }

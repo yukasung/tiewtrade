@@ -82,6 +82,43 @@ test('documentation validator accepts a complete reader-facing page', async () =
   assert.deepEqual(await validateDocumentation(root, contract), [])
 })
 
+test('documentation validator detects 1-3-space-indented Mermaid fences', async () => {
+  const root = await mkdtemp(path.join(tmpdir(), 'tiewtrade-docs-'))
+  await mkdir(path.join(root, 'content'))
+  const contract = {}
+  for (const spaces of [1, 2, 3]) {
+    const page = `content/guide-${spaces}.mdx`
+    const indentation = ' '.repeat(spaces)
+    await writeFile(path.join(root, page), `${indentation}\`\`\`mermaid\nflowchart LR\nA --> B\n${indentation}\`\`\`\n\nแผนภาพลำดับการทำงาน\n`)
+    contract[page] = { headings: [], diagrams: 1 }
+  }
+  assert.deepEqual(await validateDocumentation(root, contract), [])
+})
+
+test('documentation validator detects a tilde Mermaid fence', async () => {
+  const root = await mkdtemp(path.join(tmpdir(), 'tiewtrade-docs-'))
+  await mkdir(path.join(root, 'content'))
+  await writeFile(path.join(root, 'content', 'guide.mdx'), '~~~mermaid\nflowchart LR\nA --> B\n~~~\n\nแผนภาพลำดับการทำงาน\n')
+  const contract = { 'content/guide.mdx': { headings: [], diagrams: 1 } }
+  assert.deepEqual(await validateDocumentation(root, contract), [])
+})
+
+test('documentation validator detects a longer-backtick Mermaid fence', async () => {
+  const root = await mkdtemp(path.join(tmpdir(), 'tiewtrade-docs-'))
+  await mkdir(path.join(root, 'content'))
+  await writeFile(path.join(root, 'content', 'guide.mdx'), '````mermaid\nflowchart LR\nA --> B\n````\n\nแผนภาพลำดับการทำงาน\n')
+  const contract = { 'content/guide.mdx': { headings: [], diagrams: 1 } }
+  assert.deepEqual(await validateDocumentation(root, contract), [])
+})
+
+test('documentation validator does not count mermaidx as Mermaid', async () => {
+  const root = await mkdtemp(path.join(tmpdir(), 'tiewtrade-docs-'))
+  await mkdir(path.join(root, 'content'))
+  await writeFile(path.join(root, 'content', 'guide.mdx'), '```mermaidx\nflowchart LR\nA --> B\n```\n\n## Next Step\n')
+  const contract = { 'content/guide.mdx': { headings: [], diagrams: 0 } }
+  assert.deepEqual(await validateDocumentation(root, contract), [])
+})
+
 test('documentation validator rejects a Mermaid diagram without a following prose paragraph', async () => {
   const root = await mkdtemp(path.join(tmpdir(), 'tiewtrade-docs-'))
   await mkdir(path.join(root, 'content'))
@@ -161,16 +198,10 @@ function hasCodeIndentation(content, node) {
   return indentation.includes('\t') || indentation.length >= 4
 }
 
-function hasFollowingProseParagraph(content, diagram) {
-  const diagramBody = content.slice(diagram.index + diagram[0].length)
-  const closingFence = diagramBody.match(/^```[ \t]*$/m)
-  if (!closingFence) return false
-
-  const followingContent = diagramBody.slice(closingFence.index + closingFence[0].length)
-  const firstBlock = markdownParser.parse(followingContent).children[0]
-  return firstBlock?.type === 'paragraph' &&
-    !hasCodeIndentation(followingContent, firstBlock) &&
-    hasMeaningfulText(firstBlock)
+function isExplanatoryParagraph(content, node) {
+  return node?.type === 'paragraph' &&
+    !hasCodeIndentation(content, node) &&
+    hasMeaningfulText(node)
 }
 
 export async function validateDocumentation(root = siteRoot, contracts = pages) {
@@ -184,14 +215,18 @@ export async function validateDocumentation(root = siteRoot, contracts = pages) 
       continue
     }
     const content = await readFile(absolutePath, 'utf8')
+    const document = markdownParser.parse(content)
     if (forbidden.test(content)) failures.push(`${page}: contains forbidden tracker or source metadata`)
     for (const heading of contract.headings) {
       if (!content.includes(`## ${heading}`)) failures.push(`${page}: missing heading ${heading}`)
     }
-    const diagrams = [...content.matchAll(/^```mermaid[^\r\n]*\r?$/gm)]
+    const diagrams = document.children
+      .map((node, siblingIndex) => ({ node, siblingIndex }))
+      .filter(({ node }) => node.type === 'code' && node.lang === 'mermaid')
     if (diagrams.length < contract.diagrams) failures.push(`${page}: expected ${contract.diagrams} Mermaid diagrams, found ${diagrams.length}`)
     for (const [index, diagram] of diagrams.entries()) {
-      if (!hasFollowingProseParagraph(content, diagram)) {
+      const followingBlock = document.children[diagram.siblingIndex + 1]
+      if (!isExplanatoryParagraph(content, followingBlock)) {
         failures.push(`${page}: Mermaid diagram ${index + 1} must be followed by an explanatory prose paragraph`)
       }
     }
@@ -216,12 +251,12 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
 
 Run: `cd docs-site && npm test`
 
-Expected: documentation validator tests สิบรายการและ source-reference tests เดิมสองรายการ PASS; AST contract ยอมรับ paragraph ที่มี Unicode text/inlineCode descendant รวม inline emphasis/link และปฏิเสธ non-paragraph blocks, image-only paragraphs, MDX expressions, MDX ESM, full/shortcut reference images และ indented code; production page registry remains empty until Task 2 adds the first complete pages
+Expected: documentation validator tests สิบสี่รายการและ source-reference tests เดิมสองรายการ PASS; full-document AST contract ตรวจ root-level Mermaid code nodes รวม fence ที่เยื้อง 1–3 spaces, tilde fence และ longer-backtick fence โดยไม่รวม `mermaidx`; sibling ถัดไปต้องเป็น paragraph ที่มี Unicode text/inlineCode descendant รวม inline emphasis/link และปฏิเสธ non-paragraph blocks, image-only paragraphs, MDX expressions, MDX ESM, full/shortcut reference images และ indented code; production page registry remains empty until Task 2 adds the first complete pages
 
 - [ ] **Step 6: Commit the contract**
 
 ```bash
-git add docs-site/package.json docs-site/scripts docs-site/tests
+git add docs-site/package.json docs-site/package-lock.json docs-site/scripts docs-site/tests
 git commit -m "test: define project documentation contract"
 ```
 
