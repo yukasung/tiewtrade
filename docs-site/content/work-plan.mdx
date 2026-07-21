@@ -1,0 +1,129 @@
+---
+title: Documentation Work Plan
+description: Main Issue, Sub-issues และ dependency order สำหรับเว็บไซต์เอกสารภายใน
+---
+
+# Documentation Work Plan
+
+หน้านี้เป็น snapshot ของรายละเอียดงานจาก Linear สำหรับการสร้าง Internal Product & Engineering Reference Docs เพื่อให้ผู้อ่านเห็นขอบเขตและลำดับการส่งมอบร่วมกับเอกสารอ้างอิง
+
+> Source file: `docs/superpowers/specs/2026-07-21-internal-reference-docs-design.md`  
+> Source file: `docs/superpowers/plans/2026-07-21-internal-reference-docs.md`  
+> Last reviewed date: 2026-07-21
+
+> **หมายเหตุ:** Linear เป็น Issue Tracker หลัก ข้อมูลในหน้านี้ไม่ใช่การ sync สถานะแบบ real-time หากสถานะหรือ acceptance criteria ขัดกับ Linear ให้ใช้ Linear เป็นข้อมูลล่าสุด
+
+## Main Issue
+
+### [DEV-81 — Internal Product & Engineering Reference Docs](https://linear.app/chainarong/issue/DEV-81/internal-product-and-engineering-reference-docs)
+
+**เป้าหมาย:** สร้างเว็บไซต์เอกสารภายในสำหรับ Product และ Engineering ด้วย Nextra โดยใช้ Markdown ที่ repository เป็น Source of Truth และใช้ Linear สำหรับติดตามงาน
+
+**ขอบเขต:**
+
+- แยก Nextra application ไว้ใน `docs-site/`
+- จัดทำ 8 reference routes: Overview, Product, Domain, Architecture, Strategy, Safety, Delivery และ Decisions
+- อ้างอิง `PRODUCT.md`, `CONTEXT.md`, `ARCHITECTURE.md`, `PROJECT_PLAN.md` และ `docs/adr/`
+- ตรวจ source references และ production build ในเครื่อง
+- ไม่รวม deployment และ CI ในระยะนี้
+
+**Acceptance criteria:**
+
+- Sub-issues ทั้งหมดเสร็จและผ่าน acceptance criteria
+- Nextra ไม่กลายเป็น Source of Truth ชุดที่สอง
+- ทุกหน้าแสดง source path และวันที่ตรวจสอบล่าสุด
+- Test, source-reference check และ production build ผ่าน
+- ตรวจ responsive layout ที่ 1440×900 และ 390×844
+- ไม่มี credentials, secrets หรือข้อมูลบัญชีจริงในเอกสารหรือ build output
+
+## Sub-issues
+
+### [DEV-82 — สร้าง Nextra foundation และ Product Overview](https://linear.app/chainarong/issue/DEV-82/สราง-nextra-foundation-และ-product-overview)
+
+**สิ่งที่สร้าง:** Nextra 4 App Router foundation, navigation, Overview, Product และ automated source-reference validator
+
+**Acceptance criteria:**
+
+- `docs-site/` มีคำสั่ง dev, test, reference check และ build
+- Overview และ Product สอดคล้องกับ `PRODUCT.md`
+- Navigation, metadata และ source references ตรวจสอบได้
+- ไม่มี deployment หรือ CI configuration
+
+**Blocked by:** ไม่มี
+
+### [DEV-83 — กำหนด Domain Glossary และ Domain Reference](https://linear.app/chainarong/issue/DEV-83/กำหนด-domain-glossary-และ-domain-reference)
+
+**สิ่งที่สร้าง:** หน้า Domain จาก `CONTEXT.md` โดยใช้คำศัพท์ Basket, Entry, Entry Pair, Cooldown Month, Paper และ Live ชุดเดียวกันทั้งระบบ
+
+**Acceptance criteria:**
+
+- ครอบคลุมคำศัพท์และกฎโดเมนสำคัญ
+- ไม่สร้างคำใหม่ที่มีความหมายซ้ำกัน
+- มี source metadata และ internal links จาก Overview/Product
+- Reference test และ production build ผ่าน
+
+**Blocked by:** DEV-82
+
+### [DEV-84 — กำหนด Modular Monolith Architecture](https://linear.app/chainarong/issue/DEV-84/กำหนด-modular-monolith-architecture)
+
+**สิ่งที่สร้าง:** หน้า Architecture จาก `ARCHITECTURE.md` และ ADR-0001 ครอบคลุม feature-first modular monolith, module ownership, dependency rules และ consumer-owned interfaces
+
+**Acceptance criteria:**
+
+- แสดง module boundaries และ dependency direction
+- อธิบายเหตุผลของ Binance-specific modular monolith
+- อธิบายว่า integrations เป็นผู้ implement interface ของ consumer module
+- เชื่อมโยง Domain และ Decisions พร้อมผ่าน reference test/build
+
+**Blocked by:** DEV-83
+
+### [DEV-85 — จัดทำ Strategy และ Trading Safety Reference](https://linear.app/chainarong/issue/DEV-85/จดทำ-strategy-และ-trading-safety-reference)
+
+**สิ่งที่สร้าง:** หน้า Strategy และ Safety สำหรับ RSI Step Grid, Basket, Entry Pair, capital allocation และ Paper/Live safety
+
+**Acceptance criteria:**
+
+- Strategy ครอบคลุม completed candle 5m และ lifecycle หลัก
+- Safety แยก Paper และ Live execution adapters
+- ครอบคลุม preflight, stale-data fail-closed, reconciliation และ recovery
+- ระบุการใช้ Paper/fake adapters และไม่ใช้ Testnet แทน Live safety
+- Source metadata, reference test และ production build ผ่าน
+
+**Blocked by:** DEV-83 และ DEV-84
+
+### [DEV-86 — จัดทำ Delivery Roadmap และ Decisions Reference](https://linear.app/chainarong/issue/DEV-86/จดทำ-delivery-roadmap-และ-decisions-reference)
+
+**สิ่งที่สร้าง:** หน้า Delivery จาก `PROJECT_PLAN.md` และหน้า Decisions จาก `docs/adr/`
+
+**Acceptance criteria:**
+
+- แสดง milestones, delivery order และ quality gates
+- เชื่อมโยง DEV-74 ถึง DEV-80 โดยไม่ทำ status synchronization
+- ทำ ADR index โดยไม่แทนที่ ADR ต้นฉบับ
+- มี source metadata, internal links, reference test และ production build
+
+**Blocked by:** DEV-84
+
+### [DEV-87 — ตรวจความสอดคล้องและ Production Build](https://linear.app/chainarong/issue/DEV-87/ตรวจความสอดคลองและ-production-build)
+
+**สิ่งที่สร้าง:** Final verification สำหรับ 8 routes, navigation, source references, responsive layout และ production build
+
+**Acceptance criteria:**
+
+- Routes และ internal links เปิดได้ครบ
+- ทุกหน้ามี source metadata ที่ตรวจอัตโนมัติได้
+- ไม่มี secrets หรือข้อมูลบัญชีจริง
+- ตรวจ desktop 1440×900 และ mobile 390×844
+- Test, reference check, build และ `git diff --check` ผ่าน
+- README อธิบาย install, local run, test และ build
+
+**Blocked by:** DEV-85 และ DEV-86
+
+## Dependency order
+
+```text
+DEV-82 → DEV-83 → DEV-84 ─┬→ DEV-85 ─┐
+                          └→ DEV-86 ─┴→ DEV-87
+```
+
+ลำดับเริ่มต้นคือ Foundation → Domain → Architecture จากนั้น Strategy/Safety และ Delivery/Decisions ทำต่อได้ตาม dependency ก่อนรวมที่ Final Verification

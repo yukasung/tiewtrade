@@ -8,7 +8,11 @@ const repositoryRoot = path.resolve(siteRoot, '..')
 
 export const references = {
   'content/index.mdx': ['PRODUCT.md'],
-  'content/product.mdx': ['PRODUCT.md']
+  'content/product.mdx': ['PRODUCT.md'],
+  'content/work-plan.mdx': [
+    'docs/superpowers/specs/2026-07-21-internal-reference-docs-design.md',
+    'docs/superpowers/plans/2026-07-21-internal-reference-docs.md'
+  ]
 }
 
 export async function validateSourceReferences() {
