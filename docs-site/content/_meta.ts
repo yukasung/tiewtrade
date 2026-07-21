@@ -1,4 +1,5 @@
 export default {
+  '*': { theme: { timestamp: false } },
   index: 'Overview',
   product: 'Product',
   domain: 'Domain',

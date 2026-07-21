@@ -23,6 +23,8 @@ RSI และ ATR ใช้ Wilder smoothing และไม่ส่ง indicat
 
 ## Signal Lifecycle
 
+State diagram นี้แยก warm-up, reset, confirmation และการรอ Fill เพื่อให้เห็นว่าแต่ละ signal ถูกใช้เพียงครั้งเดียว
+
 ```mermaid
 stateDiagram-v2
     [*] --> WaitingForWarmup

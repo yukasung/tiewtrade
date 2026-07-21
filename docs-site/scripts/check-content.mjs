@@ -23,7 +23,7 @@ export const pages = {
   },
   'content/architecture.mdx': {
     headings: ['Module Ownership', 'Dependency Direction', 'Paper และ Live Boundaries', 'Persistence และ UI'],
-    diagrams: 2
+    diagrams: 3
   },
   'content/trading-process.mdx': {
     headings: ['จาก Candle ถึง Entry Intent', 'จาก Fill ถึง Basket Take Profit', 'Persistence และ Audit Trail', 'Fail-closed Paths'],
@@ -39,7 +39,7 @@ export const pages = {
   },
   'content/entry-pair-cooldown.mdx': {
     headings: ['Pair Sequence', 'UTC Month Boundary', 'ระหว่าง Cooldown Month', 'การประเมินสิทธิ์ Entry'],
-    diagrams: 2
+    diagrams: 3
   },
   'content/capital-allocation.mdx': {
     headings: ['Spot 80/20', 'Futures 50/50', 'ตัวอย่าง 200,000 USDT', 'Policy Checks'],
@@ -67,8 +67,22 @@ export const pages = {
   }
 }
 
-const forbidden = /\bLinear\b|linear\.app|\bDEV-\d+\b|Source file|Last reviewed date|Main Issue|Sub-?issues?|\b(?:PRODUCT|CONTEXT|ARCHITECTURE|PROJECT_PLAN)\.md\b|\.superpowers\/|docs\/superpowers\/|docs\/adr\//i
+const forbidden = /\bLinear\b|linear\.app|\bDEV-\d+\b|Source file|Last reviewed date|(?:^|\n)\s*(?:Status|สถานะ)\s*:\s*[^\n]+|Main Issue|Sub-?issues?|\b(?:PRODUCT|CONTEXT|ARCHITECTURE|PROJECT_PLAN)\.md\b|\.superpowers\/|docs\/superpowers\/|docs\/adr\//i
 const unicodeLetterOrNumber = /[\p{L}\p{N}]/u
+
+function routeForPage(page) {
+  const name = page.replace(/^content\//, '').replace(/\.mdx$/, '')
+  if (name === 'index') return '/'
+  return `/${name.replace(/\/index$/, '')}`
+}
+
+function findLinks(node, links = []) {
+  if (node?.type === 'link') links.push(node.url)
+  if (Array.isArray(node?.children)) {
+    for (const child of node.children) findLinks(child, links)
+  }
+  return links
+}
 
 function hasMeaningfulText(node) {
   if ((node.type === 'text' || node.type === 'inlineCode') && unicodeLetterOrNumber.test(node.value)) return true
@@ -92,6 +106,7 @@ function isExplanatoryParagraph(content, node) {
 
 export async function validateDocumentation(root = siteRoot, contracts = pages) {
   const failures = []
+  const registeredRoutes = new Set(Object.keys(contracts).map(routeForPage))
   for (const [page, contract] of Object.entries(contracts)) {
     const absolutePath = path.join(root, page)
     try {
@@ -103,6 +118,12 @@ export async function validateDocumentation(root = siteRoot, contracts = pages) 
     const content = await readFile(absolutePath, 'utf8')
     const document = markdownParser.parse(content)
     if (forbidden.test(content)) failures.push(`${page}: contains forbidden tracker or source metadata`)
+    for (const url of findLinks(document)) {
+      if (!url.startsWith('/') || url.startsWith('//')) continue
+      const pathOnly = url.split(/[?#]/, 1)[0]
+      const route = pathOnly.length > 1 ? pathOnly.replace(/\/$/, '') : pathOnly
+      if (!registeredRoutes.has(route)) failures.push(`${page}: link points to missing route ${route}`)
+    }
     for (const heading of contract.headings) {
       if (!content.includes(`## ${heading}`)) failures.push(`${page}: missing heading ${heading}`)
     }

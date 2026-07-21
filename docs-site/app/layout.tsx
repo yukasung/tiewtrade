@@ -22,6 +22,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <Layout
           navbar={<Navbar logo={<strong>TiewTrade Reference</strong>} />}
           pageMap={await getPageMap()}
+          editLink={null}
+          feedback={{ content: null, link: undefined }}
           footer={<Footer>TiewTrade Internal Alpha</Footer>}
         >
           {children}

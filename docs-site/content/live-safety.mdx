@@ -9,6 +9,8 @@ Live ไม่ใช่ Mode ที่ระบบเปลี่ยนจาก
 
 ## Live Activation
 
+Sequence การเปิด Live แสดงว่า Preflight เกิดก่อนการยืนยันครั้งสุดท้ายของผู้ใช้เสมอ
+
 ```mermaid
 sequenceDiagram
     participant U as User
@@ -38,6 +40,8 @@ Live Spot และ Live Futures ใช้ execution adapters แยกกัน
 ระบบไม่ใช้ Master Account API และไม่ใช้ Binance Testnet การพัฒนาและ verification ใช้ Paper, fake transport และ contract tests ก่อนขออนุมัติทดสอบ Live ด้วยบัญชีที่ผู้ใช้กำหนด
 
 ## Stale Data Fail Closed
+
+State diagram นี้แสดงเส้นทางจากข้อมูลสดไปยัง backfill, Reconciliation และการ Resume หรือ Block
 
 ```mermaid
 stateDiagram-v2

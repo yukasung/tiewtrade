@@ -31,6 +31,7 @@ test('navigation lists all documentation routes in process order', async () => {
   const meta = await readFile(new URL('../content/_meta.ts', import.meta.url), 'utf8')
   const navigationKeys = [...meta.matchAll(/^  (?:'([^']+)'|([a-z-]+)):/gm)]
     .map((match) => match[1] ?? match[2])
+    .filter((key) => key !== '*')
 
   assert.deepEqual(navigationKeys, expectedPages.map((page) => path.basename(page, '.mdx')))
 })
@@ -42,6 +43,16 @@ test('package commands use the content gate and README documents the local workf
 
   const layout = await readFile(new URL('../app/layout.tsx', import.meta.url), 'utf8')
   assert.doesNotMatch(layout, /docsRepositoryBase/)
+  assert.match(layout, /editLink=\{null\}/)
+  assert.match(layout, /feedback=\{\{\s*content:\s*null,\s*link:\s*undefined\s*\}\}/)
+
+  const meta = await readFile(new URL('../content/_meta.ts', import.meta.url), 'utf8')
+  assert.match(meta, /['"]\*['"]:\s*\{\s*theme:\s*\{\s*timestamp:\s*false\s*\}\s*\}/)
+
+  const notFound = await readFile(new URL('../app/not-found.tsx', import.meta.url), 'utf8')
+  assert.match(notFound, /from ['"]next\/link['"]/)
+  assert.match(notFound, /href=['"]\/['"]/)
+  assert.doesNotMatch(notFound, /NotFoundPage|github|https?:\/\/|usePathname|document\.referrer|location\./i)
 
   const readme = await readFile(new URL('../README.md', import.meta.url), 'utf8')
   for (const command of ['npm install', 'npm run dev', 'npm test', 'npm run check:content', 'npm run build']) {
@@ -52,8 +63,38 @@ test('package commands use the content gate and README documents the local workf
 test('documentation validator accepts a complete reader-facing page', async () => {
   const root = await mkdtemp(path.join(tmpdir(), 'tiewtrade-docs-'))
   await mkdir(path.join(root, 'content'))
-  await writeFile(path.join(root, 'content', 'guide.mdx'), '## Process\n\n```mermaid\nflowchart LR\nA --> B\n```\n\nแผนภาพนี้อธิบาย **ลำดับ** จาก [A ไป B](/process)\n')
+  await writeFile(path.join(root, 'content', 'guide.mdx'), '## Process\n\n```mermaid\nflowchart LR\nA --> B\n```\n\nแผนภาพนี้อธิบาย **ลำดับ** จาก [A ไป B](/guide)\n')
   const contract = { 'content/guide.mdx': { headings: ['Process'], diagrams: 1 } }
+  assert.deepEqual(await validateDocumentation(root, contract), [])
+})
+
+test('documentation validator accepts root and named registered routes', async () => {
+  const root = await mkdtemp(path.join(tmpdir(), 'tiewtrade-docs-'))
+  await mkdir(path.join(root, 'content'))
+  await writeFile(path.join(root, 'content', 'index.mdx'), '[Home](/) [Known page](/known)\n')
+  await writeFile(path.join(root, 'content', 'known.mdx'), '# Known\n')
+  const contract = {
+    'content/index.mdx': { headings: [], diagrams: 0 },
+    'content/known.mdx': { headings: [], diagrams: 0 }
+  }
+  assert.deepEqual(await validateDocumentation(root, contract), [])
+})
+
+test('documentation validator reports the exact missing root-relative route', async () => {
+  const root = await mkdtemp(path.join(tmpdir(), 'tiewtrade-docs-'))
+  await mkdir(path.join(root, 'content'))
+  await writeFile(path.join(root, 'content', 'guide.mdx'), '[Missing page](/missing)\n')
+  const contract = { 'content/guide.mdx': { headings: [], diagrams: 0 } }
+  assert.deepEqual(await validateDocumentation(root, contract), [
+    'content/guide.mdx: link points to missing route /missing'
+  ])
+})
+
+test('documentation validator ignores external, mailto and hash-only links', async () => {
+  const root = await mkdtemp(path.join(tmpdir(), 'tiewtrade-docs-'))
+  await mkdir(path.join(root, 'content'))
+  await writeFile(path.join(root, 'content', 'guide.mdx'), '[External](https://example.com) [Mail](mailto:test@example.com) [Section](#section)\n')
+  const contract = { 'content/guide.mdx': { headings: [], diagrams: 0 } }
   assert.deepEqual(await validateDocumentation(root, contract), [])
 })
 
@@ -127,6 +168,8 @@ for (const [description, block] of [
 for (const forbiddenContent of [
   'Source file: `PRODUCT.md`',
   'Last reviewed date: 2026-07-21',
+  'Status: Done',
+  'สถานะ: เสร็จแล้ว',
   'Linear',
   'https://linear.app/example',
   'DEV-82',
