@@ -23,6 +23,21 @@ test('documentation validator rejects a Mermaid diagram without a following pros
   ])
 })
 
+for (const [name, block] of [
+  ['horizontal rule', '---'],
+  ['standalone image', '![Trading flow](flow.png)']
+]) {
+  test(`documentation validator rejects a ${name} after a Mermaid diagram`, async () => {
+    const root = await mkdtemp(path.join(tmpdir(), 'tiewtrade-docs-'))
+    await mkdir(path.join(root, 'content'))
+    await writeFile(path.join(root, 'content', 'guide.mdx'), `## Process\n\n\`\`\`mermaid\nflowchart LR\nA --> B\n\`\`\`\n\n${block}\n`)
+    const contract = { 'content/guide.mdx': { headings: ['Process'], diagrams: 1 } }
+    assert.deepEqual(await validateDocumentation(root, contract), [
+      'content/guide.mdx: Mermaid diagram 1 must be followed by an explanatory prose paragraph'
+    ])
+  })
+}
+
 test('documentation validator rejects tracker and source metadata', async () => {
   const root = await mkdtemp(path.join(tmpdir(), 'tiewtrade-docs-'))
   await mkdir(path.join(root, 'content'))

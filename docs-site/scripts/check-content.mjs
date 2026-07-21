@@ -8,6 +8,8 @@ export const pages = {}
 
 const forbidden = /linear\.app|\bDEV-\d+\b|Source file:|Last reviewed date:|Main Issue|Sub-issues/i
 const nonProseBlock = /^(?:#{1,6}(?:\s|$)|```|~~~|>|[-+*]\s|\d+[.)]\s|\||<)/
+const horizontalRule = /^(?:(?:\*[ \t]*){3,}|(?:-[ \t]*){3,}|(?:_[ \t]*){3,})$/
+const standaloneImage = /^!\[[^\]\r\n]*\]\([^\r\n]*\)$/
 
 function hasFollowingProseParagraph(content, diagram) {
   const diagramBody = content.slice(diagram.index + diagram[0].length)
@@ -16,7 +18,10 @@ function hasFollowingProseParagraph(content, diagram) {
 
   const followingContent = diagramBody.slice(closingFence.index + closingFence[0].length)
   const firstBlock = followingContent.trimStart().split(/\r?\n[ \t]*\r?\n/, 1)[0].trim()
-  return firstBlock.length > 0 && !nonProseBlock.test(firstBlock)
+  return firstBlock.length > 0 &&
+    !nonProseBlock.test(firstBlock) &&
+    !horizontalRule.test(firstBlock) &&
+    !standaloneImage.test(firstBlock)
 }
 
 export async function validateDocumentation(root = siteRoot, contracts = pages) {
