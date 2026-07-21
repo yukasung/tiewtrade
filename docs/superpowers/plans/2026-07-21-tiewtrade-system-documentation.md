@@ -1,0 +1,421 @@
+# TiewTrade System Documentation Implementation Plan
+
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+
+**Goal:** สร้าง Project Documentation แบบ self-contained ที่อธิบายพฤติกรรมและ process ของ TiewTrade V2 ผ่าน 11 routes พร้อม Mermaid diagrams โดยไม่มี metadata หรือข้อมูลจาก Issue Tracker ใน reader-facing content
+
+**Architecture:** `docs-site/content/` เก็บ MDX ที่แบ่งตาม mental model ของผู้อ่าน ส่วน `scripts/check-content.mjs` ตรวจ route contract, required headings, Mermaid diagrams, internal links และ forbidden tracker/source metadata ก่อน Nextra build ทุกครั้ง Nextra 4 compile Mermaid code fences เป็น diagram โดยไม่เพิ่ม diagram dependency ใหม่
+
+**Tech Stack:** Next.js 16, React 19, Nextra 4 App Router, `nextra-theme-docs`, MDX, Mermaid, Node.js built-in test runner, npm
+
+## Global Constraints
+
+- Reader-facing content ใช้ภาษาไทย โดยคงชื่อ module, class, function, parameter และคำศัพท์ Binance เป็นภาษาอังกฤษ
+- ห้ามแสดง Issue Tracker URL, issue identifier, status, `Source file` หรือ `Last reviewed date`
+- ทุก process diagram ต้องมีคำอธิบายเป็นข้อความประกอบ
+- ใช้ completed candle 5 นาทีและ UTC ตาม Product Definition
+- ห้ามเปลี่ยน business rules ของ TiewTrade V2
+- ห้ามใส่ API credentials, account identifiers จริง หรือข้อมูลบัญชีจริง
+- ไม่มี deployment, CI, authentication, analytics หรือ external search service
+- แต่ละ task ใช้ failing test → minimal content/configuration → passing test → commit
+
+## File Map
+
+```text
+docs-site/
+├── README.md
+├── app/layout.tsx
+├── content/
+│   ├── _meta.ts
+│   ├── index.mdx
+│   ├── product.mdx
+│   ├── architecture.mdx
+│   ├── trading-process.mdx
+│   ├── strategy.mdx
+│   ├── basket-lifecycle.mdx
+│   ├── entry-pair-cooldown.mdx
+│   ├── capital-allocation.mdx
+│   ├── paper-trading.mdx
+│   ├── live-safety.mdx
+│   └── recovery.mdx
+├── package.json
+├── scripts/check-content.mjs
+└── tests/documentation.test.mjs
+```
+
+`content/work-plan.mdx`, `scripts/check-source-references.mjs` และ `tests/source-references.test.mjs` ถูกลบ เพราะ contract แบบ source-reference ไม่ตรงกับ Project Documentation ใหม่
+
+---
+
+### Task 1: Reader-facing documentation contract
+
+**Files:**
+- Create: `docs-site/tests/documentation.test.mjs`
+- Create: `docs-site/scripts/check-content.mjs`
+- Modify: `docs-site/package.json`
+- Delete: `docs-site/tests/source-references.test.mjs`
+- Delete: `docs-site/scripts/check-source-references.mjs`
+
+**Interfaces:**
+- Produces: `validateDocumentation(): Promise<string[]>`
+- Produces: npm scripts `test`, `check:content`, `build`
+
+- [ ] **Step 1: Write the failing documentation contract test**
+
+```javascript
+import test from 'node:test'
+import assert from 'node:assert/strict'
+import { validateDocumentation } from '../scripts/check-content.mjs'
+
+test('project documentation satisfies the reader-facing contract', async () => {
+  assert.deepEqual(await validateDocumentation(), [])
+})
+```
+
+- [ ] **Step 2: Run the test and verify RED**
+
+Run: `cd docs-site && npm test`
+
+Expected: FAIL with `ERR_MODULE_NOT_FOUND` for `scripts/check-content.mjs`
+
+- [ ] **Step 3: Implement the content validator**
+
+```javascript
+import { access, readFile } from 'node:fs/promises'
+import { fileURLToPath } from 'node:url'
+import path from 'node:path'
+
+const siteRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
+
+export const pages = {
+  'content/index.mdx': { headings: ['How the System Works', 'Recommended Reading'], diagrams: 1 },
+  'content/product.mdx': { headings: ['Internal Alpha Scope', 'Delivery Gates'], diagrams: 0 },
+  'content/architecture.mdx': { headings: ['Module Boundaries', 'Dependency Direction'], diagrams: 2 },
+  'content/trading-process.mdx': { headings: ['Trading Pipeline', 'Entry to Take Profit'], diagrams: 2 },
+  'content/strategy.mdx': { headings: ['Entry Signal', 'Strategy State'], diagrams: 1 },
+  'content/basket-lifecycle.mdx': { headings: ['Basket Take Profit', 'Basket States'], diagrams: 1 },
+  'content/entry-pair-cooldown.mdx': { headings: ['Entry Pairs', 'Cooldown Month'], diagrams: 2 },
+  'content/capital-allocation.mdx': { headings: ['Spot Allocation', 'Futures Allocation'], diagrams: 1 },
+  'content/paper-trading.mdx': { headings: ['Conservative Fill Model', 'Replay Determinism'], diagrams: 1 },
+  'content/live-safety.mdx': { headings: ['Preflight', 'Stale Market Data'], diagrams: 2 },
+  'content/recovery.mdx': { headings: ['Stop Session', 'Startup Recovery'], diagrams: 2 }
+}
+
+const forbidden = /linear\.app|\bDEV-\d+\b|Source file:|Last reviewed date:|Main Issue|Sub-issues/i
+
+export async function validateDocumentation() {
+  const failures = []
+  for (const [page, contract] of Object.entries(pages)) {
+    const absolutePath = path.join(siteRoot, page)
+    try {
+      await access(absolutePath)
+    } catch {
+      failures.push(`${page}: missing page`)
+      continue
+    }
+    const content = await readFile(absolutePath, 'utf8')
+    if (forbidden.test(content)) failures.push(`${page}: contains forbidden tracker or source metadata`)
+    for (const heading of contract.headings) {
+      if (!content.includes(`## ${heading}`)) failures.push(`${page}: missing heading ${heading}`)
+    }
+    const diagrams = content.match(/```mermaid/g)?.length ?? 0
+    if (diagrams < contract.diagrams) failures.push(`${page}: expected ${contract.diagrams} Mermaid diagrams, found ${diagrams}`)
+  }
+  return failures
+}
+
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  const failures = await validateDocumentation()
+  if (failures.length) {
+    console.error(failures.join('\n'))
+    process.exitCode = 1
+  }
+}
+```
+
+- [ ] **Step 4: Update npm scripts**
+
+Set `check:content` to `node scripts/check-content.mjs` and set `build` to `npm run check:content && next build`. Keep `test` as `node --test tests/*.test.mjs`.
+
+- [ ] **Step 5: Run the test and verify meaningful RED**
+
+Run: `cd docs-site && npm test`
+
+Expected: FAIL listing the missing routes and forbidden metadata in existing pages
+
+- [ ] **Step 6: Commit the contract**
+
+```bash
+git add docs-site/package.json docs-site/scripts docs-site/tests
+git commit -m "test: define project documentation contract"
+```
+
+---
+
+### Task 2: Overview, Product Overview, and navigation
+
+**Files:**
+- Modify: `docs-site/content/_meta.ts`
+- Modify: `docs-site/content/index.mdx`
+- Modify: `docs-site/content/product.mdx`
+- Modify: `docs-site/app/layout.tsx`
+- Delete: `docs-site/content/work-plan.mdx`
+
+**Interfaces:**
+- Consumes: route contract from Task 1
+- Produces: navigation order and entry points used by all later pages
+
+- [ ] **Step 1: Add navigation assertions to the test**
+
+Read `_meta.ts` and assert that it contains these keys in order: `index`, `product`, `architecture`, `trading-process`, `strategy`, `basket-lifecycle`, `entry-pair-cooldown`, `capital-allocation`, `paper-trading`, `live-safety`, `recovery`. Assert it does not contain `work-plan`.
+
+- [ ] **Step 2: Run the test and verify RED**
+
+Run: `cd docs-site && npm test`
+
+Expected: FAIL because navigation still contains `work-plan`
+
+- [ ] **Step 3: Replace navigation**
+
+```typescript
+export default {
+  index: 'Overview',
+  product: 'Product Overview',
+  architecture: 'System Architecture',
+  'trading-process': 'Trading Process',
+  strategy: 'RSI Step Grid Strategy',
+  'basket-lifecycle': 'Basket Lifecycle',
+  'entry-pair-cooldown': 'Entry Pair & Cooldown',
+  'capital-allocation': 'Capital Allocation',
+  'paper-trading': 'Paper Trading',
+  'live-safety': 'Live Trading Safety',
+  recovery: 'Recovery & Reconciliation'
+}
+```
+
+- [ ] **Step 4: Rewrite Overview as the reading map**
+
+Use `# TiewTrade System Guide`, explain the Paper-first Internal Alpha purpose, add `## How the System Works` with a Mermaid `flowchart LR` connecting `Completed Candle → Strategy → Entry Intent → Execution → Basket → Take Profit`, and add `## Recommended Reading` with paths for Product owner, Tester, and Developer.
+
+- [ ] **Step 5: Rewrite Product Overview**
+
+Use `# Product Overview`, `## Internal Alpha Scope`, and `## Delivery Gates`. Include a scope table for BTCUSDT, completed candle 5m, UTC, RSI Step Grid, maximum five Account Profiles, one Active Bot Session per profile, Paper Spot/Futures, and sequential gates `Paper → Live Spot → Live Futures`. Include an explicit non-goals list for Login, License, Cloud Sync, Stop Loss, Maximum Drawdown hard limit, Max Daily Loss, and automatic Paper-to-Live switching.
+
+- [ ] **Step 6: Remove repository edit metadata from layout**
+
+Remove `docsRepositoryBase` from `<Layout>` so the reader interface does not present source-file navigation.
+
+- [ ] **Step 7: Run tests**
+
+Run: `cd docs-site && npm test`
+
+Expected: Remaining failures only identify pages planned in Tasks 3–5
+
+- [ ] **Step 8: Commit foundation content**
+
+```bash
+git add docs-site/app/layout.tsx docs-site/content
+git commit -m "docs: add system guide foundation"
+```
+
+---
+
+### Task 3: Architecture and end-to-end Trading Process
+
+**Files:**
+- Create: `docs-site/content/architecture.mdx`
+- Create: `docs-site/content/trading-process.mdx`
+
+**Interfaces:**
+- Produces: shared system terminology and pipeline referenced by strategy, execution, and recovery pages
+
+- [ ] **Step 1: Run the contract test and capture RED for both pages**
+
+Run: `cd docs-site && npm test`
+
+Expected: FAIL with missing `architecture.mdx` and `trading-process.mdx`
+
+- [ ] **Step 2: Create System Architecture**
+
+Document `## Module Boundaries` with responsibilities for accounts, market data, strategy, trading, paper, live, integrations, UI, runtime, and observability. Add a `flowchart LR` showing UI/runtime depending on feature modules and integrations implementing consumer-owned boundaries. Document `## Dependency Direction` and add a second diagram comparing shared business policies with separate Paper, Live Spot, and Live Futures adapters.
+
+- [ ] **Step 3: Create Trading Process**
+
+Document `## Trading Pipeline` with a flowchart covering completed-candle validation, deduplication, strategy evaluation, lifecycle/risk checks, Entry Intent, execution, Fill, Basket update, Take Profit recalculation, and persistence/UI notification. Document `## Entry to Take Profit` with a sequence diagram between Market Data, Strategy, Trading Engine, Executor, Basket, Persistence, and UI.
+
+- [ ] **Step 4: Run tests and build these MDX diagrams**
+
+Run: `cd docs-site && npm test && npm run build`
+
+Expected: Architecture and Trading Process contract failures disappear; build compiles Mermaid code fences
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add docs-site/content/architecture.mdx docs-site/content/trading-process.mdx
+git commit -m "docs: explain architecture and trading process"
+```
+
+---
+
+### Task 4: Strategy, Basket lifecycle, Entry Pair, and Capital Allocation
+
+**Files:**
+- Create: `docs-site/content/strategy.mdx`
+- Create: `docs-site/content/basket-lifecycle.mdx`
+- Create: `docs-site/content/entry-pair-cooldown.mdx`
+- Create: `docs-site/content/capital-allocation.mdx`
+
+**Interfaces:**
+- Consumes: Trading Process terminology from Task 3
+- Produces: complete business-rule reference used by Paper and Live pages
+
+- [ ] **Step 1: Run the contract test and capture RED for four pages**
+
+Run: `cd docs-site && npm test`
+
+Expected: FAIL listing the four missing pages
+
+- [ ] **Step 2: Create RSI Step Grid Strategy**
+
+Document `## Entry Signal` with RSI(14) reset below 30, entry above 50, bullish candle, close above reset close, maximum 10 Entries, completed candle 5m only, and reset consumption after Fill. Add `## Strategy State` with a state diagram `Waiting for Reset → Armed → Entry Intent → Filled → Waiting for Reset`. Explain ATR(14) and `weighted_average_entry_price + ATR × 3` without treating an incomplete candle as input.
+
+- [ ] **Step 3: Create Basket Lifecycle**
+
+Document `## Basket Take Profit` with recalculation after every Fill, Binance tick-size rounding, bot-owned position coverage, fees in realized PnL, and immediate new Basket eligibility after close. Add `## Basket States` with `Empty → Open → TP Active → Closed`, plus transitions for additional Entry Fill and recovery mismatch.
+
+- [ ] **Step 4: Create Entry Pair and Cooldown Month**
+
+Document `## Entry Pairs` as pairs 1–2 through 9–10 and add a state diagram for first Entry, completed Pair, month boundary, cooldown, and next Pair. Document `## Cooldown Month` with a Mermaid timeline showing that a lone first Entry may receive its second Entry next month, while a completed Pair held across month end forces the following month to cooldown.
+
+- [ ] **Step 5: Create Capital Allocation**
+
+Document `## Spot Allocation` as 80% Trading Capital and 20% Spot Reserve, divided equally across 10 Entries. Document `## Futures Allocation` as 50% Trading Capital and 50% Collateral Buffer, Cross Margin, leverage cap 5x, and 10 equal initial-margin budgets. Add a flowchart and a table using a clearly fictional 200,000 USDT example without implying guaranteed liquidation protection.
+
+- [ ] **Step 6: Run tests and build**
+
+Run: `cd docs-site && npm test && npm run build`
+
+Expected: Contract failures remain only for Paper Trading, Live Safety, and Recovery
+
+- [ ] **Step 7: Commit**
+
+```bash
+git add docs-site/content/strategy.mdx docs-site/content/basket-lifecycle.mdx docs-site/content/entry-pair-cooldown.mdx docs-site/content/capital-allocation.mdx
+git commit -m "docs: document strategy and lifecycle rules"
+```
+
+---
+
+### Task 5: Paper Trading, Live Safety, and Recovery
+
+**Files:**
+- Create: `docs-site/content/paper-trading.mdx`
+- Create: `docs-site/content/live-safety.mdx`
+- Create: `docs-site/content/recovery.mdx`
+
+**Interfaces:**
+- Consumes: shared pipeline and business rules from Tasks 3–4
+- Produces: complete execution and operational safety documentation
+
+- [ ] **Step 1: Run the contract test and capture RED for three pages**
+
+Run: `cd docs-site && npm test`
+
+Expected: FAIL listing the three missing pages
+
+- [ ] **Step 2: Create Paper Trading**
+
+Document `## Conservative Fill Model` with a sequence diagram: signal on completed candle N, Entry Fill at candle N+1 open, Take Profit eligible from the candle after Fill, plus fee/slippage/funding capture. Document `## Replay Determinism` and explain identical market data, Preset version, fee, slippage, and funding configuration producing the same replay result.
+
+- [ ] **Step 3: Create Live Trading Safety**
+
+Document `## Preflight` with a flowchart for credentials in OS Keyring, permissions, selected Account Profile, symbol rules, balance, open orders/positions, margin mode, leverage, reconciliation, and explicit confirmation. Document `## Stale Market Data` with a fail-closed decision diagram: block new Entries, preserve exchange-hosted Take Profit, alert, bounded retry, backfill, deduplicate, validate continuity, then resume.
+
+- [ ] **Step 4: Create Recovery and Reconciliation**
+
+Document `## Stop Session` as stopping new Entries while preserving state and Take Profit. Document `## Startup Recovery` with a state diagram and sequence diagram covering load local state, fetch exchange state for Live, compare, resume only on match, and block Entries/report mismatch without automatic cancellation or state mutation.
+
+- [ ] **Step 5: Run tests and build**
+
+Run: `cd docs-site && npm test && npm run build`
+
+Expected: PASS with all 11 pages satisfying headings, diagrams, and forbidden-content checks
+
+- [ ] **Step 6: Commit**
+
+```bash
+git add docs-site/content/paper-trading.mdx docs-site/content/live-safety.mdx docs-site/content/recovery.mdx
+git commit -m "docs: explain execution safety and recovery"
+```
+
+---
+
+### Task 6: Local usage, links, responsive rendering, and final verification
+
+**Files:**
+- Create: `docs-site/README.md`
+- Modify: `docs-site/tests/documentation.test.mjs`
+- Modify: `docs-site/scripts/check-content.mjs`
+
+**Interfaces:**
+- Consumes: all routes produced by Tasks 2–5
+- Produces: verified local Project Documentation package
+
+- [ ] **Step 1: Add failing internal-link assertions**
+
+Extend `validateDocumentation()` to extract Markdown links beginning with `/`, map `/` to `content/index.mdx` and other routes to `content/<route>.mdx`, and report missing targets. Add an assertion that every non-home page is linked from `content/index.mdx` or `_meta.ts`.
+
+- [ ] **Step 2: Run test and verify RED if any link is missing**
+
+Run: `cd docs-site && npm test`
+
+Expected: FAIL with exact missing route; correct content links rather than weakening the check
+
+- [ ] **Step 3: Create local usage README**
+
+Document Node/npm prerequisites and exact commands:
+
+```bash
+cd docs-site
+npm install
+npm run dev
+npm test
+npm run check:content
+npm run build
+```
+
+Explain that the site opens at `http://localhost:3000` unless Next selects another port.
+
+- [ ] **Step 4: Run full automated verification**
+
+Run: `cd docs-site && npm test && npm run check:content && npm run build`
+
+Expected: all commands exit 0
+
+- [ ] **Step 5: Verify browser rendering**
+
+Start `npm run dev`, open every route, confirm Mermaid diagrams render rather than appearing as raw code, and inspect `/`, `/trading-process`, `/entry-pair-cooldown`, `/live-safety`, and `/recovery` at 1440×900 and 390×844. Confirm navigation, tables, diagrams, and Thai copy do not overflow.
+
+- [ ] **Step 6: Scan forbidden content and secrets**
+
+Run:
+
+```bash
+rg -n -i 'linear\.app|\bDEV-[0-9]+\b|Source file:|Last reviewed date:|api[_ -]?key|secret' docs-site/content
+```
+
+Expected: no matches
+
+- [ ] **Step 7: Check repository diff**
+
+Run: `git diff --check && git status --short`
+
+Expected: no whitespace errors; only intended documentation changes
+
+- [ ] **Step 8: Commit final verification support**
+
+```bash
+git add docs-site/README.md docs-site/scripts/check-content.mjs docs-site/tests/documentation.test.mjs
+git commit -m "docs: verify project documentation site"
+```
