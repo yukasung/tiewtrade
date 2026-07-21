@@ -1,52 +1,30 @@
 import { access, readFile } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
+import { unified } from 'unified'
+import remarkParse from 'remark-parse'
+import remarkMdx from 'remark-mdx'
 
 const siteRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
+const markdownParser = unified().use(remarkParse).use(remarkMdx)
 
 export const pages = {}
 
 const forbidden = /linear\.app|\bDEV-\d+\b|Source file:|Last reviewed date:|Main Issue|Sub-issues/i
-const horizontalRule = /^(?:(?:\*[ \t]*){3,}|(?:-[ \t]*){3,}|(?:_[ \t]*){3,})$/
-const standaloneInlineImage = /^!\[[^\]\r\n]*\]\([^\r\n]*\)$/
-const standaloneReferenceImage = /^!\[[^\]\r\n]*\]\[[^\]\r\n]*\]$/
-const referenceDefinition = /^\[[^\]\r\n]+\]:[ \t]+\S/
 const unicodeLetterOrNumber = /[\p{L}\p{N}]/u
 
-function firstNonblankBlock(content) {
-  const lines = content.replace(/\r\n?/g, '\n').split('\n')
-  const start = lines.findIndex(line => line.trim().length > 0)
-  if (start === -1) return ''
-
-  let end = start
-  while (end < lines.length && lines[end].trim().length > 0) end += 1
-  return lines.slice(start, end).join('\n')
+function hasMeaningfulText(node) {
+  if ((node.type === 'text' || node.type === 'inlineCode') && unicodeLetterOrNumber.test(node.value)) return true
+  return Array.isArray(node.children) && node.children.some(hasMeaningfulText)
 }
 
-function isTableDelimiter(line) {
-  const trimmed = line.trim()
-  if (!trimmed.includes('|')) return false
+function hasCodeIndentation(content, node) {
+  const offset = node.position?.start.offset
+  if (typeof offset !== 'number') return false
 
-  const cells = trimmed.replace(/^\|/, '').replace(/\|$/, '').split('|')
-  return cells.length > 0 && cells.every(cell => /^:?-{3,}:?$/.test(cell.trim()))
-}
-
-function isPlainProseParagraph(block) {
-  if (!block) return false
-
-  const lines = block.split('\n')
-  if (/^(?: {4}| {0,3}\t)/.test(lines[0])) return false
-
-  const candidate = block.replace(/^ {0,3}/, '').trimEnd()
-  const firstLine = candidate.split('\n', 1)[0]
-  if (/^(?:#{1,6}(?:[ \t]+|$)|`{3,}|~{3,}|>|[-+*][ \t]+|\d{1,9}[.)][ \t]+|\||<|\{)/.test(firstLine)) return false
-  if (horizontalRule.test(candidate)) return false
-  if (standaloneInlineImage.test(candidate) || standaloneReferenceImage.test(candidate)) return false
-  if (referenceDefinition.test(candidate)) return false
-  if (lines.length > 1 && /^(?:=+|-+)[ \t]*$/.test(lines[1].trim())) return false
-  if (lines.length > 1 && firstLine.includes('|') && isTableDelimiter(lines[1])) return false
-
-  return unicodeLetterOrNumber.test(candidate)
+  const lineStart = content.lastIndexOf('\n', offset - 1) + 1
+  const indentation = content.slice(lineStart, offset)
+  return indentation.includes('\t') || indentation.length >= 4
 }
 
 function hasFollowingProseParagraph(content, diagram) {
@@ -55,7 +33,10 @@ function hasFollowingProseParagraph(content, diagram) {
   if (!closingFence) return false
 
   const followingContent = diagramBody.slice(closingFence.index + closingFence[0].length)
-  return isPlainProseParagraph(firstNonblankBlock(followingContent))
+  const firstBlock = markdownParser.parse(followingContent).children[0]
+  return firstBlock?.type === 'paragraph' &&
+    !hasCodeIndentation(followingContent, firstBlock) &&
+    hasMeaningfulText(firstBlock)
 }
 
 export async function validateDocumentation(root = siteRoot, contracts = pages) {

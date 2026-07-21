@@ -27,8 +27,10 @@ for (const [description, block] of [
   ['a horizontal rule', '---'],
   ['a standalone image', '![Trading flow](flow.png)'],
   ['indented code', '    const explanation = true'],
-  ['a reference image', '![Trading flow][flow]'],
-  ['an MDX expression', '{diagramExplanation}']
+  ['a reference image', '![Trading flow][flow]\n\n[flow]: flow.png'],
+  ['an MDX expression', '{diagramExplanation}'],
+  ['MDX ESM', 'export const diagramExplanation = "Trading flow"'],
+  ['a shortcut reference image', '![Trading flow]\n\n[Trading flow]: flow.png']
 ]) {
   test(`documentation validator rejects ${description} after a Mermaid diagram`, async () => {
     const root = await mkdtemp(path.join(tmpdir(), 'tiewtrade-docs-'))

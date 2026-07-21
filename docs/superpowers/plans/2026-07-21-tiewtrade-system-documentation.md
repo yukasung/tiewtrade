@@ -6,7 +6,7 @@
 
 **Architecture:** `docs-site/content/` เก็บ MDX ที่แบ่งตาม mental model ของผู้อ่าน ส่วน `scripts/check-content.mjs` ตรวจ route contract, required headings, Mermaid diagrams, internal links และ forbidden tracker/source metadata ก่อน Nextra build ทุกครั้ง Nextra 4 compile Mermaid code fences เป็น diagram โดยไม่เพิ่ม diagram dependency ใหม่
 
-**Tech Stack:** Next.js 16, React 19, Nextra 4 App Router, `nextra-theme-docs`, MDX, Mermaid, Node.js built-in test runner, npm
+**Tech Stack:** Next.js 16, React 19, Nextra 4 App Router, `nextra-theme-docs`, MDX, Mermaid, unified, remark-parse, remark-mdx, Node.js built-in test runner, npm
 
 ## Global Constraints
 
@@ -55,6 +55,7 @@ Task 1 ยังเก็บ `content/work-plan.mdx`, `scripts/check-source-refe
 - Create: `docs-site/tests/documentation.test.mjs`
 - Create: `docs-site/scripts/check-content.mjs`
 - Modify: `docs-site/package.json`
+- Modify: `docs-site/package-lock.json`
 - Retain: `docs-site/tests/source-references.test.mjs`
 - Retain: `docs-site/scripts/check-source-references.mjs`
 
@@ -95,8 +96,10 @@ for (const [description, block] of [
   ['a horizontal rule', '---'],
   ['a standalone image', '![Trading flow](flow.png)'],
   ['indented code', '    const explanation = true'],
-  ['a reference image', '![Trading flow][flow]'],
-  ['an MDX expression', '{diagramExplanation}']
+  ['a reference image', '![Trading flow][flow]\n\n[flow]: flow.png'],
+  ['an MDX expression', '{diagramExplanation}'],
+  ['MDX ESM', 'export const diagramExplanation = "Trading flow"'],
+  ['a shortcut reference image', '![Trading flow]\n\n[Trading flow]: flow.png']
 ]) {
   test(`documentation validator rejects ${description} after a Mermaid diagram`, async () => {
     const root = await mkdtemp(path.join(tmpdir(), 'tiewtrade-docs-'))
@@ -132,52 +135,30 @@ Expected: FAIL with `ERR_MODULE_NOT_FOUND` for `scripts/check-content.mjs`
 import { access, readFile } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
+import { unified } from 'unified'
+import remarkParse from 'remark-parse'
+import remarkMdx from 'remark-mdx'
 
 const siteRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
+const markdownParser = unified().use(remarkParse).use(remarkMdx)
 
 export const pages = {}
 
 const forbidden = /linear\.app|\bDEV-\d+\b|Source file:|Last reviewed date:|Main Issue|Sub-issues/i
-const horizontalRule = /^(?:(?:\*[ \t]*){3,}|(?:-[ \t]*){3,}|(?:_[ \t]*){3,})$/
-const standaloneInlineImage = /^!\[[^\]\r\n]*\]\([^\r\n]*\)$/
-const standaloneReferenceImage = /^!\[[^\]\r\n]*\]\[[^\]\r\n]*\]$/
-const referenceDefinition = /^\[[^\]\r\n]+\]:[ \t]+\S/
 const unicodeLetterOrNumber = /[\p{L}\p{N}]/u
 
-function firstNonblankBlock(content) {
-  const lines = content.replace(/\r\n?/g, '\n').split('\n')
-  const start = lines.findIndex(line => line.trim().length > 0)
-  if (start === -1) return ''
-
-  let end = start
-  while (end < lines.length && lines[end].trim().length > 0) end += 1
-  return lines.slice(start, end).join('\n')
+function hasMeaningfulText(node) {
+  if ((node.type === 'text' || node.type === 'inlineCode') && unicodeLetterOrNumber.test(node.value)) return true
+  return Array.isArray(node.children) && node.children.some(hasMeaningfulText)
 }
 
-function isTableDelimiter(line) {
-  const trimmed = line.trim()
-  if (!trimmed.includes('|')) return false
+function hasCodeIndentation(content, node) {
+  const offset = node.position?.start.offset
+  if (typeof offset !== 'number') return false
 
-  const cells = trimmed.replace(/^\|/, '').replace(/\|$/, '').split('|')
-  return cells.length > 0 && cells.every(cell => /^:?-{3,}:?$/.test(cell.trim()))
-}
-
-function isPlainProseParagraph(block) {
-  if (!block) return false
-
-  const lines = block.split('\n')
-  if (/^(?: {4}| {0,3}\t)/.test(lines[0])) return false
-
-  const candidate = block.replace(/^ {0,3}/, '').trimEnd()
-  const firstLine = candidate.split('\n', 1)[0]
-  if (/^(?:#{1,6}(?:[ \t]+|$)|`{3,}|~{3,}|>|[-+*][ \t]+|\d{1,9}[.)][ \t]+|\||<|\{)/.test(firstLine)) return false
-  if (horizontalRule.test(candidate)) return false
-  if (standaloneInlineImage.test(candidate) || standaloneReferenceImage.test(candidate)) return false
-  if (referenceDefinition.test(candidate)) return false
-  if (lines.length > 1 && /^(?:=+|-+)[ \t]*$/.test(lines[1].trim())) return false
-  if (lines.length > 1 && firstLine.includes('|') && isTableDelimiter(lines[1])) return false
-
-  return unicodeLetterOrNumber.test(candidate)
+  const lineStart = content.lastIndexOf('\n', offset - 1) + 1
+  const indentation = content.slice(lineStart, offset)
+  return indentation.includes('\t') || indentation.length >= 4
 }
 
 function hasFollowingProseParagraph(content, diagram) {
@@ -186,7 +167,10 @@ function hasFollowingProseParagraph(content, diagram) {
   if (!closingFence) return false
 
   const followingContent = diagramBody.slice(closingFence.index + closingFence[0].length)
-  return isPlainProseParagraph(firstNonblankBlock(followingContent))
+  const firstBlock = markdownParser.parse(followingContent).children[0]
+  return firstBlock?.type === 'paragraph' &&
+    !hasCodeIndentation(followingContent, firstBlock) &&
+    hasMeaningfulText(firstBlock)
 }
 
 export async function validateDocumentation(root = siteRoot, contracts = pages) {
@@ -224,15 +208,15 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
 }
 ```
 
-- [ ] **Step 4: Update npm scripts**
+- [ ] **Step 4: Add direct parser dependencies and update npm scripts**
 
-เพิ่ม `check:content` เป็น `node scripts/check-content.mjs` และคง `test` เป็น `node --test tests/*.test.mjs` โดยยังคง `check:references` และ `build` เป็น `npm run check:references && next build` จนถึง Task 2
+เพิ่ม direct devDependencies ด้วย `npm install --save-dev unified@11.0.5 remark-parse@11.0.0 remark-mdx@3.1.1` เพื่อให้ imports ของ content validator ไม่พึ่ง transitive dependencies เพิ่ม `check:content` เป็น `node scripts/check-content.mjs` และคง `test` เป็น `node --test tests/*.test.mjs` โดยยังคง `check:references` และ `build` เป็น `npm run check:references && next build` จนถึง Task 2
 
 - [ ] **Step 5: Run the tests and verify GREEN**
 
 Run: `cd docs-site && npm test`
 
-Expected: documentation validator tests แปดรายการและ source-reference tests เดิมสองรายการ PASS; positive prose case รองรับ Unicode text พร้อม inline emphasis/link ขณะที่ heading, horizontal rule, standalone inline/reference image, indented code และ MDX expression ถูกปฏิเสธ; production page registry remains empty until Task 2 adds the first complete pages
+Expected: documentation validator tests สิบรายการและ source-reference tests เดิมสองรายการ PASS; AST contract ยอมรับ paragraph ที่มี Unicode text/inlineCode descendant รวม inline emphasis/link และปฏิเสธ non-paragraph blocks, image-only paragraphs, MDX expressions, MDX ESM, full/shortcut reference images และ indented code; production page registry remains empty until Task 2 adds the first complete pages
 
 - [ ] **Step 6: Commit the contract**
 
