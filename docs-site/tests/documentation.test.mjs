@@ -197,8 +197,6 @@ for (const [description, block] of [
 for (const forbiddenContent of [
   'Source file: `PRODUCT.md`',
   'Last reviewed date: 2026-07-21',
-  'Status: Done',
-  'สถานะ: เสร็จแล้ว',
   'Linear',
   'https://linear.app/example',
   'DEV-82',
@@ -228,5 +226,42 @@ test('documentation validator allows ordinary prose using product and architectu
   await mkdir(path.join(root, 'content'))
   await writeFile(path.join(root, 'content', 'guide.mdx'), 'Product context และ architecture decisions อธิบาย project plan สำหรับผู้อ่าน\n')
   const contract = { 'content/guide.mdx': { headings: [], diagrams: 0 } }
+  assert.deepEqual(await validateDocumentation(root, contract), [])
+})
+
+for (const [label, content] of [
+  ['English workflow heading', '## Status\n\nIn Progress\n'],
+  ['Thai workflow heading', '## สถานะ\n\nเสร็จแล้ว\n'],
+  ['workflow status table', '| Item | Status |\n| --- | --- |\n| Documentation | Done |\n']
+]) {
+  test(`documentation validator rejects ${label}`, async () => {
+    const root = await mkdtemp(path.join(tmpdir(), 'tiewtrade-docs-'))
+    await mkdir(path.join(root, 'content'))
+    await writeFile(path.join(root, 'content', 'guide.mdx'), content)
+    const contract = { 'content/guide.mdx': { headings: [], diagrams: 0 } }
+    assert.deepEqual(await validateDocumentation(root, contract), [
+      'content/guide.mdx: contains forbidden tracker or source metadata'
+    ])
+  })
+}
+
+test('documentation validator allows domain status prose and qualified headings', async () => {
+  const root = await mkdtemp(path.join(tmpdir(), 'tiewtrade-docs-'))
+  await mkdir(path.join(root, 'content'))
+  await writeFile(path.join(root, 'content', 'guide.mdx'), [
+    '## Bot Session Status',
+    '',
+    'Bot Session Status แสดง data freshness status และ operational state ปัจจุบัน',
+    '',
+    '## Status',
+    '',
+    'Ready',
+    '',
+    '| Check | Status |',
+    '| --- | --- |',
+    '| Market data | Blocked |',
+    ''
+  ].join('\n'))
+  const contract = { 'content/guide.mdx': { headings: ['Bot Session Status', 'Status'], diagrams: 0 } }
   assert.deepEqual(await validateDocumentation(root, contract), [])
 })

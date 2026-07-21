@@ -68,8 +68,20 @@ export const pages = {
   }
 }
 
-const forbidden = /\bLinear\b|linear\.app|\bDEV-\d+\b|Source file|Last reviewed date|(?:^|\n)\s*(?:Status|สถานะ)\s*:\s*[^\n]+|Main Issue|Sub-?issues?|\b(?:PRODUCT|CONTEXT|ARCHITECTURE|PROJECT_PLAN)\.md\b|\.superpowers\/|docs\/superpowers\/|docs\/adr\//i
+const forbidden = /\bLinear\b|linear\.app|\bDEV-\d+\b|Source file|Last reviewed date|Main Issue|Sub-?issues?|\b(?:PRODUCT|CONTEXT|ARCHITECTURE|PROJECT_PLAN)\.md\b|\.superpowers\/|docs\/superpowers\/|docs\/adr\//i
 const unicodeLetterOrNumber = /[\p{L}\p{N}]/u
+const statusLabels = new Set(['Status', 'สถานะ'])
+const workflowValues = new Set([
+  'todo',
+  'in progress',
+  'done',
+  'canceled',
+  'cancelled',
+  'สิ่งที่ต้องทำ',
+  'กำลังดำเนินการ',
+  'เสร็จแล้ว',
+  'ยกเลิก'
+])
 
 function routeForPage(page) {
   const name = page.replace(/^content\//, '').replace(/\.mdx$/, '')
@@ -96,6 +108,64 @@ function headingIds(document) {
   return new Set(document.children
     .filter((node) => node.type === 'heading')
     .map((node) => slugger.slug(nodeText(node))))
+}
+
+function normalizedText(value) {
+  return value.trim().replace(/\s+/g, ' ')
+}
+
+function isWorkflowValue(value) {
+  return workflowValues.has(normalizedText(value).toLocaleLowerCase('en'))
+}
+
+function hasWorkflowStatusHeading(document) {
+  return document.children.some((node, index) => {
+    if (node.type !== 'heading' || !statusLabels.has(normalizedText(nodeText(node)))) return false
+    const followingBlock = document.children[index + 1]
+    return followingBlock?.type === 'paragraph' && isWorkflowValue(nodeText(followingBlock))
+  })
+}
+
+function splitTableRow(line) {
+  const trimmed = line.trim()
+  if (!trimmed.includes('|')) return null
+  const cells = trimmed.split(/(?<!\\)\|/)
+  if (trimmed.startsWith('|')) cells.shift()
+  if (trimmed.endsWith('|')) cells.pop()
+  return cells.map((cell) => cell.trim().replaceAll('\\|', '|'))
+}
+
+function cellText(cell) {
+  return normalizedText(nodeText(markdownParser.parse(cell)))
+}
+
+function isTableDelimiter(cells) {
+  return cells.length > 0 && cells.every((cell) => /^:?-{3,}:?$/.test(cell.trim()))
+}
+
+function hasWorkflowStatusTable(content, document) {
+  const codeLines = document.children
+    .filter((node) => node.type === 'code')
+    .map((node) => [node.position?.start.line, node.position?.end.line])
+  const isCodeLine = (lineNumber) => codeLines.some(([start, end]) => start <= lineNumber && lineNumber <= end)
+  const lines = content.split(/\r?\n/)
+
+  for (let index = 0; index < lines.length - 2; index += 1) {
+    if (isCodeLine(index + 1) || isCodeLine(index + 2)) continue
+    const headers = splitTableRow(lines[index])
+    const delimiter = splitTableRow(lines[index + 1])
+    if (!headers || !delimiter || headers.length !== delimiter.length || !isTableDelimiter(delimiter)) continue
+    const statusColumn = headers.findIndex((cell) => statusLabels.has(cellText(cell)))
+    if (statusColumn < 0) continue
+
+    for (let rowIndex = index + 2; rowIndex < lines.length; rowIndex += 1) {
+      if (isCodeLine(rowIndex + 1) || !lines[rowIndex].trim()) break
+      const row = splitTableRow(lines[rowIndex])
+      if (!row || row.length !== headers.length) break
+      if (isWorkflowValue(cellText(row[statusColumn]))) return true
+    }
+  }
+  return false
 }
 
 function hasMeaningfulText(node) {
@@ -140,7 +210,9 @@ export async function validateDocumentation(root = siteRoot, contracts = pages) 
     const parsed = documents.get(page)
     if (!parsed) continue
     const { content, document } = parsed
-    if (forbidden.test(content)) failures.push(`${page}: contains forbidden tracker or source metadata`)
+    if (forbidden.test(content) || hasWorkflowStatusHeading(document) || hasWorkflowStatusTable(content, document)) {
+      failures.push(`${page}: contains forbidden tracker or source metadata`)
+    }
     for (const url of findLinks(document)) {
       if ((!url.startsWith('/') && !url.startsWith('#')) || url.startsWith('//')) continue
       const hashIndex = url.indexOf('#')
