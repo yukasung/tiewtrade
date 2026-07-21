@@ -11,23 +11,23 @@ const markdownParser = unified().use(remarkParse).use(remarkMdx)
 
 export const pages = {
   'content/index.mdx': {
-    headings: ['ภาพรวมระบบ', 'เส้นทางการอ่าน', 'หลักความปลอดภัย'],
+    headings: ['System Overview', 'Reading Path', 'Safety Principles'],
     diagrams: 1
   },
   'content/product.mdx': {
-    headings: ['ขอบเขต Internal Alpha', 'Delivery Gates', 'Risk Policy', 'สิ่งที่ไม่อยู่ในขอบเขต'],
+    headings: ['Internal Alpha Scope', 'Delivery Gates', 'Risk Policy', 'Out of Scope'],
     diagrams: 1
   },
   'content/domain.mdx': {
-    headings: ['Identity และ Configuration', 'Market และ Decision', 'Basket และ Lifecycle', 'Capital และ Execution', 'Recovery และ Reconciliation'],
+    headings: ['Identity and Configuration', 'Market and Decision', 'Basket and Lifecycle', 'Capital and Execution', 'Recovery and Reconciliation'],
     diagrams: 0
   },
   'content/architecture.mdx': {
-    headings: ['Module Ownership', 'Dependency Direction', 'Paper และ Live Boundaries', 'Persistence และ UI'],
+    headings: ['Module Ownership', 'Dependency Direction', 'Paper and Live Boundaries', 'Persistence and UI'],
     diagrams: 3
   },
   'content/trading-process.mdx': {
-    headings: ['จาก Candle ถึง Entry Intent', 'จาก Fill ถึง Basket Take Profit', 'Persistence และ Audit Trail', 'Fail-closed Paths'],
+    headings: ['From Candle to Entry Intent', 'From Fill to Basket Take Profit', 'Persistence and Audit Trail', 'Fail-closed Paths'],
     diagrams: 2
   },
   'content/strategy.mdx': {
@@ -35,15 +35,15 @@ export const pages = {
     diagrams: 1
   },
   'content/basket-lifecycle.mdx': {
-    headings: ['Weighted Average', 'Take Profit', 'State Transitions', 'หลัง Basket ปิด'],
+    headings: ['Weighted Average', 'Take Profit', 'State Transitions', 'After Basket Closure'],
     diagrams: 1
   },
   'content/entry-pair-cooldown.mdx': {
-    headings: ['Pair Sequence', 'UTC Month Boundary', 'ระหว่าง Cooldown Month', 'การประเมินสิทธิ์ Entry'],
+    headings: ['Pair Sequence', 'UTC Month Boundary', 'During the Cooldown Month', 'Entry Eligibility Evaluation'],
     diagrams: 3
   },
   'content/capital-allocation.mdx': {
-    headings: ['Spot 80/20', 'Futures 50/50', 'ตัวอย่าง 200,000 USDT', 'Policy Checks'],
+    headings: ['Spot 80/20', 'Futures 50/50', 'Example: 200,000 USDT', 'Policy Checks'],
     diagrams: 1
   },
   'content/paper-trading.mdx': {
@@ -63,7 +63,7 @@ export const pages = {
     diagrams: 1
   },
   'content/decisions.mdx': {
-    headings: ['Paper-first Desktop Product', 'Feature-first Modular Monolith', 'Consumer-owned Interfaces', 'Shared Policies, Separate Execution', 'Completed Candle และ UTC', 'Conservative Paper Fill', 'Durable State และ Secret Boundary', 'Fail Closed on Uncertainty'],
+    headings: ['Paper-first Desktop Product', 'Feature-first Modular Monolith', 'Consumer-owned Interfaces', 'Shared Policies, Separate Execution', 'Completed Candle and UTC', 'Conservative Paper Fill', 'Durable State and Secret Boundary', 'Fail Closed on Uncertainty'],
     diagrams: 0
   }
 }

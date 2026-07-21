@@ -45,7 +45,7 @@ stateDiagram-v2
 
 ตราบใดที่ Take Profit Order ยังไม่ Fill Basket ยังคงเปิดและติดตาม Order identity เดิม การ replace target ต้อง idempotent ระบบไม่สร้าง Basket ใหม่หรือปิด Entries ใน local state ก่อน Fill ยืนยัน
 
-## หลัง Basket ปิด
+## After Basket Closure
 
 การปิด Basket reset Entry Pair และ Cooldown Month สำหรับ Basket ใหม่ รวมถึงล้าง active Take Profit และ Entry count ของ Basket เดิม แต่ประวัติ Order, Fill, fee, PnL และ lifecycle events ยังคงอยู่ใน audit trail
 

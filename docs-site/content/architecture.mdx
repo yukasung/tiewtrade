@@ -56,7 +56,7 @@ flowchart LR
 
 Interface ต้องอยู่ใน module ที่ใช้ความสามารถนั้น เพราะ consumer เป็นผู้รู้ว่าต้องการ operation และผลลัพธ์อะไร Integration เป็นผู้ implement interface ดังกล่าว ไม่สร้าง generic registry, factory หรือ base class จนกว่าจะมี adapter หรือ consumer จริงอย่างน้อยสองแบบ
 
-## Paper และ Live Boundaries
+## Paper and Live Boundaries
 
 Strategy, capital allocation, Basket และ Entry Pair policies ใช้ร่วมกันทุก Mode จากนั้น Execution แยกเป็น Paper Spot, Paper Futures, Live Spot และ Live Futures adapters การแยกนี้ป้องกัน test double หรือ conservative fill หลุดไปเรียก API จริง และไม่ทำให้เงื่อนไข Live ปะปนกับ replay
 
@@ -79,7 +79,7 @@ flowchart LR
 
 Live Spot กับ Live Futures แยก adapters เพราะ symbol rules, balance/position facts, margin mode, leverage และ reconciliation ต่างกัน Paper ไม่ใช่ Live adapter ที่สลับ endpoint และ Testnet ไม่ได้อยู่ในขอบเขต safety
 
-## Persistence และ UI
+## Persistence and UI
 
 SQLite เก็บ non-secret state ได้แก่ configuration, Basket, Entry Pair, Entry Intent, Order, Fill, PnL, execution costs, Notification, Reconciliation และ operational audit events Credentials อยู่ใน OS Keyring เท่านั้น
 

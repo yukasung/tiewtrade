@@ -57,12 +57,12 @@ flowchart LR
 
 แผนภาพ timeline ยืนยันว่า Entry เดี่ยวข้ามเดือนได้ และ Cooldown เริ่มจาก completed Candles ของเดือนหลัง Pair ครบ ไม่ได้เริ่มจากเวลานาฬิกาของเครื่อง
 
-## ระหว่าง Cooldown Month
+## During the Cooldown Month
 
 ระบบห้ามสร้าง Entry ใหม่ แต่ยังติดตาม market data, อัปเดต UI และรักษา Basket Take Profit ตามปกติ Cooldown ไม่ยกเลิก Order, ไม่ปิด Position และไม่หยุด Recovery
 
 เมื่อ Basket ปิดเมื่อใด lifecycle ของ Basket นั้นสิ้นสุดทันที Pair และ Cooldown state ถูก reset ทำให้ Basket ใหม่เริ่ม Pair 1 ในเดือน UTC เดียวกันได้ ไม่ต้องรอ Cooldown เดิม
 
-## การประเมินสิทธิ์ Entry
+## Entry Eligibility Evaluation
 
 ก่อนอนุมัติ Entry Intent ระบบตรวจตามลำดับว่า Bot Session รับ Entry ใหม่ได้, Basket ยังไม่ครบ 10 Entries, ไม่มี Intent รอ Fill, Pair ปัจจุบันรับ Entry ได้ และเดือน UTC ของ completed Candle ที่กำลังประมวลผลไม่ใช่ Cooldown Month หลังจากนั้นจึงคำนวณขนาดจาก [Capital Allocation](/capital-allocation)
