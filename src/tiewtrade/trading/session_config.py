@@ -1,13 +1,26 @@
 from dataclasses import dataclass
 from decimal import Decimal
+from enum import StrEnum
 from uuid import UUID
 
 
+class TradeMode(StrEnum):
+    PAPER = "paper"
+    LIVE = "live"
+
+
+class MarketType(StrEnum):
+    SPOT = "spot"
+    FUTURES = "futures"
+
+
 @dataclass(frozen=True, slots=True)
-class PaperSpotSessionConfig:
+class SessionConfig:
     session_id: UUID
     account_profile_id: UUID
     preset_version: str
+    market_type: MarketType
+    trade_mode: TradeMode
     available_capital: Decimal
     fee_rate: Decimal
     slippage_bps: Decimal
