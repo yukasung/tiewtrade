@@ -146,6 +146,18 @@ Paper Trading ใช้ conservative candle fill เพื่อให้ replay
 
 Paper, Live Spot และ Live Futures ใช้ strategy, capital และ lifecycle policies ร่วมกัน แต่ใช้ execution adapter แยกกัน
 
+### 8.1 Shared Policies และ Execution Boundary
+
+Paper และ Live ต้องใช้ business rules ชุดเดียวกันสำหรับ Session, Strategy, capital allocation, Basket, Entry Pair, risk policy และ PnL calculation เพื่อให้ผลการตัดสินใจสอดคล้องกันทุก Mode
+
+Execution ต้องแยกเป็น adapter ตาม Mode และ Market Type:
+
+- Paper ใช้ adapter สำหรับจำลอง Fill และ execution costs โดยไม่ส่งคำสั่งไป Binance
+- Live Spot ใช้ adapter สำหรับ Spot และต้องผ่าน Preflight ก่อน execution
+- Live Futures ใช้ adapter สำหรับ Futures และต้องจัดการ margin, leverage, funding และ reconciliation ตาม semantics ของ Futures
+
+การตั้งค่า `TradeMode.LIVE` เพียงอย่างเดียวไม่เพียงพอที่จะเริ่มการเทรดจริง และห้ามทำให้ Paper adapter เรียก Live adapter หรือ Live endpoint ได้
+
 ## 9. Live Execution Safety
 
 - ไม่มี Binance Testnet
