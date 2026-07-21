@@ -7,9 +7,47 @@ const siteRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..'
 export const pages = {}
 
 const forbidden = /linear\.app|\bDEV-\d+\b|Source file:|Last reviewed date:|Main Issue|Sub-issues/i
-const nonProseBlock = /^(?:#{1,6}(?:\s|$)|```|~~~|>|[-+*]\s|\d+[.)]\s|\||<)/
 const horizontalRule = /^(?:(?:\*[ \t]*){3,}|(?:-[ \t]*){3,}|(?:_[ \t]*){3,})$/
-const standaloneImage = /^!\[[^\]\r\n]*\]\([^\r\n]*\)$/
+const standaloneInlineImage = /^!\[[^\]\r\n]*\]\([^\r\n]*\)$/
+const standaloneReferenceImage = /^!\[[^\]\r\n]*\]\[[^\]\r\n]*\]$/
+const referenceDefinition = /^\[[^\]\r\n]+\]:[ \t]+\S/
+const unicodeLetterOrNumber = /[\p{L}\p{N}]/u
+
+function firstNonblankBlock(content) {
+  const lines = content.replace(/\r\n?/g, '\n').split('\n')
+  const start = lines.findIndex(line => line.trim().length > 0)
+  if (start === -1) return ''
+
+  let end = start
+  while (end < lines.length && lines[end].trim().length > 0) end += 1
+  return lines.slice(start, end).join('\n')
+}
+
+function isTableDelimiter(line) {
+  const trimmed = line.trim()
+  if (!trimmed.includes('|')) return false
+
+  const cells = trimmed.replace(/^\|/, '').replace(/\|$/, '').split('|')
+  return cells.length > 0 && cells.every(cell => /^:?-{3,}:?$/.test(cell.trim()))
+}
+
+function isPlainProseParagraph(block) {
+  if (!block) return false
+
+  const lines = block.split('\n')
+  if (/^(?: {4}| {0,3}\t)/.test(lines[0])) return false
+
+  const candidate = block.replace(/^ {0,3}/, '').trimEnd()
+  const firstLine = candidate.split('\n', 1)[0]
+  if (/^(?:#{1,6}(?:[ \t]+|$)|`{3,}|~{3,}|>|[-+*][ \t]+|\d{1,9}[.)][ \t]+|\||<|\{)/.test(firstLine)) return false
+  if (horizontalRule.test(candidate)) return false
+  if (standaloneInlineImage.test(candidate) || standaloneReferenceImage.test(candidate)) return false
+  if (referenceDefinition.test(candidate)) return false
+  if (lines.length > 1 && /^(?:=+|-+)[ \t]*$/.test(lines[1].trim())) return false
+  if (lines.length > 1 && firstLine.includes('|') && isTableDelimiter(lines[1])) return false
+
+  return unicodeLetterOrNumber.test(candidate)
+}
 
 function hasFollowingProseParagraph(content, diagram) {
   const diagramBody = content.slice(diagram.index + diagram[0].length)
@@ -17,11 +55,7 @@ function hasFollowingProseParagraph(content, diagram) {
   if (!closingFence) return false
 
   const followingContent = diagramBody.slice(closingFence.index + closingFence[0].length)
-  const firstBlock = followingContent.trimStart().split(/\r?\n[ \t]*\r?\n/, 1)[0].trim()
-  return firstBlock.length > 0 &&
-    !nonProseBlock.test(firstBlock) &&
-    !horizontalRule.test(firstBlock) &&
-    !standaloneImage.test(firstBlock)
+  return isPlainProseParagraph(firstNonblankBlock(followingContent))
 }
 
 export async function validateDocumentation(root = siteRoot, contracts = pages) {

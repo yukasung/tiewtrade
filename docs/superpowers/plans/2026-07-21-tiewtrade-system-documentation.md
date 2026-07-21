@@ -76,7 +76,7 @@ import { validateDocumentation } from '../scripts/check-content.mjs'
 test('documentation validator accepts a complete reader-facing page', async () => {
   const root = await mkdtemp(path.join(tmpdir(), 'tiewtrade-docs-'))
   await mkdir(path.join(root, 'content'))
-  await writeFile(path.join(root, 'content', 'guide.mdx'), '## Process\n\n```mermaid\nflowchart LR\nA --> B\n```\n\nแผนภาพนี้อธิบายลำดับจาก A ไป B\n')
+  await writeFile(path.join(root, 'content', 'guide.mdx'), '## Process\n\n```mermaid\nflowchart LR\nA --> B\n```\n\nแผนภาพนี้อธิบาย **ลำดับ** จาก [A ไป B](/process)\n')
   const contract = { 'content/guide.mdx': { headings: ['Process'], diagrams: 1 } }
   assert.deepEqual(await validateDocumentation(root, contract), [])
 })
@@ -90,6 +90,24 @@ test('documentation validator rejects a Mermaid diagram without a following pros
     'content/guide.mdx: Mermaid diagram 1 must be followed by an explanatory prose paragraph'
   ])
 })
+
+for (const [description, block] of [
+  ['a horizontal rule', '---'],
+  ['a standalone image', '![Trading flow](flow.png)'],
+  ['indented code', '    const explanation = true'],
+  ['a reference image', '![Trading flow][flow]'],
+  ['an MDX expression', '{diagramExplanation}']
+]) {
+  test(`documentation validator rejects ${description} after a Mermaid diagram`, async () => {
+    const root = await mkdtemp(path.join(tmpdir(), 'tiewtrade-docs-'))
+    await mkdir(path.join(root, 'content'))
+    await writeFile(path.join(root, 'content', 'guide.mdx'), `## Process\n\n\`\`\`mermaid\nflowchart LR\nA --> B\n\`\`\`\n\n${block}\n`)
+    const contract = { 'content/guide.mdx': { headings: ['Process'], diagrams: 1 } }
+    assert.deepEqual(await validateDocumentation(root, contract), [
+      'content/guide.mdx: Mermaid diagram 1 must be followed by an explanatory prose paragraph'
+    ])
+  })
+}
 
 test('documentation validator rejects tracker and source metadata', async () => {
   const root = await mkdtemp(path.join(tmpdir(), 'tiewtrade-docs-'))
@@ -120,7 +138,47 @@ const siteRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..'
 export const pages = {}
 
 const forbidden = /linear\.app|\bDEV-\d+\b|Source file:|Last reviewed date:|Main Issue|Sub-issues/i
-const nonProseBlock = /^(?:#{1,6}(?:\s|$)|```|~~~|>|[-+*]\s|\d+[.)]\s|\||<)/
+const horizontalRule = /^(?:(?:\*[ \t]*){3,}|(?:-[ \t]*){3,}|(?:_[ \t]*){3,})$/
+const standaloneInlineImage = /^!\[[^\]\r\n]*\]\([^\r\n]*\)$/
+const standaloneReferenceImage = /^!\[[^\]\r\n]*\]\[[^\]\r\n]*\]$/
+const referenceDefinition = /^\[[^\]\r\n]+\]:[ \t]+\S/
+const unicodeLetterOrNumber = /[\p{L}\p{N}]/u
+
+function firstNonblankBlock(content) {
+  const lines = content.replace(/\r\n?/g, '\n').split('\n')
+  const start = lines.findIndex(line => line.trim().length > 0)
+  if (start === -1) return ''
+
+  let end = start
+  while (end < lines.length && lines[end].trim().length > 0) end += 1
+  return lines.slice(start, end).join('\n')
+}
+
+function isTableDelimiter(line) {
+  const trimmed = line.trim()
+  if (!trimmed.includes('|')) return false
+
+  const cells = trimmed.replace(/^\|/, '').replace(/\|$/, '').split('|')
+  return cells.length > 0 && cells.every(cell => /^:?-{3,}:?$/.test(cell.trim()))
+}
+
+function isPlainProseParagraph(block) {
+  if (!block) return false
+
+  const lines = block.split('\n')
+  if (/^(?: {4}| {0,3}\t)/.test(lines[0])) return false
+
+  const candidate = block.replace(/^ {0,3}/, '').trimEnd()
+  const firstLine = candidate.split('\n', 1)[0]
+  if (/^(?:#{1,6}(?:[ \t]+|$)|`{3,}|~{3,}|>|[-+*][ \t]+|\d{1,9}[.)][ \t]+|\||<|\{)/.test(firstLine)) return false
+  if (horizontalRule.test(candidate)) return false
+  if (standaloneInlineImage.test(candidate) || standaloneReferenceImage.test(candidate)) return false
+  if (referenceDefinition.test(candidate)) return false
+  if (lines.length > 1 && /^(?:=+|-+)[ \t]*$/.test(lines[1].trim())) return false
+  if (lines.length > 1 && firstLine.includes('|') && isTableDelimiter(lines[1])) return false
+
+  return unicodeLetterOrNumber.test(candidate)
+}
 
 function hasFollowingProseParagraph(content, diagram) {
   const diagramBody = content.slice(diagram.index + diagram[0].length)
@@ -128,8 +186,7 @@ function hasFollowingProseParagraph(content, diagram) {
   if (!closingFence) return false
 
   const followingContent = diagramBody.slice(closingFence.index + closingFence[0].length)
-  const firstBlock = followingContent.trimStart().split(/\r?\n[ \t]*\r?\n/, 1)[0].trim()
-  return firstBlock.length > 0 && !nonProseBlock.test(firstBlock)
+  return isPlainProseParagraph(firstNonblankBlock(followingContent))
 }
 
 export async function validateDocumentation(root = siteRoot, contracts = pages) {
@@ -175,7 +232,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
 
 Run: `cd docs-site && npm test`
 
-Expected: validator tests ใหม่สามรายการและ source-reference tests เดิมสองรายการ PASS; production page registry remains empty until Task 2 adds the first complete pages
+Expected: documentation validator tests แปดรายการและ source-reference tests เดิมสองรายการ PASS; positive prose case รองรับ Unicode text พร้อม inline emphasis/link ขณะที่ heading, horizontal rule, standalone inline/reference image, indented code และ MDX expression ถูกปฏิเสธ; production page registry remains empty until Task 2 adds the first complete pages
 
 - [ ] **Step 6: Commit the contract**
 
