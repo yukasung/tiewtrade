@@ -21,25 +21,36 @@ Futures ใช้ Cross Margin และ leverage ไม่เกิน 5x Colla
 
 ## ตัวอย่าง 200,000 USDT
 
-แผนภาพเปรียบเทียบการแตก Available Capital ชุดเดียวกันเป็น Spot และ Futures budgets
+ตัวอย่างต่อไปนี้เป็นสอง Session scenarios ที่เลือกใช้แยกกัน ไม่ใช่การแบ่งทุนก้อนเดียวไปทำ Spot และ Futures พร้อมกัน แต่ละ scenario จึงเริ่มจาก Available Capital สมมติ 200,000 USDT ของตัวเอง
 
 ```mermaid
-flowchart TB
-    A[Available Capital<br/>200,000 USDT]
-    A --> S[Spot]
-    A --> F[Futures]
-    S --> ST[Trading Capital<br/>160,000]
-    S --> SR[Reserve<br/>40,000]
-    ST --> SE[10 Entries<br/>16,000 notional each]
-    F --> FT[Trading Capital<br/>100,000]
-    F --> FB[Collateral Buffer<br/>100,000]
-    FT --> FM[10 Entries<br/>10,000 initial margin each]
-    FM --> FN[At 5x<br/>50,000 target notional each]
+flowchart LR
+    subgraph SPOT[Spot Session scenario]
+        SA[Available Capital<br/>200,000 USDT]
+        SA --> ST[Trading Capital<br/>160,000]
+        SA --> SR[Reserve<br/>40,000]
+        ST --> SE[10 Entries<br/>16,000 notional each]
+    end
+    subgraph FUTURES[Futures Session scenario]
+        FA[Available Capital<br/>200,000 USDT]
+        FA --> FT[Trading Capital<br/>100,000]
+        FA --> FB[Collateral Buffer<br/>100,000]
+        FT --> FM[10 Entries<br/>10,000 initial margin each]
+        FM --> FN[At 5x<br/>50,000 target notional each]
+    end
 ```
 
-แผนภาพเปรียบเทียบ Session สมมติที่ตั้ง Available Capital 200,000 USDT: Spot ใช้ 160,000 สำหรับ Entries และกัน 40,000 เป็น Reserve ส่วน Futures ใช้ initial margin รวม 100,000, กัน Collateral Buffer 100,000 และที่ 5x มี target notional สูงสุด 50,000 ต่อ Entry
+แผนภาพเปรียบเทียบผลลัพธ์เมื่อสร้าง Spot Session หรือ Futures Session แยกกันด้วยทุนตั้งต้นสมมติเท่ากัน: Spot ใช้ 160,000 สำหรับ Entries และกัน 40,000 เป็น Reserve ส่วน Futures ใช้ initial margin รวม 100,000, กัน Collateral Buffer 100,000 และที่ 5x มี target notional สูงสุด 50,000 ต่อ Entry
 
 ตัวเลขนี้เป็นตัวอย่างการคำนวณ policy ไม่ใช่คำแนะนำการลงทุนและไม่ใช่ยอดเงินจริง ราคา, quantity, fee, margin facts และ symbol rules ยังต้องผ่าน execution checks ของ Mode นั้น
+
+| Policy | Spot Session | Futures Session |
+| --- | --- | --- |
+| Allocation ratio | Trading Capital 80% | Trading Capital 50% |
+| Reserve / buffer | Reserve 20% | Collateral Buffer 50% |
+| Budget ต่อ 10 Entries | 16,000 USDT quote notional ต่อ Entry | 10,000 USDT initial margin ต่อ Entry; target notional เท่ากับ budget คูณ leverage |
+| Cross Margin | ไม่ใช้ | บังคับใช้ |
+| Leverage cap | ไม่ใช้ | ไม่เกิน 5x |
 
 ## Policy Checks
 

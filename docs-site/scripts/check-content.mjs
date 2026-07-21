@@ -1,6 +1,7 @@
 import { access, readFile } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
+import GithubSlugger from 'github-slugger'
 import { unified } from 'unified'
 import remarkParse from 'remark-parse'
 import remarkMdx from 'remark-mdx'
@@ -84,6 +85,19 @@ function findLinks(node, links = []) {
   return links
 }
 
+function nodeText(node) {
+  if (node?.type === 'text' || node?.type === 'inlineCode') return node.value
+  if (!Array.isArray(node?.children)) return ''
+  return node.children.map(nodeText).join('')
+}
+
+function headingIds(document) {
+  const slugger = new GithubSlugger()
+  return new Set(document.children
+    .filter((node) => node.type === 'heading')
+    .map((node) => slugger.slug(nodeText(node))))
+}
+
 function hasMeaningfulText(node) {
   if ((node.type === 'text' || node.type === 'inlineCode') && unicodeLetterOrNumber.test(node.value)) return true
   return Array.isArray(node.children) && node.children.some(hasMeaningfulText)
@@ -106,7 +120,9 @@ function isExplanatoryParagraph(content, node) {
 
 export async function validateDocumentation(root = siteRoot, contracts = pages) {
   const failures = []
-  const registeredRoutes = new Set(Object.keys(contracts).map(routeForPage))
+  const pagesByRoute = new Map(Object.keys(contracts).map((page) => [routeForPage(page), page]))
+  const documents = new Map()
+
   for (const [page, contract] of Object.entries(contracts)) {
     const absolutePath = path.join(root, page)
     try {
@@ -117,12 +133,36 @@ export async function validateDocumentation(root = siteRoot, contracts = pages) 
     }
     const content = await readFile(absolutePath, 'utf8')
     const document = markdownParser.parse(content)
+    documents.set(page, { content, document })
+  }
+
+  for (const [page, contract] of Object.entries(contracts)) {
+    const parsed = documents.get(page)
+    if (!parsed) continue
+    const { content, document } = parsed
     if (forbidden.test(content)) failures.push(`${page}: contains forbidden tracker or source metadata`)
     for (const url of findLinks(document)) {
-      if (!url.startsWith('/') || url.startsWith('//')) continue
-      const pathOnly = url.split(/[?#]/, 1)[0]
+      if ((!url.startsWith('/') && !url.startsWith('#')) || url.startsWith('//')) continue
+      const hashIndex = url.indexOf('#')
+      const pathOnly = url.startsWith('#') ? routeForPage(page) : url.split(/[?#]/, 1)[0]
       const route = pathOnly.length > 1 ? pathOnly.replace(/\/$/, '') : pathOnly
-      if (!registeredRoutes.has(route)) failures.push(`${page}: link points to missing route ${route}`)
+      const targetPage = pagesByRoute.get(route)
+      if (!targetPage) {
+        failures.push(`${page}: link points to missing route ${route}`)
+        continue
+      }
+      if (hashIndex < 0 || hashIndex === url.length - 1) continue
+      const rawFragment = url.slice(hashIndex + 1)
+      let fragment = rawFragment
+      try {
+        fragment = decodeURIComponent(rawFragment)
+      } catch {
+        // Keep malformed fragments literal so validation reports the missing heading.
+      }
+      const targetDocument = documents.get(targetPage)?.document
+      if (targetDocument && !headingIds(targetDocument).has(fragment)) {
+        failures.push(`${page}: link points to missing heading #${rawFragment} in ${route}`)
+      }
     }
     for (const heading of contract.headings) {
       if (!content.includes(`## ${heading}`)) failures.push(`${page}: missing heading ${heading}`)

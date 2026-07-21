@@ -52,6 +52,7 @@ test('package commands use the content gate and README documents the local workf
   const notFound = await readFile(new URL('../app/not-found.tsx', import.meta.url), 'utf8')
   assert.match(notFound, /from ['"]next\/link['"]/)
   assert.match(notFound, /href=['"]\/['"]/)
+  assert.match(notFound, /<main\s+id=['"]nextra-skip-nav['"]/)
   assert.doesNotMatch(notFound, /NotFoundPage|github|https?:\/\/|usePathname|document\.referrer|location\./i)
 
   const readme = await readFile(new URL('../README.md', import.meta.url), 'utf8')
@@ -90,12 +91,40 @@ test('documentation validator reports the exact missing root-relative route', as
   ])
 })
 
-test('documentation validator ignores external, mailto and hash-only links', async () => {
+test('documentation validator validates hash-only and route fragment links', async () => {
   const root = await mkdtemp(path.join(tmpdir(), 'tiewtrade-docs-'))
   await mkdir(path.join(root, 'content'))
-  await writeFile(path.join(root, 'content', 'guide.mdx'), '[External](https://example.com) [Mail](mailto:test@example.com) [Section](#section)\n')
-  const contract = { 'content/guide.mdx': { headings: [], diagrams: 0 } }
+  await writeFile(path.join(root, 'content', 'index.mdx'), '[Entry pair](/guide#entry-pair--cooldown)\n')
+  await writeFile(path.join(root, 'content', 'guide.mdx'), '## Risk Policy\n\n[Same section](#risk-policy)\n\n## Entry Pair & Cooldown\n\n[External](https://example.com) [Mail](mailto:test@example.com)\n')
+  const contract = {
+    'content/index.mdx': { headings: [], diagrams: 0 },
+    'content/guide.mdx': { headings: ['Risk Policy', 'Entry Pair & Cooldown'], diagrams: 0 }
+  }
   assert.deepEqual(await validateDocumentation(root, contract), [])
+})
+
+test('documentation validator reports a missing hash-only heading', async () => {
+  const root = await mkdtemp(path.join(tmpdir(), 'tiewtrade-docs-'))
+  await mkdir(path.join(root, 'content'))
+  await writeFile(path.join(root, 'content', 'guide.mdx'), '## Risk Policy\n\n[Missing](#missing-section)\n')
+  const contract = { 'content/guide.mdx': { headings: ['Risk Policy'], diagrams: 0 } }
+  assert.deepEqual(await validateDocumentation(root, contract), [
+    'content/guide.mdx: link points to missing heading #missing-section in /guide'
+  ])
+})
+
+test('documentation validator reports a missing heading on a registered route', async () => {
+  const root = await mkdtemp(path.join(tmpdir(), 'tiewtrade-docs-'))
+  await mkdir(path.join(root, 'content'))
+  await writeFile(path.join(root, 'content', 'index.mdx'), '[Missing](/guide#missing-section)\n')
+  await writeFile(path.join(root, 'content', 'guide.mdx'), '## Risk Policy\n')
+  const contract = {
+    'content/index.mdx': { headings: [], diagrams: 0 },
+    'content/guide.mdx': { headings: ['Risk Policy'], diagrams: 0 }
+  }
+  assert.deepEqual(await validateDocumentation(root, contract), [
+    'content/index.mdx: link points to missing heading #missing-section in /guide'
+  ])
 })
 
 test('documentation validator detects 1-3-space-indented Mermaid fences', async () => {
