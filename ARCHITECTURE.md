@@ -30,7 +30,19 @@ Paper และ Live ห้ามใช้ execution implementation เดีย
 
 ## Configuration Boundary
 
-`SessionConfig` เป็น shared interface ที่เก็บ session ID, Account Profile ID, Preset version, Market Type, Trade Mode, capital และ execution costs
+`SessionConfig` เป็น shared configuration ที่เก็บ session ID, Account Profile ID, Preset version, Market Type, Trade Mode, capital และ execution costs
+
+Market identity ต้องเป็นข้อมูลจาก configuration ไม่ใช่ค่าคงที่ใน strategy หรือ market-data pipeline:
+
+| Configuration | เจ้าของ | กติกา |
+| --- | --- | --- |
+| `symbol` | Session/market configuration | เลือก symbol ที่ exchange รองรับ |
+| `timeframe` | Session/market configuration | กำหนด candle interval เช่น `5m` |
+| `timezone` | System policy | ใช้ `UTC` เท่านั้น |
+| `trade_mode`, `market_type` | `SessionConfig` | ใช้เลือก execution boundary |
+| `preset_version` | Strategy preset | กำหนด RSI, TP, entry และ lifecycle rules |
+
+ค่าต้นทุนและความเสี่ยง เช่น fee, slippage, funding, leverage, margin mode และ collateral buffer ต้องถูกแยกตาม market/execution policy และ validate ก่อนสร้าง runtime
 
 Configuration นี้ไม่มี side effect และไม่เลือกหรือเรียก adapter โดยตรง การเลือก adapter ต้องเกิดที่ application composition seam และ `TradeMode.LIVE` ต้องผ่าน Preflight กับ explicit confirmation ก่อนเสมอ
 

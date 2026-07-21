@@ -2,12 +2,13 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from decimal import Decimal
 
-CANDLE_INTERVAL = timedelta(minutes=5)
+from tiewtrade.market_data.config import timeframe_to_interval
 
 
 @dataclass(frozen=True, slots=True)
 class Candle:
     symbol: str
+    timeframe: str
     open_time: datetime
     open: Decimal
     high: Decimal
@@ -16,14 +17,13 @@ class Candle:
     volume: Decimal
 
     def __post_init__(self) -> None:
-        if self.symbol != "BTCUSDT":
-            raise ValueError("symbol must be BTCUSDT")
+        interval = timeframe_to_interval(self.timeframe)
         if self.open_time.tzinfo is None or self.open_time.utcoffset() != timedelta(0):
             raise ValueError("open_time must use UTC")
         if self.open_time.second or self.open_time.microsecond:
             raise ValueError("open_time must align to a minute")
-        if self.open_time.minute % 5:
-            raise ValueError("open_time must align to a 5-minute boundary")
+        if self.open_time.timestamp() % interval.total_seconds():
+            raise ValueError("open_time must align to the timeframe boundary")
         if min(self.open, self.high, self.low, self.close) <= 0:
             raise ValueError("OHLC prices must be positive")
         if self.high < max(self.open, self.close) or self.low > min(
@@ -35,4 +35,4 @@ class Candle:
 
     @property
     def close_time(self) -> datetime:
-        return self.open_time + CANDLE_INTERVAL
+        return self.open_time + timeframe_to_interval(self.timeframe)
