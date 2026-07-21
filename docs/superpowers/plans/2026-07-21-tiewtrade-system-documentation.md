@@ -40,10 +40,12 @@ docs-site/
 │   └── recovery.mdx
 ├── package.json
 ├── scripts/check-content.mjs
-└── tests/documentation.test.mjs
+├── scripts/check-source-references.mjs
+├── tests/documentation.test.mjs
+└── tests/source-references.test.mjs
 ```
 
-`content/work-plan.mdx`, `scripts/check-source-references.mjs` และ `tests/source-references.test.mjs` ถูกลบ เพราะ contract แบบ source-reference ไม่ตรงกับ Project Documentation ใหม่
+Task 1 ยังเก็บ `content/work-plan.mdx`, `scripts/check-source-references.mjs` และ `tests/source-references.test.mjs` เพื่อให้ production build gate เดิมยังผ่าน จนกว่า Task 2 จะ rewrite Overview/Product, ลงทะเบียน production pages แรก และย้าย build gate ไปใช้ content contract ได้พร้อมกัน
 
 ---
 
@@ -53,12 +55,13 @@ docs-site/
 - Create: `docs-site/tests/documentation.test.mjs`
 - Create: `docs-site/scripts/check-content.mjs`
 - Modify: `docs-site/package.json`
-- Delete: `docs-site/tests/source-references.test.mjs`
-- Delete: `docs-site/scripts/check-source-references.mjs`
+- Retain: `docs-site/tests/source-references.test.mjs`
+- Retain: `docs-site/scripts/check-source-references.mjs`
 
 **Interfaces:**
 - Produces: `validateDocumentation(): Promise<string[]>`
-- Produces: npm scripts `test`, `check:content`, `build`
+- Produces: npm scripts `test` และ `check:content`
+- Retains: production `build` gate ผ่าน `check:references` จนถึง Task 2
 
 - [ ] **Step 1: Write the failing documentation contract test**
 
@@ -73,9 +76,19 @@ import { validateDocumentation } from '../scripts/check-content.mjs'
 test('documentation validator accepts a complete reader-facing page', async () => {
   const root = await mkdtemp(path.join(tmpdir(), 'tiewtrade-docs-'))
   await mkdir(path.join(root, 'content'))
-  await writeFile(path.join(root, 'content', 'guide.mdx'), '## Process\n\n```mermaid\nflowchart LR\nA --> B\n```\n')
+  await writeFile(path.join(root, 'content', 'guide.mdx'), '## Process\n\n```mermaid\nflowchart LR\nA --> B\n```\n\nแผนภาพนี้อธิบายลำดับจาก A ไป B\n')
   const contract = { 'content/guide.mdx': { headings: ['Process'], diagrams: 1 } }
   assert.deepEqual(await validateDocumentation(root, contract), [])
+})
+
+test('documentation validator rejects a Mermaid diagram without a following prose paragraph', async () => {
+  const root = await mkdtemp(path.join(tmpdir(), 'tiewtrade-docs-'))
+  await mkdir(path.join(root, 'content'))
+  await writeFile(path.join(root, 'content', 'guide.mdx'), '## Process\n\n```mermaid\nflowchart LR\nA --> B\n```\n\n## Next Step\n')
+  const contract = { 'content/guide.mdx': { headings: ['Process'], diagrams: 1 } }
+  assert.deepEqual(await validateDocumentation(root, contract), [
+    'content/guide.mdx: Mermaid diagram 1 must be followed by an explanatory prose paragraph'
+  ])
 })
 
 test('documentation validator rejects tracker and source metadata', async () => {
@@ -107,6 +120,17 @@ const siteRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..'
 export const pages = {}
 
 const forbidden = /linear\.app|\bDEV-\d+\b|Source file:|Last reviewed date:|Main Issue|Sub-issues/i
+const nonProseBlock = /^(?:#{1,6}(?:\s|$)|```|~~~|>|[-+*]\s|\d+[.)]\s|\||<)/
+
+function hasFollowingProseParagraph(content, diagram) {
+  const diagramBody = content.slice(diagram.index + diagram[0].length)
+  const closingFence = diagramBody.match(/^```[ \t]*$/m)
+  if (!closingFence) return false
+
+  const followingContent = diagramBody.slice(closingFence.index + closingFence[0].length)
+  const firstBlock = followingContent.trimStart().split(/\r?\n[ \t]*\r?\n/, 1)[0].trim()
+  return firstBlock.length > 0 && !nonProseBlock.test(firstBlock)
+}
 
 export async function validateDocumentation(root = siteRoot, contracts = pages) {
   const failures = []
@@ -123,8 +147,13 @@ export async function validateDocumentation(root = siteRoot, contracts = pages) 
     for (const heading of contract.headings) {
       if (!content.includes(`## ${heading}`)) failures.push(`${page}: missing heading ${heading}`)
     }
-    const diagrams = content.match(/```mermaid/g)?.length ?? 0
-    if (diagrams < contract.diagrams) failures.push(`${page}: expected ${contract.diagrams} Mermaid diagrams, found ${diagrams}`)
+    const diagrams = [...content.matchAll(/^```mermaid[^\r\n]*\r?$/gm)]
+    if (diagrams.length < contract.diagrams) failures.push(`${page}: expected ${contract.diagrams} Mermaid diagrams, found ${diagrams.length}`)
+    for (const [index, diagram] of diagrams.entries()) {
+      if (!hasFollowingProseParagraph(content, diagram)) {
+        failures.push(`${page}: Mermaid diagram ${index + 1} must be followed by an explanatory prose paragraph`)
+      }
+    }
   }
   return failures
 }
@@ -140,13 +169,13 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
 
 - [ ] **Step 4: Update npm scripts**
 
-Set `check:content` to `node scripts/check-content.mjs` and set `build` to `npm run check:content && next build`. Keep `test` as `node --test tests/*.test.mjs`.
+เพิ่ม `check:content` เป็น `node scripts/check-content.mjs` และคง `test` เป็น `node --test tests/*.test.mjs` โดยยังคง `check:references` และ `build` เป็น `npm run check:references && next build` จนถึง Task 2
 
 - [ ] **Step 5: Run the tests and verify GREEN**
 
 Run: `cd docs-site && npm test`
 
-Expected: both validator unit tests PASS; production page registry remains empty until Task 2 adds the first complete pages
+Expected: validator tests ใหม่สามรายการและ source-reference tests เดิมสองรายการ PASS; production page registry remains empty until Task 2 adds the first complete pages
 
 - [ ] **Step 6: Commit the contract**
 
@@ -164,7 +193,10 @@ git commit -m "test: define project documentation contract"
 - Modify: `docs-site/content/index.mdx`
 - Modify: `docs-site/content/product.mdx`
 - Modify: `docs-site/app/layout.tsx`
+- Modify: `docs-site/package.json`
 - Delete: `docs-site/content/work-plan.mdx`
+- Delete: `docs-site/tests/source-references.test.mjs`
+- Delete: `docs-site/scripts/check-source-references.mjs`
 
 **Interfaces:**
 - Consumes: route contract from Task 1
@@ -221,16 +253,20 @@ export const pages = {
 }
 ```
 
-- [ ] **Step 8: Run tests**
+- [ ] **Step 8: Switch the production build gate**
+
+Set `build` to `npm run check:content && next build`, keep `check:content`, remove `check:references`, and delete `scripts/check-source-references.mjs` กับ `tests/source-references.test.mjs` หลัง Overview/Product ไม่มี source metadata และถูกลงทะเบียนใน `pages` แล้ว
+
+- [ ] **Step 9: Run tests**
 
 Run: `cd docs-site && npm test`
 
 Expected: all tests PASS with Overview and Product Overview registered
 
-- [ ] **Step 9: Commit foundation content**
+- [ ] **Step 10: Commit foundation content**
 
 ```bash
-git add docs-site/app/layout.tsx docs-site/content
+git add docs-site/app/layout.tsx docs-site/content docs-site/package.json docs-site/scripts docs-site/tests
 git commit -m "docs: add system guide foundation"
 ```
 
