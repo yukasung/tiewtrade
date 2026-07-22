@@ -4,11 +4,11 @@ from decimal import Decimal
 import pytest
 
 from tiewtrade.market_data.candle import Candle
-from tiewtrade.market_data.config import MarketDataConfig
 from tiewtrade.market_data.completed_candle_stream import (
     CandleGapError,
     CompletedCandleStream,
 )
+from tiewtrade.market_data.config import MarketDataConfig
 
 
 def candle_at(

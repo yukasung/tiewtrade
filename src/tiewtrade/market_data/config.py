@@ -2,7 +2,6 @@ import re
 from dataclasses import dataclass
 from datetime import timedelta
 
-
 _TIMEFRAME_PATTERN = re.compile(r"^(?P<value>[1-9][0-9]*)(?P<unit>[mhd])$")
 
 
