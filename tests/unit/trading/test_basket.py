@@ -4,14 +4,11 @@ from decimal import Decimal
 import pytest
 
 from tiewtrade.trading.basket import Basket
-from tiewtrade.trading.spot_policy import SpotTradingPolicy
+from tiewtrade.trading.entry_policy import EntryPolicy
 
 
-def policy(max_entries: int = 10) -> SpotTradingPolicy:
-    return SpotTradingPolicy(
-        trading_capital_ratio=Decimal("0.80"),
-        max_entries=max_entries,
-    )
+def policy(max_entries: int = 10) -> EntryPolicy:
+    return EntryPolicy(max_entries=max_entries)
 
 
 def test_basket_reprices_take_profit_after_each_entry() -> None:
@@ -37,6 +34,14 @@ def test_basket_reprices_take_profit_after_each_entry() -> None:
 
     assert basket.average_entry_price == Decimal("95")
     assert basket.take_profit_price == Decimal("104.0")
+
+
+def test_basket_requires_positive_take_profit_multiplier() -> None:
+    with pytest.raises(ValueError, match="take_profit_atr_multiplier"):
+        Basket(
+            policy=policy(),
+            take_profit_atr_multiplier=Decimal("0"),
+        )
 
 
 def test_close_subtracts_entry_and_exit_fees() -> None:
@@ -179,3 +184,31 @@ def test_closed_basket_cannot_close_or_accept_entries_twice() -> None:
             atr=Decimal("2"),
             tick_size=Decimal("0.1"),
         )
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [("exit_price", Decimal("0")), ("exit_fee", Decimal("-0.1"))],
+)
+def test_invalid_close_does_not_close_basket(
+    field: str, value: Decimal
+) -> None:
+    basket = Basket(policy=policy(), take_profit_atr_multiplier=Decimal("3"))
+    basket.add_entry(
+        price=Decimal("100"),
+        quantity=Decimal("1"),
+        fee=Decimal("0.1"),
+        filled_at=datetime(2026, 1, 1, tzinfo=UTC),
+        atr=Decimal("2"),
+        tick_size=Decimal("0.1"),
+    )
+    values = {"exit_price": Decimal("106"), "exit_fee": Decimal("0.106")}
+    values[field] = value
+
+    with pytest.raises(ValueError, match=field):
+        basket.close(
+            **values,
+            closed_at=datetime(2026, 1, 2, tzinfo=UTC),
+        )
+
+    assert not basket.is_closed

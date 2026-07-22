@@ -26,7 +26,7 @@ flowchart LR
 
 ## Paper Trading Complete
 
-Paper เริ่มจาก vertical slice ของ BTCUSDT Spot: รับ completed Candles ที่ต่อเนื่อง, คำนวณ Wilder RSI/ATR, สร้าง deterministic Entry Intent, บังคับ Spot 80/20 และ Entry Pair, Fill ที่ Candle ถัดไป, ปิด Basket ด้วย Take Profit และ replay ผลเดิม
+Paper เริ่มจาก vertical slice ของ BTCUSDT Spot: รับ completed Candles ที่ต่อเนื่อง, คำนวณ Wilder RSI/ATR, สร้าง deterministic Entry Intent, บังคับ immutable Spot allocation และ Entry Policy จาก Session, Fill ที่ Candle ถัดไป, ปิด Basket ด้วย Take Profit และ replay ผลเดิม
 
 จาก tracer slice นี้จึงเติม Paper Futures, public market-data runtime, SQLite persistence, Account Profile isolation, desktop UI และ restart Recovery จนครบ flow ใช้งานจริง ไม่ถือว่าการ replay ชุดเดียวสำเร็จเท่ากับ Paper Trading Complete
 

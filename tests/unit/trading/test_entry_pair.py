@@ -1,17 +1,13 @@
 from datetime import UTC, datetime
-from decimal import Decimal
 
 import pytest
 
 from tiewtrade.trading.entry_pair import EntryPairLifecycle
-from tiewtrade.trading.spot_policy import SpotTradingPolicy
+from tiewtrade.trading.entry_policy import EntryPolicy
 
 
-def policy(max_entries: int = 10) -> SpotTradingPolicy:
-    return SpotTradingPolicy(
-        trading_capital_ratio=Decimal("0.80"),
-        max_entries=max_entries,
-    )
+def policy(max_entries: int = 10) -> EntryPolicy:
+    return EntryPolicy(max_entries=max_entries)
 
 
 def test_one_entry_may_cross_month_to_complete_its_pair() -> None:

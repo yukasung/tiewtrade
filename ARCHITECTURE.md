@@ -41,7 +41,8 @@ Market identity ต้องเป็นข้อมูลจาก configuratio
 | `timezone` | System policy | ใช้ `UTC` เท่านั้น |
 | `trade_mode`, `market_type` | `SessionConfig` | ใช้เลือก execution boundary |
 | `preset_version` | Strategy preset | กำหนด RSI, TP, entry และ lifecycle rules |
-| `trading_capital_ratio`, `max_entries` | `SpotTradingPolicy` | รับจาก form, validate และตรึงตลอด Session |
+| `max_entries` | `EntryPolicy` | ใช้ร่วมกันทุก Market Type และตรึงตลอด Session |
+| `trading_capital_ratio` | `SpotTradingPolicy` | ใช้เฉพาะ Spot, รับจาก form และตรึงตลอด Session |
 
 ค่าต้นทุนและความเสี่ยง เช่น fee, slippage, funding, leverage, margin mode และ collateral buffer ต้องถูกแยกตาม market/execution policy และ validate ก่อนสร้าง runtime
 

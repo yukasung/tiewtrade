@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 
-from tiewtrade.trading.spot_policy import SpotTradingPolicy
+from tiewtrade.trading.entry_policy import EntryPolicy
 
 
 def month_index(at: datetime) -> int:
@@ -10,7 +10,7 @@ def month_index(at: datetime) -> int:
 
 
 class EntryPairLifecycle:
-    def __init__(self, policy: SpotTradingPolicy) -> None:
+    def __init__(self, policy: EntryPolicy) -> None:
         self._policy = policy
         self._entry_count = 0
         self._completed_pair_month: int | None = None

@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from decimal import Decimal
 
+from tiewtrade.trading.entry_policy import EntryPolicy
 from tiewtrade.trading.spot_policy import SpotTradingPolicy
 
 
@@ -15,16 +16,17 @@ class SpotCapitalPlan:
     def from_available(
         cls,
         available: Decimal,
-        policy: SpotTradingPolicy,
+        spot_policy: SpotTradingPolicy,
+        entry_policy: EntryPolicy,
     ) -> "SpotCapitalPlan":
         if available <= 0:
             raise ValueError("available capital must be positive")
 
-        trading_capital = available * policy.trading_capital_ratio
+        trading_capital = available * spot_policy.trading_capital_ratio
         reserve = available - trading_capital
         return cls(
             available_capital=available,
             trading_capital=trading_capital,
             reserve=reserve,
-            entry_notional=trading_capital / Decimal(policy.max_entries),
+            entry_notional=trading_capital / Decimal(entry_policy.max_entries),
         )

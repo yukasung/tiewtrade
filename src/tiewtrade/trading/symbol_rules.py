@@ -27,3 +27,6 @@ class SymbolRules:
             (value / self.step_size).to_integral_value(rounding=ROUND_DOWN)
             * self.step_size
         )
+
+    def meets_min_notional(self, *, price: Decimal, quantity: Decimal) -> bool:
+        return price * quantity >= self.min_notional

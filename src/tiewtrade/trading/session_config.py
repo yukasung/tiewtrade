@@ -3,6 +3,9 @@ from decimal import Decimal
 from enum import StrEnum
 from uuid import UUID
 
+from tiewtrade.trading.entry_policy import EntryPolicy
+from tiewtrade.trading.spot_policy import SpotTradingPolicy
+
 
 class TradeMode(StrEnum):
     PAPER = "paper"
@@ -24,6 +27,8 @@ class SessionConfig:
     available_capital: Decimal
     fee_rate: Decimal
     slippage_bps: Decimal
+    entry_policy: EntryPolicy
+    spot_policy: SpotTradingPolicy | None
 
     def __post_init__(self) -> None:
         if self.available_capital <= 0:
@@ -32,3 +37,7 @@ class SessionConfig:
             raise ValueError("fee_rate must not be negative")
         if self.slippage_bps < 0:
             raise ValueError("slippage_bps must not be negative")
+        if self.market_type is MarketType.SPOT and self.spot_policy is None:
+            raise ValueError("spot_policy is required for Spot sessions")
+        if self.market_type is MarketType.FUTURES and self.spot_policy is not None:
+            raise ValueError("spot_policy is not valid for Futures sessions")

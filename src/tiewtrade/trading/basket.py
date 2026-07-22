@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from decimal import ROUND_DOWN, Decimal
 
-from tiewtrade.trading.spot_policy import SpotTradingPolicy
+from tiewtrade.trading.entry_policy import EntryPolicy
 
 
 def _require_utc(value: datetime, field: str) -> None:
@@ -40,9 +40,13 @@ class ClosedBasket:
 class Basket:
     def __init__(
         self,
-        policy: SpotTradingPolicy,
+        policy: EntryPolicy,
         take_profit_atr_multiplier: Decimal,
     ) -> None:
+        _require_positive(
+            take_profit_atr_multiplier,
+            "take_profit_atr_multiplier",
+        )
         self._policy = policy
         self._take_profit_atr_multiplier = take_profit_atr_multiplier
         self._entries: list[BasketEntry] = []
@@ -117,6 +121,8 @@ class Basket:
             raise ValueError("basket is closed")
         if self.is_empty:
             raise ValueError("basket is empty")
+        _require_positive(exit_price, "exit_price")
+        _require_non_negative(exit_fee, "exit_fee")
 
         gross_pnl = sum(
             (

@@ -4,11 +4,13 @@ from uuid import UUID
 
 import pytest
 
+from tiewtrade.trading.entry_policy import EntryPolicy
 from tiewtrade.trading.session_config import (
     MarketType,
     SessionConfig,
     TradeMode,
 )
+from tiewtrade.trading.spot_policy import SpotTradingPolicy
 
 SESSION_ID = UUID("00000000-0000-0000-0000-000000000010")
 ACCOUNT_PROFILE_ID = UUID("00000000-0000-0000-0000-000000000001")
@@ -24,6 +26,10 @@ def make_config(**overrides: object) -> SessionConfig:
         "available_capital": Decimal("1000"),
         "fee_rate": Decimal("0.001"),
         "slippage_bps": Decimal("2"),
+        "entry_policy": EntryPolicy(max_entries=10),
+        "spot_policy": SpotTradingPolicy(
+            trading_capital_ratio=Decimal("0.80")
+        ),
     }
     values.update(overrides)
     return SessionConfig(**values)  # type: ignore[arg-type]
@@ -34,10 +40,46 @@ def make_config(**overrides: object) -> SessionConfig:
 def test_session_configuration_supports_each_mode_and_market(
     trade_mode: TradeMode, market_type: MarketType
 ) -> None:
-    config = make_config(trade_mode=trade_mode, market_type=market_type)
+    config = make_config(
+        trade_mode=trade_mode,
+        market_type=market_type,
+        spot_policy=(
+            SpotTradingPolicy(trading_capital_ratio=Decimal("0.80"))
+            if market_type is MarketType.SPOT
+            else None
+        ),
+    )
 
     assert config.trade_mode is trade_mode
     assert config.market_type is market_type
+
+
+def test_spot_session_owns_form_policies() -> None:
+    entry_policy = EntryPolicy(max_entries=12)
+    spot_policy = SpotTradingPolicy(trading_capital_ratio=Decimal("0.75"))
+
+    config = make_config(
+        entry_policy=entry_policy,
+        spot_policy=spot_policy,
+    )
+
+    assert config.entry_policy is entry_policy
+    assert config.spot_policy is spot_policy
+
+
+def test_spot_session_requires_spot_policy() -> None:
+    with pytest.raises(ValueError, match="spot_policy"):
+        make_config(spot_policy=None)
+
+
+def test_futures_session_rejects_spot_policy() -> None:
+    with pytest.raises(ValueError, match="spot_policy"):
+        make_config(
+            market_type=MarketType.FUTURES,
+            spot_policy=SpotTradingPolicy(
+                trading_capital_ratio=Decimal("0.80")
+            ),
+        )
 
 
 def test_session_configuration_is_immutable() -> None:
