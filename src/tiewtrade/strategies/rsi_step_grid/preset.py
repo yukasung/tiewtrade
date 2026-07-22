@@ -1,6 +1,13 @@
 from dataclasses import dataclass
 from decimal import Decimal
 
+_V1_VERSION = "rsi-step-grid-v1"
+_V1_RSI_PERIOD = 14
+_V1_RSI_RESET_THRESHOLD = Decimal("30")
+_V1_RSI_ENTRY_THRESHOLD = Decimal("50")
+_V1_ATR_PERIOD = 14
+_V1_TAKE_PROFIT_ATR_MULTIPLIER = Decimal("3")
+
 
 @dataclass(frozen=True, slots=True)
 class RsiStepGridPreset:
@@ -24,14 +31,24 @@ class RsiStepGridPreset:
             raise ValueError("entry threshold must not exceed 100")
         if self.take_profit_atr_multiplier <= 0:
             raise ValueError("take_profit_atr_multiplier must be positive")
+        if self.version != _V1_VERSION:
+            raise ValueError("unsupported preset version")
+        if (
+            self.rsi_period != _V1_RSI_PERIOD
+            or self.rsi_reset_threshold != _V1_RSI_RESET_THRESHOLD
+            or self.rsi_entry_threshold != _V1_RSI_ENTRY_THRESHOLD
+            or self.atr_period != _V1_ATR_PERIOD
+            or self.take_profit_atr_multiplier != _V1_TAKE_PROFIT_ATR_MULTIPLIER
+        ):
+            raise ValueError("rsi-step-grid-v1 parameters must remain canonical")
 
     @classmethod
     def v1(cls) -> "RsiStepGridPreset":
         return cls(
-            version="rsi-step-grid-v1",
-            rsi_period=14,
-            rsi_reset_threshold=Decimal("30"),
-            rsi_entry_threshold=Decimal("50"),
-            atr_period=14,
-            take_profit_atr_multiplier=Decimal("3"),
+            version=_V1_VERSION,
+            rsi_period=_V1_RSI_PERIOD,
+            rsi_reset_threshold=_V1_RSI_RESET_THRESHOLD,
+            rsi_entry_threshold=_V1_RSI_ENTRY_THRESHOLD,
+            atr_period=_V1_ATR_PERIOD,
+            take_profit_atr_multiplier=_V1_TAKE_PROFIT_ATR_MULTIPLIER,
         )

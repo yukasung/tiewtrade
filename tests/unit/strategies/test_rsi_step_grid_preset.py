@@ -34,3 +34,15 @@ def test_preset_rejects_overlapping_rsi_thresholds() -> None:
             atr_period=14,
             take_profit_atr_multiplier=Decimal("3"),
         )
+
+
+def test_preset_version_cannot_be_reused_with_different_parameters() -> None:
+    with pytest.raises(ValueError, match="rsi-step-grid-v1 parameters"):
+        RsiStepGridPreset(
+            version="rsi-step-grid-v1",
+            rsi_period=7,
+            rsi_reset_threshold=Decimal("30"),
+            rsi_entry_threshold=Decimal("50"),
+            atr_period=14,
+            take_profit_atr_multiplier=Decimal("3"),
+        )
