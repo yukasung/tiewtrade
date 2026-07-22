@@ -12,9 +12,7 @@ from tiewtrade.trading.symbol_rules import SymbolRules
 def test_spot_capital_uses_form_policy_to_allocate_equal_entries() -> None:
     spot_policy = SpotTradingPolicy(trading_capital_ratio=Decimal("0.75"))
     entry_policy = EntryPolicy(max_entries=12)
-    plan = SpotCapitalPlan.from_available(
-        Decimal("1000"), spot_policy, entry_policy
-    )
+    plan = SpotCapitalPlan.from_available(Decimal("1000"), spot_policy, entry_policy)
 
     assert plan.trading_capital == Decimal("750")
     assert plan.reserve == Decimal("250")
@@ -49,9 +47,7 @@ def test_spot_capital_requires_positive_available_capital() -> None:
     spot_policy = SpotTradingPolicy(trading_capital_ratio=Decimal("0.80"))
     entry_policy = EntryPolicy(max_entries=10)
     with pytest.raises(ValueError, match="available capital"):
-        SpotCapitalPlan.from_available(
-            Decimal("0"), spot_policy, entry_policy
-        )
+        SpotCapitalPlan.from_available(Decimal("0"), spot_policy, entry_policy)
 
 
 def test_symbol_rules_round_quantity_and_price_down() -> None:
@@ -62,6 +58,7 @@ def test_symbol_rules_round_quantity_and_price_down() -> None:
     )
 
     assert rules.floor_price(Decimal("101.29")) == Decimal("101.20")
+    assert rules.ceil_price(Decimal("101.29")) == Decimal("101.30")
     assert rules.floor_quantity(Decimal("0.1239")) == Decimal("0.123")
 
 
@@ -81,9 +78,5 @@ def test_symbol_rules_check_notional_after_rounding() -> None:
         min_notional=Decimal("5"),
     )
 
-    assert rules.meets_min_notional(
-        price=Decimal("100"), quantity=Decimal("0.050")
-    )
-    assert not rules.meets_min_notional(
-        price=Decimal("100"), quantity=Decimal("0.049")
-    )
+    assert rules.meets_min_notional(price=Decimal("100"), quantity=Decimal("0.050"))
+    assert not rules.meets_min_notional(price=Decimal("100"), quantity=Decimal("0.049"))

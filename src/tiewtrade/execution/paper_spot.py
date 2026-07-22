@@ -43,7 +43,7 @@ class PaperSpotExecutor:
     def fill_entry(
         self, intent: EntryIntent, candle: Candle
     ) -> PaperSpotEntryFill | None:
-        price = self._symbol_rules.floor_price(
+        price = self._symbol_rules.ceil_price(
             candle.open * (Decimal("1") + self._session.slippage_bps / Decimal("10000"))
         )
         quantity = self._symbol_rules.floor_quantity(
@@ -71,6 +71,9 @@ class PaperSpotExecutor:
             basket.take_profit_price
             * (Decimal("1") - self._session.slippage_bps / Decimal("10000"))
         )
+        if price <= 0:
+            return None
+
         quantity = basket.total_quantity
         notional = price * quantity
         return PaperSpotExitFill(

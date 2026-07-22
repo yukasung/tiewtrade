@@ -27,9 +27,7 @@ def make_config(**overrides: object) -> SessionConfig:
         "fee_rate": Decimal("0.001"),
         "slippage_bps": Decimal("2"),
         "entry_policy": EntryPolicy(max_entries=10),
-        "spot_policy": SpotTradingPolicy(
-            trading_capital_ratio=Decimal("0.80")
-        ),
+        "spot_policy": SpotTradingPolicy(trading_capital_ratio=Decimal("0.80")),
     }
     values.update(overrides)
     return SessionConfig(**values)  # type: ignore[arg-type]
@@ -76,9 +74,7 @@ def test_futures_session_rejects_spot_policy() -> None:
     with pytest.raises(ValueError, match="spot_policy"):
         make_config(
             market_type=MarketType.FUTURES,
-            spot_policy=SpotTradingPolicy(
-                trading_capital_ratio=Decimal("0.80")
-            ),
+            spot_policy=SpotTradingPolicy(trading_capital_ratio=Decimal("0.80")),
         )
 
 
@@ -104,6 +100,14 @@ def test_session_rejects_negative_execution_costs(
 ) -> None:
     with pytest.raises(ValueError):
         make_config(fee_rate=fee_rate, slippage_bps=slippage_bps)
+
+
+@pytest.mark.parametrize("slippage_bps", [Decimal("10000"), Decimal("10000.001")])
+def test_session_rejects_slippage_of_ten_thousand_basis_points_or_more(
+    slippage_bps: Decimal,
+) -> None:
+    with pytest.raises(ValueError, match="slippage_bps"):
+        make_config(slippage_bps=slippage_bps)
 
 
 def test_live_configuration_is_only_data_and_does_not_start_execution() -> None:
