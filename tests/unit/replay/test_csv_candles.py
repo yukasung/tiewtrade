@@ -24,10 +24,13 @@ def test_loads_utc_candle_with_market_identity_from_configuration(
 
     candles = load_candles_csv(path, MarketDataConfig(symbol="ETHUSDT", timeframe="5m"))
 
+    assert isinstance(candles, tuple)
     assert candles[0].symbol == "ETHUSDT"
     assert candles[0].timeframe == "5m"
     assert candles[0].open == Decimal("100.10")
+    assert candles[0].open.as_tuple().exponent == -2
     assert candles[0].volume == Decimal("123.4500")
+    assert candles[0].volume.as_tuple().exponent == -4
 
 
 @pytest.mark.parametrize(
