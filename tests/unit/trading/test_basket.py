@@ -4,10 +4,18 @@ from decimal import Decimal
 import pytest
 
 from tiewtrade.trading.basket import Basket
+from tiewtrade.trading.spot_policy import SpotTradingPolicy
+
+
+def policy(max_entries: int = 10) -> SpotTradingPolicy:
+    return SpotTradingPolicy(
+        trading_capital_ratio=Decimal("0.80"),
+        max_entries=max_entries,
+    )
 
 
 def test_basket_reprices_take_profit_after_each_entry() -> None:
-    basket = Basket(max_entries=10, take_profit_atr_multiplier=Decimal("3"))
+    basket = Basket(policy=policy(), take_profit_atr_multiplier=Decimal("3"))
     basket.add_entry(
         price=Decimal("100"),
         quantity=Decimal("1"),
@@ -32,7 +40,7 @@ def test_basket_reprices_take_profit_after_each_entry() -> None:
 
 
 def test_close_subtracts_entry_and_exit_fees() -> None:
-    basket = Basket(max_entries=10, take_profit_atr_multiplier=Decimal("3"))
+    basket = Basket(policy=policy(), take_profit_atr_multiplier=Decimal("3"))
     basket.add_entry(
         price=Decimal("100"),
         quantity=Decimal("1"),
@@ -51,9 +59,9 @@ def test_close_subtracts_entry_and_exit_fees() -> None:
     assert closed.realized_pnl == Decimal("5.794")
 
 
-def test_basket_rejects_more_than_ten_entries() -> None:
-    basket = Basket(max_entries=10, take_profit_atr_multiplier=Decimal("3"))
-    for day in range(1, 11):
+def test_basket_rejects_entries_beyond_configured_maximum() -> None:
+    basket = Basket(policy=policy(4), take_profit_atr_multiplier=Decimal("3"))
+    for day in range(1, 5):
         basket.add_entry(
             price=Decimal("100"),
             quantity=Decimal("1"),
@@ -68,19 +76,14 @@ def test_basket_rejects_more_than_ten_entries() -> None:
             price=Decimal("100"),
             quantity=Decimal("1"),
             fee=Decimal("0.1"),
-            filled_at=datetime(2026, 1, 11, tzinfo=UTC),
+            filled_at=datetime(2026, 1, 5, tzinfo=UTC),
             atr=Decimal("2"),
             tick_size=Decimal("0.1"),
         )
 
 
-def test_basket_configuration_cannot_exceed_ten_entries() -> None:
-    with pytest.raises(ValueError, match="maximum entries"):
-        Basket(max_entries=11, take_profit_atr_multiplier=Decimal("3"))
-
-
 def test_basket_requires_utc_fill_timestamp() -> None:
-    basket = Basket(max_entries=10, take_profit_atr_multiplier=Decimal("3"))
+    basket = Basket(policy=policy(), take_profit_atr_multiplier=Decimal("3"))
 
     with pytest.raises(ValueError, match="UTC"):
         basket.add_entry(
@@ -94,7 +97,7 @@ def test_basket_requires_utc_fill_timestamp() -> None:
 
 
 def test_basket_requires_utc_close_timestamp() -> None:
-    basket = Basket(max_entries=10, take_profit_atr_multiplier=Decimal("3"))
+    basket = Basket(policy=policy(), take_profit_atr_multiplier=Decimal("3"))
     basket.add_entry(
         price=Decimal("100"),
         quantity=Decimal("1"),
@@ -125,7 +128,7 @@ def test_basket_requires_utc_close_timestamp() -> None:
 def test_invalid_entry_does_not_mutate_basket(
     field: str, value: Decimal
 ) -> None:
-    basket = Basket(max_entries=10, take_profit_atr_multiplier=Decimal("3"))
+    basket = Basket(policy=policy(), take_profit_atr_multiplier=Decimal("3"))
     values = {
         "price": Decimal("100"),
         "quantity": Decimal("1"),
@@ -145,7 +148,7 @@ def test_invalid_entry_does_not_mutate_basket(
 
 
 def test_closed_basket_cannot_close_or_accept_entries_twice() -> None:
-    basket = Basket(max_entries=10, take_profit_atr_multiplier=Decimal("3"))
+    basket = Basket(policy=policy(), take_profit_atr_multiplier=Decimal("3"))
     basket.add_entry(
         price=Decimal("100"),
         quantity=Decimal("1"),

@@ -45,7 +45,7 @@ Live Spot เพิ่ม Preflight, idempotency, Reconciliation และ safe 
 
 ## Risk Policy
 
-Internal Alpha แสดง PnL และ Drawdown เพื่อเฝ้าระวัง แต่ยังไม่มี Stop Loss, Maximum Drawdown hard limit, Max Daily Loss หรือ Consecutive-loss stop ระบบจึงไม่บังคับปิด Position จากตัวเลขเหล่านี้ อย่างไรก็ตาม capital allocation, maximum 10 Entries และ Futures leverage ไม่เกิน 5x เป็นข้อบังคับเสมอ
+Internal Alpha แสดง PnL และ Drawdown เพื่อเฝ้าระวัง แต่ยังไม่มี Stop Loss, Maximum Drawdown hard limit, Max Daily Loss หรือ Consecutive-loss stop ระบบจึงไม่บังคับปิด Position จากตัวเลขเหล่านี้ อย่างไรก็ตาม capital allocation, `max_entries` ของ Session และ Futures leverage ไม่เกิน 5x เป็นข้อบังคับเสมอ
 
 ## Out of Scope
 

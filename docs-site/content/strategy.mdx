@@ -38,7 +38,7 @@ stateDiagram-v2
 
 แผนภาพแสดงว่า reset ใต้ 30 เป็นเงื่อนไขเริ่มต้น ไม่ใช่คำสั่งซื้อ หลัง reset ระบบรอ Candle ที่ผ่าน confirmation ครบทุกข้อ สร้าง Intent ได้หนึ่งรายการ แล้วรอ Fill ก่อนกลับไปหา reset ใหม่
 
-Confirmation ต้องเกิดใน completed Candle เดียวกันและผ่านทุกเงื่อนไข: RSI สูงกว่า 50, `close > open`, `close > reset close`, Basket ยังไม่ครบ 10 Entries และ Bot Session กับ lifecycle อนุญาต Entry ใหม่
+Confirmation ต้องเกิดใน completed Candle เดียวกันและผ่านทุกเงื่อนไข: RSI สูงกว่า 50, `close > open`, `close > reset close`, Basket ยังไม่ครบ `max_entries` ของ Session และ Bot Session กับ lifecycle อนุญาต Entry ใหม่
 
 ## Deterministic Entry Intent
 

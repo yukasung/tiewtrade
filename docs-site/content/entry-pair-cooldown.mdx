@@ -5,11 +5,11 @@ description: ลำดับ Entry Pair และกฎ Cooldown Month แบบ
 
 # Entry Pair & Cooldown
 
-Entries ใน Basket ถูกจัดเป็นคู่เพื่อเว้นจังหวะการเพิ่ม Position ตามเดือน UTC กฎนี้จำกัดการสะสมโดยไม่หยุด Take Profit และไม่เปลี่ยนขีดจำกัดสูงสุด 10 Entries
+Entries ใน Basket ถูกจัดเป็นคู่เพื่อเว้นจังหวะการเพิ่ม Position ตามเดือน UTC กฎนี้จำกัดการสะสมโดยไม่หยุด Take Profit จำนวน Entries สูงสุดมาจาก immutable Session policy และต้องเป็นเลขคู่ 2–20
 
 ## Pair Sequence
 
-แผนภาพแรกเรียง Pair ทั้งห้าจาก Entry 1 ถึงเพดาน Entry 10
+ตัวอย่างนี้ใช้ค่าเริ่มต้น 10 Entries จึงมี Pair ทั้งหมดห้าคู่
 
 ```mermaid
 flowchart LR
@@ -21,7 +21,7 @@ flowchart LR
 
 แผนภาพแสดง Pair ทั้งห้าตามลำดับ ระบบเริ่ม Pair ถัดไปได้เมื่อ Pair ปัจจุบันครบสอง Entries, ผ่าน Cooldown Month ที่เกี่ยวข้อง และ Basket ยังเปิดอยู่
 
-แต่ละ Entry ยังต้องมี reset และ confirmation ของ Strategy ใหม่ การอนุญาตจาก lifecycle ไม่ได้สร้าง Entry เอง และ maximum 10 Entries ยังคงเป็นเพดานสุดท้าย
+แต่ละ Entry ยังต้องมี reset และ confirmation ของ Strategy ใหม่ การอนุญาตจาก lifecycle ไม่ได้สร้าง Entry เอง และ `max_entries` ของ Session ยังคงเป็นเพดานสุดท้าย
 
 ## UTC Month Boundary
 
@@ -65,4 +65,4 @@ flowchart LR
 
 ## Entry Eligibility Evaluation
 
-ก่อนอนุมัติ Entry Intent ระบบตรวจตามลำดับว่า Bot Session รับ Entry ใหม่ได้, Basket ยังไม่ครบ 10 Entries, ไม่มี Intent รอ Fill, Pair ปัจจุบันรับ Entry ได้ และเดือน UTC ของ completed Candle ที่กำลังประมวลผลไม่ใช่ Cooldown Month หลังจากนั้นจึงคำนวณขนาดจาก [Capital Allocation](/capital-allocation)
+ก่อนอนุมัติ Entry Intent ระบบตรวจตามลำดับว่า Bot Session รับ Entry ใหม่ได้, Basket ยังไม่ครบ `max_entries`, ไม่มี Intent รอ Fill, Pair ปัจจุบันรับ Entry ได้ และเดือน UTC ของ completed Candle ที่กำลังประมวลผลไม่ใช่ Cooldown Month หลังจากนั้นจึงคำนวณขนาดจาก [Capital Allocation](/capital-allocation)

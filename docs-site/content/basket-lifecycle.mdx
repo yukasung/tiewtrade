@@ -5,7 +5,7 @@ description: การสะสม Entry คำนวณ weighted average แล
 
 # Basket Lifecycle
 
-Basket รวม Entries ของรอบการสะสม Position เดียวกันและมี Take Profit ร่วมกัน Basket หนึ่งมีได้สูงสุด 10 Entries ทุกการคำนวณอ้างอิง Fill ที่ยืนยันแล้ว ไม่ใช้เพียง Order หรือ Entry Intent
+Basket รวม Entries ของรอบการสะสม Position เดียวกันและมี Take Profit ร่วมกัน Basket หนึ่งมีได้สูงสุดตาม `max_entries` ของ immutable Session policy ทุกการคำนวณอ้างอิง Fill ที่ยืนยันแล้ว ไม่ใช้เพียง Order หรือ Entry Intent
 
 ## Weighted Average
 

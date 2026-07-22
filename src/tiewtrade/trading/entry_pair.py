@@ -1,5 +1,7 @@
 from datetime import datetime, timedelta
 
+from tiewtrade.trading.spot_policy import SpotTradingPolicy
+
 
 def month_index(at: datetime) -> int:
     if at.tzinfo is None or at.utcoffset() != timedelta(0):
@@ -8,10 +10,8 @@ def month_index(at: datetime) -> int:
 
 
 class EntryPairLifecycle:
-    def __init__(self, max_entries: int) -> None:
-        if not 1 <= max_entries <= 10:
-            raise ValueError("maximum entries must be between 1 and 10")
-        self._max_entries = max_entries
+    def __init__(self, policy: SpotTradingPolicy) -> None:
+        self._policy = policy
         self._entry_count = 0
         self._completed_pair_month: int | None = None
 
@@ -21,7 +21,7 @@ class EntryPairLifecycle:
 
     def can_enter(self, at: datetime) -> bool:
         current_month = month_index(at)
-        if self._entry_count >= self._max_entries:
+        if self._entry_count >= self._policy.max_entries:
             return False
         if self._entry_count == 0 or self._entry_count % 2 == 1:
             return True

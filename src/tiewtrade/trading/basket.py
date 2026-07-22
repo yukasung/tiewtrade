@@ -2,6 +2,8 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from decimal import ROUND_DOWN, Decimal
 
+from tiewtrade.trading.spot_policy import SpotTradingPolicy
+
 
 def _require_utc(value: datetime, field: str) -> None:
     if value.tzinfo is None or value.utcoffset() != timedelta(0):
@@ -36,10 +38,12 @@ class ClosedBasket:
 
 
 class Basket:
-    def __init__(self, max_entries: int, take_profit_atr_multiplier: Decimal) -> None:
-        if not 1 <= max_entries <= 10:
-            raise ValueError("maximum entries must be between 1 and 10")
-        self._max_entries = max_entries
+    def __init__(
+        self,
+        policy: SpotTradingPolicy,
+        take_profit_atr_multiplier: Decimal,
+    ) -> None:
+        self._policy = policy
         self._take_profit_atr_multiplier = take_profit_atr_multiplier
         self._entries: list[BasketEntry] = []
         self._is_closed = False
@@ -84,7 +88,7 @@ class Basket:
         _require_utc(filled_at, "filled_at")
         if self.is_closed:
             raise ValueError("basket is closed")
-        if self.entry_count >= self._max_entries:
+        if self.entry_count >= self._policy.max_entries:
             raise ValueError("basket has reached maximum entries")
         _require_positive(price, "price")
         _require_positive(quantity, "quantity")
