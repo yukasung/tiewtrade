@@ -62,6 +62,8 @@ def test_take_profit_skips_entry_fill_candle_and_closes_on_following_candle() ->
 
     assert entry_snapshot.entry_fill is not None
     assert entry_snapshot.closed_basket is None
+    assert entry_snapshot.take_profit_fill is None
+    assert entry_snapshot.closed_basket_count == 0
     assert entry_snapshot.basket_entry_count == 1
 
     target_candle = candle(130, open_price="125", close_price="130", high="140")
@@ -71,6 +73,9 @@ def test_take_profit_skips_entry_fill_candle_and_closes_on_following_candle() ->
 
     assert target_snapshot.closed_basket is not None
     assert target_snapshot.closed_basket.entry_count == 1
+    assert target_snapshot.take_profit_fill is not None
+    assert target_snapshot.take_profit_fill.filled_at == target_candle.close_time
+    assert target_snapshot.closed_basket_count == 1
     assert target_snapshot.basket_entry_count == 0
     assert target_snapshot.take_profit_price is None
 
@@ -124,6 +129,8 @@ def test_closed_two_entry_basket_resets_lifecycle_for_a_new_basket() -> None:
     )
     assert closed.closed_basket is not None
     assert closed.closed_basket.entry_count == 2
+    assert closed.take_profit_fill is not None
+    assert closed.closed_basket_count == 1
 
     new_intent = arm_entry_intent(
         application,
@@ -139,6 +146,22 @@ def test_closed_two_entry_basket_resets_lifecycle_for_a_new_basket() -> None:
 
     assert new_fill.entry_fill is not None
     assert new_fill.basket_entry_count == 1
+    assert new_fill.take_profit_fill is not None
+    assert new_fill.closed_basket_count == 1
+
+    second_close_candle = candle(
+        minute_after(new_intent) + 5,
+        open_price="100",
+        close_price="101",
+        high="1000",
+    )
+    second_closed = application.process_completed_candle(
+        second_close_candle, received_at=second_close_candle.close_time
+    )
+
+    assert second_closed.closed_basket is not None
+    assert second_closed.take_profit_fill is not None
+    assert second_closed.closed_basket_count == 2
 
 
 def paper_session(*, min_notional: Decimal = Decimal("5")) -> PaperSpotSession:

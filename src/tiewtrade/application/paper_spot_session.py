@@ -2,7 +2,11 @@ from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
 
-from tiewtrade.execution.paper_spot import PaperSpotEntryFill, PaperSpotExecutor
+from tiewtrade.execution.paper_spot import (
+    PaperSpotEntryFill,
+    PaperSpotExecutor,
+    PaperSpotExitFill,
+)
 from tiewtrade.market_data.candle import Candle
 from tiewtrade.market_data.completed_candle_stream import CompletedCandleStream
 from tiewtrade.market_data.config import MarketDataConfig
@@ -23,7 +27,9 @@ class PaperSpotSessionSnapshot:
     accepted: bool
     pending_intent: EntryIntent | None
     entry_fill: PaperSpotEntryFill | None
+    take_profit_fill: PaperSpotExitFill | None
     closed_basket: ClosedBasket | None
+    closed_basket_count: int
     basket_entry_count: int
     take_profit_price: Decimal | None
 
@@ -54,6 +60,8 @@ class PaperSpotSession:
         self._lifecycle = EntryPairLifecycle(session.entry_policy)
         self._basket: Basket | None = None
         self._pending_intent: EntryIntent | None = None
+        self._latest_take_profit_fill: PaperSpotExitFill | None = None
+        self._closed_basket_count = 0
 
     def process_completed_candle(
         self, candle: Candle, *, received_at: datetime
@@ -131,6 +139,8 @@ class PaperSpotSession:
         )
         self._basket = None
         self._lifecycle.reset()
+        self._latest_take_profit_fill = exit_fill
+        self._closed_basket_count += 1
         return closed
 
     def _snapshot(
@@ -144,7 +154,9 @@ class PaperSpotSession:
             accepted=accepted,
             pending_intent=self._pending_intent,
             entry_fill=entry_fill,
+            take_profit_fill=self._latest_take_profit_fill,
             closed_basket=closed_basket,
+            closed_basket_count=self._closed_basket_count,
             basket_entry_count=0 if self._basket is None else self._basket.entry_count,
             take_profit_price=(
                 None if self._basket is None else self._basket.take_profit_price
