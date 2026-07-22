@@ -8,6 +8,16 @@ def _require_utc(value: datetime, field: str) -> None:
         raise ValueError(f"{field} must use UTC")
 
 
+def _require_positive(value: Decimal, field: str) -> None:
+    if value <= 0:
+        raise ValueError(f"{field} must be positive")
+
+
+def _require_non_negative(value: Decimal, field: str) -> None:
+    if value < 0:
+        raise ValueError(f"{field} must not be negative")
+
+
 @dataclass(frozen=True, slots=True)
 class BasketEntry:
     price: Decimal
@@ -32,6 +42,7 @@ class Basket:
         self._max_entries = max_entries
         self._take_profit_atr_multiplier = take_profit_atr_multiplier
         self._entries: list[BasketEntry] = []
+        self._is_closed = False
         self.take_profit_price: Decimal | None = None
 
     @property
@@ -41,6 +52,10 @@ class Basket:
     @property
     def is_empty(self) -> bool:
         return not self._entries
+
+    @property
+    def is_closed(self) -> bool:
+        return self._is_closed
 
     @property
     def total_quantity(self) -> Decimal:
@@ -67,8 +82,15 @@ class Basket:
         tick_size: Decimal,
     ) -> None:
         _require_utc(filled_at, "filled_at")
+        if self.is_closed:
+            raise ValueError("basket is closed")
         if self.entry_count >= self._max_entries:
             raise ValueError("basket has reached maximum entries")
+        _require_positive(price, "price")
+        _require_positive(quantity, "quantity")
+        _require_non_negative(fee, "fee")
+        _require_non_negative(atr, "atr")
+        _require_positive(tick_size, "tick_size")
 
         self._entries.append(BasketEntry(price, quantity, fee, filled_at))
         raw_target = self.average_entry_price + (
@@ -87,6 +109,8 @@ class Basket:
         closed_at: datetime,
     ) -> ClosedBasket:
         _require_utc(closed_at, "closed_at")
+        if self.is_closed:
+            raise ValueError("basket is closed")
         if self.is_empty:
             raise ValueError("basket is empty")
 
@@ -98,10 +122,12 @@ class Basket:
             Decimal("0"),
         )
         entry_fees = sum((entry.fee for entry in self._entries), Decimal("0"))
-        return ClosedBasket(
+        closed = ClosedBasket(
             entry_count=self.entry_count,
             average_entry_price=self.average_entry_price,
             exit_price=exit_price,
             realized_pnl=gross_pnl - entry_fees - exit_fee,
             closed_at=closed_at,
         )
+        self._is_closed = True
+        return closed

@@ -110,3 +110,69 @@ def test_basket_requires_utc_close_timestamp() -> None:
             exit_fee=Decimal("0.106"),
             closed_at=datetime(2026, 1, 2),
         )
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [
+        ("price", Decimal("0")),
+        ("quantity", Decimal("0")),
+        ("fee", Decimal("-0.1")),
+        ("atr", Decimal("-1")),
+        ("tick_size", Decimal("0")),
+    ],
+)
+def test_invalid_entry_does_not_mutate_basket(
+    field: str, value: Decimal
+) -> None:
+    basket = Basket(max_entries=10, take_profit_atr_multiplier=Decimal("3"))
+    values = {
+        "price": Decimal("100"),
+        "quantity": Decimal("1"),
+        "fee": Decimal("0.1"),
+        "atr": Decimal("2"),
+        "tick_size": Decimal("0.1"),
+    }
+    values[field] = value
+
+    with pytest.raises(ValueError, match=field):
+        basket.add_entry(
+            **values,
+            filled_at=datetime(2026, 1, 1, tzinfo=UTC),
+        )
+
+    assert basket.entry_count == 0
+
+
+def test_closed_basket_cannot_close_or_accept_entries_twice() -> None:
+    basket = Basket(max_entries=10, take_profit_atr_multiplier=Decimal("3"))
+    basket.add_entry(
+        price=Decimal("100"),
+        quantity=Decimal("1"),
+        fee=Decimal("0.1"),
+        filled_at=datetime(2026, 1, 1, tzinfo=UTC),
+        atr=Decimal("2"),
+        tick_size=Decimal("0.1"),
+    )
+    basket.close(
+        exit_price=Decimal("106"),
+        exit_fee=Decimal("0.106"),
+        closed_at=datetime(2026, 1, 2, tzinfo=UTC),
+    )
+
+    assert basket.is_closed
+    with pytest.raises(ValueError, match="closed"):
+        basket.close(
+            exit_price=Decimal("106"),
+            exit_fee=Decimal("0.106"),
+            closed_at=datetime(2026, 1, 2, tzinfo=UTC),
+        )
+    with pytest.raises(ValueError, match="closed"):
+        basket.add_entry(
+            price=Decimal("100"),
+            quantity=Decimal("1"),
+            fee=Decimal("0.1"),
+            filled_at=datetime(2026, 1, 3, tzinfo=UTC),
+            atr=Decimal("2"),
+            tick_size=Decimal("0.1"),
+        )
