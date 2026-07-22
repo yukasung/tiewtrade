@@ -67,6 +67,11 @@ class RsiStepGridStrategy:
         self._pending_intent = None
         self._reset_close = None
 
+    def on_entry_rejected(self, intent_id: str) -> None:
+        if self._pending_intent is None or self._pending_intent.intent_id != intent_id:
+            raise ValueError("rejection does not match pending intent")
+        self._pending_intent = None
+
     def _intent_id(self, candle: Candle, entry_number: int) -> str:
         identity = "\n".join(
             (

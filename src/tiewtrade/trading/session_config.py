@@ -35,8 +35,8 @@ class SessionConfig:
             raise ValueError("available_capital must be positive")
         if self.fee_rate < 0:
             raise ValueError("fee_rate must not be negative")
-        if self.slippage_bps < 0:
-            raise ValueError("slippage_bps must not be negative")
+        if not Decimal("0") <= self.slippage_bps < Decimal("10000"):
+            raise ValueError("slippage_bps must be between 0 and 10000")
         if self.market_type is MarketType.SPOT and self.spot_policy is None:
             raise ValueError("spot_policy is required for Spot sessions")
         if self.market_type is MarketType.FUTURES and self.spot_policy is not None:
