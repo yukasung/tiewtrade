@@ -17,9 +17,7 @@ class CompletedCandleStream:
         if received_at.tzinfo is None or received_at.utcoffset() != timedelta(0):
             raise ValueError("received_at must use UTC")
         if candle.symbol != self._config.symbol:
-            raise ValueError(
-                "candle symbol does not match market data configuration"
-            )
+            raise ValueError("candle symbol does not match market data configuration")
         if candle.timeframe != self._config.timeframe:
             raise ValueError(
                 "candle timeframe does not match market data configuration"
@@ -31,8 +29,6 @@ class CompletedCandleStream:
                 return False
             expected = self._last_open_time + self._config.interval
             if candle.open_time != expected:
-                raise CandleGapError(
-                    f"missing candle beginning {expected.isoformat()}"
-                )
+                raise CandleGapError(f"missing candle beginning {expected.isoformat()}")
         self._last_open_time = candle.open_time
         return True

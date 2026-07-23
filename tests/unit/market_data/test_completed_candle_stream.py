@@ -11,9 +11,7 @@ from tiewtrade.market_data.completed_candle_stream import (
 from tiewtrade.market_data.config import MarketDataConfig
 
 
-def candle_at(
-    minute: int, *, symbol: str = "BTCUSDT", timeframe: str = "5m"
-) -> Candle:
+def candle_at(minute: int, *, symbol: str = "BTCUSDT", timeframe: str = "5m") -> Candle:
     opened = datetime(2026, 1, 1, 0, minute, tzinfo=UTC)
     return Candle(
         symbol=symbol,

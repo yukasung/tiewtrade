@@ -130,9 +130,7 @@ def test_basket_requires_utc_close_timestamp() -> None:
         ("tick_size", Decimal("0")),
     ],
 )
-def test_invalid_entry_does_not_mutate_basket(
-    field: str, value: Decimal
-) -> None:
+def test_invalid_entry_does_not_mutate_basket(field: str, value: Decimal) -> None:
     basket = Basket(policy=policy(), take_profit_atr_multiplier=Decimal("3"))
     values = {
         "price": Decimal("100"),
@@ -190,9 +188,7 @@ def test_closed_basket_cannot_close_or_accept_entries_twice() -> None:
     ("field", "value"),
     [("exit_price", Decimal("0")), ("exit_fee", Decimal("-0.1"))],
 )
-def test_invalid_close_does_not_close_basket(
-    field: str, value: Decimal
-) -> None:
+def test_invalid_close_does_not_close_basket(field: str, value: Decimal) -> None:
     basket = Basket(policy=policy(), take_profit_atr_multiplier=Decimal("3"))
     basket.add_entry(
         price=Decimal("100"),
