@@ -19,7 +19,7 @@ sequenceDiagram
     participant P as Preflight
     participant A as Live Adapter
 
-    U->>S: Select Account Profile and Live Mode
+    U->>S: Select Live Mode
     S->>K: Request credentials reference
     K-->>P: Supply credentials securely
     P->>A: Check exchange and account facts
@@ -29,9 +29,9 @@ sequenceDiagram
     S->>A: Start Live Bot Session
 ```
 
-แผนภาพแสดงว่าการยืนยันอยู่หลังผล Preflight ผู้ใช้ต้องเห็น Account Profile, Market Type, Mode และข้อเท็จจริงที่ตรวจแล้วก่อนเริ่ม Live ไม่มี credential value ถูกส่งไปเก็บใน application database
+แผนภาพแสดงว่าการยืนยันอยู่หลังผล Preflight ผู้ใช้ต้องเห็น Market Type, Mode และข้อเท็จจริงของ Binance Account ที่ตรวจแล้วก่อนเริ่ม Live ไม่มี credential value ถูกส่งไปเก็บใน application database
 
-Preflight ตรวจ API credentials และ permissions, Account Profile, BTCUSDT symbol rules, balance, open orders, positions, margin mode และ leverage Spot กับ Futures ใช้ checklist ที่เหมาะกับ account facts ของตนเอง
+Preflight ตรวจ API credentials และ permissions ของ Binance Account เดียว, BTCUSDT symbol rules, balance, open orders, positions, margin mode และ leverage Spot กับ Futures ใช้ checklist ที่เหมาะกับ account facts ของตนเอง
 
 ## Execution Boundaries
 

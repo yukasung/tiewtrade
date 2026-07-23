@@ -20,7 +20,6 @@ class MarketType(StrEnum):
 @dataclass(frozen=True, slots=True)
 class SessionConfig:
     session_id: UUID
-    account_profile_id: UUID
     preset_version: str
     market_type: MarketType
     trade_mode: TradeMode

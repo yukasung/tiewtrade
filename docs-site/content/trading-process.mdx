@@ -64,7 +64,7 @@ Take Profit ใช้ `weighted_average_entry_price + ATR(14) × 3` จาก AT
 
 ## Persistence and Audit Trail
 
-ทุก decision และ side effect ที่สำคัญถูกบันทึกพร้อม Account Profile และ Bot Session ได้แก่ signal Candle, Preset version, Entry Intent, Order, Fill, fee, slippage, funding, Basket state และ notification Audit trail ต้องตอบได้ว่า Bot ตัดสินใจอะไร เมื่อใด ใช้ข้อมูลใด และ execution ให้ผลอย่างไร
+ทุก decision และ side effect ที่สำคัญถูกบันทึกพร้อม Bot Session ได้แก่ signal Candle, Preset version, Entry Intent, Order, Fill, fee, slippage, funding, Basket state และ notification `session_id` เป็น ownership boundary โดยตรง และ Audit trail ต้องตอบได้ว่า Bot ตัดสินใจอะไร เมื่อใด ใช้ข้อมูลใด และ execution ให้ผลอย่างไร
 
 UI แสดง state ที่ยืนยันแล้ว เช่น pending Entry, Entry count, active Take Profit, closed Baskets, PnL, Drawdown และ data freshness งาน network, engine และ persistence ต้องไม่บล็อก UI thread
 

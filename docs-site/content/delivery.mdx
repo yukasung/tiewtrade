@@ -28,9 +28,9 @@ flowchart LR
 
 Paper เริ่มจาก vertical slice ของ BTCUSDT Spot: รับ completed Candles ที่ต่อเนื่อง, คำนวณ Wilder RSI/ATR, สร้าง deterministic Entry Intent, บังคับ immutable Spot allocation และ Entry Policy จาก Session, Fill ที่ Candle ถัดไป, ปิด Basket ด้วย Take Profit และ replay ผลเดิม
 
-จาก tracer slice นี้จึงกำหนด Account Profile และ Session ownership ก่อนบันทึก ownership เดียวกันด้วย SQLite จากนั้นเติม public market-data runtime, Paper Futures, desktop UI และ restart Recovery ตามลำดับ dependency จนครบ flow ใช้งานจริง ไม่ถือว่าการ replay ชุดเดียวสำเร็จเท่ากับ Paper Trading Complete
+จาก tracer slice นี้จึงบังคับ one Active Bot Session และ Session ownership โดยตรงก่อนบันทึก ownership เดียวกันด้วย SQLite จากนั้นเติม public market-data runtime, Paper Futures, desktop UI และ restart Recovery ตามลำดับ dependency จนครบ flow ใช้งานจริง ไม่ถือว่าการ replay ชุดเดียวสำเร็จเท่ากับ Paper Trading Complete
 
-Quality gate ครอบคลุม automated tests ของ business rules, persistence, Recovery และ execution boundaries รวมทั้ง fee, slippage, funding, data freshness, PnL, Drawdown และ audit events
+Quality gate ครอบคลุม automated tests ของ business rules, persistence, Recovery และ execution boundaries รวมทั้ง fee, slippage, Funding Fee `0.00` สำหรับ Paper Futures Phase แรก, data freshness, PnL, Drawdown และ audit events
 
 ## Live Spot
 

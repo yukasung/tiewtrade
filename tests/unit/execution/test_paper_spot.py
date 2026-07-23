@@ -20,7 +20,6 @@ from tiewtrade.trading.symbol_rules import SymbolRules
 def test_entry_fill_uses_session_capital_costs_and_symbol_rules() -> None:
     session = SessionConfig(
         session_id=UUID("00000000-0000-0000-0000-000000000079"),
-        account_profile_id=UUID("00000000-0000-0000-0000-000000000001"),
         preset_version="rsi-step-grid-v1",
         market_type=MarketType.SPOT,
         trade_mode=TradeMode.PAPER,
@@ -53,7 +52,6 @@ def test_entry_fill_uses_session_capital_costs_and_symbol_rules() -> None:
 def test_entry_fill_rounds_buy_slippage_up_to_the_next_tick() -> None:
     session = SessionConfig(
         session_id=UUID("00000000-0000-0000-0000-000000000079"),
-        account_profile_id=UUID("00000000-0000-0000-0000-000000000001"),
         preset_version="rsi-step-grid-v1",
         market_type=MarketType.SPOT,
         trade_mode=TradeMode.PAPER,
@@ -83,7 +81,6 @@ def test_entry_fill_rounds_buy_slippage_up_to_the_next_tick() -> None:
 def test_entry_fill_rejects_quantity_below_minimum_notional() -> None:
     session = SessionConfig(
         session_id=UUID("00000000-0000-0000-0000-000000000079"),
-        account_profile_id=UUID("00000000-0000-0000-0000-000000000001"),
         preset_version="rsi-step-grid-v1",
         market_type=MarketType.SPOT,
         trade_mode=TradeMode.PAPER,
@@ -110,7 +107,6 @@ def test_entry_fill_rejects_quantity_below_minimum_notional() -> None:
 def test_take_profit_target_touch_uses_sell_floor_price_and_exact_fee() -> None:
     session = SessionConfig(
         session_id=UUID("00000000-0000-0000-0000-000000000079"),
-        account_profile_id=UUID("00000000-0000-0000-0000-000000000001"),
         preset_version="rsi-step-grid-v1",
         market_type=MarketType.SPOT,
         trade_mode=TradeMode.PAPER,
@@ -148,7 +144,6 @@ def test_take_profit_target_touch_uses_sell_floor_price_and_exact_fee() -> None:
 def test_take_profit_rejects_a_non_positive_sell_price_after_quantization() -> None:
     session = SessionConfig(
         session_id=UUID("00000000-0000-0000-0000-000000000079"),
-        account_profile_id=UUID("00000000-0000-0000-0000-000000000001"),
         preset_version="rsi-step-grid-v1",
         market_type=MarketType.SPOT,
         trade_mode=TradeMode.PAPER,
