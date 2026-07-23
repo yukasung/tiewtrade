@@ -15,7 +15,6 @@ from tiewtrade.trading.spot_policy import SpotTradingPolicy
 from tiewtrade.trading.symbol_rules import SymbolRules
 
 _SESSION_ID = UUID("00000000-0000-0000-0000-000000000080")
-_ACCOUNT_PROFILE_ID = UUID("00000000-0000-0000-0000-000000000001")
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -28,7 +27,6 @@ def main(argv: Sequence[str] | None = None) -> int:
         preset = RsiStepGridPreset.v1()
         session = SessionConfig(
             session_id=_SESSION_ID,
-            account_profile_id=_ACCOUNT_PROFILE_ID,
             preset_version=preset.version,
             market_type=MarketType.SPOT,
             trade_mode=TradeMode.PAPER,

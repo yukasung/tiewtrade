@@ -19,6 +19,7 @@ production code
 - `trading_capital_ratio`, `max_entries`, symbol และ timeframe ห้าม hard-code ใน
   business logic
 - 80% และ 10 Entries เป็นค่าเริ่มต้นของ form เท่านั้น
+- หนึ่ง installation ใช้ Binance Account เดียวและมี Active Bot Session ได้สูงสุดหนึ่ง Session
 - สร้าง Module หรือ seam เมื่อมีพฤติกรรมและ consumer จริง ไม่สร้างโครงว่างล่วงหน้า
 - ระหว่างพัฒนาใช้ Paper และ fake adapters เท่านั้น ห้ามส่ง Live order
 
@@ -75,10 +76,10 @@ Recovery, Paper Futures, public market-data runtime และ Desktop UI
 
 ส่งมอบ vertical slices ต่อจาก tracer ตามลำดับ dependency:
 
-1. กำหนด Account Profile isolation, Session ownership และ Active Bot Session invariant
-2. บันทึก ownership เดียวกันผ่าน SQLite schema, repositories, audit trail และ migrations
+1. บังคับ one Active Bot Session สำหรับ installation และ Session ownership โดยตรง
+2. เพิ่ม SQLite migrations, durable trade history, audit trail และ Recovery state
 3. Public Binance market-data adapter, reconnect, backfill และ stale-data fail closed
-4. Paper Futures: leverage, Cross Margin, Collateral Buffer และ funding replay
+4. Paper Futures: leverage, Cross Margin, Collateral Buffer และบันทึก Funding Fee เป็น `0.00`
 5. Desktop UI สำหรับ Session setup, Dashboard, Orders, Positions และ Notifications
 6. Stop Session, startup Recovery และ deterministic reconciliation ด้วย fake adapters
 7. Paper acceptance ครบทั้ง business rules, persistence, UI และ Recovery

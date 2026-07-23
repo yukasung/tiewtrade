@@ -1,4 +1,4 @@
-from dataclasses import FrozenInstanceError
+from dataclasses import FrozenInstanceError, fields
 from decimal import Decimal
 from uuid import UUID
 
@@ -13,13 +13,11 @@ from tiewtrade.trading.session_config import (
 from tiewtrade.trading.spot_policy import SpotTradingPolicy
 
 SESSION_ID = UUID("00000000-0000-0000-0000-000000000010")
-ACCOUNT_PROFILE_ID = UUID("00000000-0000-0000-0000-000000000001")
 
 
 def make_config(**overrides: object) -> SessionConfig:
     values: dict[str, object] = {
         "session_id": SESSION_ID,
-        "account_profile_id": ACCOUNT_PROFILE_ID,
         "preset_version": "rsi-step-grid-v1",
         "market_type": MarketType.SPOT,
         "trade_mode": TradeMode.PAPER,
@@ -31,6 +29,13 @@ def make_config(**overrides: object) -> SessionConfig:
     }
     values.update(overrides)
     return SessionConfig(**values)  # type: ignore[arg-type]
+
+
+def test_session_configuration_is_owned_directly_by_the_session() -> None:
+    field_names = {field.name for field in fields(SessionConfig)}
+
+    assert "session_id" in field_names
+    assert "account_profile_id" not in field_names
 
 
 @pytest.mark.parametrize("trade_mode", [TradeMode.PAPER, TradeMode.LIVE])

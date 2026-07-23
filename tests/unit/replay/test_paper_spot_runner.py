@@ -59,7 +59,6 @@ def test_replay_rejects_an_empty_iterable() -> None:
 def session_config() -> SessionConfig:
     return SessionConfig(
         session_id=UUID("00000000-0000-0000-0000-000000000080"),
-        account_profile_id=UUID("00000000-0000-0000-0000-000000000001"),
         preset_version="rsi-step-grid-v1",
         market_type=MarketType.SPOT,
         trade_mode=TradeMode.PAPER,

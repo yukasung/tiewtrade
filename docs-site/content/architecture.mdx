@@ -87,4 +87,4 @@ Live Spot กับ Live Futures แยก adapters เพราะ symbol rules
 
 SQLite เก็บ non-secret state ได้แก่ configuration, Basket, Entry Pair, Entry Intent, Order, Fill, PnL, execution costs, Notification, Reconciliation และ operational audit events Credentials อยู่ใน OS Keyring เท่านั้น
 
-Network, engine และ persistence ทำงานนอก UI thread UI อ่าน application state เพื่อแสดง Account Profile, Market Type, Mode, Preset Version, data freshness และ Bot Session state โดยไม่เป็นเจ้าของ business rules ดูเหตุผลสรุปของขอบเขตเหล่านี้ต่อได้ที่ [Decisions](/decisions)
+Network, engine และ persistence ทำงานนอก UI thread UI อ่าน application state เพื่อแสดง Market Type, Mode, Preset Version, data freshness และ Bot Session state โดยไม่เป็นเจ้าของ business rules ดูเหตุผลสรุปของขอบเขตเหล่านี้ต่อได้ที่ [Decisions](/decisions)

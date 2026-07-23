@@ -22,7 +22,7 @@ Execution เป็น seam ที่แยก side effects ออกจาก b
 
 | Mode | Market Type | Adapter responsibility |
 | --- | --- | --- |
-| Paper | Spot/Futures | จำลอง Fill, fee, slippage และ funding โดยไม่ส่งคำสั่งจริง |
+| Paper | Spot/Futures | จำลอง Fill, fee และ slippage โดยไม่ส่งคำสั่งจริง; Paper Futures Phase แรกบันทึก Funding Fee เป็น `0.00` |
 | Live | Spot | ส่งคำสั่ง Spot หลัง Preflight, idempotency และ reconciliation |
 | Live | Futures | จัดการ Futures order, margin, leverage, funding และ reconciliation |
 
@@ -30,7 +30,9 @@ Paper และ Live ห้ามใช้ execution implementation เดีย
 
 ## Configuration Boundary
 
-`SessionConfig` เป็น shared configuration ที่เก็บ session ID, Account Profile ID, Preset version, Market Type, Trade Mode, capital และ execution costs
+`SessionConfig` เป็น shared configuration ที่เก็บ session ID, Preset version, Market Type, Trade Mode, capital และ execution costs
+
+หนึ่ง installation ใช้ Binance Account เดียวและมี Active Bot Session ได้สูงสุดหนึ่ง Session ทุก Basket, Entry, Order, Fill, PnL และ audit record ผูกกับ `session_id` โดยตรง
 
 Market identity ต้องเป็นข้อมูลจาก configuration ไม่ใช่ค่าคงที่ใน strategy หรือ market-data pipeline:
 

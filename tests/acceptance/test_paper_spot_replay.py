@@ -32,7 +32,6 @@ def replay_fixture() -> ReplayResult:
         load_candles_csv(FIXTURE_PATH, market_data),
         session=SessionConfig(
             session_id=UUID("00000000-0000-0000-0000-000000000080"),
-            account_profile_id=UUID("00000000-0000-0000-0000-000000000001"),
             preset_version="rsi-step-grid-v1",
             market_type=MarketType.SPOT,
             trade_mode=TradeMode.PAPER,

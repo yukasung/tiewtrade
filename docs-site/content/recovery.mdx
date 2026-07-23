@@ -54,7 +54,7 @@ flowchart TD
 
 แผนภาพแยก Recovery ตาม Mode หลังโหลด durable state: Paper ตรวจ persisted state และวนกลับมาตรวจใหม่หลังผู้ใช้แก้ validation error โดยไม่ดึง exchange state ส่วน Live ดึง exchange facts, Reconcile และวนกลับไปดึงข้อมูลใหม่หลังผู้ใช้แก้ mismatch ทั้งสองเส้นทาง Resume เมื่อ validation ของตนผ่านเท่านั้น
 
-ข้อมูลที่โหลดรวม Bot Session configuration, Basket, Entry Pair, Entry Intent, Order, Fill, PnL และ operational audit events ทุก record ต้องผูก Account Profile กับ Bot Session ถูกต้อง
+ข้อมูลที่โหลดรวม Bot Session configuration, Basket, Entry Pair, Entry Intent, Order, Fill, PnL และ operational audit events ทุก record ต้องผูกกับ `session_id` ของ Bot Session โดยตรง
 
 ## Mismatch Handling
 

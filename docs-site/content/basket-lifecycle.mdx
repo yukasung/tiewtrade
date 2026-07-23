@@ -26,7 +26,7 @@ take_profit_price = weighted_average_entry_price + (ATR(14) × 3)
 
 ATR คือค่าล่าสุดจาก completed Candle ณ เวลาที่ Entry Fill ทุก Fill ทำให้ระบบคำนวณ weighted average และ Take Profit ใหม่ แล้วปัด target ตาม tick size ของ BTCUSDT จากนั้น place หรือ replace Take Profit Order สำหรับ quantity ทั้งหมดที่ Bot เป็นเจ้าของใน Basket สำหรับ Live Order นี้อยู่บน exchange และยัง active หลัง Stop Session
 
-ค่าธรรมเนียมไม่ถูกบวกใน Take Profit price แต่ entry fees และ exit fees ต้องถูกหักเมื่อคำนวณ realized PnL สำหรับ Futures ต้องรวม funding ที่เกิดขึ้นตามข้อมูลที่บันทึกไว้ด้วย
+ค่าธรรมเนียมไม่ถูกบวกใน Take Profit price แต่ entry fees และ exit fees ต้องถูกหักเมื่อคำนวณ realized PnL สำหรับ Paper Futures Phase แรก Funding Fee เป็น `0.00`; Live Futures ในอนาคตต้องใช้ funding ที่เกิดขึ้นจริงจาก Binance
 
 ## State Transitions
 
