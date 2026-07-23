@@ -1,7 +1,7 @@
 import argparse
 import sys
 from collections.abc import Sequence
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from uuid import UUID
 
@@ -64,10 +64,20 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument("csv_path", type=Path)
     parser.add_argument("--symbol", default="BTCUSDT")
     parser.add_argument("--timeframe", default="5m")
-    parser.add_argument("--available-capital", required=True, type=Decimal)
-    parser.add_argument("--trading-capital-ratio", required=True, type=Decimal)
+    parser.add_argument("--available-capital", required=True, type=_finite_decimal)
+    parser.add_argument("--trading-capital-ratio", required=True, type=_finite_decimal)
     parser.add_argument("--max-entries", required=True, type=int)
     return parser
+
+
+def _finite_decimal(value: str) -> Decimal:
+    try:
+        decimal = Decimal(value)
+    except InvalidOperation as error:
+        raise argparse.ArgumentTypeError("must be a decimal number") from error
+    if not decimal.is_finite():
+        raise argparse.ArgumentTypeError("must be finite")
+    return decimal
 
 
 if __name__ == "__main__":

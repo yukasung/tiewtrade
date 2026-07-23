@@ -144,6 +144,7 @@ src/tiewtrade/
 └── paper_replay_main.py
 tests/
 ├── acceptance/
+│   ├── test_paper_replay_cli.py
 │   └── test_paper_spot_replay.py
 ├── fixtures/
 │   └── btcusdt_5m_tracer.csv
