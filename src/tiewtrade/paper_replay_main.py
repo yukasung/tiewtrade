@@ -62,8 +62,8 @@ def main(argv: Sequence[str] | None = None) -> int:
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser()
     parser.add_argument("csv_path", type=Path)
-    parser.add_argument("--symbol", default="BTCUSDT")
-    parser.add_argument("--timeframe", default="5m")
+    parser.add_argument("--symbol", choices=("BTCUSDT",), default="BTCUSDT")
+    parser.add_argument("--timeframe", choices=("5m",), default="5m")
     parser.add_argument("--available-capital", required=True, type=_finite_decimal)
     parser.add_argument("--trading-capital-ratio", required=True, type=_finite_decimal)
     parser.add_argument("--max-entries", required=True, type=int)

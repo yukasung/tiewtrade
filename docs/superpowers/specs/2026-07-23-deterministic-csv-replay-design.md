@@ -41,7 +41,8 @@ ReplayResult -> Stable JSON -> CLI stdout
 - บังคับ header ตามลำดับ `open_time,open,high,low,close,volume`
 - ปฏิเสธ header ที่ขาด เกิน ซ้ำ หรือเรียงผิด
 - รับ timestamp แบบ ISO-8601 ที่มี UTC offset เท่านั้น
-- แปลง OHLCV เป็น `Decimal` โดยไม่ผ่าน `float`
+- แปลง OHLCV เป็น `Decimal` โดยไม่ผ่าน `float` แล้วตรวจ `.is_finite()` ของ
+  `open`, `high`, `low`, `close` และ `volume` ทุกค่า ก่อนสร้าง `Candle`
 - ใช้ symbol และ timeframe จาก `MarketDataConfig` ไม่อ่านหรือ hard-code ใน CSV
 - ส่ง validation ของราคา, range, volume และ timeframe alignment ให้ `Candle`
 - รายงาน row number ใน `ValueError` เมื่อข้อมูลไม่ถูกต้อง
@@ -76,6 +77,8 @@ acceptance contract ของ DEV-80 fixture
 - รับ `--available-capital`, `--trading-capital-ratio` และ `--max-entries`
 - มี `--symbol` และ `--timeframe` เป็น composition defaults สำหรับ acceptance
   scenario โดยค่าถูกส่งผ่าน configuration ไม่ฝังใน Strategy, loader หรือ runner
+- flags identity นี้จำกัด choices ที่ Internal Alpha รองรับเป็น `BTCUSDT` และ `5m`
+  จนกว่าจะมี validated rules mapping สำหรับ market identity อื่น
 - ประกอบ immutable Session configuration, deterministic Symbol rules และ Preset v1
 - เขียน stable JSON หนึ่งบรรทัดไปยัง stdout
 - คืน non-zero exit code พร้อมข้อความ error ทาง stderr เมื่อ input/config ไม่ถูกต้อง
@@ -112,7 +115,8 @@ JSON summary มีเฉพาะ audit facts ต่อไปนี้:
 
 - file missing หรือ unreadable: propagate error ที่ระบุ path
 - empty CSV หรือ header ผิด: `ValueError`
-- timestamp, Decimal หรือ Candle field ผิด: `ValueError` ที่ระบุ row number
+- timestamp, Decimal, non-finite OHLCV หรือ Candle field ผิด: `ValueError` ที่ระบุ
+  row number
 - Candle gap, duplicate หรือ out-of-order: replay หยุดด้วย `ValueError` แทนการคืน
   summary บางส่วน
 - Session ที่ไม่ใช่ Paper Spot: ใช้ validation เดิมของ `PaperSpotSession`
@@ -124,12 +128,13 @@ deterministic และปิดบังข้อมูลตลาดที่
 
 ใช้ Test-Driven Development ตามลำดับ:
 
-1. unit tests ของ strict CSV loader สำหรับ happy path, exact headers, UTC, Decimal
-   และ row-numbered errors
+1. unit tests ของ strict CSV loader สำหรับ happy path, exact headers, UTC, Decimal,
+   non-finite OHLCV ทุก field และ row-numbered errors
 2. unit tests ของ `ReplayResult` สำหรับ stable JSON และ Decimal serialization
 3. acceptance test replay fixture 40 Candles สองครั้งผ่าน object graph ใหม่คนละชุด
 4. assert ว่า outputs ตรงกันทุกตัวอักษรและเกิด Entry Fill/closed Basket/realized PnL
-5. CLI test ตรวจ stdout และยืนยันว่า process สำเร็จโดยไม่ใช้ network หรือ Binance
+5. CLI test ตรวจ stdout, ปฏิเสธ identity นอก `BTCUSDT`/`5m` และยืนยันว่า process
+   สำเร็จโดยไม่ใช้ network หรือ Binance
 
 Final verification ใช้ pytest, Ruff check, Ruff format, mypy และ `git diff --check`
 

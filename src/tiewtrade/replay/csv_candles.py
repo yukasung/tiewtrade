@@ -31,6 +31,9 @@ def _parse_candle(row: list[str], row_number: int, config: MarketDataConfig) -> 
     try:
         open_time = datetime.fromisoformat(row[0])
         open_price, high, low, close, volume = (Decimal(value) for value in row[1:])
+        values = (open_price, high, low, close, volume)
+        if not all(value.is_finite() for value in values):
+            raise ValueError("OHLCV values must be finite")
         return Candle(
             symbol=config.symbol,
             timeframe=config.timeframe,

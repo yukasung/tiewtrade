@@ -13,10 +13,13 @@
 - เวลา Candle และ received_at ต้องเป็น timezone-aware UTC
 - ราคา quantity fee slippage capital และ PnL ใช้ Decimal โดยไม่ผ่าน float
 - CSV header ต้องตรง open_time,open,high,low,close,volume ตามลำดับ
+- CSV loader ต้องปฏิเสธ Decimal ที่ไม่ finite ใน OHLCV ทุก field ก่อนสร้าง Candle
 - symbol และ timeframe มาจาก MarketDataConfig
 - replay ต้องสร้าง PaperSpotSession ใหม่ทุกครั้งและยอมรับทุก Candle เท่านั้น
 - output ใช้ compact JSON และแปลง PnL เป็น fixed-point string
 - CLI รับ available capital, Spot capital ratio และ maximum Entries
+- CLI คง flags `--symbol` และ `--timeframe` แต่จำกัด choices เป็น `BTCUSDT` และ
+  `5m` ตาม Internal Alpha จนกว่าจะมี validated rules mapping สำหรับ identity อื่น
 - ห้าม import Binance, credentials, Keyring, Live Preflight, network หรือ SQLite
 - ใช้ failing test → minimal implementation → refactor ในทุก Task
 
@@ -39,6 +42,8 @@ Tests ต้องครอบคลุม:
 - valid UTC row ใช้ symbol/timeframe จาก configuration และคง Decimal scale
 - header ขาด เกิน หรือเรียงผิด
 - timestamp ไม่มี UTC, Decimal ผิด และจำนวน columns ผิด พร้อมข้อความ CSV row 2
+- `NaN`, `Infinity` และ `-Infinity` ใน `open`, `high`, `low`, `close` และ `volume`
+  ถูกปฏิเสธพร้อมข้อความ CSV row 2
 - header-only file ถูกปฏิเสธ
 
 Wished-for API:
@@ -82,7 +87,7 @@ Implementation contract:
             raise ValueError("CSV must contain at least one candle")
         return candles
 
-\`_parse_candle\` ต้องตรวจ 6 columns, ใช้ \`datetime.fromisoformat\`, สร้าง Decimal ทั้งห้าค่า และ wrap \`InvalidOperation\`/Candle \`ValueError\` เป็น \`invalid CSV row {row_number}: ...\`.
+\`_parse_candle\` ต้องตรวจ 6 columns, ใช้ \`datetime.fromisoformat\`, สร้าง Decimal ทั้งห้าค่า, ตรวจ \`.is_finite()\` ทุกค่าก่อนสร้าง \`Candle\` และ wrap \`InvalidOperation\`/Candle \`ValueError\` เป็น \`invalid CSV row {row_number}: ...\`.
 
 - [ ] **Step 4: Verify GREEN**
 
@@ -285,6 +290,10 @@ Expected: subprocess หา \`tiewtrade.paper_replay_main\` ไม่พบ.
 - required Decimal --available-capital
 - required Decimal --trading-capital-ratio
 - required int --max-entries
+
+\`--symbol\` และ \`--timeframe\` ต้องคง flags/defaults เดิม แต่ใช้ argparse
+\`choices=("BTCUSDT",)\` และ \`choices=("5m",)\` ตามลำดับ จนกว่าจะมี
+validated rules mapping สำหรับ identity อื่น
 
 Composition defaults:
 - fee_rate 0.001

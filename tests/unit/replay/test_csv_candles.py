@@ -68,6 +68,33 @@ def test_rejects_invalid_row_with_its_csv_row_number(tmp_path: Path, row: str) -
         load_candles_csv(path, MarketDataConfig(symbol="ETHUSDT", timeframe="5m"))
 
 
+@pytest.mark.parametrize("field", ["open", "high", "low", "close", "volume"])
+@pytest.mark.parametrize("non_finite", ["NaN", "Infinity", "-Infinity"])
+def test_rejects_non_finite_ohlcv_values_with_its_csv_row_number(
+    tmp_path: Path, field: str, non_finite: str
+) -> None:
+    values = {
+        "open": "100",
+        "high": "102",
+        "low": "99",
+        "close": "101",
+        "volume": "10",
+    }
+    values[field] = non_finite
+    path = write_csv(
+        tmp_path,
+        "open_time,open,high,low,close,volume\n"
+        "2026-01-01T00:00:00+00:00,"
+        f"{values['open']},{values['high']},{values['low']},"
+        f"{values['close']},{values['volume']}\n",
+    )
+
+    with pytest.raises(
+        ValueError, match="invalid CSV row 2: OHLCV values must be finite"
+    ):
+        load_candles_csv(path, MarketDataConfig(symbol="ETHUSDT", timeframe="5m"))
+
+
 def test_rejects_header_only_csv(tmp_path: Path) -> None:
     path = write_csv(tmp_path, "open_time,open,high,low,close,volume\n")
 

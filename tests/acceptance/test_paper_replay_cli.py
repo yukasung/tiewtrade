@@ -3,6 +3,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 FIXTURE_PATH = Path("tests/fixtures/btcusdt_5m_tracer.csv")
 EXPECTED_JSON = (
     '{"accepted_candles":40,"closed_baskets":1,"current_entries":0,'
@@ -44,9 +46,24 @@ def test_replay_cli_rejects_non_finite_trading_capital_ratio() -> None:
     assert "Traceback" not in completed.stderr
 
 
+@pytest.mark.parametrize(
+    ("option", "value"),
+    [("--symbol", "ETHUSDT"), ("--timeframe", "15m")],
+)
+def test_replay_cli_rejects_unsupported_market_identity(
+    option: str, value: str
+) -> None:
+    completed = _run_cli(FIXTURE_PATH, option, value)
+
+    assert completed.returncode == 2
+    assert completed.stdout == ""
+    assert "error:" in completed.stderr
+    assert "Traceback" not in completed.stderr
+
+
 def _run_cli(
     csv_path: Path,
-    *,
+    *identity_arguments: str,
     available_capital: str = "1000",
     trading_capital_ratio: str = "0.6",
 ) -> subprocess.CompletedProcess[str]:
@@ -63,6 +80,7 @@ def _run_cli(
             trading_capital_ratio,
             "--max-entries",
             "4",
+            *identity_arguments,
         ],
         capture_output=True,
         check=False,

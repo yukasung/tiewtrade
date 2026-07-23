@@ -1,15 +1,14 @@
 # TiewTrade
 
-TiewTrade is an Internal Alpha trading bot. Development is Paper-first: this
-repository currently provides a deterministic Paper Spot replay for completed
-BTCUSDT 5-minute candles.
+TiewTrade เป็นบอตซื้อขายระยะ Internal Alpha ที่พัฒนาแบบ Paper-first ปัจจุบัน
+โครงการนี้รองรับการ replay Paper Spot แบบกำหนดผลแน่นอนสำหรับ Candle ที่ปิดสมบูรณ์ของ
+BTCUSDT ช่วงเวลา 5 นาที
 
-The replay CLI does not connect to Binance and does not send Live orders.
+CLI สำหรับ replay ไม่เชื่อมต่อ Binance และไม่ส่งคำสั่ง Live
 
-## Setup
+## การติดตั้ง
 
-Create a virtual environment and install the project with its development
-dependencies:
+สร้างสภาพแวดล้อมเสมือน แล้วติดตั้งโครงการพร้อมส่วนพึ่งพาสำหรับการพัฒนา:
 
 ```bash
 python3 -m venv .venv
@@ -17,9 +16,9 @@ python3 -m venv .venv
 .venv/bin/python -m pip install -e ".[dev]"
 ```
 
-## Replay the tracer fixture
+## การตรวจซ้ำด้วย fixture
 
-Run the deterministic Paper Spot replay from the repository root:
+เรียกใช้ deterministic Paper Spot replay จาก root ของโครงการ:
 
 ```bash
 PYTHONPATH=src .venv/bin/python -m tiewtrade.paper_replay_main \
@@ -29,13 +28,13 @@ PYTHONPATH=src .venv/bin/python -m tiewtrade.paper_replay_main \
   --max-entries 4
 ```
 
-The stable JSON result is:
+ผลลัพธ์ JSON ที่คงที่คือ:
 
 ```json
 {"accepted_candles":40,"closed_baskets":1,"current_entries":0,"realized_pnl":"13.84062222"}
 ```
 
-## Verification
+## การตรวจสอบ
 
 ```bash
 PYTHONPATH=src .venv/bin/python -m pytest -q
