@@ -47,6 +47,9 @@ def test_entry_fill_uses_session_capital_costs_and_symbol_rules() -> None:
     assert fill.quantity == Decimal("1.477")
     assert fill.fee == Decimal("0.14990073")
     assert fill.filled_at == fill_candle.open_time
+    entry_order_id = f"entry:{intent(session, signal_candle).intent_id}"
+    assert fill.order_id == entry_order_id
+    assert fill.fill_id == f"paper:{session.session_id}:{entry_order_id}:fill"
 
 
 def test_entry_fill_rounds_buy_slippage_up_to_the_next_tick() -> None:
@@ -121,7 +124,11 @@ def test_take_profit_target_touch_uses_sell_floor_price_and_exact_fee() -> None:
         step_size=Decimal("0.001"),
         min_notional=Decimal("5"),
     )
-    basket = Basket(EntryPolicy(max_entries=4), Decimal("1"))
+    basket = Basket(
+        UUID("00000000-0000-0000-0000-000000000092"),
+        EntryPolicy(max_entries=4),
+        Decimal("1"),
+    )
     basket.add_entry(
         price=Decimal("100"),
         quantity=Decimal("2"),
@@ -139,6 +146,9 @@ def test_take_profit_target_touch_uses_sell_floor_price_and_exact_fee() -> None:
     assert fill.quantity == Decimal("2")
     assert fill.fee == Decimal("0.20148")
     assert fill.filled_at == touch_candle.close_time
+    exit_order_id = f"take-profit:{basket.basket_id}"
+    assert fill.order_id == exit_order_id
+    assert fill.fill_id == f"paper:{session.session_id}:{exit_order_id}:fill"
 
 
 def test_take_profit_rejects_a_non_positive_sell_price_after_quantization() -> None:
@@ -158,7 +168,11 @@ def test_take_profit_rejects_a_non_positive_sell_price_after_quantization() -> N
         step_size=Decimal("0.001"),
         min_notional=Decimal("0.001"),
     )
-    basket = Basket(EntryPolicy(max_entries=4), Decimal("1"))
+    basket = Basket(
+        UUID("00000000-0000-0000-0000-000000000092"),
+        EntryPolicy(max_entries=4),
+        Decimal("1"),
+    )
     basket.add_entry(
         price=Decimal("0.01"),
         quantity=Decimal("1"),

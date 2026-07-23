@@ -12,6 +12,8 @@ from tiewtrade.trading.symbol_rules import SymbolRules
 
 @dataclass(frozen=True, slots=True)
 class PaperSpotEntryFill:
+    order_id: str
+    fill_id: str
     intent_id: str
     price: Decimal
     quantity: Decimal
@@ -21,6 +23,8 @@ class PaperSpotEntryFill:
 
 @dataclass(frozen=True, slots=True)
 class PaperSpotExitFill:
+    order_id: str
+    fill_id: str
     price: Decimal
     quantity: Decimal
     fee: Decimal
@@ -53,7 +57,10 @@ class PaperSpotExecutor:
             return None
 
         notional = price * quantity
+        order_id = f"entry:{intent.intent_id}"
         return PaperSpotEntryFill(
+            order_id=order_id,
+            fill_id=f"paper:{self._session.session_id}:{order_id}:fill",
             intent_id=intent.intent_id,
             price=price,
             quantity=quantity,
@@ -76,7 +83,10 @@ class PaperSpotExecutor:
 
         quantity = basket.total_quantity
         notional = price * quantity
+        order_id = f"take-profit:{basket.basket_id}"
         return PaperSpotExitFill(
+            order_id=order_id,
+            fill_id=f"paper:{self._session.session_id}:{order_id}:fill",
             price=price,
             quantity=quantity,
             fee=notional * self._session.fee_rate,
