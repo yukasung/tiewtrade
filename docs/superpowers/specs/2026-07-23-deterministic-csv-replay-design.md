@@ -149,7 +149,7 @@ tests/
 │   └── btcusdt_5m_tracer.csv
 └── unit/replay/
     ├── test_csv_candles.py
-    └── test_paper_spot.py
+    └── test_paper_spot_runner.py
 ```
 
 `README.md` จะระบุ setup, replay command, JSON contract และ verification commands

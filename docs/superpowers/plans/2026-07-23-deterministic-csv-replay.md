@@ -101,7 +101,7 @@ Implementation contract:
 
 **Files:**
 - Create: \`src/tiewtrade/replay/paper_spot.py\`
-- Create: \`tests/unit/replay/test_paper_spot.py\`
+- Create: \`tests/unit/replay/test_paper_spot_runner.py\`
 - Create: \`tests/acceptance/test_paper_spot_replay.py\`
 - Create: \`tests/fixtures/btcusdt_5m_tracer.csv\`
 
@@ -187,7 +187,7 @@ Assertions:
 
 - [ ] **Step 3: Verify RED**
 
-    PYTHONPATH=src .venv/bin/python -m pytest tests/unit/replay/test_paper_spot.py tests/acceptance/test_paper_spot_replay.py -q
+    PYTHONPATH=src .venv/bin/python -m pytest tests/unit/replay/test_paper_spot_runner.py tests/acceptance/test_paper_spot_replay.py -q
 
 Expected: ModuleNotFoundError สำหรับ \`tiewtrade.replay.paper_spot\`.
 
@@ -238,7 +238,7 @@ Signature:
     PYTHONPATH=src .venv/bin/python -m pytest tests/unit/replay tests/acceptance -q
     .venv/bin/python -m ruff check src/tiewtrade/replay tests/unit/replay tests/acceptance
     .venv/bin/python -m mypy src
-    git add src/tiewtrade/replay/paper_spot.py tests/unit/replay/test_paper_spot.py tests/acceptance tests/fixtures
+    git add src/tiewtrade/replay/paper_spot.py tests/unit/replay/test_paper_spot_runner.py tests/acceptance tests/fixtures
     git commit -m "feat: replay deterministic Paper Spot candles"
 
 Expected JSON:
