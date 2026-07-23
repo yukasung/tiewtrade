@@ -1,7 +1,7 @@
 # Paper Trade History Design
 
-**Date:** 2026-07-23  
-**Status:** Approved design  
+**Date:** 2026-07-23
+**Status:** Approved design
 **Scope:** Phase 1 Paper Trading
 
 ## 1. Purpose
@@ -299,4 +299,3 @@ Phase 1 does not include:
 - Live execution or Private API integration
 - Paper Futures funding simulation
 - Multi-account or Binance sub-account support
-
