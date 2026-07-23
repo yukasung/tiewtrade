@@ -101,13 +101,10 @@ class Basket:
         _require_positive(tick_size, "tick_size")
 
         self._entries.append(BasketEntry(price, quantity, fee, filled_at))
-        raw_target = self.average_entry_price + (
-            atr * self._take_profit_atr_multiplier
-        )
-        self.take_profit_price = (
-            (raw_target / tick_size).to_integral_value(rounding=ROUND_DOWN)
-            * tick_size
-        )
+        raw_target = self.average_entry_price + (atr * self._take_profit_atr_multiplier)
+        self.take_profit_price = (raw_target / tick_size).to_integral_value(
+            rounding=ROUND_DOWN
+        ) * tick_size
 
     def close(
         self,
@@ -125,10 +122,7 @@ class Basket:
         _require_non_negative(exit_fee, "exit_fee")
 
         gross_pnl = sum(
-            (
-                (exit_price - entry.price) * entry.quantity
-                for entry in self._entries
-            ),
+            ((exit_price - entry.price) * entry.quantity for entry in self._entries),
             Decimal("0"),
         )
         entry_fees = sum((entry.fee for entry in self._entries), Decimal("0"))
