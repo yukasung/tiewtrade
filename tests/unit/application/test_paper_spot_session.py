@@ -1,6 +1,6 @@
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
-from uuid import UUID
+from uuid import UUID, uuid5
 
 import pytest
 
@@ -35,7 +35,17 @@ def test_session_rejects_a_non_paper_spot_configuration() -> None:
 
 
 def test_pending_intent_fills_at_the_next_completed_candle_open() -> None:
-    application = paper_session()
+    session = session_config()
+    application = PaperSpotSession(
+        session,
+        MarketDataConfig(symbol="BTCUSDT", timeframe="5m"),
+        SymbolRules(
+            tick_size=Decimal("0.01"),
+            step_size=Decimal("0.001"),
+            min_notional=Decimal("5"),
+        ),
+        RsiStepGridPreset.v1(),
+    )
     pending = arm_entry_intent(application)
     fill_candle = candle(125, open_price="120", close_price="121")
 
@@ -47,6 +57,7 @@ def test_pending_intent_fills_at_the_next_completed_candle_open() -> None:
     assert snapshot.entry_fill is not None
     assert snapshot.entry_fill.intent_id == pending.intent_id
     assert snapshot.entry_fill.price == Decimal("120.30")
+    assert snapshot.basket_id == uuid5(session.session_id, "basket:1")
     assert snapshot.basket_entry_count == 1
     assert snapshot.take_profit_price == Decimal("129.30")
 

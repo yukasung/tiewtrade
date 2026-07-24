@@ -1,5 +1,6 @@
 from datetime import UTC, datetime
 from decimal import Decimal
+from uuid import UUID
 
 import pytest
 
@@ -11,8 +12,14 @@ def policy(max_entries: int = 10) -> EntryPolicy:
     return EntryPolicy(max_entries=max_entries)
 
 
+def basket_id() -> UUID:
+    return UUID("00000000-0000-0000-0000-000000000092")
+
+
 def test_basket_reprices_take_profit_after_each_entry() -> None:
-    basket = Basket(policy=policy(), take_profit_atr_multiplier=Decimal("3"))
+    basket = Basket(
+        basket_id=basket_id(), policy=policy(), take_profit_atr_multiplier=Decimal("3")
+    )
     basket.add_entry(
         price=Decimal("100"),
         quantity=Decimal("1"),
@@ -39,33 +46,46 @@ def test_basket_reprices_take_profit_after_each_entry() -> None:
 def test_basket_requires_positive_take_profit_multiplier() -> None:
     with pytest.raises(ValueError, match="take_profit_atr_multiplier"):
         Basket(
+            basket_id=basket_id(),
             policy=policy(),
             take_profit_atr_multiplier=Decimal("0"),
         )
 
 
-def test_close_subtracts_entry_and_exit_fees() -> None:
-    basket = Basket(policy=policy(), take_profit_atr_multiplier=Decimal("3"))
+def test_close_exposes_identity_and_pnl_accounting_components() -> None:
+    expected_basket_id = basket_id()
+    basket = Basket(
+        basket_id=expected_basket_id,
+        policy=policy(),
+        take_profit_atr_multiplier=Decimal("3"),
+    )
     basket.add_entry(
         price=Decimal("100"),
         quantity=Decimal("1"),
-        fee=Decimal("0.1"),
+        fee=Decimal("0.2"),
         filled_at=datetime(2026, 1, 1, tzinfo=UTC),
         atr=Decimal("2"),
         tick_size=Decimal("0.1"),
     )
 
     closed = basket.close(
-        exit_price=Decimal("106"),
-        exit_fee=Decimal("0.106"),
+        exit_price=Decimal("120"),
+        exit_fee=Decimal("0.22"),
         closed_at=datetime(2026, 1, 2, tzinfo=UTC),
     )
 
-    assert closed.realized_pnl == Decimal("5.794")
+    assert closed.basket_id == expected_basket_id
+    assert closed.gross_realized_pnl == Decimal("20")
+    assert closed.trading_fees == Decimal("0.42")
+    assert closed.funding_fee == Decimal("0")
+    assert closed.net_realized_pnl == Decimal("19.58")
+    assert closed.realized_pnl == closed.net_realized_pnl
 
 
 def test_basket_rejects_entries_beyond_configured_maximum() -> None:
-    basket = Basket(policy=policy(4), take_profit_atr_multiplier=Decimal("3"))
+    basket = Basket(
+        basket_id=basket_id(), policy=policy(4), take_profit_atr_multiplier=Decimal("3")
+    )
     for day in range(1, 5):
         basket.add_entry(
             price=Decimal("100"),
@@ -88,7 +108,9 @@ def test_basket_rejects_entries_beyond_configured_maximum() -> None:
 
 
 def test_basket_requires_utc_fill_timestamp() -> None:
-    basket = Basket(policy=policy(), take_profit_atr_multiplier=Decimal("3"))
+    basket = Basket(
+        basket_id=basket_id(), policy=policy(), take_profit_atr_multiplier=Decimal("3")
+    )
 
     with pytest.raises(ValueError, match="UTC"):
         basket.add_entry(
@@ -102,7 +124,9 @@ def test_basket_requires_utc_fill_timestamp() -> None:
 
 
 def test_basket_requires_utc_close_timestamp() -> None:
-    basket = Basket(policy=policy(), take_profit_atr_multiplier=Decimal("3"))
+    basket = Basket(
+        basket_id=basket_id(), policy=policy(), take_profit_atr_multiplier=Decimal("3")
+    )
     basket.add_entry(
         price=Decimal("100"),
         quantity=Decimal("1"),
@@ -131,7 +155,9 @@ def test_basket_requires_utc_close_timestamp() -> None:
     ],
 )
 def test_invalid_entry_does_not_mutate_basket(field: str, value: Decimal) -> None:
-    basket = Basket(policy=policy(), take_profit_atr_multiplier=Decimal("3"))
+    basket = Basket(
+        basket_id=basket_id(), policy=policy(), take_profit_atr_multiplier=Decimal("3")
+    )
     values = {
         "price": Decimal("100"),
         "quantity": Decimal("1"),
@@ -151,7 +177,9 @@ def test_invalid_entry_does_not_mutate_basket(field: str, value: Decimal) -> Non
 
 
 def test_closed_basket_cannot_close_or_accept_entries_twice() -> None:
-    basket = Basket(policy=policy(), take_profit_atr_multiplier=Decimal("3"))
+    basket = Basket(
+        basket_id=basket_id(), policy=policy(), take_profit_atr_multiplier=Decimal("3")
+    )
     basket.add_entry(
         price=Decimal("100"),
         quantity=Decimal("1"),
@@ -189,7 +217,9 @@ def test_closed_basket_cannot_close_or_accept_entries_twice() -> None:
     [("exit_price", Decimal("0")), ("exit_fee", Decimal("-0.1"))],
 )
 def test_invalid_close_does_not_close_basket(field: str, value: Decimal) -> None:
-    basket = Basket(policy=policy(), take_profit_atr_multiplier=Decimal("3"))
+    basket = Basket(
+        basket_id=basket_id(), policy=policy(), take_profit_atr_multiplier=Decimal("3")
+    )
     basket.add_entry(
         price=Decimal("100"),
         quantity=Decimal("1"),

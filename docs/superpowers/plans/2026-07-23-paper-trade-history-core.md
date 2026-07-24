@@ -47,6 +47,30 @@ application wrapper fails closed if durable recording fails.
 
 ---
 
+## Linear Issue Boundaries
+
+This document is the umbrella design for DEV-91 through DEV-97. Its tasks must
+not be executed as one Linear Issue:
+
+- DEV-91 owns Task 1.
+- DEV-92 uses the scoped plan
+  `docs/superpowers/plans/2026-07-24-dev-92-paper-spot-sqlite.md`. It owns
+  normalized records, versioned SQLite schema, canonical Decimal/UTC
+  round-trip, Paper Spot mapping, and restart reads.
+- DEV-93 owns duplicate-event handling, explicit atomicity verification,
+  ownership/lifecycle hardening, and fail-closed Session state from the
+  advanced parts of Tasks 4 and 7.
+- DEV-94 owns filtered summaries and pagination from Tasks 4–5.
+- DEV-97 owns the full persistence-hardening acceptance gate represented by
+  Task 8.
+
+Do not use Task 7 as a prerequisite for DEV-92: Linear defines DEV-93 as
+blocked by DEV-92. The DEV-92 restart acceptance therefore records existing
+Paper Spot snapshots through its concrete SQLite mapper; DEV-93 adds mandatory
+fail-closed orchestration afterward.
+
+---
+
 ## File Ownership
 
 | File | Responsibility |

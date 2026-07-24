@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from decimal import ROUND_DOWN, Decimal
+from uuid import UUID
 
 from tiewtrade.trading.entry_policy import EntryPolicy
 
@@ -30,16 +31,25 @@ class BasketEntry:
 
 @dataclass(frozen=True, slots=True)
 class ClosedBasket:
+    basket_id: UUID
     entry_count: int
     average_entry_price: Decimal
     exit_price: Decimal
-    realized_pnl: Decimal
+    gross_realized_pnl: Decimal
+    trading_fees: Decimal
+    funding_fee: Decimal
+    net_realized_pnl: Decimal
     closed_at: datetime
+
+    @property
+    def realized_pnl(self) -> Decimal:
+        return self.net_realized_pnl
 
 
 class Basket:
     def __init__(
         self,
+        basket_id: UUID,
         policy: EntryPolicy,
         take_profit_atr_multiplier: Decimal,
     ) -> None:
@@ -47,11 +57,16 @@ class Basket:
             take_profit_atr_multiplier,
             "take_profit_atr_multiplier",
         )
+        self._basket_id = basket_id
         self._policy = policy
         self._take_profit_atr_multiplier = take_profit_atr_multiplier
         self._entries: list[BasketEntry] = []
         self._is_closed = False
         self.take_profit_price: Decimal | None = None
+
+    @property
+    def basket_id(self) -> UUID:
+        return self._basket_id
 
     @property
     def entry_count(self) -> int:
@@ -121,16 +136,24 @@ class Basket:
         _require_positive(exit_price, "exit_price")
         _require_non_negative(exit_fee, "exit_fee")
 
-        gross_pnl = sum(
+        gross_realized_pnl = sum(
             ((exit_price - entry.price) * entry.quantity for entry in self._entries),
             Decimal("0"),
         )
-        entry_fees = sum((entry.fee for entry in self._entries), Decimal("0"))
+        trading_fees = (
+            sum((entry.fee for entry in self._entries), Decimal("0")) + exit_fee
+        )
+        funding_fee = Decimal("0")
+        net_realized_pnl = gross_realized_pnl - trading_fees - funding_fee
         closed = ClosedBasket(
+            basket_id=self.basket_id,
             entry_count=self.entry_count,
             average_entry_price=self.average_entry_price,
             exit_price=exit_price,
-            realized_pnl=gross_pnl - entry_fees - exit_fee,
+            gross_realized_pnl=gross_realized_pnl,
+            trading_fees=trading_fees,
+            funding_fee=funding_fee,
+            net_realized_pnl=net_realized_pnl,
             closed_at=closed_at,
         )
         self._is_closed = True

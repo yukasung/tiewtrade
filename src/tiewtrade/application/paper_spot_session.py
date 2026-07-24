@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
+from uuid import UUID, uuid5
 
 from tiewtrade.execution.paper_spot import (
     PaperSpotEntryFill,
@@ -30,6 +31,7 @@ class PaperSpotSessionSnapshot:
     take_profit_fill: PaperSpotExitFill | None
     closed_basket: ClosedBasket | None
     closed_basket_count: int
+    basket_id: UUID | None
     basket_entry_count: int
     take_profit_price: Decimal | None
 
@@ -109,7 +111,12 @@ class PaperSpotSession:
             return None
 
         if self._basket is None:
+            basket_id = uuid5(
+                self._session.session_id,
+                f"basket:{self._closed_basket_count + 1}",
+            )
             self._basket = Basket(
+                basket_id,
                 self._session.entry_policy,
                 self._preset.take_profit_atr_multiplier,
             )
@@ -150,6 +157,13 @@ class PaperSpotSession:
         entry_fill: PaperSpotEntryFill | None = None,
         closed_basket: ClosedBasket | None = None,
     ) -> PaperSpotSessionSnapshot:
+        basket_id = (
+            self._basket.basket_id
+            if self._basket is not None
+            else None
+            if closed_basket is None
+            else closed_basket.basket_id
+        )
         return PaperSpotSessionSnapshot(
             accepted=accepted,
             pending_intent=self._pending_intent,
@@ -157,6 +171,7 @@ class PaperSpotSession:
             take_profit_fill=self._latest_take_profit_fill,
             closed_basket=closed_basket,
             closed_basket_count=self._closed_basket_count,
+            basket_id=basket_id,
             basket_entry_count=0 if self._basket is None else self._basket.entry_count,
             take_profit_price=(
                 None if self._basket is None else self._basket.take_profit_price
