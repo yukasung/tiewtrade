@@ -174,6 +174,11 @@ fill_id = execution แต่ละครั้ง
 ดังนั้น `order_id` ไม่เป็น unique key แต่ละ Fill ใหม่เพิ่ม aggregate ได้หนึ่งครั้ง
 ตาม `fill_id` ของตน
 
+Partial Fills ของ Entry เดียวกันต้องใช้ `entry_number` เดียวกัน โดย
+`BasketResult.entry_count` นับจำนวน Entry ไม่ใช่จำนวน Fill จึงเพิ่มเพียงครั้งเดียว
+เมื่อ Order ของ Entry นั้นเริ่มมี Fill รายการแรก Fill ถัดไปของ Order เดิมเพิ่มเฉพาะ
+quantity, notional และ commission aggregate ที่เกี่ยวข้อง
+
 DEV-93 ทดสอบความสามารถนี้ที่ normalized persistence layer โดยสร้าง
 `TradeFill` หลายรายการ ไม่เปลี่ยน Paper execution model
 
@@ -274,6 +279,7 @@ fallback และ startup Recovery เป็นงานแยก
 `tests/unit/integrations/sqlite/test_trade_history.py`:
 
 - Partial Fills สองรายการใช้ `order_id` เดียวกันและ `fill_id` ต่างกัน
+- Partial Fills ใช้ `entry_number` เดียวกันและไม่เพิ่ม `entry_count` ซ้ำ
 - exact duplicate คืน `False`
 - conflicting duplicate raise `TradeHistoryConflictError`
 - ownership mismatch ทุกกรณีถูกปฏิเสธ
