@@ -33,6 +33,8 @@ class SQLiteTradeHistory:
 
     def record_open_basket(self, basket: BasketResult, fill: TradeFill) -> bool:
         _validate_fill_ownership(basket, fill)
+        if basket.status is not BasketStatus.OPEN:
+            raise TradeHistoryConflictError("new Basket must have OPEN status")
 
         def operation(connection: sqlite3.Connection) -> bool:
             if _check_duplicate_fill(connection, fill):
@@ -97,14 +99,14 @@ class SQLiteTradeHistory:
         connection: sqlite3.Connection | None = None
         try:
             connection = self._database.connect()
-            return _find_basket(connection, basket_id)
+            result = _find_basket(connection, basket_id)
         except sqlite3.Error as error:
+            _discard_close_error(connection)
             raise TradeHistoryUnavailableError(
                 "Trade History SQLite read failed"
             ) from error
-        finally:
-            if connection is not None:
-                connection.close()
+        _close_or_raise(connection)
+        return result
 
     def list_fills(self, basket_id: UUID) -> tuple[TradeFill, ...]:
         connection: sqlite3.Connection | None = None
@@ -118,14 +120,14 @@ class SQLiteTradeHistory:
                 """,
                 (str(basket_id),),
             ).fetchall()
-            return tuple(_fill_from_row(row) for row in rows)
+            result = tuple(_fill_from_row(row) for row in rows)
         except sqlite3.Error as error:
+            _discard_close_error(connection)
             raise TradeHistoryUnavailableError(
                 "Trade History SQLite read failed"
             ) from error
-        finally:
-            if connection is not None:
-                connection.close()
+        _close_or_raise(connection)
+        return result
 
     def _run_write(
         self,
@@ -137,20 +139,45 @@ class SQLiteTradeHistory:
             connection.execute("BEGIN IMMEDIATE")
             result = operation(connection)
             connection.commit()
-            return result
         except TradeHistoryError:
-            if connection is not None:
-                connection.rollback()
+            _discard_rollback_error(connection)
+            _discard_close_error(connection)
             raise
         except sqlite3.Error as error:
-            if connection is not None:
-                connection.rollback()
+            _discard_rollback_error(connection)
+            _discard_close_error(connection)
             raise TradeHistoryUnavailableError(
                 "Trade History SQLite write failed"
             ) from error
-        finally:
-            if connection is not None:
-                connection.close()
+        _close_or_raise(connection)
+        return result
+
+
+def _discard_rollback_error(connection: sqlite3.Connection | None) -> None:
+    if connection is None:
+        return
+    try:
+        connection.rollback()
+    except sqlite3.Error:
+        pass
+
+
+def _discard_close_error(connection: sqlite3.Connection | None) -> None:
+    if connection is None:
+        return
+    try:
+        connection.close()
+    except sqlite3.Error:
+        pass
+
+
+def _close_or_raise(connection: sqlite3.Connection) -> None:
+    try:
+        connection.close()
+    except sqlite3.Error as error:
+        raise TradeHistoryUnavailableError(
+            "Trade History SQLite close failed"
+        ) from error
 
 
 def _validate_fill_ownership(basket: BasketResult, fill: TradeFill) -> None:

@@ -120,10 +120,10 @@ Recovery ยังคงอยู่ในลำดับถัดไปขอ�
 | Session และ immutable policies | `trading` | ไม่เลือก adapter |
 | RSI Step Grid | `strategies/rsi_step_grid` | ไม่รู้จัก Paper หรือ Live |
 | Basket, capital และ Entry Pair | `trading` | ใช้ร่วมกันทุก Trade Mode |
-| Session orchestration | `application` | จัดลำดับ shared rules กับ adapter |
+| Session orchestration | `application` | จัดลำดับ shared business rules กับ execution adapter |
 | Paper execution | `execution` | จำลอง side effects โดยไม่เรียก Binance |
 | Binance adapters | `integrations/binance` | เพิ่มตาม Live gates เท่านั้น |
-| Persistence | `integrations/sqlite` | ไม่เก็บ secrets |
+| Persistence | `integrations/sqlite` | จัดการ transaction, durable mapping และ persistence-specific fail-closed coordinator; ไม่เก็บ secrets |
 | Desktop UI | `ui` | ไม่ถือ business rules |
 
 `execution` เป็นเจ้าของ deterministic simulation ภายในโปรแกรม ส่วน side effects ที่

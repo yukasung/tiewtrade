@@ -1,7 +1,9 @@
+import sqlite3
 from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
+from unittest.mock import create_autospec
 from uuid import UUID
 
 import pytest
@@ -49,6 +51,15 @@ def test_exact_duplicate_fill_is_a_no_op(history: SQLiteTradeHistory) -> None:
     assert history.record_open_basket(basket, fill) is False
     assert history.get_basket(basket.basket_id) == basket
     assert history.list_fills(basket.basket_id) == (fill,)
+
+
+def test_open_basket_requires_open_status(history: SQLiteTradeHistory) -> None:
+    basket = basket_result(status=BasketStatus.CLOSED)
+
+    with pytest.raises(TradeHistoryConflictError, match="OPEN"):
+        history.record_open_basket(basket, trade_fill())
+
+    assert history.get_basket(basket.basket_id) is None
 
 
 def test_same_fill_id_with_different_payload_is_a_conflict(
@@ -293,6 +304,39 @@ def test_entry_fill_rolls_back_when_basket_update_fails(tmp_path: Path) -> None:
 
     assert history.get_basket(BASKET_ID) == opened
     assert history.list_fills(BASKET_ID) == (first,)
+
+
+def test_read_wraps_connection_close_failure() -> None:
+    database = create_autospec(SQLiteDatabase, instance=True)
+    connection = create_autospec(sqlite3.Connection, instance=True)
+    database.connect.return_value = connection
+    connection.execute.return_value.fetchone.return_value = None
+    connection.close.side_effect = sqlite3.OperationalError("forced close failure")
+    history = SQLiteTradeHistory(database)
+
+    with pytest.raises(TradeHistoryUnavailableError, match="close") as raised:
+        history.get_basket(BASKET_ID)
+
+    assert isinstance(raised.value.__cause__, sqlite3.OperationalError)
+
+
+def test_rollback_failure_does_not_escape_as_raw_sqlite_error() -> None:
+    database = create_autospec(SQLiteDatabase, instance=True)
+    connection = create_autospec(sqlite3.Connection, instance=True)
+    database.connect.return_value = connection
+    connection.execute.side_effect = [
+        None,
+        sqlite3.OperationalError("forced write failure"),
+    ]
+    connection.rollback.side_effect = sqlite3.OperationalError(
+        "forced rollback failure"
+    )
+    history = SQLiteTradeHistory(database)
+
+    with pytest.raises(TradeHistoryUnavailableError, match="write") as raised:
+        history.record_open_basket(open_basket(), trade_fill())
+
+    assert isinstance(raised.value.__cause__, sqlite3.OperationalError)
 
 
 def test_migration_creates_versioned_history_schema_and_indexes(tmp_path: Path) -> None:

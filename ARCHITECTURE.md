@@ -53,3 +53,15 @@ Configuration นี้ไม่มี side effect และไม่เลื�
 ## Dependency Direction
 
 Business rules ไม่ import Binance SDK, SQLite หรือ UI รายละเอียด integration ต้องอยู่ใน adapter ที่ implement interface ของ consumer Module
+
+## Persistence Boundary
+
+`application` เป็นเจ้าของ business Session orchestration และลำดับ shared rules
+ส่วน `integrations/sqlite` เป็นเจ้าของ transaction, durable mapping และ
+persistence-specific fail-closed coordinator ที่ครอบ concrete application Session
+โดย coordinator นี้ทำได้เฉพาะเรียก Session, บันทึกผลแบบ synchronous และปิดรับ
+candle ถัดไปเมื่อยืนยัน durability ไม่ได้ ห้ามคำนวณหรือเปลี่ยน business decision
+
+ช่วงที่มี persistence adapter เพียงแบบเดียวให้ใช้ concrete coordinator ได้โดยไม่สร้าง
+generic interface ล่วงหน้า เมื่อมี consumer ของ persistence adapter อย่างน้อยสองแบบ
+จึงค่อยย้าย contract ไปไว้ที่ Module ผู้ใช้งาน

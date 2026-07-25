@@ -47,7 +47,9 @@ def test_replayed_paper_spot_history_is_idempotent_after_sqlite_restart(
         store,
     )
 
-    for _ in range(2):
+    first_basket = None
+    first_fills = ()
+    for replay_number in range(2):
         persistent = PersistentPaperSpotSQLiteSession(
             paper_spot_session(market_data, preset),
             history,
@@ -58,6 +60,20 @@ def test_replayed_paper_spot_history_is_idempotent_after_sqlite_restart(
                 received_at=candle.close_time,
             )
             assert snapshot.persistence_state is PersistenceState.READY
+        current_basket = store.get_basket(BASKET_ID)
+        current_fills = store.list_fills(BASKET_ID)
+        if replay_number == 0:
+            assert current_basket is not None
+            assert current_basket.net_realized_pnl == Decimal("13.84062222")
+            assert [fill.side for fill in current_fills] == [
+                FillSide.BUY,
+                FillSide.SELL,
+            ]
+            first_basket = current_basket
+            first_fills = current_fills
+        else:
+            assert current_basket == first_basket
+            assert current_fills == first_fills
 
     reopened_database = SQLiteDatabase(database_path)
     reopened_database.migrate()
