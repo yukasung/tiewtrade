@@ -1,4 +1,4 @@
-# DEV-98: Paper Spot Snapshot Basket ID Readability
+# DEV-98: ทำให้การเลือก Basket ID ใน Paper Spot Snapshot อ่านง่ายขึ้น
 
 ## เป้าหมาย
 

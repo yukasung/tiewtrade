@@ -1,6 +1,6 @@
-# แผนการดำเนินงาน DEV-98: ความอ่านง่ายของ Snapshot Basket ID
+# แผนการดำเนินงาน DEV-98: ทำให้การเลือก Basket ID ใน Snapshot อ่านง่ายขึ้น
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **สำหรับผู้ปฏิบัติงานแบบ agent:** ต้องใช้ทักษะย่อย `superpowers:subagent-driven-development` (แนะนำ) หรือ `superpowers:executing-plans` เพื่อดำเนินแผนนี้ทีละงาน ขั้นตอนใช้รูปแบบช่องทำเครื่องหมาย (`- [ ]`) เพื่อติดตามสถานะ
 
 **เป้าหมาย:** เปลี่ยน nested conditional expression ที่เลือก `basket_id` ใน `PaperSpotSession._snapshot()` เป็น `if/elif/else` โดยคง behavior เดิมทุกกรณี
 
@@ -25,7 +25,7 @@
 | `src/tiewtrade/application/paper_spot_session.py` | เปลี่ยนรูปแบบการเลือก `basket_id` ภายใน `_snapshot()` |
 | `tests/unit/application/test_paper_spot_session.py` | ยืนยัน behavior ของ `basket_id` ทั้ง active, closed และ empty state |
 
-### งานที่ 1: ทำให้ Basket ID Resolution อ่านตรงไปตรงมา
+### งานที่ 1: ทำให้ลำดับการเลือก Basket ID อ่านตรงไปตรงมา
 
 **ไฟล์:**
 
