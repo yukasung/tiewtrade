@@ -84,10 +84,11 @@ Recovery, Paper Futures, public market-data runtime และ Desktop UI
 6. Stop Session, startup Recovery และ deterministic reconciliation ด้วย fake adapters
 7. Paper acceptance ครบทั้ง business rules, persistence, UI และ Recovery
 
-สถานะ DEV-92: durable Paper Spot SQLite history เสร็จแล้ว รวม normalized Basket/Fill,
-exact Decimal/UTC round-trip, deterministic IDs และการอ่านประวัติหลัง restart ส่วน
-duplicate/idempotency, atomicity และ fail-closed Session state ยังเป็นงานของ DEV-93
-และงาน Paper Futures กับ Desktop UI ยังคงอยู่ในลำดับถัดไปของ milestone นี้
+สถานะ DEV-92–DEV-93: durable Paper Spot SQLite history รองรับ normalized
+Basket/Fill, exact Decimal/UTC round-trip, deterministic IDs, atomic writes,
+idempotent duplicate handling, ownership/lifecycle validation และ fail-closed
+Session state แล้ว ส่วน query/pagination, Paper Futures, Desktop UI และ startup
+Recovery ยังคงอยู่ในลำดับถัดไปของ milestone นี้
 
 ## Milestone 4 — Live Spot
 
@@ -119,10 +120,10 @@ duplicate/idempotency, atomicity และ fail-closed Session state ยัง�
 | Session และ immutable policies | `trading` | ไม่เลือก adapter |
 | RSI Step Grid | `strategies/rsi_step_grid` | ไม่รู้จัก Paper หรือ Live |
 | Basket, capital และ Entry Pair | `trading` | ใช้ร่วมกันทุก Trade Mode |
-| Session orchestration | `application` | จัดลำดับ shared rules กับ adapter |
+| Session orchestration | `application` | จัดลำดับ shared business rules กับ execution adapter |
 | Paper execution | `execution` | จำลอง side effects โดยไม่เรียก Binance |
 | Binance adapters | `integrations/binance` | เพิ่มตาม Live gates เท่านั้น |
-| Persistence | `integrations/sqlite` | ไม่เก็บ secrets |
+| Persistence | `integrations/sqlite` | จัดการ transaction, durable mapping และ persistence-specific fail-closed coordinator; ไม่เก็บ secrets |
 | Desktop UI | `ui` | ไม่ถือ business rules |
 
 `execution` เป็นเจ้าของ deterministic simulation ภายในโปรแกรม ส่วน side effects ที่

@@ -39,7 +39,7 @@ class PaperSpotSQLiteHistory:
         basket_id: UUID,
         entry_number: int,
         fill: PaperSpotEntryFill,
-    ) -> None:
+    ) -> bool:
         normalized_fill = TradeFill(
             fill_id=fill.fill_id,
             basket_id=basket_id,
@@ -77,8 +77,7 @@ class PaperSpotSQLiteHistory:
                 net_realized_pnl=-normalized_fill.commission,
                 status=BasketStatus.OPEN,
             )
-            self._store.record_open_basket(basket, normalized_fill)
-            return
+            return self._store.record_open_basket(basket, normalized_fill)
 
         basket = replace(
             existing,
@@ -92,7 +91,7 @@ class PaperSpotSQLiteHistory:
                 - existing.funding_fee
             ),
         )
-        self._store.record_entry_fill(basket, normalized_fill)
+        return self._store.record_entry_fill(basket, normalized_fill)
 
     def record_close(
         self,
@@ -100,7 +99,7 @@ class PaperSpotSQLiteHistory:
         basket_id: UUID,
         fill: PaperSpotExitFill,
         closed: ClosedBasket,
-    ) -> None:
+    ) -> bool:
         existing = self._store.get_basket(basket_id)
         if existing is None:
             raise ValueError("Basket does not exist")
@@ -132,4 +131,4 @@ class PaperSpotSQLiteHistory:
             net_realized_pnl=closed.net_realized_pnl,
             status=BasketStatus.CLOSED,
         )
-        self._store.record_closed_basket(basket, normalized_fill)
+        return self._store.record_closed_basket(basket, normalized_fill)

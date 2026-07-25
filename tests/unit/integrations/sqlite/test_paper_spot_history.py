@@ -92,12 +92,13 @@ def test_entry_fill_creates_exact_open_basket_and_buy_fill(
 ) -> None:
     fill = entry_fill()
 
-    history.record_entry(
+    result = history.record_entry(
         basket_id=BASKET_ID,
         entry_number=1,
         fill=fill,
     )
 
+    assert result is True
     assert store.get_basket(BASKET_ID) == BasketResult(
         basket_id=BASKET_ID,
         session_id=SESSION_ID,
@@ -220,4 +221,27 @@ def test_close_records_exact_closed_basket_and_sell_fill(
         commission_asset="USDT",
         realized_pnl=Decimal("19.58"),
         source=FillSource.PAPER_EXECUTOR,
+    )
+
+
+def test_mapper_propagates_duplicate_write_result(
+    history: PaperSpotSQLiteHistory,
+) -> None:
+    fill = entry_fill()
+
+    assert (
+        history.record_entry(
+            basket_id=BASKET_ID,
+            entry_number=1,
+            fill=fill,
+        )
+        is True
+    )
+    assert (
+        history.record_entry(
+            basket_id=BASKET_ID,
+            entry_number=1,
+            fill=fill,
+        )
+        is False
     )
