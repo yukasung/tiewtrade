@@ -2,6 +2,7 @@ import sqlite3
 from collections.abc import Callable
 from datetime import datetime
 from decimal import Decimal
+from typing import TypeVar
 from uuid import UUID
 
 from tiewtrade.integrations.sqlite.database import SQLiteDatabase
@@ -25,6 +26,9 @@ class TradeHistoryConflictError(TradeHistoryError):
 
 class TradeHistoryUnavailableError(TradeHistoryError):
     pass
+
+
+ReadResult = TypeVar("ReadResult")
 
 
 class SQLiteTradeHistory:
@@ -96,22 +100,10 @@ class SQLiteTradeHistory:
         return self._run_write(operation)
 
     def get_basket(self, basket_id: UUID) -> BasketResult | None:
-        connection: sqlite3.Connection | None = None
-        try:
-            connection = self._database.connect()
-            result = _find_basket(connection, basket_id)
-        except sqlite3.Error as error:
-            _discard_close_error(connection)
-            raise TradeHistoryUnavailableError(
-                "Trade History SQLite read failed"
-            ) from error
-        _close_or_raise(connection)
-        return result
+        return self._run_read(lambda connection: _find_basket(connection, basket_id))
 
     def list_fills(self, basket_id: UUID) -> tuple[TradeFill, ...]:
-        connection: sqlite3.Connection | None = None
-        try:
-            connection = self._database.connect()
+        def operation(connection: sqlite3.Connection) -> tuple[TradeFill, ...]:
             rows = connection.execute(
                 """
                 SELECT * FROM trade_fills
@@ -120,12 +112,26 @@ class SQLiteTradeHistory:
                 """,
                 (str(basket_id),),
             ).fetchall()
-            result = tuple(_fill_from_row(row) for row in rows)
+            return tuple(_fill_from_row(row) for row in rows)
+
+        return self._run_read(operation)
+
+    def _run_read(
+        self,
+        operation: Callable[[sqlite3.Connection], ReadResult],
+    ) -> ReadResult:
+        connection: sqlite3.Connection | None = None
+        try:
+            connection = self._database.connect()
+            result = operation(connection)
         except sqlite3.Error as error:
             _discard_close_error(connection)
             raise TradeHistoryUnavailableError(
                 "Trade History SQLite read failed"
             ) from error
+        except BaseException:
+            _discard_close_error(connection)
+            raise
         _close_or_raise(connection)
         return result
 
@@ -149,6 +155,10 @@ class SQLiteTradeHistory:
             raise TradeHistoryUnavailableError(
                 "Trade History SQLite write failed"
             ) from error
+        except BaseException:
+            _discard_rollback_error(connection)
+            _discard_close_error(connection)
+            raise
         _close_or_raise(connection)
         return result
 

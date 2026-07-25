@@ -339,6 +339,19 @@ def test_rollback_failure_does_not_escape_as_raw_sqlite_error() -> None:
     assert isinstance(raised.value.__cause__, sqlite3.OperationalError)
 
 
+def test_read_closes_connection_when_row_mapping_fails() -> None:
+    database = create_autospec(SQLiteDatabase, instance=True)
+    connection = create_autospec(sqlite3.Connection, instance=True)
+    database.connect.return_value = connection
+    connection.execute.return_value.fetchone.return_value = {"basket_id": "not-a-uuid"}
+    history = SQLiteTradeHistory(database)
+
+    with pytest.raises(ValueError):
+        history.get_basket(BASKET_ID)
+
+    connection.close.assert_called_once_with()
+
+
 def test_migration_creates_versioned_history_schema_and_indexes(tmp_path: Path) -> None:
     database = SQLiteDatabase(tmp_path / "history.sqlite3")
 
