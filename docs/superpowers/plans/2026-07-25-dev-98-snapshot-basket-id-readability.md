@@ -1,14 +1,14 @@
-# DEV-98 Snapshot Basket ID Readability Implementation Plan
+# แผนการดำเนินงาน DEV-98: ความอ่านง่ายของ Snapshot Basket ID
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** เปลี่ยน nested conditional expression ที่เลือก `basket_id` ใน `PaperSpotSession._snapshot()` เป็น `if/elif/else` โดยคง behavior เดิมทุกกรณี
+**เป้าหมาย:** เปลี่ยน nested conditional expression ที่เลือก `basket_id` ใน `PaperSpotSession._snapshot()` เป็น `if/elif/else` โดยคง behavior เดิมทุกกรณี
 
-**Architecture:** แก้เฉพาะ implementation ภายใน `_snapshot()` และไม่เพิ่ม abstraction ใหม่ ใช้ characterization tests ยืนยันลำดับ active Basket, closed Basket และไม่มี Basket ทั้งก่อนและหลัง refactor
+**สถาปัตยกรรม:** แก้เฉพาะ implementation ภายใน `_snapshot()` และไม่เพิ่ม abstraction ใหม่ ใช้ characterization tests ยืนยันลำดับ active Basket, closed Basket และไม่มี Basket ทั้งก่อนและหลัง refactor
 
-**Tech Stack:** Python 3.12+, dataclasses, pytest, Ruff, mypy strict
+**ชุดเทคโนโลยี:** Python 3.12+, dataclasses, pytest, Ruff, mypy strict
 
-## Global Constraints
+## ข้อจำกัดโดยรวม
 
 - ห้ามเปลี่ยน `PaperSpotSessionSnapshot` หรือ public API
 - ห้ามเปลี่ยน Basket lifecycle, Take Profit, persistence, execution หรือ strategy
@@ -18,26 +18,26 @@
 
 ---
 
-## File Structure
+## โครงสร้างไฟล์
 
-| File | หน้าที่ |
+| ไฟล์ | หน้าที่ |
 | --- | --- |
 | `src/tiewtrade/application/paper_spot_session.py` | เปลี่ยนรูปแบบการเลือก `basket_id` ภายใน `_snapshot()` |
 | `tests/unit/application/test_paper_spot_session.py` | ยืนยัน behavior ของ `basket_id` ทั้ง active, closed และ empty state |
 
-### Task 1: ทำให้ Basket ID Resolution อ่านตรงไปตรงมา
+### งานที่ 1: ทำให้ Basket ID Resolution อ่านตรงไปตรงมา
 
-**Files:**
+**ไฟล์:**
 
-- Modify: `src/tiewtrade/application/paper_spot_session.py:158-168`
-- Modify: `tests/unit/application/test_paper_spot_session.py`
+- แก้ไข: `src/tiewtrade/application/paper_spot_session.py:158-168`
+- แก้ไข: `tests/unit/application/test_paper_spot_session.py`
 
-**Interfaces:**
+**อินเทอร์เฟซ:**
 
-- Consumes: `PaperSpotSession.process_completed_candle(candle, *, received_at) -> PaperSpotSessionSnapshot`
-- Produces: behavior เดิมของ `PaperSpotSessionSnapshot.basket_id: UUID | None`
+- รับเข้า: `PaperSpotSession.process_completed_candle(candle, *, received_at) -> PaperSpotSessionSnapshot`
+- ส่งออก: behavior เดิมของ `PaperSpotSessionSnapshot.basket_id: UUID | None`
 
-- [ ] **Step 1: เพิ่ม characterization assertions ที่ขาด**
+- [ ] **ขั้นที่ 1: เพิ่ม characterization assertions ที่ขาด**
 
 ใน
 `test_take_profit_skips_entry_fill_candle_and_closes_on_following_candle()`
@@ -70,18 +70,18 @@ def test_snapshot_has_no_basket_id_before_first_entry() -> None:
 assert snapshot.basket_id == uuid5(session.session_id, "basket:1")
 ```
 
-- [ ] **Step 2: รัน characterization tests ก่อน refactor**
+- [ ] **ขั้นที่ 2: รัน characterization tests ก่อน refactor**
 
-Run:
+รัน:
 
 ```bash
 PYTHONPATH=src ../../.venv/bin/python -m pytest \
   tests/unit/application/test_paper_spot_session.py -q
 ```
 
-Expected: PASS เพราะ tests บันทึก behavior เดิม ไม่ได้เพิ่ม behavior ใหม่
+ผลที่คาดหวัง: PASS เพราะ tests บันทึก behavior เดิม ไม่ได้เพิ่ม behavior ใหม่
 
-- [ ] **Step 3: เปลี่ยน nested conditional เป็น explicit branches**
+- [ ] **ขั้นที่ 3: เปลี่ยน nested conditional เป็น explicit branches**
 
 แทนที่การกำหนด `basket_id` เดิมใน `_snapshot()` ด้วย:
 
@@ -96,20 +96,20 @@ else:
 
 ห้ามแยก helper method และห้ามแก้ field อื่นของ snapshot
 
-- [ ] **Step 4: รัน unit test หลัง refactor**
+- [ ] **ขั้นที่ 4: รัน unit test หลัง refactor**
 
-Run:
+รัน:
 
 ```bash
 PYTHONPATH=src ../../.venv/bin/python -m pytest \
   tests/unit/application/test_paper_spot_session.py -q
 ```
 
-Expected: PASS และจำนวน test ในไฟล์เพิ่มขึ้นหนึ่งรายการ
+ผลที่คาดหวัง: PASS และจำนวน test ในไฟล์เพิ่มขึ้นหนึ่งรายการ
 
-- [ ] **Step 5: รัน quality gates ทั้งหมด**
+- [ ] **ขั้นที่ 5: รัน quality gates ทั้งหมด**
 
-Run:
+รัน:
 
 ```bash
 PYTHONPATH=src ../../.venv/bin/python -m pytest -q
@@ -121,15 +121,15 @@ npm --prefix docs-site run check:content
 git diff --check
 ```
 
-Expected:
+ผลที่คาดหวัง:
 
 - Python tests ผ่านทั้งหมด
 - docs tests ผ่าน 50 รายการ
 - Ruff, format, mypy, content check และ `git diff --check` ผ่าน
 
-- [ ] **Step 6: Review และ commit**
+- [ ] **ขั้นที่ 6: ตรวจและ commit**
 
-Review `git diff main...HEAD` เทียบ:
+ตรวจ `git diff main...HEAD` เทียบ:
 
 - `AGENTS.md`, `PRODUCT.md`, `CONTEXT.md`, `ARCHITECTURE.md`,
   `PROJECT_PLAN.md`
