@@ -1,3 +1,4 @@
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import StrEnum
@@ -43,6 +44,47 @@ class MarketDataRuntimeSnapshot:
                 self.last_accepted_open_time,
                 name="last_accepted_open_time",
             )
+
+
+class MarketDataRuntimeStatus:
+    def __init__(self, now: Callable[[], datetime]) -> None:
+        self._now = now
+        self._snapshot = MarketDataRuntimeSnapshot(
+            state=MarketDataRuntimeState.STARTING,
+            reason=MarketDataRuntimeReason.START_REQUESTED,
+            transitioned_at=self._now(),
+            last_accepted_open_time=None,
+        )
+        self._visited_states = [MarketDataRuntimeState.STARTING]
+
+    @property
+    def snapshot(self) -> MarketDataRuntimeSnapshot:
+        return self._snapshot
+
+    @property
+    def visited_states(self) -> tuple[MarketDataRuntimeState, ...]:
+        return tuple(self._visited_states)
+
+    def transition(
+        self,
+        state: MarketDataRuntimeState,
+        reason: MarketDataRuntimeReason,
+    ) -> None:
+        self._snapshot = MarketDataRuntimeSnapshot(
+            state=state,
+            reason=reason,
+            transitioned_at=self._now(),
+            last_accepted_open_time=self._snapshot.last_accepted_open_time,
+        )
+        self._visited_states.append(state)
+
+    def record_delivery(self, open_time: datetime) -> None:
+        self._snapshot = MarketDataRuntimeSnapshot(
+            state=self._snapshot.state,
+            reason=self._snapshot.reason,
+            transitioned_at=self._snapshot.transitioned_at,
+            last_accepted_open_time=open_time,
+        )
 
 
 def _require_utc(value: datetime, *, name: str) -> None:

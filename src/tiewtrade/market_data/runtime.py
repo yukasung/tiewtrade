@@ -16,6 +16,7 @@ from tiewtrade.market_data.runtime_state import (
     MarketDataRuntimeReason,
     MarketDataRuntimeSnapshot,
     MarketDataRuntimeState,
+    MarketDataRuntimeStatus,
 )
 
 _T = TypeVar("_T")
@@ -80,32 +81,24 @@ class MarketDataRuntime:
         self._source = source
         self._sink = sink
         self._scheduler = scheduler or AsyncioRuntimeScheduler()
+        self._status = MarketDataRuntimeStatus(self._scheduler.now)
         self._candles = CompletedCandleStream(config)
-        self._last_accepted_open_time: datetime | None = None
         self._run_task: asyncio.Task[None] | None = None
         self._shutdown_task: asyncio.Task[None] | None = None
         self._stop_requested = False
         self._source_close_lock = asyncio.Lock()
         self._source_closed = False
 
-        self._snapshot = MarketDataRuntimeSnapshot(
-            state=MarketDataRuntimeState.STARTING,
-            reason=MarketDataRuntimeReason.START_REQUESTED,
-            transitioned_at=self._scheduler.now(),
-            last_accepted_open_time=None,
-        )
-        self._visited_states = [MarketDataRuntimeState.STARTING]
-
     @property
     def snapshot(self) -> MarketDataRuntimeSnapshot:
-        return self._snapshot
+        return self._status.snapshot
 
     @property
     def visited_states(self) -> tuple[MarketDataRuntimeState, ...]:
-        return tuple(self._visited_states)
+        return self._status.visited_states
 
     async def run(self) -> None:
-        if self._snapshot.state in {
+        if self._status.snapshot.state in {
             MarketDataRuntimeState.FAILED_CLOSED,
             MarketDataRuntimeState.STOPPED,
         }:
@@ -129,7 +122,8 @@ class MarketDataRuntime:
             try:
                 if (
                     not self._stop_requested
-                    and self._snapshot.state is MarketDataRuntimeState.FAILED_CLOSED
+                    and self._status.snapshot.state
+                    is MarketDataRuntimeState.FAILED_CLOSED
                 ):
                     try:
                         await self._close_source_once()
@@ -217,7 +211,7 @@ class MarketDataRuntime:
             await self._sink.warm_up(candles, received_at=completed_before)
         except Exception as error:
             raise _WarmUpSinkError from error
-        self._last_accepted_open_time = candles[-1].open_time
+        self._status.record_delivery(candles[-1].open_time)
 
     async def _consume_live(self) -> None:
         try:
@@ -273,9 +267,10 @@ class MarketDataRuntime:
         )
 
     def _freshness_deadline(self) -> datetime:
-        if self._last_accepted_open_time is None:
+        last_accepted_open_time = self._status.snapshot.last_accepted_open_time
+        if last_accepted_open_time is None:
             raise RuntimeError("freshness requires an accepted candle")
-        expected_open_time = self._last_accepted_open_time + self._config.interval
+        expected_open_time = last_accepted_open_time + self._config.interval
         expected_close_boundary = expected_open_time + self._config.interval
         return expected_close_boundary + _STALE_GRACE
 
@@ -293,7 +288,7 @@ class MarketDataRuntime:
 
         if not await self._deliver(candle, received_at=received_at):
             return False
-        self._last_accepted_open_time = candle.open_time
+        self._status.record_delivery(candle.open_time)
         self._transition(
             MarketDataRuntimeState.LIVE,
             MarketDataRuntimeReason.LIVE_CANDLE_ACCEPTED,
@@ -319,11 +314,12 @@ class MarketDataRuntime:
         received_at: datetime,
         observed: Candle | None = None,
     ) -> bool:
-        if self._last_accepted_open_time is None:
+        last_accepted_open_time = self._status.snapshot.last_accepted_open_time
+        if last_accepted_open_time is None:
             self._fail_closed(MarketDataRuntimeReason.SOURCE_ERROR)
             return False
 
-        start = self._last_accepted_open_time + self._config.interval
+        start = last_accepted_open_time + self._config.interval
         self._transition(
             MarketDataRuntimeState.BACKFILLING,
             MarketDataRuntimeReason.GAP_DETECTED,
@@ -375,8 +371,7 @@ class MarketDataRuntime:
         for candle in accepted_candles:
             if not await self._deliver(candle, received_at=received_at):
                 return False
-            self._last_accepted_open_time = candle.open_time
-            self._refresh_snapshot_watermark()
+            self._status.record_delivery(candle.open_time)
         return True
 
     async def _recover_stream(
@@ -451,16 +446,8 @@ class MarketDataRuntime:
     def _fail_closed(self, reason: MarketDataRuntimeReason) -> None:
         self._transition(MarketDataRuntimeState.FAILED_CLOSED, reason)
 
-    def _refresh_snapshot_watermark(self) -> None:
-        self._snapshot = MarketDataRuntimeSnapshot(
-            state=self._snapshot.state,
-            reason=self._snapshot.reason,
-            transitioned_at=self._snapshot.transitioned_at,
-            last_accepted_open_time=self._last_accepted_open_time,
-        )
-
     def _transition_to_stopped(self) -> None:
-        if self._snapshot.state in {
+        if self._status.snapshot.state in {
             MarketDataRuntimeState.FAILED_CLOSED,
             MarketDataRuntimeState.STOPPED,
         }:
@@ -475,13 +462,7 @@ class MarketDataRuntime:
         state: MarketDataRuntimeState,
         reason: MarketDataRuntimeReason,
     ) -> None:
-        self._snapshot = MarketDataRuntimeSnapshot(
-            state=state,
-            reason=reason,
-            transitioned_at=self._scheduler.now(),
-            last_accepted_open_time=self._last_accepted_open_time,
-        )
-        self._visited_states.append(state)
+        self._status.transition(state, reason)
 
 
 def _latest_completed_boundary(value: datetime, *, interval: timedelta) -> datetime:
