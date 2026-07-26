@@ -6,6 +6,7 @@ import pytest
 
 from tiewtrade.market_data.candle import Candle
 from tiewtrade.market_data.candle_pipeline import (
+    CandlePipelineInputError,
     CandlePipelineSinkError,
     CompletedCandlePipeline,
 )
@@ -149,4 +150,68 @@ def test_warm_up_sink_failure_does_not_record_delivery() -> None:
                 received_at=RECEIVED_AT,
             )
         )
+    assert deliveries == []
+
+
+def test_incomplete_backfill_does_not_advance_continuity_before_retry() -> None:
+    sink = RecordingSink()
+    deliveries: list[datetime] = []
+    pipeline = pipeline_for(sink, deliveries)
+    asyncio.run(
+        pipeline.warm_up(
+            (candle_at(0), candle_at(5), candle_at(10)),
+            expected_count=3,
+            received_at=RECEIVED_AT,
+        )
+    )
+
+    with pytest.raises(CandlePipelineInputError):
+        asyncio.run(
+            pipeline.process_backfill(
+                (candle_at(15),),
+                start=candle_at(15).open_time,
+                end=candle_at(25).open_time,
+                observed=candle_at(20),
+                received_at=RECEIVED_AT,
+                on_ready_for_delivery=lambda: sink.events.append("ready"),
+            )
+        )
+
+    assert sink.events == ["warm_up"]
+    assert deliveries == [candle_at(10).open_time]
+
+    asyncio.run(
+        pipeline.process_backfill(
+            (candle_at(15), candle_at(20)),
+            start=candle_at(15).open_time,
+            end=candle_at(25).open_time,
+            observed=candle_at(20),
+            received_at=RECEIVED_AT,
+            on_ready_for_delivery=lambda: sink.events.append("ready"),
+        )
+    )
+
+    assert sink.events == ["warm_up", "ready", "sink:15", "sink:20"]
+    assert deliveries == [
+        candle_at(10).open_time,
+        candle_at(15).open_time,
+        candle_at(20).open_time,
+    ]
+
+
+def test_warm_up_rejects_non_positive_expected_count_before_sink_delivery() -> None:
+    sink = RecordingSink()
+    deliveries: list[datetime] = []
+    pipeline = pipeline_for(sink, deliveries)
+
+    with pytest.raises(CandlePipelineInputError):
+        asyncio.run(
+            pipeline.warm_up(
+                (),
+                expected_count=0,
+                received_at=RECEIVED_AT,
+            )
+        )
+
+    assert sink.events == []
     assert deliveries == []

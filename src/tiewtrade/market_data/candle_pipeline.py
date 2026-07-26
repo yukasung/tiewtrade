@@ -1,4 +1,5 @@
 from collections.abc import Callable
+from copy import deepcopy
 from datetime import datetime
 from typing import Protocol
 
@@ -55,6 +56,8 @@ class CompletedCandlePipeline:
         received_at: datetime,
     ) -> None:
         try:
+            if expected_count <= 0:
+                raise ValueError("expected_count must be positive")
             if len(candles) < expected_count:
                 raise ValueError("insufficient warm-up candles")
             for candle in candles:
@@ -100,20 +103,25 @@ class CompletedCandlePipeline:
                 raise ValueError("backfill must not be empty")
             if start >= end and candles:
                 raise ValueError("backfill must be empty when no range is missing")
+            validation_candles = deepcopy(self._candles)
             accepted: list[Candle] = []
             for candle in candles:
-                if not self._candles.accept(candle, received_at):
+                if not validation_candles.accept(candle, received_at):
                     raise ValueError("backfill requires new completed candles")
                 accepted.append(candle)
             if accepted:
                 reached = accepted[-1].open_time + self._config.interval
                 if reached != end:
                     raise ValueError("backfill did not reach requested boundary")
-            if observed is not None and self._candles.accept(observed, received_at):
+            if observed is not None and validation_candles.accept(
+                observed, received_at
+            ):
                 raise ValueError("buffered observation was not covered by backfill")
         except ValueError as error:
             raise CandlePipelineInputError from error
 
+        for candle in accepted:
+            self._candles.accept(candle, received_at)
         on_ready_for_delivery()
         for candle in accepted:
             await self._deliver(candle, received_at=received_at)
