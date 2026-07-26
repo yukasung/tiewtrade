@@ -88,3 +88,20 @@ Live Spot กับ Live Futures แยก adapters เพราะ symbol rules
 SQLite เก็บ non-secret state ได้แก่ configuration, Basket, Entry Pair, Entry Intent, Order, Fill, PnL, execution costs, Notification, Reconciliation และ operational audit events Credentials อยู่ใน OS Keyring เท่านั้น
 
 Network, engine และ persistence ทำงานนอก UI thread UI อ่าน application state เพื่อแสดง Market Type, Mode, Preset Version, data freshness และ Bot Session state โดยไม่เป็นเจ้าของ business rules ดูเหตุผลสรุปของขอบเขตเหล่านี้ต่อได้ที่ [Decisions](/decisions)
+
+### Trade History Read Flow
+
+Trade History แยก application query request/result ออกจาก SQLite เพื่อให้ UI ค้นหา Basket และ Trade Fills โดยไม่รู้จัก table หรือ SQL โดยตรง โดยยังไม่สร้าง generic persistence interface ก่อนมี consumer จริงตัวถัดไป
+
+```mermaid
+flowchart LR
+    UI[Desktop Trade History UI] -->|Application query request| STORE[Composed SQLite Trade History Reader]
+    STORE --> DB[(SQLite)]
+    STORE -->|Application query result| UI
+```
+
+แผนภาพแสดง read flow ที่ composition ส่ง concrete reader ให้ UI ขณะที่ request และ result types เป็นของ application ส่วน SQLite reader map durable records กลับเป็น Basket กับ Trade Fill วิธีนี้ทำให้ UI ขอ filter, deterministic ordering, pagination, total count และ Net Realized PnL ได้โดยไม่ถือ persistence rules เมื่อมี consumer หรือ adapter จริงเพิ่มจึงค่อยย้าย operation contract ไปไว้ใน application
+
+Basket History เรียงจากเวลาเปิดล่าสุดก่อน โดยใช้ Basket ID เป็นตัวตัดสินเมื่อเวลาเท่ากัน ตัวกรองรองรับ Symbol, Timeframe, Market Type, Trade Mode, Basket Status และช่วงเวลาเปิดแบบ UTC ผลลัพธ์หนึ่งหน้ามีจำนวนรายการทั้งหมด และ summary รวมเฉพาะ Net Realized PnL ของ Basket ที่ปิดแล้วและตรงกับตัวกรอง
+
+เมื่อผู้ใช้เลือก Basket เดียว UI จึงขอ Trade Fills ของ Basket นั้นตามเวลา execution และ Fill ID ค่าเงินทั้งหมดคงเป็น Decimal ตลอด read flow เพื่อไม่ให้ summary เปลี่ยนจาก floating-point conversion

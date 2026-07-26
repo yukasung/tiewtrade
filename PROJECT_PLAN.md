@@ -84,11 +84,12 @@ Recovery, Paper Futures, public market-data runtime และ Desktop UI
 6. Stop Session, startup Recovery และ deterministic reconciliation ด้วย fake adapters
 7. Paper acceptance ครบทั้ง business rules, persistence, UI และ Recovery
 
-สถานะ DEV-92–DEV-93: durable Paper Spot SQLite history รองรับ normalized
+สถานะ DEV-92–DEV-94: durable Paper Spot SQLite history รองรับ normalized
 Basket/Fill, exact Decimal/UTC round-trip, deterministic IDs, atomic writes,
 idempotent duplicate handling, ownership/lifecycle validation และ fail-closed
-Session state แล้ว ส่วน query/pagination, Paper Futures, Desktop UI และ startup
-Recovery ยังคงอยู่ในลำดับถัดไปของ milestone นี้
+Session state รวมทั้ง application query สำหรับ filter, deterministic ordering,
+pagination, total count และ closed-Basket Net Realized PnL แล้ว ส่วน Paper Futures,
+Desktop UI และ startup Recovery ยังคงอยู่ในลำดับถัดไปของ milestone นี้
 
 ## Milestone 4 — Live Spot
 
