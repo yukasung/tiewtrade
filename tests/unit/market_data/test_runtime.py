@@ -226,6 +226,18 @@ class BlockingWarmUpSource(FakeSource):
         raise AssertionError("unreachable")
 
 
+class NoneWarmUpSource(FakeSource):
+    async def load_recent(
+        self,
+        config: MarketDataConfig,
+        *,
+        count: int,
+        completed_before: datetime,
+    ) -> tuple[Candle, ...]:
+        self.recent_requests.append((config, count, completed_before))
+        return None  # type: ignore[return-value]
+
+
 class FailingCloseSource(FakeSource):
     async def close(self) -> None:
         self.close_count += 1
@@ -560,6 +572,20 @@ def test_invalid_warm_up_batch_fails_closed_without_calling_sink(
     assert not source.live_started
 
 
+def test_none_warm_up_output_fails_closed_and_closes_source() -> None:
+    source = NoneWarmUpSource()
+    sink = RecordingSink()
+    runtime = runtime_for(source, sink)
+
+    asyncio.run(runtime.run())
+
+    assert runtime.snapshot.state is MarketDataRuntimeState.FAILED_CLOSED
+    assert runtime.snapshot.reason is MarketDataRuntimeReason.SOURCE_ERROR
+    assert runtime.snapshot.last_accepted_open_time is None
+    assert sink.calls == []
+    assert source.close_count == 1
+
+
 def test_warm_up_sink_failure_fails_closed_without_live_delivery() -> None:
     source = FakeSource(recent=warm_up_candles(), live=[candle_at(15)])
     sink = RecordingSink(fail_warm_up=True)
@@ -663,6 +689,29 @@ def test_incomplete_gap_backfill_fails_closed(
             candle_at(25).open_time,
         )
     ]
+
+
+def test_non_candle_backfill_output_fails_closed_and_closes_source() -> None:
+    source = FakeSource(
+        recent=warm_up_candles(),
+        live=[candle_at(20)],
+        ranges={
+            (candle_at(15).open_time, candle_at(25).open_time): (
+                candle_at(15),
+                object(),
+            )
+        },
+    )
+    sink = RecordingSink()
+    runtime = runtime_for(source, sink)
+
+    asyncio.run(runtime.run())
+
+    assert runtime.snapshot.state is MarketDataRuntimeState.FAILED_CLOSED
+    assert runtime.snapshot.reason is MarketDataRuntimeReason.SOURCE_ERROR
+    assert runtime.snapshot.last_accepted_open_time == candle_at(10).open_time
+    assert sink.live_candles == []
+    assert source.close_count == 1
 
 
 def test_stale_wait_uses_expected_close_boundary_plus_thirty_seconds() -> None:

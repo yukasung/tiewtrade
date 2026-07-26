@@ -63,7 +63,7 @@ class CompletedCandlePipeline:
             for candle in candles:
                 if not self._candles.accept(candle, received_at):
                     raise ValueError("warm-up requires new completed candles")
-        except ValueError as error:
+        except (AttributeError, TypeError, ValueError) as error:
             raise CandlePipelineInputError from error
         try:
             await self._sink.warm_up(candles, received_at=received_at)
@@ -81,7 +81,7 @@ class CompletedCandlePipeline:
             accepted = self._candles.accept(candle, received_at)
         except CandleGapError:
             raise
-        except ValueError as error:
+        except (AttributeError, TypeError, ValueError) as error:
             raise CandlePipelineInputError from error
         if not accepted:
             return False
@@ -117,7 +117,7 @@ class CompletedCandlePipeline:
                 observed, received_at
             ):
                 raise ValueError("buffered observation was not covered by backfill")
-        except ValueError as error:
+        except (AttributeError, TypeError, ValueError) as error:
             raise CandlePipelineInputError from error
 
         for candle in accepted:
