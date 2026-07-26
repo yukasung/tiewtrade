@@ -5,7 +5,7 @@ from collections.abc import AsyncIterator, Awaitable, Coroutine, Iterable
 from dataclasses import FrozenInstanceError
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
-from typing import TypeVar
+from typing import TypeVar, cast
 
 import pytest
 
@@ -236,6 +236,32 @@ class NoneWarmUpSource(FakeSource):
     ) -> tuple[Candle, ...]:
         self.recent_requests.append((config, count, completed_before))
         return None  # type: ignore[return-value]
+
+
+class ExplodingWarmUpBatch:
+    def __len__(self) -> int:
+        raise RuntimeError("warm-up batch validation failed")
+
+
+class ExplodingWarmUpSource(FakeSource):
+    async def load_recent(
+        self,
+        config: MarketDataConfig,
+        *,
+        count: int,
+        completed_before: datetime,
+    ) -> tuple[Candle, ...]:
+        self.recent_requests.append((config, count, completed_before))
+        return cast(tuple[Candle, ...], ExplodingWarmUpBatch())
+
+
+class ExplodingValidationCandle:
+    def __init__(self, error: Exception) -> None:
+        self._error = error
+
+    @property
+    def symbol(self) -> str:
+        raise self._error
 
 
 class FailingCloseSource(FakeSource):
@@ -586,6 +612,20 @@ def test_none_warm_up_output_fails_closed_and_closes_source() -> None:
     assert source.close_count == 1
 
 
+def test_unexpected_warm_up_validation_error_fails_closed_and_closes_source() -> None:
+    source = ExplodingWarmUpSource()
+    sink = RecordingSink()
+    runtime = runtime_for(source, sink)
+
+    asyncio.run(runtime.run())
+
+    assert runtime.snapshot.state is MarketDataRuntimeState.FAILED_CLOSED
+    assert runtime.snapshot.reason is MarketDataRuntimeReason.SOURCE_ERROR
+    assert runtime.snapshot.last_accepted_open_time is None
+    assert sink.calls == []
+    assert source.close_count == 1
+
+
 def test_warm_up_sink_failure_fails_closed_without_live_delivery() -> None:
     source = FakeSource(recent=warm_up_candles(), live=[candle_at(15)])
     sink = RecordingSink(fail_warm_up=True)
@@ -626,6 +666,30 @@ def test_invalid_live_candle_maps_to_source_error() -> None:
     assert runtime.snapshot.state is MarketDataRuntimeState.FAILED_CLOSED
     assert runtime.snapshot.reason is MarketDataRuntimeReason.SOURCE_ERROR
     assert sink.live_candles == []
+
+
+def test_unexpected_live_validation_error_fails_closed_and_closes_source() -> None:
+    source = FakeSource(
+        recent=warm_up_candles(),
+        live=[
+            cast(
+                Candle,
+                ExplodingValidationCandle(
+                    RuntimeError("live candle validation failed")
+                ),
+            )
+        ],
+    )
+    sink = RecordingSink()
+    runtime = runtime_for(source, sink)
+
+    asyncio.run(runtime.run())
+
+    assert runtime.snapshot.state is MarketDataRuntimeState.FAILED_CLOSED
+    assert runtime.snapshot.reason is MarketDataRuntimeReason.SOURCE_ERROR
+    assert runtime.snapshot.last_accepted_open_time == candle_at(10).open_time
+    assert sink.live_candles == []
+    assert source.close_count == 1
 
 
 def test_gap_backfills_in_order_before_resuming_live() -> None:
@@ -699,6 +763,33 @@ def test_non_candle_backfill_output_fails_closed_and_closes_source() -> None:
             (candle_at(15).open_time, candle_at(25).open_time): (
                 candle_at(15),
                 object(),
+            )
+        },
+    )
+    sink = RecordingSink()
+    runtime = runtime_for(source, sink)
+
+    asyncio.run(runtime.run())
+
+    assert runtime.snapshot.state is MarketDataRuntimeState.FAILED_CLOSED
+    assert runtime.snapshot.reason is MarketDataRuntimeReason.SOURCE_ERROR
+    assert runtime.snapshot.last_accepted_open_time == candle_at(10).open_time
+    assert sink.live_candles == []
+    assert source.close_count == 1
+
+
+def test_unexpected_backfill_validation_error_fails_closed_and_closes_source() -> None:
+    malformed = cast(
+        Candle,
+        ExplodingValidationCandle(OverflowError("backfill candle time overflow")),
+    )
+    source = FakeSource(
+        recent=warm_up_candles(),
+        live=[candle_at(20)],
+        ranges={
+            (candle_at(15).open_time, candle_at(25).open_time): (
+                candle_at(15),
+                malformed,
             )
         },
     )
