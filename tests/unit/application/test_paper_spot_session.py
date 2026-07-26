@@ -62,6 +62,19 @@ def test_pending_intent_fills_at_the_next_completed_candle_open() -> None:
     assert snapshot.take_profit_price == Decimal("129.30")
 
 
+def test_snapshot_has_no_basket_id_before_first_entry() -> None:
+    application = paper_session()
+    first_candle = candle(0, open_price="100", close_price="101")
+
+    snapshot = application.process_completed_candle(
+        first_candle,
+        received_at=first_candle.close_time,
+    )
+
+    assert snapshot.accepted is True
+    assert snapshot.basket_id is None
+
+
 def test_take_profit_skips_entry_fill_candle_and_closes_on_following_candle() -> None:
     application = paper_session()
     arm_entry_intent(application)
@@ -83,6 +96,7 @@ def test_take_profit_skips_entry_fill_candle_and_closes_on_following_candle() ->
     )
 
     assert target_snapshot.closed_basket is not None
+    assert target_snapshot.basket_id == target_snapshot.closed_basket.basket_id
     assert target_snapshot.closed_basket.entry_count == 1
     assert target_snapshot.take_profit_fill is not None
     assert target_snapshot.take_profit_fill.filled_at == target_candle.close_time

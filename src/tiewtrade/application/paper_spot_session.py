@@ -157,13 +157,12 @@ class PaperSpotSession:
         entry_fill: PaperSpotEntryFill | None = None,
         closed_basket: ClosedBasket | None = None,
     ) -> PaperSpotSessionSnapshot:
-        basket_id = (
-            self._basket.basket_id
-            if self._basket is not None
-            else None
-            if closed_basket is None
-            else closed_basket.basket_id
-        )
+        if self._basket is not None:
+            basket_id = self._basket.basket_id
+        elif closed_basket is not None:
+            basket_id = closed_basket.basket_id
+        else:
+            basket_id = None
         return PaperSpotSessionSnapshot(
             accepted=accepted,
             pending_intent=self._pending_intent,
