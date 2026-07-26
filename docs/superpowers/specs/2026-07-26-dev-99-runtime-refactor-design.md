@@ -9,12 +9,12 @@
 ## 1. Purpose
 
 ลดความซับซ้อนภายใน Public Binance Market Data Runtime โดยคง public interface,
-state sequence, failure policy และผลลัพธ์เดิมทั้งหมด ปัจจุบัน
-`market_data/runtime.py` รวม lifecycle orchestration, candle validation, sink
+state sequence, failure policy และผลลัพธ์เดิมทั้งหมด ก่อน refactor
+`market_data/runtime.py` เคยรวม lifecycle orchestration, candle validation, sink
 delivery, watermark publishing และ runtime status ไว้ในไฟล์เดียว ทำให้ invariant
 สำคัญกระจายอยู่หลาย method
 
-Refactor นี้จะสร้าง deep internal modules สองส่วนเพื่อให้กฎการส่ง candle และการ
+Refactor นี้สร้าง deep internal modules สองส่วนแล้ว เพื่อให้กฎการส่ง candle และการ
 เผยแพร่ runtime status มีเจ้าของเพียงจุดเดียว โดย `MarketDataRuntime` ยังคงเป็น
 external interface เดิมของ application และ tests
 

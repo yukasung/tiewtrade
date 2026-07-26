@@ -116,9 +116,11 @@ Any active state -> STOPPED after explicit shutdown
 ```
 
 The Runtime publishes an immutable snapshot after every meaningful transition.
-The snapshot contains the state, UTC transition time, last accepted candle time,
-and a machine-readable reason. Future UI and Notifications consume this snapshot;
-they do not infer freshness from raw candles.
+The snapshot contains the state, UTC transition time, the legacy
+`last_accepted_open_time` field, and a machine-readable reason. Despite its public
+name, `last_accepted_open_time` is the successful-delivery watermark: the Status
+Tracker updates it only after the application sink succeeds. Future UI and
+Notifications consume this snapshot; they do not infer freshness from raw candles.
 
 `FAILED_CLOSED` is terminal for one Runtime instance. Automatic retry does not
 restart after the three attempts are exhausted. A user action creates or starts a
@@ -156,10 +158,12 @@ For every yielded candle:
 1. `CompletedCandlePipeline` validates symbol, timeframe, UTC alignment, OHLC,
    and volume.
 2. The Pipeline passes the candle through its internal `CompletedCandleStream`.
-3. Ignore an already accepted candle without evaluating Strategy again.
+3. Ignore a duplicate already seen by `CompletedCandleStream` without evaluating
+   Strategy again.
 4. Send the next contiguous candle to the application sink exactly once.
-5. Advance the accepted-candle watermark and freshness deadline only after the
-   sink receives that candle successfully.
+5. Advance the delivery watermark exposed as `last_accepted_open_time`, and its
+   derived freshness deadline, only after the sink receives that candle
+   successfully.
 
 Messages for another stream identity and malformed Binance payloads do not reach
 the Strategy. They produce an explicit Runtime failure reason rather than a
@@ -190,14 +194,15 @@ data leaves the Runtime fail closed.
 ## 8. Stale Data and Reconnect
 
 The Runtime calculates the next freshness deadline as 30 seconds after the next
-expected completed-candle boundary. Crossing that deadline without accepting the
-expected candle immediately transitions to `STALE`; no new Entry decision is
-allowed.
+expected completed-candle boundary. Crossing that deadline without successfully
+delivering the expected candle immediately transitions to `STALE`; no new Entry
+decision is allowed.
 
 A WebSocket disconnect or stale deadline starts reconnect attempts after 1, 2,
 and 4 seconds. Each successful connection enters `BACKFILLING` before returning to
 `LIVE`, even when no missing candle is ultimately found. This proves continuity
-between the last locally accepted candle and the current public market state.
+between the last successfully delivered candle and the current public market
+state.
 
 If all three attempts fail, the Runtime transitions to `FAILED_CLOSED`. Existing
 Basket state and Paper history remain unchanged. DEV-99 does not implement Stop
