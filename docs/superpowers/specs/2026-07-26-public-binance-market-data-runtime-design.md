@@ -23,6 +23,9 @@ test mode.
 - The Runtime accepts `symbol` and `timeframe` from immutable Session
   configuration. `BTCUSDT 5m` is the Internal Alpha acceptance scenario, not a
   constant inside business logic.
+- Application composition selects a Spot or USDⓈ-M Futures public market-data
+  venue from the Session Market Type. Spot and Futures use the same Runtime
+  contract but never share or substitute each other's Kline stream.
 - Historical Warm-up prepares indicator state only. It must not create an Entry
   Intent, Fill, Basket, or any other trading side effect.
 - The Strategy receives only newly completed candles after Warm-up succeeds.
@@ -71,7 +74,8 @@ client dependencies.
   deduplication, freshness, retry scheduling, backfill coordination, and immutable
   status snapshots.
 - `integrations/binance` owns Binance endpoint construction, response parsing,
-  public REST transport, and public WebSocket transport.
+  public REST transport, and public WebSocket transport. It exposes explicit Spot
+  and USDⓈ-M Futures endpoint profiles selected by application composition.
 - `application` composes the Runtime with the active Session and separates
   indicator-only Warm-up from live Strategy evaluation.
 - `strategies` consumes validated candles and does not import Binance or network
@@ -83,6 +87,11 @@ Small consumer-owned protocols define the historical source, live source, clock,
 sleeper, and application candle sink used by the Runtime. Concrete Binance and
 fake test adapters implement those contracts. The contracts expose only the
 operations the Runtime needs and do not form a generic exchange SDK.
+
+The public Binance adapter uses the Spot Kline REST/WebSocket APIs for a Spot
+Session and the USDⓈ-M Futures Kline REST/WebSocket APIs for a Futures Session.
+The Runtime remains venue-agnostic after composition; it receives only normalized
+`Candle` values from the selected adapter.
 
 ## 4. Runtime State Model
 
