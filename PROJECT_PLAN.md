@@ -91,6 +91,12 @@ Session state รวมทั้ง application query สำหรับ filter,
 pagination, total count และ closed-Basket Net Realized PnL แล้ว ส่วน Paper Futures,
 Desktop UI และ startup Recovery ยังคงอยู่ในลำดับถัดไปของ milestone นี้
 
+สถานะ DEV-99: public Binance market-data Runtime รองรับ Historical Warm-up,
+completed-candle live flow, gap backfill, stale-data fail closed, bounded reconnect
+และการเลือก Spot หรือ USDⓈ-M Futures public endpoint จาก Session configuration แล้ว
+งานนี้ยังไม่ทำให้ Paper Trading Complete; Paper Futures, Desktop UI, Stop Session และ
+startup Recovery ยังคงอยู่ในลำดับถัดไปของ milestone นี้
+
 ## Milestone 4 — Live Spot
 
 เริ่มได้เมื่อ Paper Trading Complete ผ่านทั้งหมด:
