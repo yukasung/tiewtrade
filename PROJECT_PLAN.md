@@ -123,7 +123,8 @@ Desktop UI และ startup Recovery ยังคงอยู่ในลำด
 | Basket, capital และ Entry Pair | `trading` | ใช้ร่วมกันทุก Trade Mode |
 | Session orchestration | `application` | จัดลำดับ shared business rules กับ execution adapter |
 | Paper execution | `execution` | จำลอง side effects โดยไม่เรียก Binance |
-| Binance adapters | `integrations/binance` | เพิ่มตาม Live gates เท่านั้น |
+| Binance public market data | `integrations/binance` | ส่งมอบใน Paper Trading Complete โดยไม่ใช้ credentials |
+| Binance Live execution | `integrations/binance` | เพิ่มตาม Live gates เท่านั้น |
 | Persistence | `integrations/sqlite` | จัดการ transaction, durable mapping และ persistence-specific fail-closed coordinator; ไม่เก็บ secrets |
 | Desktop UI | `ui` | ไม่ถือ business rules |
 

@@ -45,7 +45,14 @@ class BinancePublicMarketData:
 
         page = await self._load_rest_page(
             config,
-            {"symbol": config.symbol, "interval": config.timeframe, "limit": count},
+            {
+                "symbol": config.symbol,
+                "interval": config.timeframe,
+                "endTime": _last_completed_millisecond(
+                    completed_before, interval=config.interval
+                ),
+                "limit": count,
+            },
         )
         completed = sorted(
             (candle for candle in page if candle.close_time <= completed_before),
@@ -169,6 +176,11 @@ class BinancePublicMarketData:
 
 def _milliseconds(value: datetime) -> int:
     return int(value.timestamp() * 1_000)
+
+
+def _last_completed_millisecond(value: datetime, *, interval: timedelta) -> int:
+    interval_milliseconds = int(interval.total_seconds() * 1_000)
+    return _milliseconds(value) // interval_milliseconds * interval_milliseconds - 1
 
 
 def _require_utc(value: datetime, *, name: str) -> None:

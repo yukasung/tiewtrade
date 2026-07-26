@@ -136,8 +136,36 @@ async def collect(source: BinancePublicMarketData) -> tuple[object, ...]:
     return tuple([candle async for candle in source.stream_completed(config())])
 
 
-def test_load_recent_sends_requested_limit_and_excludes_unfinished_candles() -> None:
+def test_load_recent_requests_and_returns_requested_completed_candle_count() -> None:
     source, session = source_with(
+        rest_pages=[
+            FakeResponse(payload=[rest_kline(-5), rest_kline(0), rest_kline(5)])
+        ]
+    )
+
+    candles = asyncio.run(
+        source.load_recent(
+            config(),
+            count=3,
+            completed_before=datetime(2026, 1, 1, 0, 12, tzinfo=UTC),
+        )
+    )
+
+    assert [candle.open_time for candle in candles] == [
+        datetime(2025, 12, 31, 23, 55, tzinfo=UTC),
+        datetime(2026, 1, 1, tzinfo=UTC),
+        datetime(2026, 1, 1, 0, 5, tzinfo=UTC),
+    ]
+    assert session.requests[0][1] == {
+        "symbol": "BTCUSDT",
+        "interval": "5m",
+        "endTime": 1767226199999,
+        "limit": 3,
+    }
+
+
+def test_load_recent_excludes_unfinished_candles_from_response() -> None:
+    source, _ = source_with(
         rest_pages=[
             FakeResponse(payload=[rest_kline(0), rest_kline(5), rest_kline(10)])
         ]
@@ -155,7 +183,6 @@ def test_load_recent_sends_requested_limit_and_excludes_unfinished_candles() -> 
         datetime(2026, 1, 1, tzinfo=UTC),
         datetime(2026, 1, 1, 0, 5, tzinfo=UTC),
     ]
-    assert session.requests[0][1]["limit"] == 3
 
 
 def test_load_range_paginates_and_returns_ascending_completed_candles() -> None:
@@ -243,7 +270,7 @@ def test_stream_completed_ignores_open_updates_and_uses_symbol_stream_url() -> N
     ]
 
 
-def test_network_operations_reject_unsupported_interval_before_requesting() -> None:
+def test_load_recent_rejects_unsupported_interval_before_rest_request() -> None:
     source, session = source_with(rest_pages=[FakeResponse(payload=[])])
 
     with pytest.raises(BinanceMarketDataPayloadError, match="unsupported Binance"):
@@ -256,6 +283,35 @@ def test_network_operations_reject_unsupported_interval_before_requesting() -> N
         )
 
     assert session.requests == []
+
+
+def test_load_range_rejects_unsupported_interval_before_rest_request() -> None:
+    source, session = source_with(rest_pages=[FakeResponse(payload=[])])
+
+    with pytest.raises(BinanceMarketDataPayloadError, match="unsupported Binance"):
+        asyncio.run(
+            source.load_range(
+                config(timeframe="7m"),
+                start=datetime(2026, 1, 1, tzinfo=UTC),
+                end=datetime(2026, 1, 1, 0, 7, tzinfo=UTC),
+            )
+        )
+
+    assert session.requests == []
+
+
+def test_stream_completed_rejects_unsupported_interval_before_ws_handshake() -> None:
+    source, session = source_with(websocket_payloads=[websocket_kline(closed=True)])
+
+    async def collect_invalid_stream() -> tuple[object, ...]:
+        return tuple(
+            [candle async for candle in source.stream_completed(config(timeframe="7m"))]
+        )
+
+    with pytest.raises(BinanceMarketDataPayloadError, match="unsupported Binance"):
+        asyncio.run(collect_invalid_stream())
+
+    assert session.websocket_urls == []
 
 
 def test_close_is_idempotent() -> None:

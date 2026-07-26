@@ -202,15 +202,14 @@ git commit -m "feat: normalize Binance public klines"
 
 **Files:**
 - Modify: `pyproject.toml`
-- Create: `src/tiewtrade/market_data/candle_source.py`
 - Create: `src/tiewtrade/integrations/binance/public_market_data.py`
 - Create: `tests/unit/integrations/binance/test_public_market_data.py`
 
 **Interfaces:**
 - Produces:
-  - `HistoricalCandleSource.load_recent(config, *, count, completed_before) -> tuple[Candle, ...]`
-  - `HistoricalCandleSource.load_range(config, *, start, end) -> tuple[Candle, ...]`
-  - `LiveCandleSource.stream_completed(config) -> AsyncIterator[Candle]`
+  - `BinancePublicMarketData.load_recent(config, *, count, completed_before) -> tuple[Candle, ...]`
+  - `BinancePublicMarketData.load_range(config, *, start, end) -> tuple[Candle, ...]`
+  - `BinancePublicMarketData.stream_completed(config) -> AsyncIterator[Candle]`
   - `BinancePublicMarketData.close() -> None`
 
 - [ ] **Step 1: เขียน failing tests สำหรับ recent, paginated range และ live closed candles**
@@ -247,7 +246,7 @@ def test_stream_completed_ignores_open_updates() -> None:
 
 Expected: FAIL ด้วย import error
 
-- [ ] **Step 3: เพิ่ม dependency และ consumer-owned source contracts**
+- [ ] **Step 3: เพิ่ม aiohttp dependency**
 
 เพิ่มใน `[project].dependencies`:
 
@@ -257,36 +256,9 @@ dependencies = [
 ]
 ```
 
-สร้าง Protocol ที่ market-data consumer เป็นเจ้าของ:
-
-```python
-class HistoricalCandleSource(Protocol):
-    async def load_recent(
-        self,
-        config: MarketDataConfig,
-        *,
-        count: int,
-        completed_before: datetime,
-    ) -> tuple[Candle, ...]: ...
-
-    async def load_range(
-        self,
-        config: MarketDataConfig,
-        *,
-        start: datetime,
-        end: datetime,
-    ) -> tuple[Candle, ...]: ...
-
-
-class LiveCandleSource(Protocol):
-    def stream_completed(
-        self, config: MarketDataConfig
-    ) -> AsyncIterator[Candle]: ...
-```
-
 - [ ] **Step 4: Implement Binance source โดยใช้ selected endpoint profile**
 
-`load_recent` ต้องส่ง `limit=count` และตัด candle ที่ close boundary ยังอยู่หลัง `completed_before`; `load_range` ต้องเลื่อน `startTime` จาก candle ล่าสุดทีละ `config.interval` จนถึง `end`; WebSocket URL ใช้ `<lowercase-symbol>@kline_<timeframe>` และ `close()` ปิด session เพียงครั้งเดียว
+`load_recent` ต้องส่ง `limit=count` พร้อม `endTime` ที่ millisecond สุดท้ายก่อน boundary ของ completed candle ล่าสุด เพื่อให้ response ปกติคืน completed candles ครบ `count` และยังตัด candle ที่ close boundary อยู่หลัง `completed_before`; `load_range` ต้องเลื่อน `startTime` จาก candle ล่าสุดทีละ `config.interval` จนถึง `end`; WebSocket URL ใช้ `<lowercase-symbol>@kline_<timeframe>` และ `close()` ปิด session เพียงครั้งเดียว
 
 - [ ] **Step 5: รัน source tests, Ruff และ mypy**
 
@@ -301,7 +273,7 @@ Expected: ทุกคำสั่ง exit 0
 - [ ] **Step 6: Commit Task 3**
 
 ```bash
-git add pyproject.toml src/tiewtrade/market_data/candle_source.py src/tiewtrade/integrations/binance/public_market_data.py tests/unit/integrations/binance/test_public_market_data.py
+git add pyproject.toml src/tiewtrade/integrations/binance/public_market_data.py tests/unit/integrations/binance/test_public_market_data.py
 git commit -m "feat: add Binance public candle source"
 ```
 
@@ -310,12 +282,15 @@ git commit -m "feat: add Binance public candle source"
 ### Task 4: ส่ง Warm-up และ Live Candle ผ่าน Runtime State Machine
 
 **Files:**
+- Create: `src/tiewtrade/market_data/candle_source.py`
 - Create: `src/tiewtrade/market_data/runtime_state.py`
 - Create: `src/tiewtrade/market_data/runtime.py`
 - Create: `tests/unit/market_data/test_runtime.py`
 
 **Interfaces:**
 - Produces:
+  - `HistoricalCandleSource.load_recent` และ `load_range`
+  - `LiveCandleSource.stream_completed`
   - `MarketDataRuntimeState`
   - `MarketDataRuntimeSnapshot`
   - `MarketDataCandleSink.warm_up` และ `process_completed`
@@ -367,7 +342,34 @@ def test_warm_up_timeout_fails_closed_without_live_delivery() -> None:
 
 Expected: FAIL ด้วย import error
 
-- [ ] **Step 3: สร้าง immutable state และ scheduler seam**
+- [ ] **Step 3: สร้าง consumer-owned source contracts, immutable state และ scheduler seam**
+
+สร้าง Protocol ใน `market_data` พร้อม Runtime ซึ่งเป็น consumer จริง:
+
+```python
+class HistoricalCandleSource(Protocol):
+    async def load_recent(
+        self,
+        config: MarketDataConfig,
+        *,
+        count: int,
+        completed_before: datetime,
+    ) -> tuple[Candle, ...]: ...
+
+    async def load_range(
+        self,
+        config: MarketDataConfig,
+        *,
+        start: datetime,
+        end: datetime,
+    ) -> tuple[Candle, ...]: ...
+
+
+class LiveCandleSource(Protocol):
+    def stream_completed(
+        self, config: MarketDataConfig
+    ) -> AsyncIterator[Candle]: ...
+```
 
 ```python
 class MarketDataRuntimeState(StrEnum):
@@ -423,7 +425,7 @@ Expected: ทุกคำสั่ง exit 0
 - [ ] **Step 6: Commit Task 4**
 
 ```bash
-git add src/tiewtrade/market_data/runtime.py src/tiewtrade/market_data/runtime_state.py tests/unit/market_data/test_runtime.py
+git add src/tiewtrade/market_data/candle_source.py src/tiewtrade/market_data/runtime.py src/tiewtrade/market_data/runtime_state.py tests/unit/market_data/test_runtime.py
 git commit -m "feat: run public candle warm-up and live flow"
 ```
 
