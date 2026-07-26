@@ -123,3 +123,64 @@ git diff --check
 
 ไม่มี concern ที่เหลือในขอบเขต Task 3; การตัดสินว่า exchange history มี candles ไม่พอ
 ยังคงเป็นหน้าที่ของ `MarketDataRuntime` ใน Task 4 ตามแผน
+
+## Review fix 2: completed-only range เมื่อ end ไม่ตรง timeframe boundary
+
+### RED
+
+Command:
+
+```bash
+.venv/bin/python -m pytest tests/unit/integrations/binance/test_public_market_data.py::test_load_range_excludes_candle_closing_after_non_aligned_end -q
+```
+
+Result:
+
+```text
+F                                                                        [100%]
+E       assert [datetime.dat...timezone.utc)] == [datetime.dat...timezone.utc)]
+E         Left contains one more item: datetime.datetime(2026, 1, 1, 0, 10, tzinfo=datetime.timezone.utc)
+1 failed in 0.08s
+```
+
+สาเหตุคือ `load_range(end=00:12)` ส่ง `endTime=00:12` และกรองเพียง
+`open_time < end` จึงรับ candle `00:10–00:15` ที่ยังไม่ completed ณ end
+
+### GREEN และ verification
+
+```text
+.venv/bin/python -m pytest tests/unit/integrations/binance/test_public_market_data.py -q
+  14 passed in 0.05s
+.venv/bin/python -m pytest -q
+  227 passed in 0.47s
+.venv/bin/python -m ruff check src tests
+  All checks passed!
+.venv/bin/python -m ruff format --check src tests
+  69 files already formatted
+.venv/bin/python -m mypy src
+  Success: no issues found in 38 source files
+npm --prefix docs-site run check:content
+  exit 0
+git diff --check
+  exit 0
+```
+
+### Files
+
+- `src/tiewtrade/integrations/binance/public_market_data.py`
+- `tests/unit/integrations/binance/test_public_market_data.py`
+- `docs/superpowers/plans/2026-07-26-public-binance-market-data-runtime.md`
+- `.superpowers/sdd/task-3-report.md`
+
+### Self-review
+
+- Range request ใช้ `endTime` เป็น millisecond สุดท้ายก่อน completed boundary ล่าสุด
+  เช่น `5m end=00:12` ใช้ `00:09:59.999`
+- Post-filter ยังคง `[start, end)` สำหรับ `open_time` และเพิ่ม `close_time <= end`
+  เพื่อคืนเฉพาะ completed candles แม้ source ส่ง payload เกิน request boundary
+- Range ที่ end ตรง boundary เช่น `00:15` ยังรับ candle `00:10–00:15` ตามเดิม
+- ไม่ refactor middleman และไม่แตะ `.mcp.json`
+
+### Concerns
+
+ไม่มี concern เพิ่มเติมในขอบเขต Task 3

@@ -212,6 +212,28 @@ def test_load_range_paginates_and_returns_ascending_completed_candles() -> None:
     ]
 
 
+def test_load_range_excludes_candle_closing_after_non_aligned_end() -> None:
+    source, session = source_with(
+        rest_pages=[
+            FakeResponse(payload=[rest_kline(0), rest_kline(5), rest_kline(10)])
+        ]
+    )
+
+    candles = asyncio.run(
+        source.load_range(
+            config(),
+            start=datetime(2026, 1, 1, tzinfo=UTC),
+            end=datetime(2026, 1, 1, 0, 12, tzinfo=UTC),
+        )
+    )
+
+    assert [candle.open_time for candle in candles] == [
+        datetime(2026, 1, 1, tzinfo=UTC),
+        datetime(2026, 1, 1, 0, 5, tzinfo=UTC),
+    ]
+    assert session.requests[0][1]["endTime"] == 1767226199999
+
+
 @pytest.mark.parametrize(
     ("pages", "request_count", "candle_count"),
     [([[]], 1, 0), ([[rest_kline(0)], [rest_kline(0)]], 2, 1)],

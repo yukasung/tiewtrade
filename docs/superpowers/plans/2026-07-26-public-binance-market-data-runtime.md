@@ -258,7 +258,7 @@ dependencies = [
 
 - [ ] **Step 4: Implement Binance source โดยใช้ selected endpoint profile**
 
-`load_recent` ต้องส่ง `limit=count` พร้อม `endTime` ที่ millisecond สุดท้ายก่อน boundary ของ completed candle ล่าสุด เพื่อให้ response ปกติคืน completed candles ครบ `count` และยังตัด candle ที่ close boundary อยู่หลัง `completed_before`; `load_range` ต้องเลื่อน `startTime` จาก candle ล่าสุดทีละ `config.interval` จนถึง `end`; WebSocket URL ใช้ `<lowercase-symbol>@kline_<timeframe>` และ `close()` ปิด session เพียงครั้งเดียว
+`load_recent` ต้องส่ง `limit=count` พร้อม `endTime` ที่ millisecond สุดท้ายก่อน boundary ของ completed candle ล่าสุด เพื่อให้ response ปกติคืน completed candles ครบ `count` และยังตัด candle ที่ close boundary อยู่หลัง `completed_before`; `load_range` ต้องใช้ completed boundary เดียวกัน, คืนเฉพาะ candle ใน `[start, end)` ที่ `close_time <= end` และเลื่อน `startTime` จาก candle ล่าสุดทีละ `config.interval` จนถึง `end`; WebSocket URL ใช้ `<lowercase-symbol>@kline_<timeframe>` และ `close()` ปิด session เพียงครั้งเดียว
 
 - [ ] **Step 5: รัน source tests, Ruff และ mypy**
 

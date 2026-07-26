@@ -81,7 +81,9 @@ class BinancePublicMarketData:
                     "symbol": config.symbol,
                     "interval": config.timeframe,
                     "startTime": _milliseconds(cursor),
-                    "endTime": _milliseconds(end),
+                    "endTime": _last_completed_millisecond(
+                        end, interval=config.interval
+                    ),
                     "limit": _PAGE_LIMIT,
                 },
             )
@@ -90,7 +92,7 @@ class BinancePublicMarketData:
 
             page_candles = sorted(page, key=lambda candle: candle.open_time)
             for candle in page_candles:
-                if start <= candle.open_time < end:
+                if start <= candle.open_time < end and candle.close_time <= end:
                     candles[candle.open_time] = candle
 
             next_cursor = page_candles[-1].open_time + config.interval
