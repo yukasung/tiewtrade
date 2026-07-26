@@ -39,7 +39,7 @@ Market identity ต้องเป็นข้อมูลจาก configuratio
 | Configuration | เจ้าของ | กติกา |
 | --- | --- | --- |
 | `symbol` | Session/market configuration | เลือก symbol ที่ exchange รองรับ |
-| `timeframe` | Session/market configuration | กำหนด candle interval เช่น `5m` |
+| `timeframe` | Session/market configuration | เลือก `3m`, `5m`, `15m`, `30m`, `1h`, `4h` และตรึงตลอด Session |
 | `timezone` | System policy | ใช้ `UTC` เท่านั้น |
 | `trade_mode`, `market_type` | `SessionConfig` | ใช้เลือก execution boundary |
 | `preset_version` | Strategy preset | กำหนด RSI, TP, entry และ lifecycle rules |

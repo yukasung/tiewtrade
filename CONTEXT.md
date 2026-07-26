@@ -31,7 +31,8 @@ Paper และ Live ใช้ business rules ชุดเดียวกัน�
 ค่าที่ผู้ใช้หรือ session เลือกได้ต้องส่งผ่าน configuration ไม่ hardcode ใน business logic:
 
 - `symbol` — สัญลักษณ์ตลาด เช่น `BTCUSDT`
-- `timeframe` — ช่วงเวลาของ candle เช่น `5m`
+- `timeframe` — ช่วงเวลาของ candle ที่เลือกได้จาก `3m`, `5m`, `15m`, `30m`,
+  `1h`, `4h` และถูกตรึงตลอด Session
 - `market_type` — `SPOT` หรือ `FUTURES`
 - `trade_mode` — `PAPER` หรือ `LIVE`
 - `available_capital` และ `preset_version`

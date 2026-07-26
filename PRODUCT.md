@@ -22,7 +22,8 @@ TiewTrade V2 คือ Desktop Binance Trading Bot สำหรับใช้�
 
 - macOS เป็นแพลตฟอร์มแรก โดยสถาปัตยกรรมต้องไม่ปิดทางการรองรับ Windows และ Linux ในอนาคต
 - BTCUSDT เพียง Symbol เดียว
-- completed candle ช่วงเวลา 5 นาทีเท่านั้น
+- completed candle รองรับช่วงเวลา `3m`, `5m`, `15m`, `30m`, `1h`, `4h`
+- ผู้ใช้เลือก Timeframe ก่อนเริ่ม Session และค่า Timeframe ถูกตรึงตลอด Session
 - ใช้ UTC สำหรับเวลา candle, Entry Pair และ Cooldown Month
 - RSI Step Grid พร้อม Versioned Preset เพียงกลยุทธ์เดียว
 - Paper Spot และ Paper Futures
@@ -51,9 +52,13 @@ TiewTrade V2 คือ Desktop Binance Trading Bot สำหรับใช้�
 | RSI entry threshold | สูงกว่า 50 |
 | ATR period | 14 |
 | Take Profit ATR multiplier | 3 |
-| Candle interval | 5 นาที |
 
 Preset ทุกชุดต้องมี version แบบ immutable เมื่อ Session เริ่มทำงาน Session ต้องอ้างถึง version ที่แน่นอน การแก้ค่าในภายหลังต้องสร้าง version ใหม่และไม่มีผลย้อนหลังต่อ Session เดิม
+
+Timeframe ไม่ใช่ Strategy Preset parameter ผู้ใช้เลือกจาก `3m`, `5m`, `15m`,
+`30m`, `1h`, `4h` ก่อนเริ่ม Session และระบบบันทึกเป็น immutable Session
+configuration โดย Indicator และ Strategy ต้องใช้ completed candle ของ Timeframe ที่
+Session เลือกเท่านั้น
 
 `max_entries` ไม่ใช่ Strategy Preset parameter แต่เป็น immutable Session policy โดยมีค่าเริ่มต้น 10 และผู้ใช้เลือกเลขคู่ 2–20 ก่อนเริ่ม Session
 
@@ -82,7 +87,7 @@ weighted_average_entry_price + (ATR(14) * 3)
 
 กติกา:
 
-- ใช้ ATR จาก completed candle 5 นาทีล่าสุด ณ เวลาที่ Entry ถูก Fill
+- ใช้ ATR จาก completed candle ล่าสุดของ Timeframe ที่ Session เลือก ณ เวลาที่ Entry ถูก Fill
 - คำนวณราคา Take Profit ใหม่หลังทุก Entry Fill
 - ปัดราคาตาม Binance tick size ของ BTCUSDT
 - Take Profit ครอบคลุมขนาด Position ที่ Bot เป็นเจ้าของทั้งหมดใน Basket
@@ -254,7 +259,7 @@ SQLite เก็บข้อมูลที่ไม่ใช่ secret ได�
 
 ### 15.1 Paper Trading Complete
 
-- completed candle 5 นาทีต่อเนื่อง ไม่ขาดและไม่ซ้ำหลัง backfill
+- completed candle ของ Timeframe ที่ Session เลือกต่อเนื่อง ไม่ขาดและไม่ซ้ำหลัง backfill
 - RSI Step Grid ทำงานตรงตาม Versioned Preset
 - Basket Take Profit, Entry Pair และ Cooldown Month ผ่าน automated tests
 - Paper Fill ไม่มี look-ahead bias และ replay ได้ผลเดิม
