@@ -1,10 +1,15 @@
 import sqlite3
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from datetime import datetime
 from decimal import Decimal
 from typing import TypeVar
 from uuid import UUID
 
+from tiewtrade.application.trade_history import (
+    BasketHistoryPage,
+    PageRequest,
+    TradeHistoryFilter,
+)
 from tiewtrade.integrations.sqlite.database import SQLiteDatabase
 from tiewtrade.trading.session_config import MarketType, TradeMode
 from tiewtrade.trading.trade_history import (
@@ -102,6 +107,40 @@ class SQLiteTradeHistory:
     def get_basket(self, basket_id: UUID) -> BasketResult | None:
         return self._run_read(lambda connection: _find_basket(connection, basket_id))
 
+    def list_baskets(
+        self,
+        filters: TradeHistoryFilter,
+        page: PageRequest,
+    ) -> BasketHistoryPage:
+        def operation(connection: sqlite3.Connection) -> BasketHistoryPage:
+            where_sql, parameters = _basket_where(filters)
+            rows = connection.execute(
+                f"""
+                SELECT * FROM basket_results
+                {where_sql}
+                ORDER BY opened_at_utc DESC, basket_id DESC
+                LIMIT ? OFFSET ?
+                """,
+                (*parameters, page.page_size, page.offset),
+            ).fetchall()
+            total_items = connection.execute(
+                f"SELECT COUNT(*) FROM basket_results {where_sql}",
+                parameters,
+            ).fetchone()[0]
+            net_realized_pnl = _closed_net_realized_pnl(
+                connection,
+                filters,
+            )
+            return BasketHistoryPage(
+                items=tuple(_basket_from_row(row) for row in rows),
+                page=page.page,
+                page_size=page.page_size,
+                total_items=total_items,
+                net_realized_pnl=net_realized_pnl,
+            )
+
+        return self._run_read(operation)
+
     def list_fills(self, basket_id: UUID) -> tuple[TradeFill, ...]:
         def operation(connection: sqlite3.Connection) -> tuple[TradeFill, ...]:
             rows = connection.execute(
@@ -161,6 +200,97 @@ class SQLiteTradeHistory:
             raise
         _close_or_raise(connection)
         return result
+
+
+def _basket_where(
+    filters: TradeHistoryFilter,
+    *,
+    closed_only: bool = False,
+) -> tuple[str, tuple[object, ...]]:
+    clauses: list[str] = []
+    parameters: list[object] = []
+    fields = (
+        ("symbol", filters.symbol),
+        ("timeframe", filters.timeframe),
+        (
+            "market_type",
+            filters.market_type.value if filters.market_type is not None else None,
+        ),
+        (
+            "trade_mode",
+            filters.trade_mode.value if filters.trade_mode is not None else None,
+        ),
+    )
+    for column, value in fields:
+        if value is not None:
+            clauses.append(f"{column} = ?")
+            parameters.append(value)
+
+    status = BasketStatus.CLOSED if closed_only else filters.status
+    if status is not None:
+        clauses.append("status = ?")
+        parameters.append(status.value)
+    if filters.opened_from_utc is not None:
+        clauses.append("opened_at_utc >= ?")
+        parameters.append(_utc_text(filters.opened_from_utc))
+    if filters.opened_before_utc is not None:
+        clauses.append("opened_at_utc < ?")
+        parameters.append(_utc_text(filters.opened_before_utc))
+
+    if not clauses:
+        return "", ()
+    return f"WHERE {' AND '.join(clauses)}", tuple(parameters)
+
+
+def _closed_net_realized_pnl(
+    connection: sqlite3.Connection,
+    filters: TradeHistoryFilter,
+) -> Decimal:
+    if filters.status is BasketStatus.OPEN:
+        return Decimal("0")
+    where_sql, parameters = _basket_where(filters, closed_only=True)
+    rows = connection.execute(
+        f"SELECT net_realized_pnl FROM basket_results {where_sql}",
+        parameters,
+    )
+    return _exact_decimal_sum(Decimal(row["net_realized_pnl"]) for row in rows)
+
+
+def _exact_decimal_sum(values: Iterable[Decimal]) -> Decimal:
+    coefficient = 0
+    exponent = 0
+    initialized = False
+    for value in values:
+        if not value.is_finite():
+            raise ValueError("net_realized_pnl must be finite")
+        parts = value.as_tuple()
+        if not isinstance(parts.exponent, int):
+            raise ValueError("net_realized_pnl must have a finite exponent")
+        item_coefficient = 0
+        for digit in parts.digits:
+            item_coefficient = item_coefficient * 10 + digit
+        if parts.sign:
+            item_coefficient = -item_coefficient
+
+        if not initialized:
+            coefficient = item_coefficient
+            exponent = parts.exponent
+            initialized = True
+        else:
+            common_exponent = min(exponent, parts.exponent)
+            coefficient = coefficient * 10 ** (
+                exponent - common_exponent
+            ) + item_coefficient * 10 ** (parts.exponent - common_exponent)
+            exponent = common_exponent
+
+        while coefficient and coefficient % 10 == 0:
+            coefficient //= 10
+            exponent += 1
+
+    if not initialized or coefficient == 0:
+        return Decimal("0")
+    digits = tuple(int(character) for character in str(abs(coefficient)))
+    return Decimal((int(coefficient < 0), digits, exponent))
 
 
 def _discard_rollback_error(connection: sqlite3.Connection | None) -> None:
