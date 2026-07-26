@@ -6,11 +6,16 @@ from datetime import UTC, datetime, timedelta
 from typing import Protocol, TypeVar
 
 from tiewtrade.market_data.candle import Candle
-from tiewtrade.market_data.candle_source import MarketDataCandleSource
-from tiewtrade.market_data.completed_candle_stream import (
-    CandleGapError,
-    CompletedCandleStream,
+from tiewtrade.market_data.candle_pipeline import (
+    CandlePipelineInputError,
+    CandlePipelineSinkError,
+    CompletedCandlePipeline,
 )
+from tiewtrade.market_data.candle_pipeline import (
+    MarketDataCandleSink as MarketDataCandleSink,
+)
+from tiewtrade.market_data.candle_source import MarketDataCandleSource
+from tiewtrade.market_data.completed_candle_stream import CandleGapError
 from tiewtrade.market_data.config import MarketDataConfig
 from tiewtrade.market_data.runtime_state import (
     MarketDataRuntimeReason,
@@ -32,16 +37,6 @@ class _WarmUpSourceError(Exception):
 
 class _WarmUpSinkError(Exception):
     pass
-
-
-class MarketDataCandleSink(Protocol):
-    async def warm_up(
-        self, candles: tuple[Candle, ...], *, received_at: datetime
-    ) -> None: ...
-
-    async def process_completed(
-        self, candle: Candle, *, received_at: datetime
-    ) -> None: ...
 
 
 class RuntimeScheduler(Protocol):
@@ -79,10 +74,13 @@ class MarketDataRuntime:
         self._config = config
         self._warm_up_count = warm_up_count
         self._source = source
-        self._sink = sink
         self._scheduler = scheduler or AsyncioRuntimeScheduler()
         self._status = MarketDataRuntimeStatus(self._scheduler.now)
-        self._candles = CompletedCandleStream(config)
+        self._pipeline = CompletedCandlePipeline(
+            config=config,
+            sink=sink,
+            on_delivery=self._status.record_delivery,
+        )
         self._run_task: asyncio.Task[None] | None = None
         self._shutdown_task: asyncio.Task[None] | None = None
         self._stop_requested = False
@@ -199,19 +197,19 @@ class MarketDataRuntime:
                 count=self._warm_up_count,
                 completed_before=completed_before,
             )
-            if len(candles) < self._warm_up_count:
-                raise ValueError("insufficient warm-up candles")
-            for candle in candles:
-                if not self._candles.accept(candle, completed_before):
-                    raise ValueError("warm-up requires new completed candles")
         except Exception as error:
             raise _WarmUpSourceError from error
 
         try:
-            await self._sink.warm_up(candles, received_at=completed_before)
-        except Exception as error:
+            await self._pipeline.warm_up(
+                candles,
+                expected_count=self._warm_up_count,
+                received_at=completed_before,
+            )
+        except CandlePipelineInputError as error:
+            raise _WarmUpSourceError from error
+        except CandlePipelineSinkError as error:
             raise _WarmUpSinkError from error
-        self._status.record_delivery(candles[-1].open_time)
 
     async def _consume_live(self) -> None:
         try:
@@ -277,18 +275,21 @@ class MarketDataRuntime:
     async def _accept_live_candle(self, candle: Candle) -> bool:
         received_at = self._scheduler.now()
         try:
-            accepted = self._candles.accept(candle, received_at)
+            accepted = await self._pipeline.process_live(
+                candle,
+                received_at=received_at,
+            )
         except CandleGapError:
             return await self._backfill_through(candle, received_at=received_at)
-        except ValueError:
+        except CandlePipelineInputError:
             self._fail_closed(MarketDataRuntimeReason.SOURCE_ERROR)
+            return False
+        except CandlePipelineSinkError:
+            self._fail_closed(MarketDataRuntimeReason.SINK_ERROR)
             return False
         if not accepted:
             return True
 
-        if not await self._deliver(candle, received_at=received_at):
-            return False
-        self._status.record_delivery(candle.open_time)
         self._transition(
             MarketDataRuntimeState.LIVE,
             MarketDataRuntimeReason.LIVE_CANDLE_ACCEPTED,
@@ -324,54 +325,42 @@ class MarketDataRuntime:
             MarketDataRuntimeState.BACKFILLING,
             MarketDataRuntimeReason.GAP_DETECTED,
         )
-        if start >= end:
-            if not self._validate_buffered_observation(
-                observed,
-                received_at=received_at,
-            ):
+        candles: tuple[Candle, ...] = ()
+        if start < end:
+            try:
+                candles = await self._scheduler.wait_for(
+                    self._source.load_range(
+                        self._config,
+                        start=start,
+                        end=end,
+                    ),
+                    _BACKFILL_TIMEOUT_SECONDS,
+                )
+            except Exception:
+                self._fail_closed(MarketDataRuntimeReason.SOURCE_ERROR)
                 return False
+
+        def publish_backfill_ready() -> None:
             self._transition(
                 MarketDataRuntimeState.LIVE,
                 MarketDataRuntimeReason.BACKFILL_COMPLETED,
             )
-            return True
 
         try:
-            candles = await self._scheduler.wait_for(
-                self._source.load_range(
-                    self._config,
-                    start=start,
-                    end=end,
-                ),
-                _BACKFILL_TIMEOUT_SECONDS,
-            )
-            if not candles:
-                raise ValueError("backfill must not be empty")
-
-            accepted_candles: list[Candle] = []
-            for candle in candles:
-                if not self._candles.accept(candle, received_at):
-                    raise ValueError("backfill requires new completed candles")
-                accepted_candles.append(candle)
-            if accepted_candles[-1].open_time + self._config.interval != end:
-                raise ValueError("backfill did not reach requested boundary")
-            if not self._validate_buffered_observation(
-                observed,
+            await self._pipeline.process_backfill(
+                candles,
+                start=start,
+                end=end,
+                observed=observed,
                 received_at=received_at,
-            ):
-                return False
-        except Exception:
+                on_ready_for_delivery=publish_backfill_ready,
+            )
+        except CandlePipelineInputError:
             self._fail_closed(MarketDataRuntimeReason.SOURCE_ERROR)
             return False
-
-        self._transition(
-            MarketDataRuntimeState.LIVE,
-            MarketDataRuntimeReason.BACKFILL_COMPLETED,
-        )
-        for candle in accepted_candles:
-            if not await self._deliver(candle, received_at=received_at):
-                return False
-            self._status.record_delivery(candle.open_time)
+        except CandlePipelineSinkError:
+            self._fail_closed(MarketDataRuntimeReason.SINK_ERROR)
+            return False
         return True
 
     async def _recover_stream(
@@ -409,32 +398,6 @@ class MarketDataRuntime:
 
         self._fail_closed(MarketDataRuntimeReason.RECONNECT_EXHAUSTED)
         return None
-
-    async def _deliver(self, candle: Candle, *, received_at: datetime) -> bool:
-        try:
-            await self._sink.process_completed(candle, received_at=received_at)
-        except Exception:
-            self._fail_closed(MarketDataRuntimeReason.SINK_ERROR)
-            return False
-        return True
-
-    def _validate_buffered_observation(
-        self,
-        observed: Candle | None,
-        *,
-        received_at: datetime,
-    ) -> bool:
-        if observed is None:
-            return True
-        try:
-            accepted = self._candles.accept(observed, received_at)
-        except ValueError:
-            self._fail_closed(MarketDataRuntimeReason.SOURCE_ERROR)
-            return False
-        if accepted:
-            self._fail_closed(MarketDataRuntimeReason.SOURCE_ERROR)
-            return False
-        return True
 
     async def _close_source_once(self) -> None:
         async with self._source_close_lock:

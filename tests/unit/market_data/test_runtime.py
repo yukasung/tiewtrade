@@ -10,8 +10,11 @@ from typing import TypeVar
 import pytest
 
 from tiewtrade.market_data.candle import Candle
+from tiewtrade.market_data.candle_pipeline import (
+    MarketDataCandleSink as PipelineMarketDataCandleSink,
+)
 from tiewtrade.market_data.config import MarketDataConfig
-from tiewtrade.market_data.runtime import MarketDataRuntime
+from tiewtrade.market_data.runtime import MarketDataCandleSink, MarketDataRuntime
 from tiewtrade.market_data.runtime_state import (
     MarketDataRuntimeReason,
     MarketDataRuntimeSnapshot,
@@ -491,6 +494,10 @@ def test_runtime_state_snapshot_is_immutable() -> None:
         snapshot.state = MarketDataRuntimeState.LIVE  # type: ignore[misc]
 
 
+def test_runtime_reexports_pipeline_candle_sink_contract() -> None:
+    assert MarketDataCandleSink is PipelineMarketDataCandleSink
+
+
 def test_runtime_warms_sink_before_live_delivery() -> None:
     source = FakeSource(recent=warm_up_candles(), live=[candle_at(15)])
     scheduler = FakeScheduler()
@@ -578,6 +585,21 @@ def test_duplicate_live_candle_is_ignored() -> None:
 
     assert sink.live_candles == [candle_at(15)]
     assert runtime.snapshot.last_accepted_open_time == candle_at(15).open_time
+
+
+def test_invalid_live_candle_maps_to_source_error() -> None:
+    source = FakeSource(
+        recent=warm_up_candles(),
+        live=[candle_at(15, symbol="ETHUSDT")],
+    )
+    sink = RecordingSink()
+    runtime = runtime_for(source, sink)
+
+    asyncio.run(runtime.run())
+
+    assert runtime.snapshot.state is MarketDataRuntimeState.FAILED_CLOSED
+    assert runtime.snapshot.reason is MarketDataRuntimeReason.SOURCE_ERROR
+    assert sink.live_candles == []
 
 
 def test_gap_backfills_in_order_before_resuming_live() -> None:
