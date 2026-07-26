@@ -4,7 +4,6 @@ from decimal import Decimal, InvalidOperation
 
 from tiewtrade.integrations.binance.public_endpoints import (
     BinanceMarketDataPayloadError,
-    BinancePublicEndpoints,
 )
 from tiewtrade.market_data.candle import Candle
 from tiewtrade.market_data.config import MarketDataConfig
@@ -15,7 +14,6 @@ _INVALID_PAYLOAD_MESSAGE = "invalid Binance market-data payload"
 def parse_rest_kline(payload: object, config: MarketDataConfig) -> Candle:
     """Normalize one Binance REST kline array into a validated Candle."""
     try:
-        BinancePublicEndpoints.validate_config(config)
         if not isinstance(payload, list) or len(payload) < 6:
             raise ValueError
         return _candle_from_values(payload[:6], config)
@@ -28,7 +26,6 @@ def parse_rest_kline(payload: object, config: MarketDataConfig) -> Candle:
 def parse_websocket_kline(payload: object, config: MarketDataConfig) -> Candle | None:
     """Normalize a valid closed WebSocket kline; ignore valid open updates."""
     try:
-        BinancePublicEndpoints.validate_config(config)
         if not isinstance(payload, Mapping):
             raise ValueError
 

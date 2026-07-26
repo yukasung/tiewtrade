@@ -549,7 +549,7 @@ def test_fake_public_runtime_warms_then_processes_paper_spot_live_candle() -> No
     sink = PaperSpotMarketDataSink(paper_session)
     runtime = MarketDataRuntime(
         config=MarketDataConfig(symbol="BTCUSDT", timeframe="5m"),
-        warm_up_count=15,
+        warm_up_count=RsiStepGridPreset.v1().minimum_warm_up_candles,
         source=FakePublicCandleSource(warm_up=warm_up_15(), live=[live_candle()]),
         sink=sink,
         scheduler=FakeRuntimeScheduler(),
@@ -605,15 +605,17 @@ def create_public_market_data_runtime(
     *,
     session: SessionConfig,
     market_data: MarketDataConfig,
-    warm_up_count: int,
+    preset: RsiStepGridPreset,
     sink: MarketDataCandleSink,
     scheduler: RuntimeScheduler | None = None,
 ) -> MarketDataRuntime:
+    if session.preset_version != preset.version:
+        raise ValueError("session preset version does not match the preset")
     endpoints = BinancePublicEndpoints.for_market_type(session.market_type)
     source = BinancePublicMarketData(endpoints)
     return MarketDataRuntime(
         config=market_data,
-        warm_up_count=warm_up_count,
+        warm_up_count=preset.minimum_warm_up_candles,
         source=source,
         sink=sink,
         scheduler=scheduler or AsyncioRuntimeScheduler(),

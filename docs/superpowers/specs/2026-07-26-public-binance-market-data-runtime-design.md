@@ -29,7 +29,8 @@ test mode.
 - Historical Warm-up prepares indicator state only. It must not create an Entry
   Intent, Fill, Basket, or any other trading side effect.
 - The Strategy receives only newly completed candles after Warm-up succeeds.
-- Warm-up must finish within 30 seconds. Failure leaves the Runtime fail closed.
+- Warm-up and each REST backfill request must finish within 30 seconds. Failure
+  leaves the Runtime fail closed.
 - A candle is stale when no completed candle has arrived within 30 seconds after
   its expected close boundary.
 - WebSocket reconnect uses three delayed attempts: 1, 2, and 4 seconds. Exhausting
@@ -149,7 +150,8 @@ For every yielded candle:
 2. Pass the candle through `CompletedCandleStream`.
 3. Ignore an already accepted candle without evaluating Strategy again.
 4. Send the next contiguous candle to the application sink exactly once.
-5. Update the Runtime freshness deadline from the accepted candle boundary.
+5. Advance the accepted-candle watermark and freshness deadline only after the
+   sink receives that candle successfully.
 
 Messages for another stream identity and malformed Binance payloads do not reach
 the Strategy. They produce an explicit Runtime failure reason rather than a
@@ -166,6 +168,11 @@ to restore continuity. Every backfilled candle passes through the same
 `CompletedCandleStream`, in ascending open-time order, before reaching the live
 application sink. The originally observed later candle is naturally deduplicated
 if REST already returned it.
+
+Each REST backfill request has a 30-second Runtime deadline. The Runtime advances
+its public watermark one candle at a time after successful sink delivery. If a
+later delivery fails, the snapshot therefore reports the last candle actually
+delivered rather than the end of the requested batch.
 
 The Runtime returns to `LIVE` only after the backfill range is contiguous and the
 WebSocket stream is active. Empty, malformed, incomplete, or still-gapped backfill
@@ -191,9 +198,10 @@ delivery to the Session.
 ## 9. Shutdown
 
 Explicit shutdown stops accepting new WebSocket messages, cancels freshness and
-retry timers, closes the public REST/WebSocket client session, and transitions to
-`STOPPED`. Shutdown is idempotent and awaits child-task completion so network work
-does not survive the Runtime lifecycle.
+retry timers, closes a public REST/WebSocket client session owned by the Binance
+adapter, and transitions to `STOPPED`. A session injected by another owner is not
+closed by the adapter. Shutdown is idempotent and awaits child-task completion so
+network work does not survive the Runtime lifecycle.
 
 Shutdown does not close an open Basket, fabricate a final candle, or change durable
 trade history.

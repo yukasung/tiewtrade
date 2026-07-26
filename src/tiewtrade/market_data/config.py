@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from datetime import timedelta
 
 _TIMEFRAME_PATTERN = re.compile(r"^(?P<value>[1-9][0-9]*)(?P<unit>[mhd])$")
+SUPPORTED_V1_TIMEFRAMES = frozenset({"3m", "5m", "15m", "30m", "1h", "4h"})
 
 
 def timeframe_to_interval(timeframe: str) -> timedelta:
@@ -28,6 +29,8 @@ class MarketDataConfig:
         if not self.symbol.strip():
             raise ValueError("symbol must not be blank")
         timeframe_to_interval(self.timeframe)
+        if self.timeframe not in SUPPORTED_V1_TIMEFRAMES:
+            raise ValueError("timeframe must be a supported V1 timeframe")
 
     @property
     def interval(self) -> timedelta:

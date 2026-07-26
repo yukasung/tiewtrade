@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 from collections.abc import AsyncIterator
 from datetime import datetime
 from decimal import Decimal
@@ -14,12 +15,16 @@ from tiewtrade.integrations.binance.public_endpoints import BinancePublicEndpoin
 from tiewtrade.market_data.candle import Candle
 from tiewtrade.market_data.config import MarketDataConfig
 from tiewtrade.market_data.runtime import MarketDataRuntime
+from tiewtrade.strategies.rsi_step_grid.preset import RsiStepGridPreset
 from tiewtrade.trading.entry_policy import EntryPolicy
 from tiewtrade.trading.session_config import MarketType, SessionConfig, TradeMode
 from tiewtrade.trading.spot_policy import SpotTradingPolicy
 
 
 class FakePublicCandleSource:
+    def __init__(self) -> None:
+        self.requested_warm_up_counts: list[int] = []
+
     async def load_recent(
         self,
         config: MarketDataConfig,
@@ -27,7 +32,8 @@ class FakePublicCandleSource:
         count: int,
         completed_before: datetime,
     ) -> tuple[Candle, ...]:
-        raise AssertionError("unit composition must not load market data")
+        self.requested_warm_up_counts.append(count)
+        return ()
 
     async def load_range(
         self,
@@ -91,7 +97,7 @@ def test_session_market_type_selects_public_endpoint_before_source_creation(
     runtime = create_public_market_data_runtime(
         session=session_config(market_type),
         market_data=MarketDataConfig(symbol="ETHUSDT", timeframe="15m"),
-        warm_up_count=23,
+        preset=RsiStepGridPreset.v1(),
         sink=RecordingSink(),
         source_factory=source_factory,
     )
@@ -103,6 +109,8 @@ def test_session_market_type_selects_public_endpoint_before_source_creation(
             websocket_base_url=expected_websocket_url,
         )
     ]
+    asyncio.run(runtime.run())
+    assert fake_source.requested_warm_up_counts == [15]
 
 
 def session_config(market_type: MarketType) -> SessionConfig:

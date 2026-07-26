@@ -15,6 +15,7 @@ def test_preset_v1_matches_the_approved_product_parameters() -> None:
     assert preset.rsi_entry_threshold == Decimal("50")
     assert preset.atr_period == 14
     assert preset.take_profit_atr_multiplier == Decimal("3")
+    assert preset.minimum_warm_up_candles == 15
 
 
 def test_preset_is_immutable() -> None:

@@ -17,6 +17,7 @@ from tiewtrade.market_data.config import MarketDataConfig
 
 _INVALID_RESPONSE_MESSAGE = "invalid Binance market-data response"
 _PAGE_LIMIT = 1_000
+_HTTP_REQUEST_TIMEOUT_SECONDS = 30.0
 
 
 class BinancePublicMarketData:
@@ -30,6 +31,7 @@ class BinancePublicMarketData:
     ) -> None:
         self._endpoints = endpoints
         self._session = session
+        self._owns_session = session is None
         self._closed = False
 
     async def load_recent(
@@ -106,13 +108,12 @@ class BinancePublicMarketData:
         if self._closed:
             return
         self._closed = True
-        if self._session is not None:
+        if self._owns_session and self._session is not None:
             await self._session.close()
 
     async def _load_rest_page(
         self, config: MarketDataConfig, params: dict[str, str | int]
     ) -> tuple[Candle, ...]:
-        BinancePublicEndpoints.validate_config(config)
         session = self._network_session()
         try:
             async with session.get(
@@ -132,7 +133,6 @@ class BinancePublicMarketData:
     async def _stream_completed(
         self, config: MarketDataConfig
     ) -> AsyncIterator[Candle]:
-        BinancePublicEndpoints.validate_config(config)
         session = self._network_session()
         stream_url = (
             f"{self._endpoints.websocket_base_url}/"
@@ -172,7 +172,9 @@ class BinancePublicMarketData:
         if self._closed:
             raise RuntimeError("Binance public market-data source is closed")
         if self._session is None:
-            self._session = aiohttp.ClientSession()
+            self._session = aiohttp.ClientSession(
+                timeout=aiohttp.ClientTimeout(total=_HTTP_REQUEST_TIMEOUT_SECONDS)
+            )
         return self._session
 
 

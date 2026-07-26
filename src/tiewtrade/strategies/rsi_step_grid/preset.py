@@ -42,6 +42,10 @@ class RsiStepGridPreset:
         ):
             raise ValueError("rsi-step-grid-v1 parameters must remain canonical")
 
+    @property
+    def minimum_warm_up_candles(self) -> int:
+        return max(self.rsi_period + 1, self.atr_period)
+
     @classmethod
     def v1(cls) -> "RsiStepGridPreset":
         return cls(

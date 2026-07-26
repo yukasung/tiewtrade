@@ -180,6 +180,32 @@ class FakeSource:
         await self._closed.wait()
 
 
+class DeadlineAwareBackfillSource(FakeSource):
+    def __init__(self, scheduler: FakeScheduler) -> None:
+        super().__init__(
+            recent=warm_up_candles(),
+            live=[candle_at(20)],
+            ranges={
+                (candle_at(15).open_time, candle_at(25).open_time): (
+                    candle_at(15),
+                    candle_at(20),
+                )
+            },
+        )
+        self._scheduler = scheduler
+        self.backfill_within_deadline = False
+
+    async def load_range(
+        self,
+        config: MarketDataConfig,
+        *,
+        start: datetime,
+        end: datetime,
+    ) -> tuple[Candle, ...]:
+        self.backfill_within_deadline = self._scheduler.wait_for_active
+        return await super().load_range(config, start=start, end=end)
+
+
 class BlockingWarmUpSource(FakeSource):
     def __init__(self) -> None:
         super().__init__()
@@ -328,10 +354,13 @@ class RecordingSink:
         *,
         fail_warm_up: bool = False,
         fail_live: bool = False,
+        fail_live_at: int | None = None,
         scheduler: FakeScheduler | None = None,
     ) -> None:
         self._fail_warm_up = fail_warm_up
         self._fail_live = fail_live
+        self._fail_live_at = fail_live_at
+        self._live_attempt_count = 0
         self._live_received = asyncio.Event()
         self._scheduler = scheduler
         self.calls: list[tuple[str, tuple[Candle, ...] | Candle]] = []
@@ -353,7 +382,8 @@ class RecordingSink:
 
     async def process_completed(self, candle: Candle, *, received_at: datetime) -> None:
         self._record_state()
-        if self._fail_live:
+        self._live_attempt_count += 1
+        if self._fail_live or self._live_attempt_count == self._fail_live_at:
             raise RuntimeError("live sink failed")
         self.calls.append(("process_completed", candle))
         self.live_candles.append(candle)
@@ -532,6 +562,7 @@ def test_warm_up_sink_failure_fails_closed_without_live_delivery() -> None:
 
     assert runtime.snapshot.state is MarketDataRuntimeState.FAILED_CLOSED
     assert runtime.snapshot.reason is MarketDataRuntimeReason.SINK_ERROR
+    assert runtime.snapshot.last_accepted_open_time is None
     assert not source.live_started
 
 
@@ -550,18 +581,10 @@ def test_duplicate_live_candle_is_ignored() -> None:
 
 
 def test_gap_backfills_in_order_before_resuming_live() -> None:
-    source = FakeSource(
-        recent=warm_up_candles(),
-        live=[candle_at(20)],
-        ranges={
-            (candle_at(15).open_time, candle_at(25).open_time): (
-                candle_at(15),
-                candle_at(20),
-            )
-        },
-    )
+    scheduler = FakeScheduler()
+    source = DeadlineAwareBackfillSource(scheduler)
     sink = RecordingSink()
-    runtime = runtime_for(source, sink)
+    runtime = runtime_for(source, sink, scheduler=scheduler)
 
     asyncio.run(run_until_sink_receives_or_runtime_stops(runtime, sink, count=2))
 
@@ -581,6 +604,7 @@ def test_gap_backfills_in_order_before_resuming_live() -> None:
         MarketDataRuntimeState.BACKFILLING,
         MarketDataRuntimeState.LIVE,
     )
+    assert source.backfill_within_deadline
 
 
 @pytest.mark.parametrize(
@@ -758,6 +782,28 @@ def test_backfill_sink_failure_fails_closed_without_partial_delivery() -> None:
     assert sink.live_candles == []
 
 
+def test_backfill_sink_failure_reports_last_delivered_candle_watermark() -> None:
+    source = FakeSource(
+        recent=warm_up_candles(),
+        live=[candle_at(20)],
+        ranges={
+            (candle_at(15).open_time, candle_at(25).open_time): (
+                candle_at(15),
+                candle_at(20),
+            )
+        },
+    )
+    sink = RecordingSink(fail_live_at=2)
+    runtime = runtime_for(source, sink)
+
+    asyncio.run(runtime.run())
+
+    assert sink.live_candles == [candle_at(15)]
+    assert runtime.snapshot.state is MarketDataRuntimeState.FAILED_CLOSED
+    assert runtime.snapshot.reason is MarketDataRuntimeReason.SINK_ERROR
+    assert runtime.snapshot.last_accepted_open_time == candle_at(15).open_time
+
+
 def test_stop_cancels_freshness_wait_and_awaits_live_iterator_cleanup() -> None:
     source = BlockingLiveSource()
     sink = RecordingSink()
@@ -808,6 +854,7 @@ def test_live_sink_failure_fails_closed_and_stops_delivery() -> None:
 
     assert runtime.snapshot.state is MarketDataRuntimeState.FAILED_CLOSED
     assert runtime.snapshot.reason is MarketDataRuntimeReason.SINK_ERROR
+    assert runtime.snapshot.last_accepted_open_time == candle_at(10).open_time
     assert sink.live_candles == []
 
 

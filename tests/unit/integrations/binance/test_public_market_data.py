@@ -5,11 +5,14 @@ import json
 from collections.abc import AsyncIterator, Iterable
 from datetime import UTC, datetime
 
+import aiohttp
 import pytest
 from aiohttp import WSMsgType
 
-from tiewtrade.integrations.binance.kline_parser import BinanceMarketDataPayloadError
-from tiewtrade.integrations.binance.public_endpoints import BinancePublicEndpoints
+from tiewtrade.integrations.binance.public_endpoints import (
+    BinanceMarketDataPayloadError,
+    BinancePublicEndpoints,
+)
 from tiewtrade.integrations.binance.public_market_data import BinancePublicMarketData
 from tiewtrade.market_data.config import MarketDataConfig
 from tiewtrade.trading.session_config import MarketType
@@ -292,54 +295,40 @@ def test_stream_completed_ignores_open_updates_and_uses_symbol_stream_url() -> N
     ]
 
 
-def test_load_recent_rejects_unsupported_interval_before_rest_request() -> None:
-    source, session = source_with(rest_pages=[FakeResponse(payload=[])])
-
-    with pytest.raises(BinanceMarketDataPayloadError, match="unsupported Binance"):
-        asyncio.run(
-            source.load_recent(
-                config(timeframe="7m"),
-                count=1,
-                completed_before=datetime(2026, 1, 1, tzinfo=UTC),
-            )
-        )
-
-    assert session.requests == []
-
-
-def test_load_range_rejects_unsupported_interval_before_rest_request() -> None:
-    source, session = source_with(rest_pages=[FakeResponse(payload=[])])
-
-    with pytest.raises(BinanceMarketDataPayloadError, match="unsupported Binance"):
-        asyncio.run(
-            source.load_range(
-                config(timeframe="7m"),
-                start=datetime(2026, 1, 1, tzinfo=UTC),
-                end=datetime(2026, 1, 1, 0, 7, tzinfo=UTC),
-            )
-        )
-
-    assert session.requests == []
-
-
-def test_stream_completed_rejects_unsupported_interval_before_ws_handshake() -> None:
-    source, session = source_with(websocket_payloads=[websocket_kline(closed=True)])
-
-    async def collect_invalid_stream() -> tuple[object, ...]:
-        return tuple(
-            [candle async for candle in source.stream_completed(config(timeframe="7m"))]
-        )
-
-    with pytest.raises(BinanceMarketDataPayloadError, match="unsupported Binance"):
-        asyncio.run(collect_invalid_stream())
-
-    assert session.websocket_urls == []
-
-
-def test_close_is_idempotent() -> None:
+def test_close_does_not_close_injected_session() -> None:
     source, session = source_with()
 
     asyncio.run(source.close())
     asyncio.run(source.close())
 
+    assert session.close_count == 0
+
+
+def test_owned_session_uses_bounded_timeout_and_closes_once(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    session = FakeSession(rest_pages=[FakeResponse(payload=[rest_kline(0)])])
+    configured_timeouts: list[aiohttp.ClientTimeout | None] = []
+
+    def session_factory(*, timeout: aiohttp.ClientTimeout | None = None) -> FakeSession:
+        configured_timeouts.append(timeout)
+        return session
+
+    monkeypatch.setattr(aiohttp, "ClientSession", session_factory)
+    source = BinancePublicMarketData(
+        BinancePublicEndpoints.for_market_type(MarketType.SPOT)
+    )
+
+    asyncio.run(
+        source.load_recent(
+            config(),
+            count=1,
+            completed_before=datetime(2026, 1, 1, 0, 5, tzinfo=UTC),
+        )
+    )
+    asyncio.run(source.close())
+    asyncio.run(source.close())
+
+    assert configured_timeouts[0] is not None
+    assert configured_timeouts[0].total == 30.0
     assert session.close_count == 1

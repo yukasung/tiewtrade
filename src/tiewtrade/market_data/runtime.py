@@ -20,6 +20,7 @@ from tiewtrade.market_data.runtime_state import (
 
 _T = TypeVar("_T")
 _WARM_UP_TIMEOUT_SECONDS = 30.0
+_BACKFILL_TIMEOUT_SECONDS = 30.0
 _STALE_GRACE = timedelta(seconds=30)
 _RECONNECT_DELAYS_SECONDS = (1.0, 2.0, 4.0)
 
@@ -209,7 +210,6 @@ class MarketDataRuntime:
             for candle in candles:
                 if not self._candles.accept(candle, completed_before):
                     raise ValueError("warm-up requires new completed candles")
-                self._last_accepted_open_time = candle.open_time
         except Exception as error:
             raise _WarmUpSourceError from error
 
@@ -217,6 +217,7 @@ class MarketDataRuntime:
             await self._sink.warm_up(candles, received_at=completed_before)
         except Exception as error:
             raise _WarmUpSinkError from error
+        self._last_accepted_open_time = candles[-1].open_time
 
     async def _consume_live(self) -> None:
         try:
@@ -290,9 +291,9 @@ class MarketDataRuntime:
         if not accepted:
             return True
 
-        self._last_accepted_open_time = candle.open_time
         if not await self._deliver(candle, received_at=received_at):
             return False
+        self._last_accepted_open_time = candle.open_time
         self._transition(
             MarketDataRuntimeState.LIVE,
             MarketDataRuntimeReason.LIVE_CANDLE_ACCEPTED,
@@ -340,10 +341,13 @@ class MarketDataRuntime:
             return True
 
         try:
-            candles = await self._source.load_range(
-                self._config,
-                start=start,
-                end=end,
+            candles = await self._scheduler.wait_for(
+                self._source.load_range(
+                    self._config,
+                    start=start,
+                    end=end,
+                ),
+                _BACKFILL_TIMEOUT_SECONDS,
             )
             if not candles:
                 raise ValueError("backfill must not be empty")
@@ -364,7 +368,6 @@ class MarketDataRuntime:
             self._fail_closed(MarketDataRuntimeReason.SOURCE_ERROR)
             return False
 
-        self._last_accepted_open_time = accepted_candles[-1].open_time
         self._transition(
             MarketDataRuntimeState.LIVE,
             MarketDataRuntimeReason.BACKFILL_COMPLETED,
@@ -372,6 +375,8 @@ class MarketDataRuntime:
         for candle in accepted_candles:
             if not await self._deliver(candle, received_at=received_at):
                 return False
+            self._last_accepted_open_time = candle.open_time
+            self._refresh_snapshot_watermark()
         return True
 
     async def _recover_stream(
@@ -445,6 +450,14 @@ class MarketDataRuntime:
 
     def _fail_closed(self, reason: MarketDataRuntimeReason) -> None:
         self._transition(MarketDataRuntimeState.FAILED_CLOSED, reason)
+
+    def _refresh_snapshot_watermark(self) -> None:
+        self._snapshot = MarketDataRuntimeSnapshot(
+            state=self._snapshot.state,
+            reason=self._snapshot.reason,
+            transitioned_at=self._snapshot.transitioned_at,
+            last_accepted_open_time=self._last_accepted_open_time,
+        )
 
     def _transition_to_stopped(self) -> None:
         if self._snapshot.state in {

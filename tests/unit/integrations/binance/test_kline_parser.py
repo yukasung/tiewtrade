@@ -4,9 +4,11 @@ from decimal import Decimal
 import pytest
 
 from tiewtrade.integrations.binance.kline_parser import (
-    BinanceMarketDataPayloadError,
     parse_rest_kline,
     parse_websocket_kline,
+)
+from tiewtrade.integrations.binance.public_endpoints import (
+    BinanceMarketDataPayloadError,
 )
 from tiewtrade.market_data.config import MarketDataConfig
 
@@ -100,11 +102,3 @@ def test_malformed_rest_kline_is_rejected(payload: list[object]) -> None:
 def test_malformed_websocket_kline_is_rejected() -> None:
     with pytest.raises(BinanceMarketDataPayloadError, match="invalid Binance"):
         parse_websocket_kline({"s": "BTCUSDT", "k": {"x": True}}, config())
-
-
-def test_unsupported_binance_interval_is_rejected_at_parser_boundary() -> None:
-    with pytest.raises(BinanceMarketDataPayloadError, match="unsupported Binance"):
-        parse_rest_kline(
-            [1767225600000, "100.10", "102.20", "99.90", "101.30", "12.50"],
-            config(timeframe="7m"),
-        )
