@@ -2,7 +2,7 @@
 
 **Date:** 2026-07-26
 
-**Status:** Approved
+**Status:** Implemented and verified
 
 **Scope:** Behavior-preserving refactor of DEV-99
 
@@ -35,24 +35,14 @@ external interface เดิมของ application และ tests
 เป็น `CompletedCandlePipeline` กับ `MarketDataRuntimeStatus`
 
 ```text
-MarketDataCandleSource
-          |
-          v
-  MarketDataRuntime
-  lifecycle / deadline
-  backfill / reconnect
-          |
-          v
- CompletedCandlePipeline
- validation / continuity
- deduplicate / sink delivery
-          |
-          v
- MarketDataCandleSink
-
-CompletedCandlePipeline -- successful delivery --> MarketDataRuntimeStatus
-MarketDataRuntime       -- state transition -----> MarketDataRuntimeStatus
+MarketDataRuntime -> CompletedCandlePipeline -> MarketDataCandleSink
+                           |
+                           +-> MarketDataRuntimeStatus.record_delivery(...)
 ```
+
+`MarketDataRuntime` records state transitions with `MarketDataRuntimeStatus`;
+`CompletedCandlePipeline` records the delivery watermark only after a successful
+sink delivery.
 
 Recovery และ backfill orchestration ยังคงอยู่ใน `MarketDataRuntime` เพราะต้องใช้
 source, scheduler, deadline, retry policy และ lifecycle state ร่วมกัน การแยกสอง
@@ -81,6 +71,7 @@ module เพื่อไม่ให้ caller ต้องเปลี่ย�
 
 - ใช้ `CompletedCandleStream` ตรวจ identity, UTC alignment, duplicate และ
   continuity
+- เป็นเจ้าของ deduplication และ sink-delivery invariant ทั้งหมด
 - ตรวจจำนวนและความต่อเนื่องของ Warm-up batch
 - ตรวจ backfill batch และ buffered observation ก่อนเริ่ม delivery
 - เรียก `MarketDataCandleSink`

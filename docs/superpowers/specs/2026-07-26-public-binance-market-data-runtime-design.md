@@ -42,21 +42,22 @@ test mode.
 ## 3. Architecture
 
 ```text
-Binance Public REST ---- Historical Warm-up ----+
-                                                 |
-                                                 v
-                                        MarketDataRuntime
-                                                 |
-Binance Public WebSocket ---- Live Klines -------+
-                                                 |
-                                                 v
-                                      CompletedCandleStream
-                                  validate / deduplicate / gap
-                                                 |
-                                                 v
-                                      Application Candle Sink
-                                                 |
-                                      Paper Spot / Futures Session
+Binance Public REST ---- Historical Warm-up ---+
+                                                |
+                                                +--> MarketDataRuntime
+                                                |
+Binance Public WebSocket ---- Live Klines ------+
+                                                          |
+                                                          v
+                                             CompletedCandlePipeline
+                                  validation / deduplication / continuity / delivery
+                                                          |
+                           +------------------------------+------------------+
+                           |                                                 |
+                           v                                                 v
+              MarketDataRuntimeStatus                         Application Candle Sink
+          snapshot / watermark / state history                       |
+                                                                  Paper Spot / Futures Session
 ```
 
 The design uses an asynchronous Runtime and one network dependency:
@@ -71,9 +72,14 @@ client dependencies.
 
 ### 3.1 Module Ownership
 
-- `market_data` owns Runtime state, Warm-up orchestration, continuity,
-  deduplication, freshness, retry scheduling, backfill coordination, and immutable
-  status snapshots.
+- `market_data/runtime.py` owns Runtime lifecycle, deadlines, source I/O,
+  recovery, backfill orchestration, and shutdown.
+- `market_data/candle_pipeline.py` owns candle validation, deduplication,
+  continuity, and sink delivery. It records a delivery with
+  `MarketDataRuntimeStatus.record_delivery(...)` only after the sink succeeds.
+- `market_data/runtime_state.py` owns immutable status snapshots, the delivery
+  watermark, and state history. `MarketDataRuntime` delegates its public
+  `snapshot` and `visited_states` properties to this Status Tracker.
 - `integrations/binance` owns Binance endpoint construction, response parsing,
   public REST transport, and public WebSocket transport. It exposes explicit Spot
   and USDⓈ-M Futures endpoint profiles selected by application composition.
@@ -127,8 +133,9 @@ new Runtime instance.
 3. Public REST loads candles ending at the most recent fully closed UTC boundary.
 4. The Binance adapter maps decimal strings directly to `Decimal` and milliseconds
    directly to UTC `datetime` values.
-5. `CompletedCandleStream` validates identity, UTC alignment, continuity, and
-   duplicate ordering before the batch reaches the application.
+5. `CompletedCandlePipeline` validates identity, UTC alignment, continuity, and
+   duplicate ordering through its internal `CompletedCandleStream` before the
+   batch reaches the application.
 6. The application updates indicator state without evaluating Entry conditions or
    invoking execution.
 7. Only after the complete Warm-up batch succeeds does the Runtime transition to
@@ -146,8 +153,9 @@ boundary.
 
 For every yielded candle:
 
-1. Validate symbol, timeframe, UTC alignment, OHLC, and volume.
-2. Pass the candle through `CompletedCandleStream`.
+1. `CompletedCandlePipeline` validates symbol, timeframe, UTC alignment, OHLC,
+   and volume.
+2. The Pipeline passes the candle through its internal `CompletedCandleStream`.
 3. Ignore an already accepted candle without evaluating Strategy again.
 4. Send the next contiguous candle to the application sink exactly once.
 5. Advance the accepted-candle watermark and freshness deadline only after the
@@ -159,20 +167,21 @@ fabricated candle.
 
 ## 7. Gap Detection and Backfill
 
-When `CompletedCandleStream` reports a missing candle, the Runtime must not deliver
-the later candle. It enters `BACKFILLING` and requests the exact missing UTC range
-through public REST.
+When `CompletedCandlePipeline` reports a missing candle from its internal
+`CompletedCandleStream`, the Runtime must not deliver the later candle. It enters
+`BACKFILLING` and requests the exact missing UTC range through public REST.
 
 REST backfill paginates until it reaches the latest fully completed candle needed
 to restore continuity. Every backfilled candle passes through the same
-`CompletedCandleStream`, in ascending open-time order, before reaching the live
+`CompletedCandlePipeline`, in ascending open-time order, before reaching the live
 application sink. The originally observed later candle is naturally deduplicated
 if REST already returned it.
 
-Each REST backfill request has a 30-second Runtime deadline. The Runtime advances
-its public watermark one candle at a time after successful sink delivery. If a
-later delivery fails, the snapshot therefore reports the last candle actually
-delivered rather than the end of the requested batch.
+Each REST backfill request has a 30-second Runtime deadline. The Pipeline records
+the delivery watermark with `MarketDataRuntimeStatus` one candle at a time after
+successful sink delivery. If a later delivery fails, the snapshot therefore
+reports the last candle actually delivered rather than the end of the requested
+batch.
 
 The Runtime returns to `LIVE` only after the backfill range is contiguous and the
 WebSocket stream is active. Empty, malformed, incomplete, or still-gapped backfill
