@@ -1,3 +1,4 @@
+from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
@@ -99,6 +100,17 @@ class PaperSpotSession:
             entry_fill=entry_fill,
             closed_basket=closed_basket,
         )
+
+    def warm_up_completed_candles(
+        self,
+        candles: Iterable[Candle],
+        *,
+        received_at: datetime,
+    ) -> None:
+        for candle in candles:
+            if not self._candles.accept(candle, received_at):
+                raise ValueError("warm-up requires new completed candles")
+            self._indicators.update(candle)
 
     def _fill_pending_intent(self, candle: Candle) -> PaperSpotEntryFill | None:
         if self._pending_intent is None:

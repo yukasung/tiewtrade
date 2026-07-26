@@ -75,6 +75,25 @@ def test_snapshot_has_no_basket_id_before_first_entry() -> None:
     assert snapshot.basket_id is None
 
 
+def test_warm_up_seeds_indicators_without_creating_trade_side_effects() -> None:
+    application = paper_session()
+    warm_up = indicator_ready_candles_with_entry_signal()
+    next_candle = next_candle_after(warm_up[-1])
+
+    application.warm_up_completed_candles(
+        warm_up,
+        received_at=warm_up[-1].close_time,
+    )
+    snapshot = application.process_completed_candle(
+        next_candle,
+        received_at=next_candle.close_time,
+    )
+
+    assert snapshot.entry_fill is None
+    assert snapshot.closed_basket_count == 0
+    assert snapshot.basket_entry_count == 0
+
+
 def test_take_profit_skips_entry_fill_candle_and_closes_on_following_candle() -> None:
     application = paper_session()
     arm_entry_intent(application)
@@ -250,6 +269,39 @@ def candle(
         ),
         low=min(open_decimal, close_decimal) - Decimal("1"),
         close=close_decimal,
+        volume=Decimal("1"),
+    )
+
+
+def indicator_ready_candles_with_entry_signal() -> list[Candle]:
+    candles: list[Candle] = []
+    close = Decimal("100")
+
+    for minute in range(0, 75, 5):
+        candles.append(
+            candle(minute, open_price=str(close + 1), close_price=str(close))
+        )
+        close -= Decimal("1")
+
+    for minute in range(75, 125, 5):
+        candles.append(
+            candle(minute, open_price=str(close), close_price=str(close + 1))
+        )
+        close += Decimal("1")
+
+    return candles
+
+
+def next_candle_after(previous: Candle) -> Candle:
+    next_open_time = previous.open_time + timedelta(minutes=5)
+    return Candle(
+        symbol=previous.symbol,
+        timeframe=previous.timeframe,
+        open_time=next_open_time,
+        open=previous.close,
+        high=previous.close + Decimal("2"),
+        low=previous.close - Decimal("1"),
+        close=previous.close + Decimal("1"),
         volume=Decimal("1"),
     )
 
