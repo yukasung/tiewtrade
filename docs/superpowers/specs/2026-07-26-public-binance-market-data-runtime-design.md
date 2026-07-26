@@ -31,8 +31,8 @@ test mode.
 - The Strategy receives only newly completed candles after Warm-up succeeds.
 - Warm-up and each REST backfill request must finish within 30 seconds. Failure
   leaves the Runtime fail closed.
-- A candle is stale when no completed candle has arrived within 30 seconds after
-  its expected close boundary.
+- Source data is stale when the Runtime is still waiting for the expected
+  completed candle from the live stream 30 seconds after its close boundary.
 - WebSocket reconnect uses three delayed attempts: 1, 2, and 4 seconds. Exhausting
   those attempts leaves the Runtime fail closed until the user starts it again.
 - Phase 1 does not persist candles in SQLite and does not include Chart UI.
@@ -161,9 +161,9 @@ For every yielded candle:
 3. Ignore a duplicate already seen by `CompletedCandleStream` without evaluating
    Strategy again.
 4. Send the next contiguous candle to the application sink exactly once.
-5. Advance the delivery watermark exposed as `last_accepted_open_time`, and its
-   derived freshness deadline, only after the sink receives that candle
-   successfully.
+5. After the sink succeeds, advance the delivery watermark exposed as
+   `last_accepted_open_time`. The Runtime uses this watermark to calculate the
+   deadline for waiting for the next expected completed candle from the source.
 
 Messages for another stream identity and malformed Binance payloads do not reach
 the Strategy. They produce an explicit Runtime failure reason rather than a
@@ -193,10 +193,16 @@ data leaves the Runtime fail closed.
 
 ## 8. Stale Data and Reconnect
 
-The Runtime calculates the next freshness deadline as 30 seconds after the next
-expected completed-candle boundary. Crossing that deadline without successfully
-delivering the expected candle immediately transitions to `STALE`; no new Entry
-decision is allowed.
+The Runtime calculates the next freshness deadline from the delivery watermark as
+30 seconds after the next expected completed-candle boundary. It applies that
+deadline while awaiting the next candle from the live source. If
+`stream.__anext__()` times out, the Runtime immediately transitions to `STALE` and
+allows no new Entry decision.
+
+Once the source yields a candle, Pipeline validation and sink delivery run outside
+the freshness timeout. A sink failure does not become `STALE`; it maps to
+`SINK_ERROR` and transitions the Runtime to `FAILED_CLOSED`. A successful delivery
+advances the watermark used to calculate the following source-wait deadline.
 
 A WebSocket disconnect or stale deadline starts reconnect attempts after 1, 2,
 and 4 seconds. Each successful connection enters `BACKFILLING` before returning to
@@ -228,8 +234,8 @@ trade history.
   flow.
 - Candle validation and continuity errors never get converted into permissive
   warnings.
-- A callback or application sink failure stops further delivery and fails closed;
-  the Runtime must not skip the failed candle and continue.
+- An application sink failure stops further delivery and fails closed with
+  `SINK_ERROR`; the Runtime must not skip the failed candle and continue.
 - Runtime state changes are monotonic according to the state model. A failed
   instance cannot silently return to `LIVE`.
 - No error path falls back to cached, invented, or partially validated candles.
@@ -245,7 +251,8 @@ Unit and integration verification must cover:
 - Warm-up timeout after 30 seconds.
 - Duplicate delivery without duplicate Strategy processing.
 - Gap detection, paginated REST backfill, and ordered resume.
-- Stale transition 30 seconds after the expected close boundary.
+- Stale transition when the source wait reaches 30 seconds after the expected
+  close boundary.
 - Reconnect attempts after exactly 1, 2, and 4 seconds.
 - Fail closed after the third unsuccessful reconnect.
 - Reconnect success followed by mandatory backfill before `LIVE`.
