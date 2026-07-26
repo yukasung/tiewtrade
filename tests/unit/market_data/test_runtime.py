@@ -3,7 +3,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import AsyncIterator, Awaitable, Coroutine, Iterable
 from dataclasses import FrozenInstanceError
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from typing import TypeVar
 
@@ -40,16 +40,18 @@ def warm_up_candles() -> tuple[Candle, ...]:
 
 
 class FakeScheduler:
-    def __init__(self) -> None:
+    def __init__(self, *, now: datetime = _NOW) -> None:
+        self._now = now
         self.timeouts: list[float] = []
         self.sleeps: list[float] = []
         self.wait_for_active = False
 
     def now(self) -> datetime:
-        return _NOW
+        return self._now
 
     async def sleep(self, seconds: float) -> None:
         self.sleeps.append(seconds)
+        self._now += timedelta(seconds=seconds)
 
     async def wait_for(self, awaitable: Awaitable[_T], timeout: float) -> _T:
         self.timeouts.append(timeout)
@@ -60,6 +62,45 @@ class FakeScheduler:
             self.wait_for_active = False
 
 
+class TimeoutAfterWarmUpScheduler(FakeScheduler):
+    def __init__(self, *, now: datetime) -> None:
+        super().__init__(now=now)
+        self._warm_up_completed = False
+
+    async def wait_for(self, awaitable: Awaitable[_T], timeout: float) -> _T:
+        self.timeouts.append(timeout)
+        if not self._warm_up_completed:
+            self._warm_up_completed = True
+            return await awaitable
+
+        task = asyncio.ensure_future(awaitable)
+        await asyncio.sleep(0)
+        task.cancel()
+        await asyncio.gather(task, return_exceptions=True)
+        self._now += timedelta(seconds=timeout)
+        raise TimeoutError
+
+
+class RecoveringAfterStaleScheduler(FakeScheduler):
+    def __init__(self, *, now: datetime) -> None:
+        super().__init__(now=now)
+        self._wait_count = 0
+
+    async def wait_for(self, awaitable: Awaitable[_T], timeout: float) -> _T:
+        self.timeouts.append(timeout)
+        self._wait_count += 1
+        if self._wait_count == 1:
+            return await awaitable
+        if self._wait_count == 2 or timeout <= 0:
+            task = asyncio.ensure_future(awaitable)
+            await asyncio.sleep(0)
+            task.cancel()
+            await asyncio.gather(task, return_exceptions=True)
+            self._now += timedelta(seconds=timeout)
+            raise TimeoutError
+        return await awaitable
+
+
 class TimeoutScheduler(FakeScheduler):
     async def wait_for(self, awaitable: Awaitable[_T], timeout: float) -> _T:
         self.timeouts.append(timeout)
@@ -68,17 +109,38 @@ class TimeoutScheduler(FakeScheduler):
         raise TimeoutError
 
 
+class BlockingReconnectScheduler(FakeScheduler):
+    def __init__(self) -> None:
+        super().__init__()
+        self.sleep_started = asyncio.Event()
+        self.sleep_finished = asyncio.Event()
+
+    async def sleep(self, seconds: float) -> None:
+        self.sleeps.append(seconds)
+        self.sleep_started.set()
+        try:
+            await asyncio.Event().wait()
+        finally:
+            self.sleep_finished.set()
+
+
 class FakeSource:
     def __init__(
         self,
         *,
         recent: Iterable[Candle] = (),
         live: Iterable[Candle] = (),
+        ranges: dict[tuple[datetime, datetime], Iterable[Candle]] | None = None,
     ) -> None:
         self._recent = tuple(recent)
         self._live = tuple(live)
+        self._ranges = {
+            requested_range: tuple(candles)
+            for requested_range, candles in (ranges or {}).items()
+        }
         self._closed = asyncio.Event()
         self.recent_requests: list[tuple[MarketDataConfig, int, datetime]] = []
+        self.range_requests: list[tuple[MarketDataConfig, datetime, datetime]] = []
         self.live_started = False
         self.close_count = 0
 
@@ -99,7 +161,8 @@ class FakeSource:
         start: datetime,
         end: datetime,
     ) -> tuple[Candle, ...]:
-        raise AssertionError("Task 4 must not request backfill")
+        self.range_requests.append((config, start, end))
+        return self._ranges.get((start, end), ())
 
     def stream_completed(self, config: MarketDataConfig) -> AsyncIterator[Candle]:
         return self._stream_completed()
@@ -156,6 +219,107 @@ class SlowCloseSource(FakeSource):
         self.close_started.set()
         await self.allow_close.wait()
         self._closed.set()
+
+
+class AlwaysDisconnectingSource(FakeSource):
+    def __init__(self) -> None:
+        super().__init__(recent=warm_up_candles())
+        self.stream_count = 0
+
+    async def _stream_completed(self) -> AsyncIterator[Candle]:
+        self.stream_count += 1
+        if False:
+            yield candle_at(15)
+
+
+class SynchronousDisconnectSource(FakeSource):
+    def __init__(self) -> None:
+        super().__init__(recent=warm_up_candles())
+        self.stream_count = 0
+
+    def stream_completed(self, config: MarketDataConfig) -> AsyncIterator[Candle]:
+        self.stream_count += 1
+        raise RuntimeError("websocket handshake failed")
+
+
+class DisconnectThenRecoverSource(FakeSource):
+    def __init__(self) -> None:
+        super().__init__(
+            recent=warm_up_candles(),
+            ranges={
+                (candle_at(15).open_time, candle_at(25).open_time): (
+                    candle_at(15),
+                    candle_at(20),
+                )
+            },
+        )
+        self.stream_count = 0
+
+    async def _stream_completed(self) -> AsyncIterator[Candle]:
+        self.stream_count += 1
+        if self.stream_count == 1:
+            return
+        yield candle_at(20)
+        await self._closed.wait()
+
+
+class MismatchedReconnectSource(DisconnectThenRecoverSource):
+    async def _stream_completed(self) -> AsyncIterator[Candle]:
+        self.stream_count += 1
+        if self.stream_count == 1:
+            return
+        yield candle_at(20, symbol="ETHUSDT")
+        await self._closed.wait()
+
+
+class DisconnectThenDuplicateSource(FakeSource):
+    def __init__(self) -> None:
+        super().__init__(recent=warm_up_candles())
+        self.stream_count = 0
+
+    async def _stream_completed(self) -> AsyncIterator[Candle]:
+        self.stream_count += 1
+        if self.stream_count == 1:
+            return
+        yield candle_at(10)
+        yield candle_at(15)
+        await self._closed.wait()
+
+
+class BlockingLiveSource(FakeSource):
+    def __init__(self) -> None:
+        super().__init__(recent=warm_up_candles())
+        self.live_wait_started = asyncio.Event()
+        self.live_wait_finished = asyncio.Event()
+
+    async def _stream_completed(self) -> AsyncIterator[Candle]:
+        self.live_started = True
+        self.live_wait_started.set()
+        try:
+            await self._closed.wait()
+        finally:
+            self.live_wait_finished.set()
+        if False:
+            yield candle_at(15)
+
+
+class StaleThenRecoverSource(FakeSource):
+    def __init__(self) -> None:
+        super().__init__(
+            recent=warm_up_candles(),
+            ranges={
+                (candle_at(15).open_time, candle_at(20).open_time): (candle_at(15),)
+            },
+        )
+        self.stream_count = 0
+
+    async def _stream_completed(self) -> AsyncIterator[Candle]:
+        self.stream_count += 1
+        if self.stream_count == 1:
+            await asyncio.Event().wait()
+            return
+        yield candle_at(15)
+        await self._closed.wait()
 
 
 class RecordingSink:
@@ -234,6 +398,57 @@ async def run_until_sink_receives(
     await task
 
 
+async def run_until_sink_receives_or_runtime_stops(
+    runtime: MarketDataRuntime,
+    sink: RecordingSink,
+    *,
+    count: int,
+) -> None:
+    run_task = asyncio.create_task(runtime.run())
+    sink_task = asyncio.create_task(sink.wait_for_live_candle_count(count))
+    done, _ = await asyncio.wait(
+        {run_task, sink_task},
+        return_when=asyncio.FIRST_COMPLETED,
+    )
+    if sink_task in done:
+        await runtime.stop()
+    else:
+        sink_task.cancel()
+    await asyncio.gather(run_task, sink_task, return_exceptions=True)
+
+
+async def run_stale_scenario_or_stop(
+    runtime: MarketDataRuntime,
+    source: BlockingLiveSource,
+) -> None:
+    run_task = asyncio.create_task(runtime.run())
+    await source.live_wait_started.wait()
+    for _ in range(100):
+        if run_task.done():
+            break
+        await asyncio.sleep(0)
+    if not run_task.done():
+        await runtime.stop()
+    await run_task
+
+
+async def run_until_recovered_or_runtime_stops(runtime: MarketDataRuntime) -> None:
+    run_task = asyncio.create_task(runtime.run())
+    for _ in range(100):
+        visited = runtime.visited_states
+        if (
+            MarketDataRuntimeState.STALE in visited
+            and visited[-1] is MarketDataRuntimeState.LIVE
+        ):
+            break
+        if run_task.done():
+            break
+        await asyncio.sleep(0)
+    if not run_task.done():
+        await runtime.stop()
+    await run_task
+
+
 def test_runtime_state_snapshot_is_immutable() -> None:
     snapshot = MarketDataRuntimeSnapshot(
         state=MarketDataRuntimeState.STARTING,
@@ -266,7 +481,7 @@ def test_runtime_warms_sink_before_live_delivery() -> None:
     assert source.recent_requests == [
         (MarketDataConfig(symbol="BTCUSDT", timeframe="5m"), 3, _NOW)
     ]
-    assert scheduler.timeouts == [30.0]
+    assert scheduler.timeouts[0] == 30.0
     assert sink.warm_up_within_deadline
 
 
@@ -332,6 +547,253 @@ def test_duplicate_live_candle_is_ignored() -> None:
 
     assert sink.live_candles == [candle_at(15)]
     assert runtime.snapshot.last_accepted_open_time == candle_at(15).open_time
+
+
+def test_gap_backfills_in_order_before_resuming_live() -> None:
+    source = FakeSource(
+        recent=warm_up_candles(),
+        live=[candle_at(20)],
+        ranges={
+            (candle_at(15).open_time, candle_at(25).open_time): (
+                candle_at(15),
+                candle_at(20),
+            )
+        },
+    )
+    sink = RecordingSink()
+    runtime = runtime_for(source, sink)
+
+    asyncio.run(run_until_sink_receives_or_runtime_stops(runtime, sink, count=2))
+
+    assert sink.live_candles == [candle_at(15), candle_at(20)]
+    assert sink.states_at_calls[-2:] == [
+        MarketDataRuntimeState.LIVE,
+        MarketDataRuntimeState.LIVE,
+    ]
+    assert source.range_requests == [
+        (
+            MarketDataConfig(symbol="BTCUSDT", timeframe="5m"),
+            candle_at(15).open_time,
+            candle_at(25).open_time,
+        )
+    ]
+    assert runtime.visited_states[-3:-1] == (
+        MarketDataRuntimeState.BACKFILLING,
+        MarketDataRuntimeState.LIVE,
+    )
+
+
+@pytest.mark.parametrize(
+    "backfill",
+    [
+        (),
+        (candle_at(20),),
+        (candle_at(15),),
+    ],
+    ids=["empty", "still-gapped", "missing-observed"],
+)
+def test_incomplete_gap_backfill_fails_closed(
+    backfill: tuple[Candle, ...],
+) -> None:
+    source = FakeSource(
+        recent=warm_up_candles(),
+        live=[candle_at(20)],
+        ranges={
+            (candle_at(15).open_time, candle_at(25).open_time): backfill,
+        },
+    )
+    sink = RecordingSink()
+    runtime = runtime_for(source, sink)
+
+    asyncio.run(runtime.run())
+
+    assert runtime.snapshot.state is MarketDataRuntimeState.FAILED_CLOSED
+    assert runtime.snapshot.reason is MarketDataRuntimeReason.SOURCE_ERROR
+    assert sink.live_candles == []
+    assert source.range_requests == [
+        (
+            MarketDataConfig(symbol="BTCUSDT", timeframe="5m"),
+            candle_at(15).open_time,
+            candle_at(25).open_time,
+        )
+    ]
+
+
+def test_stale_wait_uses_expected_close_boundary_plus_thirty_seconds() -> None:
+    source = BlockingLiveSource()
+    scheduler = TimeoutAfterWarmUpScheduler(
+        now=datetime(2026, 1, 1, 0, 15, tzinfo=UTC),
+    )
+    sink = RecordingSink()
+    runtime = runtime_for(source, sink, scheduler=scheduler)
+
+    asyncio.run(run_stale_scenario_or_stop(runtime, source))
+
+    assert scheduler.timeouts[:2] == [30.0, 330.0]
+    assert MarketDataRuntimeState.STALE in runtime.visited_states
+    assert runtime.snapshot.state is MarketDataRuntimeState.FAILED_CLOSED
+    assert runtime.snapshot.reason is MarketDataRuntimeReason.RECONNECT_EXHAUSTED
+
+
+def test_stale_reconnect_uses_new_boundary_deadline_and_recovers() -> None:
+    source = StaleThenRecoverSource()
+    scheduler = RecoveringAfterStaleScheduler(
+        now=datetime(2026, 1, 1, 0, 15, tzinfo=UTC),
+    )
+    sink = RecordingSink()
+    runtime = runtime_for(source, sink, scheduler=scheduler)
+
+    asyncio.run(run_until_sink_receives_or_runtime_stops(runtime, sink, count=1))
+
+    assert scheduler.timeouts[:3] == [30.0, 330.0, 299.0]
+    assert scheduler.sleeps == [1.0]
+    assert sink.live_candles == [candle_at(15)]
+    assert runtime.snapshot.state is MarketDataRuntimeState.STOPPED
+
+
+def test_reconnect_uses_one_two_four_seconds_then_fails_closed() -> None:
+    source = AlwaysDisconnectingSource()
+    scheduler = FakeScheduler()
+    sink = RecordingSink()
+    runtime = runtime_for(source, sink, scheduler=scheduler)
+
+    asyncio.run(runtime.run())
+
+    assert scheduler.sleeps == [1.0, 2.0, 4.0]
+    assert source.stream_count == 4
+    assert runtime.snapshot.state is MarketDataRuntimeState.FAILED_CLOSED
+    assert runtime.snapshot.reason is MarketDataRuntimeReason.RECONNECT_EXHAUSTED
+
+
+def test_synchronous_disconnect_uses_bounded_reconnect_policy() -> None:
+    source = SynchronousDisconnectSource()
+    scheduler = FakeScheduler()
+    sink = RecordingSink()
+    runtime = runtime_for(source, sink, scheduler=scheduler)
+
+    asyncio.run(runtime.run())
+
+    assert scheduler.sleeps == [1.0, 2.0, 4.0]
+    assert source.stream_count == 4
+    assert runtime.snapshot.state is MarketDataRuntimeState.FAILED_CLOSED
+    assert runtime.snapshot.reason is MarketDataRuntimeReason.RECONNECT_EXHAUSTED
+
+
+def test_reconnect_backfills_buffered_first_candle_before_returning_live() -> None:
+    source = DisconnectThenRecoverSource()
+    scheduler = FakeScheduler(
+        now=datetime(2026, 1, 1, 0, 25, tzinfo=UTC),
+    )
+    sink = RecordingSink()
+    runtime = runtime_for(source, sink, scheduler=scheduler)
+
+    asyncio.run(run_until_sink_receives_or_runtime_stops(runtime, sink, count=2))
+
+    assert sink.live_candles == [candle_at(15), candle_at(20)]
+    stale_index = runtime.visited_states.index(MarketDataRuntimeState.STALE)
+    assert runtime.visited_states[stale_index : stale_index + 4] == (
+        MarketDataRuntimeState.STALE,
+        MarketDataRuntimeState.RECONNECTING,
+        MarketDataRuntimeState.BACKFILLING,
+        MarketDataRuntimeState.LIVE,
+    )
+    assert scheduler.sleeps == [1.0]
+    assert source.stream_count == 2
+
+
+def test_reconnect_rejects_malformed_buffered_first_candle_before_sink() -> None:
+    source = MismatchedReconnectSource()
+    scheduler = FakeScheduler(
+        now=datetime(2026, 1, 1, 0, 25, tzinfo=UTC),
+    )
+    sink = RecordingSink()
+    runtime = runtime_for(source, sink, scheduler=scheduler)
+
+    asyncio.run(run_until_sink_receives_or_runtime_stops(runtime, sink, count=2))
+
+    assert runtime.snapshot.state is MarketDataRuntimeState.FAILED_CLOSED
+    assert runtime.snapshot.reason is MarketDataRuntimeReason.SOURCE_ERROR
+    assert sink.live_candles == []
+
+
+def test_reconnect_duplicate_proves_no_missing_backfill_before_live() -> None:
+    source = DisconnectThenDuplicateSource()
+    scheduler = FakeScheduler(
+        now=datetime(2026, 1, 1, 0, 15, tzinfo=UTC),
+    )
+    sink = RecordingSink()
+    runtime = runtime_for(source, sink, scheduler=scheduler)
+
+    asyncio.run(run_until_recovered_or_runtime_stops(runtime))
+
+    assert sink.live_candles == []
+    assert source.range_requests == []
+    stale_index = runtime.visited_states.index(MarketDataRuntimeState.STALE)
+    assert runtime.visited_states[stale_index : stale_index + 4] == (
+        MarketDataRuntimeState.STALE,
+        MarketDataRuntimeState.RECONNECTING,
+        MarketDataRuntimeState.BACKFILLING,
+        MarketDataRuntimeState.LIVE,
+    )
+
+
+def test_backfill_sink_failure_fails_closed_without_partial_delivery() -> None:
+    source = FakeSource(
+        recent=warm_up_candles(),
+        live=[candle_at(20)],
+        ranges={
+            (candle_at(15).open_time, candle_at(25).open_time): (
+                candle_at(15),
+                candle_at(20),
+            )
+        },
+    )
+    sink = RecordingSink(fail_live=True)
+    runtime = runtime_for(source, sink)
+
+    asyncio.run(runtime.run())
+
+    assert runtime.snapshot.state is MarketDataRuntimeState.FAILED_CLOSED
+    assert runtime.snapshot.reason is MarketDataRuntimeReason.SINK_ERROR
+    assert sink.live_candles == []
+
+
+def test_stop_cancels_freshness_wait_and_awaits_live_iterator_cleanup() -> None:
+    source = BlockingLiveSource()
+    sink = RecordingSink()
+    runtime = runtime_for(source, sink)
+
+    async def exercise() -> None:
+        run_task = asyncio.create_task(runtime.run())
+        await source.live_wait_started.wait()
+        await runtime.stop()
+        await run_task
+
+    asyncio.run(exercise())
+
+    assert source.live_wait_finished.is_set()
+    assert source.close_count == 1
+    assert runtime.snapshot.state is MarketDataRuntimeState.STOPPED
+
+
+def test_stop_cancels_reconnect_delay_and_awaits_cleanup() -> None:
+    source = AlwaysDisconnectingSource()
+    scheduler = BlockingReconnectScheduler()
+    sink = RecordingSink()
+    runtime = runtime_for(source, sink, scheduler=scheduler)
+
+    async def exercise() -> None:
+        run_task = asyncio.create_task(runtime.run())
+        await scheduler.sleep_started.wait()
+        await runtime.stop()
+        await run_task
+
+    asyncio.run(exercise())
+
+    assert scheduler.sleeps == [1.0]
+    assert scheduler.sleep_finished.is_set()
+    assert source.close_count == 1
+    assert runtime.snapshot.state is MarketDataRuntimeState.STOPPED
 
 
 def test_live_sink_failure_fails_closed_and_stops_delivery() -> None:
