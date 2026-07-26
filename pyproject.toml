@@ -6,7 +6,9 @@ build-backend = "hatchling.build"
 name = "tiewtrade"
 version = "0.1.0"
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+  "aiohttp>=3.11,<4",
+]
 
 [project.optional-dependencies]
 dev = [
