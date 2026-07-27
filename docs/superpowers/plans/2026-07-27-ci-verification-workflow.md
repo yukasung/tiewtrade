@@ -10,7 +10,7 @@
 
 ## Global Constraints
 
-- Implementation เปลี่ยนเฉพาะ `.github/workflows/verify.yml`, `tests/unit/test_ci_workflow.py` และ `AGENTS.md`; branch มี design และ plan documents ของ DEV-121 เพิ่มเติมตาม development workflow
+- Implementation เปลี่ยนเฉพาะ `.github/workflows/verify.yml`, `tests/unit/test_ci_workflow.py`, `pyproject.toml` และ `AGENTS.md`; branch มี design และ plan documents ของ DEV-121 เพิ่มเติมตาม development workflow
 - ห้ามเปลี่ยน production modules ใต้ `src/`, trading behavior, database schema หรือ `docs-site`
 - Workflow ทำงานเฉพาะ Pull Request ที่ target `main` สำหรับ event `opened`, `synchronize`, `reopened`, `edited` และ push เข้า `main`
 - ใช้ `ubuntu-latest`, timeout `10` นาที และ `permissions: contents: read`
@@ -19,6 +19,7 @@
 - ใช้ `actions/setup-python@v6`, Python `3.12` และ pip cache จาก `pyproject.toml`
 - ติดตั้งด้วย `python -m pip install -e ".[dev]"`
 - กำหนด `PYTHONPATH=src` และ `QT_QPA_PLATFORM=offscreen` ระดับ job
+- กำหนด `[tool.ruff] extend-exclude = ["*.md"]` เพื่อให้ Ruff format/lint ตรวจเฉพาะขอบเขต Python โดยไม่ pin Ruff, แก้ Markdown เดิม หรือเปลี่ยน workflow command
 - รัน Pytest, Ruff lint, Ruff format check, Mypy และ committed-range whitespace check โดยไม่มี `continue-on-error`
 - ห้ามใช้ GitHub secrets และห้ามเชื่อม Binance
 - DEV-121 ต้องคงสถานะ `In Progress` จนกว่า workflow ถูก push โดยได้รับอนุญาตและ GitHub Actions run ผ่านจริง
@@ -29,6 +30,7 @@
 
 - Create `.github/workflows/verify.yml`: กำหนด event triggers, least-privilege job environment, dependency setup และ verification commands
 - Create `tests/unit/test_ci_workflow.py`: contract tests สำหรับ workflow structure, exact verification commands และการจัดแนว repository instructions
+- Modify `pyproject.toml`: กำหนด Ruff formatter scope ให้ exclude Markdown
 - Modify `AGENTS.md:66-73`: แยก local working-tree whitespace check ออกจาก CI committed-range whitespace check
 
 ---
@@ -48,12 +50,14 @@
 สร้าง `tests/unit/test_ci_workflow.py`:
 
 ```python
+import tomllib
 from pathlib import Path
 
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
 WORKFLOW_PATH = REPOSITORY_ROOT / ".github" / "workflows" / "verify.yml"
 INSTRUCTIONS_PATH = REPOSITORY_ROOT / "AGENTS.md"
+PYPROJECT_PATH = REPOSITORY_ROOT / "pyproject.toml"
 
 
 def _workflow_text() -> str:
@@ -62,6 +66,17 @@ def _workflow_text() -> str:
 
 def _repository_instructions_text() -> str:
     return INSTRUCTIONS_PATH.read_text(encoding="utf-8")
+
+
+def _pyproject_config() -> dict[str, object]:
+    with PYPROJECT_PATH.open("rb") as pyproject_file:
+        return tomllib.load(pyproject_file)
+
+
+def test_ruff_configuration_excludes_markdown_from_formatting() -> None:
+    config = _pyproject_config()
+
+    assert config["tool"]["ruff"]["extend-exclude"] == ["*.md"]
 
 
 def test_verify_workflow_targets_main_without_duplicate_branch_pushes() -> None:
@@ -152,9 +167,9 @@ env PYTHONPATH=src QT_QPA_PLATFORM=offscreen \
   ../../.venv/bin/python -m pytest tests/unit/test_ci_workflow.py -q
 ```
 
-Expected สำหรับ regression นี้: `1 failed, 3 passed` เพราะ trigger block ยังไม่มี `edited`
+Expected สำหรับ Ruff scope regression: `1 failed, 5 passed` เพราะ `[tool.ruff]` ยังไม่มี `extend-exclude`
 
-- [ ] **Step 3: Add the minimal GitHub Actions workflow**
+- [ ] **Step 3: Add the minimal CI configuration**
 
 สร้าง `.github/workflows/verify.yml`:
 
@@ -218,6 +233,15 @@ jobs:
         run: git diff --check "$BASE_SHA" HEAD
 ```
 
+เพิ่มใน `pyproject.toml` โดยคงคำสั่ง workflow เดิม:
+
+```toml
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+extend-exclude = ["*.md"]
+```
+
 - [ ] **Step 4: Run the focused tests and verify the GREEN state**
 
 Run:
@@ -227,7 +251,7 @@ env PYTHONPATH=src QT_QPA_PLATFORM=offscreen \
   ../../.venv/bin/python -m pytest tests/unit/test_ci_workflow.py -q
 ```
 
-Expected: `4 passed`
+Expected: `6 passed`
 
 - [ ] **Step 5: Run focused static checks**
 
@@ -304,7 +328,7 @@ env PYTHONPATH=src QT_QPA_PLATFORM=offscreen \
   ../../.venv/bin/python -m pytest tests/unit/test_ci_workflow.py -q
 ```
 
-Expected: `4 passed`
+Expected: `6 passed`
 
 - [ ] **Step 5: Commit the instruction alignment slice**
 
@@ -337,7 +361,7 @@ env PYTHONPATH=src QT_QPA_PLATFORM=offscreen \
   ../../.venv/bin/python -m pytest -q
 ```
 
-Expected: tests ทั้งหมดผ่าน โดยมีอย่างน้อย baseline `466` tests บวก contract tests ใหม่ `4` tests
+Expected: tests ทั้งหมดผ่าน โดยมีอย่างน้อย baseline `466` tests บวก contract tests ใหม่ `6` tests
 
 - [ ] **Step 2: Run repository lint**
 
@@ -396,6 +420,7 @@ Expected:
 AGENTS.md
 docs/superpowers/plans/2026-07-27-ci-verification-workflow.md
 docs/superpowers/specs/2026-07-27-ci-verification-workflow-design.md
+pyproject.toml
 tests/unit/test_ci_workflow.py
 ```
 

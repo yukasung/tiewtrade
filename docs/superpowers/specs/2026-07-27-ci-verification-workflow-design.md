@@ -24,6 +24,7 @@
 
 - `.github/workflows/verify.yml` — GitHub Actions workflow
 - `tests/unit/test_ci_workflow.py` — contract test สำหรับ requirement สำคัญของ workflow
+- `pyproject.toml` — ขอบเขตไฟล์ที่ Ruff format และ lint ตรวจ
 - `AGENTS.md` — แยกความหมายของ whitespace check ระหว่าง local checkout และ CI
 
 ไฟล์ที่ไม่อยู่ในขอบเขต:
@@ -83,6 +84,12 @@ git diff --check "$BASE_SHA" HEAD
 
 ไม่มี `continue-on-error` เพราะทุก check เป็น merge requirement
 
+## Ruff Formatter Scope
+
+GitHub Actions run `30288239088` ผ่าน Pytest หลังแก้ Qt EGL แต่ `python -m ruff format --check .` ล้มเหลว เพราะ CI ติดตั้ง Ruff `0.16.0` ซึ่งตรวจ Markdown เก่า 10 ไฟล์ ขณะที่ venv local ใช้ Ruff `0.15.22` จึงไม่แสดงปัญหาเดียวกัน
+
+ตั้งค่า `[tool.ruff]` เป็น `extend-exclude = ["*.md"]` เพื่อกำหนด formatter และ linter ใน workflow นี้ให้ตรวจเฉพาะไฟล์ที่อยู่ในขอบเขต Python โดยไม่ pin Ruff, ไม่แก้ Markdown เดิม และไม่เปลี่ยน workflow command. การ reproduce แบบ isolated ด้วย Ruff `0.16.0` ต้องรายงาน `115 files already formatted`.
+
 ## Committed-Range Whitespace Check
 
 CI กำหนด `BASE_SHA` ตาม event:
@@ -102,6 +109,7 @@ CI กำหนด `BASE_SHA` ตาม event:
 - `permissions`, job runtime และ job environment block
 - checkout, Python setup และ dependency-installation blocks
 - Qt EGL runtime installation block ที่ติดตั้งเฉพาะ `libegl1`
+- ค่า `config["tool"]["ruff"]["extend-exclude"] == ["*.md"]` จาก `pyproject.toml` โดยใช้ stdlib `tomllib`
 - verification sequence ทั้งห้ารายการ รวมถึง `BASE_SHA` expression แบบ exact และ whitespace check แบบ base-to-HEAD committed range
 
 Contract test ไม่แทน GitHub Actions parser หรือ runner การรันจริงบน GitHub หลัง push ยังคงเป็น final integration verification

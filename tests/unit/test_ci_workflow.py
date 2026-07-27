@@ -1,8 +1,10 @@
+import tomllib
 from pathlib import Path
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
 WORKFLOW_PATH = REPOSITORY_ROOT / ".github" / "workflows" / "verify.yml"
 INSTRUCTIONS_PATH = REPOSITORY_ROOT / "AGENTS.md"
+PYPROJECT_PATH = REPOSITORY_ROOT / "pyproject.toml"
 
 
 def _workflow_text() -> str:
@@ -11,6 +13,17 @@ def _workflow_text() -> str:
 
 def _repository_instructions_text() -> str:
     return INSTRUCTIONS_PATH.read_text(encoding="utf-8")
+
+
+def _pyproject_config() -> dict[str, object]:
+    with PYPROJECT_PATH.open("rb") as pyproject_file:
+        return tomllib.load(pyproject_file)
+
+
+def test_ruff_configuration_excludes_markdown_from_formatting() -> None:
+    config = _pyproject_config()
+
+    assert config["tool"]["ruff"]["extend-exclude"] == ["*.md"]
 
 
 def test_verify_workflow_targets_main_without_duplicate_branch_pushes() -> None:
