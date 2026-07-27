@@ -45,6 +45,12 @@ def test_short_entry_uses_adverse_downward_slippage() -> None:
     assert fill.fee == Decimal("29.99997")
 
 
+def test_short_entry_returns_none_when_quantized_price_is_zero() -> None:
+    executor = make_executor(slippage_bps="9999.9")
+
+    assert executor.fill_entry(short_intent(), candle(minute=5, open="100")) is None
+
+
 def test_entry_below_min_notional_returns_none() -> None:
     executor = make_executor(min_notional="50000", leverage=1)
 

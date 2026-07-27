@@ -65,6 +65,9 @@ class PaperFuturesExecutor:
             raw_price = candle.open * (Decimal("1") - slippage)
             price = self._symbol_rules.floor_price(raw_price)
 
+        if not price.is_finite() or price <= 0:
+            return None
+
         quantity = self._symbol_rules.floor_quantity(
             self._capital_plan.target_notional_per_entry / price
         )
