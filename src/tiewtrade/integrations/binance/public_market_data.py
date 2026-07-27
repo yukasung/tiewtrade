@@ -172,17 +172,19 @@ class BinancePublicMarketData:
             MarketDataFatalError,
         ):
             raise
-        except (aiohttp.ClientError, TimeoutError) as error:
-            raise MarketDataRetryableError(
-                "Binance market-data transport failed"
-            ) from error
         except (
+            aiohttp.ContentTypeError,
+            aiohttp.ClientPayloadError,
             BinanceMarketDataPayloadError,
             json.JSONDecodeError,
             TypeError,
             ValueError,
         ) as error:
             raise MarketDataFatalError(_INVALID_RESPONSE_MESSAGE) from error
+        except (aiohttp.ClientError, TimeoutError) as error:
+            raise MarketDataRetryableError(
+                "Binance market-data transport failed"
+            ) from error
 
     async def _stream_completed(
         self, config: MarketDataConfig

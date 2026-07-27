@@ -47,14 +47,22 @@ class FakeResponse:
 class FakeMessage:
     def __init__(self, payload: object) -> None:
         self.type = WSMsgType.TEXT
-        self.data = json.dumps(payload)
+        self.data = payload if isinstance(payload, str) else json.dumps(payload)
 
 
 class FakeWebSocket:
-    def __init__(self, payloads: Iterable[object]) -> None:
+    def __init__(
+        self,
+        payloads: Iterable[object],
+        *,
+        failure: Exception | None = None,
+    ) -> None:
         self._messages = iter(FakeMessage(payload) for payload in payloads)
+        self._failure = failure
 
     async def __aenter__(self) -> FakeWebSocket:
+        if self._failure is not None:
+            raise self._failure
         return self
 
     async def __aexit__(self, *args: object) -> None:
@@ -76,9 +84,11 @@ class FakeSession:
         *,
         rest_pages: Iterable[FakeResponse] = (),
         websocket_payloads: Iterable[object] = (),
+        websocket_failure: Exception | None = None,
     ) -> None:
         self._rest_pages = iter(rest_pages)
         self._websocket_payloads = tuple(websocket_payloads)
+        self._websocket_failure = websocket_failure
         self.requests: list[tuple[str, dict[str, str | int]]] = []
         self.websocket_urls: list[str] = []
         self.close_count = 0
@@ -89,7 +99,10 @@ class FakeSession:
 
     def ws_connect(self, url: str) -> FakeWebSocket:
         self.websocket_urls.append(url)
-        return FakeWebSocket(self._websocket_payloads)
+        return FakeWebSocket(
+            self._websocket_payloads,
+            failure=self._websocket_failure,
+        )
 
     async def close(self) -> None:
         self.close_count += 1
@@ -131,10 +144,12 @@ def source_with(
     *,
     rest_pages: Iterable[FakeResponse] = (),
     websocket_payloads: Iterable[object] = (),
+    websocket_failure: Exception | None = None,
 ) -> tuple[BinancePublicMarketData, FakeSession]:
     session = FakeSession(
         rest_pages=rest_pages,
         websocket_payloads=websocket_payloads,
+        websocket_failure=websocket_failure,
     )
     return (
         BinancePublicMarketData(
@@ -355,6 +370,31 @@ def test_transport_failure_raises_retryable_error() -> None:
         load_one(source)
 
 
+def test_timeout_failure_raises_retryable_error() -> None:
+    source, _ = source_with(
+        rest_pages=[FakeResponse(payload=TimeoutError("timed out"))]
+    )
+
+    with pytest.raises(MarketDataRetryableError):
+        load_one(source)
+
+
+@pytest.mark.parametrize(
+    "payload_error",
+    [
+        aiohttp.ContentTypeError(request_info=None, history=()),
+        aiohttp.ClientPayloadError("invalid response body"),
+    ],
+)
+def test_rest_payload_client_error_raises_fatal_error(
+    payload_error: aiohttp.ClientError,
+) -> None:
+    source, _ = source_with(rest_pages=[FakeResponse(payload=payload_error)])
+
+    with pytest.raises(MarketDataFatalError):
+        load_one(source)
+
+
 @pytest.mark.parametrize(
     "payload",
     [{"code": -1121, "msg": "invalid symbol"}, ValueError("bad JSON")],
@@ -378,6 +418,44 @@ def test_stream_completed_ignores_open_updates_and_uses_symbol_stream_url() -> N
     assert session.websocket_urls == [
         "wss://data-stream.binance.vision/ws/btcusdt@kline_5m"
     ]
+
+
+@pytest.mark.parametrize(
+    "failure",
+    [aiohttp.ClientConnectionError("offline"), TimeoutError("timed out")],
+)
+def test_websocket_transport_failure_raises_retryable_error(
+    failure: Exception,
+) -> None:
+    source, _ = source_with(websocket_failure=failure)
+
+    with pytest.raises(MarketDataRetryableError):
+        asyncio.run(collect(source))
+
+
+@pytest.mark.parametrize("payload", ["not JSON", {"unexpected": "payload"}])
+def test_invalid_websocket_payload_raises_fatal_error(payload: object) -> None:
+    source, _ = source_with(websocket_payloads=[payload])
+
+    with pytest.raises(MarketDataFatalError):
+        asyncio.run(collect(source))
+
+
+@pytest.mark.parametrize(
+    "failure",
+    [
+        MarketDataRetryableError("retryable"),
+        MarketDataRateLimitError("rate limited", retry_after=None),
+        MarketDataFatalError("fatal"),
+    ],
+)
+def test_websocket_domain_error_is_not_remapped(failure: Exception) -> None:
+    source, _ = source_with(websocket_failure=failure)
+
+    with pytest.raises(type(failure)) as captured:
+        asyncio.run(collect(source))
+
+    assert captured.value is failure
 
 
 def test_close_does_not_close_injected_session() -> None:
