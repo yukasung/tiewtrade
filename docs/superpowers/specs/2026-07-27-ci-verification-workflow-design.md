@@ -1,7 +1,7 @@
 # DEV-121 CI Verification Workflow Design
 
-**Date:** 2026-07-27  
-**Status:** Approved for implementation planning  
+**Date:** 2026-07-27
+**Status:** Approved for implementation planning
 **Scope:** GitHub Actions verification for Python application changes
 
 ## Goal
