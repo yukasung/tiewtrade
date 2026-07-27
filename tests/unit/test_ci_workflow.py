@@ -45,7 +45,10 @@ def test_verify_workflow_uses_bounded_least_privilege_environment() -> None:
         "      - name: Check out repository\n"
         "        uses: actions/checkout@v6\n"
         "        with:\n"
-        "          fetch-depth: 0\n\n"
+        "          fetch-depth: 0"
+    ) in workflow
+
+    assert (
         "      - name: Set up Python\n"
         "        uses: actions/setup-python@v6\n"
         "        with:\n"
@@ -54,6 +57,17 @@ def test_verify_workflow_uses_bounded_least_privilege_environment() -> None:
         "          cache-dependency-path: pyproject.toml\n\n"
         "      - name: Install application and development tools\n"
         '        run: python -m pip install -e ".[dev]"'
+    ) in workflow
+
+
+def test_verify_workflow_installs_the_qt_egl_runtime() -> None:
+    workflow = _workflow_text()
+
+    assert (
+        "      - name: Install Qt runtime libraries\n"
+        "        run: |\n"
+        "          sudo apt-get update\n"
+        "          sudo apt-get install --yes libegl1"
     ) in workflow
 
 

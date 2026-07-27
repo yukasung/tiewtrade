@@ -15,6 +15,7 @@
 - Workflow ทำงานเฉพาะ Pull Request ที่ target `main` สำหรับ event `opened`, `synchronize`, `reopened`, `edited` และ push เข้า `main`
 - ใช้ `ubuntu-latest`, timeout `10` นาที และ `permissions: contents: read`
 - ใช้ `actions/checkout@v6` พร้อม `fetch-depth: 0`
+- หลัง checkout ติดตั้ง Qt EGL runtime ด้วย `sudo apt-get update` และ `sudo apt-get install --yes libegl1` ก่อน Python setup/dependency use โดยไม่เพิ่ม X11 packages อื่น
 - ใช้ `actions/setup-python@v6`, Python `3.12` และ pip cache จาก `pyproject.toml`
 - ติดตั้งด้วย `python -m pip install -e ".[dev]"`
 - กำหนด `PYTHONPATH=src` และ `QT_QPA_PLATFORM=offscreen` ระดับ job
@@ -95,7 +96,10 @@ def test_verify_workflow_uses_bounded_least_privilege_environment() -> None:
         "      - name: Check out repository\n"
         "        uses: actions/checkout@v6\n"
         "        with:\n"
-        "          fetch-depth: 0\n\n"
+        "          fetch-depth: 0"
+    ) in workflow
+
+    assert (
         "      - name: Set up Python\n"
         "        uses: actions/setup-python@v6\n"
         "        with:\n"
@@ -104,6 +108,17 @@ def test_verify_workflow_uses_bounded_least_privilege_environment() -> None:
         "          cache-dependency-path: pyproject.toml\n\n"
         "      - name: Install application and development tools\n"
         '        run: python -m pip install -e ".[dev]"'
+    ) in workflow
+
+
+def test_verify_workflow_installs_the_qt_egl_runtime() -> None:
+    workflow = _workflow_text()
+
+    assert (
+        "      - name: Install Qt runtime libraries\n"
+        "        run: |\n"
+        "          sudo apt-get update\n"
+        "          sudo apt-get install --yes libegl1"
     ) in workflow
 
 
@@ -169,6 +184,11 @@ jobs:
         uses: actions/checkout@v6
         with:
           fetch-depth: 0
+
+      - name: Install Qt runtime libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes libegl1
 
       - name: Set up Python
         uses: actions/setup-python@v6

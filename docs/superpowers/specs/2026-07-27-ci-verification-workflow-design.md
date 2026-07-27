@@ -56,11 +56,14 @@ Job ใช้ค่าต่อไปนี้:
 
 Workflow ไม่ใช้ GitHub secrets และไม่เชื่อม Binance การกำหนด `QT_QPA_PLATFORM=offscreen` ทำให้ UI tests ทำงานบน runner ที่ไม่มีจอแสดงผลโดยไม่เปลี่ยน behavior ของ application
 
+GitHub Actions run `30287870327` พบว่า pytest-qt import `PySide6.QtGui` ไม่ได้เพราะไม่มี `libEGL.so.1` บน Ubuntu runner จึงติดตั้ง `libegl1` ซึ่งเป็น package ที่ให้ runtime library นี้เท่านั้น ไม่ติดตั้ง X11 package เพิ่มเติมโดยไม่มีหลักฐานว่าจำเป็น
+
 ## Actions and Dependency Installation
 
 Workflow ใช้:
 
 - `actions/checkout@v6` พร้อม `fetch-depth: 0` เพื่อให้ base commit ที่ใช้ตรวจ committed range มีอยู่ใน checkout
+- step `Install Qt runtime libraries` รัน `sudo apt-get update` และ `sudo apt-get install --yes libegl1` หลัง checkout และก่อน Python setup/dependency use
 - `actions/setup-python@v6` พร้อม pip cache และ `cache-dependency-path: pyproject.toml`
 - `python -m pip install -e ".[dev]"` เพื่อติดตั้ง application และ verification tools จาก Source of Truth เดียวกัน
 
@@ -98,6 +101,7 @@ CI กำหนด `BASE_SHA` ตาม event:
 - trigger สำหรับ push ที่ `main` และ Pull Request ที่ `main` โดยมี `types: [opened, synchronize, reopened, edited]`
 - `permissions`, job runtime และ job environment block
 - checkout, Python setup และ dependency-installation blocks
+- Qt EGL runtime installation block ที่ติดตั้งเฉพาะ `libegl1`
 - verification sequence ทั้งห้ารายการ รวมถึง `BASE_SHA` expression แบบ exact และ whitespace check แบบ base-to-HEAD committed range
 
 Contract test ไม่แทน GitHub Actions parser หรือ runner การรันจริงบน GitHub หลัง push ยังคงเป็น final integration verification
