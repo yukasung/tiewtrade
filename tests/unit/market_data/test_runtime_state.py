@@ -11,6 +11,13 @@ TRANSITION = datetime(2026, 1, 1, 0, 1, tzinfo=UTC)
 DELIVERY = datetime(2026, 1, 1, 0, 5, tzinfo=UTC)
 
 
+def test_runtime_state_exposes_rate_limit_diagnostics() -> None:
+    assert MarketDataRuntimeState.RATE_LIMITED == "rate_limited"
+    assert MarketDataRuntimeReason.RATE_LIMITED == "rate_limited"
+    assert MarketDataRuntimeReason.RATE_LIMIT_EXHAUSTED == "rate_limit_exhausted"
+    assert MarketDataRuntimeReason.SOURCE_FATAL == "source_fatal"
+
+
 class SequenceClock:
     def __init__(self, *values: datetime) -> None:
         self._values = iter(values)

@@ -11,6 +11,7 @@ class MarketDataRuntimeState(StrEnum):
     BACKFILLING = "backfilling"
     STALE = "stale"
     RECONNECTING = "reconnecting"
+    RATE_LIMITED = "rate_limited"
     FAILED_CLOSED = "failed_closed"
     STOPPED = "stopped"
 
@@ -25,6 +26,9 @@ class MarketDataRuntimeReason(StrEnum):
     DATA_STALE = "data_stale"
     SOURCE_DISCONNECTED = "source_disconnected"
     RECONNECT_EXHAUSTED = "reconnect_exhausted"
+    RATE_LIMITED = "rate_limited"
+    RATE_LIMIT_EXHAUSTED = "rate_limit_exhausted"
+    SOURCE_FATAL = "source_fatal"
     SOURCE_ERROR = "source_error"
     SINK_ERROR = "sink_error"
     STOP_REQUESTED = "stop_requested"
