@@ -37,7 +37,7 @@
 
 Workflow ทำงานเมื่อ:
 
-1. มี Pull Request ที่ target `main`
+1. มี Pull Request ที่ target `main` เมื่อเปิด, push commit ใหม่, เปิดใหม่ หรือเปลี่ยน target branch (`opened`, `synchronize`, `reopened`, `edited`)
 2. มีการ push เข้า `main`
 
 ไม่เรียก workflow จากทุก feature-branch push เพื่อลดการรันซ้ำ เพราะ branch ที่มี Pull Request จะถูกตรวจผ่าน `pull_request` event อยู่แล้ว
@@ -93,14 +93,12 @@ CI กำหนด `BASE_SHA` ตาม event:
 
 ## Workflow Contract Test
 
-เพิ่ม `tests/unit/test_ci_workflow.py` เพื่ออ่าน workflow เป็น text โดยไม่เพิ่ม YAML dependency ใหม่ และตรวจ requirement ที่ repository ควบคุมได้ เช่น:
+เพิ่ม `tests/unit/test_ci_workflow.py` เพื่ออ่าน workflow เป็น text โดยไม่เพิ่ม YAML dependency ใหม่ และตรวจ complete YAML blocks ที่ repository ควบคุมได้ ได้แก่:
 
-- มี trigger สำหรับ Pull Request และ push ที่ `main`
-- ใช้ `actions/checkout@v6` และ `actions/setup-python@v6`
-- ใช้ Python `3.12`
-- กำหนด `QT_QPA_PLATFORM=offscreen`
-- มีคำสั่ง verification ทั้งห้ารายการ
-- whitespace check ใช้ base-to-HEAD committed range
+- trigger สำหรับ push ที่ `main` และ Pull Request ที่ `main` โดยมี `types: [opened, synchronize, reopened, edited]`
+- `permissions`, job runtime และ job environment block
+- checkout, Python setup และ dependency-installation blocks
+- verification sequence ทั้งห้ารายการ รวมถึง `BASE_SHA` expression แบบ exact และ whitespace check แบบ base-to-HEAD committed range
 
 Contract test ไม่แทน GitHub Actions parser หรือ runner การรันจริงบน GitHub หลัง push ยังคงเป็น final integration verification
 
@@ -130,7 +128,7 @@ DEV-121 จะย้ายเป็น `Done` ได้เมื่อครบ�
 
 ระหว่าง implementation ใช้ TDD ตามลำดับ:
 
-1. เพิ่ม contract test และยืนยันว่า test ล้มเหลวเพราะ workflow ยังไม่มี
+1. เพิ่มหรือยกระดับ contract test และยืนยันว่า test ล้มเหลวเพราะ workflow ยังไม่มี behavior ที่ต้องการ
 2. เพิ่ม workflow ขั้นต่ำให้ contract test ผ่าน
 3. ปรับ `AGENTS.md` ให้ตรงกับ behavior ที่ implement
 4. รัน Python unit/integration tests, Ruff lint, Ruff format check, Mypy และ `git diff --check`

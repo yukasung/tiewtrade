@@ -12,7 +12,7 @@
 
 - Implementation เปลี่ยนเฉพาะ `.github/workflows/verify.yml`, `tests/unit/test_ci_workflow.py` และ `AGENTS.md`; branch มี design และ plan documents ของ DEV-121 เพิ่มเติมตาม development workflow
 - ห้ามเปลี่ยน production modules ใต้ `src/`, trading behavior, database schema หรือ `docs-site`
-- Workflow ทำงานเฉพาะ Pull Request ที่ target `main` และ push เข้า `main`
+- Workflow ทำงานเฉพาะ Pull Request ที่ target `main` สำหรับ event `opened`, `synchronize`, `reopened`, `edited` และ push เข้า `main`
 - ใช้ `ubuntu-latest`, timeout `10` นาที และ `permissions: contents: read`
 - ใช้ `actions/checkout@v6` พร้อม `fetch-depth: 0`
 - ใช้ `actions/setup-python@v6`, Python `3.12` และ pip cache จาก `pyproject.toml`
@@ -66,48 +66,65 @@ def _repository_instructions_text() -> str:
 def test_verify_workflow_targets_main_without_duplicate_branch_pushes() -> None:
     workflow = _workflow_text()
 
-    assert "push:\n    branches: [main]" in workflow
-    assert "pull_request:\n    branches: [main]" in workflow
+    assert (
+        "on:\n"
+        "  push:\n"
+        "    branches: [main]\n"
+        "  pull_request:\n"
+        "    branches: [main]\n"
+        "    types: [opened, synchronize, reopened, edited]"
+    ) in workflow
 
 
 def test_verify_workflow_uses_bounded_least_privilege_environment() -> None:
     workflow = _workflow_text()
 
-    required_fragments = (
-        "contents: read",
-        "runs-on: ubuntu-latest",
-        "timeout-minutes: 10",
-        "PYTHONPATH: src",
-        "QT_QPA_PLATFORM: offscreen",
-        "actions/checkout@v6",
-        "fetch-depth: 0",
-        "actions/setup-python@v6",
-        'python-version: "3.12"',
-        "cache: pip",
-        "cache-dependency-path: pyproject.toml",
-        'python -m pip install -e ".[dev]"',
-    )
+    assert (
+        "permissions:\n"
+        "  contents: read\n\n"
+        "jobs:\n"
+        "  verify:\n"
+        "    runs-on: ubuntu-latest\n"
+        "    timeout-minutes: 10\n"
+        "    env:\n"
+        "      PYTHONPATH: src\n"
+        "      QT_QPA_PLATFORM: offscreen"
+    ) in workflow
 
-    for fragment in required_fragments:
-        assert fragment in workflow
+    assert (
+        "      - name: Check out repository\n"
+        "        uses: actions/checkout@v6\n"
+        "        with:\n"
+        "          fetch-depth: 0\n\n"
+        "      - name: Set up Python\n"
+        "        uses: actions/setup-python@v6\n"
+        "        with:\n"
+        '          python-version: "3.12"\n'
+        "          cache: pip\n"
+        "          cache-dependency-path: pyproject.toml\n\n"
+        "      - name: Install application and development tools\n"
+        '        run: python -m pip install -e ".[dev]"'
+    ) in workflow
 
 
 def test_verify_workflow_runs_the_repository_checklist() -> None:
     workflow = _workflow_text()
 
-    required_commands = (
-        "python -m pytest -q",
-        "python -m ruff check .",
-        "python -m ruff format --check .",
-        "python -m mypy src",
-        'git diff --check "$BASE_SHA" HEAD',
-    )
-
-    for command in required_commands:
-        assert command in workflow
-
-    assert "github.event.pull_request.base.sha" in workflow
-    assert "github.event.before" in workflow
+    assert (
+        "      - name: Run tests\n"
+        "        run: python -m pytest -q\n\n"
+        "      - name: Run Ruff lint\n"
+        "        run: python -m ruff check .\n\n"
+        "      - name: Check Ruff formatting\n"
+        "        run: python -m ruff format --check .\n\n"
+        "      - name: Run Mypy\n"
+        "        run: python -m mypy src\n\n"
+        "      - name: Check committed whitespace\n"
+        "        env:\n"
+        "          BASE_SHA: ${{ github.event_name == 'pull_request' && "
+        "github.event.pull_request.base.sha || github.event.before }}\n"
+        "        run: git diff --check \"$BASE_SHA\" HEAD"
+    ) in workflow
     assert "continue-on-error" not in workflow
 ```
 
@@ -120,7 +137,7 @@ env PYTHONPATH=src QT_QPA_PLATFORM=offscreen \
   ../../.venv/bin/python -m pytest tests/unit/test_ci_workflow.py -q
 ```
 
-Expected: `3 failed` โดยมี `FileNotFoundError` สำหรับ `.github/workflows/verify.yml`
+Expected สำหรับ regression นี้: `1 failed, 3 passed` เพราะ trigger block ยังไม่มี `edited`
 
 - [ ] **Step 3: Add the minimal GitHub Actions workflow**
 
@@ -134,6 +151,7 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+    types: [opened, synchronize, reopened, edited]
 
 permissions:
   contents: read
@@ -189,7 +207,7 @@ env PYTHONPATH=src QT_QPA_PLATFORM=offscreen \
   ../../.venv/bin/python -m pytest tests/unit/test_ci_workflow.py -q
 ```
 
-Expected: `3 passed`
+Expected: `4 passed`
 
 - [ ] **Step 5: Run focused static checks**
 
