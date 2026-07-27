@@ -10,6 +10,7 @@ from tiewtrade.application.paper_session_setup import (
 )
 from tiewtrade.integrations.sqlite.database import SQLiteDatabase
 from tiewtrade.market_data.config import MarketDataConfig
+from tiewtrade.strategies.rsi_step_grid.preset import RsiStepGridPreset
 from tiewtrade.trading.entry_policy import EntryPolicy
 from tiewtrade.trading.futures_policy import (
     FuturesTradingPolicy,
@@ -73,6 +74,10 @@ class SQLiteActivePaperSessions:
 
 
 def _session_from_row(row: sqlite3.Row) -> ConfiguredPaperSession:
+    if row["symbol"] != "BTCUSDT":
+        raise PaperSessionUnavailableError("Active Paper Session read failed")
+    if row["preset_version"] != RsiStepGridPreset.v1().version:
+        raise PaperSessionUnavailableError("Active Paper Session read failed")
     market_type = MarketType(row["market_type"])
     spot_policy = (
         SpotTradingPolicy(Decimal(row["spot_trading_capital_ratio"]))

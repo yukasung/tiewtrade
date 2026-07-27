@@ -72,6 +72,35 @@ def test_get_active_returns_none_when_database_has_no_session(tmp_path: Path) ->
     assert SQLiteActivePaperSessions(database).get_active() is None
 
 
+@pytest.mark.parametrize(
+    ("column", "unsupported_value"),
+    [
+        pytest.param("symbol", "ETHUSDT", id="symbol"),
+        pytest.param("preset_version", "rsi-step-grid-v2", id="preset-version"),
+    ],
+)
+def test_get_active_fails_closed_for_unsupported_durable_session_identity(
+    tmp_path: Path,
+    column: str,
+    unsupported_value: str,
+) -> None:
+    database = SQLiteDatabase(tmp_path / "tiewtrade.sqlite3")
+    database.migrate()
+    store = SQLiteActivePaperSessions(database)
+    store.create(configured_spot_session())
+    with database.connect() as connection:
+        connection.execute(
+            f"UPDATE bot_sessions SET {column} = ?",
+            (unsupported_value,),
+        )
+
+    with pytest.raises(
+        PaperSessionUnavailableError,
+        match="Active Paper Session read failed",
+    ):
+        store.get_active()
+
+
 def test_migration_from_v2_preserves_trade_history_record(tmp_path: Path) -> None:
     database = SQLiteDatabase(tmp_path / "tiewtrade.sqlite3")
     with database.connect() as connection:

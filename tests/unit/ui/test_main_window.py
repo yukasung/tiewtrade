@@ -2,6 +2,7 @@ import threading
 from copy import copy
 from dataclasses import replace
 from decimal import Decimal
+from pathlib import Path
 
 import pytest
 from PySide6.QtCore import Qt, QThreadPool
@@ -18,6 +19,10 @@ from tiewtrade.application.paper_session_setup import (
     PaperSessionUnavailableError,
     PaperSessionValidationError,
 )
+from tiewtrade.integrations.sqlite.active_paper_sessions import (
+    SQLiteActivePaperSessions,
+)
+from tiewtrade.integrations.sqlite.database import SQLiteDatabase
 from tiewtrade.trading.futures_policy import FuturesTradingPolicy
 from tiewtrade.trading.spot_policy import SpotTradingPolicy
 from tiewtrade.ui.main_window import MainWindow
@@ -278,6 +283,32 @@ def test_sqlite_failure_shows_unavailable_without_fake_overview(qtbot: QtBot) ->
     assert window.current_page_name == "Unavailable"
     assert window.unavailable_message.text() == "Session storage is unavailable"
     assert "/private/tmp" not in window.unavailable_message.text()
+    assert not window.overview.isVisible()
+
+
+def test_corrupt_sqlite_session_stays_unavailable_without_persisted_text(
+    qtbot: QtBot,
+    tmp_path: Path,
+) -> None:
+    database = SQLiteDatabase(tmp_path / "tiewtrade.sqlite3")
+    database.migrate()
+    store = SQLiteActivePaperSessions(database)
+    store.create(configured_spot_session())
+    unsupported_symbol = "PRIVATE-PERSISTED-SYMBOL"
+    with database.connect() as connection:
+        connection.execute(
+            "UPDATE bot_sessions SET symbol = ?",
+            (unsupported_symbol,),
+        )
+    window = MainWindow(create_session=unused_create, load_active=store.get_active)
+    qtbot.addWidget(window)
+    window.show()
+
+    qtbot.waitUntil(window.unavailable_panel.isVisible)
+
+    assert window.current_page_name == "Unavailable"
+    assert window.unavailable_message.text() == "Session storage is unavailable"
+    assert unsupported_symbol not in window.unavailable_message.text()
     assert not window.overview.isVisible()
 
 

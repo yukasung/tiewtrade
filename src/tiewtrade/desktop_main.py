@@ -14,18 +14,23 @@ from tiewtrade.ui.desktop import run_desktop as run_desktop_ui
 
 
 def run_desktop(database_path: Path | None = None) -> int:
-    database = SQLiteDatabase(database_path or default_database_path())
+    resolved_database_path = database_path or default_database_path()
+    database = SQLiteDatabase(resolved_database_path)
     store = SQLiteActivePaperSessions(database)
     create_session = CreatePaperSession(create_active=store.create)
+
+    def prepare_database() -> None:
+        resolved_database_path.parent.mkdir(parents=True, exist_ok=True)
+        database.migrate()
 
     def create_after_migration(
         values: PaperSessionSetupValues,
     ) -> PaperSessionCreateOutcome:
-        database.migrate()
+        prepare_database()
         return create_session.execute(values)
 
     def load_after_migration() -> ConfiguredPaperSession | None:
-        database.migrate()
+        prepare_database()
         return store.get_active()
 
     return run_desktop_ui(
@@ -36,7 +41,6 @@ def run_desktop(database_path: Path | None = None) -> int:
 
 def default_database_path() -> Path:
     directory = Path.home() / "Library" / "Application Support" / "TiewTrade"
-    directory.mkdir(parents=True, exist_ok=True)
     return directory / "tiewtrade.sqlite3"
 
 
