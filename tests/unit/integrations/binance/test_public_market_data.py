@@ -3,25 +3,34 @@ from __future__ import annotations
 import asyncio
 import json
 from collections.abc import AsyncIterator, Iterable
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
 import aiohttp
 import pytest
 from aiohttp import WSMsgType
 
-from tiewtrade.integrations.binance.public_endpoints import (
-    BinanceMarketDataPayloadError,
-    BinancePublicEndpoints,
-)
+from tiewtrade.integrations.binance.public_endpoints import BinancePublicEndpoints
 from tiewtrade.integrations.binance.public_market_data import BinancePublicMarketData
 from tiewtrade.market_data.config import MarketDataConfig
+from tiewtrade.market_data.source_errors import (
+    MarketDataFatalError,
+    MarketDataRateLimitError,
+    MarketDataRetryableError,
+)
 from tiewtrade.trading.session_config import MarketType
 
 
 class FakeResponse:
-    def __init__(self, *, status: int = 200, payload: object = None) -> None:
+    def __init__(
+        self,
+        *,
+        status: int = 200,
+        payload: object = None,
+        headers: dict[str, str] | None = None,
+    ) -> None:
         self.status = status
         self._payload = payload
+        self.headers = headers or {}
 
     async def __aenter__(self) -> FakeResponse:
         return self
@@ -260,25 +269,101 @@ def test_load_range_stops_on_empty_or_nonadvancing_page(
     assert len(candles) == candle_count
 
 
-@pytest.mark.parametrize(
-    "response",
-    [
-        FakeResponse(status=503, payload=[]),
-        FakeResponse(payload={"code": -1121, "msg": "invalid symbol"}),
-        FakeResponse(payload=ValueError("malformed JSON")),
-    ],
-)
-def test_rest_failures_raise_stable_payload_error(response: FakeResponse) -> None:
-    source, _ = source_with(rest_pages=[response])
-
-    with pytest.raises(BinanceMarketDataPayloadError, match="invalid Binance"):
-        asyncio.run(
-            source.load_recent(
-                config(),
-                count=1,
-                completed_before=datetime(2026, 1, 1, tzinfo=UTC),
-            )
+def load_one(source: BinancePublicMarketData) -> None:
+    asyncio.run(
+        source.load_recent(
+            config(),
+            count=1,
+            completed_before=datetime(2026, 1, 1, tzinfo=UTC),
         )
+    )
+
+
+def test_429_preserves_delta_seconds_retry_after() -> None:
+    source, _ = source_with(
+        rest_pages=[
+            FakeResponse(
+                status=429,
+                headers={"Retry-After": "45"},
+            )
+        ]
+    )
+
+    with pytest.raises(MarketDataRateLimitError) as captured:
+        load_one(source)
+
+    assert captured.value.retry_after == timedelta(seconds=45)
+
+
+def test_429_preserves_http_date_retry_after() -> None:
+    source, _ = source_with(
+        rest_pages=[
+            FakeResponse(
+                status=429,
+                headers={"Retry-After": "Thu, 01 Jan 2026 00:01:00 GMT"},
+            )
+        ]
+    )
+
+    with pytest.raises(MarketDataRateLimitError) as captured:
+        load_one(source)
+
+    assert captured.value.retry_after == datetime(2026, 1, 1, 0, 1, tzinfo=UTC)
+
+
+@pytest.mark.parametrize("header", [None, "", "not-a-date"])
+def test_429_without_valid_retry_after_uses_no_directive(
+    header: str | None,
+) -> None:
+    headers = {} if header is None else {"Retry-After": header}
+    source, _ = source_with(rest_pages=[FakeResponse(status=429, headers=headers)])
+
+    with pytest.raises(MarketDataRateLimitError) as captured:
+        load_one(source)
+
+    assert captured.value.retry_after is None
+
+
+@pytest.mark.parametrize("status", [418, 429])
+def test_rate_limit_statuses_raise_rate_limit_error(status: int) -> None:
+    source, _ = source_with(rest_pages=[FakeResponse(status=status)])
+
+    with pytest.raises(MarketDataRateLimitError):
+        load_one(source)
+
+
+def test_400_raises_fatal_error() -> None:
+    source, _ = source_with(rest_pages=[FakeResponse(status=400)])
+
+    with pytest.raises(MarketDataFatalError):
+        load_one(source)
+
+
+def test_503_raises_retryable_error() -> None:
+    source, _ = source_with(rest_pages=[FakeResponse(status=503)])
+
+    with pytest.raises(MarketDataRetryableError):
+        load_one(source)
+
+
+def test_transport_failure_raises_retryable_error() -> None:
+    source, _ = source_with(
+        rest_pages=[FakeResponse(payload=aiohttp.ClientConnectionError("offline"))]
+    )
+
+    with pytest.raises(MarketDataRetryableError):
+        load_one(source)
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [{"code": -1121, "msg": "invalid symbol"}, ValueError("bad JSON")],
+)
+def test_invalid_rest_payload_raises_fatal_error(payload: object) -> None:
+    source, _ = source_with(rest_pages=[FakeResponse(payload=payload)])
+
+    with pytest.raises(MarketDataFatalError):
+        load_one(source)
 
 
 def test_stream_completed_ignores_open_updates_and_uses_symbol_stream_url() -> None:

@@ -1,6 +1,7 @@
 import json
 from collections.abc import AsyncIterator
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
+from email.utils import parsedate_to_datetime
 
 import aiohttp
 
@@ -14,10 +15,37 @@ from tiewtrade.integrations.binance.public_endpoints import (
 )
 from tiewtrade.market_data.candle import Candle
 from tiewtrade.market_data.config import MarketDataConfig
+from tiewtrade.market_data.source_errors import (
+    MarketDataFatalError,
+    MarketDataRateLimitError,
+    MarketDataRetryableError,
+    RetryAfter,
+)
 
 _INVALID_RESPONSE_MESSAGE = "invalid Binance market-data response"
 _PAGE_LIMIT = 1_000
 _HTTP_REQUEST_TIMEOUT_SECONDS = 30.0
+
+
+def _parse_retry_after(value: str | None) -> RetryAfter | None:
+    if value is None:
+        return None
+    normalized = value.strip()
+    if not normalized:
+        return None
+    try:
+        seconds = int(normalized)
+    except ValueError:
+        try:
+            parsed = parsedate_to_datetime(normalized)
+        except (TypeError, ValueError, OverflowError):
+            return None
+        if parsed.tzinfo is None:
+            return None
+        return parsed.astimezone(UTC)
+    if seconds < 0:
+        return None
+    return timedelta(seconds=seconds)
 
 
 class BinancePublicMarketData:
@@ -119,16 +147,42 @@ class BinancePublicMarketData:
             async with session.get(
                 self._endpoints.rest_klines_url, params=params
             ) as response:
+                if response.status in {418, 429}:
+                    raise MarketDataRateLimitError(
+                        "Binance market data is rate limited",
+                        retry_after=_parse_retry_after(
+                            response.headers.get("Retry-After")
+                        ),
+                    )
+                if 500 <= response.status < 600:
+                    raise MarketDataRetryableError(
+                        "Binance market-data service is unavailable"
+                    )
                 if not 200 <= response.status < 300:
-                    raise ValueError
+                    raise MarketDataFatalError(
+                        "Binance rejected the market-data request"
+                    )
                 payload = await response.json()
             if not isinstance(payload, list):
                 raise ValueError
             return tuple(parse_rest_kline(item, config) for item in payload)
-        except BinanceMarketDataPayloadError:
+        except (
+            MarketDataRetryableError,
+            MarketDataRateLimitError,
+            MarketDataFatalError,
+        ):
             raise
-        except (aiohttp.ClientError, TimeoutError, TypeError, ValueError) as error:
-            raise BinanceMarketDataPayloadError(_INVALID_RESPONSE_MESSAGE) from error
+        except (aiohttp.ClientError, TimeoutError) as error:
+            raise MarketDataRetryableError(
+                "Binance market-data transport failed"
+            ) from error
+        except (
+            BinanceMarketDataPayloadError,
+            json.JSONDecodeError,
+            TypeError,
+            ValueError,
+        ) as error:
+            raise MarketDataFatalError(_INVALID_RESPONSE_MESSAGE) from error
 
     async def _stream_completed(
         self, config: MarketDataConfig
@@ -154,16 +208,23 @@ class BinancePublicMarketData:
                         return
                     else:
                         raise ValueError
-        except BinanceMarketDataPayloadError:
-            raise
         except (
-            aiohttp.ClientError,
-            TimeoutError,
+            MarketDataRetryableError,
+            MarketDataRateLimitError,
+            MarketDataFatalError,
+        ):
+            raise
+        except (aiohttp.ClientError, TimeoutError) as error:
+            raise MarketDataRetryableError(
+                "Binance market-data transport failed"
+            ) from error
+        except (
+            BinanceMarketDataPayloadError,
             json.JSONDecodeError,
             TypeError,
             ValueError,
         ) as error:
-            raise BinanceMarketDataPayloadError(_INVALID_RESPONSE_MESSAGE) from error
+            raise MarketDataFatalError(_INVALID_RESPONSE_MESSAGE) from error
 
     def stream_completed(self, config: MarketDataConfig) -> AsyncIterator[Candle]:
         return self._stream_completed(config)
