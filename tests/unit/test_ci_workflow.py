@@ -59,3 +59,10 @@ def test_verify_workflow_runs_the_repository_checklist() -> None:
     assert "github.event.pull_request.base.sha" in workflow
     assert "github.event.before" in workflow
     assert "continue-on-error" not in workflow
+
+
+def test_repository_instructions_distinguish_local_and_ci_whitespace() -> None:
+    instructions = _repository_instructions_text()
+
+    assert "`git diff --check` สำหรับ working-tree changes" in instructions
+    assert "`git diff --check <base> HEAD` สำหรับ committed range" in instructions
