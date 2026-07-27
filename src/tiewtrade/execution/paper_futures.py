@@ -116,6 +116,9 @@ class PaperFuturesExecutor:
         *,
         liquidation_price: Decimal,
     ) -> PaperFuturesExitFill | None:
+        if not liquidation_price.is_finite() or liquidation_price <= 0:
+            raise ValueError("liquidation_price must be finite and positive")
+
         if basket.position_side is PositionSide.LONG:
             if candle.low > liquidation_price:
                 return None
@@ -150,10 +153,13 @@ class PaperFuturesExecutor:
         close_reason: BasketCloseReason,
         filled_at: datetime,
     ) -> PaperFuturesExitFill | None:
-        if price <= 0:
+        if not price.is_finite() or price <= 0:
             return None
 
         quantity = basket.total_quantity
+        if not quantity.is_finite() or quantity <= 0:
+            return None
+
         order_id = f"{close_reason.value}:{basket.basket_id}"
         return PaperFuturesExitFill(
             order_id=order_id,
