@@ -126,9 +126,11 @@ Lifecycle:
 - Collateral Buffer: 50% ของ Available Capital
 - Initial margin budget ต่อ Entry: Trading Capital หาร `max_entries`
 - Target notional ต่อ Entry: Initial margin budget ต่อ Entry คูณด้วย leverage ของ Session
-- ใช้ Cross Margin
-- Leverage ต้องไม่เกิน 5x
+- Internal Alpha ใช้ One-way Mode และ Cross Margin เท่านั้น
+- Leverage เป็นจำนวนเต็ม 1x–5x และตรึงตลอด Session
 - Collateral Buffer ไม่ถูกใช้สร้าง Entry ใหม่ แต่ถือเป็นเงินที่ผู้ใช้ยอมเสี่ยงทั้งหมดเพื่อเลื่อน liquidation
+- Paper Futures Policy v1 ใช้ Maintenance Margin Rate 0.5% แบบ deterministic ไม่อ้างว่าเท่ากับ Binance Mark Price หรือ Maintenance Margin Tier จริง
+- Liquidation ปิด Basket ด้วย `close_reason = LIQUIDATION`, เปลี่ยน Session เป็น terminal `LIQUIDATED` และห้ามสร้าง Entry ใหม่
 
 ระบบต้องบังคับ immutable Session policy, capital allocation, leverage cap และ `max_entries` ใน Paper และ Live ด้วยกติกาชุดเดียวกัน
 
@@ -141,6 +143,7 @@ Paper Trading ใช้ conservative candle fill เพื่อให้ replay
 - คำนวณ fee และ slippage ด้วยค่าที่กำหนดใน Session
 - Take Profit เริ่มทำงานหลัง Entry Fill และ Fill เมื่อช่วงราคาของ candle ถัดจาก candle ที่ Entry Fill แตะระดับ Limit เพื่อหลีกเลี่ยงการสมมติลำดับราคา intrabar
 - Paper Futures Phase แรกบันทึก Funding Fee เป็น `0.00` และยังไม่จำลอง funding
+- Paper Futures execution contract รองรับ `LONG` และ `SHORT` แต่ RSI Step Grid Preset v1 ยังสร้างเฉพาะ `LONG`
 - fee และ slippage configuration ต้องถูกตรึงตลอด Session
 - เมื่อใช้ข้อมูลตลาดและ Preset version เดิม Paper replay ต้องให้ผลลัพธ์เดิม
 
@@ -264,6 +267,7 @@ SQLite เก็บข้อมูลที่ไม่ใช่ secret ได�
 - Basket Take Profit, Entry Pair และ Cooldown Month ผ่าน automated tests
 - Paper Fill ไม่มี look-ahead bias และ replay ได้ผลเดิม
 - fee และ slippage ถูกคำนวณและบันทึก โดย Paper Futures Phase แรกบันทึก Funding Fee เป็น `0.00`
+- Paper Futures ใช้ Trading Capital และ Collateral Buffer อย่างละ 50%, One-way Mode, Cross Margin, leverage จำนวนเต็ม 1x–5x ที่ตรึงตลอด Session และ Liquidation แบบ deterministic
 - Restart แล้วกู้ Session และ Basket ได้โดยไม่สร้าง Entry หรือ Order ซ้ำ
 - ระบบบังคับหนึ่ง Active Bot Session สำหรับ installation
 - UI แสดง state, PnL, Drawdown, data freshness และเหตุการณ์สำคัญ

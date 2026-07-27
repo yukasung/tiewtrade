@@ -10,6 +10,19 @@
 - `SPOT` — ซื้อขาย Spot และใช้ Spot capital policy
 - `FUTURES` — ใช้ Futures margin, leverage, funding และ liquidation-related account facts
 
+## Position Side
+
+- `LONG` — Position ที่ได้กำไรเมื่อราคาปรับขึ้น
+- `SHORT` — Position ที่ได้กำไรเมื่อราคาปรับลง
+- Paper Futures execution contract รองรับ `LONG` และ `SHORT` แต่ RSI Step Grid Preset v1 ยังสร้างเฉพาะ `LONG`
+
+## Futures Trading Policy
+
+`FuturesTradingPolicy` เป็น immutable policy ของ Futures Session ที่กำหนด Trading
+Capital 50%, Collateral Buffer 50%, leverage จำนวนเต็ม 1x–5x ที่ตรึงตลอด Session,
+One-way Mode, Cross Margin และ Maintenance Margin Rate 0.5% แบบ deterministic โดยไม่
+อ้างว่าเท่ากับ Binance Mark Price หรือ Maintenance Margin Tier จริง
+
 ## Shared Policy Rule
 
 Paper และ Live ใช้ business rules ชุดเดียวกันสำหรับ Strategy, capital, Basket, Entry Pair, risk policy และ PnL แต่ใช้ execution adapter แยกกัน
@@ -47,5 +60,15 @@ RSI parameters, take-profit rule, Entry Pair และ Cooldown Month ยัง�
 กฎเฉพาะตลาดต้องถูกตรวจสอบที่ boundary ก่อนเริ่ม session:
 
 - Spot ใช้ Spot capital policy
-- Futures ใช้ Cross Margin, leverage และ collateral buffer ตาม preset/policy
+- Futures ใช้ `FuturesTradingPolicy` ที่กำหนด One-way Mode, Cross Margin, leverage และ collateral buffer
 - Paper และ Live ใช้ business/risk policy เดียวกัน แต่ใช้ execution adapter แยกกัน
+
+### Liquidation
+
+Liquidation เป็นผลลัพธ์แบบ deterministic ของ Paper Futures Policy v1 ที่ปิด Basket
+และห้ามสร้าง Entry ใหม่
+
+### Basket Close Reason
+
+เมื่อเกิด Liquidation Basket ต้องมี `close_reason = LIQUIDATION` และ Session เปลี่ยนเป็น
+terminal `LIQUIDATED`

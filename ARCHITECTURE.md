@@ -14,6 +14,9 @@ Paper และ Live ใช้ implementation เดียวกันของ 
 - Basket และ Entry Pair/Cooldown Month
 - Risk policies และ PnL calculation
 
+`trading` เป็นเจ้าของ Futures side-aware PnL และ margin policy รวมถึง One-way Mode,
+Cross Margin, leverage และ liquidation rules
+
 การใช้ implementation ร่วมกันทำให้ Paper replay และ Live decision ใช้กติกาเดียวกัน ลดความเสี่ยงที่ผลทดสอบกับผลใช้งานจริงจะแตกต่างกัน
 
 ## Execution Adapters
@@ -27,6 +30,9 @@ Execution เป็น seam ที่แยก side effects ออกจาก b
 | Live | Futures | จัดการ Futures order, margin, leverage, funding และ reconciliation |
 
 Paper และ Live ห้ามใช้ execution implementation เดียวกัน เพราะ failure modes, account facts และ side effects ต่างกัน แม้จะใช้ business rules ร่วมกัน
+
+`execution` เป็นเจ้าของ Paper fills และ deterministic simulation โดยไม่คำนวณหรือเปลี่ยน
+business policy
 
 ## Configuration Boundary
 
@@ -53,6 +59,11 @@ Configuration นี้ไม่มี side effect และไม่เลื�
 ## Dependency Direction
 
 Business rules ไม่ import Binance SDK, SQLite หรือ UI รายละเอียด integration ต้องอยู่ใน adapter ที่ implement interface ของ consumer Module
+
+`application` เป็นเจ้าของ completed-candle orchestration ที่จัดลำดับ `trading` policy
+และ `execution` adapter ห้ามมี reverse dependency จาก `trading` หรือ `execution` กลับไป
+หา `application` และห้าม Module ใดเข้าถึง Binance Private API นอกจาก concrete Live
+integration ที่ส่งมอบตาม Live gate
 
 ## Persistence Boundary
 

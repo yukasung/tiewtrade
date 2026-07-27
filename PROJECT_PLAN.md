@@ -79,10 +79,11 @@ Recovery, Paper Futures, public market-data runtime และ Desktop UI
 1. บังคับ one Active Bot Session สำหรับ installation และ Session ownership โดยตรง
 2. เพิ่ม SQLite migrations, durable trade history, audit trail และ Recovery state
 3. Public Binance market-data adapter, reconnect, backfill และ stale-data fail closed
-4. Paper Futures: leverage, Cross Margin, Collateral Buffer และบันทึก Funding Fee เป็น `0.00`
-5. Desktop UI สำหรับ Session setup, Dashboard, Orders, Positions และ Notifications
-6. Stop Session, startup Recovery และ deterministic reconciliation ด้วย fake adapters
-7. Paper acceptance ครบทั้ง business rules, persistence, UI และ Recovery
+4. Paper Futures Core: shared Futures PnL policy, immutable session policy, leverage, Cross Margin, Collateral Buffer, liquidation และ Funding Fee `0.00`
+5. Paper Futures Execution: concrete executor และ deterministic Paper fills
+6. DEV-95 — Desktop UI สำหรับ Session setup, Dashboard, Orders, Positions และ Notifications; ยัง blocked จนกว่า concrete executor และ shared Futures PnL policy จะเสร็จ
+7. Stop Session, startup Recovery และ deterministic reconciliation ด้วย fake adapters
+8. Paper acceptance ครบทั้ง business rules, persistence, UI และ Recovery
 
 สถานะ DEV-92–DEV-94: durable Paper Spot SQLite history รองรับ normalized
 Basket/Fill, exact Decimal/UTC round-trip, deterministic IDs, atomic writes,
@@ -126,9 +127,9 @@ startup Recovery ยังคงอยู่ในลำดับถัดไป
 | Candle และ continuity | `market_data` | รับ symbol/timeframe จาก configuration |
 | Session และ immutable policies | `trading` | ไม่เลือก adapter |
 | RSI Step Grid | `strategies/rsi_step_grid` | ไม่รู้จัก Paper หรือ Live |
-| Basket, capital และ Entry Pair | `trading` | ใช้ร่วมกันทุก Trade Mode |
-| Session orchestration | `application` | จัดลำดับ shared business rules กับ execution adapter |
-| Paper execution | `execution` | จำลอง side effects โดยไม่เรียก Binance |
+| Basket, capital, Entry Pair, Futures PnL และ margin policy | `trading` | ใช้ร่วมกันทุก Trade Mode; policy เป็น side-aware |
+| Session และ completed-candle orchestration | `application` | จัดลำดับ shared business rules กับ execution adapter |
+| Paper execution | `execution` | จำลอง deterministic Paper fills และ side effects โดยไม่เรียก Binance |
 | Binance public market data | `integrations/binance` | ส่งมอบใน Paper Trading Complete โดยไม่ใช้ credentials |
 | Binance Live execution | `integrations/binance` | เพิ่มตาม Live gates เท่านั้น |
 | Persistence | `integrations/sqlite` | จัดการ transaction, durable mapping และ persistence-specific fail-closed coordinator; ไม่เก็บ secrets |

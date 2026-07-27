@@ -17,6 +17,7 @@ from tiewtrade.market_data.config import MarketDataConfig
 from tiewtrade.market_data.runtime import MarketDataRuntime
 from tiewtrade.strategies.rsi_step_grid.preset import RsiStepGridPreset
 from tiewtrade.trading.entry_policy import EntryPolicy
+from tiewtrade.trading.futures_policy import FuturesTradingPolicy
 from tiewtrade.trading.session_config import MarketType, SessionConfig, TradeMode
 from tiewtrade.trading.spot_policy import SpotTradingPolicy
 
@@ -126,6 +127,11 @@ def session_config(market_type: MarketType) -> SessionConfig:
         spot_policy=(
             SpotTradingPolicy(trading_capital_ratio=Decimal("0.6"))
             if market_type is MarketType.SPOT
+            else None
+        ),
+        futures_policy=(
+            FuturesTradingPolicy.v1(leverage=3)
+            if market_type is MarketType.FUTURES
             else None
         ),
     )

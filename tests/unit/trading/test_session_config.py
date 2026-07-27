@@ -5,6 +5,7 @@ from uuid import UUID
 import pytest
 
 from tiewtrade.trading.entry_policy import EntryPolicy
+from tiewtrade.trading.futures_policy import FuturesTradingPolicy
 from tiewtrade.trading.session_config import (
     MarketType,
     SessionConfig,
@@ -26,6 +27,7 @@ def make_config(**overrides: object) -> SessionConfig:
         "slippage_bps": Decimal("2"),
         "entry_policy": EntryPolicy(max_entries=10),
         "spot_policy": SpotTradingPolicy(trading_capital_ratio=Decimal("0.80")),
+        "futures_policy": None,
     }
     values.update(overrides)
     return SessionConfig(**values)  # type: ignore[arg-type]
@@ -49,6 +51,11 @@ def test_session_configuration_supports_each_mode_and_market(
         spot_policy=(
             SpotTradingPolicy(trading_capital_ratio=Decimal("0.80"))
             if market_type is MarketType.SPOT
+            else None
+        ),
+        futures_policy=(
+            FuturesTradingPolicy.v1(leverage=3)
+            if market_type is MarketType.FUTURES
             else None
         ),
     )
@@ -75,12 +82,23 @@ def test_spot_session_requires_spot_policy() -> None:
         make_config(spot_policy=None)
 
 
+def test_futures_session_requires_futures_policy() -> None:
+    with pytest.raises(ValueError, match="futures_policy"):
+        make_config(market_type=MarketType.FUTURES, spot_policy=None)
+
+
 def test_futures_session_rejects_spot_policy() -> None:
     with pytest.raises(ValueError, match="spot_policy"):
         make_config(
             market_type=MarketType.FUTURES,
             spot_policy=SpotTradingPolicy(trading_capital_ratio=Decimal("0.80")),
+            futures_policy=FuturesTradingPolicy.v1(leverage=3),
         )
+
+
+def test_spot_session_rejects_futures_policy() -> None:
+    with pytest.raises(ValueError, match="futures_policy"):
+        make_config(futures_policy=FuturesTradingPolicy.v1(leverage=3))
 
 
 def test_session_configuration_is_immutable() -> None:
