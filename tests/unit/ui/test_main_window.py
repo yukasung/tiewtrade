@@ -4,7 +4,7 @@ from dataclasses import replace
 from decimal import Decimal
 
 import pytest
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QThreadPool
 from pytestqt.qtbot import QtBot
 
 from tests.support.paper_session_setup import (
@@ -208,8 +208,9 @@ def test_persistence_failure_shows_sanitized_unavailable_state_and_allows_retry(
     assert window.unavailable_message.text() == "Session storage is unavailable"
     assert window.current_page_name == "Unavailable"
     assert "/private/tmp" not in window.unavailable_message.text()
+    qtbot.waitUntil(window.unavailable_retry_button.isEnabled)
     qtbot.mouseClick(window.unavailable_retry_button, Qt.MouseButton.LeftButton)
-    assert window.current_page_name == "Session Setup"
+    qtbot.waitUntil(lambda: window.current_page_name == "Session Setup")
     assert window.setup.create_button.isEnabled() is True
 
 
@@ -280,17 +281,104 @@ def test_sqlite_failure_shows_unavailable_without_fake_overview(qtbot: QtBot) ->
     assert not window.overview.isVisible()
 
 
-def test_closing_window_ignores_late_worker_result(qtbot: QtBot) -> None:
+def test_retry_after_startup_load_failure_reloads_existing_session(
+    qtbot: QtBot,
+) -> None:
+    existing = configured_spot_session()
+    load_calls = 0
+
+    def fail_then_load_existing() -> ConfiguredPaperSession | None:
+        nonlocal load_calls
+        load_calls += 1
+        if load_calls == 1:
+            raise PaperSessionUnavailableError(
+                "sqlite3.OperationalError: unable to open "
+                "/private/tmp/tiewtrade.sqlite3"
+            )
+        return existing
+
+    window = MainWindow(
+        create_session=unused_create,
+        load_active=fail_then_load_existing,
+    )
+    qtbot.addWidget(window)
+    window.show()
+
+    qtbot.waitUntil(window.unavailable_panel.isVisible)
+    qtbot.waitUntil(window.unavailable_retry_button.isEnabled)
+    assert load_calls == 1
+    assert not window.setup.isVisible()
+    assert not window.setup.create_button.isEnabled()
+
+    qtbot.mouseClick(window.unavailable_retry_button, Qt.MouseButton.LeftButton)
+
+    qtbot.waitUntil(lambda: window.current_page_name == "Session Overview")
+    assert load_calls == 2
+    assert window.overview.session_id_value.text() == str(existing.config.session_id)
+
+
+@pytest.mark.parametrize(
+    ("error", "expected_message"),
+    [
+        pytest.param(
+            PaperSessionValidationError("available_capital", "invalid persisted value"),
+            "Paper Session could not be loaded",
+            id="validation",
+        ),
+        pytest.param(
+            PaperSessionUnavailableError(
+                "SQLite failed at /private/tmp/tiewtrade.sqlite3"
+            ),
+            "Session storage is unavailable",
+            id="storage",
+        ),
+        pytest.param(
+            RuntimeError("unexpected SQLite failure at /private/tmp/tiewtrade.sqlite3"),
+            "Paper Session could not be loaded",
+            id="unknown",
+        ),
+    ],
+)
+def test_load_failures_stay_fail_closed_with_sanitized_copy(
+    qtbot: QtBot,
+    error: Exception,
+    expected_message: str,
+) -> None:
+    def fail_load() -> ConfiguredPaperSession | None:
+        raise error
+
+    window = MainWindow(create_session=unused_create, load_active=fail_load)
+    qtbot.addWidget(window)
+    window.show()
+
+    qtbot.waitUntil(window.unavailable_panel.isVisible)
+
+    assert window.current_page_name == "Unavailable"
+    assert window.unavailable_message.text() == expected_message
+    assert not window.setup.isVisible()
+    assert window.setup.available_capital_error.text() == ""
+    assert "private/tmp" not in window.unavailable_message.text()
+
+
+def test_closing_window_ignores_late_worker_result_and_releases_task(
+    qtbot: QtBot,
+) -> None:
     started = threading.Event()
     release = threading.Event()
     existing = configured_spot_session()
+    thread_pool = QThreadPool()
+    thread_pool.setMaxThreadCount(1)
 
     def delayed_load() -> ConfiguredPaperSession | None:
         started.set()
         release.wait(timeout=1)
         return existing
 
-    window = MainWindow(create_session=unused_create, load_active=delayed_load)
+    window = MainWindow(
+        create_session=unused_create,
+        load_active=delayed_load,
+        thread_pool=thread_pool,
+    )
     qtbot.addWidget(window)
     window.show()
     qtbot.waitUntil(started.is_set)
@@ -300,7 +388,8 @@ def test_closing_window_ignores_late_worker_result(qtbot: QtBot) -> None:
 
     window.close()
     release.set()
-    qtbot.wait(50)
+    assert thread_pool.waitForDone(1_000)
+    qtbot.waitUntil(lambda: not window._tasks)
 
     assert not window.isVisible()
     assert window.current_page_name == page_before_close
