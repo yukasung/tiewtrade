@@ -65,6 +65,16 @@ Business rules ไม่ import Binance SDK, SQLite หรือ UI รายล
 หา `application` และห้าม Module ใดเข้าถึง Binance Private API นอกจาก concrete Live
 integration ที่ส่งมอบตาม Live gate
 
+## Desktop UI Boundary
+
+`ui` ใช้ PySide6 เป็น thin presentation layer โดยแปลงค่าจาก form เป็น application
+request และแสดง durable result เท่านั้น UI ห้าม import SQLite, Strategy หรือ Execution
+adapter โดยตรง และงาน persistence ต้องทำผ่าน focused worker นอก UI thread
+
+Application layer เป็นเจ้าของ `Create Paper Session` use case ซึ่งสร้าง shared immutable
+Session/market configuration ก่อนเรียก concrete SQLite adapter การสร้าง Session เป็น
+durable configuration step และไม่เริ่ม Market Data, Strategy หรือ Execution
+
 ## Persistence Boundary
 
 `application` เป็นเจ้าของ business Session orchestration และลำดับ shared rules

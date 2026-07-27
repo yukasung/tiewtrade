@@ -3,7 +3,7 @@ from pathlib import Path
 
 
 class SQLiteDatabase:
-    _SCHEMA_VERSION = 2
+    _SCHEMA_VERSION = 3
 
     def __init__(self, path: Path) -> None:
         self._path = path
@@ -34,6 +34,8 @@ class SQLiteDatabase:
                         CHECK (leverage IS NULL OR leverage BETWEEN 1 AND 5)
                         """
                     )
+                if version in {0, 1, 2}:
+                    _create_bot_sessions_schema(connection)
                 connection.execute(f"PRAGMA user_version = {self._SCHEMA_VERSION}")
         finally:
             connection.close()
@@ -99,5 +101,58 @@ def _create_schema(connection: sqlite3.Connection) -> None:
         """
         CREATE INDEX IF NOT EXISTS trade_fills_basket_time_idx
         ON trade_fills (basket_id, filled_at_utc, fill_id)
+        """
+    )
+
+
+def _create_bot_sessions_schema(connection: sqlite3.Connection) -> None:
+    connection.execute(
+        """
+        CREATE TABLE IF NOT EXISTS bot_sessions (
+            session_id TEXT PRIMARY KEY,
+            trade_mode TEXT NOT NULL CHECK (trade_mode = 'paper'),
+            market_type TEXT NOT NULL CHECK (
+                market_type IN ('spot', 'futures')
+            ),
+            symbol TEXT NOT NULL,
+            timeframe TEXT NOT NULL,
+            preset_version TEXT NOT NULL,
+            available_capital TEXT NOT NULL,
+            max_entries INTEGER NOT NULL CHECK (
+                max_entries BETWEEN 2 AND 20 AND max_entries % 2 = 0
+            ),
+            fee_rate TEXT NOT NULL,
+            slippage_bps TEXT NOT NULL,
+            spot_trading_capital_ratio TEXT,
+            futures_policy_version TEXT,
+            futures_leverage INTEGER,
+            futures_trading_capital_ratio TEXT,
+            futures_collateral_buffer_ratio TEXT,
+            futures_maintenance_margin_rate TEXT,
+            futures_margin_mode TEXT,
+            futures_position_mode TEXT,
+            created_at_utc TEXT NOT NULL,
+            ended_at_utc TEXT,
+            CHECK (
+                (
+                    market_type = 'spot'
+                    AND spot_trading_capital_ratio IS NOT NULL
+                    AND futures_policy_version IS NULL
+                )
+                OR
+                (
+                    market_type = 'futures'
+                    AND spot_trading_capital_ratio IS NULL
+                    AND futures_policy_version IS NOT NULL
+                )
+            )
+        )
+        """
+    )
+    connection.execute(
+        """
+        CREATE UNIQUE INDEX IF NOT EXISTS bot_sessions_single_active_idx
+        ON bot_sessions ((1))
+        WHERE ended_at_utc IS NULL
         """
     )

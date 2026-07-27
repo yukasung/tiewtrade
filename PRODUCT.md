@@ -146,6 +146,7 @@ Paper Trading ใช้ conservative candle fill เพื่อให้ replay
 - Take Profit เริ่มทำงานหลัง Entry Fill และ Fill เมื่อช่วงราคาของ candle ถัดจาก candle ที่ Entry Fill แตะระดับ Limit เพื่อหลีกเลี่ยงการสมมติลำดับราคา intrabar
 - Paper Futures Phase แรกบันทึก Funding Fee เป็น `0.00` และยังไม่จำลอง funding
 - Paper Futures execution contract รองรับ `LONG` และ `SHORT` แต่ RSI Step Grid Preset v1 ยังสร้างเฉพาะ `LONG`
+- Trading Fee Rate ต้องตั้งแต่ 0 และน้อยกว่า 1 ส่วน slippage ต้องตั้งแต่ 0 และน้อยกว่า 10,000 bps
 - fee และ slippage configuration ต้องถูกตรึงตลอด Session
 - เมื่อใช้ข้อมูลตลาดและ Preset version เดิม Paper replay ต้องให้ผลลัพธ์เดิม
 
@@ -230,6 +231,11 @@ Stop Session หมายถึง:
 ## 13. User Interface
 
 UI เป็นภาษาอังกฤษและใช้ light theme โทน neutral/blue ที่อ่านง่ายและน่าเชื่อถือ งาน network, engine และ persistence ต้องไม่บล็อก UI thread
+
+การกด `Create Paper Session` หมายถึงตรวจสอบและบันทึก immutable Session
+configuration เท่านั้น ไม่เริ่ม Market Data, Strategy หรือ Execution หลังสร้างสำเร็จ UI
+ต้องแสดงสถานะ `Configured — Market Data Not Started` จนกว่าผู้ใช้จะเริ่ม runtime
+ผ่าน flow ที่ส่งมอบใน Issue ภายหลัง
 
 หน้าจอหลัก:
 

@@ -84,9 +84,12 @@ Recovery, Paper Futures, public market-data runtime และ Desktop UI
 6. DEV-95 — เชื่อม Paper Futures เข้ากับ Trade History ด้วย normalized
    Basket/Fill schema, immutable leverage context, Funding Fee `0.00` และ
    atomic/idempotent SQLite flow เดียวกับ Spot
-7. Desktop UI สำหรับ Session setup, Dashboard, Orders, Positions และ Notifications
-8. Stop Session, startup Recovery และ deterministic reconciliation ด้วย fake adapters
-9. Paper acceptance ครบทั้ง business rules, persistence, UI และ Recovery
+7. Desktop Session Setup vertical slice: สร้าง immutable Active Paper Session แบบ
+   atomic, แสดง durable Overview และวาง Thin PySide6 worker boundary
+8. DEV-96 — เพิ่ม Trade History UI หลัง Desktop Session Setup acceptance gate ผ่าน
+9. Desktop UI สำหรับ Dashboard, Orders, Positions และ Notifications
+10. Stop Session, startup Recovery และ deterministic reconciliation ด้วย fake adapters
+11. Paper acceptance ครบทั้ง business rules, persistence, UI และ Recovery
 
 สถานะ DEV-92–DEV-95: durable SQLite Trade History รองรับ normalized Basket/Fill
 ของ Paper Spot และ Paper Futures, exact Decimal/UTC round-trip, deterministic IDs,

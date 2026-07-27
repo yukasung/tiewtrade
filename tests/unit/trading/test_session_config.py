@@ -125,6 +125,11 @@ def test_session_rejects_negative_execution_costs(
         make_config(fee_rate=fee_rate, slippage_bps=slippage_bps)
 
 
+def test_session_config_rejects_fee_rate_at_or_above_one() -> None:
+    with pytest.raises(ValueError, match="fee_rate must be below 1"):
+        make_config(fee_rate=Decimal("1"))
+
+
 @pytest.mark.parametrize("slippage_bps", [Decimal("10000"), Decimal("10000.001")])
 def test_session_rejects_slippage_of_ten_thousand_basis_points_or_more(
     slippage_bps: Decimal,
