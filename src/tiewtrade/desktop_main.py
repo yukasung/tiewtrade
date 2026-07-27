@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from tiewtrade.application.paper_session_setup import (
+    ConfiguredPaperSession,
     CreatePaperSession,
     PaperSessionCreateOutcome,
     PaperSessionSetupValues,
@@ -23,7 +24,14 @@ def run_desktop(database_path: Path | None = None) -> int:
         database.migrate()
         return create_session.execute(values)
 
-    return run_desktop_ui(create_session=create_after_migration)
+    def load_after_migration() -> ConfiguredPaperSession | None:
+        database.migrate()
+        return store.get_active()
+
+    return run_desktop_ui(
+        create_session=create_after_migration,
+        load_active=load_after_migration,
+    )
 
 
 def default_database_path() -> Path:

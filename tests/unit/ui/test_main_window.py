@@ -1,7 +1,7 @@
+import threading
 from copy import copy
 from dataclasses import replace
 from decimal import Decimal
-from threading import Event
 
 import pytest
 from PySide6.QtCore import Qt
@@ -24,15 +24,25 @@ from tiewtrade.ui.main_window import MainWindow
 from tiewtrade.ui.session_overview import SessionOverviewWidget
 
 
+def no_active_session() -> ConfiguredPaperSession | None:
+    return None
+
+
+def unused_create(values: PaperSessionSetupValues) -> PaperSessionCreateOutcome:
+    pytest.fail("create must not run")
+
+
 def test_created_spot_session_replaces_form_with_durable_overview(
     qtbot: QtBot,
 ) -> None:
     created = configured_spot_session()
     window = MainWindow(
-        create_session=lambda values: PaperSessionCreateOutcome(created, True)
+        create_session=lambda values: PaperSessionCreateOutcome(created, True),
+        load_active=no_active_session,
     )
     qtbot.addWidget(window)
     window.show()
+    qtbot.waitUntil(window.setup.create_button.isEnabled)
     window.setup.available_capital.setText("200000")
 
     qtbot.mouseClick(window.setup.create_button, Qt.MouseButton.LeftButton)
@@ -127,8 +137,8 @@ def test_spot_overview_marks_missing_or_mixed_policy_unavailable(
 def test_repeated_submit_while_worker_is_running_calls_create_once(
     qtbot: QtBot,
 ) -> None:
-    started = Event()
-    release = Event()
+    started = threading.Event()
+    release = threading.Event()
     created = configured_spot_session()
     calls: list[PaperSessionSetupValues] = []
 
@@ -139,9 +149,10 @@ def test_repeated_submit_while_worker_is_running_calls_create_once(
             raise TimeoutError("test did not release worker")
         return PaperSessionCreateOutcome(created, True)
 
-    window = MainWindow(create_session=create)
+    window = MainWindow(create_session=create, load_active=no_active_session)
     qtbot.addWidget(window)
     window.show()
+    qtbot.waitUntil(window.setup.create_button.isEnabled)
     window.setup.available_capital.setText("200000")
 
     qtbot.mouseClick(window.setup.create_button, Qt.MouseButton.LeftButton)
@@ -159,9 +170,11 @@ def test_validation_failure_restores_form_and_shows_field_error(qtbot: QtBot) ->
             "available_capital", "Available Capital must be positive"
         )
 
-    window = MainWindow(create_session=reject)
+    window = MainWindow(create_session=reject, load_active=no_active_session)
     qtbot.addWidget(window)
     window.show()
+    qtbot.waitUntil(window.setup.create_button.isEnabled)
+    window.setup.available_capital.setText("0")
 
     qtbot.mouseClick(window.setup.create_button, Qt.MouseButton.LeftButton)
 
@@ -173,24 +186,127 @@ def test_validation_failure_restores_form_and_shows_field_error(qtbot: QtBot) ->
     )
     assert window.current_page_name == "Session Setup"
     assert window.setup.create_button.isEnabled() is True
+    assert window.setup.available_capital.text() == "0"
 
 
-def test_persistence_failure_shows_unavailable_state_and_allows_retry(
+def test_persistence_failure_shows_sanitized_unavailable_state_and_allows_retry(
     qtbot: QtBot,
 ) -> None:
     def unavailable(values: PaperSessionSetupValues) -> PaperSessionCreateOutcome:
-        raise PaperSessionUnavailableError("Session storage is unavailable")
+        raise PaperSessionUnavailableError(
+            "sqlite3.OperationalError: unable to open /private/tmp/tiewtrade.sqlite3"
+        )
 
-    window = MainWindow(create_session=unavailable)
+    window = MainWindow(create_session=unavailable, load_active=no_active_session)
     qtbot.addWidget(window)
     window.show()
+    qtbot.waitUntil(window.setup.create_button.isEnabled)
 
     qtbot.mouseClick(window.setup.create_button, Qt.MouseButton.LeftButton)
 
-    qtbot.waitUntil(lambda: window.unavailable_message.isVisible())
+    qtbot.waitUntil(window.unavailable_panel.isVisible)
     assert window.unavailable_message.text() == "Session storage is unavailable"
+    assert window.current_page_name == "Unavailable"
+    assert "/private/tmp" not in window.unavailable_message.text()
+    qtbot.mouseClick(window.unavailable_retry_button, Qt.MouseButton.LeftButton)
     assert window.current_page_name == "Session Setup"
     assert window.setup.create_button.isEnabled() is True
+
+
+def test_unknown_create_failure_shows_sanitized_unavailable_state(qtbot: QtBot) -> None:
+    def fail_create(values: PaperSessionSetupValues) -> PaperSessionCreateOutcome:
+        raise RuntimeError("sqlite error at /private/tmp/tiewtrade.sqlite3")
+
+    window = MainWindow(create_session=fail_create, load_active=no_active_session)
+    qtbot.addWidget(window)
+    window.show()
+    qtbot.waitUntil(window.setup.create_button.isEnabled)
+
+    qtbot.mouseClick(window.setup.create_button, Qt.MouseButton.LeftButton)
+
+    qtbot.waitUntil(window.unavailable_panel.isVisible)
+    assert window.unavailable_message.text() == "Paper Session could not be created"
+    assert "/private/tmp" not in window.unavailable_message.text()
+
+
+def test_existing_create_outcome_opens_existing_session_overview(qtbot: QtBot) -> None:
+    existing = configured_spot_session()
+    window = MainWindow(
+        create_session=lambda values: PaperSessionCreateOutcome(existing, False),
+        load_active=no_active_session,
+    )
+    qtbot.addWidget(window)
+    window.show()
+    qtbot.waitUntil(window.setup.create_button.isEnabled)
+    window.setup.available_capital.setText("200000")
+
+    qtbot.mouseClick(window.setup.create_button, Qt.MouseButton.LeftButton)
+
+    qtbot.waitUntil(lambda: window.current_page_name == "Session Overview")
+    assert window.overview.session_id_value.text() == str(existing.config.session_id)
+
+
+def test_existing_active_session_opens_overview_without_create_form(
+    qtbot: QtBot,
+) -> None:
+    existing = configured_spot_session()
+    window = MainWindow(
+        create_session=lambda values: pytest.fail("must not create"),
+        load_active=lambda: existing,
+    )
+    qtbot.addWidget(window)
+    window.show()
+
+    qtbot.waitUntil(lambda: window.current_page_name == "Session Overview")
+
+    assert window.overview.session_id_value.text() == str(existing.config.session_id)
+
+
+def test_sqlite_failure_shows_unavailable_without_fake_overview(qtbot: QtBot) -> None:
+    def fail_load() -> ConfiguredPaperSession | None:
+        raise PaperSessionUnavailableError(
+            "Active Paper Session read failed at /private/tmp/tiewtrade.sqlite3"
+        )
+
+    window = MainWindow(create_session=unused_create, load_active=fail_load)
+    qtbot.addWidget(window)
+    window.show()
+
+    qtbot.waitUntil(window.unavailable_panel.isVisible)
+
+    assert window.current_page_name == "Unavailable"
+    assert window.unavailable_message.text() == "Session storage is unavailable"
+    assert "/private/tmp" not in window.unavailable_message.text()
+    assert not window.overview.isVisible()
+
+
+def test_closing_window_ignores_late_worker_result(qtbot: QtBot) -> None:
+    started = threading.Event()
+    release = threading.Event()
+    existing = configured_spot_session()
+
+    def delayed_load() -> ConfiguredPaperSession | None:
+        started.set()
+        release.wait(timeout=1)
+        return existing
+
+    window = MainWindow(create_session=unused_create, load_active=delayed_load)
+    qtbot.addWidget(window)
+    window.show()
+    qtbot.waitUntil(started.is_set)
+    page_before_close = window.current_page_name
+    overview_before_close = window.overview.session_id_value.text()
+    unavailable_before_close = window.unavailable_message.text()
+
+    window.close()
+    release.set()
+    qtbot.wait(50)
+
+    assert not window.isVisible()
+    assert window.current_page_name == page_before_close
+    assert window.overview.session_id_value.text() == overview_before_close
+    assert window.unavailable_message.text() == unavailable_before_close
+    assert not window.overview.isVisible()
 
 
 def test_main_window_starts_on_setup_without_placeholder_navigation(
@@ -199,7 +315,7 @@ def test_main_window_starts_on_setup_without_placeholder_navigation(
     def operation(values: PaperSessionSetupValues) -> PaperSessionCreateOutcome:
         return PaperSessionCreateOutcome(configured_spot_session(), True)
 
-    window = MainWindow(create_session=operation)
+    window = MainWindow(create_session=operation, load_active=no_active_session)
     qtbot.addWidget(window)
 
     assert window.current_page_name == "Session Setup"
