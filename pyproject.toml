@@ -30,6 +30,7 @@ qt_api = "pyside6"
 [tool.ruff]
 line-length = 88
 target-version = "py312"
+extend-exclude = ["*.md"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]

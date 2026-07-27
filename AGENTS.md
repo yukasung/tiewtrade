@@ -69,5 +69,6 @@ GitHub ใช้เก็บ source code และ Pull Requests ไม่ใช
 - รัน unit tests และ integration tests ที่เกี่ยวข้อง
 - รัน lint/format checks ที่กำหนดใน `pyproject.toml`
 - รัน smoke/acceptance tests เมื่อกระทบ application flow
-- ตรวจ `git diff --check`
+- ตรวจ `git diff --check` สำหรับ working-tree changes ระหว่างการตรวจบนเครื่องนักพัฒนา
+- ใน GitHub Actions ตรวจ `git diff --check <base> HEAD` สำหรับ committed range
 - สรุปสิ่งที่เปลี่ยน ผลการทดสอบ และความเสี่ยงที่ยังเหลือ
