@@ -31,10 +31,6 @@ Milestone 3 ที่ Desktop UI จะอ่านข้อมูลพร้�
 สามารถรอ database lock ตาม policy เดียวกันได้ การเรียก `journal_mode = WAL` ซ้ำบน
 database ที่เป็น WAL อยู่แล้วปลอดภัย และครอบคลุมกรณีสร้าง database file ใหม่
 
-ผลลัพธ์จาก `PRAGMA journal_mode = WAL` ต้องมีค่า `wal` หาก SQLite ไม่สามารถเปิด WAL
-ได้ `connect()` จะปิด connection และ raise `sqlite3.OperationalError` แบบ fail closed
-แทนการคืน connection ที่มี concurrency semantics ต่างจาก contract
-
 ## Ownership และขอบเขต
 
 การตั้งค่าอยู่ใน `integrations/sqlite/database.py` เพราะเป็น policy ของ concrete
@@ -50,23 +46,14 @@ adapter เพียงแบบเดียวและค่า 5 วินา
 ```mermaid
 flowchart LR
     C[SQLiteDatabase.connect] --> B[Set busy timeout 5000 ms]
-    B --> W[Enable and verify WAL]
+    B --> W[Enable WAL]
     W --> F[Enable foreign keys]
     F --> R[Return configured connection]
-    W -->|Mode is not wal| X[Close connection and raise OperationalError]
 ```
 
 ทุก caller ยังคงเรียก `connect()` เหมือนเดิม ไม่มีการเปลี่ยน repository API เมื่อ
 writer ถือ transaction อยู่ reader จะอ่าน committed snapshot ล่าสุดผ่าน WAL ส่วน
 writer อีกตัวต้องรอ lock ภายในขอบเขต `busy_timeout`
-
-## Error Handling
-
-- หาก PRAGMA ใด raise exception ให้ปิด connection แล้ว re-raise exception เดิม
-- หาก `journal_mode` ไม่มี result row หรือไม่ได้ค่า `wal` ให้ปิด connection แล้ว raise
-  `sqlite3.OperationalError("SQLite WAL mode is unavailable")`
-- ห้าม fallback กลับไปใช้ rollback journal โดยเงียบ ๆ
-- ห้าม log database path หรือข้อมูล credential เพิ่มจากงานนี้
 
 ## Testing
 
@@ -76,8 +63,6 @@ writer อีกตัวต้องรอ lock ภายในขอบเข�
 1. File-backed connection รายงาน `journal_mode = wal` และ `busy_timeout = 5000`
 2. เมื่อ writer ถือ `BEGIN EXCLUSIVE` และมี uncommitted row, reader connection ยังอ่าน
    committed snapshot เดิมได้โดยไม่ต้องรอ writer ปล่อย transaction
-3. Database ที่ไม่รองรับ WAL เช่น SQLite in-memory connection ถูกปฏิเสธแบบ fail closed
-   และไม่คืน connection ที่ผิด contract
 
 ใช้ TDD โดยรัน tests ใหม่ให้ fail กับ implementation เดิมก่อน แล้วเพิ่ม production code
 ขั้นต่ำให้ผ่าน จากนั้นรัน SQLite unit tests, full Python suite, Ruff, format, mypy,

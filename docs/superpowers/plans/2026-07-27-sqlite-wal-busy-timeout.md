@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** ทำให้ทุก connection จาก `SQLiteDatabase.connect()` ใช้ WAL, รอ writer lock สูงสุด 5 วินาที และ fail closed เมื่อ WAL ใช้งานไม่ได้
+**Goal:** ทำให้ทุก file-backed connection จาก `SQLiteDatabase.connect()` ใช้ WAL และรอ writer lock สูงสุด 5 วินาที
 
-**Architecture:** Concrete SQLite adapter เป็นเจ้าของ concurrency policy และกำหนด PRAGMA ทุกครั้งที่เปิด connection โดยไม่เปลี่ยน repository interface หรือ transaction boundary เดิม ผลของ `journal_mode` ถูกตรวจทันทีเพื่อป้องกันการทำงานต่อด้วย rollback journal โดยไม่ตั้งใจ
+**Architecture:** Concrete SQLite adapter เป็นเจ้าของ concurrency policy และกำหนด PRAGMA ทุกครั้งที่เปิด connection โดยไม่เปลี่ยน repository interface หรือ transaction boundary เดิม Contract tests อ่านค่าจาก connection จริงและพิสูจน์ว่า reader อ่าน committed snapshot ได้ระหว่าง writer transaction
 
 **Tech Stack:** Python 3.12+, stdlib `sqlite3`, pytest, Ruff, mypy strict
 
@@ -13,7 +13,6 @@
 - ใช้ file-backed SQLite และ temporary test databases เท่านั้น
 - ไม่เปลี่ยน schema version, migration, repository contract หรือ business rules
 - กำหนด `busy_timeout` เป็น `5000` milliseconds และ `journal_mode` เป็น `WAL`
-- ปิด connection และ raise `sqlite3.OperationalError` หาก WAL ใช้งานไม่ได้
 - ไม่เพิ่ม retry loop, connection pool, background thread หรือ configuration option
 - ใช้ TDD: tests ใหม่ต้อง fail กับ implementation เดิมก่อนแก้ production code
 
@@ -21,8 +20,8 @@
 
 ## File Structure
 
-- Create: `tests/unit/integrations/sqlite/test_database.py` — contract tests สำหรับ connection policy, concurrent reader และ fail-closed WAL validation
-- Modify: `src/tiewtrade/integrations/sqlite/database.py` — กำหนดและตรวจ SQLite connection policy ที่ boundary เดียว
+- Create: `tests/unit/integrations/sqlite/test_database.py` — contract tests สำหรับ connection policy และ concurrent reader
+- Modify: `src/tiewtrade/integrations/sqlite/database.py` — กำหนด SQLite connection policy ที่ boundary เดียว
 
 ### Task 1: Enforce the SQLite connection concurrency policy
 
@@ -32,17 +31,14 @@
 
 **Interfaces:**
 - Consumes: `SQLiteDatabase(path: pathlib.Path)` และ `SQLiteDatabase.connect() -> sqlite3.Connection`
-- Produces: file-backed connection ที่รายงาน `journal_mode = wal`, `busy_timeout = 5000`, เปิด foreign keys และปฏิเสธ database ที่ไม่รองรับ WAL
+- Produces: file-backed connection ที่รายงาน `journal_mode = wal`, `busy_timeout = 5000` และเปิด foreign keys
 
 - [ ] **Step 1: Write failing connection-policy tests**
 
 สร้าง `tests/unit/integrations/sqlite/test_database.py` ด้วยเนื้อหาต่อไปนี้:
 
 ```python
-import sqlite3
 from pathlib import Path
-
-import pytest
 
 from tiewtrade.integrations.sqlite.database import SQLiteDatabase
 
@@ -86,14 +82,6 @@ def test_reader_can_read_committed_snapshot_while_writer_is_active(
         writer.close()
 
     assert rows == []
-
-
-def test_connect_fails_closed_when_wal_is_unavailable() -> None:
-    with pytest.raises(
-        sqlite3.OperationalError,
-        match="SQLite WAL mode is unavailable",
-    ):
-        SQLiteDatabase(Path(":memory:")).connect()
 ```
 
 - [ ] **Step 2: Run tests to verify RED**
@@ -105,8 +93,8 @@ env PYTHONPATH=src ../../.venv/bin/python -m pytest \
   tests/unit/integrations/sqlite/test_database.py -q
 ```
 
-Expected: FAIL เพราะ file-backed database ยังรายงาน `journal_mode = delete`, reader
-ถูก rollback-journal lock ขวาง และ in-memory connection ยังไม่ถูกปฏิเสธ
+Expected: FAIL เพราะ file-backed database ยังรายงาน `journal_mode = delete` และ reader
+ถูก rollback-journal lock ขวาง
 
 - [ ] **Step 3: Implement the minimal connection policy**
 
@@ -126,22 +114,12 @@ class SQLiteDatabase:
 
     def connect(self) -> sqlite3.Connection:
         connection = sqlite3.connect(self._path)
-        try:
-            connection.row_factory = sqlite3.Row
-            connection.execute(
-                f"PRAGMA busy_timeout = {self._BUSY_TIMEOUT_MS}"
-            )
-            journal_mode = connection.execute(
-                "PRAGMA journal_mode = WAL"
-            ).fetchone()
-            if journal_mode is None or journal_mode[0] != "wal":
-                raise sqlite3.OperationalError(
-                    "SQLite WAL mode is unavailable"
-                )
-            connection.execute("PRAGMA foreign_keys = ON")
-        except Exception:
-            connection.close()
-            raise
+        connection.row_factory = sqlite3.Row
+        connection.execute(
+            f"PRAGMA busy_timeout = {self._BUSY_TIMEOUT_MS}"
+        )
+        connection.execute("PRAGMA journal_mode = WAL")
+        connection.execute("PRAGMA foreign_keys = ON")
         return connection
 ```
 
@@ -156,7 +134,7 @@ env PYTHONPATH=src ../../.venv/bin/python -m pytest \
   tests/unit/integrations/sqlite/test_database.py -q
 ```
 
-Expected: `3 passed` และไม่มี warning
+Expected: `2 passed` และไม่มี warning
 
 - [ ] **Step 5: Run the SQLite integration regression suite**
 
