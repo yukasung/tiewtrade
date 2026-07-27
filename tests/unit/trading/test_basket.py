@@ -23,7 +23,7 @@ def test_basket_reprices_take_profit_after_each_entry() -> None:
     )
     basket.add_entry(
         price=Decimal("100"),
-        quantity=Decimal("1"),
+        quantity=Decimal("3"),
         fee=Decimal("0.1"),
         filled_at=datetime(2026, 1, 1, tzinfo=UTC),
         atr=Decimal("2.03"),
@@ -40,8 +40,8 @@ def test_basket_reprices_take_profit_after_each_entry() -> None:
         tick_size=Decimal("0.1"),
     )
 
-    assert basket.average_entry_price == Decimal("95")
-    assert basket.take_profit_price == Decimal("104.0")
+    assert basket.average_entry_price == Decimal("97.5")
+    assert basket.take_profit_price == Decimal("106.5")
 
 
 def test_short_basket_reprices_take_profit_below_average_and_rounds_up() -> None:
@@ -68,15 +68,15 @@ def test_short_basket_reprices_take_profit_below_average_and_rounds_up() -> None
     basket.add_entry(
         position_side=PositionSide.SHORT,
         price=Decimal("90"),
-        quantity=Decimal("1"),
+        quantity=Decimal("3"),
         fee=Decimal("0.09"),
         filled_at=datetime(2026, 1, 2, tzinfo=UTC),
         atr=Decimal("1.03"),
         tick_size=Decimal("0.1"),
     )
 
-    assert basket.average_entry_price == Decimal("95")
-    assert basket.take_profit_price == Decimal("92.0")
+    assert basket.average_entry_price == Decimal("92.5")
+    assert basket.take_profit_price == Decimal("89.5")
 
 
 def test_one_way_basket_rejects_opposite_side_without_mutation() -> None:
