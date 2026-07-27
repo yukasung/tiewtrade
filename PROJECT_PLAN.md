@@ -81,9 +81,10 @@ Recovery, Paper Futures, public market-data runtime และ Desktop UI
 3. Public Binance market-data adapter, reconnect, backfill และ stale-data fail closed
 4. Paper Futures Core: shared Futures PnL policy, immutable session policy, leverage, Cross Margin, Collateral Buffer, liquidation และ Funding Fee `0.00`
 5. Paper Futures Execution: concrete executor และ deterministic Paper fills
-6. DEV-95 — Desktop UI สำหรับ Session setup, Dashboard, Orders, Positions และ Notifications; ยัง blocked จนกว่า concrete executor และ shared Futures PnL policy จะเสร็จ
-7. Stop Session, startup Recovery และ deterministic reconciliation ด้วย fake adapters
-8. Paper acceptance ครบทั้ง business rules, persistence, UI และ Recovery
+6. DEV-95 — เชื่อม Paper Futures เข้ากับ Trade History; ยัง blocked จนกว่า concrete executor และ shared Futures PnL policy จะเสร็จ
+7. Desktop UI สำหรับ Session setup, Dashboard, Orders, Positions และ Notifications
+8. Stop Session, startup Recovery และ deterministic reconciliation ด้วย fake adapters
+9. Paper acceptance ครบทั้ง business rules, persistence, UI และ Recovery
 
 สถานะ DEV-92–DEV-94: durable Paper Spot SQLite history รองรับ normalized
 Basket/Fill, exact Decimal/UTC round-trip, deterministic IDs, atomic writes,

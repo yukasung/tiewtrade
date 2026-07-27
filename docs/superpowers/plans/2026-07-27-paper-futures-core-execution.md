@@ -48,6 +48,7 @@
 - Create: `src/tiewtrade/trading/futures_policy.py`
 - Modify: `src/tiewtrade/trading/session_config.py`
 - Modify: `tests/unit/trading/test_session_config.py`
+- Modify: `tests/unit/application/test_public_market_data_runtime_composition.py`
 - Create: `tests/unit/trading/test_futures_policy.py`
 - Modify: `PRODUCT.md`
 - Modify: `CONTEXT.md`
@@ -119,6 +120,10 @@ def test_v1_futures_policy_rejects_invalid_leverage(leverage: object) -> None:
         FuturesTradingPolicy.v1(leverage=leverage)  # type: ignore[arg-type]
 ```
 
+Add negative tests for both the direct constructor and `dataclasses.replace` that
+reject an unknown version, altered 50/50 capital ratios, and an altered v1 Maintenance
+Margin Rate. Only leverage may vary within the approved integer range 1–5x.
+
 Append SessionConfig tests that prove Spot and Futures policies are mutually exclusive:
 
 ```python
@@ -186,20 +191,18 @@ class FuturesTradingPolicy:
     position_mode: PositionMode
 
     def __post_init__(self) -> None:
-        if not self.version:
-            raise ValueError("version must not be empty")
+        if self.version != "paper-futures-v1":
+            raise ValueError("version must be paper-futures-v1")
         if isinstance(self.leverage, bool) or not isinstance(self.leverage, int):
             raise ValueError("leverage must be an integer")
         if not 1 <= self.leverage <= 5:
             raise ValueError("leverage must be between 1 and 5")
-        if self.trading_capital_ratio <= 0:
-            raise ValueError("trading_capital_ratio must be positive")
-        if self.collateral_buffer_ratio <= 0:
-            raise ValueError("collateral_buffer_ratio must be positive")
-        if self.trading_capital_ratio + self.collateral_buffer_ratio != Decimal("1"):
-            raise ValueError("Futures capital ratios must sum to 1")
-        if not Decimal("0") < self.maintenance_margin_rate < Decimal("1"):
-            raise ValueError("maintenance_margin_rate must be between 0 and 1")
+        if self.trading_capital_ratio != Decimal("0.5"):
+            raise ValueError("trading_capital_ratio must be 0.5")
+        if self.collateral_buffer_ratio != Decimal("0.5"):
+            raise ValueError("collateral_buffer_ratio must be 0.5")
+        if self.maintenance_margin_rate != Decimal("0.005"):
+            raise ValueError("maintenance_margin_rate must be 0.005")
         if self.margin_mode is not MarginMode.CROSS:
             raise ValueError("Paper Futures requires Cross Margin")
         if self.position_mode is not PositionMode.ONE_WAY:
@@ -252,7 +255,7 @@ Expected: all pass and Paper Spot replay remains unchanged.
 .venv/bin/python -m ruff format --check src tests
 .venv/bin/python -m mypy src
 git diff --check
-git add PRODUCT.md CONTEXT.md ARCHITECTURE.md PROJECT_PLAN.md src/tiewtrade/trading/futures_policy.py src/tiewtrade/trading/session_config.py tests/unit/trading/test_futures_policy.py tests/unit/trading/test_session_config.py
+git add PRODUCT.md CONTEXT.md ARCHITECTURE.md PROJECT_PLAN.md docs/superpowers/plans/2026-07-27-paper-futures-core-execution.md src/tiewtrade/trading/futures_policy.py src/tiewtrade/trading/session_config.py tests/unit/application/test_public_market_data_runtime_composition.py tests/unit/trading/test_futures_policy.py tests/unit/trading/test_session_config.py
 git commit -m "feat: define Paper Futures session policy"
 ```
 
