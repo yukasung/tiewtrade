@@ -23,9 +23,9 @@ Milestone 3 ที่ Desktop UI จะอ่านข้อมูลพร้�
 
 `SQLiteDatabase.connect()` จะกำหนด policy ต่อไปนี้กับทุก connection:
 
-1. `PRAGMA foreign_keys = ON`
-2. `PRAGMA busy_timeout = 5000`
-3. `PRAGMA journal_mode = WAL`
+1. `PRAGMA busy_timeout = 5000`
+2. `PRAGMA journal_mode = WAL`
+3. `PRAGMA foreign_keys = ON`
 
 กำหนด `busy_timeout` ก่อนเปลี่ยนหรือตรวจ `journal_mode` เพื่อให้ operation ของ WAL
 สามารถรอ database lock ตาม policy เดียวกันได้ การเรียก `journal_mode = WAL` ซ้ำบน
