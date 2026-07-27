@@ -4,6 +4,7 @@ from pathlib import Path
 
 class SQLiteDatabase:
     _SCHEMA_VERSION = 3
+    _BUSY_TIMEOUT_MS = 5_000
 
     def __init__(self, path: Path) -> None:
         self._path = path
@@ -11,6 +12,8 @@ class SQLiteDatabase:
     def connect(self) -> sqlite3.Connection:
         connection = sqlite3.connect(self._path)
         connection.row_factory = sqlite3.Row
+        connection.execute(f"PRAGMA busy_timeout = {self._BUSY_TIMEOUT_MS}")
+        connection.execute("PRAGMA journal_mode = WAL")
         connection.execute("PRAGMA foreign_keys = ON")
         return connection
 
