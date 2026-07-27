@@ -1,22 +1,16 @@
 from dataclasses import dataclass
 from datetime import datetime
-from enum import StrEnum
 
 from tiewtrade.application.paper_spot_session import (
     PaperSpotSession,
     PaperSpotSessionSnapshot,
 )
 from tiewtrade.integrations.sqlite.paper_spot_history import PaperSpotSQLiteHistory
+from tiewtrade.integrations.sqlite.session_persistence import (
+    PersistenceState,
+    SessionPersistenceBlockedError,
+)
 from tiewtrade.market_data.candle import Candle
-
-
-class PersistenceState(StrEnum):
-    READY = "ready"
-    BLOCKED = "blocked"
-
-
-class SessionPersistenceBlockedError(RuntimeError):
-    pass
 
 
 @dataclass(frozen=True, slots=True)

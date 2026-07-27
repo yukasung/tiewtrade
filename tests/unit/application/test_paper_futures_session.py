@@ -9,6 +9,7 @@ from tiewtrade.application.paper_futures_session import (
     PaperFuturesFailureReason,
     PaperFuturesSession,
     PaperFuturesSessionError,
+    PaperFuturesSessionIdentity,
     PaperFuturesSessionState,
 )
 from tiewtrade.market_data.candle import Candle
@@ -45,6 +46,18 @@ def test_session_requires_paper_futures_configuration_and_matching_preset() -> N
 
     with pytest.raises(ValueError, match="preset version"):
         make_session(replace(session, preset_version="wrong-version"))
+
+
+def test_session_exposes_immutable_persistence_identity() -> None:
+    session = make_session()
+
+    assert session.identity == PaperFuturesSessionIdentity(
+        session_id=UUID("00000000-0000-0000-0000-000000000108"),
+        symbol="BTCUSDT",
+        timeframe="5m",
+        preset_version="rsi-step-grid-v1",
+        leverage=5,
+    )
 
 
 def test_entry_fill_can_liquidate_on_the_same_candle() -> None:

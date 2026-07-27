@@ -53,12 +53,12 @@ class SQLiteTradeHistory:
             connection.execute(
                 """
                 INSERT INTO basket_results (
-                    basket_id, session_id, trade_mode, market_type, symbol,
+                    basket_id, session_id, trade_mode, market_type, leverage, symbol,
                     timeframe, strategy_preset_version, opened_at_utc,
                     closed_at_utc, entry_count, invested_notional,
                     gross_realized_pnl, trading_fees, funding_fee,
                     net_realized_pnl, status
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 _basket_values(basket),
             )
@@ -336,6 +336,7 @@ def _validate_immutable_identity(
         "session_id",
         "trade_mode",
         "market_type",
+        "leverage",
         "symbol",
         "timeframe",
         "strategy_preset_version",
@@ -438,7 +439,7 @@ def _update_basket(
     cursor = connection.execute(
         """
         UPDATE basket_results
-        SET session_id = ?, trade_mode = ?, market_type = ?, symbol = ?,
+        SET session_id = ?, trade_mode = ?, market_type = ?, leverage = ?, symbol = ?,
             timeframe = ?, strategy_preset_version = ?, opened_at_utc = ?,
             closed_at_utc = ?, entry_count = ?, invested_notional = ?,
             gross_realized_pnl = ?, trading_fees = ?, funding_fee = ?,
@@ -457,6 +458,7 @@ def _basket_values(basket: BasketResult) -> tuple[object, ...]:
         str(basket.session_id),
         basket.trade_mode.value,
         basket.market_type.value,
+        basket.leverage,
         basket.symbol,
         basket.timeframe,
         basket.strategy_preset_version,
@@ -515,6 +517,7 @@ def _basket_from_row(row: sqlite3.Row) -> BasketResult:
         session_id=UUID(row["session_id"]),
         trade_mode=TradeMode(row["trade_mode"]),
         market_type=MarketType(row["market_type"]),
+        leverage=row["leverage"],
         symbol=row["symbol"],
         timeframe=row["timeframe"],
         strategy_preset_version=row["strategy_preset_version"],

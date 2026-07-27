@@ -5,6 +5,7 @@ from decimal import Decimal
 import pytest
 
 from tests.support.trade_history_records import basket_result, trade_fill
+from tiewtrade.trading.session_config import MarketType
 from tiewtrade.trading.trade_history import BasketStatus
 
 
@@ -67,6 +68,22 @@ def test_open_basket_requires_no_close_time() -> None:
     open_basket = replace(basket_result(), status=BasketStatus.OPEN, closed_at_utc=None)
 
     assert open_basket.closed_at_utc is None
+
+
+def test_basket_result_requires_market_specific_leverage_context() -> None:
+    futures_basket = basket_result(
+        market_type=MarketType.FUTURES,
+        leverage=3,
+    )
+
+    assert futures_basket.leverage == 3
+    with pytest.raises(ValueError, match="Futures Basket requires leverage"):
+        replace(futures_basket, leverage=None)
+    for invalid_leverage in (0, 6, True, 1.5):
+        with pytest.raises(ValueError, match="between 1 and 5"):
+            replace(futures_basket, leverage=invalid_leverage)
+    with pytest.raises(ValueError, match="Spot Basket must not have leverage"):
+        basket_result(leverage=3)
 
 
 @pytest.mark.parametrize(

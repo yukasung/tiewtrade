@@ -81,23 +81,27 @@ Recovery, Paper Futures, public market-data runtime และ Desktop UI
 3. Public Binance market-data adapter, reconnect, backfill และ stale-data fail closed
 4. Paper Futures Core: shared Futures PnL policy, immutable session policy, leverage, Cross Margin, Collateral Buffer, liquidation และ Funding Fee `0.00`
 5. Paper Futures Execution: concrete executor และ deterministic Paper fills
-6. DEV-95 — เชื่อม Paper Futures เข้ากับ Trade History; ยัง blocked จนกว่า concrete executor และ shared Futures PnL policy จะเสร็จ
+6. DEV-95 — เชื่อม Paper Futures เข้ากับ Trade History ด้วย normalized
+   Basket/Fill schema, immutable leverage context, Funding Fee `0.00` และ
+   atomic/idempotent SQLite flow เดียวกับ Spot
 7. Desktop UI สำหรับ Session setup, Dashboard, Orders, Positions และ Notifications
 8. Stop Session, startup Recovery และ deterministic reconciliation ด้วย fake adapters
 9. Paper acceptance ครบทั้ง business rules, persistence, UI และ Recovery
 
-สถานะ DEV-92–DEV-94: durable Paper Spot SQLite history รองรับ normalized
-Basket/Fill, exact Decimal/UTC round-trip, deterministic IDs, atomic writes,
-idempotent duplicate handling, ownership/lifecycle validation และ fail-closed
-Session state รวมทั้ง application query สำหรับ filter, deterministic ordering,
-pagination, total count และ closed-Basket Net Realized PnL แล้ว ส่วน Paper Futures,
-Desktop UI และ startup Recovery ยังคงอยู่ในลำดับถัดไปของ milestone นี้
+สถานะ DEV-92–DEV-95: durable SQLite Trade History รองรับ normalized Basket/Fill
+ของ Paper Spot และ Paper Futures, exact Decimal/UTC round-trip, deterministic IDs,
+atomic writes, idempotent duplicate handling, ownership/lifecycle validation,
+fail-closed Session state และ immutable Futures leverage context รวมทั้ง application
+query สำหรับ filter, deterministic ordering, pagination, total count และ
+closed-Basket Net Realized PnL แล้ว ส่วน Desktop UI และ startup Recovery ยังคงอยู่ใน
+ลำดับถัดไปของ milestone นี้
 
 สถานะ DEV-99: public Binance market-data Runtime รองรับ Historical Warm-up,
 completed-candle live flow, gap backfill, stale-data fail closed, bounded reconnect
 และการเลือก Spot หรือ USDⓈ-M Futures public endpoint จาก Session configuration แล้ว
-งานนี้ยังไม่ทำให้ Paper Trading Complete; Paper Futures, Desktop UI, Stop Session และ
-startup Recovery ยังคงอยู่ในลำดับถัดไปของ milestone นี้
+งานนี้ยังไม่ทำให้ Paper Trading Complete; Paper Futures persistence ถูกส่งมอบใน
+DEV-95 แล้ว แต่ Desktop UI, Stop Session และ startup Recovery ยังคงอยู่ในลำดับถัดไป
+ของ milestone นี้
 
 ## Milestone 4 — Live Spot
 

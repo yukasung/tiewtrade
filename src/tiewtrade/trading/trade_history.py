@@ -101,11 +101,21 @@ class BasketResult:
     funding_fee: Decimal
     net_realized_pnl: Decimal
     status: BasketStatus
+    leverage: int | None = None
 
     def __post_init__(self) -> None:
         _require_non_empty(self.symbol, "symbol")
         _require_non_empty(self.timeframe, "timeframe")
         _require_non_empty(self.strategy_preset_version, "strategy_preset_version")
+        if self.market_type is MarketType.FUTURES:
+            if (
+                isinstance(self.leverage, bool)
+                or not isinstance(self.leverage, int)
+                or not 1 <= self.leverage <= 5
+            ):
+                raise ValueError("Futures Basket requires leverage between 1 and 5")
+        elif self.leverage is not None:
+            raise ValueError("Spot Basket must not have leverage")
         _require_utc(self.opened_at_utc, "opened_at_utc")
         if self.closed_at_utc is not None:
             _require_utc(self.closed_at_utc, "closed_at_utc")

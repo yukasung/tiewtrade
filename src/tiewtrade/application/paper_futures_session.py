@@ -47,6 +47,15 @@ class PaperFuturesSessionError(RuntimeError):
 
 
 @dataclass(frozen=True, slots=True)
+class PaperFuturesSessionIdentity:
+    session_id: UUID
+    symbol: str
+    timeframe: str
+    preset_version: str
+    leverage: int
+
+
+@dataclass(frozen=True, slots=True)
 class PaperFuturesSessionSnapshot:
     accepted: bool
     state: PaperFuturesSessionState
@@ -83,6 +92,14 @@ class PaperFuturesSession:
         if session.preset_version != preset.version:
             raise ValueError("session preset version does not match the preset")
 
+        assert session.futures_policy is not None
+        self._identity = PaperFuturesSessionIdentity(
+            session_id=session.session_id,
+            symbol=market_data.symbol,
+            timeframe=market_data.timeframe,
+            preset_version=session.preset_version,
+            leverage=session.futures_policy.leverage,
+        )
         self._session = session
         self._symbol_rules = symbol_rules
         self._preset = preset
@@ -108,6 +125,10 @@ class PaperFuturesSession:
         self._closed_basket_count = 0
         self._terminal_exit_fill: PaperFuturesExitFill | None = None
         self._terminal_closed_basket: ClosedBasket | None = None
+
+    @property
+    def identity(self) -> PaperFuturesSessionIdentity:
+        return self._identity
 
     @property
     def snapshot(self) -> PaperFuturesSessionSnapshot:

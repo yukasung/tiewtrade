@@ -97,6 +97,7 @@ Each Basket Result stores:
 - `session_id`
 - `trade_mode`: `PAPER` or `LIVE`
 - `market_type`: `SPOT` or `FUTURES`
+- `leverage`, nullable for Spot and required in the 1x–5x Session cap for Futures
 - `symbol`
 - `timeframe`
 - `strategy_preset_version`
@@ -145,6 +146,10 @@ Live adapter can record Binance partial fills without changing the history model
 - Duplicate Fill delivery is idempotent and must not change Basket totals.
 - All records are scoped directly by `session_id`; there is no Account Profile
   identifier.
+
+SQLite schema version 2 adds nullable `leverage` to `basket_results`. Migration
+from version 1 preserves existing Spot history with `leverage = NULL`; every new
+Futures Basket must persist the immutable leverage used by its Session.
 
 ## 6. Profit Calculation
 
@@ -220,6 +225,7 @@ The top table displays:
 - Closed At
 - Mode
 - Market
+- Leverage for Futures
 - Symbol
 - Timeframe
 - Entries
@@ -274,6 +280,7 @@ Automated verification must cover:
 - Multi-entry Paper Spot BUY fills followed by SELL and correct gross PnL, fees,
   and Net PnL.
 - Paper Futures realized PnL and trading fees with zero Funding Fee.
+- Paper Futures leverage context survives SQLite restart.
 - Multiple partial fills for one Order.
 - Idempotent duplicate Fill delivery.
 - Atomic Trade Fill and Basket Result persistence.

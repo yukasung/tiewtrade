@@ -60,6 +60,7 @@ def basket(
         funding_fee=Decimal("0"),
         net_realized_pnl=net_realized_pnl if closed else Decimal("0"),
         status=status,
+        leverage=3 if market_type is MarketType.FUTURES else None,
     )
 
 

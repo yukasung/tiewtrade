@@ -81,11 +81,24 @@ def test_same_fill_id_with_different_payload_is_a_conflict(
     assert history.list_fills(basket.basket_id) == (fill,)
 
 
+@pytest.mark.parametrize(
+    ("market_type", "leverage"),
+    [
+        (MarketType.SPOT, None),
+        (MarketType.FUTURES, 3),
+    ],
+)
 def test_partial_fills_share_order_and_entry_without_incrementing_entry_count(
     history: SQLiteTradeHistory,
+    market_type: MarketType,
+    leverage: int | None,
 ) -> None:
     first = trade_fill()
-    opened = open_basket()
+    opened = replace(
+        open_basket(),
+        market_type=market_type,
+        leverage=leverage,
+    )
     history.record_open_basket(opened, first)
     second = trade_fill(
         fill_id="fill-partial-2",
@@ -154,10 +167,13 @@ def test_entry_rejects_changed_basket_identity(
     opened = open_basket()
     history.record_open_basket(opened, trade_fill())
     second = trade_fill(fill_id="fill-2", order_id="order-2", entry_number=2)
+    identity_changes = {field: value}
+    if field == "market_type":
+        identity_changes["leverage"] = 3
     proposed = replace(
         opened,
         **{
-            field: value,
+            **identity_changes,
             "entry_count": 2,
             "invested_notional": opened.invested_notional + second.notional,
             "trading_fees": opened.trading_fees + second.commission,
@@ -381,7 +397,7 @@ def test_migration_creates_versioned_history_schema_and_indexes(tmp_path: Path) 
             for row in connection.execute("PRAGMA table_info(trade_fills)")
         }
 
-    assert version == 1
+    assert version == 2
     assert {"basket_results", "trade_fills"} <= table_names
     assert {
         "basket_results_history_idx",
@@ -390,6 +406,7 @@ def test_migration_creates_versioned_history_schema_and_indexes(tmp_path: Path) 
     assert basket_columns["basket_id"] == "TEXT"
     assert basket_columns["invested_notional"] == "TEXT"
     assert basket_columns["opened_at_utc"] == "TEXT"
+    assert basket_columns["leverage"] == "INTEGER"
     assert fill_columns["fill_id"] == "TEXT"
     assert fill_columns["price"] == "TEXT"
     assert fill_columns["filled_at_utc"] == "TEXT"
@@ -398,10 +415,112 @@ def test_migration_creates_versioned_history_schema_and_indexes(tmp_path: Path) 
 def test_migration_rejects_future_schema_version(tmp_path: Path) -> None:
     database = SQLiteDatabase(tmp_path / "history.sqlite3")
     with database.connect() as connection:
-        connection.execute("PRAGMA user_version = 2")
+        connection.execute("PRAGMA user_version = 3")
 
     with pytest.raises(ValueError, match="newer than supported"):
         database.migrate()
+
+
+def test_migration_from_v1_preserves_spot_basket_with_null_leverage(
+    tmp_path: Path,
+) -> None:
+    database = SQLiteDatabase(tmp_path / "history.sqlite3")
+    legacy = basket_result()
+    with database.connect() as connection:
+        connection.execute(
+            """
+            CREATE TABLE basket_results (
+                basket_id TEXT PRIMARY KEY,
+                session_id TEXT NOT NULL,
+                trade_mode TEXT NOT NULL,
+                market_type TEXT NOT NULL,
+                symbol TEXT NOT NULL,
+                timeframe TEXT NOT NULL,
+                strategy_preset_version TEXT NOT NULL,
+                opened_at_utc TEXT NOT NULL,
+                closed_at_utc TEXT,
+                entry_count INTEGER NOT NULL,
+                invested_notional TEXT NOT NULL,
+                gross_realized_pnl TEXT NOT NULL,
+                trading_fees TEXT NOT NULL,
+                funding_fee TEXT NOT NULL,
+                net_realized_pnl TEXT NOT NULL,
+                status TEXT NOT NULL
+            )
+            """
+        )
+        connection.execute(
+            """
+            INSERT INTO basket_results VALUES (
+                ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+            )
+            """,
+            (
+                str(legacy.basket_id),
+                str(legacy.session_id),
+                legacy.trade_mode.value,
+                legacy.market_type.value,
+                legacy.symbol,
+                legacy.timeframe,
+                legacy.strategy_preset_version,
+                legacy.opened_at_utc.isoformat(),
+                legacy.closed_at_utc.isoformat(),
+                legacy.entry_count,
+                str(legacy.invested_notional),
+                str(legacy.gross_realized_pnl),
+                str(legacy.trading_fees),
+                str(legacy.funding_fee),
+                str(legacy.net_realized_pnl),
+                legacy.status.value,
+            ),
+        )
+        connection.execute("PRAGMA user_version = 1")
+
+    database.migrate()
+
+    with database.connect() as connection:
+        version = connection.execute("PRAGMA user_version").fetchone()[0]
+        leverage = connection.execute(
+            "SELECT leverage FROM basket_results WHERE basket_id = ?",
+            (str(legacy.basket_id),),
+        ).fetchone()[0]
+    assert version == 2
+    assert leverage is None
+    assert SQLiteTradeHistory(database).get_basket(legacy.basket_id) == legacy
+
+
+def test_futures_leverage_round_trips_and_is_immutable(tmp_path: Path) -> None:
+    database_path = tmp_path / "history.sqlite3"
+    database = SQLiteDatabase(database_path)
+    database.migrate()
+    history = SQLiteTradeHistory(database)
+    futures_open = replace(
+        open_basket(),
+        market_type=MarketType.FUTURES,
+        leverage=3,
+    )
+    first = trade_fill()
+    history.record_open_basket(futures_open, first)
+
+    reopened = SQLiteTradeHistory(SQLiteDatabase(database_path))
+
+    assert reopened.get_basket(futures_open.basket_id) == futures_open
+    second = trade_fill(
+        fill_id="fill-2",
+        order_id="order-2",
+        entry_number=2,
+        filled_at_utc=first.filled_at_utc + timedelta(minutes=1),
+    )
+    changed = replace(
+        futures_open,
+        leverage=4,
+        entry_count=2,
+        invested_notional=Decimal("400"),
+        trading_fees=Decimal("0.4"),
+        net_realized_pnl=Decimal("-0.4"),
+    )
+    with pytest.raises(TradeHistoryConflictError, match="leverage"):
+        reopened.record_entry_fill(changed, second)
 
 
 def test_history_round_trips_exact_records_after_reopen(tmp_path: Path) -> None:
