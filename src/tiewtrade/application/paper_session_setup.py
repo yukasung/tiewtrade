@@ -97,15 +97,11 @@ class CreatePaperSession:
         spot_policy: SpotTradingPolicy | None = None
         futures_policy: FuturesTradingPolicy | None = None
         if market_type is MarketType.SPOT:
-            ratio = _decimal(
+            spot_policy = spot_trading_policy_from_percent(
                 _required(
                     values.spot_trading_capital_percent,
                     "spot_trading_capital_percent",
-                ),
-                "spot_trading_capital_percent",
-            ) / Decimal("100")
-            spot_policy = _validate_field(
-                "spot_trading_capital_percent", lambda: SpotTradingPolicy(ratio)
+                )
             )
         else:
             leverage = _integer(
@@ -146,6 +142,12 @@ class CreatePaperSession:
             created_at_utc=self._clock(),
         )
         return self._create_active(session)
+
+
+def spot_trading_policy_from_percent(value: str) -> SpotTradingPolicy:
+    field = "spot_trading_capital_percent"
+    ratio = _decimal(value, field) / Decimal("100")
+    return _validate_field(field, lambda: SpotTradingPolicy(ratio))
 
 
 def _required(value: str | None, field: str) -> str:

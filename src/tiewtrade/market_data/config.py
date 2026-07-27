@@ -3,7 +3,8 @@ from dataclasses import dataclass
 from datetime import timedelta
 
 _TIMEFRAME_PATTERN = re.compile(r"^(?P<value>[1-9][0-9]*)(?P<unit>[mhd])$")
-SUPPORTED_V1_TIMEFRAMES = frozenset({"3m", "5m", "15m", "30m", "1h", "4h"})
+SUPPORTED_V1_TIMEFRAME_CHOICES = ("3m", "5m", "15m", "30m", "1h", "4h")
+SUPPORTED_V1_TIMEFRAMES = frozenset(SUPPORTED_V1_TIMEFRAME_CHOICES)
 
 
 def timeframe_to_interval(timeframe: str) -> timedelta:
