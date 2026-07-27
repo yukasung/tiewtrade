@@ -1,4 +1,4 @@
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime, timedelta, timezone
 
 import pytest
 
@@ -26,9 +26,32 @@ def test_rate_limit_error_preserves_retry_directive(
     assert error.retry_after == retry_after
 
 
+def test_rate_limit_error_retry_directive_is_read_only() -> None:
+    error = MarketDataRateLimitError(
+        "rate limited",
+        retry_after=timedelta(seconds=30),
+    )
+
+    with pytest.raises(AttributeError):
+        setattr(error, "retry_after", timedelta(seconds=60))  # noqa: B010
+
+
 def test_rate_limit_error_rejects_naive_http_date() -> None:
     with pytest.raises(ValueError, match="retry_after datetime must use UTC"):
         MarketDataRateLimitError(
             "rate limited",
             retry_after=datetime(2026, 1, 1),
+        )
+
+
+def test_rate_limit_error_rejects_non_utc_http_date() -> None:
+    with pytest.raises(ValueError, match="retry_after datetime must use UTC"):
+        MarketDataRateLimitError(
+            "rate limited",
+            retry_after=datetime(
+                2026,
+                1,
+                1,
+                tzinfo=timezone(timedelta(hours=7)),
+            ),
         )
