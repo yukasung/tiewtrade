@@ -3,7 +3,10 @@ from threading import Event
 from PySide6.QtCore import Qt
 from pytestqt.qtbot import QtBot
 
-from tests.support.paper_session_setup import configured_spot_session
+from tests.support.paper_session_setup import (
+    configured_futures_session,
+    configured_spot_session,
+)
 from tiewtrade.application.paper_session_setup import (
     PaperSessionCreateOutcome,
     PaperSessionSetupValues,
@@ -11,6 +14,7 @@ from tiewtrade.application.paper_session_setup import (
     PaperSessionValidationError,
 )
 from tiewtrade.ui.main_window import MainWindow
+from tiewtrade.ui.session_overview import SessionOverviewWidget
 
 
 def test_created_spot_session_replaces_form_with_durable_overview(
@@ -35,6 +39,37 @@ def test_created_spot_session_replaces_form_with_durable_overview(
     assert window.overview.timeframe_value.text() == "5m"
     assert window.overview.available_capital_value.text() == "200000 USDT"
     assert window.overview.spot_reserve_ratio_value.text() == "20%"
+
+
+def test_futures_overview_shows_immutable_policy(qtbot: QtBot) -> None:
+    session = configured_futures_session(leverage=3)
+    overview = SessionOverviewWidget()
+    qtbot.addWidget(overview)
+
+    overview.show_session(session)
+
+    assert overview.market_value.text() == "Futures"
+    assert overview.leverage_value.text() == "3x"
+    assert overview.margin_mode_value.text() == "Cross Margin"
+    assert overview.position_mode_value.text() == "One-way Mode"
+    assert overview.collateral_buffer_value.text() == "50%"
+
+
+def test_futures_overview_marks_missing_required_policy_unavailable(
+    qtbot: QtBot,
+) -> None:
+    session = configured_futures_session()
+    object.__setattr__(session.config, "futures_policy", None)
+    overview = SessionOverviewWidget()
+    qtbot.addWidget(overview)
+
+    overview.show_session(session)
+
+    assert overview.leverage_value.text() == "Unavailable"
+    assert overview.margin_mode_value.text() == "Unavailable"
+    assert overview.position_mode_value.text() == "Unavailable"
+    assert overview.trading_capital_value.text() == "Unavailable"
+    assert overview.collateral_buffer_value.text() == "Unavailable"
 
 
 def test_repeated_submit_while_worker_is_running_calls_create_once(

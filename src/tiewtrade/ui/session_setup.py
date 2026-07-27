@@ -1,4 +1,5 @@
 from collections.abc import Iterable
+from decimal import Decimal
 
 from PySide6.QtCore import Signal, Slot
 from PySide6.QtWidgets import (
@@ -20,6 +21,7 @@ from tiewtrade.application.paper_session_setup import (
     spot_trading_policy_from_percent,
 )
 from tiewtrade.market_data.config import SUPPORTED_V1_TIMEFRAME_CHOICES
+from tiewtrade.trading.futures_policy import FuturesTradingPolicy
 from tiewtrade.ui.preset_display import preset_display_name
 
 
@@ -37,7 +39,7 @@ class SessionSetupWidget(QWidget):
         self.market_type = QComboBox()
         self.market_type.setObjectName("marketType")
         self.market_type.addItem("Spot", "spot")
-        self.market_type.setEnabled(False)
+        self.market_type.addItem("Futures", "futures")
 
         self.symbol_field = QLineEdit("BTCUSDT")
         self.symbol_field.setObjectName("symbol")
@@ -72,6 +74,28 @@ class SessionSetupWidget(QWidget):
         self.spot_reserve_ratio = QLabel("20%")
         self.spot_reserve_ratio.setObjectName("readOnlyValue")
 
+        futures_policy = FuturesTradingPolicy.v1(leverage=1)
+        self.leverage = QSpinBox()
+        self.leverage.setObjectName("futuresLeverage")
+        self.leverage.setRange(1, 5)
+        self.leverage.setValue(futures_policy.leverage)
+        self.margin_mode_value = QLabel(
+            f"{futures_policy.margin_mode.value.title()} Margin"
+        )
+        self.margin_mode_value.setObjectName("readOnlyValue")
+        self.position_mode_value = QLabel(
+            f"{futures_policy.position_mode.value.replace('_', '-').capitalize()} Mode"
+        )
+        self.position_mode_value.setObjectName("readOnlyValue")
+        self.trading_capital_value = QLabel(
+            _percent_text(futures_policy.trading_capital_ratio)
+        )
+        self.trading_capital_value.setObjectName("readOnlyValue")
+        self.collateral_buffer_value = QLabel(
+            _percent_text(futures_policy.collateral_buffer_ratio)
+        )
+        self.collateral_buffer_value.setObjectName("readOnlyValue")
+
         self.fee_percent = QLineEdit()
         self.fee_percent.setObjectName("feePercent")
         self.fee_percent.setPlaceholderText("Percent")
@@ -98,8 +122,11 @@ class SessionSetupWidget(QWidget):
         self.advanced_costs.setVisible(False)
 
         self._build_layout()
+        self.market_type.currentIndexChanged.connect(self._sync_market_fields)
+        self._sync_market_fields()
 
     def values(self) -> PaperSessionSetupValues:
+        futures = self.market_type.currentData() == "futures"
         return PaperSessionSetupValues(
             market_type=str(self.market_type.currentData()),
             symbol=self.symbol_field.text().strip(),
@@ -108,8 +135,10 @@ class SessionSetupWidget(QWidget):
             max_entries=str(self.max_entries.value()),
             fee_percent=self.fee_percent.text().strip(),
             slippage_bps=self.slippage_bps.text().strip(),
-            spot_trading_capital_percent=self.spot_ratio.text().strip(),
-            futures_leverage=None,
+            spot_trading_capital_percent=(
+                None if futures else self.spot_ratio.text().strip()
+            ),
+            futures_leverage=str(self.leverage.value()) if futures else None,
         )
 
     @Slot()
@@ -141,7 +170,7 @@ class SessionSetupWidget(QWidget):
         heading = QLabel("Create Paper Session")
         heading.setObjectName("pageTitle")
         description = QLabel(
-            "Configure an immutable Paper Spot session. Trading does not start yet."
+            "Configure an immutable Paper session. Trading does not start yet."
         )
         description.setObjectName("supportingText")
         root.addWidget(heading)
@@ -195,18 +224,12 @@ class SessionSetupWidget(QWidget):
             self.max_entries,
             (self.max_entries_error,),
         )
-        self._add_row(
-            capital_form,
-            "Spot Trading Capital Ratio (%)",
-            self.spot_ratio,
-            (self.spot_ratio_error,),
-        )
-        self._add_row(
-            capital_form,
-            "Spot Reserve Ratio",
-            self.spot_reserve_ratio,
-        )
         card_layout.addLayout(capital_form)
+
+        self.spot_fields = self._build_spot_fields()
+        card_layout.addWidget(self.spot_fields)
+        self.futures_fields = self._build_futures_fields()
+        card_layout.addWidget(self.futures_fields)
 
         card_layout.addWidget(self.advanced_toggle)
         card_layout.addWidget(self.advanced_costs)
@@ -259,6 +282,48 @@ class SessionSetupWidget(QWidget):
         layout.addLayout(costs_form)
         return container
 
+    def _build_spot_fields(self) -> QWidget:
+        container = QWidget()
+        layout = QVBoxLayout(container)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(12)
+        heading = QLabel("Spot capital policy")
+        heading.setObjectName("sectionTitle")
+        layout.addWidget(heading)
+        form = self._form()
+        self._add_row(
+            form,
+            "Spot Trading Capital Ratio (%)",
+            self.spot_ratio,
+            (self.spot_ratio_error,),
+        )
+        self._add_row(form, "Spot Reserve Ratio", self.spot_reserve_ratio)
+        layout.addLayout(form)
+        return container
+
+    def _build_futures_fields(self) -> QWidget:
+        container = QWidget()
+        layout = QVBoxLayout(container)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(12)
+        heading = QLabel("Futures policy")
+        heading.setObjectName("sectionTitle")
+        layout.addWidget(heading)
+        form = self._form()
+        self._add_row(form, "Leverage", self.leverage)
+        self._add_row(form, "Margin Mode", self.margin_mode_value)
+        self._add_row(form, "Position Mode", self.position_mode_value)
+        self._add_row(form, "Trading Capital", self.trading_capital_value)
+        self._add_row(form, "Collateral Buffer", self.collateral_buffer_value)
+        layout.addLayout(form)
+        return container
+
+    @Slot()
+    def _sync_market_fields(self) -> None:
+        futures = self.market_type.currentData() == "futures"
+        self.spot_fields.setVisible(not futures)
+        self.futures_fields.setVisible(futures)
+
     @staticmethod
     def _form() -> QFormLayout:
         form = QFormLayout()
@@ -288,3 +353,7 @@ class SessionSetupWidget(QWidget):
         label.setWordWrap(True)
         self._field_errors[field] = label
         return label
+
+
+def _percent_text(ratio: Decimal) -> str:
+    return f"{format((ratio * Decimal('100')).normalize(), 'f')}%"

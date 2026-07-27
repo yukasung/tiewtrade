@@ -3,6 +3,7 @@ from decimal import Decimal
 from PySide6.QtWidgets import QFrame, QGridLayout, QLabel, QVBoxLayout, QWidget
 
 from tiewtrade.application.paper_session_setup import ConfiguredPaperSession
+from tiewtrade.trading.session_config import MarketType
 from tiewtrade.ui.preset_display import preset_display_name
 
 
@@ -21,6 +22,11 @@ class SessionOverviewWidget(QWidget):
         self.max_entries_value = self._value_label()
         self.spot_ratio_value = self._value_label()
         self.spot_reserve_ratio_value = self._value_label()
+        self.leverage_value = self._value_label()
+        self.margin_mode_value = self._value_label()
+        self.position_mode_value = self._value_label()
+        self.trading_capital_value = self._value_label()
+        self.collateral_buffer_value = self._value_label()
         self.fee_value = self._value_label()
         self.slippage_value = self._value_label()
         self.created_at_value = self._value_label()
@@ -39,16 +45,7 @@ class SessionOverviewWidget(QWidget):
             f"{_decimal_text(config.available_capital)} USDT"
         )
         self.max_entries_value.setText(str(config.entry_policy.max_entries))
-        spot_policy = config.spot_policy
-        reserve_ratio = None if spot_policy is None else spot_policy.reserve_ratio * 100
-        self.spot_ratio_value.setText(
-            "—"
-            if spot_policy is None
-            else f"{_decimal_text(spot_policy.trading_capital_ratio * 100)}%"
-        )
-        self.spot_reserve_ratio_value.setText(
-            "—" if reserve_ratio is None else f"{_decimal_text(reserve_ratio)}%"
-        )
+        self._show_market_policy(session)
         self.fee_value.setText(f"{_decimal_text(config.fee_rate * Decimal('100'))}%")
         self.slippage_value.setText(f"{_decimal_text(config.slippage_bps)} bps")
         self.created_at_value.setText(session.created_at_utc.isoformat())
@@ -94,6 +91,11 @@ class SessionOverviewWidget(QWidget):
             ("Max Entries", self.max_entries_value),
             ("Spot Trading Capital Ratio", self.spot_ratio_value),
             ("Spot Reserve Ratio", self.spot_reserve_ratio_value),
+            ("Leverage", self.leverage_value),
+            ("Margin Mode", self.margin_mode_value),
+            ("Position Mode", self.position_mode_value),
+            ("Trading Capital", self.trading_capital_value),
+            ("Collateral Buffer", self.collateral_buffer_value),
             ("Trading Fee", self.fee_value),
             ("Slippage", self.slippage_value),
             ("Created at (UTC)", self.created_at_value),
@@ -107,6 +109,65 @@ class SessionOverviewWidget(QWidget):
             grid.addWidget(value, row + 1, column)
         root.addWidget(details)
         root.addStretch()
+
+    def _show_market_policy(self, session: ConfiguredPaperSession) -> None:
+        config = session.config
+        if config.market_type is MarketType.SPOT:
+            self._show_spot_policy(session)
+            self._clear_futures_policy()
+            return
+
+        self._clear_spot_policy()
+        futures_policy = config.futures_policy
+        if futures_policy is None or config.spot_policy is not None:
+            self._show_unavailable_futures_policy()
+            return
+
+        self.leverage_value.setText(f"{futures_policy.leverage}x")
+        self.margin_mode_value.setText(
+            f"{futures_policy.margin_mode.value.title()} Margin"
+        )
+        self.position_mode_value.setText(
+            f"{futures_policy.position_mode.value.replace('_', '-').capitalize()} Mode"
+        )
+        self.trading_capital_value.setText(
+            f"{_decimal_text(futures_policy.trading_capital_ratio * Decimal('100'))}%"
+        )
+        self.collateral_buffer_value.setText(
+            f"{_decimal_text(futures_policy.collateral_buffer_ratio * Decimal('100'))}%"
+        )
+
+    def _show_spot_policy(self, session: ConfiguredPaperSession) -> None:
+        config = session.config
+        spot_policy = config.spot_policy
+        if spot_policy is None or config.futures_policy is not None:
+            self.spot_ratio_value.setText("Unavailable")
+            self.spot_reserve_ratio_value.setText("Unavailable")
+            return
+        self.spot_ratio_value.setText(
+            f"{_decimal_text(spot_policy.trading_capital_ratio * Decimal('100'))}%"
+        )
+        self.spot_reserve_ratio_value.setText(
+            f"{_decimal_text(spot_policy.reserve_ratio * Decimal('100'))}%"
+        )
+
+    def _clear_spot_policy(self) -> None:
+        self.spot_ratio_value.setText("—")
+        self.spot_reserve_ratio_value.setText("—")
+
+    def _clear_futures_policy(self) -> None:
+        self.leverage_value.setText("—")
+        self.margin_mode_value.setText("—")
+        self.position_mode_value.setText("—")
+        self.trading_capital_value.setText("—")
+        self.collateral_buffer_value.setText("—")
+
+    def _show_unavailable_futures_policy(self) -> None:
+        self.leverage_value.setText("Unavailable")
+        self.margin_mode_value.setText("Unavailable")
+        self.position_mode_value.setText("Unavailable")
+        self.trading_capital_value.setText("Unavailable")
+        self.collateral_buffer_value.setText("Unavailable")
 
     @staticmethod
     def _value_label() -> QLabel:

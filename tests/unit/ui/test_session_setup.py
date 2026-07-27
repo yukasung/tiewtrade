@@ -21,9 +21,48 @@ def test_default_form_builds_paper_spot_values(qtbot: QtBot) -> None:
     assert values.futures_leverage is None
     assert widget.trade_mode_label.text() == "Paper"
     assert widget.market_type.currentData() == "spot"
-    assert widget.market_type.count() == 1
+    assert [
+        widget.market_type.itemData(index)
+        for index in range(widget.market_type.count())
+    ] == ["spot", "futures"]
+    assert widget.market_type.isEnabled()
     assert widget.symbol_field.isReadOnly()
     assert widget.preset_label.text() == "RSI Step Grid v1"
+
+
+def test_futures_selection_shows_futures_policy_and_hides_spot_ratio(
+    qtbot: QtBot,
+) -> None:
+    widget = SessionSetupWidget()
+    qtbot.addWidget(widget)
+
+    widget.market_type.setCurrentIndex(widget.market_type.findData("futures"))
+
+    assert widget.spot_fields.isHidden()
+    assert widget.futures_fields.isHidden() is False
+    assert widget.margin_mode_value.text() == "Cross Margin"
+    assert widget.position_mode_value.text() == "One-way Mode"
+    assert widget.trading_capital_value.text() == "50%"
+    assert widget.collateral_buffer_value.text() == "50%"
+    assert widget.values().spot_trading_capital_percent is None
+    assert widget.values().futures_leverage == "1"
+
+
+def test_switching_back_to_spot_removes_futures_input_from_request(
+    qtbot: QtBot,
+) -> None:
+    widget = SessionSetupWidget()
+    qtbot.addWidget(widget)
+    widget.market_type.setCurrentIndex(widget.market_type.findData("futures"))
+    widget.leverage.setValue(5)
+
+    widget.market_type.setCurrentIndex(widget.market_type.findData("spot"))
+
+    values = widget.values()
+
+    assert values.market_type == "spot"
+    assert values.futures_leverage is None
+    assert values.spot_trading_capital_percent == widget.spot_ratio.text()
 
 
 def test_timeframe_field_offers_every_supported_value(qtbot: QtBot) -> None:
