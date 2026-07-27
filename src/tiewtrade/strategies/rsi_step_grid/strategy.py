@@ -6,6 +6,7 @@ from uuid import UUID
 from tiewtrade.market_data.candle import Candle
 from tiewtrade.strategies.rsi_step_grid.indicators import IndicatorSnapshot
 from tiewtrade.strategies.rsi_step_grid.preset import RsiStepGridPreset
+from tiewtrade.trading.position import PositionSide
 
 
 @dataclass(frozen=True, slots=True)
@@ -16,6 +17,7 @@ class EntryIntent:
     entry_number: int
     signal_candle: Candle
     atr: Decimal
+    side: PositionSide = PositionSide.LONG
 
 
 class RsiStepGridStrategy:
@@ -57,6 +59,7 @@ class RsiStepGridStrategy:
             entry_number=entry_number,
             signal_candle=candle,
             atr=indicators.atr,
+            side=PositionSide.LONG,
         )
         self._pending_intent = intent
         return intent

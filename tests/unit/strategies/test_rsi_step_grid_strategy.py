@@ -8,6 +8,7 @@ from tiewtrade.market_data.candle import Candle
 from tiewtrade.strategies.rsi_step_grid.indicators import IndicatorSnapshot
 from tiewtrade.strategies.rsi_step_grid.preset import RsiStepGridPreset
 from tiewtrade.strategies.rsi_step_grid.strategy import RsiStepGridStrategy
+from tiewtrade.trading.position import PositionSide
 
 SESSION_ID = UUID("00000000-0000-0000-0000-000000000078")
 
@@ -61,7 +62,11 @@ def test_reset_then_bullish_confirmation_creates_an_auditable_intent() -> None:
     assert intent.entry_number == 3
     assert intent.signal_candle == signal_candle
     assert intent.atr == Decimal("2.75")
-    assert len(intent.intent_id) == 64
+    assert intent.side is PositionSide.LONG
+    assert (
+        intent.intent_id
+        == "6adc569ab122ee53a61acad7f50a07b268c5d451031d230fddd510f4410791e7"
+    )
 
 
 def test_same_decision_inputs_create_the_same_intent_id() -> None:
