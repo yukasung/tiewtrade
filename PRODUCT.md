@@ -79,17 +79,19 @@ Session เลือกเท่านั้น
 
 ## 5. Basket Take Profit
 
-Basket Take Profit คำนวณด้วยสูตร:
+Basket Take Profit คำนวณตาม Position Side ด้วยสูตร:
 
 ```text
-weighted_average_entry_price + (ATR(14) * 3)
+Long  = weighted_average_entry_price + (ATR(14) * 3)
+Short = weighted_average_entry_price - (ATR(14) * 3)
 ```
 
 กติกา:
 
 - ใช้ ATR จาก completed candle ล่าสุดของ Timeframe ที่ Session เลือก ณ เวลาที่ Entry ถูก Fill
 - คำนวณราคา Take Profit ใหม่หลังทุก Entry Fill
-- ปัดราคาตาม Binance tick size ของ BTCUSDT
+- Long Take Profit ปัดลง และ Short Take Profit ปัดขึ้นตาม Binance tick size ของ BTCUSDT
+- RSI Step Grid Preset v1 ยังสร้างเฉพาะ Long Entry Intent
 - Take Profit ครอบคลุมขนาด Position ที่ Bot เป็นเจ้าของทั้งหมดใน Basket
 - เมื่อ Take Profit ถูก Fill ให้ปิด Entries ทั้งหมดใน Basket พร้อมกัน
 - เมื่อ Basket ปิดสมบูรณ์ สามารถเริ่ม Basket ใหม่ในเดือน UTC เดียวกันได้ทันที

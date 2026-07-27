@@ -19,12 +19,12 @@ def _require_utc(value: datetime, field: str) -> None:
 
 
 def _require_positive(value: Decimal, field: str) -> None:
-    if value <= 0:
+    if not value.is_finite() or value <= 0:
         raise ValueError(f"{field} must be positive")
 
 
 def _require_non_negative(value: Decimal, field: str) -> None:
-    if value < 0:
+    if not value.is_finite() or value < 0:
         raise ValueError(f"{field} must not be negative")
 
 

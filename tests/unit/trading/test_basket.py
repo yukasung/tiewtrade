@@ -26,7 +26,7 @@ def test_basket_reprices_take_profit_after_each_entry() -> None:
         quantity=Decimal("1"),
         fee=Decimal("0.1"),
         filled_at=datetime(2026, 1, 1, tzinfo=UTC),
-        atr=Decimal("2"),
+        atr=Decimal("2.03"),
         tick_size=Decimal("0.1"),
     )
     assert basket.take_profit_price == Decimal("106.0")
@@ -36,7 +36,7 @@ def test_basket_reprices_take_profit_after_each_entry() -> None:
         quantity=Decimal("1"),
         fee=Decimal("0.09"),
         filled_at=datetime(2026, 1, 2, tzinfo=UTC),
-        atr=Decimal("3"),
+        atr=Decimal("3.03"),
         tick_size=Decimal("0.1"),
     )
 
@@ -64,6 +64,19 @@ def test_short_basket_reprices_take_profit_below_average_and_rounds_up() -> None
 
     assert basket.position_side is PositionSide.SHORT
     assert basket.take_profit_price == Decimal("97.0")
+
+    basket.add_entry(
+        position_side=PositionSide.SHORT,
+        price=Decimal("90"),
+        quantity=Decimal("1"),
+        fee=Decimal("0.09"),
+        filled_at=datetime(2026, 1, 2, tzinfo=UTC),
+        atr=Decimal("1.03"),
+        tick_size=Decimal("0.1"),
+    )
+
+    assert basket.average_entry_price == Decimal("95")
+    assert basket.take_profit_price == Decimal("92.0")
 
 
 def test_one_way_basket_rejects_opposite_side_without_mutation() -> None:
@@ -327,6 +340,45 @@ def test_invalid_entry_does_not_mutate_basket(field: str, value: Decimal) -> Non
     assert basket.entry_count == 0
 
 
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [
+        ("price", Decimal("NaN")),
+        ("price", Decimal("Infinity")),
+        ("quantity", Decimal("NaN")),
+        ("quantity", Decimal("Infinity")),
+        ("fee", Decimal("NaN")),
+        ("fee", Decimal("Infinity")),
+        ("atr", Decimal("NaN")),
+        ("atr", Decimal("Infinity")),
+        ("tick_size", Decimal("NaN")),
+        ("tick_size", Decimal("Infinity")),
+    ],
+)
+def test_non_finite_entry_does_not_mutate_basket(field: str, value: Decimal) -> None:
+    basket = Basket(
+        basket_id=basket_id(), policy=policy(), take_profit_atr_multiplier=Decimal("3")
+    )
+    values = {
+        "price": Decimal("100"),
+        "quantity": Decimal("1"),
+        "fee": Decimal("0.1"),
+        "atr": Decimal("2"),
+        "tick_size": Decimal("0.1"),
+    }
+    values[field] = value
+
+    with pytest.raises(ValueError, match=field):
+        basket.add_entry(
+            **values,
+            filled_at=datetime(2026, 1, 1, tzinfo=UTC),
+        )
+
+    assert basket.entry_count == 0
+    assert basket.entry_fees == Decimal("0")
+    assert basket.take_profit_price is None
+
+
 def test_closed_basket_cannot_close_or_accept_entries_twice() -> None:
     basket = Basket(
         basket_id=basket_id(), policy=policy(), take_profit_atr_multiplier=Decimal("3")
@@ -368,6 +420,39 @@ def test_closed_basket_cannot_close_or_accept_entries_twice() -> None:
     [("exit_price", Decimal("0")), ("exit_fee", Decimal("-0.1"))],
 )
 def test_invalid_close_does_not_close_basket(field: str, value: Decimal) -> None:
+    basket = Basket(
+        basket_id=basket_id(), policy=policy(), take_profit_atr_multiplier=Decimal("3")
+    )
+    basket.add_entry(
+        price=Decimal("100"),
+        quantity=Decimal("1"),
+        fee=Decimal("0.1"),
+        filled_at=datetime(2026, 1, 1, tzinfo=UTC),
+        atr=Decimal("2"),
+        tick_size=Decimal("0.1"),
+    )
+    values = {"exit_price": Decimal("106"), "exit_fee": Decimal("0.106")}
+    values[field] = value
+
+    with pytest.raises(ValueError, match=field):
+        basket.close(
+            **values,
+            closed_at=datetime(2026, 1, 2, tzinfo=UTC),
+        )
+
+    assert not basket.is_closed
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [
+        ("exit_price", Decimal("NaN")),
+        ("exit_price", Decimal("Infinity")),
+        ("exit_fee", Decimal("NaN")),
+        ("exit_fee", Decimal("Infinity")),
+    ],
+)
+def test_non_finite_close_does_not_close_basket(field: str, value: Decimal) -> None:
     basket = Basket(
         basket_id=basket_id(), policy=policy(), take_profit_atr_multiplier=Decimal("3")
     )
