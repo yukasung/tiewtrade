@@ -235,8 +235,8 @@ credential หรือ user-owned file change และ worktree สะอา�
 
 - Standards: DEV-118 acceptance criteria, design, repository rules, TDD evidence และ
   Trading Safety
-- Code Quality: connection cleanup, PRAGMA ordering, WAL result validation,
-  deterministic tests และไม่มี abstraction เกินความจำเป็น
+- Code Quality: PRAGMA ordering, deterministic file-backed connection tests และ
+  ไม่มี abstraction เกินความจำเป็น
 
 แก้ Critical/Important findings และรัน verification ที่เกี่ยวข้องซ้ำก่อนรายงานเสร็จ
 
