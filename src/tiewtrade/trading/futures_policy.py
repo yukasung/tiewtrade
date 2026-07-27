@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from decimal import Decimal
 from enum import StrEnum
+from typing import ClassVar
 
 
 class MarginMode(StrEnum):
@@ -13,6 +14,9 @@ class PositionMode(StrEnum):
 
 @dataclass(frozen=True, slots=True)
 class FuturesTradingPolicy:
+    V1_MINIMUM_LEVERAGE: ClassVar[int] = 1
+    V1_MAXIMUM_LEVERAGE: ClassVar[int] = 5
+
     version: str
     leverage: int
     trading_capital_ratio: Decimal
@@ -26,8 +30,11 @@ class FuturesTradingPolicy:
             raise ValueError("version must be paper-futures-v1")
         if isinstance(self.leverage, bool) or not isinstance(self.leverage, int):
             raise ValueError("leverage must be an integer")
-        if not 1 <= self.leverage <= 5:
-            raise ValueError("leverage must be between 1 and 5")
+        if not self.V1_MINIMUM_LEVERAGE <= self.leverage <= self.V1_MAXIMUM_LEVERAGE:
+            raise ValueError(
+                "leverage must be between "
+                f"{self.V1_MINIMUM_LEVERAGE} and {self.V1_MAXIMUM_LEVERAGE}"
+            )
         if self.trading_capital_ratio != Decimal("0.5"):
             raise ValueError("trading_capital_ratio must be 0.5")
         if self.collateral_buffer_ratio != Decimal("0.5"):

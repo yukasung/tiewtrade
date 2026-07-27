@@ -22,7 +22,22 @@ def test_v1_futures_policy_uses_approved_constants() -> None:
     assert policy.position_mode is PositionMode.ONE_WAY
 
 
-@pytest.mark.parametrize("leverage", [0, 6, 1.5, True])
+def test_v1_exposes_supported_leverage_bounds() -> None:
+    assert FuturesTradingPolicy.V1_MINIMUM_LEVERAGE == 1
+    assert FuturesTradingPolicy.V1_MAXIMUM_LEVERAGE == 5
+    assert FuturesTradingPolicy.v1(leverage=1).leverage == 1
+    assert FuturesTradingPolicy.v1(leverage=5).leverage == 5
+
+
+@pytest.mark.parametrize(
+    "leverage",
+    [
+        FuturesTradingPolicy.V1_MINIMUM_LEVERAGE - 1,
+        FuturesTradingPolicy.V1_MAXIMUM_LEVERAGE + 1,
+        1.5,
+        True,
+    ],
+)
 def test_v1_futures_policy_rejects_invalid_leverage(leverage: object) -> None:
     with pytest.raises(ValueError, match="leverage"):
         FuturesTradingPolicy.v1(leverage=leverage)  # type: ignore[arg-type]

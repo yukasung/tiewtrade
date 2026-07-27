@@ -1,5 +1,9 @@
+from copy import copy
+from dataclasses import replace
+from decimal import Decimal
 from threading import Event
 
+import pytest
 from PySide6.QtCore import Qt
 from pytestqt.qtbot import QtBot
 
@@ -8,11 +12,14 @@ from tests.support.paper_session_setup import (
     configured_spot_session,
 )
 from tiewtrade.application.paper_session_setup import (
+    ConfiguredPaperSession,
     PaperSessionCreateOutcome,
     PaperSessionSetupValues,
     PaperSessionUnavailableError,
     PaperSessionValidationError,
 )
+from tiewtrade.trading.futures_policy import FuturesTradingPolicy
+from tiewtrade.trading.spot_policy import SpotTradingPolicy
 from tiewtrade.ui.main_window import MainWindow
 from tiewtrade.ui.session_overview import SessionOverviewWidget
 
@@ -52,14 +59,16 @@ def test_futures_overview_shows_immutable_policy(qtbot: QtBot) -> None:
     assert overview.leverage_value.text() == "3x"
     assert overview.margin_mode_value.text() == "Cross Margin"
     assert overview.position_mode_value.text() == "One-way Mode"
+    assert overview.trading_capital_value.text() == "50%"
     assert overview.collateral_buffer_value.text() == "50%"
 
 
 def test_futures_overview_marks_missing_required_policy_unavailable(
     qtbot: QtBot,
 ) -> None:
-    session = configured_futures_session()
-    object.__setattr__(session.config, "futures_policy", None)
+    session = _session_with_policy_changes(
+        configured_futures_session(), futures_policy=None
+    )
     overview = SessionOverviewWidget()
     qtbot.addWidget(overview)
 
@@ -70,6 +79,49 @@ def test_futures_overview_marks_missing_required_policy_unavailable(
     assert overview.position_mode_value.text() == "Unavailable"
     assert overview.trading_capital_value.text() == "Unavailable"
     assert overview.collateral_buffer_value.text() == "Unavailable"
+
+
+def test_futures_overview_marks_mixed_spot_policy_unavailable(
+    qtbot: QtBot,
+) -> None:
+    session = _session_with_policy_changes(
+        configured_futures_session(),
+        spot_policy=SpotTradingPolicy(Decimal("0.8")),
+    )
+    overview = SessionOverviewWidget()
+    qtbot.addWidget(overview)
+
+    overview.show_session(session)
+
+    assert overview.leverage_value.text() == "Unavailable"
+    assert overview.margin_mode_value.text() == "Unavailable"
+    assert overview.position_mode_value.text() == "Unavailable"
+    assert overview.trading_capital_value.text() == "Unavailable"
+    assert overview.collateral_buffer_value.text() == "Unavailable"
+
+
+@pytest.mark.parametrize(
+    "changes",
+    [
+        pytest.param({"spot_policy": None}, id="missing-spot-policy"),
+        pytest.param(
+            {"futures_policy": FuturesTradingPolicy.v1(leverage=3)},
+            id="mixed-futures-policy",
+        ),
+    ],
+)
+def test_spot_overview_marks_missing_or_mixed_policy_unavailable(
+    qtbot: QtBot,
+    changes: dict[str, object],
+) -> None:
+    session = _session_with_policy_changes(configured_spot_session(), **changes)
+    overview = SessionOverviewWidget()
+    qtbot.addWidget(overview)
+
+    overview.show_session(session)
+
+    assert overview.spot_ratio_value.text() == "Unavailable"
+    assert overview.spot_reserve_ratio_value.text() == "Unavailable"
 
 
 def test_repeated_submit_while_worker_is_running_calls_create_once(
@@ -152,3 +204,13 @@ def test_main_window_starts_on_setup_without_placeholder_navigation(
 
     assert window.current_page_name == "Session Setup"
     assert window.navigation_items == ("Session",)
+
+
+def _session_with_policy_changes(
+    session: ConfiguredPaperSession,
+    **changes: object,
+) -> ConfiguredPaperSession:
+    inconsistent_config = copy(session.config)
+    for field, value in changes.items():
+        object.__setattr__(inconsistent_config, field, value)
+    return replace(session, config=inconsistent_config)

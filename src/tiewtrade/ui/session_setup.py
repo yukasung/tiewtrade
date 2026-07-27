@@ -74,10 +74,15 @@ class SessionSetupWidget(QWidget):
         self.spot_reserve_ratio = QLabel("20%")
         self.spot_reserve_ratio.setObjectName("readOnlyValue")
 
-        futures_policy = FuturesTradingPolicy.v1(leverage=1)
+        futures_policy = FuturesTradingPolicy.v1(
+            leverage=FuturesTradingPolicy.V1_MINIMUM_LEVERAGE
+        )
         self.leverage = QSpinBox()
         self.leverage.setObjectName("futuresLeverage")
-        self.leverage.setRange(1, 5)
+        self.leverage.setRange(
+            FuturesTradingPolicy.V1_MINIMUM_LEVERAGE,
+            FuturesTradingPolicy.V1_MAXIMUM_LEVERAGE,
+        )
         self.leverage.setValue(futures_policy.leverage)
         self.margin_mode_value = QLabel(
             f"{futures_policy.margin_mode.value.title()} Margin"

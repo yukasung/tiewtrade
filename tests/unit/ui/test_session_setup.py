@@ -1,6 +1,7 @@
 from PySide6.QtCore import Qt
 from pytestqt.qtbot import QtBot
 
+from tiewtrade.trading.futures_policy import FuturesTradingPolicy
 from tiewtrade.ui.session_setup import SessionSetupWidget
 
 
@@ -46,6 +47,24 @@ def test_futures_selection_shows_futures_policy_and_hides_spot_ratio(
     assert widget.collateral_buffer_value.text() == "50%"
     assert widget.values().spot_trading_capital_percent is None
     assert widget.values().futures_leverage == "1"
+
+
+def test_futures_leverage_input_uses_domain_bounds(qtbot: QtBot) -> None:
+    widget = SessionSetupWidget()
+    qtbot.addWidget(widget)
+
+    assert widget.leverage.minimum() == FuturesTradingPolicy.V1_MINIMUM_LEVERAGE
+    assert widget.leverage.maximum() == FuturesTradingPolicy.V1_MAXIMUM_LEVERAGE
+
+
+def test_futures_request_includes_selected_leverage(qtbot: QtBot) -> None:
+    widget = SessionSetupWidget()
+    qtbot.addWidget(widget)
+    widget.market_type.setCurrentIndex(widget.market_type.findData("futures"))
+
+    widget.leverage.setValue(5)
+
+    assert widget.values().futures_leverage == "5"
 
 
 def test_switching_back_to_spot_removes_futures_input_from_request(
