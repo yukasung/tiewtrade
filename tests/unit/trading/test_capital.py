@@ -3,8 +3,9 @@ from decimal import Decimal
 
 import pytest
 
-from tiewtrade.trading.capital import SpotCapitalPlan
+from tiewtrade.trading.capital import FuturesCapitalPlan, SpotCapitalPlan
 from tiewtrade.trading.entry_policy import EntryPolicy
+from tiewtrade.trading.futures_policy import FuturesTradingPolicy
 from tiewtrade.trading.spot_policy import SpotTradingPolicy
 from tiewtrade.trading.symbol_rules import SymbolRules
 
@@ -48,6 +49,52 @@ def test_spot_capital_requires_positive_available_capital() -> None:
     entry_policy = EntryPolicy(max_entries=10)
     with pytest.raises(ValueError, match="available capital"):
         SpotCapitalPlan.from_available(Decimal("0"), spot_policy, entry_policy)
+
+
+def test_futures_capital_plan_uses_half_for_trading_and_half_for_buffer() -> None:
+    plan = FuturesCapitalPlan.from_available(
+        Decimal("200000"),
+        FuturesTradingPolicy.v1(leverage=3),
+        EntryPolicy(max_entries=10),
+    )
+
+    assert plan.available_capital == Decimal("200000")
+    assert plan.trading_capital == Decimal("100000.0")
+    assert plan.collateral_buffer == Decimal("100000.0")
+    assert plan.initial_margin_per_entry == Decimal("10000.0")
+    assert plan.target_notional_per_entry == Decimal("30000.0")
+
+
+def test_futures_capital_plan_is_immutable() -> None:
+    plan = FuturesCapitalPlan.from_available(
+        Decimal("200000"),
+        FuturesTradingPolicy.v1(leverage=3),
+        EntryPolicy(max_entries=10),
+    )
+
+    with pytest.raises(FrozenInstanceError):
+        plan.available_capital = Decimal("1")  # type: ignore[misc]
+
+
+@pytest.mark.parametrize(
+    "available",
+    [
+        Decimal("0"),
+        Decimal("-1"),
+        Decimal("NaN"),
+        Decimal("Infinity"),
+        Decimal("-Infinity"),
+    ],
+)
+def test_futures_capital_plan_rejects_invalid_available_capital(
+    available: Decimal,
+) -> None:
+    with pytest.raises(ValueError, match="available capital"):
+        FuturesCapitalPlan.from_available(
+            available,
+            FuturesTradingPolicy.v1(leverage=3),
+            EntryPolicy(max_entries=10),
+        )
 
 
 def test_symbol_rules_round_quantity_and_price_down() -> None:
