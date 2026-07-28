@@ -462,6 +462,11 @@ Expected: checks exit `0` และ commit สำเร็จ
 
 ### Task 3: Apply bounded runtime policies by error action
 
+> **User-approved resolution (2026-07-28):** หลัง provider delay ต้อง transition
+> `RATE_LIMITED -> RECONNECTING`; timeout ระหว่าง warm-up ทั้ง source attempts และ
+> pipeline deadline ต้องคง public reason `WARM_UP_TIMEOUT`; และ Stop Session ต้อง
+> ยกเลิกการรอ `Retry-After` ได้โดยรักษา close-once กับ `STOPPED` semantics
+
 **Files:**
 - Modify: `tests/unit/market_data/test_runtime.py`
 - Modify: `src/tiewtrade/market_data/runtime.py`
@@ -795,7 +800,10 @@ except MarketDataFatalError:
 except MarketDataRateLimitError:
     self._fail_closed(MarketDataRuntimeReason.RATE_LIMIT_EXHAUSTED)
     return False
-except (MarketDataRetryableError, TimeoutError, _WarmUpSourceError):
+except TimeoutError:
+    self._fail_closed(MarketDataRuntimeReason.WARM_UP_TIMEOUT)
+    return False
+except (MarketDataRetryableError, _WarmUpSourceError):
     self._fail_closed(MarketDataRuntimeReason.SOURCE_ERROR)
     return False
 ```
