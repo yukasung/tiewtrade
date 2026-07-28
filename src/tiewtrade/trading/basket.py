@@ -73,7 +73,7 @@ class Basket:
         self._position_side = position_side
         self._entries: list[BasketEntry] = []
         self._is_closed = False
-        self.take_profit_price: Decimal | None = None
+        self._take_profit_price: Decimal | None = None
 
     @property
     def basket_id(self) -> UUID:
@@ -94,6 +94,10 @@ class Basket:
     @property
     def is_closed(self) -> bool:
         return self._is_closed
+
+    @property
+    def take_profit_price(self) -> Decimal | None:
+        return self._take_profit_price
 
     @property
     def total_quantity(self) -> Decimal:
@@ -156,7 +160,7 @@ class Basket:
         ) * tick_size
 
         self._entries.append(BasketEntry(price, quantity, fee, filled_at))
-        self.take_profit_price = take_profit_price
+        self._take_profit_price = take_profit_price
 
     def close(
         self,

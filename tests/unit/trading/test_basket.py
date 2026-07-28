@@ -17,6 +17,19 @@ def basket_id() -> UUID:
     return UUID("00000000-0000-0000-0000-000000000092")
 
 
+def test_take_profit_price_is_read_only() -> None:
+    basket = Basket(
+        basket_id=basket_id(),
+        policy=policy(),
+        take_profit_atr_multiplier=Decimal("3"),
+    )
+
+    with pytest.raises(AttributeError):
+        setattr(basket, "take_profit_price", Decimal("999"))  # noqa: B010
+
+    assert basket.take_profit_price is None
+
+
 def test_basket_reprices_take_profit_after_each_entry() -> None:
     basket = Basket(
         basket_id=basket_id(), policy=policy(), take_profit_atr_multiplier=Decimal("3")
