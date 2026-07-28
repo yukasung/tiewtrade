@@ -5,6 +5,7 @@ from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from uuid import UUID
 
+from tiewtrade.decimal_context import configure_decimal_context
 from tiewtrade.market_data.config import MarketDataConfig
 from tiewtrade.replay.csv_candles import load_candles_csv
 from tiewtrade.replay.paper_spot import run_paper_spot_replay
@@ -18,6 +19,7 @@ _SESSION_ID = UUID("00000000-0000-0000-0000-000000000080")
 
 
 def main(argv: Sequence[str] | None = None) -> int:
+    configure_decimal_context()
     arguments = _build_parser().parse_args(argv)
     try:
         market_data = MarketDataConfig(

@@ -10,6 +10,30 @@ from tiewtrade.application.paper_session_setup import (
 )
 
 
+def test_desktop_configures_decimal_context_before_composition(
+    tmp_path: Path,
+    monkeypatch: MonkeyPatch,
+) -> None:
+    events: list[str] = []
+    original_database = desktop_main.SQLiteDatabase
+
+    def capture_database(path: Path) -> object:
+        events.append("database")
+        return original_database(path)
+
+    monkeypatch.setattr(
+        desktop_main,
+        "configure_decimal_context",
+        lambda: events.append("decimal"),
+        raising=False,
+    )
+    monkeypatch.setattr(desktop_main, "SQLiteDatabase", capture_database)
+    monkeypatch.setattr(desktop_main, "run_desktop_ui", lambda **kwargs: 0)
+
+    assert desktop_main.run_desktop(tmp_path / "tiewtrade.sqlite3") == 0
+    assert events == ["decimal", "database"]
+
+
 def test_desktop_composition_supplies_migrated_create_and_load_operations(
     tmp_path: Path,
     monkeypatch: MonkeyPatch,

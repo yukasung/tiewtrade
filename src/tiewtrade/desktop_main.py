@@ -6,6 +6,7 @@ from tiewtrade.application.paper_session_setup import (
     PaperSessionCreateOutcome,
     PaperSessionSetupValues,
 )
+from tiewtrade.decimal_context import configure_decimal_context
 from tiewtrade.integrations.sqlite.active_paper_sessions import (
     SQLiteActivePaperSessions,
 )
@@ -14,6 +15,7 @@ from tiewtrade.ui.desktop import run_desktop as run_desktop_ui
 
 
 def run_desktop(database_path: Path | None = None) -> int:
+    configure_decimal_context()
     resolved_database_path = database_path or default_database_path()
     database = SQLiteDatabase(resolved_database_path)
     store = SQLiteActivePaperSessions(database)
