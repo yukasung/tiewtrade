@@ -25,6 +25,8 @@ class PersistentPaperSpotSQLiteSession:
         session: PaperSpotSession,
         history: PaperSpotSQLiteHistory,
     ) -> None:
+        if session.identity != history.session_identity:
+            raise ValueError("Paper Spot Session and Trade History identity differ")
         self._session = session
         self._history = history
         self._state = PersistenceState.READY

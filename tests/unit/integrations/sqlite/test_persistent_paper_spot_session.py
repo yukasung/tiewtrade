@@ -1,3 +1,4 @@
+from dataclasses import replace
 from datetime import UTC, datetime
 from decimal import Decimal
 from unittest.mock import create_autospec
@@ -7,6 +8,7 @@ import pytest
 
 from tiewtrade.application.paper_spot_session import (
     PaperSpotSession,
+    PaperSpotSessionIdentity,
     PaperSpotSessionSnapshot,
 )
 from tiewtrade.execution.paper_spot import PaperSpotEntryFill, PaperSpotExitFill
@@ -106,12 +108,43 @@ def close_snapshot() -> PaperSpotSessionSnapshot:
     )
 
 
+def session_identity() -> PaperSpotSessionIdentity:
+    return PaperSpotSessionIdentity(
+        session_id=SESSION_ID,
+        symbol="BTCUSDT",
+        timeframe="5m",
+        preset_version="rsi-step-grid-v1",
+    )
+
+
+def persistent_session(
+    session: PaperSpotSession,
+    history: PaperSpotSQLiteHistory,
+) -> PersistentPaperSpotSQLiteSession:
+    session.identity = session_identity()  # type: ignore[misc]
+    history.session_identity = session_identity()  # type: ignore[misc]
+    return PersistentPaperSpotSQLiteSession(session, history)
+
+
+def test_constructor_rejects_mismatched_session_and_history_identity() -> None:
+    session = create_autospec(PaperSpotSession, instance=True)
+    history = create_autospec(PaperSpotSQLiteHistory, instance=True)
+    session.identity = session_identity()  # type: ignore[misc]
+    history.session_identity = replace(  # type: ignore[misc]
+        session_identity(),
+        timeframe="15m",
+    )
+
+    with pytest.raises(ValueError, match="identity"):
+        PersistentPaperSpotSQLiteSession(session, history)
+
+
 def test_successful_entry_is_durable_before_ready_snapshot_returns() -> None:
     session = create_autospec(PaperSpotSession, instance=True)
     history = create_autospec(PaperSpotSQLiteHistory, instance=True)
     session.process_completed_candle.return_value = entry_snapshot()
     history.record_entry.return_value = True
-    persistent = PersistentPaperSpotSQLiteSession(session, history)
+    persistent = persistent_session(session, history)
     candle = completed_candle()
 
     result = persistent.process_completed_candle(
@@ -133,7 +166,7 @@ def test_successful_close_is_durable_before_ready_snapshot_returns() -> None:
     history = create_autospec(PaperSpotSQLiteHistory, instance=True)
     session.process_completed_candle.return_value = close_snapshot()
     history.record_close.return_value = True
-    persistent = PersistentPaperSpotSQLiteSession(session, history)
+    persistent = persistent_session(session, history)
     candle = completed_candle()
 
     result = persistent.process_completed_candle(
@@ -162,7 +195,7 @@ def test_persistence_error_blocks_every_later_candle(error: Exception) -> None:
     history = create_autospec(PaperSpotSQLiteHistory, instance=True)
     session.process_completed_candle.return_value = entry_snapshot()
     history.record_entry.side_effect = error
-    persistent = PersistentPaperSpotSQLiteSession(session, history)
+    persistent = persistent_session(session, history)
     candle = completed_candle()
 
     with pytest.raises(type(error), match=str(error)):

@@ -4,7 +4,10 @@ from uuid import UUID, uuid5
 
 import pytest
 
-from tiewtrade.application.paper_spot_session import PaperSpotSession
+from tiewtrade.application.paper_spot_session import (
+    PaperSpotSession,
+    PaperSpotSessionIdentity,
+)
 from tiewtrade.market_data.candle import Candle
 from tiewtrade.market_data.config import MarketDataConfig
 from tiewtrade.strategies.rsi_step_grid.preset import RsiStepGridPreset
@@ -33,6 +36,17 @@ def test_session_rejects_a_non_paper_spot_configuration() -> None:
             ),
             RsiStepGridPreset.v1(),
         )
+
+
+def test_session_exposes_immutable_persistence_identity() -> None:
+    application = paper_session()
+
+    assert application.identity == PaperSpotSessionIdentity(
+        session_id=UUID("00000000-0000-0000-0000-000000000079"),
+        symbol="BTCUSDT",
+        timeframe="5m",
+        preset_version="rsi-step-grid-v1",
+    )
 
 
 def test_pending_intent_fills_at_the_next_completed_candle_open() -> None:

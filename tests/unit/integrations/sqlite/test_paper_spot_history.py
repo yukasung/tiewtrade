@@ -5,6 +5,7 @@ from uuid import UUID
 
 import pytest
 
+from tiewtrade.application.paper_spot_session import PaperSpotSessionIdentity
 from tiewtrade.execution.paper_spot import PaperSpotEntryFill, PaperSpotExitFill
 from tiewtrade.integrations.sqlite.database import SQLiteDatabase
 from tiewtrade.integrations.sqlite.paper_spot_history import (
@@ -46,6 +47,17 @@ def history(store: SQLiteTradeHistory) -> PaperSpotSQLiteHistory:
             commission_asset="USDT",
         ),
         store,
+    )
+
+
+def test_history_exposes_session_identity(
+    history: PaperSpotSQLiteHistory,
+) -> None:
+    assert history.session_identity == PaperSpotSessionIdentity(
+        session_id=SESSION_ID,
+        symbol="BTCUSDT",
+        timeframe="5m",
+        preset_version="rsi-step-grid-v1",
     )
 
 

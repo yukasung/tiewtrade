@@ -2,6 +2,7 @@ from dataclasses import dataclass, replace
 from decimal import Decimal
 from uuid import UUID
 
+from tiewtrade.application.paper_spot_session import PaperSpotSessionIdentity
 from tiewtrade.execution.paper_spot import PaperSpotEntryFill, PaperSpotExitFill
 from tiewtrade.integrations.sqlite.trade_history import SQLiteTradeHistory
 from tiewtrade.trading.basket import ClosedBasket
@@ -23,6 +24,15 @@ class PaperSpotHistoryContext:
     preset_version: str
     commission_asset: str
 
+    @property
+    def session_identity(self) -> PaperSpotSessionIdentity:
+        return PaperSpotSessionIdentity(
+            session_id=self.session_id,
+            symbol=self.symbol,
+            timeframe=self.timeframe,
+            preset_version=self.preset_version,
+        )
+
 
 class PaperSpotSQLiteHistory:
     def __init__(
@@ -32,6 +42,10 @@ class PaperSpotSQLiteHistory:
     ) -> None:
         self._context = context
         self._store = store
+
+    @property
+    def session_identity(self) -> PaperSpotSessionIdentity:
+        return self._context.session_identity
 
     def record_entry(
         self,

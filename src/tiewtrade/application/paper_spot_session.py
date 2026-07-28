@@ -37,6 +37,14 @@ class PaperSpotSessionSnapshot:
     take_profit_price: Decimal | None
 
 
+@dataclass(frozen=True, slots=True)
+class PaperSpotSessionIdentity:
+    session_id: UUID
+    symbol: str
+    timeframe: str
+    preset_version: str
+
+
 class PaperSpotSession:
     def __init__(
         self,
@@ -54,6 +62,12 @@ class PaperSpotSession:
             raise ValueError("session preset version does not match the preset")
 
         self._session = session
+        self._identity = PaperSpotSessionIdentity(
+            session_id=session.session_id,
+            symbol=market_data.symbol,
+            timeframe=market_data.timeframe,
+            preset_version=session.preset_version,
+        )
         self._symbol_rules = symbol_rules
         self._preset = preset
         self._candles = CompletedCandleStream(market_data)
@@ -65,6 +79,10 @@ class PaperSpotSession:
         self._pending_intent: EntryIntent | None = None
         self._latest_take_profit_fill: PaperSpotExitFill | None = None
         self._closed_basket_count = 0
+
+    @property
+    def identity(self) -> PaperSpotSessionIdentity:
+        return self._identity
 
     def process_completed_candle(
         self, candle: Candle, *, received_at: datetime
