@@ -126,15 +126,11 @@ class PaperFuturesExecutor:
             raise ValueError("liquidation_price must be finite and positive")
 
         if basket.position_side is PositionSide.LONG:
-            if candle.low > liquidation_price:
-                return None
             raw_price = min(candle.open, liquidation_price) * (
                 Decimal("1") - self._slippage
             )
             price = self._symbol_rules.floor_price(raw_price)
         else:
-            if candle.high < liquidation_price:
-                return None
             raw_price = max(candle.open, liquidation_price) * (
                 Decimal("1") + self._slippage
             )

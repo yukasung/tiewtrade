@@ -212,7 +212,7 @@ Take Profit ที่เพิ่งคำนวณใหม่หลัง Entr
 - `P` = current evaluation price
 - `m` = Maintenance Margin Rate
 
-Account Equity และ Maintenance Margin:
+Account Equity และ Maintenance Margin ที่ใช้ derive threshold:
 
 ```text
 Long unrealized PnL  = (P - E) × Q
@@ -222,7 +222,8 @@ account_equity = W + unrealized_pnl
 maintenance_margin = abs(P × Q) × m
 ```
 
-Liquidation condition:
+สมการขอบเขต equity ที่ใช้แก้หา `liquidation_price` เท่านั้น ไม่ใช่ runtime
+Liquidation verdict:
 
 ```text
 account_equity <= maintenance_margin
@@ -238,7 +239,7 @@ Short = (W + E × Q) ÷ (Q × (1 + m))
 Long threshold ที่ไม่เป็นค่าบวกหมายถึง model ยังไม่มี Liquidation threshold ในช่วง
 ราคาบวก
 
-Completed-candle trigger:
+Runtime Liquidation verdict ใช้ completed-Candle price crossing เพียงแบบเดียว:
 
 - Long: `candle.low <= liquidation_price`
 - Short: `candle.high >= liquidation_price`

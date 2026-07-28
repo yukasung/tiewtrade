@@ -28,6 +28,50 @@ def test_snapshot_does_not_duplicate_liquidation_verdict() -> None:
     )
 
     assert not hasattr(snapshot, "is_liquidated")
+    assert not hasattr(snapshot, "maintenance_margin")
+
+
+@pytest.mark.parametrize(
+    ("side", "candle_low", "candle_high"),
+    [
+        (PositionSide.LONG, Decimal("80"), Decimal("100")),
+        (PositionSide.SHORT, Decimal("100"), Decimal("120")),
+    ],
+)
+def test_liquidation_crossing_includes_exact_threshold(
+    side: PositionSide,
+    candle_low: Decimal,
+    candle_high: Decimal,
+) -> None:
+    assert model().is_liquidation_crossed(
+        side=side,
+        liquidation_price=Decimal("80")
+        if side is PositionSide.LONG
+        else Decimal("120"),
+        candle_low=candle_low,
+        candle_high=candle_high,
+    )
+
+
+@pytest.mark.parametrize(
+    ("side", "liquidation_price", "candle_low", "candle_high"),
+    [
+        (PositionSide.LONG, Decimal("80"), Decimal("80.1"), Decimal("100")),
+        (PositionSide.SHORT, Decimal("120"), Decimal("100"), Decimal("119.9")),
+    ],
+)
+def test_liquidation_crossing_rejects_ranges_that_do_not_touch_threshold(
+    side: PositionSide,
+    liquidation_price: Decimal,
+    candle_low: Decimal,
+    candle_high: Decimal,
+) -> None:
+    assert not model().is_liquidation_crossed(
+        side=side,
+        liquidation_price=liquidation_price,
+        candle_low=candle_low,
+        candle_high=candle_high,
+    )
 
 
 def test_long_liquidation_threshold_uses_cross_account_equity() -> None:
@@ -77,9 +121,7 @@ def test_entry_fees_reduce_account_equity() -> None:
     )
 
     assert snapshot.account_equity == Decimal("169970")
-    assert snapshot.maintenance_margin == Decimal("1350.000")
     assert isinstance(snapshot.account_equity, Decimal)
-    assert isinstance(snapshot.maintenance_margin, Decimal)
 
 
 def test_short_snapshot_uses_directional_unrealized_pnl() -> None:
@@ -93,10 +135,9 @@ def test_short_snapshot_uses_directional_unrealized_pnl() -> None:
     )
 
     assert snapshot.account_equity == Decimal("979")
-    assert snapshot.maintenance_margin == Decimal("1.100")
 
 
-def test_snapshot_keeps_equity_and_maintenance_margin_at_adverse_price() -> None:
+def test_snapshot_keeps_equity_at_adverse_price() -> None:
     snapshot = model().snapshot(
         side=PositionSide.LONG,
         average_entry_price=Decimal("100"),
@@ -107,7 +148,6 @@ def test_snapshot_keeps_equity_and_maintenance_margin_at_adverse_price() -> None
     )
 
     assert snapshot.account_equity == Decimal("0")
-    assert snapshot.maintenance_margin == Decimal("0.450")
 
 
 @pytest.mark.parametrize(

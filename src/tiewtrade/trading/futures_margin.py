@@ -8,7 +8,6 @@ from tiewtrade.trading.position import PositionSide
 @dataclass(frozen=True, slots=True)
 class FuturesMarginSnapshot:
     account_equity: Decimal
-    maintenance_margin: Decimal
     liquidation_price: Decimal | None
 
 
@@ -67,14 +66,25 @@ class FuturesMarginModel:
         else:
             unrealized_pnl = (average_entry_price - current_price) * quantity
         account_equity = available_capital - accumulated_entry_fees + unrealized_pnl
-        maintenance_margin = (
-            abs(current_price * quantity) * self._policy.maintenance_margin_rate
-        )
         return FuturesMarginSnapshot(
             account_equity=account_equity,
-            maintenance_margin=maintenance_margin,
             liquidation_price=liquidation_price,
         )
+
+    def is_liquidation_crossed(
+        self,
+        *,
+        side: PositionSide,
+        liquidation_price: Decimal,
+        candle_low: Decimal,
+        candle_high: Decimal,
+    ) -> bool:
+        self._require_position_side(side)
+        if not liquidation_price.is_finite() or liquidation_price <= 0:
+            raise ValueError("liquidation_price must be finite and positive")
+        if side is PositionSide.LONG:
+            return candle_low <= liquidation_price
+        return candle_high >= liquidation_price
 
     @staticmethod
     def _require_position_side(side: PositionSide) -> None:

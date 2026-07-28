@@ -132,6 +132,10 @@ Lifecycle:
 - Leverage เป็นจำนวนเต็ม 1x–5x และตรึงตลอด Session
 - Collateral Buffer ไม่ถูกใช้สร้าง Entry ใหม่ แต่ถือเป็นเงินที่ผู้ใช้ยอมเสี่ยงทั้งหมดเพื่อเลื่อน liquidation
 - Paper Futures Policy v1 ใช้ Maintenance Margin Rate 0.5% แบบ deterministic ไม่อ้างว่าเท่ากับ Binance Mark Price หรือ Maintenance Margin Tier จริง
+- Paper Futures ใช้ completed-Candle price crossing เป็น Liquidation verdict แบบ
+  deterministic: LONG ใช้ `candle.low <= liquidation_price` และ SHORT ใช้
+  `candle.high >= liquidation_price` หากราคาแตะระดับดังกล่าวระหว่าง Candle แล้วฟื้นกลับ
+  ก่อน Candle ปิด ให้ถือว่าเกิด Liquidation แล้ว
 - Liquidation ปิด Basket ด้วย `close_reason = LIQUIDATION`, เปลี่ยน Session เป็น terminal `LIQUIDATED` และห้ามสร้าง Entry ใหม่
 
 ระบบต้องบังคับ immutable Session policy, capital allocation, leverage cap และ `max_entries` ใน Paper และ Live ด้วยกติกาชุดเดียวกัน
@@ -290,7 +294,9 @@ SQLite เก็บข้อมูลที่ไม่ใช่ secret ได�
 ### 15.3 Live Futures Gate
 
 - Live Spot Gate และ acceptance ผ่าน
-- Cross Margin, leverage cap, Collateral Buffer, funding และ liquidation-related account facts ผ่านการตรวจสอบ
+- Cross Margin, leverage cap, Collateral Buffer และ funding ผ่านการตรวจสอบ
+- `liquidationPrice`, `markPrice` และ maintenance-margin facts จาก Binance เป็น
+  authoritative source สำหรับ Live Futures ส่วนสูตร Paper Futures ใช้ตัดสิน Live ไม่ได้
 - ผู้ใช้อนุมัติเริ่มทดสอบ Live Futures โดยชัดแจ้งในอนาคต
 
 ## 16. สิ่งที่ไม่อยู่ใน Internal Alpha

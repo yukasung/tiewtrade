@@ -106,6 +106,38 @@ def test_liquidation_wins_when_same_candle_touches_take_profit() -> None:
     assert snapshot.state is PaperFuturesSessionState.LIQUIDATED
 
 
+def test_session_does_not_call_executor_before_liquidation_crossing(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    session, entry_candle = make_session_with_open_long_basket()
+    session._liquidation_price = Decimal("80")
+    safe_candle = next_candle(
+        entry_candle,
+        open="100",
+        high="110",
+        low="90",
+        close="100",
+    )
+
+    def unexpected_liquidation_fill(*args: object, **kwargs: object) -> None:
+        raise AssertionError("executor called before liquidation crossing")
+
+    monkeypatch.setattr(
+        session._executor,
+        "fill_liquidation",
+        unexpected_liquidation_fill,
+    )
+
+    snapshot = session.process_completed_candle(
+        safe_candle,
+        received_at=safe_candle.close_time,
+    )
+
+    assert snapshot.accepted
+    assert snapshot.state is PaperFuturesSessionState.ACTIVE
+    assert snapshot.exit_fill is None
+
+
 def test_liquidated_session_rejects_future_candles_without_mutation() -> None:
     session, liquidation_candle = make_liquidated_session()
     before = session.snapshot

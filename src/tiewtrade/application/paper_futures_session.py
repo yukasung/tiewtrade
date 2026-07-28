@@ -259,6 +259,13 @@ class PaperFuturesSession:
     def _fill_liquidation(self, candle: Candle) -> PaperFuturesExitFill | None:
         if self._basket is None or self._liquidation_price is None:
             return None
+        if not self._margin.is_liquidation_crossed(
+            side=self._basket.position_side,
+            liquidation_price=self._liquidation_price,
+            candle_low=candle.low,
+            candle_high=candle.high,
+        ):
+            return None
         return self._executor.fill_liquidation(
             self._basket,
             candle,

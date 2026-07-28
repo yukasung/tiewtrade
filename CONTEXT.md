@@ -73,8 +73,13 @@ Liquidation เป็นผลลัพธ์แบบ deterministic ของ P
 - หากราคาแตะระดับ Liquidation ระหว่าง completed Candle แล้วฟื้นกลับก่อน Candle ปิด
   ให้ถือว่าเกิด Liquidation แล้ว
 
-`account_equity` และ `maintenance_margin` เป็นข้อมูลสำหรับแสดงผลและตรวจสอบย้อนหลัง
-ไม่ใช่ Liquidation verdict
+`account_equity` และ `liquidation_price` เป็นข้อมูล Paper ที่ใช้แสดงผลและตรวจสอบ
+ย้อนหลัง ส่วน Liquidation verdict ใช้ price-crossing rule ข้างต้นเพียงแบบเดียว
+
+สำหรับ Live Futures ค่า `liquidationPrice`, `markPrice` และ maintenance-margin facts
+จาก Binance เป็น authoritative source เพื่อแสดงผล เฝ้าระวัง และ reconciliation โดย
+Binance เป็นผู้ตัดสินและดำเนินการ Liquidation จริง ห้ามใช้สูตร Paper Futures เป็น
+authoritative Live verdict
 
 ### Basket Close Reason
 

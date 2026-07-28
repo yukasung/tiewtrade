@@ -283,25 +283,24 @@ def test_liquidation_returns_none_for_empty_basket() -> None:
     )
 
 
-def test_liquidation_returns_none_until_the_price_is_touched() -> None:
+def test_liquidation_fill_construction_does_not_decide_price_crossing() -> None:
     executor = make_executor()
 
-    assert (
-        executor.fill_liquidation(
-            long_basket(entry_price="100", take_profit="106"),
-            candle(open="100", high="110", low="90"),
-            liquidation_price=Decimal("80"),
-        )
-        is None
+    long_fill = executor.fill_liquidation(
+        long_basket(entry_price="100", take_profit="106"),
+        candle(open="100", high="110", low="90"),
+        liquidation_price=Decimal("80"),
     )
-    assert (
-        executor.fill_liquidation(
-            short_basket(entry_price="100", take_profit="94"),
-            candle(open="100", high="110", low="90"),
-            liquidation_price=Decimal("120"),
-        )
-        is None
+    short_fill = executor.fill_liquidation(
+        short_basket(entry_price="100", take_profit="94"),
+        candle(open="100", high="110", low="90"),
+        liquidation_price=Decimal("120"),
     )
+
+    assert long_fill is not None
+    assert long_fill.price == Decimal("80.0")
+    assert short_fill is not None
+    assert short_fill.price == Decimal("120.0")
 
 
 def test_executor_rejects_non_paper_or_non_futures_configuration() -> None:
