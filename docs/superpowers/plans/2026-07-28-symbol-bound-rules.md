@@ -1,6 +1,6 @@
-# Symbol-Bound Trading Rules Implementation Plan
+# แผนการทำงาน Symbol-Bound Trading Rules
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **สำหรับผู้ปฏิบัติงานแบบ agentic:** ต้องใช้ sub-skill: ใช้ superpowers:subagent-driven-development (แนะนำ) หรือ superpowers:executing-plans เพื่อทำตามแผนนี้ทีละงาน โดยใช้รูปแบบ checkbox (`- [ ]`) เพื่อติดตามขั้นตอน
 
 **Goal:** ผูก `SymbolRules` กับ market symbol และทำให้ Paper Spot/Futures ปฏิเสธ Candle ของคนละ symbol ก่อนคำนวณหรือสร้าง Fill
 
@@ -8,7 +8,7 @@
 
 **Tech Stack:** Python 3.13, dataclasses, Decimal, pytest, Ruff, Mypy
 
-## Global Constraints
+## ข้อจำกัดร่วม
 
 - Internal Alpha รองรับ BTCUSDT เพียง symbol เดียว; ห้ามเปิด symbol ที่สองใน Issue นี้
 - `symbol` มาจาก Session/market configuration และห้าม hard-code ใน business logic
@@ -17,20 +17,20 @@
 - ใช้ Paper และ fake data เท่านั้น ห้ามเรียก Binance network หรือ Live execution
 - คงค่า BTCUSDT V1 `tick_size=0.01`, `step_size=0.001`, `min_notional=5` ใน replay จนกว่าจะมี Level 2 Issue สำหรับ `exchangeInfo`
 - ไม่สร้าง interface, factory, registry หรือ generic symbol-rules provider
-- Design source: `docs/superpowers/specs/2026-07-28-symbol-bound-rules-design.md`
+- เอกสารออกแบบต้นทาง: `docs/superpowers/specs/2026-07-28-symbol-bound-rules-design.md`
 
 ---
 
-## File Map
+## ผังไฟล์
 
-### Production files
+### ไฟล์ Production
 
 - `src/tiewtrade/trading/symbol_rules.py` — เพิ่ม immutable symbol identity และ validation
 - `src/tiewtrade/execution/paper_spot.py` — ตรวจ identity ก่อน Spot Entry/Take Profit
 - `src/tiewtrade/execution/paper_futures.py` — ตรวจ identity ก่อน Futures Entry/Take Profit/Liquidation
 - `src/tiewtrade/paper_replay_main.py` — ส่ง `MarketDataConfig.symbol` เข้า `SymbolRules`
 
-### Test and fixture call sites
+### จุดเรียกใช้ใน Test และ fixture
 
 - `tests/unit/trading/test_capital.py`
 - `tests/unit/execution/test_paper_spot.py`
@@ -46,25 +46,25 @@
 
 ---
 
-### Task 1: Add Symbol Identity to `SymbolRules`
+### Task 1: เพิ่ม Symbol Identity ให้ `SymbolRules`
 
 **Files:**
 
-- Modify: `src/tiewtrade/trading/symbol_rules.py:5-17`
-- Modify: `src/tiewtrade/paper_replay_main.py:45-50`
-- Modify: every test/fixture call site listed in File Map
+- แก้: `src/tiewtrade/trading/symbol_rules.py:5-17`
+- แก้: `src/tiewtrade/paper_replay_main.py:45-50`
+- แก้: ทุกจุดเรียกใช้ test/fixture ที่ระบุในผังไฟล์
 - Test: `tests/unit/trading/test_capital.py:98-130`
 - Acceptance: `tests/acceptance/test_paper_replay_cli.py`
 
 **Interfaces:**
 
-- Consumes: `MarketDataConfig.symbol: str`
-- Produces: `SymbolRules(symbol: str, tick_size: Decimal, step_size: Decimal, min_notional: Decimal)`
-- Invariant: `SymbolRules.symbol` is non-empty after `str.strip()` validation, but the stored value is not normalized
+- รับ: `MarketDataConfig.symbol: str`
+- ให้ผลเป็น: `SymbolRules(symbol: str, tick_size: Decimal, step_size: Decimal, min_notional: Decimal)`
+- เงื่อนไขคงที่: `SymbolRules.symbol` ไม่ว่างหลังตรวจด้วย `str.strip()` แต่ค่าที่เก็บจะไม่ถูก normalize
 
-- [ ] **Step 1: Write the failing symbol validation test**
+- [ ] **Step 1: เขียน test validation ของ symbol ที่ต้องล้มเหลวก่อน**
 
-Add to `tests/unit/trading/test_capital.py`:
+เพิ่มใน `tests/unit/trading/test_capital.py`:
 
 ```python
 @pytest.mark.parametrize("symbol", ["", "   "])
@@ -78,20 +78,20 @@ def test_symbol_rules_require_a_non_blank_symbol(symbol: str) -> None:
         )
 ```
 
-- [ ] **Step 2: Run the test and verify RED**
+- [ ] **Step 2: รัน test และยืนยัน RED**
 
-Run:
+รัน:
 
 ```bash
 PYTHONPATH=src ../../.venv/bin/python -m pytest \
   tests/unit/trading/test_capital.py::test_symbol_rules_require_a_non_blank_symbol -q
 ```
 
-Expected: FAIL because `SymbolRules` does not accept the `symbol` argument yet.
+ผลที่คาดหวัง: FAIL เพราะ `SymbolRules` ยังไม่รับ argument `symbol`.
 
-- [ ] **Step 3: Add the minimal immutable symbol contract**
+- [ ] **Step 3: เพิ่ม contract ของ immutable symbol เท่าที่จำเป็น**
 
-Change `src/tiewtrade/trading/symbol_rules.py`:
+แก้ `src/tiewtrade/trading/symbol_rules.py`:
 
 ```python
 @dataclass(frozen=True, slots=True)
@@ -112,12 +112,12 @@ class SymbolRules:
             raise ValueError("min_notional must be positive")
 ```
 
-- [ ] **Step 4: Update all constructors without changing filter values**
+- [ ] **Step 4: ปรับ constructor ทุกจุดโดยไม่เปลี่ยนค่า filter**
 
-Insert `symbol="BTCUSDT",` immediately before the existing `tick_size=` argument in
-every test/fixture constructor listed in File Map. For example, the constructor in
+แทรก `symbol="BTCUSDT",` ก่อน argument `tick_size=` ที่มีอยู่ทันทีใน constructor
+ของ test/fixture ทุกจุดที่ระบุในผังไฟล์ ตัวอย่างเช่น constructor ใน
 `tests/unit/trading/test_capital.py::test_symbol_rules_round_quantity_and_price_down`
-must become:
+ต้องเป็นดังนี้:
 
 ```python
 SymbolRules(
@@ -128,7 +128,7 @@ SymbolRules(
 )
 ```
 
-In `src/tiewtrade/paper_replay_main.py`, market identity must come from the already validated configuration:
+ใน `src/tiewtrade/paper_replay_main.py` market identity ต้องมาจาก configuration ที่ผ่าน validation แล้ว:
 
 ```python
 symbol_rules=SymbolRules(
@@ -139,11 +139,11 @@ symbol_rules=SymbolRules(
 ),
 ```
 
-Do not replace `market_data.symbol` with `arguments.symbol` or a second `"BTCUSDT"` literal.
+ห้ามแทนที่ `market_data.symbol` ด้วย `arguments.symbol` หรือ literal `"BTCUSDT"` อีกชุดหนึ่ง
 
-- [ ] **Step 5: Run focused tests and verify GREEN**
+- [ ] **Step 5: รัน tests ที่ระบุและยืนยัน GREEN**
 
-Run:
+รัน:
 
 ```bash
 PYTHONPATH=src ../../.venv/bin/python -m pytest -q \
@@ -151,18 +151,18 @@ PYTHONPATH=src ../../.venv/bin/python -m pytest -q \
   tests/acceptance/test_paper_replay_cli.py
 ```
 
-Expected: all focused tests PASS and the replay JSON remains byte-for-byte unchanged.
+ผลที่คาดหวัง: tests ที่ระบุทั้งหมด PASS และ replay JSON ต้องไม่เปลี่ยนแม้แต่ byte เดียว
 
-- [ ] **Step 6: Find any constructor that was missed**
+- [ ] **Step 6: ค้นหา constructor ที่อาจตกหล่น**
 
-Run:
+รัน:
 
 ```bash
 rg -n "SymbolRules\\(" src tests
 PYTHONPATH=src ../../.venv/bin/python -m pytest -q
 ```
 
-Expected: every constructor supplies `symbol`; the full suite passes.
+ผลที่คาดหวัง: constructor ทุกจุดส่ง `symbol` และ test suite ทั้งหมดผ่าน
 
 - [ ] **Step 7: Commit Task 1**
 
@@ -176,22 +176,22 @@ git commit -m "feat: bind symbol rules to market identity"
 
 ---
 
-### Task 2: Reject Mismatched Candles in Paper Spot
+### Task 2: ปฏิเสธ Candle ที่ symbol ไม่ตรงใน Paper Spot
 
 **Files:**
 
-- Modify: `src/tiewtrade/execution/paper_spot.py:39-94`
+- แก้: `src/tiewtrade/execution/paper_spot.py:39-94`
 - Test: `tests/unit/execution/test_paper_spot.py`
 
 **Interfaces:**
 
-- Consumes: `Candle.symbol` and `SymbolRules.symbol`
-- Produces: `PaperSpotExecutor._require_matching_symbol(candle: Candle) -> None`
+- รับ: `Candle.symbol` และ `SymbolRules.symbol`
+- ให้ผลเป็น: `PaperSpotExecutor._require_matching_symbol(candle: Candle) -> None`
 - Error: `ValueError("candle symbol must match SymbolRules.symbol: candle='ETHUSDT', rules='BTCUSDT'")`
 
-- [ ] **Step 1: Add imports and failing Entry mismatch test**
+- [ ] **Step 1: เพิ่ม import และ Entry mismatch test ที่ต้องล้มเหลวก่อน**
 
-Add to `tests/unit/execution/test_paper_spot.py`:
+เพิ่มใน `tests/unit/execution/test_paper_spot.py`:
 
 ```python
 from dataclasses import replace
@@ -199,7 +199,7 @@ from dataclasses import replace
 import pytest
 ```
 
-Then add:
+จากนั้นเพิ่ม:
 
 ```python
 def test_entry_fill_rejects_a_candle_from_another_symbol() -> None:
@@ -217,8 +217,8 @@ def test_entry_fill_rejects_a_candle_from_another_symbol() -> None:
         executor.fill_entry(intent(spot_session(), signal_candle), fill_candle)
 ```
 
-Add the following focused valid-configuration helpers to the test file without changing
-the setup used by existing tests:
+เพิ่ม helper สำหรับ configuration ที่ถูกต้องต่อไปนี้ในไฟล์ test โดยไม่เปลี่ยน setup
+ที่ tests เดิมใช้อยู่:
 
 ```python
 def spot_session() -> SessionConfig:
@@ -244,20 +244,20 @@ def spot_rules() -> SymbolRules:
     )
 ```
 
-- [ ] **Step 2: Run the Entry test and verify RED**
+- [ ] **Step 2: รัน Entry test และยืนยัน RED**
 
-Run:
+รัน:
 
 ```bash
 PYTHONPATH=src ../../.venv/bin/python -m pytest \
   tests/unit/execution/test_paper_spot.py::test_entry_fill_rejects_a_candle_from_another_symbol -q
 ```
 
-Expected: FAIL because the executor creates a Fill instead of raising `ValueError`.
+ผลที่คาดหวัง: FAIL เพราะ executor สร้าง Fill แทนที่จะ raise `ValueError`.
 
-- [ ] **Step 3: Add failing Take Profit mismatch test**
+- [ ] **Step 3: เพิ่ม Take Profit mismatch test ที่ต้องล้มเหลวก่อน**
 
-Add:
+เพิ่ม:
 
 ```python
 def test_take_profit_rejects_a_candle_from_another_symbol() -> None:
@@ -287,9 +287,9 @@ def test_take_profit_rejects_a_candle_from_another_symbol() -> None:
         PaperSpotExecutor(spot_session(), rules).fill_take_profit(basket, candle)
 ```
 
-- [ ] **Step 4: Run both tests and verify RED**
+- [ ] **Step 4: รันทั้งสอง tests และยืนยัน RED**
 
-Run:
+รัน:
 
 ```bash
 PYTHONPATH=src ../../.venv/bin/python -m pytest \
@@ -297,11 +297,11 @@ PYTHONPATH=src ../../.venv/bin/python -m pytest \
   -k "another_symbol" -q
 ```
 
-Expected: both tests FAIL because no symbol guard exists.
+ผลที่คาดหวัง: ทั้งสอง tests FAIL เพราะยังไม่มี symbol guard.
 
-- [ ] **Step 5: Add the minimal Paper Spot guard**
+- [ ] **Step 5: เพิ่ม Paper Spot guard เท่าที่จำเป็น**
 
-Change `src/tiewtrade/execution/paper_spot.py`:
+แก้ `src/tiewtrade/execution/paper_spot.py`:
 
 ```python
     # Add as the first statement in fill_entry.
@@ -318,11 +318,11 @@ Change `src/tiewtrade/execution/paper_spot.py`:
             )
 ```
 
-Place the helper after the public fill methods. Do not return `None` for identity mismatch.
+วาง helper หลัง public fill methods และห้าม return `None` เมื่อ identity ไม่ตรงกัน
 
-- [ ] **Step 6: Run Paper Spot tests and verify GREEN**
+- [ ] **Step 6: รัน Paper Spot tests และยืนยัน GREEN**
 
-Run:
+รัน:
 
 ```bash
 PYTHONPATH=src ../../.venv/bin/python -m pytest -q \
@@ -332,7 +332,7 @@ PYTHONPATH=src ../../.venv/bin/python -m pytest -q \
   tests/acceptance/test_paper_spot_trade_history.py
 ```
 
-Expected: all Paper Spot tests PASS with unchanged valid-symbol fills.
+ผลที่คาดหวัง: Paper Spot tests ทั้งหมด PASS โดย Fill ของ symbol ที่ถูกต้องไม่เปลี่ยน
 
 - [ ] **Step 7: Commit Task 2**
 
@@ -345,23 +345,23 @@ git commit -m "fix: reject mismatched Paper Spot candles"
 
 ---
 
-### Task 3: Reject Mismatched Candles in Paper Futures
+### Task 3: ปฏิเสธ Candle ที่ symbol ไม่ตรงใน Paper Futures
 
 **Files:**
 
-- Modify: `src/tiewtrade/execution/paper_futures.py:43-176`
+- แก้: `src/tiewtrade/execution/paper_futures.py:43-176`
 - Test: `tests/unit/execution/test_paper_futures.py`
 
 **Interfaces:**
 
-- Consumes: `Candle.symbol` and `SymbolRules.symbol`
-- Produces: `PaperFuturesExecutor._require_matching_symbol(candle: Candle) -> None`
-- Applies before Entry price calculation, Take Profit target evaluation and Liquidation validation
+- รับ: `Candle.symbol` และ `SymbolRules.symbol`
+- ให้ผลเป็น: `PaperFuturesExecutor._require_matching_symbol(candle: Candle) -> None`
+- ต้องทำก่อนคำนวณราคา Entry, ประเมินเป้าหมาย Take Profit และ validate Liquidation
 
-- [ ] **Step 1: Write the failing Entry mismatch test**
+- [ ] **Step 1: เขียน Entry mismatch test ที่ต้องล้มเหลวก่อน**
 
-`tests/unit/execution/test_paper_futures.py` already imports `dataclasses.replace` and
-`pytest`. Add:
+`tests/unit/execution/test_paper_futures.py` import `dataclasses.replace` และ
+`pytest` อยู่แล้ว เพิ่ม:
 
 ```python
 def test_entry_rejects_a_candle_from_another_symbol() -> None:
@@ -374,20 +374,20 @@ def test_entry_rejects_a_candle_from_another_symbol() -> None:
         make_executor().fill_entry(long_intent(), current)
 ```
 
-- [ ] **Step 2: Run the Entry test and verify RED**
+- [ ] **Step 2: รัน Entry test และยืนยัน RED**
 
-Run:
+รัน:
 
 ```bash
 PYTHONPATH=src ../../.venv/bin/python -m pytest \
   tests/unit/execution/test_paper_futures.py::test_entry_rejects_a_candle_from_another_symbol -q
 ```
 
-Expected: FAIL because a Fill is returned instead of `ValueError`.
+ผลที่คาดหวัง: FAIL เพราะ return Fill แทนที่จะ raise `ValueError`.
 
-- [ ] **Step 3: Write failing Take Profit and Liquidation mismatch tests**
+- [ ] **Step 3: เขียน Take Profit และ Liquidation mismatch tests ที่ต้องล้มเหลวก่อน**
 
-Add:
+เพิ่ม:
 
 ```python
 def test_take_profit_rejects_a_candle_from_another_symbol() -> None:
@@ -423,9 +423,9 @@ def test_liquidation_rejects_a_candle_from_another_symbol() -> None:
         )
 ```
 
-- [ ] **Step 4: Run all mismatch tests and verify RED**
+- [ ] **Step 4: รัน mismatch tests ทั้งหมดและยืนยัน RED**
 
-Run:
+รัน:
 
 ```bash
 PYTHONPATH=src ../../.venv/bin/python -m pytest \
@@ -433,11 +433,11 @@ PYTHONPATH=src ../../.venv/bin/python -m pytest \
   -k "another_symbol" -q
 ```
 
-Expected: all three tests FAIL because no Futures symbol guard exists.
+ผลที่คาดหวัง: ทั้งสาม tests FAIL เพราะยังไม่มี Futures symbol guard.
 
-- [ ] **Step 5: Add the minimal Paper Futures guard**
+- [ ] **Step 5: เพิ่ม Paper Futures guard เท่าที่จำเป็น**
 
-Change `src/tiewtrade/execution/paper_futures.py`:
+แก้ `src/tiewtrade/execution/paper_futures.py`:
 
 ```python
     # Add as the first statement in fill_entry.
@@ -457,12 +457,12 @@ Change `src/tiewtrade/execution/paper_futures.py`:
             )
 ```
 
-Place the helper beside `_slippage` and `_exit_fill`; do not change side-aware pricing,
-liquidation ordering, quantities, fees or Fill identities.
+วาง helper ข้าง `_slippage` และ `_exit_fill`; ห้ามเปลี่ยน pricing ที่รับรู้ side,
+ลำดับ liquidation, quantity, fee หรือ Fill identity
 
-- [ ] **Step 6: Run Paper Futures tests and verify GREEN**
+- [ ] **Step 6: รัน Paper Futures tests และยืนยัน GREEN**
 
-Run:
+รัน:
 
 ```bash
 PYTHONPATH=src ../../.venv/bin/python -m pytest -q \
@@ -472,11 +472,11 @@ PYTHONPATH=src ../../.venv/bin/python -m pytest -q \
   tests/acceptance/test_paper_futures_trade_history.py
 ```
 
-Expected: all Paper Futures tests PASS with unchanged valid-symbol behavior.
+ผลที่คาดหวัง: Paper Futures tests ทั้งหมด PASS โดยพฤติกรรมของ symbol ที่ถูกต้องไม่เปลี่ยน
 
-- [ ] **Step 7: Run the complete verification gate**
+- [ ] **Step 7: รัน verification gate ทั้งหมด**
 
-Run:
+รัน:
 
 ```bash
 PYTHONPATH=src QT_QPA_PLATFORM=offscreen ../../.venv/bin/python -m pytest -q
@@ -488,7 +488,7 @@ npm --prefix ../../docs-site run check:content
 git diff --check
 ```
 
-Expected: all tests and quality gates PASS; no Binance network or Live order is used.
+ผลที่คาดหวัง: tests และ quality gates ทั้งหมด PASS; ไม่มีการใช้ Binance network หรือ Live order
 
 - [ ] **Step 8: Commit Task 3**
 
@@ -501,14 +501,14 @@ git commit -m "fix: reject mismatched Paper Futures candles"
 
 ---
 
-## Final Review Checklist
+## รายการตรวจสอบ final review
 
-- [ ] `SymbolRules` rejects `""` and whitespace-only symbol
-- [ ] Every `SymbolRules` constructor provides the intended symbol
-- [ ] Replay uses `market_data.symbol`, not a duplicate identity literal
-- [ ] Spot Entry and Take Profit reject mismatched Candle before calculation
-- [ ] Futures Entry, Take Profit and Liquidation reject mismatched Candle before calculation
-- [ ] Valid BTCUSDT replay output and Fill identities are unchanged
-- [ ] No `exchangeInfo`, Live execution, generic provider or symbol-two support was added
-- [ ] Run `code-review` against the branch base and resolve every Critical/Important finding
-- [ ] Record RED/GREEN commands and final gate results in the DEV-120 Linear comment
+- [ ] `SymbolRules` ปฏิเสธ symbol `""` และ symbol ที่เป็น whitespace อย่างเดียว
+- [ ] constructor ทุกจุดของ `SymbolRules` ส่ง symbol ที่ต้องการ
+- [ ] Replay ใช้ `market_data.symbol` ไม่ใช่ identity literal ที่ซ้ำกัน
+- [ ] Spot Entry และ Take Profit ปฏิเสธ Candle ที่ symbol ไม่ตรงก่อนคำนวณ
+- [ ] Futures Entry, Take Profit และ Liquidation ปฏิเสธ Candle ที่ symbol ไม่ตรงก่อนคำนวณ
+- [ ] output ของ BTCUSDT replay ที่ถูกต้องและ Fill identities ไม่เปลี่ยน
+- [ ] ไม่ได้เพิ่ม `exchangeInfo`, Live execution, generic provider หรือการรองรับ symbol ที่สอง
+- [ ] รัน `code-review` เทียบกับ branch base และแก้ทุก finding ระดับ Critical/Important
+- [ ] บันทึกคำสั่ง RED/GREEN และผล final gate ใน DEV-120 Linear comment

@@ -108,6 +108,17 @@ def test_symbol_rules_require_a_non_blank_symbol(symbol: str) -> None:
         )
 
 
+def test_symbol_rules_preserve_a_nonblank_padded_symbol() -> None:
+    rules = SymbolRules(
+        symbol=" BTCUSDT ",
+        tick_size=Decimal("0.01"),
+        step_size=Decimal("0.001"),
+        min_notional=Decimal("5"),
+    )
+
+    assert rules.symbol == " BTCUSDT "
+
+
 def test_symbol_rules_round_quantity_and_price_down() -> None:
     rules = SymbolRules(
         symbol="BTCUSDT",

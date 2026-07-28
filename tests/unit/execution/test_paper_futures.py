@@ -57,14 +57,15 @@ def test_entry_below_min_notional_returns_none() -> None:
     assert executor.fill_entry(long_intent(), candle(open="100")) is None
 
 
-def test_entry_rejects_a_candle_from_another_symbol() -> None:
-    current = replace(candle(minute=5, open="100"), symbol="ETHUSDT")
+def test_entry_rejects_a_lowercase_near_match() -> None:
+    current = replace(candle(minute=5, open="100"), symbol="btcusdt")
 
-    with pytest.raises(
-        ValueError,
-        match="candle symbol must match SymbolRules.symbol",
-    ):
+    with pytest.raises(ValueError) as error:
         make_executor().fill_entry(long_intent(), current)
+
+    assert str(error.value) == (
+        "candle symbol must match SymbolRules.symbol: candle='btcusdt', rules='BTCUSDT'"
+    )
 
 
 def test_repeating_the_same_entry_produces_the_same_fill_identity() -> None:
@@ -144,20 +145,22 @@ def test_take_profit_returns_none_until_the_target_is_touched() -> None:
     )
 
 
-def test_take_profit_rejects_a_candle_from_another_symbol() -> None:
+def test_take_profit_rejects_a_padded_near_match() -> None:
     current = replace(
         candle(open="105", high="107", low="104"),
-        symbol="ETHUSDT",
+        symbol=" BTCUSDT ",
     )
 
-    with pytest.raises(
-        ValueError,
-        match="candle symbol must match SymbolRules.symbol",
-    ):
+    with pytest.raises(ValueError) as error:
         make_executor().fill_take_profit(
             long_basket(entry_price="100", take_profit="106"),
             current,
         )
+
+    assert str(error.value) == (
+        "candle symbol must match SymbolRules.symbol: "
+        "candle=' BTCUSDT ', rules='BTCUSDT'"
+    )
 
 
 def test_liquidation_wins_over_take_profit_and_uses_gap_aware_price() -> None:
@@ -226,15 +229,16 @@ def test_liquidation_rejects_a_candle_from_another_symbol() -> None:
         symbol="ETHUSDT",
     )
 
-    with pytest.raises(
-        ValueError,
-        match="candle symbol must match SymbolRules.symbol",
-    ):
+    with pytest.raises(ValueError) as error:
         make_executor().fill_liquidation(
             long_basket(entry_price="100", take_profit="106"),
             current,
             liquidation_price=Decimal("80"),
         )
+
+    assert str(error.value) == (
+        "candle symbol must match SymbolRules.symbol: candle='ETHUSDT', rules='BTCUSDT'"
+    )
 
 
 @pytest.mark.parametrize(

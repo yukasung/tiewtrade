@@ -113,19 +113,20 @@ def test_entry_fill_rejects_quantity_below_minimum_notional() -> None:
     assert executor.fill_entry(intent(session, signal_candle), fill_candle) is None
 
 
-def test_entry_fill_rejects_a_candle_from_another_symbol() -> None:
+def test_entry_fill_rejects_a_lowercase_near_match() -> None:
     executor = PaperSpotExecutor(spot_session(), spot_rules())
     signal_candle = candle_at(0, open_price="100", high="102", low="99", close="101")
     fill_candle = replace(
         candle_at(5, open_price="101", high="103", low="100", close="102"),
-        symbol="ETHUSDT",
+        symbol="btcusdt",
     )
 
-    with pytest.raises(
-        ValueError,
-        match="candle symbol must match SymbolRules.symbol",
-    ):
+    with pytest.raises(ValueError) as error:
         executor.fill_entry(intent(spot_session(), signal_candle), fill_candle)
+
+    assert str(error.value) == (
+        "candle symbol must match SymbolRules.symbol: candle='btcusdt', rules='BTCUSDT'"
+    )
 
 
 def test_take_profit_target_touch_uses_sell_floor_price_and_exact_fee() -> None:
@@ -173,7 +174,7 @@ def test_take_profit_target_touch_uses_sell_floor_price_and_exact_fee() -> None:
     assert fill.fill_id == f"paper:{session.session_id}:{exit_order_id}:fill"
 
 
-def test_take_profit_rejects_a_candle_from_another_symbol() -> None:
+def test_take_profit_rejects_a_padded_near_match() -> None:
     rules = spot_rules()
     basket = Basket(
         UUID("00000000-0000-0000-0000-000000000092"),
@@ -190,14 +191,16 @@ def test_take_profit_rejects_a_candle_from_another_symbol() -> None:
     )
     candle = replace(
         candle_at(5, open_price="100", high="101", low="99", close="100"),
-        symbol="ETHUSDT",
+        symbol=" BTCUSDT ",
     )
 
-    with pytest.raises(
-        ValueError,
-        match="candle symbol must match SymbolRules.symbol",
-    ):
+    with pytest.raises(ValueError) as error:
         PaperSpotExecutor(spot_session(), rules).fill_take_profit(basket, candle)
+
+    assert str(error.value) == (
+        "candle symbol must match SymbolRules.symbol: "
+        "candle=' BTCUSDT ', rules='BTCUSDT'"
+    )
 
 
 def test_take_profit_rejects_a_non_positive_sell_price_after_quantization() -> None:
