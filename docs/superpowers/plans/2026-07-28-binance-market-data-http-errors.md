@@ -374,6 +374,7 @@ from tiewtrade.market_data.source_errors import (
     MarketDataFatalError,
     MarketDataRateLimitError,
     MarketDataRetryableError,
+    MarketDataTimeoutError,
     RetryAfter,
 )
 

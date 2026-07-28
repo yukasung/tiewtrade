@@ -490,16 +490,17 @@ def test_stream_completed_ignores_open_updates_and_uses_symbol_stream_url() -> N
     ]
 
 
-@pytest.mark.parametrize(
-    "failure",
-    [aiohttp.ClientConnectionError("offline"), TimeoutError("timed out")],
-)
-def test_websocket_transport_failure_raises_retryable_error(
-    failure: Exception,
-) -> None:
-    source, _ = source_with(websocket_failure=failure)
+def test_websocket_connection_failure_raises_retryable_error() -> None:
+    source, _ = source_with(websocket_failure=aiohttp.ClientConnectionError("offline"))
 
     with pytest.raises(MarketDataRetryableError):
+        asyncio.run(collect(source))
+
+
+def test_websocket_handshake_timeout_preserves_timeout_action() -> None:
+    source, _ = source_with(websocket_failure=TimeoutError("timed out"))
+
+    with pytest.raises(MarketDataTimeoutError):
         asyncio.run(collect(source))
 
 
