@@ -22,6 +22,10 @@
 
 ### Task 1: Remove the duplicate equity-based Liquidation verdict
 
+> **หมายเหตุ:** snapshot contract และ execution ownership ใน Task 1 เป็น intermediate
+> implementation ที่ถูกแทนที่ด้วย final contract ใน Task 2 เพื่อแก้ final-review findings
+> ห้ามใช้ snippets ของ Task 1 เป็นเป้าหมายสุดท้ายของ branch
+
 **Files:**
 - Modify: `tests/unit/trading/test_futures_margin.py`
 - Modify: `src/tiewtrade/trading/futures_margin.py`
@@ -278,4 +282,60 @@ git add PRODUCT.md CONTEXT.md \
   tests/unit/execution/test_paper_futures.py \
   tests/unit/application/test_paper_futures_session.py
 git commit -m "refactor: clarify Paper Futures liquidation ownership"
+```
+
+---
+
+### Task 3: Clarify cross-mode architecture and close regression gaps
+
+**Files:**
+- Modify: `ARCHITECTURE.md`
+- Modify: `tests/unit/trading/test_futures_margin.py`
+
+**Interfaces:**
+- Clarifies: shared post-Liquidation lifecycle/risk policies versus mode-specific authority
+- Preserves: Paper predicate and all production behavior
+
+- [ ] **Step 1: แก้ Architecture Source of Truth**
+
+ปรับ `ARCHITECTURE.md` ให้ระบุชัดเจนว่า:
+
+- Paper และ Live ใช้ Strategy, capital, Basket, Entry Pair, risk limits และ
+  post-Liquidation lifecycle rules ร่วมกัน
+- Paper Futures deterministic threshold/predicate อยู่ใน `trading`
+- Live Futures ใช้ Binance position/account facts และ Binance Liquidation Engine เป็น
+  authoritative; local Paper formula ไม่ใช่ Live verdict
+- Live integration/reconciliation เป็นเจ้าของการอ่านและสะท้อน exchange facts โดยไม่ทำให้
+  `trading` import Binance SDK
+
+- [ ] **Step 2: เพิ่ม failing validation test**
+
+เพิ่ม parameterized test ให้ `FuturesMarginModel.is_liquidation_crossed()` ปฏิเสธ
+`NaN`, `Infinity`, `0` และค่าติดลบของ `liquidation_price`
+
+- [ ] **Step 3: รัน RED แล้วทำ minimal fix เฉพาะเมื่อจำเป็น**
+
+```bash
+PYTHONPATH=src ../../.venv/bin/python -m pytest \
+  tests/unit/trading/test_futures_margin.py -q
+```
+
+Expected: หาก implementation validation เดิมถูกต้อง test อาจ PASS ทันที ให้บันทึกเป็น
+characterization evidence และห้ามแก้ production codeโดยไม่จำเป็น
+
+- [ ] **Step 4: รัน full verification และ commit**
+
+```bash
+PYTHONPATH=src QT_QPA_PLATFORM=offscreen ../../.venv/bin/python -m pytest -q
+../../.venv/bin/python -m ruff check src tests
+../../.venv/bin/python -m ruff format --check src tests
+../../.venv/bin/python -m mypy src
+npm --prefix ../../docs-site test
+npm --prefix ../../docs-site run check:content
+git diff --check
+```
+
+```bash
+git add ARCHITECTURE.md tests/unit/trading/test_futures_margin.py
+git commit -m "docs: clarify Live Futures liquidation authority"
 ```
