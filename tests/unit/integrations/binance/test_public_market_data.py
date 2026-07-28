@@ -433,6 +433,57 @@ def test_websocket_transport_failure_raises_retryable_error(
         asyncio.run(collect(source))
 
 
+@pytest.mark.parametrize(
+    ("header", "expected_retry_after"),
+    [
+        ("45", timedelta(seconds=45)),
+        (
+            "Thu, 01 Jan 2026 00:01:00 GMT",
+            datetime(2026, 1, 1, 0, 1, tzinfo=UTC),
+        ),
+    ],
+)
+def test_websocket_429_preserves_retry_after(
+    header: str,
+    expected_retry_after: timedelta | datetime,
+) -> None:
+    source, _ = source_with(
+        websocket_failure=websocket_handshake_error(
+            429,
+            headers={"Retry-After": header},
+        )
+    )
+
+    with pytest.raises(MarketDataRateLimitError) as captured:
+        asyncio.run(collect(source))
+
+    assert captured.value.retry_after == expected_retry_after
+
+
+@pytest.mark.parametrize("status", [418, 429])
+def test_websocket_rate_limit_without_header_uses_no_directive(status: int) -> None:
+    source, _ = source_with(websocket_failure=websocket_handshake_error(status))
+
+    with pytest.raises(MarketDataRateLimitError) as captured:
+        asyncio.run(collect(source))
+
+    assert captured.value.retry_after is None
+
+
+def test_websocket_400_handshake_raises_fatal_error() -> None:
+    source, _ = source_with(websocket_failure=websocket_handshake_error(400))
+
+    with pytest.raises(MarketDataFatalError):
+        asyncio.run(collect(source))
+
+
+def test_websocket_503_handshake_raises_retryable_error() -> None:
+    source, _ = source_with(websocket_failure=websocket_handshake_error(503))
+
+    with pytest.raises(MarketDataRetryableError):
+        asyncio.run(collect(source))
+
+
 @pytest.mark.parametrize("payload", ["not JSON", {"unexpected": "payload"}])
 def test_invalid_websocket_payload_raises_fatal_error(payload: object) -> None:
     source, _ = source_with(websocket_payloads=[payload])
@@ -456,6 +507,19 @@ def test_websocket_domain_error_is_not_remapped(failure: Exception) -> None:
         asyncio.run(collect(source))
 
     assert captured.value is failure
+
+
+def websocket_handshake_error(
+    status: int,
+    *,
+    headers: dict[str, str] | None = None,
+) -> aiohttp.ClientResponseError:
+    return aiohttp.ClientResponseError(
+        request_info=None,
+        history=(),
+        status=status,
+        headers=headers,
+    )
 
 
 def test_close_does_not_close_injected_session() -> None:

@@ -13,7 +13,14 @@ from tiewtrade.application.paper_spot_session import PaperSpotSession
 from tiewtrade.market_data.candle import Candle
 from tiewtrade.market_data.config import MarketDataConfig
 from tiewtrade.market_data.runtime import MarketDataRuntime
-from tiewtrade.market_data.runtime_state import MarketDataRuntimeState
+from tiewtrade.market_data.runtime_state import (
+    MarketDataRuntimeReason,
+    MarketDataRuntimeState,
+)
+from tiewtrade.market_data.source_errors import (
+    MarketDataFatalError,
+    MarketDataRateLimitError,
+)
 from tiewtrade.strategies.rsi_step_grid.preset import RsiStepGridPreset
 from tiewtrade.trading.entry_policy import EntryPolicy
 from tiewtrade.trading.session_config import MarketType, SessionConfig, TradeMode
@@ -82,6 +89,41 @@ class FakeRuntimeScheduler:
         return await awaitable
 
 
+class FakeFailureRuntimeScheduler(FakeRuntimeScheduler):
+    def __init__(self) -> None:
+        self.sleeps: list[float] = []
+
+    async def sleep(self, seconds: float) -> None:
+        self.sleeps.append(seconds)
+
+
+class FailedCompletedCandleStream:
+    def __init__(self, failure: Exception) -> None:
+        self._failure = failure
+
+    def __aiter__(self) -> FailedCompletedCandleStream:
+        return self
+
+    async def __anext__(self) -> Candle:
+        raise self._failure
+
+
+class FakeFailingPublicCandleSource(FakePublicCandleSource):
+    def __init__(
+        self,
+        *,
+        warm_up: Iterable[Candle],
+        failure: Exception,
+    ) -> None:
+        super().__init__(warm_up=warm_up, live=())
+        self._failure = failure
+        self.stream_count = 0
+
+    def stream_completed(self, config: MarketDataConfig) -> AsyncIterator[Candle]:
+        self.stream_count += 1
+        return FailedCompletedCandleStream(self._failure)
+
+
 def test_fake_public_runtime_warms_then_processes_paper_spot_live_candle() -> None:
     market_data = MarketDataConfig(symbol="BTCUSDT", timeframe="5m")
     warm_up = candles(start=0, count=15, config=market_data)
@@ -114,6 +156,62 @@ def test_fake_public_runtime_warms_then_processes_paper_spot_live_candle() -> No
     assert not hasattr(source, "credentials")
     assert not hasattr(source, "order_transport")
     assert not hasattr(source, "place_order")
+
+
+def test_rate_limit_exhaustion_fails_closed_without_paper_spot_delivery() -> None:
+    runtime, source, sink, scheduler = runtime_with_failing_stream(
+        MarketDataRateLimitError("429", retry_after=None)
+    )
+
+    asyncio.run(runtime.run())
+
+    assert runtime.snapshot.state is MarketDataRuntimeState.FAILED_CLOSED
+    assert runtime.snapshot.reason is MarketDataRuntimeReason.RATE_LIMIT_EXHAUSTED
+    assert scheduler.sleeps == [60.0, 60.0, 60.0]
+    assert source.stream_count == 4
+    assert sink.live_candle_count == 0
+    assert sink.last_snapshot is None
+
+
+def test_fatal_source_failure_fails_closed_without_paper_spot_delivery() -> None:
+    runtime, source, sink, scheduler = runtime_with_failing_stream(
+        MarketDataFatalError("bad request")
+    )
+
+    asyncio.run(runtime.run())
+
+    assert runtime.snapshot.state is MarketDataRuntimeState.FAILED_CLOSED
+    assert runtime.snapshot.reason is MarketDataRuntimeReason.SOURCE_FATAL
+    assert scheduler.sleeps == []
+    assert source.stream_count == 1
+    assert sink.live_candle_count == 0
+    assert sink.last_snapshot is None
+
+
+def runtime_with_failing_stream(
+    failure: Exception,
+) -> tuple[
+    MarketDataRuntime,
+    FakeFailingPublicCandleSource,
+    PaperSpotMarketDataSink,
+    FakeFailureRuntimeScheduler,
+]:
+    market_data = MarketDataConfig(symbol="BTCUSDT", timeframe="5m")
+    warm_up = candles(start=0, count=15, config=market_data)
+    source = FakeFailingPublicCandleSource(
+        warm_up=warm_up,
+        failure=failure,
+    )
+    sink = PaperSpotMarketDataSink(configured_paper_spot_session(market_data))
+    scheduler = FakeFailureRuntimeScheduler()
+    runtime = MarketDataRuntime(
+        config=market_data,
+        warm_up_count=len(warm_up),
+        source=source,
+        sink=sink,
+        scheduler=scheduler,
+    )
+    return runtime, source, sink, scheduler
 
 
 async def run_until_sink_receives(

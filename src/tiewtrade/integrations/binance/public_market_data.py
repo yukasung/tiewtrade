@@ -48,6 +48,22 @@ def _parse_retry_after(value: str | None) -> RetryAfter | None:
     return timedelta(seconds=seconds)
 
 
+def _raise_for_http_status(
+    status: int,
+    *,
+    retry_after: str | None,
+) -> None:
+    if status in {418, 429}:
+        raise MarketDataRateLimitError(
+            "Binance market data is rate limited",
+            retry_after=_parse_retry_after(retry_after),
+        )
+    if 500 <= status < 600:
+        raise MarketDataRetryableError("Binance market-data service is unavailable")
+    if not 200 <= status < 300:
+        raise MarketDataFatalError("Binance rejected the market-data request")
+
+
 class BinancePublicMarketData:
     """Load completed public Binance candles from one selected endpoint profile."""
 
@@ -147,21 +163,10 @@ class BinancePublicMarketData:
             async with session.get(
                 self._endpoints.rest_klines_url, params=params
             ) as response:
-                if response.status in {418, 429}:
-                    raise MarketDataRateLimitError(
-                        "Binance market data is rate limited",
-                        retry_after=_parse_retry_after(
-                            response.headers.get("Retry-After")
-                        ),
-                    )
-                if 500 <= response.status < 600:
-                    raise MarketDataRetryableError(
-                        "Binance market-data service is unavailable"
-                    )
-                if not 200 <= response.status < 300:
-                    raise MarketDataFatalError(
-                        "Binance rejected the market-data request"
-                    )
+                _raise_for_http_status(
+                    response.status,
+                    retry_after=response.headers.get("Retry-After"),
+                )
                 payload = await response.json()
             if not isinstance(payload, list):
                 raise ValueError
@@ -216,6 +221,18 @@ class BinancePublicMarketData:
             MarketDataFatalError,
         ):
             raise
+        except aiohttp.ClientResponseError as error:
+            _raise_for_http_status(
+                error.status,
+                retry_after=(
+                    error.headers.get("Retry-After")
+                    if error.headers is not None
+                    else None
+                ),
+            )
+            raise MarketDataRetryableError(
+                "Binance market-data transport failed"
+            ) from error
         except (aiohttp.ClientError, TimeoutError) as error:
             raise MarketDataRetryableError(
                 "Binance market-data transport failed"
