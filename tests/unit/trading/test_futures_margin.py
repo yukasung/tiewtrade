@@ -21,6 +21,15 @@ def margin_inputs() -> dict[str, Decimal | PositionSide]:
     }
 
 
+def test_snapshot_does_not_duplicate_liquidation_verdict() -> None:
+    snapshot = model().snapshot(
+        **margin_inputs(),  # type: ignore[arg-type]
+        current_price=Decimal("90"),
+    )
+
+    assert not hasattr(snapshot, "is_liquidated")
+
+
 def test_long_liquidation_threshold_uses_cross_account_equity() -> None:
     price = model().liquidation_price(**margin_inputs())  # type: ignore[arg-type]
     expected = (Decimal("100") * Decimal("3000") - Decimal("199970")) / (
@@ -71,7 +80,6 @@ def test_entry_fees_reduce_account_equity() -> None:
     assert snapshot.maintenance_margin == Decimal("1350.000")
     assert isinstance(snapshot.account_equity, Decimal)
     assert isinstance(snapshot.maintenance_margin, Decimal)
-    assert not snapshot.is_liquidated
 
 
 def test_short_snapshot_uses_directional_unrealized_pnl() -> None:
@@ -86,10 +94,9 @@ def test_short_snapshot_uses_directional_unrealized_pnl() -> None:
 
     assert snapshot.account_equity == Decimal("979")
     assert snapshot.maintenance_margin == Decimal("1.100")
-    assert not snapshot.is_liquidated
 
 
-def test_snapshot_marks_position_liquidated_when_equity_reaches_maintenance() -> None:
+def test_snapshot_keeps_equity_and_maintenance_margin_at_adverse_price() -> None:
     snapshot = model().snapshot(
         side=PositionSide.LONG,
         average_entry_price=Decimal("100"),
@@ -101,7 +108,6 @@ def test_snapshot_marks_position_liquidated_when_equity_reaches_maintenance() ->
 
     assert snapshot.account_equity == Decimal("0")
     assert snapshot.maintenance_margin == Decimal("0.450")
-    assert snapshot.is_liquidated
 
 
 @pytest.mark.parametrize(

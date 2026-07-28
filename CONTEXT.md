@@ -66,7 +66,15 @@ RSI parameters, take-profit rule, Entry Pair และ Cooldown Month ยัง�
 ### Liquidation
 
 Liquidation เป็นผลลัพธ์แบบ deterministic ของ Paper Futures Policy v1 ที่ปิด Basket
-และห้ามสร้าง Entry ใหม่
+และห้ามสร้าง Entry ใหม่ โดยใช้ price-crossing เป็นเกณฑ์ตัดสินเพียงแบบเดียว:
+
+- LONG เกิด Liquidation เมื่อ `candle.low <= liquidation_price`
+- SHORT เกิด Liquidation เมื่อ `candle.high >= liquidation_price`
+- หากราคาแตะระดับ Liquidation ระหว่าง completed Candle แล้วฟื้นกลับก่อน Candle ปิด
+  ให้ถือว่าเกิด Liquidation แล้ว
+
+`account_equity` และ `maintenance_margin` เป็นข้อมูลสำหรับแสดงผลและตรวจสอบย้อนหลัง
+ไม่ใช่ Liquidation verdict
 
 ### Basket Close Reason
 

@@ -10,7 +10,6 @@ class FuturesMarginSnapshot:
     account_equity: Decimal
     maintenance_margin: Decimal
     liquidation_price: Decimal | None
-    is_liquidated: bool
 
 
 class FuturesMarginModel:
@@ -75,7 +74,6 @@ class FuturesMarginModel:
             account_equity=account_equity,
             maintenance_margin=maintenance_margin,
             liquidation_price=liquidation_price,
-            is_liquidated=account_equity <= maintenance_margin,
         )
 
     @staticmethod
