@@ -29,3 +29,18 @@
 ## ข้อกังวล
 
 ไม่มีข้อกังวลที่เหลือ; ไม่มีการเปลี่ยน production behavior, network call หรือ Live execution.
+
+## การแก้ไข minor final review เพิ่มเติม
+
+- คืน header ของ writing-plans template ที่บังคับให้เป็นภาษาอังกฤษแบบตรงตัว รวม title, directive, `Goal`, `Architecture`, `Tech Stack`, `Global Constraints` และ labels ของโครงสร้าง
+- ปรับ snippets และ node IDs ในแผนให้ตรงกับ tests ปัจจุบัน รวม exact `ValueError` assertions และ `SymbolRules` padded-symbol test
+- ปรับคำสั่งเลือก mismatch tests ให้เลือก Spot 2 รายการด้วย `-k "near_match"` และ Futures guards 3 รายการด้วยชื่อ tests ปัจจุบันทั้งหมด
+
+## การตรวจสอบ minor final review เพิ่มเติม
+
+- Spot selection command — `2 passed, 5 deselected`
+- Futures selection command — `3 passed, 18 deselected`
+- stale-name scan สำหรับ node IDs และ `-k "another_symbol"` เดิม — ไม่พบผลลัพธ์
+- `npm --prefix ../../docs-site test` — `50` tests ผ่าน
+- `npm --prefix ../../docs-site run check:content` — ผ่าน
+- `git diff --check` — ผ่าน

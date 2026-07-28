@@ -1,6 +1,6 @@
-# แผนการทำงาน Symbol-Bound Trading Rules
+# Symbol-Bound Trading Rules Implementation Plan
 
-> **สำหรับผู้ปฏิบัติงานแบบ agentic:** ต้องใช้ sub-skill: ใช้ superpowers:subagent-driven-development (แนะนำ) หรือ superpowers:executing-plans เพื่อทำตามแผนนี้ทีละงาน โดยใช้รูปแบบ checkbox (`- [ ]`) เพื่อติดตามขั้นตอน
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** ผูก `SymbolRules` กับ market symbol และทำให้ Paper Spot/Futures ปฏิเสธ Candle ของคนละ symbol ก่อนคำนวณหรือสร้าง Fill
 
@@ -8,7 +8,7 @@
 
 **Tech Stack:** Python 3.13, dataclasses, Decimal, pytest, Ruff, Mypy
 
-## ข้อจำกัดร่วม
+## Global Constraints
 
 - Internal Alpha รองรับ BTCUSDT เพียง symbol เดียว; ห้ามเปิด symbol ที่สองใน Issue นี้
 - `symbol` มาจาก Session/market configuration และห้าม hard-code ใน business logic
@@ -50,17 +50,17 @@
 
 **Files:**
 
-- แก้: `src/tiewtrade/trading/symbol_rules.py:5-17`
-- แก้: `src/tiewtrade/paper_replay_main.py:45-50`
-- แก้: ทุกจุดเรียกใช้ test/fixture ที่ระบุในผังไฟล์
+- Modify: `src/tiewtrade/trading/symbol_rules.py:5-17`
+- Modify: `src/tiewtrade/paper_replay_main.py:45-50`
+- Modify: ทุกจุดเรียกใช้ test/fixture ที่ระบุในผังไฟล์
 - Test: `tests/unit/trading/test_capital.py:98-130`
 - Acceptance: `tests/acceptance/test_paper_replay_cli.py`
 
 **Interfaces:**
 
-- รับ: `MarketDataConfig.symbol: str`
-- ให้ผลเป็น: `SymbolRules(symbol: str, tick_size: Decimal, step_size: Decimal, min_notional: Decimal)`
-- เงื่อนไขคงที่: `SymbolRules.symbol` ไม่ว่างหลังตรวจด้วย `str.strip()` แต่ค่าที่เก็บจะไม่ถูก normalize
+- Consumes: `MarketDataConfig.symbol: str`
+- Produces: `SymbolRules(symbol: str, tick_size: Decimal, step_size: Decimal, min_notional: Decimal)`
+- Invariant: `SymbolRules.symbol` ไม่ว่างหลังตรวจด้วย `str.strip()` แต่ค่าที่เก็บจะไม่ถูก normalize
 
 - [ ] **Step 1: เขียน test validation ของ symbol ที่ต้องล้มเหลวก่อน**
 
@@ -76,6 +76,17 @@ def test_symbol_rules_require_a_non_blank_symbol(symbol: str) -> None:
             step_size=Decimal("0.001"),
             min_notional=Decimal("5"),
         )
+
+
+def test_symbol_rules_preserve_a_nonblank_padded_symbol() -> None:
+    rules = SymbolRules(
+        symbol=" BTCUSDT ",
+        tick_size=Decimal("0.01"),
+        step_size=Decimal("0.001"),
+        min_notional=Decimal("5"),
+    )
+
+    assert rules.symbol == " BTCUSDT "
 ```
 
 - [ ] **Step 2: รัน test และยืนยัน RED**
@@ -180,13 +191,13 @@ git commit -m "feat: bind symbol rules to market identity"
 
 **Files:**
 
-- แก้: `src/tiewtrade/execution/paper_spot.py:39-94`
+- Modify: `src/tiewtrade/execution/paper_spot.py:39-94`
 - Test: `tests/unit/execution/test_paper_spot.py`
 
 **Interfaces:**
 
-- รับ: `Candle.symbol` และ `SymbolRules.symbol`
-- ให้ผลเป็น: `PaperSpotExecutor._require_matching_symbol(candle: Candle) -> None`
+- Consumes: `Candle.symbol` และ `SymbolRules.symbol`
+- Produces: `PaperSpotExecutor._require_matching_symbol(candle: Candle) -> None`
 - Error: `ValueError("candle symbol must match SymbolRules.symbol: candle='ETHUSDT', rules='BTCUSDT'")`
 
 - [ ] **Step 1: เพิ่ม import และ Entry mismatch test ที่ต้องล้มเหลวก่อน**
@@ -202,19 +213,21 @@ import pytest
 จากนั้นเพิ่ม:
 
 ```python
-def test_entry_fill_rejects_a_candle_from_another_symbol() -> None:
+def test_entry_fill_rejects_a_lowercase_near_match() -> None:
     executor = PaperSpotExecutor(spot_session(), spot_rules())
     signal_candle = candle_at(0, open_price="100", high="102", low="99", close="101")
     fill_candle = replace(
         candle_at(5, open_price="101", high="103", low="100", close="102"),
-        symbol="ETHUSDT",
+        symbol="btcusdt",
     )
 
-    with pytest.raises(
-        ValueError,
-        match="candle symbol must match SymbolRules.symbol",
-    ):
+    with pytest.raises(ValueError) as error:
         executor.fill_entry(intent(spot_session(), signal_candle), fill_candle)
+
+    assert str(error.value) == (
+        "candle symbol must match SymbolRules.symbol: "
+        "candle='btcusdt', rules='BTCUSDT'"
+    )
 ```
 
 เพิ่ม helper สำหรับ configuration ที่ถูกต้องต่อไปนี้ในไฟล์ test โดยไม่เปลี่ยน setup
@@ -250,7 +263,7 @@ def spot_rules() -> SymbolRules:
 
 ```bash
 PYTHONPATH=src ../../.venv/bin/python -m pytest \
-  tests/unit/execution/test_paper_spot.py::test_entry_fill_rejects_a_candle_from_another_symbol -q
+  tests/unit/execution/test_paper_spot.py::test_entry_fill_rejects_a_lowercase_near_match -q
 ```
 
 ผลที่คาดหวัง: FAIL เพราะ executor สร้าง Fill แทนที่จะ raise `ValueError`.
@@ -260,7 +273,7 @@ PYTHONPATH=src ../../.venv/bin/python -m pytest \
 เพิ่ม:
 
 ```python
-def test_take_profit_rejects_a_candle_from_another_symbol() -> None:
+def test_take_profit_rejects_a_padded_near_match() -> None:
     rules = spot_rules()
     basket = Basket(
         UUID("00000000-0000-0000-0000-000000000092"),
@@ -277,14 +290,16 @@ def test_take_profit_rejects_a_candle_from_another_symbol() -> None:
     )
     candle = replace(
         candle_at(5, open_price="100", high="101", low="99", close="100"),
-        symbol="ETHUSDT",
+        symbol=" BTCUSDT ",
     )
 
-    with pytest.raises(
-        ValueError,
-        match="candle symbol must match SymbolRules.symbol",
-    ):
+    with pytest.raises(ValueError) as error:
         PaperSpotExecutor(spot_session(), rules).fill_take_profit(basket, candle)
+
+    assert str(error.value) == (
+        "candle symbol must match SymbolRules.symbol: "
+        "candle=' BTCUSDT ', rules='BTCUSDT'"
+    )
 ```
 
 - [ ] **Step 4: รันทั้งสอง tests และยืนยัน RED**
@@ -294,7 +309,7 @@ def test_take_profit_rejects_a_candle_from_another_symbol() -> None:
 ```bash
 PYTHONPATH=src ../../.venv/bin/python -m pytest \
   tests/unit/execution/test_paper_spot.py \
-  -k "another_symbol" -q
+  -k "near_match" -q
 ```
 
 ผลที่คาดหวัง: ทั้งสอง tests FAIL เพราะยังไม่มี symbol guard.
@@ -349,13 +364,13 @@ git commit -m "fix: reject mismatched Paper Spot candles"
 
 **Files:**
 
-- แก้: `src/tiewtrade/execution/paper_futures.py:43-176`
+- Modify: `src/tiewtrade/execution/paper_futures.py:43-176`
 - Test: `tests/unit/execution/test_paper_futures.py`
 
 **Interfaces:**
 
-- รับ: `Candle.symbol` และ `SymbolRules.symbol`
-- ให้ผลเป็น: `PaperFuturesExecutor._require_matching_symbol(candle: Candle) -> None`
+- Consumes: `Candle.symbol` และ `SymbolRules.symbol`
+- Produces: `PaperFuturesExecutor._require_matching_symbol(candle: Candle) -> None`
 - ต้องทำก่อนคำนวณราคา Entry, ประเมินเป้าหมาย Take Profit และ validate Liquidation
 
 - [ ] **Step 1: เขียน Entry mismatch test ที่ต้องล้มเหลวก่อน**
@@ -364,14 +379,16 @@ git commit -m "fix: reject mismatched Paper Spot candles"
 `pytest` อยู่แล้ว เพิ่ม:
 
 ```python
-def test_entry_rejects_a_candle_from_another_symbol() -> None:
-    current = replace(candle(minute=5, open="100"), symbol="ETHUSDT")
+def test_entry_rejects_a_lowercase_near_match() -> None:
+    current = replace(candle(minute=5, open="100"), symbol="btcusdt")
 
-    with pytest.raises(
-        ValueError,
-        match="candle symbol must match SymbolRules.symbol",
-    ):
+    with pytest.raises(ValueError) as error:
         make_executor().fill_entry(long_intent(), current)
+
+    assert str(error.value) == (
+        "candle symbol must match SymbolRules.symbol: "
+        "candle='btcusdt', rules='BTCUSDT'"
+    )
 ```
 
 - [ ] **Step 2: รัน Entry test และยืนยัน RED**
@@ -380,7 +397,7 @@ def test_entry_rejects_a_candle_from_another_symbol() -> None:
 
 ```bash
 PYTHONPATH=src ../../.venv/bin/python -m pytest \
-  tests/unit/execution/test_paper_futures.py::test_entry_rejects_a_candle_from_another_symbol -q
+  tests/unit/execution/test_paper_futures.py::test_entry_rejects_a_lowercase_near_match -q
 ```
 
 ผลที่คาดหวัง: FAIL เพราะ return Fill แทนที่จะ raise `ValueError`.
@@ -390,20 +407,22 @@ PYTHONPATH=src ../../.venv/bin/python -m pytest \
 เพิ่ม:
 
 ```python
-def test_take_profit_rejects_a_candle_from_another_symbol() -> None:
+def test_take_profit_rejects_a_padded_near_match() -> None:
     current = replace(
         candle(open="105", high="107", low="104"),
-        symbol="ETHUSDT",
+        symbol=" BTCUSDT ",
     )
 
-    with pytest.raises(
-        ValueError,
-        match="candle symbol must match SymbolRules.symbol",
-    ):
+    with pytest.raises(ValueError) as error:
         make_executor().fill_take_profit(
             long_basket(entry_price="100", take_profit="106"),
             current,
         )
+
+    assert str(error.value) == (
+        "candle symbol must match SymbolRules.symbol: "
+        "candle=' BTCUSDT ', rules='BTCUSDT'"
+    )
 
 
 def test_liquidation_rejects_a_candle_from_another_symbol() -> None:
@@ -412,15 +431,17 @@ def test_liquidation_rejects_a_candle_from_another_symbol() -> None:
         symbol="ETHUSDT",
     )
 
-    with pytest.raises(
-        ValueError,
-        match="candle symbol must match SymbolRules.symbol",
-    ):
+    with pytest.raises(ValueError) as error:
         make_executor().fill_liquidation(
             long_basket(entry_price="100", take_profit="106"),
             current,
             liquidation_price=Decimal("80"),
         )
+
+    assert str(error.value) == (
+        "candle symbol must match SymbolRules.symbol: "
+        "candle='ETHUSDT', rules='BTCUSDT'"
+    )
 ```
 
 - [ ] **Step 4: รัน mismatch tests ทั้งหมดและยืนยัน RED**
@@ -430,7 +451,7 @@ def test_liquidation_rejects_a_candle_from_another_symbol() -> None:
 ```bash
 PYTHONPATH=src ../../.venv/bin/python -m pytest \
   tests/unit/execution/test_paper_futures.py \
-  -k "another_symbol" -q
+  -k "lowercase_near_match or padded_near_match or liquidation_rejects_a_candle_from_another_symbol" -q
 ```
 
 ผลที่คาดหวัง: ทั้งสาม tests FAIL เพราะยังไม่มี Futures symbol guard.
