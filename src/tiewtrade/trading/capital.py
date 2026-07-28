@@ -20,8 +20,8 @@ class SpotCapitalPlan:
         spot_policy: SpotTradingPolicy,
         entry_policy: EntryPolicy,
     ) -> "SpotCapitalPlan":
-        if available <= 0:
-            raise ValueError("available capital must be positive")
+        if not available.is_finite() or available <= 0:
+            raise ValueError("available capital must be finite and positive")
 
         trading_capital = available * spot_policy.trading_capital_ratio
         reserve = available - trading_capital

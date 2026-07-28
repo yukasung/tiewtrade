@@ -44,11 +44,25 @@ def test_spot_trading_policy_requires_even_entries_between_two_and_twenty(
         EntryPolicy(max_entries=max_entries)
 
 
-def test_spot_capital_requires_positive_available_capital() -> None:
-    spot_policy = SpotTradingPolicy(trading_capital_ratio=Decimal("0.80"))
-    entry_policy = EntryPolicy(max_entries=10)
+@pytest.mark.parametrize(
+    "available",
+    [
+        Decimal("0"),
+        Decimal("-1"),
+        Decimal("NaN"),
+        Decimal("Infinity"),
+        Decimal("-Infinity"),
+    ],
+)
+def test_spot_capital_plan_rejects_invalid_available_capital(
+    available: Decimal,
+) -> None:
     with pytest.raises(ValueError, match="available capital"):
-        SpotCapitalPlan.from_available(Decimal("0"), spot_policy, entry_policy)
+        SpotCapitalPlan.from_available(
+            available,
+            SpotTradingPolicy(trading_capital_ratio=Decimal("0.80")),
+            EntryPolicy(max_entries=10),
+        )
 
 
 def test_futures_capital_plan_uses_half_for_trading_and_half_for_buffer() -> None:
