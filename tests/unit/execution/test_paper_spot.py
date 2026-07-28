@@ -1,6 +1,9 @@
+from dataclasses import replace
 from datetime import UTC, datetime
 from decimal import Decimal
 from uuid import UUID
+
+import pytest
 
 from tiewtrade.execution.paper_spot import PaperSpotExecutor
 from tiewtrade.market_data.candle import Candle
@@ -110,6 +113,21 @@ def test_entry_fill_rejects_quantity_below_minimum_notional() -> None:
     assert executor.fill_entry(intent(session, signal_candle), fill_candle) is None
 
 
+def test_entry_fill_rejects_a_candle_from_another_symbol() -> None:
+    executor = PaperSpotExecutor(spot_session(), spot_rules())
+    signal_candle = candle_at(0, open_price="100", high="102", low="99", close="101")
+    fill_candle = replace(
+        candle_at(5, open_price="101", high="103", low="100", close="102"),
+        symbol="ETHUSDT",
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="candle symbol must match SymbolRules.symbol",
+    ):
+        executor.fill_entry(intent(spot_session(), signal_candle), fill_candle)
+
+
 def test_take_profit_target_touch_uses_sell_floor_price_and_exact_fee() -> None:
     session = SessionConfig(
         session_id=UUID("00000000-0000-0000-0000-000000000079"),
@@ -155,6 +173,33 @@ def test_take_profit_target_touch_uses_sell_floor_price_and_exact_fee() -> None:
     assert fill.fill_id == f"paper:{session.session_id}:{exit_order_id}:fill"
 
 
+def test_take_profit_rejects_a_candle_from_another_symbol() -> None:
+    rules = spot_rules()
+    basket = Basket(
+        UUID("00000000-0000-0000-0000-000000000092"),
+        EntryPolicy(max_entries=4),
+        Decimal("1"),
+    )
+    basket.add_entry(
+        price=Decimal("100"),
+        quantity=Decimal("2"),
+        fee=Decimal("0.2"),
+        filled_at=datetime(2026, 1, 1, tzinfo=UTC),
+        atr=Decimal("1"),
+        tick_size=rules.tick_size,
+    )
+    candle = replace(
+        candle_at(5, open_price="100", high="101", low="99", close="100"),
+        symbol="ETHUSDT",
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="candle symbol must match SymbolRules.symbol",
+    ):
+        PaperSpotExecutor(spot_session(), rules).fill_take_profit(basket, candle)
+
+
 def test_take_profit_rejects_a_non_positive_sell_price_after_quantization() -> None:
     session = SessionConfig(
         session_id=UUID("00000000-0000-0000-0000-000000000079"),
@@ -190,6 +235,29 @@ def test_take_profit_rejects_a_non_positive_sell_price_after_quantization() -> N
 
     assert (
         PaperSpotExecutor(session, rules).fill_take_profit(basket, touch_candle) is None
+    )
+
+
+def spot_session() -> SessionConfig:
+    return SessionConfig(
+        session_id=UUID("00000000-0000-0000-0000-000000000079"),
+        preset_version="rsi-step-grid-v1",
+        market_type=MarketType.SPOT,
+        trade_mode=TradeMode.PAPER,
+        available_capital=Decimal("1000"),
+        fee_rate=Decimal("0.001"),
+        slippage_bps=Decimal("0"),
+        entry_policy=EntryPolicy(max_entries=4),
+        spot_policy=SpotTradingPolicy(trading_capital_ratio=Decimal("0.6")),
+    )
+
+
+def spot_rules() -> SymbolRules:
+    return SymbolRules(
+        symbol="BTCUSDT",
+        tick_size=Decimal("0.01"),
+        step_size=Decimal("0.001"),
+        min_notional=Decimal("5"),
     )
 
 

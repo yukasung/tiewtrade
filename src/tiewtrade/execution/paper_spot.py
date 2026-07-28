@@ -47,6 +47,8 @@ class PaperSpotExecutor:
     def fill_entry(
         self, intent: EntryIntent, candle: Candle
     ) -> PaperSpotEntryFill | None:
+        self._require_matching_symbol(candle)
+
         price = self._symbol_rules.ceil_price(
             candle.open * (Decimal("1") + self._session.slippage_bps / Decimal("10000"))
         )
@@ -71,6 +73,8 @@ class PaperSpotExecutor:
     def fill_take_profit(
         self, basket: Basket, candle: Candle
     ) -> PaperSpotExitFill | None:
+        self._require_matching_symbol(candle)
+
         if basket.take_profit_price is None or candle.high < basket.take_profit_price:
             return None
 
@@ -92,3 +96,10 @@ class PaperSpotExecutor:
             fee=notional * self._session.fee_rate,
             filled_at=candle.close_time,
         )
+
+    def _require_matching_symbol(self, candle: Candle) -> None:
+        if candle.symbol != self._symbol_rules.symbol:
+            raise ValueError(
+                "candle symbol must match SymbolRules.symbol: "
+                f"candle={candle.symbol!r}, rules={self._symbol_rules.symbol!r}"
+            )
