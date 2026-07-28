@@ -27,6 +27,19 @@ def test_completed_pair_blocks_remainder_then_cooldown_month() -> None:
     assert lifecycle.can_enter(datetime(2026, 3, 1, tzinfo=UTC))
 
 
+def test_completed_pair_requires_completion_month() -> None:
+    lifecycle = EntryPairLifecycle(policy())
+    lifecycle.record_fill(datetime(2026, 1, 10, tzinfo=UTC))
+    lifecycle.record_fill(datetime(2026, 1, 20, tzinfo=UTC))
+    lifecycle._completed_pair_month = None
+
+    with pytest.raises(
+        RuntimeError,
+        match="completed Entry Pair is missing its completion month",
+    ):
+        lifecycle.can_enter(datetime(2026, 3, 1, tzinfo=UTC))
+
+
 def test_entry_pair_stops_at_configured_maximum() -> None:
     lifecycle = EntryPairLifecycle(policy(4))
     for pair_start_month in (1, 3):

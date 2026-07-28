@@ -84,31 +84,32 @@ class PaperFuturesSession:
         if (
             session.trade_mode is not TradeMode.PAPER
             or session.market_type is not MarketType.FUTURES
-            or session.futures_policy is None
         ):
             raise ValueError(
                 "PaperFuturesSession requires a Paper Futures configuration"
             )
+        futures_policy = session.futures_policy
+        if futures_policy is None:
+            raise ValueError("PaperFuturesSession requires futures_policy")
         if session.preset_version != preset.version:
             raise ValueError("session preset version does not match the preset")
 
-        assert session.futures_policy is not None
         self._identity = PaperFuturesSessionIdentity(
             session_id=session.session_id,
             symbol=market_data.symbol,
             timeframe=market_data.timeframe,
             preset_version=session.preset_version,
-            leverage=session.futures_policy.leverage,
+            leverage=futures_policy.leverage,
         )
         self._session = session
         self._symbol_rules = symbol_rules
         self._preset = preset
         self._candles = CompletedCandleStream(market_data)
         self._executor = PaperFuturesExecutor(session, symbol_rules)
-        self._margin = FuturesMarginModel(session.futures_policy)
+        self._margin = FuturesMarginModel(futures_policy)
         self._capital_plan = FuturesCapitalPlan.from_available(
             session.available_capital,
-            session.futures_policy,
+            futures_policy,
             session.entry_policy,
         )
         self._indicators = WilderIndicators(preset)

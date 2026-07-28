@@ -26,7 +26,8 @@ class EntryPairLifecycle:
         if self._entry_count == 0 or self._entry_count % 2 == 1:
             return True
 
-        assert self._completed_pair_month is not None
+        if self._completed_pair_month is None:
+            raise RuntimeError("completed Entry Pair is missing its completion month")
         return current_month >= self._completed_pair_month + 2
 
     def record_fill(self, at: datetime) -> None:

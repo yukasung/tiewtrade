@@ -48,6 +48,14 @@ def test_session_requires_paper_futures_configuration_and_matching_preset() -> N
         make_session(replace(session, preset_version="wrong-version"))
 
 
+def test_session_requires_futures_policy() -> None:
+    session = futures_session()
+    object.__setattr__(session, "futures_policy", None)
+
+    with pytest.raises(ValueError, match="futures_policy"):
+        make_session(session)
+
+
 def test_session_exposes_immutable_persistence_identity() -> None:
     session = make_session()
 
