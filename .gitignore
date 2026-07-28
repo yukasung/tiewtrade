@@ -6,3 +6,5 @@ docs-site/out/
 __pycache__/
 *.py[cod]
 /tiewtrade.code-workspace
+/.mcp.json
+/.superpowers/
