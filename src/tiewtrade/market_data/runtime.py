@@ -154,7 +154,8 @@ class MarketDataRuntime:
             await self._close_source_once()
         except Exception as error:
             close_error = error
-            self._fail_closed(MarketDataRuntimeReason.SOURCE_ERROR)
+            if self._status.snapshot.state is not MarketDataRuntimeState.FAILED_CLOSED:
+                self._fail_closed(MarketDataRuntimeReason.SOURCE_ERROR)
 
         if run_task is not None:
             await asyncio.gather(run_task, return_exceptions=True)

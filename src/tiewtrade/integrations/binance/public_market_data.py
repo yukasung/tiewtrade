@@ -152,9 +152,9 @@ class BinancePublicMarketData:
     async def close(self) -> None:
         if self._closed:
             return
-        self._closed = True
         if self._owns_session and self._session is not None:
             await self._session.close()
+        self._closed = True
 
     async def _load_rest_page(
         self, config: MarketDataConfig, params: dict[str, str | int]
@@ -218,6 +218,18 @@ class BinancePublicMarketData:
                         aiohttp.WSMsgType.CLOSING,
                     }:
                         return
+                    elif message.type is aiohttp.WSMsgType.ERROR:
+                        if isinstance(message.data, TimeoutError):
+                            raise MarketDataTimeoutError(
+                                "Binance market-data transport timed out"
+                            ) from message.data
+                        if isinstance(message.data, Exception):
+                            raise MarketDataRetryableError(
+                                "Binance market-data transport failed"
+                            ) from message.data
+                        raise MarketDataRetryableError(
+                            "Binance market-data transport failed"
+                        )
                     else:
                         raise ValueError
         except (

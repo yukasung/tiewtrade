@@ -55,9 +55,18 @@ class FakeResponse:
 
 
 class FakeMessage:
-    def __init__(self, payload: object) -> None:
-        self.type = WSMsgType.TEXT
-        self.data = payload if isinstance(payload, str) else json.dumps(payload)
+    def __init__(
+        self,
+        payload: object,
+        *,
+        message_type: WSMsgType = WSMsgType.TEXT,
+    ) -> None:
+        self.type = message_type
+        self.data = (
+            payload
+            if message_type is WSMsgType.ERROR or isinstance(payload, str)
+            else json.dumps(payload)
+        )
 
 
 class FakeWebSocket:
@@ -67,7 +76,10 @@ class FakeWebSocket:
         *,
         failure: Exception | None = None,
     ) -> None:
-        self._messages = iter(FakeMessage(payload) for payload in payloads)
+        self._messages = iter(
+            payload if isinstance(payload, FakeMessage) else FakeMessage(payload)
+            for payload in payloads
+        )
         self._failure = failure
 
     async def __aenter__(self) -> FakeWebSocket:
@@ -491,6 +503,31 @@ def test_websocket_transport_failure_raises_retryable_error(
         asyncio.run(collect(source))
 
 
+def test_websocket_error_message_raises_retryable_error() -> None:
+    source, _ = source_with(
+        websocket_payloads=[
+            FakeMessage(
+                aiohttp.ClientConnectionError("offline"),
+                message_type=WSMsgType.ERROR,
+            )
+        ]
+    )
+
+    with pytest.raises(MarketDataRetryableError):
+        asyncio.run(collect(source))
+
+
+def test_websocket_timeout_message_preserves_timeout_action() -> None:
+    source, _ = source_with(
+        websocket_payloads=[
+            FakeMessage(TimeoutError("timed out"), message_type=WSMsgType.ERROR)
+        ]
+    )
+
+    with pytest.raises(MarketDataTimeoutError):
+        asyncio.run(collect(source))
+
+
 @pytest.mark.parametrize(
     ("header", "expected_retry_after"),
     [
@@ -617,3 +654,70 @@ def test_owned_session_uses_bounded_timeout_and_closes_once(
     assert configured_timeouts[0] is not None
     assert configured_timeouts[0].total == 30.0
     assert session.close_count == 1
+
+
+class FailureThenSuccessCloseSession(FakeSession):
+    async def close(self) -> None:
+        self.close_count += 1
+        if self.close_count == 1:
+            raise RuntimeError("close failed")
+
+
+def test_owned_session_close_failure_can_be_retried(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    session = FailureThenSuccessCloseSession(
+        rest_pages=[FakeResponse(payload=[rest_kline(0)])]
+    )
+    monkeypatch.setattr(aiohttp, "ClientSession", lambda **_: session)
+    source = BinancePublicMarketData(
+        BinancePublicEndpoints.for_market_type(MarketType.SPOT)
+    )
+    load_one(source)
+
+    with pytest.raises(RuntimeError, match="close failed"):
+        asyncio.run(source.close())
+    asyncio.run(source.close())
+    asyncio.run(source.close())
+
+    assert session.close_count == 2
+
+
+class CancelThenSuccessCloseSession(FakeSession):
+    def __init__(self) -> None:
+        super().__init__(rest_pages=[FakeResponse(payload=[rest_kline(0)])])
+        self.close_started = asyncio.Event()
+
+    async def close(self) -> None:
+        self.close_count += 1
+        if self.close_count == 1:
+            self.close_started.set()
+            await asyncio.Event().wait()
+
+
+def test_owned_session_cancelled_close_can_be_retried(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    session = CancelThenSuccessCloseSession()
+    monkeypatch.setattr(aiohttp, "ClientSession", lambda **_: session)
+    source = BinancePublicMarketData(
+        BinancePublicEndpoints.for_market_type(MarketType.SPOT)
+    )
+
+    async def exercise() -> None:
+        await source.load_recent(
+            config(),
+            count=1,
+            completed_before=datetime(2026, 1, 1, 0, 5, tzinfo=UTC),
+        )
+        close_task = asyncio.create_task(source.close())
+        await session.close_started.wait()
+        close_task.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await close_task
+        await source.close()
+        await source.close()
+
+    asyncio.run(exercise())
+
+    assert session.close_count == 2

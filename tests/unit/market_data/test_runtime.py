@@ -769,6 +769,36 @@ def test_close_failure_does_not_overwrite_fatal_source_reason() -> None:
     assert runtime.snapshot.reason is MarketDataRuntimeReason.SOURCE_FATAL
 
 
+@pytest.mark.parametrize(
+    ("failures", "expected_reason"),
+    [
+        ([MarketDataFatalError("bad symbol")], MarketDataRuntimeReason.SOURCE_FATAL),
+        (
+            [MarketDataRateLimitError("429", retry_after=None)] * 4,
+            MarketDataRuntimeReason.RATE_LIMIT_EXHAUSTED,
+        ),
+    ],
+)
+def test_stop_close_retry_preserves_primary_failed_closed_reason(
+    failures: list[Exception],
+    expected_reason: MarketDataRuntimeReason,
+) -> None:
+    source = FailingCloseWarmUpSource(failures)
+    runtime = runtime_for(source, RecordingSink())
+
+    async def exercise() -> None:
+        await runtime.run()
+        assert runtime.snapshot.reason is expected_reason
+        with pytest.raises(RuntimeError, match="source close failed"):
+            await runtime.stop()
+
+    asyncio.run(exercise())
+
+    assert source.close_count == 2
+    assert runtime.snapshot.state is MarketDataRuntimeState.FAILED_CLOSED
+    assert runtime.snapshot.reason is expected_reason
+
+
 def test_retryable_warm_up_failure_uses_bounded_backoff_then_recovers() -> None:
     source = WarmUpFailureSource([MarketDataRetryableError("503")])
     scheduler = FakeScheduler()

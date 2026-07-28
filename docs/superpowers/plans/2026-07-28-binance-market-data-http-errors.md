@@ -422,7 +422,11 @@ if not 200 <= response.status < 300:
 ```python
 except (MarketDataRetryableError, MarketDataRateLimitError, MarketDataFatalError):
     raise
-except (aiohttp.ClientError, TimeoutError) as error:
+except TimeoutError as error:
+    raise MarketDataTimeoutError(
+        "Binance market-data transport timed out"
+    ) from error
+except aiohttp.ClientError as error:
     raise MarketDataRetryableError(
         "Binance market-data transport failed"
     ) from error
@@ -433,6 +437,22 @@ except (
     ValueError,
 ) as error:
     raise MarketDataFatalError(_INVALID_RESPONSE_MESSAGE) from error
+```
+
+สำหรับ WebSocket message ที่มี `type == WSMsgType.ERROR` ให้ map connection error
+เป็น `MarketDataRetryableError` และ assert timeout โดยตรงเป็น
+`MarketDataTimeoutError`:
+
+```python
+def test_websocket_timeout_message_preserves_timeout_action() -> None:
+    source, _ = source_with(
+        websocket_payloads=[
+            FakeMessage(TimeoutError("timed out"), message_type=WSMsgType.ERROR)
+        ]
+    )
+
+    with pytest.raises(MarketDataTimeoutError):
+        asyncio.run(collect(source))
 ```
 
 คง `BinanceMarketDataPayloadError` ไว้ภายใน endpoint/kline parsing แต่ห้ามปล่อยข้าม
