@@ -188,6 +188,40 @@ def test_successful_close_is_durable_before_ready_snapshot_returns() -> None:
     assert result.persistence_state is PersistenceState.READY
 
 
+def test_take_profit_fill_without_closed_basket_blocks_persistence() -> None:
+    session = create_autospec(PaperSpotSession, instance=True)
+    history = create_autospec(PaperSpotSQLiteHistory, instance=True)
+    session.process_completed_candle.return_value = replace(
+        entry_snapshot(),
+        entry_fill=None,
+        take_profit_fill=exit_fill(),
+        closed_basket=None,
+    )
+    persistent = persistent_session(session, history)
+    candle = completed_candle()
+
+    with pytest.raises(ValueError, match="present together"):
+        persistent.process_completed_candle(candle, received_at=candle.close_time)
+
+    history.record_close.assert_not_called()
+
+
+def test_closed_basket_with_mismatched_snapshot_basket_id_blocks_persistence() -> None:
+    session = create_autospec(PaperSpotSession, instance=True)
+    history = create_autospec(PaperSpotSQLiteHistory, instance=True)
+    session.process_completed_candle.return_value = replace(
+        close_snapshot(),
+        basket_id=UUID("00000000-0000-0000-0000-000000000199"),
+    )
+    persistent = persistent_session(session, history)
+    candle = completed_candle()
+
+    with pytest.raises(ValueError, match="matching Basket ID"):
+        persistent.process_completed_candle(candle, received_at=candle.close_time)
+
+    history.record_close.assert_not_called()
+
+
 @pytest.mark.parametrize(
     "error",
     [

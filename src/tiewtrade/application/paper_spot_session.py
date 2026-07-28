@@ -94,7 +94,6 @@ class PaperSpotSession:
         self._lifecycle = EntryPairLifecycle(session.entry_policy)
         self._basket: Basket | None = None
         self._pending_intent: EntryIntent | None = None
-        self._latest_take_profit_fill: PaperSpotExitFill | None = None
         self._closed_basket_count = 0
         self._state = PaperSpotSessionState.ACTIVE
         self._failure_reason: PaperSpotFailureReason | None = None
@@ -119,10 +118,13 @@ class PaperSpotSession:
             basket_existed_at_candle_open = self._basket is not None
             entry_fill = self._fill_pending_intent(candle)
             entry_filled_on_current_candle = entry_fill is not None
+            take_profit_fill: PaperSpotExitFill | None = None
             closed_basket: ClosedBasket | None = None
 
             if basket_existed_at_candle_open and not entry_filled_on_current_candle:
-                closed_basket = self._fill_take_profit(candle)
+                take_profit_fill = self._fill_take_profit(candle)
+                if take_profit_fill is not None:
+                    closed_basket = self._close_basket(take_profit_fill)
 
             indicators = self._indicators.update(candle)
             if indicators is not None:
@@ -142,6 +144,7 @@ class PaperSpotSession:
             return self._snapshot(
                 accepted=True,
                 entry_fill=entry_fill,
+                take_profit_fill=take_profit_fill,
                 closed_basket=closed_basket,
             )
         except PaperSpotSessionError:
@@ -212,12 +215,12 @@ class PaperSpotSession:
         self._pending_intent = None
         self._strategy = RsiStepGridStrategy(self._session.session_id, self._preset)
 
-    def _fill_take_profit(self, candle: Candle) -> ClosedBasket | None:
+    def _fill_take_profit(self, candle: Candle) -> PaperSpotExitFill | None:
         assert self._basket is not None
-        exit_fill = self._executor.fill_take_profit(self._basket, candle)
-        if exit_fill is None:
-            return None
+        return self._executor.fill_take_profit(self._basket, candle)
 
+    def _close_basket(self, exit_fill: PaperSpotExitFill) -> ClosedBasket:
+        assert self._basket is not None
         closed = self._basket.close(
             exit_price=exit_fill.price,
             exit_fee=exit_fill.fee,
@@ -225,7 +228,6 @@ class PaperSpotSession:
         )
         self._basket = None
         self._lifecycle.reset()
-        self._latest_take_profit_fill = exit_fill
         self._closed_basket_count += 1
         return closed
 
@@ -234,6 +236,7 @@ class PaperSpotSession:
         *,
         accepted: bool,
         entry_fill: PaperSpotEntryFill | None = None,
+        take_profit_fill: PaperSpotExitFill | None = None,
         closed_basket: ClosedBasket | None = None,
     ) -> PaperSpotSessionSnapshot:
         if self._basket is not None:
@@ -248,7 +251,7 @@ class PaperSpotSession:
             failure_reason=self._failure_reason,
             pending_intent=self._pending_intent,
             entry_fill=entry_fill,
-            take_profit_fill=self._latest_take_profit_fill,
+            take_profit_fill=take_profit_fill,
             closed_basket=closed_basket,
             closed_basket_count=self._closed_basket_count,
             basket_id=basket_id,

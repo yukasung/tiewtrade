@@ -300,7 +300,8 @@ def test_closed_two_entry_basket_resets_lifecycle_for_a_new_basket() -> None:
 
     assert new_fill.entry_fill is not None
     assert new_fill.basket_entry_count == 1
-    assert new_fill.take_profit_fill is not None
+    assert new_fill.take_profit_fill is None
+    assert new_fill.closed_basket is None
     assert new_fill.closed_basket_count == 1
 
     second_close_candle = candle(

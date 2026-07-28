@@ -23,7 +23,10 @@ def test_replaying_the_tracer_fixture_is_deterministic() -> None:
     assert first.current_entries == 0
     assert first.closed_baskets == 1
     assert first.realized_pnl == Decimal("13.84062222")
-    assert first.to_json() == second.to_json()
+    assert first.to_json() == (
+        '{"accepted_candles":40,"closed_baskets":1,'
+        '"current_entries":0,"realized_pnl":"13.84062222"}'
+    )
 
 
 def replay_fixture() -> ReplayResult:
