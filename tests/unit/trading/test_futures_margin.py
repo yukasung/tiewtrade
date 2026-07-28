@@ -74,6 +74,27 @@ def test_liquidation_crossing_rejects_ranges_that_do_not_touch_threshold(
     )
 
 
+@pytest.mark.parametrize(
+    "liquidation_price",
+    [
+        Decimal("NaN"),
+        Decimal("Infinity"),
+        Decimal("0"),
+        Decimal("-1"),
+    ],
+)
+def test_liquidation_crossing_rejects_invalid_threshold(
+    liquidation_price: Decimal,
+) -> None:
+    with pytest.raises(ValueError, match="liquidation_price"):
+        model().is_liquidation_crossed(
+            side=PositionSide.LONG,
+            liquidation_price=liquidation_price,
+            candle_low=Decimal("80"),
+            candle_high=Decimal("100"),
+        )
+
+
 def test_long_liquidation_threshold_uses_cross_account_equity() -> None:
     price = model().liquidation_price(**margin_inputs())  # type: ignore[arg-type]
     expected = (Decimal("100") * Decimal("3000") - Decimal("199970")) / (
