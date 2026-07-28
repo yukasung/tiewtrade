@@ -57,6 +57,16 @@ def test_entry_below_min_notional_returns_none() -> None:
     assert executor.fill_entry(long_intent(), candle(open="100")) is None
 
 
+def test_entry_rejects_a_candle_from_another_symbol() -> None:
+    current = replace(candle(minute=5, open="100"), symbol="ETHUSDT")
+
+    with pytest.raises(
+        ValueError,
+        match="candle symbol must match SymbolRules.symbol",
+    ):
+        make_executor().fill_entry(long_intent(), current)
+
+
 def test_repeating_the_same_entry_produces_the_same_fill_identity() -> None:
     executor = make_executor(leverage=3)
     intent = long_intent()
@@ -134,6 +144,22 @@ def test_take_profit_returns_none_until_the_target_is_touched() -> None:
     )
 
 
+def test_take_profit_rejects_a_candle_from_another_symbol() -> None:
+    current = replace(
+        candle(open="105", high="107", low="104"),
+        symbol="ETHUSDT",
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="candle symbol must match SymbolRules.symbol",
+    ):
+        make_executor().fill_take_profit(
+            long_basket(entry_price="100", take_profit="106"),
+            current,
+        )
+
+
 def test_liquidation_wins_over_take_profit_and_uses_gap_aware_price() -> None:
     executor = make_executor(slippage_bps="10")
     basket = long_basket(entry_price="100", take_profit="106")
@@ -192,6 +218,23 @@ def test_short_liquidation_uses_gap_aware_adverse_price() -> None:
         current,
         liquidation_price=Decimal("120"),
     )
+
+
+def test_liquidation_rejects_a_candle_from_another_symbol() -> None:
+    current = replace(
+        candle(open="70", high="110", low="60"),
+        symbol="ETHUSDT",
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="candle symbol must match SymbolRules.symbol",
+    ):
+        make_executor().fill_liquidation(
+            long_basket(entry_price="100", take_profit="106"),
+            current,
+            liquidation_price=Decimal("80"),
+        )
 
 
 @pytest.mark.parametrize(

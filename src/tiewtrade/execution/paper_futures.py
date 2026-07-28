@@ -57,6 +57,7 @@ class PaperFuturesExecutor:
     def fill_entry(
         self, intent: EntryIntent, candle: Candle
     ) -> PaperFuturesEntryFill | None:
+        self._require_matching_symbol(candle)
         slippage = self._slippage
         if intent.side is PositionSide.LONG:
             raw_price = candle.open * (Decimal("1") + slippage)
@@ -89,6 +90,7 @@ class PaperFuturesExecutor:
     def fill_take_profit(
         self, basket: Basket, candle: Candle
     ) -> PaperFuturesExitFill | None:
+        self._require_matching_symbol(candle)
         if basket.take_profit_price is None:
             return None
 
@@ -119,6 +121,7 @@ class PaperFuturesExecutor:
         *,
         liquidation_price: Decimal,
     ) -> PaperFuturesExitFill | None:
+        self._require_matching_symbol(candle)
         if not liquidation_price.is_finite() or liquidation_price <= 0:
             raise ValueError("liquidation_price must be finite and positive")
 
@@ -147,6 +150,13 @@ class PaperFuturesExecutor:
     @property
     def _slippage(self) -> Decimal:
         return self._session.slippage_bps / Decimal("10000")
+
+    def _require_matching_symbol(self, candle: Candle) -> None:
+        if candle.symbol != self._symbol_rules.symbol:
+            raise ValueError(
+                "candle symbol must match SymbolRules.symbol: "
+                f"candle={candle.symbol!r}, rules={self._symbol_rules.symbol!r}"
+            )
 
     def _exit_fill(
         self,
