@@ -13,7 +13,7 @@
 - Paper Spot and Paper Futures remain separate application orchestrators; do not create a shared base class, generic interface, registry, or factory.
 - Paper and Live continue to share business policies but never execution adapters.
 - Production behavior changes must follow failing-test-first TDD.
-- Atomic Entry commit uses candidate copies of Basket, Entry Pair lifecycle, and Strategy; original objects must not receive partial mutation.
+- Whole-Candle commit uses candidate copies of Basket, Entry Pair lifecycle, Strategy, Indicator state, pending intent, and counters; original objects must not receive partial mutation from a failed accepted Candle.
 - Session identity is exactly `session_id`, `symbol`, `timeframe`, and `preset_version`.
 - A failed Paper Spot execution becomes terminal `FAILED_CLOSED`, clears pending intent, and rejects later Candles.
 - `take_profit_fill` and `closed_basket` are both present only on the Candle that closes the Basket and are both absent otherwise.
@@ -758,4 +758,316 @@ git add src/tiewtrade/application/paper_spot_session.py \
   tests/unit/integrations/sqlite/test_persistent_paper_spot_session.py \
   tests/acceptance/test_paper_spot_replay.py
 git commit -m "fix: scope Paper Spot close snapshots per Candle"
+```
+
+### Task 5: Expand atomicity to the whole accepted Candle and close review findings
+
+**Files:**
+- Modify: `src/tiewtrade/application/paper_spot_session.py`
+- Modify: `tests/unit/application/test_paper_spot_session.py`
+- Modify: `tests/unit/integrations/sqlite/test_persistent_paper_spot_session.py`
+- Modify: `docs/superpowers/plans/2026-07-28-paper-spot-hardening.md`
+
+**Interfaces:**
+- Produces: private `_PaperSpotTransition` that owns candidate Basket, lifecycle,
+  Strategy, Indicator, pending intent, and closed-Basket count for one accepted Candle.
+- Changes: `PaperSpotSession` commits candidate state only after Entry, Take Profit,
+  Indicator, and Strategy steps all succeed.
+- Preserves: public Session, snapshot, identity, persistence, replay, and fail-closed
+  contracts from Tasks 1–4.
+
+- [ ] **Step 1: Write failing late-Entry and late-close durability tests**
+
+เพิ่ม helper ที่สร้าง persistent coordinator จาก real Session กับ mock History โดยกำหนด
+identity ให้ตรงกัน:
+
+```python
+def persistent_spot_session(
+    application: PaperSpotSession,
+) -> tuple[PersistentPaperSpotSQLiteSession, PaperSpotSQLiteHistory]:
+    history = create_autospec(PaperSpotSQLiteHistory, instance=True)
+    history.session_identity = application.identity  # type: ignore[misc]
+    return PersistentPaperSpotSQLiteSession(application, history), history
+```
+
+เพิ่ม test ที่ทำให้ Indicator ล้มหลัง Entry Fill candidate ถูกสร้างแล้ว:
+
+```python
+def test_late_entry_failure_does_not_commit_or_persist_entry(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    application = paper_session()
+    pending = arm_entry_intent(application)
+    persistent, history = persistent_spot_session(application)
+    entry_candle = candle(
+        minute_after(pending),
+        open_price="120",
+        close_price="121",
+    )
+
+    def raise_indicator_error(*args: object, **kwargs: object) -> None:
+        raise ValueError("indicator transition failed")
+
+    monkeypatch.setattr(WilderIndicators, "update", raise_indicator_error)
+
+    with pytest.raises(PaperSpotSessionError, match="execution failed"):
+        persistent.process_completed_candle(
+            entry_candle,
+            received_at=entry_candle.close_time,
+        )
+
+    assert application.snapshot.state is PaperSpotSessionState.FAILED_CLOSED
+    assert application.snapshot.basket_id is None
+    assert application.snapshot.basket_entry_count == 0
+    history.record_entry.assert_not_called()
+    history.record_close.assert_not_called()
+```
+
+เพิ่ม test ที่บันทึก Entry สำเร็จก่อน แล้วทำให้ Indicator ล้มหลัง candidate Basket close:
+
+```python
+def test_late_close_failure_keeps_open_basket_and_does_not_persist_close(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    application = paper_session()
+    pending = arm_entry_intent(application)
+    persistent, history = persistent_spot_session(application)
+    entry_candle = candle(
+        minute_after(pending),
+        open_price="120",
+        close_price="121",
+    )
+    entry = persistent.process_completed_candle(
+        entry_candle,
+        received_at=entry_candle.close_time,
+    )
+    assert entry.session.basket_entry_count == 1
+
+    def raise_indicator_error(*args: object, **kwargs: object) -> None:
+        raise ValueError("indicator transition failed after close")
+
+    monkeypatch.setattr(WilderIndicators, "update", raise_indicator_error)
+    close_candle = candle(
+        minute_after(pending) + 5,
+        open_price="125",
+        close_price="130",
+        high="1000",
+    )
+
+    with pytest.raises(PaperSpotSessionError, match="execution failed"):
+        persistent.process_completed_candle(
+            close_candle,
+            received_at=close_candle.close_time,
+        )
+
+    assert application.snapshot.state is PaperSpotSessionState.FAILED_CLOSED
+    assert application.snapshot.basket_id == entry.session.basket_id
+    assert application.snapshot.basket_entry_count == 1
+    history.record_entry.assert_called_once()
+    history.record_close.assert_not_called()
+```
+
+เพิ่ม imports สำหรับ `create_autospec`, `WilderIndicators`, `PaperSpotSQLiteHistory` และ
+`PersistentPaperSpotSQLiteSession` ใน test file เดียวกัน
+
+- [ ] **Step 2: Write the failing Strategy-candidate rollback regression**
+
+เพิ่ม test ที่ callback บน candidate Strategy mutate ก่อน raise:
+
+```python
+def test_strategy_callback_failure_does_not_commit_candidate_transition(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    application = paper_session()
+    first_intent = arm_entry_intent(application)
+    first_fill_candle = candle(
+        minute_after(first_intent),
+        open_price="120",
+        close_price="121",
+    )
+    application.process_completed_candle(
+        first_fill_candle,
+        received_at=first_fill_candle.close_time,
+    )
+    second_intent = arm_entry_intent(
+        application,
+        start_minute=minute_after(first_intent) + 5,
+        downtrend_candles=60,
+    )
+    original_strategy = application._strategy
+    original_callback = RsiStepGridStrategy.on_entry_filled
+
+    def mutate_then_raise(
+        self: RsiStepGridStrategy,
+        intent_id: str,
+    ) -> None:
+        original_callback(self, intent_id)
+        raise ValueError("strategy transition failed")
+
+    monkeypatch.setattr(RsiStepGridStrategy, "on_entry_filled", mutate_then_raise)
+    second_fill_candle = candle(
+        minute_after(second_intent),
+        open_price="100",
+        close_price="101",
+    )
+
+    with pytest.raises(PaperSpotSessionError) as captured:
+        application.process_completed_candle(
+            second_fill_candle,
+            received_at=second_fill_candle.close_time,
+        )
+
+    assert str(captured.value.__cause__) == "strategy transition failed"
+    assert application.snapshot.basket_entry_count == 1
+    assert application._lifecycle.entry_count == 1
+    assert original_strategy._pending_intent == second_intent
+    assert application._strategy is not original_strategy
+```
+
+- [ ] **Step 3: Parameterize identity mismatch coverage for all four fields**
+
+แทน test mismatch เดิมด้วย:
+
+```python
+@pytest.mark.parametrize(
+    "mismatched_identity",
+    [
+        replace(
+            session_identity(),
+            session_id=UUID("00000000-0000-0000-0000-000000000199"),
+        ),
+        replace(session_identity(), symbol="ETHUSDT"),
+        replace(session_identity(), timeframe="15m"),
+        replace(session_identity(), preset_version="rsi-step-grid-v2"),
+    ],
+)
+def test_constructor_rejects_mismatched_session_and_history_identity(
+    mismatched_identity: PaperSpotSessionIdentity,
+) -> None:
+    session = create_autospec(PaperSpotSession, instance=True)
+    history = create_autospec(PaperSpotSQLiteHistory, instance=True)
+    session.identity = session_identity()  # type: ignore[misc]
+    history.session_identity = mismatched_identity  # type: ignore[misc]
+
+    with pytest.raises(
+        ValueError,
+        match="Paper Spot Session and Trade History identity differ",
+    ):
+        PersistentPaperSpotSQLiteSession(session, history)
+```
+
+- [ ] **Step 4: Run focused tests and verify RED**
+
+Run:
+
+```bash
+PYTHONPATH=src ../../.venv/bin/python -m pytest \
+  tests/unit/application/test_paper_spot_session.py::test_late_entry_failure_does_not_commit_or_persist_entry \
+  tests/unit/application/test_paper_spot_session.py::test_late_close_failure_keeps_open_basket_and_does_not_persist_close \
+  tests/unit/application/test_paper_spot_session.py::test_strategy_callback_failure_does_not_commit_candidate_transition \
+  tests/unit/integrations/sqlite/test_persistent_paper_spot_session.py::test_constructor_rejects_mismatched_session_and_history_identity -q
+```
+
+Expected: late Entry/close tests แสดงว่า state จริงถูก mutate ก่อน error; Strategy test หรือ
+identity matrix ยังไม่ผ่าน contract ใหม่ทั้งหมด
+
+- [ ] **Step 5: Introduce the whole-Candle candidate state**
+
+เพิ่ม private mutable dataclass ใน `paper_spot_session.py`:
+
+```python
+@dataclass(slots=True)
+class _PaperSpotTransition:
+    indicators: WilderIndicators
+    strategy: RsiStepGridStrategy
+    lifecycle: EntryPairLifecycle
+    basket: Basket | None
+    pending_intent: EntryIntent | None
+    closed_basket_count: int
+```
+
+สร้าง candidate จาก state เดิม:
+
+```python
+def _new_transition(self) -> _PaperSpotTransition:
+    return _PaperSpotTransition(
+        indicators=deepcopy(self._indicators),
+        strategy=deepcopy(self._strategy),
+        lifecycle=deepcopy(self._lifecycle),
+        basket=deepcopy(self._basket),
+        pending_intent=self._pending_intent,
+        closed_basket_count=self._closed_basket_count,
+    )
+```
+
+และ commit พร้อมกันหลังทุก fallible step สำเร็จ:
+
+```python
+def _commit_transition(self, transition: _PaperSpotTransition) -> None:
+    self._indicators = transition.indicators
+    self._strategy = transition.strategy
+    self._lifecycle = transition.lifecycle
+    self._basket = transition.basket
+    self._pending_intent = transition.pending_intent
+    self._closed_basket_count = transition.closed_basket_count
+```
+
+- [ ] **Step 6: Run all accepted-Candle behavior on the candidate**
+
+หลัง Candle acceptance ให้สร้าง `transition = self._new_transition()` แล้วเปลี่ยน private
+helpers ให้รับ transition เป็น argument:
+
+```python
+entry_fill = self._fill_pending_intent(transition, candle)
+take_profit_fill = self._fill_take_profit(transition, candle)
+closed_basket = self._close_basket(transition, take_profit_fill)
+indicators = transition.indicators.update(candle)
+self._evaluate_strategy(transition, candle, indicators)
+self._commit_transition(transition)
+```
+
+`_fill_pending_intent()` ต้อง mutate `transition.basket`, `transition.lifecycle`,
+`transition.strategy` และ `transition.pending_intent` โดยตรง และลบ candidate-copy ชั้นใน
+ที่ซ้ำซ้อนจาก Task 3
+
+`_fill_take_profit()`, `_close_basket()` และ Strategy evaluation ต้องอ่าน/เขียน state
+ผ่าน transition เท่านั้น โดยเพิ่ม `transition.closed_basket_count` เมื่อ close สำเร็จ
+
+`_commit_transition()` ต้องถูกเรียกหลัง Indicator/Strategy step และก่อนสร้าง success
+snapshot เท่านั้น หาก exception เกิดก่อนหน้านั้นให้ใช้ fail-closed boundary เดิมโดยไม่
+commit candidate
+
+- [ ] **Step 7: Translate implementation-plan prose to Thai**
+
+แปล narrative, instructions, expected results และ explanatory text ในไฟล์แผนนี้เป็น
+ภาษาไทยทั้งหมด คง required writing-plans header, section labels (`Goal`,
+`Architecture`, `Tech Stack`, `Global Constraints`, `Task`, `Files`, `Interfaces`,
+`Step`), identifiers, code, commands, paths และ exact error strings เป็นอังกฤษ
+
+- [ ] **Step 8: Verify GREEN and all repository gates**
+
+Run:
+
+```bash
+PYTHONPATH=src QT_QPA_PLATFORM=offscreen ../../.venv/bin/python -m pytest -q
+../../.venv/bin/python -m ruff check src tests
+../../.venv/bin/python -m ruff format --check src tests
+../../.venv/bin/python -m mypy src
+npm --prefix ../../docs-site test
+npm --prefix ../../docs-site run check:content
+git diff --check
+```
+
+Expected: ทุก command exit `0`, late-failure tests ไม่พบ memory/durable divergence และ
+replay JSON ยังคงตรง Global Constraint ทุกตัวอักษร
+
+- [ ] **Step 9: Commit**
+
+```bash
+git add src/tiewtrade/application/paper_spot_session.py \
+  tests/unit/application/test_paper_spot_session.py \
+  tests/unit/integrations/sqlite/test_persistent_paper_spot_session.py \
+  docs/superpowers/specs/2026-07-28-paper-spot-hardening-design.md \
+  docs/superpowers/plans/2026-07-28-paper-spot-hardening.md
+git commit -m "fix: make Paper Spot Candle transitions atomic"
 ```

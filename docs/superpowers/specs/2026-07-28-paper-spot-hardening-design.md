@@ -26,10 +26,10 @@ Session identity guard, per-candle snapshot contract และ capital validatio
 
 ### 1. Candidate-copy parity with Paper Futures — selected
 
-สร้าง candidate copies ของ Basket, Entry Pair lifecycle และ Strategy ก่อนใช้ Entry
-Fill แล้ว commit ทั้งสาม object พร้อมกันเมื่อทุก operation สำเร็จ วิธีนี้ตรงกับ
-`PaperFuturesSession`, พิสูจน์ atomicity ได้จาก test และมีต้นทุนจำกัดเพราะหนึ่ง Basket
-มี Entries สูงสุด 20 รายการ
+สร้าง whole-Candle transition candidate ที่รวม Basket, Entry Pair lifecycle, Strategy,
+Indicator, pending intent และ counters แล้ว commit state ทั้งชุดเมื่อทุก operation สำเร็จ
+แนวทางนี้ขยาย candidate pattern ของ `PaperFuturesSession` ให้ปิด durable audit gap และ
+มีต้นทุนจำกัดเพราะหนึ่ง Basket มี Entries สูงสุด 20 รายการ
 
 ### 2. Validate before mutating
 
@@ -69,21 +69,36 @@ state ของ Futures ซึ่งขัดกับขอบเขต capabil
 raise `ValueError("Paper Spot Session and Trade History identity differ")` ก่อนเก็บ
 dependency หากค่าใดไม่ตรงกัน
 
-## Atomic Entry Transition
+## Whole-Candle Atomic Transition
 
-เมื่อมี pending intent และ executor ให้ Entry Fill:
+หลัง completed-candle stream ยอมรับ Candle แล้ว Session ต้องสร้าง Spot-specific
+transition candidate ที่ถือ state ต่อไปนี้:
 
-1. เก็บ intent ไว้ใน local variable
-2. สร้าง Basket ใหม่หรือ `deepcopy` Basket เดิมเป็น candidate
-3. `deepcopy` Entry Pair lifecycle และ Strategy เป็น candidates
-4. apply Entry ไปยัง candidate Basket
-5. apply `record_fill()` ไปยัง candidate lifecycle
-6. apply `on_entry_filled()` ไปยัง candidate Strategy
-7. เมื่อทุกขั้นสำเร็จจึง assign candidates กลับเข้า Session พร้อมกัน แล้วล้าง pending
-   intent
+- Basket
+- Entry Pair lifecycle
+- Strategy
+- Indicator state
+- pending intent
+- closed Basket count
+
+Session ต้องประมวลผล Entry Fill, Take Profit close, Indicator update และ Strategy
+evaluation บน transition candidate เท่านั้น แล้ว assign state ทั้งชุดกลับเข้า Session จริง
+เพียงครั้งเดียวเมื่อทุก fallible step สำเร็จ
+
+ภายใน candidate เมื่อมี pending intent และ executor ให้ Entry Fill:
+
+1. สร้าง Basket ใหม่หรือใช้ Basket candidate ที่คัดลอกมาจาก state เดิม
+2. apply Entry ไปยัง candidate Basket
+3. apply `record_fill()` ไปยัง candidate lifecycle
+4. apply `on_entry_filled()` ไปยัง candidate Strategy
+5. ล้าง candidate pending intent
+6. ดำเนิน Take Profit, Indicator และ Strategy steps ที่เหลือบน candidate เดิม
+7. commit transition candidate ทั้งชุดหลังทุกขั้นสำเร็จ
 
 หากขั้นใดล้ม original Basket, lifecycle และ Strategy ต้องไม่รับ partial mutation
-exception จะถูกส่งให้ fail-closed boundary จัดการ
+รวมทั้ง Indicator, pending intent และ counters ต้องไม่รับ transition ของ Candle นั้น
+exception จะถูกส่งให้ fail-closed boundary จัดการ โดย completed-candle stream ที่รับ
+Candle ไปแล้วไม่ต้อง rollback เพราะ Session กลายเป็น terminal และไม่ resume ต่อ
 
 กรณี executor ปฏิเสธ Entry เพราะ minimum notional ยังคงเรียก
 `on_entry_rejected()`, ล้าง pending intent และเปิดทางให้ Strategy สร้าง intent ใหม่ตาม
@@ -152,16 +167,15 @@ flowchart TD
     S -- No --> R[Return accepted false snapshot]
     S -- Yes --> A{Completed-candle stream accepts?}
     A -- No --> R
-    A -- Yes --> E[Paper executor produces Entry Fill]
-    E --> B[Build Basket lifecycle strategy candidates]
-    B --> V{All candidate transitions succeed?}
+    A -- Yes --> B[Build whole-Candle transition candidate]
+    B --> E[Process Entry Take Profit Indicators and Strategy]
+    E --> V{All candidate transitions succeed?}
     V -- Yes --> K[Commit candidates together]
     V -- No --> F[Set FAILED_CLOSED and raise PaperSpotSessionError]
-    K --> T[Evaluate Take Profit and Strategy]
-    T --> P[Return per-Candle snapshot]
+    K --> P[Return per-Candle snapshot]
 ```
 
-candidate objects ป้องกัน partial mutation ก่อน commit ส่วน fail-closed state ป้องกัน
+candidate object ป้องกัน partial mutation ของทั้ง Candle ก่อน commit ส่วน fail-closed state ป้องกัน
 Session ที่เจอ execution invariant failure ไม่ให้รับ Candle ต่อ
 
 ## Error Handling
@@ -171,6 +185,8 @@ Session ที่เจอ execution invariant failure ไม่ให้รั�
   `accepted=False` โดยไม่ทำให้ Session fail-closed
 - execution/orchestration exception หลัง Candle ถูกยอมรับถูก wrap เป็น
   `PaperSpotSessionError` และเปลี่ยน Session เป็น terminal `FAILED_CLOSED`
+- เพราะ whole-Candle candidate ยังไม่ถูก commit Entry หรือ Basket close จาก Candle ที่
+  ล้มจึงไม่ปรากฏใน memory และไม่ต้องส่ง durable snapshot ที่ไม่สมบูรณ์ให้ persistence
 - persistence exception ยังคงเปลี่ยน persistence coordinator เป็น `BLOCKED` แยกจาก
   application Session state ตาม ownership เดิม
 
@@ -181,11 +197,17 @@ Session ที่เจอ execution invariant failure ไม่ให้รั�
 1. บังคับ `record_fill()` บน candidate lifecycle ให้ล้ม แล้วพิสูจน์ว่า original Basket
    ไม่มี Entry เพิ่ม, Session เป็น `FAILED_CLOSED`, original exception เป็น cause และ
    Candle ถัดไปไม่ถูกประมวลผล
-2. ตรวจ state/snapshot/warm-up behavior หลัง fail-closed
-3. ตรวจ identity ตรงกันและ mismatch ทีละ field ระหว่าง Session กับ History
-4. ตรวจว่า `take_profit_fill` มีเฉพาะ Candle ที่ปิด Basket และ Candle ถัดไปเป็น `None`
-5. ตรวจ `NaN`, Infinity, negative Infinity, zero และค่าติดลบของ Spot capital
-6. รัน deterministic 40-Candle replay และยืนยัน JSON เดิม:
+2. บังคับ candidate Strategy ให้ mutate แล้วล้ม และพิสูจน์ว่า Basket, lifecycle และ
+   original Strategy ไม่รับ partial transition
+3. บังคับ Indicator/Strategy step หลัง Entry Fill ให้ล้ม แล้วยืนยันว่า Entry ไม่ถูก
+   commit ใน memory และไม่มี durable Entry record
+4. บังคับ Indicator/Strategy step หลัง Basket close ให้ล้ม แล้วยืนยันว่า Basket เดิม
+   ยังเปิดอยู่ทั้งใน memory และ Trade History
+5. ตรวจ state/snapshot/warm-up behavior หลัง fail-closed
+6. ตรวจ identity ตรงกันและ mismatch ทีละ field ระหว่าง Session กับ History
+7. ตรวจว่า `take_profit_fill` มีเฉพาะ Candle ที่ปิด Basket และ Candle ถัดไปเป็น `None`
+8. ตรวจ `NaN`, Infinity, negative Infinity, zero และค่าติดลบของ Spot capital
+9. รัน deterministic 40-Candle replay และยืนยัน JSON เดิม:
 
 ```json
 {"accepted_candles":40,"closed_baskets":1,"current_entries":0,"realized_pnl":"13.84062222"}
