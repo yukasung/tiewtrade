@@ -315,6 +315,7 @@ def futures_session(
 
 def symbol_rules(*, min_notional: str = "5") -> SymbolRules:
     return SymbolRules(
+        symbol="BTCUSDT",
         tick_size=Decimal("0.1"),
         step_size=Decimal("0.1"),
         min_notional=Decimal(min_notional),

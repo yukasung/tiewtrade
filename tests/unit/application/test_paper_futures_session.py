@@ -431,6 +431,7 @@ def make_session(
         session or futures_session(),
         MarketDataConfig(symbol="BTCUSDT", timeframe="5m"),
         SymbolRules(
+            symbol="BTCUSDT",
             tick_size=Decimal("0.1"),
             step_size=Decimal("0.1"),
             min_notional=min_notional,

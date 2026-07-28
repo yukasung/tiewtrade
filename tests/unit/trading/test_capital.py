@@ -97,8 +97,20 @@ def test_futures_capital_plan_rejects_invalid_available_capital(
         )
 
 
+@pytest.mark.parametrize("symbol", ["", "   "])
+def test_symbol_rules_require_a_non_blank_symbol(symbol: str) -> None:
+    with pytest.raises(ValueError, match="symbol must not be blank"):
+        SymbolRules(
+            symbol=symbol,
+            tick_size=Decimal("0.01"),
+            step_size=Decimal("0.001"),
+            min_notional=Decimal("5"),
+        )
+
+
 def test_symbol_rules_round_quantity_and_price_down() -> None:
     rules = SymbolRules(
+        symbol="BTCUSDT",
         tick_size=Decimal("0.10"),
         step_size=Decimal("0.001"),
         min_notional=Decimal("5"),
@@ -111,6 +123,7 @@ def test_symbol_rules_round_quantity_and_price_down() -> None:
 def test_symbol_rules_require_positive_exchange_filters() -> None:
     with pytest.raises(ValueError, match="tick_size"):
         SymbolRules(
+            symbol="BTCUSDT",
             tick_size=Decimal("0"),
             step_size=Decimal("0.001"),
             min_notional=Decimal("5"),
@@ -119,6 +132,7 @@ def test_symbol_rules_require_positive_exchange_filters() -> None:
 
 def test_symbol_rules_check_notional_after_rounding() -> None:
     rules = SymbolRules(
+        symbol="BTCUSDT",
         tick_size=Decimal("0.10"),
         step_size=Decimal("0.001"),
         min_notional=Decimal("5"),

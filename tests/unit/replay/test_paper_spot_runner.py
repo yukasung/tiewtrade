@@ -72,6 +72,7 @@ def session_config() -> SessionConfig:
 
 def symbol_rules() -> SymbolRules:
     return SymbolRules(
+        symbol="BTCUSDT",
         tick_size=Decimal("0.01"),
         step_size=Decimal("0.001"),
         min_notional=Decimal("5"),

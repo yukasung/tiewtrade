@@ -4,11 +4,14 @@ from decimal import ROUND_CEILING, ROUND_DOWN, Decimal
 
 @dataclass(frozen=True, slots=True)
 class SymbolRules:
+    symbol: str
     tick_size: Decimal
     step_size: Decimal
     min_notional: Decimal
 
     def __post_init__(self) -> None:
+        if not self.symbol.strip():
+            raise ValueError("symbol must not be blank")
         if self.tick_size <= 0:
             raise ValueError("tick_size must be positive")
         if self.step_size <= 0:

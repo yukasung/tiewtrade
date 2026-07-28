@@ -66,6 +66,7 @@ def replay(candles: list[Candle]) -> list[PaperFuturesSessionSnapshot]:
         ),
         market_data,
         SymbolRules(
+            symbol="BTCUSDT",
             tick_size=Decimal("0.1"),
             step_size=Decimal("0.001"),
             min_notional=Decimal("5"),

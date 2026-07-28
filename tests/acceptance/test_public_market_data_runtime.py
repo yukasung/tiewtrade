@@ -253,6 +253,7 @@ def configured_paper_spot_session(
         ),
         market_data,
         SymbolRules(
+            symbol="BTCUSDT",
             tick_size=Decimal("0.01"),
             step_size=Decimal("0.001"),
             min_notional=Decimal("5"),

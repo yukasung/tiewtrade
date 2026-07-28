@@ -32,6 +32,7 @@ def test_entry_fill_uses_session_capital_costs_and_symbol_rules() -> None:
     executor = PaperSpotExecutor(
         session,
         SymbolRules(
+            symbol="BTCUSDT",
             tick_size=Decimal("0.01"),
             step_size=Decimal("0.001"),
             min_notional=Decimal("5"),
@@ -67,6 +68,7 @@ def test_entry_fill_rounds_buy_slippage_up_to_the_next_tick() -> None:
     executor = PaperSpotExecutor(
         session,
         SymbolRules(
+            symbol="BTCUSDT",
             tick_size=Decimal("0.01"),
             step_size=Decimal("0.001"),
             min_notional=Decimal("5"),
@@ -96,6 +98,7 @@ def test_entry_fill_rejects_quantity_below_minimum_notional() -> None:
     executor = PaperSpotExecutor(
         session,
         SymbolRules(
+            symbol="BTCUSDT",
             tick_size=Decimal("0.01"),
             step_size=Decimal("0.001"),
             min_notional=Decimal("20"),
@@ -120,6 +123,7 @@ def test_take_profit_target_touch_uses_sell_floor_price_and_exact_fee() -> None:
         spot_policy=SpotTradingPolicy(trading_capital_ratio=Decimal("0.6")),
     )
     rules = SymbolRules(
+        symbol="BTCUSDT",
         tick_size=Decimal("0.01"),
         step_size=Decimal("0.001"),
         min_notional=Decimal("5"),
@@ -164,6 +168,7 @@ def test_take_profit_rejects_a_non_positive_sell_price_after_quantization() -> N
         spot_policy=SpotTradingPolicy(trading_capital_ratio=Decimal("0.6")),
     )
     rules = SymbolRules(
+        symbol="BTCUSDT",
         tick_size=Decimal("0.01"),
         step_size=Decimal("0.001"),
         min_notional=Decimal("0.001"),

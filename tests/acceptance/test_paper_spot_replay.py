@@ -43,6 +43,7 @@ def replay_fixture() -> ReplayResult:
         ),
         market_data=market_data,
         symbol_rules=SymbolRules(
+            symbol="BTCUSDT",
             tick_size=Decimal("0.01"),
             step_size=Decimal("0.001"),
             min_notional=Decimal("5"),

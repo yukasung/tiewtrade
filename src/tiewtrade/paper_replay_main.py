@@ -43,6 +43,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             session=session,
             market_data=market_data,
             symbol_rules=SymbolRules(
+                symbol=market_data.symbol,
                 tick_size=Decimal("0.01"),
                 step_size=Decimal("0.001"),
                 min_notional=Decimal("5"),

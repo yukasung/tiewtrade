@@ -26,6 +26,7 @@ def test_session_rejects_a_non_paper_spot_configuration() -> None:
             config,
             MarketDataConfig(symbol="BTCUSDT", timeframe="5m"),
             SymbolRules(
+                symbol="BTCUSDT",
                 tick_size=Decimal("0.01"),
                 step_size=Decimal("0.001"),
                 min_notional=Decimal("5"),
@@ -40,6 +41,7 @@ def test_pending_intent_fills_at_the_next_completed_candle_open() -> None:
         session,
         MarketDataConfig(symbol="BTCUSDT", timeframe="5m"),
         SymbolRules(
+            symbol="BTCUSDT",
             tick_size=Decimal("0.01"),
             step_size=Decimal("0.001"),
             min_notional=Decimal("5"),
@@ -213,6 +215,7 @@ def paper_session(*, min_notional: Decimal = Decimal("5")) -> PaperSpotSession:
         session_config(),
         MarketDataConfig(symbol="BTCUSDT", timeframe="5m"),
         SymbolRules(
+            symbol="BTCUSDT",
             tick_size=Decimal("0.01"),
             step_size=Decimal("0.001"),
             min_notional=min_notional,
