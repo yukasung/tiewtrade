@@ -42,6 +42,8 @@
 **Interfaces:**
 - Produces: `RetryAfter = timedelta | datetime`
 - Produces: `MarketDataRetryableError(message: str)`
+- Produces: `MarketDataTimeoutError(message: str)` ซึ่งเป็น retryable subtype ที่รักษา
+  public timeout semantics โดยไม่ผูก Runtime กับ Binance
 - Produces: `MarketDataRateLimitError(message: str, *, retry_after: RetryAfter | None)` พร้อม read-only `retry_after`
 - Produces: `MarketDataFatalError(message: str)`
 - Produces: `MarketDataRuntimeState.RATE_LIMITED`
@@ -60,6 +62,7 @@ from tiewtrade.market_data.source_errors import (
     MarketDataFatalError,
     MarketDataRateLimitError,
     MarketDataRetryableError,
+    MarketDataTimeoutError,
 )
 
 
@@ -238,6 +241,7 @@ from tiewtrade.market_data.source_errors import (
     MarketDataFatalError,
     MarketDataRateLimitError,
     MarketDataRetryableError,
+    MarketDataTimeoutError,
 )
 ```
 
@@ -716,6 +720,7 @@ from tiewtrade.market_data.source_errors import (
     MarketDataFatalError,
     MarketDataRateLimitError,
     MarketDataRetryableError,
+    MarketDataTimeoutError,
 )
 
 _RATE_LIMIT_FALLBACK_SECONDS = 60.0
@@ -740,8 +745,6 @@ async def _run_source_operation(
     operation: Callable[[], Awaitable[_T]],
     *,
     timeout: float,
-    resume_state: MarketDataRuntimeState,
-    resume_reason: MarketDataRuntimeReason,
 ) -> _T:
     last_error: Exception | None = None
     for attempt in range(len(_RECONNECT_DELAYS_SECONDS) + 1):
@@ -751,14 +754,17 @@ async def _run_source_operation(
             raise
         except MarketDataRateLimitError as error:
             last_error = error
-            if attempt == len(_RECONNECT_DELAYS_SECONDS):
-                raise
             self._transition(
                 MarketDataRuntimeState.RATE_LIMITED,
                 MarketDataRuntimeReason.RATE_LIMITED,
             )
+            if attempt == len(_RECONNECT_DELAYS_SECONDS):
+                raise
             await self._scheduler.sleep(self._retry_after_seconds(error))
-            self._transition(resume_state, resume_reason)
+            self._transition(
+                MarketDataRuntimeState.RECONNECTING,
+                MarketDataRuntimeReason.RATE_LIMITED,
+            )
         except (MarketDataRetryableError, TimeoutError) as error:
             last_error = error
             if attempt == len(_RECONNECT_DELAYS_SECONDS):
@@ -779,8 +785,6 @@ candles = await self._run_source_operation(
         completed_before=completed_before,
     ),
     timeout=_WARM_UP_TIMEOUT_SECONDS,
-    resume_state=MarketDataRuntimeState.WARMING_UP,
-    resume_reason=MarketDataRuntimeReason.START_REQUESTED,
 )
 ```
 
@@ -788,7 +792,8 @@ candles = await self._run_source_operation(
 timeout `30.0` ต่อ network attempt เพื่อไม่ให้ safe fallback `60.0` ถูกตัดก่อนครบเวลา
 และยังคงครอบ `self._pipeline.warm_up(...)` ด้วย `_WARM_UP_TIMEOUT_SECONDS` แยกต่างหาก
 ใน `_perform_warm_up` ต้องปล่อย `MarketDataFatalError`,
-`MarketDataRateLimitError`, `MarketDataRetryableError` และ `TimeoutError` ผ่านโดยไม่ห่อ
+`MarketDataRateLimitError`, `MarketDataRetryableError`, `MarketDataTimeoutError` และ
+`TimeoutError` ผ่านโดยไม่ห่อ
 เป็น `_WarmUpSourceError`; ห่อเฉพาะ unexpected source/pipeline validation failure เดิม
 
 จับ exhausted errors ใน caller ตามชนิด:
@@ -800,7 +805,7 @@ except MarketDataFatalError:
 except MarketDataRateLimitError:
     self._fail_closed(MarketDataRuntimeReason.RATE_LIMIT_EXHAUSTED)
     return False
-except TimeoutError:
+except (MarketDataTimeoutError, TimeoutError):
     self._fail_closed(MarketDataRuntimeReason.WARM_UP_TIMEOUT)
     return False
 except (MarketDataRetryableError, _WarmUpSourceError):
@@ -809,9 +814,10 @@ except (MarketDataRetryableError, _WarmUpSourceError):
 ```
 
 คง sink/pipeline errors เป็น `SINK_ERROR` หรือ `SOURCE_ERROR` ตาม behavior เดิม
-สำหรับ `_backfill_to_boundary` ให้ใช้ `_run_source_operation` กับ
-`resume_state=BACKFILLING`, `resume_reason=GAP_DETECTED` และจับสาม error types ด้วย
-reason ชุดเดียวกันก่อน generic `Exception` branch เดิม
+สำหรับ `_backfill_to_boundary` ให้ใช้ `_run_source_operation` และจับสาม error types
+ด้วย reason ชุดเดียวกันก่อน generic `Exception` branch เดิม หลัง rate-limit delay
+ทั้ง warm-up และ backfill ต้องผ่าน `RATE_LIMITED -> RECONNECTING` ก่อนทำ source
+attempt ถัดไป ห้าม transition กลับ `WARMING_UP` หรือ `BACKFILLING` โดยตรง
 
 - [ ] **Step 6: Add stream recovery classification**
 
@@ -844,12 +850,17 @@ async def _recover_stream(
             await self._scheduler.sleep(reconnect_delay)
             self._transition(MarketDataRuntimeState.RECONNECTING, reason)
         else:
-            self._transition(
-                MarketDataRuntimeState.RATE_LIMITED,
-                MarketDataRuntimeReason.RATE_LIMITED,
-            )
+            if self._status.snapshot.state is not MarketDataRuntimeState.RATE_LIMITED:
+                self._transition(
+                    MarketDataRuntimeState.RATE_LIMITED,
+                    MarketDataRuntimeReason.RATE_LIMITED,
+                )
             await self._scheduler.sleep(
                 self._retry_after_seconds(pending_rate_limit)
+            )
+            self._transition(
+                MarketDataRuntimeState.RECONNECTING,
+                MarketDataRuntimeReason.RATE_LIMITED,
             )
         if self._stop_requested:
             return None
@@ -861,6 +872,10 @@ async def _recover_stream(
             return None
         except MarketDataRateLimitError as error:
             pending_rate_limit = error
+            self._transition(
+                MarketDataRuntimeState.RATE_LIMITED,
+                MarketDataRuntimeReason.RATE_LIMITED,
+            )
             continue
         except Exception:
             pending_rate_limit = None

@@ -2,8 +2,9 @@ from __future__ import annotations
 
 import asyncio
 import json
-from collections.abc import AsyncIterator, Iterable
+from collections.abc import AsyncIterator, Awaitable, Iterable
 from datetime import UTC, datetime, timedelta
+from typing import TypeVar
 
 import aiohttp
 import pytest
@@ -11,13 +12,22 @@ from aiohttp import WSMsgType
 
 from tiewtrade.integrations.binance.public_endpoints import BinancePublicEndpoints
 from tiewtrade.integrations.binance.public_market_data import BinancePublicMarketData
+from tiewtrade.market_data.candle import Candle
 from tiewtrade.market_data.config import MarketDataConfig
+from tiewtrade.market_data.runtime import MarketDataRuntime
+from tiewtrade.market_data.runtime_state import (
+    MarketDataRuntimeReason,
+    MarketDataRuntimeState,
+)
 from tiewtrade.market_data.source_errors import (
     MarketDataFatalError,
     MarketDataRateLimitError,
     MarketDataRetryableError,
+    MarketDataTimeoutError,
 )
 from tiewtrade.trading.session_config import MarketType
+
+_T = TypeVar("_T")
 
 
 class FakeResponse:
@@ -326,7 +336,7 @@ def test_429_preserves_http_date_retry_after() -> None:
     assert captured.value.retry_after == datetime(2026, 1, 1, 0, 1, tzinfo=UTC)
 
 
-@pytest.mark.parametrize("header", [None, "", "not-a-date"])
+@pytest.mark.parametrize("header", [None, "", "not-a-date", "-1"])
 def test_429_without_valid_retry_after_uses_no_directive(
     header: str | None,
 ) -> None:
@@ -370,13 +380,61 @@ def test_transport_failure_raises_retryable_error() -> None:
         load_one(source)
 
 
-def test_timeout_failure_raises_retryable_error() -> None:
+def test_timeout_failure_preserves_timeout_action() -> None:
     source, _ = source_with(
         rest_pages=[FakeResponse(payload=TimeoutError("timed out"))]
     )
 
-    with pytest.raises(MarketDataRetryableError):
+    with pytest.raises(MarketDataTimeoutError):
         load_one(source)
+
+
+class ImmediateRuntimeScheduler:
+    def __init__(self) -> None:
+        self.sleeps: list[float] = []
+
+    def now(self) -> datetime:
+        return datetime(2026, 1, 1, 0, 30, tzinfo=UTC)
+
+    async def sleep(self, seconds: float) -> None:
+        self.sleeps.append(seconds)
+
+    async def wait_for(self, awaitable: Awaitable[_T], timeout: float) -> _T:
+        return await awaitable
+
+
+class RejectingWarmUpSink:
+    async def warm_up(
+        self,
+        candles: tuple[Candle, ...],
+        *,
+        received_at: datetime,
+    ) -> None:
+        raise AssertionError("timed-out source must not reach the sink")
+
+    async def process_completed(self, candle: Candle, *, received_at: datetime) -> None:
+        raise AssertionError("timed-out source must not reach the sink")
+
+
+def test_binance_timeout_exhaustion_remains_warm_up_timeout_in_runtime() -> None:
+    source, session = source_with(
+        rest_pages=[FakeResponse(payload=TimeoutError("timed out")) for _ in range(4)]
+    )
+    scheduler = ImmediateRuntimeScheduler()
+    runtime = MarketDataRuntime(
+        config=config(),
+        warm_up_count=1,
+        source=source,
+        sink=RejectingWarmUpSink(),
+        scheduler=scheduler,
+    )
+
+    asyncio.run(runtime.run())
+
+    assert len(session.requests) == 4
+    assert scheduler.sleeps == [1.0, 2.0, 4.0]
+    assert runtime.snapshot.state is MarketDataRuntimeState.FAILED_CLOSED
+    assert runtime.snapshot.reason is MarketDataRuntimeReason.WARM_UP_TIMEOUT
 
 
 @pytest.mark.parametrize(

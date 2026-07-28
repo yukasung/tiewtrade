@@ -27,6 +27,7 @@ from tiewtrade.market_data.source_errors import (
     MarketDataFatalError,
     MarketDataRateLimitError,
     MarketDataRetryableError,
+    MarketDataTimeoutError,
 )
 
 _T = TypeVar("_T")
@@ -187,7 +188,7 @@ class MarketDataRuntime:
         except _WarmUpSinkError:
             self._fail_closed(MarketDataRuntimeReason.SINK_ERROR)
             return False
-        except TimeoutError:
+        except (MarketDataTimeoutError, TimeoutError):
             self._fail_closed(MarketDataRuntimeReason.WARM_UP_TIMEOUT)
             return False
         except (MarketDataRetryableError, _WarmUpSourceError):
@@ -209,8 +210,6 @@ class MarketDataRuntime:
                     completed_before=completed_before,
                 ),
                 timeout=_WARM_UP_TIMEOUT_SECONDS,
-                resume_state=MarketDataRuntimeState.WARMING_UP,
-                resume_reason=MarketDataRuntimeReason.START_REQUESTED,
             )
         except (
             MarketDataFatalError,
@@ -383,8 +382,6 @@ class MarketDataRuntime:
                         end=end,
                     ),
                     timeout=_BACKFILL_TIMEOUT_SECONDS,
-                    resume_state=MarketDataRuntimeState.BACKFILLING,
-                    resume_reason=MarketDataRuntimeReason.GAP_DETECTED,
                 )
             except MarketDataFatalError:
                 self._fail_closed(MarketDataRuntimeReason.SOURCE_FATAL)
@@ -435,10 +432,14 @@ class MarketDataRuntime:
                 await self._scheduler.sleep(reconnect_delay)
                 self._transition(MarketDataRuntimeState.RECONNECTING, reason)
             else:
-                self._transition(
-                    MarketDataRuntimeState.RATE_LIMITED,
-                    MarketDataRuntimeReason.RATE_LIMITED,
-                )
+                if (
+                    self._status.snapshot.state
+                    is not MarketDataRuntimeState.RATE_LIMITED
+                ):
+                    self._transition(
+                        MarketDataRuntimeState.RATE_LIMITED,
+                        MarketDataRuntimeReason.RATE_LIMITED,
+                    )
                 await self._scheduler.sleep(
                     self._retry_after_seconds(pending_rate_limit)
                 )
@@ -453,6 +454,10 @@ class MarketDataRuntime:
                 return None
             except MarketDataRateLimitError as error:
                 pending_rate_limit = error
+                self._transition(
+                    MarketDataRuntimeState.RATE_LIMITED,
+                    MarketDataRuntimeReason.RATE_LIMITED,
+                )
                 continue
             except Exception:
                 pending_rate_limit = None
@@ -499,8 +504,6 @@ class MarketDataRuntime:
         operation: Callable[[], Awaitable[_T]],
         *,
         timeout: float,
-        resume_state: MarketDataRuntimeState,
-        resume_reason: MarketDataRuntimeReason,
     ) -> _T:
         last_error: Exception | None = None
         for attempt in range(len(_RECONNECT_DELAYS_SECONDS) + 1):
@@ -510,14 +513,17 @@ class MarketDataRuntime:
                 raise
             except MarketDataRateLimitError as error:
                 last_error = error
-                if attempt == len(_RECONNECT_DELAYS_SECONDS):
-                    raise
                 self._transition(
                     MarketDataRuntimeState.RATE_LIMITED,
                     MarketDataRuntimeReason.RATE_LIMITED,
                 )
+                if attempt == len(_RECONNECT_DELAYS_SECONDS):
+                    raise
                 await self._scheduler.sleep(self._retry_after_seconds(error))
-                self._transition(resume_state, resume_reason)
+                self._transition(
+                    MarketDataRuntimeState.RECONNECTING,
+                    MarketDataRuntimeReason.RATE_LIMITED,
+                )
             except (MarketDataRetryableError, TimeoutError) as error:
                 last_error = error
                 if attempt == len(_RECONNECT_DELAYS_SECONDS):

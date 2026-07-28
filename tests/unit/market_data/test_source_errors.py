@@ -6,12 +6,14 @@ from tiewtrade.market_data.source_errors import (
     MarketDataFatalError,
     MarketDataRateLimitError,
     MarketDataRetryableError,
+    MarketDataTimeoutError,
 )
 
 
 def test_source_error_types_have_distinct_actions() -> None:
     assert not issubclass(MarketDataFatalError, MarketDataRetryableError)
     assert not issubclass(MarketDataRateLimitError, MarketDataRetryableError)
+    assert issubclass(MarketDataTimeoutError, MarketDataRetryableError)
 
 
 @pytest.mark.parametrize(

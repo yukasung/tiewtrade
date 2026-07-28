@@ -11,6 +11,10 @@ class MarketDataRetryableError(MarketDataSourceError):
     """A transient source failure eligible for bounded retry."""
 
 
+class MarketDataTimeoutError(MarketDataRetryableError):
+    """A source timeout whose public timeout meaning must be preserved."""
+
+
 class MarketDataFatalError(MarketDataSourceError):
     """A source failure that cannot succeed through retry."""
 

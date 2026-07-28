@@ -19,6 +19,7 @@ from tiewtrade.market_data.source_errors import (
     MarketDataFatalError,
     MarketDataRateLimitError,
     MarketDataRetryableError,
+    MarketDataTimeoutError,
     RetryAfter,
 )
 
@@ -186,7 +187,11 @@ class BinancePublicMarketData:
             ValueError,
         ) as error:
             raise MarketDataFatalError(_INVALID_RESPONSE_MESSAGE) from error
-        except (aiohttp.ClientError, TimeoutError) as error:
+        except TimeoutError as error:
+            raise MarketDataTimeoutError(
+                "Binance market-data transport timed out"
+            ) from error
+        except aiohttp.ClientError as error:
             raise MarketDataRetryableError(
                 "Binance market-data transport failed"
             ) from error
@@ -233,7 +238,11 @@ class BinancePublicMarketData:
             raise MarketDataRetryableError(
                 "Binance market-data transport failed"
             ) from error
-        except (aiohttp.ClientError, TimeoutError) as error:
+        except TimeoutError as error:
+            raise MarketDataTimeoutError(
+                "Binance market-data transport timed out"
+            ) from error
+        except aiohttp.ClientError as error:
             raise MarketDataRetryableError(
                 "Binance market-data transport failed"
             ) from error

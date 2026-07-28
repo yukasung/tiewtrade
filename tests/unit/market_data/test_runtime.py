@@ -35,6 +35,7 @@ _RATE_LIMIT_EXHAUSTION_STATES = (
     MarketDataRuntimeState.RECONNECTING,
     MarketDataRuntimeState.RATE_LIMITED,
     MarketDataRuntimeState.RECONNECTING,
+    MarketDataRuntimeState.RATE_LIMITED,
     MarketDataRuntimeState.FAILED_CLOSED,
 )
 
@@ -799,6 +800,24 @@ def test_rate_limit_uses_delta_seconds_not_reconnect_backoff() -> None:
     assert MarketDataRuntimeState.RATE_LIMITED in runtime.visited_states
 
 
+def test_warm_up_rate_limit_resumes_through_reconnecting_state() -> None:
+    source = WarmUpFailureSource(
+        [MarketDataRateLimitError("429", retry_after=timedelta(seconds=45))]
+    )
+    sink = RecordingSink()
+    runtime = runtime_for(source, sink, scheduler=FakeScheduler())
+
+    asyncio.run(run_until_sink_receives(runtime, sink, count=1))
+
+    assert runtime.visited_states[:5] == (
+        MarketDataRuntimeState.STARTING,
+        MarketDataRuntimeState.WARMING_UP,
+        MarketDataRuntimeState.RATE_LIMITED,
+        MarketDataRuntimeState.RECONNECTING,
+        MarketDataRuntimeState.LIVE,
+    )
+
+
 def test_rate_limit_http_date_uses_scheduler_clock() -> None:
     scheduler = FakeScheduler(now=_NOW)
     source = WarmUpFailureSource(
@@ -815,6 +834,24 @@ def test_rate_limit_http_date_uses_scheduler_clock() -> None:
     asyncio.run(run_until_sink_receives_or_runtime_stops(runtime, sink, count=1))
 
     assert scheduler.sleeps[0] == 90.0
+
+
+def test_expired_rate_limit_http_date_retries_without_extra_delay() -> None:
+    scheduler = FakeScheduler(now=_NOW)
+    source = WarmUpFailureSource(
+        [
+            MarketDataRateLimitError(
+                "429",
+                retry_after=_NOW - timedelta(seconds=1),
+            )
+        ]
+    )
+    sink = RecordingSink()
+    runtime = runtime_for(source, sink, scheduler=scheduler)
+
+    asyncio.run(run_until_sink_receives(runtime, sink, count=1))
+
+    assert scheduler.sleeps[0] == 0.0
 
 
 def test_rate_limit_without_directive_uses_sixty_second_fallback() -> None:
@@ -857,6 +894,30 @@ def test_repeated_rate_limit_fails_closed_without_one_two_four_backoff() -> None
     assert runtime.snapshot.reason is MarketDataRuntimeReason.RATE_LIMIT_EXHAUSTED
 
 
+def test_final_warm_up_attempt_announces_rate_limit_before_failing_closed() -> None:
+    source = WarmUpFailureSource(
+        [
+            MarketDataRateLimitError("429", retry_after=None),
+            MarketDataRetryableError("503"),
+            MarketDataRetryableError("503"),
+            MarketDataRateLimitError("429", retry_after=None),
+        ]
+    )
+    runtime = runtime_for(source, RecordingSink(), scheduler=FakeScheduler())
+
+    asyncio.run(runtime.run())
+
+    assert runtime.visited_states == (
+        MarketDataRuntimeState.STARTING,
+        MarketDataRuntimeState.WARMING_UP,
+        MarketDataRuntimeState.RATE_LIMITED,
+        MarketDataRuntimeState.RECONNECTING,
+        MarketDataRuntimeState.RATE_LIMITED,
+        MarketDataRuntimeState.FAILED_CLOSED,
+    )
+    assert runtime.snapshot.reason is MarketDataRuntimeReason.RATE_LIMIT_EXHAUSTED
+
+
 def test_rate_limited_backfill_uses_provider_delay_then_recovers() -> None:
     source = BackfillFailureSource([MarketDataRateLimitError("429", retry_after=None)])
     scheduler = FakeScheduler(now=datetime(2026, 1, 1, 0, 25, tzinfo=UTC))
@@ -868,6 +929,26 @@ def test_rate_limited_backfill_uses_provider_delay_then_recovers() -> None:
     assert scheduler.sleeps == [60.0]
     assert MarketDataRuntimeState.RATE_LIMITED in runtime.visited_states
     assert sink.live_candles == [candle_at(15), candle_at(20)]
+
+
+def test_backfill_rate_limit_resumes_through_reconnecting_state() -> None:
+    source = BackfillFailureSource([MarketDataRateLimitError("429", retry_after=None)])
+    sink = RecordingSink()
+    runtime = runtime_for(
+        source,
+        sink,
+        scheduler=FakeScheduler(now=datetime(2026, 1, 1, 0, 25, tzinfo=UTC)),
+    )
+
+    asyncio.run(run_until_sink_receives_or_runtime_stops(runtime, sink, count=2))
+
+    backfill_index = runtime.visited_states.index(MarketDataRuntimeState.BACKFILLING)
+    assert runtime.visited_states[backfill_index : backfill_index + 4] == (
+        MarketDataRuntimeState.BACKFILLING,
+        MarketDataRuntimeState.RATE_LIMITED,
+        MarketDataRuntimeState.RECONNECTING,
+        MarketDataRuntimeState.LIVE,
+    )
 
 
 def test_fatal_backfill_failure_fails_closed_without_retry() -> None:
@@ -964,6 +1045,32 @@ def test_reconnect_async_iterator_fatal_failure_stops_recovery() -> None:
     assert runtime.snapshot.reason is MarketDataRuntimeReason.SOURCE_FATAL
 
 
+def test_final_reconnect_attempt_announces_rate_limit_before_failing_closed() -> None:
+    source = AsyncIteratorFailureSource(
+        [
+            RuntimeError("disconnected"),
+            MarketDataRateLimitError("429", retry_after=None),
+            MarketDataRateLimitError("429", retry_after=None),
+            MarketDataRateLimitError("429", retry_after=None),
+        ]
+    )
+    runtime = runtime_for(source, RecordingSink(), scheduler=FakeScheduler())
+
+    asyncio.run(runtime.run())
+
+    assert runtime.visited_states[-8:] == (
+        MarketDataRuntimeState.STALE,
+        MarketDataRuntimeState.RECONNECTING,
+        MarketDataRuntimeState.RATE_LIMITED,
+        MarketDataRuntimeState.RECONNECTING,
+        MarketDataRuntimeState.RATE_LIMITED,
+        MarketDataRuntimeState.RECONNECTING,
+        MarketDataRuntimeState.RATE_LIMITED,
+        MarketDataRuntimeState.FAILED_CLOSED,
+    )
+    assert runtime.snapshot.reason is MarketDataRuntimeReason.RATE_LIMIT_EXHAUSTED
+
+
 def test_async_iterator_rate_limit_exhausts_provider_delays_in_state_order() -> None:
     source = AsyncIteratorFailureSource(
         [MarketDataRateLimitError("429", retry_after=None)] * 4
@@ -975,7 +1082,7 @@ def test_async_iterator_rate_limit_exhausts_provider_delays_in_state_order() -> 
 
     assert source.stream_count == 4
     assert scheduler.sleeps == [60.0, 60.0, 60.0]
-    assert runtime.visited_states[-7:] == _RATE_LIMIT_EXHAUSTION_STATES
+    assert runtime.visited_states[-8:] == _RATE_LIMIT_EXHAUSTION_STATES
     assert runtime.snapshot.reason is MarketDataRuntimeReason.RATE_LIMIT_EXHAUSTED
 
 
@@ -989,7 +1096,7 @@ def test_rate_limited_stream_exhausts_only_provider_delays() -> None:
     asyncio.run(runtime.run())
 
     assert scheduler.sleeps == [60.0, 60.0, 60.0]
-    assert runtime.visited_states[-7:] == _RATE_LIMIT_EXHAUSTION_STATES
+    assert runtime.visited_states[-8:] == _RATE_LIMIT_EXHAUSTION_STATES
     assert runtime.snapshot.reason is MarketDataRuntimeReason.RATE_LIMIT_EXHAUSTED
 
 

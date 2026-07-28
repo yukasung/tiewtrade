@@ -57,7 +57,8 @@
 
 | Error | ความหมาย | Runtime action |
 | --- | --- | --- |
-| `MarketDataRetryableError` | transport timeout, connection error หรือ service `5xx` | retry ด้วย bounded backoff เดิม |
+| `MarketDataRetryableError` | connection error หรือ service `5xx` | retry ด้วย bounded backoff เดิม |
+| `MarketDataTimeoutError` | focused subtype ของ retryable source timeout | retry แบบ bounded และคง `WARM_UP_TIMEOUT` เมื่อ warm-up attempts หมด |
 | `MarketDataRateLimitError` | source ปฏิเสธเพราะ rate limit | เปลี่ยนเป็น `RATE_LIMITED` และรอตาม retry directive |
 | `MarketDataFatalError` | request `4xx` อื่นหรือ payload ใช้งานไม่ได้ | `FAILED_CLOSED` ทันที |
 
@@ -79,7 +80,8 @@ unit test deterministic และไม่บังคับให้ Binance ad
 | HTTP `418`, `429` | `MarketDataRateLimitError` |
 | HTTP `500`–`599` | `MarketDataRetryableError` |
 | HTTP `400`–`499` อื่น | `MarketDataFatalError` |
-| `aiohttp.ClientError`, connection error, timeout | `MarketDataRetryableError` |
+| timeout | `MarketDataTimeoutError` |
+| `aiohttp.ClientError`, connection error | `MarketDataRetryableError` |
 | JSON, kline หรือ payload ผิดรูปแบบ | `MarketDataFatalError` |
 
 Adapter อ่าน header แบบ case-insensitive ผ่าน response headers แต่ไม่ส่ง status code
