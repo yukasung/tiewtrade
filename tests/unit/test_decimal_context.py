@@ -18,7 +18,23 @@ def _decimal_policy(
     )
 
 
+def _restore_context(target: decimal.Context, snapshot: decimal.Context) -> None:
+    target.prec = snapshot.prec
+    target.rounding = snapshot.rounding
+    target.Emin = snapshot.Emin
+    target.Emax = snapshot.Emax
+    target.capitals = snapshot.capitals
+    target.clamp = snapshot.clamp
+    for signal, enabled in snapshot.traps.items():
+        target.traps[signal] = enabled
+    for signal, raised in snapshot.flags.items():
+        target.flags[signal] = raised
+
+
 def test_decimal_policy_is_shared_by_current_and_future_worker_threads() -> None:
+    original_default = decimal.DefaultContext.copy()
+    original_current = decimal.getcontext().copy()
+
     decimal.DefaultContext.prec = 7
     decimal.DefaultContext.rounding = decimal.ROUND_DOWN
     decimal.DefaultContext.traps[decimal.InvalidOperation] = False
@@ -35,16 +51,24 @@ def test_decimal_policy_is_shared_by_current_and_future_worker_threads() -> None
 
     try:
         configure_decimal_context()
-        configure_decimal_context()
+        first_default_policy = _decimal_policy(decimal.DefaultContext)
+        first_current_policy = _decimal_policy()
 
-        default_policy = _decimal_policy(decimal.DefaultContext)
-        current_policy = _decimal_policy()
+        expected_policy = (28, decimal.ROUND_HALF_EVEN, True, True, True, True)
+        assert first_default_policy == expected_policy
+        assert first_current_policy == expected_policy
+
+        configure_decimal_context()
+        second_default_policy = _decimal_policy(decimal.DefaultContext)
+        second_current_policy = _decimal_policy()
+
+        assert second_default_policy == first_default_policy
+        assert second_current_policy == first_current_policy
+
         with ThreadPoolExecutor(max_workers=1) as pool:
             worker_policy = pool.submit(_decimal_policy).result()
 
-        expected_policy = (28, decimal.ROUND_HALF_EVEN, True, True, True, True)
-        assert default_policy == expected_policy
-        assert current_policy == expected_policy
         assert worker_policy == expected_policy
     finally:
-        configure_decimal_context()
+        _restore_context(decimal.DefaultContext, original_default)
+        decimal.setcontext(original_current)
