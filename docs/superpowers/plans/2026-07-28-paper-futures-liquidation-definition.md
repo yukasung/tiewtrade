@@ -128,10 +128,13 @@ Liquidation เป็นผลลัพธ์แบบ deterministic ของ P
 Run:
 
 ```bash
-rg -n "is_liquidated" src tests CONTEXT.md
+rg -n "is_liquidated" src CONTEXT.md
+rg -n "is_liquidated" tests/unit/trading/test_futures_margin.py
 ```
 
-Expected: ไม่มี output
+Expected: คำสั่งแรกไม่มี output ส่วนคำสั่งที่สองพบเฉพาะ regression assertion
+`assert not hasattr(snapshot, "is_liquidated")` หนึ่งจุด เพื่อป้องกันไม่ให้ duplicate
+verdict กลับเข้ามาใน snapshot contract
 
 - [ ] **Step 8: รัน full verification**
 
