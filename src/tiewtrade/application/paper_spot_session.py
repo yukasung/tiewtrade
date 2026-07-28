@@ -14,7 +14,10 @@ from tiewtrade.execution.paper_spot import (
 from tiewtrade.market_data.candle import Candle
 from tiewtrade.market_data.completed_candle_stream import CompletedCandleStream
 from tiewtrade.market_data.config import MarketDataConfig
-from tiewtrade.strategies.rsi_step_grid.indicators import WilderIndicators
+from tiewtrade.strategies.rsi_step_grid.indicators import (
+    IndicatorSnapshot,
+    WilderIndicators,
+)
 from tiewtrade.strategies.rsi_step_grid.preset import RsiStepGridPreset
 from tiewtrade.strategies.rsi_step_grid.strategy import (
     EntryIntent,
@@ -60,6 +63,16 @@ class PaperSpotSessionIdentity:
     symbol: str
     timeframe: str
     preset_version: str
+
+
+@dataclass(slots=True)
+class _PaperSpotTransition:
+    indicators: WilderIndicators
+    strategy: RsiStepGridStrategy
+    lifecycle: EntryPairLifecycle
+    basket: Basket | None
+    pending_intent: EntryIntent | None
+    closed_basket_count: int
 
 
 class PaperSpotSession:
@@ -115,31 +128,21 @@ class PaperSpotSession:
             return self._snapshot(accepted=False)
 
         try:
-            basket_existed_at_candle_open = self._basket is not None
-            entry_fill = self._fill_pending_intent(candle)
+            transition = self._new_transition()
+            basket_existed_at_candle_open = transition.basket is not None
+            entry_fill = self._fill_pending_intent(transition, candle)
             entry_filled_on_current_candle = entry_fill is not None
             take_profit_fill: PaperSpotExitFill | None = None
             closed_basket: ClosedBasket | None = None
 
             if basket_existed_at_candle_open and not entry_filled_on_current_candle:
-                take_profit_fill = self._fill_take_profit(candle)
+                take_profit_fill = self._fill_take_profit(transition, candle)
                 if take_profit_fill is not None:
-                    closed_basket = self._close_basket(take_profit_fill)
+                    closed_basket = self._close_basket(transition, take_profit_fill)
 
-            indicators = self._indicators.update(candle)
-            if indicators is not None:
-                can_enter = self._lifecycle.can_enter(candle.close_time) and (
-                    self._basket is None
-                    or self._basket.entry_count < self._session.entry_policy.max_entries
-                )
-                intent = self._strategy.evaluate(
-                    candle,
-                    indicators,
-                    entry_number=self._lifecycle.entry_count + 1,
-                    can_enter=can_enter,
-                )
-                if intent is not None:
-                    self._pending_intent = intent
+            indicators = transition.indicators.update(candle)
+            self._evaluate_strategy(transition, candle, indicators)
+            self._commit_transition(transition)
 
             return self._snapshot(
                 accepted=True,
@@ -166,33 +169,50 @@ class PaperSpotSession:
                 raise ValueError("warm-up requires new completed candles")
             self._indicators.update(candle)
 
-    def _fill_pending_intent(self, candle: Candle) -> PaperSpotEntryFill | None:
-        if self._pending_intent is None:
+    def _new_transition(self) -> _PaperSpotTransition:
+        return _PaperSpotTransition(
+            indicators=deepcopy(self._indicators),
+            strategy=deepcopy(self._strategy),
+            lifecycle=deepcopy(self._lifecycle),
+            basket=deepcopy(self._basket),
+            pending_intent=self._pending_intent,
+            closed_basket_count=self._closed_basket_count,
+        )
+
+    def _commit_transition(self, transition: _PaperSpotTransition) -> None:
+        self._indicators = transition.indicators
+        self._strategy = transition.strategy
+        self._lifecycle = transition.lifecycle
+        self._basket = transition.basket
+        self._pending_intent = transition.pending_intent
+        self._closed_basket_count = transition.closed_basket_count
+
+    def _fill_pending_intent(
+        self,
+        transition: _PaperSpotTransition,
+        candle: Candle,
+    ) -> PaperSpotEntryFill | None:
+        if transition.pending_intent is None:
             return None
 
-        intent = self._pending_intent
+        intent = transition.pending_intent
         fill = self._executor.fill_entry(intent, candle)
         if fill is None:
-            self._strategy.on_entry_rejected(intent.intent_id)
-            self._pending_intent = None
+            transition.strategy.on_entry_rejected(intent.intent_id)
+            transition.pending_intent = None
             return None
 
-        if self._basket is None:
+        if transition.basket is None:
             basket_id = uuid5(
                 self._session.session_id,
-                f"basket:{self._closed_basket_count + 1}",
+                f"basket:{transition.closed_basket_count + 1}",
             )
-            candidate_basket = Basket(
+            transition.basket = Basket(
                 basket_id,
                 self._session.entry_policy,
                 self._preset.take_profit_atr_multiplier,
             )
-        else:
-            candidate_basket = deepcopy(self._basket)
-        candidate_lifecycle = deepcopy(self._lifecycle)
-        candidate_strategy = deepcopy(self._strategy)
-
-        candidate_basket.add_entry(
+        transition.basket.add_entry(
             price=fill.price,
             quantity=fill.quantity,
             fee=fill.fee,
@@ -200,13 +220,9 @@ class PaperSpotSession:
             atr=intent.atr,
             tick_size=self._symbol_rules.tick_size,
         )
-        candidate_lifecycle.record_fill(fill.filled_at)
-        candidate_strategy.on_entry_filled(intent.intent_id)
-
-        self._basket = candidate_basket
-        self._lifecycle = candidate_lifecycle
-        self._strategy = candidate_strategy
-        self._pending_intent = None
+        transition.lifecycle.record_fill(fill.filled_at)
+        transition.strategy.on_entry_filled(intent.intent_id)
+        transition.pending_intent = None
         return fill
 
     def _fail_closed(self) -> None:
@@ -215,21 +231,50 @@ class PaperSpotSession:
         self._pending_intent = None
         self._strategy = RsiStepGridStrategy(self._session.session_id, self._preset)
 
-    def _fill_take_profit(self, candle: Candle) -> PaperSpotExitFill | None:
-        assert self._basket is not None
-        return self._executor.fill_take_profit(self._basket, candle)
+    def _fill_take_profit(
+        self,
+        transition: _PaperSpotTransition,
+        candle: Candle,
+    ) -> PaperSpotExitFill | None:
+        assert transition.basket is not None
+        return self._executor.fill_take_profit(transition.basket, candle)
 
-    def _close_basket(self, exit_fill: PaperSpotExitFill) -> ClosedBasket:
-        assert self._basket is not None
-        closed = self._basket.close(
+    def _close_basket(
+        self,
+        transition: _PaperSpotTransition,
+        exit_fill: PaperSpotExitFill,
+    ) -> ClosedBasket:
+        assert transition.basket is not None
+        closed = transition.basket.close(
             exit_price=exit_fill.price,
             exit_fee=exit_fill.fee,
             closed_at=exit_fill.filled_at,
         )
-        self._basket = None
-        self._lifecycle.reset()
-        self._closed_basket_count += 1
+        transition.basket = None
+        transition.lifecycle.reset()
+        transition.closed_basket_count += 1
         return closed
+
+    def _evaluate_strategy(
+        self,
+        transition: _PaperSpotTransition,
+        candle: Candle,
+        indicators: IndicatorSnapshot | None,
+    ) -> None:
+        if indicators is None:
+            return
+        can_enter = transition.lifecycle.can_enter(candle.close_time) and (
+            transition.basket is None
+            or transition.basket.entry_count < self._session.entry_policy.max_entries
+        )
+        intent = transition.strategy.evaluate(
+            candle,
+            indicators,
+            entry_number=transition.lifecycle.entry_count + 1,
+            can_enter=can_enter,
+        )
+        if intent is not None:
+            transition.pending_intent = intent
 
     def _snapshot(
         self,

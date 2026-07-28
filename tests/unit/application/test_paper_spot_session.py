@@ -1,5 +1,6 @@
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
+from unittest.mock import create_autospec
 from uuid import UUID, uuid5
 
 import pytest
@@ -11,9 +12,15 @@ from tiewtrade.application.paper_spot_session import (
     PaperSpotSessionIdentity,
     PaperSpotSessionState,
 )
+from tiewtrade.integrations.sqlite.paper_spot_history import PaperSpotSQLiteHistory
+from tiewtrade.integrations.sqlite.persistent_paper_spot_session import (
+    PersistentPaperSpotSQLiteSession,
+)
 from tiewtrade.market_data.candle import Candle
 from tiewtrade.market_data.config import MarketDataConfig
+from tiewtrade.strategies.rsi_step_grid.indicators import WilderIndicators
 from tiewtrade.strategies.rsi_step_grid.preset import RsiStepGridPreset
+from tiewtrade.strategies.rsi_step_grid.strategy import RsiStepGridStrategy
 from tiewtrade.trading.entry_pair import EntryPairLifecycle
 from tiewtrade.trading.entry_policy import EntryPolicy
 from tiewtrade.trading.session_config import (
@@ -206,6 +213,126 @@ def test_entry_transition_is_atomic_when_lifecycle_rejects_fill(
     assert application._lifecycle.entry_count == 1
 
 
+def test_late_entry_failure_does_not_commit_or_persist_entry(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    application = paper_session()
+    pending = arm_entry_intent(application)
+    persistent, history = persistent_spot_session(application)
+    entry_candle = candle(
+        minute_after(pending),
+        open_price="120",
+        close_price="121",
+    )
+
+    def raise_indicator_error(*args: object, **kwargs: object) -> None:
+        raise ValueError("indicator transition failed")
+
+    monkeypatch.setattr(WilderIndicators, "update", raise_indicator_error)
+
+    with pytest.raises(PaperSpotSessionError, match="execution failed"):
+        persistent.process_completed_candle(
+            entry_candle,
+            received_at=entry_candle.close_time,
+        )
+
+    assert application.snapshot.state is PaperSpotSessionState.FAILED_CLOSED
+    assert application.snapshot.basket_id is None
+    assert application.snapshot.basket_entry_count == 0
+    history.record_entry.assert_not_called()
+    history.record_close.assert_not_called()
+
+
+def test_late_close_failure_keeps_open_basket_and_does_not_persist_close(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    application = paper_session()
+    pending = arm_entry_intent(application)
+    persistent, history = persistent_spot_session(application)
+    entry_candle = candle(
+        minute_after(pending),
+        open_price="120",
+        close_price="121",
+    )
+    entry = persistent.process_completed_candle(
+        entry_candle,
+        received_at=entry_candle.close_time,
+    )
+    assert entry.session.basket_entry_count == 1
+
+    def raise_indicator_error(*args: object, **kwargs: object) -> None:
+        raise ValueError("indicator transition failed after close")
+
+    monkeypatch.setattr(WilderIndicators, "update", raise_indicator_error)
+    close_candle = candle(
+        minute_after(pending) + 5,
+        open_price="125",
+        close_price="130",
+        high="1000",
+    )
+
+    with pytest.raises(PaperSpotSessionError, match="execution failed"):
+        persistent.process_completed_candle(
+            close_candle,
+            received_at=close_candle.close_time,
+        )
+
+    assert application.snapshot.state is PaperSpotSessionState.FAILED_CLOSED
+    assert application.snapshot.basket_id == entry.session.basket_id
+    assert application.snapshot.basket_entry_count == 1
+    history.record_entry.assert_called_once()
+    history.record_close.assert_not_called()
+
+
+def test_strategy_callback_failure_does_not_commit_candidate_transition(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    application = paper_session()
+    first_intent = arm_entry_intent(application)
+    first_fill_candle = candle(
+        minute_after(first_intent),
+        open_price="120",
+        close_price="121",
+    )
+    application.process_completed_candle(
+        first_fill_candle,
+        received_at=first_fill_candle.close_time,
+    )
+    second_intent = arm_entry_intent(
+        application,
+        start_minute=minute_after(first_intent) + 5,
+        downtrend_candles=60,
+    )
+    original_strategy = application._strategy
+    original_callback = RsiStepGridStrategy.on_entry_filled
+
+    def mutate_then_raise(
+        self: RsiStepGridStrategy,
+        intent_id: str,
+    ) -> None:
+        original_callback(self, intent_id)
+        raise ValueError("strategy transition failed")
+
+    monkeypatch.setattr(RsiStepGridStrategy, "on_entry_filled", mutate_then_raise)
+    second_fill_candle = candle(
+        minute_after(second_intent),
+        open_price="100",
+        close_price="101",
+    )
+
+    with pytest.raises(PaperSpotSessionError) as captured:
+        application.process_completed_candle(
+            second_fill_candle,
+            received_at=second_fill_candle.close_time,
+        )
+
+    assert str(captured.value.__cause__) == "strategy transition failed"
+    assert application.snapshot.basket_entry_count == 1
+    assert application._lifecycle.entry_count == 1
+    assert original_strategy._pending_intent == second_intent
+    assert application._strategy is not original_strategy
+
+
 def test_failed_closed_session_rejects_later_candles_and_warm_up(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -331,6 +458,14 @@ def paper_session(*, min_notional: Decimal = Decimal("5")) -> PaperSpotSession:
         ),
         RsiStepGridPreset.v1(),
     )
+
+
+def persistent_spot_session(
+    application: PaperSpotSession,
+) -> tuple[PersistentPaperSpotSQLiteSession, PaperSpotSQLiteHistory]:
+    history = create_autospec(PaperSpotSQLiteHistory, instance=True)
+    history.session_identity = application.identity  # type: ignore[misc]
+    return PersistentPaperSpotSQLiteSession(application, history), history
 
 
 def arm_entry_intent(

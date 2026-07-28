@@ -2,27 +2,27 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Make Paper Spot entry transitions atomic, fail closed on execution invariant failures, bind persistence to immutable Session identity, emit per-Candle close snapshots, and reject non-finite capital without changing deterministic replay output.
+**Goal:** ทำให้ transition ของ Paper Spot Entry เป็น atomic, fail closed เมื่อ execution invariant ล้มเหลว, ผูก persistence เข้ากับ Session identity แบบ immutable, สร้าง close snapshot แยกต่อ Candle และปฏิเสธ capital ที่ไม่เป็น finite โดยไม่เปลี่ยน deterministic replay output
 
-**Architecture:** Keep `PaperSpotSession` independent from `PaperFuturesSession`, while applying the proven candidate-copy and fail-closed patterns from Futures. Application owns Session orchestration and identity; SQLite integration validates identity and snapshot invariants; shared `trading` capital policy validates inputs at its boundary.
+**Architecture:** คง `PaperSpotSession` ให้แยกจาก `PaperFuturesSession` พร้อมนำ candidate-copy และ fail-closed patterns ที่พิสูจน์แล้วจาก Futures มาใช้ Application เป็นเจ้าของ Session orchestration และ identity; SQLite integration ตรวจสอบ identity และ snapshot invariants; ส่วน shared `trading` capital policy ตรวจสอบ input ที่ boundary ของตน
 
-**Tech Stack:** Python 3.12, immutable dataclasses, `Decimal`, Pytest, Ruff, Mypy, SQLite integration adapters.
+**Tech Stack:** Python 3.12, immutable dataclasses, `Decimal`, Pytest, Ruff, Mypy และ SQLite integration adapters
 
 ## Global Constraints
 
-- Paper Spot and Paper Futures remain separate application orchestrators; do not create a shared base class, generic interface, registry, or factory.
-- Paper and Live continue to share business policies but never execution adapters.
-- Production behavior changes must follow failing-test-first TDD.
-- Whole-Candle commit uses candidate copies of Basket, Entry Pair lifecycle, Strategy, Indicator state, pending intent, and counters; original objects must not receive partial mutation from a failed accepted Candle.
-- Session identity is exactly `session_id`, `symbol`, `timeframe`, and `preset_version`.
-- A failed Paper Spot execution becomes terminal `FAILED_CLOSED`, clears pending intent, and rejects later Candles.
-- `take_profit_fill` and `closed_basket` are both present only on the Candle that closes the Basket and are both absent otherwise.
-- Deterministic 40-Candle replay output remains exactly `{"accepted_candles":40,"closed_baskets":1,"current_entries":0,"realized_pnl":"13.84062222"}`.
-- Use Paper and fake objects only; do not call Binance private APIs or send Live orders.
+- คง Paper Spot และ Paper Futures เป็น application orchestrators ที่แยกจากกัน ห้ามสร้าง shared base class, generic interface, registry หรือ factory
+- Paper และ Live ยังคงใช้ business policies ร่วมกัน แต่ห้ามใช้ execution adapters ร่วมกัน
+- การเปลี่ยน production behavior ต้องใช้ TDD แบบ failing-test-first
+- Whole-Candle commit ใช้ candidate copies ของ Basket, Entry Pair lifecycle, Strategy, Indicator state, pending intent และ counters; original objects ต้องไม่รับ partial mutation จาก accepted Candle ที่ล้มเหลว
+- Session identity ประกอบด้วย `session_id`, `symbol`, `timeframe` และ `preset_version` เท่านั้น
+- Paper Spot execution ที่ล้มเหลวต้องเข้าสู่ terminal `FAILED_CLOSED`, ล้าง pending intent และปฏิเสธ Candles ถัดไป
+- `take_profit_fill` และ `closed_basket` ต้องมีทั้งคู่เฉพาะ Candle ที่ปิด Basket และต้องไม่มีทั้งคู่ในกรณีอื่น
+- Deterministic 40-Candle replay output ต้องคงเป็น `{"accepted_candles":40,"closed_baskets":1,"current_entries":0,"realized_pnl":"13.84062222"}` แบบตรงทุกตัวอักษร
+- ใช้เฉพาะ Paper และ fake objects ห้ามเรียก Binance private APIs หรือส่ง Live orders
 
 ---
 
-### Task 1: Reject non-finite Paper Spot capital
+### Task 1: ปฏิเสธ Paper Spot capital ที่ไม่เป็น finite
 
 **Files:**
 - Modify: `src/tiewtrade/trading/capital.py`
@@ -30,11 +30,11 @@
 
 **Interfaces:**
 - Consumes: `SpotCapitalPlan.from_available(available: Decimal, spot_policy: SpotTradingPolicy, entry_policy: EntryPolicy) -> SpotCapitalPlan`
-- Produces: the same public method, now raising `ValueError("available capital must be finite and positive")` for non-finite or non-positive input.
+- Produces: public method เดิมซึ่งต้อง raise `ValueError("available capital must be finite and positive")` เมื่อ input ไม่เป็น finite หรือไม่เป็นค่าบวก
 
-- [ ] **Step 1: Write the failing parameterized test**
+- [ ] **Step 1: เขียน failing parameterized test**
 
-Replace the zero-only Spot test with the complete invalid-input contract:
+แทนที่ Spot test ที่ตรวจเฉพาะศูนย์ด้วย invalid-input contract ที่ครบถ้วน:
 
 ```python
 @pytest.mark.parametrize(
@@ -58,45 +58,45 @@ def test_spot_capital_plan_rejects_invalid_available_capital(
         )
 ```
 
-- [ ] **Step 2: Run the test and verify RED**
+- [ ] **Step 2: รัน test และตรวจสอบ RED**
 
-Run:
+รัน:
 
 ```bash
 PYTHONPATH=src ../../.venv/bin/python -m pytest tests/unit/trading/test_capital.py::test_spot_capital_plan_rejects_invalid_available_capital -q
 ```
 
-Expected: `NaN` errors with `decimal.InvalidOperation` or Infinity cases do not raise the required `ValueError`.
+ผลที่คาดหวัง: `NaN` เกิด error เป็น `decimal.InvalidOperation` หรือกรณี Infinity ไม่ raise `ValueError` ที่กำหนด
 
-- [ ] **Step 3: Implement the minimal boundary validation**
+- [ ] **Step 3: implement boundary validation ขั้นต่ำ**
 
-Change `SpotCapitalPlan.from_available()` to:
+แก้ `SpotCapitalPlan.from_available()` เป็น:
 
 ```python
 if not available.is_finite() or available <= 0:
     raise ValueError("available capital must be finite and positive")
 ```
 
-Keep all allocation calculations unchanged.
+คง allocation calculations ทั้งหมดไว้โดยไม่เปลี่ยนแปลง
 
-- [ ] **Step 4: Verify GREEN and the capital module**
+- [ ] **Step 4: ตรวจสอบ GREEN และ capital module**
 
-Run:
+รัน:
 
 ```bash
 PYTHONPATH=src ../../.venv/bin/python -m pytest tests/unit/trading/test_capital.py -q
 ```
 
-Expected: all capital tests pass.
+ผลที่คาดหวัง: capital tests ทั้งหมดผ่าน
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 5: สร้าง commit**
 
 ```bash
 git add src/tiewtrade/trading/capital.py tests/unit/trading/test_capital.py
 git commit -m "fix: validate Paper Spot capital boundary"
 ```
 
-### Task 2: Bind Paper Spot persistence to immutable Session identity
+### Task 2: ผูก Paper Spot persistence เข้ากับ Session identity แบบ immutable
 
 **Files:**
 - Modify: `src/tiewtrade/application/paper_spot_session.py`
@@ -107,14 +107,14 @@ git commit -m "fix: validate Paper Spot capital boundary"
 - Test: `tests/unit/integrations/sqlite/test_persistent_paper_spot_session.py`
 
 **Interfaces:**
-- Produces: immutable `PaperSpotSessionIdentity(session_id: UUID, symbol: str, timeframe: str, preset_version: str)`.
-- Produces: `PaperSpotSession.identity -> PaperSpotSessionIdentity`.
-- Produces: `PaperSpotHistoryContext.session_identity -> PaperSpotSessionIdentity` and `PaperSpotSQLiteHistory.session_identity -> PaperSpotSessionIdentity`.
-- Consumes: `PersistentPaperSpotSQLiteSession` compares `session.identity` with `history.session_identity` before retaining either dependency.
+- Produces: `PaperSpotSessionIdentity(session_id: UUID, symbol: str, timeframe: str, preset_version: str)` แบบ immutable
+- Produces: `PaperSpotSession.identity -> PaperSpotSessionIdentity`
+- Produces: `PaperSpotHistoryContext.session_identity -> PaperSpotSessionIdentity` และ `PaperSpotSQLiteHistory.session_identity -> PaperSpotSessionIdentity`
+- Consumes: `PersistentPaperSpotSQLiteSession` เปรียบเทียบ `session.identity` กับ `history.session_identity` ก่อนเก็บ dependency ทั้งสอง
 
-- [ ] **Step 1: Write failing identity exposure tests**
+- [ ] **Step 1: เขียน failing identity exposure tests**
 
-Add the application import and test:
+เพิ่ม application import และ test:
 
 ```python
 from tiewtrade.application.paper_spot_session import (
@@ -134,7 +134,7 @@ def test_session_exposes_immutable_persistence_identity() -> None:
     )
 ```
 
-In `test_paper_spot_history.py`, reuse the existing `history` fixture and add:
+ใน `test_paper_spot_history.py` ให้ใช้ `history` fixture เดิมและเพิ่ม:
 
 ```python
 def test_history_exposes_session_identity(
@@ -148,12 +148,12 @@ def test_history_exposes_session_identity(
     )
 ```
 
-Add only the missing `PaperSpotSessionIdentity` import; the history fixture and
-`PaperSpotSQLiteHistory` import already exist.
+เพิ่มเฉพาะ import `PaperSpotSessionIdentity` ที่ยังขาด โดย history fixture และ import
+`PaperSpotSQLiteHistory` มีอยู่แล้ว
 
-- [ ] **Step 2: Write the failing persistence mismatch test**
+- [ ] **Step 2: เขียน failing persistence mismatch test**
 
-Add a focused identity helper and mismatch test:
+เพิ่ม identity helper และ mismatch test ที่เจาะจง:
 
 ```python
 def session_identity() -> PaperSpotSessionIdentity:
@@ -178,8 +178,8 @@ def test_constructor_rejects_mismatched_session_and_history_identity() -> None:
         PersistentPaperSpotSQLiteSession(session, history)
 ```
 
-Add `replace` to the dataclasses import. Introduce this helper for all existing mock-based
-constructor calls:
+เพิ่ม `replace` ใน dataclasses import และเพิ่ม helper นี้สำหรับ mock-based constructor
+calls ที่มีอยู่ทั้งหมด:
 
 ```python
 def persistent_session(
@@ -191,13 +191,13 @@ def persistent_session(
     return PersistentPaperSpotSQLiteSession(session, history)
 ```
 
-Replace existing direct mock-based `PersistentPaperSpotSQLiteSession(session, history)`
-calls with `persistent_session(session, history)` so those tests explicitly satisfy the new
-boundary.
+แทน direct mock-based calls ของ `PersistentPaperSpotSQLiteSession(session, history)`
+ที่มีอยู่ด้วย `persistent_session(session, history)` เพื่อให้ tests เหล่านั้นผ่าน boundary
+ใหม่อย่างชัดเจน
 
-- [ ] **Step 3: Run the identity tests and verify RED**
+- [ ] **Step 3: รัน identity tests และตรวจสอบ RED**
 
-Run:
+รัน:
 
 ```bash
 PYTHONPATH=src ../../.venv/bin/python -m pytest \
@@ -206,11 +206,11 @@ PYTHONPATH=src ../../.venv/bin/python -m pytest \
   tests/unit/integrations/sqlite/test_persistent_paper_spot_session.py::test_constructor_rejects_mismatched_session_and_history_identity -q
 ```
 
-Expected: imports/properties do not exist or the mismatch constructor does not raise.
+ผลที่คาดหวัง: imports/properties ยังไม่มี หรือ mismatch constructor ไม่ raise
 
-- [ ] **Step 4: Implement the immutable identity contracts**
+- [ ] **Step 4: implement immutable identity contracts**
 
-In `paper_spot_session.py`, add:
+ใน `paper_spot_session.py` ให้เพิ่ม:
 
 ```python
 @dataclass(frozen=True, slots=True)
@@ -221,7 +221,7 @@ class PaperSpotSessionIdentity:
     preset_version: str
 ```
 
-Snapshot identity in `PaperSpotSession.__init__`:
+บันทึก identity เป็น snapshot ใน `PaperSpotSession.__init__`:
 
 ```python
 self._identity = PaperSpotSessionIdentity(
@@ -232,7 +232,7 @@ self._identity = PaperSpotSessionIdentity(
 )
 ```
 
-Expose it read-only:
+เปิดให้อ่านแบบ read-only:
 
 ```python
 @property
@@ -240,7 +240,7 @@ def identity(self) -> PaperSpotSessionIdentity:
     return self._identity
 ```
 
-In `paper_spot_history.py`, add the application identity import and properties:
+ใน `paper_spot_history.py` ให้เพิ่ม application identity import และ properties:
 
 ```python
 @property
@@ -253,7 +253,7 @@ def session_identity(self) -> PaperSpotSessionIdentity:
     )
 ```
 
-on `PaperSpotHistoryContext`, and:
+บน `PaperSpotHistoryContext` และ:
 
 ```python
 @property
@@ -261,18 +261,18 @@ def session_identity(self) -> PaperSpotSessionIdentity:
     return self._context.session_identity
 ```
 
-on `PaperSpotSQLiteHistory`.
+บน `PaperSpotSQLiteHistory`
 
-In the persistent constructor, validate before assignment:
+ใน persistent constructor ให้ validate ก่อน assignment:
 
 ```python
 if session.identity != history.session_identity:
     raise ValueError("Paper Spot Session and Trade History identity differ")
 ```
 
-- [ ] **Step 5: Verify GREEN and all Spot persistence tests**
+- [ ] **Step 5: ตรวจสอบ GREEN และ Spot persistence tests ทั้งหมด**
 
-Run:
+รัน:
 
 ```bash
 PYTHONPATH=src ../../.venv/bin/python -m pytest \
@@ -282,9 +282,9 @@ PYTHONPATH=src ../../.venv/bin/python -m pytest \
   tests/acceptance/test_paper_spot_trade_history.py -q
 ```
 
-Expected: all selected tests pass.
+ผลที่คาดหวัง: selected tests ทั้งหมดผ่าน
 
-- [ ] **Step 6: Commit**
+- [ ] **Step 6: สร้าง commit**
 
 ```bash
 git add src/tiewtrade/application/paper_spot_session.py \
@@ -296,7 +296,7 @@ git add src/tiewtrade/application/paper_spot_session.py \
 git commit -m "feat: bind Paper Spot persistence identity"
 ```
 
-### Task 3: Make Paper Spot Entry atomic and fail closed
+### Task 3: ทำให้ Paper Spot Entry เป็น atomic และ fail closed
 
 **Files:**
 - Modify: `src/tiewtrade/application/paper_spot_session.py`
@@ -304,15 +304,15 @@ git commit -m "feat: bind Paper Spot persistence identity"
 - Test: `tests/unit/integrations/sqlite/test_persistent_paper_spot_session.py`
 
 **Interfaces:**
-- Produces: `PaperSpotSessionState` with `ACTIVE` and `FAILED_CLOSED`.
-- Produces: `PaperSpotFailureReason.EXECUTION_ERROR` and `PaperSpotSessionError`.
-- Produces: `PaperSpotSession.snapshot -> PaperSpotSessionSnapshot`.
-- Changes: `PaperSpotSessionSnapshot` adds required `state` and `failure_reason` fields.
-- Preserves: minimum-notional rejection re-arms Strategy and is not a failure.
+- Produces: `PaperSpotSessionState` พร้อม `ACTIVE` และ `FAILED_CLOSED`
+- Produces: `PaperSpotFailureReason.EXECUTION_ERROR` และ `PaperSpotSessionError`
+- Produces: `PaperSpotSession.snapshot -> PaperSpotSessionSnapshot`
+- Changes: `PaperSpotSessionSnapshot` เพิ่ม fields `state` และ `failure_reason` ที่จำเป็น
+- Preserves: minimum-notional rejection ต้อง re-arm Strategy และไม่นับเป็น failure
 
-- [ ] **Step 1: Write the failing atomicity and failure-cause test**
+- [ ] **Step 1: เขียน failing atomicity และ failure-cause test**
 
-Add imports for `EntryPairLifecycle` and the new contracts, then add:
+เพิ่ม imports สำหรับ `EntryPairLifecycle` และ contracts ใหม่ แล้วเพิ่ม:
 
 ```python
 def test_entry_transition_is_atomic_when_lifecycle_rejects_fill(
@@ -362,9 +362,9 @@ def test_entry_transition_is_atomic_when_lifecycle_rejects_fill(
     assert application._lifecycle.entry_count == 1
 ```
 
-- [ ] **Step 2: Write failing tests for terminal rejection and warm-up**
+- [ ] **Step 2: เขียน failing tests สำหรับ terminal rejection และ warm-up**
 
-Add:
+เพิ่ม:
 
 ```python
 def test_failed_closed_session_rejects_later_candles_and_warm_up(
@@ -410,9 +410,9 @@ def test_failed_closed_session_rejects_later_candles_and_warm_up(
         )
 ```
 
-- [ ] **Step 3: Run the focused tests and verify RED**
+- [ ] **Step 3: รัน focused tests และตรวจสอบ RED**
 
-Run:
+รัน:
 
 ```bash
 PYTHONPATH=src ../../.venv/bin/python -m pytest \
@@ -420,11 +420,11 @@ PYTHONPATH=src ../../.venv/bin/python -m pytest \
   tests/unit/application/test_paper_spot_session.py::test_failed_closed_session_rejects_later_candles_and_warm_up -q
 ```
 
-Expected: new contracts are missing and/or partial Basket mutation remains.
+ผลที่คาดหวัง: contracts ใหม่ยังไม่มี และ/หรือยังเหลือ partial Basket mutation
 
-- [ ] **Step 4: Add Spot-specific state and snapshot contracts**
+- [ ] **Step 4: เพิ่ม Spot-specific state และ snapshot contracts**
 
-Add `deepcopy` and `StrEnum` imports, then define:
+เพิ่ม imports `deepcopy` และ `StrEnum` แล้วกำหนด:
 
 ```python
 class PaperSpotSessionState(StrEnum):
@@ -440,21 +440,21 @@ class PaperSpotSessionError(RuntimeError):
     """Paper Spot stopped because an execution invariant failed."""
 ```
 
-Add these required fields to `PaperSpotSessionSnapshot`:
+เพิ่ม fields ที่จำเป็นต่อไปนี้ใน `PaperSpotSessionSnapshot`:
 
 ```python
 state: PaperSpotSessionState
 failure_reason: PaperSpotFailureReason | None
 ```
 
-Initialize state in the Session:
+กำหนดค่าเริ่มต้นของ state ใน Session:
 
 ```python
 self._state = PaperSpotSessionState.ACTIVE
 self._failure_reason: PaperSpotFailureReason | None = None
 ```
 
-Expose a snapshot:
+เปิดให้ใช้งาน snapshot:
 
 ```python
 @property
@@ -462,26 +462,26 @@ def snapshot(self) -> PaperSpotSessionSnapshot:
     return self._snapshot(accepted=self._state is PaperSpotSessionState.ACTIVE)
 ```
 
-Pass `state=self._state` and `failure_reason=self._failure_reason` when constructing every
-snapshot. Update direct `PaperSpotSessionSnapshot` fixtures in the persistent-session tests
-with:
+ส่ง `state=self._state` และ `failure_reason=self._failure_reason` เมื่อสร้าง snapshot
+ทุกครั้ง และแก้ direct `PaperSpotSessionSnapshot` fixtures ใน persistent-session tests
+ด้วย:
 
 ```python
 state=PaperSpotSessionState.ACTIVE,
 failure_reason=None,
 ```
 
-- [ ] **Step 5: Add the fail-closed execution boundary**
+- [ ] **Step 5: เพิ่ม fail-closed execution boundary**
 
-At the start of `process_completed_candle()`:
+ที่จุดเริ่มของ `process_completed_candle()`:
 
 ```python
 if self._state is not PaperSpotSessionState.ACTIVE:
     return self._snapshot(accepted=False)
 ```
 
-Keep completed-candle acceptance outside the execution `try`, and wrap all subsequent
-orchestration:
+คง completed-candle acceptance ไว้นอก execution `try` และครอบ orchestration หลังจากนั้น
+ทั้งหมด:
 
 ```python
 try:
@@ -493,14 +493,14 @@ except Exception as error:
     raise PaperSpotSessionError("Paper Spot execution failed") from error
 ```
 
-Guard warm-up before iteration:
+ป้องกัน warm-up ก่อน iteration:
 
 ```python
 if self._state is not PaperSpotSessionState.ACTIVE:
     raise PaperSpotSessionError("Paper Spot session is not active")
 ```
 
-Add:
+เพิ่ม:
 
 ```python
 def _fail_closed(self) -> None:
@@ -510,9 +510,9 @@ def _fail_closed(self) -> None:
     self._strategy = RsiStepGridStrategy(self._session.session_id, self._preset)
 ```
 
-- [ ] **Step 6: Implement candidate-copy Entry commit**
+- [ ] **Step 6: implement candidate-copy Entry commit**
 
-Replace the successful Fill mutation block with:
+แทน successful Fill mutation block ด้วย:
 
 ```python
 intent = self._pending_intent
@@ -555,9 +555,9 @@ self._pending_intent = None
 return fill
 ```
 
-- [ ] **Step 7: Verify GREEN and Spot Session integration**
+- [ ] **Step 7: ตรวจสอบ GREEN และ Spot Session integration**
 
-Run:
+รัน:
 
 ```bash
 PYTHONPATH=src ../../.venv/bin/python -m pytest \
@@ -567,9 +567,9 @@ PYTHONPATH=src ../../.venv/bin/python -m pytest \
   tests/acceptance/test_paper_spot_trade_history.py -q
 ```
 
-Expected: all selected tests pass and replay output remains unchanged.
+ผลที่คาดหวัง: selected tests ทั้งหมดผ่านและ replay output ไม่เปลี่ยนแปลง
 
-- [ ] **Step 8: Commit**
+- [ ] **Step 8: สร้าง commit**
 
 ```bash
 git add src/tiewtrade/application/paper_spot_session.py \
@@ -578,7 +578,7 @@ git add src/tiewtrade/application/paper_spot_session.py \
 git commit -m "fix: make Paper Spot entry fail closed atomically"
 ```
 
-### Task 4: Make Paper Spot close snapshots per-Candle and invariant-safe
+### Task 4: ทำให้ Paper Spot close snapshots แยกต่อ Candle และปลอดภัยตาม invariant
 
 **Files:**
 - Modify: `src/tiewtrade/application/paper_spot_session.py`
@@ -588,30 +588,30 @@ git commit -m "fix: make Paper Spot entry fail closed atomically"
 - Test: `tests/acceptance/test_paper_spot_replay.py`
 
 **Interfaces:**
-- Preserves: `PaperSpotSessionSnapshot.take_profit_fill` name for existing consumers.
-- Changes: `take_profit_fill` and `closed_basket` describe only the current Candle.
-- Strengthens: persistent close requires both fields and matching Basket IDs.
+- Preserves: คงชื่อ `PaperSpotSessionSnapshot.take_profit_fill` สำหรับ consumers เดิม
+- Changes: `take_profit_fill` และ `closed_basket` อธิบายเฉพาะ Candle ปัจจุบัน
+- Strengthens: persistent close ต้องมีทั้งสอง fields และ Basket IDs ต้องตรงกัน
 
-- [ ] **Step 1: Write the failing non-sticky snapshot test**
+- [ ] **Step 1: เขียน failing non-sticky snapshot test**
 
-In the existing multi-Basket test, change the assertion after the next Basket Entry from:
+ใน multi-Basket test เดิม ให้เปลี่ยน assertion หลัง Basket Entry ถัดไปจาก:
 
 ```python
 assert new_fill.take_profit_fill is not None
 ```
 
-to:
+เป็น:
 
 ```python
 assert new_fill.take_profit_fill is None
 assert new_fill.closed_basket is None
 ```
 
-This uses an existing flow that closes one Basket and processes later Candles, proving the
-old `_latest_take_profit_fill` no longer leaks into a later snapshot.
+ส่วนนี้ใช้ flow เดิมที่ปิด Basket หนึ่งแล้วประมวลผล Candles ถัดมา เพื่อพิสูจน์ว่า
+`_latest_take_profit_fill` เดิมไม่รั่วไปยัง snapshot ถัดไปอีก
 
-Strengthen `test_replaying_the_tracer_fixture_is_deterministic()` with the exact stable
-serialization contract:
+เพิ่มความเข้มงวดให้ `test_replaying_the_tracer_fixture_is_deterministic()` ด้วย stable
+serialization contract แบบตรงทุกตัวอักษร:
 
 ```python
 assert first.to_json() == (
@@ -620,9 +620,9 @@ assert first.to_json() == (
 )
 ```
 
-- [ ] **Step 2: Write failing persistent snapshot invariant tests**
+- [ ] **Step 2: เขียน failing persistent snapshot invariant tests**
 
-Add:
+เพิ่ม:
 
 ```python
 def test_take_profit_fill_without_closed_basket_blocks_persistence() -> None:
@@ -659,9 +659,9 @@ def test_closed_basket_with_mismatched_snapshot_basket_id_blocks_persistence() -
     history.record_close.assert_not_called()
 ```
 
-- [ ] **Step 3: Run the focused tests and verify RED**
+- [ ] **Step 3: รัน focused tests และตรวจสอบ RED**
 
-Run:
+รัน:
 
 ```bash
 PYTHONPATH=src ../../.venv/bin/python -m pytest \
@@ -670,12 +670,12 @@ PYTHONPATH=src ../../.venv/bin/python -m pytest \
   tests/unit/integrations/sqlite/test_persistent_paper_spot_session.py::test_closed_basket_with_mismatched_snapshot_basket_id_blocks_persistence -q
 ```
 
-Expected: the later snapshot still contains the old Fill and persistent pair/identity checks
-do not all raise.
+ผลที่คาดหวัง: snapshot ถัดมายังมี Fill เดิม และ persistent pair/identity checks ยังไม่
+raise ครบทุกกรณี
 
-- [ ] **Step 4: Make Take Profit Fill a local Candle result**
+- [ ] **Step 4: ทำให้ Take Profit Fill เป็น local Candle result**
 
-Remove `_latest_take_profit_fill`. Change the processing flow to:
+ลบ `_latest_take_profit_fill` และเปลี่ยน processing flow เป็น:
 
 ```python
 take_profit_fill: PaperSpotExitFill | None = None
@@ -686,7 +686,7 @@ if basket_existed_at_candle_open and not entry_filled_on_current_candle:
         closed_basket = self._close_basket(take_profit_fill)
 ```
 
-Change `_fill_take_profit()` to return the executor result without mutation:
+เปลี่ยน `_fill_take_profit()` ให้คืน executor result โดยไม่มี mutation:
 
 ```python
 def _fill_take_profit(self, candle: Candle) -> PaperSpotExitFill | None:
@@ -694,7 +694,7 @@ def _fill_take_profit(self, candle: Candle) -> PaperSpotExitFill | None:
     return self._executor.fill_take_profit(self._basket, candle)
 ```
 
-Move close mutation into:
+ย้าย close mutation เข้าไปใน:
 
 ```python
 def _close_basket(self, exit_fill: PaperSpotExitFill) -> ClosedBasket:
@@ -710,13 +710,13 @@ def _close_basket(self, exit_fill: PaperSpotExitFill) -> ClosedBasket:
     return closed
 ```
 
-Add `take_profit_fill: PaperSpotExitFill | None = None` to `_snapshot()` and pass the local
-value from `process_completed_candle()`. Construct snapshots with that parameter, never a
-stored previous Fill.
+เพิ่ม `take_profit_fill: PaperSpotExitFill | None = None` ใน `_snapshot()` และส่ง local
+value จาก `process_completed_candle()` สร้าง snapshots ด้วย parameter นี้เท่านั้น ห้ามใช้
+previous Fill ที่เก็บไว้
 
-- [ ] **Step 5: Enforce the persistent pair and Basket ID contract**
+- [ ] **Step 5: บังคับ persistent pair และ Basket ID contract**
 
-Replace the close branch in `_record_snapshot()` with:
+แทน close branch ใน `_record_snapshot()` ด้วย:
 
 ```python
 if snapshot.take_profit_fill is None and snapshot.closed_basket is None:
@@ -732,9 +732,9 @@ self._history.record_close(
 )
 ```
 
-- [ ] **Step 6: Verify GREEN, deterministic replay, and all repository gates**
+- [ ] **Step 6: ตรวจสอบ GREEN, deterministic replay และ repository gates ทั้งหมด**
 
-Run:
+รัน:
 
 ```bash
 PYTHONPATH=src QT_QPA_PLATFORM=offscreen ../../.venv/bin/python -m pytest -q
@@ -746,10 +746,10 @@ npm --prefix ../../docs-site run check:content
 git diff --check
 ```
 
-Expected: all commands exit `0`; replay assertion remains exactly the Global Constraint
-JSON.
+ผลที่คาดหวัง: commands ทั้งหมด exit `0`; replay assertion ยังคงตรงกับ JSON ใน
+Global Constraint ทุกตัวอักษร
 
-- [ ] **Step 7: Commit**
+- [ ] **Step 7: สร้าง commit**
 
 ```bash
 git add src/tiewtrade/application/paper_spot_session.py \
@@ -760,7 +760,7 @@ git add src/tiewtrade/application/paper_spot_session.py \
 git commit -m "fix: scope Paper Spot close snapshots per Candle"
 ```
 
-### Task 5: Expand atomicity to the whole accepted Candle and close review findings
+### Task 5: ขยาย atomicity ให้ครอบคลุม accepted Candle ทั้งแท่งและแก้ review findings
 
 **Files:**
 - Modify: `src/tiewtrade/application/paper_spot_session.py`
@@ -769,14 +769,14 @@ git commit -m "fix: scope Paper Spot close snapshots per Candle"
 - Modify: `docs/superpowers/plans/2026-07-28-paper-spot-hardening.md`
 
 **Interfaces:**
-- Produces: private `_PaperSpotTransition` that owns candidate Basket, lifecycle,
-  Strategy, Indicator, pending intent, and closed-Basket count for one accepted Candle.
-- Changes: `PaperSpotSession` commits candidate state only after Entry, Take Profit,
-  Indicator, and Strategy steps all succeed.
-- Preserves: public Session, snapshot, identity, persistence, replay, and fail-closed
-  contracts from Tasks 1–4.
+- Produces: private `_PaperSpotTransition` ที่เป็นเจ้าของ candidate Basket, lifecycle,
+  Strategy, Indicator, pending intent และ closed-Basket count สำหรับ accepted Candle หนึ่งแท่ง
+- Changes: `PaperSpotSession` commit candidate state หลังจาก Entry, Take Profit,
+  Indicator และ Strategy steps สำเร็จทั้งหมดเท่านั้น
+- Preserves: คง public Session, snapshot, identity, persistence, replay และ fail-closed
+  contracts จาก Tasks 1–4
 
-- [ ] **Step 1: Write failing late-Entry and late-close durability tests**
+- [ ] **Step 1: เขียน failing late-Entry และ late-close durability tests**
 
 เพิ่ม helper ที่สร้าง persistent coordinator จาก real Session กับ mock History โดยกำหนด
 identity ให้ตรงกัน:
@@ -870,7 +870,7 @@ def test_late_close_failure_keeps_open_basket_and_does_not_persist_close(
 เพิ่ม imports สำหรับ `create_autospec`, `WilderIndicators`, `PaperSpotSQLiteHistory` และ
 `PersistentPaperSpotSQLiteSession` ใน test file เดียวกัน
 
-- [ ] **Step 2: Write the failing Strategy-candidate rollback regression**
+- [ ] **Step 2: เขียน failing Strategy-candidate rollback regression**
 
 เพิ่ม test ที่ callback บน candidate Strategy mutate ก่อน raise:
 
@@ -924,7 +924,7 @@ def test_strategy_callback_failure_does_not_commit_candidate_transition(
     assert application._strategy is not original_strategy
 ```
 
-- [ ] **Step 3: Parameterize identity mismatch coverage for all four fields**
+- [ ] **Step 3: ทำ identity mismatch coverage แบบ parameterized สำหรับทั้งสี่ fields**
 
 แทน test mismatch เดิมด้วย:
 
@@ -956,9 +956,9 @@ def test_constructor_rejects_mismatched_session_and_history_identity(
         PersistentPaperSpotSQLiteSession(session, history)
 ```
 
-- [ ] **Step 4: Run focused tests and verify RED**
+- [ ] **Step 4: รัน focused tests และตรวจสอบ RED**
 
-Run:
+รัน:
 
 ```bash
 PYTHONPATH=src ../../.venv/bin/python -m pytest \
@@ -968,10 +968,10 @@ PYTHONPATH=src ../../.venv/bin/python -m pytest \
   tests/unit/integrations/sqlite/test_persistent_paper_spot_session.py::test_constructor_rejects_mismatched_session_and_history_identity -q
 ```
 
-Expected: late Entry/close tests แสดงว่า state จริงถูก mutate ก่อน error; Strategy test หรือ
-identity matrix ยังไม่ผ่าน contract ใหม่ทั้งหมด
+ผลที่คาดหวัง: late Entry/close tests แสดงว่า state จริงถูก mutate ก่อน error; Strategy test
+หรือ identity matrix ยังไม่ผ่าน contract ใหม่ทั้งหมด
 
-- [ ] **Step 5: Introduce the whole-Candle candidate state**
+- [ ] **Step 5: เพิ่ม whole-Candle candidate state**
 
 เพิ่ม private mutable dataclass ใน `paper_spot_session.py`:
 
@@ -1012,7 +1012,7 @@ def _commit_transition(self, transition: _PaperSpotTransition) -> None:
     self._closed_basket_count = transition.closed_basket_count
 ```
 
-- [ ] **Step 6: Run all accepted-Candle behavior on the candidate**
+- [ ] **Step 6: ทำ accepted-Candle behavior ทั้งหมดบน candidate**
 
 หลัง Candle acceptance ให้สร้าง `transition = self._new_transition()` แล้วเปลี่ยน private
 helpers ให้รับ transition เป็น argument:
@@ -1037,16 +1037,16 @@ self._commit_transition(transition)
 snapshot เท่านั้น หาก exception เกิดก่อนหน้านั้นให้ใช้ fail-closed boundary เดิมโดยไม่
 commit candidate
 
-- [ ] **Step 7: Translate implementation-plan prose to Thai**
+- [ ] **Step 7: แปล implementation-plan prose เป็นภาษาไทย**
 
 แปล narrative, instructions, expected results และ explanatory text ในไฟล์แผนนี้เป็น
 ภาษาไทยทั้งหมด คง required writing-plans header, section labels (`Goal`,
 `Architecture`, `Tech Stack`, `Global Constraints`, `Task`, `Files`, `Interfaces`,
 `Step`), identifiers, code, commands, paths และ exact error strings เป็นอังกฤษ
 
-- [ ] **Step 8: Verify GREEN and all repository gates**
+- [ ] **Step 8: ตรวจสอบ GREEN และ repository gates ทั้งหมด**
 
-Run:
+รัน:
 
 ```bash
 PYTHONPATH=src QT_QPA_PLATFORM=offscreen ../../.venv/bin/python -m pytest -q
@@ -1058,10 +1058,10 @@ npm --prefix ../../docs-site run check:content
 git diff --check
 ```
 
-Expected: ทุก command exit `0`, late-failure tests ไม่พบ memory/durable divergence และ
+ผลที่คาดหวัง: ทุก command exit `0`, late-failure tests ไม่พบ memory/durable divergence และ
 replay JSON ยังคงตรง Global Constraint ทุกตัวอักษร
 
-- [ ] **Step 9: Commit**
+- [ ] **Step 9: สร้าง commit**
 
 ```bash
 git add src/tiewtrade/application/paper_spot_session.py \

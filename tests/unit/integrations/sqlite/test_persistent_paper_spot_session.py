@@ -131,16 +131,30 @@ def persistent_session(
     return PersistentPaperSpotSQLiteSession(session, history)
 
 
-def test_constructor_rejects_mismatched_session_and_history_identity() -> None:
+@pytest.mark.parametrize(
+    "mismatched_identity",
+    [
+        replace(
+            session_identity(),
+            session_id=UUID("00000000-0000-0000-0000-000000000199"),
+        ),
+        replace(session_identity(), symbol="ETHUSDT"),
+        replace(session_identity(), timeframe="15m"),
+        replace(session_identity(), preset_version="rsi-step-grid-v2"),
+    ],
+)
+def test_constructor_rejects_mismatched_session_and_history_identity(
+    mismatched_identity: PaperSpotSessionIdentity,
+) -> None:
     session = create_autospec(PaperSpotSession, instance=True)
     history = create_autospec(PaperSpotSQLiteHistory, instance=True)
     session.identity = session_identity()  # type: ignore[misc]
-    history.session_identity = replace(  # type: ignore[misc]
-        session_identity(),
-        timeframe="15m",
-    )
+    history.session_identity = mismatched_identity  # type: ignore[misc]
 
-    with pytest.raises(ValueError, match="identity"):
+    with pytest.raises(
+        ValueError,
+        match="Paper Spot Session and Trade History identity differ",
+    ):
         PersistentPaperSpotSQLiteSession(session, history)
 
 
