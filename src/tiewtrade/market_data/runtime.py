@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncIterator, Awaitable
+from collections.abc import AsyncIterator, Awaitable, Callable
 from datetime import UTC, datetime, timedelta
 from typing import Protocol, TypeVar
 
@@ -23,12 +23,19 @@ from tiewtrade.market_data.runtime_state import (
     MarketDataRuntimeState,
     MarketDataRuntimeStatus,
 )
+from tiewtrade.market_data.source_errors import (
+    MarketDataFatalError,
+    MarketDataRateLimitError,
+    MarketDataRetryableError,
+    MarketDataTimeoutError,
+)
 
 _T = TypeVar("_T")
 _WARM_UP_TIMEOUT_SECONDS = 30.0
 _BACKFILL_TIMEOUT_SECONDS = 30.0
 _STALE_GRACE = timedelta(seconds=30)
 _RECONNECT_DELAYS_SECONDS = (1.0, 2.0, 4.0)
+_RATE_LIMIT_FALLBACK_SECONDS = 60.0
 
 
 class _WarmUpSourceError(Exception):
@@ -123,10 +130,11 @@ class MarketDataRuntime:
                     and self._status.snapshot.state
                     is MarketDataRuntimeState.FAILED_CLOSED
                 ):
+                    primary_reason = self._status.snapshot.reason
                     try:
                         await self._close_source_once()
                     except Exception:
-                        self._fail_closed(MarketDataRuntimeReason.SOURCE_ERROR)
+                        self._fail_closed(primary_reason)
             finally:
                 self._run_task = None
 
@@ -146,7 +154,8 @@ class MarketDataRuntime:
             await self._close_source_once()
         except Exception as error:
             close_error = error
-            self._fail_closed(MarketDataRuntimeReason.SOURCE_ERROR)
+            if self._status.snapshot.state is not MarketDataRuntimeState.FAILED_CLOSED:
+                self._fail_closed(MarketDataRuntimeReason.SOURCE_ERROR)
 
         if run_task is not None:
             await asyncio.gather(run_task, return_exceptions=True)
@@ -170,17 +179,20 @@ class MarketDataRuntime:
         )
         completed_before = self._scheduler.now()
         try:
-            await self._scheduler.wait_for(
-                self._perform_warm_up(completed_before),
-                _WARM_UP_TIMEOUT_SECONDS,
-            )
-        except TimeoutError:
-            self._fail_closed(MarketDataRuntimeReason.WARM_UP_TIMEOUT)
+            await self._perform_warm_up(completed_before)
+        except MarketDataFatalError:
+            self._fail_closed(MarketDataRuntimeReason.SOURCE_FATAL)
+            return False
+        except MarketDataRateLimitError:
+            self._fail_closed(MarketDataRuntimeReason.RATE_LIMIT_EXHAUSTED)
             return False
         except _WarmUpSinkError:
             self._fail_closed(MarketDataRuntimeReason.SINK_ERROR)
             return False
-        except _WarmUpSourceError:
+        except (MarketDataTimeoutError, TimeoutError):
+            self._fail_closed(MarketDataRuntimeReason.WARM_UP_TIMEOUT)
+            return False
+        except (MarketDataRetryableError, _WarmUpSourceError):
             self._fail_closed(MarketDataRuntimeReason.SOURCE_ERROR)
             return False
 
@@ -192,19 +204,32 @@ class MarketDataRuntime:
 
     async def _perform_warm_up(self, completed_before: datetime) -> None:
         try:
-            candles = await self._source.load_recent(
-                self._config,
-                count=self._warm_up_count,
-                completed_before=completed_before,
+            candles = await self._run_source_operation(
+                lambda: self._source.load_recent(
+                    self._config,
+                    count=self._warm_up_count,
+                    completed_before=completed_before,
+                ),
+                timeout=_WARM_UP_TIMEOUT_SECONDS,
             )
+        except (
+            MarketDataFatalError,
+            MarketDataRateLimitError,
+            MarketDataRetryableError,
+            TimeoutError,
+        ):
+            raise
         except Exception as error:
             raise _WarmUpSourceError from error
 
         try:
-            await self._pipeline.warm_up(
-                candles,
-                expected_count=self._warm_up_count,
-                received_at=completed_before,
+            await self._scheduler.wait_for(
+                self._pipeline.warm_up(
+                    candles,
+                    expected_count=self._warm_up_count,
+                    received_at=completed_before,
+                ),
+                _WARM_UP_TIMEOUT_SECONDS,
             )
         except CandlePipelineInputError as error:
             raise _WarmUpSourceError from error
@@ -214,6 +239,17 @@ class MarketDataRuntime:
     async def _consume_live(self) -> None:
         try:
             stream = self._source.stream_completed(self._config)
+        except MarketDataFatalError:
+            self._fail_closed(MarketDataRuntimeReason.SOURCE_FATAL)
+            return
+        except MarketDataRateLimitError as error:
+            recovered_stream = await self._recover_stream(
+                MarketDataRuntimeReason.RATE_LIMITED,
+                pending_rate_limit=error,
+            )
+            if recovered_stream is None:
+                return
+            stream = recovered_stream
         except Exception:
             recovered_stream = await self._recover_stream(
                 MarketDataRuntimeReason.SOURCE_DISCONNECTED
@@ -227,6 +263,18 @@ class MarketDataRuntime:
                 candle = await self._next_before_stale(stream)
             except TimeoutError:
                 disconnect_reason = MarketDataRuntimeReason.DATA_STALE
+            except MarketDataFatalError:
+                self._fail_closed(MarketDataRuntimeReason.SOURCE_FATAL)
+                return
+            except MarketDataRateLimitError as error:
+                recovered_stream = await self._recover_stream(
+                    MarketDataRuntimeReason.RATE_LIMITED,
+                    pending_rate_limit=error,
+                )
+                if recovered_stream is None:
+                    return
+                stream = recovered_stream
+                continue
             except Exception:
                 disconnect_reason = MarketDataRuntimeReason.SOURCE_DISCONNECTED
             else:
@@ -328,14 +376,23 @@ class MarketDataRuntime:
         candles: tuple[Candle, ...] = ()
         if start < end:
             try:
-                candles = await self._scheduler.wait_for(
-                    self._source.load_range(
+                candles = await self._run_source_operation(
+                    lambda: self._source.load_range(
                         self._config,
                         start=start,
                         end=end,
                     ),
-                    _BACKFILL_TIMEOUT_SECONDS,
+                    timeout=_BACKFILL_TIMEOUT_SECONDS,
                 )
+            except MarketDataFatalError:
+                self._fail_closed(MarketDataRuntimeReason.SOURCE_FATAL)
+                return False
+            except MarketDataRateLimitError:
+                self._fail_closed(MarketDataRuntimeReason.RATE_LIMIT_EXHAUSTED)
+                return False
+            except (MarketDataRetryableError, TimeoutError):
+                self._fail_closed(MarketDataRuntimeReason.SOURCE_ERROR)
+                return False
             except Exception:
                 self._fail_closed(MarketDataRuntimeReason.SOURCE_ERROR)
                 return False
@@ -366,17 +423,45 @@ class MarketDataRuntime:
     async def _recover_stream(
         self,
         reason: MarketDataRuntimeReason,
+        *,
+        pending_rate_limit: MarketDataRateLimitError | None = None,
     ) -> AsyncIterator[Candle] | None:
-        self._transition(MarketDataRuntimeState.STALE, reason)
-        for delay in _RECONNECT_DELAYS_SECONDS:
-            await self._scheduler.sleep(delay)
+        if pending_rate_limit is None:
+            self._transition(MarketDataRuntimeState.STALE, reason)
+        for reconnect_delay in _RECONNECT_DELAYS_SECONDS:
+            if pending_rate_limit is None:
+                await self._scheduler.sleep(reconnect_delay)
+                self._transition(MarketDataRuntimeState.RECONNECTING, reason)
+            else:
+                if (
+                    self._status.snapshot.state
+                    is not MarketDataRuntimeState.RATE_LIMITED
+                ):
+                    self._transition(
+                        MarketDataRuntimeState.RATE_LIMITED,
+                        MarketDataRuntimeReason.RATE_LIMITED,
+                    )
+                await self._scheduler.sleep(
+                    self._retry_after_seconds(pending_rate_limit)
+                )
+                self._transition(MarketDataRuntimeState.RECONNECTING, reason)
             if self._stop_requested:
                 return None
-            self._transition(MarketDataRuntimeState.RECONNECTING, reason)
             try:
                 stream = self._source.stream_completed(self._config)
                 observed = await self._next_reconnect_candle(stream)
+            except MarketDataFatalError:
+                self._fail_closed(MarketDataRuntimeReason.SOURCE_FATAL)
+                return None
+            except MarketDataRateLimitError as error:
+                pending_rate_limit = error
+                self._transition(
+                    MarketDataRuntimeState.RATE_LIMITED,
+                    MarketDataRuntimeReason.RATE_LIMITED,
+                )
+                continue
             except Exception:
+                pending_rate_limit = None
                 continue
 
             received_at = self._scheduler.now()
@@ -396,8 +481,58 @@ class MarketDataRuntime:
                 return None
             return stream
 
-        self._fail_closed(MarketDataRuntimeReason.RECONNECT_EXHAUSTED)
+        exhausted_reason = (
+            MarketDataRuntimeReason.RATE_LIMIT_EXHAUSTED
+            if pending_rate_limit is not None
+            else MarketDataRuntimeReason.RECONNECT_EXHAUSTED
+        )
+        self._fail_closed(exhausted_reason)
         return None
+
+    def _retry_after_seconds(self, error: MarketDataRateLimitError) -> float:
+        retry_after = error.retry_after
+        if isinstance(retry_after, timedelta):
+            return max(0.0, retry_after.total_seconds())
+        if isinstance(retry_after, datetime):
+            return max(
+                0.0,
+                (retry_after - self._scheduler.now()).total_seconds(),
+            )
+        return _RATE_LIMIT_FALLBACK_SECONDS
+
+    async def _run_source_operation(
+        self,
+        operation: Callable[[], Awaitable[_T]],
+        *,
+        timeout: float,
+    ) -> _T:
+        last_error: Exception | None = None
+        for attempt in range(len(_RECONNECT_DELAYS_SECONDS) + 1):
+            try:
+                return await self._scheduler.wait_for(operation(), timeout)
+            except MarketDataFatalError:
+                raise
+            except MarketDataRateLimitError as error:
+                last_error = error
+                self._transition(
+                    MarketDataRuntimeState.RATE_LIMITED,
+                    MarketDataRuntimeReason.RATE_LIMITED,
+                )
+                if attempt == len(_RECONNECT_DELAYS_SECONDS):
+                    raise
+                await self._scheduler.sleep(self._retry_after_seconds(error))
+                self._transition(
+                    MarketDataRuntimeState.RECONNECTING,
+                    MarketDataRuntimeReason.RATE_LIMITED,
+                )
+            except (MarketDataRetryableError, TimeoutError) as error:
+                last_error = error
+                if attempt == len(_RECONNECT_DELAYS_SECONDS):
+                    raise
+                await self._scheduler.sleep(_RECONNECT_DELAYS_SECONDS[attempt])
+        if last_error is None:
+            raise RuntimeError("source retry loop did not execute")
+        raise last_error
 
     async def _close_source_once(self) -> None:
         async with self._source_close_lock:
