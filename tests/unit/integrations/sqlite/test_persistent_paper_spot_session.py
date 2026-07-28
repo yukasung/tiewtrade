@@ -10,6 +10,7 @@ from tiewtrade.application.paper_spot_session import (
     PaperSpotSession,
     PaperSpotSessionIdentity,
     PaperSpotSessionSnapshot,
+    PaperSpotSessionState,
 )
 from tiewtrade.execution.paper_spot import PaperSpotEntryFill, PaperSpotExitFill
 from tiewtrade.integrations.sqlite.paper_spot_history import PaperSpotSQLiteHistory
@@ -83,6 +84,8 @@ def closed_basket() -> ClosedBasket:
 def entry_snapshot() -> PaperSpotSessionSnapshot:
     return PaperSpotSessionSnapshot(
         accepted=True,
+        state=PaperSpotSessionState.ACTIVE,
+        failure_reason=None,
         pending_intent=None,
         entry_fill=entry_fill(),
         take_profit_fill=None,
@@ -97,6 +100,8 @@ def entry_snapshot() -> PaperSpotSessionSnapshot:
 def close_snapshot() -> PaperSpotSessionSnapshot:
     return PaperSpotSessionSnapshot(
         accepted=True,
+        state=PaperSpotSessionState.ACTIVE,
+        failure_reason=None,
         pending_intent=None,
         entry_fill=None,
         take_profit_fill=exit_fill(),

@@ -1,7 +1,9 @@
 from collections.abc import Iterable
+from copy import deepcopy
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
+from enum import StrEnum
 from uuid import UUID, uuid5
 
 from tiewtrade.execution.paper_spot import (
@@ -24,9 +26,24 @@ from tiewtrade.trading.session_config import MarketType, SessionConfig, TradeMod
 from tiewtrade.trading.symbol_rules import SymbolRules
 
 
+class PaperSpotSessionState(StrEnum):
+    ACTIVE = "active"
+    FAILED_CLOSED = "failed_closed"
+
+
+class PaperSpotFailureReason(StrEnum):
+    EXECUTION_ERROR = "execution_error"
+
+
+class PaperSpotSessionError(RuntimeError):
+    """Paper Spot stopped because an execution invariant failed."""
+
+
 @dataclass(frozen=True, slots=True)
 class PaperSpotSessionSnapshot:
     accepted: bool
+    state: PaperSpotSessionState
+    failure_reason: PaperSpotFailureReason | None
     pending_intent: EntryIntent | None
     entry_fill: PaperSpotEntryFill | None
     take_profit_fill: PaperSpotExitFill | None
@@ -79,45 +96,59 @@ class PaperSpotSession:
         self._pending_intent: EntryIntent | None = None
         self._latest_take_profit_fill: PaperSpotExitFill | None = None
         self._closed_basket_count = 0
+        self._state = PaperSpotSessionState.ACTIVE
+        self._failure_reason: PaperSpotFailureReason | None = None
 
     @property
     def identity(self) -> PaperSpotSessionIdentity:
         return self._identity
 
+    @property
+    def snapshot(self) -> PaperSpotSessionSnapshot:
+        return self._snapshot(accepted=self._state is PaperSpotSessionState.ACTIVE)
+
     def process_completed_candle(
         self, candle: Candle, *, received_at: datetime
     ) -> PaperSpotSessionSnapshot:
+        if self._state is not PaperSpotSessionState.ACTIVE:
+            return self._snapshot(accepted=False)
         if not self._candles.accept(candle, received_at):
             return self._snapshot(accepted=False)
 
-        basket_existed_at_candle_open = self._basket is not None
-        entry_fill = self._fill_pending_intent(candle)
-        entry_filled_on_current_candle = entry_fill is not None
-        closed_basket: ClosedBasket | None = None
+        try:
+            basket_existed_at_candle_open = self._basket is not None
+            entry_fill = self._fill_pending_intent(candle)
+            entry_filled_on_current_candle = entry_fill is not None
+            closed_basket: ClosedBasket | None = None
 
-        if basket_existed_at_candle_open and not entry_filled_on_current_candle:
-            closed_basket = self._fill_take_profit(candle)
+            if basket_existed_at_candle_open and not entry_filled_on_current_candle:
+                closed_basket = self._fill_take_profit(candle)
 
-        indicators = self._indicators.update(candle)
-        if indicators is not None:
-            can_enter = self._lifecycle.can_enter(candle.close_time) and (
-                self._basket is None
-                or self._basket.entry_count < self._session.entry_policy.max_entries
+            indicators = self._indicators.update(candle)
+            if indicators is not None:
+                can_enter = self._lifecycle.can_enter(candle.close_time) and (
+                    self._basket is None
+                    or self._basket.entry_count < self._session.entry_policy.max_entries
+                )
+                intent = self._strategy.evaluate(
+                    candle,
+                    indicators,
+                    entry_number=self._lifecycle.entry_count + 1,
+                    can_enter=can_enter,
+                )
+                if intent is not None:
+                    self._pending_intent = intent
+
+            return self._snapshot(
+                accepted=True,
+                entry_fill=entry_fill,
+                closed_basket=closed_basket,
             )
-            intent = self._strategy.evaluate(
-                candle,
-                indicators,
-                entry_number=self._lifecycle.entry_count + 1,
-                can_enter=can_enter,
-            )
-            if intent is not None:
-                self._pending_intent = intent
-
-        return self._snapshot(
-            accepted=True,
-            entry_fill=entry_fill,
-            closed_basket=closed_basket,
-        )
+        except PaperSpotSessionError:
+            raise
+        except Exception as error:
+            self._fail_closed()
+            raise PaperSpotSessionError("Paper Spot execution failed") from error
 
     def warm_up_completed_candles(
         self,
@@ -125,6 +156,8 @@ class PaperSpotSession:
         *,
         received_at: datetime,
     ) -> None:
+        if self._state is not PaperSpotSessionState.ACTIVE:
+            raise PaperSpotSessionError("Paper Spot session is not active")
         for candle in candles:
             if not self._candles.accept(candle, received_at):
                 raise ValueError("warm-up requires new completed candles")
@@ -134,9 +167,10 @@ class PaperSpotSession:
         if self._pending_intent is None:
             return None
 
-        fill = self._executor.fill_entry(self._pending_intent, candle)
+        intent = self._pending_intent
+        fill = self._executor.fill_entry(intent, candle)
         if fill is None:
-            self._strategy.on_entry_rejected(self._pending_intent.intent_id)
+            self._strategy.on_entry_rejected(intent.intent_id)
             self._pending_intent = None
             return None
 
@@ -145,23 +179,38 @@ class PaperSpotSession:
                 self._session.session_id,
                 f"basket:{self._closed_basket_count + 1}",
             )
-            self._basket = Basket(
+            candidate_basket = Basket(
                 basket_id,
                 self._session.entry_policy,
                 self._preset.take_profit_atr_multiplier,
             )
-        self._basket.add_entry(
+        else:
+            candidate_basket = deepcopy(self._basket)
+        candidate_lifecycle = deepcopy(self._lifecycle)
+        candidate_strategy = deepcopy(self._strategy)
+
+        candidate_basket.add_entry(
             price=fill.price,
             quantity=fill.quantity,
             fee=fill.fee,
             filled_at=fill.filled_at,
-            atr=self._pending_intent.atr,
+            atr=intent.atr,
             tick_size=self._symbol_rules.tick_size,
         )
-        self._lifecycle.record_fill(fill.filled_at)
-        self._strategy.on_entry_filled(self._pending_intent.intent_id)
+        candidate_lifecycle.record_fill(fill.filled_at)
+        candidate_strategy.on_entry_filled(intent.intent_id)
+
+        self._basket = candidate_basket
+        self._lifecycle = candidate_lifecycle
+        self._strategy = candidate_strategy
         self._pending_intent = None
         return fill
+
+    def _fail_closed(self) -> None:
+        self._state = PaperSpotSessionState.FAILED_CLOSED
+        self._failure_reason = PaperSpotFailureReason.EXECUTION_ERROR
+        self._pending_intent = None
+        self._strategy = RsiStepGridStrategy(self._session.session_id, self._preset)
 
     def _fill_take_profit(self, candle: Candle) -> ClosedBasket | None:
         assert self._basket is not None
@@ -195,6 +244,8 @@ class PaperSpotSession:
             basket_id = None
         return PaperSpotSessionSnapshot(
             accepted=accepted,
+            state=self._state,
+            failure_reason=self._failure_reason,
             pending_intent=self._pending_intent,
             entry_fill=entry_fill,
             take_profit_fill=self._latest_take_profit_fill,

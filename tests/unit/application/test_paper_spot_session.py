@@ -5,12 +5,16 @@ from uuid import UUID, uuid5
 import pytest
 
 from tiewtrade.application.paper_spot_session import (
+    PaperSpotFailureReason,
     PaperSpotSession,
+    PaperSpotSessionError,
     PaperSpotSessionIdentity,
+    PaperSpotSessionState,
 )
 from tiewtrade.market_data.candle import Candle
 from tiewtrade.market_data.config import MarketDataConfig
 from tiewtrade.strategies.rsi_step_grid.preset import RsiStepGridPreset
+from tiewtrade.trading.entry_pair import EntryPairLifecycle
 from tiewtrade.trading.entry_policy import EntryPolicy
 from tiewtrade.trading.session_config import (
     MarketType,
@@ -153,6 +157,96 @@ def test_minimum_notional_rejection_releases_strategy_to_create_a_new_intent() -
     assert rejected.pending_intent is not None
     assert rejected.pending_intent.intent_id != first_intent.intent_id
     assert rejected.pending_intent.signal_candle == rejected_candle
+
+
+def test_entry_transition_is_atomic_when_lifecycle_rejects_fill(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    application = paper_session()
+    first_intent = arm_entry_intent(application)
+    first_fill_candle = candle(
+        minute_after(first_intent),
+        open_price="120",
+        close_price="121",
+    )
+    first_fill = application.process_completed_candle(
+        first_fill_candle,
+        received_at=first_fill_candle.close_time,
+    )
+    assert first_fill.basket_entry_count == 1
+
+    second_intent = arm_entry_intent(
+        application,
+        start_minute=minute_after(first_intent) + 5,
+        downtrend_candles=60,
+    )
+    second_fill_candle = candle(
+        minute_after(second_intent),
+        open_price="100",
+        close_price="101",
+    )
+
+    def reject_fill(self: EntryPairLifecycle, filled_at: datetime) -> None:
+        raise ValueError("entry is blocked by pair lifecycle")
+
+    monkeypatch.setattr(EntryPairLifecycle, "record_fill", reject_fill)
+
+    with pytest.raises(PaperSpotSessionError, match="execution failed") as captured:
+        application.process_completed_candle(
+            second_fill_candle,
+            received_at=second_fill_candle.close_time,
+        )
+
+    assert isinstance(captured.value.__cause__, ValueError)
+    assert str(captured.value.__cause__) == "entry is blocked by pair lifecycle"
+    assert application.snapshot.state is PaperSpotSessionState.FAILED_CLOSED
+    assert application.snapshot.failure_reason is PaperSpotFailureReason.EXECUTION_ERROR
+    assert application.snapshot.pending_intent is None
+    assert application.snapshot.basket_entry_count == 1
+    assert application._lifecycle.entry_count == 1
+
+
+def test_failed_closed_session_rejects_later_candles_and_warm_up(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    application = paper_session()
+    pending = arm_entry_intent(application)
+    failed_candle = candle(
+        minute_after(pending),
+        open_price="120",
+        close_price="121",
+    )
+
+    def raise_execution_error(*args: object, **kwargs: object) -> None:
+        raise ValueError("broken execution invariant")
+
+    monkeypatch.setattr(application._executor, "fill_entry", raise_execution_error)
+    with pytest.raises(PaperSpotSessionError, match="execution failed"):
+        application.process_completed_candle(
+            failed_candle,
+            received_at=failed_candle.close_time,
+        )
+
+    before = application.snapshot
+    following = candle(
+        minute_after(pending) + 5,
+        open_price="121",
+        close_price="122",
+    )
+    after = application.process_completed_candle(
+        following,
+        received_at=following.close_time,
+    )
+
+    assert after.accepted is False
+    assert after.state is before.state
+    assert after.basket_id == before.basket_id
+    assert after.basket_entry_count == before.basket_entry_count
+    with pytest.raises(PaperSpotSessionError, match="not active"):
+        application.warm_up_completed_candles(
+            [following],
+            received_at=following.close_time,
+        )
 
 
 def test_closed_two_entry_basket_resets_lifecycle_for_a_new_basket() -> None:
