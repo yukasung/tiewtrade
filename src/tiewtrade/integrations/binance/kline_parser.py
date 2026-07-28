@@ -80,7 +80,10 @@ def _required_milliseconds(value: object) -> int:
 
 
 def _utc_datetime(milliseconds: int) -> datetime:
-    return datetime.fromtimestamp(milliseconds / 1000, tz=UTC)
+    seconds, remainder = divmod(milliseconds, 1000)
+    if remainder:
+        raise ValueError("timestamp milliseconds must align to a whole second")
+    return datetime.fromtimestamp(seconds, tz=UTC)
 
 
 def _decimal_from_string(value: object) -> Decimal:

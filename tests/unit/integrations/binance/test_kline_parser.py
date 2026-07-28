@@ -60,6 +60,22 @@ def test_rest_kline_maps_exact_decimal_and_utc_values() -> None:
     assert candle.volume == Decimal("12.50")
 
 
+def test_rest_kline_rejects_timestamp_with_subsecond_remainder() -> None:
+    with pytest.raises(
+        BinanceMarketDataPayloadError,
+        match="invalid Binance",
+    ) as captured:
+        parse_rest_kline(
+            [1767225600001, "100.10", "102.20", "99.90", "101.30", "12.50"],
+            config(),
+        )
+
+    assert isinstance(captured.value.__cause__, ValueError)
+    assert str(captured.value.__cause__) == (
+        "timestamp milliseconds must align to a whole second"
+    )
+
+
 def test_closed_websocket_kline_maps_to_candle() -> None:
     candle = parse_websocket_kline(closed_kline_payload(), config())
 
