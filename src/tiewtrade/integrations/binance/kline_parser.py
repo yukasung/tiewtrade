@@ -101,7 +101,7 @@ def _utc_datetime(milliseconds: int, *, name: str) -> datetime:
         raise ValueError(f"{name} timestamp milliseconds must align to a whole second")
     try:
         return datetime.fromtimestamp(seconds, tz=UTC)
-    except (OSError, OverflowError) as error:
+    except (OSError, OverflowError, ValueError) as error:
         raise ValueError(f"{name} timestamp is out of range") from error
 
 
