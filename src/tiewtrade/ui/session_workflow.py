@@ -10,7 +10,7 @@ from tiewtrade.application.paper_session_setup import (
     PaperSessionUnavailableError,
     PaperSessionValidationError,
 )
-from tiewtrade.ui.session_tasks import SessionTask
+from tiewtrade.ui.background_task import BackgroundTask
 
 CreateSession = Callable[[PaperSessionSetupValues], PaperSessionCreateOutcome]
 LoadActiveSession = Callable[[], ConfiguredPaperSession | None]
@@ -40,7 +40,7 @@ class SessionWorkflow(QObject):
         self._create_session = create_session
         self._load_active = load_active
         self._thread_pool = thread_pool or QThreadPool.globalInstance()
-        self._active_task: SessionTask | None = None
+        self._active_task: BackgroundTask | None = None
         self._active_operation: _Operation | None = None
         self._active_generation: int | None = None
         self._callback_generation = 0
@@ -66,7 +66,7 @@ class SessionWorkflow(QObject):
     ) -> None:
         if self._closed or self._active_task is not None:
             return
-        task = SessionTask(callback)
+        task = BackgroundTask(callback)
         task.signals.succeeded.connect(self._task_succeeded)
         task.signals.failed.connect(self._task_failed)
         task.signals.finished.connect(self._task_finished)

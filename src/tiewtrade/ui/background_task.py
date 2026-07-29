@@ -3,17 +3,17 @@ from collections.abc import Callable
 from PySide6.QtCore import QObject, QRunnable, Signal, Slot
 
 
-class SessionTaskSignals(QObject):
+class BackgroundTaskSignals(QObject):
     succeeded = Signal(object)
     failed = Signal(object)
     finished = Signal()
 
 
-class SessionTask(QRunnable):
+class BackgroundTask(QRunnable):
     def __init__(self, operation: Callable[[], object]) -> None:
         super().__init__()
         self._operation = operation
-        self.signals = SessionTaskSignals()
+        self.signals = BackgroundTaskSignals()
 
     @Slot()
     def run(self) -> None:
