@@ -8,13 +8,19 @@ from uuid import UUID
 
 import pytest
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication, QTableWidget
 from pytest import MonkeyPatch
 from pytestqt.qtbot import QtBot
 
 import tiewtrade.desktop_main as desktop_main
 import tiewtrade.ui.desktop as ui_desktop
-from tests.support.trade_history_records import basket_result, trade_fill
+from tests.support.trade_history_records import (
+    BASKET_ID as SPOT_BASKET_ID,
+)
+from tests.support.trade_history_records import (
+    basket_result,
+    trade_fill,
+)
 from tiewtrade.application.paper_session_setup import (
     ConfiguredPaperSession,
     PaperSessionCreateOutcome,
@@ -38,6 +44,8 @@ from tiewtrade.trading.trade_history import (
 )
 from tiewtrade.ui.main_window import MainWindow
 
+FUTURES_BASKET_ID = UUID("00000000-0000-0000-0000-000000000202")
+
 
 def test_desktop_trade_history_reads_durable_spot_and_futures_records(
     monkeypatch: MonkeyPatch,
@@ -56,21 +64,100 @@ def test_desktop_trade_history_reads_durable_spot_and_futures_records(
     qtbot.mouseClick(window.trade_history_button, Qt.MouseButton.LeftButton)
 
     qtbot.waitUntil(lambda: window.trade_history.basket_table.rowCount() == 2)
-    assert window.trade_history.basket_table.item(0, 2).text() == "Futures"
-    assert {
-        window.trade_history.basket_table.item(row, 2).text() for row in range(2)
-    } == {"Spot", "Futures"}
+    assert _table_row_text(window.trade_history.basket_table, 0) == (
+        "2026-01-03 00:00:00 UTC",
+        "Paper",
+        "Futures",
+        "BTCUSDT",
+        "5m",
+        "1",
+        "200 USDT",
+        "30 USDT",
+        "0.6 USDT",
+        "0.00 USDT",
+        "29.4 USDT · Profit",
+        "Closed",
+    )
+    assert (
+        window.trade_history.basket_table.item(0, 0).data(Qt.ItemDataRole.UserRole)
+        == FUTURES_BASKET_ID
+    )
+    assert _table_row_text(window.trade_history.basket_table, 1) == (
+        "2026-01-01 00:00:00 UTC",
+        "Paper",
+        "Spot",
+        "BTCUSDT",
+        "5m",
+        "1",
+        "200 USDT",
+        "20 USDT",
+        "0.42 USDT",
+        "0.00 USDT",
+        "19.58 USDT · Profit",
+        "Closed",
+    )
+    assert (
+        window.trade_history.basket_table.item(1, 0).data(Qt.ItemDataRole.UserRole)
+        == SPOT_BASKET_ID
+    )
     assert window.trade_history.total_net_pnl.text() == "48.98 USDT · Profit"
     qtbot.waitUntil(lambda: window.trade_history.fill_table.rowCount() == 2)
-    assert window.trade_history.fill_table.item(1, 7).text() == "29.4 USDT · Profit"
+    assert _table_rows_text(window.trade_history.fill_table) == (
+        (
+            "2026-01-03 00:00:00 UTC",
+            "Buy",
+            "1",
+            "100",
+            "2",
+            "200 USDT",
+            "0.2 USDT",
+            "0.00 USDT · Break-even",
+            "Paper Executor",
+        ),
+        (
+            "2026-01-03 01:00:00 UTC",
+            "Sell",
+            "—",
+            "100",
+            "2",
+            "200 USDT",
+            "0.2 USDT",
+            "29.4 USDT · Profit",
+            "Paper Executor",
+        ),
+    )
 
     window.trade_history.basket_table.selectRow(1)
     qtbot.waitUntil(
         lambda: (
             window.trade_history.fill_table.rowCount() == 2
-            and window.trade_history.fill_table.item(1, 7).text()
-            == "19.58 USDT · Profit"
+            and window.trade_history.fill_table.item(0, 0).text()
+            == "2026-01-01 00:00:00 UTC"
         )
+    )
+    assert _table_rows_text(window.trade_history.fill_table) == (
+        (
+            "2026-01-01 00:00:00 UTC",
+            "Buy",
+            "1",
+            "100",
+            "2",
+            "200 USDT",
+            "0.2 USDT",
+            "0.00 USDT · Break-even",
+            "Paper Executor",
+        ),
+        (
+            "2026-01-02 00:00:00 UTC",
+            "Sell",
+            "—",
+            "100",
+            "2",
+            "200 USDT",
+            "0.2 USDT",
+            "19.58 USDT · Profit",
+            "Paper Executor",
+        ),
     )
 
 
@@ -96,6 +183,10 @@ def test_desktop_trade_history_filters_paginates_and_survives_restart(
                 timeframe="15m" if index == 50 else "5m",
                 market_type=(MarketType.FUTURES if index == 50 else MarketType.SPOT),
                 leverage=3 if index == 50 else None,
+                gross_realized_pnl=(Decimal("30") if index == 50 else Decimal("20")),
+                trading_fees=(Decimal("0.6") if index == 50 else Decimal("0.42")),
+                funding_fee=Decimal("0.00") if index == 50 else Decimal("0"),
+                net_realized_pnl=(Decimal("29.4") if index == 50 else Decimal("19.58")),
             ),
         )
     first = _composed_window(
@@ -109,6 +200,12 @@ def test_desktop_trade_history_filters_paginates_and_survives_restart(
     qtbot.waitUntil(lambda: first.trade_history.basket_table.rowCount() == 50)
     assert first.trade_history.basket_table.item(0, 4).text() == "15m"
     assert first.trade_history.page_label.text() == "Page 1 of 2"
+    first_page_opened_at = tuple(
+        first.trade_history.basket_table.item(row, 0).text() for row in range(50)
+    )
+    assert first_page_opened_at == tuple(sorted(first_page_opened_at, reverse=True))
+    assert first_page_opened_at[0] == "2026-02-20 00:00:00 UTC"
+    assert first_page_opened_at[-1] == "2026-01-02 00:00:00 UTC"
 
     matching_filters = (
         (first.trade_history.symbol, "BTCUSDT"),
@@ -128,6 +225,7 @@ def test_desktop_trade_history_filters_paginates_and_survives_restart(
     qtbot.waitUntil(lambda: first.trade_history.basket_table.rowCount() == 1)
     assert first.trade_history.basket_table.item(0, 4).text() == "15m"
     assert first.trade_history.basket_table.item(0, 2).text() == "Futures"
+    assert first.trade_history.total_net_pnl.text() == "29.4 USDT · Profit"
     assert basket_requests[-1] == (
         TradeHistoryFilter(
             symbol="BTCUSDT",
@@ -142,6 +240,12 @@ def test_desktop_trade_history_filters_paginates_and_survives_restart(
     )
 
     qtbot.mouseClick(first.trade_history.reset_button, Qt.MouseButton.LeftButton)
+    for combo, _ in matching_filters:
+        assert combo.currentData() is None
+    assert not first.trade_history.from_date_enabled.isChecked()
+    assert not first.trade_history.from_date.isEnabled()
+    assert not first.trade_history.to_date_enabled.isChecked()
+    assert not first.trade_history.to_date.isEnabled()
     qtbot.waitUntil(lambda: first.trade_history.basket_table.rowCount() == 50)
     qtbot.mouseClick(first.trade_history.next_button, Qt.MouseButton.LeftButton)
     qtbot.waitUntil(lambda: first.trade_history.basket_table.rowCount() == 1)
@@ -222,29 +326,60 @@ def test_trade_history_desktop_flow_has_no_forbidden_import_or_network(
         "binance",
         "aiohttp",
     )
-    for path in Path("src/tiewtrade/ui").glob("*.py"):
+    ui_paths = tuple(Path("src/tiewtrade/ui").rglob("*.py"))
+    assert ui_paths
+    for path in ui_paths:
         tree = ast.parse(path.read_text())
-        from_imports = [
-            node.module or ""
-            for node in ast.walk(tree)
-            if isinstance(node, ast.ImportFrom)
-        ]
-        direct_imports = [
-            alias.name
-            for node in ast.walk(tree)
-            if isinstance(node, ast.Import)
-            for alias in node.names
-        ]
         assert all(
             not any(name in module for name in forbidden)
-            for module in (*from_imports, *direct_imports)
+            for module in _imported_names(tree)
         )
 
-    monkeypatch.setattr(
-        socket,
-        "create_connection",
-        lambda *args, **kwargs: pytest.fail("network must not run"),
+    composition_paths = (
+        Path("src/tiewtrade/desktop_main.py"),
+        Path("src/tiewtrade/ui/desktop.py"),
+        Path("src/tiewtrade/ui/main_window.py"),
     )
+    network_dependencies = (
+        "binance",
+        "aiohttp",
+        "httpx",
+        "requests",
+        "urllib",
+        "websocket",
+        "socket",
+    )
+    forbidden_source_references = (
+        "tiewtrade.integrations.binance",
+        "aiohttp.",
+        "httpx.",
+        "requests.",
+        "urllib.",
+        "websocket.",
+        "websockets.",
+        "socket.",
+    )
+    assert all(path.is_file() for path in composition_paths)
+    for path in composition_paths:
+        source = path.read_text()
+        imported_names = _imported_names(ast.parse(source))
+        assert all(
+            not any(name in imported for name in network_dependencies)
+            for imported in imported_names
+        )
+        source_lower = source.casefold()
+        assert all(
+            reference not in source_lower for reference in forbidden_source_references
+        )
+
+    def fail_network(*args: object, **kwargs: object) -> None:
+        del args, kwargs
+        pytest.fail("network must not run")
+
+    monkeypatch.setattr(socket, "create_connection", fail_network)
+    monkeypatch.setattr(socket.socket, "connect", fail_network)
+    monkeypatch.setattr(socket, "getaddrinfo", fail_network)
+    monkeypatch.setattr(socket, "gethostbyname", fail_network)
     window = _composed_window(tmp_path / "tiewtrade.sqlite3", monkeypatch)
     qtbot.addWidget(window)
     window.show()
@@ -261,7 +396,7 @@ def _record_spot_and_futures_history(history: SQLiteTradeHistory) -> None:
     _record_closed(
         history,
         basket_result(
-            basket_id=UUID("00000000-0000-0000-0000-000000000202"),
+            basket_id=FUTURES_BASKET_ID,
             session_id=UUID("00000000-0000-0000-0000-000000000201"),
             market_type=MarketType.FUTURES,
             leverage=3,
@@ -305,6 +440,36 @@ def _record_closed(history: SQLiteTradeHistory, closed: BasketResult) -> None:
     )
     history.record_open_basket(opened, buy)
     history.record_closed_basket(closed, sell)
+
+
+def _table_rows_text(table: QTableWidget) -> tuple[tuple[str, ...], ...]:
+    return tuple(_table_row_text(table, row) for row in range(table.rowCount()))
+
+
+def _table_row_text(table: QTableWidget, row: int) -> tuple[str, ...]:
+    values: list[str] = []
+    for column in range(table.columnCount()):
+        item = table.item(row, column)
+        assert item is not None
+        values.append(item.text())
+    return tuple(values)
+
+
+def _imported_names(tree: ast.AST) -> tuple[str, ...]:
+    imported_names: list[str] = []
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            for alias in node.names:
+                imported_names.append(alias.name.casefold())
+                if alias.asname is not None:
+                    imported_names.append(alias.asname.casefold())
+        elif isinstance(node, ast.ImportFrom):
+            module = (node.module or "").casefold()
+            for alias in node.names:
+                imported_names.append(f"{module}.{alias.name.casefold()}")
+                if alias.asname is not None:
+                    imported_names.append(alias.asname.casefold())
+    return tuple(imported_names)
 
 
 def _composed_window(
