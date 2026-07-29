@@ -1,3 +1,5 @@
+import ast
+import inspect
 import threading
 from copy import copy
 from dataclasses import replace
@@ -8,6 +10,7 @@ import pytest
 from PySide6.QtCore import Qt, QThreadPool
 from pytestqt.qtbot import QtBot
 
+import tiewtrade.ui.main_window as main_window_module
 from tests.support.paper_session_setup import (
     configured_futures_session,
     configured_spot_session,
@@ -35,6 +38,23 @@ def no_active_session() -> ConfiguredPaperSession | None:
 
 def unused_create(values: PaperSessionSetupValues) -> PaperSessionCreateOutcome:
     pytest.fail("create must not run")
+
+
+def test_main_window_delegates_session_task_lifecycle_to_workflow() -> None:
+    source = inspect.getsource(main_window_module)
+    tree = ast.parse(source)
+    imported_names = {
+        alias.name
+        for node in ast.walk(tree)
+        if isinstance(node, ast.ImportFrom)
+        for alias in node.names
+    }
+
+    assert "SessionWorkflow" in imported_names
+    assert "SessionTask" not in imported_names
+    assert "_active_create_task" not in source
+    assert "_active_load_task" not in source
+    assert "_callback_generation" not in source
 
 
 def test_created_spot_session_replaces_form_with_durable_overview(
@@ -420,7 +440,7 @@ def test_closing_window_ignores_late_worker_result_and_releases_task(
     window.close()
     release.set()
     assert thread_pool.waitForDone(1_000)
-    qtbot.waitUntil(lambda: not window._tasks)
+    qtbot.wait(20)
 
     assert not window.isVisible()
     assert window.current_page_name == page_before_close

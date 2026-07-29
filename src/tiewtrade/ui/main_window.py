@@ -1,5 +1,3 @@
-from collections.abc import Callable
-
 from PySide6.QtCore import QThreadPool, Slot
 from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import (
@@ -15,17 +13,15 @@ from PySide6.QtWidgets import (
 
 from tiewtrade.application.paper_session_setup import (
     ConfiguredPaperSession,
-    PaperSessionCreateOutcome,
     PaperSessionSetupValues,
-    PaperSessionUnavailableError,
-    PaperSessionValidationError,
 )
 from tiewtrade.ui.session_overview import SessionOverviewWidget
 from tiewtrade.ui.session_setup import SessionSetupWidget
-from tiewtrade.ui.session_tasks import SessionTask
-
-CreateSession = Callable[[PaperSessionSetupValues], PaperSessionCreateOutcome]
-LoadActiveSession = Callable[[], ConfiguredPaperSession | None]
+from tiewtrade.ui.session_workflow import (
+    CreateSession,
+    LoadActiveSession,
+    SessionWorkflow,
+)
 
 
 class MainWindow(QMainWindow):
@@ -37,17 +33,6 @@ class MainWindow(QMainWindow):
         thread_pool: QThreadPool | None = None,
     ) -> None:
         super().__init__()
-        self._create_session = create_session
-        self._load_active = load_active
-        self._thread_pool = thread_pool or QThreadPool.globalInstance()
-        self._tasks: set[SessionTask] = set()
-        self._active_create_task: SessionTask | None = None
-        self._active_create_generation: int | None = None
-        self._active_load_task: SessionTask | None = None
-        self._active_load_generation: int | None = None
-        self._callback_generation = 0
-        self._closed = False
-
         self.navigation_items = ("Session",)
         self.current_page_name = "Session Setup"
         self.setup = SessionSetupWidget()
@@ -67,144 +52,44 @@ class MainWindow(QMainWindow):
         self._pages.setCurrentWidget(self.setup)
 
         self._build_window()
+        self._workflow = SessionWorkflow(
+            create_session=create_session,
+            load_active=load_active,
+            thread_pool=thread_pool,
+            parent=self,
+        )
+        self._workflow.busy_changed.connect(self._set_busy)
+        self._workflow.setup_required.connect(self._show_setup)
+        self._workflow.session_ready.connect(self._show_session)
+        self._workflow.validation_failed.connect(self._show_validation_error)
+        self._workflow.unavailable.connect(self._show_unavailable)
         self.setup.create_requested.connect(self._create_requested)
-        self.unavailable_retry_button.clicked.connect(self._retry_load_active)
-        self._start_load_active()
+        self.unavailable_retry_button.clicked.connect(self._workflow.start)
+        self._workflow.start()
 
     @Slot(object)
     def _create_requested(self, raw_values: object) -> None:
-        if (
-            self._closed
-            or self._active_create_task is not None
-            or self._active_load_task is not None
-        ):
-            return
         if not isinstance(raw_values, PaperSessionSetupValues):
             return
 
         self.setup.clear_errors()
-        self.setup.set_loading(True)
-        self.unavailable_retry_button.setDisabled(True)
+        self._workflow.create(raw_values)
 
-        task = SessionTask(lambda: self._create_session(raw_values))
-        task.signals.succeeded.connect(self._create_succeeded)
-        task.signals.failed.connect(self._create_failed)
-        task.signals.finished.connect(self._create_finished)
-        self._active_create_task = task
-        self._active_create_generation = self._callback_generation
-        self._tasks.add(task)
-        self._thread_pool.start(task)
-
-    def _start_load_active(self) -> None:
-        if self._closed or self._active_load_task is not None:
-            return
-        self.setup.set_loading(True)
-        self.unavailable_retry_button.setDisabled(True)
-
-        task = SessionTask(self._load_active)
-        task.signals.succeeded.connect(self._load_succeeded)
-        task.signals.failed.connect(self._load_failed)
-        task.signals.finished.connect(self._load_finished)
-        self._active_load_task = task
-        self._active_load_generation = self._callback_generation
-        self._tasks.add(task)
-        self._thread_pool.start(task)
+    @Slot(bool)
+    def _set_busy(self, busy: bool) -> None:
+        if busy or self.current_page_name == "Session Setup":
+            self.setup.set_loading(busy)
+        self.unavailable_retry_button.setDisabled(busy)
 
     @Slot(object)
-    def _create_succeeded(self, raw_outcome: object) -> None:
-        if not self._create_callbacks_are_current():
-            return
-        if not isinstance(raw_outcome, PaperSessionCreateOutcome):
-            self._show_unavailable("Paper Session could not be created")
-            return
-        self.overview.show_session(raw_outcome.session)
+    def _show_session(self, session: ConfiguredPaperSession) -> None:
+        self.overview.show_session(session)
         self._pages.setCurrentWidget(self.overview)
         self.current_page_name = "Session Overview"
 
-    @Slot(object)
-    def _create_failed(self, raw_error: object) -> None:
-        if not self._create_callbacks_are_current():
-            return
-        self._show_create_error(raw_error)
-
-    @Slot()
-    def _create_finished(self) -> None:
-        task = self._active_create_task
-        generation = self._active_create_generation
-        if task is None or generation is None:
-            return
-        callbacks_are_current = self._callbacks_are_current(generation)
-        task.signals.succeeded.disconnect(self._create_succeeded)
-        task.signals.failed.disconnect(self._create_failed)
-        task.signals.finished.disconnect(self._create_finished)
-        self._tasks.discard(task)
-        self._active_create_task = None
-        self._active_create_generation = None
-        if not callbacks_are_current:
-            return
-        if self.current_page_name == "Session Setup":
-            self.setup.set_loading(False)
-        if self.current_page_name == "Unavailable":
-            self.unavailable_retry_button.setEnabled(True)
-
-    @Slot(object)
-    def _load_succeeded(self, raw_session: object) -> None:
-        if not self._load_callbacks_are_current():
-            return
-        if raw_session is None:
-            self._show_setup()
-            return
-        if not isinstance(raw_session, ConfiguredPaperSession):
-            self._show_unavailable("Paper Session could not be loaded")
-            return
-        self.overview.show_session(raw_session)
-        self._pages.setCurrentWidget(self.overview)
-        self.current_page_name = "Session Overview"
-
-    @Slot(object)
-    def _load_failed(self, raw_error: object) -> None:
-        if not self._load_callbacks_are_current():
-            return
-        if isinstance(raw_error, PaperSessionUnavailableError):
-            self._show_unavailable("Session storage is unavailable")
-            return
-        self._show_unavailable("Paper Session could not be loaded")
-
-    @Slot()
-    def _load_finished(self) -> None:
-        task = self._active_load_task
-        generation = self._active_load_generation
-        if task is None or generation is None:
-            return
-        callbacks_are_current = self._callbacks_are_current(generation)
-        task.signals.succeeded.disconnect(self._load_succeeded)
-        task.signals.failed.disconnect(self._load_failed)
-        task.signals.finished.disconnect(self._load_finished)
-        self._tasks.discard(task)
-        self._active_load_task = None
-        self._active_load_generation = None
-        if not callbacks_are_current:
-            return
-        if self.current_page_name == "Session Setup":
-            self.setup.set_loading(False)
-        if self.current_page_name == "Unavailable":
-            self.unavailable_retry_button.setEnabled(True)
-
-    def _show_create_error(self, raw_error: object) -> None:
-        if isinstance(raw_error, PaperSessionValidationError):
-            self.setup.show_field_error(raw_error.field, str(raw_error))
-            self._show_setup()
-            return
-        if isinstance(raw_error, PaperSessionUnavailableError):
-            self._show_unavailable("Session storage is unavailable")
-            return
-        self._show_unavailable("Paper Session could not be created")
-
-    @Slot()
-    def _retry_load_active(self) -> None:
-        if self._active_create_task is not None:
-            return
-        self._start_load_active()
+    @Slot(str, str)
+    def _show_validation_error(self, field: str, message: str) -> None:
+        self.setup.show_field_error(field, message)
 
     def _show_unavailable(self, message: str) -> None:
         self.unavailable_message.setText(message)
@@ -213,36 +98,12 @@ class MainWindow(QMainWindow):
 
     @Slot()
     def _show_setup(self) -> None:
-        if self._closed:
-            return
         self._pages.setCurrentWidget(self.setup)
         self.current_page_name = "Session Setup"
-        if self._active_create_task is None and self._active_load_task is None:
-            self.setup.set_loading(False)
 
     def closeEvent(self, event: QCloseEvent) -> None:
-        self._closed = True
-        self._callback_generation += 1
+        self._workflow.close()
         super().closeEvent(event)
-
-    def _callbacks_are_current(self, generation: int) -> bool:
-        return not self._closed and generation == self._callback_generation
-
-    def _create_callbacks_are_current(self) -> bool:
-        generation = self._active_create_generation
-        return (
-            generation is not None
-            and self._active_create_task is not None
-            and self._callbacks_are_current(generation)
-        )
-
-    def _load_callbacks_are_current(self) -> bool:
-        generation = self._active_load_generation
-        return (
-            generation is not None
-            and self._active_load_task is not None
-            and self._callbacks_are_current(generation)
-        )
 
     def _build_window(self) -> None:
         self.setWindowTitle("TiewTrade")

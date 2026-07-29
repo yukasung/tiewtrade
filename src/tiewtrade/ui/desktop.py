@@ -2,7 +2,8 @@ import sys
 
 from PySide6.QtWidgets import QApplication
 
-from tiewtrade.ui.main_window import CreateSession, LoadActiveSession, MainWindow
+from tiewtrade.ui.main_window import MainWindow
+from tiewtrade.ui.session_workflow import CreateSession, LoadActiveSession
 from tiewtrade.ui.theme import LIGHT_THEME
 
 
