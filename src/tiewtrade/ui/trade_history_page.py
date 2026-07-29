@@ -1,5 +1,4 @@
 from datetime import date
-from decimal import Decimal
 from uuid import UUID
 
 from PySide6.QtCore import QDate, QSignalBlocker, Qt, Signal, Slot
@@ -222,17 +221,9 @@ class TradeHistoryPage(QWidget):
             self._set_basket_state("No trade history")
         self._show_page_state(result.page, result.page_size, result.total_items)
 
-    @Slot()
-    def show_baskets_empty(self) -> None:
-        self._clear_table(self.basket_table)
-        self._clear_fill_result()
-        self.total_net_pnl_label.setVisible(True)
-        self.total_net_pnl.setText(pnl_text(Decimal("0")))
-        self.total_net_pnl.setVisible(True)
-        self.total_items.setText("0 total Baskets")
-        self._set_basket_state("No trade history")
-        self.retry_baskets_button.setVisible(False)
-        self._show_page_state(1, 50, 0)
+    @Slot(object)
+    def show_baskets_empty(self, result: BasketHistoryPage) -> None:
+        self.show_baskets(result)
 
     @Slot(str)
     def show_baskets_unavailable(self, message: str) -> None:

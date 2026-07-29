@@ -367,12 +367,12 @@ def test_empty_basket_page_does_not_query_fills(qtbot: QtBot) -> None:
         list_baskets=lambda filters, request: page_with(),
         list_fills=lambda basket_id: fill_calls.append(basket_id) or (),
     )
-    empty_events: list[None] = []
-    workflow.baskets_empty.connect(lambda: empty_events.append(None))
+    empty_events: list[BasketHistoryPage] = []
+    workflow.baskets_empty.connect(empty_events.append)
 
     workflow.start()
 
-    qtbot.waitUntil(lambda: empty_events == [None])
+    qtbot.waitUntil(lambda: empty_events == [page_with()])
     assert fill_calls == []
     assert pool.waitForDone(1_000)
 ```
@@ -578,7 +578,7 @@ ListFills = Callable[[UUID], tuple[TradeFill, ...]]
 class TradeHistoryWorkflow(QObject):
     baskets_loading = Signal(bool)
     baskets_ready = Signal(object)
-    baskets_empty = Signal()
+    baskets_empty = Signal(object)
     baskets_unavailable = Signal(str)
     filter_invalid = Signal(str)
     fills_loading = Signal(bool)

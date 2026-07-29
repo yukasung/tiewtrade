@@ -151,7 +151,7 @@ Workflow ส่ง semantic signals:
 ```python
 baskets_loading(bool)
 baskets_ready(BasketHistoryPage)
-baskets_empty()
+baskets_empty(BasketHistoryPage)
 baskets_unavailable(str)
 filter_invalid(str)
 fills_loading(bool)
@@ -201,6 +201,8 @@ Page ไม่รับ exception object และไม่แสดงข้อ
 2. Workflow ไม่ยอมรับ page ต่ำกว่า 1 หรือสูงกว่าจำนวนหน้าที่ทราบ
 3. Filters คงเดิม ส่วน selection และ Fills ถูก invalidate
 4. Query สำเร็จแล้วเลือก Basket แรกของหน้าใหม่อัตโนมัติ
+5. ถ้าจำนวนผลลัพธ์หดระหว่าง query จนหน้าที่ขอเกินหน้าสุด Workflow จะ query
+   หน้าสุดใหม่ผ่าน generation/request pipeline เดิมก่อนส่ง semantic result
 
 ### Basket Selection
 
@@ -255,8 +257,8 @@ Trade Fills columns เรียงดังนี้:
 
 - แสดง `No trade history`
 - Basket และ Fill tables ไม่มี rows
-- Total Net PnL แสดง `0.00 USDT · Break-even` เพราะ query สำเร็จและยืนยันว่าไม่มี
-  matching closed Baskets
+- Total Net PnL, total items และ pagination ใช้ค่าจาก `BasketHistoryPage` ที่ query
+  สำเร็จโดยตรง ไม่สร้าง summary หรือ page state ใหม่ใน Page
 - pagination buttons disabled
 
 ### Fill Query Success — Empty

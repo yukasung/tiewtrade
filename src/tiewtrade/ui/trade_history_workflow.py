@@ -28,7 +28,7 @@ PendingFillRequest = tuple[int, UUID]
 class TradeHistoryWorkflow(QObject):
     baskets_loading = Signal(bool)
     baskets_ready = Signal(object)
-    baskets_empty = Signal()
+    baskets_empty = Signal(object)
     baskets_unavailable = Signal(str)
     filter_invalid = Signal(str)
     fills_loading = Signal(bool)
@@ -216,10 +216,21 @@ class TradeHistoryWorkflow(QObject):
             return
 
         self._failed_basket_request = None
-        self._page = result.page
         self._total_items = result.total_items
+        last_page = self._total_pages()
+        if result.page > last_page:
+            self._page = last_page
+            self._request_baskets(
+                (
+                    request[0],
+                    PageRequest(page=last_page, page_size=self.PAGE_SIZE),
+                )
+            )
+            return
+
+        self._page = result.page
         if not result.items:
-            self.baskets_empty.emit()
+            self.baskets_empty.emit(result)
             return
 
         generation = self._basket_task_generation

@@ -240,14 +240,22 @@ def test_basket_loading_clears_stale_results_and_disables_requests(
     assert page.reset_button.isEnabled()
 
 
-def test_empty_basket_result_is_explicit_break_even_state(qtbot: QtBot) -> None:
+def test_empty_basket_result_preserves_exact_query_summary_and_page_state(
+    qtbot: QtBot,
+) -> None:
     page = TradeHistoryPage()
     qtbot.addWidget(page)
+    exact_empty_page = history_page(
+        page=1,
+        total_items=0,
+        net_realized_pnl=Decimal("0.000000000000000001"),
+    )
 
-    page.show_baskets_empty()
+    page.show_baskets_empty(exact_empty_page)
 
     assert page.basket_state.text() == "No trade history"
-    assert page.total_net_pnl.text() == "0.00 USDT · Break-even"
+    assert page.total_net_pnl.text() == "0.000000000000000001 USDT · Profit"
+    assert page.total_items.text() == "0 total Baskets"
     assert not page.total_net_pnl.isHidden()
     assert page.page_label.text() == "Page 1 of 1"
     assert page.basket_table.rowCount() == 0
@@ -300,6 +308,7 @@ def test_fill_loading_clears_stale_fills_and_preserves_basket_selection(
     basket = basket_result()
     page = TradeHistoryPage()
     qtbot.addWidget(page)
+    page.show()
     page.show_baskets(history_page(basket))
     page.show_fills(basket.basket_id, (trade_fill(),))
     page.show_fills_unavailable(basket.basket_id, "Trade Fills unavailable")
@@ -310,6 +319,7 @@ def test_fill_loading_clears_stale_fills_and_preserves_basket_selection(
     assert page.basket_table.currentRow() == 0
     assert page.fill_table.rowCount() == 0
     assert page.fill_state.text() == "Loading trade fills…"
+    assert page.fill_state.isVisible()
     assert page.retry_fills_button.isHidden()
 
 

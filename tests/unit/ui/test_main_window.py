@@ -70,6 +70,39 @@ def test_navigation_opens_trade_history_without_active_session(qtbot: QtBot) -> 
     assert window.trade_history.isVisible()
 
 
+def test_empty_trade_history_preserves_exact_query_summary_and_page_state(
+    qtbot: QtBot,
+) -> None:
+    exact_empty_page = BasketHistoryPage(
+        items=(),
+        page=1,
+        page_size=50,
+        total_items=0,
+        net_realized_pnl=Decimal("0.000000000000000001"),
+    )
+    window = MainWindow(
+        create_session=unused_create,
+        load_active=no_active_session,
+        list_baskets=lambda filters, request: exact_empty_page,
+        list_fills=empty_fills,
+    )
+    qtbot.addWidget(window)
+    window.show()
+    qtbot.waitUntil(window.setup.create_button.isEnabled)
+
+    qtbot.mouseClick(window.trade_history_button, Qt.MouseButton.LeftButton)
+
+    qtbot.waitUntil(
+        lambda: window.trade_history.basket_state.text() == "No trade history"
+    )
+    assert (
+        window.trade_history.total_net_pnl.text()
+        == "0.000000000000000001 USDT · Profit"
+    )
+    assert window.trade_history.total_items.text() == "0 total Baskets"
+    assert window.trade_history.page_label.text() == "Page 1 of 1"
+
+
 def test_trade_history_remains_available_when_session_load_fails(
     qtbot: QtBot,
 ) -> None:

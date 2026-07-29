@@ -377,17 +377,24 @@ def test_baskets_ready_reentrancy_preserves_new_fill_selection(
 
 
 def test_empty_basket_page_does_not_query_fills(qtbot: QtBot) -> None:
+    exact_empty_page = BasketHistoryPage(
+        items=(),
+        page=1,
+        page_size=50,
+        total_items=0,
+        net_realized_pnl=Decimal("0.000000000000000001"),
+    )
     fill_calls: list[UUID] = []
     workflow, pool = workflow_with(
-        list_baskets=lambda filters, request: page_with(),
+        list_baskets=lambda filters, request: exact_empty_page,
         list_fills=lambda basket_id: fill_calls.append(basket_id) or (),
     )
-    empty_events: list[None] = []
-    workflow.baskets_empty.connect(lambda: empty_events.append(None))
+    empty_events: list[BasketHistoryPage] = []
+    workflow.baskets_empty.connect(empty_events.append)
 
     workflow.start()
 
-    qtbot.waitUntil(lambda: empty_events == [None])
+    qtbot.waitUntil(lambda: empty_events == [exact_empty_page])
     assert fill_calls == []
     assert pool.waitForDone(1_000)
 
@@ -504,6 +511,61 @@ def test_page_request_stays_within_known_bounds(qtbot: QtBot) -> None:
     assert pool.waitForDone(1_000)
 
 
+def test_page_beyond_shrunken_results_requeries_last_valid_page(
+    qtbot: QtBot,
+) -> None:
+    first = basket_result()
+    last = basket_result(
+        basket_id=UUID("00000000-0000-0000-0000-000000000299"),
+    )
+    aggregate = Decimal("7.250000000000000001")
+    calls: list[PageRequest] = []
+
+    def list_baskets(
+        filters: TradeHistoryFilter, request: PageRequest
+    ) -> BasketHistoryPage:
+        del filters
+        calls.append(request)
+        items = (first,) if request.page == 1 else (last,) if request.page == 2 else ()
+        total_items = 101 if request.page == 1 else 51
+        return BasketHistoryPage(
+            items=items,
+            page=request.page,
+            page_size=request.page_size,
+            total_items=total_items,
+            net_realized_pnl=aggregate,
+        )
+
+    workflow, pool = workflow_with(
+        list_baskets=list_baskets,
+        list_fills=lambda basket_id: (),
+    )
+    pages: list[BasketHistoryPage] = []
+    empty_pages: list[BasketHistoryPage] = []
+    loading_events: list[bool] = []
+    workflow.baskets_ready.connect(pages.append)
+    workflow.baskets_empty.connect(empty_pages.append)
+    workflow.baskets_loading.connect(loading_events.append)
+    workflow.start()
+    qtbot.waitUntil(lambda: workflow._basket_task is None)
+
+    workflow.go_to_page(3)
+
+    qtbot.waitUntil(lambda: [page.page for page in pages] == [1, 2])
+    assert calls == [
+        PageRequest(page=1, page_size=50),
+        PageRequest(page=3, page_size=50),
+        PageRequest(page=2, page_size=50),
+    ]
+    assert pages[-1].items == (last,)
+    assert pages[-1].net_realized_pnl == aggregate
+    assert empty_pages == []
+    assert loading_events == [True, False, True, False]
+    assert workflow._page == 2
+    assert workflow._total_items == 51
+    assert pool.waitForDone(1_000)
+
+
 def test_basket_failure_is_sanitized_and_retry_reuses_latest_request(
     qtbot: QtBot,
 ) -> None:
@@ -548,13 +610,13 @@ def test_basket_retry_can_queue_before_failed_task_finishes(qtbot: QtBot) -> Non
     workflow, pool = workflow_with(
         list_baskets=fail_then_succeed, list_fills=lambda basket_id: ()
     )
-    empty_events: list[None] = []
+    empty_events: list[BasketHistoryPage] = []
     workflow.baskets_unavailable.connect(workflow.retry_baskets)
-    workflow.baskets_empty.connect(lambda: empty_events.append(None))
+    workflow.baskets_empty.connect(empty_events.append)
 
     workflow.start()
 
-    qtbot.waitUntil(lambda: empty_events == [None])
+    qtbot.waitUntil(lambda: len(empty_events) == 1)
     assert calls == 2
     assert pool.waitForDone(1_000)
 
@@ -904,16 +966,16 @@ def test_basket_request_invalidates_running_fill_result(qtbot: QtBot) -> None:
         list_fills=delayed_fills,
     )
     fill_results: list[tuple[UUID, tuple[TradeFill, ...]]] = []
-    basket_empty: list[None] = []
+    basket_empty: list[BasketHistoryPage] = []
     workflow.fills_ready.connect(
         lambda basket_id, fills: fill_results.append((basket_id, fills))
     )
-    workflow.baskets_empty.connect(lambda: basket_empty.append(None))
+    workflow.baskets_empty.connect(basket_empty.append)
     workflow.start()
     qtbot.waitUntil(fill_started.is_set)
 
     workflow.apply_filters(TradeHistoryFilterValues(symbol="BTCUSDT"))
-    qtbot.waitUntil(lambda: basket_empty == [None])
+    qtbot.waitUntil(lambda: len(basket_empty) == 1)
     fill_release.set()
 
     assert pool.waitForDone(1_000)
