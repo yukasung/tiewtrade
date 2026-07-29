@@ -106,6 +106,14 @@ completed-candle live flow, gap backfill, stale-data fail closed, bounded reconn
 DEV-95 แล้ว แต่ Desktop UI, Stop Session และ startup Recovery ยังคงอยู่ในลำดับถัดไป
 ของ milestone นี้
 
+สถานะ DEV-115/DEV-116 (กู้คืนผ่าน DEV-130): Desktop Session Setup acceptance
+พิสูจน์ Paper Spot และ Paper Futures ตั้งแต่ form, durable create, Overview,
+restart/restore, duplicate suppression และ fail-closed paths โดยไม่เริ่ม Market Data,
+Strategy หรือ Execution แล้ว Background-task lifecycle ถูกย้ายจาก `MainWindow` ไปอยู่
+ใน focused `SessionWorkflow` ซึ่งดูแล startup load, create, busy state, sanitized error
+mapping, task cleanup และ late-callback invalidation โดยไม่เปลี่ยน SQLite schema,
+application contract, UI copy หรือ business rules
+
 ## Milestone 4 — Live Spot
 
 เริ่มได้เมื่อ Paper Trading Complete ผ่านทั้งหมด:

@@ -227,4 +227,3 @@ Recovery ต้องเก็บ `configure_decimal_context()` และ harden
 - ไม่มีไฟล์หรือ behavior ใหม่บน `main` ถูกลบ
 - dependency direction และ Trading Safety ตรงกับ `ARCHITECTURE.md` และ `AGENTS.md`
 - unit, integration, acceptance, Ruff, format, Mypy และ docs checks ผ่าน
-

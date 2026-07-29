@@ -426,4 +426,3 @@ git commit -m "docs: record desktop session recovery"
 
 แก้ Critical/Important findings ผ่าน subagent review loop และรัน covering tests ซ้ำ
 ก่อนรายงานพร้อม merge ห้าม push, merge หรือ cleanup จนกว่าจะได้รับคำยืนยันจากผู้ใช้
-
