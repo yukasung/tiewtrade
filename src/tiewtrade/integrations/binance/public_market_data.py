@@ -88,6 +88,8 @@ class BinancePublicMarketData:
     ) -> tuple[Candle, ...]:
         if count <= 0:
             raise ValueError("count must be positive")
+        if count > _PAGE_LIMIT:
+            raise ValueError(f"count must not exceed {_PAGE_LIMIT}")
         _require_utc(completed_before, name="completed_before")
 
         page = await self._load_rest_page(

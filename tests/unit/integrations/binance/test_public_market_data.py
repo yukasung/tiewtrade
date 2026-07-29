@@ -213,6 +213,21 @@ def test_load_recent_requests_and_returns_requested_completed_candle_count() -> 
     }
 
 
+def test_load_recent_rejects_count_above_page_limit_before_request() -> None:
+    source, session = source_with()
+
+    with pytest.raises(ValueError, match="count must not exceed 1000"):
+        asyncio.run(
+            source.load_recent(
+                config(),
+                count=1_001,
+                completed_before=datetime(2026, 1, 1, tzinfo=UTC),
+            )
+        )
+
+    assert session.requests == []
+
+
 def test_load_recent_excludes_unfinished_candles_from_response() -> None:
     source, _ = source_with(
         rest_pages=[

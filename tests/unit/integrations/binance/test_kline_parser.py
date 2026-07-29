@@ -76,6 +76,18 @@ def test_rest_kline_rejects_timestamp_with_subsecond_remainder() -> None:
     )
 
 
+def test_rest_kline_preserves_public_error_with_open_field_diagnostic() -> None:
+    with pytest.raises(BinanceMarketDataPayloadError) as captured:
+        parse_rest_kline(
+            [1767225600000, 100.10, "102.20", "99.90", "101.30", "12.50"],
+            config(),
+        )
+
+    assert str(captured.value) == "invalid Binance market-data payload"
+    assert isinstance(captured.value.__cause__, ValueError)
+    assert str(captured.value.__cause__) == "open must be a finite decimal string"
+
+
 def test_closed_websocket_kline_maps_to_candle() -> None:
     candle = parse_websocket_kline(closed_kline_payload(), config())
 
@@ -86,6 +98,20 @@ def test_closed_websocket_kline_maps_to_candle() -> None:
 
 def test_open_websocket_kline_is_not_emitted() -> None:
     assert parse_websocket_kline(open_kline_payload(), config()) is None
+
+
+def test_websocket_kline_preserves_public_error_with_closed_field_diagnostic() -> None:
+    payload = closed_kline_payload()
+    kline = payload["k"]
+    assert isinstance(kline, dict)
+    kline["x"] = "true"
+
+    with pytest.raises(BinanceMarketDataPayloadError) as captured:
+        parse_websocket_kline(payload, config())
+
+    assert str(captured.value) == "invalid Binance market-data payload"
+    assert isinstance(captured.value.__cause__, ValueError)
+    assert str(captured.value.__cause__) == "k.x must be a boolean"
 
 
 @pytest.mark.parametrize(
