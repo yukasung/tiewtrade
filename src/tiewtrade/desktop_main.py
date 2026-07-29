@@ -1,4 +1,5 @@
 from pathlib import Path
+from threading import Lock
 from uuid import UUID
 
 from tiewtrade.application.paper_session_setup import (
@@ -29,10 +30,12 @@ def run_desktop(database_path: Path | None = None) -> int:
     store = SQLiteActivePaperSessions(database)
     history = SQLiteTradeHistory(database)
     create_session = CreatePaperSession(create_active=store.create)
+    database_preparation_lock = Lock()
 
     def prepare_database() -> None:
-        resolved_database_path.parent.mkdir(parents=True, exist_ok=True)
-        database.migrate()
+        with database_preparation_lock:
+            resolved_database_path.parent.mkdir(parents=True, exist_ok=True)
+            database.migrate()
 
     def create_after_migration(
         values: PaperSessionSetupValues,
