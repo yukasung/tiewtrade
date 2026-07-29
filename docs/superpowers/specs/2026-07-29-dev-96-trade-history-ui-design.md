@@ -138,7 +138,8 @@ apply_filters(values: TradeHistoryFilterValues) -> None
 reset_filters() -> None
 go_to_page(page: int) -> None
 select_basket(basket_id: UUID) -> None
-retry() -> None
+retry_baskets() -> None
+retry_fills() -> None
 close() -> None
 ```
 
