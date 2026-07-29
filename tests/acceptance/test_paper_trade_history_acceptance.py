@@ -3,7 +3,7 @@ from dataclasses import replace
 from datetime import timedelta
 from decimal import Decimal
 from pathlib import Path
-from uuid import UUID
+from uuid import UUID, uuid4
 
 import pytest
 from PySide6.QtCore import Qt
@@ -15,12 +15,24 @@ import tiewtrade.desktop_main as desktop_main
 import tiewtrade.ui.desktop as ui_desktop
 from tests.support import paper_trade_history_acceptance
 from tests.support.paper_trade_history_acceptance import (
+    build_spot_session,
     run_closed_futures,
     run_closed_spot,
+    spot_candles,
+    spot_history,
 )
 from tiewtrade.application.trade_history import PageRequest, TradeHistoryFilter
 from tiewtrade.integrations.sqlite.database import SQLiteDatabase
-from tiewtrade.integrations.sqlite.trade_history import SQLiteTradeHistory
+from tiewtrade.integrations.sqlite.persistent_paper_spot_session import (
+    PersistentPaperSpotSQLiteSession,
+)
+from tiewtrade.integrations.sqlite.session_persistence import (
+    SessionPersistenceBlockedError,
+)
+from tiewtrade.integrations.sqlite.trade_history import (
+    SQLiteTradeHistory,
+    TradeHistoryUnavailableError,
+)
 from tiewtrade.trading.trade_history import (
     BasketStatus,
     FillSide,
@@ -28,6 +40,63 @@ from tiewtrade.trading.trade_history import (
     TradeFill,
 )
 from tiewtrade.ui.main_window import MainWindow
+
+
+def test_sqlite_failure_blocks_new_paper_entry_fail_closed(tmp_path: Path) -> None:
+    path = tmp_path / "paper-trade-history.sqlite3"
+    database = SQLiteDatabase(path)
+    database.migrate()
+    with database.connect() as connection:
+        connection.execute(
+            """
+            CREATE TRIGGER fail_trade_fill_insert
+            BEFORE INSERT ON trade_fills
+            BEGIN
+                SELECT RAISE(ABORT, 'forced Trade History failure');
+            END;
+            """
+        )
+
+    session_id = uuid4()
+    history = SQLiteTradeHistory(database)
+    persistent = PersistentPaperSpotSQLiteSession(
+        build_spot_session(session_id),
+        spot_history(session_id, history),
+    )
+    candles = spot_candles()
+
+    for _index, candle in enumerate(candles):
+        try:
+            snapshot = persistent.process_completed_candle(
+                candle,
+                received_at=candle.close_time,
+            )
+        except TradeHistoryUnavailableError as raised:
+            assert "SQLite write failed" in str(raised)
+            break
+        assert snapshot.session.entry_fill is None
+    else:
+        raise AssertionError("deterministic Paper Spot candles did not reach an Entry")
+
+    assert history.list_baskets(TradeHistoryFilter(), PageRequest()).items == ()
+    with database.connect() as connection:
+        assert connection.execute("SELECT COUNT(*) FROM trade_fills").fetchone()[0] == 0
+
+    next_candle = candles[_index + 1]
+    with pytest.raises(SessionPersistenceBlockedError, match="blocked"):
+        persistent.process_completed_candle(
+            next_candle,
+            received_at=next_candle.close_time,
+        )
+
+    reopened_database = SQLiteDatabase(path)
+    reopened_database.migrate()
+    reopened_history = SQLiteTradeHistory(reopened_database)
+    assert (
+        reopened_history.list_baskets(TradeHistoryFilter(), PageRequest()).items == ()
+    )
+    with reopened_database.connect() as connection:
+        assert connection.execute("SELECT COUNT(*) FROM trade_fills").fetchone()[0] == 0
 
 
 def test_open_basket_duplicate_and_partial_fills_remain_deterministic(
