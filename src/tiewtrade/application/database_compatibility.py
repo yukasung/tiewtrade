@@ -1,0 +1,2 @@
+class DatabaseCompatibilityError(RuntimeError):
+    pass

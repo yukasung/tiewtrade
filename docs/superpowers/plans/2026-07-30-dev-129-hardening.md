@@ -64,21 +64,26 @@ completed-candle pipeline เปลี่ยนเฉพาะคำอธิบ
 **Files:**
 
 - แก้ไข: `tests/unit/integrations/sqlite/test_database.py`
-- แก้ไข: `tests/unit/application/test_paper_session_setup.py`
+- สร้าง: `tests/unit/application/test_database_compatibility.py`
 - แก้ไข: Desktop composition tests ที่ครอบคลุม `prepare_database`
+- แก้ไข: `tests/unit/ui/test_session_workflow.py`
 - แก้ไข: `src/tiewtrade/integrations/sqlite/database.py`
-- แก้ไข: `src/tiewtrade/application/paper_session_setup.py`
+- สร้าง: `src/tiewtrade/application/database_compatibility.py`
 - แก้ไข: `src/tiewtrade/desktop_main.py`
 - แก้ไข: `src/tiewtrade/ui/session_workflow.py`
 
 ### Steps
 
 1. เพิ่ม failing SQLite test สำหรับ `UnsupportedDatabaseSchemaError` พร้อม version facts
-2. เพิ่ม failing application/workflow tests สำหรับ application error และข้อความ
+2. เพิ่ม failing application/workflow tests สำหรับ shared
+   `DatabaseCompatibilityError` และข้อความ
    `Database was created by a newer version of TiewTrade`
-3. เพิ่ม composition test ว่า SQLite exception ถูก translate โดย UI ไม่ import SQLite
+3. เพิ่ม composition test ว่า SQLite exception ถูก translate ที่ shared
+   `prepare_database()` โดย UI ไม่ import SQLite; error contract ไม่ผูกกับ Session เพราะ
+   seam นี้ใช้ทั้ง Session และ Trade History
 4. รัน focused tests และยืนยัน RED ตามแต่ละ layer
-5. เพิ่ม typed integration error, application error, composition translation และ UI mapping
+5. เพิ่ม typed integration error, focused application compatibility error, composition
+   translation และ UI mapping
 6. รัน SQLite, application, desktop composition และ UI workflow suites
 7. Commit: `fix: report unsupported database schema safely`
 

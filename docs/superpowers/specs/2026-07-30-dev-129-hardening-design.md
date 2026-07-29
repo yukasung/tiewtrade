@@ -37,9 +37,12 @@ SQLite integration ต้องแทน raw `ValueError` ด้วย exception
 เพื่อให้ composition layer ระบุสาเหตุได้อย่างชัดเจน
 
 Desktop composition จะแปลง exception นี้เป็น application-level
-`PaperSessionDatabaseVersionError` ก่อนส่งผ่าน workflow โดย UI แสดงข้อความ
-`Database was created by a newer version of TiewTrade` เท่านั้น UI จะไม่ import
-SQLite integration และจะไม่เปิดเผย filesystem path, SQL หรือรายละเอียดภายใน
+`DatabaseCompatibilityError` ที่ประกาศใน focused module
+`application/database_compatibility.py` ก่อนส่งผ่าน workflow เนื่องจาก
+`prepare_database()` เป็น seam ร่วมของทั้ง Session และ Trade History contract นี้จึงไม่
+ผูกกับ Paper Session use case โดย UI แสดงข้อความ
+`Database was created by a newer version of TiewTrade` เท่านั้น UI จะไม่ import SQLite
+integration และจะไม่เปิดเผย filesystem path, SQL หรือรายละเอียดภายใน
 
 exception อื่นจาก storage ยังคงใช้ unavailable behavior เดิม จึงไม่มีการเปลี่ยน semantics
 ของ storage failures ทั่วไป

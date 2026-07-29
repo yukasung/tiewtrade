@@ -2,6 +2,13 @@ import sqlite3
 from pathlib import Path
 
 
+class UnsupportedDatabaseSchemaError(ValueError):
+    def __init__(self, database_version: int, supported_version: int) -> None:
+        super().__init__("database schema is newer than supported")
+        self.database_version = database_version
+        self.supported_version = supported_version
+
+
 class SQLiteDatabase:
     _SCHEMA_VERSION = 3
     _BUSY_TIMEOUT_MS = 5_000
@@ -22,7 +29,7 @@ class SQLiteDatabase:
         try:
             version = connection.execute("PRAGMA user_version").fetchone()[0]
             if version > self._SCHEMA_VERSION:
-                raise ValueError("database schema is newer than supported")
+                raise UnsupportedDatabaseSchemaError(version, self._SCHEMA_VERSION)
             if version == self._SCHEMA_VERSION:
                 return
 

@@ -3,6 +3,7 @@ from enum import Enum
 
 from PySide6.QtCore import QObject, QThreadPool, Signal, Slot
 
+from tiewtrade.application.database_compatibility import DatabaseCompatibilityError
 from tiewtrade.application.paper_session_setup import (
     ConfiguredPaperSession,
     PaperSessionCreateOutcome,
@@ -14,6 +15,7 @@ from tiewtrade.ui.background_task import BackgroundTask
 
 CreateSession = Callable[[PaperSessionSetupValues], PaperSessionCreateOutcome]
 LoadActiveSession = Callable[[], ConfiguredPaperSession | None]
+_NEWER_DATABASE_MESSAGE = "Database was created by a newer version of TiewTrade"
 
 
 class _Operation(Enum):
@@ -127,6 +129,9 @@ class SessionWorkflow(QObject):
         self.unavailable.emit("Paper Session could not be created")
 
     def _load_failed(self, error: object) -> None:
+        if isinstance(error, DatabaseCompatibilityError):
+            self.unavailable.emit(_NEWER_DATABASE_MESSAGE)
+            return
         if isinstance(error, PaperSessionUnavailableError):
             self.unavailable.emit("Session storage is unavailable")
             return
@@ -136,6 +141,9 @@ class SessionWorkflow(QObject):
         if isinstance(error, PaperSessionValidationError):
             self.validation_failed.emit(error.field, str(error))
             self.setup_required.emit()
+            return
+        if isinstance(error, DatabaseCompatibilityError):
+            self.unavailable.emit(_NEWER_DATABASE_MESSAGE)
             return
         if isinstance(error, PaperSessionUnavailableError):
             self.unavailable.emit("Session storage is unavailable")

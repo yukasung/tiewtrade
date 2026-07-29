@@ -11,6 +11,7 @@ from pytest import MonkeyPatch
 import tiewtrade.desktop_main as desktop_main
 import tiewtrade.ui.desktop as ui_desktop
 from tests.support.trade_history_ui import empty_basket_page, empty_fills
+from tiewtrade.application.database_compatibility import DatabaseCompatibilityError
 from tiewtrade.application.paper_session_setup import (
     ConfiguredPaperSession,
     PaperSessionCreateOutcome,
@@ -21,6 +22,7 @@ from tiewtrade.application.trade_history import (
     PageRequest,
     TradeHistoryFilter,
 )
+from tiewtrade.integrations.sqlite.database import UnsupportedDatabaseSchemaError
 
 
 class _CoordinatedUserVersionCursor:
@@ -293,6 +295,34 @@ def test_failed_database_preparation_can_be_retried_by_later_consumer(
 
     assert result.items == ()
     assert migration_attempts == 2
+
+
+def test_newer_schema_is_translated_at_desktop_composition_boundary(
+    tmp_path: Path,
+    monkeypatch: MonkeyPatch,
+) -> None:
+    captured: dict[str, object] = {}
+
+    def reject_newer_schema(database: desktop_main.SQLiteDatabase) -> None:
+        raise UnsupportedDatabaseSchemaError(
+            database_version=4,
+            supported_version=3,
+        )
+
+    def capture_desktop(**dependencies: object) -> int:
+        captured.update(dependencies)
+        return 0
+
+    monkeypatch.setattr(desktop_main.SQLiteDatabase, "migrate", reject_newer_schema)
+    monkeypatch.setattr(desktop_main, "run_desktop_ui", capture_desktop)
+    assert desktop_main.run_desktop(tmp_path / "tiewtrade.sqlite3") == 0
+    load_active = captured["load_active"]
+    assert callable(load_active)
+
+    with pytest.raises(DatabaseCompatibilityError) as caught:
+        load_active()
+
+    assert isinstance(caught.value.__cause__, UnsupportedDatabaseSchemaError)
 
 
 def test_ui_desktop_forwards_required_trade_history_dependencies(

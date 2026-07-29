@@ -6,6 +6,7 @@ from PySide6.QtCore import QCoreApplication, QThreadPool
 from pytestqt.qtbot import QtBot
 
 from tests.support.paper_session_setup import configured_spot_session
+from tiewtrade.application.database_compatibility import DatabaseCompatibilityError
 from tiewtrade.application.paper_session_setup import (
     ConfiguredPaperSession,
     PaperSessionCreateOutcome,
@@ -172,6 +173,11 @@ def test_validation_failure_emits_field_error_and_setup(qtbot: QtBot) -> None:
             id="load-unknown",
         ),
         pytest.param(
+            "load-version",
+            "Database was created by a newer version of TiewTrade",
+            id="load-version",
+        ),
+        pytest.param(
             "create-storage",
             "Session storage is unavailable",
             id="create-storage",
@@ -180,6 +186,11 @@ def test_validation_failure_emits_field_error_and_setup(qtbot: QtBot) -> None:
             "create-unknown",
             "Paper Session could not be created",
             id="create-unknown",
+        ),
+        pytest.param(
+            "create-version",
+            "Database was created by a newer version of TiewTrade",
+            id="create-version",
         ),
     ],
 )
@@ -193,6 +204,8 @@ def test_failures_emit_sanitized_unavailable_copy(
         error = PaperSessionUnavailableError(
             "SQLite failed at /private/tmp/tiewtrade.sqlite3"
         )
+    elif operation.endswith("version"):
+        error = DatabaseCompatibilityError()
     else:
         error = RuntimeError("SQLite failed at /private/tmp/tiewtrade.sqlite3")
 

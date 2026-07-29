@@ -2,6 +2,7 @@ from pathlib import Path
 from threading import Lock
 from uuid import UUID
 
+from tiewtrade.application.database_compatibility import DatabaseCompatibilityError
 from tiewtrade.application.paper_session_setup import (
     ConfiguredPaperSession,
     CreatePaperSession,
@@ -17,7 +18,10 @@ from tiewtrade.decimal_context import configure_decimal_context
 from tiewtrade.integrations.sqlite.active_paper_sessions import (
     SQLiteActivePaperSessions,
 )
-from tiewtrade.integrations.sqlite.database import SQLiteDatabase
+from tiewtrade.integrations.sqlite.database import (
+    SQLiteDatabase,
+    UnsupportedDatabaseSchemaError,
+)
 from tiewtrade.integrations.sqlite.trade_history import SQLiteTradeHistory
 from tiewtrade.trading.trade_history import TradeFill
 from tiewtrade.ui.desktop import run_desktop as run_desktop_ui
@@ -35,7 +39,10 @@ def run_desktop(database_path: Path | None = None) -> int:
     def prepare_database() -> None:
         with database_preparation_lock:
             resolved_database_path.parent.mkdir(parents=True, exist_ok=True)
-            database.migrate()
+            try:
+                database.migrate()
+            except UnsupportedDatabaseSchemaError as error:
+                raise DatabaseCompatibilityError from error
 
     def create_after_migration(
         values: PaperSessionSetupValues,

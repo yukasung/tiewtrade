@@ -1,6 +1,11 @@
 from pathlib import Path
 
-from tiewtrade.integrations.sqlite.database import SQLiteDatabase
+import pytest
+
+from tiewtrade.integrations.sqlite.database import (
+    SQLiteDatabase,
+    UnsupportedDatabaseSchemaError,
+)
 
 
 def test_connect_enables_wal_and_explicit_busy_timeout(tmp_path: Path) -> None:
@@ -38,3 +43,15 @@ def test_reader_can_read_committed_snapshot_while_writer_is_active(
         writer.close()
 
     assert rows == []
+
+
+def test_migrate_reports_newer_schema_with_version_facts(tmp_path: Path) -> None:
+    database = SQLiteDatabase(tmp_path / "tiewtrade.sqlite3")
+    with database.connect() as connection:
+        connection.execute("PRAGMA user_version = 4")
+
+    with pytest.raises(UnsupportedDatabaseSchemaError) as caught:
+        database.migrate()
+
+    assert caught.value.database_version == 4
+    assert caught.value.supported_version == 3
