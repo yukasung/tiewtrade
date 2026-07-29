@@ -95,10 +95,10 @@ class TradeHistoryPage(QWidget):
 
         self.from_date_enabled = QCheckBox("From Date (UTC)")
         self.from_date_enabled.setObjectName("fromDateEnabled")
-        self.from_date = self._date_edit("fromDate")
+        self.from_date = self._date_edit("fromDate", "From Date (UTC)")
         self.to_date_enabled = QCheckBox("To Date (UTC)")
         self.to_date_enabled.setObjectName("toDateEnabled")
-        self.to_date = self._date_edit("toDate")
+        self.to_date = self._date_edit("toDate", "To Date (UTC)")
         self.from_date_enabled.toggled.connect(self.from_date.setEnabled)
         self.to_date_enabled.toggled.connect(self.to_date.setEnabled)
 
@@ -192,8 +192,7 @@ class TradeHistoryPage(QWidget):
         self.total_items.clear()
         self._set_basket_state("Loading trade history…")
         self.retry_baskets_button.setVisible(False)
-        self.previous_button.setEnabled(False)
-        self.next_button.setEnabled(False)
+        self._clear_pagination()
 
     @Slot(object)
     def show_baskets(self, result: BasketHistoryPage) -> None:
@@ -246,8 +245,7 @@ class TradeHistoryPage(QWidget):
         self._set_basket_state(message)
         self.retry_baskets_button.setVisible(True)
         self.retry_fills_button.setVisible(False)
-        self.previous_button.setEnabled(False)
-        self.next_button.setEnabled(False)
+        self._clear_pagination()
 
     @Slot(str)
     def show_filter_error(self, message: str) -> None:
@@ -417,8 +415,16 @@ class TradeHistoryPage(QWidget):
         )
         self._current_page = state.current_page
         self.page_label.setText(f"Page {state.current_page} of {state.total_pages}")
+        self.page_label.setVisible(True)
         self.previous_button.setEnabled(state.previous_enabled)
         self.next_button.setEnabled(state.next_enabled)
+
+    def _clear_pagination(self) -> None:
+        self._current_page = 1
+        self.page_label.clear()
+        self.page_label.setVisible(False)
+        self.previous_button.setEnabled(False)
+        self.next_button.setEnabled(False)
 
     def _clear_fill_result(self) -> None:
         self._clear_table(self.fill_table)
@@ -461,9 +467,10 @@ class TradeHistoryPage(QWidget):
         return combo
 
     @staticmethod
-    def _date_edit(object_name: str) -> QDateEdit:
+    def _date_edit(object_name: str, accessible_name: str) -> QDateEdit:
         field = QDateEdit(QDate.currentDate())
         field.setObjectName(object_name)
+        field.setAccessibleName(accessible_name)
         field.setCalendarPopup(True)
         field.setDisplayFormat("yyyy-MM-dd")
         field.setEnabled(False)
