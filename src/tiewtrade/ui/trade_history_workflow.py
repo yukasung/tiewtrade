@@ -175,7 +175,6 @@ class TradeHistoryWorkflow(QObject):
         generation = self._basket_generation
         self._latest_basket_request = request
         self._failed_basket_request = None
-        self._invalidate_fills()
         task_to_start: BackgroundTask | None = None
 
         if self._basket_task is not None:
@@ -186,6 +185,7 @@ class TradeHistoryWorkflow(QObject):
                 self._pending_basket_request = (generation, request)
         else:
             task_to_start = self._prepare_basket_task(generation, request)
+        self._invalidate_fills()
         self._set_baskets_loading(True)
         if task_to_start is not None:
             self._thread_pool.start(task_to_start)

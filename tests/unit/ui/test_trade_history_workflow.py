@@ -250,6 +250,68 @@ def test_fills_loading_reentrancy_preserves_selection_order_and_idle(
     assert pool.waitForDone(1_000)
 
 
+def test_fill_invalidation_reentrancy_preserves_latest_basket_request(
+    qtbot: QtBot,
+) -> None:
+    fill_started = threading.Event()
+    fill_release = threading.Event()
+    initial = basket_result(symbol="INITIAL")
+    outer = basket_result(
+        basket_id=UUID("00000000-0000-0000-0000-000000000599"),
+        symbol="OUTER",
+    )
+    latest = basket_result(
+        basket_id=UUID("00000000-0000-0000-0000-000000000699"),
+        symbol="LATEST",
+    )
+    basket_calls: list[str | None] = []
+
+    def list_baskets(
+        filters: TradeHistoryFilter, request: PageRequest
+    ) -> BasketHistoryPage:
+        basket_calls.append(filters.symbol)
+        if filters.symbol == "OUTER":
+            return page_with(outer)
+        if filters.symbol == "LATEST":
+            return page_with(latest)
+        return page_with(initial)
+
+    def list_fills(basket_id: UUID) -> tuple[TradeFill, ...]:
+        if basket_id == initial.basket_id:
+            fill_started.set()
+            assert fill_release.wait(timeout=2)
+        return ()
+
+    workflow, pool = workflow_with(
+        list_baskets=list_baskets,
+        list_fills=list_fills,
+    )
+    basket_loading: list[bool] = []
+    fill_loading: list[bool] = []
+    pages: list[BasketHistoryPage] = []
+
+    def request_latest_when_fill_is_invalidated(loading: bool) -> None:
+        fill_loading.append(loading)
+        if not loading and fill_loading == [True, False]:
+            workflow.apply_filters(TradeHistoryFilterValues(symbol="LATEST"))
+
+    workflow.baskets_loading.connect(basket_loading.append)
+    workflow.baskets_ready.connect(pages.append)
+    workflow.fills_loading.connect(request_latest_when_fill_is_invalidated)
+    workflow.start()
+    qtbot.waitUntil(fill_started.is_set)
+
+    workflow.apply_filters(TradeHistoryFilterValues(symbol="OUTER"))
+    qtbot.waitUntil(lambda: len(basket_calls) == 3)
+    fill_release.set()
+
+    qtbot.waitUntil(lambda: basket_loading[-1:] == [False])
+    assert basket_calls == [None, "OUTER", "LATEST"]
+    assert [page.items for page in pages] == [(initial,), (latest,)]
+    assert basket_loading == [True, False, True, False]
+    assert pool.waitForDone(1_000)
+
+
 def test_baskets_ready_reentrancy_does_not_restore_stale_selection(
     qtbot: QtBot,
 ) -> None:
