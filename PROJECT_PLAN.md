@@ -120,6 +120,13 @@ Total Net PnL, UTC date range, accessible PnL state และ scoped unavailable
 งานนี้ปลด prerequisite ด้าน UI เพื่อเริ่ม DEV-97 แต่ยังไม่ทำให้ Paper Trading Complete
 จนกว่า acceptance, Stop Session และ startup Recovery ที่เหลือจะผ่าน
 
+สถานะ DEV-97: real Paper Spot/Futures execution เข้าสู่ durable SQLite และ Desktop
+Trade History แล้ว โดย restart คง Basket, Fills และ exact closed Net PnL เดิมไว้ครบ;
+ครอบคลุม Open Basket, duplicate, Partial Fill และ SQLite fail-closed semantics โดยไม่
+เพิ่มพฤติกรรม Live, network หรือ credentials งานนี้ปิด Trade History acceptance slice
+เท่านั้น และยังไม่ทำให้ Stop Session, startup Recovery หรือเกณฑ์ Paper Trading Complete
+ทั้งหมดเสร็จ
+
 ## Milestone 4 — Live Spot
 
 เริ่มได้เมื่อ Paper Trading Complete ผ่านทั้งหมด:
