@@ -114,6 +114,12 @@ Strategy หรือ Execution แล้ว Background-task lifecycle ถูก
 mapping, task cleanup และ late-callback invalidation โดยไม่เปลี่ยน SQLite schema,
 application contract, UI copy หรือ business rules
 
+สถานะ DEV-96: Desktop Trade History แสดง Basket History และ Trade Fills ของทุก
+Session ผ่าน application query แบบ filter/pagination บน background worker พร้อม
+Total Net PnL, UTC date range, accessible PnL state และ scoped unavailable states แล้ว
+งานนี้ปลด prerequisite ด้าน UI เพื่อเริ่ม DEV-97 แต่ยังไม่ทำให้ Paper Trading Complete
+จนกว่า acceptance, Stop Session และ startup Recovery ที่เหลือจะผ่าน
+
 ## Milestone 4 — Live Spot
 
 เริ่มได้เมื่อ Paper Trading Complete ผ่านทั้งหมด:
