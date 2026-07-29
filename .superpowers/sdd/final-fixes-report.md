@@ -1,83 +1,46 @@
-# รายงาน final fix wave ของ DEV-96
+# รายงานการแก้ไข final review ของ DEV-120
 
-## สถานะและ commit
+## การเปลี่ยนแปลง
 
-- Implementation commit: `bd4a1cb fix: preserve Trade History page results`
-- ไม่มีการ push, merge, ลบ branch/worktree หรือเชื่อม Live execution
+- เพิ่ม regression coverage ให้ `SymbolRules` ยืนยันว่ารับ symbol ที่มีช่องว่างได้เมื่อไม่ว่าง และเก็บค่าเดิมโดยไม่ normalize
+- ปรับ mismatch tests ทั้ง 5 จุดของ Paper Spot/Futures ให้ตรวจ exact identity สำหรับ `"btcusdt"`, `" BTCUSDT "` และ `"ETHUSDT"` พร้อมตรวจข้อความ `ValueError` ทั้งบรรทัด รวมค่า Candle และ `SymbolRules` จริง
+- แปลคำอธิบาย คำสั่ง และผลที่คาดหวังใน implementation plan เป็นภาษาไทย โดยคง template headings, identifiers, code, commands และ error strings
 
-## Root cause
+## หลักฐาน RED/GREEN
 
-`TradeHistoryWorkflow` เดิมตีความ `BasketHistoryPage.items == ()` ทุกกรณีเป็น
-parameterless `baskets_empty()` จึงทิ้ง page object แม้ query สำเร็จและยังมี
-`total_items`/aggregate อยู่ เมื่อ result set หดจนหน้าที่ขอเกินหน้าสุด Workflow
-จึงไม่แก้หน้า ส่วน `TradeHistoryPage.show_baskets_empty()` สร้าง Net PnL `0`, total
-`0` และ Page 1 เอง ทำให้ UI ไม่รักษา application query result
+- RED: ไม่มี RED ที่ถูกต้องตามหลัก TDD สำหรับ regression นี้ เพราะ guard production ที่มีอยู่ตรวจ exact equality และ `SymbolRules` เก็บค่า padded โดยไม่ normalize อยู่ก่อนแล้ว การแก้ production ที่ถูกต้องชั่วคราวเพื่อบังคับให้ test ล้มเหลวจะเป็น RED เทียมและอยู่นอกขอบเขตงาน
+- GREEN ก่อนจัดรูปแบบ: `PYTHONPATH=src ../../.venv/bin/python -m pytest -q tests/unit/trading/test_capital.py tests/unit/execution/test_paper_spot.py tests/unit/execution/test_paper_futures.py` — `51 passed in 0.06s`
+- GREEN หลังจัดรูปแบบ: คำสั่งเดิม — `51 passed in 0.05s`
 
-## การแก้ไข
+## การตรวจสอบ
 
-- ให้ Workflow คำนวณ known last page จาก successful result และ requery หน้าสุดผ่าน
-  `_request_baskets()` เดิม จึงรักษา generation, pending/latest request,
-  reentrancy, Fill invalidation และ loading contracts
-- เปลี่ยน semantic signal เป็น `baskets_empty(BasketHistoryPage)` เพื่อส่ง exact
-  successful result โดยยังแยก empty ออกจาก ready/unavailable
-- ให้ Page ใช้ rendering path เดียวกับ `show_baskets()` จึงไม่คำนวณ summary,
-  total หรือ pagination ซ้ำ และไม่เกิด duplicate semantic rendering
-- อัปเดต design/plan ให้ตรงกับ signal contract และ shrink recovery
-- ปรับ Fill-loading test ให้แสดง Page จริงและตรวจ `fill_state.isVisible()`
+- `../../.venv/bin/python -m ruff check tests/unit/trading/test_capital.py tests/unit/execution/test_paper_spot.py tests/unit/execution/test_paper_futures.py` — ผ่าน
+- `../../.venv/bin/python -m ruff format --check tests/unit/trading/test_capital.py tests/unit/execution/test_paper_spot.py tests/unit/execution/test_paper_futures.py` — ผ่าน
+- ชุด SymbolRules/Paper Spot/Paper Futures ที่ครอบคลุม — `78 passed in 0.72s`
+- `npm --prefix ../../docs-site test` — `50` tests ผ่าน
+- `npm --prefix ../../docs-site run check:content` — ผ่าน
+- `git diff --check` — ผ่าน
 
-## หลักฐาน RED → GREEN
+## การทบทวน final findings
 
-RED command:
+- Exact identity/error coverage: ครบทั้ง 5 execution guards และมี test ของ padded `SymbolRules.symbol`
+- ภาษาในแผน: แปล prose/instructions/expected results โดยไม่เปลี่ยน commands หรือความหมาย
 
-```text
-env PYTHONPATH=src QT_QPA_PLATFORM=offscreen ../../.venv/bin/python -m pytest \
-  tests/unit/ui/test_trade_history_workflow.py::test_empty_basket_page_does_not_query_fills \
-  tests/unit/ui/test_trade_history_workflow.py::test_page_beyond_shrunken_results_requeries_last_valid_page \
-  tests/unit/ui/test_trade_history_page.py::test_empty_basket_result_is_explicit_break_even_state \
-  tests/unit/ui/test_trade_history_page.py::test_fill_loading_clears_stale_fills_and_preserves_basket_selection \
-  tests/unit/ui/test_main_window.py::test_empty_trade_history_preserves_exact_query_summary_and_page_state -q
-```
+## ข้อกังวล
 
-ผล RED: `4 failed, 1 passed, 2 errors` โดยล้มตรงสาเหตุที่ต้องการ: signal ไม่มี
-page payload, Workflow ไม่ requery last page, Page slot ไม่รับ result และ MainWindow
-แสดง `0.00 USDT · Break-even` ที่สร้างเอง
+ไม่มีข้อกังวลที่เหลือ; ไม่มีการเปลี่ยน production behavior, network call หรือ Live execution.
 
-GREEN หลัง minimal implementation: regression 5 รายการ `5 passed in 0.26s`
+## การแก้ไข minor final review เพิ่มเติม
 
-## ไฟล์ที่เปลี่ยน
+- คืน header ของ writing-plans template ที่บังคับให้เป็นภาษาอังกฤษแบบตรงตัว รวม title, directive, `Goal`, `Architecture`, `Tech Stack`, `Global Constraints` และ labels ของโครงสร้าง
+- ปรับ snippets และ node IDs ในแผนให้ตรงกับ tests ปัจจุบัน รวม exact `ValueError` assertions และ `SymbolRules` padded-symbol test
+- ปรับคำสั่งเลือก mismatch tests ให้เลือก Spot 2 รายการด้วย `-k "near_match"` และ Futures guards 3 รายการด้วยชื่อ tests ปัจจุบันทั้งหมด
 
-- `src/tiewtrade/ui/trade_history_workflow.py`
-- `src/tiewtrade/ui/trade_history_page.py`
-- `tests/unit/ui/test_trade_history_workflow.py`
-- `tests/unit/ui/test_trade_history_page.py`
-- `tests/unit/ui/test_main_window.py`
-- `docs/superpowers/specs/2026-07-29-dev-96-trade-history-ui-design.md`
-- `docs/superpowers/plans/2026-07-29-dev-96-trade-history-ui.md`
+## การตรวจสอบ minor final review เพิ่มเติม
 
-## Tests และ gates
-
-- Focused Workflow/Page/MainWindow/SQLite query baseline: `82 passed`
-- Focused หลังแก้รวม Desktop acceptance: `88 passed in 1.85s`
-- Full Python suite: `684 passed in 4.37s`
-- Ruff check: ผ่าน
-- Ruff format check: `132 files already formatted`
-- Mypy strict: `69 source files`, ไม่มี issue
-- docs-site tests: `50 passed`
-- docs content check: ผ่าน
-- `git diff --check`: ผ่านก่อน commit
-
-## Self-review
-
-- Spec: ครบ last-page requery, exact empty page payload, aggregate/total/page state,
-  stale-page regression, Page/MainWindow integration และ Fill-loading visibility
-- Standards: ไม่เพิ่ม generic framework, persistence/UI dependency หรือ business
-  calculation ใน UI; ใช้ callable/request pipeline และศัพท์เดิมของระบบ
-- Concurrency: หน้าที่ out-of-range ไม่ emit transient empty/ready; loading คงเป็นช่วง
-  เดียว และ request ใหม่กว่ายัง supersede pending correction ตาม generation guard
-- Scope: ไม่แตะ late failed/finished close path ตาม reviewer note
-
-## ข้อกังวลที่เหลือ
-
-ไม่มี blocker ที่ทราบ หาก result set หดต่อเนื่องระหว่าง correction Workflow อาจ query
-หน้าสุดซ้ำมากกว่าหนึ่งครั้ง แต่แต่ละรอบเลือกหน้าสุดจาก successful result ล่าสุดและ
-ยังถูก supersede ได้ด้วย request ใหม่ จึงเป็นพฤติกรรม deterministic ตาม contract
+- Spot selection command — `2 passed, 5 deselected`
+- Futures selection command — `3 passed, 18 deselected`
+- stale-name scan สำหรับ node IDs และ `-k "another_symbol"` เดิม — ไม่พบผลลัพธ์
+- `npm --prefix ../../docs-site test` — `50` tests ผ่าน
+- `npm --prefix ../../docs-site run check:content` — ผ่าน
+- `git diff --check` — ผ่าน
