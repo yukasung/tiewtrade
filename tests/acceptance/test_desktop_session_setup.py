@@ -13,6 +13,7 @@ from PySide6.QtWidgets import QApplication, QLabel
 from pytest import MonkeyPatch
 from pytestqt.qtbot import QtBot
 
+from tests.support.trade_history_ui import empty_basket_page, empty_fills
 from tiewtrade.application.paper_session_setup import (
     ConfiguredPaperSession,
     CreatePaperSession,
@@ -98,6 +99,8 @@ def test_desktop_paper_session_create_overview_and_restart_restore(
     first_window = MainWindow(
         create_session=create_from_form,
         load_active=first_store.get_active,
+        list_baskets=empty_basket_page,
+        list_fills=empty_fills,
     )
     qtbot.addWidget(first_window)
     first_window.show()
@@ -169,6 +172,8 @@ def test_desktop_paper_session_create_overview_and_restart_restore(
     restarted_window = MainWindow(
         create_session=create_must_not_run,
         load_active=restarted_store.get_active,
+        list_baskets=empty_basket_page,
+        list_fills=empty_fills,
     )
     qtbot.addWidget(restarted_window)
     restarted_window.show()
@@ -203,6 +208,8 @@ def test_desktop_session_storage_unavailable_fails_closed(
     window = MainWindow(
         create_session=create_must_not_run,
         load_active=unavailable_store.get_active,
+        list_baskets=empty_basket_page,
+        list_fills=empty_fills,
     )
     qtbot.addWidget(window)
     window.show()
@@ -230,6 +237,8 @@ def test_desktop_session_sqlite_write_failure_after_setup_fails_closed(
     window = MainWindow(
         create_session=create_use_case.execute,
         load_active=failed_store.get_active,
+        list_baskets=empty_basket_page,
+        list_fills=empty_fills,
     )
     qtbot.addWidget(window)
     window.show()
@@ -274,6 +283,8 @@ def test_desktop_session_validation_failure_after_setup_preserves_input(
     window = MainWindow(
         create_session=create_use_case.execute,
         load_active=store.get_active,
+        list_baskets=empty_basket_page,
+        list_fills=empty_fills,
     )
     qtbot.addWidget(window)
     window.show()
@@ -380,6 +391,8 @@ def test_desktop_session_setup_smoke_composes_without_network(
     window = MainWindow(
         create_session=create_use_case.execute,
         load_active=store.get_active,
+        list_baskets=empty_basket_page,
+        list_fills=empty_fills,
     )
     qtbot.addWidget(window)
 
