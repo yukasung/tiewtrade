@@ -1,7 +1,7 @@
 # DEV-97 Paper Trade History Acceptance Design
 
 **Date:** 2026-07-29  
-**Status:** Approved direction; pending document review  
+**Status:** Approved
 **Scope:** Paper Spot and Paper Futures Trade History acceptance flow
 
 ## 1. Purpose
