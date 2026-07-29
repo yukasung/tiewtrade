@@ -13,7 +13,7 @@
 - `PRODUCT.md` — ขอบเขตผลิตภัณฑ์และสิ่งที่ไม่ทำ
 - `CONTEXT.md` — คำศัพท์และกฎของโดเมน
 - `ARCHITECTURE.md` — Module ownership, interfaces และ dependency rules
-- `docs/adr/` — เหตุผลของการตัดสินใจด้านสถาปัตยกรรม
+- `docs/superpowers/specs/` — เหตุผลของการตัดสินใจด้านสถาปัตยกรรม
 - `PROJECT_PLAN.md` — ลำดับการส่งมอบ
 
 หากเอกสารขัดแย้งกัน ให้หยุดและแจ้งข้อขัดแย้งก่อน implement
