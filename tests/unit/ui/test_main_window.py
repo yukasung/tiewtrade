@@ -819,6 +819,48 @@ def test_closing_window_ignores_late_worker_result_and_releases_task(
     assert not window.overview.isVisible()
 
 
+def test_closing_window_waits_for_workers_after_closing_workflows(
+    qtbot: QtBot,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    events: list[str] = []
+
+    class RecordingThreadPool(QThreadPool):
+        def waitForDone(self, msecs: int = -1) -> bool:
+            events.append(f"pool:{msecs}")
+            return super().waitForDone(msecs)
+
+    thread_pool = RecordingThreadPool()
+    window = MainWindow(
+        create_session=unused_create,
+        load_active=no_active_session,
+        list_baskets=empty_basket_page,
+        list_fills=empty_fills,
+        thread_pool=thread_pool,
+    )
+    qtbot.addWidget(window)
+    window.show()
+    qtbot.waitUntil(window.setup.create_button.isEnabled)
+
+    session_close = window._workflow.close
+    history_close = window._history_workflow.close
+
+    def close_session_workflow() -> None:
+        events.append("session")
+        session_close()
+
+    def close_history_workflow() -> None:
+        events.append("history")
+        history_close()
+
+    monkeypatch.setattr(window._workflow, "close", close_session_workflow)
+    monkeypatch.setattr(window._history_workflow, "close", close_history_workflow)
+
+    window.close()
+
+    assert events == ["session", "history", "pool:5000"]
+
+
 def test_closing_window_ignores_late_trade_history_result(qtbot: QtBot) -> None:
     started = threading.Event()
     release = threading.Event()

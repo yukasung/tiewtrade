@@ -29,6 +29,8 @@ from tiewtrade.ui.trade_history_workflow import (
     TradeHistoryWorkflow,
 )
 
+WORKER_SHUTDOWN_TIMEOUT_MS = 5_000
+
 
 class MainWindow(QMainWindow):
     def __init__(
@@ -41,6 +43,7 @@ class MainWindow(QMainWindow):
         thread_pool: QThreadPool | None = None,
     ) -> None:
         super().__init__()
+        self._thread_pool = thread_pool or QThreadPool.globalInstance()
         self.navigation_items = ("Session", "Trade History")
         self.current_page_name = "Session Setup"
         self.setup = SessionSetupWidget()
@@ -69,7 +72,7 @@ class MainWindow(QMainWindow):
         self._workflow = SessionWorkflow(
             create_session=create_session,
             load_active=load_active,
-            thread_pool=thread_pool,
+            thread_pool=self._thread_pool,
             parent=self,
         )
         self._workflow.busy_changed.connect(self._set_busy)
@@ -83,7 +86,7 @@ class MainWindow(QMainWindow):
         self._history_workflow = TradeHistoryWorkflow(
             list_baskets=list_baskets,
             list_fills=list_fills,
-            thread_pool=thread_pool,
+            thread_pool=self._thread_pool,
             parent=self,
         )
         self._wire_trade_history()
@@ -139,6 +142,7 @@ class MainWindow(QMainWindow):
     def closeEvent(self, event: QCloseEvent) -> None:
         self._workflow.close()
         self._history_workflow.close()
+        self._thread_pool.waitForDone(WORKER_SHUTDOWN_TIMEOUT_MS)
         super().closeEvent(event)
 
     def _set_session_page(self, page: QWidget, page_name: str) -> None:
