@@ -72,8 +72,21 @@ def test_rest_kline_rejects_timestamp_with_subsecond_remainder() -> None:
 
     assert isinstance(captured.value.__cause__, ValueError)
     assert str(captured.value.__cause__) == (
-        "timestamp milliseconds must align to a whole second"
+        "open_time timestamp milliseconds must align to a whole second"
     )
+
+
+def test_rest_kline_preserves_public_error_for_out_of_range_open_time() -> None:
+    with pytest.raises(BinanceMarketDataPayloadError) as captured:
+        parse_rest_kline(
+            [10**20, "100.10", "102.20", "99.90", "101.30", "12.50"],
+            config(),
+        )
+
+    assert str(captured.value) == "invalid Binance market-data payload"
+    assert isinstance(captured.value.__cause__, ValueError)
+    assert str(captured.value.__cause__) == "open_time timestamp is out of range"
+    assert isinstance(captured.value.__cause__.__cause__, OSError)
 
 
 def test_rest_kline_preserves_public_error_with_open_field_diagnostic() -> None:
@@ -98,6 +111,21 @@ def test_closed_websocket_kline_maps_to_candle() -> None:
 
 def test_open_websocket_kline_is_not_emitted() -> None:
     assert parse_websocket_kline(open_kline_payload(), config()) is None
+
+
+def test_websocket_kline_preserves_public_error_for_out_of_range_open_time() -> None:
+    payload = closed_kline_payload()
+    kline = payload["k"]
+    assert isinstance(kline, dict)
+    kline["t"] = 10**20
+
+    with pytest.raises(BinanceMarketDataPayloadError) as captured:
+        parse_websocket_kline(payload, config())
+
+    assert str(captured.value) == "invalid Binance market-data payload"
+    assert isinstance(captured.value.__cause__, ValueError)
+    assert str(captured.value.__cause__) == "k.t timestamp is out of range"
+    assert isinstance(captured.value.__cause__.__cause__, OSError)
 
 
 def test_websocket_kline_preserves_public_error_with_closed_field_diagnostic() -> None:

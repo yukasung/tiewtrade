@@ -74,7 +74,9 @@ def _candle_from_values(
     *,
     field_names: tuple[str, str, str, str, str, str],
 ) -> Candle:
-    open_time = _utc_datetime(_required_milliseconds(values[0], name=field_names[0]))
+    open_time = _utc_datetime(
+        _required_milliseconds(values[0], name=field_names[0]), name=field_names[0]
+    )
     return Candle(
         symbol=config.symbol,
         timeframe=config.timeframe,
@@ -93,11 +95,14 @@ def _required_milliseconds(value: object, *, name: str) -> int:
     return value
 
 
-def _utc_datetime(milliseconds: int) -> datetime:
+def _utc_datetime(milliseconds: int, *, name: str) -> datetime:
     seconds, remainder = divmod(milliseconds, 1000)
     if remainder:
-        raise ValueError("timestamp milliseconds must align to a whole second")
-    return datetime.fromtimestamp(seconds, tz=UTC)
+        raise ValueError(f"{name} timestamp milliseconds must align to a whole second")
+    try:
+        return datetime.fromtimestamp(seconds, tz=UTC)
+    except (OSError, OverflowError) as error:
+        raise ValueError(f"{name} timestamp is out of range") from error
 
 
 def _decimal_from_string(value: object, *, name: str) -> Decimal:
