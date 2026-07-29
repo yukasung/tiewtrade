@@ -176,18 +176,23 @@ class TradeHistoryWorkflow(QObject):
         self._latest_basket_request = request
         self._failed_basket_request = None
         self._invalidate_fills()
-        self._set_baskets_loading(True)
+        task_to_start: BackgroundTask | None = None
 
         if self._basket_task is not None:
             if active_task_can_satisfy_request:
                 self._basket_task_generation = generation
                 self._pending_basket_request = None
-                return
-            self._pending_basket_request = (generation, request)
-            return
-        self._start_basket_task(generation, request)
+            else:
+                self._pending_basket_request = (generation, request)
+        else:
+            task_to_start = self._prepare_basket_task(generation, request)
+        self._set_baskets_loading(True)
+        if task_to_start is not None:
+            self._thread_pool.start(task_to_start)
 
-    def _start_basket_task(self, generation: int, request: BasketRequest) -> None:
+    def _prepare_basket_task(
+        self, generation: int, request: BasketRequest
+    ) -> BackgroundTask:
         filters, page_request = request
         task = BackgroundTask(lambda: self._list_baskets(filters, page_request))
         task.signals.succeeded.connect(self._basket_task_succeeded)
@@ -196,7 +201,10 @@ class TradeHistoryWorkflow(QObject):
         self._basket_task = task
         self._basket_task_generation = generation
         self._basket_task_request = request
-        self._thread_pool.start(task)
+        return task
+
+    def _start_basket_task(self, generation: int, request: BasketRequest) -> None:
+        self._thread_pool.start(self._prepare_basket_task(generation, request))
 
     @Slot(object)
     def _basket_task_succeeded(self, result: object) -> None:
@@ -214,7 +222,16 @@ class TradeHistoryWorkflow(QObject):
             self.baskets_empty.emit()
             return
 
+        generation = self._basket_task_generation
+        fill_generation = self._fill_generation
         self.baskets_ready.emit(result)
+        if (
+            generation is None
+            or generation != self._basket_generation
+            or fill_generation != self._fill_generation
+            or not self._basket_callbacks_are_current()
+        ):
+            return
         first_basket_id = result.items[0].basket_id
         self._selected_basket_id = first_basket_id
         self._request_fills(first_basket_id)
@@ -303,18 +320,21 @@ class TradeHistoryWorkflow(QObject):
         generation = self._fill_generation
         self._latest_fill_request = basket_id
         self._failed_fill_request = None
-        self._set_fills_loading(True)
+        task_to_start: BackgroundTask | None = None
 
         if self._fill_task is not None:
             if active_task_can_satisfy_request:
                 self._fill_task_generation = generation
                 self._pending_fill_request = None
-                return
-            self._pending_fill_request = (generation, basket_id)
-            return
-        self._start_fill_task(generation, basket_id)
+            else:
+                self._pending_fill_request = (generation, basket_id)
+        else:
+            task_to_start = self._prepare_fill_task(generation, basket_id)
+        self._set_fills_loading(True)
+        if task_to_start is not None:
+            self._thread_pool.start(task_to_start)
 
-    def _start_fill_task(self, generation: int, basket_id: UUID) -> None:
+    def _prepare_fill_task(self, generation: int, basket_id: UUID) -> BackgroundTask:
         task = BackgroundTask(lambda: self._list_fills(basket_id))
         task.signals.succeeded.connect(self._fill_task_succeeded)
         task.signals.failed.connect(self._fill_task_failed)
@@ -322,7 +342,10 @@ class TradeHistoryWorkflow(QObject):
         self._fill_task = task
         self._fill_task_generation = generation
         self._fill_task_basket_id = basket_id
-        self._thread_pool.start(task)
+        return task
+
+    def _start_fill_task(self, generation: int, basket_id: UUID) -> None:
+        self._thread_pool.start(self._prepare_fill_task(generation, basket_id))
 
     @Slot(object)
     def _fill_task_succeeded(self, result: object) -> None:

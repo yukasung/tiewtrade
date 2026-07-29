@@ -14,6 +14,7 @@ from tiewtrade.application.trade_history import (
     TradeHistoryFilter,
 )
 from tiewtrade.trading.trade_history import BasketResult, BasketStatus, TradeFill
+from tiewtrade.ui.background_task import BackgroundTask
 from tiewtrade.ui.trade_history_presenter import TradeHistoryFilterValues
 from tiewtrade.ui.trade_history_workflow import (
     ListBaskets,
@@ -60,6 +61,11 @@ def workflow_with(
     )
 
 
+class ImmediateThreadPool:
+    def start(self, task: BackgroundTask) -> None:
+        task.run()
+
+
 def test_start_loads_first_page_and_auto_loads_first_basket_fills(
     qtbot: QtBot,
 ) -> None:
@@ -99,6 +105,48 @@ def test_start_loads_first_page_and_auto_loads_first_basket_fills(
     assert pool.waitForDone(1_000)
 
 
+def test_loading_precedes_immediate_queries_and_returns_idle() -> None:
+    basket = basket_result()
+    events: list[str] = []
+
+    def list_baskets(
+        filters: TradeHistoryFilter, request: PageRequest
+    ) -> BasketHistoryPage:
+        events.append("baskets:query")
+        return page_with(basket)
+
+    def list_fills(basket_id: UUID) -> tuple[TradeFill, ...]:
+        events.append("fills:query")
+        return ()
+
+    workflow = TradeHistoryWorkflow(
+        list_baskets=list_baskets,
+        list_fills=list_fills,
+        thread_pool=ImmediateThreadPool(),  # type: ignore[arg-type]
+    )
+    workflow.baskets_loading.connect(
+        lambda loading: events.append(f"baskets:{loading}")
+    )
+    workflow.baskets_ready.connect(lambda page: events.append("baskets:ready"))
+    workflow.fills_loading.connect(lambda loading: events.append(f"fills:{loading}"))
+    workflow.fills_empty.connect(lambda basket_id: events.append("fills:empty"))
+
+    workflow.start()
+
+    assert events == [
+        "baskets:True",
+        "baskets:query",
+        "baskets:ready",
+        "fills:True",
+        "fills:query",
+        "fills:empty",
+        "fills:False",
+        "baskets:False",
+    ]
+    assert workflow._basket_task is None
+    assert workflow._fill_task is None
+
+
 def test_success_emits_semantic_results_before_matching_loading_false(
     qtbot: QtBot,
 ) -> None:
@@ -120,6 +168,149 @@ def test_success_emits_semantic_results_before_matching_loading_false(
     qtbot.waitUntil(lambda: events[-1:] == ["fills:False"])
     assert events.index("baskets:ready") < events.index("baskets:False")
     assert events.index("fills:empty") < events.index("fills:False")
+    assert pool.waitForDone(1_000)
+
+
+def test_baskets_loading_reentrancy_preserves_request_order_and_idle(
+    qtbot: QtBot,
+) -> None:
+    initial = basket_result(symbol="INITIAL")
+    latest = basket_result(
+        basket_id=UUID("00000000-0000-0000-0000-000000000199"),
+        symbol="BTCUSDT",
+    )
+    calls: list[str | None] = []
+
+    def list_baskets(
+        filters: TradeHistoryFilter, request: PageRequest
+    ) -> BasketHistoryPage:
+        calls.append(filters.symbol)
+        return page_with(latest if filters.symbol == "BTCUSDT" else initial)
+
+    workflow, pool = workflow_with(
+        list_baskets=list_baskets,
+        list_fills=lambda basket_id: (),
+    )
+    loading_events: list[bool] = []
+    pages: list[BasketHistoryPage] = []
+
+    def apply_latest_while_loading(loading: bool) -> None:
+        loading_events.append(loading)
+        if loading and len(loading_events) == 1:
+            workflow.apply_filters(TradeHistoryFilterValues(symbol="BTCUSDT"))
+
+    workflow.baskets_loading.connect(apply_latest_while_loading)
+    workflow.baskets_ready.connect(pages.append)
+
+    workflow.start()
+
+    qtbot.waitUntil(lambda: loading_events[-1:] == [False])
+    assert calls == [None, "BTCUSDT"]
+    assert [page.items for page in pages] == [(latest,)]
+    assert loading_events == [True, False]
+    assert pool.waitForDone(1_000)
+
+
+def test_fills_loading_reentrancy_preserves_selection_order_and_idle(
+    qtbot: QtBot,
+) -> None:
+    first = basket_result()
+    second = basket_result(basket_id=UUID("00000000-0000-0000-0000-000000000299"))
+    first_fill = trade_fill()
+    second_fill = trade_fill(basket_id=second.basket_id, fill_id="fill-2")
+    calls: list[UUID] = []
+
+    def list_fills(basket_id: UUID) -> tuple[TradeFill, ...]:
+        calls.append(basket_id)
+        return (second_fill,) if basket_id == second.basket_id else (first_fill,)
+
+    workflow, pool = workflow_with(
+        list_baskets=lambda filters, request: page_with(first, second),
+        list_fills=list_fills,
+    )
+    loading_events: list[bool] = []
+    results: list[tuple[UUID, tuple[TradeFill, ...]]] = []
+
+    def select_latest_while_loading(loading: bool) -> None:
+        loading_events.append(loading)
+        if loading and len(loading_events) == 1:
+            workflow.select_basket(second.basket_id)
+
+    workflow.fills_loading.connect(select_latest_while_loading)
+    workflow.fills_ready.connect(
+        lambda basket_id, fills: results.append((basket_id, fills))
+    )
+
+    workflow.start()
+
+    qtbot.waitUntil(lambda: loading_events[-1:] == [False])
+    assert calls == [first.basket_id, second.basket_id]
+    assert results == [(second.basket_id, (second_fill,))]
+    assert loading_events == [True, False]
+    assert pool.waitForDone(1_000)
+
+
+def test_baskets_ready_reentrancy_does_not_restore_stale_selection(
+    qtbot: QtBot,
+) -> None:
+    initial = basket_result(symbol="INITIAL")
+    latest = basket_result(
+        basket_id=UUID("00000000-0000-0000-0000-000000000399"),
+        symbol="BTCUSDT",
+    )
+    fill_calls: list[UUID] = []
+    pages: list[BasketHistoryPage] = []
+    workflow, pool = workflow_with(
+        list_baskets=lambda filters, request: page_with(
+            latest if filters.symbol == "BTCUSDT" else initial
+        ),
+        list_fills=lambda basket_id: fill_calls.append(basket_id) or (),
+    )
+
+    def request_latest_from_ready(page: BasketHistoryPage) -> None:
+        pages.append(page)
+        if page.items == (initial,):
+            workflow.apply_filters(TradeHistoryFilterValues(symbol="BTCUSDT"))
+
+    workflow.baskets_ready.connect(request_latest_from_ready)
+
+    workflow.start()
+
+    qtbot.waitUntil(lambda: fill_calls == [latest.basket_id])
+    assert [page.items for page in pages] == [(initial,), (latest,)]
+    assert pool.waitForDone(1_000)
+
+
+def test_baskets_ready_reentrancy_preserves_new_fill_selection(
+    qtbot: QtBot,
+) -> None:
+    first = basket_result()
+    second = basket_result(basket_id=UUID("00000000-0000-0000-0000-000000000499"))
+    second_fill = trade_fill(basket_id=second.basket_id, fill_id="fill-2")
+    fill_calls: list[UUID] = []
+    results: list[tuple[UUID, tuple[TradeFill, ...]]] = []
+
+    def list_fills(basket_id: UUID) -> tuple[TradeFill, ...]:
+        fill_calls.append(basket_id)
+        return (second_fill,) if basket_id == second.basket_id else (trade_fill(),)
+
+    workflow, pool = workflow_with(
+        list_baskets=lambda filters, request: page_with(first, second),
+        list_fills=list_fills,
+    )
+    workflow.baskets_ready.connect(
+        lambda page: workflow.select_basket(second.basket_id)
+    )
+    workflow.fills_ready.connect(
+        lambda basket_id, fills: results.append((basket_id, fills))
+    )
+
+    workflow.start()
+
+    qtbot.waitUntil(lambda: len(results) == 1)
+    qtbot.waitUntil(lambda: workflow._fill_task is None)
+    assert fill_calls == [second.basket_id]
+    assert results == [(second.basket_id, (second_fill,))]
     assert pool.waitForDone(1_000)
 
 
