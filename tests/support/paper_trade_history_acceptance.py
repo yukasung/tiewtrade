@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
@@ -30,6 +31,7 @@ from tiewtrade.trading.futures_policy import FuturesTradingPolicy
 from tiewtrade.trading.session_config import MarketType, SessionConfig, TradeMode
 from tiewtrade.trading.spot_policy import SpotTradingPolicy
 from tiewtrade.trading.symbol_rules import SymbolRules
+from tiewtrade.trading.trade_history import BasketResult, BasketStatus, TradeFill
 
 SPOT_SESSION_ID = UUID("00000000-0000-0000-0000-000000000401")
 FUTURES_SESSION_ID = UUID("00000000-0000-0000-0000-000000000402")
@@ -38,6 +40,12 @@ OPEN_SPOT_SESSION_ID = UUID("00000000-0000-0000-0000-000000000403")
 _MARKET_DATA = MarketDataConfig(symbol="BTCUSDT", timeframe="5m")
 _PRESET = RsiStepGridPreset.v1()
 _FIXTURE_PATH = Path(__file__).parents[1] / "fixtures" / "btcusdt_5m_tracer.csv"
+
+
+@dataclass(frozen=True, slots=True)
+class OpenSpotHistory:
+    basket: BasketResult
+    fill: TradeFill
 
 
 def build_spot_session(session_id: UUID) -> PaperSpotSession:
@@ -152,6 +160,33 @@ def run_closed_spot(store: SQLiteTradeHistory) -> UUID:
         if snapshot.session.closed_basket is not None:
             return snapshot.session.closed_basket.basket_id
     raise AssertionError("deterministic Paper Spot candles did not close a Basket")
+
+
+def run_spot_until_entry(store: SQLiteTradeHistory) -> OpenSpotHistory:
+    persistent = PersistentPaperSpotSQLiteSession(
+        build_spot_session(OPEN_SPOT_SESSION_ID),
+        spot_history(OPEN_SPOT_SESSION_ID, store),
+    )
+    for candle in spot_candles():
+        snapshot = persistent.process_completed_candle(
+            candle,
+            received_at=candle.close_time,
+        )
+        assert snapshot.persistence_state is PersistenceState.READY
+        if snapshot.session.entry_fill is None:
+            continue
+
+        basket_id = snapshot.session.basket_id
+        assert basket_id is not None
+        basket = store.get_basket(basket_id)
+        assert basket is not None
+        fills = store.list_fills(basket_id)
+        assert basket.status is BasketStatus.OPEN
+        assert len(fills) == 1
+        return OpenSpotHistory(basket=basket, fill=fills[0])
+    raise AssertionError(
+        "deterministic Paper Spot candles did not persist an Entry Fill"
+    )
 
 
 def run_closed_futures(store: SQLiteTradeHistory) -> UUID:

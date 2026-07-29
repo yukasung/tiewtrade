@@ -1,4 +1,6 @@
 import socket
+from dataclasses import replace
+from datetime import timedelta
 from decimal import Decimal
 from pathlib import Path
 from uuid import UUID
@@ -11,6 +13,7 @@ from pytestqt.qtbot import QtBot
 
 import tiewtrade.desktop_main as desktop_main
 import tiewtrade.ui.desktop as ui_desktop
+from tests.support import paper_trade_history_acceptance
 from tests.support.paper_trade_history_acceptance import (
     run_closed_futures,
     run_closed_spot,
@@ -22,8 +25,89 @@ from tiewtrade.trading.trade_history import (
     BasketStatus,
     FillSide,
     FillSource,
+    TradeFill,
 )
 from tiewtrade.ui.main_window import MainWindow
+
+
+def test_open_basket_duplicate_and_partial_fills_remain_deterministic(
+    tmp_path: Path,
+) -> None:
+    path = tmp_path / "paper-trade-history.sqlite3"
+    database = SQLiteDatabase(path)
+    database.migrate()
+    history = SQLiteTradeHistory(database)
+
+    closed_basket_id = run_closed_spot(history)
+    open_history = paper_trade_history_acceptance.run_spot_until_entry(history)
+
+    assert history.record_open_basket(open_history.basket, open_history.fill) is False
+
+    first_fill = open_history.fill
+    partial_fill = TradeFill(
+        fill_id=f"{first_fill.fill_id}-partial-2",
+        basket_id=first_fill.basket_id,
+        session_id=first_fill.session_id,
+        order_id=first_fill.order_id,
+        exchange_trade_id=first_fill.exchange_trade_id,
+        side=first_fill.side,
+        entry_number=first_fill.entry_number,
+        filled_at_utc=first_fill.filled_at_utc + timedelta(seconds=1),
+        price=first_fill.price,
+        quantity=Decimal("0.001"),
+        notional=first_fill.price * Decimal("0.001"),
+        commission=(first_fill.price * Decimal("0.001")) * Decimal("0.001"),
+        commission_asset=first_fill.commission_asset,
+        realized_pnl=Decimal("0"),
+        source=first_fill.source,
+    )
+    updated_open_basket = replace(
+        open_history.basket,
+        entry_count=1,
+        invested_notional=(
+            open_history.basket.invested_notional + partial_fill.notional
+        ),
+        trading_fees=open_history.basket.trading_fees + partial_fill.commission,
+        net_realized_pnl=(
+            open_history.basket.gross_realized_pnl
+            - (open_history.basket.trading_fees + partial_fill.commission)
+            - open_history.basket.funding_fee
+        ),
+    )
+
+    assert history.record_entry_fill(updated_open_basket, partial_fill) is True
+    assert history.record_entry_fill(updated_open_basket, partial_fill) is False
+
+    first_restart_database = SQLiteDatabase(path)
+    first_restart_database.migrate()
+    first_restart = SQLiteTradeHistory(first_restart_database)
+    first_page = first_restart.list_baskets(TradeHistoryFilter(), PageRequest())
+    first_open_page = first_restart.list_baskets(
+        TradeHistoryFilter(status=BasketStatus.OPEN),
+        PageRequest(),
+    )
+    first_fills = first_restart.list_fills(open_history.basket.basket_id)
+
+    assert {basket.basket_id for basket in first_page.items} == {
+        closed_basket_id,
+        open_history.basket.basket_id,
+    }
+    assert first_page.net_realized_pnl == Decimal("13.84062222")
+    assert first_open_page.items == (updated_open_basket,)
+    assert first_open_page.net_realized_pnl == Decimal("0")
+    assert len(first_fills) == 2
+    assert {fill.order_id for fill in first_fills} == {first_fill.order_id}
+    assert {fill.entry_number for fill in first_fills} == {1}
+    assert first_fills == (first_fill, partial_fill)
+
+    second_restart_database = SQLiteDatabase(path)
+    second_restart_database.migrate()
+    second_restart = SQLiteTradeHistory(second_restart_database)
+    second_page = second_restart.list_baskets(TradeHistoryFilter(), PageRequest())
+    second_fills = second_restart.list_fills(open_history.basket.basket_id)
+
+    assert second_page == first_page
+    assert second_fills == first_fills
 
 
 def test_paper_execution_history_survives_restart_and_reaches_desktop(
