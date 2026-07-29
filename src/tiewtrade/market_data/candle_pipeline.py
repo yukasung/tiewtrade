@@ -121,6 +121,7 @@ class CompletedCandlePipeline:
             raise CandlePipelineInputError from error
 
         for candle in accepted:
+            # Deep-copy validation guarantees acceptance by unchanged real state.
             self._candles.accept(candle, received_at)
         on_ready_for_delivery()
         for candle in accepted:
