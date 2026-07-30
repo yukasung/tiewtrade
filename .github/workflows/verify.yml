@@ -49,7 +49,7 @@ jobs:
         run: python -m ruff format --check .
 
       - name: Run Mypy
-        run: python -m mypy src
+        run: python -m mypy
 
       - name: Check committed whitespace
         env:

@@ -323,8 +323,8 @@ def test_exit_without_closed_basket_fails_closed() -> None:
 def test_factory_rejects_mismatched_session_and_history_identity() -> None:
     session = create_autospec(PaperFuturesSession, instance=True)
     history = create_autospec(PaperFuturesSQLiteHistory, instance=True)
-    session.identity = session_identity()  # type: ignore[misc]
-    history.session_identity = replace(  # type: ignore[misc]
+    session.identity = session_identity()
+    history.session_identity = replace(
         session_identity(),
         leverage=4,
     )

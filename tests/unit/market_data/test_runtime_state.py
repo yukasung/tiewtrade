@@ -15,10 +15,10 @@ DELIVERY = datetime(2026, 1, 1, 0, 5, tzinfo=UTC)
 
 
 def test_runtime_state_exposes_rate_limit_diagnostics() -> None:
-    assert MarketDataRuntimeState.RATE_LIMITED == "rate_limited"
-    assert MarketDataRuntimeReason.RATE_LIMITED == "rate_limited"
-    assert MarketDataRuntimeReason.RATE_LIMIT_EXHAUSTED == "rate_limit_exhausted"
-    assert MarketDataRuntimeReason.SOURCE_FATAL == "source_fatal"
+    assert MarketDataRuntimeState.RATE_LIMITED.value == "rate_limited"
+    assert MarketDataRuntimeReason.RATE_LIMITED.value == "rate_limited"
+    assert MarketDataRuntimeReason.RATE_LIMIT_EXHAUSTED.value == "rate_limit_exhausted"
+    assert MarketDataRuntimeReason.SOURCE_FATAL.value == "source_fatal"
 
 
 class SequenceClock:
@@ -64,10 +64,11 @@ def test_status_isolates_transition_observer_failures() -> None:
         MarketDataRuntimeState.WARMING_UP,
         MarketDataRuntimeReason.GAP_DETECTED,
     )
+    transitioned_snapshot = status.snapshot
 
-    assert status.snapshot.state is MarketDataRuntimeState.WARMING_UP
-    assert status.snapshot.reason is MarketDataRuntimeReason.GAP_DETECTED
-    assert status.snapshot.transitioned_at == TRANSITION
+    assert transitioned_snapshot.state is MarketDataRuntimeState.WARMING_UP
+    assert transitioned_snapshot.reason is MarketDataRuntimeReason.GAP_DETECTED
+    assert transitioned_snapshot.transitioned_at == TRANSITION
 
 
 def test_status_does_not_isolate_base_exceptions() -> None:

@@ -1,5 +1,6 @@
 import tomllib
 from pathlib import Path
+from typing import TypedDict, cast
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
 WORKFLOW_PATH = REPOSITORY_ROOT / ".github" / "workflows" / "verify.yml"
@@ -15,9 +16,39 @@ def _repository_instructions_text() -> str:
     return INSTRUCTIONS_PATH.read_text(encoding="utf-8")
 
 
-def _pyproject_config() -> dict[str, object]:
+class MypyConfig(TypedDict):
+    python_version: str
+    strict: bool
+    files: list[str]
+    mypy_path: str
+    explicit_package_bases: bool
+
+
+RuffConfig = TypedDict("RuffConfig", {"extend-exclude": list[str]})
+
+
+class ToolConfig(TypedDict):
+    mypy: MypyConfig
+    ruff: RuffConfig
+
+
+class PyprojectConfig(TypedDict):
+    tool: ToolConfig
+
+
+def _pyproject_config() -> PyprojectConfig:
     with PYPROJECT_PATH.open("rb") as pyproject_file:
-        return tomllib.load(pyproject_file)
+        return cast(PyprojectConfig, tomllib.load(pyproject_file))
+
+
+def test_mypy_configuration_checks_source_and_tests_strictly() -> None:
+    assert _pyproject_config()["tool"]["mypy"] == {
+        "python_version": "3.12",
+        "strict": True,
+        "files": ["src/tiewtrade", "tests"],
+        "mypy_path": "src",
+        "explicit_package_bases": True,
+    }
 
 
 def test_ruff_configuration_excludes_markdown_from_formatting() -> None:
@@ -95,7 +126,7 @@ def test_verify_workflow_runs_the_repository_checklist() -> None:
         "      - name: Check Ruff formatting\n"
         "        run: python -m ruff format --check .\n\n"
         "      - name: Run Mypy\n"
-        "        run: python -m mypy src\n\n"
+        "        run: python -m mypy\n\n"
         "      - name: Check committed whitespace\n"
         "        env:\n"
         "          BASE_SHA: ${{ github.event_name == 'pull_request' && "

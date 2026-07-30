@@ -6,10 +6,11 @@ from dataclasses import replace
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
+from typing import overload
 from uuid import UUID
 
 import pytest
-from PySide6.QtCore import Qt, QThreadPool
+from PySide6.QtCore import QDeadlineTimer, QThreadPool
 from pytestqt.qtbot import QtBot
 
 import tiewtrade.ui.main_window as main_window_module
@@ -17,6 +18,7 @@ from tests.support.paper_session_setup import (
     configured_futures_session,
     configured_spot_session,
 )
+from tests.support.qt_interactions import click, qdate
 from tests.support.trade_history_records import basket_result, trade_fill
 from tests.support.trade_history_ui import empty_basket_page, empty_fills
 from tiewtrade.application.paper_session_setup import (
@@ -61,7 +63,7 @@ def test_navigation_opens_trade_history_without_active_session(qtbot: QtBot) -> 
     window.show()
     qtbot.waitUntil(window.setup.create_button.isEnabled)
 
-    qtbot.mouseClick(window.trade_history_button, Qt.MouseButton.LeftButton)
+    click(window.trade_history_button)
 
     qtbot.waitUntil(lambda: window.current_page_name == "Trade History")
     qtbot.waitUntil(
@@ -90,7 +92,7 @@ def test_empty_trade_history_preserves_exact_query_summary_and_page_state(
     window.show()
     qtbot.waitUntil(window.setup.create_button.isEnabled)
 
-    qtbot.mouseClick(window.trade_history_button, Qt.MouseButton.LeftButton)
+    click(window.trade_history_button)
 
     qtbot.waitUntil(
         lambda: window.trade_history.basket_state.text() == "No trade history"
@@ -121,7 +123,7 @@ def test_trade_history_remains_available_when_session_load_fails(
     window.show()
     qtbot.waitUntil(window.unavailable_panel.isVisible)
 
-    qtbot.mouseClick(window.trade_history_button, Qt.MouseButton.LeftButton)
+    click(window.trade_history_button)
 
     qtbot.waitUntil(lambda: window.current_page_name == "Trade History")
     qtbot.waitUntil(
@@ -149,10 +151,10 @@ def test_navigation_starts_history_query_only_once(qtbot: QtBot) -> None:
     window.show()
     qtbot.waitUntil(window.setup.create_button.isEnabled)
 
-    qtbot.mouseClick(window.trade_history_button, Qt.MouseButton.LeftButton)
+    click(window.trade_history_button)
     qtbot.waitUntil(lambda: calls == 1)
-    qtbot.mouseClick(window.session_button, Qt.MouseButton.LeftButton)
-    qtbot.mouseClick(window.trade_history_button, Qt.MouseButton.LeftButton)
+    click(window.session_button)
+    click(window.trade_history_button)
 
     assert calls == 1
 
@@ -183,7 +185,7 @@ def test_session_load_finishing_does_not_navigate_away_from_history(
     window.show()
     qtbot.waitUntil(started.is_set)
 
-    qtbot.mouseClick(window.trade_history_button, Qt.MouseButton.LeftButton)
+    click(window.trade_history_button)
     release.set()
 
     qtbot.waitUntil(
@@ -194,7 +196,7 @@ def test_session_load_finishing_does_not_navigate_away_from_history(
     assert window.current_page_name == "Trade History"
     assert window.trade_history.isVisible()
 
-    qtbot.mouseClick(window.session_button, Qt.MouseButton.LeftButton)
+    click(window.session_button)
     assert window.current_page_name == "Session Overview"
     assert window.overview.isVisible()
 
@@ -239,23 +241,17 @@ def test_trade_history_basket_and_fill_retries_are_wired_separately(
     )
     qtbot.addWidget(window)
     window.show()
-    qtbot.mouseClick(window.trade_history_button, Qt.MouseButton.LeftButton)
+    click(window.trade_history_button)
     qtbot.waitUntil(
         lambda: window.trade_history.basket_state.text() == "Trade History unavailable"
     )
 
-    qtbot.mouseClick(
-        window.trade_history.retry_baskets_button,
-        Qt.MouseButton.LeftButton,
-    )
+    click(window.trade_history.retry_baskets_button)
     qtbot.waitUntil(
         lambda: window.trade_history.fill_state.text() == "Trade Fills unavailable"
     )
 
-    qtbot.mouseClick(
-        window.trade_history.retry_fills_button,
-        Qt.MouseButton.LeftButton,
-    )
+    click(window.trade_history.retry_fills_button)
     qtbot.waitUntil(lambda: window.trade_history.fill_table.rowCount() == 1)
     assert basket_calls == 2
     assert fill_calls == 2
@@ -294,7 +290,7 @@ def test_trade_history_filter_reset_page_and_selection_requests_are_wired(
     )
     qtbot.addWidget(window)
     window.show()
-    qtbot.mouseClick(window.trade_history_button, Qt.MouseButton.LeftButton)
+    click(window.trade_history_button)
     qtbot.waitUntil(lambda: window.trade_history.basket_table.rowCount() == 2)
     qtbot.waitUntil(lambda: fill_calls == [first.basket_id])
 
@@ -303,14 +299,14 @@ def test_trade_history_filter_reset_page_and_selection_requests_are_wired(
     window.trade_history.symbol.setCurrentIndex(
         window.trade_history.symbol.findData("BTCUSDT")
     )
-    qtbot.mouseClick(window.trade_history.apply_button, Qt.MouseButton.LeftButton)
+    click(window.trade_history.apply_button)
     qtbot.waitUntil(lambda: len(basket_calls) == 2)
     assert basket_calls[-1] == (
         TradeHistoryFilter(symbol="BTCUSDT"),
         PageRequest(page=1, page_size=50),
     )
 
-    qtbot.mouseClick(window.trade_history.reset_button, Qt.MouseButton.LeftButton)
+    click(window.trade_history.reset_button)
     qtbot.waitUntil(lambda: len(basket_calls) == 3)
     assert basket_calls[-1] == (
         TradeHistoryFilter(),
@@ -318,7 +314,7 @@ def test_trade_history_filter_reset_page_and_selection_requests_are_wired(
     )
 
     qtbot.waitUntil(window.trade_history.next_button.isEnabled)
-    qtbot.mouseClick(window.trade_history.next_button, Qt.MouseButton.LeftButton)
+    click(window.trade_history.next_button)
     qtbot.waitUntil(lambda: len(basket_calls) == 4)
     assert basket_calls[-1] == (
         TradeHistoryFilter(),
@@ -347,15 +343,15 @@ def test_trade_history_filter_validation_is_wired_without_starting_query(
     )
     qtbot.addWidget(window)
     window.show()
-    qtbot.mouseClick(window.trade_history_button, Qt.MouseButton.LeftButton)
+    click(window.trade_history_button)
     qtbot.waitUntil(lambda: basket_calls == 1)
     qtbot.waitUntil(window.trade_history.apply_button.isEnabled)
     window.trade_history.from_date_enabled.setChecked(True)
     window.trade_history.to_date_enabled.setChecked(True)
-    window.trade_history.from_date.setDate(date(2026, 1, 2))
-    window.trade_history.to_date.setDate(date(2026, 1, 1))
+    window.trade_history.from_date.setDate(qdate(date(2026, 1, 2)))
+    window.trade_history.to_date.setDate(qdate(date(2026, 1, 1)))
 
-    qtbot.mouseClick(window.trade_history.apply_button, Qt.MouseButton.LeftButton)
+    click(window.trade_history.apply_button)
 
     qtbot.waitUntil(window.trade_history.filter_error.isVisible)
     assert (
@@ -397,7 +393,7 @@ def test_created_spot_session_replaces_form_with_durable_overview(
     qtbot.waitUntil(window.setup.create_button.isEnabled)
     window.setup.available_capital.setText("200000")
 
-    qtbot.mouseClick(window.setup.create_button, Qt.MouseButton.LeftButton)
+    click(window.setup.create_button)
 
     qtbot.waitUntil(lambda: window.current_page_name == "Session Overview")
     assert window.overview.state_value.text() == (
@@ -512,9 +508,9 @@ def test_repeated_submit_while_worker_is_running_calls_create_once(
     qtbot.waitUntil(window.setup.create_button.isEnabled)
     window.setup.available_capital.setText("200000")
 
-    qtbot.mouseClick(window.setup.create_button, Qt.MouseButton.LeftButton)
+    click(window.setup.create_button)
     qtbot.waitUntil(started.is_set)
-    qtbot.mouseClick(window.setup.create_button, Qt.MouseButton.LeftButton)
+    click(window.setup.create_button)
 
     assert len(calls) == 1
     release.set()
@@ -538,7 +534,7 @@ def test_validation_failure_restores_form_and_shows_field_error(qtbot: QtBot) ->
     qtbot.waitUntil(window.setup.create_button.isEnabled)
     window.setup.available_capital.setText("0")
 
-    qtbot.mouseClick(window.setup.create_button, Qt.MouseButton.LeftButton)
+    click(window.setup.create_button)
 
     qtbot.waitUntil(
         lambda: (
@@ -569,14 +565,14 @@ def test_persistence_failure_shows_sanitized_unavailable_state_and_allows_retry(
     window.show()
     qtbot.waitUntil(window.setup.create_button.isEnabled)
 
-    qtbot.mouseClick(window.setup.create_button, Qt.MouseButton.LeftButton)
+    click(window.setup.create_button)
 
     qtbot.waitUntil(window.unavailable_panel.isVisible)
     assert window.unavailable_message.text() == "Session storage is unavailable"
     assert window.current_page_name == "Unavailable"
     assert "/private/tmp" not in window.unavailable_message.text()
     qtbot.waitUntil(window.unavailable_retry_button.isEnabled)
-    qtbot.mouseClick(window.unavailable_retry_button, Qt.MouseButton.LeftButton)
+    click(window.unavailable_retry_button)
     qtbot.waitUntil(lambda: window.current_page_name == "Session Setup")
     assert window.setup.create_button.isEnabled() is True
 
@@ -595,7 +591,7 @@ def test_unknown_create_failure_shows_sanitized_unavailable_state(qtbot: QtBot) 
     window.show()
     qtbot.waitUntil(window.setup.create_button.isEnabled)
 
-    qtbot.mouseClick(window.setup.create_button, Qt.MouseButton.LeftButton)
+    click(window.setup.create_button)
 
     qtbot.waitUntil(window.unavailable_panel.isVisible)
     assert window.unavailable_message.text() == "Paper Session could not be created"
@@ -615,7 +611,7 @@ def test_existing_create_outcome_opens_existing_session_overview(qtbot: QtBot) -
     qtbot.waitUntil(window.setup.create_button.isEnabled)
     window.setup.available_capital.setText("200000")
 
-    qtbot.mouseClick(window.setup.create_button, Qt.MouseButton.LeftButton)
+    click(window.setup.create_button)
 
     qtbot.waitUntil(lambda: window.current_page_name == "Session Overview")
     assert window.overview.session_id_value.text() == str(existing.config.session_id)
@@ -724,7 +720,7 @@ def test_retry_after_startup_load_failure_reloads_existing_session(
     assert not window.setup.isVisible()
     assert not window.setup.create_button.isEnabled()
 
-    qtbot.mouseClick(window.unavailable_retry_button, Qt.MouseButton.LeftButton)
+    click(window.unavailable_retry_button)
 
     qtbot.waitUntil(lambda: window.current_page_name == "Session Overview")
     assert load_calls == 2
@@ -826,9 +822,22 @@ def test_closing_window_waits_for_workers_after_closing_workflows(
     events: list[str] = []
 
     class RecordingThreadPool(QThreadPool):
-        def waitForDone(self, msecs: int = -1) -> bool:
-            events.append(f"pool:{msecs}")
-            return super().waitForDone(msecs)
+        @overload
+        def waitForDone(self, msecs: int, /) -> bool: ...
+
+        @overload
+        def waitForDone(
+            self,
+            /,
+            deadline: QDeadlineTimer | QDeadlineTimer.ForeverConstant | int = -1,
+        ) -> bool: ...
+
+        def waitForDone(
+            self,
+            deadline: QDeadlineTimer | QDeadlineTimer.ForeverConstant | int = -1,
+        ) -> bool:
+            events.append(f"pool:{deadline}")
+            return super().waitForDone(deadline)
 
     thread_pool = RecordingThreadPool()
     window = MainWindow(
@@ -886,7 +895,7 @@ def test_closing_window_ignores_late_trade_history_result(qtbot: QtBot) -> None:
     qtbot.addWidget(window)
     window.show()
     qtbot.waitUntil(window.setup.create_button.isEnabled)
-    qtbot.mouseClick(window.trade_history_button, Qt.MouseButton.LeftButton)
+    click(window.trade_history_button)
     qtbot.waitUntil(started.is_set)
     basket_state_before_close = window.trade_history.basket_state.text()
 

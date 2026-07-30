@@ -14,6 +14,7 @@ from pytestqt.qtbot import QtBot
 
 import tiewtrade.desktop_main as desktop_main
 import tiewtrade.ui.desktop as ui_desktop
+from tests.support.qt_interactions import click, qdate, table_item
 from tests.support.trade_history_records import (
     BASKET_ID as SPOT_BASKET_ID,
 )
@@ -61,7 +62,7 @@ def test_desktop_trade_history_reads_durable_spot_and_futures_records(
     qtbot.addWidget(window)
     window.show()
 
-    qtbot.mouseClick(window.trade_history_button, Qt.MouseButton.LeftButton)
+    click(window.trade_history_button)
 
     qtbot.waitUntil(lambda: window.trade_history.basket_table.rowCount() == 2)
     assert _table_row_text(window.trade_history.basket_table, 0) == (
@@ -79,7 +80,9 @@ def test_desktop_trade_history_reads_durable_spot_and_futures_records(
         "Closed",
     )
     assert (
-        window.trade_history.basket_table.item(0, 0).data(Qt.ItemDataRole.UserRole)
+        table_item(window.trade_history.basket_table, 0, 0).data(
+            Qt.ItemDataRole.UserRole
+        )
         == FUTURES_BASKET_ID
     )
     assert _table_row_text(window.trade_history.basket_table, 1) == (
@@ -97,7 +100,9 @@ def test_desktop_trade_history_reads_durable_spot_and_futures_records(
         "Closed",
     )
     assert (
-        window.trade_history.basket_table.item(1, 0).data(Qt.ItemDataRole.UserRole)
+        table_item(window.trade_history.basket_table, 1, 0).data(
+            Qt.ItemDataRole.UserRole
+        )
         == SPOT_BASKET_ID
     )
     assert window.trade_history.total_net_pnl.text() == "48.98 USDT · Profit"
@@ -131,7 +136,7 @@ def test_desktop_trade_history_reads_durable_spot_and_futures_records(
     qtbot.waitUntil(
         lambda: (
             window.trade_history.fill_table.rowCount() == 2
-            and window.trade_history.fill_table.item(0, 0).text()
+            and table_item(window.trade_history.fill_table, 0, 0).text()
             == "2026-01-01 00:00:00 UTC"
         )
     )
@@ -196,12 +201,12 @@ def test_desktop_trade_history_filters_paginates_and_survives_restart(
     )
     qtbot.addWidget(first)
     first.show()
-    qtbot.mouseClick(first.trade_history_button, Qt.MouseButton.LeftButton)
+    click(first.trade_history_button)
     qtbot.waitUntil(lambda: first.trade_history.basket_table.rowCount() == 50)
-    assert first.trade_history.basket_table.item(0, 4).text() == "15m"
+    assert table_item(first.trade_history.basket_table, 0, 4).text() == "15m"
     assert first.trade_history.page_label.text() == "Page 1 of 2"
     first_page_opened_at = tuple(
-        first.trade_history.basket_table.item(row, 0).text() for row in range(50)
+        table_item(first.trade_history.basket_table, row, 0).text() for row in range(50)
     )
     assert first_page_opened_at == tuple(sorted(first_page_opened_at, reverse=True))
     assert first_page_opened_at[0] == "2026-02-20 00:00:00 UTC"
@@ -218,13 +223,13 @@ def test_desktop_trade_history_filters_paginates_and_survives_restart(
         combo.setCurrentIndex(combo.findData(value))
     newest_date = (datetime(2026, 1, 1, tzinfo=UTC) + timedelta(days=50)).date()
     first.trade_history.from_date_enabled.setChecked(True)
-    first.trade_history.from_date.setDate(newest_date)
+    first.trade_history.from_date.setDate(qdate(newest_date))
     first.trade_history.to_date_enabled.setChecked(True)
-    first.trade_history.to_date.setDate(newest_date)
-    qtbot.mouseClick(first.trade_history.apply_button, Qt.MouseButton.LeftButton)
+    first.trade_history.to_date.setDate(qdate(newest_date))
+    click(first.trade_history.apply_button)
     qtbot.waitUntil(lambda: first.trade_history.basket_table.rowCount() == 1)
-    assert first.trade_history.basket_table.item(0, 4).text() == "15m"
-    assert first.trade_history.basket_table.item(0, 2).text() == "Futures"
+    assert table_item(first.trade_history.basket_table, 0, 4).text() == "15m"
+    assert table_item(first.trade_history.basket_table, 0, 2).text() == "Futures"
     assert first.trade_history.total_net_pnl.text() == "29.4 USDT · Profit"
     assert basket_requests[-1] == (
         TradeHistoryFilter(
@@ -239,7 +244,7 @@ def test_desktop_trade_history_filters_paginates_and_survives_restart(
         PageRequest(page=1, page_size=50),
     )
 
-    qtbot.mouseClick(first.trade_history.reset_button, Qt.MouseButton.LeftButton)
+    click(first.trade_history.reset_button)
     for combo, _ in matching_filters:
         assert combo.currentData() is None
     assert not first.trade_history.from_date_enabled.isChecked()
@@ -247,19 +252,23 @@ def test_desktop_trade_history_filters_paginates_and_survives_restart(
     assert not first.trade_history.to_date_enabled.isChecked()
     assert not first.trade_history.to_date.isEnabled()
     qtbot.waitUntil(lambda: first.trade_history.basket_table.rowCount() == 50)
-    qtbot.mouseClick(first.trade_history.next_button, Qt.MouseButton.LeftButton)
+    click(first.trade_history.next_button)
     qtbot.waitUntil(lambda: first.trade_history.basket_table.rowCount() == 1)
     assert first.trade_history.page_label.text() == "Page 2 of 2"
-    assert first.trade_history.basket_table.item(0, 0).text().startswith("2026-01-01")
+    assert (
+        table_item(first.trade_history.basket_table, 0, 0)
+        .text()
+        .startswith("2026-01-01")
+    )
     first.close()
 
     restarted = _composed_window(path, monkeypatch)
     qtbot.addWidget(restarted)
     restarted.show()
-    qtbot.mouseClick(restarted.trade_history_button, Qt.MouseButton.LeftButton)
+    click(restarted.trade_history_button)
     qtbot.waitUntil(lambda: restarted.trade_history.basket_table.rowCount() == 50)
     assert restarted.trade_history.page_label.text() == "Page 1 of 2"
-    assert restarted.trade_history.basket_table.item(0, 4).text() == "15m"
+    assert table_item(restarted.trade_history.basket_table, 0, 4).text() == "15m"
 
 
 def test_trade_history_read_failure_is_fail_closed_and_sanitized(
@@ -295,12 +304,12 @@ def test_trade_history_read_failure_is_fail_closed_and_sanitized(
     )
     qtbot.addWidget(window)
     window.show()
-    qtbot.mouseClick(window.trade_history_button, Qt.MouseButton.LeftButton)
+    click(window.trade_history_button)
     qtbot.waitUntil(lambda: window.trade_history.basket_table.rowCount() == 1)
     qtbot.waitUntil(lambda: window.trade_history.fill_table.rowCount() == 1)
     assert not window.trade_history.total_net_pnl.isHidden()
 
-    qtbot.mouseClick(window.trade_history.apply_button, Qt.MouseButton.LeftButton)
+    click(window.trade_history.apply_button)
     qtbot.waitUntil(
         lambda: window.trade_history.basket_state.text() == "Trade History unavailable"
     )
@@ -383,7 +392,7 @@ def test_trade_history_desktop_flow_has_no_forbidden_import_or_network(
     window = _composed_window(tmp_path / "tiewtrade.sqlite3", monkeypatch)
     qtbot.addWidget(window)
     window.show()
-    qtbot.mouseClick(window.trade_history_button, Qt.MouseButton.LeftButton)
+    click(window.trade_history_button)
     qtbot.waitUntil(
         lambda: window.trade_history.basket_state.text() == "No trade history"
     )
@@ -449,9 +458,7 @@ def _table_rows_text(table: QTableWidget) -> tuple[tuple[str, ...], ...]:
 def _table_row_text(table: QTableWidget, row: int) -> tuple[str, ...]:
     values: list[str] = []
     for column in range(table.columnCount()):
-        item = table.item(row, column)
-        assert item is not None
-        values.append(item.text())
+        values.append(table_item(table, row, column).text())
     return tuple(values)
 
 

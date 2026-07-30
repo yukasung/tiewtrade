@@ -15,6 +15,7 @@ from tiewtrade.application.paper_futures_session import (
 from tiewtrade.market_data.candle import Candle
 from tiewtrade.market_data.config import MarketDataConfig
 from tiewtrade.strategies.rsi_step_grid.preset import RsiStepGridPreset
+from tiewtrade.strategies.rsi_step_grid.strategy import EntryIntent
 from tiewtrade.trading.basket import BasketCloseReason
 from tiewtrade.trading.entry_policy import EntryPolicy
 from tiewtrade.trading.futures_policy import FuturesTradingPolicy
@@ -544,7 +545,7 @@ def make_liquidated_session() -> tuple[PaperFuturesSession, Candle]:
     return session, liquidation_candle
 
 
-def arm_entry_intent(session: PaperFuturesSession):
+def arm_entry_intent(session: PaperFuturesSession) -> EntryIntent:
     for current in signal_candles():
         snapshot = session.process_completed_candle(
             current,
@@ -555,7 +556,9 @@ def arm_entry_intent(session: PaperFuturesSession):
     raise AssertionError("expected a pending Entry Intent")
 
 
-def arm_next_entry_intent(session: PaperFuturesSession, previous: Candle):
+def arm_next_entry_intent(
+    session: PaperFuturesSession, previous: Candle
+) -> EntryIntent:
     current = previous
     close = previous.close
     for _ in range(30):
