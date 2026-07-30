@@ -53,6 +53,7 @@ class TradingWorkspace(QWidget):
         self.position_state = QLabel("No open Position or Basket")
 
         self._bot_pages = QStackedWidget()
+        self._bot_pages.setObjectName("botControlPages")
         self._bot_pages.addWidget(self.setup)
         self._bot_pages.addWidget(self.overview)
         self._bot_pages.addWidget(self.unavailable_panel)
@@ -81,17 +82,18 @@ class TradingWorkspace(QWidget):
             Qt.ShortcutContext.WidgetWithChildrenShortcut
         )
         self._drawer_close_shortcut.activated.connect(self.close_bot_control)
+        self._drawer_close_shortcut.setEnabled(False)
         self._apply_layout_mode()
 
     @Slot()
     def show_setup(self) -> None:
-        self._bot_pages.setCurrentWidget(self.setup)
+        self._show_bot_page(self.setup)
         self.header_runtime.setText("No Session")
         self._set_bot_control_state("No Session")
 
     def show_configured_session(self, session: ConfiguredPaperSession) -> None:
         self.overview.show_session(session)
-        self._bot_pages.setCurrentWidget(self.overview)
+        self._show_bot_page(self.overview)
         self.header_symbol.setText(session.market_data.symbol)
         self.header_timeframe.setText(session.market_data.timeframe)
         market = session.config.market_type.value.title()
@@ -103,7 +105,7 @@ class TradingWorkspace(QWidget):
 
     def show_unavailable(self, message: str) -> None:
         self.unavailable_message.setText(message)
-        self._bot_pages.setCurrentWidget(self.unavailable_panel)
+        self._show_bot_page(self.unavailable_panel)
         self.header_runtime.setText("Unavailable")
         self._set_bot_control_state("Unavailable")
 
@@ -125,16 +127,18 @@ class TradingWorkspace(QWidget):
         if not self.compact_mode:
             return
         self._drawer_open = True
+        self._drawer_close_shortcut.setEnabled(True)
         self._position_drawer()
         self.bot_control.show()
         self.bot_control.raise_()
-        self.bot_control.setFocus()
+        self.bot_control_close_button.setFocus(Qt.FocusReason.OtherFocusReason)
 
     @Slot()
     def close_bot_control(self) -> None:
         if not self.compact_mode or not self._drawer_open:
             return
         self._drawer_open = False
+        self._drawer_close_shortcut.setEnabled(False)
         self.bot_control.hide()
         self.bot_control_button.setFocus()
 
@@ -150,6 +154,7 @@ class TradingWorkspace(QWidget):
 
     def _apply_layout_mode(self) -> None:
         self._body_layout.removeWidget(self.bot_control)
+        self._drawer_close_shortcut.setEnabled(False)
         if self.compact_mode:
             self._drawer_open = False
             self.bot_control.setMinimumWidth(0)
@@ -213,7 +218,6 @@ class TradingWorkspace(QWidget):
 
         self.bot_control = QFrame()
         self.bot_control.setObjectName("botControl")
-        self.bot_control.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
         self.bot_control.setFixedWidth(BOT_CONTROL_WIDTH)
         bot_layout = QVBoxLayout(self.bot_control)
         bot_header = QHBoxLayout()
@@ -229,6 +233,7 @@ class TradingWorkspace(QWidget):
         bot_layout.addLayout(bot_header)
         self.bot_control_scroll = QScrollArea()
         self.bot_control_scroll.setObjectName("botControlScroll")
+        self.bot_control_scroll.viewport().setObjectName("botControlViewport")
         self.bot_control_scroll.setWidgetResizable(True)
         self.bot_control_scroll.setHorizontalScrollBarPolicy(
             Qt.ScrollBarPolicy.ScrollBarAlwaysOff
@@ -253,6 +258,11 @@ class TradingWorkspace(QWidget):
     def _set_bot_control_state(self, state: str) -> None:
         self.bot_control_button.setText(f"Bot Control · {state}")
         self.bot_control_button.setAccessibleName(f"Bot Control: {state}")
+
+    def _show_bot_page(self, page: QWidget) -> None:
+        self._bot_pages.setCurrentWidget(page)
+        self.bot_control_scroll.horizontalScrollBar().setValue(0)
+        self.bot_control_scroll.verticalScrollBar().setValue(0)
 
     @staticmethod
     def _empty_panel(message: QLabel) -> QFrame:

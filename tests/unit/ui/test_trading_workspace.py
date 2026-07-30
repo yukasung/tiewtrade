@@ -58,6 +58,7 @@ def test_bot_control_uses_drawer_below_breakpoint(qtbot: QtBot) -> None:
     assert workspace.bot_control.isVisible()
     assert workspace.bot_control.geometry().right() == workspace.rect().right()
     assert workspace.bot_control_close_button.isVisible()
+    assert workspace.bot_control_close_button.hasFocus()
 
     click(workspace.bot_control_close_button)
 
@@ -77,11 +78,54 @@ def test_escape_closes_compact_bot_control_and_restores_trigger_focus(
     qtbot.waitUntil(lambda: workspace.compact_mode)
 
     click(workspace.bot_control_button)
-    workspace.bot_control.setFocus()
-    QTest.keyClick(workspace.bot_control, Qt.Key.Key_Escape)
+    QTest.keyClick(workspace.bot_control_close_button, Qt.Key.Key_Escape)
 
     qtbot.waitUntil(lambda: not workspace.bot_control.isVisible())
     assert workspace.bot_control_button.hasFocus()
+
+
+def test_escape_shortcut_is_active_only_while_compact_drawer_is_open(
+    qtbot: QtBot,
+) -> None:
+    class CountingWorkspace(TradingWorkspace):
+        def __init__(self) -> None:
+            self.close_calls = 0
+            super().__init__()
+
+        def close_bot_control(self) -> None:
+            self.close_calls += 1
+            super().close_bot_control()
+
+    workspace = CountingWorkspace()
+    qtbot.addWidget(workspace)
+    workspace.resize(1024, 700)
+    workspace.show()
+    workspace.activateWindow()
+    qtbot.waitUntil(workspace.isActiveWindow)
+    qtbot.waitUntil(lambda: workspace.compact_mode)
+
+    assert not workspace._drawer_close_shortcut.isEnabled()
+    QTest.keyClick(workspace.bot_control_button, Qt.Key.Key_Escape)
+    assert workspace.close_calls == 0
+
+    click(workspace.bot_control_button)
+    assert workspace._drawer_close_shortcut.isEnabled()
+    workspace.resize(1200, 700)
+    qtbot.waitUntil(lambda: not workspace.compact_mode)
+
+    assert not workspace._drawer_close_shortcut.isEnabled()
+    QTest.keyClick(workspace.tabs, Qt.Key.Key_Escape)
+    assert workspace.close_calls == 0
+
+    workspace.resize(1024, 700)
+    qtbot.waitUntil(lambda: workspace.compact_mode)
+    click(workspace.bot_control_button)
+    QTest.keyClick(workspace.bot_control_close_button, Qt.Key.Key_Escape)
+
+    assert workspace.close_calls == 1
+    assert not workspace._drawer_close_shortcut.isEnabled()
+    QTest.keyClick(workspace.bot_control_button, Qt.Key.Key_Escape)
+    assert workspace.close_calls == 1
 
 
 def test_resize_transitions_do_not_duplicate_drawer_close_connection(
@@ -186,6 +230,44 @@ def test_compact_bot_control_trigger_exposes_current_state(qtbot: QtBot) -> None
 
     assert workspace.bot_control_button.text() == "Bot Control · No Session"
     assert workspace.bot_control_button.accessibleName() == "Bot Control: No Session"
+
+
+@pytest.mark.parametrize("transition", ["setup", "configured", "unavailable"])
+def test_bot_control_state_transition_resets_scrolled_setup_to_top(
+    qtbot: QtBot,
+    transition: str,
+) -> None:
+    workspace = TradingWorkspace()
+    qtbot.addWidget(workspace)
+    workspace.setFixedSize(1024, 700)
+    workspace.show()
+    qtbot.waitUntil(lambda: workspace.compact_mode)
+    click(workspace.bot_control_button)
+    click(workspace.setup.advanced_toggle)
+    vertical = workspace.bot_control_scroll.verticalScrollBar()
+    horizontal = workspace.bot_control_scroll.horizontalScrollBar()
+    qtbot.waitUntil(lambda: vertical.maximum() > 0)
+    vertical.setValue(vertical.maximum())
+
+    target: QWidget = workspace.setup.trade_mode_label
+    if transition == "configured":
+        workspace.show_configured_session(configured_spot_session())
+        target = workspace.overview.state_value
+    elif transition == "unavailable":
+        workspace.show_unavailable("Session storage is unavailable")
+        target = workspace.unavailable_retry_button
+    else:
+        workspace.show_setup()
+
+    assert vertical.value() == 0
+    assert horizontal.value() == 0
+    assert (
+        workspace.bot_control_scroll.viewport()
+        .rect()
+        .intersects(
+            _widget_rect_in_viewport(target, workspace.bot_control_scroll.viewport())
+        )
+    )
 
 
 @pytest.mark.parametrize("content", ["spot", "futures", "advanced"])

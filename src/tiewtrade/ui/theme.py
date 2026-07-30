@@ -50,7 +50,7 @@ QLabel#summaryValue {
     color: #F1F5F9;
     font-weight: 700;
 }
-QLabel#environmentBadge, QWidget[state="warning"] {
+QWidget[state="warning"] {
     background: #2A2412;
     color: #F0B90B;
     border-radius: 6px;
@@ -128,6 +128,9 @@ QPushButton#secondaryButton:hover, QPushButton[retryButton="true"]:hover {
     background: #243044;
     border-color: #4C7DFF;
 }
+QPushButton#secondaryButton:focus, QPushButton[retryButton="true"]:focus {
+    border: 2px solid #4C7DFF;
+}
 QPushButton#destructiveButton {
     background: #F6465D;
     border: 0;
@@ -157,9 +160,32 @@ QTabBar::tab:selected {
     color: #F1F5F9;
     border-bottom: 2px solid #4C7DFF;
 }
-QScrollArea#botControlScroll {
-    background: transparent;
+QScrollArea#botControlScroll, QWidget#botControlViewport,
+QStackedWidget#botControlPages {
+    background: #141A22;
     border: 0;
+}
+QScrollArea#botControlScroll QScrollBar:vertical {
+    background: #0B0E11;
+    border: 0;
+    margin: 0;
+    width: 12px;
+}
+QScrollArea#botControlScroll QScrollBar::handle:vertical {
+    background: #3A4656;
+    border: 0;
+    border-radius: 6px;
+    min-height: 24px;
+}
+QScrollArea#botControlScroll QScrollBar::add-line:vertical,
+QScrollArea#botControlScroll QScrollBar::sub-line:vertical {
+    background: #0B0E11;
+    border: 0;
+    height: 0;
+}
+QScrollArea#botControlScroll QScrollBar::add-page:vertical,
+QScrollArea#botControlScroll QScrollBar::sub-page:vertical {
+    background: #0B0E11;
 }
 QTableWidget {
     alternate-background-color: #111821;

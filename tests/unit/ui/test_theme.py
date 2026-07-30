@@ -48,6 +48,7 @@ def test_dark_theme_covers_current_semantic_object_names_without_dead_navigation
         "QPushButton#navigationButton",
         "QPushButton#navigationButtonSelected",
         "QPushButton#unavailableRetryButton",
+        "QLabel#environmentBadge",
     ):
         assert dead_selector not in DARK_THEME
 
@@ -136,5 +137,52 @@ def test_calendar_popup_renders_with_dark_readable_palette(qtbot: QtBot) -> None
     assert _palette_color(calendar_view, QPalette.ColorRole.Text) == QColor("#F1F5F9")
 
 
+def test_bot_control_scroll_surfaces_and_scrollbar_render_dark(qtbot: QtBot) -> None:
+    workspace = TradingWorkspace()
+    qtbot.addWidget(workspace)
+    workspace.setStyleSheet(DARK_THEME)
+    workspace.setFixedSize(1024, 700)
+    workspace.show()
+    workspace.bot_control_button.click()
+    scroll_bar = workspace.bot_control_scroll.verticalScrollBar()
+
+    assert _palette_color(workspace._bot_pages, QPalette.ColorRole.Window) == QColor(
+        "#141A22"
+    )
+    assert _palette_color(
+        workspace.bot_control_scroll.viewport(), QPalette.ColorRole.Window
+    ) == QColor("#141A22")
+    assert _palette_color(scroll_bar, QPalette.ColorRole.Window) == QColor("#0B0E11")
+    assert _palette_color(scroll_bar, QPalette.ColorRole.Base) == QColor("#0B0E11")
+    assert (
+        max(QColor(color).lightness() for color in _rendered_colors(scroll_bar)) < 128
+    )
+
+
+def test_compact_drawer_focus_renders_on_actionable_close_button(qtbot: QtBot) -> None:
+    workspace = TradingWorkspace()
+    qtbot.addWidget(workspace)
+    workspace.setStyleSheet(DARK_THEME)
+    workspace.resize(1024, 700)
+    workspace.show()
+    workspace.activateWindow()
+    qtbot.waitUntil(workspace.isActiveWindow)
+
+    workspace.bot_control_button.click()
+
+    assert workspace.bot_control_close_button.hasFocus()
+    assert "#4c7dff" in _rendered_colors(workspace.bot_control_close_button)
+
+
 def _palette_color(widget: QWidget, role: QPalette.ColorRole) -> QColor:
     return widget.palette().color(role)
+
+
+def _rendered_colors(widget: QWidget) -> set[str]:
+    image = widget.grab().toImage()
+    return {
+        image.pixelColor(x, y).name()
+        for x in range(image.width())
+        for y in range(image.height())
+        if image.pixelColor(x, y).alpha() > 0
+    }
