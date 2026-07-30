@@ -629,6 +629,10 @@ class ObservedMarketDataRuntime(MarketDataRuntime):
     def observed_states(self) -> tuple[MarketDataRuntimeState, ...]:
         return self._state_recorder.states
 
+    @property
+    def observed_reasons(self) -> tuple[MarketDataRuntimeReason, ...]:
+        return tuple(snapshot.reason for snapshot in self._state_recorder.snapshots)
+
 
 def runtime_for(
     source: FakeSource,
@@ -1325,6 +1329,28 @@ def test_duplicate_live_candle_is_ignored() -> None:
 
     assert sink.live_candles == [candle_at(15)]
     assert runtime.snapshot.last_accepted_open_time == candle_at(15).open_time
+    assert (
+        runtime.observed_reasons.count(MarketDataRuntimeReason.LIVE_CANDLE_ACCEPTED)
+        == 1
+    )
+
+
+def test_incomplete_live_candle_does_not_publish_accepted_transition() -> None:
+    source = FakeSource(
+        recent=warm_up_candles(),
+        live=[candle_at(30), candle_at(15)],
+    )
+    sink = RecordingSink()
+    runtime = runtime_for(source, sink)
+
+    asyncio.run(run_until_sink_receives(runtime, sink, count=1))
+
+    assert sink.live_candles == [candle_at(15)]
+    assert runtime.snapshot.last_accepted_open_time == candle_at(15).open_time
+    assert (
+        runtime.observed_reasons.count(MarketDataRuntimeReason.LIVE_CANDLE_ACCEPTED)
+        == 1
+    )
 
 
 def test_invalid_live_candle_maps_to_source_error() -> None:

@@ -128,9 +128,16 @@ class CompletedCandlePipeline:
         except Exception as error:
             raise CandlePipelineInputError from error
 
-        for candle in accepted:
-            # Deep-copy validation guarantees acceptance by unchanged real state.
-            self._candles.accept(candle, received_at)
+        try:
+            for candle in accepted:
+                # Deep-copy validation guarantees acceptance by unchanged real state.
+                if (
+                    self._candles.accept(candle, received_at)
+                    is not CandleAcceptance.ACCEPTED
+                ):
+                    raise ValueError("backfill commit diverged from validation")
+        except Exception as error:
+            raise CandlePipelineInputError from error
         on_ready_for_delivery()
         for candle in accepted:
             await self._deliver(candle, received_at=received_at)

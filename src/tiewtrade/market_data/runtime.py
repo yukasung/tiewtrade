@@ -15,7 +15,10 @@ from tiewtrade.market_data.candle_pipeline import (
     MarketDataCandleSink as MarketDataCandleSink,
 )
 from tiewtrade.market_data.candle_source import MarketDataCandleSource
-from tiewtrade.market_data.completed_candle_stream import CandleGapError
+from tiewtrade.market_data.completed_candle_stream import (
+    CandleAcceptance,
+    CandleGapError,
+)
 from tiewtrade.market_data.config import MarketDataConfig
 from tiewtrade.market_data.runtime_state import (
     MarketDataRuntimeReason,
@@ -323,7 +326,7 @@ class MarketDataRuntime:
     async def _accept_live_candle(self, candle: Candle) -> bool:
         received_at = self._scheduler.now()
         try:
-            accepted = await self._pipeline.process_live(
+            decision = await self._pipeline.process_live(
                 candle,
                 received_at=received_at,
             )
@@ -335,7 +338,7 @@ class MarketDataRuntime:
         except CandlePipelineSinkError:
             self._fail_closed(MarketDataRuntimeReason.SINK_ERROR)
             return False
-        if not accepted:
+        if decision is not CandleAcceptance.ACCEPTED:
             return True
 
         self._transition(

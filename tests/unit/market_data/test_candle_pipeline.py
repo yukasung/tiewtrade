@@ -214,6 +214,42 @@ def test_incomplete_backfill_does_not_advance_continuity_before_retry() -> None:
     ]
 
 
+def test_backfill_commit_rejects_continuity_divergence(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    sink = RecordingSink()
+    deliveries: list[datetime] = []
+    pipeline = pipeline_for(sink, deliveries)
+    real_stream = pipeline._candles
+    original_accept = type(real_stream).accept
+
+    def diverging_accept(
+        stream: object,
+        candle: Candle,
+        received_at: datetime,
+    ) -> CandleAcceptance:
+        if stream is real_stream:
+            return CandleAcceptance.DUPLICATE_OR_OUT_OF_ORDER
+        return original_accept(stream, candle, received_at)  # type: ignore[arg-type]
+
+    monkeypatch.setattr(type(real_stream), "accept", diverging_accept)
+
+    with pytest.raises(CandlePipelineInputError):
+        asyncio.run(
+            pipeline.process_backfill(
+                (candle_at(0),),
+                start=candle_at(0).open_time,
+                end=candle_at(5).open_time,
+                observed=candle_at(0),
+                received_at=RECEIVED_AT,
+                on_ready_for_delivery=lambda: sink.events.append("ready"),
+            )
+        )
+
+    assert sink.events == []
+    assert deliveries == []
+
+
 def test_warm_up_rejects_non_positive_expected_count_before_sink_delivery() -> None:
     sink = RecordingSink()
     deliveries: list[datetime] = []
