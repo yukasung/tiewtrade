@@ -29,6 +29,7 @@ from tiewtrade.market_data.source_errors import (
     MarketDataFatalError,
     MarketDataRateLimitError,
     MarketDataRetryableError,
+    MarketDataSourceError,
 )
 
 _NOW = datetime(2026, 1, 1, 0, 30, tzinfo=UTC)
@@ -440,6 +441,15 @@ class FailingCloseWarmUpSource(WarmUpFailureSource):
     async def close(self) -> None:
         self.close_count += 1
         raise RuntimeError("source close failed")
+
+
+class SourceErrorFailingCloseWarmUpSource(WarmUpFailureSource):
+    async def close(self) -> None:
+        self.close_count += 1
+        raise MarketDataRetryableError(
+            "source close failed",
+            kind=MarketDataFailureKind.TRANSPORT,
+        )
 
 
 class SlowCloseSource(FakeSource):
@@ -1057,6 +1067,39 @@ def test_fatal_warm_up_failure_fails_closed_without_retry() -> None:
     assert runtime.snapshot.reason is MarketDataRuntimeReason.SOURCE_FATAL
 
 
+def test_plain_warm_up_source_failure_logs_original_kind_without_retry(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    logger = logging.getLogger("tests.market_data.plain_warm_up_source_failure")
+    caplog.set_level(logging.INFO, logger=logger.name)
+    source = WarmUpFailureSource(
+        [
+            MarketDataSourceError(
+                "source adapter failed",
+                kind=MarketDataFailureKind.PAYLOAD,
+            )
+        ]
+    )
+    scheduler = FakeScheduler()
+    runtime = runtime_for(
+        source,
+        RecordingSink(),
+        scheduler=scheduler,
+        logger=logger,
+    )
+
+    asyncio.run(runtime.run())
+
+    assert source.load_count == 1
+    assert scheduler.sleeps == []
+    assert runtime.snapshot.state is MarketDataRuntimeState.FAILED_CLOSED
+    assert runtime.snapshot.reason is MarketDataRuntimeReason.SOURCE_ERROR
+    terminal_record = market_data_records(caplog)[-1]
+    assert terminal_record.event_name == MarketDataEventName.RUNTIME_FAILED_CLOSED.value
+    assert terminal_record.reason == MarketDataRuntimeReason.SOURCE_ERROR.value
+    assert terminal_record.failure_kind == MarketDataFailureKind.PAYLOAD.value
+
+
 def test_close_failure_does_not_overwrite_fatal_source_reason() -> None:
     source = FailingCloseWarmUpSource(
         [
@@ -1073,6 +1116,60 @@ def test_close_failure_does_not_overwrite_fatal_source_reason() -> None:
     assert source.close_count == 1
     assert runtime.snapshot.state is MarketDataRuntimeState.FAILED_CLOSED
     assert runtime.snapshot.reason is MarketDataRuntimeReason.SOURCE_FATAL
+
+
+@pytest.mark.parametrize(
+    ("primary_error", "expected_reason", "expected_failure_kind"),
+    [
+        (
+            MarketDataFatalError(
+                "bad symbol",
+                kind=MarketDataFailureKind.PROTOCOL,
+            ),
+            MarketDataRuntimeReason.SOURCE_FATAL,
+            MarketDataFailureKind.PROTOCOL.value,
+        ),
+        (
+            RuntimeError("warm-up source failed"),
+            MarketDataRuntimeReason.SOURCE_ERROR,
+            None,
+        ),
+    ],
+    ids=["primary-kind", "primary-kind-none"],
+)
+def test_cleanup_terminal_record_reuses_primary_reason_and_kind(
+    caplog: pytest.LogCaptureFixture,
+    primary_error: Exception,
+    expected_reason: MarketDataRuntimeReason,
+    expected_failure_kind: str | None,
+) -> None:
+    logger = logging.getLogger(
+        f"tests.market_data.cleanup_preserves_primary.{expected_failure_kind}"
+    )
+    caplog.set_level(logging.INFO, logger=logger.name)
+    source = SourceErrorFailingCloseWarmUpSource([primary_error])
+    runtime = runtime_for(source, RecordingSink(), logger=logger)
+
+    asyncio.run(runtime.run())
+
+    assert source.close_count == 1
+    assert runtime.snapshot.state is MarketDataRuntimeState.FAILED_CLOSED
+    assert runtime.snapshot.reason is expected_reason
+    assert not hasattr(runtime.snapshot, "failure_kind")
+    terminal_records = [
+        record
+        for record in market_data_records(caplog)
+        if record.event_name == MarketDataEventName.RUNTIME_FAILED_CLOSED.value
+    ]
+    assert len(terminal_records) == 2
+    assert [record.reason for record in terminal_records] == [
+        expected_reason.value,
+        expected_reason.value,
+    ]
+    assert [record.failure_kind for record in terminal_records] == [
+        expected_failure_kind,
+        expected_failure_kind,
+    ]
 
 
 @pytest.mark.parametrize(
@@ -1847,6 +1944,52 @@ def test_gap_backfill_logs_completed_range_and_count(
     assert record.start == "2026-01-01T00:15:00+00:00"
     assert record.end == "2026-01-01T00:25:00+00:00"
     assert record.candle_count == 2
+
+
+def test_backfill_without_delivery_watermark_logs_requested_boundary_before_terminal(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    logger = logging.getLogger("tests.market_data.backfill_without_watermark")
+    caplog.set_level(logging.INFO, logger=logger.name)
+    requested_boundary = candle_at(25).open_time
+    runtime = runtime_for(FakeSource(), RecordingSink(), logger=logger)
+
+    result = asyncio.run(
+        runtime._backfill_to_boundary(
+            requested_boundary,
+            received_at=_NOW,
+            observed=candle_at(20),
+        )
+    )
+
+    assert result is False
+    assert runtime.snapshot.state is MarketDataRuntimeState.FAILED_CLOSED
+    records = market_data_records(caplog)
+    assert [record.event_name for record in records] == [
+        MarketDataEventName.BACKFILL_FAILED.value,
+        MarketDataEventName.RUNTIME_FAILED_CLOSED.value,
+    ]
+    backfill_record, terminal_record = records
+    assert backfill_record.start == requested_boundary.isoformat()
+    assert backfill_record.end == requested_boundary.isoformat()
+    assert backfill_record.reason == MarketDataRuntimeReason.SOURCE_ERROR.value
+    assert backfill_record.failure_kind is None
+    assert terminal_record.reason == MarketDataRuntimeReason.SOURCE_ERROR.value
+    assert terminal_record.failure_kind is None
+    assert (
+        not {
+            "candle",
+            "observed",
+            "open_time",
+            "close_time",
+            "open",
+            "high",
+            "low",
+            "close",
+            "volume",
+        }
+        & backfill_record.__dict__.keys()
+    )
 
 
 @pytest.mark.parametrize(

@@ -111,6 +111,7 @@ class MarketDataRuntime:
         self._stop_requested = False
         self._source_close_lock = asyncio.Lock()
         self._source_closed = False
+        self._terminal_failure_kind: MarketDataFailureKind | None = None
 
     @property
     def snapshot(self) -> MarketDataRuntimeSnapshot:
@@ -145,12 +146,13 @@ class MarketDataRuntime:
                     is MarketDataRuntimeState.FAILED_CLOSED
                 ):
                     primary_reason = self._status.snapshot.reason
+                    primary_failure_kind = self._terminal_failure_kind
                     try:
                         await self._close_source_once()
-                    except Exception as error:
+                    except Exception:
                         self._fail_closed(
                             primary_reason,
-                            failure_kind=_failure_kind(error),
+                            failure_kind=primary_failure_kind,
                         )
             finally:
                 self._run_task = None
@@ -414,8 +416,12 @@ class MarketDataRuntime:
     ) -> bool:
         last_accepted_open_time = self._status.snapshot.last_accepted_open_time
         if last_accepted_open_time is None:
-            self._fail_closed(MarketDataRuntimeReason.SOURCE_ERROR)
-            return False
+            return self._fail_backfill(
+                start=end,
+                end=end,
+                reason=MarketDataRuntimeReason.SOURCE_ERROR,
+                failure_kind=None,
+            )
 
         start = last_accepted_open_time + self._config.interval
         self._transition(
@@ -674,6 +680,8 @@ class MarketDataRuntime:
         *,
         failure_kind: MarketDataFailureKind | None = None,
     ) -> None:
+        if self._status.snapshot.state is not MarketDataRuntimeState.FAILED_CLOSED:
+            self._terminal_failure_kind = failure_kind
         self._runtime_log.failed_closed(
             reason=reason,
             failure_kind=failure_kind,
@@ -708,4 +716,8 @@ def _latest_completed_boundary(value: datetime, *, interval: timedelta) -> datet
 def _failure_kind(error: BaseException) -> MarketDataFailureKind | None:
     if isinstance(error, MarketDataSourceError):
         return error.kind
+    if isinstance(error, _WarmUpSourceError) and isinstance(
+        error.__cause__, MarketDataSourceError
+    ):
+        return error.__cause__.kind
     return None
