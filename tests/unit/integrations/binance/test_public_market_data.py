@@ -4,11 +4,13 @@ import asyncio
 import json
 from collections.abc import AsyncIterator, Awaitable, Iterable
 from datetime import UTC, datetime, timedelta
-from typing import TypeVar
+from typing import TypeVar, cast
 
 import aiohttp
 import pytest
-from aiohttp import WSMsgType
+from aiohttp import RequestInfo, WSMsgType
+from multidict import CIMultiDict, CIMultiDictProxy
+from yarl import URL
 
 from tiewtrade.integrations.binance.public_endpoints import BinancePublicEndpoints
 from tiewtrade.integrations.binance.public_market_data import BinancePublicMarketData
@@ -176,14 +178,30 @@ def source_with(
     )
     return (
         BinancePublicMarketData(
-            BinancePublicEndpoints.for_market_type(MarketType.SPOT), session=session
+            BinancePublicEndpoints.for_market_type(MarketType.SPOT),
+            session=cast(aiohttp.ClientSession, session),
         ),
         session,
     )
 
 
-async def collect(source: BinancePublicMarketData) -> tuple[object, ...]:
+async def collect(source: BinancePublicMarketData) -> tuple[Candle, ...]:
     return tuple([candle async for candle in source.stream_completed(config())])
+
+
+def request_info() -> tuple[RequestInfo, CIMultiDictProxy[str]]:
+    headers = CIMultiDictProxy(CIMultiDict[str]())
+    url = URL("https://api.binance.com/api/v3/klines")
+    return RequestInfo(url, "GET", headers), headers
+
+
+def content_type_error() -> aiohttp.ContentTypeError:
+    request, headers = request_info()
+    return aiohttp.ContentTypeError(
+        request_info=request,
+        history=(),
+        headers=headers,
+    )
 
 
 def test_load_recent_requests_and_returns_requested_completed_candle_count() -> None:
@@ -478,7 +496,7 @@ def test_binance_timeout_exhaustion_remains_warm_up_timeout_in_runtime() -> None
 @pytest.mark.parametrize(
     "payload_error",
     [
-        aiohttp.ContentTypeError(request_info=None, history=()),
+        content_type_error(),
         aiohttp.ClientPayloadError("invalid response body"),
     ],
 )
@@ -674,11 +692,12 @@ def websocket_handshake_error(
     *,
     headers: dict[str, str] | None = None,
 ) -> aiohttp.ClientResponseError:
+    request, _ = request_info()
     return aiohttp.ClientResponseError(
-        request_info=None,
+        request_info=request,
         history=(),
         status=status,
-        headers=headers,
+        headers=CIMultiDictProxy(CIMultiDict(headers or {})),
     )
 
 
