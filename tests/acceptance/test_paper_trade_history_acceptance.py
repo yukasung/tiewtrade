@@ -21,13 +21,11 @@ from tests.support.paper_trade_history_acceptance import (
     spot_candles,
     spot_history,
 )
+from tiewtrade.application.session_persistence import SessionPersistenceBlockedError
 from tiewtrade.application.trade_history import PageRequest, TradeHistoryFilter
 from tiewtrade.integrations.sqlite.database import SQLiteDatabase
 from tiewtrade.integrations.sqlite.persistent_paper_spot_session import (
-    PersistentPaperSpotSQLiteSession,
-)
-from tiewtrade.integrations.sqlite.session_persistence import (
-    SessionPersistenceBlockedError,
+    create_persistent_paper_spot_session,
 )
 from tiewtrade.integrations.sqlite.trade_history import (
     SQLiteTradeHistory,
@@ -59,7 +57,7 @@ def test_sqlite_failure_blocks_new_paper_entry_fail_closed(tmp_path: Path) -> No
 
     session_id = uuid4()
     history = SQLiteTradeHistory(database)
-    persistent = PersistentPaperSpotSQLiteSession(
+    persistent = create_persistent_paper_spot_session(
         build_spot_session(session_id),
         spot_history(session_id, history),
     )

@@ -10,11 +10,13 @@ from tiewtrade.application.paper_spot_session import (
     PaperSpotSession,
     PaperSpotSessionError,
     PaperSpotSessionIdentity,
+    PaperSpotSessionSnapshot,
     PaperSpotSessionState,
 )
+from tiewtrade.application.session_persistence import SessionPersistenceCoordinator
 from tiewtrade.integrations.sqlite.paper_spot_history import PaperSpotSQLiteHistory
 from tiewtrade.integrations.sqlite.persistent_paper_spot_session import (
-    PersistentPaperSpotSQLiteSession,
+    create_persistent_paper_spot_session,
 )
 from tiewtrade.market_data.candle import Candle
 from tiewtrade.market_data.config import MarketDataConfig
@@ -462,10 +464,12 @@ def paper_session(*, min_notional: Decimal = Decimal("5")) -> PaperSpotSession:
 
 def persistent_spot_session(
     application: PaperSpotSession,
-) -> tuple[PersistentPaperSpotSQLiteSession, PaperSpotSQLiteHistory]:
+) -> tuple[
+    SessionPersistenceCoordinator[PaperSpotSessionSnapshot], PaperSpotSQLiteHistory
+]:
     history = create_autospec(PaperSpotSQLiteHistory, instance=True)
     history.session_identity = application.identity  # type: ignore[misc]
-    return PersistentPaperSpotSQLiteSession(application, history), history
+    return create_persistent_paper_spot_session(application, history), history
 
 
 def arm_entry_intent(

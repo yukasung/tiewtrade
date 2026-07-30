@@ -6,6 +6,7 @@ from uuid import UUID
 
 from tiewtrade.application.paper_futures_session import PaperFuturesSession
 from tiewtrade.application.paper_spot_session import PaperSpotSession
+from tiewtrade.application.session_persistence import PersistenceState
 from tiewtrade.integrations.sqlite.paper_futures_history import (
     PaperFuturesHistoryContext,
     PaperFuturesSQLiteHistory,
@@ -18,9 +19,8 @@ from tiewtrade.integrations.sqlite.persistent_paper_futures_session import (
     PersistentPaperFuturesSQLiteSession,
 )
 from tiewtrade.integrations.sqlite.persistent_paper_spot_session import (
-    PersistentPaperSpotSQLiteSession,
+    create_persistent_paper_spot_session,
 )
-from tiewtrade.integrations.sqlite.session_persistence import PersistenceState
 from tiewtrade.integrations.sqlite.trade_history import SQLiteTradeHistory
 from tiewtrade.market_data.candle import Candle
 from tiewtrade.market_data.config import MarketDataConfig
@@ -147,7 +147,7 @@ def futures_candles() -> tuple[Candle, ...]:
 
 
 def run_closed_spot(store: SQLiteTradeHistory) -> UUID:
-    persistent = PersistentPaperSpotSQLiteSession(
+    persistent = create_persistent_paper_spot_session(
         build_spot_session(SPOT_SESSION_ID),
         spot_history(SPOT_SESSION_ID, store),
     )
@@ -163,7 +163,7 @@ def run_closed_spot(store: SQLiteTradeHistory) -> UUID:
 
 
 def run_spot_until_entry(store: SQLiteTradeHistory) -> OpenSpotHistory:
-    persistent = PersistentPaperSpotSQLiteSession(
+    persistent = create_persistent_paper_spot_session(
         build_spot_session(OPEN_SPOT_SESSION_ID),
         spot_history(OPEN_SPOT_SESSION_ID, store),
     )

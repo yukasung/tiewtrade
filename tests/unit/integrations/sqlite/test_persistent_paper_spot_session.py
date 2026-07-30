@@ -12,12 +12,15 @@ from tiewtrade.application.paper_spot_session import (
     PaperSpotSessionSnapshot,
     PaperSpotSessionState,
 )
+from tiewtrade.application.session_persistence import (
+    PersistenceState,
+    SessionPersistenceBlockedError,
+    SessionPersistenceCoordinator,
+)
 from tiewtrade.execution.paper_spot import PaperSpotEntryFill, PaperSpotExitFill
 from tiewtrade.integrations.sqlite.paper_spot_history import PaperSpotSQLiteHistory
 from tiewtrade.integrations.sqlite.persistent_paper_spot_session import (
-    PersistenceState,
-    PersistentPaperSpotSQLiteSession,
-    SessionPersistenceBlockedError,
+    create_persistent_paper_spot_session,
 )
 from tiewtrade.integrations.sqlite.trade_history import (
     TradeHistoryConflictError,
@@ -125,10 +128,10 @@ def session_identity() -> PaperSpotSessionIdentity:
 def persistent_session(
     session: PaperSpotSession,
     history: PaperSpotSQLiteHistory,
-) -> PersistentPaperSpotSQLiteSession:
+) -> SessionPersistenceCoordinator[PaperSpotSessionSnapshot]:
     session.identity = session_identity()  # type: ignore[misc]
     history.session_identity = session_identity()  # type: ignore[misc]
-    return PersistentPaperSpotSQLiteSession(session, history)
+    return create_persistent_paper_spot_session(session, history)
 
 
 @pytest.mark.parametrize(
@@ -155,7 +158,7 @@ def test_constructor_rejects_mismatched_session_and_history_identity(
         ValueError,
         match="Paper Spot Session and Trade History identity differ",
     ):
-        PersistentPaperSpotSQLiteSession(session, history)
+        create_persistent_paper_spot_session(session, history)
 
 
 def test_successful_entry_is_durable_before_ready_snapshot_returns() -> None:

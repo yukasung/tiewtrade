@@ -3,14 +3,14 @@ from pathlib import Path
 from uuid import UUID, uuid5
 
 from tiewtrade.application.paper_spot_session import PaperSpotSession
+from tiewtrade.application.session_persistence import PersistenceState
 from tiewtrade.integrations.sqlite.database import SQLiteDatabase
 from tiewtrade.integrations.sqlite.paper_spot_history import (
     PaperSpotHistoryContext,
     PaperSpotSQLiteHistory,
 )
 from tiewtrade.integrations.sqlite.persistent_paper_spot_session import (
-    PersistenceState,
-    PersistentPaperSpotSQLiteSession,
+    create_persistent_paper_spot_session,
 )
 from tiewtrade.integrations.sqlite.trade_history import SQLiteTradeHistory
 from tiewtrade.market_data.config import MarketDataConfig
@@ -50,7 +50,7 @@ def test_replayed_paper_spot_history_is_idempotent_after_sqlite_restart(
     first_basket = None
     first_fills = ()
     for replay_number in range(2):
-        persistent = PersistentPaperSpotSQLiteSession(
+        persistent = create_persistent_paper_spot_session(
             paper_spot_session(market_data, preset),
             history,
         )
