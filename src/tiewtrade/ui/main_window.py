@@ -83,6 +83,11 @@ class MainWindow(QMainWindow):
     @Slot(bool)
     def _set_busy(self, busy: bool) -> None:
         self.workspace.set_bot_busy(busy)
+        if busy or self._pending_validation_field is None:
+            return
+        validation_field = self._pending_validation_field
+        self._pending_validation_field = None
+        self.workspace.show_setup_for_validation(validation_field)
 
     @Slot(object)
     def _show_session(self, session: ConfiguredPaperSession) -> None:
@@ -100,12 +105,7 @@ class MainWindow(QMainWindow):
 
     @Slot()
     def _show_setup(self) -> None:
-        validation_field = self._pending_validation_field
-        self._pending_validation_field = None
-        if validation_field is None:
-            self.workspace.show_setup()
-            return
-        self.workspace.show_setup_for_validation(validation_field)
+        self.workspace.show_setup()
 
     @Slot()
     def _start_trade_history_once(self) -> None:

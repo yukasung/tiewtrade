@@ -152,7 +152,21 @@ class SessionSetupWidget(QWidget):
             self.create_requested.emit(self.values())
 
     def set_loading(self, loading: bool) -> None:
-        self.create_button.setDisabled(loading)
+        for control in (
+            self.market_type,
+            self.symbol_field,
+            self.timeframe,
+            self.preset_label,
+            self.available_capital,
+            self.max_entries,
+            self.spot_ratio,
+            self.leverage,
+            self.advanced_toggle,
+            self.fee_percent,
+            self.slippage_bps,
+            self.create_button,
+        ):
+            control.setDisabled(loading)
         self.create_button.setText("Creating…" if loading else "Create Paper Session")
 
     def clear_errors(self) -> None:
