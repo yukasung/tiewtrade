@@ -27,8 +27,14 @@
 **Files:**
 - Modify: `src/tiewtrade/market_data/completed_candle_stream.py`
 - Modify: `src/tiewtrade/market_data/candle_pipeline.py`
+- Modify: `src/tiewtrade/market_data/runtime.py`
+- Modify: `src/tiewtrade/application/paper_spot_session.py`
+- Modify: `src/tiewtrade/application/paper_futures_session.py`
 - Modify: `tests/unit/market_data/test_completed_candle_stream.py`
 - Modify: `tests/unit/market_data/test_candle_pipeline.py`
+- Modify: `tests/unit/market_data/test_runtime.py`
+- Modify if compatibility coverage is absent: `tests/unit/application/test_paper_spot_session.py`
+- Modify if compatibility coverage is absent: `tests/unit/application/test_paper_futures_session.py`
 
 **Interfaces:**
 - Consumes: `Candle`, `MarketDataConfig`, UTC `received_at`
@@ -93,7 +99,10 @@ Run:
 ```bash
 QT_QPA_PLATFORM=offscreen PYTHONPATH=src ../../.venv/bin/python -m pytest -q \
   tests/unit/market_data/test_completed_candle_stream.py \
-  tests/unit/market_data/test_candle_pipeline.py
+  tests/unit/market_data/test_candle_pipeline.py \
+  tests/unit/market_data/test_runtime.py \
+  tests/unit/application/test_paper_spot_session.py \
+  tests/unit/application/test_paper_futures_session.py
 ```
 
 Expected: FAIL ขณะ import `CandleAcceptance` เพราะ type ยังไม่มี
@@ -159,6 +168,21 @@ if (
     raise ValueError("buffered observation was not covered by backfill")
 ```
 
+ใน `paper_spot_session.py` และ `paper_futures_session.py` เปลี่ยนทุก consumer ของ
+`CompletedCandleStream.accept()` จาก boolean truthiness เป็นการเปรียบเทียบ
+`is not CandleAcceptance.ACCEPTED` ทั้ง live processing และ warm-up หาก tests เดิมยัง
+ไม่พิสูจน์ rejection behavior ให้เพิ่ม test ที่ส่ง not-closed หรือ duplicate Candle แล้ว
+ยืนยันว่า session คืน `accepted=False` และไม่อัปเดต trading state
+
+ใน `runtime.py` เปลี่ยน consumer ของ `process_live()` ให้ใช้ตัวแปร `decision` และ
+return ก่อน transition เมื่อ `decision is not CandleAcceptance.ACCEPTED`; เพิ่ม Runtime
+tests สำหรับ not-closed และ duplicate Candle เพื่อยืนยันว่าไม่มี
+`LIVE_CANDLE_ACCEPTED` transition ที่เกิดจาก Candle ซึ่ง Pipeline ไม่ได้ส่งเข้า sink
+
+ใน backfill commit path ต้องตรวจผลจาก real stream แบบ explicit เช่นกัน หากผลไม่ใช่
+`ACCEPTED` ให้ raise `CandlePipelineInputError` เพราะเป็น invariant violation หลัง
+deep-copy validation ไม่ใช่ silent discard
+
 - [ ] **Step 4: รัน focused tests เพื่อยืนยัน GREEN**
 
 Run command จาก Step 2 อีกครั้ง
@@ -174,8 +198,14 @@ Expected: focused tests PASS และ gap/validation semantics เดิมย�
 git diff --check
 git add src/tiewtrade/market_data/completed_candle_stream.py \
   src/tiewtrade/market_data/candle_pipeline.py \
+  src/tiewtrade/market_data/runtime.py \
+  src/tiewtrade/application/paper_spot_session.py \
+  src/tiewtrade/application/paper_futures_session.py \
   tests/unit/market_data/test_completed_candle_stream.py \
-  tests/unit/market_data/test_candle_pipeline.py
+  tests/unit/market_data/test_candle_pipeline.py \
+  tests/unit/market_data/test_runtime.py \
+  tests/unit/application/test_paper_spot_session.py \
+  tests/unit/application/test_paper_futures_session.py
 git commit -m "refactor: classify completed candle acceptance"
 ```
 

@@ -70,6 +70,13 @@ backfill paths เพื่อไม่พึ่ง truthiness ของ enum
 โดยไม่อ่าน private state ของ stream ส่วน warm-up หรือ backfill rejection ยังคงเป็น
 `CandlePipelineInputError` และ fail closed ตามเดิม เพราะไม่ใช่ silent live discard
 
+Paper Spot และ Paper Futures ซึ่งใช้ `CompletedCandleStream` ร่วมกันต้องเปรียบเทียบ
+`CandleAcceptance.ACCEPTED` แบบ explicit เช่นกัน เพื่อคง acceptance/rejection behavior
+เดิมหลังเปลี่ยน return type; การเปลี่ยนนี้ไม่แก้ business หรือ execution policy
+Runtime ต้องเปรียบเทียบผลจาก `CompletedCandlePipeline.process_live()` แบบ explicit ใน
+Task เดียวกัน เพื่อไม่ให้สมาชิก `StrEnum` ที่ถูกปฏิเสธถูกตีความเป็น accepted ระหว่าง
+ช่วงที่ structured event wiring ยังไม่ถูกเพิ่ม
+
 ## 5. Event Contract
 
 `MarketDataEventName` เป็น `StrEnum` และทุก record ใช้ event name เป็นทั้ง log message
@@ -186,10 +193,16 @@ mypy source, docs tests, content check และ `git diff --check`
 - Modify: `src/tiewtrade/market_data/completed_candle_stream.py`
 - Modify: `src/tiewtrade/market_data/candle_pipeline.py`
 - Modify: `src/tiewtrade/market_data/runtime.py`
+- Modify: `src/tiewtrade/application/paper_spot_session.py`
+- Modify: `src/tiewtrade/application/paper_futures_session.py`
 - Create: `tests/unit/market_data/test_runtime_logging.py`
 - Modify: `tests/unit/market_data/test_completed_candle_stream.py`
 - Modify: `tests/unit/market_data/test_candle_pipeline.py`
 - Modify: `tests/unit/market_data/test_runtime.py`
+- Modify: `tests/unit/application/test_paper_spot_session.py` (หากจำเป็นต่อ
+  compatibility coverage)
+- Modify: `tests/unit/application/test_paper_futures_session.py` (หากจำเป็นต่อ
+  compatibility coverage)
 - Modify: `tests/acceptance/test_public_market_data_runtime.py`
 
 ไม่เพิ่ม production module อื่น เพราะ event ownership อยู่ที่ Market Data consumer
