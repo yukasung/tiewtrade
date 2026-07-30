@@ -1,4 +1,5 @@
 from PySide6.QtCore import Qt, Signal, Slot
+from PySide6.QtGui import QResizeEvent
 from PySide6.QtWidgets import (
     QFrame,
     QHBoxLayout,
@@ -15,6 +16,9 @@ from tiewtrade.ui.preset_display import preset_display_name
 from tiewtrade.ui.session_overview import SessionOverviewWidget
 from tiewtrade.ui.session_setup import SessionSetupWidget
 from tiewtrade.ui.trade_history_page import TradeHistoryPage
+
+BOT_CONTROL_BREAKPOINT = 1200
+BOT_CONTROL_WIDTH = 360
 
 
 class TradingWorkspace(QWidget):
@@ -63,6 +67,13 @@ class TradingWorkspace(QWidget):
         unavailable_layout.addStretch()
 
         self._build_layout()
+        self.compact_mode = self.width() < BOT_CONTROL_BREAKPOINT
+        self._drawer_open = False
+        self.bot_control_button = QPushButton("Bot Control")
+        self.bot_control_button.setObjectName("secondaryButton")
+        self.bot_control_button.clicked.connect(self.open_bot_control)
+        self._header_layout.addWidget(self.bot_control_button)
+        self._apply_layout_mode()
 
     @Slot()
     def show_setup(self) -> None:
@@ -89,6 +100,61 @@ class TradingWorkspace(QWidget):
         self.setup.set_loading(busy)
         self.unavailable_retry_button.setDisabled(busy)
 
+    def resizeEvent(self, event: QResizeEvent) -> None:
+        super().resizeEvent(event)
+        compact = event.size().width() < BOT_CONTROL_BREAKPOINT
+        if compact != self.compact_mode:
+            self.compact_mode = compact
+            self._apply_layout_mode()
+        if self.compact_mode and self._drawer_open:
+            self._position_drawer()
+
+    @Slot()
+    def open_bot_control(self) -> None:
+        if not self.compact_mode:
+            return
+        self._drawer_open = True
+        self._position_drawer()
+        self.bot_control.show()
+        self.bot_control.raise_()
+        self.bot_control.setFocus()
+
+    @Slot()
+    def close_bot_control(self) -> None:
+        if not self.compact_mode:
+            return
+        self._drawer_open = False
+        self.bot_control.hide()
+        self.bot_control_button.setFocus()
+
+    def _position_drawer(self) -> None:
+        width = min(BOT_CONTROL_WIDTH, self.width())
+        top = self.workspace_header.geometry().bottom() + 13
+        self.bot_control.setGeometry(
+            self.width() - width,
+            top,
+            width,
+            self.height() - top,
+        )
+
+    def _apply_layout_mode(self) -> None:
+        self._body_layout.removeWidget(self.bot_control)
+        if self.compact_mode:
+            self._drawer_open = False
+            self.bot_control.setMinimumWidth(0)
+            self.bot_control.setMaximumWidth(BOT_CONTROL_WIDTH)
+            self.bot_control.setParent(self)
+            self.bot_control.hide()
+            self.bot_control_button.show()
+            return
+
+        self._drawer_open = False
+        self.bot_control_button.hide()
+        self.bot_control.setParent(self._body)
+        self.bot_control.setFixedWidth(BOT_CONTROL_WIDTH)
+        self._body_layout.addWidget(self.bot_control)
+        self.bot_control.show()
+
     def _build_layout(self) -> None:
         root = QVBoxLayout(self)
         root.setContentsMargins(16, 16, 16, 16)
@@ -96,11 +162,11 @@ class TradingWorkspace(QWidget):
 
         self.workspace_header = QFrame()
         self.workspace_header.setObjectName("workspaceHeader")
-        header_layout = QHBoxLayout(self.workspace_header)
-        header_layout.setContentsMargins(16, 10, 16, 10)
+        self._header_layout = QHBoxLayout(self.workspace_header)
+        self._header_layout.setContentsMargins(16, 10, 16, 10)
         brand = QLabel("TIEWTRADE")
         brand.setObjectName("brand")
-        header_layout.addWidget(brand)
+        self._header_layout.addWidget(brand)
         for label in (
             self.header_symbol,
             self.header_timeframe,
@@ -109,15 +175,15 @@ class TradingWorkspace(QWidget):
             self.header_runtime,
             self.header_freshness,
         ):
-            header_layout.addWidget(label)
-        header_layout.addStretch()
+            self._header_layout.addWidget(label)
+        self._header_layout.addStretch()
         root.addWidget(self.workspace_header)
 
-        body = QWidget()
-        body.setObjectName("workspaceContent")
-        body_layout = QHBoxLayout(body)
-        body_layout.setContentsMargins(0, 0, 0, 0)
-        body_layout.setSpacing(12)
+        self._body = QWidget()
+        self._body.setObjectName("workspaceContent")
+        self._body_layout = QHBoxLayout(self._body)
+        self._body_layout.setContentsMargins(0, 0, 0, 0)
+        self._body_layout.setSpacing(12)
 
         primary = QWidget()
         primary_layout = QVBoxLayout(primary)
@@ -134,16 +200,17 @@ class TradingWorkspace(QWidget):
 
         self.bot_control = QFrame()
         self.bot_control.setObjectName("botControl")
-        self.bot_control.setFixedWidth(360)
+        self.bot_control.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
+        self.bot_control.setFixedWidth(BOT_CONTROL_WIDTH)
         bot_layout = QVBoxLayout(self.bot_control)
         bot_title = QLabel("Bot Control")
         bot_title.setObjectName("sectionTitle")
         bot_layout.addWidget(bot_title)
         bot_layout.addWidget(self._bot_pages, 1)
 
-        body_layout.addWidget(primary, 1)
-        body_layout.addWidget(self.bot_control)
-        root.addWidget(body, 1)
+        self._body_layout.addWidget(primary, 1)
+        self._body_layout.addWidget(self.bot_control)
+        root.addWidget(self._body, 1)
 
     @Slot(int)
     def _tab_changed(self, index: int) -> None:

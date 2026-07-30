@@ -1,6 +1,7 @@
 from pytestqt.qtbot import QtBot
 
 from tests.support.paper_session_setup import configured_spot_session
+from tests.support.qt_interactions import click
 from tiewtrade.ui.trading_workspace import TradingWorkspace
 
 
@@ -18,6 +19,67 @@ def test_workspace_places_existing_features_in_one_screen(qtbot: QtBot) -> None:
     assert workspace.orders_state.text() == "No open orders"
     assert workspace.position_state.text() == "No open Position or Basket"
     assert workspace.setup.isVisible()
+
+
+def test_bot_control_is_docked_at_wide_width(qtbot: QtBot) -> None:
+    workspace = TradingWorkspace()
+    qtbot.addWidget(workspace)
+    workspace.resize(1200, 700)
+    workspace.show()
+
+    qtbot.waitUntil(lambda: not workspace.compact_mode)
+
+    assert workspace.bot_control.isVisible()
+    assert not workspace.bot_control_button.isVisible()
+
+
+def test_bot_control_uses_drawer_below_breakpoint(qtbot: QtBot) -> None:
+    workspace = TradingWorkspace()
+    qtbot.addWidget(workspace)
+    workspace.resize(1199, 700)
+    workspace.show()
+    workspace.activateWindow()
+
+    qtbot.waitUntil(workspace.isActiveWindow)
+
+    qtbot.waitUntil(lambda: workspace.compact_mode)
+    assert not workspace.bot_control.isVisible()
+    assert workspace.bot_control_button.isVisible()
+
+    click(workspace.bot_control_button)
+
+    assert workspace.bot_control.isVisible()
+    assert workspace.bot_control.geometry().right() == workspace.rect().right()
+
+    workspace.close_bot_control()
+
+    assert not workspace.bot_control.isVisible()
+    assert workspace.bot_control_button.hasFocus()
+
+
+def test_resizing_keeps_the_same_bot_control_and_workspace_state(
+    qtbot: QtBot,
+) -> None:
+    workspace = TradingWorkspace()
+    qtbot.addWidget(workspace)
+    workspace.resize(1200, 700)
+    workspace.show()
+    session = configured_spot_session()
+    bot_control = workspace.bot_control
+
+    workspace.show_configured_session(session)
+    workspace.tabs.setCurrentWidget(workspace.trade_history)
+    workspace.resize(1199, 700)
+    qtbot.waitUntil(lambda: workspace.compact_mode)
+    click(workspace.bot_control_button)
+    workspace.resize(1200, 700)
+    qtbot.waitUntil(lambda: not workspace.compact_mode)
+
+    assert workspace.bot_control is bot_control
+    assert workspace.overview.isVisible()
+    assert workspace.header_runtime.text() == "Configured"
+    assert workspace.tabs.currentWidget() is workspace.trade_history
+    assert workspace.bot_control.isVisible()
 
 
 def test_configured_session_updates_header_and_bot_control(qtbot: QtBot) -> None:
@@ -50,6 +112,7 @@ def test_unavailable_state_and_busy_control_are_scoped_to_bot_control(
 ) -> None:
     workspace = TradingWorkspace()
     qtbot.addWidget(workspace)
+    workspace.resize(1200, 700)
     workspace.show()
 
     workspace.show_unavailable("Paper Session unavailable")
