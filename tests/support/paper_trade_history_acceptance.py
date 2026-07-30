@@ -4,9 +4,15 @@ from decimal import Decimal
 from pathlib import Path
 from uuid import UUID
 
-from tiewtrade.application.paper_futures_session import PaperFuturesSession
+from tiewtrade.application.paper_futures_session import (
+    PaperFuturesSession,
+    PaperFuturesSessionSnapshot,
+)
 from tiewtrade.application.paper_spot_session import PaperSpotSession
-from tiewtrade.application.session_persistence import PersistenceState
+from tiewtrade.application.session_persistence import (
+    PersistenceState,
+    SessionPersistenceCoordinator,
+)
 from tiewtrade.integrations.sqlite.paper_futures_history import (
     PaperFuturesHistoryContext,
     PaperFuturesSQLiteHistory,
@@ -16,7 +22,7 @@ from tiewtrade.integrations.sqlite.paper_spot_history import (
     PaperSpotSQLiteHistory,
 )
 from tiewtrade.integrations.sqlite.persistent_paper_futures_session import (
-    PersistentPaperFuturesSQLiteSession,
+    create_persistent_paper_futures_session,
 )
 from tiewtrade.integrations.sqlite.persistent_paper_spot_session import (
     create_persistent_paper_spot_session,
@@ -190,9 +196,11 @@ def run_spot_until_entry(store: SQLiteTradeHistory) -> OpenSpotHistory:
 
 
 def run_closed_futures(store: SQLiteTradeHistory) -> UUID:
-    persistent = PersistentPaperFuturesSQLiteSession(
-        build_futures_session(FUTURES_SESSION_ID),
-        futures_history(FUTURES_SESSION_ID, store),
+    persistent: SessionPersistenceCoordinator[PaperFuturesSessionSnapshot] = (
+        create_persistent_paper_futures_session(
+            build_futures_session(FUTURES_SESSION_ID),
+            futures_history(FUTURES_SESSION_ID, store),
+        )
     )
     for candle in futures_candles():
         snapshot = persistent.process_completed_candle(

@@ -10,7 +10,7 @@ from tiewtrade.integrations.sqlite.paper_futures_history import (
     PaperFuturesSQLiteHistory,
 )
 from tiewtrade.integrations.sqlite.persistent_paper_futures_session import (
-    PersistentPaperFuturesSQLiteSession,
+    create_persistent_paper_futures_session,
 )
 from tiewtrade.integrations.sqlite.trade_history import SQLiteTradeHistory
 from tiewtrade.market_data.candle import Candle
@@ -40,7 +40,7 @@ def test_paper_futures_history_survives_restart_and_duplicate_replay(
         commission_asset="USDT",
         leverage=3,
     )
-    persistent = PersistentPaperFuturesSQLiteSession(
+    persistent = create_persistent_paper_futures_session(
         build_session(),
         PaperFuturesSQLiteHistory(context, store),
     )

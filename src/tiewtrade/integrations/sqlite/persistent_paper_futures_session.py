@@ -1,65 +1,21 @@
-from dataclasses import dataclass
-from datetime import datetime
-
 from tiewtrade.application.paper_futures_session import (
     PaperFuturesSession,
     PaperFuturesSessionSnapshot,
 )
-from tiewtrade.application.session_persistence import (
-    PersistenceState,
-    SessionPersistenceBlockedError,
-)
+from tiewtrade.application.session_persistence import SessionPersistenceCoordinator
 from tiewtrade.integrations.sqlite.paper_futures_history import (
     PaperFuturesSQLiteHistory,
 )
-from tiewtrade.market_data.candle import Candle
+from tiewtrade.integrations.sqlite.session_persistence import (
+    SQLiteSessionPersistenceCoordinator,
+)
 
 
-@dataclass(frozen=True, slots=True)
-class PersistentPaperFuturesSnapshot:
-    session: PaperFuturesSessionSnapshot
-    persistence_state: PersistenceState
-
-
-class PersistentPaperFuturesSQLiteSession:
-    def __init__(
-        self,
-        session: PaperFuturesSession,
-        history: PaperFuturesSQLiteHistory,
-    ) -> None:
-        if session.identity != history.session_identity:
-            raise ValueError("Paper Futures Session and Trade History identity differ")
-        self._session = session
+class _PaperFuturesSnapshotRecorder:
+    def __init__(self, history: PaperFuturesSQLiteHistory) -> None:
         self._history = history
-        self._state = PersistenceState.READY
 
-    def process_completed_candle(
-        self,
-        candle: Candle,
-        *,
-        received_at: datetime,
-    ) -> PersistentPaperFuturesSnapshot:
-        if self._state is PersistenceState.BLOCKED:
-            raise SessionPersistenceBlockedError(
-                "Session is blocked because Trade History persistence failed"
-            )
-
-        snapshot = self._session.process_completed_candle(
-            candle,
-            received_at=received_at,
-        )
-        try:
-            self._record_snapshot(snapshot)
-        except Exception:
-            self._state = PersistenceState.BLOCKED
-            raise
-
-        return PersistentPaperFuturesSnapshot(
-            session=snapshot,
-            persistence_state=self._state,
-        )
-
-    def _record_snapshot(self, snapshot: PaperFuturesSessionSnapshot) -> None:
+    def record(self, snapshot: PaperFuturesSessionSnapshot) -> None:
         if snapshot.entry_fill is not None:
             if snapshot.basket_id is None:
                 raise ValueError("entry Fill requires a Basket ID")
@@ -83,3 +39,13 @@ class PersistentPaperFuturesSQLiteSession:
             fill=snapshot.exit_fill,
             closed=snapshot.closed_basket,
         )
+
+
+def create_persistent_paper_futures_session(
+    session: PaperFuturesSession,
+    history: PaperFuturesSQLiteHistory,
+) -> SessionPersistenceCoordinator[PaperFuturesSessionSnapshot]:
+    if session.identity != history.session_identity:
+        raise ValueError("Paper Futures Session and Trade History identity differ")
+    recorder = _PaperFuturesSnapshotRecorder(history)
+    return SQLiteSessionPersistenceCoordinator(session, recorder.record)

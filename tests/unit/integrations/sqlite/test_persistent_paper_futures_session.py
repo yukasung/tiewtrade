@@ -12,6 +12,11 @@ from tiewtrade.application.paper_futures_session import (
     PaperFuturesSessionSnapshot,
     PaperFuturesSessionState,
 )
+from tiewtrade.application.session_persistence import (
+    PersistenceState,
+    SessionPersistenceBlockedError,
+    SessionPersistenceCoordinator,
+)
 from tiewtrade.execution.paper_futures import (
     PaperFuturesEntryFill,
     PaperFuturesExitFill,
@@ -20,11 +25,7 @@ from tiewtrade.integrations.sqlite.paper_futures_history import (
     PaperFuturesSQLiteHistory,
 )
 from tiewtrade.integrations.sqlite.persistent_paper_futures_session import (
-    PersistentPaperFuturesSQLiteSession,
-)
-from tiewtrade.integrations.sqlite.session_persistence import (
-    PersistenceState,
-    SessionPersistenceBlockedError,
+    create_persistent_paper_futures_session,
 )
 from tiewtrade.integrations.sqlite.trade_history import (
     TradeHistoryConflictError,
@@ -147,10 +148,10 @@ def session_identity() -> PaperFuturesSessionIdentity:
 def persistent_session(
     session: PaperFuturesSession,
     history: PaperFuturesSQLiteHistory,
-) -> PersistentPaperFuturesSQLiteSession:
+) -> SessionPersistenceCoordinator[PaperFuturesSessionSnapshot]:
     session.identity = session_identity()  # type: ignore[misc]
     history.session_identity = session_identity()  # type: ignore[misc]
-    return PersistentPaperFuturesSQLiteSession(session, history)
+    return create_persistent_paper_futures_session(session, history)
 
 
 def test_entry_is_durable_before_ready_snapshot_returns() -> None:
@@ -319,7 +320,7 @@ def test_exit_without_closed_basket_fails_closed() -> None:
     history.record_close.assert_not_called()
 
 
-def test_constructor_rejects_mismatched_session_and_history_identity() -> None:
+def test_factory_rejects_mismatched_session_and_history_identity() -> None:
     session = create_autospec(PaperFuturesSession, instance=True)
     history = create_autospec(PaperFuturesSQLiteHistory, instance=True)
     session.identity = session_identity()  # type: ignore[misc]
@@ -329,4 +330,4 @@ def test_constructor_rejects_mismatched_session_and_history_identity() -> None:
     )
 
     with pytest.raises(ValueError, match="identity"):
-        PersistentPaperFuturesSQLiteSession(session, history)
+        create_persistent_paper_futures_session(session, history)
