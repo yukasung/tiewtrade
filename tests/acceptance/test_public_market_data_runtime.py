@@ -2,17 +2,21 @@ from __future__ import annotations
 
 import asyncio
 import inspect
+import logging
 from collections.abc import AsyncIterator, Awaitable, Iterable
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from typing import TypeVar
 from uuid import UUID
 
+import pytest
+
 from tiewtrade.application.paper_spot_market_data import PaperSpotMarketDataSink
 from tiewtrade.application.paper_spot_session import PaperSpotSession
 from tiewtrade.market_data.candle import Candle
 from tiewtrade.market_data.config import MarketDataConfig
 from tiewtrade.market_data.runtime import MarketDataRuntime
+from tiewtrade.market_data.runtime_logging import MarketDataEventName
 from tiewtrade.market_data.runtime_state import (
     MarketDataRuntimeReason,
     MarketDataRuntimeState,
@@ -177,12 +181,17 @@ def test_rate_limit_exhaustion_fails_closed_without_paper_spot_delivery() -> Non
     assert sink.last_snapshot is None
 
 
-def test_fatal_source_failure_fails_closed_without_paper_spot_delivery() -> None:
+def test_fatal_source_failure_fails_closed_without_paper_spot_delivery(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    logger = logging.getLogger("acceptance.market_data.fatal_source_failure")
+    caplog.set_level(logging.INFO, logger=logger.name)
     runtime, source, sink, scheduler = runtime_with_failing_stream(
         MarketDataFatalError(
             "bad request",
             kind=MarketDataFailureKind.PROTOCOL,
-        )
+        ),
+        logger=logger,
     )
 
     asyncio.run(runtime.run())
@@ -193,10 +202,36 @@ def test_fatal_source_failure_fails_closed_without_paper_spot_delivery() -> None
     assert source.stream_count == 1
     assert sink.live_candle_count == 0
     assert sink.last_snapshot is None
+    terminal_record = next(
+        record
+        for record in caplog.records
+        if getattr(record, "event_name", None)
+        == MarketDataEventName.RUNTIME_FAILED_CLOSED.value
+    )
+    assert terminal_record.event_name == "market_data.runtime.failed_closed"
+    assert terminal_record.reason == "source_fatal"
+    assert terminal_record.failure_kind == "protocol"
+    assert (
+        not {
+            "api_key",
+            "secret",
+            "credentials",
+            "payload",
+            "exception",
+            "open",
+            "high",
+            "low",
+            "close",
+            "volume",
+        }
+        & terminal_record.__dict__.keys()
+    )
 
 
 def runtime_with_failing_stream(
     failure: Exception,
+    *,
+    logger: logging.Logger | None = None,
 ) -> tuple[
     MarketDataRuntime,
     FakeFailingPublicCandleSource,
@@ -217,6 +252,7 @@ def runtime_with_failing_stream(
         source=source,
         sink=sink,
         scheduler=scheduler,
+        logger=logger,
     )
     return runtime, source, sink, scheduler
 
