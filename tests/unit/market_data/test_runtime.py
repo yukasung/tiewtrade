@@ -11,6 +11,7 @@ from typing import TypeVar, cast, get_type_hints
 
 import pytest
 
+from tests.support.market_data_logging import market_data_records
 from tiewtrade.market_data.candle import Candle
 from tiewtrade.market_data.candle_pipeline import (
     MarketDataCandleSink as PipelineMarketDataCandleSink,
@@ -719,10 +720,6 @@ def runtime_for(
     return runtime
 
 
-def market_data_records(caplog: pytest.LogCaptureFixture) -> list[logging.LogRecord]:
-    return [record for record in caplog.records if hasattr(record, "event_name")]
-
-
 async def run_until_sink_receives(
     runtime: MarketDataRuntime,
     sink: RecordingSink,
@@ -744,12 +741,12 @@ async def run_until_market_data_record_count(
     task = asyncio.create_task(runtime.run())
     try:
         for _ in range(100):
-            if len(market_data_records(caplog)) >= count:
+            if len(market_data_records(caplog.records)) >= count:
                 return
             if task.done():
                 break
             await asyncio.sleep(0)
-        records = market_data_records(caplog)
+        records = market_data_records(caplog.records)
         if len(records) >= count:
             return
         record_label = "record" if count == 1 else "records"
@@ -1094,7 +1091,7 @@ def test_plain_warm_up_source_failure_logs_original_kind_without_retry(
     assert scheduler.sleeps == []
     assert runtime.snapshot.state is MarketDataRuntimeState.FAILED_CLOSED
     assert runtime.snapshot.reason is MarketDataRuntimeReason.SOURCE_ERROR
-    terminal_record = market_data_records(caplog)[-1]
+    terminal_record = market_data_records(caplog.records)[-1]
     assert terminal_record.event_name == MarketDataEventName.RUNTIME_FAILED_CLOSED.value
     assert terminal_record.reason == MarketDataRuntimeReason.SOURCE_ERROR.value
     assert terminal_record.failure_kind == MarketDataFailureKind.PAYLOAD.value
@@ -1158,7 +1155,7 @@ def test_cleanup_terminal_record_reuses_primary_reason_and_kind(
     assert not hasattr(runtime.snapshot, "failure_kind")
     terminal_records = [
         record
-        for record in market_data_records(caplog)
+        for record in market_data_records(caplog.records)
         if record.event_name == MarketDataEventName.RUNTIME_FAILED_CLOSED.value
     ]
     assert len(terminal_records) == 2
@@ -1349,7 +1346,7 @@ def test_repeated_rate_limit_fails_closed_without_one_two_four_backoff(
     assert scheduler.sleeps == [60.0, 60.0, 60.0]
     assert runtime.snapshot.state is MarketDataRuntimeState.FAILED_CLOSED
     assert runtime.snapshot.reason is MarketDataRuntimeReason.RATE_LIMIT_EXHAUSTED
-    terminal_record = market_data_records(caplog)[-1]
+    terminal_record = market_data_records(caplog.records)[-1]
     assert terminal_record.event_name == MarketDataEventName.RUNTIME_FAILED_CLOSED.value
     assert terminal_record.reason == MarketDataRuntimeReason.RATE_LIMIT_EXHAUSTED.value
     assert terminal_record.failure_kind == MarketDataFailureKind.PROTOCOL.value
@@ -1445,7 +1442,7 @@ def test_fatal_backfill_logs_failure_kind_before_terminal_event(
     assert scheduler.sleeps == []
     assert runtime.snapshot.state is MarketDataRuntimeState.FAILED_CLOSED
     assert runtime.snapshot.reason is MarketDataRuntimeReason.SOURCE_FATAL
-    records = market_data_records(caplog)
+    records = market_data_records(caplog.records)
     assert [record.event_name for record in records][-2:] == [
         MarketDataEventName.BACKFILL_FAILED.value,
         MarketDataEventName.RUNTIME_FAILED_CLOSED.value,
@@ -1499,7 +1496,7 @@ def test_retryable_backfill_failure_uses_bounded_backoff_then_fails_closed(
     assert scheduler.sleeps == [1.0, 2.0, 4.0]
     assert runtime.snapshot.state is MarketDataRuntimeState.FAILED_CLOSED
     assert runtime.snapshot.reason is MarketDataRuntimeReason.SOURCE_ERROR
-    records = market_data_records(caplog)
+    records = market_data_records(caplog.records)
     assert [record.event_name for record in records][-2:] == [
         MarketDataEventName.BACKFILL_FAILED.value,
         MarketDataEventName.RUNTIME_FAILED_CLOSED.value,
@@ -1659,7 +1656,7 @@ def test_reconnect_exhaustion_logs_latest_failure_kind(
 
     assert scheduler.sleeps == [1.0, 2.0, 4.0]
     assert runtime.snapshot.reason is MarketDataRuntimeReason.RECONNECT_EXHAUSTED
-    terminal_record = market_data_records(caplog)[-1]
+    terminal_record = market_data_records(caplog.records)[-1]
     assert terminal_record.event_name == MarketDataEventName.RUNTIME_FAILED_CLOSED.value
     assert terminal_record.failure_kind == expected_failure_kind
 
@@ -1698,7 +1695,7 @@ def test_async_iterator_rate_limit_exhausts_provider_delays_in_state_order(
     assert runtime.snapshot.reason is MarketDataRuntimeReason.RATE_LIMIT_EXHAUSTED
     reconnect_records = [
         record
-        for record in market_data_records(caplog)
+        for record in market_data_records(caplog.records)
         if record.event_name == MarketDataEventName.RECONNECT_ATTEMPTED.value
     ]
     assert [record.attempt for record in reconnect_records] == [1, 2, 3]
@@ -1815,7 +1812,7 @@ def test_duplicate_live_candle_logs_only_discard(
     assert runtime.snapshot.state is MarketDataRuntimeState.STOPPED
     discard_records = [
         record
-        for record in market_data_records(caplog)
+        for record in market_data_records(caplog.records)
         if record.event_name == MarketDataEventName.CANDLE_DISCARDED.value
     ]
     assert len(discard_records) == 1
@@ -1823,7 +1820,7 @@ def test_duplicate_live_candle_logs_only_discard(
         discard_records[0].discard_reason
         == CandleAcceptance.DUPLICATE_OR_OUT_OF_ORDER.value
     )
-    assert [record.event_name for record in market_data_records(caplog)] == [
+    assert [record.event_name for record in market_data_records(caplog.records)] == [
         MarketDataEventName.CANDLE_DISCARDED.value,
     ]
 
@@ -1840,7 +1837,7 @@ def test_not_closed_live_candle_logs_discard_then_clock_skew(
 
     asyncio.run(run_until_sink_receives_or_runtime_stops(runtime, sink, count=1))
 
-    records = market_data_records(caplog)
+    records = market_data_records(caplog.records)
     assert [record.event_name for record in records] == [
         MarketDataEventName.CANDLE_DISCARDED.value,
         MarketDataEventName.CLOCK_SKEW_DETECTED.value,
@@ -1872,7 +1869,7 @@ def test_pipeline_input_failure_logs_terminal_source_error_without_failure_kind(
     assert runtime.snapshot.state is MarketDataRuntimeState.FAILED_CLOSED
     assert runtime.snapshot.reason is MarketDataRuntimeReason.SOURCE_ERROR
     assert sink.live_candles == []
-    terminal_record = market_data_records(caplog)[-1]
+    terminal_record = market_data_records(caplog.records)[-1]
     assert terminal_record.event_name == MarketDataEventName.RUNTIME_FAILED_CLOSED.value
     assert terminal_record.reason == MarketDataRuntimeReason.SOURCE_ERROR.value
     assert terminal_record.failure_kind is None
@@ -1938,7 +1935,7 @@ def test_gap_backfill_logs_completed_range_and_count(
     assert source.backfill_within_deadline
     record = next(
         record
-        for record in market_data_records(caplog)
+        for record in market_data_records(caplog.records)
         if record.event_name == MarketDataEventName.BACKFILL_COMPLETED.value
     )
     assert record.start == "2026-01-01T00:15:00+00:00"
@@ -1964,7 +1961,7 @@ def test_backfill_without_delivery_watermark_logs_requested_boundary_before_term
 
     assert result is False
     assert runtime.snapshot.state is MarketDataRuntimeState.FAILED_CLOSED
-    records = market_data_records(caplog)
+    records = market_data_records(caplog.records)
     assert [record.event_name for record in records] == [
         MarketDataEventName.BACKFILL_FAILED.value,
         MarketDataEventName.RUNTIME_FAILED_CLOSED.value,
@@ -2035,7 +2032,7 @@ def test_non_candle_backfill_output_fails_closed_and_closes_source() -> None:
         ranges={
             (candle_at(15).open_time, candle_at(25).open_time): (
                 candle_at(15),
-                object(),
+                cast(Candle, object()),
             )
         },
     )
@@ -2114,12 +2111,12 @@ def test_stale_reconnect_uses_new_boundary_deadline_and_recovers(
     assert runtime.snapshot.state is MarketDataRuntimeState.STOPPED
     stale_records = [
         record
-        for record in market_data_records(caplog)
+        for record in market_data_records(caplog.records)
         if record.event_name == MarketDataEventName.STALE_DETECTED.value
     ]
     reconnect_records = [
         record
-        for record in market_data_records(caplog)
+        for record in market_data_records(caplog.records)
         if record.event_name == MarketDataEventName.RECONNECT_ATTEMPTED.value
     ]
     assert len(stale_records) == 1
@@ -2147,14 +2144,14 @@ def test_reconnect_uses_one_two_four_seconds_then_fails_closed(
     assert runtime.snapshot.reason is MarketDataRuntimeReason.RECONNECT_EXHAUSTED
     reconnect_records = [
         record
-        for record in market_data_records(caplog)
+        for record in market_data_records(caplog.records)
         if record.event_name == MarketDataEventName.RECONNECT_ATTEMPTED.value
     ]
     assert [record.attempt for record in reconnect_records] == [1, 2, 3]
     assert [record.delay_seconds for record in reconnect_records] == [1.0, 2.0, 4.0]
     assert not any(
         record.event_name == MarketDataEventName.STALE_DETECTED.value
-        for record in market_data_records(caplog)
+        for record in market_data_records(caplog.records)
     )
 
 
@@ -2253,7 +2250,7 @@ def test_backfill_sink_failure_logs_before_terminal_without_failure_kind(
     assert runtime.snapshot.state is MarketDataRuntimeState.FAILED_CLOSED
     assert runtime.snapshot.reason is MarketDataRuntimeReason.SINK_ERROR
     assert sink.live_candles == []
-    records = market_data_records(caplog)
+    records = market_data_records(caplog.records)
     assert [record.event_name for record in records][-2:] == [
         MarketDataEventName.BACKFILL_FAILED.value,
         MarketDataEventName.RUNTIME_FAILED_CLOSED.value,
@@ -2333,7 +2330,7 @@ def test_stop_cancels_reconnect_delay_and_awaits_cleanup(
     assert runtime.snapshot.state is MarketDataRuntimeState.STOPPED
     assert not any(
         record.event_name == MarketDataEventName.RECONNECT_ATTEMPTED.value
-        for record in market_data_records(caplog)
+        for record in market_data_records(caplog.records)
     )
 
 

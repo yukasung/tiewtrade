@@ -4,6 +4,7 @@ from datetime import UTC, datetime
 
 import pytest
 
+from tests.support.market_data_logging import as_market_data_record
 from tiewtrade.market_data.completed_candle_stream import CandleAcceptance
 from tiewtrade.market_data.runtime_logging import (
     MarketDataEventName,
@@ -182,7 +183,7 @@ PROHIBITED_FIELDS = {
     ],
 )
 def test_typed_event_records_follow_exact_contract(
-    caplog,
+    caplog: pytest.LogCaptureFixture,
     emit: Callable[[MarketDataRuntimeLog], None],
     event_name: MarketDataEventName,
     level: int,
@@ -194,9 +195,10 @@ def test_typed_event_records_follow_exact_contract(
     emit(runtime_log)
 
     record = caplog.records[-1]
+    typed_record = as_market_data_record(record)
     fields = custom_fields(record)
-    assert record.getMessage() == event_name.value
-    assert record.levelno == level
+    assert typed_record.getMessage() == event_name.value
+    assert typed_record.levelno == level
     assert fields == expected_fields
     assert PROHIBITED_FIELDS.isdisjoint(fields)
     for integer_field in ("attempt", "candle_count"):
@@ -204,8 +206,9 @@ def test_typed_event_records_follow_exact_contract(
             assert type(fields[integer_field]) is int
     for float_field in ("delay_seconds", "skew_seconds"):
         if float_field in fields:
-            assert type(fields[float_field]) is float
-            assert fields[float_field] >= 0.0
+            value = fields[float_field]
+            assert isinstance(value, float)
+            assert value >= 0.0
 
 
 class RaisingHandler(logging.Handler):

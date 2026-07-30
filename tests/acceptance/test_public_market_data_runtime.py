@@ -11,6 +11,7 @@ from uuid import UUID
 
 import pytest
 
+from tests.support.market_data_logging import market_data_records
 from tiewtrade.application.paper_spot_market_data import PaperSpotMarketDataSink
 from tiewtrade.application.paper_spot_session import PaperSpotSession
 from tiewtrade.market_data.candle import Candle
@@ -204,9 +205,8 @@ def test_fatal_source_failure_fails_closed_without_paper_spot_delivery(
     assert sink.last_snapshot is None
     terminal_record = next(
         record
-        for record in caplog.records
-        if getattr(record, "event_name", None)
-        == MarketDataEventName.RUNTIME_FAILED_CLOSED.value
+        for record in market_data_records(caplog.records)
+        if record.event_name == MarketDataEventName.RUNTIME_FAILED_CLOSED.value
     )
     assert terminal_record.event_name == "market_data.runtime.failed_closed"
     assert terminal_record.reason == "source_fatal"
