@@ -44,6 +44,7 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("TiewTrade")
         self.setMinimumSize(1024, 700)
         self.resize(1440, 900)
+        self._pending_validation_field: str | None = None
 
         self._workflow = SessionWorkflow(
             create_session=create_session,
@@ -75,6 +76,7 @@ class MainWindow(QMainWindow):
         if not isinstance(raw_values, PaperSessionSetupValues):
             return
 
+        self._pending_validation_field = None
         self.setup.clear_errors()
         self._workflow.create(raw_values)
 
@@ -84,18 +86,26 @@ class MainWindow(QMainWindow):
 
     @Slot(object)
     def _show_session(self, session: ConfiguredPaperSession) -> None:
+        self._pending_validation_field = None
         self.workspace.show_configured_session(session)
 
     @Slot(str, str)
     def _show_validation_error(self, field: str, message: str) -> None:
         self.setup.show_field_error(field, message)
+        self._pending_validation_field = field
 
     def _show_unavailable(self, message: str) -> None:
+        self._pending_validation_field = None
         self.workspace.show_unavailable(message)
 
     @Slot()
     def _show_setup(self) -> None:
-        self.workspace.show_setup()
+        validation_field = self._pending_validation_field
+        self._pending_validation_field = None
+        if validation_field is None:
+            self.workspace.show_setup()
+            return
+        self.workspace.show_setup_for_validation(validation_field)
 
     @Slot()
     def _start_trade_history_once(self) -> None:

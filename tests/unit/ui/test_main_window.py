@@ -10,7 +10,8 @@ from typing import overload
 from uuid import UUID
 
 import pytest
-from PySide6.QtCore import QDeadlineTimer, QThreadPool
+from PySide6.QtCore import QDeadlineTimer, QPoint, QRect, QThreadPool
+from PySide6.QtWidgets import QWidget
 from pytestqt.qtbot import QtBot
 
 import tiewtrade.ui.main_window as main_window_module
@@ -23,6 +24,7 @@ from tests.support.trade_history_records import basket_result, trade_fill
 from tests.support.trade_history_ui import empty_basket_page, empty_fills
 from tiewtrade.application.paper_session_setup import (
     ConfiguredPaperSession,
+    CreatePaperSession,
     PaperSessionCreateOutcome,
     PaperSessionSetupValues,
     PaperSessionUnavailableError,
@@ -545,6 +547,53 @@ def test_validation_failure_restores_form_and_shows_field_error(qtbot: QtBot) ->
     assert window.setup.isVisible()
     assert window.setup.create_button.isEnabled() is True
     assert window.setup.available_capital.text() == "0"
+
+
+def test_compact_validation_failure_reveals_and_focuses_advanced_field(
+    qtbot: QtBot,
+) -> None:
+    def unused_create_active(
+        _session: ConfiguredPaperSession,
+    ) -> PaperSessionCreateOutcome:
+        pytest.fail("invalid setup must not create a session")
+
+    create_session = CreatePaperSession(create_active=unused_create_active)
+    window = MainWindow(
+        create_session=create_session.execute,
+        load_active=no_active_session,
+        list_baskets=empty_basket_page,
+        list_fills=empty_fills,
+    )
+    qtbot.addWidget(window)
+    window.setFixedSize(1024, 700)
+    window.show()
+    window.activateWindow()
+    qtbot.waitUntil(window.isActiveWindow)
+    qtbot.waitUntil(window.setup.create_button.isEnabled)
+    click(window.workspace.bot_control_button)
+
+    window.setup.available_capital.setText("200000")
+    click(window.setup.advanced_toggle)
+    window.setup.fee_percent.setText("100")
+    window.setup.slippage_bps.setText("5")
+    window.workspace.bot_control_scroll.ensureWidgetVisible(window.setup.create_button)
+    click(window.setup.create_button)
+
+    qtbot.waitUntil(
+        lambda: (
+            window.setup.fee_percent_error.text() == "Trading Fee must be below 100%"
+        )
+    )
+    viewport = window.workspace.bot_control_scroll.viewport()
+
+    def rect_in_viewport(widget: QWidget) -> QRect:
+        return QRect(widget.mapTo(viewport, QPoint()), widget.size())
+
+    assert window.workspace.bot_control.isVisible()
+    assert window.setup.fee_percent_error.isVisible()
+    assert viewport.rect().contains(rect_in_viewport(window.setup.fee_percent))
+    assert viewport.rect().contains(rect_in_viewport(window.setup.fee_percent_error))
+    assert window.setup.fee_percent.hasFocus()
 
 
 def test_persistence_failure_shows_sanitized_unavailable_state_and_allows_retry(

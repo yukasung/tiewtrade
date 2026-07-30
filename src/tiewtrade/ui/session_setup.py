@@ -115,6 +115,17 @@ class SessionSetupWidget(QWidget):
         self.timeframe_error = self._error_label("timeframe")
         self.market_type_error = self._error_label("market_type")
 
+        self._validation_controls: dict[str, QWidget] = {
+            "available_capital": self.available_capital,
+            "fee_percent": self.fee_percent,
+            "market_type": self.market_type,
+            "max_entries": self.max_entries,
+            "slippage_bps": self.slippage_bps,
+            "spot_trading_capital_percent": self.spot_ratio,
+            "symbol": self.symbol_field,
+            "timeframe": self.timeframe,
+        }
+
         self.create_button = QPushButton("Create Paper Session")
         self.create_button.setObjectName("primaryButton")
         self.create_button.clicked.connect(self._submit)
@@ -166,6 +177,13 @@ class SessionSetupWidget(QWidget):
             return
         error_label.setText(message)
         error_label.setVisible(True)
+
+    def validation_widgets(self, field: str) -> tuple[QWidget, QLabel] | None:
+        control = self._validation_controls.get(field)
+        error_label = self._field_errors.get(field)
+        if control is None or error_label is None:
+            return None
+        return control, error_label
 
     def _build_layout(self) -> None:
         root = QVBoxLayout(self)

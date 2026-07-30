@@ -87,6 +87,19 @@ class TradingWorkspace(QWidget):
 
     @Slot()
     def show_setup(self) -> None:
+        self._activate_setup()
+
+    @Slot(str)
+    def show_setup_for_validation(self, field: str) -> None:
+        self._activate_setup()
+        validation_widgets = self.setup.validation_widgets(field)
+        if validation_widgets is None:
+            return
+        control, error_label = validation_widgets
+        control.setFocus(Qt.FocusReason.OtherFocusReason)
+        self.bot_control_scroll.ensureWidgetVisible(error_label)
+
+    def _activate_setup(self) -> None:
         self._show_bot_page(self.setup)
         self.header_runtime.setText("No Session")
         self._set_bot_control_state("No Session")
