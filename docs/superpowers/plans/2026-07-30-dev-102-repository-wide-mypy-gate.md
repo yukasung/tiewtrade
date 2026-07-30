@@ -71,7 +71,7 @@ Change the workflow expectation to `run: python -m mypy`.
 
 - [ ] **Step 2: Verify RED**
 
-Run: `../../.venv/bin/python -m pytest tests/unit/test_ci_workflow.py -q`
+Run: `PYTHONPATH=src ../../.venv/bin/python -m pytest tests/unit/test_ci_workflow.py -q`
 
 Expected: FAIL because `packages = ["tiewtrade"]` remains and the workflow still passes `src` explicitly.
 
@@ -95,7 +95,7 @@ Set the GitHub Actions command to `python -m mypy`. Replace `.venv/bin/python -m
 Run:
 
 ```bash
-../../.venv/bin/python -m pytest tests/unit/test_ci_workflow.py -q
+PYTHONPATH=src ../../.venv/bin/python -m pytest tests/unit/test_ci_workflow.py -q
 ../../.venv/bin/python -m mypy --show-error-codes --no-pretty
 ```
 
@@ -206,7 +206,7 @@ Use `first_fills: tuple[TradeFill, ...] = ()`; assert `legacy.closed_at_utc is n
 - [ ] **Step 5: Verify GREEN and commit**
 
 ```bash
-../../.venv/bin/python -m pytest tests/unit/trading/test_trade_history.py tests/unit/trading/test_basket.py tests/unit/application/test_trade_history_query.py tests/unit/integrations/sqlite/test_trade_history.py tests/unit/integrations/sqlite/test_trade_history_query.py tests/acceptance/test_paper_spot_trade_history.py -q
+PYTHONPATH=src ../../.venv/bin/python -m pytest tests/unit/trading/test_trade_history.py tests/unit/trading/test_basket.py tests/unit/application/test_trade_history_query.py tests/unit/integrations/sqlite/test_trade_history.py tests/unit/integrations/sqlite/test_trade_history_query.py tests/acceptance/test_paper_spot_trade_history.py -q
 ../../.venv/bin/python -m mypy tests/support/trade_history_records.py tests/support/dataclass_validation.py tests/unit/trading/test_trade_history.py tests/unit/trading/test_basket.py tests/unit/application/test_trade_history_query.py tests/unit/integrations/sqlite/test_trade_history.py tests/unit/integrations/sqlite/test_trade_history_query.py tests/acceptance/test_paper_spot_trade_history.py
 ../../.venv/bin/python -m ruff check tests/support tests/unit/trading tests/unit/application/test_trade_history_query.py tests/unit/integrations/sqlite tests/acceptance/test_paper_spot_trade_history.py
 ../../.venv/bin/python -m ruff format --check tests/support tests/unit/trading tests/unit/application/test_trade_history_query.py tests/unit/integrations/sqlite tests/acceptance/test_paper_spot_trade_history.py
@@ -261,7 +261,7 @@ def record_mkdir(
 - [ ] **Step 4: Verify GREEN and commit**
 
 ```bash
-../../.venv/bin/python -m pytest tests/unit/test_desktop_main.py -q
+PYTHONPATH=src ../../.venv/bin/python -m pytest tests/unit/test_desktop_main.py -q
 ../../.venv/bin/python -m mypy tests/unit/test_desktop_main.py
 ../../.venv/bin/python -m ruff check tests/unit/test_desktop_main.py
 ../../.venv/bin/python -m ruff format --check tests/unit/test_desktop_main.py
@@ -321,7 +321,7 @@ For tests that intentionally send an invalid worker result, cast that single val
 - [ ] **Step 4: Verify GREEN and commit**
 
 ```bash
-../../.venv/bin/python -m pytest tests/unit/application/test_paper_spot_session.py tests/unit/application/test_paper_futures_session.py tests/unit/integrations/sqlite/test_persistent_paper_spot_session.py tests/unit/integrations/sqlite/test_persistent_paper_futures_session.py tests/unit/ui/test_session_workflow.py tests/unit/ui/test_trade_history_workflow.py -q
+PYTHONPATH=src ../../.venv/bin/python -m pytest tests/unit/application/test_paper_spot_session.py tests/unit/application/test_paper_futures_session.py tests/unit/integrations/sqlite/test_persistent_paper_spot_session.py tests/unit/integrations/sqlite/test_persistent_paper_futures_session.py tests/unit/ui/test_session_workflow.py tests/unit/ui/test_trade_history_workflow.py -q
 ../../.venv/bin/python -m mypy tests/unit/application/test_paper_spot_session.py tests/unit/application/test_paper_futures_session.py tests/unit/integrations/sqlite/test_persistent_paper_spot_session.py tests/unit/integrations/sqlite/test_persistent_paper_futures_session.py tests/unit/ui/test_session_workflow.py tests/unit/ui/test_trade_history_workflow.py
 ../../.venv/bin/python -m ruff check tests/unit/application tests/unit/integrations/sqlite tests/unit/ui
 ../../.venv/bin/python -m ruff format --check tests/unit/application tests/unit/integrations/sqlite tests/unit/ui
@@ -394,7 +394,7 @@ Annotate `caplog` as `pytest.LogCaptureFixture`; use the helper before accessing
 - [ ] **Step 4: Verify GREEN and commit**
 
 ```bash
-../../.venv/bin/python -m pytest tests/unit/market_data/test_runtime.py tests/unit/market_data/test_runtime_logging.py tests/unit/market_data/test_runtime_state.py tests/acceptance/test_public_market_data_runtime.py -q
+PYTHONPATH=src ../../.venv/bin/python -m pytest tests/unit/market_data/test_runtime.py tests/unit/market_data/test_runtime_logging.py tests/unit/market_data/test_runtime_state.py tests/acceptance/test_public_market_data_runtime.py -q
 ../../.venv/bin/python -m mypy tests/support/market_data_logging.py tests/unit/market_data/test_runtime.py tests/unit/market_data/test_runtime_logging.py tests/unit/market_data/test_runtime_state.py tests/acceptance/test_public_market_data_runtime.py
 ../../.venv/bin/python -m ruff check tests/support/market_data_logging.py tests/unit/market_data tests/acceptance/test_public_market_data_runtime.py
 ../../.venv/bin/python -m ruff format --check tests/support/market_data_logging.py tests/unit/market_data tests/acceptance/test_public_market_data_runtime.py
@@ -431,7 +431,7 @@ Build `RequestInfo` with `yarl.URL`, `multidict.CIMultiDict` and `CIMultiDictPro
 - [ ] **Step 4: Verify GREEN and commit**
 
 ```bash
-../../.venv/bin/python -m pytest tests/unit/integrations/binance/test_public_market_data.py -q
+PYTHONPATH=src ../../.venv/bin/python -m pytest tests/unit/integrations/binance/test_public_market_data.py -q
 ../../.venv/bin/python -m mypy tests/unit/integrations/binance/test_public_market_data.py
 ../../.venv/bin/python -m ruff check tests/unit/integrations/binance/test_public_market_data.py
 ../../.venv/bin/python -m ruff format --check tests/unit/integrations/binance/test_public_market_data.py
@@ -492,7 +492,7 @@ Replace direct mouse calls, nullable `.item()` dereferences and Python-date `set
 - [ ] **Step 4: Verify GREEN**
 
 ```bash
-QT_QPA_PLATFORM=offscreen ../../.venv/bin/python -m pytest tests/unit/ui/test_trade_history_page.py tests/unit/ui/test_main_window.py tests/unit/ui/test_session_setup.py tests/acceptance/test_paper_trade_history_acceptance.py tests/acceptance/test_desktop_trade_history.py tests/acceptance/test_desktop_session_setup.py -q
+QT_QPA_PLATFORM=offscreen PYTHONPATH=src ../../.venv/bin/python -m pytest tests/unit/ui/test_trade_history_page.py tests/unit/ui/test_main_window.py tests/unit/ui/test_session_setup.py tests/acceptance/test_paper_trade_history_acceptance.py tests/acceptance/test_desktop_trade_history.py tests/acceptance/test_desktop_session_setup.py -q
 ../../.venv/bin/python -m mypy tests/support/qt_interactions.py tests/unit/ui/test_trade_history_page.py tests/unit/ui/test_main_window.py tests/unit/ui/test_session_setup.py tests/acceptance/test_paper_trade_history_acceptance.py tests/acceptance/test_desktop_trade_history.py tests/acceptance/test_desktop_session_setup.py
 ../../.venv/bin/python -m ruff check tests/support/qt_interactions.py tests/unit/ui tests/acceptance
 ../../.venv/bin/python -m ruff format --check tests/support/qt_interactions.py tests/unit/ui tests/acceptance
@@ -503,7 +503,7 @@ git diff --check
 
 ```bash
 QT_QPA_PLATFORM=offscreen ../../.venv/bin/python -m mypy
-QT_QPA_PLATFORM=offscreen ../../.venv/bin/python -m pytest -q
+QT_QPA_PLATFORM=offscreen PYTHONPATH=src ../../.venv/bin/python -m pytest -q
 ../../.venv/bin/python -m ruff check .
 ../../.venv/bin/python -m ruff format --check .
 git diff --check
