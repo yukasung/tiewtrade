@@ -92,10 +92,14 @@ class TradingWorkspace(QWidget):
     @Slot(str)
     def show_setup_for_validation(self, field: str) -> None:
         self._activate_setup()
-        validation_widgets = self.setup.validation_widgets(field)
+        if self.compact_mode and not self._drawer_open:
+            self.open_bot_control()
+        validation_widgets = self.setup.reveal_validation_field(field)
         if validation_widgets is None:
             return
         control, error_label = validation_widgets
+        self.setup.adjustSize()
+        self._bot_pages.adjustSize()
         control.setFocus(Qt.FocusReason.OtherFocusReason)
         self.bot_control_scroll.ensureWidgetVisible(error_label)
 

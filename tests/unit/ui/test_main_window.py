@@ -596,6 +596,121 @@ def test_compact_validation_failure_reveals_and_focuses_advanced_field(
     assert window.setup.fee_percent.hasFocus()
 
 
+@pytest.mark.parametrize("field", ["fee_percent", "slippage_bps"])
+def test_compact_required_advanced_validation_expands_and_reveals_field(
+    qtbot: QtBot,
+    field: str,
+) -> None:
+    def unused_create_active(
+        _session: ConfiguredPaperSession,
+    ) -> PaperSessionCreateOutcome:
+        pytest.fail("invalid setup must not create a session")
+
+    create_session = CreatePaperSession(create_active=unused_create_active)
+    window = MainWindow(
+        create_session=create_session.execute,
+        load_active=no_active_session,
+        list_baskets=empty_basket_page,
+        list_fills=empty_fills,
+    )
+    qtbot.addWidget(window)
+    window.setFixedSize(1024, 700)
+    window.show()
+    window.activateWindow()
+    qtbot.waitUntil(window.isActiveWindow)
+    qtbot.waitUntil(window.setup.create_button.isEnabled)
+    click(window.workspace.bot_control_button)
+    assert not window.setup.advanced_toggle.isChecked()
+
+    window.setup.available_capital.setText("200000")
+    if field == "slippage_bps":
+        window.setup.fee_percent.setText("0.1")
+    window.workspace.bot_control_scroll.ensureWidgetVisible(window.setup.create_button)
+    click(window.setup.create_button)
+
+    control = getattr(window.setup, field)
+    error_label = getattr(window.setup, f"{field}_error")
+    qtbot.waitUntil(lambda: error_label.text() == "This field is required")
+    viewport = window.workspace.bot_control_scroll.viewport()
+
+    def rect_in_viewport(widget: QWidget) -> QRect:
+        return QRect(widget.mapTo(viewport, QPoint()), widget.size())
+
+    assert window.setup.advanced_toggle.isChecked()
+    assert window.setup.advanced_costs.isVisible()
+    assert error_label.isVisible()
+    assert viewport.rect().contains(rect_in_viewport(control))
+    assert viewport.rect().contains(rect_in_viewport(error_label))
+    assert control.hasFocus()
+
+
+def test_delayed_validation_reopens_compact_drawer_and_reveals_field(
+    qtbot: QtBot,
+) -> None:
+    started = threading.Event()
+    release = threading.Event()
+    thread_pool = QThreadPool()
+    thread_pool.setMaxThreadCount(1)
+
+    def unused_create_active(
+        _session: ConfiguredPaperSession,
+    ) -> PaperSessionCreateOutcome:
+        pytest.fail("invalid setup must not create a session")
+
+    create_session = CreatePaperSession(create_active=unused_create_active)
+
+    def delayed_create(
+        values: PaperSessionSetupValues,
+    ) -> PaperSessionCreateOutcome:
+        started.set()
+        if not release.wait(timeout=2):
+            raise TimeoutError("test did not release worker")
+        return create_session.execute(values)
+
+    window = MainWindow(
+        create_session=delayed_create,
+        load_active=no_active_session,
+        list_baskets=empty_basket_page,
+        list_fills=empty_fills,
+        thread_pool=thread_pool,
+    )
+    qtbot.addWidget(window)
+    window.setFixedSize(1024, 700)
+    window.show()
+    window.activateWindow()
+    qtbot.waitUntil(window.isActiveWindow)
+    qtbot.waitUntil(window.setup.create_button.isEnabled)
+    click(window.workspace.bot_control_button)
+    window.setup.available_capital.setText("200000")
+    click(window.setup.advanced_toggle)
+    window.setup.fee_percent.setText("100")
+    window.setup.slippage_bps.setText("5")
+    window.workspace.bot_control_scroll.ensureWidgetVisible(window.setup.create_button)
+    click(window.setup.create_button)
+    qtbot.waitUntil(started.is_set)
+
+    click(window.workspace.bot_control_close_button)
+    assert not window.workspace.bot_control.isVisible()
+    release.set()
+
+    qtbot.waitUntil(
+        lambda: (
+            window.setup.fee_percent_error.text() == "Trading Fee must be below 100%"
+        )
+    )
+    viewport = window.workspace.bot_control_scroll.viewport()
+
+    def rect_in_viewport(widget: QWidget) -> QRect:
+        return QRect(widget.mapTo(viewport, QPoint()), widget.size())
+
+    assert window.workspace.bot_control.isVisible()
+    assert window.setup.fee_percent_error.isVisible()
+    assert viewport.rect().contains(rect_in_viewport(window.setup.fee_percent))
+    assert viewport.rect().contains(rect_in_viewport(window.setup.fee_percent_error))
+    assert window.setup.fee_percent.hasFocus()
+    assert thread_pool.waitForDone(1_000)
+
+
 def test_persistence_failure_shows_sanitized_unavailable_state_and_allows_retry(
     qtbot: QtBot,
 ) -> None:

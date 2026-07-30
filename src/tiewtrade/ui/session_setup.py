@@ -115,17 +115,6 @@ class SessionSetupWidget(QWidget):
         self.timeframe_error = self._error_label("timeframe")
         self.market_type_error = self._error_label("market_type")
 
-        self._validation_controls: dict[str, QWidget] = {
-            "available_capital": self.available_capital,
-            "fee_percent": self.fee_percent,
-            "market_type": self.market_type,
-            "max_entries": self.max_entries,
-            "slippage_bps": self.slippage_bps,
-            "spot_trading_capital_percent": self.spot_ratio,
-            "symbol": self.symbol_field,
-            "timeframe": self.timeframe,
-        }
-
         self.create_button = QPushButton("Create Paper Session")
         self.create_button.setObjectName("primaryButton")
         self.create_button.clicked.connect(self._submit)
@@ -178,12 +167,26 @@ class SessionSetupWidget(QWidget):
         error_label.setText(message)
         error_label.setVisible(True)
 
-    def validation_widgets(self, field: str) -> tuple[QWidget, QLabel] | None:
-        control = self._validation_controls.get(field)
-        error_label = self._field_errors.get(field)
-        if control is None or error_label is None:
-            return None
-        return control, error_label
+    def reveal_validation_field(self, field: str) -> tuple[QWidget, QLabel] | None:
+        if field == "fee_percent":
+            self.advanced_toggle.setChecked(True)
+            return self.fee_percent, self.fee_percent_error
+        if field == "slippage_bps":
+            self.advanced_toggle.setChecked(True)
+            return self.slippage_bps, self.slippage_bps_error
+        if field == "available_capital":
+            return self.available_capital, self.available_capital_error
+        if field == "market_type":
+            return self.market_type, self.market_type_error
+        if field == "max_entries":
+            return self.max_entries, self.max_entries_error
+        if field == "spot_trading_capital_percent":
+            return self.spot_ratio, self.spot_ratio_error
+        if field == "symbol":
+            return self.symbol_field, self.symbol_error
+        if field == "timeframe":
+            return self.timeframe, self.timeframe_error
+        return None
 
     def _build_layout(self) -> None:
         root = QVBoxLayout(self)
