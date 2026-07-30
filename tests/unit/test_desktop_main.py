@@ -28,6 +28,7 @@ from tiewtrade.integrations.sqlite.database import (
     UnsupportedDatabaseSchemaError,
 )
 from tiewtrade.ui.session_workflow import CreateSession, LoadActiveSession
+from tiewtrade.ui.theme import DARK_THEME
 from tiewtrade.ui.trade_history_workflow import ListBaskets, ListFills
 
 
@@ -362,6 +363,7 @@ def test_ui_desktop_forwards_required_trade_history_dependencies(
     )
     assert captured["list_baskets"] is empty_basket_page
     assert captured["list_fills"] is empty_fills
+    assert captured["style_sheet"] == DARK_THEME
     assert captured["shown"] is True
 
 

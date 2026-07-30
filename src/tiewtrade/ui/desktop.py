@@ -4,7 +4,7 @@ from PySide6.QtWidgets import QApplication
 
 from tiewtrade.ui.main_window import MainWindow
 from tiewtrade.ui.session_workflow import CreateSession, LoadActiveSession
-from tiewtrade.ui.theme import LIGHT_THEME
+from tiewtrade.ui.theme import DARK_THEME
 from tiewtrade.ui.trade_history_workflow import ListBaskets, ListFills
 
 
@@ -25,6 +25,6 @@ def run_desktop(
         list_baskets=list_baskets,
         list_fills=list_fills,
     )
-    window.setStyleSheet(LIGHT_THEME)
+    window.setStyleSheet(DARK_THEME)
     window.show()
     return app.exec()
