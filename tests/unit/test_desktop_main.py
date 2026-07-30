@@ -3,6 +3,7 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from threading import Barrier, BrokenBarrierError
 from types import TracebackType
+from typing import cast
 from uuid import UUID
 
 import pytest
@@ -22,7 +23,12 @@ from tiewtrade.application.trade_history import (
     PageRequest,
     TradeHistoryFilter,
 )
-from tiewtrade.integrations.sqlite.database import UnsupportedDatabaseSchemaError
+from tiewtrade.integrations.sqlite.database import (
+    SQLiteDatabase,
+    UnsupportedDatabaseSchemaError,
+)
+from tiewtrade.ui.session_workflow import CreateSession, LoadActiveSession
+from tiewtrade.ui.trade_history_workflow import ListBaskets, ListFills
 
 
 class _CoordinatedUserVersionCursor:
@@ -32,12 +38,15 @@ class _CoordinatedUserVersionCursor:
 
     def fetchone(self) -> sqlite3.Row | tuple[int] | None:
         row = self._cursor.fetchone()
-        if row is not None and row[0] == 1:
+        if row is None:
+            return None
+        typed_row = cast(sqlite3.Row | tuple[int], row)
+        if typed_row[0] == 1:
             try:
                 self._reads.wait(timeout=0.5)
             except BrokenBarrierError:
                 pass
-        return row
+        return typed_row
 
 
 class _CoordinatedConnection:
@@ -71,7 +80,7 @@ class _CoordinatedConnection:
         self._connection.close()
 
 
-def _create_v1_database(database: desktop_main.SQLiteDatabase) -> None:
+def _create_v1_database(database: SQLiteDatabase) -> None:
     with database.connect() as connection:
         connection.execute(
             """
@@ -103,7 +112,7 @@ def test_desktop_configures_decimal_context_before_composition(
     monkeypatch: MonkeyPatch,
 ) -> None:
     events: list[str] = []
-    original_database = desktop_main.SQLiteDatabase
+    original_database = SQLiteDatabase
 
     def capture_database(path: Path) -> object:
         events.append("database")
@@ -146,11 +155,9 @@ def test_desktop_composition_supplies_migrated_create_and_load_operations(
     result = desktop_main.run_desktop(tmp_path / "tiewtrade.sqlite3")
 
     assert result == 0
-    create_session = captured["create_session"]
-    load_active = captured["load_active"]
-    assert callable(create_session)
-    assert callable(load_active)
-    assert load_active() is None
+    create_session = cast(CreateSession, captured["create_session"])
+    load_active_session = cast(LoadActiveSession, captured["load_active"])
+    assert load_active_session() is None
     outcome = create_session(
         PaperSessionSetupValues(
             market_type="spot",
@@ -167,7 +174,7 @@ def test_desktop_composition_supplies_migrated_create_and_load_operations(
 
     assert isinstance(outcome, PaperSessionCreateOutcome)
     assert outcome.created is True
-    active = load_active()
+    active = load_active_session()
     assert isinstance(active, ConfiguredPaperSession)
     assert active.config.session_id == outcome.session.config.session_id
 
@@ -178,27 +185,25 @@ def test_desktop_composition_supplies_migrated_trade_history_queries(
 ) -> None:
     captured: dict[str, object] = {}
     migration_calls = 0
-    original_migrate = desktop_main.SQLiteDatabase.migrate
+    original_migrate = SQLiteDatabase.migrate
 
     def capture_desktop(**dependencies: object) -> int:
         captured.update(dependencies)
         return 0
 
-    def record_migrate(database: desktop_main.SQLiteDatabase) -> None:
+    def record_migrate(database: SQLiteDatabase) -> None:
         nonlocal migration_calls
         migration_calls += 1
         original_migrate(database)
 
     monkeypatch.setattr(desktop_main, "run_desktop_ui", capture_desktop)
-    monkeypatch.setattr(desktop_main.SQLiteDatabase, "migrate", record_migrate)
+    monkeypatch.setattr(SQLiteDatabase, "migrate", record_migrate)
 
     assert desktop_main.run_desktop(tmp_path / "tiewtrade.sqlite3") == 0
     assert migration_calls == 0
 
-    list_baskets = captured["list_baskets"]
-    list_fills = captured["list_fills"]
-    assert callable(list_baskets)
-    assert callable(list_fills)
+    list_baskets = cast(ListBaskets, captured["list_baskets"])
+    list_fills = cast(ListFills, captured["list_fills"])
     assert list_baskets(TradeHistoryFilter(), PageRequest()).items == ()
     assert migration_calls == 1
     assert list_fills(UUID("00000000-0000-0000-0000-000000000001")) == ()
@@ -212,14 +217,14 @@ def test_concurrent_session_load_and_history_query_serialize_v1_migration(
     monkeypatch: MonkeyPatch,
 ) -> None:
     database_path = tmp_path / "tiewtrade.sqlite3"
-    _create_v1_database(desktop_main.SQLiteDatabase(database_path))
+    _create_v1_database(SQLiteDatabase(database_path))
     captured: dict[str, object] = {}
     migration_reads = Barrier(2)
     worker_start = Barrier(2)
-    original_connect = desktop_main.SQLiteDatabase.connect
+    original_connect = SQLiteDatabase.connect
 
     def coordinated_connect(
-        database: desktop_main.SQLiteDatabase,
+        database: SQLiteDatabase,
     ) -> _CoordinatedConnection:
         return _CoordinatedConnection(original_connect(database), migration_reads)
 
@@ -227,14 +232,12 @@ def test_concurrent_session_load_and_history_query_serialize_v1_migration(
         captured.update(dependencies)
         return 0
 
-    monkeypatch.setattr(desktop_main.SQLiteDatabase, "connect", coordinated_connect)
+    monkeypatch.setattr(SQLiteDatabase, "connect", coordinated_connect)
     monkeypatch.setattr(desktop_main, "run_desktop_ui", capture_desktop)
 
     assert desktop_main.run_desktop(database_path) == 0
-    load_active = captured["load_active"]
-    list_baskets = captured["list_baskets"]
-    assert callable(load_active)
-    assert callable(list_baskets)
+    load_active = cast(LoadActiveSession, captured["load_active"])
+    list_baskets = cast(ListBaskets, captured["list_baskets"])
 
     def load_session() -> ConfiguredPaperSession | None:
         worker_start.wait()
@@ -267,9 +270,9 @@ def test_failed_database_preparation_can_be_retried_by_later_consumer(
 ) -> None:
     captured: dict[str, object] = {}
     migration_attempts = 0
-    original_migrate = desktop_main.SQLiteDatabase.migrate
+    original_migrate = SQLiteDatabase.migrate
 
-    def fail_first_migration(database: desktop_main.SQLiteDatabase) -> None:
+    def fail_first_migration(database: SQLiteDatabase) -> None:
         nonlocal migration_attempts
         migration_attempts += 1
         if migration_attempts == 1:
@@ -280,13 +283,11 @@ def test_failed_database_preparation_can_be_retried_by_later_consumer(
         captured.update(dependencies)
         return 0
 
-    monkeypatch.setattr(desktop_main.SQLiteDatabase, "migrate", fail_first_migration)
+    monkeypatch.setattr(SQLiteDatabase, "migrate", fail_first_migration)
     monkeypatch.setattr(desktop_main, "run_desktop_ui", capture_desktop)
     assert desktop_main.run_desktop(tmp_path / "tiewtrade.sqlite3") == 0
-    load_active = captured["load_active"]
-    list_baskets = captured["list_baskets"]
-    assert callable(load_active)
-    assert callable(list_baskets)
+    load_active = cast(LoadActiveSession, captured["load_active"])
+    list_baskets = cast(ListBaskets, captured["list_baskets"])
 
     with pytest.raises(sqlite3.OperationalError, match="injected migration failure"):
         load_active()
@@ -303,7 +304,7 @@ def test_newer_schema_is_translated_at_desktop_composition_boundary(
 ) -> None:
     captured: dict[str, object] = {}
 
-    def reject_newer_schema(database: desktop_main.SQLiteDatabase) -> None:
+    def reject_newer_schema(database: SQLiteDatabase) -> None:
         raise UnsupportedDatabaseSchemaError(
             database_version=4,
             supported_version=3,
@@ -313,11 +314,10 @@ def test_newer_schema_is_translated_at_desktop_composition_boundary(
         captured.update(dependencies)
         return 0
 
-    monkeypatch.setattr(desktop_main.SQLiteDatabase, "migrate", reject_newer_schema)
+    monkeypatch.setattr(SQLiteDatabase, "migrate", reject_newer_schema)
     monkeypatch.setattr(desktop_main, "run_desktop_ui", capture_desktop)
     assert desktop_main.run_desktop(tmp_path / "tiewtrade.sqlite3") == 0
-    load_active = captured["load_active"]
-    assert callable(load_active)
+    load_active = cast(LoadActiveSession, captured["load_active"])
 
     with pytest.raises(DatabaseCompatibilityError) as caught:
         load_active()
@@ -370,7 +370,7 @@ def test_desktop_composition_defers_database_directory_creation_to_load_worker(
     monkeypatch: MonkeyPatch,
 ) -> None:
     captured: dict[str, object] = {}
-    mkdir_calls: list[Path] = []
+    mkdir_calls: list[tuple[Path, int, bool, bool]] = []
     original_mkdir = Path.mkdir
 
     def capture_desktop(
@@ -386,9 +386,14 @@ def test_desktop_composition_defers_database_directory_creation_to_load_worker(
         captured["list_fills"] = list_fills
         return 0
 
-    def record_mkdir(path: Path, *args: object, **kwargs: object) -> None:
-        mkdir_calls.append(path)
-        original_mkdir(path, *args, **kwargs)
+    def record_mkdir(
+        path: Path,
+        mode: int = 0o777,
+        parents: bool = False,
+        exist_ok: bool = False,
+    ) -> None:
+        mkdir_calls.append((path, mode, parents, exist_ok))
+        original_mkdir(path, mode=mode, parents=parents, exist_ok=exist_ok)
 
     monkeypatch.setattr(Path, "home", classmethod(lambda cls: tmp_path))
     monkeypatch.setattr(Path, "mkdir", record_mkdir)
@@ -399,7 +404,11 @@ def test_desktop_composition_defers_database_directory_creation_to_load_worker(
     assert result == 0
     assert mkdir_calls == []
 
-    load_active = captured["load_active"]
-    assert callable(load_active)
+    load_active = cast(LoadActiveSession, captured["load_active"])
     assert load_active() is None
-    assert (tmp_path / "Library" / "Application Support" / "TiewTrade") in mkdir_calls
+    assert (
+        tmp_path / "Library" / "Application Support" / "TiewTrade",
+        0o777,
+        True,
+        True,
+    ) in mkdir_calls
