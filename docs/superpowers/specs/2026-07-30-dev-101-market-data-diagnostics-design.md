@@ -126,6 +126,8 @@ mypy source และ `git diff --check` ตาม `PROJECT_PLAN.md`
 - Modify: `src/tiewtrade/integrations/binance/public_market_data.py`
 - Modify: focused tests ใต้ `tests/unit/market_data/` และ
   `tests/unit/integrations/binance/`
+- Modify: `tests/acceptance/test_public_market_data_runtime.py` เพื่อย้ายการเก็บ
+  transition sequence ไปอยู่ใน test-owned observer
 
 ไม่สร้าง production module ใหม่ เพราะ ownership ของ status และ source error อยู่ใน
 focused modules ที่มีอยู่แล้ว
