@@ -1,5 +1,5 @@
 import threading
-from collections.abc import Callable
+from typing import cast
 
 import pytest
 from PySide6.QtCore import QCoreApplication, QThreadPool
@@ -14,7 +14,11 @@ from tiewtrade.application.paper_session_setup import (
     PaperSessionUnavailableError,
     PaperSessionValidationError,
 )
-from tiewtrade.ui.session_workflow import SessionWorkflow
+from tiewtrade.ui.session_workflow import (
+    CreateSession,
+    LoadActiveSession,
+    SessionWorkflow,
+)
 
 
 class _CallbackTrackingSessionWorkflow(SessionWorkflow):
@@ -41,8 +45,8 @@ def _spot_values() -> PaperSessionSetupValues:
 
 def _workflow(
     *,
-    create_session: Callable[[PaperSessionSetupValues], PaperSessionCreateOutcome],
-    load_active: Callable[[], ConfiguredPaperSession | None],
+    create_session: CreateSession,
+    load_active: LoadActiveSession,
 ) -> tuple[SessionWorkflow, QThreadPool]:
     thread_pool = QThreadPool()
     thread_pool.setMaxThreadCount(1)
@@ -139,12 +143,12 @@ def test_validation_failure_emits_field_error_and_setup(qtbot: QtBot) -> None:
     workflow, thread_pool = _workflow(create_session=reject, load_active=lambda: None)
     errors: list[tuple[str, str]] = []
     events: list[str] = []
-    workflow.validation_failed.connect(
-        lambda field, message: (
-            errors.append((field, message)),
-            events.append("validation"),
-        )
-    )
+
+    def record_validation_error(field: str, message: str) -> None:
+        errors.append((field, message))
+        events.append("validation")
+
+    workflow.validation_failed.connect(record_validation_error)
     workflow.setup_required.connect(lambda: events.append("setup"))
     workflow.busy_changed.connect(lambda busy: events.append(f"busy:{busy}"))
 
@@ -247,8 +251,8 @@ def test_invalid_result_type_fails_closed(
     expected_message: str,
 ) -> None:
     workflow, thread_pool = _workflow(
-        create_session=lambda values: object(),  # type: ignore[return-value]
-        load_active=lambda: object(),  # type: ignore[return-value]
+        create_session=cast(CreateSession, lambda values: object()),
+        load_active=cast(LoadActiveSession, lambda: object()),
     )
     messages: list[str] = []
     workflow.unavailable.connect(messages.append)

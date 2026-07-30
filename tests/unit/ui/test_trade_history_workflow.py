@@ -1,6 +1,7 @@
 import threading
 from datetime import date
 from decimal import Decimal
+from typing import cast
 from uuid import UUID
 
 import pytest
@@ -321,12 +322,17 @@ def test_baskets_ready_reentrancy_does_not_restore_stale_selection(
         symbol="BTCUSDT",
     )
     fill_calls: list[UUID] = []
+
+    def list_fills(basket_id: UUID) -> tuple[TradeFill, ...]:
+        fill_calls.append(basket_id)
+        return ()
+
     pages: list[BasketHistoryPage] = []
     workflow, pool = workflow_with(
         list_baskets=lambda filters, request: page_with(
             latest if filters.symbol == "BTCUSDT" else initial
         ),
-        list_fills=lambda basket_id: fill_calls.append(basket_id) or (),
+        list_fills=list_fills,
     )
 
     def request_latest_from_ready(page: BasketHistoryPage) -> None:
@@ -385,9 +391,14 @@ def test_empty_basket_page_does_not_query_fills(qtbot: QtBot) -> None:
         net_realized_pnl=Decimal("0.000000000000000001"),
     )
     fill_calls: list[UUID] = []
+
+    def list_fills(basket_id: UUID) -> tuple[TradeFill, ...]:
+        fill_calls.append(basket_id)
+        return ()
+
     workflow, pool = workflow_with(
         list_baskets=lambda filters, request: exact_empty_page,
-        list_fills=lambda basket_id: fill_calls.append(basket_id) or (),
+        list_fills=list_fills,
     )
     empty_events: list[BasketHistoryPage] = []
     workflow.baskets_empty.connect(empty_events.append)
@@ -427,10 +438,15 @@ def test_apply_filters_resets_to_page_one_and_uses_exact_filter(
 
 def test_reset_filters_queries_empty_filter_on_page_one(qtbot: QtBot) -> None:
     calls: list[tuple[TradeHistoryFilter, PageRequest]] = []
+
+    def list_baskets(
+        filters: TradeHistoryFilter, request: PageRequest
+    ) -> BasketHistoryPage:
+        calls.append((filters, request))
+        return page_with()
+
     workflow, pool = workflow_with(
-        list_baskets=lambda filters, request: (
-            calls.append((filters, request)) or page_with()
-        ),
+        list_baskets=list_baskets,
         list_fills=lambda basket_id: (),
     )
     workflow.apply_filters(TradeHistoryFilterValues(symbol="BTCUSDT"))
@@ -445,10 +461,15 @@ def test_reset_filters_queries_empty_filter_on_page_one(qtbot: QtBot) -> None:
 
 def test_invalid_filter_emits_validation_without_query() -> None:
     calls: list[tuple[TradeHistoryFilter, PageRequest]] = []
+
+    def list_baskets(
+        filters: TradeHistoryFilter, request: PageRequest
+    ) -> BasketHistoryPage:
+        calls.append((filters, request))
+        return page_with()
+
     workflow, pool = workflow_with(
-        list_baskets=lambda filters, request: (
-            calls.append((filters, request)) or page_with()
-        ),
+        list_baskets=list_baskets,
         list_fills=lambda basket_id: (),
     )
     messages: list[str] = []
@@ -468,10 +489,15 @@ def test_invalid_filter_emits_validation_without_query() -> None:
 
 def test_filter_date_overflow_emits_validation_without_query() -> None:
     calls: list[tuple[TradeHistoryFilter, PageRequest]] = []
+
+    def list_baskets(
+        filters: TradeHistoryFilter, request: PageRequest
+    ) -> BasketHistoryPage:
+        calls.append((filters, request))
+        return page_with()
+
     workflow, pool = workflow_with(
-        list_baskets=lambda filters, request: (
-            calls.append((filters, request)) or page_with()
-        ),
+        list_baskets=list_baskets,
         list_fills=lambda basket_id: (),
     )
     messages: list[str] = []
@@ -685,7 +711,7 @@ def test_fill_retry_can_queue_before_failed_task_finishes(qtbot: QtBot) -> None:
 def test_invalid_worker_results_fail_closed(qtbot: QtBot) -> None:
     basket = basket_result()
     basket_workflow, basket_pool = workflow_with(
-        list_baskets=lambda filters, request: object(),  # type: ignore[return-value]
+        list_baskets=cast(ListBaskets, lambda filters, request: object()),
         list_fills=lambda basket_id: (),
     )
     basket_messages: list[str] = []
@@ -695,7 +721,7 @@ def test_invalid_worker_results_fail_closed(qtbot: QtBot) -> None:
 
     fill_workflow, fill_pool = workflow_with(
         list_baskets=lambda filters, request: page_with(basket),
-        list_fills=lambda basket_id: (object(),),  # type: ignore[return-value]
+        list_fills=cast(ListFills, lambda basket_id: (object(),)),
     )
     fill_messages: list[tuple[UUID, str]] = []
     fill_workflow.fills_unavailable.connect(

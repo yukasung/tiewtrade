@@ -151,8 +151,8 @@ def test_constructor_rejects_mismatched_session_and_history_identity(
 ) -> None:
     session = create_autospec(PaperSpotSession, instance=True)
     history = create_autospec(PaperSpotSQLiteHistory, instance=True)
-    session.identity = session_identity()  # type: ignore[misc]
-    history.session_identity = mismatched_identity  # type: ignore[misc]
+    session.identity = session_identity()
+    history.session_identity = mismatched_identity
 
     with pytest.raises(
         ValueError,

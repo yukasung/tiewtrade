@@ -1,6 +1,7 @@
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
-from unittest.mock import create_autospec
+from typing import cast
+from unittest.mock import Mock, create_autospec
 from uuid import UUID, uuid5
 
 import pytest
@@ -22,7 +23,7 @@ from tiewtrade.market_data.candle import Candle
 from tiewtrade.market_data.config import MarketDataConfig
 from tiewtrade.strategies.rsi_step_grid.indicators import WilderIndicators
 from tiewtrade.strategies.rsi_step_grid.preset import RsiStepGridPreset
-from tiewtrade.strategies.rsi_step_grid.strategy import RsiStepGridStrategy
+from tiewtrade.strategies.rsi_step_grid.strategy import EntryIntent, RsiStepGridStrategy
 from tiewtrade.trading.entry_pair import EntryPairLifecycle
 from tiewtrade.trading.entry_policy import EntryPolicy
 from tiewtrade.trading.session_config import (
@@ -477,12 +478,11 @@ def paper_session(*, min_notional: Decimal = Decimal("5")) -> PaperSpotSession:
 
 def persistent_spot_session(
     application: PaperSpotSession,
-) -> tuple[
-    SessionPersistenceCoordinator[PaperSpotSessionSnapshot], PaperSpotSQLiteHistory
-]:
-    history = create_autospec(PaperSpotSQLiteHistory, instance=True)
-    history.session_identity = application.identity  # type: ignore[misc]
-    return create_persistent_paper_spot_session(application, history), history
+) -> tuple[SessionPersistenceCoordinator[PaperSpotSessionSnapshot], Mock]:
+    history_mock: Mock = create_autospec(PaperSpotSQLiteHistory, instance=True)
+    history_mock.session_identity = application.identity
+    history = cast(PaperSpotSQLiteHistory, history_mock)
+    return create_persistent_paper_spot_session(application, history), history_mock
 
 
 def arm_entry_intent(
@@ -490,7 +490,7 @@ def arm_entry_intent(
     *,
     start_minute: int = 0,
     downtrend_candles: int = 15,
-):
+) -> EntryIntent:
     close = Decimal("100")
     downtrend_end = start_minute + (downtrend_candles * 5)
     for minute in range(start_minute, downtrend_end, 5):
@@ -570,7 +570,7 @@ def next_candle_after(previous: Candle) -> Candle:
     )
 
 
-def minute_after(intent) -> int:
+def minute_after(intent: EntryIntent) -> int:
     origin = datetime(2026, 1, 1, tzinfo=UTC)
     return int((intent.signal_candle.open_time - origin).total_seconds() / 60) + 5
 
