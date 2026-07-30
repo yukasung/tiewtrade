@@ -396,10 +396,12 @@ def test_trade_history_desktop_flow_has_no_forbidden_import_or_network(
     window = _composed_window(tmp_path / "tiewtrade.sqlite3", monkeypatch)
     qtbot.addWidget(window)
     window.show()
+    assert window.setup.isVisible()
     open_trade_history(window)
     qtbot.waitUntil(
         lambda: window.trade_history.basket_state.text() == "No trade history"
     )
+    assert window.workspace.tabs.currentWidget() is window.trade_history
     assert window.trade_history.basket_state.text() == "No trade history"
 
 

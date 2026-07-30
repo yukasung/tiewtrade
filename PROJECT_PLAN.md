@@ -127,6 +127,11 @@ Trade History แล้ว โดย restart คง Basket, Fills และ exac
 เท่านั้น และยังไม่ทำให้ Stop Session, startup Recovery หรือเกณฑ์ Paper Trading Complete
 ทั้งหมดเสร็จ
 
+สถานะ Unified Trading Workspace slice 1: Desktop UI ใช้ Full Dark Theme และรวม
+Session Setup, configured Session summary และ Trade History ไว้ใน Workspace หน้าเดียว
+พร้อม responsive Bot Control แล้ว ส่วน dynamic Runtime read model, Start/Stop/Recovery,
+Notifications และ Chart ยังคงส่งมอบตาม Sub-issues ถัดไป
+
 ## Milestone 4 — Live Spot
 
 เริ่มได้เมื่อ Paper Trading Complete ผ่านทั้งหมด:

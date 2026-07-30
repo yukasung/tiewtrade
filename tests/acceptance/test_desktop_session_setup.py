@@ -8,7 +8,7 @@ from pathlib import Path
 from uuid import UUID
 
 import pytest
-from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication, QPushButton
 from pytest import MonkeyPatch
 from pytestqt.qtbot import QtBot
 
@@ -106,6 +106,20 @@ def test_desktop_paper_session_create_overview_and_restart_restore(
     first_window.show()
     qtbot.waitUntil(first_window.setup.create_button.isEnabled)
 
+    assert first_window.findChildren(QPushButton, "manualBuyButton") == []
+    assert first_window.findChildren(QPushButton, "manualSellButton") == []
+    assert first_window.workspace.chart_state.text() == "Chart is not available yet"
+    assert first_window.workspace.orders_state.text() == "No open orders"
+    assert first_window.workspace.position_state.text() == "No open Position or Basket"
+    assert _trade_side_effect_counts(database) == initial_side_effect_counts
+
+    first_window.workspace.tabs.setCurrentWidget(first_window.trade_history)
+    qtbot.waitUntil(
+        lambda: first_window.trade_history.basket_state.text() == "No trade history"
+    )
+    assert first_window.workspace.header_runtime.text() == "No Session"
+    first_window.workspace.tabs.setCurrentIndex(0)
+
     _enter_form_values(first_window, case)
     click(first_window.setup.create_button)
     qtbot.waitUntil(first_window.overview.isVisible)
@@ -131,6 +145,14 @@ def test_desktop_paper_session_create_overview_and_restart_restore(
     )
     assert _active_session_count(database) == 1
     assert _trade_side_effect_counts(database) == initial_side_effect_counts
+
+    first_window.resize(1199, 700)
+    qtbot.waitUntil(lambda: first_window.workspace.compact_mode)
+    assert first_window.workspace.bot_control_button.isVisible()
+
+    first_window.workspace.tabs.setCurrentWidget(first_window.trade_history)
+    assert first_window.workspace.tabs.currentWidget() is first_window.trade_history
+    first_window.workspace.tabs.setCurrentIndex(0)
 
     second_create_use_case = CreatePaperSession(
         create_active=SQLiteActivePaperSessions(SQLiteDatabase(database_path)).create,
@@ -187,6 +209,12 @@ def test_desktop_paper_session_create_overview_and_restart_restore(
     )
     assert _active_session_count(database) == 1
     assert _trade_side_effect_counts(database) == initial_side_effect_counts
+
+    restarted_window.workspace.tabs.setCurrentWidget(restarted_window.trade_history)
+    qtbot.waitUntil(
+        lambda: restarted_window.trade_history.basket_state.text() == "No trade history"
+    )
+    assert restarted_window.overview.isVisible()
 
 
 def test_desktop_session_storage_unavailable_fails_closed(
