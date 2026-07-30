@@ -38,6 +38,10 @@ Production composition ไม่ส่ง callback จึงไม่มี coll
 ส่วน tests ใช้ recorder ที่อยู่ใน test code เป็นเจ้าของ list ของ states เอง Callback เป็น
 observer เท่านั้นและต้องไม่เปลี่ยน Runtime decision
 
+หาก synchronous observer โยน `Exception` ให้ Status Tracker แยก failure นั้นออกและคง
+snapshot กับ Runtime decision ที่เลือกไว้แล้ว โดยไม่เพิ่ม log หรือ operational event;
+`BaseException` เช่น `KeyboardInterrupt` และ `SystemExit` ไม่อยู่ใน failure boundary นี้
+
 ```text
 MarketDataRuntimeStatus
   ├─ snapshot: current immutable state only
@@ -108,7 +112,8 @@ flowchart LR
 ใช้ TDD แยกสาม behavior:
 
 1. Status/Runtime tests พิสูจน์ว่า production object ไม่มี `visited_states` และ test-owned
-   observer ได้รับ initial state กับ transition sequence เดิม
+   observer ได้รับ initial state กับ transition sequence เดิม รวมทั้ง observer failure ไม่
+   ทำให้ constructor หรือ transition ล้มและไม่ย้อน snapshot ที่ Runtime เลือกไว้
 2. Pipeline/runtime tests พิสูจน์ว่า `observed` เป็น required candle และ backfill ที่ไม่
    ครอบคลุม observation ยัง fail closed
 3. Source error/Binance adapter tests พิสูจน์ kind ของ transport, protocol และ payload

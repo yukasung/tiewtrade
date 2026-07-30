@@ -14,6 +14,7 @@
 - `MarketDataFailureKind` is diagnostic metadata only; `MarketDataRuntime` must continue choosing retry, rate-limit, timeout, and fail-closed actions from the existing exception types.
 - Production composition passes no transition callback and must retain no transition-history collection.
 - The optional transition callback receives the initial `STARTING` snapshot and every state transition, but not `record_delivery()` watermark-only updates.
+- Isolate `Exception` from the synchronous transition callback so it cannot change Runtime decisions; do not catch `BaseException` or add logging/operational events.
 - `_backfill_to_boundary()` and `CompletedCandlePipeline.process_backfill()` require a buffered `Candle`; no `None` path remains.
 - Tests use fake sources/transports only. Do not use credentials, Binance Private APIs, network calls, or Live Orders.
 - Do not add structured logging (DEV-100), test-suite mypy expansion (DEV-102), a generic error framework, registry, factory, or base adapter.
@@ -177,7 +178,10 @@ class MarketDataRuntimeStatus:
 
     def _publish_transition(self) -> None:
         if self._on_transition is not None:
-            self._on_transition(self._snapshot)
+            try:
+                self._on_transition(self._snapshot)
+            except Exception:
+                return
 ```
 
 Do not call `_publish_transition()` from `record_delivery()`.

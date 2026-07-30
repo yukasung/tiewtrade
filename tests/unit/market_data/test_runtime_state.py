@@ -1,5 +1,7 @@
 from datetime import UTC, datetime
 
+import pytest
+
 from tiewtrade.market_data.runtime_state import (
     MarketDataRuntimeReason,
     MarketDataRuntimeSnapshot,
@@ -44,6 +46,39 @@ def test_status_publishes_transitions_without_retaining_history() -> None:
     ]
     assert status.snapshot.transitioned_at == TRANSITION
     assert not hasattr(status, "visited_states")
+
+
+def test_status_isolates_transition_observer_failures() -> None:
+    def fail_observation(snapshot: MarketDataRuntimeSnapshot) -> None:
+        raise RuntimeError(f"cannot observe {snapshot.state}")
+
+    status = MarketDataRuntimeStatus(
+        SequenceClock(START, TRANSITION),
+        on_transition=fail_observation,
+    )
+
+    assert status.snapshot.state is MarketDataRuntimeState.STARTING
+    assert status.snapshot.reason is MarketDataRuntimeReason.START_REQUESTED
+
+    status.transition(
+        MarketDataRuntimeState.WARMING_UP,
+        MarketDataRuntimeReason.GAP_DETECTED,
+    )
+
+    assert status.snapshot.state is MarketDataRuntimeState.WARMING_UP
+    assert status.snapshot.reason is MarketDataRuntimeReason.GAP_DETECTED
+    assert status.snapshot.transitioned_at == TRANSITION
+
+
+def test_status_does_not_isolate_base_exceptions() -> None:
+    def interrupt_observation(snapshot: MarketDataRuntimeSnapshot) -> None:
+        raise KeyboardInterrupt(snapshot.state)
+
+    with pytest.raises(KeyboardInterrupt):
+        MarketDataRuntimeStatus(
+            SequenceClock(START),
+            on_transition=interrupt_observation,
+        )
 
 
 def test_delivery_preserves_transition_metadata() -> None:

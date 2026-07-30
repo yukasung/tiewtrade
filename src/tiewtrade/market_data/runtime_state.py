@@ -94,7 +94,10 @@ class MarketDataRuntimeStatus:
 
     def _publish_transition(self) -> None:
         if self._on_transition is not None:
-            self._on_transition(self._snapshot)
+            try:
+                self._on_transition(self._snapshot)
+            except Exception:
+                return
 
 
 def _require_utc(value: datetime, *, name: str) -> None:
