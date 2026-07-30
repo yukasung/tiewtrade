@@ -1,4 +1,5 @@
 import logging
+from collections.abc import Callable
 from datetime import UTC, datetime
 
 import pytest
@@ -32,139 +33,179 @@ def custom_fields(record: logging.LogRecord) -> dict[str, object]:
     return {key: value for key, value in record.__dict__.items() if key not in standard}
 
 
-def test_candle_discard_record_has_exact_whitelisted_fields(caplog) -> None:
-    runtime_log, logger = configured_log("tests.market_data.discard")
-    caplog.set_level(logging.INFO, logger=logger.name)
-    opened = datetime(2026, 1, 1, 0, 15, tzinfo=UTC)
-    received = datetime(2026, 1, 1, 0, 19, tzinfo=UTC)
+OPENED = datetime(2026, 1, 1, 0, 15, tzinfo=UTC)
+CLOSED = datetime(2026, 1, 1, 0, 18, tzinfo=UTC)
+RECEIVED = datetime(2026, 1, 1, 0, 19, tzinfo=UTC)
+BACKFILL_END = datetime(2026, 1, 1, 0, 20, tzinfo=UTC)
+PROHIBITED_FIELDS = {
+    "api_key",
+    "secret",
+    "credentials",
+    "payload",
+    "exception",
+    "open",
+    "high",
+    "low",
+    "close",
+    "volume",
+}
 
-    runtime_log.candle_discarded(
-        open_time=opened,
-        received_at=received,
-        discard_reason=CandleAcceptance.NOT_CLOSED,
-    )
+
+@pytest.mark.parametrize(
+    ("emit", "event_name", "level", "expected_fields"),
+    [
+        pytest.param(
+            lambda runtime_log: runtime_log.candle_discarded(
+                open_time=OPENED,
+                received_at=RECEIVED,
+                discard_reason=CandleAcceptance.NOT_CLOSED,
+            ),
+            MarketDataEventName.CANDLE_DISCARDED,
+            logging.INFO,
+            {
+                "event_name": "market_data.candle.discarded",
+                "symbol": "BTCUSDT",
+                "timeframe": "5m",
+                "open_time": "2026-01-01T00:15:00+00:00",
+                "received_at": "2026-01-01T00:19:00+00:00",
+                "discard_reason": "not_closed",
+            },
+            id="candle-discarded",
+        ),
+        pytest.param(
+            lambda runtime_log: runtime_log.clock_skew_detected(
+                open_time=OPENED,
+                close_time=CLOSED,
+                received_at=RECEIVED,
+            ),
+            MarketDataEventName.CLOCK_SKEW_DETECTED,
+            logging.WARNING,
+            {
+                "event_name": "market_data.clock_skew.detected",
+                "symbol": "BTCUSDT",
+                "timeframe": "5m",
+                "open_time": "2026-01-01T00:15:00+00:00",
+                "close_time": "2026-01-01T00:18:00+00:00",
+                "received_at": "2026-01-01T00:19:00+00:00",
+                "skew_seconds": 0.0,
+            },
+            id="clock-skew-detected",
+        ),
+        pytest.param(
+            lambda runtime_log: runtime_log.stale_detected(
+                reason=MarketDataRuntimeReason.DATA_STALE,
+                last_accepted_open_time=None,
+            ),
+            MarketDataEventName.STALE_DETECTED,
+            logging.WARNING,
+            {
+                "event_name": "market_data.stale.detected",
+                "symbol": "BTCUSDT",
+                "timeframe": "5m",
+                "reason": "data_stale",
+                "last_accepted_open_time": None,
+            },
+            id="stale-detected",
+        ),
+        pytest.param(
+            lambda runtime_log: runtime_log.reconnect_attempted(
+                attempt=3,
+                delay_seconds=-2.0,
+                reason=MarketDataRuntimeReason.SOURCE_DISCONNECTED,
+            ),
+            MarketDataEventName.RECONNECT_ATTEMPTED,
+            logging.WARNING,
+            {
+                "event_name": "market_data.reconnect.attempted",
+                "symbol": "BTCUSDT",
+                "timeframe": "5m",
+                "attempt": 3,
+                "delay_seconds": 0.0,
+                "reason": "source_disconnected",
+            },
+            id="reconnect-attempted",
+        ),
+        pytest.param(
+            lambda runtime_log: runtime_log.backfill_completed(
+                start=OPENED,
+                end=BACKFILL_END,
+                candle_count=2,
+            ),
+            MarketDataEventName.BACKFILL_COMPLETED,
+            logging.INFO,
+            {
+                "event_name": "market_data.backfill.completed",
+                "symbol": "BTCUSDT",
+                "timeframe": "5m",
+                "start": "2026-01-01T00:15:00+00:00",
+                "end": "2026-01-01T00:20:00+00:00",
+                "candle_count": 2,
+            },
+            id="backfill-completed",
+        ),
+        pytest.param(
+            lambda runtime_log: runtime_log.backfill_failed(
+                start=OPENED,
+                end=BACKFILL_END,
+                reason=MarketDataRuntimeReason.SOURCE_FATAL,
+                failure_kind=MarketDataFailureKind.PROTOCOL,
+            ),
+            MarketDataEventName.BACKFILL_FAILED,
+            logging.ERROR,
+            {
+                "event_name": "market_data.backfill.failed",
+                "symbol": "BTCUSDT",
+                "timeframe": "5m",
+                "start": "2026-01-01T00:15:00+00:00",
+                "end": "2026-01-01T00:20:00+00:00",
+                "reason": "source_fatal",
+                "failure_kind": "protocol",
+            },
+            id="backfill-failed",
+        ),
+        pytest.param(
+            lambda runtime_log: runtime_log.failed_closed(
+                reason=MarketDataRuntimeReason.SOURCE_ERROR,
+                failure_kind=None,
+            ),
+            MarketDataEventName.RUNTIME_FAILED_CLOSED,
+            logging.ERROR,
+            {
+                "event_name": "market_data.runtime.failed_closed",
+                "symbol": "BTCUSDT",
+                "timeframe": "5m",
+                "reason": "source_error",
+                "failure_kind": None,
+            },
+            id="runtime-failed-closed",
+        ),
+    ],
+)
+def test_typed_event_records_follow_exact_contract(
+    caplog,
+    emit: Callable[[MarketDataRuntimeLog], None],
+    event_name: MarketDataEventName,
+    level: int,
+    expected_fields: dict[str, object],
+) -> None:
+    runtime_log, logger = configured_log(f"tests.market_data.{event_name.value}")
+    caplog.set_level(logging.DEBUG, logger=logger.name)
+
+    emit(runtime_log)
 
     record = caplog.records[-1]
-    assert record.levelno == logging.INFO
-    assert record.getMessage() == MarketDataEventName.CANDLE_DISCARDED.value
-    assert custom_fields(record) == {
-        "event_name": "market_data.candle.discarded",
-        "symbol": "BTCUSDT",
-        "timeframe": "5m",
-        "open_time": "2026-01-01T00:15:00+00:00",
-        "received_at": "2026-01-01T00:19:00+00:00",
-        "discard_reason": "not_closed",
-    }
-
-
-def test_event_names_and_levels_are_stable(caplog) -> None:
-    runtime_log, logger = configured_log("tests.market_data.events")
-    caplog.set_level(logging.DEBUG, logger=logger.name)
-    opened = datetime(2026, 1, 1, 0, 15, tzinfo=UTC)
-    closed = datetime(2026, 1, 1, 0, 20, tzinfo=UTC)
-    received = datetime(2026, 1, 1, 0, 19, tzinfo=UTC)
-    calls = {
-        MarketDataEventName.CANDLE_DISCARDED: lambda: runtime_log.candle_discarded(
-            open_time=opened,
-            received_at=received,
-            discard_reason=CandleAcceptance.NOT_CLOSED,
-        ),
-        MarketDataEventName.CLOCK_SKEW_DETECTED: lambda: (
-            runtime_log.clock_skew_detected(
-                open_time=opened,
-                close_time=closed,
-                received_at=received,
-            )
-        ),
-        MarketDataEventName.STALE_DETECTED: lambda: runtime_log.stale_detected(
-            reason=MarketDataRuntimeReason.DATA_STALE,
-            last_accepted_open_time=opened,
-        ),
-        MarketDataEventName.RECONNECT_ATTEMPTED: lambda: (
-            runtime_log.reconnect_attempted(
-                attempt=1,
-                delay_seconds=1.0,
-                reason=MarketDataRuntimeReason.DATA_STALE,
-            )
-        ),
-        MarketDataEventName.BACKFILL_COMPLETED: lambda: runtime_log.backfill_completed(
-            start=opened,
-            end=closed,
-            candle_count=1,
-        ),
-        MarketDataEventName.BACKFILL_FAILED: lambda: runtime_log.backfill_failed(
-            start=opened,
-            end=closed,
-            reason=MarketDataRuntimeReason.SOURCE_FATAL,
-            failure_kind=MarketDataFailureKind.PROTOCOL,
-        ),
-        MarketDataEventName.RUNTIME_FAILED_CLOSED: lambda: runtime_log.failed_closed(
-            reason=MarketDataRuntimeReason.SOURCE_FATAL,
-            failure_kind=MarketDataFailureKind.PROTOCOL,
-        ),
-    }
-    expected_levels = {
-        MarketDataEventName.CANDLE_DISCARDED: logging.INFO,
-        MarketDataEventName.CLOCK_SKEW_DETECTED: logging.WARNING,
-        MarketDataEventName.STALE_DETECTED: logging.WARNING,
-        MarketDataEventName.RECONNECT_ATTEMPTED: logging.WARNING,
-        MarketDataEventName.BACKFILL_COMPLETED: logging.INFO,
-        MarketDataEventName.BACKFILL_FAILED: logging.ERROR,
-        MarketDataEventName.RUNTIME_FAILED_CLOSED: logging.ERROR,
-    }
-
-    for event_name, call in calls.items():
-        call()
-        record = caplog.records[-1]
-        assert record.getMessage() == event_name.value
-        assert record.event_name == event_name.value
-        assert record.levelno == expected_levels[event_name]
-
-
-def test_clock_skew_and_failed_closed_serialize_diagnostic_values(caplog) -> None:
-    runtime_log, logger = configured_log("tests.market_data.diagnostics")
-    caplog.set_level(logging.DEBUG, logger=logger.name)
-    opened = datetime(2026, 1, 1, 0, 15, tzinfo=UTC)
-    closed = datetime(2026, 1, 1, 0, 20, tzinfo=UTC)
-    received = datetime(2026, 1, 1, 0, 19, tzinfo=UTC)
-
-    runtime_log.clock_skew_detected(
-        open_time=opened,
-        close_time=closed,
-        received_at=received,
-    )
-    runtime_log.failed_closed(
-        reason=MarketDataRuntimeReason.SOURCE_FATAL,
-        failure_kind=MarketDataFailureKind.PROTOCOL,
-    )
-
-    assert caplog.records[-2].skew_seconds == 60.0
-    assert caplog.records[-1].failure_kind == "protocol"
-
-
-def test_records_do_not_include_sensitive_or_candle_price_fields(caplog) -> None:
-    runtime_log, logger = configured_log("tests.market_data.sensitive")
-    caplog.set_level(logging.DEBUG, logger=logger.name)
-
-    runtime_log.failed_closed(
-        reason=MarketDataRuntimeReason.SOURCE_ERROR,
-        failure_kind=None,
-    )
-
-    fields = custom_fields(caplog.records[-1])
-    prohibited = {
-        "api_key",
-        "secret",
-        "credentials",
-        "payload",
-        "exception",
-        "open",
-        "high",
-        "low",
-        "close",
-        "volume",
-    }
-    assert prohibited.isdisjoint(fields)
+    fields = custom_fields(record)
+    assert record.getMessage() == event_name.value
+    assert record.levelno == level
+    assert fields == expected_fields
+    assert PROHIBITED_FIELDS.isdisjoint(fields)
+    for integer_field in ("attempt", "candle_count"):
+        if integer_field in fields:
+            assert type(fields[integer_field]) is int
+    for float_field in ("delay_seconds", "skew_seconds"):
+        if float_field in fields:
+            assert type(fields[float_field]) is float
+            assert fields[float_field] >= 0.0
 
 
 class RaisingHandler(logging.Handler):
