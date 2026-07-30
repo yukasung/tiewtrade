@@ -5,7 +5,8 @@ from collections.abc import AsyncIterator, Awaitable, Coroutine, Iterable
 from dataclasses import FrozenInstanceError
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
-from typing import TypeVar, cast
+from inspect import Parameter, signature
+from typing import TypeVar, cast, get_type_hints
 
 import pytest
 
@@ -38,6 +39,16 @@ _RATE_LIMIT_EXHAUSTION_STATES = (
     MarketDataRuntimeState.RATE_LIMITED,
     MarketDataRuntimeState.FAILED_CLOSED,
 )
+
+
+def test_runtime_backfill_boundary_requires_an_observed_candle() -> None:
+    parameter = signature(MarketDataRuntime._backfill_to_boundary).parameters[
+        "observed"
+    ]
+    hints = get_type_hints(MarketDataRuntime._backfill_to_boundary)
+
+    assert parameter.default is Parameter.empty
+    assert hints["observed"] is Candle
 
 
 def candle_at(minute: int, *, symbol: str = "BTCUSDT") -> Candle:

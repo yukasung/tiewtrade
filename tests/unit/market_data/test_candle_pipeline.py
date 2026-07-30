@@ -1,6 +1,8 @@
 import asyncio
 from datetime import UTC, datetime
 from decimal import Decimal
+from inspect import Parameter, signature
+from typing import get_type_hints
 
 import pytest
 
@@ -72,6 +74,16 @@ def pipeline_for(
         sink=sink,
         on_delivery=deliveries.append,
     )
+
+
+def test_backfill_requires_a_buffered_observation() -> None:
+    parameter = signature(CompletedCandlePipeline.process_backfill).parameters[
+        "observed"
+    ]
+    hints = get_type_hints(CompletedCandlePipeline.process_backfill)
+
+    assert parameter.default is Parameter.empty
+    assert hints["observed"] is Candle
 
 
 def test_live_gap_does_not_reach_sink() -> None:

@@ -361,7 +361,7 @@ class MarketDataRuntime:
         end: datetime,
         *,
         received_at: datetime,
-        observed: Candle | None = None,
+        observed: Candle,
     ) -> bool:
         last_accepted_open_time = self._status.snapshot.last_accepted_open_time
         if last_accepted_open_time is None:

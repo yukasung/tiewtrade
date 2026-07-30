@@ -94,7 +94,7 @@ class CompletedCandlePipeline:
         *,
         start: datetime,
         end: datetime,
-        observed: Candle | None,
+        observed: Candle,
         received_at: datetime,
         on_ready_for_delivery: Callable[[], None],
     ) -> None:
@@ -113,9 +113,7 @@ class CompletedCandlePipeline:
                 reached = accepted[-1].open_time + self._config.interval
                 if reached != end:
                     raise ValueError("backfill did not reach requested boundary")
-            if observed is not None and validation_candles.accept(
-                observed, received_at
-            ):
+            if validation_candles.accept(observed, received_at):
                 raise ValueError("buffered observation was not covered by backfill")
         except Exception as error:
             raise CandlePipelineInputError from error
