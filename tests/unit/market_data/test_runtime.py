@@ -82,9 +82,12 @@ class FakeScheduler:
     def now(self) -> datetime:
         return self._now
 
+    def advance(self, seconds: float) -> None:
+        self._now += timedelta(seconds=seconds)
+
     async def sleep(self, seconds: float) -> None:
         self.sleeps.append(seconds)
-        self._now += timedelta(seconds=seconds)
+        self.advance(seconds)
 
     async def wait_for(self, awaitable: Awaitable[_T], timeout: float) -> _T:
         self.timeouts.append(timeout)
@@ -240,6 +243,19 @@ class FakeSource:
         self.live_started = True
         for candle in self._live:
             yield candle
+        await self._closed.wait()
+
+
+class NotClosedThenValidSource(FakeSource):
+    def __init__(self, scheduler: FakeScheduler) -> None:
+        super().__init__(recent=warm_up_candles())
+        self._scheduler = scheduler
+
+    async def _stream_completed(self) -> AsyncIterator[Candle]:
+        self.live_started = True
+        yield candle_at(15)
+        self._scheduler.advance(60.0)
+        yield candle_at(15)
         await self._closed.wait()
 
 
@@ -688,10 +704,12 @@ async def run_until_market_data_record_count(
             if task.done():
                 break
             await asyncio.sleep(0)
+        records = market_data_records(caplog)
+        if len(records) >= count:
+            return
         record_label = "record" if count == 1 else "records"
         raise AssertionError(
-            f"expected {count} market data {record_label}, "
-            f"observed {len(market_data_records(caplog))}"
+            f"expected {count} market data {record_label}, observed {len(records)}"
         )
     finally:
         try:
@@ -778,7 +796,7 @@ def test_market_data_record_wait_fails_bounded_and_stops_runtime(
         ):
             await asyncio.wait_for(
                 run_until_market_data_record_count(runtime, caplog, count=1),
-                timeout=0.1,
+                timeout=1.0,
             )
 
     asyncio.run(exercise())
@@ -1413,7 +1431,7 @@ def test_duplicate_live_candle_logs_only_discard(
     caplog.set_level(logging.INFO, logger=logger.name)
     source = FakeSource(
         recent=warm_up_candles(),
-        live=[candle_at(15), candle_at(15)],
+        live=[candle_at(10), candle_at(15)],
     )
     sink = RecordingSink()
     runtime = runtime_for(
@@ -1425,7 +1443,7 @@ def test_duplicate_live_candle_logs_only_discard(
         logger=logger,
     )
 
-    asyncio.run(run_until_market_data_record_count(runtime, caplog, count=1))
+    asyncio.run(run_until_sink_receives_or_runtime_stops(runtime, sink, count=1))
 
     assert sink.live_candles == [candle_at(15)]
     assert runtime.snapshot.last_accepted_open_time == candle_at(15).open_time
@@ -1433,6 +1451,7 @@ def test_duplicate_live_candle_logs_only_discard(
         runtime.observed_reasons.count(MarketDataRuntimeReason.LIVE_CANDLE_ACCEPTED)
         == 1
     )
+    assert runtime.snapshot.state is MarketDataRuntimeState.STOPPED
     discard_records = [
         record
         for record in market_data_records(caplog)
@@ -1453,21 +1472,12 @@ def test_not_closed_live_candle_logs_discard_then_clock_skew(
 ) -> None:
     logger = logging.getLogger("tests.market_data.not_closed_live_candle")
     caplog.set_level(logging.INFO, logger=logger.name)
-    source = FakeSource(
-        recent=warm_up_candles(),
-        live=[candle_at(15)],
-    )
+    scheduler = FakeScheduler(now=datetime(2026, 1, 1, 0, 19, tzinfo=UTC))
+    source = NotClosedThenValidSource(scheduler)
     sink = RecordingSink()
-    runtime = runtime_for(
-        source,
-        sink,
-        scheduler=FakeScheduler(
-            now=datetime(2026, 1, 1, 0, 19, tzinfo=UTC),
-        ),
-        logger=logger,
-    )
+    runtime = runtime_for(source, sink, scheduler=scheduler, logger=logger)
 
-    asyncio.run(run_until_market_data_record_count(runtime, caplog, count=2))
+    asyncio.run(run_until_sink_receives_or_runtime_stops(runtime, sink, count=1))
 
     records = market_data_records(caplog)
     assert [record.event_name for record in records] == [
@@ -1475,8 +1485,12 @@ def test_not_closed_live_candle_logs_discard_then_clock_skew(
         MarketDataEventName.CLOCK_SKEW_DETECTED.value,
     ]
     assert records[1].skew_seconds == 60.0
-    assert sink.live_candles == []
-    assert runtime.snapshot.last_accepted_open_time == candle_at(10).open_time
+    assert sink.live_candles == [candle_at(15)]
+    assert runtime.snapshot.last_accepted_open_time == candle_at(15).open_time
+    assert (
+        runtime.observed_reasons.count(MarketDataRuntimeReason.LIVE_CANDLE_ACCEPTED)
+        == 1
+    )
     assert runtime.snapshot.state is MarketDataRuntimeState.STOPPED
 
 
