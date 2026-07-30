@@ -1,6 +1,6 @@
-from PySide6.QtCore import Qt
 from pytestqt.qtbot import QtBot
 
+from tests.support.qt_interactions import click
 from tiewtrade.trading.futures_policy import FuturesTradingPolicy
 from tiewtrade.ui.session_setup import SessionSetupWidget
 
@@ -115,7 +115,7 @@ def test_advanced_execution_costs_can_be_revealed(qtbot: QtBot) -> None:
     assert widget.advanced_costs.isHidden() is True
     assert widget.advanced_toggle.text() == "Show Advanced Settings"
 
-    qtbot.mouseClick(widget.advanced_toggle, Qt.MouseButton.LeftButton)
+    click(widget.advanced_toggle)
 
     assert widget.advanced_costs.isHidden() is False
     assert widget.advanced_toggle.text() == "Hide Advanced Settings"
@@ -127,7 +127,7 @@ def test_submit_emits_current_values_once(qtbot: QtBot) -> None:
     widget.available_capital.setText("200000")
 
     with qtbot.waitSignal(widget.create_requested) as signal:
-        qtbot.mouseClick(widget.create_button, Qt.MouseButton.LeftButton)
+        click(widget.create_button)
 
     assert signal.args == [widget.values()]
 

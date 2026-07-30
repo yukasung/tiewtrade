@@ -7,6 +7,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QAbstractItemView
 from pytestqt.qtbot import QtBot
 
+from tests.support.qt_interactions import click, qdate, table_item
 from tests.support.trade_history_records import basket_result, trade_fill
 from tiewtrade.application.trade_history import BasketHistoryPage
 from tiewtrade.ui.trade_history_page import TradeHistoryPage
@@ -58,21 +59,19 @@ def test_page_exposes_filters_and_exact_table_columns(qtbot: QtBot) -> None:
         "Source",
     )
     assert page.basket_table.columnCount() == len(page.basket_headers)
-    assert (
-        tuple(
-            page.basket_table.horizontalHeaderItem(index).text()
-            for index in range(page.basket_table.columnCount())
-        )
-        == page.basket_headers
-    )
+    basket_headers: list[str] = []
+    for index in range(page.basket_table.columnCount()):
+        item = page.basket_table.horizontalHeaderItem(index)
+        assert item is not None
+        basket_headers.append(item.text())
+    assert tuple(basket_headers) == page.basket_headers
     assert page.fill_table.columnCount() == len(page.fill_headers)
-    assert (
-        tuple(
-            page.fill_table.horizontalHeaderItem(index).text()
-            for index in range(page.fill_table.columnCount())
-        )
-        == page.fill_headers
-    )
+    fill_headers: list[str] = []
+    for index in range(page.fill_table.columnCount()):
+        item = page.fill_table.horizontalHeaderItem(index)
+        assert item is not None
+        fill_headers.append(item.text())
+    assert tuple(fill_headers) == page.fill_headers
     assert [page.symbol.itemText(index) for index in range(page.symbol.count())] == [
         "All",
         "BTCUSDT",
@@ -110,10 +109,10 @@ def test_apply_and_reset_emit_immutable_filter_values(qtbot: QtBot) -> None:
     page.reset_requested.connect(lambda: resets.append(None))
     page.symbol.setCurrentIndex(page.symbol.findData("BTCUSDT"))
 
-    qtbot.mouseClick(page.apply_button, Qt.MouseButton.LeftButton)
+    click(page.apply_button)
     assert emitted == [TradeHistoryFilterValues(symbol="BTCUSDT")]
 
-    qtbot.mouseClick(page.reset_button, Qt.MouseButton.LeftButton)
+    click(page.reset_button)
     assert resets == [None]
     assert emitted == [TradeHistoryFilterValues(symbol="BTCUSDT")]
     assert page.filter_values() == TradeHistoryFilterValues()
@@ -130,8 +129,8 @@ def test_optional_dates_are_disabled_by_default_and_emitted_when_enabled(
 
     page.from_date_enabled.setChecked(True)
     page.to_date_enabled.setChecked(True)
-    page.from_date.setDate(date(2026, 1, 2))
-    page.to_date.setDate(date(2026, 1, 3))
+    page.from_date.setDate(qdate(date(2026, 1, 2)))
+    page.to_date.setDate(qdate(date(2026, 1, 3)))
 
     assert page.filter_values() == TradeHistoryFilterValues(
         from_date=date(2026, 1, 2),
@@ -153,7 +152,8 @@ def test_show_baskets_selects_first_row_without_emitting_selection(
 
     assert page.basket_table.currentRow() == 0
     assert (
-        page.basket_table.item(0, 0).data(Qt.ItemDataRole.UserRole) == first.basket_id
+        table_item(page.basket_table, 0, 0).data(Qt.ItemDataRole.UserRole)
+        == first.basket_id
     )
     assert selected == []
 
@@ -206,8 +206,8 @@ def test_basket_pagination_uses_presented_page_state_and_emits_requests(
     assert page.previous_button.isEnabled()
     assert page.next_button.isEnabled()
 
-    qtbot.mouseClick(page.previous_button, Qt.MouseButton.LeftButton)
-    qtbot.mouseClick(page.next_button, Qt.MouseButton.LeftButton)
+    click(page.previous_button)
+    click(page.next_button)
 
     assert requested == [1, 3]
 
@@ -294,7 +294,7 @@ def test_fill_success_and_empty_state_keep_basket_selection(qtbot: QtBot) -> Non
 
     page.show_fills(basket.basket_id, (trade_fill(),))
     assert page.fill_table.rowCount() == 1
-    assert "Break-even" in page.fill_table.item(0, 7).text()
+    assert "Break-even" in table_item(page.fill_table, 0, 7).text()
 
     page.show_fills_empty(basket.basket_id)
     assert page.basket_table.currentRow() == 0
@@ -351,10 +351,10 @@ def test_retry_buttons_and_filter_error_are_scoped(qtbot: QtBot) -> None:
     assert page.filter_error.text() == "From Date must not be after To Date"
 
     page.show_baskets_unavailable("Trade History unavailable")
-    qtbot.mouseClick(page.retry_baskets_button, Qt.MouseButton.LeftButton)
+    click(page.retry_baskets_button)
     page.show_baskets(history_page(basket_result()))
     page.show_fills_unavailable(basket_result().basket_id, "Trade Fills unavailable")
-    qtbot.mouseClick(page.retry_fills_button, Qt.MouseButton.LeftButton)
+    click(page.retry_fills_button)
 
     assert basket_retries == [None]
     assert fill_retries == [None]

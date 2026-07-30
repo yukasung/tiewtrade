@@ -21,6 +21,7 @@ from tests.support.paper_trade_history_acceptance import (
     spot_candles,
     spot_history,
 )
+from tests.support.qt_interactions import click, table_item
 from tiewtrade.application.session_persistence import SessionPersistenceBlockedError
 from tiewtrade.application.trade_history import PageRequest, TradeHistoryFilter
 from tiewtrade.integrations.sqlite.database import SQLiteDatabase
@@ -225,7 +226,7 @@ def test_paper_execution_history_survives_restart_and_reaches_desktop(
     window = _composed_window(path, monkeypatch)
     qtbot.addWidget(window)
     window.show()
-    qtbot.mouseClick(window.trade_history_button, Qt.MouseButton.LeftButton)
+    click(window.trade_history_button)
 
     qtbot.waitUntil(lambda: window.trade_history.basket_table.rowCount() == 2)
     assert window.trade_history.total_net_pnl.text() == "2273.69035202 USDT · Profit"
@@ -344,9 +345,7 @@ def _composed_window(path: Path, monkeypatch: MonkeyPatch) -> MainWindow:
 
 
 def _basket_id(table: QTableWidget, row: int) -> UUID:
-    item = table.item(row, 0)
-    assert item is not None
-    basket_id = item.data(Qt.ItemDataRole.UserRole)
+    basket_id = table_item(table, row, 0).data(Qt.ItemDataRole.UserRole)
     assert isinstance(basket_id, UUID)
     return basket_id
 
@@ -358,7 +357,5 @@ def _table_rows_text(table: QTableWidget) -> tuple[tuple[str, ...], ...]:
 def _table_row_text(table: QTableWidget, row: int) -> tuple[str, ...]:
     values: list[str] = []
     for column in range(table.columnCount()):
-        item = table.item(row, column)
-        assert item is not None
-        values.append(item.text())
+        values.append(table_item(table, row, column).text())
     return tuple(values)

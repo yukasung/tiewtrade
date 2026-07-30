@@ -8,11 +8,11 @@ from pathlib import Path
 from uuid import UUID
 
 import pytest
-from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication, QLabel
 from pytest import MonkeyPatch
 from pytestqt.qtbot import QtBot
 
+from tests.support.qt_interactions import click
 from tests.support.trade_history_ui import empty_basket_page, empty_fills
 from tiewtrade.application.paper_session_setup import (
     ConfiguredPaperSession,
@@ -107,7 +107,7 @@ def test_desktop_paper_session_create_overview_and_restart_restore(
     qtbot.waitUntil(first_window.setup.create_button.isEnabled)
 
     _enter_form_values(first_window, case)
-    qtbot.mouseClick(first_window.setup.create_button, Qt.MouseButton.LeftButton)
+    click(first_window.setup.create_button)
     qtbot.waitUntil(lambda: first_window.current_page_name == "Session Overview")
 
     durable_session = SQLiteActivePaperSessions(
@@ -256,7 +256,7 @@ def test_desktop_session_sqlite_write_failure_after_setup_fails_closed(
             futures_leverage=None,
         ),
     )
-    qtbot.mouseClick(window.setup.create_button, Qt.MouseButton.LeftButton)
+    click(window.setup.create_button)
     qtbot.waitUntil(lambda: window.current_page_name == "Unavailable")
 
     assert window.unavailable_message.text() == "Session storage is unavailable"
@@ -303,7 +303,7 @@ def test_desktop_session_validation_failure_after_setup_preserves_input(
         ),
     )
     window.setup.available_capital.setText("0")
-    qtbot.mouseClick(window.setup.create_button, Qt.MouseButton.LeftButton)
+    click(window.setup.create_button)
     qtbot.waitUntil(
         lambda: (
             window.setup.available_capital_error.text()
