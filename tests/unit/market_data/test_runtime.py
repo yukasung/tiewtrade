@@ -22,6 +22,7 @@ from tiewtrade.market_data.runtime_state import (
     MarketDataRuntimeState,
 )
 from tiewtrade.market_data.source_errors import (
+    MarketDataFailureKind,
     MarketDataFatalError,
     MarketDataRateLimitError,
     MarketDataRetryableError,
@@ -796,7 +797,14 @@ def test_pipeline_warm_up_timeout_preserves_warm_up_timeout_reason() -> None:
 
 
 def test_fatal_warm_up_failure_fails_closed_without_retry() -> None:
-    source = WarmUpFailureSource([MarketDataFatalError("bad symbol")])
+    source = WarmUpFailureSource(
+        [
+            MarketDataFatalError(
+                "bad symbol",
+                kind=MarketDataFailureKind.PROTOCOL,
+            )
+        ]
+    )
     scheduler = FakeScheduler()
     runtime = runtime_for(source, RecordingSink(), scheduler=scheduler)
 
@@ -809,7 +817,14 @@ def test_fatal_warm_up_failure_fails_closed_without_retry() -> None:
 
 
 def test_close_failure_does_not_overwrite_fatal_source_reason() -> None:
-    source = FailingCloseWarmUpSource([MarketDataFatalError("bad symbol")])
+    source = FailingCloseWarmUpSource(
+        [
+            MarketDataFatalError(
+                "bad symbol",
+                kind=MarketDataFailureKind.PROTOCOL,
+            )
+        ]
+    )
     runtime = runtime_for(source, RecordingSink())
 
     asyncio.run(runtime.run())
@@ -822,7 +837,15 @@ def test_close_failure_does_not_overwrite_fatal_source_reason() -> None:
 @pytest.mark.parametrize(
     ("failures", "expected_reason"),
     [
-        ([MarketDataFatalError("bad symbol")], MarketDataRuntimeReason.SOURCE_FATAL),
+        (
+            [
+                MarketDataFatalError(
+                    "bad symbol",
+                    kind=MarketDataFailureKind.PROTOCOL,
+                )
+            ],
+            MarketDataRuntimeReason.SOURCE_FATAL,
+        ),
         (
             [MarketDataRateLimitError("429", retry_after=None)] * 4,
             MarketDataRuntimeReason.RATE_LIMIT_EXHAUSTED,
@@ -850,7 +873,14 @@ def test_stop_close_retry_preserves_primary_failed_closed_reason(
 
 
 def test_retryable_warm_up_failure_uses_bounded_backoff_then_recovers() -> None:
-    source = WarmUpFailureSource([MarketDataRetryableError("503")])
+    source = WarmUpFailureSource(
+        [
+            MarketDataRetryableError(
+                "503",
+                kind=MarketDataFailureKind.PROTOCOL,
+            )
+        ]
+    )
     scheduler = FakeScheduler()
     sink = RecordingSink()
     runtime = runtime_for(source, sink, scheduler=scheduler)
@@ -978,8 +1008,14 @@ def test_final_warm_up_attempt_announces_rate_limit_before_failing_closed() -> N
     source = WarmUpFailureSource(
         [
             MarketDataRateLimitError("429", retry_after=None),
-            MarketDataRetryableError("503"),
-            MarketDataRetryableError("503"),
+            MarketDataRetryableError(
+                "503",
+                kind=MarketDataFailureKind.PROTOCOL,
+            ),
+            MarketDataRetryableError(
+                "503",
+                kind=MarketDataFailureKind.PROTOCOL,
+            ),
             MarketDataRateLimitError("429", retry_after=None),
         ]
     )
@@ -1032,7 +1068,14 @@ def test_backfill_rate_limit_resumes_through_reconnecting_state() -> None:
 
 
 def test_fatal_backfill_failure_fails_closed_without_retry() -> None:
-    source = BackfillFailureSource([MarketDataFatalError("bad request")])
+    source = BackfillFailureSource(
+        [
+            MarketDataFatalError(
+                "bad request",
+                kind=MarketDataFailureKind.PROTOCOL,
+            )
+        ]
+    )
     scheduler = FakeScheduler()
     runtime = runtime_for(source, RecordingSink(), scheduler=scheduler)
 
@@ -1060,7 +1103,15 @@ def test_repeated_rate_limited_backfill_uses_only_provider_delays() -> None:
 
 
 def test_retryable_backfill_failure_uses_bounded_backoff_then_fails_closed() -> None:
-    source = BackfillFailureSource([MarketDataRetryableError("503")] * 4)
+    source = BackfillFailureSource(
+        [
+            MarketDataRetryableError(
+                "503",
+                kind=MarketDataFailureKind.PROTOCOL,
+            )
+        ]
+        * 4
+    )
     scheduler = FakeScheduler()
     runtime = runtime_for(source, RecordingSink(), scheduler=scheduler)
 
@@ -1086,7 +1137,15 @@ def test_backfill_timeout_uses_bounded_backoff_then_fails_closed() -> None:
 
 
 def test_fatal_stream_failure_does_not_reconnect() -> None:
-    source = StreamFailureSource([MarketDataFatalError("bad request")] * 4)
+    source = StreamFailureSource(
+        [
+            MarketDataFatalError(
+                "bad request",
+                kind=MarketDataFailureKind.PROTOCOL,
+            )
+        ]
+        * 4
+    )
     scheduler = FakeScheduler()
     runtime = runtime_for(source, RecordingSink(), scheduler=scheduler)
 
@@ -1097,7 +1156,14 @@ def test_fatal_stream_failure_does_not_reconnect() -> None:
 
 
 def test_async_iterator_fatal_failure_does_not_reconnect() -> None:
-    source = AsyncIteratorFailureSource([MarketDataFatalError("bad payload")])
+    source = AsyncIteratorFailureSource(
+        [
+            MarketDataFatalError(
+                "bad payload",
+                kind=MarketDataFailureKind.PAYLOAD,
+            )
+        ]
+    )
     scheduler = FakeScheduler()
     runtime = runtime_for(source, RecordingSink(), scheduler=scheduler)
 
@@ -1112,7 +1178,10 @@ def test_reconnect_async_iterator_fatal_failure_stops_recovery() -> None:
     source = AsyncIteratorFailureSource(
         [
             RuntimeError("disconnected"),
-            MarketDataFatalError("bad payload"),
+            MarketDataFatalError(
+                "bad payload",
+                kind=MarketDataFailureKind.PAYLOAD,
+            ),
         ]
     )
     scheduler = FakeScheduler()

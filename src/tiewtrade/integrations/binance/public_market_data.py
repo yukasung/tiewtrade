@@ -16,6 +16,7 @@ from tiewtrade.integrations.binance.public_endpoints import (
 from tiewtrade.market_data.candle import Candle
 from tiewtrade.market_data.config import MarketDataConfig
 from tiewtrade.market_data.source_errors import (
+    MarketDataFailureKind,
     MarketDataFatalError,
     MarketDataRateLimitError,
     MarketDataRetryableError,
@@ -60,9 +61,15 @@ def _raise_for_http_status(
             retry_after=_parse_retry_after(retry_after),
         )
     if 500 <= status < 600:
-        raise MarketDataRetryableError("Binance market-data service is unavailable")
+        raise MarketDataRetryableError(
+            "Binance market-data service is unavailable",
+            kind=MarketDataFailureKind.PROTOCOL,
+        )
     if not 200 <= status < 300:
-        raise MarketDataFatalError("Binance rejected the market-data request")
+        raise MarketDataFatalError(
+            "Binance rejected the market-data request",
+            kind=MarketDataFailureKind.PROTOCOL,
+        )
 
 
 class BinancePublicMarketData:
@@ -188,14 +195,18 @@ class BinancePublicMarketData:
             TypeError,
             ValueError,
         ) as error:
-            raise MarketDataFatalError(_INVALID_RESPONSE_MESSAGE) from error
+            raise MarketDataFatalError(
+                _INVALID_RESPONSE_MESSAGE,
+                kind=MarketDataFailureKind.PAYLOAD,
+            ) from error
         except TimeoutError as error:
             raise MarketDataTimeoutError(
                 "Binance market-data transport timed out"
             ) from error
         except aiohttp.ClientError as error:
             raise MarketDataRetryableError(
-                "Binance market-data transport failed"
+                "Binance market-data transport failed",
+                kind=MarketDataFailureKind.TRANSPORT,
             ) from error
 
     async def _stream_completed(
@@ -227,13 +238,18 @@ class BinancePublicMarketData:
                             ) from message.data
                         if isinstance(message.data, Exception):
                             raise MarketDataRetryableError(
-                                "Binance market-data transport failed"
+                                "Binance market-data transport failed",
+                                kind=MarketDataFailureKind.TRANSPORT,
                             ) from message.data
                         raise MarketDataRetryableError(
-                            "Binance market-data transport failed"
+                            "Binance market-data transport failed",
+                            kind=MarketDataFailureKind.TRANSPORT,
                         )
                     else:
-                        raise ValueError
+                        raise MarketDataFatalError(
+                            _INVALID_RESPONSE_MESSAGE,
+                            kind=MarketDataFailureKind.PROTOCOL,
+                        )
         except (
             MarketDataRetryableError,
             MarketDataRateLimitError,
@@ -250,7 +266,8 @@ class BinancePublicMarketData:
                 ),
             )
             raise MarketDataRetryableError(
-                "Binance market-data transport failed"
+                "Binance market-data transport failed",
+                kind=MarketDataFailureKind.TRANSPORT,
             ) from error
         except TimeoutError as error:
             raise MarketDataTimeoutError(
@@ -258,7 +275,8 @@ class BinancePublicMarketData:
             ) from error
         except aiohttp.ClientError as error:
             raise MarketDataRetryableError(
-                "Binance market-data transport failed"
+                "Binance market-data transport failed",
+                kind=MarketDataFailureKind.TRANSPORT,
             ) from error
         except (
             BinanceMarketDataPayloadError,
@@ -266,7 +284,10 @@ class BinancePublicMarketData:
             TypeError,
             ValueError,
         ) as error:
-            raise MarketDataFatalError(_INVALID_RESPONSE_MESSAGE) from error
+            raise MarketDataFatalError(
+                _INVALID_RESPONSE_MESSAGE,
+                kind=MarketDataFailureKind.PAYLOAD,
+            ) from error
 
     def stream_completed(self, config: MarketDataConfig) -> AsyncIterator[Candle]:
         return self._stream_completed(config)

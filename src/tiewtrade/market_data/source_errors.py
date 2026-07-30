@@ -1,10 +1,25 @@
 from datetime import datetime, timedelta
+from enum import StrEnum
 
 RetryAfter = timedelta | datetime
 
 
+class MarketDataFailureKind(StrEnum):
+    TRANSPORT = "transport"
+    PROTOCOL = "protocol"
+    PAYLOAD = "payload"
+
+
 class MarketDataSourceError(Exception):
     """Base failure exposed by a market-data source adapter."""
+
+    def __init__(self, message: str, *, kind: MarketDataFailureKind) -> None:
+        super().__init__(message)
+        self._kind = kind
+
+    @property
+    def kind(self) -> MarketDataFailureKind:
+        return self._kind
 
 
 class MarketDataRetryableError(MarketDataSourceError):
@@ -13,6 +28,9 @@ class MarketDataRetryableError(MarketDataSourceError):
 
 class MarketDataTimeoutError(MarketDataRetryableError):
     """A source timeout whose public timeout meaning must be preserved."""
+
+    def __init__(self, message: str) -> None:
+        super().__init__(message, kind=MarketDataFailureKind.TRANSPORT)
 
 
 class MarketDataFatalError(MarketDataSourceError):
@@ -32,7 +50,7 @@ class MarketDataRateLimitError(MarketDataSourceError):
             retry_after.tzinfo is None or retry_after.utcoffset() != timedelta(0)
         ):
             raise ValueError("retry_after datetime must use UTC")
-        super().__init__(message)
+        super().__init__(message, kind=MarketDataFailureKind.PROTOCOL)
         self._retry_after = retry_after
 
     @property

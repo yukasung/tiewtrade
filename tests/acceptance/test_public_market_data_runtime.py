@@ -18,6 +18,7 @@ from tiewtrade.market_data.runtime_state import (
     MarketDataRuntimeState,
 )
 from tiewtrade.market_data.source_errors import (
+    MarketDataFailureKind,
     MarketDataFatalError,
     MarketDataRateLimitError,
 )
@@ -178,7 +179,10 @@ def test_rate_limit_exhaustion_fails_closed_without_paper_spot_delivery() -> Non
 
 def test_fatal_source_failure_fails_closed_without_paper_spot_delivery() -> None:
     runtime, source, sink, scheduler = runtime_with_failing_stream(
-        MarketDataFatalError("bad request")
+        MarketDataFatalError(
+            "bad request",
+            kind=MarketDataFailureKind.PROTOCOL,
+        )
     )
 
     asyncio.run(runtime.run())

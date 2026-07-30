@@ -20,6 +20,7 @@ from tiewtrade.market_data.runtime_state import (
     MarketDataRuntimeState,
 )
 from tiewtrade.market_data.source_errors import (
+    MarketDataFailureKind,
     MarketDataFatalError,
     MarketDataRateLimitError,
     MarketDataRetryableError,
@@ -380,22 +381,28 @@ def test_429_without_valid_retry_after_uses_no_directive(
 def test_rate_limit_statuses_raise_rate_limit_error(status: int) -> None:
     source, _ = source_with(rest_pages=[FakeResponse(status=status)])
 
-    with pytest.raises(MarketDataRateLimitError):
+    with pytest.raises(MarketDataRateLimitError) as captured:
         load_one(source)
+
+    assert captured.value.kind is MarketDataFailureKind.PROTOCOL
 
 
 def test_400_raises_fatal_error() -> None:
     source, _ = source_with(rest_pages=[FakeResponse(status=400)])
 
-    with pytest.raises(MarketDataFatalError):
+    with pytest.raises(MarketDataFatalError) as captured:
         load_one(source)
+
+    assert captured.value.kind is MarketDataFailureKind.PROTOCOL
 
 
 def test_503_raises_retryable_error() -> None:
     source, _ = source_with(rest_pages=[FakeResponse(status=503)])
 
-    with pytest.raises(MarketDataRetryableError):
+    with pytest.raises(MarketDataRetryableError) as captured:
         load_one(source)
+
+    assert captured.value.kind is MarketDataFailureKind.PROTOCOL
 
 
 def test_transport_failure_raises_retryable_error() -> None:
@@ -403,8 +410,10 @@ def test_transport_failure_raises_retryable_error() -> None:
         rest_pages=[FakeResponse(payload=aiohttp.ClientConnectionError("offline"))]
     )
 
-    with pytest.raises(MarketDataRetryableError):
+    with pytest.raises(MarketDataRetryableError) as captured:
         load_one(source)
+
+    assert captured.value.kind is MarketDataFailureKind.TRANSPORT
 
 
 def test_timeout_failure_preserves_timeout_action() -> None:
@@ -412,8 +421,10 @@ def test_timeout_failure_preserves_timeout_action() -> None:
         rest_pages=[FakeResponse(payload=TimeoutError("timed out"))]
     )
 
-    with pytest.raises(MarketDataTimeoutError):
+    with pytest.raises(MarketDataTimeoutError) as captured:
         load_one(source)
+
+    assert captured.value.kind is MarketDataFailureKind.TRANSPORT
 
 
 class ImmediateRuntimeScheduler:
@@ -476,8 +487,10 @@ def test_rest_payload_client_error_raises_fatal_error(
 ) -> None:
     source, _ = source_with(rest_pages=[FakeResponse(payload=payload_error)])
 
-    with pytest.raises(MarketDataFatalError):
+    with pytest.raises(MarketDataFatalError) as captured:
         load_one(source)
+
+    assert captured.value.kind is MarketDataFailureKind.PAYLOAD
 
 
 @pytest.mark.parametrize(
@@ -487,8 +500,10 @@ def test_rest_payload_client_error_raises_fatal_error(
 def test_invalid_rest_payload_raises_fatal_error(payload: object) -> None:
     source, _ = source_with(rest_pages=[FakeResponse(payload=payload)])
 
-    with pytest.raises(MarketDataFatalError):
+    with pytest.raises(MarketDataFatalError) as captured:
         load_one(source)
+
+    assert captured.value.kind is MarketDataFailureKind.PAYLOAD
 
 
 def test_stream_completed_ignores_open_updates_and_uses_symbol_stream_url() -> None:
@@ -508,15 +523,19 @@ def test_stream_completed_ignores_open_updates_and_uses_symbol_stream_url() -> N
 def test_websocket_connection_failure_raises_retryable_error() -> None:
     source, _ = source_with(websocket_failure=aiohttp.ClientConnectionError("offline"))
 
-    with pytest.raises(MarketDataRetryableError):
+    with pytest.raises(MarketDataRetryableError) as captured:
         asyncio.run(collect(source))
+
+    assert captured.value.kind is MarketDataFailureKind.TRANSPORT
 
 
 def test_websocket_handshake_timeout_preserves_timeout_action() -> None:
     source, _ = source_with(websocket_failure=TimeoutError("timed out"))
 
-    with pytest.raises(MarketDataTimeoutError):
+    with pytest.raises(MarketDataTimeoutError) as captured:
         asyncio.run(collect(source))
+
+    assert captured.value.kind is MarketDataFailureKind.TRANSPORT
 
 
 def test_websocket_error_message_raises_retryable_error() -> None:
@@ -529,8 +548,10 @@ def test_websocket_error_message_raises_retryable_error() -> None:
         ]
     )
 
-    with pytest.raises(MarketDataRetryableError):
+    with pytest.raises(MarketDataRetryableError) as captured:
         asyncio.run(collect(source))
+
+    assert captured.value.kind is MarketDataFailureKind.TRANSPORT
 
 
 def test_websocket_timeout_message_preserves_timeout_action() -> None:
@@ -540,8 +561,10 @@ def test_websocket_timeout_message_preserves_timeout_action() -> None:
         ]
     )
 
-    with pytest.raises(MarketDataTimeoutError):
+    with pytest.raises(MarketDataTimeoutError) as captured:
         asyncio.run(collect(source))
+
+    assert captured.value.kind is MarketDataFailureKind.TRANSPORT
 
 
 @pytest.mark.parametrize(
@@ -579,36 +602,62 @@ def test_websocket_rate_limit_without_header_uses_no_directive(status: int) -> N
         asyncio.run(collect(source))
 
     assert captured.value.retry_after is None
+    assert captured.value.kind is MarketDataFailureKind.PROTOCOL
 
 
 def test_websocket_400_handshake_raises_fatal_error() -> None:
     source, _ = source_with(websocket_failure=websocket_handshake_error(400))
 
-    with pytest.raises(MarketDataFatalError):
+    with pytest.raises(MarketDataFatalError) as captured:
         asyncio.run(collect(source))
+
+    assert captured.value.kind is MarketDataFailureKind.PROTOCOL
 
 
 def test_websocket_503_handshake_raises_retryable_error() -> None:
     source, _ = source_with(websocket_failure=websocket_handshake_error(503))
 
-    with pytest.raises(MarketDataRetryableError):
+    with pytest.raises(MarketDataRetryableError) as captured:
         asyncio.run(collect(source))
+
+    assert captured.value.kind is MarketDataFailureKind.PROTOCOL
 
 
 @pytest.mark.parametrize("payload", ["not JSON", {"unexpected": "payload"}])
 def test_invalid_websocket_payload_raises_fatal_error(payload: object) -> None:
     source, _ = source_with(websocket_payloads=[payload])
 
-    with pytest.raises(MarketDataFatalError):
+    with pytest.raises(MarketDataFatalError) as captured:
         asyncio.run(collect(source))
+
+    assert captured.value.kind is MarketDataFailureKind.PAYLOAD
+
+
+def test_unexpected_websocket_message_is_fatal_protocol_failure() -> None:
+    source, _ = source_with(
+        websocket_payloads=[
+            FakeMessage("binary", message_type=WSMsgType.BINARY),
+        ]
+    )
+
+    with pytest.raises(MarketDataFatalError) as captured:
+        asyncio.run(collect(source))
+
+    assert captured.value.kind is MarketDataFailureKind.PROTOCOL
 
 
 @pytest.mark.parametrize(
     "failure",
     [
-        MarketDataRetryableError("retryable"),
+        MarketDataRetryableError(
+            "retryable",
+            kind=MarketDataFailureKind.TRANSPORT,
+        ),
         MarketDataRateLimitError("rate limited", retry_after=None),
-        MarketDataFatalError("fatal"),
+        MarketDataFatalError(
+            "fatal",
+            kind=MarketDataFailureKind.PAYLOAD,
+        ),
     ],
 )
 def test_websocket_domain_error_is_not_remapped(failure: Exception) -> None:
