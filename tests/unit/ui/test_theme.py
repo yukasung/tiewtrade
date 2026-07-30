@@ -30,8 +30,10 @@ def test_dark_theme_covers_existing_navigation_and_content_object_names() -> Non
     for selector in (
         "QWidget#content",
         "QFrame#navigation",
+        "QPushButton#navigationButton",
         "QPushButton#navigationButtonSelected",
+        "QPushButton#unavailableRetryButton",
         "QLabel#eyebrow",
         "QLabel#summaryValue",
     ):
-        assert selector in DARK_THEME
+        assert f"{selector} {{" in DARK_THEME

@@ -9,6 +9,15 @@ QFrame#navigation {
     background: #141A22;
     border-right: 1px solid #2B3441;
 }
+QPushButton#navigationButton {
+    background: transparent;
+    border: 0;
+    border-radius: 6px;
+    color: #94A3B8;
+    font-weight: 600;
+    padding: 11px 14px;
+    text-align: left;
+}
 QFrame#workspaceHeader, QFrame#botControl, QFrame#card,
 QFrame#statusCard, QFrame#filterCard, QFrame#emptyPanel {
     background: #141A22;
@@ -110,6 +119,14 @@ QPushButton#secondaryButton, QPushButton[retryButton="true"] {
 QPushButton#secondaryButton:hover, QPushButton[retryButton="true"]:hover {
     background: #243044;
     border-color: #4C7DFF;
+}
+QPushButton#unavailableRetryButton {
+    background: #1B2430;
+    border: 1px solid #3A4656;
+    border-radius: 6px;
+    color: #F1F5F9;
+    min-height: 36px;
+    padding: 0 14px;
 }
 QPushButton#destructiveButton {
     background: #F6465D;
