@@ -24,8 +24,12 @@ class MypyConfig(TypedDict):
     explicit_package_bases: bool
 
 
+RuffConfig = TypedDict("RuffConfig", {"extend-exclude": list[str]})
+
+
 class ToolConfig(TypedDict):
     mypy: MypyConfig
+    ruff: RuffConfig
 
 
 class PyprojectConfig(TypedDict):
