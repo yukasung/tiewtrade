@@ -681,12 +681,23 @@ async def run_until_market_data_record_count(
     count: int,
 ) -> None:
     task = asyncio.create_task(runtime.run())
-    while len(market_data_records(caplog)) < count:
-        if task.done():
-            break
-        await asyncio.sleep(0)
-    await runtime.stop()
-    await task
+    try:
+        for _ in range(100):
+            if len(market_data_records(caplog)) >= count:
+                return
+            if task.done():
+                break
+            await asyncio.sleep(0)
+        record_label = "record" if count == 1 else "records"
+        raise AssertionError(
+            f"expected {count} market data {record_label}, "
+            f"observed {len(market_data_records(caplog))}"
+        )
+    finally:
+        try:
+            await runtime.stop()
+        finally:
+            await task
 
 
 async def run_until_sink_receives_or_runtime_stops(
@@ -750,6 +761,30 @@ async def stop_during_rate_limit_delay(
     await scheduler.sleep_started.wait()
     await runtime.stop()
     await run_task
+
+
+def test_market_data_record_wait_fails_bounded_and_stops_runtime(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    logger = logging.getLogger("tests.market_data.missing_runtime_event")
+    caplog.set_level(logging.INFO, logger=logger.name)
+    source = FakeSource(recent=warm_up_candles())
+    runtime = runtime_for(source, RecordingSink(), logger=logger)
+
+    async def exercise() -> None:
+        with pytest.raises(
+            AssertionError,
+            match="expected 1 market data record, observed 0",
+        ):
+            await asyncio.wait_for(
+                run_until_market_data_record_count(runtime, caplog, count=1),
+                timeout=0.1,
+            )
+
+    asyncio.run(exercise())
+
+    assert runtime.snapshot.state is MarketDataRuntimeState.STOPPED
+    assert source.close_count == 1
 
 
 def test_runtime_state_snapshot_is_immutable() -> None:
