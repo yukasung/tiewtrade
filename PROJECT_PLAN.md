@@ -176,7 +176,7 @@ milestone ต้องรัน checks ทั้งหมดต่อไปน�
 .venv/bin/python -m pytest -q
 .venv/bin/python -m ruff check src tests
 .venv/bin/python -m ruff format --check src tests
-.venv/bin/python -m mypy src
+.venv/bin/python -m mypy
 npm --prefix docs-site test
 npm --prefix docs-site run check:content
 git diff --check
