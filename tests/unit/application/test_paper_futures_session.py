@@ -68,6 +68,19 @@ def test_session_exposes_immutable_persistence_identity() -> None:
     )
 
 
+def test_incomplete_candle_is_not_processed() -> None:
+    session = make_session()
+    incomplete = candle(0, open="100", close="101")
+
+    snapshot = session.process_completed_candle(
+        incomplete,
+        received_at=incomplete.close_time - timedelta(seconds=1),
+    )
+
+    assert snapshot.accepted is False
+    assert session._latest_mark_price is None
+
+
 def test_entry_fill_can_liquidate_on_the_same_candle() -> None:
     session = make_session()
     pending = arm_entry_intent(session)

@@ -12,7 +12,10 @@ from tiewtrade.market_data.candle_pipeline import (
     CandlePipelineSinkError,
     CompletedCandlePipeline,
 )
-from tiewtrade.market_data.completed_candle_stream import CandleGapError
+from tiewtrade.market_data.completed_candle_stream import (
+    CandleAcceptance,
+    CandleGapError,
+)
 from tiewtrade.market_data.config import MarketDataConfig
 
 RECEIVED_AT = datetime(2026, 1, 1, 0, 30, tzinfo=UTC)
@@ -132,7 +135,7 @@ def test_partial_backfill_records_only_successful_deliveries() -> None:
     ]
 
 
-def test_duplicate_live_returns_false_without_sink_delivery() -> None:
+def test_duplicate_live_returns_discard_reason_without_sink_delivery() -> None:
     sink = RecordingSink()
     deliveries: list[datetime] = []
     pipeline = pipeline_for(sink, deliveries)
@@ -143,8 +146,8 @@ def test_duplicate_live_returns_false_without_sink_delivery() -> None:
             received_at=RECEIVED_AT,
         )
     )
-    accepted = asyncio.run(pipeline.process_live(candle_at(5), received_at=RECEIVED_AT))
-    assert accepted is False
+    decision = asyncio.run(pipeline.process_live(candle_at(5), received_at=RECEIVED_AT))
+    assert decision is CandleAcceptance.DUPLICATE_OR_OUT_OF_ORDER
     assert sink.events == ["warm_up"]
 
 

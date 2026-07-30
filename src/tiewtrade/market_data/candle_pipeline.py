@@ -5,6 +5,7 @@ from typing import Protocol
 
 from tiewtrade.market_data.candle import Candle
 from tiewtrade.market_data.completed_candle_stream import (
+    CandleAcceptance,
     CandleGapError,
     CompletedCandleStream,
 )
@@ -61,7 +62,10 @@ class CompletedCandlePipeline:
             if len(candles) < expected_count:
                 raise ValueError("insufficient warm-up candles")
             for candle in candles:
-                if not self._candles.accept(candle, received_at):
+                if (
+                    self._candles.accept(candle, received_at)
+                    is not CandleAcceptance.ACCEPTED
+                ):
                     raise ValueError("warm-up requires new completed candles")
         except Exception as error:
             raise CandlePipelineInputError from error
@@ -76,17 +80,17 @@ class CompletedCandlePipeline:
         candle: Candle,
         *,
         received_at: datetime,
-    ) -> bool:
+    ) -> CandleAcceptance:
         try:
-            accepted = self._candles.accept(candle, received_at)
+            decision = self._candles.accept(candle, received_at)
         except CandleGapError:
             raise
         except Exception as error:
             raise CandlePipelineInputError from error
-        if not accepted:
-            return False
+        if decision is not CandleAcceptance.ACCEPTED:
+            return decision
         await self._deliver(candle, received_at=received_at)
-        return True
+        return decision
 
     async def process_backfill(
         self,
@@ -106,14 +110,20 @@ class CompletedCandlePipeline:
             validation_candles = deepcopy(self._candles)
             accepted: list[Candle] = []
             for candle in candles:
-                if not validation_candles.accept(candle, received_at):
+                if (
+                    validation_candles.accept(candle, received_at)
+                    is not CandleAcceptance.ACCEPTED
+                ):
                     raise ValueError("backfill requires new completed candles")
                 accepted.append(candle)
             if accepted:
                 reached = accepted[-1].open_time + self._config.interval
                 if reached != end:
                     raise ValueError("backfill did not reach requested boundary")
-            if validation_candles.accept(observed, received_at):
+            if (
+                validation_candles.accept(observed, received_at)
+                is CandleAcceptance.ACCEPTED
+            ):
                 raise ValueError("buffered observation was not covered by backfill")
         except Exception as error:
             raise CandlePipelineInputError from error

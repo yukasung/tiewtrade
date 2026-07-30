@@ -5,6 +5,7 @@ import pytest
 
 from tiewtrade.market_data.candle import Candle
 from tiewtrade.market_data.completed_candle_stream import (
+    CandleAcceptance,
     CandleGapError,
     CompletedCandleStream,
 )
@@ -30,21 +31,48 @@ def test_accepts_only_closed_candles_and_deduplicates() -> None:
     stream = CompletedCandleStream(config)
     first = candle_at(0)
 
-    assert not stream.accept(first, datetime(2026, 1, 1, 0, 4, 59, tzinfo=UTC))
-    assert stream.accept(first, datetime(2026, 1, 1, 0, 5, tzinfo=UTC))
-    assert not stream.accept(first, datetime(2026, 1, 1, 0, 6, tzinfo=UTC))
+    assert (
+        stream.accept(
+            first,
+            datetime(2026, 1, 1, 0, 4, 59, tzinfo=UTC),
+        )
+        is CandleAcceptance.NOT_CLOSED
+    )
+    assert (
+        stream.accept(
+            first,
+            datetime(2026, 1, 1, 0, 5, tzinfo=UTC),
+        )
+        is CandleAcceptance.ACCEPTED
+    )
+    assert (
+        stream.accept(
+            first,
+            datetime(2026, 1, 1, 0, 6, tzinfo=UTC),
+        )
+        is CandleAcceptance.DUPLICATE_OR_OUT_OF_ORDER
+    )
 
 
 def test_rejects_a_gap_until_backfill_supplies_missing_candle() -> None:
     config = MarketDataConfig(symbol="BTCUSDT", timeframe="5m")
     stream = CompletedCandleStream(config)
-    assert stream.accept(candle_at(0), datetime(2026, 1, 1, 0, 5, tzinfo=UTC))
+    assert (
+        stream.accept(candle_at(0), datetime(2026, 1, 1, 0, 5, tzinfo=UTC))
+        is CandleAcceptance.ACCEPTED
+    )
 
     with pytest.raises(CandleGapError, match="2026-01-01T00:05:00"):
         stream.accept(candle_at(10), datetime(2026, 1, 1, 0, 15, tzinfo=UTC))
 
-    assert stream.accept(candle_at(5), datetime(2026, 1, 1, 0, 10, tzinfo=UTC))
-    assert stream.accept(candle_at(10), datetime(2026, 1, 1, 0, 15, tzinfo=UTC))
+    assert (
+        stream.accept(candle_at(5), datetime(2026, 1, 1, 0, 10, tzinfo=UTC))
+        is CandleAcceptance.ACCEPTED
+    )
+    assert (
+        stream.accept(candle_at(10), datetime(2026, 1, 1, 0, 15, tzinfo=UTC))
+        is CandleAcceptance.ACCEPTED
+    )
 
 
 def test_candle_requires_utc_and_valid_ohlc() -> None:
@@ -102,5 +130,11 @@ def test_stream_accepts_a_non_five_minute_timeframe() -> None:
     first = candle_at(0, symbol="ETHUSDT", timeframe="15m")
     second = candle_at(15, symbol="ETHUSDT", timeframe="15m")
 
-    assert stream.accept(first, datetime(2026, 1, 1, 0, 15, tzinfo=UTC))
-    assert stream.accept(second, datetime(2026, 1, 1, 0, 30, tzinfo=UTC))
+    assert (
+        stream.accept(first, datetime(2026, 1, 1, 0, 15, tzinfo=UTC))
+        is CandleAcceptance.ACCEPTED
+    )
+    assert (
+        stream.accept(second, datetime(2026, 1, 1, 0, 30, tzinfo=UTC))
+        is CandleAcceptance.ACCEPTED
+    )

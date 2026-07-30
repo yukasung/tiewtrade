@@ -12,7 +12,10 @@ from tiewtrade.execution.paper_spot import (
     PaperSpotExitFill,
 )
 from tiewtrade.market_data.candle import Candle
-from tiewtrade.market_data.completed_candle_stream import CompletedCandleStream
+from tiewtrade.market_data.completed_candle_stream import (
+    CandleAcceptance,
+    CompletedCandleStream,
+)
 from tiewtrade.market_data.config import MarketDataConfig
 from tiewtrade.strategies.rsi_step_grid.indicators import (
     IndicatorSnapshot,
@@ -124,7 +127,7 @@ class PaperSpotSession:
     ) -> PaperSpotSessionSnapshot:
         if self._state is not PaperSpotSessionState.ACTIVE:
             return self._snapshot(accepted=False)
-        if not self._candles.accept(candle, received_at):
+        if self._candles.accept(candle, received_at) is not CandleAcceptance.ACCEPTED:
             return self._snapshot(accepted=False)
 
         try:
@@ -165,7 +168,10 @@ class PaperSpotSession:
         if self._state is not PaperSpotSessionState.ACTIVE:
             raise PaperSpotSessionError("Paper Spot session is not active")
         for candle in candles:
-            if not self._candles.accept(candle, received_at):
+            if (
+                self._candles.accept(candle, received_at)
+                is not CandleAcceptance.ACCEPTED
+            ):
                 raise ValueError("warm-up requires new completed candles")
             self._indicators.update(candle)
 
