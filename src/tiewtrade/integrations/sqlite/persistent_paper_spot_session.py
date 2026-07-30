@@ -5,11 +5,11 @@ from tiewtrade.application.paper_spot_session import (
     PaperSpotSession,
     PaperSpotSessionSnapshot,
 )
-from tiewtrade.integrations.sqlite.paper_spot_history import PaperSpotSQLiteHistory
-from tiewtrade.integrations.sqlite.session_persistence import (
+from tiewtrade.application.session_persistence import (
     PersistenceState,
     SessionPersistenceBlockedError,
 )
+from tiewtrade.integrations.sqlite.paper_spot_history import PaperSpotSQLiteHistory
 from tiewtrade.market_data.candle import Candle
 
 
