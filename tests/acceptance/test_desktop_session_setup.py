@@ -8,7 +8,7 @@ from pathlib import Path
 from uuid import UUID
 
 import pytest
-from PySide6.QtWidgets import QApplication, QLabel
+from PySide6.QtWidgets import QApplication
 from pytest import MonkeyPatch
 from pytestqt.qtbot import QtBot
 
@@ -108,7 +108,7 @@ def test_desktop_paper_session_create_overview_and_restart_restore(
 
     _enter_form_values(first_window, case)
     click(first_window.setup.create_button)
-    qtbot.waitUntil(lambda: first_window.current_page_name == "Session Overview")
+    qtbot.waitUntil(first_window.overview.isVisible)
 
     durable_session = SQLiteActivePaperSessions(
         SQLiteDatabase(database_path)
@@ -177,7 +177,7 @@ def test_desktop_paper_session_create_overview_and_restart_restore(
     )
     qtbot.addWidget(restarted_window)
     restarted_window.show()
-    qtbot.waitUntil(lambda: restarted_window.current_page_name == "Session Overview")
+    qtbot.waitUntil(restarted_window.overview.isVisible)
 
     _assert_overview_matches_case(
         restarted_window,
@@ -213,7 +213,7 @@ def test_desktop_session_storage_unavailable_fails_closed(
     )
     qtbot.addWidget(window)
     window.show()
-    qtbot.waitUntil(lambda: window.current_page_name == "Unavailable")
+    qtbot.waitUntil(window.unavailable_panel.isVisible)
 
     assert create_calls == 0
     assert window.unavailable_message.text() == "Session storage is unavailable"
@@ -257,7 +257,7 @@ def test_desktop_session_sqlite_write_failure_after_setup_fails_closed(
         ),
     )
     click(window.setup.create_button)
-    qtbot.waitUntil(lambda: window.current_page_name == "Unavailable")
+    qtbot.waitUntil(window.unavailable_panel.isVisible)
 
     assert window.unavailable_message.text() == "Session storage is unavailable"
     assert window.setup.available_capital.text() == "200000"
@@ -311,7 +311,7 @@ def test_desktop_session_validation_failure_after_setup_preserves_input(
         )
     )
 
-    assert window.current_page_name == "Session Setup"
+    assert window.setup.isVisible()
     assert window.setup.available_capital.text() == "0"
     assert window.setup.timeframe.currentData() == "15m"
     assert window.setup.max_entries.value() == 12
@@ -488,10 +488,10 @@ def _assert_overview_matches_case(
     expected_session_id: UUID,
     expected_created_at: datetime,
 ) -> None:
-    environment_badge = window.findChild(QLabel, "environmentBadge")
-
-    assert environment_badge is not None
-    assert environment_badge.text() == "PAPER\nNo live orders"
+    assert window.workspace.header_mode.text() == f"Paper · {case.market_type.title()}"
+    assert window.workspace.header_runtime.text() == "Configured"
+    assert window.workspace.header_freshness.text() == "Market data not started"
+    assert window.overview.isVisible()
     assert window.overview.state_value.text() == (
         "Configured — Market Data Not Started"
     )

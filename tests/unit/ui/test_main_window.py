@@ -52,7 +52,11 @@ def unused_create(values: PaperSessionSetupValues) -> PaperSessionCreateOutcome:
     pytest.fail("create must not run")
 
 
-def test_navigation_opens_trade_history_without_active_session(qtbot: QtBot) -> None:
+def open_trade_history(window: MainWindow) -> None:
+    window.workspace.tabs.setCurrentWidget(window.trade_history)
+
+
+def test_trade_history_opens_without_active_session(qtbot: QtBot) -> None:
     window = MainWindow(
         create_session=unused_create,
         load_active=no_active_session,
@@ -63,13 +67,13 @@ def test_navigation_opens_trade_history_without_active_session(qtbot: QtBot) -> 
     window.show()
     qtbot.waitUntil(window.setup.create_button.isEnabled)
 
-    click(window.trade_history_button)
+    open_trade_history(window)
 
-    qtbot.waitUntil(lambda: window.current_page_name == "Trade History")
     qtbot.waitUntil(
         lambda: window.trade_history.basket_state.text() == "No trade history"
     )
     assert window.trade_history.isVisible()
+    assert window.workspace.header_runtime.text() == "No Session"
 
 
 def test_empty_trade_history_preserves_exact_query_summary_and_page_state(
@@ -92,7 +96,7 @@ def test_empty_trade_history_preserves_exact_query_summary_and_page_state(
     window.show()
     qtbot.waitUntil(window.setup.create_button.isEnabled)
 
-    click(window.trade_history_button)
+    open_trade_history(window)
 
     qtbot.waitUntil(
         lambda: window.trade_history.basket_state.text() == "No trade history"
@@ -123,15 +127,14 @@ def test_trade_history_remains_available_when_session_load_fails(
     window.show()
     qtbot.waitUntil(window.unavailable_panel.isVisible)
 
-    click(window.trade_history_button)
+    open_trade_history(window)
 
-    qtbot.waitUntil(lambda: window.current_page_name == "Trade History")
     qtbot.waitUntil(
         lambda: window.trade_history.basket_state.text() == "No trade history"
     )
 
 
-def test_navigation_starts_history_query_only_once(qtbot: QtBot) -> None:
+def test_tab_activation_starts_history_query_only_once(qtbot: QtBot) -> None:
     calls = 0
 
     def count_baskets(
@@ -151,10 +154,10 @@ def test_navigation_starts_history_query_only_once(qtbot: QtBot) -> None:
     window.show()
     qtbot.waitUntil(window.setup.create_button.isEnabled)
 
-    click(window.trade_history_button)
+    open_trade_history(window)
     qtbot.waitUntil(lambda: calls == 1)
-    click(window.session_button)
-    click(window.trade_history_button)
+    window.workspace.tabs.setCurrentIndex(0)
+    open_trade_history(window)
 
     assert calls == 1
 
@@ -185,7 +188,7 @@ def test_session_load_finishing_does_not_navigate_away_from_history(
     window.show()
     qtbot.waitUntil(started.is_set)
 
-    click(window.trade_history_button)
+    open_trade_history(window)
     release.set()
 
     qtbot.waitUntil(
@@ -193,12 +196,9 @@ def test_session_load_finishing_does_not_navigate_away_from_history(
             window.overview.session_id_value.text() == str(existing.config.session_id)
         )
     )
-    assert window.current_page_name == "Trade History"
     assert window.trade_history.isVisible()
-
-    click(window.session_button)
-    assert window.current_page_name == "Session Overview"
     assert window.overview.isVisible()
+    assert window.workspace.header_runtime.text() == "Configured"
 
 
 def test_trade_history_basket_and_fill_retries_are_wired_separately(
@@ -241,7 +241,7 @@ def test_trade_history_basket_and_fill_retries_are_wired_separately(
     )
     qtbot.addWidget(window)
     window.show()
-    click(window.trade_history_button)
+    open_trade_history(window)
     qtbot.waitUntil(
         lambda: window.trade_history.basket_state.text() == "Trade History unavailable"
     )
@@ -290,7 +290,7 @@ def test_trade_history_filter_reset_page_and_selection_requests_are_wired(
     )
     qtbot.addWidget(window)
     window.show()
-    click(window.trade_history_button)
+    open_trade_history(window)
     qtbot.waitUntil(lambda: window.trade_history.basket_table.rowCount() == 2)
     qtbot.waitUntil(lambda: fill_calls == [first.basket_id])
 
@@ -343,7 +343,7 @@ def test_trade_history_filter_validation_is_wired_without_starting_query(
     )
     qtbot.addWidget(window)
     window.show()
-    click(window.trade_history_button)
+    open_trade_history(window)
     qtbot.waitUntil(lambda: basket_calls == 1)
     qtbot.waitUntil(window.trade_history.apply_button.isEnabled)
     window.trade_history.from_date_enabled.setChecked(True)
@@ -395,7 +395,7 @@ def test_created_spot_session_replaces_form_with_durable_overview(
 
     click(window.setup.create_button)
 
-    qtbot.waitUntil(lambda: window.current_page_name == "Session Overview")
+    qtbot.waitUntil(window.overview.isVisible)
     assert window.overview.state_value.text() == (
         "Configured — Market Data Not Started"
     )
@@ -514,7 +514,7 @@ def test_repeated_submit_while_worker_is_running_calls_create_once(
 
     assert len(calls) == 1
     release.set()
-    qtbot.waitUntil(lambda: window.current_page_name == "Session Overview")
+    qtbot.waitUntil(window.overview.isVisible)
 
 
 def test_validation_failure_restores_form_and_shows_field_error(qtbot: QtBot) -> None:
@@ -542,7 +542,7 @@ def test_validation_failure_restores_form_and_shows_field_error(qtbot: QtBot) ->
             == "Available Capital must be positive"
         )
     )
-    assert window.current_page_name == "Session Setup"
+    assert window.setup.isVisible()
     assert window.setup.create_button.isEnabled() is True
     assert window.setup.available_capital.text() == "0"
 
@@ -569,11 +569,10 @@ def test_persistence_failure_shows_sanitized_unavailable_state_and_allows_retry(
 
     qtbot.waitUntil(window.unavailable_panel.isVisible)
     assert window.unavailable_message.text() == "Session storage is unavailable"
-    assert window.current_page_name == "Unavailable"
     assert "/private/tmp" not in window.unavailable_message.text()
     qtbot.waitUntil(window.unavailable_retry_button.isEnabled)
     click(window.unavailable_retry_button)
-    qtbot.waitUntil(lambda: window.current_page_name == "Session Setup")
+    qtbot.waitUntil(window.setup.isVisible)
     assert window.setup.create_button.isEnabled() is True
 
 
@@ -613,7 +612,7 @@ def test_existing_create_outcome_opens_existing_session_overview(qtbot: QtBot) -
 
     click(window.setup.create_button)
 
-    qtbot.waitUntil(lambda: window.current_page_name == "Session Overview")
+    qtbot.waitUntil(window.overview.isVisible)
     assert window.overview.session_id_value.text() == str(existing.config.session_id)
 
 
@@ -630,7 +629,7 @@ def test_existing_active_session_opens_overview_without_create_form(
     qtbot.addWidget(window)
     window.show()
 
-    qtbot.waitUntil(lambda: window.current_page_name == "Session Overview")
+    qtbot.waitUntil(window.overview.isVisible)
 
     assert window.overview.session_id_value.text() == str(existing.config.session_id)
 
@@ -652,7 +651,6 @@ def test_sqlite_failure_shows_unavailable_without_fake_overview(qtbot: QtBot) ->
 
     qtbot.waitUntil(window.unavailable_panel.isVisible)
 
-    assert window.current_page_name == "Unavailable"
     assert window.unavailable_message.text() == "Session storage is unavailable"
     assert "/private/tmp" not in window.unavailable_message.text()
     assert not window.overview.isVisible()
@@ -683,7 +681,6 @@ def test_corrupt_sqlite_session_stays_unavailable_without_persisted_text(
 
     qtbot.waitUntil(window.unavailable_panel.isVisible)
 
-    assert window.current_page_name == "Unavailable"
     assert window.unavailable_message.text() == "Session storage is unavailable"
     assert unsupported_symbol not in window.unavailable_message.text()
     assert not window.overview.isVisible()
@@ -718,11 +715,10 @@ def test_retry_after_startup_load_failure_reloads_existing_session(
     qtbot.waitUntil(window.unavailable_retry_button.isEnabled)
     assert load_calls == 1
     assert not window.setup.isVisible()
-    assert not window.setup.create_button.isEnabled()
 
     click(window.unavailable_retry_button)
 
-    qtbot.waitUntil(lambda: window.current_page_name == "Session Overview")
+    qtbot.waitUntil(window.overview.isVisible)
     assert load_calls == 2
     assert window.overview.session_id_value.text() == str(existing.config.session_id)
 
@@ -768,7 +764,6 @@ def test_load_failures_stay_fail_closed_with_sanitized_copy(
 
     qtbot.waitUntil(window.unavailable_panel.isVisible)
 
-    assert window.current_page_name == "Unavailable"
     assert window.unavailable_message.text() == expected_message
     assert not window.setup.isVisible()
     assert window.setup.available_capital_error.text() == ""
@@ -799,7 +794,7 @@ def test_closing_window_ignores_late_worker_result_and_releases_task(
     qtbot.addWidget(window)
     window.show()
     qtbot.waitUntil(started.is_set)
-    page_before_close = window.current_page_name
+    runtime_before_close = window.workspace.header_runtime.text()
     overview_before_close = window.overview.session_id_value.text()
     unavailable_before_close = window.unavailable_message.text()
 
@@ -809,7 +804,7 @@ def test_closing_window_ignores_late_worker_result_and_releases_task(
     qtbot.wait(20)
 
     assert not window.isVisible()
-    assert window.current_page_name == page_before_close
+    assert window.workspace.header_runtime.text() == runtime_before_close
     assert window.overview.session_id_value.text() == overview_before_close
     assert window.unavailable_message.text() == unavailable_before_close
     assert not window.overview.isVisible()
@@ -895,7 +890,7 @@ def test_closing_window_ignores_late_trade_history_result(qtbot: QtBot) -> None:
     qtbot.addWidget(window)
     window.show()
     qtbot.waitUntil(window.setup.create_button.isEnabled)
-    click(window.trade_history_button)
+    open_trade_history(window)
     qtbot.waitUntil(started.is_set)
     basket_state_before_close = window.trade_history.basket_state.text()
 
@@ -908,7 +903,7 @@ def test_closing_window_ignores_late_trade_history_result(qtbot: QtBot) -> None:
     assert window.trade_history.basket_state.text() == basket_state_before_close
 
 
-def test_main_window_starts_on_setup_without_placeholder_navigation(
+def test_main_window_composes_workspace_and_starts_on_setup(
     qtbot: QtBot,
 ) -> None:
     def operation(values: PaperSessionSetupValues) -> PaperSessionCreateOutcome:
@@ -921,9 +916,13 @@ def test_main_window_starts_on_setup_without_placeholder_navigation(
         list_fills=empty_fills,
     )
     qtbot.addWidget(window)
+    window.show()
+    qtbot.waitUntil(window.setup.isVisible)
 
-    assert window.current_page_name == "Session Setup"
-    assert window.navigation_items == ("Session", "Trade History")
+    assert window.centralWidget() is window.workspace
+    assert window.setup is window.workspace.setup
+    assert window.overview is window.workspace.overview
+    assert window.trade_history is window.workspace.trade_history
 
 
 def _session_with_policy_changes(

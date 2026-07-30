@@ -48,6 +48,10 @@ from tiewtrade.ui.main_window import MainWindow
 FUTURES_BASKET_ID = UUID("00000000-0000-0000-0000-000000000202")
 
 
+def open_trade_history(window: MainWindow) -> None:
+    window.workspace.tabs.setCurrentWidget(window.trade_history)
+
+
 def test_desktop_trade_history_reads_durable_spot_and_futures_records(
     monkeypatch: MonkeyPatch,
     qtbot: QtBot,
@@ -62,7 +66,7 @@ def test_desktop_trade_history_reads_durable_spot_and_futures_records(
     qtbot.addWidget(window)
     window.show()
 
-    click(window.trade_history_button)
+    open_trade_history(window)
 
     qtbot.waitUntil(lambda: window.trade_history.basket_table.rowCount() == 2)
     assert _table_row_text(window.trade_history.basket_table, 0) == (
@@ -201,7 +205,7 @@ def test_desktop_trade_history_filters_paginates_and_survives_restart(
     )
     qtbot.addWidget(first)
     first.show()
-    click(first.trade_history_button)
+    open_trade_history(first)
     qtbot.waitUntil(lambda: first.trade_history.basket_table.rowCount() == 50)
     assert table_item(first.trade_history.basket_table, 0, 4).text() == "15m"
     assert first.trade_history.page_label.text() == "Page 1 of 2"
@@ -265,7 +269,7 @@ def test_desktop_trade_history_filters_paginates_and_survives_restart(
     restarted = _composed_window(path, monkeypatch)
     qtbot.addWidget(restarted)
     restarted.show()
-    click(restarted.trade_history_button)
+    open_trade_history(restarted)
     qtbot.waitUntil(lambda: restarted.trade_history.basket_table.rowCount() == 50)
     assert restarted.trade_history.page_label.text() == "Page 1 of 2"
     assert table_item(restarted.trade_history.basket_table, 0, 4).text() == "15m"
@@ -304,7 +308,7 @@ def test_trade_history_read_failure_is_fail_closed_and_sanitized(
     )
     qtbot.addWidget(window)
     window.show()
-    click(window.trade_history_button)
+    open_trade_history(window)
     qtbot.waitUntil(lambda: window.trade_history.basket_table.rowCount() == 1)
     qtbot.waitUntil(lambda: window.trade_history.fill_table.rowCount() == 1)
     assert not window.trade_history.total_net_pnl.isHidden()
@@ -392,7 +396,7 @@ def test_trade_history_desktop_flow_has_no_forbidden_import_or_network(
     window = _composed_window(tmp_path / "tiewtrade.sqlite3", monkeypatch)
     qtbot.addWidget(window)
     window.show()
-    click(window.trade_history_button)
+    open_trade_history(window)
     qtbot.waitUntil(
         lambda: window.trade_history.basket_state.text() == "No trade history"
     )
