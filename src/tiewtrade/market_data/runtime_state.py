@@ -51,23 +51,25 @@ class MarketDataRuntimeSnapshot:
 
 
 class MarketDataRuntimeStatus:
-    def __init__(self, now: Callable[[], datetime]) -> None:
+    def __init__(
+        self,
+        now: Callable[[], datetime],
+        *,
+        on_transition: Callable[[MarketDataRuntimeSnapshot], None] | None = None,
+    ) -> None:
         self._now = now
+        self._on_transition = on_transition
         self._snapshot = MarketDataRuntimeSnapshot(
             state=MarketDataRuntimeState.STARTING,
             reason=MarketDataRuntimeReason.START_REQUESTED,
             transitioned_at=self._now(),
             last_accepted_open_time=None,
         )
-        self._visited_states = [MarketDataRuntimeState.STARTING]
+        self._publish_transition()
 
     @property
     def snapshot(self) -> MarketDataRuntimeSnapshot:
         return self._snapshot
-
-    @property
-    def visited_states(self) -> tuple[MarketDataRuntimeState, ...]:
-        return tuple(self._visited_states)
 
     def transition(
         self,
@@ -80,7 +82,7 @@ class MarketDataRuntimeStatus:
             transitioned_at=self._now(),
             last_accepted_open_time=self._snapshot.last_accepted_open_time,
         )
-        self._visited_states.append(state)
+        self._publish_transition()
 
     def record_delivery(self, open_time: datetime) -> None:
         self._snapshot = MarketDataRuntimeSnapshot(
@@ -89,6 +91,10 @@ class MarketDataRuntimeStatus:
             transitioned_at=self._snapshot.transitioned_at,
             last_accepted_open_time=open_time,
         )
+
+    def _publish_transition(self) -> None:
+        if self._on_transition is not None:
+            self._on_transition(self._snapshot)
 
 
 def _require_utc(value: datetime, *, name: str) -> None:

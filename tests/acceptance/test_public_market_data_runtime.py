@@ -130,20 +130,23 @@ def test_fake_public_runtime_warms_then_processes_paper_spot_live_candle() -> No
     live = candles(start=75, count=1, config=market_data)
     source = FakePublicCandleSource(warm_up=warm_up, live=live)
     sink = PaperSpotMarketDataSink(configured_paper_spot_session(market_data))
+    observed_states: list[MarketDataRuntimeState] = []
     runtime = MarketDataRuntime(
         config=market_data,
         warm_up_count=len(warm_up),
         source=source,
         sink=sink,
         scheduler=FakeRuntimeScheduler(),
+        on_transition=lambda snapshot: observed_states.append(snapshot.state),
     )
 
     asyncio.run(run_until_sink_receives(runtime, sink, count=len(live)))
 
-    assert runtime.visited_states.index(
+    assert observed_states.index(
         MarketDataRuntimeState.WARMING_UP
-    ) < runtime.visited_states.index(MarketDataRuntimeState.LIVE)
+    ) < observed_states.index(MarketDataRuntimeState.LIVE)
     assert runtime.snapshot.state is MarketDataRuntimeState.STOPPED
+    assert not hasattr(runtime, "visited_states")
     assert source.requested_warm_up_count == len(warm_up)
     assert source.close_count == 1
     assert sink.last_snapshot is not None

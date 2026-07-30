@@ -2,6 +2,7 @@ from datetime import UTC, datetime
 
 from tiewtrade.market_data.runtime_state import (
     MarketDataRuntimeReason,
+    MarketDataRuntimeSnapshot,
     MarketDataRuntimeState,
     MarketDataRuntimeStatus,
 )
@@ -26,22 +27,31 @@ class SequenceClock:
         return next(self._values)
 
 
-def test_status_owns_transitions_and_history() -> None:
-    status = MarketDataRuntimeStatus(SequenceClock(START, TRANSITION))
+def test_status_publishes_transitions_without_retaining_history() -> None:
+    observed: list[MarketDataRuntimeSnapshot] = []
+    status = MarketDataRuntimeStatus(
+        SequenceClock(START, TRANSITION),
+        on_transition=observed.append,
+    )
     status.transition(
         MarketDataRuntimeState.WARMING_UP,
         MarketDataRuntimeReason.START_REQUESTED,
     )
 
-    assert status.snapshot.transitioned_at == TRANSITION
-    assert status.visited_states == (
+    assert [snapshot.state for snapshot in observed] == [
         MarketDataRuntimeState.STARTING,
         MarketDataRuntimeState.WARMING_UP,
-    )
+    ]
+    assert status.snapshot.transitioned_at == TRANSITION
+    assert not hasattr(status, "visited_states")
 
 
 def test_delivery_preserves_transition_metadata() -> None:
-    status = MarketDataRuntimeStatus(SequenceClock(START, TRANSITION))
+    observed: list[MarketDataRuntimeSnapshot] = []
+    status = MarketDataRuntimeStatus(
+        SequenceClock(START, TRANSITION),
+        on_transition=observed.append,
+    )
     status.transition(
         MarketDataRuntimeState.LIVE,
         MarketDataRuntimeReason.WARM_UP_COMPLETED,
@@ -52,3 +62,4 @@ def test_delivery_preserves_transition_metadata() -> None:
     assert status.snapshot.reason is MarketDataRuntimeReason.WARM_UP_COMPLETED
     assert status.snapshot.transitioned_at == TRANSITION
     assert status.snapshot.last_accepted_open_time == DELIVERY
+    assert len(observed) == 2

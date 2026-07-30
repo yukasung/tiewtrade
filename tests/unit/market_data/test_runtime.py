@@ -581,13 +581,50 @@ class RecordingSink:
         self.states_at_calls.append(self.runtime.snapshot.state)
 
 
+class RuntimeStateRecorder:
+    def __init__(self) -> None:
+        self.snapshots: list[MarketDataRuntimeSnapshot] = []
+
+    def __call__(self, snapshot: MarketDataRuntimeSnapshot) -> None:
+        self.snapshots.append(snapshot)
+
+    @property
+    def states(self) -> tuple[MarketDataRuntimeState, ...]:
+        return tuple(snapshot.state for snapshot in self.snapshots)
+
+
+class ObservedMarketDataRuntime(MarketDataRuntime):
+    def __init__(
+        self,
+        *,
+        config: MarketDataConfig,
+        warm_up_count: int,
+        source: FakeSource,
+        sink: RecordingSink,
+        scheduler: FakeScheduler,
+    ) -> None:
+        self._state_recorder = RuntimeStateRecorder()
+        super().__init__(
+            config=config,
+            warm_up_count=warm_up_count,
+            source=source,
+            sink=sink,
+            scheduler=scheduler,
+            on_transition=self._state_recorder,
+        )
+
+    @property
+    def observed_states(self) -> tuple[MarketDataRuntimeState, ...]:
+        return self._state_recorder.states
+
+
 def runtime_for(
     source: FakeSource,
     sink: RecordingSink,
     *,
     scheduler: FakeScheduler | None = None,
-) -> MarketDataRuntime:
-    runtime = MarketDataRuntime(
+) -> ObservedMarketDataRuntime:
+    runtime = ObservedMarketDataRuntime(
         config=MarketDataConfig(symbol="BTCUSDT", timeframe="5m"),
         warm_up_count=3,
         source=source,
@@ -644,10 +681,12 @@ async def run_stale_scenario_or_stop(
     await run_task
 
 
-async def run_until_recovered_or_runtime_stops(runtime: MarketDataRuntime) -> None:
+async def run_until_recovered_or_runtime_stops(
+    runtime: ObservedMarketDataRuntime,
+) -> None:
     run_task = asyncio.create_task(runtime.run())
     for _ in range(100):
-        visited = runtime.visited_states
+        visited = runtime.observed_states
         if (
             MarketDataRuntimeState.STALE in visited
             and visited[-1] is MarketDataRuntimeState.LIVE
@@ -703,7 +742,7 @@ def test_runtime_warms_sink_before_live_delivery() -> None:
         MarketDataRuntimeState.WARMING_UP,
         MarketDataRuntimeState.LIVE,
     ]
-    assert MarketDataRuntimeState.LIVE in runtime.visited_states
+    assert MarketDataRuntimeState.LIVE in runtime.observed_states
     assert source.recent_requests == [
         (MarketDataConfig(symbol="BTCUSDT", timeframe="5m"), 3, _NOW)
     ]
@@ -827,7 +866,7 @@ def test_rate_limit_uses_delta_seconds_not_reconnect_backoff() -> None:
     asyncio.run(run_until_sink_receives_or_runtime_stops(runtime, sink, count=1))
 
     assert scheduler.sleeps[0] == 45.0
-    assert MarketDataRuntimeState.RATE_LIMITED in runtime.visited_states
+    assert MarketDataRuntimeState.RATE_LIMITED in runtime.observed_states
 
 
 def test_warm_up_rate_limit_resumes_through_reconnecting_state() -> None:
@@ -839,7 +878,7 @@ def test_warm_up_rate_limit_resumes_through_reconnecting_state() -> None:
 
     asyncio.run(run_until_sink_receives(runtime, sink, count=1))
 
-    assert runtime.visited_states[:5] == (
+    assert runtime.observed_states[:5] == (
         MarketDataRuntimeState.STARTING,
         MarketDataRuntimeState.WARMING_UP,
         MarketDataRuntimeState.RATE_LIMITED,
@@ -937,7 +976,7 @@ def test_final_warm_up_attempt_announces_rate_limit_before_failing_closed() -> N
 
     asyncio.run(runtime.run())
 
-    assert runtime.visited_states == (
+    assert runtime.observed_states == (
         MarketDataRuntimeState.STARTING,
         MarketDataRuntimeState.WARMING_UP,
         MarketDataRuntimeState.RATE_LIMITED,
@@ -957,7 +996,7 @@ def test_rate_limited_backfill_uses_provider_delay_then_recovers() -> None:
     asyncio.run(run_until_sink_receives_or_runtime_stops(runtime, sink, count=2))
 
     assert scheduler.sleeps == [60.0]
-    assert MarketDataRuntimeState.RATE_LIMITED in runtime.visited_states
+    assert MarketDataRuntimeState.RATE_LIMITED in runtime.observed_states
     assert sink.live_candles == [candle_at(15), candle_at(20)]
 
 
@@ -972,8 +1011,8 @@ def test_backfill_rate_limit_resumes_through_reconnecting_state() -> None:
 
     asyncio.run(run_until_sink_receives_or_runtime_stops(runtime, sink, count=2))
 
-    backfill_index = runtime.visited_states.index(MarketDataRuntimeState.BACKFILLING)
-    assert runtime.visited_states[backfill_index : backfill_index + 4] == (
+    backfill_index = runtime.observed_states.index(MarketDataRuntimeState.BACKFILLING)
+    assert runtime.observed_states[backfill_index : backfill_index + 4] == (
         MarketDataRuntimeState.BACKFILLING,
         MarketDataRuntimeState.RATE_LIMITED,
         MarketDataRuntimeState.RECONNECTING,
@@ -1088,7 +1127,7 @@ def test_final_reconnect_attempt_announces_rate_limit_before_failing_closed() ->
 
     asyncio.run(runtime.run())
 
-    assert runtime.visited_states[-8:] == (
+    assert runtime.observed_states[-8:] == (
         MarketDataRuntimeState.STALE,
         MarketDataRuntimeState.RECONNECTING,
         MarketDataRuntimeState.RATE_LIMITED,
@@ -1112,7 +1151,7 @@ def test_async_iterator_rate_limit_exhausts_provider_delays_in_state_order() -> 
 
     assert source.stream_count == 4
     assert scheduler.sleeps == [60.0, 60.0, 60.0]
-    assert runtime.visited_states[-8:] == _RATE_LIMIT_EXHAUSTION_STATES
+    assert runtime.observed_states[-8:] == _RATE_LIMIT_EXHAUSTION_STATES
     assert runtime.snapshot.reason is MarketDataRuntimeReason.RATE_LIMIT_EXHAUSTED
 
 
@@ -1126,7 +1165,7 @@ def test_rate_limited_stream_exhausts_only_provider_delays() -> None:
     asyncio.run(runtime.run())
 
     assert scheduler.sleeps == [60.0, 60.0, 60.0]
-    assert runtime.visited_states[-8:] == _RATE_LIMIT_EXHAUSTION_STATES
+    assert runtime.observed_states[-8:] == _RATE_LIMIT_EXHAUSTION_STATES
     assert runtime.snapshot.reason is MarketDataRuntimeReason.RATE_LIMIT_EXHAUSTED
 
 
@@ -1267,7 +1306,7 @@ def test_gap_backfills_in_order_before_resuming_live() -> None:
             candle_at(25).open_time,
         )
     ]
-    assert runtime.visited_states[-3:-1] == (
+    assert runtime.observed_states[-3:-1] == (
         MarketDataRuntimeState.BACKFILLING,
         MarketDataRuntimeState.LIVE,
     )
@@ -1371,7 +1410,7 @@ def test_stale_wait_uses_expected_close_boundary_plus_thirty_seconds() -> None:
     asyncio.run(run_stale_scenario_or_stop(runtime, source))
 
     assert scheduler.timeouts[:3] == [30.0, 30.0, 330.0]
-    assert MarketDataRuntimeState.STALE in runtime.visited_states
+    assert MarketDataRuntimeState.STALE in runtime.observed_states
     assert runtime.snapshot.state is MarketDataRuntimeState.FAILED_CLOSED
     assert runtime.snapshot.reason is MarketDataRuntimeReason.RECONNECT_EXHAUSTED
 
@@ -1431,8 +1470,8 @@ def test_reconnect_backfills_buffered_first_candle_before_returning_live() -> No
     asyncio.run(run_until_sink_receives_or_runtime_stops(runtime, sink, count=2))
 
     assert sink.live_candles == [candle_at(15), candle_at(20)]
-    stale_index = runtime.visited_states.index(MarketDataRuntimeState.STALE)
-    assert runtime.visited_states[stale_index : stale_index + 4] == (
+    stale_index = runtime.observed_states.index(MarketDataRuntimeState.STALE)
+    assert runtime.observed_states[stale_index : stale_index + 4] == (
         MarketDataRuntimeState.STALE,
         MarketDataRuntimeState.RECONNECTING,
         MarketDataRuntimeState.BACKFILLING,
@@ -1469,8 +1508,8 @@ def test_reconnect_duplicate_proves_no_missing_backfill_before_live() -> None:
 
     assert sink.live_candles == []
     assert source.range_requests == []
-    stale_index = runtime.visited_states.index(MarketDataRuntimeState.STALE)
-    assert runtime.visited_states[stale_index : stale_index + 4] == (
+    stale_index = runtime.observed_states.index(MarketDataRuntimeState.STALE)
+    assert runtime.observed_states[stale_index : stale_index + 4] == (
         MarketDataRuntimeState.STALE,
         MarketDataRuntimeState.RECONNECTING,
         MarketDataRuntimeState.BACKFILLING,

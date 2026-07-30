@@ -74,6 +74,7 @@ class MarketDataRuntime:
         source: MarketDataCandleSource,
         sink: MarketDataCandleSink,
         scheduler: RuntimeScheduler | None = None,
+        on_transition: Callable[[MarketDataRuntimeSnapshot], None] | None = None,
     ) -> None:
         if warm_up_count <= 0:
             raise ValueError("warm_up_count must be positive")
@@ -82,7 +83,10 @@ class MarketDataRuntime:
         self._warm_up_count = warm_up_count
         self._source = source
         self._scheduler = scheduler or AsyncioRuntimeScheduler()
-        self._status = MarketDataRuntimeStatus(self._scheduler.now)
+        self._status = MarketDataRuntimeStatus(
+            self._scheduler.now,
+            on_transition=on_transition,
+        )
         self._pipeline = CompletedCandlePipeline(
             config=config,
             sink=sink,
@@ -97,10 +101,6 @@ class MarketDataRuntime:
     @property
     def snapshot(self) -> MarketDataRuntimeSnapshot:
         return self._status.snapshot
-
-    @property
-    def visited_states(self) -> tuple[MarketDataRuntimeState, ...]:
-        return self._status.visited_states
 
     async def run(self) -> None:
         if self._status.snapshot.state in {
