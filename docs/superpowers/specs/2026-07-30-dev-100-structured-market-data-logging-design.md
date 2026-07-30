@@ -1,7 +1,7 @@
 # DEV-100 Structured Market Data Logging Design
 
 **Date:** 2026-07-30
-**Status:** Approved in conversation; pending written-spec review
+**Status:** Approved
 **Scope:** Public Market Data Runtime operational diagnostics
 
 ## 1. Purpose
