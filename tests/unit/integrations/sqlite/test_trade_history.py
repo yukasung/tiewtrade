@@ -1,4 +1,5 @@
 import sqlite3
+from collections.abc import Callable
 from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
@@ -148,58 +149,71 @@ def sell_fill() -> TradeFill:
 
 
 @pytest.mark.parametrize(
-    ("field", "value"),
+    "change_identity",
     [
-        ("session_id", UUID("00000000-0000-0000-0000-000000000999")),
-        ("trade_mode", TradeMode.LIVE),
-        ("market_type", MarketType.FUTURES),
-        ("symbol", "ETHUSDT"),
-        ("timeframe", "15m"),
-        ("strategy_preset_version", "rsi-step-grid-v2"),
-        ("opened_at_utc", datetime(2026, 1, 2, tzinfo=UTC)),
+        lambda result: replace(
+            result,
+            session_id=UUID("00000000-0000-0000-0000-000000000999"),
+        ),
+        lambda result: replace(result, trade_mode=TradeMode.LIVE),
+        lambda result: replace(
+            result,
+            market_type=MarketType.FUTURES,
+            leverage=3,
+        ),
+        lambda result: replace(result, symbol="ETHUSDT"),
+        lambda result: replace(result, timeframe="15m"),
+        lambda result: replace(result, strategy_preset_version="rsi-step-grid-v2"),
+        lambda result: replace(
+            result,
+            opened_at_utc=datetime(2026, 1, 2, tzinfo=UTC),
+        ),
     ],
 )
 def test_entry_rejects_changed_basket_identity(
     history: SQLiteTradeHistory,
-    field: str,
-    value: object,
+    change_identity: Callable[[BasketResult], BasketResult],
 ) -> None:
     opened = open_basket()
     history.record_open_basket(opened, trade_fill())
     second = trade_fill(fill_id="fill-2", order_id="order-2", entry_number=2)
-    identity_changes = {field: value}
-    if field == "market_type":
-        identity_changes["leverage"] = 3
+    changed_identity = change_identity(opened)
     proposed = replace(
-        opened,
-        **{
-            **identity_changes,
-            "entry_count": 2,
-            "invested_notional": opened.invested_notional + second.notional,
-            "trading_fees": opened.trading_fees + second.commission,
-            "net_realized_pnl": (
-                opened.gross_realized_pnl
-                - opened.trading_fees
-                - second.commission
-                - opened.funding_fee
-            ),
-        },
+        changed_identity,
+        entry_count=2,
+        invested_notional=opened.invested_notional + second.notional,
+        trading_fees=opened.trading_fees + second.commission,
+        net_realized_pnl=(
+            opened.gross_realized_pnl
+            - opened.trading_fees
+            - second.commission
+            - opened.funding_fee
+        ),
     )
 
     with pytest.raises(TradeHistoryConflictError):
         history.record_entry_fill(proposed, second)
 
 
-@pytest.mark.parametrize("field", ["basket_id", "session_id"])
+@pytest.mark.parametrize(
+    "change_identity",
+    [
+        lambda fill: replace(
+            fill,
+            basket_id=UUID("00000000-0000-0000-0000-000000000999"),
+        ),
+        lambda fill: replace(
+            fill,
+            session_id=UUID("00000000-0000-0000-0000-000000000999"),
+        ),
+    ],
+)
 def test_fill_rejects_different_basket_or_session(
     history: SQLiteTradeHistory,
-    field: str,
+    change_identity: Callable[[TradeFill], TradeFill],
 ) -> None:
     basket = open_basket()
-    fill = replace(
-        trade_fill(),
-        **{field: UUID("00000000-0000-0000-0000-000000000999")},
-    )
+    fill = change_identity(trade_fill())
 
     with pytest.raises(TradeHistoryConflictError):
         history.record_open_basket(basket, fill)
@@ -426,6 +440,7 @@ def test_migration_from_v1_preserves_spot_basket_with_null_leverage(
 ) -> None:
     database = SQLiteDatabase(tmp_path / "history.sqlite3")
     legacy = basket_result()
+    assert legacy.closed_at_utc is not None
     with database.connect() as connection:
         connection.execute(
             """

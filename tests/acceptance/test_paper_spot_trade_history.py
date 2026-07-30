@@ -20,7 +20,7 @@ from tiewtrade.trading.entry_policy import EntryPolicy
 from tiewtrade.trading.session_config import MarketType, SessionConfig, TradeMode
 from tiewtrade.trading.spot_policy import SpotTradingPolicy
 from tiewtrade.trading.symbol_rules import SymbolRules
-from tiewtrade.trading.trade_history import BasketStatus, FillSide
+from tiewtrade.trading.trade_history import BasketStatus, FillSide, TradeFill
 
 FIXTURE_PATH = Path(__file__).parents[1] / "fixtures" / "btcusdt_5m_tracer.csv"
 SESSION_ID = UUID("00000000-0000-0000-0000-000000000080")
@@ -48,7 +48,7 @@ def test_replayed_paper_spot_history_is_idempotent_after_sqlite_restart(
     )
 
     first_basket = None
-    first_fills = ()
+    first_fills: tuple[TradeFill, ...] = ()
     for replay_number in range(2):
         persistent = create_persistent_paper_spot_session(
             paper_spot_session(market_data, preset),

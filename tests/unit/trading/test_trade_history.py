@@ -4,6 +4,7 @@ from decimal import Decimal
 
 import pytest
 
+from tests.support.dataclass_validation import replace_unchecked
 from tests.support.trade_history_records import basket_result, trade_fill
 from tiewtrade.trading.session_config import MarketType
 from tiewtrade.trading.trade_history import BasketStatus
@@ -45,7 +46,7 @@ def test_trade_fill_rejects_invalid_values(
     field: str, value: object, message: str
 ) -> None:
     with pytest.raises(ValueError, match=message):
-        replace(trade_fill(), **{field: value})
+        replace_unchecked(trade_fill(), **{field: value})
 
 
 def test_closed_basket_requires_close_time_and_balanced_net_pnl() -> None:
@@ -81,7 +82,7 @@ def test_basket_result_requires_market_specific_leverage_context() -> None:
         replace(futures_basket, leverage=None)
     for invalid_leverage in (0, 6, True, 1.5):
         with pytest.raises(ValueError, match="between 1 and 5"):
-            replace(futures_basket, leverage=invalid_leverage)
+            replace_unchecked(futures_basket, leverage=invalid_leverage)
     with pytest.raises(ValueError, match="Spot Basket must not have leverage"):
         basket_result(leverage=3)
 
@@ -121,4 +122,4 @@ def test_basket_result_rejects_invalid_values(
     field: str, value: object, message: str
 ) -> None:
     with pytest.raises(ValueError, match=message):
-        replace(basket_result(), **{field: value})
+        replace_unchecked(basket_result(), **{field: value})

@@ -232,9 +232,9 @@ def test_list_baskets_filters_every_supported_dimension(
     )
 
     for filters, expected, expected_net_realized_pnl in cases:
-        result = history.list_baskets(filters, PageRequest(page=1, page_size=20))
-        assert result.items == expected
-        assert result.net_realized_pnl == expected_net_realized_pnl
+        page = history.list_baskets(filters, PageRequest(page=1, page_size=20))
+        assert page.items == expected
+        assert page.net_realized_pnl == expected_net_realized_pnl
 
     exact = history.list_baskets(
         TradeHistoryFilter(

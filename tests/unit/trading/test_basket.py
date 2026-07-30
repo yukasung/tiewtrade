@@ -322,69 +322,153 @@ def test_basket_requires_utc_close_timestamp() -> None:
 
 
 @pytest.mark.parametrize(
-    ("field", "value"),
+    ("field", "price", "quantity", "fee", "atr", "tick_size"),
     [
-        ("price", Decimal("0")),
-        ("quantity", Decimal("0")),
-        ("fee", Decimal("-0.1")),
-        ("atr", Decimal("-1")),
-        ("tick_size", Decimal("0")),
+        (
+            "price",
+            Decimal("0"),
+            Decimal("1"),
+            Decimal("0.1"),
+            Decimal("2"),
+            Decimal("0.1"),
+        ),
+        (
+            "quantity",
+            Decimal("100"),
+            Decimal("0"),
+            Decimal("0.1"),
+            Decimal("2"),
+            Decimal("0.1"),
+        ),
+        (
+            "fee",
+            Decimal("100"),
+            Decimal("1"),
+            Decimal("-0.1"),
+            Decimal("2"),
+            Decimal("0.1"),
+        ),
+        (
+            "atr",
+            Decimal("100"),
+            Decimal("1"),
+            Decimal("0.1"),
+            Decimal("-1"),
+            Decimal("0.1"),
+        ),
+        (
+            "tick_size",
+            Decimal("100"),
+            Decimal("1"),
+            Decimal("0.1"),
+            Decimal("2"),
+            Decimal("0"),
+        ),
     ],
 )
-def test_invalid_entry_does_not_mutate_basket(field: str, value: Decimal) -> None:
+def test_invalid_entry_does_not_mutate_basket(
+    field: str,
+    price: Decimal,
+    quantity: Decimal,
+    fee: Decimal,
+    atr: Decimal,
+    tick_size: Decimal,
+) -> None:
     basket = Basket(
         basket_id=basket_id(), policy=policy(), take_profit_atr_multiplier=Decimal("3")
     )
-    values = {
-        "price": Decimal("100"),
-        "quantity": Decimal("1"),
-        "fee": Decimal("0.1"),
-        "atr": Decimal("2"),
-        "tick_size": Decimal("0.1"),
-    }
-    values[field] = value
 
     with pytest.raises(ValueError, match=field):
         basket.add_entry(
-            **values,
+            price=price,
+            quantity=quantity,
+            fee=fee,
             filled_at=datetime(2026, 1, 1, tzinfo=UTC),
+            atr=atr,
+            tick_size=tick_size,
         )
 
     assert basket.entry_count == 0
 
 
 @pytest.mark.parametrize(
-    ("field", "value"),
+    ("field", "price", "quantity", "fee", "atr", "tick_size"),
     [
-        ("price", Decimal("NaN")),
-        ("price", Decimal("Infinity")),
-        ("quantity", Decimal("NaN")),
-        ("quantity", Decimal("Infinity")),
-        ("fee", Decimal("NaN")),
-        ("fee", Decimal("Infinity")),
-        ("atr", Decimal("NaN")),
-        ("atr", Decimal("Infinity")),
-        ("tick_size", Decimal("NaN")),
-        ("tick_size", Decimal("Infinity")),
+        (
+            "price",
+            invalid,
+            Decimal("1"),
+            Decimal("0.1"),
+            Decimal("2"),
+            Decimal("0.1"),
+        )
+        for invalid in (Decimal("NaN"), Decimal("Infinity"))
+    ]
+    + [
+        (
+            "quantity",
+            Decimal("100"),
+            invalid,
+            Decimal("0.1"),
+            Decimal("2"),
+            Decimal("0.1"),
+        )
+        for invalid in (Decimal("NaN"), Decimal("Infinity"))
+    ]
+    + [
+        (
+            "fee",
+            Decimal("100"),
+            Decimal("1"),
+            invalid,
+            Decimal("2"),
+            Decimal("0.1"),
+        )
+        for invalid in (Decimal("NaN"), Decimal("Infinity"))
+    ]
+    + [
+        (
+            "atr",
+            Decimal("100"),
+            Decimal("1"),
+            Decimal("0.1"),
+            invalid,
+            Decimal("0.1"),
+        )
+        for invalid in (Decimal("NaN"), Decimal("Infinity"))
+    ]
+    + [
+        (
+            "tick_size",
+            Decimal("100"),
+            Decimal("1"),
+            Decimal("0.1"),
+            Decimal("2"),
+            invalid,
+        )
+        for invalid in (Decimal("NaN"), Decimal("Infinity"))
     ],
 )
-def test_non_finite_entry_does_not_mutate_basket(field: str, value: Decimal) -> None:
+def test_non_finite_entry_does_not_mutate_basket(
+    field: str,
+    price: Decimal,
+    quantity: Decimal,
+    fee: Decimal,
+    atr: Decimal,
+    tick_size: Decimal,
+) -> None:
     basket = Basket(
         basket_id=basket_id(), policy=policy(), take_profit_atr_multiplier=Decimal("3")
     )
-    values = {
-        "price": Decimal("100"),
-        "quantity": Decimal("1"),
-        "fee": Decimal("0.1"),
-        "atr": Decimal("2"),
-        "tick_size": Decimal("0.1"),
-    }
-    values[field] = value
 
     with pytest.raises(ValueError, match=field):
         basket.add_entry(
-            **values,
+            price=price,
+            quantity=quantity,
+            fee=fee,
             filled_at=datetime(2026, 1, 1, tzinfo=UTC),
+            atr=atr,
+            tick_size=tick_size,
         )
 
     assert basket.entry_count == 0
@@ -429,10 +513,17 @@ def test_closed_basket_cannot_close_or_accept_entries_twice() -> None:
 
 
 @pytest.mark.parametrize(
-    ("field", "value"),
-    [("exit_price", Decimal("0")), ("exit_fee", Decimal("-0.1"))],
+    ("field", "exit_price", "exit_fee"),
+    [
+        ("exit_price", Decimal("0"), Decimal("0.106")),
+        ("exit_fee", Decimal("106"), Decimal("-0.1")),
+    ],
 )
-def test_invalid_close_does_not_close_basket(field: str, value: Decimal) -> None:
+def test_invalid_close_does_not_close_basket(
+    field: str,
+    exit_price: Decimal,
+    exit_fee: Decimal,
+) -> None:
     basket = Basket(
         basket_id=basket_id(), policy=policy(), take_profit_atr_multiplier=Decimal("3")
     )
@@ -444,12 +535,10 @@ def test_invalid_close_does_not_close_basket(field: str, value: Decimal) -> None
         atr=Decimal("2"),
         tick_size=Decimal("0.1"),
     )
-    values = {"exit_price": Decimal("106"), "exit_fee": Decimal("0.106")}
-    values[field] = value
-
     with pytest.raises(ValueError, match=field):
         basket.close(
-            **values,
+            exit_price=exit_price,
+            exit_fee=exit_fee,
             closed_at=datetime(2026, 1, 2, tzinfo=UTC),
         )
 
@@ -457,15 +546,19 @@ def test_invalid_close_does_not_close_basket(field: str, value: Decimal) -> None
 
 
 @pytest.mark.parametrize(
-    ("field", "value"),
+    ("field", "exit_price", "exit_fee"),
     [
-        ("exit_price", Decimal("NaN")),
-        ("exit_price", Decimal("Infinity")),
-        ("exit_fee", Decimal("NaN")),
-        ("exit_fee", Decimal("Infinity")),
+        ("exit_price", Decimal("NaN"), Decimal("0.106")),
+        ("exit_price", Decimal("Infinity"), Decimal("0.106")),
+        ("exit_fee", Decimal("106"), Decimal("NaN")),
+        ("exit_fee", Decimal("106"), Decimal("Infinity")),
     ],
 )
-def test_non_finite_close_does_not_close_basket(field: str, value: Decimal) -> None:
+def test_non_finite_close_does_not_close_basket(
+    field: str,
+    exit_price: Decimal,
+    exit_fee: Decimal,
+) -> None:
     basket = Basket(
         basket_id=basket_id(), policy=policy(), take_profit_atr_multiplier=Decimal("3")
     )
@@ -477,12 +570,10 @@ def test_non_finite_close_does_not_close_basket(field: str, value: Decimal) -> N
         atr=Decimal("2"),
         tick_size=Decimal("0.1"),
     )
-    values = {"exit_price": Decimal("106"), "exit_fee": Decimal("0.106")}
-    values[field] = value
-
     with pytest.raises(ValueError, match=field):
         basket.close(
-            **values,
+            exit_price=exit_price,
+            exit_fee=exit_fee,
             closed_at=datetime(2026, 1, 2, tzinfo=UTC),
         )
 

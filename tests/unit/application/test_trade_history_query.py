@@ -1,3 +1,4 @@
+from collections.abc import Callable
 from datetime import UTC, datetime
 
 import pytest
@@ -5,10 +6,18 @@ import pytest
 from tiewtrade.application.trade_history import PageRequest, TradeHistoryFilter
 
 
-@pytest.mark.parametrize("field", ["opened_from_utc", "opened_before_utc"])
-def test_trade_history_filter_requires_utc_bounds(field: str) -> None:
+@pytest.mark.parametrize(
+    "create_filter",
+    [
+        lambda value: TradeHistoryFilter(opened_from_utc=value),
+        lambda value: TradeHistoryFilter(opened_before_utc=value),
+    ],
+)
+def test_trade_history_filter_requires_utc_bounds(
+    create_filter: Callable[[datetime], TradeHistoryFilter],
+) -> None:
     with pytest.raises(ValueError, match="UTC"):
-        TradeHistoryFilter(**{field: datetime(2026, 1, 1)})
+        create_filter(datetime(2026, 1, 1))
 
 
 def test_trade_history_filter_rejects_empty_market_identity() -> None:
