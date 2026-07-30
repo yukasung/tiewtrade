@@ -1,9 +1,13 @@
 DARK_THEME = """
-QMainWindow, QWidget#workspace, QWidget#workspaceContent {
+QMainWindow, QWidget#workspace, QWidget#workspaceContent, QWidget#content {
     background: #0B0E11;
     color: #F1F5F9;
     font-family: "Inter", "SF Pro Text", "Helvetica Neue", sans-serif;
     font-size: 14px;
+}
+QFrame#navigation {
+    background: #141A22;
+    border-right: 1px solid #2B3441;
 }
 QFrame#workspaceHeader, QFrame#botControl, QFrame#card,
 QFrame#statusCard, QFrame#filterCard, QFrame#emptyPanel {
@@ -26,6 +30,16 @@ QLabel#brand {
     font-weight: 700;
     letter-spacing: 1px;
 }
+QPushButton#navigationButtonSelected {
+    background: #1B2430;
+    border: 0;
+    border-radius: 6px;
+    color: #F1F5F9;
+    font-weight: 600;
+    padding: 11px 14px;
+    text-align: left;
+}
+QPushButton#navigationButtonSelected:disabled { color: #F1F5F9; }
 QLabel#pageTitle {
     font-size: 24px;
     font-weight: 700;
@@ -37,6 +51,15 @@ QLabel#sectionTitle {
 QLabel#supportingText, QLabel#detailLabel, QLabel#filterLabel,
 QLabel#summaryLabel, QLabel#pageLabel, QLabel[stateMessage="true"] {
     color: #94A3B8;
+}
+QLabel#eyebrow {
+    color: #94A3B8;
+    font-size: 11px;
+    font-weight: 700;
+}
+QLabel#summaryValue {
+    color: #F1F5F9;
+    font-weight: 700;
 }
 QLabel#environmentBadge, QWidget[state="warning"] {
     background: #2A2412;

@@ -24,3 +24,14 @@ def test_dark_theme_defines_focus_and_semantic_states() -> None:
     assert 'QWidget[state="negative"]' in DARK_THEME
     assert 'QWidget[state="warning"]' in DARK_THEME
     assert "QPushButton:focus" in DARK_THEME
+
+
+def test_dark_theme_covers_existing_navigation_and_content_object_names() -> None:
+    for selector in (
+        "QWidget#content",
+        "QFrame#navigation",
+        "QPushButton#navigationButtonSelected",
+        "QLabel#eyebrow",
+        "QLabel#summaryValue",
+    ):
+        assert selector in DARK_THEME
