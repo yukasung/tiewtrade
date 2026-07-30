@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 from collections.abc import AsyncIterator, Awaitable, Callable
 from datetime import UTC, datetime, timedelta
 from typing import Protocol, TypeVar
@@ -20,6 +21,7 @@ from tiewtrade.market_data.completed_candle_stream import (
     CandleGapError,
 )
 from tiewtrade.market_data.config import MarketDataConfig
+from tiewtrade.market_data.runtime_logging import MarketDataRuntimeLog
 from tiewtrade.market_data.runtime_state import (
     MarketDataRuntimeReason,
     MarketDataRuntimeSnapshot,
@@ -39,6 +41,7 @@ _BACKFILL_TIMEOUT_SECONDS = 30.0
 _STALE_GRACE = timedelta(seconds=30)
 _RECONNECT_DELAYS_SECONDS = (1.0, 2.0, 4.0)
 _RATE_LIMIT_FALLBACK_SECONDS = 60.0
+_LOGGER = logging.getLogger("tiewtrade.market_data.runtime")
 
 
 class _WarmUpSourceError(Exception):
@@ -78,6 +81,7 @@ class MarketDataRuntime:
         sink: MarketDataCandleSink,
         scheduler: RuntimeScheduler | None = None,
         on_transition: Callable[[MarketDataRuntimeSnapshot], None] | None = None,
+        logger: logging.Logger | None = None,
     ) -> None:
         if warm_up_count <= 0:
             raise ValueError("warm_up_count must be positive")
@@ -89,6 +93,11 @@ class MarketDataRuntime:
         self._status = MarketDataRuntimeStatus(
             self._scheduler.now,
             on_transition=on_transition,
+        )
+        self._runtime_log = MarketDataRuntimeLog(
+            logger or _LOGGER,
+            symbol=config.symbol,
+            timeframe=config.timeframe,
         )
         self._pipeline = CompletedCandlePipeline(
             config=config,
@@ -339,6 +348,17 @@ class MarketDataRuntime:
             self._fail_closed(MarketDataRuntimeReason.SINK_ERROR)
             return False
         if decision is not CandleAcceptance.ACCEPTED:
+            self._runtime_log.candle_discarded(
+                open_time=candle.open_time,
+                received_at=received_at,
+                discard_reason=decision,
+            )
+            if decision is CandleAcceptance.NOT_CLOSED:
+                self._runtime_log.clock_skew_detected(
+                    open_time=candle.open_time,
+                    close_time=candle.close_time,
+                    received_at=received_at,
+                )
             return True
 
         self._transition(
@@ -430,10 +450,21 @@ class MarketDataRuntime:
         pending_rate_limit: MarketDataRateLimitError | None = None,
     ) -> AsyncIterator[Candle] | None:
         if pending_rate_limit is None:
+            if reason is MarketDataRuntimeReason.DATA_STALE:
+                self._runtime_log.stale_detected(
+                    reason=reason,
+                    last_accepted_open_time=(
+                        self._status.snapshot.last_accepted_open_time
+                    ),
+                )
             self._transition(MarketDataRuntimeState.STALE, reason)
-        for reconnect_delay in _RECONNECT_DELAYS_SECONDS:
+        for attempt, reconnect_delay in enumerate(
+            _RECONNECT_DELAYS_SECONDS,
+            start=1,
+        ):
             if pending_rate_limit is None:
-                await self._scheduler.sleep(reconnect_delay)
+                attempt_delay = reconnect_delay
+                await self._scheduler.sleep(attempt_delay)
                 self._transition(MarketDataRuntimeState.RECONNECTING, reason)
             else:
                 if (
@@ -444,12 +475,16 @@ class MarketDataRuntime:
                         MarketDataRuntimeState.RATE_LIMITED,
                         MarketDataRuntimeReason.RATE_LIMITED,
                     )
-                await self._scheduler.sleep(
-                    self._retry_after_seconds(pending_rate_limit)
-                )
+                attempt_delay = self._retry_after_seconds(pending_rate_limit)
+                await self._scheduler.sleep(attempt_delay)
                 self._transition(MarketDataRuntimeState.RECONNECTING, reason)
             if self._stop_requested:
                 return None
+            self._runtime_log.reconnect_attempted(
+                attempt=attempt,
+                delay_seconds=attempt_delay,
+                reason=reason,
+            )
             try:
                 stream = self._source.stream_completed(self._config)
                 observed = await self._next_reconnect_candle(stream)

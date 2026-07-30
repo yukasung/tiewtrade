@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 from collections.abc import AsyncIterator, Awaitable, Coroutine, Iterable
 from dataclasses import FrozenInstanceError
 from datetime import UTC, datetime, timedelta
@@ -14,8 +15,10 @@ from tiewtrade.market_data.candle import Candle
 from tiewtrade.market_data.candle_pipeline import (
     MarketDataCandleSink as PipelineMarketDataCandleSink,
 )
+from tiewtrade.market_data.completed_candle_stream import CandleAcceptance
 from tiewtrade.market_data.config import MarketDataConfig
 from tiewtrade.market_data.runtime import MarketDataCandleSink, MarketDataRuntime
+from tiewtrade.market_data.runtime_logging import MarketDataEventName
 from tiewtrade.market_data.runtime_state import (
     MarketDataRuntimeReason,
     MarketDataRuntimeSnapshot,
@@ -614,6 +617,7 @@ class ObservedMarketDataRuntime(MarketDataRuntime):
         source: FakeSource,
         sink: RecordingSink,
         scheduler: FakeScheduler,
+        logger: logging.Logger | None = None,
     ) -> None:
         self._state_recorder = RuntimeStateRecorder()
         super().__init__(
@@ -623,6 +627,7 @@ class ObservedMarketDataRuntime(MarketDataRuntime):
             sink=sink,
             scheduler=scheduler,
             on_transition=self._state_recorder,
+            logger=logger,
         )
 
     @property
@@ -639,6 +644,7 @@ def runtime_for(
     sink: RecordingSink,
     *,
     scheduler: FakeScheduler | None = None,
+    logger: logging.Logger | None = None,
 ) -> ObservedMarketDataRuntime:
     runtime = ObservedMarketDataRuntime(
         config=MarketDataConfig(symbol="BTCUSDT", timeframe="5m"),
@@ -646,9 +652,14 @@ def runtime_for(
         source=source,
         sink=sink,
         scheduler=scheduler or FakeScheduler(),
+        logger=logger,
     )
     sink.runtime = runtime
     return runtime
+
+
+def market_data_records(caplog: pytest.LogCaptureFixture) -> list[logging.LogRecord]:
+    return [record for record in caplog.records if hasattr(record, "event_name")]
 
 
 async def run_until_sink_receives(
@@ -659,6 +670,21 @@ async def run_until_sink_receives(
 ) -> None:
     task = asyncio.create_task(runtime.run())
     await sink.wait_for_live_candle_count(count)
+    await runtime.stop()
+    await task
+
+
+async def run_until_market_data_record_count(
+    runtime: MarketDataRuntime,
+    caplog: pytest.LogCaptureFixture,
+    *,
+    count: int,
+) -> None:
+    task = asyncio.create_task(runtime.run())
+    while len(market_data_records(caplog)) < count:
+        if task.done():
+            break
+        await asyncio.sleep(0)
     await runtime.stop()
     await task
 
@@ -1224,19 +1250,47 @@ def test_final_reconnect_attempt_announces_rate_limit_before_failing_closed() ->
     assert runtime.snapshot.reason is MarketDataRuntimeReason.RATE_LIMIT_EXHAUSTED
 
 
-def test_async_iterator_rate_limit_exhausts_provider_delays_in_state_order() -> None:
+@pytest.mark.parametrize(
+    ("retry_after", "expected_delay"),
+    [
+        (timedelta(seconds=45), 45.0),
+        (None, 60.0),
+    ],
+    ids=["provider-delay", "fallback-delay"],
+)
+def test_async_iterator_rate_limit_exhausts_provider_delays_in_state_order(
+    caplog: pytest.LogCaptureFixture,
+    retry_after: timedelta | None,
+    expected_delay: float,
+) -> None:
+    logger = logging.getLogger("tests.market_data.async_iterator_rate_limit")
+    caplog.set_level(logging.INFO, logger=logger.name)
     source = AsyncIteratorFailureSource(
-        [MarketDataRateLimitError("429", retry_after=None)] * 4
+        [MarketDataRateLimitError("429", retry_after=retry_after)] * 4
     )
     scheduler = FakeScheduler()
-    runtime = runtime_for(source, RecordingSink(), scheduler=scheduler)
+    runtime = runtime_for(
+        source,
+        RecordingSink(),
+        scheduler=scheduler,
+        logger=logger,
+    )
 
     asyncio.run(runtime.run())
 
     assert source.stream_count == 4
-    assert scheduler.sleeps == [60.0, 60.0, 60.0]
+    assert scheduler.sleeps == [expected_delay] * 3
     assert runtime.observed_states[-8:] == _RATE_LIMIT_EXHAUSTION_STATES
     assert runtime.snapshot.reason is MarketDataRuntimeReason.RATE_LIMIT_EXHAUSTED
+    reconnect_records = [
+        record
+        for record in market_data_records(caplog)
+        if record.event_name == MarketDataEventName.RECONNECT_ATTEMPTED.value
+    ]
+    assert [record.attempt for record in reconnect_records] == [1, 2, 3]
+    assert [record.delay_seconds for record in reconnect_records] == [
+        expected_delay
+    ] * 3
 
 
 def test_rate_limited_stream_exhausts_only_provider_delays() -> None:
@@ -1317,15 +1371,26 @@ def test_warm_up_sink_failure_fails_closed_without_live_delivery() -> None:
     assert not source.live_started
 
 
-def test_duplicate_live_candle_is_ignored() -> None:
+def test_duplicate_live_candle_logs_only_discard(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    logger = logging.getLogger("tests.market_data.duplicate_live_candle")
+    caplog.set_level(logging.INFO, logger=logger.name)
     source = FakeSource(
         recent=warm_up_candles(),
-        live=[candle_at(10), candle_at(15)],
+        live=[candle_at(15), candle_at(15)],
     )
     sink = RecordingSink()
-    runtime = runtime_for(source, sink)
+    runtime = runtime_for(
+        source,
+        sink,
+        scheduler=FakeScheduler(
+            now=datetime(2026, 1, 1, 0, 20, tzinfo=UTC),
+        ),
+        logger=logger,
+    )
 
-    asyncio.run(run_until_sink_receives(runtime, sink, count=1))
+    asyncio.run(run_until_market_data_record_count(runtime, caplog, count=1))
 
     assert sink.live_candles == [candle_at(15)]
     assert runtime.snapshot.last_accepted_open_time == candle_at(15).open_time
@@ -1333,24 +1398,51 @@ def test_duplicate_live_candle_is_ignored() -> None:
         runtime.observed_reasons.count(MarketDataRuntimeReason.LIVE_CANDLE_ACCEPTED)
         == 1
     )
+    discard_records = [
+        record
+        for record in market_data_records(caplog)
+        if record.event_name == MarketDataEventName.CANDLE_DISCARDED.value
+    ]
+    assert len(discard_records) == 1
+    assert (
+        discard_records[0].discard_reason
+        == CandleAcceptance.DUPLICATE_OR_OUT_OF_ORDER.value
+    )
+    assert [record.event_name for record in market_data_records(caplog)] == [
+        MarketDataEventName.CANDLE_DISCARDED.value,
+    ]
 
 
-def test_incomplete_live_candle_does_not_publish_accepted_transition() -> None:
+def test_not_closed_live_candle_logs_discard_then_clock_skew(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    logger = logging.getLogger("tests.market_data.not_closed_live_candle")
+    caplog.set_level(logging.INFO, logger=logger.name)
     source = FakeSource(
         recent=warm_up_candles(),
-        live=[candle_at(30), candle_at(15)],
+        live=[candle_at(15)],
     )
     sink = RecordingSink()
-    runtime = runtime_for(source, sink)
-
-    asyncio.run(run_until_sink_receives(runtime, sink, count=1))
-
-    assert sink.live_candles == [candle_at(15)]
-    assert runtime.snapshot.last_accepted_open_time == candle_at(15).open_time
-    assert (
-        runtime.observed_reasons.count(MarketDataRuntimeReason.LIVE_CANDLE_ACCEPTED)
-        == 1
+    runtime = runtime_for(
+        source,
+        sink,
+        scheduler=FakeScheduler(
+            now=datetime(2026, 1, 1, 0, 19, tzinfo=UTC),
+        ),
+        logger=logger,
     )
+
+    asyncio.run(run_until_market_data_record_count(runtime, caplog, count=2))
+
+    records = market_data_records(caplog)
+    assert [record.event_name for record in records] == [
+        MarketDataEventName.CANDLE_DISCARDED.value,
+        MarketDataEventName.CLOCK_SKEW_DETECTED.value,
+    ]
+    assert records[1].skew_seconds == 60.0
+    assert sink.live_candles == []
+    assert runtime.snapshot.last_accepted_open_time == candle_at(10).open_time
+    assert runtime.snapshot.state is MarketDataRuntimeState.STOPPED
 
 
 def test_invalid_live_candle_maps_to_source_error() -> None:
@@ -1521,13 +1613,17 @@ def test_stale_wait_uses_expected_close_boundary_plus_thirty_seconds() -> None:
     assert runtime.snapshot.reason is MarketDataRuntimeReason.RECONNECT_EXHAUSTED
 
 
-def test_stale_reconnect_uses_new_boundary_deadline_and_recovers() -> None:
+def test_stale_reconnect_uses_new_boundary_deadline_and_recovers(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    logger = logging.getLogger("tests.market_data.stale_reconnect")
+    caplog.set_level(logging.INFO, logger=logger.name)
     source = StaleThenRecoverSource()
     scheduler = RecoveringAfterStaleScheduler(
         now=datetime(2026, 1, 1, 0, 15, tzinfo=UTC),
     )
     sink = RecordingSink()
-    runtime = runtime_for(source, sink, scheduler=scheduler)
+    runtime = runtime_for(source, sink, scheduler=scheduler, logger=logger)
 
     asyncio.run(run_until_sink_receives_or_runtime_stops(runtime, sink, count=1))
 
@@ -1535,13 +1631,32 @@ def test_stale_reconnect_uses_new_boundary_deadline_and_recovers() -> None:
     assert scheduler.sleeps == [1.0]
     assert sink.live_candles == [candle_at(15)]
     assert runtime.snapshot.state is MarketDataRuntimeState.STOPPED
+    stale_records = [
+        record
+        for record in market_data_records(caplog)
+        if record.event_name == MarketDataEventName.STALE_DETECTED.value
+    ]
+    reconnect_records = [
+        record
+        for record in market_data_records(caplog)
+        if record.event_name == MarketDataEventName.RECONNECT_ATTEMPTED.value
+    ]
+    assert len(stale_records) == 1
+    assert stale_records[0].reason == MarketDataRuntimeReason.DATA_STALE.value
+    assert len(reconnect_records) == 1
+    assert reconnect_records[0].attempt == 1
+    assert reconnect_records[0].delay_seconds == 1.0
 
 
-def test_reconnect_uses_one_two_four_seconds_then_fails_closed() -> None:
+def test_reconnect_uses_one_two_four_seconds_then_fails_closed(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    logger = logging.getLogger("tests.market_data.bounded_reconnect")
+    caplog.set_level(logging.INFO, logger=logger.name)
     source = AlwaysDisconnectingSource()
     scheduler = FakeScheduler()
     sink = RecordingSink()
-    runtime = runtime_for(source, sink, scheduler=scheduler)
+    runtime = runtime_for(source, sink, scheduler=scheduler, logger=logger)
 
     asyncio.run(runtime.run())
 
@@ -1549,6 +1664,17 @@ def test_reconnect_uses_one_two_four_seconds_then_fails_closed() -> None:
     assert source.stream_count == 4
     assert runtime.snapshot.state is MarketDataRuntimeState.FAILED_CLOSED
     assert runtime.snapshot.reason is MarketDataRuntimeReason.RECONNECT_EXHAUSTED
+    reconnect_records = [
+        record
+        for record in market_data_records(caplog)
+        if record.event_name == MarketDataEventName.RECONNECT_ATTEMPTED.value
+    ]
+    assert [record.attempt for record in reconnect_records] == [1, 2, 3]
+    assert [record.delay_seconds for record in reconnect_records] == [1.0, 2.0, 4.0]
+    assert not any(
+        record.event_name == MarketDataEventName.STALE_DETECTED.value
+        for record in market_data_records(caplog)
+    )
 
 
 def test_synchronous_disconnect_uses_bounded_reconnect_policy() -> None:
@@ -1684,11 +1810,15 @@ def test_stop_cancels_freshness_wait_and_awaits_live_iterator_cleanup() -> None:
     assert runtime.snapshot.state is MarketDataRuntimeState.STOPPED
 
 
-def test_stop_cancels_reconnect_delay_and_awaits_cleanup() -> None:
+def test_stop_cancels_reconnect_delay_and_awaits_cleanup(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    logger = logging.getLogger("tests.market_data.stop_during_reconnect_delay")
+    caplog.set_level(logging.INFO, logger=logger.name)
     source = AlwaysDisconnectingSource()
     scheduler = BlockingReconnectScheduler()
     sink = RecordingSink()
-    runtime = runtime_for(source, sink, scheduler=scheduler)
+    runtime = runtime_for(source, sink, scheduler=scheduler, logger=logger)
 
     async def exercise() -> None:
         run_task = asyncio.create_task(runtime.run())
@@ -1700,8 +1830,13 @@ def test_stop_cancels_reconnect_delay_and_awaits_cleanup() -> None:
 
     assert scheduler.sleeps == [1.0]
     assert scheduler.sleep_finished.is_set()
+    assert source.stream_count == 1
     assert source.close_count == 1
     assert runtime.snapshot.state is MarketDataRuntimeState.STOPPED
+    assert not any(
+        record.event_name == MarketDataEventName.RECONNECT_ATTEMPTED.value
+        for record in market_data_records(caplog)
+    )
 
 
 def test_live_sink_failure_fails_closed_and_stops_delivery() -> None:
