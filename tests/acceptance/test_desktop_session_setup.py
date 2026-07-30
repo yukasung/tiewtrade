@@ -210,11 +210,13 @@ def test_desktop_paper_session_create_overview_and_restart_restore(
     assert _active_session_count(database) == 1
     assert _trade_side_effect_counts(database) == initial_side_effect_counts
 
+    restored_history_side_effect_counts = _trade_side_effect_counts(database)
     restarted_window.workspace.tabs.setCurrentWidget(restarted_window.trade_history)
     qtbot.waitUntil(
         lambda: restarted_window.trade_history.basket_state.text() == "No trade history"
     )
     assert restarted_window.overview.isVisible()
+    assert _trade_side_effect_counts(database) == restored_history_side_effect_counts
 
 
 def test_desktop_session_storage_unavailable_fails_closed(
@@ -249,6 +251,13 @@ def test_desktop_session_storage_unavailable_fails_closed(
     assert "sqlite" not in window.unavailable_message.text().casefold()
     assert not window.setup.isVisible()
     assert not window.overview.isVisible()
+
+    window.workspace.tabs.setCurrentWidget(window.trade_history)
+    qtbot.waitUntil(
+        lambda: window.trade_history.basket_state.text() == "No trade history"
+    )
+    assert window.workspace.tabs.currentWidget() is window.trade_history
+    assert window.unavailable_panel.isVisible()
 
 
 def test_desktop_session_sqlite_write_failure_after_setup_fails_closed(
