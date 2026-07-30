@@ -612,6 +612,36 @@ class RecordingSink:
         self.states_at_calls.append(self.runtime.snapshot.state)
 
 
+class BlockingDeliveryWaitSink(RecordingSink):
+    def __init__(self) -> None:
+        super().__init__()
+        self.wait_finished = False
+
+    async def wait_for_live_candle_count(self, count: int) -> None:
+        try:
+            await asyncio.Event().wait()
+        finally:
+            self.wait_finished = True
+
+
+class FailingDeliveryWaitSink(RecordingSink):
+    async def wait_for_live_candle_count(self, count: int) -> None:
+        await asyncio.sleep(0)
+        raise RuntimeError("sink wait crashed")
+
+
+class FailingRunRuntime:
+    def __init__(self) -> None:
+        self.stop_called = False
+
+    async def run(self) -> None:
+        await asyncio.sleep(0)
+        raise RuntimeError("runtime task crashed")
+
+    async def stop(self) -> None:
+        self.stop_called = True
+
+
 class RuntimeStateRecorder:
     def __init__(self) -> None:
         self.snapshots: list[MarketDataRuntimeSnapshot] = []
@@ -726,25 +756,69 @@ async def run_until_sink_receives_or_runtime_stops(
 ) -> None:
     run_task = asyncio.create_task(runtime.run())
     sink_task = asyncio.create_task(sink.wait_for_live_candle_count(count))
+    operation_error: BaseException | None = None
+    stop_error: BaseException | None = None
+    task_results: list[object] = []
+    run_done_before_cleanup = False
+    sink_done_before_cleanup = False
+    sink_cancelled_by_helper = False
     try:
         for _ in range(100):
             if run_task.done() or sink_task.done():
-                return
+                break
             await asyncio.sleep(0)
-        if run_task.done() or sink_task.done():
-            return
-        delivery_label = "delivery" if count == 1 else "deliveries"
-        raise AssertionError(
-            f"expected {count} live Candle {delivery_label}, "
-            f"observed {len(sink.live_candles)}"
-        )
+        if not run_task.done() and not sink_task.done():
+            delivery_label = "delivery" if count == 1 else "deliveries"
+            raise AssertionError(
+                f"expected {count} live Candle {delivery_label}, "
+                f"observed {len(sink.live_candles)}"
+            )
+    except BaseException as error:
+        operation_error = error
     finally:
+        run_done_before_cleanup = run_task.done()
+        sink_done_before_cleanup = sink_task.done()
         if not sink_task.done():
+            sink_cancelled_by_helper = True
             sink_task.cancel()
         try:
             await runtime.stop()
+        except BaseException as error:
+            stop_error = error
         finally:
-            await asyncio.gather(run_task, sink_task, return_exceptions=True)
+            task_results = list(
+                await asyncio.gather(
+                    run_task,
+                    sink_task,
+                    return_exceptions=True,
+                )
+            )
+
+    original_task_errors: list[BaseException] = []
+    cleanup_task_errors: list[BaseException] = []
+    for result, done_before_cleanup, cancelled_by_helper in (
+        (task_results[0], run_done_before_cleanup, False),
+        (
+            task_results[1],
+            sink_done_before_cleanup,
+            sink_cancelled_by_helper,
+        ),
+    ):
+        if not isinstance(result, BaseException):
+            continue
+        if cancelled_by_helper and isinstance(result, asyncio.CancelledError):
+            continue
+        target = original_task_errors if done_before_cleanup else cleanup_task_errors
+        target.append(result)
+
+    if operation_error is not None:
+        raise operation_error
+    if original_task_errors:
+        raise original_task_errors[0]
+    if stop_error is not None:
+        raise stop_error
+    if cleanup_task_errors:
+        raise cleanup_task_errors[0]
 
 
 async def run_stale_scenario_or_stop(
@@ -837,6 +911,50 @@ def test_sink_delivery_wait_fails_bounded_and_cleans_up_runtime() -> None:
     asyncio.run(exercise())
 
     assert runtime.snapshot.state is MarketDataRuntimeState.STOPPED
+    assert source.close_count == 1
+
+
+def test_sink_delivery_wait_surfaces_runtime_task_error_after_cleanup() -> None:
+    runtime = FailingRunRuntime()
+    sink = BlockingDeliveryWaitSink()
+
+    with pytest.raises(RuntimeError, match="runtime task crashed"):
+        asyncio.run(
+            run_until_sink_receives_or_runtime_stops(
+                cast(MarketDataRuntime, runtime),
+                sink,
+                count=1,
+            )
+        )
+
+    assert runtime.stop_called
+    assert sink.wait_finished
+
+
+def test_sink_delivery_wait_surfaces_sink_task_error_after_cleanup() -> None:
+    source = FakeSource(recent=warm_up_candles())
+    sink = FailingDeliveryWaitSink()
+    runtime = runtime_for(source, sink)
+
+    with pytest.raises(RuntimeError, match="sink wait crashed"):
+        asyncio.run(run_until_sink_receives_or_runtime_stops(runtime, sink, count=1))
+
+    assert runtime.snapshot.state is MarketDataRuntimeState.STOPPED
+    assert source.close_count == 1
+
+
+def test_sink_delivery_wait_preserves_operation_error_over_stop_error() -> None:
+    source = FailingCloseSource(recent=warm_up_candles())
+    sink = RecordingSink()
+    runtime = runtime_for(source, sink)
+
+    with pytest.raises(
+        AssertionError,
+        match="expected 1 live Candle delivery, observed 0",
+    ):
+        asyncio.run(run_until_sink_receives_or_runtime_stops(runtime, sink, count=1))
+
+    assert runtime.snapshot.state is MarketDataRuntimeState.FAILED_CLOSED
     assert source.close_count == 1
 
 
