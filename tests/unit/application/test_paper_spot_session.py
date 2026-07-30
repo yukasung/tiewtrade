@@ -104,6 +104,19 @@ def test_snapshot_has_no_basket_id_before_first_entry() -> None:
     assert snapshot.basket_id is None
 
 
+def test_incomplete_candle_is_not_processed() -> None:
+    application = paper_session()
+    incomplete = candle(0, open_price="100", close_price="101")
+
+    snapshot = application.process_completed_candle(
+        incomplete,
+        received_at=incomplete.close_time - timedelta(seconds=1),
+    )
+
+    assert snapshot.accepted is False
+    assert application._indicators._previous_close is None
+
+
 def test_warm_up_seeds_indicators_without_creating_trade_side_effects() -> None:
     application = paper_session()
     warm_up = indicator_ready_candles_with_entry_signal()
