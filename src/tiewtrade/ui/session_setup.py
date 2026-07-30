@@ -335,6 +335,7 @@ class SessionSetupWidget(QWidget):
         form.setHorizontalSpacing(24)
         form.setVerticalSpacing(10)
         form.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow)
+        form.setRowWrapPolicy(QFormLayout.RowWrapPolicy.WrapAllRows)
         return form
 
     @staticmethod

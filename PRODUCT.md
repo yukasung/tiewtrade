@@ -234,7 +234,8 @@ Stop Session หมายถึง:
 
 ## 13. User Interface
 
-UI เป็นภาษาอังกฤษและใช้ light theme โทน neutral/blue ที่อ่านง่ายและน่าเชื่อถือ งาน network, engine และ persistence ต้องไม่บล็อก UI thread
+UI เป็นภาษาอังกฤษและใช้ Full Dark Theme ที่อ่านง่ายและน่าเชื่อถือ โดยใช้ TiewTrade
+Blue เป็นสี primary action งาน network, engine และ persistence ต้องไม่บล็อก UI thread
 
 การกด `Create Paper Session` หมายถึงตรวจสอบและบันทึก immutable Session
 configuration เท่านั้น ไม่เริ่ม Market Data, Strategy หรือ Execution หลังสร้างสำเร็จ UI

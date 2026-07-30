@@ -1,10 +1,12 @@
 from PySide6.QtCore import Qt, Signal, Slot
-from PySide6.QtGui import QResizeEvent
+from PySide6.QtGui import QKeySequence, QResizeEvent, QShortcut
 from PySide6.QtWidgets import (
     QFrame,
     QHBoxLayout,
     QLabel,
     QPushButton,
+    QScrollArea,
+    QSizePolicy,
     QStackedWidget,
     QTabWidget,
     QVBoxLayout,
@@ -69,16 +71,23 @@ class TradingWorkspace(QWidget):
         self._build_layout()
         self.compact_mode = self.width() < BOT_CONTROL_BREAKPOINT
         self._drawer_open = False
-        self.bot_control_button = QPushButton("Bot Control")
+        self.bot_control_button = QPushButton()
         self.bot_control_button.setObjectName("secondaryButton")
         self.bot_control_button.clicked.connect(self.open_bot_control)
         self._header_layout.addWidget(self.bot_control_button)
+        self._set_bot_control_state("No Session")
+        self._drawer_close_shortcut = QShortcut(QKeySequence(Qt.Key.Key_Escape), self)
+        self._drawer_close_shortcut.setContext(
+            Qt.ShortcutContext.WidgetWithChildrenShortcut
+        )
+        self._drawer_close_shortcut.activated.connect(self.close_bot_control)
         self._apply_layout_mode()
 
     @Slot()
     def show_setup(self) -> None:
         self._bot_pages.setCurrentWidget(self.setup)
         self.header_runtime.setText("No Session")
+        self._set_bot_control_state("No Session")
 
     def show_configured_session(self, session: ConfiguredPaperSession) -> None:
         self.overview.show_session(session)
@@ -90,11 +99,13 @@ class TradingWorkspace(QWidget):
         self.header_preset.setText(preset_display_name(session.config.preset_version))
         self.header_runtime.setText("Configured")
         self.header_freshness.setText("Market data not started")
+        self._set_bot_control_state("Configured")
 
     def show_unavailable(self, message: str) -> None:
         self.unavailable_message.setText(message)
         self._bot_pages.setCurrentWidget(self.unavailable_panel)
         self.header_runtime.setText("Unavailable")
+        self._set_bot_control_state("Unavailable")
 
     def set_bot_busy(self, busy: bool) -> None:
         self.setup.set_loading(busy)
@@ -121,7 +132,7 @@ class TradingWorkspace(QWidget):
 
     @Slot()
     def close_bot_control(self) -> None:
-        if not self.compact_mode:
+        if not self.compact_mode or not self._drawer_open:
             return
         self._drawer_open = False
         self.bot_control.hide()
@@ -145,11 +156,13 @@ class TradingWorkspace(QWidget):
             self.bot_control.setMaximumWidth(BOT_CONTROL_WIDTH)
             self.bot_control.setParent(self)
             self.bot_control.hide()
+            self.bot_control_close_button.show()
             self.bot_control_button.show()
             return
 
         self._drawer_open = False
         self.bot_control_button.hide()
+        self.bot_control_close_button.hide()
         self.bot_control.setParent(self._body)
         self.bot_control.setFixedWidth(BOT_CONTROL_WIDTH)
         self._body_layout.addWidget(self.bot_control)
@@ -203,10 +216,30 @@ class TradingWorkspace(QWidget):
         self.bot_control.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
         self.bot_control.setFixedWidth(BOT_CONTROL_WIDTH)
         bot_layout = QVBoxLayout(self.bot_control)
+        bot_header = QHBoxLayout()
         bot_title = QLabel("Bot Control")
         bot_title.setObjectName("sectionTitle")
-        bot_layout.addWidget(bot_title)
-        bot_layout.addWidget(self._bot_pages, 1)
+        bot_header.addWidget(bot_title)
+        bot_header.addStretch()
+        self.bot_control_close_button = QPushButton("Close")
+        self.bot_control_close_button.setObjectName("secondaryButton")
+        self.bot_control_close_button.setAccessibleName("Close Bot Control")
+        self.bot_control_close_button.clicked.connect(self.close_bot_control)
+        bot_header.addWidget(self.bot_control_close_button)
+        bot_layout.addLayout(bot_header)
+        self.bot_control_scroll = QScrollArea()
+        self.bot_control_scroll.setObjectName("botControlScroll")
+        self.bot_control_scroll.setWidgetResizable(True)
+        self.bot_control_scroll.setHorizontalScrollBarPolicy(
+            Qt.ScrollBarPolicy.ScrollBarAlwaysOff
+        )
+        self.bot_control_scroll.setFrameShape(QFrame.Shape.NoFrame)
+        self._bot_pages.setSizePolicy(
+            QSizePolicy.Policy.Ignored,
+            QSizePolicy.Policy.Minimum,
+        )
+        self.bot_control_scroll.setWidget(self._bot_pages)
+        bot_layout.addWidget(self.bot_control_scroll, 1)
 
         self._body_layout.addWidget(primary, 1)
         self._body_layout.addWidget(self.bot_control)
@@ -216,6 +249,10 @@ class TradingWorkspace(QWidget):
     def _tab_changed(self, index: int) -> None:
         if self.tabs.widget(index) is self.trade_history:
             self.trade_history_activated.emit()
+
+    def _set_bot_control_state(self, state: str) -> None:
+        self.bot_control_button.setText(f"Bot Control · {state}")
+        self.bot_control_button.setAccessibleName(f"Bot Control: {state}")
 
     @staticmethod
     def _empty_panel(message: QLabel) -> QFrame:

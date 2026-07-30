@@ -1,22 +1,9 @@
 DARK_THEME = """
-QMainWindow, QWidget#workspace, QWidget#workspaceContent, QWidget#content {
+QMainWindow, QWidget#workspace, QWidget#workspaceContent {
     background: #0B0E11;
     color: #F1F5F9;
     font-family: "Inter", "SF Pro Text", "Helvetica Neue", sans-serif;
     font-size: 14px;
-}
-QFrame#navigation {
-    background: #141A22;
-    border-right: 1px solid #2B3441;
-}
-QPushButton#navigationButton {
-    background: transparent;
-    border: 0;
-    border-radius: 6px;
-    color: #94A3B8;
-    font-weight: 600;
-    padding: 11px 14px;
-    text-align: left;
 }
 QFrame#workspaceHeader, QFrame#botControl, QFrame#card,
 QFrame#statusCard, QFrame#filterCard, QFrame#emptyPanel {
@@ -29,6 +16,9 @@ QFrame#chartPlaceholder {
     border: 1px solid #2B3441;
     border-radius: 8px;
 }
+QLabel {
+    color: #F1F5F9;
+}
 QLabel#brand, QLabel#pageTitle, QLabel#sectionTitle,
 QLabel#detailValue, QLabel#readOnlyValue, QLabel#stateValue {
     color: #F1F5F9;
@@ -39,16 +29,6 @@ QLabel#brand {
     font-weight: 700;
     letter-spacing: 1px;
 }
-QPushButton#navigationButtonSelected {
-    background: #1B2430;
-    border: 0;
-    border-radius: 6px;
-    color: #F1F5F9;
-    font-weight: 600;
-    padding: 11px 14px;
-    text-align: left;
-}
-QPushButton#navigationButtonSelected:disabled { color: #F1F5F9; }
 QLabel#pageTitle {
     font-size: 24px;
     font-weight: 700;
@@ -94,6 +74,34 @@ QLineEdit:read-only, QComboBox:disabled, QDateEdit:disabled {
     background: #151C25;
     color: #94A3B8;
 }
+QComboBox QAbstractItemView {
+    alternate-background-color: #141A22;
+    background: #1B2430;
+    border: 1px solid #3A4656;
+    color: #F1F5F9;
+    outline: 0;
+    selection-background-color: #315CF4;
+    selection-color: #F8FAFC;
+}
+QCalendarWidget {
+    background: #141A22;
+    color: #F1F5F9;
+}
+QCalendarWidget QWidget {
+    background: #141A22;
+    color: #F1F5F9;
+}
+QCalendarWidget QAbstractItemView {
+    alternate-background-color: #141A22;
+    background: #141A22;
+    color: #F1F5F9;
+    selection-background-color: #315CF4;
+    selection-color: #F8FAFC;
+}
+QCalendarWidget QToolButton, QCalendarWidget QMenu {
+    background: #1B2430;
+    color: #F1F5F9;
+}
 QPushButton#primaryButton {
     background: #315CF4;
     border: 0;
@@ -119,14 +127,6 @@ QPushButton#secondaryButton, QPushButton[retryButton="true"] {
 QPushButton#secondaryButton:hover, QPushButton[retryButton="true"]:hover {
     background: #243044;
     border-color: #4C7DFF;
-}
-QPushButton#unavailableRetryButton {
-    background: #1B2430;
-    border: 1px solid #3A4656;
-    border-radius: 6px;
-    color: #F1F5F9;
-    min-height: 36px;
-    padding: 0 14px;
 }
 QPushButton#destructiveButton {
     background: #F6465D;
@@ -156,6 +156,10 @@ QTabBar::tab {
 QTabBar::tab:selected {
     color: #F1F5F9;
     border-bottom: 2px solid #4C7DFF;
+}
+QScrollArea#botControlScroll {
+    background: transparent;
+    border: 0;
 }
 QTableWidget {
     alternate-background-color: #111821;
