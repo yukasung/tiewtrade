@@ -726,15 +726,25 @@ async def run_until_sink_receives_or_runtime_stops(
 ) -> None:
     run_task = asyncio.create_task(runtime.run())
     sink_task = asyncio.create_task(sink.wait_for_live_candle_count(count))
-    done, _ = await asyncio.wait(
-        {run_task, sink_task},
-        return_when=asyncio.FIRST_COMPLETED,
-    )
-    if sink_task in done:
-        await runtime.stop()
-    else:
-        sink_task.cancel()
-    await asyncio.gather(run_task, sink_task, return_exceptions=True)
+    try:
+        for _ in range(100):
+            if run_task.done() or sink_task.done():
+                return
+            await asyncio.sleep(0)
+        if run_task.done() or sink_task.done():
+            return
+        delivery_label = "delivery" if count == 1 else "deliveries"
+        raise AssertionError(
+            f"expected {count} live Candle {delivery_label}, "
+            f"observed {len(sink.live_candles)}"
+        )
+    finally:
+        if not sink_task.done():
+            sink_task.cancel()
+        try:
+            await runtime.stop()
+        finally:
+            await asyncio.gather(run_task, sink_task, return_exceptions=True)
 
 
 async def run_stale_scenario_or_stop(
@@ -796,6 +806,31 @@ def test_market_data_record_wait_fails_bounded_and_stops_runtime(
         ):
             await asyncio.wait_for(
                 run_until_market_data_record_count(runtime, caplog, count=1),
+                timeout=1.0,
+            )
+
+    asyncio.run(exercise())
+
+    assert runtime.snapshot.state is MarketDataRuntimeState.STOPPED
+    assert source.close_count == 1
+
+
+def test_sink_delivery_wait_fails_bounded_and_cleans_up_runtime() -> None:
+    source = FakeSource(recent=warm_up_candles())
+    sink = RecordingSink()
+    runtime = runtime_for(source, sink)
+
+    async def exercise() -> None:
+        with pytest.raises(
+            AssertionError,
+            match="expected 1 live Candle delivery, observed 0",
+        ):
+            await asyncio.wait_for(
+                run_until_sink_receives_or_runtime_stops(
+                    runtime,
+                    sink,
+                    count=1,
+                ),
                 timeout=1.0,
             )
 
