@@ -338,11 +338,14 @@ def test_stop_exception_maps_to_safe_blocked_reason(qtbot: QtBot) -> None:
 def test_reconfigure_discards_late_callback_from_older_generation(qtbot: QtBot) -> None:
     started = threading.Event()
     release = threading.Event()
+    calls: list[UUID] = []
 
     def start(snapshot: BotControlSnapshot) -> BotLifecycleResult:
-        started.set()
-        if not release.wait(timeout=2):
-            raise TimeoutError("test did not release worker")
+        calls.append(snapshot.session.config.session_id)
+        if len(calls) == 1:
+            started.set()
+            if not release.wait(timeout=2):
+                raise TimeoutError("test did not release worker")
         return _result(snapshot, BotRuntimeState.RUNNING)
 
     workflow, thread_pool = _workflow(start_bot=start, stop_bot=None, recover=None)
@@ -362,19 +365,38 @@ def test_reconfigure_discards_late_callback_from_older_generation(qtbot: QtBot) 
     workflow.start_bot()
     qtbot.waitUntil(started.is_set)
     workflow.configure(second)
+    reconfigured = workflow.snapshot
+
+    assert reconfigured.available_actions == frozenset()
+    assert busy_events == [True]
+    workflow.start_bot()
+    assert calls == [first.config.session_id]
+
     release.set()
+    qtbot.waitUntil(
+        lambda: (
+            workflow.snapshot.available_actions == frozenset({BotControlAction.START})
+        )
+    )
 
     assert thread_pool.waitForDone(1_000)
     QCoreApplication.processEvents()
 
     assert workflow.snapshot.state is BotRuntimeState.CONFIGURED
     assert workflow.snapshot.session is second
+    assert workflow.snapshot.workspace is reconfigured.workspace
     assert [item.state for item in emitted] == [
         BotRuntimeState.CONFIGURED,
         BotRuntimeState.STARTING,
         BotRuntimeState.CONFIGURED,
+        BotRuntimeState.CONFIGURED,
     ]
     assert busy_events == [True, False]
+
+    workflow.start_bot()
+    qtbot.waitUntil(lambda: workflow.snapshot.state is BotRuntimeState.RUNNING)
+
+    assert calls == [first.config.session_id, second.config.session_id]
 
 
 def test_close_discards_late_callback_and_busy_false(qtbot: QtBot) -> None:

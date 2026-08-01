@@ -1,4 +1,5 @@
 from collections.abc import Callable
+from dataclasses import replace
 from datetime import UTC, datetime
 from enum import Enum
 
@@ -62,19 +63,19 @@ class BotLifecycleWorkflow(QObject):
     def configure(self, session: ConfiguredPaperSession) -> None:
         if self._closed:
             return
-        active_task_was_current = (
-            self._active_task is not None and self._task_generation == self._generation
-        )
+        active_task = self._active_task is not None
         self._generation += 1
         self._publish(
             configured_bot_control(
                 session,
                 observed_at_utc=self._clock(),
-                actions=self._actions_for(BotRuntimeState.CONFIGURED),
+                actions=(
+                    frozenset()
+                    if active_task
+                    else self._actions_for(BotRuntimeState.CONFIGURED)
+                ),
             )
         )
-        if active_task_was_current:
-            self.busy_changed.emit(False)
 
     @Slot()
     def start_bot(self) -> None:
@@ -224,6 +225,7 @@ class BotLifecycleWorkflow(QObject):
         if task is None or self._task_generation is None:
             return
         callbacks_are_current = self._callbacks_are_current()
+        snapshot = self._snapshot
         task.signals.succeeded.disconnect(self._task_succeeded)
         task.signals.failed.disconnect(self._task_failed)
         task.signals.finished.disconnect(self._task_finished)
@@ -231,6 +233,18 @@ class BotLifecycleWorkflow(QObject):
         self._active_operation = None
         self._task_generation = None
         if callbacks_are_current:
+            self.busy_changed.emit(False)
+        elif (
+            not self._closed
+            and snapshot is not None
+            and snapshot.state is BotRuntimeState.CONFIGURED
+        ):
+            self._publish(
+                replace(
+                    snapshot,
+                    available_actions=self._actions_for(BotRuntimeState.CONFIGURED),
+                )
+            )
             self.busy_changed.emit(False)
 
     def _publish_failure(
