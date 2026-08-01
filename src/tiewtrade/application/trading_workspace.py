@@ -148,6 +148,8 @@ class TradingWorkspaceSnapshot:
                 raise ValueError("READY snapshot requires a header")
             if self.data_as_of_utc is None:
                 raise ValueError("READY snapshot requires data_as_of_utc")
+            if self.header.data_freshness is DataFreshness.STALE:
+                raise ValueError("READY snapshot must not have stale data")
             if self.message is not None:
                 raise ValueError("READY snapshot must not contain a message")
         elif self.read_state is WorkspaceReadState.ERROR:

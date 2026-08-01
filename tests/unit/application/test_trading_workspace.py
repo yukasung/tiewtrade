@@ -143,6 +143,14 @@ def test_workspace_rejects_invalid_state_combinations() -> None:
             basket=None,
             data_as_of_utc=None,
         )
+    with pytest.raises(ValueError, match="READY snapshot must not have stale data"):
+        TradingWorkspaceSnapshot(
+            read_state=WorkspaceReadState.READY,
+            header=replace(_header(), data_freshness=DataFreshness.STALE),
+            orders=(),
+            basket=None,
+            data_as_of_utc=_utc(),
+        )
 
 
 def test_empty_and_loading_snapshots_can_honestly_represent_no_session() -> None:
