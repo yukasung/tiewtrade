@@ -132,6 +132,11 @@ Session Setup, configured Session summary และ Trade History ไว้ใ�
 พร้อม responsive Bot Control แล้ว ส่วน dynamic Runtime read model, Start/Stop/Recovery,
 Notifications และ Chart ยังคงส่งมอบตาม Sub-issues ถัดไป
 
+สถานะ DEV-133: ส่งมอบ immutable Trading Workspace read model พร้อม exact
+Decimal/UTC contracts, background generation-safe refresh และ persistent status header
+แล้ว ส่วน Bot lifecycle controls, durable Orders/Basket integration, Runtime
+Start/Stop/Recovery, Notifications และ Chart ยังคงอยู่ใน Sub-issues ถัดไป
+
 ## Milestone 4 — Live Spot
 
 เริ่มได้เมื่อ Paper Trading Complete ผ่านทั้งหมด:

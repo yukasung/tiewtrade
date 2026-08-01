@@ -53,6 +53,7 @@ class MainWindow(QMainWindow):
             parent=self,
         )
         self._workflow.busy_changed.connect(self._set_busy)
+        self._workflow.workspace_changed.connect(self.workspace.show_workspace_snapshot)
         self._workflow.setup_required.connect(self._show_setup)
         self._workflow.session_ready.connect(self._show_session)
         self._workflow.validation_failed.connect(self._show_validation_error)

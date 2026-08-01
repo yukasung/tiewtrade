@@ -1,4 +1,6 @@
+from datetime import UTC, datetime
 from functools import partial
+from pathlib import Path
 
 import pytest
 from PySide6.QtCore import QPoint, QRect, Qt
@@ -8,6 +10,11 @@ from pytestqt.qtbot import QtBot
 
 from tests.support.paper_session_setup import configured_spot_session
 from tests.support.qt_interactions import click
+from tiewtrade.application.trading_workspace import (
+    configured_workspace_snapshot,
+    failed_workspace_snapshot,
+    stale_workspace_snapshot,
+)
 from tiewtrade.ui.trading_workspace import TradingWorkspace
 
 
@@ -25,6 +32,62 @@ def test_workspace_places_existing_features_in_one_screen(qtbot: QtBot) -> None:
     assert workspace.orders_state.text() == "No open orders"
     assert workspace.position_state.text() == "No open Position or Basket"
     assert workspace.setup.isVisible()
+
+
+def test_snapshot_updates_all_persistent_header_facts(qtbot: QtBot) -> None:
+    workspace = TradingWorkspace()
+    qtbot.addWidget(workspace)
+    snapshot = configured_workspace_snapshot(
+        configured_spot_session(),
+        observed_at_utc=datetime(2026, 8, 1, 12, tzinfo=UTC),
+    )
+
+    workspace.show_workspace_snapshot(snapshot)
+
+    assert workspace.header_symbol.text() == "BTCUSDT"
+    assert workspace.header_timeframe.text() == "5m"
+    assert workspace.header_mode.text() == "Paper"
+    assert workspace.header_market_type.text() == "Spot"
+    assert workspace.header_preset.text() == "RSI Step Grid v1"
+    assert workspace.header_runtime.text() == "Configured"
+    assert workspace.header_freshness.text() == "Market data not started"
+    assert workspace.header_read_state.text() == "Ready"
+
+
+def test_error_and_stale_snapshots_keep_header_facts_visible(qtbot: QtBot) -> None:
+    workspace = TradingWorkspace()
+    qtbot.addWidget(workspace)
+    ready = configured_workspace_snapshot(
+        configured_spot_session(),
+        observed_at_utc=datetime(2026, 8, 1, 12, tzinfo=UTC),
+    )
+    expected_facts = ("BTCUSDT", "5m", "Paper", "Spot", "RSI Step Grid v1")
+
+    for snapshot, read_state in (
+        (failed_workspace_snapshot(ready, "Workspace data is unavailable"), "Error"),
+        (stale_workspace_snapshot(ready), "Stale"),
+    ):
+        workspace.show_workspace_snapshot(snapshot)
+        assert (
+            workspace.header_symbol.text(),
+            workspace.header_timeframe.text(),
+            workspace.header_mode.text(),
+            workspace.header_market_type.text(),
+            workspace.header_preset.text(),
+        ) == expected_facts
+        assert workspace.header_read_state.text() == read_state
+
+
+def test_ui_modules_do_not_import_prohibited_adapters() -> None:
+    ui_paths = Path("src/tiewtrade/ui").glob("*.py")
+    ui_source = "\n".join(path.read_text() for path in ui_paths)
+    for prohibited in (
+        "tiewtrade.integrations.sqlite",
+        "tiewtrade.strategies",
+        "binance",
+        "tiewtrade.execution",
+    ):
+        assert prohibited not in ui_source
 
 
 def test_bot_control_is_docked_at_wide_width(qtbot: QtBot) -> None:
@@ -171,6 +234,12 @@ def test_resizing_keeps_the_same_bot_control_and_workspace_state(
         workspace.unavailable_panel,
     )
 
+    workspace.show_workspace_snapshot(
+        configured_workspace_snapshot(
+            session,
+            observed_at_utc=datetime(2026, 8, 1, 12, tzinfo=UTC),
+        )
+    )
     workspace.show_configured_session(session)
     workspace.tabs.setCurrentWidget(workspace.trade_history)
     workspace.resize(1199, 700)
@@ -199,11 +268,18 @@ def test_configured_session_updates_header_and_bot_control(qtbot: QtBot) -> None
     workspace.show()
     session = configured_spot_session()
 
+    workspace.show_workspace_snapshot(
+        configured_workspace_snapshot(
+            session,
+            observed_at_utc=datetime(2026, 8, 1, 12, tzinfo=UTC),
+        )
+    )
     workspace.show_configured_session(session)
 
     assert workspace.header_symbol.text() == session.market_data.symbol
     assert workspace.header_timeframe.text() == session.market_data.timeframe
-    assert workspace.header_mode.text() == "Paper · Spot"
+    assert workspace.header_mode.text() == "Paper"
+    assert workspace.header_market_type.text() == "Spot"
     assert workspace.header_runtime.text() == "Configured"
     assert workspace.header_freshness.text() == "Market data not started"
     assert workspace.overview.isVisible()
@@ -216,7 +292,14 @@ def test_compact_bot_control_trigger_exposes_current_state(qtbot: QtBot) -> None
     assert workspace.bot_control_button.text() == "Bot Control · No Session"
     assert workspace.bot_control_button.accessibleName() == "Bot Control: No Session"
 
-    workspace.show_configured_session(configured_spot_session())
+    session = configured_spot_session()
+    workspace.show_workspace_snapshot(
+        configured_workspace_snapshot(
+            session,
+            observed_at_utc=datetime(2026, 8, 1, 12, tzinfo=UTC),
+        )
+    )
+    workspace.show_configured_session(session)
 
     assert workspace.bot_control_button.text() == "Bot Control · Configured"
     assert workspace.bot_control_button.accessibleName() == "Bot Control: Configured"
@@ -251,7 +334,14 @@ def test_bot_control_state_transition_resets_scrolled_setup_to_top(
 
     target: QWidget = workspace.setup.trade_mode_label
     if transition == "configured":
-        workspace.show_configured_session(configured_spot_session())
+        session = configured_spot_session()
+        workspace.show_workspace_snapshot(
+            configured_workspace_snapshot(
+                session,
+                observed_at_utc=datetime(2026, 8, 1, 12, tzinfo=UTC),
+            )
+        )
+        workspace.show_configured_session(session)
         target = workspace.overview.state_value
     elif transition == "unavailable":
         workspace.show_unavailable("Session storage is unavailable")
@@ -337,7 +427,7 @@ def test_unavailable_state_and_busy_control_are_scoped_to_bot_control(
 
     assert workspace.unavailable_message.text() == "Paper Session unavailable"
     assert workspace.unavailable_panel.isVisible()
-    assert workspace.header_runtime.text() == "Unavailable"
+    assert workspace.header_runtime.text() == "No Session"
     assert not workspace.unavailable_retry_button.isEnabled()
     assert not workspace.setup.create_button.isEnabled()
 

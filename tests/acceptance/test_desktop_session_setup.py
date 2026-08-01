@@ -118,6 +118,7 @@ def test_desktop_paper_session_create_overview_and_restart_restore(
         lambda: first_window.trade_history.basket_state.text() == "No trade history"
     )
     assert first_window.workspace.header_runtime.text() == "No Session"
+    assert first_window.workspace.header_read_state.text() == "Empty"
     first_window.workspace.tabs.setCurrentIndex(0)
 
     _enter_form_values(first_window, case)
@@ -525,9 +526,14 @@ def _assert_overview_matches_case(
     expected_session_id: UUID,
     expected_created_at: datetime,
 ) -> None:
-    assert window.workspace.header_mode.text() == f"Paper · {case.market_type.title()}"
+    assert window.workspace.header_symbol.text() == "BTCUSDT"
+    assert window.workspace.header_timeframe.text() == case.timeframe
+    assert window.workspace.header_mode.text() == "Paper"
+    assert window.workspace.header_market_type.text() == case.market_type.title()
+    assert window.workspace.header_preset.text() == "RSI Step Grid v1"
     assert window.workspace.header_runtime.text() == "Configured"
     assert window.workspace.header_freshness.text() == "Market data not started"
+    assert window.workspace.header_read_state.text() == "Ready"
     assert window.overview.isVisible()
     assert window.overview.state_value.text() == (
         "Configured — Market Data Not Started"
