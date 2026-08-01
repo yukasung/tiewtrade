@@ -360,4 +360,3 @@ git diff --check
 Chart slice ต้องเพิ่ม visual interaction tests และ Historical/Live candle tests ก่อนถือว่า
 Unified Trading Workspace เสร็จครบ ส่วน slice ก่อนหน้าไม่ต้องรอ Chart เพื่อส่งมอบ
 Session controls และ durable trading tables
-
