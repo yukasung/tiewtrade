@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
+from threading import Event
 from uuid import UUID
 
 import pytest
@@ -14,12 +15,18 @@ from pytestqt.qtbot import QtBot
 
 from tests.support.qt_interactions import click
 from tests.support.trade_history_ui import empty_basket_page, empty_fills
+from tiewtrade.application.bot_control import (
+    BotControlSnapshot,
+    BotLifecycleResult,
+    workspace_with_runtime_state,
+)
 from tiewtrade.application.paper_session_setup import (
     ConfiguredPaperSession,
     CreatePaperSession,
     PaperSessionCreateOutcome,
     PaperSessionSetupValues,
 )
+from tiewtrade.application.trading_workspace import BotRuntimeState, DataFreshness
 from tiewtrade.integrations.sqlite.active_paper_sessions import (
     SQLiteActivePaperSessions,
 )
@@ -218,6 +225,95 @@ def test_desktop_paper_session_create_overview_and_restart_restore(
     )
     assert restarted_window.overview.isVisible()
     assert _trade_side_effect_counts(database) == restored_history_side_effect_counts
+
+
+@pytest.mark.parametrize(
+    "case",
+    [
+        pytest.param(
+            _SessionCase("spot", "15m", 12, "0.1", "5", "80", None),
+            id="spot",
+        ),
+        pytest.param(
+            _SessionCase("futures", "1h", 14, "0.2", "8", None, 4),
+            id="futures",
+        ),
+    ],
+)
+def test_desktop_fake_lifecycle_has_no_trade_storage_side_effects(
+    monkeypatch: MonkeyPatch,
+    qtbot: QtBot,
+    tmp_path: Path,
+    case: _SessionCase,
+) -> None:
+    _block_network(monkeypatch)
+    database = SQLiteDatabase(tmp_path / "tiewtrade.sqlite3")
+    database.migrate()
+    store = SQLiteActivePaperSessions(database)
+    durable = (
+        CreatePaperSession(create_active=store.create)
+        .execute(_setup_values(case))
+        .session
+    )
+    initial_counts = _trade_side_effect_counts(database)
+    start_entered = Event()
+    release_start = Event()
+    stop_entered = Event()
+    release_stop = Event()
+
+    def fake_start(snapshot: BotControlSnapshot) -> BotLifecycleResult:
+        start_entered.set()
+        assert release_start.wait(timeout=1)
+        return BotLifecycleResult(
+            workspace=workspace_with_runtime_state(
+                snapshot.workspace,
+                BotRuntimeState.RUNNING,
+                data_freshness=DataFreshness.FRESH,
+            )
+        )
+
+    def fake_stop(snapshot: BotControlSnapshot) -> BotLifecycleResult:
+        stop_entered.set()
+        assert release_stop.wait(timeout=1)
+        return BotLifecycleResult(
+            workspace=workspace_with_runtime_state(
+                snapshot.workspace,
+                BotRuntimeState.STOPPED,
+            )
+        )
+
+    window = MainWindow(
+        create_session=lambda values: pytest.fail("create must not run"),
+        load_active=lambda: durable,
+        list_baskets=empty_basket_page,
+        list_fills=empty_fills,
+        start_bot=fake_start,
+        stop_bot=fake_stop,
+    )
+    qtbot.addWidget(window)
+    window.show()
+    qtbot.waitUntil(
+        lambda: window.workspace.bot_control_widget.start_button.isEnabled()
+    )
+
+    click(window.workspace.bot_control_widget.start_button)
+    qtbot.waitUntil(start_entered.is_set)
+    qtbot.waitUntil(lambda: window.workspace.header_runtime.text() == "Starting")
+    release_start.set()
+    qtbot.waitUntil(lambda: window.workspace.header_runtime.text() == "Running")
+
+    assert window.workspace.bot_control_widget.stop_button.text() == "Stop Session"
+    assert window.findChildren(QPushButton, "manualBuyButton") == []
+    assert window.findChildren(QPushButton, "manualSellButton") == []
+    assert _trade_side_effect_counts(database) == initial_counts
+
+    click(window.workspace.bot_control_widget.stop_button)
+    qtbot.waitUntil(stop_entered.is_set)
+    qtbot.waitUntil(lambda: window.workspace.header_runtime.text() == "Stopping")
+    release_stop.set()
+    qtbot.waitUntil(lambda: window.workspace.header_runtime.text() == "Stopped")
+
+    assert _trade_side_effect_counts(database) == initial_counts
 
 
 def test_desktop_session_storage_unavailable_fails_closed(
@@ -535,6 +631,13 @@ def _assert_overview_matches_case(
     assert window.workspace.header_freshness.text() == "Market data not started"
     assert window.workspace.header_read_state.text() == "Ready"
     assert window.overview.isVisible()
+    assert window.workspace.bot_control_widget.state_value.text() == "Configured"
+    assert window.workspace.bot_control_widget.start_button.isVisible()
+    assert not window.workspace.bot_control_widget.start_button.isEnabled()
+    assert (
+        window.workspace.bot_control_widget.supporting_text.text()
+        == "Runtime integration is not available yet"
+    )
     assert window.overview.state_value.text() == (
         "Configured — Market Data Not Started"
     )

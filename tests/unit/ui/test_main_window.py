@@ -23,6 +23,11 @@ from tests.support.paper_session_setup import (
 from tests.support.qt_interactions import click, qdate
 from tests.support.trade_history_records import basket_result, trade_fill
 from tests.support.trade_history_ui import empty_basket_page, empty_fills
+from tiewtrade.application.bot_control import (
+    BotControlSnapshot,
+    BotLifecycleResult,
+    workspace_with_runtime_state,
+)
 from tiewtrade.application.paper_session_setup import (
     ConfiguredPaperSession,
     CreatePaperSession,
@@ -36,6 +41,7 @@ from tiewtrade.application.trade_history import (
     PageRequest,
     TradeHistoryFilter,
 )
+from tiewtrade.application.trading_workspace import BotRuntimeState, DataFreshness
 from tiewtrade.integrations.sqlite.active_paper_sessions import (
     SQLiteActivePaperSessions,
 )
@@ -1278,6 +1284,130 @@ def test_main_window_composes_workspace_and_starts_on_setup(
     assert window.setup is window.workspace.setup
     assert window.overview is window.workspace.overview
     assert window.trade_history is window.workspace.trade_history
+
+
+def test_lifecycle_actions_render_matching_header_and_control_snapshot(
+    qtbot: QtBot,
+) -> None:
+    session = configured_spot_session()
+    start_calls = 0
+    stop_calls = 0
+
+    def start_bot(snapshot: object) -> BotLifecycleResult:
+        nonlocal start_calls
+        assert isinstance(snapshot, BotControlSnapshot)
+        start_calls += 1
+        return BotLifecycleResult(
+            workspace=workspace_with_runtime_state(
+                snapshot.workspace,
+                BotRuntimeState.RUNNING,
+                data_freshness=DataFreshness.FRESH,
+            )
+        )
+
+    def stop_bot(snapshot: object) -> BotLifecycleResult:
+        nonlocal stop_calls
+        assert isinstance(snapshot, BotControlSnapshot)
+        stop_calls += 1
+        return BotLifecycleResult(
+            workspace=workspace_with_runtime_state(
+                snapshot.workspace,
+                BotRuntimeState.STOPPED,
+            )
+        )
+
+    window = MainWindow(
+        create_session=unused_create,
+        load_active=lambda: session,
+        list_baskets=empty_basket_page,
+        list_fills=empty_fills,
+        start_bot=start_bot,
+        stop_bot=stop_bot,
+    )
+    qtbot.addWidget(window)
+    window.show()
+    qtbot.waitUntil(
+        lambda: window.workspace.bot_control_widget.start_button.isEnabled()
+    )
+
+    click(window.workspace.bot_control_widget.start_button)
+    click(window.workspace.bot_control_widget.start_button)
+
+    qtbot.waitUntil(lambda: window.workspace.header_runtime.text() == "Running")
+    assert start_calls == 1
+    assert window.workspace.bot_control_widget.state_value.text() == "Running"
+    assert window.workspace.bot_control_widget.stop_button.isVisible()
+    assert window.findChildren(QWidget, "manualBuyButton") == []
+    assert window.findChildren(QWidget, "manualSellButton") == []
+
+    click(window.workspace.bot_control_widget.stop_button)
+
+    qtbot.waitUntil(lambda: window.workspace.header_runtime.text() == "Stopped")
+    assert stop_calls == 1
+    assert window.workspace.bot_control_widget.state_value.text() == "Stopped"
+
+
+def test_lifecycle_recovery_hides_raw_fake_exception(
+    qtbot: QtBot,
+) -> None:
+    def fail_start(snapshot: BotControlSnapshot) -> BotLifecycleResult:
+        raise RuntimeError("raw fake exception must not reach the UI")
+
+    def recover(snapshot: BotControlSnapshot) -> BotLifecycleResult:
+        return BotLifecycleResult(
+            workspace=workspace_with_runtime_state(
+                snapshot.workspace,
+                BotRuntimeState.CONFIGURED,
+            )
+        )
+
+    window = MainWindow(
+        create_session=unused_create,
+        load_active=configured_spot_session,
+        list_baskets=empty_basket_page,
+        list_fills=empty_fills,
+        start_bot=fail_start,
+        recover_bot=recover,
+    )
+    qtbot.addWidget(window)
+    window.show()
+    qtbot.waitUntil(
+        lambda: window.workspace.bot_control_widget.start_button.isEnabled()
+    )
+
+    click(window.workspace.bot_control_widget.start_button)
+
+    qtbot.waitUntil(lambda: window.workspace.header_runtime.text() == "Blocked")
+    control = window.workspace.bot_control_widget
+    assert control.supporting_text.text() == "Paper Bot could not be started"
+    assert "raw fake exception" not in control.supporting_text.text()
+    assert control.recover_button.isEnabled()
+
+    click(control.recover_button)
+
+    qtbot.waitUntil(lambda: window.workspace.header_runtime.text() == "Configured")
+    assert control.state_value.text() == "Configured"
+
+
+def test_configured_session_does_not_auto_start_and_explains_missing_runtime(
+    qtbot: QtBot,
+) -> None:
+    window = MainWindow(
+        create_session=unused_create,
+        load_active=configured_spot_session,
+        list_baskets=empty_basket_page,
+        list_fills=empty_fills,
+    )
+    qtbot.addWidget(window)
+    window.show()
+    qtbot.waitUntil(lambda: window.workspace.overview.isVisible())
+
+    control = window.workspace.bot_control_widget
+    assert window.workspace.header_runtime.text() == "Configured"
+    assert control.state_value.text() == "Configured"
+    assert control.start_button.isVisible()
+    assert not control.start_button.isEnabled()
+    assert control.supporting_text.text() == "Runtime integration is not available yet"
 
 
 def _session_with_policy_changes(

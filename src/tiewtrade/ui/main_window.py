@@ -6,6 +6,10 @@ from tiewtrade.application.paper_session_setup import (
     ConfiguredPaperSession,
     PaperSessionSetupValues,
 )
+from tiewtrade.ui.bot_lifecycle_workflow import (
+    BotLifecycleWorkflow,
+    LifecycleAction,
+)
 from tiewtrade.ui.session_workflow import (
     CreateSession,
     LoadActiveSession,
@@ -29,6 +33,9 @@ class MainWindow(QMainWindow):
         load_active: LoadActiveSession,
         list_baskets: ListBaskets,
         list_fills: ListFills,
+        start_bot: LifecycleAction | None = None,
+        stop_bot: LifecycleAction | None = None,
+        recover_bot: LifecycleAction | None = None,
         thread_pool: QThreadPool | None = None,
     ) -> None:
         super().__init__()
@@ -60,6 +67,20 @@ class MainWindow(QMainWindow):
         self._workflow.unavailable.connect(self._show_unavailable)
         self.setup.create_requested.connect(self._create_requested)
         self.unavailable_retry_button.clicked.connect(self._workflow.start)
+
+        self._lifecycle_workflow = BotLifecycleWorkflow(
+            start_bot=start_bot,
+            stop_bot=stop_bot,
+            recover=recover_bot,
+            thread_pool=self._thread_pool,
+            parent=self,
+        )
+        self._lifecycle_workflow.snapshot_changed.connect(
+            self.workspace.show_bot_control_snapshot
+        )
+        self.workspace.start_bot_requested.connect(self._lifecycle_workflow.start_bot)
+        self.workspace.stop_bot_requested.connect(self._lifecycle_workflow.stop_bot)
+        self.workspace.recover_requested.connect(self._lifecycle_workflow.recover)
 
         self._history_started = False
         self._history_workflow = TradeHistoryWorkflow(
@@ -93,7 +114,7 @@ class MainWindow(QMainWindow):
     @Slot(object)
     def _show_session(self, session: ConfiguredPaperSession) -> None:
         self._pending_validation_field = None
-        self.workspace.show_configured_session(session)
+        self._lifecycle_workflow.configure(session)
 
     @Slot(str, str)
     def _show_validation_error(self, field: str, message: str) -> None:
@@ -117,6 +138,7 @@ class MainWindow(QMainWindow):
 
     def closeEvent(self, event: QCloseEvent) -> None:
         self._workflow.close()
+        self._lifecycle_workflow.close()
         self._history_workflow.close()
         self._thread_pool.waitForDone(WORKER_SHUTDOWN_TIMEOUT_MS)
         super().closeEvent(event)

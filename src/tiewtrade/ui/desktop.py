@@ -2,6 +2,7 @@ import sys
 
 from PySide6.QtWidgets import QApplication
 
+from tiewtrade.ui.bot_lifecycle_workflow import LifecycleAction
 from tiewtrade.ui.main_window import MainWindow
 from tiewtrade.ui.session_workflow import CreateSession, LoadActiveSession
 from tiewtrade.ui.theme import DARK_THEME
@@ -14,6 +15,9 @@ def run_desktop(
     load_active: LoadActiveSession,
     list_baskets: ListBaskets,
     list_fills: ListFills,
+    start_bot: LifecycleAction | None = None,
+    stop_bot: LifecycleAction | None = None,
+    recover_bot: LifecycleAction | None = None,
 ) -> int:
     app = QApplication.instance()
     if app is None:
@@ -24,6 +28,9 @@ def run_desktop(
         load_active=load_active,
         list_baskets=list_baskets,
         list_fills=list_fills,
+        start_bot=start_bot,
+        stop_bot=stop_bot,
+        recover_bot=recover_bot,
     )
     window.setStyleSheet(DARK_THEME)
     window.show()
