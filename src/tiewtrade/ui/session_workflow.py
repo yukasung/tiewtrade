@@ -1,4 +1,5 @@
 from collections.abc import Callable
+from datetime import UTC, datetime
 from enum import Enum
 
 from PySide6.QtCore import QObject, QThreadPool, Signal, Slot
@@ -10,6 +11,14 @@ from tiewtrade.application.paper_session_setup import (
     PaperSessionSetupValues,
     PaperSessionUnavailableError,
     PaperSessionValidationError,
+)
+from tiewtrade.application.trading_workspace import (
+    TradingWorkspaceSnapshot,
+    WorkspaceReadState,
+    configured_workspace_snapshot,
+    empty_workspace_snapshot,
+    failed_workspace_snapshot,
+    loading_workspace_snapshot,
 )
 from tiewtrade.ui.background_task import BackgroundTask
 
@@ -29,6 +38,7 @@ class SessionWorkflow(QObject):
     validation_failed = Signal(str, str)
     unavailable = Signal(str)
     busy_changed = Signal(bool)
+    workspace_changed = Signal(object)
 
     def __init__(
         self,
@@ -36,12 +46,15 @@ class SessionWorkflow(QObject):
         create_session: CreateSession,
         load_active: LoadActiveSession,
         thread_pool: QThreadPool | None = None,
+        clock: Callable[[], datetime] = lambda: datetime.now(UTC),
         parent: QObject | None = None,
     ) -> None:
         super().__init__(parent)
         self._create_session = create_session
         self._load_active = load_active
         self._thread_pool = thread_pool or QThreadPool.globalInstance()
+        self._clock = clock
+        self._last_known_workspace: TradingWorkspaceSnapshot | None = None
         self._active_task: BackgroundTask | None = None
         self._active_operation: _Operation | None = None
         self._active_generation: int | None = None
@@ -75,6 +88,10 @@ class SessionWorkflow(QObject):
         self._active_task = task
         self._active_operation = operation
         self._active_generation = self._callback_generation
+        if operation is _Operation.LOAD:
+            self._publish_workspace(
+                loading_workspace_snapshot(self._last_known_or_empty_workspace())
+            )
         self.busy_changed.emit(True)
         self._thread_pool.start(task)
 
@@ -113,29 +130,41 @@ class SessionWorkflow(QObject):
 
     def _load_succeeded(self, result: object) -> None:
         if result is None:
+            self._publish_workspace(
+                empty_workspace_snapshot(observed_at_utc=self._clock())
+            )
             self.setup_required.emit()
             return
         if isinstance(result, ConfiguredPaperSession):
+            self._publish_workspace(
+                configured_workspace_snapshot(result, observed_at_utc=self._clock())
+            )
             self.session_ready.emit(result)
             return
-        self.unavailable.emit("Paper Session could not be loaded")
+        self._publish_load_failure("Paper Session could not be loaded")
 
     def _create_succeeded(self, result: object) -> None:
         if isinstance(result, PaperSessionCreateOutcome) and isinstance(
             result.session, ConfiguredPaperSession
         ):
+            self._publish_workspace(
+                configured_workspace_snapshot(
+                    result.session,
+                    observed_at_utc=self._clock(),
+                )
+            )
             self.session_ready.emit(result.session)
             return
-        self.unavailable.emit("Paper Session could not be created")
+        self._publish_create_failure("Paper Session could not be created")
 
     def _load_failed(self, error: object) -> None:
         if isinstance(error, DatabaseCompatibilityError):
-            self.unavailable.emit(_NEWER_DATABASE_MESSAGE)
+            self._publish_load_failure(_NEWER_DATABASE_MESSAGE)
             return
         if isinstance(error, PaperSessionUnavailableError):
-            self.unavailable.emit("Session storage is unavailable")
+            self._publish_load_failure("Session storage is unavailable")
             return
-        self.unavailable.emit("Paper Session could not be loaded")
+        self._publish_load_failure("Paper Session could not be loaded")
 
     def _create_failed(self, error: object) -> None:
         if isinstance(error, PaperSessionValidationError):
@@ -143,12 +172,38 @@ class SessionWorkflow(QObject):
             self.setup_required.emit()
             return
         if isinstance(error, DatabaseCompatibilityError):
-            self.unavailable.emit(_NEWER_DATABASE_MESSAGE)
+            self._publish_create_failure(_NEWER_DATABASE_MESSAGE)
             return
         if isinstance(error, PaperSessionUnavailableError):
-            self.unavailable.emit("Session storage is unavailable")
+            self._publish_create_failure("Session storage is unavailable")
             return
-        self.unavailable.emit("Paper Session could not be created")
+        self._publish_create_failure("Paper Session could not be created")
+
+    def _publish_load_failure(self, message: str) -> None:
+        self._publish_workspace(
+            failed_workspace_snapshot(self._last_known_or_empty_workspace(), message)
+        )
+        self.unavailable.emit(message)
+
+    def _publish_create_failure(self, message: str) -> None:
+        self._publish_workspace(
+            failed_workspace_snapshot(self._last_known_or_empty_workspace(), message)
+        )
+        self.unavailable.emit(message)
+
+    def _last_known_or_empty_workspace(self) -> TradingWorkspaceSnapshot:
+        if self._last_known_workspace is not None:
+            return self._last_known_workspace
+        return empty_workspace_snapshot(observed_at_utc=self._clock())
+
+    def _publish_workspace(self, snapshot: TradingWorkspaceSnapshot) -> None:
+        if snapshot.read_state in {
+            WorkspaceReadState.EMPTY,
+            WorkspaceReadState.READY,
+            WorkspaceReadState.STALE,
+        }:
+            self._last_known_workspace = snapshot
+        self.workspace_changed.emit(snapshot)
 
     def _callbacks_are_current(self) -> bool:
         return (
