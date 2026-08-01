@@ -69,9 +69,7 @@ def test_loading_error_and_stale_preserve_last_known_durable_data() -> None:
         assert snapshot.orders == ready.orders
         assert snapshot.basket == ready.basket
         assert snapshot.data_as_of_utc == ready.data_as_of_utc
-    assert stale.header == replace(
-        ready.header, data_freshness=DataFreshness.STALE
-    )
+    assert stale.header == replace(ready.header, data_freshness=DataFreshness.STALE)
     assert stale.orders == ready.orders
     assert stale.basket == ready.basket
     assert stale.data_as_of_utc == ready.data_as_of_utc
