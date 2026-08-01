@@ -1,8 +1,9 @@
+from collections.abc import Callable
 from dataclasses import replace
 from datetime import UTC, datetime
-from decimal import Decimal
+from decimal import Decimal, localcontext
 
-from PySide6.QtWidgets import QPushButton
+from PySide6.QtWidgets import QMessageBox, QPushButton
 from pytestqt.qtbot import QtBot
 
 from tests.support.paper_session_setup import configured_spot_session
@@ -18,7 +19,7 @@ from tiewtrade.application.trading_workspace import (
     BotRuntimeState,
     DataFreshness,
 )
-from tiewtrade.ui.bot_control import BotControlWidget
+from tiewtrade.ui.bot_control import BotControlWidget, _decimal_text
 
 
 def test_configured_shows_immutable_overview_and_disabled_start_without_runtime(
@@ -97,6 +98,7 @@ def test_running_shows_runtime_and_basket_facts_without_manual_order_controls(
     widget.show_snapshot(running)
 
     assert widget.state_value.text() == "Running"
+    assert widget.data_freshness_value.text() == "Fresh"
     assert widget.overview.state_value.text() == "Immutable Configuration"
     assert widget.entry_count_value.text() == "2"
     assert widget.average_entry_value.text() == "64000 USDT"
@@ -106,6 +108,40 @@ def test_running_shows_runtime_and_basket_facts_without_manual_order_controls(
     assert widget.stop_button.text() == "Stop Session"
     assert widget.findChildren(QPushButton, "manualBuyButton") == []
     assert widget.findChildren(QPushButton, "manualSellButton") == []
+
+
+def test_configured_and_blocked_show_readable_data_freshness(qtbot: QtBot) -> None:
+    widget = BotControlWidget()
+    qtbot.addWidget(widget)
+    configured = configured_bot_control(
+        configured_spot_session(),
+        observed_at_utc=datetime(2026, 8, 1, 12, tzinfo=UTC),
+    )
+    widget.show_snapshot(configured)
+    assert widget.data_freshness_value.text() == "Not Started"
+
+    assert configured.workspace.header is not None
+    blocked_workspace = workspace_with_runtime_state(
+        configured.workspace, BotRuntimeState.BLOCKED
+    )
+    assert blocked_workspace.header is not None
+    blocked_workspace = replace(
+        blocked_workspace,
+        header=replace(
+            blocked_workspace.header,
+            data_freshness=DataFreshness.UNAVAILABLE,
+        ),
+    )
+    blocked = BotControlSnapshot(
+        state=BotRuntimeState.BLOCKED,
+        session=configured.session,
+        workspace=blocked_workspace,
+        available_actions=frozenset(),
+        blocked_reason="Paper Bot recovery failed",
+    )
+    widget.show_snapshot(blocked)
+
+    assert widget.data_freshness_value.text() == "Unavailable"
 
 
 def test_progress_blocked_and_stopped_states_expose_only_their_allowed_actions(
@@ -198,3 +234,118 @@ def test_enabled_action_emits_once_and_disables_repeated_submission(
     click(widget.start_button)
 
     assert not widget.start_button.isEnabled()
+
+
+def test_stop_cancel_does_not_emit_and_returns_focus(qtbot: QtBot) -> None:
+    callbacks: list[tuple[Callable[[], None], Callable[[], None]]] = []
+
+    def confirm_stop(confirm: Callable[[], None], cancel: Callable[[], None]) -> None:
+        callbacks.append((confirm, cancel))
+
+    widget = BotControlWidget(stop_confirmation=confirm_stop)
+    qtbot.addWidget(widget)
+    widget.show()
+    widget.show_snapshot(_running_snapshot())
+    emissions: list[None] = []
+    widget.stop_requested.connect(lambda: emissions.append(None))
+
+    click(widget.stop_button)
+
+    assert len(callbacks) == 1
+    assert emissions == []
+    confirm, cancel = callbacks[0]
+    cancel()
+
+    assert emissions == []
+    assert widget.stop_button.isEnabled()
+    qtbot.waitUntil(widget.stop_button.hasFocus)
+
+
+def test_stop_confirm_emits_once_and_guards_repeated_confirmation(qtbot: QtBot) -> None:
+    callbacks: list[tuple[Callable[[], None], Callable[[], None]]] = []
+
+    def confirm_stop(confirm: Callable[[], None], cancel: Callable[[], None]) -> None:
+        callbacks.append((confirm, cancel))
+
+    widget = BotControlWidget(stop_confirmation=confirm_stop)
+    qtbot.addWidget(widget)
+    widget.show()
+    widget.show_snapshot(_running_snapshot())
+    emissions: list[None] = []
+    widget.stop_requested.connect(lambda: emissions.append(None))
+
+    click(widget.stop_button)
+    click(widget.stop_button)
+
+    assert len(callbacks) == 1
+    confirm, _cancel = callbacks[0]
+    confirm()
+    confirm()
+
+    assert emissions == [None]
+    assert not widget.stop_button.isEnabled()
+    qtbot.waitUntil(widget.state_value.hasFocus)
+
+
+def test_default_stop_confirmation_is_destructive_and_default_safe(
+    qtbot: QtBot,
+) -> None:
+    widget = BotControlWidget()
+    qtbot.addWidget(widget)
+    widget.show()
+    widget.show_snapshot(_running_snapshot())
+    emissions: list[None] = []
+    widget.stop_requested.connect(lambda: emissions.append(None))
+
+    click(widget.stop_button)
+
+    dialog = next(
+        child
+        for child in widget.findChildren(QMessageBox)
+        if child.text() == "Stop this Paper Bot session?"
+    )
+    assert dialog.isVisible()
+    assert dialog.text() == "Stop this Paper Bot session?"
+    assert "Existing Basket Take Profit stays active" in dialog.informativeText()
+    cancel_button = next(
+        button for button in dialog.buttons() if button.text() == "Cancel"
+    )
+    stop_button = next(
+        button for button in dialog.buttons() if button.text() == "Stop Session"
+    )
+    assert dialog.defaultButton() is cancel_button
+    assert dialog.buttonRole(stop_button) is QMessageBox.ButtonRole.DestructiveRole
+
+    click(cancel_button)
+
+    assert emissions == []
+    qtbot.waitUntil(widget.stop_button.hasFocus)
+
+
+def test_decimal_text_is_context_independent_and_exact() -> None:
+    with localcontext() as context:
+        context.prec = 4
+        assert (
+            _decimal_text(Decimal("12345678901234567890.123456789012345678900"))
+            == "12345678901234567890.1234567890123456789"
+        )
+
+    assert _decimal_text(Decimal("0")) == "0"
+    assert _decimal_text(Decimal("-0.0000")) == "0"
+
+
+def _running_snapshot() -> BotControlSnapshot:
+    configured = configured_bot_control(
+        configured_spot_session(),
+        observed_at_utc=datetime(2026, 8, 1, 12, tzinfo=UTC),
+    )
+    return BotControlSnapshot(
+        state=BotRuntimeState.RUNNING,
+        session=configured.session,
+        workspace=workspace_with_runtime_state(
+            configured.workspace,
+            BotRuntimeState.RUNNING,
+            data_freshness=DataFreshness.FRESH,
+        ),
+        available_actions=frozenset({BotControlAction.STOP}),
+    )

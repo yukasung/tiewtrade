@@ -1,5 +1,7 @@
+from collections.abc import Callable
 from dataclasses import FrozenInstanceError, replace
 from datetime import UTC, datetime
+from decimal import Decimal
 
 import pytest
 
@@ -14,11 +16,15 @@ from tiewtrade.application.bot_control import (
     workspace_with_runtime_state,
 )
 from tiewtrade.application.trading_workspace import (
+    BasketSnapshot,
     BotRuntimeState,
     DataFreshness,
+    OpenOrderSnapshot,
+    WorkspaceHeaderSnapshot,
     WorkspaceReadState,
     empty_workspace_snapshot,
 )
+from tiewtrade.trading.session_config import MarketType, TradeMode
 
 OBSERVED_AT = datetime(2026, 8, 1, 12, tzinfo=UTC)
 
@@ -235,6 +241,44 @@ def test_control_rejects_workspace_header_state_mismatch() -> None:
         )
 
 
+@pytest.mark.parametrize(
+    ("field", "change_header"),
+    [
+        ("symbol", lambda header: replace(header, symbol="ETHUSDT")),
+        ("timeframe", lambda header: replace(header, timeframe="4h")),
+        ("trade_mode", lambda header: replace(header, trade_mode=TradeMode.LIVE)),
+        (
+            "market_type",
+            lambda header: replace(header, market_type=MarketType.FUTURES),
+        ),
+        (
+            "preset_version",
+            lambda header: replace(header, preset_version="rsi-step-grid-v2"),
+        ),
+    ],
+)
+def test_control_rejects_header_facts_owned_by_another_session(
+    field: str,
+    change_header: Callable[[WorkspaceHeaderSnapshot], WorkspaceHeaderSnapshot],
+) -> None:
+    configured = configured_bot_control(
+        configured_spot_session(), observed_at_utc=OBSERVED_AT
+    )
+    assert configured.workspace.header is not None
+    mismatched_workspace = replace(
+        configured.workspace,
+        header=change_header(configured.workspace.header),
+    )
+
+    with pytest.raises(ValueError, match=f"workspace header {field}"):
+        BotControlSnapshot(
+            state=BotRuntimeState.CONFIGURED,
+            session=configured.session,
+            workspace=mismatched_workspace,
+            available_actions=frozenset(),
+        )
+
+
 def test_lifecycle_result_allows_blocked_reason_only_for_blocked_workspace() -> None:
     configured = configured_bot_control(
         configured_spot_session(), observed_at_utc=OBSERVED_AT
@@ -263,6 +307,41 @@ def test_transition_accepts_only_state_diagram_edges() -> None:
         )
 
 
+@pytest.mark.parametrize(
+    "changed_workspace",
+    [
+        pytest.param(lambda workspace: replace(workspace, orders=()), id="orders"),
+        pytest.param(lambda workspace: replace(workspace, basket=None), id="basket"),
+        pytest.param(
+            lambda workspace: replace(
+                workspace,
+                data_as_of_utc=datetime(2026, 8, 1, 12, 1, tzinfo=UTC),
+            ),
+            id="data-as-of",
+        ),
+        pytest.param(
+            lambda workspace: replace(workspace, read_state=WorkspaceReadState.LOADING),
+            id="read-state",
+        ),
+    ],
+)
+def test_transition_rejects_result_that_changes_workspace_continuity(
+    changed_workspace: object,
+) -> None:
+    running = _running_control_with_workspace_facts()
+    stopping_workspace = workspace_with_runtime_state(
+        running.workspace, BotRuntimeState.STOPPING
+    )
+    assert callable(changed_workspace)
+
+    with pytest.raises(ValueError, match="workspace continuity"):
+        transition_bot_control(
+            running,
+            result=BotLifecycleResult(workspace=changed_workspace(stopping_workspace)),
+            progress_message="Stopping Paper Bot",
+        )
+
+
 def test_blocked_control_can_recover_to_configured_or_stopped() -> None:
     blocked = blocked_bot_control(
         _running_control(), reason="Paper Bot could not be started"
@@ -288,6 +367,32 @@ def test_blocked_control_can_recover_to_configured_or_stopped() -> None:
 
     assert recovered.state is BotRuntimeState.CONFIGURED
     assert stopped.state is BotRuntimeState.STOPPED
+
+
+def test_blocked_control_can_remain_blocked_through_application_transition() -> None:
+    blocked = blocked_bot_control(
+        _running_control_with_workspace_facts(),
+        reason="Paper Bot could not be started",
+    )
+    result_workspace = workspace_with_runtime_state(
+        blocked.workspace,
+        BotRuntimeState.BLOCKED,
+        data_freshness=DataFreshness.UNAVAILABLE,
+    )
+
+    still_blocked = transition_bot_control(
+        blocked,
+        result=BotLifecycleResult(
+            workspace=result_workspace,
+            blocked_reason="Paper Bot recovery failed",
+        ),
+        actions=frozenset({BotControlAction.RECOVER}),
+    )
+
+    assert still_blocked.workspace is result_workspace
+    assert still_blocked.workspace.orders is blocked.workspace.orders
+    assert still_blocked.workspace.basket is blocked.workspace.basket
+    assert still_blocked.blocked_reason == "Paper Bot recovery failed"
 
 
 def test_workspace_state_helper_preserves_workspace_facts() -> None:
@@ -350,3 +455,37 @@ def _running_control() -> BotControlSnapshot:
         ),
         actions=frozenset({BotControlAction.STOP}),
     )
+
+
+def _running_control_with_workspace_facts() -> BotControlSnapshot:
+    running = _running_control()
+    workspace = replace(
+        running.workspace,
+        orders=(
+            OpenOrderSnapshot(
+                order_id="order-1",
+                created_at_utc=OBSERVED_AT,
+                symbol="BTCUSDT",
+                side="SELL",
+                order_type="LIMIT",
+                price=Decimal("66000.123456789012345678"),
+                quantity=Decimal("1"),
+                filled_quantity=Decimal("0"),
+                status="NEW",
+            ),
+        ),
+        basket=BasketSnapshot(
+            symbol="BTCUSDT",
+            market_type="spot",
+            entry_count=2,
+            total_quantity=Decimal("1"),
+            average_entry_price=Decimal("64000.123456789012345678"),
+            current_price=Decimal("65000.123456789012345678"),
+            take_profit_price=Decimal("66000.123456789012345678"),
+            unrealized_pnl=Decimal("1000"),
+            liquidation_price=None,
+            lifecycle="open",
+            updated_at_utc=OBSERVED_AT,
+        ),
+    )
+    return replace(running, workspace=workspace)

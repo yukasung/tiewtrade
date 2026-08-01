@@ -193,17 +193,6 @@ class BotLifecycleWorkflow(QObject):
         header = result.workspace.header
         if header is None:
             raise ValueError("result workspace requires a header")
-        if (
-            operation is _LifecycleOperation.RECOVER
-            and header.runtime_state is BotRuntimeState.BLOCKED
-        ):
-            return BotControlSnapshot(
-                state=BotRuntimeState.BLOCKED,
-                session=snapshot.session,
-                workspace=result.workspace,
-                available_actions=self._actions_for(BotRuntimeState.BLOCKED),
-                blocked_reason=result.blocked_reason,
-            )
         return transition_bot_control(
             snapshot,
             result=result,
@@ -257,20 +246,11 @@ class BotLifecycleWorkflow(QObject):
             _LifecycleOperation.STOP: "Paper Bot could not be stopped",
             _LifecycleOperation.RECOVER: "Paper Bot recovery failed",
         }[operation]
-        if snapshot.state is BotRuntimeState.BLOCKED:
-            blocked = BotControlSnapshot(
-                state=BotRuntimeState.BLOCKED,
-                session=snapshot.session,
-                workspace=snapshot.workspace,
-                available_actions=self._actions_for(BotRuntimeState.BLOCKED),
-                blocked_reason=reason,
-            )
-        else:
-            blocked = blocked_bot_control(
-                snapshot,
-                reason=reason,
-                actions=self._actions_for(BotRuntimeState.BLOCKED),
-            )
+        blocked = blocked_bot_control(
+            snapshot,
+            reason=reason,
+            actions=self._actions_for(BotRuntimeState.BLOCKED),
+        )
         self._publish(blocked)
 
     def _actions_for(self, state: BotRuntimeState) -> frozenset[BotControlAction]:

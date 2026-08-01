@@ -9,7 +9,7 @@ from threading import Event
 from uuid import UUID
 
 import pytest
-from PySide6.QtWidgets import QApplication, QPushButton
+from PySide6.QtWidgets import QApplication, QMessageBox, QPushButton
 from pytest import MonkeyPatch
 from pytestqt.qtbot import QtBot
 
@@ -308,6 +308,13 @@ def test_desktop_fake_lifecycle_has_no_trade_storage_side_effects(
     assert _trade_side_effect_counts(database) == initial_counts
 
     click(window.workspace.bot_control_widget.stop_button)
+    confirmation = window.findChild(QMessageBox)
+    assert confirmation is not None
+    assert confirmation.defaultButton().text() == "Cancel"
+    confirm_button = next(
+        button for button in confirmation.buttons() if button.text() == "Stop Session"
+    )
+    click(confirm_button)
     qtbot.waitUntil(stop_entered.is_set)
     qtbot.waitUntil(lambda: window.workspace.header_runtime.text() == "Stopping")
     release_stop.set()

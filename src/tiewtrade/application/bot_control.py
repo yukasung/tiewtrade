@@ -58,6 +58,7 @@ class BotControlSnapshot:
             raise ValueError("workspace requires a header")
         if self.workspace.header.runtime_state is not self.state:
             raise ValueError("workspace header runtime state must match state")
+        self._validate_session_ownership()
         _require_actions(self.available_actions)
         self._validate_state_combination()
 
@@ -105,6 +106,20 @@ class BotControlSnapshot:
             _require_absent(self.progress_message, "progress_message")
             _require_sanitized_reason(self.blocked_reason, "blocked_reason")
 
+    def _validate_session_ownership(self) -> None:
+        header = self.workspace.header
+        assert header is not None
+        session_facts = {
+            "symbol": self.session.market_data.symbol,
+            "timeframe": self.session.market_data.timeframe,
+            "trade_mode": self.session.config.trade_mode,
+            "market_type": self.session.config.market_type,
+            "preset_version": self.session.config.preset_version,
+        }
+        for field, expected in session_facts.items():
+            if getattr(header, field) != expected:
+                raise ValueError(f"workspace header {field} must match session")
+
 
 def configured_bot_control(
     session: ConfiguredPaperSession,
@@ -137,6 +152,7 @@ def transition_bot_control(
     if header is None:
         raise ValueError("result workspace requires a header")
     state = header.runtime_state
+    _require_workspace_continuity(current.workspace, result.workspace)
     if state not in _ALLOWED_TARGET_STATES[current.state]:
         raise ValueError(
             f"Invalid Bot Control transition: {current.state.value} -> {state.value}"
@@ -202,7 +218,11 @@ _ALLOWED_TARGET_STATES: dict[BotRuntimeState, frozenset[BotRuntimeState]] = {
     ),
     BotRuntimeState.STOPPED: frozenset(),
     BotRuntimeState.BLOCKED: frozenset(
-        {BotRuntimeState.CONFIGURED, BotRuntimeState.STOPPED}
+        {
+            BotRuntimeState.CONFIGURED,
+            BotRuntimeState.STOPPED,
+            BotRuntimeState.BLOCKED,
+        }
     ),
 }
 
@@ -246,3 +266,16 @@ def _require_sanitized_reason(value: str | None, name: str) -> None:
     assert value is not None
     if value not in _SAFE_BLOCKED_REASONS:
         raise ValueError(f"{name} must be sanitized")
+
+
+def _require_workspace_continuity(
+    current: TradingWorkspaceSnapshot,
+    result: TradingWorkspaceSnapshot,
+) -> None:
+    if (
+        result.read_state is not current.read_state
+        or result.orders != current.orders
+        or result.basket != current.basket
+        or result.data_as_of_utc != current.data_as_of_utc
+    ):
+        raise ValueError("result must preserve workspace continuity")

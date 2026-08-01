@@ -1,20 +1,23 @@
 from collections.abc import Callable
 from decimal import Decimal
 
-from PySide6.QtCore import Signal, Slot
+from PySide6.QtCore import Qt, QTimer, Signal, Slot
 from PySide6.QtWidgets import (
     QFrame,
     QGridLayout,
     QHBoxLayout,
     QLabel,
+    QMessageBox,
     QPushButton,
     QVBoxLayout,
     QWidget,
 )
 
 from tiewtrade.application.bot_control import BotControlAction, BotControlSnapshot
-from tiewtrade.application.trading_workspace import BotRuntimeState
+from tiewtrade.application.trading_workspace import BotRuntimeState, DataFreshness
 from tiewtrade.ui.session_overview import SessionOverviewWidget
+
+StopConfirmation = Callable[[Callable[[], None], Callable[[], None]], None]
 
 
 class BotControlWidget(QWidget):
@@ -22,18 +25,29 @@ class BotControlWidget(QWidget):
     stop_requested = Signal()
     recover_requested = Signal()
 
-    def __init__(self, parent: QWidget | None = None) -> None:
+    def __init__(
+        self,
+        parent: QWidget | None = None,
+        *,
+        stop_confirmation: StopConfirmation | None = None,
+    ) -> None:
         super().__init__(parent)
+        self._stop_confirmation = stop_confirmation or self._open_stop_confirmation
+        self._stop_confirmation_pending = False
+        self._stop_confirmation_dialog: QMessageBox | None = None
         self.setObjectName("botControlWidget")
         self.overview = SessionOverviewWidget()
         self.state_value = QLabel("—")
         self.state_value.setObjectName("botControlState")
+        self.state_value.setAccessibleName("Bot State")
+        self.state_value.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
         self.supporting_text = QLabel()
         self.supporting_text.setObjectName("supportingText")
         self.supporting_text.setWordWrap(True)
         self.recovery_required = QLabel("Recovery Required")
         self.recovery_required.setObjectName("recoveryRequired")
         self.entry_count_value = QLabel("—")
+        self.data_freshness_value = QLabel("—")
         self.average_entry_value = QLabel("—")
         self.current_price_value = QLabel("—")
         self.take_profit_value = QLabel("—")
@@ -60,6 +74,9 @@ class BotControlWidget(QWidget):
             configuration_summary=value.state is not BotRuntimeState.CONFIGURED,
         )
         self.state_value.setText(_STATE_TEXT[value.state])
+        header = value.workspace.header
+        assert header is not None
+        self.data_freshness_value.setText(_DATA_FRESHNESS_TEXT[header.data_freshness])
         self.recovery_required.setVisible(value.state is BotRuntimeState.BLOCKED)
         self._show_basket_facts(value)
         self._show_state_content(value)
@@ -86,6 +103,7 @@ class BotControlWidget(QWidget):
         for row, (label, value) in enumerate(
             (
                 ("Entries", self.entry_count_value),
+                ("Data Freshness", self.data_freshness_value),
                 ("Average Entry", self.average_entry_value),
                 ("Current Price", self.current_price_value),
                 ("Take Profit", self.take_profit_value),
@@ -169,11 +187,71 @@ class BotControlWidget(QWidget):
 
     @Slot()
     def _stop_clicked(self) -> None:
-        self._emit_once(self.stop_button, self.stop_requested.emit)
+        if not self.stop_button.isEnabled() or self._stop_confirmation_pending:
+            return
+        self._stop_confirmation_pending = True
+        self._stop_confirmation(self._confirm_stop, self._cancel_stop)
 
     @Slot()
     def _recover_clicked(self) -> None:
         self._emit_once(self.recover_button, self.recover_requested.emit)
+
+    def _open_stop_confirmation(
+        self,
+        confirm: Callable[[], None],
+        cancel: Callable[[], None],
+    ) -> None:
+        dialog = QMessageBox(self)
+        dialog.setWindowTitle("Confirm Stop Session")
+        dialog.setIcon(QMessageBox.Icon.Warning)
+        dialog.setText("Stop this Paper Bot session?")
+        dialog.setInformativeText(
+            "New entries will stop. Existing Basket Take Profit stays active."
+        )
+        stop_button = dialog.addButton(
+            "Stop Session", QMessageBox.ButtonRole.DestructiveRole
+        )
+        cancel_button = dialog.addButton("Cancel", QMessageBox.ButtonRole.RejectRole)
+        dialog.setDefaultButton(cancel_button)
+        dialog.setEscapeButton(cancel_button)
+        dialog.setWindowModality(Qt.WindowModality.WindowModal)
+
+        def finish(_result: int) -> None:
+            if dialog.clickedButton() is stop_button:
+                confirm()
+            else:
+                cancel()
+            dialog.deleteLater()
+
+        dialog.finished.connect(finish)
+        self._stop_confirmation_dialog = dialog
+        dialog.open()
+
+    def _confirm_stop(self) -> None:
+        if not self._stop_confirmation_pending:
+            return
+        self._stop_confirmation_pending = False
+        self._stop_confirmation_dialog = None
+        self._emit_once(self.stop_button, self.stop_requested.emit)
+        QTimer.singleShot(0, self._restore_confirm_focus)
+
+    def _cancel_stop(self) -> None:
+        if not self._stop_confirmation_pending:
+            return
+        self._stop_confirmation_pending = False
+        self._stop_confirmation_dialog = None
+        QTimer.singleShot(
+            0,
+            self._restore_stop_focus,
+        )
+
+    def _restore_stop_focus(self) -> None:
+        self.window().activateWindow()
+        self.stop_button.setFocus(Qt.FocusReason.OtherFocusReason)
+
+    def _restore_confirm_focus(self) -> None:
+        self.window().activateWindow()
+        self.state_value.setFocus(Qt.FocusReason.OtherFocusReason)
 
     def _emit_once(
         self,
@@ -195,6 +273,16 @@ _STATE_TEXT = {
     BotRuntimeState.BLOCKED: "Blocked",
 }
 
+_DATA_FRESHNESS_TEXT = {
+    DataFreshness.NOT_STARTED: "Not Started",
+    DataFreshness.FRESH: "Fresh",
+    DataFreshness.STALE: "Stale",
+    DataFreshness.UNAVAILABLE: "Unavailable",
+}
+
 
 def _decimal_text(value: Decimal) -> str:
-    return format(value.normalize(), "f")
+    text = format(value, "f")
+    if "." in text:
+        text = text.rstrip("0").rstrip(".")
+    return "0" if text in {"0", "-0"} else text

@@ -12,7 +12,7 @@ from uuid import UUID
 import pytest
 from PySide6.QtCore import QDeadlineTimer, QPoint, QRect, Qt, QThreadPool
 from PySide6.QtTest import QTest
-from PySide6.QtWidgets import QWidget
+from PySide6.QtWidgets import QMessageBox, QWidget
 from pytestqt.qtbot import QtBot
 
 import tiewtrade.ui.main_window as main_window_module
@@ -1341,6 +1341,12 @@ def test_lifecycle_actions_render_matching_header_and_control_snapshot(
     assert window.findChildren(QWidget, "manualSellButton") == []
 
     click(window.workspace.bot_control_widget.stop_button)
+    confirmation = window.findChild(QMessageBox)
+    assert confirmation is not None
+    confirm_button = next(
+        button for button in confirmation.buttons() if button.text() == "Stop Session"
+    )
+    click(confirm_button)
 
     qtbot.waitUntil(lambda: window.workspace.header_runtime.text() == "Stopped")
     assert stop_calls == 1
