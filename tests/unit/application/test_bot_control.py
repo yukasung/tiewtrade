@@ -102,18 +102,36 @@ def test_stopping_and_stopped_disallow_actions_and_entries() -> None:
 def test_blocked_control_requires_sanitized_reason_and_only_allows_recovery() -> None:
     running = _running_control()
 
-    blocked = blocked_bot_control(
-        running,
-        reason="Paper Bot could not be started",
-        actions=frozenset({BotControlAction.RECOVER}),
-    )
+    for reason in (
+        "Paper Bot could not be started",
+        "Paper Bot could not be stopped",
+        "Paper Bot recovery failed",
+    ):
+        blocked = blocked_bot_control(
+            running,
+            reason=reason,
+            actions=frozenset({BotControlAction.RECOVER}),
+        )
 
-    assert blocked.state is BotRuntimeState.BLOCKED
-    assert blocked.blocked_reason == "Paper Bot could not be started"
-    assert blocked.available_actions == frozenset({BotControlAction.RECOVER})
-    assert blocked.entry_creation_allowed is False
+        assert blocked.state is BotRuntimeState.BLOCKED
+        assert blocked.blocked_reason == reason
+        assert blocked.available_actions == frozenset({BotControlAction.RECOVER})
+        assert blocked.entry_creation_allowed is False
+
+
+@pytest.mark.parametrize(
+    "reason",
+    [
+        "RuntimeError: failed at /private/tmp",
+        "ValueError: api_key=secret",
+        "request_id=abc123 payload=order",
+    ],
+)
+def test_blocked_control_rejects_raw_exception_credential_and_payload_reasons(
+    reason: str,
+) -> None:
     with pytest.raises(ValueError, match="blocked_reason"):
-        blocked_bot_control(running, reason="RuntimeError: failed at /private/tmp")
+        blocked_bot_control(_running_control(), reason=reason)
 
 
 @pytest.mark.parametrize(

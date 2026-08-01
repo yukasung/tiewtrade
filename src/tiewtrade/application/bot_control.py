@@ -206,6 +206,14 @@ _ALLOWED_TARGET_STATES: dict[BotRuntimeState, frozenset[BotRuntimeState]] = {
     ),
 }
 
+_SAFE_BLOCKED_REASONS = frozenset(
+    {
+        "Paper Bot could not be started",
+        "Paper Bot could not be stopped",
+        "Paper Bot recovery failed",
+    }
+)
+
 
 def _require_actions(actions: frozenset[BotControlAction]) -> None:
     if type(actions) is not frozenset or not all(
@@ -236,7 +244,5 @@ def _require_text(value: str | None, name: str) -> None:
 def _require_sanitized_reason(value: str | None, name: str) -> None:
     _require_text(value, name)
     assert value is not None
-    if value != value.strip() or any(character in value for character in "\r\n\t/\\{}"):
-        raise ValueError(f"{name} must be sanitized")
-    if "traceback" in value.lower() or "exception" in value.lower():
+    if value not in _SAFE_BLOCKED_REASONS:
         raise ValueError(f"{name} must be sanitized")
