@@ -35,6 +35,7 @@ class BotControlWidget(QWidget):
         self.recovery_required.setObjectName("recoveryRequired")
         self.entry_count_value = QLabel("—")
         self.average_entry_value = QLabel("—")
+        self.current_price_value = QLabel("—")
         self.take_profit_value = QLabel("—")
         self.start_button = QPushButton("Start Bot")
         self.start_button.setObjectName("startBotButton")
@@ -48,6 +49,7 @@ class BotControlWidget(QWidget):
         self.recover_button.clicked.connect(self._recover_clicked)
         self._build_layout()
         self._hide_actions()
+        self.recovery_required.hide()
 
     @Slot(object)
     def show_snapshot(self, value: object) -> None:
@@ -85,6 +87,7 @@ class BotControlWidget(QWidget):
             (
                 ("Entries", self.entry_count_value),
                 ("Average Entry", self.average_entry_value),
+                ("Current Price", self.current_price_value),
                 ("Take Profit", self.take_profit_value),
             )
         ):
@@ -104,12 +107,14 @@ class BotControlWidget(QWidget):
         if basket is None:
             self.entry_count_value.setText("—")
             self.average_entry_value.setText("—")
+            self.current_price_value.setText("—")
             self.take_profit_value.setText("—")
             return
         self.entry_count_value.setText(str(basket.entry_count))
         self.average_entry_value.setText(
             f"{_decimal_text(basket.average_entry_price)} USDT"
         )
+        self.current_price_value.setText(f"{_decimal_text(basket.current_price)} USDT")
         self.take_profit_value.setText(
             f"{_decimal_text(basket.take_profit_price)} USDT"
         )

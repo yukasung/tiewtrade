@@ -48,6 +48,14 @@ def test_configured_shows_immutable_overview_and_disabled_start_without_runtime(
     assert widget.findChildren(QPushButton, "manualSellButton") == []
 
 
+def test_initial_state_hides_recovery_requirement(qtbot: QtBot) -> None:
+    widget = BotControlWidget()
+    qtbot.addWidget(widget)
+    widget.show()
+
+    assert widget.recovery_required.isHidden()
+
+
 def test_running_shows_runtime_and_basket_facts_without_manual_order_controls(
     qtbot: QtBot,
 ) -> None:
@@ -92,6 +100,7 @@ def test_running_shows_runtime_and_basket_facts_without_manual_order_controls(
     assert widget.overview.state_value.text() == "Immutable Configuration"
     assert widget.entry_count_value.text() == "2"
     assert widget.average_entry_value.text() == "64000 USDT"
+    assert widget.current_price_value.text() == "65000 USDT"
     assert widget.take_profit_value.text() == "66000 USDT"
     assert widget.stop_button.isVisible()
     assert widget.stop_button.text() == "Stop Session"
