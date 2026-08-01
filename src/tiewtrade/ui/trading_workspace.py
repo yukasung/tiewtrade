@@ -14,6 +14,12 @@ from PySide6.QtWidgets import (
 )
 
 from tiewtrade.application.paper_session_setup import ConfiguredPaperSession
+from tiewtrade.application.trading_workspace import (
+    BotRuntimeState,
+    DataFreshness,
+    TradingWorkspaceSnapshot,
+    WorkspaceReadState,
+)
 from tiewtrade.ui.preset_display import preset_display_name
 from tiewtrade.ui.session_overview import SessionOverviewWidget
 from tiewtrade.ui.session_setup import SessionSetupWidget
@@ -21,6 +27,29 @@ from tiewtrade.ui.trade_history_page import TradeHistoryPage
 
 BOT_CONTROL_BREAKPOINT = 1200
 BOT_CONTROL_WIDTH = 360
+
+_RUNTIME_STATE_TEXT = {
+    BotRuntimeState.NO_SESSION: "No Session",
+    BotRuntimeState.CONFIGURED: "Configured",
+    BotRuntimeState.STARTING: "Starting",
+    BotRuntimeState.RUNNING: "Running",
+    BotRuntimeState.STOPPING: "Stopping",
+    BotRuntimeState.STOPPED: "Stopped",
+    BotRuntimeState.BLOCKED: "Blocked",
+}
+_DATA_FRESHNESS_TEXT = {
+    DataFreshness.NOT_STARTED: "Market data not started",
+    DataFreshness.FRESH: "Market data is fresh",
+    DataFreshness.STALE: "Market data is stale",
+    DataFreshness.UNAVAILABLE: "Market data is unavailable",
+}
+_READ_STATE_TEXT = {
+    WorkspaceReadState.LOADING: "Loading",
+    WorkspaceReadState.EMPTY: "Empty",
+    WorkspaceReadState.READY: "Ready",
+    WorkspaceReadState.ERROR: "Error",
+    WorkspaceReadState.STALE: "Stale",
+}
 
 
 class TradingWorkspace(QWidget):
@@ -43,10 +72,12 @@ class TradingWorkspace(QWidget):
 
         self.header_symbol = QLabel("No Session")
         self.header_timeframe = QLabel("—")
-        self.header_mode = QLabel("Paper")
-        self.header_preset = QLabel("RSI Step Grid v1")
+        self.header_mode = QLabel("—")
+        self.header_market_type = QLabel("—")
+        self.header_preset = QLabel("—")
         self.header_runtime = QLabel("No Session")
-        self.header_freshness = QLabel("Market data not started")
+        self.header_freshness = QLabel("No Session")
+        self.header_read_state = QLabel("Empty")
 
         self.chart_state = QLabel("Chart is not available yet")
         self.orders_state = QLabel("No open orders")
@@ -89,6 +120,13 @@ class TradingWorkspace(QWidget):
     def show_setup(self) -> None:
         self._activate_setup()
 
+    @Slot(object)
+    def show_workspace_snapshot(self, value: object) -> None:
+        if not isinstance(value, TradingWorkspaceSnapshot):
+            return
+        self._show_header(value)
+        self._show_placeholder_states(value)
+
     @Slot(str)
     def show_setup_for_validation(self, field: str) -> None:
         self._activate_setup()
@@ -105,25 +143,16 @@ class TradingWorkspace(QWidget):
 
     def _activate_setup(self) -> None:
         self._show_bot_page(self.setup)
-        self.header_runtime.setText("No Session")
         self._set_bot_control_state("No Session")
 
     def show_configured_session(self, session: ConfiguredPaperSession) -> None:
         self.overview.show_session(session)
         self._show_bot_page(self.overview)
-        self.header_symbol.setText(session.market_data.symbol)
-        self.header_timeframe.setText(session.market_data.timeframe)
-        market = session.config.market_type.value.title()
-        self.header_mode.setText(f"Paper · {market}")
-        self.header_preset.setText(preset_display_name(session.config.preset_version))
-        self.header_runtime.setText("Configured")
-        self.header_freshness.setText("Market data not started")
         self._set_bot_control_state("Configured")
 
     def show_unavailable(self, message: str) -> None:
         self.unavailable_message.setText(message)
         self._show_bot_page(self.unavailable_panel)
-        self.header_runtime.setText("Unavailable")
         self._set_bot_control_state("Unavailable")
 
     def set_bot_busy(self, busy: bool) -> None:
@@ -206,9 +235,11 @@ class TradingWorkspace(QWidget):
             self.header_symbol,
             self.header_timeframe,
             self.header_mode,
+            self.header_market_type,
             self.header_preset,
             self.header_runtime,
             self.header_freshness,
+            self.header_read_state,
         ):
             self._header_layout.addWidget(label)
         self._header_layout.addStretch()
@@ -280,6 +311,42 @@ class TradingWorkspace(QWidget):
         self._bot_pages.setCurrentWidget(page)
         self.bot_control_scroll.horizontalScrollBar().setValue(0)
         self.bot_control_scroll.verticalScrollBar().setValue(0)
+
+    def _show_header(self, snapshot: TradingWorkspaceSnapshot) -> None:
+        header = snapshot.header
+        if header is None:
+            self.header_symbol.setText("No Session")
+            self.header_timeframe.setText("—")
+            self.header_mode.setText("—")
+            self.header_market_type.setText("—")
+            self.header_preset.setText("—")
+            self.header_runtime.setText("No Session")
+            self.header_freshness.setText("No Session")
+        else:
+            self.header_symbol.setText(header.symbol)
+            self.header_timeframe.setText(header.timeframe)
+            self.header_mode.setText(header.trade_mode.value.title())
+            self.header_market_type.setText(header.market_type.value.title())
+            self.header_preset.setText(preset_display_name(header.preset_version))
+            self.header_runtime.setText(_RUNTIME_STATE_TEXT[header.runtime_state])
+            self.header_freshness.setText(_DATA_FRESHNESS_TEXT[header.data_freshness])
+        self.header_read_state.setText(_READ_STATE_TEXT[snapshot.read_state])
+
+    def _show_placeholder_states(self, snapshot: TradingWorkspaceSnapshot) -> None:
+        if (
+            snapshot.read_state is WorkspaceReadState.LOADING
+            and snapshot.header is None
+        ):
+            self.orders_state.setText("Loading workspace data")
+            self.position_state.setText("Loading workspace data")
+            return
+        if snapshot.read_state is WorkspaceReadState.ERROR and snapshot.header is None:
+            message = snapshot.message or "Workspace data is unavailable"
+            self.orders_state.setText(message)
+            self.position_state.setText(message)
+            return
+        self.orders_state.setText("No open orders")
+        self.position_state.setText("No open Position or Basket")
 
     @staticmethod
     def _empty_panel(message: QLabel) -> QFrame:

@@ -403,6 +403,93 @@ def test_main_window_delegates_session_task_lifecycle_to_workflow() -> None:
     assert "_callback_generation" not in source
 
 
+def test_workspace_header_follows_background_snapshot_flow_through_create(
+    qtbot: QtBot,
+) -> None:
+    started = threading.Event()
+    release = threading.Event()
+    worker_thread_ids: list[int] = []
+    created = configured_spot_session()
+    thread_pool = QThreadPool()
+    thread_pool.setMaxThreadCount(1)
+
+    def delayed_load() -> ConfiguredPaperSession | None:
+        worker_thread_ids.append(threading.get_ident())
+        started.set()
+        if not release.wait(timeout=2):
+            raise TimeoutError("test did not release worker")
+        return None
+
+    window = MainWindow(
+        create_session=lambda values: PaperSessionCreateOutcome(created, True),
+        load_active=delayed_load,
+        list_baskets=empty_basket_page,
+        list_fills=empty_fills,
+        thread_pool=thread_pool,
+    )
+    qtbot.addWidget(window)
+    window.show()
+    qtbot.waitUntil(started.is_set)
+
+    assert worker_thread_ids[0] != threading.get_ident()
+    assert window.workspace.header_read_state.text() == "Loading"
+    release.set()
+    qtbot.waitUntil(lambda: window.workspace.header_read_state.text() == "Empty")
+    assert window.workspace.header_symbol.text() == "No Session"
+
+    window.setup.available_capital.setText("200000")
+    click(window.setup.create_button)
+
+    qtbot.waitUntil(lambda: window.workspace.header_read_state.text() == "Ready")
+    assert window.workspace.header_symbol.text() == "BTCUSDT"
+    assert window.workspace.header_timeframe.text() == "5m"
+    assert window.workspace.header_mode.text() == "Paper"
+    assert window.workspace.header_market_type.text() == "Spot"
+    assert window.workspace.header_runtime.text() == "Configured"
+    assert thread_pool.waitForDone(1_000)
+
+
+def test_workspace_header_keeps_ready_facts_when_retry_fails(qtbot: QtBot) -> None:
+    existing = configured_spot_session()
+    load_calls = 0
+
+    def load_then_fail() -> ConfiguredPaperSession | None:
+        nonlocal load_calls
+        load_calls += 1
+        if load_calls == 1:
+            return existing
+        raise RuntimeError("private path /private/tmp/tiewtrade.sqlite3")
+
+    window = MainWindow(
+        create_session=unused_create,
+        load_active=load_then_fail,
+        list_baskets=empty_basket_page,
+        list_fills=empty_fills,
+    )
+    qtbot.addWidget(window)
+    window.show()
+    qtbot.waitUntil(lambda: window.workspace.header_read_state.text() == "Ready")
+    expected_facts = (
+        "BTCUSDT",
+        "5m",
+        "Paper",
+        "Spot",
+        "RSI Step Grid v1",
+    )
+
+    click(window.unavailable_retry_button)
+
+    qtbot.waitUntil(lambda: window.workspace.header_read_state.text() == "Error")
+    assert (
+        window.workspace.header_symbol.text(),
+        window.workspace.header_timeframe.text(),
+        window.workspace.header_mode.text(),
+        window.workspace.header_market_type.text(),
+        window.workspace.header_preset.text(),
+    ) == expected_facts
+    assert "/private/tmp" not in window.unavailable_message.text()
+
+
 def test_created_spot_session_replaces_form_with_durable_overview(
     qtbot: QtBot,
 ) -> None:

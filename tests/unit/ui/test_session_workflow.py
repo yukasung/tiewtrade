@@ -14,6 +14,10 @@ from tiewtrade.application.paper_session_setup import (
     PaperSessionUnavailableError,
     PaperSessionValidationError,
 )
+from tiewtrade.application.trading_workspace import (
+    TradingWorkspaceSnapshot,
+    WorkspaceReadState,
+)
 from tiewtrade.ui.session_workflow import (
     CreateSession,
     LoadActiveSession,
@@ -62,6 +66,91 @@ def _workflow(
 
 def _unused_create(values: PaperSessionSetupValues) -> PaperSessionCreateOutcome:
     pytest.fail("create must not run")
+
+
+def test_load_publishes_loading_then_ready_snapshot_off_ui_thread(
+    qtbot: QtBot,
+) -> None:
+    caller_thread = threading.get_ident()
+    worker_threads: list[int] = []
+    session = configured_spot_session()
+
+    def load() -> ConfiguredPaperSession:
+        worker_threads.append(threading.get_ident())
+        return session
+
+    workflow, thread_pool = _workflow(create_session=_unused_create, load_active=load)
+    snapshots: list[TradingWorkspaceSnapshot] = []
+    workflow.workspace_changed.connect(snapshots.append)
+
+    workflow.start()
+
+    qtbot.waitUntil(
+        lambda: (
+            [item.read_state for item in snapshots]
+            == [WorkspaceReadState.LOADING, WorkspaceReadState.READY]
+        )
+    )
+    assert worker_threads[0] != caller_thread
+    assert thread_pool.waitForDone(1_000)
+
+
+def test_refresh_failure_preserves_last_known_snapshot(qtbot: QtBot) -> None:
+    session = configured_spot_session()
+    calls = 0
+
+    def load() -> ConfiguredPaperSession:
+        nonlocal calls
+        calls += 1
+        if calls == 2:
+            raise RuntimeError("SQLite failed at /private/tmp/tiewtrade.sqlite3")
+        return session
+
+    workflow, thread_pool = _workflow(create_session=_unused_create, load_active=load)
+    snapshots: list[TradingWorkspaceSnapshot] = []
+    workflow.workspace_changed.connect(snapshots.append)
+
+    workflow.start()
+    qtbot.waitUntil(lambda: snapshots[-1].read_state is WorkspaceReadState.READY)
+    ready = snapshots[-1]
+    workflow.start()
+    qtbot.waitUntil(lambda: snapshots[-1].read_state is WorkspaceReadState.ERROR)
+    failed = snapshots[-1]
+
+    assert failed.header == ready.header
+    assert failed.orders == ready.orders
+    assert failed.basket == ready.basket
+    assert failed.data_as_of_utc == ready.data_as_of_utc
+    assert failed.message == "Paper Session could not be loaded"
+    assert "private/tmp" not in failed.message
+    assert thread_pool.waitForDone(1_000)
+
+
+def test_close_discards_late_workspace_generation(qtbot: QtBot) -> None:
+    started = threading.Event()
+    release = threading.Event()
+
+    def delayed_load() -> ConfiguredPaperSession:
+        started.set()
+        if not release.wait(timeout=2):
+            raise TimeoutError("test did not release worker")
+        return configured_spot_session()
+
+    workflow, thread_pool = _workflow(
+        create_session=_unused_create,
+        load_active=delayed_load,
+    )
+    snapshots: list[TradingWorkspaceSnapshot] = []
+    workflow.workspace_changed.connect(snapshots.append)
+
+    workflow.start()
+    qtbot.waitUntil(started.is_set)
+    workflow.close()
+    release.set()
+
+    assert thread_pool.waitForDone(1_000)
+    QCoreApplication.processEvents()
+    assert [item.read_state for item in snapshots] == [WorkspaceReadState.LOADING]
 
 
 def test_start_emits_setup_when_no_active_session(qtbot: QtBot) -> None:
