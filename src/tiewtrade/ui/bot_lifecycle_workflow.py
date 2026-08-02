@@ -115,6 +115,7 @@ class BotLifecycleWorkflow(QObject):
         active_task = self._active_task is not None
         self._invalidate_runtime_snapshots()
         self._generation += 1
+        self._notification_store.reset_transition_identity()
         configured = configured_bot_control(
             session,
             observed_at_utc=self._clock(),

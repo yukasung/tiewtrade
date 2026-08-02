@@ -57,6 +57,7 @@ class NotificationStore:
         self._max_records = max_records
         self._records: tuple[NotificationRecord, ...] = ()
         self._last_runtime_state: BotRuntimeState | None = None
+        self._last_event_fingerprint: str | None = None
 
     @property
     def records(self) -> tuple[NotificationRecord, ...]:
@@ -73,6 +74,11 @@ class NotificationStore:
         )
         return max(unread, key=_severity_rank, default=None)
 
+    def reset_transition_identity(self) -> None:
+        """Forget only the prior session transition identity."""
+        self._last_runtime_state = None
+        self._last_event_fingerprint = None
+
     def publish(
         self,
         result: BotLifecycleResult,
@@ -88,18 +94,16 @@ class NotificationStore:
         if header is not None:
             self._last_runtime_state = header.runtime_state
         if notification is None:
+            self._last_event_fingerprint = None
             return None
         if header is None:
+            self._last_event_fingerprint = None
             return None
 
         severity, category, message = notification
         fingerprint = _fingerprint(header.runtime_state, category, message)
-        existing = next(
-            (record for record in self._records if record.fingerprint == fingerprint),
-            None,
-        )
-        if existing is not None:
-            return existing
+        if fingerprint == self._last_event_fingerprint:
+            return self._records[0]
 
         record = NotificationRecord(
             fingerprint=fingerprint,
@@ -109,6 +113,7 @@ class NotificationStore:
             message=message,
         )
         self._records = (record, *self._records[: self._max_records - 1])
+        self._last_event_fingerprint = fingerprint
         return record
 
     def acknowledge(self, fingerprint: str) -> bool:

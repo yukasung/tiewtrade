@@ -154,6 +154,35 @@ def test_publish_deduplicates_safe_fingerprint_and_keeps_records_bounded() -> No
     )
 
 
+def test_stale_incident_after_fresh_transition_creates_new_notification() -> None:
+    store = NotificationStore()
+    stale = _result(BotRuntimeState.RUNNING, freshness=DataFreshness.STALE)
+
+    first_stale = store.publish(stale, occurred_at_utc=OBSERVED_AT)
+    duplicate_stale = store.publish(
+        stale, occurred_at_utc=OBSERVED_AT + timedelta(minutes=1)
+    )
+    fresh = store.publish(
+        _result(BotRuntimeState.RUNNING),
+        occurred_at_utc=OBSERVED_AT + timedelta(minutes=2),
+    )
+    second_stale = store.publish(
+        stale, occurred_at_utc=OBSERVED_AT + timedelta(minutes=3)
+    )
+
+    assert first_stale is not None
+    assert duplicate_stale is first_stale
+    assert fresh is not None
+    assert second_stale is not None
+    assert second_stale is not first_stale
+    assert tuple(record.category for record in store.records) == (
+        NotificationCategory.MARKET_DATA,
+        NotificationCategory.RUNTIME,
+        NotificationCategory.MARKET_DATA,
+    )
+    assert store.unread_count == 3
+
+
 def test_acknowledge_is_idempotent_and_updates_unread_highest_severity() -> None:
     store = NotificationStore()
     warning = store.publish(

@@ -443,7 +443,10 @@ class TradingWorkspace(QWidget):
             )
             acknowledge.setObjectName("notificationAcknowledge")
             acknowledge.setDisabled(record.acknowledged)
-            acknowledge.setAccessibleName(f"Acknowledge notification: {record.message}")
+            acknowledge.setAccessibleName(
+                f"{'Acknowledged' if record.acknowledged else 'Acknowledge'} "
+                f"notification: {record.message}"
+            )
             acknowledge.clicked.connect(
                 lambda _checked=False, fingerprint=record.fingerprint: (
                     self._acknowledge_notification(fingerprint)

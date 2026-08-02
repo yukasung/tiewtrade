@@ -121,6 +121,46 @@ def test_start_emits_starting_then_running_off_ui_thread(qtbot: QtBot) -> None:
     assert thread_pool.waitForDone(1_000)
 
 
+def test_reconfigure_after_blocked_labels_new_session_running_as_runtime(
+    qtbot: QtBot,
+) -> None:
+    starts = 0
+
+    def start(snapshot: BotControlSnapshot) -> BotLifecycleResult:
+        nonlocal starts
+        starts += 1
+        if starts == 1:
+            return _result(
+                snapshot,
+                BotRuntimeState.BLOCKED,
+                blocked_reason="Paper Bot could not be started",
+            )
+        return _result(snapshot, BotRuntimeState.RUNNING)
+
+    workflow, thread_pool = _workflow(start_bot=start, stop_bot=None, recover=None)
+    workflow.configure(configured_spot_session())
+    workflow.start_bot()
+    qtbot.waitUntil(lambda: workflow.snapshot.state is BotRuntimeState.BLOCKED)
+
+    second_session = replace(
+        configured_spot_session(),
+        config=replace(
+            configured_spot_session().config,
+            session_id=UUID("00000000-0000-0000-0000-000000000999"),
+        ),
+    )
+    workflow.configure(second_session)
+    workflow.start_bot()
+
+    qtbot.waitUntil(lambda: workflow.snapshot.state is BotRuntimeState.RUNNING)
+
+    assert (
+        workflow.notification_store.records[0].category is NotificationCategory.RUNTIME
+    )
+    assert workflow.notification_store.records[0].message == "Paper Bot is running"
+    assert thread_pool.waitForDone(1_000)
+
+
 def test_runtime_snapshot_from_worker_is_published_on_qt_thread(
     qtbot: QtBot,
 ) -> None:

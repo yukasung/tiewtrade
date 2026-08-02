@@ -332,11 +332,13 @@ def _assert_notification_dependencies_are_safe() -> None:
     forbidden_prefixes = (
         "aiohttp",
         "keyring",
+        "sqlite3",
         "tiewtrade.application.live",
         "tiewtrade.execution.live",
         "tiewtrade.integrations.credentials",
         "tiewtrade.integrations.keyring",
         "tiewtrade.integrations.private_api",
+        "tiewtrade.integrations.sqlite",
         "tiewtrade.live",
     )
     source_paths = (

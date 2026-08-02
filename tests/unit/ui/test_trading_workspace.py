@@ -158,6 +158,9 @@ def test_notification_header_and_drawer_render_and_acknowledge_in_memory_only(
     assert store.unread_count == 0
     assert workspace.notification_button.text() == "Notifications · 0"
     assert workspace.notification_button.accessibleName() == "Notifications: 0 unread"
+    assert workspace.notification_acknowledge_buttons[0].accessibleName() == (
+        "Acknowledged notification: Paper Bot recovery required"
+    )
     assert workspace.header_runtime.text() == "Blocked"
 
 
