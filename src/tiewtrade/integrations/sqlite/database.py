@@ -10,7 +10,7 @@ class UnsupportedDatabaseSchemaError(ValueError):
 
 
 class SQLiteDatabase:
-    _SCHEMA_VERSION = 4
+    _SCHEMA_VERSION = 5
     _BUSY_TIMEOUT_MS = 5_000
 
     def __init__(self, path: Path) -> None:
@@ -48,6 +48,8 @@ class SQLiteDatabase:
                     _create_bot_sessions_schema(connection)
                 if version in {0, 1, 2, 3}:
                     _create_paper_runtime_lifecycle_schema(connection)
+                if version == 4:
+                    _create_chart_history_indexes(connection)
                 connection.execute(f"PRAGMA user_version = {self._SCHEMA_VERSION}")
         finally:
             connection.close()
@@ -113,6 +115,16 @@ def _create_schema(connection: sqlite3.Connection) -> None:
         """
         CREATE INDEX IF NOT EXISTS trade_fills_basket_time_idx
         ON trade_fills (basket_id, filled_at_utc, fill_id)
+        """
+    )
+    _create_chart_history_indexes(connection)
+
+
+def _create_chart_history_indexes(connection: sqlite3.Connection) -> None:
+    connection.execute(
+        """
+        CREATE INDEX IF NOT EXISTS trade_fills_session_time_idx
+        ON trade_fills (session_id, filled_at_utc, fill_id)
         """
     )
 

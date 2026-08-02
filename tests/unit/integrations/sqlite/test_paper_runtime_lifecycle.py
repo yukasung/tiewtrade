@@ -110,7 +110,7 @@ def test_migration_from_v3_creates_lifecycle_marker_table(tmp_path: Path) -> Non
             for row in connection.execute("PRAGMA table_info(paper_runtime_lifecycle)")
         }
 
-    assert version == 4
+    assert version == 5
     assert columns == {"session_id", "state", "observed_at_utc"}
 
 

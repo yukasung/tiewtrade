@@ -449,12 +449,13 @@ def test_migration_creates_versioned_history_schema_and_indexes(tmp_path: Path) 
             for row in connection.execute("PRAGMA table_info(trade_fills)")
         }
 
-    assert version == 4
+    assert version == 5
     assert "paper_runtime_lifecycle" in table_names
     assert {"basket_results", "trade_fills"} <= table_names
     assert {
         "basket_results_history_idx",
         "trade_fills_basket_time_idx",
+        "trade_fills_session_time_idx",
     } <= index_names
     assert basket_columns["basket_id"] == "TEXT"
     assert basket_columns["invested_notional"] == "TEXT"
@@ -465,10 +466,30 @@ def test_migration_creates_versioned_history_schema_and_indexes(tmp_path: Path) 
     assert fill_columns["filled_at_utc"] == "TEXT"
 
 
+def test_migration_from_v4_adds_session_fill_history_index(tmp_path: Path) -> None:
+    database = SQLiteDatabase(tmp_path / "history.sqlite3")
+    database.migrate()
+
+    with database.connect() as connection:
+        connection.execute("PRAGMA user_version = 4")
+
+    database.migrate()
+
+    with database.connect() as connection:
+        index_names = {
+            row["name"]
+            for row in connection.execute(
+                "SELECT name FROM sqlite_master WHERE type = 'index'"
+            )
+        }
+
+    assert "trade_fills_session_time_idx" in index_names
+
+
 def test_migration_rejects_future_schema_version(tmp_path: Path) -> None:
     database = SQLiteDatabase(tmp_path / "history.sqlite3")
     with database.connect() as connection:
-        connection.execute("PRAGMA user_version = 5")
+        connection.execute("PRAGMA user_version = 6")
 
     with pytest.raises(ValueError, match="newer than supported"):
         database.migrate()
@@ -538,7 +559,7 @@ def test_migration_from_v1_preserves_spot_basket_with_null_leverage(
             "SELECT leverage FROM basket_results WHERE basket_id = ?",
             (str(legacy.basket_id),),
         ).fetchone()[0]
-    assert version == 4
+    assert version == 5
     assert leverage is None
     assert SQLiteTradeHistory(database).get_basket(legacy.basket_id) == legacy
 

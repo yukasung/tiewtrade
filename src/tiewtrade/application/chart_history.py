@@ -35,11 +35,11 @@ class ChartHistory:
     def __init__(
         self,
         *,
-        source: ChartCandleSource,
+        source_factory: Callable[[], ChartCandleSource],
         trade_history: ChartFillHistory,
         clock: Callable[[], datetime] = lambda: datetime.now(UTC),
     ) -> None:
-        self._source = source
+        self._source_factory = source_factory
         self._trade_history = trade_history
         self._clock = clock
 
@@ -48,14 +48,15 @@ class ChartHistory:
         session: ConfiguredPaperSession,
         chart_range: ChartRange,
     ) -> ChartSnapshot:
+        source = self._source_factory()
         try:
-            candles = await self._source.load_range(
+            candles = await source.load_range(
                 session.market_data,
                 start=chart_range.start,
                 end=chart_range.end,
             )
         finally:
-            await self._source.close()
+            await source.close()
         fills = self._trade_history.list_session_fills(
             session.config.session_id,
             chart_range.start,

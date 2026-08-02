@@ -56,7 +56,7 @@ def test_chart_history_loads_only_requested_public_range_and_session_fills() -> 
     source = FakeCandleSource((candle(),))
     fills = FakeTradeHistory((buy, sell))
     history = ChartHistory(
-        source=source,
+        source_factory=lambda: source,
         trade_history=fills,
         clock=lambda: selected_range.end,
     )
@@ -72,6 +72,29 @@ def test_chart_history_loads_only_requested_public_range_and_session_fills() -> 
     ]
     assert snapshot.state is ChartReadState.READY
     assert [marker.fill_id for marker in snapshot.markers] == ["buy-1", "sell-1"]
+
+
+def test_chart_history_creates_and_closes_a_fresh_source_for_each_load() -> None:
+    selected_range = chart_range()
+    first_source = FakeCandleSource((candle(),))
+    second_source = FakeCandleSource((candle(),))
+    sources = iter((first_source, second_source))
+    history = ChartHistory(
+        source_factory=lambda: next(sources),
+        trade_history=FakeTradeHistory(()),
+        clock=lambda: selected_range.end,
+    )
+
+    asyncio.run(history.load(session(), selected_range))
+    asyncio.run(history.load(session(), selected_range))
+
+    expected_request = [
+        (session().market_data, selected_range.start, selected_range.end)
+    ]
+    assert first_source.requests == expected_request
+    assert second_source.requests == expected_request
+    assert first_source.closed is True
+    assert second_source.closed is True
 
 
 def chart_range() -> ChartRange:
