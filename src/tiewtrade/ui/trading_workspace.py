@@ -24,6 +24,8 @@ from tiewtrade.application.trading_workspace import (
     WorkspaceReadState,
 )
 from tiewtrade.ui.bot_control import BotControlWidget
+from tiewtrade.ui.open_orders_table import OpenOrdersTable
+from tiewtrade.ui.position_basket_table import PositionBasketTable
 from tiewtrade.ui.preset_display import preset_display_name
 from tiewtrade.ui.session_setup import SessionSetupWidget
 from tiewtrade.ui.trade_history_page import TradeHistoryPage
@@ -68,6 +70,8 @@ class TradingWorkspace(QWidget):
         self.setup = SessionSetupWidget()
         self.bot_control_widget = BotControlWidget()
         self.overview = self.bot_control_widget.overview
+        self.open_orders = OpenOrdersTable()
+        self.position_basket = PositionBasketTable()
         self.trade_history = TradeHistoryPage()
 
         self.unavailable_panel = QFrame()
@@ -87,8 +91,6 @@ class TradingWorkspace(QWidget):
         self.header_read_state = QLabel("Empty")
 
         self.chart_state = QLabel("Chart is not available yet")
-        self.orders_state = QLabel("No open orders")
-        self.position_state = QLabel("No open Position or Basket")
 
         self._bot_pages = QStackedWidget()
         self._bot_pages.setObjectName("botControlPages")
@@ -100,8 +102,8 @@ class TradingWorkspace(QWidget):
         self.bot_control_widget.recover_requested.connect(self.recover_requested)
 
         self.tabs = QTabWidget()
-        self.tabs.addTab(self._empty_panel(self.orders_state), "Open Orders")
-        self.tabs.addTab(self._empty_panel(self.position_state), "Position / Basket")
+        self.tabs.addTab(self.open_orders, "Open Orders")
+        self.tabs.addTab(self.position_basket, "Position / Basket")
         self.tabs.addTab(self.trade_history, "Trade History")
         self.tabs.currentChanged.connect(self._tab_changed)
 
@@ -135,7 +137,8 @@ class TradingWorkspace(QWidget):
         if not isinstance(value, TradingWorkspaceSnapshot):
             return
         self._show_header(value)
-        self._show_placeholder_states(value)
+        self.open_orders.show_snapshot(value.open_orders)
+        self.position_basket.show_snapshot(value.position_basket)
 
     @Slot(str)
     def show_setup_for_validation(self, field: str) -> None:
@@ -353,31 +356,3 @@ class TradingWorkspace(QWidget):
             self.header_runtime.setText(_RUNTIME_STATE_TEXT[header.runtime_state])
             self.header_freshness.setText(_DATA_FRESHNESS_TEXT[header.data_freshness])
         self.header_read_state.setText(_READ_STATE_TEXT[snapshot.read_state])
-
-    def _show_placeholder_states(self, snapshot: TradingWorkspaceSnapshot) -> None:
-        if (
-            snapshot.read_state is WorkspaceReadState.LOADING
-            and snapshot.header is None
-        ):
-            self.orders_state.setText("Loading workspace data")
-            self.position_state.setText("Loading workspace data")
-            return
-        if snapshot.read_state is WorkspaceReadState.ERROR and snapshot.header is None:
-            message = snapshot.message or "Workspace data is unavailable"
-            self.orders_state.setText(message)
-            self.position_state.setText(message)
-            return
-        self.orders_state.setText("No open orders")
-        self.position_state.setText("No open Position or Basket")
-
-    @staticmethod
-    def _empty_panel(message: QLabel) -> QFrame:
-        panel = QFrame()
-        panel.setObjectName("emptyPanel")
-        layout = QVBoxLayout(panel)
-        layout.addStretch()
-        message.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        message.setProperty("stateMessage", True)
-        layout.addWidget(message)
-        layout.addStretch()
-        return panel

@@ -1,6 +1,8 @@
+from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
+from threading import Barrier, Lock, current_thread, main_thread
 from uuid import UUID
 
 import pytest
@@ -48,6 +50,28 @@ def history(store: SQLiteTradeHistory) -> PaperSpotSQLiteHistory:
         ),
         store,
     )
+
+
+class _InterleavingSQLiteTradeHistory(SQLiteTradeHistory):
+    def __init__(self, database: SQLiteDatabase, reads: Barrier) -> None:
+        super().__init__(database)
+        self._reads = reads
+        self._remaining_interleaved_reads = 2
+        self._read_guard = Lock()
+
+    def get_basket(self, basket_id: UUID) -> BasketResult | None:
+        basket = super().get_basket(basket_id)
+        with self._read_guard:
+            interleave = (
+                basket is not None
+                and current_thread() is not main_thread()
+                and self._remaining_interleaved_reads > 0
+            )
+            if interleave:
+                self._remaining_interleaved_reads -= 1
+        if interleave:
+            self._reads.wait(timeout=2)
+        return basket
 
 
 def test_history_exposes_session_identity(
@@ -187,6 +211,109 @@ def test_second_entry_replaces_open_aggregate_and_records_another_buy_fill(
     assert fills[1].entry_number == 2
     assert fills[1].notional == Decimal("90")
     assert fills[1].commission == Decimal("0.09")
+
+
+def test_partial_fill_for_same_spot_order_does_not_increment_entry_count(
+    history: PaperSpotSQLiteHistory,
+    store: SQLiteTradeHistory,
+) -> None:
+    first = PaperSpotEntryFill(
+        intent_id="intent-1",
+        order_id="entry-order-1",
+        fill_id="fill-1",
+        price=Decimal("100"),
+        quantity=Decimal("0.001"),
+        fee=Decimal("0.1"),
+        filled_at=OPENED_AT,
+    )
+    partial = PaperSpotEntryFill(
+        intent_id="intent-1",
+        order_id="entry-order-1",
+        fill_id="fill-2",
+        price=Decimal("100"),
+        quantity=Decimal("0.0005"),
+        fee=Decimal("0.05"),
+        filled_at=OPENED_AT + timedelta(seconds=1),
+    )
+
+    assert history.record_entry(basket_id=BASKET_ID, entry_number=1, fill=first)
+    assert history.record_entry(basket_id=BASKET_ID, entry_number=1, fill=partial)
+
+    basket = store.get_basket(BASKET_ID)
+    assert basket is not None
+    assert basket.entry_count == 1
+    assert basket.invested_notional == Decimal("0.1500")
+    assert basket.trading_fees == Decimal("0.15")
+    assert tuple(fill.order_id for fill in store.list_fills(BASKET_ID)) == (
+        "entry-order-1",
+        "entry-order-1",
+    )
+
+
+def test_concurrent_partial_fills_update_spot_basket_aggregate_atomically(
+    tmp_path: Path,
+) -> None:
+    database = SQLiteDatabase(tmp_path / "history.sqlite3")
+    database.migrate()
+    store = _InterleavingSQLiteTradeHistory(database, Barrier(2))
+    history = PaperSpotSQLiteHistory(
+        PaperSpotHistoryContext(
+            session_id=SESSION_ID,
+            symbol="BTCUSDT",
+            timeframe="5m",
+            preset_version="rsi-step-grid-v1",
+            commission_asset="USDT",
+        ),
+        store,
+    )
+    first = PaperSpotEntryFill(
+        intent_id="intent-1",
+        order_id="entry-order-1",
+        fill_id="fill-1",
+        price=Decimal("100"),
+        quantity=Decimal("0.001"),
+        fee=Decimal("0.1"),
+        filled_at=OPENED_AT,
+    )
+    partials = (
+        PaperSpotEntryFill(
+            intent_id="intent-1",
+            order_id="entry-order-1",
+            fill_id="fill-2",
+            price=Decimal("100"),
+            quantity=Decimal("0.0005"),
+            fee=Decimal("0.05"),
+            filled_at=OPENED_AT + timedelta(seconds=1),
+        ),
+        PaperSpotEntryFill(
+            intent_id="intent-1",
+            order_id="entry-order-1",
+            fill_id="fill-3",
+            price=Decimal("100"),
+            quantity=Decimal("0.00025"),
+            fee=Decimal("0.025"),
+            filled_at=OPENED_AT + timedelta(seconds=2),
+        ),
+    )
+    assert history.record_entry(basket_id=BASKET_ID, entry_number=1, fill=first)
+
+    def record(fill: PaperSpotEntryFill) -> bool:
+        return history.record_entry(basket_id=BASKET_ID, entry_number=1, fill=fill)
+
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        results = tuple(pool.map(record, partials))
+
+    basket = store.get_basket(BASKET_ID)
+    assert results == (True, True)
+    assert basket is not None
+    assert basket.entry_count == 1
+    assert basket.invested_notional == Decimal("0.17500")
+    assert basket.trading_fees == Decimal("0.175")
+    assert tuple(fill.fill_id for fill in store.list_fills(BASKET_ID)) == (
+        "fill-1",
+        "fill-2",
+        "fill-3",
+    )
 
 
 def test_close_records_exact_closed_basket_and_sell_fill(

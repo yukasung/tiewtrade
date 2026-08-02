@@ -62,13 +62,25 @@ def test_desktop_trade_history_reads_durable_spot_and_futures_records(
     database.migrate()
     history = SQLiteTradeHistory(database)
     _record_spot_and_futures_history(history)
-    window = _composed_window(path, monkeypatch)
+    basket_requests: list[tuple[TradeHistoryFilter, PageRequest]] = []
+    window = _composed_window(
+        path,
+        monkeypatch,
+        basket_requests=basket_requests,
+    )
     qtbot.addWidget(window)
     window.show()
+    qtbot.waitUntil(window.setup.isVisible)
+
+    assert window.workspace.header_runtime.text() == "No Session"
+    assert basket_requests == []
 
     open_trade_history(window)
 
     qtbot.waitUntil(lambda: window.trade_history.basket_table.rowCount() == 2)
+    assert basket_requests == [
+        (TradeHistoryFilter(), PageRequest(page=1, page_size=50))
+    ]
     assert _table_row_text(window.trade_history.basket_table, 0) == (
         "2026-01-03 00:00:00 UTC",
         "Paper",
@@ -315,14 +327,18 @@ def test_trade_history_read_failure_is_fail_closed_and_sanitized(
 
     click(window.trade_history.apply_button)
     qtbot.waitUntil(
-        lambda: window.trade_history.basket_state.text() == "Trade History unavailable"
+        lambda: (
+            window.trade_history.basket_state.text()
+            == "Stale · Trade History unavailable"
+        )
     )
 
-    assert window.trade_history.basket_table.rowCount() == 0
-    assert window.trade_history.fill_table.rowCount() == 0
-    assert window.trade_history.total_net_pnl.isHidden()
-    assert window.trade_history.total_net_pnl_label.isHidden()
-    assert window.trade_history.total_net_pnl.text() == ""
+    assert window.trade_history.basket_table.rowCount() == 1
+    assert window.trade_history.fill_table.rowCount() == 1
+    assert not window.trade_history.total_net_pnl.isHidden()
+    assert not window.trade_history.total_net_pnl_label.isHidden()
+    assert window.trade_history.total_net_pnl.text() == "19.58 USDT · Profit"
+    assert window.trade_history.retry_baskets_button.isVisible()
     assert "/private/tmp" not in window.trade_history.basket_state.text()
 
 

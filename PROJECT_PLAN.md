@@ -144,6 +144,14 @@ production desktop จะแสดง Configured Start ที่ปิดใช�
 integration จริง; Runtime Start/Stop/Recovery จริงยังคงเป็น DEV-136 โดยไม่มี
 network, SQLite Basket/Fill หรือ execution side effect ใน slice นี้
 
+สถานะ DEV-135: ส่งมอบ Open Orders และ Position / Basket tabs ที่แยก state และ render
+immutable application facts โดยหนึ่ง Order ที่มีหลาย Partial Fills แสดงหนึ่ง row และ
+Paper Spot Basket คง `entry_count` หนึ่งครั้งต่อ Order ส่วน durable Trade History
+ยังเปิดดูได้โดยไม่มี Active Bot Session พร้อมรักษา filters, pagination, Fill details และ
+last-known rows เมื่อ refresh ล้มเหลว งานนี้ไม่เพิ่ม Runtime source, Open Orders schema,
+network หรือ Live execution; authoritative Runtime refresh และ lifecycle ownership
+ยังคงเป็นขอบเขต DEV-136
+
 ## Milestone 4 — Live Spot
 
 เริ่มได้เมื่อ Paper Trading Complete ผ่านทั้งหมด:

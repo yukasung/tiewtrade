@@ -6,9 +6,7 @@ from tiewtrade.application.paper_spot_session import PaperSpotSessionIdentity
 from tiewtrade.execution.paper_spot import PaperSpotEntryFill, PaperSpotExitFill
 from tiewtrade.integrations.sqlite.trade_history import SQLiteTradeHistory
 from tiewtrade.trading.basket import ClosedBasket
-from tiewtrade.trading.session_config import MarketType, TradeMode
 from tiewtrade.trading.trade_history import (
-    BasketResult,
     BasketStatus,
     FillSide,
     FillSource,
@@ -71,41 +69,12 @@ class PaperSpotSQLiteHistory:
             realized_pnl=Decimal("0"),
             source=FillSource.PAPER_EXECUTOR,
         )
-        existing = self._store.get_basket(basket_id)
-        if existing is None:
-            basket = BasketResult(
-                basket_id=basket_id,
-                session_id=self._context.session_id,
-                trade_mode=TradeMode.PAPER,
-                market_type=MarketType.SPOT,
-                symbol=self._context.symbol,
-                timeframe=self._context.timeframe,
-                strategy_preset_version=self._context.preset_version,
-                opened_at_utc=fill.filled_at,
-                closed_at_utc=None,
-                entry_count=1,
-                invested_notional=normalized_fill.notional,
-                gross_realized_pnl=Decimal("0"),
-                trading_fees=normalized_fill.commission,
-                funding_fee=Decimal("0"),
-                net_realized_pnl=-normalized_fill.commission,
-                status=BasketStatus.OPEN,
-            )
-            return self._store.record_open_basket(basket, normalized_fill)
-
-        basket = replace(
-            existing,
-            entry_count=existing.entry_count + 1,
-            invested_notional=existing.invested_notional + normalized_fill.notional,
-            trading_fees=existing.trading_fees + normalized_fill.commission,
-            net_realized_pnl=(
-                existing.gross_realized_pnl
-                - existing.trading_fees
-                - normalized_fill.commission
-                - existing.funding_fee
-            ),
+        return self._store.record_paper_spot_entry_fill(
+            normalized_fill,
+            symbol=self._context.symbol,
+            timeframe=self._context.timeframe,
+            strategy_preset_version=self._context.preset_version,
         )
-        return self._store.record_entry_fill(basket, normalized_fill)
 
     def record_close(
         self,

@@ -12,13 +12,26 @@ from tiewtrade.application.trading_workspace import (
     BotRuntimeState,
     DataFreshness,
     OpenOrderSnapshot,
+    OpenOrdersTabSnapshot,
+    PositionBasketTabSnapshot,
     TradingWorkspaceSnapshot,
     WorkspaceHeaderSnapshot,
     WorkspaceReadState,
+    WorkspaceTabState,
     configured_workspace_snapshot,
+    empty_open_orders_tab,
+    empty_position_basket_tab,
     empty_workspace_snapshot,
+    failed_open_orders_tab,
+    failed_position_basket_tab,
     failed_workspace_snapshot,
+    loading_open_orders_tab,
+    loading_position_basket_tab,
     loading_workspace_snapshot,
+    ready_open_orders_tab,
+    ready_position_basket_tab,
+    stale_open_orders_tab,
+    stale_position_basket_tab,
     stale_workspace_snapshot,
 )
 
@@ -119,8 +132,8 @@ def test_workspace_rejects_invalid_state_combinations() -> None:
         TradingWorkspaceSnapshot(
             read_state=WorkspaceReadState.READY,
             header=None,
-            orders=(),
-            basket=None,
+            open_orders=empty_open_orders_tab(),
+            position_basket=empty_position_basket_tab(),
             data_as_of_utc=_utc(),
         )
     with pytest.raises(
@@ -129,24 +142,24 @@ def test_workspace_rejects_invalid_state_combinations() -> None:
         TradingWorkspaceSnapshot(
             read_state=WorkspaceReadState.EMPTY,
             header=_header(),
-            orders=(),
-            basket=None,
+            open_orders=empty_open_orders_tab(),
+            position_basket=empty_position_basket_tab(),
             data_as_of_utc=None,
         )
     with pytest.raises(ValueError, match="STALE snapshot requires data_as_of_utc"):
         TradingWorkspaceSnapshot(
             read_state=WorkspaceReadState.STALE,
             header=replace(_header(), data_freshness=DataFreshness.STALE),
-            orders=(),
-            basket=None,
+            open_orders=empty_open_orders_tab(),
+            position_basket=empty_position_basket_tab(),
             data_as_of_utc=None,
         )
     with pytest.raises(ValueError, match="READY snapshot must not have stale data"):
         TradingWorkspaceSnapshot(
             read_state=WorkspaceReadState.READY,
             header=replace(_header(), data_freshness=DataFreshness.STALE),
-            orders=(),
-            basket=None,
+            open_orders=empty_open_orders_tab(),
+            position_basket=empty_position_basket_tab(),
             data_as_of_utc=_utc(),
         )
 
@@ -165,16 +178,188 @@ def test_empty_and_loading_snapshots_can_honestly_represent_no_session() -> None
     assert loading.data_as_of_utc is observed_at
 
 
-def _order(created_at: datetime) -> OpenOrderSnapshot:
+def test_open_orders_tab_aggregates_one_row_per_order_and_sorts_latest_first() -> None:
+    older = _order(_utc(minute=1), order_id="order-1", filled="0.001")
+    newer = _order(_utc(minute=2), order_id="order-2", filled="0.002")
+
+    tab = ready_open_orders_tab((older, newer), observed_at_utc=_utc(minute=3))
+
+    assert tab.state is WorkspaceTabState.READY
+    assert tuple(item.order_id for item in tab.orders) == ("order-2", "order-1")
+
+
+def test_open_orders_tab_rejects_duplicate_order_rows_and_overfill() -> None:
+    order = _order(_utc(), order_id="order-1", filled="0.003")
+
+    with pytest.raises(ValueError, match="order_id must be unique"):
+        ready_open_orders_tab((order, order), observed_at_utc=_utc(minute=1))
+    with pytest.raises(ValueError, match="filled_quantity must not exceed quantity"):
+        replace(order, filled_quantity=Decimal("0.004"))
+
+
+def test_orders_and_position_tabs_transition_independently() -> None:
+    orders = ready_open_orders_tab((_order(_utc()),), observed_at_utc=_utc())
+    position = ready_position_basket_tab(_basket(_utc()), observed_at_utc=_utc())
+
+    snapshot = replace(
+        configured_workspace_snapshot(
+            configured_spot_session(), observed_at_utc=_utc()
+        ),
+        open_orders=loading_open_orders_tab(orders),
+        position_basket=stale_position_basket_tab(position),
+    )
+
+    assert snapshot.open_orders.state is WorkspaceTabState.LOADING
+    assert snapshot.position_basket.state is WorkspaceTabState.STALE
+    assert snapshot.orders == orders.orders
+    assert snapshot.basket == position.basket
+
+
+def test_workspace_compatibility_properties_expose_scoped_tab_data() -> None:
+    workspace = configured_workspace_snapshot(
+        configured_spot_session(), observed_at_utc=_utc()
+    )
+    order = _order(_utc())
+    basket = _basket(_utc())
+
+    updated = replace(
+        workspace,
+        open_orders=ready_open_orders_tab((order,), observed_at_utc=_utc()),
+        position_basket=ready_position_basket_tab(basket, observed_at_utc=_utc()),
+    )
+    cleared = replace(
+        updated,
+        open_orders=empty_open_orders_tab(),
+        position_basket=empty_position_basket_tab(),
+    )
+
+    assert updated.orders == (order,)
+    assert updated.basket is basket
+    assert cleared.orders == ()
+    assert cleared.basket is None
+
+
+def test_open_orders_tab_helpers_preserve_last_known_rows_by_state() -> None:
+    ready = ready_open_orders_tab((_order(_utc()),), observed_at_utc=_utc())
+
+    assert empty_open_orders_tab() == OpenOrdersTabSnapshot(
+        state=WorkspaceTabState.EMPTY,
+        orders=(),
+        data_as_of_utc=None,
+    )
+    assert loading_open_orders_tab(ready).orders == ready.orders
+    assert failed_open_orders_tab(ready, "Open orders are unavailable").message == (
+        "Open orders are unavailable"
+    )
+    assert stale_open_orders_tab(ready).data_as_of_utc == ready.data_as_of_utc
+
+
+def test_position_basket_tab_helpers_preserve_last_known_basket_by_state() -> None:
+    ready = ready_position_basket_tab(_basket(_utc()), observed_at_utc=_utc())
+
+    assert empty_position_basket_tab() == PositionBasketTabSnapshot(
+        state=WorkspaceTabState.EMPTY,
+        basket=None,
+        data_as_of_utc=None,
+    )
+    assert loading_position_basket_tab(ready).basket is ready.basket
+    assert (
+        failed_position_basket_tab(
+            ready, "Position / Basket data is unavailable"
+        ).message
+        == "Position / Basket data is unavailable"
+    )
+    assert stale_position_basket_tab(ready).data_as_of_utc == ready.data_as_of_utc
+
+
+def test_failed_tabs_reject_raw_backend_messages_and_accept_safe_display_copy() -> None:
+    open_orders = ready_open_orders_tab((_order(_utc()),), observed_at_utc=_utc())
+    position_basket = ready_position_basket_tab(_basket(_utc()), observed_at_utc=_utc())
+
+    assert (
+        failed_open_orders_tab(open_orders, "Open orders are unavailable").message
+        == "Open orders are unavailable"
+    )
+    assert (
+        failed_position_basket_tab(
+            position_basket, "Position / Basket data is unavailable"
+        ).message
+        == "Position / Basket data is unavailable"
+    )
+    with pytest.raises(ValueError, match="message must be sanitized"):
+        failed_open_orders_tab(open_orders, "RuntimeError: api_key=secret")
+    with pytest.raises(ValueError, match="message must be sanitized"):
+        failed_position_basket_tab(position_basket, "sqlite failure at /private/tmp")
+
+
+@pytest.mark.parametrize(
+    ("factory", "expected"),
+    [
+        (
+            lambda: OpenOrdersTabSnapshot(
+                state=WorkspaceTabState.EMPTY,
+                orders=(_order(_utc()),),
+                data_as_of_utc=None,
+            ),
+            "EMPTY tab must not contain durable data",
+        ),
+        (
+            lambda: OpenOrdersTabSnapshot(
+                state=WorkspaceTabState.READY,
+                orders=(_order(_utc()),),
+                data_as_of_utc=None,
+            ),
+            "READY tab requires data_as_of_utc",
+        ),
+        (
+            lambda: OpenOrdersTabSnapshot(
+                state=WorkspaceTabState.LOADING,
+                orders=(),
+                data_as_of_utc=None,
+                message="loading",
+            ),
+            "LOADING tab must not contain a message",
+        ),
+        (
+            lambda: PositionBasketTabSnapshot(
+                state=WorkspaceTabState.ERROR,
+                basket=None,
+                data_as_of_utc=None,
+            ),
+            "ERROR tab requires a message",
+        ),
+        (
+            lambda: PositionBasketTabSnapshot(
+                state=WorkspaceTabState.STALE,
+                basket=_basket(_utc()),
+                data_as_of_utc=None,
+            ),
+            "STALE tab requires data_as_of_utc",
+        ),
+    ],
+)
+def test_tab_snapshots_reject_invalid_state_combinations(
+    factory: Callable[[], object], expected: str
+) -> None:
+    with pytest.raises(ValueError, match=expected):
+        factory()
+
+
+def _order(
+    created_at: datetime,
+    *,
+    order_id: str = "order-1",
+    filled: str = "0.00100000",
+) -> OpenOrderSnapshot:
     return OpenOrderSnapshot(
-        order_id="order-1",
+        order_id=order_id,
         created_at_utc=created_at,
         symbol="BTCUSDT",
         side="BUY",
         order_type="LIMIT",
         price=Decimal("66321.1200"),
         quantity=Decimal("0.00300000"),
-        filled_quantity=Decimal("0.00100000"),
+        filled_quantity=Decimal(filled),
         status="PARTIALLY_FILLED",
     )
 
@@ -203,5 +388,5 @@ def _header() -> WorkspaceHeaderSnapshot:
     return snapshot.header
 
 
-def _utc() -> datetime:
-    return datetime(2026, 8, 1, 12, tzinfo=UTC)
+def _utc(*, minute: int = 0) -> datetime:
+    return datetime(2026, 8, 1, 12, minute, tzinfo=UTC)

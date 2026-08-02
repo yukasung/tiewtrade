@@ -32,6 +32,16 @@ def test_dark_theme_defines_focus_and_semantic_states() -> None:
     assert "QPushButton:focus" in DARK_THEME
 
 
+def test_dark_theme_styles_scoped_trading_tab_states() -> None:
+    for selector in (
+        "QLabel#openOrdersState",
+        "QLabel#positionBasketState",
+        "QLabel#basketState",
+        "QLabel#fillState",
+    ):
+        assert selector in DARK_THEME
+
+
 def test_dark_theme_covers_current_semantic_object_names_without_dead_navigation() -> (
     None
 ):

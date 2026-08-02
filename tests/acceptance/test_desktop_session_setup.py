@@ -1,8 +1,8 @@
 import ast
 import socket
 import sqlite3
-from dataclasses import dataclass
-from datetime import UTC, datetime
+from dataclasses import dataclass, replace
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
 from threading import Event
@@ -13,7 +13,7 @@ from PySide6.QtWidgets import QApplication, QMessageBox, QPushButton
 from pytest import MonkeyPatch
 from pytestqt.qtbot import QtBot
 
-from tests.support.qt_interactions import click
+from tests.support.qt_interactions import click, table_item
 from tests.support.trade_history_ui import empty_basket_page, empty_fills
 from tiewtrade.application.bot_control import (
     BotControlSnapshot,
@@ -26,11 +26,26 @@ from tiewtrade.application.paper_session_setup import (
     PaperSessionCreateOutcome,
     PaperSessionSetupValues,
 )
-from tiewtrade.application.trading_workspace import BotRuntimeState, DataFreshness
+from tiewtrade.application.trading_workspace import (
+    BasketSnapshot,
+    BotRuntimeState,
+    DataFreshness,
+    OpenOrderSnapshot,
+    TradingWorkspaceSnapshot,
+    configured_workspace_snapshot,
+    ready_open_orders_tab,
+    ready_position_basket_tab,
+)
+from tiewtrade.execution.paper_spot import PaperSpotEntryFill
 from tiewtrade.integrations.sqlite.active_paper_sessions import (
     SQLiteActivePaperSessions,
 )
 from tiewtrade.integrations.sqlite.database import SQLiteDatabase
+from tiewtrade.integrations.sqlite.paper_spot_history import (
+    PaperSpotHistoryContext,
+    PaperSpotSQLiteHistory,
+)
+from tiewtrade.integrations.sqlite.trade_history import SQLiteTradeHistory
 from tiewtrade.trading.futures_policy import MarginMode, PositionMode
 from tiewtrade.trading.session_config import MarketType, TradeMode
 from tiewtrade.ui.main_window import MainWindow
@@ -45,6 +60,181 @@ class _SessionCase:
     slippage_bps: str
     spot_ratio: str | None
     futures_leverage: int | None
+
+
+@pytest.mark.parametrize(
+    "case",
+    [
+        pytest.param(
+            _SessionCase("spot", "15m", 12, "0.1", "5", "80", None),
+            id="spot",
+        ),
+        pytest.param(
+            _SessionCase("futures", "1h", 14, "0.2", "8", None, 4),
+            id="futures",
+        ),
+    ],
+)
+def test_desktop_fake_snapshots_render_orders_and_basket_without_manual_trading(
+    monkeypatch: MonkeyPatch,
+    qtbot: QtBot,
+    tmp_path: Path,
+    case: _SessionCase,
+) -> None:
+    _block_network(monkeypatch)
+    database = SQLiteDatabase(tmp_path / "tiewtrade.sqlite3")
+    database.migrate()
+    store = SQLiteActivePaperSessions(database)
+    session = (
+        CreatePaperSession(create_active=store.create)
+        .execute(_setup_values(case))
+        .session
+    )
+    initial_counts = _trade_side_effect_counts(database)
+    assert initial_counts == (0, 0)
+    start_calls = 0
+
+    def fake_start(snapshot: BotControlSnapshot) -> BotLifecycleResult:
+        nonlocal start_calls
+        start_calls += 1
+        return BotLifecycleResult(
+            workspace=workspace_with_runtime_state(
+                snapshot.workspace,
+                BotRuntimeState.RUNNING,
+                data_freshness=DataFreshness.FRESH,
+            )
+        )
+
+    window = MainWindow(
+        create_session=lambda values: pytest.fail("create must not run"),
+        load_active=store.get_active,
+        list_baskets=empty_basket_page,
+        list_fills=empty_fills,
+        start_bot=fake_start,
+    )
+    qtbot.addWidget(window)
+    window.show()
+    qtbot.waitUntil(window.overview.isVisible)
+    qtbot.waitUntil(
+        window.workspace.bot_control_widget.start_button.isEnabled,
+        timeout=250,
+    )
+    click(window.workspace.bot_control_widget.start_button)
+    qtbot.waitUntil(lambda: window.workspace.header_runtime.text() == "Running")
+
+    window.workspace.show_workspace_snapshot(
+        _fake_running_workspace(session, observed_at=datetime(2026, 8, 2, tzinfo=UTC))
+    )
+
+    assert start_calls == 1
+    assert window.workspace.header_runtime.text() == "Running"
+    assert window.workspace.open_orders.table.rowCount() == 1
+    assert table_item(window.workspace.open_orders.table, 0, 0).text() == (
+        "entry-order-1"
+    )
+    assert table_item(window.workspace.open_orders.table, 0, 7).text() == "0.00150000"
+    assert table_item(window.workspace.open_orders.table, 0, 8).text() == (
+        "Partially Filled"
+    )
+    assert window.workspace.position_basket.table.rowCount() == 1
+    assert table_item(window.workspace.position_basket.table, 0, 1).text() == (
+        case.market_type.title()
+    )
+    assert table_item(window.workspace.position_basket.table, 0, 2).text() == "1"
+    assert table_item(window.workspace.position_basket.table, 0, 8).text() == (
+        "—" if case.market_type == "spot" else "44000.5000"
+    )
+    assert _manual_order_buttons(window) == ()
+    assert _trade_side_effect_counts(database) == initial_counts
+
+
+def test_spot_partial_fills_keep_one_order_and_basket_entry_across_tabs(
+    monkeypatch: MonkeyPatch,
+    qtbot: QtBot,
+    tmp_path: Path,
+) -> None:
+    _block_network(monkeypatch)
+    database = SQLiteDatabase(tmp_path / "tiewtrade.sqlite3")
+    database.migrate()
+    active_sessions = SQLiteActivePaperSessions(database)
+    session = (
+        CreatePaperSession(create_active=active_sessions.create)
+        .execute(_setup_values(_SessionCase("spot", "5m", 10, "0.1", "5", "80", None)))
+        .session
+    )
+    store = SQLiteTradeHistory(database)
+    history = PaperSpotSQLiteHistory(
+        PaperSpotHistoryContext(
+            session_id=session.config.session_id,
+            symbol=session.market_data.symbol,
+            timeframe=session.market_data.timeframe,
+            preset_version=session.config.preset_version,
+            commission_asset="USDT",
+        ),
+        store,
+    )
+    observed_at = datetime(2026, 8, 2, tzinfo=UTC)
+    fills = (
+        PaperSpotEntryFill(
+            intent_id="intent-1",
+            order_id="entry-order-1",
+            fill_id="fill-1",
+            price=Decimal("66000.1250"),
+            quantity=Decimal("0.00100000"),
+            fee=Decimal("0.0660001250"),
+            filled_at=observed_at,
+        ),
+        PaperSpotEntryFill(
+            intent_id="intent-1",
+            order_id="entry-order-1",
+            fill_id="fill-2",
+            price=Decimal("66000.1250"),
+            quantity=Decimal("0.00050000"),
+            fee=Decimal("0.0330000625"),
+            filled_at=observed_at + timedelta(seconds=1),
+        ),
+    )
+    for fill in fills:
+        assert history.record_entry(
+            basket_id=UUID("00000000-0000-0000-0000-000000000135"),
+            entry_number=1,
+            fill=fill,
+        )
+
+    basket_id = UUID("00000000-0000-0000-0000-000000000135")
+    basket = store.get_basket(basket_id)
+    durable_fills = store.list_fills(basket_id)
+    assert basket is not None
+    assert basket.entry_count == 1
+    assert len(durable_fills) == 2
+    assert {fill.order_id for fill in durable_fills} == {"entry-order-1"}
+    initial_counts = _trade_side_effect_counts(database)
+    assert initial_counts == (1, 2)
+
+    window = MainWindow(
+        create_session=lambda values: pytest.fail("create must not run"),
+        load_active=active_sessions.get_active,
+        list_baskets=store.list_baskets,
+        list_fills=store.list_fills,
+    )
+    qtbot.addWidget(window)
+    window.show()
+    qtbot.waitUntil(window.overview.isVisible)
+    window.workspace.show_workspace_snapshot(
+        _fake_running_workspace(session, observed_at=observed_at)
+    )
+
+    assert window.workspace.open_orders.table.rowCount() == 1
+    assert table_item(window.workspace.open_orders.table, 0, 0).text() == (
+        durable_fills[0].order_id
+    )
+    assert window.workspace.position_basket.table.rowCount() == 1
+    assert table_item(window.workspace.position_basket.table, 0, 2).text() == "1"
+    window.workspace.tabs.setCurrentWidget(window.trade_history)
+    qtbot.waitUntil(lambda: window.trade_history.basket_table.rowCount() == 1)
+    qtbot.waitUntil(lambda: window.trade_history.fill_table.rowCount() == 2)
+    assert table_item(window.trade_history.basket_table, 0, 5).text() == "1"
+    assert _trade_side_effect_counts(database) == initial_counts
 
 
 @pytest.mark.parametrize(
@@ -116,8 +306,10 @@ def test_desktop_paper_session_create_overview_and_restart_restore(
     assert first_window.findChildren(QPushButton, "manualBuyButton") == []
     assert first_window.findChildren(QPushButton, "manualSellButton") == []
     assert first_window.workspace.chart_state.text() == "Chart is not available yet"
-    assert first_window.workspace.orders_state.text() == "No open orders"
-    assert first_window.workspace.position_state.text() == "No open Position or Basket"
+    assert first_window.workspace.open_orders.state_label.text() == "No open orders"
+    assert first_window.workspace.position_basket.state_label.text() == (
+        "No open Position or Basket"
+    )
     assert _trade_side_effect_counts(database) == initial_side_effect_counts
 
     first_window.workspace.tabs.setCurrentWidget(first_window.trade_history)
@@ -544,6 +736,69 @@ def test_desktop_session_setup_smoke_composes_without_network(
 
     assert qapp.platformName() == "offscreen"
     assert not window.isVisible()
+
+
+def _fake_running_workspace(
+    session: ConfiguredPaperSession,
+    *,
+    observed_at: datetime,
+) -> TradingWorkspaceSnapshot:
+    configured = configured_workspace_snapshot(session, observed_at_utc=observed_at)
+    with_facts = replace(
+        configured,
+        open_orders=ready_open_orders_tab(
+            (
+                OpenOrderSnapshot(
+                    order_id="entry-order-1",
+                    created_at_utc=observed_at,
+                    symbol="BTCUSDT",
+                    side="buy",
+                    order_type="limit",
+                    price=Decimal("66321.1200"),
+                    quantity=Decimal("0.00300000"),
+                    filled_quantity=Decimal("0.00150000"),
+                    status="partially_filled",
+                ),
+            ),
+            observed_at_utc=observed_at,
+        ),
+        position_basket=ready_position_basket_tab(
+            BasketSnapshot(
+                symbol="BTCUSDT",
+                market_type=session.config.market_type.value,
+                entry_count=1,
+                total_quantity=Decimal("0.00150000"),
+                average_entry_price=Decimal("66000.1250"),
+                current_price=Decimal("66321.1200"),
+                take_profit_price=Decimal("67000.0000"),
+                unrealized_pnl=Decimal("1.92600000"),
+                liquidation_price=(
+                    None
+                    if session.config.market_type is MarketType.SPOT
+                    else Decimal("44000.5000")
+                ),
+                lifecycle="active_pair",
+                updated_at_utc=observed_at,
+            ),
+            observed_at_utc=observed_at,
+        ),
+    )
+    return workspace_with_runtime_state(
+        with_facts,
+        BotRuntimeState.RUNNING,
+        data_freshness=DataFreshness.FRESH,
+    )
+
+
+def _manual_order_buttons(window: MainWindow) -> tuple[QPushButton, ...]:
+    object_names = {"manualBuyButton", "manualSellButton"}
+    manual_texts = {"buy", "sell"}
+    return tuple(
+        button
+        for button in window.findChildren(QPushButton)
+        if button.objectName() in object_names
+        or button.text().strip().casefold() in manual_texts
+    )
 
 
 def _enter_form_values(window: MainWindow, case: _SessionCase) -> None:

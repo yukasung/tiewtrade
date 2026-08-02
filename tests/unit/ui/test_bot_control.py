@@ -18,6 +18,7 @@ from tiewtrade.application.trading_workspace import (
     BasketSnapshot,
     BotRuntimeState,
     DataFreshness,
+    ready_position_basket_tab,
 )
 from tiewtrade.ui.bot_control import BotControlWidget, _decimal_text
 
@@ -74,18 +75,21 @@ def test_running_shows_runtime_and_basket_facts_without_manual_order_controls(
             BotRuntimeState.RUNNING,
             data_freshness=DataFreshness.FRESH,
         ),
-        basket=BasketSnapshot(
-            symbol="BTCUSDT",
-            market_type="spot",
-            entry_count=2,
-            total_quantity=Decimal("1"),
-            average_entry_price=Decimal("64000"),
-            current_price=Decimal("65000"),
-            take_profit_price=Decimal("66000"),
-            unrealized_pnl=Decimal("1000"),
-            liquidation_price=None,
-            lifecycle="open",
-            updated_at_utc=datetime(2026, 8, 1, 12, tzinfo=UTC),
+        position_basket=ready_position_basket_tab(
+            BasketSnapshot(
+                symbol="BTCUSDT",
+                market_type="spot",
+                entry_count=2,
+                total_quantity=Decimal("1"),
+                average_entry_price=Decimal("64000"),
+                current_price=Decimal("65000"),
+                take_profit_price=Decimal("66000"),
+                unrealized_pnl=Decimal("1000"),
+                liquidation_price=None,
+                lifecycle="open",
+                updated_at_utc=datetime(2026, 8, 1, 12, tzinfo=UTC),
+            ),
+            observed_at_utc=datetime(2026, 8, 1, 12, tzinfo=UTC),
         ),
     )
     running = BotControlSnapshot(

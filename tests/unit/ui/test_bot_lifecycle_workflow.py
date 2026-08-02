@@ -21,6 +21,9 @@ from tiewtrade.application.trading_workspace import (
     DataFreshness,
     OpenOrderSnapshot,
     WorkspaceReadState,
+    empty_position_basket_tab,
+    ready_open_orders_tab,
+    ready_position_basket_tab,
 )
 from tiewtrade.trading.session_config import MarketType
 from tiewtrade.ui.bot_lifecycle_workflow import BotLifecycleWorkflow, LifecycleAction
@@ -206,7 +209,7 @@ def test_stop_result_dropping_basket_is_blocked_and_preserves_take_profit(
                 workspace_with_runtime_state(
                     snapshot.workspace, BotRuntimeState.STOPPED
                 ),
-                basket=None,
+                position_basket=empty_position_basket_tab(),
             )
         )
 
@@ -216,7 +219,12 @@ def test_stop_result_dropping_basket_is_blocked_and_preserves_take_profit(
     qtbot.waitUntil(lambda: workflow.snapshot.state is BotRuntimeState.RUNNING)
     running = replace(
         workflow.snapshot,
-        workspace=replace(workflow.snapshot.workspace, basket=_basket()),
+        workspace=replace(
+            workflow.snapshot.workspace,
+            position_basket=ready_position_basket_tab(
+                _basket(), observed_at_utc=OBSERVED_AT
+            ),
+        ),
     )
     workflow._snapshot = running
     workflow.stop_bot()
@@ -236,7 +244,12 @@ def test_stop_result_dropping_basket_is_blocked_and_preserves_take_profit(
     "alter_workspace",
     [
         pytest.param(
-            lambda workspace: replace(workspace, orders=(_order(),)),
+            lambda workspace: replace(
+                workspace,
+                open_orders=ready_open_orders_tab(
+                    (_order(),), observed_at_utc=OBSERVED_AT
+                ),
+            ),
             id="orders",
         ),
         pytest.param(

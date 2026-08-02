@@ -288,6 +288,144 @@ def test_trade_history_basket_and_fill_retries_are_wired_separately(
     assert fill_calls == 2
 
 
+def test_fill_retry_remains_wired_after_basket_refresh_failure(
+    qtbot: QtBot,
+) -> None:
+    basket = basket_result()
+    fill = trade_fill()
+    basket_calls = 0
+    fill_calls = 0
+
+    def succeed_then_fail_baskets(
+        filters: TradeHistoryFilter,
+        request: PageRequest,
+    ) -> BasketHistoryPage:
+        nonlocal basket_calls
+        del filters
+        basket_calls += 1
+        if basket_calls > 1:
+            raise RuntimeError("private basket failure")
+        return BasketHistoryPage(
+            items=(basket,),
+            page=request.page,
+            page_size=request.page_size,
+            total_items=1,
+            net_realized_pnl=basket.net_realized_pnl,
+        )
+
+    def succeed_fail_succeed_fills(basket_id: UUID) -> tuple[TradeFill, ...]:
+        nonlocal fill_calls
+        fill_calls += 1
+        assert basket_id == basket.basket_id
+        if fill_calls == 2:
+            raise RuntimeError("private fill failure")
+        return (fill,)
+
+    window = MainWindow(
+        create_session=unused_create,
+        load_active=no_active_session,
+        list_baskets=succeed_then_fail_baskets,
+        list_fills=succeed_fail_succeed_fills,
+    )
+    qtbot.addWidget(window)
+    window.show()
+    open_trade_history(window)
+    qtbot.waitUntil(lambda: window.trade_history.fill_table.rowCount() == 1)
+
+    window.trade_history.basket_selected.emit(basket.basket_id)
+    qtbot.waitUntil(
+        lambda: (
+            window.trade_history.fill_state.text() == "Stale · Trade Fills unavailable"
+        )
+    )
+    click(window.trade_history.apply_button)
+    qtbot.waitUntil(
+        lambda: (
+            window.trade_history.basket_state.text()
+            == "Stale · Trade History unavailable"
+        )
+    )
+
+    assert window.trade_history.retry_fills_button.isVisible()
+    click(window.trade_history.retry_fills_button)
+
+    qtbot.waitUntil(lambda: fill_calls == 3)
+    qtbot.waitUntil(window.trade_history.fill_state.isHidden)
+    assert basket_calls == 2
+
+
+def test_invalidated_active_fill_does_not_keep_loading_after_basket_failure(
+    qtbot: QtBot,
+) -> None:
+    basket = basket_result()
+    fill = trade_fill()
+    basket_calls = 0
+    fill_calls = 0
+    fill_started = threading.Event()
+    release_fill = threading.Event()
+    thread_pool = QThreadPool()
+    thread_pool.setMaxThreadCount(2)
+
+    def succeed_then_fail_baskets(
+        filters: TradeHistoryFilter,
+        request: PageRequest,
+    ) -> BasketHistoryPage:
+        nonlocal basket_calls
+        del filters
+        basket_calls += 1
+        if basket_calls > 1:
+            raise RuntimeError("private basket failure")
+        return BasketHistoryPage(
+            items=(basket,),
+            page=request.page,
+            page_size=request.page_size,
+            total_items=1,
+            net_realized_pnl=basket.net_realized_pnl,
+        )
+
+    def delay_second_fill(basket_id: UUID) -> tuple[TradeFill, ...]:
+        nonlocal fill_calls
+        fill_calls += 1
+        assert basket_id == basket.basket_id
+        if fill_calls == 2:
+            fill_started.set()
+            assert release_fill.wait(timeout=1)
+        return (fill,)
+
+    window = MainWindow(
+        create_session=unused_create,
+        load_active=no_active_session,
+        list_baskets=succeed_then_fail_baskets,
+        list_fills=delay_second_fill,
+        thread_pool=thread_pool,
+    )
+    qtbot.addWidget(window)
+    window.show()
+    open_trade_history(window)
+    qtbot.waitUntil(lambda: window.trade_history.fill_table.rowCount() == 1)
+
+    window.trade_history.basket_selected.emit(basket.basket_id)
+    qtbot.waitUntil(fill_started.is_set)
+    qtbot.waitUntil(
+        lambda: window.trade_history.fill_state.text() == "Loading trade fills…"
+    )
+    click(window.trade_history.apply_button)
+    qtbot.waitUntil(
+        lambda: (
+            window.trade_history.basket_state.text()
+            == "Stale · Trade History unavailable"
+        )
+    )
+
+    try:
+        assert window.trade_history.fill_state.text() != "Loading trade fills…"
+        assert window.trade_history.fill_state.isHidden()
+        assert window.trade_history.fill_table.rowCount() == 1
+    finally:
+        release_fill.set()
+        assert thread_pool.waitForDone(1_000)
+
+
 def test_trade_history_filter_reset_page_and_selection_requests_are_wired(
     qtbot: QtBot,
 ) -> None:

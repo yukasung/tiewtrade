@@ -212,7 +212,7 @@ def test_basket_pagination_uses_presented_page_state_and_emits_requests(
     assert requested == [1, 3]
 
 
-def test_basket_loading_clears_stale_results_and_disables_requests(
+def test_basket_refresh_loading_keeps_last_known_durable_result(
     qtbot: QtBot,
 ) -> None:
     page = TradeHistoryPage()
@@ -223,17 +223,18 @@ def test_basket_loading_clears_stale_results_and_disables_requests(
 
     page.set_baskets_loading(True)
 
-    assert page.basket_table.rowCount() == 0
-    assert page.fill_table.rowCount() == 0
+    assert page.basket_table.rowCount() == 1
+    assert page.fill_table.rowCount() == 1
     assert page.basket_state.text() == "Loading trade history…"
     assert not page.apply_button.isEnabled()
     assert not page.reset_button.isEnabled()
     assert not page.previous_button.isEnabled()
     assert not page.next_button.isEnabled()
-    assert page.page_label.text() == ""
-    assert page.page_label.isHidden()
-    assert page._current_page == 1
-    assert page.total_net_pnl.isHidden()
+    assert page.page_label.text() == "Page 2 of 3"
+    assert not page.page_label.isHidden()
+    assert page._current_page == 2
+    assert page.total_net_pnl.text() == "19.58 USDT · Profit"
+    assert not page.total_net_pnl.isHidden()
 
     page.set_baskets_loading(False)
     assert page.apply_button.isEnabled()
@@ -262,13 +263,10 @@ def test_empty_basket_result_preserves_exact_query_summary_and_page_state(
     assert page.fill_table.rowCount() == 0
 
 
-def test_basket_failure_hides_summary_and_clears_stale_rows(qtbot: QtBot) -> None:
+def test_initial_basket_failure_clears_only_trade_history_scope(qtbot: QtBot) -> None:
     page = TradeHistoryPage()
     qtbot.addWidget(page)
     page.show()
-    basket = basket_result()
-    page.show_baskets(history_page(basket, page=2, total_items=120))
-    page.show_fills(basket.basket_id, (trade_fill(),))
 
     page.show_baskets_unavailable("Trade History unavailable")
 
@@ -282,6 +280,31 @@ def test_basket_failure_hides_summary_and_clears_stale_rows(qtbot: QtBot) -> Non
     assert page._current_page == 1
     assert not page.previous_button.isEnabled()
     assert not page.next_button.isEnabled()
+    assert page.retry_baskets_button.isVisible()
+    assert not page.retry_fills_button.isVisible()
+
+
+def test_basket_refresh_failure_keeps_last_known_durable_result(
+    qtbot: QtBot,
+) -> None:
+    page = TradeHistoryPage()
+    qtbot.addWidget(page)
+    page.show()
+    basket = basket_result()
+    page.show_baskets(history_page(basket, page=2, total_items=120))
+    page.show_fills(basket.basket_id, (trade_fill(),))
+
+    page.set_baskets_loading(True)
+    page.show_baskets_unavailable("Trade History unavailable")
+
+    assert page.basket_table.rowCount() == 1
+    assert page.fill_table.rowCount() == 1
+    assert page.total_net_pnl.text() == "19.58 USDT · Profit"
+    assert not page.total_net_pnl.isHidden()
+    assert page.total_items.text() == "120 total Baskets"
+    assert page.basket_state.text() == "Stale · Trade History unavailable"
+    assert page.page_label.text() == "Page 2 of 3"
+    assert page._current_page == 2
     assert page.retry_baskets_button.isVisible()
     assert not page.retry_fills_button.isVisible()
 
@@ -302,7 +325,7 @@ def test_fill_success_and_empty_state_keep_basket_selection(qtbot: QtBot) -> Non
     assert page.fill_state.text() == "No fills for this Basket"
 
 
-def test_fill_loading_clears_stale_fills_and_preserves_basket_selection(
+def test_fill_refresh_loading_keeps_same_basket_durable_fills(
     qtbot: QtBot,
 ) -> None:
     basket = basket_result()
@@ -311,13 +334,11 @@ def test_fill_loading_clears_stale_fills_and_preserves_basket_selection(
     page.show()
     page.show_baskets(history_page(basket))
     page.show_fills(basket.basket_id, (trade_fill(),))
-    page.show_fills_unavailable(basket.basket_id, "Trade Fills unavailable")
-
     page.set_fills_loading(True)
 
     assert page.basket_table.rowCount() == 1
     assert page.basket_table.currentRow() == 0
-    assert page.fill_table.rowCount() == 0
+    assert page.fill_table.rowCount() == 1
     assert page.fill_state.text() == "Loading trade fills…"
     assert page.fill_state.isVisible()
     assert page.retry_fills_button.isHidden()
@@ -337,6 +358,61 @@ def test_fill_failure_keeps_basket_rows_and_scopes_retry(qtbot: QtBot) -> None:
     assert page.fill_state.text() == "Trade Fills unavailable"
     assert page.retry_fills_button.isVisible()
     assert not page.retry_baskets_button.isVisible()
+
+
+def test_fill_refresh_failure_keeps_same_basket_durable_fills(
+    qtbot: QtBot,
+) -> None:
+    basket = basket_result()
+    page = TradeHistoryPage()
+    qtbot.addWidget(page)
+    page.show()
+    page.show_baskets(history_page(basket))
+    page.show_fills(basket.basket_id, (trade_fill(),))
+
+    page.show_fills_unavailable(basket.basket_id, "Trade Fills unavailable")
+
+    assert page.basket_table.rowCount() == 1
+    assert page.fill_table.rowCount() == 1
+    assert page.fill_state.text() == "Stale · Trade Fills unavailable"
+    assert page.retry_fills_button.isVisible()
+    assert not page.retry_baskets_button.isVisible()
+
+
+def test_basket_failure_does_not_clobber_existing_fill_failure_state(
+    qtbot: QtBot,
+) -> None:
+    basket = basket_result()
+    page = TradeHistoryPage()
+    qtbot.addWidget(page)
+    page.show()
+    page.show_baskets(history_page(basket))
+    page.show_fills(basket.basket_id, (trade_fill(),))
+    page.show_fills_unavailable(basket.basket_id, "Trade Fills unavailable")
+
+    page.show_baskets_unavailable("Trade History unavailable")
+
+    assert page.basket_state.text() == "Stale · Trade History unavailable"
+    assert page.fill_state.text() == "Stale · Trade Fills unavailable"
+    assert page.retry_baskets_button.isVisible()
+    assert page.retry_fills_button.isVisible()
+
+
+def test_fill_loading_for_another_basket_clears_only_fill_scope(qtbot: QtBot) -> None:
+    first = basket_result()
+    second = basket_result(basket_id=UUID("00000000-0000-0000-0000-000000000202"))
+    page = TradeHistoryPage()
+    qtbot.addWidget(page)
+    page.show_baskets(history_page(first, second))
+    page.show_fills(first.basket_id, (trade_fill(),))
+
+    page.basket_table.selectRow(1)
+    page.set_fills_loading(True)
+
+    assert page.basket_table.rowCount() == 2
+    assert page.basket_table.currentRow() == 1
+    assert page.fill_table.rowCount() == 0
+    assert page.fill_state.text() == "Loading trade fills…"
 
 
 def test_retry_buttons_and_filter_error_are_scoped(qtbot: QtBot) -> None:
