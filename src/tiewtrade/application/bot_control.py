@@ -274,8 +274,8 @@ def _require_workspace_continuity(
 ) -> None:
     if (
         result.read_state is not current.read_state
-        or result.orders != current.orders
-        or result.basket != current.basket
+        or result.open_orders != current.open_orders
+        or result.position_basket != current.position_basket
         or result.data_as_of_utc != current.data_as_of_utc
     ):
         raise ValueError("result must preserve workspace continuity")
