@@ -4,7 +4,11 @@ from uuid import UUID
 
 import pytest
 
-from tiewtrade.trading.basket import Basket, BasketCloseReason
+from tiewtrade.trading.basket import (
+    Basket,
+    BasketCloseReason,
+    average_entry_price_after_fill,
+)
 from tiewtrade.trading.entry_policy import EntryPolicy
 from tiewtrade.trading.position import PositionSide
 
@@ -55,6 +59,15 @@ def test_basket_reprices_take_profit_after_each_entry() -> None:
 
     assert basket.average_entry_price == Decimal("97.5")
     assert basket.take_profit_price == Decimal("106.5")
+
+
+def test_average_entry_price_after_fill_uses_domain_weighting() -> None:
+    assert average_entry_price_after_fill(
+        current_average_entry_price=Decimal("100"),
+        current_quantity=Decimal("3"),
+        fill_price=Decimal("90"),
+        fill_quantity=Decimal("1"),
+    ) == Decimal("97.5")
 
 
 def test_short_basket_reprices_take_profit_below_average_and_rounds_up() -> None:

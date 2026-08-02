@@ -340,6 +340,67 @@ def stale_workspace_snapshot(
     )
 
 
+def paper_runtime_workspace_snapshot(
+    last_known: TradingWorkspaceSnapshot,
+    *,
+    orders: tuple[OpenOrderSnapshot, ...],
+    basket: BasketSnapshot | None,
+    observed_at_utc: datetime,
+) -> TradingWorkspaceSnapshot:
+    if last_known.header is None:
+        raise ValueError("Paper Runtime workspace requires a header")
+    _require_utc(observed_at_utc, "observed_at_utc")
+    _require_unique_order_ids(orders)
+    open_orders = (
+        OpenOrdersTabSnapshot(
+            state=WorkspaceTabState.EMPTY,
+            orders=(),
+            data_as_of_utc=observed_at_utc,
+        )
+        if not orders
+        else ready_open_orders_tab(orders, observed_at_utc=observed_at_utc)
+    )
+    position_basket = (
+        PositionBasketTabSnapshot(
+            state=WorkspaceTabState.EMPTY,
+            basket=None,
+            data_as_of_utc=observed_at_utc,
+        )
+        if basket is None
+        else ready_position_basket_tab(basket, observed_at_utc=observed_at_utc)
+    )
+    return TradingWorkspaceSnapshot(
+        read_state=WorkspaceReadState.READY,
+        header=replace(
+            last_known.header,
+            runtime_state=BotRuntimeState.RUNNING,
+            data_freshness=DataFreshness.FRESH,
+        ),
+        open_orders=open_orders,
+        position_basket=position_basket,
+        data_as_of_utc=observed_at_utc,
+    )
+
+
+def paper_runtime_blocked_workspace_snapshot(
+    last_known: TradingWorkspaceSnapshot,
+) -> TradingWorkspaceSnapshot:
+    if last_known.header is None:
+        raise ValueError("Paper Runtime workspace requires a header")
+    if last_known.data_as_of_utc is None:
+        raise ValueError("Paper Runtime workspace requires data_as_of_utc")
+    return replace(
+        last_known,
+        read_state=WorkspaceReadState.STALE,
+        header=replace(
+            last_known.header,
+            runtime_state=BotRuntimeState.BLOCKED,
+            data_freshness=DataFreshness.STALE,
+        ),
+        message=None,
+    )
+
+
 def empty_open_orders_tab() -> OpenOrdersTabSnapshot:
     return OpenOrdersTabSnapshot(
         state=WorkspaceTabState.EMPTY,
