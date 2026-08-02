@@ -57,7 +57,8 @@ class NotificationStore:
         self._max_records = max_records
         self._records: tuple[NotificationRecord, ...] = ()
         self._last_runtime_state: BotRuntimeState | None = None
-        self._last_event_fingerprint: str | None = None
+        self._last_event_key: str | None = None
+        self._incident_sequence = 0
 
     @property
     def records(self) -> tuple[NotificationRecord, ...]:
@@ -77,7 +78,7 @@ class NotificationStore:
     def reset_transition_identity(self) -> None:
         """Forget only the prior session transition identity."""
         self._last_runtime_state = None
-        self._last_event_fingerprint = None
+        self._last_event_key = None
 
     def publish(
         self,
@@ -94,26 +95,27 @@ class NotificationStore:
         if header is not None:
             self._last_runtime_state = header.runtime_state
         if notification is None:
-            self._last_event_fingerprint = None
+            self._last_event_key = None
             return None
         if header is None:
-            self._last_event_fingerprint = None
+            self._last_event_key = None
             return None
 
         severity, category, message = notification
-        fingerprint = _fingerprint(header.runtime_state, category, message)
-        if fingerprint == self._last_event_fingerprint:
+        event_key = _event_key(header.runtime_state, category, message)
+        if event_key == self._last_event_key:
             return self._records[0]
 
+        self._incident_sequence += 1
         record = NotificationRecord(
-            fingerprint=fingerprint,
+            fingerprint=_incident_fingerprint(event_key, self._incident_sequence),
             occurred_at_utc=occurred_at_utc,
             severity=severity,
             category=category,
             message=message,
         )
         self._records = (record, *self._records[: self._max_records - 1])
-        self._last_event_fingerprint = fingerprint
+        self._last_event_key = event_key
         return record
 
     def acknowledge(self, fingerprint: str) -> bool:
@@ -156,13 +158,19 @@ class NotificationStore:
                 NotificationCategory.RECOVERY,
                 "Paper Bot recovery completed safely",
             )
-        if header.runtime_state is BotRuntimeState.RUNNING:
+        if (
+            header.runtime_state is BotRuntimeState.RUNNING
+            and self._last_runtime_state is not BotRuntimeState.RUNNING
+        ):
             return (
                 NotificationSeverity.INFO,
                 NotificationCategory.RUNTIME,
                 "Paper Bot is running",
             )
-        if header.runtime_state is BotRuntimeState.STOPPED:
+        if (
+            header.runtime_state is BotRuntimeState.STOPPED
+            and self._last_runtime_state is not BotRuntimeState.STOPPED
+        ):
             return (
                 NotificationSeverity.INFO,
                 NotificationCategory.RUNTIME,
@@ -171,13 +179,18 @@ class NotificationStore:
         return None
 
 
-def _fingerprint(
+def _event_key(
     runtime_state: BotRuntimeState,
     category: NotificationCategory,
     message: str,
 ) -> str:
     safe_event = "\x1f".join((runtime_state.value, category.value, message))
     return sha256(safe_event.encode("utf-8")).hexdigest()
+
+
+def _incident_fingerprint(event_key: str, sequence: int) -> str:
+    safe_incident = "\x1f".join((event_key, str(sequence)))
+    return sha256(safe_incident.encode("utf-8")).hexdigest()
 
 
 def _severity_rank(severity: NotificationSeverity) -> int:

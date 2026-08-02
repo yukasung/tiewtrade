@@ -28,10 +28,10 @@
 
 **Produces:** `NotificationStore.publish(result, occurred_at_utc)`, `acknowledge(fingerprint)`, `unread_count`, `highest_unread_severity`, immutable notification rows.
 
-- [ ] Write failing tests for BLOCKED/STALE/recovery mapping, UTC records, raw message sanitization, duplicate fingerprints and idempotent acknowledge.
-- [ ] Run `QT_QPA_PLATFORM=offscreen PYTHONPATH=src ../.venv/bin/python -m pytest tests/unit/ui/test_notification_center.py -q`; expect RED.
-- [ ] Implement enum/record/store with bounded in-memory list and stable fingerprint derived only from safe state/category/message.
-- [ ] Rerun focused tests; expect PASS. Commit `feat: add notification read model`.
+- [x] Write failing tests for BLOCKED/STALE/recovery mapping, UTC records, raw message sanitization, duplicate fingerprints and idempotent acknowledge.
+- [x] Run `QT_QPA_PLATFORM=offscreen PYTHONPATH=src ../.venv/bin/python -m pytest tests/unit/ui/test_notification_center.py -q`; RED was observed before implementation.
+- [x] Implement enum/record/store with bounded in-memory list and safe event keys plus per-incident fingerprints.
+- [x] Rerun focused tests; PASS. Commit `feat: add notification read model`.
 
 ## Task 2: Workflow and Desktop Drawer
 
@@ -41,21 +41,21 @@
 
 **Produces:** Header unread/highest severity status, drawer rows with UTC/severity/category/message, acknowledge UI action, and unchanged Bot Control state.
 
-- [ ] Write failing Qt tests for current-generation event rendering, stale callback rejection, repeated event responsiveness and acknowledge behavior.
-- [ ] Run focused UI tests; expect RED.
-- [ ] Wire store on Qt thread only; make drawer read model renderable at all sizes and preserve Blocked/Stale outside drawer.
-- [ ] Rerun tests; expect PASS. Commit `feat: show notification center safety feedback`.
+- [x] Write failing Qt tests for current-generation event rendering, stale callback rejection, repeated event responsiveness and acknowledge behavior.
+- [x] Run focused UI tests; RED was observed before implementation.
+- [x] Wire store on Qt thread only; make drawer read model renderable at all sizes and preserve Blocked/Stale outside drawer.
+- [x] Rerun tests; PASS. Commit `feat: show notification center safety feedback`.
 
 ## Task 3: Acceptance and Delivery Record
 
 **Files:** Modify acceptance tests and `PROJECT_PLAN.md`.
 
-- [ ] Add deterministic Paper/fake flows for Blocked, Stale and Recovery; assert no private credential/network or SQLite trading mutation from acknowledge.
-- [ ] Run focused acceptance RED/then GREEN.
-- [ ] Run `QT_QPA_PLATFORM=offscreen PYTHONPATH=src ../.venv/bin/python -m pytest -q`, Ruff, format check, MyPy and `git diff --check`.
-- [ ] Update project plan and commit `test: verify notification safety feedback`.
+- [x] Add deterministic Paper/fake flows for Blocked, Stale and Recovery; assert no private credential/network or SQLite trading mutation from acknowledge.
+- [x] Run focused acceptance RED/then GREEN.
+- [x] Run `QT_QPA_PLATFORM=offscreen PYTHONPATH=src ../.venv/bin/python -m pytest -q`, Ruff, format check, MyPy and `git diff --check`.
+- [x] Update project plan and commit `test: verify notification safety feedback`.
 
 ## Final Verification
 
-- [ ] Full pytest, Ruff check/format, MyPy and diff check pass.
-- [ ] Review all DEV-137 acceptance criteria; move Linear issue Done only after verification.
+- [x] Full pytest, Ruff check/format, MyPy and diff check pass (current verification: 955 tests passed).
+- [x] Review all DEV-137 acceptance criteria completed; Linear status is intentionally not changed by this plan update.
