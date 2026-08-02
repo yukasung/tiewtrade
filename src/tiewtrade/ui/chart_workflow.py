@@ -1,7 +1,7 @@
 import asyncio
 from collections.abc import Awaitable, Callable
 from datetime import UTC, datetime
-from typing import Any, Protocol, TypeGuard, cast, runtime_checkable
+from typing import Any, TypeGuard, cast
 
 from PySide6.QtCore import QObject, QThreadPool, Signal, Slot
 
@@ -9,24 +9,17 @@ from tiewtrade.application.chart_data import (
     ChartRange,
     ChartReadState,
     ChartSnapshot,
+    CompletedCandleFacts,
     append_completed_candle,
 )
 from tiewtrade.application.paper_session_setup import ConfiguredPaperSession
-from tiewtrade.market_data.candle import Candle
 from tiewtrade.ui.background_task import BackgroundTask
 
 LoadChart = Callable[[ConfiguredPaperSession, ChartRange], Awaitable[ChartSnapshot]]
 RefreshChart = Callable[
-    [ConfiguredPaperSession, ChartSnapshot, Candle], Awaitable[ChartSnapshot]
+    [ConfiguredPaperSession, ChartSnapshot, CompletedCandleFacts],
+    Awaitable[ChartSnapshot],
 ]
-
-
-@runtime_checkable
-class CompletedCandleFacts(Protocol):
-    symbol: str
-    timeframe: str
-    open_time: datetime
-    close_time: datetime
 
 
 class ChartWorkflow(QObject):
@@ -54,7 +47,7 @@ class ChartWorkflow(QObject):
         self._generation = 0
         self._active_task: BackgroundTask | None = None
         self._pending_request: tuple[int, ChartRange] | None = None
-        self._pending_completed_candle: Candle | None = None
+        self._pending_completed_candle: CompletedCandleFacts | None = None
         self._last_safe_range: ChartRange | None = None
         self._closed = False
 
@@ -95,7 +88,7 @@ class ChartWorkflow(QObject):
             snapshot is not None and snapshot.state is ChartReadState.LOADING
         ):
             pending = self._pending_completed_candle
-            typed_candle = cast(Candle, candle)
+            typed_candle = candle
             if pending is None or typed_candle.close_time > pending.close_time:
                 self._pending_completed_candle = typed_candle
             return
@@ -125,7 +118,7 @@ class ChartWorkflow(QObject):
                         refresh_chart,
                         session,
                         snapshot,
-                        cast(Candle, candle),
+                        candle,
                     )
                 )
             )
@@ -286,7 +279,7 @@ class ChartWorkflow(QObject):
         refresh_chart: RefreshChart,
         session: ConfiguredPaperSession,
         snapshot: ChartSnapshot,
-        candle: Candle,
+        candle: CompletedCandleFacts,
     ) -> ChartSnapshot:
         return await refresh_chart(session, snapshot, candle)
 

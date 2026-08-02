@@ -1,5 +1,6 @@
 from datetime import UTC, datetime
 from decimal import Decimal
+from typing import cast
 
 from tests.support.paper_session_setup import configured_spot_session
 from tests.support.trade_history_records import trade_fill
@@ -7,6 +8,7 @@ from tiewtrade.application.chart_data import (
     ChartRange,
     ChartReadState,
     ChartSnapshot,
+    CompletedCandleFacts,
 )
 from tiewtrade.application.paper_session_setup import ConfiguredPaperSession
 from tiewtrade.market_data.candle import Candle
@@ -157,13 +159,13 @@ def test_completed_candle_ignores_other_session_and_updates_current_snapshot() -
 def test_completed_candle_refreshes_shifted_latest_range_and_durable_fills() -> None:
     session = configured_spot_session()
     selected_range = chart_range(0, 20)
-    refreshed: list[tuple[ChartSnapshot, Candle]] = []
+    refreshed: list[tuple[ChartSnapshot, CompletedCandleFacts]] = []
     snapshots: list[ChartSnapshot] = []
 
     async def refresh_chart(
         configured: ConfiguredPaperSession,
         current: ChartSnapshot,
-        completed: Candle,
+        completed: CompletedCandleFacts,
     ) -> ChartSnapshot:
         assert configured is session
         refreshed.append((current, completed))
@@ -175,7 +177,7 @@ def test_completed_candle_refreshes_shifted_latest_range_and_durable_fills() -> 
             session=session,
             chart_range=shifted_range,
             observed_at_utc=completed.close_time,
-            candles=(completed,),
+            candles=(cast(Candle, completed),),
             fills=(
                 trade_fill(
                     fill_id="runtime-buy",
@@ -217,7 +219,7 @@ def test_completed_candle_refresh_keeps_latest_event_while_worker_is_active() ->
     async def refresh_chart(
         configured: ConfiguredPaperSession,
         current: ChartSnapshot,
-        completed: Candle,
+        completed: CompletedCandleFacts,
     ) -> ChartSnapshot:
         refreshed_minutes.append(completed.open_time.minute)
         duration = current.chart_range.end - current.chart_range.start
@@ -226,7 +228,7 @@ def test_completed_candle_refresh_keeps_latest_event_while_worker_is_active() ->
             session=configured,
             chart_range=next_range,
             observed_at_utc=completed.close_time,
-            candles=(completed,),
+            candles=(cast(Candle, completed),),
             fills=(),
             state=ChartReadState.READY,
         )

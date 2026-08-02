@@ -9,7 +9,11 @@ from tiewtrade.application.bot_control import (
     BotLifecycleResult,
     workspace_with_runtime_state,
 )
-from tiewtrade.application.chart_data import ChartRange, ChartSnapshot
+from tiewtrade.application.chart_data import (
+    ChartRange,
+    ChartSnapshot,
+    CompletedCandleFacts,
+)
 from tiewtrade.application.chart_history import ChartHistory
 from tiewtrade.application.database_compatibility import DatabaseCompatibilityError
 from tiewtrade.application.paper_runtime import PaperRuntimeController
@@ -39,7 +43,6 @@ from tiewtrade.integrations.sqlite.paper_runtime_lifecycle import (
     SQLitePaperRuntimeLifecycle,
 )
 from tiewtrade.integrations.sqlite.trade_history import SQLiteTradeHistory
-from tiewtrade.market_data.candle import Candle
 from tiewtrade.trading.session_config import MarketType
 from tiewtrade.trading.symbol_rules import SymbolRules
 from tiewtrade.trading.trade_history import TradeFill
@@ -345,7 +348,7 @@ def run_desktop(database_path: Path | None = None) -> int:
     async def refresh_chart(
         session: ConfiguredPaperSession,
         snapshot: ChartSnapshot,
-        candle: Candle,
+        candle: CompletedCandleFacts,
     ) -> ChartSnapshot:
         prepare_database()
         chart_history = ChartHistory(

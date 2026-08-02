@@ -1,7 +1,13 @@
 from collections.abc import Callable
 from datetime import UTC, datetime
+from typing import cast
 
-from tiewtrade.application.chart_data import ChartRange, ChartReadState, ChartSnapshot
+from tiewtrade.application.chart_data import (
+    ChartRange,
+    ChartReadState,
+    ChartSnapshot,
+    CompletedCandleFacts,
+)
 from tiewtrade.application.paper_session_setup import ConfiguredPaperSession
 from tiewtrade.integrations.sqlite.trade_history import SQLiteTradeHistory
 from tiewtrade.market_data.candle import Candle
@@ -52,7 +58,7 @@ class ChartHistory:
         self,
         session: ConfiguredPaperSession,
         snapshot: ChartSnapshot,
-        candle: Candle,
+        candle: CompletedCandleFacts,
     ) -> ChartSnapshot:
         if snapshot.session_id != session.config.session_id:
             raise ValueError("ChartSnapshot Session must match Session")
@@ -70,7 +76,7 @@ class ChartHistory:
             return snapshot
 
         candles_by_open_time = {item.open_time: item for item in snapshot.candles}
-        candles_by_open_time[candle.open_time] = candle
+        candles_by_open_time[candle.open_time] = cast(Candle, candle)
         candles = tuple(
             candles_by_open_time[open_time]
             for open_time in sorted(candles_by_open_time)

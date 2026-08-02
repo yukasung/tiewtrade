@@ -2,11 +2,27 @@ from dataclasses import InitVar, dataclass, field
 from datetime import datetime, timedelta
 from decimal import Decimal
 from enum import StrEnum
+from typing import Protocol, runtime_checkable
 from uuid import UUID
 
 from tiewtrade.application.paper_session_setup import ConfiguredPaperSession
 from tiewtrade.market_data.candle import Candle
 from tiewtrade.trading.trade_history import FillSide, TradeFill
+
+
+@runtime_checkable
+class CompletedCandleFacts(Protocol):
+    @property
+    def symbol(self) -> str: ...
+
+    @property
+    def timeframe(self) -> str: ...
+
+    @property
+    def open_time(self) -> datetime: ...
+
+    @property
+    def close_time(self) -> datetime: ...
 
 
 def _require_utc(value: datetime, field: str) -> None:

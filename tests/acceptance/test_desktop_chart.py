@@ -1,5 +1,6 @@
 from datetime import UTC, datetime
 from decimal import Decimal
+from typing import cast
 
 from PySide6.QtWidgets import QPushButton
 from pytestqt.qtbot import QtBot
@@ -7,7 +8,12 @@ from pytestqt.qtbot import QtBot
 from tests.support.paper_session_setup import configured_spot_session
 from tests.support.trade_history_records import trade_fill
 from tests.support.trade_history_ui import empty_basket_page, empty_fills
-from tiewtrade.application.chart_data import ChartRange, ChartReadState, ChartSnapshot
+from tiewtrade.application.chart_data import (
+    ChartRange,
+    ChartReadState,
+    ChartSnapshot,
+    CompletedCandleFacts,
+)
 from tiewtrade.application.paper_session_setup import (
     ConfiguredPaperSession,
     PaperSessionCreateOutcome,
@@ -69,7 +75,7 @@ def test_runtime_completed_candle_updates_chart_and_new_durable_fill_marker(
     session = configured_spot_session()
     relay = RuntimeSnapshotRelay()
     relayed: list[Candle] = []
-    refreshed: list[Candle] = []
+    refreshed: list[CompletedCandleFacts] = []
     relay.completed_candle_ready.connect(
         lambda candle, _generation: relayed.append(candle)
     )
@@ -89,7 +95,7 @@ def test_runtime_completed_candle_updates_chart_and_new_durable_fill_marker(
     async def refresh_chart(
         configured: ConfiguredPaperSession,
         current: ChartSnapshot,
-        completed: Candle,
+        completed: CompletedCandleFacts,
     ) -> ChartSnapshot:
         refreshed.append(completed)
         duration = current.chart_range.end - current.chart_range.start
@@ -104,7 +110,7 @@ def test_runtime_completed_candle_updates_chart_and_new_durable_fill_marker(
             session=configured,
             chart_range=next_range,
             observed_at_utc=completed.close_time,
-            candles=(completed,),
+            candles=(cast(Candle, completed),),
             fills=(fill,),
             state=ChartReadState.READY,
         )
