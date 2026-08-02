@@ -9,6 +9,8 @@ from tiewtrade.application.chart_data import (
     ChartReadState,
     ChartSnapshot,
     append_completed_candle,
+    default_chart_range,
+    latest_completed_boundary,
 )
 from tiewtrade.application.paper_session_setup import ConfiguredPaperSession
 from tiewtrade.market_data.candle import Candle
@@ -44,6 +46,17 @@ def test_chart_range_requires_an_ordered_utc_half_open_range() -> None:
         ChartRange(datetime(2026, 1, 1), start + timedelta(minutes=5))
     with pytest.raises(ValueError, match="start must be before end"):
         ChartRange(start, start)
+
+
+def test_default_chart_range_ends_at_latest_completed_timeframe_boundary() -> None:
+    observed_at_utc = datetime(2026, 1, 1, 10, 3, tzinfo=UTC)
+    completed_end = datetime(2026, 1, 1, 10, 0, tzinfo=UTC)
+
+    assert latest_completed_boundary("5m", observed_at_utc) == completed_end
+    assert default_chart_range(session(), observed_at_utc) == ChartRange(
+        datetime(2026, 1, 1, 0, 0, tzinfo=UTC),
+        completed_end,
+    )
 
 
 def test_snapshot_reads_immutable_chart_facts_from_configured_paper_session() -> None:

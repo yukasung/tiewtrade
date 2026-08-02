@@ -1,13 +1,17 @@
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import datetime
 from decimal import Decimal
 
 from PySide6.QtCore import QLineF, QPointF, QRectF, Signal
 from PySide6.QtGui import QColor, QPainter, QPen, QPolygonF
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QWidget
 
-from tiewtrade.application.chart_data import ChartRange, ChartReadState, ChartSnapshot
-from tiewtrade.market_data.config import timeframe_to_interval
+from tiewtrade.application.chart_data import (
+    ChartRange,
+    ChartReadState,
+    ChartSnapshot,
+    latest_completed_boundary,
+)
 from tiewtrade.trading.trade_history import FillSide
 
 
@@ -99,7 +103,11 @@ class CandlestickChartWidget(QWidget):
         self.previous_range_button.setEnabled(has_range)
         self.next_range_button.setEnabled(
             has_range
-            and snapshot.chart_range.end < _latest_completed_boundary(snapshot)
+            and snapshot.chart_range.end
+            < latest_completed_boundary(
+                snapshot.timeframe,
+                snapshot.observed_at_utc,
+            )
         )
         self.retry_button.setVisible(snapshot.state is ChartReadState.UNAVAILABLE)
         self.update()
@@ -141,7 +149,10 @@ class CandlestickChartWidget(QWidget):
             return
         chart_range = self._snapshot.chart_range
         duration = chart_range.end - chart_range.start
-        latest_end = _latest_completed_boundary(self._snapshot)
+        latest_end = latest_completed_boundary(
+            self._snapshot.timeframe,
+            self._snapshot.observed_at_utc,
+        )
         next_end = min(chart_range.end + duration, latest_end)
         next_range = ChartRange(next_end - duration, next_end)
         if next_range == chart_range:
@@ -274,13 +285,6 @@ def _build_painter_model(
 
 def _range_text(chart_range: ChartRange) -> str:
     return f"{chart_range.start:%Y-%m-%d %H:%M}–{chart_range.end:%H:%M} UTC"
-
-
-def _latest_completed_boundary(snapshot: ChartSnapshot) -> datetime:
-    interval = timeframe_to_interval(snapshot.timeframe)
-    epoch = datetime(1970, 1, 1, tzinfo=UTC)
-    elapsed = snapshot.observed_at_utc - epoch
-    return epoch + (elapsed // interval) * interval
 
 
 def _price_y(price: Decimal, low: Decimal, high: Decimal, surface: QRectF) -> float:

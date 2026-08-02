@@ -10,7 +10,6 @@ from tiewtrade.application.paper_session_setup import (
     ConfiguredPaperSession,
     PaperSessionSetupValues,
 )
-from tiewtrade.market_data.config import timeframe_to_interval
 from tiewtrade.ui.background_task import BackgroundTask
 from tiewtrade.ui.bot_lifecycle_workflow import (
     BotLifecycleWorkflow,
@@ -55,7 +54,6 @@ class MainWindow(QMainWindow):
         super().__init__()
         self._thread_pool = thread_pool or QThreadPool.globalInstance()
         self._load_chart = load_chart
-        self._chart_clock = chart_clock
         self._shutdown_runtime = shutdown_runtime
         self._close_sequence_started = False
         self._close_sequence_completed = False
@@ -162,10 +160,7 @@ class MainWindow(QMainWindow):
         self._pending_validation_field = None
         self._lifecycle_workflow.configure(session)
         if self._load_chart is not None:
-            self._chart_workflow.configure(session)
-            self._chart_workflow.load_range(
-                _initial_chart_range(session, self._chart_clock())
-            )
+            self._chart_workflow.start(session)
 
     @Slot(object, int)
     def _runtime_completed_candle(self, candle: object, generation: int) -> None:
@@ -282,16 +277,4 @@ async def _unused_chart_loader(
         fills=(),
         state=ChartReadState.UNAVAILABLE,
         message="Chart is unavailable",
-    )
-
-
-def _initial_chart_range(
-    session: ConfiguredPaperSession, observed_at_utc: datetime
-) -> ChartRange:
-    interval = timeframe_to_interval(session.market_data.timeframe)
-    elapsed = observed_at_utc - datetime(1970, 1, 1, tzinfo=UTC)
-    completed_end = datetime(1970, 1, 1, tzinfo=UTC) + (elapsed // interval) * interval
-    return ChartRange(
-        start=completed_end - interval * 120,
-        end=completed_end,
     )

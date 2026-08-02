@@ -11,6 +11,7 @@ from tiewtrade.application.chart_data import (
     ChartSnapshot,
     CompletedCandleFacts,
     append_completed_candle,
+    default_chart_range,
 )
 from tiewtrade.application.paper_session_setup import ConfiguredPaperSession
 from tiewtrade.ui.background_task import BackgroundTask
@@ -60,6 +61,10 @@ class ChartWorkflow(QObject):
         self._pending_request = None
         self._pending_completed_candle = None
         self._last_safe_range = None
+
+    def start(self, session: ConfiguredPaperSession) -> None:
+        self.configure(session)
+        self.load_range(default_chart_range(session, self._clock()))
 
     def load_range(self, chart_range: ChartRange) -> None:
         if self._closed or self._session is None:
@@ -150,6 +155,7 @@ class ChartWorkflow(QObject):
         ):
             return
         self._snapshot = result
+        self._last_safe_range = result.chart_range
         self.snapshot_changed.emit(result)
 
     def _refresh_failed(
@@ -179,9 +185,15 @@ class ChartWorkflow(QObject):
         if task is not self._active_task:
             return
         self._active_task = None
-        if not self._closed:
-            self.loading_changed.emit(False)
-            self._drain_pending_completed_candle()
+        pending = self._pending_request
+        self._pending_request = None
+        if self._closed:
+            return
+        if pending is not None:
+            self._start_load(*pending)
+            return
+        self.loading_changed.emit(False)
+        self._drain_pending_completed_candle()
 
     @Slot()
     def close(self) -> None:

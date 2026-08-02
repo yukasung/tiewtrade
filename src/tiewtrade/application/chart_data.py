@@ -1,5 +1,5 @@
 from dataclasses import InitVar, dataclass, field
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from enum import StrEnum
 from typing import Protocol, runtime_checkable
@@ -7,7 +7,11 @@ from uuid import UUID
 
 from tiewtrade.application.paper_session_setup import ConfiguredPaperSession
 from tiewtrade.market_data.candle import Candle
+from tiewtrade.market_data.config import timeframe_to_interval
 from tiewtrade.trading.trade_history import FillSide, TradeFill
+
+_UTC_EPOCH = datetime(1970, 1, 1, tzinfo=UTC)
+_DEFAULT_VISIBLE_CANDLE_COUNT = 120
 
 
 @runtime_checkable
@@ -43,6 +47,30 @@ class ChartRange:
 
     def contains(self, value: datetime) -> bool:
         return self.start <= value < self.end
+
+
+def latest_completed_boundary(
+    timeframe: str,
+    observed_at_utc: datetime,
+) -> datetime:
+    _require_utc(observed_at_utc, "observed_at_utc")
+    interval = timeframe_to_interval(timeframe)
+    return _UTC_EPOCH + ((observed_at_utc - _UTC_EPOCH) // interval) * interval
+
+
+def default_chart_range(
+    session: ConfiguredPaperSession,
+    observed_at_utc: datetime,
+) -> ChartRange:
+    interval = timeframe_to_interval(session.market_data.timeframe)
+    completed_end = latest_completed_boundary(
+        session.market_data.timeframe,
+        observed_at_utc,
+    )
+    return ChartRange(
+        start=completed_end - interval * _DEFAULT_VISIBLE_CANDLE_COUNT,
+        end=completed_end,
+    )
 
 
 @dataclass(frozen=True, slots=True)

@@ -213,10 +213,13 @@ def test_desktop_composition_supplies_chart_loader_without_ui_adapter_imports(
 ) -> None:
     captured: dict[str, object] = {}
     selected_endpoints: list[BinancePublicEndpoints] = []
+    sources: list[object] = []
 
     class FakePublicMarketData:
         def __init__(self, endpoints: BinancePublicEndpoints) -> None:
             selected_endpoints.append(endpoints)
+            self.closed = False
+            sources.append(self)
 
         async def load_range(
             self, config: object, *, start: object, end: object
@@ -225,7 +228,7 @@ def test_desktop_composition_supplies_chart_loader_without_ui_adapter_imports(
             return ()
 
         async def close(self) -> None:
-            return None
+            self.closed = True
 
     def capture_desktop(**dependencies: object) -> int:
         captured.update(dependencies)
@@ -267,11 +270,17 @@ def test_desktop_composition_supplies_chart_loader_without_ui_adapter_imports(
     assert all(
         "/api/v3/account" not in item.rest_klines_url for item in selected_endpoints
     )
+    assert len(sources) == 2
+    assert all(cast(FakePublicMarketData, source).closed for source in sources)
 
     ui_source = "\n".join(
         path.read_text() for path in Path("src/tiewtrade/ui").glob("*.py")
     )
     assert "tiewtrade.application.chart_history" not in ui_source
+    chart_history_source = Path(
+        "src/tiewtrade/application/chart_history.py"
+    ).read_text()
+    assert "tiewtrade.integrations" not in chart_history_source
 
 
 def test_desktop_composition_supplies_migrated_trade_history_queries(

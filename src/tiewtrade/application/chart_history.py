@@ -1,6 +1,7 @@
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from datetime import UTC, datetime
 from typing import cast
+from uuid import UUID
 
 from tiewtrade.application.chart_data import (
     ChartRange,
@@ -9,21 +10,25 @@ from tiewtrade.application.chart_data import (
     CompletedCandleFacts,
 )
 from tiewtrade.application.paper_session_setup import ConfiguredPaperSession
-from tiewtrade.integrations.sqlite.trade_history import SQLiteTradeHistory
 from tiewtrade.market_data.candle import Candle
-from tiewtrade.market_data.candle_source import HistoricalCandleSource
+from tiewtrade.trading.trade_history import TradeFill
+
+LoadChartCandles = Callable[
+    [ConfiguredPaperSession, ChartRange], Awaitable[tuple[Candle, ...]]
+]
+ListChartFills = Callable[[UUID, ChartRange], tuple[TradeFill, ...]]
 
 
 class ChartHistory:
     def __init__(
         self,
         *,
-        source_factory: Callable[[], HistoricalCandleSource],
-        trade_history: SQLiteTradeHistory,
+        load_candles: LoadChartCandles,
+        list_fills: ListChartFills,
         clock: Callable[[], datetime] = lambda: datetime.now(UTC),
     ) -> None:
-        self._source_factory = source_factory
-        self._trade_history = trade_history
+        self._load_candles = load_candles
+        self._list_fills = list_fills
         self._clock = clock
 
     async def load(
@@ -31,19 +36,10 @@ class ChartHistory:
         session: ConfiguredPaperSession,
         chart_range: ChartRange,
     ) -> ChartSnapshot:
-        source = self._source_factory()
-        try:
-            candles = await source.load_range(
-                session.market_data,
-                start=chart_range.start,
-                end=chart_range.end,
-            )
-        finally:
-            await source.close()
-        fills = self._trade_history.list_session_fills(
+        candles = await self._load_candles(session, chart_range)
+        fills = self._list_fills(
             session.config.session_id,
-            chart_range.start,
-            chart_range.end,
+            chart_range,
         )
         return ChartSnapshot(
             session=session,
@@ -83,10 +79,9 @@ class ChartHistory:
             if chart_range.start <= open_time
             and candles_by_open_time[open_time].close_time <= chart_range.end
         )
-        fills = self._trade_history.list_session_fills(
+        fills = self._list_fills(
             session.config.session_id,
-            chart_range.start,
-            chart_range.end,
+            chart_range,
         )
         return ChartSnapshot(
             session=session,

@@ -43,6 +43,7 @@ from tiewtrade.integrations.sqlite.paper_runtime_lifecycle import (
     SQLitePaperRuntimeLifecycle,
 )
 from tiewtrade.integrations.sqlite.trade_history import SQLiteTradeHistory
+from tiewtrade.market_data.candle import Candle
 from tiewtrade.trading.session_config import MarketType
 from tiewtrade.trading.symbol_rules import SymbolRules
 from tiewtrade.trading.trade_history import TradeFill
@@ -332,17 +333,42 @@ def run_desktop(database_path: Path | None = None) -> int:
         prepare_database=prepare_database,
     )
 
+    async def load_chart_candles(
+        session: ConfiguredPaperSession,
+        chart_range: ChartRange,
+    ) -> tuple[Candle, ...]:
+        source = BinancePublicMarketData(
+            BinancePublicEndpoints.for_market_type(session.config.market_type)
+        )
+        try:
+            return await source.load_range(
+                session.market_data,
+                start=chart_range.start,
+                end=chart_range.end,
+            )
+        finally:
+            await source.close()
+
+    def list_chart_fills(
+        session_id: UUID,
+        chart_range: ChartRange,
+    ) -> tuple[TradeFill, ...]:
+        return history.list_session_fills(
+            session_id,
+            chart_range.start,
+            chart_range.end,
+        )
+
+    chart_history = ChartHistory(
+        load_candles=load_chart_candles,
+        list_fills=list_chart_fills,
+    )
+
     async def load_chart(
         session: ConfiguredPaperSession,
         chart_range: ChartRange,
     ) -> ChartSnapshot:
         prepare_database()
-        chart_history = ChartHistory(
-            source_factory=lambda: BinancePublicMarketData(
-                BinancePublicEndpoints.for_market_type(session.config.market_type)
-            ),
-            trade_history=history,
-        )
         return await chart_history.load(session, chart_range)
 
     async def refresh_chart(
@@ -351,12 +377,6 @@ def run_desktop(database_path: Path | None = None) -> int:
         candle: CompletedCandleFacts,
     ) -> ChartSnapshot:
         prepare_database()
-        chart_history = ChartHistory(
-            source_factory=lambda: BinancePublicMarketData(
-                BinancePublicEndpoints.for_market_type(session.config.market_type)
-            ),
-            trade_history=history,
-        )
         return await chart_history.refresh_completed(session, snapshot, candle)
 
     return run_desktop_ui(

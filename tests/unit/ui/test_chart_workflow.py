@@ -30,6 +30,27 @@ class DeferredThreadPool:
         self.tasks.append(task)
 
 
+def test_start_loads_application_owned_default_visible_range() -> None:
+    session = configured_spot_session()
+    requests: list[ChartRange] = []
+    workflow = ChartWorkflow(
+        load_chart=lambda configured, requested: load_snapshot(
+            configured, requested, requests
+        ),
+        thread_pool=ImmediateThreadPool(),  # type: ignore[arg-type]
+        clock=lambda: datetime(2026, 1, 1, 10, 3, tzinfo=UTC),
+    )
+
+    workflow.start(session)
+
+    assert requests == [
+        ChartRange(
+            datetime(2026, 1, 1, 0, 0, tzinfo=UTC),
+            datetime(2026, 1, 1, 10, 0, tzinfo=UTC),
+        )
+    ]
+
+
 def test_latest_chart_request_wins() -> None:
     session = configured_spot_session()
     first_range = chart_range(0, 20)
@@ -209,6 +230,43 @@ def test_completed_candle_refreshes_shifted_latest_range_and_durable_fills() -> 
     assert [marker.fill_id for marker in snapshots[-1].markers] == ["runtime-buy"]
 
 
+def test_retry_uses_latest_runtime_refreshed_visible_range() -> None:
+    session = configured_spot_session()
+    initial_range = chart_range(0, 20)
+    refreshed_range = chart_range(5, 25)
+    load_requests: list[ChartRange] = []
+
+    async def refresh_chart(
+        configured: ConfiguredPaperSession,
+        current: ChartSnapshot,
+        completed: CompletedCandleFacts,
+    ) -> ChartSnapshot:
+        del current
+        return ChartSnapshot(
+            session=configured,
+            chart_range=refreshed_range,
+            observed_at_utc=completed.close_time,
+            candles=(cast(Candle, completed),),
+            fills=(),
+            state=ChartReadState.READY,
+        )
+
+    workflow = ChartWorkflow(
+        load_chart=lambda configured, requested: load_snapshot(
+            configured, requested, load_requests
+        ),
+        refresh_chart=refresh_chart,
+        thread_pool=ImmediateThreadPool(),  # type: ignore[arg-type]
+    )
+    workflow.configure(session)
+    workflow.load_range(initial_range)
+
+    workflow.completed_candle(candle("5m", 20))
+    workflow.retry()
+
+    assert load_requests == [initial_range, refreshed_range]
+
+
 def test_completed_candle_refresh_keeps_latest_event_while_worker_is_active() -> None:
     session = configured_spot_session()
     selected_range = chart_range(0, 20)
@@ -253,6 +311,42 @@ def test_completed_candle_refresh_keeps_latest_event_while_worker_is_active() ->
     assert refreshed_minutes == [20, 25]
     assert snapshots[-1].candles[0].open_time.minute == 25
     assert snapshots[-1].chart_range.end.minute == 30
+
+
+def test_load_queued_during_refresh_is_drained_and_latest_request_wins() -> None:
+    session = configured_spot_session()
+    initial_range = chart_range(0, 20)
+    queued_range = chart_range(20, 40)
+    latest_range = chart_range(40, 55)
+    calls: list[ChartRange] = []
+    pool = DeferredThreadPool()
+
+    async def refresh_chart(
+        configured: ConfiguredPaperSession,
+        current: ChartSnapshot,
+        completed: CompletedCandleFacts,
+    ) -> ChartSnapshot:
+        del configured, completed
+        return current
+
+    workflow = ChartWorkflow(
+        load_chart=lambda configured, requested: load_snapshot(
+            configured, requested, calls
+        ),
+        refresh_chart=refresh_chart,
+        thread_pool=pool,  # type: ignore[arg-type]
+    )
+    workflow.configure(session)
+    workflow.load_range(initial_range)
+    pool.tasks[0].run()
+
+    workflow.completed_candle(candle("5m", 20))
+    workflow.load_range(queued_range)
+    workflow.load_range(latest_range)
+    pool.tasks[1].run()
+    pool.tasks[2].run()
+
+    assert calls == [initial_range, latest_range]
 
 
 async def load_snapshot(
