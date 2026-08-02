@@ -48,7 +48,7 @@ class SQLiteDatabase:
                     _create_bot_sessions_schema(connection)
                 if version in {0, 1, 2, 3}:
                     _create_paper_runtime_lifecycle_schema(connection)
-                if version == 4:
+                if version in {1, 2, 3, 4} and _table_exists(connection, "trade_fills"):
                     _create_chart_history_indexes(connection)
                 connection.execute(f"PRAGMA user_version = {self._SCHEMA_VERSION}")
         finally:
@@ -126,6 +126,16 @@ def _create_chart_history_indexes(connection: sqlite3.Connection) -> None:
         CREATE INDEX IF NOT EXISTS trade_fills_session_time_idx
         ON trade_fills (session_id, filled_at_utc, fill_id)
         """
+    )
+
+
+def _table_exists(connection: sqlite3.Connection, name: str) -> bool:
+    return (
+        connection.execute(
+            "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = ?",
+            (name,),
+        ).fetchone()
+        is not None
     )
 
 

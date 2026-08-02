@@ -486,6 +486,51 @@ def test_migration_from_v4_adds_session_fill_history_index(tmp_path: Path) -> No
     assert "trade_fills_session_time_idx" in index_names
 
 
+@pytest.mark.parametrize("version", [1, 2, 3])
+def test_migration_from_legacy_schema_adds_session_fill_history_index(
+    tmp_path: Path,
+    version: int,
+) -> None:
+    database = SQLiteDatabase(tmp_path / "history.sqlite3")
+    with database.connect() as connection:
+        if version == 1:
+            connection.execute(
+                "CREATE TABLE basket_results (basket_id TEXT PRIMARY KEY)"
+            )
+        connection.execute(
+            """
+            CREATE TABLE trade_fills (
+                fill_id TEXT PRIMARY KEY,
+                session_id TEXT NOT NULL,
+                filled_at_utc TEXT NOT NULL
+            )
+            """
+        )
+        connection.execute(f"PRAGMA user_version = {version}")
+
+    database.migrate()
+
+    with database.connect() as connection:
+        index_names = {
+            row["name"]
+            for row in connection.execute(
+                "SELECT name FROM sqlite_master WHERE type = 'index'"
+            )
+        }
+        query_plan = connection.execute(
+            """
+            EXPLAIN QUERY PLAN
+            SELECT fill_id FROM trade_fills
+            WHERE session_id = ? AND filled_at_utc >= ? AND filled_at_utc < ?
+            ORDER BY filled_at_utc, fill_id
+            """,
+            ("session-1", "2026-01-01T00:00:00+00:00", "2026-01-02T00:00:00+00:00"),
+        ).fetchall()
+
+    assert "trade_fills_session_time_idx" in index_names
+    assert any("trade_fills_session_time_idx" in row[3] for row in query_plan)
+
+
 def test_migration_rejects_future_schema_version(tmp_path: Path) -> None:
     database = SQLiteDatabase(tmp_path / "history.sqlite3")
     with database.connect() as connection:
