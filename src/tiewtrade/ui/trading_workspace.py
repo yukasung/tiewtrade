@@ -24,6 +24,7 @@ from tiewtrade.application.trading_workspace import (
     WorkspaceReadState,
 )
 from tiewtrade.ui.bot_control import BotControlWidget
+from tiewtrade.ui.notification_center import NotificationRecord, NotificationStore
 from tiewtrade.ui.open_orders_table import OpenOrdersTable
 from tiewtrade.ui.position_basket_table import PositionBasketTable
 from tiewtrade.ui.preset_display import preset_display_name
@@ -32,6 +33,7 @@ from tiewtrade.ui.trade_history_page import TradeHistoryPage
 
 BOT_CONTROL_BREAKPOINT = 1200
 BOT_CONTROL_WIDTH = 360
+NOTIFICATION_DRAWER_WIDTH = 420
 
 _RUNTIME_STATE_TEXT = {
     BotRuntimeState.NO_SESSION: "No Session",
@@ -89,6 +91,9 @@ class TradingWorkspace(QWidget):
         self.header_runtime = QLabel("No Session")
         self.header_freshness = QLabel("No Session")
         self.header_read_state = QLabel("Empty")
+        self.notification_button = QPushButton("Notifications · 0")
+        self.notification_button.setObjectName("notificationButton")
+        self.notification_button.setAccessibleName("Notifications: 0 unread")
 
         self.chart_state = QLabel("Chart is not available yet")
 
@@ -113,11 +118,16 @@ class TradingWorkspace(QWidget):
         unavailable_layout.addStretch()
 
         self._build_layout()
+        self._notification_store: NotificationStore | None = None
+        self.notification_rows: list[QLabel] = []
+        self.notification_acknowledge_buttons: list[QPushButton] = []
+        self._build_notification_drawer()
         self.compact_mode = self.width() < BOT_CONTROL_BREAKPOINT
         self._drawer_open = False
         self.bot_control_button = QPushButton()
         self.bot_control_button.setObjectName("secondaryButton")
         self.bot_control_button.clicked.connect(self.open_bot_control)
+        self.notification_button.clicked.connect(self.open_notifications)
         self._header_layout.addWidget(self.bot_control_button)
         self._set_bot_control_state("No Session")
         self._drawer_close_shortcut = QShortcut(QKeySequence(Qt.Key.Key_Escape), self)
@@ -192,6 +202,8 @@ class TradingWorkspace(QWidget):
             self._apply_layout_mode()
         if self.compact_mode and self._drawer_open:
             self._position_drawer()
+        if self.notification_drawer.isVisible():
+            self._position_notification_drawer()
 
     @Slot()
     def open_bot_control(self) -> None:
@@ -213,10 +225,40 @@ class TradingWorkspace(QWidget):
         self.bot_control.hide()
         self.bot_control_button.setFocus()
 
+    @Slot(object)
+    def show_notifications(self, value: object) -> None:
+        if not isinstance(value, NotificationStore):
+            return
+        self._notification_store = value
+        self._update_notification_header(value)
+        self._render_notification_rows(value.records)
+
+    @Slot()
+    def open_notifications(self) -> None:
+        self._position_notification_drawer()
+        self.notification_drawer.show()
+        self.notification_drawer.raise_()
+        self.notification_close_button.setFocus(Qt.FocusReason.OtherFocusReason)
+
+    @Slot()
+    def close_notifications(self) -> None:
+        self.notification_drawer.hide()
+        self.notification_button.setFocus()
+
     def _position_drawer(self) -> None:
         width = min(BOT_CONTROL_WIDTH, self.width())
         top = self.workspace_header.geometry().bottom() + 13
         self.bot_control.setGeometry(
+            self.width() - width,
+            top,
+            width,
+            self.height() - top,
+        )
+
+    def _position_notification_drawer(self) -> None:
+        width = min(NOTIFICATION_DRAWER_WIDTH, self.width())
+        top = self.workspace_header.geometry().bottom() + 13
+        self.notification_drawer.setGeometry(
             self.width() - width,
             top,
             width,
@@ -268,6 +310,7 @@ class TradingWorkspace(QWidget):
         ):
             self._header_layout.addWidget(label)
         self._header_layout.addStretch()
+        self._header_layout.addWidget(self.notification_button)
         root.addWidget(self.workspace_header)
 
         self._body = QWidget()
@@ -323,6 +366,37 @@ class TradingWorkspace(QWidget):
         self._body_layout.addWidget(self.bot_control)
         root.addWidget(self._body, 1)
 
+    def _build_notification_drawer(self) -> None:
+        self.notification_drawer = QFrame(self)
+        self.notification_drawer.setObjectName("notificationDrawer")
+        drawer_layout = QVBoxLayout(self.notification_drawer)
+        drawer_layout.setContentsMargins(16, 16, 16, 16)
+        drawer_header = QHBoxLayout()
+        drawer_title = QLabel("Notifications")
+        drawer_title.setObjectName("sectionTitle")
+        drawer_header.addWidget(drawer_title)
+        drawer_header.addStretch()
+        self.notification_close_button = QPushButton("Close")
+        self.notification_close_button.setObjectName("secondaryButton")
+        self.notification_close_button.setAccessibleName("Close Notifications")
+        self.notification_close_button.clicked.connect(self.close_notifications)
+        drawer_header.addWidget(self.notification_close_button)
+        drawer_layout.addLayout(drawer_header)
+
+        notification_scroll = QScrollArea()
+        notification_scroll.setWidgetResizable(True)
+        notification_scroll.setHorizontalScrollBarPolicy(
+            Qt.ScrollBarPolicy.ScrollBarAlwaysOff
+        )
+        notification_scroll.setFrameShape(QFrame.Shape.NoFrame)
+        self.notification_list = QWidget()
+        self.notification_list_layout = QVBoxLayout(self.notification_list)
+        self.notification_list_layout.setContentsMargins(0, 0, 0, 0)
+        self.notification_list_layout.setSpacing(8)
+        notification_scroll.setWidget(self.notification_list)
+        drawer_layout.addWidget(notification_scroll, 1)
+        self.notification_drawer.hide()
+
     @Slot(int)
     def _tab_changed(self, index: int) -> None:
         if self.tabs.widget(index) is self.trade_history:
@@ -331,6 +405,69 @@ class TradingWorkspace(QWidget):
     def _set_bot_control_state(self, state: str) -> None:
         self.bot_control_button.setText(f"Bot Control · {state}")
         self.bot_control_button.setAccessibleName(f"Bot Control: {state}")
+
+    def _update_notification_header(self, store: NotificationStore) -> None:
+        unread_count = store.unread_count
+        highest = store.highest_unread_severity
+        self.notification_button.setText(f"Notifications · {unread_count}")
+        accessible_name = f"Notifications: {unread_count} unread"
+        if highest is not None:
+            accessible_name += f"; highest severity {highest.value.title()}"
+        self.notification_button.setAccessibleName(accessible_name)
+
+    def _render_notification_rows(
+        self, records: tuple[NotificationRecord, ...]
+    ) -> None:
+        while self.notification_list_layout.count():
+            item = self.notification_list_layout.takeAt(0)
+            if item is None:
+                continue
+            widget = item.widget()
+            if widget is not None:
+                widget.deleteLater()
+        self.notification_rows = []
+        self.notification_acknowledge_buttons = []
+        if not records:
+            self.notification_list_layout.addWidget(QLabel("No notifications"))
+            self.notification_list_layout.addStretch()
+            return
+        for record in records:
+            row = QFrame()
+            row_layout = QVBoxLayout(row)
+            row_layout.setContentsMargins(0, 0, 0, 0)
+            message = QLabel(self._notification_row_text(record))
+            message.setWordWrap(True)
+            row_layout.addWidget(message)
+            acknowledge = QPushButton(
+                "Acknowledged" if record.acknowledged else "Acknowledge"
+            )
+            acknowledge.setObjectName("notificationAcknowledge")
+            acknowledge.setDisabled(record.acknowledged)
+            acknowledge.setAccessibleName(f"Acknowledge notification: {record.message}")
+            acknowledge.clicked.connect(
+                lambda _checked=False, fingerprint=record.fingerprint: (
+                    self._acknowledge_notification(fingerprint)
+                )
+            )
+            row_layout.addWidget(acknowledge)
+            self.notification_list_layout.addWidget(row)
+            self.notification_rows.append(message)
+            self.notification_acknowledge_buttons.append(acknowledge)
+        self.notification_list_layout.addStretch()
+
+    def _acknowledge_notification(self, fingerprint: str) -> None:
+        store = self._notification_store
+        if store is None or not store.acknowledge(fingerprint):
+            return
+        self._update_notification_header(store)
+        self._render_notification_rows(store.records)
+
+    def _notification_row_text(self, record: NotificationRecord) -> str:
+        occurred_at = record.occurred_at_utc.astimezone(UTC)
+        timestamp = occurred_at.strftime("%Y-%m-%d %H:%M:%S UTC")
+        severity = record.severity.value.title()
+        category = record.category.value.replace("_", " ").title()
+        return f"{timestamp} · {severity} · {category} · {record.message}"
 
     def _show_bot_page(self, page: QWidget) -> None:
         self._bot_pages.setCurrentWidget(page)

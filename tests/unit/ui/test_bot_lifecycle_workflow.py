@@ -26,6 +26,7 @@ from tiewtrade.application.trading_workspace import (
     paper_runtime_workspace_snapshot,
     ready_open_orders_tab,
     ready_position_basket_tab,
+    stale_workspace_snapshot,
 )
 from tiewtrade.trading.session_config import MarketType
 from tiewtrade.ui.bot_lifecycle_workflow import (
@@ -33,6 +34,7 @@ from tiewtrade.ui.bot_lifecycle_workflow import (
     LifecycleAction,
     RuntimeSnapshotRelay,
 )
+from tiewtrade.ui.notification_center import NotificationCategory, NotificationSeverity
 
 OBSERVED_AT = datetime(2026, 8, 1, 12, tzinfo=UTC)
 
@@ -361,6 +363,132 @@ def test_runtime_callback_from_older_generation_is_ignored(qtbot: QtBot) -> None
     qtbot.waitUntil(lambda: workflow.snapshot.workspace.basket == _basket())
 
     assert workflow.snapshot.session is second_session
+    assert thread_pool.waitForDone(1_000)
+
+
+def test_current_generation_runtime_event_is_visible_as_notification(
+    qtbot: QtBot,
+) -> None:
+    relay = RuntimeSnapshotRelay()
+    callbacks: list[Callable[[BotLifecycleResult], None]] = []
+
+    def start(snapshot: BotControlSnapshot) -> BotLifecycleResult:
+        callbacks.append(relay.new_generation())
+        return _result(
+            snapshot,
+            BotRuntimeState.RUNNING,
+            data_freshness=DataFreshness.FRESH,
+        )
+
+    workflow, thread_pool = _workflow(
+        start_bot=start,
+        stop_bot=None,
+        recover=None,
+        runtime_snapshots=relay,
+    )
+    workflow.configure(configured_spot_session())
+    workflow.start_bot()
+    qtbot.waitUntil(lambda: workflow.snapshot.state is BotRuntimeState.RUNNING)
+
+    callbacks[0](
+        BotLifecycleResult(
+            workspace=stale_workspace_snapshot(workflow.snapshot.workspace)
+        )
+    )
+
+    qtbot.waitUntil(
+        lambda: any(
+            record.category is NotificationCategory.MARKET_DATA
+            for record in workflow.notification_store.records
+        )
+    )
+    record = next(
+        record
+        for record in workflow.notification_store.records
+        if record.category is NotificationCategory.MARKET_DATA
+    )
+    assert record.severity is NotificationSeverity.WARNING
+    assert record.category is NotificationCategory.MARKET_DATA
+    assert workflow.snapshot.workspace.header is not None
+    assert workflow.snapshot.workspace.header.data_freshness is DataFreshness.STALE
+    assert thread_pool.waitForDone(1_000)
+
+
+def test_stale_runtime_callback_does_not_create_notification(qtbot: QtBot) -> None:
+    relay = RuntimeSnapshotRelay()
+    callbacks: list[Callable[[BotLifecycleResult], None]] = []
+
+    def start(snapshot: BotControlSnapshot) -> BotLifecycleResult:
+        callbacks.append(relay.new_generation())
+        return _result(snapshot, BotRuntimeState.RUNNING)
+
+    workflow, thread_pool = _workflow(
+        start_bot=start,
+        stop_bot=None,
+        recover=None,
+        runtime_snapshots=relay,
+    )
+    first = configured_spot_session()
+    second = replace(
+        configured_spot_session(),
+        config=replace(
+            configured_spot_session().config,
+            session_id=UUID("00000000-0000-0000-0000-000000000999"),
+        ),
+    )
+    workflow.configure(first)
+    workflow.start_bot()
+    qtbot.waitUntil(lambda: workflow.snapshot.state is BotRuntimeState.RUNNING)
+    stale_callback = callbacks[0]
+    workflow.configure(second)
+
+    stale_callback(
+        _result(
+            workflow.snapshot,
+            BotRuntimeState.BLOCKED,
+            blocked_reason="Paper Bot recovery required",
+        )
+    )
+    QCoreApplication.processEvents()
+
+    assert len(workflow.notification_store.records) == 1
+    assert (
+        workflow.notification_store.records[0].category is NotificationCategory.RUNTIME
+    )
+    assert workflow.snapshot.state is BotRuntimeState.CONFIGURED
+    assert thread_pool.waitForDone(1_000)
+
+
+def test_repeated_runtime_event_does_not_duplicate_or_block_ui(qtbot: QtBot) -> None:
+    relay = RuntimeSnapshotRelay()
+    callbacks: list[Callable[[BotLifecycleResult], None]] = []
+
+    def start(snapshot: BotControlSnapshot) -> BotLifecycleResult:
+        callbacks.append(relay.new_generation())
+        return _result(snapshot, BotRuntimeState.RUNNING)
+
+    workflow, thread_pool = _workflow(
+        start_bot=start,
+        stop_bot=None,
+        recover=None,
+        runtime_snapshots=relay,
+    )
+    workflow.configure(configured_spot_session())
+    workflow.start_bot()
+    qtbot.waitUntil(lambda: workflow.snapshot.state is BotRuntimeState.RUNNING)
+    event = BotLifecycleResult(
+        workspace=stale_workspace_snapshot(workflow.snapshot.workspace)
+    )
+
+    initial_count = len(workflow.notification_store.records)
+    callbacks[0](event)
+    callbacks[0](event)
+
+    qtbot.waitUntil(
+        lambda: len(workflow.notification_store.records) == initial_count + 1
+    )
+    assert len(workflow.notification_store.records) == initial_count + 1
+    assert workflow.snapshot.state is BotRuntimeState.RUNNING
     assert thread_pool.waitForDone(1_000)
 
 
