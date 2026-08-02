@@ -476,6 +476,8 @@ def test_repeated_runtime_event_does_not_duplicate_or_block_ui(qtbot: QtBot) -> 
     workflow.configure(configured_spot_session())
     workflow.start_bot()
     qtbot.waitUntil(lambda: workflow.snapshot.state is BotRuntimeState.RUNNING)
+    notification_updates: list[object] = []
+    workflow.notifications_changed.connect(notification_updates.append)
     event = BotLifecycleResult(
         workspace=stale_workspace_snapshot(workflow.snapshot.workspace)
     )
@@ -488,6 +490,7 @@ def test_repeated_runtime_event_does_not_duplicate_or_block_ui(qtbot: QtBot) -> 
         lambda: len(workflow.notification_store.records) == initial_count + 1
     )
     assert len(workflow.notification_store.records) == initial_count + 1
+    assert len(notification_updates) == 1
     assert workflow.snapshot.state is BotRuntimeState.RUNNING
     assert thread_pool.waitForDone(1_000)
 

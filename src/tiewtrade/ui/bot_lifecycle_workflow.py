@@ -450,7 +450,10 @@ class BotLifecycleWorkflow(QObject):
         self.snapshot_changed.emit(snapshot)
 
     def _publish_notification(self, result: BotLifecycleResult) -> None:
+        records_before = self._notification_store.records
         self._notification_store.publish(result, occurred_at_utc=self._clock())
+        if self._notification_store.records is records_before:
+            return
         self.notifications_changed.emit(self._notification_store)
 
     def _callbacks_are_current(self) -> bool:
