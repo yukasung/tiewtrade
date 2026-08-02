@@ -108,4 +108,3 @@
 - Safety: the only network seam is existing public market data; no Private API or Live adapter is introduced.
 - Recovery: interrupted runtime is explicitly fail-closed rather than reconstructed from insufficient history.
 - Boundaries: SQLite remains in integrations, orchestration is application-owned and UI renders immutable snapshots.
-
