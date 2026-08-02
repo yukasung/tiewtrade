@@ -1,11 +1,13 @@
 import asyncio
 from datetime import UTC, datetime
 from decimal import Decimal
+from typing import cast
 from uuid import UUID
 
-from tiewtrade.application.chart_data import ChartRange, ChartReadState
+from tiewtrade.application.chart_data import ChartRange, ChartReadState, ChartSnapshot
 from tiewtrade.application.chart_history import ChartHistory
 from tiewtrade.application.paper_session_setup import ConfiguredPaperSession
+from tiewtrade.integrations.sqlite.trade_history import SQLiteTradeHistory
 from tiewtrade.market_data.candle import Candle
 from tiewtrade.market_data.config import MarketDataConfig
 from tiewtrade.trading.entry_policy import EntryPolicy
@@ -19,6 +21,16 @@ class FakeCandleSource:
         self._candles = candles
         self.requests: list[tuple[MarketDataConfig, datetime, datetime]] = []
         self.closed = False
+
+    async def load_recent(
+        self,
+        config: MarketDataConfig,
+        *,
+        count: int,
+        completed_before: datetime,
+    ) -> tuple[Candle, ...]:
+        del config, completed_before
+        return self._candles[-count:]
 
     async def load_range(
         self,
@@ -57,7 +69,7 @@ def test_chart_history_loads_only_requested_public_range_and_session_fills() -> 
     fills = FakeTradeHistory((buy, sell))
     history = ChartHistory(
         source_factory=lambda: source,
-        trade_history=fills,
+        trade_history=cast(SQLiteTradeHistory, fills),
         clock=lambda: selected_range.end,
     )
 
@@ -81,7 +93,7 @@ def test_chart_history_creates_and_closes_a_fresh_source_for_each_load() -> None
     sources = iter((first_source, second_source))
     history = ChartHistory(
         source_factory=lambda: next(sources),
-        trade_history=FakeTradeHistory(()),
+        trade_history=cast(SQLiteTradeHistory, FakeTradeHistory(())),
         clock=lambda: selected_range.end,
     )
 
@@ -95,6 +107,44 @@ def test_chart_history_creates_and_closes_a_fresh_source_for_each_load() -> None
     assert second_source.requests == expected_request
     assert first_source.closed is True
     assert second_source.closed is True
+
+
+def test_refresh_completed_candle_advances_latest_range_and_reloads_durable_fills() -> (
+    None
+):
+    selected_range = chart_range()
+    completed = candle(20)
+    new_fill = trade_fill("runtime-buy", FillSide.BUY)
+    fills = FakeTradeHistory((new_fill,))
+    history = ChartHistory(
+        source_factory=lambda: FakeCandleSource(()),
+        trade_history=cast(SQLiteTradeHistory, fills),
+        clock=lambda: completed.close_time,
+    )
+    current = ChartSnapshot(
+        session=session(),
+        chart_range=selected_range,
+        observed_at_utc=selected_range.end,
+        candles=(candle(0), candle(5), candle(10), candle(15)),
+        fills=(),
+        state=ChartReadState.READY,
+    )
+
+    refreshed = asyncio.run(history.refresh_completed(session(), current, completed))
+
+    assert refreshed.chart_range == ChartRange(
+        datetime(2026, 1, 1, 0, 5, tzinfo=UTC),
+        datetime(2026, 1, 1, 0, 25, tzinfo=UTC),
+    )
+    assert [item.open_time.minute for item in refreshed.candles] == [5, 10, 15, 20]
+    assert fills.requests == [
+        (
+            session().config.session_id,
+            refreshed.chart_range.start,
+            refreshed.chart_range.end,
+        )
+    ]
+    assert [marker.fill_id for marker in refreshed.markers] == ["runtime-buy"]
 
 
 def chart_range() -> ChartRange:
@@ -122,11 +172,11 @@ def session() -> ConfiguredPaperSession:
     )
 
 
-def candle() -> Candle:
+def candle(minute: int = 10) -> Candle:
     return Candle(
         symbol="BTCUSDT",
         timeframe="5m",
-        open_time=datetime(2026, 1, 1, 0, 10, tzinfo=UTC),
+        open_time=datetime(2026, 1, 1, 0, minute, tzinfo=UTC),
         open=Decimal("100"),
         high=Decimal("106"),
         low=Decimal("99"),

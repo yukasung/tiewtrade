@@ -99,11 +99,23 @@ def test_chart_unavailable_does_not_disable_bot_control_or_trade_history(
 ) -> None:
     session = configured_spot_session()
 
+    attempts = 0
+
     async def unavailable_chart(
         configured: ConfiguredPaperSession, chart_range: ChartRange
     ) -> ChartSnapshot:
-        del configured, chart_range
-        raise RuntimeError("public transport unavailable")
+        nonlocal attempts
+        attempts += 1
+        if attempts == 1:
+            raise RuntimeError("public transport unavailable")
+        return ChartSnapshot(
+            session=configured,
+            chart_range=chart_range,
+            observed_at_utc=chart_range.end,
+            candles=(),
+            fills=(),
+            state=ChartReadState.EMPTY,
+        )
 
     window = MainWindow(
         create_session=unused_create,
@@ -123,10 +135,21 @@ def test_chart_unavailable_does_not_disable_bot_control_or_trade_history(
     )
 
     assert window.overview.isVisible()
+    assert window.workspace.bot_control.isEnabled()
+    assert window.trade_history.isEnabled()
+    assert window.workspace.chart.retry_button.isVisible()
     open_trade_history(window)
     qtbot.waitUntil(
         lambda: window.trade_history.basket_state.text() == "No trade history"
     )
+    click(window.workspace.chart.retry_button)
+    qtbot.waitUntil(
+        lambda: (
+            window.workspace.chart._snapshot is not None
+            and window.workspace.chart._snapshot.state is ChartReadState.EMPTY
+        )
+    )
+    assert attempts == 2
 
 
 def unused_create(values: PaperSessionSetupValues) -> PaperSessionCreateOutcome:

@@ -276,6 +276,7 @@ def test_start_selects_concrete_paper_market_and_publishes_live_basket(
     lifecycle = RecordingRuntimeLifecycle(database)
     selected: list[BinancePublicEndpoints] = []
     snapshots: list[TradingWorkspaceSnapshot] = []
+    completed_candles: list[Candle] = []
     basket_ready = Event()
 
     def publish(snapshot: TradingWorkspaceSnapshot) -> None:
@@ -292,6 +293,7 @@ def test_start_selects_concrete_paper_market_and_publishes_live_basket(
         ),
         scheduler=ImmediateScheduler(),
         snapshot_callback=publish,
+        completed_candle_callback=completed_candles.append,
     )
 
     result = controller.start(session)
@@ -320,6 +322,7 @@ def test_start_selects_concrete_paper_market_and_publishes_live_basket(
     assert len(history.items) == 1
     assert history.items[0].status is BasketStatus.OPEN
     assert MarketDataRuntimeState.LIVE in controller.observed_runtime_states
+    assert completed_candles == list(_live_candles())
 
     source.fail_stream()
     assert source.closed.wait(2)

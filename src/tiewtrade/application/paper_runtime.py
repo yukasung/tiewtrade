@@ -90,6 +90,7 @@ class PaperRuntimeController:
         symbol_rules: SymbolRules,
         source_factory: Callable[[BinancePublicEndpoints], MarketDataCandleSource],
         snapshot_callback: Callable[[TradingWorkspaceSnapshot], None],
+        completed_candle_callback: Callable[[Candle], None] | None = None,
         scheduler: RuntimeScheduler | None = None,
         clock: Callable[[], datetime] = lambda: datetime.now(UTC),
     ) -> None:
@@ -98,6 +99,7 @@ class PaperRuntimeController:
         self._symbol_rules = symbol_rules
         self._source_factory = source_factory
         self._snapshot_callback = snapshot_callback
+        self._completed_candle_callback = completed_candle_callback
         self._scheduler = scheduler or AsyncioRuntimeScheduler()
         self._clock = clock
         self._lock = Lock()
@@ -474,6 +476,7 @@ class PaperRuntimeController:
                 )
             )
         )
+        self._publish_completed_candle(candle)
 
     def _publish_futures_candle(
         self,
@@ -500,6 +503,17 @@ class PaperRuntimeController:
                 )
             )
         )
+        self._publish_completed_candle(candle)
+
+    def _publish_completed_candle(self, candle: Candle) -> None:
+        callback = self._completed_candle_callback
+        if callback is None:
+            return
+        try:
+            callback(candle)
+        except Exception:
+            # Chart/read-model observers cannot make Paper Runtime fail closed.
+            pass
 
     def _owned_runtime_for(
         self,

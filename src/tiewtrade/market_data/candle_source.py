@@ -23,10 +23,12 @@ class HistoricalCandleSource(Protocol):
         end: datetime,
     ) -> tuple[Candle, ...]: ...
 
+    async def close(self) -> None: ...
+
 
 class LiveCandleSource(Protocol):
     def stream_completed(self, config: MarketDataConfig) -> AsyncIterator[Candle]: ...
 
 
 class MarketDataCandleSource(HistoricalCandleSource, LiveCandleSource, Protocol):
-    async def close(self) -> None: ...
+    pass

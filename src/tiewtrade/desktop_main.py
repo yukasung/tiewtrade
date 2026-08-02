@@ -39,6 +39,7 @@ from tiewtrade.integrations.sqlite.paper_runtime_lifecycle import (
     SQLitePaperRuntimeLifecycle,
 )
 from tiewtrade.integrations.sqlite.trade_history import SQLiteTradeHistory
+from tiewtrade.market_data.candle import Candle
 from tiewtrade.trading.session_config import MarketType
 from tiewtrade.trading.symbol_rules import SymbolRules
 from tiewtrade.trading.trade_history import TradeFill
@@ -232,6 +233,7 @@ class _PaperRuntimeActions:
             symbol_rules=_symbol_rules_for(session),
             source_factory=BinancePublicMarketData,
             snapshot_callback=publish_current_result,
+            completed_candle_callback=publish.completed_candle,
         )
         return controller
 
@@ -331,6 +333,7 @@ def run_desktop(database_path: Path | None = None) -> int:
         session: ConfiguredPaperSession,
         chart_range: ChartRange,
     ) -> ChartSnapshot:
+        prepare_database()
         chart_history = ChartHistory(
             source_factory=lambda: BinancePublicMarketData(
                 BinancePublicEndpoints.for_market_type(session.config.market_type)
@@ -338,6 +341,20 @@ def run_desktop(database_path: Path | None = None) -> int:
             trade_history=history,
         )
         return await chart_history.load(session, chart_range)
+
+    async def refresh_chart(
+        session: ConfiguredPaperSession,
+        snapshot: ChartSnapshot,
+        candle: Candle,
+    ) -> ChartSnapshot:
+        prepare_database()
+        chart_history = ChartHistory(
+            source_factory=lambda: BinancePublicMarketData(
+                BinancePublicEndpoints.for_market_type(session.config.market_type)
+            ),
+            trade_history=history,
+        )
+        return await chart_history.refresh_completed(session, snapshot, candle)
 
     return run_desktop_ui(
         create_session=create_after_migration,
@@ -351,6 +368,7 @@ def run_desktop(database_path: Path | None = None) -> int:
         runtime_snapshots=runtime_snapshots,
         shutdown_runtime=runtime_actions.shutdown,
         load_chart=load_chart,
+        refresh_chart=refresh_chart,
     )
 
 
