@@ -33,9 +33,21 @@ class SessionOverviewWidget(QWidget):
 
         self._build_layout()
 
-    def show_session(self, session: ConfiguredPaperSession) -> None:
+    def show_session(
+        self,
+        session: ConfiguredPaperSession,
+        *,
+        configuration_summary: bool = False,
+    ) -> None:
         config = session.config
-        self.state_value.setText("Configured — Market Data Not Started")
+        if configuration_summary:
+            self.state_value.setText("Immutable Configuration")
+            self.description.setText("This is the stored session configuration.")
+        else:
+            self.state_value.setText("Configured — Market Data Not Started")
+            self.description.setText(
+                "This configuration is stored. Market data and trading are not running."
+            )
         self.session_id_value.setText(str(config.session_id))
         self.market_value.setText(config.market_type.value.title())
         self.symbol_value.setText(session.market_data.symbol)
@@ -57,12 +69,12 @@ class SessionOverviewWidget(QWidget):
 
         heading = QLabel("Session Overview")
         heading.setObjectName("pageTitle")
-        description = QLabel(
+        self.description = QLabel(
             "This configuration is stored. Market data and trading are not running."
         )
-        description.setObjectName("supportingText")
+        self.description.setObjectName("supportingText")
         root.addWidget(heading)
-        root.addWidget(description)
+        root.addWidget(self.description)
 
         status_card = QFrame()
         status_card.setObjectName("statusCard")

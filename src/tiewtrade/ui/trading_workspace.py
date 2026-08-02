@@ -1,3 +1,5 @@
+from datetime import UTC, datetime
+
 from PySide6.QtCore import Qt, Signal, Slot
 from PySide6.QtGui import QKeySequence, QResizeEvent, QShortcut
 from PySide6.QtWidgets import (
@@ -13,6 +15,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from tiewtrade.application.bot_control import BotControlSnapshot, configured_bot_control
 from tiewtrade.application.paper_session_setup import ConfiguredPaperSession
 from tiewtrade.application.trading_workspace import (
     BotRuntimeState,
@@ -20,8 +23,8 @@ from tiewtrade.application.trading_workspace import (
     TradingWorkspaceSnapshot,
     WorkspaceReadState,
 )
+from tiewtrade.ui.bot_control import BotControlWidget
 from tiewtrade.ui.preset_display import preset_display_name
-from tiewtrade.ui.session_overview import SessionOverviewWidget
 from tiewtrade.ui.session_setup import SessionSetupWidget
 from tiewtrade.ui.trade_history_page import TradeHistoryPage
 
@@ -54,13 +57,17 @@ _READ_STATE_TEXT = {
 
 class TradingWorkspace(QWidget):
     trade_history_activated = Signal()
+    start_bot_requested = Signal()
+    stop_bot_requested = Signal()
+    recover_requested = Signal()
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self.setObjectName("workspace")
 
         self.setup = SessionSetupWidget()
-        self.overview = SessionOverviewWidget()
+        self.bot_control_widget = BotControlWidget()
+        self.overview = self.bot_control_widget.overview
         self.trade_history = TradeHistoryPage()
 
         self.unavailable_panel = QFrame()
@@ -86,8 +93,11 @@ class TradingWorkspace(QWidget):
         self._bot_pages = QStackedWidget()
         self._bot_pages.setObjectName("botControlPages")
         self._bot_pages.addWidget(self.setup)
-        self._bot_pages.addWidget(self.overview)
+        self._bot_pages.addWidget(self.bot_control_widget)
         self._bot_pages.addWidget(self.unavailable_panel)
+        self.bot_control_widget.start_requested.connect(self.start_bot_requested)
+        self.bot_control_widget.stop_requested.connect(self.stop_bot_requested)
+        self.bot_control_widget.recover_requested.connect(self.recover_requested)
 
         self.tabs = QTabWidget()
         self.tabs.addTab(self._empty_panel(self.orders_state), "Open Orders")
@@ -146,9 +156,21 @@ class TradingWorkspace(QWidget):
         self._set_bot_control_state("No Session")
 
     def show_configured_session(self, session: ConfiguredPaperSession) -> None:
-        self.overview.show_session(session)
-        self._show_bot_page(self.overview)
-        self._set_bot_control_state("Configured")
+        self.show_bot_control_snapshot(
+            configured_bot_control(
+                session,
+                observed_at_utc=datetime.now(UTC),
+            )
+        )
+
+    @Slot(object)
+    def show_bot_control_snapshot(self, value: object) -> None:
+        if not isinstance(value, BotControlSnapshot):
+            return
+        self.bot_control_widget.show_snapshot(value)
+        self.show_workspace_snapshot(value.workspace)
+        self._show_bot_page(self.bot_control_widget)
+        self._set_bot_control_state(_RUNTIME_STATE_TEXT[value.state])
 
     def show_unavailable(self, message: str) -> None:
         self.unavailable_message.setText(message)

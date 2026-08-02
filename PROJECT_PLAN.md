@@ -137,6 +137,13 @@ Decimal/UTC contracts, background generation-safe refresh และ persistent s
 แล้ว ส่วน Bot lifecycle controls, durable Orders/Basket integration, Runtime
 Start/Stop/Recovery, Notifications และ Chart ยังคงอยู่ใน Sub-issues ถัดไป
 
+สถานะ DEV-134: ส่งมอบ Bot Control แบบ state-driven ที่ render immutable Session
+Overview และ Workspace snapshot เดียวกับ Header, พร้อม fake lifecycle seam สำหรับ
+Start/Stop/Recovery, repeated-action guard และ stale-callback suppression แล้ว
+production desktop จะแสดง Configured Start ที่ปิดใช้งานอย่างซื่อสัตย์จนกว่าจะมี
+integration จริง; Runtime Start/Stop/Recovery จริงยังคงเป็น DEV-136 โดยไม่มี
+network, SQLite Basket/Fill หรือ execution side effect ใน slice นี้
+
 ## Milestone 4 — Live Spot
 
 เริ่มได้เมื่อ Paper Trading Complete ผ่านทั้งหมด:
