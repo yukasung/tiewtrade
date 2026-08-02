@@ -163,6 +163,13 @@ Runtime เดิมไม่ปลอดภัยและใช้ Recovery �
 จะแสดงเฉพาะสถานะ `BLOCKED` และข้อความที่ผ่านการ sanitize ส่วน Notifications, Chart UI
 และ Live Trading ยังเป็นงานในลำดับถัดไป
 
+สถานะ DEV-137: ส่งมอบ Notification Center ใน Desktop UI เป็น in-memory read model
+สำหรับ `Blocked`, data `Stale`, recovery และ runtime transition พร้อม unread/highest
+severity, UTC drawer rows, acknowledge แบบ idempotent และ deduplicate snapshot ซ้ำ
+โดย acceptance แบบ Paper/fake ยืนยันว่า acknowledge ไม่เปลี่ยน SQLite trading state
+และไม่มี network, credentials, private endpoint หรือ Live adapter behavior; งานนี้ไม่เพิ่ม
+notification persistence, business/risk policy หรือ Live execution
+
 ## Milestone 4 — Live Spot
 
 เริ่มได้เมื่อ Paper Trading Complete ผ่านทั้งหมด:
