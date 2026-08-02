@@ -1,5 +1,6 @@
-import builtins
+import ast
 import socket
+import sqlite3
 from collections.abc import Callable
 from datetime import UTC, datetime
 from pathlib import Path
@@ -42,10 +43,12 @@ def test_paper_notification_feedback_shows_blocked_and_recovery_without_side_eff
     tmp_path: Path,
 ) -> None:
     _block_network(monkeypatch)
-    _block_private_or_live_imports(monkeypatch)
+    _assert_notification_dependencies_are_safe()
     _freeze_notification_clock(monkeypatch)
     database, sessions = _paper_session(tmp_path)
-    initial_counts = _sqlite_row_counts(database)
+    write_guard = _guard_durable_writes(monkeypatch, database)
+    _prove_durable_write_guard_rejects_updates(database, write_guard)
+    initial_durable_state = _sqlite_table_contents(database)
     initialize_calls = 0
     recover_calls = 0
 
@@ -92,7 +95,8 @@ def test_paper_notification_feedback_shows_blocked_and_recovery_without_side_eff
 
     click(window.workspace.notification_acknowledge_buttons[0])
 
-    assert _sqlite_row_counts(database) == initial_counts
+    assert write_guard.write_attempts == []
+    assert _sqlite_table_contents(database) == initial_durable_state
     assert window.workspace.header_runtime.text() == "Blocked"
     assert window.workspace.notification_button.text() == "Notifications · 0"
     assert (
@@ -108,7 +112,8 @@ def test_paper_notification_feedback_shows_blocked_and_recovery_without_side_eff
         "2026-08-02 12:00:00 UTC · Info · Recovery · "
         "Paper Bot recovery completed safely"
     )
-    assert _sqlite_row_counts(database) == initial_counts
+    assert write_guard.write_attempts == []
+    assert _sqlite_table_contents(database) == initial_durable_state
 
 
 def test_paper_fake_stale_notification_keeps_safe_workspace_state(
@@ -117,7 +122,7 @@ def test_paper_fake_stale_notification_keeps_safe_workspace_state(
     tmp_path: Path,
 ) -> None:
     _block_network(monkeypatch)
-    _block_private_or_live_imports(monkeypatch)
+    _assert_notification_dependencies_are_safe()
     _freeze_notification_clock(monkeypatch)
     _, sessions = _paper_session(tmp_path)
     relay = RuntimeSnapshotRelay()
@@ -208,7 +213,9 @@ def _result(
     )
 
 
-def _sqlite_row_counts(database: SQLiteDatabase) -> dict[str, int]:
+def _sqlite_table_contents(
+    database: SQLiteDatabase,
+) -> dict[str, tuple[tuple[object, ...], ...]]:
     with database.connect() as connection:
         table_names = tuple(
             row[0]
@@ -218,8 +225,11 @@ def _sqlite_row_counts(database: SQLiteDatabase) -> dict[str, int]:
             )
         )
         return {
-            table_name: int(
-                connection.execute(f"SELECT COUNT(*) FROM {table_name}").fetchone()[0]
+            table_name: tuple(
+                tuple(row)
+                for row in connection.execute(
+                    f"SELECT * FROM {table_name} ORDER BY rowid"
+                )
             )
             for table_name in table_names
         }
@@ -235,9 +245,63 @@ def _freeze_notification_clock(monkeypatch: MonkeyPatch) -> None:
     monkeypatch.setattr(lifecycle_workflow_module, "datetime", _FixedDateTime)
 
 
-def _block_private_or_live_imports(monkeypatch: MonkeyPatch) -> None:
-    original_import = builtins.__import__
+class _DurableWriteGuard:
+    def __init__(self) -> None:
+        self.write_attempts: list[tuple[str, str | None]] = []
+
+    def authorize(
+        self,
+        action_code: int,
+        parameter_1: str | None,
+        parameter_2: str | None,
+        database_name: str | None,
+        source: str | None,
+    ) -> int:
+        del parameter_2, database_name, source
+        write_actions = {
+            sqlite3.SQLITE_INSERT: "INSERT",
+            sqlite3.SQLITE_UPDATE: "UPDATE",
+            sqlite3.SQLITE_DELETE: "DELETE",
+        }
+        action = write_actions.get(action_code)
+        if action is None:
+            return sqlite3.SQLITE_OK
+        self.write_attempts.append((action, parameter_1))
+        return sqlite3.SQLITE_DENY
+
+
+def _guard_durable_writes(
+    monkeypatch: MonkeyPatch,
+    database: SQLiteDatabase,
+) -> _DurableWriteGuard:
+    original_connect = SQLiteDatabase.connect
+    guard = _DurableWriteGuard()
+
+    def guarded_connect(instance: SQLiteDatabase) -> sqlite3.Connection:
+        connection = original_connect(instance)
+        if instance is database:
+            connection.set_authorizer(guard.authorize)
+        return connection
+
+    monkeypatch.setattr(SQLiteDatabase, "connect", guarded_connect)
+    return guard
+
+
+def _prove_durable_write_guard_rejects_updates(
+    database: SQLiteDatabase,
+    guard: _DurableWriteGuard,
+) -> None:
+    with pytest.raises(sqlite3.DatabaseError, match="not authorized"):
+        with database.connect() as connection:
+            connection.execute("UPDATE bot_sessions SET ended_at_utc = NULL")
+
+    assert guard.write_attempts == [("UPDATE", "bot_sessions")]
+    guard.write_attempts.clear()
+
+
+def _assert_notification_dependencies_are_safe() -> None:
     forbidden_prefixes = (
+        "aiohttp",
         "keyring",
         "tiewtrade.application.live",
         "tiewtrade.execution.live",
@@ -246,24 +310,37 @@ def _block_private_or_live_imports(monkeypatch: MonkeyPatch) -> None:
         "tiewtrade.integrations.private_api",
         "tiewtrade.live",
     )
+    source_paths = (
+        Path("src/tiewtrade/ui/notification_center.py"),
+        Path("src/tiewtrade/ui/bot_lifecycle_workflow.py"),
+        Path("src/tiewtrade/ui/trading_workspace.py"),
+        Path("src/tiewtrade/ui/main_window.py"),
+    )
+    imported_modules = {
+        module
+        for source_path in source_paths
+        for module in _imported_modules(source_path)
+    }
 
-    def guarded_import(
-        name: str,
-        globals: dict[str, object] | None = None,
-        locals: dict[str, object] | None = None,
-        fromlist: tuple[str, ...] = (),
-        level: int = 0,
-    ) -> object:
+    assert not {
+        module
+        for module in imported_modules
         if any(
-            name == prefix or name.startswith(f"{prefix}.")
+            module == prefix or module.startswith(f"{prefix}.")
             for prefix in forbidden_prefixes
-        ):
-            raise AssertionError(
-                "notification feedback must not import private or Live code"
-            )
-        return original_import(name, globals, locals, fromlist, level)
+        )
+    }
 
-    monkeypatch.setattr(builtins, "__import__", guarded_import)
+
+def _imported_modules(source_path: Path) -> tuple[str, ...]:
+    source = ast.parse(source_path.read_text(encoding="utf-8"))
+    modules: list[str] = []
+    for node in ast.walk(source):
+        if isinstance(node, ast.Import):
+            modules.extend(alias.name for alias in node.names)
+        elif isinstance(node, ast.ImportFrom) and node.module is not None:
+            modules.append(node.module)
+    return tuple(modules)
 
 
 def _block_network(monkeypatch: MonkeyPatch) -> None:

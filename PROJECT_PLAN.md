@@ -167,7 +167,8 @@ Runtime เดิมไม่ปลอดภัยและใช้ Recovery �
 สำหรับ `Blocked`, data `Stale`, recovery และ runtime transition พร้อม unread/highest
 severity, UTC drawer rows, acknowledge แบบ idempotent และ deduplicate snapshot ซ้ำ
 โดย acceptance แบบ Paper/fake ยืนยันว่า acknowledge ไม่เปลี่ยน SQLite trading state
-และไม่มี network, credentials, private endpoint หรือ Live adapter behavior; งานนี้ไม่เพิ่ม
+และไม่มี network attempt ขณะที่ static dependency proof ยืนยันว่า Notification UI ไม่มี
+dependency ไปยัง credentials, private endpoint หรือ Live adapter; งานนี้ไม่เพิ่ม
 notification persistence, business/risk policy หรือ Live execution
 
 ## Milestone 4 — Live Spot
