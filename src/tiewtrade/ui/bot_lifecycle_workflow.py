@@ -2,8 +2,9 @@ from collections.abc import Callable
 from dataclasses import replace
 from datetime import UTC, datetime
 from enum import Enum
+from threading import Lock
 
-from PySide6.QtCore import QObject, QThreadPool, Signal, Slot
+from PySide6.QtCore import QObject, Qt, QThreadPool, Signal, Slot
 
 from tiewtrade.application.bot_control import (
     BotControlAction,
@@ -19,6 +20,36 @@ from tiewtrade.application.trading_workspace import BotRuntimeState
 from tiewtrade.ui.background_task import BackgroundTask
 
 LifecycleAction = Callable[[BotControlSnapshot], BotLifecycleResult]
+RuntimeSnapshotCallback = Callable[[BotLifecycleResult], None]
+
+
+class RuntimeSnapshotRelay(QObject):
+    """Queue immutable runtime results onto the owning Qt thread."""
+
+    snapshot_ready = Signal(object, int)
+
+    def __init__(self, parent: QObject | None = None) -> None:
+        super().__init__(parent)
+        self._lock = Lock()
+        self._generation = 0
+
+    def new_generation(self) -> RuntimeSnapshotCallback:
+        with self._lock:
+            self._generation += 1
+            generation = self._generation
+
+        def publish(result: BotLifecycleResult) -> None:
+            self.snapshot_ready.emit(result, generation)
+
+        return publish
+
+    def invalidate(self) -> None:
+        with self._lock:
+            self._generation += 1
+
+    def is_current(self, generation: int) -> bool:
+        with self._lock:
+            return generation == self._generation
 
 
 class _LifecycleOperation(Enum):
@@ -37,6 +68,7 @@ class BotLifecycleWorkflow(QObject):
         start_bot: LifecycleAction | None,
         stop_bot: LifecycleAction | None,
         recover: LifecycleAction | None,
+        runtime_snapshots: RuntimeSnapshotRelay | None = None,
         thread_pool: QThreadPool | None = None,
         clock: Callable[[], datetime] = lambda: datetime.now(UTC),
         parent: QObject | None = None,
@@ -45,6 +77,7 @@ class BotLifecycleWorkflow(QObject):
         self._start_bot = start_bot
         self._stop_bot = stop_bot
         self._recover = recover
+        self._runtime_snapshots = runtime_snapshots
         self._thread_pool = thread_pool or QThreadPool.globalInstance()
         self._clock = clock
         self._snapshot: BotControlSnapshot | None = None
@@ -53,6 +86,12 @@ class BotLifecycleWorkflow(QObject):
         self._task_generation: int | None = None
         self._generation = 0
         self._closed = False
+        self._pending_runtime_result: tuple[int, BotLifecycleResult] | None = None
+        if runtime_snapshots is not None:
+            runtime_snapshots.snapshot_ready.connect(
+                self._runtime_snapshot_received,
+                Qt.ConnectionType.QueuedConnection,
+            )
 
     @property
     def snapshot(self) -> BotControlSnapshot:
@@ -64,6 +103,7 @@ class BotLifecycleWorkflow(QObject):
         if self._closed:
             return
         active_task = self._active_task is not None
+        self._invalidate_runtime_snapshots()
         self._generation += 1
         self._publish(
             configured_bot_control(
@@ -108,12 +148,14 @@ class BotLifecycleWorkflow(QObject):
             or BotControlAction.RECOVER not in snapshot.available_actions
         ):
             return
+        self._invalidate_runtime_snapshots()
         self._start_task(_LifecycleOperation.RECOVER, self._recover, snapshot)
 
     def close(self) -> None:
         if self._closed:
             return
         self._closed = True
+        self._invalidate_runtime_snapshots()
         self._generation += 1
 
     def _begin(
@@ -133,6 +175,7 @@ class BotLifecycleWorkflow(QObject):
             or action_name not in snapshot.available_actions
         ):
             return
+        self._invalidate_runtime_snapshots()
         transition = transition_bot_control(
             snapshot,
             result=BotLifecycleResult(
@@ -183,6 +226,7 @@ class BotLifecycleWorkflow(QObject):
             self._publish_failure(operation, snapshot)
             return
         self._publish(next_snapshot)
+        self._flush_pending_runtime_result()
 
     def _result_snapshot(
         self,
@@ -241,6 +285,7 @@ class BotLifecycleWorkflow(QObject):
         operation: _LifecycleOperation,
         snapshot: BotControlSnapshot,
     ) -> None:
+        self._pending_runtime_result = None
         reason = {
             _LifecycleOperation.START: "Paper Bot could not be started",
             _LifecycleOperation.STOP: "Paper Bot could not be stopped",
@@ -252,6 +297,73 @@ class BotLifecycleWorkflow(QObject):
             actions=self._actions_for(BotRuntimeState.BLOCKED),
         )
         self._publish(blocked)
+
+    @Slot(object, int)
+    def _runtime_snapshot_received(self, result: object, generation: int) -> None:
+        runtime_snapshots = self._runtime_snapshots
+        snapshot = self._snapshot
+        if (
+            self._closed
+            or runtime_snapshots is None
+            or not runtime_snapshots.is_current(generation)
+            or snapshot is None
+            or not isinstance(result, BotLifecycleResult)
+        ):
+            return
+        if (
+            snapshot.state is BotRuntimeState.STARTING
+            and self._active_operation is _LifecycleOperation.START
+        ):
+            self._pending_runtime_result = (generation, result)
+            return
+        if snapshot.state is not BotRuntimeState.RUNNING:
+            return
+        self._publish_runtime_result(snapshot, result)
+
+    def _publish_runtime_result(
+        self,
+        current: BotControlSnapshot,
+        result: BotLifecycleResult,
+    ) -> None:
+        header = result.workspace.header
+        if header is None or header.runtime_state not in {
+            BotRuntimeState.RUNNING,
+            BotRuntimeState.BLOCKED,
+        }:
+            return
+        try:
+            snapshot = BotControlSnapshot(
+                state=header.runtime_state,
+                session=current.session,
+                workspace=result.workspace,
+                available_actions=self._actions_for(header.runtime_state),
+                blocked_reason=result.blocked_reason,
+            )
+        except ValueError:
+            return
+        self._publish(snapshot)
+        if snapshot.state is BotRuntimeState.BLOCKED:
+            self._invalidate_runtime_snapshots()
+
+    def _flush_pending_runtime_result(self) -> None:
+        pending = self._pending_runtime_result
+        self._pending_runtime_result = None
+        snapshot = self._snapshot
+        runtime_snapshots = self._runtime_snapshots
+        if (
+            pending is None
+            or snapshot is None
+            or snapshot.state is not BotRuntimeState.RUNNING
+            or runtime_snapshots is None
+            or not runtime_snapshots.is_current(pending[0])
+        ):
+            return
+        self._publish_runtime_result(snapshot, pending[1])
+
+    def _invalidate_runtime_snapshots(self) -> None:
+        self._pending_runtime_result = None
+        if self._runtime_snapshots is not None:
+            self._runtime_snapshots.invalidate()
 
     def _actions_for(self, state: BotRuntimeState) -> frozenset[BotControlAction]:
         if state is BotRuntimeState.CONFIGURED and self._start_bot is not None:

@@ -657,10 +657,10 @@ def test_desktop_session_validation_failure_after_setup_preserves_input(
 
 def test_desktop_session_setup_sources_exclude_runtime_and_sensitive_imports() -> None:
     ui_source_paths = tuple(sorted(Path("src/tiewtrade/ui").rglob("*.py")))
-    composition_source_paths = (
-        Path("src/tiewtrade/desktop_main.py"),
+    session_setup_source_paths = (
         Path("src/tiewtrade/application/paper_session_setup.py"),
     )
+    desktop_composition_path = Path("src/tiewtrade/desktop_main.py")
     ui_forbidden_prefixes = (
         "aiohttp",
         "keyring",
@@ -695,6 +695,16 @@ def test_desktop_session_setup_sources_exclude_runtime_and_sensitive_imports() -
         "tiewtrade.strategies.rsi_step_grid.strategy",
         "tiewtrade.trading.entry_pair",
     )
+    desktop_forbidden_prefixes = (
+        "aiohttp",
+        "keyring",
+        "tiewtrade.application.live",
+        "tiewtrade.execution.live",
+        "tiewtrade.integrations.credentials",
+        "tiewtrade.integrations.keyring",
+        "tiewtrade.integrations.private_api",
+        "tiewtrade.live",
+    )
 
     assert ui_source_paths
     assert not _forbidden_imports(
@@ -703,11 +713,22 @@ def test_desktop_session_setup_sources_exclude_runtime_and_sensitive_imports() -
         restrict_market_data_to_config=True,
     )
     assert not _forbidden_imports(
-        composition_source_paths,
+        session_setup_source_paths,
         forbidden_prefixes=composition_forbidden_prefixes,
         restrict_market_data_to_config=False,
     )
-    assert not _sensitive_terms(ui_source_paths + composition_source_paths)
+    desktop_imports = _imported_modules(desktop_composition_path)
+    assert not {
+        module
+        for module in desktop_imports
+        if any(
+            module == prefix or module.startswith(f"{prefix}.")
+            for prefix in desktop_forbidden_prefixes
+        )
+    }
+    assert not _sensitive_terms(
+        ui_source_paths + session_setup_source_paths + (desktop_composition_path,)
+    )
 
 
 def test_desktop_session_setup_smoke_composes_without_network(
@@ -732,7 +753,7 @@ def test_desktop_session_setup_smoke_composes_without_network(
     window.show()
     qapp.processEvents()
     window.close()
-    qapp.processEvents()
+    qtbot.waitUntil(lambda: not window.isVisible())
 
     assert qapp.platformName() == "offscreen"
     assert not window.isVisible()

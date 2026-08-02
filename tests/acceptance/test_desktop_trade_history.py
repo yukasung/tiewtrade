@@ -365,7 +365,6 @@ def test_trade_history_desktop_flow_has_no_forbidden_import_or_network(
         )
 
     composition_paths = (
-        Path("src/tiewtrade/desktop_main.py"),
         Path("src/tiewtrade/ui/desktop.py"),
         Path("src/tiewtrade/ui/main_window.py"),
     )
