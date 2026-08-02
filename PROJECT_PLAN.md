@@ -152,6 +152,17 @@ last-known rows เมื่อ refresh ล้มเหลว งานนี้
 network หรือ Live execution; authoritative Runtime refresh และ lifecycle ownership
 ยังคงเป็นขอบเขต DEV-136
 
+สถานะ DEV-136: ส่งมอบ Paper Spot/Futures Runtime lifecycle จริงตั้งแต่ Start, public
+market-data Warm-up และ completed-candle flow ไปจนถึง immutable Workspace snapshot,
+durable Basket/Fill, Stop ภายใน deadline 30 วินาที และ controlled Desktop shutdown แล้ว
+โดย Stop ปิดการสร้าง Entry ใหม่แต่คง Open Basket และ Basket Take Profit ไว้โดยไม่
+force close เมื่อเริ่มโปรแกรมใหม่แล้วพบ lifecycle marker เป็น `RUNNING` ระบบถือว่า
+Runtime เดิมไม่ปลอดภัยและใช้ Recovery แบบอนุรักษ์นิยมเพื่อรับรู้เหตุขัดข้องและจบเป็น
+`STOPPED` อย่างปลอดภัยเท่านั้น ระบบจะไม่สร้าง indicator state หรือ pending Entry Intent
+ย้อนหลังจากข้อมูลที่ไม่เพียงพอ ความล้มเหลวจาก SQLite หรือ public market-data Runtime
+จะแสดงเฉพาะสถานะ `BLOCKED` และข้อความที่ผ่านการ sanitize ส่วน Notifications, Chart UI
+และ Live Trading ยังเป็นงานในลำดับถัดไป
+
 ## Milestone 4 — Live Spot
 
 เริ่มได้เมื่อ Paper Trading Complete ผ่านทั้งหมด:

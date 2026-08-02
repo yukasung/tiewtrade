@@ -67,6 +67,24 @@ class _PaperRuntimeActions:
         self._shutdown_requested = False
         self._shutdown_stop_claimed = False
 
+    def initialize(self, snapshot: BotControlSnapshot) -> BotLifecycleResult:
+        self._prepare_database()
+        self._begin_operation("initialize")
+        controller: PaperRuntimeController | None = None
+        try:
+            controller = self._new_controller(snapshot.session)
+            with self._lock:
+                self._controller = controller
+                self._session = snapshot.session
+            result = controller.inspect_startup(snapshot.session)
+        finally:
+            self._finish_operation(
+                "initialize",
+                controller=controller,
+                session=snapshot.session,
+            )
+        return _lifecycle_result_for_ui(snapshot, result)
+
     def start(self, snapshot: BotControlSnapshot) -> BotLifecycleResult:
         self._prepare_database()
         self._begin_operation("start")
@@ -237,7 +255,11 @@ def _lifecycle_result_for_ui(
         workspace=workspace_with_runtime_state(
             current.workspace,
             header.runtime_state,
-            data_freshness=header.data_freshness,
+            data_freshness=(
+                None
+                if header.runtime_state is BotRuntimeState.BLOCKED
+                else header.data_freshness
+            ),
         ),
         blocked_reason=result.blocked_reason,
     )
@@ -310,6 +332,7 @@ def run_desktop(database_path: Path | None = None) -> int:
         start_bot=runtime_actions.start,
         stop_bot=runtime_actions.stop,
         recover_bot=runtime_actions.recover,
+        initialize_bot=runtime_actions.initialize,
         runtime_snapshots=runtime_snapshots,
         shutdown_runtime=runtime_actions.shutdown,
     )

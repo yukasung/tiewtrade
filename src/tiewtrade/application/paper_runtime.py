@@ -77,6 +77,7 @@ from tiewtrade.trading.symbol_rules import SymbolRules
 _START_BLOCKED_REASON = "Paper Bot could not be started"
 _STOP_BLOCKED_REASON = "Paper Bot could not be stopped"
 _RECOVERY_BLOCKED_REASON = "Paper Bot recovery failed"
+_RECOVERY_REQUIRED_REASON = "Paper Bot recovery required"
 _STOP_TIMEOUT_SECONDS = 30.0
 
 
@@ -159,6 +160,32 @@ class PaperRuntimeController:
             if self._readiness_result is None:
                 raise RuntimeError("Paper Runtime readiness was not published")
             return self._readiness_result
+
+    def inspect_startup(self, session: ConfiguredPaperSession) -> BotLifecycleResult:
+        """Project durable lifecycle state without starting market data."""
+        self._validate_session(session)
+        baseline = configured_workspace_snapshot(
+            session,
+            observed_at_utc=self._clock(),
+        )
+        self._store_result(BotLifecycleResult(workspace=baseline))
+        try:
+            marker = self._lifecycle.read(session.config.session_id)
+            if marker is None:
+                return self._publish_result_or_block(
+                    BotLifecycleResult(workspace=baseline),
+                    blocked_reason=_RECOVERY_BLOCKED_REASON,
+                )
+            if marker.session_id != session.config.session_id:
+                return self._startup_blocked_result(_RECOVERY_BLOCKED_REASON)
+            if marker.state is PaperRuntimeLifecycleState.RUNNING:
+                return self._startup_blocked_result(_RECOVERY_REQUIRED_REASON)
+            return self._publish_result_or_block(
+                BotLifecycleResult(workspace=baseline),
+                blocked_reason=_RECOVERY_BLOCKED_REASON,
+            )
+        except Exception:
+            return self._startup_blocked_result(_RECOVERY_BLOCKED_REASON)
 
     def stop(self, session: ConfiguredPaperSession) -> BotLifecycleResult:
         self._validate_session(session)
@@ -529,6 +556,19 @@ class PaperRuntimeController:
     def _blocked_result(self, reason: str) -> BotLifecycleResult:
         self._publish_blocked(reason=reason)
         return self.current_result
+
+    def _startup_blocked_result(self, reason: str) -> BotLifecycleResult:
+        result = BotLifecycleResult(
+            workspace=workspace_with_runtime_state(
+                self.current_workspace,
+                BotRuntimeState.BLOCKED,
+            ),
+            blocked_reason=reason,
+        )
+        return self._publish_result_or_block(
+            result,
+            blocked_reason=_RECOVERY_BLOCKED_REASON,
+        )
 
     def _publish_result_or_block(
         self,

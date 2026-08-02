@@ -19,6 +19,7 @@ def run_desktop(
     start_bot: LifecycleAction | None = None,
     stop_bot: LifecycleAction | None = None,
     recover_bot: LifecycleAction | None = None,
+    initialize_bot: LifecycleAction | None = None,
     runtime_snapshots: RuntimeSnapshotRelay | None = None,
     shutdown_runtime: Callable[[], None] | None = None,
 ) -> int:
@@ -34,6 +35,7 @@ def run_desktop(
         start_bot=start_bot,
         stop_bot=stop_bot,
         recover_bot=recover_bot,
+        initialize_bot=initialize_bot,
         runtime_snapshots=runtime_snapshots,
         shutdown_runtime=shutdown_runtime,
     )

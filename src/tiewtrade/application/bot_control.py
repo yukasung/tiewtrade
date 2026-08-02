@@ -206,7 +206,9 @@ def workspace_with_runtime_state(
 
 
 _ALLOWED_TARGET_STATES: dict[BotRuntimeState, frozenset[BotRuntimeState]] = {
-    BotRuntimeState.CONFIGURED: frozenset({BotRuntimeState.STARTING}),
+    BotRuntimeState.CONFIGURED: frozenset(
+        {BotRuntimeState.STARTING, BotRuntimeState.BLOCKED}
+    ),
     BotRuntimeState.STARTING: frozenset(
         {BotRuntimeState.RUNNING, BotRuntimeState.BLOCKED}
     ),
@@ -231,6 +233,7 @@ _SAFE_BLOCKED_REASONS = frozenset(
         "Paper Bot could not be started",
         "Paper Bot could not be stopped",
         "Paper Bot recovery failed",
+        "Paper Bot recovery required",
     }
 )
 

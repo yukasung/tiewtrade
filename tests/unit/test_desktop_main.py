@@ -256,6 +256,18 @@ def test_desktop_composes_concrete_paper_runtime_actions(
             assert self.result is not None
             return self.result
 
+        def inspect_startup(
+            self,
+            session: ConfiguredPaperSession,
+        ) -> BotLifecycleResult:
+            workspace = configured_bot_control(
+                session,
+                observed_at_utc=datetime(2026, 8, 2, tzinfo=UTC),
+            ).workspace
+            self.result = BotLifecycleResult(workspace=workspace)
+            self.snapshot_callback(workspace)
+            return self.result
+
         def start(self, session: ConfiguredPaperSession) -> BotLifecycleResult:
             workspace = workspace_with_runtime_state(
                 configured_bot_control(
@@ -304,6 +316,7 @@ def test_desktop_composes_concrete_paper_runtime_actions(
 
     assert desktop_main.run_desktop(tmp_path / "tiewtrade.sqlite3") == 0
 
+    initialize_bot = cast(LifecycleAction, captured["initialize_bot"])
     start_bot = cast(LifecycleAction, captured["start_bot"])
     shutdown_runtime = cast(Callable[[], None], captured["shutdown_runtime"])
     session = configured_spot_session()
@@ -311,12 +324,19 @@ def test_desktop_composes_concrete_paper_runtime_actions(
         session,
         observed_at_utc=datetime(2026, 8, 2, tzinfo=UTC),
     )
+
+    initialized = initialize_bot(start_snapshot)
+
+    assert initialized.workspace.header is not None
+    assert initialized.workspace.header.runtime_state is BotRuntimeState.CONFIGURED
+    assert len(controllers) == 1
+
     result = start_bot(start_snapshot)
 
     assert result.workspace.header is not None
     assert result.workspace.header.runtime_state is BotRuntimeState.RUNNING
-    assert len(controllers) == 1
-    controller = cast(FakePaperRuntimeController, controllers[0])
+    assert len(controllers) == 2
+    controller = cast(FakePaperRuntimeController, controllers[1])
     assert isinstance(controller.dependencies["lifecycle"], SQLitePaperRuntimeLifecycle)
     assert isinstance(controller.dependencies["trade_history"], SQLiteTradeHistory)
     rules = controller.dependencies["symbol_rules"]

@@ -53,6 +53,7 @@ class RuntimeSnapshotRelay(QObject):
 
 
 class _LifecycleOperation(Enum):
+    INITIALIZE = "initialize"
     START = "start"
     STOP = "stop"
     RECOVER = "recover"
@@ -68,6 +69,7 @@ class BotLifecycleWorkflow(QObject):
         start_bot: LifecycleAction | None,
         stop_bot: LifecycleAction | None,
         recover: LifecycleAction | None,
+        initialize_bot: LifecycleAction | None = None,
         runtime_snapshots: RuntimeSnapshotRelay | None = None,
         thread_pool: QThreadPool | None = None,
         clock: Callable[[], datetime] = lambda: datetime.now(UTC),
@@ -77,6 +79,7 @@ class BotLifecycleWorkflow(QObject):
         self._start_bot = start_bot
         self._stop_bot = stop_bot
         self._recover = recover
+        self._initialize_bot = initialize_bot
         self._runtime_snapshots = runtime_snapshots
         self._thread_pool = thread_pool or QThreadPool.globalInstance()
         self._clock = clock
@@ -105,17 +108,22 @@ class BotLifecycleWorkflow(QObject):
         active_task = self._active_task is not None
         self._invalidate_runtime_snapshots()
         self._generation += 1
-        self._publish(
-            configured_bot_control(
-                session,
-                observed_at_utc=self._clock(),
-                actions=(
-                    frozenset()
-                    if active_task
-                    else self._actions_for(BotRuntimeState.CONFIGURED)
-                ),
-            )
+        configured = configured_bot_control(
+            session,
+            observed_at_utc=self._clock(),
+            actions=(
+                frozenset()
+                if active_task or self._initialize_bot is not None
+                else self._actions_for(BotRuntimeState.CONFIGURED)
+            ),
         )
+        self._publish(configured)
+        if not active_task and self._initialize_bot is not None:
+            self._start_task(
+                _LifecycleOperation.INITIALIZE,
+                self._initialize_bot,
+                configured,
+            )
 
     @Slot()
     def start_bot(self) -> None:
@@ -218,7 +226,11 @@ class BotLifecycleWorkflow(QObject):
             self._publish_failure(operation, snapshot)
             return
         try:
-            next_snapshot = self._result_snapshot(operation, snapshot, result)
+            next_snapshot = (
+                self._initialization_result_snapshot(snapshot, result)
+                if operation is _LifecycleOperation.INITIALIZE
+                else self._result_snapshot(operation, snapshot, result)
+            )
         except ValueError:
             self._publish_failure(operation, snapshot)
             return
@@ -227,6 +239,22 @@ class BotLifecycleWorkflow(QObject):
             return
         self._publish(next_snapshot)
         self._flush_pending_runtime_result()
+
+    def _initialization_result_snapshot(
+        self,
+        current: BotControlSnapshot,
+        result: BotLifecycleResult,
+    ) -> BotControlSnapshot:
+        header = result.workspace.header
+        if header is None:
+            raise ValueError("result workspace requires a header")
+        return BotControlSnapshot(
+            state=header.runtime_state,
+            session=current.session,
+            workspace=result.workspace,
+            available_actions=self._actions_for(header.runtime_state),
+            blocked_reason=result.blocked_reason,
+        )
 
     def _result_snapshot(
         self,
@@ -287,6 +315,7 @@ class BotLifecycleWorkflow(QObject):
     ) -> None:
         self._pending_runtime_result = None
         reason = {
+            _LifecycleOperation.INITIALIZE: "Paper Bot recovery failed",
             _LifecycleOperation.START: "Paper Bot could not be started",
             _LifecycleOperation.STOP: "Paper Bot could not be stopped",
             _LifecycleOperation.RECOVER: "Paper Bot recovery failed",
@@ -382,6 +411,9 @@ class BotLifecycleWorkflow(QObject):
         return (
             state
             in {
+                _LifecycleOperation.INITIALIZE: frozenset(
+                    {BotRuntimeState.CONFIGURED, BotRuntimeState.BLOCKED}
+                ),
                 _LifecycleOperation.START: frozenset(
                     {BotRuntimeState.RUNNING, BotRuntimeState.BLOCKED}
                 ),
