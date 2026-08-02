@@ -93,9 +93,17 @@ class PaperSpotSQLiteHistory:
             )
             return self._store.record_open_basket(basket, normalized_fill)
 
+        order_already_filled = any(
+            item.order_id == normalized_fill.order_id
+            for item in self._store.list_fills(basket_id)
+        )
         basket = replace(
             existing,
-            entry_count=existing.entry_count + 1,
+            entry_count=(
+                existing.entry_count
+                if order_already_filled
+                else existing.entry_count + 1
+            ),
             invested_notional=existing.invested_notional + normalized_fill.notional,
             trading_fees=existing.trading_fees + normalized_fill.commission,
             net_realized_pnl=(

@@ -189,6 +189,43 @@ def test_second_entry_replaces_open_aggregate_and_records_another_buy_fill(
     assert fills[1].commission == Decimal("0.09")
 
 
+def test_partial_fill_for_same_spot_order_does_not_increment_entry_count(
+    history: PaperSpotSQLiteHistory,
+    store: SQLiteTradeHistory,
+) -> None:
+    first = PaperSpotEntryFill(
+        intent_id="intent-1",
+        order_id="entry-order-1",
+        fill_id="fill-1",
+        price=Decimal("100"),
+        quantity=Decimal("0.001"),
+        fee=Decimal("0.1"),
+        filled_at=OPENED_AT,
+    )
+    partial = PaperSpotEntryFill(
+        intent_id="intent-1",
+        order_id="entry-order-1",
+        fill_id="fill-2",
+        price=Decimal("100"),
+        quantity=Decimal("0.0005"),
+        fee=Decimal("0.05"),
+        filled_at=OPENED_AT + timedelta(seconds=1),
+    )
+
+    assert history.record_entry(basket_id=BASKET_ID, entry_number=1, fill=first)
+    assert history.record_entry(basket_id=BASKET_ID, entry_number=1, fill=partial)
+
+    basket = store.get_basket(BASKET_ID)
+    assert basket is not None
+    assert basket.entry_count == 1
+    assert basket.invested_notional == Decimal("0.1500")
+    assert basket.trading_fees == Decimal("0.15")
+    assert tuple(fill.order_id for fill in store.list_fills(BASKET_ID)) == (
+        "entry-order-1",
+        "entry-order-1",
+    )
+
+
 def test_close_records_exact_closed_basket_and_sell_fill(
     history: PaperSpotSQLiteHistory,
     store: SQLiteTradeHistory,
