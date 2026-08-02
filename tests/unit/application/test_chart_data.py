@@ -10,8 +10,12 @@ from tiewtrade.application.chart_data import (
     ChartSnapshot,
     append_completed_candle,
 )
-from tiewtrade.application.paper_spot_session import PaperSpotSessionIdentity
+from tiewtrade.application.paper_session_setup import ConfiguredPaperSession
 from tiewtrade.market_data.candle import Candle
+from tiewtrade.market_data.config import MarketDataConfig
+from tiewtrade.trading.entry_policy import EntryPolicy
+from tiewtrade.trading.session_config import MarketType, SessionConfig, TradeMode
+from tiewtrade.trading.spot_policy import SpotTradingPolicy
 from tiewtrade.trading.trade_history import FillSide, FillSource, TradeFill
 
 
@@ -40,6 +44,56 @@ def test_chart_range_requires_an_ordered_utc_half_open_range() -> None:
         ChartRange(datetime(2026, 1, 1), start + timedelta(minutes=5))
     with pytest.raises(ValueError, match="start must be before end"):
         ChartRange(start, start)
+
+
+def test_snapshot_reads_immutable_chart_facts_from_configured_paper_session() -> None:
+    snapshot = ready_chart_snapshot()
+
+    assert snapshot.session_id == session().config.session_id
+    assert snapshot.symbol == "BTCUSDT"
+    assert snapshot.timeframe == "5m"
+    assert "session" not in ChartSnapshot.__slots__
+
+
+def test_snapshot_rejects_unknown_read_state() -> None:
+    with pytest.raises(ValueError, match="state must be a ChartReadState"):
+        ChartSnapshot(
+            session=session(),
+            chart_range=chart_range(),
+            observed_at_utc=datetime(2026, 1, 1, 0, 20, tzinfo=UTC),
+            candles=(),
+            fills=(),
+            state="ready",  # type: ignore[arg-type]
+        )
+
+
+def test_snapshot_rejects_range_ending_after_observation_boundary() -> None:
+    with pytest.raises(
+        ValueError, match="ChartRange end must not be after observed_at_utc"
+    ):
+        ChartSnapshot(
+            session=session(),
+            chart_range=chart_range(),
+            observed_at_utc=datetime(2026, 1, 1, 0, 15, tzinfo=UTC),
+            candles=(),
+            fills=(),
+            state=ChartReadState.READY,
+        )
+
+
+def test_snapshot_rejects_candle_not_completed_by_observation_boundary() -> None:
+    with pytest.raises(ValueError, match="candle must be completed by observed_at_utc"):
+        ChartSnapshot(
+            session=session(),
+            chart_range=ChartRange(
+                datetime(2026, 1, 1, 0, 0, tzinfo=UTC),
+                datetime(2026, 1, 1, 0, 10, tzinfo=UTC),
+            ),
+            observed_at_utc=datetime(2026, 1, 1, 0, 10, tzinfo=UTC),
+            candles=(candle("5m", minute=10),),
+            fills=(),
+            state=ChartReadState.READY,
+        )
 
 
 def test_ready_snapshot_derives_session_scoped_markers_from_durable_fills() -> None:
@@ -74,22 +128,36 @@ def ready_chart_snapshot(
 ) -> ChartSnapshot:
     return ChartSnapshot(
         session=session(),
-        chart_range=ChartRange(
-            datetime(2026, 1, 1, 0, 0, tzinfo=UTC),
-            datetime(2026, 1, 1, 0, 20, tzinfo=UTC),
-        ),
+        chart_range=chart_range(),
+        observed_at_utc=datetime(2026, 1, 1, 0, 20, tzinfo=UTC),
         candles=candles,
         fills=fills,
         state=ChartReadState.READY,
     )
 
 
-def session() -> PaperSpotSessionIdentity:
-    return PaperSpotSessionIdentity(
-        session_id=UUID("00000000-0000-0000-0000-000000000138"),
-        symbol="BTCUSDT",
-        timeframe="5m",
-        preset_version="rsi-step-grid-v1",
+def chart_range() -> ChartRange:
+    return ChartRange(
+        datetime(2026, 1, 1, 0, 0, tzinfo=UTC),
+        datetime(2026, 1, 1, 0, 20, tzinfo=UTC),
+    )
+
+
+def session() -> ConfiguredPaperSession:
+    return ConfiguredPaperSession(
+        config=SessionConfig(
+            session_id=UUID("00000000-0000-0000-0000-000000000138"),
+            preset_version="rsi-step-grid-v1",
+            market_type=MarketType.SPOT,
+            trade_mode=TradeMode.PAPER,
+            available_capital=Decimal("1000"),
+            fee_rate=Decimal("0.001"),
+            slippage_bps=Decimal("5"),
+            entry_policy=EntryPolicy(max_entries=10),
+            spot_policy=SpotTradingPolicy(trading_capital_ratio=Decimal("0.8")),
+        ),
+        market_data=MarketDataConfig(symbol="BTCUSDT", timeframe="5m"),
+        created_at_utc=datetime(2026, 1, 1, tzinfo=UTC),
     )
 
 
@@ -119,7 +187,7 @@ def trade_fill(
     return TradeFill(
         fill_id="fill-138",
         basket_id=uuid4(),
-        session_id=session().session_id if session_id is None else session_id,
+        session_id=session().config.session_id if session_id is None else session_id,
         order_id="order-138",
         exchange_trade_id="trade-138",
         side=FillSide.BUY,
