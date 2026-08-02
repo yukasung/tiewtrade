@@ -40,6 +40,12 @@ class DataFreshness(StrEnum):
     UNAVAILABLE = "unavailable"
 
 
+_SAFE_OPEN_ORDERS_TAB_MESSAGES = frozenset({"Open orders are unavailable"})
+_SAFE_POSITION_BASKET_TAB_MESSAGES = frozenset(
+    {"Position / Basket data is unavailable"}
+)
+
+
 @dataclass(frozen=True, slots=True)
 class WorkspaceHeaderSnapshot:
     symbol: str
@@ -159,6 +165,7 @@ class OpenOrdersTabSnapshot:
         elif self.state is WorkspaceTabState.ERROR:
             if self.message is None:
                 raise ValueError("ERROR tab requires a message")
+            _require_sanitized_open_orders_message(self.message)
         elif self.state is WorkspaceTabState.STALE:
             if self.data_as_of_utc is None:
                 raise ValueError("STALE tab requires data_as_of_utc")
@@ -203,6 +210,7 @@ class PositionBasketTabSnapshot:
         elif self.state is WorkspaceTabState.ERROR:
             if self.message is None:
                 raise ValueError("ERROR tab requires a message")
+            _require_sanitized_position_basket_message(self.message)
         elif self.state is WorkspaceTabState.STALE:
             if self.data_as_of_utc is None:
                 raise ValueError("STALE tab requires data_as_of_utc")
@@ -210,14 +218,7 @@ class PositionBasketTabSnapshot:
                 raise ValueError("STALE tab must not contain a message")
 
 
-class _Unset:
-    pass
-
-
-_UNSET = _Unset()
-
-
-@dataclass(frozen=True, slots=True, init=False)
+@dataclass(frozen=True, slots=True)
 class TradingWorkspaceSnapshot:
     read_state: WorkspaceReadState
     header: WorkspaceHeaderSnapshot | None
@@ -225,34 +226,6 @@ class TradingWorkspaceSnapshot:
     position_basket: PositionBasketTabSnapshot
     data_as_of_utc: datetime | None
     message: str | None = None
-
-    def __init__(
-        self,
-        *,
-        read_state: WorkspaceReadState,
-        header: WorkspaceHeaderSnapshot | None,
-        data_as_of_utc: datetime | None,
-        open_orders: OpenOrdersTabSnapshot | None = None,
-        position_basket: PositionBasketTabSnapshot | None = None,
-        message: str | None = None,
-        orders: tuple[OpenOrderSnapshot, ...] | None = None,
-        basket: BasketSnapshot | None | _Unset = _UNSET,
-    ) -> None:
-        if orders is not None:
-            open_orders = _legacy_open_orders_tab(orders, data_as_of_utc)
-        elif open_orders is None:
-            open_orders = empty_open_orders_tab()
-        if not isinstance(basket, _Unset):
-            position_basket = _legacy_position_basket_tab(basket, data_as_of_utc)
-        elif position_basket is None:
-            position_basket = empty_position_basket_tab()
-        object.__setattr__(self, "read_state", read_state)
-        object.__setattr__(self, "header", header)
-        object.__setattr__(self, "open_orders", open_orders)
-        object.__setattr__(self, "position_basket", position_basket)
-        object.__setattr__(self, "data_as_of_utc", data_as_of_utc)
-        object.__setattr__(self, "message", message)
-        self.__post_init__()
 
     def __post_init__(self) -> None:
         if not isinstance(self.read_state, WorkspaceReadState):
@@ -501,21 +474,11 @@ def _require_position_basket_tab(value: object, name: str) -> None:
         raise ValueError(f"{name} must be a PositionBasketTabSnapshot")
 
 
-def _legacy_open_orders_tab(
-    orders: tuple[OpenOrderSnapshot, ...] | None, data_as_of_utc: datetime | None
-) -> OpenOrdersTabSnapshot:
-    if not orders:
-        return empty_open_orders_tab()
-    if data_as_of_utc is None:
-        raise ValueError("orders require data_as_of_utc")
-    return ready_open_orders_tab(orders, observed_at_utc=data_as_of_utc)
+def _require_sanitized_open_orders_message(message: str) -> None:
+    if message not in _SAFE_OPEN_ORDERS_TAB_MESSAGES:
+        raise ValueError("message must be sanitized")
 
 
-def _legacy_position_basket_tab(
-    basket: BasketSnapshot | None, data_as_of_utc: datetime | None
-) -> PositionBasketTabSnapshot:
-    if basket is None:
-        return empty_position_basket_tab()
-    if data_as_of_utc is None:
-        raise ValueError("basket requires data_as_of_utc")
-    return ready_position_basket_tab(basket, observed_at_utc=data_as_of_utc)
+def _require_sanitized_position_basket_message(message: str) -> None:
+    if message not in _SAFE_POSITION_BASKET_TAB_MESSAGES:
+        raise ValueError("message must be sanitized")

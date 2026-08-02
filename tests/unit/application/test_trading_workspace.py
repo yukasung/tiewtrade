@@ -132,8 +132,8 @@ def test_workspace_rejects_invalid_state_combinations() -> None:
         TradingWorkspaceSnapshot(
             read_state=WorkspaceReadState.READY,
             header=None,
-            orders=(),
-            basket=None,
+            open_orders=empty_open_orders_tab(),
+            position_basket=empty_position_basket_tab(),
             data_as_of_utc=_utc(),
         )
     with pytest.raises(
@@ -142,24 +142,24 @@ def test_workspace_rejects_invalid_state_combinations() -> None:
         TradingWorkspaceSnapshot(
             read_state=WorkspaceReadState.EMPTY,
             header=_header(),
-            orders=(),
-            basket=None,
+            open_orders=empty_open_orders_tab(),
+            position_basket=empty_position_basket_tab(),
             data_as_of_utc=None,
         )
     with pytest.raises(ValueError, match="STALE snapshot requires data_as_of_utc"):
         TradingWorkspaceSnapshot(
             read_state=WorkspaceReadState.STALE,
             header=replace(_header(), data_freshness=DataFreshness.STALE),
-            orders=(),
-            basket=None,
+            open_orders=empty_open_orders_tab(),
+            position_basket=empty_position_basket_tab(),
             data_as_of_utc=None,
         )
     with pytest.raises(ValueError, match="READY snapshot must not have stale data"):
         TradingWorkspaceSnapshot(
             read_state=WorkspaceReadState.READY,
             header=replace(_header(), data_freshness=DataFreshness.STALE),
-            orders=(),
-            basket=None,
+            open_orders=empty_open_orders_tab(),
+            position_basket=empty_position_basket_tab(),
             data_as_of_utc=_utc(),
         )
 
@@ -215,17 +215,23 @@ def test_orders_and_position_tabs_transition_independently() -> None:
     assert snapshot.basket == position.basket
 
 
-def test_workspace_compatibility_properties_support_existing_replace_consumers() -> (
-    None
-):
+def test_workspace_compatibility_properties_expose_scoped_tab_data() -> None:
     workspace = configured_workspace_snapshot(
         configured_spot_session(), observed_at_utc=_utc()
     )
     order = _order(_utc())
     basket = _basket(_utc())
 
-    updated = replace(workspace, orders=(order,), basket=basket)
-    cleared = replace(updated, orders=(), basket=None)
+    updated = replace(
+        workspace,
+        open_orders=ready_open_orders_tab((order,), observed_at_utc=_utc()),
+        position_basket=ready_position_basket_tab(basket, observed_at_utc=_utc()),
+    )
+    cleared = replace(
+        updated,
+        open_orders=empty_open_orders_tab(),
+        position_basket=empty_position_basket_tab(),
+    )
 
     assert updated.orders == (order,)
     assert updated.basket is basket
@@ -258,10 +264,32 @@ def test_position_basket_tab_helpers_preserve_last_known_basket_by_state() -> No
     )
     assert loading_position_basket_tab(ready).basket is ready.basket
     assert (
-        failed_position_basket_tab(ready, "Position data is unavailable").message
-        == "Position data is unavailable"
+        failed_position_basket_tab(
+            ready, "Position / Basket data is unavailable"
+        ).message
+        == "Position / Basket data is unavailable"
     )
     assert stale_position_basket_tab(ready).data_as_of_utc == ready.data_as_of_utc
+
+
+def test_failed_tabs_reject_raw_backend_messages_and_accept_safe_display_copy() -> None:
+    open_orders = ready_open_orders_tab((_order(_utc()),), observed_at_utc=_utc())
+    position_basket = ready_position_basket_tab(_basket(_utc()), observed_at_utc=_utc())
+
+    assert (
+        failed_open_orders_tab(open_orders, "Open orders are unavailable").message
+        == "Open orders are unavailable"
+    )
+    assert (
+        failed_position_basket_tab(
+            position_basket, "Position / Basket data is unavailable"
+        ).message
+        == "Position / Basket data is unavailable"
+    )
+    with pytest.raises(ValueError, match="message must be sanitized"):
+        failed_open_orders_tab(open_orders, "RuntimeError: api_key=secret")
+    with pytest.raises(ValueError, match="message must be sanitized"):
+        failed_position_basket_tab(position_basket, "sqlite failure at /private/tmp")
 
 
 @pytest.mark.parametrize(
