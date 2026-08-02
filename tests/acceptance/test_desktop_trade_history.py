@@ -62,13 +62,25 @@ def test_desktop_trade_history_reads_durable_spot_and_futures_records(
     database.migrate()
     history = SQLiteTradeHistory(database)
     _record_spot_and_futures_history(history)
-    window = _composed_window(path, monkeypatch)
+    basket_requests: list[tuple[TradeHistoryFilter, PageRequest]] = []
+    window = _composed_window(
+        path,
+        monkeypatch,
+        basket_requests=basket_requests,
+    )
     qtbot.addWidget(window)
     window.show()
+    qtbot.waitUntil(window.setup.isVisible)
+
+    assert window.workspace.header_runtime.text() == "No Session"
+    assert basket_requests == []
 
     open_trade_history(window)
 
     qtbot.waitUntil(lambda: window.trade_history.basket_table.rowCount() == 2)
+    assert basket_requests == [
+        (TradeHistoryFilter(), PageRequest(page=1, page_size=50))
+    ]
     assert _table_row_text(window.trade_history.basket_table, 0) == (
         "2026-01-03 00:00:00 UTC",
         "Paper",
