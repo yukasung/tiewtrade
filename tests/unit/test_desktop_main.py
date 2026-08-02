@@ -201,6 +201,27 @@ def test_desktop_composition_supplies_migrated_create_and_load_operations(
     assert active.config.session_id == outcome.session.config.session_id
 
 
+def test_desktop_composition_supplies_chart_loader_without_ui_adapter_imports(
+    tmp_path: Path,
+    monkeypatch: MonkeyPatch,
+) -> None:
+    captured: dict[str, object] = {}
+
+    def capture_desktop(**dependencies: object) -> int:
+        captured.update(dependencies)
+        return 0
+
+    monkeypatch.setattr(desktop_main, "run_desktop_ui", capture_desktop)
+
+    assert desktop_main.run_desktop(tmp_path / "tiewtrade.sqlite3") == 0
+    assert callable(captured["load_chart"])
+
+    ui_source = "\n".join(
+        path.read_text() for path in Path("src/tiewtrade/ui").glob("*.py")
+    )
+    assert "tiewtrade.application.chart_history" not in ui_source
+
+
 def test_desktop_composition_supplies_migrated_trade_history_queries(
     tmp_path: Path,
     monkeypatch: MonkeyPatch,

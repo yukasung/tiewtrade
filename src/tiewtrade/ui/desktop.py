@@ -4,6 +4,7 @@ from collections.abc import Callable
 from PySide6.QtWidgets import QApplication
 
 from tiewtrade.ui.bot_lifecycle_workflow import LifecycleAction, RuntimeSnapshotRelay
+from tiewtrade.ui.chart_workflow import LoadChart
 from tiewtrade.ui.main_window import MainWindow
 from tiewtrade.ui.session_workflow import CreateSession, LoadActiveSession
 from tiewtrade.ui.theme import DARK_THEME
@@ -22,6 +23,7 @@ def run_desktop(
     initialize_bot: LifecycleAction | None = None,
     runtime_snapshots: RuntimeSnapshotRelay | None = None,
     shutdown_runtime: Callable[[], None] | None = None,
+    load_chart: LoadChart | None = None,
 ) -> int:
     app = QApplication.instance()
     if app is None:
@@ -38,6 +40,7 @@ def run_desktop(
         initialize_bot=initialize_bot,
         runtime_snapshots=runtime_snapshots,
         shutdown_runtime=shutdown_runtime,
+        load_chart=load_chart,
     )
     window.setStyleSheet(DARK_THEME)
     window.show()

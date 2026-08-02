@@ -9,6 +9,8 @@ from tiewtrade.application.bot_control import (
     BotLifecycleResult,
     workspace_with_runtime_state,
 )
+from tiewtrade.application.chart_data import ChartRange, ChartSnapshot
+from tiewtrade.application.chart_history import ChartHistory
 from tiewtrade.application.database_compatibility import DatabaseCompatibilityError
 from tiewtrade.application.paper_runtime import PaperRuntimeController
 from tiewtrade.application.paper_session_setup import (
@@ -24,6 +26,7 @@ from tiewtrade.application.trade_history import (
 )
 from tiewtrade.application.trading_workspace import BotRuntimeState
 from tiewtrade.decimal_context import configure_decimal_context
+from tiewtrade.integrations.binance.public_endpoints import BinancePublicEndpoints
 from tiewtrade.integrations.binance.public_market_data import BinancePublicMarketData
 from tiewtrade.integrations.sqlite.active_paper_sessions import (
     SQLiteActivePaperSessions,
@@ -324,6 +327,18 @@ def run_desktop(database_path: Path | None = None) -> int:
         prepare_database=prepare_database,
     )
 
+    async def load_chart(
+        session: ConfiguredPaperSession,
+        chart_range: ChartRange,
+    ) -> ChartSnapshot:
+        chart_history = ChartHistory(
+            source_factory=lambda: BinancePublicMarketData(
+                BinancePublicEndpoints.for_market_type(session.config.market_type)
+            ),
+            trade_history=history,
+        )
+        return await chart_history.load(session, chart_range)
+
     return run_desktop_ui(
         create_session=create_after_migration,
         load_active=load_after_migration,
@@ -335,6 +350,7 @@ def run_desktop(database_path: Path | None = None) -> int:
         initialize_bot=runtime_actions.initialize,
         runtime_snapshots=runtime_snapshots,
         shutdown_runtime=runtime_actions.shutdown,
+        load_chart=load_chart,
     )
 
 

@@ -11,7 +11,7 @@ QFrame#statusCard, QFrame#filterCard, QFrame#emptyPanel {
     border: 1px solid #2B3441;
     border-radius: 8px;
 }
-QFrame#chartPlaceholder {
+QWidget#candlestickChart {
     background: #10151C;
     border: 1px solid #2B3441;
     border-radius: 8px;
