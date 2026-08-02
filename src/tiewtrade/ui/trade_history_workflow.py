@@ -76,6 +76,7 @@ class TradeHistoryWorkflow(QObject):
         self._latest_fill_request: UUID | None = None
         self._failed_fill_request: UUID | None = None
         self._fills_are_loading = False
+        self._fill_context_before_basket_refresh: tuple[UUID, UUID | None] | None = None
 
     @Slot()
     def start(self) -> None:
@@ -124,6 +125,8 @@ class TradeHistoryWorkflow(QObject):
     def select_basket(self, basket_id: UUID) -> None:
         if self._closed:
             return
+        if self._baskets_are_loading:
+            self._fill_context_before_basket_refresh = None
         self._selected_basket_id = basket_id
         self._request_fills(basket_id)
 
@@ -155,6 +158,7 @@ class TradeHistoryWorkflow(QObject):
         self._failed_basket_request = None
         self._failed_fill_request = None
         self._selected_basket_id = None
+        self._fill_context_before_basket_refresh = None
 
     def _request_baskets(self, request: BasketRequest) -> None:
         if self._closed:
@@ -185,6 +189,7 @@ class TradeHistoryWorkflow(QObject):
                 self._pending_basket_request = (generation, request)
         else:
             task_to_start = self._prepare_basket_task(generation, request)
+        self._capture_fill_context_before_basket_refresh()
         self._invalidate_fills()
         self._set_baskets_loading(True)
         if task_to_start is not None:
@@ -229,6 +234,8 @@ class TradeHistoryWorkflow(QObject):
             return
 
         self._page = result.page
+        self._fill_context_before_basket_refresh = None
+        self._invalidate_fills()
         if not result.items:
             self.baskets_empty.emit(result)
             return
@@ -281,7 +288,7 @@ class TradeHistoryWorkflow(QObject):
 
     def _basket_query_failed(self) -> None:
         self._failed_basket_request = self._basket_task_request
-        self._invalidate_fills()
+        self._restore_fill_context_after_basket_failure()
         self.baskets_unavailable.emit("Trade History unavailable")
 
     def _basket_callbacks_are_current(self) -> bool:
@@ -437,6 +444,29 @@ class TradeHistoryWorkflow(QObject):
         self._latest_fill_request = None
         self._failed_fill_request = None
         self._set_fills_loading(False)
+
+    def _capture_fill_context_before_basket_refresh(self) -> None:
+        if (
+            self._fill_context_before_basket_refresh is not None
+            or self._selected_basket_id is None
+        ):
+            return
+        failed_request = (
+            self._failed_fill_request
+            if self._failed_fill_request == self._selected_basket_id
+            else None
+        )
+        self._fill_context_before_basket_refresh = (
+            self._selected_basket_id,
+            failed_request,
+        )
+
+    def _restore_fill_context_after_basket_failure(self) -> None:
+        context = self._fill_context_before_basket_refresh
+        self._fill_context_before_basket_refresh = None
+        if context is None or self._selected_basket_id is not None:
+            return
+        self._selected_basket_id, self._failed_fill_request = context
 
     def _set_baskets_loading(self, loading: bool) -> None:
         if self._baskets_are_loading == loading:

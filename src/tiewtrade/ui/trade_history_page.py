@@ -73,6 +73,7 @@ class TradeHistoryPage(QWidget):
         self._has_basket_result = False
         self._fill_result_basket_id: UUID | None = None
         self._baskets_loading = False
+        self._fills_loading = False
         self._previous_page_available = False
         self._next_page_available = False
 
@@ -249,7 +250,12 @@ class TradeHistoryPage(QWidget):
     @Slot(bool)
     def set_fills_loading(self, loading: bool) -> None:
         if not loading:
+            if not self._fills_loading:
+                return
+            self._fills_loading = False
+            self._show_durable_fill_state()
             return
+        self._fills_loading = True
         if self._fill_result_basket_id != self._selected_basket_id():
             self._clear_fill_result()
         self._set_fill_state("Loading trade fills…")
@@ -257,6 +263,7 @@ class TradeHistoryPage(QWidget):
 
     @Slot(object, object)
     def show_fills(self, basket_id: UUID, fills: tuple[TradeFill, ...]) -> None:
+        self._fills_loading = False
         rows = fill_rows(fills)
         blocker = QSignalBlocker(self.fill_table)
         self.fill_table.setRowCount(len(rows))
@@ -273,6 +280,7 @@ class TradeHistoryPage(QWidget):
 
     @Slot(object)
     def show_fills_empty(self, basket_id: UUID) -> None:
+        self._fills_loading = False
         self._clear_table(self.fill_table)
         self._fill_result_basket_id = basket_id
         self._set_fill_state("No fills for this Basket")
@@ -280,6 +288,7 @@ class TradeHistoryPage(QWidget):
 
     @Slot(object, str)
     def show_fills_unavailable(self, basket_id: UUID, message: str) -> None:
+        self._fills_loading = False
         if self._fill_result_basket_id == basket_id:
             self._set_fill_state(f"Stale · {message}")
         else:
@@ -435,6 +444,17 @@ class TradeHistoryPage(QWidget):
         self.fill_state.clear()
         self.fill_state.setVisible(False)
         self.retry_fills_button.setVisible(False)
+
+    def _show_durable_fill_state(self) -> None:
+        if self._fill_result_basket_id != self._selected_basket_id():
+            self._clear_fill_result()
+            return
+        self.retry_fills_button.setVisible(False)
+        if self.fill_table.rowCount() == 0:
+            self._set_fill_state("No fills for this Basket")
+            return
+        self.fill_state.clear()
+        self.fill_state.setVisible(False)
 
     def _set_filter_controls_enabled(self, enabled: bool) -> None:
         for widget in (
