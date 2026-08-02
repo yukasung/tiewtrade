@@ -1515,6 +1515,10 @@ def test_lifecycle_actions_render_matching_header_and_control_snapshot(
 
     qtbot.waitUntil(lambda: window.workspace.header_runtime.text() == "Running")
     assert start_calls == 1
+    assert window.workspace.notification_button.text() == "Notifications · 1"
+    assert window.workspace.notification_button.accessibleName() == (
+        "Notifications: 1 unread; highest severity Info"
+    )
     assert window.workspace.bot_control_widget.state_value.text() == "Running"
     assert window.workspace.bot_control_widget.stop_button.isVisible()
     assert window.findChildren(QWidget, "manualBuyButton") == []

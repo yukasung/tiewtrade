@@ -12,8 +12,10 @@ from pytestqt.qtbot import QtBot
 
 from tests.support.paper_session_setup import configured_spot_session
 from tests.support.qt_interactions import click
+from tiewtrade.application.bot_control import BotLifecycleResult
 from tiewtrade.application.trading_workspace import (
     BasketSnapshot,
+    BotRuntimeState,
     OpenOrderSnapshot,
     configured_workspace_snapshot,
     failed_workspace_snapshot,
@@ -22,6 +24,7 @@ from tiewtrade.application.trading_workspace import (
     ready_position_basket_tab,
     stale_workspace_snapshot,
 )
+from tiewtrade.ui.notification_center import NotificationStore
 from tiewtrade.ui.trading_workspace import TradingWorkspace
 
 
@@ -110,6 +113,55 @@ def test_snapshot_updates_all_persistent_header_facts(qtbot: QtBot) -> None:
     assert workspace.header_runtime.text() == "Configured"
     assert workspace.header_freshness.text() == "Market data not started"
     assert workspace.header_read_state.text() == "Ready"
+
+
+def test_notification_header_and_drawer_render_and_acknowledge_in_memory_only(
+    qtbot: QtBot,
+) -> None:
+    workspace = TradingWorkspace()
+    qtbot.addWidget(workspace)
+    workspace.resize(1024, 700)
+    workspace.show()
+    snapshot = configured_workspace_snapshot(
+        configured_spot_session(),
+        observed_at_utc=datetime(2026, 8, 2, 9, 30, tzinfo=UTC),
+    )
+    assert snapshot.header is not None
+    blocked_workspace = replace(
+        snapshot,
+        header=replace(snapshot.header, runtime_state=BotRuntimeState.BLOCKED),
+    )
+    store = NotificationStore()
+    store.publish(
+        BotLifecycleResult(
+            workspace=blocked_workspace,
+            blocked_reason="Paper Bot recovery required",
+        ),
+        occurred_at_utc=datetime(2026, 8, 2, 9, 30, tzinfo=UTC),
+    )
+
+    workspace.show_workspace_snapshot(blocked_workspace)
+    workspace.show_notifications(store)
+
+    assert workspace.notification_button.text() == "Notifications · 1"
+    assert workspace.notification_button.accessibleName() == (
+        "Notifications: 1 unread; highest severity Critical"
+    )
+    click(workspace.notification_button)
+    qtbot.waitUntil(workspace.notification_drawer.isVisible)
+    assert workspace.notification_rows[0].text() == (
+        "2026-08-02 09:30:00 UTC · Critical · Safety · Paper Bot recovery required"
+    )
+
+    click(workspace.notification_acknowledge_buttons[0])
+
+    assert store.unread_count == 0
+    assert workspace.notification_button.text() == "Notifications · 0"
+    assert workspace.notification_button.accessibleName() == "Notifications: 0 unread"
+    assert workspace.notification_acknowledge_buttons[0].accessibleName() == (
+        "Acknowledged notification: Paper Bot recovery required"
+    )
+    assert workspace.header_runtime.text() == "Blocked"
 
 
 def test_error_and_stale_snapshots_keep_header_facts_visible(qtbot: QtBot) -> None:
