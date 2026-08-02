@@ -5,7 +5,7 @@ from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
 from unittest.mock import create_autospec
-from uuid import UUID
+from uuid import UUID, uuid4
 
 import pytest
 
@@ -52,6 +52,44 @@ def test_exact_duplicate_fill_is_a_no_op(history: SQLiteTradeHistory) -> None:
     assert history.record_open_basket(basket, fill) is False
     assert history.get_basket(basket.basket_id) == basket
     assert history.list_fills(basket.basket_id) == (fill,)
+
+
+def test_list_session_fills_orders_by_utc_then_fill_id_and_excludes_other_session(
+    history: SQLiteTradeHistory,
+) -> None:
+    session_id = UUID("00000000-0000-0000-0000-000000000138")
+    start = datetime(2026, 1, 1, tzinfo=UTC)
+    end = datetime(2026, 1, 2, tzinfo=UTC)
+    first = trade_fill(
+        fill_id="fill-a",
+        basket_id=uuid4(),
+        session_id=session_id,
+        filled_at_utc=start + timedelta(hours=1),
+    )
+    second = trade_fill(
+        fill_id="fill-b",
+        basket_id=uuid4(),
+        session_id=session_id,
+        filled_at_utc=start + timedelta(hours=1),
+    )
+    other_session = trade_fill(
+        fill_id="fill-other",
+        basket_id=uuid4(),
+        session_id=uuid4(),
+        filled_at_utc=start + timedelta(hours=1),
+    )
+    for fill in (second, other_session, first):
+        history.record_open_basket(
+            replace(
+                open_basket(),
+                basket_id=fill.basket_id,
+                session_id=fill.session_id,
+                opened_at_utc=fill.filled_at_utc,
+            ),
+            fill,
+        )
+
+    assert history.list_session_fills(session_id, start, end) == (first, second)
 
 
 def test_open_basket_requires_open_status(history: SQLiteTradeHistory) -> None:
