@@ -1314,6 +1314,8 @@ def test_closing_window_waits_for_workers_after_closing_workflows(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     events: list[str] = []
+    caller_thread = threading.get_ident()
+    wait_threads: list[int] = []
 
     class RecordingThreadPool(QThreadPool):
         @overload
@@ -1330,6 +1332,7 @@ def test_closing_window_waits_for_workers_after_closing_workflows(
             self,
             deadline: QDeadlineTimer | QDeadlineTimer.ForeverConstant | int = -1,
         ) -> bool:
+            wait_threads.append(threading.get_ident())
             events.append(f"pool:{deadline}")
             return super().waitForDone(deadline)
 
@@ -1360,8 +1363,47 @@ def test_closing_window_waits_for_workers_after_closing_workflows(
     monkeypatch.setattr(window._history_workflow, "close", close_history_workflow)
 
     window.close()
+    qtbot.waitUntil(lambda: not window.isVisible())
 
     assert events == ["session", "history", "pool:5000"]
+    assert len(wait_threads) == 1
+    assert wait_threads[0] != caller_thread
+
+
+def test_closing_window_invokes_controlled_runtime_shutdown(qtbot: QtBot) -> None:
+    caller_thread = threading.get_ident()
+    shutdown_started = threading.Event()
+    release_shutdown = threading.Event()
+    shutdown_threads: list[int] = []
+
+    def shutdown_runtime() -> None:
+        shutdown_threads.append(threading.get_ident())
+        shutdown_started.set()
+        if not release_shutdown.wait(timeout=2):
+            raise TimeoutError("test did not release shutdown")
+
+    window = MainWindow(
+        create_session=unused_create,
+        load_active=no_active_session,
+        list_baskets=empty_basket_page,
+        list_fills=empty_fills,
+        shutdown_runtime=shutdown_runtime,
+    )
+    qtbot.addWidget(window)
+    window.show()
+    qtbot.waitUntil(window.setup.create_button.isEnabled)
+
+    window.close()
+    qtbot.waitUntil(shutdown_started.is_set)
+
+    assert window.isVisible()
+    assert len(shutdown_threads) == 1
+    assert shutdown_threads[0] != caller_thread
+
+    release_shutdown.set()
+    qtbot.waitUntil(lambda: not window.isVisible())
+
+    assert len(shutdown_threads) == 1
 
 
 def test_closing_window_ignores_late_trade_history_result(qtbot: QtBot) -> None:

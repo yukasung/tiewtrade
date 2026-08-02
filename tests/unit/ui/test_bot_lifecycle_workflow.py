@@ -1,11 +1,12 @@
 import threading
+from collections.abc import Callable
 from dataclasses import replace
 from datetime import UTC, datetime
 from decimal import Decimal
 from uuid import UUID
 
 import pytest
-from PySide6.QtCore import QCoreApplication, QThreadPool
+from PySide6.QtCore import QCoreApplication, QObject, QThread, QThreadPool, Slot
 from pytestqt.qtbot import QtBot
 
 from tests.support.paper_session_setup import configured_spot_session
@@ -22,11 +23,16 @@ from tiewtrade.application.trading_workspace import (
     OpenOrderSnapshot,
     WorkspaceReadState,
     empty_position_basket_tab,
+    paper_runtime_workspace_snapshot,
     ready_open_orders_tab,
     ready_position_basket_tab,
 )
 from tiewtrade.trading.session_config import MarketType
-from tiewtrade.ui.bot_lifecycle_workflow import BotLifecycleWorkflow, LifecycleAction
+from tiewtrade.ui.bot_lifecycle_workflow import (
+    BotLifecycleWorkflow,
+    LifecycleAction,
+    RuntimeSnapshotRelay,
+)
 
 OBSERVED_AT = datetime(2026, 8, 1, 12, tzinfo=UTC)
 
@@ -36,6 +42,7 @@ def _workflow(
     start_bot: LifecycleAction | None,
     stop_bot: LifecycleAction | None,
     recover: LifecycleAction | None,
+    runtime_snapshots: RuntimeSnapshotRelay | None = None,
 ) -> tuple[BotLifecycleWorkflow, QThreadPool]:
     thread_pool = QThreadPool()
     thread_pool.setMaxThreadCount(1)
@@ -44,11 +51,25 @@ def _workflow(
             start_bot=start_bot,
             stop_bot=stop_bot,
             recover=recover,
+            runtime_snapshots=runtime_snapshots,
             thread_pool=thread_pool,
             clock=lambda: OBSERVED_AT,
         ),
         thread_pool,
     )
+
+
+class _SnapshotThreadRecorder(QObject):
+    def __init__(self) -> None:
+        super().__init__()
+        self.snapshots: list[BotControlSnapshot] = []
+        self.threads: list[QThread] = []
+
+    @Slot(object)
+    def record(self, value: object) -> None:
+        assert isinstance(value, BotControlSnapshot)
+        self.snapshots.append(value)
+        self.threads.append(QThread.currentThread())
 
 
 def _result(
@@ -95,6 +116,251 @@ def test_start_emits_starting_then_running_off_ui_thread(qtbot: QtBot) -> None:
     ]
     assert worker_threads[0] != caller_thread
     assert emitted[-1].available_actions == frozenset()
+    assert thread_pool.waitForDone(1_000)
+
+
+def test_runtime_snapshot_from_worker_is_published_on_qt_thread(
+    qtbot: QtBot,
+) -> None:
+    relay = RuntimeSnapshotRelay()
+    callbacks: list[Callable[[BotLifecycleResult], None]] = []
+
+    def start(snapshot: BotControlSnapshot) -> BotLifecycleResult:
+        callbacks.append(relay.new_generation())
+        return _result(
+            snapshot,
+            BotRuntimeState.RUNNING,
+            data_freshness=DataFreshness.FRESH,
+        )
+
+    workflow, thread_pool = _workflow(
+        start_bot=start,
+        stop_bot=None,
+        recover=None,
+        runtime_snapshots=relay,
+    )
+    recorder = _SnapshotThreadRecorder()
+    workflow.snapshot_changed.connect(recorder.record)
+    workflow.configure(configured_spot_session())
+    workflow.start_bot()
+    qtbot.waitUntil(lambda: workflow.snapshot.state is BotRuntimeState.RUNNING)
+
+    updated_at = datetime(2026, 8, 1, 12, 5, tzinfo=UTC)
+    runtime_result = BotLifecycleResult(
+        workspace=paper_runtime_workspace_snapshot(
+            workflow.snapshot.workspace,
+            orders=(_order(),),
+            basket=_basket(),
+            observed_at_utc=updated_at,
+        )
+    )
+    callback_thread: list[int] = []
+
+    def publish_from_runtime() -> None:
+        callback_thread.append(threading.get_ident())
+        callbacks[0](runtime_result)
+
+    runtime_thread = threading.Thread(target=publish_from_runtime)
+    runtime_thread.start()
+    runtime_thread.join(timeout=1)
+
+    qtbot.waitUntil(lambda: workflow.snapshot.workspace.orders == (_order(),))
+
+    assert callback_thread == [runtime_thread.ident]
+    assert recorder.threads[-1] is workflow.thread()
+    assert workflow.snapshot.workspace.basket == _basket()
+    assert workflow.snapshot.workspace.data_as_of_utc == updated_at
+    assert thread_pool.waitForDone(1_000)
+
+
+def test_runtime_snapshot_published_before_start_returns_is_not_lost(
+    qtbot: QtBot,
+) -> None:
+    relay = RuntimeSnapshotRelay()
+
+    def start(snapshot: BotControlSnapshot) -> BotLifecycleResult:
+        publish = relay.new_generation()
+        publish(
+            BotLifecycleResult(
+                workspace=paper_runtime_workspace_snapshot(
+                    snapshot.workspace,
+                    orders=(_order(),),
+                    basket=_basket(),
+                    observed_at_utc=datetime(2026, 8, 1, 12, 5, tzinfo=UTC),
+                )
+            )
+        )
+        return _result(
+            snapshot,
+            BotRuntimeState.RUNNING,
+            data_freshness=DataFreshness.FRESH,
+        )
+
+    workflow, thread_pool = _workflow(
+        start_bot=start,
+        stop_bot=None,
+        recover=None,
+        runtime_snapshots=relay,
+    )
+    workflow.configure(configured_spot_session())
+    workflow.start_bot()
+
+    qtbot.waitUntil(lambda: workflow.snapshot.workspace.basket == _basket())
+
+    assert workflow.snapshot.state is BotRuntimeState.RUNNING
+    assert workflow.snapshot.workspace.orders == (_order(),)
+    assert thread_pool.waitForDone(1_000)
+
+
+def test_stop_invalidates_late_runtime_callback_and_preserves_basket(
+    qtbot: QtBot,
+) -> None:
+    relay = RuntimeSnapshotRelay()
+    callbacks: list[Callable[[BotLifecycleResult], None]] = []
+    stop_started = threading.Event()
+    release_stop = threading.Event()
+
+    def start(snapshot: BotControlSnapshot) -> BotLifecycleResult:
+        callbacks.append(relay.new_generation())
+        return _result(
+            snapshot,
+            BotRuntimeState.RUNNING,
+            data_freshness=DataFreshness.FRESH,
+        )
+
+    def stop(snapshot: BotControlSnapshot) -> BotLifecycleResult:
+        stop_started.set()
+        if not release_stop.wait(timeout=2):
+            raise TimeoutError("test did not release stop")
+        return _result(snapshot, BotRuntimeState.STOPPED)
+
+    workflow, thread_pool = _workflow(
+        start_bot=start,
+        stop_bot=stop,
+        recover=None,
+        runtime_snapshots=relay,
+    )
+    workflow.configure(configured_spot_session())
+    workflow.start_bot()
+    qtbot.waitUntil(lambda: workflow.snapshot.state is BotRuntimeState.RUNNING)
+    callbacks[0](
+        BotLifecycleResult(
+            workspace=paper_runtime_workspace_snapshot(
+                workflow.snapshot.workspace,
+                orders=(_order(),),
+                basket=_basket(),
+                observed_at_utc=datetime(2026, 8, 1, 12, 5, tzinfo=UTC),
+            )
+        )
+    )
+    qtbot.waitUntil(lambda: workflow.snapshot.workspace.basket == _basket())
+
+    workflow.stop_bot()
+    qtbot.waitUntil(stop_started.is_set)
+    stopping_workspace = workflow.snapshot.workspace
+    callbacks[0](
+        BotLifecycleResult(
+            workspace=paper_runtime_workspace_snapshot(
+                stopping_workspace,
+                orders=(),
+                basket=None,
+                observed_at_utc=datetime(2026, 8, 1, 12, 10, tzinfo=UTC),
+            )
+        )
+    )
+    QCoreApplication.processEvents()
+
+    assert workflow.snapshot.workspace is stopping_workspace
+    assert workflow.snapshot.workspace.basket == _basket()
+
+    release_stop.set()
+    qtbot.waitUntil(lambda: workflow.snapshot.state is BotRuntimeState.STOPPED)
+
+    assert workflow.snapshot.workspace.basket == _basket()
+    assert thread_pool.waitForDone(1_000)
+
+
+def test_runtime_callback_from_older_generation_is_ignored(qtbot: QtBot) -> None:
+    relay = RuntimeSnapshotRelay()
+    callbacks: list[Callable[[BotLifecycleResult], None]] = []
+
+    def start(snapshot: BotControlSnapshot) -> BotLifecycleResult:
+        callbacks.append(relay.new_generation())
+        return _result(
+            snapshot,
+            BotRuntimeState.RUNNING,
+            data_freshness=DataFreshness.FRESH,
+        )
+
+    workflow, thread_pool = _workflow(
+        start_bot=start,
+        stop_bot=None,
+        recover=None,
+        runtime_snapshots=relay,
+    )
+    first_session = configured_spot_session()
+    second_session = replace(
+        configured_spot_session(),
+        config=replace(
+            configured_spot_session().config,
+            session_id=UUID("00000000-0000-0000-0000-000000000999"),
+        ),
+    )
+    workflow.configure(first_session)
+    workflow.start_bot()
+    qtbot.waitUntil(lambda: workflow.snapshot.state is BotRuntimeState.RUNNING)
+    first_callback = callbacks[0]
+
+    workflow.configure(second_session)
+    configured_workspace = workflow.snapshot.workspace
+    first_callback(
+        BotLifecycleResult(
+            workspace=paper_runtime_workspace_snapshot(
+                configured_workspace,
+                orders=(_order(),),
+                basket=_basket(),
+                observed_at_utc=datetime(2026, 8, 1, 12, 5, tzinfo=UTC),
+            )
+        )
+    )
+    QCoreApplication.processEvents()
+
+    assert workflow.snapshot.workspace is configured_workspace
+
+    workflow.start_bot()
+    qtbot.waitUntil(
+        lambda: (
+            len(callbacks) == 2 and workflow.snapshot.state is BotRuntimeState.RUNNING
+        )
+    )
+    second_callback = callbacks[1]
+    current_workspace = workflow.snapshot.workspace
+    first_callback(
+        BotLifecycleResult(
+            workspace=paper_runtime_workspace_snapshot(
+                current_workspace,
+                orders=(_order(),),
+                basket=_basket(),
+                observed_at_utc=datetime(2026, 8, 1, 12, 10, tzinfo=UTC),
+            )
+        )
+    )
+    QCoreApplication.processEvents()
+    assert workflow.snapshot.workspace is current_workspace
+
+    second_callback(
+        BotLifecycleResult(
+            workspace=paper_runtime_workspace_snapshot(
+                current_workspace,
+                orders=(_order(),),
+                basket=_basket(),
+                observed_at_utc=datetime(2026, 8, 1, 12, 15, tzinfo=UTC),
+            )
+        )
+    )
+    qtbot.waitUntil(lambda: workflow.snapshot.workspace.basket == _basket())
+
+    assert workflow.snapshot.session is second_session
     assert thread_pool.waitForDone(1_000)
 
 

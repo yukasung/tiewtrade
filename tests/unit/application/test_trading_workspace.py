@@ -28,6 +28,8 @@ from tiewtrade.application.trading_workspace import (
     loading_open_orders_tab,
     loading_position_basket_tab,
     loading_workspace_snapshot,
+    paper_runtime_blocked_workspace_snapshot,
+    paper_runtime_workspace_snapshot,
     ready_open_orders_tab,
     ready_position_basket_tab,
     stale_open_orders_tab,
@@ -270,6 +272,37 @@ def test_position_basket_tab_helpers_preserve_last_known_basket_by_state() -> No
         == "Position / Basket data is unavailable"
     )
     assert stale_position_basket_tab(ready).data_as_of_utc == ready.data_as_of_utc
+
+
+def test_paper_runtime_projection_refreshes_and_preserves_when_blocked() -> None:
+    observed_at = _utc(minute=3)
+    configured = configured_workspace_snapshot(
+        configured_spot_session(), observed_at_utc=_utc()
+    )
+    order = _order(_utc(minute=1))
+    basket = _basket(_utc(minute=2))
+
+    running = paper_runtime_workspace_snapshot(
+        configured,
+        orders=(order,),
+        basket=basket,
+        observed_at_utc=observed_at,
+    )
+    blocked = paper_runtime_blocked_workspace_snapshot(running)
+
+    assert running.header is not None
+    assert running.header.runtime_state is BotRuntimeState.RUNNING
+    assert running.header.data_freshness is DataFreshness.FRESH
+    assert running.orders == (order,)
+    assert running.basket is basket
+    assert running.data_as_of_utc is observed_at
+    assert blocked.header is not None
+    assert blocked.header.runtime_state is BotRuntimeState.BLOCKED
+    assert blocked.header.data_freshness is DataFreshness.STALE
+    assert blocked.read_state is WorkspaceReadState.STALE
+    assert blocked.orders == running.orders
+    assert blocked.basket == running.basket
+    assert blocked.data_as_of_utc is observed_at
 
 
 def test_failed_tabs_reject_raw_backend_messages_and_accept_safe_display_copy() -> None:

@@ -122,7 +122,7 @@ def test_migration_from_v2_preserves_trade_history_record(tmp_path: Path) -> Non
             """
         ).fetchone()
 
-    assert version == 3
+    assert version == 4
     assert basket_id == "basket-sentinel"
     assert bot_sessions_exists is not None
 

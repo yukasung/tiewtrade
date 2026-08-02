@@ -10,7 +10,7 @@ class UnsupportedDatabaseSchemaError(ValueError):
 
 
 class SQLiteDatabase:
-    _SCHEMA_VERSION = 3
+    _SCHEMA_VERSION = 4
     _BUSY_TIMEOUT_MS = 5_000
 
     def __init__(self, path: Path) -> None:
@@ -46,6 +46,8 @@ class SQLiteDatabase:
                     )
                 if version in {0, 1, 2}:
                     _create_bot_sessions_schema(connection)
+                if version in {0, 1, 2, 3}:
+                    _create_paper_runtime_lifecycle_schema(connection)
                 connection.execute(f"PRAGMA user_version = {self._SCHEMA_VERSION}")
         finally:
             connection.close()
@@ -164,5 +166,17 @@ def _create_bot_sessions_schema(connection: sqlite3.Connection) -> None:
         CREATE UNIQUE INDEX IF NOT EXISTS bot_sessions_single_active_idx
         ON bot_sessions ((1))
         WHERE ended_at_utc IS NULL
+        """
+    )
+
+
+def _create_paper_runtime_lifecycle_schema(connection: sqlite3.Connection) -> None:
+    connection.execute(
+        """
+        CREATE TABLE IF NOT EXISTS paper_runtime_lifecycle (
+            session_id TEXT PRIMARY KEY REFERENCES bot_sessions(session_id),
+            state TEXT NOT NULL CHECK (state IN ('running', 'stopped')),
+            observed_at_utc TEXT NOT NULL
+        )
         """
     )

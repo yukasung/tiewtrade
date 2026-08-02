@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from decimal import Decimal
 
 from tiewtrade.trading.futures_policy import FuturesTradingPolicy
-from tiewtrade.trading.position import PositionSide
+from tiewtrade.trading.position import PositionSide, unrealized_pnl
 
 
 @dataclass(frozen=True, slots=True)
@@ -61,11 +61,13 @@ class FuturesMarginModel:
             available_capital=available_capital,
             accumulated_entry_fees=accumulated_entry_fees,
         )
-        if side is PositionSide.LONG:
-            unrealized_pnl = (current_price - average_entry_price) * quantity
-        else:
-            unrealized_pnl = (average_entry_price - current_price) * quantity
-        account_equity = available_capital - accumulated_entry_fees + unrealized_pnl
+        marked_pnl = unrealized_pnl(
+            side=side,
+            average_entry_price=average_entry_price,
+            quantity=quantity,
+            current_price=current_price,
+        )
+        account_equity = available_capital - accumulated_entry_fees + marked_pnl
         return FuturesMarginSnapshot(
             account_equity=account_equity,
             liquidation_price=liquidation_price,

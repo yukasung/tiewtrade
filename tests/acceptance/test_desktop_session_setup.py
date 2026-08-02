@@ -1,11 +1,14 @@
 import ast
+import asyncio
 import socket
 import sqlite3
-from dataclasses import dataclass, replace
+from collections.abc import AsyncIterator, Awaitable
+from dataclasses import FrozenInstanceError, dataclass, replace
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
 from threading import Event
+from typing import TypeVar
 from uuid import UUID
 
 import pytest
@@ -20,35 +23,51 @@ from tiewtrade.application.bot_control import (
     BotLifecycleResult,
     workspace_with_runtime_state,
 )
+from tiewtrade.application.paper_runtime import PaperRuntimeController
 from tiewtrade.application.paper_session_setup import (
     ConfiguredPaperSession,
     CreatePaperSession,
     PaperSessionCreateOutcome,
     PaperSessionSetupValues,
 )
+from tiewtrade.application.trade_history import PageRequest, TradeHistoryFilter
 from tiewtrade.application.trading_workspace import (
     BasketSnapshot,
     BotRuntimeState,
     DataFreshness,
     OpenOrderSnapshot,
     TradingWorkspaceSnapshot,
+    WorkspaceReadState,
     configured_workspace_snapshot,
     ready_open_orders_tab,
     ready_position_basket_tab,
 )
 from tiewtrade.execution.paper_spot import PaperSpotEntryFill
+from tiewtrade.integrations.binance.public_endpoints import BinancePublicEndpoints
 from tiewtrade.integrations.sqlite.active_paper_sessions import (
     SQLiteActivePaperSessions,
 )
 from tiewtrade.integrations.sqlite.database import SQLiteDatabase
+from tiewtrade.integrations.sqlite.paper_runtime_lifecycle import (
+    PaperRuntimeLifecycleState,
+    SQLitePaperRuntimeLifecycle,
+)
 from tiewtrade.integrations.sqlite.paper_spot_history import (
     PaperSpotHistoryContext,
     PaperSpotSQLiteHistory,
 )
 from tiewtrade.integrations.sqlite.trade_history import SQLiteTradeHistory
+from tiewtrade.market_data.candle import Candle
+from tiewtrade.market_data.config import MarketDataConfig
 from tiewtrade.trading.futures_policy import MarginMode, PositionMode
 from tiewtrade.trading.session_config import MarketType, TradeMode
+from tiewtrade.trading.symbol_rules import SymbolRules
+from tiewtrade.trading.trade_history import BasketStatus
+from tiewtrade.ui.bot_lifecycle_workflow import RuntimeSnapshotRelay
 from tiewtrade.ui.main_window import MainWindow
+
+_T = TypeVar("_T")
+_RUNTIME_NOW = datetime(2026, 8, 2, 3, tzinfo=UTC)
 
 
 @dataclass(frozen=True, slots=True)
@@ -60,6 +79,307 @@ class _SessionCase:
     slippage_bps: str
     spot_ratio: str | None
     futures_leverage: int | None
+
+
+class _ImmediateRuntimeScheduler:
+    def now(self) -> datetime:
+        return _RUNTIME_NOW
+
+    async def sleep(self, seconds: float) -> None:
+        await asyncio.sleep(0)
+
+    async def wait_for(self, awaitable: Awaitable[_T], timeout: float) -> _T:
+        return await awaitable
+
+
+class _AcceptancePublicCandleSource:
+    def __init__(
+        self,
+        *,
+        config: MarketDataConfig,
+        warm_up: tuple[Candle, ...],
+        live: tuple[Candle, ...],
+    ) -> None:
+        self._config = config
+        self._warm_up = warm_up
+        self._live = live
+        self.load_recent_calls = 0
+        self.stream_completed_calls = 0
+        self.closed = Event()
+
+    async def load_recent(
+        self,
+        config: MarketDataConfig,
+        *,
+        count: int,
+        completed_before: datetime,
+    ) -> tuple[Candle, ...]:
+        assert config == self._config
+        assert count == len(self._warm_up)
+        assert completed_before == _RUNTIME_NOW
+        self.load_recent_calls += 1
+        return self._warm_up
+
+    async def load_range(
+        self,
+        config: MarketDataConfig,
+        *,
+        start: datetime,
+        end: datetime,
+    ) -> tuple[Candle, ...]:
+        raise AssertionError("contiguous acceptance candles must not backfill")
+
+    def stream_completed(self, config: MarketDataConfig) -> AsyncIterator[Candle]:
+        assert config == self._config
+        self.stream_completed_calls += 1
+        return self._stream_completed()
+
+    async def close(self) -> None:
+        self.closed.set()
+
+    async def _stream_completed(self) -> AsyncIterator[Candle]:
+        for candle in self._live:
+            yield candle
+        await asyncio.Event().wait()
+
+
+@pytest.mark.parametrize(
+    "case",
+    [
+        pytest.param(
+            _SessionCase("spot", "5m", 10, "0.1", "5", "80", None),
+            id="spot",
+        ),
+        pytest.param(
+            _SessionCase("futures", "5m", 10, "0.1", "5", None, 3),
+            id="futures",
+        ),
+    ],
+)
+def test_desktop_real_paper_runtime_starts_once_and_stops_without_closing_basket(
+    monkeypatch: MonkeyPatch,
+    qtbot: QtBot,
+    tmp_path: Path,
+    case: _SessionCase,
+) -> None:
+    _block_network(monkeypatch)
+    database = SQLiteDatabase(tmp_path / "tiewtrade.sqlite3")
+    database.migrate()
+    active_sessions = SQLiteActivePaperSessions(database)
+    session = (
+        CreatePaperSession(create_active=active_sessions.create)
+        .execute(_setup_values(case))
+        .session
+    )
+    history = SQLiteTradeHistory(database)
+    warm_up, live = _paper_runtime_candles(session.market_data)
+    source = _AcceptancePublicCandleSource(
+        config=session.market_data,
+        warm_up=warm_up,
+        live=live,
+    )
+    selected_endpoints: list[BinancePublicEndpoints] = []
+    runtime_relay = RuntimeSnapshotRelay()
+    controller: PaperRuntimeController | None = None
+    initialize_calls = 0
+    start_calls = 0
+
+    def initialize_bot(snapshot: BotControlSnapshot) -> BotLifecycleResult:
+        nonlocal initialize_calls
+        initialize_calls += 1
+        startup_controller = PaperRuntimeController(
+            lifecycle=SQLitePaperRuntimeLifecycle(database),
+            trade_history=history,
+            symbol_rules=_acceptance_symbol_rules(session.market_data.symbol),
+            source_factory=lambda _endpoints: pytest.fail(
+                "clean startup inspection must not contact public market data"
+            ),
+            snapshot_callback=lambda _snapshot: None,
+            clock=lambda: _RUNTIME_NOW,
+        )
+        return _paper_runtime_result_for_ui(
+            snapshot,
+            startup_controller.inspect_startup(snapshot.session),
+        )
+
+    def start_bot(snapshot: BotControlSnapshot) -> BotLifecycleResult:
+        nonlocal controller, start_calls
+        start_calls += 1
+        assert controller is None
+        publish = runtime_relay.new_generation()
+
+        def publish_current_result(workspace: TradingWorkspaceSnapshot) -> None:
+            del workspace
+            assert controller is not None
+            publish(controller.current_result)
+
+        def select_source(
+            endpoints: BinancePublicEndpoints,
+        ) -> _AcceptancePublicCandleSource:
+            selected_endpoints.append(endpoints)
+            return source
+
+        controller = PaperRuntimeController(
+            lifecycle=SQLitePaperRuntimeLifecycle(database),
+            trade_history=history,
+            symbol_rules=_acceptance_symbol_rules(session.market_data.symbol),
+            source_factory=select_source,
+            snapshot_callback=publish_current_result,
+            scheduler=_ImmediateRuntimeScheduler(),
+            clock=lambda: _RUNTIME_NOW,
+        )
+        return _paper_runtime_result_for_ui(
+            snapshot,
+            controller.start(snapshot.session),
+        )
+
+    def stop_bot(snapshot: BotControlSnapshot) -> BotLifecycleResult:
+        assert controller is not None
+        return _paper_runtime_result_for_ui(
+            snapshot,
+            controller.stop(snapshot.session),
+        )
+
+    window = MainWindow(
+        create_session=lambda values: pytest.fail("create must not run"),
+        load_active=active_sessions.get_active,
+        list_baskets=history.list_baskets,
+        list_fills=history.list_fills,
+        start_bot=start_bot,
+        stop_bot=stop_bot,
+        initialize_bot=initialize_bot,
+        runtime_snapshots=runtime_relay,
+    )
+    qtbot.addWidget(window)
+    window.show()
+    qtbot.waitUntil(window.overview.isVisible)
+    qtbot.waitUntil(window.workspace.bot_control_widget.start_button.isEnabled)
+    assert initialize_calls == 1
+
+    click(window.workspace.bot_control_widget.start_button)
+    window.workspace.start_bot_requested.emit()
+
+    qtbot.waitUntil(lambda: start_calls == 1)
+    qtbot.waitUntil(lambda: window.workspace.header_runtime.text() == "Running")
+    qtbot.waitUntil(lambda: window.workspace.position_basket.table.rowCount() == 1)
+    assert start_calls == 1
+    assert source.load_recent_calls == 1
+    assert source.stream_completed_calls == 1
+    assert selected_endpoints == [
+        BinancePublicEndpoints.for_market_type(MarketType(case.market_type))
+    ]
+    assert controller is not None
+    running_workspace = controller.current_workspace
+    assert running_workspace.basket is not None
+    assert running_workspace.basket.market_type == case.market_type
+    assert running_workspace.basket.entry_count == 1
+    assert running_workspace.basket.take_profit_price is not None
+    with pytest.raises(FrozenInstanceError):
+        running_workspace.read_state = WorkspaceReadState.EMPTY  # type: ignore[misc]
+
+    click(window.workspace.bot_control_widget.stop_button)
+    confirmation = window.findChild(QMessageBox)
+    assert confirmation is not None
+    confirm_button = next(
+        button for button in confirmation.buttons() if button.text() == "Stop Session"
+    )
+    click(confirm_button)
+    qtbot.waitUntil(lambda: window.workspace.header_runtime.text() == "Stopped")
+
+    stopped_workspace = controller.current_workspace
+    assert source.closed.wait(1)
+    assert stopped_workspace.basket == running_workspace.basket
+    assert stopped_workspace.basket is not None
+    assert (
+        stopped_workspace.basket.take_profit_price
+        == running_workspace.basket.take_profit_price
+    )
+    history_page = history.list_baskets(
+        TradeHistoryFilter(market_type=MarketType(case.market_type)),
+        PageRequest(page=1, page_size=20),
+    )
+    assert len(history_page.items) == 1
+    assert history_page.items[0].status is BasketStatus.OPEN
+
+
+def test_desktop_restart_blocks_interrupted_runtime_until_recovery(
+    monkeypatch: MonkeyPatch,
+    qtbot: QtBot,
+    tmp_path: Path,
+) -> None:
+    _block_network(monkeypatch)
+    database = SQLiteDatabase(tmp_path / "tiewtrade.sqlite3")
+    database.migrate()
+    active_sessions = SQLiteActivePaperSessions(database)
+    session = (
+        CreatePaperSession(create_active=active_sessions.create)
+        .execute(_setup_values(_SessionCase("spot", "5m", 10, "0.1", "5", "80", None)))
+        .session
+    )
+    lifecycle = SQLitePaperRuntimeLifecycle(database)
+    lifecycle.mark_running(session.config.session_id, _RUNTIME_NOW)
+    controller = PaperRuntimeController(
+        lifecycle=lifecycle,
+        trade_history=SQLiteTradeHistory(database),
+        symbol_rules=_acceptance_symbol_rules(session.market_data.symbol),
+        source_factory=lambda _endpoints: pytest.fail(
+            "startup recovery must not contact public market data"
+        ),
+        snapshot_callback=lambda _snapshot: None,
+        clock=lambda: _RUNTIME_NOW,
+    )
+    initialize_calls = 0
+    recover_calls = 0
+
+    def initialize_bot(snapshot: BotControlSnapshot) -> BotLifecycleResult:
+        nonlocal initialize_calls
+        initialize_calls += 1
+        result = _paper_runtime_result_for_ui(
+            snapshot,
+            controller.inspect_startup(snapshot.session),
+        )
+        assert result.blocked_reason == "Paper Bot recovery required"
+        return result
+
+    def recover_bot(snapshot: BotControlSnapshot) -> BotLifecycleResult:
+        nonlocal recover_calls
+        recover_calls += 1
+        return _paper_runtime_result_for_ui(
+            snapshot,
+            controller.recover(snapshot.session),
+        )
+
+    window = MainWindow(
+        create_session=lambda values: pytest.fail("create must not run"),
+        load_active=active_sessions.get_active,
+        list_baskets=empty_basket_page,
+        list_fills=empty_fills,
+        recover_bot=recover_bot,
+        initialize_bot=initialize_bot,
+    )
+    qtbot.addWidget(window)
+    window.show()
+
+    qtbot.waitUntil(lambda: window.workspace.header_runtime.text() == "Blocked")
+    assert initialize_calls == 1
+    assert recover_calls == 0
+    assert window.workspace.bot_control_widget.supporting_text.text() == (
+        "Paper Bot recovery required"
+    )
+    assert window.workspace.bot_control_widget.recover_button.isEnabled()
+    marker = lifecycle.read(session.config.session_id)
+    assert marker is not None
+    assert marker.state is PaperRuntimeLifecycleState.RUNNING
+
+    click(window.workspace.bot_control_widget.recover_button)
+    qtbot.waitUntil(lambda: window.workspace.header_runtime.text() == "Stopped")
+
+    assert recover_calls == 1
+    marker = lifecycle.read(session.config.session_id)
+    assert marker is not None
+    assert marker.state is PaperRuntimeLifecycleState.STOPPED
+    assert window.workspace.open_orders.table.rowCount() == 0
+    assert window.workspace.position_basket.table.rowCount() == 0
 
 
 @pytest.mark.parametrize(
@@ -657,10 +977,10 @@ def test_desktop_session_validation_failure_after_setup_preserves_input(
 
 def test_desktop_session_setup_sources_exclude_runtime_and_sensitive_imports() -> None:
     ui_source_paths = tuple(sorted(Path("src/tiewtrade/ui").rglob("*.py")))
-    composition_source_paths = (
-        Path("src/tiewtrade/desktop_main.py"),
+    session_setup_source_paths = (
         Path("src/tiewtrade/application/paper_session_setup.py"),
     )
+    desktop_composition_path = Path("src/tiewtrade/desktop_main.py")
     ui_forbidden_prefixes = (
         "aiohttp",
         "keyring",
@@ -695,6 +1015,16 @@ def test_desktop_session_setup_sources_exclude_runtime_and_sensitive_imports() -
         "tiewtrade.strategies.rsi_step_grid.strategy",
         "tiewtrade.trading.entry_pair",
     )
+    desktop_forbidden_prefixes = (
+        "aiohttp",
+        "keyring",
+        "tiewtrade.application.live",
+        "tiewtrade.execution.live",
+        "tiewtrade.integrations.credentials",
+        "tiewtrade.integrations.keyring",
+        "tiewtrade.integrations.private_api",
+        "tiewtrade.live",
+    )
 
     assert ui_source_paths
     assert not _forbidden_imports(
@@ -703,11 +1033,22 @@ def test_desktop_session_setup_sources_exclude_runtime_and_sensitive_imports() -
         restrict_market_data_to_config=True,
     )
     assert not _forbidden_imports(
-        composition_source_paths,
+        session_setup_source_paths,
         forbidden_prefixes=composition_forbidden_prefixes,
         restrict_market_data_to_config=False,
     )
-    assert not _sensitive_terms(ui_source_paths + composition_source_paths)
+    desktop_imports = _imported_modules(desktop_composition_path)
+    assert not {
+        module
+        for module in desktop_imports
+        if any(
+            module == prefix or module.startswith(f"{prefix}.")
+            for prefix in desktop_forbidden_prefixes
+        )
+    }
+    assert not _sensitive_terms(
+        ui_source_paths + session_setup_source_paths + (desktop_composition_path,)
+    )
 
 
 def test_desktop_session_setup_smoke_composes_without_network(
@@ -732,7 +1073,7 @@ def test_desktop_session_setup_smoke_composes_without_network(
     window.show()
     qapp.processEvents()
     window.close()
-    qapp.processEvents()
+    qtbot.waitUntil(lambda: not window.isVisible())
 
     assert qapp.platformName() == "offscreen"
     assert not window.isVisible()
@@ -831,6 +1172,71 @@ def _setup_values(case: _SessionCase) -> PaperSessionSetupValues:
         futures_leverage=(
             None if case.futures_leverage is None else str(case.futures_leverage)
         ),
+    )
+
+
+def _paper_runtime_candles(
+    config: MarketDataConfig,
+) -> tuple[tuple[Candle, ...], tuple[Candle, ...]]:
+    assert config.timeframe == "5m"
+    close = Decimal("100")
+    warm_up: list[Candle] = []
+    for index in range(15):
+        warm_up.append(_paper_runtime_candle(config, index=index, close=close))
+        close -= Decimal("1")
+
+    live: list[Candle] = []
+    for index in range(15, 26):
+        close += Decimal("1")
+        live.append(_paper_runtime_candle(config, index=index, close=close))
+    return tuple(warm_up), tuple(live)
+
+
+def _paper_runtime_candle(
+    config: MarketDataConfig,
+    *,
+    index: int,
+    close: Decimal,
+) -> Candle:
+    opened = close - Decimal("0.5")
+    return Candle(
+        symbol=config.symbol,
+        timeframe=config.timeframe,
+        open_time=datetime(2026, 8, 2, tzinfo=UTC) + timedelta(minutes=index * 5),
+        open=opened,
+        high=close + Decimal("1"),
+        low=opened - Decimal("1"),
+        close=close,
+        volume=Decimal("1"),
+    )
+
+
+def _acceptance_symbol_rules(symbol: str) -> SymbolRules:
+    return SymbolRules(
+        symbol=symbol,
+        tick_size=Decimal("0.1"),
+        step_size=Decimal("0.001"),
+        min_notional=Decimal("5"),
+    )
+
+
+def _paper_runtime_result_for_ui(
+    current: BotControlSnapshot,
+    result: BotLifecycleResult,
+) -> BotLifecycleResult:
+    header = result.workspace.header
+    assert header is not None
+    return BotLifecycleResult(
+        workspace=workspace_with_runtime_state(
+            current.workspace,
+            header.runtime_state,
+            data_freshness=(
+                None
+                if header.runtime_state is BotRuntimeState.BLOCKED
+                else header.data_freshness
+            ),
+        ),
+        blocked_reason=result.blocked_reason,
     )
 
 

@@ -28,6 +28,32 @@ def _require_non_negative(value: Decimal, field: str) -> None:
         raise ValueError(f"{field} must not be negative")
 
 
+def average_entry_price_after_fill(
+    *,
+    current_average_entry_price: Decimal | None,
+    current_quantity: Decimal,
+    fill_price: Decimal,
+    fill_quantity: Decimal,
+) -> Decimal:
+    _require_non_negative(current_quantity, "current_quantity")
+    _require_positive(fill_price, "fill_price")
+    _require_positive(fill_quantity, "fill_quantity")
+    if current_quantity == 0:
+        if current_average_entry_price is not None:
+            raise ValueError("current_average_entry_price requires a current position")
+        return fill_price
+    if current_average_entry_price is None:
+        raise ValueError("current position requires current_average_entry_price")
+    _require_positive(
+        current_average_entry_price,
+        "current_average_entry_price",
+    )
+    total_quantity = current_quantity + fill_quantity
+    return (
+        current_average_entry_price * current_quantity + fill_price * fill_quantity
+    ) / total_quantity
+
+
 @dataclass(frozen=True, slots=True)
 class BasketEntry:
     price: Decimal
@@ -141,12 +167,14 @@ class Basket:
         _require_non_negative(atr, "atr")
         _require_positive(tick_size, "tick_size")
 
-        total_quantity = self.total_quantity + quantity
-        total_notional = sum(
-            (entry.price * entry.quantity for entry in self._entries),
-            Decimal("0"),
-        ) + (price * quantity)
-        average_entry_price = total_notional / total_quantity
+        average_entry_price = average_entry_price_after_fill(
+            current_average_entry_price=(
+                None if self.is_empty else self.average_entry_price
+            ),
+            current_quantity=self.total_quantity,
+            fill_price=price,
+            fill_quantity=quantity,
+        )
         if self.position_side is PositionSide.LONG:
             raw_target = average_entry_price + (atr * self._take_profit_atr_multiplier)
             rounding = ROUND_DOWN

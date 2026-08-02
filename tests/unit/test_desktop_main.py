@@ -1,7 +1,11 @@
 import sqlite3
+from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
+from dataclasses import replace
+from datetime import UTC, datetime
+from decimal import Decimal
 from pathlib import Path
-from threading import Barrier, BrokenBarrierError
+from threading import Barrier, BrokenBarrierError, Event, Thread
 from types import TracebackType
 from typing import cast
 from uuid import UUID
@@ -11,7 +15,15 @@ from pytest import MonkeyPatch
 
 import tiewtrade.desktop_main as desktop_main
 import tiewtrade.ui.desktop as ui_desktop
+from tests.support.paper_session_setup import configured_spot_session
 from tests.support.trade_history_ui import empty_basket_page, empty_fills
+from tiewtrade.application.bot_control import (
+    BotControlAction,
+    BotControlSnapshot,
+    BotLifecycleResult,
+    configured_bot_control,
+    workspace_with_runtime_state,
+)
 from tiewtrade.application.database_compatibility import DatabaseCompatibilityError
 from tiewtrade.application.paper_session_setup import (
     ConfiguredPaperSession,
@@ -23,10 +35,18 @@ from tiewtrade.application.trade_history import (
     PageRequest,
     TradeHistoryFilter,
 )
+from tiewtrade.application.trading_workspace import BotRuntimeState, DataFreshness
+from tiewtrade.integrations.binance.public_market_data import BinancePublicMarketData
 from tiewtrade.integrations.sqlite.database import (
     SQLiteDatabase,
     UnsupportedDatabaseSchemaError,
 )
+from tiewtrade.integrations.sqlite.paper_runtime_lifecycle import (
+    SQLitePaperRuntimeLifecycle,
+)
+from tiewtrade.integrations.sqlite.trade_history import SQLiteTradeHistory
+from tiewtrade.trading.symbol_rules import SymbolRules
+from tiewtrade.ui.bot_lifecycle_workflow import LifecycleAction, RuntimeSnapshotRelay
 from tiewtrade.ui.session_workflow import CreateSession, LoadActiveSession
 from tiewtrade.ui.theme import DARK_THEME
 from tiewtrade.ui.trade_history_workflow import ListBaskets, ListFills
@@ -144,6 +164,7 @@ def test_desktop_composition_supplies_migrated_create_and_load_operations(
         load_active: object,
         list_baskets: object,
         list_fills: object,
+        **dependencies: object,
     ) -> int:
         captured["create_session"] = create_session
         captured["load_active"] = load_active
@@ -213,6 +234,355 @@ def test_desktop_composition_supplies_migrated_trade_history_queries(
     assert migration_calls == 3
 
 
+def test_desktop_composes_concrete_paper_runtime_actions(
+    tmp_path: Path,
+    monkeypatch: MonkeyPatch,
+) -> None:
+    captured: dict[str, object] = {}
+    controllers: list[object] = []
+
+    class FakePaperRuntimeController:
+        def __init__(self, **dependencies: object) -> None:
+            self.dependencies = dependencies
+            self.snapshot_callback = cast(
+                Callable[[object], None], dependencies["snapshot_callback"]
+            )
+            self.result: BotLifecycleResult | None = None
+            self.stop_calls = 0
+            controllers.append(self)
+
+        @property
+        def current_result(self) -> BotLifecycleResult:
+            assert self.result is not None
+            return self.result
+
+        def inspect_startup(
+            self,
+            session: ConfiguredPaperSession,
+        ) -> BotLifecycleResult:
+            workspace = configured_bot_control(
+                session,
+                observed_at_utc=datetime(2026, 8, 2, tzinfo=UTC),
+            ).workspace
+            self.result = BotLifecycleResult(workspace=workspace)
+            self.snapshot_callback(workspace)
+            return self.result
+
+        def start(self, session: ConfiguredPaperSession) -> BotLifecycleResult:
+            workspace = workspace_with_runtime_state(
+                configured_bot_control(
+                    session,
+                    observed_at_utc=datetime(2026, 8, 2, tzinfo=UTC),
+                ).workspace,
+                BotRuntimeState.RUNNING,
+                data_freshness=DataFreshness.FRESH,
+            )
+            self.result = BotLifecycleResult(workspace=workspace)
+            self.snapshot_callback(workspace)
+            return self.result
+
+        def stop(self, session: ConfiguredPaperSession) -> BotLifecycleResult:
+            self.stop_calls += 1
+            assert self.result is not None
+            self.result = BotLifecycleResult(
+                workspace=workspace_with_runtime_state(
+                    self.result.workspace,
+                    BotRuntimeState.STOPPED,
+                )
+            )
+            self.snapshot_callback(self.result.workspace)
+            return self.result
+
+        def recover(self, session: ConfiguredPaperSession) -> BotLifecycleResult:
+            workspace = configured_bot_control(
+                session,
+                observed_at_utc=datetime(2026, 8, 2, tzinfo=UTC),
+            ).workspace
+            self.result = BotLifecycleResult(workspace=workspace)
+            self.snapshot_callback(workspace)
+            return self.result
+
+    def capture_desktop(**dependencies: object) -> int:
+        captured.update(dependencies)
+        return 0
+
+    monkeypatch.setattr(
+        desktop_main,
+        "PaperRuntimeController",
+        FakePaperRuntimeController,
+        raising=False,
+    )
+    monkeypatch.setattr(desktop_main, "run_desktop_ui", capture_desktop)
+
+    assert desktop_main.run_desktop(tmp_path / "tiewtrade.sqlite3") == 0
+
+    initialize_bot = cast(LifecycleAction, captured["initialize_bot"])
+    start_bot = cast(LifecycleAction, captured["start_bot"])
+    shutdown_runtime = cast(Callable[[], None], captured["shutdown_runtime"])
+    session = configured_spot_session()
+    start_snapshot = configured_bot_control(
+        session,
+        observed_at_utc=datetime(2026, 8, 2, tzinfo=UTC),
+    )
+
+    initialized = initialize_bot(start_snapshot)
+
+    assert initialized.workspace.header is not None
+    assert initialized.workspace.header.runtime_state is BotRuntimeState.CONFIGURED
+    assert len(controllers) == 1
+
+    result = start_bot(start_snapshot)
+
+    assert result.workspace.header is not None
+    assert result.workspace.header.runtime_state is BotRuntimeState.RUNNING
+    assert len(controllers) == 2
+    controller = cast(FakePaperRuntimeController, controllers[1])
+    assert isinstance(controller.dependencies["lifecycle"], SQLitePaperRuntimeLifecycle)
+    assert isinstance(controller.dependencies["trade_history"], SQLiteTradeHistory)
+    rules = controller.dependencies["symbol_rules"]
+    assert isinstance(rules, SymbolRules)
+    assert rules.symbol == "BTCUSDT"
+    assert rules.tick_size == Decimal("0.01")
+    assert controller.dependencies["source_factory"] is BinancePublicMarketData
+    assert isinstance(captured["runtime_snapshots"], RuntimeSnapshotRelay)
+
+    shutdown_runtime()
+
+    assert controller.stop_calls == 1
+
+
+def test_runtime_shutdown_during_start_stops_controller_after_readiness(
+    tmp_path: Path,
+    monkeypatch: MonkeyPatch,
+) -> None:
+    started = Event()
+    release_start = Event()
+    controllers: list[object] = []
+
+    class SlowPaperRuntimeController:
+        def __init__(self, **dependencies: object) -> None:
+            del dependencies
+            self.result: BotLifecycleResult | None = None
+            self.stop_calls = 0
+            controllers.append(self)
+
+        @property
+        def current_result(self) -> BotLifecycleResult:
+            assert self.result is not None
+            return self.result
+
+        def start(self, session: ConfiguredPaperSession) -> BotLifecycleResult:
+            started.set()
+            if not release_start.wait(timeout=2):
+                raise TimeoutError("test did not release start")
+            self.result = BotLifecycleResult(
+                workspace=workspace_with_runtime_state(
+                    configured_bot_control(
+                        session,
+                        observed_at_utc=datetime(2026, 8, 2, tzinfo=UTC),
+                    ).workspace,
+                    BotRuntimeState.RUNNING,
+                    data_freshness=DataFreshness.FRESH,
+                )
+            )
+            return self.result
+
+        def stop(self, session: ConfiguredPaperSession) -> BotLifecycleResult:
+            self.stop_calls += 1
+            assert self.result is not None
+            self.result = BotLifecycleResult(
+                workspace=workspace_with_runtime_state(
+                    self.result.workspace,
+                    BotRuntimeState.STOPPED,
+                )
+            )
+            return self.result
+
+    monkeypatch.setattr(
+        desktop_main,
+        "PaperRuntimeController",
+        SlowPaperRuntimeController,
+    )
+    database = SQLiteDatabase(tmp_path / "tiewtrade.sqlite3")
+    actions = desktop_main._PaperRuntimeActions(
+        lifecycle=SQLitePaperRuntimeLifecycle(database),
+        trade_history=SQLiteTradeHistory(database),
+        runtime_snapshots=RuntimeSnapshotRelay(),
+        prepare_database=lambda: None,
+    )
+    session = configured_spot_session()
+    errors: list[BaseException] = []
+
+    def start_runtime() -> None:
+        try:
+            actions.start(
+                configured_bot_control(
+                    session,
+                    observed_at_utc=datetime(2026, 8, 2, tzinfo=UTC),
+                )
+            )
+        except BaseException as error:
+            errors.append(error)
+
+    worker = Thread(target=start_runtime)
+    worker.start()
+    assert started.wait(timeout=1)
+
+    shutdown_worker = Thread(target=actions.shutdown)
+    shutdown_worker.start()
+
+    controller = cast(SlowPaperRuntimeController, controllers[0])
+    assert controller.stop_calls == 0
+    assert shutdown_worker.is_alive()
+
+    release_start.set()
+    worker.join(timeout=1)
+    shutdown_worker.join(timeout=1)
+
+    assert not worker.is_alive()
+    assert not shutdown_worker.is_alive()
+    assert errors == []
+    assert controller.stop_calls == 1
+
+
+@pytest.mark.parametrize("operation", ["stop", "recover"])
+def test_runtime_shutdown_waits_for_active_lifecycle_operation_without_duplicate(
+    operation: str,
+    tmp_path: Path,
+    monkeypatch: MonkeyPatch,
+) -> None:
+    operation_started = Event()
+    release_operation = Event()
+    controllers: list[object] = []
+
+    class BlockingPaperRuntimeController:
+        def __init__(self, **dependencies: object) -> None:
+            del dependencies
+            self.result: BotLifecycleResult | None = None
+            self.stop_calls = 0
+            self.recover_calls = 0
+            controllers.append(self)
+
+        @property
+        def current_result(self) -> BotLifecycleResult:
+            assert self.result is not None
+            return self.result
+
+        def start(self, session: ConfiguredPaperSession) -> BotLifecycleResult:
+            self.result = BotLifecycleResult(
+                workspace=workspace_with_runtime_state(
+                    configured_bot_control(
+                        session,
+                        observed_at_utc=datetime(2026, 8, 2, tzinfo=UTC),
+                    ).workspace,
+                    BotRuntimeState.RUNNING,
+                    data_freshness=DataFreshness.FRESH,
+                )
+            )
+            return self.result
+
+        def stop(self, session: ConfiguredPaperSession) -> BotLifecycleResult:
+            self.stop_calls += 1
+            if operation == "stop":
+                operation_started.set()
+                if not release_operation.wait(timeout=2):
+                    raise TimeoutError("test did not release Stop")
+            assert self.result is not None
+            self.result = BotLifecycleResult(
+                workspace=workspace_with_runtime_state(
+                    self.result.workspace,
+                    BotRuntimeState.STOPPED,
+                )
+            )
+            return self.result
+
+        def recover(self, session: ConfiguredPaperSession) -> BotLifecycleResult:
+            self.recover_calls += 1
+            operation_started.set()
+            if not release_operation.wait(timeout=2):
+                raise TimeoutError("test did not release Recover")
+            assert self.result is not None
+            self.result = BotLifecycleResult(
+                workspace=workspace_with_runtime_state(
+                    self.result.workspace,
+                    BotRuntimeState.BLOCKED,
+                ),
+                blocked_reason="Paper Bot recovery failed",
+            )
+            return self.result
+
+    monkeypatch.setattr(
+        desktop_main,
+        "PaperRuntimeController",
+        BlockingPaperRuntimeController,
+    )
+    database = SQLiteDatabase(tmp_path / "tiewtrade.sqlite3")
+    actions = desktop_main._PaperRuntimeActions(
+        lifecycle=SQLitePaperRuntimeLifecycle(database),
+        trade_history=SQLiteTradeHistory(database),
+        runtime_snapshots=RuntimeSnapshotRelay(),
+        prepare_database=lambda: None,
+    )
+    session = configured_spot_session()
+    configured = configured_bot_control(
+        session,
+        observed_at_utc=datetime(2026, 8, 2, tzinfo=UTC),
+    )
+    running_result = actions.start(configured)
+    running = BotControlSnapshot(
+        state=BotRuntimeState.RUNNING,
+        session=session,
+        workspace=running_result.workspace,
+        available_actions=frozenset({BotControlAction.STOP}),
+    )
+    if operation == "stop":
+        lifecycle_snapshot = running
+        lifecycle_action = actions.stop
+    else:
+        blocked_workspace = workspace_with_runtime_state(
+            running.workspace,
+            BotRuntimeState.BLOCKED,
+        )
+        lifecycle_snapshot = BotControlSnapshot(
+            state=BotRuntimeState.BLOCKED,
+            session=session,
+            workspace=blocked_workspace,
+            available_actions=frozenset({BotControlAction.RECOVER}),
+            blocked_reason="Paper Bot recovery failed",
+        )
+        lifecycle_action = actions.recover
+
+    action_worker = Thread(target=lambda: lifecycle_action(lifecycle_snapshot))
+    action_worker.start()
+    assert operation_started.wait(timeout=1)
+    shutdown_worker = Thread(target=actions.shutdown)
+    shutdown_worker.start()
+
+    assert shutdown_worker.is_alive()
+
+    release_operation.set()
+    action_worker.join(timeout=1)
+    shutdown_worker.join(timeout=1)
+
+    controller = cast(BlockingPaperRuntimeController, controllers[0])
+    assert not action_worker.is_alive()
+    assert not shutdown_worker.is_alive()
+    assert controller.recover_calls == (1 if operation == "recover" else 0)
+    assert controller.stop_calls == 1
+
+
+def test_runtime_symbol_rules_derive_symbol_from_session_market_data() -> None:
+    session = configured_spot_session()
+    session = replace(
+        session,
+        market_data=replace(session.market_data, symbol="ETHUSDT"),
+    )
+
+    rules = desktop_main._symbol_rules_for(session)
+
+    assert rules.symbol == "ETHUSDT"
+
+
 def test_concurrent_session_load_and_history_query_serialize_v1_migration(
     tmp_path: Path,
     monkeypatch: MonkeyPatch,
@@ -261,7 +631,7 @@ def test_concurrent_session_load_and_history_query_serialize_v1_migration(
             row[1] for row in connection.execute("PRAGMA table_info(basket_results)")
         }
 
-    assert schema_version == 3
+    assert schema_version == 4
     assert "leverage" in basket_columns
 
 
@@ -351,6 +721,10 @@ def test_ui_desktop_forwards_required_trade_history_dependencies(
 
     monkeypatch.setattr(ui_desktop, "QApplication", FakeApplication)
     monkeypatch.setattr(ui_desktop, "MainWindow", FakeMainWindow)
+    runtime_snapshots = RuntimeSnapshotRelay()
+
+    def shutdown_runtime() -> None:
+        pass
 
     assert (
         ui_desktop.run_desktop(
@@ -358,11 +732,15 @@ def test_ui_desktop_forwards_required_trade_history_dependencies(
             load_active=lambda: None,
             list_baskets=empty_basket_page,
             list_fills=empty_fills,
+            runtime_snapshots=runtime_snapshots,
+            shutdown_runtime=shutdown_runtime,
         )
         == 0
     )
     assert captured["list_baskets"] is empty_basket_page
     assert captured["list_fills"] is empty_fills
+    assert captured["runtime_snapshots"] is runtime_snapshots
+    assert captured["shutdown_runtime"] is shutdown_runtime
     assert captured["style_sheet"] == DARK_THEME
     assert captured["shown"] is True
 
@@ -381,6 +759,7 @@ def test_desktop_composition_defers_database_directory_creation_to_load_worker(
         load_active: object,
         list_baskets: object,
         list_fills: object,
+        **dependencies: object,
     ) -> int:
         captured["create_session"] = create_session
         captured["load_active"] = load_active

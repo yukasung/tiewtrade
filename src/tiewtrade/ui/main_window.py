@@ -1,3 +1,5 @@
+from collections.abc import Callable
+
 from PySide6.QtCore import QThreadPool, Slot
 from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import QMainWindow
@@ -6,9 +8,11 @@ from tiewtrade.application.paper_session_setup import (
     ConfiguredPaperSession,
     PaperSessionSetupValues,
 )
+from tiewtrade.ui.background_task import BackgroundTask
 from tiewtrade.ui.bot_lifecycle_workflow import (
     BotLifecycleWorkflow,
     LifecycleAction,
+    RuntimeSnapshotRelay,
 )
 from tiewtrade.ui.session_workflow import (
     CreateSession,
@@ -36,10 +40,19 @@ class MainWindow(QMainWindow):
         start_bot: LifecycleAction | None = None,
         stop_bot: LifecycleAction | None = None,
         recover_bot: LifecycleAction | None = None,
+        initialize_bot: LifecycleAction | None = None,
+        runtime_snapshots: RuntimeSnapshotRelay | None = None,
+        shutdown_runtime: Callable[[], None] | None = None,
         thread_pool: QThreadPool | None = None,
     ) -> None:
         super().__init__()
         self._thread_pool = thread_pool or QThreadPool.globalInstance()
+        self._shutdown_runtime = shutdown_runtime
+        self._close_sequence_started = False
+        self._close_sequence_completed = False
+        self._shutdown_task: BackgroundTask | None = None
+        self._runtime_shutdown_pool = QThreadPool(self)
+        self._runtime_shutdown_pool.setMaxThreadCount(1)
         self.workspace = TradingWorkspace()
         self.setup = self.workspace.setup
         self.overview = self.workspace.overview
@@ -72,6 +85,8 @@ class MainWindow(QMainWindow):
             start_bot=start_bot,
             stop_bot=stop_bot,
             recover=recover_bot,
+            initialize_bot=initialize_bot,
+            runtime_snapshots=runtime_snapshots,
             thread_pool=self._thread_pool,
             parent=self,
         )
@@ -137,11 +152,44 @@ class MainWindow(QMainWindow):
         self._history_workflow.start()
 
     def closeEvent(self, event: QCloseEvent) -> None:
+        if not self._close_sequence_completed:
+            event.ignore()
+            if not self._close_sequence_started:
+                self._close_sequence_started = True
+                self._close_workflows()
+                if self._shutdown_runtime is None:
+                    self._start_worker_drain()
+                else:
+                    task = BackgroundTask(self._shutdown_runtime)
+                    task.signals.finished.connect(self._runtime_shutdown_finished)
+                    self._shutdown_task = task
+                    self._runtime_shutdown_pool.start(task)
+            return
+        super().closeEvent(event)
+
+    def _close_workflows(self) -> None:
         self._workflow.close()
         self._lifecycle_workflow.close()
         self._history_workflow.close()
-        self._thread_pool.waitForDone(WORKER_SHUTDOWN_TIMEOUT_MS)
-        super().closeEvent(event)
+
+    @Slot()
+    def _runtime_shutdown_finished(self) -> None:
+        self._shutdown_task = None
+        self._start_worker_drain()
+
+    def _start_worker_drain(self) -> None:
+        task = BackgroundTask(
+            lambda: self._thread_pool.waitForDone(WORKER_SHUTDOWN_TIMEOUT_MS)
+        )
+        task.signals.finished.connect(self._close_sequence_finished)
+        self._shutdown_task = task
+        self._runtime_shutdown_pool.start(task)
+
+    @Slot()
+    def _close_sequence_finished(self) -> None:
+        self._close_sequence_completed = True
+        self._shutdown_task = None
+        self.close()
 
     def _wire_trade_history(self) -> None:
         self.trade_history.apply_filters_requested.connect(
