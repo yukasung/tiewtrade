@@ -67,6 +67,14 @@ def test_publish_maps_blocked_to_sanitized_critical_safety_notification() -> Non
     assert store.highest_unread_severity is NotificationSeverity.CRITICAL
 
 
+def test_raw_blocked_reason_is_rejected_before_notification_store() -> None:
+    with pytest.raises(ValueError, match="blocked_reason must be sanitized"):
+        _result(
+            BotRuntimeState.BLOCKED,
+            blocked_reason="sqlite failed at /private/runtime.db token=secret",
+        )
+
+
 def test_publish_maps_stale_workspace_to_warning_without_raw_message() -> None:
     store = NotificationStore()
 
