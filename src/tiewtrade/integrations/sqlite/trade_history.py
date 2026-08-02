@@ -1,5 +1,6 @@
 import sqlite3
 from collections.abc import Callable, Iterable
+from dataclasses import replace
 from datetime import datetime
 from decimal import Decimal
 from typing import TypeVar
@@ -50,18 +51,7 @@ class SQLiteTradeHistory:
                 return False
             if _find_basket(connection, basket.basket_id) is not None:
                 raise TradeHistoryConflictError("Basket already exists")
-            connection.execute(
-                """
-                INSERT INTO basket_results (
-                    basket_id, session_id, trade_mode, market_type, leverage, symbol,
-                    timeframe, strategy_preset_version, opened_at_utc,
-                    closed_at_utc, entry_count, invested_notional,
-                    gross_realized_pnl, trading_fees, funding_fee,
-                    net_realized_pnl, status
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                _basket_values(basket),
-            )
+            _insert_basket(connection, basket)
             _insert_fill(connection, fill)
             return True
 
@@ -82,6 +72,76 @@ class SQLiteTradeHistory:
             _validate_entry_count(connection, current, basket, fill)
             _insert_fill(connection, fill)
             _update_basket(connection, basket)
+            return True
+
+        return self._run_write(operation)
+
+    def record_paper_spot_entry_fill(
+        self,
+        fill: TradeFill,
+        *,
+        symbol: str,
+        timeframe: str,
+        strategy_preset_version: str,
+    ) -> bool:
+        def operation(connection: sqlite3.Connection) -> bool:
+            if _check_duplicate_fill(connection, fill):
+                return False
+            current = _find_basket(connection, fill.basket_id)
+            if current is None:
+                if fill.entry_number != 1:
+                    raise TradeHistoryConflictError(
+                        "new Entry Fill has an unexpected entry_number"
+                    )
+                _insert_basket(
+                    connection,
+                    BasketResult(
+                        basket_id=fill.basket_id,
+                        session_id=fill.session_id,
+                        trade_mode=TradeMode.PAPER,
+                        market_type=MarketType.SPOT,
+                        symbol=symbol,
+                        timeframe=timeframe,
+                        strategy_preset_version=strategy_preset_version,
+                        opened_at_utc=fill.filled_at_utc,
+                        closed_at_utc=None,
+                        entry_count=1,
+                        invested_notional=fill.notional,
+                        gross_realized_pnl=Decimal("0"),
+                        trading_fees=fill.commission,
+                        funding_fee=Decimal("0"),
+                        net_realized_pnl=-fill.commission,
+                        status=BasketStatus.OPEN,
+                    ),
+                )
+                _insert_fill(connection, fill)
+                return True
+            _validate_paper_spot_identity(
+                current,
+                fill,
+                symbol=symbol,
+                timeframe=timeframe,
+                strategy_preset_version=strategy_preset_version,
+            )
+            if current.status is not BasketStatus.OPEN:
+                raise TradeHistoryConflictError("closed Basket cannot receive a Fill")
+            entry_count = _entry_count_after_fill(connection, current, fill)
+            _insert_fill(connection, fill)
+            _update_basket(
+                connection,
+                replace(
+                    current,
+                    entry_count=entry_count,
+                    invested_notional=current.invested_notional + fill.notional,
+                    trading_fees=current.trading_fees + fill.commission,
+                    net_realized_pnl=(
+                        current.gross_realized_pnl
+                        - current.trading_fees
+                        - fill.commission
+                        - current.funding_fee
+                    ),
+                ),
+            )
             return True
 
         return self._run_write(operation)
@@ -349,6 +409,35 @@ def _validate_immutable_identity(
             )
 
 
+def _validate_paper_spot_identity(
+    current: BasketResult,
+    fill: TradeFill,
+    *,
+    symbol: str,
+    timeframe: str,
+    strategy_preset_version: str,
+) -> None:
+    fields = (
+        ("basket_id", current.basket_id, fill.basket_id),
+        ("session_id", current.session_id, fill.session_id),
+        ("trade_mode", current.trade_mode, TradeMode.PAPER),
+        ("market_type", current.market_type, MarketType.SPOT),
+        ("leverage", current.leverage, None),
+        ("symbol", current.symbol, symbol),
+        ("timeframe", current.timeframe, timeframe),
+        (
+            "strategy_preset_version",
+            current.strategy_preset_version,
+            strategy_preset_version,
+        ),
+    )
+    for field, current_value, expected_value in fields:
+        if current_value != expected_value:
+            raise TradeHistoryConflictError(
+                f"Basket identity field {field} cannot change"
+            )
+
+
 def _validate_entry_count(
     connection: sqlite3.Connection,
     current: BasketResult,
@@ -384,6 +473,33 @@ def _validate_entry_count(
         raise TradeHistoryConflictError(
             "new Entry Fill must increment Basket entry_count once"
         )
+
+
+def _entry_count_after_fill(
+    connection: sqlite3.Connection,
+    current: BasketResult,
+    fill: TradeFill,
+) -> int:
+    row = connection.execute(
+        """
+        SELECT entry_number
+        FROM trade_fills
+        WHERE basket_id = ? AND order_id = ?
+        ORDER BY filled_at_utc, fill_id
+        LIMIT 1
+        """,
+        (str(fill.basket_id), fill.order_id),
+    ).fetchone()
+    if row is not None:
+        if fill.entry_number != row["entry_number"]:
+            raise TradeHistoryConflictError(
+                "Partial Fills for one Order must use the same entry_number"
+            )
+        return current.entry_count
+    expected_entry_number = current.entry_count + 1
+    if fill.entry_number != expected_entry_number:
+        raise TradeHistoryConflictError("new Entry Fill has an unexpected entry_number")
+    return expected_entry_number
 
 
 def _find_basket(
@@ -450,6 +566,24 @@ def _update_basket(
     )
     if cursor.rowcount != 1:
         raise TradeHistoryConflictError("Basket does not exist")
+
+
+def _insert_basket(
+    connection: sqlite3.Connection,
+    basket: BasketResult,
+) -> None:
+    connection.execute(
+        """
+        INSERT INTO basket_results (
+            basket_id, session_id, trade_mode, market_type, leverage, symbol,
+            timeframe, strategy_preset_version, opened_at_utc,
+            closed_at_utc, entry_count, invested_notional,
+            gross_realized_pnl, trading_fees, funding_fee,
+            net_realized_pnl, status
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """,
+        _basket_values(basket),
+    )
 
 
 def _basket_values(basket: BasketResult) -> tuple[object, ...]:
