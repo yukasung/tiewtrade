@@ -471,7 +471,18 @@ def test_migration_from_v4_adds_session_fill_history_index(tmp_path: Path) -> No
     database.migrate()
 
     with database.connect() as connection:
+        connection.execute("DROP INDEX trade_fills_session_time_idx")
         connection.execute("PRAGMA user_version = 4")
+
+    with database.connect() as connection:
+        index_names_before = {
+            row["name"]
+            for row in connection.execute(
+                "SELECT name FROM sqlite_master WHERE type = 'index'"
+            )
+        }
+
+    assert "trade_fills_session_time_idx" not in index_names_before
 
     database.migrate()
 
