@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncIterator, Awaitable
+from collections.abc import AsyncIterator, Awaitable, Callable
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
@@ -11,6 +11,7 @@ from uuid import UUID
 
 import pytest
 
+import tiewtrade.application.paper_runtime as paper_runtime_module
 from tests.support.paper_session_setup import (
     configured_futures_session,
     configured_spot_session,
@@ -30,6 +31,7 @@ from tiewtrade.integrations.sqlite.active_paper_sessions import (
 )
 from tiewtrade.integrations.sqlite.database import SQLiteDatabase
 from tiewtrade.integrations.sqlite.paper_runtime_lifecycle import (
+    PaperRuntimeLifecycleRecord,
     PaperRuntimeLifecycleState,
     SQLitePaperRuntimeLifecycle,
 )
@@ -53,6 +55,7 @@ from tiewtrade.trading.symbol_rules import SymbolRules
 from tiewtrade.trading.trade_history import BasketStatus, TradeFill
 
 _NOW = datetime(2026, 8, 2, 3, tzinfo=UTC)
+_STOPPED_AT = datetime(2026, 8, 2, 4, tzinfo=UTC)
 _T = TypeVar("_T")
 
 
@@ -173,6 +176,93 @@ class FatalWarmUpSource(ControllablePublicCandleSource):
             "warm-up failed with api_key=secret",
             kind=MarketDataFailureKind.PAYLOAD,
         )
+
+
+class FailingStopLifecycle(SQLitePaperRuntimeLifecycle):
+    def mark_stopped(
+        self,
+        session_id: UUID,
+        observed_at_utc: datetime,
+    ) -> None:
+        raise RuntimeError("sqlite failed at /private/tmp with api_key=secret")
+
+
+class FailingReadLifecycle(SQLitePaperRuntimeLifecycle):
+    def read(self, session_id: UUID) -> PaperRuntimeLifecycleRecord | None:
+        raise RuntimeError("sqlite failed at /private/tmp with api_key=secret")
+
+
+class MismatchedRuntimeLifecycle(SQLitePaperRuntimeLifecycle):
+    def read(self, session_id: UUID) -> PaperRuntimeLifecycleRecord | None:
+        return PaperRuntimeLifecycleRecord(
+            session_id=UUID("10000000-0000-0000-0000-000000000099"),
+            state=PaperRuntimeLifecycleState.STOPPED,
+            observed_at_utc=_STOPPED_AT,
+        )
+
+
+class BlockingCloseSource(ControllablePublicCandleSource):
+    def __init__(
+        self,
+        *,
+        warm_up: tuple[Candle, ...],
+        live: tuple[Candle, ...],
+    ) -> None:
+        super().__init__(warm_up=warm_up, live=live)
+        self.close_started = Event()
+        self._close_loop: asyncio.AbstractEventLoop | None = None
+        self._close_release: asyncio.Event | None = None
+
+    async def close(self) -> None:
+        self._close_loop = asyncio.get_running_loop()
+        self._close_release = asyncio.Event()
+        self.close_started.set()
+        await self._close_release.wait()
+        self.closed.set()
+
+    def release_close(self) -> None:
+        assert self.close_started.wait(1)
+        assert self._close_loop is not None
+        assert self._close_release is not None
+        self._close_loop.call_soon_threadsafe(self._close_release.set)
+
+
+class FailingCloseSource(ControllablePublicCandleSource):
+    async def close(self) -> None:
+        self.closed.set()
+        raise RuntimeError("transport failed with api_key=secret")
+
+
+class QueuedPublicCandleSource(ControllablePublicCandleSource):
+    def __init__(self, *, warm_up: tuple[Candle, ...]) -> None:
+        super().__init__(warm_up=warm_up, live=())
+        self._queue_loop: asyncio.AbstractEventLoop | None = None
+        self._queue: asyncio.Queue[Candle] | None = None
+        self.stream_ready = Event()
+        self.delivery_completed = Event()
+
+    def stream_completed(self, config: MarketDataConfig) -> AsyncIterator[Candle]:
+        return self._queued_stream()
+
+    async def close(self) -> None:
+        self.closed.set()
+
+    def emit(self, candle: Candle) -> None:
+        assert self.stream_ready.wait(1)
+        assert self._queue_loop is not None
+        assert self._queue is not None
+        asyncio.run_coroutine_threadsafe(
+            self._queue.put(candle),
+            self._queue_loop,
+        ).result(timeout=1)
+
+    async def _queued_stream(self) -> AsyncIterator[Candle]:
+        self._queue_loop = asyncio.get_running_loop()
+        self._queue = asyncio.Queue()
+        self.stream_ready.set()
+        while True:
+            yield await self._queue.get()
+            self.delivery_completed.set()
 
 
 @pytest.mark.parametrize("market_type", [MarketType.SPOT, MarketType.FUTURES])
@@ -436,6 +526,336 @@ def test_transient_runtime_state_projects_stale_until_live(
     assert source.closed.wait(2)
 
 
+@pytest.mark.parametrize("market_type", [MarketType.SPOT, MarketType.FUTURES])
+def test_stop_closes_runtime_marks_stopped_and_preserves_basket(
+    tmp_path: Path,
+    market_type: MarketType,
+) -> None:
+    session = _session(market_type)
+    database = _database_with_session(tmp_path, session)
+    source = _source()
+    basket_ready = Event()
+
+    def publish(snapshot: TradingWorkspaceSnapshot) -> None:
+        if snapshot.basket is not None:
+            basket_ready.set()
+
+    controller = PaperRuntimeController(
+        lifecycle=SQLitePaperRuntimeLifecycle(database),
+        trade_history=SQLiteTradeHistory(database),
+        symbol_rules=_symbol_rules(),
+        source_factory=lambda _endpoints: source,
+        scheduler=ImmediateScheduler(),
+        snapshot_callback=publish,
+        clock=lambda: _STOPPED_AT,
+    )
+    controller.start(session)
+    assert basket_ready.wait(2)
+    running = controller.current_workspace
+    assert running.basket is not None
+
+    stopped = controller.stop(session)
+
+    assert stopped.workspace.header is not None
+    assert stopped.workspace.header.runtime_state is BotRuntimeState.STOPPED
+    assert stopped.workspace.header.data_freshness is DataFreshness.UNAVAILABLE
+    assert stopped.workspace.basket == running.basket
+    assert stopped.workspace.basket.take_profit_price == (
+        running.basket.take_profit_price
+    )
+    assert stopped.workspace.orders == running.orders
+    assert source.closed.wait(1)
+    marker = SQLitePaperRuntimeLifecycle(database).read(session.config.session_id)
+    assert marker == PaperRuntimeLifecycleRecord(
+        session_id=session.config.session_id,
+        state=PaperRuntimeLifecycleState.STOPPED,
+        observed_at_utc=_STOPPED_AT,
+    )
+
+
+def test_stop_timeout_blocks_without_writing_stopped_marker(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(paper_runtime_module, "_STOP_TIMEOUT_SECONDS", 0.01)
+    session = configured_spot_session()
+    database = _database_with_session(tmp_path, session)
+    source = BlockingCloseSource(
+        warm_up=_warm_up_candles(),
+        live=_live_candles(),
+    )
+    controller = PaperRuntimeController(
+        lifecycle=SQLitePaperRuntimeLifecycle(database),
+        trade_history=SQLiteTradeHistory(database),
+        symbol_rules=_symbol_rules(),
+        source_factory=lambda _endpoints: source,
+        scheduler=ImmediateScheduler(),
+        snapshot_callback=lambda _snapshot: None,
+        clock=lambda: _STOPPED_AT,
+    )
+    controller.start(session)
+
+    result = controller.stop(session)
+
+    assert source.close_started.wait(1)
+    assert result.workspace.header is not None
+    assert result.workspace.header.runtime_state is BotRuntimeState.BLOCKED
+    assert result.blocked_reason == "Paper Bot could not be stopped"
+    marker = SQLitePaperRuntimeLifecycle(database).read(session.config.session_id)
+    assert marker is not None
+    assert marker.state is PaperRuntimeLifecycleState.RUNNING
+    source.release_close()
+    assert source.closed.wait(1)
+
+
+def test_stop_lock_timeout_keeps_gate_closed_and_ignores_later_candle(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(paper_runtime_module, "_STOP_TIMEOUT_SECONDS", 0.01)
+    session = configured_spot_session()
+    database = _database_with_session(tmp_path, session)
+    source = QueuedPublicCandleSource(warm_up=_warm_up_candles())
+    snapshots: list[TradingWorkspaceSnapshot] = []
+    controller = PaperRuntimeController(
+        lifecycle=SQLitePaperRuntimeLifecycle(database),
+        trade_history=SQLiteTradeHistory(database),
+        symbol_rules=_symbol_rules(),
+        source_factory=lambda _endpoints: source,
+        scheduler=ImmediateScheduler(),
+        snapshot_callback=snapshots.append,
+    )
+    controller.start(session)
+    assert source.stream_ready.wait(1)
+
+    controller._entry_lock.acquire()  # noqa: SLF001
+    try:
+        result = controller.stop(session)
+    finally:
+        controller._entry_lock.release()  # noqa: SLF001
+
+    assert result.workspace.header is not None
+    assert result.workspace.header.runtime_state is BotRuntimeState.BLOCKED
+    snapshot_count = len(snapshots)
+    source.emit(_live_candles()[0])
+    assert source.delivery_completed.wait(1)
+    assert len(snapshots) == snapshot_count
+    assert controller.current_workspace.header is not None
+    assert controller.current_workspace.header.runtime_state is BotRuntimeState.BLOCKED
+    assert controller.current_workspace.orders == ()
+
+    monkeypatch.setattr(paper_runtime_module, "_STOP_TIMEOUT_SECONDS", 1.0)
+    stopped = controller.stop(session)
+    assert stopped.workspace.header is not None
+    assert stopped.workspace.header.runtime_state is BotRuntimeState.STOPPED
+    assert source.closed.wait(1)
+
+
+def test_stop_lifecycle_failure_blocks_after_runtime_is_closed(
+    tmp_path: Path,
+) -> None:
+    session = configured_spot_session()
+    database = _database_with_session(tmp_path, session)
+    source = _source()
+    basket_ready = Event()
+
+    def publish(snapshot: TradingWorkspaceSnapshot) -> None:
+        if snapshot.basket is not None:
+            basket_ready.set()
+
+    controller = PaperRuntimeController(
+        lifecycle=FailingStopLifecycle(database),
+        trade_history=SQLiteTradeHistory(database),
+        symbol_rules=_symbol_rules(),
+        source_factory=lambda _endpoints: source,
+        scheduler=ImmediateScheduler(),
+        snapshot_callback=publish,
+    )
+    controller.start(session)
+    assert basket_ready.wait(2)
+    running = controller.current_workspace
+
+    result = controller.stop(session)
+
+    assert source.closed.wait(1)
+    assert result.workspace.header is not None
+    assert result.workspace.header.runtime_state is BotRuntimeState.BLOCKED
+    assert result.workspace.basket == running.basket
+    assert result.blocked_reason == "Paper Bot could not be stopped"
+    assert "api_key" not in (result.blocked_reason or "")
+
+
+def test_stop_controlled_loop_error_returns_sanitized_blocked(
+    tmp_path: Path,
+) -> None:
+    session = configured_spot_session()
+    database = _database_with_session(tmp_path, session)
+    source = FailingCloseSource(
+        warm_up=_warm_up_candles(),
+        live=_live_candles(),
+    )
+    controller = PaperRuntimeController(
+        lifecycle=SQLitePaperRuntimeLifecycle(database),
+        trade_history=SQLiteTradeHistory(database),
+        symbol_rules=_symbol_rules(),
+        source_factory=lambda _endpoints: source,
+        scheduler=ImmediateScheduler(),
+        snapshot_callback=lambda _snapshot: None,
+    )
+    controller.start(session)
+
+    result = controller.stop(session)
+
+    assert source.closed.wait(1)
+    assert result.workspace.header is not None
+    assert result.workspace.header.runtime_state is BotRuntimeState.BLOCKED
+    assert result.blocked_reason == "Paper Bot could not be stopped"
+    assert "api_key" not in (result.blocked_reason or "")
+
+
+def test_recover_interrupted_running_marker_finishes_stopped_without_market_data(
+    tmp_path: Path,
+) -> None:
+    session = configured_spot_session()
+    database = _database_with_session(tmp_path, session)
+    lifecycle = SQLitePaperRuntimeLifecycle(database)
+    lifecycle.mark_running(session.config.session_id, _NOW)
+    controller = PaperRuntimeController(
+        lifecycle=lifecycle,
+        trade_history=SQLiteTradeHistory(database),
+        symbol_rules=_symbol_rules(),
+        source_factory=lambda _endpoints: _unexpected_source_factory(),
+        snapshot_callback=lambda _snapshot: None,
+        clock=lambda: _STOPPED_AT,
+    )
+
+    result = controller.recover(session)
+
+    assert result.workspace.header is not None
+    assert result.workspace.header.runtime_state is BotRuntimeState.STOPPED
+    marker = lifecycle.read(session.config.session_id)
+    assert marker == PaperRuntimeLifecycleRecord(
+        session_id=session.config.session_id,
+        state=PaperRuntimeLifecycleState.STOPPED,
+        observed_at_utc=_STOPPED_AT,
+    )
+
+
+def test_recover_rejects_owned_running_runtime_without_changing_marker(
+    tmp_path: Path,
+) -> None:
+    session = configured_spot_session()
+    database = _database_with_session(tmp_path, session)
+    lifecycle = SQLitePaperRuntimeLifecycle(database)
+    source = _source()
+    controller = PaperRuntimeController(
+        lifecycle=lifecycle,
+        trade_history=SQLiteTradeHistory(database),
+        symbol_rules=_symbol_rules(),
+        source_factory=lambda _endpoints: source,
+        scheduler=ImmediateScheduler(),
+        snapshot_callback=lambda _snapshot: None,
+        clock=lambda: _STOPPED_AT,
+    )
+    controller.start(session)
+
+    result = controller.recover(session)
+
+    assert result.workspace.header is not None
+    assert result.workspace.header.runtime_state is BotRuntimeState.BLOCKED
+    assert result.blocked_reason == "Paper Bot recovery failed"
+    marker = lifecycle.read(session.config.session_id)
+    assert marker is not None
+    assert marker.state is PaperRuntimeLifecycleState.RUNNING
+    assert not source.closed.is_set()
+
+    stopped = controller.stop(session)
+    assert stopped.workspace.header is not None
+    assert stopped.workspace.header.runtime_state is BotRuntimeState.STOPPED
+    assert source.closed.wait(1)
+
+
+def test_recover_running_marker_write_failure_remains_blocked(
+    tmp_path: Path,
+) -> None:
+    session = configured_spot_session()
+    database = _database_with_session(tmp_path, session)
+    SQLitePaperRuntimeLifecycle(database).mark_running(session.config.session_id, _NOW)
+    controller = PaperRuntimeController(
+        lifecycle=FailingStopLifecycle(database),
+        trade_history=SQLiteTradeHistory(database),
+        symbol_rules=_symbol_rules(),
+        source_factory=lambda _endpoints: _unexpected_source_factory(),
+        snapshot_callback=lambda _snapshot: None,
+        clock=lambda: _STOPPED_AT,
+    )
+
+    result = controller.recover(session)
+
+    assert result.workspace.header is not None
+    assert result.workspace.header.runtime_state is BotRuntimeState.BLOCKED
+    assert result.blocked_reason == "Paper Bot recovery failed"
+    marker = SQLitePaperRuntimeLifecycle(database).read(session.config.session_id)
+    assert marker is not None
+    assert marker.state is PaperRuntimeLifecycleState.RUNNING
+
+
+def test_recover_clean_stopped_marker_returns_configured_without_market_data(
+    tmp_path: Path,
+) -> None:
+    session = configured_spot_session()
+    database = _database_with_session(tmp_path, session)
+    lifecycle = SQLitePaperRuntimeLifecycle(database)
+    lifecycle.mark_stopped(session.config.session_id, _NOW)
+    controller = PaperRuntimeController(
+        lifecycle=lifecycle,
+        trade_history=SQLiteTradeHistory(database),
+        symbol_rules=_symbol_rules(),
+        source_factory=lambda _endpoints: _unexpected_source_factory(),
+        snapshot_callback=lambda _snapshot: None,
+        clock=lambda: _STOPPED_AT,
+    )
+
+    result = controller.recover(session)
+
+    assert result.workspace.header is not None
+    assert result.workspace.header.runtime_state is BotRuntimeState.CONFIGURED
+    assert result.workspace.header.data_freshness is DataFreshness.NOT_STARTED
+    assert result.workspace.orders == ()
+    assert result.workspace.basket is None
+
+
+@pytest.mark.parametrize(
+    "lifecycle_factory",
+    [
+        lambda database: SQLitePaperRuntimeLifecycle(database),
+        FailingReadLifecycle,
+        MismatchedRuntimeLifecycle,
+    ],
+)
+def test_recover_missing_mismatched_or_unavailable_marker_blocks_safely(
+    tmp_path: Path,
+    lifecycle_factory: Callable[[SQLiteDatabase], SQLitePaperRuntimeLifecycle],
+) -> None:
+    session = configured_spot_session()
+    database = _database_with_session(tmp_path, session)
+    controller = PaperRuntimeController(
+        lifecycle=lifecycle_factory(database),
+        trade_history=SQLiteTradeHistory(database),
+        symbol_rules=_symbol_rules(),
+        source_factory=lambda _endpoints: _unexpected_source_factory(),
+        snapshot_callback=lambda _snapshot: None,
+        clock=lambda: _STOPPED_AT,
+    )
+
+    result = controller.recover(session)
+
+    assert result.workspace.header is not None
+    assert result.workspace.header.runtime_state is BotRuntimeState.BLOCKED
+    assert result.blocked_reason == "Paper Bot recovery failed"
+    assert "api_key" not in (result.blocked_reason or "")
+
+
 def _database_with_session(
     tmp_path: Path,
     session: ConfiguredPaperSession,
@@ -462,6 +882,10 @@ def _raise_composition_failure() -> NoReturn:
 
 def _raise_callback_failure() -> None:
     raise RuntimeError("UI callback failed with api_key=secret")
+
+
+def _unexpected_source_factory() -> NoReturn:
+    raise AssertionError("recovery must not start market data")
 
 
 def _source() -> ControllablePublicCandleSource:
