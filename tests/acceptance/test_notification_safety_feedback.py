@@ -1,7 +1,7 @@
 import ast
 import socket
 import sqlite3
-from collections.abc import Callable
+from collections.abc import Callable, Collection
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -35,6 +35,35 @@ from tiewtrade.ui.bot_lifecycle_workflow import RuntimeSnapshotRelay
 from tiewtrade.ui.main_window import MainWindow
 
 _NOW = datetime(2026, 8, 2, 12, tzinfo=UTC)
+
+
+def test_static_dependency_scanner_expands_from_import_aliases(
+    tmp_path: Path,
+) -> None:
+    source_path = tmp_path / "src" / "tiewtrade" / "ui" / "dependency_fixture.py"
+    source_path.parent.mkdir(parents=True)
+    source_path.write_text(
+        "from tiewtrade.integrations import private_api\n"
+        "from tiewtrade.application import live as live_application\n"
+        "from ..integrations import private_api as relative_private_api\n",
+        encoding="utf-8",
+    )
+
+    imported_modules = _imported_modules(source_path)
+
+    assert "tiewtrade.integrations.private_api" in imported_modules
+    assert "tiewtrade.application.live" in imported_modules
+    assert imported_modules.count("tiewtrade.integrations.private_api") == 2
+    assert _forbidden_imports(
+        imported_modules,
+        (
+            "tiewtrade.application.live",
+            "tiewtrade.integrations.private_api",
+        ),
+    ) == {
+        "tiewtrade.application.live",
+        "tiewtrade.integrations.private_api",
+    }
 
 
 def test_paper_notification_feedback_shows_blocked_and_recovery_without_side_effects(
@@ -322,7 +351,56 @@ def _assert_notification_dependencies_are_safe() -> None:
         for module in _imported_modules(source_path)
     }
 
-    assert not {
+    assert not _forbidden_imports(imported_modules, forbidden_prefixes)
+
+
+def _imported_modules(source_path: Path) -> tuple[str, ...]:
+    source = ast.parse(source_path.read_text(encoding="utf-8"))
+    package = _package_for_source(source_path)
+    modules: list[str] = []
+    for node in ast.walk(source):
+        if isinstance(node, ast.Import):
+            modules.extend(alias.name for alias in node.names)
+        elif isinstance(node, ast.ImportFrom):
+            base_module = _import_from_base_module(node, package)
+            if base_module is None:
+                continue
+            modules.append(base_module)
+            modules.extend(
+                f"{base_module}.{alias.name}"
+                for alias in node.names
+                if alias.name != "*"
+            )
+    return tuple(modules)
+
+
+def _package_for_source(source_path: Path) -> str:
+    source_parts = source_path.with_suffix("").parts
+    source_index = source_parts.index("src")
+    package_parts = source_parts[source_index + 1 : -1]
+    if not package_parts:
+        raise ValueError("source path must be inside a package below src")
+    return ".".join(package_parts)
+
+
+def _import_from_base_module(node: ast.ImportFrom, package: str) -> str | None:
+    if node.level == 0:
+        return node.module
+    package_parts = package.split(".")
+    parent_count = node.level - 1
+    if parent_count >= len(package_parts):
+        return node.module
+    base_parts = package_parts[: len(package_parts) - parent_count]
+    if node.module is not None:
+        base_parts.extend(node.module.split("."))
+    return ".".join(base_parts)
+
+
+def _forbidden_imports(
+    imported_modules: Collection[str],
+    forbidden_prefixes: tuple[str, ...],
+) -> set[str]:
+    return {
         module
         for module in imported_modules
         if any(
@@ -330,17 +408,6 @@ def _assert_notification_dependencies_are_safe() -> None:
             for prefix in forbidden_prefixes
         )
     }
-
-
-def _imported_modules(source_path: Path) -> tuple[str, ...]:
-    source = ast.parse(source_path.read_text(encoding="utf-8"))
-    modules: list[str] = []
-    for node in ast.walk(source):
-        if isinstance(node, ast.Import):
-            modules.extend(alias.name for alias in node.names)
-        elif isinstance(node, ast.ImportFrom) and node.module is not None:
-            modules.append(node.module)
-    return tuple(modules)
 
 
 def _block_network(monkeypatch: MonkeyPatch) -> None:
