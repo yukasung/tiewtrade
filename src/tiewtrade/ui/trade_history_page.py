@@ -70,6 +70,11 @@ class TradeHistoryPage(QWidget):
         self.setObjectName("tradeHistoryPage")
         self.setAccessibleName("Trade History")
         self._current_page = 1
+        self._has_basket_result = False
+        self._fill_result_basket_id: UUID | None = None
+        self._baskets_loading = False
+        self._previous_page_available = False
+        self._next_page_available = False
 
         self.symbol = self._combo(
             "historySymbol", (("All", None), ("BTCUSDT", "BTCUSDT"))
@@ -127,7 +132,7 @@ class TradeHistoryPage(QWidget):
             "basketHistoryTable", "Basket History", self.BASKET_HEADERS
         )
         self.basket_table.itemSelectionChanged.connect(self._emit_basket_selection)
-        self.basket_state = self._state_label("basketState")
+        self.basket_state = self._state_label("basketState", "Basket History status")
         self.retry_baskets_button = self._retry_button("retryBasketsButton")
         self.retry_baskets_button.clicked.connect(self.baskets_retry_requested)
 
@@ -146,7 +151,7 @@ class TradeHistoryPage(QWidget):
         self.fill_table = self._table(
             "tradeFillsTable", "Trade Fills", self.FILL_HEADERS
         )
-        self.fill_state = self._state_label("fillState")
+        self.fill_state = self._state_label("fillState", "Trade Fills status")
         self.retry_fills_button = self._retry_button("retryFillsButton")
         self.retry_fills_button.clicked.connect(self.fills_retry_requested)
 
@@ -181,17 +186,18 @@ class TradeHistoryPage(QWidget):
 
     @Slot(bool)
     def set_baskets_loading(self, loading: bool) -> None:
+        self._baskets_loading = loading
         self._set_filter_controls_enabled(not loading)
         if not loading:
+            self.previous_button.setEnabled(self._previous_page_available)
+            self.next_button.setEnabled(self._next_page_available)
             return
-        self._clear_table(self.basket_table)
-        self._clear_fill_result()
-        self.total_net_pnl_label.setVisible(False)
-        self.total_net_pnl.setVisible(False)
-        self.total_items.clear()
+        if not self._has_basket_result:
+            self._clear_basket_result()
         self._set_basket_state("Loading trade history…")
         self.retry_baskets_button.setVisible(False)
-        self._clear_pagination()
+        self.previous_button.setEnabled(False)
+        self.next_button.setEnabled(False)
 
     @Slot(object)
     def show_baskets(self, result: BasketHistoryPage) -> None:
@@ -208,6 +214,7 @@ class TradeHistoryPage(QWidget):
             self.basket_table.selectRow(0)
         del blocker
 
+        self._has_basket_result = True
         self._clear_fill_result()
         self.total_net_pnl_label.setVisible(True)
         self.total_net_pnl.setText(pnl_text(result.net_realized_pnl))
@@ -227,16 +234,12 @@ class TradeHistoryPage(QWidget):
 
     @Slot(str)
     def show_baskets_unavailable(self, message: str) -> None:
-        self._clear_table(self.basket_table)
-        self._clear_fill_result()
-        self.total_net_pnl_label.setVisible(False)
-        self.total_net_pnl.clear()
-        self.total_net_pnl.setVisible(False)
-        self.total_items.clear()
-        self._set_basket_state(message)
+        if self._has_basket_result:
+            self._set_basket_state(f"Stale · {message}")
+        else:
+            self._clear_basket_result()
+            self._set_basket_state(message)
         self.retry_baskets_button.setVisible(True)
-        self.retry_fills_button.setVisible(False)
-        self._clear_pagination()
 
     @Slot(str)
     def show_filter_error(self, message: str) -> None:
@@ -247,13 +250,13 @@ class TradeHistoryPage(QWidget):
     def set_fills_loading(self, loading: bool) -> None:
         if not loading:
             return
-        self._clear_table(self.fill_table)
+        if self._fill_result_basket_id != self._selected_basket_id():
+            self._clear_fill_result()
         self._set_fill_state("Loading trade fills…")
         self.retry_fills_button.setVisible(False)
 
     @Slot(object, object)
     def show_fills(self, basket_id: UUID, fills: tuple[TradeFill, ...]) -> None:
-        del basket_id
         rows = fill_rows(fills)
         blocker = QSignalBlocker(self.fill_table)
         self.fill_table.setRowCount(len(rows))
@@ -263,22 +266,25 @@ class TradeHistoryPage(QWidget):
                     row_index, column_index, self._table_item(value)
                 )
         del blocker
+        self._fill_result_basket_id = basket_id
         self.fill_state.clear()
         self.fill_state.setVisible(False)
         self.retry_fills_button.setVisible(False)
 
     @Slot(object)
     def show_fills_empty(self, basket_id: UUID) -> None:
-        del basket_id
         self._clear_table(self.fill_table)
+        self._fill_result_basket_id = basket_id
         self._set_fill_state("No fills for this Basket")
         self.retry_fills_button.setVisible(False)
 
     @Slot(object, str)
     def show_fills_unavailable(self, basket_id: UUID, message: str) -> None:
-        del basket_id
-        self._clear_table(self.fill_table)
-        self._set_fill_state(message)
+        if self._fill_result_basket_id == basket_id:
+            self._set_fill_state(f"Stale · {message}")
+        else:
+            self._clear_fill_result()
+            self._set_fill_state(message)
         self.retry_fills_button.setVisible(True)
 
     @Slot()
@@ -407,11 +413,17 @@ class TradeHistoryPage(QWidget):
         self._current_page = state.current_page
         self.page_label.setText(f"Page {state.current_page} of {state.total_pages}")
         self.page_label.setVisible(True)
-        self.previous_button.setEnabled(state.previous_enabled)
-        self.next_button.setEnabled(state.next_enabled)
+        self._previous_page_available = state.previous_enabled
+        self._next_page_available = state.next_enabled
+        self.previous_button.setEnabled(
+            state.previous_enabled and not self._baskets_loading
+        )
+        self.next_button.setEnabled(state.next_enabled and not self._baskets_loading)
 
     def _clear_pagination(self) -> None:
         self._current_page = 1
+        self._previous_page_available = False
+        self._next_page_available = False
         self.page_label.clear()
         self.page_label.setVisible(False)
         self.previous_button.setEnabled(False)
@@ -419,6 +431,7 @@ class TradeHistoryPage(QWidget):
 
     def _clear_fill_result(self) -> None:
         self._clear_table(self.fill_table)
+        self._fill_result_basket_id = None
         self.fill_state.clear()
         self.fill_state.setVisible(False)
         self.retry_fills_button.setVisible(False)
@@ -495,9 +508,10 @@ class TradeHistoryPage(QWidget):
         return item
 
     @staticmethod
-    def _state_label(object_name: str) -> QLabel:
+    def _state_label(object_name: str, accessible_name: str) -> QLabel:
         label = QLabel()
         label.setObjectName(object_name)
+        label.setAccessibleName(accessible_name)
         label.setProperty("stateMessage", True)
         label.setWordWrap(True)
         label.setVisible(False)
@@ -542,3 +556,24 @@ class TradeHistoryPage(QWidget):
         table.setCurrentCell(-1, -1)
         table.setRowCount(0)
         del blocker
+
+    def _clear_basket_result(self) -> None:
+        self._has_basket_result = False
+        self._clear_table(self.basket_table)
+        self._clear_fill_result()
+        self.total_net_pnl_label.setVisible(False)
+        self.total_net_pnl.clear()
+        self.total_net_pnl.setVisible(False)
+        self.total_items.clear()
+        self.retry_fills_button.setVisible(False)
+        self._clear_pagination()
+
+    def _selected_basket_id(self) -> UUID | None:
+        row = self.basket_table.currentRow()
+        if row < 0:
+            return None
+        item = self.basket_table.item(row, 0)
+        if item is None:
+            return None
+        basket_id = item.data(Qt.ItemDataRole.UserRole)
+        return basket_id if isinstance(basket_id, UUID) else None

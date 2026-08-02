@@ -38,7 +38,9 @@ QLabel#sectionTitle {
     font-weight: 650;
 }
 QLabel#supportingText, QLabel#detailLabel, QLabel#filterLabel,
-QLabel#summaryLabel, QLabel#pageLabel, QLabel[stateMessage="true"] {
+QLabel#summaryLabel, QLabel#pageLabel, QLabel[stateMessage="true"],
+QLabel#openOrdersState, QLabel#positionBasketState,
+QLabel#basketState, QLabel#fillState {
     color: #94A3B8;
 }
 QLabel#eyebrow {

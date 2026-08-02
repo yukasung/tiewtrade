@@ -315,14 +315,18 @@ def test_trade_history_read_failure_is_fail_closed_and_sanitized(
 
     click(window.trade_history.apply_button)
     qtbot.waitUntil(
-        lambda: window.trade_history.basket_state.text() == "Trade History unavailable"
+        lambda: (
+            window.trade_history.basket_state.text()
+            == "Stale · Trade History unavailable"
+        )
     )
 
-    assert window.trade_history.basket_table.rowCount() == 0
-    assert window.trade_history.fill_table.rowCount() == 0
-    assert window.trade_history.total_net_pnl.isHidden()
-    assert window.trade_history.total_net_pnl_label.isHidden()
-    assert window.trade_history.total_net_pnl.text() == ""
+    assert window.trade_history.basket_table.rowCount() == 1
+    assert window.trade_history.fill_table.rowCount() == 1
+    assert not window.trade_history.total_net_pnl.isHidden()
+    assert not window.trade_history.total_net_pnl_label.isHidden()
+    assert window.trade_history.total_net_pnl.text() == "19.58 USDT · Profit"
+    assert window.trade_history.retry_baskets_button.isVisible()
     assert "/private/tmp" not in window.trade_history.basket_state.text()
 
 

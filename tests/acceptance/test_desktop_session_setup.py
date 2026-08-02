@@ -116,8 +116,10 @@ def test_desktop_paper_session_create_overview_and_restart_restore(
     assert first_window.findChildren(QPushButton, "manualBuyButton") == []
     assert first_window.findChildren(QPushButton, "manualSellButton") == []
     assert first_window.workspace.chart_state.text() == "Chart is not available yet"
-    assert first_window.workspace.orders_state.text() == "No open orders"
-    assert first_window.workspace.position_state.text() == "No open Position or Basket"
+    assert first_window.workspace.open_orders.state_label.text() == "No open orders"
+    assert first_window.workspace.position_basket.state_label.text() == (
+        "No open Position or Basket"
+    )
     assert _trade_side_effect_counts(database) == initial_side_effect_counts
 
     first_window.workspace.tabs.setCurrentWidget(first_window.trade_history)
