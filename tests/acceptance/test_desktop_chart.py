@@ -1,6 +1,5 @@
 from datetime import UTC, datetime
 from decimal import Decimal
-from typing import cast
 
 from PySide6.QtWidgets import QPushButton
 from pytestqt.qtbot import QtBot
@@ -12,7 +11,6 @@ from tiewtrade.application.chart_data import (
     ChartRange,
     ChartReadState,
     ChartSnapshot,
-    CompletedCandleFacts,
 )
 from tiewtrade.application.paper_session_setup import (
     ConfiguredPaperSession,
@@ -61,7 +59,12 @@ def test_desktop_shows_configured_session_chart_without_manual_order_controls(
     window.resize(1200, 700)
     window.show()
 
-    qtbot.waitUntil(lambda: window.workspace.chart._snapshot is not None)
+    qtbot.waitUntil(
+        lambda: (
+            window.workspace.chart._snapshot is not None
+            and window.workspace.chart._snapshot.state is ChartReadState.EMPTY
+        )
+    )
 
     assert window.workspace.chart.isVisible()
     assert window.workspace.bot_control.isVisible()
@@ -75,7 +78,7 @@ def test_runtime_completed_candle_updates_chart_and_new_durable_fill_marker(
     session = configured_spot_session()
     relay = RuntimeSnapshotRelay()
     relayed: list[Candle] = []
-    refreshed: list[CompletedCandleFacts] = []
+    refreshed: list[Candle] = []
     relay.completed_candle_ready.connect(
         lambda candle, _generation: relayed.append(candle)
     )
@@ -95,7 +98,7 @@ def test_runtime_completed_candle_updates_chart_and_new_durable_fill_marker(
     async def refresh_chart(
         configured: ConfiguredPaperSession,
         current: ChartSnapshot,
-        completed: CompletedCandleFacts,
+        completed: Candle,
     ) -> ChartSnapshot:
         refreshed.append(completed)
         duration = current.chart_range.end - current.chart_range.start
@@ -110,7 +113,7 @@ def test_runtime_completed_candle_updates_chart_and_new_durable_fill_marker(
             session=configured,
             chart_range=next_range,
             observed_at_utc=completed.close_time,
-            candles=(cast(Candle, completed),),
+            candles=(completed,),
             fills=(fill,),
             state=ChartReadState.READY,
         )

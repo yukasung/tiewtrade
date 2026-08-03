@@ -1,15 +1,15 @@
 import asyncio
 from collections.abc import Awaitable, Callable
 from datetime import UTC, datetime
-from typing import Any, TypeGuard, cast
+from typing import TypeGuard
 
 from PySide6.QtCore import QObject, QThreadPool, Signal, Slot
 
 from tiewtrade.application.chart_data import (
+    ChartCandle,
     ChartRange,
     ChartReadState,
     ChartSnapshot,
-    CompletedCandleFacts,
     append_completed_candle,
     default_chart_range,
 )
@@ -18,7 +18,7 @@ from tiewtrade.ui.background_task import BackgroundTask
 
 LoadChart = Callable[[ConfiguredPaperSession, ChartRange], Awaitable[ChartSnapshot]]
 RefreshChart = Callable[
-    [ConfiguredPaperSession, ChartSnapshot, CompletedCandleFacts],
+    [ConfiguredPaperSession, ChartSnapshot, ChartCandle],
     Awaitable[ChartSnapshot],
 ]
 
@@ -48,7 +48,7 @@ class ChartWorkflow(QObject):
         self._generation = 0
         self._active_task: BackgroundTask | None = None
         self._pending_request: tuple[int, ChartRange] | None = None
-        self._pending_completed_candle: CompletedCandleFacts | None = None
+        self._pending_completed_candle: ChartCandle | None = None
         self._last_safe_range: ChartRange | None = None
         self._closed = False
 
@@ -139,7 +139,7 @@ class ChartWorkflow(QObject):
             self._thread_pool.start(task)
             return
         try:
-            updated = append_completed_candle(snapshot, cast(Any, candle))
+            updated = append_completed_candle(snapshot, candle)
         except ValueError:
             return
         self._snapshot = updated
@@ -291,7 +291,7 @@ class ChartWorkflow(QObject):
         refresh_chart: RefreshChart,
         session: ConfiguredPaperSession,
         snapshot: ChartSnapshot,
-        candle: CompletedCandleFacts,
+        candle: ChartCandle,
     ) -> ChartSnapshot:
         return await refresh_chart(session, snapshot, candle)
 
@@ -307,21 +307,18 @@ class ChartWorkflow(QObject):
 
     def _is_current_session_candle(
         self, candle: object, snapshot: ChartSnapshot
-    ) -> TypeGuard[CompletedCandleFacts]:
-        return self._is_current_session_candle_fact(candle) and (
-            (
-                candle.open_time >= snapshot.chart_range.start
-                and candle.close_time <= snapshot.chart_range.end
-            )
-            or candle.open_time == snapshot.chart_range.end
+    ) -> TypeGuard[ChartCandle]:
+        return (
+            self._is_current_session_candle_fact(candle)
+            and candle.open_time >= snapshot.chart_range.start
         )
 
     def _is_current_session_candle_fact(
         self,
         candle: object,
-    ) -> TypeGuard[CompletedCandleFacts]:
+    ) -> TypeGuard[ChartCandle]:
         return (
-            isinstance(candle, CompletedCandleFacts)
+            isinstance(candle, ChartCandle)
             and self._session is not None
             and candle.symbol == self._session.market_data.symbol
             and candle.timeframe == self._session.market_data.timeframe

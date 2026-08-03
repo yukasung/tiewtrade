@@ -15,7 +15,7 @@ from tiewtrade.application.bot_control import (
     transition_bot_control,
     workspace_with_runtime_state,
 )
-from tiewtrade.application.chart_data import CompletedCandleFacts
+from tiewtrade.application.chart_data import ChartCandle
 from tiewtrade.application.paper_session_setup import ConfiguredPaperSession
 from tiewtrade.application.trading_workspace import BotRuntimeState
 from tiewtrade.ui.background_task import BackgroundTask
@@ -32,7 +32,7 @@ class RuntimeSnapshotPublisher:
     def __call__(self, result: BotLifecycleResult) -> None:
         self._relay.snapshot_ready.emit(result, self._generation)
 
-    def completed_candle(self, candle: CompletedCandleFacts) -> None:
+    def completed_candle(self, candle: ChartCandle) -> None:
         self._relay.completed_candle_ready.emit(candle, self._generation)
 
 

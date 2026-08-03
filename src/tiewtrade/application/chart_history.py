@@ -1,13 +1,11 @@
 from collections.abc import Awaitable, Callable
 from datetime import UTC, datetime
-from typing import cast
 from uuid import UUID
 
 from tiewtrade.application.chart_data import (
     ChartRange,
     ChartReadState,
     ChartSnapshot,
-    CompletedCandleFacts,
 )
 from tiewtrade.application.paper_session_setup import ConfiguredPaperSession
 from tiewtrade.market_data.candle import Candle
@@ -54,25 +52,29 @@ class ChartHistory:
         self,
         session: ConfiguredPaperSession,
         snapshot: ChartSnapshot,
-        candle: CompletedCandleFacts,
+        candle: Candle,
     ) -> ChartSnapshot:
         if snapshot.session_id != session.config.session_id:
             raise ValueError("ChartSnapshot Session must match Session")
         chart_range = snapshot.chart_range
-        if candle.open_time == chart_range.end:
+        candles = snapshot.candles
+        if candle.open_time >= chart_range.end:
+            reload_history = candle.open_time > chart_range.end
             duration = chart_range.end - chart_range.start
             chart_range = ChartRange(
                 start=candle.close_time - duration,
                 end=candle.close_time,
             )
+            if reload_history:
+                candles = await self._load_candles(session, chart_range)
         elif not (
             chart_range.start <= candle.open_time
             and candle.close_time <= chart_range.end
         ):
             return snapshot
 
-        candles_by_open_time = {item.open_time: item for item in snapshot.candles}
-        candles_by_open_time[candle.open_time] = cast(Candle, candle)
+        candles_by_open_time = {item.open_time: item for item in candles}
+        candles_by_open_time[candle.open_time] = candle
         candles = tuple(
             candles_by_open_time[open_time]
             for open_time in sorted(candles_by_open_time)

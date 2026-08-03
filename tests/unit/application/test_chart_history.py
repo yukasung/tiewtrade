@@ -117,6 +117,43 @@ def test_refresh_completed_candle_advances_latest_range_and_reloads_durable_fill
     assert [marker.fill_id for marker in refreshed.markers] == ["runtime-buy"]
 
 
+def test_refresh_after_candle_gap_reloads_latest_bounded_range_and_durable_fills() -> (
+    None
+):
+    selected_range = chart_range()
+    completed = candle(25)
+    latest_range = ChartRange(
+        datetime(2026, 1, 1, 0, 10, tzinfo=UTC),
+        datetime(2026, 1, 1, 0, 30, tzinfo=UTC),
+    )
+    loaded_candles = (candle(10), candle(15), candle(20))
+    latest_candles = (*loaded_candles, completed)
+    load_candles = FakeLoadChartCandles(loaded_candles)
+    new_fill = trade_fill("runtime-gap-buy", FillSide.BUY)
+    fills = FakeListChartFills((new_fill,))
+    history = ChartHistory(
+        load_candles=load_candles,
+        list_fills=fills,
+        clock=lambda: completed.close_time,
+    )
+    current = ChartSnapshot(
+        session=session(),
+        chart_range=selected_range,
+        observed_at_utc=selected_range.end,
+        candles=(candle(0), candle(5), candle(10), candle(15)),
+        fills=(),
+        state=ChartReadState.READY,
+    )
+
+    refreshed = asyncio.run(history.refresh_completed(session(), current, completed))
+
+    assert load_candles.requests == [(session(), latest_range)]
+    assert fills.requests == [(session().config.session_id, latest_range)]
+    assert refreshed.chart_range == latest_range
+    assert refreshed.candles == latest_candles
+    assert [marker.fill_id for marker in refreshed.markers] == ["runtime-gap-buy"]
+
+
 def chart_range() -> ChartRange:
     return ChartRange(
         datetime(2026, 1, 1, 0, 0, tzinfo=UTC),

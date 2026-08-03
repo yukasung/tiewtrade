@@ -1,6 +1,5 @@
 from datetime import UTC, datetime
 from decimal import Decimal
-from typing import cast
 
 from tests.support.paper_session_setup import configured_spot_session
 from tests.support.trade_history_records import trade_fill
@@ -8,7 +7,6 @@ from tiewtrade.application.chart_data import (
     ChartRange,
     ChartReadState,
     ChartSnapshot,
-    CompletedCandleFacts,
 )
 from tiewtrade.application.paper_session_setup import ConfiguredPaperSession
 from tiewtrade.market_data.candle import Candle
@@ -28,6 +26,13 @@ class DeferredThreadPool:
 
     def start(self, task: BackgroundTask) -> None:
         self.tasks.append(task)
+
+
+class PartialCompletedCandle:
+    symbol = "BTCUSDT"
+    timeframe = "5m"
+    open_time = datetime(2026, 1, 1, 0, 15, tzinfo=UTC)
+    close_time = datetime(2026, 1, 1, 0, 20, tzinfo=UTC)
 
 
 def test_start_loads_application_owned_default_visible_range() -> None:
@@ -180,13 +185,13 @@ def test_completed_candle_ignores_other_session_and_updates_current_snapshot() -
 def test_completed_candle_refreshes_shifted_latest_range_and_durable_fills() -> None:
     session = configured_spot_session()
     selected_range = chart_range(0, 20)
-    refreshed: list[tuple[ChartSnapshot, CompletedCandleFacts]] = []
+    refreshed: list[tuple[ChartSnapshot, Candle]] = []
     snapshots: list[ChartSnapshot] = []
 
     async def refresh_chart(
         configured: ConfiguredPaperSession,
         current: ChartSnapshot,
-        completed: CompletedCandleFacts,
+        completed: Candle,
     ) -> ChartSnapshot:
         assert configured is session
         refreshed.append((current, completed))
@@ -198,7 +203,7 @@ def test_completed_candle_refreshes_shifted_latest_range_and_durable_fills() -> 
             session=session,
             chart_range=shifted_range,
             observed_at_utc=completed.close_time,
-            candles=(cast(Candle, completed),),
+            candles=(completed,),
             fills=(
                 trade_fill(
                     fill_id="runtime-buy",
@@ -239,14 +244,14 @@ def test_retry_uses_latest_runtime_refreshed_visible_range() -> None:
     async def refresh_chart(
         configured: ConfiguredPaperSession,
         current: ChartSnapshot,
-        completed: CompletedCandleFacts,
+        completed: Candle,
     ) -> ChartSnapshot:
         del current
         return ChartSnapshot(
             session=configured,
             chart_range=refreshed_range,
             observed_at_utc=completed.close_time,
-            candles=(cast(Candle, completed),),
+            candles=(completed,),
             fills=(),
             state=ChartReadState.READY,
         )
@@ -277,7 +282,7 @@ def test_completed_candle_refresh_keeps_latest_event_while_worker_is_active() ->
     async def refresh_chart(
         configured: ConfiguredPaperSession,
         current: ChartSnapshot,
-        completed: CompletedCandleFacts,
+        completed: Candle,
     ) -> ChartSnapshot:
         refreshed_minutes.append(completed.open_time.minute)
         duration = current.chart_range.end - current.chart_range.start
@@ -286,7 +291,7 @@ def test_completed_candle_refresh_keeps_latest_event_while_worker_is_active() ->
             session=configured,
             chart_range=next_range,
             observed_at_utc=completed.close_time,
-            candles=(cast(Candle, completed),),
+            candles=(completed,),
             fills=(),
             state=ChartReadState.READY,
         )
@@ -313,6 +318,77 @@ def test_completed_candle_refresh_keeps_latest_event_while_worker_is_active() ->
     assert snapshots[-1].chart_range.end.minute == 30
 
 
+def test_completed_candle_gap_advances_and_keeps_following_runtime_updates() -> None:
+    session = configured_spot_session()
+    selected_range = chart_range(0, 20)
+    refreshed_minutes: list[int] = []
+    snapshots: list[ChartSnapshot] = []
+
+    async def refresh_chart(
+        configured: ConfiguredPaperSession,
+        current: ChartSnapshot,
+        completed: Candle,
+    ) -> ChartSnapshot:
+        refreshed_minutes.append(completed.open_time.minute)
+        duration = current.chart_range.end - current.chart_range.start
+        next_range = ChartRange(completed.close_time - duration, completed.close_time)
+        return ChartSnapshot(
+            session=configured,
+            chart_range=next_range,
+            observed_at_utc=completed.close_time,
+            candles=(completed,),
+            fills=(),
+            state=ChartReadState.READY,
+        )
+
+    workflow = ChartWorkflow(
+        load_chart=lambda configured, requested: load_snapshot(
+            configured, requested, []
+        ),
+        refresh_chart=refresh_chart,
+        thread_pool=ImmediateThreadPool(),  # type: ignore[arg-type]
+    )
+    workflow.snapshot_changed.connect(snapshots.append)
+    workflow.configure(session)
+    workflow.load_range(selected_range)
+
+    workflow.completed_candle(candle("5m", 25))
+    workflow.completed_candle(candle("5m", 30))
+
+    assert refreshed_minutes == [25, 30]
+    assert snapshots[-1].chart_range == chart_range(15, 35)
+    assert snapshots[-1].candles == (candle("5m", 30),)
+
+
+def test_partial_completed_candle_fact_cannot_reach_refresh_boundary() -> None:
+    session = configured_spot_session()
+    selected_range = chart_range(0, 20)
+    refreshed: list[object] = []
+
+    async def refresh_chart(
+        configured: ConfiguredPaperSession,
+        current: ChartSnapshot,
+        completed: Candle,
+    ) -> ChartSnapshot:
+        del configured
+        refreshed.append(completed)
+        return current
+
+    workflow = ChartWorkflow(
+        load_chart=lambda configured, requested: load_snapshot(
+            configured, requested, []
+        ),
+        refresh_chart=refresh_chart,
+        thread_pool=ImmediateThreadPool(),  # type: ignore[arg-type]
+    )
+    workflow.configure(session)
+    workflow.load_range(selected_range)
+
+    workflow.completed_candle(PartialCompletedCandle())
+
+    assert refreshed == []
+
+
 def test_load_queued_during_refresh_is_drained_and_latest_request_wins() -> None:
     session = configured_spot_session()
     initial_range = chart_range(0, 20)
@@ -324,7 +400,7 @@ def test_load_queued_during_refresh_is_drained_and_latest_request_wins() -> None
     async def refresh_chart(
         configured: ConfiguredPaperSession,
         current: ChartSnapshot,
-        completed: CompletedCandleFacts,
+        completed: Candle,
     ) -> ChartSnapshot:
         del configured, completed
         return current

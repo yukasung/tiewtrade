@@ -1,5 +1,6 @@
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
+from typing import cast
 from uuid import UUID, uuid4
 
 import pytest
@@ -24,6 +25,17 @@ from tiewtrade.trading.trade_history import FillSide, FillSource, TradeFill
 def test_ready_snapshot_rejects_candle_from_another_session_timeframe() -> None:
     with pytest.raises(ValueError, match="candle timeframe must match Session"):
         ready_chart_snapshot(candles=(candle("15m"),), fills=())
+
+
+def test_snapshot_rejects_partial_candle_facts_without_ohlcv() -> None:
+    class PartialCandle:
+        symbol = "BTCUSDT"
+        timeframe = "5m"
+        open_time = datetime(2026, 1, 1, 0, 10, tzinfo=UTC)
+        close_time = datetime(2026, 1, 1, 0, 15, tzinfo=UTC)
+
+    with pytest.raises(ValueError, match="candles must be Candle values"):
+        ready_chart_snapshot(candles=(cast(Candle, PartialCandle()),), fills=())
 
 
 def test_append_completed_candle_replaces_same_open_time_and_keeps_order() -> None:

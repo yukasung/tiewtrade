@@ -2,7 +2,6 @@ from dataclasses import InitVar, dataclass, field
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from enum import StrEnum
-from typing import Protocol, runtime_checkable
 from uuid import UUID
 
 from tiewtrade.application.paper_session_setup import ConfiguredPaperSession
@@ -12,21 +11,7 @@ from tiewtrade.trading.trade_history import FillSide, TradeFill
 
 _UTC_EPOCH = datetime(1970, 1, 1, tzinfo=UTC)
 _DEFAULT_VISIBLE_CANDLE_COUNT = 120
-
-
-@runtime_checkable
-class CompletedCandleFacts(Protocol):
-    @property
-    def symbol(self) -> str: ...
-
-    @property
-    def timeframe(self) -> str: ...
-
-    @property
-    def open_time(self) -> datetime: ...
-
-    @property
-    def close_time(self) -> datetime: ...
+ChartCandle = Candle
 
 
 def _require_utc(value: datetime, field: str) -> None:
@@ -158,6 +143,8 @@ class ChartSnapshot:
 
         previous_open_time: datetime | None = None
         for candle in self.candles:
+            if not isinstance(candle, Candle):
+                raise ValueError("candles must be Candle values")
             if candle.symbol != self.symbol:
                 raise ValueError("candle symbol must match Session")
             if candle.timeframe != self.timeframe:

@@ -12,7 +12,6 @@ from tiewtrade.application.bot_control import (
 from tiewtrade.application.chart_data import (
     ChartRange,
     ChartSnapshot,
-    CompletedCandleFacts,
 )
 from tiewtrade.application.chart_history import ChartHistory
 from tiewtrade.application.database_compatibility import DatabaseCompatibilityError
@@ -374,7 +373,7 @@ def run_desktop(database_path: Path | None = None) -> int:
     async def refresh_chart(
         session: ConfiguredPaperSession,
         snapshot: ChartSnapshot,
-        candle: CompletedCandleFacts,
+        candle: Candle,
     ) -> ChartSnapshot:
         prepare_database()
         return await chart_history.refresh_completed(session, snapshot, candle)
