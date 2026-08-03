@@ -166,18 +166,9 @@ def test_desktop_real_paper_runtime_starts_once_and_stops_without_closing_basket
     database = SQLiteDatabase(tmp_path / "tiewtrade.sqlite3")
     database.migrate()
     active_sessions = SQLiteActivePaperSessions(database)
-    session = (
-        CreatePaperSession(create_active=active_sessions.create)
-        .execute(_setup_values(case))
-        .session
-    )
+    create_session = CreatePaperSession(create_active=active_sessions.create)
     history = SQLiteTradeHistory(database)
-    warm_up, live = _paper_runtime_candles(session.market_data)
-    source = _AcceptancePublicCandleSource(
-        config=session.market_data,
-        warm_up=warm_up,
-        live=live,
-    )
+    sources: list[_AcceptancePublicCandleSource] = []
     selected_endpoints: list[BinancePublicEndpoints] = []
     runtime_relay = RuntimeSnapshotRelay()
     controller: PaperRuntimeController | None = None
@@ -190,7 +181,7 @@ def test_desktop_real_paper_runtime_starts_once_and_stops_without_closing_basket
         startup_controller = PaperRuntimeController(
             lifecycle=SQLitePaperRuntimeLifecycle(database),
             trade_history=history,
-            symbol_rules=_acceptance_symbol_rules(session.market_data.symbol),
+            symbol_rules=_acceptance_symbol_rules(snapshot.session.market_data.symbol),
             source_factory=lambda _endpoints: pytest.fail(
                 "clean startup inspection must not contact public market data"
             ),
@@ -206,6 +197,13 @@ def test_desktop_real_paper_runtime_starts_once_and_stops_without_closing_basket
         nonlocal controller, start_calls
         start_calls += 1
         assert controller is None
+        warm_up, live = _paper_runtime_candles(snapshot.session.market_data)
+        source = _AcceptancePublicCandleSource(
+            config=snapshot.session.market_data,
+            warm_up=warm_up,
+            live=live,
+        )
+        sources.append(source)
         publish = runtime_relay.new_generation()
 
         def publish_current_result(workspace: TradingWorkspaceSnapshot) -> None:
@@ -222,7 +220,7 @@ def test_desktop_real_paper_runtime_starts_once_and_stops_without_closing_basket
         controller = PaperRuntimeController(
             lifecycle=SQLitePaperRuntimeLifecycle(database),
             trade_history=history,
-            symbol_rules=_acceptance_symbol_rules(session.market_data.symbol),
+            symbol_rules=_acceptance_symbol_rules(snapshot.session.market_data.symbol),
             source_factory=select_source,
             snapshot_callback=publish_current_result,
             scheduler=_ImmediateRuntimeScheduler(),
@@ -241,7 +239,7 @@ def test_desktop_real_paper_runtime_starts_once_and_stops_without_closing_basket
         )
 
     window = MainWindow(
-        create_session=lambda values: pytest.fail("create must not run"),
+        create_session=create_session.execute,
         load_active=active_sessions.get_active,
         list_baskets=history.list_baskets,
         list_fills=history.list_fills,
@@ -252,8 +250,20 @@ def test_desktop_real_paper_runtime_starts_once_and_stops_without_closing_basket
     )
     qtbot.addWidget(window)
     window.show()
+    qtbot.waitUntil(window.setup.create_button.isEnabled)
+    assert active_sessions.get_active() is None
+    assert initialize_calls == 0
+    assert start_calls == 0
+
+    _enter_form_values(window, case)
+    click(window.setup.create_button)
+
     qtbot.waitUntil(window.overview.isVisible)
     qtbot.waitUntil(window.workspace.bot_control_widget.start_button.isEnabled)
+    session = active_sessions.get_active()
+    assert session is not None
+    assert window.workspace.header_runtime.text() == "Configured"
+    assert sources == []
     assert initialize_calls == 1
 
     click(window.workspace.bot_control_widget.start_button)
@@ -262,6 +272,8 @@ def test_desktop_real_paper_runtime_starts_once_and_stops_without_closing_basket
     qtbot.waitUntil(lambda: start_calls == 1)
     qtbot.waitUntil(lambda: window.workspace.header_runtime.text() == "Running")
     qtbot.waitUntil(lambda: window.workspace.position_basket.table.rowCount() == 1)
+    assert len(sources) == 1
+    source = sources[0]
     assert start_calls == 1
     assert source.load_recent_calls == 1
     assert source.stream_completed_calls == 1
