@@ -1,9 +1,11 @@
 from dataclasses import replace
 from datetime import UTC, datetime
 from decimal import Decimal
+from functools import partial
 
 from PySide6.QtCore import Qt
 from PySide6.QtTest import QTest
+from PySide6.QtWidgets import QTableWidget
 from pytestqt.qtbot import QtBot
 
 from tests.support.paper_session_setup import configured_spot_session
@@ -123,4 +125,8 @@ def test_trading_tables_are_named_and_scroll_horizontally(qtbot: QtBot) -> None:
             table.setColumnWidth(column, 180)
         table.resize(360, 180)
         table.show()
-        qtbot.waitUntil(lambda table=table: table.horizontalScrollBar().maximum() > 0)
+        qtbot.waitUntil(partial(_has_horizontal_overflow, table))
+
+
+def _has_horizontal_overflow(table: QTableWidget) -> bool:
+    return table.horizontalScrollBar().maximum() > 0
