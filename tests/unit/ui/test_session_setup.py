@@ -5,6 +5,23 @@ from tiewtrade.trading.futures_policy import FuturesTradingPolicy
 from tiewtrade.ui.session_setup import SessionSetupWidget
 
 
+def test_configuration_controls_have_explicit_accessible_names(qtbot: QtBot) -> None:
+    widget = SessionSetupWidget()
+    qtbot.addWidget(widget)
+
+    assert widget.market_type.accessibleName() == "Market Type"
+    assert widget.symbol_field.accessibleName() == "Symbol"
+    assert widget.timeframe.accessibleName() == "Timeframe"
+    assert widget.available_capital.accessibleName() == "Available Capital (USDT)"
+    assert widget.max_entries.accessibleName() == "Maximum Entries"
+    assert widget.spot_ratio.accessibleName() == "Spot Trading Capital (%)"
+    assert widget.leverage.accessibleName() == "Futures Leverage"
+    assert widget.advanced_toggle.accessibleName() == "Advanced Execution Costs"
+    assert widget.fee_percent.accessibleName() == "Trading Fee (%)"
+    assert widget.slippage_bps.accessibleName() == "Slippage (bps)"
+    assert widget.create_button.accessibleName() == "Create Paper Session"
+
+
 def test_default_form_builds_paper_spot_values(qtbot: QtBot) -> None:
     widget = SessionSetupWidget()
     qtbot.addWidget(widget)

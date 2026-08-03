@@ -30,6 +30,8 @@ def test_dark_theme_defines_focus_and_semantic_states() -> None:
     assert 'QWidget[state="negative"]' in DARK_THEME
     assert 'QWidget[state="warning"]' in DARK_THEME
     assert "QPushButton:focus" in DARK_THEME
+    assert "QTableWidget:focus" in DARK_THEME
+    assert "border: 2px solid #4C7DFF" in DARK_THEME
 
 
 def test_dark_theme_styles_scoped_trading_tab_states() -> None:

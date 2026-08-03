@@ -126,6 +126,18 @@ class SessionSetupWidget(QWidget):
         self.advanced_costs = self._build_advanced_costs()
         self.advanced_costs.setVisible(False)
 
+        self.market_type.setAccessibleName("Market Type")
+        self.symbol_field.setAccessibleName("Symbol")
+        self.timeframe.setAccessibleName("Timeframe")
+        self.available_capital.setAccessibleName("Available Capital (USDT)")
+        self.max_entries.setAccessibleName("Maximum Entries")
+        self.spot_ratio.setAccessibleName("Spot Trading Capital (%)")
+        self.leverage.setAccessibleName("Futures Leverage")
+        self.advanced_toggle.setAccessibleName("Advanced Execution Costs")
+        self.fee_percent.setAccessibleName("Trading Fee (%)")
+        self.slippage_bps.setAccessibleName("Slippage (bps)")
+        self.create_button.setAccessibleName("Create Paper Session")
+
         self._build_layout()
         self.market_type.currentIndexChanged.connect(self._sync_market_fields)
         self._sync_market_fields()

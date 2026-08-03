@@ -69,7 +69,7 @@ QLineEdit, QComboBox, QSpinBox, QDateEdit {
     selection-background-color: #315CF4;
 }
 QLineEdit:focus, QComboBox:focus, QSpinBox:focus, QDateEdit:focus,
-QPushButton:focus, QTabBar::tab:focus {
+QPushButton:focus, QTabBar::tab:focus, QTableWidget:focus {
     border: 2px solid #4C7DFF;
 }
 QLineEdit:read-only, QComboBox:disabled, QDateEdit:disabled {
