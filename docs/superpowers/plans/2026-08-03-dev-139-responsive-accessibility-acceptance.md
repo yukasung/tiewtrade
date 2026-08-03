@@ -58,7 +58,7 @@ def test_configuration_controls_have_explicit_accessible_names(qtbot: QtBot) -> 
 
 ```python
 assert "QTableWidget:focus" in DARK_THEME
-assert "border: 2px solid #2f81f7" in DARK_THEME
+assert "border: 2px solid #4C7DFF" in DARK_THEME
 ```
 
 - [ ] **Step 2: รัน test เพื่อยืนยัน RED**
@@ -95,7 +95,7 @@ self.create_button.setAccessibleName("Create Paper Session")
 
 ```css
 QTableWidget:focus {
-    border: 2px solid #2f81f7;
+    border: 2px solid #4C7DFF;
 }
 ```
 

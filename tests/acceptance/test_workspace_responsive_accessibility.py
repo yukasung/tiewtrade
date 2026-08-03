@@ -1,5 +1,6 @@
 from dataclasses import replace
 from datetime import UTC, datetime
+from decimal import Decimal
 
 from PySide6.QtCore import Qt
 from PySide6.QtTest import QTest
@@ -7,7 +8,9 @@ from pytestqt.qtbot import QtBot
 
 from tests.support.paper_session_setup import configured_spot_session
 from tests.support.qt_interactions import click
+from tests.support.trade_history_records import basket_result
 from tiewtrade.application.bot_control import BotLifecycleResult
+from tiewtrade.application.trade_history import BasketHistoryPage
 from tiewtrade.application.trading_workspace import (
     BotRuntimeState,
     configured_workspace_snapshot,
@@ -89,6 +92,23 @@ def test_trading_tables_are_named_and_scroll_horizontally(qtbot: QtBot) -> None:
     qtbot.addWidget(workspace)
     workspace.resize(760, 700)
     workspace.show()
+    workspace.trade_history.show_baskets(
+        BasketHistoryPage(
+            items=(
+                basket_result(
+                    gross_realized_pnl=Decimal("-1"),
+                    trading_fees=Decimal("0.25"),
+                    net_realized_pnl=Decimal("-1.25"),
+                ),
+            ),
+            page=1,
+            page_size=50,
+            total_items=1,
+            net_realized_pnl=Decimal("-1.25"),
+        )
+    )
+
+    assert workspace.trade_history.total_net_pnl.text() == "-1.25 USDT · Loss"
 
     tables = (
         workspace.open_orders.table,
