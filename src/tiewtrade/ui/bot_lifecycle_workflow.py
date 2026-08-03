@@ -15,34 +15,44 @@ from tiewtrade.application.bot_control import (
     transition_bot_control,
     workspace_with_runtime_state,
 )
+from tiewtrade.application.chart_data import ChartCandle
 from tiewtrade.application.paper_session_setup import ConfiguredPaperSession
 from tiewtrade.application.trading_workspace import BotRuntimeState
 from tiewtrade.ui.background_task import BackgroundTask
 from tiewtrade.ui.notification_center import NotificationStore
 
 LifecycleAction = Callable[[BotControlSnapshot], BotLifecycleResult]
-RuntimeSnapshotCallback = Callable[[BotLifecycleResult], None]
+
+
+class RuntimeSnapshotPublisher:
+    def __init__(self, relay: "RuntimeSnapshotRelay", generation: int) -> None:
+        self._relay = relay
+        self._generation = generation
+
+    def __call__(self, result: BotLifecycleResult) -> None:
+        self._relay.snapshot_ready.emit(result, self._generation)
+
+    def completed_candle(self, candle: ChartCandle) -> None:
+        self._relay.completed_candle_ready.emit(candle, self._generation)
 
 
 class RuntimeSnapshotRelay(QObject):
     """Queue immutable runtime results onto the owning Qt thread."""
 
     snapshot_ready = Signal(object, int)
+    completed_candle_ready = Signal(object, int)
 
     def __init__(self, parent: QObject | None = None) -> None:
         super().__init__(parent)
         self._lock = Lock()
         self._generation = 0
 
-    def new_generation(self) -> RuntimeSnapshotCallback:
+    def new_generation(self) -> RuntimeSnapshotPublisher:
         with self._lock:
             self._generation += 1
             generation = self._generation
 
-        def publish(result: BotLifecycleResult) -> None:
-            self.snapshot_ready.emit(result, generation)
-
-        return publish
+        return RuntimeSnapshotPublisher(self, generation)
 
     def invalidate(self) -> None:
         with self._lock:

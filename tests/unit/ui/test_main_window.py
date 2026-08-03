@@ -3,7 +3,7 @@ import inspect
 import threading
 from copy import copy
 from dataclasses import replace
-from datetime import date
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 from typing import overload
@@ -28,6 +28,7 @@ from tiewtrade.application.bot_control import (
     BotLifecycleResult,
     workspace_with_runtime_state,
 )
+from tiewtrade.application.chart_data import ChartRange, ChartReadState, ChartSnapshot
 from tiewtrade.application.paper_session_setup import (
     ConfiguredPaperSession,
     CreatePaperSession,
@@ -55,6 +56,100 @@ from tiewtrade.ui.session_overview import SessionOverviewWidget
 
 def no_active_session() -> ConfiguredPaperSession | None:
     return None
+
+
+def test_session_ready_loads_chart_for_configured_session(qtbot: QtBot) -> None:
+    session = configured_spot_session()
+    requests: list[tuple[ConfiguredPaperSession, ChartRange]] = []
+
+    async def load_chart(
+        configured: ConfiguredPaperSession, chart_range: ChartRange
+    ) -> ChartSnapshot:
+        requests.append((configured, chart_range))
+        return ChartSnapshot(
+            session=configured,
+            chart_range=chart_range,
+            observed_at_utc=chart_range.end,
+            candles=(),
+            fills=(),
+            state=ChartReadState.EMPTY,
+        )
+
+    window = MainWindow(
+        create_session=unused_create,
+        load_active=lambda: session,
+        list_baskets=empty_basket_page,
+        list_fills=empty_fills,
+        load_chart=load_chart,
+        chart_clock=lambda: datetime(2026, 8, 2, 10, 3, tzinfo=UTC),
+    )
+    qtbot.addWidget(window)
+    window.show()
+
+    qtbot.waitUntil(lambda: len(requests) == 1)
+
+    configured, chart_range = requests[0]
+    assert configured is session
+    assert chart_range.end == datetime(2026, 8, 2, 10, 0, tzinfo=UTC)
+    assert chart_range.end - chart_range.start == session.market_data.interval * 120
+
+
+def test_chart_unavailable_does_not_disable_bot_control_or_trade_history(
+    qtbot: QtBot,
+) -> None:
+    session = configured_spot_session()
+
+    attempts = 0
+
+    async def unavailable_chart(
+        configured: ConfiguredPaperSession, chart_range: ChartRange
+    ) -> ChartSnapshot:
+        nonlocal attempts
+        attempts += 1
+        if attempts == 1:
+            raise RuntimeError("public transport unavailable")
+        return ChartSnapshot(
+            session=configured,
+            chart_range=chart_range,
+            observed_at_utc=chart_range.end,
+            candles=(),
+            fills=(),
+            state=ChartReadState.EMPTY,
+        )
+
+    window = MainWindow(
+        create_session=unused_create,
+        load_active=lambda: session,
+        list_baskets=empty_basket_page,
+        list_fills=empty_fills,
+        load_chart=unavailable_chart,
+    )
+    qtbot.addWidget(window)
+    window.show()
+
+    qtbot.waitUntil(
+        lambda: (
+            window.workspace.chart._snapshot is not None
+            and window.workspace.chart._snapshot.state is ChartReadState.UNAVAILABLE
+        )
+    )
+
+    assert window.overview.isVisible()
+    assert window.workspace.bot_control.isEnabled()
+    assert window.trade_history.isEnabled()
+    assert window.workspace.chart.retry_button.isVisible()
+    open_trade_history(window)
+    qtbot.waitUntil(
+        lambda: window.trade_history.basket_state.text() == "No trade history"
+    )
+    click(window.workspace.chart.retry_button)
+    qtbot.waitUntil(
+        lambda: (
+            window.workspace.chart._snapshot is not None
+            and window.workspace.chart._snapshot.state is ChartReadState.EMPTY
+        )
+    )
+    assert attempts == 2
 
 
 def unused_create(values: PaperSessionSetupValues) -> PaperSessionCreateOutcome:

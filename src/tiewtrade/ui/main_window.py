@@ -1,9 +1,11 @@
 from collections.abc import Callable
+from datetime import UTC, datetime
 
-from PySide6.QtCore import QThreadPool, Slot
+from PySide6.QtCore import Qt, QThreadPool, Slot
 from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import QMainWindow
 
+from tiewtrade.application.chart_data import ChartRange, ChartReadState, ChartSnapshot
 from tiewtrade.application.paper_session_setup import (
     ConfiguredPaperSession,
     PaperSessionSetupValues,
@@ -14,6 +16,7 @@ from tiewtrade.ui.bot_lifecycle_workflow import (
     LifecycleAction,
     RuntimeSnapshotRelay,
 )
+from tiewtrade.ui.chart_workflow import ChartWorkflow, LoadChart, RefreshChart
 from tiewtrade.ui.session_workflow import (
     CreateSession,
     LoadActiveSession,
@@ -43,10 +46,14 @@ class MainWindow(QMainWindow):
         initialize_bot: LifecycleAction | None = None,
         runtime_snapshots: RuntimeSnapshotRelay | None = None,
         shutdown_runtime: Callable[[], None] | None = None,
+        load_chart: LoadChart | None = None,
+        refresh_chart: RefreshChart | None = None,
+        chart_clock: Callable[[], datetime] = lambda: datetime.now(UTC),
         thread_pool: QThreadPool | None = None,
     ) -> None:
         super().__init__()
         self._thread_pool = thread_pool or QThreadPool.globalInstance()
+        self._load_chart = load_chart
         self._shutdown_runtime = shutdown_runtime
         self._close_sequence_started = False
         self._close_sequence_completed = False
@@ -100,6 +107,25 @@ class MainWindow(QMainWindow):
         self.workspace.stop_bot_requested.connect(self._lifecycle_workflow.stop_bot)
         self.workspace.recover_requested.connect(self._lifecycle_workflow.recover)
 
+        self._chart_workflow = ChartWorkflow(
+            load_chart=load_chart or _unused_chart_loader,
+            refresh_chart=refresh_chart,
+            thread_pool=self._thread_pool,
+            clock=chart_clock,
+            parent=self,
+        )
+        self._chart_workflow.snapshot_changed.connect(
+            self.workspace.chart.show_snapshot
+        )
+        self.workspace.chart.range_requested.connect(self._chart_workflow.load_range)
+        self.workspace.chart.retry_requested.connect(self._chart_workflow.retry)
+        self._runtime_snapshots = runtime_snapshots
+        if runtime_snapshots is not None:
+            runtime_snapshots.completed_candle_ready.connect(
+                self._runtime_completed_candle,
+                Qt.ConnectionType.QueuedConnection,
+            )
+
         self._history_started = False
         self._history_workflow = TradeHistoryWorkflow(
             list_baskets=list_baskets,
@@ -133,6 +159,15 @@ class MainWindow(QMainWindow):
     def _show_session(self, session: ConfiguredPaperSession) -> None:
         self._pending_validation_field = None
         self._lifecycle_workflow.configure(session)
+        if self._load_chart is not None:
+            self._chart_workflow.start(session)
+
+    @Slot(object, int)
+    def _runtime_completed_candle(self, candle: object, generation: int) -> None:
+        runtime_snapshots = self._runtime_snapshots
+        if runtime_snapshots is None or not runtime_snapshots.is_current(generation):
+            return
+        self._chart_workflow.completed_candle(candle)
 
     @Slot(str, str)
     def _show_validation_error(self, field: str, message: str) -> None:
@@ -174,6 +209,7 @@ class MainWindow(QMainWindow):
         self._workflow.close()
         self._lifecycle_workflow.close()
         self._history_workflow.close()
+        self._chart_workflow.close()
 
     @Slot()
     def _runtime_shutdown_finished(self) -> None:
@@ -228,3 +264,17 @@ class MainWindow(QMainWindow):
         self._history_workflow.fills_unavailable.connect(
             self.trade_history.show_fills_unavailable
         )
+
+
+async def _unused_chart_loader(
+    session: ConfiguredPaperSession, chart_range: ChartRange
+) -> ChartSnapshot:
+    return ChartSnapshot(
+        session=session,
+        chart_range=chart_range,
+        observed_at_utc=chart_range.end,
+        candles=(),
+        fills=(),
+        state=ChartReadState.UNAVAILABLE,
+        message="Chart is unavailable",
+    )

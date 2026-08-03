@@ -1,5 +1,6 @@
+import asyncio
 import sqlite3
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import replace
 from datetime import UTC, datetime
@@ -15,7 +16,10 @@ from pytest import MonkeyPatch
 
 import tiewtrade.desktop_main as desktop_main
 import tiewtrade.ui.desktop as ui_desktop
-from tests.support.paper_session_setup import configured_spot_session
+from tests.support.paper_session_setup import (
+    configured_futures_session,
+    configured_spot_session,
+)
 from tests.support.trade_history_ui import empty_basket_page, empty_fills
 from tiewtrade.application.bot_control import (
     BotControlAction,
@@ -24,6 +28,7 @@ from tiewtrade.application.bot_control import (
     configured_bot_control,
     workspace_with_runtime_state,
 )
+from tiewtrade.application.chart_data import ChartRange, ChartSnapshot
 from tiewtrade.application.database_compatibility import DatabaseCompatibilityError
 from tiewtrade.application.paper_session_setup import (
     ConfiguredPaperSession,
@@ -36,6 +41,7 @@ from tiewtrade.application.trade_history import (
     TradeHistoryFilter,
 )
 from tiewtrade.application.trading_workspace import BotRuntimeState, DataFreshness
+from tiewtrade.integrations.binance.public_endpoints import BinancePublicEndpoints
 from tiewtrade.integrations.binance.public_market_data import BinancePublicMarketData
 from tiewtrade.integrations.sqlite.database import (
     SQLiteDatabase,
@@ -199,6 +205,82 @@ def test_desktop_composition_supplies_migrated_create_and_load_operations(
     active = load_active_session()
     assert isinstance(active, ConfiguredPaperSession)
     assert active.config.session_id == outcome.session.config.session_id
+
+
+def test_desktop_composition_supplies_chart_loader_without_ui_adapter_imports(
+    tmp_path: Path,
+    monkeypatch: MonkeyPatch,
+) -> None:
+    captured: dict[str, object] = {}
+    selected_endpoints: list[BinancePublicEndpoints] = []
+    sources: list[object] = []
+
+    class FakePublicMarketData:
+        def __init__(self, endpoints: BinancePublicEndpoints) -> None:
+            selected_endpoints.append(endpoints)
+            self.closed = False
+            sources.append(self)
+
+        async def load_range(
+            self, config: object, *, start: object, end: object
+        ) -> tuple[object, ...]:
+            del config, start, end
+            return ()
+
+        async def close(self) -> None:
+            self.closed = True
+
+    def capture_desktop(**dependencies: object) -> int:
+        captured.update(dependencies)
+        return 0
+
+    monkeypatch.setattr(desktop_main, "run_desktop_ui", capture_desktop)
+    monkeypatch.setattr(desktop_main, "BinancePublicMarketData", FakePublicMarketData)
+
+    assert desktop_main.run_desktop(tmp_path / "tiewtrade.sqlite3") == 0
+    load_chart = cast(
+        Callable[[ConfiguredPaperSession, ChartRange], Awaitable[ChartSnapshot]],
+        captured["load_chart"],
+    )
+    chart_range = ChartRange(
+        datetime(2026, 8, 2, 9, 0, tzinfo=UTC),
+        datetime(2026, 8, 2, 10, 0, tzinfo=UTC),
+    )
+
+    async def invoke_chart_loader(session: ConfiguredPaperSession) -> ChartSnapshot:
+        return await load_chart(session, chart_range)
+
+    spot: ChartSnapshot = asyncio.run(invoke_chart_loader(configured_spot_session()))
+    futures: ChartSnapshot = asyncio.run(
+        invoke_chart_loader(configured_futures_session())
+    )
+
+    assert isinstance(spot, ChartSnapshot)
+    assert isinstance(futures, ChartSnapshot)
+    assert selected_endpoints == [
+        BinancePublicEndpoints(
+            rest_klines_url="https://data-api.binance.vision/api/v3/klines",
+            websocket_base_url="wss://data-stream.binance.vision/ws",
+        ),
+        BinancePublicEndpoints(
+            rest_klines_url="https://fapi.binance.com/fapi/v1/klines",
+            websocket_base_url="wss://fstream.binance.com/ws",
+        ),
+    ]
+    assert all(
+        "/api/v3/account" not in item.rest_klines_url for item in selected_endpoints
+    )
+    assert len(sources) == 2
+    assert all(cast(FakePublicMarketData, source).closed for source in sources)
+
+    ui_source = "\n".join(
+        path.read_text() for path in Path("src/tiewtrade/ui").glob("*.py")
+    )
+    assert "tiewtrade.application.chart_history" not in ui_source
+    chart_history_source = Path(
+        "src/tiewtrade/application/chart_history.py"
+    ).read_text()
+    assert "tiewtrade.integrations" not in chart_history_source
 
 
 def test_desktop_composition_supplies_migrated_trade_history_queries(
@@ -631,7 +713,7 @@ def test_concurrent_session_load_and_history_query_serialize_v1_migration(
             row[1] for row in connection.execute("PRAGMA table_info(basket_results)")
         }
 
-    assert schema_version == 4
+    assert schema_version == 5
     assert "leverage" in basket_columns
 
 

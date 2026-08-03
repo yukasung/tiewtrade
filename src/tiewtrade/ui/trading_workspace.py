@@ -24,6 +24,7 @@ from tiewtrade.application.trading_workspace import (
     WorkspaceReadState,
 )
 from tiewtrade.ui.bot_control import BotControlWidget
+from tiewtrade.ui.candlestick_chart import CandlestickChartWidget
 from tiewtrade.ui.notification_center import NotificationRecord, NotificationStore
 from tiewtrade.ui.open_orders_table import OpenOrdersTable
 from tiewtrade.ui.position_basket_table import PositionBasketTable
@@ -95,7 +96,7 @@ class TradingWorkspace(QWidget):
         self.notification_button.setObjectName("notificationButton")
         self.notification_button.setAccessibleName("Notifications: 0 unread")
 
-        self.chart_state = QLabel("Chart is not available yet")
+        self.chart = CandlestickChartWidget()
 
         self._bot_pages = QStackedWidget()
         self._bot_pages.setObjectName("botControlPages")
@@ -323,13 +324,7 @@ class TradingWorkspace(QWidget):
         primary_layout = QVBoxLayout(primary)
         primary_layout.setContentsMargins(0, 0, 0, 0)
         primary_layout.setSpacing(12)
-        chart = QFrame()
-        chart.setObjectName("chartPlaceholder")
-        chart_layout = QVBoxLayout(chart)
-        self.chart_state.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.chart_state.setProperty("stateMessage", True)
-        chart_layout.addWidget(self.chart_state)
-        primary_layout.addWidget(chart, 3)
+        primary_layout.addWidget(self.chart, 3)
         primary_layout.addWidget(self.tabs, 2)
 
         self.bot_control = QFrame()

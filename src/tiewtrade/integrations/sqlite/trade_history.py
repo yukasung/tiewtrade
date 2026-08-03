@@ -215,6 +215,25 @@ class SQLiteTradeHistory:
 
         return self._run_read(operation)
 
+    def list_session_fills(
+        self,
+        session_id: UUID,
+        start_utc: datetime,
+        end_utc: datetime,
+    ) -> tuple[TradeFill, ...]:
+        def operation(connection: sqlite3.Connection) -> tuple[TradeFill, ...]:
+            rows = connection.execute(
+                """
+                SELECT * FROM trade_fills
+                WHERE session_id = ? AND filled_at_utc >= ? AND filled_at_utc < ?
+                ORDER BY filled_at_utc, fill_id
+                """,
+                (str(session_id), _utc_text(start_utc), _utc_text(end_utc)),
+            ).fetchall()
+            return tuple(_fill_from_row(row) for row in rows)
+
+        return self._run_read(operation)
+
     def _run_read(
         self,
         operation: Callable[[sqlite3.Connection], ReadResult],

@@ -5,7 +5,7 @@ from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
 from unittest.mock import create_autospec
-from uuid import UUID
+from uuid import UUID, uuid4
 
 import pytest
 
@@ -52,6 +52,44 @@ def test_exact_duplicate_fill_is_a_no_op(history: SQLiteTradeHistory) -> None:
     assert history.record_open_basket(basket, fill) is False
     assert history.get_basket(basket.basket_id) == basket
     assert history.list_fills(basket.basket_id) == (fill,)
+
+
+def test_list_session_fills_orders_by_utc_then_fill_id_and_excludes_other_session(
+    history: SQLiteTradeHistory,
+) -> None:
+    session_id = UUID("00000000-0000-0000-0000-000000000138")
+    start = datetime(2026, 1, 1, tzinfo=UTC)
+    end = datetime(2026, 1, 2, tzinfo=UTC)
+    first = trade_fill(
+        fill_id="fill-a",
+        basket_id=uuid4(),
+        session_id=session_id,
+        filled_at_utc=start + timedelta(hours=1),
+    )
+    second = trade_fill(
+        fill_id="fill-b",
+        basket_id=uuid4(),
+        session_id=session_id,
+        filled_at_utc=start + timedelta(hours=1),
+    )
+    other_session = trade_fill(
+        fill_id="fill-other",
+        basket_id=uuid4(),
+        session_id=uuid4(),
+        filled_at_utc=start + timedelta(hours=1),
+    )
+    for fill in (second, other_session, first):
+        history.record_open_basket(
+            replace(
+                open_basket(),
+                basket_id=fill.basket_id,
+                session_id=fill.session_id,
+                opened_at_utc=fill.filled_at_utc,
+            ),
+            fill,
+        )
+
+    assert history.list_session_fills(session_id, start, end) == (first, second)
 
 
 def test_open_basket_requires_open_status(history: SQLiteTradeHistory) -> None:
@@ -411,12 +449,13 @@ def test_migration_creates_versioned_history_schema_and_indexes(tmp_path: Path) 
             for row in connection.execute("PRAGMA table_info(trade_fills)")
         }
 
-    assert version == 4
+    assert version == 5
     assert "paper_runtime_lifecycle" in table_names
     assert {"basket_results", "trade_fills"} <= table_names
     assert {
         "basket_results_history_idx",
         "trade_fills_basket_time_idx",
+        "trade_fills_session_time_idx",
     } <= index_names
     assert basket_columns["basket_id"] == "TEXT"
     assert basket_columns["invested_notional"] == "TEXT"
@@ -427,10 +466,86 @@ def test_migration_creates_versioned_history_schema_and_indexes(tmp_path: Path) 
     assert fill_columns["filled_at_utc"] == "TEXT"
 
 
+def test_migration_from_v4_adds_session_fill_history_index(tmp_path: Path) -> None:
+    database = SQLiteDatabase(tmp_path / "history.sqlite3")
+    database.migrate()
+
+    with database.connect() as connection:
+        connection.execute("DROP INDEX trade_fills_session_time_idx")
+        connection.execute("PRAGMA user_version = 4")
+
+    with database.connect() as connection:
+        index_names_before = {
+            row["name"]
+            for row in connection.execute(
+                "SELECT name FROM sqlite_master WHERE type = 'index'"
+            )
+        }
+
+    assert "trade_fills_session_time_idx" not in index_names_before
+
+    database.migrate()
+
+    with database.connect() as connection:
+        index_names = {
+            row["name"]
+            for row in connection.execute(
+                "SELECT name FROM sqlite_master WHERE type = 'index'"
+            )
+        }
+
+    assert "trade_fills_session_time_idx" in index_names
+
+
+@pytest.mark.parametrize("version", [1, 2, 3])
+def test_migration_from_legacy_schema_adds_session_fill_history_index(
+    tmp_path: Path,
+    version: int,
+) -> None:
+    database = SQLiteDatabase(tmp_path / "history.sqlite3")
+    with database.connect() as connection:
+        if version == 1:
+            connection.execute(
+                "CREATE TABLE basket_results (basket_id TEXT PRIMARY KEY)"
+            )
+        connection.execute(
+            """
+            CREATE TABLE trade_fills (
+                fill_id TEXT PRIMARY KEY,
+                session_id TEXT NOT NULL,
+                filled_at_utc TEXT NOT NULL
+            )
+            """
+        )
+        connection.execute(f"PRAGMA user_version = {version}")
+
+    database.migrate()
+
+    with database.connect() as connection:
+        index_names = {
+            row["name"]
+            for row in connection.execute(
+                "SELECT name FROM sqlite_master WHERE type = 'index'"
+            )
+        }
+        query_plan = connection.execute(
+            """
+            EXPLAIN QUERY PLAN
+            SELECT fill_id FROM trade_fills
+            WHERE session_id = ? AND filled_at_utc >= ? AND filled_at_utc < ?
+            ORDER BY filled_at_utc, fill_id
+            """,
+            ("session-1", "2026-01-01T00:00:00+00:00", "2026-01-02T00:00:00+00:00"),
+        ).fetchall()
+
+    assert "trade_fills_session_time_idx" in index_names
+    assert any("trade_fills_session_time_idx" in row[3] for row in query_plan)
+
+
 def test_migration_rejects_future_schema_version(tmp_path: Path) -> None:
     database = SQLiteDatabase(tmp_path / "history.sqlite3")
     with database.connect() as connection:
-        connection.execute("PRAGMA user_version = 5")
+        connection.execute("PRAGMA user_version = 6")
 
     with pytest.raises(ValueError, match="newer than supported"):
         database.migrate()
@@ -500,7 +615,7 @@ def test_migration_from_v1_preserves_spot_basket_with_null_leverage(
             "SELECT leverage FROM basket_results WHERE basket_id = ?",
             (str(legacy.basket_id),),
         ).fetchone()[0]
-    assert version == 4
+    assert version == 5
     assert leverage is None
     assert SQLiteTradeHistory(database).get_basket(legacy.basket_id) == legacy
 

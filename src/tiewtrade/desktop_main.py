@@ -9,6 +9,11 @@ from tiewtrade.application.bot_control import (
     BotLifecycleResult,
     workspace_with_runtime_state,
 )
+from tiewtrade.application.chart_data import (
+    ChartRange,
+    ChartSnapshot,
+)
+from tiewtrade.application.chart_history import ChartHistory
 from tiewtrade.application.database_compatibility import DatabaseCompatibilityError
 from tiewtrade.application.paper_runtime import PaperRuntimeController
 from tiewtrade.application.paper_session_setup import (
@@ -24,6 +29,7 @@ from tiewtrade.application.trade_history import (
 )
 from tiewtrade.application.trading_workspace import BotRuntimeState
 from tiewtrade.decimal_context import configure_decimal_context
+from tiewtrade.integrations.binance.public_endpoints import BinancePublicEndpoints
 from tiewtrade.integrations.binance.public_market_data import BinancePublicMarketData
 from tiewtrade.integrations.sqlite.active_paper_sessions import (
     SQLiteActivePaperSessions,
@@ -36,6 +42,7 @@ from tiewtrade.integrations.sqlite.paper_runtime_lifecycle import (
     SQLitePaperRuntimeLifecycle,
 )
 from tiewtrade.integrations.sqlite.trade_history import SQLiteTradeHistory
+from tiewtrade.market_data.candle import Candle
 from tiewtrade.trading.session_config import MarketType
 from tiewtrade.trading.symbol_rules import SymbolRules
 from tiewtrade.trading.trade_history import TradeFill
@@ -229,6 +236,7 @@ class _PaperRuntimeActions:
             symbol_rules=_symbol_rules_for(session),
             source_factory=BinancePublicMarketData,
             snapshot_callback=publish_current_result,
+            completed_candle_callback=publish.completed_candle,
         )
         return controller
 
@@ -324,6 +332,52 @@ def run_desktop(database_path: Path | None = None) -> int:
         prepare_database=prepare_database,
     )
 
+    async def load_chart_candles(
+        session: ConfiguredPaperSession,
+        chart_range: ChartRange,
+    ) -> tuple[Candle, ...]:
+        source = BinancePublicMarketData(
+            BinancePublicEndpoints.for_market_type(session.config.market_type)
+        )
+        try:
+            return await source.load_range(
+                session.market_data,
+                start=chart_range.start,
+                end=chart_range.end,
+            )
+        finally:
+            await source.close()
+
+    def list_chart_fills(
+        session_id: UUID,
+        chart_range: ChartRange,
+    ) -> tuple[TradeFill, ...]:
+        return history.list_session_fills(
+            session_id,
+            chart_range.start,
+            chart_range.end,
+        )
+
+    chart_history = ChartHistory(
+        load_candles=load_chart_candles,
+        list_fills=list_chart_fills,
+    )
+
+    async def load_chart(
+        session: ConfiguredPaperSession,
+        chart_range: ChartRange,
+    ) -> ChartSnapshot:
+        prepare_database()
+        return await chart_history.load(session, chart_range)
+
+    async def refresh_chart(
+        session: ConfiguredPaperSession,
+        snapshot: ChartSnapshot,
+        candle: Candle,
+    ) -> ChartSnapshot:
+        prepare_database()
+        return await chart_history.refresh_completed(session, snapshot, candle)
+
     return run_desktop_ui(
         create_session=create_after_migration,
         load_active=load_after_migration,
@@ -335,6 +389,8 @@ def run_desktop(database_path: Path | None = None) -> int:
         initialize_bot=runtime_actions.initialize,
         runtime_snapshots=runtime_snapshots,
         shutdown_runtime=runtime_actions.shutdown,
+        load_chart=load_chart,
+        refresh_chart=refresh_chart,
     )
 
 

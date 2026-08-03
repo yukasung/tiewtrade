@@ -13,6 +13,7 @@ from pytestqt.qtbot import QtBot
 from tests.support.paper_session_setup import configured_spot_session
 from tests.support.qt_interactions import click
 from tiewtrade.application.bot_control import BotLifecycleResult
+from tiewtrade.application.chart_data import ChartRange, ChartReadState, ChartSnapshot
 from tiewtrade.application.trading_workspace import (
     BasketSnapshot,
     BotRuntimeState,
@@ -24,6 +25,7 @@ from tiewtrade.application.trading_workspace import (
     ready_position_basket_tab,
     stale_workspace_snapshot,
 )
+from tiewtrade.ui.candlestick_chart import CandlestickChartWidget
 from tiewtrade.ui.notification_center import NotificationStore
 from tiewtrade.ui.trading_workspace import TradingWorkspace
 
@@ -35,7 +37,7 @@ def test_workspace_places_existing_features_in_one_screen(qtbot: QtBot) -> None:
     workspace.show()
 
     assert workspace.header_symbol.text() == "No Session"
-    assert workspace.chart_state.text() == "Chart is not available yet"
+    assert isinstance(workspace.chart, CandlestickChartWidget)
     assert workspace.tabs.tabText(0) == "Open Orders"
     assert workspace.tabs.tabText(1) == "Position / Basket"
     assert workspace.tabs.tabText(2) == "Trade History"
@@ -44,6 +46,46 @@ def test_workspace_places_existing_features_in_one_screen(qtbot: QtBot) -> None:
         "No open Position or Basket"
     )
     assert workspace.setup.isVisible()
+
+
+def test_workspace_places_candlestick_chart_above_tables_with_docked_bot_control(
+    qtbot: QtBot,
+) -> None:
+    workspace = TradingWorkspace()
+    qtbot.addWidget(workspace)
+    workspace.resize(1200, 700)
+    workspace.show()
+
+    qtbot.waitUntil(lambda: workspace.chart.isVisible())
+
+    assert workspace.chart.geometry().bottom() < workspace.tabs.geometry().top()
+    assert workspace.bot_control.isVisible()
+
+
+def test_chart_snapshot_changes_only_the_chart(qtbot: QtBot) -> None:
+    workspace = TradingWorkspace()
+    qtbot.addWidget(workspace)
+    workspace.resize(1200, 700)
+    workspace.show()
+    snapshot = ChartSnapshot(
+        session=configured_spot_session(),
+        chart_range=ChartRange(
+            datetime(2026, 8, 2, 0, tzinfo=UTC),
+            datetime(2026, 8, 2, 0, 20, tzinfo=UTC),
+        ),
+        observed_at_utc=datetime(2026, 8, 2, 0, 20, tzinfo=UTC),
+        candles=(),
+        fills=(),
+        state=ChartReadState.UNAVAILABLE,
+        message="Chart is unavailable",
+    )
+
+    workspace.chart.show_snapshot(snapshot)
+
+    assert workspace.chart._snapshot is snapshot
+    assert workspace.setup.isVisible()
+    assert workspace.bot_control.isVisible()
+    assert workspace.open_orders.state_label.text() == "No open orders"
 
 
 def test_workspace_tabs_render_independent_scoped_states(qtbot: QtBot) -> None:
