@@ -5,8 +5,14 @@ from PySide6.QtWidgets import QPushButton
 from pytestqt.qtbot import QtBot
 
 from tests.support.paper_session_setup import configured_spot_session
+from tests.support.qt_interactions import click
 from tests.support.trade_history_records import trade_fill
 from tests.support.trade_history_ui import empty_basket_page, empty_fills
+from tiewtrade.application.bot_control import (
+    BotControlSnapshot,
+    BotLifecycleResult,
+    workspace_with_runtime_state,
+)
 from tiewtrade.application.chart_data import (
     ChartRange,
     ChartReadState,
@@ -17,6 +23,7 @@ from tiewtrade.application.paper_session_setup import (
     PaperSessionCreateOutcome,
     PaperSessionSetupValues,
 )
+from tiewtrade.application.trading_workspace import BotRuntimeState, DataFreshness
 from tiewtrade.market_data.candle import Candle
 from tiewtrade.trading.trade_history import FillSide
 from tiewtrade.ui.bot_lifecycle_workflow import RuntimeSnapshotRelay
@@ -70,6 +77,66 @@ def test_desktop_shows_configured_session_chart_without_manual_order_controls(
     assert window.workspace.bot_control.isVisible()
     assert window.findChildren(QPushButton, "manualBuyButton") == []
     assert window.findChildren(QPushButton, "manualSellButton") == []
+
+
+def test_chart_failure_does_not_stop_runtime_or_trade_history(qtbot: QtBot) -> None:
+    session = configured_spot_session()
+
+    async def fail_chart(
+        configured: ConfiguredPaperSession, chart_range: ChartRange
+    ) -> ChartSnapshot:
+        del configured, chart_range
+        raise RuntimeError("raw public transport failure")
+
+    def start_bot(snapshot: BotControlSnapshot) -> BotLifecycleResult:
+        return BotLifecycleResult(
+            workspace=workspace_with_runtime_state(
+                snapshot.workspace,
+                BotRuntimeState.RUNNING,
+                data_freshness=DataFreshness.FRESH,
+            )
+        )
+
+    def stop_bot(snapshot: BotControlSnapshot) -> BotLifecycleResult:
+        return BotLifecycleResult(
+            workspace=workspace_with_runtime_state(
+                snapshot.workspace,
+                BotRuntimeState.STOPPED,
+            )
+        )
+
+    window = MainWindow(
+        create_session=unused_create,
+        load_active=lambda: session,
+        list_baskets=empty_basket_page,
+        list_fills=empty_fills,
+        load_chart=fail_chart,
+        start_bot=start_bot,
+        stop_bot=stop_bot,
+    )
+    qtbot.addWidget(window)
+    window.show()
+
+    qtbot.waitUntil(
+        lambda: (
+            window.workspace.chart._snapshot is not None
+            and window.workspace.chart._snapshot.state is ChartReadState.UNAVAILABLE
+        )
+    )
+    chart_snapshot = window.workspace.chart._snapshot
+    assert chart_snapshot is not None
+    assert chart_snapshot.message == "Chart is unavailable"
+
+    click(window.workspace.bot_control_widget.start_button)
+    qtbot.waitUntil(lambda: window.workspace.header_runtime.text() == "Running")
+    window.workspace.tabs.setCurrentWidget(window.trade_history)
+    qtbot.waitUntil(
+        lambda: window.trade_history.basket_state.text() == "No trade history"
+    )
+
+    assert window.workspace.chart.retry_button.isVisible()
+    assert window.workspace.bot_control_widget.stop_button.isEnabled()
+    assert window.workspace.tabs.currentWidget() is window.trade_history
 
 
 def test_runtime_completed_candle_updates_chart_and_new_durable_fill_marker(

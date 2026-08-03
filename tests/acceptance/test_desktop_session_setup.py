@@ -383,6 +383,14 @@ def test_desktop_restart_blocks_interrupted_runtime_until_recovery(
     assert marker is not None
     assert marker.state is PaperRuntimeLifecycleState.RUNNING
 
+    window.workspace.tabs.setCurrentWidget(window.trade_history)
+    qtbot.waitUntil(
+        lambda: window.trade_history.basket_state.text() == "No trade history"
+    )
+    assert window.workspace.header_runtime.text() == "Blocked"
+    assert not window.workspace.bot_control_widget.start_button.isVisible()
+
+    click(window.workspace.bot_control_widget.recover_button)
     click(window.workspace.bot_control_widget.recover_button)
     qtbot.waitUntil(lambda: window.workspace.header_runtime.text() == "Stopped")
 
@@ -390,6 +398,7 @@ def test_desktop_restart_blocks_interrupted_runtime_until_recovery(
     marker = lifecycle.read(session.config.session_id)
     assert marker is not None
     assert marker.state is PaperRuntimeLifecycleState.STOPPED
+    assert window.workspace.tabs.currentWidget() is window.trade_history
     assert window.workspace.open_orders.table.rowCount() == 0
     assert window.workspace.position_basket.table.rowCount() == 0
 

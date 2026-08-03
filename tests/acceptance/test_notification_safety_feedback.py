@@ -205,6 +205,56 @@ def test_paper_fake_stale_notification_keeps_safe_workspace_state(
     )
 
 
+def test_rejected_notification_presentation_keeps_workspace_interactive(
+    monkeypatch: MonkeyPatch,
+    qtbot: QtBot,
+    tmp_path: Path,
+) -> None:
+    _block_network(monkeypatch)
+    _, sessions = _paper_session(tmp_path)
+
+    def start_bot(snapshot: BotControlSnapshot) -> BotLifecycleResult:
+        return _result(
+            snapshot,
+            BotRuntimeState.RUNNING,
+            data_freshness=DataFreshness.FRESH,
+        )
+
+    window = MainWindow(
+        create_session=lambda _values: pytest.fail("create must not run"),
+        load_active=sessions.get_active,
+        list_baskets=empty_basket_page,
+        list_fills=empty_fills,
+        start_bot=start_bot,
+    )
+    qtbot.addWidget(window)
+    window.resize(1199, 700)
+    window.show()
+    window.activateWindow()
+    qtbot.waitUntil(window.isActiveWindow)
+    qtbot.waitUntil(window.workspace.bot_control_widget.start_button.isEnabled)
+
+    click(window.workspace.bot_control_button)
+    click(window.workspace.bot_control_widget.start_button)
+    qtbot.waitUntil(lambda: window.workspace.header_runtime.text() == "Running")
+    expected_notification_text = window.workspace.notification_button.text()
+
+    window.workspace.show_notifications(object())
+
+    assert window.workspace.header_runtime.text() == "Running"
+    assert window.workspace.open_orders.table.rowCount() == 0
+    assert window.workspace.position_basket.table.rowCount() == 0
+    assert window.workspace.notification_button.text() == expected_notification_text
+    window.workspace.tabs.setCurrentWidget(window.trade_history)
+    qtbot.waitUntil(
+        lambda: window.trade_history.basket_state.text() == "No trade history"
+    )
+    assert window.workspace.tabs.currentWidget() is window.trade_history
+    click(window.workspace.bot_control_close_button)
+    assert not window.workspace.bot_control.isVisible()
+    assert window.workspace.bot_control_button.hasFocus()
+
+
 def _paper_session(tmp_path: Path) -> tuple[SQLiteDatabase, SQLiteActivePaperSessions]:
     database = SQLiteDatabase(tmp_path / "tiewtrade.sqlite3")
     database.migrate()
