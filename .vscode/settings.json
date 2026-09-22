@@ -1,0 +1,25 @@
+{
+  // Match the editor to CI (ruff + mypy + pytest in backend/). See AGENTS.md.
+  "python.defaultInterpreterPath": "${workspaceFolder}/backend/.venv/bin/python",
+
+  // Pylint is not a project checker; its style rules (docstrings, argument counts)
+  // conflict with the ruff configuration and would flag code that CI accepts.
+  "pylint.enabled": false,
+
+  "[python]": {
+    "editor.defaultFormatter": "charliermarsh.ruff",
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.organizeImports.ruff": "explicit"
+    }
+  },
+
+  // mypy reads [tool.mypy] from backend/pyproject.toml; its paths are relative to backend/.
+  "mypy-type-checker.cwd": "${workspaceFolder}/backend",
+  "mypy-type-checker.args": ["--config-file=${workspaceFolder}/backend/pyproject.toml"],
+
+  "python.testing.pytestEnabled": true,
+  "python.testing.unittestEnabled": false,
+  "python.testing.cwd": "${workspaceFolder}/backend",
+  "python.testing.pytestArgs": ["packages", "services"]
+}
