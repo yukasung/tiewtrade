@@ -6,6 +6,7 @@
 | Date | 2026-09-22 |
 | Scope | วิเคราะห์ requirement, ambiguity, technical risk, MVP scope, domain glossary |
 | Out of scope | Architecture design, data model, database migration, API design, UI design, implementation |
+| Architecture | [docs/architecture/architecture.md](../architecture/architecture.md) |
 
 > **หลักการอ่านเอกสารนี้**
 > - ข้อความที่ระบุ **"Proposed"** คือข้อเสนอที่ยังไม่ได้รับการยืนยัน
