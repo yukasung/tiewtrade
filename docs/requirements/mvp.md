@@ -2,7 +2,7 @@
 
 | Field | Value |
 |---|---|
-| Status | **Draft v0.22** — รอตัดสิน [Decisions Needed](#7-questions--decisions-needed) (ตัดสินแล้ว: D-01, D-02, D-03, D-04, D-05, D-06, D-07, D-08, D-09, D-10, D-11, D-12, D-13, D-14, D-15, D-16, D-17, D-18, D-19, D-20, D-22 — ครบทุกข้อที่ block architecture และ Phase 1; ที่เหลือ block Phase 2 — ดู [Decision Log](#71-decision-log)) |
+| Status | **Draft v0.23** — รอตัดสิน [Decisions Needed](#7-questions--decisions-needed) (ตัดสินแล้ว: D-01, D-02, D-03, D-04, D-05, D-06, D-07, D-08, D-09, D-10, D-11, D-12, D-13, D-14, D-15, D-16, D-17, D-18, D-19, D-20, D-22 — ครบทุกข้อที่ block architecture และ Phase 1; ที่เหลือ block Phase 2 — ดู [Decision Log](#71-decision-log)) |
 | Date | 2026-09-22 |
 | Scope | วิเคราะห์ requirement, ambiguity, technical risk, MVP scope, domain glossary |
 | Out of scope | Architecture design, data model, database migration, API design, UI design, implementation |
@@ -98,9 +98,10 @@ Workspace (MVP: สมาชิก 1 คน = User ผู้สมัคร)
 | FR-ACC-06 | Account model ต้องออกแบบให้ทั้ง Main Account และ Sub-account เป็นบัญชีชนิดที่ผูก Portfolio ได้ เพื่อให้เปิดการเทรดบน Main Account ภายหลังได้โดยไม่ต้องรื้อ model (**Decided D-01**; การเปิดใช้บน Live ทบทวนพร้อม **D-04**) |
 | FR-ACC-07 | Paper Main Account ของแต่ละ Workspace เริ่มต้นด้วย **10,000 USDT** (ค่านี้ Platform Admin ปรับได้) เท่ากันทุก Plan; Asset เป็น USDT อย่างเดียว (**Decided D-19**) |
 | FR-ACC-08 | User **เติมเงินจำลอง** เข้า Paper Main Account ได้ ระบบบันทึกเป็นเงินทุนที่เข้ามา (Virtual Deposit) และ Analytics ต้องไม่นับเป็นกำไร (**Decided D-19**) |
-| FR-ACC-09 | User **Reset Portfolio** ของ Virtual Sub-account ได้: ต้องไม่มี Active Bot ก่อน แล้วระบบเก็บ Portfolio เดิมเป็นประวัติแบบอ่านอย่างเดียว (ยังแสดงใน Analytics และเปรียบเทียบได้) และเริ่ม Portfolio ใหม่ด้วยเงินตั้งต้น (**Decided D-19**) |
+| FR-ACC-09 | User **Reset Portfolio** ของ Virtual Sub-account ได้ ต้องไม่มี Active Bot: (1) ปิด Position และยกเลิก Order ตาม FR-ACC-10 (2) **โอนเงินที่เหลือทั้งหมดคืน Paper Main Account** บันทึกเป็น Transfer (เงินออก ไม่นับเป็นกำไร) (3) เก็บ Portfolio เดิมเป็นประวัติแบบอ่านอย่างเดียว (Archived; ยังแสดงใน Analytics และเปรียบเทียบได้) (4) สร้าง Portfolio ใหม่ใน Sub-account เดิมด้วย**ยอด 0** แล้ว User โอนเงินจาก Paper Main เอง (หน้าจอกรอกจำนวนเดิมไว้ให้); ถ้า Main ไม่พอใช้ Virtual Deposit (FR-ACC-08) (**Decided D-19**, ปรับตาม Review 2026-09-22) |
 | FR-ACC-10 | Position และ Order ที่ค้างใน Portfolio ที่ถูก Reset ต้องปิด/ยกเลิกก่อนเก็บเป็นประวัติ ตามกติกา Paper Fill Model (**Decided D-19**; รายละเอียดกำหนดตอน design) |
 | FR-ACC-11 | Analytics ต้องแยกเงินที่เข้า/ออก Portfolio (Transfer, Virtual Deposit) ออกจากกำไร/ขาดทุน (**Decided D-19**) |
+| FR-ACC-12 | Portfolio ที่ Archived แล้ว **ไม่นับ**ใน limit จำนวน Portfolio ของ Plan และไม่นับในวงเงิน (Open Notional) (**Decided — Review 2026-09-22**) |
 
 **ข้อสังเกตจาก Binance (ต้อง verify ตอน design):**
 - บัญชี Binance ทั่วไปมีเงื่อนไขในการเปิดใช้ Sub-account (เช่น VIP level หรือ corporate account) ผู้ใช้บางคนอาจไม่มี Sub-account เลย
@@ -117,7 +118,7 @@ Sub-account "Hold BTC"  ── Portfolio "Hold BTC"  (SPOT         → ใช้
 
 | ID | Requirement |
 |---|---|
-| FR-PF-00a | Sub-account หนึ่งตัวมี Portfolio ได้ไม่เกิน 1 ตัว |
+| FR-PF-00a | Sub-account หนึ่งตัวมี Portfolio ที่ **ACTIVE** ได้ไม่เกิน 1 ตัว (Portfolio ที่ Archived หลัง Reset ไม่นับ, FR-ACC-09) |
 | FR-PF-00b | ตอนสร้าง Portfolio ต้องเลือก Market Type (`SPOT` หรือ `USDM_FUTURES`) และห้ามเปลี่ยนภายหลัง |
 | FR-PF-00c | Portfolio นับ Balance, Margin, PnL, Risk และ Liquidation จาก Wallet ของ Market Type ของตัวเองเท่านั้น |
 | FR-PF-00d | Live: ยอดเงินใน Wallet อื่นของ Sub-account เดียวกัน (ที่ Portfolio ไม่ได้ใช้) ต้องแสดงแยกเป็นเงินนอก Portfolio และไม่นำไปคำนวณใดๆ |
@@ -131,7 +132,8 @@ Sub-account "Hold BTC"  ── Portfolio "Hold BTC"  (SPOT         → ใช้
 | FR-PF-07 | Portfolio อยู่ในสถานะใดสถานะหนึ่งเสมอ: **มี Active Bot** (ใช้กับ Bot นั้นเท่านั้น) หรือ **ไม่มี Active Bot** (ใช้ Manual Trading) (**Decided D-02**) |
 | FR-PF-08 | เริ่ม Bot ได้เฉพาะเมื่อ Portfolio ไม่มี Position และ Order ค้าง ซึ่งรวมถึง Position/Order ที่เปิดจาก Manual (**Decided D-02**; นิยามของ Spot ดู A-24) |
 | FR-PF-09 | เปลี่ยน Bot ใน Portfolio เดิมได้ (หยุด Bot A แล้วเริ่ม Bot B) เมื่อ Portfolio ไม่มี Position และ Order ค้าง (**Decided D-02**) |
-| FR-PF-10 | ทุก Order และ Fill ต้องบันทึก Order Owner (Bot ID, `MANUAL` หรือ `EXTERNAL` ตาม D-14) เพื่อแยกผลย้อนหลังได้แม้ Portfolio เคยเปลี่ยน Bot (**Decided D-02**) |
+| FR-PF-10 | ทุก Order และ Fill ต้องบันทึก **Order Owner** (Bot ID, `MANUAL` หรือ `EXTERNAL` ตาม D-14) = ผู้ส่ง Order; และทุก Fill, Fee, Funding และรายการ ledger ที่เกี่ยวกับ Position ต้องบันทึก **Position Episode** ที่เป็นเจ้าของผล (FR-PF-11) (**Decided D-02**, ปรับตาม Review 2026-09-22) |
+| FR-PF-11 | **Position Episode:** Position ของ Symbol หนึ่งตั้งแต่เปิดจากศูนย์จนกลับเป็นศูนย์คือหนึ่ง Episode; **ผลทั้งหมดของ Episode** (Realized PnL ทุก Fill รวม Fill ที่ปิดโดย Manual, Liquidation หรือนอกระบบ, Fee และ Funding) **เป็นของผู้ที่เปิด Episode** (Bot, `MANUAL` หรือ `EXTERNAL`); Episode คร่อมสอง Bot ไม่ได้เพราะเปลี่ยน Bot ได้เฉพาะเมื่อไม่มี Position ค้าง (FR-PF-09); การกลับทิศใน One-way ปิด Episode เดิมและเปิด Episode ใหม่ (**Decided — Review 2026-09-22**) |
 
 **ข้อสังเกต (เหตุผลของ D-02):** บน Binance USDⓈ-M แบบ One-way Mode, **หนึ่ง Symbol มี Position ได้แค่ตัวเดียวต่อ account** และ **Leverage / Margin Mode ตั้งค่าต่อ Symbol ต่อ account** ถ้ามีหลาย Bot ในบัญชีเดียว Position ของ Symbol เดียวกันจะถูกหักลบกันเป็น net position และ Bot ต้องใช้ Leverage ร่วมกัน ส่วนใน Cross Margin ความเสียหายของ Bot หนึ่งยังลามไป Liquidate Position ของ Bot อื่นได้ กติกา Active Bot ครั้งละ 1 ตัวป้องกันปัญหาเหล่านี้ทั้งหมด
 
@@ -197,12 +199,16 @@ Bot/Strategy┘                  (approve/reject)  (lifecycle,          (interfa
 | FR-ORD-05 | ทุก Order และการตัดสินของ Risk Engine ต้องบันทึกไว้ (audit log) |
 | FR-ORD-06 | Paper Execution Adapter จำลองการ fill จาก market data จริงของ Binance ตาม Paper Fill Model (FR-ORD-07 ถึง 13) หลักการคือผล Paper ต้องไม่ดูดีเกินจริง (**Decided D-05**) |
 | FR-ORD-07 | **Market Order (Paper):** fill ที่ best bid/ask (ซื้อที่ราคาเสนอขาย, ขายที่ราคาเสนอซื้อ) บวก slippage คงที่ ค่าเริ่มต้น **0.02%** ซึ่ง Platform Admin ปรับได้; ไม่จำลองความลึกของ order book (**Decided D-05**) |
-| FR-ORD-08 | **Limit Order (Paper):** fill เมื่อราคาวิ่ง**ทะลุ** Limit ไม่ใช่แค่แตะ และคิด Maker fee; Limit ที่ fill ได้ทันทีตอนส่งนับเป็น Taker และ fill แบบ Market Order (**Decided D-05**) |
+| FR-ORD-08 | **Limit Order (Paper):** fill เมื่อราคาวิ่ง**ทะลุ** Limit ไม่ใช่แค่แตะ และคิด Maker fee; Limit ที่ fill ได้ทันทีตอนส่ง (marketable) นับเป็น Taker และ fill ทันทีด้วย**ราคาที่ไม่แย่กว่าราคา Limit เสมอ**: Buy = `min(limit, ask×(1+s))`, Sell = `max(limit, bid×(1−s))` (Calculation §4.2) (**Decided D-05**, ปรับตาม Review 2026-09-22) |
 | FR-ORD-09 | **Partial fill (Paper):** ไม่จำลอง Order fill ครั้งเดียวเต็มจำนวน (**Decided D-05**) |
 | FR-ORD-10 | **Fee (Paper):** ใช้อัตรามาตรฐานของ Binance ระดับเริ่มต้น (VIP 0) เป็นค่ากลางทั้งระบบ Platform Admin ปรับได้; ไม่คิดส่วนลด BNB (อัตราจริงต้อง verify ตอน design) (**Decided D-05**) |
 | FR-ORD-11 | **Funding Fee (Paper):** จำลองด้วย Funding Rate และเวลาจริงจาก Binance (**Decided D-05**) |
 | FR-ORD-12 | **TP / SL (Paper):** ตัดสินว่าแตะแล้วด้วย **Last Price**; เมื่อแตะแล้ว fill แบบ Market Order (bid/ask + slippage + Taker fee) (**Decided D-05**) |
 | FR-ORD-13 | ข้อมูลตลาดที่ต้องรับสำหรับทุก Symbol ที่รองรับ: best bid/ask, Last Price, Mark Price และ Funding Rate (**Decided D-05**) |
+| FR-ORD-14 | **Bracket — เริ่มป้องกัน:** TP/SL เริ่มทำงานตั้งแต่ Entry **fill ครั้งแรก** และครอบคลุม**จำนวนที่ fill แล้วเท่านั้น**; ทุกครั้งที่ Entry fill เพิ่ม ปรับขนาด TP/SL ตามจำนวนที่ fill สะสม (**Decided — Review 2026-09-22**) |
+| FR-ORD-15 | **Bracket — จบ:** ขาใดขาหนึ่ง (TP หรือ SL) fill แล้วยกเลิกขาที่เหลือ; ถ้า Entry ถูกยกเลิกหรือหมดอายุหลัง fill บางส่วน TP/SL ยังคุมส่วนที่ fill แล้ว; ถ้า Position ถูกปิดด้วยวิธีอื่น (Manual, Liquidation, นอกระบบ) ยกเลิก TP/SL ที่เหลือ (R-16) (**Decided — Review 2026-09-22**) |
+| FR-ORD-16 | **Bracket — วางป้องกันไม่สำเร็จ (Live):** ลองวาง SL ใหม่ได้จำนวนครั้งจำกัดภายในไม่กี่วินาที (ค่าตั้งของระบบ); ถ้ายังไม่สำเร็จ **fail-safe: ปิดส่วนที่ไม่มี SL ด้วย Market Order แบบ reduce-only**, Pause Bot (ถ้ามี) และแจ้งเตือนระดับวิกฤต; TP ที่วางไม่สำเร็จไม่ต้องปิด Position แต่แจ้งเตือน (**Decided — Review 2026-09-22**) |
+| FR-ORD-17 | Paper จำลอง TP/SL ภายในระบบตามกติกา FR-ORD-14/15 (ไม่มีกรณีวางไม่สำเร็จ) (**Decided — Review 2026-09-22**) |
 
 ### 2.7 Margin, PnL & Liquidation
 | ID | Requirement |
@@ -271,7 +277,7 @@ Bot/Strategy┘                  (approve/reject)  (lifecycle,          (interfa
 |---|---|
 | FR-ANL-01 | แสดง Equity Curve, Realized/Unrealized PnL, Fee, Funding Fee ตามช่วงเวลา |
 | FR-ANL-02 | Metrics: Total Return, Max Drawdown, Win Rate, Profit Factor, Average Win/Loss, Sharpe Ratio (**Proposed**) |
-| FR-ANL-03 | แยก Analytics ได้ระดับ Portfolio, Bot/Strategy และ Symbol ผลระดับ Bot คำนวณจาก Order Owner; Portfolio ที่เคยเปลี่ยน Bot แยกผลตาม Bot/ช่วงเวลาได้ (**Decided D-02**) |
+| FR-ANL-03 | แยก Analytics ได้ระดับ Portfolio, Bot/Strategy และ Symbol; **ผลระดับ Bot คำนวณจาก Position Episode ที่ Bot นั้นเปิด** (FR-PF-11) ไม่ใช่จาก Order Owner ของแต่ละ Fill; Win Rate และสถิติรายเทรดนับต่อ Episode (**Decided D-02**, ปรับตาม Review 2026-09-22) |
 | FR-ANL-04 | เปรียบเทียบหลาย Portfolio ได้ในหน้าเดียว (รวม Paper vs Live) |
 | FR-ANL-05 | Metrics คำนวณด้วย deterministic code (P-07) และนิยามสูตรไว้ในเอกสาร |
 
@@ -289,13 +295,14 @@ Bot/Strategy┘                  (approve/reject)  (lifecycle,          (interfa
 | FR-LIVE-09 | ตอนเชื่อม Binance Sub-account ต้องตรวจ Position Mode, Multi-Assets Mode และประเภทบัญชี (Portfolio Margin) ว่าตรงกับที่ระบบรองรับ (**Decided D-03**) |
 | FR-LIVE-10 | ถ้าโหมดไม่ตรงและ**ไม่มี** Position/Order ค้าง: แสดงให้ User เห็นและเสนอเปลี่ยนโหมดผ่าน API **เมื่อ User กดยืนยันเท่านั้น** ห้ามเปลี่ยนเองโดยไม่บอก (**Decided D-03**) |
 | FR-LIVE-11 | ถ้าโหมดไม่ตรงและ**มี** Position/Order ค้าง: ปฏิเสธการเชื่อม และบอกวิธีแก้ (**Decided D-03**) |
-| FR-LIVE-12 | Reconciliation ตรวจโหมดของบัญชีซ้ำเป็นระยะ ถ้าพบว่าถูกเปลี่ยน (เช่น User เปลี่ยนเองใน Binance app) ให้ Pause Bot และแจ้ง User (**Decided D-03**; นโยบายการเปลี่ยนแปลงนอกระบบอื่นๆ ดู FR-LIVE-06) |
+| FR-LIVE-12 | Reconciliation ตรวจโหมดของบัญชีซ้ำเป็นระยะ ถ้าพบว่าถูกเปลี่ยนเป็นโหมดที่ไม่รองรับ (Hedge, Multi-Assets, Portfolio Margin) ให้ Portfolio เข้าสถานะ **Trading Restriction** ตาม FR-LIVE-19, Pause Bot และแจ้ง User (**Decided D-03**, ปรับตาม Review 2026-09-22; การเปลี่ยนแปลงนอกระบบอื่นๆ ดู FR-LIVE-06) |
 | FR-LIVE-13 | มี**หน้าแนะนำทีละขั้นตอน**: สร้าง Sub-account, สร้าง API Key, ตั้งสิทธิ์ และตั้ง IP whitelist (**Decided D-04**) |
 | FR-LIVE-14 | ตอนเชื่อม Portfolio แบบ Futures ตรวจว่าบัญชีเปิดใช้ Futures แล้ว ถ้ายังไม่เปิดให้ปฏิเสธพร้อมบอกวิธีเปิด (**Decided D-04**) |
 | FR-LIVE-15 | Live **ไม่มีการ Transfer ผ่านระบบ** User โอนเงินระหว่างบัญชีบน Binance เอง และระบบอ่านยอดจาก Binance (P-08) (**Decided D-04**) |
 | FR-LIVE-16 | ใช้ **Binance Testnet ภายในทีมเท่านั้น** เพื่อทดสอบการส่ง Order, TP/SL, Reconciliation และการเชื่อมบัญชี; **ไม่เปิดให้ User** (User ใช้ Paper) (**Decided D-13**) |
 | FR-LIVE-17 | ก่อนเปิด Live และทุกครั้งที่แก้โค้ดส่วนที่ติดต่อ Binance ต้องผ่านการทดสอบบน Testnet (**Decided D-13**) |
 | FR-LIVE-18 | ก่อนเปิด Live ให้ User ต้องทดสอบด้วยเงินจริงจำนวนน้อยในบัญชีของเจ้าของระบบก่อน (**Decided D-13**) |
+| FR-LIVE-19 | **Trading Restriction:** Portfolio ที่อยู่ในสถานะนี้**ห้ามส่ง Order ทุกชนิดผ่านระบบ** รวมถึง Manual และ reduce-only เพราะ Trading Core คำนวณและส่ง Order ในโหมดที่ไม่รองรับไม่ได้; ทำได้แค่**ยกเลิก Order ค้าง**; ระบบแจ้งให้ User จัดการ Position และเปลี่ยนโหมดกลับบน Binance; เมื่อ Reconciliation ยืนยันว่าโหมดกลับมาถูกต้องและ state ตรงกัน ระบบ**ปลดสถานะอัตโนมัติ** แต่ Bot ยังต้องรอ User สั่ง Resume (**Decided — Review 2026-09-22**) |
 
 ### 2.13 Security & API Credential Isolation
 | ID | Requirement |
@@ -320,7 +327,7 @@ Bot/Strategy┘                  (approve/reject)  (lifecycle,          (interfa
 | FR-PLN-02 | ระบบมี Entitlement model ที่กำหนด limit ต่อ Plan ได้โดยไม่ต้องแก้ code และ Platform Admin ปรับค่าได้ผ่านหน้าจอ Admin (FR-ADM-11) |
 | FR-PLN-03 | Entitlement ใน MVP และ**ค่าเริ่มต้น** (Admin ปรับได้ทุกค่า) (**Decided D-11**):<br>• **Leverage สูงสุด (Futures):** Free 5x / Pro 20x / Advanced 50x<br>• **วงเงิน Paper (มูลค่า Position รวม):** 10,000 / 50,000 / 250,000 USDT<br>• **วงเงิน Live (มูลค่า Position รวม):** — / 50,000 / 250,000 USDT<br>• **Live Trading:** ไม่ได้ / ได้ / ได้<br>• **จำนวน Paper Portfolio:** 2 / 5 / 10<br>• **จำนวน Live Portfolio:** — / 3 / 10<br>• **Built-in Strategy, Timeframe, Indicator:** ครบทุก Plan (ระบบรองรับการจำกัด Strategy ตาม Plan ไว้ใช้ภายหลัง) |
 | FR-PLN-04 | **วงเงินการเทรด** วัดจาก**มูลค่า Position ที่เปิดอยู่รวมทุก Portfolio ใน Workspace** (Open Notional) แยก Paper และ Live: Futures = Quantity × Mark Price, Spot = มูลค่าเหรียญที่ถือ × Last Price หน่วย USDT (**Decided D-11**) |
-| FR-PLN-05 | Risk Engine ปฏิเสธ Order ที่**เปิดหรือเพิ่ม** Position ถ้าทำให้มูลค่า Position รวมเกินวงเงิน; การลด/ปิด Position ทำได้เสมอ; ถ้าราคาขยับจนเกินวงเงิน ไม่บังคับปิดแต่ห้ามเปิด/เพิ่มจนกว่าจะต่ำกว่าวงเงิน (**Decided D-11**) |
+| FR-PLN-05 | Risk Engine ปฏิเสธ Order ที่**เปิดหรือเพิ่ม** Position ถ้าทำให้มูลค่ารวมเกินวงเงิน โดย**นับ Order ค้างที่เปิด/เพิ่ม Position ทุกตัวของทุก Portfolio ใน Workspace (Trading Mode เดียวกัน) เป็นการจองวงเงิน** ตามสูตร Calculation §5.2 และตรวจแบบลำดับเดียวต่อ Workspace (ADR-0009); วงเงินคืนเมื่อ Order ถูกปฏิเสธ/ยกเลิก/หมดอายุ/fill; การลด/ปิด Position ทำได้เสมอ; ถ้าราคาขยับจนเกินวงเงิน ไม่บังคับปิดแต่ห้ามเปิด/เพิ่มจนกว่าจะต่ำกว่าวงเงิน (**Decided D-11**, ปรับตาม Review 2026-09-22) |
 | FR-PLN-06 | **Leverage สูงสุดตาม Plan** (Futures เท่านั้น): Leverage ที่ใช้ได้ = ค่าต่ำกว่าระหว่างค่าของ Plan กับค่าที่ Binance อนุญาต (Leverage Bracket); ตรวจทั้งตอนตั้ง Leverage และตอนส่ง Order (กรณีตั้งค่านอกระบบ) (**Decided D-11**) |
 | FR-PLN-07 | Strategy Parameter ที่เกี่ยวกับ Leverage ถูกจำกัดไม่ให้เกินค่าของ Plan อัตโนมัติ (**Decided D-11**) |
 | FR-PLN-08 | วงเงินและ Leverage ตาม Plan ใช้กับ**ทั้ง Paper และ Live** เพื่อให้ทดสอบภายใต้เงื่อนไขเดียวกัน (P-03) (**Decided D-11**) |
@@ -329,6 +336,7 @@ Bot/Strategy┘                  (approve/reject)  (lifecycle,          (interfa
 | FR-PLN-11 | **เมื่อ Workspace เกิน Entitlement** (ลด Plan หรือ Admin ลดค่า): ไม่ลบข้อมูล, ไม่ปิด Position และไม่เปลี่ยน Leverage ให้; Portfolio ส่วนเกินยังดูได้แต่เริ่ม Bot ไม่ได้; Bot ส่วนเกินถูก Pause และแจ้ง User ให้เลือกตัวที่จะเก็บ; ห้ามเปิด/เพิ่ม Position ที่เกินเกณฑ์ (รวม Symbol ที่ Leverage เกิน) จนกว่าจะอยู่ในเกณฑ์; เสียสิทธิ์ Live แล้วยังลด/ปิด Position ได้ (**Decided D-11**) |
 | FR-PLN-12 | การเพิ่มค่า Entitlement มีผลทันที; การลดค่าต้องแจ้ง User ล่วงหน้า และทุกการปรับค่าบันทึกใน Audit log (**Decided D-11**) |
 | FR-PLN-13 | **Phase 1 ไม่เก็บเงินจริง** Platform Admin กำหนด Plan ให้ Workspace เอง; ไม่มี trial แยกเพราะมี Free; ราคา, ผู้ให้บริการรับชำระเงิน และเวลาเริ่มเก็บเงิน ตัดสินใน **D-21** (**Decided D-11**) |
+| FR-PLN-14 | **Order ค้างเมื่อ Entitlement ลดลง** (ลด Plan, Admin ลดค่า): ยกเลิก Order ค้างที่เปิด/เพิ่ม Position ซึ่งทำให้เกินเกณฑ์ใหม่ (วงเงิน, Leverage ของ Symbol, จำนวน Portfolio ที่มี Bot); **เสียสิทธิ์ Live** = ยกเลิก Order ค้างที่เปิด/เพิ่ม Position ทุกตัวใน Live; ทุกกรณี**คง TP/SL และ Order ที่ลด Position ไว้** (**Decided — Review 2026-09-22**) |
 
 ### 2.15 Deployment & Non-functional Requirements
 | ID | Requirement |
@@ -346,7 +354,7 @@ Bot/Strategy┘                  (approve/reject)  (lifecycle,          (interfa
 | NFR-11 | Backup PostgreSQL ได้ แม้ในโหมด VM เดียว |
 | NFR-12 | **Latency:** ส่ง Order Intent ภายใน 1 วินาทีหลังข้อมูลที่ทำให้เกิดสัญญาณเข้ามา (ราคาอัปเดตหรือ Candle ปิด) ใน 95% ของครั้ง และวัดเป็น metric (**Decided D-18**) |
 | NFR-13 | **Availability ช่วงทดลอง (VM เดียว):** 99% ต่อเดือน; แจ้ง User ล่วงหน้าเมื่อปิดปรับปรุง (**Decided D-18**) |
-| NFR-14 | **Live เมื่อระบบกลับมาทำงาน:** ทำ Reconciliation ก่อนเสมอ ถ้าตรงกัน Bot ทำงานต่อ ถ้าไม่ตรงให้ Pause Bot และแจ้ง User (**Decided D-18**) |
+| NFR-14 | **Live เมื่อระบบกลับมาทำงาน:** Bot คง**สถานะและเหตุผลการ Pause เดิม**เสมอ; ทำ Reconciliation ก่อน ถ้าตรงกัน **เฉพาะ Bot ที่เป็น `RUNNING` ก่อนระบบหยุด**ทำงานต่อ ถ้าไม่ตรงให้ Pause ด้วยเหตุผล `RECONCILIATION_MISMATCH` และแจ้ง User; Reconciliation ที่ผ่านไม่ใช่เหตุให้ Bot ที่ Pause อยู่กลับมาทำงาน (ต้องให้ User สั่ง Resume ตาม FR-STR-10) (**Decided D-18**, ปรับตาม Review 2026-09-22) |
 | NFR-15 | **Paper เมื่อระบบกลับมาทำงาน:** จำลองย้อนหลังด้วย Candle 1m ของช่วงที่ระบบหยุด เพื่อตรวจว่า TP / SL / Liquidation ถูกแตะหรือไม่; **ไม่เปิด Position ใหม่ย้อนหลัง**; ถ้า Candle เดียวแตะทั้ง TP และ SL ให้ถือว่าโดน SL ก่อน (**Decided D-18**) |
 | NFR-16 | **เป้าขนาดระบบช่วงทดลอง:** User ใช้งานพร้อมกัน 20, Bot รันพร้อมกัน 100, Symbol 50, VM 4 vCPU / RAM 16 GB — ต้องยืนยันด้วยการทดสอบโหลดจริงก่อนใช้งาน (**Decided D-18**) |
 | NFR-17 | **เกณฑ์ย้ายไป GCP:** เมื่อข้อใดข้อหนึ่งเกิดขึ้น: CPU หรือ RAM เกิน 70% ต่อเนื่อง, ต้องการ availability เกิน 99%, หรือก่อนเปิด Live ให้ User ภายนอกจำนวนมาก (**Decided D-18**) |
@@ -367,7 +375,7 @@ Bot/Strategy┘                  (approve/reject)  (lifecycle,          (interfa
 | FR-ADM-03 | จัดการ Symbol Whitelist: เพิ่ม, ปิดการเปิด Position ใหม่, นำออก (FR-MKT-13 ถึง 15) (**Decided D-20**) |
 | FR-ADM-04 | ปรับค่าระบบ: slippage และ fee rate ของ Paper, เงินเริ่มต้นของ Paper Main Account, ความถี่ในการส่งราคาให้ Strategy (**Decided D-20**) |
 | FR-ADM-05 | จัดการ User: ดูรายชื่อ User และสรุปของ Workspace (Plan, จำนวน Portfolio/Bot, สถานะ Bot), เปลี่ยน Plan ของ Workspace, ระงับบัญชี (**Decided D-20**) |
-| FR-ADM-06 | **Global Kill Switch:** Pause Bot ทุกตัวและหยุดรับ Order ใหม่ทั้งระบบ **ไม่ปิด Position ของ User** (**Decided D-20**) |
+| FR-ADM-06 | **Global Kill Switch:** Pause Bot ทุกตัว; **ยกเลิก Order ค้างที่เปิดหรือเพิ่ม Position** ทุกตัว; **คง TP/SL และ Order ที่ลด Position ไว้**; Risk Engine ปฏิเสธ Order เปิด/เพิ่ม Position ใหม่ทั้งหมด แต่ User ยัง**ลดหรือปิด Position (reduce-only) และแก้ TP/SL ให้เสี่ยงน้อยลง**ได้; **ไม่ปิด Position ของ User** (**Decided D-20**, ปรับตาม Review 2026-09-22) |
 | FR-ADM-07 | ดูสถานะของระบบ: market data stream, Reconciliation, latency และภาระของ VM (NFR-10, NFR-16) (**Decided D-20**) |
 | FR-ADM-08 | ดูข้อมูลการเทรดของ User ได้แบบ**อ่านอย่างเดียวเพื่อช่วยแก้ปัญหา** และทุกครั้งที่เปิดดูต้องบันทึกใน Audit log; ต้องระบุในนโยบายความเป็นส่วนตัว (เกี่ยวกับ D-17) (**Decided D-20**) |
 | FR-ADM-09 | **Admin ห้าม:** เห็น API Secret ของ User, ส่ง Order หรือเทรดแทน User, ปิด Position ของ User, แก้ประวัติ Order / Fill / Audit log; ทุกการกระทำของ Admin บันทึกใน Audit log แบบแก้ไขไม่ได้ (NFR-09) (**Decided D-20**) |
@@ -654,7 +662,9 @@ Bot/Strategy┘                  (approve/reject)  (lifecycle,          (interfa
 | Bot Status | `RUNNING`, `PAUSED`, `STOPPED`, `ERROR` (ชุดสุดท้ายกำหนดตอน design); `PAUSED` ใช้รวมถึงกรณีที่ Manual เข้าแทรก (FR-STR-10) | |
 | Signal | ผลการตัดสินของ Strategy (เช่น enter long) ก่อนแปลงเป็น Order Intent | |
 | Order Owner | ผู้สร้าง Order: Bot ID, `MANUAL` หรือ `EXTERNAL` (Order ที่เกิดนอกระบบ) บันทึกในทุก Order และ Fill (D-02, D-14) | "Source", "Creator" |
-| Attribution | การระบุว่า Order/Fill/PnL เป็นของ Bot ไหน คำนวณจาก Order Owner (D-02) | |
+| Attribution | การระบุว่าผล (PnL, Fee, Funding) เป็นของ Bot ไหน คำนวณจาก **Position Episode** ไม่ใช่ Order Owner (FR-PF-11) | |
+| Position Episode | ช่วงชีวิตของ Position ของ Symbol หนึ่งตั้งแต่เปิดจากศูนย์จนกลับเป็นศูนย์ ผลทั้งหมดเป็นของผู้ที่เปิด (FR-PF-11) | "Trade" (ใช้ได้ใน UI เป็นคำอธิบาย) |
+| Trading Restriction | สถานะของ Portfolio ที่ห้ามส่ง Order ผ่านระบบเพราะบัญชีอยู่ในโหมดที่ไม่รองรับ (FR-LIVE-19) | "Locked", "Frozen" |
 | Chart Workspace | layout ของหน้า Trading Terminal ที่ User บันทึกได้ (**Proposed**) | |
 
 ### 6.8 Analytics
@@ -1218,6 +1228,21 @@ Paper (Virtual Sub-account) ใช้ One-way + Single-Asset ตายตัว 
 **สิ่งที่ต้องทำใน design**
 - Exchange Venue เป็นส่วนหนึ่งของ Exchange Account และ Binance Execution Adapter / Market Data แยกตาม Venue
 - ติดตามและตรวจสอบ API ของ Binance TH เมื่อเปิด feature
+
+#### Review 2026-09-22 — แก้ช่องว่างใน requirement ✅ Decided
+
+| # | ประเด็น | Decision | Requirement |
+|---|---|---|---|
+| 1 | Global Kill Switch ขัดกับสิทธิ์ปิด Position | ยกเลิก Order เปิด/เพิ่ม Position, คง TP/SL, User ลด/ปิด Position ได้ | FR-ADM-06 |
+| 2 | Restart ทำให้ Bot ที่ Pause กลับมาทำงาน | คงสถานะเดิม; เฉพาะ Bot ที่ RUNNING ทำงานต่อหลัง Reconciliation ผ่าน | NFR-14 |
+| 3 | โหมดบัญชีที่ไม่รองรับ | Trading Restriction ระดับ Portfolio, ห้ามส่ง Order ทุกชนิด, ปลดอัตโนมัติเมื่อโหมดกลับมา | FR-LIVE-12, FR-LIVE-19 |
+| 4 | Bracket ไม่มีกติกา partial fill / วางไม่สำเร็จ | ป้องกันตามจำนวนที่ fill; SL วางไม่สำเร็จ → ปิดส่วนที่ไม่มี SL (fail-safe) | FR-ORD-14..17 |
+| 5 | Order ค้างกับวงเงิน | Order ค้างจองวงเงินข้าม Portfolio; Entitlement ลดลง → ยกเลิก Order เปิด/เพิ่มที่เกิน | FR-PLN-05, FR-PLN-14 |
+| 6 | Attribution ผลของ Bot | ใช้ Position Episode แทน Order Owner | FR-PF-10/11, FR-ANL-03 |
+| 7 | Reset ไม่มีกติกาเงิน / การนับ | เงินคืน Paper Main, Portfolio ใหม่เริ่ม 0; Archived ไม่นับ limit | FR-ACC-09, FR-ACC-12, FR-PF-00a |
+| 8 | Marketable Limit ของ Paper เกินราคา Limit | fill ไม่แย่กว่าราคา Limit | FR-ORD-08 |
+
+**ผลต่อ Decision เดิม:** ข้อ 7 เปลี่ยนความหมายของ D-19 ข้อ 5 ("เริ่ม Portfolio ใหม่ด้วยเงินตั้งต้น") เป็นเงินจาก Paper Main Account; ข้อ 1 ขยาย D-20
 
 #### D-22 — ภาษาของระบบ ✅ Decided (2026-09-22)
 

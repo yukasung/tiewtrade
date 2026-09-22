@@ -2,7 +2,7 @@
 
 | Field | Value |
 |---|---|
-| Status | **v0.2** — M-01 ถึง M-05 Decided (2026-09-22); ปรับตาม ADR-0009 ถึง 0013 (Accepted) |
+| Status | **v0.3** — M-01 ถึง M-05 Decided; ปรับตาม ADR-0009 ถึง 0013 และ Requirements Review 2026-09-22 (Trading Restriction, Position Episode, Reset) |
 | Date | 2026-09-22 |
 | Based on | [MVP Requirements](../requirements/mvp.md), [Architecture](../architecture/architecture.md), [Calculation Spec](calculation.md) |
 | Scope | ตาราง, คอลัมน์หลัก, constraint, index, partitioning, tenant isolation (RLS), retention |
@@ -354,6 +354,8 @@ CREATE TABLE portfolios (
   trading_mode  TEXT NOT NULL CHECK (trading_mode IN ('PAPER','LIVE')),           -- สืบทอดจากบัญชี (FR-ACC-04)
   name          TEXT NOT NULL CHECK (LENGTH(name) <= 100),
   status        TEXT NOT NULL DEFAULT 'ACTIVE' CHECK (status IN ('ACTIVE','ARCHIVED')),  -- ARCHIVED หลัง Reset (FR-ACC-09)
+  trading_restriction TEXT CHECK (trading_restriction IN ('UNSUPPORTED_ACCOUNT_MODE')),     -- FR-LIVE-19; NULL = ปกติ
+  restricted_at TIMESTAMPTZ,
   archived_at   TIMESTAMPTZ,
   created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
   CHECK ((status = 'ARCHIVED') = (archived_at IS NOT NULL))
@@ -363,7 +365,8 @@ CREATE INDEX ON portfolios (workspace_id, status);
 CREATE UNIQUE INDEX portfolios_one_active_per_wallet ON portfolios (wallet_id) WHERE status = 'ACTIVE';
 ```
 - ความสอดคล้อง `market_type = wallets.wallet_type` และ `trading_mode = exchange_accounts.trading_mode` ตรวจใน application ตอนสร้าง (ค่าไม่เปลี่ยนภายหลัง)
-- จำนวน Portfolio ต่อ Plan (FR-PLN-03) ตรวจใน application
+- จำนวน Portfolio ต่อ Plan (FR-PLN-03) ตรวจใน application และนับเฉพาะ `status = 'ACTIVE'` (FR-ACC-12)
+- `trading_restriction IS NOT NULL` → Risk Engine ปฏิเสธ Order ทุกชนิด ยกเว้นการยกเลิก (FR-LIVE-19)
 
 ### 6.2 symbol_settings, positions
 ```sql
@@ -385,6 +388,7 @@ CREATE TABLE positions (
   quantity        dec    NOT NULL,             -- มีเครื่องหมาย (Futures); Spot = Base Asset ที่ถือ ≥ 0
   entry_price     dec,                         -- Futures: EP; Spot: Average Cost แบบไม่รวม Fee (C-07)
   isolated_wallet dec,                         -- Futures isolated เท่านั้น
+  episode_id      UUID,                        -- Position Episode ปัจจุบัน; NULL เมื่อ quantity = 0 (FR-PF-11)
   updated_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
   PRIMARY KEY (portfolio_id, symbol_id, position_side),
   CHECK ((quantity = 0) = (entry_price IS NULL))
@@ -414,7 +418,7 @@ CREATE TABLE bots (
   status           TEXT NOT NULL CHECK (status IN ('RUNNING','PAUSED','STOPPED','ERROR')),
   pause_reason     TEXT CHECK (pause_reason IN ('MANUAL_INTERVENTION','EXTERNAL_CHANGE','ACCOUNT_MODE_CHANGED',
                                                 'ENTITLEMENT_EXCEEDED','RECONCILIATION_MISMATCH','GLOBAL_KILL_SWITCH',
-                                                'KILL_SWITCH','RISK_LIMIT','USER')),
+                                                'KILL_SWITCH','RISK_LIMIT','PROTECTION_FAILED','TRADING_RESTRICTION','USER')),
   created_at       TIMESTAMPTZ NOT NULL DEFAULT now(),
   started_at       TIMESTAMPTZ,
   stopped_at       TIMESTAMPTZ,
@@ -506,6 +510,7 @@ CREATE TABLE fills (                             -- append-only
   fee               dec NOT NULL,
   fee_asset         TEXT NOT NULL,
   realized_pnl      dec NOT NULL DEFAULT 0,      -- gross ไม่รวม Fee (Glossary, Calculation §2.6/§3.1)
+  episode_id        UUID NOT NULL,               -- ผลเป็นของ Episode (FR-PF-11); Fill ที่กลับทิศแยกเป็น 2 แถว (ปิด / เปิด)
   is_liquidation    BOOLEAN NOT NULL DEFAULT false,
   filled_at         TIMESTAMPTZ NOT NULL,
   UNIQUE (order_id, exchange_trade_id)           -- idempotency (Architecture §6.3)
@@ -525,13 +530,14 @@ CREATE TABLE ledger_entries (                    -- append-only
                     'TRANSFER_IN','TRANSFER_OUT','VIRTUAL_DEPOSIT',
                     'LIQUIDATION_CLEARANCE_FEE','LIQUIDATION_FORFEIT','INSURANCE_ABSORBED',
                     'ISOLATED_MARGIN_MOVE','EXTERNAL_DEPOSIT','EXTERNAL_WITHDRAWAL',
-                    'RECONCILIATION_ADJUSTMENT','PORTFOLIO_RESET')),
+                    'RECONCILIATION_ADJUSTMENT')),
   asset           TEXT NOT NULL,
   amount          dec  NOT NULL,                 -- + เข้า, − ออก
   balance_after   dec  NOT NULL,
   is_capital_flow BOOLEAN NOT NULL,              -- เงินเข้า/ออก ไม่นับเป็นกำไร (FR-ACC-11, D-14)
   symbol_id       BIGINT REFERENCES symbols,
   fill_id         BIGINT REFERENCES fills,
+  episode_id      UUID,                          -- Fee / Funding / Liquidation ของ Position (FR-PF-11)
   idempotency_key TEXT NOT NULL UNIQUE,          -- เช่น funding:{portfolio}:{symbol_id}:{funding_time}
   occurred_at     TIMESTAMPTZ NOT NULL,
   created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
@@ -543,7 +549,33 @@ CREATE INDEX ON ledger_entries (symbol_id) WHERE symbol_id IS NOT NULL;
 ```
 - `idempotency_key` รวม Portfolio เสมอสำหรับ Funding (แก้ประเด็นใน Calculation §2.9)
 - **Invariant (property test):** `wallet_balances.wallet_balance` = ผลรวม `amount` ของ ledger ของ Wallet และ asset นั้น
-- `is_capital_flow = true` สำหรับ `TRANSFER_*`, `VIRTUAL_DEPOSIT`, `EXTERNAL_*`, `PORTFOLIO_RESET`
+- `is_capital_flow = true` สำหรับ `TRANSFER_*`, `VIRTUAL_DEPOSIT`, `EXTERNAL_*`
+- **Reset Portfolio (FR-ACC-09):** `TRANSFER_OUT` ยอดคงเหลือทั้งหมดจาก Wallet ของ Sub-account → `TRANSFER_IN` ที่ Wallet ของ Paper Main (อ้าง Portfolio เดิม) ใน transaction เดียว แล้วจึง Archive Portfolio เดิมและสร้าง Portfolio ใหม่ที่ยอด 0
+
+### 6.6a position_episodes (FR-PF-11, FR-ANL-03)
+```sql
+CREATE TABLE position_episodes (
+  episode_id     UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  workspace_id   UUID NOT NULL,
+  portfolio_id   UUID NOT NULL REFERENCES portfolios,
+  symbol_id      BIGINT NOT NULL REFERENCES symbols,
+  side           TEXT NOT NULL CHECK (side IN ('LONG','SHORT')),
+  opened_by_type TEXT NOT NULL CHECK (opened_by_type IN ('BOT','MANUAL','EXTERNAL')),  -- เจ้าของผลของ Episode
+  opened_by_bot_id UUID REFERENCES bots,
+  opened_at      TIMESTAMPTZ NOT NULL,
+  closed_at      TIMESTAMPTZ,
+  realized_pnl   dec NOT NULL DEFAULT 0,        -- สรุปจาก fills (gross)
+  fees           dec NOT NULL DEFAULT 0,
+  funding        dec NOT NULL DEFAULT 0,
+  CHECK ((opened_by_type = 'BOT') = (opened_by_bot_id IS NOT NULL))
+);
+CREATE INDEX ON position_episodes (portfolio_id, opened_at);
+CREATE INDEX ON position_episodes (opened_by_bot_id) WHERE opened_by_bot_id IS NOT NULL;
+-- Episode เปิดได้ครั้งละ 1 ต่อ (Portfolio, Symbol) ใน One-way
+CREATE UNIQUE INDEX position_episodes_one_open ON position_episodes (portfolio_id, symbol_id) WHERE closed_at IS NULL;
+```
+- Analytics ระดับ Bot = Episode ที่ `opened_by_bot_id` เป็น Bot นั้น; Win Rate นับต่อ Episode
+- ยอดสรุปใน Episode ต้องเท่ากับผลรวมของ fills / ledger ที่อ้าง Episode เดียวกัน (property test)
 
 ### 6.7 performance_snapshots (FR-ANL)
 ```sql
@@ -753,6 +785,8 @@ CREATE INDEX ON audit_log (actor_type, actor_id, occurred_at);
 | D-01 1 บัญชี = 1 Portfolio = 1 Market Type | `wallets` UNIQUE (account, type) + `portfolios_one_active_per_wallet` |
 | D-02 Active Bot 1 ตัว | `bots_one_active_per_portfolio` |
 | D-02 / D-14 Order Owner | `orders.owner_type` + CHECK กับ `bot_id` |
+| FR-PF-11 Position Episode / Attribution | `position_episodes`, `episode_id` ใน positions / fills / ledger_entries |
+| FR-LIVE-19 Trading Restriction | `portfolios.trading_restriction` |
 | D-03 One-way, เผื่อ Hedge | `positions.position_side` (MVP = `BOTH`) |
 | D-04 / FR-SEC-11 บัญชี Binance เชื่อมที่เดียว | `exchange_accounts_binance_uid_uq` |
 | D-05 / C-07 Paper, Spot Average Cost | `positions.entry_price` (fee-exclusive), `fills.realized_pnl` (gross) |

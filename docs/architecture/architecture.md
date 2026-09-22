@@ -146,10 +146,10 @@ flowchart LR
 |---|---|---|
 | `market` | Venue, Market Type, Symbol, Symbol Filters, Candle, Timeframe, price / mark / funding events, การปัดเศษตาม filters | FR-MKT, FR-LGL-03 |
 | `indicators` | Volume, SMA, EMA, Bollinger Bands, RSI, MACD, ATR แบบ incremental + **test vectors** (JSON) ที่ frontend ใช้ร่วม | FR-CHT-03, FR-CHT-06 |
-| `portfolio` | Wallet, Position (Portfolio, Symbol, Position Side), apply Fill / Fee / Funding / Transfer / Virtual Deposit, Realized / Unrealized PnL, Open Notional | FR-PF, FR-ACC-08..11, FR-PLN-04 |
+| `portfolio` | Wallet, Position (Portfolio, Symbol, Position Side), Position Episode และ Attribution (FR-PF-11), apply Fill / Fee / Funding / Transfer / Virtual Deposit, Realized / Unrealized PnL, Open Notional | FR-PF, FR-ACC-08..11, FR-PLN-04 |
 | `margin` | Initial / Maintenance Margin, Leverage Bracket, Margin Ratio, Liquidation Price (cross / isolated, One-way, Single-Asset) | FR-MRG, D-03 |
-| `orders` | Order Intent, Order, Bracket (Entry / TP / SL), state machine, Order Owner, **Client Order ID scheme** | FR-ORD, FR-MAN, D-14 |
-| `risk` | Risk Engine: Entitlement (Leverage, Open Notional, Live), Portfolio Risk Rules, กติกา Active Bot / Manual (D-02), Kill Switch, Global Kill Switch, Symbol status | FR-RSK, FR-PLN, FR-ADM-06 |
+| `orders` | Order Intent, Order, Bracket (Entry / TP / SL) พร้อมกติกา partial fill และ fail-safe (FR-ORD-14..17), state machine, Order Owner, **Client Order ID scheme** | FR-ORD, FR-MAN, D-14 |
+| `risk` | Risk Engine: Entitlement (Leverage, Open Notional, Live), Portfolio Risk Rules, กติกา Active Bot / Manual (D-02), Kill Switch, Global Kill Switch, Symbol status, Trading Restriction (FR-LIVE-19) | FR-RSK, FR-PLN, FR-ADM-06 |
 | `execution` | port `ExecutionAdapter` + `PaperExecutionAdapter` (Paper Fill Model) + trigger TP / SL / liquidation ของ Paper | FR-ORD-06..13, FR-MRG-05 |
 | `strategy` | Strategy interface, Strategy Context (read-only), Parameter Schema + validation, clamp Leverage ตาม Plan | FR-STR, FR-PLN-07 |
 | `bot` | Bot lifecycle (`RUNNING` / `PAUSED` / `STOPPED` / `ERROR`), pause reasons, Active Bot | FR-STR-09/10, D-02 |
@@ -340,7 +340,7 @@ sequenceDiagram
 ```
 
 ### 7.7 Global Kill Switch (FR-ADM-06)
-Admin → api (2FA) → บันทึก flag ใน Postgres + audit log → publish ไปทุก engine → ทุก Portfolio Pause Bot; Risk Engine ปฏิเสธ Order ใหม่ทุกตัวขณะ flag เปิด (ลด / ปิด Position ยังทำได้ตาม FR-PLN-05) → notifier แจ้งทุก Workspace ที่ได้รับผล
+Admin → api (2FA) → บันทึก flag ใน Postgres + audit log → publish ไปทุก engine → ทุก Workspace: Pause Bot, ยกเลิก Order ค้างที่เปิด/เพิ่ม Position (คง TP/SL และ Order ที่ลด Position); Risk Engine ปฏิเสธ Order เปิด/เพิ่ม Position ใหม่ขณะ flag เปิด แต่ reduce-only และการแก้ TP/SL ให้เสี่ยงน้อยลงยังทำได้ (FR-ADM-06) → notifier แจ้งทุก Workspace ที่ได้รับผล
 
 ---
 
