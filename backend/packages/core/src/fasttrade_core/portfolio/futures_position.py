@@ -3,6 +3,7 @@ from decimal import Decimal
 
 from fasttrade_core._decimal import ZERO, calc
 from fasttrade_core.market import OrderSide
+from fasttrade_core.portfolio._fill import require_positive_fill
 
 
 @dataclass(frozen=True, slots=True)
@@ -25,6 +26,15 @@ class FuturesPosition:
     @property
     def is_flat(self) -> bool:
         return self.quantity == 0
+
+    def open_details(self) -> tuple[Decimal, str]:
+        """Entry price and episode of an open position; raises if the position is flat.
+
+        Checked explicitly rather than with ``assert``, which ``python -O`` removes.
+        """
+        if self.entry_price is None or self.episode_id is None:
+            raise ValueError("position is flat")
+        return self.entry_price, self.episode_id
 
 
 FLAT = FuturesPosition(quantity=ZERO, entry_price=None, episode_id=None)
@@ -60,40 +70,64 @@ def apply_futures_fill(
     ``new_episode_id`` is used only if this fill opens an episode; the caller supplies
     it so the core stays deterministic.
     """
-    if quantity <= 0 or price <= 0:
-        raise ValueError("fill quantity and price must be positive")
+    require_positive_fill(quantity, price)
     signed_fill = side.sign * quantity
 
     if position.is_flat:
-        opened = FuturesPosition(signed_fill, price, new_episode_id)
-        return FuturesFillResult(opened, ZERO, ZERO, quantity, None, new_episode_id)
+        return FuturesFillResult(
+            position=FuturesPosition(signed_fill, price, new_episode_id),
+            realized_pnl=ZERO,
+            closed_quantity=ZERO,
+            opened_quantity=quantity,
+            closed_episode_id=None,
+            opened_episode_id=new_episode_id,
+        )
 
-    # Guaranteed by FuturesPosition.__post_init__ for an open position.
-    assert position.entry_price is not None
-    assert position.episode_id is not None
+    entry_price, episode_id = position.open_details()
     same_direction = (position.quantity > 0) == (signed_fill > 0)
     size = abs(position.quantity)
 
     if same_direction:
-        entry = (size * position.entry_price + quantity * price) / (size + quantity)
-        grown = FuturesPosition(position.quantity + signed_fill, entry, position.episode_id)
-        return FuturesFillResult(grown, ZERO, ZERO, quantity, None, None)
+        average_entry = (size * entry_price + quantity * price) / (size + quantity)
+        return FuturesFillResult(
+            position=FuturesPosition(position.quantity + signed_fill, average_entry, episode_id),
+            realized_pnl=ZERO,
+            closed_quantity=ZERO,
+            opened_quantity=quantity,
+            closed_episode_id=None,
+            opened_episode_id=None,
+        )
 
     closing = min(quantity, size)
     side_of_position = 1 if position.quantity > 0 else -1
-    realized = closing * (price - position.entry_price) * side_of_position
+    realized = closing * (price - entry_price) * side_of_position
     remaining = quantity - closing
 
     if closing < size:
-        reduced = FuturesPosition(
-            position.quantity + signed_fill, position.entry_price, position.episode_id
+        return FuturesFillResult(
+            position=FuturesPosition(position.quantity + signed_fill, entry_price, episode_id),
+            realized_pnl=realized,
+            closed_quantity=closing,
+            opened_quantity=ZERO,
+            closed_episode_id=None,
+            opened_episode_id=None,
         )
-        return FuturesFillResult(reduced, realized, closing, ZERO, None, None)
 
     if remaining == 0:
-        return FuturesFillResult(FLAT, realized, closing, ZERO, position.episode_id, None)
+        return FuturesFillResult(
+            position=FLAT,
+            realized_pnl=realized,
+            closed_quantity=closing,
+            opened_quantity=ZERO,
+            closed_episode_id=episode_id,
+            opened_episode_id=None,
+        )
 
-    flipped = FuturesPosition(side.sign * remaining, price, new_episode_id)
     return FuturesFillResult(
-        flipped, realized, closing, remaining, position.episode_id, new_episode_id
+        position=FuturesPosition(side.sign * remaining, price, new_episode_id),
+        realized_pnl=realized,
+        closed_quantity=closing,
+        opened_quantity=remaining,
+        closed_episode_id=episode_id,
+        opened_episode_id=new_episode_id,
     )

@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from decimal import Decimal
 
 from fasttrade_core._decimal import ZERO, calc
+from fasttrade_core.portfolio._fill import require_positive_fill
 
 
 @dataclass(frozen=True, slots=True)
@@ -22,6 +23,15 @@ class SpotHolding:
         empty = self.quantity == 0
         if empty != (self.average_cost is None) or empty != (self.episode_id is None):
             raise ValueError("an empty holding has no cost or episode; a non-empty one has both")
+
+    def open_details(self) -> tuple[Decimal, str]:
+        """Average cost and episode of a non-empty holding; raises if it is empty.
+
+        Checked explicitly rather than with ``assert``, which ``python -O`` removes.
+        """
+        if self.average_cost is None or self.episode_id is None:
+            raise ValueError("holding is empty")
+        return self.average_cost, self.episode_id
 
 
 NO_HOLDING = SpotHolding(quantity=ZERO, average_cost=None, episode_id=None)
@@ -55,27 +65,26 @@ def apply_spot_buy(
     new_episode_id: str,
 ) -> SpotBuyResult:
     """Buy with the fee deducted from the received Base Asset (Verify C-06)."""
-    if quantity <= 0 or price <= 0:
-        raise ValueError("fill quantity and price must be positive")
+    require_positive_fill(quantity, price)
     received = quantity * (1 - fee_rate)
     fee_value = quantity * fee_rate * price
     if holding.quantity == 0:
         return SpotBuyResult(
-            SpotHolding(received, price, new_episode_id),
-            received,
-            quantity * price,
-            fee_value,
-            new_episode_id,
+            holding=SpotHolding(received, price, new_episode_id),
+            received_quantity=received,
+            quote_spent=quantity * price,
+            fee_quote_value=fee_value,
+            opened_episode_id=new_episode_id,
         )
-    assert holding.average_cost is not None
+    average_cost, episode_id = holding.open_details()
     total = holding.quantity + received
-    cost = (holding.quantity * holding.average_cost + received * price) / total
+    new_cost = (holding.quantity * average_cost + received * price) / total
     return SpotBuyResult(
-        SpotHolding(total, cost, holding.episode_id),
-        received,
-        quantity * price,
-        fee_value,
-        None,
+        holding=SpotHolding(total, new_cost, episode_id),
+        received_quantity=received,
+        quote_spent=quantity * price,
+        fee_quote_value=fee_value,
+        opened_episode_id=None,
     )
 
 
@@ -84,23 +93,17 @@ def apply_spot_sell(
     holding: SpotHolding, quantity: Decimal, price: Decimal, fee_rate: Decimal
 ) -> SpotSellResult:
     """Sell with the fee deducted from the received Quote Asset (Verify C-06)."""
-    if quantity <= 0 or price <= 0:
-        raise ValueError("fill quantity and price must be positive")
+    require_positive_fill(quantity, price)
     if quantity > holding.quantity:
         raise ValueError("cannot sell more than the holding")
-    # Guaranteed by SpotHolding.__post_init__ for a non-empty holding.
-    assert holding.average_cost is not None
-    assert holding.episode_id is not None
+    average_cost, episode_id = holding.open_details()
     gross = quantity * price
     fee = gross * fee_rate
-    realized = quantity * (price - holding.average_cost)
     left = holding.quantity - quantity
-    if left == 0:
-        return SpotSellResult(NO_HOLDING, realized, gross - fee, fee, holding.episode_id)
     return SpotSellResult(
-        SpotHolding(left, holding.average_cost, holding.episode_id),
-        realized,
-        gross - fee,
-        fee,
-        None,
+        holding=SpotHolding(left, average_cost, episode_id) if left else NO_HOLDING,
+        realized_pnl=quantity * (price - average_cost),
+        quote_received=gross - fee,
+        fee=fee,
+        closed_episode_id=None if left else episode_id,
     )

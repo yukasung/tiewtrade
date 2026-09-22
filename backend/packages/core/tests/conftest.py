@@ -1,3 +1,4 @@
+from collections.abc import Callable
 from decimal import Decimal, setcontext
 
 import pytest
@@ -8,8 +9,12 @@ from fasttrade_core.market import LeverageBracket, LeverageBrackets
 # Expected values in tests must be computed with the same precision as the core.
 setcontext(DECIMAL_CONTEXT.copy())
 
+# margin_gap(price, quantity, entry, wallet, other_mm=0, other_upnl=0) -> Decimal
+MarginGap = Callable[..., Decimal]
 
-def make_brackets() -> LeverageBrackets:
+
+@pytest.fixture(scope="session")
+def brackets() -> LeverageBrackets:
     """Illustrative BTCUSDT-like brackets with continuous maintenance amounts.
 
     Tier 4 (2.5%, cum 16,300) matches the Binance documentation example. These are
@@ -28,5 +33,23 @@ def make_brackets() -> LeverageBrackets:
 
 
 @pytest.fixture(scope="session")
-def brackets() -> LeverageBrackets:
-    return make_brackets()
+def margin_gap(brackets: LeverageBrackets) -> MarginGap:
+    """Margin Balance - Maintenance Margin if this position's mark price were ``price``.
+
+    Independent restatement of calculation spec §2.4 used to check liquidation prices;
+    other positions are held constant through ``other_mm`` and ``other_upnl``.
+    """
+
+    def gap(
+        price: Decimal,
+        quantity: Decimal,
+        entry: Decimal,
+        wallet: Decimal,
+        other_mm: Decimal = Decimal(0),
+        other_upnl: Decimal = Decimal(0),
+    ) -> Decimal:
+        balance = wallet + other_upnl + quantity * (price - entry)
+        maintenance = other_mm + brackets.maintenance_margin(abs(quantity) * price)
+        return balance - maintenance
+
+    return gap

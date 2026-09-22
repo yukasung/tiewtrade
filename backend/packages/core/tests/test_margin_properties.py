@@ -1,3 +1,4 @@
+from collections.abc import Callable
 from decimal import Decimal as D
 
 from hypothesis import assume, given
@@ -6,29 +7,18 @@ from hypothesis import strategies as st
 from fasttrade_core.margin import MarginState, liquidation_price
 from fasttrade_core.market import LeverageBrackets
 
+MarginGap = Callable[..., D]
+
 quantities = st.decimals(min_value="0.001", max_value="200", places=3)
 prices = st.decimals(min_value="1", max_value="200000", places=2)
 leverages = st.integers(min_value=2, max_value=125)
-
-
-def gap(
-    brackets: LeverageBrackets,
-    price: D,
-    quantity: D,
-    entry: D,
-    wallet: D,
-    other_mm: D,
-    other_upnl: D,
-) -> D:
-    balance = wallet + other_upnl + quantity * (price - entry)
-    return balance - other_mm - brackets.maintenance_margin(abs(quantity) * price)
 
 
 wallet_fractions = st.decimals(min_value="0.001", max_value="1.5", places=3)
 
 
 def assert_solution_or_no_root(
-    brackets: LeverageBrackets,
+    margin_gap: MarginGap,
     price: D | None,
     quantity: D,
     entry: D,
@@ -43,25 +33,30 @@ def assert_solution_or_no_root(
         # already has the sign it keeps forever:
         #   Long:  gap(0) >= 0 -> never liquidated by price
         #   Short: gap(0) <= 0 -> liquidatable at every price
-        at_zero = gap(brackets, D(0), quantity, entry, wallet, other_mm, other_upnl)
+        at_zero = margin_gap(D(0), quantity, entry, wallet, other_mm, other_upnl)
         assert at_zero >= 0 if quantity > 0 else at_zero <= 0
         return
     assert price > 0
     scale = max(D(1), abs(quantity) * entry, abs(wallet))
-    residual = gap(brackets, price, quantity, entry, wallet, other_mm, other_upnl)
+    residual = margin_gap(price, quantity, entry, wallet, other_mm, other_upnl)
     assert abs(residual) <= scale * D("1e-40")
 
 
 @given(quantities, prices, wallet_fractions, st.booleans())
 def test_isolated_liquidation_price_is_the_solution_or_none_only_without_root(
-    brackets: LeverageBrackets, size: D, entry: D, fraction: D, is_long: bool
+    brackets: LeverageBrackets,
+    margin_gap: MarginGap,
+    size: D,
+    entry: D,
+    fraction: D,
+    is_long: bool,
 ) -> None:
     # Wallet from 0.1% to 150% of notional reaches solutions in every bracket, including
     # lower brackets than the one at entry.
     quantity = size if is_long else -size
     wallet = size * entry * fraction
     price = liquidation_price(quantity, entry, wallet, brackets)
-    assert_solution_or_no_root(brackets, price, quantity, entry, wallet, D(0), D(0))
+    assert_solution_or_no_root(margin_gap, price, quantity, entry, wallet, D(0), D(0))
 
 
 @given(quantities, prices, leverages)
@@ -90,6 +85,7 @@ def test_isolated_long_liquidates_below_entry_and_short_above(
 )
 def test_cross_liquidation_price_is_the_solution_or_none_only_without_root(
     brackets: LeverageBrackets,
+    margin_gap: MarginGap,
     size: D,
     entry: D,
     fraction: D,
@@ -107,7 +103,7 @@ def test_cross_liquidation_price_is_the_solution_or_none_only_without_root(
         other_maintenance_margin=other_mm,
         other_unrealized_pnl=other_upnl,
     )
-    assert_solution_or_no_root(brackets, price, quantity, entry, wallet, other_mm, other_upnl)
+    assert_solution_or_no_root(margin_gap, price, quantity, entry, wallet, other_mm, other_upnl)
 
 
 @given(

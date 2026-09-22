@@ -1,3 +1,4 @@
+from collections.abc import Callable
 from decimal import Decimal as D
 
 import pytest
@@ -17,22 +18,9 @@ from fasttrade_core.margin import (
 )
 from fasttrade_core.market import LeverageBrackets, OrderSide
 
+MarginGap = Callable[..., D]
+
 TOLERANCE = D("1e-30")
-
-
-def margin_gap_at(
-    price: D,
-    quantity: D,
-    entry: D,
-    wallet: D,
-    brackets: LeverageBrackets,
-    other_mm: D = D(0),
-    other_upnl: D = D(0),
-) -> D:
-    """Margin Balance - Maintenance Margin if the mark price were ``price``."""
-    balance = wallet + other_upnl + quantity * (price - entry)
-    maintenance = other_mm + brackets.maintenance_margin(abs(quantity) * price)
-    return balance - maintenance
 
 
 # --- exposure ---------------------------------------------------------------
@@ -90,18 +78,20 @@ def test_isolated_state(brackets: LeverageBrackets) -> None:
 # --- liquidation price (calculation spec §2.5) --------------------------------
 
 
-def test_isolated_long_liquidation_price(brackets: LeverageBrackets) -> None:
+def test_isolated_long_liquidation_price(brackets: LeverageBrackets, margin_gap: MarginGap) -> None:
     price = liquidation_price(D(1), D(100), D(10), brackets)
     assert price == D(-90) / D("-0.996")
     assert price is not None
-    assert abs(margin_gap_at(price, D(1), D(100), D(10), brackets)) < TOLERANCE
+    assert abs(margin_gap(price, D(1), D(100), D(10))) < TOLERANCE
 
 
-def test_isolated_short_liquidation_price(brackets: LeverageBrackets) -> None:
+def test_isolated_short_liquidation_price(
+    brackets: LeverageBrackets, margin_gap: MarginGap
+) -> None:
     price = liquidation_price(D(-1), D(100), D(10), brackets)
     assert price == D(110) / D("1.004")
     assert price is not None
-    assert abs(margin_gap_at(price, D(-1), D(100), D(10), brackets)) < TOLERANCE
+    assert abs(margin_gap(price, D(-1), D(100), D(10))) < TOLERANCE
 
 
 def test_long_without_liquidation_price_returns_none(brackets: LeverageBrackets) -> None:
@@ -113,28 +103,32 @@ def test_flat_position_has_no_liquidation_price(brackets: LeverageBrackets) -> N
     assert liquidation_price(D(0), D(100), D(10), brackets) is None
 
 
-def test_bracket_is_chosen_at_the_liquidation_notional(brackets: LeverageBrackets) -> None:
+def test_bracket_is_chosen_at_the_liquidation_notional(
+    brackets: LeverageBrackets, margin_gap: MarginGap
+) -> None:
     # Notional at entry is in bracket 3, at the liquidation price it falls into bracket 2.
     quantity, entry, wallet = D(3), D(100_000), D(60_000)
     price = liquidation_price(quantity, entry, wallet, brackets)
     assert price is not None
     assert brackets.for_notional(quantity * entry).bracket == 3
     assert brackets.for_notional(quantity * price).bracket == 2
-    assert abs(margin_gap_at(price, quantity, entry, wallet, brackets)) < TOLERANCE
+    assert abs(margin_gap(price, quantity, entry, wallet)) < TOLERANCE
 
 
-def test_solution_in_a_lower_bracket_is_found(brackets: LeverageBrackets) -> None:
+def test_solution_in_a_lower_bracket_is_found(
+    brackets: LeverageBrackets, margin_gap: MarginGap
+) -> None:
     # Regression (Codex review): notional at entry is in bracket 3, whose formula gives a
     # negative price, but the real solution lies in bracket 1 (~1004.016064).
     quantity, entry, wallet = D(1), D(300_000), D(299_000)
     price = liquidation_price(quantity, entry, wallet, brackets)
     assert price == D(-1000) / D("-0.996")
     assert brackets.for_notional(quantity * price).bracket == 1
-    assert abs(margin_gap_at(price, quantity, entry, wallet, brackets)) < TOLERANCE
+    assert abs(margin_gap(price, quantity, entry, wallet)) < TOLERANCE
 
 
 def test_cross_liquidation_price_can_be_above_entry_for_a_long(
-    brackets: LeverageBrackets,
+    brackets: LeverageBrackets, margin_gap: MarginGap
 ) -> None:
     # Losses on other cross positions push the long's liquidation price above its entry.
     price = liquidation_price(
@@ -147,8 +141,8 @@ def test_cross_liquidation_price_can_be_above_entry_for_a_long(
     )
     assert price is not None
     assert price > D(100)
-    gap = margin_gap_at(price, D(1), D(100), D(100), brackets, D(5), D(-100))
-    assert abs(gap) < TOLERANCE
+    residual = margin_gap(price, D(1), D(100), D(100), D(5), D(-100))
+    assert abs(residual) < TOLERANCE
 
 
 # --- margin requirement, order margin, available balance (§2.2, §2.7) --------
