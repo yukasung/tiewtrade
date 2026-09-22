@@ -518,6 +518,7 @@ Bot/Strategy┘                  (approve/reject)  (lifecycle,          (interfa
 - Workspace ที่มีหลายสมาชิก (ระบบทีม): การเชิญ/ออกจาก Workspace และ Role เช่น Owner / Trader / Viewer (D-12 — ยังไม่ได้กำหนด Role; ต้องผ่าน legal review ตาม FR-LGL-04)
 - Copy trading / social / marketplace ของ Strategy
 - เครื่องมือวาดเส้นบน Chart (trend line, แนวรับแนวต้าน) — อาจพิจารณา TradingView Advanced Charts (D-09)
+- เพิ่ม / ลด margin ของ isolated Position (Calculation spec C-10)
 - Mobile app
 - ย้ายไป GCP: Cloud Run + Cloud SQL, Memorystore, Cloud KMS, Cloud NAT (static egress IP), Cloud Scheduler + Cloud Run Jobs และ scale-out
 
