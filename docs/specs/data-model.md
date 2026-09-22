@@ -2,7 +2,7 @@
 
 | Field | Value |
 |---|---|
-| Status | **v0.3** — M-01 ถึง M-05 Decided; ปรับตาม ADR-0009 ถึง 0013 และ Requirements Review 2026-09-22 (Trading Restriction, Position Episode, Reset) |
+| Status | **v0.4** — M-01 ถึง M-05 Decided; ปรับตาม ADR-0009 ถึง 0013, Requirements Review และ API Review 2026-09-22 |
 | Date | 2026-09-22 |
 | Based on | [MVP Requirements](../requirements/mvp.md), [Architecture](../architecture/architecture.md), [Calculation Spec](calculation.md) |
 | Scope | ตาราง, คอลัมน์หลัก, constraint, index, partitioning, tenant isolation (RLS), retention |
@@ -100,6 +100,18 @@ CREATE TABLE sessions (
 );
 CREATE INDEX ON sessions (principal_type, principal_id);
 CREATE INDEX ON sessions (expires_at);
+
+-- MFA challenge ระหว่าง login: ไม่ใช่ session ใช้ได้กับ /auth/mfa/verify เท่านั้น (API §4.1)
+CREATE TABLE mfa_challenges (
+  challenge_hash BYTEA PRIMARY KEY,
+  principal_type TEXT NOT NULL CHECK (principal_type IN ('USER','ADMIN')),
+  principal_id   UUID NOT NULL,
+  expires_at     TIMESTAMPTZ NOT NULL,          -- 5 นาที (API A-06)
+  attempts       INT  NOT NULL DEFAULT 0 CHECK (attempts <= 5),
+  consumed_at    TIMESTAMPTZ,
+  created_at     TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX ON mfa_challenges (expires_at);
 
 -- Platform Admin แยกจาก users (FR-ADM-01)
 CREATE TABLE admin_users (
@@ -279,9 +291,11 @@ CREATE TABLE exchange_accounts (
   binance_account_uid TEXT,                                -- Live เท่านั้น (FR-SEC-11)
   position_mode       TEXT CHECK (position_mode IN ('ONE_WAY','HEDGE')),       -- ค่าที่อ่านจาก Binance ล่าสุด (D-03)
   multi_assets_mode   BOOLEAN,
-  status              TEXT NOT NULL DEFAULT 'ACTIVE' CHECK (status IN ('ACTIVE','DISABLED','ARCHIVED')),
+  intended_market_type TEXT CHECK (intended_market_type IN ('SPOT','USDM_FUTURES')),  -- Live: ตลาดที่ตรวจสิทธิ์ตอนเชื่อม (API §4.4)
+  status              TEXT NOT NULL DEFAULT 'ACTIVE' CHECK (status IN ('PENDING_MODE_CHANGE','ACTIVE','DISABLED','ARCHIVED')),
   created_at          TIMESTAMPTZ NOT NULL DEFAULT now(),
   CHECK (trading_mode = 'LIVE' OR binance_account_uid IS NULL),
+  CHECK (trading_mode = 'PAPER' OR intended_market_type IS NOT NULL),
   CHECK (account_role = 'MAIN' OR trading_mode = 'LIVE' OR parent_account_id IS NOT NULL)
 );
 CREATE INDEX ON exchange_accounts (workspace_id);
@@ -618,14 +632,19 @@ CREATE TABLE workspace_checkpoints (             -- recovery / replay (NFR-14, N
 CREATE TABLE portfolio_checkpoints (             -- เวลาที่ประมวลผลล่าสุดต่อ Portfolio สำหรับ replay
   portfolio_id        UUID PRIMARY KEY REFERENCES portfolios,
   workspace_id        UUID NOT NULL,
+  state_version       BIGINT NOT NULL DEFAULT 0,   -- +1 ทุก transaction ที่เปลี่ยน state; = seq ของ WebSocket (API §5.2)
   last_processed_at   TIMESTAMPTZ NOT NULL,
   last_reconciled_at  TIMESTAMPTZ
 );
 
 -- Command แบบทนทาน: บันทึกก่อน publish (ADR-0011)
 CREATE TABLE commands (
-  command_id    UUID PRIMARY KEY,               -- สร้างโดยผู้ส่ง (idempotency)
+  command_id    UUID PRIMARY KEY DEFAULT gen_random_uuid(),   -- สร้างโดยระบบ (API §3)
   workspace_id  UUID NOT NULL,
+  principal_type TEXT NOT NULL CHECK (principal_type IN ('USER','ADMIN','JOB')),
+  principal_id  TEXT NOT NULL,
+  idempotency_key TEXT,                          -- จาก header Idempotency-Key (job อาจไม่มี)
+  request_fingerprint BYTEA,                     -- hash(principal, workspace, method, route, path params, normalized body)
   portfolio_id  UUID,
   command_type  TEXT NOT NULL,                  -- เช่น PLACE_ORDER, START_BOT, KILL_SWITCH, RESET_PORTFOLIO
   payload       JSONB NOT NULL,
@@ -637,6 +656,8 @@ CREATE TABLE commands (
   CHECK ((status = 'PROCESSED') = (processed_at IS NOT NULL))
 );
 CREATE INDEX commands_pending ON commands (workspace_id, created_at) WHERE status = 'PENDING';
+CREATE UNIQUE INDEX commands_idempotency_uq ON commands (workspace_id, principal_type, principal_id, idempotency_key)
+  WHERE idempotency_key IS NOT NULL;
 CREATE INDEX ON commands (processed_at) WHERE processed_at IS NOT NULL;
 
 -- Transactional outbox: published_at = ส่งเข้า Redis แล้วเท่านั้น (ADR-0003, ADR-0011)
@@ -770,7 +791,7 @@ CREATE INDEX ON audit_log (actor_type, actor_id, occurred_at);
 | execution_dispatches ที่จบแล้ว | 90 วัน (**Proposed**) | DELETE ตาม `updated_at` |
 | outbox | 7 วันหลัง publish **และ**ผู้รับที่จำเป็นประมวลผลแล้ว (M-04, ADR-0011) | DELETE |
 | notifications | 90 วัน (M-04) | DELETE ตาม `created_at` |
-| sessions ที่หมดอายุ | ทันทีหลังหมดอายุ | DELETE |
+| sessions ที่หมดอายุ, mfa_challenges | ทันทีหลังหมดอายุ | DELETE |
 | api_credentials | ลบทันทีเมื่อผู้ใช้สั่ง | DELETE (FR-SEC-09) |
 | log ของระบบ / Bot | 30 / 90 วัน | อยู่นอก Postgres (log storage) |
 
@@ -787,6 +808,10 @@ CREATE INDEX ON audit_log (actor_type, actor_id, occurred_at);
 | D-02 / D-14 Order Owner | `orders.owner_type` + CHECK กับ `bot_id` |
 | FR-PF-11 Position Episode / Attribution | `position_episodes`, `episode_id` ใน positions / fills / ledger_entries |
 | FR-LIVE-19 Trading Restriction | `portfolios.trading_restriction` |
+| API §3 Idempotency scope | `commands_idempotency_uq`, `request_fingerprint` |
+| API §4.1 MFA challenge | `mfa_challenges` |
+| API §5.2 WebSocket sync | `portfolio_checkpoints.state_version` |
+| API §4.4 Live onboarding / FR-LIVE-10 | `exchange_accounts.intended_market_type`, status `PENDING_MODE_CHANGE` |
 | D-03 One-way, เผื่อ Hedge | `positions.position_side` (MVP = `BOTH`) |
 | D-04 / FR-SEC-11 บัญชี Binance เชื่อมที่เดียว | `exchange_accounts_binance_uid_uq` |
 | D-05 / C-07 Paper, Spot Average Cost | `positions.entry_price` (fee-exclusive), `fills.realized_pnl` (gross) |
