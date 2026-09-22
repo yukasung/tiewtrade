@@ -1,6 +1,7 @@
 # ADR-0003: Postgres State + Append-only Ledger + Transactional Outbox
 
 - Status: **Accepted** (2026-09-22)
+- Amended by: [ADR-0011](0011-durable-command-lifecycle.md) (published ≠ processed, inbox)
 - Date: 2026-09-22
 - Related: FR-PF-06, FR-ACC-11, NFR-09, NFR-20, NFR-22
 

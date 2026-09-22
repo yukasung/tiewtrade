@@ -2,7 +2,7 @@
 
 | Field | Value |
 |---|---|
-| Status | **v0.2** — ADR 0001–0008 **Accepted** (2026-09-22) |
+| Status | **v0.3** — ADR 0001–0013 **Accepted** (2026-09-22) |
 | Date | 2026-09-22 |
 | Based on | [MVP Requirements v0.22](../requirements/mvp.md) |
 | Scope | Process model, Trading Core module design, messaging & state, key flows, security, frontend, repo layout, deployment (VM → GCP), testing strategy |
@@ -68,7 +68,7 @@ flowchart TB
     browser["Browser<br/>React SPA"]
     proxy["proxy (Caddy)<br/>TLS, static web, /api, /ws"]
     api["api (FastAPI)<br/>REST + WebSocket<br/>auth, admin, commands"]
-    engine["engine<br/>Portfolio owner:<br/>Strategy host, Risk, OMS,<br/>Paper execution, margin"]
+    engine["engine<br/>Workspace owner:<br/>Strategy host, Risk, OMS,<br/>Paper execution, margin"]
     md["market-data<br/>1 leader per Venue"]
     exec["execution (Phase 2)<br/>Live Execution Gateway<br/>holds decrypted secrets"]
     jobs["jobs<br/>scheduled, idempotent"]
@@ -97,8 +97,8 @@ flowchart TB
 | Process | หน้าที่ | Instance / ความเป็นเจ้าของ | ห้ามทำ |
 |---|---|---|---|
 | **proxy** | TLS, เสิร์ฟ static ของ `web`, route `/api` `/ws` ไป api | 1 | — |
-| **api** | REST + WebSocket ไปหน้าจอ, auth / 2FA, admin API (FR-ADM), อ่านข้อมูล, ส่ง **command** ไปยัง Portfolio owner, fan-out event ไปหน้าจอ | หลายตัวได้ (stateless) | แก้ state ของ Portfolio เอง, เห็น API Secret |
-| **engine** | เจ้าของ Portfolio: host Strategy ของ Active Bot, Risk Engine, Order Manager, Paper Execution Adapter, margin / liquidation, Open Notional, paper replay หลังล่ม | หลายตัวได้; **Portfolio หนึ่งมีเจ้าของตัวเดียว** ด้วย lease + fencing (NFR-21) | เรียก Binance ตรง, ถือ Secret |
+| **api** | REST + WebSocket ไปหน้าจอ, auth / 2FA, admin API (FR-ADM), อ่านข้อมูล, บันทึก **command** ลง Postgres แล้วแจ้งเจ้าของ Workspace ([ADR-0011](adr/0011-durable-command-lifecycle.md)), fan-out event ไปหน้าจอ | หลายตัวได้ (stateless) | แก้ state ของ Portfolio เอง, เห็น API Secret |
+| **engine** | เจ้าของ Workspace (ทุก Portfolio ของ Workspace): host Strategy ของ Active Bot, Risk Engine, Order Manager, Paper Execution Adapter, margin / liquidation, Open Notional, paper replay หลังล่ม | หลายตัวได้; **Workspace หนึ่งมีเจ้าของตัวเดียว** ด้วย lease + fencing (NFR-21, [ADR-0009](adr/0009-workspace-single-writer.md)) | เรียก Binance ตรง, ถือ Secret |
 | **market-data** | รับ public stream (kline, bookTicker, markPrice, funding) ต่อ Venue, สร้าง / บันทึก Candle, รวบราคา ≤1/วินาที/Symbol (FR-STR-17), backfill ช่องว่าง | **1 leader ต่อ Venue** | — |
 | **execution** | ถอดรหัส Secret, ส่ง Order / Cancel, User Data Stream ต่อบัญชี, snapshot ให้ Reconciliation, ตรวจ Key ตอนเชื่อม (D-04), global rate limiter (NFR-07) | lease ต่อบัญชี Binance | รัน Strategy, ตัดสิน Risk |
 | **jobs** | งานตามรอบแบบ idempotent: trigger Reconciliation, retention cleanup (NFR-18), paper funding fee, ส่ง outbox ที่ค้าง; รันเป็นคำสั่ง CLI ได้ (NFR-22) | ตามรอบ | — |
@@ -192,14 +192,15 @@ def apply(state: PortfolioState, event: PortfolioEvent) -> tuple[PortfolioState,
 
 ---
 
-## 5. Portfolio Engine (runtime model)
+## 5. Workspace Engine (runtime model)
 
-- ใน engine แต่ละ Portfolio เป็น **หน่วยประมวลผลแบบลำดับเดียว** (single-threaded per Portfolio): event ของ Portfolio เดียวกันถูกประมวลผลตามลำดับ ไม่มี race ภายใน
-- **Input ของ Portfolio:** commands (`cmd.portfolio.{id}`), market events ของ Symbol ที่เกี่ยวข้อง, execution reports, timers
+- ใน engine แต่ละ **Workspace** เป็นหน่วยประมวลผลแบบลำดับเดียว: event ของทุก Portfolio ใน Workspace เดียวกันถูกประมวลผลตามลำดับใน loop เดียว จึงไม่มี race ภายใน Portfolio และไม่มี race ในการตรวจวงเงิน / Leverage / จำนวน Portfolio ระดับ Workspace ([ADR-0009](adr/0009-workspace-single-writer.md))
+- **วงเงิน:** Risk Engine คำนวณ Projected Open Notional จาก state ของทุก Portfolio ใน Workspace รวม Order ค้างทุกตัว วงเงินจึงถูกจองเมื่อบันทึก Order และคืนเองเมื่อ Order ถูกยกเลิก / หมดอายุ / fill (Calculation §5.2)
+- **Input ของ Workspace:** commands (`commands` ใน Postgres + `cmd.workspace.{id}` ใน Redis เป็นตัวปลุก), market events ของ Symbol ที่เกี่ยวข้อง, execution reports, timers
 - **Pipeline:** event → `portfolio.apply` / margin update → (Paper) trigger TP / SL / liquidation → Strategy callbacks → Order Intents → Risk Engine → Order Manager → ExecutionAdapter
 - **Persist ก่อน publish:** state change + ledger + outbox เขียนใน transaction เดียว แล้วค่อย publish ([ADR-0003](adr/0003-postgres-state-ledger-outbox.md))
-- **Ownership:** engine ได้ Portfolio มาด้วย lease ใน Postgres ที่มี fencing token ทุกการเขียนตรวจ token (`... WHERE fencing_token = :t`) ป้องกัน engine เก่าที่ยังไม่รู้ว่าเสีย lease เขียนทับ ([ADR-0002](adr/0002-portfolio-single-writer-engine.md))
-- **Recovery:** เมื่อได้ lease โหลด state จาก Postgres → (Paper) replay ช่วงที่หายด้วย Candle 1m ตาม NFR-15 → (Live) ขอ Reconciliation ก่อน resume Bot ตาม NFR-14
+- **Ownership:** engine ได้ Workspace มาด้วย lease ใน Postgres ที่มี fencing token ทุกการเขียนตรวจ token (`... WHERE fencing_token = :t`) ป้องกัน engine เก่าที่ยังไม่รู้ว่าเสีย lease เขียนทับ ([ADR-0002](adr/0002-portfolio-single-writer-engine.md), [ADR-0009](adr/0009-workspace-single-writer.md)); command ที่ส่งไป execution มี token ของ Workspace เพื่อให้ execution ปฏิเสธ command ล้าสมัย ([ADR-0010](adr/0010-execution-dispatch-fencing.md))
+- **Recovery:** เมื่อได้ lease โหลด state จาก Postgres → ประมวลผล command ที่ยัง `PENDING` ของ Workspace (ADR-0011) → (Paper) replay ช่วงที่หายด้วย Candle 1m ตาม NFR-15 → (Live) ขอ Reconciliation ก่อน resume Bot ตาม NFR-14
 
 ---
 
@@ -210,18 +211,19 @@ def apply(state: PortfolioState, event: PortfolioEvent) -> tuple[PortfolioState,
 |---|---|
 | Portfolio state | ตาราง state ปัจจุบัน (balances, positions, orders, bot) |
 | Ledger | append-only: fill, fee, funding, transfer, virtual deposit, liquidation, external — ใช้คำนวณ Analytics และตรวจสอบย้อนหลัง |
-| Outbox | event ที่รอ publish ไป Redis เขียนใน transaction เดียวกับ state |
-| Lease | owner, expires_at, fencing_token สำหรับ Portfolio / market-data leader / บัญชี execution |
+| Commands / Outbox / Inbox | command จาก api / jobs และ message ที่ต้องประมวลผลแน่นอนบันทึกใน Postgres ก่อน; outbox `published_at` = ส่งเข้า Redis แล้ว; ผู้รับบันทึกการประมวลผลใน inbox ใน transaction เดียวกับผล ([ADR-0011](adr/0011-durable-command-lifecycle.md)) |
+| Execution dispatch | แถว dispatch ก่อนส่ง request ไป Binance ([ADR-0010](adr/0010-execution-dispatch-fencing.md)) |
+| Lease | owner, expires_at, fencing_token สำหรับ Workspace / market-data leader / บัญชี execution |
 | Candles | partitioned รายเดือน (NFR-24), retention ตาม NFR-18 |
 | Audit log | append-only (NFR-09, FR-TEN-09, FR-ADM-09) |
 | Tenant isolation | ทุกตารางของผู้ใช้มี `workspace_id`; repository กรองทุก query + **Postgres RLS** เป็นชั้นป้องกันเพิ่ม |
 
-รายละเอียด schema อยู่ในขั้น data model (ยังไม่ทำ)
+รายละเอียด schema อยู่ใน [Data Model](../specs/data-model.md)
 
 ### 6.2 Redis ([ADR-0004](adr/0004-redis-streams-non-authoritative.md))
 | Key / Stream | Producer → Consumer | ใช้ทำอะไร |
 |---|---|---|
-| `cmd.portfolio.{id}` | api, jobs → engine owner | Manual Order, start / stop Bot, reset, Kill Switch |
+| `cmd.workspace.{id}` | api, jobs → engine owner | ตัวปลุกว่ามี command ใหม่ใน `commands` (payload อยู่ใน Postgres) |
 | `cmd.exec.{account}` | engine → execution | submit / cancel, snapshot request |
 | `exec.report.{portfolio}` | execution → engine | execution report, account update, external change |
 | `evt.portfolio.{id}` | outbox relay → api, notifier | state change ไปหน้าจอและแจ้งเตือน |
@@ -229,10 +231,11 @@ def apply(state: PortfolioState, event: PortfolioEvent) -> tuple[PortfolioState,
 | `md:last:*` (hash) | market-data | ราคาล่าสุดสำหรับอ่านเร็ว |
 | `rl:*` | execution | rate-limit bucket รวมทั้งระบบ (NFR-07) |
 
-Redis ข้อมูลหายได้โดยไม่เสียความถูกต้อง: command ที่ยังไม่ประมวลผลส่งซ้ำได้ด้วย command id, event สร้างใหม่ได้จาก outbox
+Redis ข้อมูลหายได้โดยไม่เสียความถูกต้อง: ข้อความที่ต้องประมวลผลแน่นอนอยู่ใน Postgres (commands / outbox) ผู้รับกวาดหาข้อความที่ยังไม่ประมวลผลได้เองโดยไม่พึ่ง Redis; ข้อความที่หายได้ (ราคา, อัปเดตหน้าจอ) ใช้ Pub/Sub และหน้าจอ resync ผ่าน REST ([ADR-0011](adr/0011-durable-command-lifecycle.md))
 
 ### 6.3 Idempotency (NFR-22)
-- ทุก command มี `command_id` ที่ engine บันทึกไว้ ถ้าได้ซ้ำให้ตอบผลเดิม
+- ทุก command มี `command_id` และสถานะใน `commands`; engine ตั้งเป็น `PROCESSED` พร้อมผลใน transaction เดียวกับ state ถ้าได้ซ้ำให้ตอบผลเดิม
+- ผู้รับ message อื่นบันทึก `inbox (consumer, message_id)` ใน transaction เดียวกับผล
 - Execution report ตรวจซ้ำด้วย (Client Order ID, trade id)
 - Jobs ตรวจงานที่ทำแล้วด้วย key ของรอบ (เช่น funding time)
 
@@ -251,11 +254,13 @@ sequenceDiagram
     participant P as Postgres
     B->>A: POST /portfolios/{id}/orders (intent)
     A->>A: auth + workspace check (FR-TEN-08)
-    A->>R: XADD cmd.portfolio.{id} (command_id)
-    R->>E: command
+    A->>P: INSERT commands (PENDING, payload)
+    A->>R: XADD cmd.workspace.{id} (wakeup)
+    R->>E: wakeup
+    E->>P: read PENDING commands
     E->>E: Risk Engine (Entitlement, D-02, rules)
     E->>E: Order Manager -> PaperExecutionAdapter (fill model D-05)
-    E->>P: tx: state + ledger + outbox (fencing check)
+    E->>P: tx: state + ledger + outbox + command PROCESSED (fencing check)
     E-->>A: result (via evt / reply)
     A-->>B: 200 / WS update
 ```
@@ -271,14 +276,20 @@ sequenceDiagram
     participant P as Postgres
     M->>E: price tick / candle close
     E->>E: Strategy -> Order Intent -> Risk -> OMS
-    E->>P: save Order (Client Order ID) before send
-    E->>X: cmd.exec submit
-    X->>BN: REST new order (rate limiter)
+    E->>P: tx: save Order (Client Order ID) + outbox exec command (workspace token, valid_until)
+    E->>X: cmd.exec submit (via outbox relay)
+    X->>X: reject if token stale or past valid_until
+    X->>P: tx: dispatch DISPATCHING (check execution lease token)
+    X->>X: self-fence: lease time left > recvWindow + margin
+    X->>BN: REST new order (timestamp = dispatch time, short recvWindow)
     BN-->>X: ack
+    X->>P: dispatch ACKED + inbox
     BN-->>X: User Data Stream: execution report
     X->>E: exec.report
     E->>P: tx: fill + ledger + outbox
 ```
+
+**เมื่อ execution เปลี่ยนเจ้าของบัญชี** ([ADR-0010](adr/0010-execution-dispatch-fencing.md)): เจ้าของใหม่รอจนเลย lease เก่าหมดอายุ + recvWindow แล้ว query Binance ด้วย Client Order ID ของทุก dispatch ที่ยัง `DISPATCHING` ก่อนรับ command ใหม่
 
 ### 7.3 Market data
 1. market-data leader (lease ต่อ Venue) เปิด stream ของ Symbol ใน Whitelist (FR-MKT-13)
@@ -318,7 +329,7 @@ sequenceDiagram
     participant X as execution
     participant BN as Binance
     B->>A: GET execution public key
-    B->>B: encrypt API Secret (sealed box)
+    B->>B: encrypt API Secret (RSA-OAEP-4096, WebCrypto)
     B->>A: POST link (api key + ciphertext)
     A->>X: validate request (ciphertext only)
     X->>X: decrypt in memory
@@ -337,11 +348,11 @@ Admin → api (2FA) → บันทึก flag ใน Postgres + audit log → 
 
 | เรื่อง | Design | Requirement |
 |---|---|---|
-| API Secret | Browser เข้ารหัสด้วย **public key ของ execution** (sealed box) → api และ Postgres เห็นแค่ ciphertext; ถอดรหัสได้เฉพาะใน execution | FR-SEC-01/02/03, [ADR-0005](adr/0005-live-execution-gateway-and-credentials.md) |
+| API Secret | Browser เข้ารหัสด้วย **RSA-OAEP-4096-SHA256 (WebCrypto)** ด้วย public key ของ execution → api และ Postgres เห็นแค่ ciphertext ที่มี `format_version` และ `encryption_key_id`; ถอดรหัสได้เฉพาะใน execution; ย้าย key ด้วย rewrap job ([ADR-0012](adr/0012-credential-encryption-format.md)) | FR-SEC-01/02/03, [ADR-0005](adr/0005-live-execution-gateway-and-credentials.md) |
 | Key provider | VM: private key ในไฟล์ที่ mount เข้า container execution เท่านั้น; GCP: Cloud KMS asymmetric key, สิทธิ์ decrypt เฉพาะ service account ของ execution — เปลี่ยนด้วย config | NFR-25 |
 | ลบ Credential | ลบ ciphertext + แจ้ง execution ล้างจากหน่วยความจำทันที | FR-SEC-09 |
 | Log hygiene | ห้าม log / trace payload ที่มี key; ใช้ type ที่ redact ตัวเองเมื่อ print | FR-SEC-08 |
-| Authentication | Server-side session + httpOnly / Secure / SameSite cookie + CSRF token, password hash แบบ argon2, TOTP 2FA (บังคับสำหรับ Live และ Admin) | FR-TEN-02/04, FR-ADM-01, [ADR-0007](adr/0007-session-auth-and-totp.md) |
+| Authentication | Server-side session ใน Postgres (ไม่ cache ใน MVP, fail-closed) + httpOnly / Secure / SameSite cookie + CSRF token, password hash แบบ argon2, TOTP 2FA (บังคับสำหรับ Live และ Admin); เพิกถอนแล้วปิด WebSocket ทันทีหรือไม่เกิน 60 วินาที ([ADR-0013](adr/0013-session-revocation.md)) | FR-TEN-02/04, FR-ADM-01, [ADR-0007](adr/0007-session-auth-and-totp.md) |
 | Authorization | จุดตรวจเดียว: สมาชิกของ Workspace + permission; Platform Admin เป็น role แยก | FR-TEN-08, FR-ADM |
 | Tenant isolation | `workspace_id` + repository filter + Postgres RLS | FR-TEN-01 |
 | Admin access | ทุกการเปิดดูข้อมูลผู้ใช้และทุกการกระทำสร้าง audit log อัตโนมัติ | FR-ADM-08/09 |
@@ -432,7 +443,7 @@ docs/                         requirements, architecture, ADR
 | P-01 Strategy ไม่เรียก Binance | §4.3 Strategy ส่งออกแค่ Order Intent; engine ไม่มี Secret |
 | P-02 ทุก Order ผ่าน Risk + OMS | §5 pipeline เดียวใน engine; api ส่ง command เท่านั้น |
 | P-03 / P-04 Core ร่วม, adapter แยก | §4.1, §4.3 `ExecutionAdapter` |
-| P-05 Margin ระดับ Portfolio | §5 Portfolio เป็นหน่วยประมวลผลและ consistency |
+| P-05 Margin ระดับ Portfolio | margin คำนวณต่อ Portfolio (§4.2 `margin`); การประมวลผลเป็นลำดับเดียวต่อ Workspace (§5) |
 | P-06 Timeframe ไม่ผูก Sub-account | Timeframe เป็น parameter ของ Bot / Strategy (§4.2 `strategy`) |
 | P-07 Deterministic | §4.1 pure, ไม่อ่านนาฬิกา, Decimal |
 | P-08 / P-09 Source of Truth + Reconciliation | §7.2, §7.4 |

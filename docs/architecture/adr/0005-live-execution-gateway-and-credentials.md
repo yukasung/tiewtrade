@@ -1,6 +1,7 @@
 # ADR-0005: Live Execution Gateway แยก Process และเข้ารหัส API Secret แบบ Sealed Box
 
 - Status: **Accepted** (2026-09-22)
+- Amended by: [ADR-0010](0010-execution-dispatch-fencing.md); ส่วน sealed box ถูกแทนด้วย [ADR-0012](0012-credential-encryption-format.md) (RSA-OAEP ที่ใช้กับ Cloud KMS ได้)
 - Date: 2026-09-22
 - Related: P-04, P-10, FR-SEC-01..12, D-04, NFR-25
 

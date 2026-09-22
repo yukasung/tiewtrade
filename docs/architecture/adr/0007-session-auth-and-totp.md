@@ -1,6 +1,7 @@
 # ADR-0007: Session Authentication + TOTP 2FA
 
 - Status: **Accepted** (2026-09-22)
+- Amended by: [ADR-0013](0013-session-revocation.md) (ไม่ cache session ใน MVP, การเพิกถอน WebSocket)
 - Date: 2026-09-22
 - Related: FR-TEN-02, FR-TEN-04, FR-LIVE-08, FR-ADM-01
 

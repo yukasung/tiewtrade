@@ -1,6 +1,7 @@
 # ADR-0004: Redis Streams สำหรับ Command/Event และ Redis ไม่ใช่ Source of Truth
 
 - Status: **Accepted** (2026-09-22)
+- Amended by: [ADR-0011](0011-durable-command-lifecycle.md) (command บันทึกลง Postgres ก่อน publish)
 - Date: 2026-09-22
 - Related: NFR-20, NFR-22, NFR-23, FR-STR-17
 

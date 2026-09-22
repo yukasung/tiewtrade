@@ -1,6 +1,7 @@
 # ADR-0002: Portfolio เป็น Single-Writer ใน Engine (Lease + Fencing Token)
 
 - Status: **Accepted** (2026-09-22)
+- Amended by: [ADR-0009](0009-workspace-single-writer.md) (หน่วย single-writer เป็น Workspace), [ADR-0010](0010-execution-dispatch-fencing.md) (fencing ของการส่งไป Binance)
 - Date: 2026-09-22
 - Related: P-02, P-05, D-02, NFR-19, NFR-21, NFR-24
 
