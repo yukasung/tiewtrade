@@ -1,0 +1,13 @@
+[project]
+name = "fasttrade-engine"
+version = "0.1.0"
+description = "Workspace engine: strategy host, risk, order manager, paper execution"
+requires-python = ">=3.12"
+dependencies = ["fasttrade-core", "fasttrade-strategies", "fasttrade-infra"]
+
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/fasttrade_engine"]

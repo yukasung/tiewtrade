@@ -1,0 +1,13 @@
+[project]
+name = "fasttrade-jobs"
+version = "0.1.0"
+description = "Scheduled idempotent jobs"
+requires-python = ">=3.12"
+dependencies = ["fasttrade-core", "fasttrade-infra"]
+
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/fasttrade_jobs"]
