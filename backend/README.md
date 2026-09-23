@@ -75,7 +75,7 @@ dependency ที่ประกาศจริงใน `pyproject.toml` ขอ
 
 | Member | สถานะ | หน้าที่ (ย่อ — รายละเอียดที่ [architecture §3](../docs/architecture/architecture.md#3-processes-containers)) |
 |---|---|---|
-| `packages/core` | **Implemented (บางส่วน)** | กฎธุรกิจ pure: market, portfolio, margin, execution (Paper Fill Model) |
+| `packages/core` | **Implemented (บางส่วน)** | กฎธุรกิจ pure: market, portfolio, margin, execution (Paper Fill Model), orders (lifecycle + port) |
 | `packages/strategies` | Scaffold | Built-in Strategy → Order Intent (P-01) |
 | `packages/binance` | Scaffold | REST/WS client, payload mapping, Venue config |
 | `packages/infra` | Scaffold | Postgres repos, Redis bus, lease, key provider, settings |
@@ -86,8 +86,8 @@ dependency ที่ประกาศจริงใน `pyproject.toml` ขอ
 | `services/jobs` | Scaffold | งานตามรอบแบบ idempotent |
 | `services/notifier` | Scaffold | แจ้งเตือน In-app / Email / Telegram |
 
-**ใน core เองก็ยังไม่ครบ** ส่วนที่ยังไม่มี: Risk rules, Order Manager, Strategy interfaces
-และ Paper liquidation (§4.4) ที่ติด marker **Verify** — ทั้งที่ [architecture §4.3](../docs/architecture/architecture.md#43-key-interfaces-pseudo-code) ร่าง interface ไว้แล้ว
+**ใน core เองก็ยังไม่ครบ** ส่วนที่ยังไม่มี: Risk rules, Bracket (FR-ORD-14/15), Strategy
+interfaces และ Paper liquidation (§4.4) ที่ติด marker **Verify** — ทั้งที่ [architecture §4.3](../docs/architecture/architecture.md#43-key-interfaces-pseudo-code) ร่าง interface ไว้แล้ว
 
 ---
 
@@ -126,10 +126,21 @@ dependency ที่ประกาศจริงใน `pyproject.toml` ขอ
 | `book.py` | `TopOfBook` | snapshot best bid/ask จาก caller · ใช้ `is_abnormal` กรอง snapshot เสีย **ไม่ใช่ `is_crossed`** ซึ่งพลาดกรณี locked (`bid == ask`) |
 | `fills.py` | `PaperFill`, `market_fill`, `is_marketable`, `limit_fill_on_submit`, `resting_limit_fill`, `resting_limit_fills` | ปัดราคาไปทางเสียเปรียบผู้ใช้เสมอ (C-11) · marketable limit **ปัดก่อนแล้วค่อย cap** ห้ามปัดซ้ำ |
 | `triggers.py` | `BracketLeg`, `stop_loss_triggered`, `take_profit_triggered`, `triggered_leg`, `closing_side` | **comparison ล้วน ห้ามใส่เลขคณิต** — จะรันใน context ของ caller · SL ชนะเมื่อ trigger ทั้งคู่ |
+| `adapter.py` | `ExecutionAdapter` | **port ที่ทำให้ Paper กับ Live ใช้ core ร่วมกัน** (P-03/P-04, architecture §4.2) · ไม่คืนค่า ผลมาเป็น execution report ทีหลัง · อ้างด้วย `client_order_id` ไม่ใช่ exchange id |
 | *(ไม่มีไฟล์ guard แยก)* | — | `0 ≤ s < 1` อยู่ใน `fills.py` ส่วนกฎ "ราคาต้องเป็นบวก" เป็นของ `PaperFill.__post_init__` เองตาม C-18 |
 
 **กับดักที่ต้องรู้:** resting limit ต้องให้ราคา**ทะลุ** (`<`/`>`) ส่วน trigger ของ §4.3 **แตะก็ยิง**
 (`<=`/`>=`) ความไม่สมมาตรนี้เป็นไปตาม spec ไม่ใช่ bug
+
+### `orders/` — Order lifecycle และ Execution Adapter port (FR-ORD)
+| ไฟล์ | Public API | หมายเหตุ |
+|---|---|---|
+| `intent.py` | `OrderIntent` | สิ่งเดียวที่ Strategy/UI ส่งออกได้ (P-01) · ไม่มี id ไม่มีสถานะ · สร้าง intent ที่ขัดแย้งในตัวเองไม่ได้ |
+| `order.py` | `Order`, `order_from_intent` | state machine 7 สถานะ · **immutable** ทุก transition คืน `Order` ตัวใหม่ · ตรวจ lifecycle ก่อนตรวจจำนวนเสมอ · `remaining_quantity` มี `@calc` เพราะการอ่านคือการลบ Decimal |
+| `client_order_id.py` | `build_client_order_id`, `is_platform_client_order_id` | prefix มาจาก caller ไม่ hardcode · แยก order นอกระบบด้วย**รูปร่าง** ไม่ใช่ `startswith` (D-14) |
+| `enums.py` | `OrderStatus`, `OrderType`, `OwnerType`, `TimeInForce`, `BracketRole` | ตรงกับ `orders` table ใน data-model §6.5 |
+
+**ยังไม่มี:** Bracket (FR-ORD-14/15) — TP/SL คุมเฉพาะจำนวนที่ fill แล้วและต้องปรับขนาดทุกครั้งที่ Entry fill เพิ่ม
 
 ### จุดที่ยังไม่ยืนยันกับ Binance
 โค้ดที่มี comment `Verify` คือสูตรที่ยังไม่ confirm — อย่านำไปเสนอว่า verified แล้ว
