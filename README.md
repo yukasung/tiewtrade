@@ -36,3 +36,7 @@ cd deploy
 cp .env.example .env         # set POSTGRES_PASSWORD; change ports if 5432/6379 are taken
 docker compose up -d --wait
 ```
+
+Already ran the Compose project under its former name `fasttrade`? Do **not** follow the
+steps above — they start an empty database under a new volume. Follow
+[Runbook: renaming the Compose project](docs/runbooks/rename-compose-project.md) instead.
