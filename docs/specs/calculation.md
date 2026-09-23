@@ -354,6 +354,9 @@ Effective Max Leverage = min(Plan Max Leverage, Bracket Max Leverage ของ N
 | C-16 | Book ที่ `bid ≥ ask` (crossed หรือ locked): Trading Core รับไว้และคำนวณตามข้อมูลที่ได้ ไม่ตัดสินว่าข้อมูลดีหรือเสีย และเปิด predicate ให้ Paper adapter กรอง snapshot เอง | ✅ Decided |
 | C-17 | เมื่อเงื่อนไข TP และ SL เป็นจริงพร้อมกันใน tick เดียว (bracket ตั้งผิดหรือราคา gap) ให้ **SL ชนะ** สอดคล้องกับ §4.5 และ D-05 (§4.3) | ✅ Decided |
 | C-18 | Paper fill ปัด tick แล้วจึง cap ตามราคา Limit (ไม่ปัดซ้ำหลัง cap) และตรวจว่าราคาเป็นบวกเฉพาะราคาสุดท้าย ไม่ใช่ค่ากลางทางของ §4.2 | ✅ Decided |
+| C-19 | **`ExecutionReport`**: รูปแบบผลลัพธ์ที่ venue คืนกลับมาต่อ 1 Order ใช้ร่วมกันทั้ง Paper และ Live (P-03/P-04) ฟิลด์: `client_order_id`, `kind` (`ACCEPTED`/`REJECTED`/`FILLED`/`CANCELED`/`EXPIRED`), และเมื่อ `FILLED` ต้องมี `quantity`, `price`, `liquidity` ครบ · **ไม่มี timestamp** เพราะเวลามากับ event ที่ทำให้เกิด report และ core ไม่อ่านนาฬิกา (ADR-0001) | ✅ Decided |
+| C-20 | **`PaperExecutionAdapter` ไม่เก็บ Order เอง**: engine เป็นเจ้าของ Order ที่ยังเปิดอยู่ (ตาราง `orders`, data-model §6.5) และส่งกลับเข้ามาเมื่อราคาขยับ การเก็บสำเนาใน adapter จะเป็นแหล่งความจริงที่สอง และหายเมื่อ restart ซึ่ง paper replay (§7.5) กู้คืนไม่ได้ · market data เข้ามาทาง `update_market` ไม่ใช่พารามิเตอร์ของ port เพราะ Live ไม่ต้องใช้ | ✅ Decided |
+| C-21 | **`submit` ต้อง idempotent** (NFR-05, FR-LIVE-07): ราคาเฉพาะ Order ที่สถานะ `PENDING_NEW` เท่านั้น · Order ที่ venue รับไปแล้ว (`NEW`/`PARTIALLY_FILLED`) การส่งซ้ำคือ retry ไม่สร้าง fill ใหม่ · Order ที่จบแล้วโยน `ValueError` · ใช้สถานะของ Order เองเป็น venue state ไม่ต้องเก็บสำเนา (C-20) | ✅ Decided |
 
 ---
 

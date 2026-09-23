@@ -15,6 +15,8 @@ from tiewtrade_core.execution.fills import (
     resting_limit_fill,
     resting_limit_fills,
 )
+from tiewtrade_core.execution.paper import MarketSnapshot, PaperExecutionAdapter, ReportSink
+from tiewtrade_core.execution.report import ExecutionReport, ReportKind
 from tiewtrade_core.execution.triggers import (
     BracketLeg,
     closing_side,
@@ -26,7 +28,12 @@ from tiewtrade_core.execution.triggers import (
 __all__ = [
     "BracketLeg",
     "ExecutionAdapter",
+    "ExecutionReport",
+    "MarketSnapshot",
+    "PaperExecutionAdapter",
     "PaperFill",
+    "ReportKind",
+    "ReportSink",
     "TopOfBook",
     "closing_side",
     "is_marketable",

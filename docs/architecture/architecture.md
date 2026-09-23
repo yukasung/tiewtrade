@@ -172,8 +172,8 @@ class Strategy(Protocol):
 
 # execution — port เดียว ใช้ทั้ง Paper และ Live (P-03, P-04)
 class ExecutionAdapter(Protocol):
-    def submit(self, order: Order) -> None: ...          # ผลลัพธ์กลับมาเป็น ExecutionReport event
-    def cancel(self, order_id: ClientOrderId) -> None: ...
+    def submit(self, order: Order) -> None: ...          # ผลลัพธ์กลับมาเป็น ExecutionReport (C-19)
+    def cancel(self, client_order_id: str) -> None: ...  # อ้างด้วย Client Order ID (FR-LIVE-07)
 
 # risk
 class RiskRule(Protocol):
