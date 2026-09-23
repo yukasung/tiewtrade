@@ -25,7 +25,7 @@ dependency rules อยู่ใน [ADR-0006](architecture/adr/0006-monorepo-an
 
 | Package | สถานะ | มีอะไรอยู่จริง | ยังไม่มี |
 |---|---|---|---|
-| [`tiewtrade_core`](../backend/packages/core/src/tiewtrade_core/) | **Implemented (บางส่วน)** | `market/`, `portfolio/`, `margin/`, `_decimal.py` (`DECIMAL_CONTEXT`) | Risk rules, Order Manager, Paper Fill Model, Strategy interfaces |
+| [`tiewtrade_core`](../backend/packages/core/src/tiewtrade_core/) | **Implemented (บางส่วน)** | `market/`, `portfolio/`, `margin/`, `execution/` (Paper Fill Model §4.1–4.3), `_decimal.py` (`DECIMAL_CONTEXT`) | Risk rules, Order Manager, Strategy interfaces, Paper liquidation (§4.4) และ replay (§4.5) |
 | [`tiewtrade_strategies`](../backend/packages/strategies/src/tiewtrade_strategies/) | **Scaffold** | `__init__.py` เท่านั้น | Built-in Strategy ทุกตัว (D-06), Order Intent emission |
 | [`tiewtrade_binance`](../backend/packages/binance/src/tiewtrade_binance/) | **Scaffold** | `__init__.py` เท่านั้น | REST/WS client, payload mapping, Venue config (D-17) |
 | [`tiewtrade_infra`](../backend/packages/infra/src/tiewtrade_infra/) | **Scaffold** | `__init__.py` เท่านั้น | Postgres repositories, Redis bus, lease, key provider, settings |
@@ -37,6 +37,7 @@ dependency rules อยู่ใน [ADR-0006](architecture/adr/0006-monorepo-an
 | [`market/`](../backend/packages/core/src/tiewtrade_core/market/) | `MarketType`, `MarginMode`, `OrderSide`, `Venue`, `Symbol`, `SymbolFilters`, `FilterViolation`, `LeverageBracket(s)`, `Rounding`, `round_to_increment` | [`test_market.py`](../backend/packages/core/tests/test_market.py) |
 | [`portfolio/`](../backend/packages/core/src/tiewtrade_core/portfolio/) | `SpotHolding`, `apply_spot_buy/sell`, `FuturesPosition`, `apply_futures_fill`, `trading_fee`, `funding_payment`, `FLAT`, `NO_HOLDING` | [`test_portfolio.py`](../backend/packages/core/tests/test_portfolio.py), [`test_portfolio_properties.py`](../backend/packages/core/tests/test_portfolio_properties.py) |
 | [`margin/`](../backend/packages/core/src/tiewtrade_core/margin/) | `margin_requirement`, `order_margin`, `frozen_margin`, `open_loss`, `available_balance`, `assuming_price`, `cross_margin_state`, `isolated_margin_state`, `liquidation_price`, `FuturesExposure`, `MarginState`, `MarginRatio`, `PendingOrder` | [`test_margin.py`](../backend/packages/core/tests/test_margin.py), [`test_margin_properties.py`](../backend/packages/core/tests/test_margin_properties.py) |
+| [`execution/`](../backend/packages/core/src/tiewtrade_core/execution/) | `TopOfBook`, `PaperFill`, `market_fill`, `is_marketable`, `limit_fill_on_submit`, `resting_limit_fill(s)`, `BracketLeg`, `stop_loss_triggered`, `take_profit_triggered`, `triggered_leg`, `closing_side` | [`test_execution.py`](../backend/packages/core/tests/test_execution.py), [`test_execution_properties.py`](../backend/packages/core/tests/test_execution_properties.py) |
 
 สูตรที่ยังมี marker **Verify** ใน [calculation.md](specs/calculation.md) ยังไม่ยืนยันกับ Binance
 ต่อให้มี tests แล้วก็ยังไม่ถือว่า verified

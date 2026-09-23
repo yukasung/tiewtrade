@@ -20,6 +20,7 @@ uv workspace (Python 3.12) 10 members: `packages/` 4 ตัว + `services/` 6 �
 | 4 | [`margin/exposure.py`](packages/core/src/tiewtrade_core/margin/exposure.py) → [`margin/account.py`](packages/core/src/tiewtrade_core/margin/account.py) | จาก position หนึ่งตัว → margin state ของทั้ง Portfolio; `MarginState.is_liquidatable` คือเงื่อนไข liquidation ที่ถือเป็นทางการ |
 | 5 | [`margin/liquidation.py`](packages/core/src/tiewtrade_core/margin/liquidation.py) | ส่วนที่ยากที่สุด docstring อธิบายวิธีแก้สมการข้าม bracket และเหตุผลที่คืน `None` ได้ 2 กรณีตรงข้ามกัน |
 | 6 | [`packages/core/tests/conftest.py`](packages/core/tests/conftest.py) | fixture `margin_gap` คือการเขียนสูตร §2.4 ใหม่แบบอิสระเพื่อตรวจคำตอบ — อ่านแล้วเข้าใจวิธีทดสอบของโปรเจกต์นี้ |
+| 7 | [`execution/fills.py`](packages/core/src/tiewtrade_core/execution/fills.py) | Paper Fill Model — จุดเดียวที่ตอบว่า "order นี้ fill ที่ราคาเท่าไร" อ่าน docstring ของ `limit_fill_on_submit` เรื่องลำดับ ปัด→cap |
 
 **ถ้ามา review เรื่องเงิน** อ่าน 1 → 3 → 5 แล้วเทียบกับ
 [calculation.md](../docs/specs/calculation.md) โดยตรง
@@ -74,7 +75,7 @@ dependency ที่ประกาศจริงใน `pyproject.toml` ขอ
 
 | Member | สถานะ | หน้าที่ (ย่อ — รายละเอียดที่ [architecture §3](../docs/architecture/architecture.md#3-processes-containers)) |
 |---|---|---|
-| `packages/core` | **Implemented (บางส่วน)** | กฎธุรกิจ pure: market, portfolio, margin |
+| `packages/core` | **Implemented (บางส่วน)** | กฎธุรกิจ pure: market, portfolio, margin, execution (Paper Fill Model) |
 | `packages/strategies` | Scaffold | Built-in Strategy → Order Intent (P-01) |
 | `packages/binance` | Scaffold | REST/WS client, payload mapping, Venue config |
 | `packages/infra` | Scaffold | Postgres repos, Redis bus, lease, key provider, settings |
@@ -85,8 +86,8 @@ dependency ที่ประกาศจริงใน `pyproject.toml` ขอ
 | `services/jobs` | Scaffold | งานตามรอบแบบ idempotent |
 | `services/notifier` | Scaffold | แจ้งเตือน In-app / Email / Telegram |
 
-**ใน core เองก็ยังไม่ครบ** ส่วนที่ยังไม่มี: Risk rules, Order Manager, Paper Fill Model,
-Strategy interfaces — ทั้งที่ [architecture §4.3](../docs/architecture/architecture.md#43-key-interfaces-pseudo-code) ร่าง interface ไว้แล้ว
+**ใน core เองก็ยังไม่ครบ** ส่วนที่ยังไม่มี: Risk rules, Order Manager, Strategy interfaces
+และ Paper liquidation (§4.4) ที่ติด marker **Verify** — ทั้งที่ [architecture §4.3](../docs/architecture/architecture.md#43-key-interfaces-pseudo-code) ร่าง interface ไว้แล้ว
 
 ---
 
@@ -118,6 +119,17 @@ Strategy interfaces — ทั้งที่ [architecture §4.3](../docs/archi
 | `account.py` | `MarginState`, `MarginRatio`, `cross_margin_state`, `isolated_margin_state` | ใช้ `is_liquidatable` ไม่ใช่ `margin_ratio` — เหตุผลอยู่ใน docstring และ [calculation §2.4](../docs/specs/calculation.md) |
 | `requirement.py` | `margin_requirement`, `order_margin`, `open_loss`, `frozen_margin`, `available_balance`, `assuming_price`, `PendingOrder`, `MARKET_ORDER_PRICE_BUFFER` | `order_margin` = ส่วนต่างของ requirement + `open_loss` — **อย่าเหมาว่า order ที่ลด position ได้ 0 เสมอ** ทั้งสองส่วนไม่เป็นศูนย์ได้ สูตรอยู่ใน [calculation §2.7](../docs/specs/calculation.md) |
 | `liquidation.py` | `liquidation_price` | แก้ทุก bracket แล้วเลือกคำตอบที่ notional ตกในตัวเอง; คืน `None` ได้ 2 กรณีตรงข้ามกัน — อ่าน docstring ก่อนใช้ |
+
+### `execution/` — Paper Fill Model (§4.1–4.3)
+| ไฟล์ | Public API | หมายเหตุ |
+|---|---|---|
+| `book.py` | `TopOfBook` | snapshot best bid/ask จาก caller · ใช้ `is_abnormal` กรอง snapshot เสีย **ไม่ใช่ `is_crossed`** ซึ่งพลาดกรณี locked (`bid == ask`) |
+| `fills.py` | `PaperFill`, `market_fill`, `is_marketable`, `limit_fill_on_submit`, `resting_limit_fill`, `resting_limit_fills` | ปัดราคาไปทางเสียเปรียบผู้ใช้เสมอ (C-11) · marketable limit **ปัดก่อนแล้วค่อย cap** ห้ามปัดซ้ำ |
+| `triggers.py` | `BracketLeg`, `stop_loss_triggered`, `take_profit_triggered`, `triggered_leg`, `closing_side` | **comparison ล้วน ห้ามใส่เลขคณิต** — จะรันใน context ของ caller · SL ชนะเมื่อ trigger ทั้งคู่ |
+| *(ไม่มีไฟล์ guard แยก)* | — | `0 ≤ s < 1` อยู่ใน `fills.py` ส่วนกฎ "ราคาต้องเป็นบวก" เป็นของ `PaperFill.__post_init__` เองตาม C-18 |
+
+**กับดักที่ต้องรู้:** resting limit ต้องให้ราคา**ทะลุ** (`<`/`>`) ส่วน trigger ของ §4.3 **แตะก็ยิง**
+(`<=`/`>=`) ความไม่สมมาตรนี้เป็นไปตาม spec ไม่ใช่ bug
 
 ### จุดที่ยังไม่ยืนยันกับ Binance
 โค้ดที่มี comment `Verify` คือสูตรที่ยังไม่ confirm — อย่านำไปเสนอว่า verified แล้ว

@@ -350,6 +350,10 @@ Effective Max Leverage = min(Plan Max Leverage, Bracket Max Leverage ของ N
 | C-12 | Assuming Price ใช้ในสูตร Margin Requirement แบบรวม (§2.7) | Verify |
 | C-13 | ขอบเขต Liquidation `Margin Balance ≤ MM` กรณีเท่ากันพอดี (§2.4) | Verify |
 | C-14 | isolated wallet ที่เหลือหลัง Liquidation ถูกริบทั้งหมด (§4.4) | Verify |
+| C-15 | ขอบเขต Paper slippage rate `s`: บังคับ `0 ≤ s < 1` (`s < 0` จะ fill ดีกว่าราคาตลาด ขัด D-05; `s ≥ 1` ทำให้ราคาขาย ≤ 0; `s = 0` อนุญาตตาม FR-ORD-07 ที่ระบุแค่ค่า default) | ✅ Decided |
+| C-16 | Book ที่ `bid ≥ ask` (crossed หรือ locked): Trading Core รับไว้และคำนวณตามข้อมูลที่ได้ ไม่ตัดสินว่าข้อมูลดีหรือเสีย และเปิด predicate ให้ Paper adapter กรอง snapshot เอง | ✅ Decided |
+| C-17 | เมื่อเงื่อนไข TP และ SL เป็นจริงพร้อมกันใน tick เดียว (bracket ตั้งผิดหรือราคา gap) ให้ **SL ชนะ** สอดคล้องกับ §4.5 และ D-05 (§4.3) | ✅ Decided |
+| C-18 | Paper fill ปัด tick แล้วจึง cap ตามราคา Limit (ไม่ปัดซ้ำหลัง cap) และตรวจว่าราคาเป็นบวกเฉพาะราคาสุดท้าย ไม่ใช่ค่ากลางทางของ §4.2 | ✅ Decided |
 
 ---
 

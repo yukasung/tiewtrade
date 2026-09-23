@@ -24,3 +24,13 @@ class OrderSide(StrEnum):
 class MarginMode(StrEnum):
     CROSS = "CROSS"
     ISOLATED = "ISOLATED"
+
+
+class LiquidityRole(StrEnum):
+    """Which side of the book a fill took, selecting the fee rate (calculation spec §1, §2.8).
+
+    Paper derives it from the Fill Model (§4.2); Live takes it from what Binance reports.
+    """
+
+    MAKER = "MAKER"
+    TAKER = "TAKER"
