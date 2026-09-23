@@ -6,6 +6,7 @@ Trading SaaS for Binance Spot and USDⓈ-M Futures with Paper and Live trading.
 - [MVP Requirements](docs/requirements/mvp.md)
 - [Architecture](docs/architecture/architecture.md) and [ADRs](docs/architecture/adr/)
 - Specs: [Calculation](docs/specs/calculation.md), [Data Model](docs/specs/data-model.md), [API](docs/specs/api.md)
+- [Implementation Status](docs/implementation-status.md) — implemented vs scaffold
 
 ## Repository layout
 ```
@@ -18,6 +19,8 @@ docs/        requirements, architecture, specs
 
 ## Backend development
 Requires [uv](https://docs.astral.sh/uv/).
+Start with [backend/README.md](backend/README.md) — the developer/reviewer map of packages,
+services, dependency direction and where to start reading.
 
 ```sh
 cd backend

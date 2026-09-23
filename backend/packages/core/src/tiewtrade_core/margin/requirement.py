@@ -80,7 +80,12 @@ def order_margin(
 ) -> Decimal:
     """Margin a new order needs on top of what is already frozen (calculation spec §2.7).
 
-    Orders that reduce the position therefore need zero additional margin.
+    An order that reduces the position usually needs nothing extra, because the combined
+    per-symbol requirement already covers it. It is not guaranteed: both terms below can
+    be positive. A take-profit sell priced far above the mark raises the requirement
+    itself (its Ask Value exceeds the position notional), and an order priced against the
+    mark adds Open Loss. Callers must use this result rather than assume zero for
+    reducing orders.
     """
     existing = list(existing_orders)
     before = margin_requirement(quantity, mark_price, leverage, existing)
