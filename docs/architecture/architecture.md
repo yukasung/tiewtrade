@@ -186,7 +186,7 @@ def apply(state: PortfolioState, event: PortfolioEvent) -> tuple[PortfolioState,
 `PaperExecutionAdapter` อยู่ใน core เพราะเป็นการคำนวณล้วน (Paper Fill Model, D-05) ส่วน `BinanceExecutionAdapter` อยู่ใน engine และส่ง command ไป process `execution`
 
 ### 4.4 Client Order ID
-- รูปแบบ: prefix ของระบบ + เวอร์ชัน + รหัส Portfolio แบบสั้น + ลำดับ (เช่น `ft1-<portfolio>-<seq>`) ความยาวไม่เกินที่ Binance กำหนด (ต้อง verify)
+- รูปแบบ: prefix ของระบบ + เวอร์ชัน + รหัส Portfolio แบบสั้น + ลำดับ (เช่น `tt1-<portfolio>-<seq>`) ความยาวไม่เกินที่ Binance กำหนด (ต้อง verify)
 - ใช้ทั้ง idempotency (NFR-05) และแยก Order ของระบบออกจาก `EXTERNAL` (D-14)
 - สร้างก่อนส่งและบันทึกลง Postgres ก่อนส่งเสมอ เมื่อ timeout ให้ query ด้วย ID นี้ก่อน retry (FR-LIVE-07)
 
