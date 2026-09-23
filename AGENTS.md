@@ -64,6 +64,13 @@ Calculation code needs unit tests with worked examples and property-based tests
 
 ## Git
 - Commit or push only when the owner asks. After pushing, check that CI passes.
+- Delete a work branch once it is merged into `main`, pushed, and CI is green — all three.
+  Deleting before the work is on the remote and verified leaves nothing to fall back on if
+  the merge has to be undone.
+  - Use `git branch -d`, never `-D`: `-d` refuses to delete unmerged work and is the last
+    guard against losing commits.
+  - Delete only branches created for that task; leave the owner's other branches alone.
+  - Deleting a remote branch is the owner's call — it can affect open PRs and other people.
 - `astral-sh/setup-uv` has no floating major tags; pin exact versions.
 
 ## Local environment
