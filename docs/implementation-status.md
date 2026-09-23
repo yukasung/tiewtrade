@@ -80,7 +80,8 @@ API ที่ implement แล้วมีแค่ health endpoint เดีย
 | ส่วน | สถานะ |
 |---|---|
 | uv workspace 10 members (4 packages + 6 services) | **Implemented** |
-| ruff, mypy (strict สำหรับ core + strategies), import-linter 6 contracts, pytest | **Implemented** และเป็นเกณฑ์เดียวกับ CI |
+| ruff, mypy (strict สำหรับ core + strategies), import-linter 7 contracts, pytest | **Implemented** และเป็นเกณฑ์เดียวกับ CI |
+| Core purity checks ([`test_core_purity.py`](../backend/packages/core/tests/test_core_purity.py)) — บังคับ `@calc`, ห้าม clock/randomness/filesystem, ห้าม `float` | **Implemented** — ปิด IMP-02 |
 | `deploy/docker-compose.yml` — Postgres 16 + Redis 7 | **Implemented** (local เท่านั้น; ยังไม่มี application services) |
 | Application services ใน compose | **Planned** — เพิ่มเมื่อแต่ละ service มี runtime (ADR-0008) |
 

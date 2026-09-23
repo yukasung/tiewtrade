@@ -55,6 +55,10 @@ uv workspace (Python 3.12) 10 members: `packages/` 4 ตัว + `services/` 6 �
 `market_data` ที่ import `tiewtrade_binance` ได้ — บังคับ P-01 และ ADR-0005 ว่า
 Strategy/engine เรียก Binance ตรงไม่ได้
 
+**ภายใน core ก็มีชั้นเช่นกัน** (layers contract ตาม architecture §4.2) ชั้นบนเรียกชั้นล่างได้
+ทางเดียว: `execution` → `orders` → `margin` → `portfolio` → `market` → `_decimal`
+นี่คือสิ่งที่บังคับว่า type ที่ใช้ร่วมกันอย่าง `LiquidityRole` ต้องอยู่ `market/` ไม่ใช่เพราะมีคนจำได้
+
 dependency ที่ประกาศจริงใน `pyproject.toml` ของแต่ละ member:
 
 | Member | ขึ้นกับ |
@@ -170,8 +174,8 @@ uv sync                  # สร้าง .venv และติดตั้ง�
 uv run ruff check .          # lint
 uv run ruff format --check . # format (ตัด --check ออกเพื่อให้แก้ไฟล์ให้)
 uv run mypy                  # strict สำหรับ tiewtrade_core และ tiewtrade_strategies
-uv run lint-imports          # dependency rules 6 contracts (§2)
-uv run pytest                # ปัจจุบัน 62 tests
+uv run lint-imports          # dependency rules 7 contracts (§2)
+uv run pytest                # ปัจจุบัน 257 tests
 ```
 
 รัน API:
@@ -195,6 +199,15 @@ Postgres + Redis สำหรับ local อยู่ที่ [`deploy/`](../d
 
 `conftest.py` เรียก `setcontext(DECIMAL_CONTEXT.copy())` — ค่าที่คาดหวังในเทสต์ต้องคำนวณ
 ด้วย precision เดียวกับ core ไม่งั้นผลต่างกัน
+
+### กฎของ core ที่บังคับด้วยเทสต์
+
+[`test_core_purity.py`](packages/core/tests/test_core_purity.py) อ่าน AST ของทุกไฟล์ใน core
+แล้วบังคับ 4 ข้อที่ import-linter มองไม่เห็น: ฟังก์ชันที่ทำเลขคณิตต้องอยู่ใน `@calc` ·
+ห้าม import clock/randomness/filesystem · ห้ามเรียก `open`/`print`/`eval` · ห้ามใช้ `float`
+
+เขียนขึ้นเพราะ `@calc` ถูกลืมมาแล้ว **สองครั้ง** และทั้งสองครั้งหลุด review ไปจนถึงรอบถัดไป —
+การจำกฎไม่พอ ต้องให้เครื่องตรวจ
 
 ---
 

@@ -3,7 +3,7 @@
 วันที่: 2026-09-23
 ผู้ตอบ: Claude Code
 อ้างอิง: [backend-structure-review.md](backend-structure-review.md) (Codex, 2026-09-23)
-สถานะ: REV-01 แก้แล้วและทดสอบ end-to-end แล้ว · IMP-01 ทำแล้ว · IMP-02–IMP-04 ยังเป็น **Proposed**  
+สถานะ: REV-01 แก้แล้วและทดสอบ end-to-end แล้ว · IMP-01 ทำแล้ว · **IMP-02 ทำแล้ว** (2026-09-23) · IMP-03–IMP-04 ยังเป็น **Proposed**  
 ผ่าน re-review ของ Codex 2 รอบ พบรวม 6 findings — แก้ครบทั้งหมดแล้ว
 
 เอกสาร review เดิมไม่ถูกแก้ไข
@@ -198,10 +198,33 @@ import-linter 6 contracts · mypy `strict = true` สำหรับ `tiewtrade_
 
 ## 5. ที่ยังค้าง
 
-1. **IMP-02** เพิ่ม static checks กัน clock/file/random ใน core — ทำเมื่อขยาย core
 2. **IMP-03** integration test discovery + ownership ของ migrations — ทำเมื่อมี persistence งานแรก
 3. **IMP-04** ขอบเขต Paper execution กับ Live gateway — ทำเมื่อเริ่ม execution features
 4. **ทดสอบ restore จาก cold copy (`tar`) ใน §B.2** — ตอนนี้ทดสอบแค่ว่าสร้างไฟล์ได้
 5. ข้อจำกัดการทดสอบที่เหลือใน §3.5 (ข้อมูลขนาดใหญ่, extension/schema ซับซ้อน, ข้าม major version)
 
-IMP-02 ถึง IMP-04 ยังเป็น **Proposed** ตามขอบเขตที่ตกลงไว้ รอบนี้ไม่ได้ implement
+IMP-03 และ IMP-04 ยังเป็น **Proposed** ตามขอบเขตที่ตกลงไว้
+
+## 6. IMP-02 — ปิดแล้ว (2026-09-23)
+
+เกณฑ์รับที่ Codex เขียนไว้: *"ตัวอย่างอ่าน clock/network/file หรือสร้าง random ID ใน core ถูกตรวจพบ
+ขณะที่ deterministic code และการรับ time/ID จาก caller ยังผ่าน"*
+
+ทำด้วย [`test_core_purity.py`](../../backend/packages/core/tests/test_core_purity.py) ซึ่งอ่าน AST
+ของทุกไฟล์ใน core แล้วบังคับ 4 ข้อ:
+
+| กฎ | ทำไม |
+|---|---|
+| ฟังก์ชันที่ทำเลขคณิตต้องอยู่ใน `@calc` | ถูกลืมมาแล้ว 2 ครั้ง ทั้งคู่หลุด review ไปรอบถัดไป |
+| ห้าม import `time`, `datetime`, `random`, `uuid`, `os`, `pathlib`, `socket` | ADR-0001: เวลาและ ID มาจาก caller |
+| ห้ามเรียก `open`, `print`, `eval`, `exec` | ไม่มี I/O ใน core |
+| ห้ามใช้ `float` | เงินต้องเป็น `Decimal` |
+
+ตรงตามเกณฑ์: `datetime` ที่รับ**เป็นพารามิเตอร์**จาก caller ยังผ่าน เพราะตรวจที่ import ไม่ใช่ที่ type
+
+**ยืนยันด้วย mutation test 5 แบบ** — ลืม `@calc`, `import random`, `from datetime import`,
+`print()`, `quantity: float` → แดงทุกตัว
+
+เพิ่ม **import-linter layers contract** ด้วย (7 contracts แล้ว) บังคับลำดับชั้นภายใน core ตาม
+architecture §4.2: `execution` → `orders` → `margin` → `portfolio` → `market` → `_decimal`
+ก่อนหน้านี้เหตุผลที่วาง `LiquidityRole` ไว้ `market/` บังคับด้วย review เท่านั้น

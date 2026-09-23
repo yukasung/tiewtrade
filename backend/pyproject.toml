@@ -138,6 +138,21 @@ modules = [
     "tiewtrade_execution", "tiewtrade_jobs", "tiewtrade_notifier",
 ]
 
+# Inside the core, architecture §4.2 orders the modules. Nothing enforced this before, so
+# the reasoning that puts a shared type in `market` held only as long as someone remembered
+# it. Higher layers may import lower ones, never the reverse.
+[[tool.importlinter.contracts]]
+name = "Trading Core modules are layered (architecture §4.2)"
+type = "layers"
+layers = [
+    "tiewtrade_core.execution",
+    "tiewtrade_core.orders",
+    "tiewtrade_core.margin",
+    "tiewtrade_core.portfolio",
+    "tiewtrade_core.market",
+    "tiewtrade_core._decimal",
+]
+
 [[tool.importlinter.contracts]]
 name = "Only execution and market-data may use the Binance package (P-01, ADR-0005)"
 type = "forbidden"
