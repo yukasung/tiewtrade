@@ -2,7 +2,7 @@ from decimal import Decimal as D
 
 import pytest
 
-from fasttrade_core.market import (
+from tiewtrade_core.market import (
     FilterViolation,
     LeverageBracket,
     LeverageBrackets,

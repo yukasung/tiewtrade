@@ -3,8 +3,8 @@ from decimal import Decimal, setcontext
 
 import pytest
 
-from fasttrade_core import DECIMAL_CONTEXT
-from fasttrade_core.market import LeverageBracket, LeverageBrackets
+from tiewtrade_core import DECIMAL_CONTEXT
+from tiewtrade_core.market import LeverageBracket, LeverageBrackets
 
 # Expected values in tests must be computed with the same precision as the core.
 setcontext(DECIMAL_CONTEXT.copy())

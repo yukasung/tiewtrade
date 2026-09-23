@@ -1,4 +1,4 @@
-# fasttrade — Architecture
+# TiewTrade — Architecture
 
 | Field | Value |
 |---|---|
@@ -38,8 +38,8 @@
 flowchart LR
     user["User (Browser)"]
     admin["Platform Admin (Browser)"]
-    subgraph fasttrade["fasttrade"]
-        sys["fasttrade system"]
+    subgraph tiewtrade["TiewTrade"]
+        sys["TiewTrade system"]
     end
     bcom["Binance.com<br/>REST + WebSocket<br/>(public market data, private trading, Testnet)"]
     bth["Binance TH<br/>(future Venue)"]
@@ -110,7 +110,7 @@ flowchart TB
 
 ---
 
-## 4. Trading Core (`fasttrade_core`)
+## 4. Trading Core (`tiewtrade_core`)
 
 ### 4.1 หลักการ ([ADR-0001](adr/0001-hexagonal-pure-trading-core.md))
 - **Pure Python** ไม่มี I/O: ไม่เรียก network, database, Redis, filesystem
@@ -156,7 +156,7 @@ flowchart LR
 | `reconciliation` | เทียบ internal state กับ exchange snapshot → corrective events (Binance ชนะ), ตรวจ `EXTERNAL`, ตรวจโหมดบัญชี | FR-LIVE-04..06, FR-LIVE-12 |
 | `entitlement` | ค่า Entitlement ของ Plan (อ่านจาก config ที่ส่งเข้ามา) และการประเมินส่วนเกิน | FR-PLN-03..12 |
 
-`fasttrade_strategies` (package แยก) เก็บ Built-in Strategy ที่เจ้าของระบบเขียน ขึ้นกับ `fasttrade_core` เท่านั้น (D-06)
+`tiewtrade_strategies` (package แยก) เก็บ Built-in Strategy ที่เจ้าของระบบเขียน ขึ้นกับ `tiewtrade_core` เท่านั้น (D-06)
 
 ### 4.3 Key interfaces (pseudo-code)
 
@@ -381,10 +381,10 @@ Admin → api (2FA) → บันทึก flag ใน Postgres + audit log → 
 ```
 backend/                      uv workspace
   packages/
-    core/                     fasttrade_core — pure Trading Core
-    strategies/               fasttrade_strategies — Built-in Strategy (ขึ้นกับ core เท่านั้น)
-    binance/                  fasttrade_binance — REST/WS client, mapping, Venue config
-    infra/                    fasttrade_infra — Postgres repos, Redis bus, lease, key provider, settings
+    core/                     tiewtrade_core — pure Trading Core
+    strategies/               tiewtrade_strategies — Built-in Strategy (ขึ้นกับ core เท่านั้น)
+    binance/                  tiewtrade_binance — REST/WS client, mapping, Venue config
+    infra/                    tiewtrade_infra — Postgres repos, Redis bus, lease, key provider, settings
   services/
     api/  engine/  market_data/  execution/  jobs/  notifier/
 frontend/                     Vite + React + TS

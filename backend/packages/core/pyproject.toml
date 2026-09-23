@@ -1,5 +1,5 @@
 [project]
-name = "fasttrade-core"
+name = "tiewtrade-core"
 version = "0.1.0"
 description = "Pure Trading Core: domain model and deterministic calculations (ADR-0001)"
 requires-python = ">=3.12"
@@ -10,4 +10,4 @@ requires = ["hatchling>=1.25"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/fasttrade_core"]
+packages = ["src/tiewtrade_core"]

@@ -3,7 +3,7 @@ from decimal import Decimal as D
 
 import pytest
 
-from fasttrade_core.margin import (
+from tiewtrade_core.margin import (
     FuturesExposure,
     MarginState,
     PendingOrder,
@@ -16,7 +16,7 @@ from fasttrade_core.margin import (
     open_loss,
     order_margin,
 )
-from fasttrade_core.market import LeverageBrackets, OrderSide
+from tiewtrade_core.market import LeverageBrackets, OrderSide
 
 MarginGap = Callable[..., D]
 

@@ -1,4 +1,4 @@
-# fasttrade
+# TiewTrade
 
 Trading SaaS for Binance Spot and USDⓈ-M Futures with Paper and Live trading.
 
@@ -25,9 +25,9 @@ uv sync                      # create .venv and install all workspace packages
 uv run pytest                # tests
 uv run ruff check .          # lint
 uv run ruff format .         # format
-uv run mypy                  # type check (strict for fasttrade_core)
+uv run mypy                  # type check (strict for tiewtrade_core)
 uv run lint-imports          # architecture rules (ADR-0001, ADR-0006)
-uv run uvicorn fasttrade_api.app:app --reload   # API at http://127.0.0.1:8000/api/v1/health
+uv run uvicorn tiewtrade_api.app:app --reload   # API at http://127.0.0.1:8000/api/v1/health
 ```
 
 ## Local infrastructure

@@ -2,8 +2,8 @@ from decimal import Decimal as D
 
 import pytest
 
-from fasttrade_core.market import OrderSide
-from fasttrade_core.portfolio import (
+from tiewtrade_core.market import OrderSide
+from tiewtrade_core.portfolio import (
     FLAT,
     NO_HOLDING,
     FuturesPosition,

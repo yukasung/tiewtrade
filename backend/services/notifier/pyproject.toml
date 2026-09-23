@@ -1,13 +1,13 @@
 [project]
-name = "fasttrade-notifier"
+name = "tiewtrade-notifier"
 version = "0.1.0"
 description = "Notification delivery: in-app, email, Telegram"
 requires-python = ">=3.12"
-dependencies = ["fasttrade-core", "fasttrade-infra"]
+dependencies = ["tiewtrade-core", "tiewtrade-infra"]
 
 [build-system]
 requires = ["hatchling>=1.25"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/fasttrade_notifier"]
+packages = ["src/tiewtrade_notifier"]

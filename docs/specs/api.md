@@ -1,4 +1,4 @@
-# fasttrade — API Spec (REST + WebSocket)
+# TiewTrade — API Spec (REST + WebSocket)
 
 | Field | Value |
 |---|---|

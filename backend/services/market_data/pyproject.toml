@@ -1,13 +1,13 @@
 [project]
-name = "fasttrade-market-data"
+name = "tiewtrade-market-data"
 version = "0.1.0"
 description = "Market data ingestion per Exchange Venue"
 requires-python = ">=3.12"
-dependencies = ["fasttrade-core", "fasttrade-binance", "fasttrade-infra"]
+dependencies = ["tiewtrade-core", "tiewtrade-binance", "tiewtrade-infra"]
 
 [build-system]
 requires = ["hatchling>=1.25"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/fasttrade_market_data"]
+packages = ["src/tiewtrade_market_data"]

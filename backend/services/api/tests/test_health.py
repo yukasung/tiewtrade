@@ -1,6 +1,6 @@
 from fastapi.testclient import TestClient
 
-from fasttrade_api.app import create_app
+from tiewtrade_api.app import create_app
 
 
 def test_health_returns_ok() -> None:

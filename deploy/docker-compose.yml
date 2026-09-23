@@ -1,13 +1,13 @@
 # Local development infrastructure. Application services are added to this
 # file as they are implemented (ADR-0008).
-name: fasttrade
+name: tiewtrade
 
 services:
   postgres:
     image: postgres:16-alpine          # Cloud SQL compatible major version (NFR-24)
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-fasttrade}
-      POSTGRES_USER: ${POSTGRES_USER:-fasttrade}
+      POSTGRES_DB: ${POSTGRES_DB:-tiewtrade}
+      POSTGRES_USER: ${POSTGRES_USER:-tiewtrade}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in deploy/.env}
     ports:
       - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"

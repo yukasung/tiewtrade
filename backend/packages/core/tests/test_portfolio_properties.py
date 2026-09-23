@@ -3,8 +3,8 @@ from decimal import Decimal as D
 from hypothesis import given
 from hypothesis import strategies as st
 
-from fasttrade_core.market import OrderSide
-from fasttrade_core.portfolio import FLAT, apply_futures_fill
+from tiewtrade_core.market import OrderSide
+from tiewtrade_core.portfolio import FLAT, apply_futures_fill
 
 fills = st.lists(
     st.tuples(

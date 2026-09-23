@@ -8,7 +8,7 @@
 Paper และ Live ต้องใช้ Trading Core ร่วมกัน (P-03) การคำนวณต้อง deterministic (P-07) และต้อง replay ได้หลังระบบล่ม (NFR-15) Trading Core ต้องไม่ผูกกับ FastAPI (NFR-03)
 
 ## Decision
-- `fasttrade_core` เป็น pure Python: ไม่มี I/O, ไม่อ่านนาฬิกาเอง (เวลามากับ event), ใช้ Decimal
+- `tiewtrade_core` เป็น pure Python: ไม่มี I/O, ไม่อ่านนาฬิกาเอง (เวลามากับ event), ใช้ Decimal
 - ติดต่อโลกภายนอกผ่าน port เช่น `ExecutionAdapter`; adapter จริงอยู่นอก core
 - `PaperExecutionAdapter` อยู่ใน core เพราะเป็นการคำนวณล้วน
 - บังคับ dependency rule ด้วย import-linter ใน CI

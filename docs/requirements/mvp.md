@@ -1,4 +1,4 @@
-# fasttrade — MVP Requirements
+# TiewTrade — MVP Requirements
 
 | Field | Value |
 |---|---|
@@ -540,10 +540,10 @@ Bot/Strategy┘                  (approve/reject)  (lifecycle,          (interfa
 ### 6.1 Tenancy
 | Term | นิยาม | ห้ามใช้ / หมายเหตุ |
 |---|---|---|
-| User | บุคคลที่มีบัญชีเข้าระบบ fasttrade | "Customer" |
+| User | บุคคลที่มีบัญชีเข้าระบบ TiewTrade | "Customer" |
 | Workspace | ขอบเขตการแยกข้อมูล (Tenant) เป็นเจ้าของข้อมูลทั้งหมดและ Plan; MVP มีสมาชิก 1 คน (D-12) | "Tenant" (ใช้ได้เฉพาะเป็นคำอธิบายเชิง architecture), "Organization", "Team", "Account" |
 | Workspace Member | User ที่เป็นสมาชิกของ Workspace; MVP มีได้ 1 คนต่อ Workspace | "Member" ลอยๆ |
-| Platform Admin | เจ้าของ/ผู้ดูแลระบบ fasttrade อยู่นอกทุก Workspace ใช้บัญชีแยกและบังคับ 2FA; สิทธิ์ตาม FR-ADM (D-20) | "Admin" ลอยๆ, "Superuser" |
+| Platform Admin | เจ้าของ/ผู้ดูแลระบบ TiewTrade อยู่นอกทุก Workspace ใช้บัญชีแยกและบังคับ 2FA; สิทธิ์ตาม FR-ADM (D-20) | "Admin" ลอยๆ, "Superuser" |
 | Plan | ระดับบริการ `FREE` / `PRO` / `ADVANCED` ผูกกับ Workspace | "Tier", "Package" |
 | Entitlement | สิทธิ์/limit ที่ได้จาก Plan เช่น Leverage สูงสุด, วงเงินการเทรด, จำนวน Portfolio สูงสุด (D-11) | "Quota" (ใช้ได้เฉพาะในบริบท rate limit) |
 | Open Notional | มูลค่า Position ที่เปิดอยู่รวมทุก Portfolio ใน Workspace ใช้วัดวงเงินการเทรดตาม Plan (D-11) | "Exposure" (ใช้ได้เป็นคำอธิบาย), "Volume" (Volume คือปริมาณซื้อขาย) |

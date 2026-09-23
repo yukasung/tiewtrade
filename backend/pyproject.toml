@@ -1,21 +1,21 @@
-# fasttrade backend workspace (ADR-0006). The root is not a package; it wires
+# tiewtrade backend workspace (ADR-0006). The root is not a package; it wires
 # the workspace members together and holds shared tool configuration.
 
 [project]
-name = "fasttrade-workspace"
+name = "tiewtrade-workspace"
 version = "0.1.0"
 requires-python = ">=3.12"
 dependencies = [
-    "fasttrade-core",
-    "fasttrade-strategies",
-    "fasttrade-binance",
-    "fasttrade-infra",
-    "fasttrade-api",
-    "fasttrade-engine",
-    "fasttrade-market-data",
-    "fasttrade-execution",
-    "fasttrade-jobs",
-    "fasttrade-notifier",
+    "tiewtrade-core",
+    "tiewtrade-strategies",
+    "tiewtrade-binance",
+    "tiewtrade-infra",
+    "tiewtrade-api",
+    "tiewtrade-engine",
+    "tiewtrade-market-data",
+    "tiewtrade-execution",
+    "tiewtrade-jobs",
+    "tiewtrade-notifier",
 ]
 
 [dependency-groups]
@@ -35,16 +35,16 @@ package = false
 members = ["packages/*", "services/*"]
 
 [tool.uv.sources]
-fasttrade-core = { workspace = true }
-fasttrade-strategies = { workspace = true }
-fasttrade-binance = { workspace = true }
-fasttrade-infra = { workspace = true }
-fasttrade-api = { workspace = true }
-fasttrade-engine = { workspace = true }
-fasttrade-market-data = { workspace = true }
-fasttrade-execution = { workspace = true }
-fasttrade-jobs = { workspace = true }
-fasttrade-notifier = { workspace = true }
+tiewtrade-core = { workspace = true }
+tiewtrade-strategies = { workspace = true }
+tiewtrade-binance = { workspace = true }
+tiewtrade-infra = { workspace = true }
+tiewtrade-api = { workspace = true }
+tiewtrade-engine = { workspace = true }
+tiewtrade-market-data = { workspace = true }
+tiewtrade-execution = { workspace = true }
+tiewtrade-jobs = { workspace = true }
+tiewtrade-notifier = { workspace = true }
 
 # --- ruff ---------------------------------------------------------------
 [tool.ruff]
@@ -76,7 +76,7 @@ disallow_untyped_defs = true
 
 # Trading Core and strategies carry the money logic: strictest checking.
 [[tool.mypy.overrides]]
-module = ["fasttrade_core.*", "fasttrade_strategies.*"]
+module = ["tiewtrade_core.*", "tiewtrade_strategies.*"]
 strict = true
 
 # --- pytest -------------------------------------------------------------
@@ -87,59 +87,59 @@ addopts = ["--import-mode=importlib", "-ra", "--strict-markers"]
 # --- import-linter: architecture rules (ADR-0001, ADR-0006) -------------
 [tool.importlinter]
 root_packages = [
-    "fasttrade_core", "fasttrade_strategies", "fasttrade_binance", "fasttrade_infra",
-    "fasttrade_api", "fasttrade_engine", "fasttrade_market_data",
-    "fasttrade_execution", "fasttrade_jobs", "fasttrade_notifier",
+    "tiewtrade_core", "tiewtrade_strategies", "tiewtrade_binance", "tiewtrade_infra",
+    "tiewtrade_api", "tiewtrade_engine", "tiewtrade_market_data",
+    "tiewtrade_execution", "tiewtrade_jobs", "tiewtrade_notifier",
 ]
 include_external_packages = true
 
 [[tool.importlinter.contracts]]
-name = "Trading Core is pure: no I/O frameworks and no other fasttrade packages"
+name = "Trading Core is pure: no I/O frameworks and no other tiewtrade packages"
 type = "forbidden"
-source_modules = ["fasttrade_core"]
+source_modules = ["tiewtrade_core"]
 forbidden_modules = [
     "fastapi", "starlette", "sqlalchemy", "asyncpg", "redis", "httpx", "requests", "websockets",
-    "fasttrade_strategies", "fasttrade_binance", "fasttrade_infra",
-    "fasttrade_api", "fasttrade_engine", "fasttrade_market_data",
-    "fasttrade_execution", "fasttrade_jobs", "fasttrade_notifier",
+    "tiewtrade_strategies", "tiewtrade_binance", "tiewtrade_infra",
+    "tiewtrade_api", "tiewtrade_engine", "tiewtrade_market_data",
+    "tiewtrade_execution", "tiewtrade_jobs", "tiewtrade_notifier",
 ]
 
 [[tool.importlinter.contracts]]
 name = "Strategies depend on Trading Core only (P-01: no Binance access)"
 type = "forbidden"
-source_modules = ["fasttrade_strategies"]
+source_modules = ["tiewtrade_strategies"]
 forbidden_modules = [
     "fastapi", "sqlalchemy", "asyncpg", "redis", "httpx", "requests", "websockets",
-    "fasttrade_binance", "fasttrade_infra",
-    "fasttrade_api", "fasttrade_engine", "fasttrade_market_data",
-    "fasttrade_execution", "fasttrade_jobs", "fasttrade_notifier",
+    "tiewtrade_binance", "tiewtrade_infra",
+    "tiewtrade_api", "tiewtrade_engine", "tiewtrade_market_data",
+    "tiewtrade_execution", "tiewtrade_jobs", "tiewtrade_notifier",
 ]
 
 [[tool.importlinter.contracts]]
 name = "Shared packages depend on Trading Core only; composition happens in services"
 type = "forbidden"
-source_modules = ["fasttrade_binance", "fasttrade_infra"]
+source_modules = ["tiewtrade_binance", "tiewtrade_infra"]
 forbidden_modules = [
-    "fasttrade_strategies",
-    "fasttrade_api", "fasttrade_engine", "fasttrade_market_data",
-    "fasttrade_execution", "fasttrade_jobs", "fasttrade_notifier",
+    "tiewtrade_strategies",
+    "tiewtrade_api", "tiewtrade_engine", "tiewtrade_market_data",
+    "tiewtrade_execution", "tiewtrade_jobs", "tiewtrade_notifier",
 ]
 
 [[tool.importlinter.contracts]]
 name = "Binance adapter and infra adapters are independent"
 type = "independence"
-modules = ["fasttrade_binance", "fasttrade_infra"]
+modules = ["tiewtrade_binance", "tiewtrade_infra"]
 
 [[tool.importlinter.contracts]]
 name = "Services do not import each other"
 type = "independence"
 modules = [
-    "fasttrade_api", "fasttrade_engine", "fasttrade_market_data",
-    "fasttrade_execution", "fasttrade_jobs", "fasttrade_notifier",
+    "tiewtrade_api", "tiewtrade_engine", "tiewtrade_market_data",
+    "tiewtrade_execution", "tiewtrade_jobs", "tiewtrade_notifier",
 ]
 
 [[tool.importlinter.contracts]]
 name = "Only execution and market-data may use the Binance package (P-01, ADR-0005)"
 type = "forbidden"
-source_modules = ["fasttrade_api", "fasttrade_engine", "fasttrade_jobs", "fasttrade_notifier"]
-forbidden_modules = ["fasttrade_binance"]
+source_modules = ["tiewtrade_api", "tiewtrade_engine", "tiewtrade_jobs", "tiewtrade_notifier"]
+forbidden_modules = ["tiewtrade_binance"]

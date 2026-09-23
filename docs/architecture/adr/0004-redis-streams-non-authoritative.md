@@ -16,4 +16,4 @@ process ต้องสื่อสารกันโดยไม่เรีย
 ## Consequences
 - ใช้ Redis ตัวเดียวทั้ง cache, bus และ rate limit ลดจำนวน component บน VM
 - ย้ายไป Memorystore ได้โดยไม่เปลี่ยน design
-- ถ้าอนาคตต้องการ bus ที่ทนทานกว่า (เช่น Pub/Sub ของ GCP) ต้องเปลี่ยน adapter ใน `fasttrade_infra`
+- ถ้าอนาคตต้องการ bus ที่ทนทานกว่า (เช่น Pub/Sub ของ GCP) ต้องเปลี่ยน adapter ใน `tiewtrade_infra`

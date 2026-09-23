@@ -1,4 +1,4 @@
-# fasttrade — Data Model (PostgreSQL)
+# TiewTrade — Data Model (PostgreSQL)
 
 | Field | Value |
 |---|---|

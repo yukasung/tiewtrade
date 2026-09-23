@@ -8,17 +8,17 @@ resolution-markers = [
 
 [manifest]
 members = [
-    "fasttrade-api",
-    "fasttrade-binance",
-    "fasttrade-core",
-    "fasttrade-engine",
-    "fasttrade-execution",
-    "fasttrade-infra",
-    "fasttrade-jobs",
-    "fasttrade-market-data",
-    "fasttrade-notifier",
-    "fasttrade-strategies",
-    "fasttrade-workspace",
+    "tiewtrade-api",
+    "tiewtrade-binance",
+    "tiewtrade-core",
+    "tiewtrade-engine",
+    "tiewtrade-execution",
+    "tiewtrade-infra",
+    "tiewtrade-jobs",
+    "tiewtrade-market-data",
+    "tiewtrade-notifier",
+    "tiewtrade-strategies",
+    "tiewtrade-workspace",
 ]
 
 [[package]]
@@ -160,158 +160,158 @@ wheels = [
 ]
 
 [[package]]
-name = "fasttrade-api"
+name = "tiewtrade-api"
 version = "0.1.0"
 source = { editable = "services/api" }
 dependencies = [
     { name = "fastapi" },
-    { name = "fasttrade-core" },
-    { name = "fasttrade-infra" },
+    { name = "tiewtrade-core" },
+    { name = "tiewtrade-infra" },
     { name = "uvicorn", extra = ["standard"] },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "fastapi", specifier = ">=0.115" },
-    { name = "fasttrade-core", editable = "packages/core" },
-    { name = "fasttrade-infra", editable = "packages/infra" },
+    { name = "tiewtrade-core", editable = "packages/core" },
+    { name = "tiewtrade-infra", editable = "packages/infra" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.30" },
 ]
 
 [[package]]
-name = "fasttrade-binance"
+name = "tiewtrade-binance"
 version = "0.1.0"
 source = { editable = "packages/binance" }
 dependencies = [
-    { name = "fasttrade-core" },
+    { name = "tiewtrade-core" },
 ]
 
 [package.metadata]
-requires-dist = [{ name = "fasttrade-core", editable = "packages/core" }]
+requires-dist = [{ name = "tiewtrade-core", editable = "packages/core" }]
 
 [[package]]
-name = "fasttrade-core"
+name = "tiewtrade-core"
 version = "0.1.0"
 source = { editable = "packages/core" }
 
 [[package]]
-name = "fasttrade-engine"
+name = "tiewtrade-engine"
 version = "0.1.0"
 source = { editable = "services/engine" }
 dependencies = [
-    { name = "fasttrade-core" },
-    { name = "fasttrade-infra" },
-    { name = "fasttrade-strategies" },
+    { name = "tiewtrade-core" },
+    { name = "tiewtrade-infra" },
+    { name = "tiewtrade-strategies" },
 ]
 
 [package.metadata]
 requires-dist = [
-    { name = "fasttrade-core", editable = "packages/core" },
-    { name = "fasttrade-infra", editable = "packages/infra" },
-    { name = "fasttrade-strategies", editable = "packages/strategies" },
+    { name = "tiewtrade-core", editable = "packages/core" },
+    { name = "tiewtrade-infra", editable = "packages/infra" },
+    { name = "tiewtrade-strategies", editable = "packages/strategies" },
 ]
 
 [[package]]
-name = "fasttrade-execution"
+name = "tiewtrade-execution"
 version = "0.1.0"
 source = { editable = "services/execution" }
 dependencies = [
-    { name = "fasttrade-binance" },
-    { name = "fasttrade-core" },
-    { name = "fasttrade-infra" },
+    { name = "tiewtrade-binance" },
+    { name = "tiewtrade-core" },
+    { name = "tiewtrade-infra" },
 ]
 
 [package.metadata]
 requires-dist = [
-    { name = "fasttrade-binance", editable = "packages/binance" },
-    { name = "fasttrade-core", editable = "packages/core" },
-    { name = "fasttrade-infra", editable = "packages/infra" },
+    { name = "tiewtrade-binance", editable = "packages/binance" },
+    { name = "tiewtrade-core", editable = "packages/core" },
+    { name = "tiewtrade-infra", editable = "packages/infra" },
 ]
 
 [[package]]
-name = "fasttrade-infra"
+name = "tiewtrade-infra"
 version = "0.1.0"
 source = { editable = "packages/infra" }
 dependencies = [
-    { name = "fasttrade-core" },
+    { name = "tiewtrade-core" },
 ]
 
 [package.metadata]
-requires-dist = [{ name = "fasttrade-core", editable = "packages/core" }]
+requires-dist = [{ name = "tiewtrade-core", editable = "packages/core" }]
 
 [[package]]
-name = "fasttrade-jobs"
+name = "tiewtrade-jobs"
 version = "0.1.0"
 source = { editable = "services/jobs" }
 dependencies = [
-    { name = "fasttrade-core" },
-    { name = "fasttrade-infra" },
+    { name = "tiewtrade-core" },
+    { name = "tiewtrade-infra" },
 ]
 
 [package.metadata]
 requires-dist = [
-    { name = "fasttrade-core", editable = "packages/core" },
-    { name = "fasttrade-infra", editable = "packages/infra" },
+    { name = "tiewtrade-core", editable = "packages/core" },
+    { name = "tiewtrade-infra", editable = "packages/infra" },
 ]
 
 [[package]]
-name = "fasttrade-market-data"
+name = "tiewtrade-market-data"
 version = "0.1.0"
 source = { editable = "services/market_data" }
 dependencies = [
-    { name = "fasttrade-binance" },
-    { name = "fasttrade-core" },
-    { name = "fasttrade-infra" },
+    { name = "tiewtrade-binance" },
+    { name = "tiewtrade-core" },
+    { name = "tiewtrade-infra" },
 ]
 
 [package.metadata]
 requires-dist = [
-    { name = "fasttrade-binance", editable = "packages/binance" },
-    { name = "fasttrade-core", editable = "packages/core" },
-    { name = "fasttrade-infra", editable = "packages/infra" },
+    { name = "tiewtrade-binance", editable = "packages/binance" },
+    { name = "tiewtrade-core", editable = "packages/core" },
+    { name = "tiewtrade-infra", editable = "packages/infra" },
 ]
 
 [[package]]
-name = "fasttrade-notifier"
+name = "tiewtrade-notifier"
 version = "0.1.0"
 source = { editable = "services/notifier" }
 dependencies = [
-    { name = "fasttrade-core" },
-    { name = "fasttrade-infra" },
+    { name = "tiewtrade-core" },
+    { name = "tiewtrade-infra" },
 ]
 
 [package.metadata]
 requires-dist = [
-    { name = "fasttrade-core", editable = "packages/core" },
-    { name = "fasttrade-infra", editable = "packages/infra" },
+    { name = "tiewtrade-core", editable = "packages/core" },
+    { name = "tiewtrade-infra", editable = "packages/infra" },
 ]
 
 [[package]]
-name = "fasttrade-strategies"
+name = "tiewtrade-strategies"
 version = "0.1.0"
 source = { editable = "packages/strategies" }
 dependencies = [
-    { name = "fasttrade-core" },
+    { name = "tiewtrade-core" },
 ]
 
 [package.metadata]
-requires-dist = [{ name = "fasttrade-core", editable = "packages/core" }]
+requires-dist = [{ name = "tiewtrade-core", editable = "packages/core" }]
 
 [[package]]
-name = "fasttrade-workspace"
+name = "tiewtrade-workspace"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
-    { name = "fasttrade-api" },
-    { name = "fasttrade-binance" },
-    { name = "fasttrade-core" },
-    { name = "fasttrade-engine" },
-    { name = "fasttrade-execution" },
-    { name = "fasttrade-infra" },
-    { name = "fasttrade-jobs" },
-    { name = "fasttrade-market-data" },
-    { name = "fasttrade-notifier" },
-    { name = "fasttrade-strategies" },
+    { name = "tiewtrade-api" },
+    { name = "tiewtrade-binance" },
+    { name = "tiewtrade-core" },
+    { name = "tiewtrade-engine" },
+    { name = "tiewtrade-execution" },
+    { name = "tiewtrade-infra" },
+    { name = "tiewtrade-jobs" },
+    { name = "tiewtrade-market-data" },
+    { name = "tiewtrade-notifier" },
+    { name = "tiewtrade-strategies" },
 ]
 
 [package.dev-dependencies]
@@ -326,16 +326,16 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "fasttrade-api", editable = "services/api" },
-    { name = "fasttrade-binance", editable = "packages/binance" },
-    { name = "fasttrade-core", editable = "packages/core" },
-    { name = "fasttrade-engine", editable = "services/engine" },
-    { name = "fasttrade-execution", editable = "services/execution" },
-    { name = "fasttrade-infra", editable = "packages/infra" },
-    { name = "fasttrade-jobs", editable = "services/jobs" },
-    { name = "fasttrade-market-data", editable = "services/market_data" },
-    { name = "fasttrade-notifier", editable = "services/notifier" },
-    { name = "fasttrade-strategies", editable = "packages/strategies" },
+    { name = "tiewtrade-api", editable = "services/api" },
+    { name = "tiewtrade-binance", editable = "packages/binance" },
+    { name = "tiewtrade-core", editable = "packages/core" },
+    { name = "tiewtrade-engine", editable = "services/engine" },
+    { name = "tiewtrade-execution", editable = "services/execution" },
+    { name = "tiewtrade-infra", editable = "packages/infra" },
+    { name = "tiewtrade-jobs", editable = "services/jobs" },
+    { name = "tiewtrade-market-data", editable = "services/market_data" },
+    { name = "tiewtrade-notifier", editable = "services/notifier" },
+    { name = "tiewtrade-strategies", editable = "packages/strategies" },
 ]
 
 [package.metadata.requires-dev]

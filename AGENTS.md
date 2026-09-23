@@ -1,4 +1,4 @@
-# AGENTS.md — fasttrade
+# AGENTS.md — TiewTrade
 
 Instructions for coding agents (Codex, Claude Code) and contributors. Keep this file short;
 details live in `docs/`.
@@ -33,10 +33,10 @@ If code and a spec disagree, stop and raise it — do not silently follow either
 - **Trading Core (`backend/packages/core`) is pure:** no I/O, no network/DB/Redis/files,
   no clock reads, no randomness. Time and IDs (e.g. episode IDs) come from the caller.
 - **Money is `Decimal`, never `float`.** Any Decimal arithmetic outside the core (services,
-  tests) must run in `fasttrade_core.DECIMAL_CONTEXT` (50 digits), otherwise results differ.
+  tests) must run in `tiewtrade_core.DECIMAL_CONTEXT` (50 digits), otherwise results differ.
 - Dependency rules are enforced by import-linter (`backend/pyproject.toml`): core depends on
   nothing; strategies → core only; binance/infra → core only and not on each other;
-  services do not import each other; only `execution` and `market_data` use `fasttrade_binance`.
+  services do not import each other; only `execution` and `market_data` use `tiewtrade_binance`.
 - Services communicate only through Postgres and Redis. Postgres is authoritative; Redis may
   lose data (ADR-0004, ADR-0011). One engine owns a Workspace at a time (ADR-0009).
 - Use domain terms from the mvp.md Glossary in code (e.g. `Portfolio`, `Order Intent`,
@@ -49,7 +49,7 @@ Every change keeps all of these green (same as CI):
 ```sh
 cd backend
 uv run ruff check . && uv run ruff format --check .
-uv run mypy            # strict for fasttrade_core and fasttrade_strategies
+uv run mypy            # strict for tiewtrade_core and tiewtrade_strategies
 uv run lint-imports    # architecture rules
 uv run pytest
 ```

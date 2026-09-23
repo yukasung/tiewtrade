@@ -1,11 +1,11 @@
-# fasttrade — Calculation Spec
+# TiewTrade — Calculation Spec
 
 | Field | Value |
 |---|---|
 | Status | **v0.3** — C-07 ถึง C-11 Decided (2026-09-22); ข้อที่ระบุ **Verify** ต้องยืนยันด้วย golden test กับ Binance |
 | Date | 2026-09-22 |
 | Based on | [MVP Requirements v0.22](../requirements/mvp.md), [Architecture v0.2](../architecture/architecture.md) |
-| Scope | สูตรที่ Trading Core (`fasttrade_core`) ต้อง implement: Futures (USDⓈ-M, One-way, Single-Asset), Spot, Paper Fill Model, Funding Fee, Open Notional, Entitlement checks, golden test |
+| Scope | สูตรที่ Trading Core (`tiewtrade_core`) ต้อง implement: Futures (USDⓈ-M, One-way, Single-Asset), Spot, Paper Fill Model, Funding Fee, Open Notional, Entitlement checks, golden test |
 | Out of scope | Hedge Mode, Multi-Assets Mode, Portfolio Margin, Spot Margin (D-03, D-10) |
 
 > **หลักการ**

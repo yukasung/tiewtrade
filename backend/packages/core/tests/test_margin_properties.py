@@ -4,8 +4,8 @@ from decimal import Decimal as D
 from hypothesis import assume, given
 from hypothesis import strategies as st
 
-from fasttrade_core.margin import MarginState, liquidation_price
-from fasttrade_core.market import LeverageBrackets
+from tiewtrade_core.margin import MarginState, liquidation_price
+from tiewtrade_core.market import LeverageBrackets
 
 MarginGap = Callable[..., D]
 
