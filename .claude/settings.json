@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(uv run ruff check .)",
+      "Bash(uv run ruff format --check .)",
+      "Bash(uv run mypy)",
+      "Bash(uv run mypy *)",
+      "Bash(uv run lint-imports)",
+      "Bash(uv run pytest)",
+      "Bash(uv run pytest *)",
+      "mcp__drawdb__get_table",
+      "mcp__drawdb__list_tables"
+    ]
+  }
+}
