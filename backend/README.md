@@ -90,7 +90,7 @@ dependency ที่ประกาศจริงใน `pyproject.toml` ขอ
 | `services/jobs` | Scaffold | งานตามรอบแบบ idempotent |
 | `services/notifier` | Scaffold | แจ้งเตือน In-app / Email / Telegram |
 
-**ใน core เองก็ยังไม่ครบ** ส่วนที่ยังไม่มี: Risk rules, Strategy
+**ใน core เองก็ยังไม่ครบ** ส่วนที่ยังไม่มี: Portfolio Risk Rules, Strategy
 interfaces และ paper replay (§4.5) ที่ติด marker **Verify** — ทั้งที่ [architecture §4.3](../docs/architecture/architecture.md#43-key-interfaces-pseudo-code) ร่าง interface ไว้แล้ว
 
 ---
@@ -121,10 +121,10 @@ interfaces และ paper replay (§4.5) ที่ติด marker **Verify** �
 |---|---|---|
 | `exposure.py` | `FuturesExposure` | position เดียววัดที่ Mark Price; `quantity` เป็น signed |
 | `account.py` | `MarginState`, `MarginRatio`, `cross_margin_state`, `isolated_margin_state` | ใช้ `is_liquidatable` ไม่ใช่ `margin_ratio` — เหตุผลอยู่ใน docstring และ [calculation §2.4](../docs/specs/calculation.md) |
-| `requirement.py` | `margin_requirement`, `order_margin`, `open_loss`, `frozen_margin`, `available_balance`, `assuming_price`, `PendingOrder`, `MARKET_ORDER_PRICE_BUFFER` | `order_margin` = ส่วนต่างของ requirement + `open_loss` — **อย่าเหมาว่า order ที่ลด position ได้ 0 เสมอ** ทั้งสองส่วนไม่เป็นศูนย์ได้ สูตรอยู่ใน [calculation §2.7](../docs/specs/calculation.md) |
+| `requirement.py` | `combined_notional`, `margin_requirement`, `order_margin`, `open_loss`, `frozen_margin`, `available_balance`, `assuming_price`, `PendingOrder`, `MARKET_ORDER_PRICE_BUFFER` | `order_margin` = ส่วนต่างของ requirement + `open_loss` — **อย่าเหมาว่า order ที่ลด position ได้ 0 เสมอ** ทั้งสองส่วนไม่เป็นศูนย์ได้ สูตรอยู่ใน [calculation §2.7](../docs/specs/calculation.md) |
 | `liquidation.py` | `liquidation_price` | แก้ทุก bracket แล้วเลือกคำตอบที่ notional ตกในตัวเอง; คืน `None` ได้ 2 กรณีตรงข้ามกัน — อ่าน docstring ก่อนใช้ |
 
-### `execution/` — Paper Fill Model (§4.1–4.3)
+### `execution/` — Paper Fill Model (§4.1–4.4)
 | ไฟล์ | Public API | หมายเหตุ |
 |---|---|---|
 | `book.py` | `TopOfBook` | snapshot best bid/ask จาก caller · ใช้ `is_abnormal` กรอง snapshot เสีย **ไม่ใช่ `is_crossed`** ซึ่งพลาดกรณี locked (`bid == ask`) |
@@ -149,6 +149,17 @@ interfaces และ paper replay (§4.5) ที่ติด marker **Verify** �
 | `bracket.py` | `Bracket`, `BracketPlan`, `ProtectLeg`, `CancelLeg`, `on_entry_fill`, `on_leg_fill`, `on_entry_finished`, `on_position_closed` | **คืนแผน ไม่สั่งงานเอง** (C-23) · ป้องกันเท่า `filled_quantity` เท่านั้น (FR-ORD-14) · resize เป็น action เดียวผ่าน `replaces` ห้ามแยก cancel+place เพราะจะมีช่วงที่ไม่มีการป้องกัน · **Bracket จบแล้วต้องไม่เหลือ order ค้าง** ทั้งขาที่เหลือและ Entry — ทั้งตอนขาป้องกัน fill และตอน Position ถูกปิดด้วยวิธีอื่น (R-16, C-24) |
 
 **ยังไม่มี:** FR-ORD-16 fail-safe ตอนวาง SL ไม่สำเร็จ — ต้องนับเวลา/นับครั้ง จึงเป็นงานของ engine ไม่ใช่ core
+
+### `entitlement/` — เพดานของ Plan (FR-PLN, D-11)
+| ไฟล์ | Public API | หมายเหตุ |
+|---|---|---|
+| `plan.py` | `Entitlement` | snapshot ที่ caller อ่านมาจาก `plan_entitlements` · **core ไม่มีค่า default ของตัวเอง** เพราะ Admin แก้ได้ทุกค่า ถ้า hardcode ไว้จะเพี้ยนจาก DB เงียบ ๆ |
+| `notional.py` | `FuturesSymbolExposure`, `SpotSymbolExposure`, `open_notional`, `projected_notional`, `within_limit` | วัดระดับ **Workspace** แยก Paper/Live (FR-PLN-04) · `projected_*` นับ Order ค้างเป็นการจองวงเงิน (C-08) ใช้ `combined_notional` ร่วมกับ §2.2 · `within_limit` เป็น comparison ล้วน · **order ที่ลด/ปิด position ต้องส่ง `reduces=True`** เพราะขา TP ที่ค้างไกลจาก mark ทำให้ตัวเลข projected *สูงขึ้น* (§2.2 ตีมูลค่าฝั่ง ask ที่ราคาของ order เอง) การเดาจากตัวเลขจะปฏิเสธขาที่ปกป้องผู้ใช้ |
+| `leverage.py` | `effective_max_leverage`, `within_leverage` | `min(Plan, Bracket)` ที่ notional ที่ **order จะทำให้เกิด** ไม่ใช่ค่าปัจจุบัน |
+
+**ยังไม่มี:** Portfolio Risk Rules (FR-RSK-02) — ชุดกติกายังเป็น **Proposed** และบางข้อ (order rate
+limit, max daily loss) ต้องอ่านนาฬิกา จึงเป็นงานของ engine · Entitlement เป็นเพดานนอกสุด
+Risk Rule ตั้งให้เข้มกว่าได้แต่หละหลวมกว่าไม่ได้ (FR-PLN-09)
 
 ### จุดที่ยังไม่ยืนยันกับ Binance
 โค้ดที่มี comment `Verify` คือสูตรที่ยังไม่ confirm — อย่านำไปเสนอว่า verified แล้ว
@@ -181,7 +192,7 @@ uv run ruff check .          # lint
 uv run ruff format --check . # format (ตัด --check ออกเพื่อให้แก้ไฟล์ให้)
 uv run mypy                  # strict สำหรับ tiewtrade_core และ tiewtrade_strategies
 uv run lint-imports          # dependency rules 7 contracts (§2)
-uv run pytest                # ปัจจุบัน 368 tests
+uv run pytest                # ปัจจุบัน 416 tests
 ```
 
 รัน API:

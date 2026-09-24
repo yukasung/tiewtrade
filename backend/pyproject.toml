@@ -147,6 +147,7 @@ type = "layers"
 layers = [
     "tiewtrade_core.execution",
     "tiewtrade_core.orders",
+    "tiewtrade_core.entitlement",
     "tiewtrade_core.margin",
     "tiewtrade_core.portfolio",
     "tiewtrade_core.market",

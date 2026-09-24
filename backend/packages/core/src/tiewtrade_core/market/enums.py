@@ -34,3 +34,15 @@ class LiquidityRole(StrEnum):
 
     MAKER = "MAKER"
     TAKER = "TAKER"
+
+
+class TradingMode(StrEnum):
+    """Paper or Live (FR-ACC-04).
+
+    An attribute of the Exchange Account that a Portfolio inherits and can never change.
+    The Workspace notional limit is counted per mode, so the two never share a budget
+    (FR-PLN-04).
+    """
+
+    PAPER = "PAPER"
+    LIVE = "LIVE"

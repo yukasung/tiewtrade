@@ -6,6 +6,7 @@ from tiewtrade_core.market.enums import (
     MarginMode,
     MarketType,
     OrderSide,
+    TradingMode,
     Venue,
 )
 from tiewtrade_core.market.rounding import Rounding, round_to_increment
@@ -22,6 +23,7 @@ __all__ = [
     "Rounding",
     "Symbol",
     "SymbolFilters",
+    "TradingMode",
     "Venue",
     "round_to_increment",
 ]

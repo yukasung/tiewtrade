@@ -52,12 +52,19 @@ class PendingOrder:
 
 
 @calc
-def margin_requirement(
-    quantity: Decimal, mark_price: Decimal, leverage: int, orders: Iterable[PendingOrder]
+def combined_notional(
+    quantity: Decimal, mark_price: Decimal, orders: Iterable[PendingOrder]
 ) -> Decimal:
-    """Combined margin requirement of one symbol (One-way), calculation spec §2.7:
+    """Notional of one symbol once its resting orders are counted (calculation spec §2.7):
 
-    max(|Q*MP + BidValue|, |Q*MP - AskValue|) / L
+    max(|Q*MP + BidValue|, |Q*MP - AskValue|)
+
+    The two sides are taken separately and the worse one wins, because only one of them
+    can end up filled against the position: bids and asks do not net off.
+
+    Separate from ``margin_requirement`` because the Workspace notional limit uses this
+    same value undivided (calculation spec §5.2, C-08). Dividing and multiplying back by
+    the leverage would be a second rounding of the same number.
     """
     bid_value = ZERO
     ask_value = ZERO
@@ -67,7 +74,18 @@ def margin_requirement(
         else:
             ask_value += order.value
     position_notional = quantity * mark_price
-    return max(abs(position_notional + bid_value), abs(position_notional - ask_value)) / leverage
+    return max(abs(position_notional + bid_value), abs(position_notional - ask_value))
+
+
+@calc
+def margin_requirement(
+    quantity: Decimal, mark_price: Decimal, leverage: int, orders: Iterable[PendingOrder]
+) -> Decimal:
+    """Combined margin requirement of one symbol (One-way), calculation spec §2.7:
+
+    max(|Q*MP + BidValue|, |Q*MP - AskValue|) / L
+    """
+    return combined_notional(quantity, mark_price, orders) / leverage
 
 
 @calc
