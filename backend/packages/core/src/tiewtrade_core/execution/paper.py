@@ -69,17 +69,14 @@ class PaperExecutionAdapter:
         otherwise is only acknowledged, resting until a price goes through it. Conditional
         types rest until their trigger fires, which the Order Manager drives.
 
-        Calling this again with the same order is safe, as the port requires (NFR-05).
-        Only an order the venue has not seen yet — ``PENDING_NEW`` — is priced. A retry
-        after a timeout carries an order the engine has already acknowledged, and pricing
-        it again would invent a second fill at whatever the price has since become. The
-        order's own status is the venue state under Paper, so no second record is needed
-        here (C-20).
+        Only a ``PENDING_NEW`` order may be submitted, and anything else raises. That is a
+        check on the caller, not a retry policy: whether an order should be sent at all is
+        the Order Manager's decision (FR-ORD-03, C-22). Keeping it that way means a
+        submission always produces exactly one report, so a caller never has to read
+        meaning into silence.
         """
-        if order.status.is_terminal:
-            raise ValueError(f"cannot submit an order that is already {order.status}")
         if order.status is not OrderStatus.PENDING_NEW:
-            return  # already at the venue; a retry must not fill it twice
+            raise ValueError(f"only a PENDING_NEW order can be submitted, not {order.status}")
 
         market = self._market(order.symbol)
         fill = self._fill_on_submit(order, market)
@@ -87,23 +84,6 @@ class PaperExecutionAdapter:
             self._emit(order.client_order_id, ReportKind.ACCEPTED)
             return
         self._emit_fill(order, fill)
-
-    def on_price(self, order: Order) -> None:
-        """Re-price a resting order against the current market (calculation spec §4.2).
-
-        Called for each open order when its symbol's price changes. A resting limit fills
-        only when the last price goes **through** it; touching does nothing, so the engine
-        can call this on every tick without side effects.
-        """
-        if not order.is_open:
-            raise ValueError("only an open order can be re-priced")
-        if order.order_type is not OrderType.LIMIT or order.price is None:
-            return
-
-        market = self._market(order.symbol)
-        fill = resting_limit_fill(order.side, order.price, market.last_price)
-        if fill is not None:
-            self._emit_fill(order, fill)
 
     def cancel(self, client_order_id: str) -> None:
         """Cancel a resting order. Paper always succeeds: there is no venue to refuse."""
@@ -154,3 +134,41 @@ class PaperExecutionAdapter:
                 liquidity=fill.liquidity,
             )
         )
+
+
+def resting_fill_report(order: Order, last_price: Decimal) -> ExecutionReport | None:
+    """The report a resting order produces when the price goes through it, or None (§4.2).
+
+    A free function rather than an adapter method, because driving a simulated venue
+    forward is not something an Execution Adapter does: Binance advances its own orders,
+    so an engine calling this on the adapter would have to know it was holding the Paper
+    one, which FR-ORD-04 forbids. The engine calls this in its Paper path instead, and the
+    port stays the same on both sides (P-03, P-04).
+
+    Takes the last price rather than a whole snapshot because that is all a maker fill
+    needs: it fills at its own limit, with no slippage and no tick rounding. Narrowing the
+    parameter also drops the validation a ``MarketSnapshot`` would have carried, so the
+    price is checked here — this is the boundary now, and a resting buy compared against a
+    zero or negative price would otherwise fill as though the market had collapsed.
+
+    Touching the limit does nothing, so this is safe to call for every open order on every
+    tick. Conditional orders return None here — a fired stop fills as a market order and
+    needs the position, which belongs to the Order Manager's trigger step (§4.3, C-22).
+    """
+    if last_price <= 0:
+        raise ValueError("last price must be positive")
+    if not order.is_open:
+        raise ValueError("only an open order can be re-priced")
+    if order.order_type is not OrderType.LIMIT or order.price is None:
+        return None
+
+    fill = resting_limit_fill(order.side, order.price, last_price)
+    if fill is None:
+        return None
+    return ExecutionReport(
+        client_order_id=order.client_order_id,
+        kind=ReportKind.FILLED,
+        quantity=order.remaining_quantity,
+        price=fill.price,
+        liquidity=fill.liquidity,
+    )

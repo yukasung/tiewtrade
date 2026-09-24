@@ -131,7 +131,7 @@ interfaces และ Paper liquidation (§4.4) ที่ติด marker **Verif
 | `fills.py` | `PaperFill`, `market_fill`, `is_marketable`, `limit_fill_on_submit`, `resting_limit_fill`, `resting_limit_fills` | ปัดราคาไปทางเสียเปรียบผู้ใช้เสมอ (C-11) · marketable limit **ปัดก่อนแล้วค่อย cap** ห้ามปัดซ้ำ |
 | `triggers.py` | `BracketLeg`, `stop_loss_triggered`, `take_profit_triggered`, `triggered_leg`, `closing_side` | **comparison ล้วน ห้ามใส่เลขคณิต** — จะรันใน context ของ caller · SL ชนะเมื่อ trigger ทั้งคู่ |
 | `adapter.py` | `ExecutionAdapter` | **port ที่ทำให้ Paper กับ Live ใช้ core ร่วมกัน** (P-03/P-04, architecture §4.2) · ไม่คืนค่า ผลมาเป็น execution report ทีหลัง · อ้างด้วย `client_order_id` ไม่ใช่ exchange id |
-| `paper.py` | `PaperExecutionAdapter`, `MarketSnapshot`, `ReportSink` | **ต่อ port เข้ากับ fill model** — Paper เดินได้ครบวง · **ไม่เก็บ Order เอง** engine เป็นเจ้าของ (C-20) · market data เข้าทาง `update_market` · `submit` ราคาเฉพาะ `PENDING_NEW` การส่งซ้ำไม่ fill ซ้ำ (C-21) |
+| `paper.py` | `PaperExecutionAdapter`, `MarketSnapshot`, `ReportSink`, `resting_fill_report` | **ต่อ port เข้ากับ fill model** — Paper เดินได้ครบวง · **ไม่เก็บ Order เอง** engine เป็นเจ้าของ (C-20) · `submit` รับเฉพาะ `PENDING_NEW` และคืน report เสมอ 1 ใบ — idempotency เป็นของ Order Manager (C-22) · `resting_fill_report` เป็น **free function** ไม่ใช่ method เพราะการขับ order ค้างไม่ใช่งานของ port (FR-ORD-04) |
 | `report.py` | `ExecutionReport`, `ReportKind` | ผลลัพธ์จาก venue ใช้ร่วมกันทั้ง Paper และ Live (C-19) · ไม่มี timestamp เพราะเวลามากับ event |
 | *(ไม่มีไฟล์ guard แยก)* | — | `0 ≤ s < 1` อยู่ใน `fills.py` ส่วนกฎ "ราคาต้องเป็นบวก" เป็นของ `PaperFill.__post_init__` เองตาม C-18 |
 
@@ -177,7 +177,7 @@ uv run ruff check .          # lint
 uv run ruff format --check . # format (ตัด --check ออกเพื่อให้แก้ไฟล์ให้)
 uv run mypy                  # strict สำหรับ tiewtrade_core และ tiewtrade_strategies
 uv run lint-imports          # dependency rules 7 contracts (§2)
-uv run pytest                # ปัจจุบัน 295 tests
+uv run pytest                # ปัจจุบัน 301 tests
 ```
 
 รัน API:

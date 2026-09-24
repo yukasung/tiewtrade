@@ -15,7 +15,12 @@ from tiewtrade_core.execution.fills import (
     resting_limit_fill,
     resting_limit_fills,
 )
-from tiewtrade_core.execution.paper import MarketSnapshot, PaperExecutionAdapter, ReportSink
+from tiewtrade_core.execution.paper import (
+    MarketSnapshot,
+    PaperExecutionAdapter,
+    ReportSink,
+    resting_fill_report,
+)
 from tiewtrade_core.execution.report import ExecutionReport, ReportKind
 from tiewtrade_core.execution.triggers import (
     BracketLeg,
@@ -39,6 +44,7 @@ __all__ = [
     "is_marketable",
     "limit_fill_on_submit",
     "market_fill",
+    "resting_fill_report",
     "resting_limit_fill",
     "resting_limit_fills",
     "stop_loss_triggered",

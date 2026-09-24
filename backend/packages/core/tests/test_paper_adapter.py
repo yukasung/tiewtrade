@@ -9,6 +9,7 @@ from tiewtrade_core.execution import (
     PaperExecutionAdapter,
     ReportKind,
     TopOfBook,
+    resting_fill_report,
 )
 from tiewtrade_core.market import LiquidityRole, OrderSide
 from tiewtrade_core.orders import Order, OrderStatus, OrderType, OwnerType
@@ -114,17 +115,17 @@ def test_a_market_sell_reads_the_bid() -> None:
 
 
 def test_a_fill_covers_only_what_is_left_of_a_partly_filled_order() -> None:
-    """A partly filled order comes back through on_price, never through submit."""
-    paper, sink = adapter(snapshot("58999.8", "58999.9", last="58999.9"))
+    """A partly filled order is advanced by price, never resubmitted."""
     partly = (
         order(order_type=OrderType.LIMIT, price=D("59000.0"))
         .accept()
         .apply_fill(D("0.2"), D(59000))
     )
 
-    paper.on_price(partly)
+    report = resting_fill_report(partly, D("58999.9"))
 
-    assert sink.only.quantity == D("0.3")
+    assert report is not None
+    assert report.quantity == D("0.3")
 
 
 # --- submit: limit orders (§4.2) ----------------------------------------
@@ -168,16 +169,15 @@ def test_a_conditional_order_rests_until_its_trigger_fires(order_type: OrderType
     assert sink.only.kind is ReportKind.ACCEPTED
 
 
-# --- on_price: resting limits -------------------------------------------
+# --- resting_fill_report: a free function, no adapter needed ------------
 
 
 def test_a_resting_limit_fills_when_the_price_goes_through_it() -> None:
-    paper, sink = adapter(snapshot("58999.8", "58999.9", last="58999.9"))
     resting = order(order_type=OrderType.LIMIT, price=D("59000.0")).accept()
 
-    paper.on_price(resting)
+    report = resting_fill_report(resting, D("58999.9"))
 
-    report = sink.only
+    assert report is not None
     assert report.kind is ReportKind.FILLED
     assert report.price == D("59000.0")  # a maker fills at its own price, with no slippage
     assert report.liquidity is MAKER
@@ -185,28 +185,46 @@ def test_a_resting_limit_fills_when_the_price_goes_through_it() -> None:
 
 def test_touching_a_resting_limit_reports_nothing() -> None:
     """FR-ORD-08: the price must go through, not merely reach."""
-    paper, sink = adapter(snapshot("59000.0", "59000.1", last="59000.0"))
     resting = order(order_type=OrderType.LIMIT, price=D("59000.0")).accept()
 
-    paper.on_price(resting)
-
-    assert sink.received == []
+    assert resting_fill_report(resting, D("59000.0")) is None
 
 
-def test_a_market_order_is_never_re_priced() -> None:
-    paper, sink = adapter()
+@pytest.mark.parametrize(
+    "order_type", [OrderType.MARKET, OrderType.STOP_MARKET, OrderType.TAKE_PROFIT_MARKET]
+)
+def test_only_a_resting_limit_is_advanced_by_price(order_type: OrderType) -> None:
+    """A fired stop fills as a market order and needs the position, so it is not done here."""
+    stop = D("58000.0") if order_type.needs_stop_price else None
+    resting = order(order_type=order_type, stop_price=stop).accept()
 
-    paper.on_price(order().accept())
-
-    assert sink.received == []
+    assert resting_fill_report(resting, D("1")) is None
 
 
 def test_only_an_open_order_can_be_re_priced() -> None:
-    paper, _ = adapter()
     done = order().accept().apply_fill(D("0.5"), D(60000))
 
     with pytest.raises(ValueError, match="only an open order"):
-        paper.on_price(done)
+        resting_fill_report(done, D(60000))
+
+
+@pytest.mark.parametrize("last_price", ["0", "-1"])
+def test_advancing_against_a_non_positive_price_is_refused(last_price: str) -> None:
+    """The narrowed parameter lost MarketSnapshot's guard, so this boundary carries it.
+
+    Without it a resting buy compares against a collapsed price and fills at its limit.
+    """
+    resting = order(order_type=OrderType.LIMIT, price=D("59000.0")).accept()
+
+    with pytest.raises(ValueError, match="last price must be positive"):
+        resting_fill_report(resting, D(last_price))
+
+
+def test_advancing_an_order_needs_no_adapter_at_all() -> None:
+    """The point of the split: driving the simulation is a pure function (FR-ORD-04)."""
+    resting = order(order_type=OrderType.LIMIT, price=D("59000.0")).accept()
+
+    assert resting_fill_report(resting, D("58999.9")) is not None
 
 
 # --- cancel --------------------------------------------------------------
@@ -268,10 +286,8 @@ def test_an_order_travels_from_submission_to_filled() -> None:
     resting = resting.accept()
     assert resting.status is OrderStatus.NEW
 
-    paper.update_market(SYMBOL, snapshot("58999.8", "58999.9", last="58999.9"))
-    paper.on_price(resting)
-
-    fill = sink.received[1]
+    fill = resting_fill_report(resting, D("58999.9"))
+    assert fill is not None
     assert fill.kind is ReportKind.FILLED
     assert fill.quantity is not None
     assert fill.price is not None
@@ -331,52 +347,48 @@ def test_a_report_must_name_an_order() -> None:
         ExecutionReport(client_order_id="", kind=ReportKind.ACCEPTED)
 
 
-# --- idempotency: the port's contract (NFR-05, FR-LIVE-07) --------------
-
-
-def test_resubmitting_an_acknowledged_order_does_not_fill_it_again() -> None:
-    """A retry after a timeout must not invent a second fill at the newer price."""
-    paper, sink = adapter()
-    resting = order(order_type=OrderType.LIMIT, price=D("59000.0"))
-
-    paper.submit(resting)
-    assert sink.only.kind is ReportKind.ACCEPTED
-    acknowledged = resting.accept()
-
-    paper.update_market(SYMBOL, snapshot("70000.0", "70000.1"))
-    paper.submit(acknowledged)
-
-    assert len(sink.received) == 1  # still only the original acknowledgement
-
-
-def test_resubmitting_a_market_order_never_fills_twice() -> None:
-    paper, sink = adapter(snapshot("100", "100"))
-    fresh = order(quantity=D(1))
-
-    paper.submit(fresh)
-    filled = fresh.apply_fill(D(1), D("100"))
-
-    paper.update_market(SYMBOL, snapshot("110", "110"))
-    with pytest.raises(ValueError, match="already FILLED"):
-        paper.submit(filled)
-
-    assert len(sink.received) == 1
+# --- the port's precondition (FR-ORD-03, C-22) --------------------------
 
 
 @pytest.mark.parametrize(
-    "finish",
+    ("make", "status"),
     [
-        lambda o: o.accept().cancel(),
-        lambda o: o.accept().expire(),
-        lambda o: o.reject("no margin"),
-        lambda o: o.apply_fill(D("0.5"), D(60000)),
+        (lambda o: o.accept(), "NEW"),
+        (lambda o: o.accept().apply_fill(D("0.2"), D(60000)), "PARTIALLY_FILLED"),
+        (lambda o: o.accept().cancel(), "CANCELED"),
+        (lambda o: o.accept().expire(), "EXPIRED"),
+        (lambda o: o.reject("no margin"), "REJECTED"),
+        (lambda o: o.apply_fill(D("0.5"), D(60000)), "FILLED"),
     ],
 )
-def test_a_finished_order_can_never_be_submitted(finish: object) -> None:
-    paper, sink = adapter()
-    done = finish(order())  # type: ignore[operator]
+def test_only_a_pending_new_order_can_be_submitted(make: object, status: str) -> None:
+    """Whether an order should be sent at all is the Order Manager's call, not the adapter's.
 
-    with pytest.raises(ValueError, match="cannot submit an order that is already"):
-        paper.submit(done)
+    The adapter refuses anything else rather than deciding silently, because the two venues
+    cannot infer the same thing from a record: under Paper the record is the venue, against
+    Binance it is not (FR-ORD-03, FR-LIVE-07).
+    """
+    paper, sink = adapter()
+    already = make(order())  # type: ignore[operator]
+
+    with pytest.raises(
+        ValueError, match=f"only a PENDING_NEW order can be submitted, not {status}"
+    ):
+        paper.submit(already)
 
     assert sink.received == []
+
+
+def test_a_submission_always_produces_exactly_one_report() -> None:
+    """No path returns silently, so a caller never reads meaning into an absent report."""
+    for changes in (
+        {},  # market: fills
+        {"order_type": OrderType.LIMIT, "price": D("60013.0")},  # marketable: fills
+        {"order_type": OrderType.LIMIT, "price": D("59000.0")},  # rests: acknowledged
+        {"order_type": OrderType.STOP_MARKET, "stop_price": D("58000.0")},  # rests
+    ):
+        paper, sink = adapter()
+
+        paper.submit(order(**changes))
+
+        assert len(sink.received) == 1, changes

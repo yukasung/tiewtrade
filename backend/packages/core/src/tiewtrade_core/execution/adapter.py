@@ -25,8 +25,22 @@ class ExecutionAdapter(Protocol):
     """
 
     def submit(self, order: Order) -> None:
-        """Send an order to the venue. Must be safe to call again with the same
-        ``client_order_id`` without creating a second order at the venue (NFR-05)."""
+        """Send an order the venue has not seen yet.
+
+        The caller guarantees the order is ``PENDING_NEW``; an implementation may reject
+        anything else but owes no policy beyond that. Deciding whether an order should be
+        sent at all — including resolving an uncertain state after a timeout by querying
+        the Client Order ID before retrying — belongs to the Order Manager, which owns the
+        lifecycle and idempotency (FR-ORD-03, FR-LIVE-07).
+
+        That split matters because the two venues cannot answer the question the same way.
+        Under Paper the platform's record *is* the venue, so the order's status settles it;
+        against Binance it does not, and inferring from the record is exactly what causes a
+        duplicate order (R-06). One rule at one level, implemented once.
+
+        Every outcome arrives as an ``ExecutionReport``, so a submission that produces no
+        report is a programming error rather than a silent success.
+        """
         ...
 
     def cancel(self, client_order_id: str) -> None:
