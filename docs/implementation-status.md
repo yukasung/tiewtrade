@@ -1,6 +1,6 @@
 # Implementation Status
 
-วันที่อัปเดต: 2026-09-23 · commit อ้างอิง: `3eaeff2` + working tree (rename `fasttrade` → `tiewtrade`)
+วันที่อัปเดต: 2026-09-24 · commit อ้างอิง: `e165a8b` + working tree (Bracket lifecycle)
 ปิด finding: [IMP-01](reviews/backend-structure-review.md)
 
 เอกสารนี้ตอบคำถามเดียว: **ตอนนี้อะไรรันได้จริง และอะไรยังเป็น scaffold**
@@ -25,7 +25,7 @@ dependency rules อยู่ใน [ADR-0006](architecture/adr/0006-monorepo-an
 
 | Package | สถานะ | มีอะไรอยู่จริง | ยังไม่มี |
 |---|---|---|---|
-| [`tiewtrade_core`](../backend/packages/core/src/tiewtrade_core/) | **Implemented (บางส่วน)** | `market/`, `portfolio/`, `margin/`, `execution/` (Paper Fill Model §4.1–4.3), `orders/` (Order lifecycle), `execution/` รวม `PaperExecutionAdapter`, `_decimal.py` (`DECIMAL_CONTEXT`) | Risk rules, Bracket (FR-ORD-14/15), Strategy interfaces, Paper liquidation (§4.4) และ replay (§4.5) |
+| [`tiewtrade_core`](../backend/packages/core/src/tiewtrade_core/) | **Implemented (บางส่วน)** | `market/`, `portfolio/`, `margin/`, `execution/` (Paper Fill Model §4.1–4.3), `orders/` (Order lifecycle + Bracket FR-ORD-14/15), `execution/` รวม `PaperExecutionAdapter`, `_decimal.py` (`DECIMAL_CONTEXT`) | Risk rules, FR-ORD-16 fail-safe, Strategy interfaces, Paper liquidation (§4.4) และ replay (§4.5) |
 | [`tiewtrade_strategies`](../backend/packages/strategies/src/tiewtrade_strategies/) | **Scaffold** | `__init__.py` เท่านั้น | Built-in Strategy ทุกตัว (D-06), Order Intent emission |
 | [`tiewtrade_binance`](../backend/packages/binance/src/tiewtrade_binance/) | **Scaffold** | `__init__.py` เท่านั้น | REST/WS client, payload mapping, Venue config (D-17) |
 | [`tiewtrade_infra`](../backend/packages/infra/src/tiewtrade_infra/) | **Scaffold** | `__init__.py` เท่านั้น | Postgres repositories, Redis bus, lease, key provider, settings |
@@ -38,7 +38,7 @@ dependency rules อยู่ใน [ADR-0006](architecture/adr/0006-monorepo-an
 | [`portfolio/`](../backend/packages/core/src/tiewtrade_core/portfolio/) | `SpotHolding`, `apply_spot_buy/sell`, `FuturesPosition`, `apply_futures_fill`, `trading_fee`, `funding_payment`, `FLAT`, `NO_HOLDING` | [`test_portfolio.py`](../backend/packages/core/tests/test_portfolio.py), [`test_portfolio_properties.py`](../backend/packages/core/tests/test_portfolio_properties.py) |
 | [`margin/`](../backend/packages/core/src/tiewtrade_core/margin/) | `margin_requirement`, `order_margin`, `frozen_margin`, `open_loss`, `available_balance`, `assuming_price`, `cross_margin_state`, `isolated_margin_state`, `liquidation_price`, `FuturesExposure`, `MarginState`, `MarginRatio`, `PendingOrder` | [`test_margin.py`](../backend/packages/core/tests/test_margin.py), [`test_margin_properties.py`](../backend/packages/core/tests/test_margin_properties.py) |
 | [`execution/`](../backend/packages/core/src/tiewtrade_core/execution/) | `TopOfBook`, `PaperFill`, `market_fill`, `is_marketable`, `limit_fill_on_submit`, `resting_limit_fill(s)`, `ExecutionAdapter`, `PaperExecutionAdapter`, `ExecutionReport`, `ReportKind`, `MarketSnapshot`, `resting_fill_report`, `BracketLeg`, `stop_loss_triggered`, `take_profit_triggered`, `triggered_leg`, `closing_side` | [`test_execution.py`](../backend/packages/core/tests/test_execution.py), [`test_execution_properties.py`](../backend/packages/core/tests/test_execution_properties.py) |
-| [`orders/`](../backend/packages/core/src/tiewtrade_core/orders/) | `OrderIntent`, `Order`, `order_from_intent`, `OrderStatus`, `OrderType`, `OwnerType`, `TimeInForce`, `BracketRole`, `build_client_order_id`, `is_platform_client_order_id` | [`test_orders.py`](../backend/packages/core/tests/test_orders.py), [`test_orders_properties.py`](../backend/packages/core/tests/test_orders_properties.py) |
+| [`orders/`](../backend/packages/core/src/tiewtrade_core/orders/) | `OrderIntent`, `Order`, `order_from_intent`, `OrderStatus`, `OrderType`, `OwnerType`, `TimeInForce`, `BracketRole`, `build_client_order_id`, `is_platform_client_order_id`, `Bracket`, `BracketPlan`, `ProtectLeg`, `CancelLeg`, `on_entry_fill`, `on_leg_fill`, `on_entry_finished`, `on_position_closed` | [`test_orders.py`](../backend/packages/core/tests/test_orders.py), [`test_orders_properties.py`](../backend/packages/core/tests/test_orders_properties.py), [`test_bracket.py`](../backend/packages/core/tests/test_bracket.py), [`test_bracket_properties.py`](../backend/packages/core/tests/test_bracket_properties.py) |
 
 สูตรที่ยังมี marker **Verify** ใน [calculation.md](specs/calculation.md) ยังไม่ยืนยันกับ Binance
 ต่อให้มี tests แล้วก็ยังไม่ถือว่า verified

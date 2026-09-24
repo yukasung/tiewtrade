@@ -90,7 +90,7 @@ dependency ที่ประกาศจริงใน `pyproject.toml` ขอ
 | `services/jobs` | Scaffold | งานตามรอบแบบ idempotent |
 | `services/notifier` | Scaffold | แจ้งเตือน In-app / Email / Telegram |
 
-**ใน core เองก็ยังไม่ครบ** ส่วนที่ยังไม่มี: Risk rules, Bracket (FR-ORD-14/15), Strategy
+**ใน core เองก็ยังไม่ครบ** ส่วนที่ยังไม่มี: Risk rules, Strategy
 interfaces และ Paper liquidation (§4.4) ที่ติด marker **Verify** — ทั้งที่ [architecture §4.3](../docs/architecture/architecture.md#43-key-interfaces-pseudo-code) ร่าง interface ไว้แล้ว
 
 ---
@@ -145,8 +145,9 @@ interfaces และ Paper liquidation (§4.4) ที่ติด marker **Verif
 | `order.py` | `Order`, `order_from_intent` | state machine 7 สถานะ · **immutable** ทุก transition คืน `Order` ตัวใหม่ · ตรวจ lifecycle ก่อนตรวจจำนวนเสมอ · `remaining_quantity` มี `@calc` เพราะการอ่านคือการลบ Decimal |
 | `client_order_id.py` | `build_client_order_id`, `is_platform_client_order_id` | prefix มาจาก caller ไม่ hardcode · แยก order นอกระบบด้วย**รูปร่าง** ไม่ใช่ `startswith` (D-14) |
 | `enums.py` | `OrderStatus`, `OrderType`, `OwnerType`, `TimeInForce`, `BracketRole` | ตรงกับ `orders` table ใน data-model §6.5 |
+| `bracket.py` | `Bracket`, `BracketPlan`, `ProtectLeg`, `CancelLeg`, `on_entry_fill`, `on_leg_fill`, `on_entry_finished`, `on_position_closed` | **คืนแผน ไม่สั่งงานเอง** (C-23) · ป้องกันเท่า `filled_quantity` เท่านั้น (FR-ORD-14) · resize เป็น action เดียวผ่าน `replaces` ห้ามแยก cancel+place เพราะจะมีช่วงที่ไม่มีการป้องกัน · **Bracket จบแล้วต้องไม่เหลือ order ค้าง** ทั้งขาที่เหลือและ Entry — ทั้งตอนขาป้องกัน fill และตอน Position ถูกปิดด้วยวิธีอื่น (R-16, C-24) |
 
-**ยังไม่มี:** Bracket (FR-ORD-14/15) — TP/SL คุมเฉพาะจำนวนที่ fill แล้วและต้องปรับขนาดทุกครั้งที่ Entry fill เพิ่ม
+**ยังไม่มี:** FR-ORD-16 fail-safe ตอนวาง SL ไม่สำเร็จ — ต้องนับเวลา/นับครั้ง จึงเป็นงานของ engine ไม่ใช่ core
 
 ### จุดที่ยังไม่ยืนยันกับ Binance
 โค้ดที่มี comment `Verify` คือสูตรที่ยังไม่ confirm — อย่านำไปเสนอว่า verified แล้ว
@@ -177,7 +178,7 @@ uv run ruff check .          # lint
 uv run ruff format --check . # format (ตัด --check ออกเพื่อให้แก้ไฟล์ให้)
 uv run mypy                  # strict สำหรับ tiewtrade_core และ tiewtrade_strategies
 uv run lint-imports          # dependency rules 7 contracts (§2)
-uv run pytest                # ปัจจุบัน 301 tests
+uv run pytest                # ปัจจุบัน 344 tests
 ```
 
 รัน API:
