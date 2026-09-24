@@ -91,7 +91,7 @@ dependency ที่ประกาศจริงใน `pyproject.toml` ขอ
 | `services/notifier` | Scaffold | แจ้งเตือน In-app / Email / Telegram |
 
 **ใน core เองก็ยังไม่ครบ** ส่วนที่ยังไม่มี: Risk rules, Strategy
-interfaces และ Paper liquidation (§4.4) ที่ติด marker **Verify** — ทั้งที่ [architecture §4.3](../docs/architecture/architecture.md#43-key-interfaces-pseudo-code) ร่าง interface ไว้แล้ว
+interfaces และ paper replay (§4.5) ที่ติด marker **Verify** — ทั้งที่ [architecture §4.3](../docs/architecture/architecture.md#43-key-interfaces-pseudo-code) ร่าง interface ไว้แล้ว
 
 ---
 
@@ -129,6 +129,7 @@ interfaces และ Paper liquidation (§4.4) ที่ติด marker **Verif
 |---|---|---|
 | `book.py` | `TopOfBook` | snapshot best bid/ask จาก caller · ใช้ `is_abnormal` กรอง snapshot เสีย **ไม่ใช่ `is_crossed`** ซึ่งพลาดกรณี locked (`bid == ask`) |
 | `fills.py` | `PaperFill`, `market_fill`, `is_marketable`, `limit_fill_on_submit`, `resting_limit_fill`, `resting_limit_fills` | ปัดราคาไปทางเสียเปรียบผู้ใช้เสมอ (C-11) · marketable limit **ปัดก่อนแล้วค่อย cap** ห้ามปัดซ้ำ |
+| `liquidation.py` | `LiquidatablePosition`, `Liquidation`, `ClosedPosition`, `CancelScope`, `cross_liquidation`, `isolated_liquidation` | **ตรวจหลังทุก event ที่กระทบ margin** ไม่ใช่แค่ราคาขยับ (fee/funding ก็ทำให้โดนได้) · ใช้เงื่อนไข `is_liquidatable` ของ §2.4 ไม่ใช่เทียบกับ Liquidation Price · cross ปิดทุก position ด้วย snapshot เดียว ผลจึงไม่ขึ้นกับลำดับ (C-09) · WB ไม่ติดลบ ส่วนเกินเป็น `insurance_absorbed` · **Verify:** clearance rate และการริบ isolated wallet |
 | `triggers.py` | `BracketLeg`, `stop_loss_triggered`, `take_profit_triggered`, `triggered_leg`, `closing_side` | **comparison ล้วน ห้ามใส่เลขคณิต** — จะรันใน context ของ caller · SL ชนะเมื่อ trigger ทั้งคู่ |
 | `adapter.py` | `ExecutionAdapter` | **port ที่ทำให้ Paper กับ Live ใช้ core ร่วมกัน** (P-03/P-04, architecture §4.2) · ไม่คืนค่า ผลมาเป็น execution report ทีหลัง · อ้างด้วย `client_order_id` ไม่ใช่ exchange id |
 | `paper.py` | `PaperExecutionAdapter`, `MarketSnapshot`, `ReportSink`, `resting_fill_report` | **ต่อ port เข้ากับ fill model** — Paper เดินได้ครบวง · **ไม่เก็บ Order เอง** engine เป็นเจ้าของ (C-20) · `submit` รับเฉพาะ `PENDING_NEW` และคืน report เสมอ 1 ใบ — idempotency เป็นของ Order Manager (C-22) · `resting_fill_report` เป็น **free function** ไม่ใช่ method เพราะการขับ order ค้างไม่ใช่งานของ port (FR-ORD-04) |
@@ -157,9 +158,11 @@ interfaces และ Paper liquidation (§4.4) ที่ติด marker **Verif
 grep -rn "Verify" packages/core/src
 ```
 
-ปัจจุบันมี 6 จุด: `margin/requirement.py` (C-01 buffer), `margin/liquidation.py` (C-02),
-`margin/exposure.py` (initial margin ใช้ Mark Price), `market/brackets.py` (C-02 ขอบ bracket)
-และ `portfolio/spot_holding.py` 2 จุด (C-06 การหัก fee ของ Spot buy/sell)
+ปัจจุบันมี 9 จุด: `margin/requirement.py` (C-01 buffer), `margin/liquidation.py` (C-02),
+`margin/exposure.py` (initial margin ใช้ Mark Price), `market/brackets.py` (C-02 ขอบ bracket),
+`portfolio/spot_holding.py` 2 จุด (C-06 การหัก fee ของ Spot buy/sell),
+`orders/client_order_id.py` (ความยาวสูงสุดของ client order id) และ
+`execution/liquidation.py` 2 จุด (clearance rate ต่อ Symbol และการริบ isolated wallet)
 
 ---
 
@@ -178,7 +181,7 @@ uv run ruff check .          # lint
 uv run ruff format --check . # format (ตัด --check ออกเพื่อให้แก้ไฟล์ให้)
 uv run mypy                  # strict สำหรับ tiewtrade_core และ tiewtrade_strategies
 uv run lint-imports          # dependency rules 7 contracts (§2)
-uv run pytest                # ปัจจุบัน 344 tests
+uv run pytest                # ปัจจุบัน 368 tests
 ```
 
 รัน API:
