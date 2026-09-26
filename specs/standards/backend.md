@@ -1,6 +1,6 @@
 # Standard — Backend
 
-สถานะ: **Proposed** (ตั้งอยู่บนสมมติฐานว่า T-01 เลือก Python)
+สถานะ: **Proposed** — ภาษาและ framework ตัดสินแล้ว: **Python + FastAPI** (T-01, T-07 ปิด 2026-09-26)
 
 ---
 
