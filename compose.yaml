@@ -1,0 +1,30 @@
+# Docker Compose ของ F-01 — บางที่สุดเท่าที่งานนี้ใช้จริง (RQ-18)
+#
+# ยังไม่มี PostgreSQL และ Redis โดยเจตนา (เจ้าของตัดสิน 2026-09-27)
+# งานนี้ยังไม่มีตารางและไม่มีคิว ของที่ใส่แล้วไม่มีใครใช้จะไม่มีใครรู้ว่าพัง
+# PostgreSQL จะถูกใส่ตอน F-03
+#
+# ยังไม่มี engine และ market-data เพราะยังไม่มีอะไรให้รัน (F-20, F-10)
+
+services:
+  api:
+    build:
+      context: ./backend
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  frontend:
+    build:
+      context: ./frontend
+    environment:
+      API_URL: http://api:8000
+    ports:
+      - "5173:5173"
+    depends_on:
+      api:
+        condition: service_healthy
