@@ -32,8 +32,12 @@ uv run uvicorn services.api.app:app --reload --port 8000
 # หน้าบ้าน (อีกหน้าต่าง)
 cd frontend
 npm install
+npx playwright install chromium   # ครั้งแรกเท่านั้น สำหรับเทสต์ e2e
 npm run dev
 ```
+
+`npx playwright install chromium` เก็บเบราว์เซอร์ไว้ที่ระดับผู้ใช้ ไม่ใช่ในโฟลเดอร์โปรเจกต์
+จึงต้องรันครั้งเดียวต่อเครื่อง ไม่ใช่ครั้งเดียวต่อการโคลน — ถ้าข้าม `npm run test:e2e` จะพัง
 
 เปิด http://localhost:5173 จะเห็นหน้าเปล่าหนึ่งหน้าที่แสดงข้อมูลจาก `GET /health`
 
