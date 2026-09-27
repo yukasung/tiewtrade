@@ -125,3 +125,57 @@ async def test_downgrade_then_upgrade_rebuilds_the_same_structure(
     _alembic("upgrade", "head")
     after_second = await _snapshot(migrator_engine)
     assert after_second == after_first, "สร้างสองครั้งได้โครงสร้างไม่เหมือนกัน"
+
+
+async def test_downgrading_0003_restores_the_earlier_mechanism(
+    migrator_engine: AsyncEngine,
+) -> None:
+    """V-37 — `downgrade` ของ 0003 คืนฟังก์ชันรุ่นก่อนได้จริง
+
+    พิสูจน์ด้วยพฤติกรรม ไม่ใช่ด้วยการอ่านโค้ดของฟังก์ชัน: รุ่นก่อนไม่รู้จักพาร์ทิชัน
+    จึงไม่มีฟังก์ชันสร้างพาร์ทิชัน และ `TRUNCATE` ที่พาร์ทิชันยังผ่าน
+    เทสต์นี้จึงบอกทั้งว่า downgrade ทำงาน และว่า 0003 แก้อะไรไป
+    """
+    _alembic("downgrade", "0002")
+    try:
+        async with migrator_engine.connect() as connection:
+            helpers: list[str] = list(
+                (
+                    await connection.execute(
+                        text(
+                            "SELECT proname FROM pg_proc"
+                            " WHERE proname IN ('tiewtrade_create_monthly_partition',"
+                            "                   'tiewtrade_protect_partition')"
+                        )
+                    )
+                ).scalars()
+            )
+        assert helpers == [], f"downgrade ไม่ได้ลบของที่ 0003 เพิ่ม: {helpers}"
+
+        name = "test_downgrade_partitioned"
+        async with migrator_engine.begin() as connection:
+            await connection.execute(
+                text(
+                    f"CREATE TABLE {name} ("
+                    " id uuid NOT NULL,"
+                    " recorded_at timestamptz NOT NULL DEFAULT now(),"
+                    f" CONSTRAINT {name}_pkey PRIMARY KEY (recorded_at, id)"
+                    ") PARTITION BY RANGE (recorded_at)"
+                )
+            )
+            await connection.execute(text(f"SELECT tiewtrade_make_append_only('{name}'::regclass)"))
+            await connection.execute(
+                text(
+                    f"CREATE TABLE {name}_part PARTITION OF {name}"
+                    " FOR VALUES FROM ('2081-01-01') TO ('2081-02-01')"
+                )
+            )
+        try:
+            # รุ่นก่อนไม่ปิดพาร์ทิชัน — คำสั่งนี้จึงผ่าน ซึ่งคือช่องที่ 0003 ปิด
+            async with migrator_engine.begin() as connection:
+                await connection.execute(text(f"TRUNCATE {name}_part"))
+        finally:
+            async with migrator_engine.begin() as connection:
+                await connection.execute(text(f"DROP TABLE IF EXISTS {name}"))
+    finally:
+        _alembic("upgrade", "head")

@@ -1,11 +1,4 @@
-"""ของกลางของเทสต์ฐานข้อมูล (F-03)
-
-เทสต์กลุ่มนี้รันกับ **PostgreSQL จริง** เพราะสิ่งที่ทดสอบคือ RLS สิทธิ์ และ trigger
-ซึ่งเป็นความสามารถของ PostgreSQL เอง ฐานข้อมูลในหน่วยความจำพิสูจน์อะไรไม่ได้เลย (RQ-17)
-
-**ถ้าไม่มีฐานข้อมูล เทสต์ต้องแดง ไม่ใช่ข้าม** (V-39) การข้ามทำให้ CI เขียวทั้งที่
-ไม่เคยตรวจอะไร ซึ่งเป็นผลที่แย่กว่าการแดง
-"""
+"""ตารางทดสอบของกลไกใน F-03 — engine ต่อบทบาทอยู่ที่ tests/infra/conftest.py"""
 
 from __future__ import annotations
 
@@ -15,40 +8,6 @@ from uuid import uuid4
 import pytest_asyncio
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncEngine
-
-from tiewtrade.infra.db import DatabaseRole, create_engine_for
-
-
-async def _engine(role: DatabaseRole) -> AsyncIterator[AsyncEngine]:
-    engine = create_engine_for(role)
-    try:
-        yield engine
-    finally:
-        await engine.dispose()
-
-
-@pytest_asyncio.fixture
-async def api_engine() -> AsyncIterator[AsyncEngine]:
-    async for engine in _engine(DatabaseRole.API):
-        yield engine
-
-
-@pytest_asyncio.fixture
-async def engine_engine() -> AsyncIterator[AsyncEngine]:
-    async for engine in _engine(DatabaseRole.ENGINE):
-        yield engine
-
-
-@pytest_asyncio.fixture
-async def scan_engine() -> AsyncIterator[AsyncEngine]:
-    async for engine in _engine(DatabaseRole.ENGINE_SCAN):
-        yield engine
-
-
-@pytest_asyncio.fixture
-async def migrator_engine() -> AsyncIterator[AsyncEngine]:
-    async for engine in _engine(DatabaseRole.MIGRATOR):
-        yield engine
 
 
 async def _create_table(engine: AsyncEngine, ddl: list[str]) -> None:
