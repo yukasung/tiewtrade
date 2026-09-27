@@ -6,6 +6,10 @@ requires-python = "==3.12.*"
 dependencies = [
     "fastapi>=0.115",
     "uvicorn[standard]>=0.32",
+    # ฐานข้อมูล (F-03) — SQLAlchemy 2 async ตาม tech-stack.md หัวข้อ 4
+    "sqlalchemy[asyncio]>=2.0",
+    "asyncpg>=0.30",
+    "alembic>=1.14",
 ]
 
 [dependency-groups]
@@ -16,6 +20,7 @@ dev = [
     "pytest>=8.3",
     "hypothesis>=6.119",
     "httpx>=0.28",
+    "pytest-asyncio>=0.24",
 ]
 
 [build-system]
@@ -64,6 +69,8 @@ disallow_any_expr = true
 testpaths = ["tests"]
 pythonpath = ["src"]
 addopts = "-q --strict-markers --strict-config"
+# เทสต์ฐานข้อมูลเป็น async ทั้งหมด (F-03)
+asyncio_mode = "auto"
 
 # ─────────────────────────────────────────────────────────────
 # import-linter — ทิศทางการพึ่งพา (RQ-6)
@@ -85,6 +92,10 @@ forbidden_modules = [
     "fastapi",
     "uvicorn",
     "httpx",
+    # F-03 — core ห้ามแตะฐานข้อมูล (RQ-11)
+    "sqlalchemy",
+    "asyncpg",
+    "alembic",
 ]
 
 [[tool.importlinter.contracts]]
