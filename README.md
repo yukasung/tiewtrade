@@ -37,6 +37,18 @@ export TIEWTRADE_DATABASE_URL_MIGRATOR="postgresql+asyncpg://tiewtrade_migrator:
 uv run alembic upgrade head
 ```
 
+ฐานข้อมูลที่สร้างไว้ **ก่อน** มีตัวดักการสร้างพาร์ทิชัน (F-04) ติดตั้งเพิ่มได้โดยรันไฟล์
+bootstrap ซ้ำ — ทุกไฟล์ในโฟลเดอร์นั้นรันซ้ำได้โดยไม่เสียหาย:
+
+```sh
+for script in backend/db/bootstrap/*.sql; do
+  psql "postgresql://postgres:postgres@127.0.0.1:55432/tiewtrade" -v ON_ERROR_STOP=1 -f "$script"
+done
+```
+
+แล้วปิดพาร์ทิชันที่ค้างอยู่ด้วย `uv run alembic upgrade head`
+หรือสั่ง `SELECT tiewtrade_protect_all_partitions();` ด้วยบทบาท `tiewtrade_migrator`
+
 **เทสต์ต้องมีฐานข้อมูลจริง** ถ้าไม่ตั้ง URL เทสต์จะแดง ไม่ใช่ข้าม (ตั้งใจให้เป็นแบบนั้น)
 ตั้งครบทั้งห้าบทบาทก่อนรัน `uv run pytest`:
 

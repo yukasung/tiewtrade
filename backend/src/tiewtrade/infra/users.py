@@ -12,6 +12,15 @@ from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncEngine
 
+from tiewtrade.infra.audit import (
+    ActorKind,
+    AuditAction,
+    AuditEvent,
+    AuditOutcome,
+    SubjectKind,
+    UserCreatedDetails,
+    record_event,
+)
 from tiewtrade.infra.db.engine import DatabaseRole
 from tiewtrade.infra.db.session import require_user_session, user_session
 
@@ -34,9 +43,25 @@ async def create_user(
 
     **ไม่ส่ง `created_at`** เพราะบทบาทที่ใช้ตอนทำงานปกติไม่มีสิทธิ์เขียนคอลัมน์นั้น
     ส่งไปจะถูกฐานข้อมูลปฏิเสธ ไม่ใช่ถูกเมิน (RQ-10.1)
+
+    ลงบันทึกใน transaction เดียวกัน (F-04 RQ-10) — ลงบันทึกไม่สำเร็จแปลว่า
+    ผู้ใช้ไม่ถูกสร้าง และผู้ใช้ถูกสร้างแปลว่ามีบันทึกแล้วแน่นอน
     """
     async with user_session(engine, user_id, role=role) as session:
         await session.execute("INSERT INTO users (id) VALUES (:id)", {"id": str(user_id)})
+        await record_event(
+            session,
+            AuditEvent(
+                owner_user_id=user_id,
+                action=AuditAction.USER_CREATED,
+                actor_kind=ActorKind.USER,
+                actor_id=user_id,
+                subject_kind=SubjectKind.USER,
+                subject_id=str(user_id),
+                outcome=AuditOutcome.SUCCEEDED,
+                details=UserCreatedDetails(),
+            ),
+        )
 
 
 async def fetch_user(session: object, user_id: UUID) -> UserRow | None:

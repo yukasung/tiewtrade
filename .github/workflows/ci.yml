@@ -78,8 +78,14 @@ jobs:
 
       # บทบาทฐานข้อมูลสร้างด้วย superuser ของ container ครั้งเดียว (plan.md ข้อ 1)
       # migration รันด้วยบทบาท migrator เท่านั้น (RQ-5.1)
-      - name: bootstrap บทบาทฐานข้อมูล
-        run: psql "postgresql://postgres:postgres@127.0.0.1:5432/tiewtrade" -v ON_ERROR_STOP=1 -f db/bootstrap/00-roles.sql
+      - name: bootstrap ฐานข้อมูล (บทบาทและ event trigger)
+        # รันทั้งโฟลเดอร์ตามลำดับชื่อ เหมือนที่ Compose ทำตอนสร้าง volume
+        # ไฟล์ทุกไฟล์รันซ้ำได้ จึงรันกับฐานข้อมูลที่มีอยู่แล้วได้ด้วย
+        run: |
+          for script in db/bootstrap/*.sql; do
+            echo "== $script"
+            psql "postgresql://postgres:postgres@127.0.0.1:5432/tiewtrade" -v ON_ERROR_STOP=1 -f "$script"
+          done
       - name: migration
         run: uv run alembic upgrade head
 

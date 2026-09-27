@@ -216,3 +216,53 @@ def test_import_linter_gate_accepts_valid_tree() -> None:
     assert code == 0, f"import-linter ควรผ่านชุดที่ถูกต้อง แต่แดง:\n{output}"
     for contract in _contract_names():
         assert f"{contract} KEPT" in output, f"กฎ {contract!r} ไม่ได้ถูกตรวจในชุดที่ถูกต้อง"
+
+
+# ─────────────────────────────────────────────────────────────
+# ด่าน: บันทึกการกระทำ (F-04) — กรณีที่ต้องแดง
+#
+# สองกรณีนี้คือทางที่ค่าลับและการเขียนที่ไม่มีเจ้าของจะเข้ามาได้ ถ้าไม่แดงตรงนี้
+# จะไม่มีอะไรบอกว่าตัวกันยังทำงานอยู่ (V-40)
+# ─────────────────────────────────────────────────────────────
+
+
+def test_audit_gate_rejects_forbidden_detail_keys() -> None:
+    """คีย์ที่ห้ามต้องถูกปฏิเสธ และกรณีที่ถูกต้องคู่กันต้องผ่าน"""
+    from tiewtrade.infra.audit import ForbiddenDetailError, ensure_no_forbidden_content
+
+    with pytest.raises(ForbiddenDetailError):
+        ensure_no_forbidden_content({"wallet": {"api_key": "ค่าลับ"}})
+
+    ensure_no_forbidden_content({"wallet": {"order_id": "abc-123"}})
+
+
+def test_audit_gate_rejects_writing_without_a_user_session() -> None:
+    """ทางเขียนบันทึกต้องรับเฉพาะ session ของผู้ใช้"""
+    import asyncio
+    from uuid import uuid4
+
+    from tiewtrade.infra.audit import (
+        ActorKind,
+        AuditAction,
+        AuditEvent,
+        AuditOutcome,
+        SubjectKind,
+        UserCreatedDetails,
+        record_event,
+    )
+    from tiewtrade.infra.db import SessionKindError
+
+    owner = uuid4()
+    event = AuditEvent(
+        owner_user_id=owner,
+        action=AuditAction.USER_CREATED,
+        actor_kind=ActorKind.USER,
+        actor_id=owner,
+        subject_kind=SubjectKind.USER,
+        subject_id=str(owner),
+        outcome=AuditOutcome.SUCCEEDED,
+        details=UserCreatedDetails(),
+    )
+
+    with pytest.raises(SessionKindError):
+        asyncio.run(record_event(object(), event))
