@@ -2,7 +2,7 @@
 
 from fastapi.testclient import TestClient
 
-from services.api.app import app
+from tiewtrade.services.api.app import app
 
 client = TestClient(app)
 

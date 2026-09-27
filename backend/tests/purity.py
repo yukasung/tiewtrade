@@ -59,7 +59,7 @@ FORBIDDEN_CALLS: dict[str, str] = {
 }
 
 #: ชื่อ package ของโค้ดในโปรเจกต์นี้ที่ core อาจ import ได้ (ตัวมันเอง)
-LOCAL_PACKAGES: frozenset[str] = frozenset({"core"})
+LOCAL_PACKAGES: frozenset[str] = frozenset({"tiewtrade"})
 
 
 @dataclass(frozen=True)

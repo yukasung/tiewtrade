@@ -23,7 +23,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/core", "src/strategies", "src/venues", "src/infra", "src/services"]
+packages = ["src/tiewtrade"]
 
 # ─────────────────────────────────────────────────────────────
 # ruff — รูปแบบและ lint (RQ-8)
@@ -52,7 +52,7 @@ extra_checks = true
 
 # `core` เข้มกว่าที่อื่น เพราะโค้ดคำนวณเงินจะอยู่ที่นี่ทั้งหมด (RQ-10)
 [[tool.mypy.overrides]]
-module = "core.*"
+module = "tiewtrade.core.*"
 disallow_any_explicit = true
 disallow_any_decorated = true
 disallow_any_expr = true
@@ -70,18 +70,18 @@ addopts = "-q --strict-markers --strict-config"
 # บังคับผังใน specs/standards/architecture.md หัวข้อ 1
 # ─────────────────────────────────────────────────────────────
 [tool.importlinter]
-root_packages = ["core", "strategies", "venues", "infra", "services"]
+root_packages = ["tiewtrade"]
 include_external_packages = true
 
 [[tool.importlinter.contracts]]
 name = "core ไม่พึ่งอะไรเลยนอกจาก standard library"
 type = "forbidden"
-source_modules = ["core"]
+source_modules = ["tiewtrade.core"]
 forbidden_modules = [
-    "strategies",
-    "venues",
-    "infra",
-    "services",
+    "tiewtrade.strategies",
+    "tiewtrade.venues",
+    "tiewtrade.infra",
+    "tiewtrade.services",
     "fastapi",
     "uvicorn",
     "httpx",
@@ -90,15 +90,15 @@ forbidden_modules = [
 [[tool.importlinter.contracts]]
 name = "strategies, venues, infra พึ่งกันเองไม่ได้ และพึ่ง service ไม่ได้"
 type = "independence"
-modules = ["strategies", "venues", "infra"]
+modules = ["tiewtrade.strategies", "tiewtrade.venues", "tiewtrade.infra"]
 
 [[tool.importlinter.contracts]]
 name = "strategies, venues, infra ห้ามพึ่ง service"
 type = "forbidden"
-source_modules = ["strategies", "venues", "infra"]
-forbidden_modules = ["services"]
+source_modules = ["tiewtrade.strategies", "tiewtrade.venues", "tiewtrade.infra"]
+forbidden_modules = ["tiewtrade.services"]
 
 [[tool.importlinter.contracts]]
 name = "service ห้าม import กันเอง"
 type = "independence"
-modules = ["services.api", "services.engine", "services.market_data"]
+modules = ["tiewtrade.services.api", "tiewtrade.services.engine", "tiewtrade.services.market_data"]

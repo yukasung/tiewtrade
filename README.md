@@ -27,7 +27,7 @@ Python 3.12 ไม่ต้องติดตั้งเอง `uv` จะจ�
 # หลังบ้าน
 cd backend
 uv sync
-uv run uvicorn services.api.app:app --reload --port 8000
+uv run uvicorn tiewtrade.services.api.app:app --reload --port 8000
 
 # หน้าบ้าน (อีกหน้าต่าง)
 cd frontend
@@ -71,7 +71,7 @@ npm run test
 npm run test:e2e
 
 # สัญญา API สองฝั่งต้องตรงกัน
-cd backend && uv run python -m services.api.openapi_export
+cd backend && uv run python -m tiewtrade.services.api.openapi_export
 cd ../frontend && npm run check:api
 ```
 
@@ -80,7 +80,7 @@ cd ../frontend && npm run check:api
 สร้างสัญญาและชนิดข้อมูลใหม่ แล้ว commit ทั้งสองไฟล์
 
 ```sh
-cd backend && uv run python -m services.api.openapi_export
+cd backend && uv run python -m tiewtrade.services.api.openapi_export
 cd ../frontend && npm run gen:api
 ```
 
@@ -91,13 +91,16 @@ cd ../frontend && npm run gen:api
 ## โครงโฟลเดอร์
 
 ```
-backend/src/
+backend/src/tiewtrade/
 ├── core/         ตรรกะโดเมนบริสุทธิ์ — ห้ามพึ่งอะไรเลย ห้ามใช้ float
 ├── strategies/   กลยุทธ์ — พึ่ง core เท่านั้น
 ├── venues/       ชั้นแยกตลาด — ยังว่าง (งาน F-33)
 ├── infra/        ฐานข้อมูล คิว log
 └── services/     api, engine, market_data — ห้าม import กันเอง
 ```
+
+โค้ดทั้งหมดอยู่ใต้ namespace `tiewtrade` เพื่อไม่ให้ชื่ออย่าง `core` หรือ `services`
+ชนกับ package อื่น — import จึงเป็น `from tiewtrade.core import ...`
 
 ทิศทางการพึ่งพาถูกบังคับด้วย `import-linter` ใน CI ไม่ใช่ด้วยการรีวิว
 ดู [`specs/standards/architecture.md`](specs/standards/architecture.md)

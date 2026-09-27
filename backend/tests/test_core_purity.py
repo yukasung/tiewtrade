@@ -8,7 +8,7 @@ from pathlib import Path
 
 from tests.purity import check_tree
 
-CORE = Path(__file__).parents[1] / "src" / "core"
+CORE = Path(__file__).parents[1] / "src" / "tiewtrade" / "core"
 
 
 def test_core_is_pure() -> None:
