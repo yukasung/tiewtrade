@@ -30,7 +30,7 @@ requirements: [requirements.md](requirements.md) — Approved 2026-09-27
 tiewtrade/
 ├── backend/
 │   ├── pyproject.toml          ← uv, ruff, mypy, pytest, import-linter ที่เดียว
-│   ├── src/
+│   ├── src/tiewtrade/          ← namespace ของโปรเจกต์ (เจ้าของตัดสิน 2026-09-27)
 │   │   ├── core/               ← ตรรกะโดเมนบริสุทธิ์ (ยังว่าง)
 │   │   ├── strategies/         ← ยังว่าง
 │   │   ├── venues/             ← ยังว่าง (RQ-5 ห้ามออกแบบส่วนต่อประสาน)
@@ -155,8 +155,8 @@ tiewtrade/
 | ไฟล์ | เปลี่ยนอะไร |
 |---|---|
 | `backend/pyproject.toml` | สร้างใหม่ — dependency และตั้งค่าเครื่องมือทั้งหมด |
-| `backend/src/**` | สร้างโครงชั้นตามผัง ส่วนใหญ่ว่าง |
-| `backend/src/services/api/` | FastAPI app + `GET /health` |
+| `backend/src/tiewtrade/**` | สร้างโครงชั้นตามผัง ส่วนใหญ่ว่าง |
+| `backend/src/tiewtrade/services/api/` | FastAPI app + `GET /health` |
 | `backend/tests/**` | ตรวจความบริสุทธิ์ + กรณีที่ต้องถูกปฏิเสธ |
 | `frontend/package.json`, `tsconfig.json`, `vite.config.ts` | สร้างใหม่ |
 | `frontend/src/api-types.ts` | สร้างจาก OpenAPI **ห้ามแก้มือ** commit ไว้เพื่อให้ CI เทียบได้ |

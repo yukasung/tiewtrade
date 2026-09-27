@@ -8,9 +8,9 @@ import json
 import sys
 from pathlib import Path
 
-from services.api.app import app
+from tiewtrade.services.api.app import app
 
-DEFAULT_OUTPUT = Path(__file__).parents[3] / "openapi.json"
+DEFAULT_OUTPUT = Path(__file__).parents[4] / "openapi.json"
 
 
 def main(output: Path = DEFAULT_OUTPUT) -> int:

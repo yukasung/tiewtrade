@@ -55,12 +55,12 @@ jobs:
         working-directory: backend
         run: |
           uv sync --frozen
-          uv run python -m services.api.openapi_export
+          uv run python -m tiewtrade.services.api.openapi_export
 
       - name: เทียบกับที่ commit ไว้
         run: |
           git diff --exit-code -- backend/openapi.json \
-            || { echo "::error::openapi.json ไม่ตรงกับโค้ด — รัน uv run python -m services.api.openapi_export แล้ว commit"; exit 1; }
+            || { echo "::error::openapi.json ไม่ตรงกับโค้ด — รัน uv run python -m tiewtrade.services.api.openapi_export แล้ว commit"; exit 1; }
 
       - uses: actions/setup-node@v4
         with:
