@@ -59,6 +59,8 @@ def _run(args: list[str], cwd: Path, env_extra: dict[str, str] | None = None) ->
         ("purity_bad_clock_alias.py", "forbidden-call"),
         ("purity_bad_clock_direct_import.py", "forbidden-call"),
         ("purity_bad_external_import.py", "external-import"),
+        # F-03 — ไลบรารีฐานข้อมูลต้องเข้า core ไม่ได้ (RQ-11)
+        ("purity_bad_database_import.py", "external-import"),
     ],
 )
 def test_purity_gate_rejects(fixture: str, expected_kind: str) -> None:

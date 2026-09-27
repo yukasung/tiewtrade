@@ -13,6 +13,9 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --no-install-project --no-dev
 
 COPY src ./src
+# migration อยู่ใน image เพราะบริการ `migrate` ใน compose รันจาก image เดียวกัน (F-03)
+COPY alembic.ini ./
+COPY migrations ./migrations
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --no-dev
 

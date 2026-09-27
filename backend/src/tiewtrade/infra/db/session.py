@@ -1,0 +1,189 @@
+"""ทางเข้าฐานข้อมูล — ระบุตัวผู้ใช้ทุกครั้ง ลืมไม่ได้เพราะไม่มีทางลืม (plan.md ข้อ 7)
+
+สองชนิดที่ **ไม่สืบทอดกัน** เพื่อให้เอาไปใช้สลับกันไม่ได้:
+
+- `UserSession` — งานของผู้ใช้รายเดียว อยู่ใต้ RLS
+- `ScanSession` — งานกวาดรายการข้ามผู้ใช้ **ข้าม RLS** อ่านอย่างเดียว (Q-3)
+
+ไม่มี API ที่คืน connection ดิบ เพราะ connection ดิบคือทางที่ลืมระบุผู้ใช้ได้
+"""
+
+from __future__ import annotations
+
+from collections.abc import AsyncIterator, Mapping
+from contextlib import asynccontextmanager, suppress
+from dataclasses import dataclass
+from typing import Any, Final
+from uuid import UUID
+
+from sqlalchemy import Result, text
+from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine
+
+from tiewtrade.infra.db.engine import ROLES_UNDER_RLS, DatabaseRole
+from tiewtrade.infra.db.errors import (
+    DatabaseRoleError,
+    SessionKindError,
+    translate_database_error,
+)
+
+#: ชื่อตัวแปรที่ policy ของทุกตารางอ่าน ประกาศไว้ที่เดียว
+CURRENT_USER_SETTING: Final[str] = "tiewtrade.current_user_id"
+
+_ROLE_FACTS = text(
+    """
+    SELECT current_user AS role_name,
+           r.rolsuper AS is_superuser,
+           r.rolbypassrls AS bypasses_rls
+    FROM pg_roles AS r
+    WHERE r.rolname = current_user
+    """
+)
+
+# `set_config(..., is_local => true)` คือ SET LOCAL ในรูปที่ส่งค่าแบบ bind ได้
+# ต้องเป็น LOCAL เท่านั้น: ค่าหมดอายุเมื่อ transaction จบ จึงไม่ค้างไปถึงผู้ใช้
+# คนถัดไปที่ได้ connection เดิมจาก pool (Q-2 เงื่อนไข ข)
+_SET_LOCAL_USER = text("SELECT set_config(:setting, :user_id, true)")
+
+
+@dataclass(frozen=True, slots=True)
+class UserSession:
+    """งานของผู้ใช้รายเดียว — ทุก query อยู่ใต้ RLS ของผู้ใช้คนนี้"""
+
+    _connection: AsyncConnection
+    user_id: UUID
+
+    async def execute(
+        self, statement: str, parameters: Mapping[str, object] | None = None
+    ) -> Result[Any]:
+        """สั่ง query ในขอบเขตของผู้ใช้คนนี้"""
+        try:
+            return await self._connection.execute(text(statement), dict(parameters or {}))
+        except SQLAlchemyError as error:
+            raise translate_database_error(error) from None
+
+
+@dataclass(frozen=True, slots=True)
+class ScanSession:
+    """งานกวาดรายการข้ามผู้ใช้ — **ข้าม RLS** ใช้ได้กับงานจัดคิวเท่านั้น
+
+    บทบาทที่อยู่ข้างหลังนี้ไม่มีสิทธิ์เขียนข้อมูลผู้ใช้และไม่มีสิทธิ์อ่านคอลัมน์ secret
+    ฉะนั้นแม้โค้ดพลาด ความเสียหายก็ถูกจำกัดด้วยสิทธิ์ของฐานข้อมูลเอง
+    """
+
+    _connection: AsyncConnection
+
+    async def execute(
+        self, statement: str, parameters: Mapping[str, object] | None = None
+    ) -> Result[Any]:
+        """สั่ง query แบบข้าม RLS"""
+        try:
+            return await self._connection.execute(text(statement), dict(parameters or {}))
+        except SQLAlchemyError as error:
+            raise translate_database_error(error) from None
+
+
+async def _assert_role(connection: AsyncConnection, expected: DatabaseRole) -> None:
+    """ตรวจว่าที่ปลายสายคือบทบาทที่ขอจริง ก่อนแตะข้อมูลใด ๆ
+
+    ถ้า URL ถูกตั้งสลับกัน งานรายผู้ใช้อาจไปวิ่งอยู่บนบทบาทที่ข้าม RLS
+    ซึ่งเป็นความผิดที่เงียบที่สุดของการออกแบบนี้ จึงต้องดังตรงนี้ (Q-3, RQ-5.1)
+    """
+    try:
+        row = (await connection.execute(_ROLE_FACTS)).one()
+    except SQLAlchemyError as error:
+        raise translate_database_error(error) from None
+
+    role_name, is_superuser, bypasses_rls = row
+    if role_name != expected.role_name:
+        raise DatabaseRoleError(
+            f"ต่อฐานข้อมูลด้วยบทบาทอื่น ไม่ใช่ {expected.role_name} — ตรวจ {expected.url_variable}"
+        )
+    if is_superuser:
+        raise DatabaseRoleError(f"บทบาท {expected.role_name} เป็น superuser ซึ่งห้ามตาม RQ-5.1")
+    if expected in ROLES_UNDER_RLS and bypasses_rls:
+        raise DatabaseRoleError(f"บทบาท {expected.role_name} ข้าม RLS ได้ จึงใช้กับงานของผู้ใช้ไม่ได้")
+    if expected is DatabaseRole.ENGINE_SCAN and not bypasses_rls:
+        raise DatabaseRoleError(f"บทบาท {expected.role_name} ต้องข้าม RLS ได้ เพราะงานกวาดอ่านข้ามผู้ใช้")
+
+
+@asynccontextmanager
+async def _begin(engine: AsyncEngine) -> AsyncIterator[AsyncConnection]:
+    """เปิด transaction แล้วแปลงข้อผิดพลาดทุกชนิดตอนต่อและตอนปิดให้เป็นชนิดของเรา
+
+    ครอบตั้งแต่ **ตอนขอ connection** ไม่ใช่แค่ตอน query เพราะข้อผิดพลาดตอนต่อ
+    (รหัสผ่านผิด ต่อไม่ติด) พา URL และรหัสผ่านติดมาใน traceback ของ driver
+    ซึ่งเป็นสิ่งที่ `security.md` หัวข้อ 4 ห้ามไว้
+
+    จับ `OSError` ด้วย ไม่ใช่แค่ข้อผิดพลาดของ SQLAlchemy เพราะการต่อพอร์ตที่ปิดอยู่
+    โยน `ConnectionRefusedError` ขึ้นมาตรง ๆ ถ้าไม่จับ ผู้เรียกที่ดัก `InfraError`
+    จะรับมือกรณี "ฐานข้อมูลล่ม" ไม่ได้เลย ซึ่งเป็นกรณีที่ต้องรับมือได้ที่สุด
+
+    ข้อผิดพลาดที่เกิด **ในตัวงานของผู้เรียก** ไม่ถูกแปลง — ของจาก query ถูกแปลง
+    ที่ `execute` ไปแล้ว และของอื่นเป็นเรื่องของผู้เรียก ไม่ใช่ของชั้นนี้
+    """
+    transaction = engine.begin()
+    try:
+        connection = await transaction.__aenter__()
+    except (SQLAlchemyError, OSError) as error:
+        raise translate_database_error(error) from None
+
+    try:
+        yield connection
+    except BaseException as error:
+        # ปิด transaction ให้เรียบร้อยก่อนส่งข้อผิดพลาดของผู้เรียกต่อ
+        # ถ้าการ rollback ล้มเหลวด้วย ให้ข้อผิดพลาดตัวแรกชนะ เพราะมันบอกสาเหตุจริง
+        # ส่วนความล้มเหลวของ rollback เป็นผลพลอยได้ของสาเหตุนั้น
+        with suppress(SQLAlchemyError, OSError):
+            await transaction.__aexit__(type(error), error, error.__traceback__)
+        raise
+    try:
+        await transaction.__aexit__(None, None, None)
+    except (SQLAlchemyError, OSError) as error:
+        raise translate_database_error(error) from None
+
+
+@asynccontextmanager
+async def user_session(
+    engine: AsyncEngine, user_id: UUID, *, role: DatabaseRole = DatabaseRole.API
+) -> AsyncIterator[UserSession]:
+    """เปิด transaction ที่ผูกกับผู้ใช้คนหนึ่ง
+
+    **ไม่มีทางได้ session ของผู้ใช้โดยไม่ระบุตัวผู้ใช้** — ตัวผู้ใช้เป็นพารามิเตอร์บังคับ
+    """
+    if role not in ROLES_UNDER_RLS:
+        raise DatabaseRoleError(f"บทบาท {role.role_name} ไม่ใช่บทบาทที่ทำงานใต้ RLS")
+
+    async with _begin(engine) as connection:
+        await _assert_role(connection, role)
+        try:
+            await connection.execute(
+                _SET_LOCAL_USER,
+                {"setting": CURRENT_USER_SETTING, "user_id": str(user_id)},
+            )
+        except SQLAlchemyError as error:
+            raise translate_database_error(error) from None
+        yield UserSession(connection, user_id)
+
+
+@asynccontextmanager
+async def scan_session_bypassing_rls(engine: AsyncEngine) -> AsyncIterator[ScanSession]:
+    """เปิด session ของงานกวาดรายการข้ามผู้ใช้
+
+    ชื่อฟังก์ชันบอกตรง ๆ ว่าข้าม RLS เพื่อให้เห็นตอนรีวิวว่าโค้ดตรงไหนใช้ทางนี้
+    (Q-3 เงื่อนไข ค)
+    """
+    async with _begin(engine) as connection:
+        await _assert_role(connection, DatabaseRole.ENGINE_SCAN)
+        yield ScanSession(connection)
+
+
+def require_user_session(candidate: object) -> UserSession:
+    """ตัวตรวจกลางของทุกเส้นทางที่แตะข้อมูลของผู้ใช้
+
+    อยู่ที่เดียวเพื่อไม่ให้แต่ละ repository เขียนเงื่อนไขของตัวเอง แล้วลืมทีละที่
+    (`standards/security.md` หัวข้อ 2 — ตรวจสิทธิ์ที่จุดเดียว)
+    """
+    if isinstance(candidate, UserSession):
+        return candidate
+    raise SessionKindError(f"เส้นทางของผู้ใช้รับเฉพาะ UserSession ไม่รับ {type(candidate).__name__}")

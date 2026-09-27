@@ -1,15 +1,52 @@
-# Docker Compose ของ F-01 — บางที่สุดเท่าที่งานนี้ใช้จริง (RQ-18)
+# Docker Compose — บางที่สุดเท่าที่งานที่ทำแล้วใช้จริง (F-01 RQ-18)
 #
-# ยังไม่มี PostgreSQL และ Redis โดยเจตนา (เจ้าของตัดสิน 2026-09-27)
-# งานนี้ยังไม่มีตารางและไม่มีคิว ของที่ใส่แล้วไม่มีใครใช้จะไม่มีใครรู้ว่าพัง
-# PostgreSQL จะถูกใส่ตอน F-03
+# เวอร์ชัน PostgreSQL มาจาก config/postgres.env ที่เดียว (F-03 plan.md ข้อ 8)
+# เรียกจาก root ด้วย:
+#   env -u POSTGRES_VERSION docker compose --env-file config/postgres.env up -d --build --wait
+# การลบค่าจาก shell ก่อนอ่านไฟล์กันค่าภายนอกทับเวอร์ชันกลางโดยไม่ตั้งใจ
 #
+# ยังไม่มี Redis โดยเจตนา — ยังไม่มีงานไหนต้องใช้คิวหรือ pub/sub (tech-stack.md หัวข้อ 5)
 # ยังไม่มี engine และ market-data เพราะยังไม่มีอะไรให้รัน (F-20, F-10)
+#
+# **รหัสผ่านในไฟล์นี้ใช้ได้เฉพาะเครื่องนักพัฒนาและ CI** บนเครื่องจริงเป็นงาน F-31
 
 services:
+  postgres:
+    image: postgres:${POSTGRES_VERSION:?ต้องรันด้วย --env-file config/postgres.env}
+    environment:
+      POSTGRES_DB: tiewtrade
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    # สคริปต์สร้างบทบาทรันครั้งเดียวตอนสร้างฐานข้อมูล ด้วย superuser ของ container
+    volumes:
+      - ./backend/db/bootstrap:/docker-entrypoint-initdb.d:ro
+    # เปิดพอร์ตให้เทสต์บนเครื่องนักพัฒนาต่อได้ (testing.md — เทสต์ต้องรันกับฐานข้อมูลจริง)
+    # 55432 บนเครื่องนักพัฒนา เพื่อไม่ชนกับ PostgreSQL ที่อาจติดตั้งไว้แล้วที่ 5432
+    ports:
+      - "55432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d tiewtrade"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  # รันครั้งเดียวแล้วจบ — api รอให้เสร็จก่อนเริ่ม
+  migrate:
+    build:
+      context: ./backend
+    command: ["alembic", "upgrade", "head"]
+    environment:
+      TIEWTRADE_DATABASE_URL_MIGRATOR: postgresql+asyncpg://tiewtrade_migrator:dev_migrator@postgres:5432/tiewtrade
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+
   api:
     build:
       context: ./backend
+    environment:
+      TIEWTRADE_DATABASE_URL_API: postgresql+asyncpg://tiewtrade_api:dev_api@postgres:5432/tiewtrade
     ports:
       - "8000:8000"
     healthcheck:
@@ -17,6 +54,9 @@ services:
       interval: 5s
       timeout: 3s
       retries: 10
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
 
   frontend:
     build:
