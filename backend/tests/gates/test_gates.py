@@ -342,3 +342,39 @@ def test_venue_network_gate_scope_excludes_adapter_packages() -> None:
 
     # ไฟล์ของตัวเชื่อมจะถูกด่านจับถ้าถูกส่งเข้าไป — ขอบเขตจึงเป็นสิ่งที่กันมันไว้
     assert check_no_network(tree / "adapter_like" / "client.py")
+
+
+def test_indirect_network_dependency_is_caught_only_by_import_linter(
+    broken_contract_report: tuple[int, str],
+) -> None:
+    """ด่านสองตัวตรวจคนละมิติ — เทสต์นี้คือเหตุผลที่เก็บไว้ทั้งคู่ (เจ้าของตัดสิน 2026-09-28)
+
+    ส่วนกลางที่พึ่งเครือข่าย **ทางอ้อม** ผ่าน package ของตัวเชื่อม:
+
+    - ด่าน AST มองไม่เห็น เพราะบรรทัด import ที่ไฟล์นั้นเป็นของในโปรเจกต์เอง
+      ซึ่งอยู่ในรายการที่อนุญาต
+    - import-linter เห็น เพราะมันไล่ทั้งเส้นทางการพึ่งพา ไม่ใช่ดูบรรทัด import ทีละไฟล์
+
+    ถ้าวันหนึ่งเทสต์นี้แดงเพราะด่าน AST เริ่มจับได้ด้วย แปลว่าข้อสรุปเรื่อง
+    "ตรวจคนละมิติ" เปลี่ยนไปแล้ว และต้องทบทวนว่ายังต้องมีสองด่านหรือไม่
+    """
+    indirect = FIXTURES / "imports_bad" / "src" / "tiewtrade" / "venues" / "limits.py"
+    assert check_no_network(indirect) == [], "ด่าน AST ไม่ควรเห็นการพึ่งพาทางอ้อม"
+
+    code, output = broken_contract_report
+    assert code != 0
+    assert "ส่วนกลางของ venues ห้ามพึ่งไลบรารีเครือข่าย BROKEN" in output
+    assert "adapter_like" in output, f"รายงานไม่ได้ชี้เส้นทางทางอ้อม:\n{output}"
+
+
+def test_adapter_packages_may_use_the_network(broken_contract_report: tuple[int, str]) -> None:
+    """และด่านที่สองต้องไม่บล็อกตัวเชื่อมจริงของ F-35
+
+    ชุดที่ถูกต้องมี package ตัวเชื่อมที่ import ไลบรารีเครือข่ายอยู่ด้วย
+    ถ้ากฎครอบกว้างเกินไป ชุดนั้นจะแดง
+    """
+    code, output = _lint_imports("imports_good")
+    assert code == 0, f"ชุดที่ถูกต้องควรผ่านทุกกฎ แต่แดง:\n{output}"
+
+    broken_code, _ = broken_contract_report
+    assert broken_code != 0
