@@ -20,6 +20,7 @@ from pathlib import Path
 import pytest
 
 from tests.purity import check_file
+from tests.venue_isolation import central_venue_modules, check_no_network, check_vocabulary
 
 FIXTURES = Path(__file__).parent / "fixtures"
 BACKEND_ROOT = Path(__file__).parents[2]
@@ -202,10 +203,19 @@ def _lint_imports(variant: str) -> tuple[int, str]:
     )
 
 
+@pytest.fixture(scope="session")
+def broken_contract_report() -> tuple[int, str]:
+    """ผลของการรัน import-linter กับชุดที่ผิดกฎ — รันครั้งเดียวต่อการทดสอบหนึ่งรอบ
+
+    ผลเหมือนกันทุกกฎ การรันซ้ำต่อกฎจึงเป็นการเสียเวลาเปล่าที่โตตามจำนวนกฎ
+    """
+    return _lint_imports("imports_bad")
+
+
 @pytest.mark.parametrize("contract", _contract_names())
-def test_import_linter_gate_rejects(contract: str) -> None:
+def test_import_linter_gate_rejects(contract: str, broken_contract_report: tuple[int, str]) -> None:
     """ทุกกฎการพึ่งพาในกฎจริงต้องถูกจับ และต้องระบุได้ว่ากฎข้อไหนพัง"""
-    code, output = _lint_imports("imports_bad")
+    code, output = broken_contract_report
     assert code != 0, f"import-linter ควรปฏิเสธชุดที่ผิดกฎ แต่ผ่าน:\n{output}"
     assert f"{contract} BROKEN" in output, f"กฎ {contract!r} ไม่ได้ถูกรายงานว่าพัง ผลที่ได้:\n{output}"
 
@@ -266,3 +276,69 @@ def test_audit_gate_rejects_writing_without_a_user_session() -> None:
 
     with pytest.raises(SessionKindError):
         asyncio.run(record_event(object(), event))
+
+
+# ─────────────────────────────────────────────────────────────
+# ด่าน: ชั้นแยก venue (F-33) — กรณีที่ต้องแดงและกรณีที่ต้องผ่าน
+#
+# สองด่านนี้ import-linter ทำแทนไม่ได้ เพราะการรั่วของคำศัพท์ไม่ใช่การ import
+# และขอบเขตของด่านเครือข่ายต้องไม่ครอบ package ของตัวเชื่อมจริง (V-2, V-3, V-4.1)
+# ─────────────────────────────────────────────────────────────
+
+
+@pytest.mark.parametrize(
+    ("fixture", "expected_kind"),
+    [
+        ("venue_bad_word.py", "venue-word"),
+        ("venue_bad_joined_pair.py", "joined-pair"),
+        # ชื่อฟังก์ชัน ชื่อตัวแปร และชื่อ module ก็เป็นทางที่คำศัพท์ของตลาดรั่วได้
+        ("venue_bad_identifier.py", "venue-word"),
+        ("venue_bad_identifier.py", "joined-pair"),
+        ("venue_bad_import.py", "venue-word"),
+    ],
+)
+def test_venue_vocabulary_gate_rejects(fixture: str, expected_kind: str) -> None:
+    """V-2 — ด่านคำศัพท์จับได้ และจับด้วยเหตุผลที่ตั้งใจทดสอบ"""
+    violations = check_vocabulary(FIXTURES / fixture)
+    assert violations, f"{fixture} ควรถูกปฏิเสธ แต่ด่านไม่พบอะไรเลย"
+    kinds = {violation.kind for violation in violations}
+    assert expected_kind in kinds, f"{fixture} ถูกจับด้วยเหตุผล {kinds} ซึ่งไม่ใช่ {expected_kind}"
+
+
+def test_venue_vocabulary_gate_allows_documentation() -> None:
+    """V-3 — docstring และคอมเมนต์ที่อ้างถึงตลาดต้องผ่าน
+
+    ถ้าด่านจับเอกสารด้วย เราจะต้องเลี่ยงคำในเอกสาร ซึ่งทำให้เอกสารแย่ลง
+    โดยไม่ได้ปลอดภัยขึ้นเลย
+    """
+    assert check_vocabulary(FIXTURES / "venue_good_outside.py") == []
+
+
+def test_venue_network_gate_rejects_network_import() -> None:
+    """V-4 — ส่วนกลางของ venues พึ่งไลบรารีเครือข่ายไม่ได้"""
+    violations = check_no_network(FIXTURES / "venue_bad_network_import.py")
+    assert violations, "ไฟล์ที่ import httpx ควรถูกปฏิเสธ"
+    assert {violation.kind for violation in violations} == {"not-allowed-import"}
+
+
+def test_venue_network_gate_accepts_central_style_file() -> None:
+    """V-4 — กรณีที่ถูกต้องคู่กันต้องผ่านภายใต้ชุดตั้งค่าเดียวกัน"""
+    assert check_no_network(FIXTURES / "venue_good_central.py") == []
+
+
+def test_venue_network_gate_scope_excludes_adapter_packages() -> None:
+    """V-4.1 — ด่านต้องไม่บล็อกตัวเชื่อมจริงของ F-35
+
+    `architecture.md` หัวข้อ 1 วางตัวเชื่อมไว้ใน package ย่อยของ `venues`
+    และตัวเชื่อมต้องต่อเครือข่ายเป็นงานหลัก ขอบเขตของด่านจึงเป็น **โครงสร้าง**:
+    ไฟล์ระดับบนสุดเท่านั้น ทดสอบกับต้นไม้จำลองที่มีทั้งสองแบบ เพื่อให้พิสูจน์
+    พฤติกรรมจริง ไม่ใช่การสะกดของรายชื่อที่เขียนไว้
+    """
+    tree = FIXTURES / "venue_tree" / "venues"
+    central = central_venue_modules(tree)
+
+    assert [path.name for path in central] == ["central.py"]
+    assert not any("adapter_like" in str(path) for path in central)
+
+    # ไฟล์ของตัวเชื่อมจะถูกด่านจับถ้าถูกส่งเข้าไป — ขอบเขตจึงเป็นสิ่งที่กันมันไว้
+    assert check_no_network(tree / "adapter_like" / "client.py")

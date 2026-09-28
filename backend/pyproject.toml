@@ -113,3 +113,21 @@ forbidden_modules = ["tiewtrade.services"]
 name = "service ห้าม import กันเอง"
 type = "independence"
 modules = ["tiewtrade.services.api", "tiewtrade.services.engine", "tiewtrade.services.market_data"]
+
+# ส่วนกลางของ venues ต้องไม่รู้จักเครือข่าย (F-33 RQ-14)
+# **ไม่ครอบ package ของตัวเชื่อมจริง** เพราะตัวเชื่อมต้องต่อเครือข่ายเป็นงานหลัก (F-35)
+# ระบุรายไฟล์โดยเจตนา เพื่อให้การเพิ่มไฟล์ใหม่ในส่วนกลางต้องเพิ่มชื่อที่นี่ด้วย
+[[tool.importlinter.contracts]]
+name = "ส่วนกลางของ venues ห้ามพึ่งไลบรารีเครือข่าย"
+type = "forbidden"
+source_modules = [
+    "tiewtrade.venues.constraints",
+    "tiewtrade.venues.errors",
+    "tiewtrade.venues.fake",
+    "tiewtrade.venues.limits",
+    "tiewtrade.venues.moments",
+    "tiewtrade.venues.prices",
+    "tiewtrade.venues.symbols",
+    "tiewtrade.venues.wallets",
+]
+forbidden_modules = ["httpx", "urllib", "socket", "websockets", "aiohttp", "requests", "asyncio"]

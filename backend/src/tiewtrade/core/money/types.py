@@ -20,6 +20,7 @@ from typing import ClassVar, Self
 
 from tiewtrade.core.money.context import guarded
 from tiewtrade.core.money.errors import (
+    ArithmeticFailureError,
     InvalidInputTypeError,
     RoundingRequiredError,
     UnitMismatchError,
@@ -166,6 +167,25 @@ class _UnitBound:
             product = round_to_stored_scale(product, rounding)
 
         return self._checked(product, self.unit)
+
+    @guarded
+    def is_multiple_of(self, step: object) -> bool:
+        """เป็นจำนวนเท่าของ `step` แบบลงตัวหรือไม่ (F-33)
+
+        มีไว้ให้กฎข้อจำกัดของเหรียญตรวจว่าปริมาณที่สั่งตรงขั้นที่ตลาดยอมหรือไม่
+        (`standards/trading-safety.md` หัวข้อ 3) ซึ่งเป็นงานแรกที่ต้องใช้การหาร
+        ตามที่ F-02 เขียนนโยบายไว้ล่วงหน้า (F-02 Q-1.3)
+
+        **คืนค่าจริง/เท็จ ไม่คืนผลหารและไม่ปัดอะไรให้** เพราะการปัดต้องเป็น
+        การตัดสินใจของผู้เรียกที่ระบุทิศทางชัดเจนทุกครั้ง (RQ-3, RQ-4 ของ F-02)
+
+        `step` ต้องเป็นหน่วยเดียวกันและมากกว่าศูนย์ — ขั้นที่เป็นศูนย์หรือติดลบ
+        ไม่มีความหมายในโดเมนนี้ และการปล่อยผ่านจะให้คำตอบที่ดูเหมือนถูก
+        """
+        divisor = self._same_kind(step)
+        if not divisor.amount > 0:
+            raise ArithmeticFailureError("ขั้นที่ใช้ตรวจการลงตัวต้องมากกว่าศูนย์")
+        return self.amount % divisor.amount == 0
 
     @guarded
     def as_parts(self) -> dict[str, str]:
