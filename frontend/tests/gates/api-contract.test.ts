@@ -9,7 +9,15 @@
  * 1. ต้องแดงเพราะช่องที่หายไปจริง ไม่ใช่เพราะ tsc รันไม่ได้
  * 2. ต้องมีกรณีที่ถูกต้องคู่กัน ซึ่งผ่านภายใต้ชุดตั้งค่าเดียวกัน
  * 3. รันด้วย tsconfig และ source ชุดเดียวกับด่านจริง
+ *
+ * **แต่ละกรณีคัดลอกหน้าบ้านทั้งชุดแล้วเรียก `tsc` ในกระบวนการลูก** จึงใช้เวลาเป็นวินาที
+ * ค่า timeout ปริยายของ vitest (5 วินาที) พอในเครื่องนักพัฒนาแต่ไม่พอบน runner ของ CI
+ * ที่ cache ยังเย็น — ด่านที่แดงสุ่มแย่กว่าด่านที่ช้า เพราะมันสอนให้คนเลิกเชื่อสีแดง
+ * จึงตั้ง timeout ให้ตรงกับงานที่มันทำจริง (แก้หลัง CI ของ F-33 แดงสองครั้งด้วยเหตุนี้)
  */
+
+/** เวลาที่ให้กรณีที่ต้องคอมไพล์จริง — เผื่อ runner ที่ cache เย็น */
+const COMPILE_TIMEOUT_MS = 60_000;
 
 import { execFileSync } from "node:child_process";
 import { cpSync, mkdtempSync, readFileSync, symlinkSync, writeFileSync } from "node:fs";
@@ -78,19 +86,27 @@ describe("ด่านชนิดข้อมูลของหน้าบ้�
     components: { schemas: { Health: { properties: Record<string, unknown> } } };
   };
 
-  it("ผ่านเมื่อสัญญา API ตรงกับที่โค้ดหน้าบ้านใช้", () => {
-    const result = typecheckRealFrontendAgainst(realSchema);
-    expect(result.code, `ควรผ่านแต่แดง:\n${result.output}`).toBe(0);
-  });
+  it(
+    "ผ่านเมื่อสัญญา API ตรงกับที่โค้ดหน้าบ้านใช้",
+    () => {
+      const result = typecheckRealFrontendAgainst(realSchema);
+      expect(result.code, `ควรผ่านแต่แดง:\n${result.output}`).toBe(0);
+    },
+    COMPILE_TIMEOUT_MS,
+  );
 
-  it("แดงเมื่อหลังบ้านเปลี่ยนชื่อช่องที่หน้าบ้านใช้", () => {
-    const changed = JSON.parse(JSON.stringify(realSchema)) as typeof realSchema;
-    const properties = changed.components.schemas.Health.properties;
-    properties["state"] = properties["status"];
-    delete properties["status"];
+  it(
+    "แดงเมื่อหลังบ้านเปลี่ยนชื่อช่องที่หน้าบ้านใช้",
+    () => {
+      const changed = JSON.parse(JSON.stringify(realSchema)) as typeof realSchema;
+      const properties = changed.components.schemas.Health.properties;
+      properties["state"] = properties["status"];
+      delete properties["status"];
 
-    const result = typecheckRealFrontendAgainst(changed);
-    expect(result.code, "ควรแดงเพราะช่อง status หายไป แต่ผ่าน").not.toBe(0);
-    expect(result.output, `แดงแต่ไม่ใช่เพราะช่อง status:\n${result.output}`).toContain("status");
-  });
+      const result = typecheckRealFrontendAgainst(changed);
+      expect(result.code, "ควรแดงเพราะช่อง status หายไป แต่ผ่าน").not.toBe(0);
+      expect(result.output, `แดงแต่ไม่ใช่เพราะช่อง status:\n${result.output}`).toContain("status");
+    },
+    COMPILE_TIMEOUT_MS,
+  );
 });
