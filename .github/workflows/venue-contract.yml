@@ -1,0 +1,65 @@
+# เทสต์สัญญากับ Binance TH จริง — **ไม่อยู่ในเงื่อนไข merge**
+# F-35 plan.md ข้อ 6 (เงื่อนไขที่เจ้าของกำหนดใน Q-6)
+#
+# แยกไฟล์จาก ci.yml โดยเจตนา เพราะงานนี้พึ่งตลาดภายนอก ซึ่งล่มได้เองโดยที่โค้ดของเรา
+# ไม่ผิดอะไร ถ้าอยู่ในไฟล์เดียวกัน วันที่ตลาดล่มจะ merge ไม่ได้ทั้ง repo
+#
+# สามสถานะ: ผ่าน / ข้ามเพราะเข้าถึงตลาดไม่ได้ / แดงเพราะสัญญาไม่ตรง
+# การแยกอยู่ใน tests/venue_contract/verdict.py ซึ่งมีเทสต์ของตัวเองในชุดปกติ
+# "ข้าม" ออกมาเป็น pytest skip ซึ่ง GitHub ถือว่างานไม่ล้มเหลว — จึงไม่มีอีเมลแจ้งเตือน
+# ในวันที่เน็ตมีปัญหา และมีในวันที่สัญญาเปลี่ยนจริง
+name: venue-contract
+
+on:
+  schedule:
+    # รายวัน 02:30 UTC — เลือกเวลาที่ไม่ตรงชั่วโมงเต็มเพื่อเลี่ยงคิวที่หนาแน่นของ GitHub
+    - cron: "30 2 * * *"
+  workflow_dispatch:
+
+# เวอร์ชันตายตัวทั้งในเครื่องและ CI (P-8)
+env:
+  PYTHON_VERSION: "3.12"
+
+jobs:
+  venue-contract:
+    name: สัญญาของตลาด — Binance TH (endpoint สาธารณะ)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    env:
+      VENUE_CONTRACT_OUTPUT: venue-contract-result
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - run: uv sync --frozen
+
+      # เรียกเฉพาะ endpoint สาธารณะ ไม่มี credential และไม่ส่งคำสั่งซื้อขาย (Q-5)
+      # ไม่มี secret ของ repo ส่งเข้างานนี้เลย จึงไม่มีอะไรให้หลุด
+      - name: เทสต์สัญญากับตลาดจริง
+        run: uv run pytest -m venue_contract -rs
+
+      # สรุปผลเขียนลง job summary โดยตัวเทสต์เอง ขั้นนี้เป็นทางสำรองเมื่อเทสต์
+      # ไม่ได้ไปถึงจุดนั้น เพื่อให้ผู้ดูแลไม่ต้องเปิด log ในทุกกรณี (plan.md ข้อ 6 ข้อ 2)
+      - name: สรุปผลลง job summary
+        if: always()
+        run: |
+          if [ -f venue-contract-result/summary.md ]; then
+            cat venue-contract-result/summary.md >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "### สัญญาของตลาด: ไม่มีสรุป" >> "$GITHUB_STEP_SUMMARY"
+            echo "เทสต์หยุดก่อนเขียนสรุป — ดูขั้นก่อนหน้า" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      # ไฟล์ผลลัพธ์แนบไว้กับงาน เพื่อเทียบกับของที่บันทึกไว้ได้ทันทีเวลาสัญญาเปลี่ยน
+      - name: แนบคำตอบที่ได้จากตลาดรอบนี้
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: venue-contract-result
+          path: backend/venue-contract-result/
+          if-no-files-found: warn

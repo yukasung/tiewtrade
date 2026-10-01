@@ -1,0 +1,12 @@
+{
+ "body": "{\"code\":-1121,\"msg\":\"Invalid symbol.\"}",
+ "endpoint": "/trades",
+ "headers": {
+  "x-mbx-used-weight-1m": "13"
+ },
+ "params": {
+  "limit": "1",
+  "symbol": "ZZZZNOTAPAIR"
+ },
+ "status": 400
+}

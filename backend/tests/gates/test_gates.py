@@ -20,7 +20,13 @@ from pathlib import Path
 import pytest
 
 from tests.purity import check_file
-from tests.venue_isolation import central_venue_modules, check_no_network, check_vocabulary
+from tests.venue_isolation import (
+    central_venue_modules,
+    check_network_only_in,
+    check_no_network,
+    check_vocabulary,
+    declared_venue_words,
+)
 
 FIXTURES = Path(__file__).parent / "fixtures"
 BACKEND_ROOT = Path(__file__).parents[2]
@@ -286,6 +292,34 @@ def test_audit_gate_rejects_writing_without_a_user_session() -> None:
 # ─────────────────────────────────────────────────────────────
 
 
+def _venue_words() -> frozenset[str]:
+    """คำที่ด่านใช้ — มาจากที่ตัวเชื่อมจริงประกาศ ไม่ใช่ชุดที่เขียนไว้ในเทสต์
+
+    เทสต์กรณีที่ต้องแดงจึงพิสูจน์ด้วยว่าการประกาศของตัวเชื่อมทำงานจริง
+    ไม่ใช่พิสูจน์แค่ว่าโค้ดของด่านทำงานกับรายการสมมติ
+    """
+    words, missing = declared_venue_words(BACKEND_ROOT / "src" / "tiewtrade" / "venues")
+    assert missing == []
+    return words
+
+
+def test_vocabulary_gate_rejects_an_adapter_without_a_declaration() -> None:
+    """V-46 — package ตัวเชื่อมที่ไม่ประกาศคำศัพท์ของตัวเองต้องทำให้ด่านแดง
+
+    ต้นไม้จำลองมี `adapter_like` ที่ไม่ประกาศอะไรเลย — ถ้าด่านเงียบกับกรณีนี้
+    การเพิ่มตลาดใหม่แล้วลืมประกาศจะทำให้คำของตลาดนั้นรั่วออกนอกชั้นได้ทั้งหมด
+    """
+    words, missing = declared_venue_words(FIXTURES / "venue_tree" / "venues")
+    assert words == frozenset()
+    assert [violation.kind for violation in missing] == ["missing-vocabulary"]
+
+
+def test_vocabulary_gate_refuses_to_run_with_no_words() -> None:
+    """ด่านที่ไม่มีคำให้หาคือด่านที่เขียวตลอด — ต้องดังแทนที่จะผ่าน"""
+    with pytest.raises(ValueError, match="เขียวตลอด"):
+        check_vocabulary(FIXTURES / "venue_bad_word.py", frozenset())
+
+
 @pytest.mark.parametrize(
     ("fixture", "expected_kind"),
     [
@@ -299,7 +333,7 @@ def test_audit_gate_rejects_writing_without_a_user_session() -> None:
 )
 def test_venue_vocabulary_gate_rejects(fixture: str, expected_kind: str) -> None:
     """V-2 — ด่านคำศัพท์จับได้ และจับด้วยเหตุผลที่ตั้งใจทดสอบ"""
-    violations = check_vocabulary(FIXTURES / fixture)
+    violations = check_vocabulary(FIXTURES / fixture, _venue_words())
     assert violations, f"{fixture} ควรถูกปฏิเสธ แต่ด่านไม่พบอะไรเลย"
     kinds = {violation.kind for violation in violations}
     assert expected_kind in kinds, f"{fixture} ถูกจับด้วยเหตุผล {kinds} ซึ่งไม่ใช่ {expected_kind}"
@@ -311,7 +345,7 @@ def test_venue_vocabulary_gate_allows_documentation() -> None:
     ถ้าด่านจับเอกสารด้วย เราจะต้องเลี่ยงคำในเอกสาร ซึ่งทำให้เอกสารแย่ลง
     โดยไม่ได้ปลอดภัยขึ้นเลย
     """
-    assert check_vocabulary(FIXTURES / "venue_good_outside.py") == []
+    assert check_vocabulary(FIXTURES / "venue_good_outside.py", _venue_words()) == []
 
 
 def test_venue_network_gate_rejects_network_import() -> None:
@@ -378,3 +412,19 @@ def test_adapter_packages_may_use_the_network(broken_contract_report: tuple[int,
 
     broken_code, _ = broken_contract_report
     assert broken_code != 0
+
+
+def test_the_single_network_gateway_gate_rejects_a_second_way_out() -> None:
+    """V-42 — ไฟล์ของตัวเชื่อมที่ `import httpx` นอกไฟล์ที่กำหนดต้องถูกจับ
+
+    ต้นไม้จำลองมี `adapter_like/client.py` ที่ import ไลบรารีเครือข่ายโดยที่ชื่อไฟล์
+    ไม่ใช่ทางออกที่กำหนด — ถ้าด่านเงียบกับกรณีนี้ กฎ "ทางออกเดียว" ก็ไม่มีผลอะไร
+    """
+    violations = check_network_only_in(FIXTURES / "venue_tree" / "venues", "transport")
+    assert [violation.kind for violation in violations] == ["network-outside-gateway"]
+    assert "client.py" in str(violations[0])
+
+
+def test_the_single_network_gateway_gate_allows_the_gateway_itself() -> None:
+    """กรณีที่ถูกต้องคู่กัน — ไฟล์ทางออกใช้ไลบรารีเครือข่ายได้"""
+    assert check_network_only_in(FIXTURES / "venue_tree" / "venues", "client") == []

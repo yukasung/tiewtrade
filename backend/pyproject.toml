@@ -10,6 +10,8 @@ dependencies = [
     "sqlalchemy[asyncio]>=2.0",
     "asyncpg>=0.30",
     "alembic>=1.14",
+    # ตัวเชื่อม Binance TH (F-35) — ไคลเอนต์ HTTP ที่ async จริงและใช้ทดสอบได้ (Q-2)
+    "httpx>=0.28",
 ]
 
 [dependency-groups]
@@ -19,7 +21,6 @@ dev = [
     "import-linter>=2.1",
     "pytest>=8.3",
     "hypothesis>=6.119",
-    "httpx>=0.28",
     "pytest-asyncio>=0.24",
 ]
 
@@ -68,7 +69,10 @@ disallow_any_expr = true
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src"]
-addopts = "-q --strict-markers --strict-config"
+# เทสต์สัญญากับตลาดจริงไม่อยู่ในชุดปกติ เพราะต้องมีเน็ตและเรียกตลาดออกไปจริง
+# งาน CI `venue-contract` สั่ง `-m venue_contract` ทับค่านี้เอง
+addopts = "-q --strict-markers --strict-config -m 'not venue_contract'"
+markers = ["venue_contract: เทสต์ที่เรียก Binance TH จริง — งาน CI แยกรันรายวัน (F-35)"]
 # เทสต์ฐานข้อมูลเป็น async ทั้งหมด (F-03)
 asyncio_mode = "auto"
 
@@ -131,3 +135,17 @@ source_modules = [
     "tiewtrade.venues.wallets",
 ]
 forbidden_modules = ["httpx", "urllib", "socket", "websockets", "aiohttp", "requests", "asyncio"]
+
+# ส่วนที่แปลข้อมูลและแปลข้อผิดพลาดของตัวเชื่อมต้องไม่รู้จักเครือข่าย (F-35)
+# **ทุกโมดูลของตัวเชื่อมที่ไม่ได้ผ่าน `transport` ต้องอยู่ในรายการนี้** — เทสต์
+# `test_venue_isolation.py` เทียบรายการนี้กับโครงสร้างจริง การเพิ่มโมดูลใหม่
+# แล้วลืมเติมชื่อจึงแดงทันที ไม่ใช่เงียบไปเฉย ๆ
+[[tool.importlinter.contracts]]
+name = "การแปลข้อมูลของตัวเชื่อม Binance TH ห้ามรู้จักเครือข่าย"
+type = "forbidden"
+source_modules = [
+    "tiewtrade.venues.binance_th.failures",
+    "tiewtrade.venues.binance_th.mapping",
+    "tiewtrade.venues.binance_th.rate_limit",
+]
+forbidden_modules = ["httpx", "urllib", "socket", "websockets", "aiohttp", "requests"]
