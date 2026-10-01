@@ -15,3 +15,7 @@ test-results/
 # เครื่องมือและระบบปฏิบัติการ
 .DS_Store
 *.log
+
+# ผลของงาน CI สัญญาของตลาด (F-35) — ไม่ใช่ของที่ต้องลง repo
+venue-contract-result/
+.venue-contract/

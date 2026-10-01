@@ -1,0 +1,12 @@
+{
+ "body": "[{\"id\":3175350,\"price\":\"2821621.00\",\"qty\":\"0.00006000\",\"quoteQty\":null,\"time\":1790867536098,\"isBuyerMaker\":false,\"isBestMatch\":false}]",
+ "endpoint": "/trades",
+ "headers": {
+  "x-mbx-used-weight-1m": "12"
+ },
+ "params": {
+  "limit": "1",
+  "symbol": "BTCTHB"
+ },
+ "status": 200
+}

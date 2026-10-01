@@ -1,0 +1,12 @@
+{
+ "body": "{\"code\":-1102,\"msg\":\"Mandatory parameter 'limit' was not sent, was empty/null, or malformed.\"}",
+ "endpoint": "/trades",
+ "headers": {
+  "x-mbx-used-weight-1m": "14"
+ },
+ "params": {
+  "limit": "ไม่ใช่ตัวเลข",
+  "symbol": "BTCTHB"
+ },
+ "status": 400
+}

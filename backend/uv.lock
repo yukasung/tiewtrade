@@ -668,13 +668,13 @@ dependencies = [
     { name = "alembic" },
     { name = "asyncpg" },
     { name = "fastapi" },
+    { name = "httpx" },
     { name = "sqlalchemy", extra = ["asyncio"] },
     { name = "uvicorn", extra = ["standard"] },
 ]
 
 [package.dev-dependencies]
 dev = [
-    { name = "httpx" },
     { name = "hypothesis" },
     { name = "import-linter" },
     { name = "mypy" },
@@ -688,13 +688,13 @@ requires-dist = [
     { name = "alembic", specifier = ">=1.14" },
     { name = "asyncpg", specifier = ">=0.30" },
     { name = "fastapi", specifier = ">=0.115" },
+    { name = "httpx", specifier = ">=0.28" },
     { name = "sqlalchemy", extras = ["asyncio"], specifier = ">=2.0" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.32" },
 ]
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "httpx", specifier = ">=0.28" },
     { name = "hypothesis", specifier = ">=6.119" },
     { name = "import-linter", specifier = ">=2.1" },
     { name = "mypy", specifier = ">=1.13" },
