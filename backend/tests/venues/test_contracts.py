@@ -24,6 +24,7 @@ from tiewtrade.venues import (
     VenueCredentialRejectedError,
     VenueError,
     VenueOutcomeUnknownError,
+    VenueProtocolError,
     VenueRateLimitedError,
     VenueRejectedError,
     VenueUnavailableError,
@@ -36,6 +37,7 @@ ALL_ERRORS = (
     VenueRateLimitedError(timedelta(seconds=3)),
     VenueUnavailableError(),
     VenueCredentialRejectedError(),
+    VenueProtocolError(),
 )
 
 
@@ -105,7 +107,7 @@ async def test_unknown_symbol_is_rejected_with_a_reason() -> None:
 
 @pytest.mark.parametrize("error", ALL_ERRORS, ids=lambda error: type(error).__name__)
 async def test_every_error_kind_can_be_forced(error: VenueError) -> None:
-    """V-27 — ตัวปลอมบังคับให้เกิดข้อผิดพลาดได้ทุกชนิดในห้าชนิด"""
+    """V-27 — ตัวปลอมบังคับให้เกิดข้อผิดพลาดได้ทุกชนิดในหกชนิด"""
     venue = _venue()
     venue.queue_errors([error])
     with pytest.raises(type(error)):
@@ -139,6 +141,17 @@ async def test_unknown_outcome_is_not_caught_as_unavailable() -> None:
             await venue.latest_price(BTC_USDT)
         except VenueUnavailableError:  # pragma: no cover - ต้องไม่เข้าทางนี้
             pytest.fail("ดัก VenueUnavailableError แล้วจับ 'ไม่รู้ผล' ไปด้วย")
+
+
+def test_all_errors_covers_every_kind_there_is() -> None:
+    """V-19 — หกชนิด และเหตุผลของการปฏิเสธสี่ค่า
+
+    เทียบกับชนิดลูกทั้งหมดของ `VenueError` จริง ไม่ใช่กับตัวเลขที่เขียนมือไว้เท่านั้น
+    เพิ่มชนิดใหม่แล้วลืมเติมในเทสต์ที่เหลือ เทสต์นี้แดงทันที
+    """
+    assert {type(error) for error in ALL_ERRORS} == set(VenueError.__subclasses__())
+    assert len(ALL_ERRORS) == 6
+    assert len(RejectionReason) == 4
 
 
 def test_every_error_carries_a_distinct_stable_code() -> None:
