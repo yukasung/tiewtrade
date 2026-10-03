@@ -30,6 +30,13 @@ from tiewtrade.infra.db.errors import (
 #: ชื่อตัวแปรที่ policy ของทุกตารางอ่าน ประกาศไว้ที่เดียว
 CURRENT_USER_SETTING: Final[str] = "tiewtrade.current_user_id"
 
+#: ตัวแปรสำหรับช่วง **ก่อนรู้ว่าเป็นผู้ใช้คนไหน** (F-05) — policy ของ `sessions`
+#: และ `user_credentials` อ่านสองตัวนี้
+#:
+#: **เก็บแฮชของโทเคน ไม่ใช่โทเคนจริง** ฐานข้อมูลจึงไม่เคยเห็นโทเคนเลย
+PRESENTED_TOKEN_SETTING: Final[str] = "tiewtrade.presented_token_hash"
+PRESENTED_EMAIL_SETTING: Final[str] = "tiewtrade.presented_email"
+
 _ROLE_FACTS = text(
     """
     SELECT current_user AS role_name,
@@ -43,7 +50,7 @@ _ROLE_FACTS = text(
 # `set_config(..., is_local => true)` คือ SET LOCAL ในรูปที่ส่งค่าแบบ bind ได้
 # ต้องเป็น LOCAL เท่านั้น: ค่าหมดอายุเมื่อ transaction จบ จึงไม่ค้างไปถึงผู้ใช้
 # คนถัดไปที่ได้ connection เดิมจาก pool (Q-2 เงื่อนไข ข)
-_SET_LOCAL_USER = text("SELECT set_config(:setting, :user_id, true)")
+_SET_LOCAL = text("SELECT set_config(:setting, :value, true)")
 
 
 @dataclass(frozen=True, slots=True)
@@ -61,6 +68,45 @@ class UserSession:
             return await self._connection.execute(text(statement), dict(parameters or {}))
         except SQLAlchemyError as error:
             raise translate_database_error(error) from None
+
+
+@dataclass(frozen=True, slots=True)
+class PresentedSession:
+    """ช่วงก่อนรู้ว่าเป็นผู้ใช้คนไหน — เห็นได้เท่าที่ **ของที่ผู้เรียกพามา** เปิดให้ (F-05)
+
+    มีอยู่เพราะสองงานต้องทำก่อนรู้ตัวตน: หาเจ้าของ session จากแฮชโทเคน และหา
+    ข้อมูลเข้าสู่ระบบจากอีเมล · **ไม่ตั้งตัวแปร = อ่านศูนย์แถว** จึงพลาดแบบปิดประตู
+
+    `assume_user()` ทำให้ transaction เดียวกันเดินต่อในฐานะผู้ใช้ที่ตรวจแล้วได้
+    ซึ่งจำเป็นสองที่: การล็อกแถวข้อมูลเข้าสู่ระบบ (ต้องผ่าน policy ของ `UPDATE`
+    ที่ต้องการผู้ใช้ปัจจุบัน) และการรับคำขอต่อหลังตรวจ session ผ่าน
+    """
+
+    _connection: AsyncConnection
+
+    async def execute(
+        self, statement: str, parameters: Mapping[str, object] | None = None
+    ) -> Result[Any]:
+        """สั่ง query ในขอบเขตของสิ่งที่ผู้เรียกพามา"""
+        try:
+            return await self._connection.execute(text(statement), dict(parameters or {}))
+        except SQLAlchemyError as error:
+            raise translate_database_error(error) from None
+
+    async def assume_user(self, user_id: UUID) -> UserSession:
+        """เดินต่อใน transaction เดิมในฐานะผู้ใช้ที่ตรวจตัวตนแล้ว
+
+        **ผู้เรียกต้องตรวจตัวตนมาก่อนแล้ว** — ฟังก์ชันนี้ไม่ตรวจอะไร มันเพียงตั้ง
+        ผู้ใช้ปัจจุบันให้ policy ของตารางอื่นทำงานได้ (F-03 Q-2)
+        """
+        try:
+            await self._connection.execute(
+                _SET_LOCAL,
+                {"setting": CURRENT_USER_SETTING, "value": str(user_id)},
+            )
+        except SQLAlchemyError as error:
+            raise translate_database_error(error) from None
+        return UserSession(self._connection, user_id)
 
 
 @dataclass(frozen=True, slots=True)
@@ -158,12 +204,46 @@ async def user_session(
         await _assert_role(connection, role)
         try:
             await connection.execute(
-                _SET_LOCAL_USER,
-                {"setting": CURRENT_USER_SETTING, "user_id": str(user_id)},
+                _SET_LOCAL,
+                {"setting": CURRENT_USER_SETTING, "value": str(user_id)},
             )
         except SQLAlchemyError as error:
             raise translate_database_error(error) from None
         yield UserSession(connection, user_id)
+
+
+@asynccontextmanager
+async def presented_session(
+    engine: AsyncEngine,
+    *,
+    token_hash: str | None = None,
+    email: str | None = None,
+    role: DatabaseRole = DatabaseRole.API,
+) -> AsyncIterator[PresentedSession]:
+    """เปิด transaction สำหรับช่วงก่อนรู้ว่าเป็นผู้ใช้คนไหน (F-05)
+
+    ตั้งเฉพาะตัวแปรที่ผู้เรียกส่งมา — ไม่ส่งเลยก็เปิดได้ แต่จะอ่านอะไรไม่ได้
+    ซึ่งเป็นพฤติกรรมที่ต้องการ: สิทธิ์มาจากของที่พามา ไม่ใช่จากการเปิด session
+
+    ค่าหมดอายุเมื่อ transaction จบ (`set_config(..., is_local => true)`)
+    จึงไม่ค้างไปถึงผู้ใช้คนถัดไปที่ได้ connection เดิมจาก pool
+    """
+    if role not in ROLES_UNDER_RLS:
+        raise DatabaseRoleError(f"บทบาท {role.role_name} ไม่ใช่บทบาทที่ทำงานใต้ RLS")
+
+    async with _begin(engine) as connection:
+        await _assert_role(connection, role)
+        for setting, value in (
+            (PRESENTED_TOKEN_SETTING, token_hash),
+            (PRESENTED_EMAIL_SETTING, email),
+        ):
+            if value is None:
+                continue
+            try:
+                await connection.execute(_SET_LOCAL, {"setting": setting, "value": value})
+            except SQLAlchemyError as error:
+                raise translate_database_error(error) from None
+        yield PresentedSession(connection)
 
 
 @asynccontextmanager

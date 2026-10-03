@@ -57,6 +57,11 @@ jobs:
       TIEWTRADE_DATABASE_URL_ENGINE: postgresql+asyncpg://tiewtrade_engine:dev_engine@127.0.0.1:5432/tiewtrade
       TIEWTRADE_DATABASE_URL_ENGINE_SCAN: postgresql+asyncpg://tiewtrade_engine_scan:dev_engine_scan@127.0.0.1:5432/tiewtrade
       TIEWTRADE_DATABASE_URL_MARKET_DATA: postgresql+asyncpg://tiewtrade_market_data:dev_market_data@127.0.0.1:5432/tiewtrade
+      TIEWTRADE_DATABASE_URL_AUTH: postgresql+asyncpg://tiewtrade_auth:dev_auth@127.0.0.1:5432/tiewtrade
+      # เทสต์ของ F-05 ต้องสมัครได้ และไคลเอนต์ของเทสต์ใช้ http
+      # ค่าเริ่มต้นของทั้งสองค่าคือ "ปิดการสมัคร" และ "ตั้งธง Secure"
+      TIEWTRADE_SIGNUP_OPEN: "1"
+      TIEWTRADE_COOKIE_SECURE: "0"
     steps:
       - uses: actions/checkout@v4
 
@@ -156,6 +161,29 @@ jobs:
   e2e:
     name: e2e — เบราว์เซอร์จริงเห็นข้อมูลจาก API จริง
     runs-on: ubuntu-latest
+    needs: config
+    # ตั้งแต่ F-05 แอปสร้าง engine ของฐานข้อมูลตอนเปิด และ middleware ตัวตน
+    # ใช้ฐานข้อมูลทุกคำขอ — งานนี้จึงต้องมีฐานข้อมูลจริงเหมือนงานหลังบ้าน
+    services:
+      postgres:
+        image: postgres:${{ needs.config.outputs.postgres_version }}
+        env:
+          POSTGRES_DB: tiewtrade
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d tiewtrade"
+          --health-interval 3s
+          --health-timeout 3s
+          --health-retries 20
+    env:
+      TIEWTRADE_DATABASE_URL_MIGRATOR: postgresql+asyncpg://tiewtrade_migrator:dev_migrator@127.0.0.1:5432/tiewtrade
+      TIEWTRADE_DATABASE_URL_API: postgresql+asyncpg://tiewtrade_api:dev_api@127.0.0.1:5432/tiewtrade
+      TIEWTRADE_DATABASE_URL_AUTH: postgresql+asyncpg://tiewtrade_auth:dev_auth@127.0.0.1:5432/tiewtrade
+      TIEWTRADE_SIGNUP_OPEN: "1"
+      TIEWTRADE_COOKIE_SECURE: "0"
     steps:
       - uses: actions/checkout@v4
 
@@ -177,6 +205,16 @@ jobs:
 
       - run: npx playwright install --with-deps chromium
         working-directory: frontend
+
+      - name: bootstrap ฐานข้อมูล (บทบาทและ event trigger)
+        working-directory: backend
+        run: |
+          for script in db/bootstrap/*.sql; do
+            psql "postgresql://postgres:postgres@127.0.0.1:5432/tiewtrade" -v ON_ERROR_STOP=1 -f "$script"
+          done
+      - name: migration
+        working-directory: backend
+        run: uv run alembic upgrade head
 
       - run: npm run test:e2e
         working-directory: frontend

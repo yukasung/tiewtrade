@@ -24,6 +24,13 @@ down_revision = "0004"
 branch_labels = None
 depends_on = None
 
+# **`NOT VALID` เพิ่มตอน F-05 (2026-10-02)** — แก้เฉพาะเส้นทางถอยกลับซึ่งยังไม่เคยรัน
+# ไม่แตะเส้นทางขึ้นที่รันไปแล้ว
+#
+# เหตุผล: งานหลัง F-04 เพิ่มชนิดเหตุการณ์ใหม่ และ **ตารางนี้ลบแถวไม่ได้** ตามกลไกของ
+# F-04 เอง การถอยกลับที่ตรวจแถวเก่าย้อนหลังจึงล้มเหลวเสมอบนฐานข้อมูลที่เคยใช้งานจริง
+# `NOT VALID` บังคับกับแถวใหม่ตั้งแต่นั้นไป และไม่ตรวจย้อนหลัง ซึ่งไม่ได้เปลี่ยน
+# ความหมายของข้อมูลเก่า
 _OLD_CONSTRAINT = """
 ALTER TABLE audit_events
     ADD CONSTRAINT audit_events_action_details CHECK (
@@ -31,7 +38,7 @@ ALTER TABLE audit_events
             WHEN 'USER_CREATED' THEN details = '{}'::jsonb
             ELSE false
         END
-    )
+    ) NOT VALID
 """
 
 # เงื่อนไขรวมของแต่ละชนิดเหตุการณ์: ทั้ง details และคอลัมน์แกน

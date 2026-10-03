@@ -1,13 +1,17 @@
 """บันทึกการกระทำที่แตะเงิน (F-04) — ของสาธารณะของชั้นนี้อยู่ที่นี่ที่เดียว"""
 
 from tiewtrade.infra.audit.events import (
+    DETAILS_TYPES,
     TRADING_ACTIONS,
     ActorKind,
+    AllSessionsEndedDetails,
     AuditAction,
     AuditEvent,
     AuditEventError,
     AuditMode,
     AuditOutcome,
+    PasswordChangedDetails,
+    SessionDetails,
     SubjectKind,
     UserCreatedDetails,
     money_detail,
@@ -17,14 +21,18 @@ from tiewtrade.infra.audit.redaction import ForbiddenDetailError, ensure_no_forb
 from tiewtrade.infra.audit.writer import record_event
 
 __all__ = [
+    "DETAILS_TYPES",
     "TRADING_ACTIONS",
     "ActorKind",
+    "AllSessionsEndedDetails",
     "AuditAction",
     "AuditEvent",
     "AuditEventError",
     "AuditMode",
     "AuditOutcome",
     "ForbiddenDetailError",
+    "PasswordChangedDetails",
+    "SessionDetails",
     "SubjectKind",
     "UserCreatedDetails",
     "ensure_no_forbidden_content",

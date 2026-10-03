@@ -47,6 +47,13 @@ async def scan_engine() -> AsyncIterator[AsyncEngine]:
 
 
 @pytest_asyncio.fixture
+async def auth_engine() -> AsyncIterator[AsyncEngine]:
+    """บทบาทยืนยันตัวตนของ F-05 — บทบาทเดียวที่แตะข้อมูลเข้าสู่ระบบได้"""
+    async for engine in _engine(DatabaseRole.AUTH):
+        yield engine
+
+
+@pytest_asyncio.fixture
 async def migrator_engine() -> AsyncIterator[AsyncEngine]:
     async for engine in _engine(DatabaseRole.MIGRATOR):
         yield engine

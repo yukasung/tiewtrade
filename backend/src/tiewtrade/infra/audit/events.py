@@ -37,6 +37,11 @@ class AuditAction(Enum):
     """
 
     USER_CREATED = "USER_CREATED"
+    #: สี่ชนิดของ F-05 — ทั้งหมดเป็นการกระทำที่ผู้ใช้ทำกับบัญชีตัวเอง
+    SESSION_STARTED = "SESSION_STARTED"
+    SESSION_ENDED = "SESSION_ENDED"
+    ALL_SESSIONS_ENDED = "ALL_SESSIONS_ENDED"
+    PASSWORD_CHANGED = "PASSWORD_CHANGED"
 
 
 #: ชนิดเหตุการณ์ที่เป็นการเทรด — ต้องระบุ PAPER หรือ LIVE เสมอ (RQ-19)
@@ -96,9 +101,53 @@ class UserCreatedDetails:
         return {}
 
 
+@dataclass(frozen=True, slots=True)
+class SessionDetails:
+    """รายละเอียดของการเริ่มและจบ session หนึ่งใบ — **ไม่มีช่องใดเลย**
+
+    **ห้ามมีโทเคน แฮชของโทเคน อุปกรณ์ หรือ IP** — บันทึกที่ลบไม่ได้ไม่ใช่ที่เก็บ
+    ร่องรอยการใช้งาน และแฮชของโทเคนคือสิ่งที่ใช้ค้นหา session ได้ (`security.md` หัวข้อ 4)
+    """
+
+    def as_details(self) -> dict[str, object]:
+        return {}
+
+
+@dataclass(frozen=True, slots=True)
+class AllSessionsEndedDetails:
+    """รายละเอียดของการออกจากระบบทุกเครื่อง — จำนวนใบที่ถูกเพิกถอน
+
+    จำนวนมีประโยชน์ตอนอ่านย้อนหลัง (ออกจากกี่เครื่อง) และไม่ระบุตัวบุคคล
+    """
+
+    ended: int
+
+    def __post_init__(self) -> None:
+        if self.ended < 0:
+            raise AuditEventError("จำนวน session ที่ถูกเพิกถอนติดลบไม่ได้")
+
+    def as_details(self) -> dict[str, object]:
+        return {"ended": self.ended}
+
+
+@dataclass(frozen=True, slots=True)
+class PasswordChangedDetails:
+    """รายละเอียดของการเปลี่ยนรหัสผ่าน — **ไม่มีช่องใดเลย**
+
+    ไม่เก็บแฮชเก่า ไม่เก็บความยาว ไม่เก็บอะไรที่ช่วยเดารหัสผ่าน
+    """
+
+    def as_details(self) -> dict[str, object]:
+        return {}
+
+
 #: รูปร่างของ `details` ที่แต่ละชนิดเหตุการณ์ใช้ได้ — ตรวจตอนสร้าง `AuditEvent`
 DETAILS_TYPES: dict[AuditAction, type[object]] = {
     AuditAction.USER_CREATED: UserCreatedDetails,
+    AuditAction.SESSION_STARTED: SessionDetails,
+    AuditAction.SESSION_ENDED: SessionDetails,
+    AuditAction.ALL_SESSIONS_ENDED: AllSessionsEndedDetails,
+    AuditAction.PASSWORD_CHANGED: PasswordChangedDetails,
 }
 
 #: รหัสความล้มเหลวที่ประกาศไว้แล้ว — **ยังว่าง** เพราะยังไม่มีเหตุการณ์ที่ล้มเหลวได้
@@ -127,11 +176,34 @@ def _check_user_created(event: AuditEvent) -> None:
         raise AuditEventError("USER_CREATED บันทึกเฉพาะกรณีที่สร้างสำเร็จ")
 
 
+def _check_own_account_action(event: AuditEvent) -> None:
+    """เหตุการณ์ที่ผู้ใช้ทำกับบัญชีตัวเอง — ผู้กระทำและเป้าหมายต้องเป็นเจ้าของบันทึก
+
+    ใช้ร่วมกันสี่ชนิดของ F-05 เพราะเงื่อนไขเดียวกันทุกข้อ — เขียนแยกสี่ชุด
+    คือสี่ชุดที่ต้องแก้ให้ตรงกันทุกครั้งที่กฎเปลี่ยน
+    """
+    name = event.action.value
+    if event.actor_kind is not ActorKind.USER:
+        raise AuditEventError(f"{name} ต้องมีผู้กระทำเป็นผู้ใช้")
+    if event.actor_id != event.owner_user_id:
+        raise AuditEventError(f"{name} ต้องมีผู้กระทำเป็นเจ้าของบัญชีนั้น")
+    if event.subject_kind is not SubjectKind.USER:
+        raise AuditEventError(f"{name} ต้องมีเป้าหมายเป็นผู้ใช้")
+    if event.subject_id != str(event.owner_user_id):
+        raise AuditEventError(f"{name} ต้องมีเป้าหมายเป็นรหัสของเจ้าของบัญชีนั้น")
+    if event.outcome is not AuditOutcome.SUCCEEDED:
+        raise AuditEventError(f"{name} บันทึกเฉพาะกรณีที่สำเร็จ")
+
+
 #: ข้อบังคับเฉพาะของแต่ละเหตุการณ์ — **ทุกชนิดที่เพิ่มใหม่ต้องมีตัวตรวจของตัวเองที่นี่**
 #: ถ้าไม่มี การสร้างบันทึกของชนิดนั้นจะล้มเหลวทันที ซึ่งเป็นผลที่ต้องการ
 #: (ดังตอนเขียนโค้ด ดีกว่าปล่อยให้บันทึกที่ไม่มีใครตรวจไหลลงตารางที่ลบไม่ได้)
 _ACTION_INVARIANTS: dict[AuditAction, Callable[[AuditEvent], None]] = {
     AuditAction.USER_CREATED: _check_user_created,
+    AuditAction.SESSION_STARTED: _check_own_account_action,
+    AuditAction.SESSION_ENDED: _check_own_account_action,
+    AuditAction.ALL_SESSIONS_ENDED: _check_own_account_action,
+    AuditAction.PASSWORD_CHANGED: _check_own_account_action,
 }
 
 

@@ -29,6 +29,9 @@ class DatabaseRole(Enum):
     ENGINE_SCAN = "tiewtrade_engine_scan"
     #: เขียนได้เฉพาะตารางราคาและแท่งเทียน
     MARKET_DATA = "tiewtrade_market_data"
+    #: เส้นทางยืนยันตัวตน (F-05) — บทบาทเดียวที่แตะข้อมูลเข้าสู่ระบบและออก session ได้
+    #: อยู่ใต้ RLS เหมือน `api` และ `engine`
+    AUTH = "tiewtrade_auth"
 
     @property
     def role_name(self) -> str:
@@ -42,7 +45,9 @@ class DatabaseRole(Enum):
 
 
 #: บทบาทที่ต้องทำงานใต้ RLS — ใช้ในชั้น session ตรวจก่อนแตะข้อมูลผู้ใช้
-ROLES_UNDER_RLS: Final[frozenset[DatabaseRole]] = frozenset({DatabaseRole.API, DatabaseRole.ENGINE})
+ROLES_UNDER_RLS: Final[frozenset[DatabaseRole]] = frozenset(
+    {DatabaseRole.API, DatabaseRole.ENGINE, DatabaseRole.AUTH}
+)
 
 
 def database_url(role: DatabaseRole) -> str:

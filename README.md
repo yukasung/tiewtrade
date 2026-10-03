@@ -59,6 +59,14 @@ export TIEWTRADE_DATABASE_URL_API="postgresql+asyncpg://tiewtrade_api:dev_api@$H
 export TIEWTRADE_DATABASE_URL_ENGINE="postgresql+asyncpg://tiewtrade_engine:dev_engine@$H"
 export TIEWTRADE_DATABASE_URL_ENGINE_SCAN="postgresql+asyncpg://tiewtrade_engine_scan:dev_engine_scan@$H"
 export TIEWTRADE_DATABASE_URL_MARKET_DATA="postgresql+asyncpg://tiewtrade_market_data:dev_market_data@$H"
+export TIEWTRADE_DATABASE_URL_AUTH="postgresql+asyncpg://tiewtrade_auth:dev_auth@$H"
+```
+
+**การยืนยันตัวตน (F-05)** ตั้งเพิ่มสองค่าเมื่อจะลองสมัครหรือเข้าสู่ระบบในเครื่อง:
+
+```sh
+export TIEWTRADE_SIGNUP_OPEN=1      # ค่าเริ่มต้นคือปิด — เปิดเองโดยเจตนา
+export TIEWTRADE_COOKIE_SECURE=0    # เพราะเครื่องพัฒนาใช้ http — บนเครื่องจริงห้ามปิด
 ```
 
 พอร์ตบนเครื่องคือ **55432** เพื่อไม่ชนกับ PostgreSQL ที่อาจติดตั้งไว้แล้วที่ 5432
