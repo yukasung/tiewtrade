@@ -1,0 +1,10 @@
+{
+ "kept_entries": 331,
+ "licence": "MIT (SecLists)",
+ "minimum_length": 15,
+ "note": "เก็บเฉพาะรายการที่ยาวตั้งแต่ขั้นต่ำของนโยบายขึ้นไป เพราะรายการที่สั้นกว่านั้นถูกกฎความยาวปฏิเสธไปก่อนแล้ว",
+ "retrieved_on": "2026-10-02",
+ "source_commit": "1a7bb9127eca9e6ff2fc0301c597fe6e16a0cb56",
+ "source_entries": 99839,
+ "source_url": "https://raw.githubusercontent.com/danielmiessler/SecLists/1a7bb9127eca9e6ff2fc0301c597fe6e16a0cb56/Passwords/Common-Credentials/100k-most-used-passwords-NCSC.txt"
+}
