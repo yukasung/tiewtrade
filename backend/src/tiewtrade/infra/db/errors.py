@@ -60,6 +60,16 @@ class ValueRejectedError(InfraError):
     code: ClassVar[str] = "VALUE_REJECTED"
 
 
+class DuplicateValueError(InfraError):
+    """ค่าซ้ำกับแถวที่มีอยู่ — ชนิดแยกเพราะผู้เรียกต้องตอบผู้ใช้ต่างจากข้อผิดพลาดอื่น
+
+    เพิ่มใน F-05: การสมัครด้วยอีเมลที่มีบัญชีแล้วต้องตอบว่าอีเมลถูกใช้แล้ว
+    ไม่ใช่ "ฐานข้อมูลปฏิเสธคำสั่ง" ซึ่งผู้ใช้ทำอะไรต่อไม่ได้
+    """
+
+    code: ClassVar[str] = "DUPLICATE_VALUE"
+
+
 class DatabaseUnavailableError(InfraError):
     """ต่อฐานข้อมูลไม่ได้"""
 
@@ -72,6 +82,7 @@ SQLSTATE_INSUFFICIENT_PRIVILEGE: Final[str] = "42501"
 SQLSTATE_CHECK_VIOLATION: Final[str] = "23514"
 SQLSTATE_NUMERIC_VALUE_OUT_OF_RANGE: Final[str] = "22003"
 SQLSTATE_INVALID_TEXT_REPRESENTATION: Final[str] = "22P02"
+SQLSTATE_UNIQUE_VIOLATION: Final[str] = "23505"
 
 _BY_SQLSTATE: Final[dict[str, type[InfraError]]] = {
     SQLSTATE_APPEND_ONLY: AppendOnlyViolationError,
@@ -79,6 +90,7 @@ _BY_SQLSTATE: Final[dict[str, type[InfraError]]] = {
     SQLSTATE_CHECK_VIOLATION: ValueRejectedError,
     SQLSTATE_NUMERIC_VALUE_OUT_OF_RANGE: ValueRejectedError,
     SQLSTATE_INVALID_TEXT_REPRESENTATION: ValueRejectedError,
+    SQLSTATE_UNIQUE_VIOLATION: DuplicateValueError,
 }
 
 

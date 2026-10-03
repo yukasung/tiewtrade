@@ -47,6 +47,12 @@ services:
       context: ./backend
     environment:
       TIEWTRADE_DATABASE_URL_API: postgresql+asyncpg://tiewtrade_api:dev_api@postgres:5432/tiewtrade
+      # บทบาทยืนยันตัวตนของ F-05 — บทบาทเดียวที่แตะข้อมูลเข้าสู่ระบบและออก session ได้
+      TIEWTRADE_DATABASE_URL_AUTH: postgresql+asyncpg://tiewtrade_auth:dev_auth@postgres:5432/tiewtrade
+      # เปิดให้สมัครในเครื่องพัฒนา — **ค่าเริ่มต้นของจริงคือปิด** (F-05 Q-1)
+      TIEWTRADE_SIGNUP_OPEN: "1"
+      # ปิดธง Secure เพราะ compose ให้บริการผ่าน http — บนเครื่องจริงห้ามปิด
+      TIEWTRADE_COOKIE_SECURE: "0"
     ports:
       - "8000:8000"
     healthcheck:
