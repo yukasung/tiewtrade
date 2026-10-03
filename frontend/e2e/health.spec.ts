@@ -6,7 +6,8 @@ test("หน้าเว็บแสดงข้อมูลที่ได้�
 
   // ต้องเป็นข้อมูลจาก API ไม่ใช่ข้อความที่ฝังไว้ในหน้า
   await expect(page.getByTestId("status")).toHaveText("ok");
-  await expect(page.getByTestId("version")).toHaveText("0.1.0");
+  // ไม่ผูกกับเลขรุ่นที่เขียนไว้ เพราะรุ่นเปลี่ยนตามงาน — ที่ต้องพิสูจน์คือค่ามาจาก API
+  await expect(page.getByTestId("version")).toHaveText(/^\d+\.\d+\.\d+$/);
 
   const serverTime = await page.getByTestId("server-time").textContent();
   expect(serverTime).toBeTruthy();

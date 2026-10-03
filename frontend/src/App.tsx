@@ -1,15 +1,13 @@
 import { type JSX, useEffect, useState } from "react";
 
 import { fetchHealth, type Health } from "./api";
+import { AuthPanel } from "./AuthPanel";
 
 /**
- * หน้าเปล่าหนึ่งหน้าของ F-01
- *
- * มีหน้าที่เดียว: พิสูจน์ว่าทางเดินจากหลังบ้านถึงหน้าบ้านทำงาน
- * และชนิดข้อมูลสองฝั่งตรงกัน (RQ-17)
+ * หน้าเดียวของระบบตอนนี้ — สถานะเซิร์ฟเวอร์ (F-01) และการยืนยันตัวตน (F-05)
  *
  * ยังไม่ใช่หน้าจอจริง ไม่มีเมนู ไม่มีระบบแปลภาษา ไม่มี component กลาง
- * งานหน้าจอจริงเริ่มที่ F-12
+ * งานหน้าจอจริงเริ่มที่ F-12 และการสลับภาษาที่ F-30
  */
 export function App(): JSX.Element {
   const [health, setHealth] = useState<Health | null>(null);
@@ -26,7 +24,8 @@ export function App(): JSX.Element {
   return (
     <main>
       <h1>TiewTrade</h1>
-      <p>โครงเริ่มต้น F-01 — ยังไม่มีความสามารถด้านการเทรด</p>
+      <p>ยังไม่มีความสามารถด้านการเทรด</p>
+      <AuthPanel />
       {error !== null && <p data-testid="error">ผิดพลาด: {error}</p>}
       {health !== null && (
         <dl data-testid="health">
