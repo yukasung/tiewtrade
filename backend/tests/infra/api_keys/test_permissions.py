@@ -164,11 +164,40 @@ async def test_engine_reads_and_the_secret_survives_the_round_trip(
     assert bytes(stored) == SEALED
 
 
-async def test_api_cannot_write_the_verdict(api_engine: AsyncEngine) -> None:
-    """V-31.2 — ผลการตรวจเป็นของ `engine` เท่านั้น
+#: คอลัมน์ที่ `api` **ห้ามเขียน** พร้อมค่าที่ใช้ลองเขียน
+#:
+#: **ต้องตรวจทีละคอลัมน์** ไม่ใช่ตรวจแค่ `status` — ถ้าเผลอ `GRANT UPDATE` ช่องอื่น
+#: ของผลการตรวจ เทสต์ที่ดูแค่ `status` จะยังเขียวทั้งที่ `api` ปลอมผลได้แล้ว (V-31.2)
+#: · ครอบทั้งผลการตรวจ (`status`, `attempts`, `verified_at`, `failure_code`),
+#: จังหวะการตรวจ (`not_before`, `next_attempt_at`, `last_attempt_at`),
+#: การจอง (`claimed_by`, `claim_id`, `claim_expires_at`) และความลับเอง
+FORBIDDEN_API_UPDATES = (
+    ("status", "'ACTIVE'"),
+    ("attempts", "0"),
+    ("verified_at", "clock_timestamp()"),
+    ("failure_code", "'VENUE_UNAVAILABLE'"),
+    ("last_attempt_at", "clock_timestamp()"),
+    ("not_before", "clock_timestamp()"),
+    ("next_attempt_at", "clock_timestamp()"),
+    ("claimed_by", "'someone'"),
+    ("claim_id", "gen_random_uuid()"),
+    ("claim_expires_at", "clock_timestamp()"),
+    ("secret_sealed", "'\\x00'::bytea"),
+    ("key_version", "'2'"),
+    ("user_id", "gen_random_uuid()"),
+    ("key_public", "'OTHER'"),
+    ("created_at", "clock_timestamp()"),
+)
 
-    ถ้า `api` เขียนสถานะได้ คำขอจากอินเทอร์เน็ตก็ประกาศว่า key ผ่านการตรวจได้
-    โดยไม่เคยถามตลาดเลย
+
+@pytest.mark.parametrize(("column", "value"), FORBIDDEN_API_UPDATES)
+async def test_api_cannot_write_the_verdict(
+    api_engine: AsyncEngine, column: str, value: str
+) -> None:
+    """V-31.2 — ผลการตรวจ จังหวะการตรวจ และการจอง เป็นของ `engine` เท่านั้น
+
+    ถ้า `api` เขียนช่องใดช่องหนึ่งได้ คำขอจากอินเทอร์เน็ตก็ประกาศว่า key ผ่านการตรวจ
+    ได้โดยไม่เคยถามตลาดเลย — หรือแย่กว่านั้นคือแย่งแถวจาก worker ที่กำลังตรวจอยู่
     """
     owner = uuid4()
     await create_user(api_engine, owner)
@@ -177,7 +206,7 @@ async def test_api_cannot_write_the_verdict(api_engine: AsyncEngine) -> None:
     async with user_session(api_engine, owner) as session:
         with pytest.raises(NotPermittedError):
             await session.execute(
-                "UPDATE user_api_keys SET status = 'ACTIVE' WHERE id = :id", {"id": key_id}
+                f"UPDATE user_api_keys SET {column} = {value} WHERE id = :id", {"id": key_id}
             )
 
 
