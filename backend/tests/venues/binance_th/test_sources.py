@@ -49,20 +49,45 @@ def test_the_adapter_satisfies_both_contracts_of_the_venue_layer() -> None:
     assert isinstance(constraints, SymbolConstraintSource)
 
 
-def test_there_is_no_wallet_and_no_signing_in_this_task() -> None:
-    """V-2 — งานนี้ทำเฉพาะ endpoint สาธารณะ ไม่มีกระเป๋าและไม่มีการลงลายเซ็น"""
+def test_the_adapter_never_holds_a_secret() -> None:
+    """F-07 Q-2 — ตัวเชื่อม **ลงลายเซ็นเองไม่ได้** เพราะมันไม่มีความลับ
+
+    F-35 เคยพิสูจน์ว่างานนั้นไม่มีกระเป๋าและไม่มีการลงลายเซ็นเลย · F-07 เพิ่มกระเป๋า
+    ที่ต้องลงลายเซ็นเข้ามา แต่ข้อที่ยังต้องจริงอยู่คือ **ความลับไม่ข้ามเส้นเข้ามา**:
+    ตัวเชื่อมรู้ว่าข้อความไหนต้องถูกเซ็นและ header ชื่ออะไร ส่วนตัวที่ถือ secret
+    กับวิธีคำนวณลายเซ็นอยู่ใน `infra/api_keys` (`plan.md` ข้อ 6.1)
+
+    ถ้าวันหนึ่งมีคนย้ายการคำนวณลายเซ็นกลับเข้ามาที่นี่ เทสต์นี้แดงทันที
+    """
+    import ast
     from pathlib import Path
 
     from tiewtrade.venues import binance_th
 
-    assert not hasattr(binance_th, "BinanceThWallet")
-    assert not any("Wallet" in name for name in binance_th.__all__)
-
     adapter = Path(binance_th.__file__).parent
     for module in adapter.glob("*.py"):
-        text = module.read_text(encoding="utf-8")
-        for forbidden in ("hmac", "hashlib", "X-MBX-APIKEY", "secret"):
-            assert forbidden not in text, f"{module.name} มี {forbidden!r}"
+        tree = ast.parse(module.read_text(encoding="utf-8"))
+        for node in ast.walk(tree):
+            # อ่านด้วย AST ไม่ใช่ค้นข้อความ เพราะคำว่า "secret" ในคำอธิบายที่บอกว่า
+            # **ไม่มี** secret ก็จะโดนจับไปด้วย ซึ่งเป็นการแดงด้วยเหตุผลที่ไม่ใช่กฎ
+            if isinstance(node, ast.Import):
+                names = {alias.name.split(".")[0] for alias in node.names}
+            elif isinstance(node, ast.ImportFrom):
+                names = {(node.module or "").split(".")[0]}
+            else:
+                names = set()
+            assert not names & {"hmac", "hashlib"}, f"{module.name} คำนวณลายเซ็นเอง"
+
+            identifier = ""
+            if isinstance(node, ast.Name):
+                identifier = node.id
+            elif isinstance(node, ast.arg):
+                identifier = node.arg
+            elif isinstance(node, ast.Attribute):
+                identifier = node.attr
+            elif isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef):
+                identifier = node.name
+            assert "secret" not in identifier.lower(), f"{module.name} มีชื่อ {identifier!r}"
 
 
 async def test_the_price_asks_for_exactly_one_latest_trade() -> None:

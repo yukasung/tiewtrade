@@ -23,8 +23,9 @@ import pytest
 
 from tests.venue_contract.verdict import ContractReport, Verdict, verdict_for, weight_verdict
 from tiewtrade.venues.binance_th import BinanceThConstraints, IpWeightLimiter
+from tiewtrade.venues.binance_th.endpoints import Endpoint
 from tiewtrade.venues.binance_th.mapping import price_from_trades
-from tiewtrade.venues.binance_th.prices import LATEST_PRICE_COST, TRADES_ENDPOINT
+from tiewtrade.venues.binance_th.prices import LATEST_PRICE_COST
 from tiewtrade.venues.binance_th.transport import BinanceThTransport
 from tiewtrade.venues.errors import VenueError
 from tiewtrade.venues.symbols import Symbol
@@ -79,7 +80,7 @@ async def _check_price(
     """
     try:
         response = await transport.get(
-            TRADES_ENDPOINT,
+            Endpoint.TRADES,
             cost=LATEST_PRICE_COST,
             params={"symbol": "BTCTHB", "limit": "1"},
         )
@@ -136,7 +137,7 @@ async def _check_weight(
     for _ in range(WEIGHT_SAMPLES):
         try:
             response = await transport.get(
-                TRADES_ENDPOINT,
+                Endpoint.TRADES,
                 cost=LATEST_PRICE_COST,
                 params={"symbol": "BTCTHB", "limit": "1"},
             )

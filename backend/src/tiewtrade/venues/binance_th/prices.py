@@ -8,13 +8,12 @@ from __future__ import annotations
 
 from typing import Final
 
+from tiewtrade.venues.binance_th.endpoints import Endpoint
 from tiewtrade.venues.binance_th.mapping import market_symbol, price_from_trades
 from tiewtrade.venues.binance_th.transport import BinanceThTransport
 from tiewtrade.venues.limits import CallCost
 from tiewtrade.venues.prices import Price
 from tiewtrade.venues.symbols import Symbol
-
-TRADES_ENDPOINT: Final = "/trades"
 
 #: weight ของ `/trades` ตามเอกสารของตลาด — ไม่ใช่ค่าที่เราคิดขึ้นเอง
 LATEST_PRICE_COST: Final = CallCost(weight=1)
@@ -33,7 +32,7 @@ class BinanceThPrices:
         ยังไม่มีใครเทรดคู่นั้น → `VenueUnavailableError` (plan.md ข้อ 4.1)
         """
         response = await self._transport.get(
-            TRADES_ENDPOINT,
+            Endpoint.TRADES,
             cost=LATEST_PRICE_COST,
             params={"symbol": market_symbol(symbol), "limit": "1"},
         )

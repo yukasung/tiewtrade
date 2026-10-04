@@ -1,0 +1,9 @@
+{
+ "body": "{\"makerCommission\":10,\"takerCommission\":10,\"buyerCommission\":0,\"sellerCommission\":0,\"canTrade\":true,\"canWithdraw\":true,\"canDeposit\":true,\"updateTime\":1790867536098,\"balances\":[{\"asset\":\"THB\",\"free\":\"1234.56000000\",\"locked\":\"0.00000000\"},{\"asset\":\"BTC\",\"free\":\"0.00006000\",\"locked\":\"0.00001000\"},{\"asset\":\"USDT\",\"free\":\"0.00000000\",\"locked\":\"0.00000000\"}]}",
+ "endpoint": "/accountV2",
+ "headers": {
+  "x-mbx-used-weight-1m": "20"
+ },
+ "note": "รูปร่างของคำตอบมาจากการเรียกจริงเมื่อ 2026-10-04 (ชื่อช่องทั้งเก้า) ส่วนยอดเป็นค่าที่แต่งขึ้น — เราบันทึกเฉพาะรายชื่อช่องไว้ ไม่ได้บันทึกยอดจริงของเจ้าของ",
+ "status": 200
+}

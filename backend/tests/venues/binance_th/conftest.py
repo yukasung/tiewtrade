@@ -23,6 +23,8 @@ from tiewtrade.venues.binance_th import BinanceThTransport
 from tiewtrade.venues.limits import CallCost, RateLimitGuard
 
 RECORDED: Final = Path(__file__).parent / "recorded"
+#: คำตอบที่แต่งจากรูปร่างจริงของ endpoint ที่ต้องลงลายเซ็น (F-07)
+SHAPES: Final = Path(__file__).parent / "shapes"
 
 #: เวลาอ้างอิงของเทสต์ — ค่าคงที่เพื่อให้ผลไม่ขึ้นกับว่ารันตอนไหน
 START: Final = datetime(2026, 10, 1, 12, 0, tzinfo=UTC)
@@ -78,6 +80,19 @@ def recorded(name: str) -> dict[str, object]:
 
 def recorded_body(name: str) -> str:
     body = recorded(name)["body"]
+    assert isinstance(body, str)
+    return body
+
+
+def shaped_body(name: str) -> str:
+    """คำตอบที่เราแต่งขึ้นจาก **รูปร่าง** ที่เรียกจริงแล้วเห็น (`shapes/README.md`)
+
+    แยกจาก `recorded_body` เพราะสองอย่างนี้มีกฎคนละชุด: `recorded/` เป็นคำตอบจริง
+    จาก endpoint สาธารณะและมีด่านของตัวเอง ส่วนที่นี่คือรูปร่างของ endpoint
+    ที่ต้องลงลายเซ็น ซึ่งบันทึกคำตอบจริงไม่ได้เพราะมันคือยอดเงินของเจ้าของ
+    """
+    loaded = json.loads((SHAPES / f"{name}.json").read_text(encoding="utf-8"))
+    body = loaded["body"]
     assert isinstance(body, str)
     return body
 

@@ -24,6 +24,7 @@ from tiewtrade.core.money import Money, MoneyError, Quantity
 from tiewtrade.venues.errors import VenueProtocolError, VenueUnavailableError
 from tiewtrade.venues.prices import Price
 from tiewtrade.venues.symbols import Symbol, SymbolConstraints
+from tiewtrade.venues.wallets import Holding, WalletHoldings
 
 #: ชื่อ filter ของตลาดที่งานนี้อ่าน — **ไม่อ่าน `PRICE_FILTER` เพราะยังไม่มีใครใช้** (RQ-14)
 _LOT_SIZE: Final = "LOT_SIZE"
@@ -177,3 +178,32 @@ def _integer(value: object) -> int:
     if isinstance(value, bool) or not isinstance(value, int):
         raise VenueProtocolError()
     return value
+
+
+def holdings_from_account(*, payload: object, received_at: datetime) -> WalletHoldings:
+    """ยอดในกระเป๋าจากคำตอบของ endpoint ข้อมูลบัญชี (F-07)
+
+    **อ่านเฉพาะ `balances`** — ช่องอื่นของคำตอบนี้ (`canTrade`, `canWithdraw`,
+    `canDeposit`) **ห้ามแตะเด็ดขาด** เพราะเป็นสถานะของ **บัญชี** ไม่ใช่สิทธิ์ของ key
+    พิสูจน์แล้วด้วยการเรียกจริงเมื่อ 2026-10-04: `canWithdraw` คืนค่าจริงทั้งที่
+    หน้าสร้าง key ของตลาดนี้ไม่มีสิทธิ์ถอนเงินให้เปิดเลย (NC-16 · RQ-6.1)
+    ชื่อของมันอ่านเหมือนสิทธิ์ของ key ทุกประการ ซึ่งเป็นเหตุผลที่ต้องเขียนห้ามไว้ตรงนี้
+
+    **ยอดเป็น `Quantity` ไม่ใช่ `Money`** ตามที่ F-33 ตัดสิน และแปลงจากข้อความตรง ๆ
+    โดยไม่ผ่านทศนิยมลอยตัว — ตัวอ่าน JSON ของ `transport` คงตัวเลขที่มีจุดไว้เป็นข้อความ
+    """
+    account = _mapping(payload)
+    holdings: list[Holding] = []
+    for item in _sequence(account.get("balances")):
+        entry = _mapping(item)
+        asset = _text(entry.get("asset"))
+        with _readable():
+            holdings.append(
+                Holding(
+                    available=Quantity.of(_text(entry.get("free")), asset),
+                    reserved=Quantity.of(_text(entry.get("locked")), asset),
+                )
+            )
+
+    with _readable():
+        return WalletHoldings(received_at=received_at, holdings=tuple(holdings))

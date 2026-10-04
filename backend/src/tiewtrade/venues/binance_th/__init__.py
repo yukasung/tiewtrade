@@ -2,9 +2,16 @@
 
 ตลาดเดียวของระบบ `mission.md` หัวข้อ 2 — **ยังไม่มี Futures** (NC-12)
 
-งานนี้ทำเฉพาะ **endpoint สาธารณะ** ตามที่เจ้าของอนุมัติ (Q-1): ราคาและข้อจำกัดของเหรียญ
-**ไม่มีกุญแจ ไม่มีกระเป๋า ไม่มีการส่งคำสั่งซื้อขาย** — `WalletSource` ของ F-33
-ยังไม่มีผู้ทำ เพราะต้องใช้กุญแจของผู้ใช้ซึ่งเป็นงานของ F-14
+F-35 ทำเฉพาะ **endpoint สาธารณะ**: ราคาและข้อจำกัดของเหรียญ · **F-07 เพิ่มกระเป๋า**
+ซึ่งเป็น endpoint ที่ต้องลงลายเซ็น และใช้เป็นหลักฐานว่า API key ของผู้ใช้ใช้งานได้จริง
+**ยังไม่มีการส่งคำสั่งซื้อขาย** (F-16)
+
+**package นี้ไม่เคยเห็น secret ของผู้ใช้** — มันรับ "ตัวลงลายเซ็น" ตามสัญญา
+`venues/signing.py` ซึ่งถือความลับไว้ข้างในตัวเอง ส่วนตัวที่ทำตามสัญญานั้นอยู่ใน
+`infra/api_keys` (F-07 Q-2 ที่เจ้าของตัดสิน)
+
+**เส้นทางที่เรียกได้เป็นรายการปิดใน `endpoints.py`** — เส้นทางที่ย้ายเงินออกจาก
+บัญชีผู้ใช้สร้างขึ้นมาไม่ได้เลย ไม่ใช่แค่ไม่มีใครเขียน (F-07 RQ-16)
 
 **package นี้เป็นที่เดียวในระบบที่พูดชื่อตลาดได้** ด่านคำศัพท์อ่าน `VENUE_VOCABULARY`
 ข้างล่างไปใช้เป็นรายการคำที่ห้ามโผล่นอกชั้น `venues`
@@ -15,9 +22,11 @@ from __future__ import annotations
 from typing import Final
 
 from tiewtrade.venues.binance_th.constraints import BinanceThConstraints
+from tiewtrade.venues.binance_th.endpoints import Endpoint
 from tiewtrade.venues.binance_th.prices import BinanceThPrices
 from tiewtrade.venues.binance_th.rate_limit import IpWeightLimiter
 from tiewtrade.venues.binance_th.transport import BASE_URL, BinanceThTransport
+from tiewtrade.venues.binance_th.wallets import BinanceThWallet
 
 #: คำที่เป็นของตลาดนี้โดยเฉพาะ — **ห้ามปรากฏนอกชั้น `venues`**
 #:
@@ -37,5 +46,7 @@ __all__ = [
     "BinanceThConstraints",
     "BinanceThPrices",
     "BinanceThTransport",
+    "BinanceThWallet",
+    "Endpoint",
     "IpWeightLimiter",
 ]
