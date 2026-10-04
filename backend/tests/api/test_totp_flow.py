@@ -6,10 +6,16 @@
 
 from __future__ import annotations
 
+import asyncio
+from collections.abc import Iterator
+from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, datetime
+from threading import Event
+from uuid import UUID
 
 import pytest
 from fastapi.testclient import TestClient
+from starlette.types import Receive, Scope, Send
 
 from tests.api.conftest import (
     GOOD_PASSWORD,
@@ -20,7 +26,12 @@ from tests.api.conftest import (
     use_cookies,
 )
 from tiewtrade.core.totp import code_for, step_at
+from tiewtrade.infra.auth import totp
+from tiewtrade.infra.crypto import KeySource
+from tiewtrade.infra.db import DatabaseRole, create_engine_for
+from tiewtrade.infra.db.session import UserSession, user_session
 from tiewtrade.services.api import totp_routes
+from tiewtrade.services.api.app import app
 from tiewtrade.services.api.settings import (
     CHALLENGE_COOKIE,
     CSRF_COOKIE,
@@ -102,6 +113,165 @@ def test_setup_needs_the_current_password(client: TestClient) -> None:
     )
 
     assert refused.status_code == 401
+
+
+def test_setup_cannot_replace_an_enabled_authenticator(client: TestClient) -> None:
+    """Q-4 — session กับรหัสผ่านไม่พอสำหรับเปลี่ยนเครื่องที่เปิดอยู่แล้ว"""
+    register(client)
+    secret, _ = enable_totp(client)
+    refused = client.post(
+        "/auth/totp/setup", json={"password": GOOD_PASSWORD}, headers=csrf_headers(client)
+    )
+    assert refused.status_code == 409, refused.text
+    # เครื่องเดิมยังยืนยันซ้ำได้ และไม่มี secret ใหม่ถูกแจก
+    assert "otpauth_uri" not in refused.json()
+    headers = csrf_headers(client) | {TOTP_HEADER: code_now(secret)}
+    assert (
+        client.post(
+            "/auth/totp/recovery-codes", json={"password": GOOD_PASSWORD}, headers=headers
+        ).status_code
+        == 200
+    )
+
+
+@pytest.fixture
+def roaming_client() -> Iterator[tuple[TestClient, list[str]]]:
+    """เปลี่ยน IP จริงใน ASGI โดยคง session และ lifespan เดิม"""
+    address = ["192.0.2.1"]
+
+    async def from_address(scope: Scope, receive: Receive, send: Send) -> None:
+        if scope["type"] == "http":
+            scope = dict(scope, client=(address[0], 50000))
+        await app(scope, receive, send)
+
+    with TestClient(from_address) as client:
+        client.get("/auth/csrf")
+        yield client, address
+
+
+def test_setup_cannot_race_initial_confirmation(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Q-4 + plan 1.1 — confirm กับ setup ต้องใช้ล็อกบัญชีเดียวกัน"""
+    register(client)
+    started = client.post(
+        "/auth/totp/setup", json={"password": GOOD_PASSWORD}, headers=csrf_headers(client)
+    )
+    secret = secret_of(started.json()["otpauth_uri"])
+    activated, checked, release = Event(), Event(), Event()
+    original_confirm = totp.confirm_secret
+    original_enabled = totp.is_enabled
+
+    async def paused_confirm(
+        session: UserSession, keys: KeySource, *, presented: str, now: datetime
+    ) -> bool:
+        passed = await original_confirm(session, keys, presented=presented, now=now)
+        activated.set()
+        while not release.is_set():
+            await asyncio.sleep(0.01)
+        return passed
+
+    async def observed_enabled(session: UserSession) -> bool:
+        enabled = await original_enabled(session)
+        if activated.is_set():
+            checked.set()
+        return enabled
+
+    monkeypatch.setattr(totp, "confirm_secret", paused_confirm)
+    monkeypatch.setattr(totp, "is_enabled", observed_enabled)
+    headers = csrf_headers(client)
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        confirming = pool.submit(
+            client.post,
+            "/auth/totp/confirm",
+            json={"code": code_one_step_back(secret)},
+            headers=headers,
+        )
+        try:
+            assert activated.wait(timeout=5), "confirm ไม่ถึงจุดสลับ secret"
+            setting_up = pool.submit(
+                client.post,
+                "/auth/totp/setup",
+                json={"password": GOOD_PASSWORD},
+                headers=headers,
+            )
+            # โค้ดเดิมอ่านสถานะก่อน confirm commit; โค้ดที่ล็อกถูกต้องจะรอ
+            checked.wait(timeout=1)
+        finally:
+            release.set()
+        assert confirming.result(timeout=5).status_code == 200
+        assert setting_up.result(timeout=5).status_code == 409
+
+
+@pytest.mark.parametrize(
+    "target",
+    ["/auth/totp/replace", "/auth/totp/disable", "/auth/totp/recovery-codes", "/auth/totp/confirm"],
+)
+@pytest.mark.parametrize("source", ["login", "reverify"])
+def test_second_factor_quota_is_shared_over_http(
+    roaming_client: tuple[TestClient, list[str]], target: str, source: str
+) -> None:
+    """V-62.2 — ใช้โควตาหมดผ่าน HTTP แล้วย้ายจุดตรวจจริง"""
+    from tiewtrade.infra.auth.throttle import SECOND_FACTOR_CAPACITY
+
+    client, address = roaming_client
+    email = register(client)
+    secret, _ = enable_totp(client)
+    signed_in = cookies_now(client)
+    if source == "login":
+        sign_in(client, email)
+    for _ in range(SECOND_FACTOR_CAPACITY):
+        if source == "login":
+            response = client.post(
+                "/auth/totp/login", json={"code": "invalid"}, headers=csrf_headers(client)
+            )
+        else:
+            response = client.post(
+                "/auth/totp/recovery-codes",
+                json={"password": GOOD_PASSWORD},
+                headers=csrf_headers(client) | {TOTP_HEADER: "invalid"},
+            )
+        assert response.status_code == 403, response.text
+    use_cookies(client, signed_in)
+    address[0] = "192.0.2.2"  # ถัง IP ใหม่ยังเต็ม ต้องหยุดด้วยถังบัญชี
+    response = client.post(
+        target,
+        json={"code": "invalid"} if target.endswith("/confirm") else {"password": GOOD_PASSWORD},
+        headers=csrf_headers(client) | {TOTP_HEADER: code_now(secret)},
+    )
+    assert response.status_code == 429, response.text
+
+
+def test_stale_challenge_cleanup_survives_http_rejection(client: TestClient) -> None:
+    """การปฏิเสธรุ่นรหัสผ่านเก่าต้องไม่ย้อนการลบ challenge ทิ้ง"""
+    email = register(client)
+    account = UUID(client.get("/auth/me").json()["user_id"])
+    secret, _ = enable_totp(client)
+    sign_in(client, email)
+
+    async def challenge_rows(*, make_stale: bool = False) -> int:
+        engine = create_engine_for(DatabaseRole.AUTH)
+        try:
+            async with user_session(engine, account, role=DatabaseRole.AUTH) as session:
+                if make_stale:
+                    # จำลองชั้นลบตรง ๆ หลุด เพื่อพิสูจน์ด่านตรวจรุ่นแยกจากกัน
+                    await session.execute(
+                        "UPDATE user_credentials SET updated_at = "
+                        "updated_at + interval '1 second' WHERE user_id = :id",
+                        {"id": str(account)},
+                    )
+                return int(
+                    (await session.execute("SELECT count(*) FROM login_challenges")).scalar_one()
+                )
+        finally:
+            await engine.dispose()
+
+    assert asyncio.run(challenge_rows(make_stale=True)) == 1
+    response = client.post(
+        "/auth/totp/login", json={"code": code_now(secret)}, headers=csrf_headers(client)
+    )
+    assert response.status_code == 403, response.text
+    assert asyncio.run(challenge_rows()) == 0, "การลบ challenge ถูก rollback หลัง HTTP 403"
 
 
 def test_a_stolen_session_cannot_bind_its_own_authenticator(client: TestClient) -> None:
@@ -464,3 +634,30 @@ def test_a_challenge_dies_when_the_password_changes(client: TestClient) -> None:
     )
 
     assert refused.status_code == 403, "challenge ของรหัสผ่านเก่ายังผ่านได้"
+
+
+@pytest.mark.parametrize("target", ["/auth/totp/replace", "/auth/totp/disable"])
+def test_recovery_grant_survives_exhausted_totp_quota(
+    roaming_client: tuple[TestClient, list[str]], target: str
+) -> None:
+    """สิทธิ์กู้ไม่ใช่การเดารหัส TOTP — ถัง TOTP หมดต้องไม่ขวางสิทธิ์นี้"""
+    from tiewtrade.infra.auth.throttle import SECOND_FACTOR_CAPACITY
+
+    client, address = roaming_client
+    email = register(client)
+    _, codes = enable_totp(client)
+    for _ in range(SECOND_FACTOR_CAPACITY):
+        refused = client.post(
+            "/auth/totp/recovery-codes",
+            json={"password": GOOD_PASSWORD},
+            headers=csrf_headers(client) | {TOTP_HEADER: "invalid"},
+        )
+        assert refused.status_code == 403
+    address[0] = "192.0.2.2"
+    sign_in(client, email)
+    recovered = client.post(
+        "/auth/totp/login", json={"recovery_code": codes[0]}, headers=csrf_headers(client)
+    )
+    assert recovered.status_code == 200, recovered.text
+    changed = client.post(target, json={"password": GOOD_PASSWORD}, headers=csrf_headers(client))
+    assert changed.status_code == 200, changed.text

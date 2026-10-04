@@ -65,7 +65,7 @@ async def identify_caller(
     """
     try:
         await authenticate_request(request.app.state.api_engine, request)
-    except HTTPException as refusal:
+    except (HTTPException, AuthRejectedError) as refusal:
         return JSONResponse({"detail": refusal.detail}, status_code=refusal.status_code)
     return await call_next(request)
 

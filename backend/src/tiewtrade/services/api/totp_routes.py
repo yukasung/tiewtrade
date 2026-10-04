@@ -194,6 +194,10 @@ async def start_setup(
             except AuthRejectedError:
                 await guard.count_attempt()
                 raise
+            if await totp.is_enabled(session):
+                raise AuthRejectedError(
+                    status.HTTP_409_CONFLICT, "เปิด TOTP อยู่แล้ว — ใช้เส้นทางเปลี่ยนเครื่อง"
+                )
             label = await email_of(session, account)
             secret = totp.new_secret()
             await totp.stage_secret(session, totp_keys(request), secret)
@@ -227,6 +231,8 @@ async def confirm_setup(
     ) as guard:
         refuse_if_throttled(guard)
         async with user_session(engine, account, role=DatabaseRole.AUTH) as session:
+            # setup ตรวจสถานะใต้ล็อกนี้ จึงต้องสลับ secret ใต้ล็อกเดียวกัน (plan 1.1)
+            await locked_credential(session, account)
             replacing = await totp.is_enabled(session)
             if not await totp.confirm_secret(
                 session, totp_keys(request), presented=body.code, now=now
@@ -380,36 +386,41 @@ async def complete_sign_in(request: Request, response: Response, body: SecondSte
             session = await finder.assume_user(waiting.user_id)
 
             stored = await locked_credential(session, waiting.user_id)
-            if stored is None or stored.updated_at != waiting.credential_updated_at:
+            stale = stored is None or stored.updated_at != waiting.credential_updated_at
+            if stale:
                 # รหัสผ่านเปลี่ยนไปหลัง challenge ถูกออก → ใบนี้ตายแล้ว
                 await challenges.end_all(session)
-                raise AuthRejectedError(status.HTTP_403_FORBIDDEN, SECOND_STEP_FAILED)
 
-            left = await _passed_second_step(session, request, body, now=now)
-            if left is None:
-                await guard.count_attempt()
-                raise AuthRejectedError(status.HTTP_403_FORBIDDEN, SECOND_STEP_FAILED)
+            else:
+                left = await _passed_second_step(session, request, body, now=now)
+                if left is None:
+                    await guard.count_attempt()
+                    raise AuthRejectedError(status.HTTP_403_FORBIDDEN, SECOND_STEP_FAILED)
 
-            await challenges.spend(session, token_hash=token_hash)
-            token, session_hash = new_token()
-            deadlines = deadlines_for_new_session(now)
-            await issue(
-                session,
-                token_hash=session_hash,
-                idle_expires_at=deadlines.idle_expires_at,
-                absolute_expires_at=deadlines.absolute_expires_at,
-            )
-            await record_own_action(
-                session, waiting.user_id, AuditAction.SESSION_STARTED, SessionDetails()
-            )
-            if using_recovery:
-                await recovery_grants.grant(session, session_token_hash=session_hash)
-                await record_own_action(
+                await challenges.spend(session, token_hash=token_hash)
+                token, session_hash = new_token()
+                deadlines = deadlines_for_new_session(now)
+                await issue(
                     session,
-                    waiting.user_id,
-                    AuditAction.RECOVERY_CODE_USED,
-                    RecoveryCodeUsedDetails(remaining=left),
+                    token_hash=session_hash,
+                    idle_expires_at=deadlines.idle_expires_at,
+                    absolute_expires_at=deadlines.absolute_expires_at,
                 )
+                await record_own_action(
+                    session, waiting.user_id, AuditAction.SESSION_STARTED, SessionDetails()
+                )
+                if using_recovery:
+                    await recovery_grants.grant(session, session_token_hash=session_hash)
+                    await record_own_action(
+                        session,
+                        waiting.user_id,
+                        AuditAction.RECOVERY_CODE_USED,
+                        RecoveryCodeUsedDetails(remaining=left),
+                    )
+
+        if stale:
+            # ปฏิเสธหลัง transaction ลบ commit แล้ว ไม่ย้อน challenge กลับมา
+            raise AuthRejectedError(status.HTTP_403_FORBIDDEN, SECOND_STEP_FAILED)
 
     clear_challenge_cookie(response)
     set_session_cookies(response, token=token, csrf_token=new_csrf_token())

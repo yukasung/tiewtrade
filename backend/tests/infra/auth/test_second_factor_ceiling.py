@@ -164,19 +164,8 @@ async def test_the_ceiling_is_not_exceeded_by_requests_at_once(
     )
 
 
-async def test_the_quota_is_shared_across_checkpoints(auth_engine: AsyncEngine) -> None:
-    """V-62.2 — **โควตาของบัญชีร่วมกันทุกจุดตรวจ TOTP**
-
-    คีย์ของถังคือบัญชี ไม่ใช่จุดตรวจหรือรอบ login ฉะนั้นใช้โควตาหมดที่จุดหนึ่ง
-    แล้วย้ายไปเดาที่จุดอื่นก็ยังถูกปฏิเสธ — ช่องที่รีวิวรอบแรกจับได้
-    """
-    account_key = fresh_bucket_key()
-    now = datetime.now(UTC)
-    for _ in range(SECOND_FACTOR_CAPACITY):
-        await attempt(auth_engine, Bucket.TOTP_ACCOUNT, account_key, now=now)
-
-    # "จุดตรวจอื่น" ใช้คีย์เดียวกันเพราะคีย์คือบัญชี
-    assert await attempt(auth_engine, Bucket.TOTP_ACCOUNT, account_key, now=now) is False
+# V-62.2: tests/api/test_totp_flow.py::test_second_factor_quota_is_shared_over_http
+# ต้องผ่าน middleware และ endpoint จริง ไม่ใช่เรียกถังเดิมซ้ำอีกครั้ง
 
 
 async def test_the_recovery_bucket_is_separate(auth_engine: AsyncEngine) -> None:

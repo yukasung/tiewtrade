@@ -28,7 +28,10 @@ from fastapi import HTTPException, Request, Response, status
 from sqlalchemy.ext.asyncio import AsyncEngine
 
 from tiewtrade.infra.auth import (
+    Bucket,
     hash_token,
+    key_of,
+    locked_credential,
     owner_of_presented,
     recovery_grants,
     renew,
@@ -37,7 +40,7 @@ from tiewtrade.infra.auth import (
 )
 from tiewtrade.infra.db import DatabaseRole
 from tiewtrade.infra.db.session import presented_session, user_session
-from tiewtrade.services.api.resources import engine_for, totp_keys
+from tiewtrade.services.api.resources import client_key, engine_for, totp_keys
 from tiewtrade.services.api.routing_policy import (
     accepts_recovery_grant,
     is_public,
@@ -52,6 +55,7 @@ from tiewtrade.services.api.settings import (
     TOTP_HEADER,
     cookie_secure,
 )
+from tiewtrade.services.api.throttling import AuthRejectedError, refuse_if_throttled, throttled
 
 #: ข้อความเดียวสำหรับทุกกรณีที่ไม่มีสิทธิ์ — ไม่บอกว่าเพราะไม่มี session,
 #: session หมดอายุ หรือโทเคนไม่มีในระบบ
@@ -205,15 +209,26 @@ async def second_factor_of(request: Request, who: Authenticated) -> SecondFactor
     keys = totp_keys(request)
     now = datetime.now(UTC)
 
-    async with user_session(engine, who.user_id, role=DatabaseRole.AUTH) as session:
-        if presented and await totp.verify(session, keys, presented=presented, now=now):
-            return SecondFactor.TOTP_CODE
-        if accepts_recovery_grant(request.url.path) and await recovery_grants.usable(
-            session, session_token_hash=who.token_hash
-        ):
-            return SecondFactor.RECOVERY_GRANT
-
-    raise HTTPException(status.HTTP_403_FORBIDDEN, SECOND_FACTOR_REQUIRED)
+    async with throttled(
+        engine,
+        [(Bucket.TOTP_ACCOUNT, key_of(str(who.user_id))), (Bucket.TOTP_IP, client_key(request))],
+        now=now,
+    ) as guard:
+        async with user_session(engine, who.user_id, role=DatabaseRole.AUTH) as session:
+            grant_usable = accepts_recovery_grant(
+                request.url.path
+            ) and await recovery_grants.usable(session, session_token_hash=who.token_hash)
+            # สิทธิ์กู้ไม่ใช่การเดารหัส TOTP จึงยังใช้ได้เมื่อถัง TOTP หมด
+            if grant_usable and (not presented or guard.blocked):
+                return SecondFactor.RECOVERY_GRANT
+            refuse_if_throttled(guard)
+            await locked_credential(session, who.user_id)
+            if presented and await totp.verify(session, keys, presented=presented, now=now):
+                return SecondFactor.TOTP_CODE
+            if grant_usable:
+                return SecondFactor.RECOVERY_GRANT
+        await guard.count_attempt()
+        raise AuthRejectedError(status.HTTP_403_FORBIDDEN, SECOND_FACTOR_REQUIRED)
 
 
 async def authenticate_request(engine: AsyncEngine, request: Request) -> None:
