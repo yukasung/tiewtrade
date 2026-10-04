@@ -54,6 +54,18 @@ def totp_keys(request: Request) -> KeySource:
     return keys
 
 
+def venue_keys(request: Request) -> KeySource:
+    """กุญแจของ API key ที่ lifespan อ่านมาตอนเปิดแอป (F-07 RQ-4)
+
+    **คนละดอกกับกุญแจของ TOTP** — `tech-stack.md` หัวข้อ 8 ให้ `engine` เท่านั้น
+    ที่เปิดผนึกความลับของตลาดได้ ฝั่งนี้จึงมีไว้ **ปิดผนึกอย่างเดียว**
+    """
+    keys = getattr(request.app.state, "venue_keys", None)
+    if not isinstance(keys, KeySource):  # pragma: no cover - ตั้งค่าแอปผิด
+        raise RuntimeError("แอปยังไม่ได้อ่านกุญแจของ API key")
+    return keys
+
+
 def client_key(request: Request) -> str:
     """แฮชของที่มาคำขอ — ใช้เป็นคีย์ของถังต่อ IP
 

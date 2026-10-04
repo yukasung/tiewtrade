@@ -32,6 +32,15 @@ from tiewtrade.infra.api_keys.claims import (
     mark_deferred,
     mark_rejected,
 )
+from tiewtrade.infra.audit import (
+    ActorKind,
+    ApiKeyDetails,
+    AuditAction,
+    AuditEvent,
+    AuditOutcome,
+    SubjectKind,
+    record_event,
+)
 from tiewtrade.infra.crypto import KeySource, Sealed, SealingError, unseal
 from tiewtrade.infra.db import DatabaseRole, scan_session_bypassing_rls, user_session
 from tiewtrade.venues.errors import (
@@ -193,16 +202,62 @@ async def _write(
     deferred: str | None = None,
     retry_after: timedelta | None = None,
 ) -> bool:
-    """เขียนผลใน transaction ของตัวเอง — **ผูกกับการจองและกับเส้นตายเสมอ**"""
+    """เขียนผลใน transaction ของตัวเอง — **ผูกกับการจองและกับเส้นตายเสมอ**
+
+    **บันทึกลง audit ใน transaction เดียวกับการเปลี่ยนสถานะ** (`plan.md` ข้อ 7.2)
+    ถ้าแยก transaction จะมีช่วงที่สถานะเปลี่ยนแล้วแต่ไม่มีบันทึก หรือกลับกัน
+
+    **ไม่บันทึกเมื่อเขียนไม่สำเร็จ** — การจองหมดอายุหรือแถวหมดอายุแล้ว แปลว่า
+    ผลนี้ถูกทิ้ง ฉะนั้นบันทึกว่ามันเกิดขึ้นคือการบันทึกสิ่งที่ไม่ได้เกิด
+    """
     async with user_session(engine, claimed.user_id, role=DatabaseRole.ENGINE) as session:
         if verified:
-            return await mark_active(session, claimed, worker=worker)
-        if rejected is not None:
-            return await mark_rejected(session, claimed, worker=worker, code=rejected)
-        assert deferred is not None
-        return await mark_deferred(
-            session, claimed, worker=worker, code=deferred, retry_after=retry_after
-        )
+            written = await mark_active(session, claimed, worker=worker)
+            action, outcome, code = AuditAction.API_KEY_VERIFIED, AuditOutcome.SUCCEEDED, None
+        elif rejected is not None:
+            written = await mark_rejected(session, claimed, worker=worker, code=rejected)
+            action, outcome, code = AuditAction.API_KEY_REJECTED, AuditOutcome.REJECTED, rejected
+        else:
+            assert deferred is not None
+            written = await mark_deferred(
+                session, claimed, worker=worker, code=deferred, retry_after=retry_after
+            )
+            action, outcome, code = (
+                AuditAction.API_KEY_VERIFICATION_DEFERRED,
+                AuditOutcome.FAILED,
+                deferred,
+            )
+
+        if written:
+            await _record(session, claimed, action, outcome, code)
+        return written
+
+
+async def _record(
+    session: object,
+    claimed: ClaimedKey,
+    action: AuditAction,
+    outcome: AuditOutcome,
+    failure_code: str | None,
+) -> None:
+    """บันทึกผลหนึ่งครั้ง — **ผู้กระทำคือระบบ ไม่ใช่ผู้ใช้**
+
+    งานนี้เกิดใน `engine` ที่ไม่มีคนนั่งอยู่ปลายสาย การบันทึกว่าเป็นผู้ใช้จะทำให้
+    บันทึกที่ลบไม่ได้โกหกว่าใครเป็นคนทำ
+    """
+    await record_event(
+        session,
+        AuditEvent(
+            owner_user_id=claimed.user_id,
+            action=action,
+            actor_kind=ActorKind.SYSTEM,
+            subject_kind=SubjectKind.API_KEY,
+            subject_id=str(claimed.id),
+            outcome=outcome,
+            failure_code=failure_code,
+            details=ApiKeyDetails(),
+        ),
+    )
 
 
 __all__ = ["RoundSummary", "WalletFactory", "run_round"]

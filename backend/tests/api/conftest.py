@@ -14,6 +14,7 @@ from uuid import uuid4
 import pytest
 import pytest_asyncio
 from fastapi.testclient import TestClient
+from sqlalchemy import text
 
 from tiewtrade.infra.db import DatabaseRole, create_engine_for
 from tiewtrade.infra.db.session import presented_session
@@ -49,6 +50,25 @@ async def _clear_throttle() -> None:
             await session.execute("DELETE FROM auth_throttle")
     finally:
         await engine.dispose()
+
+
+def clear_api_throttle() -> None:
+    """ล้างถังของเส้นทาง API key — **ล้างสภาพ ไม่ใช่ปิดกฎ**
+
+    ใช้ในเทสต์ที่ต้องทำรายการหลายครั้งติดกันเพื่อพิสูจน์เรื่องอื่น (เช่นเพดานจำนวน key)
+    เทสต์ที่พิสูจน์ตัวการคุมอัตราเองไม่เรียกตัวนี้
+    """
+    import asyncio
+
+    async def run() -> None:
+        engine = create_engine_for(DatabaseRole.API)
+        try:
+            async with engine.begin() as connection:
+                await connection.execute(text("DELETE FROM api_throttle"))
+        finally:
+            await engine.dispose()
+
+    asyncio.get_event_loop().run_until_complete(run())
 
 
 @pytest.fixture

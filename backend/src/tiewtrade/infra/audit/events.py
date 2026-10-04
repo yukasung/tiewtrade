@@ -52,6 +52,16 @@ class AuditAction(Enum):
     TOTP_SECRET_REPLACED = "TOTP_SECRET_REPLACED"
     RECOVERY_CODES_ISSUED = "RECOVERY_CODES_ISSUED"
     RECOVERY_CODE_USED = "RECOVERY_CODE_USED"
+    #: หกชนิดของ F-07 — **สามชนิดแรกผู้ใช้ทำ สามชนิดหลังระบบทำ**
+    #:
+    #: ผลการตรวจเป็นของระบบเพราะมันเกิดใน `engine` ที่ไม่มีคนนั่งอยู่ปลายสาย
+    #: การบันทึกว่าเป็น `USER` จะทำให้บันทึกโกหกว่าใครเป็นคนทำ
+    API_KEY_ADDED = "API_KEY_ADDED"
+    API_KEY_RETRY_REQUESTED = "API_KEY_RETRY_REQUESTED"
+    API_KEY_DELETED = "API_KEY_DELETED"
+    API_KEY_VERIFIED = "API_KEY_VERIFIED"
+    API_KEY_REJECTED = "API_KEY_REJECTED"
+    API_KEY_VERIFICATION_DEFERRED = "API_KEY_VERIFICATION_DEFERRED"
 
 
 #: ชนิดเหตุการณ์ที่เป็นการเทรด — ต้องระบุ PAPER หรือ LIVE เสมอ (RQ-19)
@@ -88,6 +98,8 @@ class SubjectKind(Enum):
     """สิ่งที่ถูกกระทำ — "กับอะไร" ตาม RQ-1"""
 
     USER = "USER"
+    #: API key หนึ่งใบ — `subject_id` คือรหัสของแถว **ไม่ใช่ค่าของ key** (F-07 RQ-9.1)
+    API_KEY = "API_KEY"
 
 
 @runtime_checkable
@@ -201,6 +213,19 @@ class RecoveryCodeUsedDetails:
 
 
 #: รูปร่างของ `details` ที่แต่ละชนิดเหตุการณ์ใช้ได้ — ตรวจตอนสร้าง `AuditEvent`
+@dataclass(frozen=True, slots=True)
+class ApiKeyDetails:
+    """รายละเอียดของเหตุการณ์ที่แตะ API key — **ไม่มีช่องใดเลย**
+
+    ทุกอย่างที่ต้องรู้อยู่ในคอลัมน์แกนแล้ว: `subject_id` บอกว่า key ใบไหน
+    และ `failure_code` บอกว่าทำไม · **ห้ามมี `key_public` เด็ดขาด** เพราะนั่นคือ
+    การเอา API key ไปไว้ในบันทึกที่ลบไม่ได้ ซึ่ง `security.md` หัวข้อ 4 ห้าม (RQ-9.1)
+    """
+
+    def as_details(self) -> dict[str, object]:
+        return {}
+
+
 DETAILS_TYPES: dict[AuditAction, type[object]] = {
     AuditAction.USER_CREATED: UserCreatedDetails,
     AuditAction.SESSION_STARTED: SessionDetails,
@@ -212,6 +237,12 @@ DETAILS_TYPES: dict[AuditAction, type[object]] = {
     AuditAction.TOTP_SECRET_REPLACED: TotpChangeDetails,
     AuditAction.RECOVERY_CODES_ISSUED: RecoveryCodesIssuedDetails,
     AuditAction.RECOVERY_CODE_USED: RecoveryCodeUsedDetails,
+    AuditAction.API_KEY_ADDED: ApiKeyDetails,
+    AuditAction.API_KEY_RETRY_REQUESTED: ApiKeyDetails,
+    AuditAction.API_KEY_DELETED: ApiKeyDetails,
+    AuditAction.API_KEY_VERIFIED: ApiKeyDetails,
+    AuditAction.API_KEY_REJECTED: ApiKeyDetails,
+    AuditAction.API_KEY_VERIFICATION_DEFERRED: ApiKeyDetails,
 }
 
 #: รหัสความล้มเหลวที่ประกาศไว้แล้ว — **ยังว่าง** เพราะยังไม่มีเหตุการณ์ที่ล้มเหลวได้
@@ -219,7 +250,21 @@ DETAILS_TYPES: dict[AuditAction, type[object]] = {
 #: `failure_code` เป็นรหัส ไม่ใช่ข้อความอิสระ (`backend.md` หัวข้อ 4) ช่องข้อความอิสระ
 #: คือทางที่ค่าลับและข้อมูลระบุตัวตนเข้ามาได้ (RQ-4, RQ-18) จึงต้องประกาศทีละรหัส
 #: พร้อม migration เหมือนการเพิ่มชนิดเหตุการณ์
-ALLOWED_FAILURE_CODES: frozenset[str] = frozenset()
+#: รหัสความล้มเหลวที่ประกาศไว้ — **ต้องตรงกับ `CHECK` ใน migration `0009`**
+#:
+#: หกรหัสแรกเป็นชนิดข้อผิดพลาดกลางของ F-33 ส่วนรหัสสุดท้ายเป็นของ F-07 เอง
+#: (ครบเส้นตาย 24 ชั่วโมงโดยยังตรวจไม่ผ่าน)
+ALLOWED_FAILURE_CODES: frozenset[str] = frozenset(
+    {
+        "VENUE_CREDENTIAL_REJECTED",
+        "VENUE_REJECTED",
+        "VENUE_RATE_LIMITED",
+        "VENUE_UNAVAILABLE",
+        "VENUE_OUTCOME_UNKNOWN",
+        "VENUE_PROTOCOL",
+        "VERIFICATION_EXPIRED",
+    }
+)
 
 
 def _check_user_created(event: AuditEvent) -> None:
@@ -259,6 +304,47 @@ def _check_own_account_action(event: AuditEvent) -> None:
         raise AuditEventError(f"{name} บันทึกเฉพาะกรณีที่สำเร็จ")
 
 
+def _check_own_api_key_action(event: AuditEvent) -> None:
+    """เหตุการณ์ที่ผู้ใช้ทำกับ key ของตัวเอง — เป้าหมายเป็น key ไม่ใช่ผู้ใช้"""
+    name = event.action.value
+    if event.actor_kind is not ActorKind.USER:
+        raise AuditEventError(f"{name} ต้องมีผู้กระทำเป็นผู้ใช้")
+    if event.actor_id != event.owner_user_id:
+        raise AuditEventError(f"{name} ต้องมีผู้กระทำเป็นเจ้าของบัญชีนั้น")
+    if event.subject_kind is not SubjectKind.API_KEY:
+        raise AuditEventError(f"{name} ต้องมีเป้าหมายเป็น API key")
+    if event.outcome is not AuditOutcome.SUCCEEDED:
+        raise AuditEventError(f"{name} บันทึกเฉพาะกรณีที่สำเร็จ")
+
+
+def _check_system_api_key_outcome(event: AuditEvent) -> None:
+    """ผลการตรวจที่ระบบเป็นผู้ทำ — **ไม่มีผู้กระทำที่เป็นคน**
+
+    `API_KEY_VERIFIED` สำเร็จและไม่มีรหัสเหตุผล ส่วนอีกสองชนิดต้องมีรหัสเสมอ
+    เพราะผู้ใช้ต้องรู้ว่าต้องไปแก้อะไรหรือแค่รอ (Q-7)
+    """
+    name = event.action.value
+    if event.actor_kind is not ActorKind.SYSTEM:
+        raise AuditEventError(f"{name} ต้องมีผู้กระทำเป็นระบบ")
+    if event.subject_kind is not SubjectKind.API_KEY:
+        raise AuditEventError(f"{name} ต้องมีเป้าหมายเป็น API key")
+
+    if event.action is AuditAction.API_KEY_VERIFIED:
+        if event.outcome is not AuditOutcome.SUCCEEDED:
+            raise AuditEventError(f"{name} บันทึกเฉพาะกรณีที่ผ่าน")
+        return
+
+    expected = (
+        AuditOutcome.REJECTED
+        if event.action is AuditAction.API_KEY_REJECTED
+        else AuditOutcome.FAILED
+    )
+    if event.outcome is not expected:
+        raise AuditEventError(f"{name} ต้องมีผลเป็น {expected.value}")
+    if event.failure_code is None:
+        raise AuditEventError(f"{name} ต้องมีรหัสเหตุผล")
+
+
 #: ข้อบังคับเฉพาะของแต่ละเหตุการณ์ — **ทุกชนิดที่เพิ่มใหม่ต้องมีตัวตรวจของตัวเองที่นี่**
 #: ถ้าไม่มี การสร้างบันทึกของชนิดนั้นจะล้มเหลวทันที ซึ่งเป็นผลที่ต้องการ
 #: (ดังตอนเขียนโค้ด ดีกว่าปล่อยให้บันทึกที่ไม่มีใครตรวจไหลลงตารางที่ลบไม่ได้)
@@ -273,6 +359,12 @@ _ACTION_INVARIANTS: dict[AuditAction, Callable[[AuditEvent], None]] = {
     AuditAction.TOTP_SECRET_REPLACED: _check_own_account_action,
     AuditAction.RECOVERY_CODES_ISSUED: _check_own_account_action,
     AuditAction.RECOVERY_CODE_USED: _check_own_account_action,
+    AuditAction.API_KEY_ADDED: _check_own_api_key_action,
+    AuditAction.API_KEY_RETRY_REQUESTED: _check_own_api_key_action,
+    AuditAction.API_KEY_DELETED: _check_own_api_key_action,
+    AuditAction.API_KEY_VERIFIED: _check_system_api_key_outcome,
+    AuditAction.API_KEY_REJECTED: _check_system_api_key_outcome,
+    AuditAction.API_KEY_VERIFICATION_DEFERRED: _check_system_api_key_outcome,
 }
 
 

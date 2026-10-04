@@ -27,11 +27,18 @@ import hashlib
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
+from functools import cache
 from typing import Any, Final
 
 from sqlalchemy import Result
 
-from tiewtrade.infra.db.session import PresentedSession
+from tiewtrade.infra.db.session import PresentedSession, UserSession
+
+#: session ชนิดใดก็ได้ที่สั่ง query ได้ — **ตัวนับใช้ได้ทั้งก่อนและหลังรู้ว่าเป็นใคร**
+#:
+#: ถังของ F-05/F-06 ถูกใช้ก่อนรู้ตัวตน (`PresentedSession`) ส่วนถังของ F-07
+#: ถูกใช้หลังรู้แล้ว (`UserSession`) — ตรรกะเดียวกัน ต่างแค่ขอบเขตของ session
+Counting = PresentedSession | UserSession
 
 #: ── ถังของปัจจัยที่สอง (F-06 Q-7, เจ้าของอนุมัติ 2026-10-03) ──
 #:
@@ -54,6 +61,22 @@ IP_FAILURES_BEFORE_BLOCK: Final[int] = 20
 IP_WINDOW: Final[timedelta] = timedelta(minutes=15)
 SIGNUP_PER_HOUR: Final[int] = 5
 SIGNUP_WINDOW: Final[timedelta] = timedelta(hours=1)
+
+#: ── ถังของ F-07 ──
+#:
+#: **ค่าที่ผมเลือกเอง รอเจ้าของยืนยัน** — `security.md` หัวข้อ 3 บังคับว่าต้องคุมอัตรา
+#: แต่ไม่ได้ให้ตัวเลข ต่างจากเพดานของปัจจัยที่สองซึ่งเจ้าของตัดสินไว้ชัด
+#:
+#: เหตุผลของค่าที่เลือก: การเพิ่ม key ยิงตลาดหนึ่งครั้งและเก็บความลับหนึ่งแถว
+#: ผู้ใช้จริงทำไม่เกินหกครั้ง (เพดานจำนวน key) การเปิดให้ทำได้ถี่กว่านี้ไม่ช่วยใครเลย
+#: แต่ช่วยคนที่เอาระบบเราไปลองคำรับรองของคนอื่นกับตลาด
+API_KEY_ADD_CAPACITY: Final[int] = 3
+API_KEY_ADD_REFILL: Final[timedelta] = timedelta(minutes=20)
+
+#: การกดลองใหม่ไม่ได้สร้างแถวและไม่ได้เก็บความลับเพิ่ม จึงผ่อนกว่า
+#: แต่ยังต้องมีเพดาน เพราะทุกครั้งที่กดคือหนึ่งบันทึกในตารางที่ลบแถวไม่ได้
+API_KEY_RETRY_CAPACITY: Final[int] = 6
+API_KEY_RETRY_REFILL: Final[timedelta] = timedelta(minutes=5)
 
 
 @dataclass(frozen=True, slots=True)
@@ -106,6 +129,20 @@ class Bucket(Enum):
     TOTP_ACCOUNT = "TOTP_ACCOUNT"
     TOTP_IP = "TOTP_IP"
     RECOVERY_ACCOUNT = "RECOVERY_ACCOUNT"
+    #: สองถังของ F-07 — **อยู่คนละตารางกับถังข้างบน** (เจ้าของอนุมัติ 2026-10-04)
+    #:
+    #: เส้นทางของ F-07 รันบนบทบาท `api` ซึ่งเขียน `auth_throttle` ไม่ได้ และไม่ควรเขียนได้
+    #: เพราะตารางนั้นคุมการเดารหัสผ่าน · แยกกันสองใบเพราะต้นทุนต่างกัน: การเพิ่ม key
+    #: ยิงตลาดและกินที่เก็บความลับ ส่วนการกดลองใหม่แค่ปลุกงานที่มีอยู่แล้ว
+    API_KEY_ADD = "API_KEY_ADD"
+    API_KEY_RETRY = "API_KEY_RETRY"
+
+    @property
+    def table(self) -> str:
+        """ตารางที่เก็บถังชนิดนี้ — **สิทธิ์ของสองตารางนี้แยกขาดกัน**"""
+        if self in (Bucket.API_KEY_ADD, Bucket.API_KEY_RETRY):
+            return "api_throttle"
+        return "auth_throttle"
 
     @property
     def rule(self) -> Rule | TokenRule:
@@ -159,71 +196,79 @@ def key_of(value: str) -> str:
 
 
 #: สร้างหรือล็อกถังแบบเติมคืน — ค่าเริ่มต้นคือโควตาเต็ม
-_CLAIM_TOKENS = """
-INSERT INTO auth_throttle (bucket_kind, bucket_key, tokens_left, refilled_at)
+_claim_tokens_sql = """
+INSERT INTO {table} (bucket_kind, bucket_key, tokens_left, refilled_at)
 VALUES (:kind, :key, :capacity, now())
 ON CONFLICT (bucket_kind, bucket_key)
-DO UPDATE SET bucket_key = auth_throttle.bucket_key
+DO UPDATE SET bucket_key = {table}.bucket_key
 RETURNING tokens_left, refilled_at
 """
 
 #: เติมคืนตามเวลาที่ผ่านไป — **เลื่อน `refilled_at` ไปทีละช่วง ไม่ใช่ไปที่ `now()`**
 #: มิฉะนั้นเวลาที่ผ่านไปแต่ยังไม่ครบหนึ่งช่วงจะถูกทิ้ง และการเรียกถี่ ๆ จะไม่เติมคืนเลย
-_REFILL = """
-UPDATE auth_throttle
+_refill_sql = """
+UPDATE {table}
 SET tokens_left = least(:capacity, tokens_left + :gained),
     refilled_at = refilled_at + (:gained * make_interval(secs => :seconds))
 WHERE bucket_kind = :kind AND bucket_key = :key
 RETURNING tokens_left, refilled_at
 """
 
-_SPEND_TOKEN = """
-UPDATE auth_throttle
+_spend_token_sql = """
+UPDATE {table}
 SET tokens_left = greatest(0, tokens_left - 1)
 WHERE bucket_kind = :kind AND bucket_key = :key
 RETURNING tokens_left, refilled_at
 """
 
-_CLAIM = """
-INSERT INTO auth_throttle (bucket_kind, bucket_key)
+_claim_sql = """
+INSERT INTO {table} (bucket_kind, bucket_key)
 VALUES (:kind, :key)
 ON CONFLICT (bucket_kind, bucket_key)
-DO UPDATE SET bucket_key = auth_throttle.bucket_key
+DO UPDATE SET bucket_key = {table}.bucket_key
 RETURNING failures, next_allowed_at, window_started_at
 """
 
-_RESET_WINDOW = """
-UPDATE auth_throttle
+_reset_window_sql = """
+UPDATE {table}
 SET failures = 0, next_allowed_at = NULL, window_started_at = now()
 WHERE bucket_kind = :kind AND bucket_key = :key
 """
 
 # **เป็น upsert ไม่ใช่ UPDATE เปล่า** — ถังอาจยังไม่มีแถว และการพึ่งว่า `claim`
 # ถูกเรียกมาก่อนคือการพึ่งลำดับการเรียกซึ่งวันหนึ่งจะมีทางเข้าที่ไม่ผ่านตรงนั้น
-_COUNT_FAILURE = """
-INSERT INTO auth_throttle (bucket_kind, bucket_key, failures)
+_count_failure_sql = """
+INSERT INTO {table} (bucket_kind, bucket_key, failures)
 VALUES (:kind, :key, 1)
 ON CONFLICT (bucket_kind, bucket_key)
-DO UPDATE SET failures = auth_throttle.failures + 1
+DO UPDATE SET failures = {table}.failures + 1
 RETURNING failures, next_allowed_at, window_started_at
 """
 
-_SET_DELAY = """
-UPDATE auth_throttle
+_set_delay_sql = """
+UPDATE {table}
 SET next_allowed_at = now() + :delay
 WHERE bucket_kind = :kind AND bucket_key = :key
 RETURNING failures, next_allowed_at, window_started_at
 """
 
-_CLEAR = """
-DELETE FROM auth_throttle
+_clear_sql = """
+DELETE FROM {table}
 WHERE bucket_kind = :kind AND bucket_key = :key
 """
 
 
-async def claim(
-    session: PresentedSession, bucket: Bucket, key: str, *, now: datetime
-) -> BucketState:
+#: คำสั่งที่เติมชื่อตารางแล้ว — **ตรรกะเดียว สองที่เก็บ** (F-07 `plan.md` ข้อ 12.1)
+#:
+#: เติมชื่อตารางด้วยการแทนที่ข้อความได้ เพราะชื่อมาจาก `Bucket.table` ซึ่งเป็น
+#: ค่าคงที่ในโค้ด ไม่ใช่ค่าที่มาจากผู้ใช้ · ชื่อตารางเป็นตัวระบุของ SQL จึงส่งเป็น
+#: พารามิเตอร์ไม่ได้อยู่แล้ว
+@cache
+def _statement(template: str, table: str) -> str:
+    return template.format(table=table)
+
+
+async def claim(session: Counting, bucket: Bucket, key: str, *, now: datetime) -> BucketState:
     """สร้างหรือล็อกถังนี้ แล้วคืนสภาพของมัน — **ล็อกจนจบ transaction**
 
     คำขอที่ยิงพร้อมกันเข้าคิวที่ล็อกของแถวนี้ จึงเห็นสภาพที่อัปเดตแล้ว
@@ -233,20 +278,26 @@ async def claim(
     if isinstance(rule, TokenRule):
         return await _claim_tokens(session, bucket, key, rule=rule, now=now)
 
-    state = _state_of(await session.execute(_CLAIM, {"kind": bucket.value, "key": key}))
+    state = _state_of(
+        await session.execute(
+            _statement(_claim_sql, bucket.table), {"kind": bucket.value, "key": key}
+        )
+    )
     if now - state.window_started_at >= rule.window:
-        await session.execute(_RESET_WINDOW, {"kind": bucket.value, "key": key})
+        await session.execute(
+            _statement(_reset_window_sql, bucket.table), {"kind": bucket.value, "key": key}
+        )
         return BucketState(failures=0, next_allowed_at=None, window_started_at=now)
     return state
 
 
 async def _claim_tokens(
-    session: PresentedSession, bucket: Bucket, key: str, *, rule: TokenRule, now: datetime
+    session: Counting, bucket: Bucket, key: str, *, rule: TokenRule, now: datetime
 ) -> BucketState:
     """ล็อกถังแบบเติมคืน แล้วเติมคืนตามเวลาที่ผ่านไปจริง"""
     state = _tokens_of(
         await session.execute(
-            _CLAIM_TOKENS,
+            _statement(_claim_tokens_sql, bucket.table),
             {
                 "kind": bucket.value,
                 "key": key,
@@ -259,7 +310,7 @@ async def _claim_tokens(
         return state
     return _tokens_of(
         await session.execute(
-            _REFILL,
+            _statement(_refill_sql, bucket.table),
             {
                 "kind": bucket.value,
                 "key": key,
@@ -271,7 +322,7 @@ async def _claim_tokens(
     )
 
 
-async def count_failure(session: PresentedSession, bucket: Bucket, key: str) -> BucketState:
+async def count_failure(session: Counting, bucket: Bucket, key: str) -> BucketState:
     """นับความล้มเหลวหนึ่งครั้ง และตั้งเวลาที่ต้องรอถ้าถึงเกณฑ์
 
     กฎการเพิ่มเวลาหน่วงอยู่ใน `delay_after()` ฝั่ง Python ที่เดียว ฐานข้อมูลทำหน้าที่
@@ -279,25 +330,36 @@ async def count_failure(session: PresentedSession, bucket: Bucket, key: str) -> 
     """
     if bucket.is_token_bucket:
         # ถังแบบเติมคืนไม่มีเวลาหน่วง — มันปฏิเสธเมื่อโควตาหมด ไม่ใช่ให้รอ
-        return _tokens_of(await session.execute(_SPEND_TOKEN, {"kind": bucket.value, "key": key}))
+        return _tokens_of(
+            await session.execute(
+                _statement(_spend_token_sql, bucket.table), {"kind": bucket.value, "key": key}
+            )
+        )
 
-    counted = _state_of(await session.execute(_COUNT_FAILURE, {"kind": bucket.value, "key": key}))
+    counted = _state_of(
+        await session.execute(
+            _statement(_count_failure_sql, bucket.table), {"kind": bucket.value, "key": key}
+        )
+    )
     delay = delay_after(counted.failures, bucket)
     if delay <= timedelta(0):
         return counted
     return _state_of(
-        await session.execute(_SET_DELAY, {"kind": bucket.value, "key": key, "delay": delay})
+        await session.execute(
+            _statement(_set_delay_sql, bucket.table),
+            {"kind": bucket.value, "key": key, "delay": delay},
+        )
     )
 
 
-async def clear(session: PresentedSession, bucket: Bucket, key: str) -> None:
+async def clear(session: Counting, bucket: Bucket, key: str) -> None:
     """ล้างตัวนับของถังนี้
 
     **ใช้กับถังของบัญชีเท่านั้นเมื่อเข้าสู่ระบบสำเร็จ** ถังของ IP หมดตามหน้าต่างเวลา
     เท่านั้น มิฉะนั้นผู้โจมตีใช้บัญชีตัวเองเข้าสู่ระบบสำเร็จเพื่อล้างตัวนับ
     แล้วเดาบัญชีอื่นต่อได้ (รีวิว 2026-10-02)
     """
-    await session.execute(_CLEAR, {"kind": bucket.value, "key": key})
+    await session.execute(_statement(_clear_sql, bucket.table), {"kind": bucket.value, "key": key})
 
 
 def _tokens_of(result: Result[Any]) -> BucketState:
@@ -377,6 +439,16 @@ RULES: Final[dict[Bucket, Rule | TokenRule]] = {
         window=SIGNUP_WINDOW,
         max_delay=SIGNUP_WINDOW,
         doubling=False,
+    ),
+    # เพิ่ม key: ทำติดกันได้สามครั้ง แล้วเติมคืนทีละหนึ่งทุกยี่สิบนาที
+    Bucket.API_KEY_ADD: TokenRule(
+        capacity=API_KEY_ADD_CAPACITY,
+        refill_interval=API_KEY_ADD_REFILL,
+    ),
+    # กดลองใหม่: ผ่อนกว่าเพราะไม่ได้สร้างของใหม่ แต่ยังมีเพดาน
+    Bucket.API_KEY_RETRY: TokenRule(
+        capacity=API_KEY_RETRY_CAPACITY,
+        refill_interval=API_KEY_RETRY_REFILL,
     ),
     # ปัจจัยที่สอง: พิมพ์ผิดติดกันได้เท่าความจุ แล้วเติมคืนทีละหนึ่ง
     # **เพดานในช่วง 60 นาทีใด ๆ = ความจุ + ที่เติมคืนได้ในหนึ่งชั่วโมง**

@@ -22,15 +22,16 @@ from __future__ import annotations
 from collections.abc import AsyncIterator, Sequence
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Final
+from uuid import UUID
 
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncEngine
 
-from tiewtrade.infra.auth import Bucket, claim, clear, count_failure
+from tiewtrade.infra.auth import Bucket, claim, clear, count_failure, key_of
 from tiewtrade.infra.db import DatabaseRole
-from tiewtrade.infra.db.session import PresentedSession, presented_session
+from tiewtrade.infra.db.session import PresentedSession, presented_session, user_session
 
 
 class AuthRejectedError(Exception):
@@ -129,3 +130,34 @@ async def throttled(
     if rejection is not None:
         # โยนชนิดเดิมต่อ ไม่แปลงที่นี่ — ตัวแปลงอยู่ที่ `app.py` ที่เดียว
         raise rejection
+
+
+async def spend_token(engine: AsyncEngine, user_id: UUID, bucket: Bucket) -> None:
+    """ใช้โควตาหนึ่งหน่วยของถังนั้น — ปฏิเสธเมื่อหมด (F-07 RQ-11)
+
+    **ต่างจาก `throttled()` ของ F-05 ตรงที่นับทุกคำขอ ไม่ใช่นับเฉพาะที่ล้มเหลว** —
+    ที่นั่นเรานับการเดารหัสผ่านซึ่งผิดเท่านั้นที่น่าสงสัย ส่วนที่นี่ **ทุกครั้งที่เพิ่ม key
+    คือหนึ่งคำขอที่ยิงตลาดและหนึ่งความลับที่ถูกเก็บ** การสำเร็จจึงมีต้นทุนพอ ๆ กับการล้มเหลว
+
+    **ตัวนับอยู่ใน transaction ของตัวเอง** ด้วยเหตุผลเดียวกับ F-05/F-06:
+    ถ้าร่วม transaction กับการกระทำแล้วการกระทำถูกย้อน การนับจะหายไปด้วย
+    แล้วการคุมอัตราจะไม่ทำงานเลยเวลาที่คำขอถูกปฏิเสธ
+    """
+    now = datetime.now(UTC)
+    async with user_session(engine, user_id, role=DatabaseRole.API) as session:
+        state = await claim(session, bucket, key_of(str(user_id)), now=now)
+        if state.tokens_left is not None and state.tokens_left <= 0:
+            raise _too_many(bucket)
+        await count_failure(session, bucket, key_of(str(user_id)))
+
+
+def _too_many(bucket: Bucket) -> HTTPException:
+    """ข้อความเดียวสำหรับทุกถัง — **ไม่บอกว่าเหลือเท่าไร**
+
+    จำนวนที่เหลือบอกผู้โจมตีว่าควรรอนานแค่ไหนก่อนลองอีกครั้ง ซึ่งเป็นข้อมูลที่
+    ไม่ได้ช่วยผู้ใช้จริงเลย (แบบแผนเดียวกับข้อความของ F-06)
+    """
+    return HTTPException(
+        status.HTTP_429_TOO_MANY_REQUESTS,
+        "ทำรายการถี่เกินไป กรุณารอสักครู่แล้วลองใหม่",
+    )

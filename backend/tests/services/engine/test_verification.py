@@ -377,3 +377,78 @@ async def test_a_user_asking_for_a_retry_brings_the_row_forward(
     after = market.calls
     await _round(engine_engine, scan_engine, venue_keys, market)
     assert market.calls == after
+
+
+async def test_every_outcome_is_written_to_the_audit_log(
+    engine_engine: AsyncEngine,
+    scan_engine: AsyncEngine,
+    venue_keys: KeySource,
+    market: ScriptedWallet,
+    key_of_a_user: tuple[UUID, UUID],
+) -> None:
+    """V-35 — ผลการตรวจทุกแบบลงบันทึก และ **ผู้กระทำคือระบบ**
+
+    `details` ต้องว่าง — รหัสเหตุผลอยู่ในคอลัมน์ของมันเอง ไม่ใช่ยัดลง `details`
+    (`plan.md` ข้อ 4.4 · RQ-9.1)
+    """
+    owner, key_id = key_of_a_user
+    market.outcomes.append(VenueUnavailableError())
+    await _round(engine_engine, scan_engine, venue_keys, market)
+
+    async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+        rows = (
+            (
+                await session.execute(
+                    "SELECT action, actor_kind, actor_id, subject_kind, subject_id, outcome,"
+                    " failure_code, details FROM audit_events WHERE owner_user_id = :owner",
+                    {"owner": owner},
+                )
+            )
+            .mappings()
+            .all()
+        )
+
+    deferred = [row for row in rows if row["action"] == "API_KEY_VERIFICATION_DEFERRED"]
+    assert len(deferred) == 1
+    entry = deferred[0]
+    assert entry["actor_kind"] == "SYSTEM"
+    assert entry["actor_id"] is None
+    assert entry["subject_kind"] == "API_KEY"
+    assert entry["subject_id"] == str(key_id)
+    assert entry["outcome"] == "FAILED"
+    assert entry["failure_code"] == "VENUE_UNAVAILABLE"
+    assert entry["details"] == {}
+
+
+async def test_an_outcome_that_is_thrown_away_is_not_written_to_the_audit_log(
+    engine_engine: AsyncEngine,
+    migrator_engine: AsyncEngine,
+    scan_engine: AsyncEngine,
+    venue_keys: KeySource,
+    key_of_a_user: tuple[UUID, UUID],
+) -> None:
+    """V-35 — ผลที่มาถึงหลังเส้นตายถูกทิ้ง จึง **ต้องไม่มีบันทึกว่ามันเกิดขึ้น**
+
+    บันทึกที่ลบไม่ได้ต้องไม่เล่าเรื่องที่ไม่ได้เกิด
+    """
+    owner, key_id = key_of_a_user
+
+    class AgeingMarket(ScriptedWallet):
+        async def holdings(self) -> Any:
+            await _age_the_key(
+                migrator_engine, key_id, VERIFICATION_DEADLINE + timedelta(minutes=1)
+            )
+            return await super().holdings()
+
+    await _round(engine_engine, scan_engine, venue_keys, AgeingMarket(outcomes=[]))
+
+    async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+        verified = (
+            await session.execute(
+                "SELECT count(*) FROM audit_events"
+                " WHERE owner_user_id = :owner AND action = 'API_KEY_VERIFIED'",
+                {"owner": owner},
+            )
+        ).scalar_one()
+
+    assert verified == 0

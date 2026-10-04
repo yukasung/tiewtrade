@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import base64
 from collections.abc import Iterator
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
@@ -14,25 +13,19 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncEngine
 
 from tiewtrade.infra.api_keys import store_key
-from tiewtrade.infra.crypto import KEY_BYTES, KeyPurpose, KeySource
+from tiewtrade.infra.crypto import KeyPurpose, KeySource
 from tiewtrade.infra.db import user_session
 from tiewtrade.infra.users import create_user
 from tiewtrade.venues.errors import VenueError
 from tiewtrade.venues.signing import RequestSigner
 from tiewtrade.venues.wallets import WalletHoldings
 
-TEST_VENUE_KEY = "1:" + base64.b64encode(b"V" * KEY_BYTES).decode("ascii")
 PUBLIC = "PUBLICKEY000000ABCD"
 SECRET = "secret-that-must-never-come-back"
 
 
-@pytest.fixture(autouse=True)
-def _venue_sealing_key(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv(KeyPurpose.VENUE_API_SECRET.environment_variable, TEST_VENUE_KEY)
-
-
 @pytest.fixture
-def venue_keys(_venue_sealing_key: None) -> KeySource:
+def venue_keys() -> KeySource:
     return KeySource.from_environment(KeyPurpose.VENUE_API_SECRET)
 
 

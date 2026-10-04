@@ -11,7 +11,7 @@ from collections.abc import Iterator
 from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, datetime
 from threading import Event
-from uuid import UUID
+from uuid import UUID, uuid4
 
 import pytest
 from fastapi.testclient import TestClient
@@ -875,20 +875,22 @@ def test_a_challenge_opens_no_protected_route(client: TestClient) -> None:
     challenge = client.cookies.get(CHALLENGE_COOKIE)
     assert challenge
 
-    protected = sorted(path for path, rule in ROUTE_RULES.items() if not rule.public)
+    protected = sorted(key for key, rule in ROUTE_RULES.items() if not rule.public)
     assert len(protected) >= 8, f"พบเส้นทางที่ต้องมีสิทธิ์เพียง {len(protected)} เส้น"
 
-    for path in protected:
+    for method, path in protected:
         client.cookies.clear()
         client.cookies.set(SESSION_COOKIE, challenge)
         client.get("/auth/csrf")
-        response = (
-            client.get(path)
-            if path in {"/auth/me", "/openapi.json", "/docs", "/redoc", "/docs/oauth2-redirect"}
-            else client.post(path, json={}, headers=csrf_headers(client))
+        target = path.replace("{key_id}", str(uuid4()))
+        response = client.request(
+            method,
+            target,
+            json=None if method in {"GET", "DELETE"} else {},
+            headers=csrf_headers(client),
         )
         assert response.status_code in {401, 403}, (
-            f"{path} รับ challenge เป็น session: {response.status_code}"
+            f"{method} {path} รับ challenge เป็น session: {response.status_code}"
         )
 
 
@@ -1021,15 +1023,20 @@ def test_a_confirmed_secret_never_appears_on_any_route(client: TestClient) -> No
         secret.decode("latin-1"),
     )
 
-    for path, rule in sorted(ROUTE_RULES.items()):
-        response = (
-            client.get(path)
-            if path.startswith(("/health", "/docs", "/redoc", "/openapi", "/auth/me", "/auth/csrf"))
-            else client.post(path, json={"password": GOOD_PASSWORD}, headers=csrf_headers(client))
+    # **เดินด้วยเมธอดที่เส้นทางนั้นประกาศไว้จริง** ตั้งแต่ตารางกฎมีกุญแจเป็นคู่ (F-07)
+    # — การเดาเมธอดจากชื่อ path จะทำให้เส้นทางที่เดาผิดตอบ 405 แล้วด่านนี้จะ "เขียว"
+    # โดยไม่เคยเห็นคำตอบจริงของมันเลย
+    for (method, path), rule in sorted(ROUTE_RULES.items()):
+        target = path.replace("{key_id}", str(uuid4()))
+        response = client.request(
+            method,
+            target,
+            json=None if method in {"GET", "DELETE"} else {"password": GOOD_PASSWORD},
+            headers=csrf_headers(client),
         )
         haystack = response.text + "".join(f"{k}:{v}" for k, v in response.headers.items())
         for form in forms:
-            assert form not in haystack, f"{path} คืน secret ในรูป {form[:8]}…"
+            assert form not in haystack, f"{method} {path} คืน secret ในรูป {form[:8]}…"
         assert rule is not None
 
 

@@ -200,7 +200,9 @@ async def test_sweeping_counts_what_it_removed(auth_engine: AsyncEngine) -> None
     assert swept.total == swept.throttle_rows + swept.challenge_rows
 
 
-@pytest.mark.parametrize("bucket", list(Bucket), ids=lambda bucket: bucket.value)
+@pytest.mark.parametrize(
+    "bucket", [b for b in Bucket if b.table == "auth_throttle"], ids=lambda bucket: bucket.value
+)
 async def test_every_bucket_kind_is_covered(auth_engine: AsyncEngine, bucket: Bucket) -> None:
     """ทุกชนิดถังต้องถูกเก็บกวาด — **ชนิดใหม่ที่ลืมเติมจะค้างตลอดไปแบบเงียบ ๆ**
 
@@ -218,3 +220,45 @@ async def test_every_bucket_kind_is_covered(auth_engine: AsyncEngine, bucket: Bu
     await swept_at(auth_engine, now + timedelta(days=1))
 
     assert await rows_of(auth_engine, bucket, key) == 0
+
+
+@pytest.mark.parametrize(
+    "bucket", [b for b in Bucket if b.table == "api_throttle"], ids=lambda bucket: bucket.value
+)
+async def test_every_api_bucket_kind_is_covered(api_engine: AsyncEngine, bucket: Bucket) -> None:
+    """ถังของ F-07 ก็ต้องถูกเก็บกวาด — **คนละตารางคนละบทบาท แต่กฎเดียวกัน**
+
+    ถ้าชนิดใหม่ถูกเพิ่มในตารางของ `api` แล้วไม่มีใครเก็บกวาด แถวจะค้างตลอดไป
+    แบบเงียบ ๆ เหมือนกับที่หนี้ของ `auth_throttle` เคยเป็น
+    """
+    from uuid import uuid4
+
+    from tiewtrade.infra.auth.cleanup import sweep_api_buckets
+    from tiewtrade.infra.users import create_user
+
+    owner = uuid4()
+    await create_user(api_engine, owner)
+    key = fresh_bucket_key()
+    now = datetime.now(UTC)
+
+    async with user_session(api_engine, owner) as session:
+        await claim(session, bucket, key, now=now)
+        found = (
+            await session.execute(
+                "SELECT 1 FROM api_throttle WHERE bucket_kind = :k AND bucket_key = :b",
+                {"k": bucket.value, "b": key},
+            )
+        ).all()
+    assert len(found) == 1
+
+    async with user_session(api_engine, owner) as session:
+        await sweep_api_buckets(session, now=now + timedelta(days=1))
+
+    async with user_session(api_engine, owner) as session:
+        left = (
+            await session.execute(
+                "SELECT 1 FROM api_throttle WHERE bucket_kind = :k AND bucket_key = :b",
+                {"k": bucket.value, "b": key},
+            )
+        ).all()
+    assert left == []
