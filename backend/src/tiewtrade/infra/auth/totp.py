@@ -21,6 +21,7 @@ from __future__ import annotations
 import secrets
 from dataclasses import dataclass
 from datetime import datetime
+from enum import Enum
 from typing import Any, cast
 from urllib.parse import quote
 
@@ -87,6 +88,22 @@ DO UPDATE SET
 """
 
 _DISABLE = "DELETE FROM user_totp WHERE user_id = :user_id"
+
+
+class CodeOutcome(Enum):
+    """ผลของการตรวจรหัสหนึ่งครั้ง
+
+    แยก `ALREADY_USED` ออกจาก `WRONG` **เพื่อบอกผู้ใช้ให้ถูก** — คนที่พิมพ์รหัสถูก
+    แต่มันถูกใช้ไปแล้วต้องรู้ว่าให้รอรหัสของช่วงใหม่ ไม่ใช่คิดว่าเครื่องตัวเองเพี้ยน
+    (validation V-61.2) · เป็นต้นทุนของการไม่มีช่วงผ่อนผันตามคำตอบ Q-6
+
+    **ไม่ใช่การรั่วข้อมูล** เพราะคนที่ถึงจุดนี้ได้ผ่านรหัสผ่านหรือถือ session อยู่แล้ว
+    และสิ่งที่บอกคือสถานะของรหัสที่เขาเพิ่งพิมพ์เอง
+    """
+
+    ACCEPTED = "ACCEPTED"
+    WRONG = "WRONG"
+    ALREADY_USED = "ALREADY_USED"
 
 
 @dataclass(frozen=True, slots=True)
@@ -174,7 +191,9 @@ async def confirm_secret(
     return True
 
 
-async def verify(session: UserSession, source: KeySource, *, presented: str, now: datetime) -> bool:
+async def verify(
+    session: UserSession, source: KeySource, *, presented: str, now: datetime
+) -> CodeOutcome:
     """ตรวจรหัสกับ secret ที่เปิดใช้อยู่ และกันการใช้ซ้ำในคำสั่งเดียวกัน
 
     ลำดับคือ **ล็อก → ถอด → เทียบ → อนุญาต** และการอนุญาตผูกกับ `secret_version`
@@ -183,12 +202,12 @@ async def verify(session: UserSession, source: KeySource, *, presented: str, now
     """
     active = await _active_locked(session)
     if active is None:
-        return False
+        return CodeOutcome.WRONG
 
     secret = unseal(source, active.sealed, owner=session.user_id)
     step = matching_step(secret, presented, at_step=step_at(now))
     if step is None:
-        return False
+        return CodeOutcome.WRONG
 
     accepted = await session.execute(
         _ACCEPT_STEP,
@@ -202,7 +221,10 @@ async def verify(session: UserSession, source: KeySource, *, presented: str, now
     #
     # ใช้ `rowcount` ไม่ใช่ `RETURNING` ด้วยเหตุผลเดียวกับ `sessions.py` ของ F-05:
     # `RETURNING` อ้างคอลัมน์ ซึ่งดึง SELECT policy มาใช้ด้วย
-    return bool(cast("CursorResult[Any]", accepted).rowcount)
+    if cast("CursorResult[Any]", accepted).rowcount:
+        return CodeOutcome.ACCEPTED
+    # รหัสตรงกับ secret ปัจจุบัน แต่ลำดับนั้นถูกรับไปแล้ว หรือ secret เปลี่ยนระหว่างทาง
+    return CodeOutcome.ALREADY_USED
 
 
 async def is_enabled(session: UserSession) -> bool:

@@ -49,6 +49,7 @@ from tiewtrade.infra.auth import (
 from tiewtrade.infra.db import DatabaseRole
 from tiewtrade.infra.db.session import UserSession, presented_session, user_session
 from tiewtrade.services.api.authentication import (
+    CODE_ALREADY_USED,
     Authenticated,
     SecondFactor,
     current_user,
@@ -417,6 +418,17 @@ async def complete_sign_in(request: Request, response: Response, body: SecondSte
                         AuditAction.RECOVERY_CODE_USED,
                         RecoveryCodeUsedDetails(remaining=left),
                     )
+                    # **การใช้รหัสสำรองแปลว่าอุปกรณ์เดิมหายไป** จึงเพิกถอนเครื่องอื่น
+                    # ทั้งหมด — สัญญาณเดียวกับที่ F-05 ใช้ตอนเปลี่ยนรหัสผ่าน (Q-3.4)
+                    # ถ้าไม่ทำ ผู้โจมตีที่ถือ session อยู่จะอยู่ต่อได้ทั้งที่เจ้าของ
+                    # เพิ่งใช้ทางกู้บัญชี
+                    ended = await end_others(session, keep_token_hash=session_hash)
+                    await record_own_action(
+                        session,
+                        waiting.user_id,
+                        AuditAction.ALL_SESSIONS_ENDED,
+                        AllSessionsEndedDetails(ended=ended),
+                    )
 
         if stale:
             # ปฏิเสธหลัง transaction ลบ commit แล้ว ไม่ย้อน challenge กลับมา
@@ -439,6 +451,9 @@ async def _passed_second_step(
         return None
     if body.recovery_code is not None:
         return await recovery_codes.spend(session, body.recovery_code)
-    if await totp.verify(session, totp_keys(request), presented=body.code or "", now=now):
+    outcome = await totp.verify(session, totp_keys(request), presented=body.code or "", now=now)
+    if outcome is totp.CodeOutcome.ACCEPTED:
         return await recovery_codes.remaining(session)
+    if outcome is totp.CodeOutcome.ALREADY_USED:
+        raise AuthRejectedError(status.HTTP_403_FORBIDDEN, CODE_ALREADY_USED)
     return None

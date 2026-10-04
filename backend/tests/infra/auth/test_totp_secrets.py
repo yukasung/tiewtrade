@@ -55,9 +55,14 @@ async def verify_once(
     *,
     now: datetime = NOW,
 ) -> bool:
-    """ตรวจรหัสหนึ่งครั้งใน transaction ของตัวเอง — เหมือนคำขอหนึ่งคำขอ"""
+    """ตรวจรหัสหนึ่งครั้งใน transaction ของตัวเอง — เหมือนคำขอหนึ่งคำขอ
+
+    คืนค่าจริงเท็จเพื่อให้เทสต์เดิมอ่านง่าย ส่วนเทสต์ที่สนใจ **เหตุผล** ที่ไม่ผ่าน
+    เรียก `totp.verify()` เองเพื่อดู `CodeOutcome`
+    """
     async with user_session(auth_engine, user_id, role=DatabaseRole.AUTH) as session:
-        return await totp.verify(session, source, presented=presented, now=now)
+        outcome = await totp.verify(session, source, presented=presented, now=now)
+        return outcome is totp.CodeOutcome.ACCEPTED
 
 
 async def test_a_staged_secret_does_not_enable_anything(
@@ -72,7 +77,7 @@ async def test_a_staged_secret_does_not_enable_anything(
         assert await totp.is_enabled(session) is False
         assert (
             await totp.verify(session, source, presented=code_for(secret, step_at(NOW)), now=NOW)
-            is False
+            is totp.CodeOutcome.WRONG
         )
 
 

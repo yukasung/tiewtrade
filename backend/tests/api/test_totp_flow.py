@@ -91,6 +91,38 @@ def enable_totp(client: TestClient, *, password: str = GOOD_PASSWORD) -> tuple[b
     return secret, confirmed.json()["recovery_codes"]
 
 
+def audit_count(user_id: str, action: str) -> int:
+    """จำนวนบันทึกของชนิดนั้นที่ผู้ใช้คนนั้นมี — อ่านจากฐานข้อมูลจริง
+
+    อ่านตรงเพราะยังไม่มี endpoint ให้ดู audit log และสิ่งที่ต้องพิสูจน์คือ
+    **มันถูกเขียนลงไปจริง** ไม่ใช่ว่ามีโค้ดเรียกตัวเขียน
+
+    ต้องอ่านในฐานะผู้ใช้คนนั้น เพราะ `audit_events` อยู่ใต้ RLS ตามเจ้าของ —
+    ไม่ระบุผู้ใช้แล้วได้ศูนย์แถวเสมอ ซึ่งจะทำให้เทสต์เขียวแบบหลอกได้ง่ายมาก
+    """
+    import asyncio
+    from uuid import UUID
+
+    from tiewtrade.infra.db import DatabaseRole, create_engine_for
+    from tiewtrade.infra.db.session import user_session
+
+    async def read() -> int:
+        engine = create_engine_for(DatabaseRole.AUTH)
+        try:
+            async with user_session(engine, UUID(user_id), role=DatabaseRole.AUTH) as session:
+                row = (
+                    await session.execute(
+                        "SELECT count(*) FROM audit_events WHERE action = :a",
+                        {"a": action},
+                    )
+                ).one()
+                return int(next(iter(row)))
+        finally:
+            await engine.dispose()
+
+    return asyncio.run(read())
+
+
 def sign_in(client: TestClient, email: str, *, password: str = GOOD_PASSWORD) -> dict[str, object]:
     """ขั้นแรกของการเข้าสู่ระบบจากเครื่องเปล่า"""
     client.cookies.clear()
@@ -661,3 +693,122 @@ def test_recovery_grant_survives_exhausted_totp_quota(
     assert recovered.status_code == 200, recovered.text
     changed = client.post(target, json={"password": GOOD_PASSWORD}, headers=csrf_headers(client))
     assert changed.status_code == 200, changed.text
+
+
+def test_a_recovery_login_revokes_the_other_devices(client: TestClient) -> None:
+    """V-43 — **เข้าสู่ระบบด้วยรหัสสำรองแล้ว session เครื่องอื่นต้องถูกเพิกถอน** (Q-3.4)
+
+    การใช้รหัสสำรองหมายถึง "อุปกรณ์เดิมหายไป" ซึ่งเป็นสัญญาณเดียวกับที่ F-05 ใช้
+    ตอนเปลี่ยนรหัสผ่าน · ถ้าไม่เพิกถอน ผู้โจมตีที่ถือ session อยู่จะยังอยู่ต่อได้
+    ทั้งที่เจ้าของเพิ่งใช้ทางกู้บัญชี
+    """
+    email = register(client)
+    _, codes = enable_totp(client)
+    first_device = cookies_now(client)
+
+    sign_in(client, email)
+    done = client.post(
+        "/auth/totp/login", json={"recovery_code": codes[0]}, headers=csrf_headers(client)
+    )
+    assert done.status_code == 200, done.text
+
+    use_cookies(client, first_device)
+    assert client.get("/auth/me").status_code == 401, "เครื่องเก่ายังใช้ได้หลังกู้บัญชี"
+
+
+def test_a_recovery_login_records_the_revocation(client: TestClient) -> None:
+    """V-46 — การเพิกถอนของการกู้บัญชีต้องลง `ALL_SESSIONS_ENDED` พร้อมจำนวน"""
+    email = register(client)
+    _, codes = enable_totp(client)
+    account = str(client.get("/auth/me").json()["user_id"])
+    before = audit_count(account, "ALL_SESSIONS_ENDED")
+
+    sign_in(client, email)
+    assert (
+        client.post(
+            "/auth/totp/login", json={"recovery_code": codes[0]}, headers=csrf_headers(client)
+        ).status_code
+        == 200
+    )
+
+    assert audit_count(account, "ALL_SESSIONS_ENDED") == before + 1
+
+
+def test_a_reused_code_says_to_wait_for_a_new_one(client: TestClient) -> None:
+    """V-61.2 — **รหัสที่ถูกใช้ไปแล้วต้องบอกให้รอรหัสใหม่** ไม่ใช่ตอบเหมือนรหัสผิด
+
+    เป็นต้นทุนของการไม่มีช่วงผ่อนผัน (Q-6) ที่เจ้าของรับไว้: ทำสองรายการติดกัน
+    ต้องรอรหัสของช่วงใหม่ · ถ้าตอบเหมือนรหัสผิด ผู้ใช้จะพิมพ์ซ้ำจนโควตาหมด
+    """
+    register(client)
+    secret, _ = enable_totp(client)
+    code = code_now(secret)
+
+    first = client.post(
+        "/auth/totp/recovery-codes",
+        json={"password": GOOD_PASSWORD},
+        headers={**csrf_headers(client), TOTP_HEADER: code},
+    )
+    assert first.status_code == 200, first.text
+
+    again = client.post(
+        "/auth/totp/recovery-codes",
+        json={"password": GOOD_PASSWORD},
+        headers={**csrf_headers(client), TOTP_HEADER: code},
+    )
+
+    assert again.status_code == 403
+    assert "รอรหัส" in again.json()["detail"], again.text
+    # และต้อง **ต่างจาก** ข้อความของรหัสผิด
+    wrong = client.post(
+        "/auth/totp/recovery-codes",
+        json={"password": GOOD_PASSWORD},
+        headers={**csrf_headers(client), TOTP_HEADER: "000000"},
+    )
+    assert wrong.json()["detail"] != again.json()["detail"]
+
+
+def test_a_successful_check_does_not_refill_the_quota(client: TestClient) -> None:
+    """V-62.5 — **ยืนยันสำเร็จจริงแล้วโควตาไม่กลับมา**
+
+    เทสต์เดิมพิสูจน์ข้อนี้ไม่ได้ เพราะมันเรียก `clear()` แทนการยืนยันให้สำเร็จ
+    (พบตอนตรวจคำรับรอง 2026-10-04) · ที่นี่ใช้เส้นทางจริง: ทำให้โควตาพร่องด้วย
+    รหัสผิด แล้วยืนยันสำเร็จ แล้วตรวจว่าโควตาที่เหลือไม่ถูกคืน
+    """
+    register(client)
+    secret, _ = enable_totp(client)
+
+    # ใช้โควตาไปสองครั้งด้วยรหัสผิด
+    for _ in range(2):
+        assert (
+            client.post(
+                "/auth/totp/recovery-codes",
+                json={"password": GOOD_PASSWORD},
+                headers={**csrf_headers(client), TOTP_HEADER: "000000"},
+            ).status_code
+            == 403
+        )
+
+    # ยืนยันสำเร็จจริงหนึ่งครั้ง
+    assert (
+        client.post(
+            "/auth/totp/recovery-codes",
+            json={"password": GOOD_PASSWORD},
+            headers={**csrf_headers(client), TOTP_HEADER: code_now(secret)},
+        ).status_code
+        == 200
+    )
+
+    # โควตาที่เหลือต้องยังพร่องอยู่ — ความจุ 4 ใช้ไป 2 เหลือ 2 ครั้งก่อนถูกกั้น
+    refused_after = 0
+    for _ in range(3):
+        if (
+            client.post(
+                "/auth/totp/recovery-codes",
+                json={"password": GOOD_PASSWORD},
+                headers={**csrf_headers(client), TOTP_HEADER: "000000"},
+            ).status_code
+            == 429
+        ):
+            refused_after += 1
+    assert refused_after >= 1, "ยืนยันสำเร็จแล้วโควตากลับมาเต็ม — ขัด Q-7"

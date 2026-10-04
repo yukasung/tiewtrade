@@ -183,8 +183,14 @@ async def test_the_recovery_bucket_is_separate(auth_engine: AsyncEngine) -> None
     assert await attempt(auth_engine, Bucket.TOTP_ACCOUNT, key, now=now) is True
 
 
-async def test_the_quota_is_not_cleared_by_success(auth_engine: AsyncEngine) -> None:
-    """V-62.5 — **ยืนยันสำเร็จไม่คืนโควตา** (เจ้าของตัดสิน 2026-10-03)
+async def test_clearing_a_token_bucket_would_refill_it(auth_engine: AsyncEngine) -> None:
+    """**ทำไมห้ามเรียก `clear()` กับถังของปัจจัยที่สอง** — มันคืนโควตาเต็ม
+
+    เทสต์นี้เคยถูกตั้งชื่อว่าพิสูจน์ V-62.5 ซึ่ง **ไม่จริง** เพราะมันไม่ได้ยืนยันสำเร็จ
+    (พบตอนตรวจคำรับรอง 2026-10-04) · V-62.5 ของจริงอยู่ที่
+    `tests/api/test_totp_flow.py::test_a_successful_check_does_not_refill_the_quota`
+    ซึ่งยืนยันสำเร็จผ่าน HTTP จริง · ที่นี่เหลือไว้เพราะยังมีประโยชน์: มันบันทึกว่า
+    ถ้าใครเผลอเรียก `clear()` กับถังเหล่านี้จะเกิดอะไร
 
     ถังแบบเติมคืนไม่มีการล้างเลย มันคืนตามเวลาเท่านั้น — เทสต์นี้ตรึงข้อนั้นไว้
     โดยใช้ `clear()` ซึ่งเป็นทางล้างของถังหน้าต่างคงที่ แล้วพิสูจน์ว่าโควตาไม่กลับมา

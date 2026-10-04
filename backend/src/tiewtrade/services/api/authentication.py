@@ -65,6 +65,12 @@ NOT_AUTHENTICATED: Final[str] = "ต้องเข้าสู่ระบบ�
 #: รหัสผิด, รหัสถูกใช้แล้ว หรือไม่มีสิทธิ์กู้ (RQ-11 เจตนาเดียวกัน)
 SECOND_FACTOR_REQUIRED: Final[str] = "ต้องยืนยันด้วยรหัสจากแอปยืนยันตัวตน"
 
+#: ข้อความของรหัสที่ถูกต้องแต่ถูกใช้ไปแล้ว — **ต้องต่างจากข้อความของรหัสผิด**
+#:
+#: เป็นต้นทุนของการไม่มีช่วงผ่อนผัน (Q-6) ที่เจ้าของรับไว้: ทำสองรายการติดกัน
+#: ต้องรอรหัสของช่วงใหม่ · ถ้าตอบเหมือนรหัสผิด ผู้ใช้จะพิมพ์ซ้ำจนโควตาหมด
+CODE_ALREADY_USED: Final[str] = "รหัสนี้ถูกใช้ไปแล้ว — รอรหัสชุดใหม่จากแอปแล้วลองอีกครั้ง"
+
 #: ข้อความของเส้นทางที่ยังไม่ถูกจัดประเภท — **ความผิดของเรา ไม่ใช่ของผู้เรียก**
 UNCLASSIFIED_ROUTE: Final[str] = "เส้นทางนี้ยังไม่ถูกจัดประเภท"
 
@@ -223,8 +229,14 @@ async def second_factor_of(request: Request, who: Authenticated) -> SecondFactor
                 return SecondFactor.RECOVERY_GRANT
             refuse_if_throttled(guard)
             await locked_credential(session, who.user_id)
-            if presented and await totp.verify(session, keys, presented=presented, now=now):
-                return SecondFactor.TOTP_CODE
+            if presented:
+                outcome = await totp.verify(session, keys, presented=presented, now=now)
+                if outcome is totp.CodeOutcome.ACCEPTED:
+                    return SecondFactor.TOTP_CODE
+                if outcome is totp.CodeOutcome.ALREADY_USED:
+                    # **บอกให้รอรหัสใหม่** มิฉะนั้นผู้ใช้จะคิดว่าเครื่องตัวเองเพี้ยน
+                    # แล้วพิมพ์รหัสเดิมซ้ำจนโควตาหมด (validation V-61.2)
+                    raise HTTPException(status.HTTP_403_FORBIDDEN, CODE_ALREADY_USED)
             if grant_usable:
                 return SecondFactor.RECOVERY_GRANT
         await guard.count_attempt()
