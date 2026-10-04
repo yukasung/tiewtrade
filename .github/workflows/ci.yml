@@ -62,6 +62,9 @@ jobs:
       # ค่าเริ่มต้นของทั้งสองค่าคือ "ปิดการสมัคร" และ "ตั้งธง Secure"
       TIEWTRADE_SIGNUP_OPEN: "1"
       TIEWTRADE_COOKIE_SECURE: "0"
+      # กุญแจปิดผนึก secret ของ TOTP (F-06) — **ค่านี้ใช้ได้เฉพาะเครื่องพัฒนาและ CI**
+      # บนเครื่องจริงยังเป็นข้อที่ต้องตัดสิน (T-03) ซึ่งเป็นงาน F-31
+      TIEWTRADE_SEALING_KEY_TOTP_SECRET: "1:ZGV2LW9ubHkta2V5LW5vdC1hLXNlY3JldC0zMmJ5dGU="
     steps:
       - uses: actions/checkout@v4
 
@@ -184,6 +187,9 @@ jobs:
       TIEWTRADE_DATABASE_URL_AUTH: postgresql+asyncpg://tiewtrade_auth:dev_auth@127.0.0.1:5432/tiewtrade
       TIEWTRADE_SIGNUP_OPEN: "1"
       TIEWTRADE_COOKIE_SECURE: "0"
+      # กุญแจปิดผนึก secret ของ TOTP (F-06) — **ค่านี้ใช้ได้เฉพาะเครื่องพัฒนาและ CI**
+      # บนเครื่องจริงยังเป็นข้อที่ต้องตัดสิน (T-03) ซึ่งเป็นงาน F-31
+      TIEWTRADE_SEALING_KEY_TOTP_SECRET: "1:ZGV2LW9ubHkta2V5LW5vdC1hLXNlY3JldC0zMmJ5dGU="
     steps:
       - uses: actions/checkout@v4
 

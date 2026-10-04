@@ -94,8 +94,13 @@ def test_a_broken_stored_hash_is_told_apart_from_a_wrong_password() -> None:
 
 
 def test_the_response_of_a_successful_login_carries_only_the_user_id(client: TestClient) -> None:
-    """V-50 (ฝั่ง API) — คำตอบไม่พาอีเมลหรืออะไรที่ไม่จำเป็นไปด้วย (RQ-10)"""
+    """V-50 (ฝั่ง API) — คำตอบไม่พาอีเมลหรืออะไรที่ไม่จำเป็นไปด้วย (RQ-10)
+
+    F-06 เพิ่ม `totp_enabled` **เพราะหน้าเว็บต้องรู้ว่าจะแสดงปุ่มเปิดหรือปิด**
+    และเพราะ F-24 ต้องถามคำถามนี้ได้ (RQ-12) — เป็นค่าจริงเท็จที่ไม่ระบุตัวบุคคล
+    ฉะนั้นข้อห้ามเดิมยังอยู่ครบ: ไม่มีอีเมล ไม่มีโทเคน ไม่มีแฮช
+    """
     email = register(client)
     body = client.get("/auth/me").json()
-    assert set(body) == {"user_id"}
+    assert set(body) == {"user_id", "totp_enabled"}
     assert email not in str(body)

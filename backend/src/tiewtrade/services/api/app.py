@@ -19,16 +19,24 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from starlette.responses import Response
 
+from tiewtrade.infra.crypto import KeyPurpose, KeySource
 from tiewtrade.infra.db import DatabaseRole, create_engine_for
 from tiewtrade.services.api.auth_routes import router as auth_router
 from tiewtrade.services.api.authentication import authenticate_request
+from tiewtrade.services.api.throttling import AuthRejectedError
+from tiewtrade.services.api.totp_routes import router as totp_router
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
-    """สร้าง engine ของสองบทบาทตอนเปิด และปิดให้เรียบร้อยตอนจบ"""
+    """สร้าง engine ของสองบทบาทและอ่านกุญแจตอนเปิด แล้วปิดให้เรียบร้อยตอนจบ
+
+    **อ่านกุญแจของ TOTP ที่นี่เพื่อให้กุญแจไม่ครบ = กระบวนการไม่เริ่ม** ไม่ใช่ล้ม
+    ตอนมีผู้ใช้คนแรกมาเปิด TOTP (F-06 validation V-10)
+    """
     app.state.api_engine = create_engine_for(DatabaseRole.API)
     app.state.auth_engine = create_engine_for(DatabaseRole.AUTH)
+    app.state.totp_keys = KeySource.from_environment(KeyPurpose.TOTP_SECRET)
     try:
         yield
     finally:
@@ -57,12 +65,23 @@ async def identify_caller(
     """
     try:
         await authenticate_request(request.app.state.api_engine, request)
-    except HTTPException as refusal:
+    except (HTTPException, AuthRejectedError) as refusal:
         return JSONResponse({"detail": refusal.detail}, status_code=refusal.status_code)
     return await call_next(request)
 
 
+@app.exception_handler(AuthRejectedError)
+async def refused(_: Request, rejection: AuthRejectedError) -> JSONResponse:
+    """แปลง "คำขอถูกปฏิเสธตามกฎ" เป็นคำตอบ — **ที่เดียว**
+
+    มีตัวแปลงที่ระดับแอปเพื่อให้เส้นทางที่ไม่ได้อยู่ใน `throttled()` โยนชนิดนี้ได้
+    โดยไม่หลุดเป็น 500 · ถ้าต้องแปลงเองทุกที่ วันหนึ่งจะมีที่ที่ลืมแปลง
+    """
+    return JSONResponse({"detail": rejection.detail}, status_code=rejection.status_code)
+
+
 app.include_router(auth_router)
+app.include_router(totp_router)
 
 
 class Health(BaseModel):

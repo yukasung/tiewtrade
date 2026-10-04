@@ -5,6 +5,16 @@
 
 **ตัวนับอยู่ใน transaction ของตัวเอง** จึงถูกบันทึกแม้คำขอนั้นถูกปฏิเสธ
 ถ้าร่วม transaction กับการตรวจรหัสผ่านแล้วถูกยกเลิก การเดารหัสผ่านจะไม่ถูกนับเลย
+
+**แต่ "transaction ของตัวเอง" ยังไม่พอ** (แก้ใน F-06 — `plan.md` หัวข้อ 2):
+`presented_session()` ย้อน transaction เมื่อมีข้อผิดพลาด **ชนิดใดก็ตาม** หลุดออกมา
+ซึ่งรวม `HTTPException` ที่เส้นทางโยนตอนปฏิเสธคำขอ ผลคือการนับหายไปทุกครั้งที่
+คำขอถูกปฏิเสธ — การคุมอัตราการเรียกจึงไม่ทำงานเลย
+
+ทางแก้คือแยก **การปฏิเสธตามกฎ** ออกจาก **ความผิดพลาดของระบบ**:
+เส้นทางโยน `AuthRejectedError` ซึ่งถูกจับ **ภายใน** transaction (จึง commit ตามปกติ)
+แล้วแปลงเป็น `HTTPException` **หลัง** transaction จบ · ส่วน bug, ฐานข้อมูลล่ม
+และ `HTTPException` ที่เป็น 500/503 ไม่ใช่ชนิดนี้ จึงยังย้อนตามเดิม
 """
 
 from __future__ import annotations
@@ -13,12 +23,38 @@ from collections.abc import AsyncIterator, Sequence
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from datetime import datetime
+from typing import Final
 
+from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncEngine
 
 from tiewtrade.infra.auth import Bucket, claim, clear, count_failure
 from tiewtrade.infra.db import DatabaseRole
 from tiewtrade.infra.db.session import PresentedSession, presented_session
+
+
+class AuthRejectedError(Exception):
+    """คำขอยืนยันตัวตนถูกปฏิเสธตามกฎ — **ผลลัพธ์ปกติ ไม่ใช่ความล้มเหลวของ transaction**
+
+    มีชนิดนี้เพื่อให้ `throttled()` แยกได้ว่าอะไรควร commit ตัวนับแล้วค่อยปฏิเสธ
+    และอะไรควรย้อนทุกอย่าง · **ห้ามใช้ชนิดนี้กับความผิดพลาดของระบบ**
+    เพราะมันทำให้สิ่งที่เขียนไว้ก่อนหน้าถูก commit
+
+    เส้นทางที่อยู่ **นอก** `throttled()` โยน `HTTPException` ได้ตามปกติ
+    """
+
+    def __init__(self, status_code: int, detail: str) -> None:
+        super().__init__(detail)
+        self.status_code = status_code
+        self.detail = detail
+
+    def as_http_exception(self) -> HTTPException:
+        """รูปที่ส่งกลับให้ผู้เรียก — ข้อความและสถานะไม่เปลี่ยนจากที่เส้นทางตั้งไว้
+
+        **แอปแปลงชนิดนี้เป็นคำตอบที่จุดเดียว** (`app.py`) ฉะนั้นเส้นทางที่ไม่ได้
+        อยู่ใน `throttled()` ก็โยนชนิดนี้ได้ โดยไม่หลุดเป็น 500
+        """
+        return HTTPException(self.status_code, self.detail)
 
 
 @dataclass(frozen=True, slots=True)
@@ -49,6 +85,23 @@ class ThrottleGuard:
                 await clear(self._session, bucket, key)
 
 
+#: ข้อความเดียวสำหรับทุกเส้นทางที่ถูกปฏิเสธเพราะเรียกถี่เกิน
+TOO_MANY_ATTEMPTS: Final[str] = "ลองมากเกินไป กรุณารอแล้วลองอีกครั้ง"
+
+
+def refuse_if_throttled(guard: ThrottleGuard) -> None:
+    """ปฏิเสธคำขอที่ติดหน่วงอยู่หรือโควตาหมด — **ที่เดียวสำหรับทุกเส้นทาง**
+
+    **ปฏิเสธก่อนตรวจรหัสผ่าน** ฉะนั้นเจ้าของที่กรอกถูกก็ถูกปฏิเสธด้วย — ข้อจำกัดนี้
+    ยังไม่ถูกปิด ดู **NC-14** ใน `requirements.md` ของ F-05
+
+    โยน `AuthRejectedError` ไม่ใช่ `HTTPException` เพราะอยู่ **ข้างใน** `throttled()`
+    และตัวนับต้องรอด (F-06 `plan.md` หัวข้อ 2)
+    """
+    if guard.blocked:
+        raise AuthRejectedError(status.HTTP_429_TOO_MANY_REQUESTS, TOO_MANY_ATTEMPTS)
+
+
 @asynccontextmanager
 async def throttled(
     engine: AsyncEngine,
@@ -56,10 +109,23 @@ async def throttled(
     *,
     now: datetime,
 ) -> AsyncIterator[ThrottleGuard]:
-    """เปิด transaction ของตัวนับ ล็อกทุกถัง แล้วบอกว่าคำขอนี้ถูกปฏิเสธหรือยัง"""
+    """เปิด transaction ของตัวนับ ล็อกทุกถัง แล้วบอกว่าคำขอนี้ถูกปฏิเสธหรือยัง
+
+    **การปฏิเสธถูกจับไว้ข้างในแล้วโยนหลัง transaction จบ** จึงไม่ย้อนตัวนับทิ้ง
+    (F-06 `plan.md` หัวข้อ 2.4 · เกณฑ์ V-63 ถึง V-69)
+    """
+    rejection: AuthRejectedError | None = None
     async with presented_session(engine, role=DatabaseRole.AUTH) as session:
         blocked = False
         for bucket, key in buckets:
             state = await claim(session, bucket, key, now=now)
             blocked = blocked or state.blocked_at(now)
-        yield ThrottleGuard(session, tuple(buckets), blocked)
+        try:
+            yield ThrottleGuard(session, tuple(buckets), blocked)
+        except AuthRejectedError as caught:
+            # ไม่โยนต่อที่นี่โดยเจตนา — ปล่อยให้ transaction จบปกติเพื่อให้ตัวนับรอด
+            # ข้อผิดพลาดชนิดอื่นไม่ถูกจับ จึงยังย้อนตามเดิม (V-68)
+            rejection = caught
+    if rejection is not None:
+        # โยนชนิดเดิมต่อ ไม่แปลงที่นี่ — ตัวแปลงอยู่ที่ `app.py` ที่เดียว
+        raise rejection

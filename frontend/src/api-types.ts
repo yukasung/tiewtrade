@@ -93,7 +93,12 @@ export interface paths {
         };
         /**
          * Read Me
-         * @description ตัวตนของคำขอนี้ — เส้นทางที่หน้าเว็บใช้ถามว่าเข้าสู่ระบบอยู่หรือไม่
+         * @description ตัวตนของคำขอนี้ และสถานะปัจจัยที่สอง
+         *
+         *     **`totp_enabled` คือคำตอบที่ F-24 ใช้** (RQ-12) — secret ที่ยังไม่ยืนยัน
+         *     นับว่ายังไม่เปิด เพราะมันไม่มีผลกับการยืนยันตัวตนเลย
+         *
+         *     **ไม่ต่ออายุ session** เพราะหน้าเว็บเรียกเส้นทางนี้เป็นรอบ ๆ (Q-2 ของ F-05)
          */
         get: operations["read_me_auth_me_get"];
         put?: never;
@@ -147,6 +152,149 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/auth/totp/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Confirm Setup
+         * @description ยืนยันแล้วเปิดใช้ — **ทั้งก้อนสำเร็จหรือล้มเหลวด้วยกัน** (validation V-11.2)
+         *
+         *     ในก้อนเดียวกัน: สลับ secret, ยกเลิกรหัสสำรองชุดเก่า, ออกชุดใหม่,
+         *     เพิกถอน session อื่นทั้งหมด และลงบันทึก
+         *
+         *     **รหัสสำรองชุดเก่าถูกยกเลิกที่นี่ ไม่ใช่ตอนเริ่มเปลี่ยนเครื่อง** เพราะผู้ใช้ที่
+         *     ทิ้งกลางทางต้องไม่เสียทั้งรหัสสำรองและเครื่องใหม่
+         */
+        post: operations["confirm_setup_auth_totp_confirm_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/totp/disable": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Disable Totp
+         * @description ปิด TOTP — **ปิดไม่ได้ขณะที่ Live เปิดอยู่** (Q-4)
+         *
+         *     เพราะ R-19 บังคับว่า Live ต้องมี 2FA ถ้ายอมให้ปิดโดย Live ยังเปิด จะเกิดสถานะ
+         *     ที่ spec ห้าม · **ไม่ปิด Live ให้อัตโนมัติ** เพราะกระทบไม้ที่เปิดอยู่ ซึ่งเป็น
+         *     ผลข้างเคียงที่ผู้ใช้ไม่ได้สั่ง
+         */
+        post: operations["disable_totp_auth_totp_disable_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/totp/login": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Complete Sign In
+         * @description ขั้นที่สองของการเข้าสู่ระบบ — รหัสจากแอป หรือรหัสสำรองหนึ่งใบ
+         *
+         *     **ออก session ที่นี่เท่านั้น** ขั้นแรกคืน challenge ซึ่งใช้เรียกเส้นทางอื่นไม่ได้เลย
+         *     ฉะนั้น RQ-5 เป็นจริงโดยโครงสร้าง ไม่ใช่เพราะ middleware ขยัน
+         *
+         *     **เทียบรุ่นของรหัสผ่านใต้ล็อก** ฉะนั้น challenge ที่ออกด้วยรหัสผ่านเก่าใช้ต่อไม่ได้
+         *     แม้จะยังไม่หมดอายุ (RQ-22 ของ F-05 · `plan.md` หัวข้อ 1.4)
+         */
+        post: operations["complete_sign_in_auth_totp_login_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/totp/recovery-codes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Reissue Recovery Codes
+         * @description ออกชุดรหัสสำรองใหม่ — **ชุดเก่าใช้ไม่ได้ทันที** (RQ-15)
+         */
+        post: operations["reissue_recovery_codes_auth_totp_recovery_codes_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/totp/replace": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Replace Secret
+         * @description ออก secret ใหม่สำหรับเครื่องใหม่ — **ปัจจัยเดิมยังใช้ได้จนยืนยันสำเร็จ**
+         *
+         *     middleware บังคับปัจจัยที่สองของเส้นทางนี้แล้ว (รหัส TOTP หรือสิทธิ์กู้บัญชี)
+         *     ที่นี่จึงเหลือแค่รหัสผ่านปัจจุบัน และการใช้สิทธิ์กู้ถ้าคำขอนี้ผ่านด้วยมัน
+         */
+        post: operations["replace_secret_auth_totp_replace_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/totp/setup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Start Setup
+         * @description เริ่มตั้งค่า TOTP — **ต้องกรอกรหัสผ่านปัจจุบัน** (RQ-3.1)
+         *
+         *     session ที่กำลังใช้อยู่ **ไม่พอ** เพราะการกรอกรหัสจาก secret ที่ระบบเพิ่งแจกให้
+         *     พิสูจน์แค่ว่าตั้งค่าแอปสำเร็จ ไม่ได้พิสูจน์ว่าเป็นเจ้าของบัญชี — ถ้าไม่มีข้อนี้
+         *     คนที่ขโมย session ไปจะผูกแอปของตัวเองแล้วกันเจ้าของออกตอน login ครั้งถัดไป
+         */
+        post: operations["start_setup_auth_totp_setup_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/health": {
         parameters: {
             query?: never;
@@ -174,6 +322,22 @@ export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
         /**
+         * CodesIssued
+         * @description ชุดรหัสสำรองใหม่ — **แสดงครั้งเดียว ไม่มีทางอ่านกลับ**
+         */
+        CodesIssued: {
+            /** Recovery Codes */
+            recovery_codes: string[];
+        };
+        /**
+         * Confirmation
+         * @description รหัสจาก secret ที่เพิ่งตั้งค่า
+         */
+        Confirmation: {
+            /** Code */
+            code: string;
+        };
+        /**
          * Credentials
          * @description อีเมลกับรหัสผ่านที่ผู้ใช้กรอก
          */
@@ -190,6 +354,40 @@ export interface components {
         CsrfToken: {
             /** Csrf Token */
             csrf_token: string;
+        };
+        /**
+         * CurrentPassword
+         * @description รหัสผ่านปัจจุบัน — ทุกเส้นทางที่เปลี่ยนปัจจัยที่สองต้องการค่านี้ (Q-4)
+         */
+        CurrentPassword: {
+            /** Password */
+            password: string;
+        };
+        /**
+         * Disabled
+         * @description ผลของการปิด TOTP
+         */
+        Disabled: {
+            /** Ended */
+            ended: number;
+        };
+        /**
+         * Enabled
+         * @description ผลของการเปิดใช้ — รหัสสำรองชุดใหม่ และจำนวน session ที่ถูกเพิกถอน
+         */
+        Enabled: {
+            /** Ended */
+            ended: number;
+            /** Recovery Codes */
+            recovery_codes: string[];
+        };
+        /**
+         * Enrollment
+         * @description ของที่ผู้ใช้ต้องเอาไปใส่แอป — **ส่งครั้งเดียวต่อการเรียกหนึ่งครั้ง**
+         */
+        Enrollment: {
+            /** Otpauth Uri */
+            otpauth_uri: string;
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -223,6 +421,19 @@ export interface components {
             user_id: string;
         };
         /**
+         * Me
+         * @description ตัวตนของคำขอ พร้อมสถานะปัจจัยที่สอง (F-06 RQ-12)
+         */
+        Me: {
+            /** Totp Enabled */
+            totp_enabled: boolean;
+            /**
+             * User Id
+             * Format: uuid
+             */
+            user_id: string;
+        };
+        /**
          * PasswordChange
          * @description การเปลี่ยนรหัสผ่าน — ต้องยืนยันค่าปัจจุบัน (Q-5)
          */
@@ -233,12 +444,52 @@ export interface components {
             new_password: string;
         };
         /**
+         * SecondStep
+         * @description ขั้นที่สองของการเข้าสู่ระบบ — รหัสจากแอป **หรือ** รหัสสำรองหนึ่งใบ
+         */
+        SecondStep: {
+            /** Code */
+            code?: string | null;
+            /** Recovery Code */
+            recovery_code?: string | null;
+        };
+        /**
          * SessionsEnded
          * @description จำนวน session ที่ถูกเพิกถอน
          */
         SessionsEnded: {
             /** Ended */
             ended: number;
+        };
+        /**
+         * SignInStarted
+         * @description ผลของขั้นแรกของการเข้าสู่ระบบ (F-06)
+         *
+         *     **รูปร่างเดียวกันทั้งสองกรณี** ต่างกันแค่ค่าในช่อง และ cookie ที่แนบกลับไป
+         *     ฉะนั้นคนที่ยังไม่ผ่านรหัสผ่านแยกสองกรณีไม่ได้ — เขาได้ `LOGIN_FAILED` เหมือนเดิม
+         *     **ก่อน** ที่โค้ดจะแตะข้อมูล TOTP เลย (RQ-11)
+         */
+        SignInStarted: {
+            /** Second Step Required */
+            second_step_required: boolean;
+            /**
+             * User Id
+             * Format: uuid
+             */
+            user_id: string;
+        };
+        /**
+         * SignedIn
+         * @description ผลของขั้นที่สอง — รหัสผู้ใช้ และจำนวนรหัสสำรองที่เหลือถ้าใช้ไปใบหนึ่ง
+         */
+        SignedIn: {
+            /** Recovery Codes Left */
+            recovery_codes_left?: number | null;
+            /**
+             * User Id
+             * Format: uuid
+             */
+            user_id: string;
         };
         /** ValidationError */
         ValidationError: {
@@ -301,7 +552,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Identity"];
+                    "application/json": components["schemas"]["SignInStarted"];
                 };
             };
             /** @description Validation Error */
@@ -370,7 +621,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Identity"];
+                    "application/json": components["schemas"]["Me"];
                 };
             };
         };
@@ -428,6 +679,204 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Identity"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    confirm_setup_auth_totp_confirm_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Confirmation"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Enabled"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    disable_totp_auth_totp_disable_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CurrentPassword"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Disabled"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    complete_sign_in_auth_totp_login_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SecondStep"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SignedIn"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reissue_recovery_codes_auth_totp_recovery_codes_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CurrentPassword"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CodesIssued"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    replace_secret_auth_totp_replace_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CurrentPassword"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Enrollment"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    start_setup_auth_totp_setup_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CurrentPassword"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Enrollment"];
                 };
             };
             /** @description Validation Error */

@@ -11,14 +11,17 @@ from tiewtrade.infra.audit.events import (
     AuditMode,
     AuditOutcome,
     PasswordChangedDetails,
+    RecoveryCodesIssuedDetails,
+    RecoveryCodeUsedDetails,
     SessionDetails,
     SubjectKind,
+    TotpChangeDetails,
     UserCreatedDetails,
     money_detail,
     quantity_detail,
 )
 from tiewtrade.infra.audit.redaction import ForbiddenDetailError, ensure_no_forbidden_content
-from tiewtrade.infra.audit.writer import record_event
+from tiewtrade.infra.audit.writer import record_event, record_own_action
 
 __all__ = [
     "DETAILS_TYPES",
@@ -32,11 +35,15 @@ __all__ = [
     "AuditOutcome",
     "ForbiddenDetailError",
     "PasswordChangedDetails",
+    "RecoveryCodeUsedDetails",
+    "RecoveryCodesIssuedDetails",
     "SessionDetails",
     "SubjectKind",
+    "TotpChangeDetails",
     "UserCreatedDetails",
     "ensure_no_forbidden_content",
     "money_detail",
     "quantity_detail",
     "record_event",
+    "record_own_action",
 ]

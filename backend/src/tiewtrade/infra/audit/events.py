@@ -42,6 +42,16 @@ class AuditAction(Enum):
     SESSION_ENDED = "SESSION_ENDED"
     ALL_SESSIONS_ENDED = "ALL_SESSIONS_ENDED"
     PASSWORD_CHANGED = "PASSWORD_CHANGED"
+    #: ห้าชนิดของ F-06 — การจัดการปัจจัยที่สองของบัญชีตัวเอง
+    #:
+    #: **ไม่มีชนิดสำหรับรหัสที่กรอกผิด** ตารางนี้เพิ่มได้อย่างเดียว ถ้าเขียนทุกครั้ง
+    #: ที่ผิด ผู้โจมตีจะทำให้ตารางโตได้ตามใจ — แบบแผนเดียวกับที่ F-05 ไม่ลงบันทึก
+    #: การเข้าสู่ระบบที่ล้มเหลว
+    TOTP_ENABLED = "TOTP_ENABLED"
+    TOTP_DISABLED = "TOTP_DISABLED"
+    TOTP_SECRET_REPLACED = "TOTP_SECRET_REPLACED"
+    RECOVERY_CODES_ISSUED = "RECOVERY_CODES_ISSUED"
+    RECOVERY_CODE_USED = "RECOVERY_CODE_USED"
 
 
 #: ชนิดเหตุการณ์ที่เป็นการเทรด — ต้องระบุ PAPER หรือ LIVE เสมอ (RQ-19)
@@ -141,6 +151,55 @@ class PasswordChangedDetails:
         return {}
 
 
+@dataclass(frozen=True, slots=True)
+class TotpChangeDetails:
+    """รายละเอียดของการเปิด ปิด หรือเปลี่ยน secret ของ TOTP — **ไม่มีช่องใดเลย**
+
+    **ห้ามมี secret, แฮชของ secret, รุ่นของกุญแจ, อุปกรณ์ หรือ IP** — บันทึกที่ลบไม่ได้
+    ไม่ใช่ที่เก็บร่องรอยการใช้งาน และรุ่นของกุญแจบอกเรื่องการเข้ารหัสของเราให้คนอ่าน
+    บันทึกรู้โดยไม่จำเป็น (`security.md` หัวข้อ 4)
+    """
+
+    def as_details(self) -> dict[str, object]:
+        return {}
+
+
+@dataclass(frozen=True, slots=True)
+class RecoveryCodesIssuedDetails:
+    """จำนวนรหัสสำรองที่ออกในชุดนั้น
+
+    เก็บจำนวนเพราะอ่านย้อนหลังแล้วเห็นว่าชุดที่ออกมีกี่ใบ และไม่ระบุตัวบุคคล
+    — เหตุผลเดียวกับ `AllSessionsEndedDetails`
+    """
+
+    issued: int
+
+    def __post_init__(self) -> None:
+        if self.issued <= 0:
+            raise AuditEventError("ชุดรหัสสำรองที่ออกต้องมีอย่างน้อยหนึ่งใบ")
+
+    def as_details(self) -> dict[str, object]:
+        return {"issued": self.issued}
+
+
+@dataclass(frozen=True, slots=True)
+class RecoveryCodeUsedDetails:
+    """จำนวนใบที่เหลือหลังใช้ไปหนึ่งใบ
+
+    **ไม่เก็บว่าใช้ใบไหน** เพราะไม่มีใครต้องรู้ และการรู้ก็ช่วยผู้โจมตีมากกว่า
+    · จำนวนที่เหลือทำให้เห็นตอนอ่านย้อนหลังว่าบัญชีใกล้หมดทางกู้
+    """
+
+    remaining: int
+
+    def __post_init__(self) -> None:
+        if self.remaining < 0:
+            raise AuditEventError("จำนวนรหัสสำรองที่เหลือติดลบไม่ได้")
+
+    def as_details(self) -> dict[str, object]:
+        return {"remaining": self.remaining}
+
+
 #: รูปร่างของ `details` ที่แต่ละชนิดเหตุการณ์ใช้ได้ — ตรวจตอนสร้าง `AuditEvent`
 DETAILS_TYPES: dict[AuditAction, type[object]] = {
     AuditAction.USER_CREATED: UserCreatedDetails,
@@ -148,6 +207,11 @@ DETAILS_TYPES: dict[AuditAction, type[object]] = {
     AuditAction.SESSION_ENDED: SessionDetails,
     AuditAction.ALL_SESSIONS_ENDED: AllSessionsEndedDetails,
     AuditAction.PASSWORD_CHANGED: PasswordChangedDetails,
+    AuditAction.TOTP_ENABLED: TotpChangeDetails,
+    AuditAction.TOTP_DISABLED: TotpChangeDetails,
+    AuditAction.TOTP_SECRET_REPLACED: TotpChangeDetails,
+    AuditAction.RECOVERY_CODES_ISSUED: RecoveryCodesIssuedDetails,
+    AuditAction.RECOVERY_CODE_USED: RecoveryCodeUsedDetails,
 }
 
 #: รหัสความล้มเหลวที่ประกาศไว้แล้ว — **ยังว่าง** เพราะยังไม่มีเหตุการณ์ที่ล้มเหลวได้
@@ -179,8 +243,8 @@ def _check_user_created(event: AuditEvent) -> None:
 def _check_own_account_action(event: AuditEvent) -> None:
     """เหตุการณ์ที่ผู้ใช้ทำกับบัญชีตัวเอง — ผู้กระทำและเป้าหมายต้องเป็นเจ้าของบันทึก
 
-    ใช้ร่วมกันสี่ชนิดของ F-05 เพราะเงื่อนไขเดียวกันทุกข้อ — เขียนแยกสี่ชุด
-    คือสี่ชุดที่ต้องแก้ให้ตรงกันทุกครั้งที่กฎเปลี่ยน
+    ใช้ร่วมกันสี่ชนิดของ F-05 และห้าชนิดของ F-06 เพราะเงื่อนไขเดียวกันทุกข้อ —
+    เขียนแยกเก้าชุดคือเก้าชุดที่ต้องแก้ให้ตรงกันทุกครั้งที่กฎเปลี่ยน
     """
     name = event.action.value
     if event.actor_kind is not ActorKind.USER:
@@ -204,6 +268,11 @@ _ACTION_INVARIANTS: dict[AuditAction, Callable[[AuditEvent], None]] = {
     AuditAction.SESSION_ENDED: _check_own_account_action,
     AuditAction.ALL_SESSIONS_ENDED: _check_own_account_action,
     AuditAction.PASSWORD_CHANGED: _check_own_account_action,
+    AuditAction.TOTP_ENABLED: _check_own_account_action,
+    AuditAction.TOTP_DISABLED: _check_own_account_action,
+    AuditAction.TOTP_SECRET_REPLACED: _check_own_account_action,
+    AuditAction.RECOVERY_CODES_ISSUED: _check_own_account_action,
+    AuditAction.RECOVERY_CODE_USED: _check_own_account_action,
 }
 
 

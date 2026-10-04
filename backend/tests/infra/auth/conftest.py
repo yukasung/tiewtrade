@@ -23,6 +23,15 @@ from tiewtrade.infra.users import create_user_in
 GOOD_PASSWORD: Final[str] = "รหัสผ่านที่ยาวพอใช้งานจริง"
 
 
+def fresh_bucket_key() -> str:
+    """คีย์ของถังที่ไม่ซ้ำกับเทสต์อื่น
+
+    ต้องเป็นแฮช 64 ตัวอักษรตาม `CHECK` ของ `auth_throttle` — ใช้ค่าสุ่มแทนการแฮช
+    ของจริง เพราะเทสต์ของถังไม่สนใจว่าแฮชมาจากอะไร สนใจแค่ว่าคีย์ไม่ชนกัน
+    """
+    return f"{uuid4().hex}{uuid4().hex}"
+
+
 def unique_email() -> str:
     """อีเมลที่ไม่ซ้ำ — ฐานข้อมูลของเทสต์ใช้ร่วมกันทั้งชุด"""
     return f"f05-{uuid4().hex}@example.com"

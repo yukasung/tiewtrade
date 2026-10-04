@@ -18,9 +18,16 @@ from tiewtrade.infra.auth.blocklist import (
     is_blocked,
     manifest,
 )
+from tiewtrade.infra.auth.challenges import (
+    CHALLENGE_LIFETIME,
+    IssuedChallenge,
+    PresentedChallenge,
+)
 from tiewtrade.infra.auth.credentials import (
+    LockedCredential,
     create_credential,
-    locked_hash,
+    email_of,
+    locked_credential,
     owner_of_email,
     replace_password_hash,
 )
@@ -36,6 +43,7 @@ from tiewtrade.infra.auth.lifetimes import (
     deadlines_for_new_session,
     renewed_idle_deadline,
 )
+from tiewtrade.infra.auth.recovery_codes import CODES_PER_SET, IssuedCodes
 from tiewtrade.infra.auth.sessions import (
     end_all,
     end_one,
@@ -57,9 +65,15 @@ from tiewtrade.infra.auth.throttle import (
 
 __all__ = [
     "ABSOLUTE_LIFETIME",
+    "CHALLENGE_LIFETIME",
+    "CODES_PER_SET",
     "IDLE_LIFETIME",
     "MANIFEST_FIELDS",
     "Bucket",
+    "IssuedChallenge",
+    "IssuedCodes",
+    "LockedCredential",
+    "PresentedChallenge",
     "StoredHashUnreadableError",
     "blocked_digests",
     "claim",
@@ -69,6 +83,7 @@ __all__ = [
     "deadlines_for_new_session",
     "delay_after",
     "digest_of",
+    "email_of",
     "end_all",
     "end_one",
     "end_others",
@@ -77,7 +92,7 @@ __all__ = [
     "is_blocked",
     "issue",
     "key_of",
-    "locked_hash",
+    "locked_credential",
     "manifest",
     "new_token",
     "owner_of_email",
