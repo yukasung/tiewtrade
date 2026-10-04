@@ -30,6 +30,7 @@ from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncEngine
 
 from tiewtrade.infra.auth import Bucket, claim, clear, count_failure, key_of
+from tiewtrade.infra.auth.throttle import TokenRule
 from tiewtrade.infra.db import DatabaseRole
 from tiewtrade.infra.db.session import PresentedSession, presented_session, user_session
 
@@ -147,17 +148,25 @@ async def spend_token(engine: AsyncEngine, user_id: UUID, bucket: Bucket) -> Non
     async with user_session(engine, user_id, role=DatabaseRole.API) as session:
         state = await claim(session, bucket, key_of(str(user_id)), now=now)
         if state.tokens_left is not None and state.tokens_left <= 0:
-            raise _too_many(bucket)
+            raise _too_many(bucket, state.window_started_at, now)
+        # **นับทุกครั้งที่กด ไม่ว่าผลจะเป็นอย่างไร** (RQ-11.2) — นับเฉพาะที่ล้มเหลว
+        # แปลว่าลองคำรับรองได้ไม่จำกัดตราบใดที่เดาถูก
         await count_failure(session, bucket, key_of(str(user_id)))
 
 
-def _too_many(bucket: Bucket) -> HTTPException:
-    """ข้อความเดียวสำหรับทุกถัง — **ไม่บอกว่าเหลือเท่าไร**
+def _too_many(bucket: Bucket, refilled_at: datetime, now: datetime) -> HTTPException:
+    """ปฏิเสธพร้อม **บอกเวลาที่ลองได้อีกครั้ง** (RQ-11.3 — เจ้าของตัดสิน 2026-10-04)
 
-    จำนวนที่เหลือบอกผู้โจมตีว่าควรรอนานแค่ไหนก่อนลองอีกครั้ง ซึ่งเป็นข้อมูลที่
-    ไม่ได้ช่วยผู้ใช้จริงเลย (แบบแผนเดียวกับข้อความของ F-06)
+    **ต่างจากข้อความของ F-06 ที่ตั้งใจไม่บอก** และความต่างนั้นมีเหตุผล: ที่นั่นคนที่
+    ถูกปฏิเสธอาจเป็นผู้โจมตีที่กำลังเดารหัส การบอกเวลาจึงช่วยให้เขาจับจังหวะ
+    ส่วนที่นี่คนที่ถูกปฏิเสธถือความลับของตัวเองอยู่แล้ว และการไม่บอกเวลาทำให้คนที่
+    ใส่ key ถูกต้องไม่รู้ว่าต้องรอเท่าไร — กดรัวแล้วยิ่งไม่ได้
     """
+    rule = bucket.rule
+    wait = rule.refill_interval - (now - refilled_at) if isinstance(rule, TokenRule) else None
+    seconds = max(1, int(wait.total_seconds())) if wait is not None else None
     return HTTPException(
         status.HTTP_429_TOO_MANY_REQUESTS,
         "ทำรายการถี่เกินไป กรุณารอสักครู่แล้วลองใหม่",
+        headers=None if seconds is None else {"Retry-After": str(seconds)},
     )

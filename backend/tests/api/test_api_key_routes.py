@@ -232,3 +232,60 @@ def test_deleting_own_key_works(client: TestClient) -> None:
 
     assert deleted.status_code == 204, deleted.text
     assert client.get("/api-keys").json() == []
+
+
+def test_the_retry_quota_counts_per_user_not_per_key(client: TestClient) -> None:
+    """V-30.1 — ถังนับต่อผู้ใช้ รวมทุก key (RQ-11.1)
+
+    ถ้านับต่อ key การเพิ่ม key ใบใหม่จะกลายเป็นวิธีได้โควตาใหม่
+    """
+    register(client)
+    secret, _ = enable_totp(client)
+    first = _add(client, secret).json()["id"]
+    _seed_keys(_user_id(client), 1)
+    second = next(row["id"] for row in client.get("/api-keys").json() if row["id"] != first)
+
+    for _ in range(API_KEY_RETRY_CAPACITY + 1):
+        client.post(f"/api-keys/{first}/retry", headers=csrf_headers(client))
+
+    refused = client.post(f"/api-keys/{second}/retry", headers=csrf_headers(client))
+
+    assert refused.status_code == 429, refused.text
+
+
+def test_being_throttled_says_when_to_come_back(client: TestClient) -> None:
+    """V-30.4 — คำตอบ 429 บอกเวลาที่ลองได้อีกครั้ง (RQ-11.3)
+
+    **ต่างจากข้อความของ F-06 โดยตั้งใจ** — ที่นั่นคนที่ถูกปฏิเสธอาจกำลังเดารหัส
+    ส่วนที่นี่เขาถือความลับของตัวเองอยู่แล้ว
+    """
+    register(client)
+    secret, _ = enable_totp(client)
+    key_id = _add(client, secret).json()["id"]
+
+    answer = None
+    for _ in range(API_KEY_RETRY_CAPACITY + 2):
+        answer = client.post(f"/api-keys/{key_id}/retry", headers=csrf_headers(client))
+
+    assert answer is not None
+    assert answer.status_code == 429, answer.text
+    assert int(answer.headers["Retry-After"]) > 0
+
+
+def test_a_successful_request_also_spends_quota(client: TestClient) -> None:
+    """V-30.2 — นับทุกครั้งที่กด ไม่ใช่เฉพาะที่ล้มเหลว (RQ-11.2)
+
+    นับเฉพาะที่ล้มเหลวแปลว่าลองคำรับรองได้ไม่จำกัดตราบใดที่เดาถูก
+    """
+    register(client)
+    secret, _ = enable_totp(client)
+    key_id = _add(client, secret).json()["id"]
+
+    seen = [
+        client.post(f"/api-keys/{key_id}/retry", headers=csrf_headers(client)).status_code
+        for _ in range(API_KEY_RETRY_CAPACITY + 1)
+    ]
+
+    # ทุกครั้งก่อนหน้าได้ 409 (สถานะยังเป็น "กำลังตรวจ") ซึ่ง **ไม่ใช่ความล้มเหลว
+    # ของการคุมอัตรา** แต่โควตาก็ยังถูกใช้ไปจนหมด
+    assert seen[-1] == 429, seen
