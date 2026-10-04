@@ -40,13 +40,16 @@ from tiewtrade.infra.auth import (
     is_blocked,
     issue,
     key_of,
-    locked_hash,
+    locked_credential,
     new_token,
     owner_of_email,
     password_matches,
     replace_password_hash,
     spend_matching_time,
+    totp,
 )
+from tiewtrade.infra.auth.challenges import end_all as end_all_challenges
+from tiewtrade.infra.auth.challenges import issue as issue_challenge
 from tiewtrade.infra.db import DatabaseRole
 from tiewtrade.infra.db.errors import DuplicateValueError
 from tiewtrade.infra.db.session import UserSession, presented_session, user_session
@@ -60,7 +63,8 @@ from tiewtrade.services.api.authentication import (
     set_session_cookies,
 )
 from tiewtrade.services.api.settings import signup_open
-from tiewtrade.services.api.throttling import ThrottleGuard, throttled
+from tiewtrade.services.api.throttling import AuthRejectedError, ThrottleGuard, throttled
+from tiewtrade.services.api.totp_routes import set_challenge_cookie
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -70,6 +74,25 @@ TOO_MANY_ATTEMPTS: Final[str] = "ลองมากเกินไป กรุ�
 
 #: ความยาวอีเมลสูงสุดตามขอบที่ใช้ได้จริงของ RFC 5321
 EMAIL_MAX_LENGTH: Final[int] = 254
+
+
+class Me(BaseModel):
+    """ตัวตนของคำขอ พร้อมสถานะปัจจัยที่สอง (F-06 RQ-12)"""
+
+    user_id: UUID
+    totp_enabled: bool
+
+
+class SignInStarted(BaseModel):
+    """ผลของขั้นแรกของการเข้าสู่ระบบ (F-06)
+
+    **รูปร่างเดียวกันทั้งสองกรณี** ต่างกันแค่ค่าในช่อง และ cookie ที่แนบกลับไป
+    ฉะนั้นคนที่ยังไม่ผ่านรหัสผ่านแยกสองกรณีไม่ได้ — เขาได้ `LOGIN_FAILED` เหมือนเดิม
+    **ก่อน** ที่โค้ดจะแตะข้อมูล TOTP เลย (RQ-11)
+    """
+
+    user_id: UUID
+    second_step_required: bool
 
 
 class Credentials(BaseModel):
@@ -135,9 +158,12 @@ def _refuse_if_throttled(guard: ThrottleGuard) -> None:
 
     **ปฏิเสธก่อนตรวจรหัสผ่าน** ฉะนั้นเจ้าของที่กรอกถูกก็ถูกปฏิเสธด้วย — ข้อจำกัดนี้
     ยังไม่ถูกปิด ดู **NC-14** ใน `requirements.md`
+
+    โยน `AuthRejectedError` ไม่ใช่ `HTTPException` เพราะอยู่ **ข้างใน** `throttled()`
+    และตัวนับต้องรอด (F-06 `plan.md` หัวข้อ 2)
     """
     if guard.blocked:
-        raise HTTPException(status.HTTP_429_TOO_MANY_REQUESTS, TOO_MANY_ATTEMPTS)
+        raise AuthRejectedError(status.HTTP_429_TOO_MANY_REQUESTS, TOO_MANY_ATTEMPTS)
 
 
 def _client_key(request: Request) -> str:
@@ -236,7 +262,7 @@ async def register(request: Request, response: Response, body: Credentials) -> I
                 token = await _start_session(session, user_id, now)
         except DuplicateValueError:
             await guard.count_attempt()
-            raise HTTPException(status.HTTP_409_CONFLICT, "อีเมลนี้มีบัญชีอยู่แล้ว") from None
+            raise AuthRejectedError(status.HTTP_409_CONFLICT, "อีเมลนี้มีบัญชีอยู่แล้ว") from None
         await guard.count_attempt()
 
     set_session_cookies(response, token=token, csrf_token=new_csrf_token())
@@ -244,7 +270,7 @@ async def register(request: Request, response: Response, body: Credentials) -> I
 
 
 @router.post("/login")
-async def login(request: Request, response: Response, body: Credentials) -> Identity:
+async def login(request: Request, response: Response, body: Credentials) -> SignInStarted:
     """เข้าสู่ระบบ — ลำดับการล็อกแถวข้อมูลเข้าสู่ระบบมีสามขั้นตามที่ plan ข้อ 1.6 กำหนด"""
     email = normalise_email(body.email)
     password = normalised(body.password)
@@ -266,21 +292,31 @@ async def login(request: Request, response: Response, body: Credentials) -> Iden
                 # ใช้เวลาเท่าการตรวจจริง มิฉะนั้นเวลาตอบบอกว่าบัญชีมีอยู่ (RQ-8)
                 spend_matching_time()
                 await guard.count_attempt()
-                raise HTTPException(status.HTTP_401_UNAUTHORIZED, LOGIN_FAILED)
+                raise AuthRejectedError(status.HTTP_401_UNAUTHORIZED, LOGIN_FAILED)
 
             # ขั้นที่สอง: ตั้งผู้ใช้ปัจจุบัน แล้วขั้นที่สาม: ล็อกและอ่านแฮชใหม่
             session = await finder.assume_user(user_id)
-            stored = await locked_hash(session, user_id)
-            if stored is None or not password_matches(stored, password):
+            stored = await locked_credential(session, user_id)
+            if stored is None or not password_matches(stored.password_hash, password):
                 await guard.count_attempt()
-                raise HTTPException(status.HTTP_401_UNAUTHORIZED, LOGIN_FAILED)
+                raise AuthRejectedError(status.HTTP_401_UNAUTHORIZED, LOGIN_FAILED)
+
+            # ผู้ใช้ที่เปิด TOTP แล้ว **ไม่ได้ session จากรหัสผ่านอย่างเดียว** (RQ-5)
+            # — ได้ challenge ที่ใช้เรียกเส้นทางอื่นไม่ได้เลย
+            if await totp.is_enabled(session):
+                waiting = await issue_challenge(
+                    session, credential_updated_at=stored.updated_at, now=now
+                )
+                await guard.forget_account()
+                set_challenge_cookie(response, waiting.token)
+                return SignInStarted(user_id=user_id, second_step_required=True)
 
             token = await _start_session(session, user_id, now)
 
         await guard.forget_account()
 
     set_session_cookies(response, token=token, csrf_token=new_csrf_token())
-    return Identity(user_id=user_id)
+    return SignInStarted(user_id=user_id, second_step_required=False)
 
 
 async def _end_sessions(
@@ -357,12 +393,15 @@ async def change_password(
     ) as guard:
         _refuse_if_throttled(guard)
         async with user_session(engine, account, role=DatabaseRole.AUTH) as session:
-            stored = await locked_hash(session, account)
-            if stored is None or not password_matches(stored, current):
+            stored = await locked_credential(session, account)
+            if stored is None or not password_matches(stored.password_hash, current):
                 await guard.count_attempt()
-                raise HTTPException(status.HTTP_401_UNAUTHORIZED, "รหัสผ่านปัจจุบันไม่ถูกต้อง")
+                raise AuthRejectedError(status.HTTP_401_UNAUTHORIZED, "รหัสผ่านปัจจุบันไม่ถูกต้อง")
 
             await replace_password_hash(session, account, password_hash=hash_password(new_password))
+            # **ลบ challenge ทุกใบด้วย** มิฉะนั้นใบที่ออกด้วยรหัสผ่านเก่าจะยังผ่าน
+            # ปัจจัยที่สองแล้วได้ session ใหม่ทีหลัง ซึ่งขัด RQ-22 (F-06 plan.md 1.4)
+            await end_all_challenges(session)
             ended = await end_others(session, keep_token_hash=who.token_hash)
             await _record_own_action(
                 session, account, AuditAction.PASSWORD_CHANGED, PasswordChangedDetails()
@@ -373,6 +412,15 @@ async def change_password(
 
 
 @router.get("/me")
-async def read_me(who: Annotated[Authenticated, Depends(current_user)]) -> Identity:
-    """ตัวตนของคำขอนี้ — เส้นทางที่หน้าเว็บใช้ถามว่าเข้าสู่ระบบอยู่หรือไม่"""
-    return Identity(user_id=who.user_id)
+async def read_me(request: Request, who: Annotated[Authenticated, Depends(current_user)]) -> Me:
+    """ตัวตนของคำขอนี้ และสถานะปัจจัยที่สอง
+
+    **`totp_enabled` คือคำตอบที่ F-24 ใช้** (RQ-12) — secret ที่ยังไม่ยืนยัน
+    นับว่ายังไม่เปิด เพราะมันไม่มีผลกับการยืนยันตัวตนเลย
+
+    **ไม่ต่ออายุ session** เพราะหน้าเว็บเรียกเส้นทางนี้เป็นรอบ ๆ (Q-2 ของ F-05)
+    """
+    engine = _engine(request, DatabaseRole.AUTH)
+    async with user_session(engine, who.user_id, role=DatabaseRole.AUTH) as session:
+        enabled = await totp.is_enabled(session)
+    return Me(user_id=who.user_id, totp_enabled=enabled)

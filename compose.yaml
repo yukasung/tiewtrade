@@ -53,6 +53,9 @@ services:
       TIEWTRADE_SIGNUP_OPEN: "1"
       # ปิดธง Secure เพราะ compose ให้บริการผ่าน http — บนเครื่องจริงห้ามปิด
       TIEWTRADE_COOKIE_SECURE: "0"
+      # กุญแจปิดผนึก secret ของ TOTP (F-06) — **ค่านี้ใช้ได้เฉพาะเครื่องพัฒนาและ CI**
+      # บนเครื่องจริงยังเป็นข้อที่ต้องตัดสิน (T-03) ซึ่งเป็นงาน F-31
+      TIEWTRADE_SEALING_KEY_TOTP_SECRET: "1:ZGV2LW9ubHkta2V5LW5vdC1hLXNlY3JldC0zMmJ5dGU="
     ports:
       - "8000:8000"
     healthcheck:

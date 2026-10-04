@@ -14,7 +14,20 @@ from typing import Final
 #: ชื่อ cookie — `httpOnly` ตัวหนึ่งสำหรับ session และตัวที่อ่านได้สำหรับโทเคนกัน CSRF
 SESSION_COOKIE: Final[str] = "tiewtrade_session"
 CSRF_COOKIE: Final[str] = "tiewtrade_csrf"
+
+#: cookie ของ challenge ระหว่างรหัสผ่านกับปัจจัยที่สอง (F-06)
+#:
+#: **แยกจาก cookie ของ session โดยเจตนา** เพื่อให้สิ่งที่ยังไม่ผ่านปัจจัยที่สอง
+#: ไม่มีทางถูกตีความเป็น session ได้เลย แม้โค้ดที่ไหนพลาด
+CHALLENGE_COOKIE: Final[str] = "tiewtrade_challenge"
 CSRF_HEADER: Final[str] = "X-CSRF-Token"
+
+#: header ที่พารหัสยืนยันปัจจัยที่สองของคำขอนั้น (F-06 RQ-6)
+#:
+#: **มาทาง header ไม่ใช่ใน body** เพราะการตัดสินสิทธิ์อยู่ที่ middleware ตัวเดียว
+#: (`security.md` หัวข้อ 2) และ middleware อ่าน body ไม่ได้โดยไม่กินมันไปจาก endpoint
+#: · ข้อนี้ทำให้ทุกเส้นทางที่ต้องยืนยันซ้ำใช้ทางเดียวกัน ไม่ใช่แต่ละเส้นทางคิดเอง
+TOTP_HEADER: Final[str] = "X-TiewTrade-TOTP"
 
 _SIGNUP_VARIABLE: Final[str] = "TIEWTRADE_SIGNUP_OPEN"
 _COOKIE_SECURE_VARIABLE: Final[str] = "TIEWTRADE_COOKIE_SECURE"

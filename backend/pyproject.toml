@@ -14,6 +14,9 @@ dependencies = [
     "httpx>=0.28",
     # รหัสผ่าน (F-05) — argon2 ตาม standards/security.md หัวข้อ 1
     "argon2-cffi>=23.1",
+    # ปิดผนึก secret ของ TOTP (F-06) — AES-GCM ตาม plan.md หัวข้อ 4.3
+    # **ห้ามใช้กุญแจตัวเดียวกับ API secret ของตลาด** (RQ-14)
+    "cryptography>=44.0",
 ]
 
 [dependency-groups]

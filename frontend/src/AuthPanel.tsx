@@ -1,14 +1,16 @@
 import { type JSX, useEffect, useState } from "react";
 
 import {
+  completeSignIn,
   fetchIdentity,
-  type Identity,
   logIn,
   logOut,
   logOutEverywhere,
+  type Me,
   primeCsrfToken,
   register,
 } from "./auth";
+import { TotpPanel } from "./TotpPanel";
 
 type Mode = "login" | "register";
 
@@ -22,12 +24,17 @@ type Mode = "login" | "register";
  * ของ session เป็น httpOnly ซึ่งสคริปต์อ่านไม่ได้โดยเจตนา
  */
 export function AuthPanel(): JSX.Element {
-  const [identity, setIdentity] = useState<Identity | null>(null);
+  const [identity, setIdentity] = useState<Me | null>(null);
   const [mode, setMode] = useState<Mode>("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [refusal, setRefusal] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  // **ขั้นที่สองของการเข้าสู่ระบบ** — จริงเมื่อหลังบ้านบอกว่ายังไม่จบ (F-06 RQ-5)
+  const [secondStep, setSecondStep] = useState(false);
+  const [code, setCode] = useState("");
+  const [recoveryCode, setRecoveryCode] = useState("");
+  const [codesLeft, setCodesLeft] = useState<number | null>(null);
 
   useEffect(() => {
     void primeCsrfToken().then(fetchIdentity).then(setIdentity).catch(() => {
@@ -43,6 +50,9 @@ export function AuthPanel(): JSX.Element {
       const found = await fetchIdentity();
       setIdentity(found);
       setPassword("");
+      if (found !== null) {
+        setSecondStep(false);
+      }
       if (found === null) {
         // ออกจากระบบแล้ว cookie กัน CSRF ถูกลบไปด้วย — ต้องขอใบใหม่
         // มิฉะนั้นการเข้าสู่ระบบครั้งต่อไปจะถูกปฏิเสธจนกว่าผู้ใช้จะโหลดหน้าใหม่
@@ -59,12 +69,67 @@ export function AuthPanel(): JSX.Element {
     }
   }
 
+  if (secondStep && identity === null) {
+    return (
+      <section data-testid="second-step">
+        <h2>ยืนยันอีกขั้น</h2>
+        <p>
+          กรอกรหัสจากแอปยืนยันตัวตน — หรือใช้รหัสสำรองหนึ่งใบถ้าไม่มีเครื่องนั้นแล้ว
+        </p>
+        <form
+          onSubmit={(event) => {
+            event.preventDefault();
+            void run(async () => {
+              const done = await completeSignIn(
+                recoveryCode === "" ? { code } : { recoveryCode },
+              );
+              setCodesLeft(done.recovery_codes_left ?? null);
+              setCode("");
+              setRecoveryCode("");
+            });
+          }}
+        >
+          <label htmlFor="second-step-code">รหัสจากแอป</label>
+          <input
+            id="second-step-code"
+            name="second-step-code"
+            inputMode="numeric"
+            autoComplete="one-time-code"
+            value={code}
+            onChange={(event) => {
+              setCode(event.target.value);
+            }}
+          />
+          <label htmlFor="second-step-recovery">หรือรหัสสำรอง</label>
+          <input
+            id="second-step-recovery"
+            name="second-step-recovery"
+            autoComplete="off"
+            value={recoveryCode}
+            onChange={(event) => {
+              setRecoveryCode(event.target.value);
+            }}
+          />
+          <button type="submit" data-testid="submit-second-step" disabled={busy}>
+            ยืนยัน
+          </button>
+        </form>
+        {refusal !== null && <p data-testid="refusal">{refusal}</p>}
+      </section>
+    );
+  }
+
   if (identity !== null) {
     return (
       <section data-testid="signed-in">
         <p>
           เข้าสู่ระบบแล้ว: <span data-testid="user-id">{identity.user_id}</span>
         </p>
+        {codesLeft !== null && (
+          <p data-testid="codes-left">
+            เข้าสู่ระบบด้วยรหัสสำรอง — เหลืออีก {codesLeft} ใบ
+          </p>
+        )}
         <button
           type="button"
           data-testid="log-out"
@@ -82,6 +147,12 @@ export function AuthPanel(): JSX.Element {
           ออกจากระบบทุกเครื่อง
         </button>
         {refusal !== null && <p data-testid="refusal">{refusal}</p>}
+        <TotpPanel
+          identity={identity}
+          onChanged={async () => {
+            setIdentity(await fetchIdentity());
+          }}
+        />
       </section>
     );
   }
@@ -92,7 +163,15 @@ export function AuthPanel(): JSX.Element {
       <form
         onSubmit={(event) => {
           event.preventDefault();
-          void run(() => (mode === "login" ? logIn(email, password) : register(email, password)));
+          void run(async () => {
+            if (mode === "register") {
+              await register(email, password);
+              return;
+            }
+            const started = await logIn(email, password);
+            // **ขั้นแรกอาจยังไม่จบ** — ถ้ายังต้องยืนยันอีกขั้น อย่าถือว่าเข้าสู่ระบบแล้ว
+            setSecondStep(started.second_step_required);
+          });
         }}
       >
         <label htmlFor="email">อีเมล</label>

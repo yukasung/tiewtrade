@@ -50,9 +50,21 @@ def test_every_route_is_classified_as_public_or_protected() -> None:
     paths = {route.path for route in _api_routes()} - GENERATED
     assert paths, "ไม่พบเส้นทางของระบบเลย ซึ่งแปลว่าด่านนี้อ่านผิดที่"
     assert paths >= PUBLIC_ROUTES, "รายการสาธารณะมีเส้นทางที่ไม่มีอยู่จริง"
-    assert frozenset({"/health", "/auth/csrf", "/auth/register", "/auth/login"}) == PUBLIC_ROUTES, (
-        "รายการสาธารณะเปลี่ยน — ต้องเป็นการตัดสินใจที่เห็นในรีวิว ไม่ใช่ผลข้างเคียง"
-    )
+    # F-06 เพิ่ม `/auth/totp/login` เป็นเส้นทางที่ห้า **เพราะต้องเป็นสาธารณะ**:
+    # ตอนขั้นที่สอง ผู้ใช้ยังไม่มี session มีแต่ challenge — และ challenge ใช้เรียก
+    # เส้นทางอื่นไม่ได้เลย ฉะนั้นเส้นทางนี้ไม่ได้เปิดช่องให้ใครทำอะไรโดยไม่มีปัจจัยใด
+    assert (
+        frozenset(
+            {
+                "/health",
+                "/auth/csrf",
+                "/auth/register",
+                "/auth/login",
+                "/auth/totp/login",
+            }
+        )
+        == PUBLIC_ROUTES
+    ), "รายการสาธารณะเปลี่ยน — ต้องเป็นการตัดสินใจที่เห็นในรีวิว ไม่ใช่ผลข้างเคียง"
 
 
 def test_routes_that_renew_the_session_are_declared_and_few() -> None:
@@ -63,7 +75,23 @@ def test_routes_that_renew_the_session_are_declared_and_few() -> None:
     """
     paths = {route.path for route in _api_routes()}
     assert paths >= RENEWING_ROUTES
-    assert frozenset({"/auth/logout", "/auth/logout-all", "/auth/password"}) == RENEWING_ROUTES
+    # F-06 เพิ่มห้าเส้นทางที่เป็น **การกระทำของผู้ใช้** จึงนับเป็นการใช้งาน
+    # — ไม่มีเส้นทางอ่านข้อมูลที่หน้าเว็บเรียกเป็นรอบ ๆ อยู่ในรายการนี้ (Q-2)
+    assert (
+        frozenset(
+            {
+                "/auth/logout",
+                "/auth/logout-all",
+                "/auth/password",
+                "/auth/totp/setup",
+                "/auth/totp/confirm",
+                "/auth/totp/replace",
+                "/auth/totp/disable",
+                "/auth/totp/recovery-codes",
+            }
+        )
+        == RENEWING_ROUTES
+    )
 
 
 def test_no_route_is_both_public_and_renewing() -> None:

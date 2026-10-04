@@ -1,6 +1,39 @@
 {
   "components": {
     "schemas": {
+      "CodesIssued": {
+        "description": "ชุดรหัสสำรองใหม่ — **แสดงครั้งเดียว ไม่มีทางอ่านกลับ**",
+        "properties": {
+          "recovery_codes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Recovery Codes",
+            "type": "array"
+          }
+        },
+        "required": [
+          "recovery_codes"
+        ],
+        "title": "CodesIssued",
+        "type": "object"
+      },
+      "Confirmation": {
+        "description": "รหัสจาก secret ที่เพิ่งตั้งค่า",
+        "properties": {
+          "code": {
+            "maxLength": 16,
+            "minLength": 1,
+            "title": "Code",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code"
+        ],
+        "title": "Confirmation",
+        "type": "object"
+      },
       "Credentials": {
         "description": "อีเมลกับรหัสผ่านที่ผู้ใช้กรอก",
         "properties": {
@@ -36,6 +69,72 @@
           "csrf_token"
         ],
         "title": "CsrfToken",
+        "type": "object"
+      },
+      "CurrentPassword": {
+        "description": "รหัสผ่านปัจจุบัน — ทุกเส้นทางที่เปลี่ยนปัจจัยที่สองต้องการค่านี้ (Q-4)",
+        "properties": {
+          "password": {
+            "maxLength": 4096,
+            "minLength": 1,
+            "title": "Password",
+            "type": "string"
+          }
+        },
+        "required": [
+          "password"
+        ],
+        "title": "CurrentPassword",
+        "type": "object"
+      },
+      "Disabled": {
+        "description": "ผลของการปิด TOTP",
+        "properties": {
+          "ended": {
+            "title": "Ended",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "ended"
+        ],
+        "title": "Disabled",
+        "type": "object"
+      },
+      "Enabled": {
+        "description": "ผลของการเปิดใช้ — รหัสสำรองชุดใหม่ และจำนวน session ที่ถูกเพิกถอน",
+        "properties": {
+          "ended": {
+            "title": "Ended",
+            "type": "integer"
+          },
+          "recovery_codes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Recovery Codes",
+            "type": "array"
+          }
+        },
+        "required": [
+          "recovery_codes",
+          "ended"
+        ],
+        "title": "Enabled",
+        "type": "object"
+      },
+      "Enrollment": {
+        "description": "ของที่ผู้ใช้ต้องเอาไปใส่แอป — **ส่งครั้งเดียวต่อการเรียกหนึ่งครั้ง**",
+        "properties": {
+          "otpauth_uri": {
+            "title": "Otpauth Uri",
+            "type": "string"
+          }
+        },
+        "required": [
+          "otpauth_uri"
+        ],
+        "title": "Enrollment",
         "type": "object"
       },
       "HTTPValidationError": {
@@ -91,6 +190,26 @@
         "title": "Identity",
         "type": "object"
       },
+      "Me": {
+        "description": "ตัวตนของคำขอ พร้อมสถานะปัจจัยที่สอง (F-06 RQ-12)",
+        "properties": {
+          "totp_enabled": {
+            "title": "Totp Enabled",
+            "type": "boolean"
+          },
+          "user_id": {
+            "format": "uuid",
+            "title": "User Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "user_id",
+          "totp_enabled"
+        ],
+        "title": "Me",
+        "type": "object"
+      },
       "PasswordChange": {
         "description": "การเปลี่ยนรหัสผ่าน — ต้องยืนยันค่าปัจจุบัน (Q-5)",
         "properties": {
@@ -114,6 +233,37 @@
         "title": "PasswordChange",
         "type": "object"
       },
+      "SecondStep": {
+        "description": "ขั้นที่สองของการเข้าสู่ระบบ — รหัสจากแอป **หรือ** รหัสสำรองหนึ่งใบ",
+        "properties": {
+          "code": {
+            "anyOf": [
+              {
+                "maxLength": 16,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Code"
+          },
+          "recovery_code": {
+            "anyOf": [
+              {
+                "maxLength": 32,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recovery Code"
+          }
+        },
+        "title": "SecondStep",
+        "type": "object"
+      },
       "SessionsEnded": {
         "description": "จำนวน session ที่ถูกเพิกถอน",
         "properties": {
@@ -126,6 +276,52 @@
           "ended"
         ],
         "title": "SessionsEnded",
+        "type": "object"
+      },
+      "SignInStarted": {
+        "description": "ผลของขั้นแรกของการเข้าสู่ระบบ (F-06)\n\n**รูปร่างเดียวกันทั้งสองกรณี** ต่างกันแค่ค่าในช่อง และ cookie ที่แนบกลับไป\nฉะนั้นคนที่ยังไม่ผ่านรหัสผ่านแยกสองกรณีไม่ได้ — เขาได้ `LOGIN_FAILED` เหมือนเดิม\n**ก่อน** ที่โค้ดจะแตะข้อมูล TOTP เลย (RQ-11)",
+        "properties": {
+          "second_step_required": {
+            "title": "Second Step Required",
+            "type": "boolean"
+          },
+          "user_id": {
+            "format": "uuid",
+            "title": "User Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "user_id",
+          "second_step_required"
+        ],
+        "title": "SignInStarted",
+        "type": "object"
+      },
+      "SignedIn": {
+        "description": "ผลของขั้นที่สอง — รหัสผู้ใช้ และจำนวนรหัสสำรองที่เหลือถ้าใช้ไปใบหนึ่ง",
+        "properties": {
+          "recovery_codes_left": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recovery Codes Left"
+          },
+          "user_id": {
+            "format": "uuid",
+            "title": "User Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "user_id"
+        ],
+        "title": "SignedIn",
         "type": "object"
       },
       "ValidationError": {
@@ -218,7 +414,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Identity"
+                  "$ref": "#/components/schemas/SignInStarted"
                 }
               }
             },
@@ -287,14 +483,14 @@
     },
     "/auth/me": {
       "get": {
-        "description": "ตัวตนของคำขอนี้ — เส้นทางที่หน้าเว็บใช้ถามว่าเข้าสู่ระบบอยู่หรือไม่",
+        "description": "ตัวตนของคำขอนี้ และสถานะปัจจัยที่สอง\n\n**`totp_enabled` คือคำตอบที่ F-24 ใช้** (RQ-12) — secret ที่ยังไม่ยืนยัน\nนับว่ายังไม่เปิด เพราะมันไม่มีผลกับการยืนยันตัวตนเลย\n\n**ไม่ต่ออายุ session** เพราะหน้าเว็บเรียกเส้นทางนี้เป็นรอบ ๆ (Q-2 ของ F-05)",
         "operationId": "read_me_auth_me_get",
         "responses": {
           "200": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Identity"
+                  "$ref": "#/components/schemas/Me"
                 }
               }
             },
@@ -386,6 +582,258 @@
           }
         },
         "summary": "Register",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/auth/totp/confirm": {
+      "post": {
+        "description": "ยืนยันแล้วเปิดใช้ — **ทั้งก้อนสำเร็จหรือล้มเหลวด้วยกัน** (validation V-11.2)\n\nในก้อนเดียวกัน: สลับ secret, ยกเลิกรหัสสำรองชุดเก่า, ออกชุดใหม่,\nเพิกถอน session อื่นทั้งหมด และลงบันทึก\n\n**รหัสสำรองชุดเก่าถูกยกเลิกที่นี่ ไม่ใช่ตอนเริ่มเปลี่ยนเครื่อง** เพราะผู้ใช้ที่\nทิ้งกลางทางต้องไม่เสียทั้งรหัสสำรองและเครื่องใหม่",
+        "operationId": "confirm_setup_auth_totp_confirm_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Confirmation"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Enabled"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Confirm Setup",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/auth/totp/disable": {
+      "post": {
+        "description": "ปิด TOTP — **ปิดไม่ได้ขณะที่ Live เปิดอยู่** (Q-4)\n\nเพราะ R-19 บังคับว่า Live ต้องมี 2FA ถ้ายอมให้ปิดโดย Live ยังเปิด จะเกิดสถานะ\nที่ spec ห้าม · **ไม่ปิด Live ให้อัตโนมัติ** เพราะกระทบไม้ที่เปิดอยู่ ซึ่งเป็น\nผลข้างเคียงที่ผู้ใช้ไม่ได้สั่ง",
+        "operationId": "disable_totp_auth_totp_disable_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CurrentPassword"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Disabled"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Disable Totp",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/auth/totp/login": {
+      "post": {
+        "description": "ขั้นที่สองของการเข้าสู่ระบบ — รหัสจากแอป หรือรหัสสำรองหนึ่งใบ\n\n**ออก session ที่นี่เท่านั้น** ขั้นแรกคืน challenge ซึ่งใช้เรียกเส้นทางอื่นไม่ได้เลย\nฉะนั้น RQ-5 เป็นจริงโดยโครงสร้าง ไม่ใช่เพราะ middleware ขยัน\n\n**เทียบรุ่นของรหัสผ่านใต้ล็อก** ฉะนั้น challenge ที่ออกด้วยรหัสผ่านเก่าใช้ต่อไม่ได้\nแม้จะยังไม่หมดอายุ (RQ-22 ของ F-05 · `plan.md` หัวข้อ 1.4)",
+        "operationId": "complete_sign_in_auth_totp_login_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SecondStep"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SignedIn"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Complete Sign In",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/auth/totp/recovery-codes": {
+      "post": {
+        "description": "ออกชุดรหัสสำรองใหม่ — **ชุดเก่าใช้ไม่ได้ทันที** (RQ-15)",
+        "operationId": "reissue_recovery_codes_auth_totp_recovery_codes_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CurrentPassword"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CodesIssued"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Reissue Recovery Codes",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/auth/totp/replace": {
+      "post": {
+        "description": "ออก secret ใหม่สำหรับเครื่องใหม่ — **ปัจจัยเดิมยังใช้ได้จนยืนยันสำเร็จ**\n\nmiddleware บังคับปัจจัยที่สองของเส้นทางนี้แล้ว (รหัส TOTP หรือสิทธิ์กู้บัญชี)\nที่นี่จึงเหลือแค่รหัสผ่านปัจจุบัน และการใช้สิทธิ์กู้ถ้าคำขอนี้ผ่านด้วยมัน",
+        "operationId": "replace_secret_auth_totp_replace_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CurrentPassword"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Enrollment"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Replace Secret",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/auth/totp/setup": {
+      "post": {
+        "description": "เริ่มตั้งค่า TOTP — **ต้องกรอกรหัสผ่านปัจจุบัน** (RQ-3.1)\n\nsession ที่กำลังใช้อยู่ **ไม่พอ** เพราะการกรอกรหัสจาก secret ที่ระบบเพิ่งแจกให้\nพิสูจน์แค่ว่าตั้งค่าแอปสำเร็จ ไม่ได้พิสูจน์ว่าเป็นเจ้าของบัญชี — ถ้าไม่มีข้อนี้\nคนที่ขโมย session ไปจะผูกแอปของตัวเองแล้วกันเจ้าของออกตอน login ครั้งถัดไป",
+        "operationId": "start_setup_auth_totp_setup_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CurrentPassword"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Enrollment"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Start Setup",
         "tags": [
           "auth"
         ]
