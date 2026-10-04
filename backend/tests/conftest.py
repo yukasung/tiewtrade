@@ -9,11 +9,15 @@
 from __future__ import annotations
 
 import base64
+from collections.abc import AsyncIterator
 from typing import Final
 
 import pytest
+import pytest_asyncio
+from sqlalchemy.ext.asyncio import AsyncEngine
 
 from tiewtrade.infra.crypto import KEY_BYTES, KeyPurpose
+from tiewtrade.infra.db import DatabaseRole, create_engine_for
 
 #: กุญแจของเทสต์ — **ค่าคงที่ที่ไม่มีความลับ** และใช้ได้เฉพาะในเทสต์
 TEST_SEALING_KEY: Final[str] = "1:" + base64.b64encode(b"T" * KEY_BYTES).decode("ascii")
@@ -26,3 +30,42 @@ def _sealing_key(monkeypatch: pytest.MonkeyPatch) -> None:
     เทสต์ที่ต้องพิสูจน์ว่า **ไม่มีกุญแจแล้วแอปไม่เริ่ม** ลบค่านี้เองในเทสต์ของมัน
     """
     monkeypatch.setenv(KeyPurpose.TOTP_SECRET.environment_variable, TEST_SEALING_KEY)
+
+
+async def _engine(role: DatabaseRole) -> AsyncIterator[AsyncEngine]:
+    engine = create_engine_for(role)
+    try:
+        yield engine
+    finally:
+        await engine.dispose()
+
+
+@pytest_asyncio.fixture
+async def api_engine() -> AsyncIterator[AsyncEngine]:
+    async for engine in _engine(DatabaseRole.API):
+        yield engine
+
+
+@pytest_asyncio.fixture
+async def engine_engine() -> AsyncIterator[AsyncEngine]:
+    async for engine in _engine(DatabaseRole.ENGINE):
+        yield engine
+
+
+@pytest_asyncio.fixture
+async def scan_engine() -> AsyncIterator[AsyncEngine]:
+    async for engine in _engine(DatabaseRole.ENGINE_SCAN):
+        yield engine
+
+
+@pytest_asyncio.fixture
+async def auth_engine() -> AsyncIterator[AsyncEngine]:
+    """บทบาทยืนยันตัวตนของ F-05 — บทบาทเดียวที่แตะข้อมูลเข้าสู่ระบบได้"""
+    async for engine in _engine(DatabaseRole.AUTH):
+        yield engine
+
+
+@pytest_asyncio.fixture
+async def migrator_engine() -> AsyncIterator[AsyncEngine]:
+    async for engine in _engine(DatabaseRole.MIGRATOR):
+        yield engine
