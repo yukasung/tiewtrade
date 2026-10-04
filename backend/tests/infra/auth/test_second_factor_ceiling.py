@@ -9,10 +9,10 @@ from __future__ import annotations
 
 import asyncio
 from datetime import UTC, datetime, timedelta
-from uuid import uuid4
 
 from sqlalchemy.ext.asyncio import AsyncEngine
 
+from tests.infra.auth.conftest import fresh_bucket_key
 from tiewtrade.infra.auth.throttle import (
     RULES,
     SECOND_FACTOR_CAPACITY,
@@ -28,11 +28,6 @@ from tiewtrade.infra.db.session import presented_session
 
 #: ถังของปัจจัยที่สองทั้งสามใบ
 SECOND_FACTOR_BUCKETS = (Bucket.TOTP_ACCOUNT, Bucket.TOTP_IP, Bucket.RECOVERY_ACCOUNT)
-
-
-def fresh_key() -> str:
-    """คีย์ที่ไม่ซ้ำกับเทสต์อื่น — ต้องเป็นแฮช 64 ตัวอักษรตาม `CHECK` ของตาราง"""
-    return f"{uuid4().hex}{uuid4().hex}"
 
 
 async def attempt(engine: AsyncEngine, bucket: Bucket, key: str, *, now: datetime) -> bool:
@@ -101,7 +96,7 @@ async def test_the_ceiling_holds_in_any_sixty_minutes(auth_engine: AsyncEngine) 
     หน้าต่างคงที่จะยอมให้เดาเต็มเพดานท้ายหน้าต่างแรกแล้วต่อต้นหน้าต่างถัดไป
     ซึ่งได้สองเท่าในช่วง 60 นาทีจริง — เทสต์นี้คือเหตุผลที่ไม่ใช้หน้าต่างคงที่
     """
-    key = fresh_key()
+    key = fresh_bucket_key()
 
     allowed = await guesses_allowed(
         auth_engine,
@@ -118,7 +113,7 @@ async def test_the_ceiling_holds_in_any_sixty_minutes(auth_engine: AsyncEngine) 
 
 async def test_the_burst_is_the_capacity(auth_engine: AsyncEngine) -> None:
     """V-62.6 — พิมพ์ผิดติดกันได้เท่าความจุ แล้วถูกปฏิเสธ"""
-    key = fresh_key()
+    key = fresh_bucket_key()
     now = datetime.now(UTC)
 
     for attempt_number in range(SECOND_FACTOR_CAPACITY):
@@ -131,7 +126,7 @@ async def test_the_burst_is_the_capacity(auth_engine: AsyncEngine) -> None:
 
 async def test_one_token_comes_back_each_interval(auth_engine: AsyncEngine) -> None:
     """V-62.6 — เติมคืนหนึ่งครั้งต่อหนึ่งช่วง ไม่ใช่คืนเต็มก้อน"""
-    key = fresh_key()
+    key = fresh_bucket_key()
     now = datetime.now(UTC)
     for _ in range(SECOND_FACTOR_CAPACITY):
         await attempt(auth_engine, Bucket.TOTP_ACCOUNT, key, now=now)
@@ -157,7 +152,7 @@ async def test_the_ceiling_is_not_exceeded_by_requests_at_once(
 
     ถ้าแต่ละคำขออ่านโควตาของตัวเองแล้วเขียนทับกัน ความจุ 4 จะกลายเป็นไม่จำกัด
     """
-    key = fresh_key()
+    key = fresh_bucket_key()
     now = datetime.now(UTC)
 
     results = await asyncio.gather(
@@ -175,7 +170,7 @@ async def test_the_quota_is_shared_across_checkpoints(auth_engine: AsyncEngine) 
     คีย์ของถังคือบัญชี ไม่ใช่จุดตรวจหรือรอบ login ฉะนั้นใช้โควตาหมดที่จุดหนึ่ง
     แล้วย้ายไปเดาที่จุดอื่นก็ยังถูกปฏิเสธ — ช่องที่รีวิวรอบแรกจับได้
     """
-    account_key = fresh_key()
+    account_key = fresh_bucket_key()
     now = datetime.now(UTC)
     for _ in range(SECOND_FACTOR_CAPACITY):
         await attempt(auth_engine, Bucket.TOTP_ACCOUNT, account_key, now=now)
@@ -190,7 +185,7 @@ async def test_the_recovery_bucket_is_separate(auth_engine: AsyncEngine) -> None
     ถ้าใช้ถังเดียวกัน ผู้โจมตีเดารหัสสำรองจนโควตาของ TOTP หมดได้ แล้วเจ้าของ
     ที่ถือเครื่องอยู่จะใช้รหัสจากแอปไม่ได้
     """
-    key = fresh_key()
+    key = fresh_bucket_key()
     now = datetime.now(UTC)
     for _ in range(SECOND_FACTOR_CAPACITY):
         await attempt(auth_engine, Bucket.RECOVERY_ACCOUNT, key, now=now)
@@ -207,7 +202,7 @@ async def test_the_quota_is_not_cleared_by_success(auth_engine: AsyncEngine) -> 
     """
     from tiewtrade.infra.auth.throttle import clear
 
-    key = fresh_key()
+    key = fresh_bucket_key()
     now = datetime.now(UTC)
     for _ in range(SECOND_FACTOR_CAPACITY):
         await attempt(auth_engine, Bucket.TOTP_ACCOUNT, key, now=now)
@@ -233,7 +228,7 @@ async def test_forgetting_the_account_does_not_refill_a_second_factor_bucket(
     """
     from tiewtrade.services.api.throttling import ThrottleGuard
 
-    key = fresh_key()
+    key = fresh_bucket_key()
     now = datetime.now(UTC)
     for _ in range(SECOND_FACTOR_CAPACITY):
         await attempt(auth_engine, Bucket.TOTP_ACCOUNT, key, now=now)

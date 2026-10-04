@@ -8,12 +8,11 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
-from uuid import uuid4
 
 import pytest
 from sqlalchemy.ext.asyncio import AsyncEngine
 
-from tests.infra.auth.conftest import make_account
+from tests.infra.auth.conftest import fresh_bucket_key, make_account
 from tiewtrade.infra.auth import challenges
 from tiewtrade.infra.auth.cleanup import sweep
 from tiewtrade.infra.auth.throttle import (
@@ -29,11 +28,6 @@ from tiewtrade.infra.db.session import presented_session, user_session
 
 
 #: คีย์ของถังต้องเป็นแฮช 64 ตัวอักษรตาม `CHECK` ของตาราง
-def fresh_key() -> str:
-    """คีย์ที่ไม่ซ้ำกับเทสต์อื่น"""
-    return f"{uuid4().hex}{uuid4().hex}"
-
-
 async def rows_of(engine: AsyncEngine, bucket: Bucket, key: str) -> int:
     """จำนวนแถวของถังนั้นที่ยังอยู่"""
     async with presented_session(engine, role=DatabaseRole.AUTH) as session:
@@ -54,7 +48,7 @@ async def swept_at(engine: AsyncEngine, now: datetime) -> None:
 
 async def test_a_delaying_bucket_is_never_swept(auth_engine: AsyncEngine) -> None:
     """**ห้ามลบถังที่ยังหน่วงอยู่** — ลบแล้วเท่ากับยกเลิกการหน่วงให้ผู้โจมตี"""
-    key = fresh_key()
+    key = fresh_bucket_key()
     now = datetime.now(UTC)
     async with presented_session(auth_engine, role=DatabaseRole.AUTH) as session:
         await claim(session, Bucket.ACCOUNT, key, now=now)
@@ -70,7 +64,7 @@ async def test_a_delaying_bucket_is_never_swept(auth_engine: AsyncEngine) -> Non
 
 async def test_a_bucket_inside_its_window_is_never_swept(auth_engine: AsyncEngine) -> None:
     """**ห้ามลบถังที่หน้าต่างยังไม่ผ่าน** — ตัวนับในหน้าต่างนั้นยังมีผล"""
-    key = fresh_key()
+    key = fresh_bucket_key()
     now = datetime.now(UTC)
     async with presented_session(auth_engine, role=DatabaseRole.AUTH) as session:
         await claim(session, Bucket.ACCOUNT, key, now=now)
@@ -83,7 +77,7 @@ async def test_a_bucket_inside_its_window_is_never_swept(auth_engine: AsyncEngin
 
 async def test_a_bucket_past_its_window_is_swept(auth_engine: AsyncEngine) -> None:
     """หน้าต่างผ่านแล้วและไม่มีเวลาที่ต้องรอ → แถวนั้นให้ผลเท่ากับไม่มีแถว จึงลบได้"""
-    key = fresh_key()
+    key = fresh_bucket_key()
     now = datetime.now(UTC)
     async with presented_session(auth_engine, role=DatabaseRole.AUTH) as session:
         await claim(session, Bucket.ACCOUNT, key, now=now)
@@ -100,7 +94,7 @@ async def test_a_token_bucket_with_a_deficit_is_never_swept(auth_engine: AsyncEn
     นี่คือกรณีที่พลาดง่ายที่สุด เพราะถังที่โควตาเหลือศูนย์ดู "เก่า" แต่มันคือถังที่
     กำลังทำงานหนักที่สุด
     """
-    key = fresh_key()
+    key = fresh_bucket_key()
     now = datetime.now(UTC)
     async with presented_session(auth_engine, role=DatabaseRole.AUTH) as session:
         await claim(session, Bucket.TOTP_ACCOUNT, key, now=now)
@@ -116,7 +110,7 @@ async def test_a_token_bucket_with_a_deficit_is_never_swept(auth_engine: AsyncEn
 
 async def test_a_fully_refilled_token_bucket_is_swept(auth_engine: AsyncEngine) -> None:
     """เวลาผ่านไปพอเติมคืนจนเต็ม → แถวนั้นให้ผลเท่ากับไม่มีแถว จึงลบได้"""
-    key = fresh_key()
+    key = fresh_bucket_key()
     now = datetime.now(UTC)
     async with presented_session(auth_engine, role=DatabaseRole.AUTH) as session:
         await claim(session, Bucket.TOTP_ACCOUNT, key, now=now)
@@ -194,7 +188,7 @@ async def test_the_sweep_policy_cannot_delete_a_live_challenge_of_another_user(
 
 async def test_sweeping_counts_what_it_removed(auth_engine: AsyncEngine) -> None:
     """รายงานจำนวนที่ลบ เพื่อให้คนที่สั่งงานเห็นว่ามันทำอะไรจริง"""
-    key = fresh_key()
+    key = fresh_bucket_key()
     now = datetime.now(UTC)
     async with presented_session(auth_engine, role=DatabaseRole.AUTH) as session:
         await claim(session, Bucket.ACCOUNT, key, now=now)
@@ -213,7 +207,7 @@ async def test_every_bucket_kind_is_covered(auth_engine: AsyncEngine, bucket: Bu
     เทสต์นี้เดินรายการชนิดจริง ฉะนั้นการเพิ่มชนิดถังในอนาคตโดยไม่คิดเรื่องการเก็บกวาด
     จะแดงที่นี่
     """
-    key = fresh_key()
+    key = fresh_bucket_key()
     now = datetime.now(UTC)
     async with presented_session(auth_engine, role=DatabaseRole.AUTH) as session:
         await claim(session, bucket, key, now=now)

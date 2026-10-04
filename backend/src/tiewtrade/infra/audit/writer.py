@@ -11,11 +11,19 @@
 from __future__ import annotations
 
 import json
-from uuid import uuid4
+from uuid import UUID, uuid4
 
-from tiewtrade.infra.audit.events import AuditEvent, AuditEventError
+from tiewtrade.infra.audit.events import (
+    ActorKind,
+    AuditDetails,
+    AuditEvent,
+    AuditEventError,
+    AuditOutcome,
+    SubjectKind,
+)
+from tiewtrade.infra.audit.events import AuditAction as AuditAction
 from tiewtrade.infra.audit.redaction import ensure_no_forbidden_content
-from tiewtrade.infra.db.session import require_user_session
+from tiewtrade.infra.db.session import UserSession, require_user_session
 
 _INSERT = (
     "INSERT INTO audit_events"
@@ -61,4 +69,29 @@ async def record_event(session: object, event: AuditEvent) -> None:
             "failure_code": event.failure_code,
             "details": json.dumps(details, ensure_ascii=False, sort_keys=True),
         },
+    )
+
+
+async def record_own_action(
+    session: UserSession, user_id: UUID, action: AuditAction, details: AuditDetails
+) -> None:
+    """ลงบันทึกเหตุการณ์ที่ผู้ใช้ทำกับบัญชีตัวเอง — คอลัมน์แกนชุดเดียวกันทุกชนิด
+
+    เหตุการณ์ของ F-05 และ F-06 เกือบทั้งหมดมีรูปนี้ (ผู้กระทำและเป้าหมายคือเจ้าของ
+    บันทึก ผลคือสำเร็จ) **เขียนแยกทุกที่คือทุกที่ที่ต้องแก้ให้ตรงกันเมื่อกฎเปลี่ยน**
+    · ตัวตรวจ invariant ของ `events.py` บังคับรูปเดียวกันนี้อยู่แล้ว ฟังก์ชันนี้จึง
+    เป็นความสะดวก ไม่ใช่ที่ที่กฎอยู่
+    """
+    await record_event(
+        session,
+        AuditEvent(
+            owner_user_id=user_id,
+            action=action,
+            actor_kind=ActorKind.USER,
+            actor_id=user_id,
+            subject_kind=SubjectKind.USER,
+            subject_id=str(user_id),
+            outcome=AuditOutcome.SUCCEEDED,
+            details=details,
+        ),
     )

@@ -35,9 +35,9 @@ from tiewtrade.infra.auth import (
     renewed_idle_deadline,
     totp,
 )
-from tiewtrade.infra.crypto import KeySource
 from tiewtrade.infra.db import DatabaseRole
 from tiewtrade.infra.db.session import presented_session, user_session
+from tiewtrade.services.api.resources import engine_for, totp_keys
 from tiewtrade.services.api.routing_policy import (
     accepts_recovery_grant,
     is_public,
@@ -201,8 +201,8 @@ async def second_factor_of(request: Request, who: Authenticated) -> SecondFactor
     รหัสถูกใช้แล้ว หรือไม่มีสิทธิ์กู้
     """
     presented = request.headers.get(TOTP_HEADER, "")
-    engine = _auth_engine(request)
-    keys = _totp_keys(request)
+    engine = engine_for(request, DatabaseRole.AUTH)
+    keys = totp_keys(request)
     now = datetime.now(UTC)
 
     async with user_session(engine, who.user_id, role=DatabaseRole.AUTH) as session:
@@ -241,23 +241,3 @@ async def authenticate_request(engine: AsyncEngine, request: Request) -> None:
         request.state.authenticated = replace(
             found, second_factor=await second_factor_of(request, found)
         )
-
-
-def _auth_engine(request: Request) -> AsyncEngine:
-    """engine ของบทบาท `auth` — ตารางของปัจจัยที่สองแตะได้ด้วยบทบาทนี้เท่านั้น"""
-    engine = getattr(request.app.state, "auth_engine", None)
-    if not isinstance(engine, AsyncEngine):  # pragma: no cover - ตั้งค่าแอปผิด
-        raise RuntimeError("แอปยังไม่ได้ตั้ง engine ของบทบาท auth")
-    return engine
-
-
-def _totp_keys(request: Request) -> KeySource:
-    """กุญแจของ TOTP ที่ lifespan อ่านมาตอนเปิดแอป
-
-    อ่านตอนเปิดแอปเพื่อให้ **กุญแจไม่ครบ = กระบวนการไม่เริ่ม** ไม่ใช่ล้มตอนมีผู้ใช้
-    คนแรกมาเปิด TOTP (validation V-10)
-    """
-    keys = getattr(request.app.state, "totp_keys", None)
-    if not isinstance(keys, KeySource):  # pragma: no cover - ตั้งค่าแอปผิด
-        raise RuntimeError("แอปยังไม่ได้อ่านกุญแจของ TOTP")
-    return keys

@@ -23,8 +23,9 @@ from collections.abc import AsyncIterator, Sequence
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from datetime import datetime
+from typing import Final
 
-from fastapi import HTTPException
+from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncEngine
 
 from tiewtrade.infra.auth import Bucket, claim, clear, count_failure
@@ -82,6 +83,23 @@ class ThrottleGuard:
         for bucket, key in self._buckets:
             if bucket is Bucket.ACCOUNT:
                 await clear(self._session, bucket, key)
+
+
+#: ข้อความเดียวสำหรับทุกเส้นทางที่ถูกปฏิเสธเพราะเรียกถี่เกิน
+TOO_MANY_ATTEMPTS: Final[str] = "ลองมากเกินไป กรุณารอแล้วลองอีกครั้ง"
+
+
+def refuse_if_throttled(guard: ThrottleGuard) -> None:
+    """ปฏิเสธคำขอที่ติดหน่วงอยู่หรือโควตาหมด — **ที่เดียวสำหรับทุกเส้นทาง**
+
+    **ปฏิเสธก่อนตรวจรหัสผ่าน** ฉะนั้นเจ้าของที่กรอกถูกก็ถูกปฏิเสธด้วย — ข้อจำกัดนี้
+    ยังไม่ถูกปิด ดู **NC-14** ใน `requirements.md` ของ F-05
+
+    โยน `AuthRejectedError` ไม่ใช่ `HTTPException` เพราะอยู่ **ข้างใน** `throttled()`
+    และตัวนับต้องรอด (F-06 `plan.md` หัวข้อ 2)
+    """
+    if guard.blocked:
+        raise AuthRejectedError(status.HTTP_429_TOO_MANY_REQUESTS, TOO_MANY_ATTEMPTS)
 
 
 @asynccontextmanager

@@ -15,19 +15,14 @@ from uuid import UUID, uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from pydantic import BaseModel, Field
-from sqlalchemy.ext.asyncio import AsyncEngine
 
 from tiewtrade.core.passwords import PasswordPolicyError, acceptable_new_password, normalised
 from tiewtrade.infra.audit import (
-    ActorKind,
     AllSessionsEndedDetails,
     AuditAction,
-    AuditEvent,
-    AuditOutcome,
     PasswordChangedDetails,
     SessionDetails,
-    SubjectKind,
-    record_event,
+    record_own_action,
 )
 from tiewtrade.infra.auth import (
     Bucket,
@@ -62,15 +57,15 @@ from tiewtrade.services.api.authentication import (
     set_csrf_cookie,
     set_session_cookies,
 )
+from tiewtrade.services.api.resources import client_key, engine_for
 from tiewtrade.services.api.settings import signup_open
-from tiewtrade.services.api.throttling import AuthRejectedError, ThrottleGuard, throttled
+from tiewtrade.services.api.throttling import AuthRejectedError, refuse_if_throttled, throttled
 from tiewtrade.services.api.totp_routes import set_challenge_cookie
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 #: ข้อความเดียวสำหรับทั้ง "ไม่มีบัญชีนี้" และ "รหัสผ่านผิด" (RQ-8)
 LOGIN_FAILED: Final[str] = "อีเมลหรือรหัสผ่านไม่ถูกต้อง"
-TOO_MANY_ATTEMPTS: Final[str] = "ลองมากเกินไป กรุณารอแล้วลองอีกครั้ง"
 
 #: ความยาวอีเมลสูงสุดตามขอบที่ใช้ได้จริงของ RFC 5321
 EMAIL_MAX_LENGTH: Final[int] = 254
@@ -127,19 +122,6 @@ class SessionsEnded(BaseModel):
     ended: int
 
 
-def _engine(request: Request, role: DatabaseRole) -> AsyncEngine:
-    """engine ของบทบาทนั้น ตามที่ lifespan ของแอปสร้างไว้
-
-    **เส้นทางที่แตะข้อมูลเข้าสู่ระบบต้องขอบทบาท `AUTH` เท่านั้น** การเลือกบทบาท
-    จึงเขียนไว้ที่จุดเรียกให้เห็นชัด ไม่ซ่อนอยู่ในชื่อฟังก์ชันสองตัวที่ต่างกันทีละคำ
-    """
-    attribute = {DatabaseRole.API: "api_engine", DatabaseRole.AUTH: "auth_engine"}[role]
-    engine = getattr(request.app.state, attribute, None)
-    if not isinstance(engine, AsyncEngine):  # pragma: no cover - ตั้งค่าแอปผิด
-        raise RuntimeError(f"แอปยังไม่ได้ตั้ง engine ของบทบาท {role.role_name}")
-    return engine
-
-
 def normalise_email(raw: str) -> str:
     """อีเมลในรูปที่เก็บ — ตัดช่องว่างและทำเป็นตัวพิมพ์เล็ก
 
@@ -151,25 +133,6 @@ def normalise_email(raw: str) -> str:
     if "@" not in candidate or len(candidate) > EMAIL_MAX_LENGTH:
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "อีเมลไม่ถูกรูปแบบ")
     return candidate
-
-
-def _refuse_if_throttled(guard: ThrottleGuard) -> None:
-    """ปฏิเสธคำขอที่ติดหน่วงอยู่ — สถานะและข้อความอยู่ที่เดียวทั้งสามเส้นทาง
-
-    **ปฏิเสธก่อนตรวจรหัสผ่าน** ฉะนั้นเจ้าของที่กรอกถูกก็ถูกปฏิเสธด้วย — ข้อจำกัดนี้
-    ยังไม่ถูกปิด ดู **NC-14** ใน `requirements.md`
-
-    โยน `AuthRejectedError` ไม่ใช่ `HTTPException` เพราะอยู่ **ข้างใน** `throttled()`
-    และตัวนับต้องรอด (F-06 `plan.md` หัวข้อ 2)
-    """
-    if guard.blocked:
-        raise AuthRejectedError(status.HTTP_429_TOO_MANY_REQUESTS, TOO_MANY_ATTEMPTS)
-
-
-def _client_key(request: Request) -> str:
-    """แฮชของที่มาคำขอ — ใช้เป็นคีย์ของตัวนับต่อ IP"""
-    client = request.client
-    return key_of(client.host if client is not None else "unknown")
 
 
 def _accepted_new_password(raw: str) -> str:
@@ -190,33 +153,6 @@ def _accepted_new_password(raw: str) -> str:
     return candidate
 
 
-async def _record_own_action(
-    session: UserSession,
-    user_id: UUID,
-    action: AuditAction,
-    details: SessionDetails | AllSessionsEndedDetails | PasswordChangedDetails,
-) -> None:
-    """ลงบันทึกเหตุการณ์ที่ผู้ใช้ทำกับบัญชีตัวเอง
-
-    ทั้งสี่เหตุการณ์ของงานนี้มีคอลัมน์แกนชุดเดียวกัน (ผู้กระทำและเป้าหมายคือเจ้าของ
-    บันทึก ผลคือสำเร็จ) — เขียนสี่ชุดคือสี่ชุดที่ต้องแก้ให้ตรงกันทุกครั้งที่กฎเปลี่ยน
-    ตัวตรวจ invariant ฝั่ง `infra` บังคับรูปเดียวกันนี้อยู่แล้ว
-    """
-    await record_event(
-        session,
-        AuditEvent(
-            owner_user_id=user_id,
-            action=action,
-            actor_kind=ActorKind.USER,
-            actor_id=user_id,
-            subject_kind=SubjectKind.USER,
-            subject_id=str(user_id),
-            outcome=AuditOutcome.SUCCEEDED,
-            details=details,
-        ),
-    )
-
-
 async def _start_session(session: UserSession, user_id: UUID, now: datetime) -> str:
     """ออก session ใหม่และลงบันทึก — คืน **โทเคนจริง** ที่ส่งให้เบราว์เซอร์ครั้งเดียว"""
     token, token_hash = new_token()
@@ -227,7 +163,7 @@ async def _start_session(session: UserSession, user_id: UUID, now: datetime) -> 
         idle_expires_at=deadlines.idle_expires_at,
         absolute_expires_at=deadlines.absolute_expires_at,
     )
-    await _record_own_action(session, user_id, AuditAction.SESSION_STARTED, SessionDetails())
+    await record_own_action(session, user_id, AuditAction.SESSION_STARTED, SessionDetails())
     return token
 
 
@@ -247,11 +183,11 @@ async def register(request: Request, response: Response, body: Credentials) -> I
 
     email = normalise_email(body.email)
     password = _accepted_new_password(body.password)
-    engine = _engine(request, DatabaseRole.AUTH)
+    engine = engine_for(request, DatabaseRole.AUTH)
     now = datetime.now(UTC)
 
-    async with throttled(engine, [(Bucket.SIGNUP_IP, _client_key(request))], now=now) as guard:
-        _refuse_if_throttled(guard)
+    async with throttled(engine, [(Bucket.SIGNUP_IP, client_key(request))], now=now) as guard:
+        refuse_if_throttled(guard)
         user_id = uuid4()
         try:
             async with user_session(engine, user_id, role=DatabaseRole.AUTH) as session:
@@ -274,16 +210,16 @@ async def login(request: Request, response: Response, body: Credentials) -> Sign
     """เข้าสู่ระบบ — ลำดับการล็อกแถวข้อมูลเข้าสู่ระบบมีสามขั้นตามที่ plan ข้อ 1.6 กำหนด"""
     email = normalise_email(body.email)
     password = normalised(body.password)
-    engine = _engine(request, DatabaseRole.AUTH)
+    engine = engine_for(request, DatabaseRole.AUTH)
     now = datetime.now(UTC)
     account_key = key_of(email)
 
     async with throttled(
         engine,
-        [(Bucket.ACCOUNT, account_key), (Bucket.IP, _client_key(request))],
+        [(Bucket.ACCOUNT, account_key), (Bucket.IP, client_key(request))],
         now=now,
     ) as guard:
-        _refuse_if_throttled(guard)
+        refuse_if_throttled(guard)
 
         async with presented_session(engine, email=email, role=DatabaseRole.AUTH) as finder:
             # ขั้นที่หนึ่ง: หาเจ้าของจากอีเมล — ยังไม่ใช่การยืนยันตัวตน
@@ -332,7 +268,7 @@ async def _end_sessions(
     ออกเครื่องเดียวอ้างคอลัมน์ได้ ส่วนออกทุกเครื่องต้องไม่อ้างคอลัมน์ มิฉะนั้น
     PostgreSQL จะนำ SELECT policy มาใช้ด้วยแล้วลบได้แถวเดียว (RQ-19)
     """
-    engine = _engine(request, DatabaseRole.API)
+    engine = engine_for(request, DatabaseRole.API)
     async with presented_session(
         engine, token_hash=who.token_hash, role=DatabaseRole.API
     ) as session:
@@ -342,7 +278,7 @@ async def _end_sessions(
             else await end_one(session, token_hash=who.token_hash)
         )
         owned = await session.assume_user(who.user_id)
-        await _record_own_action(
+        await record_own_action(
             owned,
             who.user_id,
             AuditAction.ALL_SESSIONS_ENDED if everywhere else AuditAction.SESSION_ENDED,
@@ -385,13 +321,13 @@ async def change_password(
     """
     new_password = _accepted_new_password(body.new_password)
     current = normalised(body.current_password)
-    engine = _engine(request, DatabaseRole.AUTH)
+    engine = engine_for(request, DatabaseRole.AUTH)
     account = who.user_id
 
     async with throttled(
         engine, [(Bucket.ACCOUNT, key_of(str(account)))], now=datetime.now(UTC)
     ) as guard:
-        _refuse_if_throttled(guard)
+        refuse_if_throttled(guard)
         async with user_session(engine, account, role=DatabaseRole.AUTH) as session:
             stored = await locked_credential(session, account)
             if stored is None or not password_matches(stored.password_hash, current):
@@ -403,7 +339,7 @@ async def change_password(
             # ปัจจัยที่สองแล้วได้ session ใหม่ทีหลัง ซึ่งขัด RQ-22 (F-06 plan.md 1.4)
             await end_all_challenges(session)
             ended = await end_others(session, keep_token_hash=who.token_hash)
-            await _record_own_action(
+            await record_own_action(
                 session, account, AuditAction.PASSWORD_CHANGED, PasswordChangedDetails()
             )
         await guard.forget_account()
@@ -420,7 +356,7 @@ async def read_me(request: Request, who: Annotated[Authenticated, Depends(curren
 
     **ไม่ต่ออายุ session** เพราะหน้าเว็บเรียกเส้นทางนี้เป็นรอบ ๆ (Q-2 ของ F-05)
     """
-    engine = _engine(request, DatabaseRole.AUTH)
+    engine = engine_for(request, DatabaseRole.AUTH)
     async with user_session(engine, who.user_id, role=DatabaseRole.AUTH) as session:
         enabled = await totp.is_enabled(session)
     return Me(user_id=who.user_id, totp_enabled=enabled)

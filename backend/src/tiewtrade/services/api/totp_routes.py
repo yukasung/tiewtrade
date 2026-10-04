@@ -20,23 +20,17 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from pydantic import BaseModel, Field
-from sqlalchemy.ext.asyncio import AsyncEngine
 
 from tiewtrade.core.passwords import normalised
 from tiewtrade.infra.audit import (
-    ActorKind,
     AllSessionsEndedDetails,
     AuditAction,
-    AuditEvent,
-    AuditOutcome,
     RecoveryCodesIssuedDetails,
     RecoveryCodeUsedDetails,
     SessionDetails,
-    SubjectKind,
     TotpChangeDetails,
-    record_event,
+    record_own_action,
 )
-from tiewtrade.infra.audit.events import AuditDetails
 from tiewtrade.infra.auth import (
     Bucket,
     challenges,
@@ -52,7 +46,6 @@ from tiewtrade.infra.auth import (
     recovery_grants,
     totp,
 )
-from tiewtrade.infra.crypto import KeySource
 from tiewtrade.infra.db import DatabaseRole
 from tiewtrade.infra.db.session import UserSession, presented_session, user_session
 from tiewtrade.services.api.authentication import (
@@ -62,8 +55,9 @@ from tiewtrade.services.api.authentication import (
     new_csrf_token,
     set_session_cookies,
 )
+from tiewtrade.services.api.resources import client_key, engine_for, totp_keys
 from tiewtrade.services.api.settings import CHALLENGE_COOKIE, cookie_secure
-from tiewtrade.services.api.throttling import AuthRejectedError, ThrottleGuard, throttled
+from tiewtrade.services.api.throttling import AuthRejectedError, refuse_if_throttled, throttled
 
 router = APIRouter(prefix="/auth/totp", tags=["auth"])
 
@@ -72,8 +66,6 @@ SECOND_STEP_FAILED: Final[str] = "รหัสยืนยันไม่ถู�
 
 #: ข้อความเดียวสำหรับรหัสผ่านที่ไม่ตรง
 PASSWORD_FAILED: Final[str] = "รหัสผ่านไม่ถูกต้อง"
-
-TOO_MANY_ATTEMPTS: Final[str] = "ลองมากเกินไป กรุณารอแล้วลองอีกครั้ง"
 
 
 class CurrentPassword(BaseModel):
@@ -138,53 +130,6 @@ async def live_trading_enabled(session: UserSession) -> bool:
     return False
 
 
-def _engine(request: Request) -> AsyncEngine:
-    """engine ของบทบาท `auth` — เส้นทางที่นี่แตะข้อมูลปัจจัยยืนยันตัวตน"""
-    engine = getattr(request.app.state, "auth_engine", None)
-    if not isinstance(engine, AsyncEngine):  # pragma: no cover - ตั้งค่าแอปผิด
-        raise RuntimeError("แอปยังไม่ได้ตั้ง engine ของบทบาท auth")
-    return engine
-
-
-def _keys(request: Request) -> KeySource:
-    """กุญแจของ TOTP ที่ lifespan อ่านมาตอนเปิดแอป"""
-    keys = getattr(request.app.state, "totp_keys", None)
-    if not isinstance(keys, KeySource):  # pragma: no cover - ตั้งค่าแอปผิด
-        raise RuntimeError("แอปยังไม่ได้อ่านกุญแจของ TOTP")
-    return keys
-
-
-def _refuse_if_throttled(guard: ThrottleGuard) -> None:
-    """ปฏิเสธคำขอที่โควตาหมด — โยนชนิดของเราเพื่อให้ตัวนับรอด (plan.md หัวข้อ 2)"""
-    if guard.blocked:
-        raise AuthRejectedError(status.HTTP_429_TOO_MANY_REQUESTS, TOO_MANY_ATTEMPTS)
-
-
-def _client_key(request: Request) -> str:
-    """แฮชของที่มาคำขอ — ใช้เป็นคีย์ของถังต่อ IP"""
-    client = request.client
-    return key_of(client.host if client is not None else "unknown")
-
-
-async def _record(
-    session: UserSession, user_id: UUID, action: AuditAction, details: AuditDetails
-) -> None:
-    """ลงบันทึกเหตุการณ์ที่ผู้ใช้ทำกับบัญชีตัวเอง — คอลัมน์แกนชุดเดียวกันทุกชนิด"""
-    await record_event(
-        session,
-        AuditEvent(
-            owner_user_id=user_id,
-            action=action,
-            actor_kind=ActorKind.USER,
-            actor_id=user_id,
-            subject_kind=SubjectKind.USER,
-            subject_id=str(user_id),
-            outcome=AuditOutcome.SUCCEEDED,
-            details=details,
-        ),
-    )
-
-
 async def _checked_password(session: UserSession, user_id: UUID, raw: str) -> None:
     """ตรวจรหัสผ่านปัจจุบันใต้ล็อก — ดังเมื่อไม่ตรง
 
@@ -237,12 +182,12 @@ async def start_setup(
     พิสูจน์แค่ว่าตั้งค่าแอปสำเร็จ ไม่ได้พิสูจน์ว่าเป็นเจ้าของบัญชี — ถ้าไม่มีข้อนี้
     คนที่ขโมย session ไปจะผูกแอปของตัวเองแล้วกันเจ้าของออกตอน login ครั้งถัดไป
     """
-    engine = _engine(request)
+    engine = engine_for(request, DatabaseRole.AUTH)
     now = datetime.now(UTC)
     account = who.user_id
 
     async with throttled(engine, [(Bucket.ACCOUNT, key_of(str(account)))], now=now) as guard:
-        _refuse_if_throttled(guard)
+        refuse_if_throttled(guard)
         async with user_session(engine, account, role=DatabaseRole.AUTH) as session:
             try:
                 await _checked_password(session, account, body.password)
@@ -251,7 +196,7 @@ async def start_setup(
                 raise
             label = await email_of(session, account)
             secret = totp.new_secret()
-            await totp.stage_secret(session, _keys(request), secret)
+            await totp.stage_secret(session, totp_keys(request), secret)
         await guard.forget_account()
 
     return Enrollment(otpauth_uri=totp.otpauth_uri(secret, account=label or str(account)))
@@ -271,37 +216,39 @@ async def confirm_setup(
     **รหัสสำรองชุดเก่าถูกยกเลิกที่นี่ ไม่ใช่ตอนเริ่มเปลี่ยนเครื่อง** เพราะผู้ใช้ที่
     ทิ้งกลางทางต้องไม่เสียทั้งรหัสสำรองและเครื่องใหม่
     """
-    engine = _engine(request)
+    engine = engine_for(request, DatabaseRole.AUTH)
     now = datetime.now(UTC)
     account = who.user_id
 
     async with throttled(
         engine,
-        [(Bucket.TOTP_ACCOUNT, key_of(str(account))), (Bucket.TOTP_IP, _client_key(request))],
+        [(Bucket.TOTP_ACCOUNT, key_of(str(account))), (Bucket.TOTP_IP, client_key(request))],
         now=now,
     ) as guard:
-        _refuse_if_throttled(guard)
+        refuse_if_throttled(guard)
         async with user_session(engine, account, role=DatabaseRole.AUTH) as session:
             replacing = await totp.is_enabled(session)
-            if not await totp.confirm_secret(session, _keys(request), presented=body.code, now=now):
+            if not await totp.confirm_secret(
+                session, totp_keys(request), presented=body.code, now=now
+            ):
                 await guard.count_attempt()
                 raise AuthRejectedError(status.HTTP_403_FORBIDDEN, SECOND_STEP_FAILED)
 
             codes = await recovery_codes.issue_set(session)
             ended = await end_others(session, keep_token_hash=who.token_hash)
-            await _record(
+            await record_own_action(
                 session,
                 account,
                 AuditAction.TOTP_SECRET_REPLACED if replacing else AuditAction.TOTP_ENABLED,
                 TotpChangeDetails(),
             )
-            await _record(
+            await record_own_action(
                 session,
                 account,
                 AuditAction.RECOVERY_CODES_ISSUED,
                 RecoveryCodesIssuedDetails(issued=len(codes.codes)),
             )
-            await _record(
+            await record_own_action(
                 session,
                 account,
                 AuditAction.ALL_SESSIONS_ENDED,
@@ -322,7 +269,7 @@ async def replace_secret(
     middleware บังคับปัจจัยที่สองของเส้นทางนี้แล้ว (รหัส TOTP หรือสิทธิ์กู้บัญชี)
     ที่นี่จึงเหลือแค่รหัสผ่านปัจจุบัน และการใช้สิทธิ์กู้ถ้าคำขอนี้ผ่านด้วยมัน
     """
-    engine = _engine(request)
+    engine = engine_for(request, DatabaseRole.AUTH)
     account = who.user_id
 
     async with user_session(engine, account, role=DatabaseRole.AUTH) as session:
@@ -330,7 +277,7 @@ async def replace_secret(
         await _spend_grant_if_used(session, who)
         label = await email_of(session, account)
         secret = totp.new_secret()
-        await totp.stage_secret(session, _keys(request), secret)
+        await totp.stage_secret(session, totp_keys(request), secret)
 
     return Enrollment(otpauth_uri=totp.otpauth_uri(secret, account=label or str(account)))
 
@@ -347,7 +294,7 @@ async def disable_totp(
     ที่ spec ห้าม · **ไม่ปิด Live ให้อัตโนมัติ** เพราะกระทบไม้ที่เปิดอยู่ ซึ่งเป็น
     ผลข้างเคียงที่ผู้ใช้ไม่ได้สั่ง
     """
-    engine = _engine(request)
+    engine = engine_for(request, DatabaseRole.AUTH)
     account = who.user_id
 
     async with user_session(engine, account, role=DatabaseRole.AUTH) as session:
@@ -361,8 +308,8 @@ async def disable_totp(
         await totp.disable(session)
         await recovery_codes.revoke_all(session)
         ended = await end_others(session, keep_token_hash=who.token_hash)
-        await _record(session, account, AuditAction.TOTP_DISABLED, TotpChangeDetails())
-        await _record(
+        await record_own_action(session, account, AuditAction.TOTP_DISABLED, TotpChangeDetails())
+        await record_own_action(
             session, account, AuditAction.ALL_SESSIONS_ENDED, AllSessionsEndedDetails(ended=ended)
         )
 
@@ -376,13 +323,13 @@ async def reissue_recovery_codes(
     who: Annotated[Authenticated, Depends(current_user)],
 ) -> CodesIssued:
     """ออกชุดรหัสสำรองใหม่ — **ชุดเก่าใช้ไม่ได้ทันที** (RQ-15)"""
-    engine = _engine(request)
+    engine = engine_for(request, DatabaseRole.AUTH)
     account = who.user_id
 
     async with user_session(engine, account, role=DatabaseRole.AUTH) as session:
         await _checked_password(session, account, body.password)
         codes = await recovery_codes.issue_set(session)
-        await _record(
+        await record_own_action(
             session,
             account,
             AuditAction.RECOVERY_CODES_ISSUED,
@@ -406,7 +353,7 @@ async def complete_sign_in(request: Request, response: Response, body: SecondSte
     if not token:
         raise HTTPException(status.HTTP_403_FORBIDDEN, SECOND_STEP_FAILED)
 
-    engine = _engine(request)
+    engine = engine_for(request, DatabaseRole.AUTH)
     now = datetime.now(UTC)
     token_hash = challenges.hash_of(token)
     using_recovery = body.recovery_code is not None
@@ -420,10 +367,10 @@ async def complete_sign_in(request: Request, response: Response, body: SecondSte
     bucket = Bucket.RECOVERY_ACCOUNT if using_recovery else Bucket.TOTP_ACCOUNT
     async with throttled(
         engine,
-        [(bucket, key_of(str(account))), (Bucket.TOTP_IP, _client_key(request))],
+        [(bucket, key_of(str(account))), (Bucket.TOTP_IP, client_key(request))],
         now=now,
     ) as guard:
-        _refuse_if_throttled(guard)
+        refuse_if_throttled(guard)
         async with presented_session(
             engine, token_hash=token_hash, role=DatabaseRole.AUTH
         ) as finder:
@@ -452,10 +399,12 @@ async def complete_sign_in(request: Request, response: Response, body: SecondSte
                 idle_expires_at=deadlines.idle_expires_at,
                 absolute_expires_at=deadlines.absolute_expires_at,
             )
-            await _record(session, waiting.user_id, AuditAction.SESSION_STARTED, SessionDetails())
+            await record_own_action(
+                session, waiting.user_id, AuditAction.SESSION_STARTED, SessionDetails()
+            )
             if using_recovery:
                 await recovery_grants.grant(session, session_token_hash=session_hash)
-                await _record(
+                await record_own_action(
                     session,
                     waiting.user_id,
                     AuditAction.RECOVERY_CODE_USED,
@@ -479,6 +428,6 @@ async def _passed_second_step(
         return None
     if body.recovery_code is not None:
         return await recovery_codes.spend(session, body.recovery_code)
-    if await totp.verify(session, _keys(request), presented=body.code or "", now=now):
+    if await totp.verify(session, totp_keys(request), presented=body.code or "", now=now):
         return await recovery_codes.remaining(session)
     return None
