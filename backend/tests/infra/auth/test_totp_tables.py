@@ -269,3 +269,60 @@ async def test_an_unknown_bucket_kind_is_refused(auth_engine: AsyncEngine) -> No
                 "INSERT INTO auth_throttle (bucket_kind, bucket_key) VALUES ('ยังไม่ประกาศ', :key)",
                 {"key": uuid4().hex * 2},
             )
+
+
+async def test_a_grant_stops_working_when_the_absolute_deadline_passes(
+    auth_engine: AsyncEngine,
+) -> None:
+    """V-41.5.1 — **เส้นตายรวมก็ต้องตัดสิทธิ์** ไม่ใช่เฉพาะเส้นตายไม่ใช้งาน
+
+    เทสต์คู่กันตรวจเส้นตายไม่ใช้งานไปแล้ว · ข้อนี้ตรวจอีกเส้นหนึ่ง เพราะ policy
+    เขียนเงื่อนไขไว้สองเส้น และเส้นที่ไม่มีเทสต์คือเส้นที่ลบทิ้งได้โดยไม่มีใครรู้
+    """
+    user_id, _ = await make_account(auth_engine)
+    token_hash = await issue_session_for(auth_engine, user_id)
+
+    async with user_session(auth_engine, user_id, role=DatabaseRole.AUTH) as session:
+        await session.execute(
+            "INSERT INTO recovery_grants (session_token_hash, user_id) VALUES (:t, :u)",
+            {"t": token_hash, "u": str(user_id)},
+        )
+        assert (await session.execute("SELECT 1 FROM recovery_grants")).all() != []
+
+    # ดันเพดานอายุรวมให้ผ่านไปแล้ว — ต้องทำด้วยบทบาทเจ้าของโครงสร้าง เพราะ
+    # ไม่มีบทบาทใดได้สิทธิ์ `UPDATE` บน `absolute_expires_at` ซึ่งเป็นสิ่งที่ต้องการ
+    await _expire_absolute(auth_engine, token_hash)
+
+    async with user_session(auth_engine, user_id, role=DatabaseRole.AUTH) as session:
+        assert (await session.execute("SELECT 1 FROM recovery_grants")).all() == []
+
+
+async def _expire_absolute(auth_engine: AsyncEngine, token_hash: str) -> None:
+    """ย้อนเพดานอายุรวมของ session หนึ่งใบให้ผ่านไปแล้ว
+
+    ใช้บทบาท `migrator` ที่เป็นเจ้าของตาราง **และปิด RLS ชั่วคราว** เพราะ
+    `FORCE ROW LEVEL SECURITY` ครอบเจ้าของด้วย · เป็นของเทสต์เท่านั้น —
+    ไม่มีเส้นทางของระบบที่ทำแบบนี้ได้ ซึ่งเป็นสิ่งที่ต้องการ
+    """
+    from tiewtrade.infra.db import create_engine_for
+
+    engine = create_engine_for(DatabaseRole.MIGRATOR)
+    try:
+        async with engine.begin() as connection:
+            from sqlalchemy import text
+
+            await connection.execute(text("ALTER TABLE sessions DISABLE ROW LEVEL SECURITY"))
+            await connection.execute(
+                text(
+                    # ต้องย้อนทั้งสองเส้น เพราะ `sessions_idle_within_absolute`
+                    # บังคับว่าเส้นตายไม่ใช้งานต้องไม่เกินเพดานรวม
+                    "UPDATE sessions"
+                    " SET absolute_expires_at = now() - interval '1 second',"
+                    "     idle_expires_at = now() - interval '2 seconds'"
+                    " WHERE token_hash = :t"
+                ),
+                {"t": token_hash},
+            )
+            await connection.execute(text("ALTER TABLE sessions ENABLE ROW LEVEL SECURITY"))
+    finally:
+        await engine.dispose()

@@ -96,7 +96,11 @@ def test_a_value_sealed_for_one_purpose_resists_another_binding(source: KeySourc
 
     จำลองงานที่สองของ F-07 ด้วย associated data ของงานนั้น โดยใช้กุญแจดอกเดิม
     ซึ่งเป็นกรณีที่แย่ที่สุด: ถ้าไม่ผูกชื่องานไว้ ค่านี้จะเปิดออกได้
-    · เมื่อ F-07 เพิ่มงานของตัวเองจริง ให้เปลี่ยนเทสต์นี้มาใช้ `KeyPurpose` ของมัน
+
+    **ขอบเขตของหลักฐานนี้** (บันทึกหลังตรวจคำรับรอง 2026-10-04): พิสูจน์ได้เฉพาะ
+    การผูกกับชื่องาน · ส่วนที่ว่า **บทบาทที่อ่าน secret ของ TOTP ได้ ต้องอ่านคอลัมน์
+    secret ของตลาดไม่ได้** ยังพิสูจน์ที่นี่ไม่ได้ เพราะคอลัมน์นั้นยังไม่มีอยู่จริง —
+    **เป็นข้อที่ F-07 ต้องพิสูจน์ ไม่ใช่อ้างจากที่นี่**
     """
     owner = uuid4()
     sealed = seal(source, SECRET, owner=owner)
@@ -199,3 +203,36 @@ def test_any_secret_survives_the_round_trip(plaintext: bytes) -> None:
         source = KeySource.from_environment(KeyPurpose.TOTP_SECRET)
 
     assert unseal(source, seal(source, plaintext, owner=owner), owner=owner) == plaintext
+
+
+def test_a_failed_unseal_never_shows_the_secret_in_the_traceback(source: KeySource) -> None:
+    """V-6 — **canary ของ TOTP โดยเฉพาะ** — บังคับให้เปิดผนึกล้มแล้วค้น secret ทั้ง traceback
+
+    canary ของ F-05 ครอบรหัสผ่านกับโทเคน และของ F-03 ครอบค่าที่ bind ลงฐานข้อมูล
+    แต่ไม่มีอันไหนครอบ secret ของ TOTP · ข้อนี้สำคัญเพราะ traceback ของไลบรารี
+    เข้ารหัสเป็นที่ที่ค่าดิบโผล่ได้ง่ายที่สุด
+    """
+    import base64 as b64
+    import traceback
+
+    owner = uuid4()
+    secret = b"12345678901234567890"
+    readable = (
+        secret.hex(),
+        b64.b32encode(secret).decode("ascii").rstrip("="),
+        secret.decode("ascii"),
+    )
+    sealed = seal(source, secret, owner=owner)
+    damaged = bytearray(sealed.blob)
+    damaged[-1] ^= 0x01
+
+    try:
+        unseal(source, Sealed(sealed.key_version, bytes(damaged)), owner=owner)
+    except SealingError:
+        whole = traceback.format_exc()
+    else:  # pragma: no cover - ต้องล้มเสมอ
+        raise AssertionError("เปิดผนึกค่าที่ถูกแก้แล้วไม่ล้ม")
+
+    for form in readable:
+        assert form not in whole, f"พบ secret ในรูป {form[:8]}… ใน traceback"
+    assert "AESGCM" not in whole, "traceback พาชื่อของไลบรารีเข้ารหัสออกไปด้วย"

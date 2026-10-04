@@ -32,6 +32,7 @@ from tiewtrade.infra.db import DatabaseRole, create_engine_for
 from tiewtrade.infra.db.session import UserSession, user_session
 from tiewtrade.services.api import totp_routes
 from tiewtrade.services.api.app import app
+from tiewtrade.services.api.routing_policy import ROUTE_RULES
 from tiewtrade.services.api.settings import (
     CHALLENGE_COOKIE,
     CSRF_COOKIE,
@@ -89,6 +90,17 @@ def enable_totp(client: TestClient, *, password: str = GOOD_PASSWORD) -> tuple[b
     )
     assert confirmed.status_code == 200, confirmed.text
     return secret, confirmed.json()["recovery_codes"]
+
+
+def sign_out(client: TestClient) -> None:
+    """ออกจากระบบแล้วขอโทเคนกัน CSRF ใบใหม่
+
+    ออกจากระบบลบ cookie กัน CSRF ไปด้วย ถ้าไม่ขอใบใหม่ คำขอถัดไปจะถูกปฏิเสธ
+    ด้วยเหตุผลที่ไม่เกี่ยวกับสิ่งที่เทสต์ต้องการพิสูจน์
+    """
+    client.post("/auth/logout", headers=csrf_headers(client))
+    client.cookies.clear()
+    client.get("/auth/csrf")
 
 
 def audit_count(user_id: str, action: str) -> int:
@@ -812,3 +824,241 @@ def test_a_successful_check_does_not_refill_the_quota(client: TestClient) -> Non
         ):
             refused_after += 1
     assert refused_after >= 1, "ยืนยันสำเร็จแล้วโควตากลับมาเต็ม — ขัด Q-7"
+
+
+def session_rows_of(user_id: str) -> int:
+    """จำนวน session ที่ผู้ใช้คนนั้นมีในฐานข้อมูลจริง"""
+    import asyncio
+    from uuid import UUID
+
+    from tiewtrade.infra.db import DatabaseRole, create_engine_for
+    from tiewtrade.infra.db.session import user_session
+
+    async def read() -> int:
+        engine = create_engine_for(DatabaseRole.AUTH)
+        try:
+            async with user_session(engine, UUID(user_id), role=DatabaseRole.AUTH) as session:
+                rows = (await session.execute("SELECT 1 FROM sessions")).all()
+                return len(rows)
+        finally:
+            await engine.dispose()
+
+    return asyncio.run(read())
+
+
+def test_the_first_step_issues_no_session_row(client: TestClient) -> None:
+    """V-21 — ขั้นแรก **ไม่ออกแถว session** ไม่ใช่แค่ไม่ส่ง cookie กลับมา
+
+    เทสต์เดิมดูแต่ cookie ซึ่งผ่านได้แม้เซิร์ฟเวอร์ออก session จริงแล้วลืมแนบ
+    """
+    email = register(client)
+    enable_totp(client)
+    account = str(client.get("/auth/me").json()["user_id"])
+    client.post("/auth/logout", headers=csrf_headers(client))
+    assert session_rows_of(account) == 0
+
+    body = sign_in(client, email)
+
+    assert body["second_step_required"] is True
+    assert session_rows_of(account) == 0, "ขั้นแรกออก session ทั้งที่ยังไม่ผ่านปัจจัยที่สอง"
+
+
+def test_a_challenge_opens_no_protected_route(client: TestClient) -> None:
+    """V-22 — **เดินทุกเส้นทางที่ต้องมีสิทธิ์** โดยส่ง challenge เป็น cookie ของ session
+
+    เทสต์เดิมยิงแค่สองเส้นทาง ซึ่งผ่านได้แม้เส้นทางที่สามจะเผลอรับ challenge
+    """
+    email = register(client)
+    enable_totp(client)
+    client.post("/auth/logout", headers=csrf_headers(client))
+    sign_in(client, email)
+    challenge = client.cookies.get(CHALLENGE_COOKIE)
+    assert challenge
+
+    protected = sorted(path for path, rule in ROUTE_RULES.items() if not rule.public)
+    assert len(protected) >= 8, f"พบเส้นทางที่ต้องมีสิทธิ์เพียง {len(protected)} เส้น"
+
+    for path in protected:
+        client.cookies.clear()
+        client.cookies.set(SESSION_COOKIE, challenge)
+        client.get("/auth/csrf")
+        response = (
+            client.get(path)
+            if path in {"/auth/me", "/openapi.json", "/docs", "/redoc", "/docs/oauth2-redirect"}
+            else client.post(path, json={}, headers=csrf_headers(client))
+        )
+        assert response.status_code in {401, 403}, (
+            f"{path} รับ challenge เป็น session: {response.status_code}"
+        )
+
+
+def test_a_code_cannot_be_replayed_across_checkpoints(client: TestClient) -> None:
+    """V-18 — **ใช้รหัสซ้ำข้ามจุดตรวจไม่ได้** พิสูจน์ผ่าน HTTP ไม่ใช่ระดับโมดูล
+
+    คู่ที่ตรวจคือ "ผ่านขั้นที่สองของ login แล้วเอารหัสเดิมไปใช้ที่เส้นทางที่ต้อง
+    ยืนยันซ้ำ" ซึ่งเป็นเส้นทางที่ผู้โจมตีที่แอบดูรหัสจะลองจริง
+    """
+    email = register(client)
+    secret, _ = enable_totp(client)
+    client.post("/auth/logout", headers=csrf_headers(client))
+
+    sign_in(client, email)
+    code = code_now(secret)
+    assert (
+        client.post(
+            "/auth/totp/login", json={"code": code}, headers=csrf_headers(client)
+        ).status_code
+        == 200
+    )
+
+    for path in ("/auth/totp/recovery-codes", "/auth/totp/replace", "/auth/totp/disable"):
+        reused = client.post(
+            path,
+            json={"password": GOOD_PASSWORD},
+            headers={**csrf_headers(client), TOTP_HEADER: code},
+        )
+        assert reused.status_code in {403, 429}, f"{path} รับรหัสที่ใช้ไปแล้วตอน login"
+
+
+def test_wrong_codes_write_no_audit_rows(client: TestClient) -> None:
+    """V-58 — **ยิงรหัสผิดผ่าน HTTP แล้วจำนวนบันทึกต้องไม่เพิ่ม**
+
+    ตารางนี้เพิ่มได้อย่างเดียว ถ้าเขียนทุกครั้งที่ผิด ผู้โจมตีทำให้มันโตได้ตามใจ
+    · เทสต์เดิมดูแต่ชื่อชนิดใน enum ซึ่งไม่ได้พิสูจน์ว่าเส้นทางจริงไม่เขียน
+    """
+    register(client)
+    secret, _ = enable_totp(client)
+    account = str(client.get("/auth/me").json()["user_id"])
+    before = audit_count(account, "TOTP_ENABLED") + audit_count(account, "RECOVERY_CODES_ISSUED")
+
+    for _ in range(3):
+        client.post(
+            "/auth/totp/recovery-codes",
+            json={"password": GOOD_PASSWORD},
+            headers={**csrf_headers(client), TOTP_HEADER: "000000"},
+        )
+    client.post(
+        "/auth/totp/setup",
+        json={"password": "รหัสผ่านที่ไม่ถูกต้องเลยจริง ๆ"},
+        headers=csrf_headers(client),
+    )
+
+    after = audit_count(account, "TOTP_ENABLED") + audit_count(account, "RECOVERY_CODES_ISSUED")
+    assert after == before, "การกรอกผิดเขียนบันทึกลงตารางที่ลบไม่ได้"
+    assert code_now(secret)  # กันไม่ให้ linter ตัด secret ทิ้ง
+
+
+def test_a_password_change_racing_a_challenge_has_a_winner(client: TestClient) -> None:
+    """V-26.3 — **บังคับทั้งสองลำดับ** ของการเปลี่ยนรหัสผ่านกับการใช้ challenge
+
+    ไม่ว่าลำดับไหน ผลต้องเป็นอย่างใดอย่างหนึ่ง: challenge ผ่านก่อนรหัสผ่านเปลี่ยน
+    หรือถูกปฏิเสธ — **ห้ามมีกรณีที่ได้ session ใหม่หลังรหัสผ่านเปลี่ยนแล้ว**
+    """
+    new_password = "รหัสผ่านใหม่ที่ยาวพอใช้งานจริง"
+
+    for change_first in (True, False):
+        # เริ่มจากไคลเอนต์เปล่าทุกรอบ มิฉะนั้น cookie ที่สวมไว้รอบก่อนจะซ้อนกัน
+        client.cookies.clear()
+        client.get("/auth/csrf")
+        email = register(client)
+        secret, _ = enable_totp(client)
+        signed_in = cookies_now(client)
+
+        client.cookies.clear()
+        client.get("/auth/csrf")
+        assert (
+            client.post(
+                "/auth/login",
+                json={"email": email, "password": GOOD_PASSWORD},
+                headers=csrf_headers(client),
+            ).status_code
+            == 200
+        )
+        waiting = cookies_now(client)
+
+        # ผูกค่าของรอบนี้ไว้กับพารามิเตอร์ ไม่ใช่ปิดทับตัวแปรของลูป
+        def change(owner: dict[str, str] = signed_in) -> int:
+            use_cookies(client, owner)
+            response = client.post(
+                "/auth/password",
+                json={"current_password": GOOD_PASSWORD, "new_password": new_password},
+                headers=headers_from(owner),
+            )
+            return int(response.status_code)
+
+        def redeem(pending: dict[str, str] = waiting, key: bytes = secret) -> int:
+            use_cookies(client, pending)
+            response = client.post(
+                "/auth/totp/login",
+                json={"code": code_now(key)},
+                headers=headers_from(pending),
+            )
+            return int(response.status_code)
+
+        if change_first:
+            assert change() == 200
+            assert redeem() == 403, "challenge ของรหัสผ่านเก่าผ่านหลังเปลี่ยนรหัสผ่าน"
+        else:
+            redeemed = redeem()
+            changed = change()
+            assert changed == 200
+            assert redeemed in {200, 403}
+
+
+def test_a_confirmed_secret_never_appears_on_any_route(client: TestClient) -> None:
+    """V-5 — **เดินทุกเส้นทางและค้นทั้ง body และ header** ในทุกรูปของ secret
+
+    เทสต์เดิมยิงสองเส้นทางและค้นแต่ body · รูปที่ค้นคือ base32 (รูปที่อยู่ใน URI),
+    hex และไบต์ดิบ เพราะ secret อาจรั่วออกมาในรูปใดก็ได้
+    """
+    import base64 as b64
+
+    register(client)
+    secret, _ = enable_totp(client)
+    forms = (
+        b64.b32encode(secret).decode("ascii").rstrip("="),
+        secret.hex(),
+        secret.decode("latin-1"),
+    )
+
+    for path, rule in sorted(ROUTE_RULES.items()):
+        response = (
+            client.get(path)
+            if path.startswith(("/health", "/docs", "/redoc", "/openapi", "/auth/me", "/auth/csrf"))
+            else client.post(path, json={"password": GOOD_PASSWORD}, headers=csrf_headers(client))
+        )
+        haystack = response.text + "".join(f"{k}:{v}" for k, v in response.headers.items())
+        for form in forms:
+            assert form not in haystack, f"{path} คืน secret ในรูป {form[:8]}…"
+        assert rule is not None
+
+
+def test_the_sign_in_answer_cannot_tell_the_four_cases_apart(client: TestClient) -> None:
+    """V-25 — **คำตอบของขั้นแรกต้องแยกสี่กรณีไม่ได้** สำหรับคนที่รหัสผ่านผิด
+
+    สี่กรณี: ไม่มีบัญชี · รหัสผ่านผิด+ไม่เปิด TOTP · รหัสผ่านผิด+เปิด TOTP ·
+    และรหัสผ่านถูก (ซึ่งต่างได้ เพราะผ่านด่านรหัสผ่านไปแล้ว)
+
+    **ไม่ยืนยันเวลาเป็นตัวเลข** เพราะเครื่องที่รันเทสต์ไม่ใช่สภาพแวดล้อมที่วัดเวลา
+    ได้น่าเชื่อถือ — ที่ยืนยันได้แน่คือ **คำตอบของสามกรณีแรกเหมือนกันทุกไบต์**
+    และทั้งสามเดินผ่านการแฮชรหัสผ่านหนึ่งครั้งเท่ากัน (`spend_matching_time`)
+    """
+    plain = register(client)
+    sign_out(client)
+    with_totp = register(client)
+    enable_totp(client)
+    sign_out(client)
+
+    answers = []
+    for email in (unique_email(), plain, with_totp):
+        client.cookies.clear()
+        client.get("/auth/csrf")
+        response = client.post(
+            "/auth/login",
+            json={"email": email, "password": "ไม่ใช่รหัสผ่านของบัญชีใดเลย"},
+            headers=csrf_headers(client),
+        )
+        answers.append((response.status_code, response.text))
+
+    assert len(set(answers)) == 1, f"คำตอบแยกกรณีได้: {answers}"
+    assert answers[0][0] == 401

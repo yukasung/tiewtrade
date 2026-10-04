@@ -16,7 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncEngine
 
 from tests.infra.auth.conftest import make_account
 from tiewtrade.core.totp import TIME_STEP, code_for, step_at
-from tiewtrade.infra.auth import totp
+from tiewtrade.infra.auth import recovery_codes, totp
 from tiewtrade.infra.crypto import KEY_BYTES, KeyPurpose, KeySource
 from tiewtrade.infra.db import DatabaseRole
 from tiewtrade.infra.db.session import user_session
@@ -309,3 +309,167 @@ async def test_a_stale_clock_cannot_rewind_the_accepted_step(
         )
         is False
     )
+
+
+class InjectedFailureError(Exception):
+    """ความล้มเหลวที่เทสต์ฉีดเข้าไปกลาง transaction"""
+
+
+async def test_a_failure_after_the_swap_rolls_everything_back(
+    auth_engine: AsyncEngine, source: KeySource
+) -> None:
+    """V-11.2 — **ล้มกลางทางแล้วไม่มีสถานะผสม**
+
+    ฉีดความล้มเหลว **หลัง** สลับ secret และออกรหัสสำรองแล้ว แต่ **ก่อน** commit
+    ทุกอย่างต้องย้อนพร้อมกัน: secret เดิมยังใช้ได้ รหัสสำรองชุดเดิมยังอยู่
+    และไม่มีชุดใหม่ค้าง
+    """
+    user_id, old_secret = await enabled_account(auth_engine, source)
+    async with user_session(auth_engine, user_id, role=DatabaseRole.AUTH) as session:
+        before = await recovery_codes.issue_set(session)
+
+    later = NOW + TIME_STEP
+    new_secret = totp.new_secret()
+    with pytest.raises(InjectedFailureError):
+        async with user_session(auth_engine, user_id, role=DatabaseRole.AUTH) as session:
+            await totp.stage_secret(session, source, new_secret)
+            assert await totp.confirm_secret(
+                session, source, presented=code_for(new_secret, step_at(later)), now=later
+            )
+            await recovery_codes.issue_set(session)
+            raise InjectedFailureError
+
+    after = later + TIME_STEP
+    assert await verify_once(
+        auth_engine, source, user_id, code_for(old_secret, step_at(after)), now=after
+    ), "secret เดิมใช้ไม่ได้หลัง rollback"
+    async with user_session(auth_engine, user_id, role=DatabaseRole.AUTH) as session:
+        assert await recovery_codes.spend(session, before.codes[0]) is not None, (
+            "รหัสสำรองชุดเดิมหายไปทั้งที่ transaction ถูกย้อน"
+        )
+
+
+async def test_a_failure_while_issuing_codes_leaves_the_old_set(
+    auth_engine: AsyncEngine, source: KeySource
+) -> None:
+    """V-38 — ยกเลิกชุดเก่าแล้วล้มก่อน commit → **ชุดเก่าต้องยังอยู่**
+
+    ถ้าการลบ commit แยกจากการเพิ่ม ผู้ใช้จะเหลือศูนย์ใบโดยไม่มีใครสั่ง
+    """
+    user_id, _ = await enabled_account(auth_engine, source)
+    async with user_session(auth_engine, user_id, role=DatabaseRole.AUTH) as session:
+        original = await recovery_codes.issue_set(session)
+
+    with pytest.raises(InjectedFailureError):
+        async with user_session(auth_engine, user_id, role=DatabaseRole.AUTH) as session:
+            await recovery_codes.issue_set(session)
+            raise InjectedFailureError
+
+    async with user_session(auth_engine, user_id, role=DatabaseRole.AUTH) as session:
+        assert await recovery_codes.remaining(session) == len(original.codes)
+        assert await recovery_codes.spend(session, original.codes[0]) is not None
+
+
+async def read_totp_row(auth_engine: AsyncEngine, user_id: UUID) -> tuple[int, int]:
+    """`secret_version` กับ `last_accepted_step` ของผู้ใช้คนนั้น"""
+    async with user_session(auth_engine, user_id, role=DatabaseRole.AUTH) as session:
+        row = (
+            await session.execute(
+                "SELECT secret_version, last_accepted_step FROM user_totp WHERE user_id = :u",
+                {"u": str(user_id)},
+            )
+        ).one()
+    version, step = tuple(row)
+    return int(version), int(step)
+
+
+async def test_the_swap_bumps_the_version_and_keeps_the_step(
+    auth_engine: AsyncEngine, source: KeySource
+) -> None:
+    """V-20.3 — **ตรวจค่าทั้งสองหลังสลับ** ไม่ใช่ดูแค่ว่ารหัสเก่าใช้ไม่ได้
+
+    `last_accepted_step` ต้องเป็นช่วงของรหัสที่ยืนยัน **ไม่ใช่ศูนย์** มิฉะนั้นรหัส
+    ที่ใช้ยืนยันจะถูกนำไปใช้ซ้ำได้ทันที
+    """
+    user_id, _ = await enabled_account(auth_engine, source)
+    first_version, first_step = await read_totp_row(auth_engine, user_id)
+    assert first_version == 1
+    assert first_step == step_at(NOW)
+
+    later = NOW + TIME_STEP * 3
+    fresh = totp.new_secret()
+    async with user_session(auth_engine, user_id, role=DatabaseRole.AUTH) as session:
+        await totp.stage_secret(session, source, fresh)
+        assert await totp.confirm_secret(
+            session, source, presented=code_for(fresh, step_at(later)), now=later
+        )
+
+    version, step = await read_totp_row(auth_engine, user_id)
+    assert version == first_version + 1, "สลับ secret แล้ว secret_version ไม่เพิ่ม"
+    assert step == step_at(later), "last_accepted_step ไม่ใช่ช่วงของรหัสที่ยืนยัน"
+
+
+async def test_the_version_alone_refuses_a_stale_code(
+    auth_engine: AsyncEngine, source: KeySource
+) -> None:
+    """V-20.1 — **พิสูจน์เงื่อนไข `secret_version` ด้วยตัวเอง**
+
+    เลือกลำดับเวลาที่ **ใหม่กว่า** `last_accepted_step` ของแถวปัจจุบัน ฉะนั้น
+    เงื่อนไขเรื่องเวลาผ่านแน่นอน — สิ่งเดียวที่ปฏิเสธได้คือรุ่นของ secret
+    """
+    user_id, old_secret = await enabled_account(auth_engine, source)
+    later = NOW + TIME_STEP * 5
+    fresh = totp.new_secret()
+    async with user_session(auth_engine, user_id, role=DatabaseRole.AUTH) as session:
+        await totp.stage_secret(session, source, fresh)
+        assert await totp.confirm_secret(
+            session, source, presented=code_for(fresh, step_at(later)), now=later
+        )
+
+    _, accepted_step = await read_totp_row(auth_engine, user_id)
+    ahead = later + TIME_STEP * 2
+    assert step_at(ahead) > accepted_step, "เทสต์เลือกเวลาผิด เงื่อนไขเวลาจะเป็นตัวปฏิเสธแทน"
+
+    assert (
+        await verify_once(
+            auth_engine, source, user_id, code_for(old_secret, step_at(ahead)), now=ahead
+        )
+        is False
+    )
+
+
+async def test_the_swap_race_has_a_winner_in_both_orders(
+    auth_engine: AsyncEngine, source: KeySource
+) -> None:
+    """V-20.2 — **บังคับทั้งสองลำดับ** ไม่ใช่ยิงพร้อมกันรอบเดียวแล้วหวังว่าสลับกัน"""
+    later = NOW + TIME_STEP
+
+    for swap_first in (True, False):
+        user_id, old_secret = await enabled_account(auth_engine, source)
+        fresh = totp.new_secret()
+
+        async def swap(account: UUID = user_id, secret: bytes = fresh) -> None:
+            async with user_session(auth_engine, account, role=DatabaseRole.AUTH) as session:
+                await totp.stage_secret(session, source, secret)
+                await totp.confirm_secret(
+                    session, source, presented=code_for(secret, step_at(later)), now=later
+                )
+
+        async def check(account: UUID = user_id, secret: bytes = old_secret) -> bool:
+            return await verify_once(
+                auth_engine, source, account, code_for(secret, step_at(later)), now=later
+            )
+
+        if swap_first:
+            await swap()
+            await check()
+        else:
+            await asyncio.gather(check(), swap())
+
+        after = later + TIME_STEP
+        assert await verify_once(
+            auth_engine, source, user_id, code_for(fresh, step_at(after)), now=after
+        ), f"secret ใหม่ใช้ไม่ได้ (swap_first={swap_first})"
+        assert not await verify_once(
+            auth_engine, source, user_id, code_for(old_secret, step_at(after)), now=after
+        ), f"secret เก่ายังใช้ได้ (swap_first={swap_first})"
