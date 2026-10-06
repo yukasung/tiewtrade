@@ -11,7 +11,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from tests.api.conftest import csrf_headers, register
-from tests.api.test_route_policy import _api_routes
+from tests.api.test_route_policy import route_keys
 from tiewtrade.infra.crypto import KeyConfigurationError, KeyPurpose
 from tiewtrade.services.api.app import app
 from tiewtrade.services.api.authentication import (
@@ -34,24 +34,21 @@ def test_every_route_of_the_app_is_classified() -> None:
     เส้นทางที่ FastAPI สร้างให้เองก็อยู่ในตารางด้วย เพราะรายการยกเว้นคือที่ที่
     เส้นทางจริงแอบเข้าไปอยู่ได้
     """
-    paths = {route.path for route in _api_routes()}
+    keys = route_keys()
 
-    assert paths, "ไม่พบเส้นทางของระบบเลย ซึ่งแปลว่าด่านนี้อ่านผิดที่"
-    missing = paths - set(ROUTE_RULES)
+    assert keys, "ไม่พบเส้นทางของระบบเลย ซึ่งแปลว่าด่านนี้อ่านผิดที่"
+    missing = keys - set(ROUTE_RULES)
     assert not missing, f"เส้นทางที่ยังไม่ถูกจัดประเภท: {sorted(missing)}"
 
 
-def all_app_paths() -> set[str]:
+def all_app_paths() -> set[tuple[str, str]]:
     """ทุก path ที่แอปประกาศ **รวมเส้นทางที่ FastAPI สร้างให้เอง**
 
     ต้องรวมสองแหล่ง: เส้นทางเอกสารไม่ใช่ `APIRoute` จึงไม่โผล่ใน `_api_routes()`
     ส่วนเส้นทางของ router ที่รวมเข้ามาไม่โผล่ตรง ๆ ใน `app.routes` เพราะ FastAPI
     รุ่นนี้ห่อมันไว้ (ดู `_api_routes()` ของ F-05)
     """
-    generated = {getattr(route, "path", None) for route in app.routes}
-    return {route.path for route in _api_routes()} | {
-        path for path in generated if isinstance(path, str)
-    }
+    return route_keys()
 
 
 def test_the_table_has_no_route_that_does_not_exist() -> None:
@@ -110,14 +107,15 @@ def test_the_reset_and_restart_exceptions_are_not_risk_reducing() -> None:
 def test_the_routes_that_require_reverification_are_pinned() -> None:
     """ตรึงรายการเส้นทางที่ต้องยืนยันซ้ำ — การเพิ่มต้องเห็นในรีวิว
 
-    สามเส้นทางนี้เปลี่ยนหรือถอนปัจจัยที่สอง ฉะนั้นมันเป็นผู้ใช้กลไกรายแรกของตัวเอง
-    · เส้นทางที่เพิ่มความเสี่ยงทางการเงิน (เพิ่ม API key, เปิด Live, ขยายเพดานขาดทุน)
-    ยังไม่มีในระบบ — เป็นงานของ F-07, F-24 และงานเพดานความเสี่ยง
+    สามเส้นทางแรกเปลี่ยนหรือถอนปัจจัยที่สอง · **F-07 เพิ่ม `/api-keys`** ซึ่งเป็น
+    เส้นทางแรกที่เพิ่มความเสี่ยงทางการเงิน (`security.md` หัวข้อ 1)
+    · ที่ยังไม่มีคือเปิด Live (F-24) และขยายเพดานขาดทุน
     """
-    assert {path for path, rule in ROUTE_RULES.items() if rule.reverify} == {
-        "/auth/totp/replace",
-        "/auth/totp/disable",
-        "/auth/totp/recovery-codes",
+    assert {key for key, rule in ROUTE_RULES.items() if rule.reverify} == {
+        ("POST", "/auth/totp/replace"),
+        ("POST", "/auth/totp/disable"),
+        ("POST", "/auth/totp/recovery-codes"),
+        ("POST", "/api-keys"),
     }
 
 
@@ -126,23 +124,23 @@ def test_only_the_two_recovery_routes_accept_a_grant() -> None:
 
     การขอชุดรหัสสำรองใหม่ไม่รับสิทธิ์กู้ เพราะรหัสสำรองต้องไม่ต่ออายุตัวเองได้
     """
-    assert {path for path, rule in ROUTE_RULES.items() if rule.accepts_recovery_grant} == {
-        "/auth/totp/replace",
-        "/auth/totp/disable",
+    assert {key for key, rule in ROUTE_RULES.items() if rule.accepts_recovery_grant} == {
+        ("POST", "/auth/totp/replace"),
+        ("POST", "/auth/totp/disable"),
     }
 
 
 def test_reverification_is_enforced_at_the_single_decision_point(
     client: TestClient, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """V-61.1 — กลไกยืนยันซ้ำทำงานจริง แม้ยังไม่มีเส้นทางที่ใช้มัน
+    """V-61.1 — กลไกยืนยันซ้ำทำงานจริงกับเส้นทางที่ไม่ได้ประกาศไว้ว่าต้องยืนยัน
 
     ทำเครื่องหมายเส้นทางที่มีอยู่ว่าต้องยืนยันซ้ำชั่วคราว เพื่อทดสอบ *กลไก*
-    โดยไม่ต้องรอ F-07 — เส้นทางจริงจะเพิ่มเกณฑ์ของตัวเองตอนมันเกิดขึ้น
+    แยกจากเส้นทางจริงที่ใช้มัน (`POST /api-keys` ของ F-07 มีเทสต์ของตัวเอง)
     """
     register(client)
-    monkeypatch.setitem(ROUTE_RULES, "/auth/me", RouteRule(reverify=True))
-    assert needs_reverification("/auth/me") is True
+    monkeypatch.setitem(ROUTE_RULES, ("GET", "/auth/me"), RouteRule(reverify=True))
+    assert needs_reverification("GET", "/auth/me") is True
 
     refused = client.get("/auth/me")
 
@@ -155,7 +153,7 @@ def test_a_wrong_code_does_not_pass_reverification(
 ) -> None:
     """รหัสผิดต้องไม่ผ่าน และข้อความต้องเหมือนกรณีไม่ส่งรหัสมาเลย (RQ-11)"""
     register(client)
-    monkeypatch.setitem(ROUTE_RULES, "/auth/me", RouteRule(reverify=True))
+    monkeypatch.setitem(ROUTE_RULES, ("GET", "/auth/me"), RouteRule(reverify=True))
 
     refused = client.get("/auth/me", headers={TOTP_HEADER: "000000"})
 
@@ -169,9 +167,12 @@ def test_the_documentation_routes_still_need_a_session(client: TestClient) -> No
         assert client.get(path).status_code == 401, path
 
 
-def test_the_app_does_not_start_without_a_sealing_key(monkeypatch: pytest.MonkeyPatch) -> None:
+@pytest.mark.parametrize("purpose", list(KeyPurpose))
+def test_the_app_does_not_start_without_a_sealing_key(
+    monkeypatch: pytest.MonkeyPatch, purpose: KeyPurpose
+) -> None:
     """V-10 ที่ระดับแอป — **กุญแจไม่ครบ = กระบวนการไม่เริ่ม**"""
-    monkeypatch.delenv(KeyPurpose.TOTP_SECRET.environment_variable, raising=False)
+    monkeypatch.delenv(purpose.environment_variable, raising=False)
 
     with pytest.raises(KeyConfigurationError), TestClient(app):
         pass  # pragma: no cover - lifespan ต้องดังก่อนถึงบรรทัดนี้
@@ -185,15 +186,15 @@ def test_the_second_factor_of_a_request_is_remembered(client: TestClient) -> Non
     register(client)
     assert client.get("/auth/me").status_code == 200
     assert {factor.value for factor in SecondFactor} == {"TOTP_CODE", "RECOVERY_GRANT"}
-    assert accepts_recovery_grant("/auth/me") is False
+    assert accepts_recovery_grant("GET", "/auth/me") is False
 
 
 def test_changing_the_table_does_not_need_a_change_in_two_places() -> None:
     """รายการที่ F-05 ใช้ **คำนวณจากตารางเดียว** จึงไม่มีสองที่ให้ไม่ตรงกัน (V-30)"""
     from tiewtrade.services.api.routing_policy import PUBLIC_ROUTES, RENEWING_ROUTES
 
-    assert {path for path, rule in ROUTE_RULES.items() if rule.public} == PUBLIC_ROUTES
-    assert {path for path, rule in ROUTE_RULES.items() if rule.renews} == RENEWING_ROUTES
+    assert {key for key, rule in ROUTE_RULES.items() if rule.public} == PUBLIC_ROUTES
+    assert {key for key, rule in ROUTE_RULES.items() if rule.renews} == RENEWING_ROUTES
 
 
 def test_csrf_still_applies_to_public_routes(client: TestClient) -> None:

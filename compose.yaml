@@ -6,7 +6,8 @@
 # การลบค่าจาก shell ก่อนอ่านไฟล์กันค่าภายนอกทับเวอร์ชันกลางโดยไม่ตั้งใจ
 #
 # ยังไม่มี Redis โดยเจตนา — ยังไม่มีงานไหนต้องใช้คิวหรือ pub/sub (tech-stack.md หัวข้อ 5)
-# ยังไม่มี engine และ market-data เพราะยังไม่มีอะไรให้รัน (F-20, F-10)
+# worker ตรวจ API key ของ engine (F-07) รันด้วยมือ — ตัวตั้งเวลาเป็นงาน F-31
+# ยังไม่มี market-data เพราะยังไม่มีอะไรให้รัน (F-10)
 #
 # **รหัสผ่านในไฟล์นี้ใช้ได้เฉพาะเครื่องนักพัฒนาและ CI** บนเครื่องจริงเป็นงาน F-31
 
@@ -56,6 +57,8 @@ services:
       # กุญแจปิดผนึก secret ของ TOTP (F-06) — **ค่านี้ใช้ได้เฉพาะเครื่องพัฒนาและ CI**
       # บนเครื่องจริงยังเป็นข้อที่ต้องตัดสิน (T-03) ซึ่งเป็นงาน F-31
       TIEWTRADE_SEALING_KEY_TOTP_SECRET: "1:ZGV2LW9ubHkta2V5LW5vdC1hLXNlY3JldC0zMmJ5dGU="
+      # กุญแจของ API key แยกจาก TOTP (F-07 RQ-4) — ใช้เฉพาะพัฒนาและ CI
+      TIEWTRADE_SEALING_KEY_VENUE_API_SECRET: "1:VlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlY="
     ports:
       - "8000:8000"
     healthcheck:

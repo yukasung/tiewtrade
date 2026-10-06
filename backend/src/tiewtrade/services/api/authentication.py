@@ -43,6 +43,7 @@ from tiewtrade.infra.db.session import presented_session, user_session
 from tiewtrade.services.api.resources import client_key, engine_for, totp_keys
 from tiewtrade.services.api.routing_policy import (
     accepts_recovery_grant,
+    classify,
     is_public,
     needs_reverification,
     renews_session,
@@ -187,7 +188,8 @@ async def identify(engine: AsyncEngine, request: Request) -> Authenticated | Non
         owner = await owner_of_presented(session)
         if owner is None:
             return None
-        if renews_session(request.url.path):
+        route_key: tuple[str, str] | None = getattr(request.state, "route_key", None)
+        if route_key is not None and renews_session(*route_key):
             await renew(
                 session,
                 token_hash=token_hash,
@@ -221,9 +223,10 @@ async def second_factor_of(request: Request, who: Authenticated) -> SecondFactor
         now=now,
     ) as guard:
         async with user_session(engine, who.user_id, role=DatabaseRole.AUTH) as session:
-            grant_usable = accepts_recovery_grant(
-                request.url.path
-            ) and await recovery_grants.usable(session, session_token_hash=who.token_hash)
+            route_key: tuple[str, str] = request.state.route_key
+            grant_usable = accepts_recovery_grant(*route_key) and await recovery_grants.usable(
+                session, session_token_hash=who.token_hash
+            )
             # สิทธิ์กู้ไม่ใช่การเดารหัส TOTP จึงยังใช้ได้เมื่อถัง TOTP หมด
             if grant_usable and (not presented or guard.blocked):
                 return SecondFactor.RECOVERY_GRANT
@@ -243,6 +246,15 @@ async def second_factor_of(request: Request, who: Authenticated) -> SecondFactor
         raise AuthRejectedError(status.HTTP_403_FORBIDDEN, SECOND_FACTOR_REQUIRED)
 
 
+def classified_route(request: Request) -> tuple[str, str] | None:
+    """(เมธอด, แม่แบบของ path) ของคำขอนี้ — `None` เมื่อไม่มีแถวไหนรับ
+
+    ถามตารางกฎโดยตรง ไม่ใช่ถาม framework ว่าเส้นทางไหนจับคู่ได้ (เหตุผลอยู่ใน
+    `routing_policy.py`) · ทิศทางตรงข้ามถูกตรวจด้วยเทสต์ที่เดินทุกเส้นทางของแอป
+    """
+    return classify(request.method, request.url.path)
+
+
 async def authenticate_request(engine: AsyncEngine, request: Request) -> None:
     """ตรวจ CSRF, ตัวตน และปัจจัยที่สอง แล้วติดผลไว้กับคำขอ — ที่เดียวที่ตัดสินสิทธิ์
 
@@ -253,18 +265,20 @@ async def authenticate_request(engine: AsyncEngine, request: Request) -> None:
     ของเทสต์ที่เดินทุกเส้นทาง เพราะเทสต์เห็นเฉพาะเส้นทางที่แอปประกาศตอนเทสต์รัน
     ส่วนคำขอจริงมาที่ path อะไรก็ได้
     """
-    if rule_for(request.url.path) is None:
+    classified = classified_route(request)
+    if classified is None or rule_for(*classified) is None:
         raise HTTPException(status.HTTP_403_FORBIDDEN, UNCLASSIFIED_ROUTE)
+    request.state.route_key = classified
 
     ensure_csrf(request)
     found = await identify(engine, request)
     request.state.authenticated = found
     if found is None:
-        if not is_public(request.url.path):
+        if not is_public(*classified):
             raise HTTPException(status.HTTP_401_UNAUTHORIZED, NOT_AUTHENTICATED)
         return
 
-    if needs_reverification(request.url.path):
+    if needs_reverification(*classified):
         request.state.authenticated = replace(
             found, second_factor=await second_factor_of(request, found)
         )

@@ -65,6 +65,8 @@ jobs:
       # กุญแจปิดผนึก secret ของ TOTP (F-06) — **ค่านี้ใช้ได้เฉพาะเครื่องพัฒนาและ CI**
       # บนเครื่องจริงยังเป็นข้อที่ต้องตัดสิน (T-03) ซึ่งเป็นงาน F-31
       TIEWTRADE_SEALING_KEY_TOTP_SECRET: "1:ZGV2LW9ubHkta2V5LW5vdC1hLXNlY3JldC0zMmJ5dGU="
+      # กุญแจของ API key แยกจาก TOTP (F-07 RQ-4) — ใช้เฉพาะพัฒนาและ CI
+      TIEWTRADE_SEALING_KEY_VENUE_API_SECRET: "1:VlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlY="
     steps:
       - uses: actions/checkout@v4
 
@@ -185,11 +187,16 @@ jobs:
       TIEWTRADE_DATABASE_URL_MIGRATOR: postgresql+asyncpg://tiewtrade_migrator:dev_migrator@127.0.0.1:5432/tiewtrade
       TIEWTRADE_DATABASE_URL_API: postgresql+asyncpg://tiewtrade_api:dev_api@127.0.0.1:5432/tiewtrade
       TIEWTRADE_DATABASE_URL_AUTH: postgresql+asyncpg://tiewtrade_auth:dev_auth@127.0.0.1:5432/tiewtrade
+      # F-07 e2e เรียก worker จริงคู่กับ FakeVenue จึงต้องใช้บทบาททั้งสองนี้
+      TIEWTRADE_DATABASE_URL_ENGINE: postgresql+asyncpg://tiewtrade_engine:dev_engine@127.0.0.1:5432/tiewtrade
+      TIEWTRADE_DATABASE_URL_ENGINE_SCAN: postgresql+asyncpg://tiewtrade_engine_scan:dev_engine_scan@127.0.0.1:5432/tiewtrade
       TIEWTRADE_SIGNUP_OPEN: "1"
       TIEWTRADE_COOKIE_SECURE: "0"
       # กุญแจปิดผนึก secret ของ TOTP (F-06) — **ค่านี้ใช้ได้เฉพาะเครื่องพัฒนาและ CI**
       # บนเครื่องจริงยังเป็นข้อที่ต้องตัดสิน (T-03) ซึ่งเป็นงาน F-31
       TIEWTRADE_SEALING_KEY_TOTP_SECRET: "1:ZGV2LW9ubHkta2V5LW5vdC1hLXNlY3JldC0zMmJ5dGU="
+      # แอปอ่านตอนเริ่ม แม้ e2e ยังไม่ใช้เส้นทาง API key
+      TIEWTRADE_SEALING_KEY_VENUE_API_SECRET: "1:VlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlY="
     steps:
       - uses: actions/checkout@v4
 

@@ -9,6 +9,9 @@
 และ `AGENTS.md` กฎข้อ 2 ห้ามคิดข้อกำหนดการเทรดขึ้นเอง
 """
 
+from collections.abc import Callable
+from datetime import datetime, timedelta
+
 from tiewtrade.venues.constraints import DEFAULT_CONSTRAINTS_COST, SymbolConstraintSource
 from tiewtrade.venues.errors import (
     RejectionReason,
@@ -23,6 +26,7 @@ from tiewtrade.venues.errors import (
 from tiewtrade.venues.fake import FakeVenue
 from tiewtrade.venues.limits import CallCost, NoRateLimit, RateLimitGuard
 from tiewtrade.venues.prices import DEFAULT_LATEST_PRICE_COST, Price, PriceSource
+from tiewtrade.venues.signing import RequestSigner
 from tiewtrade.venues.symbols import Symbol, SymbolConstraints
 from tiewtrade.venues.wallets import (
     DEFAULT_HOLDINGS_COST,
@@ -30,6 +34,43 @@ from tiewtrade.venues.wallets import (
     WalletHoldings,
     WalletSource,
 )
+
+
+def live_wallet_factory(
+    *,
+    client: object,
+    clock: Callable[[], datetime],
+    timeout: timedelta,
+) -> Callable[[RequestSigner], WalletSource]:
+    """ตัวสร้างกระเป๋าของ **ตลาดจริง** — แชร์ transport/โควตาตลอดอายุ factory
+
+    **มีไว้เพื่อให้ service เรียกใช้ได้โดยไม่ต้องเอ่ยชื่อตลาด** (`architecture.md`
+    หัวข้อ 1 — โค้ดนอก `venues` ต้องไม่รู้ว่ากำลังคุยกับตลาดไหน) ก่อนหน้านี้ไม่มีใคร
+    ต้องประกอบของพวกนี้เลย เพราะ F-35 ยังไม่มีผู้เรียก · F-07 เป็นผู้เรียกรายแรก
+
+    **import ตัวเชื่อมข้างในฟังก์ชันโดยเจตนา** — ที่นี่เป็น `__init__` ของชั้นกลาง
+    การ import ตัวเชื่อมที่ระดับโมดูลจะทำให้ทุกคนที่แตะชั้นกลางลากตัวเชื่อมและไลบรารี
+    เครือข่ายติดไปด้วย ทั้งที่ส่วนใหญ่ไม่ได้ใช้ · และยังเลี่ยงวงจร import ระหว่าง
+    package แม่กับ package ย่อย
+
+    **การเลือกตลาดอยู่ที่นี่ที่เดียว** วันที่มีตลาดที่สอง ฟังก์ชันนี้คือที่ที่เลือก
+    ไม่ใช่ที่ service
+    """
+    from tiewtrade.venues.binance_th import BinanceThTransport, IpWeightLimiter
+    from tiewtrade.venues.binance_th.wallets import BinanceThWallet
+
+    transport = BinanceThTransport(
+        client=client,  # type: ignore[arg-type]
+        guard=IpWeightLimiter(clock=clock),
+        clock=clock,
+        timeout=timeout,
+    )
+
+    def build(signer: RequestSigner) -> WalletSource:
+        return BinanceThWallet(transport, signer)
+
+    return build
+
 
 __all__ = [
     "DEFAULT_CONSTRAINTS_COST",
@@ -43,6 +84,7 @@ __all__ = [
     "PriceSource",
     "RateLimitGuard",
     "RejectionReason",
+    "RequestSigner",
     "Symbol",
     "SymbolConstraintSource",
     "SymbolConstraints",
@@ -55,4 +97,5 @@ __all__ = [
     "VenueUnavailableError",
     "WalletHoldings",
     "WalletSource",
+    "live_wallet_factory",
 ]

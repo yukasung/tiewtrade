@@ -14,6 +14,7 @@ import httpx
 import pytest
 
 from tests.venues.binance_th.conftest import (
+    FakeClock,
     RecordingGuard,
     recorded,
     recorded_body,
@@ -21,12 +22,16 @@ from tests.venues.binance_th.conftest import (
     requests_to,
     transport_for,
 )
+from tiewtrade.infra.api_keys import HmacRequestSigner
+from tiewtrade.venues.binance_th.endpoints import Endpoint
 from tiewtrade.venues.binance_th.failures import (
     Delivery,
     failure_for_delivery,
     failure_for_status,
 )
-from tiewtrade.venues.binance_th.prices import LATEST_PRICE_COST, TRADES_ENDPOINT
+from tiewtrade.venues.binance_th.prices import LATEST_PRICE_COST
+from tiewtrade.venues.binance_th.rate_limit import IpWeightLimiter
+from tiewtrade.venues.binance_th.wallets import HOLDINGS_COST
 from tiewtrade.venues.errors import (
     RejectionReason,
     VenueCredentialRejectedError,
@@ -40,6 +45,43 @@ from tiewtrade.venues.errors import (
 
 #: ค่าที่แกล้งทำเป็นความลับ ใช้พิสูจน์ว่าไม่มีอะไรจากคำขอหลุดเข้าข้อความหรือ log
 PRETEND_SECRET = "sEcReT-kEy-0123456789"
+
+
+@pytest.mark.parametrize("signed", [False, True])
+@pytest.mark.parametrize(
+    "status,headers",
+    [
+        pytest.param(200, {"x-mbx-used-weight-1m": "-1"}, id="negative-weight"),
+        pytest.param(429, {"Retry-After": "999999999999999999999999999999"}, id="oversized-wait"),
+        pytest.param(429, {"Retry-After": "315360000000"}, id="unrepresentable-deadline"),
+        pytest.param(
+            200, {"x-mbx-used-weight-999999999999999999999999999999m": "1"}, id="oversized-window"
+        ),
+    ],
+)
+async def test_unrepresentable_headers_become_protocol_errors_without_a_chain(
+    signed: bool,
+    status: int,
+    headers: dict[str, str],
+) -> None:
+    clock = FakeClock()
+    transport = transport_for(
+        replying('{"balances": []}', status=status, headers=headers),
+        guard=IpWeightLimiter(clock=clock),
+        clock=clock,
+    )
+    with pytest.raises(VenueProtocolError) as caught:
+        if signed:
+            await transport.signed_get(
+                Endpoint.ACCOUNT,
+                signer=HmacRequestSigner(public_identifier="SYNTHETICKEY", secret=b"test-only"),
+                cost=HOLDINGS_COST,
+            )
+        else:
+            await transport.get(Endpoint.TRADES, cost=LATEST_PRICE_COST)
+    assert caught.value.__context__ is None
+    assert caught.value.__cause__ is None
+    assert "999999999999" not in str(caught.value)
 
 
 def test_not_sent_is_unavailable_and_sent_without_an_answer_is_unknown() -> None:
@@ -131,7 +173,7 @@ async def test_retry_after_is_carried_when_the_market_sends_it(status: int) -> N
     """V-24 — มีเวลาให้ก็พาไป"""
     transport = transport_for(replying("{}", status=status, headers={"Retry-After": "7"}))
     with pytest.raises(VenueRateLimitedError) as caught:
-        await transport.get(TRADES_ENDPOINT, cost=LATEST_PRICE_COST)
+        await transport.get(Endpoint.TRADES, cost=LATEST_PRICE_COST)
     assert caught.value.retry_after == timedelta(seconds=7)
 
 
@@ -139,7 +181,7 @@ async def test_retry_after_stays_empty_when_the_market_does_not_send_it() -> Non
     """V-24 — ไม่มีก็เป็นค่าว่าง **ห้ามเดาเวลาแทนตลาด**"""
     transport = transport_for(replying("{}", status=429))
     with pytest.raises(VenueRateLimitedError) as caught:
-        await transport.get(TRADES_ENDPOINT, cost=LATEST_PRICE_COST)
+        await transport.get(Endpoint.TRADES, cost=LATEST_PRICE_COST)
     assert caught.value.retry_after is None
 
 
@@ -149,7 +191,7 @@ async def test_a_retry_after_we_cannot_read_stays_empty() -> None:
         replying("{}", status=429, headers={"Retry-After": "Wed, 21 Oct 2026 07:28:00 GMT"})
     )
     with pytest.raises(VenueRateLimitedError) as caught:
-        await transport.get(TRADES_ENDPOINT, cost=LATEST_PRICE_COST)
+        await transport.get(Endpoint.TRADES, cost=LATEST_PRICE_COST)
     assert caught.value.retry_after is None
 
 
@@ -161,7 +203,7 @@ async def test_a_connection_that_never_opened_is_unavailable() -> None:
 
     transport = transport_for(refuse)
     with pytest.raises(VenueUnavailableError):
-        await transport.get(TRADES_ENDPOINT, cost=LATEST_PRICE_COST)
+        await transport.get(Endpoint.TRADES, cost=LATEST_PRICE_COST)
 
 
 async def test_a_timeout_after_the_request_went_out_is_an_unknown_outcome() -> None:
@@ -173,7 +215,7 @@ async def test_a_timeout_after_the_request_went_out_is_an_unknown_outcome() -> N
     transport = transport_for(stall)
     with pytest.raises(VenueOutcomeUnknownError):
         try:
-            await transport.get(TRADES_ENDPOINT, cost=LATEST_PRICE_COST)
+            await transport.get(Endpoint.TRADES, cost=LATEST_PRICE_COST)
         except VenueUnavailableError:  # pragma: no cover - ต้องไม่เข้าทางนี้
             pytest.fail("timeout หลังส่งครบถูกแปลเป็น VenueUnavailableError")
 
@@ -194,7 +236,7 @@ async def test_nothing_from_the_http_library_survives_in_the_traceback() -> None
 
     transport = transport_for(refuse)
     with pytest.raises(VenueUnavailableError) as caught:
-        await transport.get(TRADES_ENDPOINT, cost=LATEST_PRICE_COST)
+        await transport.get(Endpoint.TRADES, cost=LATEST_PRICE_COST)
 
     assert caught.value.__cause__ is None
     assert caught.value.__context__ is None
@@ -213,7 +255,7 @@ async def test_the_log_names_the_http_failure_by_type_not_by_message(
 
     transport = transport_for(refuse)
     with caplog.at_level(logging.DEBUG), pytest.raises(VenueUnavailableError):
-        await transport.get(TRADES_ENDPOINT, cost=LATEST_PRICE_COST)
+        await transport.get(Endpoint.TRADES, cost=LATEST_PRICE_COST)
 
     assert "ConnectError" in caplog.text
     assert PRETEND_SECRET not in caplog.text
@@ -239,7 +281,7 @@ async def test_a_failure_page_that_is_not_json_is_still_grouped_by_status(
         replying("<html><body>Service Unavailable</body></html>", status=status)
     )
     with pytest.raises(expected):
-        await transport.get(TRADES_ENDPOINT, cost=LATEST_PRICE_COST)
+        await transport.get(Endpoint.TRADES, cost=LATEST_PRICE_COST)
 
 
 async def test_a_rate_limit_page_that_is_not_json_still_carries_the_wait() -> None:
@@ -248,7 +290,7 @@ async def test_a_rate_limit_page_that_is_not_json_still_carries_the_wait() -> No
         replying("<html>too many requests</html>", status=429, headers={"Retry-After": "30"})
     )
     with pytest.raises(VenueRateLimitedError) as caught:
-        await transport.get(TRADES_ENDPOINT, cost=LATEST_PRICE_COST)
+        await transport.get(Endpoint.TRADES, cost=LATEST_PRICE_COST)
     assert caught.value.retry_after == timedelta(seconds=30)
 
 
@@ -256,14 +298,14 @@ async def test_a_body_we_cannot_parse_is_a_protocol_error() -> None:
     """V-23 — อ่านคำตอบไม่ออก → `VenueProtocolError`"""
     transport = transport_for(replying("ไม่ใช่ JSON"))
     with pytest.raises(VenueProtocolError):
-        await transport.get(TRADES_ENDPOINT, cost=LATEST_PRICE_COST)
+        await transport.get(Endpoint.TRADES, cost=LATEST_PRICE_COST)
 
 
 async def test_an_empty_body_with_a_success_status_is_a_protocol_error() -> None:
     """คำตอบว่างเปล่าที่บอกว่าสำเร็จคือสัญญาที่เราอ่านไม่ออก ไม่ใช่ข้อมูลที่ไม่มี"""
     transport = transport_for(replying(""))
     with pytest.raises(VenueProtocolError):
-        await transport.get(TRADES_ENDPOINT, cost=LATEST_PRICE_COST)
+        await transport.get(Endpoint.TRADES, cost=LATEST_PRICE_COST)
 
 
 async def test_nothing_from_the_request_reaches_the_message_or_the_log(
@@ -274,7 +316,7 @@ async def test_nothing_from_the_request_reaches_the_message_or_the_log(
 
     with caplog.at_level(logging.DEBUG), pytest.raises(VenueError) as caught:
         await transport.get(
-            TRADES_ENDPOINT,
+            Endpoint.TRADES,
             cost=LATEST_PRICE_COST,
             params={"symbol": "BTCTHB", "signature": PRETEND_SECRET},
         )
@@ -295,7 +337,7 @@ async def test_nothing_from_the_request_reaches_the_message_or_the_log(
     assert "://" not in everything_ours
 
     # ที่ต้องมีคือสามอย่างที่อนุญาต: endpoint แบบย่อ สถานะ และรหัสของตลาด
-    assert TRADES_ENDPOINT in ours
+    assert Endpoint.TRADES.name in ours
     assert "400" in ours
     assert "-1121" in ours
 
@@ -312,7 +354,7 @@ async def test_the_market_message_never_leaves_the_adapter() -> None:
     transport = transport_for(replying(leaky, status=400))
 
     with pytest.raises(VenueError) as caught:
-        await transport.get(TRADES_ENDPOINT, cost=LATEST_PRICE_COST)
+        await transport.get(Endpoint.TRADES, cost=LATEST_PRICE_COST)
     assert PRETEND_SECRET not in str(caught.value)
 
 
@@ -326,7 +368,7 @@ async def test_a_failed_call_is_never_retried(handler_status: int) -> None:
     transport = transport_for(handler)
 
     with pytest.raises(VenueError):
-        await transport.get(TRADES_ENDPOINT, cost=LATEST_PRICE_COST)
+        await transport.get(Endpoint.TRADES, cost=LATEST_PRICE_COST)
     assert len(seen) == 1
 
 
@@ -340,7 +382,7 @@ async def test_the_quota_is_reserved_before_the_call_even_when_it_fails() -> Non
 
     transport = transport_for(refuse, guard=guard)
     with pytest.raises(VenueUnavailableError):
-        await transport.get(TRADES_ENDPOINT, cost=LATEST_PRICE_COST)
+        await transport.get(Endpoint.TRADES, cost=LATEST_PRICE_COST)
     assert guard.reserved == [LATEST_PRICE_COST]
 
 
@@ -350,3 +392,34 @@ def test_the_recorded_rejections_cover_both_a_known_and_an_unknown_code() -> Non
         entry = recorded(name)
         assert entry["status"] == 400
         assert "code" in json.loads(str(entry["body"]))
+
+
+async def test_signed_get_info_logs_do_not_expose_credentials(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """V-5: actual signer and signed request exercised with HTTP library INFO enabled."""
+    from urllib.parse import parse_qs
+
+    signer = HmacRequestSigner(public_identifier="PUBLICCANARY", secret=b"SIGNING-SECRETCANARY")
+    seen: list[httpx.Request] = []
+
+    def reply(request: httpx.Request) -> httpx.Response:
+        seen.append(request)
+        return httpx.Response(400, json={"code": -1121, "msg": "synthetic failure"})
+
+    transport = transport_for(reply)
+    with caplog.at_level(logging.INFO), pytest.raises(VenueError) as caught:
+        await transport.signed_get(Endpoint.ACCOUNT, signer=signer, cost=HOLDINGS_COST)
+    assert len(seen) == 1
+    signature = parse_qs(seen[0].url.query.decode())["signature"][0]
+    assert any(record.name == "httpx" for record in caplog.records)
+    rendered = caplog.text + str(caught.value)
+    for forbidden in (
+        signer.public_identifier,
+        "SIGNING-SECRETCANARY",
+        signature,
+        "signature=",
+        "timestamp=",
+        "X-MBX-APIKEY",
+    ):
+        assert forbidden not in rendered

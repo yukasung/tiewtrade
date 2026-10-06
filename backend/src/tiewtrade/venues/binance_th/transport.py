@@ -22,9 +22,11 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Final
+from urllib.parse import urlencode
 
 import httpx
 
+from tiewtrade.venues.binance_th.endpoints import Endpoint
 from tiewtrade.venues.binance_th.failures import (
     Delivery,
     failure_for_delivery,
@@ -34,9 +36,18 @@ from tiewtrade.venues.binance_th.rate_limit import UsedWeightObserver
 from tiewtrade.venues.errors import VenueProtocolError
 from tiewtrade.venues.limits import CallCost, RateLimitGuard
 from tiewtrade.venues.moments import require_aware
+from tiewtrade.venues.signing import RequestSigner
 
 #: ที่อยู่ของตลาดตามเอกสาร — Spot เท่านั้น ยังไม่มี Futures (NC-12)
 BASE_URL: Final = "https://api.binance.th/api/v1"
+
+#: header ที่ตลาดใช้รับส่วนที่เปิดเผยได้ของคำรับรอง (F-07)
+_CREDENTIAL_HEADER: Final = "X-MBX-APIKEY"
+
+#: ช่วงเวลาที่ตลาดยอมรับคำขอที่ลงลายเซ็นหนึ่งใบ
+#:
+#: ค่าของตลาดเอง ไม่ใช่ timeout ของเรา — มีไว้กันคำขอเก่าที่ถูกดักไว้แล้วส่งซ้ำทีหลัง
+_RECEIVE_WINDOW: Final = timedelta(seconds=5)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -103,6 +114,12 @@ _NOT_SENT_ERRORS: Final = (
 )
 
 
+def _require_endpoint(endpoint: Endpoint) -> None:
+    """บังคับรายการปิดตอนรัน ก่อนจองโควตาหรือใช้คำรับรอง (F-07 V-32)"""
+    if not isinstance(endpoint, Endpoint):
+        raise TypeError("ต้องใช้สมาชิกของ Endpoint ที่ประกาศไว้เท่านั้น")
+
+
 @dataclass(frozen=True, slots=True)
 class VenueResponse:
     """คำตอบที่อ่านสำเร็จแล้วหนึ่งคำตอบ
@@ -141,7 +158,7 @@ class BinanceThTransport:
 
     async def get(
         self,
-        endpoint: str,
+        endpoint: Endpoint,
         *,
         cost: CallCost,
         params: Mapping[str, str] | None = None,
@@ -152,6 +169,10 @@ class BinanceThTransport:
         ล้มเหลวเมื่อไรก็โยนชนิดกลางของ F-33 เสมอ — **ไม่ปล่อยข้อผิดพลาดของไลบรารี
         HTTP ออกไปข้างนอก** เพราะชั้นข้างนอกต้องไม่รู้ว่าเราต่อตลาดด้วยอะไร
         """
+        _require_endpoint(endpoint)
+        if endpoint.needs_signature:
+            raise ValueError(f"{endpoint.name} ต้องลงลายเซ็น — ใช้ signed_get")
+
         await self._guard.reserve(cost)
         response = await self._fetch(endpoint, params)
 
@@ -166,12 +187,67 @@ class BinanceThTransport:
             received_at=received_at,
         )
 
-    async def _fetch(self, endpoint: str, params: Mapping[str, str] | None) -> httpx.Response:
+    async def signed_get(
+        self,
+        endpoint: Endpoint,
+        *,
+        signer: RequestSigner,
+        cost: CallCost,
+        params: Mapping[str, str] | None = None,
+    ) -> VenueResponse:
+        """เรียก endpoint ที่ต้องลงลายเซ็น — **ที่นี่ไม่เคยเห็น secret** (F-07 Q-2)
+
+        ประกอบ query string ให้ครบก่อน แล้วค่อยลงลายเซ็นของสิ่งที่จะส่งจริง
+        **ห้ามต่อพารามิเตอร์เพิ่มหลังลงลายเซ็นเด็ดขาด** — ลายเซ็นจะไม่ตรงกับคำขอ
+        และตลาดจะปฏิเสธด้วยรหัสที่อ่านเหมือน "คำรับรองผิด" ซึ่งทำให้เราไปปฏิเสธ
+        key ที่ถูกต้องของผู้ใช้ (validation V-37)
+
+        ส่ง query string ที่ลงลายเซ็นไว้ไปทั้งก้อน ไม่ใช่ส่งเป็นพจนานุกรมให้ไลบรารี
+        ประกอบใหม่ เพราะการประกอบใหม่อาจเรียงหรือเข้ารหัสอักขระต่างออกไป
+        """
+        _require_endpoint(endpoint)
+        signed = self._signed_query(params)
+        await self._guard.reserve(cost)
+        response = await self._fetch(
+            endpoint,
+            None,
+            query=f"{signed}&signature={signer.sign(signed)}",
+            headers={_CREDENTIAL_HEADER: signer.public_identifier},
+        )
+
+        received_at = self._now()
+        used_weight = used_weight_of(response.headers)
+        self._feed_back(used_weight, received_at)
+
+        self._reject_if_failed(endpoint, response, changes_state=False)
+        return VenueResponse(
+            payload=_parsed(response.text),
+            used_weight=used_weight,
+            received_at=received_at,
+        )
+
+    def _signed_query(self, params: Mapping[str, str] | None) -> str:
+        """ข้อความที่จะถูกลงลายเซ็น — **เท่ากับ query string ที่ส่งจริงทุกตัวอักษร**"""
+        fields = dict(params or {})
+        fields["timestamp"] = str(int(self._now().timestamp() * 1000))
+        fields["recvWindow"] = str(int(_RECEIVE_WINDOW.total_seconds() * 1000))
+        return urlencode(fields)
+
+    async def _fetch(
+        self,
+        endpoint: Endpoint,
+        params: Mapping[str, str] | None,
+        *,
+        query: str | None = None,
+        headers: Mapping[str, str] | None = None,
+    ) -> httpx.Response:
         """เรียกออกไปจริง — ความล้มเหลวที่ชั้นเครือข่ายกลายเป็นชนิดกลางที่นี่"""
+        url = f"{self._base_url}{endpoint.path}"
         try:
             return await self._client.get(
-                f"{self._base_url}{endpoint}",
-                params=dict(params or {}),
+                f"{url}?{query}" if query is not None else url,
+                params=None if query is not None else dict(params or {}),
+                headers=dict(headers or {}),
                 timeout=self._timeout.total_seconds(),
             )
         except httpx.HTTPError as error:
@@ -183,7 +259,7 @@ class BinanceThTransport:
             # **ชื่อชนิดเท่านั้น ไม่เอาข้อความ** ข้อความของไลบรารี HTTP พา URL เต็ม
             # (รวม query string ที่คำขอลงลายเซ็นพาความลับไป) ติดมาด้วย
             _LOGGER.warning(
-                "เรียก %s ไม่สำเร็จ (%s/%s)", endpoint, delivery.value, type(error).__name__
+                "เรียก %s ไม่สำเร็จ (%s/%s)", endpoint.name, delivery.value, type(error).__name__
             )
 
         # โยน **นอก** บล็อกที่ดัก: `from None` ปิดแค่การแสดงผล แต่ยังเก็บ exception
@@ -192,7 +268,7 @@ class BinanceThTransport:
         raise failure_for_delivery(delivery)
 
     def _reject_if_failed(
-        self, endpoint: str, response: httpx.Response, *, changes_state: bool
+        self, endpoint: Endpoint, response: httpx.Response, *, changes_state: bool
     ) -> None:
         """คำตอบที่ไม่สำเร็จกลายเป็นชนิดกลางที่นี่
 
@@ -206,14 +282,14 @@ class BinanceThTransport:
         market_code = _market_code(response.text)
         _LOGGER.warning(
             "ตลาดปฏิเสธการเรียก %s สถานะ %s รหัสของตลาด %s",
-            endpoint,
+            endpoint.name,
             response.status_code,
             market_code,
         )
         raise failure_for_status(
             status=response.status_code,
             market_code=market_code,
-            retry_after=_retry_after(response.headers),
+            retry_after=_retry_after(response.headers, at=self._now()),
             changes_state=changes_state,
         )
 
@@ -275,7 +351,7 @@ def _market_code(body: str) -> int | None:
     return code
 
 
-def _retry_after(headers: httpx.Headers) -> timedelta | None:
+def _retry_after(headers: httpx.Headers, *, at: datetime) -> timedelta | None:
     """เวลาที่ตลาดบอกให้รอ — ไม่มีก็เป็นค่าว่าง **ห้ามเดาแทนตลาด**"""
     raw = headers.get("retry-after")
     if raw is None:
@@ -286,7 +362,17 @@ def _retry_after(headers: httpx.Headers) -> timedelta | None:
         # รูปแบบวันที่ตาม HTTP ก็ถูกตามมาตรฐาน แต่แปลงแล้วต้องใช้นาฬิกาของเรา
         # เทียบกับของตลาด ซึ่งเป็นการเดาเวลาที่เราไม่มีสิทธิ์เดา
         return None
-    return timedelta(seconds=seconds) if seconds >= 0 else None
+    if seconds < 0:
+        return None
+    try:
+        wait = timedelta(seconds=seconds)
+        # not_before ต้องอ่านกลับเป็น datetime ได้ ไม่ใช่แค่เก็บ interval ได้
+        at + wait
+        return wait
+    except OverflowError:
+        pass
+    # ไม่ผูก header/exception ต้นทางไว้กับ error ที่ออกจาก adapter
+    raise VenueProtocolError()
 
 
 def used_weight_of(headers: Mapping[str, str]) -> Mapping[timedelta, int]:
@@ -307,6 +393,15 @@ def used_weight_of(headers: Mapping[str, str]) -> Mapping[timedelta, int]:
             used = int(value)
         except ValueError:
             continue
-        span = timedelta(**{_SPAN_UNITS[matched.group(2)]: int(matched.group(1))})
-        found[span] = used
+        if used < 0:
+            raise VenueProtocolError()
+        try:
+            span = timedelta(**{_SPAN_UNITS[matched.group(2)]: int(matched.group(1))})
+        except (ValueError, OverflowError):
+            pass
+        else:
+            found[span] = used
+            continue
+        # โยนหลังออกจาก except เพื่อไม่เก็บค่า header ดิบใน exception chain
+        raise VenueProtocolError()
     return found

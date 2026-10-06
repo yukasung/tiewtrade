@@ -141,6 +141,399 @@ NETWORK_LIBRARIES: frozenset[str] = frozenset(
     {"httpx", "socket", "urllib", "requests", "aiohttp", "websockets", "http", "ssl"}
 )
 
+# asyncio ยังใช้จัดคิวงานได้ · บล็อกเฉพาะสมาชิกที่แตะเครือข่าย
+_ASYNCIO_NETWORK = frozenset(
+    {
+        "open_connection",
+        "start_server",
+        "open_unix_connection",
+        "start_unix_server",
+        "create_connection",
+        "create_server",
+        "create_unix_connection",
+        "create_unix_server",
+        "create_datagram_endpoint",
+        "connect_accepted_socket",
+        "start_tls",
+        "getaddrinfo",
+        "getnameinfo",
+        "sock_connect",
+        "sock_accept",
+        "sock_recv",
+        "sock_recv_into",
+        "sock_recvfrom",
+        "sock_recvfrom_into",
+        "sock_sendall",
+        "sock_sendto",
+        "sendfile",
+        "sock_sendfile",
+    }
+)
+_ASYNCIO_FACTORIES = {
+    "get_running_loop": "loop",
+    "get_event_loop": "loop",
+    "new_event_loop": "loop",
+    "AbstractEventLoop": "loop",
+    "BaseEventLoop": "loop",
+    "SelectorEventLoop": "loop",
+    "ProactorEventLoop": "loop",
+    "Runner": "runner",
+    "get_event_loop_policy": "policy",
+    "AbstractEventLoopPolicy": "policy",
+    "DefaultEventLoopPolicy": "policy",
+    "WindowsSelectorEventLoopPolicy": "policy",
+    "WindowsProactorEventLoopPolicy": "policy",
+}
+_ASYNCIO_METHOD_FACTORIES = {
+    ("runner", "get_loop"): "loop",
+    ("policy", "get_event_loop"): "loop",
+    ("policy", "new_event_loop"): "loop",
+}
+
+
+def _expression_name(node: ast.AST) -> str | None:
+    if isinstance(node, ast.Name):
+        return node.id
+    if isinstance(node, ast.Attribute) and (parent := _expression_name(node.value)):
+        return f"{parent}.{node.attr}"
+    return None
+
+
+def _own_returns(node: ast.AST) -> list[ast.Return]:
+    """ไม่รวม return ของฟังก์ชัน/คลาสซ้อนซึ่งไม่ใช่ผลของผู้เรียกนี้."""
+    found: list[ast.Return] = []
+    for child in ast.iter_child_nodes(node):
+        if isinstance(child, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef, ast.Lambda)):
+            continue
+        if isinstance(child, ast.Return):
+            found.append(child)
+        else:
+            found.extend(_own_returns(child))
+    return found
+
+
+def check_asyncio_network(path: Path) -> list[Violation]:
+    """สมาชิก network ของ asyncio รวม aliases/loop objects · ไม่ execute source."""
+    nodes = code_nodes(path)
+    # แต่ละชื่อเป็นของ lexical scope; local ที่ยังไม่รู้ชนิดก็บังชื่อชั้นนอก
+    scopes: dict[ast.AST, ast.AST] = {}
+    parents: dict[ast.AST, ast.AST | None] = {nodes[0]: None}
+    locals_of: dict[ast.AST, set[str]] = {nodes[0]: set()}
+
+    def index_scope(node: ast.AST, scope: ast.AST) -> None:
+        scopes[node] = scope
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+            locals_of[scope].add(node.name)
+            parents[node] = scope
+            locals_of[node] = set()
+            for child in ast.iter_child_nodes(node):
+                index_scope(
+                    child,
+                    node if child in node.body or child is getattr(node, "args", None) else scope,
+                )
+            return
+        if isinstance(node, (ast.ListComp, ast.SetComp, ast.DictComp, ast.GeneratorExp)):
+            parents[node] = scope
+            locals_of[node] = set()
+            for index, generator in enumerate(node.generators):
+                scopes[generator] = node
+                index_scope(generator.target, node)
+                # Python ประเมิน iterable แรกก่อนเข้า comprehension scope
+                index_scope(generator.iter, scope if index == 0 else node)
+                for condition in generator.ifs:
+                    index_scope(condition, node)
+            results = [node.key, node.value] if isinstance(node, ast.DictComp) else [node.elt]
+            for result in results:
+                index_scope(result, node)
+            return
+        if isinstance(node, ast.Lambda):
+            parents[node] = scope
+            locals_of[node] = set()
+            index_scope(node.args, node)
+            index_scope(node.body, node)
+            return
+        if isinstance(node, ast.Name) and isinstance(node.ctx, ast.Store):
+            locals_of[scope].add(node.id)
+        elif isinstance(node, ast.arg):
+            locals_of[scope].add(node.arg)
+        elif isinstance(node, (ast.Import, ast.ImportFrom)):
+            for alias in node.names:
+                locals_of[scope].add(alias.asname or alias.name.split(".")[0])
+        for child in ast.iter_child_nodes(node):
+            # annotations/defaults ใช้ชื่อใน enclosing scope ของ signature
+            signature_value = isinstance(node, ast.arg) or (
+                isinstance(node, ast.arguments)
+                and (child in node.defaults or child in node.kw_defaults)
+            )
+            index_scope(child, (parents[scope] or scope) if signature_value else scope)
+
+    index_scope(nodes[0], nodes[0])
+    globals_of: dict[ast.AST, set[str]] = {}
+    for node in nodes:
+        if isinstance(node, (ast.Global, ast.Nonlocal)):
+            scope = scopes[node]
+            locals_of[scope].difference_update(node.names)
+            if isinstance(node, ast.Global):
+                globals_of.setdefault(scope, set()).update(node.names)
+
+    def binding(node: ast.AST, name: str) -> tuple[ast.AST, str]:
+        scope = scopes[node]
+        root = name.split(".")[0]
+        while root not in locals_of[scope] and (parent := parents[scope]) is not None:
+            if root in globals_of.get(scope, set()):
+                return nodes[0], name
+            # method/closure ไม่ค้นชื่อใน class namespace แบบตัวแปร local
+            if isinstance(
+                scope,
+                (
+                    ast.FunctionDef,
+                    ast.AsyncFunctionDef,
+                    ast.Lambda,
+                    ast.ListComp,
+                    ast.SetComp,
+                    ast.DictComp,
+                    ast.GeneratorExp,
+                ),
+            ):
+                while isinstance(parent, ast.ClassDef):
+                    parent = parents[parent]
+                    if parent is None:
+                        break
+            if parent is None:
+                break
+            scope = parent
+        # self/cls fields เป็นของ class เดียวกันแม้เขียน/อ่านคนละ method
+        if "." in name and isinstance(scope, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            owner = parents[scope]
+            parameters = scope.args.posonlyargs + scope.args.args
+            decorators = {_expression_name(item) for item in scope.decorator_list}
+            if (
+                isinstance(owner, ast.ClassDef)
+                and parameters
+                and root == parameters[0].arg
+                and "staticmethod" not in decorators
+            ):
+                receiver = "class" if "classmethod" in decorators else "instance"
+                return owner, f"{receiver}.{name.split('.', 1)[1]}"
+        return scope, name
+
+    classes = {binding(node, node.name): node for node in nodes if isinstance(node, ast.ClassDef)}
+    constructor_fields = set()
+    for node in nodes:
+        if isinstance(node, ast.Assign) or (
+            isinstance(node, ast.AnnAssign) and node.value is not None
+        ):
+            targets = node.targets if isinstance(node, ast.Assign) else [node.target]
+            for target in targets:
+                scope = scopes[node]
+                if (
+                    isinstance(target, ast.Attribute)
+                    and (name := _expression_name(target))
+                    and isinstance(scope, (ast.FunctionDef, ast.AsyncFunctionDef))
+                    and scope.name == "__init__"
+                    and node in scope.body
+                ):
+                    constructor_fields.add(binding(target, name))
+
+    def class_order(
+        owner: ast.ClassDef, active: frozenset[ast.AST] = frozenset()
+    ) -> tuple[ast.ClassDef, ...]:
+        """C3 order ของ base ที่ประกาศในไฟล์ · ไม่ import/execute source."""
+        if owner in active:
+            return ()
+        bases = [
+            base
+            for expression in owner.bases
+            if (name := _expression_name(expression))
+            and (base := classes.get(binding(expression, name))) is not None
+        ]
+        sequences = [list(class_order(base, active | {owner})) for base in bases] + [list(bases)]
+        result = [owner]
+        while remaining := [sequence for sequence in sequences if sequence]:
+            head = next(
+                (
+                    sequence[0]
+                    for sequence in remaining
+                    if all(sequence[0] not in other[1:] for other in remaining)
+                ),
+                None,
+            )
+            if head is None:
+                return (owner,)  # cyclic/inconsistent bases ไม่มี MRO ที่เชื่อถือได้
+            result.append(head)
+            for sequence in remaining:
+                if sequence[0] is head:
+                    sequence.pop(0)
+        return tuple(result)
+
+    def field_binding(node: ast.AST, name: str) -> tuple[ast.AST, str]:
+        owner, field = binding(node, name)
+        if isinstance(owner, ast.ClassDef) and field.startswith(("instance.", "class.")):
+            candidate: tuple[ast.AST, str] | None = None
+            for ancestor in class_order(owner):
+                key = ancestor, field
+                # optional setter ยังไม่ลบความเป็นไปได้ของ inherited loop
+                if objects.get(key) == "loop":
+                    return key
+                if candidate is None and (key in objects or key in symbols):
+                    candidate = key
+                # เฉพาะ assignment ตรงใน constructor จึงบัง ancestor evidence
+                if key in constructor_fields:
+                    return candidate or key
+            return candidate or (owner, field)
+        return owner, field
+
+    symbols: dict[tuple[ast.AST, str], tuple[str, ...]] = {}
+    objects: dict[tuple[ast.AST, str], str] = {}
+    returns: dict[tuple[ast.AST, str], str] = {}
+    hits: dict[int, str] = {}
+    functions = {
+        binding(node, node.name): node
+        for node in nodes
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
+    }
+    for node in nodes:
+        if isinstance(node, ast.Import):
+            for alias in node.names:
+                if alias.name.split(".")[0] == "asyncio":
+                    symbols[binding(node, alias.asname or "asyncio")] = (
+                        tuple(alias.name.split(".")) if alias.asname else ("asyncio",)
+                    )
+        elif (
+            isinstance(node, ast.ImportFrom)
+            and node.level == 0
+            and node.module
+            and node.module.split(".")[0] == "asyncio"
+        ):
+            for alias in node.names:
+                symbols[binding(node, alias.asname or alias.name)] = (
+                    *node.module.split("."),
+                    alias.name,
+                )
+                if alias.name in _ASYNCIO_NETWORK or alias.name == "*":
+                    hits[node.lineno] = alias.name
+
+    def qualified(node: ast.AST) -> tuple[str, ...] | None:
+        name = _expression_name(node)
+        if name is not None and (key := field_binding(node, name)) in symbols:
+            return symbols[key]
+        if isinstance(node, ast.Attribute) and (parent := qualified(node.value)):
+            return (*parent, node.attr)
+        return None
+
+    def kind(node: ast.AST | None) -> str | None:
+        if isinstance(node, ast.Await):
+            return kind(node.value)
+        if isinstance(node, (ast.BoolOp, ast.IfExp)):
+            choices = node.values if isinstance(node, ast.BoolOp) else [node.body, node.orelse]
+            resources = [kind(choice) for choice in choices]
+            # ผลลัพธ์อาจเป็น loop จากฝั่งใดก็ได้ จึงต้องตรวจ network แบบ conservative
+            if "loop" in resources:
+                return "loop"
+            return next((resource for resource in resources if resource is not None), None)
+        if isinstance(node, ast.Call):
+            return call_result(node.func)
+        return (
+            objects.get(field_binding(node, _expression_name(node) or ""))
+            if node is not None
+            else None
+        )
+
+    def call_result(function: ast.AST) -> str | None:
+        symbol = qualified(function)
+        if symbol and symbol[0] == "asyncio":
+            return _ASYNCIO_FACTORIES.get(symbol[-1])
+        if isinstance(function, ast.Attribute) and (owner := kind(function.value)):
+            return _ASYNCIO_METHOD_FACTORIES.get((owner, function.attr))
+        if isinstance(function, ast.Name):
+            return returns.get(binding(function, function.id))
+        return None
+
+    def annotation_kind(annotation: ast.AST) -> str | None:
+        if isinstance(annotation, ast.Constant) and isinstance(annotation.value, str):
+            try:
+                parsed = ast.parse(annotation.value, mode="eval").body
+                for item in ast.walk(parsed):
+                    scopes[item] = scopes[annotation]
+                annotation = parsed
+            except SyntaxError:
+                return None
+        for item in ast.walk(annotation):
+            symbol = qualified(item)
+            if symbol and symbol[0] == "asyncio" and symbol[-1][:1].isupper():
+                resource = _ASYNCIO_FACTORIES.get(symbol[-1])
+                if resource:
+                    return resource
+        return None
+
+    # เพิ่ม binding เท่านั้น จึงจบแน่นอน แม้ source มี aliases วนกลับหากัน
+    previous: tuple[int, int, int] | None = None
+    while previous != (len(symbols), len(objects), len(returns)):
+        previous = (len(symbols), len(objects), len(returns))
+        for node in nodes:
+            if isinstance(node, (ast.Assign, ast.AnnAssign)):
+                targets = node.targets if isinstance(node, ast.Assign) else [node.target]
+                symbol = qualified(node.value) if node.value is not None else None
+                resource = kind(node.value)
+                result = call_result(node.value) if node.value is not None else None
+                if isinstance(node, ast.AnnAssign):
+                    resource = resource or annotation_kind(node.annotation)
+                for target in targets:
+                    if name := _expression_name(target):
+                        if symbol:
+                            symbols.setdefault(binding(target, name), symbol)
+                        if resource:
+                            objects.setdefault(binding(target, name), resource)
+                        if result:
+                            returns.setdefault(binding(target, name), result)
+            elif isinstance(node, ast.arg) and node.annotation:
+                if resource := annotation_kind(node.annotation):
+                    objects.setdefault(binding(node, node.arg), resource)
+            elif isinstance(node, ast.withitem) and node.optional_vars:
+                name, resource = _expression_name(node.optional_vars), kind(node.context_expr)
+                if name and resource:
+                    objects.setdefault(binding(node.optional_vars, name), resource)
+            elif isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                for returned in _own_returns(node):
+                    if resource := kind(returned.value):
+                        returns.setdefault(binding(node, node.name), resource)
+            elif isinstance(node, ast.Call) and isinstance(node.func, ast.Name):
+                function = functions.get(binding(node.func, node.func.id))
+                if function:
+                    args = function.args
+                    for parameter, argument in zip(
+                        args.posonlyargs + args.args, node.args, strict=False
+                    ):
+                        if resource := kind(argument):
+                            objects.setdefault((function, parameter.arg), resource)
+                    parameter_names = {
+                        parameter.arg
+                        for parameter in args.posonlyargs + args.args + args.kwonlyargs
+                    }
+                    for keyword in node.keywords:
+                        if keyword.arg in parameter_names and (resource := kind(keyword.value)):
+                            objects.setdefault((function, keyword.arg), resource)
+
+    for node in nodes:
+        symbol = qualified(node)
+        if (
+            isinstance(node, (ast.Name, ast.Attribute))
+            and symbol
+            and symbol[0] == "asyncio"
+            and symbol[-1] in _ASYNCIO_NETWORK
+        ):
+            hits[node.lineno] = symbol[-1]
+        elif (
+            isinstance(node, ast.Attribute)
+            and kind(node.value) == "loop"
+            and node.attr in _ASYNCIO_NETWORK
+        ):
+            hits[node.lineno] = node.attr
+    return [
+        Violation(path, line, "network-outside-gateway", f"asyncio.{member} นอก gateway")
+        for line, member in sorted(hits.items())
+    ]
+
 
 def check_network_only_in(package_root: Path, gateway: str) -> list[Violation]:
     """ยืนยันว่ามีไฟล์เดียวใน package ที่รู้จักเครือข่าย (F-35 V-3)
@@ -150,16 +543,31 @@ def check_network_only_in(package_root: Path, gateway: str) -> list[Violation]:
     """
     violations: list[Violation] = []
     for path in sorted(package_root.rglob("*.py")):
-        if path.name == f"{gateway}.py":
+        if path == package_root / f"{gateway}.py":
             continue
-        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
-        for node in ast.walk(tree):
-            if isinstance(node, ast.Import):
-                for alias in node.names:
-                    _reject_network(path, alias.name, node.lineno, violations)
-            elif isinstance(node, ast.ImportFrom) and node.module is not None:
-                _reject_network(path, node.module, node.lineno, violations)
+        violations.extend(check_asyncio_network(path))
+        for module, node in network_imports(path):
+            _reject_network(path, module, node.lineno, violations)
     return violations
+
+
+def network_imports(path: Path) -> tuple[tuple[str, ast.Import | ast.ImportFrom], ...]:
+    """อ่าน import เครือข่ายให้ด่าน venue และด่านทั่ว src ใช้กฎชุดเดียวกัน"""
+    found: list[tuple[str, ast.Import | ast.ImportFrom]] = []
+    for node in code_nodes(path):
+        if isinstance(node, ast.Import):
+            found.extend(
+                (alias.name, node)
+                for alias in node.names
+                if alias.name.split(".")[0] in NETWORK_LIBRARIES
+            )
+        elif (
+            isinstance(node, ast.ImportFrom)
+            and node.module is not None
+            and node.module.split(".")[0] in NETWORK_LIBRARIES
+        ):
+            found.append((node.module, node))
+    return tuple(found)
 
 
 def _reject_network(path: Path, module: str, line: int, violations: list[Violation]) -> None:
@@ -206,7 +614,12 @@ def _venue_words_in(text: str, words: frozenset[str]) -> list[str]:
     return re.findall("|".join(sorted(re.escape(word) for word in words)), text.lower())
 
 
-def check_vocabulary(path: Path, words: frozenset[str]) -> list[Violation]:
+def check_vocabulary(
+    path: Path,
+    words: frozenset[str],
+    *,
+    allowed_literals: frozenset[tuple[int, int]] = frozenset(),
+) -> list[Violation]:
     """หาคำศัพท์ของตลาดในไฟล์หนึ่ง — ใช้กับไฟล์นอก `venues`
 
     เดินต้นไม้รอบเดียว โดยจำ docstring ที่เจอระหว่างทางไว้ข้าม
@@ -216,15 +629,10 @@ def check_vocabulary(path: Path, words: frozenset[str]) -> list[Violation]:
     """
     if not words:
         raise ValueError("ด่านคำศัพท์ที่ไม่มีคำให้หาคือด่านที่เขียวตลอด")
-    tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
     violations: list[Violation] = []
-    docstrings: set[int] = set()
 
-    for node in ast.walk(tree):
+    for node in code_nodes(path):
         if isinstance(node, (ast.Module, ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)):
-            docstring = _docstring_constant(node)
-            if docstring is not None:
-                docstrings.add(id(docstring))
             # ชื่อคลาสและชื่อฟังก์ชันก็เป็นที่ที่คำศัพท์ของตลาดโผล่ได้
             # เช่น `def binance_price()` ซึ่งไม่ใช่ทั้งข้อความและไม่ใช่การอ้างชื่อ
             if not isinstance(node, ast.Module):
@@ -232,7 +640,7 @@ def check_vocabulary(path: Path, words: frozenset[str]) -> list[Violation]:
             continue
 
         if isinstance(node, ast.Constant) and isinstance(node.value, str):
-            if id(node) in docstrings:
+            if (node.lineno, node.col_offset) in allowed_literals:
                 continue
             for word in _venue_words_in(node.value, words):
                 violations.append(
@@ -273,6 +681,18 @@ def _name_violations(path: Path, name: str, line: int, words: frozenset[str]) ->
     return found
 
 
+def code_nodes(path: Path) -> tuple[ast.AST, ...]:
+    """โหนดที่ใช้จริง ไม่รวมข้อความ docstring — ใช้ร่วมกันทุกด่าน AST"""
+    tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+    nodes = tuple(ast.walk(tree))
+    docstrings = {
+        id(_docstring_constant(node))
+        for node in nodes
+        if isinstance(node, (ast.Module, ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef))
+    }
+    return tuple(node for node in nodes if id(node) not in docstrings)
+
+
 def code_strings(path: Path) -> list[str]:
     """ข้อความที่โค้ดใช้จริงในไฟล์หนึ่ง — **ไม่รวม docstring**
 
@@ -281,18 +701,10 @@ def code_strings(path: Path) -> list[str]:
     ที่อนุมัติ — และทุกที่ต้องข้าม docstring เหมือนกัน เพราะเอกสารพูดถึงสิ่งที่
     **ไม่ทำ** เป็นเรื่องปกติและจำเป็น
     """
-    tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
-    docstrings = {
-        id(_docstring_constant(node))
-        for node in ast.walk(tree)
-        if isinstance(node, (ast.Module, ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef))
-    }
     return [
         node.value
-        for node in ast.walk(tree)
-        if isinstance(node, ast.Constant)
-        and isinstance(node.value, str)
-        and id(node) not in docstrings
+        for node in code_nodes(path)
+        if isinstance(node, ast.Constant) and isinstance(node.value, str)
     ]
 
 

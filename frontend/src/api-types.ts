@@ -4,6 +4,82 @@
  */
 
 export interface paths {
+    "/api-keys": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Keys
+         * @description รายการ key ของผู้ใช้คนนี้ — หน้าเว็บเรียกเป็นรอบ ๆ เพื่อดูสถานะ
+         *
+         *     เส้นทางนี้ **ไม่ต่ออายุ session** (`routing_policy.py`) เพราะการ poll
+         *     ไม่ควรทำให้ session ไม่มีวันหมดอายุ
+         */
+        get: operations["list_keys_api_keys_get"];
+        put?: never;
+        /**
+         * Add Key
+         * @description รับคำรับรองหนึ่งชุด ปิดผนึกทันที แล้วรอให้ `engine` ตรวจ
+         *
+         *     **คุมอัตราก่อนแตะอะไร** — มิฉะนั้นระบบนี้กลายเป็นเครื่องมือทดสอบคำรับรอง
+         *     ของคนอื่นกับตลาด (`security.md` หัวข้อ 3 · RQ-11)
+         */
+        post: operations["add_key_api_keys_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api-keys/{key_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Remove Key
+         * @description ลบ key ของตัวเอง — ของคนอื่นได้ "ไม่พบ" (RLS เป็นผู้กัน ไม่ใช่เงื่อนไขที่นี่)
+         */
+        delete: operations["remove_key_api_keys__key_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api-keys/{key_id}/retry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Retry Key
+         * @description ขอให้ตรวจ key ใบนี้ใหม่
+         *
+         *     **ไม่ต้องยืนยันปัจจัยที่สองซ้ำ** (เจ้าของตัดสิน 2026-10-04) เพราะความลับเข้าระบบ
+         *     ไปแล้วตอนเพิ่ม ซึ่งผ่านการยืนยันแล้ว การลองใหม่ไม่ได้เพิ่มความเสี่ยงใหม่
+         *
+         *     **เวลาที่ตลาดสั่งให้รอข้ามไม่ได้** — ที่นี่ปฏิเสธเพื่อให้ผู้ใช้รู้ตัวเร็ว
+         *     ส่วนด่านจริงอยู่ในคำสั่งจองของ worker (`plan.md` ข้อ 7.5)
+         */
+        post: operations["retry_key_api_keys__key_id__retry_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/auth/csrf": {
         parameters: {
             query?: never;
@@ -322,6 +398,31 @@ export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
         /**
+         * AddKeyRequest
+         * @description ของที่ผู้ใช้กรอก — **`secret` เข้ามาทางเดียวและไม่เคยออกไปทางไหน**
+         */
+        AddKeyRequest: {
+            /** Key */
+            key: string;
+            /** Label */
+            label: string;
+            /** Secret */
+            secret: string;
+        };
+        /**
+         * AddedKey
+         * @description คำตอบของการเพิ่ม — มีแค่รหัสของแถวกับสถานะเริ่มต้น
+         */
+        AddedKey: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Status */
+            status: string;
+        };
+        /**
          * CodesIssued
          * @description ชุดรหัสสำรองใหม่ — **แสดงครั้งเดียว ไม่มีทางอ่านกลับ**
          */
@@ -421,6 +522,44 @@ export interface components {
             user_id: string;
         };
         /**
+         * KeyView
+         * @description สิ่งที่หน้าจอได้เห็นของ key หนึ่งใบ
+         *
+         *     **ไม่มีช่องสำหรับ key เต็มและไม่มีช่องสำหรับ secret** — ความลับไม่หลุดเพราะ
+         *     ไม่มีที่ให้มันอยู่ ไม่ใช่เพราะผู้เขียน endpoint จำได้ว่าอย่าใส่
+         */
+        KeyView: {
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Failure Code */
+            failure_code?: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Label */
+            label: string;
+            /**
+             * May Retry
+             * @default false
+             */
+            may_retry: boolean;
+            /** Next Attempt At */
+            next_attempt_at?: string | null;
+            /** Not Before */
+            not_before?: string | null;
+            /** Public Tail */
+            public_tail: string;
+            /** Status */
+            status: string;
+            /** Verified At */
+            verified_at?: string | null;
+        };
+        /**
          * Me
          * @description ตัวตนของคำขอ พร้อมสถานะปัจจัยที่สอง (F-06 RQ-12)
          */
@@ -442,6 +581,27 @@ export interface components {
             current_password: string;
             /** New Password */
             new_password: string;
+        };
+        /**
+         * RejectedKeyInput
+         * @description คำตอบ validation ที่มีแค่รหัส ไม่มีค่าที่ผู้ใช้ส่งมา
+         */
+        RejectedKeyInput: {
+            /** Detail */
+            detail: string;
+        };
+        /**
+         * RetryAccepted
+         * @description ผลของการกดลองใหม่
+         */
+        RetryAccepted: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Status */
+            status: string;
         };
         /**
          * SecondStep
@@ -513,6 +673,128 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    list_keys_api_keys_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KeyView"][];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RejectedKeyInput"];
+                };
+            };
+        };
+    };
+    add_key_api_keys_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AddKeyRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AddedKey"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RejectedKeyInput"];
+                };
+            };
+        };
+    };
+    remove_key_api_keys__key_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                key_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RejectedKeyInput"];
+                };
+            };
+        };
+    };
+    retry_key_api_keys__key_id__retry_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                key_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RetryAccepted"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RejectedKeyInput"];
+                };
+            };
+        };
+    };
     read_csrf_token_auth_csrf_get: {
         parameters: {
             query?: never;

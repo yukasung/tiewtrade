@@ -21,8 +21,11 @@ F-05 เก็บเรื่องนี้เป็นสองรายกา
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from typing import Final
+
+from starlette.routing import compile_path
 
 
 @dataclass(frozen=True, slots=True)
@@ -63,99 +66,148 @@ class RouteRule:
 _GENERATED_RULE: Final[RouteRule] = RouteRule()
 
 #: **ทุกเส้นทางของแอปต้องมีแถวที่นี่** — ที่เดียวที่ตอบคำถามเรื่องขอบเขตของเส้นทาง
-ROUTE_RULES: Final[dict[str, RouteRule]] = {
+#:
+#: **กุญแจเป็น (เมธอด, path) ไม่ใช่ path เปล่า** (เจ้าของอนุมัติ 2026-10-04 พร้อม F-07)
+#: — F-07 เป็นงานแรกที่ path เดียวมีสองเมธอดซึ่งมีกฎคนละอย่าง: `POST /api-keys`
+#: เพิ่มความเสี่ยงจึงต้องยืนยันซ้ำ ส่วน `GET /api-keys` เป็นการอ่านที่หน้าเว็บเรียก
+#: เป็นรอบ ๆ · ถ้ายังใช้ path เป็นกุญแจ กฎที่เข้มกว่าจะเหมารวมทั้งคู่ แล้วหน้าเว็บ
+#: จะดูสถานะไม่ได้ถ้าไม่กรอกรหัสทุกรอบ
+#:
+#: **path ที่มีตัวแปรเขียนเป็นแม่แบบ** (`/api-keys/{key_id}`) ตามที่แอปประกาศ
+#: ไม่ใช่ path จริงของคำขอ — ตัวหาแม่แบบอยู่ใน `authentication.py`
+ROUTE_RULES: Final[dict[tuple[str, str], RouteRule]] = {
     # ── เส้นทางที่ FastAPI สร้างให้เอง ──
-    "/openapi.json": _GENERATED_RULE,
-    "/docs": _GENERATED_RULE,
-    "/docs/oauth2-redirect": _GENERATED_RULE,
-    "/redoc": _GENERATED_RULE,
+    ("GET", "/openapi.json"): _GENERATED_RULE,
+    ("GET", "/docs"): _GENERATED_RULE,
+    ("GET", "/docs/oauth2-redirect"): _GENERATED_RULE,
+    ("GET", "/redoc"): _GENERATED_RULE,
     # ── สาธารณะ — สี่เส้นทางเท่านั้น (F-05) ──
-    "/health": RouteRule(public=True),
-    "/auth/csrf": RouteRule(public=True),
-    "/auth/register": RouteRule(public=True),
-    "/auth/login": RouteRule(public=True),
+    ("GET", "/health"): RouteRule(public=True),
+    ("GET", "/auth/csrf"): RouteRule(public=True),
+    ("POST", "/auth/register"): RouteRule(public=True),
+    ("POST", "/auth/login"): RouteRule(public=True),
     # ── ต้องมี session และนับเป็นการใช้งาน (F-05) ──
-    "/auth/logout": RouteRule(renews=True),
-    "/auth/logout-all": RouteRule(renews=True),
-    "/auth/password": RouteRule(renews=True),
+    ("POST", "/auth/logout"): RouteRule(renews=True),
+    ("POST", "/auth/logout-all"): RouteRule(renews=True),
+    ("POST", "/auth/password"): RouteRule(renews=True),
     # ── ต้องมี session แต่ **ไม่ต่ออายุ** เพราะหน้าเว็บเรียกเป็นรอบ ๆ (Q-2) ──
-    "/auth/me": RouteRule(),
+    ("GET", "/auth/me"): RouteRule(),
     # ── ปัจจัยที่สอง (F-06) ──
     #
     # `setup` รับเฉพาะบัญชีที่ยังไม่เปิด TOTP โดยตรวจใต้ล็อกใน endpoint
     # และใช้รหัสผ่านปัจจุบันพิสูจน์ความเป็นเจ้าของ (RQ-3.1)
     # `confirm` ใช้รหัสจาก pending ที่ออกโดย setup หรือ replace ซึ่งยืนยันซ้ำแล้ว
-    "/auth/totp/setup": RouteRule(renews=True),
-    "/auth/totp/confirm": RouteRule(renews=True),
+    ("POST", "/auth/totp/setup"): RouteRule(renews=True),
+    ("POST", "/auth/totp/confirm"): RouteRule(renews=True),
     # สามเส้นทางที่เปลี่ยนหรือถอนปัจจัยที่สอง **ต้องยืนยันซ้ำ**
     # · สองเส้นทางแรกรับสิทธิ์กู้บัญชีแทนรหัส TOTP ได้ เพราะเป็นทางออกของคนที่
     #   เสียเครื่อง (Q-3.1 ช่อง ข และ ค) ส่วนการขอชุดรหัสสำรองใหม่ไม่รับ
     #   เพราะรหัสสำรองต้องไม่ต่ออายุตัวเองได้
-    "/auth/totp/replace": RouteRule(renews=True, reverify=True, accepts_recovery_grant=True),
-    "/auth/totp/disable": RouteRule(renews=True, reverify=True, accepts_recovery_grant=True),
-    "/auth/totp/recovery-codes": RouteRule(renews=True, reverify=True),
+    ("POST", "/auth/totp/replace"): RouteRule(
+        renews=True, reverify=True, accepts_recovery_grant=True
+    ),
+    ("POST", "/auth/totp/disable"): RouteRule(
+        renews=True, reverify=True, accepts_recovery_grant=True
+    ),
+    ("POST", "/auth/totp/recovery-codes"): RouteRule(renews=True, reverify=True),
+    # ── API key ของผู้ใช้ (F-07) ──
+    #
+    # **เพิ่ม key ต้องยืนยันซ้ำ และไม่รับรหัสสำรอง** — เป็นการกระทำที่เพิ่มความเสี่ยง
+    # (`security.md` หัวข้อ 1) · `accepts_recovery_grant` ปล่อยเป็นค่าปริยายคือไม่รับ
+    ("POST", "/api-keys"): RouteRule(renews=True, reverify=True),
+    # **อ่านรายการไม่ต่ออายุและไม่ยืนยันซ้ำ** เพราะหน้าเว็บเรียกเป็นรอบ ๆ
+    ("GET", "/api-keys"): RouteRule(),
+    # **อ่านรายการไม่ต่ออายุ** เพราะหน้าเว็บเรียกเป็นรอบ ๆ เพื่อดูสถานะการตรวจ
+    # (เหตุผลเดียวกับ `/auth/me` ของ F-05)
+    ("DELETE", "/api-keys/{key_id}"): RouteRule(renews=True),
+    ("POST", "/api-keys/{key_id}/retry"): RouteRule(renews=True),
     # ขั้นที่สองของการเข้าสู่ระบบ — สาธารณะเพราะยังไม่มี session
     # และ **ไม่ต่ออายุ** เพราะยังไม่มี session ให้ต่อ
-    "/auth/totp/login": RouteRule(public=True),
+    ("POST", "/auth/totp/login"): RouteRule(public=True),
 }
 
 #: เส้นทางที่เรียกได้โดยไม่ต้องมี session — **คำนวณจากตารางเดียว**
 #:
 #: ยังมีชื่อนี้อยู่เพราะเทสต์และโค้ดของ F-05 อ้างถึง และความหมายไม่เปลี่ยน
 #: (validation V-30) — เปลี่ยนแค่ว่าที่มาของมันคือแถวในตาราง ไม่ใช่รายการแยก
-PUBLIC_ROUTES: Final[frozenset[str]] = frozenset(
-    path for path, rule in ROUTE_RULES.items() if rule.public
+PUBLIC_ROUTES: Final[frozenset[tuple[str, str]]] = frozenset(
+    key for key, rule in ROUTE_RULES.items() if rule.public
 )
 
 #: เส้นทางที่นับว่าเป็น "การใช้งาน" จึงเลื่อนเวลาหมดอายุ
-RENEWING_ROUTES: Final[frozenset[str]] = frozenset(
-    path for path, rule in ROUTE_RULES.items() if rule.renews
+RENEWING_ROUTES: Final[frozenset[tuple[str, str]]] = frozenset(
+    key for key, rule in ROUTE_RULES.items() if rule.renews
 )
 
 #: เส้นทางที่ต้องยืนยันปัจจัยที่สองซ้ำ
-REVERIFYING_ROUTES: Final[frozenset[str]] = frozenset(
-    path for path, rule in ROUTE_RULES.items() if rule.reverify
+REVERIFYING_ROUTES: Final[frozenset[tuple[str, str]]] = frozenset(
+    key for key, rule in ROUTE_RULES.items() if rule.reverify
 )
 
 #: เส้นทางที่เป็นคำสั่งลดความเสี่ยง — **ยังว่างเพราะยังไม่มีเส้นทางเหล่านั้น**
 #:
 #: งานที่เพิ่มคำสั่งปิดไม้ ยกเลิกออเดอร์ หรือหยุดบอท ต้องใส่ชื่อของตัวเองที่นี่
 #: ผ่านธง `risk_reducing` และ `RouteRule` จะปฏิเสธถ้าเผลอตั้ง `reverify` ด้วย
-RISK_REDUCING_ROUTES: Final[frozenset[str]] = frozenset(
-    path for path, rule in ROUTE_RULES.items() if rule.risk_reducing
+RISK_REDUCING_ROUTES: Final[frozenset[tuple[str, str]]] = frozenset(
+    key for key, rule in ROUTE_RULES.items() if rule.risk_reducing
 )
 
 
-def rule_for(path: str) -> RouteRule | None:
+#: แม่แบบของ path ที่คอมไพล์เป็น regex ไว้แล้ว — **มาจากตารางเดียวกัน ไม่ใช่รายการที่สอง**
+#:
+#: เทียบเองแทนการถามเส้นทางที่ framework จับคู่ได้ เพราะ FastAPI รุ่นปัจจุบันห่อ
+#: router ที่ `include_router` เข้ามาไว้ในตัวที่ไม่เปิดเผยแม่แบบของเส้นทางข้างใน
+#: การพึ่งโครงสร้างภายในของมันคือการพึ่งสิ่งที่เปลี่ยนได้ทุกรุ่นโดยไม่มีสัญญา
+#:
+#: **ทิศทางที่อีกฝั่งยังถูกตรวจอยู่** — เทสต์ที่เดินทุกเส้นทางของแอปยืนยันว่า
+#: ทุกเส้นทางมีแถวในตารางนี้ ฉะนั้นแม่แบบที่นี่กับเส้นทางจริงต้องตรงกันทั้งสองทาง
+_COMPILED: Final[tuple[tuple[str, re.Pattern[str], str], ...]] = tuple(
+    (method, compile_path(path)[0], path) for method, path in ROUTE_RULES
+)
+
+
+def classify(method: str, path: str) -> tuple[str, str] | None:
+    """(เมธอด, แม่แบบ) ของคำขอนี้ — `None` เมื่อไม่มีแถวไหนรับ
+
+    **เทียบแม่แบบ ไม่ใช่เทียบข้อความตรง ๆ** เพราะ path ที่มีตัวแปรมาถึงเป็นค่าจริง
+    เสมอ (`/api-keys/8ac0…/retry`) การเทียบด้วยค่าจริงจะไม่เจอแถวของมันเลย
+    """
+    for candidate, pattern, template in _COMPILED:
+        if candidate == method and pattern.fullmatch(path) is not None:
+            return method, template
+    return None
+
+
+def rule_for(method: str, path: str) -> RouteRule | None:
     """การจัดประเภทของเส้นทางนั้น — `None` เมื่อยังไม่ถูกจัดประเภท
 
     ผู้เรียกต้อง **ปฏิเสธ** เมื่อได้ `None` ไม่ใช่เดาค่าให้ (RQ-6)
     """
-    return ROUTE_RULES.get(path)
+    return ROUTE_RULES.get((method, path))
 
 
-def is_public(path: str) -> bool:
+def is_public(method: str, path: str) -> bool:
     """เส้นทางนี้เรียกได้โดยไม่ต้องมี session หรือไม่
 
     เส้นทางที่ยังไม่ถูกจัดประเภทไม่ใช่สาธารณะ — ค่าเริ่มต้นคือปฏิเสธ
     """
-    rule = rule_for(path)
+    rule = rule_for(method, path)
     return rule is not None and rule.public
 
 
-def renews_session(path: str) -> bool:
+def renews_session(method: str, path: str) -> bool:
     """คำขอที่เส้นทางนี้รับ นับเป็นการใช้งานหรือไม่"""
-    rule = rule_for(path)
+    rule = rule_for(method, path)
     return rule is not None and rule.renews
 
 
-def needs_reverification(path: str) -> bool:
+def needs_reverification(method: str, path: str) -> bool:
     """เส้นทางนี้ต้องยืนยันปัจจัยที่สองซ้ำหรือไม่"""
-    rule = rule_for(path)
+    rule = rule_for(method, path)
     return rule is not None and rule.reverify
 
 
-def accepts_recovery_grant(path: str) -> bool:
+def accepts_recovery_grant(method: str, path: str) -> bool:
     """เส้นทางนี้รับสิทธิ์กู้บัญชีแทนรหัส TOTP ได้หรือไม่"""
-    rule = rule_for(path)
+    rule = rule_for(method, path)
     return rule is not None and rule.accepts_recovery_grant

@@ -136,6 +136,7 @@ source_modules = [
     "tiewtrade.venues.limits",
     "tiewtrade.venues.moments",
     "tiewtrade.venues.prices",
+    "tiewtrade.venues.signing",
     "tiewtrade.venues.symbols",
     "tiewtrade.venues.wallets",
 ]
@@ -149,6 +150,7 @@ forbidden_modules = ["httpx", "urllib", "socket", "websockets", "aiohttp", "requ
 name = "การแปลข้อมูลของตัวเชื่อม Binance TH ห้ามรู้จักเครือข่าย"
 type = "forbidden"
 source_modules = [
+    "tiewtrade.venues.binance_th.endpoints",
     "tiewtrade.venues.binance_th.failures",
     "tiewtrade.venues.binance_th.mapping",
     "tiewtrade.venues.binance_th.rate_limit",

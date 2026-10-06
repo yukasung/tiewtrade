@@ -25,6 +25,7 @@ from collections.abc import Callable
 from datetime import datetime, timedelta
 from typing import Final
 
+from tiewtrade.venues.binance_th.endpoints import Endpoint
 from tiewtrade.venues.binance_th.mapping import (
     constraints_from_pair,
     market_symbol,
@@ -35,8 +36,6 @@ from tiewtrade.venues.errors import RejectionReason, VenueRejectedError
 from tiewtrade.venues.limits import CallCost
 from tiewtrade.venues.moments import require_aware
 from tiewtrade.venues.symbols import Symbol, SymbolConstraints
-
-EXCHANGE_INFO_ENDPOINT: Final = "/exchangeInfo"
 
 #: weight ของ `/exchangeInfo` ตามเอกสารของตลาด
 CONSTRAINTS_COST: Final = CallCost(weight=10)
@@ -77,7 +76,7 @@ class BinanceThConstraints:
     async def _fresh(self) -> dict[str, dict[str, object]]:
         async with self._lock:
             if self._known is None or self._expired():
-                response = await self._transport.get(EXCHANGE_INFO_ENDPOINT, cost=CONSTRAINTS_COST)
+                response = await self._transport.get(Endpoint.EXCHANGE_INFO, cost=CONSTRAINTS_COST)
                 # อ่านให้ครบก่อนแล้วจึงแทนทั้งชุด — ถ้าอ่านซองจดหมายไม่ผ่าน
                 # ข้อมูลชุดเดิมต้องไม่กลายเป็นชุดที่อ่านมาได้ครึ่ง ๆ
                 parsed = pairs_from_exchange_info(response.payload)

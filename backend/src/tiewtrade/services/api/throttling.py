@@ -22,15 +22,17 @@ from __future__ import annotations
 from collections.abc import AsyncIterator, Sequence
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Final
+from uuid import UUID
 
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncEngine
 
-from tiewtrade.infra.auth import Bucket, claim, clear, count_failure
+from tiewtrade.infra.auth import Bucket, claim, clear, count_failure, key_of
+from tiewtrade.infra.auth.throttle import TokenRule
 from tiewtrade.infra.db import DatabaseRole
-from tiewtrade.infra.db.session import PresentedSession, presented_session
+from tiewtrade.infra.db.session import PresentedSession, presented_session, user_session
 
 
 class AuthRejectedError(Exception):
@@ -129,3 +131,42 @@ async def throttled(
     if rejection is not None:
         # โยนชนิดเดิมต่อ ไม่แปลงที่นี่ — ตัวแปลงอยู่ที่ `app.py` ที่เดียว
         raise rejection
+
+
+async def spend_token(engine: AsyncEngine, user_id: UUID, bucket: Bucket) -> None:
+    """ใช้โควตาหนึ่งหน่วยของถังนั้น — ปฏิเสธเมื่อหมด (F-07 RQ-11)
+
+    **ต่างจาก `throttled()` ของ F-05 ตรงที่นับทุกคำขอ ไม่ใช่นับเฉพาะที่ล้มเหลว** —
+    ที่นั่นเรานับการเดารหัสผ่านซึ่งผิดเท่านั้นที่น่าสงสัย ส่วนที่นี่ **ทุกครั้งที่เพิ่ม key
+    คือหนึ่งคำขอที่ยิงตลาดและหนึ่งความลับที่ถูกเก็บ** การสำเร็จจึงมีต้นทุนพอ ๆ กับการล้มเหลว
+
+    **ตัวนับอยู่ใน transaction ของตัวเอง** ด้วยเหตุผลเดียวกับ F-05/F-06:
+    ถ้าร่วม transaction กับการกระทำแล้วการกระทำถูกย้อน การนับจะหายไปด้วย
+    แล้วการคุมอัตราจะไม่ทำงานเลยเวลาที่คำขอถูกปฏิเสธ
+    """
+    now = datetime.now(UTC)
+    async with user_session(engine, user_id, role=DatabaseRole.API) as session:
+        state = await claim(session, bucket, key_of(str(user_id)), now=now)
+        if state.tokens_left is not None and state.tokens_left <= 0:
+            raise _too_many(bucket, state.window_started_at, now)
+        # **นับทุกครั้งที่กด ไม่ว่าผลจะเป็นอย่างไร** (RQ-11.2) — นับเฉพาะที่ล้มเหลว
+        # แปลว่าลองคำรับรองได้ไม่จำกัดตราบใดที่เดาถูก
+        await count_failure(session, bucket, key_of(str(user_id)))
+
+
+def _too_many(bucket: Bucket, refilled_at: datetime, now: datetime) -> HTTPException:
+    """ปฏิเสธพร้อม **บอกเวลาที่ลองได้อีกครั้ง** (RQ-11.3 — เจ้าของตัดสิน 2026-10-04)
+
+    **ต่างจากข้อความของ F-06 ที่ตั้งใจไม่บอก** และความต่างนั้นมีเหตุผล: ที่นั่นคนที่
+    ถูกปฏิเสธอาจเป็นผู้โจมตีที่กำลังเดารหัส การบอกเวลาจึงช่วยให้เขาจับจังหวะ
+    ส่วนที่นี่คนที่ถูกปฏิเสธถือความลับของตัวเองอยู่แล้ว และการไม่บอกเวลาทำให้คนที่
+    ใส่ key ถูกต้องไม่รู้ว่าต้องรอเท่าไร — กดรัวแล้วยิ่งไม่ได้
+    """
+    rule = bucket.rule
+    wait = rule.refill_interval - (now - refilled_at) if isinstance(rule, TokenRule) else None
+    seconds = max(1, int(wait.total_seconds())) if wait is not None else None
+    return HTTPException(
+        status.HTTP_429_TOO_MANY_REQUESTS,
+        "ทำรายการถี่เกินไป กรุณารอสักครู่แล้วลองใหม่",
+        headers=None if seconds is None else {"Retry-After": str(seconds)},
+    )

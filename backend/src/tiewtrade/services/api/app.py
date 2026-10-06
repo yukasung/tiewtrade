@@ -21,6 +21,7 @@ from starlette.responses import Response
 
 from tiewtrade.infra.crypto import KeyPurpose, KeySource
 from tiewtrade.infra.db import DatabaseRole, create_engine_for
+from tiewtrade.services.api.api_key_routes import router as api_key_router
 from tiewtrade.services.api.auth_routes import router as auth_router
 from tiewtrade.services.api.authentication import authenticate_request
 from tiewtrade.services.api.throttling import AuthRejectedError
@@ -37,6 +38,9 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     app.state.api_engine = create_engine_for(DatabaseRole.API)
     app.state.auth_engine = create_engine_for(DatabaseRole.AUTH)
     app.state.totp_keys = KeySource.from_environment(KeyPurpose.TOTP_SECRET)
+    # **กุญแจของ API key เป็นคนละดอก** และฝั่งนี้ใช้ปิดผนึกอย่างเดียว —
+    # การเปิดผนึกทำได้เฉพาะใน `engine` (`tech-stack.md` หัวข้อ 8 · F-07 RQ-4)
+    app.state.venue_keys = KeySource.from_environment(KeyPurpose.VENUE_API_SECRET)
     try:
         yield
     finally:
@@ -82,6 +86,7 @@ async def refused(_: Request, rejection: AuthRejectedError) -> JSONResponse:
 
 app.include_router(auth_router)
 app.include_router(totp_router)
+app.include_router(api_key_router)
 
 
 class Health(BaseModel):

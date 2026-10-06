@@ -427,4 +427,5 @@ def test_the_single_network_gateway_gate_rejects_a_second_way_out() -> None:
 
 def test_the_single_network_gateway_gate_allows_the_gateway_itself() -> None:
     """กรณีที่ถูกต้องคู่กัน — ไฟล์ทางออกใช้ไลบรารีเครือข่ายได้"""
-    assert check_network_only_in(FIXTURES / "venue_tree" / "venues", "client") == []
+    adapter = FIXTURES / "venue_tree" / "venues" / "adapter_like"
+    assert check_network_only_in(adapter, "client") == []

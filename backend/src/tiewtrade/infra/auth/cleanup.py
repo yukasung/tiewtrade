@@ -27,12 +27,15 @@ from typing import Any, cast
 
 from sqlalchemy import CursorResult
 
-from tiewtrade.infra.auth.throttle import RULES, Bucket, TokenRule
-from tiewtrade.infra.db.session import PresentedSession
+from tiewtrade.infra.auth.throttle import RULES, Bucket, Counting, TokenRule
+from tiewtrade.infra.db.session import PresentedSession, UserSession
 
 # ลบถังแบบหน้าต่างคงที่ที่หน้าต่างผ่านไปแล้วและไม่มีเวลาที่ต้องรอค้างอยู่
+#
+# **ชื่อตารางมาจาก `Bucket.table`** เพราะถังของ F-07 อยู่คนละตารางและคนละสิทธิ์
+# (`plan.md` ข้อ 12.1) ตรรกะการเก็บกวาดยังเป็นชุดเดียว
 _SWEEP_WINDOW_BUCKET = """
-DELETE FROM auth_throttle
+DELETE FROM {table}
 WHERE bucket_kind = :kind
   AND window_started_at <= :stale_before
   AND (next_allowed_at IS NULL OR next_allowed_at <= :now)
@@ -42,7 +45,7 @@ WHERE bucket_kind = :kind
 #
 # `:capacity - tokens_left` คือจำนวนที่ต้องเติม และแต่ละหน่วยใช้เวลาหนึ่งช่วง
 _SWEEP_TOKEN_BUCKET = """
-DELETE FROM auth_throttle
+DELETE FROM {table}
 WHERE bucket_kind = :kind
   AND refilled_at + ((:capacity - tokens_left) * make_interval(secs => :seconds)) <= :now
 """
@@ -69,13 +72,16 @@ class Swept:
 
 
 async def sweep(session: PresentedSession, *, now: datetime) -> Swept:
-    """ลบแถวที่ไม่มีผลอะไรแล้วจากทั้งสองตาราง — คืนจำนวนที่ลบ
+    """ลบแถวที่ไม่มีผลอะไรแล้วจากตารางของบทบาท `auth` — คืนจำนวนที่ลบ
 
     รับ `now` เข้ามาแทนการอ่านนาฬิกาเอง เพื่อให้เทสต์เดินเวลาได้ และเพื่อให้ทุกคำสั่ง
     ในรอบเดียวกันใช้เวลาเดียวกัน
+
+    **ไม่ครอบถังของ F-07** เพราะถังเหล่านั้นอยู่ในตารางของบทบาท `api` ซึ่ง session นี้
+    แตะไม่ได้ — ดู `sweep_api_buckets()` · การเรียกทั้งสองเป็นหน้าที่ของสคริปต์เก็บกวาด
     """
     throttle_rows = 0
-    for bucket in Bucket:
+    for bucket in _buckets_in("auth_throttle"):
         throttle_rows += await _swept_bucket(session, bucket, now=now)
 
     challenges = await session.execute(_SWEEP_CHALLENGES)
@@ -85,12 +91,29 @@ async def sweep(session: PresentedSession, *, now: datetime) -> Swept:
     )
 
 
-async def _swept_bucket(session: PresentedSession, bucket: Bucket, *, now: datetime) -> int:
+def _buckets_in(table: str) -> tuple[Bucket, ...]:
+    """ถังทุกชนิดที่เก็บอยู่ในตารางนั้น — **มาจาก `Bucket` ไม่ใช่รายการที่เขียนไว้ซ้ำ**"""
+    return tuple(bucket for bucket in Bucket if bucket.table == table)
+
+
+async def sweep_api_buckets(session: UserSession, *, now: datetime) -> int:
+    """ลบแถวที่หมดผลจากตารางถังของบทบาท `api` (F-07) — คืนจำนวนที่ลบ
+
+    แยกฟังก์ชันเพราะ **คนละบทบาทคนละ session** ไม่ใช่เพราะตรรกะต่างกัน —
+    ตัวที่ลบจริงคือ `_swept_bucket` ตัวเดียวกับของ `auth`
+    """
+    swept = 0
+    for bucket in _buckets_in("api_throttle"):
+        swept += await _swept_bucket(session, bucket, now=now)
+    return swept
+
+
+async def _swept_bucket(session: Counting, bucket: Bucket, *, now: datetime) -> int:
     """ลบแถวที่หมดผลของถังชนิดหนึ่ง"""
     rule = RULES[bucket]
     if isinstance(rule, TokenRule):
         result = await session.execute(
-            _SWEEP_TOKEN_BUCKET,
+            _SWEEP_TOKEN_BUCKET.format(table=bucket.table),
             {
                 "kind": bucket.value,
                 "now": now,
@@ -101,7 +124,7 @@ async def _swept_bucket(session: PresentedSession, bucket: Bucket, *, now: datet
         return _rows(result)
 
     result = await session.execute(
-        _SWEEP_WINDOW_BUCKET,
+        _SWEEP_WINDOW_BUCKET.format(table=bucket.table),
         {"kind": bucket.value, "now": now, "stale_before": now - rule.window},
     )
     return _rows(result)
