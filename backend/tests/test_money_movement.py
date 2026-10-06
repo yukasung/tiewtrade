@@ -19,7 +19,7 @@ FIXTURES = Path(__file__).parent / "gates" / "fixtures" / "money_paths"
 
 
 def test_the_whole_source_tree_is_clean() -> None:
-    """V-32 — ไม่มีเส้นทางที่ย้ายเงินอยู่ในโค้ดของระบบเลย"""
+    """V-32/V-33 — src ต้องไม่มีเส้นทางย้ายเงิน ทางลัด หรือการใช้ flag บัญชี"""
     violations = check_tree(SOURCE_ROOT)
     assert violations == [], "\n".join(str(violation) for violation in violations)
 
@@ -30,7 +30,7 @@ def test_the_gate_catches_a_file_that_names_a_money_path(name: str) -> None:
     violations = check_no_money_paths(FIXTURES / f"{name}.py")
 
     assert violations, f"ด่านไม่จับ {name}"
-    assert all(violation.rule == "money-moving-path" for violation in violations)
+    assert all(violation.kind == "money-moving-path" for violation in violations)
 
 
 def test_the_gate_leaves_a_correct_file_alone() -> None:

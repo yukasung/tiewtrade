@@ -180,6 +180,22 @@ def _integer(value: object) -> int:
     return value
 
 
+# NC-19: รูปร่าง account เดิมที่ยืนยันแล้ว · ตรวจชื่อช่อง ไม่อ่านค่าของ account flags
+_ACCOUNT_FIELDS: Final[frozenset[str]] = frozenset(
+    {
+        "makerCommission",
+        "takerCommission",
+        "buyerCommission",
+        "sellerCommission",
+        "canTrade",
+        "canWithdraw",
+        "canDeposit",
+        "updateTime",
+        "balances",
+    }
+)
+
+
 def holdings_from_account(*, payload: object, received_at: datetime) -> WalletHoldings:
     """ยอดในกระเป๋าจากคำตอบของ endpoint ข้อมูลบัญชี (F-07)
 
@@ -193,6 +209,8 @@ def holdings_from_account(*, payload: object, received_at: datetime) -> WalletHo
     โดยไม่ผ่านทศนิยมลอยตัว — ตัวอ่าน JSON ของ `transport` คงตัวเลขที่มีจุดไว้เป็นข้อความ
     """
     account = _mapping(payload)
+    if account.keys() - _ACCOUNT_FIELDS:
+        raise VenueProtocolError()
     holdings: list[Holding] = []
     for item in _sequence(account.get("balances")):
         entry = _mapping(item)

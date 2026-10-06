@@ -11,6 +11,7 @@ import {
   register,
 } from "./auth";
 import { TotpPanel } from "./TotpPanel";
+import { ApiKeyPanel } from "./ApiKeyPanel";
 
 type Mode = "login" | "register";
 
@@ -153,6 +154,7 @@ export function AuthPanel(): JSX.Element {
             setIdentity(await fetchIdentity());
           }}
         />
+        <ApiKeyPanel identity={identity} />
       </section>
     );
   }

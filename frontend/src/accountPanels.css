@@ -1,0 +1,18 @@
+/* ค่ากลางของส่วนจัดการบัญชี — คงค่าจาก ApiKeyPanel เดิม */
+:root {
+  --account-space-md: 1rem;
+  --account-space-lg: 2rem;
+  --account-panel-width: 64rem;
+  --account-text-width: 72ch;
+  --account-line-height: 1.6;
+  --account-border-accent: 3px;
+  --account-muted-color: GrayText;
+  --account-field-gap: 0.4rem;
+  --account-control-height: 2.5rem;
+  --account-focus-width: 2px;
+  --account-focus-offset: 3px;
+  --account-focus-color: Highlight;
+  --account-border-width: 1px;
+  --account-space-sm: 0.5rem;
+  --account-emphasis-weight: bold;
+}

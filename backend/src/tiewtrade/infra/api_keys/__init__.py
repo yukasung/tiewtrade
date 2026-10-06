@@ -10,6 +10,8 @@ from tiewtrade.infra.api_keys.records import (
     ApiKeyStatus,
     ApiKeySummary,
     TooManyKeysError,
+    accepted_label_text,
+    accepted_public_identifier,
     public_tail,
 )
 from tiewtrade.infra.api_keys.signing import HmacRequestSigner
@@ -30,6 +32,8 @@ __all__ = [
     "HmacRequestSigner",
     "RetryOutcome",
     "TooManyKeysError",
+    "accepted_label_text",
+    "accepted_public_identifier",
     "delete_key",
     "public_tail",
     "request_retry",

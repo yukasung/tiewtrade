@@ -9,6 +9,9 @@
 และ `AGENTS.md` กฎข้อ 2 ห้ามคิดข้อกำหนดการเทรดขึ้นเอง
 """
 
+from collections.abc import Callable
+from datetime import datetime, timedelta
+
 from tiewtrade.venues.constraints import DEFAULT_CONSTRAINTS_COST, SymbolConstraintSource
 from tiewtrade.venues.errors import (
     RejectionReason,
@@ -33,14 +36,13 @@ from tiewtrade.venues.wallets import (
 )
 
 
-def live_wallet_source(
+def live_wallet_factory(
     *,
-    signer: RequestSigner,
     client: object,
-    clock: object,
-    timeout: object,
-) -> WalletSource:
-    """กระเป๋าของ **ตลาดจริง** หนึ่งใบ — จุดเดียวที่ประกอบตัวเชื่อมเข้ากับคำรับรอง
+    clock: Callable[[], datetime],
+    timeout: timedelta,
+) -> Callable[[RequestSigner], WalletSource]:
+    """ตัวสร้างกระเป๋าของ **ตลาดจริง** — แชร์ transport/โควตาตลอดอายุ factory
 
     **มีไว้เพื่อให้ service เรียกใช้ได้โดยไม่ต้องเอ่ยชื่อตลาด** (`architecture.md`
     หัวข้อ 1 — โค้ดนอก `venues` ต้องไม่รู้ว่ากำลังคุยกับตลาดไหน) ก่อนหน้านี้ไม่มีใคร
@@ -59,11 +61,15 @@ def live_wallet_source(
 
     transport = BinanceThTransport(
         client=client,  # type: ignore[arg-type]
-        guard=IpWeightLimiter(clock=clock),  # type: ignore[arg-type]
-        clock=clock,  # type: ignore[arg-type]
-        timeout=timeout,  # type: ignore[arg-type]
+        guard=IpWeightLimiter(clock=clock),
+        clock=clock,
+        timeout=timeout,
     )
-    return BinanceThWallet(transport, signer)
+
+    def build(signer: RequestSigner) -> WalletSource:
+        return BinanceThWallet(transport, signer)
+
+    return build
 
 
 __all__ = [
@@ -91,5 +97,5 @@ __all__ = [
     "VenueUnavailableError",
     "WalletHoldings",
     "WalletSource",
-    "live_wallet_source",
+    "live_wallet_factory",
 ]

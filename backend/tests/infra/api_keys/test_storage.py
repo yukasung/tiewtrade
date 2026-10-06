@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import asyncio
+from typing import cast
 from uuid import UUID, uuid4
 
 import pytest
@@ -24,10 +25,30 @@ from tiewtrade.infra.api_keys import (
 )
 from tiewtrade.infra.crypto import KeyPurpose, KeySource, Sealed, SealingError, unseal
 from tiewtrade.infra.db import DatabaseRole, user_session
+from tiewtrade.infra.db.session import UserSession
 from tiewtrade.infra.users import create_user
 
 SECRET = "secret-that-must-never-come-back"
 PUBLIC = "PUBLICKEY000000ABCD"
+
+
+@pytest.mark.parametrize("bad_key", ["ทดสอบ", "bad\r\nheader", "bad\x00", "bad\x7f"])
+async def test_malformed_identifier_is_rejected_before_database_access(
+    venue_keys: KeySource,
+    bad_key: str,
+) -> None:
+    # ไม่มี session ที่เรียกได้: ถ้าแตะฐานข้อมูลก่อนตรวจ input เทสต์จะล้ม
+    with pytest.raises(ApiKeyError) as refused:
+        await store_key(
+            cast(UserSession, None),
+            venue_keys,
+            user_id=uuid4(),
+            label="valid",
+            key_public=bad_key,
+            secret=SECRET,
+        )
+    assert bad_key not in str(refused.value)
+    assert SECRET not in str(refused.value)
 
 
 async def _store(
@@ -172,6 +193,7 @@ async def test_storing_with_the_wrong_purpose_is_refused(
 @pytest.mark.parametrize(
     ("label", "key_public", "secret"),
     [
+        *((label, PUBLIC, SECRET) for label in ("\x00หลัก", "หลัก\x00รอง", "หลัก\x00")),
         ("", PUBLIC, SECRET),
         ("   ", PUBLIC, SECRET),
         ("ชื่อ" * 20, PUBLIC, SECRET),

@@ -46,11 +46,28 @@ EXPIRED_CODE: Final = "VERIFICATION_EXPIRED"
 
 _UNFINISHED = ("PENDING", "UNVERIFIABLE")
 
-#: หาแถวที่ "น่าจะ" ถึงคิว — **คำใบ้เท่านั้น** เงื่อนไขจริงอยู่ในคำสั่งจอง
-_DUE_HINTS = """
+#: เงื่อนไขเวลาที่ scan และ atomic claim ใช้ร่วมกัน · ไม่อ่านความลับ/failure_code
+_CLAIM_ELIGIBILITY = """
+  clock_timestamp() < created_at + :deadline
+  AND (claim_expires_at IS NULL OR claim_expires_at < clock_timestamp())
+  AND (not_before IS NULL OR not_before <= clock_timestamp())
+  AND (
+        (next_attempt_at IS NULL AND last_attempt_at IS NULL)
+     OR retry_requested_at > last_attempt_at
+     OR next_attempt_at <= clock_timestamp()
+     OR claim_expires_at < clock_timestamp()
+  )
+"""
+
+#: เลือกเฉพาะงานถึงคิวหรือหมดอายุ ก่อน LIMIT · claim ยังต้องตรวจซ้ำ
+_DUE_HINTS = f"""
 SELECT id, user_id
 FROM user_api_keys
 WHERE status IN ('PENDING', 'UNVERIFIABLE')
+  AND (
+      clock_timestamp() >= created_at + :deadline
+      OR ({_CLAIM_ELIGIBILITY})
+  )
 ORDER BY created_at
 LIMIT :limit
 """
@@ -72,7 +89,7 @@ RETURNING id
 """
 
 #: จองแถว — **เงื่อนไขถึงคิวครบทุกข้ออยู่ที่นี่** (`plan.md` ข้อ 7.5)
-_CLAIM = """
+_CLAIM = f"""
 UPDATE user_api_keys
 SET claimed_by = :worker,
     claim_id = :claim,
@@ -81,14 +98,11 @@ SET claimed_by = :worker,
     attempts = attempts + 1
 WHERE id = :id
   AND status IN ('PENDING', 'UNVERIFIABLE')
-  AND clock_timestamp() < created_at + :deadline
-  AND (claim_expires_at IS NULL OR claim_expires_at < clock_timestamp())
-  AND (not_before IS NULL OR not_before <= clock_timestamp())
-  AND (
-        next_attempt_at IS NULL
-     OR retry_requested_at > last_attempt_at
-     OR next_attempt_at <= clock_timestamp()
-  )
+  AND ({_CLAIM_ELIGIBILITY})
+  -- VENUE_REJECTED ไม่พิสูจน์ว่า credential ผิด: ต้องมีคำขอ manual ใหม่ (NC-20)
+  AND (failure_code IS DISTINCT FROM 'VENUE_REJECTED'
+       OR retry_requested_at > last_attempt_at
+       OR claim_expires_at < clock_timestamp())
 RETURNING id, key_public, secret_sealed, key_version, attempts, status
 """
 
@@ -134,7 +148,10 @@ _MARK_DEFERRED = f"""
 UPDATE user_api_keys
 SET status = 'UNVERIFIABLE',
     failure_code = :code,
-    next_attempt_at = clock_timestamp() + :backoff,
+    next_attempt_at = CASE
+        WHEN :automatic_retry THEN clock_timestamp() + :backoff
+        ELSE NULL
+    END,
     -- **เวลาที่ตลาดสั่งให้รอ คิดจากนาฬิกาของฐานข้อมูล** ไม่ใช่นาฬิกาของ worker
     -- ตัวหลังเดินไม่ตรงกันได้ แล้วเราจะยิงตลาดก่อนเวลาที่มันสั่ง
     not_before = CASE
@@ -183,7 +200,7 @@ def backoff_for(attempts: int) -> timedelta:
 
 async def due_hints(session: ScanSession, *, limit: int = 100) -> tuple[DueKey, ...]:
     """แถวที่ยังไม่จบ **ข้ามผู้ใช้** — บทบาทนี้อ่านความลับไม่ได้ (migration `0009`)"""
-    result = await session.execute(_DUE_HINTS, {"limit": limit})
+    result = await session.execute(_DUE_HINTS, {"limit": limit, "deadline": VERIFICATION_DEADLINE})
     return tuple(DueKey(id=row["id"], user_id=row["user_id"]) for row in result.mappings().all())
 
 
@@ -262,16 +279,19 @@ async def mark_deferred(
     worker: str,
     code: str,
     retry_after: timedelta | None = None,
+    automatic_retry: bool = True,
 ) -> bool:
     """ตรวจไม่ได้ชั่วคราว — **ห้ามลบ secret** และตั้งช่วงรอครั้งถัดไป
 
     `retry_after` คือช่วงที่ **ตลาด** สั่งให้รอ ซึ่งกลายเป็น `not_before` ที่ผู้ใช้
     กดข้ามไม่ได้ · ต่างจาก `next_attempt_at` ที่เป็นช่วงรอของเราเองและปุ่มลองใหม่ข้ามได้
+    กรณี manual-only ไม่ตั้งเวลารอบอัตโนมัติ; claim ยังบังคับคำขอใหม่ (NC-20)
     """
     arguments = _ownership(claimed, worker) | {
         "code": code,
         "backoff": backoff_for(claimed.attempts),
         "retry_after": retry_after,
+        "automatic_retry": automatic_retry,
     }
     result = await session.execute(_MARK_DEFERRED, arguments)
     return result.first() is not None

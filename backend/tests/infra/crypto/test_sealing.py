@@ -9,7 +9,7 @@ from __future__ import annotations
 import base64
 import os
 from unittest.mock import patch
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 import pytest
 from cryptography.exceptions import InvalidTag
@@ -236,3 +236,35 @@ def test_a_failed_unseal_never_shows_the_secret_in_the_traceback(source: KeySour
     for form in readable:
         assert form not in whole, f"พบ secret ในรูป {form[:8]}… ใน traceback"
     assert "AESGCM" not in whole, "traceback พาชื่อของไลบรารีเข้ารหัสออกไปด้วย"
+
+
+@given(
+    purpose=st.sampled_from(list(KeyPurpose)),
+    plaintext=st.binary(min_size=1, max_size=256),
+    owner=st.uuids(),
+)
+def test_both_purposes_preserve_generated_secrets_across_rotation_and_reject_foreign_context(
+    purpose: KeyPurpose,
+    plaintext: bytes,
+    owner: UUID,
+) -> None:
+    """F-07 V-9/12: shared-key material proves binding for both purposes and different owners."""
+    with patch.dict(
+        os.environ, {p.environment_variable: f"1:{encoded_key(b'A')}" for p in KeyPurpose}
+    ):
+        original = KeySource.from_environment(purpose)
+        foreign = KeySource.from_environment(next(p for p in KeyPurpose if p is not purpose))
+    sealed = seal(original, plaintext, owner=owner)
+    assert unseal(original, sealed, owner=owner) == plaintext
+    with pytest.raises(SealingError):
+        unseal(original, sealed, owner=UUID(int=owner.int ^ 1))
+    with pytest.raises(SealingError):
+        unseal(foreign, sealed, owner=owner)
+    with patch.dict(
+        os.environ, {purpose.environment_variable: f"2:{encoded_key(b'B')},1:{encoded_key(b'A')}"}
+    ):
+        rotated = KeySource.from_environment(purpose)
+    assert unseal(rotated, sealed, owner=owner) == plaintext
+    latest = seal(rotated, plaintext, owner=owner)
+    assert latest.key_version == "2"
+    assert unseal(rotated, latest, owner=owner) == plaintext

@@ -30,7 +30,7 @@ from tiewtrade.infra.audit import (
     money_detail,
     quantity_detail,
 )
-from tiewtrade.infra.db import CURRENT_USER_SETTING, ValueRejectedError, user_session
+from tiewtrade.infra.db import CURRENT_USER_SETTING, DatabaseRole, ValueRejectedError, user_session
 from tiewtrade.infra.users import create_user
 
 _INSERT_RAW = (
@@ -395,3 +395,54 @@ async def test_writer_rejects_email_hidden_in_subject_id(api_engine: AsyncEngine
     async with user_session(api_engine, owner) as session:
         with pytest.raises(ForbiddenDetailError):
             await record_event(session, event)
+
+
+@pytest.mark.parametrize(
+    "action,role,outcome,code",
+    [
+        ("API_KEY_ADDED", DatabaseRole.API, "SUCCEEDED", None),
+        ("API_KEY_RETRY_REQUESTED", DatabaseRole.API, "SUCCEEDED", None),
+        ("API_KEY_DELETED", DatabaseRole.API, "SUCCEEDED", None),
+        ("API_KEY_VERIFIED", DatabaseRole.ENGINE, "SUCCEEDED", None),
+        ("API_KEY_REJECTED", DatabaseRole.ENGINE, "REJECTED", "VENUE_CREDENTIAL_REJECTED"),
+        ("API_KEY_VERIFICATION_DEFERRED", DatabaseRole.ENGINE, "FAILED", "VENUE_PROTOCOL"),
+    ],
+)
+@pytest.mark.parametrize(
+    "details",
+    [{"secret": "synthetic"}, {"key_public": "synthetic"}, {"nested": {"balance": "123"}}],
+)
+async def test_database_rejects_private_details_for_every_api_key_action(
+    api_engine: AsyncEngine,
+    engine_engine: AsyncEngine,
+    action: str,
+    role: DatabaseRole,
+    outcome: str,
+    code: str | None,
+    details: dict[str, object],
+) -> None:
+    """F-07 V-6: real roles and otherwise valid events isolate the details constraint."""
+    owner = uuid4()
+    await create_user(api_engine, owner)
+    engine = api_engine if role is DatabaseRole.API else engine_engine
+    statement = (
+        "INSERT INTO audit_events (id, owner_user_id, actor_kind, actor_id, action, "
+        "subject_kind, subject_id, mode, outcome, failure_code, details) "
+        "VALUES (gen_random_uuid(), :owner, :actor_kind, :actor_id, :action, "
+        "'API_KEY', :subject, 'NOT_APPLICABLE', :outcome, :code, CAST(:details AS jsonb))"
+    )
+    parameters = {
+        "owner": owner,
+        "actor_kind": "USER" if role is DatabaseRole.API else "SYSTEM",
+        "actor_id": owner if role is DatabaseRole.API else None,
+        "action": action,
+        "subject": str(uuid4()),
+        "outcome": outcome,
+        "code": code,
+        "details": "{}",
+    }
+    async with user_session(engine, owner, role=role) as session:
+        await session.execute(statement, parameters)
+    async with user_session(engine, owner, role=role) as session:
+        with pytest.raises(ValueRejectedError):
+            await session.execute(statement, parameters | {"details": json.dumps(details)})

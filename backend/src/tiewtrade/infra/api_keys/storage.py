@@ -31,6 +31,8 @@ from tiewtrade.infra.api_keys.records import (
     ApiKeyStatus,
     ApiKeySummary,
     TooManyKeysError,
+    accepted_label_text,
+    accepted_public_identifier,
     public_tail,
 )
 from tiewtrade.infra.crypto import KeyPurpose, KeySource, seal
@@ -56,9 +58,16 @@ VALUES
 
 #: **ไม่เลือก `secret_sealed` และ `key_version`** — บทบาทนี้อ่านไม่ได้ และคำสั่งที่
 #: ขอจะถูกฐานข้อมูลปฏิเสธทั้งคำสั่ง
-_SUMMARIES = """
+#: UI flag และ UPDATE ใช้กฎเดียวกัน · ผู้ชี้ขาดเวลาคือฐานข้อมูลเสมอ (RQ-11.4)
+_RETRY_ELIGIBILITY = """
+status = 'UNVERIFIABLE'
+AND (not_before IS NULL OR not_before <= clock_timestamp())
+"""
+
+_SUMMARIES = f"""
 SELECT id, label, key_public, status, failure_code,
-       created_at, verified_at, not_before, next_attempt_at
+       created_at, verified_at, not_before, next_attempt_at,
+       ({_RETRY_ELIGIBILITY}) AS may_retry
 FROM user_api_keys
 WHERE user_id = :user_id
 ORDER BY created_at
@@ -67,8 +76,8 @@ ORDER BY created_at
 _DELETE = "DELETE FROM user_api_keys WHERE id = :id RETURNING id"
 
 #: อ่านสถานะและเวลาที่ตลาดสั่งให้รอ ก่อนตัดสินใจเรื่องปุ่มลองใหม่
-_RETRY_TARGET = """
-SELECT status, not_before
+_RETRY_TARGET = f"""
+SELECT status, not_before, ({_RETRY_ELIGIBILITY}) AS may_retry
 FROM user_api_keys
 WHERE id = :id
 """
@@ -78,12 +87,11 @@ WHERE id = :id
 #: เงื่อนไข `not_before` อยู่ในคำสั่งด้วย **ไม่ใช่เพราะที่นี่เป็นด่านหลัก** —
 #: ด่านหลักคือคำสั่งจองของ worker (`plan.md` ข้อ 7.5) ที่นี่มีไว้ให้ผู้ใช้รู้ตัวเร็วขึ้น
 #: และเพื่อไม่ให้แถวที่ตลาดสั่งให้รอถูกทำเครื่องหมายว่ามีคนขอแล้ว
-_REQUEST_RETRY = """
+_REQUEST_RETRY = f"""
 UPDATE user_api_keys
 SET retry_requested_at = clock_timestamp()
 WHERE id = :id
-  AND status = 'UNVERIFIABLE'
-  AND (not_before IS NULL OR not_before <= clock_timestamp())
+  AND ({_RETRY_ELIGIBILITY})
 RETURNING id
 """
 
@@ -115,7 +123,7 @@ def _accepted_label(label: str) -> str:
     ปฏิเสธที่นี่ **ก่อนถึงฐานข้อมูล** ตามข้อเดียวกับ F-03 RQ-9.1: ข้อความข้อผิดพลาด
     ของ PostgreSQL อ้างค่าที่ผิดได้ ซึ่งเป็นทางที่ค่าของผู้ใช้ไปโผล่ใน log
     """
-    cleaned = label.strip()
+    cleaned = accepted_label_text(label).strip()
     if not cleaned:
         raise ApiKeyError("ต้องตั้งชื่อให้ key")
     if len(cleaned) > MAX_LABEL_LENGTH:
@@ -158,7 +166,7 @@ async def store_key(
         raise ApiKeyError("ต้องใช้กุญแจของ API key เท่านั้น ไม่ใช่กุญแจของงานอื่น")
 
     accepted_label = _accepted_label(label)
-    accepted_public = _accepted_credential(key_public, field="API key")
+    accepted_public = accepted_public_identifier(key_public)
     accepted_secret = _accepted_credential(secret, field="secret")
 
     await session.execute(_LOCK, _lock_arguments(user_id))
@@ -194,6 +202,7 @@ def _summary_of(mapping: RowMapping) -> ApiKeySummary:
         verified_at=mapping["verified_at"],
         not_before=mapping["not_before"],
         next_attempt_at=mapping["next_attempt_at"],
+        may_retry=mapping["may_retry"],
     )
 
 
@@ -228,6 +237,11 @@ async def request_retry(session: UserSession, key_id: UUID) -> RetryDecision:
 
     updated = await session.execute(_REQUEST_RETRY, {"id": key_id})
     if updated.first() is None:
-        # สถานะใช่แต่เขียนไม่ได้ = ตลาดสั่งให้รออยู่ (หรือมีคนแก้แถวระหว่างนี้)
+        # UPDATE ใช้สถานะปัจจุบันแล้ว · เวลาที่อ่านก่อนหน้าจึงอาจล้าสมัย
+        target = (await session.execute(_RETRY_TARGET, {"id": key_id})).mappings().first()
+        if target is None:
+            return RetryDecision(RetryOutcome.NOT_FOUND)
+        if ApiKeyStatus(target["status"]) is not ApiKeyStatus.UNVERIFIABLE or target["may_retry"]:
+            return RetryDecision(RetryOutcome.NOT_RETRYABLE)
         return RetryDecision(RetryOutcome.MUST_WAIT, not_before=target["not_before"])
     return RetryDecision(RetryOutcome.ACCEPTED)

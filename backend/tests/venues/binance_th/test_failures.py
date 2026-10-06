@@ -14,6 +14,7 @@ import httpx
 import pytest
 
 from tests.venues.binance_th.conftest import (
+    FakeClock,
     RecordingGuard,
     recorded,
     recorded_body,
@@ -21,6 +22,7 @@ from tests.venues.binance_th.conftest import (
     requests_to,
     transport_for,
 )
+from tiewtrade.infra.api_keys import HmacRequestSigner
 from tiewtrade.venues.binance_th.endpoints import Endpoint
 from tiewtrade.venues.binance_th.failures import (
     Delivery,
@@ -28,6 +30,8 @@ from tiewtrade.venues.binance_th.failures import (
     failure_for_status,
 )
 from tiewtrade.venues.binance_th.prices import LATEST_PRICE_COST
+from tiewtrade.venues.binance_th.rate_limit import IpWeightLimiter
+from tiewtrade.venues.binance_th.wallets import HOLDINGS_COST
 from tiewtrade.venues.errors import (
     RejectionReason,
     VenueCredentialRejectedError,
@@ -41,6 +45,43 @@ from tiewtrade.venues.errors import (
 
 #: ค่าที่แกล้งทำเป็นความลับ ใช้พิสูจน์ว่าไม่มีอะไรจากคำขอหลุดเข้าข้อความหรือ log
 PRETEND_SECRET = "sEcReT-kEy-0123456789"
+
+
+@pytest.mark.parametrize("signed", [False, True])
+@pytest.mark.parametrize(
+    "status,headers",
+    [
+        pytest.param(200, {"x-mbx-used-weight-1m": "-1"}, id="negative-weight"),
+        pytest.param(429, {"Retry-After": "999999999999999999999999999999"}, id="oversized-wait"),
+        pytest.param(429, {"Retry-After": "315360000000"}, id="unrepresentable-deadline"),
+        pytest.param(
+            200, {"x-mbx-used-weight-999999999999999999999999999999m": "1"}, id="oversized-window"
+        ),
+    ],
+)
+async def test_unrepresentable_headers_become_protocol_errors_without_a_chain(
+    signed: bool,
+    status: int,
+    headers: dict[str, str],
+) -> None:
+    clock = FakeClock()
+    transport = transport_for(
+        replying('{"balances": []}', status=status, headers=headers),
+        guard=IpWeightLimiter(clock=clock),
+        clock=clock,
+    )
+    with pytest.raises(VenueProtocolError) as caught:
+        if signed:
+            await transport.signed_get(
+                Endpoint.ACCOUNT,
+                signer=HmacRequestSigner(public_identifier="SYNTHETICKEY", secret=b"test-only"),
+                cost=HOLDINGS_COST,
+            )
+        else:
+            await transport.get(Endpoint.TRADES, cost=LATEST_PRICE_COST)
+    assert caught.value.__context__ is None
+    assert caught.value.__cause__ is None
+    assert "999999999999" not in str(caught.value)
 
 
 def test_not_sent_is_unavailable_and_sent_without_an_answer_is_unknown() -> None:
@@ -351,3 +392,34 @@ def test_the_recorded_rejections_cover_both_a_known_and_an_unknown_code() -> Non
         entry = recorded(name)
         assert entry["status"] == 400
         assert "code" in json.loads(str(entry["body"]))
+
+
+async def test_signed_get_info_logs_do_not_expose_credentials(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """V-5: actual signer and signed request exercised with HTTP library INFO enabled."""
+    from urllib.parse import parse_qs
+
+    signer = HmacRequestSigner(public_identifier="PUBLICCANARY", secret=b"SIGNING-SECRETCANARY")
+    seen: list[httpx.Request] = []
+
+    def reply(request: httpx.Request) -> httpx.Response:
+        seen.append(request)
+        return httpx.Response(400, json={"code": -1121, "msg": "synthetic failure"})
+
+    transport = transport_for(reply)
+    with caplog.at_level(logging.INFO), pytest.raises(VenueError) as caught:
+        await transport.signed_get(Endpoint.ACCOUNT, signer=signer, cost=HOLDINGS_COST)
+    assert len(seen) == 1
+    signature = parse_qs(seen[0].url.query.decode())["signature"][0]
+    assert any(record.name == "httpx" for record in caplog.records)
+    rendered = caplog.text + str(caught.value)
+    for forbidden in (
+        signer.public_identifier,
+        "SIGNING-SECRETCANARY",
+        signature,
+        "signature=",
+        "timestamp=",
+        "X-MBX-APIKEY",
+    ):
+        assert forbidden not in rendered

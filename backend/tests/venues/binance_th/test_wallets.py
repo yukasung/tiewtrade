@@ -78,7 +78,8 @@ async def test_the_same_inputs_sign_the_same_text() -> None:
     await wallet.holdings()
 
     first, second = (request.url.query.decode().split("&signature=")[0] for request in seen)
-    assert [key for key, _ in parse_qsl(first)] == [key for key, _ in parse_qsl(second)]
+    assert first == second
+    assert seen[0].url.query == seen[1].url.query
 
 
 async def test_the_balances_become_quantities_without_passing_through_a_float() -> None:
@@ -91,8 +92,14 @@ async def test_the_balances_become_quantities_without_passing_through_a_float() 
     thb = holdings.holding("THB")
     assert thb is not None
     assert thb.available == Quantity.of("1234.56", "THB")
+    assert thb.reserved == Quantity.of("0", "THB")
     btc = holdings.holding("BTC")
     assert btc is not None
+    assert btc.available == Quantity.of("0.00006000", "BTC")
+    usdt = holdings.holding("USDT")
+    assert usdt is not None
+    assert usdt.available == Quantity.of("0", "USDT")
+    assert usdt.reserved == Quantity.of("0", "USDT")
     # ค่าที่ทศนิยมลอยตัวทำพังได้ — เทียบกับ Decimal ของข้อความเดิมตรง ๆ
     assert btc.reserved == Quantity.of(Decimal("0.00001000"), "BTC")
 
@@ -162,3 +169,22 @@ async def test_a_rejected_credential_is_reported_as_such() -> None:
 
     with pytest.raises(VenueCredentialRejectedError):
         await wallet.holdings()
+
+
+@pytest.mark.parametrize(
+    "name,value",
+    [
+        ("permissions", ["SPOT"]),
+        ("permissions", None),
+        ("newMetadata", {"private": "synthetic-canary"}),
+    ],
+)
+async def test_unknown_top_level_account_fields_fail_closed(name: str, value: object) -> None:
+    body = json.loads(shaped_body("account_shape"))
+    body[name] = value
+    wallet = BinanceThWallet(transport_for(replying(json.dumps(body))), _signer())
+    with pytest.raises(VenueProtocolError) as caught:
+        await wallet.holdings()
+    assert caught.value.__cause__ is caught.value.__context__ is None
+    assert name not in str(caught.value)
+    assert "synthetic-canary" not in str(caught.value)

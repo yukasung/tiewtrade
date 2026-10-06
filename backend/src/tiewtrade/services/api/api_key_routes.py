@@ -14,12 +14,18 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
-from typing import Annotated
+from collections.abc import Callable, Coroutine
+from datetime import UTC, datetime, timedelta
+from email.utils import format_datetime
+from typing import Annotated, Any
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
-from pydantic import BaseModel, Field
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
+from fastapi.routing import APIRoute
+from pydantic import BaseModel, Field, field_validator
+from starlette.responses import Response
 
 from tiewtrade.infra.api_keys import (
     ApiKeyError,
@@ -27,6 +33,8 @@ from tiewtrade.infra.api_keys import (
     ApiKeySummary,
     RetryOutcome,
     TooManyKeysError,
+    accepted_label_text,
+    accepted_public_identifier,
     delete_key,
     request_retry,
     store_key,
@@ -43,12 +51,42 @@ from tiewtrade.infra.audit import (
 from tiewtrade.infra.audit import SubjectKind as AuditSubject
 from tiewtrade.infra.auth import Bucket
 from tiewtrade.infra.db import DatabaseRole
+from tiewtrade.infra.db.errors import DuplicateValueError
 from tiewtrade.infra.db.session import UserSession, user_session
 from tiewtrade.services.api.authentication import Authenticated, current_user
 from tiewtrade.services.api.resources import engine_for, venue_keys
 from tiewtrade.services.api.throttling import spend_token
 
-router = APIRouter(prefix="/api-keys", tags=["api-keys"])
+
+class RejectedKeyInput(BaseModel):
+    """คำตอบ validation ที่มีแค่รหัส ไม่มีค่าที่ผู้ใช้ส่งมา"""
+
+    detail: str
+
+
+class _CredentialRoute(APIRoute):
+    """validation ของเส้นทาง key ห้ามสะท้อน input แม้ผิดที่ช่องอื่น (V-7)"""
+
+    def get_route_handler(self) -> Callable[[Request], Coroutine[Any, Any, Response]]:
+        original = super().get_route_handler()
+
+        async def without_raw_input(request: Request) -> Response:
+            try:
+                return await original(request)
+            except RequestValidationError:
+                return JSONResponse(
+                    {"detail": ApiKeyError.code}, status_code=status.HTTP_422_UNPROCESSABLE_CONTENT
+                )
+
+        return without_raw_input
+
+
+router = APIRouter(
+    prefix="/api-keys",
+    tags=["api-keys"],
+    route_class=_CredentialRoute,
+    responses={422: {"model": RejectedKeyInput}},
+)
 
 
 class AddKeyRequest(BaseModel):
@@ -57,6 +95,22 @@ class AddKeyRequest(BaseModel):
     label: str = Field(min_length=1, max_length=40)
     key: str = Field(min_length=1, max_length=256)
     secret: str = Field(min_length=1, max_length=256)
+
+    @field_validator("label")
+    @classmethod
+    def storable_label(cls, value: str) -> str:
+        try:
+            return accepted_label_text(value)
+        except ApiKeyError:
+            raise ValueError(ApiKeyError.code) from None
+
+    @field_validator("key")
+    @classmethod
+    def usable_header(cls, value: str) -> str:
+        try:
+            return accepted_public_identifier(value)
+        except ApiKeyError:
+            raise ValueError(ApiKeyError.code) from None
 
 
 class AddedKey(BaseModel):
@@ -148,6 +202,8 @@ async def add_key(
             )
         except TooManyKeysError as error:
             raise HTTPException(status.HTTP_409_CONFLICT, str(error)) from None
+        except DuplicateValueError:
+            raise HTTPException(status.HTTP_409_CONFLICT, DuplicateValueError.code) from None
         except ApiKeyError as error:
             raise HTTPException(status.HTTP_400_BAD_REQUEST, str(error)) from None
 
@@ -217,13 +273,26 @@ async def retry_key(
         if decision.outcome is RetryOutcome.NOT_RETRYABLE:
             raise HTTPException(status.HTTP_409_CONFLICT, "สถานะนี้สั่งตรวจใหม่ไม่ได้")
         if decision.outcome is RetryOutcome.MUST_WAIT:
+            if decision.not_before is None:
+                raise HTTPException(
+                    status.HTTP_409_CONFLICT, "สถานะเปลี่ยนระหว่างคำขอ กรุณาดึงรายการใหม่"
+                )
             raise HTTPException(
                 status.HTTP_429_TOO_MANY_REQUESTS,
                 f"ตลาดขอให้รอถึง {_as_text(decision.not_before)}",
+                headers={"Retry-After": _retry_after_header(decision.not_before)},
             )
         await _record(session, who, AuditAction.API_KEY_RETRY_REQUESTED, key_id)
 
     return RetryAccepted(id=key_id, status=ApiKeyStatus.UNVERIFIABLE.value)
+
+
+def _retry_after_header(moment: datetime) -> str:
+    """HTTP-date จากเวลาของ DB · ปัดขึ้น ไม่ชวนให้ลองก่อนตลาดอนุญาต."""
+    rounded = moment.astimezone(UTC)
+    if rounded.microsecond:
+        rounded += timedelta(seconds=1)
+    return format_datetime(rounded.replace(microsecond=0), usegmt=True)
 
 
 def _as_text(moment: datetime | None) -> str:

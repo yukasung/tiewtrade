@@ -167,9 +167,12 @@ def test_the_documentation_routes_still_need_a_session(client: TestClient) -> No
         assert client.get(path).status_code == 401, path
 
 
-def test_the_app_does_not_start_without_a_sealing_key(monkeypatch: pytest.MonkeyPatch) -> None:
+@pytest.mark.parametrize("purpose", list(KeyPurpose))
+def test_the_app_does_not_start_without_a_sealing_key(
+    monkeypatch: pytest.MonkeyPatch, purpose: KeyPurpose
+) -> None:
     """V-10 ที่ระดับแอป — **กุญแจไม่ครบ = กระบวนการไม่เริ่ม**"""
-    monkeypatch.delenv(KeyPurpose.TOTP_SECRET.environment_variable, raising=False)
+    monkeypatch.delenv(purpose.environment_variable, raising=False)
 
     with pytest.raises(KeyConfigurationError), TestClient(app):
         pass  # pragma: no cover - lifespan ต้องดังก่อนถึงบรรทัดนี้

@@ -31,7 +31,9 @@ function csrfToken(): string {
   const found = document.cookie
     .split("; ")
     .find((entry) => entry.startsWith(`${CSRF_COOKIE}=`));
-  return found === undefined ? "" : decodeURIComponent(found.slice(CSRF_COOKIE.length + 1));
+  return found === undefined
+    ? ""
+    : decodeURIComponent(found.slice(CSRF_COOKIE.length + 1));
 }
 
 /** ข้อความผิดพลาดที่หลังบ้านส่งมา — ไม่เดาแทน และไม่แปลเอง */
@@ -52,28 +54,67 @@ export async function primeCsrfToken(): Promise<void> {
   await fetch("/api/auth/csrf", { credentials: "same-origin" });
 }
 
-async function send<T>(path: string, body: unknown, code?: string): Promise<T> {
-  const headers: Record<string, string> = {
-    "Content-Type": "application/json",
-    [CSRF_HEADER]: csrfToken(),
-  };
+export class ApiRequestError extends Error {
+  readonly retryAt: string | null;
+
+  constructor(
+    message: string,
+    readonly status: number,
+    retryAfter: string | null = null,
+  ) {
+    super(message);
+    const source = retryAfter?.trim() ?? "";
+    const moment = /^\d+$/.test(source)
+      ? Date.now() + Number(source) * 1000
+      : /^(?:[A-Za-z]{3}, |\d{4}-\d{2}-\d{2}T)/.test(source)
+        ? Date.parse(source)
+        : NaN;
+    const date = new Date(moment);
+    this.retryAt = Number.isFinite(date.getTime()) ? date.toISOString() : null;
+  }
+}
+
+/** ตัวส่งที่ใช้ร่วมกัน — cookie/CSRF/TOTP อยู่ที่เดียว ไม่บันทึก payload */
+export async function send<T>(
+  path: string,
+  body: unknown,
+  code?: string,
+  method: "POST" | "GET" | "DELETE" = "POST",
+  signal?: AbortSignal,
+): Promise<T> {
+  const headers: Record<string, string> =
+    method === "GET"
+      ? {}
+      : {
+          "Content-Type": "application/json",
+          [CSRF_HEADER]: csrfToken(),
+        };
   if (code !== undefined) {
     headers[TOTP_HEADER] = code;
   }
   const response = await fetch(`/api${path}`, {
-    method: "POST",
+    method,
     credentials: "same-origin",
     headers,
-    body: JSON.stringify(body),
+    ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+    ...(signal === undefined ? {} : { signal }),
   });
   if (!response.ok) {
-    throw new Error(await refusalOf(response));
+    throw new ApiRequestError(
+      await refusalOf(response),
+      response.status,
+      response.headers?.get("Retry-After") ?? null,
+    );
   }
+  if (response.status === 204) return undefined as T;
   return (await response.json()) as T;
 }
 
 /** สมัครบัญชีใหม่ */
-export async function register(email: string, password: string): Promise<Identity> {
+export async function register(
+  email: string,
+  password: string,
+): Promise<Identity> {
   return send<Identity>("/auth/register", { email, password });
 }
 
@@ -83,7 +124,10 @@ export async function register(email: string, password: string): Promise<Identit
  * **ยังไม่แน่ว่าเข้าสู่ระบบแล้ว** — ผู้ใช้ที่เปิดการยืนยันสองชั้นจะได้
  * `second_step_required` เป็นจริง และต้องเรียก `completeSignIn` ต่อ (F-06 RQ-5)
  */
-export async function logIn(email: string, password: string): Promise<SignInStarted> {
+export async function logIn(
+  email: string,
+  password: string,
+): Promise<SignInStarted> {
   return send<SignInStarted>("/auth/login", { email, password });
 }
 
@@ -117,7 +161,10 @@ export async function startTotpReplacement(
 }
 
 /** ปิดการยืนยันสองชั้น */
-export async function disableTotp(password: string, code?: string): Promise<Disabled> {
+export async function disableTotp(
+  password: string,
+  code?: string,
+): Promise<Disabled> {
   return send<Disabled>("/auth/totp/disable", { password }, code);
 }
 

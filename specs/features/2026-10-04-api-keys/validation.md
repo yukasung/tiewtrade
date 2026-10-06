@@ -38,6 +38,7 @@
 | V-13 | key ที่ใช้ได้ → `ACTIVE` | `FakeVenue` ตอบกระเป๋าสำเร็จ |
 | V-14 | **key ที่คำรับรองไม่ถูกต้อง → `REJECTED` และ secret ถูกลบทันที** | ตรวจทั้งสถานะและคอลัมน์ที่ต้องเป็น `NULL` |
 | V-15 | **ตลาดล่ม/หมดเวลา/ถูกจำกัดอัตรา → `UNVERIFIABLE` และ secret ยังอยู่** | เดินครบทุกชนิดข้อผิดพลาดชั่วคราวของ `venues/errors.py` |
+| V-15.1 | **คำขอถูกปฏิเสธโดยไม่พิสูจน์ว่าคำรับรองผิด ต้องเก็บ secret และไม่ตรวจซ้ำอัตโนมัติ** (NC-20 เจ้าของอนุมัติ 2026-10-06) | WAF/timestamp/รหัสไม่รู้จัก → UNVERIFIABLE + ERROR + audit · รอบอัตโนมัติไม่ส่งคำขอ · กดลองใหม่เองได้ภายใต้โควตา/market wait เดิม · ไม่กดจน 24 ชม. ต้องลบ secret |
 | V-16 | **ตอบไม่ตรงสัญญา → `UNVERIFIABLE` + บันทึกระดับ ERROR ที่มีรหัสของตัวเอง** | แยกจากกรณีเน็ตสะดุดได้จริงในบันทึก ไม่ใช่รหัสเดียวกัน |
 | V-17 | **ครบ 24 ชม. นับจากเวลาที่เพิ่ม → `REJECTED` และ secret ถูกลบ** | เลื่อนเวลาที่ส่งเข้าไป ไม่ใช่รอจริง |
 | V-18 | **การลองใหม่ไม่รีเซ็ตเพดาน** | ลองใหม่หลายครั้งแล้วเพดานยังนับจาก `created_at` เดิม |
@@ -53,6 +54,7 @@
 | V-22.4 | **คำสั่งของตลาดให้รอ ถูกบังคับที่ตอนจอง ไม่ใช่ที่ endpoint** | worker สองตัว scan เจอแถวเดียวกัน → ตัวแรกตรวจแล้วบันทึก `not_before` ในอนาคตและปลดการจอง → **ตัวที่สองต้องจองไม่ได้และต้องไม่เรียกตลาดเลย** (นับจำนวนคำขอที่ออกไปจริง) |
 | V-22.5 | **ผล scan ที่เก่าแล้วไม่ทำให้ข้าม backoff** | worker แรกตรวจเสร็จจน `attempts` เพิ่มและช่วงรอเปลี่ยนจาก 1 เป็น 5 นาที → worker ที่ถือค่าเก่าพยายามจองที่นาทีที่ 2 → **ต้องได้ศูนย์แถวและไม่เรียกตลาด** |
 | V-22.6 | **ตอนจองไม่มีการคำนวณ backoff เลย** | คำสั่งจองต้องเทียบ `next_attempt_at` อย่างเดียว · ถ้ามีใครย้ายการคำนวณกลับมาที่จุดจอง เทสต์ V-22.5 ต้องแดง |
+| V-22.7 | **แถวที่รออยู่ต้องไม่บังงานใหม่ใน batch** (เจ้าของสั่งซ่อม review ข้อ 3 วันที่ 2026-10-06) | มีแถวเก่าเต็ม batch ที่รอ backoff/market wait/live lease/manual-only คู่กับ PENDING ใหม่และ expired · ใหม่ต้องถูกตรวจ expired ต้องลบ secret โดยไม่เรียกตลาดด้วยแถวรอ · claim ยังตรวจ eligibility ซ้ำ |
 
 ### ง. สิทธิ์ ขอบเขต และการยืนยันตัวตน
 
@@ -70,8 +72,11 @@
 | V-30.2 | **นับทุกครั้งที่กด ไม่ว่าผลจะเป็นอย่างไร** (RQ-11.2) | คำขอที่สำเร็จก็ลดโควตา ไม่ใช่เฉพาะที่ล้มเหลว |
 | V-30.3 | **ถูกจำกัดแล้วไม่มีงานถึงตลาด** (RQ-11.3) | นับจำนวนคำขอที่ออกไปจริง ต้องเป็นศูนย์ |
 | V-30.4 | **คำตอบบอกเวลาที่ลองได้อีกครั้ง** (RQ-11.3) | คำตอบ 429 มี `Retry-After` และหน้าเว็บแสดงเวลานั้น |
+| V-30.4.1 | **market-wait 429 มี Retry-After จาก deadline ล่าสุด ไม่เร็วกว่า not_before** (ซ่อม review ข้อ 6 เจ้าของสั่ง 2026-10-06) | HTTP-date UTC ปัดขึ้นถึงวินาที · process clock เร็ว/ช้าไม่กระทบ · refused request ไม่เปลี่ยน marker/attempts · worker เปลี่ยน deadline ระหว่าง SELECT/UPDATE ต้องอ่านใหม่ · เปลี่ยนสถานะ/ลบตอบ 409/404 และไม่เดาเวลา · frontend อ่าน HTTP-date ได้ |
 | V-30.5 | **โควตาเหลือก็ข้ามเวลาที่ตลาดสั่งให้รอไม่ได้** (RQ-11.4) | ตลาดสั่งรอ → กดทั้งที่โควตาเต็ม ต้องถูกปฏิเสธ |
+| V-30.5.1 | **GET may_retry ต้องปิดปุ่มเมื่อยังไม่ถึง market wait** (ซ่อม review ข้อ 5 เจ้าของสั่ง 2026-10-06) | บทบาท API จริง: UNVERIFIABLE + NULL/now/past → True, future → False · สถานะอื่น False · clock ของ process เร็ว/ช้าไม่เปลี่ยนผล · UI ใช้ flag จาก server |
 | V-31 | ชื่อ key ซ้ำไม่ได้ในผู้ใช้คนเดียว | ฐานข้อมูลปฏิเสธ ไม่ใช่โค้ดอย่างเดียว |
+| V-31.0.1 | **ชื่อซ้ำผ่าน HTTP เป็น 409 รหัสคงที่ ไม่เป็น 500** (ซ่อม review ข้อ 7 เจ้าของสั่ง 2026-10-06) | ชื่อตรงกัน/trim แล้วซ้ำด้วย TOTP จริง → DUPLICATE_VALUE · รายการเดิมไม่เปลี่ยน ไม่มี key/audit เพิ่มสำเร็จ · quota ลดหนึ่ง · response/log ไม่มีค่าที่กรอก |
 | V-31.1 | **ปุ่มลองใหม่ทำงานได้จริงด้วยบทบาท `api` จริง** | เรียกผ่าน endpoint ไม่ใช่เรียกฟังก์ชันตรง · ถ้าสิทธิ์ของคอลัมน์ไม่ตรงกับที่ endpoint เขียน ต้องแดง |
 | V-31.2 | **`api` แก้ `status`, `attempts`, `verified_at` ไม่ได้** | ลองเขียนด้วยบทบาท `api` แล้วต้องถูกฐานข้อมูลปฏิเสธ — ผลการตรวจเป็นของ `engine` เท่านั้น |
 | V-31.3 | **การกดลองใหม่ข้าม `not_before` ไม่ได้** | ตลาดสั่งให้รอ → กดทันทีต้องถูกปฏิเสธพร้อมบอกเวลาที่กดได้ · ไม่ใช่รับคำขอแล้วเงียบ · **รันด้วยบทบาท `api` จริง** เพื่อพิสูจน์ว่าสิทธิ์อ่าน `not_before` ครบ |
@@ -84,12 +89,13 @@
 | # | เกณฑ์ | มาจาก |
 |---|---|---|
 | V-32 | **ส่งคำขอไปเส้นทางที่ไม่ได้ประกาศไว้ไม่ได้เลย** — ตัวส่งคำขอรับเฉพาะค่าจากรายการปิด · เทสต์ต้องครอบ **เส้นทางที่ประกอบจากตัวแปร** ไม่ใช่เฉพาะสตริงที่เขียนตรง ๆ | RQ-16 · `trading-safety.md` หัวข้อ 2 |
-| V-32.1 | **ไม่มีทางลัดรอบตัวส่งคำขอ** — ด่านแดงเมื่อโมดูลใดนอก `transport.py` import ไลบรารีเครือข่ายหรือประกอบ URL ของตลาดเอง | RQ-16 |
+| V-32.1 | **ไม่มีทางลัดรอบตัวส่งคำขอ** — ตรวจทั่ว `backend/src` ด่านแดงเมื่อโมดูลนอก transport ของ adapter import เครือข่ายหรือประกอบ URL ตลาดเอง · NC-17 อนุมัติ 2026-10-06 ยกเว้นเฉพาะการสร้าง `httpx.AsyncClient` และ `socket.gethostname()` ใน engine/main กับ `urllib.parse.quote` ใน infra/auth/totp · เทสต์ต้องจับการส่งคำขอ/สมาชิกเครือข่ายอื่น/URL ในไฟล์ที่ยกเว้น และมีตัวอย่างถูกคู่กัน | RQ-16 |
+| V-32.1.1 | **asyncio ไม่เป็นทางลัดออกเครือข่ายนอก gateway** (ซ่อม review ข้อ 8 เจ้าของสั่ง 2026-10-06) | direct/from/submodule/aliases, loop getters/annotations/local helpers, Runner/policy รวม bound-getter alias ต้องแดง · run/sleep/gather/create_task/call_soon และ object อื่นต้องผ่าน · gateway ราก adapter ใช้ network ได้ตามข้อยกเว้นเดิม · ไม่ execute fixtures |
 | V-32.2 | ด่านค้นสตริงต้องห้ามยังมีอยู่เป็นชั้นสุดท้าย และ **พิสูจน์ว่าจับได้จริง** ด้วยไฟล์ตัวอย่างที่ผิด | RQ-16 |
 | V-33 | **ห้ามใช้ `canTrade`, `canWithdraw`, `canDeposit` ตัดสินสิทธิ์ของ key** — ด่านแดงถ้ามีชื่อเหล่านี้โผล่นอก `venues` หรือถูกใช้ตัดสินใจ | RQ-6.1 · NC-16 |
 | V-34 | คำศัพท์ของตลาดไม่ออกนอก `venues` รวมชื่อสิทธิ์และชื่อ endpoint | F-33 |
 | V-35 | **ทุกการกระทำที่แตะ key ลง audit log ครบตามตารางจับคู่ใน `plan.md` ข้อ 4.4** — เพิ่ม, กดลองใหม่, ลบ, ตรวจผ่าน, ตรวจไม่ผ่าน, หมดเวลา, ตรวจไม่ได้ชั่วคราว · เดินทุกแถวของตารางนั้นในเทสต์ | `mission.md` หัวข้อ 8 ข้อ 4 |
-| V-35.1 | **ลงบันทึกทุกความพยายาม ไม่มีข้อยกเว้น** (RQ-9) | ตลาดล่มยาวแล้วลองใหม่หลายรอบด้วยสาเหตุเดิม → **ต้องได้แถวทุกรอบ** · และพิสูจน์ว่าจำนวนแถวมีเพดาน: อายุ 24 ชม. กับ backoff ทำให้ไม่เกินราว 30 แถวต่อ key |
+| V-35.1 | **ลงบันทึกทุกความพยายาม ไม่มีข้อยกเว้น** (RQ-9) | ตลาดล่มยาวแล้วลองใหม่หลายรอบด้วยสาเหตุเดิม → **ต้องได้แถวทุกรอบ** · และพิสูจน์ว่าจำนวนแถวมีเพดาน: อายุ 24 ชม. กับ backoff ทำให้รอบอัตโนมัติไม่เกินราว 30 แถวต่อ key · manual retries ใช้โควตา RQ-11.5 แยก ไม่เพิ่ม cap รวม (NC-18 เจ้าของยืนยัน 2026-10-07) |
 
 **ข้ออื่นในตารางของ `testing.md` หัวข้อ 4 ไม่เกี่ยวกับงานนี้** เพราะงานนี้ไม่ส่งออเดอร์
 ไม่คิดเงิน และไม่แตะบอท — เขียนไว้เพื่อไม่ให้ใครคิดว่าลืม
@@ -124,7 +130,8 @@
 | V-36 | **ลายเซ็นถูกต้องตามค่าที่หามาแยกจาก implementation** | เทียบกับ known-answer ของ HMAC-SHA256 (เวกเตอร์มาตรฐาน) และกับค่าที่คำนวณด้วยเครื่องมืออื่น **ไม่ใช่ค่าที่ได้จากโค้ดของเราเอง** |
 | V-37 | **ข้อความที่เซ็น ตรงกับคำขอที่ส่งจริง** | ดักคำขอที่ออกจากตัวส่ง แล้วคำนวณลายเซ็นของ query string ที่เห็นจริงซ้ำ ต้องตรงกัน — จับกรณีเซ็นก่อนแล้วต่อพารามิเตอร์เพิ่มทีหลัง |
 | V-38 | ลำดับพารามิเตอร์และการเข้ารหัสอักขระคงที่ | เรียกซ้ำด้วยค่าเดียวกันต้องได้ข้อความที่เซ็นเหมือนเดิมทุกครั้ง |
-| V-39 | **แปลงคำตอบกระเป๋าที่บันทึกไว้ได้ถูกต้อง** | ใช้คำตอบจริงที่บันทึกไว้เป็นไฟล์ · ยอดต้องกลายเป็น `Quantity` ที่ถูกต้องครบทุกสินทรัพย์ **ไม่ผ่าน float** |
+| V-38.1 | **ตัวนับโควตา IP ต้องไม่รีเซ็ตเมื่อเปลี่ยน key หรือเริ่ม worker รอบใหม่** (ซ่อม review ข้อ 4 เจ้าของสั่ง 2026-10-06) | MockTransport + นาฬิกาทดสอบ: ยอดคำขอสะสม/header เต็มกั้น key ถัดไป · เวลาครบแล้วคืนโควตา · serve หลายรอบใช้ limiter เดิม · signer/header ยังตรง key แต่ละใบ |
+| V-39 | **แปลงคำตอบกระเป๋าที่บันทึกไว้ได้ถูกต้อง** | ใช้รูปร่างคำตอบจากการเรียกจริง โดยแทนยอด/ข้อมูลลับด้วยค่าทดสอบตาม NC-19 ที่เจ้าของยืนยัน 2026-10-07 · ยืนยัน provenance ในขั้น UI key จริง · ยอดต้องกลายเป็น `Quantity` ที่ถูกต้องครบทุกสินทรัพย์ **ไม่ผ่าน float** |
 | V-40 | **คำตอบที่ผิดรูปกลายเป็น `VenueProtocolError` ไม่ใช่ข้อมูลที่ผิด** | ช่องหาย, ชนิดผิด, ตัวเลขเป็นข้อความว่าง, ยอดติดลบ — เดินครบทุกแบบ |
 | V-41 | รหัสข้อผิดพลาดของตลาดถูกแปลงเข้าชนิดกลางครบ | เดินทุกรหัสที่ `failures.py` รู้จัก และรหัสที่ไม่รู้จักต้องไม่กลายเป็น "สำเร็จ" |
 
@@ -167,3 +174,145 @@
   ด้วย V-32 เท่านั้น ไม่ได้ปิดความเสี่ยง · **ต้องปิด NC-16 ก่อน F-24**
 - **ไม่พิสูจน์ว่า key มีสิทธิ์เทรด** — ตลาดไม่บอก และเราไม่เดา
 - ไม่พิสูจน์เรื่องกระเป๋า บอท หรือออเดอร์ — เป็นงานอื่น
+
+## หลักฐานการซ่อม review ข้อ 9 — 2026-10-06
+
+- V-30.2: HTTP retries ที่สำเร็จ 202 ครบ 6 ครั้ง แล้ว 429
+- V-16: protocol และ unavailable ถูกเรียกจริงอย่างละหนึ่งครั้ง
+  · unavailable เป็น deferred ไม่ใช่ skipped ก่อนตรวจว่าไม่มี ERROR
+- V-19.2: transaction เริ่มก่อนเส้นตายและเขียนหลังเส้นตายใน transaction เดิม
+  · base regression ปิด REJECTED/ลบ secret/audit · mutant now() ต้องถูกจับ
+  · mutation ในหน่วยความจำเท่านั้น ไม่มีการแก้ production/รอเวลาจริง
+- V-35: HTTP add/retry/delete และ system verified/rejected/expired/deferred
+  ครบตาราง 4.4 · assert owner/actor/subject/outcome/code/details
+  · เดินทุก temporary venue error รวม outcome unknown/rate limit/protocol
+- V-35.1: repeated identical failures ลง audit ทุกความพยายาม
+  · **ส่วนเพดาน ~30 ยังไม่รับรอง — NC-18 รอคำตัดสิน**
+
+นี่เป็นหลักฐานสี่ช่องว่างของ review ข้อ 9 ไม่ใช่การรับรอง validation ทั้งฉบับ
+· NC-18/NC-19 และ manual real-key checks ยังเหลือ
+
+
+## หลักฐานเติมช่องว่าง final review — 2026-10-07
+
+- V-22.1/V-31.6: repeated retries ระหว่าง actual worker claim ไม่เกิดตลาดซ้อน
+  และหลังจบรอบเพิ่มเพียงหนึ่งรอบ · attempt count คงเดิมเมื่อ scan รอบถัดไป
+- V-11: API ขาด TOTP/VENUE key ล้มตอน startup; engine ขาด VENUE key
+  ล้มก่อนเปิด database/client resources
+- V-6: forbidden details ครบ 6 API-key actions × 3 shapes ถูก DB CHECK ปฏิเสธ
+  ด้วย API/ENGINE roles · มี valid-event control ที่ commit ได้ในทุกกรณี
+- regression ที่เกี่ยวข้องรวม **501 passed** · Ruff/mypy/import-linter ผ่าน
+  · ฐานข้อมูลทดสอบแยก ไม่เรียกตลาดจริง ไม่เปลี่ยน runtime
+
+หลักฐานนี้ปิดสามช่องว่างจาก final review เท่านั้น ไม่รับรอง validation ทั้งฉบับ
+· NC-18/NC-19, property/deadline/backoff checks ที่ค้างและ manual real-key checks ยังเหลือ
+
+
+## หลักฐานเติม automated validation — 2026-10-07
+
+- NC-18 เจ้าของยืนยัน automatic-only; schedule ที่ enumerate จากเกณฑ์อิสระ
+  0/1/6/21 แล้วทุก60นาทีภายใน24h ได้27ครั้ง · manual quota แยกไม่เพิ่มcapรวม
+- V-22.5/6: stale hint ที่นาทีสองหลังเปลี่ยน backoff1→5 ไม่จอง/ไม่เรียกตลาด
+  และ mutant ใช้ backoff1นาทีถูกจับ
+- exact deadline: ก่อน/ตรง/หลัง ±1µs ด้วย fixed SQL clock, state/secret/audit/source call ครบ
+- hypothesis generated mixed histories 30examples +2 explicitmixed examples
+  แถวใหม่ต่อexampleและcleanup; state/secret/version/claim/audit invariants ทุกstep
+- V-2/V-4/V-5/V-9/V-12/V-23/V-24/V-30/V-30.3/V-38/V-39:
+  scan SELECT *, authenticated all-routes+ciphertext canary, actual signed INFO logs,
+  crypto propertiesทั้งpurpose/rotation/foreignowners/crosspurpose, wrongTOTP/recovery,
+  HTTPADDquotaและnoextra workerwork, identical signing textและครบ6 fixturequantities
+- Backendสุดท้าย **1,386 passed, 1 venue_contract deselected**, warningsเดิม3
+  · Ruff/mypy/import-linter ผ่าน · DB แยก/ไม่เรียกตลาดจริง/ไม่แก้runtime
+
+ส่วนที่ยังไม่รับรอง: NC-19 field-detection scope รอคำตอบ; fixture provenance
+และ manual UI/real-key checks อยู่ขั้น3 · F-07 ยัง In Progress
+
+
+## NC-19 / RQ-6.4 เกณฑ์ที่เจ้าของอนุมัติ — 2026-10-07
+
+account response มี top-level field นอกชุดเดิมทั้งเก้า → VENUE_PROTOCOL ทุกชนิด
+ทั้ง field สิทธิ์และ field อื่น/null · secret ยังอยู่, audit+ERROR ตาม protocol flow
+ค่า canTrade/canWithdraw/canDeposit ยังไม่ใช้ตัดสินสิทธิ์ของ key
+· fixture ใช้รูปร่างจริงกับค่าทดแทน · actual provenance/manual key validation ขั้น3
+
+
+## หลักฐาน NC-19 และ manual readiness — 2026-10-07
+
+- strict top-level account shape guard ผ่านadapter+worker retention/audit/ERROR tests
+- knownaccountflags ไม่ถูกอ่านค่า; schema names exemption จำกัดdeclaration/positions
+  value getters/subscripts/attributesรวมinlineยังถูกจับ
+- Backendfinal **1,402 passed**, Ruff/mypy/import-linterผ่าน
+- NC-18/NC-19 closed · fixture/provenanceและmanualUI keyจริงยังไม่รับรอง
+- localUIเปิดแล้วบนDBแยก; workerพร้อม · รอเจ้าของกรอก fresh testkey ในUI
+  · ห้ามส่งcredentialsในแชต · manualDBยังไม่มีkeyณreadinesscheck
+
+
+## Manual key evidence — 2026-10-07
+
+เจ้าของกรอก key ผ่านUIแล้ว: DBสถานะACTIVE/attempts1/verified_atมีค่า/ไม่มีclaimค้าง
+ตรวจ metadata-only; auditADDEDและVERIFIEDรายละเอียดว่าง
+· API/engine ERROR0/Traceback0/query-signature markers0
+· ยังไม่รับรองmanual2–7/ผลแสดงUIจากการควบคุมbrowser/provenancecapture
+· ไม่เปิดเผยkey/secret/ยอดบัญชี ไม่ส่งคำสั่งซื้อขาย
+
+
+Manualข้อ2: เจ้าของretryแล้วตลาดตอบ-1022; REJECTED/VENUE_CREDENTIAL_REJECTED
+secret/versionถูกลบจริง, auditถูกต้อง, keyเดิมACTIVEไม่กระทบ · ผ่านbackendverification
+Manualข้อ3: เตรียมworker-only network failureแล้ว รอvalidkeyผ่านUI
+
+
+Manualข้อ3 failurehalf: actualworkerconnectfailure → UNVERIFIABLE/VENUE_UNAVAILABLE
+secret/versionยังอยู่, claimปล่อย, auditถูกต้อง · รอUIretryแล้วnormalworkerrecovery
+
+
+Manualข้อ3 recovery: UI manualmarkerยืนยันแล้ว; normalworker → ACTIVE/attempts2
+auditRETRY_REQUESTED+VERIFIEDครบ, secret/versionคงอยู่, ไม่มีclaimค้าง
+· ข้อ3backendnetworkfailure/recoveryผ่าน ไม่กระทบสองkeyก่อนหน้า
+
+
+Manualข้อ4: ownerรายงานreaddชื่อเดิม; auditADDEDหลังDELETEDจริง
+PENDING→ACTIVE/attempts1, auditVERIFIEDครบ, ไม่มีclaimค้าง · backendผ่าน
+
+
+Manualข้อ5: ภาพUIจากเจ้าของยืนยันnoTOTP guidance/link และไม่มีadd-key form
+· ผ่าน · ไม่เก็บภาพส่วนตัวลงrepo
+
+
+Manualข้อ6/provenance: logAPI/normalengine/offlineengineตรวจแล้วมีเฉพาะmetadata,
+structuredmessagesและknowncodewarning; ไม่มีcredentials/signedqueries/tracebacks
+· engine-only readonlyshapecheck: actualtop-levelและbalancefieldsetsตรงsanitizedfixture=true
+ไม่เก็บrawresponseหรือยอดเงินจริง · เหลือownerrevoke/UIconfirmation/cleanupก่อนรับรองครบ
+
+
+Manualข้อ7: เจ้าของยืนยันถอนเฉพาะtestkeysทั้งหมดแล้ว · cleanupmanualDB/masterkeys/processesเสร็จ
+Finalautomaticgates: backend1402, frontend34, E2E7, lint/type/architecture/contract/Dockerผ่าน
+· ยังรอownerconfirmationผลที่เห็นUIข้อ1–4ก่อนประกาศvalidationผ่านครบ
+
+
+## Final validation acceptance — 2026-10-07
+
+เจ้าของยืนยัน “ตรงครบ” สำหรับผลUIข้อ1–4; ภาพข้อ5และlogreviewข้อ6ผ่าน
+ข้อ7เจ้าของยืนยันถอนtestkeysทั้งหมดแล้วและcleanupระบบทดสอบเสร็จ
+
+**ผลสุดท้าย: ผ่านครบเกณฑ์ F-07** — automatedและmanual evidenceตามบันทึกข้างต้น
+NC-18/NC-19ปิดแล้ว; Backend1402/Frontend34/E2E7และทุกquality/containergateผ่าน
+สถานะfeatureอ่านจากroadmapที่เดียว · ไม่commit/push/merge
+ข้อจำกัดเรื่องสิทธิ์key/ถอนเงิน/งานเทรดที่ระบุในเอกสารนี้ยังคงเดิม
+
+### ซ่อม review ค่ากลาง CSS — 2026-10-07
+
+- ย้ายค่าไป `frontend/src/accountPanels.css` และให้ ApiKeyPanel.css อ้าง token
+- ตรวจด้วยการ resolve custom properties แล้วเทียบ CSS ก่อนแก้: declarations ตรงกันทุกตัว
+- `npm run lint`, `npm run typecheck`, `npm run build`: ผ่าน
+- ไม่เพิ่ม tests ที่ผูกกับชื่อ token; ไม่มีการเปลี่ยนพฤติกรรมหรือค่า CSS
+
+### ตรวจขั้นสุดท้ายก่อน commit ตามคำสั่งเจ้าของ — 2026-10-07
+
+- Backend pytest: 1,402 ข้อผ่าน ไม่มี skip; disposable PostgreSQL แยกจากฐานข้อมูลเดิม
+- ruff check/format, mypy (183 source files), import-linter (6 contracts): ผ่าน
+- Frontend Vitest: 34 ข้อผ่าน; lint/typecheck/build ผ่าน
+- E2E: 7 ข้อผ่านบนฐานข้อมูลแยก ใช้ FakeVenue ไม่มีการเรียกตลาดจริง
+- หยุด E2E รอบแรกที่ใช้ DB ร่วมกับ backend แล้วรันใหม่แยก DB; ผลอ้างอิงเป็นรอบแยกที่ผ่านครบ
+- OpenAPI export และ generated frontend types ตรวจผ่าน contract tests
+- ใช้เครื่องมือจาก backend/.venv แทน uv run เพราะ sandbox ไม่ให้เขียน user uv cache
+- Commit เฉพาะ F-07 รวม CSS token extraction และ unique requirement ID; ไม่รวม F-08/template

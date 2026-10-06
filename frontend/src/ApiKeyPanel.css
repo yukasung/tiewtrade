@@ -1,0 +1,94 @@
+@import "./accountPanels.css";
+
+.api-key-panel {
+  margin-block: var(--account-space-lg);
+  max-width: var(--account-panel-width);
+}
+.api-key-panel p {
+  max-width: var(--account-text-width);
+  line-height: var(--account-line-height);
+}
+.api-key-panel h2,
+.api-key-panel h3,
+.api-key-panel h4 {
+  text-wrap: balance;
+}
+.api-key-guidance {
+  border-inline-start: var(--account-border-accent) solid var(--account-muted-color);
+  padding-inline-start: var(--account-space-md);
+}
+.api-key-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--account-space-md);
+  border: 0;
+  padding: 0;
+  margin-block: var(--account-space-md);
+}
+.api-key-fields label {
+  display: flex;
+  flex-direction: column;
+  gap: var(--account-field-gap);
+}
+.api-key-fields input {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: var(--account-control-height);
+  font: inherit;
+}
+.api-key-panel button {
+  min-height: var(--account-control-height);
+  font: inherit;
+}
+.api-key-panel :focus-visible {
+  outline: var(--account-focus-width) solid var(--account-focus-color);
+  outline-offset: var(--account-focus-offset);
+}
+.api-key-list-heading,
+.api-key-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--account-space-md);
+  align-items: start;
+}
+.api-key-list-heading {
+  align-items: center;
+  margin-top: var(--account-space-lg);
+}
+.api-key-list {
+  padding: 0;
+  list-style: none;
+}
+.api-key-list li {
+  padding-block: var(--account-space-md);
+  border-bottom: var(--account-border-width) solid var(--account-muted-color);
+}
+.api-key-list h4 {
+  margin-block: 0 var(--account-space-sm);
+  overflow-wrap: anywhere;
+}
+.api-key-list code {
+  white-space: nowrap;
+}
+.api-key-state {
+  font-weight: var(--account-emphasis-weight);
+}
+.api-key-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--account-space-sm);
+}
+.api-key-confirmation {
+  margin-top: var(--account-space-md);
+}
+.api-key-confirmation button + button {
+  margin-inline-start: var(--account-space-sm);
+}
+@media (max-width: 40rem) {
+  .api-key-fields {
+    grid-template-columns: 1fr;
+  }
+  .api-key-list li {
+    flex-direction: column;
+  }
+}

@@ -21,8 +21,8 @@ import httpx
 
 from tiewtrade.infra.crypto import KeyPurpose, KeySource
 from tiewtrade.infra.db import DatabaseRole, create_engine_for
-from tiewtrade.services.engine.verification import RoundSummary, run_round
-from tiewtrade.venues import RequestSigner, WalletSource, live_wallet_source
+from tiewtrade.services.engine.verification import RoundSummary, WalletFactory, run_round
+from tiewtrade.venues import live_wallet_factory
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,13 +39,9 @@ def _worker_name() -> str:
     return f"{socket.gethostname()}:{os.getpid()}"
 
 
-def _wallet_factory(client: httpx.AsyncClient) -> object:
-    """ตัวสร้างกระเป๋าจากคำรับรองหนึ่งชุด — **ที่นี่ไม่รู้ว่าเป็นตลาดไหน**"""
-
-    def build(signer: RequestSigner) -> WalletSource:
-        return live_wallet_source(signer=signer, client=client, clock=_now, timeout=MARKET_TIMEOUT)
-
-    return build
+def _wallet_factory(client: httpx.AsyncClient) -> WalletFactory:
+    """สร้างตัวประกอบ wallet หนึ่งครั้งต่อ process โดยไม่เอ่ยชื่อตลาด."""
+    return live_wallet_factory(client=client, clock=_now, timeout=MARKET_TIMEOUT)
 
 
 async def serve() -> None:
@@ -60,13 +56,14 @@ async def serve() -> None:
     worker = _worker_name()
 
     async with httpx.AsyncClient() as client:
+        wallet_for = _wallet_factory(client)
         _LOGGER.info("engine เริ่มทำงานในชื่อ %s", worker)
         while True:
             summary = await run_round(
                 engine=engine,
                 scan_engine=scan_engine,
                 keys=keys,
-                wallet_for=_wallet_factory(client),  # type: ignore[arg-type]
+                wallet_for=wallet_for,
                 worker=worker,
             )
             if summary != RoundSummary():

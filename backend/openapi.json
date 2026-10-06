@@ -1,6 +1,56 @@
 {
   "components": {
     "schemas": {
+      "AddKeyRequest": {
+        "description": "ของที่ผู้ใช้กรอก — **`secret` เข้ามาทางเดียวและไม่เคยออกไปทางไหน**",
+        "properties": {
+          "key": {
+            "maxLength": 256,
+            "minLength": 1,
+            "title": "Key",
+            "type": "string"
+          },
+          "label": {
+            "maxLength": 40,
+            "minLength": 1,
+            "title": "Label",
+            "type": "string"
+          },
+          "secret": {
+            "maxLength": 256,
+            "minLength": 1,
+            "title": "Secret",
+            "type": "string"
+          }
+        },
+        "required": [
+          "label",
+          "key",
+          "secret"
+        ],
+        "title": "AddKeyRequest",
+        "type": "object"
+      },
+      "AddedKey": {
+        "description": "คำตอบของการเพิ่ม — มีแค่รหัสของแถวกับสถานะเริ่มต้น",
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "status"
+        ],
+        "title": "AddedKey",
+        "type": "object"
+      },
       "CodesIssued": {
         "description": "ชุดรหัสสำรองใหม่ — **แสดงครั้งเดียว ไม่มีทางอ่านกลับ**",
         "properties": {
@@ -190,6 +240,94 @@
         "title": "Identity",
         "type": "object"
       },
+      "KeyView": {
+        "description": "สิ่งที่หน้าจอได้เห็นของ key หนึ่งใบ\n\n**ไม่มีช่องสำหรับ key เต็มและไม่มีช่องสำหรับ secret** — ความลับไม่หลุดเพราะ\nไม่มีที่ให้มันอยู่ ไม่ใช่เพราะผู้เขียน endpoint จำได้ว่าอย่าใส่",
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "failure_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Failure Code"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "may_retry": {
+            "default": false,
+            "title": "May Retry",
+            "type": "boolean"
+          },
+          "next_attempt_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Attempt At"
+          },
+          "not_before": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Not Before"
+          },
+          "public_tail": {
+            "title": "Public Tail",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "verified_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Verified At"
+          }
+        },
+        "required": [
+          "id",
+          "label",
+          "public_tail",
+          "status",
+          "created_at"
+        ],
+        "title": "KeyView",
+        "type": "object"
+      },
       "Me": {
         "description": "ตัวตนของคำขอ พร้อมสถานะปัจจัยที่สอง (F-06 RQ-12)",
         "properties": {
@@ -231,6 +369,40 @@
           "new_password"
         ],
         "title": "PasswordChange",
+        "type": "object"
+      },
+      "RejectedKeyInput": {
+        "description": "คำตอบ validation ที่มีแค่รหัส ไม่มีค่าที่ผู้ใช้ส่งมา",
+        "properties": {
+          "detail": {
+            "title": "Detail",
+            "type": "string"
+          }
+        },
+        "required": [
+          "detail"
+        ],
+        "title": "RejectedKeyInput",
+        "type": "object"
+      },
+      "RetryAccepted": {
+        "description": "ผลของการกดลองใหม่",
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "status"
+        ],
+        "title": "RetryAccepted",
         "type": "object"
       },
       "SecondStep": {
@@ -373,6 +545,163 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api-keys": {
+      "get": {
+        "description": "รายการ key ของผู้ใช้คนนี้ — หน้าเว็บเรียกเป็นรอบ ๆ เพื่อดูสถานะ\n\nเส้นทางนี้ **ไม่ต่ออายุ session** (`routing_policy.py`) เพราะการ poll\nไม่ควรทำให้ session ไม่มีวันหมดอายุ",
+        "operationId": "list_keys_api_keys_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/KeyView"
+                  },
+                  "title": "Response List Keys Api Keys Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RejectedKeyInput"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "summary": "List Keys",
+        "tags": [
+          "api-keys"
+        ]
+      },
+      "post": {
+        "description": "รับคำรับรองหนึ่งชุด ปิดผนึกทันที แล้วรอให้ `engine` ตรวจ\n\n**คุมอัตราก่อนแตะอะไร** — มิฉะนั้นระบบนี้กลายเป็นเครื่องมือทดสอบคำรับรอง\nของคนอื่นกับตลาด (`security.md` หัวข้อ 3 · RQ-11)",
+        "operationId": "add_key_api_keys_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddKeyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AddedKey"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RejectedKeyInput"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "summary": "Add Key",
+        "tags": [
+          "api-keys"
+        ]
+      }
+    },
+    "/api-keys/{key_id}": {
+      "delete": {
+        "description": "ลบ key ของตัวเอง — ของคนอื่นได้ \"ไม่พบ\" (RLS เป็นผู้กัน ไม่ใช่เงื่อนไขที่นี่)",
+        "operationId": "remove_key_api_keys__key_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "key_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Key Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RejectedKeyInput"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "summary": "Remove Key",
+        "tags": [
+          "api-keys"
+        ]
+      }
+    },
+    "/api-keys/{key_id}/retry": {
+      "post": {
+        "description": "ขอให้ตรวจ key ใบนี้ใหม่\n\n**ไม่ต้องยืนยันปัจจัยที่สองซ้ำ** (เจ้าของตัดสิน 2026-10-04) เพราะความลับเข้าระบบ\nไปแล้วตอนเพิ่ม ซึ่งผ่านการยืนยันแล้ว การลองใหม่ไม่ได้เพิ่มความเสี่ยงใหม่\n\n**เวลาที่ตลาดสั่งให้รอข้ามไม่ได้** — ที่นี่ปฏิเสธเพื่อให้ผู้ใช้รู้ตัวเร็ว\nส่วนด่านจริงอยู่ในคำสั่งจองของ worker (`plan.md` ข้อ 7.5)",
+        "operationId": "retry_key_api_keys__key_id__retry_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "key_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Key Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RetryAccepted"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RejectedKeyInput"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "summary": "Retry Key",
+        "tags": [
+          "api-keys"
+        ]
+      }
+    },
     "/auth/csrf": {
       "get": {
         "description": "ออกโทเคนกัน CSRF ให้หน้าเว็บก่อนส่งคำขอที่เปลี่ยนสถานะ",

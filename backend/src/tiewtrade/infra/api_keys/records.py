@@ -48,6 +48,23 @@ class TooManyKeysError(ApiKeyError):
     code: ClassVar[str] = "API_KEY_LIMIT_REACHED"
 
 
+def accepted_label_text(value: str) -> str:
+    """ปฏิเสธ NUL ที่ PostgreSQL text เก็บไม่ได้ โดยไม่สะท้อนค่าที่กรอก."""
+    if "\x00" in value:
+        raise ApiKeyError("ชื่อ key มีอักขระที่เก็บไม่ได้")
+    return value
+
+
+def accepted_public_identifier(value: str) -> str:
+    """ตรวจค่าที่จะใช้เป็น HTTP header ก่อนเก็บหรือใช้ โดยไม่สะท้อนค่าใน error."""
+    cleaned = value.strip()
+    if not cleaned or len(cleaned) > MAX_CREDENTIAL_LENGTH:
+        raise ApiKeyError("API key ว่างหรือยาวเกินที่ยอมรับ")
+    if any(not 32 <= ord(character) <= 126 for character in cleaned):
+        raise ApiKeyError("API key มีอักขระที่ใช้ใน HTTP header ไม่ได้")
+    return cleaned
+
+
 class ApiKeyStatus(Enum):
     """สถานะที่ผู้ใช้เห็น — **สี่สถานะ** (Q-7 เจ้าของตัดสิน 2026-10-04)
 
@@ -98,7 +115,5 @@ class ApiKeySummary:
     not_before: datetime | None = None
     next_attempt_at: datetime | None = None
 
-    @property
-    def may_retry(self) -> bool:
-        """ผู้ใช้กดลองใหม่ได้หรือไม่ — เฉพาะแถวที่ตรวจไม่ได้ชั่วคราว"""
-        return self.status is ApiKeyStatus.UNVERIFIABLE
+    #: คำนวณจากสถานะและ market wait ด้วยเวลาฐานข้อมูล · DTO ที่ไม่ได้อ่านจาก DB ปิดไว้
+    may_retry: bool = False

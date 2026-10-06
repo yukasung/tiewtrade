@@ -78,7 +78,7 @@ export function TotpPanel({
   const enrolling = uri !== null;
 
   return (
-    <section data-testid="totp-panel">
+    <section id="totp-panel" data-testid="totp-panel">
       <h3>การยืนยันสองชั้น</h3>
       <p data-testid="totp-state">{identity.totp_enabled ? "เปิดอยู่" : "ปิดอยู่"}</p>
 

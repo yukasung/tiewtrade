@@ -117,7 +117,7 @@ async def test_scan_role_cannot_read_the_secret(scan_engine: AsyncEngine) -> Non
     ก็เท่ากับเปิดความลับของผู้ใช้ทุกคนให้ process เดียว ซึ่งลบความหมายของ
     การแยกบทบาททั้งหมดทิ้ง
     """
-    for column in SECRET_COLUMNS:
+    for column in ("*", *SECRET_COLUMNS):
         async with scan_engine.connect() as connection:
             with pytest.raises(Exception) as caught:
                 await connection.execute(text(f"SELECT {column} FROM user_api_keys"))

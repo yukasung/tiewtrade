@@ -114,6 +114,12 @@ _NOT_SENT_ERRORS: Final = (
 )
 
 
+def _require_endpoint(endpoint: Endpoint) -> None:
+    """บังคับรายการปิดตอนรัน ก่อนจองโควตาหรือใช้คำรับรอง (F-07 V-32)"""
+    if not isinstance(endpoint, Endpoint):
+        raise TypeError("ต้องใช้สมาชิกของ Endpoint ที่ประกาศไว้เท่านั้น")
+
+
 @dataclass(frozen=True, slots=True)
 class VenueResponse:
     """คำตอบที่อ่านสำเร็จแล้วหนึ่งคำตอบ
@@ -163,6 +169,7 @@ class BinanceThTransport:
         ล้มเหลวเมื่อไรก็โยนชนิดกลางของ F-33 เสมอ — **ไม่ปล่อยข้อผิดพลาดของไลบรารี
         HTTP ออกไปข้างนอก** เพราะชั้นข้างนอกต้องไม่รู้ว่าเราต่อตลาดด้วยอะไร
         """
+        _require_endpoint(endpoint)
         if endpoint.needs_signature:
             raise ValueError(f"{endpoint.name} ต้องลงลายเซ็น — ใช้ signed_get")
 
@@ -198,6 +205,7 @@ class BinanceThTransport:
         ส่ง query string ที่ลงลายเซ็นไว้ไปทั้งก้อน ไม่ใช่ส่งเป็นพจนานุกรมให้ไลบรารี
         ประกอบใหม่ เพราะการประกอบใหม่อาจเรียงหรือเข้ารหัสอักขระต่างออกไป
         """
+        _require_endpoint(endpoint)
         signed = self._signed_query(params)
         await self._guard.reserve(cost)
         response = await self._fetch(
@@ -281,7 +289,7 @@ class BinanceThTransport:
         raise failure_for_status(
             status=response.status_code,
             market_code=market_code,
-            retry_after=_retry_after(response.headers),
+            retry_after=_retry_after(response.headers, at=self._now()),
             changes_state=changes_state,
         )
 
@@ -343,7 +351,7 @@ def _market_code(body: str) -> int | None:
     return code
 
 
-def _retry_after(headers: httpx.Headers) -> timedelta | None:
+def _retry_after(headers: httpx.Headers, *, at: datetime) -> timedelta | None:
     """เวลาที่ตลาดบอกให้รอ — ไม่มีก็เป็นค่าว่าง **ห้ามเดาแทนตลาด**"""
     raw = headers.get("retry-after")
     if raw is None:
@@ -354,7 +362,17 @@ def _retry_after(headers: httpx.Headers) -> timedelta | None:
         # รูปแบบวันที่ตาม HTTP ก็ถูกตามมาตรฐาน แต่แปลงแล้วต้องใช้นาฬิกาของเรา
         # เทียบกับของตลาด ซึ่งเป็นการเดาเวลาที่เราไม่มีสิทธิ์เดา
         return None
-    return timedelta(seconds=seconds) if seconds >= 0 else None
+    if seconds < 0:
+        return None
+    try:
+        wait = timedelta(seconds=seconds)
+        # not_before ต้องอ่านกลับเป็น datetime ได้ ไม่ใช่แค่เก็บ interval ได้
+        at + wait
+        return wait
+    except OverflowError:
+        pass
+    # ไม่ผูก header/exception ต้นทางไว้กับ error ที่ออกจาก adapter
+    raise VenueProtocolError()
 
 
 def used_weight_of(headers: Mapping[str, str]) -> Mapping[timedelta, int]:
@@ -375,6 +393,15 @@ def used_weight_of(headers: Mapping[str, str]) -> Mapping[timedelta, int]:
             used = int(value)
         except ValueError:
             continue
-        span = timedelta(**{_SPAN_UNITS[matched.group(2)]: int(matched.group(1))})
-        found[span] = used
+        if used < 0:
+            raise VenueProtocolError()
+        try:
+            span = timedelta(**{_SPAN_UNITS[matched.group(2)]: int(matched.group(1))})
+        except (ValueError, OverflowError):
+            pass
+        else:
+            found[span] = used
+            continue
+        # โยนหลังออกจาก except เพื่อไม่เก็บค่า header ดิบใน exception chain
+        raise VenueProtocolError()
     return found
