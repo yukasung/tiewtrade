@@ -1,0 +1,351 @@
+/* Selected TailAdmin 2.4.0 theme/utilities. No Preflight, remote fonts or demo scans. */
+@layer theme, utilities;
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities) source(none);
+@source "../";
+@import "../accountPanels.css";
+.app-theme {
+  color: var(--account-ink);
+  background: var(--account-bg);
+  font-family: var(--account-font);
+  line-height: var(--account-line-height);
+  min-height: 100vh;
+}
+.app-theme *,
+.app-theme *::before,
+.app-theme *::after {
+  box-sizing: border-box;
+}
+.account-header {
+  display: flex;
+  align-items: center;
+  gap: var(--account-space-md);
+  padding: var(--account-space-md);
+  border-bottom: var(--account-border-width) solid var(--account-line);
+  background: var(--account-surface);
+  position: relative;
+  z-index: var(--account-z-header);
+}
+.account-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--account-space-sm);
+  padding: var(--account-space-lg) var(--account-space-md);
+  background: var(--account-surface);
+  width: var(--account-sidebar-width);
+  position: absolute;
+  min-height: 100vh;
+  border-inline-end: var(--account-border-width) solid var(--account-line);
+}
+.account-sidebar a {
+  color: var(--account-muted-color);
+  padding: var(--account-space-sm) var(--account-space-md);
+  border-radius: var(--account-radius);
+  text-decoration: none;
+}
+.account-sidebar a:hover {
+  background: var(--account-bg);
+  color: var(--account-brand);
+}
+.account-content {
+  margin-inline-start: var(--account-sidebar-width);
+  padding: var(--account-space-lg);
+  max-width: calc(var(--account-panel-width) + var(--account-sidebar-width));
+}
+.account-button {
+  min-height: var(--account-control-height);
+  padding: var(--account-space-sm) var(--account-space-md);
+  border: var(--account-border-width) solid var(--account-line);
+  background: var(--account-surface);
+  color: var(--account-ink);
+  font: inherit;
+  cursor: pointer;
+}
+.account-button[type="submit"] {
+  background: var(--account-brand);
+  color: var(--account-surface);
+  border-color: var(--account-brand);
+}
+.account-button:hover:not(:disabled) {
+  border-color: var(--account-brand);
+}
+.account-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.account-input {
+  width: 100%;
+  min-height: var(--account-control-height);
+  padding: var(--account-space-sm);
+  border: var(--account-border-width) solid var(--account-line);
+  font: inherit;
+  background: var(--account-surface);
+  color: var(--account-ink);
+}
+.account-label {
+  color: var(--account-muted-color);
+}
+.app-theme :focus-visible {
+  outline: var(--account-focus-width) solid var(--account-focus-color);
+  outline-offset: var(--account-focus-offset);
+}
+.account-layout .api-key-panel,
+.account-layout .trading-account-panel {
+  padding: var(--account-space-lg);
+  background: var(--account-surface);
+  border: var(--account-border-width) solid var(--account-line);
+  border-radius: var(--account-radius);
+}
+.account-layout .api-key-guidance {
+  border: var(--account-border-width) solid var(--account-line);
+  border-radius: var(--account-radius);
+  padding: var(--account-space-md);
+  background: var(--account-bg);
+}
+.account-menu-trigger {
+  display: none;
+}
+.account-backdrop {
+  position: fixed;
+  inset: 0;
+  background: var(--account-overlay);
+  border: 0;
+  z-index: var(--account-z-backdrop);
+}
+@media (max-width: 64rem) {
+  .account-menu-trigger {
+    display: inline-flex;
+  }
+  .account-sidebar {
+    display: none;
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    padding-top: var(--account-mobile-sidebar-top);
+    min-height: 0;
+    z-index: var(--account-z-sidebar);
+  }
+  .account-sidebar.is-open {
+    display: flex;
+  }
+  .account-content {
+    margin-inline-start: 0;
+    padding: var(--account-space-md);
+  }
+  .account-layout .api-key-panel,
+  .account-layout .trading-account-panel {
+    padding: var(--account-space-md);
+  }
+  .account-header {
+    flex-wrap: wrap;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .app-theme * {
+    transition: none;
+  }
+}
+
+/* AuthPageLayout and form presentation adapted from TailAdmin Pro 2.4.0. */
+body:has(.app-theme) {
+  margin: 0;
+}
+.app-theme h1,
+.app-theme h2,
+.app-theme h3 {
+  text-wrap: balance;
+}
+.app-theme h1 {
+  font-size: var(--app-heading-size);
+  line-height: var(--app-heading-line-height);
+  margin-block: 0 var(--account-space-sm);
+}
+.app-theme h2 {
+  font-size: var(--app-section-size);
+  margin-block: 0 var(--account-space-md);
+}
+.app-theme p {
+  max-width: var(--account-text-width);
+}
+.app-theme input::placeholder {
+  color: var(--account-muted-color);
+}
+.auth-layout {
+  display: flex;
+  min-height: calc(100vh - var(--app-footer-height));
+}
+.auth-content {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  padding: var(--account-space-lg);
+  min-width: 0;
+}
+.auth-form-container {
+  width: 100%;
+  max-width: var(--app-auth-width);
+}
+.auth-wordmark {
+  display: inline-block;
+  color: var(--account-brand);
+  font-size: var(--app-section-size);
+  font-weight: var(--account-emphasis-weight);
+  text-decoration: none;
+  margin-bottom: var(--app-auth-brand-gap);
+}
+.auth-form form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--account-space-sm);
+}
+.auth-form .account-input {
+  margin-bottom: var(--account-space-md);
+}
+.auth-form form .account-button {
+  margin-block: var(--account-space-sm) var(--account-space-md);
+}
+.auth-form > .account-button {
+  border: 0;
+  color: var(--account-brand);
+  padding-inline: 0;
+  background: transparent;
+  text-align: start;
+}
+.auth-description,
+.page-description {
+  color: var(--account-muted-color);
+  margin-bottom: var(--account-space-lg);
+}
+.auth-brand {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  background: var(--app-brand-dark);
+  color: var(--account-surface);
+  padding: var(--account-space-lg);
+  text-align: center;
+}
+.auth-brand > div {
+  max-width: var(--app-auth-width);
+}
+.auth-brand strong {
+  font-size: var(--app-brand-size);
+  letter-spacing: var(--app-brand-tracking);
+}
+.auth-brand p {
+  color: var(--app-brand-copy);
+}
+.auth-brand-caption {
+  font-size: var(--app-caption-size);
+}
+.app-theme [role="alert"],
+.auth-warning {
+  background: var(--app-warning-bg);
+  color: var(--app-warning-ink);
+  padding: var(--account-space-md);
+  border-radius: var(--account-radius);
+  overflow-wrap: anywhere;
+}
+.account-details-panel,
+.totp-panel {
+  padding: var(--account-space-lg);
+  background: var(--account-surface);
+  border: var(--account-border-width) solid var(--account-line);
+  border-radius: var(--account-radius);
+  margin-block: var(--account-space-lg);
+}
+.account-details-panel {
+  overflow-wrap: anywhere;
+}
+.account-details-panel > .account-button {
+  margin: var(--account-space-sm) var(--account-space-sm) 0 0;
+}
+.totp-panel form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--account-space-sm);
+  max-width: var(--app-auth-width);
+}
+.totp-panel form .account-button {
+  align-self: flex-start;
+  margin-top: var(--account-space-sm);
+}
+.totp-panel [data-testid="enrollment"] {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--account-space-sm);
+}
+.totp-panel [data-testid="enrollment"] .account-input {
+  max-width: var(--app-auth-width);
+}
+.totp-panel img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+.totp-panel code {
+  display: block;
+  overflow-wrap: anywhere;
+  max-width: 100%;
+}
+.totp-panel [data-testid="recovery-codes"] {
+  padding: var(--account-space-md);
+  background: var(--account-bg);
+  margin-block: var(--account-space-md);
+  border-radius: var(--account-radius);
+  overflow-wrap: anywhere;
+}
+.totp-panel [data-testid="recovery-codes"] ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--account-space-sm) var(--account-space-lg);
+  list-style: none;
+  padding: 0;
+  font-family: var(--app-code-font);
+}
+.system-footer {
+  padding: var(--account-space-md) var(--account-space-lg);
+  border-top: var(--account-border-width) solid var(--account-line);
+  color: var(--account-muted-color);
+  background: var(--account-surface);
+  font-size: var(--app-caption-size);
+}
+.system-footer > p {
+  margin-block: 0 var(--account-space-sm);
+}
+.system-footer dl {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--account-space-sm);
+  margin: 0;
+}
+.system-footer dt {
+  font-weight: var(--account-emphasis-weight);
+}
+.system-footer dd {
+  margin: 0 var(--account-space-md) 0 0;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 64rem) {
+  .auth-brand {
+    display: none;
+  }
+}
+@media (max-width: 40rem) {
+  .auth-content {
+    padding: var(--account-space-lg) var(--account-space-md);
+  }
+  .auth-wordmark {
+    margin-bottom: var(--account-space-lg);
+  }
+  .account-details-panel,
+  .totp-panel {
+    padding: var(--account-space-md);
+  }
+  .system-footer {
+    padding: var(--account-space-md);
+  }
+}

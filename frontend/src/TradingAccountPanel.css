@@ -1,0 +1,45 @@
+@import "./accountPanels.css";
+.trading-account-panel {
+  margin-block: var(--account-space-lg);
+  max-width: var(--account-panel-width);
+}
+.trading-account-panel p {
+  max-width: var(--account-text-width);
+  line-height: var(--account-line-height);
+}
+.trading-account-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--account-space-md);
+  flex-wrap: wrap;
+}
+.trading-account-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--account-space-md);
+  border: 0;
+  padding: 0;
+  margin-block: var(--account-space-md);
+}
+.trading-account-fields label {
+  display: flex;
+  flex-direction: column;
+  gap: var(--account-field-gap);
+}
+.trading-account-summary {
+  margin-block: var(--account-space-lg);
+  overflow-wrap: anywhere;
+}
+.trading-account-summary code {
+  white-space: nowrap;
+}
+.trading-account-panel :focus-visible {
+  outline: var(--account-focus-width) solid var(--account-focus-color);
+  outline-offset: var(--account-focus-offset);
+}
+@media (max-width: 40rem) {
+  .trading-account-fields {
+    grid-template-columns: 1fr;
+  }
+}

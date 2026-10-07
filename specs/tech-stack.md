@@ -75,6 +75,19 @@ uv, ruff, mypy, import-linter, pytest, vitest, Playwright, GitHub Actions, Docke
 | แปลภาษา | **i18next** | รองรับไทย/อังกฤษ และการจัดรูปตัวเลข/วันที่ตามภาษา (R-20) |
 | ชนิดข้อมูล API | **สร้างจาก OpenAPI อัตโนมัติ** | กันหน้าบ้านกับหลังบ้านเข้าใจไม่ตรงกัน |
 
+### UI template — ข้อเสนอสำหรับแผน F-08 (2026-10-07)
+
+เจ้าของเลือกใช้ TailAdmin Pro React จาก `references/admin-template/` เป็น source
+สำหรับ layout/component; runtime อยู่ใน frontend ไม่ import จาก references
+เสนอใช้ Tailwind CSS 4 เฉพาะส่วนจำเป็น โดยคง React 18/Vite 6/Node 22 เดิม
+และทดสอบ compatibility ก่อนนำมาใช้ ไม่ยก dependencies ของ template ทั้งชุด
+ซึ่งระบุ React 19/Vite 8; ถ้าต้องเปลี่ยน toolchain ให้เสนออนุมัติแผนก่อน
+รายละเอียดขอบเขตและ validation อยู่ใน F-08 plan.md/validation.md
+เจ้าของอนุมัติแนวทางนี้พร้อมแผน F-08 วันที่ 2026-10-07; implement และตรวจ
+React 18/Vite 6 + Tailwind 4.3.3 ผ่านแล้วในขอบเขตเดิม; UI นี้คงไว้ในแผนบัญชีเดียว
+ผลเดิมอยู่ใน `specs/reviews/2026-10-07-f08-multi-wallet-superseded/validation.md`
+ไม่ถือเป็นผลผ่านของ F-08 ฉบับบัญชีเดียวที่ยังรออนุมัติ
+
 **หมายเหตุเรื่อง indicator:** ค่า indicator ต้องคำนวณที่ backend แล้วส่งมา ไม่ใช่คำนวณ
 ที่หน้าบ้าน เพราะกลยุทธ์ของบอทใช้ค่าเดียวกัน ถ้าคำนวณสองที่ กราฟจะไม่ตรงกับสิ่งที่บอทเห็น
 

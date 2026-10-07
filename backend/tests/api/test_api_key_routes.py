@@ -45,7 +45,7 @@ def _add(client: TestClient, secret_value: bytes, *, label: str = "หลัก"
 
     **ฉะนั้นเพิ่ม key ได้ครั้งเดียวต่อช่วงเวลา** ซึ่งเป็นข้อกำหนดที่ถูกต้อง
     (ไม่มีช่วงผ่อนผันของการยืนยันซ้ำ — เจ้าของตัดสิน 2026-10-03) เทสต์ที่ต้องมี
-    key หลายใบจึงใส่แถวผ่านชั้นเก็บโดยตรง แล้วเดินเส้นทางเฉพาะใบที่กำลังพิสูจน์
+    fixture key จึงใส่แถวผ่านชั้นเก็บโดยตรง แล้วเดินเส้นทางเฉพาะใบที่กำลังพิสูจน์
     """
     answer: Response = client.post(
         "/api-keys",
@@ -63,7 +63,7 @@ def _user_id(client: TestClient) -> UUID:
 
 
 def _seed_keys(user_id: UUID, count: int) -> None:
-    """ใส่ key ผ่านชั้นเก็บโดยตรง — ใช้เมื่อเทสต์ต้องมีหลายใบ
+    """ใส่ key ผ่านชั้นเก็บโดยตรง — ใช้เมื่อต้องเตรียมสถานะก่อนทดสอบ
 
     **ไม่ได้ข้ามกฎใด** ชั้นนี้คือสิ่งที่เส้นทางเรียกอยู่แล้ว ส่วนที่ข้ามคือการยืนยัน
     ปัจจัยที่สอง ซึ่งมีเทสต์ของตัวเองอยู่แล้วและใช้รหัสได้ครั้งเดียวต่อช่วงเวลา
@@ -298,12 +298,12 @@ def test_retry_view_stays_disabled_for_other_states(client: TestClient, status: 
 
 
 @pytest.mark.parametrize("label", ["seeded-0", " seeded-0 "])
-def test_duplicate_label_returns_safe_conflict_and_rolls_back_key_work(
+def test_existing_key_returns_safe_conflict_and_rolls_back_key_work(
     client: TestClient,
     caplog: pytest.LogCaptureFixture,
     label: str,
 ) -> None:
-    """V-7/V-31: unique violation ไม่เป็น 500 และไม่สร้างแถว/audit สำเร็จ."""
+    """F-08 cap1 rejects a second key without echoing label/credentials or auditing success."""
     import asyncio
 
     register(client)
@@ -340,7 +340,7 @@ def test_duplicate_label_returns_safe_conflict_and_rolls_back_key_work(
             headers=csrf_headers(client) | {TOTP_HEADER: code_now(second_factor)},
         )
     assert refused.status_code == 409
-    assert refused.json() == {"detail": "DUPLICATE_VALUE"}
+    assert refused.json() == {"detail": "เพิ่ม key ได้ไม่เกิน 1 อันต่อผู้ใช้"}
     assert client.get("/api-keys").json() == before
     assert asyncio.get_event_loop().run_until_complete(stats()) == (0, API_KEY_ADD_CAPACITY - 1)
     assert KEY not in refused.text + caplog.text
@@ -625,11 +625,15 @@ def test_the_retry_quota_counts_per_user_not_per_key(client: TestClient) -> None
     register(client)
     secret, _ = enable_totp(client)
     first = _add(client, secret).json()["id"]
-    _seed_keys(_user_id(client), 1)
-    second = next(row["id"] for row in client.get("/api-keys").json() if row["id"] != first)
-
     for _ in range(API_KEY_RETRY_CAPACITY + 1):
         client.post(f"/api-keys/{first}/retry", headers=csrf_headers(client))
+
+    # Cap1 permits replacement after deletion; replacing a key must not reset
+    # the owner's retry quota or create a fresh per-key bucket.
+    assert client.delete(f"/api-keys/{first}", headers=csrf_headers(client)).status_code == 204
+    _seed_keys(_user_id(client), 1)
+    second = client.get("/api-keys").json()[0]["id"]
+    assert second != first
 
     refused = client.post(f"/api-keys/{second}/retry", headers=csrf_headers(client))
 

@@ -29,6 +29,8 @@ describe("App", () => {
     await waitFor(() => {
       expect(screen.getByTestId("status").textContent).toBe("ok");
     });
+    expect(screen.getAllByRole("main")).toHaveLength(1);
+    expect(screen.getByTestId("health").closest("footer")).not.toBeNull();
     expect(screen.getByTestId("server-time").textContent).toBe("2026-09-27T12:00:00Z");
     expect(screen.getByTestId("version").textContent).toBe("0.1.0");
   });

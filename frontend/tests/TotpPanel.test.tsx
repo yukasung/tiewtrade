@@ -45,7 +45,7 @@ describe("การยืนยันสองชั้นบนหน้าเ�
     await waitFor(() => {
       expect(screen.getByTestId("totp-state").textContent).toBe("ปิดอยู่");
     });
-    expect(screen.getByTestId("start-totp")).toBeTruthy();
+    expect(screen.getByTestId("start-totp").className).toContain("account-button");
   });
 
   it("แสดง QR และข้อความให้สแกน แล้วแสดงรหัสสำรองหลังยืนยัน", async () => {
@@ -66,7 +66,7 @@ describe("การยืนยันสองชั้นบนหน้าเ�
 
     render(<AuthPanel />);
     await waitFor(() => {
-      expect(screen.getByTestId("start-totp")).toBeTruthy();
+      expect(screen.getByTestId("start-totp").className).toContain("account-button");
     });
 
     fireEvent.click(screen.getByTestId("start-totp"));

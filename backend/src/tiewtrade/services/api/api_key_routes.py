@@ -14,18 +14,13 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Coroutine
 from datetime import UTC, datetime, timedelta
 from email.utils import format_datetime
-from typing import Annotated, Any
+from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
-from fastapi.exceptions import RequestValidationError
-from fastapi.responses import JSONResponse
-from fastapi.routing import APIRoute
 from pydantic import BaseModel, Field, field_validator
-from starlette.responses import Response
 
 from tiewtrade.infra.api_keys import (
     ApiKeyError,
@@ -55,6 +50,7 @@ from tiewtrade.infra.db.errors import DuplicateValueError
 from tiewtrade.infra.db.session import UserSession, user_session
 from tiewtrade.services.api.authentication import Authenticated, current_user
 from tiewtrade.services.api.resources import engine_for, venue_keys
+from tiewtrade.services.api.safe_input_routes import SafeInputRoute
 from tiewtrade.services.api.throttling import spend_token
 
 
@@ -64,21 +60,10 @@ class RejectedKeyInput(BaseModel):
     detail: str
 
 
-class _CredentialRoute(APIRoute):
-    """validation ของเส้นทาง key ห้ามสะท้อน input แม้ผิดที่ช่องอื่น (V-7)"""
+class _CredentialRoute(SafeInputRoute):
+    """Keep the existing F-07 validation response unchanged."""
 
-    def get_route_handler(self) -> Callable[[Request], Coroutine[Any, Any, Response]]:
-        original = super().get_route_handler()
-
-        async def without_raw_input(request: Request) -> Response:
-            try:
-                return await original(request)
-            except RequestValidationError:
-                return JSONResponse(
-                    {"detail": ApiKeyError.code}, status_code=status.HTTP_422_UNPROCESSABLE_CONTENT
-                )
-
-        return without_raw_input
+    rejection_code = ApiKeyError.code
 
 
 router = APIRouter(
@@ -139,7 +124,7 @@ class KeyView(BaseModel):
     may_retry: bool = False
 
 
-def _view(summary: ApiKeySummary) -> KeyView:
+def key_view(summary: ApiKeySummary) -> KeyView:
     return KeyView(
         id=summary.id,
         label=summary.label,
@@ -225,7 +210,7 @@ async def list_keys(
     engine = engine_for(request, DatabaseRole.API)
     async with user_session(engine, who.user_id) as session:
         summaries = await summaries_for(session, who.user_id)
-    return [_view(summary) for summary in summaries]
+    return [key_view(summary) for summary in summaries]
 
 
 @router.delete("/{key_id}", status_code=status.HTTP_204_NO_CONTENT)

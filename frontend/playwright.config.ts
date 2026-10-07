@@ -1,4 +1,7 @@
 import { defineConfig } from "@playwright/test";
+import { e2eEnvironment } from "./e2e/helpers/environment";
+
+const environment = e2eEnvironment();
 
 /**
  * e2e ของ F-01 — พิสูจน์ว่าเบราว์เซอร์จริงเห็นข้อมูลจาก API จริง (V-8)
@@ -7,18 +10,22 @@ import { defineConfig } from "@playwright/test";
  */
 export default defineConfig({
   testDir: "./e2e",
+  // FakeVenue workers scan shared pending jobs; serialize with per-test DB throttle isolation.
+  workers: 1,
   use: { baseURL: "http://localhost:5173" },
   webServer: [
     {
       command: "uv run uvicorn tiewtrade.services.api.app:app --port 8000",
       cwd: "../backend",
       url: "http://localhost:8000/health",
-      reuseExistingServer: !process.env.CI,
+      env: environment,
+      reuseExistingServer: false,
     },
     {
-      command: "npm run dev",
+      command: "npm run dev -- --strictPort",
       url: "http://localhost:5173",
-      reuseExistingServer: !process.env.CI,
+      env: environment,
+      reuseExistingServer: false,
     },
   ],
 });

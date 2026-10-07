@@ -1,5 +1,6 @@
+import { e2eEnvironment } from "./helpers/environment";
 import { execFileSync } from "node:child_process";
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./helpers/test";
 
 import { PASSWORD, codeFor, secretOf, stepAt } from "./helpers/totp";
 
@@ -40,11 +41,13 @@ async def check():
 asyncio.run(check())
 `,
     ],
-    { cwd: "../backend", stdio: "pipe" },
+    { cwd: "../backend", stdio: "pipe", env: e2eEnvironment() },
   );
 }
 
-test("เพิ่ม key ยืนยัน TOTP → ตรวจชั่วคราว → ลองใหม่ → ใช้งานได้ → ลบ", async ({ page }, testInfo) => {
+test("เพิ่ม key ยืนยัน TOTP → ตรวจชั่วคราว → ลองใหม่ → ใช้งานได้ → ลบ", async ({
+  page,
+}, testInfo) => {
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
   await page.goto("/");
@@ -103,9 +106,15 @@ test("เพิ่ม key ยืนยัน TOTP → ตรวจชั่ว�
     path: testInfo.outputPath("api-keys-desktop.png"),
   });
   await page.setViewportSize({ width: 375, height: 812 });
-  expect(await panel.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true);
+  expect(
+    await panel.evaluate(
+      (element) => element.scrollWidth <= element.clientWidth,
+    ),
+  ).toBe(true);
   await expect(panel.getByLabel("API secret", { exact: true })).toHaveValue("");
-  await panel.screenshot({ path: testInfo.outputPath("api-keys-mobile-form.png") });
+  await panel.screenshot({
+    path: testInfo.outputPath("api-keys-mobile-form.png"),
+  });
   expect(
     await page.evaluate(() => [
       window.localStorage.length,
@@ -121,7 +130,9 @@ test("เพิ่ม key ยืนยัน TOTP → ตรวจชั่ว�
   expect(errors).toEqual([]);
 });
 
-test("มือถือ: บัญชีไม่มี TOTP เห็นทางไปเปิดและไม่มีช่องรับ secret", async ({ page }, testInfo) => {
+test("มือถือ: บัญชีไม่มี TOTP เห็นทางไปเปิดและไม่มีช่องรับ secret", async ({
+  page,
+}, testInfo) => {
   await page.setViewportSize({ width: 375, height: 812 });
   await page.goto("/");
   await page.getByTestId("switch-mode").click();

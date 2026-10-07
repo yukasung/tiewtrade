@@ -173,23 +173,24 @@ jobs:
       postgres:
         image: postgres:${{ needs.config.outputs.postgres_version }}
         env:
-          POSTGRES_DB: tiewtrade
+          POSTGRES_DB: tiewtrade_e2e
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
         ports:
           - 5432:5432
         options: >-
-          --health-cmd "pg_isready -U postgres -d tiewtrade"
+          --health-cmd "pg_isready -U postgres -d tiewtrade_e2e"
           --health-interval 3s
           --health-timeout 3s
           --health-retries 20
     env:
-      TIEWTRADE_DATABASE_URL_MIGRATOR: postgresql+asyncpg://tiewtrade_migrator:dev_migrator@127.0.0.1:5432/tiewtrade
-      TIEWTRADE_DATABASE_URL_API: postgresql+asyncpg://tiewtrade_api:dev_api@127.0.0.1:5432/tiewtrade
-      TIEWTRADE_DATABASE_URL_AUTH: postgresql+asyncpg://tiewtrade_auth:dev_auth@127.0.0.1:5432/tiewtrade
+      TIEWTRADE_E2E_DATABASE_NAME: tiewtrade_e2e
+      TIEWTRADE_DATABASE_URL_MIGRATOR: postgresql+asyncpg://tiewtrade_migrator:dev_migrator@127.0.0.1:5432/tiewtrade_e2e
+      TIEWTRADE_DATABASE_URL_API: postgresql+asyncpg://tiewtrade_api:dev_api@127.0.0.1:5432/tiewtrade_e2e
+      TIEWTRADE_DATABASE_URL_AUTH: postgresql+asyncpg://tiewtrade_auth:dev_auth@127.0.0.1:5432/tiewtrade_e2e
       # F-07 e2e เรียก worker จริงคู่กับ FakeVenue จึงต้องใช้บทบาททั้งสองนี้
-      TIEWTRADE_DATABASE_URL_ENGINE: postgresql+asyncpg://tiewtrade_engine:dev_engine@127.0.0.1:5432/tiewtrade
-      TIEWTRADE_DATABASE_URL_ENGINE_SCAN: postgresql+asyncpg://tiewtrade_engine_scan:dev_engine_scan@127.0.0.1:5432/tiewtrade
+      TIEWTRADE_DATABASE_URL_ENGINE: postgresql+asyncpg://tiewtrade_engine:dev_engine@127.0.0.1:5432/tiewtrade_e2e
+      TIEWTRADE_DATABASE_URL_ENGINE_SCAN: postgresql+asyncpg://tiewtrade_engine_scan:dev_engine_scan@127.0.0.1:5432/tiewtrade_e2e
       TIEWTRADE_SIGNUP_OPEN: "1"
       TIEWTRADE_COOKIE_SECURE: "0"
       # กุญแจปิดผนึก secret ของ TOTP (F-06) — **ค่านี้ใช้ได้เฉพาะเครื่องพัฒนาและ CI**
@@ -223,7 +224,7 @@ jobs:
         working-directory: backend
         run: |
           for script in db/bootstrap/*.sql; do
-            psql "postgresql://postgres:postgres@127.0.0.1:5432/tiewtrade" -v ON_ERROR_STOP=1 -f "$script"
+            psql "postgresql://postgres:postgres@127.0.0.1:5432/tiewtrade_e2e" -v ON_ERROR_STOP=1 -f "$script"
           done
       - name: migration
         working-directory: backend

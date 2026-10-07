@@ -192,11 +192,9 @@ async def test_waiting_batch_cannot_hide_new_or_expired_keys(
 ) -> None:
     """V-22.7: งานเก่าเต็ม batch ต้องไม่บัง PENDING ใหม่หรือการลบ secret หมดอายุ."""
     waiting: list[tuple[UUID, UUID]] = []
-    owner = uuid4()
     for index in range(limit):
-        if index % 6 == 0:
-            owner = uuid4()
-            await create_user(api_engine, owner)
+        owner = uuid4()
+        await create_user(api_engine, owner)
         async with user_session(api_engine, owner) as session:
             key_id = await store_key(
                 session,
@@ -236,10 +234,13 @@ async def test_waiting_batch_cannot_hide_new_or_expired_keys(
             key_public="FRESHKEY",
             secret=SECRET,
         )
+    expired_owner = uuid4()
+    await create_user(api_engine, expired_owner)
+    async with user_session(api_engine, expired_owner) as session:
         expired = await store_key(
             session,
             venue_keys,
-            user_id=fresh_owner,
+            user_id=expired_owner,
             label="expired",
             key_public="EXPIREDKEY",
             secret=SECRET,
@@ -256,8 +257,8 @@ async def test_waiting_batch_cannot_hide_new_or_expired_keys(
     assert result.skipped == 0
     assert market.calls == 1
     assert (await _state(engine_engine, fresh_owner, fresh))["status"] == "ACTIVE"
-    assert (await _state(engine_engine, fresh_owner, expired))["secret_sealed"] is None
-    await _assert_expiration_audit(engine_engine, fresh_owner, expired)
+    assert (await _state(engine_engine, expired_owner, expired))["secret_sealed"] is None
+    await _assert_expiration_audit(engine_engine, expired_owner, expired)
     for waiting_owner, key_id in waiting:
         state = await _state(engine_engine, waiting_owner, key_id)
         assert state["attempts"] == 1

@@ -16,3 +16,36 @@
   --account-space-sm: 0.5rem;
   --account-emphasis-weight: bold;
 }
+
+/* Selected TailAdmin 2.4.0 shared auth/account theme. */
+.app-theme {
+  --app-heading-line-height: 1.25;
+  --app-brand-tracking: -0.02em;
+  --app-code-font: monospace;
+  --app-heading-size: 2rem;
+  --app-section-size: 1.25rem;
+  --app-brand-size: 3rem;
+  --app-caption-size: 0.875rem;
+  --app-auth-width: 28rem;
+  --app-auth-brand-gap: 3rem;
+  --app-footer-height: 7rem;
+  --app-brand-dark: #101828;
+  --app-brand-copy: #d0d5dd;
+  --app-warning-bg: #fff4ed;
+  --app-warning-ink: #9c2a10;
+  --account-ink: #101828;
+  --account-muted-color: #475467;
+  --account-surface: #fff;
+  --account-bg: #f9fafb;
+  --account-line: #d0d5dd;
+  --account-brand: #465fff;
+  --account-focus-color: #3641f5;
+  --account-radius: 0.5rem;
+  --account-sidebar-width: 16rem;
+  --account-mobile-sidebar-top: 5rem;
+  --account-overlay: rgba(16, 24, 40, 0.5);
+  --account-z-backdrop: 10;
+  --account-z-sidebar: 20;
+  --account-z-header: 30;
+  --account-font: system-ui, "Noto Sans Thai", Tahoma, sans-serif;
+}

@@ -18,11 +18,8 @@ from uuid import UUID
 
 from tiewtrade.infra.db.errors import InfraError
 
-#: จำนวน key สูงสุดต่อผู้ใช้ (Q-3 — เจ้าของตัดสิน 2026-10-04)
-#:
-#: ตรงกับเพดานกระเป๋าที่ `mission.md` หัวข้อ 5 ตัดสินไว้ (บัญชีหลัก 1 + บัญชีย่อย 5)
-#: แต่ **ยังไม่ผูกกับกระเป๋า** — F-08 เป็นผู้ผูก
-MAX_KEYS_PER_USER: Final[int] = 6
+#: One credential per user, including every status (F-08 single-account RQ-2).
+MAX_KEYS_PER_USER: Final[int] = 1
 
 #: จำนวนหลักท้ายของ API key ที่แสดงได้
 PUBLIC_TAIL_LENGTH: Final[int] = 4

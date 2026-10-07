@@ -1,50 +1,18 @@
-import {
-  QueryClient,
-  QueryClientProvider,
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query";
-import { type JSX, useEffect, useRef, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { type JSX, useRef, useState } from "react";
 
 import {
   addApiKey,
   deleteApiKey,
   fetchApiKeys,
   retryApiKey,
-  type KeyView,
 } from "./apiKeys";
-import { keyText as t, keyTime } from "./apiKeyMessages";
+import { keyText as t, keyTime, keyState } from "./apiKeyMessages";
 import { ApiRequestError, type Me } from "./auth";
 import "./ApiKeyPanel.css";
-
-/** เปลี่ยนผู้ใช้ = เปลี่ยน cache ทั้งก้อน · ไม่เก็บ cache เมื่อออกจากหน้าจอ */
-export function ApiKeyPanel({ identity }: { identity: Me }): JSX.Element {
-  return <KeySession key={identity.user_id} identity={identity} />;
-}
-
-function KeySession({ identity }: { identity: Me }): JSX.Element {
-  const [client] = useState(
-    () =>
-      new QueryClient({
-        defaultOptions: {
-          queries: { retry: false, gcTime: 0 },
-          mutations: { retry: false, gcTime: 0, networkMode: "always" },
-        },
-      }),
-  );
-  useEffect(
-    () => () => {
-      client.clear();
-    },
-    [client],
-  );
-  return (
-    <QueryClientProvider client={client}>
-      <KeyWorkspace identity={identity} />
-    </QueryClientProvider>
-  );
-}
+import { Button } from "./components/ui/Button";
+import { Input } from "./components/ui/Input";
+import { Label } from "./components/ui/Label";
 
 function failure(error: Error | null): string | null {
   if (error === null) return null;
@@ -70,27 +38,20 @@ function failure(error: Error | null): string | null {
   }
 }
 
-function stateOf(item: KeyView): string {
-  switch (item.status) {
-    case "PENDING":
-      return t("pending");
-    case "ACTIVE":
-      return t("active");
-    case "REJECTED":
-      return t("rejected");
-    case "UNVERIFIABLE":
-      return t("unverifiable");
-    default:
-      return t("unknown");
-  }
-}
-
-function KeyWorkspace({ identity }: { identity: Me }): JSX.Element {
+export function ApiKeyPanel({ identity }: { identity: Me }): JSX.Element {
   const client = useQueryClient();
   const queryKey = ["api-keys", identity.user_id];
+  const accountQueryKey = ["trading-account", identity.user_id];
   const query = useQuery({
     queryKey,
-    queryFn: ({ signal }) => fetchApiKeys(signal),
+    queryFn: async ({ signal }) => {
+      const rows = await fetchApiKeys(signal);
+      void client.invalidateQueries({
+        queryKey: accountQueryKey,
+        exact: true,
+      });
+      return rows;
+    },
     refetchInterval: (current) =>
       current.state.error instanceof ApiRequestError &&
       current.state.error.status === 401
@@ -105,9 +66,32 @@ function KeyWorkspace({ identity }: { identity: Me }): JSX.Element {
   const submitting = useRef(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
-  const refresh = (): void => {
-    void client.invalidateQueries({ queryKey });
+  const [refreshUnconfirmed, setRefreshUnconfirmed] = useState(false);
+  const refresh = async (): Promise<boolean> => {
+    // Key reads invalidate the account query too. Await keys first, then the
+    // final account request, so cancellation of an earlier refetch is not
+    // mistaken for confirmation. Query invalidation can swallow fetch errors.
+    await client.invalidateQueries({ queryKey, exact: true });
+    await client.invalidateQueries({ queryKey: accountQueryKey, exact: true });
+    const keysState = client.getQueryState(queryKey);
+    const accountState = client.getQueryState(accountQueryKey);
+    const fresh =
+      keysState !== undefined &&
+      [keysState, accountState].every(
+        (state) =>
+          state === undefined ||
+          (state.status === "success" &&
+            state.fetchStatus === "idle" &&
+            !state.isInvalidated),
+      );
+    setRefreshUnconfirmed(!fresh);
+    return fresh;
   };
+  async function showNoticeAfterRefresh(
+    message: "added" | "retried" | "deleted",
+  ): Promise<void> {
+    if (await refresh()) setNotice(t(message));
+  }
   const add = useMutation({
     // ไม่มี variables: ห้ามส่งคำรับรองเข้า mutation cache แม้เป็นเพียงชั่วคราว
     mutationFn: () => {
@@ -126,28 +110,21 @@ function KeyWorkspace({ identity }: { identity: Me }): JSX.Element {
           if (input) input.value = "";
       }
     },
-    onSuccess: () => {
-      setNotice(t("added"));
-      refresh();
-    },
+    onSuccess: () => showNoticeAfterRefresh("added"),
     onSettled: () => {
       submitting.current = false;
     },
   });
   const retry = useMutation({
     mutationFn: retryApiKey,
-    onSuccess: () => {
-      setNotice(t("retried"));
-      refresh();
-    },
+    onSuccess: () => showNoticeAfterRefresh("retried"),
     onError: refresh,
   });
   const remove = useMutation({
     mutationFn: deleteApiKey,
     onSuccess: () => {
       setDeleting(null);
-      setNotice(t("deleted"));
-      refresh();
+      return showNoticeAfterRefresh("deleted");
     },
     onError: refresh,
   });
@@ -156,7 +133,9 @@ function KeyWorkspace({ identity }: { identity: Me }): JSX.Element {
   const expired = [query.error, actionError].some(
     (error) => error instanceof ApiRequestError && error.status === 401,
   );
-  const stale = query.isError || query.fetchStatus === "paused";
+  const stale =
+    query.isError || query.fetchStatus === "paused" || refreshUnconfirmed;
+  const hasKey = (query.data?.length ?? 0) > 0;
   const selected = query.data?.find((item) => item.id === deleting);
   function resetFeedback(): void {
     add.reset();
@@ -172,6 +151,7 @@ function KeyWorkspace({ identity }: { identity: Me }): JSX.Element {
       data-testid="api-key-panel"
     >
       <h2 id="api-key-heading">{t("heading")}</h2>
+      <p>{t("oneKey")}</p>
       <aside className="api-key-guidance" aria-label={t("heading")}>
         <p>{t("spotWarning")}</p>
         <p>{t("whitelistWarning")}</p>
@@ -185,17 +165,20 @@ function KeyWorkspace({ identity }: { identity: Me }): JSX.Element {
               aria-label={t("add")}
               onSubmit={(event) => {
                 event.preventDefault();
-                if (busy || submitting.current) return;
+                if (busy || stale || hasKey || submitting.current) return;
                 resetFeedback();
                 submitting.current = true;
                 add.mutate();
               }}
             >
               <p>{t("totpHelp")}</p>
-              <fieldset className="api-key-fields" disabled={busy}>
-                <label htmlFor="api-key-name">
+              <fieldset
+                className="api-key-fields"
+                disabled={busy || stale || hasKey}
+              >
+                <Label htmlFor="api-key-name">
                   {t("name")}
-                  <input
+                  <Input
                     id="api-key-name"
                     name="label"
                     ref={name}
@@ -203,10 +186,10 @@ function KeyWorkspace({ identity }: { identity: Me }): JSX.Element {
                     maxLength={40}
                     autoComplete="off"
                   />
-                </label>
-                <label htmlFor="api-key-key">
+                </Label>
+                <Label htmlFor="api-key-key">
                   {t("key")}
-                  <input
+                  <Input
                     id="api-key-key"
                     name="key"
                     ref={key}
@@ -216,10 +199,10 @@ function KeyWorkspace({ identity }: { identity: Me }): JSX.Element {
                     autoComplete="off"
                     spellCheck={false}
                   />
-                </label>
-                <label htmlFor="api-key-secret">
+                </Label>
+                <Label htmlFor="api-key-secret">
                   {t("secret")}
-                  <input
+                  <Input
                     id="api-key-secret"
                     name="secret"
                     ref={secret}
@@ -229,10 +212,10 @@ function KeyWorkspace({ identity }: { identity: Me }): JSX.Element {
                     autoComplete="off"
                     spellCheck={false}
                   />
-                </label>
-                <label htmlFor="api-key-code">
+                </Label>
+                <Label htmlFor="api-key-code">
                   {t("totp")}
-                  <input
+                  <Input
                     id="api-key-code"
                     name="totp"
                     ref={code}
@@ -242,11 +225,11 @@ function KeyWorkspace({ identity }: { identity: Me }): JSX.Element {
                     maxLength={6}
                     autoComplete="one-time-code"
                   />
-                </label>
+                </Label>
               </fieldset>
-              <button type="submit" disabled={busy}>
+              <Button type="submit" disabled={busy || stale || hasKey}>
                 {t(add.isPending ? "adding" : "add")}
-              </button>
+              </Button>
             </form>
           ) : (
             <p>
@@ -256,21 +239,26 @@ function KeyWorkspace({ identity }: { identity: Me }): JSX.Element {
           {actionError !== null && notice === null && (
             <p role="alert">{failure(actionError)}</p>
           )}
-          {notice !== null && <p role="status">{notice}</p>}
+          {notice !== null && !stale && <p role="status">{notice}</p>}
           <div className="api-key-list-heading">
             <h3>{t("list")}</h3>
-            <button
+            <Button
               type="button"
               disabled={busy || query.isFetching}
               onClick={() => {
-                void query.refetch();
+                setNotice(null);
+                void refresh();
               }}
             >
               {t("refresh")}
-            </button>
+            </Button>
           </div>
           {query.isPending && <p role="status">{t("loading")}</p>}
-          {stale && <p role="alert">{t("stale")}</p>}
+          {stale && (
+            <p role="alert">
+              {t(refreshUnconfirmed ? "refreshUnconfirmed" : "stale")}
+            </p>
+          )}
           {query.data?.length === 0 && <p>{t("empty")}</p>}
           <ul className="api-key-list">
             {query.data?.map((item) => (
@@ -281,7 +269,7 @@ function KeyWorkspace({ identity }: { identity: Me }): JSX.Element {
                     <code>{t("tail", { tail: item.public_tail })}</code>
                   </h4>
                   <p className="api-key-state" aria-live="polite">
-                    {stateOf(item)}
+                    {keyState(item.status)}
                   </p>
                   {item.failure_code === "VERIFICATION_EXPIRED" && (
                     <p>{t("expired")}</p>
@@ -291,7 +279,13 @@ function KeyWorkspace({ identity }: { identity: Me }): JSX.Element {
                       <p>{t("badCredential")}</p>
                     )}
                   {item.status === "UNVERIFIABLE" && (
-                    <p>{t(item.failure_code === "VENUE_REJECTED" ? "manualRetry" : "temporary")}</p>
+                    <p>
+                      {t(
+                        item.failure_code === "VENUE_REJECTED"
+                          ? "manualRetry"
+                          : "temporary",
+                      )}
+                    </p>
                   )}
                   <p>{t("created", { at: keyTime(item.created_at) })}</p>
                   {item.verified_at && (
@@ -308,7 +302,7 @@ function KeyWorkspace({ identity }: { identity: Me }): JSX.Element {
                 </div>
                 <div className="api-key-actions">
                   {item.status === "UNVERIFIABLE" && (
-                    <button
+                    <Button
                       type="button"
                       disabled={busy || stale || !item.may_retry}
                       onClick={() => {
@@ -318,9 +312,9 @@ function KeyWorkspace({ identity }: { identity: Me }): JSX.Element {
                       }}
                     >
                       {t("retry")}
-                    </button>
+                    </Button>
                   )}
-                  <button
+                  <Button
                     type="button"
                     disabled={busy || stale}
                     onClick={() => {
@@ -329,7 +323,7 @@ function KeyWorkspace({ identity }: { identity: Me }): JSX.Element {
                     }}
                   >
                     {t("remove")}
-                  </button>
+                  </Button>
                 </div>
               </li>
             ))}
@@ -343,7 +337,7 @@ function KeyWorkspace({ identity }: { identity: Me }): JSX.Element {
                   tail: selected.public_tail,
                 })}
               </p>
-              <button
+              <Button
                 type="button"
                 disabled={busy || stale}
                 onClick={() => {
@@ -354,15 +348,15 @@ function KeyWorkspace({ identity }: { identity: Me }): JSX.Element {
                 }}
               >
                 {t("confirmDelete")}
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
                 onClick={() => {
                   setDeleting(null);
                 }}
               >
                 {t("cancel")}
-              </button>
+              </Button>
             </fieldset>
           )}
         </>

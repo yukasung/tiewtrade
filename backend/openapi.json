@@ -1,6 +1,14 @@
 {
   "components": {
     "schemas": {
+      "AccountUse": {
+        "enum": [
+          "MANUAL",
+          "BOT"
+        ],
+        "title": "AccountUse",
+        "type": "string"
+      },
       "AddKeyRequest": {
         "description": "ของที่ผู้ใช้กรอก — **`secret` เข้ามาทางเดียวและไม่เคยออกไปทางไหน**",
         "properties": {
@@ -385,6 +393,19 @@
         "title": "RejectedKeyInput",
         "type": "object"
       },
+      "RejectedTradingAccountInput": {
+        "properties": {
+          "detail": {
+            "title": "Detail",
+            "type": "string"
+          }
+        },
+        "required": [
+          "detail"
+        ],
+        "title": "RejectedTradingAccountInput",
+        "type": "object"
+      },
       "RetryAccepted": {
         "description": "ผลของการกดลองใหม่",
         "properties": {
@@ -434,6 +455,19 @@
           }
         },
         "title": "SecondStep",
+        "type": "object"
+      },
+      "SelectTradingUseRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "use": {
+            "$ref": "#/components/schemas/AccountUse"
+          }
+        },
+        "required": [
+          "use"
+        ],
+        "title": "SelectTradingUseRequest",
         "type": "object"
       },
       "SessionsEnded": {
@@ -494,6 +528,48 @@
           "user_id"
         ],
         "title": "SignedIn",
+        "type": "object"
+      },
+      "TradingAccountView": {
+        "properties": {
+          "key": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/KeyView"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "may_change_use": {
+            "const": false,
+            "default": false,
+            "title": "May Change Use",
+            "type": "boolean"
+          },
+          "may_trade": {
+            "const": false,
+            "default": false,
+            "title": "May Trade",
+            "type": "boolean"
+          },
+          "use": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AccountUse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "use",
+          "key"
+        ],
+        "title": "TradingAccountView",
         "type": "object"
       },
       "ValidationError": {
@@ -1185,6 +1261,78 @@
           }
         },
         "summary": "Read Health"
+      }
+    },
+    "/trading-account": {
+      "get": {
+        "operationId": "read_account_trading_account_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TradingAccountView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RejectedTradingAccountInput"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "summary": "Read Account",
+        "tags": [
+          "trading-account"
+        ]
+      }
+    },
+    "/trading-account/use": {
+      "post": {
+        "operationId": "select_account_use_trading_account_use_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SelectTradingUseRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TradingAccountView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RejectedTradingAccountInput"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "summary": "Select Account Use",
+        "tags": [
+          "trading-account"
+        ]
       }
     }
   }

@@ -2,6 +2,7 @@ import { createInstance } from "i18next";
 
 const th = {
   heading: "API key",
+  oneKey: "เก็บ API key ได้หนึ่งชุดต่อบัญชี ต้องลบชุดเดิมก่อนเพิ่มใหม่",
   name: "ชื่อ key",
   key: "API key",
   secret: "API secret",
@@ -41,6 +42,7 @@ const th = {
   deleted: "ลบ key แล้ว",
   refresh: "ดึงรายการใหม่",
   stale: "ดึงข้อมูลล่าสุดไม่ได้ รายการที่แสดงอาจไม่ตรงกับสถานะปัจจุบัน",
+  refreshUnconfirmed: "ยังยืนยันข้อมูลล่าสุดไม่ได้ รายการที่แสดงอาจไม่ตรงกับสถานะปัจจุบัน กรุณาดึงรายการใหม่ก่อนทำต่อ",
   unauthorized: "session หมดอายุ กรุณาเข้าสู่ระบบใหม่",
   forbidden: "ยืนยัน TOTP ไม่ผ่าน หากใช้รหัสเดิมไปแล้วให้รอรหัสชุดใหม่",
   invalid:
@@ -53,11 +55,14 @@ const th = {
   expired: "หมดเวลาตรวจ 24 ชั่วโมงแล้ว ต้องเพิ่ม key ใหม่",
   badCredential: "คำรับรองไม่ผ่านการตรวจ ตรวจข้อมูลที่ตลาดแล้วเพิ่ม key ใหม่",
   temporary: "ระบบจะตรวจใหม่อัตโนมัติ หรือกดลองใหม่เมื่อถึงเวลาที่อนุญาต",
-  manualRetry: "คำขอถูกปฏิเสธโดยยังไม่ทราบสาเหตุ ระบบระงับการตรวจอัตโนมัติและแจ้งผู้ดูแลแล้ว คุณกดลองใหม่ได้เมื่อถึงเวลาที่อนุญาต",
+  manualRetry:
+    "คำขอถูกปฏิเสธโดยยังไม่ทราบสาเหตุ ระบบระงับการตรวจอัตโนมัติและแจ้งผู้ดูแลแล้ว คุณกดลองใหม่ได้เมื่อถึงเวลาที่อนุญาต",
   tail: "•••• {{tail}}",
 };
 const en: typeof th = {
   heading: "API keys",
+  oneKey:
+    "One API key per account. Delete the existing key before adding another.",
   name: "Key name",
   key: "API key",
   secret: "API secret",
@@ -97,6 +102,7 @@ const en: typeof th = {
   deleted: "Key deleted",
   refresh: "Refresh list",
   stale: "Could not refresh. The displayed list may be out of date.",
+  refreshUnconfirmed: "The latest data could not be confirmed. The displayed list may be out of date. Refresh before continuing.",
   unauthorized: "Session expired. Sign in again.",
   forbidden:
     "TOTP confirmation failed. Wait for a new code if the previous one was already used.",
@@ -112,7 +118,8 @@ const en: typeof th = {
     "Credentials were rejected. Check them at the exchange and add a new key.",
   temporary:
     "Verification retries automatically, or you may retry when allowed.",
-  manualRetry: "The request was rejected without confirming a credential problem. Automatic verification is paused and operators have been notified. You may retry when allowed.",
+  manualRetry:
+    "The request was rejected without confirming a credential problem. Automatic verification is paused and operators have been notified. You may retry when allowed.",
   tail: "•••• {{tail}}",
 };
 
@@ -131,4 +138,19 @@ export function keyTime(value: string | null | undefined): string {
     dateStyle: "medium",
     timeStyle: "short",
   }).format(new Date(value));
+}
+
+export function keyState(status: string): string {
+  switch (status) {
+    case "PENDING":
+      return keyText("pending");
+    case "ACTIVE":
+      return keyText("active");
+    case "REJECTED":
+      return keyText("rejected");
+    case "UNVERIFIABLE":
+      return keyText("unverifiable");
+    default:
+      return keyText("unknown");
+  }
 }

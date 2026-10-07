@@ -10,7 +10,9 @@ import {
 } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { AccountSession } from "../src/AccountSession";
 import { ApiKeyPanel } from "../src/ApiKeyPanel";
+import { TradingAccountPanel } from "../src/TradingAccountPanel";
 import { retryApiKey } from "../src/apiKeys";
 import type { components } from "../src/api-types";
 
@@ -18,6 +20,100 @@ type KeyView = components["schemas"]["KeyView"];
 const IDENTITY = { user_id: "user-one", totp_enabled: true };
 const KEY = "PUBLIC-KEY-MUST-NOT-STAY";
 const SECRET = "SECRET-MUST-NOT-STAY";
+
+const mutations = [
+  { action: "add", message: "เพิ่ม key แล้ว กำลังรอตรวจ" },
+  { action: "retry", message: "ส่งคำขอตรวจใหม่แล้ว" },
+  { action: "delete", message: "ลบ key แล้ว" },
+] as const;
+
+function mutateKey(action: typeof mutations[number]["action"]): void {
+  if (action === "add") {
+    fill();
+    fireEvent.click(screen.getByRole("button", { name: "เพิ่ม key" }));
+  } else if (action === "retry") {
+    fireEvent.click(screen.getByRole("button", { name: "ลองใหม่" }));
+  } else {
+    fireEvent.click(screen.getByRole("button", { name: "ลบ key" }));
+    fireEvent.click(screen.getByRole("button", { name: "ยืนยันลบ" }));
+  }
+}
+
+it.each(mutations.flatMap((mutation) =>
+  ["api-keys", "trading-account"].map((failedQuery) => ({ ...mutation, failedQuery })),
+))("$action suppresses success feedback when $failedQuery refetch fails", async ({ action, message, failedQuery }) => {
+  let changed = false;
+  let fail = true;
+  const fetcher = vi.fn((url: string, init?: RequestInit) => {
+    if (init?.method === "POST" || init?.method === "DELETE") {
+      changed = true;
+      return Promise.resolve(response({ id: "key-one", status: "PENDING" },
+        action === "delete" ? 204 : action === "retry" ? 202 : 201));
+    }
+    if (changed && fail && url.endsWith(failedQuery)) {
+      return Promise.reject(new Error(SECRET));
+    }
+    const rows = changed ? action === "delete" ? [] : [row("PENDING")] :
+      action === "add" ? [] : [row("UNVERIFIABLE")];
+    return Promise.resolve(response(url.endsWith("api-keys") ? rows : {
+      use: null, key: rows[0] ?? null, may_trade: false, may_change_use: false,
+    }));
+  });
+  vi.stubGlobal("fetch", fetcher);
+  render(
+    <AccountSession identity={IDENTITY}>
+      <ApiKeyPanel identity={IDENTITY} />
+      <TradingAccountPanel identity={IDENTITY} />
+    </AccountSession>,
+  );
+  await screen.findByText("ยังไม่ได้เลือกประเภทการใช้งาน");
+  mutateKey(action);
+  await waitFor(() => expect(changed).toBe(true));
+  await screen.findAllByRole("alert");
+  expect(screen.queryByText(message)).toBeNull();
+  expect(document.body.textContent).not.toContain(SECRET);
+  if (action === "add") assertCleared();
+  expect(fetcher.mock.calls.filter(([, init]) => init?.method === "POST" || init?.method === "DELETE")).toHaveLength(1);
+  fail = false;
+  fireEvent.click(screen.getByRole("button", { name: "ดึงรายการใหม่" }));
+  await waitFor(() => expect(screen.queryAllByRole("alert")).toHaveLength(0));
+  expect(fetcher.mock.calls.filter(([, init]) => init?.method === "POST" || init?.method === "DELETE")).toHaveLength(1);
+});
+
+it.each(mutations)("$action waits for a delayed account refetch before showing success", async ({ action, message }) => {
+  let changed = false;
+  let finish!: (value: Response) => void;
+  const rows = () => changed ? action === "delete" ? [] : [row("PENDING")] :
+    action === "add" ? [] : [row("UNVERIFIABLE")];
+  vi.stubGlobal("fetch", vi.fn((url: string, init?: RequestInit) => {
+    if (init?.method === "POST" || init?.method === "DELETE") {
+      changed = true;
+      return Promise.resolve(response({ id: "key-one", status: "PENDING" },
+        action === "delete" ? 204 : action === "retry" ? 202 : 201));
+    }
+    if (changed && url.endsWith("trading-account")) {
+      return new Promise<Response>((resolve) => { finish = resolve; });
+    }
+    return Promise.resolve(response(url.endsWith("api-keys") ? rows() : {
+      use: null, key: rows()[0] ?? null, may_trade: false, may_change_use: false,
+    }));
+  }));
+  render(
+    <AccountSession identity={IDENTITY}>
+      <ApiKeyPanel identity={IDENTITY} />
+      <TradingAccountPanel identity={IDENTITY} />
+    </AccountSession>,
+  );
+  await screen.findByText("ยังไม่ได้เลือกประเภทการใช้งาน");
+  mutateKey(action);
+  await waitFor(() => expect(finish).toBeTypeOf("function"));
+  expect(screen.queryByText(message)).toBeNull();
+  await act(async () => {
+    finish(response({ use: null, key: rows()[0] ?? null, may_trade: false, may_change_use: false }));
+    await Promise.resolve();
+  });
+  await screen.findByText(message);
+});
 
 function row(status: string, extra: Partial<KeyView> = {}): KeyView {
   return {
@@ -64,7 +160,11 @@ function mount(
     throw new Error(`Unexpected request: ${url}`);
   });
   vi.stubGlobal("fetch", fetcher);
-  render(<ApiKeyPanel identity={IDENTITY} />);
+  render(
+    <AccountSession identity={IDENTITY}>
+      <ApiKeyPanel identity={IDENTITY} />
+    </AccountSession>,
+  );
   return fetcher;
 }
 
@@ -108,9 +208,16 @@ afterEach(() => {
 
 describe("หน้าจัดการ API key", () => {
   it("Retry-After แบบ HTTP-date ผ่าน adapter เป็นเวลา UTC ที่ตรงกัน", async () => {
-    vi.stubGlobal("fetch", vi.fn(() => Promise.resolve(response(
-      { detail: SECRET }, 429, { "Retry-After": "Wed, 07 Oct 2026 12:00:00 GMT" },
-    ))));
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(() =>
+        Promise.resolve(
+          response({ detail: SECRET }, 429, {
+            "Retry-After": "Wed, 07 Oct 2026 12:00:00 GMT",
+          }),
+        ),
+      ),
+    );
     await expect(retryApiKey("key-one")).rejects.toMatchObject({
       status: 429,
       retryAt: "2026-10-07T12:00:00.000Z",
@@ -121,7 +228,10 @@ describe("หน้าจัดการ API key", () => {
     mount([row("UNVERIFIABLE", { failure_code: "VENUE_REJECTED" })]);
     await screen.findByText(/ระงับการตรวจอัตโนมัติ/);
     expect(screen.queryByText(/ระบบจะตรวจใหม่อัตโนมัติ/)).toBeNull();
-    expect(screen.getByRole<HTMLButtonElement>("button", { name: "ลองใหม่" }).disabled).toBe(false);
+    expect(
+      screen.getByRole<HTMLButtonElement>("button", { name: "ลองใหม่" })
+        .disabled,
+    ).toBe(false);
   });
   it("แสดงคำเตือนถาวรและอธิบายการใช้รหัส TOTP ชุดใหม่", async () => {
     mount();
@@ -256,7 +366,11 @@ describe("หน้าจัดการ API key", () => {
       "fetch",
       vi.fn(() => Promise.resolve(response([]))),
     );
-    render(<ApiKeyPanel identity={{ ...IDENTITY, totp_enabled: false }} />);
+    render(
+      <AccountSession identity={{ ...IDENTITY, totp_enabled: false }}>
+        <ApiKeyPanel identity={{ ...IDENTITY, totp_enabled: false }} />
+      </AccountSession>,
+    );
     expect(screen.queryByLabelText("API secret")).toBeNull();
     expect(
       screen
@@ -272,7 +386,11 @@ describe("หน้าจัดการ API key", () => {
       Promise.resolve(response([row(calls++ === 0 ? "PENDING" : "ACTIVE")])),
     );
     vi.stubGlobal("fetch", fetcher);
-    const view = render(<ApiKeyPanel identity={IDENTITY} />);
+    const view = render(
+      <AccountSession identity={IDENTITY}>
+        <ApiKeyPanel identity={IDENTITY} />
+      </AccountSession>,
+    );
     await act(async () => {
       await vi.advanceTimersByTimeAsync(100);
     });
@@ -325,7 +443,11 @@ describe("หน้าจัดการ API key", () => {
           : Promise.resolve(response([row("UNVERIFIABLE")])),
       ),
     );
-    render(<ApiKeyPanel identity={IDENTITY} />);
+    render(
+      <AccountSession identity={IDENTITY}>
+        <ApiKeyPanel identity={IDENTITY} />
+      </AccountSession>,
+    );
     await screen.findByText("ตรวจไม่ได้ ลองใหม่ได้");
     fail = true;
     fireEvent.click(screen.getByRole("button", { name: "ดึงรายการใหม่" }));
@@ -350,10 +472,16 @@ describe("หน้าจัดการ API key", () => {
           : Promise.resolve(response([row("ACTIVE", { label: "บัญชีใหม่" })])),
       ),
     );
-    const view = render(<ApiKeyPanel identity={IDENTITY} />);
+    const view = render(
+      <AccountSession identity={IDENTITY}>
+        <ApiKeyPanel identity={IDENTITY} />
+      </AccountSession>,
+    );
     await waitFor(() => expect(oldAnswer).toBeTypeOf("function"));
     view.rerender(
-      <ApiKeyPanel identity={{ ...IDENTITY, user_id: "user-two" }} />,
+      <AccountSession identity={{ ...IDENTITY, user_id: "user-two" }}>
+        <ApiKeyPanel identity={{ ...IDENTITY, user_id: "user-two" }} />
+      </AccountSession>,
     );
     await screen.findByText("บัญชีใหม่", { exact: false });
     await act(async () => {
@@ -374,7 +502,11 @@ describe("หน้าจัดการ API key", () => {
           : Promise.resolve(response([row("ACTIVE")])),
     );
     vi.stubGlobal("fetch", fetcher);
-    render(<ApiKeyPanel identity={IDENTITY} />);
+    render(
+      <AccountSession identity={IDENTITY}>
+        <ApiKeyPanel identity={IDENTITY} />
+      </AccountSession>,
+    );
     fireEvent.click(await screen.findByRole("button", { name: "ลบ key" }));
     fail = true;
     fireEvent.click(screen.getByRole("button", { name: "ดึงรายการใหม่" }));
@@ -405,3 +537,19 @@ describe("หน้าจัดการ API key", () => {
     },
   );
 });
+it.each(["PENDING", "ACTIVE", "REJECTED", "UNVERIFIABLE"])(
+  "one stored %s key blocks adding another",
+  async (status) => {
+    mount([row(status)]);
+    await screen.findByRole("button", { name: "ลบ key" });
+    expect(
+      screen.getByText(
+        "เก็บ API key ได้หนึ่งชุดต่อบัญชี ต้องลบชุดเดิมก่อนเพิ่มใหม่",
+      ),
+    ).toBeTruthy();
+    expect(
+      screen.getByRole<HTMLButtonElement>("button", { name: "เพิ่ม key" })
+        .disabled,
+    ).toBe(true);
+  },
+);

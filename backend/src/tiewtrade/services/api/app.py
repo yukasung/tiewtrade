@@ -26,6 +26,7 @@ from tiewtrade.services.api.auth_routes import router as auth_router
 from tiewtrade.services.api.authentication import authenticate_request
 from tiewtrade.services.api.throttling import AuthRejectedError
 from tiewtrade.services.api.totp_routes import router as totp_router
+from tiewtrade.services.api.trading_account_routes import router as trading_account_router
 
 
 @asynccontextmanager
@@ -87,6 +88,7 @@ async def refused(_: Request, rejection: AuthRejectedError) -> JSONResponse:
 app.include_router(auth_router)
 app.include_router(totp_router)
 app.include_router(api_key_router)
+app.include_router(trading_account_router)
 
 
 class Health(BaseModel):

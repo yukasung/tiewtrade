@@ -1,3 +1,8 @@
+import { Button } from "./components/ui/Button";
+import { Input } from "./components/ui/Input";
+import { Label } from "./components/ui/Label";
+import { authText as t } from "./authMessages";
+
 import QRCode from "qrcode";
 import { type JSX, useEffect, useState } from "react";
 
@@ -13,8 +18,7 @@ import {
 /**
  * จัดการการยืนยันสองชั้น (F-06)
  *
- * ยังไม่ใช่หน้าจอจริงของผลิตภัณฑ์ — งานหน้าจอเริ่มที่ F-12 และการสลับภาษาที่ F-30
- * ที่นี่มีเท่าที่ทำให้ผู้ใช้เปิด ปิด ผูกเครื่องใหม่ และขอรหัสสำรองใหม่ได้จริง
+ * TailAdmin presentation for the existing setup/replacement/recovery flow.
  *
  * **ไม่เก็บ secret, รหัส หรือรหัสสำรองไว้ที่ไหนเลยนอกจาก state ของหน้าจอ**
  * ไม่ลง `localStorage` ไม่ลง cookie เพราะรหัสสำรองคือทางเข้าบัญชีอีกทางหนึ่ง
@@ -47,7 +51,11 @@ export function TotpPanel({
       return;
     }
     let current = true;
-    void QRCode.toDataURL(uri, { errorCorrectionLevel: "M", margin: 4, width: 320 })
+    void QRCode.toDataURL(uri, {
+      errorCorrectionLevel: "M",
+      margin: 4,
+      width: 320,
+    })
       .then((image) => {
         if (current) {
           setQr(image);
@@ -78,42 +86,43 @@ export function TotpPanel({
   const enrolling = uri !== null;
 
   return (
-    <section id="totp-panel" data-testid="totp-panel">
-      <h3>การยืนยันสองชั้น</h3>
-      <p data-testid="totp-state">{identity.totp_enabled ? "เปิดอยู่" : "ปิดอยู่"}</p>
+    <section id="totp-panel" data-testid="totp-panel" className="totp-panel">
+      <h2>{t("totpHeading")}</h2>
+      <p data-testid="totp-state">
+        {t(identity.totp_enabled ? "enabled" : "disabled")}
+      </p>
 
       {codes !== null && (
         <div data-testid="recovery-codes">
           <p>
-            <strong>เก็บรหัสสำรองชุดนี้ไว้ — แสดงครั้งเดียว</strong> เหลือ {codes.length} ใบ
+            <strong>{t("saveCodes")}</strong>{" "}
+            {t("remaining", { count: codes.length })}
           </p>
           <ul>
             {codes.map((one) => (
               <li key={one}>{one}</li>
             ))}
           </ul>
-          <p>
-            ใช้ได้ใบละครั้ง และ<strong> ถ้าหมดแล้วเสียเครื่องด้วย จะเข้าบัญชีไม่ได้เลย</strong>
-          </p>
+          <p>{t("codesWarning")}</p>
         </div>
       )}
 
       {enrolling && (
         <div data-testid="enrollment">
-          <p>สแกนภาพนี้ด้วยแอปยืนยันตัวตน แล้วกรอกรหัสที่แอปแสดงเพื่อยืนยัน</p>
+          <p>{t("scanHelp")}</p>
           {qr !== null && (
             <img
               data-testid="otpauth-qr"
               src={qr}
               width={320}
               height={320}
-              alt="รหัส QR สำหรับเพิ่มบัญชีนี้ในแอปยืนยันตัวตน — ถ้าสแกนไม่ได้ ใช้ข้อความข้างล่างแทน"
+              alt={t("qrAlt")}
             />
           )}
-          <p>สแกนไม่ได้ก็กรอกค่านี้ในแอปด้วยมือได้ (เลือก &ldquo;ใส่รหัสด้วยตนเอง&rdquo;)</p>
+          <p>{t("manualHelp")}</p>
           <code data-testid="otpauth-uri">{uri}</code>
-          <label htmlFor="totp-code">รหัสจากแอป</label>
-          <input
+          <Label htmlFor="totp-code">{t("appCode")}</Label>
+          <Input
             id="totp-code"
             name="totp-code"
             inputMode="numeric"
@@ -123,7 +132,7 @@ export function TotpPanel({
               setCode(event.target.value);
             }}
           />
-          <button
+          <Button
             type="button"
             data-testid="confirm-totp"
             disabled={busy}
@@ -138,8 +147,8 @@ export function TotpPanel({
               })
             }
           >
-            ยืนยันและเปิดใช้
-          </button>
+            {t("enableConfirm")}
+          </Button>
         </div>
       )}
 
@@ -149,8 +158,8 @@ export function TotpPanel({
             event.preventDefault();
           }}
         >
-          <label htmlFor="totp-password">รหัสผ่านปัจจุบัน</label>
-          <input
+          <Label htmlFor="totp-password">{t("currentPassword")}</Label>
+          <Input
             id="totp-password"
             name="totp-password"
             type="password"
@@ -162,8 +171,8 @@ export function TotpPanel({
           />
           {identity.totp_enabled && (
             <>
-              <label htmlFor="totp-current">รหัสจากแอปปัจจุบัน</label>
-              <input
+              <Label htmlFor="totp-current">{t("currentCode")}</Label>
+              <Input
                 id="totp-current"
                 name="totp-current"
                 inputMode="numeric"
@@ -177,7 +186,7 @@ export function TotpPanel({
           )}
 
           {!identity.totp_enabled && (
-            <button
+            <Button
               type="button"
               data-testid="start-totp"
               disabled={busy}
@@ -189,13 +198,13 @@ export function TotpPanel({
                 })
               }
             >
-              เปิดใช้การยืนยันสองชั้น
-            </button>
+              {t("enableTotp")}
+            </Button>
           )}
 
           {identity.totp_enabled && (
             <>
-              <button
+              <Button
                 type="button"
                 data-testid="replace-totp"
                 disabled={busy}
@@ -211,9 +220,9 @@ export function TotpPanel({
                   })
                 }
               >
-                ผูกเครื่องใหม่
-              </button>
-              <button
+                {t("replaceTotp")}
+              </Button>
+              <Button
                 type="button"
                 data-testid="reissue-codes"
                 disabled={busy}
@@ -226,9 +235,9 @@ export function TotpPanel({
                   })
                 }
               >
-                ขอรหัสสำรองชุดใหม่
-              </button>
-              <button
+                {t("reissueCodes")}
+              </Button>
+              <Button
                 type="button"
                 data-testid="disable-totp"
                 disabled={busy}
@@ -242,14 +251,18 @@ export function TotpPanel({
                   })
                 }
               >
-                ปิดการยืนยันสองชั้น
-              </button>
+                {t("disableTotp")}
+              </Button>
             </>
           )}
         </form>
       )}
 
-      {refusal !== null && <p data-testid="totp-refusal">{refusal}</p>}
+      {refusal !== null && (
+        <p role="alert" data-testid="totp-refusal">
+          {refusal}
+        </p>
+      )}
     </section>
   );
 }
