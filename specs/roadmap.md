@@ -179,7 +179,7 @@ domain ของเงินที่ปฏิเสธค่าที่เก�
 
 | รหัส | งาน | สถานะ | หมายเหตุ |
 |---|---|---|---|
-| F-09 | ดึงและเก็บแท่งเทียนผ่านชั้น venue | **Completed** | issue1–5แก้แล้ว; backend1,652/frontend113/E2E9/lint/type/architecture/build/generatedcontract และDocker/CLI--once1,000rowsผ่านหลังแก้; final deep reviewAPPROVED; [audit](reviews/2026-10-07-f09-market-data-validation-audit.md); RESTยังUNCONFIRMED; local validationครบ เจ้าของสั่งcommit/push/PR/CI/mergeกำลังดำเนินการ |
+| F-09 | ดึงและเก็บแท่งเทียนผ่านชั้น venue | **Completed** | issue1–5แก้แล้ว; backend1,652/frontend113/E2E9/lint/type/architecture/build/generatedcontract และDocker/CLI--once1,000rowsผ่านหลังแก้; final deep reviewAPPROVED; [audit](reviews/2026-10-07-f09-market-data-validation-audit.md); RESTยังUNCONFIRMED; เจ้าของอนุมัติส่งงานผ่าน [PR #7](https://github.com/yukasung/tiewtrade/pull/7) โดยตรวจ CI ก่อน merge |
 | F-10 | รับราคาเรียลไทม์ + ต่อกลับเมื่อหลุด | Planned | |
 | F-11 | คำนวณ indicator ที่ backend | Planned | NC-09ปิดแล้ว: EMA20/50/200, RSI14, MACD12/26/9, ATR14; สูตร/seed/warm-up/missing-dataต้องกำหนดในspec F-11ก่อนcode |
 | F-12 | กราฟแท่งเทียนบนหน้าเว็บ | Planned | + จุดเข้า/ออก (R-14) |
