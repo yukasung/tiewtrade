@@ -179,3 +179,140 @@ async def test_downgrading_0003_restores_the_earlier_mechanism(
                 await connection.execute(text(f"DROP TABLE IF EXISTS {name}"))
     finally:
         _alembic("upgrade", "head")
+
+
+@pytest.fixture(autouse=True)
+async def _empty_preferences_for_migration_cycles(migrator_engine: AsyncEngine) -> None:
+    """Only this destructive test module clears preferences in the disposable DB."""
+    async with migrator_engine.begin() as connection:
+        exists: str | None = (
+            await connection.execute(text("SELECT to_regclass('public.user_trading_preferences')"))
+        ).scalar_one()
+        if exists is not None:
+            await connection.execute(text("TRUNCATE public.user_trading_preferences"))
+
+
+def _failed_upgrade_or_downgrade(*args: str) -> subprocess.CompletedProcess[str]:
+    result = subprocess.run(
+        [sys.executable, "-m", "alembic", *args],
+        cwd=BACKEND_ROOT,
+        env=os.environ.copy(),
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode != 0
+    return result
+
+
+async def test_single_account_upgrade_refuses_multiple_keys_and_keeps_rows(
+    api_engine: AsyncEngine, migrator_engine: AsyncEngine
+) -> None:
+    from uuid import uuid4
+
+    from tiewtrade.infra.db import user_session
+    from tiewtrade.infra.users import create_user
+
+    owner = uuid4()
+    await create_user(api_engine, owner)
+    _alembic("downgrade", "0011")
+    try:
+        async with user_session(api_engine, owner) as session:
+            for index in range(2):
+                await session.execute(
+                    "INSERT INTO user_api_keys "
+                    "(id,user_id,label,key_public,secret_sealed,key_version,status) "
+                    "VALUES (:id,:owner,:label,'synthetic',decode('abcd','hex'),'1','PENDING')",
+                    {"id": uuid4(), "owner": owner, "label": f"key-{index}"},
+                )
+        failed = _failed_upgrade_or_downgrade("upgrade", "head")
+        assert "multiple API keys exist; migration refused" in failed.stderr
+        async with user_session(api_engine, owner) as session:
+            assert (await session.execute("SELECT count(*) FROM user_api_keys")).scalar_one() == 2
+        async with migrator_engine.connect() as connection:
+            assert (
+                await connection.execute(text("SELECT version_num FROM alembic_version"))
+            ).scalar_one() == "0011"
+            assert (
+                await connection.execute(
+                    text(
+                        "SELECT count(*) FROM pg_policy WHERE "
+                        "polname='trading_account_key_precheck'"
+                    )
+                )
+            ).scalar_one() == 0
+    finally:
+        async with user_session(api_engine, owner) as session:
+            await session.execute("DELETE FROM user_api_keys")
+        _alembic("upgrade", "head")
+
+
+async def test_preferences_populated_downgrade_refuses_and_keeps_history(
+    api_engine: AsyncEngine, engine_engine: AsyncEngine, migrator_engine: AsyncEngine
+) -> None:
+    from uuid import uuid4
+
+    from tests.infra.trading_account.conftest import active_key
+    from tests.infra.trading_account.test_audit import selected_event
+    from tiewtrade.infra.audit import record_event
+    from tiewtrade.infra.db import user_session
+    from tiewtrade.infra.trading_account import AccountUse, get_account, select_use
+    from tiewtrade.infra.users import create_user
+
+    owner = uuid4()
+    await create_user(api_engine, owner)
+    await active_key(api_engine, engine_engine, owner)
+    async with user_session(api_engine, owner) as session:
+        await select_use(session, AccountUse.BOT)
+        await record_event(session, selected_event(owner, AccountUse.BOT))
+    failed = _failed_upgrade_or_downgrade("downgrade", "0011")
+    assert "trading preferences populated; downgrade refused" in failed.stderr
+    async with user_session(api_engine, owner) as session:
+        assert (await get_account(session)).use is AccountUse.BOT
+        assert (
+            await session.execute(
+                "SELECT count(*) FROM audit_events WHERE action='TRADING_USE_SELECTED'"
+            )
+        ).scalar_one() == 1
+    async with migrator_engine.connect() as connection:
+        assert (
+            await connection.execute(text("SELECT version_num FROM alembic_version"))
+        ).scalar_one() == "0012"
+        assert (
+            await connection.execute(
+                text(
+                    "SELECT count(*) FROM pg_policy WHERE "
+                    "polname='trading_preferences_downgrade_check'"
+                )
+            )
+        ).scalar_one() == 0
+
+
+async def test_selected_use_audit_survives_allowed_downgrade(
+    api_engine: AsyncEngine, migrator_engine: AsyncEngine
+) -> None:
+    from uuid import uuid4
+
+    from tests.infra.trading_account.test_audit import selected_event
+    from tiewtrade.infra.audit import record_event
+    from tiewtrade.infra.db import user_session
+    from tiewtrade.infra.trading_account import AccountUse
+    from tiewtrade.infra.users import create_user
+
+    owner = uuid4()
+    await create_user(api_engine, owner)
+    async with user_session(api_engine, owner) as session:
+        await record_event(session, selected_event(owner, AccountUse.MANUAL))
+    before = await _snapshot(migrator_engine)
+    _alembic("downgrade", "0011")
+    try:
+        async with user_session(api_engine, owner) as session:
+            assert (
+                await session.execute(
+                    "SELECT subject_id,details FROM audit_events WHERE "
+                    "action='TRADING_USE_SELECTED'"
+                )
+            ).one() == (str(owner), {"use": "MANUAL"})
+    finally:
+        _alembic("upgrade", "head")
+    assert await _snapshot(migrator_engine) == before

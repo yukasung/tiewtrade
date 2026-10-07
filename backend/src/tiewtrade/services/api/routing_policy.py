@@ -121,6 +121,9 @@ ROUTE_RULES: Final[dict[tuple[str, str], RouteRule]] = {
     # (เหตุผลเดียวกับ `/auth/me` ของ F-05)
     ("DELETE", "/api-keys/{key_id}"): RouteRule(renews=True),
     ("POST", "/api-keys/{key_id}/retry"): RouteRule(renews=True),
+    # Metadata only; initial account-use selection requires a fresh non-recovery TOTP.
+    ("GET", "/trading-account"): RouteRule(),
+    ("POST", "/trading-account/use"): RouteRule(renews=True, reverify=True),
     # ขั้นที่สองของการเข้าสู่ระบบ — สาธารณะเพราะยังไม่มี session
     # และ **ไม่ต่ออายุ** เพราะยังไม่มี session ให้ต่อ
     ("POST", "/auth/totp/login"): RouteRule(public=True),

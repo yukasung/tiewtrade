@@ -446,3 +446,60 @@ async def test_database_rejects_private_details_for_every_api_key_action(
     async with user_session(engine, owner, role=role) as session:
         with pytest.raises(ValueRejectedError):
             await session.execute(statement, parameters | {"details": json.dumps(details)})
+
+
+@pytest.mark.parametrize("use", ["MANUAL", "BOT"])
+@pytest.mark.parametrize(
+    "bad_field", ["actor_id", "subject_id", "subject_kind", "mode", "outcome", "details"]
+)
+async def test_selected_use_frozen_shape(api_engine: AsyncEngine, use: str, bad_field: str) -> None:
+    owner = uuid4()
+    await create_user(api_engine, owner)
+    statement = (
+        "INSERT INTO audit_events "
+        "(id,owner_user_id,actor_kind,actor_id,action,subject_kind,subject_id,mode,"
+        "outcome,details) "
+        "VALUES "
+        "(gen_random_uuid(),:owner,'USER',:actor_id,'TRADING_USE_SELECTED',:subject_kind,"
+        ":subject_id,:mode,:outcome,CAST(:details AS jsonb))"
+    )
+    params: dict[str, object] = {
+        "owner": owner,
+        "actor_id": owner,
+        "subject_id": str(owner),
+        "subject_kind": "USER",
+        "mode": "NOT_APPLICABLE",
+        "outcome": "SUCCEEDED",
+        "details": json.dumps({"use": use}),
+    }
+    async with user_session(api_engine, owner) as session:
+        await session.execute(statement, params)
+    bad: dict[str, object] = {
+        "actor_id": uuid4(),
+        "subject_id": str(uuid4()),
+        "subject_kind": "API_KEY",
+        "mode": "LIVE",
+        "outcome": "FAILED",
+        "details": json.dumps({"use": use, "key_public": "synthetic"}),
+    }
+    with pytest.raises(ValueRejectedError):
+        async with user_session(api_engine, owner) as session:
+            await session.execute(statement, params | {bad_field: bad[bad_field]})
+
+
+@pytest.mark.parametrize("details", [{}, {"use": None}, {"use": "OTHER"}, {"use": ["BOT"]}])
+async def test_selected_use_rejects_missing_or_invalid_use(
+    api_engine: AsyncEngine, details: dict[str, object]
+) -> None:
+    owner = uuid4()
+    await create_user(api_engine, owner)
+    with pytest.raises(ValueRejectedError):
+        async with user_session(api_engine, owner) as session:
+            await session.execute(
+                "INSERT INTO audit_events "
+                "(id,owner_user_id,actor_kind,actor_id,action,subject_kind,subject_id,"
+                "mode,outcome,details) VALUES "
+                "(gen_random_uuid(),:owner,'USER',:owner,'TRADING_USE_SELECTED','USER',"
+                ":subject,'NOT_APPLICABLE','SUCCEEDED',CAST(:details AS jsonb))",
+                {"owner": owner, "subject": str(owner), "details": json.dumps(details)},
+            )

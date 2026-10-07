@@ -21,6 +21,7 @@ from uuid import UUID
 
 from tiewtrade.core.money import Money, Quantity
 from tiewtrade.infra.db.errors import InfraError
+from tiewtrade.infra.trading_account.records import AccountUse
 
 
 class AuditEventError(InfraError):
@@ -62,6 +63,7 @@ class AuditAction(Enum):
     API_KEY_VERIFIED = "API_KEY_VERIFIED"
     API_KEY_REJECTED = "API_KEY_REJECTED"
     API_KEY_VERIFICATION_DEFERRED = "API_KEY_VERIFICATION_DEFERRED"
+    TRADING_USE_SELECTED = "TRADING_USE_SELECTED"
 
 
 #: ชนิดเหตุการณ์ที่เป็นการเทรด — ต้องระบุ PAPER หรือ LIVE เสมอ (RQ-19)
@@ -226,7 +228,22 @@ class ApiKeyDetails:
         return {}
 
 
+@dataclass(frozen=True, slots=True)
+class TradingUseDetails:
+    """The selected account use; no credential data."""
+
+    use: AccountUse
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.use, AccountUse):
+            raise AuditEventError("account use must be a declared AccountUse")
+
+    def as_details(self) -> dict[str, object]:
+        return {"use": self.use.value}
+
+
 DETAILS_TYPES: dict[AuditAction, type[object]] = {
+    AuditAction.TRADING_USE_SELECTED: TradingUseDetails,
     AuditAction.USER_CREATED: UserCreatedDetails,
     AuditAction.SESSION_STARTED: SessionDetails,
     AuditAction.SESSION_ENDED: SessionDetails,
@@ -349,6 +366,7 @@ def _check_system_api_key_outcome(event: AuditEvent) -> None:
 #: ถ้าไม่มี การสร้างบันทึกของชนิดนั้นจะล้มเหลวทันที ซึ่งเป็นผลที่ต้องการ
 #: (ดังตอนเขียนโค้ด ดีกว่าปล่อยให้บันทึกที่ไม่มีใครตรวจไหลลงตารางที่ลบไม่ได้)
 _ACTION_INVARIANTS: dict[AuditAction, Callable[[AuditEvent], None]] = {
+    AuditAction.TRADING_USE_SELECTED: _check_own_account_action,
     AuditAction.USER_CREATED: _check_user_created,
     AuditAction.SESSION_STARTED: _check_own_account_action,
     AuditAction.SESSION_ENDED: _check_own_account_action,

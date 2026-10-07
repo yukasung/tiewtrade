@@ -4,10 +4,23 @@ Web application สำหรับเทรดคริปโตบน Binance T
 รองรับทั้งการสั่งออเดอร์เองและบอทเทรดตามกลยุทธ์สำเร็จรูป มีทั้ง Paper Trading
 และ Live Trading
 
-**สถานะ: F-03 โครงฐานข้อมูล** ยังไม่มีความสามารถด้านการเทรด
+สถานะงานปัจจุบันอ่านจาก [`specs/roadmap.md`](specs/roadmap.md) — ยังไม่มีความสามารถด้านการเทรด
 เอกสารทั้งหมดอยู่ใน [`specs/`](specs/) — อ่าน [`specs/README.md`](specs/README.md) ก่อน
 
 ---
+
+## ต้นฉบับ UI template
+
+[`references/admin-template/`](references/admin-template/) เก็บ TailAdmin Pro React
+ที่เจ้าของเลือกใช้เป็นต้นฉบับ UI; source ที่นำมาปรับใช้จริงอยู่ใน `frontend/src/`
+ไม่รันหรือ import แอปจาก references และไม่คัดลอก demo data/auth หรือ package.json
+ทับโปรเจกต์ ก่อนนำ component/assets มาใช้ให้ตรวจเงื่อนไข license ที่มากับการซื้อ
+
+แผนการปรับใช้และ dependency ที่เสนออยู่ใน
+[F-08 plan.md](specs/features/2026-10-07-single-trading-account/plan.md) และ
+[validation.md](specs/features/2026-10-07-single-trading-account/validation.md)
+หน้าจัดการบัญชี/key/ประเภทการใช้งานปรับใช้ layout/component ที่เลือกจากต้นฉบับแล้ว
+ใช้ React/Vite เดิมร่วมกับ Tailwind 4 โดยไม่ import runtime จาก references
 
 ## สิ่งที่ต้องมีในเครื่อง
 
@@ -143,6 +156,12 @@ npm run dev
 สถานะจะอัปเดตเอง แต่ต้องรัน worker ตามคำสั่งด้านบนเพื่อให้มีการตรวจจริง
 หน้าเว็บยังแสดงข้อมูลจาก `GET /health` และยังไม่มีความสามารถด้านการเทรด
 
+**F-08 บัญชีเทรดเดียว:** API key หนึ่งชุดต่อผู้ใช้รวมทุกสถานะ
+เลือก MANUAL หรือ BOT ครั้งแรกได้เมื่อ key ACTIVE และยืนยัน fresh TOTP
+ความเลือกเก็บที่ server; การลบ key คงความเลือกไว้ และยังเปลี่ยนประเภทไม่ได้
+เมื่อไม่มีหลักฐาน activity ครบ คง UI จาก TailAdmin; ยังไม่มีการส่งออเดอร์/บอท/เปิด Live
+สถานะ validation/review ปัจจุบันอ่านจาก roadmap และ validation.md
+
 ## รันด้วย container
 
 ```sh
@@ -177,6 +196,21 @@ npm run test:e2e
 cd backend && uv run python -m tiewtrade.services.api.openapi_export
 cd ../frontend && npm run check:api
 ```
+
+### ฐานข้อมูลสำหรับ E2E
+
+ก่อน `npm run test:e2e` ให้สร้างฐานข้อมูล PostgreSQL ที่ทิ้งได้แยกจากฐานพัฒนา
+เช่น `tiewtrade_e2e_local`, bootstrap บทบาทและรัน migration ตามขั้นตอนเดิม
+ตั้ง `TIEWTRADE_E2E_DATABASE_NAME=tiewtrade_e2e_local` และ URL ของบทบาท
+`MIGRATOR`, `API`, `AUTH`, `ENGINE`, `ENGINE_SCAN` ให้ชี้ชื่อฐานนี้บน loopback
+host/port เดียวกัน ถ้าตั้ง `MARKET_DATA` ต้องชี้ฐานเดียวกันด้วย
+ใช้ username ของแต่ละบทบาทตามเดิม ไม่มี query parameters ใน URL
+
+E2E ล้าง `auth_throttle` ก่อนแต่ละ test **เฉพาะฐานทดสอบที่ตรวจแล้ว**
+ตรวจชื่อจาก connection จริงก่อนล้าง และไม่ reuse API/frontend ที่เปิดอยู่
+หยุด server บน port 8000/5173 ก่อนรัน; proxy ของ E2E ชี้ API ที่เริ่มเอง
+หากไม่ตั้งฐานทดสอบหรือ URL ไม่ตรงกัน จะหยุดด้วย `E2E_DATABASE_REJECTED`
+CI job E2E ใช้ฐานแยกชื่อ `tiewtrade_e2e`
 
 ### ถ้าแก้ API แล้วด่านแดง
 

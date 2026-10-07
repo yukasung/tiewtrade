@@ -2,13 +2,10 @@ import { type JSX, useEffect, useState } from "react";
 
 import { fetchHealth, type Health } from "./api";
 import { AuthPanel } from "./AuthPanel";
+import { authText as t } from "./authMessages";
+import "./styles/admin-theme.css";
 
-/**
- * หน้าเดียวของระบบตอนนี้ — สถานะเซิร์ฟเวอร์ (F-01) และการยืนยันตัวตน (F-05)
- *
- * ยังไม่ใช่หน้าจอจริง ไม่มีเมนู ไม่มีระบบแปลภาษา ไม่มี component กลาง
- * งานหน้าจอจริงเริ่มที่ F-12 และการสลับภาษาที่ F-30
- */
+/** Application shell with account/auth presentation and live server health. */
 export function App(): JSX.Element {
   const [health, setHealth] = useState<Health | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -22,21 +19,26 @@ export function App(): JSX.Element {
   }, []);
 
   return (
-    <main>
-      <h1>TiewTrade</h1>
-      <p>ยังไม่มีความสามารถด้านการเทรด</p>
+    <main className="app-theme">
       <AuthPanel />
-      {error !== null && <p data-testid="error">ผิดพลาด: {error}</p>}
-      {health !== null && (
-        <dl data-testid="health">
-          <dt>สถานะ</dt>
-          <dd data-testid="status">{health.status}</dd>
-          <dt>เวลาของเซิร์ฟเวอร์</dt>
-          <dd data-testid="server-time">{health.server_time}</dd>
-          <dt>รุ่น</dt>
-          <dd data-testid="version">{health.version}</dd>
-        </dl>
-      )}
+      <footer className="system-footer" aria-label={t("systemStatus")}>
+        <p>{t("noTrading")}</p>
+        {error !== null && (
+          <p role="alert" data-testid="error">
+            {t("error", { message: error })}
+          </p>
+        )}
+        {health !== null && (
+          <dl data-testid="health">
+            <dt>{t("status")}</dt>
+            <dd data-testid="status">{health.status}</dd>
+            <dt>{t("serverTime")}</dt>
+            <dd data-testid="server-time">{health.server_time}</dd>
+            <dt>{t("version")}</dt>
+            <dd data-testid="version">{health.version}</dd>
+          </dl>
+        )}
+      </footer>
     </main>
   );
 }

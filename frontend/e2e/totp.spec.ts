@@ -1,4 +1,5 @@
-import { expect, test } from "@playwright/test";
+import { captureUi } from "./helpers/ui";
+import { expect, test } from "./helpers/test";
 import { PASSWORD, codeFor, secretOf, stepAt } from "./helpers/totp";
 
 /**
@@ -14,7 +15,7 @@ import { PASSWORD, codeFor, secretOf, stepAt } from "./helpers/totp";
 
 test("เปิดการยืนยันสองชั้น แล้วเข้าสู่ระบบต้องผ่านสองขั้น", async ({
   page,
-}) => {
+}, testInfo) => {
   const email = `e2e-totp-${String(Date.now())}@example.com`;
 
   await page.goto("/");
@@ -31,6 +32,7 @@ test("เปิดการยืนยันสองชั้น แล้ว�
 
   // **QR ต้องมีจริงบนเบราว์เซอร์** ไม่ใช่แค่มีโค้ดที่สร้างมัน (plan หัวข้อ 9)
   await expect(page.getByTestId("otpauth-qr")).toBeVisible();
+  await captureUi(page, testInfo, "totp-enrollment");
 
   const uri = await page.getByTestId("otpauth-uri").textContent();
   expect(uri).toContain("otpauth://totp/");
@@ -44,6 +46,7 @@ test("เปิดการยืนยันสองชั้น แล้ว�
   await page.getByTestId("confirm-totp").click();
 
   await expect(page.getByTestId("recovery-codes")).toBeVisible();
+  await captureUi(page, testInfo, "totp-recovery");
   await expect(page.getByTestId("totp-state")).toHaveText("เปิดอยู่");
 
   // ── เข้าสู่ระบบใหม่ต้องผ่านสองขั้น ──
@@ -57,6 +60,8 @@ test("เปิดการยืนยันสองชั้น แล้ว�
   // **รหัสผ่านถูกแล้วยังไม่เข้า** — หน้าจอขอขั้นที่สอง
   await expect(page.getByTestId("second-step")).toBeVisible();
   await expect(page.getByTestId("signed-in")).toBeHidden();
+  await expect(page.locator(".auth-layout")).toBeVisible();
+  await captureUi(page, testInfo, "second-step");
 
   await page.getByLabel("รหัสจากแอป").fill(codeFor(secret, stepAt(Date.now())));
   await page.getByTestId("submit-second-step").click();
@@ -64,7 +69,9 @@ test("เปิดการยืนยันสองชั้น แล้ว�
   await expect(page.getByTestId("signed-in")).toBeVisible();
 });
 
-test("รหัสยืนยันผิดไม่พาเข้าระบบ และยังอยู่ที่ขั้นที่สอง", async ({ page }) => {
+test("รหัสยืนยันผิดไม่พาเข้าระบบ และยังอยู่ที่ขั้นที่สอง", async ({
+  page,
+}, testInfo) => {
   const email = `e2e-totp-bad-${String(Date.now())}@example.com`;
 
   await page.goto("/");
@@ -94,6 +101,7 @@ test("รหัสยืนยันผิดไม่พาเข้าระ�
   await page.getByTestId("submit-second-step").click();
 
   await expect(page.getByTestId("refusal")).toHaveText("รหัสยืนยันไม่ถูกต้อง");
+  await captureUi(page, testInfo, "second-step-error");
   // ลองใหม่ได้โดยไม่ต้องกรอกรหัสผ่านอีก — challenge ยังอยู่ (V-24.1)
   await expect(page.getByTestId("second-step")).toBeVisible();
 });

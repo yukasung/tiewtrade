@@ -393,10 +393,49 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/trading-account": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read Account */
+        get: operations["read_account_trading_account_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/trading-account/use": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Select Account Use */
+        post: operations["select_account_use_trading_account_use_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /**
+         * AccountUse
+         * @enum {string}
+         */
+        AccountUse: "MANUAL" | "BOT";
         /**
          * AddKeyRequest
          * @description ของที่ผู้ใช้กรอก — **`secret` เข้ามาทางเดียวและไม่เคยออกไปทางไหน**
@@ -590,6 +629,11 @@ export interface components {
             /** Detail */
             detail: string;
         };
+        /** RejectedTradingAccountInput */
+        RejectedTradingAccountInput: {
+            /** Detail */
+            detail: string;
+        };
         /**
          * RetryAccepted
          * @description ผลของการกดลองใหม่
@@ -612,6 +656,10 @@ export interface components {
             code?: string | null;
             /** Recovery Code */
             recovery_code?: string | null;
+        };
+        /** SelectTradingUseRequest */
+        SelectTradingUseRequest: {
+            use: components["schemas"]["AccountUse"];
         };
         /**
          * SessionsEnded
@@ -650,6 +698,23 @@ export interface components {
              * Format: uuid
              */
             user_id: string;
+        };
+        /** TradingAccountView */
+        TradingAccountView: {
+            key: components["schemas"]["KeyView"] | null;
+            /**
+             * May Change Use
+             * @default false
+             * @constant
+             */
+            may_change_use: false;
+            /**
+             * May Trade
+             * @default false
+             * @constant
+             */
+            may_trade: false;
+            use: components["schemas"]["AccountUse"] | null;
         };
         /** ValidationError */
         ValidationError: {
@@ -1188,6 +1253,68 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Health"];
+                };
+            };
+        };
+    };
+    read_account_trading_account_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TradingAccountView"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RejectedTradingAccountInput"];
+                };
+            };
+        };
+    };
+    select_account_use_trading_account_use_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SelectTradingUseRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TradingAccountView"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RejectedTradingAccountInput"];
                 };
             };
         };

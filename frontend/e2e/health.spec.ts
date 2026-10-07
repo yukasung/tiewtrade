@@ -1,8 +1,11 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./helpers/test";
 
 test("หน้าเว็บแสดงข้อมูลที่ได้จาก API จริง", async ({ page }) => {
   await page.goto("/");
-  await expect(page.getByRole("heading", { name: "TiewTrade" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "TiewTrade" })).toBeVisible();
+
+  await expect(page.getByRole("main")).toHaveCount(1);
+  await expect(page.locator('footer[aria-label="สถานะระบบ"]')).toBeVisible();
 
   // ต้องเป็นข้อมูลจาก API ไม่ใช่ข้อความที่ฝังไว้ในหน้า
   await expect(page.getByTestId("status")).toHaveText("ok");
