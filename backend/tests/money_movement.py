@@ -214,7 +214,7 @@ def check_no_market_urls(path: Path, *, fragments: bool = True) -> list[Violatio
 def check_network_boundary(path: Path, relative: str) -> list[Violation]:
     """NC-17: import นอก gateway ต้องตรงข้อยกเว้นทั้งไฟล์และสมาชิก"""
     allowed: dict[str, str] = {}
-    if relative == "tiewtrade/services/engine/main.py":
+    if relative in {"tiewtrade/services/engine/main.py", "tiewtrade/services/market_data/main.py"}:
         allowed = {"httpx": "AsyncClient", "socket": "gethostname"}
     elif relative == "tiewtrade/infra/auth/totp.py":
         allowed = {"urllib.parse": "quote"}
@@ -321,7 +321,7 @@ def _check_composition_uses(
         for node in nodes
         if isinstance(node, ast.ImportFrom) and node.module == "tiewtrade.venues"
         for alias in node.names
-        if alias.name == "live_wallet_factory"
+        if alias.name in {"live_wallet_factory", "live_candle_source"}
     }
     for node in nodes:
         if (

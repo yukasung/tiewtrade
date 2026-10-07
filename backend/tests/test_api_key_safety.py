@@ -105,8 +105,11 @@ def test_each_account_flag_is_forbidden(tmp_path: Path, flag: str, fixture: str)
         "client = httpx.AsyncClient()\nsend(client)",
     ],
 )
-def test_the_engine_exception_does_not_allow_network_shortcuts(tmp_path: Path, source: str) -> None:
-    target = tmp_path / "tiewtrade/services/engine/main.py"
+@pytest.mark.parametrize("service", ["engine", "market_data"])
+def test_the_engine_exception_does_not_allow_network_shortcuts(
+    tmp_path: Path, source: str, service: str
+) -> None:
+    target = tmp_path / f"tiewtrade/services/{service}/main.py"
     target.parent.mkdir(parents=True)
     target.write_text(source, encoding="utf-8")
     assert check_tree(tmp_path), source
@@ -123,6 +126,13 @@ def test_only_the_approved_composition_operations_are_allowed(tmp_path: Path) ->
             "metadata = {}\nmetadata.get('worker')\n"
         ),
         "infra/auth/totp.py": "from urllib.parse import quote as encode\nlabel = encode(account)",
+        "services/market_data/main.py": (
+            "import httpx\nimport socket\n"
+            "from tiewtrade.venues import live_candle_source as venue\n"
+            "def worker_name():\n return socket.gethostname()\n"
+            "def build(client: httpx.AsyncClient):\n return venue(client=client)\n"
+            "async def serve():\n async with httpx.AsyncClient() as client:\n  build(client)\n"
+        ),
     }.items():
         target = tmp_path / "tiewtrade" / relative
         target.parent.mkdir(parents=True, exist_ok=True)

@@ -203,7 +203,7 @@ cd ../frontend && npm run check:api
 เช่น `tiewtrade_e2e_local`, bootstrap บทบาทและรัน migration ตามขั้นตอนเดิม
 ตั้ง `TIEWTRADE_E2E_DATABASE_NAME=tiewtrade_e2e_local` และ URL ของบทบาท
 `MIGRATOR`, `API`, `AUTH`, `ENGINE`, `ENGINE_SCAN` ให้ชี้ชื่อฐานนี้บน loopback
-host/port เดียวกัน ถ้าตั้ง `MARKET_DATA` ต้องชี้ฐานเดียวกันด้วย
+host/port เดียวกัน; F-09 E2E ต้องตั้ง `MARKET_DATA` ให้ชี้ฐานเดียวกันด้วย
 ใช้ username ของแต่ละบทบาทตามเดิม ไม่มี query parameters ใน URL
 
 E2E ล้าง `auth_throttle` ก่อนแต่ละ test **เฉพาะฐานทดสอบที่ตรวจแล้ว**
@@ -211,6 +211,29 @@ E2E ล้าง `auth_throttle` ก่อนแต่ละ test **เฉพา
 หยุด server บน port 8000/5173 ก่อนรัน; proxy ของ E2E ชี้ API ที่เริ่มเอง
 หากไม่ตั้งฐานทดสอบหรือ URL ไม่ตรงกัน จะหยุดด้วย `E2E_DATABASE_REJECTED`
 CI job E2E ใช้ฐานแยกชื่อ `tiewtrade_e2e`
+
+### ประวัติแท่งเทียน (F-09)
+
+หลัง migration0013 API ที่เข้าสู่ระบบแล้วอ่าน `GET /market-data/candles`
+ด้วย `base`, `quote`, `timeframe` และ `start`/`end` คู่กัน (ไม่ระบุช่วงจะใช้ช่วงตั้งต้น)
+รองรับ1m/5m/15m/1h/4h/1d และอ่านได้สูงสุด1,000 slots ต่อครั้งภายใน365วัน
+การอ่านไม่สร้างงานดึงข้อมูล; ใช้ `POST /market-data/candles/requests` พร้อม CSRF
+เพื่อขอเติมประวัติหรือ refresh observation ที่เข้าเกณฑ์ มีข้อมูลครบและไม่มีงานที่ต้องรอจะคืน200
+งานที่รับ/coalesce แล้วคืน202 โดยอ่าน `coverage`, `gaps`, `status`, `refresh_pending`
+และเวลาของ observation จาก GET ต่อไป
+
+รัน public-market worker ด้วยบทบาท `MARKET_DATA` ที่ตั้งไว้แล้ว:
+
+```sh
+cd backend
+uv run python -m tiewtrade.services.market_data.main --once
+```
+
+ไม่ใส่ `--once` จะวนทุก30s; ตัวตั้งเวลา deployment เป็นงาน F-31
+worker อ่าน public market data ผ่าน venue โดยไม่ใช้ key ผู้ใช้หรือส่งออเดอร์
+REST finality คงเป็น `UNCONFIRMED`; presence ไม่ใช่คำรับรองว่าปิดแล้วหรือพร้อมให้กลยุทธ์ใช้
+ไม่รับรอง upstream history ครบ365วัน และต้องทำ rolling partition maintenance ก่อนช่วงที่เตรียมไว้หมด
+เทสต์ปกติและ Docker smoke ใช้ FakeVenue/fixtures; realtime/indicator/chart เป็น F-10/F-11/F-12
 
 ### ถ้าแก้ API แล้วด่านแดง
 

@@ -53,6 +53,15 @@ _ROLE_FACTS = text(
 _SET_LOCAL = text("SELECT set_config(:setting, :value, true)")
 
 
+async def _execute(
+    connection: AsyncConnection, statement: str, parameters: Mapping[str, object] | None
+) -> Result[Any]:
+    try:
+        return await connection.execute(text(statement), dict(parameters or {}))
+    except SQLAlchemyError as error:
+        raise translate_database_error(error) from None
+
+
 @dataclass(frozen=True, slots=True)
 class UserSession:
     """งานของผู้ใช้รายเดียว — ทุก query อยู่ใต้ RLS ของผู้ใช้คนนี้"""
@@ -64,10 +73,7 @@ class UserSession:
         self, statement: str, parameters: Mapping[str, object] | None = None
     ) -> Result[Any]:
         """สั่ง query ในขอบเขตของผู้ใช้คนนี้"""
-        try:
-            return await self._connection.execute(text(statement), dict(parameters or {}))
-        except SQLAlchemyError as error:
-            raise translate_database_error(error) from None
+        return await _execute(self._connection, statement, parameters)
 
 
 @dataclass(frozen=True, slots=True)
@@ -88,10 +94,7 @@ class PresentedSession:
         self, statement: str, parameters: Mapping[str, object] | None = None
     ) -> Result[Any]:
         """สั่ง query ในขอบเขตของสิ่งที่ผู้เรียกพามา"""
-        try:
-            return await self._connection.execute(text(statement), dict(parameters or {}))
-        except SQLAlchemyError as error:
-            raise translate_database_error(error) from None
+        return await _execute(self._connection, statement, parameters)
 
     async def assume_user(self, user_id: UUID) -> UserSession:
         """เดินต่อใน transaction เดิมในฐานะผู้ใช้ที่ตรวจตัวตนแล้ว
@@ -123,10 +126,32 @@ class ScanSession:
         self, statement: str, parameters: Mapping[str, object] | None = None
     ) -> Result[Any]:
         """สั่ง query แบบข้าม RLS"""
-        try:
-            return await self._connection.execute(text(statement), dict(parameters or {}))
-        except SQLAlchemyError as error:
-            raise translate_database_error(error) from None
+        return await _execute(self._connection, statement, parameters)
+
+
+@dataclass(frozen=True, slots=True)
+class MarketDataSession:
+    """Public market observations and ingestion metadata only."""
+
+    _connection: AsyncConnection
+
+    async def execute(
+        self, statement: str, parameters: Mapping[str, object] | None = None
+    ) -> Result[Any]:
+        return await _execute(self._connection, statement, parameters)
+
+
+@asynccontextmanager
+async def market_data_session(engine: AsyncEngine) -> AsyncIterator[MarketDataSession]:
+    async with _begin(engine) as connection:
+        await _assert_role(connection, DatabaseRole.MARKET_DATA)
+        yield MarketDataSession(connection)
+
+
+def require_market_data_session(candidate: object) -> MarketDataSession:
+    if isinstance(candidate, MarketDataSession):
+        return candidate
+    raise SessionKindError("market data requires MarketDataSession")
 
 
 async def _assert_role(connection: AsyncConnection, expected: DatabaseRole) -> None:
@@ -147,7 +172,7 @@ async def _assert_role(connection: AsyncConnection, expected: DatabaseRole) -> N
         )
     if is_superuser:
         raise DatabaseRoleError(f"บทบาท {expected.role_name} เป็น superuser ซึ่งห้ามตาม RQ-5.1")
-    if expected in ROLES_UNDER_RLS and bypasses_rls:
+    if (expected in ROLES_UNDER_RLS or expected is DatabaseRole.MARKET_DATA) and bypasses_rls:
         raise DatabaseRoleError(f"บทบาท {expected.role_name} ข้าม RLS ได้ จึงใช้กับงานของผู้ใช้ไม่ได้")
     if expected is DatabaseRole.ENGINE_SCAN and not bypasses_rls:
         raise DatabaseRoleError(f"บทบาท {expected.role_name} ต้องข้าม RLS ได้ เพราะงานกวาดอ่านข้ามผู้ใช้")

@@ -130,6 +130,7 @@ modules = ["tiewtrade.services.api", "tiewtrade.services.engine", "tiewtrade.ser
 name = "ส่วนกลางของ venues ห้ามพึ่งไลบรารีเครือข่าย"
 type = "forbidden"
 source_modules = [
+    "tiewtrade.venues.candles",
     "tiewtrade.venues.constraints",
     "tiewtrade.venues.errors",
     "tiewtrade.venues.fake",

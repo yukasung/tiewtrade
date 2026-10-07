@@ -1,0 +1,20 @@
+{
+  "method": "GET",
+  "url": "https://api.binance.th/api/v1/klines?symbol=BTCUSDT&interval=4h&startTime=1791360000000&endTime=1791368538921&limit=1",
+  "params": {
+    "symbol": "BTCUSDT",
+    "interval": "4h",
+    "startTime": 1791360000000,
+    "endTime": 1791368538921,
+    "limit": 1
+  },
+  "requested_at_utc": "2026-10-07T10:22:20.443805+00:00",
+  "received_at_utc": "2026-10-07T10:22:20.681564+00:00",
+  "status": 200,
+  "headers": {
+    "Content-Type": "application/json",
+    "Date": "Wed, 07 Oct 2026 10:22:20 GMT",
+    "X-MBX-USED-WEIGHT-1M": "4"
+  },
+  "body": "[[1791360000000,\"84145.16000000\",\"84179.60000000\",\"83442.00000000\",\"83908.14000000\",\"4542.66468000\",1791374399999,\"381140999.48992830\",1351649,\"2325.56711000\",\"195152096.53352740\",\"0\"]]"
+}

@@ -179,9 +179,9 @@ domain ของเงินที่ปฏิเสธค่าที่เก�
 
 | รหัส | งาน | สถานะ | หมายเหตุ |
 |---|---|---|---|
-| F-09 | ดึงและเก็บแท่งเทียนผ่านชั้น venue | Planned | ผ่าน F-33 ห้ามเรียกตลาดใดตรง ๆ — ติด **NC-09** และ **T-04** (NC-06 ปิดแล้ว) |
+| F-09 | ดึงและเก็บแท่งเทียนผ่านชั้น venue | **Completed** | issue1–5แก้แล้ว; backend1,652/frontend113/E2E9/lint/type/architecture/build/generatedcontract และDocker/CLI--once1,000rowsผ่านหลังแก้; final deep reviewAPPROVED; [audit](reviews/2026-10-07-f09-market-data-validation-audit.md); RESTยังUNCONFIRMED; local validationครบ เจ้าของสั่งcommit/push/PR/CI/mergeกำลังดำเนินการ |
 | F-10 | รับราคาเรียลไทม์ + ต่อกลับเมื่อหลุด | Planned | |
-| F-11 | คำนวณ indicator ที่ backend | Planned | ติด **NC-09** |
+| F-11 | คำนวณ indicator ที่ backend | Planned | NC-09ปิดแล้ว: EMA20/50/200, RSI14, MACD12/26/9, ATR14; สูตร/seed/warm-up/missing-dataต้องกำหนดในspec F-11ก่อนcode |
 | F-12 | กราฟแท่งเทียนบนหน้าเว็บ | Planned | + จุดเข้า/ออก (R-14) |
 | F-37 | **รายการเหรียญที่รองรับและการจัดการ** | Planned | รายการตั้งต้น 5 คู่, Platform Admin เพิ่ม/ถอนได้, ผลของการถอน (ห้ามเปิดใหม่ / ไม้เดิมไม่แตะ / บอทหยุด) — **ต้องเสร็จก่อน F-16** เพราะจุดตรวจออเดอร์ต้องใช้รายการนี้ (`mission.md` หัวข้อ 6, `standards/trading-safety.md` หัวข้อ 3) |
 

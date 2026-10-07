@@ -393,6 +393,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/market-data/candles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Candles */
+        get: operations["candles_market_data_candles_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/market-data/candles/requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Request Candles */
+        post: operations["request_candles_market_data_candles_requests_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/trading-account": {
         parameters: {
             query?: never;
@@ -460,6 +494,92 @@ export interface components {
             id: string;
             /** Status */
             status: string;
+        };
+        /**
+         * CandleFinality
+         * @enum {string}
+         */
+        CandleFinality: "UNCONFIRMED" | "OPEN" | "CLOSED";
+        /** CandleHistoryView */
+        CandleHistoryView: {
+            /** Base */
+            base: string;
+            /**
+             * Coverage
+             * @enum {string}
+             */
+            coverage: "PRESENT" | "INCOMPLETE" | "UNAVAILABLE";
+            /** Failure Code */
+            failure_code: string | null;
+            /** Gaps */
+            gaps: components["schemas"]["WindowView"][];
+            observed: components["schemas"]["WindowView"] | null;
+            /**
+             * Observed At
+             * Format: date-time
+             */
+            observed_at: string;
+            /** Quote */
+            quote: string;
+            /** Refresh Pending */
+            refresh_pending: boolean;
+            requested: components["schemas"]["WindowView"];
+            /** Rows */
+            rows: components["schemas"]["CandleView"][];
+            /** Status */
+            status: string | null;
+            timeframe: components["schemas"]["Timeframe"];
+        };
+        /** CandleRequest */
+        CandleRequest: {
+            /** Base */
+            base: string;
+            /** End */
+            end?: string | null;
+            /** Quote */
+            quote: string;
+            /** Start */
+            start?: string | null;
+            timeframe: components["schemas"]["Timeframe"];
+        };
+        /** CandleRequestView */
+        CandleRequestView: {
+            /** Accepted */
+            accepted: boolean;
+        };
+        /** CandleView */
+        CandleView: {
+            /** Close */
+            close: string;
+            /**
+             * End At
+             * Format: date-time
+             */
+            end_at: string;
+            finality: components["schemas"]["CandleFinality"];
+            /** High */
+            high: string;
+            /**
+             * Last Checked At
+             * Format: date-time
+             */
+            last_checked_at: string;
+            /** Low */
+            low: string;
+            /**
+             * Observed At
+             * Format: date-time
+             */
+            observed_at: string;
+            /** Open */
+            open: string;
+            /**
+             * Open At
+             * Format: date-time
+             */
+            open_at: string;
+            /** Volume */
+            volume: string;
         };
         /**
          * CodesIssued
@@ -621,6 +741,11 @@ export interface components {
             /** New Password */
             new_password: string;
         };
+        /** RejectedCandleInput */
+        RejectedCandleInput: {
+            /** Detail */
+            detail: string;
+        };
         /**
          * RejectedKeyInput
          * @description คำตอบ validation ที่มีแค่รหัส ไม่มีค่าที่ผู้ใช้ส่งมา
@@ -699,6 +824,11 @@ export interface components {
              */
             user_id: string;
         };
+        /**
+         * Timeframe
+         * @enum {string}
+         */
+        Timeframe: "1m" | "5m" | "15m" | "1h" | "4h" | "1d";
         /** TradingAccountView */
         TradingAccountView: {
             key: components["schemas"]["KeyView"] | null;
@@ -728,6 +858,19 @@ export interface components {
             msg: string;
             /** Error Type */
             type: string;
+        };
+        /** WindowView */
+        WindowView: {
+            /**
+             * End
+             * Format: date-time
+             */
+            end: string;
+            /**
+             * Start
+             * Format: date-time
+             */
+            start: string;
         };
     };
     responses: never;
@@ -1253,6 +1396,84 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Health"];
+                };
+            };
+        };
+    };
+    candles_market_data_candles_get: {
+        parameters: {
+            query: {
+                base: string;
+                quote: string;
+                timeframe: components["schemas"]["Timeframe"];
+                start?: string | null;
+                end?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CandleHistoryView"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RejectedCandleInput"];
+                };
+            };
+        };
+    };
+    request_candles_market_data_candles_requests_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CandleRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CandleRequestView"];
+                };
+            };
+            /** @description Accepted */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CandleRequestView"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RejectedCandleInput"];
                 };
             };
         };

@@ -191,6 +191,7 @@ jobs:
       # F-07 e2e เรียก worker จริงคู่กับ FakeVenue จึงต้องใช้บทบาททั้งสองนี้
       TIEWTRADE_DATABASE_URL_ENGINE: postgresql+asyncpg://tiewtrade_engine:dev_engine@127.0.0.1:5432/tiewtrade_e2e
       TIEWTRADE_DATABASE_URL_ENGINE_SCAN: postgresql+asyncpg://tiewtrade_engine_scan:dev_engine_scan@127.0.0.1:5432/tiewtrade_e2e
+      TIEWTRADE_DATABASE_URL_MARKET_DATA: postgresql+asyncpg://tiewtrade_market_data:dev_market_data@127.0.0.1:5432/tiewtrade_e2e
       TIEWTRADE_SIGNUP_OPEN: "1"
       TIEWTRADE_COOKIE_SECURE: "0"
       # กุญแจปิดผนึก secret ของ TOTP (F-06) — **ค่านี้ใช้ได้เฉพาะเครื่องพัฒนาและ CI**

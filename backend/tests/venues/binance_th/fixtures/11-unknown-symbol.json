@@ -1,0 +1,20 @@
+{
+  "method": "GET",
+  "url": "https://api.binance.th/api/v1/klines?symbol=NOTAREALSYMBOL&interval=1m&startTime=1791368040000&endTime=1791368100000&limit=1",
+  "params": {
+    "symbol": "NOTAREALSYMBOL",
+    "interval": "1m",
+    "startTime": 1791368040000,
+    "endTime": 1791368100000,
+    "limit": 1
+  },
+  "requested_at_utc": "2026-10-07T10:18:10.876255+00:00",
+  "received_at_utc": "2026-10-07T10:18:11.168934+00:00",
+  "status": 400,
+  "headers": {
+    "Content-Type": "application/json",
+    "Date": "Wed, 07 Oct 2026 10:18:11 GMT",
+    "X-MBX-USED-WEIGHT-1M": "19"
+  },
+  "body": "{\"code\":-1121,\"msg\":\"Invalid symbol.\"}"
+}

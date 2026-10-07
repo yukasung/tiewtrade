@@ -19,7 +19,15 @@ from __future__ import annotations
 
 from collections import deque
 from collections.abc import Iterable, Mapping
+from datetime import datetime
 
+from tiewtrade.core.market_data import Timeframe
+from tiewtrade.venues.candles import (
+    DEFAULT_CANDLES_COST,
+    CandlePage,
+    CandleRequest,
+    validate_request,
+)
 from tiewtrade.venues.constraints import DEFAULT_CONSTRAINTS_COST
 from tiewtrade.venues.errors import RejectionReason, VenueError, VenueRejectedError
 from tiewtrade.venues.limits import CallCost, NoRateLimit, RateLimitGuard
@@ -50,6 +58,21 @@ class FakeVenue:
         self._holdings_cost = holdings_cost
         self._constraints_cost = constraints_cost
         self._queued_errors: deque[VenueError] = deque()
+        self._candle_pages: deque[CandlePage] = deque()
+        self.candle_calls: list[CandleRequest] = []
+
+    def queue_candle_pages(self, pages: Iterable[CandlePage]) -> None:
+        self._candle_pages.extend(pages)
+
+    async def fetch_candles(
+        self, symbol: Symbol, timeframe: Timeframe, start: datetime, end: datetime, limit: int
+    ) -> CandlePage:
+        validate_request(timeframe, start, end, limit)
+        self.candle_calls.append(CandleRequest(symbol, timeframe, start, end, limit))
+        await self._before_call(DEFAULT_CANDLES_COST)
+        if not self._candle_pages:
+            raise VenueRejectedError(RejectionReason.UNKNOWN_SYMBOL)
+        return self._candle_pages.popleft()
 
     def queue_errors(self, errors: Iterable[VenueError]) -> None:
         """เตรียมข้อผิดพลาดให้เกิดตามลำดับที่ใส่ไว้

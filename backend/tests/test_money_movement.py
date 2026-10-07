@@ -63,4 +63,11 @@ def test_only_the_transport_reaches_the_network() -> None:
     reaching = {path.name for path in adapter.glob("*.py")} - {
         path.name for path in modules_not_reaching(adapter, "transport")
     }
-    assert reaching == {"__init__.py", "transport.py", "prices.py", "constraints.py", "wallets.py"}
+    assert reaching == {
+        "__init__.py",
+        "transport.py",
+        "prices.py",
+        "constraints.py",
+        "wallets.py",
+        "candles.py",
+    }

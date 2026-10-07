@@ -24,6 +24,7 @@ from tiewtrade.infra.db import DatabaseRole, create_engine_for
 from tiewtrade.services.api.api_key_routes import router as api_key_router
 from tiewtrade.services.api.auth_routes import router as auth_router
 from tiewtrade.services.api.authentication import authenticate_request
+from tiewtrade.services.api.candle_routes import router as candle_router
 from tiewtrade.services.api.throttling import AuthRejectedError
 from tiewtrade.services.api.totp_routes import router as totp_router
 from tiewtrade.services.api.trading_account_routes import router as trading_account_router
@@ -89,6 +90,7 @@ app.include_router(auth_router)
 app.include_router(totp_router)
 app.include_router(api_key_router)
 app.include_router(trading_account_router)
+app.include_router(candle_router)
 
 
 class Health(BaseModel):

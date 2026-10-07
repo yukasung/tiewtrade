@@ -1,0 +1,14 @@
+{
+  "method": "GET",
+  "url": "https://api.binance.th/api/v1/time",
+  "params": {},
+  "requested_at_utc": "2026-10-07T10:17:29.244965+00:00",
+  "received_at_utc": "2026-10-07T10:17:30.255487+00:00",
+  "status": 200,
+  "headers": {
+    "Content-Type": "application/json",
+    "Date": "Wed, 07 Oct 2026 10:17:30 GMT",
+    "X-MBX-USED-WEIGHT-1M": "1"
+  },
+  "body": "{\"serverTime\":1791368250194}"
+}

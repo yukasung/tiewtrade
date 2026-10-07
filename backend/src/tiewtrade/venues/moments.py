@@ -10,13 +10,6 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+from tiewtrade.core.moments import require_aware
 
-
-def require_aware(label: str, moment: datetime) -> None:
-    """ปฏิเสธเวลาที่ไม่มี timezone กำกับ
-
-    `label` มีไว้บอกว่าช่องไหนผิด เพราะชนิดข้อมูลหนึ่งตัวมีเวลาได้หลายช่อง
-    """
-    if moment.tzinfo is None or moment.utcoffset() is None:
-        raise ValueError(f"{label}ต้องมี timezone กำกับ")
+__all__ = ["require_aware"]

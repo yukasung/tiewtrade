@@ -287,6 +287,8 @@ async def test_preferences_populated_downgrade_refuses_and_keeps_history(
             )
         ).scalar_one() == 0
 
+    _alembic("upgrade", "head")
+
 
 async def test_selected_use_audit_survives_allowed_downgrade(
     api_engine: AsyncEngine, migrator_engine: AsyncEngine

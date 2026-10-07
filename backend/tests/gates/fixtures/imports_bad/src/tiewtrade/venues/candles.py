@@ -1,0 +1,1 @@
+"""Central candle contract fixture."""
