@@ -1,0 +1,20 @@
+{
+  "method": "GET",
+  "url": "https://api.binance.th/api/v1/klines?symbol=BTCUSDT&interval=1m&startTime=1791368040000&endTime=1791368100000&limit=1001",
+  "params": {
+    "symbol": "BTCUSDT",
+    "interval": "1m",
+    "startTime": 1791368040000,
+    "endTime": 1791368100000,
+    "limit": 1001
+  },
+  "requested_at_utc": "2026-10-07T10:18:10.388477+00:00",
+  "received_at_utc": "2026-10-07T10:18:10.620362+00:00",
+  "status": 400,
+  "headers": {
+    "Content-Type": "application/json",
+    "Date": "Wed, 07 Oct 2026 10:18:10 GMT",
+    "X-MBX-USED-WEIGHT-1M": "18"
+  },
+  "body": "{\"code\":-1130,\"msg\":\"Data sent for parameter 'limit' is not valid.\"}"
+}

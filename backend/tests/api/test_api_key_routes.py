@@ -452,7 +452,13 @@ def test_no_route_hands_back_the_secret(client: TestClient, ending: bool) -> Non
         path = template.replace("{key_id}", key_id)
         assert "{" not in path, f"missing canary path value for {template}"
         response = client.request(
-            method, path, headers=csrf_headers(client), **({"json": {}} if method == "POST" else {})
+            method,
+            path,
+            headers=csrf_headers(client),
+            params={"base": "BTC", "quote": "USDT", "timeframe": "1m"}
+            if template == "/market-data/candles"
+            else None,
+            **({"json": {}} if method == "POST" else {}),
         )
         if method == "GET":
             assert response.status_code == 200, (method, template, response.status_code)

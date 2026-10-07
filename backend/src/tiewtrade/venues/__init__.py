@@ -12,6 +12,7 @@
 from collections.abc import Callable
 from datetime import datetime, timedelta
 
+from tiewtrade.venues.candles import CandlePage, CandleSource
 from tiewtrade.venues.constraints import DEFAULT_CONSTRAINTS_COST, SymbolConstraintSource
 from tiewtrade.venues.errors import (
     RejectionReason,
@@ -34,6 +35,25 @@ from tiewtrade.venues.wallets import (
     WalletHoldings,
     WalletSource,
 )
+
+
+def live_candle_source(
+    *,
+    client: object,
+    clock: Callable[[], datetime],
+    timeout: timedelta,
+) -> CandleSource:
+    """Compose one public source with shared conservative IP reservations."""
+    from tiewtrade.venues.binance_th import BinanceThTransport, IpWeightLimiter
+    from tiewtrade.venues.binance_th.candles import BinanceThCandles
+
+    transport = BinanceThTransport(
+        client=client,  # type: ignore[arg-type]
+        guard=IpWeightLimiter(clock=clock, reservation_weight_floor=10),
+        clock=clock,
+        timeout=timeout,
+    )
+    return BinanceThCandles(transport, clock=clock)
 
 
 def live_wallet_factory(
@@ -77,6 +97,8 @@ __all__ = [
     "DEFAULT_HOLDINGS_COST",
     "DEFAULT_LATEST_PRICE_COST",
     "CallCost",
+    "CandlePage",
+    "CandleSource",
     "FakeVenue",
     "Holding",
     "NoRateLimit",
@@ -97,5 +119,6 @@ __all__ = [
     "VenueUnavailableError",
     "WalletHoldings",
     "WalletSource",
+    "live_candle_source",
     "live_wallet_factory",
 ]

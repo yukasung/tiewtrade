@@ -59,6 +59,234 @@
         "title": "AddedKey",
         "type": "object"
       },
+      "CandleFinality": {
+        "enum": [
+          "UNCONFIRMED",
+          "OPEN",
+          "CLOSED"
+        ],
+        "title": "CandleFinality",
+        "type": "string"
+      },
+      "CandleHistoryView": {
+        "properties": {
+          "base": {
+            "title": "Base",
+            "type": "string"
+          },
+          "coverage": {
+            "enum": [
+              "PRESENT",
+              "INCOMPLETE",
+              "UNAVAILABLE"
+            ],
+            "title": "Coverage",
+            "type": "string"
+          },
+          "failure_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Failure Code"
+          },
+          "gaps": {
+            "items": {
+              "$ref": "#/components/schemas/WindowView"
+            },
+            "title": "Gaps",
+            "type": "array"
+          },
+          "observed": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/WindowView"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "observed_at": {
+            "format": "date-time",
+            "title": "Observed At",
+            "type": "string"
+          },
+          "quote": {
+            "title": "Quote",
+            "type": "string"
+          },
+          "refresh_pending": {
+            "title": "Refresh Pending",
+            "type": "boolean"
+          },
+          "requested": {
+            "$ref": "#/components/schemas/WindowView"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/CandleView"
+            },
+            "title": "Rows",
+            "type": "array"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          },
+          "timeframe": {
+            "$ref": "#/components/schemas/Timeframe"
+          }
+        },
+        "required": [
+          "base",
+          "quote",
+          "timeframe",
+          "requested",
+          "observed",
+          "rows",
+          "gaps",
+          "coverage",
+          "observed_at",
+          "refresh_pending",
+          "status",
+          "failure_code"
+        ],
+        "title": "CandleHistoryView",
+        "type": "object"
+      },
+      "CandleRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "base": {
+            "title": "Base",
+            "type": "string"
+          },
+          "end": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End"
+          },
+          "quote": {
+            "title": "Quote",
+            "type": "string"
+          },
+          "start": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start"
+          },
+          "timeframe": {
+            "$ref": "#/components/schemas/Timeframe"
+          }
+        },
+        "required": [
+          "base",
+          "quote",
+          "timeframe"
+        ],
+        "title": "CandleRequest",
+        "type": "object"
+      },
+      "CandleRequestView": {
+        "properties": {
+          "accepted": {
+            "title": "Accepted",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "accepted"
+        ],
+        "title": "CandleRequestView",
+        "type": "object"
+      },
+      "CandleView": {
+        "properties": {
+          "close": {
+            "title": "Close",
+            "type": "string"
+          },
+          "end_at": {
+            "format": "date-time",
+            "title": "End At",
+            "type": "string"
+          },
+          "finality": {
+            "$ref": "#/components/schemas/CandleFinality"
+          },
+          "high": {
+            "title": "High",
+            "type": "string"
+          },
+          "last_checked_at": {
+            "format": "date-time",
+            "title": "Last Checked At",
+            "type": "string"
+          },
+          "low": {
+            "title": "Low",
+            "type": "string"
+          },
+          "observed_at": {
+            "format": "date-time",
+            "title": "Observed At",
+            "type": "string"
+          },
+          "open": {
+            "title": "Open",
+            "type": "string"
+          },
+          "open_at": {
+            "format": "date-time",
+            "title": "Open At",
+            "type": "string"
+          },
+          "volume": {
+            "title": "Volume",
+            "type": "string"
+          }
+        },
+        "required": [
+          "open_at",
+          "end_at",
+          "open",
+          "high",
+          "low",
+          "close",
+          "volume",
+          "finality",
+          "observed_at",
+          "last_checked_at"
+        ],
+        "title": "CandleView",
+        "type": "object"
+      },
       "CodesIssued": {
         "description": "ชุดรหัสสำรองใหม่ — **แสดงครั้งเดียว ไม่มีทางอ่านกลับ**",
         "properties": {
@@ -379,6 +607,19 @@
         "title": "PasswordChange",
         "type": "object"
       },
+      "RejectedCandleInput": {
+        "properties": {
+          "detail": {
+            "title": "Detail",
+            "type": "string"
+          }
+        },
+        "required": [
+          "detail"
+        ],
+        "title": "RejectedCandleInput",
+        "type": "object"
+      },
       "RejectedKeyInput": {
         "description": "คำตอบ validation ที่มีแค่รหัส ไม่มีค่าที่ผู้ใช้ส่งมา",
         "properties": {
@@ -530,6 +771,18 @@
         "title": "SignedIn",
         "type": "object"
       },
+      "Timeframe": {
+        "enum": [
+          "1m",
+          "5m",
+          "15m",
+          "1h",
+          "4h",
+          "1d"
+        ],
+        "title": "Timeframe",
+        "type": "string"
+      },
       "TradingAccountView": {
         "properties": {
           "key": {
@@ -610,6 +863,26 @@
           "type"
         ],
         "title": "ValidationError",
+        "type": "object"
+      },
+      "WindowView": {
+        "properties": {
+          "end": {
+            "format": "date-time",
+            "title": "End",
+            "type": "string"
+          },
+          "start": {
+            "format": "date-time",
+            "title": "Start",
+            "type": "string"
+          }
+        },
+        "required": [
+          "start",
+          "end"
+        ],
+        "title": "WindowView",
         "type": "object"
       }
     }
@@ -1261,6 +1534,162 @@
           }
         },
         "summary": "Read Health"
+      }
+    },
+    "/market-data/candles": {
+      "get": {
+        "operationId": "candles_market_data_candles_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "base",
+            "required": true,
+            "schema": {
+              "title": "Base",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "quote",
+            "required": true,
+            "schema": {
+              "title": "Quote",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "timeframe",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Timeframe"
+            }
+          },
+          {
+            "in": "query",
+            "name": "start",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Start"
+            }
+          },
+          {
+            "in": "query",
+            "name": "end",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "End"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 1000,
+              "maximum": 1000,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CandleHistoryView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RejectedCandleInput"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "summary": "Candles",
+        "tags": [
+          "market-data"
+        ]
+      }
+    },
+    "/market-data/candles/requests": {
+      "post": {
+        "operationId": "request_candles_market_data_candles_requests_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CandleRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CandleRequestView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CandleRequestView"
+                }
+              }
+            },
+            "description": "Accepted"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RejectedCandleInput"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "summary": "Request Candles",
+        "tags": [
+          "market-data"
+        ]
       }
     },
     "/trading-account": {

@@ -79,8 +79,16 @@ class IpWeightLimiter:
         *,
         clock: Callable[[], datetime],
         windows: Iterable[WeightWindow] = IP_WEIGHT_WINDOWS,
+        reservation_weight_floor: int = 1,
     ) -> None:
         self._clock = clock
+        if (
+            isinstance(reservation_weight_floor, bool)
+            or not isinstance(reservation_weight_floor, int)
+            or reservation_weight_floor < 1
+        ):
+            raise ValueError("reservation weight floor must be a positive integer")
+        self._reservation_weight_floor = reservation_weight_floor
         self._windows: Final[tuple[WeightWindow, ...]] = tuple(windows)
         if not self._windows:
             raise ValueError("ตัวกั้นต้องมีหน้าต่างเวลาอย่างน้อยหนึ่งหน้าต่าง")
@@ -92,12 +100,13 @@ class IpWeightLimiter:
         if cost.orders:
             raise ValueError("ตัวกั้นนี้นับน้ำหนักต่อ IP เท่านั้น เพดานจำนวนออเดอร์นับต่อบัญชี ต้องใช้ตัวกั้นที่รู้จักบัญชี")
 
+        reserved_weight = max(cost.weight, self._reservation_weight_floor)
         for window in self._windows:
-            if cost.weight > window.limit:
+            if reserved_weight > window.limit:
                 # รอเท่าไรก็ไม่พอ — เป็นความผิดของค่าที่ประกาศ ไม่ใช่ของจังหวะเวลา
                 # จึงดังทันทีแทนการโยน "ถูกจำกัดอัตรา" ที่ชวนให้ผู้เรียกลองใหม่ตลอดไป
                 raise ValueError(
-                    f"ต้นทุน {cost.weight} weight เกินเพดานของหน้าต่าง {window.span} "
+                    f"ต้นทุน {reserved_weight} weight เกินเพดานของหน้าต่าง {window.span} "
                     f"ที่ {window.limit} จึงไม่มีทางจองสำเร็จ"
                 )
 
@@ -106,10 +115,10 @@ class IpWeightLimiter:
 
         for window in self._windows:
             used = self._used_within(window.span, now)
-            if used + cost.weight > window.limit:
-                raise VenueRateLimitedError(self._wait_for(window, cost.weight, now))
+            if used + reserved_weight > window.limit:
+                raise VenueRateLimitedError(self._wait_for(window, reserved_weight, now))
 
-        self._spent.append(_Spent(at=now, weight=cost.weight, scope=None))
+        self._spent.append(_Spent(at=now, weight=reserved_weight, scope=None))
 
     def observe_used_weight(self, *, span: timedelta, used: int, at: datetime) -> None:
         """รับยอดที่ตลาดนับเอง — **ค่าที่ตลาดนับสูงกว่า ให้เชื่อตลาด**

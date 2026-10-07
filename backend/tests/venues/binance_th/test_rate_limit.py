@@ -6,22 +6,140 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
+from typing import cast
 
+import httpx
 import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
 
-from tests.venues.binance_th.conftest import START, FakeClock
+from tests.venues.binance_th.conftest import START, FakeClock, transport_for
+from tiewtrade.venues.binance_th.endpoints import Endpoint
 from tiewtrade.venues.binance_th.rate_limit import (
     IP_WEIGHT_WINDOWS,
     IpWeightLimiter,
     WeightWindow,
 )
-from tiewtrade.venues.errors import VenueRateLimitedError
+from tiewtrade.venues.errors import VenueRateLimitedError, VenueUnavailableError
 from tiewtrade.venues.limits import CallCost
 
 TEN_SECONDS = timedelta(seconds=10)
 ONE_MINUTE = timedelta(seconds=60)
+
+
+@pytest.mark.parametrize("floor", [True, False, 0, -1, "10", 1.5, None])
+def test_floor_requires_positive_integer_excluding_bool(floor: object) -> None:
+    with pytest.raises(ValueError):
+        IpWeightLimiter(clock=FakeClock(), reservation_weight_floor=cast(int, floor))
+
+
+async def test_published_cost_above_floor_is_not_lowered() -> None:
+    limiter = IpWeightLimiter(
+        clock=FakeClock(), windows=[WeightWindow(20, TEN_SECONDS)], reservation_weight_floor=10
+    )
+    await limiter.reserve(CallCost(weight=15))
+    with pytest.raises(VenueRateLimitedError):
+        await limiter.reserve(CallCost(weight=1))
+
+
+async def test_second_window_refusal_never_partially_charges_first_window() -> None:
+    clock = FakeClock()
+    limiter = IpWeightLimiter(
+        clock=clock,
+        windows=[WeightWindow(20, ONE_MINUTE), WeightWindow(10, TEN_SECONDS)],
+        reservation_weight_floor=10,
+    )
+    await limiter.reserve(CallCost(weight=1))
+    clock.advance(timedelta(seconds=1))
+    with pytest.raises(VenueRateLimitedError):
+        await limiter.reserve(CallCost(weight=1))
+    clock.advance(timedelta(seconds=9))
+    # First window still contains the original ten. A rejected partial charge
+    # would make this successful ten-weight probe exceed its twenty ceiling.
+    await limiter.reserve(CallCost(weight=1))
+
+
+async def test_floor_wait_uses_reserved_weight_and_recovers() -> None:
+    clock = FakeClock()
+    limiter = IpWeightLimiter(
+        clock=clock, windows=[WeightWindow(20, TEN_SECONDS)], reservation_weight_floor=10
+    )
+    await limiter.reserve(CallCost(weight=15))
+    clock.advance(timedelta(seconds=3))
+    with pytest.raises(VenueRateLimitedError) as caught:
+        await limiter.reserve(CallCost(weight=1))
+    assert caught.value.retry_after == timedelta(seconds=7)
+    clock.advance(timedelta(seconds=7))
+    await limiter.reserve(CallCost(weight=1))
+
+
+async def test_observer_below_floor_never_refunds_and_higher_adds_only_delta() -> None:
+    clock = FakeClock()
+    limiter = IpWeightLimiter(
+        clock=clock, windows=[WeightWindow(30, TEN_SECONDS)], reservation_weight_floor=10
+    )
+    await limiter.reserve(CallCost(weight=1))
+    limiter.observe_used_weight(span=TEN_SECONDS, used=1, at=clock.now)
+    limiter.observe_used_weight(span=TEN_SECONDS, used=15, at=clock.now)
+    await limiter.reserve(CallCost(weight=1))
+    with pytest.raises(VenueRateLimitedError):
+        await limiter.reserve(CallCost(weight=1))
+
+
+async def test_impossible_floor_refuses_before_http() -> None:
+    calls: list[httpx.Request] = []
+    limiter = IpWeightLimiter(
+        clock=FakeClock(), windows=[WeightWindow(9, TEN_SECONDS)], reservation_weight_floor=10
+    )
+
+    def reply(request: httpx.Request) -> httpx.Response:
+        calls.append(request)
+        return httpx.Response(200, json=[])
+
+    transport = transport_for(reply, guard=limiter)
+    with pytest.raises(ValueError):
+        await transport.get(Endpoint.KLINES, cost=CallCost(weight=1))
+    assert calls == []
+
+
+async def test_failed_http_keeps_floor_until_expiry() -> None:
+    clock = FakeClock()
+    calls: list[httpx.Request] = []
+    limiter = IpWeightLimiter(
+        clock=clock, windows=[WeightWindow(10, TEN_SECONDS)], reservation_weight_floor=10
+    )
+
+    def reply(request: httpx.Request) -> httpx.Response:
+        calls.append(request)
+        return httpx.Response(500, json={})
+
+    transport = transport_for(reply, guard=limiter, clock=clock)
+    with pytest.raises(VenueUnavailableError):
+        await transport.get(Endpoint.KLINES, cost=CallCost(weight=1))
+    with pytest.raises(VenueRateLimitedError):
+        await transport.get(Endpoint.KLINES, cost=CallCost(weight=1))
+    assert len(calls) == 1
+    clock.advance(TEN_SECONDS)
+    with pytest.raises(VenueUnavailableError):
+        await transport.get(Endpoint.KLINES, cost=CallCost(weight=1))
+    assert len(calls) == 2
+
+
+async def test_default_floor_preserves_published_one_weight_price_accounting() -> None:
+    from tiewtrade.venues.binance_th.prices import BinanceThPrices
+    from tiewtrade.venues.symbols import Symbol
+
+    clock = FakeClock()
+    limiter = IpWeightLimiter(clock=clock, windows=[WeightWindow(2, TEN_SECONDS)])
+
+    def reply(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, json=[{"price": "2", "time": 0}])
+
+    source = BinanceThPrices(transport_for(reply, guard=limiter, clock=clock))
+    await source.latest_price(Symbol("BTC", "USDT"))
+    await source.latest_price(Symbol("BTC", "USDT"))
+    with pytest.raises(VenueRateLimitedError):
+        await source.latest_price(Symbol("BTC", "USDT"))
 
 
 def test_the_windows_are_the_ones_the_market_documents() -> None:
