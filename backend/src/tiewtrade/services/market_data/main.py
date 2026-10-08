@@ -9,12 +9,16 @@ from contextlib import suppress
 from datetime import UTC, datetime, timedelta
 
 import httpx
+from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncEngine
 
 from tiewtrade.infra.db import DatabaseRole, create_engine_for
+from tiewtrade.infra.realtime.notifications import RedisNotifications
 from tiewtrade.services.market_data.ingestion import MARKET_TIMEOUT, run_round
-from tiewtrade.venues import live_candle_source
+from tiewtrade.services.market_data.realtime import QuoteSupervisor
+from tiewtrade.venues import live_candle_source, live_price_feed, public_rate_limit_guard
 from tiewtrade.venues.candles import CandleSource
+from tiewtrade.venues.price_streams import PriceFeed
 
 ROUND_INTERVAL = timedelta(seconds=30)
 
@@ -24,20 +28,56 @@ def _now() -> datetime:
 
 
 async def serve(
-    *, once: bool = False, source: CandleSource | None = None, engine: AsyncEngine | None = None
+    *,
+    once: bool = False,
+    source: CandleSource | None = None,
+    engine: AsyncEngine | None = None,
+    price_feed: PriceFeed | None = None,
 ) -> None:
     owned = engine is None
     engine = engine or create_engine_for(DatabaseRole.MARKET_DATA)
     worker = f"{socket.gethostname()}:{os.getpid()}"
     try:
         async with httpx.AsyncClient() as client:
-            source = source or live_candle_source(client=client, clock=_now, timeout=MARKET_TIMEOUT)
-            while True:
-                summary = await run_round(engine, source, worker, _now())
-                logging.getLogger(__name__).info("market-data round: %s", summary)
-                if once:
-                    break
-                await asyncio.sleep(ROUND_INTERVAL.total_seconds())
+            guard = public_rate_limit_guard(clock=_now)
+            source = source or live_candle_source(
+                client=client, clock=_now, timeout=MARKET_TIMEOUT, guard=guard
+            )
+
+            async def candles() -> None:
+                while True:
+                    summary = await run_round(engine, source, worker, _now())
+                    logging.getLogger(__name__).info("market-data round: %s", summary)
+                    if once:
+                        return
+                    await asyncio.sleep(ROUND_INTERVAL.total_seconds())
+
+            if once:
+                await candles()
+                return
+            feed = price_feed or live_price_feed(
+                client=client, clock=_now, timeout=MARKET_TIMEOUT, guard=guard
+            )
+            url = os.environ.get("TIEWTRADE_REDIS_URL_MARKET_DATA", "")
+            if not url:
+                raise ValueError("TIEWTRADE_REDIS_URL_MARKET_DATA is required")
+            redis = Redis.from_url(url)
+            notification = RedisNotifications(redis)
+            tasks = [
+                asyncio.create_task(candles()),
+                asyncio.create_task(QuoteSupervisor(engine, feed, notification).run()),
+            ]
+            try:
+                done, _ = await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
+                for task in done:
+                    task.result()
+            finally:
+                for task in tasks:
+                    task.cancel()
+                await asyncio.gather(*tasks, return_exceptions=True)
+                await notification.close()
+                await redis.aclose()
+
     finally:
         if owned:
             await engine.dispose()

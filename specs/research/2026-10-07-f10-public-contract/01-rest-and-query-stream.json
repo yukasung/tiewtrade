@@ -1,0 +1,90 @@
+{
+  "captured_at": "2026-10-07T13:56:08.876635+00:00",
+  "stream": [
+    {
+      "received_at": "2026-10-07T13:56:09.344660+00:00",
+      "payload": {
+        "id": 31734489,
+        "result": null
+      }
+    }
+  ],
+  "rest": {
+    "BTCUSDT": {
+      "status": 200,
+      "received_at": "2026-10-07T13:56:09.462637+00:00",
+      "payload": [
+        {
+          "id": 6744708977,
+          "price": "83348.47000000",
+          "qty": "0.00426000",
+          "quoteQty": "355.06448220",
+          "time": 1791381369316,
+          "isBuyerMaker": false,
+          "isBestMatch": true
+        }
+      ]
+    },
+    "ETHUSDT": {
+      "status": 200,
+      "received_at": "2026-10-07T13:56:09.622347+00:00",
+      "payload": [
+        {
+          "id": 4413801574,
+          "price": "2575.06000000",
+          "qty": "1.94260000",
+          "quoteQty": "5002.31155600",
+          "time": 1791381369550,
+          "isBuyerMaker": true,
+          "isBestMatch": true
+        }
+      ]
+    },
+    "SOLUSDT": {
+      "status": 200,
+      "received_at": "2026-10-07T13:56:09.773088+00:00",
+      "payload": [
+        {
+          "id": 2074028032,
+          "price": "116.49000000",
+          "qty": "11.49300000",
+          "quoteQty": "1338.81957000",
+          "time": 1791381369549,
+          "isBuyerMaker": true,
+          "isBestMatch": true
+        }
+      ]
+    },
+    "XRPUSDT": {
+      "status": 200,
+      "received_at": "2026-10-07T13:56:09.940835+00:00",
+      "payload": [
+        {
+          "id": 1731762339,
+          "price": "1.43760000",
+          "qty": "426.80000000",
+          "quoteQty": "613.56768000",
+          "time": 1791381369618,
+          "isBuyerMaker": false,
+          "isBestMatch": true
+        }
+      ]
+    },
+    "DOGEUSDT": {
+      "status": 200,
+      "received_at": "2026-10-07T13:56:10.106045+00:00",
+      "payload": [
+        {
+          "id": 1623705281,
+          "price": "0.08892000",
+          "qty": "7336.00000000",
+          "quoteQty": "652.31712000",
+          "time": 1791381369958,
+          "isBuyerMaker": false,
+          "isBestMatch": true
+        }
+      ]
+    }
+  },
+  "stream_error": "TimeoutError: "
+}

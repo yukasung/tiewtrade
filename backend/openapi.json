@@ -607,6 +607,165 @@
         "title": "PasswordChange",
         "type": "object"
       },
+      "PriceRow": {
+        "additionalProperties": false,
+        "properties": {
+          "alert_due": {
+            "title": "Alert Due",
+            "type": "boolean"
+          },
+          "amount": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Amount"
+          },
+          "base": {
+            "title": "Base",
+            "type": "string"
+          },
+          "generation": {
+            "pattern": "^[0-9]+$",
+            "title": "Generation",
+            "type": "string"
+          },
+          "quote": {
+            "title": "Quote",
+            "type": "string"
+          },
+          "readiness": {
+            "enum": [
+              "MISSING",
+              "RECOVERING",
+              "STALE",
+              "READY"
+            ],
+            "title": "Readiness",
+            "type": "string"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "received_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Received At"
+          },
+          "revision": {
+            "pattern": "^[0-9]+$",
+            "title": "Revision",
+            "type": "string"
+          },
+          "source": {
+            "title": "Source",
+            "type": "string"
+          },
+          "trade_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Trade At"
+          },
+          "unavailable_since": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unavailable Since"
+          },
+          "valid_until": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Valid Until"
+          }
+        },
+        "required": [
+          "source",
+          "base",
+          "quote",
+          "amount",
+          "trade_at",
+          "received_at",
+          "revision",
+          "generation",
+          "readiness",
+          "reason",
+          "valid_until",
+          "unavailable_since",
+          "alert_due"
+        ],
+        "title": "PriceRow",
+        "type": "object"
+      },
+      "PricesView": {
+        "additionalProperties": false,
+        "properties": {
+          "delivery_status": {
+            "enum": [
+              "CONNECTED",
+              "RECOVERING"
+            ],
+            "title": "Delivery Status",
+            "type": "string"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/PriceRow"
+            },
+            "title": "Rows",
+            "type": "array"
+          },
+          "schema_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          },
+          "server_time": {
+            "format": "date-time",
+            "title": "Server Time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "server_time",
+          "delivery_status",
+          "rows"
+        ],
+        "title": "PricesView",
+        "type": "object"
+      },
       "RejectedCandleInput": {
         "properties": {
           "detail": {
@@ -1687,6 +1846,27 @@
           }
         },
         "summary": "Request Candles",
+        "tags": [
+          "market-data"
+        ]
+      }
+    },
+    "/market-data/prices": {
+      "get": {
+        "operationId": "prices_market_data_prices_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PricesView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Prices",
         "tags": [
           "market-data"
         ]

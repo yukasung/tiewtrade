@@ -427,6 +427,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/market-data/prices": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Prices */
+        get: operations["prices_market_data_prices_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/trading-account": {
         parameters: {
             query?: never;
@@ -740,6 +757,59 @@ export interface components {
             current_password: string;
             /** New Password */
             new_password: string;
+        };
+        /** PriceRow */
+        PriceRow: {
+            /** Alert Due */
+            alert_due: boolean;
+            /** Amount */
+            amount: string | null;
+            /** Base */
+            base: string;
+            /** Generation */
+            generation: string;
+            /** Quote */
+            quote: string;
+            /**
+             * Readiness
+             * @enum {string}
+             */
+            readiness: "MISSING" | "RECOVERING" | "STALE" | "READY";
+            /** Reason */
+            reason: string;
+            /** Received At */
+            received_at: string | null;
+            /** Revision */
+            revision: string;
+            /** Source */
+            source: string;
+            /** Trade At */
+            trade_at: string | null;
+            /** Unavailable Since */
+            unavailable_since: string | null;
+            /** Valid Until */
+            valid_until: string | null;
+        };
+        /** PricesView */
+        PricesView: {
+            /**
+             * Delivery Status
+             * @enum {string}
+             */
+            delivery_status: "CONNECTED" | "RECOVERING";
+            /** Rows */
+            rows: components["schemas"]["PriceRow"][];
+            /**
+             * Schema Version
+             * @default 1
+             * @constant
+             */
+            schema_version: 1;
+            /**
+             * Server Time
+             * Format: date-time
+             */
+            server_time: string;
         };
         /** RejectedCandleInput */
         RejectedCandleInput: {
@@ -1474,6 +1544,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["RejectedCandleInput"];
+                };
+            };
+        };
+    };
+    prices_market_data_prices_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PricesView"];
                 };
             };
         };

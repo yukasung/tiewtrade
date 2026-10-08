@@ -5,13 +5,15 @@ description = "TiewTrade backend — Spot trading on Binance TH"
 requires-python = "==3.12.*"
 dependencies = [
     "fastapi>=0.115",
-    "uvicorn[standard]>=0.32",
+    "uvicorn[standard]>=0.54,<0.55",
     # ฐานข้อมูล (F-03) — SQLAlchemy 2 async ตาม tech-stack.md หัวข้อ 4
     "sqlalchemy[asyncio]>=2.0",
     "asyncpg>=0.30",
     "alembic>=1.14",
     # ตัวเชื่อม Binance TH (F-35) — ไคลเอนต์ HTTP ที่ async จริงและใช้ทดสอบได้ (Q-2)
     "httpx>=0.28",
+    "websockets>=17.1,<18",
+    "redis>=5,<8",
     # รหัสผ่าน (F-05) — argon2 ตาม standards/security.md หัวข้อ 1
     "argon2-cffi>=23.1",
     # ปิดผนึก secret ของ TOTP (F-06) — AES-GCM ตาม plan.md หัวข้อ 4.3
@@ -101,6 +103,8 @@ forbidden_modules = [
     "fastapi",
     "uvicorn",
     "httpx",
+    "websockets",
+    "redis",
     # F-03 — core ห้ามแตะฐานข้อมูล (RQ-11)
     "sqlalchemy",
     "asyncpg",
@@ -137,6 +141,7 @@ source_modules = [
     "tiewtrade.venues.limits",
     "tiewtrade.venues.moments",
     "tiewtrade.venues.prices",
+    "tiewtrade.venues.price_streams",
     "tiewtrade.venues.signing",
     "tiewtrade.venues.symbols",
     "tiewtrade.venues.wallets",
@@ -154,6 +159,14 @@ source_modules = [
     "tiewtrade.venues.binance_th.endpoints",
     "tiewtrade.venues.binance_th.failures",
     "tiewtrade.venues.binance_th.mapping",
+    "tiewtrade.venues.binance_th.stream_mapping",
     "tiewtrade.venues.binance_th.rate_limit",
 ]
 forbidden_modules = ["httpx", "urllib", "socket", "websockets", "aiohttp", "requests"]
+
+
+[[tool.importlinter.contracts]]
+name = "strategies must not reach realtime network clients"
+type = "forbidden"
+source_modules = ["tiewtrade.strategies"]
+forbidden_modules = ["websockets", "redis"]

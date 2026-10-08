@@ -15,6 +15,8 @@ from tiewtrade.core.market_data import (
 )
 from tiewtrade.infra.db import money_from_columns, quantity_from_columns, require_user_session
 from tiewtrade.infra.db.session import MarketDataSession, UserSession, require_market_data_session
+from tiewtrade.infra.market_data.catalog import PAIRS as PAIRS
+from tiewtrade.infra.market_data.catalog import SOURCE as SOURCE
 from tiewtrade.infra.market_data.records import (
     CandleRead,
     RetentionError,
@@ -23,10 +25,6 @@ from tiewtrade.infra.market_data.records import (
     WindowTooLargeError,
 )
 
-SOURCE = "primary_spot"
-PAIRS = frozenset(
-    {("BTC", "USDT"), ("ETH", "USDT"), ("SOL", "USDT"), ("XRP", "USDT"), ("DOGE", "USDT")}
-)
 Session = UserSession | MarketDataSession
 
 

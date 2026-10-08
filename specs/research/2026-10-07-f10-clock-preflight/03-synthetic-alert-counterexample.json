@@ -1,0 +1,24 @@
+{
+  "kind": "synthetic_counterexample_not_browser_measurement",
+  "cases": [
+    {
+      "name": "awake",
+      "real_elapsed_ms": 20000,
+      "observed_mono_delta_ms": 20000,
+      "observed_wall_delta_ms": 20000
+    },
+    {
+      "name": "asleep_plus_rollback",
+      "real_elapsed_ms": 80000,
+      "sleep_ms": 60000,
+      "wall_adjustment_ms": -60000,
+      "observed_mono_delta_ms": 20000,
+      "observed_wall_delta_ms": 20000
+    }
+  ],
+  "alert_threshold_ms": 60000,
+  "correct_alert_results": [
+    false,
+    true
+  ]
+}

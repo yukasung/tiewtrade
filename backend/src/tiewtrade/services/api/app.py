@@ -10,24 +10,41 @@ F-01 ส่งมอบเส้นทางเดียวเพื่อพิ
 ไม่ได้เลย ส่วนเส้นทางยืนยันตัวตนใช้ `auth` (`requirements.md` Q-8)
 """
 
+import asyncio
 from collections.abc import AsyncIterator, Awaitable, Callable
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime
+from typing import cast
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
+from redis.asyncio import Redis
 from starlette.responses import Response
 
 from tiewtrade.infra.crypto import KeyPurpose, KeySource
 from tiewtrade.infra.db import DatabaseRole, create_engine_for
+from tiewtrade.infra.db.session import presented_session
+from tiewtrade.infra.market_data.realtime_records import PriceSnapshot
+from tiewtrade.infra.market_data.realtime_storage import read_snapshot
+from tiewtrade.infra.realtime.admission import AdmissionRedis, RedisAdmission
+from tiewtrade.infra.realtime.notifications import RedisNotifications
 from tiewtrade.services.api.api_key_routes import router as api_key_router
 from tiewtrade.services.api.auth_routes import router as auth_router
 from tiewtrade.services.api.authentication import authenticate_request
 from tiewtrade.services.api.candle_routes import router as candle_router
+from tiewtrade.services.api.price_admission import ProcessBudget
+from tiewtrade.services.api.price_broadcast import PriceBroadcaster
+from tiewtrade.services.api.price_guard import PriceScopeGuard
+from tiewtrade.services.api.price_routes import router as price_router
+from tiewtrade.services.api.safe_logging import install_query_redaction
+from tiewtrade.services.api.settings import PRICE_SETTINGS, price_redis_url
 from tiewtrade.services.api.throttling import AuthRejectedError
 from tiewtrade.services.api.totp_routes import router as totp_router
 from tiewtrade.services.api.trading_account_routes import router as trading_account_router
+
+# Install before Uvicorn can log a request, including when lifespan is disabled.
+install_query_redaction()
 
 
 @asynccontextmanager
@@ -37,15 +54,42 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     **อ่านกุญแจของ TOTP ที่นี่เพื่อให้กุญแจไม่ครบ = กระบวนการไม่เริ่ม** ไม่ใช่ล้ม
     ตอนมีผู้ใช้คนแรกมาเปิด TOTP (F-06 validation V-10)
     """
+    # Reapply after server logging configuration/repeated application startups.
+    install_query_redaction()
     app.state.api_engine = create_engine_for(DatabaseRole.API)
     app.state.auth_engine = create_engine_for(DatabaseRole.AUTH)
     app.state.totp_keys = KeySource.from_environment(KeyPurpose.TOTP_SECRET)
     # **กุญแจของ API key เป็นคนละดอก** และฝั่งนี้ใช้ปิดผนึกอย่างเดียว —
     # การเปิดผนึกทำได้เฉพาะใน `engine` (`tech-stack.md` หัวข้อ 8 · F-07 RQ-4)
     app.state.venue_keys = KeySource.from_environment(KeyPurpose.VENUE_API_SECRET)
+    app.state.price_engine = create_engine_for(
+        DatabaseRole.API, pool_size=3, max_overflow=0, pool_timeout=0.5
+    )
+    redis = Redis.from_url(price_redis_url())
+    app.state.price_budget = ProcessBudget()
+    app.state.price_admission = RedisAdmission(
+        cast(AdmissionRedis, redis),
+        global_limit=PRICE_SETTINGS.global_attempts,
+        ip_limit=PRICE_SETTINGS.ip_attempts,
+        timeout=PRICE_SETTINGS.query_timeout,
+    )
+
+    async def public_read() -> PriceSnapshot:
+        async with asyncio.timeout(PRICE_SETTINGS.query_timeout):
+            async with presented_session(app.state.price_engine) as session:
+                await session.execute("SET LOCAL statement_timeout = '500ms'")
+                await session.execute("SET LOCAL lock_timeout = '500ms'")
+                return await read_snapshot(session)
+
+    app.state.price_broadcaster = PriceBroadcaster(RedisNotifications(redis), public_read)
+    broadcast_task = asyncio.create_task(app.state.price_broadcaster.run())
     try:
         yield
     finally:
+        broadcast_task.cancel()
+        await asyncio.gather(broadcast_task, return_exceptions=True)
+        await redis.aclose()
+        await app.state.price_engine.dispose()
         await app.state.api_engine.dispose()
         await app.state.auth_engine.dispose()
 
@@ -58,6 +102,9 @@ app = FastAPI(
     description="เทรดคริปโตแบบ Spot — ยืนยันตัวตนด้วย session ฝั่งเซิร์ฟเวอร์",
     lifespan=lifespan,
 )
+
+
+app.add_middleware(PriceScopeGuard)
 
 
 @app.middleware("http")
@@ -91,6 +138,7 @@ app.include_router(totp_router)
 app.include_router(api_key_router)
 app.include_router(trading_account_router)
 app.include_router(candle_router)
+app.include_router(price_router)
 
 
 class Health(BaseModel):

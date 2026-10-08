@@ -15,7 +15,7 @@ export default defineConfig({
   use: { baseURL: "http://localhost:5173" },
   webServer: [
     {
-      command: "uv run uvicorn tiewtrade.services.api.app:app --port 8000",
+      command: "uv run uvicorn tiewtrade.services.api.app:app --no-proxy-headers --port 8000 --ws tiewtrade.services.api.price_protocol:PriceWebSocketProtocol",
       cwd: "../backend",
       url: "http://localhost:8000/health",
       env: environment,

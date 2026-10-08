@@ -535,7 +535,9 @@ def check_asyncio_network(path: Path) -> list[Violation]:
     ]
 
 
-def check_network_only_in(package_root: Path, gateway: str) -> list[Violation]:
+def check_network_only_in(
+    package_root: Path, gateway: str, *, extra_gateways: tuple[str, ...] = ()
+) -> list[Violation]:
     """ยืนยันว่ามีไฟล์เดียวใน package ที่รู้จักเครือข่าย (F-35 V-3)
 
     ตรวจ **ทุกไฟล์ของ package รวมโฟลเดอร์ย่อย** เพราะกฎคือ "ทางเดียวที่ออกไปข้างนอก"
@@ -543,7 +545,7 @@ def check_network_only_in(package_root: Path, gateway: str) -> list[Violation]:
     """
     violations: list[Violation] = []
     for path in sorted(package_root.rglob("*.py")):
-        if path == package_root / f"{gateway}.py":
+        if path in {package_root / f"{name}.py" for name in (gateway, *extra_gateways)}:
             continue
         violations.extend(check_asyncio_network(path))
         for module, node in network_imports(path):
@@ -577,7 +579,9 @@ def _reject_network(path: Path, module: str, line: int, violations: list[Violati
         )
 
 
-def modules_not_reaching(package_root: Path, gateway: str) -> tuple[Path, ...]:
+def modules_not_reaching(
+    package_root: Path, gateway: str, *, extra_gateways: tuple[str, ...] = ()
+) -> tuple[Path, ...]:
     """ไฟล์ระดับบนสุดของ package ที่ **ไม่ได้** ผ่านโมดูลหนึ่ง (F-35 plan.md ข้อ 7.1)
 
     ใช้หาว่าโมดูลไหนของตัวเชื่อมต้องไม่รู้จักเครือข่ายเลย: ทุกไฟล์ที่ไม่ใช่
@@ -589,9 +593,9 @@ def modules_not_reaching(package_root: Path, gateway: str) -> tuple[Path, ...]:
     """
     found: list[Path] = []
     for path in sorted(package_root.glob("*.py")):
-        if path.name in ("__init__.py", f"{gateway}.py"):
+        if path.name in ("__init__.py", *(f"{name}.py" for name in (gateway, *extra_gateways))):
             continue
-        if not _imports_sibling(path, gateway):
+        if not any(_imports_sibling(path, name) for name in (gateway, *extra_gateways)):
             found.append(path)
     return tuple(found)
 

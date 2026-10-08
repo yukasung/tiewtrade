@@ -31,6 +31,7 @@ from tiewtrade.venues.binance_th.failures import (
     Delivery,
     failure_for_delivery,
     failure_for_status,
+    retry_after_of,
 )
 from tiewtrade.venues.binance_th.rate_limit import UsedWeightObserver
 from tiewtrade.venues.errors import VenueProtocolError
@@ -352,27 +353,7 @@ def _market_code(body: str) -> int | None:
 
 
 def _retry_after(headers: httpx.Headers, *, at: datetime) -> timedelta | None:
-    """เวลาที่ตลาดบอกให้รอ — ไม่มีก็เป็นค่าว่าง **ห้ามเดาแทนตลาด**"""
-    raw = headers.get("retry-after")
-    if raw is None:
-        return None
-    try:
-        seconds = int(raw.strip())
-    except ValueError:
-        # รูปแบบวันที่ตาม HTTP ก็ถูกตามมาตรฐาน แต่แปลงแล้วต้องใช้นาฬิกาของเรา
-        # เทียบกับของตลาด ซึ่งเป็นการเดาเวลาที่เราไม่มีสิทธิ์เดา
-        return None
-    if seconds < 0:
-        return None
-    try:
-        wait = timedelta(seconds=seconds)
-        # not_before ต้องอ่านกลับเป็น datetime ได้ ไม่ใช่แค่เก็บ interval ได้
-        at + wait
-        return wait
-    except OverflowError:
-        pass
-    # ไม่ผูก header/exception ต้นทางไว้กับ error ที่ออกจาก adapter
-    raise VenueProtocolError()
+    return retry_after_of(headers.get("retry-after"), at=at)
 
 
 def used_weight_of(headers: Mapping[str, str]) -> Mapping[timedelta, int]:

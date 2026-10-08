@@ -149,8 +149,22 @@ def check_tree(root: Path) -> list[Violation]:
     violations: list[Violation] = []
     adapters = adapter_packages(root / "tiewtrade" / "venues")
     gateways = {adapter / "transport.py" for adapter in adapters}
+    # F-10 approves this public WSS gateway only, not an extra gateway per adapter.
+    stream_gateway = root / "tiewtrade/venues/binance_th/stream_transport.py"
+    gateways.add(stream_gateway)
     for path in sorted(root.rglob("*.py")):
         violations.extend(check_no_money_paths(path))
+        if path == stream_gateway:
+            violations.extend(
+                Violation(
+                    path,
+                    node.lineno,
+                    "network-outside-gateway",
+                    "WSS gateway allows websockets only",
+                )
+                for module, node in network_imports(path)
+                if module.split(".")[0] != "websockets"
+            )
         violations.extend(
             Violation(item.path, item.line, "account-flag", item.detail)
             for item in check_vocabulary(
@@ -179,13 +193,16 @@ def check_no_market_urls(path: Path, *, fragments: bool = True) -> list[Violatio
             )
 
     violations: list[Violation] = []
+    origin_prefixes = _origin_prefix_literals(path)
     for node in nodes:
         if isinstance(node, ast.Constant) and isinstance(node.value, str):
+            if (node.lineno, node.col_offset) in origin_prefixes:
+                continue
             value = node.value.lower()
             forbidden = (
-                value.startswith(("http://", "https://", "//"))
+                value.startswith(("http://", "https://", "ws://", "wss://", "//"))
                 or (
-                    value in {"http", "https", "http:", "https:", "://"}
+                    value in {"http", "https", "ws", "wss", "http:", "https:", "ws:", "wss:", "://"}
                     and (
                         fragments
                         or isinstance(parents.get(id(node)), (ast.Assign, ast.BinOp, ast.JoinedStr))
@@ -211,6 +228,33 @@ def check_no_market_urls(path: Path, *, fragments: bool = True) -> list[Violatio
     return violations
 
 
+def _origin_prefix_literals(path: Path) -> frozenset[tuple[int, int]]:
+    """F-10 origin validation may compare HTTP prefixes, never construct endpoints."""
+    if path.parts[-4:] != ("tiewtrade", "services", "api", "settings.py"):
+        return frozenset()
+    tree = ast.parse(path.read_text(encoding="utf-8"))
+    prefixes: set[tuple[int, int]] = set()
+    for function in tree.body:
+        if not isinstance(function, ast.FunctionDef) or function.name != "price_origins":
+            continue
+        for node in ast.walk(function):
+            if not (
+                isinstance(node, ast.Call)
+                and isinstance(node.func, ast.Attribute)
+                and node.func.attr == "startswith"
+                and len(node.args) == 1
+                and not node.keywords
+                and isinstance(node.args[0], ast.Tuple)
+            ):
+                continue
+            members = node.args[0].elts
+            if len(members) == 2 and all(isinstance(item, ast.Constant) for item in members):
+                literals = [item for item in members if isinstance(item, ast.Constant)]
+                if [item.value for item in literals] == ["http://", "https://"]:
+                    prefixes.update((item.lineno, item.col_offset) for item in literals)
+    return frozenset(prefixes)
+
+
 def check_network_boundary(path: Path, relative: str) -> list[Violation]:
     """NC-17: import นอก gateway ต้องตรงข้อยกเว้นทั้งไฟล์และสมาชิก"""
     allowed: dict[str, str] = {}
@@ -218,6 +262,9 @@ def check_network_boundary(path: Path, relative: str) -> list[Violation]:
         allowed = {"httpx": "AsyncClient", "socket": "gethostname"}
     elif relative == "tiewtrade/infra/auth/totp.py":
         allowed = {"urllib.parse": "quote"}
+    elif relative == "tiewtrade/services/api/price_protocol.py":
+        # NC-29: inbound Sans-I/O decoding only, not a network-client gateway.
+        allowed = {"websockets.server": "ServerProtocol", "websockets.frames": "CloseCode"}
     violations = check_asyncio_network(path)
     bindings: dict[str, tuple[str, str | None]] = {}
     for module, node in network_imports(path):
@@ -276,11 +323,41 @@ def _check_composition_uses(
 
     violations: list[Violation] = []
     for node in nodes:
+        if isinstance(node, (ast.Assign, ast.AnnAssign)):
+            targets = node.targets if isinstance(node, ast.Assign) else [node.target]
+            if node.value is not None and any(
+                isinstance(target, ast.Name) and target.id == "__all__" for target in targets
+            ):
+                exported = {
+                    child.value
+                    for child in ast.walk(node.value)
+                    if isinstance(child, ast.Constant) and isinstance(child.value, str)
+                }
+                if any(
+                    name in exported and module.startswith("websockets.")
+                    for name, (module, _member) in bindings.items()
+                ):
+                    violations.append(
+                        Violation(
+                            path,
+                            node.lineno,
+                            "network-outside-gateway",
+                            "ห้าม re-export decoder imports",
+                        )
+                    )
         if isinstance(node, ast.Name) and isinstance(node.ctx, ast.Load) and node.id in bindings:
             module, member = bindings[node.id]
             parent = parents.get(id(node))
             if member is None:
                 valid = isinstance(parent, ast.Attribute) and parent.attr == allowed[module]
+            elif (module, member) == ("websockets.server", "ServerProtocol"):
+                valid = isinstance(parent, ast.ClassDef) and node in parent.bases
+            elif (module, member) == ("websockets.frames", "CloseCode"):
+                valid = id(node) in annotations or (
+                    isinstance(parent, ast.Attribute)
+                    and parent.attr in {"MESSAGE_TOO_BIG", "POLICY_VIOLATION"}
+                    and isinstance(parent.ctx, ast.Load)
+                )
             else:
                 called = isinstance(parent, ast.Call) and parent.func is node
                 valid = called or id(node) in annotations
@@ -316,12 +393,15 @@ def _check_composition_uses(
         for node in nodes
         if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
     }
+    approved_factories = {"live_wallet_factory", "live_candle_source"}
+    if path.parts[-4:] == ("tiewtrade", "services", "market_data", "main.py"):
+        approved_factories.add("live_price_feed")
     venue_factories = {
         alias.asname or alias.name
         for node in nodes
         if isinstance(node, ast.ImportFrom) and node.module == "tiewtrade.venues"
         for alias in node.names
-        if alias.name in {"live_wallet_factory", "live_candle_source"}
+        if alias.name in approved_factories
     }
     for node in nodes:
         if (

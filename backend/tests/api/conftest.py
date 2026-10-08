@@ -32,6 +32,16 @@ def _api_environment(monkeypatch: pytest.MonkeyPatch) -> None:
     ปิดธง `Secure` เพราะไคลเอนต์ของเทสต์ใช้ `http://` จึงไม่ส่ง cookie ที่มีธงนั้นกลับมา
     ค่าเริ่มต้นของจริงยังเป็นเปิด และมีเทสต์แยกยืนยัน (V-21)
     """
+    monkeypatch.setenv("TIEWTRADE_PRICE_ORIGINS", "http://localhost:5173")
+    # Preserve CI/explicit role credentials and database selection. Only supply a
+    # local default when no API endpoint was configured by the test environment.
+    monkeypatch.setenv(
+        "TIEWTRADE_REDIS_URL_API",
+        os.environ.get(
+            "TIEWTRADE_REDIS_URL_API",
+            os.environ.get("TIEWTRADE_TEST_REDIS_URL", "redis://127.0.0.1:56379/0"),
+        ),
+    )
     monkeypatch.setenv("TIEWTRADE_SIGNUP_OPEN", "1")
     monkeypatch.setenv("TIEWTRADE_COOKIE_SECURE", "0")
 

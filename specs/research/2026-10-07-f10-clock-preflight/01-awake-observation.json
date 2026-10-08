@@ -1,0 +1,43 @@
+{
+  "kind": "awake_browser_observation_not_suspend_test",
+  "observed_at": "2026-10-07",
+  "os": {
+    "name": "macOS",
+    "version": "27.0",
+    "build": "26A428"
+  },
+  "browser": {
+    "product": "Chrome/154.0.8037.93",
+    "revision": "f89f3a4363808e117c592adedcf9947882ac3b79",
+    "jsVersion": "15.4.80.19",
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+  },
+  "context": {
+    "url": "about:blank",
+    "crossOriginIsolated": false
+  },
+  "observation": {
+    "sampleCount": 100000,
+    "positiveDeltas": 71,
+    "minPositiveDeltaMs": 0.09999999776482582,
+    "maxPositiveDeltaMs": 0.10000000149011612,
+    "awakeInterval": {
+      "monoMs": 2001.2000000029802,
+      "wallMs": 2001
+    }
+  },
+  "limitations": [
+    "No OS suspend or hibernate performed",
+    "Date.now is not an independent trusted reference",
+    "Observed minimum step is not accuracy or an upper error bound",
+    "Browser UA disguises OS version; true OS recorded separately",
+    "Pinned CDP source revision subsequently inspected; default macOS TimeTicks path excludes sleep. No OS suspend experiment."
+  ],
+  "suspendTestPerformed": false,
+  "clockEligibleCertified": false,
+  "sourceContract": {
+    "suspendInclusive": "FAIL_DEFAULT_MACOS_PATH",
+    "quantizationDifferenceBoundMs": "<0.2 for coarse context on inspected revision",
+    "totalElapsedErrorBound": "UNVERIFIED"
+  }
+}

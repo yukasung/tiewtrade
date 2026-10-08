@@ -12,6 +12,7 @@ import {
 } from "./auth";
 import { TotpPanel } from "./TotpPanel";
 import { AccountSession } from "./AccountSession";
+import { RealtimePricePanel } from "./RealtimePricePanel";
 import { TradingAccountPanel } from "./TradingAccountPanel";
 import { AccountLayout } from "./layout/AccountLayout";
 import { ApiKeyPanel } from "./ApiKeyPanel";
@@ -212,6 +213,7 @@ export function AuthPanel(): JSX.Element {
             />
             <ApiKeyPanel identity={identity} />
             <TradingAccountPanel identity={identity} />
+            <RealtimePricePanel />
           </section>
         </AccountLayout>
       </AccountSession>

@@ -451,6 +451,14 @@ def test_no_route_hands_back_the_secret(client: TestClient, ending: bool) -> Non
         assert client.get("/auth/me").status_code == 200
         path = template.replace("{key_id}", key_id)
         assert "{" not in path, f"missing canary path value for {template}"
+        if method == "WEBSOCKET":
+            with client.websocket_connect(
+                path, headers={"origin": "http://localhost:5173"}
+            ) as socket:
+                frame = socket.receive_text()
+                for item in forbidden:
+                    assert item not in frame
+            continue
         response = client.request(
             method,
             path,

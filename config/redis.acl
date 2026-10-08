@@ -1,0 +1,3 @@
+user default off
+user market_data on >dev_market_data_redis -@all +ping +publish +client|setinfo &market.prices.changed
+user api on >dev_api_redis -@all +ping +subscribe +unsubscribe +client|setinfo +eval +time +get +incr +expire ~market.ws.admission:* &market.prices.changed

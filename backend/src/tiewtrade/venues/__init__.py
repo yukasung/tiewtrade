@@ -24,8 +24,9 @@ from tiewtrade.venues.errors import (
     VenueRejectedError,
     VenueUnavailableError,
 )
-from tiewtrade.venues.fake import FakeVenue
+from tiewtrade.venues.fake import FakePriceFeed, FakeVenue
 from tiewtrade.venues.limits import CallCost, NoRateLimit, RateLimitGuard
+from tiewtrade.venues.price_streams import PriceFeed
 from tiewtrade.venues.prices import DEFAULT_LATEST_PRICE_COST, Price, PriceSource
 from tiewtrade.venues.signing import RequestSigner
 from tiewtrade.venues.symbols import Symbol, SymbolConstraints
@@ -42,6 +43,7 @@ def live_candle_source(
     client: object,
     clock: Callable[[], datetime],
     timeout: timedelta,
+    guard: RateLimitGuard | None = None,
 ) -> CandleSource:
     """Compose one public source with shared conservative IP reservations."""
     from tiewtrade.venues.binance_th import BinanceThTransport, IpWeightLimiter
@@ -49,11 +51,43 @@ def live_candle_source(
 
     transport = BinanceThTransport(
         client=client,  # type: ignore[arg-type]
-        guard=IpWeightLimiter(clock=clock, reservation_weight_floor=10),
+        guard=guard
+        if guard is not None
+        else IpWeightLimiter(clock=clock, reservation_weight_floor=10),
         clock=clock,
         timeout=timeout,
     )
     return BinanceThCandles(transport, clock=clock)
+
+
+def live_price_feed(
+    *,
+    client: object,
+    clock: Callable[[], datetime],
+    timeout: timedelta,
+    guard: RateLimitGuard | None = None,
+) -> "PriceFeed":
+    """Compose public recovery and stream, sharing the caller's IP guard."""
+    from tiewtrade.venues.binance_th import BinanceThTransport, IpWeightLimiter
+    from tiewtrade.venues.binance_th.price_feed import BinanceThPriceFeed
+    from tiewtrade.venues.binance_th.stream_transport import BinanceThStreamTransport
+
+    transport = BinanceThTransport(
+        client=client,  # type: ignore[arg-type]
+        guard=guard
+        if guard is not None
+        else IpWeightLimiter(clock=clock, reservation_weight_floor=10),
+        clock=clock,
+        timeout=timeout,
+    )
+    return BinanceThPriceFeed(transport, BinanceThStreamTransport(clock=clock))
+
+
+def public_rate_limit_guard(*, clock: Callable[[], datetime]) -> RateLimitGuard:
+    """A single public-data reservation guard for all sources in one process."""
+    from tiewtrade.venues.binance_th import IpWeightLimiter
+
+    return IpWeightLimiter(clock=clock, reservation_weight_floor=10)
 
 
 def live_wallet_factory(
@@ -99,10 +133,12 @@ __all__ = [
     "CallCost",
     "CandlePage",
     "CandleSource",
+    "FakePriceFeed",
     "FakeVenue",
     "Holding",
     "NoRateLimit",
     "Price",
+    "PriceFeed",
     "PriceSource",
     "RateLimitGuard",
     "RejectionReason",
@@ -120,5 +156,7 @@ __all__ = [
     "WalletHoldings",
     "WalletSource",
     "live_candle_source",
+    "live_price_feed",
     "live_wallet_factory",
+    "public_rate_limit_guard",
 ]

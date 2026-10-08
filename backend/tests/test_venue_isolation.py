@@ -125,7 +125,9 @@ def test_adapter_contract_lists_every_module_that_must_not_reach_the_network() -
     for package in adapter_packages(VENUES_ROOT):
         expected = {
             f"tiewtrade.venues.{package.name}.{path.stem}"
-            for path in modules_not_reaching(package, "transport")
+            for path in modules_not_reaching(
+                package, "transport", extra_gateways=("stream_transport",)
+            )
         }
         assert _contract_modules(ADAPTER_CONTRACT) == expected
 
@@ -164,7 +166,7 @@ def test_each_adapter_reaches_the_network_through_one_file_only() -> None:
     ทางออกเดียวคือเหตุผลที่ทำให้ "จองโควตา → เรียก → แปลผล" เลี่ยงไม่ได้
     """
     for package in adapter_packages(VENUES_ROOT):
-        found = check_network_only_in(package, "transport")
+        found = check_network_only_in(package, "transport", extra_gateways=("stream_transport",))
         assert found == [], f"{package.name} มีทางออกสู่เครือข่ายมากกว่าหนึ่งทาง:\n" + "\n".join(
             str(violation) for violation in found
         )
