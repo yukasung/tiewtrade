@@ -140,11 +140,12 @@ class Bucket(Enum):
     #: ยิงตลาดและกินที่เก็บความลับ ส่วนการกดลองใหม่แค่ปลุกงานที่มีอยู่แล้ว
     API_KEY_ADD = "API_KEY_ADD"
     API_KEY_RETRY = "API_KEY_RETRY"
+    PRICE_STREAM_HANDSHAKE = "PRICE_STREAM_HANDSHAKE"
 
     @property
     def table(self) -> str:
         """ตารางที่เก็บถังชนิดนี้ — **สิทธิ์ของสองตารางนี้แยกขาดกัน**"""
-        if self in (Bucket.API_KEY_ADD, Bucket.API_KEY_RETRY):
+        if self in (Bucket.API_KEY_ADD, Bucket.API_KEY_RETRY, Bucket.PRICE_STREAM_HANDSHAKE):
             return "api_throttle"
         return "auth_throttle"
 
@@ -445,6 +446,7 @@ RULES: Final[dict[Bucket, Rule | TokenRule]] = {
         doubling=False,
     ),
     # เพิ่ม key: ทำติดกันได้สามครั้ง แล้วเติมคืนทีละหนึ่งทุกยี่สิบนาที
+    Bucket.PRICE_STREAM_HANDSHAKE: TokenRule(6, timedelta(seconds=10)),
     Bucket.API_KEY_ADD: TokenRule(
         capacity=API_KEY_ADD_CAPACITY,
         refill_interval=API_KEY_ADD_REFILL,

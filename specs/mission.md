@@ -261,6 +261,12 @@ TiewTrade ไม่ใช่ UID หรือ API key ของ Binance TH
 
 | รหัส | เรื่อง | บล็อกอะไร |
 |---|---|---|
+| **NC-29 — Closed (2026-10-08)** | F-10 issue7: เจ้าของอนุมัติข้อยกเว้น NC-17 เฉพาะ ServerProtocol/CloseCode สำหรับ inbound Sans-I/O decoder ใน price_protocol.py; [ข้อเสนอ](features/2026-10-07-realtime-prices/plan.md#การเปลี่ยนแปลงหลังอนุมัติ--nc-29-approved-2026-10-08) | ปิดคำตัดสิน; negative fixtures/networkgate และfullbackendผ่านหลังอนุมัติ |
+| **NC-28 — Closed (2026-10-07)** | เจ้าของapproveก่อนแก้โค้ดให้F-10 WSตรวจsession/renewทุก500ms สูงสุด2transactions/s/socket โดยคงpool3/querytimeout≤500ms และstart-anchoredauthorizationdeadline1s | ปิดการปรับแผน; strictwatchdog/loadtestยังต้องตรวจผ่าน |
+| **NC-26 — Closed (2026-10-07)** | เจ้าของapproveให้เว็บแสดงสถานะที่serverตรวจ ณsnapshotพร้อมเวลา; backendตรวจfreshnessใหม่ก่อนใช้จริง ยกเลิกbrowserclockcertification; researchเก็บเหตุผลไว้ | ปิดREADY semantics; ไม่อนุมัติplan/validationโดยปริยาย |
+| **NC-27 — Closed (2026-10-07)** | เจ้าของapproveให้serverนับmarketoutageครบ60sและเว็บเตือนdeliveryfailureทันทีที่ตรวจพบพร้อมsnapshottime; ต่อกลับรับsnapshotใหม่ก่อนstatusล่าสุด ไม่ใช้browserelapsed60s | ปิดalertsemantics/แก้RQ-15; plan+validationยังต้องอนุมัติแยก |
+| **NC-24 — Closed (2026-10-07)** | เจ้าของเลือก A: ราคาซื้อขายล่าสุด + ส่งถึงเว็บพร้อมสถานะขั้นต่ำและการต่อกลับ; ไม่รวม bid/ask หรือแท่งเทียนสด; รายละเอียดใน `features/2026-10-07-realtime-prices/requirements.md` | ปิดขอบเขต F-10 แล้ว |
+| **NC-25 — Closed (2026-10-07)** | เจ้าของยืนยันราคาเกิน 10 วินาทีใช้ไม่ได้ทั้ง 5 คู่; ท่อตลาดหลุดถือว่าไม่พร้อมทันที; กู้ข้อมูลและตรวจความสดก่อนพร้อม; แจ้งเตือนในเว็บเมื่อไม่พร้อมต่อเนื่องครบ 60 วินาที | ปิดเกณฑ์ F-10 แล้ว |
 | **NC-23 — Closed (2026-10-07)** | เจ้าของสั่งแก้ issue4 ให้กฎหยุดบอทสอดคล้องกับประเภททีละแบบ: หยุดไม่เปลี่ยนประเภท, manual opening ต้องเลือก MANUAL; ลดความเสี่ยงได้ทุกประเภท | ไม่บล็อกด้วยความขัดแย้งนี้แล้ว; งาน F-16/F-19/F-22 ต้อง implement/test ตาม trading-safety หัวข้อ8 |
 | **NC-21 — รวมกับ NC-16 (2026-10-07)** | ยกเลิกฟีเจอร์ sub-account แต่ยังไม่ทราบอำนาจของ key; ไม่อ้างว่าความเสี่ยงโอน/ถอนหายไป | ติดตามก่อน Live ภายใต้ NC-16; ข้อห้าม endpoint ย้ายเงินคงเดิม |
 | **NC-22 — Superseded (2026-10-07)** | เจ้าของยกเลิกหลายบัญชี/หลายกระเป๋าและการใช้ UID เพื่อกันบัญชีซ้ำ | ไม่บล็อก F-08 ใหม่; ไม่อ้างว่า key ใหม่เป็นบัญชีเดิมโดยอัตโนมัติ |

@@ -1,0 +1,7 @@
+.realtime-price-panel { margin-top: var(--account-space-lg); padding: var(--account-space-md); border: var(--account-border-width) solid var(--account-line); border-radius: var(--account-radius); background: var(--account-surface); }
+.realtime-price-list { padding: 0; list-style: none; display: grid; gap: var(--account-space-md); }
+.realtime-price-list li { min-width: 0; border-top: var(--account-border-width) solid var(--account-line); padding-top: var(--account-space-sm); overflow-wrap: anywhere; }
+.realtime-price-list p { margin-block: var(--account-space-sm); }
+.market-value { font-variant-numeric: tabular-nums; }
+.realtime-price-warning { color: var(--app-warning-ink); background: var(--app-warning-bg); padding: var(--account-space-sm); }
+@media (min-width: 64rem) { .realtime-price-list li { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: var(--account-space-sm); } }

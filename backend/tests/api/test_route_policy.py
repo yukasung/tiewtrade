@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from typing import Final
 
-from fastapi.routing import APIRoute
+from fastapi.routing import APIRoute, APIWebSocketRoute
 from starlette.routing import BaseRoute
 
 from tiewtrade.services.api.app import app
@@ -32,6 +32,7 @@ def route_keys() -> set[tuple[str, str]]:
         for method in sorted(route.methods or set())
         if method != "HEAD"
     }
+    found |= {("WEBSOCKET", route.path) for route in _socket_routes()}
     for route in app.routes:
         path = getattr(route, "path", None)
         methods = getattr(route, "methods", None)
@@ -123,3 +124,17 @@ def test_routes_that_renew_the_session_are_declared_and_few() -> None:
 def test_no_route_is_both_public_and_renewing() -> None:
     """เส้นทางสาธารณะไม่มี session ให้ต่ออายุ ถ้าอยู่ทั้งสองรายการแปลว่าสับสน"""
     assert frozenset() == PUBLIC_ROUTES & RENEWING_ROUTES
+
+
+def _socket_routes(routes: list[BaseRoute] | None = None) -> list[APIWebSocketRoute]:
+    found: list[APIWebSocketRoute] = []
+    for route in app.routes if routes is None else routes:
+        if isinstance(route, APIWebSocketRoute):
+            found.append(route)
+        for attribute in ("routes", "original_router"):
+            nested = getattr(route, attribute, None)
+            if isinstance(nested, list):
+                found.extend(_socket_routes(nested))
+            elif nested is not None and hasattr(nested, "routes"):
+                found.extend(_socket_routes(list(nested.routes)))
+    return found

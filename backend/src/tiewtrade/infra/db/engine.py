@@ -63,15 +63,35 @@ def database_url(role: DatabaseRole) -> str:
     return url
 
 
-def create_engine_for(role: DatabaseRole) -> AsyncEngine:
+def create_engine_for(
+    role: DatabaseRole,
+    *,
+    pool_size: int | None = None,
+    max_overflow: int | None = None,
+    pool_timeout: float | None = None,
+) -> AsyncEngine:
     """สร้าง engine ของบทบาทนั้น
 
     `echo=False` และ `hide_parameters=True` เพื่อไม่ให้ค่าที่ bind หลุดลง log (RQ-15)
     """
+    options: dict[str, object] = {}
+    if pool_size is not None:
+        if pool_size < 1:
+            raise ValueError("pool_size must be positive")
+        options["pool_size"] = pool_size
+    if max_overflow is not None:
+        if max_overflow < 0:
+            raise ValueError("max_overflow must be nonnegative")
+        options["max_overflow"] = max_overflow
+    if pool_timeout is not None:
+        if not 0 < pool_timeout <= 0.5:
+            raise ValueError("bounded pool timeout must be at most 500ms")
+        options["pool_timeout"] = pool_timeout
     return create_async_engine(
         database_url(role),
         echo=False,
         echo_pool=False,
         hide_parameters=True,
         pool_pre_ping=True,
+        **options,
     )

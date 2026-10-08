@@ -5,9 +5,8 @@
 #   env -u POSTGRES_VERSION docker compose --env-file config/postgres.env up -d --build --wait
 # การลบค่าจาก shell ก่อนอ่านไฟล์กันค่าภายนอกทับเวอร์ชันกลางโดยไม่ตั้งใจ
 #
-# ยังไม่มี Redis โดยเจตนา — ยังไม่มีงานไหนต้องใช้คิวหรือ pub/sub (tech-stack.md หัวข้อ 5)
+# F-10 adds public-price ingestion and Redis invalidations with process-scoped ACLs.
 # worker ตรวจ API key ของ engine (F-07) รันด้วยมือ — ตัวตั้งเวลาเป็นงาน F-31
-# ยังไม่มี market-data เพราะยังไม่มีอะไรให้รัน (F-10)
 #
 # **รหัสผ่านในไฟล์นี้ใช้ได้เฉพาะเครื่องนักพัฒนาและ CI** บนเครื่องจริงเป็นงาน F-31
 
@@ -31,6 +30,31 @@ services:
       timeout: 3s
       retries: 20
 
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--aclfile", "/etc/redis/users.acl"]
+    volumes:
+      - ./config/redis.acl:/etc/redis/users.acl:ro
+    healthcheck:
+      test: ["CMD-SHELL", "REDISCLI_AUTH=dev_api_redis redis-cli --user api ping"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  market-data:
+    build:
+      context: ./backend
+    command: ["python", "-m", "tiewtrade.services.market_data.main"]
+    environment:
+      TIEWTRADE_DATABASE_URL_MARKET_DATA: postgresql+asyncpg://tiewtrade_market_data:dev_market_data@postgres:5432/tiewtrade
+      TIEWTRADE_REDIS_URL_MARKET_DATA: redis://market_data:dev_market_data_redis@redis:6379/0
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
   # รันครั้งเดียวแล้วจบ — api รอให้เสร็จก่อนเริ่ม
   migrate:
     build:
@@ -44,6 +68,7 @@ services:
     restart: "no"
 
   api:
+    command: ["uvicorn", "tiewtrade.services.api.app:app", "--no-proxy-headers", "--host", "0.0.0.0", "--port", "8000", "--ws", "tiewtrade.services.api.price_protocol:PriceWebSocketProtocol"]
     build:
       context: ./backend
     environment:
@@ -51,6 +76,8 @@ services:
       # บทบาทยืนยันตัวตนของ F-05 — บทบาทเดียวที่แตะข้อมูลเข้าสู่ระบบและออก session ได้
       TIEWTRADE_DATABASE_URL_AUTH: postgresql+asyncpg://tiewtrade_auth:dev_auth@postgres:5432/tiewtrade
       # เปิดให้สมัครในเครื่องพัฒนา — **ค่าเริ่มต้นของจริงคือปิด** (F-05 Q-1)
+      TIEWTRADE_REDIS_URL_API: redis://api:dev_api_redis@redis:6379/0
+      TIEWTRADE_PRICE_ORIGINS: http://localhost:5173,http://127.0.0.1:5173
       TIEWTRADE_SIGNUP_OPEN: "1"
       # ปิดธง Secure เพราะ compose ให้บริการผ่าน http — บนเครื่องจริงห้ามปิด
       TIEWTRADE_COOKIE_SECURE: "0"
@@ -69,6 +96,8 @@ services:
     depends_on:
       migrate:
         condition: service_completed_successfully
+      redis:
+        condition: service_healthy
 
   frontend:
     build:

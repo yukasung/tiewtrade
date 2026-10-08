@@ -93,6 +93,8 @@ ROUTE_RULES: Final[dict[tuple[str, str], RouteRule]] = {
     # ── ต้องมี session แต่ **ไม่ต่ออายุ** เพราะหน้าเว็บเรียกเป็นรอบ ๆ (Q-2) ──
     ("GET", "/auth/me"): RouteRule(),
     ("GET", "/market-data/candles"): RouteRule(),
+    ("GET", "/market-data/prices"): RouteRule(),
+    ("WEBSOCKET", "/market-data/prices/stream"): RouteRule(),
     ("POST", "/market-data/candles/requests"): RouteRule(),
     # ── ปัจจัยที่สอง (F-06) ──
     #

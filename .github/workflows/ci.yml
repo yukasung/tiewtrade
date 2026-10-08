@@ -36,6 +36,15 @@ jobs:
       run:
         working-directory: backend
     services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 3s
+          --health-timeout 3s
+          --health-retries 20
       postgres:
         image: postgres:${{ needs.config.outputs.postgres_version }}
         env:
@@ -60,6 +69,10 @@ jobs:
       TIEWTRADE_DATABASE_URL_AUTH: postgresql+asyncpg://tiewtrade_auth:dev_auth@127.0.0.1:5432/tiewtrade
       # เทสต์ของ F-05 ต้องสมัครได้ และไคลเอนต์ของเทสต์ใช้ http
       # ค่าเริ่มต้นของทั้งสองค่าคือ "ปิดการสมัคร" และ "ตั้งธง Secure"
+      TIEWTRADE_REDIS_URL_API: redis://127.0.0.1:6379/0
+      TIEWTRADE_REDIS_URL_MARKET_DATA: redis://127.0.0.1:6379/0
+      TIEWTRADE_TEST_REDIS_URL: redis://127.0.0.1:6379/0
+      TIEWTRADE_PRICE_ORIGINS: http://localhost:5173,http://127.0.0.1:5173
       TIEWTRADE_SIGNUP_OPEN: "1"
       TIEWTRADE_COOKIE_SECURE: "0"
       # กุญแจปิดผนึก secret ของ TOTP (F-06) — **ค่านี้ใช้ได้เฉพาะเครื่องพัฒนาและ CI**
@@ -170,6 +183,15 @@ jobs:
     # ตั้งแต่ F-05 แอปสร้าง engine ของฐานข้อมูลตอนเปิด และ middleware ตัวตน
     # ใช้ฐานข้อมูลทุกคำขอ — งานนี้จึงต้องมีฐานข้อมูลจริงเหมือนงานหลังบ้าน
     services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 3s
+          --health-timeout 3s
+          --health-retries 20
       postgres:
         image: postgres:${{ needs.config.outputs.postgres_version }}
         env:
@@ -192,6 +214,10 @@ jobs:
       TIEWTRADE_DATABASE_URL_ENGINE: postgresql+asyncpg://tiewtrade_engine:dev_engine@127.0.0.1:5432/tiewtrade_e2e
       TIEWTRADE_DATABASE_URL_ENGINE_SCAN: postgresql+asyncpg://tiewtrade_engine_scan:dev_engine_scan@127.0.0.1:5432/tiewtrade_e2e
       TIEWTRADE_DATABASE_URL_MARKET_DATA: postgresql+asyncpg://tiewtrade_market_data:dev_market_data@127.0.0.1:5432/tiewtrade_e2e
+      TIEWTRADE_REDIS_URL_API: redis://127.0.0.1:6379/0
+      TIEWTRADE_REDIS_URL_MARKET_DATA: redis://127.0.0.1:6379/0
+      TIEWTRADE_TEST_REDIS_URL: redis://127.0.0.1:6379/0
+      TIEWTRADE_PRICE_ORIGINS: http://localhost:5173,http://127.0.0.1:5173
       TIEWTRADE_SIGNUP_OPEN: "1"
       TIEWTRADE_COOKIE_SECURE: "0"
       # กุญแจปิดผนึก secret ของ TOTP (F-06) — **ค่านี้ใช้ได้เฉพาะเครื่องพัฒนาและ CI**

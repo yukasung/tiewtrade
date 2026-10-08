@@ -139,7 +139,7 @@ uv run python scripts/sweep_auth_tables.py            # ลบจริง
 # หลังบ้าน
 cd backend
 uv sync
-uv run uvicorn tiewtrade.services.api.app:app --reload --port 8000
+uv run uvicorn tiewtrade.services.api.app:app --no-proxy-headers --reload --port 8000 --ws tiewtrade.services.api.price_protocol:PriceWebSocketProtocol
 
 # หน้าบ้าน (อีกหน้าต่าง)
 cd frontend
@@ -147,6 +147,13 @@ npm install
 npx playwright install chromium   # ครั้งแรกเท่านั้น สำหรับเทสต์ e2e
 npm run dev
 ```
+
+API ปิดการอ่าน forwarded headers ด้วย `--no-proxy-headers` ทุก launch command
+เพื่อให้ WebSocket admission ใช้ TCP peer จริง ผู้เรียกจึงปลอม `X-Forwarded-For`
+เพื่อเปลี่ยน IP bucket ไม่ได้ เมื่อผ่าน Vite/reverse proxy ผู้ใช้จะใช้ IP bucket
+ของ proxy ร่วมกัน หาก deployment ต้องแยก client IP ต้องกำหนด trusted proxy
+อย่างชัดเจนและให้ proxy ล้าง/เขียน forwarded headers ใหม่ก่อนเปิดรับ headers เหล่านี้.
+
 
 `npx playwright install chromium` เก็บเบราว์เซอร์ไว้ที่ระดับผู้ใช้ ไม่ใช่ในโฟลเดอร์โปรเจกต์
 จึงต้องรันครั้งเดียวต่อเครื่อง ไม่ใช่ครั้งเดียวต่อการโคลน — ถ้าข้าม `npm run test:e2e` จะพัง

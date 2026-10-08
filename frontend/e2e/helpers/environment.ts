@@ -1,4 +1,4 @@
-const roles = ["API", "AUTH", "ENGINE", "ENGINE_SCAN", "MIGRATOR"] as const;
+const roles = ["API", "AUTH", "ENGINE", "ENGINE_SCAN", "MIGRATOR", "MARKET_DATA"] as const;
 
 /** Fail before starting servers or connecting to any database. Never echo URLs. */
 export function e2eEnvironment(
@@ -9,10 +9,7 @@ export function e2eEnvironment(
     throw new Error("E2E_DATABASE_REJECTED");
   }
   let target: string | undefined;
-  const configuredRoles = [
-    ...roles,
-    ...(source.TIEWTRADE_DATABASE_URL_MARKET_DATA ? ["MARKET_DATA"] : []),
-  ];
+  const configuredRoles = roles;
   for (const role of configuredRoles) {
     try {
       const url = new URL(source[`TIEWTRADE_DATABASE_URL_${role}`] ?? "");
@@ -31,6 +28,16 @@ export function e2eEnvironment(
       target = address;
     } catch {
       throw new Error("E2E_DATABASE_REJECTED");
+    }
+  }
+  for (const role of ["API", "MARKET_DATA"]) {
+    try {
+      const redis = new URL(source[`TIEWTRADE_REDIS_URL_${role}`] ?? "");
+      if (redis.protocol !== "redis:" || !["127.0.0.1", "localhost", "[::1]"].includes(redis.hostname) || redis.search || redis.hash) {
+        throw new Error("E2E_REDIS_REJECTED");
+      }
+    } catch {
+      throw new Error("E2E_REDIS_REJECTED");
     }
   }
   const environment: Record<string, string> = {};

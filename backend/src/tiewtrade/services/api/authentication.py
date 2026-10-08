@@ -38,8 +38,9 @@ from tiewtrade.infra.auth import (
     renewed_idle_deadline,
     totp,
 )
+from tiewtrade.infra.auth.sessions import SessionOwner
 from tiewtrade.infra.db import DatabaseRole
-from tiewtrade.infra.db.session import presented_session, user_session
+from tiewtrade.infra.db.session import PresentedSession, presented_session, user_session
 from tiewtrade.services.api.resources import client_key, engine_for, totp_keys
 from tiewtrade.services.api.routing_policy import (
     accepts_recovery_grant,
@@ -185,7 +186,7 @@ async def identify(engine: AsyncEngine, request: Request) -> Authenticated | Non
     token_hash = hash_token(token)
     now = datetime.now(UTC)
     async with presented_session(engine, token_hash=token_hash, role=DatabaseRole.API) as session:
-        owner = await owner_of_presented(session)
+        owner = await presented_owner(session)
         if owner is None:
             return None
         route_key: tuple[str, str] | None = getattr(request.state, "route_key", None)
@@ -282,3 +283,8 @@ async def authenticate_request(engine: AsyncEngine, request: Request) -> None:
         request.state.authenticated = replace(
             found, second_factor=await second_factor_of(request, found)
         )
+
+
+async def presented_owner(session: PresentedSession) -> SessionOwner | None:
+    """Shared HTTP/WS identity lookup; never extends a session by itself."""
+    return await owner_of_presented(session)

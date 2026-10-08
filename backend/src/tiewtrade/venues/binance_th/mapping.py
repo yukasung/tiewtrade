@@ -71,7 +71,12 @@ def price_from_trades(*, symbol: Symbol, payload: object, received_at: datetime)
     if not trades:
         raise VenueUnavailableError()
 
-    latest = _mapping(trades[-1])
+    return price_from_trade(symbol=symbol, trade=trades[-1], received_at=received_at)
+
+
+def price_from_trade(*, symbol: Symbol, trade: object, received_at: datetime) -> Price:
+    """Shared exact trade scalar parser for REST and stream mapping."""
+    latest = _mapping(trade)
     # ราคาศูนย์หรือติดลบผิดกฎของ `Price` และเวลาที่ใหญ่เกินช่วงก็อ่านไม่ได้เหมือนกัน
     with _readable():
         return Price(

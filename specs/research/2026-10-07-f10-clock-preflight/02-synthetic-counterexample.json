@@ -1,0 +1,43 @@
+{
+  "kind": "synthetic_counterexample_not_browser_measurement",
+  "assumption": "monotonic clock pauses in OS sleep; wall clock can adjust; no lifecycle event observed",
+  "worlds": [
+    {
+      "name": "awake",
+      "real_elapsed_ms": 500,
+      "samples": [
+        {
+          "mono_ms": 1000,
+          "wall_ms": 1700000000000
+        },
+        {
+          "mono_ms": 1500,
+          "wall_ms": 1700000000500
+        }
+      ]
+    },
+    {
+      "name": "suspend_plus_wall_rollback",
+      "real_elapsed_ms": 20500,
+      "sleep_ms": 20000,
+      "wall_adjustment_ms": -20000,
+      "samples": [
+        {
+          "mono_ms": 1000,
+          "wall_ms": 1700000000000
+        },
+        {
+          "mono_ms": 1500,
+          "wall_ms": 1700000000500
+        }
+      ]
+    }
+  ],
+  "price_budget_ms": 1000,
+  "elapsed_formula_ms": 501,
+  "same_observable_samples": true,
+  "correct_fresh_results": [
+    true,
+    false
+  ]
+}

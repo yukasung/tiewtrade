@@ -9,6 +9,7 @@
 from __future__ import annotations
 
 import os
+from dataclasses import dataclass
 from typing import Final
 
 #: ชื่อ cookie — `httpOnly` ตัวหนึ่งสำหรับ session และตัวที่อ่านได้สำหรับโทเคนกัน CSRF
@@ -45,3 +46,46 @@ def cookie_secure() -> bool:
     จะไม่ส่ง cookie ที่มีธงนี้กลับมา — บนเครื่องจริงห้ามปิด
     """
     return os.environ.get(_COOKIE_SECURE_VARIABLE, "1") != "0"
+
+
+def price_origins() -> frozenset[str]:
+    """Explicit browser origins; missing configuration permits no browser connection."""
+    origins = frozenset(filter(None, os.environ.get("TIEWTRADE_PRICE_ORIGINS", "").split(",")))
+    if any("*" in value for value in origins) or any(
+        not value.startswith(("http://", "https://")) for value in origins
+    ):
+        raise ValueError("price origins must be explicit HTTP origins")
+    return origins
+
+
+def price_redis_url() -> str:
+    value = os.environ.get("TIEWTRADE_REDIS_URL_API", "")
+    if not value:
+        raise ValueError("TIEWTRADE_REDIS_URL_API is required")
+    return value
+
+
+@dataclass(frozen=True, slots=True)
+class PriceSettings:
+    """Approved resource defaults; the three user slots remain a database contract."""
+
+    physical_limit: int = 100
+    pending_limit: int = 16
+    global_attempts: int = 200
+    ip_attempts: int = 30
+    coordinator_interval: float = 0.5
+    authorization_age: float = 1
+    query_timeout: float = 0.5
+    send_timeout: float = 5
+    inbound_max_bytes: int = 256
+
+    def __post_init__(self) -> None:
+        if not 1 <= self.pending_limit <= self.physical_limit:
+            raise ValueError("invalid process socket budgets")
+        if min(self.global_attempts, self.ip_attempts, self.inbound_max_bytes) < 1:
+            raise ValueError("stream limits must be positive")
+        if not 0 < self.query_timeout <= 0.5 or self.send_timeout <= 0:
+            raise ValueError("invalid stream deadlines")
+
+
+PRICE_SETTINGS: Final[PriceSettings] = PriceSettings()

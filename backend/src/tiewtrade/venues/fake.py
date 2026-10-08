@@ -18,10 +18,11 @@
 from __future__ import annotations
 
 from collections import deque
-from collections.abc import Iterable, Mapping
+from collections.abc import AsyncIterator, Iterable, Mapping
 from datetime import datetime
 
 from tiewtrade.core.market_data import Timeframe
+from tiewtrade.core.realtime_prices import QuoteObservation
 from tiewtrade.venues.candles import (
     DEFAULT_CANDLES_COST,
     CandlePage,
@@ -29,8 +30,14 @@ from tiewtrade.venues.candles import (
     validate_request,
 )
 from tiewtrade.venues.constraints import DEFAULT_CONSTRAINTS_COST
-from tiewtrade.venues.errors import RejectionReason, VenueError, VenueRejectedError
+from tiewtrade.venues.errors import (
+    RejectionReason,
+    VenueError,
+    VenueRejectedError,
+    VenueUnavailableError,
+)
 from tiewtrade.venues.limits import CallCost, NoRateLimit, RateLimitGuard
+from tiewtrade.venues.price_streams import FeedEvent
 from tiewtrade.venues.prices import DEFAULT_LATEST_PRICE_COST, Price
 from tiewtrade.venues.symbols import Symbol, SymbolConstraints
 from tiewtrade.venues.wallets import DEFAULT_HOLDINGS_COST, WalletHoldings
@@ -115,3 +122,23 @@ class FakeVenue:
         await self._guard.reserve(cost)
         if self._queued_errors:
             raise self._queued_errors.popleft()
+
+
+class FakePriceFeed:
+    """Finite scripted feed with exact recovery observations and no clock/network."""
+
+    def __init__(
+        self, *, snapshots: dict[Symbol, QuoteObservation], events: tuple[FeedEvent, ...] = ()
+    ) -> None:
+        self._snapshots = dict(snapshots)
+        self._events = events
+
+    async def snapshot(self, symbol: Symbol) -> QuoteObservation:
+        quote = self._snapshots.get(symbol)
+        if quote is None:
+            raise VenueUnavailableError()
+        return quote
+
+    async def events(self, symbols: tuple[Symbol, ...]) -> AsyncIterator[FeedEvent]:
+        for event in self._events:
+            yield event

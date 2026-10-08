@@ -4,14 +4,23 @@ import { e2eEnvironment } from "../e2e/helpers/environment";
 
 function isolated(): Record<string, string | undefined> {
   const env: Record<string, string | undefined> = { TIEWTRADE_E2E_DATABASE_NAME: "tiewtrade_e2e_review" };
-  for (const role of ["API", "AUTH", "ENGINE", "ENGINE_SCAN", "MIGRATOR"]) {
+  for (const role of ["API", "AUTH", "ENGINE", "ENGINE_SCAN", "MIGRATOR", "MARKET_DATA"]) {
     env[`TIEWTRADE_DATABASE_URL_${role}`] =
       `postgresql+asyncpg://tiewtrade_${role.toLowerCase()}:synthetic@127.0.0.1:55432/tiewtrade_e2e_review`;
   }
+  env.TIEWTRADE_REDIS_URL_API = "redis://127.0.0.1:56379/0";
+  env.TIEWTRADE_REDIS_URL_MARKET_DATA = "redis://127.0.0.1:56379/0";
   return env;
 }
 
 describe("E2E destructive fixture isolation", () => {
+  it.each([undefined, "redis://remote.invalid:6379/0", "redis://localhost:56379/0?host=remote.invalid", "redis://localhost:56379/0#foreign"])(
+    "rejects unsafe Redis targets without exposing URLs %s", (url) => {
+      const env = isolated();
+      env.TIEWTRADE_REDIS_URL_API = url;
+      expect(() => e2eEnvironment(env)).toThrow(/^E2E_REDIS_REJECTED$/);
+    },
+  );
   it("accepts explicit isolated roles and pins the frontend to its own API", () => {
     const env = isolated();
     env.API_URL = "https://unrelated.invalid";

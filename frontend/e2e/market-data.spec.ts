@@ -39,6 +39,24 @@ asyncio.run(run())
   );
 }
 
+// The shared public demand queue survives previous E2E runs, including unconfirmed repairs.
+// Reset only these fixtures after the existing isolation guard validates the disposable target.
+test.beforeEach(() => {
+  execFileSync(".venv/bin/python", ["-B", "-c", `
+import asyncio
+from sqlalchemy import text
+from tiewtrade.infra.db import DatabaseRole, create_engine_for
+async def clear():
+    engine = create_engine_for(DatabaseRole.MIGRATOR)
+    try:
+        async with engine.begin() as connection:
+            await connection.execute(text('TRUNCATE market_candle_demand, market_candles'))
+    finally:
+        await engine.dispose()
+asyncio.run(clear())
+`], { cwd: "../backend", stdio: "pipe", env: e2eEnvironment() });
+});
+
 test("market history request → actual worker → exact stored observations", async ({ page }) => {
   await page.goto("/");
   await page.getByTestId("switch-mode").click();
