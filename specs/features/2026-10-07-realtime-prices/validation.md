@@ -563,3 +563,13 @@ Local validation after the three latest fixes is complete. Deep code review was
 APPROVED before this run; no implementation changes were required by these tests.
 Remote CI and merge remain pending; no commit/push/merge performed. Docker image
 rebuild and live venue-contract probes were not rerun as part of this test task.
+
+
+### 2026-10-08 — Remote CI and integration approval
+
+Implementation commit `e8796f97d2de35d8cfc7c37f065591d17d30dc3a` passed all6
+[remote CI jobs](https://github.com/yukasung/tiewtrade/actions/runs/37743108753):
+configuration, frontend, API contract, container builds, backend, browser E2E.
+Owner authorized PR, merge, main CI verification and branch cleanup. The Done
+roadmap change is included in the closing PR; branch deletion follows successful
+main CI and confirmed remote merge.
