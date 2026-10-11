@@ -1,0 +1,14 @@
+﻿[
+    {
+        "sha256":  "4D4B791DDC30E35994A2B6DD0F5528D20E1DA7C7D5E8B5ACF5B5FF09F59EE7EF",
+        "path":  "backend/tests/services/indicator_builder/profile_capacity.py"
+    },
+    {
+        "sha256":  "FBE31D6E9A5F8D8B3761B6E2519CAEDA9076B2298C1AF1ADB3AA9193083AB2C7",
+        "path":  "backend/tests/services/indicator_builder/profile_capacity_app.py"
+    },
+    {
+        "sha256":  "5BC2F9B839D271A152766F9E89BD3D29FED8C8F2C26EFEA1E3A60503FA6712E4",
+        "path":  "backend/tests/services/indicator_builder/capacity_instrumentation/sitecustomize.py"
+    }
+]

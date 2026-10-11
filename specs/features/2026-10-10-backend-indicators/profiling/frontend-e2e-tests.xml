@@ -1,0 +1,36 @@
+<testsuites id="" name="" tests="10" failures="0" skipped="0" errors="0" time="52.224731999999996">
+<testsuite name="api-keys.spec.ts" timestamp="2026-10-11T13:44:40.149Z" hostname="" tests="2" failures="0" skipped="0" time="13.853" errors="0">
+<testcase name="เพิ่ม key ยืนยัน TOTP → ตรวจชั่วคราว → ลองใหม่ → ใช้งานได้ → ลบ" classname="api-keys.spec.ts" time="12.946">
+</testcase>
+<testcase name="มือถือ: บัญชีไม่มี TOTP เห็นทางไปเปิดและไม่มีช่องรับ secret" classname="api-keys.spec.ts" time="0.907">
+</testcase>
+</testsuite>
+<testsuite name="auth.spec.ts" timestamp="2026-10-11T13:44:40.149Z" hostname="" tests="2" failures="0" skipped="0" time="2.193" errors="0">
+<testcase name="สมัคร เข้าสู่ระบบ แล้วออกจากระบบได้บนเบราว์เซอร์จริง" classname="auth.spec.ts" time="1.347">
+</testcase>
+<testcase name="บอกเหตุผลเมื่อรหัสผ่านไม่ถูกต้อง และไม่พาเข้าระบบ" classname="auth.spec.ts" time="0.846">
+</testcase>
+</testsuite>
+<testsuite name="health.spec.ts" timestamp="2026-10-11T13:44:40.149Z" hostname="" tests="1" failures="0" skipped="0" time="0.478" errors="0">
+<testcase name="หน้าเว็บแสดงข้อมูลที่ได้จาก API จริง" classname="health.spec.ts" time="0.478">
+</testcase>
+</testsuite>
+<testsuite name="market-data.spec.ts" timestamp="2026-10-11T13:44:40.149Z" hostname="" tests="1" failures="0" skipped="0" time="1.636" errors="0">
+<testcase name="market history request → actual worker → exact stored observations" classname="market-data.spec.ts" time="1.636">
+</testcase>
+</testsuite>
+<testsuite name="realtime-prices.spec.ts" timestamp="2026-10-11T13:44:40.149Z" hostname="" tests="1" failures="0" skipped="0" time="15.146" errors="0">
+<testcase name="actual quote producer → PostgreSQL → Redis → API → browser recovery" classname="realtime-prices.spec.ts" time="15.146">
+</testcase>
+</testsuite>
+<testsuite name="totp.spec.ts" timestamp="2026-10-11T13:44:40.149Z" hostname="" tests="2" failures="0" skipped="0" time="4.622" errors="0">
+<testcase name="เปิดการยืนยันสองชั้น แล้วเข้าสู่ระบบต้องผ่านสองขั้น" classname="totp.spec.ts" time="2.554">
+</testcase>
+<testcase name="รหัสยืนยันผิดไม่พาเข้าระบบ และยังอยู่ที่ขั้นที่สอง" classname="totp.spec.ts" time="2.068">
+</testcase>
+</testsuite>
+<testsuite name="trading-account.spec.ts" timestamp="2026-10-11T13:44:40.149Z" hostname="" tests="1" failures="0" skipped="0" time="12.265" errors="0">
+<testcase name="fake key → explicit account use → reload → key deletion retains preference" classname="trading-account.spec.ts" time="12.265">
+</testcase>
+</testsuite>
+</testsuites>

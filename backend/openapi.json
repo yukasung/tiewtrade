@@ -476,6 +476,216 @@
         "title": "Identity",
         "type": "object"
       },
+      "IndicatorHistoryView": {
+        "properties": {
+          "as_of": {
+            "format": "date-time",
+            "title": "As Of",
+            "type": "string"
+          },
+          "base": {
+            "title": "Base",
+            "type": "string"
+          },
+          "calculation_end": {
+            "format": "date-time",
+            "title": "Calculation End",
+            "type": "string"
+          },
+          "calculation_start": {
+            "format": "date-time",
+            "title": "Calculation Start",
+            "type": "string"
+          },
+          "dataset_revision": {
+            "title": "Dataset Revision",
+            "type": "string"
+          },
+          "formula_version": {
+            "title": "Formula Version",
+            "type": "string"
+          },
+          "generation_age_seconds": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Generation Age Seconds"
+          },
+          "generation_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Generation Id"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          },
+          "prepared_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prepared At"
+          },
+          "quote": {
+            "title": "Quote",
+            "type": "string"
+          },
+          "refresh": {
+            "$ref": "#/components/schemas/RefreshView"
+          },
+          "result_end": {
+            "format": "date-time",
+            "title": "Result End",
+            "type": "string"
+          },
+          "result_start": {
+            "format": "date-time",
+            "title": "Result Start",
+            "type": "string"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/IndicatorPointView"
+            },
+            "title": "Rows",
+            "type": "array"
+          },
+          "source": {
+            "title": "Source",
+            "type": "string"
+          },
+          "timeframe": {
+            "$ref": "#/components/schemas/Timeframe"
+          }
+        },
+        "required": [
+          "source",
+          "base",
+          "quote",
+          "timeframe",
+          "formula_version",
+          "dataset_revision",
+          "as_of",
+          "calculation_start",
+          "calculation_end",
+          "result_start",
+          "result_end",
+          "rows",
+          "refresh",
+          "next_cursor"
+        ],
+        "title": "IndicatorHistoryView",
+        "type": "object"
+      },
+      "IndicatorPointView": {
+        "properties": {
+          "finality": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finality"
+          },
+          "open_at": {
+            "format": "date-time",
+            "title": "Open At",
+            "type": "string"
+          },
+          "seed_open_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seed Open At"
+          },
+          "values": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/IndicatorValueView"
+            },
+            "title": "Values",
+            "type": "object"
+          }
+        },
+        "required": [
+          "open_at",
+          "seed_open_at",
+          "finality",
+          "values"
+        ],
+        "title": "IndicatorPointView",
+        "type": "object"
+      },
+      "IndicatorValueView": {
+        "properties": {
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          }
+        },
+        "required": [
+          "value",
+          "unit",
+          "status"
+        ],
+        "title": "IndicatorValueView",
+        "type": "object"
+      },
       "KeyView": {
         "description": "สิ่งที่หน้าจอได้เห็นของ key หนึ่งใบ\n\n**ไม่มีช่องสำหรับ key เต็มและไม่มีช่องสำหรับ secret** — ความลับไม่หลุดเพราะ\nไม่มีที่ให้มันอยู่ ไม่ใช่เพราะผู้เขียน endpoint จำได้ว่าอย่าใส่",
         "properties": {
@@ -764,6 +974,99 @@
           "rows"
         ],
         "title": "PricesView",
+        "type": "object"
+      },
+      "RefreshTarget": {
+        "properties": {
+          "base": {
+            "title": "Base",
+            "type": "string"
+          },
+          "end": {
+            "format": "date-time",
+            "title": "End",
+            "type": "string"
+          },
+          "quote": {
+            "title": "Quote",
+            "type": "string"
+          },
+          "start": {
+            "format": "date-time",
+            "title": "Start",
+            "type": "string"
+          },
+          "timeframe": {
+            "$ref": "#/components/schemas/Timeframe"
+          }
+        },
+        "required": [
+          "base",
+          "quote",
+          "timeframe",
+          "start",
+          "end"
+        ],
+        "title": "RefreshTarget",
+        "type": "object"
+      },
+      "RefreshView": {
+        "properties": {
+          "failure_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Failure Code"
+          },
+          "more_required": {
+            "title": "More Required",
+            "type": "boolean"
+          },
+          "observed_at": {
+            "format": "date-time",
+            "title": "Observed At",
+            "type": "string"
+          },
+          "queue_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Queue Status"
+          },
+          "required": {
+            "title": "Required",
+            "type": "boolean"
+          },
+          "target": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RefreshTarget"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "required",
+          "target",
+          "more_required",
+          "queue_status",
+          "failure_code",
+          "observed_at"
+        ],
+        "title": "RefreshView",
         "type": "object"
       },
       "RejectedCandleInput": {
@@ -1846,6 +2149,156 @@
           }
         },
         "summary": "Request Candles",
+        "tags": [
+          "market-data"
+        ]
+      }
+    },
+    "/market-data/indicators": {
+      "get": {
+        "operationId": "indicators_market_data_indicators_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "base",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Base"
+            }
+          },
+          {
+            "in": "query",
+            "name": "quote",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Quote"
+            }
+          },
+          {
+            "in": "query",
+            "name": "timeframe",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/Timeframe"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Timeframe"
+            }
+          },
+          {
+            "in": "query",
+            "name": "start",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Start"
+            }
+          },
+          {
+            "in": "query",
+            "name": "end",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "End"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page_size",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 1000,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Page Size"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 4096,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IndicatorHistoryView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Indicators",
         "tags": [
           "market-data"
         ]

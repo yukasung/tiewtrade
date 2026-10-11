@@ -1,8 +1,15 @@
 # F-09 — ดึงและเก็บแท่งเทียนผ่านชั้น venue
 
-สถานะ: **Approved** — เจ้าของตอบ approve วันที่2026-10-07 หลังอ่านข้อกำหนดฉบับนี้
+สถานะ: **Approved** — เจ้าของตอบ approve วันที่2026-10-07 หลังอ่านข้อกำหนดฉบับนี้; รวมNC-35 amendmentsที่เจ้าของอนุมัติเมื่อ2026-10-10
 วันที่: 2026-10-07
 Branch: feature/f-09-market-data
+
+Amendmentที่เสนอโดยF-11 NC-35: [prepared indicators รอบ2](../2026-10-10-backend-indicators/performance-plan-v2.md)
+เป็น **Approved** เจ้าของอนุมัติamendmentเมื่อ2026-10-10 ตามคำสั่ง “approve”; แยกlogical365วัน/physicalgraceและsourcejournal proof
+รวมsourcewrite scopeก่อนpre-locks/DMLและmaintenance relation-firstตามADR-002
+amendmentNC-35ที่อนุมัติใช้แทนbaselineเฉพาะส่วนที่ระบุเปลี่ยน ข้อกำหนดส่วนอื่นคงเดิม
+แก้reviewรอบ2ข้อ5: ข้อเสนอรวมmixed-versionrollout/rollback retentionในS0..S5
+ของแผนF-11รอบ2; ห้ามlegacycleanupลบseedระหว่างมีpreparedreader/validv2
 
 ## ทำไมต้องมี
 

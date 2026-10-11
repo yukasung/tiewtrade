@@ -72,13 +72,14 @@ async def test_direct_db_rejects_invalid_financial_values(value: str) -> None:
 
 
 async def test_cleanup_removes_only_expired_observations() -> None:
+    await insert_raw("1", age=timedelta(days=365, hours=6, minutes=16))
     await insert_raw("1", age=timedelta(days=365, minutes=1))
     await insert_raw("1")
     engine = create_engine_for(DatabaseRole.MARKET_DATA)
     try:
         async with market_data_session(engine) as session:
             assert await cleanup(session) == 1
-            assert (await session.execute("SELECT count(*) FROM market_candles")).scalar_one() == 1
+            assert (await session.execute("SELECT count(*) FROM market_candles")).scalar_one() == 2
     finally:
         await engine.dispose()
 
@@ -114,7 +115,7 @@ async def test_cleanup_fixed_cutoff_across_dst(
     zone: str,
     as_of: datetime,
 ) -> None:
-    cutoff = as_of - timedelta(days=365)
+    cutoff = as_of - timedelta(days=365, hours=6, minutes=15)
     month = cutoff.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
     end = month.replace(year=month.year + month.month // 12, month=month.month % 12 + 1)
     partition = f"market_candles_{month:%Y%m}"

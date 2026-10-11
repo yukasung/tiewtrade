@@ -91,3 +91,4 @@ async def test_upgrade_starts_durable_outage_before_first_producer(api_engine: A
     finally:
         await restarted_api_engine.dispose()
         await market_engine.dispose()
+        _alembic("upgrade", "head")

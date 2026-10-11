@@ -1,0 +1,36 @@
+{
+  "blocked": [
+    {
+      "component": "indicator-builder",
+      "event": "boot",
+      "owner": "aca94e1a-50a4-43e2-bda9-62e6de19916a"
+    },
+    {
+      "step": "actual_unlock_sql",
+      "time_ns": 38139612488562,
+      "cpu_ns": 535276300
+    },
+    {
+      "step": "writer_closed",
+      "time_ns": 38139613879552,
+      "cpu_ns": 536013966
+    },
+    {
+      "step": "result",
+      "time_ns": 38139614075575,
+      "cpu_ns": 536209450,
+      "status": "NO_JOB",
+      "reason": null
+    }
+  ],
+  "successor": {
+    "status": "READY",
+    "fence": 3,
+    "stale_probe_slot_state": "RUNNING",
+    "same_owner_session": true,
+    "state_unchanged": true
+  },
+  "verified_stop_reap": true,
+  "stale_operations_rejected": 5,
+  "budget_preserved": true
+}

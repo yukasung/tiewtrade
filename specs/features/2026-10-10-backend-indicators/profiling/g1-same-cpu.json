@@ -1,0 +1,136 @@
+{
+  "holder": [
+    {
+      "component": "indicator-builder",
+      "event": "boot",
+      "owner": "2acb08fd-6e2e-4614-8cf1-b0074f42c3c9"
+    },
+    {
+      "step": "claim_committed",
+      "time_ns": 37161050236069,
+      "cpu_ns": 522152768,
+      "pid": 47,
+      "fence": 1,
+      "job": "904d0db0-3788-4b1c-85a9-56d7b8d6f1d2",
+      "formula": "indicators-v1"
+    },
+    {
+      "step": "source_open",
+      "time_ns": 37161078665952,
+      "cpu_ns": 543074764,
+      "pid": 48
+    },
+    {
+      "step": "hash_start",
+      "time_ns": 37161098891648,
+      "cpu_ns": 549589927
+    },
+    {
+      "step": "cpu_start",
+      "time_ns": 37161099039574,
+      "cpu_ns": 549736687
+    },
+    {
+      "step": "barrier",
+      "time_ns": 37161099264692,
+      "cpu_ns": 549961841,
+      "stage": "cpu"
+    },
+    {
+      "step": "source_closed",
+      "time_ns": 37162965091806,
+      "cpu_ns": 612720569,
+      "last_cpu_end": 37162960236295,
+      "batches": 138
+    },
+    {
+      "step": "published",
+      "time_ns": 37162976856850,
+      "cpu_ns": 616333354,
+      "status": "READY"
+    },
+    {
+      "step": "writer_closed",
+      "time_ns": 37162978347787,
+      "cpu_ns": 617270798
+    },
+    {
+      "step": "result",
+      "time_ns": 37162978507384,
+      "cpu_ns": 617430027,
+      "status": "READY",
+      "reason": null
+    }
+  ],
+  "blocked": [
+    {
+      "component": "indicator-builder",
+      "event": "boot",
+      "owner": "b5acac38-f452-43fc-aa13-7df3786d4039"
+    },
+    {
+      "step": "result",
+      "time_ns": 37162520863812,
+      "cpu_ns": 515699382,
+      "status": "LOCK_BUSY",
+      "reason": null
+    }
+  ],
+  "successor": [
+    {
+      "component": "indicator-builder",
+      "event": "boot",
+      "owner": "1a4034e2-8ff3-4112-9a82-c33b823b49ee"
+    },
+    {
+      "step": "claim_committed",
+      "time_ns": 37164634990772,
+      "cpu_ns": 534060019,
+      "pid": 50,
+      "fence": 2,
+      "job": "013d822f-79fc-44be-ba50-06762d51c2ba",
+      "formula": "indicators-v1"
+    },
+    {
+      "step": "source_open",
+      "time_ns": 37164662021985,
+      "cpu_ns": 553975225,
+      "pid": 51
+    },
+    {
+      "step": "hash_start",
+      "time_ns": 37164682279900,
+      "cpu_ns": 560447193
+    },
+    {
+      "step": "cpu_start",
+      "time_ns": 37164682452836,
+      "cpu_ns": 560618452
+    },
+    {
+      "step": "source_closed",
+      "time_ns": 37164729571354,
+      "cpu_ns": 597022151,
+      "last_cpu_end": 37164725740078,
+      "batches": 138
+    },
+    {
+      "step": "published",
+      "time_ns": 37164739310217,
+      "cpu_ns": 599679342,
+      "status": "READY"
+    },
+    {
+      "step": "writer_closed",
+      "time_ns": 37164740634647,
+      "cpu_ns": 600472952
+    },
+    {
+      "step": "result",
+      "time_ns": 37164740779447,
+      "cpu_ns": 600617109,
+      "status": "READY",
+      "reason": null
+    }
+  ]
+}

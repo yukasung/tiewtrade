@@ -427,6 +427,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/market-data/indicators": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Indicators */
+        get: operations["indicators_market_data_indicators_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/market-data/prices": {
         parameters: {
             query?: never;
@@ -697,6 +714,81 @@ export interface components {
              */
             user_id: string;
         };
+        /** IndicatorHistoryView */
+        IndicatorHistoryView: {
+            /**
+             * As Of
+             * Format: date-time
+             */
+            as_of: string;
+            /** Base */
+            base: string;
+            /**
+             * Calculation End
+             * Format: date-time
+             */
+            calculation_end: string;
+            /**
+             * Calculation Start
+             * Format: date-time
+             */
+            calculation_start: string;
+            /** Dataset Revision */
+            dataset_revision: string;
+            /** Formula Version */
+            formula_version: string;
+            /** Generation Age Seconds */
+            generation_age_seconds?: number | null;
+            /** Generation Id */
+            generation_id?: string | null;
+            /** Next Cursor */
+            next_cursor: string | null;
+            /** Prepared At */
+            prepared_at?: string | null;
+            /** Quote */
+            quote: string;
+            refresh: components["schemas"]["RefreshView"];
+            /**
+             * Result End
+             * Format: date-time
+             */
+            result_end: string;
+            /**
+             * Result Start
+             * Format: date-time
+             */
+            result_start: string;
+            /** Rows */
+            rows: components["schemas"]["IndicatorPointView"][];
+            /** Source */
+            source: string;
+            timeframe: components["schemas"]["Timeframe"];
+        };
+        /** IndicatorPointView */
+        IndicatorPointView: {
+            /** Finality */
+            finality: string | null;
+            /**
+             * Open At
+             * Format: date-time
+             */
+            open_at: string;
+            /** Seed Open At */
+            seed_open_at: string | null;
+            /** Values */
+            values: {
+                [key: string]: components["schemas"]["IndicatorValueView"];
+            };
+        };
+        /** IndicatorValueView */
+        IndicatorValueView: {
+            /** Status */
+            status: string;
+            /** Unit */
+            unit: string | null;
+            /** Value */
+            value: string | null;
+        };
         /**
          * KeyView
          * @description สิ่งที่หน้าจอได้เห็นของ key หนึ่งใบ
@@ -810,6 +902,41 @@ export interface components {
              * Format: date-time
              */
             server_time: string;
+        };
+        /** RefreshTarget */
+        RefreshTarget: {
+            /** Base */
+            base: string;
+            /**
+             * End
+             * Format: date-time
+             */
+            end: string;
+            /** Quote */
+            quote: string;
+            /**
+             * Start
+             * Format: date-time
+             */
+            start: string;
+            timeframe: components["schemas"]["Timeframe"];
+        };
+        /** RefreshView */
+        RefreshView: {
+            /** Failure Code */
+            failure_code: string | null;
+            /** More Required */
+            more_required: boolean;
+            /**
+             * Observed At
+             * Format: date-time
+             */
+            observed_at: string;
+            /** Queue Status */
+            queue_status: string | null;
+            /** Required */
+            required: boolean;
+            target: components["schemas"]["RefreshTarget"] | null;
         };
         /** RejectedCandleInput */
         RejectedCandleInput: {
@@ -1544,6 +1671,43 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["RejectedCandleInput"];
+                };
+            };
+        };
+    };
+    indicators_market_data_indicators_get: {
+        parameters: {
+            query?: {
+                base?: string | null;
+                quote?: string | null;
+                timeframe?: components["schemas"]["Timeframe"] | null;
+                start?: string | null;
+                end?: string | null;
+                page_size?: number | null;
+                cursor?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IndicatorHistoryView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

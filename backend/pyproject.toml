@@ -3,6 +3,7 @@ name = "tiewtrade-backend"
 version = "0.1.0"
 description = "TiewTrade backend — Spot trading on Binance TH"
 requires-python = "==3.12.*"
+
 dependencies = [
     "fastapi>=0.115",
     "uvicorn[standard]>=0.54,<0.55",
@@ -20,6 +21,9 @@ dependencies = [
     # **ห้ามใช้กุญแจตัวเดียวกับ API secret ของตลาด** (RQ-14)
     "cryptography>=44.0",
 ]
+
+[project.scripts]
+indicator-builder = "tiewtrade.services.indicator_builder.main:main"
 
 [dependency-groups]
 dev = [
@@ -125,7 +129,7 @@ forbidden_modules = ["tiewtrade.services"]
 [[tool.importlinter.contracts]]
 name = "service ห้าม import กันเอง"
 type = "independence"
-modules = ["tiewtrade.services.api", "tiewtrade.services.engine", "tiewtrade.services.market_data"]
+modules = ["tiewtrade.services.api", "tiewtrade.services.engine", "tiewtrade.services.market_data", "tiewtrade.services.indicator_builder"]
 
 # ส่วนกลางของ venues ต้องไม่รู้จักเครือข่าย (F-33 RQ-14)
 # **ไม่ครอบ package ของตัวเชื่อมจริง** เพราะตัวเชื่อมต้องต่อเครือข่ายเป็นงานหลัก (F-35)

@@ -1,0 +1,116 @@
+{
+  "baseline": "owner-approved-first-release",
+  "legacy_image": "sha256:dd045295cb6c6293f8c602b97f961d2f1a8593474fd2cdd1070b543fbb22d7be",
+  "compatible_images": [
+    "sha256:b96ed3cf5c213a887bb5e631958498938f861384a620505425a7d747449d3302",
+    "sha256:d5e03697b8aafb4eaf145ef30041909600c5d39c1ef548fcce8e0e084c4e3215"
+  ],
+  "v1_pages": 4,
+  "stage": {
+    "epoch": "c5a01536-5082-4bc0-937a-b20e38192f2c",
+    "cutoff": null,
+    "result": "APPLIED"
+  },
+  "schema_revision": "0023",
+  "control": {
+    "before": {
+      "mode": "LEGACY",
+      "rollout_epoch": "c5a01536-5082-4bc0-937a-b20e38192f2c",
+      "source_proof_state": "PENDING"
+    },
+    "after": {
+      "mode": "PREPARING",
+      "rollout_epoch": "c5a01536-5082-4bc0-937a-b20e38192f2c",
+      "source_proof_state": "READY"
+    }
+  },
+  "result_bounds": {
+    "start": "2026-10-01 00:00:00+00:00",
+    "end": "2026-10-03 00:00:00+00:00"
+  },
+  "dataset_revision": "7c917add3a8de33e6dbadd98ae17121edb3e56424aa3c0b86afb714ad0c7798e",
+  "numeric_rows_verified": 8,
+  "trace": [
+    {
+      "step": "numeric_mutation",
+      "result": "rejected"
+    },
+    {
+      "step": "page",
+      "replica": "A",
+      "offset": 0,
+      "http": 200,
+      "numeric_parity": true,
+      "cursor_version": 1
+    },
+    {
+      "step": "page",
+      "replica": "B",
+      "offset": 2,
+      "http": 200,
+      "numeric_parity": true,
+      "cursor_version": 1
+    },
+    {
+      "step": "page",
+      "replica": "A",
+      "offset": 4,
+      "http": 200,
+      "numeric_parity": true,
+      "cursor_version": 1
+    },
+    {
+      "step": "page_after_restart",
+      "replica": "B",
+      "offset": 6,
+      "http": 200,
+      "numeric_parity": true,
+      "cursor_version": 1
+    },
+    {
+      "step": "before_stage",
+      "seeded": 0,
+      "claim": null
+    },
+    {
+      "step": "missing_offline_inventory",
+      "result": "rejected"
+    },
+    {
+      "step": "legacy_restart_policy",
+      "result": "rejected"
+    },
+    {
+      "step": "legacy_capability",
+      "result": "rejected",
+      "control_unchanged": true
+    },
+    {
+      "step": "legacy_write_after_proof",
+      "sqlstate": "TT011"
+    },
+    {
+      "step": "compatible_cleanup",
+      "image": "sha256:b96ed3cf5c213a887bb5e631958498938f861384a620505425a7d747449d3302",
+      "count": 0
+    },
+    {
+      "step": "compatible_cleanup",
+      "image": "sha256:d5e03697b8aafb4eaf145ef30041909600c5d39c1ef548fcce8e0e084c4e3215",
+      "count": 0
+    },
+    {
+      "step": "after_stage",
+      "replica": "A",
+      "http": 503,
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    {
+      "step": "after_stage",
+      "replica": "B",
+      "http": 503,
+      "detail": "INDICATOR_DATA_NOT_READY"
+    }
+  ],
+  "production_activation": false
+}

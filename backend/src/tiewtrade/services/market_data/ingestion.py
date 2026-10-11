@@ -1,6 +1,7 @@
 """Bounded, durable public-observation ingestion."""
 
 import asyncio
+import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from uuid import uuid4
@@ -18,7 +19,9 @@ from tiewtrade.core.market_data import (
     missing_windows,
     retention_cutoff,
 )
+from tiewtrade.infra.db.errors import DatabaseTimeoutError
 from tiewtrade.infra.db.session import MarketDataSession, market_data_session
+from tiewtrade.infra.indicators.source import begin_source_write, source_write_timeouts
 from tiewtrade.infra.market_data.claims import (
     Claim,
     claim_next,
@@ -242,7 +245,13 @@ async def _failure(session: MarketDataSession, claim: Claim, error: Exception) -
     count = row["attemptcount"]
     transient = isinstance(
         error,
-        (TimeoutError, VenueUnavailableError, VenueOutcomeUnknownError, VenueRateLimitedError),
+        (
+            TimeoutError,
+            DatabaseTimeoutError,
+            VenueUnavailableError,
+            VenueOutcomeUnknownError,
+            VenueRateLimitedError,
+        ),
     )
     delay = timedelta(seconds={1: 30, 2: 60}.get(count, 120))
     if rate_limit_error is not None:
@@ -271,7 +280,14 @@ async def run_round(
 ) -> RoundSummary:
     async with market_data_session(engine) as session:
         await _seed_initial_demand(session)
-        await cleanup(session)
+    try:
+        async with market_data_session(engine) as session:
+            await cleanup(session)
+    except DatabaseTimeoutError:
+        # No fetch was claimed. The regular scheduler may try the next round;
+        # do not spin or consume a source attempt for cleanup contention.
+        logging.getLogger(__name__).warning("market-data cleanup: DATABASE_TIMEOUT")
+        return RoundSummary()
     attempts = stored = stale = 0
     # Non-fetch state transitions are bounded independently of the HTTP budget.
     for _ in range(120):
@@ -297,6 +313,7 @@ async def run_round(
                 )
             page = _validate(page, claim, window)
             async with market_data_session(engine) as session:
+                await begin_source_write(session)
                 row = await lock_claim(session, claim)
                 await write_candles(session, claim, page.candles, started)
                 now = await database_now(session)
@@ -336,11 +353,25 @@ async def run_round(
                 stored += len(page.candles)
         except StaleClaimError:
             stale += 1
-        except (VenueError, TimeoutError, PartitionUnavailableError, ValueError) as error:
+        except (
+            VenueError,
+            TimeoutError,
+            DatabaseTimeoutError,
+            PartitionUnavailableError,
+            ValueError,
+        ) as error:
             try:
                 async with market_data_session(engine) as session:
+                    if isinstance(error, DatabaseTimeoutError):
+                        await source_write_timeouts(session)
                     if await _failure(session, claim, error):
                         break
             except StaleClaimError:
                 stale += 1
+            except DatabaseTimeoutError:
+                # The attempt reservation committed before HTTP. Preserve it
+                # and its lease for normal reclaim rather than refunding it or
+                # retrying an aborted write/claim update in a hot loop.
+                logging.getLogger(__name__).warning("market-data failure record: DATABASE_TIMEOUT")
+                break
     return RoundSummary(attempts, stored, stale)

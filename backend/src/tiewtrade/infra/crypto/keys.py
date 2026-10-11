@@ -60,6 +60,7 @@ class KeyPurpose(Enum):
     TOTP_SECRET = "TOTP_SECRET"
     #: secret ของ API key ที่ผู้ใช้ให้ไว้ (F-07 RQ-4) — **เปิดผนึกได้เฉพาะใน `engine`**
     VENUE_API_SECRET = "VENUE_API_SECRET"
+    INDICATOR_CURSOR = "INDICATOR_CURSOR"
 
     @property
     def environment_variable(self) -> str:

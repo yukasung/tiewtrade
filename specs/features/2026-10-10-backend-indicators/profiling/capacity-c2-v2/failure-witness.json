@@ -1,0 +1,29 @@
+[
+  {
+    "metric": {
+      "recorded_at": "2026-10-11 11:45:03.798732+00:00",
+      "kind": "accepted",
+      "status": 200,
+      "seconds": 0.24795179499778897,
+      "max_lag_seconds": 0.10946503499973914,
+      "rss_delta_upper_bytes": 53927936,
+      "body_bytes": 690749,
+      "candle_queries": 2,
+      "barrier": false
+    },
+    "phase_offset_seconds": 3243.204073,
+    "timestamp_and_body_size_matches": [
+      {
+        "base": "DOGE",
+        "timeframe": "15m",
+        "started_seconds": 3242.9370000000017,
+        "finished_seconds": 3243.280999999999,
+        "elapsed_seconds": 0.34399999999732245,
+        "status": 200,
+        "body_bytes": 690749,
+        "reference": "c8fab2fc537f1805cf541ea3b85c9fa0033ffa380d480640f8049fb07d9da8a9",
+        "envelope_ok": true
+      }
+    ]
+  }
+]

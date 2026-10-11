@@ -76,6 +76,38 @@ class DatabaseUnavailableError(InfraError):
     code: ClassVar[str] = "DATABASE_UNAVAILABLE"
 
 
+class SourceWriteScopeError(InfraError):
+    code: ClassVar[str] = "SOURCE_WRITE_SCOPE_REQUIRED"
+
+
+class DatabaseTimeoutError(InfraError):
+    code: ClassVar[str] = "DATABASE_TIMEOUT"
+
+
+class DatabaseRetryableError(InfraError):
+    code: ClassVar[str] = "DATABASE_RETRYABLE"
+
+
+class SourceMaintenanceScopeError(InfraError):
+    code: ClassVar[str] = "SOURCE_MAINTENANCE_SCOPE_REQUIRED"
+
+
+class SourceProofStateError(InfraError):
+    code: ClassVar[str] = "SOURCE_PROOF_STATE"
+
+
+class IndicatorBuildOwnershipError(InfraError):
+    code: ClassVar[str] = "INDICATOR_BUILD_OWNERSHIP_LOST"
+
+
+class IndicatorBuildConfigurationError(InfraError):
+    code: ClassVar[str] = "INDICATOR_BUILD_CONFIGURATION"
+
+
+class IndicatorBuildCounterError(InfraError):
+    code: ClassVar[str] = "INDICATOR_BUILD_COUNTER_EXHAUSTED"
+
+
 #: SQLSTATE ที่กลไกของ F-03 ใช้ ประกาศไว้ที่เดียว
 SQLSTATE_APPEND_ONLY: Final[str] = "TT001"
 SQLSTATE_INSUFFICIENT_PRIVILEGE: Final[str] = "42501"
@@ -85,6 +117,16 @@ SQLSTATE_INVALID_TEXT_REPRESENTATION: Final[str] = "22P02"
 SQLSTATE_UNIQUE_VIOLATION: Final[str] = "23505"
 
 _BY_SQLSTATE: Final[dict[str, type[InfraError]]] = {
+    "40001": DatabaseRetryableError,
+    "40P01": DatabaseRetryableError,
+    "55P03": DatabaseTimeoutError,
+    "57014": DatabaseTimeoutError,
+    "TT011": SourceWriteScopeError,
+    "TT012": SourceMaintenanceScopeError,
+    "TT013": SourceProofStateError,
+    "TT014": IndicatorBuildOwnershipError,
+    "TT015": IndicatorBuildConfigurationError,
+    "TT016": IndicatorBuildCounterError,
     SQLSTATE_APPEND_ONLY: AppendOnlyViolationError,
     SQLSTATE_INSUFFICIENT_PRIVILEGE: NotPermittedError,
     SQLSTATE_CHECK_VIOLATION: ValueRejectedError,

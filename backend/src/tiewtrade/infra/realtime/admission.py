@@ -2,11 +2,18 @@
 
 import asyncio
 import hashlib
+from enum import StrEnum
 from typing import Protocol
 
 
 class AdmissionRedis(Protocol):
     async def eval(self, script: str, numkeys: int, *args: object) -> object: ...
+
+
+class AdmissionOutcome(StrEnum):
+    ACCEPTED = "ACCEPTED"
+    DENIED = "DENIED"
+    UNAVAILABLE = "UNAVAILABLE"
 
 
 # TIME anchors windows in Redis. Global check precedes all per-IP key creation.
@@ -35,6 +42,8 @@ class RedisAdmission:
         global_limit: int = 200,
         ip_limit: int = 30,
         timeout: float = 0.5,
+        namespace: str = "market.ws.admission",
+        subject: str = "ip",
     ) -> None:
         if global_limit < 1 or ip_limit < 1 or not 0 < timeout <= 0.5:
             raise ValueError("invalid admission limits")
@@ -42,22 +51,27 @@ class RedisAdmission:
         self.global_limit = global_limit
         self.ip_limit = ip_limit
         self.timeout = timeout
+        self.namespace = namespace
+        self.subject = subject
 
     async def admit(self, peer_ip: str | None) -> bool:
+        return await self.outcome(peer_ip) is AdmissionOutcome.ACCEPTED
+
+    async def outcome(self, peer_ip: str | None) -> AdmissionOutcome:
         peer_hash = hashlib.sha256((peer_ip or "unknown").encode()).hexdigest()
         try:
             async with asyncio.timeout(self.timeout):
                 result = await self.client.eval(
                     SCRIPT,
                     2,
-                    "market.ws.admission:global",
-                    "market.ws.admission:ip:" + peer_hash,
+                    self.namespace + ":global",
+                    self.namespace + ":" + self.subject + ":" + peer_hash,
                     self.global_limit,
                     self.ip_limit,
                 )
-                return result == 1
+                return AdmissionOutcome.ACCEPTED if result == 1 else AdmissionOutcome.DENIED
         except (TimeoutError, OSError):
-            return False
+            return AdmissionOutcome.UNAVAILABLE
         except Exception:
             # Redis errors are intentionally not exposed/logged with connection URLs.
-            return False
+            return AdmissionOutcome.UNAVAILABLE

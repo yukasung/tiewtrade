@@ -1,0 +1,15 @@
+{
+  "baseline": "owner-approved-first-release",
+  "legacy_image": "sha256:dd045295cb6c6293f8c602b97f961d2f1a8593474fd2cdd1070b543fbb22d7be",
+  "compatible_images": [
+    "sha256:b96ed3cf5c213a887bb5e631958498938f861384a620505425a7d747449d3302",
+    "sha256:d5e03697b8aafb4eaf145ef30041909600c5d39c1ef548fcce8e0e084c4e3215"
+  ],
+  "v1_pages": 4,
+  "stage": {
+    "epoch": "c5a01536-5082-4bc0-937a-b20e38192f2c",
+    "cutoff": null,
+    "result": "APPLIED"
+  },
+  "production_activation": false
+}

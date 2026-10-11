@@ -46,3 +46,32 @@ BEGIN
     END IF;
 END
 $$;
+
+-- Source DROP protection is installed separately from ordinary partition hooks.
+DO $$ BEGIN
+    IF to_regprocedure('public.tiewtrade_indicator_source_on_drop()') IS NULL THEN
+        CREATE FUNCTION public.tiewtrade_indicator_source_on_drop() RETURNS event_trigger
+            LANGUAGE plpgsql AS $body$ BEGIN RETURN; END $body$;
+        ALTER FUNCTION public.tiewtrade_indicator_source_on_drop() OWNER TO tiewtrade_migrator;
+    END IF;
+    IF NOT EXISTS(SELECT 1 FROM pg_event_trigger WHERE evtname='tiewtrade_indicator_source_drop') THEN
+        CREATE EVENT TRIGGER tiewtrade_indicator_source_drop ON sql_drop
+            EXECUTE FUNCTION public.tiewtrade_indicator_source_on_drop();
+    END IF;
+END $$;
+REVOKE ALL ON FUNCTION public.tiewtrade_indicator_source_on_drop() FROM PUBLIC;
+
+-- CREATE OR REPLACE TRIGGER can change a journal without dropping its name.
+DO $$ BEGIN
+    IF to_regprocedure('public.tiewtrade_indicator_source_on_trigger_ddl()') IS NULL THEN
+        CREATE FUNCTION public.tiewtrade_indicator_source_on_trigger_ddl() RETURNS event_trigger
+            LANGUAGE plpgsql AS $body$ BEGIN RETURN; END $body$;
+        ALTER FUNCTION public.tiewtrade_indicator_source_on_trigger_ddl() OWNER TO tiewtrade_migrator;
+    END IF;
+    IF NOT EXISTS(SELECT 1 FROM pg_event_trigger WHERE evtname='tiewtrade_indicator_trigger_ddl') THEN
+        CREATE EVENT TRIGGER tiewtrade_indicator_trigger_ddl ON ddl_command_end
+            WHEN TAG IN ('CREATE TRIGGER')
+            EXECUTE FUNCTION public.tiewtrade_indicator_source_on_trigger_ddl();
+    END IF;
+END $$;
+REVOKE ALL ON FUNCTION public.tiewtrade_indicator_source_on_trigger_ddl() FROM PUBLIC;

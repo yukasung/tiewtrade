@@ -1,0 +1,32 @@
+[
+  {
+    "step": "cursor_before_cleanup",
+    "series": "BTC/USDT/4h",
+    "seed": "2025-10-11 20:00:00+00:00",
+    "generation": "2e08f1d9-ebf5-4295-ab42-a4679caea2e0",
+    "parity": true
+  },
+  {
+    "step": "legacy_cleanup",
+    "image": "sha256:dd045295cb6c6293f8c602b97f961d2f1a8593474fd2cdd1070b543fbb22d7be",
+    "sqlstate": "TT011"
+  },
+  {
+    "step": "cleanup_then_continuation",
+    "image": "sha256:b96ed3cf5c213a887bb5e631958498938f861384a620505425a7d747449d3302",
+    "deleted": 1,
+    "seed_unchanged": true,
+    "grace_probe": "2025-10-11 16:00:00+00:00",
+    "offset": 2,
+    "both_replicas_parity": true
+  },
+  {
+    "step": "cleanup_then_continuation",
+    "image": "sha256:b7ae3fd6193e00fb323587c2dc220ba6eacd5bf2f9e5057119fcac6e14d672cf",
+    "deleted": 0,
+    "seed_unchanged": true,
+    "grace_probe": "2025-10-11 16:00:00+00:00",
+    "offset": 4,
+    "both_replicas_parity": true
+  }
+]

@@ -12,9 +12,19 @@
 | **Planned** | ตกลงแล้วว่าจะทำ แต่ยังไม่มี spec |
 | **Spec Ready** | มีโฟลเดอร์ใน `specs/features/` และ `requirements.md`, `plan.md`, `validation.md` ผ่านการอนุมัติครบทั้งสามฉบับ **และ** ไม่มี Needs Clarification ที่เกี่ยวกับงานนี้ค้างอยู่ — ครบทุกข้อจึงเริ่มเขียนโค้ดได้ (ตาม `AGENTS.md`) |
 | **In Progress** | กำลังทำอยู่ |
+| **Development Complete** | พัฒนาและรีวิวเสร็จ ด่านที่ไม่เลื่อนผ่านครบ รอตรวจรับระบบในชุดที่ 9; ยังไม่รับรองพร้อมใช้งานจริง |
 | **Completed** | โค้ดทำงานได้จริง **และ** มีเทสต์ **และ** `validation.md` ผ่านครบ |
 
 **"มีไฟล์แล้ว" ไม่นับว่า Completed**
+
+### การตรวจรับระบบหลังชุดที่ 8 (เจ้าของอนุมัติ 2026-10-11)
+
+- เลื่อนการทดสอบโหลดและความเสถียรระยะยาวของ F-11 ไปตรวจรับรวมในชุดที่ 9 หลังพัฒนาชุดที่ 8 เสร็จ ไม่รันทดสอบยาวระหว่างพัฒนาโดยอัตโนมัติ
+- ระหว่างพัฒนายังต้องทดสอบความถูกต้อง ความปลอดภัย การคำนวณเงิน และ regression ที่เกี่ยวข้อง; การเลื่อนนี้ไม่ยกเว้นด่านเหล่านั้น
+- ใช้สถานะ **Development Complete — พัฒนาเสร็จ รอตรวจรับระบบ** ได้เมื่อ implementation/review และด่านที่ไม่เลื่อนผ่านครบแล้ว; ยังไม่ใช่ Completed และไม่รับรองพร้อมใช้งานจริง ส่วน F-11 ปัจจุบันยัง In Progress เพราะยังมีข้อบกพร่องและด่านอื่นค้าง
+- ชุดที่ 9 ต้องตรวจ capacity/ระยะยาวและระบบรวมตาม [validation ของ F-11](features/2026-10-10-backend-indicators/validation.md) และ [แผน performance](features/2026-10-10-backend-indicators/performance-plan-v2.md) โดยคงเกณฑ์เดิม; API lag ที่พบ, R2-7, C2/C3/C5, C4 fairness และ C6 ยังต้องติดตาม ไม่เปลี่ยน Failed/Partial เป็น Passed
+- ต้องผ่านการตรวจรับก่อนใช้เงินจริงใน F-25 หรือเปิดให้คนนอก; ระหว่างนี้พัฒนาและทดลองภายในด้วย Paper เท่านั้น การเปิด prepared mode ใช้งานจริงและ Completed ยังคงต้องผ่านด่านเดิม; merge เพื่อพัฒนาต่อทำได้เมื่อ implementation/review และด่านที่ไม่เลื่อนผ่านครบตาม testing standard (เจ้าของอนุมัติ 2026-10-11)
+- ก่อนเริ่มรอบยาวให้ตกลงเวลากับเจ้าของอีกครั้ง เก็บ [หลักฐานเดิม](features/2026-10-10-backend-indicators/profiling/capacity-report.md) ไว้เพื่อเปรียบเทียบ
 
 **F-01 ถึง F-04 เสร็จแล้ว** (2026-09-27) · **F-33** (2026-09-28) · **F-35** (2026-10-01)
 · **F-05** (2026-10-03) · **F-06** (2026-10-04) · **F-07 เสร็จแล้ว** (2026-10-07) · **F-08 เสร็จแล้ว** (2026-10-07) — บัญชีเดียวและ TailAdmin ทุกหน้าปัจจุบัน; frontend113/E2E8/reviewsผ่าน; เจ้าของทดสอบ UI และสั่ง commit/push/PR/CI/merge ผ่าน [PR #6](https://github.com/yukasung/tiewtrade/pull/6)
@@ -180,8 +190,8 @@ domain ของเงินที่ปฏิเสธค่าที่เก�
 | รหัส | งาน | สถานะ | หมายเหตุ |
 |---|---|---|---|
 | F-09 | ดึงและเก็บแท่งเทียนผ่านชั้น venue | **Completed** | issue1–5แก้แล้ว; backend1,652/frontend113/E2E9/lint/type/architecture/build/generatedcontract และDocker/CLI--once1,000rowsผ่านหลังแก้; final deep reviewAPPROVED; [audit](reviews/2026-10-07-f09-market-data-validation-audit.md); RESTยังUNCONFIRMED; เจ้าของอนุมัติส่งงานผ่าน [PR #7](https://github.com/yukasung/tiewtrade/pull/7) โดยตรวจ CI ก่อน merge |
-| F-10 | รับราคาเรียลไทม์ + ต่อกลับเมื่อหลุด | Done | 2026-10-08 · review fixesครบ; deepreview APPROVED; NC-24..29ปิด · latest local backend1870ผ่าน/2live deselected, frontend158, Playwright10; PG/Redis integration805ผ่าน · Ruff/format/mypy/7imports/lock/OpenAPI/buildผ่าน · remoteCIครบ6jobsผ่าน ([run37743108753](https://github.com/yukasung/tiewtrade/actions/runs/37743108753)); เจ้าของอนุมัติปิดงานและmergeแล้ว · ผลใน `features/2026-10-07-realtime-prices/validation.md` และ `reviews/2026-10-07-f10-realtime-prices/final-validation.md` |
-| F-11 | คำนวณ indicator ที่ backend | Planned | NC-09ปิดแล้ว: EMA20/50/200, RSI14, MACD12/26/9, ATR14; สูตร/seed/warm-up/missing-dataต้องกำหนดในspec F-11ก่อนcode |
+| F-10 | รับราคาเรียลไทม์ + ต่อกลับเมื่อหลุด | **Completed** | 2026-10-08 · review fixesครบ; deepreview APPROVED; NC-24..29ปิด · latest local backend1870ผ่าน/2live deselected, frontend158, Playwright10; PG/Redis integration805ผ่าน · Ruff/format/mypy/7imports/lock/OpenAPI/buildผ่าน · remoteCIครบ6jobsผ่าน ([run37743108753](https://github.com/yukasung/tiewtrade/actions/runs/37743108753)); เจ้าของอนุมัติปิดงานและmergeแล้ว · ผลใน `features/2026-10-07-realtime-prices/validation.md` และ `reviews/2026-10-07-f10-realtime-prices/final-validation.md` |
+| F-11 | คำนวณ indicator ที่ backend | **In Progress** | F1–F6 functional review APPROVED/NC-37 corrected; regression241ผ่าน137.754s + F4/F5final8ผ่าน (overlap), full-load F4/F5ชุด9; N4ยังค้าง — [F1–F6 review](features/2026-10-10-backend-indicators/profiling/f1-f6-review.md); D4–D7 functional review APPROVED; D5–D7ผ่าน89กรณี117.997s/post-update regression213ผ่าน165.597s; NC-36แก้grantsแล้ว; D7aggregateยังขึ้นกับF/C gates — [รีวิวรวม](features/2026-10-10-backend-indicators/profiling/d47-combined-review.md); D4 active-build/rollout functional harnessผลเดิม52กรณี91.981s (รีวิวรวมผ่านแล้ว) — [D4 evidence](features/2026-10-10-backend-indicators/profiling/d4-active-build-report.md); D2current-image lifecycleผ่าน1กรณี91.449s; auditD2–D7แล้ว; D3แก้reviewaged-seedข้ามcutoff365วันแล้วผ่าน1lifecycle102.331sพร้อมรีวิวซ้ำ — [audit](features/2026-10-10-backend-indicators/profiling/d2-d7-coverage-audit.md); S1–S4 scheduler validationผลเดิม179กรณี(ใหม่31+regression148); S3แก้reviewด้วยDB barrierแล้ว/พร้อมรีวิวซ้ำ targeted1ผ่าน10.911s, Ruff/format/mypy340filesผ่าน — [scheduler evidence](features/2026-10-10-backend-indicators/profiling/scheduler-validation/README.md); ปรับbatchตามNC-34แล้ว; coldยัง504~30.07s, V-15Failed — [หลักฐานbatch](features/2026-10-10-backend-indicators/profiling/batch/report.md); NC-35/แผนรอบ2/ADR-002/amendmentsF-11/F-09Approved2026-10-10; foundation0015/roles/sourceproofและcodec/parityreviewผ่าน; claims/globalslot0016และreap cancellation reviewผ่าน; source scan/STAGING/checkpoint writer0017และatomic READY/numeric publication0018 reviewซ้ำผ่าน; workerหนึ่งattemptและscheduler/coalesce0019 reviewซ้ำผ่าน; launcher/supervisor/verifiedstop-reap reviewผ่าน2026-10-11 targeted595ผ่าน+actualcontainer/CLI1ผ่าน; manualretry/GC0020และpressurefix0021 reviewซ้ำผ่าน targeted610ผ่าน+fullstoragepressure1ผ่าน; preparedAPIrouting0022 reviewผ่าน2026-10-11 rerun30ผ่าน+targeted639ผ่าน+TFboundary1ผ่าน; rollout/rollback orchestration0023 reviewAPPROVED2026-10-11 rerun45ผ่าน+regression681ผ่าน+migration7ผ่าน — [ผลimplementation](features/2026-10-10-backend-indicators/validation.md); mixed-versionharnessรอreview53ผ่าน(HTTP1+barrier/CAS/CLI52) D1firstreleaseamendmentPassedหลังแก้2findings: numericparity/evidencetraceครบ, lifecycle1ผ่าน21.539s; G1–G6แก้review4ข้อแล้ว/พร้อมรีวิวซ้ำ ผลใหม่44ผ่าน(container/lease20+regression24) — [global-slot fixes](features/2026-10-10-backend-indicators/profiling/global-review-fixed/README.md); ผล223ผ่านเดิมเก็บเป็นประวัติ; L1–L6Passed source-lock/DDL/role regression179+16ผ่าน — [source-lock](features/2026-10-10-backend-indicators/profiling/source-lock-validation-report.md); N1–N3Passed controlledclock/HTTP/oracle regression52ผ่าน38.353s — [numeric-window](features/2026-10-10-backend-indicators/profiling/numeric-window-report.md); D2..D7ยังไม่ครบ — [coverage](features/2026-10-10-backend-indicators/profiling/mixed-version-report.md); fullbackendล่าสุดLinux2,324ผ่าน/0ล้ม/0error/1skip (ComposeCLIผ่านแยกบนhost1กรณี), 2venue-contract deselectedตามCI; Redisadmissionผ่านในfullrun2026-10-11 — [JUnit](features/2026-10-10-backend-indicators/profiling/resume-linux-final-tests.xml); frontendLinuxNode22 lint/types/buildผ่าน, tests158/16suitesผ่าน, OpenAPI/generatedtypesตรงworkingtree2026-10-11; dependency findings4รายการแก้แล้ว(Vitest4.1.11/source-map-js1.2.2/tinypoolถอดออก), npm audit0, frontend158/lint/types/build/contractผ่านซ้ำ2026-10-11; browserE2E10ผ่าน52.2sบนฐานแยก, CIเพิ่มindicatorcursor testkeyแล้ว — [validation](features/2026-10-10-backend-indicators/validation.md); capacityC1ผ่าน30/30, C2Failedที่54นาที11วินาที(APIlag109.465ms>100ms); R2-7Partial(exact525,600slotsยังขาด), C3/C5ไม่รันต่อ/C4ยังไม่ครบ/C6Failed — [capacity evidence](features/2026-10-10-backend-indicators/profiling/capacity-report.md); continuousGCpressure/fullgatesยังไม่ครบ; mergeเพื่อพัฒนาต่อต้องผ่านด่านที่ไม่เลื่อนตาม testing standard ก่อน ไม่เปิดproduction preparedmode/Completed |
 | F-12 | กราฟแท่งเทียนบนหน้าเว็บ | Planned | + จุดเข้า/ออก (R-14) |
 | F-37 | **รายการเหรียญที่รองรับและการจัดการ** | Planned | รายการตั้งต้น 5 คู่, Platform Admin เพิ่ม/ถอนได้, ผลของการถอน (ห้ามเปิดใหม่ / ไม้เดิมไม่แตะ / บอทหยุด) — **ต้องเสร็จก่อน F-16** เพราะจุดตรวจออเดอร์ต้องใช้รายการนี้ (`mission.md` หัวข้อ 6, `standards/trading-safety.md` หัวข้อ 3) |
 
@@ -218,15 +228,15 @@ domain ของเงินที่ปฏิเสธค่าที่เก�
 | F-22 | ส่งออเดอร์จริงผ่านชั้น venue + กันสั่งซ้ำ | Planned | ผ่าน F-33 ต้องใช้ได้กับทั้งสองตลาด |
 | F-23 | กระทบยอดกับ Binance | Planned | รวมถึงตรวจจับออเดอร์ที่เกิดนอกระบบ |
 | F-24 | ขั้นตอนเปิด Live (ยืนยันตัวตน + คำเตือน) | Planned | Live ต้องไม่เปิดเอง · **ต้องปิด NC-14 ก่อนเริ่มงานนี้** (เจ้าของตัดสิน 2026-10-03) — เจ้าของบัญชีต้องกลับเข้ามาลดความเสี่ยงได้แม้ session หมดอายุและบัญชีถูกโจมตีต่อเนื่อง (`trading-safety.md` หัวข้อ 8) |
-| F-25 | เริ่มใช้เงินจริงจำนวนน้อย | Planned | **ไม่ทดสอบบน Testnet** (เจ้าของตัดสิน 2026-09-26) ข้ามจาก Paper ไปเงินจริงโดยตรง ต้องเริ่มด้วยจำนวนน้อยและมีคนเฝ้า — **ต้องมี F-26 (แจ้งเตือนในแอพ) เสร็จก่อน** เพราะกฎความปลอดภัยสั่งให้แจ้งเตือนจริงเมื่อตั้ง TP/SL ไม่สำเร็จ, ยกเลิกออเดอร์ไม่สำเร็จ, บอทหยุดผิดปกติ, มีไม้โผล่หลังกดหยุด และชนเพดานขาดทุน |
+| F-25 | เริ่มใช้เงินจริงจำนวนน้อย | Planned | **ต้องผ่านชุดที่ 9 ก่อนเริ่มใช้เงินจริง** (เจ้าของอนุมัติ 2026-10-11) · **ไม่ทดสอบบน Testnet** (เจ้าของตัดสิน 2026-09-26) ข้ามจาก Paper ไปเงินจริงโดยตรง ต้องเริ่มด้วยจำนวนน้อยและมีคนเฝ้า — **ต้องมี F-26 (แจ้งเตือนในแอพ) เสร็จก่อน** เพราะกฎความปลอดภัยสั่งให้แจ้งเตือนจริงเมื่อตั้ง TP/SL ไม่สำเร็จ, ยกเลิกออเดอร์ไม่สำเร็จ, บอทหยุดผิดปกติ, มีไม้โผล่หลังกดหยุด และชนเพดานขาดทุน |
 
 ## ชุดที่ 8 — รอบระบบ
 
 | รหัส | งาน | สถานะ | หมายเหตุ |
 |---|---|---|---|
 | F-26 | แจ้งเตือนในแอพ | Planned | **ต้องเสร็จก่อน F-25** (เจ้าของตัดสิน 2026-09-26) ไม่ติด T-05 ทำได้เลย |
-| F-36 | แจ้งเตือน Email | Planned | (R-15) ติด **T-05** ทำหลัง F-25 ได้ |
-| F-27 | แจ้งเตือน Telegram + LINE | Planned | ติด **T-05** ทำหลัง F-25 ได้ |
+| F-36 | แจ้งเตือน Email | Planned | (R-15) ติด **T-05**; พัฒนาในชุดที่ 8 ก่อนตรวจรับชุดที่ 9 และ F-25 (ปรับลำดับ 2026-10-11) |
+| F-27 | แจ้งเตือน Telegram + LINE | Planned | ติด **T-05**; พัฒนาในชุดที่ 8 ก่อนตรวจรับชุดที่ 9 และ F-25 (ปรับลำดับ 2026-10-11) |
 | F-28 | สรุปผลงานและประวัติการเทรด | Planned | |
 | F-29 | ระบบผู้ดูแลแพลตฟอร์ม | Planned | ติด **NC-02** |
 | F-30 | สลับภาษาไทย/อังกฤษ | Planned | (R-20) ต้องวางตั้งแต่ F-12 |
@@ -235,6 +245,50 @@ domain ของเงินที่ปฏิเสธค่าที่เก�
 
 ---
 
+## ชุดที่ 9 — ตรวจรับระบบก่อนใช้งานจริง
+
+**ลำดับและขอบเขต Approved — เจ้าของยืนยัน 2026-10-11** · สถานะ: **Planned**
+เริ่มหลังพัฒนาชุดที่ 8 เสร็จ รวมการทดสอบละเอียดที่เลื่อนจาก F-11;
+ไม่แทนการทดสอบความถูกต้อง ความปลอดภัย และ regression ระหว่างพัฒนาแต่ละ feature
+
+| งานตรวจรับ | สถานะ | ขอบเขต |
+|---|---|---|
+| การทำงานร่วมกันและ flow ผู้ใช้ | Planned | ตรวจระบบทั้งชุดตั้งแต่หน้าจอ API ฐานข้อมูล และงานเบื้องหลังตาม spec ของแต่ละ feature |
+| ความถูกต้องทางการเงินและออเดอร์ | Planned | เงิน ปริมาณ ออเดอร์ซ้ำ balance, position, PnL, leverage/margin และ liquidation ตามข้อกำหนดที่อนุมัติ |
+| โหลดและความเสถียรระยะยาว | Planned | รวม capacity ของ F-11 ที่ค้าง: R2-C2/C3/C5 รอบเต็ม, C4/C6 และ R2-7 พร้อมติดตาม API lag และผล Failed/Partial เดิมตาม validation |
+| ความล้มเหลวและการกู้คืน | Planned | exchange API failures, retry/idempotency, WebSocket หลุด, order synchronization และการกู้คืนตามแผนที่อนุมัติ |
+| สำรองและกู้คืนฐานข้อมูล | Planned | ทดลอง backup และ restore จริงในสภาพแวดล้อมแยก ตรวจ schema/migrations, ความครบถ้วนและความสัมพันธ์ของข้อมูล, balance/position/order/audit ตาม spec; บันทึกเวลาและข้อมูลที่กู้คืนได้ โดยกำหนดเกณฑ์ RPO/RTO ในแผนตรวจรับเพื่อขออนุมัติก่อนรัน ไม่แตะฐานจริงหรือส่งออเดอร์ |
+| ความปลอดภัยและความพร้อมใช้งานจริง | Planned | ตรวจสิทธิ์ การแยกผู้ใช้ secrets และ deployment/rollback ตามข้อกำหนด พร้อมรวบรวมหลักฐานและรีวิวปิดงาน |
+
+ก่อนเริ่มให้จัดทำแผนและ validation ของรอบตรวจรับรวมเพื่อขออนุมัติ โดยอ้างอิงเกณฑ์
+ของแต่ละ feature ไม่ลดเกณฑ์เดิมโดยอัตโนมัติ และตกลงเวลารันทดสอบยาวกับเจ้าของ
+การตรวจรับก่อน F-25 ใช้ Paper/สภาพแวดล้อมทดสอบที่ได้รับอนุมัติ ไม่ส่งออเดอร์เงินจริง
+และไม่เพิ่ม Testnet เป็นข้อกำหนด; การตรวจที่ต้องใช้เงินจริงอยู่ใน F-25 หลังผ่านชุดนี้
+
+**ต้องผ่านชุดที่ 9 ก่อนเริ่ม F-25 ใช้เงินจริงหรือเปิดให้คนนอก** และต้องผ่านเงื่อนไขอื่น
+ของจุดปล่อยด้วย ผลการตรวจรับเป็นหลักฐานสำหรับปิด validation ที่ค้างและเปลี่ยน
+Development Complete เป็น Completed เมื่อเกณฑ์ของ feature นั้นครบ
+
+---
+### ทะเบียนงานค้างสำหรับชุดที่ 9
+
+ทะเบียนนี้ติดตามด่านตรวจรับที่เลื่อน ไม่เปลี่ยนผลหลักฐานเดิมหรือสถานะ feature
+เมื่อมีรายการใหม่ให้ระบุ feature/เกณฑ์/หลักฐานและการอนุมัติเลื่อนก่อนนำออกจากด่าน merge
+เกณฑ์ตัวเลขและรายละเอียดใช้ validation ของ feature เป็นแหล่งอ้างอิง
+
+| Feature / งาน | เกณฑ์ที่ต้องตรวจรับ | หลักฐาน / ข้อจำกัดปัจจุบัน |
+|---|---|---|
+| F-11 โหลดและระยะยาว | R2-C2/C3/C5 รอบเต็ม; C4 ส่วน trace/fairness ที่ต้องใช้รอบเต็ม; C6 และ R2-G7/D7 เฉพาะส่วนที่พึ่ง capacity | [Capacity report](features/2026-10-10-backend-indicators/profiling/capacity-report.md): C2 Failed (lag 109.465 ms > 100 ms), C3/C5 ยังไม่รัน, C4 ยังไม่ครบ, C6 Failed; ต้องแก้และพิสูจน์ตามเกณฑ์เดิม |
+| F-11 หลักฐานประกอบการตรวจรับ | R2-7 ต้องมีกรณี 525,600 slots; รวมผล worker/resource/parity ที่ใช้ปิด capacity gate | [Validation](features/2026-10-10-backend-indicators/validation.md): R2-7 Partial; เตรียม fixture และทดสอบสั้นระหว่างพัฒนาได้ การเลื่อนรอบรวมไม่ยกเว้นเทสต์ความถูกต้อง |
+| ระบบรวม | Flow ผู้ใช้, เงิน/ออเดอร์, ความล้มเหลว/กู้คืน และความปลอดภัยตามตารางชุดที่ 9 | รอแผนตรวจรับรวมและ validation ที่อนุมัติ; ไม่แทนเทสต์ของแต่ละ feature |
+| ฐานข้อมูล / F-31 | Backup/restore จริงและตรวจข้อมูลหลังคืนระบบ | ยังไม่มีหลักฐานตรวจรับในทะเบียนนี้; ต้องระบุวิธีและเกณฑ์ในแผนตรวจรับก่อนรัน |
+
+**ยังเป็นด่านก่อน merge ของ F-11:** full regression (ล่าสุด backend ผ่านแล้ว รวม Redis admission; หลักฐานอยู่ใน validation),
+ความถูกต้อง/ความปลอดภัย/transaction/concurrency/parity และ mixed-version/GC cases
+ที่ไม่ใช่รอบโหลดหรือระยะยาวซึ่งอนุมัติเลื่อน ต้องผ่านตาม validation เดิม
+D1 first-release amendment Passedหลังแก้numeric parity/evidence trace ตาม d1-harness-review.md; D2..D6 ไม่ถูกยกเว้นเพราะ D7 รอ capacity;
+การทดสอบสั้นของ fairness และ GC ยังต้องทำ ผลรอบยาวที่เลื่อนจึงค่อยรวบรวมในชุดที่ 9
+ขณะนี้ยังไม่รับรองว่า F-11 ผ่านเงื่อนไข merge หรือ Development Complete
 ## ลำดับที่เสนอ
 
 **Proposed — เจ้าของยังไม่อนุมัติ**
@@ -247,8 +301,9 @@ domain ของเงินที่ปฏิเสธค่าที่เก�
 6. F-18, F-19 (เพดานความเสี่ยงและปุ่มหยุดบอท) — NC-07 ปิดแล้ว
 7. F-20, F-21 (บอท)
 8. **F-26 (แจ้งเตือนในแอพ)** — ต้องเสร็จก่อนแตะเงินจริงใน F-25
-9. F-22 → F-25 (Live Trading)
+9. F-22 → F-24 (พัฒนา Live Trading; ยังไม่ใช้เงินจริง)
 10. F-27, F-36, F-28 → F-32 (รอบระบบ ทำคู่ขนานได้)
+11. **ชุดที่ 9 — ตรวจรับระบบก่อนใช้งานจริง** หลังพัฒนาชุดที่ 8 — รวม load/ระยะยาวของ F-11 และระบบรวม; ผ่านแล้วจึง F-25 และเปิดให้คนนอกเมื่อเงื่อนไขอื่นครบ
 
 ### จุดปล่อยมี 2 จุด ไม่ใช่จุดเดียว (เจ้าของตัดสิน 2026-09-26)
 
@@ -262,6 +317,7 @@ domain ของเงินที่ปฏิเสธค่าที่เก�
 
 | ต้องมี | เพราะ |
 |---|---|
+| **ชุดที่ 9 ตรวจรับระบบ** | ต้องผ่านการตรวจรับระบบรวมก่อนเปิดให้คนนอก (เจ้าของอนุมัติ 2026-10-11) |
 | F-18 เพดานความเสี่ยง | `trading-safety.md` หัวข้อ 13 บังคับว่า Paper ใช้กฎเดียวกับ Live ทุกข้อ |
 | F-19 ปุ่มหยุดบอท | กฎเดียวกัน และผู้ใช้ต้องหยุดบอทได้ |
 | F-32 เอกสารทางกฎหมาย | **NC-11** บล็อกการเปิดให้คนนอกใช้ตาม `mission.md` หัวข้อ 9 |

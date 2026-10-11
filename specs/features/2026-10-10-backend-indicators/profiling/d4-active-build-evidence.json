@@ -1,0 +1,561 @@
+[
+  {
+    "step": "drained_transition",
+    "from": "PREPARING",
+    "to": "PREPARED",
+    "worker": [
+      {
+        "component": "indicator-builder",
+        "event": "boot",
+        "owner": "1a7b34f4-2f9c-422d-b6c0-9bed97fcb3c5"
+      },
+      {
+        "step": "claim_committed",
+        "time_ns": 43271906851968,
+        "cpu_ns": 518874576,
+        "pid": 1949,
+        "fence": 31,
+        "job": "7e5b0861-0620-4f62-9c24-da5b9a0b9112",
+        "formula": "indicators-v1"
+      },
+      {
+        "step": "source_open",
+        "time_ns": 43271934537274,
+        "cpu_ns": 539314478,
+        "pid": 1950
+      },
+      {
+        "step": "checkpoint_attempt",
+        "time_ns": 43271946895353,
+        "cpu_ns": 543308908
+      },
+      {
+        "step": "checkpoint_committed",
+        "time_ns": 43271952666110,
+        "cpu_ns": 545352273
+      },
+      {
+        "step": "hash_start",
+        "time_ns": 43271963576924,
+        "cpu_ns": 553434640
+      },
+      {
+        "step": "cpu_start",
+        "time_ns": 43271964597066,
+        "cpu_ns": 554454093
+      },
+      {
+        "step": "barrier",
+        "time_ns": 43271965204749,
+        "cpu_ns": 555061094,
+        "stage": "cpu"
+      },
+      {
+        "step": "checkpoint_attempt",
+        "time_ns": 43272249809986,
+        "cpu_ns": 642041684
+      },
+      {
+        "step": "checkpoint_committed",
+        "time_ns": 43272254770280,
+        "cpu_ns": 643895109
+      },
+      {
+        "step": "checkpoint_attempt",
+        "time_ns": 43272340575167,
+        "cpu_ns": 726151826
+      },
+      {
+        "step": "checkpoint_committed",
+        "time_ns": 43272345990852,
+        "cpu_ns": 728221866
+      },
+      {
+        "step": "checkpoint_attempt",
+        "time_ns": 43272364090451,
+        "cpu_ns": 745500015
+      },
+      {
+        "step": "checkpoint_committed",
+        "time_ns": 43272369067310,
+        "cpu_ns": 747401777
+      },
+      {
+        "step": "source_closed",
+        "time_ns": 43272369589513,
+        "cpu_ns": 747826870,
+        "last_cpu_end": 43272364064494,
+        "batches": 138
+      },
+      {
+        "step": "ready_attempt",
+        "time_ns": 43272373875221,
+        "cpu_ns": 749379342
+      },
+      {
+        "step": "published",
+        "time_ns": 43272381982545,
+        "cpu_ns": 751614462,
+        "status": "READY"
+      },
+      {
+        "step": "actual_unlock_sql",
+        "time_ns": 43272382334069,
+        "cpu_ns": 751965141
+      },
+      {
+        "step": "writer_closed",
+        "time_ns": 43272383691589,
+        "cpu_ns": 752653330
+      },
+      {
+        "step": "result",
+        "time_ns": 43272383836850,
+        "cpu_ns": 752798205,
+        "status": "READY",
+        "reason": null
+      }
+    ],
+    "joined_ns": 45947593000000,
+    "drained_ns": 45947671000000,
+    "transition_observed_ns": 45947687000000,
+    "epoch": "8d74b413-3856-41f0-aff1-88509c34e798",
+    "cutoff": "2026-10-11 16:58:40.079987+00:00"
+  },
+  {
+    "step": "v2_before_pause",
+    "epoch": "8d74b413-3856-41f0-aff1-88509c34e798",
+    "issued_at": "2026-10-11 16:58:44.835174+00:00",
+    "sql_positive_control": [
+      {
+        "kind": "select",
+        "unsafe_dml": false,
+        "payload": false
+      },
+      {
+        "kind": "set",
+        "unsafe_dml": false,
+        "payload": false
+      },
+      {
+        "kind": "select",
+        "unsafe_dml": false,
+        "payload": false
+      },
+      {
+        "kind": "select",
+        "unsafe_dml": false,
+        "payload": false
+      },
+      {
+        "kind": "select",
+        "unsafe_dml": false,
+        "payload": false
+      },
+      {
+        "kind": "select",
+        "unsafe_dml": false,
+        "payload": false
+      },
+      {
+        "kind": "select",
+        "unsafe_dml": false,
+        "payload": false
+      },
+      {
+        "kind": "select",
+        "unsafe_dml": false,
+        "payload": false
+      },
+      {
+        "kind": "select",
+        "unsafe_dml": false,
+        "payload": false
+      },
+      {
+        "kind": "select",
+        "unsafe_dml": false,
+        "payload": true
+      },
+      {
+        "kind": "select",
+        "unsafe_dml": false,
+        "payload": true
+      },
+      {
+        "kind": "select",
+        "unsafe_dml": false,
+        "payload": false
+      },
+      {
+        "kind": "select",
+        "unsafe_dml": false,
+        "payload": true
+      },
+      {
+        "kind": "select",
+        "unsafe_dml": false,
+        "payload": false
+      },
+      {
+        "kind": "select",
+        "unsafe_dml": false,
+        "payload": false
+      },
+      {
+        "kind": "select",
+        "unsafe_dml": false,
+        "payload": true
+      },
+      {
+        "kind": "select",
+        "unsafe_dml": false,
+        "payload": false
+      },
+      {
+        "kind": "select",
+        "unsafe_dml": false,
+        "payload": false
+      },
+      {
+        "kind": "select",
+        "unsafe_dml": false,
+        "payload": false
+      },
+      {
+        "kind": "select",
+        "unsafe_dml": false,
+        "payload": false
+      },
+      {
+        "kind": "select",
+        "unsafe_dml": false,
+        "payload": false
+      },
+      {
+        "kind": "select",
+        "unsafe_dml": false,
+        "payload": false
+      }
+    ]
+  },
+  {
+    "step": "drained_transition",
+    "from": "PREPARED",
+    "to": "PAUSED",
+    "worker": [
+      {
+        "component": "indicator-builder",
+        "event": "boot",
+        "owner": "4d4fb15b-6acc-44b6-a30c-185d6ac5795b"
+      },
+      {
+        "step": "claim_committed",
+        "time_ns": 43275152071460,
+        "cpu_ns": 538134399,
+        "pid": 1955,
+        "fence": 32,
+        "job": "7e5b0861-0620-4f62-9c24-da5b9a0b9112",
+        "formula": "indicators-v1"
+      },
+      {
+        "step": "source_open",
+        "time_ns": 43275177122727,
+        "cpu_ns": 556987351,
+        "pid": 1956
+      },
+      {
+        "step": "checkpoint_attempt",
+        "time_ns": 43275187599084,
+        "cpu_ns": 560447635
+      },
+      {
+        "step": "checkpoint_committed",
+        "time_ns": 43275192281985,
+        "cpu_ns": 561809413
+      },
+      {
+        "step": "hash_start",
+        "time_ns": 43275203072870,
+        "cpu_ns": 569718769
+      },
+      {
+        "step": "cpu_start",
+        "time_ns": 43275204037715,
+        "cpu_ns": 570682026
+      },
+      {
+        "step": "barrier",
+        "time_ns": 43275204636421,
+        "cpu_ns": 571280243,
+        "stage": "cpu"
+      },
+      {
+        "step": "checkpoint_attempt",
+        "time_ns": 43275793189318,
+        "cpu_ns": 663321011
+      },
+      {
+        "step": "checkpoint_committed",
+        "time_ns": 43275798330118,
+        "cpu_ns": 665399344
+      },
+      {
+        "step": "checkpoint_attempt",
+        "time_ns": 43275883420827,
+        "cpu_ns": 748432482
+      },
+      {
+        "step": "checkpoint_committed",
+        "time_ns": 43275888239767,
+        "cpu_ns": 750460939
+      },
+      {
+        "step": "checkpoint_attempt",
+        "time_ns": 43275906718765,
+        "cpu_ns": 768102237
+      },
+      {
+        "step": "checkpoint_committed",
+        "time_ns": 43275911322551,
+        "cpu_ns": 769885180
+      },
+      {
+        "step": "source_closed",
+        "time_ns": 43275911870312,
+        "cpu_ns": 770323256,
+        "last_cpu_end": 43275906702334,
+        "batches": 138
+      },
+      {
+        "step": "ready_attempt",
+        "time_ns": 43275916352722,
+        "cpu_ns": 771867195
+      },
+      {
+        "step": "published",
+        "time_ns": 43275923241021,
+        "cpu_ns": 773541849,
+        "status": "READY"
+      },
+      {
+        "step": "actual_unlock_sql",
+        "time_ns": 43275923497600,
+        "cpu_ns": 773798068
+      },
+      {
+        "step": "writer_closed",
+        "time_ns": 43275924631323,
+        "cpu_ns": 774393807
+      },
+      {
+        "step": "result",
+        "time_ns": 43275924751501,
+        "cpu_ns": 774513707,
+        "status": "READY",
+        "reason": null
+      }
+    ],
+    "joined_ns": 45951125000000,
+    "drained_ns": 45952296000000,
+    "transition_observed_ns": 45952296000000,
+    "epoch": "369cec77-b336-4a4e-9507-c3ec2923c317",
+    "cutoff": "2026-10-11 16:58:46.806205+00:00"
+  },
+  {
+    "step": "paused_http",
+    "replica": 0,
+    "first": 503,
+    "continuation": 409,
+    "sql": [
+      {
+        "kind": "select",
+        "unsafe_dml": false,
+        "payload": false
+      },
+      {
+        "kind": "set",
+        "unsafe_dml": false,
+        "payload": false
+      },
+      {
+        "kind": "select",
+        "unsafe_dml": false,
+        "payload": false
+      },
+      {
+        "kind": "select",
+        "unsafe_dml": false,
+        "payload": false
+      },
+      {
+        "kind": "select",
+        "unsafe_dml": false,
+        "payload": false
+      },
+      {
+        "kind": "select",
+        "unsafe_dml": false,
+        "payload": false
+      },
+      {
+        "kind": "select",
+        "unsafe_dml": false,
+        "payload": false
+      },
+      {
+        "kind": "select",
+        "unsafe_dml": false,
+        "payload": false
+      },
+      {
+        "kind": "select",
+        "unsafe_dml": false,
+        "payload": false
+      },
+      {
+        "kind": "select",
+        "unsafe_dml": false,
+        "payload": false
+      },
+      {
+        "kind": "set",
+        "unsafe_dml": false,
+        "payload": false
+      },
+      {
+        "kind": "select",
+        "unsafe_dml": false,
+        "payload": false
+      },
+      {
+        "kind": "select",
+        "unsafe_dml": false,
+        "payload": false
+      },
+      {
+        "kind": "select",
+        "unsafe_dml": false,
+        "payload": false
+      },
+      {
+        "kind": "select",
+        "unsafe_dml": false,
+        "payload": false
+      },
+      {
+        "kind": "select",
+        "unsafe_dml": false,
+        "payload": false
+      },
+      {
+        "kind": "select",
+        "unsafe_dml": false,
+        "payload": false
+      },
+      {
+        "kind": "select",
+        "unsafe_dml": false,
+        "payload": false
+      }
+    ]
+  },
+  {
+    "step": "paused_http",
+    "replica": 1,
+    "first": 503,
+    "continuation": 409,
+    "sql": [
+      {
+        "kind": "select",
+        "unsafe_dml": false,
+        "payload": false
+      },
+      {
+        "kind": "set",
+        "unsafe_dml": false,
+        "payload": false
+      },
+      {
+        "kind": "select",
+        "unsafe_dml": false,
+        "payload": false
+      },
+      {
+        "kind": "select",
+        "unsafe_dml": false,
+        "payload": false
+      },
+      {
+        "kind": "select",
+        "unsafe_dml": false,
+        "payload": false
+      },
+      {
+        "kind": "select",
+        "unsafe_dml": false,
+        "payload": false
+      },
+      {
+        "kind": "select",
+        "unsafe_dml": false,
+        "payload": false
+      },
+      {
+        "kind": "select",
+        "unsafe_dml": false,
+        "payload": false
+      },
+      {
+        "kind": "select",
+        "unsafe_dml": false,
+        "payload": false
+      },
+      {
+        "kind": "select",
+        "unsafe_dml": false,
+        "payload": false
+      },
+      {
+        "kind": "set",
+        "unsafe_dml": false,
+        "payload": false
+      },
+      {
+        "kind": "select",
+        "unsafe_dml": false,
+        "payload": false
+      },
+      {
+        "kind": "select",
+        "unsafe_dml": false,
+        "payload": false
+      },
+      {
+        "kind": "select",
+        "unsafe_dml": false,
+        "payload": false
+      },
+      {
+        "kind": "select",
+        "unsafe_dml": false,
+        "payload": false
+      },
+      {
+        "kind": "select",
+        "unsafe_dml": false,
+        "payload": false
+      },
+      {
+        "kind": "select",
+        "unsafe_dml": false,
+        "payload": false
+      },
+      {
+        "kind": "select",
+        "unsafe_dml": false,
+        "payload": false
+      }
+    ]
+  }
+]

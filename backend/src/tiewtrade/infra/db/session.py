@@ -10,6 +10,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import AsyncIterator, Mapping
 from contextlib import asynccontextmanager, suppress
 from dataclasses import dataclass
@@ -172,14 +173,19 @@ async def _assert_role(connection: AsyncConnection, expected: DatabaseRole) -> N
         )
     if is_superuser:
         raise DatabaseRoleError(f"บทบาท {expected.role_name} เป็น superuser ซึ่งห้ามตาม RQ-5.1")
-    if (expected in ROLES_UNDER_RLS or expected is DatabaseRole.MARKET_DATA) and bypasses_rls:
+    if (
+        expected in ROLES_UNDER_RLS
+        or expected in {DatabaseRole.MARKET_DATA, DatabaseRole.INDICATOR_BUILDER}
+    ) and bypasses_rls:
         raise DatabaseRoleError(f"บทบาท {expected.role_name} ข้าม RLS ได้ จึงใช้กับงานของผู้ใช้ไม่ได้")
     if expected is DatabaseRole.ENGINE_SCAN and not bypasses_rls:
         raise DatabaseRoleError(f"บทบาท {expected.role_name} ต้องข้าม RLS ได้ เพราะงานกวาดอ่านข้ามผู้ใช้")
 
 
 @asynccontextmanager
-async def _begin(engine: AsyncEngine) -> AsyncIterator[AsyncConnection]:
+async def _begin(
+    engine: AsyncEngine, *, cleanup_seconds: int | None = None
+) -> AsyncIterator[AsyncConnection]:
     """เปิด transaction แล้วแปลงข้อผิดพลาดทุกชนิดตอนต่อและตอนปิดให้เป็นชนิดของเรา
 
     ครอบตั้งแต่ **ตอนขอ connection** ไม่ใช่แค่ตอน query เพราะข้อผิดพลาดตอนต่อ
@@ -206,7 +212,17 @@ async def _begin(engine: AsyncEngine) -> AsyncIterator[AsyncConnection]:
         # ถ้าการ rollback ล้มเหลวด้วย ให้ข้อผิดพลาดตัวแรกชนะ เพราะมันบอกสาเหตุจริง
         # ส่วนความล้มเหลวของ rollback เป็นผลพลอยได้ของสาเหตุนั้น
         with suppress(SQLAlchemyError, OSError):
-            await transaction.__aexit__(type(error), error, error.__traceback__)
+            if cleanup_seconds is None:
+                await transaction.__aexit__(type(error), error, error.__traceback__)
+            else:
+                cleanup = asyncio.create_task(
+                    transaction.__aexit__(type(error), error, error.__traceback__)
+                )
+                try:
+                    await asyncio.wait_for(asyncio.shield(cleanup), cleanup_seconds)
+                except TimeoutError:
+                    await connection.invalidate()
+                    await asyncio.shield(cleanup)
         raise
     try:
         await transaction.__aexit__(None, None, None)
@@ -234,6 +250,22 @@ async def user_session(
             )
         except SQLAlchemyError as error:
             raise translate_database_error(error) from None
+        yield UserSession(connection, user_id)
+
+
+@asynccontextmanager
+async def indicator_read_session(engine: AsyncEngine, user_id: UUID) -> AsyncIterator[UserSession]:
+    """F-11 snapshot: transaction characteristics precede every SELECT."""
+    async with _begin(engine, cleanup_seconds=2) as connection:
+        await _execute(
+            connection, "SET TRANSACTION ISOLATION LEVEL REPEATABLE READ, READ ONLY", None
+        )
+        await _assert_role(connection, DatabaseRole.API)
+        await _execute(
+            connection,
+            "SELECT set_config(:setting, :value, true)",
+            {"setting": CURRENT_USER_SETTING, "value": str(user_id)},
+        )
         yield UserSession(connection, user_id)
 
 

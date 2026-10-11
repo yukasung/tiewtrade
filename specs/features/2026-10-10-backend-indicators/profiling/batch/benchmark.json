@@ -1,0 +1,12 @@
+[
+  {
+    "run": 0,
+    "status": 504,
+    "elapsed_seconds": 30.071055921000152,
+    "idle_rss_kib": 89820,
+    "peak_rss_delta_kib": 64076,
+    "event_loop_lag_seconds": 0.027592626000332528,
+    "response_bytes": 40,
+    "error": "INDICATOR_DEADLINE_EXCEEDED"
+  }
+]

@@ -46,7 +46,7 @@ async def claim_window(api_engine: AsyncEngine, engine: AsyncEngine, window: Can
         return claim
 
 
-async def test_thousand_candles_write_with_five_sql_calls_and_exact_values(
+async def test_thousand_candles_write_with_scope_check_and_exact_values(
     api_engine: AsyncEngine,
 ) -> None:
     now = datetime.now(UTC)
@@ -96,7 +96,8 @@ async def test_thousand_candles_write_with_five_sql_calls_and_exact_values(
             async with market_data_session(engine) as market_session:
                 calls.clear()
                 await write_candles(market_session, claim, candles, now)
-            assert len(calls) == 5
+            assert len(calls) == 6
+            assert "require_indicator_source_write" in calls[0]
         finally:
             event.remove(engine.sync_engine, "before_cursor_execute", before_execute)
         async with user_session(api_engine, uuid4()) as api_session:

@@ -1,0 +1,10 @@
+{
+  "R2-7": "PARTIAL",
+  "original_producer_result": "PASSED for response/parity/resource checks only; exact input size was not asserted in that version",
+  "required_calculation_slots": 525600,
+  "actual_calculation_slots": 525599,
+  "generation_id": "87696690-cb21-406e-8939-81a0a9014381",
+  "calculation_start": "2025-10-11T10:35:00+00:00",
+  "calculation_end": "2026-10-11T10:34:00+00:00",
+  "reason": "Actual aligned generation covers 525599 minute slots. The exact 525600-slot prepared case remains unmeasured. Current harness now requires this count."
+}

@@ -29,6 +29,8 @@ class DatabaseRole(Enum):
     ENGINE_SCAN = "tiewtrade_engine_scan"
     #: เขียนได้เฉพาะตารางราคาและแท่งเทียน
     MARKET_DATA = "tiewtrade_market_data"
+    #: Public derived indicators only; ADR-002.
+    INDICATOR_BUILDER = "tiewtrade_indicator_builder"
     #: เส้นทางยืนยันตัวตน (F-05) — บทบาทเดียวที่แตะข้อมูลเข้าสู่ระบบและออก session ได้
     #: อยู่ใต้ RLS เหมือน `api` และ `engine`
     AUTH = "tiewtrade_auth"

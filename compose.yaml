@@ -55,6 +55,20 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
+  # Opt-in only. An orphan requires verified operator recovery before another boot.
+  indicator-builder:
+    profiles: ["prepared-indicators"]
+    build:
+      context: ./backend
+    command: ["python", "-m", "tiewtrade.services.indicator_builder.main", "run"]
+    environment:
+      TIEWTRADE_DATABASE_URL_INDICATOR_BUILDER: postgresql+asyncpg://tiewtrade_indicator_builder:dev_indicator_builder@postgres:5432/tiewtrade
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    restart: "no"
+    stop_grace_period: 130s
+
   # รันครั้งเดียวแล้วจบ — api รอให้เสร็จก่อนเริ่ม
   migrate:
     build:
@@ -86,6 +100,7 @@ services:
       TIEWTRADE_SEALING_KEY_TOTP_SECRET: "1:ZGV2LW9ubHkta2V5LW5vdC1hLXNlY3JldC0zMmJ5dGU="
       # กุญแจของ API key แยกจาก TOTP (F-07 RQ-4) — ใช้เฉพาะพัฒนาและ CI
       TIEWTRADE_SEALING_KEY_VENUE_API_SECRET: "1:VlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlY="
+      TIEWTRADE_SEALING_KEY_INDICATOR_CURSOR: "1:SUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUk="
     ports:
       - "8000:8000"
     healthcheck:

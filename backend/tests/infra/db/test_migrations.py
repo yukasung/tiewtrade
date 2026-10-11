@@ -215,6 +215,8 @@ async def test_single_account_upgrade_refuses_multiple_keys_and_keeps_rows(
 
     owner = uuid4()
     await create_user(api_engine, owner)
+    # F-11 schema retirement requires runtime pools to be drained before DDL.
+    await api_engine.dispose()
     _alembic("downgrade", "0011")
     try:
         async with user_session(api_engine, owner) as session:
@@ -265,6 +267,7 @@ async def test_preferences_populated_downgrade_refuses_and_keeps_history(
     async with user_session(api_engine, owner) as session:
         await select_use(session, AccountUse.BOT)
         await record_event(session, selected_event(owner, AccountUse.BOT))
+    await api_engine.dispose()
     failed = _failed_upgrade_or_downgrade("downgrade", "0011")
     assert "trading preferences populated; downgrade refused" in failed.stderr
     async with user_session(api_engine, owner) as session:
@@ -306,6 +309,7 @@ async def test_selected_use_audit_survives_allowed_downgrade(
     async with user_session(api_engine, owner) as session:
         await record_event(session, selected_event(owner, AccountUse.MANUAL))
     before = await _snapshot(migrator_engine)
+    await api_engine.dispose()
     _alembic("downgrade", "0011")
     try:
         async with user_session(api_engine, owner) as session:
