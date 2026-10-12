@@ -222,12 +222,10 @@ async def _begin(
                 cleanup = asyncio.create_task(
                     transaction.__aexit__(type(error), error, error.__traceback__)
                 )
-                try:
+                # Preserve the original failure, especially deadline cancellation.
+                with suppress(DatabaseTimeoutError):
                     assert raw is not None
                     await _bounded_cleanup(connection, raw, cleanup, cleanup_seconds)
-                except DatabaseTimeoutError:
-                    # Preserve the original failure, especially deadline cancellation.
-                    pass
         raise
     try:
         if cleanup_seconds is None:
@@ -252,8 +250,9 @@ async def _bounded_cleanup(
     checkout. ORM bookkeeping cannot retain a live transport after this point.
     """
     driver = raw.driver_connection
+    abort_join_seconds = 0.05
     try:
-        await asyncio.wait_for(asyncio.shield(cleanup), max(0, seconds - 0.1))
+        await asyncio.wait_for(asyncio.shield(cleanup), max(0, seconds - 2 * abort_join_seconds))
         return
     except (TimeoutError, asyncio.CancelledError) as error:
         # Detach before abort: even stalled invalidation cannot return this
@@ -265,13 +264,13 @@ async def _bounded_cleanup(
         discard = asyncio.create_task(connection.invalidate())
         tasks = {cleanup, discard}
         try:
-            await asyncio.wait(tasks, timeout=0.05)
+            await asyncio.wait(tasks, timeout=abort_join_seconds)
         finally:
             for task in tasks:
                 if not task.done():
                     task.cancel()
                 task.add_done_callback(_consume_cleanup_result)
-        await asyncio.wait(tasks, timeout=0.05)
+        await asyncio.wait(tasks, timeout=abort_join_seconds)
         if isinstance(error, asyncio.CancelledError):
             raise
         raise DatabaseTimeoutError("indicator transaction cleanup failed") from None

@@ -21,6 +21,28 @@ from tiewtrade.services.api.authentication import Authenticated
 from tiewtrade.services.api.indicator_admission import IndicatorBudget
 
 
+class _AcceptedAdmission:
+    async def outcome(self, user: str) -> AdmissionOutcome:
+        return AdmissionOutcome.ACCEPTED
+
+
+def _indicator_request(budget: IndicatorBudget, messages: asyncio.Queue[dict[str, Any]]) -> Request:
+    return Request(
+        {
+            "type": "http",
+            "method": "GET",
+            "path": "/market-data/indicators",
+            "headers": [],
+            "app": SimpleNamespace(
+                state=SimpleNamespace(
+                    indicator_budget=budget, indicator_admission=_AcceptedAdmission()
+                )
+            ),
+        },
+        receive=messages.get,
+    )
+
+
 @pytest.mark.parametrize("cause", ["disconnect", "timeout", "cancel"])
 @pytest.mark.parametrize("stalled_invalidate", [False, True])
 async def test_stalled_cleanup_aborts_before_releasing_slot(
@@ -67,22 +89,10 @@ async def test_stalled_cleanup_aborts_before_releasing_slot(
             with suppress(DatabaseTimeoutError):
                 await _bounded_cleanup(cast(Any, Connection()), cast(Any, Raw()), cleanup, 0.2)
 
-    class Admission:
-        async def outcome(self, user: str) -> AdmissionOutcome:
-            return AdmissionOutcome.ACCEPTED
-
     monkeypatch.setattr(routes, "_read", read)
     if cause == "timeout":
         monkeypatch.setattr(routes, "INDICATOR_SETTINGS", SimpleNamespace(deadline_seconds=0.02))
-    request = Request(
-        {
-            "type": "http",
-            "app": SimpleNamespace(
-                state=SimpleNamespace(indicator_budget=budget, indicator_admission=Admission())
-            ),
-        },
-        receive=messages.get,
-    )
+    request = _indicator_request(budget, messages)
     who = cast(Authenticated, SimpleNamespace(user_id=uuid4()))
     task = asyncio.create_task(routes.indicators(routes.IndicatorQuery(), request, who))
     await asyncio.wait_for(entered.wait(), 1)
@@ -103,7 +113,7 @@ async def test_stalled_cleanup_aborts_before_releasing_slot(
         assert isinstance(result, HTTPException) and result.status_code == 504
     else:
         assert isinstance(result, asyncio.CancelledError)
-    async with budget.reserve(cast(Any, Admission()), who.user_id):
+    async with budget.reserve(cast(Any, _AcceptedAdmission()), who.user_id):
         assert budget.busy
 
 
@@ -202,10 +212,6 @@ async def test_disconnect_cancels_reader_before_releasing_local_slot(
     messages: asyncio.Queue[dict[str, Any]] = asyncio.Queue()
     budget = IndicatorBudget()
 
-    class Admission:
-        async def outcome(self, user: str) -> AdmissionOutcome:
-            return AdmissionOutcome.ACCEPTED
-
     async def suspended_read(*args: Any) -> Any:
         entered.set()
         try:
@@ -216,18 +222,7 @@ async def test_disconnect_cancels_reader_before_releasing_local_slot(
             closed.set()
 
     monkeypatch.setattr(routes, "_read", suspended_read)
-    request = Request(
-        {
-            "type": "http",
-            "method": "GET",
-            "path": "/market-data/indicators",
-            "headers": [],
-            "app": SimpleNamespace(
-                state=SimpleNamespace(indicator_budget=budget, indicator_admission=Admission())
-            ),
-        },
-        receive=messages.get,
-    )
+    request = _indicator_request(budget, messages)
     who = cast(Authenticated, SimpleNamespace(user_id=uuid4()))
     task = asyncio.create_task(routes.indicators(routes.IndicatorQuery(), request, who))
     try:
@@ -251,10 +246,6 @@ async def test_cleanup_survives_repeated_cancel_and_slot_is_reusable(
     messages: asyncio.Queue[dict[str, Any]] = asyncio.Queue()
     budget = IndicatorBudget()
 
-    class Admission:
-        async def outcome(self, user: str) -> AdmissionOutcome:
-            return AdmissionOutcome.ACCEPTED
-
     async def read(*args: Any) -> Any:
         entered.set()
         try:
@@ -267,15 +258,7 @@ async def test_cleanup_survives_repeated_cancel_and_slot_is_reusable(
     monkeypatch.setattr(routes, "_read", read)
     if cause == "timeout":
         monkeypatch.setattr(routes, "INDICATOR_SETTINGS", SimpleNamespace(deadline_seconds=0.05))
-    request = Request(
-        {
-            "type": "http",
-            "app": SimpleNamespace(
-                state=SimpleNamespace(indicator_budget=budget, indicator_admission=Admission())
-            ),
-        },
-        receive=messages.get,
-    )
+    request = _indicator_request(budget, messages)
     who = cast(Authenticated, SimpleNamespace(user_id=uuid4()))
     task = asyncio.create_task(routes.indicators(routes.IndicatorQuery(), request, who))
     try:
@@ -294,7 +277,7 @@ async def test_cleanup_survives_repeated_cancel_and_slot_is_reusable(
         result = await asyncio.wait_for(asyncio.gather(task, return_exceptions=True), 1)
         assert isinstance(result[0], asyncio.CancelledError)
         assert not budget.busy
-        async with budget.reserve(cast(Any, Admission()), who.user_id):
+        async with budget.reserve(cast(Any, _AcceptedAdmission()), who.user_id):
             assert bool(budget.busy)
         assert not budget.busy
     finally:
@@ -314,10 +297,6 @@ async def test_postgres_query_stops_and_pool_is_reusable(
     budget = IndicatorBudget()
     user_id = uuid4()
 
-    class Admission:
-        async def outcome(self, user: str) -> AdmissionOutcome:
-            return AdmissionOutcome.ACCEPTED
-
     async def read(*args: Any) -> Any:
         async with indicator_read_session(api_engine, user_id) as session:
             entered.set()
@@ -326,15 +305,7 @@ async def test_postgres_query_stops_and_pool_is_reusable(
     monkeypatch.setattr(routes, "_read", read)
     if cause == "timeout":
         monkeypatch.setattr(routes, "INDICATOR_SETTINGS", SimpleNamespace(deadline_seconds=0.2))
-    request = Request(
-        {
-            "type": "http",
-            "app": SimpleNamespace(
-                state=SimpleNamespace(indicator_budget=budget, indicator_admission=Admission())
-            ),
-        },
-        receive=messages.get,
-    )
+    request = _indicator_request(budget, messages)
     who = cast(Authenticated, SimpleNamespace(user_id=user_id))
     task = asyncio.create_task(routes.indicators(routes.IndicatorQuery(), request, who))
     try:
@@ -353,7 +324,7 @@ async def test_postgres_query_stops_and_pool_is_reusable(
         assert not budget.busy
         assert cast(Any, api_engine.pool).checkedout() == 0
         async with (
-            budget.reserve(cast(Any, Admission()), user_id),
+            budget.reserve(cast(Any, _AcceptedAdmission()), user_id),
             indicator_read_session(api_engine, user_id) as session,
         ):
             assert (await session.execute("SELECT 1")).scalar_one() == 1

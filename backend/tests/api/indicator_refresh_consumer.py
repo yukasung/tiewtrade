@@ -38,6 +38,7 @@ async def refresh_once(
     if not requested or not refresh["required"] or refresh["target"] is None:
         return result
     target = refresh["target"]
+    result.status = "STOPPED"
     deadline = clock() + 60
 
     def remaining() -> float:
@@ -52,7 +53,6 @@ async def refresh_once(
         )
         remaining()  # A late response never authorizes another request or success.
         if response.status_code not in (200, 202):
-            result.status = "STOPPED"
             return result
         if response.status_code == 202:
             for _ in range(6):
@@ -62,11 +62,9 @@ async def refresh_once(
                 response = client.get("/market-data/candles", params=target, timeout=timeout)
                 remaining()
                 if response.status_code != 200:
-                    result.status = "STOPPED"
                     return result
                 state = response.json()
                 if state["status"] in ("FAILED", "UNAVAILABLE") or state["failure_code"]:
-                    result.status = "STOPPED"
                     return result
                 if not state["refresh_pending"]:
                     break
@@ -84,7 +82,6 @@ async def refresh_once(
             if response.status_code != 409:
                 break
         if response.status_code != 200:
-            result.status = "STOPPED"
             return result
         body = response.json()
         result.pages.append(body)
@@ -92,5 +89,4 @@ async def refresh_once(
         return result
     except (httpx.RequestError, TimeoutError):
         # An unknown POST outcome never causes another POST in this action.
-        result.status = "STOPPED"
         return result
