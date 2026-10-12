@@ -1,7 +1,8 @@
 # A–D implementation and validation — 2026-10-12
 
-Status: **Implemented; ready for review.** NC-38 was approved by the owner before
-the disconnect correction. No commit, push, merge or production activation.
+Status: **Review APPROVED; merged in PR #9.** NC-38 was approved by the owner before
+the disconnect correction. Feature status is maintained in `../../../roadmap.md`.
+There is no production activation or completed capacity acceptance claim.
 
 ## A — HTTP lifecycle, boundaries and failures
 
@@ -123,7 +124,15 @@ were interrupted, not counted as passing. The corrected code passed the complete
 Linux run. `ad-prototype-*.xml` preserve early test-fixture mistakes (expiry model,
 RLS setup and source setup); they are not current validation results.
 
-Remaining work is review of these changes, owner-authorized Git actions and
-remote CI, plus the approved phase-9 load/soak/capacity and release checks.
-The historical capacity failures remain open. F-11 remains **In Progress** and
-production PREPARED mode must not be inferred from these development tests.
+The corrections and subsequent three-file refactor passed review. After refactor,
+149 relevant tests passed in 62.97s, with Ruff/format, mypy and seven import
+contracts passing (session execution evidence, not a new XML/full-suite count).
+[CI run 38210601366](https://github.com/yukasung/tiewtrade/actions/runs/38210601366)
+passed all six jobs on `e84b0e8`, including backend regression and browser E2E.
+The owner authorized [PR #9](https://github.com/yukasung/tiewtrade/pull/9), merged
+as `279c03f`, and subsequent local/remote feature-branch deletion. See
+`../validation.md` for the development-gate closeout.
+
+Remaining acceptance is the approved phase-9 load/soak/capacity and release checks.
+Historical capacity failures remain open; production PREPARED mode must not be
+inferred from these development tests or the merge.
