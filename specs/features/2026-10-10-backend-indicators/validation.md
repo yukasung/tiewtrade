@@ -4,6 +4,33 @@
 วันที่: 2026-10-10
 Branch: feature/f-11-backend-indicators
 
+## ผลตรวจด่านพัฒนาและ merge — 2026-10-12
+
+Implementation/A–D และการแก้ cleanup/refresh deadline ผ่านรีวิวซ้ำแล้ว;
+refactor ล่าสุดทั้ง3ไฟล์ผ่าน deep review APPROVED โดยคงพฤติกรรมเดิม.
+หลัง refactor ทดสอบ149กรณีผ่าน (62.97s), Ruff/check-format, mypy352ไฟล์
+และ import contracts7ข้อผ่าน; มีเพียง TestClient deprecation warnings เดิม.
+ผล149เป็นผลรันใน session ไม่ใช่จำนวนใน XML ของรอบก่อน และไม่นำยอดมาบวกกัน.
+
+เจ้าของสั่ง push/เปิด PR/merge แล้ว: [PR #9](https://github.com/yukasung/tiewtrade/pull/9),
+head `e84b0e816aa97530c4e338a5e47c3d8ac7a8d168`, merge
+`279c03f065418018a035991771fa8e68544e58b3` เข้า main.
+[CI run 38210601366](https://github.com/yukasung/tiewtrade/actions/runs/38210601366)
+ของ head นี้ **success ครบ6 jobs**: backend lint/types/imports/tests, frontend
+lint/types/tests, API contract, PostgreSQL version, container และ browser E2E.
+นี่คือ CI ก่อน merge ไม่อ้างว่ามี CI อีกชุดบน merge SHA; merge tree ตรงกับ head ที่ตรวจ.
+ลบ feature branch local/remote ตามคำสั่งเจ้าของหลังยืนยัน merge/push/CI แล้ว.
+
+ตรวจ [R2 mapping](profiling/merge-validation-mapping.md) และ
+[RQ/V/PV crosswalk](profiling/baseline-coverage-crosswalk.md) แล้ว:
+ด่าน correctness/security/transaction/concurrency/parity, functional
+mixed-version/GC และ V-17/PV-9 ที่ไม่ได้เลื่อนผ่านและรีวิวครบ.
+สถานะ feature ใช้ [roadmap](../../roadmap.md) เป็นแหล่งเดียว.
+ยังไม่ปิด aggregate ที่พึ่ง capacity/release: R2-7 measurements, C2/C3/C5,
+C4 ส่วนรอบเต็ม, C6, S5/G7/D7 ส่วนที่เลื่อน รวม production inventory/release checks.
+ผล Failed/Partial เดิมคงไว้; ไม่ได้รันทดสอบยาวใหม่ ไม่อนุมัติ production PREPARED
+และไม่ถือว่าผ่านเกณฑ์ Completed.
+
 ## A–D implementation / NC-38 corrected — 2026-10-12
 
 แก้สองข้อจากรีวิว A–D ตามคำสั่งเจ้าของแล้ว: cleanup มี bounded abort/quarantine
@@ -21,7 +48,7 @@ Backend Linux2514ผ่าน/1skip (Composeที่skipผ่านบนhost�
 frontend Linux158ผ่าน; exact fixture1ผ่าน141.355s ไม่ใช่load/soak acceptance.
 ดู [รายงาน A–D](profiling/ad-validation-report.md) และ
 [baseline crosswalk](profiling/baseline-coverage-crosswalk.md).
-ยังไม่commit/merge/เปิดproduction; F-11 In Progress รอรีวิวและด่านชุด9ตามเดิม.
+บันทึกส่วนนี้เป็นหลักฐานก่อน merge; ผล review/CI/merge ล่าสุดอยู่หัวข้อด้านบน. ยังไม่รับรอง production PREPARED.
 
 ## ประวัติก่อนแก้ — A–D disconnect Failed / NC-38 — 2026-10-12
 

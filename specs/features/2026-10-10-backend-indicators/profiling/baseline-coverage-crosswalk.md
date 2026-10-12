@@ -44,8 +44,8 @@ current execution results are recorded in `ad-validation-report.md`.
 | V-13 | batched DB reader parity and snapshot races | Functional evidence present. |
 | V-14 | actual read-only snapshot, grants/RLS, route/auth/canary tests | Session non-renewal additionally checked through outage and recovery. |
 | V-15 | admission tests, serialization boundaries, NC-38 disconnect/query cleanup | Functional evidence expanded; cold/warm/RSS/lag acceptance remains deferred. |
-| V-16 | current static/frontend/OpenAPI checks; full regression | See current results and external CI limit in report. |
-| V-17 | empty-derived scheduler → HTTP → F-09 refresh → rebuild lifecycle | Real endpoint/worker/scheduler flow plus 23 consumer cases including HTTP elapsed time and exact/over-60s rejection (`ad-review-fixes-tests.xml`); active-lease duplicate POST and expired-target HTTP cases. Ready for re-review; no production frontend claim. |
+| V-16 | current static/frontend/OpenAPI checks; full regression | Local gates and remote CI run38210601366 passed; see validation.md. |
+| V-17 | empty-derived scheduler → HTTP → F-09 refresh → rebuild lifecycle | Real endpoint/worker/scheduler flow plus 23 consumer cases including HTTP elapsed time and exact/over-60s rejection (`ad-review-fixes-tests.xml`); active-lease duplicate POST and expired-target HTTP cases. Review APPROVED; no production frontend claim. |
 | V-18 | crypto cursor/key tests, mixed-replica D2, exact expiry boundaries | Backend token evidence present; consumer restart policy additionally tested by the V-17 reference harness. |
 
 ## Performance amendment
@@ -61,9 +61,12 @@ current execution results are recorded in `ad-validation-report.md`.
 | PV-7 | constant fixture plus changing/fractional independent oracle | Correctness fixtures present; not a new full-size performance result. |
 | PV-8 | source/API snapshot races and NC-38 real-query cancellation/pool reuse | Functional evidence expanded; this is not continuous-load certification. |
 | PV-9 | parity gap/refresh states, D3 retention, F-09 refresh/rebuild | Functional evidence includes V-17 consumer matrix and real refresh flow; not waived by R2-7. |
-| PV-10 | current local static/frontend/backend results | Remote CI/release approval remains separate; no push was authorized. |
+| PV-10 | current local static/frontend/backend results | Remote CI run38210601366 passed; PR9 merged. Production release acceptance remains separate. |
 
 The V-17/PV-9 consumer matrix remains a non-deferred requirement; its new evidence
-is in `ad-consumer-tests.xml`. Phase 9 covers only the explicitly approved
-load/soak/capacity items. This inventory does not
-authorize Development Complete, Completed, merge, or production PREPARED mode.
+is in `ad-consumer-tests.xml` and the corrected `ad-review-fixes-tests.xml`;
+the subsequent refactor regression and remote CI are recorded in `../validation.md`.
+Phase 9 covers only the explicitly approved
+load/soak/capacity items. The subsequent review/CI/merge outcome is recorded in ../validation.md;
+feature status is maintained only in ../../../roadmap.md. Completed and
+production PREPARED acceptance still require the remaining phase-9/release gates.
