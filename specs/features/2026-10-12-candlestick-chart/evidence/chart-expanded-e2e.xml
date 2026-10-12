@@ -1,0 +1,146 @@
+<testsuites id="" name="" tests="4" failures="1" skipped="0" errors="2" time="205.99542799999998">
+<testsuite name="candlestick-chart.spec.ts" timestamp="2026-10-12T14:12:52.446Z" hostname="" tests="4" failures="1" skipped="0" time="202.36" errors="2">
+<testcase name="password login, series switching and actual latest-price worker" classname="candlestick-chart.spec.ts" time="67.165">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|..\..\..\..\frontend\test-results\candlestick-chart-password-90df9--actual-latest-price-worker\error-context.md]]
+]]>
+</system-out>
+<failure message="expect(locator).toBeVisible() failed" type="expect.toBeVisible">
+<![CDATA[  candlestick-chart.spec.ts:129:1 › password login, series switching and actual latest-price worker 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByTestId('candlestick-chart').getByText('100.000000000000000001 USDT', { exact: true })
+    Expected: visible
+    Timeout: 60000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" getByTestId('candlestick-chart').getByText('100.000000000000000001 USDT', { exact: true }) with timeout 60000ms
+      - waiting for getByTestId('candlestick-chart').getByText('100.000000000000000001 USDT', { exact: true })
+
+
+      140 |     await expect(chart).toBeVisible();
+      141 |     await chart.getByRole("combobox", { name: "คู่เทรด", exact: true }).selectOption("ETH");
+    > 142 |     await expect(chart.getByText("100.000000000000000001 USDT", { exact: true })).toBeVisible({ timeout: 60_000 });
+          |                                                                                   ^
+      143 |     await chart.getByRole("combobox", { name: "Timeframe", exact: true }).selectOption("5m");
+      144 |     await chart.getByRole("combobox", { name: "Timeframe", exact: true }).selectOption("1h");
+      145 |     await expect(chart.getByText("100.000000000000000001 USDT", { exact: true })).toBeVisible({ timeout: 60_000 });
+        at D:\Projects\TiewTrade\Projects\TiewTrade\frontend\e2e\candlestick-chart.spec.ts:142:83
+
+    Error Context: ..\test-results\candlestick-chart-password-90df9--actual-latest-price-worker\error-context.md
+]]>
+</failure>
+</testcase>
+<testcase name="ended preview waits for actual REST commit before new indicator bundle" classname="candlestick-chart.spec.ts" time="4.306">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|..\..\..\..\frontend\test-results\candlestick-chart-ended-pr-c0681-before-new-indicator-bundle\error-context.md]]
+]]>
+</system-out>
+<error message="Command failed: .venv/Scripts/python.exe -X utf8 ../specs/features/2026-10-12-candlestick-chart/evidence/browser_fixture.py repair" type="Error">
+<![CDATA[  candlestick-chart.spec.ts:149:1 › ended preview waits for actual REST commit before new indicator bundle 
+
+    Error: Command failed: .venv/Scripts/python.exe -X utf8 ../specs/features/2026-10-12-candlestick-chart/evidence/browser_fixture.py repair
+    Traceback (most recent call last):
+      File "D:\Projects\TiewTrade\Projects\TiewTrade\specs\features\2026-10-12-candlestick-chart\evidence\browser_fixture.py", line 196, in <module>
+        asyncio.run(main())
+      File "C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\runners.py", line 194, in run
+        return runner.run(main)
+               ^^^^^^^^^^^^^^^^
+      File "C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\runners.py", line 118, in run
+        return self._loop.run_until_complete(task)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      File "C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\base_events.py", line 687, in run_until_complete
+        return future.result()
+               ^^^^^^^^^^^^^^^
+      File "D:\Projects\TiewTrade\Projects\TiewTrade\specs\features\2026-10-12-candlestick-chart\evidence\browser_fixture.py", line 142, in main
+        raise RuntimeError("F12_REPAIR_REJECTED")
+    RuntimeError: F12_REPAIR_REJECTED
+
+
+       9 |
+      10 | function fixture(action: string): void {
+    > 11 |   execFileSync(process.platform === "win32" ? ".venv/Scripts/python.exe" : ".venv/bin/python",
+         |   ^
+      12 |     ["-X", "utf8", "../specs/features/2026-10-12-candlestick-chart/evidence/browser_fixture.py", action],
+      13 |     { cwd: "../backend", env: e2eEnvironment(), stdio: "pipe" });
+      14 | }
+        at fixture (D:\Projects\TiewTrade\Projects\TiewTrade\frontend\e2e\candlestick-chart.spec.ts:11:3)
+        at D:\Projects\TiewTrade\Projects\TiewTrade\frontend\e2e\candlestick-chart.spec.ts:157:3
+
+    Error: page.waitForResponse: Test ended.
+
+      152 |   await expect(chart.getByText("100.000000000000000001 USDT", { exact: true })).toBeVisible({ timeout: 60_000 });
+      153 |   fixture("rollover");
+    > 154 |   const revised = page.waitForResponse(async response => response.url().includes("/chart/history") &&
+          |                        ^
+      155 |     response.status() === 200 && ((await response.json()) as { candles: { close: string }[] })
+      156 |       .candles.some(row => row.close === "100.75"));
+      157 |   fixture("repair");
+        at D:\Projects\TiewTrade\Projects\TiewTrade\frontend\e2e\candlestick-chart.spec.ts:154:24
+
+    Error Context: ..\test-results\candlestick-chart-ended-pr-c0681-before-new-indicator-bundle\error-context.md
+]]>
+</error>
+</testcase>
+<testcase name="manual refresh reaches the real worker and failed polling stops" classname="candlestick-chart.spec.ts" time="120.047">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|..\..\..\..\frontend\test-results\candlestick-chart-manual-r-290b4-er-and-failed-polling-stops\error-context.md]]
+]]>
+</system-out>
+<error message="Test timeout of 120000ms exceeded." type="Error">
+<![CDATA[  candlestick-chart.spec.ts:162:1 › manual refresh reaches the real worker and failed polling stops 
+
+    Test timeout of 120000ms exceeded.
+
+    Error: page.waitForResponse: Test timeout of 120000ms exceeded.
+
+      164 |   await registerAccount(page);
+      165 |   const chart = page.getByTestId("candlestick-chart");
+    > 166 |   const posted = page.waitForResponse(response => response.url().endsWith("/candles/requests") &&
+          |                       ^
+      167 |     response.request().method() === "POST" && response.status() === 202);
+      168 |   await chart.getByRole("button", { name: "ขอ refresh ประวัติ", exact: true }).click();
+      169 |   await posted;
+        at D:\Projects\TiewTrade\Projects\TiewTrade\frontend\e2e\candlestick-chart.spec.ts:166:23
+
+    Error: locator.click: Test timeout of 120000ms exceeded.
+    Call log:
+      - waiting for getByTestId('candlestick-chart').getByRole('button', { name: 'ขอ refresh ประวัติ', exact: true })
+        - locator resolved to <button disabled type="button" class="account-button inline-flex items-center justify-center gap-2 rounded-lg font-medium ">ขอ refresh ประวัติ</button>
+      - attempting click action
+        2 × waiting for element to be visible, enabled and stable
+          - element is not enabled
+        - retrying click action
+        - waiting 20ms
+        2 × waiting for element to be visible, enabled and stable
+          - element is not enabled
+        - retrying click action
+          - waiting 100ms
+        226 × waiting for element to be visible, enabled and stable
+            - element is not enabled
+          - retrying click action
+            - waiting 500ms
+
+
+      166 |   const posted = page.waitForResponse(response => response.url().endsWith("/candles/requests") &&
+      167 |     response.request().method() === "POST" && response.status() === 202);
+    > 168 |   await chart.getByRole("button", { name: "ขอ refresh ประวัติ", exact: true }).click();
+          |                                                                                ^
+      169 |   await posted;
+      170 |   fixture("repair");
+      171 |   await expect(chart.locator(".chart-selection").getByText("100.75 USDT", { exact: true }).first()).toBeVisible({ timeout: 60_000 });
+        at D:\Projects\TiewTrade\Projects\TiewTrade\frontend\e2e\candlestick-chart.spec.ts:168:80
+
+    Error Context: ..\test-results\candlestick-chart-manual-r-290b4-er-and-failed-polling-stops\error-context.md
+]]>
+</error>
+</testcase>
+<testcase name="browser network loss and a restarted fenced candle worker recover from PG" classname="candlestick-chart.spec.ts" time="10.842">
+</testcase>
+</testsuite>
+</testsuites>

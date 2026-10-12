@@ -264,3 +264,23 @@ async def test_no_representable_open_time_returns_empty_without_discovery_or_bud
     assert page.received_at == clock.now
     assert calls == []
     assert guard.reserved == []
+
+
+async def test_oversized_source_span_rejected_before_http_or_budget() -> None:
+    clock = FakeClock()
+    guard = RecordingGuard()
+
+    def reply(request: httpx.Request) -> httpx.Response:
+        raise AssertionError("oversized range must not reach the transport")
+
+    source = BinanceThCandles(transport_for(reply, guard=guard), clock=clock)
+    assert source.max_request_span == timedelta(days=7)
+    with pytest.raises(ValueError, match="span limit"):
+        await source.fetch_candles(
+            Symbol("BTC", "USDT"),
+            Timeframe.H1,
+            clock.now,
+            clock.now + timedelta(days=7, microseconds=1),
+            1000,
+        )
+    assert guard.reserved == []

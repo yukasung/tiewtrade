@@ -1,0 +1,267 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="40" failures="1" errors="0" time="2.8882773">
+    <testsuite name="tests/AccountLayout.test.tsx" timestamp="2026-10-12T16:46:03.125Z" hostname="DESKTOP-RONGMEV" tests="3" failures="0" errors="0" skipped="0" time="0.1112477">
+        <testcase classname="tests/AccountLayout.test.tsx" name="keeps one main landmark when embedded in the page main" time="0.0613732">
+        </testcase>
+        <testcase classname="tests/AccountLayout.test.tsx" name="closes navigation with Escape and backdrop and restores trigger focus" time="0.028635">
+        </testcase>
+        <testcase classname="tests/AccountLayout.test.tsx" name="preserves native form props and explicit button types" time="0.0190263">
+        </testcase>
+    </testsuite>
+    <testsuite name="tests/AccountNavigation.test.tsx" timestamp="2026-10-12T16:46:03.128Z" hostname="DESKTOP-RONGMEV" tests="3" failures="0" errors="0" skipped="0" time="0.1674031">
+        <testcase classname="tests/AccountNavigation.test.tsx" name="defaults to chart and mounts only the selected module without replacing the session" time="0.1110941">
+        </testcase>
+        <testcase classname="tests/AccountNavigation.test.tsx" name="preserves a direct link through authentication and handles a changed or unknown hash" time="0.0243943">
+        </testcase>
+        <testcase classname="tests/AccountNavigation.test.tsx" name="keeps the disabled chart default without mounting modules or starting their requests" time="0.0297867">
+        </testcase>
+    </testsuite>
+    <testsuite name="tests/AccountSession.test.tsx" timestamp="2026-10-12T16:46:03.129Z" hostname="DESKTOP-RONGMEV" tests="5" failures="1" errors="0" skipped="0" time="1.372406">
+        <testcase classname="tests/AccountSession.test.tsx" name="cancels pending queries and clears both caches when identity changes" time="0.0642083">
+        </testcase>
+        <testcase classname="tests/AccountSession.test.tsx" name="session expired cancels and clears cache and invokes auth boundary" time="0.0670243">
+        </testcase>
+        <testcase classname="tests/AccountSession.test.tsx" name="keeps the same cache when auth callback changes within one identity" time="0.0190744">
+        </testcase>
+        <testcase classname="tests/AccountSession.test.tsx" name="real panels ignore late key and account responses after identity switch" time="0.1543004">
+        </testcase>
+        <testcase classname="tests/AccountSession.test.tsx" name="account 401 unmounts the authenticated account boundary" time="1.0653801">
+            <failure message="expected false to be true // Object.is equality
+
+Ignored nodes: comments, script, style
+[36m&lt;html&gt;[39m
+  [36m&lt;head /&gt;[39m
+  [36m&lt;body&gt;[39m
+    [36m&lt;div&gt;[39m
+      [36m&lt;div[39m
+        [33mclass[39m=[32m&quot;app-theme account-layout&quot;[39m
+      [36m&gt;[39m
+        [36m&lt;header[39m
+          [33mclass[39m=[32m&quot;account-header&quot;[39m
+        [36m&gt;[39m
+          [36m&lt;button[39m
+            [33maria-controls[39m=[32m&quot;account-navigation&quot;[39m
+            [33maria-expanded[39m=[32m&quot;false&quot;[39m
+            [33maria-label[39m=[32m&quot;เปิดเมนูบัญชี&quot;[39m
+            [33mclass[39m=[32m&quot;account-button inline-flex items-center justify-center gap-2 rounded-lg font-medium account-menu-trigger&quot;[39m
+            [33mtype[39m=[32m&quot;button&quot;[39m
+          [36m&gt;[39m
+            [0m☰[0m
+          [36m&lt;/button&gt;[39m
+          [36m&lt;strong&gt;[39m
+            [0mTiewTrade[0m
+          [36m&lt;/strong&gt;[39m
+          [36m&lt;span&gt;[39m
+            [0mจัดการบัญชี[0m
+          [36m&lt;/span&gt;[39m
+        [36m&lt;/header&gt;[39m
+        [36m&lt;nav[39m
+          [33maria-label[39m=[32m&quot;จัดการบัญชี&quot;[39m
+          [33mclass[39m=[32m&quot;account-sidebar &quot;[39m
+          [33mid[39m=[32m&quot;account-navigation&quot;[39m
+        [36m&gt;[39m
+          [36m&lt;strong&gt;[39m
+            [0mTiewTrade[0m
+          [36m&lt;/strong&gt;[39m
+          [36m&lt;a[39m
+            [33mhref[39m=[32m&quot;#/account&quot;[39m
+          [36m&gt;[39m
+            [0mบัญชี[0m
+          [36m&lt;/a&gt;[39m
+          [36m&lt;a[39m
+            [33mhref[39m=[32m&quot;#/security&quot;[39m
+          [36m&gt;[39m
+            [0mTOTP / 2FA[0m
+          [36m&lt;/a&gt;[39m
+          [36m&lt;a[39m
+            [33mhref[39m=[32m&quot;#/api-keys&quot;[39m
+          [36m&gt;[39m
+            [0mAPI key[0m
+          [36m&lt;/a&gt;[39m
+          [36m&lt;a[39m
+            [33mhref[39m=[32m&quot;#/trading-account&quot;[39m
+          [36m&gt;[39m
+            [0mบัญชีเทรด[0m
+          [36m&lt;/a&gt;[39m
+          [36m&lt;a[39m
+            [33mhref[39m=[32m&quot;#/prices&quot;[39m
+          [36m&gt;[39m
+            [0mราคาสด[0m
+          [36m&lt;/a&gt;[39m
+        [36m&lt;/nav&gt;[39m
+        [36m&lt;div[39m
+          [33mclass[39m=[32m&quot;account-content&quot;[39m
+        [36m&gt;[39m
+          [36m&lt;div[39m
+            [33mdata-testid[39m=[32m&quot;signed-in&quot;[39m
+          [36m&gt;[39m
+            [36m&lt;p[39m
+              [33mrole[39m=[32m&quot;status&quot;[39m
+            [36m&gt;[39m
+              [0mกราฟยังไม่เปิดใช้งาน[0m
+            [36m&lt;/p&gt;[39m
+          [36m&lt;/div&gt;[39m
+        [36m&lt;/div&gt;[39m
+      [36m&lt;/div&gt;[39m
+    [36m&lt;/div&gt;[39m
+  [36m&lt;/body&gt;[39m
+[36m&lt;/html&gt;[39m" type="AssertionError">
+AssertionError: expected false to be true // Object.is equality
+
+Ignored nodes: comments, script, style
+&lt;html&gt;
+  &lt;head /&gt;
+  &lt;body&gt;
+    &lt;div&gt;
+      &lt;div
+        class=&quot;app-theme account-layout&quot;
+      &gt;
+        &lt;header
+          class=&quot;account-header&quot;
+        &gt;
+          &lt;button
+            aria-controls=&quot;account-navigation&quot;
+            aria-expanded=&quot;false&quot;
+            aria-label=&quot;เปิดเมนูบัญชี&quot;
+            class=&quot;account-button inline-flex items-center justify-center gap-2 rounded-lg font-medium account-menu-trigger&quot;
+            type=&quot;button&quot;
+          &gt;
+            ☰
+          &lt;/button&gt;
+          &lt;strong&gt;
+            TiewTrade
+          &lt;/strong&gt;
+          &lt;span&gt;
+            จัดการบัญชี
+          &lt;/span&gt;
+        &lt;/header&gt;
+        &lt;nav
+          aria-label=&quot;จัดการบัญชี&quot;
+          class=&quot;account-sidebar &quot;
+          id=&quot;account-navigation&quot;
+        &gt;
+          &lt;strong&gt;
+            TiewTrade
+          &lt;/strong&gt;
+          &lt;a
+            href=&quot;#/account&quot;
+          &gt;
+            บัญชี
+          &lt;/a&gt;
+          &lt;a
+            href=&quot;#/security&quot;
+          &gt;
+            TOTP / 2FA
+          &lt;/a&gt;
+          &lt;a
+            href=&quot;#/api-keys&quot;
+          &gt;
+            API key
+          &lt;/a&gt;
+          &lt;a
+            href=&quot;#/trading-account&quot;
+          &gt;
+            บัญชีเทรด
+          &lt;/a&gt;
+          &lt;a
+            href=&quot;#/prices&quot;
+          &gt;
+            ราคาสด
+          &lt;/a&gt;
+        &lt;/nav&gt;
+        &lt;div
+          class=&quot;account-content&quot;
+        &gt;
+          &lt;div
+            data-testid=&quot;signed-in&quot;
+          &gt;
+            &lt;p
+              role=&quot;status&quot;
+            &gt;
+              กราฟยังไม่เปิดใช้งาน
+            &lt;/p&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/body&gt;
+&lt;/html&gt;
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ tests/AccountSession.test.tsx:191:7
+ ❯ runWithExpensiveErrorDiagnosticsDisabled node_modules/@testing-library/dom/dist/config.js:47:12
+ ❯ checkCallback node_modules/@testing-library/dom/dist/wait-for.js:124:77
+ ❯ Timeout.checkRealTimersCallback node_modules/@testing-library/dom/dist/wait-for.js:118:16
+            </failure>
+        </testcase>
+    </testsuite>
+    <testsuite name="tests/AuthPanel.test.tsx" timestamp="2026-10-12T16:46:03.131Z" hostname="DESKTOP-RONGMEV" tests="5" failures="0" errors="0" skipped="0" time="0.1796075">
+        <testcase classname="tests/AuthPanel.test.tsx" name="AuthPanel &gt; แสดงฟอร์มเข้าสู่ระบบเมื่อยังไม่ได้เข้าสู่ระบบ" time="0.0526589">
+        </testcase>
+        <testcase classname="tests/AuthPanel.test.tsx" name="AuthPanel &gt; แสดงรหัสผู้ใช้เมื่อเข้าสู่ระบบแล้ว" time="0.0217546">
+        </testcase>
+        <testcase classname="tests/AuthPanel.test.tsx" name="AuthPanel &gt; บอกเหตุผลที่หลังบ้านปฏิเสธ ไม่ใช่ข้อความที่เขียนไว้เอง" time="0.0310695">
+        </testcase>
+        <testcase classname="tests/AuthPanel.test.tsx" name="AuthPanel &gt; เตือนว่ากู้รหัสผ่านไม่ได้ ก่อนผู้ใช้สมัคร" time="0.011953">
+        </testcase>
+        <testcase classname="tests/AuthPanel.test.tsx" name="AuthPanel &gt; ขอโทเคนกัน CSRF ใบใหม่และกลับไปโหมดเข้าสู่ระบบหลังออกจากระบบ" time="0.0596753">
+        </testcase>
+    </testsuite>
+    <testsuite name="tests/AuthPanelLogout.test.tsx" timestamp="2026-10-12T16:46:03.132Z" hostname="DESKTOP-RONGMEV" tests="13" failures="0" errors="0" skipped="0" time="0.986595">
+        <testcase classname="tests/AuthPanelLogout.test.tsx" name="&apos;/api/auth/logout&apos; clears cached account and aborts pending GET despite &apos;identity-error&apos;" time="0.1579009">
+        </testcase>
+        <testcase classname="tests/AuthPanelLogout.test.tsx" name="&apos;/api/auth/logout&apos; clears cached account and aborts pending GET despite &apos;identity-hang&apos;" time="0.0615081">
+        </testcase>
+        <testcase classname="tests/AuthPanelLogout.test.tsx" name="&apos;/api/auth/logout&apos; clears cached account and aborts pending GET despite &apos;csrf-error&apos;" time="0.0657908">
+        </testcase>
+        <testcase classname="tests/AuthPanelLogout.test.tsx" name="&apos;/api/auth/logout&apos; clears cached account and aborts pending GET despite &apos;csrf-hang&apos;" time="0.0756176">
+        </testcase>
+        <testcase classname="tests/AuthPanelLogout.test.tsx" name="&apos;/api/auth/logout-all&apos; clears cached account and aborts pending GET despite &apos;identity-error&apos;" time="0.0584261">
+        </testcase>
+        <testcase classname="tests/AuthPanelLogout.test.tsx" name="&apos;/api/auth/logout-all&apos; clears cached account and aborts pending GET despite &apos;identity-hang&apos;" time="0.058076">
+        </testcase>
+        <testcase classname="tests/AuthPanelLogout.test.tsx" name="&apos;/api/auth/logout-all&apos; clears cached account and aborts pending GET despite &apos;csrf-error&apos;" time="0.0343525">
+        </testcase>
+        <testcase classname="tests/AuthPanelLogout.test.tsx" name="&apos;/api/auth/logout-all&apos; clears cached account and aborts pending GET despite &apos;csrf-hang&apos;" time="0.0646042">
+        </testcase>
+        <testcase classname="tests/AuthPanelLogout.test.tsx" name="log-out retains the authenticated boundary when POST /api/auth/logout fails" time="0.0518709">
+        </testcase>
+        <testcase classname="tests/AuthPanelLogout.test.tsx" name="log-out-everywhere retains the authenticated boundary when POST /api/auth/logout-all fails" time="0.0490144">
+        </testcase>
+        <testcase classname="tests/AuthPanelLogout.test.tsx" name="a TOTP identity response started before logout cannot restore the old boundary" time="0.0559193">
+        </testcase>
+        <testcase classname="tests/AuthPanelLogout.test.tsx" name="log-out clears a pending key mutation after POST /api/auth/logout succeeds" time="0.1272969">
+        </testcase>
+        <testcase classname="tests/AuthPanelLogout.test.tsx" name="log-out-everywhere clears a pending key mutation after POST /api/auth/logout-all succeeds" time="0.1238118">
+        </testcase>
+    </testsuite>
+    <testsuite name="tests/chart-useChartData.test.tsx" timestamp="2026-10-12T16:46:03.134Z" hostname="DESKTOP-RONGMEV" tests="11" failures="0" errors="0" skipped="0" time="0.071018">
+        <testcase classname="tests/chart-useChartData.test.tsx" name="StrictMode starts one read and never polls live sooner than two seconds" time="0.0268704">
+        </testcase>
+        <testcase classname="tests/chart-useChartData.test.tsx" name="terminal history errors stop automatic work" time="0.005388">
+        </testcase>
+        <testcase classname="tests/chart-useChartData.test.tsx" name="terminal history errors stop automatic work" time="0.0032785">
+        </testcase>
+        <testcase classname="tests/chart-useChartData.test.tsx" name="failed admission cancels a readiness wait and stops proof polling" time="0.0036156">
+        </testcase>
+        <testcase classname="tests/chart-useChartData.test.tsx" name="switching series aborts the old read and rejects a late response" time="0.0049386">
+        </testcase>
+        <testcase classname="tests/chart-useChartData.test.tsx" name="hidden pages cancel work and retain no valid freshness claim" time="0.0032849">
+        </testcase>
+        <testcase classname="tests/chart-useChartData.test.tsx" name="refresh polls use a bodyless GET and stop after failure" time="0.0054051">
+        </testcase>
+        <testcase classname="tests/chart-useChartData.test.tsx" name="successful refresh false reads a new bundle once" time="0.0035334">
+        </testcase>
+        <testcase classname="tests/chart-useChartData.test.tsx" name="successful refresh true reads a new bundle once" time="0.0042152">
+        </testcase>
+        <testcase classname="tests/chart-useChartData.test.tsx" name="hiding an older window cancels that window&apos;s active request" time="0.0037394">
+        </testcase>
+        <testcase classname="tests/chart-useChartData.test.tsx" name="a cancelled proof from an old series cannot renew the current proof TTL" time="0.0043281">
+        </testcase>
+    </testsuite>
+</testsuites>

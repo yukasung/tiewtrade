@@ -26,6 +26,8 @@ CANDLES_COST = CallCost(weight=1, orders=0)
 
 
 class BinanceThCandles:
+    max_request_span = timedelta(days=7)
+
     def __init__(self, transport: BinanceThTransport, *, clock: Callable[[], datetime]) -> None:
         self._transport = transport
         self._clock = clock
@@ -35,6 +37,8 @@ class BinanceThCandles:
         self, symbol: Symbol, timeframe: Timeframe, start: datetime, end: datetime, limit: int
     ) -> CandlePage:
         window = validate_request(timeframe, start, end, limit)
+        if window.end - window.start > self.max_request_span:
+            raise ValueError("candle request exceeds source span limit")
         epoch = datetime(1970, 1, 1, tzinfo=UTC)
         millisecond = timedelta(milliseconds=1)
         # Upstream open times are integer milliseconds. Ceiling both bounds

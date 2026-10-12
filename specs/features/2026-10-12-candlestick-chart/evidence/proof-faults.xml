@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="7" time="10.117" timestamp="2026-10-12T16:16:26.982674+00:00" hostname="a1f8c4f64bcb"><testcase classname="tests.api.test_chart_routes" name="test_display_proof_rejects_source_and_generation_faults[gap-CHANGED]" time="1.357" /><testcase classname="tests.api.test_chart_routes" name="test_display_proof_rejects_source_and_generation_faults[finality-CHANGED]" time="1.093" /><testcase classname="tests.api.test_chart_routes" name="test_display_proof_rejects_source_and_generation_faults[fetch_start-CHANGED]" time="1.024" /><testcase classname="tests.api.test_chart_routes" name="test_display_proof_rejects_source_and_generation_faults[floor-UNVERIFIABLE]" time="1.059" /><testcase classname="tests.api.test_chart_routes" name="test_display_proof_rejects_source_and_generation_faults[rollout_epoch-CHANGED]" time="1.085" /><testcase classname="tests.api.test_chart_routes" name="test_display_proof_rejects_source_and_generation_faults[maintenance-UNVERIFIABLE]" time="1.105" /><testcase classname="tests.api.test_chart_routes" name="test_display_proof_rejects_source_and_generation_faults[expiry-CHANGED]" time="1.104"><failure message="sqlalchemy.exc.IntegrityError: (sqlalchemy.dialects.postgresql.asyncpg.CheckViolationError) new row for relation &quot;indicator_generations&quot; violates check constraint &quot;indicator_generations_check1&quot;&#10;[SQL: UPDATE indicator_generations SET expires_at=clock_timestamp()-interval '1 second']&#10;(Background on this error at: https://sqlalche.me/e/21/gkpj)">.venv/lib/python3.12/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py:605: in _prepare_and_execute
+    self._rows = deque(await prepared_stmt.fetch(*parameters))
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/asyncpg/prepared_stmt.py:177: in fetch
+    data = await self.__bind_execute(args, 0, timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/asyncpg/prepared_stmt.py:268: in __bind_execute
+    data, status, _ = await self.__do_execute(
+.venv/lib/python3.12/site-packages/asyncpg/prepared_stmt.py:257: in __do_execute
+    return await executor(protocol)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+asyncpg/protocol/protocol.pyx:205: in bind_execute
+    ???
+E   asyncpg.exceptions.CheckViolationError: new row for relation "indicator_generations" violates check constraint "indicator_generations_check1"
+E   DETAIL:  Failing row contains (82ccbc1d-1f0a-44a7-87cc-92850727d046, 41427cf3-8967-413d-8b20-cf28cd4e7430, primary_spot, BTC, USDT, 4h, indicators-v1, 2025-10-12 20:00:00+00, 2026-10-12 16:00:00+00, 2026-10-12 16:16:34.924701+00, 998eadcb-ecd5-4bb6-b950-46fd9689007d, 2, 922011843ef52ac04b1569ccfcead6743e1f0c75d14dedf70461055e91c0b739, 4, 1, 9096d24c-165b-4615-9898-b1fa8c1b3d00, 1, 708de868-b953-46ba-9f6e-4ab87172864f, READY, 2026-10-12 16:16:34.690361+00, 2026-10-12 16:16:35.163409+00, null, null).
+
+The above exception was the direct cause of the following exception:
+.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py:1943: in _exec_single_context
+    self.dialect.do_execute(
+.venv/lib/python3.12/site-packages/sqlalchemy/engine/default.py:1180: in do_execute
+    cursor.execute(statement, parameters)
+.venv/lib/python3.12/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py:656: in execute
+    await_(self._prepare_and_execute(operation, parameters))
+.venv/lib/python3.12/site-packages/sqlalchemy/util/concurrency.py:167: in await_
+    return current.parent.switch(awaitable)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/sqlalchemy/util/concurrency.py:205: in greenlet_spawn
+    value = await result
+            ^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py:618: in _prepare_and_execute
+    self._handle_exception(error)
+.venv/lib/python3.12/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py:568: in _handle_exception
+    self._adapt_connection._handle_exception(error)
+.venv/lib/python3.12/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py:847: in _handle_exception
+    super()._handle_exception(error)
+.venv/lib/python3.12/site-packages/sqlalchemy/connectors/asyncio.py:412: in _handle_exception
+    self._handle_exception_no_connection(self.dbapi, error)
+.venv/lib/python3.12/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py:840: in _handle_exception_no_connection
+    raise translated_error from error
+E   sqlalchemy.dialects.postgresql.asyncpg.AsyncAdapt_asyncpg_dbapi.CheckViolationError: new row for relation "indicator_generations" violates check constraint "indicator_generations_check1"
+
+The above exception was the direct cause of the following exception:
+tests/api/test_chart_routes.py:266: in test_display_proof_rejects_source_and_generation_faults
+    await c.execute(
+.venv/lib/python3.12/site-packages/sqlalchemy/ext/asyncio/engine.py:668: in execute
+    result = await greenlet_spawn(
+.venv/lib/python3.12/site-packages/sqlalchemy/util/concurrency.py:210: in greenlet_spawn
+    result = context.throw(*sys.exc_info())
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py:1448: in execute
+    return meth(
+.venv/lib/python3.12/site-packages/sqlalchemy/sql/elements.py:533: in _execute_on_connection
+    return connection._execute_clauseelement(
+.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py:1668: in _execute_clauseelement
+    ret = self._execute_context(
+.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py:1822: in _execute_context
+    return self._exec_single_context(
+.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py:1962: in _exec_single_context
+    self._handle_dbapi_exception(
+.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py:2332: in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py:1943: in _exec_single_context
+    self.dialect.do_execute(
+.venv/lib/python3.12/site-packages/sqlalchemy/engine/default.py:1180: in do_execute
+    cursor.execute(statement, parameters)
+.venv/lib/python3.12/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py:656: in execute
+    await_(self._prepare_and_execute(operation, parameters))
+.venv/lib/python3.12/site-packages/sqlalchemy/util/concurrency.py:167: in await_
+    return current.parent.switch(awaitable)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/sqlalchemy/util/concurrency.py:205: in greenlet_spawn
+    value = await result
+            ^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py:618: in _prepare_and_execute
+    self._handle_exception(error)
+.venv/lib/python3.12/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py:568: in _handle_exception
+    self._adapt_connection._handle_exception(error)
+.venv/lib/python3.12/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py:847: in _handle_exception
+    super()._handle_exception(error)
+.venv/lib/python3.12/site-packages/sqlalchemy/connectors/asyncio.py:412: in _handle_exception
+    self._handle_exception_no_connection(self.dbapi, error)
+.venv/lib/python3.12/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py:840: in _handle_exception_no_connection
+    raise translated_error from error
+E   sqlalchemy.exc.IntegrityError: (sqlalchemy.dialects.postgresql.asyncpg.CheckViolationError) new row for relation "indicator_generations" violates check constraint "indicator_generations_check1"
+E   [SQL: UPDATE indicator_generations SET expires_at=clock_timestamp()-interval '1 second']
+E   (Background on this error at: https://sqlalche.me/e/21/gkpj)</failure></testcase></testsuite></testsuites>

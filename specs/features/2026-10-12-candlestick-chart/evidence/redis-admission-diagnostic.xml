@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="3" time="1.292" timestamp="2026-10-12T16:08:02.682755+00:00" hostname="db3485578e04"><testcase classname="tests.infra.realtime.test_admission" name="test_redis_down_fails_closed" time="0.010" /><testcase classname="tests.infra.realtime.test_admission" name="test_timeout_is_unavailable_and_cancels_pending_request" time="0.011" /><testcase classname="tests.infra.realtime.test_admission" name="test_actual_redis_atomic_limits_and_bounded_keys" time="0.759"><failure message="AssertionError: assert Counter({&lt;Adm...ILABLE'&gt;: 17}) == {&lt;AdmissionOu...'DENIED'&gt;: 10}&#10;  &#10;  Differing items:&#10;  {&lt;AdmissionOutcome.ACCEPTED: 'ACCEPTED'&gt;: 153} != {&lt;AdmissionOutcome.ACCEPTED: 'ACCEPTED'&gt;: 160}&#10;  Left contains 1 more item:&#10;  {&lt;AdmissionOutcome.UNAVAILABLE: 'UNAVAILABLE'&gt;: 17}&#10;  Right contains 1 more item:&#10;  {&lt;AdmissionOutcome.DENIED: 'DENIED'&gt;: 10}&#10;  Use -v to get more diff">tests/infra/realtime/test_admission.py:53: in test_actual_redis_atomic_limits_and_bounded_keys
+    assert varied == {AdmissionOutcome.ACCEPTED: 160, AdmissionOutcome.DENIED: 10}
+E   AssertionError: assert Counter({&lt;Adm...ILABLE'&gt;: 17}) == {&lt;AdmissionOu...'DENIED'&gt;: 10}
+E     
+E     Differing items:
+E     {&lt;AdmissionOutcome.ACCEPTED: 'ACCEPTED'&gt;: 153} != {&lt;AdmissionOutcome.ACCEPTED: 'ACCEPTED'&gt;: 160}
+E     Left contains 1 more item:
+E     {&lt;AdmissionOutcome.UNAVAILABLE: 'UNAVAILABLE'&gt;: 17}
+E     Right contains 1 more item:
+E     {&lt;AdmissionOutcome.DENIED: 'DENIED'&gt;: 10}
+E     Use -v to get more diff</failure></testcase></testsuite></testsuites>

@@ -1,0 +1,42 @@
+<testsuites id="" name="" tests="3" failures="1" skipped="0" errors="0" time="41.457263">
+<testsuite name="candlestick-chart.spec.ts" timestamp="2026-10-12T16:59:35.564Z" hostname="" tests="3" failures="1" skipped="0" time="36.87" errors="0">
+<testcase name="module pages preserve navigation history, deep links and cancel inactive chart work" classname="candlestick-chart.spec.ts" time="15.015">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|..\..\..\..\frontend\test-results\candlestick-chart-module-p-efe58--cancel-inactive-chart-work\error-context.md]]
+]]>
+</system-out>
+<failure message="expect(locator).toBeVisible() failed" type="expect.toBeVisible">
+<![CDATA[  candlestick-chart.spec.ts:104:1 › module pages preserve navigation history, deep links and cancel inactive chart work 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByTestId('api-key-panel')
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" getByTestId('api-key-panel') with timeout 5000ms
+      - waiting for getByTestId('api-key-panel')
+
+
+      124 |   await expect(page.getByTestId("realtime-prices")).toBeVisible();
+      125 |   await page.goto("/api-keys");
+    > 126 |   await expect(page.getByTestId("api-key-panel")).toBeVisible();
+          |                                                   ^
+      127 |   await page.setViewportSize({ width: 375, height: 812 });
+      128 |   const trigger = page.getByRole("button", { name: "เปิดเมนูบัญชี" });
+      129 |   await trigger.click();
+        at D:\Projects\TiewTrade\Projects\TiewTrade\frontend\e2e\candlestick-chart.spec.ts:126:51
+
+    Error Context: ..\test-results\candlestick-chart-module-p-efe58--cancel-inactive-chart-work\error-context.md
+]]>
+</failure>
+</testcase>
+<testcase name="gap selection has no fabricated OHLC and logout stops chart requests" classname="candlestick-chart.spec.ts" time="10.177">
+</testcase>
+<testcase name="password login, series switching and actual latest-price worker" classname="candlestick-chart.spec.ts" time="11.678">
+</testcase>
+</testsuite>
+</testsuites>

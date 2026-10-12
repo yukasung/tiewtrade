@@ -18,7 +18,7 @@ from tiewtrade.core.market_data import (
 from tiewtrade.core.money import Money, Quantity
 from tiewtrade.infra.db import DatabaseRole, create_engine_for, user_session
 from tiewtrade.infra.db.session import MarketDataSession, market_data_session
-from tiewtrade.infra.market_data.claims import Claim, claim_next, update_claim
+from tiewtrade.infra.market_data.claims import Claim, claim_next, lock_claim, update_claim
 from tiewtrade.infra.market_data.storage import database_now, enqueue
 from tiewtrade.services.market_data import ingestion
 from tiewtrade.services.market_data.ingestion import _validate, run_round
@@ -148,6 +148,133 @@ class FullSource(FakeVenue):
             for moment in expected_opens(window, timeframe)
         )
         return CandlePage(symbol, timeframe, window, candles, datetime.now(UTC))
+
+
+class SpanLimitedSource(FullSource):
+    max_request_span = timedelta(days=7)
+
+    def __init__(self, first_page_missing: str | None = None) -> None:
+        super().__init__()
+        self.windows: list[CandleWindow] = []
+        self.first_page_missing = first_page_missing
+
+    async def fetch_candles(
+        self, symbol: Symbol, timeframe: Timeframe, start: datetime, end: datetime, limit: int
+    ) -> CandlePage:
+        assert end - start <= self.max_request_span
+        self.windows.append(CandleWindow(start, end))
+        page = await super().fetch_candles(symbol, timeframe, start, end, limit)
+        if len(self.windows) == 1 and self.first_page_missing:
+            candles = (
+                () if self.first_page_missing == "empty" else page.candles[:1] + page.candles[2:]
+            )
+            return replace(page, candles=candles)
+        return page
+
+
+@pytest.mark.parametrize("timeframe", [Timeframe.M15, Timeframe.H1, Timeframe.H4, Timeframe.D1])
+@pytest.mark.parametrize("first_page_missing", [None, "gap", "empty"])
+async def test_source_span_splits_units_without_skipping_the_remaining_tail(
+    timeframe: Timeframe,
+    first_page_missing: str | None,
+) -> None:
+    engine = create_engine_for(DatabaseRole.MARKET_DATA)
+    try:
+        await isolated_window(engine)
+        async with market_data_session(engine) as session:
+            await ingestion._seed_initial_demand(session)
+            now = await database_now(session)
+            end = align_floor(now, timeframe)
+            start = end - timedelta(days=7) - timeframe.span
+            await session.execute("""UPDATE market_candle_demand SET
+              next_attempt_at=clock_timestamp()+interval '1 hour'""")
+            await session.execute(
+                """UPDATE market_candle_demand SET desired_start=:start,
+              desired_end=:end,next_attempt_at='-infinity' WHERE base='BTC' AND timeframe=:tf""",
+                {"start": start, "end": end, "tf": timeframe.value},
+            )
+        source = SpanLimitedSource(first_page_missing)
+        summary = await run_round(engine, source, "span-limit", now)
+        assert summary.attempts == 2
+        assert source.windows == [
+            CandleWindow(start, start + timedelta(days=7)),
+            CandleWindow(start + timedelta(days=7), end),
+        ]
+        if first_page_missing:
+            async with market_data_session(engine) as session:
+                await session.execute(
+                    """UPDATE market_candle_demand SET next_attempt_at='-infinity'
+                  WHERE base='BTC' AND timeframe=:tf""",
+                    {"tf": timeframe.value},
+                )
+            repaired = await run_round(engine, source, "span-repair", now)
+            assert repaired.attempts == 1
+            assert all(w.end - w.start <= source.max_request_span for w in source.windows)
+        async with market_data_session(engine) as session:
+            row = (
+                (
+                    await session.execute(
+                        """SELECT status,cursor,attemptcount FROM
+              market_candle_demand WHERE base='BTC' AND timeframe=:tf""",
+                        {"tf": timeframe.value},
+                    )
+                )
+                .mappings()
+                .one()
+            )
+            assert row["status"] == "COMPLETE"
+            assert row["cursor"] == end
+            assert row["attemptcount"] == 0
+            opens = (
+                (
+                    await session.execute(
+                        """SELECT open_at FROM market_candles
+              WHERE base='BTC' AND timeframe=:tf ORDER BY open_at""",
+                        {"tf": timeframe.value},
+                    )
+                )
+                .scalars()
+                .all()
+            )
+            assert opens == list(expected_opens(CandleWindow(start, end), timeframe))
+    finally:
+        await engine.dispose()
+
+
+async def test_reclaimed_oversized_unit_keeps_attempts_and_claim_identity() -> None:
+    engine = create_engine_for(DatabaseRole.MARKET_DATA)
+    try:
+        await isolated_window(engine)
+        async with market_data_session(engine) as session:
+            await ingestion._seed_initial_demand(session)
+            now = await database_now(session)
+            end = align_floor(now, Timeframe.H1)
+            start = end - timedelta(days=8)
+            await session.execute("""UPDATE market_candle_demand SET
+              next_attempt_at=clock_timestamp()+interval '1 hour'""")
+            await session.execute(
+                """UPDATE market_candle_demand SET desired_start=:start,
+              desired_end=:end,next_attempt_at='-infinity' WHERE base='BTC' AND timeframe='1h'""",
+                {"start": start, "end": end},
+            )
+            claim = await claim_next(session, "old-unit")
+            assert claim is not None
+            unit = uuid4()
+            await update_claim(
+                session, claim, fetch_unit_id=unit, fetch_start=start, fetch_end=end, attemptcount=2
+            )
+        async with market_data_session(engine) as session:
+            window = await ingestion._prepare(session, claim, timedelta(days=7))
+            row = await lock_claim(session, claim)
+            assert window == CandleWindow(start, start + timedelta(days=7))
+            assert row["fetch_unit_id"] == unit
+            assert row["attemptcount"] == 2
+            assert row["token"] == claim.token
+            assert row["fetch_end"] == window.end
+            assert row["desired_end"] == end
+            assert row["cursor"] == start
+    finally:
+        await engine.dispose()
 
 
 class RemainingGapSource(FullSource):

@@ -48,6 +48,11 @@
 
 ## จุดอนุมัติและข้อจำกัด
 
+คำสั่งเจ้าของเพิ่มเติม 2026-10-13: “ลบ footer”. ยกเลิกเฉพาะการแสดง health/error/
+สถานะระบบใน footer ตาม UI-RQ-4 และ UI-V-4 เดิม; หน้า auth/account ไม่มี footer
+และไม่เรียก health เพื่อวาด footer อีก. Backend health endpoint และสัญญา API คงเดิม.
+ผลตรวจ UI รอบใหม่ติดตามใน F-12 evidence ตามงานปรับ presentation ปัจจุบัน.
+
 ข้อกำหนดส่วนเพิ่มได้รับอนุมัติแล้ว; plan.md และ validation.md มีส่วนเพิ่ม
 สถานะ Approved หลังเจ้าของตอบ approve วันที่ 2026-10-07
 พร้อมเริ่ม implementation ตาม AGENTS.md

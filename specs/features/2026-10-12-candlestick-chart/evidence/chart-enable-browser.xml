@@ -1,0 +1,35 @@
+<testsuites id="" name="" tests="3" failures="1" skipped="0" errors="0" time="29.659513000000004">
+<testsuite name="candlestick-chart.spec.ts" timestamp="2026-10-12T13:25:49.682Z" hostname="" tests="3" failures="1" skipped="0" time="27.08" errors="0">
+<testcase name="actual chart panes, exact values, languages and keyboard selection" classname="candlestick-chart.spec.ts" time="2.679">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|..\..\..\..\frontend\test-results\candlestick-chart-actual-c-3787a-ages-and-keyboard-selection\error-context.md]]
+]]>
+</system-out>
+<failure message="expect(received).toBe(expected) // Object.is equality" type="expect.toBe">
+<![CDATA[  candlestick-chart.spec.ts:14:1 › actual chart panes, exact values, languages and keyboard selection 
+
+    Error: expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+      42 |     await page.setViewportSize({ width, height: 1000 });
+      43 |     await expect(chart.locator("canvas").first()).toBeVisible();
+    > 44 |     expect(await page.evaluate(() => document.documentElement.scrollWidth <= globalThis.innerWidth)).toBe(true);
+         |                                                                                                      ^
+      45 |   }
+      46 |   await expect(chart.getByRole("link", { name: /TradingView Lightweight Charts/ })).toBeVisible();
+      47 |   await expect(chart.getByRole("link", { name: "Charting by TradingView", exact: true })).toBeVisible();
+        at D:\Projects\TiewTrade\Projects\TiewTrade\frontend\e2e\candlestick-chart.spec.ts:44:102
+
+    Error Context: ..\test-results\candlestick-chart-actual-c-3787a-ages-and-keyboard-selection\error-context.md
+]]>
+</failure>
+</testcase>
+<testcase name="source mutation hides overlays and live snapshots recover after disconnect" classname="candlestick-chart.spec.ts" time="17.684">
+</testcase>
+<testcase name="gap selection has no fabricated OHLC and logout stops chart requests" classname="candlestick-chart.spec.ts" time="6.717">
+</testcase>
+</testsuite>
+</testsuites>

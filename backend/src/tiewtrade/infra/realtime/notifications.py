@@ -9,15 +9,16 @@ CHANNEL = "market.prices.changed"
 
 
 class RedisNotifications:
-    def __init__(self, client: Any) -> None:
+    def __init__(self, client: Any, *, channel: str = CHANNEL) -> None:
         self.client = client
+        self.channel = channel
         self._pubsub: Any = None
 
     async def publish(self, source: str, revision: int) -> bool:
         try:
             async with asyncio.timeout(0.5):
                 await self.client.publish(
-                    CHANNEL, json.dumps({"source": source, "revision": str(revision)})
+                    self.channel, json.dumps({"source": source, "revision": str(revision)})
                 )
             return True
         except Exception:
@@ -26,7 +27,7 @@ class RedisNotifications:
     async def subscribe(self) -> None:
         self._pubsub = self.client.pubsub()
         async with asyncio.timeout(0.5):
-            await self._pubsub.subscribe(CHANNEL)
+            await self._pubsub.subscribe(self.channel)
             while True:
                 message = await self._pubsub.get_message(
                     ignore_subscribe_messages=False, timeout=0.5

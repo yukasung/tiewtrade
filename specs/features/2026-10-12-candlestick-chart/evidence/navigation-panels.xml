@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="54" failures="0" errors="0" time="2.9178685">
+    <testsuite name="tests/ApiKeyPanel.test.tsx" timestamp="2026-10-12T16:48:56.824Z" hostname="DESKTOP-RONGMEV" tests="33" failures="0" errors="0" skipped="0" time="1.6950968">
+        <testcase classname="tests/ApiKeyPanel.test.tsx" name="&apos;add&apos; suppresses success feedback when &apos;api-keys&apos; refetch fails" time="0.2107138">
+        </testcase>
+        <testcase classname="tests/ApiKeyPanel.test.tsx" name="&apos;add&apos; suppresses success feedback when &apos;trading-account&apos; refetch fails" time="0.0813093">
+        </testcase>
+        <testcase classname="tests/ApiKeyPanel.test.tsx" name="&apos;retry&apos; suppresses success feedback when &apos;api-keys&apos; refetch fails" time="0.0525853">
+        </testcase>
+        <testcase classname="tests/ApiKeyPanel.test.tsx" name="&apos;retry&apos; suppresses success feedback when &apos;trading-account&apos; refetch fails" time="0.0570839">
+        </testcase>
+        <testcase classname="tests/ApiKeyPanel.test.tsx" name="&apos;delete&apos; suppresses success feedback when &apos;api-keys&apos; refetch fails" time="0.052176">
+        </testcase>
+        <testcase classname="tests/ApiKeyPanel.test.tsx" name="&apos;delete&apos; suppresses success feedback when &apos;trading-account&apos; refetch fails" time="0.0642433">
+        </testcase>
+        <testcase classname="tests/ApiKeyPanel.test.tsx" name="&apos;add&apos; waits for a delayed account refetch before showing success" time="0.0682227">
+        </testcase>
+        <testcase classname="tests/ApiKeyPanel.test.tsx" name="&apos;retry&apos; waits for a delayed account refetch before showing success" time="0.0478564">
+        </testcase>
+        <testcase classname="tests/ApiKeyPanel.test.tsx" name="&apos;delete&apos; waits for a delayed account refetch before showing success" time="0.0517497">
+        </testcase>
+        <testcase classname="tests/ApiKeyPanel.test.tsx" name="หน้าจัดการ API key &gt; Retry-After แบบ HTTP-date ผ่าน adapter เป็นเวลา UTC ที่ตรงกัน" time="0.0023828">
+        </testcase>
+        <testcase classname="tests/ApiKeyPanel.test.tsx" name="หน้าจัดการ API key &gt; การปฏิเสธที่ไม่ทราบสาเหตุบอกให้ลองเองโดยไม่สัญญาว่าจะตรวจอัตโนมัติ" time="0.0346578">
+        </testcase>
+        <testcase classname="tests/ApiKeyPanel.test.tsx" name="หน้าจัดการ API key &gt; แสดงคำเตือนถาวรและอธิบายการใช้รหัส TOTP ชุดใหม่" time="0.0121388">
+        </testcase>
+        <testcase classname="tests/ApiKeyPanel.test.tsx" name="หน้าจัดการ API key &gt; ส่ง CSRF/TOTP และล้างค่าทันทีโดยไม่ใส่ secret ใน mutation cache" time="0.1164728">
+        </testcase>
+        <testcase classname="tests/ApiKeyPanel.test.tsx" name="หน้าจัดการ API key &gt; คำตอบ 403 ไม่เติม secret กลับและไม่แสดงรายละเอียดดิบ" time="0.0511385">
+        </testcase>
+        <testcase classname="tests/ApiKeyPanel.test.tsx" name="หน้าจัดการ API key &gt; คำตอบ 409 ไม่เติม secret กลับและไม่แสดงรายละเอียดดิบ" time="0.0441663">
+        </testcase>
+        <testcase classname="tests/ApiKeyPanel.test.tsx" name="หน้าจัดการ API key &gt; คำตอบ 422 ไม่เติม secret กลับและไม่แสดงรายละเอียดดิบ" time="0.0548688">
+        </testcase>
+        <testcase classname="tests/ApiKeyPanel.test.tsx" name="หน้าจัดการ API key &gt; คำตอบ 500 ไม่เติม secret กลับและไม่แสดงรายละเอียดดิบ" time="0.0340903">
+        </testcase>
+        <testcase classname="tests/ApiKeyPanel.test.tsx" name="หน้าจัดการ API key &gt; เน็ตมีปัญหาก็ล้าง secret และบอกว่าต้องตรวจรายการก่อนเพิ่มซ้ำ" time="0.0327812">
+        </testcase>
+        <testcase classname="tests/ApiKeyPanel.test.tsx" name="หน้าจัดการ API key &gt; แยกสี่สถานะและไม่ให้ลองใหม่เมื่อ server สั่งรอ" time="0.0978954">
+        </testcase>
+        <testcase classname="tests/ApiKeyPanel.test.tsx" name="หน้าจัดการ API key &gt; ลองใหม่ไม่ส่ง TOTP และลบได้เมื่อยืนยันเท่านั้น" time="0.1026666">
+        </testcase>
+        <testcase classname="tests/ApiKeyPanel.test.tsx" name="หน้าจัดการ API key &gt; บอกทางไปเปิด TOTP และไม่แสดงฟอร์มเพิ่ม key เมื่อยังไม่เปิด" time="0.0060157">
+        </testcase>
+        <testcase classname="tests/ApiKeyPanel.test.tsx" name="หน้าจัดการ API key &gt; poll เปลี่ยนสถานะเองและหยุดเมื่อออกจากหน้าจอ" time="0.0126635">
+        </testcase>
+        <testcase classname="tests/ApiKeyPanel.test.tsx" name="หน้าจัดการ API key &gt; 401 ไม่แสดงรายการที่ค้างจากบัญชีเดิม" time="0.0475922">
+        </testcase>
+        <testcase classname="tests/ApiKeyPanel.test.tsx" name="หน้าจัดการ API key &gt; 429 แสดงเวลาจาก Retry-After และไม่ส่งคำขอซ้ำอัตโนมัติ" time="0.0502422">
+        </testcase>
+        <testcase classname="tests/ApiKeyPanel.test.tsx" name="หน้าจัดการ API key &gt; แสดงว่าข้อมูลเก่าเมื่อดึงใหม่ล้มเหลวและปิดปุ่มลองใหม่" time="0.0355471">
+        </testcase>
+        <testcase classname="tests/ApiKeyPanel.test.tsx" name="หน้าจัดการ API key &gt; คำตอบที่มาช้าของบัญชีเก่าไม่โผล่ในบัญชีใหม่" time="0.0460576">
+        </testcase>
+        <testcase classname="tests/ApiKeyPanel.test.tsx" name="หน้าจัดการ API key &gt; คำยืนยันลบที่เปิดไว้ไม่ส่งคำขอเมื่อรายการกลายเป็นข้อมูลเก่า" time="0.0516415">
+        </testcase>
+        <testcase classname="tests/ApiKeyPanel.test.tsx" name="หน้าจัดการ API key &gt; Retry-After ผิดรูป -1 ไม่ทำให้เสียสถานะ 429" time="0.033178">
+        </testcase>
+        <testcase classname="tests/ApiKeyPanel.test.tsx" name="หน้าจัดการ API key &gt; Retry-After ผิดรูป 999999999999999999999999 ไม่ทำให้เสียสถานะ 429" time="0.0336693">
+        </testcase>
+        <testcase classname="tests/ApiKeyPanel.test.tsx" name="one stored PENDING key blocks adding another" time="0.0163994">
+        </testcase>
+        <testcase classname="tests/ApiKeyPanel.test.tsx" name="one stored ACTIVE key blocks adding another" time="0.0348945">
+        </testcase>
+        <testcase classname="tests/ApiKeyPanel.test.tsx" name="one stored REJECTED key blocks adding another" time="0.0312122">
+        </testcase>
+        <testcase classname="tests/ApiKeyPanel.test.tsx" name="one stored UNVERIFIABLE key blocks adding another" time="0.0234401">
+        </testcase>
+    </testsuite>
+    <testsuite name="tests/TradingAccountPanel.test.tsx" timestamp="2026-10-12T16:48:56.849Z" hostname="DESKTOP-RONGMEV" tests="21" failures="0" errors="0" skipped="0" time="1.2227717">
+        <testcase classname="tests/TradingAccountPanel.test.tsx" name="initial choice is empty and needs explicit selection with fresh TOTP" time="0.1329738">
+        </testcase>
+        <testcase classname="tests/TradingAccountPanel.test.tsx" name="selects MANUAL with CSRF/TOTP and refetches server choice" time="0.058687">
+        </testcase>
+        <testcase classname="tests/TradingAccountPanel.test.tsx" name="selects BOT with CSRF/TOTP and refetches server choice" time="0.0455024">
+        </testcase>
+        <testcase classname="tests/TradingAccountPanel.test.tsx" name="cannot select without ACTIVE sole key null" time="0.0209848">
+        </testcase>
+        <testcase classname="tests/TradingAccountPanel.test.tsx" name="cannot select without ACTIVE sole key {&quot;id&quot;:&quot;key-one&quot;,&quot;label&quot;:&quot;Primary&quot;,&quot;public_tail&quot;:&quot;ABCD&quot;,&quot;status&quot;:&quot;PENDING&quot;,&quot;created_at&quot;:&quot;2026-10-07T00:00:00Z&quot;,&quot;may_retry&quot;:false}" time="0.0302669">
+        </testcase>
+        <testcase classname="tests/TradingAccountPanel.test.tsx" name="cannot select without ACTIVE sole key {&quot;id&quot;:&quot;key-one&quot;,&quot;label&quot;:&quot;Primary&quot;,&quot;public_tail&quot;:&quot;ABCD&quot;,&quot;status&quot;:&quot;REJECTED&quot;,&quot;created_at&quot;:&quot;2026-10-07T00:00:00Z&quot;,&quot;may_retry&quot;:false}" time="0.0328483">
+        </testcase>
+        <testcase classname="tests/TradingAccountPanel.test.tsx" name="cannot select without ACTIVE sole key {&quot;id&quot;:&quot;key-one&quot;,&quot;label&quot;:&quot;Primary&quot;,&quot;public_tail&quot;:&quot;ABCD&quot;,&quot;status&quot;:&quot;UNVERIFIABLE&quot;,&quot;created_at&quot;:&quot;2026-10-07T00:00:00Z&quot;,&quot;may_retry&quot;:false}" time="0.0326253">
+        </testcase>
+        <testcase classname="tests/TradingAccountPanel.test.tsx" name="uncertain POST clears code, does not retry and keeps choice unconfirmed" time="0.0454684">
+        </testcase>
+        <testcase classname="tests/TradingAccountPanel.test.tsx" name="sanitizes and explains TRADING_ACCOUNT_KEY_UNAVAILABLE" time="0.0299281">
+        </testcase>
+        <testcase classname="tests/TradingAccountPanel.test.tsx" name="sanitizes and explains TRADING_ACCOUNT_ACTIVITY_UNKNOWN" time="0.0363212">
+        </testcase>
+        <testcase classname="tests/TradingAccountPanel.test.tsx" name="sanitizes and explains RAW-SECRET" time="0.0484693">
+        </testcase>
+        <testcase classname="tests/TradingAccountPanel.test.tsx" name="loading/read failure does not invent an empty or disconnected account" time="0.0194416">
+        </testcase>
+        <testcase classname="tests/TradingAccountPanel.test.tsx" name="existing selection persists when sole key is deleted and both panels refetch" time="0.0684278">
+        </testcase>
+        <testcase classname="tests/TradingAccountPanel.test.tsx" name="DELETE followed by summary refetch failure clearly marks retained old data stale" time="0.0694423">
+        </testcase>
+        <testcase classname="tests/TradingAccountPanel.test.tsx" name="TOTP never enters mutation variables/query keys and mutation cache clears after settle" time="0.1302914">
+        </testcase>
+        <testcase classname="tests/TradingAccountPanel.test.tsx" name="late old-user POST success never changes new-user summary, cache or feedback" time="0.2185886">
+        </testcase>
+        <testcase classname="tests/TradingAccountPanel.test.tsx" name="POST followed by failed summary refetch never reports a confirmed selected state" time="0.0505054">
+        </testcase>
+        <testcase classname="tests/TradingAccountPanel.test.tsx" name="adding sole key refetches the account summary through the shared client" time="0.0489897">
+        </testcase>
+        <testcase classname="tests/TradingAccountPanel.test.tsx" name="retrying a key refetches its new status in the account panel" time="0.03219">
+        </testcase>
+        <testcase classname="tests/TradingAccountPanel.test.tsx" name="key polling updates the sole account summary when worker verification completes" time="0.0274399">
+        </testcase>
+        <testcase classname="tests/TradingAccountPanel.test.tsx" name="ACTIVE key without TOTP points to setup instead of showing selection fields" time="0.0404165">
+        </testcase>
+    </testsuite>
+</testsuites>

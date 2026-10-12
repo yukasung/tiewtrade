@@ -183,6 +183,14 @@ async def enqueue(
     session: UserSession, base: str, quote: str, timeframe: Timeframe, window: CandleWindow
 ) -> bool:
     session = require_user_session(session)
+    return await coalesce_demand(session, base, quote, timeframe, window)
+
+
+async def coalesce_demand(
+    session: Session, base: str, quote: str, timeframe: Timeframe, window: CandleWindow
+) -> bool:
+    """Shared row-locked demand; never resets worker claims, attempts or backoff."""
+    session = _session(session)
     now = await database_now(session)
     validate_window(window, now, timeframe)
     missing, refresh = await window_needs_work(session, base, quote, timeframe, window, now)

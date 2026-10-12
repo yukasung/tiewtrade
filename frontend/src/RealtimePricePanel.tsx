@@ -1,13 +1,12 @@
 import { useRealtimePrices } from "./useRealtimePrices";
 import { realtimePriceI18n, realtimePriceText as t } from "./realtimePriceMessages";
 import { MarketTime, MarketValue } from "./components/MarketValue";
+import { ComponentCard } from "./components/ui/ComponentCard";
 import "./RealtimePricePanel.css";
 export function RealtimePricePanel() {
     const { view, delivery } = useRealtimePrices();
     const time = (value: string) => <MarketTime value={value} locale={realtimePriceI18n.language}/>;
-    return <section className="realtime-price-panel" aria-labelledby="realtime-price-heading" data-testid="realtime-prices">
-  <h2 id="realtime-price-heading">{t("heading")}</h2>
-  <p>{t("disclaimer")}</p>
+    return <ComponentCard className="realtime-price-panel" headingId="realtime-price-heading" title={t("heading")} desc={t("disclaimer")} data-testid="realtime-prices">
   <p role="status" aria-live="polite">{t(delivery)}</p>
   {view && <><p>{t("checked")}: {time(view.server_time)}</p><p>{t("delivery")}: {t(view.delivery_status)}</p>
    <ul className="realtime-price-list">{view.rows.map(row => <li key={`${row.source}:${row.base}:${row.quote}`} data-testid={`price-${row.base}`}>
@@ -18,5 +17,5 @@ export function RealtimePricePanel() {
     <p>{t("reason")}: <span>{t(`reasons.${row.reason}`, { defaultValue: t("unknownReason") })}</span></p>
     {row.alert_due && <p className="realtime-price-warning">{t("marketWarning")}</p>}
    </li>)}</ul></>}
- </section>;
+ </ComponentCard>;
 }

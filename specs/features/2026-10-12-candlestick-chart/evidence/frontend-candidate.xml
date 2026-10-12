@@ -1,0 +1,427 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="192" failures="0" errors="0" time="12.013370052">
+    <testsuite name="tests/AccountLayout.test.tsx" timestamp="2026-10-12T15:51:57.845Z" hostname="67bb5a0897d7" tests="3" failures="0" errors="0" skipped="0" time="0.133683235">
+        <testcase classname="tests/AccountLayout.test.tsx" name="keeps one main landmark when embedded in the page main" time="0.067074188">
+        </testcase>
+        <testcase classname="tests/AccountLayout.test.tsx" name="closes navigation with Escape and backdrop and restores trigger focus" time="0.042352666">
+        </testcase>
+        <testcase classname="tests/AccountLayout.test.tsx" name="preserves native form props and explicit button types" time="0.021547958">
+        </testcase>
+    </testsuite>
+    <testsuite name="tests/AccountSession.test.tsx" timestamp="2026-10-12T15:51:57.853Z" hostname="67bb5a0897d7" tests="5" failures="0" errors="0" skipped="0" time="0.458533419">
+        <testcase classname="tests/AccountSession.test.tsx" name="cancels pending queries and clears both caches when identity changes" time="0.035306343">
+        </testcase>
+        <testcase classname="tests/AccountSession.test.tsx" name="session expired cancels and clears cache and invokes auth boundary" time="0.055531574">
+        </testcase>
+        <testcase classname="tests/AccountSession.test.tsx" name="keeps the same cache when auth callback changes within one identity" time="0.005142621">
+        </testcase>
+        <testcase classname="tests/AccountSession.test.tsx" name="real panels ignore late key and account responses after identity switch" time="0.249181466">
+        </testcase>
+        <testcase classname="tests/AccountSession.test.tsx" name="account 401 unmounts the authenticated account boundary" time="0.109058922">
+        </testcase>
+    </testsuite>
+    <testsuite name="tests/ApiKeyPanel.test.tsx" timestamp="2026-10-12T15:51:57.871Z" hostname="67bb5a0897d7" tests="33" failures="0" errors="0" skipped="0" time="1.09579071">
+        <testcase classname="tests/ApiKeyPanel.test.tsx" name="&apos;add&apos; suppresses success feedback when &apos;api-keys&apos; refetch fails" time="0.209733648">
+        </testcase>
+        <testcase classname="tests/ApiKeyPanel.test.tsx" name="&apos;add&apos; suppresses success feedback when &apos;trading-account&apos; refetch fails" time="0.063234475">
+        </testcase>
+        <testcase classname="tests/ApiKeyPanel.test.tsx" name="&apos;retry&apos; suppresses success feedback when &apos;api-keys&apos; refetch fails" time="0.044228864">
+        </testcase>
+        <testcase classname="tests/ApiKeyPanel.test.tsx" name="&apos;retry&apos; suppresses success feedback when &apos;trading-account&apos; refetch fails" time="0.044384436">
+        </testcase>
+        <testcase classname="tests/ApiKeyPanel.test.tsx" name="&apos;delete&apos; suppresses success feedback when &apos;api-keys&apos; refetch fails" time="0.058297788">
+        </testcase>
+        <testcase classname="tests/ApiKeyPanel.test.tsx" name="&apos;delete&apos; suppresses success feedback when &apos;trading-account&apos; refetch fails" time="0.051644867">
+        </testcase>
+        <testcase classname="tests/ApiKeyPanel.test.tsx" name="&apos;add&apos; waits for a delayed account refetch before showing success" time="0.036285129">
+        </testcase>
+        <testcase classname="tests/ApiKeyPanel.test.tsx" name="&apos;retry&apos; waits for a delayed account refetch before showing success" time="0.03249972">
+        </testcase>
+        <testcase classname="tests/ApiKeyPanel.test.tsx" name="&apos;delete&apos; waits for a delayed account refetch before showing success" time="0.036958286">
+        </testcase>
+        <testcase classname="tests/ApiKeyPanel.test.tsx" name="หน้าจัดการ API key &gt; Retry-After แบบ HTTP-date ผ่าน adapter เป็นเวลา UTC ที่ตรงกัน" time="0.002352012">
+        </testcase>
+        <testcase classname="tests/ApiKeyPanel.test.tsx" name="หน้าจัดการ API key &gt; การปฏิเสธที่ไม่ทราบสาเหตุบอกให้ลองเองโดยไม่สัญญาว่าจะตรวจอัตโนมัติ" time="0.017847245">
+        </testcase>
+        <testcase classname="tests/ApiKeyPanel.test.tsx" name="หน้าจัดการ API key &gt; แสดงคำเตือนถาวรและอธิบายการใช้รหัส TOTP ชุดใหม่" time="0.014656703">
+        </testcase>
+        <testcase classname="tests/ApiKeyPanel.test.tsx" name="หน้าจัดการ API key &gt; ส่ง CSRF/TOTP และล้างค่าทันทีโดยไม่ใส่ secret ใน mutation cache" time="0.072046156">
+        </testcase>
+        <testcase classname="tests/ApiKeyPanel.test.tsx" name="หน้าจัดการ API key &gt; คำตอบ 403 ไม่เติม secret กลับและไม่แสดงรายละเอียดดิบ" time="0.01972082">
+        </testcase>
+        <testcase classname="tests/ApiKeyPanel.test.tsx" name="หน้าจัดการ API key &gt; คำตอบ 409 ไม่เติม secret กลับและไม่แสดงรายละเอียดดิบ" time="0.020880852">
+        </testcase>
+        <testcase classname="tests/ApiKeyPanel.test.tsx" name="หน้าจัดการ API key &gt; คำตอบ 422 ไม่เติม secret กลับและไม่แสดงรายละเอียดดิบ" time="0.02479886">
+        </testcase>
+        <testcase classname="tests/ApiKeyPanel.test.tsx" name="หน้าจัดการ API key &gt; คำตอบ 500 ไม่เติม secret กลับและไม่แสดงรายละเอียดดิบ" time="0.022571314">
+        </testcase>
+        <testcase classname="tests/ApiKeyPanel.test.tsx" name="หน้าจัดการ API key &gt; เน็ตมีปัญหาก็ล้าง secret และบอกว่าต้องตรวจรายการก่อนเพิ่มซ้ำ" time="0.022560767">
+        </testcase>
+        <testcase classname="tests/ApiKeyPanel.test.tsx" name="หน้าจัดการ API key &gt; แยกสี่สถานะและไม่ให้ลองใหม่เมื่อ server สั่งรอ" time="0.022449141">
+        </testcase>
+        <testcase classname="tests/ApiKeyPanel.test.tsx" name="หน้าจัดการ API key &gt; ลองใหม่ไม่ส่ง TOTP และลบได้เมื่อยืนยันเท่านั้น" time="0.049886546">
+        </testcase>
+        <testcase classname="tests/ApiKeyPanel.test.tsx" name="หน้าจัดการ API key &gt; บอกทางไปเปิด TOTP และไม่แสดงฟอร์มเพิ่ม key เมื่อยังไม่เปิด" time="0.005377996">
+        </testcase>
+        <testcase classname="tests/ApiKeyPanel.test.tsx" name="หน้าจัดการ API key &gt; poll เปลี่ยนสถานะเองและหยุดเมื่อออกจากหน้าจอ" time="0.011553534">
+        </testcase>
+        <testcase classname="tests/ApiKeyPanel.test.tsx" name="หน้าจัดการ API key &gt; 401 ไม่แสดงรายการที่ค้างจากบัญชีเดิม" time="0.020584469">
+        </testcase>
+        <testcase classname="tests/ApiKeyPanel.test.tsx" name="หน้าจัดการ API key &gt; 429 แสดงเวลาจาก Retry-After และไม่ส่งคำขอซ้ำอัตโนมัติ" time="0.01887286">
+        </testcase>
+        <testcase classname="tests/ApiKeyPanel.test.tsx" name="หน้าจัดการ API key &gt; แสดงว่าข้อมูลเก่าเมื่อดึงใหม่ล้มเหลวและปิดปุ่มลองใหม่" time="0.022531949">
+        </testcase>
+        <testcase classname="tests/ApiKeyPanel.test.tsx" name="หน้าจัดการ API key &gt; คำตอบที่มาช้าของบัญชีเก่าไม่โผล่ในบัญชีใหม่" time="0.017140678">
+        </testcase>
+        <testcase classname="tests/ApiKeyPanel.test.tsx" name="หน้าจัดการ API key &gt; คำยืนยันลบที่เปิดไว้ไม่ส่งคำขอเมื่อรายการกลายเป็นข้อมูลเก่า" time="0.033476821">
+        </testcase>
+        <testcase classname="tests/ApiKeyPanel.test.tsx" name="หน้าจัดการ API key &gt; Retry-After ผิดรูป -1 ไม่ทำให้เสียสถานะ 429" time="0.018596947">
+        </testcase>
+        <testcase classname="tests/ApiKeyPanel.test.tsx" name="หน้าจัดการ API key &gt; Retry-After ผิดรูป 999999999999999999999999 ไม่ทำให้เสียสถานะ 429" time="0.016308074">
+        </testcase>
+        <testcase classname="tests/ApiKeyPanel.test.tsx" name="one stored PENDING key blocks adding another" time="0.01574873">
+        </testcase>
+        <testcase classname="tests/ApiKeyPanel.test.tsx" name="one stored ACTIVE key blocks adding another" time="0.014687034">
+        </testcase>
+        <testcase classname="tests/ApiKeyPanel.test.tsx" name="one stored REJECTED key blocks adding another" time="0.015930742">
+        </testcase>
+        <testcase classname="tests/ApiKeyPanel.test.tsx" name="one stored UNVERIFIABLE key blocks adding another" time="0.01469658">
+        </testcase>
+    </testsuite>
+    <testsuite name="tests/App.test.tsx" timestamp="2026-10-12T15:51:57.923Z" hostname="67bb5a0897d7" tests="2" failures="0" errors="0" skipped="0" time="0.140291947">
+        <testcase classname="tests/App.test.tsx" name="App &gt; แสดงข้อมูลที่ได้จาก /health ไม่ใช่ข้อความที่ฝังไว้ในโค้ด" time="0.120681045">
+        </testcase>
+        <testcase classname="tests/App.test.tsx" name="App &gt; แสดงข้อผิดพลาดเมื่อเรียก /health ไม่สำเร็จ" time="0.016858547">
+        </testcase>
+    </testsuite>
+    <testsuite name="tests/AuthLayout.test.tsx" timestamp="2026-10-12T15:51:57.930Z" hostname="67bb5a0897d7" tests="1" failures="0" errors="0" skipped="0" time="0.070888892">
+        <testcase classname="tests/AuthLayout.test.tsx" name="renders an auth form with TiewTrade branding and no account navigation or nested main" time="0.068839881">
+        </testcase>
+    </testsuite>
+    <testsuite name="tests/AuthMessages.test.ts" timestamp="2026-10-12T15:51:57.936Z" hostname="67bb5a0897d7" tests="1" failures="0" errors="0" skipped="0" time="0.006276391">
+        <testcase classname="tests/AuthMessages.test.ts" name="translates auth/TOTP/health copy and interpolates recovery counts in both languages" time="0.005310482">
+        </testcase>
+    </testsuite>
+    <testsuite name="tests/AuthPanel.test.tsx" timestamp="2026-10-12T15:51:57.937Z" hostname="67bb5a0897d7" tests="5" failures="0" errors="0" skipped="0" time="0.221433233">
+        <testcase classname="tests/AuthPanel.test.tsx" name="AuthPanel &gt; แสดงฟอร์มเข้าสู่ระบบเมื่อยังไม่ได้เข้าสู่ระบบ" time="0.060886237">
+        </testcase>
+        <testcase classname="tests/AuthPanel.test.tsx" name="AuthPanel &gt; แสดงรหัสผู้ใช้เมื่อเข้าสู่ระบบแล้ว" time="0.057056446">
+        </testcase>
+        <testcase classname="tests/AuthPanel.test.tsx" name="AuthPanel &gt; บอกเหตุผลที่หลังบ้านปฏิเสธ ไม่ใช่ข้อความที่เขียนไว้เอง" time="0.030338306">
+        </testcase>
+        <testcase classname="tests/AuthPanel.test.tsx" name="AuthPanel &gt; เตือนว่ากู้รหัสผ่านไม่ได้ ก่อนผู้ใช้สมัคร" time="0.00979334">
+        </testcase>
+        <testcase classname="tests/AuthPanel.test.tsx" name="AuthPanel &gt; ขอโทเคนกัน CSRF ใบใหม่และกลับไปโหมดเข้าสู่ระบบหลังออกจากระบบ" time="0.060437769">
+        </testcase>
+    </testsuite>
+    <testsuite name="tests/AuthPanelLogout.test.tsx" timestamp="2026-10-12T15:51:57.943Z" hostname="67bb5a0897d7" tests="13" failures="0" errors="0" skipped="0" time="0.885394704">
+        <testcase classname="tests/AuthPanelLogout.test.tsx" name="&apos;/api/auth/logout&apos; clears cached account and aborts pending GET despite &apos;identity-error&apos;" time="0.229273339">
+        </testcase>
+        <testcase classname="tests/AuthPanelLogout.test.tsx" name="&apos;/api/auth/logout&apos; clears cached account and aborts pending GET despite &apos;identity-hang&apos;" time="0.055750073">
+        </testcase>
+        <testcase classname="tests/AuthPanelLogout.test.tsx" name="&apos;/api/auth/logout&apos; clears cached account and aborts pending GET despite &apos;csrf-error&apos;" time="0.065374301">
+        </testcase>
+        <testcase classname="tests/AuthPanelLogout.test.tsx" name="&apos;/api/auth/logout&apos; clears cached account and aborts pending GET despite &apos;csrf-hang&apos;" time="0.055258287">
+        </testcase>
+        <testcase classname="tests/AuthPanelLogout.test.tsx" name="&apos;/api/auth/logout-all&apos; clears cached account and aborts pending GET despite &apos;identity-error&apos;" time="0.0546919">
+        </testcase>
+        <testcase classname="tests/AuthPanelLogout.test.tsx" name="&apos;/api/auth/logout-all&apos; clears cached account and aborts pending GET despite &apos;identity-hang&apos;" time="0.047490375">
+        </testcase>
+        <testcase classname="tests/AuthPanelLogout.test.tsx" name="&apos;/api/auth/logout-all&apos; clears cached account and aborts pending GET despite &apos;csrf-error&apos;" time="0.04714045">
+        </testcase>
+        <testcase classname="tests/AuthPanelLogout.test.tsx" name="&apos;/api/auth/logout-all&apos; clears cached account and aborts pending GET despite &apos;csrf-hang&apos;" time="0.034327188">
+        </testcase>
+        <testcase classname="tests/AuthPanelLogout.test.tsx" name="log-out retains the authenticated boundary when POST /api/auth/logout fails" time="0.025568809">
+        </testcase>
+        <testcase classname="tests/AuthPanelLogout.test.tsx" name="log-out-everywhere retains the authenticated boundary when POST /api/auth/logout-all fails" time="0.026525085">
+        </testcase>
+        <testcase classname="tests/AuthPanelLogout.test.tsx" name="a TOTP identity response started before logout cannot restore the old boundary" time="0.038404553">
+        </testcase>
+        <testcase classname="tests/AuthPanelLogout.test.tsx" name="log-out clears a pending key mutation after POST /api/auth/logout succeeds" time="0.107541264">
+        </testcase>
+        <testcase classname="tests/AuthPanelLogout.test.tsx" name="log-out-everywhere clears a pending key mutation after POST /api/auth/logout-all succeeds" time="0.095000423">
+        </testcase>
+    </testsuite>
+    <testsuite name="tests/E2eEnvironment.test.ts" timestamp="2026-10-12T15:51:57.959Z" hostname="67bb5a0897d7" tests="22" failures="0" errors="0" skipped="0" time="0.02686546">
+        <testcase classname="tests/E2eEnvironment.test.ts" name="E2E destructive fixture isolation &gt; rejects unsafe Redis targets without exposing URLs undefined" time="0.00458112">
+        </testcase>
+        <testcase classname="tests/E2eEnvironment.test.ts" name="E2E destructive fixture isolation &gt; rejects unsafe Redis targets without exposing URLs redis://remote.invalid:6379/0" time="0.001065925">
+        </testcase>
+        <testcase classname="tests/E2eEnvironment.test.ts" name="E2E destructive fixture isolation &gt; rejects unsafe Redis targets without exposing URLs redis://localhost:56379/0?host=remote.invalid" time="0.00052215">
+        </testcase>
+        <testcase classname="tests/E2eEnvironment.test.ts" name="E2E destructive fixture isolation &gt; rejects unsafe Redis targets without exposing URLs redis://localhost:56379/0#foreign" time="0.000537326">
+        </testcase>
+        <testcase classname="tests/E2eEnvironment.test.ts" name="E2E destructive fixture isolation &gt; accepts explicit isolated roles and pins the frontend to its own API" time="0.001533953">
+        </testcase>
+        <testcase classname="tests/E2eEnvironment.test.ts" name="E2E destructive fixture isolation &gt; rejects absent or unsafe database declaration undefined" time="0.000542962">
+        </testcase>
+        <testcase classname="tests/E2eEnvironment.test.ts" name="E2E destructive fixture isolation &gt; rejects absent or unsafe database declaration " time="0.000473105">
+        </testcase>
+        <testcase classname="tests/E2eEnvironment.test.ts" name="E2E destructive fixture isolation &gt; rejects absent or unsafe database declaration tiewtrade" time="0.000322158">
+        </testcase>
+        <testcase classname="tests/E2eEnvironment.test.ts" name="E2E destructive fixture isolation &gt; rejects absent or unsafe database declaration production" time="0.000656209">
+        </testcase>
+        <testcase classname="tests/E2eEnvironment.test.ts" name="E2E destructive fixture isolation &gt; rejects absent or unsafe database declaration tiewtrade_e2e/other" time="0.000432283">
+        </testcase>
+        <testcase classname="tests/E2eEnvironment.test.ts" name="E2E destructive fixture isolation &gt; rejects missing, foreign or overridden AUTH target without echoing secrets" time="0.000576633">
+        </testcase>
+        <testcase classname="tests/E2eEnvironment.test.ts" name="E2E destructive fixture isolation &gt; rejects missing, foreign or overridden AUTH target without echoing secrets" time="0.001905429">
+        </testcase>
+        <testcase classname="tests/E2eEnvironment.test.ts" name="E2E destructive fixture isolation &gt; rejects missing, foreign or overridden AUTH target without echoing secrets" time="0.000371525">
+        </testcase>
+        <testcase classname="tests/E2eEnvironment.test.ts" name="E2E destructive fixture isolation &gt; rejects missing, foreign or overridden AUTH target without echoing secrets" time="0.000217257">
+        </testcase>
+        <testcase classname="tests/E2eEnvironment.test.ts" name="E2E destructive fixture isolation &gt; rejects missing, foreign or overridden AUTH target without echoing secrets" time="0.000246745">
+        </testcase>
+        <testcase classname="tests/E2eEnvironment.test.ts" name="E2E destructive fixture isolation &gt; rejects missing, foreign or overridden AUTH target without echoing secrets" time="0.000313563">
+        </testcase>
+        <testcase classname="tests/E2eEnvironment.test.ts" name="E2E destructive fixture isolation &gt; rejects missing, foreign or overridden AUTH target without echoing secrets" time="0.000205319">
+        </testcase>
+        <testcase classname="tests/E2eEnvironment.test.ts" name="E2E destructive fixture isolation &gt; rejects a different database for API" time="0.000361813">
+        </testcase>
+        <testcase classname="tests/E2eEnvironment.test.ts" name="E2E destructive fixture isolation &gt; rejects a different database for ENGINE" time="0.00021764">
+        </testcase>
+        <testcase classname="tests/E2eEnvironment.test.ts" name="E2E destructive fixture isolation &gt; rejects a different database for ENGINE_SCAN" time="0.004552425">
+        </testcase>
+        <testcase classname="tests/E2eEnvironment.test.ts" name="E2E destructive fixture isolation &gt; rejects a different database for MIGRATOR" time="0.000601704">
+        </testcase>
+        <testcase classname="tests/E2eEnvironment.test.ts" name="E2E destructive fixture isolation &gt; rejects a different database for MARKET_DATA" time="0.000322689">
+        </testcase>
+    </testsuite>
+    <testsuite name="tests/MarketValue.test.tsx" timestamp="2026-10-12T15:51:57.984Z" hostname="67bb5a0897d7" tests="2" failures="0" errors="0" skipped="0" time="0.03156555">
+        <testcase classname="tests/MarketValue.test.tsx" name="displays Bangkok time across the UTC date boundary (undefined)" time="0.026364651">
+        </testcase>
+        <testcase classname="tests/MarketValue.test.tsx" name="displays Bangkok time across the UTC date boundary (&apos;en-GB&apos;)" time="0.003151376">
+        </testcase>
+    </testsuite>
+    <testsuite name="tests/RealtimePricePanel.test.tsx" timestamp="2026-10-12T15:51:57.986Z" hostname="67bb5a0897d7" tests="35" failures="0" errors="0" skipped="0" time="0.604930327">
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="reports readiness only at server reference, preserves exact decimals and trade time" time="0.067638607">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="late GET cannot overwrite stream and offline warns without changing snapshot" time="0.031075989">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="reconnect awaits full snapshot and rejects callbacks from old transport" time="0.033189411">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="session 4401 uses existing expiry flow and cleanup closes socket" time="0.00459729">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="observed resume invalidates transport; wall clock alone does not certify readiness" time="0.022963152">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="heartbeat detection warns immediately and does not infer a market outage" time="0.018322712">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="market alert remains visible beside delivery failure and is not cleared by opening" time="0.020824461">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="identity replacement prevents late old socket and GET callbacks entering new cache" time="0.008038296">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="a late failed GET cannot demote a valid newer socket delivery" time="0.046544306">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="invalid schema warns and preserves last valid snapshot" time="0.020480018">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="English snapshot labels and reference timestamps remain observational across silent wall-clock jumps" time="0.017099643">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="translates &apos;READY&apos; into &apos;th&apos; without exposing raw reason codes" time="0.013615323">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="translates &apos;READY&apos; into &apos;en&apos; without exposing raw reason codes" time="0.012077826">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="translates &apos;STALE&apos; into &apos;th&apos; without exposing raw reason codes" time="0.013004244">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="translates &apos;STALE&apos; into &apos;en&apos; without exposing raw reason codes" time="0.012324787">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="translates &apos;RECOVERING&apos; into &apos;th&apos; without exposing raw reason codes" time="0.01498889">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="translates &apos;RECOVERING&apos; into &apos;en&apos; without exposing raw reason codes" time="0.016309204">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="translates &apos;MISSING&apos; into &apos;th&apos; without exposing raw reason codes" time="0.014263092">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="translates &apos;MISSING&apos; into &apos;en&apos; without exposing raw reason codes" time="0.010855688">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="translates &apos;VENUE_PROTOCOL&apos; into &apos;th&apos; without exposing raw reason codes" time="0.014031683">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="translates &apos;VENUE_PROTOCOL&apos; into &apos;en&apos; without exposing raw reason codes" time="0.010389314">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="translates &apos;VENUE_RATE_LIMITED&apos; into &apos;th&apos; without exposing raw reason codes" time="0.013801669">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="translates &apos;VENUE_RATE_LIMITED&apos; into &apos;en&apos; without exposing raw reason codes" time="0.011576119">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="translates &apos;VENUE_UNAVAILABLE&apos; into &apos;th&apos; without exposing raw reason codes" time="0.010491981">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="translates &apos;VENUE_UNAVAILABLE&apos; into &apos;en&apos; without exposing raw reason codes" time="0.010696374">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="translates &apos;VENUE_REJECTED&apos; into &apos;th&apos; without exposing raw reason codes" time="0.014351205">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="translates &apos;VENUE_REJECTED&apos; into &apos;en&apos; without exposing raw reason codes" time="0.014834933">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="translates &apos;SUBSCRIPTION_ACK_TIMEOUT&apos; into &apos;th&apos; without exposing raw reason codes" time="0.015652681">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="translates &apos;SUBSCRIPTION_ACK_TIMEOUT&apos; into &apos;en&apos; without exposing raw reason codes" time="0.013587108">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="translates &apos;ORDER_UNCONFIRMED&apos; into &apos;th&apos; without exposing raw reason codes" time="0.015039993">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="translates &apos;ORDER_UNCONFIRMED&apos; into &apos;en&apos; without exposing raw reason codes" time="0.010037125">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="translates &apos;DELIVERY_UNAVAILABLE&apos; into &apos;th&apos; without exposing raw reason codes" time="0.011831817">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="translates &apos;DELIVERY_UNAVAILABLE&apos; into &apos;en&apos; without exposing raw reason codes" time="0.011228601">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="translates &apos;FUTURE_REASON&apos; into &apos;th&apos; without exposing raw reason codes" time="0.011363082">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="translates &apos;FUTURE_REASON&apos; into &apos;en&apos; without exposing raw reason codes" time="0.015130461">
+        </testcase>
+    </testsuite>
+    <testsuite name="tests/TotpPanel.test.tsx" timestamp="2026-10-12T15:51:58.017Z" hostname="67bb5a0897d7" tests="5" failures="0" errors="0" skipped="0" time="0.284203135">
+        <testcase classname="tests/TotpPanel.test.tsx" name="การยืนยันสองชั้นบนหน้าเว็บ &gt; บอกว่าปิดอยู่เมื่อบัญชียังไม่เปิดใช้" time="0.089156173">
+        </testcase>
+        <testcase classname="tests/TotpPanel.test.tsx" name="การยืนยันสองชั้นบนหน้าเว็บ &gt; แสดง QR และข้อความให้สแกน แล้วแสดงรหัสสำรองหลังยืนยัน" time="0.103039435">
+        </testcase>
+        <testcase classname="tests/TotpPanel.test.tsx" name="การยืนยันสองชั้นบนหน้าเว็บ &gt; ขอรหัสจากแอปเป็นขั้นที่สองหลังกรอกรหัสผ่านถูก" time="0.036913842">
+        </testcase>
+        <testcase classname="tests/TotpPanel.test.tsx" name="การยืนยันสองชั้นบนหน้าเว็บ &gt; บอกจำนวนรหัสสำรองที่เหลือเมื่อเข้าสู่ระบบด้วยรหัสสำรอง" time="0.031091952">
+        </testcase>
+        <testcase classname="tests/TotpPanel.test.tsx" name="การยืนยันสองชั้นบนหน้าเว็บ &gt; แสดงข้อความที่หลังบ้านส่งมาเมื่อรหัสไม่ผ่าน" time="0.020651843">
+        </testcase>
+    </testsuite>
+    <testsuite name="tests/TotpPresentation.test.tsx" timestamp="2026-10-12T15:51:58.020Z" hostname="67bb5a0897d7" tests="4" failures="0" errors="0" skipped="0" time="0.14604724">
+        <testcase classname="tests/TotpPresentation.test.tsx" name="uses the existing replacement API and shows its URI in the themed enrollment section" time="0.058346656">
+        </testcase>
+        <testcase classname="tests/TotpPresentation.test.tsx" name="shows reissued recovery codes and clears the existing credential fields" time="0.026279123">
+        </testcase>
+        <testcase classname="tests/TotpPresentation.test.tsx" name="disables TOTP through the existing callback and clears credential fields" time="0.014545635">
+        </testcase>
+        <testcase classname="tests/TotpPresentation.test.tsx" name="keeps all TOTP actions disabled while waiting and exposes a failure as an alert" time="0.04446982">
+        </testcase>
+    </testsuite>
+    <testsuite name="tests/TradingAccountPanel.test.tsx" timestamp="2026-10-12T15:51:58.023Z" hostname="67bb5a0897d7" tests="21" failures="0" errors="0" skipped="0" time="0.83001154">
+        <testcase classname="tests/TradingAccountPanel.test.tsx" name="initial choice is empty and needs explicit selection with fresh TOTP" time="0.129502557">
+        </testcase>
+        <testcase classname="tests/TradingAccountPanel.test.tsx" name="selects MANUAL with CSRF/TOTP and refetches server choice" time="0.062331464">
+        </testcase>
+        <testcase classname="tests/TradingAccountPanel.test.tsx" name="selects BOT with CSRF/TOTP and refetches server choice" time="0.032133646">
+        </testcase>
+        <testcase classname="tests/TradingAccountPanel.test.tsx" name="cannot select without ACTIVE sole key null" time="0.012825923">
+        </testcase>
+        <testcase classname="tests/TradingAccountPanel.test.tsx" name="cannot select without ACTIVE sole key {&quot;id&quot;:&quot;key-one&quot;,&quot;label&quot;:&quot;Primary&quot;,&quot;public_tail&quot;:&quot;ABCD&quot;,&quot;status&quot;:&quot;PENDING&quot;,&quot;created_at&quot;:&quot;2026-10-07T00:00:00Z&quot;,&quot;may_retry&quot;:false}" time="0.015584164">
+        </testcase>
+        <testcase classname="tests/TradingAccountPanel.test.tsx" name="cannot select without ACTIVE sole key {&quot;id&quot;:&quot;key-one&quot;,&quot;label&quot;:&quot;Primary&quot;,&quot;public_tail&quot;:&quot;ABCD&quot;,&quot;status&quot;:&quot;REJECTED&quot;,&quot;created_at&quot;:&quot;2026-10-07T00:00:00Z&quot;,&quot;may_retry&quot;:false}" time="0.012053262">
+        </testcase>
+        <testcase classname="tests/TradingAccountPanel.test.tsx" name="cannot select without ACTIVE sole key {&quot;id&quot;:&quot;key-one&quot;,&quot;label&quot;:&quot;Primary&quot;,&quot;public_tail&quot;:&quot;ABCD&quot;,&quot;status&quot;:&quot;UNVERIFIABLE&quot;,&quot;created_at&quot;:&quot;2026-10-07T00:00:00Z&quot;,&quot;may_retry&quot;:false}" time="0.011883277">
+        </testcase>
+        <testcase classname="tests/TradingAccountPanel.test.tsx" name="uncertain POST clears code, does not retry and keeps choice unconfirmed" time="0.025300704">
+        </testcase>
+        <testcase classname="tests/TradingAccountPanel.test.tsx" name="sanitizes and explains TRADING_ACCOUNT_KEY_UNAVAILABLE" time="0.023540927">
+        </testcase>
+        <testcase classname="tests/TradingAccountPanel.test.tsx" name="sanitizes and explains TRADING_ACCOUNT_ACTIVITY_UNKNOWN" time="0.027481254">
+        </testcase>
+        <testcase classname="tests/TradingAccountPanel.test.tsx" name="sanitizes and explains RAW-SECRET" time="0.023230605">
+        </testcase>
+        <testcase classname="tests/TradingAccountPanel.test.tsx" name="loading/read failure does not invent an empty or disconnected account" time="0.010585192">
+        </testcase>
+        <testcase classname="tests/TradingAccountPanel.test.tsx" name="existing selection persists when sole key is deleted and both panels refetch" time="0.07268365">
+        </testcase>
+        <testcase classname="tests/TradingAccountPanel.test.tsx" name="DELETE followed by summary refetch failure clearly marks retained old data stale" time="0.054151518">
+        </testcase>
+        <testcase classname="tests/TradingAccountPanel.test.tsx" name="TOTP never enters mutation variables/query keys and mutation cache clears after settle" time="0.078355593">
+        </testcase>
+        <testcase classname="tests/TradingAccountPanel.test.tsx" name="late old-user POST success never changes new-user summary, cache or feedback" time="0.128473147">
+        </testcase>
+        <testcase classname="tests/TradingAccountPanel.test.tsx" name="POST followed by failed summary refetch never reports a confirmed selected state" time="0.030131233">
+        </testcase>
+        <testcase classname="tests/TradingAccountPanel.test.tsx" name="adding sole key refetches the account summary through the shared client" time="0.027562655">
+        </testcase>
+        <testcase classname="tests/TradingAccountPanel.test.tsx" name="retrying a key refetches its new status in the account panel" time="0.023334332">
+        </testcase>
+        <testcase classname="tests/TradingAccountPanel.test.tsx" name="key polling updates the sole account summary when worker verification completes" time="0.016227123">
+        </testcase>
+        <testcase classname="tests/TradingAccountPanel.test.tsx" name="ACTIVE key without TOTP points to setup instead of showing selection fields" time="0.009843891">
+        </testcase>
+    </testsuite>
+    <testsuite name="tests/chart-api.test.ts" timestamp="2026-10-12T15:51:58.038Z" hostname="67bb5a0897d7" tests="4" failures="0" errors="0" skipped="0" time="0.024665424">
+        <testcase classname="tests/chart-api.test.ts" name="reads a complete streamed response without cancelling its successful body" time="0.008699096">
+        </testcase>
+        <testcase classname="tests/chart-api.test.ts" name="rejects over-limit bytes before caching and preserves the error if cancellation fails" time="0.004094435">
+        </testcase>
+        <testcase classname="tests/chart-api.test.ts" name="accepts the exact byte bound and rejects invalid UTF-8 before JSON parsing" time="0.007852121">
+        </testcase>
+        <testcase classname="tests/chart-api.test.ts" name="preserves typed refusals and Retry-After without creating a history page" time="0.001897258">
+        </testcase>
+    </testsuite>
+    <testsuite name="tests/chart-readEpisode.test.ts" timestamp="2026-10-12T15:51:58.050Z" hostname="67bb5a0897d7" tests="13" failures="0" errors="0" skipped="0" time="0.016886664">
+        <testcase classname="tests/chart-readEpisode.test.ts" name="finite chart reads &gt; allows exactly twelve readiness requests with no reset" time="0.009355657">
+        </testcase>
+        <testcase classname="tests/chart-readEpisode.test.ts" name="finite chart reads &gt; discards all pages on 409 and spends only one restart" time="0.001000779">
+        </testcase>
+        <testcase classname="tests/chart-readEpisode.test.ts" name="finite chart reads &gt; stops on 422 INDICATOR_NUMERIC_ERROR without retry" time="0.000373294">
+        </testcase>
+        <testcase classname="tests/chart-readEpisode.test.ts" name="finite chart reads &gt; stops on 429 RATE_LIMITED without retry" time="0.000243377">
+        </testcase>
+        <testcase classname="tests/chart-readEpisode.test.ts" name="finite chart reads &gt; stops on 504 INDICATOR_DEADLINE_EXCEEDED without retry" time="0.000260508">
+        </testcase>
+        <testcase classname="tests/chart-readEpisode.test.ts" name="finite chart reads &gt; stops on 503 CHART_ADMISSION_UNAVAILABLE without retry" time="0.000186397">
+        </testcase>
+        <testcase classname="tests/chart-readEpisode.test.ts" name="finite chart reads &gt; stops on 503 INDICATOR_DATA_UNAVAILABLE without retry" time="0.000322766">
+        </testcase>
+        <testcase classname="tests/chart-readEpisode.test.ts" name="finite chart reads &gt; rejects revision mixing even if the server incorrectly returns 200" time="0.000250909">
+        </testcase>
+        <testcase classname="tests/chart-readEpisode.test.ts" name="finite chart reads &gt; rejects a first page for a different series" time="0.000481252">
+        </testcase>
+        <testcase classname="tests/chart-readEpisode.test.ts" name="finite chart reads &gt; cancels waiting without sending another readiness request" time="0.001210862">
+        </testcase>
+        <testcase classname="tests/chart-readEpisode.test.ts" name="finite chart reads &gt; rejects completion at the total elapsed deadline even if a reader ignores abort" time="0.000538307">
+        </testcase>
+        <testcase classname="tests/chart-readEpisode.test.ts" name="finite chart reads &gt; rejects a late completion after cancellation" time="0.000250025">
+        </testcase>
+        <testcase classname="tests/chart-readEpisode.test.ts" name="finite chart reads &gt; reduces request deadlines to the remaining total budget" time="0.000528043">
+        </testcase>
+    </testsuite>
+    <testsuite name="tests/chart-renderer.test.ts" timestamp="2026-10-12T15:51:58.069Z" hostname="67bb5a0897d7" tests="6" failures="0" errors="0" skipped="0" time="0.049126956">
+        <testcase classname="tests/chart-renderer.test.ts" name="projects only inside the renderer and preserves every exact source string" time="0.036336007">
+        </testcase>
+        <testcase classname="tests/chart-renderer.test.ts" name="uses whitespace for absent OHLC and never joins indicators across a gap or warm-up" time="0.003117672">
+        </testcase>
+        <testcase classname="tests/chart-renderer.test.ts" name="reports an unrenderable quantity without changing its exact source" time="0.002748773">
+        </testcase>
+        <testcase classname="tests/chart-renderer.test.ts" name="reports an unrenderable quantity without changing its exact source" time="0.001643549">
+        </testcase>
+        <testcase classname="tests/chart-renderer.test.ts" name="reports an unrenderable quantity without changing its exact source" time="0.001333476">
+        </testcase>
+        <testcase classname="tests/chart-renderer.test.ts" name="removes unverified lines and closes the library subscriptions on teardown" time="0.001682314">
+        </testcase>
+    </testsuite>
+    <testsuite name="tests/chart-useChartData.test.tsx" timestamp="2026-10-12T15:51:58.079Z" hostname="67bb5a0897d7" tests="11" failures="0" errors="0" skipped="0" time="0.091965497">
+        <testcase classname="tests/chart-useChartData.test.tsx" name="StrictMode starts one read and never polls live sooner than two seconds" time="0.029507122">
+        </testcase>
+        <testcase classname="tests/chart-useChartData.test.tsx" name="terminal history errors stop automatic work" time="0.008787071">
+        </testcase>
+        <testcase classname="tests/chart-useChartData.test.tsx" name="terminal history errors stop automatic work" time="0.004971447">
+        </testcase>
+        <testcase classname="tests/chart-useChartData.test.tsx" name="failed admission cancels a readiness wait and stops proof polling" time="0.003689041">
+        </testcase>
+        <testcase classname="tests/chart-useChartData.test.tsx" name="switching series aborts the old read and rejects a late response" time="0.005078253">
+        </testcase>
+        <testcase classname="tests/chart-useChartData.test.tsx" name="hidden pages cancel work and retain no valid freshness claim" time="0.003362446">
+        </testcase>
+        <testcase classname="tests/chart-useChartData.test.tsx" name="refresh polls use a bodyless GET and stop after failure" time="0.005816888">
+        </testcase>
+        <testcase classname="tests/chart-useChartData.test.tsx" name="successful refresh false reads a new bundle once" time="0.004402256">
+        </testcase>
+        <testcase classname="tests/chart-useChartData.test.tsx" name="successful refresh true reads a new bundle once" time="0.008644723">
+        </testcase>
+        <testcase classname="tests/chart-useChartData.test.tsx" name="hiding an older window cancels that window&apos;s active request" time="0.007079806">
+        </testcase>
+        <testcase classname="tests/chart-useChartData.test.tsx" name="a cancelled proof from an old series cannot renew the current proof TTL" time="0.007980126">
+        </testcase>
+    </testsuite>
+    <testsuite name="tests/realtimePrices.test.ts" timestamp="2026-10-12T15:51:58.093Z" hostname="67bb5a0897d7" tests="4" failures="0" errors="0" skipped="0" time="0.010386176">
+        <testcase classname="tests/realtimePrices.test.ts" name="decodes only bounded complete snapshots with string prices and counters" time="0.005302208">
+        </testcase>
+        <testcase classname="tests/realtimePrices.test.ts" name="late GET and revisions beyond JS precision cannot roll back a newer stream" time="0.001681562">
+        </testcase>
+        <testcase classname="tests/realtimePrices.test.ts" name="a newer reference cannot overwrite a row from an older generation" time="0.000448574">
+        </testcase>
+        <testcase classname="tests/realtimePrices.test.ts" name="reference ordering retains microseconds in delayed heartbeat snapshots" time="0.000495954">
+        </testcase>
+    </testsuite>
+    <testsuite name="tests/gates/api-contract.test.ts" timestamp="2026-10-12T15:51:58.098Z" hostname="67bb5a0897d7" tests="2" failures="0" errors="0" skipped="0" time="6.884423552">
+        <testcase classname="tests/gates/api-contract.test.ts" name="ด่านชนิดข้อมูลของหน้าบ้าน &gt; ผ่านเมื่อสัญญา API ตรงกับที่โค้ดหน้าบ้านใช้" time="3.705282358">
+        </testcase>
+        <testcase classname="tests/gates/api-contract.test.ts" name="ด่านชนิดข้อมูลของหน้าบ้าน &gt; แดงเมื่อหลังบ้านเปลี่ยนชื่อช่องที่หน้าบ้านใช้" time="3.176391278">
+        </testcase>
+    </testsuite>
+</testsuites>

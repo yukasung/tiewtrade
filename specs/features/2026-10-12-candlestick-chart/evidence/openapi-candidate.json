@@ -1,0 +1,2974 @@
+{
+  "components": {
+    "schemas": {
+      "AccountUse": {
+        "enum": [
+          "MANUAL",
+          "BOT"
+        ],
+        "title": "AccountUse",
+        "type": "string"
+      },
+      "AddKeyRequest": {
+        "description": "ของที่ผู้ใช้กรอก — **`secret` เข้ามาทางเดียวและไม่เคยออกไปทางไหน**",
+        "properties": {
+          "key": {
+            "maxLength": 256,
+            "minLength": 1,
+            "title": "Key",
+            "type": "string"
+          },
+          "label": {
+            "maxLength": 40,
+            "minLength": 1,
+            "title": "Label",
+            "type": "string"
+          },
+          "secret": {
+            "maxLength": 256,
+            "minLength": 1,
+            "title": "Secret",
+            "type": "string"
+          }
+        },
+        "required": [
+          "label",
+          "key",
+          "secret"
+        ],
+        "title": "AddKeyRequest",
+        "type": "object"
+      },
+      "AddedKey": {
+        "description": "คำตอบของการเพิ่ม — มีแค่รหัสของแถวกับสถานะเริ่มต้น",
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "status"
+        ],
+        "title": "AddedKey",
+        "type": "object"
+      },
+      "CandleFinality": {
+        "enum": [
+          "UNCONFIRMED",
+          "OPEN",
+          "CLOSED"
+        ],
+        "title": "CandleFinality",
+        "type": "string"
+      },
+      "CandleHistoryView": {
+        "properties": {
+          "base": {
+            "title": "Base",
+            "type": "string"
+          },
+          "coverage": {
+            "enum": [
+              "PRESENT",
+              "INCOMPLETE",
+              "UNAVAILABLE"
+            ],
+            "title": "Coverage",
+            "type": "string"
+          },
+          "failure_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Failure Code"
+          },
+          "gaps": {
+            "items": {
+              "$ref": "#/components/schemas/WindowView"
+            },
+            "title": "Gaps",
+            "type": "array"
+          },
+          "observed": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/WindowView"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "observed_at": {
+            "format": "date-time",
+            "title": "Observed At",
+            "type": "string"
+          },
+          "quote": {
+            "title": "Quote",
+            "type": "string"
+          },
+          "refresh_pending": {
+            "title": "Refresh Pending",
+            "type": "boolean"
+          },
+          "requested": {
+            "$ref": "#/components/schemas/WindowView"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/CandleView"
+            },
+            "title": "Rows",
+            "type": "array"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          },
+          "timeframe": {
+            "$ref": "#/components/schemas/Timeframe"
+          }
+        },
+        "required": [
+          "base",
+          "quote",
+          "timeframe",
+          "requested",
+          "observed",
+          "rows",
+          "gaps",
+          "coverage",
+          "observed_at",
+          "refresh_pending",
+          "status",
+          "failure_code"
+        ],
+        "title": "CandleHistoryView",
+        "type": "object"
+      },
+      "CandleRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "base": {
+            "title": "Base",
+            "type": "string"
+          },
+          "end": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End"
+          },
+          "quote": {
+            "title": "Quote",
+            "type": "string"
+          },
+          "start": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start"
+          },
+          "timeframe": {
+            "$ref": "#/components/schemas/Timeframe"
+          }
+        },
+        "required": [
+          "base",
+          "quote",
+          "timeframe"
+        ],
+        "title": "CandleRequest",
+        "type": "object"
+      },
+      "CandleRequestView": {
+        "properties": {
+          "accepted": {
+            "title": "Accepted",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "accepted"
+        ],
+        "title": "CandleRequestView",
+        "type": "object"
+      },
+      "CandleView": {
+        "properties": {
+          "close": {
+            "title": "Close",
+            "type": "string"
+          },
+          "end_at": {
+            "format": "date-time",
+            "title": "End At",
+            "type": "string"
+          },
+          "finality": {
+            "$ref": "#/components/schemas/CandleFinality"
+          },
+          "high": {
+            "title": "High",
+            "type": "string"
+          },
+          "last_checked_at": {
+            "format": "date-time",
+            "title": "Last Checked At",
+            "type": "string"
+          },
+          "low": {
+            "title": "Low",
+            "type": "string"
+          },
+          "observed_at": {
+            "format": "date-time",
+            "title": "Observed At",
+            "type": "string"
+          },
+          "open": {
+            "title": "Open",
+            "type": "string"
+          },
+          "open_at": {
+            "format": "date-time",
+            "title": "Open At",
+            "type": "string"
+          },
+          "volume": {
+            "title": "Volume",
+            "type": "string"
+          }
+        },
+        "required": [
+          "open_at",
+          "end_at",
+          "open",
+          "high",
+          "low",
+          "close",
+          "volume",
+          "finality",
+          "observed_at",
+          "last_checked_at"
+        ],
+        "title": "CandleView",
+        "type": "object"
+      },
+      "ChartHistoryView": {
+        "properties": {
+          "as_of": {
+            "format": "date-time",
+            "title": "As Of",
+            "type": "string"
+          },
+          "base": {
+            "title": "Base",
+            "type": "string"
+          },
+          "calculation_end": {
+            "format": "date-time",
+            "title": "Calculation End",
+            "type": "string"
+          },
+          "calculation_start": {
+            "format": "date-time",
+            "title": "Calculation Start",
+            "type": "string"
+          },
+          "candles": {
+            "items": {
+              "$ref": "#/components/schemas/CandleView"
+            },
+            "title": "Candles",
+            "type": "array"
+          },
+          "dataset_revision": {
+            "title": "Dataset Revision",
+            "type": "string"
+          },
+          "display_proof": {
+            "title": "Display Proof",
+            "type": "string"
+          },
+          "formula_version": {
+            "title": "Formula Version",
+            "type": "string"
+          },
+          "generation_age_seconds": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Generation Age Seconds"
+          },
+          "generation_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Generation Id"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          },
+          "prepared_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prepared At"
+          },
+          "quote": {
+            "title": "Quote",
+            "type": "string"
+          },
+          "refresh": {
+            "$ref": "#/components/schemas/RefreshView"
+          },
+          "result_end": {
+            "format": "date-time",
+            "title": "Result End",
+            "type": "string"
+          },
+          "result_start": {
+            "format": "date-time",
+            "title": "Result Start",
+            "type": "string"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/IndicatorPointView"
+            },
+            "title": "Rows",
+            "type": "array"
+          },
+          "source": {
+            "title": "Source",
+            "type": "string"
+          },
+          "timeframe": {
+            "$ref": "#/components/schemas/Timeframe"
+          }
+        },
+        "required": [
+          "source",
+          "base",
+          "quote",
+          "timeframe",
+          "formula_version",
+          "dataset_revision",
+          "as_of",
+          "calculation_start",
+          "calculation_end",
+          "result_start",
+          "result_end",
+          "rows",
+          "refresh",
+          "next_cursor",
+          "candles",
+          "display_proof"
+        ],
+        "title": "ChartHistoryView",
+        "type": "object"
+      },
+      "ChartLiveView": {
+        "properties": {
+          "base": {
+            "title": "Base",
+            "type": "string"
+          },
+          "epoch": {
+            "title": "Epoch",
+            "type": "string"
+          },
+          "event_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Event At"
+          },
+          "history_end": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "History End"
+          },
+          "quote": {
+            "title": "Quote",
+            "type": "string"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "received_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Received At"
+          },
+          "revision": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revision"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/CandleView"
+            },
+            "title": "Rows",
+            "type": "array"
+          },
+          "server_time": {
+            "format": "date-time",
+            "title": "Server Time",
+            "type": "string"
+          },
+          "source": {
+            "title": "Source",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "READY",
+              "RECOVERING",
+              "STALE",
+              "NO_DATA",
+              "UNAVAILABLE"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "timeframe": {
+            "$ref": "#/components/schemas/Timeframe"
+          }
+        },
+        "required": [
+          "source",
+          "base",
+          "quote",
+          "timeframe",
+          "rows",
+          "status",
+          "reason",
+          "server_time",
+          "epoch",
+          "revision",
+          "event_at",
+          "received_at",
+          "history_end"
+        ],
+        "title": "ChartLiveView",
+        "type": "object"
+      },
+      "ChartProofRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "display_proof": {
+            "maxLength": 4096,
+            "title": "Display Proof",
+            "type": "string"
+          }
+        },
+        "required": [
+          "display_proof"
+        ],
+        "title": "ChartProofRequest",
+        "type": "object"
+      },
+      "ChartProofView": {
+        "properties": {
+          "calculation_end": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Calculation End"
+          },
+          "calculation_start": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Calculation Start"
+          },
+          "checked_at": {
+            "format": "date-time",
+            "title": "Checked At",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "MATCHED",
+              "CHANGED",
+              "UNVERIFIABLE"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "checked_at"
+        ],
+        "title": "ChartProofView",
+        "type": "object"
+      },
+      "CodesIssued": {
+        "description": "ชุดรหัสสำรองใหม่ — **แสดงครั้งเดียว ไม่มีทางอ่านกลับ**",
+        "properties": {
+          "recovery_codes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Recovery Codes",
+            "type": "array"
+          }
+        },
+        "required": [
+          "recovery_codes"
+        ],
+        "title": "CodesIssued",
+        "type": "object"
+      },
+      "Confirmation": {
+        "description": "รหัสจาก secret ที่เพิ่งตั้งค่า",
+        "properties": {
+          "code": {
+            "maxLength": 16,
+            "minLength": 1,
+            "title": "Code",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code"
+        ],
+        "title": "Confirmation",
+        "type": "object"
+      },
+      "Credentials": {
+        "description": "อีเมลกับรหัสผ่านที่ผู้ใช้กรอก",
+        "properties": {
+          "email": {
+            "maxLength": 254,
+            "minLength": 3,
+            "title": "Email",
+            "type": "string"
+          },
+          "password": {
+            "maxLength": 4096,
+            "minLength": 1,
+            "title": "Password",
+            "type": "string"
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ],
+        "title": "Credentials",
+        "type": "object"
+      },
+      "CsrfToken": {
+        "description": "โทเคนกัน CSRF ที่หน้าเว็บต้องส่งกลับมาใน header",
+        "properties": {
+          "csrf_token": {
+            "title": "Csrf Token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "csrf_token"
+        ],
+        "title": "CsrfToken",
+        "type": "object"
+      },
+      "CurrentPassword": {
+        "description": "รหัสผ่านปัจจุบัน — ทุกเส้นทางที่เปลี่ยนปัจจัยที่สองต้องการค่านี้ (Q-4)",
+        "properties": {
+          "password": {
+            "maxLength": 4096,
+            "minLength": 1,
+            "title": "Password",
+            "type": "string"
+          }
+        },
+        "required": [
+          "password"
+        ],
+        "title": "CurrentPassword",
+        "type": "object"
+      },
+      "Disabled": {
+        "description": "ผลของการปิด TOTP",
+        "properties": {
+          "ended": {
+            "title": "Ended",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "ended"
+        ],
+        "title": "Disabled",
+        "type": "object"
+      },
+      "Enabled": {
+        "description": "ผลของการเปิดใช้ — รหัสสำรองชุดใหม่ และจำนวน session ที่ถูกเพิกถอน",
+        "properties": {
+          "ended": {
+            "title": "Ended",
+            "type": "integer"
+          },
+          "recovery_codes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Recovery Codes",
+            "type": "array"
+          }
+        },
+        "required": [
+          "recovery_codes",
+          "ended"
+        ],
+        "title": "Enabled",
+        "type": "object"
+      },
+      "Enrollment": {
+        "description": "ของที่ผู้ใช้ต้องเอาไปใส่แอป — **ส่งครั้งเดียวต่อการเรียกหนึ่งครั้ง**",
+        "properties": {
+          "otpauth_uri": {
+            "title": "Otpauth Uri",
+            "type": "string"
+          }
+        },
+        "required": [
+          "otpauth_uri"
+        ],
+        "title": "Enrollment",
+        "type": "object"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "title": "Detail",
+            "type": "array"
+          }
+        },
+        "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "Health": {
+        "description": "สถานะของเซิร์ฟเวอร์ — ชนิดนี้เป็นต้นทางของชนิดข้อมูลฝั่งหน้าบ้าน",
+        "properties": {
+          "server_time": {
+            "format": "date-time",
+            "title": "Server Time",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "server_time",
+          "version"
+        ],
+        "title": "Health",
+        "type": "object"
+      },
+      "Identity": {
+        "description": "ตัวตนของคำขอ — **ไม่คืนอีเมลหรืออะไรที่ไม่จำเป็น** (RQ-10)",
+        "properties": {
+          "user_id": {
+            "format": "uuid",
+            "title": "User Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "user_id"
+        ],
+        "title": "Identity",
+        "type": "object"
+      },
+      "IndicatorHistoryView": {
+        "properties": {
+          "as_of": {
+            "format": "date-time",
+            "title": "As Of",
+            "type": "string"
+          },
+          "base": {
+            "title": "Base",
+            "type": "string"
+          },
+          "calculation_end": {
+            "format": "date-time",
+            "title": "Calculation End",
+            "type": "string"
+          },
+          "calculation_start": {
+            "format": "date-time",
+            "title": "Calculation Start",
+            "type": "string"
+          },
+          "dataset_revision": {
+            "title": "Dataset Revision",
+            "type": "string"
+          },
+          "formula_version": {
+            "title": "Formula Version",
+            "type": "string"
+          },
+          "generation_age_seconds": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Generation Age Seconds"
+          },
+          "generation_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Generation Id"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          },
+          "prepared_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prepared At"
+          },
+          "quote": {
+            "title": "Quote",
+            "type": "string"
+          },
+          "refresh": {
+            "$ref": "#/components/schemas/RefreshView"
+          },
+          "result_end": {
+            "format": "date-time",
+            "title": "Result End",
+            "type": "string"
+          },
+          "result_start": {
+            "format": "date-time",
+            "title": "Result Start",
+            "type": "string"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/IndicatorPointView"
+            },
+            "title": "Rows",
+            "type": "array"
+          },
+          "source": {
+            "title": "Source",
+            "type": "string"
+          },
+          "timeframe": {
+            "$ref": "#/components/schemas/Timeframe"
+          }
+        },
+        "required": [
+          "source",
+          "base",
+          "quote",
+          "timeframe",
+          "formula_version",
+          "dataset_revision",
+          "as_of",
+          "calculation_start",
+          "calculation_end",
+          "result_start",
+          "result_end",
+          "rows",
+          "refresh",
+          "next_cursor"
+        ],
+        "title": "IndicatorHistoryView",
+        "type": "object"
+      },
+      "IndicatorPointView": {
+        "properties": {
+          "finality": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finality"
+          },
+          "open_at": {
+            "format": "date-time",
+            "title": "Open At",
+            "type": "string"
+          },
+          "seed_open_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seed Open At"
+          },
+          "values": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/IndicatorValueView"
+            },
+            "title": "Values",
+            "type": "object"
+          }
+        },
+        "required": [
+          "open_at",
+          "seed_open_at",
+          "finality",
+          "values"
+        ],
+        "title": "IndicatorPointView",
+        "type": "object"
+      },
+      "IndicatorValueView": {
+        "properties": {
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          }
+        },
+        "required": [
+          "value",
+          "unit",
+          "status"
+        ],
+        "title": "IndicatorValueView",
+        "type": "object"
+      },
+      "KeyView": {
+        "description": "สิ่งที่หน้าจอได้เห็นของ key หนึ่งใบ\n\n**ไม่มีช่องสำหรับ key เต็มและไม่มีช่องสำหรับ secret** — ความลับไม่หลุดเพราะ\nไม่มีที่ให้มันอยู่ ไม่ใช่เพราะผู้เขียน endpoint จำได้ว่าอย่าใส่",
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "failure_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Failure Code"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "may_retry": {
+            "default": false,
+            "title": "May Retry",
+            "type": "boolean"
+          },
+          "next_attempt_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Attempt At"
+          },
+          "not_before": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Not Before"
+          },
+          "public_tail": {
+            "title": "Public Tail",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "verified_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Verified At"
+          }
+        },
+        "required": [
+          "id",
+          "label",
+          "public_tail",
+          "status",
+          "created_at"
+        ],
+        "title": "KeyView",
+        "type": "object"
+      },
+      "Me": {
+        "description": "ตัวตนของคำขอ พร้อมสถานะปัจจัยที่สอง (F-06 RQ-12)",
+        "properties": {
+          "totp_enabled": {
+            "title": "Totp Enabled",
+            "type": "boolean"
+          },
+          "user_id": {
+            "format": "uuid",
+            "title": "User Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "user_id",
+          "totp_enabled"
+        ],
+        "title": "Me",
+        "type": "object"
+      },
+      "PasswordChange": {
+        "description": "การเปลี่ยนรหัสผ่าน — ต้องยืนยันค่าปัจจุบัน (Q-5)",
+        "properties": {
+          "current_password": {
+            "maxLength": 4096,
+            "minLength": 1,
+            "title": "Current Password",
+            "type": "string"
+          },
+          "new_password": {
+            "maxLength": 4096,
+            "minLength": 1,
+            "title": "New Password",
+            "type": "string"
+          }
+        },
+        "required": [
+          "current_password",
+          "new_password"
+        ],
+        "title": "PasswordChange",
+        "type": "object"
+      },
+      "PriceRow": {
+        "additionalProperties": false,
+        "properties": {
+          "alert_due": {
+            "title": "Alert Due",
+            "type": "boolean"
+          },
+          "amount": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Amount"
+          },
+          "base": {
+            "title": "Base",
+            "type": "string"
+          },
+          "generation": {
+            "pattern": "^[0-9]+$",
+            "title": "Generation",
+            "type": "string"
+          },
+          "quote": {
+            "title": "Quote",
+            "type": "string"
+          },
+          "readiness": {
+            "enum": [
+              "MISSING",
+              "RECOVERING",
+              "STALE",
+              "READY"
+            ],
+            "title": "Readiness",
+            "type": "string"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "received_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Received At"
+          },
+          "revision": {
+            "pattern": "^[0-9]+$",
+            "title": "Revision",
+            "type": "string"
+          },
+          "source": {
+            "title": "Source",
+            "type": "string"
+          },
+          "trade_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Trade At"
+          },
+          "unavailable_since": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unavailable Since"
+          },
+          "valid_until": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Valid Until"
+          }
+        },
+        "required": [
+          "source",
+          "base",
+          "quote",
+          "amount",
+          "trade_at",
+          "received_at",
+          "revision",
+          "generation",
+          "readiness",
+          "reason",
+          "valid_until",
+          "unavailable_since",
+          "alert_due"
+        ],
+        "title": "PriceRow",
+        "type": "object"
+      },
+      "PricesView": {
+        "additionalProperties": false,
+        "properties": {
+          "delivery_status": {
+            "enum": [
+              "CONNECTED",
+              "RECOVERING"
+            ],
+            "title": "Delivery Status",
+            "type": "string"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/PriceRow"
+            },
+            "title": "Rows",
+            "type": "array"
+          },
+          "schema_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          },
+          "server_time": {
+            "format": "date-time",
+            "title": "Server Time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "server_time",
+          "delivery_status",
+          "rows"
+        ],
+        "title": "PricesView",
+        "type": "object"
+      },
+      "RefreshTarget": {
+        "properties": {
+          "base": {
+            "title": "Base",
+            "type": "string"
+          },
+          "end": {
+            "format": "date-time",
+            "title": "End",
+            "type": "string"
+          },
+          "quote": {
+            "title": "Quote",
+            "type": "string"
+          },
+          "start": {
+            "format": "date-time",
+            "title": "Start",
+            "type": "string"
+          },
+          "timeframe": {
+            "$ref": "#/components/schemas/Timeframe"
+          }
+        },
+        "required": [
+          "base",
+          "quote",
+          "timeframe",
+          "start",
+          "end"
+        ],
+        "title": "RefreshTarget",
+        "type": "object"
+      },
+      "RefreshView": {
+        "properties": {
+          "failure_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Failure Code"
+          },
+          "more_required": {
+            "title": "More Required",
+            "type": "boolean"
+          },
+          "observed_at": {
+            "format": "date-time",
+            "title": "Observed At",
+            "type": "string"
+          },
+          "queue_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Queue Status"
+          },
+          "required": {
+            "title": "Required",
+            "type": "boolean"
+          },
+          "target": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RefreshTarget"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "required",
+          "target",
+          "more_required",
+          "queue_status",
+          "failure_code",
+          "observed_at"
+        ],
+        "title": "RefreshView",
+        "type": "object"
+      },
+      "RejectedCandleInput": {
+        "properties": {
+          "detail": {
+            "title": "Detail",
+            "type": "string"
+          }
+        },
+        "required": [
+          "detail"
+        ],
+        "title": "RejectedCandleInput",
+        "type": "object"
+      },
+      "RejectedKeyInput": {
+        "description": "คำตอบ validation ที่มีแค่รหัส ไม่มีค่าที่ผู้ใช้ส่งมา",
+        "properties": {
+          "detail": {
+            "title": "Detail",
+            "type": "string"
+          }
+        },
+        "required": [
+          "detail"
+        ],
+        "title": "RejectedKeyInput",
+        "type": "object"
+      },
+      "RejectedTradingAccountInput": {
+        "properties": {
+          "detail": {
+            "title": "Detail",
+            "type": "string"
+          }
+        },
+        "required": [
+          "detail"
+        ],
+        "title": "RejectedTradingAccountInput",
+        "type": "object"
+      },
+      "RetryAccepted": {
+        "description": "ผลของการกดลองใหม่",
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "status"
+        ],
+        "title": "RetryAccepted",
+        "type": "object"
+      },
+      "SecondStep": {
+        "description": "ขั้นที่สองของการเข้าสู่ระบบ — รหัสจากแอป **หรือ** รหัสสำรองหนึ่งใบ",
+        "properties": {
+          "code": {
+            "anyOf": [
+              {
+                "maxLength": 16,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Code"
+          },
+          "recovery_code": {
+            "anyOf": [
+              {
+                "maxLength": 32,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recovery Code"
+          }
+        },
+        "title": "SecondStep",
+        "type": "object"
+      },
+      "SelectTradingUseRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "use": {
+            "$ref": "#/components/schemas/AccountUse"
+          }
+        },
+        "required": [
+          "use"
+        ],
+        "title": "SelectTradingUseRequest",
+        "type": "object"
+      },
+      "SessionsEnded": {
+        "description": "จำนวน session ที่ถูกเพิกถอน",
+        "properties": {
+          "ended": {
+            "title": "Ended",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "ended"
+        ],
+        "title": "SessionsEnded",
+        "type": "object"
+      },
+      "SignInStarted": {
+        "description": "ผลของขั้นแรกของการเข้าสู่ระบบ (F-06)\n\n**รูปร่างเดียวกันทั้งสองกรณี** ต่างกันแค่ค่าในช่อง และ cookie ที่แนบกลับไป\nฉะนั้นคนที่ยังไม่ผ่านรหัสผ่านแยกสองกรณีไม่ได้ — เขาได้ `LOGIN_FAILED` เหมือนเดิม\n**ก่อน** ที่โค้ดจะแตะข้อมูล TOTP เลย (RQ-11)",
+        "properties": {
+          "second_step_required": {
+            "title": "Second Step Required",
+            "type": "boolean"
+          },
+          "user_id": {
+            "format": "uuid",
+            "title": "User Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "user_id",
+          "second_step_required"
+        ],
+        "title": "SignInStarted",
+        "type": "object"
+      },
+      "SignedIn": {
+        "description": "ผลของขั้นที่สอง — รหัสผู้ใช้ และจำนวนรหัสสำรองที่เหลือถ้าใช้ไปใบหนึ่ง",
+        "properties": {
+          "recovery_codes_left": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recovery Codes Left"
+          },
+          "user_id": {
+            "format": "uuid",
+            "title": "User Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "user_id"
+        ],
+        "title": "SignedIn",
+        "type": "object"
+      },
+      "Timeframe": {
+        "enum": [
+          "1m",
+          "5m",
+          "15m",
+          "1h",
+          "4h",
+          "1d"
+        ],
+        "title": "Timeframe",
+        "type": "string"
+      },
+      "TradingAccountView": {
+        "properties": {
+          "key": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/KeyView"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "may_change_use": {
+            "const": false,
+            "default": false,
+            "title": "May Change Use",
+            "type": "boolean"
+          },
+          "may_trade": {
+            "const": false,
+            "default": false,
+            "title": "May Trade",
+            "type": "boolean"
+          },
+          "use": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AccountUse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "use",
+          "key"
+        ],
+        "title": "TradingAccountView",
+        "type": "object"
+      },
+      "ValidationError": {
+        "properties": {
+          "ctx": {
+            "title": "Context",
+            "type": "object"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "title": "Location",
+            "type": "array"
+          },
+          "msg": {
+            "title": "Message",
+            "type": "string"
+          },
+          "type": {
+            "title": "Error Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError",
+        "type": "object"
+      },
+      "WindowView": {
+        "properties": {
+          "end": {
+            "format": "date-time",
+            "title": "End",
+            "type": "string"
+          },
+          "start": {
+            "format": "date-time",
+            "title": "Start",
+            "type": "string"
+          }
+        },
+        "required": [
+          "start",
+          "end"
+        ],
+        "title": "WindowView",
+        "type": "object"
+      }
+    }
+  },
+  "info": {
+    "description": "เทรดคริปโตแบบ Spot — ยืนยันตัวตนด้วย session ฝั่งเซิร์ฟเวอร์",
+    "title": "TiewTrade API",
+    "version": "0.2.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/api-keys": {
+      "get": {
+        "description": "รายการ key ของผู้ใช้คนนี้ — หน้าเว็บเรียกเป็นรอบ ๆ เพื่อดูสถานะ\n\nเส้นทางนี้ **ไม่ต่ออายุ session** (`routing_policy.py`) เพราะการ poll\nไม่ควรทำให้ session ไม่มีวันหมดอายุ",
+        "operationId": "list_keys_api_keys_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/KeyView"
+                  },
+                  "title": "Response List Keys Api Keys Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RejectedKeyInput"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "summary": "List Keys",
+        "tags": [
+          "api-keys"
+        ]
+      },
+      "post": {
+        "description": "รับคำรับรองหนึ่งชุด ปิดผนึกทันที แล้วรอให้ `engine` ตรวจ\n\n**คุมอัตราก่อนแตะอะไร** — มิฉะนั้นระบบนี้กลายเป็นเครื่องมือทดสอบคำรับรอง\nของคนอื่นกับตลาด (`security.md` หัวข้อ 3 · RQ-11)",
+        "operationId": "add_key_api_keys_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddKeyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AddedKey"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RejectedKeyInput"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "summary": "Add Key",
+        "tags": [
+          "api-keys"
+        ]
+      }
+    },
+    "/api-keys/{key_id}": {
+      "delete": {
+        "description": "ลบ key ของตัวเอง — ของคนอื่นได้ \"ไม่พบ\" (RLS เป็นผู้กัน ไม่ใช่เงื่อนไขที่นี่)",
+        "operationId": "remove_key_api_keys__key_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "key_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Key Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RejectedKeyInput"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "summary": "Remove Key",
+        "tags": [
+          "api-keys"
+        ]
+      }
+    },
+    "/api-keys/{key_id}/retry": {
+      "post": {
+        "description": "ขอให้ตรวจ key ใบนี้ใหม่\n\n**ไม่ต้องยืนยันปัจจัยที่สองซ้ำ** (เจ้าของตัดสิน 2026-10-04) เพราะความลับเข้าระบบ\nไปแล้วตอนเพิ่ม ซึ่งผ่านการยืนยันแล้ว การลองใหม่ไม่ได้เพิ่มความเสี่ยงใหม่\n\n**เวลาที่ตลาดสั่งให้รอข้ามไม่ได้** — ที่นี่ปฏิเสธเพื่อให้ผู้ใช้รู้ตัวเร็ว\nส่วนด่านจริงอยู่ในคำสั่งจองของ worker (`plan.md` ข้อ 7.5)",
+        "operationId": "retry_key_api_keys__key_id__retry_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "key_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Key Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RetryAccepted"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RejectedKeyInput"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "summary": "Retry Key",
+        "tags": [
+          "api-keys"
+        ]
+      }
+    },
+    "/auth/csrf": {
+      "get": {
+        "description": "ออกโทเคนกัน CSRF ให้หน้าเว็บก่อนส่งคำขอที่เปลี่ยนสถานะ",
+        "operationId": "read_csrf_token_auth_csrf_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CsrfToken"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Read Csrf Token",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "description": "เข้าสู่ระบบ — ลำดับการล็อกแถวข้อมูลเข้าสู่ระบบมีสามขั้นตามที่ plan ข้อ 1.6 กำหนด",
+        "operationId": "login_auth_login_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Credentials"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SignInStarted"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Login",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "description": "ออกจากระบบเครื่องนี้ — **ลบแถว** ไม่ใช่แค่ลบ cookie (RQ-15)",
+        "operationId": "logout_auth_logout_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionsEnded"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Logout",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/auth/logout-all": {
+      "post": {
+        "description": "ออกจากระบบทุกเครื่องของผู้ใช้นี้",
+        "operationId": "logout_everywhere_auth_logout_all_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionsEnded"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Logout Everywhere",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/auth/me": {
+      "get": {
+        "description": "ตัวตนของคำขอนี้ และสถานะปัจจัยที่สอง\n\n**`totp_enabled` คือคำตอบที่ F-24 ใช้** (RQ-12) — secret ที่ยังไม่ยืนยัน\nนับว่ายังไม่เปิด เพราะมันไม่มีผลกับการยืนยันตัวตนเลย\n\n**ไม่ต่ออายุ session** เพราะหน้าเว็บเรียกเส้นทางนี้เป็นรอบ ๆ (Q-2 ของ F-05)",
+        "operationId": "read_me_auth_me_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Me"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Read Me",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/auth/password": {
+      "post": {
+        "description": "เปลี่ยนรหัสผ่าน — ทั้งก้อนสำเร็จหรือล้มเหลวด้วยกัน (RQ-22)\n\nล็อกแถวข้อมูลเข้าสู่ระบบก่อนตรวจค่าปัจจุบัน จึงไม่มีช่องที่การเข้าสู่ระบบด้วย\nรหัสผ่านเก่าซึ่งกำลังดำเนินอยู่พร้อมกันจะได้ session ที่รอดหลังการเพิกถอนเสร็จ",
+        "operationId": "change_password_auth_password_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PasswordChange"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionsEnded"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Change Password",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/auth/register": {
+      "post": {
+        "description": "สมัครบัญชีใหม่ — ผู้ใช้ ข้อมูลเข้าสู่ระบบ session และบันทึก **ในก้อนเดียว**",
+        "operationId": "register_auth_register_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Credentials"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Identity"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Register",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/auth/totp/confirm": {
+      "post": {
+        "description": "ยืนยันแล้วเปิดใช้ — **ทั้งก้อนสำเร็จหรือล้มเหลวด้วยกัน** (validation V-11.2)\n\nในก้อนเดียวกัน: สลับ secret, ยกเลิกรหัสสำรองชุดเก่า, ออกชุดใหม่,\nเพิกถอน session อื่นทั้งหมด และลงบันทึก\n\n**รหัสสำรองชุดเก่าถูกยกเลิกที่นี่ ไม่ใช่ตอนเริ่มเปลี่ยนเครื่อง** เพราะผู้ใช้ที่\nทิ้งกลางทางต้องไม่เสียทั้งรหัสสำรองและเครื่องใหม่",
+        "operationId": "confirm_setup_auth_totp_confirm_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Confirmation"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Enabled"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Confirm Setup",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/auth/totp/disable": {
+      "post": {
+        "description": "ปิด TOTP — **ปิดไม่ได้ขณะที่ Live เปิดอยู่** (Q-4)\n\nเพราะ R-19 บังคับว่า Live ต้องมี 2FA ถ้ายอมให้ปิดโดย Live ยังเปิด จะเกิดสถานะ\nที่ spec ห้าม · **ไม่ปิด Live ให้อัตโนมัติ** เพราะกระทบไม้ที่เปิดอยู่ ซึ่งเป็น\nผลข้างเคียงที่ผู้ใช้ไม่ได้สั่ง",
+        "operationId": "disable_totp_auth_totp_disable_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CurrentPassword"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Disabled"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Disable Totp",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/auth/totp/login": {
+      "post": {
+        "description": "ขั้นที่สองของการเข้าสู่ระบบ — รหัสจากแอป หรือรหัสสำรองหนึ่งใบ\n\n**ออก session ที่นี่เท่านั้น** ขั้นแรกคืน challenge ซึ่งใช้เรียกเส้นทางอื่นไม่ได้เลย\nฉะนั้น RQ-5 เป็นจริงโดยโครงสร้าง ไม่ใช่เพราะ middleware ขยัน\n\n**เทียบรุ่นของรหัสผ่านใต้ล็อก** ฉะนั้น challenge ที่ออกด้วยรหัสผ่านเก่าใช้ต่อไม่ได้\nแม้จะยังไม่หมดอายุ (RQ-22 ของ F-05 · `plan.md` หัวข้อ 1.4)",
+        "operationId": "complete_sign_in_auth_totp_login_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SecondStep"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SignedIn"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Complete Sign In",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/auth/totp/recovery-codes": {
+      "post": {
+        "description": "ออกชุดรหัสสำรองใหม่ — **ชุดเก่าใช้ไม่ได้ทันที** (RQ-15)",
+        "operationId": "reissue_recovery_codes_auth_totp_recovery_codes_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CurrentPassword"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CodesIssued"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Reissue Recovery Codes",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/auth/totp/replace": {
+      "post": {
+        "description": "ออก secret ใหม่สำหรับเครื่องใหม่ — **ปัจจัยเดิมยังใช้ได้จนยืนยันสำเร็จ**\n\nmiddleware บังคับปัจจัยที่สองของเส้นทางนี้แล้ว (รหัส TOTP หรือสิทธิ์กู้บัญชี)\nที่นี่จึงเหลือแค่รหัสผ่านปัจจุบัน และการใช้สิทธิ์กู้ถ้าคำขอนี้ผ่านด้วยมัน",
+        "operationId": "replace_secret_auth_totp_replace_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CurrentPassword"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Enrollment"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Replace Secret",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/auth/totp/setup": {
+      "post": {
+        "description": "เริ่มตั้งค่า TOTP — **ต้องกรอกรหัสผ่านปัจจุบัน** (RQ-3.1)\n\nsession ที่กำลังใช้อยู่ **ไม่พอ** เพราะการกรอกรหัสจาก secret ที่ระบบเพิ่งแจกให้\nพิสูจน์แค่ว่าตั้งค่าแอปสำเร็จ ไม่ได้พิสูจน์ว่าเป็นเจ้าของบัญชี — ถ้าไม่มีข้อนี้\nคนที่ขโมย session ไปจะผูกแอปของตัวเองแล้วกันเจ้าของออกตอน login ครั้งถัดไป",
+        "operationId": "start_setup_auth_totp_setup_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CurrentPassword"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Enrollment"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Start Setup",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/health": {
+      "get": {
+        "description": "คืนสถานะและเวลาของเซิร์ฟเวอร์\n\nหน้าบ้านใช้ endpoint นี้พิสูจน์ว่าชนิดข้อมูลสองฝั่งตรงกัน (F-01 RQ-16, RQ-17)",
+        "operationId": "read_health_health_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Health"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Read Health"
+      }
+    },
+    "/market-data/candles": {
+      "get": {
+        "operationId": "candles_market_data_candles_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "base",
+            "required": true,
+            "schema": {
+              "title": "Base",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "quote",
+            "required": true,
+            "schema": {
+              "title": "Quote",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "timeframe",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Timeframe"
+            }
+          },
+          {
+            "in": "query",
+            "name": "start",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Start"
+            }
+          },
+          {
+            "in": "query",
+            "name": "end",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "End"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 1000,
+              "maximum": 1000,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CandleHistoryView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RejectedCandleInput"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "summary": "Candles",
+        "tags": [
+          "market-data"
+        ]
+      }
+    },
+    "/market-data/candles/requests": {
+      "post": {
+        "operationId": "request_candles_market_data_candles_requests_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CandleRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CandleRequestView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CandleRequestView"
+                }
+              }
+            },
+            "description": "Accepted"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RejectedCandleInput"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "summary": "Request Candles",
+        "tags": [
+          "market-data"
+        ]
+      }
+    },
+    "/market-data/chart/history": {
+      "get": {
+        "operationId": "history_market_data_chart_history_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "base",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Base"
+            }
+          },
+          {
+            "in": "query",
+            "name": "quote",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Quote"
+            }
+          },
+          {
+            "in": "query",
+            "name": "timeframe",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/Timeframe"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Timeframe"
+            }
+          },
+          {
+            "in": "query",
+            "name": "start",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Start"
+            }
+          },
+          {
+            "in": "query",
+            "name": "end",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "End"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page_size",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 1000,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Page Size"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 4096,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChartHistoryView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "History",
+        "tags": [
+          "market-data"
+        ]
+      }
+    },
+    "/market-data/chart/live": {
+      "get": {
+        "operationId": "live_market_data_chart_live_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "base",
+            "required": true,
+            "schema": {
+              "title": "Base",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "quote",
+            "required": true,
+            "schema": {
+              "title": "Quote",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "timeframe",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Timeframe"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChartLiveView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Live",
+        "tags": [
+          "market-data"
+        ]
+      }
+    },
+    "/market-data/chart/verify": {
+      "post": {
+        "operationId": "verify_chart_market_data_chart_verify_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChartProofRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChartProofView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Verify Chart",
+        "tags": [
+          "market-data"
+        ]
+      }
+    },
+    "/market-data/indicators": {
+      "get": {
+        "operationId": "indicators_market_data_indicators_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "base",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Base"
+            }
+          },
+          {
+            "in": "query",
+            "name": "quote",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Quote"
+            }
+          },
+          {
+            "in": "query",
+            "name": "timeframe",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/Timeframe"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Timeframe"
+            }
+          },
+          {
+            "in": "query",
+            "name": "start",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Start"
+            }
+          },
+          {
+            "in": "query",
+            "name": "end",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "End"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page_size",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 1000,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Page Size"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 4096,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IndicatorHistoryView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Indicators",
+        "tags": [
+          "market-data"
+        ]
+      }
+    },
+    "/market-data/prices": {
+      "get": {
+        "operationId": "prices_market_data_prices_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PricesView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Prices",
+        "tags": [
+          "market-data"
+        ]
+      }
+    },
+    "/trading-account": {
+      "get": {
+        "operationId": "read_account_trading_account_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TradingAccountView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RejectedTradingAccountInput"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "summary": "Read Account",
+        "tags": [
+          "trading-account"
+        ]
+      }
+    },
+    "/trading-account/use": {
+      "post": {
+        "operationId": "select_account_use_trading_account_use_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SelectTradingUseRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TradingAccountView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RejectedTradingAccountInput"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "summary": "Select Account Use",
+        "tags": [
+          "trading-account"
+        ]
+      }
+    }
+  }
+}

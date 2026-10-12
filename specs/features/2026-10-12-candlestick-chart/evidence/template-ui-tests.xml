@@ -1,0 +1,1678 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="127" failures="3" errors="0" time="10.7837886">
+    <testsuite name="tests/AccountLayout.test.tsx" timestamp="2026-10-12T17:09:33.826Z" hostname="DESKTOP-RONGMEV" tests="3" failures="0" errors="0" skipped="0" time="0.1812526">
+        <testcase classname="tests/AccountLayout.test.tsx" name="keeps one main landmark when embedded in the page main" time="0.0850754">
+        </testcase>
+        <testcase classname="tests/AccountLayout.test.tsx" name="closes navigation with Escape and backdrop and restores trigger focus" time="0.0489482">
+        </testcase>
+        <testcase classname="tests/AccountLayout.test.tsx" name="preserves native form props and explicit button types" time="0.0435307">
+        </testcase>
+    </testsuite>
+    <testsuite name="tests/AccountNavigation.test.tsx" timestamp="2026-10-12T17:09:33.841Z" hostname="DESKTOP-RONGMEV" tests="4" failures="0" errors="0" skipped="0" time="0.316862">
+        <testcase classname="tests/AccountNavigation.test.tsx" name="defaults to chart and mounts only the selected module without replacing the session" time="0.1980462">
+        </testcase>
+        <testcase classname="tests/AccountNavigation.test.tsx" name="preserves a direct link through authentication and handles a changed or unknown path" time="0.025098">
+        </testcase>
+        <testcase classname="tests/AccountNavigation.test.tsx" name="keeps the disabled chart default without mounting modules or starting their requests" time="0.0443434">
+        </testcase>
+        <testcase classname="tests/AccountNavigation.test.tsx" name="navigates a plain internal click without reloading and preserves modified clicks" time="0.0458745">
+        </testcase>
+    </testsuite>
+    <testsuite name="tests/AccountSession.test.tsx" timestamp="2026-10-12T17:09:33.842Z" hostname="DESKTOP-RONGMEV" tests="5" failures="0" errors="0" skipped="0" time="0.4745002">
+        <testcase classname="tests/AccountSession.test.tsx" name="cancels pending queries and clears both caches when identity changes" time="0.0599048">
+        </testcase>
+        <testcase classname="tests/AccountSession.test.tsx" name="session expired cancels and clears cache and invokes auth boundary" time="0.0785844">
+        </testcase>
+        <testcase classname="tests/AccountSession.test.tsx" name="keeps the same cache when auth callback changes within one identity" time="0.0213118">
+        </testcase>
+        <testcase classname="tests/AccountSession.test.tsx" name="real panels ignore late key and account responses after identity switch" time="0.1453965">
+        </testcase>
+        <testcase classname="tests/AccountSession.test.tsx" name="account 401 unmounts the authenticated account boundary" time="0.1652946">
+        </testcase>
+    </testsuite>
+    <testsuite name="tests/ApiKeyPanel.test.tsx" timestamp="2026-10-12T17:09:33.843Z" hostname="DESKTOP-RONGMEV" tests="33" failures="0" errors="0" skipped="0" time="2.3837853">
+        <testcase classname="tests/ApiKeyPanel.test.tsx" name="&apos;add&apos; suppresses success feedback when &apos;api-keys&apos; refetch fails" time="0.3084892">
+        </testcase>
+        <testcase classname="tests/ApiKeyPanel.test.tsx" name="&apos;add&apos; suppresses success feedback when &apos;trading-account&apos; refetch fails" time="0.0907618">
+        </testcase>
+        <testcase classname="tests/ApiKeyPanel.test.tsx" name="&apos;retry&apos; suppresses success feedback when &apos;api-keys&apos; refetch fails" time="0.0640764">
+        </testcase>
+        <testcase classname="tests/ApiKeyPanel.test.tsx" name="&apos;retry&apos; suppresses success feedback when &apos;trading-account&apos; refetch fails" time="0.0499822">
+        </testcase>
+        <testcase classname="tests/ApiKeyPanel.test.tsx" name="&apos;delete&apos; suppresses success feedback when &apos;api-keys&apos; refetch fails" time="0.0633172">
+        </testcase>
+        <testcase classname="tests/ApiKeyPanel.test.tsx" name="&apos;delete&apos; suppresses success feedback when &apos;trading-account&apos; refetch fails" time="0.0864002">
+        </testcase>
+        <testcase classname="tests/ApiKeyPanel.test.tsx" name="&apos;add&apos; waits for a delayed account refetch before showing success" time="0.0513707">
+        </testcase>
+        <testcase classname="tests/ApiKeyPanel.test.tsx" name="&apos;retry&apos; waits for a delayed account refetch before showing success" time="0.0505285">
+        </testcase>
+        <testcase classname="tests/ApiKeyPanel.test.tsx" name="&apos;delete&apos; waits for a delayed account refetch before showing success" time="0.0656897">
+        </testcase>
+        <testcase classname="tests/ApiKeyPanel.test.tsx" name="หน้าจัดการ API key &gt; Retry-After แบบ HTTP-date ผ่าน adapter เป็นเวลา UTC ที่ตรงกัน" time="0.0028135">
+        </testcase>
+        <testcase classname="tests/ApiKeyPanel.test.tsx" name="หน้าจัดการ API key &gt; การปฏิเสธที่ไม่ทราบสาเหตุบอกให้ลองเองโดยไม่สัญญาว่าจะตรวจอัตโนมัติ" time="0.0358091">
+        </testcase>
+        <testcase classname="tests/ApiKeyPanel.test.tsx" name="หน้าจัดการ API key &gt; แสดงคำเตือนถาวรและอธิบายการใช้รหัส TOTP ชุดใหม่" time="0.0282397">
+        </testcase>
+        <testcase classname="tests/ApiKeyPanel.test.tsx" name="หน้าจัดการ API key &gt; ส่ง CSRF/TOTP และล้างค่าทันทีโดยไม่ใส่ secret ใน mutation cache" time="0.1044005">
+        </testcase>
+        <testcase classname="tests/ApiKeyPanel.test.tsx" name="หน้าจัดการ API key &gt; คำตอบ 403 ไม่เติม secret กลับและไม่แสดงรายละเอียดดิบ" time="0.0445224">
+        </testcase>
+        <testcase classname="tests/ApiKeyPanel.test.tsx" name="หน้าจัดการ API key &gt; คำตอบ 409 ไม่เติม secret กลับและไม่แสดงรายละเอียดดิบ" time="0.0470454">
+        </testcase>
+        <testcase classname="tests/ApiKeyPanel.test.tsx" name="หน้าจัดการ API key &gt; คำตอบ 422 ไม่เติม secret กลับและไม่แสดงรายละเอียดดิบ" time="0.0532349">
+        </testcase>
+        <testcase classname="tests/ApiKeyPanel.test.tsx" name="หน้าจัดการ API key &gt; คำตอบ 500 ไม่เติม secret กลับและไม่แสดงรายละเอียดดิบ" time="0.0509537">
+        </testcase>
+        <testcase classname="tests/ApiKeyPanel.test.tsx" name="หน้าจัดการ API key &gt; เน็ตมีปัญหาก็ล้าง secret และบอกว่าต้องตรวจรายการก่อนเพิ่มซ้ำ" time="0.0464788">
+        </testcase>
+        <testcase classname="tests/ApiKeyPanel.test.tsx" name="หน้าจัดการ API key &gt; แยกสี่สถานะและไม่ให้ลองใหม่เมื่อ server สั่งรอ" time="0.0780179">
+        </testcase>
+        <testcase classname="tests/ApiKeyPanel.test.tsx" name="หน้าจัดการ API key &gt; ลองใหม่ไม่ส่ง TOTP และลบได้เมื่อยืนยันเท่านั้น" time="0.1300977">
+        </testcase>
+        <testcase classname="tests/ApiKeyPanel.test.tsx" name="หน้าจัดการ API key &gt; บอกทางไปเปิด TOTP และไม่แสดงฟอร์มเพิ่ม key เมื่อยังไม่เปิด" time="0.019565">
+        </testcase>
+        <testcase classname="tests/ApiKeyPanel.test.tsx" name="หน้าจัดการ API key &gt; poll เปลี่ยนสถานะเองและหยุดเมื่อออกจากหน้าจอ" time="0.0367879">
+        </testcase>
+        <testcase classname="tests/ApiKeyPanel.test.tsx" name="หน้าจัดการ API key &gt; 401 ไม่แสดงรายการที่ค้างจากบัญชีเดิม" time="0.0766657">
+        </testcase>
+        <testcase classname="tests/ApiKeyPanel.test.tsx" name="หน้าจัดการ API key &gt; 429 แสดงเวลาจาก Retry-After และไม่ส่งคำขอซ้ำอัตโนมัติ" time="0.0828847">
+        </testcase>
+        <testcase classname="tests/ApiKeyPanel.test.tsx" name="หน้าจัดการ API key &gt; แสดงว่าข้อมูลเก่าเมื่อดึงใหม่ล้มเหลวและปิดปุ่มลองใหม่" time="0.0812667">
+        </testcase>
+        <testcase classname="tests/ApiKeyPanel.test.tsx" name="หน้าจัดการ API key &gt; คำตอบที่มาช้าของบัญชีเก่าไม่โผล่ในบัญชีใหม่" time="0.0520657">
+        </testcase>
+        <testcase classname="tests/ApiKeyPanel.test.tsx" name="หน้าจัดการ API key &gt; คำยืนยันลบที่เปิดไว้ไม่ส่งคำขอเมื่อรายการกลายเป็นข้อมูลเก่า" time="0.128432">
+        </testcase>
+        <testcase classname="tests/ApiKeyPanel.test.tsx" name="หน้าจัดการ API key &gt; Retry-After ผิดรูป -1 ไม่ทำให้เสียสถานะ 429" time="0.1192933">
+        </testcase>
+        <testcase classname="tests/ApiKeyPanel.test.tsx" name="หน้าจัดการ API key &gt; Retry-After ผิดรูป 999999999999999999999999 ไม่ทำให้เสียสถานะ 429" time="0.0875991">
+        </testcase>
+        <testcase classname="tests/ApiKeyPanel.test.tsx" name="one stored PENDING key blocks adding another" time="0.0489573">
+        </testcase>
+        <testcase classname="tests/ApiKeyPanel.test.tsx" name="one stored ACTIVE key blocks adding another" time="0.072032">
+        </testcase>
+        <testcase classname="tests/ApiKeyPanel.test.tsx" name="one stored REJECTED key blocks adding another" time="0.0612078">
+        </testcase>
+        <testcase classname="tests/ApiKeyPanel.test.tsx" name="one stored UNVERIFIABLE key blocks adding another" time="0.0592467">
+        </testcase>
+    </testsuite>
+    <testsuite name="tests/AuthPanel.test.tsx" timestamp="2026-10-12T17:09:33.850Z" hostname="DESKTOP-RONGMEV" tests="5" failures="0" errors="0" skipped="0" time="0.2742696">
+        <testcase classname="tests/AuthPanel.test.tsx" name="AuthPanel &gt; แสดงฟอร์มเข้าสู่ระบบเมื่อยังไม่ได้เข้าสู่ระบบ" time="0.0693429">
+        </testcase>
+        <testcase classname="tests/AuthPanel.test.tsx" name="AuthPanel &gt; แสดงรหัสผู้ใช้เมื่อเข้าสู่ระบบแล้ว" time="0.0402782">
+        </testcase>
+        <testcase classname="tests/AuthPanel.test.tsx" name="AuthPanel &gt; บอกเหตุผลที่หลังบ้านปฏิเสธ ไม่ใช่ข้อความที่เขียนไว้เอง" time="0.0612197">
+        </testcase>
+        <testcase classname="tests/AuthPanel.test.tsx" name="AuthPanel &gt; เตือนว่ากู้รหัสผ่านไม่ได้ ก่อนผู้ใช้สมัคร" time="0.0143608">
+        </testcase>
+        <testcase classname="tests/AuthPanel.test.tsx" name="AuthPanel &gt; ขอโทเคนกัน CSRF ใบใหม่และกลับไปโหมดเข้าสู่ระบบหลังออกจากระบบ" time="0.0850492">
+        </testcase>
+    </testsuite>
+    <testsuite name="tests/AuthPanelLogout.test.tsx" timestamp="2026-10-12T17:09:33.851Z" hostname="DESKTOP-RONGMEV" tests="13" failures="0" errors="0" skipped="0" time="1.2006476">
+        <testcase classname="tests/AuthPanelLogout.test.tsx" name="&apos;/api/auth/logout&apos; clears cached account and aborts pending GET despite &apos;identity-error&apos;" time="0.2748878">
+        </testcase>
+        <testcase classname="tests/AuthPanelLogout.test.tsx" name="&apos;/api/auth/logout&apos; clears cached account and aborts pending GET despite &apos;identity-hang&apos;" time="0.0685436">
+        </testcase>
+        <testcase classname="tests/AuthPanelLogout.test.tsx" name="&apos;/api/auth/logout&apos; clears cached account and aborts pending GET despite &apos;csrf-error&apos;" time="0.0729708">
+        </testcase>
+        <testcase classname="tests/AuthPanelLogout.test.tsx" name="&apos;/api/auth/logout&apos; clears cached account and aborts pending GET despite &apos;csrf-hang&apos;" time="0.0617208">
+        </testcase>
+        <testcase classname="tests/AuthPanelLogout.test.tsx" name="&apos;/api/auth/logout-all&apos; clears cached account and aborts pending GET despite &apos;identity-error&apos;" time="0.0505773">
+        </testcase>
+        <testcase classname="tests/AuthPanelLogout.test.tsx" name="&apos;/api/auth/logout-all&apos; clears cached account and aborts pending GET despite &apos;identity-hang&apos;" time="0.0645781">
+        </testcase>
+        <testcase classname="tests/AuthPanelLogout.test.tsx" name="&apos;/api/auth/logout-all&apos; clears cached account and aborts pending GET despite &apos;csrf-error&apos;" time="0.0603474">
+        </testcase>
+        <testcase classname="tests/AuthPanelLogout.test.tsx" name="&apos;/api/auth/logout-all&apos; clears cached account and aborts pending GET despite &apos;csrf-hang&apos;" time="0.0817056">
+        </testcase>
+        <testcase classname="tests/AuthPanelLogout.test.tsx" name="log-out retains the authenticated boundary when POST /api/auth/logout fails" time="0.0596069">
+        </testcase>
+        <testcase classname="tests/AuthPanelLogout.test.tsx" name="log-out-everywhere retains the authenticated boundary when POST /api/auth/logout-all fails" time="0.0742386">
+        </testcase>
+        <testcase classname="tests/AuthPanelLogout.test.tsx" name="a TOTP identity response started before logout cannot restore the old boundary" time="0.0616713">
+        </testcase>
+        <testcase classname="tests/AuthPanelLogout.test.tsx" name="log-out clears a pending key mutation after POST /api/auth/logout succeeds" time="0.1273448">
+        </testcase>
+        <testcase classname="tests/AuthPanelLogout.test.tsx" name="log-out-everywhere clears a pending key mutation after POST /api/auth/logout-all succeeds" time="0.1388984">
+        </testcase>
+    </testsuite>
+    <testsuite name="tests/CandlestickChartPanel.test.tsx" timestamp="2026-10-12T17:09:33.853Z" hostname="DESKTOP-RONGMEV" tests="3" failures="0" errors="0" skipped="0" time="0.1790674">
+        <testcase classname="tests/CandlestickChartPanel.test.tsx" name="shows loading while the first request is scheduled, rather than empty data" time="0.1145524">
+        </testcase>
+        <testcase classname="tests/CandlestickChartPanel.test.tsx" name="shows empty only after an empty bundle completes" time="0.0377991">
+        </testcase>
+        <testcase classname="tests/CandlestickChartPanel.test.tsx" name="shows stopped when delivery errors cancel a pending history episode" time="0.0226634">
+        </testcase>
+    </testsuite>
+    <testsuite name="tests/RealtimePricePanel.test.tsx" timestamp="2026-10-12T17:09:33.854Z" hostname="DESKTOP-RONGMEV" tests="35" failures="0" errors="0" skipped="0" time="1.109961">
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="reports readiness only at server reference, preserves exact decimals and trade time" time="0.1098478">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="late GET cannot overwrite stream and offline warns without changing snapshot" time="0.0413489">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="reconnect awaits full snapshot and rejects callbacks from old transport" time="0.0421652">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="session 4401 uses existing expiry flow and cleanup closes socket" time="0.0088119">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="observed resume invalidates transport; wall clock alone does not certify readiness" time="0.0401397">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="heartbeat detection warns immediately and does not infer a market outage" time="0.0191523">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="market alert remains visible beside delivery failure and is not cleared by opening" time="0.02616">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="identity replacement prevents late old socket and GET callbacks entering new cache" time="0.0178208">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="a late failed GET cannot demote a valid newer socket delivery" time="0.0743328">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="invalid schema warns and preserves last valid snapshot" time="0.0290434">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="English snapshot labels and reference timestamps remain observational across silent wall-clock jumps" time="0.0397193">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="translates &apos;READY&apos; into &apos;th&apos; without exposing raw reason codes" time="0.0266509">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="translates &apos;READY&apos; into &apos;en&apos; without exposing raw reason codes" time="0.0315334">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="translates &apos;STALE&apos; into &apos;th&apos; without exposing raw reason codes" time="0.0174856">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="translates &apos;STALE&apos; into &apos;en&apos; without exposing raw reason codes" time="0.0320035">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="translates &apos;RECOVERING&apos; into &apos;th&apos; without exposing raw reason codes" time="0.035489">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="translates &apos;RECOVERING&apos; into &apos;en&apos; without exposing raw reason codes" time="0.0226942">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="translates &apos;MISSING&apos; into &apos;th&apos; without exposing raw reason codes" time="0.0265878">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="translates &apos;MISSING&apos; into &apos;en&apos; without exposing raw reason codes" time="0.0232408">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="translates &apos;VENUE_PROTOCOL&apos; into &apos;th&apos; without exposing raw reason codes" time="0.0244101">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="translates &apos;VENUE_PROTOCOL&apos; into &apos;en&apos; without exposing raw reason codes" time="0.0167517">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="translates &apos;VENUE_RATE_LIMITED&apos; into &apos;th&apos; without exposing raw reason codes" time="0.0221333">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="translates &apos;VENUE_RATE_LIMITED&apos; into &apos;en&apos; without exposing raw reason codes" time="0.0285812">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="translates &apos;VENUE_UNAVAILABLE&apos; into &apos;th&apos; without exposing raw reason codes" time="0.0355718">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="translates &apos;VENUE_UNAVAILABLE&apos; into &apos;en&apos; without exposing raw reason codes" time="0.0241362">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="translates &apos;VENUE_REJECTED&apos; into &apos;th&apos; without exposing raw reason codes" time="0.0256657">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="translates &apos;VENUE_REJECTED&apos; into &apos;en&apos; without exposing raw reason codes" time="0.0312844">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="translates &apos;SUBSCRIPTION_ACK_TIMEOUT&apos; into &apos;th&apos; without exposing raw reason codes" time="0.0378722">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="translates &apos;SUBSCRIPTION_ACK_TIMEOUT&apos; into &apos;en&apos; without exposing raw reason codes" time="0.0276094">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="translates &apos;ORDER_UNCONFIRMED&apos; into &apos;th&apos; without exposing raw reason codes" time="0.0214898">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="translates &apos;ORDER_UNCONFIRMED&apos; into &apos;en&apos; without exposing raw reason codes" time="0.0283576">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="translates &apos;DELIVERY_UNAVAILABLE&apos; into &apos;th&apos; without exposing raw reason codes" time="0.0324828">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="translates &apos;DELIVERY_UNAVAILABLE&apos; into &apos;en&apos; without exposing raw reason codes" time="0.0239258">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="translates &apos;FUTURE_REASON&apos; into &apos;th&apos; without exposing raw reason codes" time="0.0269128">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="translates &apos;FUTURE_REASON&apos; into &apos;en&apos; without exposing raw reason codes" time="0.0347216">
+        </testcase>
+    </testsuite>
+    <testsuite name="tests/TotpPanel.test.tsx" timestamp="2026-10-12T17:09:33.859Z" hostname="DESKTOP-RONGMEV" tests="5" failures="3" errors="0" skipped="0" time="3.3480914">
+        <testcase classname="tests/TotpPanel.test.tsx" name="การยืนยันสองชั้นบนหน้าเว็บ &gt; บอกว่าปิดอยู่เมื่อบัญชียังไม่เปิดใช้" time="1.0509632">
+            <failure message="Unable to find an element by: [data-testid=&quot;totp-state&quot;]
+
+Ignored nodes: comments, script, style
+[36m&lt;body&gt;[39m
+  [36m&lt;div&gt;[39m
+    [36m&lt;div[39m
+      [33mclass[39m=[32m&quot;app-theme account-layout min-h-screen xl:flex&quot;[39m
+    [36m&gt;[39m
+      [36m&lt;nav[39m
+        [33maria-label[39m=[32m&quot;จัดการบัญชี&quot;[39m
+        [33mclass[39m=[32m&quot;account-sidebar &quot;[39m
+        [33mid[39m=[32m&quot;account-navigation&quot;[39m
+      [36m&gt;[39m
+        [36m&lt;strong&gt;[39m
+          [0mTiewTrade[0m
+        [36m&lt;/strong&gt;[39m
+        [36m&lt;a[39m
+          [33mhref[39m=[32m&quot;/account&quot;[39m
+        [36m&gt;[39m
+          [0mบัญชี[0m
+        [36m&lt;/a&gt;[39m
+        [36m&lt;a[39m
+          [33mhref[39m=[32m&quot;/security&quot;[39m
+        [36m&gt;[39m
+          [0mTOTP / 2FA[0m
+        [36m&lt;/a&gt;[39m
+        [36m&lt;a[39m
+          [33mhref[39m=[32m&quot;/api-keys&quot;[39m
+        [36m&gt;[39m
+          [0mAPI key[0m
+        [36m&lt;/a&gt;[39m
+        [36m&lt;a[39m
+          [33mhref[39m=[32m&quot;/trading-account&quot;[39m
+        [36m&gt;[39m
+          [0mบัญชีเทรด[0m
+        [36m&lt;/a&gt;[39m
+        [36m&lt;a[39m
+          [33mhref[39m=[32m&quot;/prices&quot;[39m
+        [36m&gt;[39m
+          [0mราคาสด[0m
+        [36m&lt;/a&gt;[39m
+      [36m&lt;/nav&gt;[39m
+      [36m&lt;div[39m
+        [33mclass[39m=[32m&quot;account-workspace flex-1&quot;[39m
+      [36m&gt;[39m
+        [36m&lt;header[39m
+          [33mclass[39m=[32m&quot;account-header&quot;[39m
+        [36m&gt;[39m
+          [36m&lt;button[39m
+            [33maria-controls[39m=[32m&quot;account-navigation&quot;[39m
+            [33maria-expanded[39m=[32m&quot;false&quot;[39m
+            [33maria-label[39m=[32m&quot;เปิดเมนูบัญชี&quot;[39m
+            [33mclass[39m=[32m&quot;account-button inline-flex items-center justify-center gap-2 rounded-lg font-medium account-menu-trigger&quot;[39m
+            [33mtype[39m=[32m&quot;button&quot;[39m
+          [36m&gt;[39m
+            [0m☰[0m
+          [36m&lt;/button&gt;[39m
+          [36m&lt;strong&gt;[39m
+            [0mTiewTrade[0m
+          [36m&lt;/strong&gt;[39m
+          [36m&lt;span&gt;[39m
+            [0mจัดการบัญชี[0m
+          [36m&lt;/span&gt;[39m
+        [36m&lt;/header&gt;[39m
+        [36m&lt;div[39m
+          [33mclass[39m=[32m&quot;account-content mx-auto p-4 md:p-6&quot;[39m
+        [36m&gt;[39m
+          [36m&lt;div[39m
+            [33mclass[39m=[32m&quot;page-breadcrumb flex flex-wrap items-center justify-between gap-3 mb-6&quot;[39m
+          [36m&gt;[39m
+            [36m&lt;h1[39m
+              [33mclass[39m=[32m&quot;text-xl font-semibold&quot;[39m
+            [36m&gt;[39m
+              [0mกราฟแท่งเทียน[0m
+            [36m&lt;/h1&gt;[39m
+            [36m&lt;nav[39m
+              [33maria-label[39m=[32m&quot;เส้นทางหน้า&quot;[39m
+            [36m&gt;[39m
+              [36m&lt;ol[39m
+                [33mclass[39m=[32m&quot;flex items-center gap-1.5&quot;[39m
+              [36m&gt;[39m
+                [36m&lt;li&gt;[39m
+                  [36m&lt;a[39m
+                    [33mhref[39m=[32m&quot;/chart&quot;[39m
+                  [36m&gt;[39m
+                    [0mหน้าหลัก[0m
+                  [36m&lt;/a&gt;[39m
+                [36m&lt;/li&gt;[39m
+                [36m&lt;li[39m
+                  [33maria-hidden[39m=[32m&quot;true&quot;[39m
+                [36m&gt;[39m
+                  [0m›[0m
+                [36m&lt;/li&gt;[39m
+                [36m&lt;li[39m
+                  [33maria-current[39m=[32m&quot;page&quot;[39m
+                [36m&gt;[39m
+                  [0mกราฟแท่งเทียน[0m
+                [36m&lt;/li&gt;[39m
+              [36m&lt;/ol&gt;[39m
+            [36m&lt;/nav&gt;[39m
+          [36m&lt;/div&gt;[39m
+          [36m&lt;div[39m
+            [33mdata-testid[39m=[32m&quot;signed-in&quot;[39m
+          [36m&gt;[39m
+            [36m&lt;p[39m
+              [33mrole[39m=[32m&quot;status&quot;[39m
+            [36m&gt;[39m
+              [0mกราฟยังไม่เปิดใช้งาน[0m
+            [36m&lt;/p&gt;[39m
+          [36m&lt;/div&gt;[39m
+        [36m&lt;/div&gt;[39m
+      [36m&lt;/div&gt;[39m
+    [36m&lt;/div&gt;[39m
+  [36m&lt;/div&gt;[39m
+[36m&lt;/body&gt;[39m
+
+Ignored nodes: comments, script, style
+[36m&lt;html&gt;[39m
+  [36m&lt;head /&gt;[39m
+  [36m&lt;body&gt;[39m
+    [36m&lt;div&gt;[39m
+      [36m&lt;div[39m
+        [33mclass[39m=[32m&quot;app-theme account-layout min-h-screen xl:flex&quot;[39m
+      [36m&gt;[39m
+        [36m&lt;nav[39m
+          [33maria-label[39m=[32m&quot;จัดการบัญชี&quot;[39m
+          [33mclass[39m=[32m&quot;account-sidebar &quot;[39m
+          [33mid[39m=[32m&quot;account-navigation&quot;[39m
+        [36m&gt;[39m
+          [36m&lt;strong&gt;[39m
+            [0mTiewTrade[0m
+          [36m&lt;/strong&gt;[39m
+          [36m&lt;a[39m
+            [33mhref[39m=[32m&quot;/account&quot;[39m
+          [36m&gt;[39m
+            [0mบัญชี[0m
+          [36m&lt;/a&gt;[39m
+          [36m&lt;a[39m
+            [33mhref[39m=[32m&quot;/security&quot;[39m
+          [36m&gt;[39m
+            [0mTOTP / 2FA[0m
+          [36m&lt;/a&gt;[39m
+          [36m&lt;a[39m
+            [33mhref[39m=[32m&quot;/api-keys&quot;[39m
+          [36m&gt;[39m
+            [0mAPI key[0m
+          [36m&lt;/a&gt;[39m
+          [36m&lt;a[39m
+            [33mhref[39m=[32m&quot;/trading-account&quot;[39m
+          [36m&gt;[39m
+            [0mบัญชีเทรด[0m
+          [36m&lt;/a&gt;[39m
+          [36m&lt;a[39m
+            [33mhref[39m=[32m&quot;/prices&quot;[39m
+          [36m&gt;[39m
+            [0mราคาสด[0m
+          [36m&lt;/a&gt;[39m
+        [36m&lt;/nav&gt;[39m
+        [36m&lt;div[39m
+          [33mclass[39m=[32m&quot;account-workspace flex-1&quot;[39m
+        [36m&gt;[39m
+          [36m&lt;header[39m
+            [33mclass[39m=[32m&quot;account-header&quot;[39m
+          [36m&gt;[39m
+            [36m&lt;button[39m
+              [33maria-controls[39m=[32m&quot;account-navigation&quot;[39m
+              [33maria-expanded[39m=[32m&quot;false&quot;[39m
+              [33maria-label[39m=[32m&quot;เปิดเมนูบัญชี&quot;[39m
+              [33mclass[39m=[32m&quot;account-button inline-flex items-center justify-center gap-2 rounded-lg font-medium account-menu-trigger&quot;[39m
+              [33mtype[39m=[32m&quot;button&quot;[39m
+            [36m&gt;[39m
+              [0m☰[0m
+            [36m&lt;/button&gt;[39m
+            [36m&lt;strong&gt;[39m
+              [0mTiewTrade[0m
+            [36m&lt;/strong&gt;[39m
+            [36m&lt;span&gt;[39m
+              [0mจัดการบัญชี[0m
+            [36m&lt;/span&gt;[39m
+          [36m&lt;/header&gt;[39m
+          [36m&lt;div[39m
+            [33mclass[39m=[32m&quot;account-content mx-auto p-4 md:p-6&quot;[39m
+          [36m&gt;[39m
+            [36m&lt;div[39m
+              [33mclass[39m=[32m&quot;page-breadcrumb flex flex-wrap items-center justify-between gap-3 mb-6&quot;[39m
+            [36m&gt;[39m
+              [36m&lt;h1[39m
+                [33mclass[39m=[32m&quot;text-xl font-semibold&quot;[39m
+              [36m&gt;[39m
+                [0mกราฟแท่งเทียน[0m
+              [36m&lt;/h1&gt;[39m
+              [36m&lt;nav[39m
+                [33maria-label[39m=[32m&quot;เส้นทางหน้า&quot;[39m
+              [36m&gt;[39m
+                [36m&lt;ol[39m
+                  [33mclass[39m=[32m&quot;flex items-center gap-1.5&quot;[39m
+                [36m&gt;[39m
+                  [36m&lt;li&gt;[39m
+                    [36m&lt;a[39m
+                      [33mhref[39m=[32m&quot;/chart&quot;[39m
+                    [36m&gt;[39m
+                      [0mหน้าหลัก[0m
+                    [36m&lt;/a&gt;[39m
+                  [36m&lt;/li&gt;[39m
+                  [36m&lt;li[39m
+                    [33maria-hidden[39m=[32m&quot;true&quot;[39m
+                  [36m&gt;[39m
+                    [0m›[0m
+                  [36m&lt;/li&gt;[39m
+                  [36m&lt;li[39m
+                    [33maria-current[39m=[32m&quot;page&quot;[39m
+                  [36m&gt;[39m
+                    [0mกราฟแท่งเทียน[0m
+                  [36m&lt;/li&gt;[39m
+                [36m&lt;/ol&gt;[39m
+              [36m&lt;/nav&gt;[39m
+            [36m&lt;/div&gt;[39m
+            [36m&lt;div[39m
+              [33mdata-testid[39m=[32m&quot;signed-in&quot;[39m
+            [36m&gt;[39m
+              [36m&lt;p[39m
+                [33mrole[39m=[32m&quot;status&quot;[39m
+              [36m&gt;[39m
+                [0mกราฟยังไม่เปิดใช้งาน[0m
+              [36m&lt;/p&gt;[39m
+            [36m&lt;/div&gt;[39m
+          [36m&lt;/div&gt;[39m
+        [36m&lt;/div&gt;[39m
+      [36m&lt;/div&gt;[39m
+    [36m&lt;/div&gt;[39m
+  [36m&lt;/body&gt;[39m
+[36m&lt;/html&gt;[39m" type="TestingLibraryElementError">
+TestingLibraryElementError: Unable to find an element by: [data-testid=&quot;totp-state&quot;]
+
+Ignored nodes: comments, script, style
+&lt;body&gt;
+  &lt;div&gt;
+    &lt;div
+      class=&quot;app-theme account-layout min-h-screen xl:flex&quot;
+    &gt;
+      &lt;nav
+        aria-label=&quot;จัดการบัญชี&quot;
+        class=&quot;account-sidebar &quot;
+        id=&quot;account-navigation&quot;
+      &gt;
+        &lt;strong&gt;
+          TiewTrade
+        &lt;/strong&gt;
+        &lt;a
+          href=&quot;/account&quot;
+        &gt;
+          บัญชี
+        &lt;/a&gt;
+        &lt;a
+          href=&quot;/security&quot;
+        &gt;
+          TOTP / 2FA
+        &lt;/a&gt;
+        &lt;a
+          href=&quot;/api-keys&quot;
+        &gt;
+          API key
+        &lt;/a&gt;
+        &lt;a
+          href=&quot;/trading-account&quot;
+        &gt;
+          บัญชีเทรด
+        &lt;/a&gt;
+        &lt;a
+          href=&quot;/prices&quot;
+        &gt;
+          ราคาสด
+        &lt;/a&gt;
+      &lt;/nav&gt;
+      &lt;div
+        class=&quot;account-workspace flex-1&quot;
+      &gt;
+        &lt;header
+          class=&quot;account-header&quot;
+        &gt;
+          &lt;button
+            aria-controls=&quot;account-navigation&quot;
+            aria-expanded=&quot;false&quot;
+            aria-label=&quot;เปิดเมนูบัญชี&quot;
+            class=&quot;account-button inline-flex items-center justify-center gap-2 rounded-lg font-medium account-menu-trigger&quot;
+            type=&quot;button&quot;
+          &gt;
+            ☰
+          &lt;/button&gt;
+          &lt;strong&gt;
+            TiewTrade
+          &lt;/strong&gt;
+          &lt;span&gt;
+            จัดการบัญชี
+          &lt;/span&gt;
+        &lt;/header&gt;
+        &lt;div
+          class=&quot;account-content mx-auto p-4 md:p-6&quot;
+        &gt;
+          &lt;div
+            class=&quot;page-breadcrumb flex flex-wrap items-center justify-between gap-3 mb-6&quot;
+          &gt;
+            &lt;h1
+              class=&quot;text-xl font-semibold&quot;
+            &gt;
+              กราฟแท่งเทียน
+            &lt;/h1&gt;
+            &lt;nav
+              aria-label=&quot;เส้นทางหน้า&quot;
+            &gt;
+              &lt;ol
+                class=&quot;flex items-center gap-1.5&quot;
+              &gt;
+                &lt;li&gt;
+                  &lt;a
+                    href=&quot;/chart&quot;
+                  &gt;
+                    หน้าหลัก
+                  &lt;/a&gt;
+                &lt;/li&gt;
+                &lt;li
+                  aria-hidden=&quot;true&quot;
+                &gt;
+                  ›
+                &lt;/li&gt;
+                &lt;li
+                  aria-current=&quot;page&quot;
+                &gt;
+                  กราฟแท่งเทียน
+                &lt;/li&gt;
+              &lt;/ol&gt;
+            &lt;/nav&gt;
+          &lt;/div&gt;
+          &lt;div
+            data-testid=&quot;signed-in&quot;
+          &gt;
+            &lt;p
+              role=&quot;status&quot;
+            &gt;
+              กราฟยังไม่เปิดใช้งาน
+            &lt;/p&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/body&gt;
+
+Ignored nodes: comments, script, style
+&lt;html&gt;
+  &lt;head /&gt;
+  &lt;body&gt;
+    &lt;div&gt;
+      &lt;div
+        class=&quot;app-theme account-layout min-h-screen xl:flex&quot;
+      &gt;
+        &lt;nav
+          aria-label=&quot;จัดการบัญชี&quot;
+          class=&quot;account-sidebar &quot;
+          id=&quot;account-navigation&quot;
+        &gt;
+          &lt;strong&gt;
+            TiewTrade
+          &lt;/strong&gt;
+          &lt;a
+            href=&quot;/account&quot;
+          &gt;
+            บัญชี
+          &lt;/a&gt;
+          &lt;a
+            href=&quot;/security&quot;
+          &gt;
+            TOTP / 2FA
+          &lt;/a&gt;
+          &lt;a
+            href=&quot;/api-keys&quot;
+          &gt;
+            API key
+          &lt;/a&gt;
+          &lt;a
+            href=&quot;/trading-account&quot;
+          &gt;
+            บัญชีเทรด
+          &lt;/a&gt;
+          &lt;a
+            href=&quot;/prices&quot;
+          &gt;
+            ราคาสด
+          &lt;/a&gt;
+        &lt;/nav&gt;
+        &lt;div
+          class=&quot;account-workspace flex-1&quot;
+        &gt;
+          &lt;header
+            class=&quot;account-header&quot;
+          &gt;
+            &lt;button
+              aria-controls=&quot;account-navigation&quot;
+              aria-expanded=&quot;false&quot;
+              aria-label=&quot;เปิดเมนูบัญชี&quot;
+              class=&quot;account-button inline-flex items-center justify-center gap-2 rounded-lg font-medium account-menu-trigger&quot;
+              type=&quot;button&quot;
+            &gt;
+              ☰
+            &lt;/button&gt;
+            &lt;strong&gt;
+              TiewTrade
+            &lt;/strong&gt;
+            &lt;span&gt;
+              จัดการบัญชี
+            &lt;/span&gt;
+          &lt;/header&gt;
+          &lt;div
+            class=&quot;account-content mx-auto p-4 md:p-6&quot;
+          &gt;
+            &lt;div
+              class=&quot;page-breadcrumb flex flex-wrap items-center justify-between gap-3 mb-6&quot;
+            &gt;
+              &lt;h1
+                class=&quot;text-xl font-semibold&quot;
+              &gt;
+                กราฟแท่งเทียน
+              &lt;/h1&gt;
+              &lt;nav
+                aria-label=&quot;เส้นทางหน้า&quot;
+              &gt;
+                &lt;ol
+                  class=&quot;flex items-center gap-1.5&quot;
+                &gt;
+                  &lt;li&gt;
+                    &lt;a
+                      href=&quot;/chart&quot;
+                    &gt;
+                      หน้าหลัก
+                    &lt;/a&gt;
+                  &lt;/li&gt;
+                  &lt;li
+                    aria-hidden=&quot;true&quot;
+                  &gt;
+                    ›
+                  &lt;/li&gt;
+                  &lt;li
+                    aria-current=&quot;page&quot;
+                  &gt;
+                    กราฟแท่งเทียน
+                  &lt;/li&gt;
+                &lt;/ol&gt;
+              &lt;/nav&gt;
+            &lt;/div&gt;
+            &lt;div
+              data-testid=&quot;signed-in&quot;
+            &gt;
+              &lt;p
+                role=&quot;status&quot;
+              &gt;
+                กราฟยังไม่เปิดใช้งาน
+              &lt;/p&gt;
+            &lt;/div&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/body&gt;
+&lt;/html&gt;
+ ❯ waitForWrapper node_modules/@testing-library/dom/dist/wait-for.js:163:27
+ ❯ tests/TotpPanel.test.tsx:45:11
+            </failure>
+        </testcase>
+        <testcase classname="tests/TotpPanel.test.tsx" name="การยืนยันสองชั้นบนหน้าเว็บ &gt; แสดง QR และข้อความให้สแกน แล้วแสดงรหัสสำรองหลังยืนยัน" time="1.0211851">
+            <failure message="Unable to find an element by: [data-testid=&quot;start-totp&quot;]
+
+Ignored nodes: comments, script, style
+[36m&lt;body&gt;[39m
+  [36m&lt;div&gt;[39m
+    [36m&lt;div[39m
+      [33mclass[39m=[32m&quot;app-theme account-layout min-h-screen xl:flex&quot;[39m
+    [36m&gt;[39m
+      [36m&lt;nav[39m
+        [33maria-label[39m=[32m&quot;จัดการบัญชี&quot;[39m
+        [33mclass[39m=[32m&quot;account-sidebar &quot;[39m
+        [33mid[39m=[32m&quot;account-navigation&quot;[39m
+      [36m&gt;[39m
+        [36m&lt;strong&gt;[39m
+          [0mTiewTrade[0m
+        [36m&lt;/strong&gt;[39m
+        [36m&lt;a[39m
+          [33mhref[39m=[32m&quot;/account&quot;[39m
+        [36m&gt;[39m
+          [0mบัญชี[0m
+        [36m&lt;/a&gt;[39m
+        [36m&lt;a[39m
+          [33mhref[39m=[32m&quot;/security&quot;[39m
+        [36m&gt;[39m
+          [0mTOTP / 2FA[0m
+        [36m&lt;/a&gt;[39m
+        [36m&lt;a[39m
+          [33mhref[39m=[32m&quot;/api-keys&quot;[39m
+        [36m&gt;[39m
+          [0mAPI key[0m
+        [36m&lt;/a&gt;[39m
+        [36m&lt;a[39m
+          [33mhref[39m=[32m&quot;/trading-account&quot;[39m
+        [36m&gt;[39m
+          [0mบัญชีเทรด[0m
+        [36m&lt;/a&gt;[39m
+        [36m&lt;a[39m
+          [33mhref[39m=[32m&quot;/prices&quot;[39m
+        [36m&gt;[39m
+          [0mราคาสด[0m
+        [36m&lt;/a&gt;[39m
+      [36m&lt;/nav&gt;[39m
+      [36m&lt;div[39m
+        [33mclass[39m=[32m&quot;account-workspace flex-1&quot;[39m
+      [36m&gt;[39m
+        [36m&lt;header[39m
+          [33mclass[39m=[32m&quot;account-header&quot;[39m
+        [36m&gt;[39m
+          [36m&lt;button[39m
+            [33maria-controls[39m=[32m&quot;account-navigation&quot;[39m
+            [33maria-expanded[39m=[32m&quot;false&quot;[39m
+            [33maria-label[39m=[32m&quot;เปิดเมนูบัญชี&quot;[39m
+            [33mclass[39m=[32m&quot;account-button inline-flex items-center justify-center gap-2 rounded-lg font-medium account-menu-trigger&quot;[39m
+            [33mtype[39m=[32m&quot;button&quot;[39m
+          [36m&gt;[39m
+            [0m☰[0m
+          [36m&lt;/button&gt;[39m
+          [36m&lt;strong&gt;[39m
+            [0mTiewTrade[0m
+          [36m&lt;/strong&gt;[39m
+          [36m&lt;span&gt;[39m
+            [0mจัดการบัญชี[0m
+          [36m&lt;/span&gt;[39m
+        [36m&lt;/header&gt;[39m
+        [36m&lt;div[39m
+          [33mclass[39m=[32m&quot;account-content mx-auto p-4 md:p-6&quot;[39m
+        [36m&gt;[39m
+          [36m&lt;div[39m
+            [33mclass[39m=[32m&quot;page-breadcrumb flex flex-wrap items-center justify-between gap-3 mb-6&quot;[39m
+          [36m&gt;[39m
+            [36m&lt;h1[39m
+              [33mclass[39m=[32m&quot;text-xl font-semibold&quot;[39m
+            [36m&gt;[39m
+              [0mกราฟแท่งเทียน[0m
+            [36m&lt;/h1&gt;[39m
+            [36m&lt;nav[39m
+              [33maria-label[39m=[32m&quot;เส้นทางหน้า&quot;[39m
+            [36m&gt;[39m
+              [36m&lt;ol[39m
+                [33mclass[39m=[32m&quot;flex items-center gap-1.5&quot;[39m
+              [36m&gt;[39m
+                [36m&lt;li&gt;[39m
+                  [36m&lt;a[39m
+                    [33mhref[39m=[32m&quot;/chart&quot;[39m
+                  [36m&gt;[39m
+                    [0mหน้าหลัก[0m
+                  [36m&lt;/a&gt;[39m
+                [36m&lt;/li&gt;[39m
+                [36m&lt;li[39m
+                  [33maria-hidden[39m=[32m&quot;true&quot;[39m
+                [36m&gt;[39m
+                  [0m›[0m
+                [36m&lt;/li&gt;[39m
+                [36m&lt;li[39m
+                  [33maria-current[39m=[32m&quot;page&quot;[39m
+                [36m&gt;[39m
+                  [0mกราฟแท่งเทียน[0m
+                [36m&lt;/li&gt;[39m
+              [36m&lt;/ol&gt;[39m
+            [36m&lt;/nav&gt;[39m
+          [36m&lt;/div&gt;[39m
+          [36m&lt;div[39m
+            [33mdata-testid[39m=[32m&quot;signed-in&quot;[39m
+          [36m&gt;[39m
+            [36m&lt;p[39m
+              [33mrole[39m=[32m&quot;status&quot;[39m
+            [36m&gt;[39m
+              [0mกราฟยังไม่เปิดใช้งาน[0m
+            [36m&lt;/p&gt;[39m
+          [36m&lt;/div&gt;[39m
+        [36m&lt;/div&gt;[39m
+      [36m&lt;/div&gt;[39m
+    [36m&lt;/div&gt;[39m
+  [36m&lt;/div&gt;[39m
+[36m&lt;/body&gt;[39m
+
+Ignored nodes: comments, script, style
+[36m&lt;html&gt;[39m
+  [36m&lt;head /&gt;[39m
+  [36m&lt;body&gt;[39m
+    [36m&lt;div&gt;[39m
+      [36m&lt;div[39m
+        [33mclass[39m=[32m&quot;app-theme account-layout min-h-screen xl:flex&quot;[39m
+      [36m&gt;[39m
+        [36m&lt;nav[39m
+          [33maria-label[39m=[32m&quot;จัดการบัญชี&quot;[39m
+          [33mclass[39m=[32m&quot;account-sidebar &quot;[39m
+          [33mid[39m=[32m&quot;account-navigation&quot;[39m
+        [36m&gt;[39m
+          [36m&lt;strong&gt;[39m
+            [0mTiewTrade[0m
+          [36m&lt;/strong&gt;[39m
+          [36m&lt;a[39m
+            [33mhref[39m=[32m&quot;/account&quot;[39m
+          [36m&gt;[39m
+            [0mบัญชี[0m
+          [36m&lt;/a&gt;[39m
+          [36m&lt;a[39m
+            [33mhref[39m=[32m&quot;/security&quot;[39m
+          [36m&gt;[39m
+            [0mTOTP / 2FA[0m
+          [36m&lt;/a&gt;[39m
+          [36m&lt;a[39m
+            [33mhref[39m=[32m&quot;/api-keys&quot;[39m
+          [36m&gt;[39m
+            [0mAPI key[0m
+          [36m&lt;/a&gt;[39m
+          [36m&lt;a[39m
+            [33mhref[39m=[32m&quot;/trading-account&quot;[39m
+          [36m&gt;[39m
+            [0mบัญชีเทรด[0m
+          [36m&lt;/a&gt;[39m
+          [36m&lt;a[39m
+            [33mhref[39m=[32m&quot;/prices&quot;[39m
+          [36m&gt;[39m
+            [0mราคาสด[0m
+          [36m&lt;/a&gt;[39m
+        [36m&lt;/nav&gt;[39m
+        [36m&lt;div[39m
+          [33mclass[39m=[32m&quot;account-workspace flex-1&quot;[39m
+        [36m&gt;[39m
+          [36m&lt;header[39m
+            [33mclass[39m=[32m&quot;account-header&quot;[39m
+          [36m&gt;[39m
+            [36m&lt;button[39m
+              [33maria-controls[39m=[32m&quot;account-navigation&quot;[39m
+              [33maria-expanded[39m=[32m&quot;false&quot;[39m
+              [33maria-label[39m=[32m&quot;เปิดเมนูบัญชี&quot;[39m
+              [33mclass[39m=[32m&quot;account-button inline-flex items-center justify-center gap-2 rounded-lg font-medium account-menu-trigger&quot;[39m
+              [33mtype[39m=[32m&quot;button&quot;[39m
+            [36m&gt;[39m
+              [0m☰[0m
+            [36m&lt;/button&gt;[39m
+            [36m&lt;strong&gt;[39m
+              [0mTiewTrade[0m
+            [36m&lt;/strong&gt;[39m
+            [36m&lt;span&gt;[39m
+              [0mจัดการบัญชี[0m
+            [36m&lt;/span&gt;[39m
+          [36m&lt;/header&gt;[39m
+          [36m&lt;div[39m
+            [33mclass[39m=[32m&quot;account-content mx-auto p-4 md:p-6&quot;[39m
+          [36m&gt;[39m
+            [36m&lt;div[39m
+              [33mclass[39m=[32m&quot;page-breadcrumb flex flex-wrap items-center justify-between gap-3 mb-6&quot;[39m
+            [36m&gt;[39m
+              [36m&lt;h1[39m
+                [33mclass[39m=[32m&quot;text-xl font-semibold&quot;[39m
+              [36m&gt;[39m
+                [0mกราฟแท่งเทียน[0m
+              [36m&lt;/h1&gt;[39m
+              [36m&lt;nav[39m
+                [33maria-label[39m=[32m&quot;เส้นทางหน้า&quot;[39m
+              [36m&gt;[39m
+                [36m&lt;ol[39m
+                  [33mclass[39m=[32m&quot;flex items-center gap-1.5&quot;[39m
+                [36m&gt;[39m
+                  [36m&lt;li&gt;[39m
+                    [36m&lt;a[39m
+                      [33mhref[39m=[32m&quot;/chart&quot;[39m
+                    [36m&gt;[39m
+                      [0mหน้าหลัก[0m
+                    [36m&lt;/a&gt;[39m
+                  [36m&lt;/li&gt;[39m
+                  [36m&lt;li[39m
+                    [33maria-hidden[39m=[32m&quot;true&quot;[39m
+                  [36m&gt;[39m
+                    [0m›[0m
+                  [36m&lt;/li&gt;[39m
+                  [36m&lt;li[39m
+                    [33maria-current[39m=[32m&quot;page&quot;[39m
+                  [36m&gt;[39m
+                    [0mกราฟแท่งเทียน[0m
+                  [36m&lt;/li&gt;[39m
+                [36m&lt;/ol&gt;[39m
+              [36m&lt;/nav&gt;[39m
+            [36m&lt;/div&gt;[39m
+            [36m&lt;div[39m
+              [33mdata-testid[39m=[32m&quot;signed-in&quot;[39m
+            [36m&gt;[39m
+              [36m&lt;p[39m
+                [33mrole[39m=[32m&quot;status&quot;[39m
+              [36m&gt;[39m
+                [0mกราฟยังไม่เปิดใช้งาน[0m
+              [36m&lt;/p&gt;[39m
+            [36m&lt;/div&gt;[39m
+          [36m&lt;/div&gt;[39m
+        [36m&lt;/div&gt;[39m
+      [36m&lt;/div&gt;[39m
+    [36m&lt;/div&gt;[39m
+  [36m&lt;/body&gt;[39m
+[36m&lt;/html&gt;[39m" type="TestingLibraryElementError">
+TestingLibraryElementError: Unable to find an element by: [data-testid=&quot;start-totp&quot;]
+
+Ignored nodes: comments, script, style
+&lt;body&gt;
+  &lt;div&gt;
+    &lt;div
+      class=&quot;app-theme account-layout min-h-screen xl:flex&quot;
+    &gt;
+      &lt;nav
+        aria-label=&quot;จัดการบัญชี&quot;
+        class=&quot;account-sidebar &quot;
+        id=&quot;account-navigation&quot;
+      &gt;
+        &lt;strong&gt;
+          TiewTrade
+        &lt;/strong&gt;
+        &lt;a
+          href=&quot;/account&quot;
+        &gt;
+          บัญชี
+        &lt;/a&gt;
+        &lt;a
+          href=&quot;/security&quot;
+        &gt;
+          TOTP / 2FA
+        &lt;/a&gt;
+        &lt;a
+          href=&quot;/api-keys&quot;
+        &gt;
+          API key
+        &lt;/a&gt;
+        &lt;a
+          href=&quot;/trading-account&quot;
+        &gt;
+          บัญชีเทรด
+        &lt;/a&gt;
+        &lt;a
+          href=&quot;/prices&quot;
+        &gt;
+          ราคาสด
+        &lt;/a&gt;
+      &lt;/nav&gt;
+      &lt;div
+        class=&quot;account-workspace flex-1&quot;
+      &gt;
+        &lt;header
+          class=&quot;account-header&quot;
+        &gt;
+          &lt;button
+            aria-controls=&quot;account-navigation&quot;
+            aria-expanded=&quot;false&quot;
+            aria-label=&quot;เปิดเมนูบัญชี&quot;
+            class=&quot;account-button inline-flex items-center justify-center gap-2 rounded-lg font-medium account-menu-trigger&quot;
+            type=&quot;button&quot;
+          &gt;
+            ☰
+          &lt;/button&gt;
+          &lt;strong&gt;
+            TiewTrade
+          &lt;/strong&gt;
+          &lt;span&gt;
+            จัดการบัญชี
+          &lt;/span&gt;
+        &lt;/header&gt;
+        &lt;div
+          class=&quot;account-content mx-auto p-4 md:p-6&quot;
+        &gt;
+          &lt;div
+            class=&quot;page-breadcrumb flex flex-wrap items-center justify-between gap-3 mb-6&quot;
+          &gt;
+            &lt;h1
+              class=&quot;text-xl font-semibold&quot;
+            &gt;
+              กราฟแท่งเทียน
+            &lt;/h1&gt;
+            &lt;nav
+              aria-label=&quot;เส้นทางหน้า&quot;
+            &gt;
+              &lt;ol
+                class=&quot;flex items-center gap-1.5&quot;
+              &gt;
+                &lt;li&gt;
+                  &lt;a
+                    href=&quot;/chart&quot;
+                  &gt;
+                    หน้าหลัก
+                  &lt;/a&gt;
+                &lt;/li&gt;
+                &lt;li
+                  aria-hidden=&quot;true&quot;
+                &gt;
+                  ›
+                &lt;/li&gt;
+                &lt;li
+                  aria-current=&quot;page&quot;
+                &gt;
+                  กราฟแท่งเทียน
+                &lt;/li&gt;
+              &lt;/ol&gt;
+            &lt;/nav&gt;
+          &lt;/div&gt;
+          &lt;div
+            data-testid=&quot;signed-in&quot;
+          &gt;
+            &lt;p
+              role=&quot;status&quot;
+            &gt;
+              กราฟยังไม่เปิดใช้งาน
+            &lt;/p&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/body&gt;
+
+Ignored nodes: comments, script, style
+&lt;html&gt;
+  &lt;head /&gt;
+  &lt;body&gt;
+    &lt;div&gt;
+      &lt;div
+        class=&quot;app-theme account-layout min-h-screen xl:flex&quot;
+      &gt;
+        &lt;nav
+          aria-label=&quot;จัดการบัญชี&quot;
+          class=&quot;account-sidebar &quot;
+          id=&quot;account-navigation&quot;
+        &gt;
+          &lt;strong&gt;
+            TiewTrade
+          &lt;/strong&gt;
+          &lt;a
+            href=&quot;/account&quot;
+          &gt;
+            บัญชี
+          &lt;/a&gt;
+          &lt;a
+            href=&quot;/security&quot;
+          &gt;
+            TOTP / 2FA
+          &lt;/a&gt;
+          &lt;a
+            href=&quot;/api-keys&quot;
+          &gt;
+            API key
+          &lt;/a&gt;
+          &lt;a
+            href=&quot;/trading-account&quot;
+          &gt;
+            บัญชีเทรด
+          &lt;/a&gt;
+          &lt;a
+            href=&quot;/prices&quot;
+          &gt;
+            ราคาสด
+          &lt;/a&gt;
+        &lt;/nav&gt;
+        &lt;div
+          class=&quot;account-workspace flex-1&quot;
+        &gt;
+          &lt;header
+            class=&quot;account-header&quot;
+          &gt;
+            &lt;button
+              aria-controls=&quot;account-navigation&quot;
+              aria-expanded=&quot;false&quot;
+              aria-label=&quot;เปิดเมนูบัญชี&quot;
+              class=&quot;account-button inline-flex items-center justify-center gap-2 rounded-lg font-medium account-menu-trigger&quot;
+              type=&quot;button&quot;
+            &gt;
+              ☰
+            &lt;/button&gt;
+            &lt;strong&gt;
+              TiewTrade
+            &lt;/strong&gt;
+            &lt;span&gt;
+              จัดการบัญชี
+            &lt;/span&gt;
+          &lt;/header&gt;
+          &lt;div
+            class=&quot;account-content mx-auto p-4 md:p-6&quot;
+          &gt;
+            &lt;div
+              class=&quot;page-breadcrumb flex flex-wrap items-center justify-between gap-3 mb-6&quot;
+            &gt;
+              &lt;h1
+                class=&quot;text-xl font-semibold&quot;
+              &gt;
+                กราฟแท่งเทียน
+              &lt;/h1&gt;
+              &lt;nav
+                aria-label=&quot;เส้นทางหน้า&quot;
+              &gt;
+                &lt;ol
+                  class=&quot;flex items-center gap-1.5&quot;
+                &gt;
+                  &lt;li&gt;
+                    &lt;a
+                      href=&quot;/chart&quot;
+                    &gt;
+                      หน้าหลัก
+                    &lt;/a&gt;
+                  &lt;/li&gt;
+                  &lt;li
+                    aria-hidden=&quot;true&quot;
+                  &gt;
+                    ›
+                  &lt;/li&gt;
+                  &lt;li
+                    aria-current=&quot;page&quot;
+                  &gt;
+                    กราฟแท่งเทียน
+                  &lt;/li&gt;
+                &lt;/ol&gt;
+              &lt;/nav&gt;
+            &lt;/div&gt;
+            &lt;div
+              data-testid=&quot;signed-in&quot;
+            &gt;
+              &lt;p
+                role=&quot;status&quot;
+              &gt;
+                กราฟยังไม่เปิดใช้งาน
+              &lt;/p&gt;
+            &lt;/div&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/body&gt;
+&lt;/html&gt;
+ ❯ waitForWrapper node_modules/@testing-library/dom/dist/wait-for.js:163:27
+ ❯ tests/TotpPanel.test.tsx:68:11
+            </failure>
+        </testcase>
+        <testcase classname="tests/TotpPanel.test.tsx" name="การยืนยันสองชั้นบนหน้าเว็บ &gt; ขอรหัสจากแอปเป็นขั้นที่สองหลังกรอกรหัสผ่านถูก" time="0.1296781">
+        </testcase>
+        <testcase classname="tests/TotpPanel.test.tsx" name="การยืนยันสองชั้นบนหน้าเว็บ &gt; บอกจำนวนรหัสสำรองที่เหลือเมื่อเข้าสู่ระบบด้วยรหัสสำรอง" time="1.0761298">
+            <failure message="Unable to find an element by: [data-testid=&quot;codes-left&quot;]
+
+Ignored nodes: comments, script, style
+[36m&lt;body&gt;[39m
+  [36m&lt;div&gt;[39m
+    [36m&lt;div[39m
+      [33mclass[39m=[32m&quot;app-theme account-layout min-h-screen xl:flex&quot;[39m
+    [36m&gt;[39m
+      [36m&lt;nav[39m
+        [33maria-label[39m=[32m&quot;จัดการบัญชี&quot;[39m
+        [33mclass[39m=[32m&quot;account-sidebar &quot;[39m
+        [33mid[39m=[32m&quot;account-navigation&quot;[39m
+      [36m&gt;[39m
+        [36m&lt;strong&gt;[39m
+          [0mTiewTrade[0m
+        [36m&lt;/strong&gt;[39m
+        [36m&lt;a[39m
+          [33mhref[39m=[32m&quot;/account&quot;[39m
+        [36m&gt;[39m
+          [0mบัญชี[0m
+        [36m&lt;/a&gt;[39m
+        [36m&lt;a[39m
+          [33mhref[39m=[32m&quot;/security&quot;[39m
+        [36m&gt;[39m
+          [0mTOTP / 2FA[0m
+        [36m&lt;/a&gt;[39m
+        [36m&lt;a[39m
+          [33mhref[39m=[32m&quot;/api-keys&quot;[39m
+        [36m&gt;[39m
+          [0mAPI key[0m
+        [36m&lt;/a&gt;[39m
+        [36m&lt;a[39m
+          [33mhref[39m=[32m&quot;/trading-account&quot;[39m
+        [36m&gt;[39m
+          [0mบัญชีเทรด[0m
+        [36m&lt;/a&gt;[39m
+        [36m&lt;a[39m
+          [33mhref[39m=[32m&quot;/prices&quot;[39m
+        [36m&gt;[39m
+          [0mราคาสด[0m
+        [36m&lt;/a&gt;[39m
+      [36m&lt;/nav&gt;[39m
+      [36m&lt;div[39m
+        [33mclass[39m=[32m&quot;account-workspace flex-1&quot;[39m
+      [36m&gt;[39m
+        [36m&lt;header[39m
+          [33mclass[39m=[32m&quot;account-header&quot;[39m
+        [36m&gt;[39m
+          [36m&lt;button[39m
+            [33maria-controls[39m=[32m&quot;account-navigation&quot;[39m
+            [33maria-expanded[39m=[32m&quot;false&quot;[39m
+            [33maria-label[39m=[32m&quot;เปิดเมนูบัญชี&quot;[39m
+            [33mclass[39m=[32m&quot;account-button inline-flex items-center justify-center gap-2 rounded-lg font-medium account-menu-trigger&quot;[39m
+            [33mtype[39m=[32m&quot;button&quot;[39m
+          [36m&gt;[39m
+            [0m☰[0m
+          [36m&lt;/button&gt;[39m
+          [36m&lt;strong&gt;[39m
+            [0mTiewTrade[0m
+          [36m&lt;/strong&gt;[39m
+          [36m&lt;span&gt;[39m
+            [0mจัดการบัญชี[0m
+          [36m&lt;/span&gt;[39m
+        [36m&lt;/header&gt;[39m
+        [36m&lt;div[39m
+          [33mclass[39m=[32m&quot;account-content mx-auto p-4 md:p-6&quot;[39m
+        [36m&gt;[39m
+          [36m&lt;div[39m
+            [33mclass[39m=[32m&quot;page-breadcrumb flex flex-wrap items-center justify-between gap-3 mb-6&quot;[39m
+          [36m&gt;[39m
+            [36m&lt;h1[39m
+              [33mclass[39m=[32m&quot;text-xl font-semibold&quot;[39m
+            [36m&gt;[39m
+              [0mกราฟแท่งเทียน[0m
+            [36m&lt;/h1&gt;[39m
+            [36m&lt;nav[39m
+              [33maria-label[39m=[32m&quot;เส้นทางหน้า&quot;[39m
+            [36m&gt;[39m
+              [36m&lt;ol[39m
+                [33mclass[39m=[32m&quot;flex items-center gap-1.5&quot;[39m
+              [36m&gt;[39m
+                [36m&lt;li&gt;[39m
+                  [36m&lt;a[39m
+                    [33mhref[39m=[32m&quot;/chart&quot;[39m
+                  [36m&gt;[39m
+                    [0mหน้าหลัก[0m
+                  [36m&lt;/a&gt;[39m
+                [36m&lt;/li&gt;[39m
+                [36m&lt;li[39m
+                  [33maria-hidden[39m=[32m&quot;true&quot;[39m
+                [36m&gt;[39m
+                  [0m›[0m
+                [36m&lt;/li&gt;[39m
+                [36m&lt;li[39m
+                  [33maria-current[39m=[32m&quot;page&quot;[39m
+                [36m&gt;[39m
+                  [0mกราฟแท่งเทียน[0m
+                [36m&lt;/li&gt;[39m
+              [36m&lt;/ol&gt;[39m
+            [36m&lt;/nav&gt;[39m
+          [36m&lt;/div&gt;[39m
+          [36m&lt;div[39m
+            [33mdata-testid[39m=[32m&quot;signed-in&quot;[39m
+          [36m&gt;[39m
+            [36m&lt;p[39m
+              [33mrole[39m=[32m&quot;status&quot;[39m
+            [36m&gt;[39m
+              [0mกราฟยังไม่เปิดใช้งาน[0m
+            [36m&lt;/p&gt;[39m
+          [36m&lt;/div&gt;[39m
+        [36m&lt;/div&gt;[39m
+      [36m&lt;/div&gt;[39m
+    [36m&lt;/div&gt;[39m
+  [36m&lt;/div&gt;[39m
+[36m&lt;/body&gt;[39m
+
+Ignored nodes: comments, script, style
+[36m&lt;html&gt;[39m
+  [36m&lt;head /&gt;[39m
+  [36m&lt;body&gt;[39m
+    [36m&lt;div&gt;[39m
+      [36m&lt;div[39m
+        [33mclass[39m=[32m&quot;app-theme account-layout min-h-screen xl:flex&quot;[39m
+      [36m&gt;[39m
+        [36m&lt;nav[39m
+          [33maria-label[39m=[32m&quot;จัดการบัญชี&quot;[39m
+          [33mclass[39m=[32m&quot;account-sidebar &quot;[39m
+          [33mid[39m=[32m&quot;account-navigation&quot;[39m
+        [36m&gt;[39m
+          [36m&lt;strong&gt;[39m
+            [0mTiewTrade[0m
+          [36m&lt;/strong&gt;[39m
+          [36m&lt;a[39m
+            [33mhref[39m=[32m&quot;/account&quot;[39m
+          [36m&gt;[39m
+            [0mบัญชี[0m
+          [36m&lt;/a&gt;[39m
+          [36m&lt;a[39m
+            [33mhref[39m=[32m&quot;/security&quot;[39m
+          [36m&gt;[39m
+            [0mTOTP / 2FA[0m
+          [36m&lt;/a&gt;[39m
+          [36m&lt;a[39m
+            [33mhref[39m=[32m&quot;/api-keys&quot;[39m
+          [36m&gt;[39m
+            [0mAPI key[0m
+          [36m&lt;/a&gt;[39m
+          [36m&lt;a[39m
+            [33mhref[39m=[32m&quot;/trading-account&quot;[39m
+          [36m&gt;[39m
+            [0mบัญชีเทรด[0m
+          [36m&lt;/a&gt;[39m
+          [36m&lt;a[39m
+            [33mhref[39m=[32m&quot;/prices&quot;[39m
+          [36m&gt;[39m
+            [0mราคาสด[0m
+          [36m&lt;/a&gt;[39m
+        [36m&lt;/nav&gt;[39m
+        [36m&lt;div[39m
+          [33mclass[39m=[32m&quot;account-workspace flex-1&quot;[39m
+        [36m&gt;[39m
+          [36m&lt;header[39m
+            [33mclass[39m=[32m&quot;account-header&quot;[39m
+          [36m&gt;[39m
+            [36m&lt;button[39m
+              [33maria-controls[39m=[32m&quot;account-navigation&quot;[39m
+              [33maria-expanded[39m=[32m&quot;false&quot;[39m
+              [33maria-label[39m=[32m&quot;เปิดเมนูบัญชี&quot;[39m
+              [33mclass[39m=[32m&quot;account-button inline-flex items-center justify-center gap-2 rounded-lg font-medium account-menu-trigger&quot;[39m
+              [33mtype[39m=[32m&quot;button&quot;[39m
+            [36m&gt;[39m
+              [0m☰[0m
+            [36m&lt;/button&gt;[39m
+            [36m&lt;strong&gt;[39m
+              [0mTiewTrade[0m
+            [36m&lt;/strong&gt;[39m
+            [36m&lt;span&gt;[39m
+              [0mจัดการบัญชี[0m
+            [36m&lt;/span&gt;[39m
+          [36m&lt;/header&gt;[39m
+          [36m&lt;div[39m
+            [33mclass[39m=[32m&quot;account-content mx-auto p-4 md:p-6&quot;[39m
+          [36m&gt;[39m
+            [36m&lt;div[39m
+              [33mclass[39m=[32m&quot;page-breadcrumb flex flex-wrap items-center justify-between gap-3 mb-6&quot;[39m
+            [36m&gt;[39m
+              [36m&lt;h1[39m
+                [33mclass[39m=[32m&quot;text-xl font-semibold&quot;[39m
+              [36m&gt;[39m
+                [0mกราฟแท่งเทียน[0m
+              [36m&lt;/h1&gt;[39m
+              [36m&lt;nav[39m
+                [33maria-label[39m=[32m&quot;เส้นทางหน้า&quot;[39m
+              [36m&gt;[39m
+                [36m&lt;ol[39m
+                  [33mclass[39m=[32m&quot;flex items-center gap-1.5&quot;[39m
+                [36m&gt;[39m
+                  [36m&lt;li&gt;[39m
+                    [36m&lt;a[39m
+                      [33mhref[39m=[32m&quot;/chart&quot;[39m
+                    [36m&gt;[39m
+                      [0mหน้าหลัก[0m
+                    [36m&lt;/a&gt;[39m
+                  [36m&lt;/li&gt;[39m
+                  [36m&lt;li[39m
+                    [33maria-hidden[39m=[32m&quot;true&quot;[39m
+                  [36m&gt;[39m
+                    [0m›[0m
+                  [36m&lt;/li&gt;[39m
+                  [36m&lt;li[39m
+                    [33maria-current[39m=[32m&quot;page&quot;[39m
+                  [36m&gt;[39m
+                    [0mกราฟแท่งเทียน[0m
+                  [36m&lt;/li&gt;[39m
+                [36m&lt;/ol&gt;[39m
+              [36m&lt;/nav&gt;[39m
+            [36m&lt;/div&gt;[39m
+            [36m&lt;div[39m
+              [33mdata-testid[39m=[32m&quot;signed-in&quot;[39m
+            [36m&gt;[39m
+              [36m&lt;p[39m
+                [33mrole[39m=[32m&quot;status&quot;[39m
+              [36m&gt;[39m
+                [0mกราฟยังไม่เปิดใช้งาน[0m
+              [36m&lt;/p&gt;[39m
+            [36m&lt;/div&gt;[39m
+          [36m&lt;/div&gt;[39m
+        [36m&lt;/div&gt;[39m
+      [36m&lt;/div&gt;[39m
+    [36m&lt;/div&gt;[39m
+  [36m&lt;/body&gt;[39m
+[36m&lt;/html&gt;[39m" type="TestingLibraryElementError">
+TestingLibraryElementError: Unable to find an element by: [data-testid=&quot;codes-left&quot;]
+
+Ignored nodes: comments, script, style
+&lt;body&gt;
+  &lt;div&gt;
+    &lt;div
+      class=&quot;app-theme account-layout min-h-screen xl:flex&quot;
+    &gt;
+      &lt;nav
+        aria-label=&quot;จัดการบัญชี&quot;
+        class=&quot;account-sidebar &quot;
+        id=&quot;account-navigation&quot;
+      &gt;
+        &lt;strong&gt;
+          TiewTrade
+        &lt;/strong&gt;
+        &lt;a
+          href=&quot;/account&quot;
+        &gt;
+          บัญชี
+        &lt;/a&gt;
+        &lt;a
+          href=&quot;/security&quot;
+        &gt;
+          TOTP / 2FA
+        &lt;/a&gt;
+        &lt;a
+          href=&quot;/api-keys&quot;
+        &gt;
+          API key
+        &lt;/a&gt;
+        &lt;a
+          href=&quot;/trading-account&quot;
+        &gt;
+          บัญชีเทรด
+        &lt;/a&gt;
+        &lt;a
+          href=&quot;/prices&quot;
+        &gt;
+          ราคาสด
+        &lt;/a&gt;
+      &lt;/nav&gt;
+      &lt;div
+        class=&quot;account-workspace flex-1&quot;
+      &gt;
+        &lt;header
+          class=&quot;account-header&quot;
+        &gt;
+          &lt;button
+            aria-controls=&quot;account-navigation&quot;
+            aria-expanded=&quot;false&quot;
+            aria-label=&quot;เปิดเมนูบัญชี&quot;
+            class=&quot;account-button inline-flex items-center justify-center gap-2 rounded-lg font-medium account-menu-trigger&quot;
+            type=&quot;button&quot;
+          &gt;
+            ☰
+          &lt;/button&gt;
+          &lt;strong&gt;
+            TiewTrade
+          &lt;/strong&gt;
+          &lt;span&gt;
+            จัดการบัญชี
+          &lt;/span&gt;
+        &lt;/header&gt;
+        &lt;div
+          class=&quot;account-content mx-auto p-4 md:p-6&quot;
+        &gt;
+          &lt;div
+            class=&quot;page-breadcrumb flex flex-wrap items-center justify-between gap-3 mb-6&quot;
+          &gt;
+            &lt;h1
+              class=&quot;text-xl font-semibold&quot;
+            &gt;
+              กราฟแท่งเทียน
+            &lt;/h1&gt;
+            &lt;nav
+              aria-label=&quot;เส้นทางหน้า&quot;
+            &gt;
+              &lt;ol
+                class=&quot;flex items-center gap-1.5&quot;
+              &gt;
+                &lt;li&gt;
+                  &lt;a
+                    href=&quot;/chart&quot;
+                  &gt;
+                    หน้าหลัก
+                  &lt;/a&gt;
+                &lt;/li&gt;
+                &lt;li
+                  aria-hidden=&quot;true&quot;
+                &gt;
+                  ›
+                &lt;/li&gt;
+                &lt;li
+                  aria-current=&quot;page&quot;
+                &gt;
+                  กราฟแท่งเทียน
+                &lt;/li&gt;
+              &lt;/ol&gt;
+            &lt;/nav&gt;
+          &lt;/div&gt;
+          &lt;div
+            data-testid=&quot;signed-in&quot;
+          &gt;
+            &lt;p
+              role=&quot;status&quot;
+            &gt;
+              กราฟยังไม่เปิดใช้งาน
+            &lt;/p&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/body&gt;
+
+Ignored nodes: comments, script, style
+&lt;html&gt;
+  &lt;head /&gt;
+  &lt;body&gt;
+    &lt;div&gt;
+      &lt;div
+        class=&quot;app-theme account-layout min-h-screen xl:flex&quot;
+      &gt;
+        &lt;nav
+          aria-label=&quot;จัดการบัญชี&quot;
+          class=&quot;account-sidebar &quot;
+          id=&quot;account-navigation&quot;
+        &gt;
+          &lt;strong&gt;
+            TiewTrade
+          &lt;/strong&gt;
+          &lt;a
+            href=&quot;/account&quot;
+          &gt;
+            บัญชี
+          &lt;/a&gt;
+          &lt;a
+            href=&quot;/security&quot;
+          &gt;
+            TOTP / 2FA
+          &lt;/a&gt;
+          &lt;a
+            href=&quot;/api-keys&quot;
+          &gt;
+            API key
+          &lt;/a&gt;
+          &lt;a
+            href=&quot;/trading-account&quot;
+          &gt;
+            บัญชีเทรด
+          &lt;/a&gt;
+          &lt;a
+            href=&quot;/prices&quot;
+          &gt;
+            ราคาสด
+          &lt;/a&gt;
+        &lt;/nav&gt;
+        &lt;div
+          class=&quot;account-workspace flex-1&quot;
+        &gt;
+          &lt;header
+            class=&quot;account-header&quot;
+          &gt;
+            &lt;button
+              aria-controls=&quot;account-navigation&quot;
+              aria-expanded=&quot;false&quot;
+              aria-label=&quot;เปิดเมนูบัญชี&quot;
+              class=&quot;account-button inline-flex items-center justify-center gap-2 rounded-lg font-medium account-menu-trigger&quot;
+              type=&quot;button&quot;
+            &gt;
+              ☰
+            &lt;/button&gt;
+            &lt;strong&gt;
+              TiewTrade
+            &lt;/strong&gt;
+            &lt;span&gt;
+              จัดการบัญชี
+            &lt;/span&gt;
+          &lt;/header&gt;
+          &lt;div
+            class=&quot;account-content mx-auto p-4 md:p-6&quot;
+          &gt;
+            &lt;div
+              class=&quot;page-breadcrumb flex flex-wrap items-center justify-between gap-3 mb-6&quot;
+            &gt;
+              &lt;h1
+                class=&quot;text-xl font-semibold&quot;
+              &gt;
+                กราฟแท่งเทียน
+              &lt;/h1&gt;
+              &lt;nav
+                aria-label=&quot;เส้นทางหน้า&quot;
+              &gt;
+                &lt;ol
+                  class=&quot;flex items-center gap-1.5&quot;
+                &gt;
+                  &lt;li&gt;
+                    &lt;a
+                      href=&quot;/chart&quot;
+                    &gt;
+                      หน้าหลัก
+                    &lt;/a&gt;
+                  &lt;/li&gt;
+                  &lt;li
+                    aria-hidden=&quot;true&quot;
+                  &gt;
+                    ›
+                  &lt;/li&gt;
+                  &lt;li
+                    aria-current=&quot;page&quot;
+                  &gt;
+                    กราฟแท่งเทียน
+                  &lt;/li&gt;
+                &lt;/ol&gt;
+              &lt;/nav&gt;
+            &lt;/div&gt;
+            &lt;div
+              data-testid=&quot;signed-in&quot;
+            &gt;
+              &lt;p
+                role=&quot;status&quot;
+              &gt;
+                กราฟยังไม่เปิดใช้งาน
+              &lt;/p&gt;
+            &lt;/div&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/body&gt;
+&lt;/html&gt;
+ ❯ waitForWrapper node_modules/@testing-library/dom/dist/wait-for.js:163:27
+ ❯ tests/TotpPanel.test.tsx:175:11
+            </failure>
+        </testcase>
+        <testcase classname="tests/TotpPanel.test.tsx" name="การยืนยันสองชั้นบนหน้าเว็บ &gt; แสดงข้อความที่หลังบ้านส่งมาเมื่อรหัสไม่ผ่าน" time="0.0661213">
+        </testcase>
+    </testsuite>
+    <testsuite name="tests/TradingAccountPanel.test.tsx" timestamp="2026-10-12T17:09:33.864Z" hostname="DESKTOP-RONGMEV" tests="21" failures="0" errors="0" skipped="0" time="1.3153515">
+        <testcase classname="tests/TradingAccountPanel.test.tsx" name="initial choice is empty and needs explicit selection with fresh TOTP" time="0.1945801">
+        </testcase>
+        <testcase classname="tests/TradingAccountPanel.test.tsx" name="selects MANUAL with CSRF/TOTP and refetches server choice" time="0.1044244">
+        </testcase>
+        <testcase classname="tests/TradingAccountPanel.test.tsx" name="selects BOT with CSRF/TOTP and refetches server choice" time="0.0488731">
+        </testcase>
+        <testcase classname="tests/TradingAccountPanel.test.tsx" name="cannot select without ACTIVE sole key null" time="0.0220638">
+        </testcase>
+        <testcase classname="tests/TradingAccountPanel.test.tsx" name="cannot select without ACTIVE sole key {&quot;id&quot;:&quot;key-one&quot;,&quot;label&quot;:&quot;Primary&quot;,&quot;public_tail&quot;:&quot;ABCD&quot;,&quot;status&quot;:&quot;PENDING&quot;,&quot;created_at&quot;:&quot;2026-10-07T00:00:00Z&quot;,&quot;may_retry&quot;:false}" time="0.0295307">
+        </testcase>
+        <testcase classname="tests/TradingAccountPanel.test.tsx" name="cannot select without ACTIVE sole key {&quot;id&quot;:&quot;key-one&quot;,&quot;label&quot;:&quot;Primary&quot;,&quot;public_tail&quot;:&quot;ABCD&quot;,&quot;status&quot;:&quot;REJECTED&quot;,&quot;created_at&quot;:&quot;2026-10-07T00:00:00Z&quot;,&quot;may_retry&quot;:false}" time="0.0370012">
+        </testcase>
+        <testcase classname="tests/TradingAccountPanel.test.tsx" name="cannot select without ACTIVE sole key {&quot;id&quot;:&quot;key-one&quot;,&quot;label&quot;:&quot;Primary&quot;,&quot;public_tail&quot;:&quot;ABCD&quot;,&quot;status&quot;:&quot;UNVERIFIABLE&quot;,&quot;created_at&quot;:&quot;2026-10-07T00:00:00Z&quot;,&quot;may_retry&quot;:false}" time="0.0270808">
+        </testcase>
+        <testcase classname="tests/TradingAccountPanel.test.tsx" name="uncertain POST clears code, does not retry and keeps choice unconfirmed" time="0.0484149">
+        </testcase>
+        <testcase classname="tests/TradingAccountPanel.test.tsx" name="sanitizes and explains TRADING_ACCOUNT_KEY_UNAVAILABLE" time="0.0288596">
+        </testcase>
+        <testcase classname="tests/TradingAccountPanel.test.tsx" name="sanitizes and explains TRADING_ACCOUNT_ACTIVITY_UNKNOWN" time="0.0634395">
+        </testcase>
+        <testcase classname="tests/TradingAccountPanel.test.tsx" name="sanitizes and explains RAW-SECRET" time="0.0615391">
+        </testcase>
+        <testcase classname="tests/TradingAccountPanel.test.tsx" name="loading/read failure does not invent an empty or disconnected account" time="0.0280441">
+        </testcase>
+        <testcase classname="tests/TradingAccountPanel.test.tsx" name="existing selection persists when sole key is deleted and both panels refetch" time="0.0716405">
+        </testcase>
+        <testcase classname="tests/TradingAccountPanel.test.tsx" name="DELETE followed by summary refetch failure clearly marks retained old data stale" time="0.0957448">
+        </testcase>
+        <testcase classname="tests/TradingAccountPanel.test.tsx" name="TOTP never enters mutation variables/query keys and mutation cache clears after settle" time="0.1152706">
+        </testcase>
+        <testcase classname="tests/TradingAccountPanel.test.tsx" name="late old-user POST success never changes new-user summary, cache or feedback" time="0.1838893">
+        </testcase>
+        <testcase classname="tests/TradingAccountPanel.test.tsx" name="POST followed by failed summary refetch never reports a confirmed selected state" time="0.0506389">
+        </testcase>
+        <testcase classname="tests/TradingAccountPanel.test.tsx" name="adding sole key refetches the account summary through the shared client" time="0.0329801">
+        </testcase>
+        <testcase classname="tests/TradingAccountPanel.test.tsx" name="retrying a key refetches its new status in the account panel" time="0.0318455">
+        </testcase>
+        <testcase classname="tests/TradingAccountPanel.test.tsx" name="key polling updates the sole account summary when worker verification completes" time="0.0143901">
+        </testcase>
+        <testcase classname="tests/TradingAccountPanel.test.tsx" name="ACTIVE key without TOTP points to setup instead of showing selection fields" time="0.0204405">
+        </testcase>
+    </testsuite>
+</testsuites>

@@ -464,12 +464,23 @@ def test_no_route_hands_back_the_secret(client: TestClient, ending: bool) -> Non
             path,
             headers=csrf_headers(client),
             params={"base": "BTC", "quote": "USDT", "timeframe": "1m"}
-            if template in {"/market-data/candles", "/market-data/indicators"}
+            if template
+            in {
+                "/market-data/candles",
+                "/market-data/indicators",
+                "/market-data/chart/history",
+                "/market-data/chart/live",
+            }
             else None,
             **({"json": {}} if method == "POST" else {}),
         )
         if method == "GET":
-            assert response.status_code == 200, (method, template, response.status_code)
+            if template.startswith("/market-data/chart/"):
+                assert (
+                    response.status_code == 404
+                )  # Disabled by default; refusal must also be secret-free.
+            else:
+                assert response.status_code == 200, (method, template, response.status_code)
         elif method == "DELETE":
             assert response.status_code == 204
         elif template == "/api-keys/{key_id}/retry":

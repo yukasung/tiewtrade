@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="3" failures="0" errors="0" time="0.1567606">
+    <testsuite name="tests/App.test.tsx" timestamp="2026-10-12T17:23:06.585Z" hostname="DESKTOP-RONGMEV" tests="2" failures="0" errors="0" skipped="0" time="0.0908319">
+        <testcase classname="tests/App.test.tsx" name="keeps a single main and no footer when authenticated=false" time="0.0640596">
+        </testcase>
+        <testcase classname="tests/App.test.tsx" name="keeps a single main and no footer when authenticated=true" time="0.0247165">
+        </testcase>
+    </testsuite>
+    <testsuite name="tests/AuthLayout.test.tsx" timestamp="2026-10-12T17:23:06.587Z" hostname="DESKTOP-RONGMEV" tests="1" failures="0" errors="0" skipped="0" time="0.0659287">
+        <testcase classname="tests/AuthLayout.test.tsx" name="renders an auth form with TiewTrade branding and no account navigation or nested main" time="0.0638723">
+        </testcase>
+    </testsuite>
+</testsuites>

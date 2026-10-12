@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="56" failures="0" errors="0" time="2.6702295">
+    <testsuite name="tests/AccountNavigation.test.tsx" timestamp="2026-10-12T16:46:46.795Z" hostname="DESKTOP-RONGMEV" tests="3" failures="0" errors="0" skipped="0" time="0.1820774">
+        <testcase classname="tests/AccountNavigation.test.tsx" name="defaults to chart and mounts only the selected module without replacing the session" time="0.1362682">
+        </testcase>
+        <testcase classname="tests/AccountNavigation.test.tsx" name="preserves a direct link through authentication and handles a changed or unknown hash" time="0.0135681">
+        </testcase>
+        <testcase classname="tests/AccountNavigation.test.tsx" name="keeps the disabled chart default without mounting modules or starting their requests" time="0.0298484">
+        </testcase>
+    </testsuite>
+    <testsuite name="tests/AccountSession.test.tsx" timestamp="2026-10-12T16:46:46.797Z" hostname="DESKTOP-RONGMEV" tests="5" failures="0" errors="0" skipped="0" time="0.5054319">
+        <testcase classname="tests/AccountSession.test.tsx" name="cancels pending queries and clears both caches when identity changes" time="0.0582848">
+        </testcase>
+        <testcase classname="tests/AccountSession.test.tsx" name="session expired cancels and clears cache and invokes auth boundary" time="0.077103">
+        </testcase>
+        <testcase classname="tests/AccountSession.test.tsx" name="keeps the same cache when auth callback changes within one identity" time="0.0194321">
+        </testcase>
+        <testcase classname="tests/AccountSession.test.tsx" name="real panels ignore late key and account responses after identity switch" time="0.2191021">
+        </testcase>
+        <testcase classname="tests/AccountSession.test.tsx" name="account 401 unmounts the authenticated account boundary" time="0.1290007">
+        </testcase>
+    </testsuite>
+    <testsuite name="tests/AuthPanelLogout.test.tsx" timestamp="2026-10-12T16:46:46.798Z" hostname="DESKTOP-RONGMEV" tests="13" failures="0" errors="0" skipped="0" time="0.9412131">
+        <testcase classname="tests/AuthPanelLogout.test.tsx" name="&apos;/api/auth/logout&apos; clears cached account and aborts pending GET despite &apos;identity-error&apos;" time="0.1673874">
+        </testcase>
+        <testcase classname="tests/AuthPanelLogout.test.tsx" name="&apos;/api/auth/logout&apos; clears cached account and aborts pending GET despite &apos;identity-hang&apos;" time="0.0537487">
+        </testcase>
+        <testcase classname="tests/AuthPanelLogout.test.tsx" name="&apos;/api/auth/logout&apos; clears cached account and aborts pending GET despite &apos;csrf-error&apos;" time="0.0604479">
+        </testcase>
+        <testcase classname="tests/AuthPanelLogout.test.tsx" name="&apos;/api/auth/logout&apos; clears cached account and aborts pending GET despite &apos;csrf-hang&apos;" time="0.0733008">
+        </testcase>
+        <testcase classname="tests/AuthPanelLogout.test.tsx" name="&apos;/api/auth/logout-all&apos; clears cached account and aborts pending GET despite &apos;identity-error&apos;" time="0.0519567">
+        </testcase>
+        <testcase classname="tests/AuthPanelLogout.test.tsx" name="&apos;/api/auth/logout-all&apos; clears cached account and aborts pending GET despite &apos;identity-hang&apos;" time="0.0507692">
+        </testcase>
+        <testcase classname="tests/AuthPanelLogout.test.tsx" name="&apos;/api/auth/logout-all&apos; clears cached account and aborts pending GET despite &apos;csrf-error&apos;" time="0.0479195">
+        </testcase>
+        <testcase classname="tests/AuthPanelLogout.test.tsx" name="&apos;/api/auth/logout-all&apos; clears cached account and aborts pending GET despite &apos;csrf-hang&apos;" time="0.0487004">
+        </testcase>
+        <testcase classname="tests/AuthPanelLogout.test.tsx" name="log-out retains the authenticated boundary when POST /api/auth/logout fails" time="0.0680014">
+        </testcase>
+        <testcase classname="tests/AuthPanelLogout.test.tsx" name="log-out-everywhere retains the authenticated boundary when POST /api/auth/logout-all fails" time="0.0501605">
+        </testcase>
+        <testcase classname="tests/AuthPanelLogout.test.tsx" name="a TOTP identity response started before logout cannot restore the old boundary" time="0.057036">
+        </testcase>
+        <testcase classname="tests/AuthPanelLogout.test.tsx" name="log-out clears a pending key mutation after POST /api/auth/logout succeeds" time="0.1011627">
+        </testcase>
+        <testcase classname="tests/AuthPanelLogout.test.tsx" name="log-out-everywhere clears a pending key mutation after POST /api/auth/logout-all succeeds" time="0.1077203">
+        </testcase>
+    </testsuite>
+    <testsuite name="tests/RealtimePricePanel.test.tsx" timestamp="2026-10-12T16:46:46.801Z" hostname="DESKTOP-RONGMEV" tests="35" failures="0" errors="0" skipped="0" time="1.0415071">
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="reports readiness only at server reference, preserves exact decimals and trade time" time="0.114383">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="late GET cannot overwrite stream and offline warns without changing snapshot" time="0.0235687">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="reconnect awaits full snapshot and rejects callbacks from old transport" time="0.0208609">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="session 4401 uses existing expiry flow and cleanup closes socket" time="0.0051204">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="observed resume invalidates transport; wall clock alone does not certify readiness" time="0.0260427">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="heartbeat detection warns immediately and does not infer a market outage" time="0.0117094">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="market alert remains visible beside delivery failure and is not cleared by opening" time="0.0115146">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="identity replacement prevents late old socket and GET callbacks entering new cache" time="0.0106208">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="a late failed GET cannot demote a valid newer socket delivery" time="0.0447356">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="invalid schema warns and preserves last valid snapshot" time="0.0417449">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="English snapshot labels and reference timestamps remain observational across silent wall-clock jumps" time="0.0280999">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="translates &apos;READY&apos; into &apos;th&apos; without exposing raw reason codes" time="0.0341905">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="translates &apos;READY&apos; into &apos;en&apos; without exposing raw reason codes" time="0.0325978">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="translates &apos;STALE&apos; into &apos;th&apos; without exposing raw reason codes" time="0.0221048">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="translates &apos;STALE&apos; into &apos;en&apos; without exposing raw reason codes" time="0.0304254">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="translates &apos;RECOVERING&apos; into &apos;th&apos; without exposing raw reason codes" time="0.0317572">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="translates &apos;RECOVERING&apos; into &apos;en&apos; without exposing raw reason codes" time="0.0322129">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="translates &apos;MISSING&apos; into &apos;th&apos; without exposing raw reason codes" time="0.0330836">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="translates &apos;MISSING&apos; into &apos;en&apos; without exposing raw reason codes" time="0.0344217">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="translates &apos;VENUE_PROTOCOL&apos; into &apos;th&apos; without exposing raw reason codes" time="0.0169829">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="translates &apos;VENUE_PROTOCOL&apos; into &apos;en&apos; without exposing raw reason codes" time="0.020132">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="translates &apos;VENUE_RATE_LIMITED&apos; into &apos;th&apos; without exposing raw reason codes" time="0.01568">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="translates &apos;VENUE_RATE_LIMITED&apos; into &apos;en&apos; without exposing raw reason codes" time="0.0311781">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="translates &apos;VENUE_UNAVAILABLE&apos; into &apos;th&apos; without exposing raw reason codes" time="0.0322258">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="translates &apos;VENUE_UNAVAILABLE&apos; into &apos;en&apos; without exposing raw reason codes" time="0.0339442">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="translates &apos;VENUE_REJECTED&apos; into &apos;th&apos; without exposing raw reason codes" time="0.0149868">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="translates &apos;VENUE_REJECTED&apos; into &apos;en&apos; without exposing raw reason codes" time="0.0345367">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="translates &apos;SUBSCRIPTION_ACK_TIMEOUT&apos; into &apos;th&apos; without exposing raw reason codes" time="0.0330478">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="translates &apos;SUBSCRIPTION_ACK_TIMEOUT&apos; into &apos;en&apos; without exposing raw reason codes" time="0.0335295">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="translates &apos;ORDER_UNCONFIRMED&apos; into &apos;th&apos; without exposing raw reason codes" time="0.0338647">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="translates &apos;ORDER_UNCONFIRMED&apos; into &apos;en&apos; without exposing raw reason codes" time="0.0330435">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="translates &apos;DELIVERY_UNAVAILABLE&apos; into &apos;th&apos; without exposing raw reason codes" time="0.0161189">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="translates &apos;DELIVERY_UNAVAILABLE&apos; into &apos;en&apos; without exposing raw reason codes" time="0.0340066">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="translates &apos;FUTURE_REASON&apos; into &apos;th&apos; without exposing raw reason codes" time="0.0329976">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="translates &apos;FUTURE_REASON&apos; into &apos;en&apos; without exposing raw reason codes" time="0.0331542">
+        </testcase>
+    </testsuite>
+</testsuites>

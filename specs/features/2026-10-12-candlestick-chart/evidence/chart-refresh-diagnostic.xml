@@ -1,0 +1,42 @@
+<testsuites id="" name="" tests="1" failures="0" skipped="0" errors="1" time="122.34317200000001">
+<testsuite name="candlestick-chart.spec.ts" timestamp="2026-10-12T14:46:12.862Z" hostname="" tests="1" failures="0" skipped="0" time="120.011" errors="1">
+<testcase name="manual refresh reaches the real worker and failed polling stops" classname="candlestick-chart.spec.ts" time="120.011">
+<system-out>
+<![CDATA[{"path":"/api/market-data/chart/live","http":200,"status":"NO_DATA","rows":0}
+{"path":"/api/market-data/candles/requests","http":202,"accepted":true}
+{"path":"/api/market-data/chart/live","http":200,"status":"NO_DATA","rows":0}
+{"path":"/api/market-data/chart/live","http":200,"status":"NO_DATA","rows":0}
+{"path":"/api/market-data/chart/live","http":200,"status":"NO_DATA","rows":0}
+{"path":"/api/market-data/chart/live","http":200,"status":"NO_DATA","rows":0}
+{"path":"/api/market-data/chart/live","http":200,"status":"NO_DATA","rows":0}
+{"path":"/api/market-data/candles","http":200,"status":"COMPLETE","rows":1}
+
+[[ATTACHMENT|..\..\..\..\frontend\test-results\candlestick-chart-manual-r-290b4-er-and-failed-polling-stops\error-context.md]]
+]]>
+</system-out>
+<error message="Test timeout of 120000ms exceeded." type="Error">
+<![CDATA[  candlestick-chart.spec.ts:177:1 › manual refresh reaches the real worker and failed polling stops 
+
+    Test timeout of 120000ms exceeded.
+
+    Error: locator.innerText: Test timeout of 120000ms exceeded.
+    Call log:
+      - waiting for getByTestId('candlestick-chart')
+
+
+      185 |   fixture("repair");
+      186 |   await expect(chart.locator(".chart-selection").getByText("100.75 USDT", { exact: true }).first()).toBeVisible({ timeout: 20_000 }).catch(async (error: unknown) => {
+    > 187 |     if (process.env.CHART_E2E_DIAGNOSTICS === "1") process.stdout.write(await chart.innerText());
+          |                                                                                     ^
+      188 |     throw error;
+      189 |   });
+      190 |   fixture("needs-refresh");
+        at D:\Projects\TiewTrade\Projects\TiewTrade\frontend\e2e\candlestick-chart.spec.ts:187:85
+        at D:\Projects\TiewTrade\Projects\TiewTrade\frontend\e2e\candlestick-chart.spec.ts:186:3
+
+    Error Context: ..\test-results\candlestick-chart-manual-r-290b4-er-and-failed-polling-stops\error-context.md
+]]>
+</error>
+</testcase>
+</testsuite>
+</testsuites>

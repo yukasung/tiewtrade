@@ -13,7 +13,7 @@ test("สมัคร เข้าสู่ระบบ แล้วออกจ
   const email = `e2e-${String(Date.now())}@example.com`;
   const password = "รหัสผ่านที่ยาวพอใช้งานจริง";
 
-  await page.goto("/");
+  await page.goto("/account");
   await expect(page.locator(".auth-layout")).toBeVisible();
   await expect(page.getByTestId("submit")).toHaveClass(/account-button/);
   await page.getByRole("link", { name: "TiewTrade" }).focus();
@@ -58,6 +58,7 @@ test("สมัคร เข้าสู่ระบบ แล้วออกจ
   const userId = await page.getByTestId("user-id").textContent();
   expect(userId).toMatch(/^[0-9a-f-]{36}$/);
 
+  await page.goto("/account");
   await page.getByTestId("log-out").click();
   await expect(page.getByTestId("signed-out")).toBeVisible();
 
@@ -71,7 +72,7 @@ test("สมัคร เข้าสู่ระบบ แล้วออกจ
 test("บอกเหตุผลเมื่อรหัสผ่านไม่ถูกต้อง และไม่พาเข้าระบบ", async ({
   page,
 }, testInfo) => {
-  await page.goto("/");
+  await page.goto("/account");
   await page.getByLabel("อีเมล").fill("nobody-e2e@example.com");
   await page.getByLabel("รหัสผ่าน").fill("รหัสผ่านที่ไม่ถูกต้องเลย");
   await page.getByTestId("submit").click();

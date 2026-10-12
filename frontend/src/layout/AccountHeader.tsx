@@ -4,10 +4,12 @@ import { accountText as t } from "../accountMessages";
 /** Adapted from TailAdmin Pro 2.4.0 layout/AppHeader.tsx. */
 export function AccountHeader({
   open,
+  mobileOpen,
   toggle,
   trigger,
 }: {
   open: boolean;
+  mobileOpen: boolean;
   toggle: () => void;
   trigger: RefObject<HTMLButtonElement>;
 }) {
@@ -21,7 +23,7 @@ export function AccountHeader({
         aria-controls="account-navigation"
         onClick={toggle}
       >
-        ☰
+        <span className={`sidebar-toggle-icon ${mobileOpen ? "is-close" : ""}`} aria-hidden="true" />
       </Button>
       <strong>TiewTrade</strong>
       <span>{t("navigation")}</span>

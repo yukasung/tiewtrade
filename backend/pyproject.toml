@@ -139,6 +139,7 @@ name = "ส่วนกลางของ venues ห้ามพึ่งไล�
 type = "forbidden"
 source_modules = [
     "tiewtrade.venues.candles",
+    "tiewtrade.venues.candle_streams",
     "tiewtrade.venues.constraints",
     "tiewtrade.venues.errors",
     "tiewtrade.venues.fake",
@@ -164,6 +165,7 @@ source_modules = [
     "tiewtrade.venues.binance_th.failures",
     "tiewtrade.venues.binance_th.mapping",
     "tiewtrade.venues.binance_th.stream_mapping",
+    "tiewtrade.venues.binance_th.candle_stream_mapping",
     "tiewtrade.venues.binance_th.rate_limit",
 ]
 forbidden_modules = ["httpx", "urllib", "socket", "websockets", "aiohttp", "requests"]

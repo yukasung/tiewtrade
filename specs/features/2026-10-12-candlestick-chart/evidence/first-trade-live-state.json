@@ -1,0 +1,128 @@
+[
+  {
+    "now": "2026-10-12T18:05:58.18503+00:00",
+    "connected": true,
+    "failure": null,
+    "epoch": 327,
+    "lease_active": true,
+    "preview_rows": 55,
+    "latest_age_seconds": 1.95774
+  },
+  {
+    "now": "2026-10-12T18:06:03.36032+00:00",
+    "connected": true,
+    "failure": null,
+    "epoch": 327,
+    "lease_active": true,
+    "preview_rows": 55,
+    "latest_age_seconds": 7.133027
+  },
+  {
+    "now": "2026-10-12T18:06:08.545816+00:00",
+    "connected": true,
+    "failure": null,
+    "epoch": 327,
+    "lease_active": true,
+    "preview_rows": 55,
+    "latest_age_seconds": 12.318521
+  },
+  {
+    "now": "2026-10-12T18:06:13.718962+00:00",
+    "connected": true,
+    "failure": null,
+    "epoch": 327,
+    "lease_active": true,
+    "preview_rows": 55,
+    "latest_age_seconds": 17.491666
+  },
+  {
+    "now": "2026-10-12T18:06:18.895083+00:00",
+    "connected": false,
+    "failure": "RECOVERING",
+    "epoch": 328,
+    "lease_active": true,
+    "preview_rows": 55,
+    "latest_age_seconds": 22.667789
+  },
+  {
+    "now": "2026-10-12T18:06:24.086308+00:00",
+    "connected": true,
+    "failure": null,
+    "epoch": 329,
+    "lease_active": true,
+    "preview_rows": 55,
+    "latest_age_seconds": 1.839747
+  },
+  {
+    "now": "2026-10-12T18:06:29.260594+00:00",
+    "connected": true,
+    "failure": null,
+    "epoch": 329,
+    "lease_active": true,
+    "preview_rows": 55,
+    "latest_age_seconds": 0.985121
+  },
+  {
+    "now": "2026-10-12T18:06:34.460669+00:00",
+    "connected": true,
+    "failure": null,
+    "epoch": 329,
+    "lease_active": true,
+    "preview_rows": 55,
+    "latest_age_seconds": 0.237693
+  },
+  {
+    "now": "2026-10-12T18:06:39.655198+00:00",
+    "connected": true,
+    "failure": null,
+    "epoch": 329,
+    "lease_active": true,
+    "preview_rows": 55,
+    "latest_age_seconds": 1.408727
+  },
+  {
+    "now": "2026-10-12T18:06:44.839693+00:00",
+    "connected": true,
+    "failure": null,
+    "epoch": 329,
+    "lease_active": true,
+    "preview_rows": 55,
+    "latest_age_seconds": 0.591977
+  },
+  {
+    "now": "2026-10-12T18:06:50.029566+00:00",
+    "connected": true,
+    "failure": null,
+    "epoch": 329,
+    "lease_active": true,
+    "preview_rows": 55,
+    "latest_age_seconds": 1.692584
+  },
+  {
+    "now": "2026-10-12T18:06:55.209259+00:00",
+    "connected": true,
+    "failure": null,
+    "epoch": 329,
+    "lease_active": true,
+    "preview_rows": 55,
+    "latest_age_seconds": 0.990878
+  },
+  {
+    "now": "2026-10-12T18:07:00.408887+00:00",
+    "connected": true,
+    "failure": null,
+    "epoch": 329,
+    "lease_active": true,
+    "preview_rows": 55,
+    "latest_age_seconds": 0.18164
+  },
+  {
+    "now": "2026-10-12T18:07:05.589601+00:00",
+    "connected": true,
+    "failure": null,
+    "epoch": 329,
+    "lease_active": true,
+    "preview_rows": 55,
+    "latest_age_seconds": 1.354287
+  }
+]

@@ -13,8 +13,11 @@ import {
 import { TotpPanel } from "./TotpPanel";
 import { AccountSession } from "./AccountSession";
 import { RealtimePricePanel } from "./RealtimePricePanel";
+import { CandlestickChartPanel } from "./CandlestickChartPanel";
 import { TradingAccountPanel } from "./TradingAccountPanel";
 import { AccountLayout } from "./layout/AccountLayout";
+import { AccountPages } from "./AccountPages";
+import { chartText } from "./chartMessages";
 import { ApiKeyPanel } from "./ApiKeyPanel";
 
 import { AuthLayout } from "./layout/AuthLayout";
@@ -166,8 +169,9 @@ export function AuthPanel(): JSX.Element {
   if (identity !== null) {
     return (
       <AccountSession identity={identity} onExpired={() => setIdentity(null)}>
-        <AccountLayout>
-          <section id="account-details" data-testid="signed-in">
+        <AccountPages>{page => <AccountLayout page={page}>
+          <div data-testid="signed-in">
+          {page === "account" && <section id="account-details">
             <h1>{t("accountHeading")}</h1>
             <p className="page-description">{t("accountHelp")}</p>
             <div className="account-details-panel">
@@ -202,7 +206,8 @@ export function AuthPanel(): JSX.Element {
                 </p>
               )}
             </div>
-            <TotpPanel
+          </section>}
+            {page === "security" && <TotpPanel
               identity={identity}
               onChanged={async () => {
                 const found = await fetchIdentity();
@@ -210,12 +215,15 @@ export function AuthPanel(): JSX.Element {
                   current?.user_id === identity.user_id ? found : current,
                 );
               }}
-            />
-            <ApiKeyPanel identity={identity} />
-            <TradingAccountPanel identity={identity} />
-            <RealtimePricePanel />
-          </section>
-        </AccountLayout>
+            />}
+            {page === "api-keys" && <ApiKeyPanel identity={identity} />}
+            {page === "trading-account" && <TradingAccountPanel identity={identity} />}
+            {page === "prices" && <RealtimePricePanel />}
+            {page === "chart" && (import.meta.env.VITE_CHART_ENABLED === "1"
+              ? <CandlestickChartPanel userId={identity.user_id}/>
+              : <p role="status">{chartText("errors.CHART_DISABLED")}</p>)}
+          </div>
+        </AccountLayout>}</AccountPages>
       </AccountSession>
     );
   }

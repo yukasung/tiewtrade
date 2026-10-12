@@ -1,7 +1,7 @@
 """Public candle observation contract; pages do not promise complete coverage."""
 
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Protocol, runtime_checkable
 
 from tiewtrade.core.market_data import Candle, CandleWindow, Timeframe
@@ -54,6 +54,11 @@ def validate_request(
 
 @runtime_checkable
 class CandleSource(Protocol):
+    @property
+    def max_request_span(self) -> timedelta | None:
+        """Maximum time range per fetch; None means only the slot limit applies."""
+        ...
+
     async def fetch_candles(
         self, symbol: Symbol, timeframe: Timeframe, start: datetime, end: datetime, limit: int
     ) -> CandlePage: ...

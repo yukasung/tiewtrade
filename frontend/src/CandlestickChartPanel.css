@@ -1,0 +1,21 @@
+.candlestick-panel {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.chart-controls, .chart-indicators, .chart-selection dl {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--account-space-sm);
+}
+.chart-controls label { display: grid; gap: var(--account-field-gap); }
+.chart-controls button, .chart-selection button, .chart-controls select {
+  padding: var(--account-space-sm) var(--account-space-md);
+  border: var(--account-border-width) solid var(--account-line);
+  border-radius: var(--account-radius);
+}
+.chart-indicators { margin-block: var(--account-space-md); min-inline-size: 0; }
+.chart-controls select { max-width: 100%; }
+.chart-canvas { width: 100%; min-width: 0; height: 580px; }
+.chart-selection dl > div { min-width: 0; overflow-wrap: anywhere; }
+.chart-selection dt { font-weight: var(--account-emphasis-weight); }
+.chart-attribution { margin-block: var(--account-space-sm); }

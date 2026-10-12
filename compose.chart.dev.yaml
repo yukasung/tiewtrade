@@ -1,0 +1,15 @@
+# F-12 local preview only. The base Compose keeps the chart disabled.
+# docker compose --env-file config/postgres.env -f compose.yaml -f compose.chart.dev.yaml up -d
+# Port 18000 avoids the Windows reservation covering port 8000.
+services:
+  api:
+    ports: !override
+      - "127.0.0.1:18000:8000"
+    environment:
+      TIEWTRADE_CHART_ENABLED: "1"
+  market-data:
+    environment:
+      TIEWTRADE_CHART_ENABLED: "1"
+  frontend:
+    environment:
+      VITE_CHART_ENABLED: "1"

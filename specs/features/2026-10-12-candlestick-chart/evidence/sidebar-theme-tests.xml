@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="54" failures="0" errors="0" time="1.7441202">
+    <testsuite name="tests/AccountLayout.test.tsx" timestamp="2026-10-12T17:16:33.585Z" hostname="DESKTOP-RONGMEV" tests="5" failures="0" errors="0" skipped="0" time="0.2082221">
+        <testcase classname="tests/AccountLayout.test.tsx" name="toggles the desktop icon rail without hiding the current module" time="0.1142017">
+        </testcase>
+        <testcase classname="tests/AccountLayout.test.tsx" name="removes the mobile backdrop when resizing into desktop layout" time="0.0333364">
+        </testcase>
+        <testcase classname="tests/AccountLayout.test.tsx" name="keeps one main landmark when embedded in the page main" time="0.0149712">
+        </testcase>
+        <testcase classname="tests/AccountLayout.test.tsx" name="closes navigation with Escape and backdrop and restores trigger focus" time="0.0190448">
+        </testcase>
+        <testcase classname="tests/AccountLayout.test.tsx" name="preserves native form props and explicit button types" time="0.0242059">
+        </testcase>
+    </testsuite>
+    <testsuite name="tests/AccountNavigation.test.tsx" timestamp="2026-10-12T17:16:33.587Z" hostname="DESKTOP-RONGMEV" tests="4" failures="0" errors="0" skipped="0" time="0.2520318">
+        <testcase classname="tests/AccountNavigation.test.tsx" name="defaults to chart and mounts only the selected module without replacing the session" time="0.1501547">
+        </testcase>
+        <testcase classname="tests/AccountNavigation.test.tsx" name="preserves a direct link through authentication and handles a changed or unknown path" time="0.0302106">
+        </testcase>
+        <testcase classname="tests/AccountNavigation.test.tsx" name="keeps the disabled chart default without mounting modules or starting their requests" time="0.0429206">
+        </testcase>
+        <testcase classname="tests/AccountNavigation.test.tsx" name="navigates a plain internal click without reloading and preserves modified clicks" time="0.0258583">
+        </testcase>
+    </testsuite>
+    <testsuite name="tests/AuthLayout.test.tsx" timestamp="2026-10-12T17:16:33.588Z" hostname="DESKTOP-RONGMEV" tests="1" failures="0" errors="0" skipped="0" time="0.1027072">
+        <testcase classname="tests/AuthLayout.test.tsx" name="renders an auth form with TiewTrade branding and no account navigation or nested main" time="0.0999372">
+        </testcase>
+    </testsuite>
+    <testsuite name="tests/CandlestickChartPanel.test.tsx" timestamp="2026-10-12T17:16:33.589Z" hostname="DESKTOP-RONGMEV" tests="3" failures="0" errors="0" skipped="0" time="0.1348239">
+        <testcase classname="tests/CandlestickChartPanel.test.tsx" name="shows loading while the first request is scheduled, rather than empty data" time="0.0994078">
+        </testcase>
+        <testcase classname="tests/CandlestickChartPanel.test.tsx" name="shows empty only after an empty bundle completes" time="0.0188131">
+        </testcase>
+        <testcase classname="tests/CandlestickChartPanel.test.tsx" name="shows stopped when delivery errors cancel a pending history episode" time="0.0138306">
+        </testcase>
+    </testsuite>
+    <testsuite name="tests/chart-renderer.test.ts" timestamp="2026-10-12T17:16:33.589Z" hostname="DESKTOP-RONGMEV" tests="6" failures="0" errors="0" skipped="0" time="0.0766129">
+        <testcase classname="tests/chart-renderer.test.ts" name="projects only inside the renderer and preserves every exact source string" time="0.0577428">
+        </testcase>
+        <testcase classname="tests/chart-renderer.test.ts" name="uses whitespace for absent OHLC and never joins indicators across a gap or warm-up" time="0.0041725">
+        </testcase>
+        <testcase classname="tests/chart-renderer.test.ts" name="reports an unrenderable quantity without changing its exact source" time="0.0030437">
+        </testcase>
+        <testcase classname="tests/chart-renderer.test.ts" name="reports an unrenderable quantity without changing its exact source" time="0.0036825">
+        </testcase>
+        <testcase classname="tests/chart-renderer.test.ts" name="reports an unrenderable quantity without changing its exact source" time="0.0023195">
+        </testcase>
+        <testcase classname="tests/chart-renderer.test.ts" name="removes unverified lines and closes the library subscriptions on teardown" time="0.0038508">
+        </testcase>
+    </testsuite>
+    <testsuite name="tests/RealtimePricePanel.test.tsx" timestamp="2026-10-12T17:16:33.590Z" hostname="DESKTOP-RONGMEV" tests="35" failures="0" errors="0" skipped="0" time="0.9697223">
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="reports readiness only at server reference, preserves exact decimals and trade time" time="0.0860601">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="late GET cannot overwrite stream and offline warns without changing snapshot" time="0.0322853">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="reconnect awaits full snapshot and rejects callbacks from old transport" time="0.0408675">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="session 4401 uses existing expiry flow and cleanup closes socket" time="0.0107766">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="observed resume invalidates transport; wall clock alone does not certify readiness" time="0.0291731">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="heartbeat detection warns immediately and does not infer a market outage" time="0.019187">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="market alert remains visible beside delivery failure and is not cleared by opening" time="0.0137975">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="identity replacement prevents late old socket and GET callbacks entering new cache" time="0.0078696">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="a late failed GET cannot demote a valid newer socket delivery" time="0.04149">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="invalid schema warns and preserves last valid snapshot" time="0.021549">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="English snapshot labels and reference timestamps remain observational across silent wall-clock jumps" time="0.0181286">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="translates &apos;READY&apos; into &apos;th&apos; without exposing raw reason codes" time="0.0310716">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="translates &apos;READY&apos; into &apos;en&apos; without exposing raw reason codes" time="0.0268205">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="translates &apos;STALE&apos; into &apos;th&apos; without exposing raw reason codes" time="0.0380194">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="translates &apos;STALE&apos; into &apos;en&apos; without exposing raw reason codes" time="0.0149442">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="translates &apos;RECOVERING&apos; into &apos;th&apos; without exposing raw reason codes" time="0.0302466">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="translates &apos;RECOVERING&apos; into &apos;en&apos; without exposing raw reason codes" time="0.0222">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="translates &apos;MISSING&apos; into &apos;th&apos; without exposing raw reason codes" time="0.0335485">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="translates &apos;MISSING&apos; into &apos;en&apos; without exposing raw reason codes" time="0.0200549">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="translates &apos;VENUE_PROTOCOL&apos; into &apos;th&apos; without exposing raw reason codes" time="0.0285358">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="translates &apos;VENUE_PROTOCOL&apos; into &apos;en&apos; without exposing raw reason codes" time="0.0351587">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="translates &apos;VENUE_RATE_LIMITED&apos; into &apos;th&apos; without exposing raw reason codes" time="0.0215962">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="translates &apos;VENUE_RATE_LIMITED&apos; into &apos;en&apos; without exposing raw reason codes" time="0.0276463">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="translates &apos;VENUE_UNAVAILABLE&apos; into &apos;th&apos; without exposing raw reason codes" time="0.0234516">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="translates &apos;VENUE_UNAVAILABLE&apos; into &apos;en&apos; without exposing raw reason codes" time="0.0261552">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="translates &apos;VENUE_REJECTED&apos; into &apos;th&apos; without exposing raw reason codes" time="0.0242943">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="translates &apos;VENUE_REJECTED&apos; into &apos;en&apos; without exposing raw reason codes" time="0.0310923">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="translates &apos;SUBSCRIPTION_ACK_TIMEOUT&apos; into &apos;th&apos; without exposing raw reason codes" time="0.0161517">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="translates &apos;SUBSCRIPTION_ACK_TIMEOUT&apos; into &apos;en&apos; without exposing raw reason codes" time="0.0271685">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="translates &apos;ORDER_UNCONFIRMED&apos; into &apos;th&apos; without exposing raw reason codes" time="0.0340841">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="translates &apos;ORDER_UNCONFIRMED&apos; into &apos;en&apos; without exposing raw reason codes" time="0.0339339">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="translates &apos;DELIVERY_UNAVAILABLE&apos; into &apos;th&apos; without exposing raw reason codes" time="0.0320244">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="translates &apos;DELIVERY_UNAVAILABLE&apos; into &apos;en&apos; without exposing raw reason codes" time="0.021525">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="translates &apos;FUTURE_REASON&apos; into &apos;th&apos; without exposing raw reason codes" time="0.0145272">
+        </testcase>
+        <testcase classname="tests/RealtimePricePanel.test.tsx" name="translates &apos;FUTURE_REASON&apos; into &apos;en&apos; without exposing raw reason codes" time="0.0308717">
+        </testcase>
+    </testsuite>
+</testsuites>

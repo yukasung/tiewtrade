@@ -48,3 +48,9 @@ uv run mypy
 uv run lint-imports
 uv run pytest
 ```
+
+ระหว่างพัฒนาให้เลือก Tests ตามผลกระทบและลำดับการตรวจใน
+`testing.md` หัวข้อ 7 ไม่จำเป็นต้องรันทุกคำสั่งหลังทุกการแก้ไข
+ก่อน merge ต้องมีผลผ่านด่านบังคับข้างต้นสำหรับ candidate สุดท้าย ไม่รันซ้ำทุก patch
+performance/workload/resource ชุดเต็มอยู่ที่ release checkpoint ตาม `testing.md` หัวข้อ 7
+ก่อน Completed/release ต้องตรวจครบ `validation.md`; ห้ามใช้ smoke แทนผลรับรองชุดเต็ม

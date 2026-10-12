@@ -15,7 +15,10 @@ implementation/review และด่านที่ไม่เลื่อน�
 ตาม [ทะเบียนตรวจรับ](../roadmap.md#ทะเบียนงานค้างสำหรับชุดที่-9)
 ด่านอื่นที่ยังล้มต้องแก้ก่อน merge ห้าม skip/xfail หรือลดเกณฑ์ CI เพื่อให้ผ่าน
 ผล Failed/Partial ของการตรวจรับที่เลื่อนต้องเก็บไว้ ไม่แปลงเป็น Passed
-การเลื่อน feature อื่นต้องระบุรายการและได้รับอนุมัติเฉพาะ ไม่ใช่สิทธิ์เลื่อนทุกเทสต์
+**การปรับ workflow ที่เจ้าของอนุมัติ 2026-10-12:** ย้ายการตรวจ performance/workload/
+stress/endurance/resource ชุดเต็มไป release checkpoint ตามหัวข้อ 7 รวม F-12 V-17
+โดยระบุรายการใน validation/roadmap เป็น `Pending Full Validation`
+ไม่ใช่สิทธิ์เลื่อนเทสต์ความถูกต้องหรือความปลอดภัย และไม่เปลี่ยนผล Failed/Partial เดิม
 
 การ merge นี้ไม่รับรองพร้อมใช้งานจริง ไม่อนุญาต production activation หรือ Completed
 จนผ่าน validation ครบ และยังต้องให้เจ้าของสั่ง commit/push/merge ตามขั้นตอนเดิม
@@ -26,7 +29,7 @@ implementation/review และด่านที่ไม่เลื่อน�
 | รูปแบบและ lint | โค้ดสะอาดตามมาตรฐาน |
 | ตรวจชนิดข้อมูล | เข้มที่สุดกับโค้ดที่คำนวณเงิน |
 | ขอบเขตสถาปัตยกรรม | import-linter ตามกฎใน `architecture.md` |
-| เทสต์ | ด่านก่อน merge ผ่านทั้งหมด; ด่านตรวจรับที่เจ้าของอนุมัติเลื่อนติดตามในชุดที่ 9 |
+| เทสต์ | ด่านบังคับก่อน merge ผ่านทั้งหมด; ชุดยาวที่เลื่อนติดตามใน release checkpoint/ชุดที่ 9 |
 
 ## 2. โค้ดที่คำนวณเงิน
 
@@ -91,3 +94,79 @@ implementation/review และด่านที่ไม่เลื่อน�
 ## 6. ทุก feature ต้องมี validation.md
 
 บอกไว้ล่วงหน้าว่า "เสร็จ" หมายถึงอะไร และตรวจอย่างไร — เขียนก่อนลงมือทำ ไม่ใช่เขียนตามหลัง
+
+## 7. เลือกการตรวจตามผลกระทบและลดงานซ้ำ
+
+### ระยะรันและความหมายของผล
+
+| ระยะ | ตรวจอะไร |
+|---|---|
+| ระหว่างพัฒนา | targeted Tests, lint/types และ smoke ตาม diff กับ dependencies ที่ได้รับผลกระทบ |
+| Candidate ก่อน merge | full regression และ lint/types/imports/build/generated contracts/required CI ที่กำหนด เมื่อชุดการแก้นิ่ง |
+| Release checkpoint | performance/workload/stress/endurance/resource ชุดเต็ม และเกณฑ์ตรวจรับที่ยังค้าง ก่อน Completed/production activation/ใช้เงินจริง/เปิดให้คนนอก |
+
+`Pending Full Validation` คือเกณฑ์ชุดเต็มที่ยังรอ checkpoint ไม่ใช่ผล Passed
+ถ้าเคย Failed/Partial ให้เก็บผลนั้นและเพิ่มระยะรัน/งานค้างแยกต่างหาก
+การกำหนด checkpoint ต้องชี้กลับไปยังเกณฑ์เดิมและทะเบียน roadmap; ไม่ลบ workload,
+ระยะเวลา, thresholds, modes หรือกรณีขอบเขตสูงสุดเพื่อให้รอบสั้นผ่าน
+
+เกณฑ์หนึ่งอาจมีหลายส่วน: ตรวจ correctness/safety/transaction/concurrency/idempotency
+ที่ได้รับผลกระทบระหว่างพัฒนา แม้จะอยู่ใน V เดียวกับ benchmark
+หาก smoke ไม่พอพิสูจน์ความเสี่ยงด้านเงิน/ออเดอร์/ความถูกต้อง ต้องรันชุดที่จำเป็นก่อน
+ไม่รอ release; smoke ที่ผ่านไม่ถือว่าผ่านเกณฑ์ชุดเต็ม
+
+### ก่อนและระหว่างพัฒนา
+
+- ใช้ milestone/แนวทางจาก plan ที่อนุมัติแล้ว ผูกกับ Tests และเกณฑ์ใน `validation.md`
+  ไม่เขียนแผนใหม่หากข้อกำหนดและแนวทางไม่เปลี่ยน ไม่ลดเกณฑ์เพื่อให้ตรวจเร็วขึ้น
+- อ่าน spec และโค้ดที่เกี่ยวข้องให้ครบครั้งแรก จากนั้นอ่านซ้ำเมื่อมีการเปลี่ยนแปลง
+  dependency ใหม่ หรือข้อขัดแย้ง; ขยายการค้นหาเมื่อยังระบุผลกระทบไม่ได้
+- ก่อนการตรวจชุดยาว ตรวจ runtime versions, lockfiles, virtualenv, services,
+  DB bootstrap และ tooling ที่ต้องใช้ ให้ตรงกับ environment ที่กำหนด
+- เลือก Tests จากผลกระทบของ diff รวม callers, dependencies, contracts, database,
+  concurrency และ trading safety ไม่เลือกจากชื่อไฟล์อย่างเดียว และไม่มีรายการข้ามตายตัว
+- รวมการแก้ที่เกี่ยวข้องก่อนตรวจ ไม่รันทุกคำสั่งหลังทุก patch/ทุกงาน
+  ใช้ focused Tests ระหว่างพัฒนา ไม่รัน full suite อัตโนมัติหลังทุก fix
+- เริ่มจาก format, lint, type-check และ Tests ที่ช่วยพบข้อผิดพลาดเร็ว
+  แล้วตรวจ integration และด่านรับงานที่เกี่ยวข้อง โดยไม่ลดความเข้มของคำสั่งตรวจ
+- หลังแก้ข้อผิดพลาด ตรวจ Tests ที่ล้มและ regression ที่ได้รับผลกระทบก่อนรันชุดยาวใหม่
+- แยก environment/fixture/tooling failure จาก code failure ก่อน retry
+  แก้สาเหตุหรือเพิ่ม diagnostic เฉพาะจุด ไม่รอ timeout เดิมซ้ำโดยไม่มีข้อมูลใหม่
+- ไม่เริ่ม benchmark ชุดเต็มโดยปริยาย ใช้ smoke เมื่อช่วยวินิจฉัยความเสี่ยงของ diff;
+  รันเต็มก่อน release checkpoint เฉพาะเมื่อมีความเสี่ยงจริงที่จำเป็นต้องพิสูจน์ พร้อมบันทึกเหตุผล
+- ไม่เพิ่ม parallel workers ให้ Tests ที่ใช้ shared mutable state จนพิสูจน์ isolation ได้
+- ห้ามลดหรือข้ามการตรวจที่บังคับเกี่ยวกับ order execution, duplicate orders,
+  balances, positions, financial precision, risk management, concurrency,
+  idempotency และ exchange integration
+- ห้ามส่งออเดอร์ Live ใน automated validation; ใช้ fixtures/FakeVenue/Paper
+  ส่วน venue contract จริงคงเป็น bounded public requests ตามหัวข้อ 5
+
+### หลักฐานและการตรวจรับ
+
+- บันทึกคำสั่ง, environment, revision และการเปลี่ยนแปลงที่ยังไม่ commit,
+  ผลตรวจ, เวลาที่วัดได้ และเกณฑ์ validation ที่ผลนั้นครอบคลุม
+  ใช้ ledger/หลักฐานเดิมเมื่อเพียงพอ ไม่สร้าง manifest หรือรายงานใหม่หลังทุก patch
+- ก่อนรันคำสั่งเดิมซ้ำ ระบุเหตุผล เช่น inputs เปลี่ยน, ผลเดิมไม่ครบ,
+  ตรวจ flaky behavior หรือเกณฑ์กำหนดให้รันหลายรอบ
+- ใช้ผลเดิมประกอบการตรวจรับได้เมื่อยืนยันว่า source, Tests, contracts, migrations,
+  dependencies, configuration, environment และ test harness ที่ผลนั้นพึ่งพาไม่เปลี่ยน
+  และเกณฑ์ไม่ได้กำหนดให้ตรวจใหม่; หากยืนยันไม่ได้ ให้ตรวจซ้ำหรือขยายขอบเขต
+- ก่อน merge ต้องตรวจด่านบังคับครบ พร้อมหลักฐานที่ใช้ได้กับ candidate สุดท้าย
+  ก่อน Completed/release ต้องตรวจครบทุกเกณฑ์ใน `validation.md` รวมชุดเต็มที่เลื่อน
+  focused Tests ไม่ทดแทนด่านที่ยังไม่ครบ
+- Full suite/required CI checks คงบังคับที่ checkpoint ก่อน merge
+  หลังแก้ให้ตรวจเฉพาะส่วนที่ผลเดิมได้รับผลกระทบ; ขยายถึง full เมื่อผลกระทบกว้างหรือระบุไม่ได้
+  ไม่ตรวจซ้ำส่วนที่ยัง valid และไม่ใช้ผล local แทน required CI บน commit สุดท้าย
+- อัปเดตผล validation ตามหลักฐานจริง ไม่เปลี่ยน Partial/Failed/Not Run เป็น Passed
+  จนเงื่อนไขของด่านนั้นครบ; diagnostic run สั้นไม่ทดแทน load/soak/acceptance ที่กำหนด
+
+### รีวิว
+
+- รีวิวตามขั้น SDD; การยังไม่มี implementation ในขั้น requirements/plan ไม่ใช่ defect
+- เริ่มจาก changed files กับ dependencies ที่เกี่ยวข้อง เน้น Critical/High และ trading safety
+  ไม่รีวิวทั้ง repo โดยปริยาย; ขยายเมื่อ shared domain/security/architecture รับผลกระทบหรือขอบเขตไม่ชัด
+- หลังแก้ findings ให้ตรวจ findings เดิม, diff ใหม่ และผลกระทบต่อ regression
+  ขยายรีวิวเมื่อ scope, architecture, contracts หรือ safety logic เปลี่ยน
+- ไม่เริ่มรอบรีวิวใหม่หรือรายงาน finding เดิมซ้ำเมื่อไม่มีการเปลี่ยนแปลง/หลักฐานใหม่
+- รายงานความคืบหน้าตาม milestone พร้อมหลักฐานและสิ่งที่ยังขาด
+  ไม่เพิ่มจุดอนุมัติซ้ำสำหรับงานที่เจ้าของอนุมัติแล้ว

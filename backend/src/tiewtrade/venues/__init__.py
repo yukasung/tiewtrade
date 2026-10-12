@@ -12,6 +12,7 @@
 from collections.abc import Callable
 from datetime import datetime, timedelta
 
+from tiewtrade.venues.candle_streams import CandleFeed
 from tiewtrade.venues.candles import CandlePage, CandleSource
 from tiewtrade.venues.constraints import DEFAULT_CONSTRAINTS_COST, SymbolConstraintSource
 from tiewtrade.venues.errors import (
@@ -24,7 +25,7 @@ from tiewtrade.venues.errors import (
     VenueRejectedError,
     VenueUnavailableError,
 )
-from tiewtrade.venues.fake import FakePriceFeed, FakeVenue
+from tiewtrade.venues.fake import FakeCandleFeed, FakePriceFeed, FakeVenue
 from tiewtrade.venues.limits import CallCost, NoRateLimit, RateLimitGuard
 from tiewtrade.venues.price_streams import PriceFeed
 from tiewtrade.venues.prices import DEFAULT_LATEST_PRICE_COST, Price, PriceSource
@@ -36,6 +37,13 @@ from tiewtrade.venues.wallets import (
     WalletHoldings,
     WalletSource,
 )
+
+
+def live_candle_feed(*, clock: Callable[[], datetime]) -> CandleFeed:
+    from tiewtrade.venues.binance_th.candle_feed import BinanceThCandleFeed
+    from tiewtrade.venues.binance_th.stream_transport import BinanceThStreamTransport
+
+    return BinanceThCandleFeed(BinanceThStreamTransport(clock=clock))
 
 
 def live_candle_source(
@@ -131,8 +139,10 @@ __all__ = [
     "DEFAULT_HOLDINGS_COST",
     "DEFAULT_LATEST_PRICE_COST",
     "CallCost",
+    "CandleFeed",
     "CandlePage",
     "CandleSource",
+    "FakeCandleFeed",
     "FakePriceFeed",
     "FakeVenue",
     "Holding",
@@ -155,6 +165,7 @@ __all__ = [
     "VenueUnavailableError",
     "WalletHoldings",
     "WalletSource",
+    "live_candle_feed",
     "live_candle_source",
     "live_price_feed",
     "live_wallet_factory",

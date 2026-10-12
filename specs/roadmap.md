@@ -26,6 +26,13 @@
 - ต้องผ่านการตรวจรับก่อนใช้เงินจริงใน F-25 หรือเปิดให้คนนอก; ระหว่างนี้พัฒนาและทดลองภายในด้วย Paper เท่านั้น การเปิด prepared mode ใช้งานจริงและ Completed ยังคงต้องผ่านด่านเดิม; merge เพื่อพัฒนาต่อทำได้เมื่อ implementation/review และด่านที่ไม่เลื่อนผ่านครบตาม testing standard (เจ้าของอนุมัติ 2026-10-11)
 - ก่อนเริ่มรอบยาวให้ตกลงเวลากับเจ้าของอีกครั้ง เก็บ [หลักฐานเดิม](features/2026-10-10-backend-indicators/profiling/capacity-report.md) ไว้เพื่อเปรียบเทียบ
 
+**เพิ่มเติมตามคำสั่งปรับ workflow 2026-10-12:** performance/workload/stress/endurance/
+resource ชุดเต็มของ feature ต่าง ๆ รวม F-12 V-17 รันที่ release checkpoint/ชุดที่ 9
+ตาม [testing standard หัวข้อ 7](standards/testing.md#7-เลือกการตรวจตามผลกระทบและลดงานซ้ำ).
+ระบุ `Pending Full Validation` ในเกณฑ์ที่ยังไม่รัน ไม่เปลี่ยนผล Failed/Partial ที่มีอยู่
+และไม่เลื่อนเทสต์ correctness/trading safety ตามการจัดระยะรัน benchmark.
+ต้องรันส่วนที่จำเป็นเร็วขึ้นเมื่อมีความเสี่ยงจริงที่ smoke พิสูจน์ไม่ได้.
+
 **F-01 ถึง F-04 เสร็จแล้ว** (2026-09-27) · **F-33** (2026-09-28) · **F-35** (2026-10-01)
 · **F-05** (2026-10-03) · **F-06** (2026-10-04) · **F-07 เสร็จแล้ว** (2026-10-07) · **F-08 เสร็จแล้ว** (2026-10-07) — บัญชีเดียวและ TailAdmin ทุกหน้าปัจจุบัน; frontend113/E2E8/reviewsผ่าน; เจ้าของทดสอบ UI และสั่ง commit/push/PR/CI/merge ผ่าน [PR #6](https://github.com/yukasung/tiewtrade/pull/6)
 
@@ -192,7 +199,7 @@ domain ของเงินที่ปฏิเสธค่าที่เก�
 | F-09 | ดึงและเก็บแท่งเทียนผ่านชั้น venue | **Completed** | issue1–5แก้แล้ว; backend1,652/frontend113/E2E9/lint/type/architecture/build/generatedcontract และDocker/CLI--once1,000rowsผ่านหลังแก้; final deep reviewAPPROVED; [audit](reviews/2026-10-07-f09-market-data-validation-audit.md); RESTยังUNCONFIRMED; เจ้าของอนุมัติส่งงานผ่าน [PR #7](https://github.com/yukasung/tiewtrade/pull/7) โดยตรวจ CI ก่อน merge |
 | F-10 | รับราคาเรียลไทม์ + ต่อกลับเมื่อหลุด | **Completed** | 2026-10-08 · review fixesครบ; deepreview APPROVED; NC-24..29ปิด · latest local backend1870ผ่าน/2live deselected, frontend158, Playwright10; PG/Redis integration805ผ่าน · Ruff/format/mypy/7imports/lock/OpenAPI/buildผ่าน · remoteCIครบ6jobsผ่าน ([run37743108753](https://github.com/yukasung/tiewtrade/actions/runs/37743108753)); เจ้าของอนุมัติปิดงานและmergeแล้ว · ผลใน `features/2026-10-07-realtime-prices/validation.md` และ `reviews/2026-10-07-f10-realtime-prices/final-validation.md` |
 | F-11 | คำนวณ indicator ที่ backend | **Development Complete** | 2026-10-12 — implementation/A–D/NC-38 และ refactor ผ่านรีวิว; ด่านที่ไม่เลื่อนผ่านครบตาม [validation](features/2026-10-10-backend-indicators/validation.md). [PR #9](https://github.com/yukasung/tiewtrade/pull/9) merge เข้า main (`279c03f`), [CI ก่อน merge](https://github.com/yukasung/tiewtrade/actions/runs/38210601366) ผ่านครบ 6 jobs ที่ `e84b0e8`; refactor regression149ผ่าน. รอตรวจรับชุด9: load/soak/capacity และ release checks; C2/C6 Failed เดิม, C3/C5 และส่วนที่พึ่ง capacity ยังไม่ผ่าน — [ทะเบียน/หลักฐาน](features/2026-10-10-backend-indicators/profiling/capacity-report.md). ยังไม่ใช่ Completed และไม่รับรอง production PREPARED |
-| F-12 | กราฟแท่งเทียนบนหน้าเว็บ | Planned | + จุดเข้า/ออก (R-14) |
+| F-12 | กราฟแท่งเทียนบนหน้าเว็บ | **In Progress** | เจ้าของอนุมัติ [requirements](features/2026-10-12-candlestick-chart/requirements.md), [plan](features/2026-10-12-candlestick-chart/plan.md)/[validation](features/2026-10-12-candlestick-chart/validation.md) และ implementation (2026-10-12). เปิดกราฟใน local development แล้ว; [หลักฐานและงานตรวจรับที่ยังขาด](features/2026-10-12-candlestick-chart/evidence/checkpoint.md). รวมแท่งสดตาม NC-39; เลื่อนจุดเข้า/ออกจริงตาม NC-40 จนมีข้อมูลออเดอร์และ spec การเชื่อมกราฟ (R-14). ยังไม่ผ่าน validation ครบและไม่ใช่ Completed |
 | F-37 | **รายการเหรียญที่รองรับและการจัดการ** | Planned | รายการตั้งต้น 5 คู่, Platform Admin เพิ่ม/ถอนได้, ผลของการถอน (ห้ามเปิดใหม่ / ไม้เดิมไม่แตะ / บอทหยุด) — **ต้องเสร็จก่อน F-16** เพราะจุดตรวจออเดอร์ต้องใช้รายการนี้ (`mission.md` หัวข้อ 6, `standards/trading-safety.md` หัวข้อ 3) |
 
 ## ชุดที่ 4 — Paper Trading
@@ -278,6 +285,7 @@ Development Complete เป็น Completed เมื่อเกณฑ์ขอ
 
 | Feature / งาน | เกณฑ์ที่ต้องตรวจรับ | หลักฐาน / ข้อจำกัดปัจจุบัน |
 |---|---|---|
+| F-12 workload/resource | V-17 ชุดเต็มทั้ง LEGACY/PREPARED และส่วนสรุป V-18 ที่พึ่ง V-17 | **Pending Full Validation** — เจ้าของอนุมัติย้ายเวลารันไป release checkpoint/ชุดที่ 9 วันที่ 2026-10-12; [เกณฑ์/ระยะรัน](features/2026-10-12-candlestick-chart/validation.md#ระยะรัน--เจ้าของอนุมัติปรับ-workflow-2026-10-12). คง workload, warm-up/ระยะรัน, thresholds และ max-input เดิมทั้งหมด; correctness/security/concurrency และ V-18 ด่านบังคับก่อน merge ยังต้องผ่าน |
 | F-11 โหลดและระยะยาว | R2-C2/C3/C5 รอบเต็ม; C4 ส่วน trace/fairness ที่ต้องใช้รอบเต็ม; C6 และ R2-G7/D7 เฉพาะส่วนที่พึ่ง capacity | [Capacity report](features/2026-10-10-backend-indicators/profiling/capacity-report.md): C2 Failed (lag 109.465 ms > 100 ms), C3/C5 ยังไม่รัน, C4 ยังไม่ครบ, C6 Failed; ต้องแก้และพิสูจน์ตามเกณฑ์เดิม |
 | F-11 หลักฐานประกอบการตรวจรับ | R2-7 ต้องมีกรณี 525,600 slots; รวมผล worker/resource/parity ที่ใช้ปิด capacity gate | [Validation](features/2026-10-10-backend-indicators/validation.md): R2-7 exact fixture/digestผ่านแล้วตามA–D (525,600rows/527checkpoints); cold/warm/resource measurementยังDeferred การเลื่อนรอบรวมไม่ยกเว้นเทสต์ความถูกต้อง |
 | ระบบรวม | Flow ผู้ใช้, เงิน/ออเดอร์, ความล้มเหลว/กู้คืน และความปลอดภัยตามตารางชุดที่ 9 | รอแผนตรวจรับรวมและ validation ที่อนุมัติ; ไม่แทนเทสต์ของแต่ละ feature |

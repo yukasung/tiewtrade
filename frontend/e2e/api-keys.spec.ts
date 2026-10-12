@@ -50,7 +50,7 @@ test("เพิ่ม key ยืนยัน TOTP → ตรวจชั่ว�
 }, testInfo) => {
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
-  await page.goto("/");
+  await page.goto("/security");
   await page.getByTestId("switch-mode").click();
   await page
     .getByLabel("อีเมล")
@@ -68,6 +68,7 @@ test("เพิ่ม key ยืนยัน TOTP → ตรวจชั่ว�
   await page.getByTestId("confirm-totp").click();
   await expect(page.getByTestId("totp-state")).toHaveText("เปิดอยู่");
 
+  await page.goto("/api-keys");
   const panel = page.getByTestId("api-key-panel");
   await panel.getByLabel("ชื่อ key").fill("กระเป๋าทดสอบ");
   await panel.locator("#api-key-key").fill(PUBLIC);
@@ -125,6 +126,7 @@ test("เพิ่ม key ยืนยัน TOTP → ตรวจชั่ว�
   await panel.getByRole("button", { name: "ลบ key", exact: true }).click();
   await panel.getByRole("button", { name: "ยืนยันลบ", exact: true }).click();
   await expect(panel.getByText(/ยังไม่มี API key/)).toBeVisible();
+  await page.goto("/account");
   await page.getByTestId("log-out").click();
   await expect(panel).toBeHidden();
   expect(errors).toEqual([]);
@@ -134,18 +136,21 @@ test("มือถือ: บัญชีไม่มี TOTP เห็นทา
   page,
 }, testInfo) => {
   await page.setViewportSize({ width: 375, height: 812 });
-  await page.goto("/");
+  await page.goto("/security");
   await page.getByTestId("switch-mode").click();
   await page
     .getByLabel("อีเมล")
     .fill(`e2e-key-mobile-${String(Date.now())}@example.com`);
   await page.getByLabel("รหัสผ่าน", { exact: true }).fill(PASSWORD);
   await page.getByTestId("submit").click();
+  await page.goto("/api-keys");
   const panel = page.getByTestId("api-key-panel");
   await expect(panel).toBeVisible();
   await expect(panel.getByLabel("API secret", { exact: true })).toBeHidden();
   await panel.getByRole("link", { name: /เปิดการยืนยันสองชั้น/ }).click();
   await expect(page.getByTestId("totp-panel")).toBeInViewport();
+  await page.goto("/api-keys");
+  await expect(panel).toBeVisible();
   expect(
     await panel.evaluate(
       (element) => element.scrollWidth <= element.clientWidth,

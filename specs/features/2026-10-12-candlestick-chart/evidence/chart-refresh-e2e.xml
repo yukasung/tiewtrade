@@ -1,0 +1,80 @@
+<testsuites id="" name="" tests="2" failures="1" skipped="0" errors="1" time="89.273696">
+<testsuite name="candlestick-chart.spec.ts" timestamp="2026-10-12T14:38:55.481Z" hostname="" tests="2" failures="1" skipped="0" time="86.514" errors="1">
+<testcase name="ended preview waits for actual REST commit before new indicator bundle" classname="candlestick-chart.spec.ts" time="21.026">
+<system-out>
+<![CDATA[{"path":"/api/market-data/chart/live","http":200,"status":"NO_DATA","rows":0}
+{"path":"/api/market-data/chart/live","http":200,"status":"RECOVERING","rows":2}
+{"path":"/api/market-data/chart/live","http":200,"status":"READY","rows":1}
+{"path":"/api/market-data/chart/live","http":200,"status":"READY","rows":1}
+{"path":"/api/market-data/chart/live","http":200,"status":"STALE","rows":1}
+{"path":"/api/market-data/chart/live","http":200,"status":"STALE","rows":1}
+{"path":"/api/market-data/chart/live","http":200,"status":"STALE","rows":1}
+{"path":"/api/market-data/chart/live","http":200,"status":"STALE","rows":1}
+{"path":"/api/market-data/chart/verify","http":200,"status":"CHANGED"}
+
+[[ATTACHMENT|..\..\..\..\frontend\test-results\candlestick-chart-ended-pr-c0681-before-new-indicator-bundle\error-context.md]]
+]]>
+</system-out>
+<error message="page.waitForResponse: response.json: Protocol error (Network.getResponseBody): No data found for resource with given identifier" type="Error">
+<![CDATA[  candlestick-chart.spec.ts:164:1 › ended preview waits for actual REST commit before new indicator bundle 
+
+    Error: page.waitForResponse: response.json: Protocol error (Network.getResponseBody): No data found for resource with given identifier
+    Response body is not available for a response that was navigated away from. Read response.body() before triggering any navigation.
+
+      168 |   await expect(chart.getByText("100.000000000000000001 USDT", { exact: true })).toBeVisible({ timeout: 60_000 });
+      169 |   fixture("rollover");
+    > 170 |   const revised = page.waitForResponse(async response => response.url().includes("/chart/history") &&
+          |                        ^
+      171 |     response.status() === 200 && ((await response.json()) as { candles: { close: string }[] })
+      172 |       .candles.some(row => row.close === "100.75"));
+      173 |   fixture("repair");
+        at D:\Projects\TiewTrade\Projects\TiewTrade\frontend\e2e\candlestick-chart.spec.ts:170:24
+
+    Error Context: ..\test-results\candlestick-chart-ended-pr-c0681-before-new-indicator-bundle\error-context.md
+]]>
+</error>
+</testcase>
+<testcase name="manual refresh reaches the real worker and failed polling stops" classname="candlestick-chart.spec.ts" time="65.488">
+<system-out>
+<![CDATA[{"path":"/api/market-data/chart/live","http":200,"status":"NO_DATA","rows":0}
+{"path":"/api/market-data/chart/history","http":200,"refresh":true,"rows":1000}
+{"path":"/api/market-data/candles/requests","http":202,"accepted":true}
+{"path":"/api/market-data/chart/live","http":200,"status":"NO_DATA","rows":0}
+{"path":"/api/market-data/chart/live","http":200,"status":"NO_DATA","rows":0}
+{"path":"/api/market-data/chart/live","http":200,"status":"NO_DATA","rows":0}
+{"path":"/api/market-data/chart/live","http":200,"status":"NO_DATA","rows":0}
+{"path":"/api/market-data/candles","http":200,"status":"COMPLETE","rows":1}
+
+[[ATTACHMENT|..\..\..\..\frontend\test-results\candlestick-chart-manual-r-290b4-er-and-failed-polling-stops\error-context.md]]
+]]>
+</system-out>
+<failure message="expect(locator).toBeVisible() failed" type="expect.toBeVisible">
+<![CDATA[  candlestick-chart.spec.ts:178:1 › manual refresh reaches the real worker and failed polling stops 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByTestId('candlestick-chart').locator('.chart-selection').getByText('100.75 USDT', { exact: true }).first()
+    Expected: visible
+    Timeout: 60000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" getByTestId('candlestick-chart').locator('.chart-selection').getByText('100.75 USDT', { exact: true }).first() with timeout 60000ms
+      - waiting for getByTestId('candlestick-chart').locator('.chart-selection').getByText('100.75 USDT', { exact: true }).first()
+
+
+      185 |   await posted;
+      186 |   fixture("repair");
+    > 187 |   await expect(chart.locator(".chart-selection").getByText("100.75 USDT", { exact: true }).first()).toBeVisible({ timeout: 60_000 });
+          |                                                                                                     ^
+      188 |   fixture("needs-refresh");
+      189 |   await chart.getByRole("button", { name: "ลองใหม่", exact: true }).click();
+      190 |   // Failure injection is confined to F-09 polling; the successful path above is real.
+        at D:\Projects\TiewTrade\Projects\TiewTrade\frontend\e2e\candlestick-chart.spec.ts:187:101
+
+    Error Context: ..\test-results\candlestick-chart-manual-r-290b4-er-and-failed-polling-stops\error-context.md
+]]>
+</failure>
+</testcase>
+</testsuite>
+</testsuites>

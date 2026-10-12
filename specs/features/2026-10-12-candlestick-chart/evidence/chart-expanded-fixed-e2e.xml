@@ -1,0 +1,92 @@
+<testsuites id="" name="" tests="3" failures="1" skipped="0" errors="1" time="85.130843">
+<testsuite name="candlestick-chart.spec.ts" timestamp="2026-10-12T14:32:50.828Z" hostname="" tests="3" failures="1" skipped="0" time="82.399" errors="1">
+<testcase name="password login, series switching and actual latest-price worker" classname="candlestick-chart.spec.ts" time="11.26">
+</testcase>
+<testcase name="ended preview waits for actual REST commit before new indicator bundle" classname="candlestick-chart.spec.ts" time="5.654">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|..\..\..\..\frontend\test-results\candlestick-chart-ended-pr-c0681-before-new-indicator-bundle\error-context.md]]
+]]>
+</system-out>
+<error message="Command failed: .venv/Scripts/python.exe -X utf8 ../specs/features/2026-10-12-candlestick-chart/evidence/browser_fixture.py repair" type="Error">
+<![CDATA[  candlestick-chart.spec.ts:150:1 › ended preview waits for actual REST commit before new indicator bundle 
+
+    Error: Command failed: .venv/Scripts/python.exe -X utf8 ../specs/features/2026-10-12-candlestick-chart/evidence/browser_fixture.py repair
+    Traceback (most recent call last):
+      File "D:\Projects\TiewTrade\Projects\TiewTrade\specs\features\2026-10-12-candlestick-chart\evidence\browser_fixture.py", line 206, in <module>
+        asyncio.run(main())
+      File "C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\runners.py", line 194, in run
+        return runner.run(main)
+               ^^^^^^^^^^^^^^^^
+      File "C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\runners.py", line 118, in run
+        return self._loop.run_until_complete(task)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      File "C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\base_events.py", line 687, in run_until_complete
+        return future.result()
+               ^^^^^^^^^^^^^^^
+      File "D:\Projects\TiewTrade\Projects\TiewTrade\specs\features\2026-10-12-candlestick-chart\evidence\browser_fixture.py", line 152, in main
+        raise RuntimeError("F12_REPAIR_REJECTED")
+    RuntimeError: F12_REPAIR_REJECTED
+
+
+      10 |
+      11 | function fixture(action: string): void {
+    > 12 |   execFileSync(process.platform === "win32" ? ".venv/Scripts/python.exe" : ".venv/bin/python",
+         |   ^
+      13 |     ["-X", "utf8", "../specs/features/2026-10-12-candlestick-chart/evidence/browser_fixture.py", action],
+      14 |     { cwd: "../backend", env: e2eEnvironment(), stdio: "pipe" });
+      15 | }
+        at fixture (D:\Projects\TiewTrade\Projects\TiewTrade\frontend\e2e\candlestick-chart.spec.ts:12:3)
+        at D:\Projects\TiewTrade\Projects\TiewTrade\frontend\e2e\candlestick-chart.spec.ts:158:3
+
+    Error: page.waitForResponse: Test ended.
+
+      153 |   await expect(chart.getByText("100.000000000000000001 USDT", { exact: true })).toBeVisible({ timeout: 60_000 });
+      154 |   fixture("rollover");
+    > 155 |   const revised = page.waitForResponse(async response => response.url().includes("/chart/history") &&
+          |                        ^
+      156 |     response.status() === 200 && ((await response.json()) as { candles: { close: string }[] })
+      157 |       .candles.some(row => row.close === "100.75"));
+      158 |   fixture("repair");
+        at D:\Projects\TiewTrade\Projects\TiewTrade\frontend\e2e\candlestick-chart.spec.ts:155:24
+
+    Error Context: ..\test-results\candlestick-chart-ended-pr-c0681-before-new-indicator-bundle\error-context.md
+]]>
+</error>
+</testcase>
+<testcase name="manual refresh reaches the real worker and failed polling stops" classname="candlestick-chart.spec.ts" time="65.485">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|..\..\..\..\frontend\test-results\candlestick-chart-manual-r-290b4-er-and-failed-polling-stops\error-context.md]]
+]]>
+</system-out>
+<failure message="expect(locator).toBeVisible() failed" type="expect.toBeVisible">
+<![CDATA[  candlestick-chart.spec.ts:163:1 › manual refresh reaches the real worker and failed polling stops 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByTestId('candlestick-chart').locator('.chart-selection').getByText('100.75 USDT', { exact: true }).first()
+    Expected: visible
+    Timeout: 60000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" getByTestId('candlestick-chart').locator('.chart-selection').getByText('100.75 USDT', { exact: true }).first() with timeout 60000ms
+      - waiting for getByTestId('candlestick-chart').locator('.chart-selection').getByText('100.75 USDT', { exact: true }).first()
+
+
+      170 |   await posted;
+      171 |   fixture("repair");
+    > 172 |   await expect(chart.locator(".chart-selection").getByText("100.75 USDT", { exact: true }).first()).toBeVisible({ timeout: 60_000 });
+          |                                                                                                     ^
+      173 |   fixture("needs-refresh");
+      174 |   await chart.getByRole("button", { name: "ลองใหม่", exact: true }).click();
+      175 |   // Failure injection is confined to F-09 polling; the successful path above is real.
+        at D:\Projects\TiewTrade\Projects\TiewTrade\frontend\e2e\candlestick-chart.spec.ts:172:101
+
+    Error Context: ..\test-results\candlestick-chart-manual-r-290b4-er-and-failed-polling-stops\error-context.md
+]]>
+</failure>
+</testcase>
+</testsuite>
+</testsuites>
