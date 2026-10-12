@@ -108,6 +108,61 @@ async def valid(builder: AsyncEngine, version: SourceFence, bounds: dict[str, da
 
 
 @pytest.mark.usefixtures("active")
+@pytest.mark.parametrize("identity", ["pair", "timeframe", "open_at"])
+@pytest.mark.parametrize("commit", [True, False])
+async def test_identity_move_proves_both_scopes_and_rollback(
+    md: AsyncEngine,
+    builder: AsyncEngine,
+    identity: str,
+    commit: bool,
+) -> None:
+    bounds = values()
+    # Use a common aligned open for both 1m and 5m identities.
+    bounds["opened"] = align_floor(bounds["opened"], Timeframe.M5)
+    bounds["end"] = bounds["opened"] + Timeframe.M1.span
+    async with market_data_session(md) as session:
+        await begin_source_write(session)
+        await session.execute(INSERT, bounds)
+    version = await fence(builder)
+    new_base = "ETH" if identity == "pair" else "BTC"
+    new_tf = "5m" if identity == "timeframe" else "1m"
+    new_open = bounds["opened"] + (timedelta(minutes=10) if identity == "open_at" else timedelta())
+    new_end = new_open + (Timeframe.M5.span if identity == "timeframe" else Timeframe.M1.span)
+
+    class RollbackError(Exception):
+        pass
+
+    try:
+        async with market_data_session(md) as session:
+            await begin_source_write(session)
+            await session.execute(
+                """UPDATE market_candles SET base=:base,timeframe=:tf,open_at=:opened,end_at=:end
+                WHERE source='primary_spot' AND base='BTC' AND quote='USDT' AND timeframe='1m'""",
+                {"base": new_base, "tf": new_tf, "opened": new_open, "end": new_end},
+            )
+            if not commit:
+                raise RollbackError()
+    except RollbackError:
+        pass
+    async with indicator_source_session(builder) as reader:
+        for base, tf, opened, end, expected in (
+            ("BTC", "1m", bounds["opened"], bounds["end"], not commit),
+            (new_base, new_tf, new_open, new_end, not commit),
+            ("SOL", "1m", bounds["opened"], bounds["end"], True),
+        ):
+            params = proof_parameters(
+                version,
+                source="primary_spot",
+                base=base,
+                quote="USDT",
+                timeframe=tf,
+                start=opened,
+                end=end,
+            )
+            assert bool((await reader.execute(PROOF_SQL, params)).scalar_one()) is expected
+
+
+@pytest.mark.usefixtures("active")
 async def test_missing_or_spoofed_scope_and_transaction_reuse(md: AsyncEngine) -> None:
     for spoof in (False, True):
         with pytest.raises(SourceWriteScopeError):

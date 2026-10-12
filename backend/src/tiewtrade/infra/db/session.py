@@ -20,10 +20,12 @@ from uuid import UUID
 from sqlalchemy import Result, text
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine
+from sqlalchemy.pool import PoolProxiedConnection
 
 from tiewtrade.infra.db.engine import ROLES_UNDER_RLS, DatabaseRole
 from tiewtrade.infra.db.errors import (
     DatabaseRoleError,
+    DatabaseTimeoutError,
     SessionKindError,
     translate_database_error,
 )
@@ -184,7 +186,7 @@ async def _assert_role(connection: AsyncConnection, expected: DatabaseRole) -> N
 
 @asynccontextmanager
 async def _begin(
-    engine: AsyncEngine, *, cleanup_seconds: int | None = None
+    engine: AsyncEngine, *, cleanup_seconds: float | None = None
 ) -> AsyncIterator[AsyncConnection]:
     """เปิด transaction แล้วแปลงข้อผิดพลาดทุกชนิดตอนต่อและตอนปิดให้เป็นชนิดของเรา
 
@@ -205,6 +207,8 @@ async def _begin(
     except (SQLAlchemyError, OSError) as error:
         raise translate_database_error(error) from None
 
+    assert connection.sync_connection is not None
+    raw = connection.sync_connection.connection if cleanup_seconds is not None else None
     try:
         yield connection
     except BaseException as error:
@@ -219,15 +223,63 @@ async def _begin(
                     transaction.__aexit__(type(error), error, error.__traceback__)
                 )
                 try:
-                    await asyncio.wait_for(asyncio.shield(cleanup), cleanup_seconds)
-                except TimeoutError:
-                    await connection.invalidate()
-                    await asyncio.shield(cleanup)
+                    assert raw is not None
+                    await _bounded_cleanup(connection, raw, cleanup, cleanup_seconds)
+                except DatabaseTimeoutError:
+                    # Preserve the original failure, especially deadline cancellation.
+                    pass
         raise
     try:
-        await transaction.__aexit__(None, None, None)
+        if cleanup_seconds is None:
+            await transaction.__aexit__(None, None, None)
+        else:
+            assert raw is not None
+            cleanup = asyncio.create_task(transaction.__aexit__(None, None, None))
+            await _bounded_cleanup(connection, raw, cleanup, cleanup_seconds)
     except (SQLAlchemyError, OSError) as error:
         raise translate_database_error(error) from None
+
+
+async def _bounded_cleanup(
+    connection: AsyncConnection,
+    raw: PoolProxiedConnection,
+    cleanup: asyncio.Task[Any],
+    seconds: float,
+) -> None:
+    """Bound graceful close, then quarantine and synchronously abort asyncpg.
+
+    As in indicator_source_session, abort uses the saved driver, never a new
+    checkout. ORM bookkeeping cannot retain a live transport after this point.
+    """
+    driver = raw.driver_connection
+    try:
+        await asyncio.wait_for(asyncio.shield(cleanup), max(0, seconds - 0.1))
+        return
+    except (TimeoutError, asyncio.CancelledError) as error:
+        # Detach before abort: even stalled invalidation cannot return this
+        # physical connection to another caller through the pool.
+        if raw.driver_connection is driver and driver is not None:
+            raw.detach()
+            driver.terminate()
+        cleanup.cancel()
+        discard = asyncio.create_task(connection.invalidate())
+        tasks = {cleanup, discard}
+        try:
+            await asyncio.wait(tasks, timeout=0.05)
+        finally:
+            for task in tasks:
+                if not task.done():
+                    task.cancel()
+                task.add_done_callback(_consume_cleanup_result)
+        await asyncio.wait(tasks, timeout=0.05)
+        if isinstance(error, asyncio.CancelledError):
+            raise
+        raise DatabaseTimeoutError("indicator transaction cleanup failed") from None
+
+
+def _consume_cleanup_result(task: asyncio.Task[Any]) -> None:
+    if not task.cancelled():
+        task.exception()
 
 
 @asynccontextmanager

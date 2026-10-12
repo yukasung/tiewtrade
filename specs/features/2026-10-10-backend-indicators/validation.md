@@ -4,6 +4,67 @@
 วันที่: 2026-10-10
 Branch: feature/f-11-backend-indicators
 
+## A–D implementation / NC-38 corrected — 2026-10-12
+
+แก้สองข้อจากรีวิว A–D ตามคำสั่งเจ้าของแล้ว: cleanup มี bounded abort/quarantine
+และ consumer นับเวลา HTTP ใน deadline60s. หลักฐานใหม่เฉพาะส่วนที่เกี่ยวข้อง:
+Linux164ผ่าน/1skip, STAGING/publication70ผ่าน, Composeที่skipผ่านบนhost1กรณี;
+Ruff/mypy/import contracts ผ่าน. พร้อมรีวิวซ้ำ ไม่ใช่การรันfull suite/loadใหม่.
+ดู `profiling/ad-review-fixes-tests.xml`, `ad-review-writer-tests.xml`,
+`ad-review-host-tests.xml` และรายละเอียดในรายงาน A–D ด้านล่าง.
+
+เจ้าของอนุมัติ NC-38 แล้ว; แก้ watcher/cancel/join และ fast-reader middleware race.
+A–D มี implementation/evidence พร้อมรีวิว: API lifecycle/expiry/outage/cleanup,
+source identity commit/rollback, exact dense525600 fixture/digest, baseline crosswalk
+และ refresh consumer ผ่าน F-09/scheduler จริงพร้อม budget/failure matrix.
+Backend Linux2514ผ่าน/1skip (Composeที่skipผ่านบนhostใน19testsเพิ่มเติม),
+frontend Linux158ผ่าน; exact fixture1ผ่าน141.355s ไม่ใช่load/soak acceptance.
+ดู [รายงาน A–D](profiling/ad-validation-report.md) และ
+[baseline crosswalk](profiling/baseline-coverage-crosswalk.md).
+ยังไม่commit/merge/เปิดproduction; F-11 In Progress รอรีวิวและด่านชุด9ตามเดิม.
+
+## ประวัติก่อนแก้ — A–D disconnect Failed / NC-38 — 2026-10-12
+
+เริ่มกลุ่ม A แล้วพบ code/spec conflict: route ไม่มี disconnect watcher ตามแผน.
+Regression `tests/test_indicator_disconnect.py` ส่ง ASGI http.disconnect จริงเข้า
+Request queue ขณะ reader ค้าง โดยไม่ cancel task แทน client: **1 failed** ภายในรอบสั้น.
+ยังไม่แก้ production; หยุดตาม AGENTS.md และบันทึก NC-38.
+[หลักฐาน/ผลกระทบ/แนวแก้](profiling/api-disconnect-review.md).
+A–D ยังไม่ครบ; ไม่รันโหลด/soak หรือเปลี่ยนเกณฑ์ acceptance.
+
+## Pre-merge coverage audit — 2026-10-12
+
+ตรวจ Partial เทียบเกณฑ์/test code/ผลเดิมแล้ว; ไม่รัน load หรือ suite ซ้ำ.
+ปิด functional mapping ของ R2-5/6/8/11, D2/D3 และ logical prerequisites G7;
+D7 ยัง aggregate Partial; N4 review APPROVED ตามการรีวิวซ้ำ.
+ตรวจ catalog แบบ read-only เพิ่ม: 35 functions, 28 definers มี hardened search_path,
+ไม่มี PUBLIC EXECUTE และ runtime 3 roles ไม่มี public CREATE.
+งานค้างจัดเป็น A–D ใน [รายงาน audit](profiling/premerge-coverage-audit.md)
+และ [mapping ล่าสุด](profiling/merge-validation-mapping.md).
+ไม่มีการเปลี่ยนข้อกำหนด/production หรือย้ายด่าน functional ไปชุด9;
+ยังไม่รับรอง Development Complete/merge และเก็บผล Failed เดิมครบ.
+
+## N4 review correction — 2026-10-12
+
+แก้ Medium เรื่อง GC บัง deadline assertion: เพิ่ม 119/120/121s โดยไม่เรียก GC
+และพิสูจน์ lease/manifest/source proof ยัง valid; เพิ่ม M1 ข้ามสอง boundary
+ภายใน 61s ขณะ attempt ยังไม่หมดอายุ พร้อม latest-window/HTTP/no-repeat assertions.
+ผล **7 ผ่าน / 0 failed/error/skipped ใน 54.357s** รวมกรณีเดิมสามและใหม่สี่.
+Ruff/format และ mypy 348 files ผ่าน; ไม่มี production change; พร้อมรีวิวซ้ำ.
+[JUnit](profiling/n4-review-fixed-tests.xml) · [รายละเอียด](profiling/n4-validation/README.md).
+คำอ้าง deadline ของผลเดิมถูกแก้ในรายงานแล้ว; full-load ยังคงชุดที่ 9.
+
+## N4 functional harness — 2026-10-12
+
+ทำ actual-container harness ครบ RUNNING ข้ามหลาย window, crash ก่อน publication,
+crash หลัง commit/outage, สอง replicas, GC และ HTTP GET; ใช้ clock ควบคุมได้.
+ผลรวม harness/regression **49 ผ่าน / 0 failed/error/skipped ใน 88.344s**;
+รอบสุดท้ายเพิ่ม SQL no-DML และ episode assertions **3 ผ่าน ใน 37.052s** (ซ้ำกับชุดก่อน).
+Ruff/format, strict mypy 348 files และ architecture 7 contracts ผ่าน.
+N4 functional **Passed / พร้อมรีวิว**; full-load/resource acceptance ยังคง **Deferred ชุดที่ 9**.
+[หลักฐาน/ข้อจำกัด/คำสั่งรัน](profiling/n4-validation/README.md).
+ไม่มีการแก้ production code หรือ migration; ยังไม่ปิด aggregate F-11.
+
 ## F1–F6 correction / functional validation — 2026-10-12
 
 เจ้าของสั่ง “แก้ไข” ปิด NC-37 โดยใช้ snapshot เดิมสร้าง metadata สำหรับ numeric

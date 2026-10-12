@@ -298,6 +298,44 @@ async def _read(
     )
 
 
+async def _read_until_disconnect(
+    query: IndicatorQuery, request: Request, who: Authenticated, deadline: float
+) -> IndicatorHistoryView:
+    """Join both tasks before admission is released, including repeated cancellation."""
+    stopping = False
+
+    async def disconnected() -> None:
+        while not stopping:
+            if (await request.receive())["type"] == "http.disconnect":
+                return
+
+    reader = asyncio.create_task(_read(query, request, who, deadline))
+    watcher = asyncio.create_task(disconnected())
+    try:
+        done, _ = await asyncio.wait((reader, watcher), return_when=asyncio.FIRST_COMPLETED)
+        if watcher in done:
+            watcher.result()
+            raise asyncio.CancelledError()
+        return reader.result()
+    finally:
+        # Starlette's receive wrapper can consume cancellation while finishing
+        # its own task group. Do not begin another receive after it returns.
+        stopping = True
+        for task in (reader, watcher):
+            if not task.done():
+                task.cancel()
+        joined = asyncio.gather(reader, watcher, return_exceptions=True)
+        cancelled = False
+        while not joined.done():
+            try:
+                await asyncio.shield(joined)
+            except asyncio.CancelledError:
+                # Do not interrupt the reader's bounded transaction cleanup again.
+                cancelled = True
+        if cancelled:
+            raise asyncio.CancelledError()
+
+
 @router.get("", response_model=IndicatorHistoryView)
 async def indicators(
     query: Annotated[IndicatorQuery, Query()],
@@ -310,7 +348,7 @@ async def indicators(
     try:
         async with asyncio.timeout_at(deadline):
             async with budget.reserve(admission, who.user_id):
-                result = await _read(query, request, who, deadline)
+                result = await _read_until_disconnect(query, request, who, deadline)
                 body = result.model_dump_json().encode()
                 # Synchronous serialization cannot dispatch timeout cancellation.
                 # Reject an overrun before returning a successful response.

@@ -39,7 +39,7 @@ class Probes:
     owners: dict[str, UUID] = field(default_factory=dict)
     severed_sources: set[int] = field(default_factory=set)
 
-    async def start(self, stage: str = "none") -> str:
+    async def start(self, stage: str = "none", *, clocked: bool = False) -> str:
         owner = uuid4()
         root = Path(__file__).resolve().parents[4]
         ident = await docker(
@@ -56,6 +56,8 @@ class Probes:
             "PYTHONDONTWRITEBYTECODE=1",
             "-e",
             f"PROBE_STAGE={stage}",
+            "-e",
+            f"PROBE_DB_CLOCK={int(clocked)}",
             "-e",
             f"TIEWTRADE_INDICATOR_OWNER={owner}",
             "-e",

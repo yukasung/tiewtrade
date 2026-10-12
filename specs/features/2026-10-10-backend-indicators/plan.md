@@ -658,3 +658,40 @@ rollout inventory/retirement checks และ migrations เดิมบน isol
 ไม่ recapture source หรือ retry การคำนวณ. เพิ่ม boundary tests และใช้ db_clock
 จาก tests/services/indicator_builder/test_numeric_windows.py สำหรับ backoff/cooldown,
 fixtures/API จาก test_prepared_indicators.py และ publication/maintenance tests เดิม.
+
+### N4 validation implementation — 2026-10-12
+
+ตามคำสั่งเริ่ม N4 ใช้ `tests/services/indicator_builder/profile_global_handoff.py`
+(`Probes`, actual containers/verified reap), `global_slot_probe.py` (barriers/trace),
+`test_numeric_windows.py` (`db_clock`, damaged-source fixture) และ
+`tests/api/test_numeric_windows.py` (`http_clock`) ซ้ำ. เพิ่ม clock option และ numeric
+publication barriers เฉพาะ test probe เพื่อทดสอบหลาย window ระหว่าง RUNNING/outage,
+crash ก่อน/หลัง publication, GC และสอง replicas โดยไม่รอ wall-clock ระยะยาว.
+เกณฑ์เดิม R2-N4 ไม่เปลี่ยน; full-load budgets ยังคงชุดที่ 9.
+
+N4 review correction (2026-10-12): ใช้ numeric barrier/clock เดิมซ้ำ แยก
+119/120/121s publication จาก GC โดยตรวจ lease/manifest/source proof ยัง valid;
+เพิ่ม M1 ข้ามสอง boundary ภายใน 61s เพื่อพิสูจน์ live pending-window publication.
+เป็นการตรวจเกณฑ์ R2-N4 เดิม ไม่เปลี่ยน production หรือข้อกำหนด.
+
+### NC-38 implementation clarification — approved 2026-10-12
+
+Owner approved restoring the existing disconnect contract while completing A–D.
+Reuse `services/api/indicator_routes.py` for ASGI receive observation,
+`IndicatorBudget.reserve` for admission lifetime, and
+`infra/db/session.py::indicator_read_session` for transaction cleanup.
+Join reader and watcher before leaving admission; repeated caller cancellation
+must not cancel transaction cleanup a second time. No acceptance threshold changes.
+
+Owner requested both A–D review corrections on 2026-10-12. Reuse the saved
+asyncpg driver / synchronous terminate approach from
+`infra/indicators/session.py::indicator_source_session` in the bounded
+`infra/db/session.py::_begin` cleanup path. Reserve part of the existing 2s
+budget for abort/cancellation; detach the physical connection from its pool
+before abort so stalled invalidation cannot make it reusable. Preserve the
+original cancellation/error, and bound successful transaction exit as well.
+The test-only refresh consumer uses an injected monotonic clock, one 60s
+deadline including HTTP time, remaining-time request timeouts and late-response
+rejection. Reuse its existing HTTP scenarios and actual F-09/scheduler integration;
+add stalled cleanup/transport reuse and slow HTTP boundary cases. No threshold,
+trading rule, production activation or phase-9 deferral changes.

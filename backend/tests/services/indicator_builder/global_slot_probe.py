@@ -15,7 +15,7 @@ from sqlalchemy import event
 from tiewtrade.core.indicators import IndicatorStream
 from tiewtrade.infra.indicators import scan
 from tiewtrade.infra.indicators.pinned import PinnedIndicatorWriter
-from tiewtrade.infra.indicators.session import indicator_source_session
+from tiewtrade.infra.indicators.session import IndicatorSourceSession, indicator_source_session
 from tiewtrade.infra.indicators.staging import append_checkpoint
 from tiewtrade.infra.market_data.indicator_reader import IndicatorDigest
 from tiewtrade.services.indicator_builder.attempt import create_builder_engine, run_attempt
@@ -35,6 +35,17 @@ async def run() -> None:
     stage = os.environ.get("PROBE_STAGE", "none")
     gate = Path("/tmp/release-probe")
     held = False
+    if os.environ.get("PROBE_DB_CLOCK") == "1":
+        execute = IndicatorSourceSession.execute
+
+        async def clocked_execute(self: Any, statement: str, parameters: Any = None) -> Any:
+            return await execute(
+                self,
+                statement.replace("clock_timestamp()", "public.test_indicator_clock()"),
+                parameters,
+            )
+
+        IndicatorSourceSession.execute = clocked_execute  # type: ignore[method-assign]
 
     async def hold(at: str) -> None:
         nonlocal held
@@ -92,7 +103,12 @@ async def run() -> None:
             emit("source_closed", last_cpu_end=cpu_end, batches=batches)
 
     async def checkpoint(*args: Any, **kwargs: Any) -> None:
-        emit("checkpoint_attempt")
+        emit(
+            "checkpoint_attempt",
+            start=args[2].calculation.start.isoformat(),
+            end=args[2].calculation.end.isoformat(),
+            next_open=args[4].isoformat(),
+        )
         await checkpoint_original(*args, **kwargs)
         emit("checkpoint_committed")
         await hold("after_staging")
@@ -105,9 +121,11 @@ async def run() -> None:
         return result
 
     async def numeric(self: Any, value: Any, error: Any) -> Any:
+        await hold("before_numeric")
         emit("numeric_attempt")
         result = await numeric_original(self, value, error)
         emit("numeric_published", status=result.value)
+        await hold("after_numeric")
         return result
 
     async def cleanup(self: Any) -> None:
@@ -164,10 +182,30 @@ async def run() -> None:
         setattr(target, name, replacement)
     record("boot", owner)
     engine = create_builder_engine()
+    checked_out = 0
+    peak_connections = 0
+
+    def checkout(*args: Any) -> None:
+        nonlocal checked_out, peak_connections
+        checked_out += 1
+        peak_connections = max(peak_connections, checked_out)
+        assert peak_connections <= 2
+
+    def checkin(*args: Any) -> None:
+        nonlocal checked_out
+        checked_out -= 1
+
+    event.listen(engine.sync_engine, "checkout", checkout)
+    event.listen(engine.sync_engine, "checkin", checkin)
     event.listen(engine.sync_engine, "before_cursor_execute", before_sql)
     try:
         result = await run_attempt(engine, owner)
-        emit("result", status=result.status.value, reason=result.reason)
+        emit(
+            "result",
+            status=result.status.value,
+            reason=result.reason,
+            peak_connections=peak_connections,
+        )
     finally:
         await engine.dispose()
 

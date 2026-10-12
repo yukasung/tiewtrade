@@ -261,6 +261,7 @@ TiewTrade ไม่ใช่ UID หรือ API key ของ Binance TH
 
 | รหัส | เรื่อง | บล็อกอะไร |
 |---|---|---|
+| **NC-38 — Closed (เจ้าของอนุมัติ 2026-10-12)** | ระหว่างทำ A–D พบ indicator HTTP ไม่มี disconnect watcher ตามแผน; regression ส่ง http.disconnect แล้ว reader ไม่หยุดภายใน 2.5s — [หลักฐาน/แนวแก้](features/2026-10-10-backend-indicators/profiling/api-disconnect-review.md) | เจ้าของอนุมัติแก้ตามแผนเดิม; disconnect/repeated cancel/PG cleanup/slot reuse ผ่านแล้วใน [A–D evidence](features/2026-10-10-backend-indicators/profiling/ad-validation-report.md); พร้อมรีวิว |
 | **NC-37 — Closed (2026-10-12)** | เจ้าของสั่ง “แก้ไข” ให้แก้ F1 numeric pre-STAGING commit ตาม R2-F1 เดิม และทำ F1–F6 ต่อ; ไม่เปลี่ยนข้อกำหนด — [หลักฐาน](features/2026-10-10-backend-indicators/profiling/f1-f6-review.md) | ไม่บล็อก implementation; regression241ผ่านและรีวิว correction APPROVED — ดูรายงาน F1–F6 |
 | **NC-36 — Closed (2026-10-12)** | เจ้าของสั่ง “แก้ไข” ให้แก้ D6 ตรวจ grants ตาม R2-D6 เดิม แล้วทำ D5–D7 ต่อก่อนรีวิวรวม; ไม่เปลี่ยนข้อกำหนด — [หลักฐาน](features/2026-10-10-backend-indicators/profiling/d6-partial-grant-report.md) | ไม่บล็อก implementation; ต้องผ่าน regression และรีวิวรวมก่อนปิดงาน |
 | **NC-29 — Closed (2026-10-08)** | F-10 issue7: เจ้าของอนุมัติข้อยกเว้น NC-17 เฉพาะ ServerProtocol/CloseCode สำหรับ inbound Sans-I/O decoder ใน price_protocol.py; [ข้อเสนอ](features/2026-10-07-realtime-prices/plan.md#การเปลี่ยนแปลงหลังอนุมัติ--nc-29-approved-2026-10-08) | ปิดคำตัดสิน; negative fixtures/networkgate และfullbackendผ่านหลังอนุมัติ |

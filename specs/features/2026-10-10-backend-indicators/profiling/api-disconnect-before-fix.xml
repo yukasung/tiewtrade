@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="2.963" timestamp="2026-10-12T11:31:50.778948+07:00" hostname="DESKTOP-RONGMEV"><testcase classname="tests.test_indicator_disconnect" name="test_disconnect_cancels_reader_before_releasing_local_slot" time="2.507"><failure message="TimeoutError">C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\tasks.py:520: in wait_for
+    return await fut
+           ^^^^^^^^^
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\locks.py:212: in wait
+    await fut
+E   asyncio.exceptions.CancelledError
+
+The above exception was the direct cause of the following exception:
+tests\test_indicator_disconnect.py:57: in test_disconnect_cancels_reader_before_releasing_local_slot
+    await asyncio.wait_for(closed.wait(), 2.5)
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\tasks.py:519: in wait_for
+    async with timeouts.timeout(timeout):
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\timeouts.py:115: in __aexit__
+    raise TimeoutError from exc_val
+E   TimeoutError</failure></testcase></testsuite></testsuites>
