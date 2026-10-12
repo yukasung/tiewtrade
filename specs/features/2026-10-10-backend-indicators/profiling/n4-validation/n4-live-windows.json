@@ -1,0 +1,297 @@
+{
+  "initial": {
+    "id": "5a7c8db5-66b2-4e6a-b0c4-4966ada1b891",
+    "source": "primary_spot",
+    "base": "BTC",
+    "quote": "USDT",
+    "timeframe": "1m",
+    "formula_version": "indicators-v1",
+    "status": "QUEUED",
+    "current_candidate": null,
+    "generation_sequence": 0,
+    "claim_token": null,
+    "lease_until": null,
+    "build_rollout_epoch": null,
+    "desired_start": "2025-10-01 00:01:00+00:00",
+    "desired_end": "2026-10-01 00:00:00+00:00",
+    "failed_calculation_key": null,
+    "failed_input_version": null,
+    "first_eligible_at": "2026-10-01 00:00:59+00:00",
+    "availability_deadline": "2026-10-01 00:10:59+00:00",
+    "attempts_used": 0,
+    "cycle_id": "5ef9d089-bf7d-4341-979e-6744b0c4f8d2",
+    "retry_not_before": "2026-10-01 00:00:59+00:00",
+    "last_served_round": 0,
+    "deadline_missed_at": null,
+    "failure_category": null,
+    "failure_reason": null,
+    "failed_at": null,
+    "recovery_event_revision": null,
+    "failure_source_epoch": null,
+    "failure_source_fence": null
+  },
+  "slot": {
+    "id": 1,
+    "slot_epoch": "b324e2e3-d981-4df5-9f32-ced4abd82cc3",
+    "fence": 1,
+    "owner_instance": "2547ed11-2e09-41d2-b90b-a4e5b28f932e",
+    "owner_backend_pid": 410,
+    "job_id": "5a7c8db5-66b2-4e6a-b0c4-4966ada1b891",
+    "generation_id": "b498204d-2753-4ca3-9623-d06102645859",
+    "claim_token": "e9b9289d-c679-4d0c-a831-3bac8753aff4",
+    "lease_until": "2026-10-01 00:03:29+00:00",
+    "attempt_deadline": "2026-10-01 00:02:59+00:00",
+    "last_heartbeat": "2026-10-01 00:00:59+00:00",
+    "state": "RUNNING",
+    "dispatch_round": 1,
+    "dispatch_cursor": 0
+  },
+  "old_trace": [
+    {
+      "component": "indicator-builder",
+      "event": "boot",
+      "owner": "2547ed11-2e09-41d2-b90b-a4e5b28f932e"
+    },
+    {
+      "step": "claim_committed",
+      "time_ns": 748016800291,
+      "cpu_ns": 495179939,
+      "pid": 410,
+      "fence": 1,
+      "job": "5a7c8db5-66b2-4e6a-b0c4-4966ada1b891",
+      "formula": "indicators-v1"
+    },
+    {
+      "step": "source_open",
+      "time_ns": 748041070106,
+      "cpu_ns": 513127323,
+      "pid": 411
+    },
+    {
+      "step": "checkpoint_attempt",
+      "time_ns": 748051903538,
+      "cpu_ns": 516787446,
+      "start": "2025-10-01T00:01:00+00:00",
+      "end": "2026-10-01T00:00:00+00:00",
+      "next_open": "2025-10-01T00:01:00+00:00"
+    },
+    {
+      "step": "checkpoint_committed",
+      "time_ns": 748057053553,
+      "cpu_ns": 518522605
+    },
+    {
+      "step": "hash_start",
+      "time_ns": 748059791266,
+      "cpu_ns": 520099232
+    },
+    {
+      "step": "source_closed",
+      "time_ns": 748060312684,
+      "cpu_ns": 520548898,
+      "last_cpu_end": 0,
+      "batches": 0
+    },
+    {
+      "step": "barrier",
+      "time_ns": 748060410757,
+      "cpu_ns": 520646627,
+      "stage": "before_numeric"
+    },
+    {
+      "step": "numeric_attempt",
+      "time_ns": 749926509313,
+      "cpu_ns": 543796381
+    },
+    {
+      "step": "numeric_published",
+      "time_ns": 749934285725,
+      "cpu_ns": 546466519,
+      "status": "FAILED_NUMERIC"
+    },
+    {
+      "step": "actual_unlock_sql",
+      "time_ns": 749934651355,
+      "cpu_ns": 546831269
+    },
+    {
+      "step": "writer_closed",
+      "time_ns": 749935904488,
+      "cpu_ns": 547511865
+    },
+    {
+      "step": "result",
+      "time_ns": 749936129305,
+      "cpu_ns": 547736141,
+      "status": "FAILED_NUMERIC",
+      "reason": null,
+      "peak_connections": 2
+    }
+  ],
+  "queued": {
+    "id": "5a7c8db5-66b2-4e6a-b0c4-4966ada1b891",
+    "source": "primary_spot",
+    "base": "BTC",
+    "quote": "USDT",
+    "timeframe": "1m",
+    "formula_version": "indicators-v1",
+    "status": "QUEUED",
+    "current_candidate": "b498204d-2753-4ca3-9623-d06102645859",
+    "generation_sequence": 1,
+    "claim_token": null,
+    "lease_until": null,
+    "build_rollout_epoch": "612e757b-04de-4a56-8893-9bc49b5e442e",
+    "desired_start": "2025-10-01 00:02:00+00:00",
+    "desired_end": "2026-10-01 00:02:00+00:00",
+    "failed_calculation_key": {
+      "end": "2026-10-01T00:00:00.000000+00:00",
+      "base": "BTC",
+      "quote": "USDT",
+      "start": "2025-10-01T00:01:00.000000+00:00",
+      "source": "primary_spot",
+      "timeframe": "1m",
+      "formula_version": "indicators-v1"
+    },
+    "failed_input_version": {
+      "epoch": "7f0380b7-3736-45c6-8361-99e6563802bf",
+      "fence": 1
+    },
+    "first_eligible_at": "2026-10-01 00:00:59+00:00",
+    "availability_deadline": "2026-10-01 00:10:59+00:00",
+    "attempts_used": 0,
+    "cycle_id": "8b523b8a-e486-4512-9a5d-3cc839fd0e84",
+    "retry_not_before": "2026-10-01 00:02:00+00:00",
+    "last_served_round": 1,
+    "deadline_missed_at": null,
+    "failure_category": null,
+    "failure_reason": null,
+    "failed_at": null,
+    "recovery_event_revision": null,
+    "failure_source_epoch": null,
+    "failure_source_fence": null
+  },
+  "trace": [
+    {
+      "component": "indicator-builder",
+      "event": "boot",
+      "owner": "92b109a8-0391-4b25-ab5b-9ce2fb5a3d30"
+    },
+    {
+      "step": "claim_committed",
+      "time_ns": 751786931486,
+      "cpu_ns": 517131425,
+      "pid": 416,
+      "fence": 2,
+      "job": "5a7c8db5-66b2-4e6a-b0c4-4966ada1b891",
+      "formula": "indicators-v1"
+    },
+    {
+      "step": "source_open",
+      "time_ns": 751811249630,
+      "cpu_ns": 535645646,
+      "pid": 417
+    },
+    {
+      "step": "checkpoint_attempt",
+      "time_ns": 751823074401,
+      "cpu_ns": 539158902,
+      "start": "2025-10-01T00:02:00+00:00",
+      "end": "2026-10-01T00:02:00+00:00",
+      "next_open": "2025-10-01T00:02:00+00:00"
+    },
+    {
+      "step": "checkpoint_committed",
+      "time_ns": 751827786806,
+      "cpu_ns": 540641758
+    },
+    {
+      "step": "hash_start",
+      "time_ns": 751830557958,
+      "cpu_ns": 542182947
+    },
+    {
+      "step": "source_closed",
+      "time_ns": 751831098485,
+      "cpu_ns": 542662146,
+      "last_cpu_end": 0,
+      "batches": 0
+    },
+    {
+      "step": "barrier",
+      "time_ns": 751831172327,
+      "cpu_ns": 542735391,
+      "stage": "before_numeric"
+    },
+    {
+      "step": "numeric_attempt",
+      "time_ns": 751943236721,
+      "cpu_ns": 544093651
+    },
+    {
+      "step": "numeric_published",
+      "time_ns": 751951917454,
+      "cpu_ns": 547157758,
+      "status": "FAILED_NUMERIC"
+    },
+    {
+      "step": "actual_unlock_sql",
+      "time_ns": 751952353406,
+      "cpu_ns": 547593220
+    },
+    {
+      "step": "writer_closed",
+      "time_ns": 751953605596,
+      "cpu_ns": 548271063
+    },
+    {
+      "step": "result",
+      "time_ns": 751953746211,
+      "cpu_ns": 548411191,
+      "status": "FAILED_NUMERIC",
+      "reason": null,
+      "peak_connections": 2
+    }
+  ],
+  "failed": {
+    "id": "5a7c8db5-66b2-4e6a-b0c4-4966ada1b891",
+    "source": "primary_spot",
+    "base": "BTC",
+    "quote": "USDT",
+    "timeframe": "1m",
+    "formula_version": "indicators-v1",
+    "status": "FAILED_NUMERIC",
+    "current_candidate": "1e161149-0fff-4abc-92aa-495fa651d112",
+    "generation_sequence": 2,
+    "claim_token": null,
+    "lease_until": null,
+    "build_rollout_epoch": "612e757b-04de-4a56-8893-9bc49b5e442e",
+    "desired_start": "2025-10-01 00:02:00+00:00",
+    "desired_end": "2026-10-01 00:02:00+00:00",
+    "failed_calculation_key": {
+      "end": "2026-10-01T00:02:00.000000+00:00",
+      "base": "BTC",
+      "quote": "USDT",
+      "start": "2025-10-01T00:02:00.000000+00:00",
+      "source": "primary_spot",
+      "timeframe": "1m",
+      "formula_version": "indicators-v1"
+    },
+    "failed_input_version": {
+      "epoch": "7f0380b7-3736-45c6-8361-99e6563802bf",
+      "fence": 1
+    },
+    "first_eligible_at": "2026-10-01 00:00:59+00:00",
+    "availability_deadline": "2026-10-01 00:10:59+00:00",
+    "attempts_used": 1,
+    "cycle_id": "8b523b8a-e486-4512-9a5d-3cc839fd0e84",
+    "retry_not_before": null,
+    "last_served_round": 2,
+    "deadline_missed_at": null,
+    "failure_category": "NUMERIC",
+    "failure_reason": "INDICATOR_NUMERIC_ERROR",
+    "failed_at": "2026-10-01 00:02:00+00:00",
+    "recovery_event_revision": null,
+    "failure_source_epoch": null,
+    "failure_source_fence": null
+  }
+}

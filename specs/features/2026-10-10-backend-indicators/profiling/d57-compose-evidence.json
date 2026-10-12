@@ -1,0 +1,159 @@
+[
+  {
+    "step": "sidecar_completed",
+    "service": "market-data"
+  },
+  {
+    "step": "sidecar_completed",
+    "service": "indicator-builder"
+  },
+  {
+    "step": "drained",
+    "inventory": {
+      "version": 1,
+      "project": "f11-compose-d1539486f72f451a92d5b228074da599",
+      "containers": [
+        {
+          "container_id": "567f41b8ac80c54e3c7815630320a5863edfdf541c134e742351b9b0a8bad38a",
+          "image_id": "sha256:b96ed3cf5c213a887bb5e631958498938f861384a620505425a7d747449d3302",
+          "service": "api"
+        },
+        {
+          "container_id": "b71727cb0ba2c5e9cc07efdf156acb46d4bfd4d1341a45a07118f745b6c54aac",
+          "image_id": "sha256:b96ed3cf5c213a887bb5e631958498938f861384a620505425a7d747449d3302",
+          "service": "api"
+        },
+        {
+          "container_id": "cfbe749bb4bbd3590e23daef189f5544272dd6c33c2036c2ee24ef531a640f5c",
+          "image_id": "sha256:b96ed3cf5c213a887bb5e631958498938f861384a620505425a7d747449d3302",
+          "service": "market-data"
+        },
+        {
+          "container_id": "debacc87d5cfcaf141af63f49514163fb372a8fb1ba334707e4ca0ff7ca63b16",
+          "image_id": "sha256:b96ed3cf5c213a887bb5e631958498938f861384a620505425a7d747449d3302",
+          "service": "indicator-builder"
+        }
+      ],
+      "external_paths_drained": true,
+      "legacy_restart_disabled": true,
+      "verification_keyring_verified": true,
+      "keyring_config_id": "isolated-keyring-v1"
+    }
+  },
+  {
+    "step": "mixed_rolling",
+    "images": {
+      "567f41b8ac80c54e3c7815630320a5863edfdf541c134e742351b9b0a8bad38a": "sha256:b96ed3cf5c213a887bb5e631958498938f861384a620505425a7d747449d3302",
+      "b71727cb0ba2c5e9cc07efdf156acb46d4bfd4d1341a45a07118f745b6c54aac": "sha256:b96ed3cf5c213a887bb5e631958498938f861384a620505425a7d747449d3302",
+      "ae4c98d41b22def977fb5fbbf02267a3da121c4e5b935ce27441efdcc84b3641": "sha256:118509334a36044223e0c73bed88e50a8b5a92d6f1ee938966dc52ba1e0ec7a7"
+    },
+    "cursor_key_configuration": "isolated-keyring-v1"
+  },
+  {
+    "step": "mixed_rolling",
+    "images": {
+      "b71727cb0ba2c5e9cc07efdf156acb46d4bfd4d1341a45a07118f745b6c54aac": "sha256:b96ed3cf5c213a887bb5e631958498938f861384a620505425a7d747449d3302",
+      "ae4c98d41b22def977fb5fbbf02267a3da121c4e5b935ce27441efdcc84b3641": "sha256:118509334a36044223e0c73bed88e50a8b5a92d6f1ee938966dc52ba1e0ec7a7",
+      "c2c92e42f226a2310b02a47eb9ce4a8fe11a3daa592fb44c0d299d5079ca087b": "sha256:118509334a36044223e0c73bed88e50a8b5a92d6f1ee938966dc52ba1e0ec7a7"
+    },
+    "cursor_key_configuration": "isolated-keyring-v1"
+  },
+  {
+    "step": "sidecar_completed",
+    "service": "market-data"
+  },
+  {
+    "step": "sidecar_completed",
+    "service": "indicator-builder"
+  },
+  {
+    "step": "drained",
+    "inventory": {
+      "version": 1,
+      "project": "f11-compose-d1539486f72f451a92d5b228074da599",
+      "containers": [
+        {
+          "container_id": "ae4c98d41b22def977fb5fbbf02267a3da121c4e5b935ce27441efdcc84b3641",
+          "image_id": "sha256:118509334a36044223e0c73bed88e50a8b5a92d6f1ee938966dc52ba1e0ec7a7",
+          "service": "api"
+        },
+        {
+          "container_id": "c2c92e42f226a2310b02a47eb9ce4a8fe11a3daa592fb44c0d299d5079ca087b",
+          "image_id": "sha256:118509334a36044223e0c73bed88e50a8b5a92d6f1ee938966dc52ba1e0ec7a7",
+          "service": "api"
+        },
+        {
+          "container_id": "d28d8f83f813cb7fa04ec1901f90350184d9843223b92779662345221f8cd78a",
+          "image_id": "sha256:118509334a36044223e0c73bed88e50a8b5a92d6f1ee938966dc52ba1e0ec7a7",
+          "service": "market-data"
+        },
+        {
+          "container_id": "8a9db0dbed24e4cea8c67079374a4465cb19fa03d245bab2c97bfae69855fb26",
+          "image_id": "sha256:118509334a36044223e0c73bed88e50a8b5a92d6f1ee938966dc52ba1e0ec7a7",
+          "service": "indicator-builder"
+        }
+      ],
+      "external_paths_drained": true,
+      "legacy_restart_disabled": true,
+      "verification_keyring_verified": true,
+      "keyring_config_id": "isolated-keyring-v1"
+    }
+  },
+  {
+    "step": "paused",
+    "state": {
+      "epoch": "13493838-8bb5-4d80-b903-08d262966328",
+      "cutoff": "2026-10-11T17:17:57.290223+00:00",
+      "result": "APPLIED"
+    }
+  },
+  {
+    "step": "partial_grant_inspected",
+    "result": "POLICY_UNSUPPORTED",
+    "replay": "ALREADY_APPLIED"
+  },
+  {
+    "step": "drained",
+    "inventory": {
+      "version": 1,
+      "project": "f11-compose-d1539486f72f451a92d5b228074da599",
+      "containers": [
+        {
+          "container_id": "ae4c98d41b22def977fb5fbbf02267a3da121c4e5b935ce27441efdcc84b3641",
+          "image_id": "sha256:118509334a36044223e0c73bed88e50a8b5a92d6f1ee938966dc52ba1e0ec7a7",
+          "service": "api"
+        },
+        {
+          "container_id": "c2c92e42f226a2310b02a47eb9ce4a8fe11a3daa592fb44c0d299d5079ca087b",
+          "image_id": "sha256:118509334a36044223e0c73bed88e50a8b5a92d6f1ee938966dc52ba1e0ec7a7",
+          "service": "api"
+        },
+        {
+          "container_id": "d28d8f83f813cb7fa04ec1901f90350184d9843223b92779662345221f8cd78a",
+          "image_id": "sha256:118509334a36044223e0c73bed88e50a8b5a92d6f1ee938966dc52ba1e0ec7a7",
+          "service": "market-data"
+        },
+        {
+          "container_id": "8a9db0dbed24e4cea8c67079374a4465cb19fa03d245bab2c97bfae69855fb26",
+          "image_id": "sha256:118509334a36044223e0c73bed88e50a8b5a92d6f1ee938966dc52ba1e0ec7a7",
+          "service": "indicator-builder"
+        }
+      ],
+      "external_paths_drained": true,
+      "legacy_restart_disabled": true,
+      "verification_keyring_verified": true,
+      "keyring_config_id": "isolated-keyring-v1"
+    }
+  },
+  {
+    "step": "sidecar_completed",
+    "service": "market-data"
+  },
+  {
+    "step": "retired",
+    "schema": "0014",
+    "legacy_api": 403,
+    "cursor_key_configuration": "retired",
+    "support_clock": "DB cutoff aged by fixture"
+  }
+]

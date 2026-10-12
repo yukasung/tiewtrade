@@ -31,6 +31,9 @@ BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'tiewtrade_market_data') THEN
         CREATE ROLE tiewtrade_market_data LOGIN PASSWORD 'dev_market_data';
     END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'tiewtrade_indicator_builder') THEN
+        CREATE ROLE tiewtrade_indicator_builder LOGIN PASSWORD 'dev_indicator_builder';
+    END IF;
     -- บทบาทของเส้นทางยืนยันตัวตน (F-05) — อยู่ใต้ RLS เหมือนบทบาททำงานอื่น
     -- แยกจาก api เพราะเป็นบทบาทเดียวที่แตะข้อมูลเข้าสู่ระบบและออก session ได้
     IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'tiewtrade_auth') THEN
@@ -75,11 +78,11 @@ REVOKE ALL ON DATABASE :"DBNAME" FROM PUBLIC;
 
 GRANT CONNECT ON DATABASE :"DBNAME" TO
     tiewtrade_migrator, tiewtrade_api, tiewtrade_engine,
-    tiewtrade_engine_scan, tiewtrade_market_data, tiewtrade_auth;
+    tiewtrade_engine_scan, tiewtrade_market_data, tiewtrade_auth, tiewtrade_indicator_builder;
 
 GRANT USAGE ON SCHEMA public TO
     tiewtrade_migrator, tiewtrade_api, tiewtrade_engine,
-    tiewtrade_engine_scan, tiewtrade_market_data, tiewtrade_auth;
+    tiewtrade_engine_scan, tiewtrade_market_data, tiewtrade_auth, tiewtrade_indicator_builder;
 
 -- เจ้าของโครงสร้างเท่านั้นที่สร้างของใน schema ได้ (RQ-5.1)
 GRANT CREATE ON SCHEMA public TO tiewtrade_migrator;

@@ -1,0 +1,236 @@
+{
+  "holder": [
+    {
+      "component": "indicator-builder",
+      "event": "boot",
+      "owner": "532240a8-78f1-4292-82d2-ce617e2e8bc3"
+    },
+    {
+      "step": "claim_committed",
+      "time_ns": 38233015416662,
+      "cpu_ns": 561340872,
+      "pid": 141,
+      "fence": 1,
+      "job": "1965e7cf-a7f4-423b-a02a-8a932b811b7d",
+      "formula": "indicators-v1"
+    },
+    {
+      "step": "source_open",
+      "time_ns": 38233041539582,
+      "cpu_ns": 580992475,
+      "pid": 142
+    },
+    {
+      "step": "checkpoint_attempt",
+      "time_ns": 38233052681166,
+      "cpu_ns": 584866320
+    },
+    {
+      "step": "checkpoint_committed",
+      "time_ns": 38233058228959,
+      "cpu_ns": 586664669
+    },
+    {
+      "step": "hash_start",
+      "time_ns": 38233062458819,
+      "cpu_ns": 588465627
+    },
+    {
+      "step": "cpu_start",
+      "time_ns": 38233062612518,
+      "cpu_ns": 588617871
+    },
+    {
+      "step": "checkpoint_attempt",
+      "time_ns": 38233076284344,
+      "cpu_ns": 602290638
+    },
+    {
+      "step": "checkpoint_committed",
+      "time_ns": 38233081221063,
+      "cpu_ns": 604183916
+    },
+    {
+      "step": "checkpoint_attempt",
+      "time_ns": 38233097649434,
+      "cpu_ns": 618980341
+    },
+    {
+      "step": "checkpoint_committed",
+      "time_ns": 38233102656937,
+      "cpu_ns": 620768557
+    },
+    {
+      "step": "checkpoint_attempt",
+      "time_ns": 38233107504394,
+      "cpu_ns": 624822720
+    },
+    {
+      "step": "checkpoint_committed",
+      "time_ns": 38233112111175,
+      "cpu_ns": 626678567
+    },
+    {
+      "step": "barrier",
+      "time_ns": 38233112180369,
+      "cpu_ns": 626746803,
+      "stage": "source_cleanup"
+    },
+    {
+      "step": "source_closed",
+      "time_ns": 38234975518830,
+      "cpu_ns": 656341611,
+      "last_cpu_end": 38233107494077,
+      "batches": 138
+    },
+    {
+      "step": "ready_attempt",
+      "time_ns": 38234980521983,
+      "cpu_ns": 658295155
+    },
+    {
+      "step": "published",
+      "time_ns": 38234987680440,
+      "cpu_ns": 660248237,
+      "status": "READY"
+    },
+    {
+      "step": "actual_unlock_sql",
+      "time_ns": 38234988088236,
+      "cpu_ns": 660655337
+    },
+    {
+      "step": "writer_closed",
+      "time_ns": 38234989674426,
+      "cpu_ns": 661432913
+    },
+    {
+      "step": "result",
+      "time_ns": 38234989837177,
+      "cpu_ns": 661594577,
+      "status": "READY",
+      "reason": null
+    }
+  ],
+  "blocked": [
+    {
+      "component": "indicator-builder",
+      "event": "boot",
+      "owner": "5c9cdd8e-bdc3-4424-9d59-1fc0a0b96623"
+    },
+    {
+      "step": "result",
+      "time_ns": 38234572574076,
+      "cpu_ns": 527820045,
+      "status": "LOCK_BUSY",
+      "reason": null
+    }
+  ],
+  "successor": [
+    {
+      "component": "indicator-builder",
+      "event": "boot",
+      "owner": "511cd1e0-b033-4c05-9ca5-5ebd30ece078"
+    },
+    {
+      "step": "claim_committed",
+      "time_ns": 38236605075499,
+      "cpu_ns": 513217781,
+      "pid": 144,
+      "fence": 2,
+      "job": "1df105c7-2756-49db-a1b1-cb3df1d4d859",
+      "formula": "indicators-v1"
+    },
+    {
+      "step": "source_open",
+      "time_ns": 38236633524806,
+      "cpu_ns": 534207067,
+      "pid": 145
+    },
+    {
+      "step": "checkpoint_attempt",
+      "time_ns": 38236644818257,
+      "cpu_ns": 538142949
+    },
+    {
+      "step": "checkpoint_committed",
+      "time_ns": 38236650828316,
+      "cpu_ns": 540219079
+    },
+    {
+      "step": "hash_start",
+      "time_ns": 38236654466690,
+      "cpu_ns": 541698719
+    },
+    {
+      "step": "cpu_start",
+      "time_ns": 38236654603445,
+      "cpu_ns": 541834501
+    },
+    {
+      "step": "checkpoint_attempt",
+      "time_ns": 38236667879721,
+      "cpu_ns": 555111088
+    },
+    {
+      "step": "checkpoint_committed",
+      "time_ns": 38236672349337,
+      "cpu_ns": 556766881
+    },
+    {
+      "step": "checkpoint_attempt",
+      "time_ns": 38236688336871,
+      "cpu_ns": 571200607
+    },
+    {
+      "step": "checkpoint_committed",
+      "time_ns": 38236692817680,
+      "cpu_ns": 573041918
+    },
+    {
+      "step": "checkpoint_attempt",
+      "time_ns": 38236697296447,
+      "cpu_ns": 576771441
+    },
+    {
+      "step": "checkpoint_committed",
+      "time_ns": 38236701803576,
+      "cpu_ns": 578296588
+    },
+    {
+      "step": "source_closed",
+      "time_ns": 38236702297753,
+      "cpu_ns": 578694806,
+      "last_cpu_end": 38236697286894,
+      "batches": 138
+    },
+    {
+      "step": "ready_attempt",
+      "time_ns": 38236707030256,
+      "cpu_ns": 580319515
+    },
+    {
+      "step": "published",
+      "time_ns": 38236714504730,
+      "cpu_ns": 582294796,
+      "status": "READY"
+    },
+    {
+      "step": "actual_unlock_sql",
+      "time_ns": 38236714890207,
+      "cpu_ns": 582679603
+    },
+    {
+      "step": "writer_closed",
+      "time_ns": 38236716228578,
+      "cpu_ns": 583407133
+    },
+    {
+      "step": "result",
+      "time_ns": 38236716370463,
+      "cpu_ns": 583548605,
+      "status": "READY",
+      "reason": null
+    }
+  ]
+}

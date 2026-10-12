@@ -23,6 +23,7 @@ from redis.asyncio import Redis
 from starlette.responses import Response
 
 from tiewtrade.infra.crypto import KeyPurpose, KeySource
+from tiewtrade.infra.crypto.indicator_cursor import validate_keys
 from tiewtrade.infra.db import DatabaseRole, create_engine_for
 from tiewtrade.infra.db.session import presented_session
 from tiewtrade.infra.market_data.realtime_records import PriceSnapshot
@@ -33,6 +34,8 @@ from tiewtrade.services.api.api_key_routes import router as api_key_router
 from tiewtrade.services.api.auth_routes import router as auth_router
 from tiewtrade.services.api.authentication import authenticate_request
 from tiewtrade.services.api.candle_routes import router as candle_router
+from tiewtrade.services.api.indicator_admission import IndicatorBudget
+from tiewtrade.services.api.indicator_routes import router as indicator_router
 from tiewtrade.services.api.price_admission import ProcessBudget
 from tiewtrade.services.api.price_broadcast import PriceBroadcaster
 from tiewtrade.services.api.price_guard import PriceScopeGuard
@@ -66,6 +69,19 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         DatabaseRole.API, pool_size=3, max_overflow=0, pool_timeout=0.5
     )
     redis = Redis.from_url(price_redis_url())
+    app.state.indicator_keys = KeySource.from_environment(KeyPurpose.INDICATOR_CURSOR)
+    validate_keys(app.state.indicator_keys, (app.state.totp_keys, app.state.venue_keys))
+    app.state.indicator_engine = create_engine_for(
+        DatabaseRole.API, pool_size=1, max_overflow=0, pool_timeout=0.25
+    )
+    app.state.indicator_budget = IndicatorBudget()
+    app.state.indicator_admission = RedisAdmission(
+        cast(AdmissionRedis, redis),
+        global_limit=30,
+        ip_limit=6,
+        namespace="market.indicator.admission",
+        subject="user",
+    )
     app.state.price_budget = ProcessBudget()
     app.state.price_admission = RedisAdmission(
         cast(AdmissionRedis, redis),
@@ -89,6 +105,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         broadcast_task.cancel()
         await asyncio.gather(broadcast_task, return_exceptions=True)
         await redis.aclose()
+        await app.state.indicator_engine.dispose()
         await app.state.price_engine.dispose()
         await app.state.api_engine.dispose()
         await app.state.auth_engine.dispose()
@@ -138,6 +155,7 @@ app.include_router(totp_router)
 app.include_router(api_key_router)
 app.include_router(trading_account_router)
 app.include_router(candle_router)
+app.include_router(indicator_router)
 app.include_router(price_router)
 
 

@@ -1,0 +1,136 @@
+{
+  "proof": {
+    "status": "STAGING",
+    "expires_at": "2026-10-01 06:10:00+00:00",
+    "source_epoch": "4007559f-eb77-42be-9499-882ee827a5b8",
+    "source_fence": 1,
+    "epoch": "4007559f-eb77-42be-9499-882ee827a5b8",
+    "revision": 1,
+    "journal_floor": 0,
+    "triggers": true
+  },
+  "slot": {
+    "id": 1,
+    "slot_epoch": "69b80147-766d-43f1-89ae-e73b60e1d7e2",
+    "fence": 1,
+    "owner_instance": "44e387e9-b23b-411b-9684-9add436a38b2",
+    "owner_backend_pid": 402,
+    "job_id": "17c06113-1787-4c04-855b-635a05f404ae",
+    "generation_id": "46422cc9-d866-41ca-b9ca-4d6e0aba4e9d",
+    "claim_token": "fdf562bb-6ef3-4445-b77d-33496ca7aec4",
+    "lease_until": "2026-10-01 00:02:30+00:00",
+    "attempt_deadline": "2026-10-01 00:02:00+00:00",
+    "last_heartbeat": "2026-10-01 00:00:00+00:00",
+    "state": "RUNNING",
+    "dispatch_round": 1,
+    "dispatch_cursor": 4
+  },
+  "trace": [
+    {
+      "component": "indicator-builder",
+      "event": "boot",
+      "owner": "44e387e9-b23b-411b-9684-9add436a38b2"
+    },
+    {
+      "step": "claim_committed",
+      "time_ns": 745363596696,
+      "cpu_ns": 516887199,
+      "pid": 402,
+      "fence": 1,
+      "job": "17c06113-1787-4c04-855b-635a05f404ae",
+      "formula": "indicators-v1"
+    },
+    {
+      "step": "source_open",
+      "time_ns": 745387438295,
+      "cpu_ns": 535072612,
+      "pid": 403
+    },
+    {
+      "step": "checkpoint_attempt",
+      "time_ns": 745397616577,
+      "cpu_ns": 538434023,
+      "start": "2025-10-01T00:00:00+00:00",
+      "end": "2026-10-01T00:00:00+00:00",
+      "next_open": "2025-10-01T00:00:00+00:00"
+    },
+    {
+      "step": "checkpoint_committed",
+      "time_ns": 745402711405,
+      "cpu_ns": 540004757
+    },
+    {
+      "step": "source_closed",
+      "time_ns": 745406721073,
+      "cpu_ns": 541747785,
+      "last_cpu_end": 0,
+      "batches": 0
+    },
+    {
+      "step": "barrier",
+      "time_ns": 745406802991,
+      "cpu_ns": 541829102,
+      "stage": "before_numeric"
+    },
+    {
+      "step": "numeric_attempt",
+      "time_ns": 745539246299,
+      "cpu_ns": 543389128
+    },
+    {
+      "step": "numeric_published",
+      "time_ns": 745545633782,
+      "cpu_ns": 545704370,
+      "status": "SUPERSEDED"
+    },
+    {
+      "step": "actual_unlock_sql",
+      "time_ns": 745545991173,
+      "cpu_ns": 546060399
+    },
+    {
+      "step": "writer_closed",
+      "time_ns": 745547349547,
+      "cpu_ns": 546765502
+    },
+    {
+      "step": "result",
+      "time_ns": 745547545078,
+      "cpu_ns": 546960250,
+      "status": "SUPERSEDED",
+      "reason": null,
+      "peak_connections": 2
+    }
+  ],
+  "after": {
+    "id": "17c06113-1787-4c04-855b-635a05f404ae",
+    "source": "primary_spot",
+    "base": "BTC",
+    "quote": "USDT",
+    "timeframe": "4h",
+    "formula_version": "indicators-v1",
+    "status": "QUEUED",
+    "current_candidate": "46422cc9-d866-41ca-b9ca-4d6e0aba4e9d",
+    "generation_sequence": 1,
+    "claim_token": null,
+    "lease_until": null,
+    "build_rollout_epoch": "612e757b-04de-4a56-8893-9bc49b5e442e",
+    "desired_start": "2025-10-01 00:00:00+00:00",
+    "desired_end": "2026-10-01 00:00:00+00:00",
+    "failed_calculation_key": null,
+    "failed_input_version": null,
+    "first_eligible_at": "2026-10-01 00:00:00+00:00",
+    "availability_deadline": "2026-10-01 00:10:00+00:00",
+    "attempts_used": 1,
+    "cycle_id": "1fccfb04-52e2-4e34-8c3c-38907edda5b7",
+    "retry_not_before": "2026-10-01 00:02:31+00:00",
+    "last_served_round": 1,
+    "deadline_missed_at": null,
+    "failure_category": "SUPERSEDED",
+    "failure_reason": "OWNERSHIP_LOST",
+    "failed_at": null,
+    "recovery_event_revision": null,
+    "failure_source_epoch": "4007559f-eb77-42be-9499-882ee827a5b8",
+    "failure_source_fence": 1
+  }
+}

@@ -1,8 +1,18 @@
 # F-09 — Candle history Implementation Plan
 
-สถานะ: **Approved** — เจ้าของตอบ approve วันที่2026-10-07 หลังแก้ไขและรีวิวแผนฉบับนี้
+สถานะ: **Approved** — เจ้าของตอบ approve วันที่2026-10-07 หลังแก้ไขและรีวิวแผนฉบับนี้; รวมNC-35 amendmentsที่เจ้าของอนุมัติเมื่อ2026-10-10
 วันที่: 2026-10-07
 Branch: feature/f-09-market-data
+
+แผนdependencyของF-11 NC-35อยู่ใน [performance-plan-v2](../2026-10-10-backend-indicators/performance-plan-v2.md)
+และ [ADR-002](../../decisions/002-prepared-indicators.md) — **Approved**
+เจ้าของอนุมัติamendmentF-09เมื่อ2026-10-10 ตามคำสั่ง “approve”; พร้อมปรับphysicalcleanup/partition triggers/grantsตามแผน
+แก้reviewรอบ2ข้อ1: รวมการปรับrun_round/write_candles/cleanupให้acquire sourcewrite
+scopeก่อนlock_claim/candleprelocks และmaintenance relation-first ตามADR-002
+ไม่ใช่การเปลี่ยนcleanupcutoffเพียงอย่างเดียว; amendmentนี้Approvedแล้ว
+แก้reviewรอบ2ข้อ5: ต้องdrain/หยุดlegacyF-09รวมcleanupทุกreplicaก่อนติดstrict
+sourceprooftrigger/เปิดbuilderตามS0..S5 และคงgraceระหว่างrollback supportwindow
+ในแผนรอบ2; ห้ามoldimage restartกลับมาcleanup365วันระหว่างpreparedmode
 
 ใช้ executing-plans ดำเนินงานตามลำดับหลังอนุมัติ รักษา working tree ไม่ commit/pushเอง
 

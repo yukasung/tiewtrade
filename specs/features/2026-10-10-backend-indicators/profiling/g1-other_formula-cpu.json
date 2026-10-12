@@ -1,0 +1,136 @@
+{
+  "holder": [
+    {
+      "component": "indicator-builder",
+      "event": "boot",
+      "owner": "ea551083-aeb2-46f9-8bed-292706a206eb"
+    },
+    {
+      "step": "claim_committed",
+      "time_ns": 37206207104706,
+      "cpu_ns": 534812049,
+      "pid": 105,
+      "fence": 1,
+      "job": "7071b63e-39ef-429c-8a6a-463623055ee5",
+      "formula": "indicators-v1"
+    },
+    {
+      "step": "source_open",
+      "time_ns": 37206242349617,
+      "cpu_ns": 561003333,
+      "pid": 106
+    },
+    {
+      "step": "hash_start",
+      "time_ns": 37206269214504,
+      "cpu_ns": 570376304
+    },
+    {
+      "step": "cpu_start",
+      "time_ns": 37206269424429,
+      "cpu_ns": 570582622
+    },
+    {
+      "step": "barrier",
+      "time_ns": 37206269734480,
+      "cpu_ns": 570892982,
+      "stage": "cpu"
+    },
+    {
+      "step": "source_closed",
+      "time_ns": 37208127597609,
+      "cpu_ns": 633757582,
+      "last_cpu_end": 37208122438975,
+      "batches": 138
+    },
+    {
+      "step": "published",
+      "time_ns": 37208139385309,
+      "cpu_ns": 637251117,
+      "status": "READY"
+    },
+    {
+      "step": "writer_closed",
+      "time_ns": 37208141036869,
+      "cpu_ns": 638269566
+    },
+    {
+      "step": "result",
+      "time_ns": 37208141195993,
+      "cpu_ns": 638428136,
+      "status": "READY",
+      "reason": null
+    }
+  ],
+  "blocked": [
+    {
+      "component": "indicator-builder",
+      "event": "boot",
+      "owner": "6a9edaf2-dec9-4a90-9e0d-2eb5dcf5a99d"
+    },
+    {
+      "step": "result",
+      "time_ns": 37207699199931,
+      "cpu_ns": 528263641,
+      "status": "LOCK_BUSY",
+      "reason": null
+    }
+  ],
+  "successor": [
+    {
+      "component": "indicator-builder",
+      "event": "boot",
+      "owner": "7d3ae5f7-2c34-4636-a1d4-babfaa368238"
+    },
+    {
+      "step": "claim_committed",
+      "time_ns": 37209777644406,
+      "cpu_ns": 521329862,
+      "pid": 109,
+      "fence": 2,
+      "job": "15500a2b-9d8d-45ba-8e9d-212ad6b2ae6f",
+      "formula": "indicators-v1"
+    },
+    {
+      "step": "source_open",
+      "time_ns": 37209803533442,
+      "cpu_ns": 540605728,
+      "pid": 110
+    },
+    {
+      "step": "hash_start",
+      "time_ns": 37209821734578,
+      "cpu_ns": 546205692
+    },
+    {
+      "step": "cpu_start",
+      "time_ns": 37209821890816,
+      "cpu_ns": 546359521
+    },
+    {
+      "step": "source_closed",
+      "time_ns": 37209871721588,
+      "cpu_ns": 584592523,
+      "last_cpu_end": 37209867098273,
+      "batches": 138
+    },
+    {
+      "step": "published",
+      "time_ns": 37209883711063,
+      "cpu_ns": 588067998,
+      "status": "READY"
+    },
+    {
+      "step": "writer_closed",
+      "time_ns": 37209885248939,
+      "cpu_ns": 588985544
+    },
+    {
+      "step": "result",
+      "time_ns": 37209885406898,
+      "cpu_ns": 589142386,
+      "status": "READY",
+      "reason": null
+    }
+  ]
+}

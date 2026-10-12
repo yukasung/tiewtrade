@@ -1,0 +1,273 @@
+{
+  "python": "3.12.15",
+  "postgres": "16.15 (Debian 16.15-1.pgdg13+2)",
+  "fixture_rows": 525600,
+  "cpu_limit": "2vCPU",
+  "memory_limit": "1GiB",
+  "api_runs": [
+    {
+      "instrumented": false,
+      "http_status": 504,
+      "error": "INDICATOR_DEADLINE_EXCEEDED",
+      "elapsed_seconds": 30.07161196600009,
+      "event_loop_lag_seconds": 0.15089312199983396,
+      "metrics": {
+        "db": {
+          "calls": 0,
+          "seconds": 0,
+          "max_seconds": 0
+        },
+        "decode": {
+          "calls": 0,
+          "seconds": 0,
+          "max_seconds": 0
+        },
+        "decode_batch": {
+          "calls": 0,
+          "seconds": 0,
+          "max_seconds": 0
+        },
+        "core": {
+          "calls": 0,
+          "seconds": 0,
+          "max_seconds": 0
+        },
+        "hash_timestamp": {
+          "calls": 0,
+          "seconds": 0,
+          "max_seconds": 0
+        },
+        "hash_numbers": {
+          "calls": 0,
+          "seconds": 0,
+          "max_seconds": 0
+        },
+        "hash_json": {
+          "calls": 0,
+          "seconds": 0,
+          "max_seconds": 0
+        },
+        "hash_update": {
+          "calls": 0,
+          "seconds": 0,
+          "max_seconds": 0
+        }
+      }
+    },
+    {
+      "instrumented": true,
+      "http_status": 504,
+      "error": "INDICATOR_DEADLINE_EXCEEDED",
+      "elapsed_seconds": 30.04040727699976,
+      "event_loop_lag_seconds": 0.15944183299983705,
+      "metrics": {
+        "db": {
+          "calls": 295,
+          "seconds": 2.1555549330023496,
+          "max_seconds": 0.047979713000131596
+        },
+        "decode": {
+          "calls": 98000,
+          "seconds": 10.120860510955936,
+          "max_seconds": 0.037708740000198304
+        },
+        "decode_batch": {
+          "calls": 98,
+          "seconds": 10.367998971998531,
+          "max_seconds": 0.14992265999990195
+        },
+        "core": {
+          "calls": 97008,
+          "seconds": 14.208704640892392,
+          "max_seconds": 0.002958901999591035
+        },
+        "hash_timestamp": {
+          "calls": 388034,
+          "seconds": 0.44700850608205656,
+          "max_seconds": 0.0003619600001911749
+        },
+        "hash_numbers": {
+          "calls": 485040,
+          "seconds": 1.0976638913143688,
+          "max_seconds": 0.00028930799999216106
+        },
+        "hash_json": {
+          "calls": 97009,
+          "seconds": 0.39074196016554197,
+          "max_seconds": 0.00021771499996248167
+        },
+        "hash_update": {
+          "calls": 97009,
+          "seconds": 0.032868578819034155,
+          "max_seconds": 0.00010457999997015577
+        }
+      }
+    }
+  ],
+  "core_cprofile": {
+    "rows": 1000,
+    "profile_total_seconds": 0.35246291700000015,
+    "top_cumulative": [
+      {
+        "file": "indicators.py",
+        "line": 91,
+        "function": "feed",
+        "calls": 1000,
+        "self_seconds": 0.01343444,
+        "cumulative_seconds": 0.366182626
+      },
+      {
+        "file": "context.py",
+        "line": 77,
+        "function": "wrapper",
+        "calls": 45080,
+        "self_seconds": 0.044755634,
+        "cumulative_seconds": 0.333422474
+      },
+      {
+        "file": "indicators.py",
+        "line": 50,
+        "function": "feed",
+        "calls": 8972,
+        "self_seconds": 0.00471313,
+        "cumulative_seconds": 0.177148556
+      },
+      {
+        "file": "indicator_arithmetic.py",
+        "line": 64,
+        "function": "weighted_mean_money",
+        "calls": 8622,
+        "self_seconds": 0.023536232,
+        "cumulative_seconds": 0.14865571500000002
+      },
+      {
+        "file": "types.py",
+        "line": 67,
+        "function": "__post_init__",
+        "calls": 18557,
+        "self_seconds": 0.011505159000000001,
+        "cumulative_seconds": 0.102509074
+      },
+      {
+        "file": "types.py",
+        "line": 119,
+        "function": "__sub__",
+        "calls": 8935,
+        "self_seconds": 0.004895054,
+        "cumulative_seconds": 0.08582941000000001
+      },
+      {
+        "file": "types.py",
+        "line": 88,
+        "function": "_checked",
+        "calls": 8935,
+        "self_seconds": 0.0028457390000000003,
+        "cumulative_seconds": 0.07662930200000001
+      },
+      {
+        "file": "validation.py",
+        "line": 91,
+        "function": "ensure_valid_amount",
+        "calls": 19543,
+        "self_seconds": 0.013916068,
+        "cumulative_seconds": 0.053387441
+      },
+      {
+        "file": "context.py",
+        "line": 48,
+        "function": "_context",
+        "calls": 45080,
+        "self_seconds": 0.046761131000000004,
+        "cumulative_seconds": 0.053008618
+      },
+      {
+        "file": "validation.py",
+        "line": 108,
+        "function": "ensure_canonical_unit",
+        "calls": 18557,
+        "self_seconds": 0.004267828,
+        "cumulative_seconds": 0.03685846
+      },
+      {
+        "file": "validation.py",
+        "line": 61,
+        "function": "real_decimal_places",
+        "calls": 21529,
+        "self_seconds": 0.014088728,
+        "cumulative_seconds": 0.034615812
+      },
+      {
+        "file": "validation.py",
+        "line": 147,
+        "function": "normalise_unit",
+        "calls": 19557,
+        "self_seconds": 0.011821949,
+        "cumulative_seconds": 0.034611647
+      },
+      {
+        "file": "indicator_arithmetic.py",
+        "line": 50,
+        "function": "_ratio",
+        "calls": 8622,
+        "self_seconds": 0.008460634,
+        "cumulative_seconds": 0.024246081000000003
+      },
+      {
+        "file": "~",
+        "line": 0,
+        "function": "<built-in method builtins.max>",
+        "calls": 3996,
+        "self_seconds": 0.001573848,
+        "cumulative_seconds": 0.021952649
+      },
+      {
+        "file": "functools.py",
+        "line": 89,
+        "function": "_gt_from_lt",
+        "calls": 4995,
+        "self_seconds": 0.002657393,
+        "cumulative_seconds": 0.020378801000000002
+      },
+      {
+        "file": "~",
+        "line": 0,
+        "function": "<built-in method builtins.all>",
+        "calls": 19557,
+        "self_seconds": 0.010456427,
+        "cumulative_seconds": 0.018963162000000002
+      },
+      {
+        "file": "~",
+        "line": 0,
+        "function": "<method 'as_tuple' of 'decimal.Decimal' objects>",
+        "calls": 21529,
+        "self_seconds": 0.009508576000000001,
+        "cumulative_seconds": 0.017347133
+      },
+      {
+        "file": "indicator_arithmetic.py",
+        "line": 46,
+        "function": "_coefficient",
+        "calls": 26207,
+        "self_seconds": 0.009785021000000001,
+        "cumulative_seconds": 0.015875349
+      },
+      {
+        "file": "types.py",
+        "line": 96,
+        "function": "of",
+        "calls": 1000,
+        "self_seconds": 0.000771995,
+        "cumulative_seconds": 0.015414298000000002
+      },
+      {
+        "file": "~",
+        "line": 0,
+        "function": "<built-in method decimal.localcontext>",
+        "calls": 45080,
+        "self_seconds": 0.012419964,
+        "cumulative_seconds": 0.012419964
+      }
+    ]
+  }
+}

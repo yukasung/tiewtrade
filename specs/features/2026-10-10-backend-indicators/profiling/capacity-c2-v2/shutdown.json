@@ -1,0 +1,46 @@
+{
+  "containers": [
+    {
+      "name": "tiewtrade-f11-capacity-builder",
+      "id": "9dd45d0bf85dbda1ccb197fc38dd5efeecdf74a96a25a993c05b76223b349062",
+      "image": "sha256:d5e03697b8aafb4eaf145ef30041909600c5d39c1ef548fcce8e0e084c4e3215",
+      "state": {
+        "Status": "exited",
+        "Running": false,
+        "Paused": false,
+        "Restarting": false,
+        "OOMKilled": false,
+        "Dead": false,
+        "Pid": 0,
+        "ExitCode": 0,
+        "Error": "",
+        "StartedAt": "2026-10-11T10:45:48.82686367Z",
+        "FinishedAt": "2026-10-11T11:45:25.481865494Z"
+      },
+      "cpus_nano": 2000000000,
+      "memory_bytes": 1073741824
+    },
+    {
+      "name": "tiewtrade-f11-capacity-api",
+      "id": "19550b8c88b13474933402e6c7e5da55b3127622c9e1ff679c26ec41ab967f9a",
+      "image": "sha256:d5e03697b8aafb4eaf145ef30041909600c5d39c1ef548fcce8e0e084c4e3215",
+      "state": {
+        "Status": "exited",
+        "Running": false,
+        "Paused": false,
+        "Restarting": false,
+        "OOMKilled": false,
+        "Dead": false,
+        "Pid": 0,
+        "ExitCode": 0,
+        "Error": "",
+        "StartedAt": "2026-10-11T10:45:47.056547372Z",
+        "FinishedAt": "2026-10-11T11:56:41.001259084Z"
+      },
+      "cpus_nano": 2000000000,
+      "memory_bytes": 1073741824
+    }
+  ],
+  "slot": "IDLE",
+  "global_advisory_locks": 0
+}

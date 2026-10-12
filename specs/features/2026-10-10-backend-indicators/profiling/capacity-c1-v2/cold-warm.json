@@ -1,0 +1,74 @@
+[
+  {
+    "base": "BTC",
+    "timeframe": "1m",
+    "run": "cold",
+    "status": 200,
+    "body_bytes": 695215,
+    "elapsed_seconds": 0.2809999999990396,
+    "correct": true,
+    "generation_id": "87696690-cb21-406e-8939-81a0a9014381",
+    "response_rows_sha256": "4063969c8b218ae747f6e82e6053eb31d69d9af19c3dffbb0df81db6a74a8d70",
+    "dataset_revision": "2f69565c869a91aec3d4061a7876d2a05561f9127bcf311e66fa1849415483df"
+  },
+  {
+    "base": "BTC",
+    "timeframe": "1m",
+    "run": "warm",
+    "status": 200,
+    "body_bytes": 695215,
+    "elapsed_seconds": 0.23500000000058208,
+    "correct": true,
+    "generation_id": "87696690-cb21-406e-8939-81a0a9014381",
+    "response_rows_sha256": "4063969c8b218ae747f6e82e6053eb31d69d9af19c3dffbb0df81db6a74a8d70",
+    "dataset_revision": "2f69565c869a91aec3d4061a7876d2a05561f9127bcf311e66fa1849415483df"
+  },
+  {
+    "base": "BTC",
+    "timeframe": "1m",
+    "run": "warm",
+    "status": 200,
+    "body_bytes": 695215,
+    "elapsed_seconds": 0.21799999999711872,
+    "correct": true,
+    "generation_id": "87696690-cb21-406e-8939-81a0a9014381",
+    "response_rows_sha256": "4063969c8b218ae747f6e82e6053eb31d69d9af19c3dffbb0df81db6a74a8d70",
+    "dataset_revision": "2f69565c869a91aec3d4061a7876d2a05561f9127bcf311e66fa1849415483df"
+  },
+  {
+    "base": "BTC",
+    "timeframe": "1m",
+    "run": "warm",
+    "status": 200,
+    "body_bytes": 695215,
+    "elapsed_seconds": 0.21900000000096043,
+    "correct": true,
+    "generation_id": "87696690-cb21-406e-8939-81a0a9014381",
+    "response_rows_sha256": "4063969c8b218ae747f6e82e6053eb31d69d9af19c3dffbb0df81db6a74a8d70",
+    "dataset_revision": "2f69565c869a91aec3d4061a7876d2a05561f9127bcf311e66fa1849415483df"
+  },
+  {
+    "base": "BTC",
+    "timeframe": "1m",
+    "run": "warm",
+    "status": 200,
+    "body_bytes": 695215,
+    "elapsed_seconds": 0.20300000000133878,
+    "correct": true,
+    "generation_id": "87696690-cb21-406e-8939-81a0a9014381",
+    "response_rows_sha256": "4063969c8b218ae747f6e82e6053eb31d69d9af19c3dffbb0df81db6a74a8d70",
+    "dataset_revision": "2f69565c869a91aec3d4061a7876d2a05561f9127bcf311e66fa1849415483df"
+  },
+  {
+    "base": "BTC",
+    "timeframe": "1m",
+    "run": "warm",
+    "status": 200,
+    "body_bytes": 695215,
+    "elapsed_seconds": 0.23500000000058208,
+    "correct": true,
+    "generation_id": "87696690-cb21-406e-8939-81a0a9014381",
+    "response_rows_sha256": "4063969c8b218ae747f6e82e6053eb31d69d9af19c3dffbb0df81db6a74a8d70",
+    "dataset_revision": "2f69565c869a91aec3d4061a7876d2a05561f9127bcf311e66fa1849415483df"
+  }
+]

@@ -1,8 +1,16 @@
 # F-09 — Candle history Validation
 
-สถานะ: **Approved** — เจ้าของตอบ approve วันที่2026-10-07 พร้อม plan.md หลังแก้ไขและรีวิว
+สถานะ: **Approved** — เจ้าของตอบ approve วันที่2026-10-07 พร้อม plan.md หลังแก้ไขและรีวิว; รวมNC-35 amendmentsที่เจ้าของอนุมัติเมื่อ2026-10-10
 วันที่: 2026-10-07
 requirements.md: Approved; NC-09/T-04 Closed
+
+เกณฑ์amendmentF-09 NC-35อยู่ใน [R2-1..12](../2026-10-10-backend-indicators/performance-plan-v2.md)
+เป็น **Approved** โดยเฉพาะlogical/physicalretention, sourcejournal/partitionproof,
+permissions/migration/rollbackและregressioningestion; เกณฑ์amendmentได้รับอนุมัติ2026-10-10; ยังไม่ได้รันและไม่ถือว่าผลผ่าน
+เพิ่มR2-L1..L6สำหรับsourcewrite/maintenance lockorder รวมbarrier testของF-09
+preselect/upsertจริง, root/leaf, timeout/cancel/rollbackและscopeข้ามtransaction
+เพิ่มR2-D1..D7ในแผนรอบ2สำหรับmixed-versionF-09cleanup/triggeractivation,
+drainsourcewriters/readerและrollbackretention supportwindow; Approved/ยังไม่ได้รัน
 
 ## เสร็จหมายถึง
 

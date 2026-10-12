@@ -464,7 +464,7 @@ def test_no_route_hands_back_the_secret(client: TestClient, ending: bool) -> Non
             path,
             headers=csrf_headers(client),
             params={"base": "BTC", "quote": "USDT", "timeframe": "1m"}
-            if template == "/market-data/candles"
+            if template in {"/market-data/candles", "/market-data/indicators"}
             else None,
             **({"json": {}} if method == "POST" else {}),
         )

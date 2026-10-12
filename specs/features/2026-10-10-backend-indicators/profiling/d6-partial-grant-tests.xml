@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="0.401" timestamp="2026-10-12T00:04:56.790489+07:00" hostname="DESKTOP-RONGMEV"><testcase classname="tests.infra.indicators.profile_partial_install" name="test_missing_api_payload_grant_blocks_prepared_activation" time="0.146"><failure message="AssertionError: {'epoch': 'cb17f163-f550-40cb-8f29-330e6bdbfe6a', 'cutoff': None, 'result': 'APPLIED'}&#10;assert 'APPLIED' == 'POLICY_UNSUPPORTED'&#10;  &#10;  - POLICY_UNSUPPORTED&#10;  + APPLIED">prepared = None
+migrator_engine = &lt;sqlalchemy.ext.asyncio.engine.AsyncEngine object at 0x000001B8C45F4AD0&gt;
+
+    async def test_missing_api_payload_grant_blocks_prepared_activation(
+        prepared: None, migrator_engine: AsyncEngine
+    ) -&gt; None:
+        assert "127.0.0.1:55433/" in os.environ["TIEWTRADE_DATABASE_URL_MIGRATOR"]
+        await synthetic_heads(migrator_engine)
+        async with migrator_engine.connect() as connection:
+            transaction = await connection.begin()
+            try:
+                await connection.execute(
+                    text("REVOKE SELECT ON indicator_ready_generations FROM tiewtrade_api")
+                )
+                assert not (
+                    await connection.execute(
+                        text(
+                            "SELECT has_table_privilege('tiewtrade_api',"
+                            "'indicator_ready_generations','SELECT')"
+                        )
+                    )
+                ).scalar_one()
+                before = dict(
+                    (await connection.execute(text("SELECT * FROM indicator_rollout_control")))
+                    .mappings()
+                    .one()
+                )
+                result = (
+                    await connection.execute(
+                        text("SELECT transition_indicator_rollout('PREPARING',:epoch,'PREPARED')"),
+                        {"epoch": before["rollout_epoch"]},
+                    )
+                ).scalar_one()
+                after = dict(
+                    (await connection.execute(text("SELECT * FROM indicator_rollout_control")))
+                    .mappings()
+                    .one()
+                )
+&gt;               assert result["result"] == "POLICY_UNSUPPORTED", result
+E               AssertionError: {'epoch': 'cb17f163-f550-40cb-8f29-330e6bdbfe6a', 'cutoff': None, 'result': 'APPLIED'}
+E               assert 'APPLIED' == 'POLICY_UNSUPPORTED'
+E                 
+E                 - POLICY_UNSUPPORTED
+E                 + APPLIED
+
+tests\infra\indicators\profile_partial_install.py:48: AssertionError</failure></testcase></testsuite></testsuites>

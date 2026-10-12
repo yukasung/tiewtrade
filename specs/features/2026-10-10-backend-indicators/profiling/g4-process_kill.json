@@ -1,0 +1,81 @@
+{
+  "blocked": [
+    {
+      "component": "indicator-builder",
+      "event": "boot",
+      "owner": "3865bb18-cc48-4251-b347-2501da666889"
+    },
+    {
+      "step": "writer_closed",
+      "time_ns": 37130939729104,
+      "cpu_ns": 523804375
+    },
+    {
+      "step": "result",
+      "time_ns": 37130939878135,
+      "cpu_ns": 523952688,
+      "status": "NO_JOB",
+      "reason": null
+    }
+  ],
+  "successor": [
+    {
+      "component": "indicator-builder",
+      "event": "boot",
+      "owner": "cddb46e9-a97f-4cb4-84cf-f2a2895be396"
+    },
+    {
+      "step": "claim_committed",
+      "time_ns": 37132749027597,
+      "cpu_ns": 520502722,
+      "pid": 698,
+      "fence": 3,
+      "job": "8dd32287-a800-4266-bd08-5df68ba1b738",
+      "formula": "indicators-v1"
+    },
+    {
+      "step": "source_open",
+      "time_ns": 37132774932898,
+      "cpu_ns": 539389594,
+      "pid": 699
+    },
+    {
+      "step": "hash_start",
+      "time_ns": 37132796908356,
+      "cpu_ns": 546676169
+    },
+    {
+      "step": "cpu_start",
+      "time_ns": 37132797073300,
+      "cpu_ns": 546839059
+    },
+    {
+      "step": "source_closed",
+      "time_ns": 37132847120855,
+      "cpu_ns": 585270749,
+      "last_cpu_end": 37132842456280,
+      "batches": 138
+    },
+    {
+      "step": "published",
+      "time_ns": 37132857724784,
+      "cpu_ns": 588242196,
+      "status": "READY"
+    },
+    {
+      "step": "writer_closed",
+      "time_ns": 37132858900797,
+      "cpu_ns": 588946019
+    },
+    {
+      "step": "result",
+      "time_ns": 37132859030889,
+      "cpu_ns": 589075876,
+      "status": "READY",
+      "reason": null
+    }
+  ],
+  "verified_stop_reap": true,
+  "stale_operations_rejected": 5,
+  "budget_preserved": true
+}

@@ -1,0 +1,130 @@
+{
+  "elapsed_seconds": 151.01600000000326,
+  "blocked": [
+    {
+      "component": "indicator-builder",
+      "event": "boot",
+      "owner": "675adb9f-5b33-48dd-bdcc-f85fbe8b568b"
+    },
+    {
+      "step": "result",
+      "time_ns": 36233592783305,
+      "cpu_ns": 557899190,
+      "status": "LOCK_BUSY",
+      "reason": null
+    }
+  ],
+  "resumed_owner": [
+    {
+      "component": "indicator-builder",
+      "event": "boot",
+      "owner": "b67b64a6-7161-459c-8569-bd594866d8b2"
+    },
+    {
+      "step": "claim_committed",
+      "time_ns": 36080935321384,
+      "cpu_ns": 511428290,
+      "pid": 27820,
+      "fence": 1,
+      "job": "3d158aea-4c93-43ea-97c8-4ade59640398",
+      "formula": "indicators-v1"
+    },
+    {
+      "step": "source_open",
+      "time_ns": 36080961097712,
+      "cpu_ns": 530087052
+    },
+    {
+      "step": "hash_start",
+      "time_ns": 36080982541255,
+      "cpu_ns": 536777863
+    },
+    {
+      "step": "cpu_start",
+      "time_ns": 36080982765894,
+      "cpu_ns": 537001284
+    },
+    {
+      "step": "barrier",
+      "time_ns": 36080982998083,
+      "cpu_ns": 537233553,
+      "stage": "cpu"
+    },
+    {
+      "step": "source_closed",
+      "time_ns": 36234140922638,
+      "cpu_ns": 543312203,
+      "last_cpu_end": 36234138958994,
+      "batches": 1
+    },
+    {
+      "step": "writer_closed",
+      "time_ns": 36234147381749,
+      "cpu_ns": 546793188
+    },
+    {
+      "step": "result",
+      "time_ns": 36234147481925,
+      "cpu_ns": 546892252,
+      "status": "ORPHANED",
+      "reason": "OWNERSHIP_LOST"
+    }
+  ],
+  "verified_reap": "REAPED",
+  "successor": [
+    {
+      "component": "indicator-builder",
+      "event": "boot",
+      "owner": "2d3d2d5f-9821-4112-b06d-d0922148391b"
+    },
+    {
+      "step": "claim_committed",
+      "time_ns": 36235897866058,
+      "cpu_ns": 517554217,
+      "pid": 27832,
+      "fence": 3,
+      "job": "9bf6fedf-3c1d-48a7-926e-6d30c14964a6",
+      "formula": "indicators-v1"
+    },
+    {
+      "step": "source_open",
+      "time_ns": 36235922989779,
+      "cpu_ns": 536109902
+    },
+    {
+      "step": "hash_start",
+      "time_ns": 36235943991733,
+      "cpu_ns": 542711197
+    },
+    {
+      "step": "cpu_start",
+      "time_ns": 36235944199523,
+      "cpu_ns": 542917436
+    },
+    {
+      "step": "source_closed",
+      "time_ns": 36235993612753,
+      "cpu_ns": 580289185,
+      "last_cpu_end": 36235989295887,
+      "batches": 138
+    },
+    {
+      "step": "published",
+      "time_ns": 36236003255819,
+      "cpu_ns": 582825365,
+      "status": "READY"
+    },
+    {
+      "step": "writer_closed",
+      "time_ns": 36236004465969,
+      "cpu_ns": 583520652
+    },
+    {
+      "step": "result",
+      "time_ns": 36236004595529,
+      "cpu_ns": 583649776,
+      "status": "READY",
+      "reason": null
+    }
+  ]
+}

@@ -9,6 +9,7 @@ from sqlalchemy import RowMapping
 from tiewtrade.core.market_data import Candle, Timeframe, retention_cutoff
 from tiewtrade.infra.db import money_to_columns, quantity_to_columns
 from tiewtrade.infra.db.session import MarketDataSession, require_market_data_session
+from tiewtrade.infra.indicators.source import begin_source_write, require_source_write
 from tiewtrade.infra.market_data.records import PartitionUnavailableError, StaleClaimError
 from tiewtrade.infra.market_data.storage import database_now
 
@@ -172,6 +173,7 @@ async def write_candles(
     candles: tuple[Candle, ...],
     fetch_started_at: datetime,
 ) -> None:
+    await require_source_write(session)
     await lock_claim(session, claim)
     now = await database_now(session)
     cutoff = retention_cutoff(now)
@@ -279,7 +281,15 @@ async def write_candles(
 
 async def cleanup(session: MarketDataSession) -> int:
     session = require_market_data_session(session)
+    await begin_source_write(session)
+    policy = (
+        await session.execute(
+            "SELECT retention_policy FROM public.indicator_rollout_control WHERE id=1"
+        )
+    ).scalar_one()
     cutoff = retention_cutoff(await database_now(session))
+    if policy == "GRACE":
+        cutoff -= timedelta(hours=6, minutes=15)
     result = await session.execute(
         """DELETE FROM market_candles WHERE (tableoid,ctid) IN (
         SELECT tableoid,ctid FROM market_candles

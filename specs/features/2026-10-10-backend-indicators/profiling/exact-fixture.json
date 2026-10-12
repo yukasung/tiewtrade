@@ -1,0 +1,10 @@
+{
+  "source_rows": 525600,
+  "logical_slots": 525600,
+  "checkpoints": 527,
+  "start": "2025-10-01T00:00:00.000000+00:00",
+  "end": "2026-10-01T00:00:00.000000+00:00",
+  "digest": "ae9363e79e154342590a1aee424c584ebc70575dbdb1c3b29191bb7a719a5b95",
+  "status": "READY",
+  "capacity_acceptance": "deferred to phase 9"
+}

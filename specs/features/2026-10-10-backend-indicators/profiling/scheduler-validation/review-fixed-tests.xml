@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="31" time="69.751" timestamp="2026-10-11T23:23:15.946244+07:00" hostname="DESKTOP-RONGMEV"><testcase classname="tests.services.indicator_builder.test_scheduler_validation" name="test_mixed_failures_share_three_attempts_exact_backoff_and_no_clock_reset" time="1.259" /><testcase classname="tests.services.indicator_builder.test_scheduler_validation" name="test_post_failure_event_and_exact_cooldown_preserve_missed_episode[-1-False-SOURCE_CHANGED]" time="0.655" /><testcase classname="tests.services.indicator_builder.test_scheduler_validation" name="test_post_failure_event_and_exact_cooldown_preserve_missed_episode[-1-False-TRANSIENT]" time="0.603" /><testcase classname="tests.services.indicator_builder.test_scheduler_validation" name="test_post_failure_event_and_exact_cooldown_preserve_missed_episode[-1-False-OPERATIONAL]" time="0.552" /><testcase classname="tests.services.indicator_builder.test_scheduler_validation" name="test_post_failure_event_and_exact_cooldown_preserve_missed_episode[-1-True-SOURCE_CHANGED]" time="0.654" /><testcase classname="tests.services.indicator_builder.test_scheduler_validation" name="test_post_failure_event_and_exact_cooldown_preserve_missed_episode[-1-True-TRANSIENT]" time="0.633" /><testcase classname="tests.services.indicator_builder.test_scheduler_validation" name="test_post_failure_event_and_exact_cooldown_preserve_missed_episode[-1-True-OPERATIONAL]" time="0.599" /><testcase classname="tests.services.indicator_builder.test_scheduler_validation" name="test_post_failure_event_and_exact_cooldown_preserve_missed_episode[0-False-SOURCE_CHANGED]" time="0.603" /><testcase classname="tests.services.indicator_builder.test_scheduler_validation" name="test_post_failure_event_and_exact_cooldown_preserve_missed_episode[0-False-TRANSIENT]" time="0.586" /><testcase classname="tests.services.indicator_builder.test_scheduler_validation" name="test_post_failure_event_and_exact_cooldown_preserve_missed_episode[0-False-OPERATIONAL]" time="0.548" /><testcase classname="tests.services.indicator_builder.test_scheduler_validation" name="test_post_failure_event_and_exact_cooldown_preserve_missed_episode[0-True-SOURCE_CHANGED]" time="0.723" /><testcase classname="tests.services.indicator_builder.test_scheduler_validation" name="test_post_failure_event_and_exact_cooldown_preserve_missed_episode[0-True-TRANSIENT]" time="0.791" /><testcase classname="tests.services.indicator_builder.test_scheduler_validation" name="test_post_failure_event_and_exact_cooldown_preserve_missed_episode[0-True-OPERATIONAL]" time="0.720" /><testcase classname="tests.services.indicator_builder.test_scheduler_validation" name="test_post_failure_event_and_exact_cooldown_preserve_missed_episode[1-False-SOURCE_CHANGED]" time="0.650" /><testcase classname="tests.services.indicator_builder.test_scheduler_validation" name="test_post_failure_event_and_exact_cooldown_preserve_missed_episode[1-False-TRANSIENT]" time="0.601" /><testcase classname="tests.services.indicator_builder.test_scheduler_validation" name="test_post_failure_event_and_exact_cooldown_preserve_missed_episode[1-False-OPERATIONAL]" time="0.585" /><testcase classname="tests.services.indicator_builder.test_scheduler_validation" name="test_post_failure_event_and_exact_cooldown_preserve_missed_episode[1-True-SOURCE_CHANGED]" time="0.783" /><testcase classname="tests.services.indicator_builder.test_scheduler_validation" name="test_post_failure_event_and_exact_cooldown_preserve_missed_episode[1-True-TRANSIENT]" time="0.731" /><testcase classname="tests.services.indicator_builder.test_scheduler_validation" name="test_post_failure_event_and_exact_cooldown_preserve_missed_episode[1-True-OPERATIONAL]" time="0.599" /><testcase classname="tests.services.indicator_builder.test_scheduler_validation" name="test_concurrent_duplicate_cli_at_cooldown_boundary_is_durable[-1]" time="1.587" /><testcase classname="tests.services.indicator_builder.test_scheduler_validation" name="test_concurrent_duplicate_cli_at_cooldown_boundary_is_durable[0]" time="1.580" /><testcase classname="tests.services.indicator_builder.test_scheduler_validation" name="test_concurrent_duplicate_cli_at_cooldown_boundary_is_durable[1]" time="1.630" /><testcase classname="tests.services.indicator_builder.test_scheduler_validation" name="test_round_advance_rollback_or_lost_ack_never_refunds_committed_attempt[False]" time="0.503" /><testcase classname="tests.services.indicator_builder.test_scheduler_validation" name="test_round_advance_rollback_or_lost_ack_never_refunds_committed_attempt[True]" time="0.518" /><testcase classname="tests.services.indicator_builder.test_scheduler_validation" name="test_locked_unserved_job_prevents_advancing_round" time="0.509" /><testcase classname="tests.services.indicator_builder.test_scheduler_validation" name="test_idle_or_contended_scheduler_polls_once_then_waits[NO_JOB]" time="0.060" /><testcase classname="tests.services.indicator_builder.test_scheduler_validation" name="test_idle_or_contended_scheduler_polls_once_then_waits[LOCK_BUSY]" time="0.065" /><testcase classname="tests.services.indicator_builder.profile_fair_scheduler" name="test_expired_live_owner_requires_verified_reap_before_manual_recovery" time="9.572" /><testcase classname="tests.services.indicator_builder.profile_fair_scheduler" name="test_two_replicas_serve_stable_b_before_continuously_superseded_a[False]" time="14.708" /><testcase classname="tests.services.indicator_builder.profile_fair_scheduler" name="test_two_replicas_serve_stable_b_before_continuously_superseded_a[True]" time="15.074" /><testcase classname="tests.services.indicator_builder.profile_fair_scheduler" name="test_crash_reap_and_coalesce_preserve_served_round_and_committed_budget" time="10.749"><failure message="assert 43885453000000 &lt; 43885453000000">probes = Probes(containers=['4e1a3c54f80317a328fbc6b65f1760c716d35d7deb123d123e7aa5d63c5cf9ab', '479a0c0ca0a18d8e5ced6461d88d41...418999f1076fec0b8d42381387b3cd256214cba1950de0f': UUID('21d784bf-8e33-4c07-a8b3-13ae83babdef')}, severed_sources=set())
+builder_engine = &lt;sqlalchemy.ext.asyncio.engine.AsyncEngine object at 0x000001D55C60C110&gt;
+migrator_engine = &lt;sqlalchemy.ext.asyncio.engine.AsyncEngine object at 0x000001D55C23F310&gt;
+
+    async def test_crash_reap_and_coalesce_preserve_served_round_and_committed_budget(
+        probes: Probes,
+        builder_engine: AsyncEngine,
+        migrator_engine: AsyncEngine,
+    ) -&gt; None:
+        await seed(builder_engine, migrator_engine)
+        await enable_other(migrator_engine)
+        async with migrator_engine.begin() as c:
+            await c.execute(
+                text("""UPDATE indicator_build_jobs
+              SET availability_deadline=availability_deadline-interval '1 second'
+              WHERE base='BTC' AND timeframe='4h'""")
+            )
+        first = await probes.start("before_scan")
+        await probes.wait(first, "barrier")
+        held = await slot(migrator_engine)
+        before = await metadata(migrator_engine)
+        assert before["attempts_used"] == before["last_served_round"] == 1
+        # Several obsolete pending windows collapse to the DB's newest desired bounds,
+        # without replacing the running token/served marker/cycle.
+        for hours in (4, 8, 12):
+            async with migrator_engine.begin() as c:
+                await c.execute(
+                    text("""UPDATE indicator_build_jobs SET
+                  desired_start=desired_start-make_interval(hours=&gt;:hours),
+                  desired_end=desired_end-make_interval(hours=&gt;:hours) WHERE id=:id"""),
+                    {"hours": hours, "id": before["id"]},
+                )
+            await asyncio.gather(coalesce_jobs(builder_engine), coalesce_jobs(builder_engine))
+            current = await metadata(migrator_engine)
+            for field in (
+                "desired_start",
+                "desired_end",
+                "claim_token",
+                "cycle_id",
+                "last_served_round",
+                "attempts_used",
+                "first_eligible_at",
+                "availability_deadline",
+            ):
+                assert current[field] == before[field]
+        busy = await probes.finish(await probes.start())
+        assert outcome(busy) == "LOCK_BUSY"
+        no_build(busy)
+        await docker("kill", first)
+        await docker("wait", first)
+        orphan = await probes.finish(await probes.start())
+        assert outcome(orphan) == "NO_JOB"
+        no_build(orphan)
+        reaper = None
+        try:
+            async with coalesce_barrier(migrator_engine) as reap_trace:
+                reaper = asyncio.create_task(
+                    reap_verified_container(
+                        migrator_engine, first, probes.owners[first], held["slot_epoch"], held["fence"]
+                    )
+                )
+                await wait_for_sql_barrier(migrator_engine, reap_trace, "reap_indicator_build_slot")
+                assert not reaper.done()
+            reaped = await reaper
+            reap_trace["reap_completed_ns"] = monotonic_ns()
+        finally:
+            if reaper is not None:
+                if not reaper.done():
+                    reaper.cancel()
+                await asyncio.gather(reaper, return_exceptions=True)
+        assert reaped is ReapResult.REAPED
+        after = await metadata(migrator_engine)
+        for field in (
+            "attempts_used",
+            "last_served_round",
+            "cycle_id",
+            "first_eligible_at",
+            "availability_deadline",
+        ):
+            assert after[field] == before[field]
+        await due_now(migrator_engine)
+        second = await probes.start("before_publish")
+        await probes.wait(second, "barrier")
+        b = await slot(migrator_engine)
+        assert b["job_id"] != held["job_id"] and b["dispatch_round"] == 1
+        await probes.release(second)
+        assert outcome(await probes.finish(second)) == "READY"
+        # Round advancement races coalescing and another replica's claim.
+        starting = None
+        try:
+            async with coalesce_barrier(migrator_engine) as claim_trace:
+                starting = asyncio.create_task(probes.start("before_publish"))
+                await wait_for_sql_barrier(migrator_engine, claim_trace, "claim_indicator_build_job")
+            third = await starting
+        finally:
+            # Join Docker startup even on failure so fixture cleanup owns its container ID.
+            if starting is not None:
+                await asyncio.gather(starting, return_exceptions=True)
+        # Keep the winner at publication while the second replica competes.
+        await probes.wait(third, "barrier")
+        fourth = await probes.start("before_publish")
+    
+        async def ready_or_blocked(ident: str) -&gt; list[dict[str, Any]]:
+            async with asyncio.timeout(12):
+                while True:
+                    rows = await probes.logs(ident)
+                    if any(row.get("step") in {"barrier", "result"} for row in rows):
+                        return rows
+                    await asyncio.sleep(0.05)
+    
+        pending = await asyncio.gather(ready_or_blocked(third), ready_or_blocked(fourth))
+        winners = [
+            ident
+            for ident, rows in zip((third, fourth), pending, strict=True)
+            if any(row.get("step") == "barrier" for row in rows)
+        ]
+        assert len(winners) == 1
+        current = await metadata(migrator_engine)
+        assert current["attempts_used"] == current["last_served_round"] == 2
+        assert current["claim_token"] is not None and current["claim_token"] != before["claim_token"]
+        claim_trace["confirmed_claim_ns"] = monotonic_ns()
+        await probes.release(winners[0])
+        results = await asyncio.gather(probes.finish(third), probes.finish(fourth))
+        assert sorted(outcome(result) for result in results) in (
+            ["LOCK_BUSY", "READY"],
+            ["NO_JOB", "READY"],
+        )
+        claims = [row for result in results for row in result if row.get("step") == "claim_committed"]
+        assert len(claims) == 1 and claims[0]["job"] == str(held["job_id"])
+        assert claims[0]["pid"] == claim_trace["blocked_sql"][0]["pid"]
+        for trace in (reap_trace, claim_trace):
+&gt;           assert (
+                trace["coalesce_uncommitted_ns"]
+                &lt;= trace["wait_observed_ns"]
+                &lt;= trace["release_ns"]
+                &lt;= trace["coalesce_committed_ns"]
+            )
+E           assert 43885453000000 &lt; 43885453000000
+
+tests\services\indicator_builder\profile_fair_scheduler.py:397: AssertionError</failure></testcase></testsuite></testsuites>

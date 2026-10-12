@@ -1,0 +1,1 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="0" skipped="0" tests="1" time="0.138" timestamp="2026-10-12T12:38:16.032507+07:00" hostname="DESKTOP-RONGMEV"><testcase classname="tests.infra.db.test_version_pin" name="test_compose_resolves_to_the_pinned_image" time="0.117" /></testsuite></testsuites>

@@ -10,6 +10,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import AsyncIterator, Mapping
 from contextlib import asynccontextmanager, suppress
 from dataclasses import dataclass
@@ -19,10 +20,12 @@ from uuid import UUID
 from sqlalchemy import Result, text
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine
+from sqlalchemy.pool import PoolProxiedConnection
 
 from tiewtrade.infra.db.engine import ROLES_UNDER_RLS, DatabaseRole
 from tiewtrade.infra.db.errors import (
     DatabaseRoleError,
+    DatabaseTimeoutError,
     SessionKindError,
     translate_database_error,
 )
@@ -172,14 +175,19 @@ async def _assert_role(connection: AsyncConnection, expected: DatabaseRole) -> N
         )
     if is_superuser:
         raise DatabaseRoleError(f"บทบาท {expected.role_name} เป็น superuser ซึ่งห้ามตาม RQ-5.1")
-    if (expected in ROLES_UNDER_RLS or expected is DatabaseRole.MARKET_DATA) and bypasses_rls:
+    if (
+        expected in ROLES_UNDER_RLS
+        or expected in {DatabaseRole.MARKET_DATA, DatabaseRole.INDICATOR_BUILDER}
+    ) and bypasses_rls:
         raise DatabaseRoleError(f"บทบาท {expected.role_name} ข้าม RLS ได้ จึงใช้กับงานของผู้ใช้ไม่ได้")
     if expected is DatabaseRole.ENGINE_SCAN and not bypasses_rls:
         raise DatabaseRoleError(f"บทบาท {expected.role_name} ต้องข้าม RLS ได้ เพราะงานกวาดอ่านข้ามผู้ใช้")
 
 
 @asynccontextmanager
-async def _begin(engine: AsyncEngine) -> AsyncIterator[AsyncConnection]:
+async def _begin(
+    engine: AsyncEngine, *, cleanup_seconds: float | None = None
+) -> AsyncIterator[AsyncConnection]:
     """เปิด transaction แล้วแปลงข้อผิดพลาดทุกชนิดตอนต่อและตอนปิดให้เป็นชนิดของเรา
 
     ครอบตั้งแต่ **ตอนขอ connection** ไม่ใช่แค่ตอน query เพราะข้อผิดพลาดตอนต่อ
@@ -199,6 +207,8 @@ async def _begin(engine: AsyncEngine) -> AsyncIterator[AsyncConnection]:
     except (SQLAlchemyError, OSError) as error:
         raise translate_database_error(error) from None
 
+    assert connection.sync_connection is not None
+    raw = connection.sync_connection.connection if cleanup_seconds is not None else None
     try:
         yield connection
     except BaseException as error:
@@ -206,12 +216,69 @@ async def _begin(engine: AsyncEngine) -> AsyncIterator[AsyncConnection]:
         # ถ้าการ rollback ล้มเหลวด้วย ให้ข้อผิดพลาดตัวแรกชนะ เพราะมันบอกสาเหตุจริง
         # ส่วนความล้มเหลวของ rollback เป็นผลพลอยได้ของสาเหตุนั้น
         with suppress(SQLAlchemyError, OSError):
-            await transaction.__aexit__(type(error), error, error.__traceback__)
+            if cleanup_seconds is None:
+                await transaction.__aexit__(type(error), error, error.__traceback__)
+            else:
+                cleanup = asyncio.create_task(
+                    transaction.__aexit__(type(error), error, error.__traceback__)
+                )
+                # Preserve the original failure, especially deadline cancellation.
+                with suppress(DatabaseTimeoutError):
+                    assert raw is not None
+                    await _bounded_cleanup(connection, raw, cleanup, cleanup_seconds)
         raise
     try:
-        await transaction.__aexit__(None, None, None)
+        if cleanup_seconds is None:
+            await transaction.__aexit__(None, None, None)
+        else:
+            assert raw is not None
+            cleanup = asyncio.create_task(transaction.__aexit__(None, None, None))
+            await _bounded_cleanup(connection, raw, cleanup, cleanup_seconds)
     except (SQLAlchemyError, OSError) as error:
         raise translate_database_error(error) from None
+
+
+async def _bounded_cleanup(
+    connection: AsyncConnection,
+    raw: PoolProxiedConnection,
+    cleanup: asyncio.Task[Any],
+    seconds: float,
+) -> None:
+    """Bound graceful close, then quarantine and synchronously abort asyncpg.
+
+    As in indicator_source_session, abort uses the saved driver, never a new
+    checkout. ORM bookkeeping cannot retain a live transport after this point.
+    """
+    driver = raw.driver_connection
+    abort_join_seconds = 0.05
+    try:
+        await asyncio.wait_for(asyncio.shield(cleanup), max(0, seconds - 2 * abort_join_seconds))
+        return
+    except (TimeoutError, asyncio.CancelledError) as error:
+        # Detach before abort: even stalled invalidation cannot return this
+        # physical connection to another caller through the pool.
+        if raw.driver_connection is driver and driver is not None:
+            raw.detach()
+            driver.terminate()
+        cleanup.cancel()
+        discard = asyncio.create_task(connection.invalidate())
+        tasks = {cleanup, discard}
+        try:
+            await asyncio.wait(tasks, timeout=abort_join_seconds)
+        finally:
+            for task in tasks:
+                if not task.done():
+                    task.cancel()
+                task.add_done_callback(_consume_cleanup_result)
+        await asyncio.wait(tasks, timeout=abort_join_seconds)
+        if isinstance(error, asyncio.CancelledError):
+            raise
+        raise DatabaseTimeoutError("indicator transaction cleanup failed") from None
+
+
+def _consume_cleanup_result(task: asyncio.Task[Any]) -> None:
+    if not task.cancelled():
+        task.exception()
 
 
 @asynccontextmanager
@@ -234,6 +301,22 @@ async def user_session(
             )
         except SQLAlchemyError as error:
             raise translate_database_error(error) from None
+        yield UserSession(connection, user_id)
+
+
+@asynccontextmanager
+async def indicator_read_session(engine: AsyncEngine, user_id: UUID) -> AsyncIterator[UserSession]:
+    """F-11 snapshot: transaction characteristics precede every SELECT."""
+    async with _begin(engine, cleanup_seconds=2) as connection:
+        await _execute(
+            connection, "SET TRANSACTION ISOLATION LEVEL REPEATABLE READ, READ ONLY", None
+        )
+        await _assert_role(connection, DatabaseRole.API)
+        await _execute(
+            connection,
+            "SELECT set_config(:setting, :value, true)",
+            {"setting": CURRENT_USER_SETTING, "value": str(user_id)},
+        )
         yield UserSession(connection, user_id)
 
 

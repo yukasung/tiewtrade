@@ -15,6 +15,9 @@ async def clear_market_tables() -> AsyncIterator[None]:
                 await session.execute("DELETE FROM market_candles")
                 await session.execute("DELETE FROM market_candle_demand")
             if phase == 0:
+                # Migration tests must enter downgrade with no runtime sessions,
+                # including idle connections owned by this cleanup fixture.
+                await engine.dispose()
                 yield
     finally:
         await engine.dispose()

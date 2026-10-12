@@ -1,12 +1,13 @@
 """Pure candle observations and half-open UTC windows."""
 
 from collections.abc import Iterable, Iterator
-from dataclasses import dataclass
+from dataclasses import InitVar, dataclass, field
 from datetime import UTC, datetime, timedelta
 from enum import StrEnum
 
 from tiewtrade.core.moments import require_aware
 from tiewtrade.core.money import InvalidUnitError, Money, Quantity
+from tiewtrade.core.money.indicator_batch import validate_ohlcv
 
 
 class Timeframe(StrEnum):
@@ -44,6 +45,27 @@ class CandleWindow:
 
 
 @dataclass(frozen=True, slots=True)
+class CandleSeries:
+    base: str
+    quote: str
+    timeframe: Timeframe
+    zero_price: Money = field(init=False)
+    zero_volume: Quantity = field(init=False)
+
+    def __post_init__(self) -> None:
+        price = Money.of(0, self.quote)
+        volume = Quantity.of(0, self.base)
+        if not isinstance(self.timeframe, Timeframe):
+            raise ValueError("unsupported timeframe")
+        if price.currency == volume.asset:
+            raise InvalidUnitError("invalid candle series")
+        object.__setattr__(self, "base", volume.asset)
+        object.__setattr__(self, "quote", price.currency)
+        object.__setattr__(self, "zero_price", price)
+        object.__setattr__(self, "zero_volume", volume)
+
+
+@dataclass(frozen=True, slots=True)
 class Candle:
     base: str
     quote: str
@@ -57,27 +79,27 @@ class Candle:
     volume: Quantity
     finality: CandleFinality
     observed_at: datetime
+    series: InitVar[CandleSeries | None] = None
 
-    def __post_init__(self) -> None:
-        base = Quantity.of(0, self.base).asset
-        quote = Money.of(0, self.quote).currency
+    def __post_init__(self, series: CandleSeries | None) -> None:
+        if series is None:
+            series = CandleSeries(self.base, self.quote, self.timeframe)
+        elif not isinstance(series, CandleSeries) or (self.base, self.quote, self.timeframe) != (
+            series.base,
+            series.quote,
+            series.timeframe,
+        ):
+            raise InvalidUnitError("different candle series")
+        base, quote = series.base, series.quote
         object.__setattr__(self, "base", base)
         object.__setattr__(self, "quote", quote)
         if not isinstance(self.timeframe, Timeframe) or not isinstance(
             self.finality, CandleFinality
         ):
             raise ValueError("unsupported timeframe or finality")
-        if base == quote or self.volume.asset != base:
-            raise InvalidUnitError("candle base and volume must agree")
-        for price in (self.open, self.high, self.low, self.close):
-            if price.currency != quote:
-                raise InvalidUnitError("candle prices must use quote")
-            if not price > Money.of(0, quote):
-                raise ValueError("candle prices must be positive")
-        if self.volume < Quantity.of(0, base):
-            raise ValueError("volume must not be negative")
-        if self.low > min(self.open, self.close) or max(self.open, self.close) > self.high:
-            raise ValueError("inconsistent OHLC")
+        validate_ohlcv(
+            self.open, self.high, self.low, self.close, self.volume, base=base, quote=quote
+        )
         for name, moment in (
             ("open_at", self.open_at),
             ("end_at", self.end_at),

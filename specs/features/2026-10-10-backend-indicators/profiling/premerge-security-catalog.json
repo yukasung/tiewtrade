@@ -1,0 +1,339 @@
+{
+  "scope": "read-only isolated DB catalog audit; no runtime or migration changes",
+  "functions": [
+    {
+      "proname": "activate_indicator_source_proof",
+      "signature": "activate_indicator_source_proof()",
+      "prosecdef": false,
+      "proconfig": [
+        "search_path=pg_catalog, public"
+      ],
+      "no_public_execute": true
+    },
+    {
+      "proname": "append_indicator_checkpoint",
+      "signature": "append_indicator_checkpoint(uuid,bigint,uuid,uuid,uuid,uuid,timestamp with time zone,jsonb)",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog, public",
+        "TimeZone=UTC"
+      ],
+      "no_public_execute": true
+    },
+    {
+      "proname": "begin_indicator_source_maintenance",
+      "signature": "begin_indicator_source_maintenance()",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog, public"
+      ],
+      "no_public_execute": true
+    },
+    {
+      "proname": "begin_indicator_source_write",
+      "signature": "begin_indicator_source_write()",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog, public"
+      ],
+      "no_public_execute": true
+    },
+    {
+      "proname": "claim_indicator_build_job",
+      "signature": "claim_indicator_build_job(uuid)",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog, public"
+      ],
+      "no_public_execute": true
+    },
+    {
+      "proname": "coalesce_indicator_build_jobs",
+      "signature": "coalesce_indicator_build_jobs()",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog, public",
+        "TimeZone=UTC"
+      ],
+      "no_public_execute": true
+    },
+    {
+      "proname": "complete_indicator_build_attempt",
+      "signature": "complete_indicator_build_attempt(uuid,text)",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog, public"
+      ],
+      "no_public_execute": true
+    },
+    {
+      "proname": "gc_indicator_data",
+      "signature": "gc_indicator_data()",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog, public"
+      ],
+      "no_public_execute": true
+    },
+    {
+      "proname": "heartbeat_indicator_build_claim",
+      "signature": "heartbeat_indicator_build_claim(uuid,bigint,uuid,uuid,uuid,uuid)",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog, public"
+      ],
+      "no_public_execute": true
+    },
+    {
+      "proname": "indicator_build_lock_held",
+      "signature": "indicator_build_lock_held()",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog, public"
+      ],
+      "no_public_execute": true
+    },
+    {
+      "proname": "indicator_calculation_bounds",
+      "signature": "indicator_calculation_bounds(text,timestamp with time zone)",
+      "prosecdef": false,
+      "proconfig": [
+        "search_path=pg_catalog, public",
+        "TimeZone=UTC"
+      ],
+      "no_public_execute": true
+    },
+    {
+      "proname": "indicator_numeric_candidate_allowed",
+      "signature": "indicator_numeric_candidate_allowed(indicator_build_jobs)",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog, public"
+      ],
+      "no_public_execute": true
+    },
+    {
+      "proname": "indicator_source_row_journal",
+      "signature": "indicator_source_row_journal()",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog, public"
+      ],
+      "no_public_execute": true
+    },
+    {
+      "proname": "indicator_source_statement_guard",
+      "signature": "indicator_source_statement_guard()",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog, public"
+      ],
+      "no_public_execute": true
+    },
+    {
+      "proname": "indicator_source_triggers_valid",
+      "signature": "indicator_source_triggers_valid()",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog, public"
+      ],
+      "no_public_execute": true
+    },
+    {
+      "proname": "initialize_indicator_staging",
+      "signature": "initialize_indicator_staging(uuid,bigint,uuid,uuid,uuid,uuid,timestamp with time zone,uuid,bigint)",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog, public",
+        "TimeZone=UTC"
+      ],
+      "no_public_execute": true
+    },
+    {
+      "proname": "install_indicator_source_partitions",
+      "signature": "install_indicator_source_partitions()",
+      "prosecdef": false,
+      "proconfig": [
+        "search_path=pg_catalog, public"
+      ],
+      "no_public_execute": true
+    },
+    {
+      "proname": "lock_indicator_build_identity",
+      "signature": "lock_indicator_build_identity(uuid,bigint,uuid,uuid,uuid,uuid)",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog, public"
+      ],
+      "no_public_execute": true
+    },
+    {
+      "proname": "protect_indicator_source_partitions",
+      "signature": "protect_indicator_source_partitions()",
+      "prosecdef": false,
+      "proconfig": [
+        "search_path=pg_catalog, public"
+      ],
+      "no_public_execute": true
+    },
+    {
+      "proname": "publish_indicator_generation",
+      "signature": "publish_indicator_generation(uuid,bigint,uuid,uuid,uuid,uuid,boolean)",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog, public",
+        "TimeZone=UTC"
+      ],
+      "no_public_execute": true
+    },
+    {
+      "proname": "publish_indicator_numeric_failure",
+      "signature": "publish_indicator_numeric_failure(uuid,bigint,uuid,uuid,uuid,uuid)",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog, public"
+      ],
+      "no_public_execute": true
+    },
+    {
+      "proname": "publish_indicator_ready",
+      "signature": "publish_indicator_ready(uuid,bigint,uuid,uuid,uuid,uuid)",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog, public"
+      ],
+      "no_public_execute": true
+    },
+    {
+      "proname": "reap_indicator_build_slot",
+      "signature": "reap_indicator_build_slot(uuid,uuid,bigint)",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog, public"
+      ],
+      "no_public_execute": true
+    },
+    {
+      "proname": "release_indicator_build_claim",
+      "signature": "release_indicator_build_claim(uuid,bigint,uuid,uuid,uuid,uuid,text)",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog, public"
+      ],
+      "no_public_execute": true
+    },
+    {
+      "proname": "require_indicator_build_claim",
+      "signature": "require_indicator_build_claim(uuid,bigint,uuid,uuid,uuid,uuid)",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog, public"
+      ],
+      "no_public_execute": true
+    },
+    {
+      "proname": "require_indicator_source_write",
+      "signature": "require_indicator_source_write()",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog, public"
+      ],
+      "no_public_execute": true
+    },
+    {
+      "proname": "retry_indicator_build_job",
+      "signature": "retry_indicator_build_job(uuid,uuid)",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog, public"
+      ],
+      "no_public_execute": true
+    },
+    {
+      "proname": "seal_indicator_staging",
+      "signature": "seal_indicator_staging(uuid,bigint,uuid,uuid,uuid,uuid,text)",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog, public"
+      ],
+      "no_public_execute": true
+    },
+    {
+      "proname": "seed_indicator_build_jobs",
+      "signature": "seed_indicator_build_jobs()",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog, public",
+        "TimeZone=UTC"
+      ],
+      "no_public_execute": true
+    },
+    {
+      "proname": "tiewtrade_indicator_source_on_drop",
+      "signature": "tiewtrade_indicator_source_on_drop()",
+      "prosecdef": false,
+      "proconfig": [
+        "search_path=pg_catalog, public"
+      ],
+      "no_public_execute": true
+    },
+    {
+      "proname": "tiewtrade_indicator_source_on_trigger_ddl",
+      "signature": "tiewtrade_indicator_source_on_trigger_ddl()",
+      "prosecdef": false,
+      "proconfig": [
+        "search_path=pg_catalog, public"
+      ],
+      "no_public_execute": true
+    },
+    {
+      "proname": "tiewtrade_protect_partitions_on_ddl",
+      "signature": "tiewtrade_protect_partitions_on_ddl()",
+      "prosecdef": false,
+      "proconfig": null,
+      "no_public_execute": true
+    },
+    {
+      "proname": "transition_indicator_rollout",
+      "signature": "transition_indicator_rollout(indicator_rollout_mode,uuid,indicator_rollout_mode)",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog, public"
+      ],
+      "no_public_execute": true
+    },
+    {
+      "proname": "try_indicator_build_lock",
+      "signature": "try_indicator_build_lock()",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog, public"
+      ],
+      "no_public_execute": true
+    },
+    {
+      "proname": "unlock_indicator_build_lock",
+      "signature": "unlock_indicator_build_lock()",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog, public"
+      ],
+      "no_public_execute": true
+    }
+  ],
+  "runtime_schema_create": [
+    {
+      "rolname": "tiewtrade_api",
+      "can_create": false
+    },
+    {
+      "rolname": "tiewtrade_indicator_builder",
+      "can_create": false
+    },
+    {
+      "rolname": "tiewtrade_market_data",
+      "can_create": false
+    }
+  ],
+  "passed": true
+}

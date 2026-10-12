@@ -1,0 +1,13 @@
+{
+  "series_count": 30,
+  "all_series_passed": true,
+  "slowest_first_correct_200_seconds": 365.07800000000134,
+  "observer_rounds": 60,
+  "accepted_probes": 300,
+  "correct_200": 193,
+  "cold_miss_503": 107,
+  "max_200_latency_seconds": 0.2819999999992433,
+  "max_body_bytes": 695286,
+  "max_scan_to_publish_seconds": 47.625826,
+  "source_inventory_rows": 3387825
+}

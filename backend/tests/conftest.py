@@ -35,6 +35,10 @@ def _sealing_key(monkeypatch: pytest.MonkeyPatch) -> None:
     """
     monkeypatch.setenv(KeyPurpose.TOTP_SECRET.environment_variable, TEST_SEALING_KEY)
     monkeypatch.setenv(KeyPurpose.VENUE_API_SECRET.environment_variable, TEST_VENUE_KEY)
+    monkeypatch.setenv(
+        KeyPurpose.INDICATOR_CURSOR.environment_variable,
+        "1:" + base64.b64encode(b"I" * KEY_BYTES).decode("ascii"),
+    )
 
 
 async def _engine(role: DatabaseRole) -> AsyncIterator[AsyncEngine]:

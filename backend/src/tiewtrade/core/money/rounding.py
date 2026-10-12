@@ -11,6 +11,7 @@ from decimal import ROUND_CEILING, ROUND_DOWN, ROUND_FLOOR, ROUND_UP, Decimal
 from enum import Enum
 
 from tiewtrade.core.money.context import allowing_rounding
+from tiewtrade.core.money.errors import InvalidInputTypeError
 from tiewtrade.core.money.limits import SMALLEST_UNIT, STORED_SCALE
 from tiewtrade.core.money.validation import real_decimal_places
 
@@ -38,6 +39,22 @@ def needs_rounding(amount: Decimal) -> bool:
     คำถามเรื่องความละเอียดที่เก็บได้อยู่ข้างค่ากลางที่นิยามมัน ไม่ใช่ที่ชั้นชนิดข้อมูล
     """
     return real_decimal_places(amount) > STORED_SCALE
+
+
+def rounded_quotient(numerator: int, denominator: int, direction: RoundingDirection) -> int:
+    """Round an exact integer ratio once (F-11 NC-33)."""
+    if type(numerator) is not int or type(denominator) is not int or denominator <= 0:
+        raise InvalidInputTypeError("invalid integer ratio")
+    if not isinstance(direction, RoundingDirection):
+        raise InvalidInputTypeError("explicit rounding direction required")
+    quotient, remainder = divmod(abs(numerator), denominator)
+    if remainder and (
+        direction is RoundingDirection.AWAY_FROM_ZERO
+        or (direction is RoundingDirection.TOWARD_POSITIVE and numerator > 0)
+        or (direction is RoundingDirection.TOWARD_NEGATIVE and numerator < 0)
+    ):
+        quotient += 1
+    return -quotient if numerator < 0 else quotient
 
 
 def round_to_stored_scale(amount: Decimal, direction: RoundingDirection) -> Decimal:

@@ -1,8 +1,10 @@
+import asyncio
+from collections import Counter
 from typing import cast
 
 import pytest
 
-from tiewtrade.infra.realtime.admission import AdmissionRedis, RedisAdmission
+from tiewtrade.infra.realtime.admission import AdmissionOutcome, AdmissionRedis, RedisAdmission
 
 
 class Broken:
@@ -14,8 +16,24 @@ async def test_redis_down_fails_closed() -> None:
     assert await RedisAdmission(Broken()).admit("127.0.0.1") is False
 
 
+async def test_timeout_is_unavailable_and_cancels_pending_request() -> None:
+    cancelled = asyncio.Event()
+
+    class Stalled:
+        async def eval(self, script: str, numkeys: int, *args: object) -> object:
+            try:
+                await asyncio.Event().wait()
+            finally:
+                cancelled.set()
+            return None
+
+    async with asyncio.timeout(1):
+        result = await RedisAdmission(Stalled(), timeout=0.01).outcome("127.0.0.1")
+    assert result is AdmissionOutcome.UNAVAILABLE
+    assert cancelled.is_set()
+
+
 async def test_actual_redis_atomic_limits_and_bounded_keys() -> None:
-    import asyncio
     import os
 
     from redis.asyncio import Redis
@@ -27,10 +45,12 @@ async def test_actual_redis_atomic_limits_and_bounded_keys() -> None:
     try:
         await client.flushdb()
         admission = RedisAdmission(cast(AdmissionRedis, client))
-        same = await asyncio.gather(*(admission.admit("127.0.0.1") for _ in range(40)))
-        assert sum(same) == 30
-        varied = await asyncio.gather(*(admission.admit(f"192.0.2.{i}") for i in range(170)))
-        assert sum(varied) == 160
+        same = Counter(await asyncio.gather(*(admission.outcome("127.0.0.1") for _ in range(40))))
+        assert same == {AdmissionOutcome.ACCEPTED: 30, AdmissionOutcome.DENIED: 10}
+        varied = Counter(
+            await asyncio.gather(*(admission.outcome(f"192.0.2.{i}") for i in range(170)))
+        )
+        assert varied == {AdmissionOutcome.ACCEPTED: 160, AdmissionOutcome.DENIED: 10}
         keys = await client.keys("market.ws.admission:*")
         assert len(keys) == 162  # global + first IP + 160 distinct accepted-window keys
         assert all(

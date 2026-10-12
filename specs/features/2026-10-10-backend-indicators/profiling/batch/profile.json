@@ -1,0 +1,230 @@
+{
+  "python": "3.12.15",
+  "postgres": "16.15 (Debian 16.15-1.pgdg13+2)",
+  "fixture_rows": 525600,
+  "cpu_limit": "2vCPU",
+  "memory_limit": "1GiB",
+  "api_runs": [
+    {
+      "instrumented": true,
+      "processed_slots": 307240,
+      "http_status": 504,
+      "error": "INDICATOR_DEADLINE_EXCEEDED",
+      "elapsed_seconds": 30.090533559000505,
+      "event_loop_lag_seconds": 0.03946711899992806,
+      "metrics": {
+        "db": {
+          "calls": 925,
+          "seconds": 5.20547984998575,
+          "max_seconds": 0.02641791799942439
+        },
+        "decode": {
+          "calls": 307240,
+          "seconds": 8.754887898843663,
+          "max_seconds": 0.0028768689999196795
+        },
+        "fetch_buffer": {
+          "calls": 308,
+          "seconds": 0.567018346997429,
+          "max_seconds": 0.03794059100073355
+        },
+        "core": {
+          "calls": 19356,
+          "seconds": 6.807517800938513,
+          "max_seconds": 0.003127935000520665
+        },
+        "hash_timestamp": {
+          "calls": 1228962,
+          "seconds": 1.2880376586763305,
+          "max_seconds": 0.0003739499998118845
+        },
+        "hash_numbers": {
+          "calls": 1536200,
+          "seconds": 3.2410836612461935,
+          "max_seconds": 0.004764673999488878
+        },
+        "hash_json": {
+          "calls": 307241,
+          "seconds": 0.975825638986862,
+          "max_seconds": 0.00022291299956123112
+        },
+        "hash_update": {
+          "calls": 307241,
+          "seconds": 0.07807032812070247,
+          "max_seconds": 8.235699988290435e-05
+        }
+      }
+    }
+  ],
+  "core_cprofile": {
+    "rows": 1000,
+    "profile_total_seconds": 0.08244853500000003,
+    "top_cumulative": [
+      {
+        "file": "indicators.py",
+        "line": 74,
+        "function": "feed_batch",
+        "calls": 63,
+        "self_seconds": 0.0035286040000000003,
+        "cumulative_seconds": 0.08472094100000001
+      },
+      {
+        "file": "context.py",
+        "line": 77,
+        "function": "wrapper",
+        "calls": 1994,
+        "self_seconds": 0.002246035,
+        "cumulative_seconds": 0.07730700900000001
+      },
+      {
+        "file": "indicator_batch.py",
+        "line": 174,
+        "function": "advance_indicator_batch",
+        "calls": 63,
+        "self_seconds": 0.007659018,
+        "cumulative_seconds": 0.076896223
+      },
+      {
+        "file": "indicator_batch.py",
+        "line": 151,
+        "function": "feed",
+        "calls": 8972,
+        "self_seconds": 0.0044722270000000005,
+        "cumulative_seconds": 0.030623287000000003
+      },
+      {
+        "file": "indicator_arithmetic.py",
+        "line": 50,
+        "function": "_ratio",
+        "calls": 8622,
+        "self_seconds": 0.0072849920000000006,
+        "cumulative_seconds": 0.021495884
+      },
+      {
+        "file": "indicator_batch.py",
+        "line": 290,
+        "function": "<genexpr>",
+        "calls": 630,
+        "self_seconds": 0.00019870300000000003,
+        "cumulative_seconds": 0.021323021
+      },
+      {
+        "file": "indicator_batch.py",
+        "line": 167,
+        "function": "state",
+        "calls": 567,
+        "self_seconds": 0.000937724,
+        "cumulative_seconds": 0.021124318000000003
+      },
+      {
+        "file": "indicator_batch.py",
+        "line": 169,
+        "function": "<genexpr>",
+        "calls": 1950,
+        "self_seconds": 0.000696635,
+        "cumulative_seconds": 0.01372924
+      },
+      {
+        "file": "indicator_arithmetic.py",
+        "line": 46,
+        "function": "_coefficient",
+        "calls": 22228,
+        "self_seconds": 0.0075298330000000005,
+        "cumulative_seconds": 0.011945512
+      },
+      {
+        "file": "types.py",
+        "line": 67,
+        "function": "__post_init__",
+        "calls": 1931,
+        "self_seconds": 0.0010986960000000001,
+        "cumulative_seconds": 0.011438967000000001
+      },
+      {
+        "file": "indicator_batch.py",
+        "line": 139,
+        "function": "_difference",
+        "calls": 8935,
+        "self_seconds": 0.003238747,
+        "cumulative_seconds": 0.009652211
+      },
+      {
+        "file": "~",
+        "line": 0,
+        "function": "<method 'scaleb' of 'decimal.Decimal' objects>",
+        "calls": 41716,
+        "self_seconds": 0.008401115,
+        "cumulative_seconds": 0.008401115
+      },
+      {
+        "file": "rounding.py",
+        "line": 44,
+        "function": "rounded_quotient",
+        "calls": 8622,
+        "self_seconds": 0.004773874,
+        "cumulative_seconds": 0.007056077
+      },
+      {
+        "file": "validation.py",
+        "line": 91,
+        "function": "ensure_valid_amount",
+        "calls": 1931,
+        "self_seconds": 0.001436318,
+        "cumulative_seconds": 0.006238878000000001
+      },
+      {
+        "file": "indicator_batch.py",
+        "line": 135,
+        "function": "_amount",
+        "calls": 10866,
+        "self_seconds": 0.004007554,
+        "cumulative_seconds": 0.00618295
+      },
+      {
+        "file": "validation.py",
+        "line": 108,
+        "function": "ensure_canonical_unit",
+        "calls": 2057,
+        "self_seconds": 0.000458334,
+        "cumulative_seconds": 0.004080083
+      },
+      {
+        "file": "validation.py",
+        "line": 61,
+        "function": "real_decimal_places",
+        "calls": 1931,
+        "self_seconds": 0.001957611,
+        "cumulative_seconds": 0.004055335
+      },
+      {
+        "file": "validation.py",
+        "line": 147,
+        "function": "normalise_unit",
+        "calls": 2057,
+        "self_seconds": 0.0012566480000000002,
+        "cumulative_seconds": 0.003621749
+      },
+      {
+        "file": "context.py",
+        "line": 48,
+        "function": "_context",
+        "calls": 1994,
+        "self_seconds": 0.00229436,
+        "cumulative_seconds": 0.002597284
+      },
+      {
+        "file": "indicator_batch.py",
+        "line": 235,
+        "function": "<genexpr>",
+        "calls": 4000,
+        "self_seconds": 0.0007470640000000001,
+        "cumulative_seconds": 0.0024142900000000004
+      }
+    ],
+    "pipeline_10000": {
+      "elapsed_seconds": 0.9482755039998665,
+      "output_rows": 1000,
+      "revision": "0943e01ba66d77b5e799d334615f3e65c8f914eeddd70a7d48ee1af1a4da9fc9"
+    }
+  }
+}

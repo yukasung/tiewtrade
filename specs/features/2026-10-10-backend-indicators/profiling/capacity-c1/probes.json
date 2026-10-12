@@ -1,0 +1,3323 @@
+[
+  {
+    "base": "BTC",
+    "timeframe": "1m",
+    "started_seconds": 0.2180000000007567,
+    "finished_seconds": 0.2809999999990396,
+    "elapsed_seconds": 0.06299999999828287,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "BTC",
+    "timeframe": "5m",
+    "started_seconds": 0.2809999999990396,
+    "finished_seconds": 0.2959999999984575,
+    "elapsed_seconds": 0.014999999999417923,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "BTC",
+    "timeframe": "15m",
+    "started_seconds": 0.2959999999984575,
+    "finished_seconds": 0.3120000000017171,
+    "elapsed_seconds": 0.01600000000325963,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "BTC",
+    "timeframe": "1h",
+    "started_seconds": 0.3120000000017171,
+    "finished_seconds": 0.3120000000017171,
+    "elapsed_seconds": 0.0,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "BTC",
+    "timeframe": "4h",
+    "started_seconds": 0.3120000000017171,
+    "finished_seconds": 0.3280000000013388,
+    "elapsed_seconds": 0.01599999999962165,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "BTC",
+    "timeframe": "1d",
+    "started_seconds": 0.3280000000013388,
+    "finished_seconds": 0.3280000000013388,
+    "elapsed_seconds": 0.0,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "DOGE",
+    "timeframe": "1m",
+    "started_seconds": 0.3280000000013388,
+    "finished_seconds": 0.3430000000007567,
+    "elapsed_seconds": 0.014999999999417923,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "DOGE",
+    "timeframe": "5m",
+    "started_seconds": 0.3430000000007567,
+    "finished_seconds": 0.3430000000007567,
+    "elapsed_seconds": 0.0,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "DOGE",
+    "timeframe": "15m",
+    "started_seconds": 0.3430000000007567,
+    "finished_seconds": 0.35900000000037835,
+    "elapsed_seconds": 0.01599999999962165,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "DOGE",
+    "timeframe": "1h",
+    "started_seconds": 0.35900000000037835,
+    "finished_seconds": 0.375,
+    "elapsed_seconds": 0.01599999999962165,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "DOGE",
+    "timeframe": "4h",
+    "started_seconds": 0.375,
+    "finished_seconds": 0.375,
+    "elapsed_seconds": 0.0,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "DOGE",
+    "timeframe": "1d",
+    "started_seconds": 0.375,
+    "finished_seconds": 0.3899999999994179,
+    "elapsed_seconds": 0.014999999999417923,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "ETH",
+    "timeframe": "1m",
+    "started_seconds": 0.3899999999994179,
+    "finished_seconds": 0.3899999999994179,
+    "elapsed_seconds": 0.0,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "ETH",
+    "timeframe": "5m",
+    "started_seconds": 0.3899999999994179,
+    "finished_seconds": 0.4059999999990396,
+    "elapsed_seconds": 0.01599999999962165,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "ETH",
+    "timeframe": "15m",
+    "started_seconds": 0.4059999999990396,
+    "finished_seconds": 0.4059999999990396,
+    "elapsed_seconds": 0.0,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "ETH",
+    "timeframe": "1h",
+    "started_seconds": 0.4059999999990396,
+    "finished_seconds": 0.4209999999984575,
+    "elapsed_seconds": 0.014999999999417923,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "ETH",
+    "timeframe": "4h",
+    "started_seconds": 0.4209999999984575,
+    "finished_seconds": 0.4370000000017171,
+    "elapsed_seconds": 0.01600000000325963,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "ETH",
+    "timeframe": "1d",
+    "started_seconds": 0.4370000000017171,
+    "finished_seconds": 0.4370000000017171,
+    "elapsed_seconds": 0.0,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "SOL",
+    "timeframe": "1m",
+    "started_seconds": 0.4370000000017171,
+    "finished_seconds": 0.4530000000013388,
+    "elapsed_seconds": 0.01599999999962165,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "SOL",
+    "timeframe": "5m",
+    "started_seconds": 0.4530000000013388,
+    "finished_seconds": 0.4530000000013388,
+    "elapsed_seconds": 0.0,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "SOL",
+    "timeframe": "15m",
+    "started_seconds": 0.4530000000013388,
+    "finished_seconds": 0.4680000000007567,
+    "elapsed_seconds": 0.014999999999417923,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "SOL",
+    "timeframe": "1h",
+    "started_seconds": 0.4680000000007567,
+    "finished_seconds": 0.48400000000037835,
+    "elapsed_seconds": 0.01599999999962165,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "SOL",
+    "timeframe": "4h",
+    "started_seconds": 0.48400000000037835,
+    "finished_seconds": 0.48400000000037835,
+    "elapsed_seconds": 0.0,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "SOL",
+    "timeframe": "1d",
+    "started_seconds": 0.48400000000037835,
+    "finished_seconds": 0.5,
+    "elapsed_seconds": 0.01599999999962165,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "XRP",
+    "timeframe": "1m",
+    "started_seconds": 0.5,
+    "finished_seconds": 0.5,
+    "elapsed_seconds": 0.0,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "XRP",
+    "timeframe": "5m",
+    "started_seconds": 0.5,
+    "finished_seconds": 0.5149999999994179,
+    "elapsed_seconds": 0.014999999999417923,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "XRP",
+    "timeframe": "15m",
+    "started_seconds": 0.5149999999994179,
+    "finished_seconds": 0.5309999999990396,
+    "elapsed_seconds": 0.01599999999962165,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "XRP",
+    "timeframe": "1h",
+    "started_seconds": 0.5309999999990396,
+    "finished_seconds": 0.5309999999990396,
+    "elapsed_seconds": 0.0,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "XRP",
+    "timeframe": "4h",
+    "started_seconds": 0.5309999999990396,
+    "finished_seconds": 0.5459999999984575,
+    "elapsed_seconds": 0.014999999999417923,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "XRP",
+    "timeframe": "1d",
+    "started_seconds": 0.5459999999984575,
+    "finished_seconds": 0.5459999999984575,
+    "elapsed_seconds": 0.0,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "BTC",
+    "timeframe": "1m",
+    "started_seconds": 60.06200000000172,
+    "finished_seconds": 60.28099999999904,
+    "elapsed_seconds": 0.21899999999732245,
+    "status": 200,
+    "body_bytes": 695280,
+    "correct": true
+  },
+  {
+    "base": "BTC",
+    "timeframe": "5m",
+    "started_seconds": 60.28099999999904,
+    "finished_seconds": 60.46800000000076,
+    "elapsed_seconds": 0.18700000000171713,
+    "status": 200,
+    "body_bytes": 691663,
+    "correct": true
+  },
+  {
+    "base": "BTC",
+    "timeframe": "15m",
+    "started_seconds": 60.46800000000076,
+    "finished_seconds": 60.625,
+    "elapsed_seconds": 0.1569999999992433,
+    "status": 200,
+    "body_bytes": 690756,
+    "correct": true
+  },
+  {
+    "base": "BTC",
+    "timeframe": "1h",
+    "started_seconds": 60.625,
+    "finished_seconds": 60.63999999999942,
+    "elapsed_seconds": 0.014999999999417923,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "BTC",
+    "timeframe": "4h",
+    "started_seconds": 60.63999999999942,
+    "finished_seconds": 60.63999999999942,
+    "elapsed_seconds": 0.0,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "BTC",
+    "timeframe": "1d",
+    "started_seconds": 60.63999999999942,
+    "finished_seconds": 60.65599999999904,
+    "elapsed_seconds": 0.01599999999962165,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "DOGE",
+    "timeframe": "1m",
+    "started_seconds": 60.65599999999904,
+    "finished_seconds": 60.65599999999904,
+    "elapsed_seconds": 0.0,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "DOGE",
+    "timeframe": "5m",
+    "started_seconds": 60.65599999999904,
+    "finished_seconds": 60.65599999999904,
+    "elapsed_seconds": 0.0,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "DOGE",
+    "timeframe": "15m",
+    "started_seconds": 60.65599999999904,
+    "finished_seconds": 60.67099999999846,
+    "elapsed_seconds": 0.014999999999417923,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "DOGE",
+    "timeframe": "1h",
+    "started_seconds": 60.67099999999846,
+    "finished_seconds": 60.68700000000172,
+    "elapsed_seconds": 0.01600000000325963,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "DOGE",
+    "timeframe": "4h",
+    "started_seconds": 60.68700000000172,
+    "finished_seconds": 60.68700000000172,
+    "elapsed_seconds": 0.0,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "DOGE",
+    "timeframe": "1d",
+    "started_seconds": 60.68700000000172,
+    "finished_seconds": 60.68700000000172,
+    "elapsed_seconds": 0.0,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "ETH",
+    "timeframe": "1m",
+    "started_seconds": 60.68700000000172,
+    "finished_seconds": 60.70300000000134,
+    "elapsed_seconds": 0.01599999999962165,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "ETH",
+    "timeframe": "5m",
+    "started_seconds": 60.70300000000134,
+    "finished_seconds": 60.70300000000134,
+    "elapsed_seconds": 0.0,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "ETH",
+    "timeframe": "15m",
+    "started_seconds": 60.70300000000134,
+    "finished_seconds": 60.71800000000076,
+    "elapsed_seconds": 0.014999999999417923,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "ETH",
+    "timeframe": "1h",
+    "started_seconds": 60.71800000000076,
+    "finished_seconds": 60.71800000000076,
+    "elapsed_seconds": 0.0,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "ETH",
+    "timeframe": "4h",
+    "started_seconds": 60.71800000000076,
+    "finished_seconds": 60.73400000000038,
+    "elapsed_seconds": 0.01599999999962165,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "ETH",
+    "timeframe": "1d",
+    "started_seconds": 60.73400000000038,
+    "finished_seconds": 60.73400000000038,
+    "elapsed_seconds": 0.0,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "SOL",
+    "timeframe": "1m",
+    "started_seconds": 60.73400000000038,
+    "finished_seconds": 60.75,
+    "elapsed_seconds": 0.01599999999962165,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "SOL",
+    "timeframe": "5m",
+    "started_seconds": 60.75,
+    "finished_seconds": 60.75,
+    "elapsed_seconds": 0.0,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "SOL",
+    "timeframe": "15m",
+    "started_seconds": 60.75,
+    "finished_seconds": 60.76499999999942,
+    "elapsed_seconds": 0.014999999999417923,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "SOL",
+    "timeframe": "1h",
+    "started_seconds": 60.76499999999942,
+    "finished_seconds": 60.76499999999942,
+    "elapsed_seconds": 0.0,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "SOL",
+    "timeframe": "4h",
+    "started_seconds": 60.76499999999942,
+    "finished_seconds": 60.78099999999904,
+    "elapsed_seconds": 0.01599999999962165,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "SOL",
+    "timeframe": "1d",
+    "started_seconds": 60.78099999999904,
+    "finished_seconds": 60.78099999999904,
+    "elapsed_seconds": 0.0,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "XRP",
+    "timeframe": "1m",
+    "started_seconds": 60.78099999999904,
+    "finished_seconds": 60.79599999999846,
+    "elapsed_seconds": 0.014999999999417923,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "XRP",
+    "timeframe": "5m",
+    "started_seconds": 60.79599999999846,
+    "finished_seconds": 60.81200000000172,
+    "elapsed_seconds": 0.01600000000325963,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "XRP",
+    "timeframe": "15m",
+    "started_seconds": 60.81200000000172,
+    "finished_seconds": 60.81200000000172,
+    "elapsed_seconds": 0.0,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "XRP",
+    "timeframe": "1h",
+    "started_seconds": 60.81200000000172,
+    "finished_seconds": 60.81200000000172,
+    "elapsed_seconds": 0.0,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "XRP",
+    "timeframe": "4h",
+    "started_seconds": 60.81200000000172,
+    "finished_seconds": 60.82800000000134,
+    "elapsed_seconds": 0.01599999999962165,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "XRP",
+    "timeframe": "1d",
+    "started_seconds": 60.82800000000134,
+    "finished_seconds": 60.82800000000134,
+    "elapsed_seconds": 0.0,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "BTC",
+    "timeframe": "1m",
+    "started_seconds": 120.04599999999846,
+    "finished_seconds": 120.28099999999904,
+    "elapsed_seconds": 0.23500000000058208,
+    "status": 200,
+    "body_bytes": 695281,
+    "correct": true
+  },
+  {
+    "base": "BTC",
+    "timeframe": "5m",
+    "started_seconds": 120.28099999999904,
+    "finished_seconds": 120.43700000000172,
+    "elapsed_seconds": 0.15600000000267755,
+    "status": 200,
+    "body_bytes": 691663,
+    "correct": true
+  },
+  {
+    "base": "BTC",
+    "timeframe": "15m",
+    "started_seconds": 120.43700000000172,
+    "finished_seconds": 120.60900000000038,
+    "elapsed_seconds": 0.17199999999866122,
+    "status": 200,
+    "body_bytes": 690757,
+    "correct": true
+  },
+  {
+    "base": "BTC",
+    "timeframe": "1h",
+    "started_seconds": 120.60900000000038,
+    "finished_seconds": 120.81200000000172,
+    "elapsed_seconds": 0.20300000000133878,
+    "status": 200,
+    "body_bytes": 690396,
+    "correct": true
+  },
+  {
+    "base": "BTC",
+    "timeframe": "4h",
+    "started_seconds": 120.81200000000172,
+    "finished_seconds": 121.0,
+    "elapsed_seconds": 0.18799999999828287,
+    "status": 200,
+    "body_bytes": 690248,
+    "correct": true
+  },
+  {
+    "base": "BTC",
+    "timeframe": "1d",
+    "started_seconds": 121.0,
+    "finished_seconds": 121.07800000000134,
+    "elapsed_seconds": 0.07800000000133878,
+    "status": 200,
+    "body_bytes": 244495,
+    "correct": true
+  },
+  {
+    "base": "DOGE",
+    "timeframe": "1m",
+    "started_seconds": 121.07800000000134,
+    "finished_seconds": 121.29599999999846,
+    "elapsed_seconds": 0.21799999999711872,
+    "status": 200,
+    "body_bytes": 695281,
+    "correct": true
+  },
+  {
+    "base": "DOGE",
+    "timeframe": "5m",
+    "started_seconds": 121.29599999999846,
+    "finished_seconds": 121.45300000000134,
+    "elapsed_seconds": 0.15700000000288128,
+    "status": 200,
+    "body_bytes": 691664,
+    "correct": true
+  },
+  {
+    "base": "DOGE",
+    "timeframe": "15m",
+    "started_seconds": 121.45300000000134,
+    "finished_seconds": 121.625,
+    "elapsed_seconds": 0.17199999999866122,
+    "status": 200,
+    "body_bytes": 690757,
+    "correct": true
+  },
+  {
+    "base": "DOGE",
+    "timeframe": "1h",
+    "started_seconds": 121.625,
+    "finished_seconds": 121.63999999999942,
+    "elapsed_seconds": 0.014999999999417923,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "DOGE",
+    "timeframe": "4h",
+    "started_seconds": 121.63999999999942,
+    "finished_seconds": 121.63999999999942,
+    "elapsed_seconds": 0.0,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "DOGE",
+    "timeframe": "1d",
+    "started_seconds": 121.63999999999942,
+    "finished_seconds": 121.65599999999904,
+    "elapsed_seconds": 0.01599999999962165,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "ETH",
+    "timeframe": "1m",
+    "started_seconds": 121.65599999999904,
+    "finished_seconds": 121.65599999999904,
+    "elapsed_seconds": 0.0,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "ETH",
+    "timeframe": "5m",
+    "started_seconds": 121.65599999999904,
+    "finished_seconds": 121.67099999999846,
+    "elapsed_seconds": 0.014999999999417923,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "ETH",
+    "timeframe": "15m",
+    "started_seconds": 121.67099999999846,
+    "finished_seconds": 121.67099999999846,
+    "elapsed_seconds": 0.0,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "ETH",
+    "timeframe": "1h",
+    "started_seconds": 121.67099999999846,
+    "finished_seconds": 121.68700000000172,
+    "elapsed_seconds": 0.01600000000325963,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "ETH",
+    "timeframe": "4h",
+    "started_seconds": 121.68700000000172,
+    "finished_seconds": 121.68700000000172,
+    "elapsed_seconds": 0.0,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "ETH",
+    "timeframe": "1d",
+    "started_seconds": 121.68700000000172,
+    "finished_seconds": 121.70300000000134,
+    "elapsed_seconds": 0.01599999999962165,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "SOL",
+    "timeframe": "1m",
+    "started_seconds": 121.70300000000134,
+    "finished_seconds": 121.70300000000134,
+    "elapsed_seconds": 0.0,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "SOL",
+    "timeframe": "5m",
+    "started_seconds": 121.70300000000134,
+    "finished_seconds": 121.71800000000076,
+    "elapsed_seconds": 0.014999999999417923,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "SOL",
+    "timeframe": "15m",
+    "started_seconds": 121.71800000000076,
+    "finished_seconds": 121.71800000000076,
+    "elapsed_seconds": 0.0,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "SOL",
+    "timeframe": "1h",
+    "started_seconds": 121.71800000000076,
+    "finished_seconds": 121.73400000000038,
+    "elapsed_seconds": 0.01599999999962165,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "SOL",
+    "timeframe": "4h",
+    "started_seconds": 121.73400000000038,
+    "finished_seconds": 121.73400000000038,
+    "elapsed_seconds": 0.0,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "SOL",
+    "timeframe": "1d",
+    "started_seconds": 121.73400000000038,
+    "finished_seconds": 121.73400000000038,
+    "elapsed_seconds": 0.0,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "XRP",
+    "timeframe": "1m",
+    "started_seconds": 121.73400000000038,
+    "finished_seconds": 121.75,
+    "elapsed_seconds": 0.01599999999962165,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "XRP",
+    "timeframe": "5m",
+    "started_seconds": 121.75,
+    "finished_seconds": 121.76499999999942,
+    "elapsed_seconds": 0.014999999999417923,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "XRP",
+    "timeframe": "15m",
+    "started_seconds": 121.76499999999942,
+    "finished_seconds": 121.76499999999942,
+    "elapsed_seconds": 0.0,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "XRP",
+    "timeframe": "1h",
+    "started_seconds": 121.76499999999942,
+    "finished_seconds": 121.76499999999942,
+    "elapsed_seconds": 0.0,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "XRP",
+    "timeframe": "4h",
+    "started_seconds": 121.76499999999942,
+    "finished_seconds": 121.78099999999904,
+    "elapsed_seconds": 0.01599999999962165,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "XRP",
+    "timeframe": "1d",
+    "started_seconds": 121.78099999999904,
+    "finished_seconds": 121.79599999999846,
+    "elapsed_seconds": 0.014999999999417923,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "BTC",
+    "timeframe": "1m",
+    "started_seconds": 180.04599999999846,
+    "finished_seconds": 180.25,
+    "elapsed_seconds": 0.2040000000015425,
+    "status": 200,
+    "body_bytes": 695281,
+    "correct": true
+  },
+  {
+    "base": "BTC",
+    "timeframe": "5m",
+    "started_seconds": 180.25,
+    "finished_seconds": 180.43700000000172,
+    "elapsed_seconds": 0.18700000000171713,
+    "status": 200,
+    "body_bytes": 691664,
+    "correct": true
+  },
+  {
+    "base": "BTC",
+    "timeframe": "15m",
+    "started_seconds": 180.43700000000172,
+    "finished_seconds": 180.59300000000076,
+    "elapsed_seconds": 0.15599999999903957,
+    "status": 200,
+    "body_bytes": 690758,
+    "correct": true
+  },
+  {
+    "base": "BTC",
+    "timeframe": "1h",
+    "started_seconds": 180.59300000000076,
+    "finished_seconds": 180.82800000000134,
+    "elapsed_seconds": 0.23500000000058208,
+    "status": 200,
+    "body_bytes": 690397,
+    "correct": true
+  },
+  {
+    "base": "BTC",
+    "timeframe": "4h",
+    "started_seconds": 180.82800000000134,
+    "finished_seconds": 181.0,
+    "elapsed_seconds": 0.17199999999866122,
+    "status": 200,
+    "body_bytes": 690249,
+    "correct": true
+  },
+  {
+    "base": "BTC",
+    "timeframe": "1d",
+    "started_seconds": 181.0,
+    "finished_seconds": 181.09300000000076,
+    "elapsed_seconds": 0.0930000000007567,
+    "status": 200,
+    "body_bytes": 244496,
+    "correct": true
+  },
+  {
+    "base": "DOGE",
+    "timeframe": "1m",
+    "started_seconds": 181.09300000000076,
+    "finished_seconds": 181.29599999999846,
+    "elapsed_seconds": 0.2029999999977008,
+    "status": 200,
+    "body_bytes": 695282,
+    "correct": true
+  },
+  {
+    "base": "DOGE",
+    "timeframe": "5m",
+    "started_seconds": 181.29599999999846,
+    "finished_seconds": 181.5,
+    "elapsed_seconds": 0.2040000000015425,
+    "status": 200,
+    "body_bytes": 691664,
+    "correct": true
+  },
+  {
+    "base": "DOGE",
+    "timeframe": "15m",
+    "started_seconds": 181.5,
+    "finished_seconds": 181.65599999999904,
+    "elapsed_seconds": 0.15599999999903957,
+    "status": 200,
+    "body_bytes": 690758,
+    "correct": true
+  },
+  {
+    "base": "DOGE",
+    "timeframe": "1h",
+    "started_seconds": 181.65599999999904,
+    "finished_seconds": 181.88999999999942,
+    "elapsed_seconds": 0.23400000000037835,
+    "status": 200,
+    "body_bytes": 690397,
+    "correct": true
+  },
+  {
+    "base": "DOGE",
+    "timeframe": "4h",
+    "started_seconds": 181.88999999999942,
+    "finished_seconds": 182.06200000000172,
+    "elapsed_seconds": 0.1720000000022992,
+    "status": 200,
+    "body_bytes": 690249,
+    "correct": true
+  },
+  {
+    "base": "DOGE",
+    "timeframe": "1d",
+    "started_seconds": 182.06200000000172,
+    "finished_seconds": 182.15599999999904,
+    "elapsed_seconds": 0.09399999999732245,
+    "status": 200,
+    "body_bytes": 244496,
+    "correct": true
+  },
+  {
+    "base": "ETH",
+    "timeframe": "1m",
+    "started_seconds": 182.15599999999904,
+    "finished_seconds": 182.35900000000038,
+    "elapsed_seconds": 0.20300000000133878,
+    "status": 200,
+    "body_bytes": 695282,
+    "correct": true
+  },
+  {
+    "base": "ETH",
+    "timeframe": "5m",
+    "started_seconds": 182.35900000000038,
+    "finished_seconds": 182.54599999999846,
+    "elapsed_seconds": 0.18699999999807915,
+    "status": 200,
+    "body_bytes": 691664,
+    "correct": true
+  },
+  {
+    "base": "ETH",
+    "timeframe": "15m",
+    "started_seconds": 182.54599999999846,
+    "finished_seconds": 182.70300000000134,
+    "elapsed_seconds": 0.15700000000288128,
+    "status": 200,
+    "body_bytes": 690756,
+    "correct": true
+  },
+  {
+    "base": "ETH",
+    "timeframe": "1h",
+    "started_seconds": 182.70300000000134,
+    "finished_seconds": 182.71800000000076,
+    "elapsed_seconds": 0.014999999999417923,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "ETH",
+    "timeframe": "4h",
+    "started_seconds": 182.71800000000076,
+    "finished_seconds": 182.71800000000076,
+    "elapsed_seconds": 0.0,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "ETH",
+    "timeframe": "1d",
+    "started_seconds": 182.71800000000076,
+    "finished_seconds": 182.73400000000038,
+    "elapsed_seconds": 0.01599999999962165,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "SOL",
+    "timeframe": "1m",
+    "started_seconds": 182.73400000000038,
+    "finished_seconds": 182.73400000000038,
+    "elapsed_seconds": 0.0,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "SOL",
+    "timeframe": "5m",
+    "started_seconds": 182.73400000000038,
+    "finished_seconds": 182.75,
+    "elapsed_seconds": 0.01599999999962165,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "SOL",
+    "timeframe": "15m",
+    "started_seconds": 182.75,
+    "finished_seconds": 182.76499999999942,
+    "elapsed_seconds": 0.014999999999417923,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "SOL",
+    "timeframe": "1h",
+    "started_seconds": 182.76499999999942,
+    "finished_seconds": 182.76499999999942,
+    "elapsed_seconds": 0.0,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "SOL",
+    "timeframe": "4h",
+    "started_seconds": 182.76499999999942,
+    "finished_seconds": 182.78099999999904,
+    "elapsed_seconds": 0.01599999999962165,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "SOL",
+    "timeframe": "1d",
+    "started_seconds": 182.78099999999904,
+    "finished_seconds": 182.78099999999904,
+    "elapsed_seconds": 0.0,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "XRP",
+    "timeframe": "1m",
+    "started_seconds": 182.78099999999904,
+    "finished_seconds": 182.79599999999846,
+    "elapsed_seconds": 0.014999999999417923,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "XRP",
+    "timeframe": "5m",
+    "started_seconds": 182.79599999999846,
+    "finished_seconds": 182.79599999999846,
+    "elapsed_seconds": 0.0,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "XRP",
+    "timeframe": "15m",
+    "started_seconds": 182.79599999999846,
+    "finished_seconds": 182.81200000000172,
+    "elapsed_seconds": 0.01600000000325963,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "XRP",
+    "timeframe": "1h",
+    "started_seconds": 182.81200000000172,
+    "finished_seconds": 182.81200000000172,
+    "elapsed_seconds": 0.0,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "XRP",
+    "timeframe": "4h",
+    "started_seconds": 182.81200000000172,
+    "finished_seconds": 182.82800000000134,
+    "elapsed_seconds": 0.01599999999962165,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "XRP",
+    "timeframe": "1d",
+    "started_seconds": 182.82800000000134,
+    "finished_seconds": 182.82800000000134,
+    "elapsed_seconds": 0.0,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "BTC",
+    "timeframe": "1m",
+    "started_seconds": 240.07800000000134,
+    "finished_seconds": 240.29599999999846,
+    "elapsed_seconds": 0.21799999999711872,
+    "status": 200,
+    "body_bytes": 695281,
+    "correct": true
+  },
+  {
+    "base": "BTC",
+    "timeframe": "5m",
+    "started_seconds": 240.29599999999846,
+    "finished_seconds": 240.45300000000134,
+    "elapsed_seconds": 0.15700000000288128,
+    "status": 200,
+    "body_bytes": 691664,
+    "correct": true
+  },
+  {
+    "base": "BTC",
+    "timeframe": "15m",
+    "started_seconds": 240.45300000000134,
+    "finished_seconds": 240.625,
+    "elapsed_seconds": 0.17199999999866122,
+    "status": 200,
+    "body_bytes": 690758,
+    "correct": true
+  },
+  {
+    "base": "BTC",
+    "timeframe": "1h",
+    "started_seconds": 240.625,
+    "finished_seconds": 240.82800000000134,
+    "elapsed_seconds": 0.20300000000133878,
+    "status": 200,
+    "body_bytes": 690397,
+    "correct": true
+  },
+  {
+    "base": "BTC",
+    "timeframe": "4h",
+    "started_seconds": 240.82800000000134,
+    "finished_seconds": 241.01499999999942,
+    "elapsed_seconds": 0.18699999999807915,
+    "status": 200,
+    "body_bytes": 690249,
+    "correct": true
+  },
+  {
+    "base": "BTC",
+    "timeframe": "1d",
+    "started_seconds": 241.01499999999942,
+    "finished_seconds": 241.07800000000134,
+    "elapsed_seconds": 0.06300000000192085,
+    "status": 200,
+    "body_bytes": 244496,
+    "correct": true
+  },
+  {
+    "base": "DOGE",
+    "timeframe": "1m",
+    "started_seconds": 241.07800000000134,
+    "finished_seconds": 241.29599999999846,
+    "elapsed_seconds": 0.21799999999711872,
+    "status": 200,
+    "body_bytes": 695282,
+    "correct": true
+  },
+  {
+    "base": "DOGE",
+    "timeframe": "5m",
+    "started_seconds": 241.29599999999846,
+    "finished_seconds": 241.45300000000134,
+    "elapsed_seconds": 0.15700000000288128,
+    "status": 200,
+    "body_bytes": 691665,
+    "correct": true
+  },
+  {
+    "base": "DOGE",
+    "timeframe": "15m",
+    "started_seconds": 241.45300000000134,
+    "finished_seconds": 241.625,
+    "elapsed_seconds": 0.17199999999866122,
+    "status": 200,
+    "body_bytes": 690759,
+    "correct": true
+  },
+  {
+    "base": "DOGE",
+    "timeframe": "1h",
+    "started_seconds": 241.625,
+    "finished_seconds": 241.82800000000134,
+    "elapsed_seconds": 0.20300000000133878,
+    "status": 200,
+    "body_bytes": 690398,
+    "correct": true
+  },
+  {
+    "base": "DOGE",
+    "timeframe": "4h",
+    "started_seconds": 241.82800000000134,
+    "finished_seconds": 242.01499999999942,
+    "elapsed_seconds": 0.18699999999807915,
+    "status": 200,
+    "body_bytes": 690250,
+    "correct": true
+  },
+  {
+    "base": "DOGE",
+    "timeframe": "1d",
+    "started_seconds": 242.01499999999942,
+    "finished_seconds": 242.07800000000134,
+    "elapsed_seconds": 0.06300000000192085,
+    "status": 200,
+    "body_bytes": 244497,
+    "correct": true
+  },
+  {
+    "base": "ETH",
+    "timeframe": "1m",
+    "started_seconds": 242.07800000000134,
+    "finished_seconds": 242.29599999999846,
+    "elapsed_seconds": 0.21799999999711872,
+    "status": 200,
+    "body_bytes": 695283,
+    "correct": true
+  },
+  {
+    "base": "ETH",
+    "timeframe": "5m",
+    "started_seconds": 242.29599999999846,
+    "finished_seconds": 242.45300000000134,
+    "elapsed_seconds": 0.15700000000288128,
+    "status": 200,
+    "body_bytes": 691664,
+    "correct": true
+  },
+  {
+    "base": "ETH",
+    "timeframe": "15m",
+    "started_seconds": 242.45300000000134,
+    "finished_seconds": 242.63999999999942,
+    "elapsed_seconds": 0.18699999999807915,
+    "status": 200,
+    "body_bytes": 690757,
+    "correct": true
+  },
+  {
+    "base": "ETH",
+    "timeframe": "1h",
+    "started_seconds": 242.63999999999942,
+    "finished_seconds": 242.82800000000134,
+    "elapsed_seconds": 0.18800000000192085,
+    "status": 200,
+    "body_bytes": 690396,
+    "correct": true
+  },
+  {
+    "base": "ETH",
+    "timeframe": "4h",
+    "started_seconds": 242.82800000000134,
+    "finished_seconds": 243.01499999999942,
+    "elapsed_seconds": 0.18699999999807915,
+    "status": 200,
+    "body_bytes": 690248,
+    "correct": true
+  },
+  {
+    "base": "ETH",
+    "timeframe": "1d",
+    "started_seconds": 243.01499999999942,
+    "finished_seconds": 243.09300000000076,
+    "elapsed_seconds": 0.07800000000133878,
+    "status": 200,
+    "body_bytes": 244495,
+    "correct": true
+  },
+  {
+    "base": "SOL",
+    "timeframe": "1m",
+    "started_seconds": 243.09300000000076,
+    "finished_seconds": 243.29599999999846,
+    "elapsed_seconds": 0.2029999999977008,
+    "status": 200,
+    "body_bytes": 695285,
+    "correct": true
+  },
+  {
+    "base": "SOL",
+    "timeframe": "5m",
+    "started_seconds": 243.29599999999846,
+    "finished_seconds": 243.45300000000134,
+    "elapsed_seconds": 0.15700000000288128,
+    "status": 200,
+    "body_bytes": 691664,
+    "correct": true
+  },
+  {
+    "base": "SOL",
+    "timeframe": "15m",
+    "started_seconds": 243.45300000000134,
+    "finished_seconds": 243.46800000000076,
+    "elapsed_seconds": 0.014999999999417923,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "SOL",
+    "timeframe": "1h",
+    "started_seconds": 243.46800000000076,
+    "finished_seconds": 243.46800000000076,
+    "elapsed_seconds": 0.0,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "SOL",
+    "timeframe": "4h",
+    "started_seconds": 243.46800000000076,
+    "finished_seconds": 243.48400000000038,
+    "elapsed_seconds": 0.01599999999962165,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "SOL",
+    "timeframe": "1d",
+    "started_seconds": 243.48400000000038,
+    "finished_seconds": 243.48400000000038,
+    "elapsed_seconds": 0.0,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "XRP",
+    "timeframe": "1m",
+    "started_seconds": 243.48400000000038,
+    "finished_seconds": 243.5,
+    "elapsed_seconds": 0.01599999999962165,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "XRP",
+    "timeframe": "5m",
+    "started_seconds": 243.5,
+    "finished_seconds": 243.5,
+    "elapsed_seconds": 0.0,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "XRP",
+    "timeframe": "15m",
+    "started_seconds": 243.5,
+    "finished_seconds": 243.51499999999942,
+    "elapsed_seconds": 0.014999999999417923,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "XRP",
+    "timeframe": "1h",
+    "started_seconds": 243.51499999999942,
+    "finished_seconds": 243.51499999999942,
+    "elapsed_seconds": 0.0,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "XRP",
+    "timeframe": "4h",
+    "started_seconds": 243.51499999999942,
+    "finished_seconds": 243.53099999999904,
+    "elapsed_seconds": 0.01599999999962165,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "XRP",
+    "timeframe": "1d",
+    "started_seconds": 243.53099999999904,
+    "finished_seconds": 243.53099999999904,
+    "elapsed_seconds": 0.0,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "BTC",
+    "timeframe": "1m",
+    "started_seconds": 300.0620000000017,
+    "finished_seconds": 300.29599999999846,
+    "elapsed_seconds": 0.23399999999674037,
+    "status": 200,
+    "body_bytes": 695281,
+    "correct": true
+  },
+  {
+    "base": "BTC",
+    "timeframe": "5m",
+    "started_seconds": 300.29599999999846,
+    "finished_seconds": 300.45300000000134,
+    "elapsed_seconds": 0.15700000000288128,
+    "status": 200,
+    "body_bytes": 691664,
+    "correct": true
+  },
+  {
+    "base": "BTC",
+    "timeframe": "15m",
+    "started_seconds": 300.45300000000134,
+    "finished_seconds": 300.6399999999994,
+    "elapsed_seconds": 0.18699999999807915,
+    "status": 200,
+    "body_bytes": 690758,
+    "correct": true
+  },
+  {
+    "base": "BTC",
+    "timeframe": "1h",
+    "started_seconds": 300.6399999999994,
+    "finished_seconds": 300.84300000000076,
+    "elapsed_seconds": 0.20300000000133878,
+    "status": 200,
+    "body_bytes": 690397,
+    "correct": true
+  },
+  {
+    "base": "BTC",
+    "timeframe": "4h",
+    "started_seconds": 300.84300000000076,
+    "finished_seconds": 301.03099999999904,
+    "elapsed_seconds": 0.18799999999828287,
+    "status": 200,
+    "body_bytes": 690249,
+    "correct": true
+  },
+  {
+    "base": "BTC",
+    "timeframe": "1d",
+    "started_seconds": 301.03099999999904,
+    "finished_seconds": 301.09300000000076,
+    "elapsed_seconds": 0.062000000001717126,
+    "status": 200,
+    "body_bytes": 244496,
+    "correct": true
+  },
+  {
+    "base": "DOGE",
+    "timeframe": "1m",
+    "started_seconds": 301.09300000000076,
+    "finished_seconds": 301.32800000000134,
+    "elapsed_seconds": 0.23500000000058208,
+    "status": 200,
+    "body_bytes": 695282,
+    "correct": true
+  },
+  {
+    "base": "DOGE",
+    "timeframe": "5m",
+    "started_seconds": 301.32800000000134,
+    "finished_seconds": 301.4840000000004,
+    "elapsed_seconds": 0.15599999999903957,
+    "status": 200,
+    "body_bytes": 691665,
+    "correct": true
+  },
+  {
+    "base": "DOGE",
+    "timeframe": "15m",
+    "started_seconds": 301.4840000000004,
+    "finished_seconds": 301.67099999999846,
+    "elapsed_seconds": 0.18699999999807915,
+    "status": 200,
+    "body_bytes": 690759,
+    "correct": true
+  },
+  {
+    "base": "DOGE",
+    "timeframe": "1h",
+    "started_seconds": 301.67099999999846,
+    "finished_seconds": 301.8590000000004,
+    "elapsed_seconds": 0.18800000000192085,
+    "status": 200,
+    "body_bytes": 690398,
+    "correct": true
+  },
+  {
+    "base": "DOGE",
+    "timeframe": "4h",
+    "started_seconds": 301.8590000000004,
+    "finished_seconds": 302.04599999999846,
+    "elapsed_seconds": 0.18699999999807915,
+    "status": 200,
+    "body_bytes": 690250,
+    "correct": true
+  },
+  {
+    "base": "DOGE",
+    "timeframe": "1d",
+    "started_seconds": 302.04599999999846,
+    "finished_seconds": 302.125,
+    "elapsed_seconds": 0.0790000000015425,
+    "status": 200,
+    "body_bytes": 244497,
+    "correct": true
+  },
+  {
+    "base": "ETH",
+    "timeframe": "1m",
+    "started_seconds": 302.125,
+    "finished_seconds": 302.3590000000004,
+    "elapsed_seconds": 0.23400000000037835,
+    "status": 200,
+    "body_bytes": 695283,
+    "correct": true
+  },
+  {
+    "base": "ETH",
+    "timeframe": "5m",
+    "started_seconds": 302.3590000000004,
+    "finished_seconds": 302.5149999999994,
+    "elapsed_seconds": 0.15599999999903957,
+    "status": 200,
+    "body_bytes": 691665,
+    "correct": true
+  },
+  {
+    "base": "ETH",
+    "timeframe": "15m",
+    "started_seconds": 302.5149999999994,
+    "finished_seconds": 302.6870000000017,
+    "elapsed_seconds": 0.1720000000022992,
+    "status": 200,
+    "body_bytes": 690758,
+    "correct": true
+  },
+  {
+    "base": "ETH",
+    "timeframe": "1h",
+    "started_seconds": 302.6870000000017,
+    "finished_seconds": 302.8899999999994,
+    "elapsed_seconds": 0.2029999999977008,
+    "status": 200,
+    "body_bytes": 690397,
+    "correct": true
+  },
+  {
+    "base": "ETH",
+    "timeframe": "4h",
+    "started_seconds": 302.8899999999994,
+    "finished_seconds": 303.07800000000134,
+    "elapsed_seconds": 0.18800000000192085,
+    "status": 200,
+    "body_bytes": 690249,
+    "correct": true
+  },
+  {
+    "base": "ETH",
+    "timeframe": "1d",
+    "started_seconds": 303.07800000000134,
+    "finished_seconds": 303.15599999999904,
+    "elapsed_seconds": 0.0779999999977008,
+    "status": 200,
+    "body_bytes": 244496,
+    "correct": true
+  },
+  {
+    "base": "SOL",
+    "timeframe": "1m",
+    "started_seconds": 303.15599999999904,
+    "finished_seconds": 303.375,
+    "elapsed_seconds": 0.21900000000096043,
+    "status": 200,
+    "body_bytes": 695286,
+    "correct": true
+  },
+  {
+    "base": "SOL",
+    "timeframe": "5m",
+    "started_seconds": 303.375,
+    "finished_seconds": 303.53099999999904,
+    "elapsed_seconds": 0.15599999999903957,
+    "status": 200,
+    "body_bytes": 691664,
+    "correct": true
+  },
+  {
+    "base": "SOL",
+    "timeframe": "15m",
+    "started_seconds": 303.53099999999904,
+    "finished_seconds": 303.70300000000134,
+    "elapsed_seconds": 0.1720000000022992,
+    "status": 200,
+    "body_bytes": 690757,
+    "correct": true
+  },
+  {
+    "base": "SOL",
+    "timeframe": "1h",
+    "started_seconds": 303.70300000000134,
+    "finished_seconds": 303.90599999999904,
+    "elapsed_seconds": 0.2029999999977008,
+    "status": 200,
+    "body_bytes": 690396,
+    "correct": true
+  },
+  {
+    "base": "SOL",
+    "timeframe": "4h",
+    "started_seconds": 303.90599999999904,
+    "finished_seconds": 304.09300000000076,
+    "elapsed_seconds": 0.18700000000171713,
+    "status": 200,
+    "body_bytes": 690248,
+    "correct": true
+  },
+  {
+    "base": "SOL",
+    "timeframe": "1d",
+    "started_seconds": 304.09300000000076,
+    "finished_seconds": 304.17099999999846,
+    "elapsed_seconds": 0.0779999999977008,
+    "status": 200,
+    "body_bytes": 244495,
+    "correct": true
+  },
+  {
+    "base": "XRP",
+    "timeframe": "1m",
+    "started_seconds": 304.17099999999846,
+    "finished_seconds": 304.375,
+    "elapsed_seconds": 0.2040000000015425,
+    "status": 200,
+    "body_bytes": 695284,
+    "correct": true
+  },
+  {
+    "base": "XRP",
+    "timeframe": "5m",
+    "started_seconds": 304.375,
+    "finished_seconds": 304.54599999999846,
+    "elapsed_seconds": 0.1709999999984575,
+    "status": 200,
+    "body_bytes": 691664,
+    "correct": true
+  },
+  {
+    "base": "XRP",
+    "timeframe": "15m",
+    "started_seconds": 304.54599999999846,
+    "finished_seconds": 304.5620000000017,
+    "elapsed_seconds": 0.01600000000325963,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "XRP",
+    "timeframe": "1h",
+    "started_seconds": 304.5620000000017,
+    "finished_seconds": 304.5620000000017,
+    "elapsed_seconds": 0.0,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "XRP",
+    "timeframe": "4h",
+    "started_seconds": 304.5620000000017,
+    "finished_seconds": 304.57800000000134,
+    "elapsed_seconds": 0.01599999999962165,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "XRP",
+    "timeframe": "1d",
+    "started_seconds": 304.57800000000134,
+    "finished_seconds": 304.57800000000134,
+    "elapsed_seconds": 0.0,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37,
+    "correct": false
+  },
+  {
+    "base": "BTC",
+    "timeframe": "1m",
+    "started_seconds": 360.09300000000076,
+    "finished_seconds": 360.3120000000017,
+    "elapsed_seconds": 0.21900000000096043,
+    "status": 200,
+    "body_bytes": 695281,
+    "correct": true
+  },
+  {
+    "base": "BTC",
+    "timeframe": "5m",
+    "started_seconds": 360.3120000000017,
+    "finished_seconds": 360.46800000000076,
+    "elapsed_seconds": 0.15599999999903957,
+    "status": 200,
+    "body_bytes": 691664,
+    "correct": true
+  },
+  {
+    "base": "BTC",
+    "timeframe": "15m",
+    "started_seconds": 360.46800000000076,
+    "finished_seconds": 360.6399999999994,
+    "elapsed_seconds": 0.17199999999866122,
+    "status": 200,
+    "body_bytes": 690758,
+    "correct": true
+  },
+  {
+    "base": "BTC",
+    "timeframe": "1h",
+    "started_seconds": 360.6399999999994,
+    "finished_seconds": 360.82800000000134,
+    "elapsed_seconds": 0.18800000000192085,
+    "status": 200,
+    "body_bytes": 690397,
+    "correct": true
+  },
+  {
+    "base": "BTC",
+    "timeframe": "4h",
+    "started_seconds": 360.82800000000134,
+    "finished_seconds": 361.0149999999994,
+    "elapsed_seconds": 0.18699999999807915,
+    "status": 200,
+    "body_bytes": 690249,
+    "correct": true
+  },
+  {
+    "base": "BTC",
+    "timeframe": "1d",
+    "started_seconds": 361.0149999999994,
+    "finished_seconds": 361.09300000000076,
+    "elapsed_seconds": 0.07800000000133878,
+    "status": 200,
+    "body_bytes": 244496,
+    "correct": true
+  },
+  {
+    "base": "DOGE",
+    "timeframe": "1m",
+    "started_seconds": 361.09300000000076,
+    "finished_seconds": 361.3120000000017,
+    "elapsed_seconds": 0.21900000000096043,
+    "status": 200,
+    "body_bytes": 695282,
+    "correct": true
+  },
+  {
+    "base": "DOGE",
+    "timeframe": "5m",
+    "started_seconds": 361.3120000000017,
+    "finished_seconds": 361.46800000000076,
+    "elapsed_seconds": 0.15599999999903957,
+    "status": 200,
+    "body_bytes": 691665,
+    "correct": true
+  },
+  {
+    "base": "DOGE",
+    "timeframe": "15m",
+    "started_seconds": 361.46800000000076,
+    "finished_seconds": 361.6399999999994,
+    "elapsed_seconds": 0.17199999999866122,
+    "status": 200,
+    "body_bytes": 690759,
+    "correct": true
+  },
+  {
+    "base": "DOGE",
+    "timeframe": "1h",
+    "started_seconds": 361.6399999999994,
+    "finished_seconds": 361.82800000000134,
+    "elapsed_seconds": 0.18800000000192085,
+    "status": 200,
+    "body_bytes": 690398,
+    "correct": true
+  },
+  {
+    "base": "DOGE",
+    "timeframe": "4h",
+    "started_seconds": 361.82800000000134,
+    "finished_seconds": 362.0149999999994,
+    "elapsed_seconds": 0.18699999999807915,
+    "status": 200,
+    "body_bytes": 690250,
+    "correct": true
+  },
+  {
+    "base": "DOGE",
+    "timeframe": "1d",
+    "started_seconds": 362.0149999999994,
+    "finished_seconds": 362.09300000000076,
+    "elapsed_seconds": 0.07800000000133878,
+    "status": 200,
+    "body_bytes": 244497,
+    "correct": true
+  },
+  {
+    "base": "ETH",
+    "timeframe": "1m",
+    "started_seconds": 362.09300000000076,
+    "finished_seconds": 362.2649999999994,
+    "elapsed_seconds": 0.17199999999866122,
+    "status": 200,
+    "body_bytes": 695283,
+    "correct": true
+  },
+  {
+    "base": "ETH",
+    "timeframe": "5m",
+    "started_seconds": 362.2649999999994,
+    "finished_seconds": 362.45300000000134,
+    "elapsed_seconds": 0.18800000000192085,
+    "status": 200,
+    "body_bytes": 691665,
+    "correct": true
+  },
+  {
+    "base": "ETH",
+    "timeframe": "15m",
+    "started_seconds": 362.45300000000134,
+    "finished_seconds": 362.6399999999994,
+    "elapsed_seconds": 0.18699999999807915,
+    "status": 200,
+    "body_bytes": 690758,
+    "correct": true
+  },
+  {
+    "base": "ETH",
+    "timeframe": "1h",
+    "started_seconds": 362.6399999999994,
+    "finished_seconds": 362.82800000000134,
+    "elapsed_seconds": 0.18800000000192085,
+    "status": 200,
+    "body_bytes": 690397,
+    "correct": true
+  },
+  {
+    "base": "ETH",
+    "timeframe": "4h",
+    "started_seconds": 362.82800000000134,
+    "finished_seconds": 363.0149999999994,
+    "elapsed_seconds": 0.18699999999807915,
+    "status": 200,
+    "body_bytes": 690249,
+    "correct": true
+  },
+  {
+    "base": "ETH",
+    "timeframe": "1d",
+    "started_seconds": 363.0149999999994,
+    "finished_seconds": 363.07800000000134,
+    "elapsed_seconds": 0.06300000000192085,
+    "status": 200,
+    "body_bytes": 244496,
+    "correct": true
+  },
+  {
+    "base": "SOL",
+    "timeframe": "1m",
+    "started_seconds": 363.07800000000134,
+    "finished_seconds": 363.28099999999904,
+    "elapsed_seconds": 0.2029999999977008,
+    "status": 200,
+    "body_bytes": 695286,
+    "correct": true
+  },
+  {
+    "base": "SOL",
+    "timeframe": "5m",
+    "started_seconds": 363.28099999999904,
+    "finished_seconds": 363.45300000000134,
+    "elapsed_seconds": 0.1720000000022992,
+    "status": 200,
+    "body_bytes": 691665,
+    "correct": true
+  },
+  {
+    "base": "SOL",
+    "timeframe": "15m",
+    "started_seconds": 363.45300000000134,
+    "finished_seconds": 363.625,
+    "elapsed_seconds": 0.17199999999866122,
+    "status": 200,
+    "body_bytes": 690758,
+    "correct": true
+  },
+  {
+    "base": "SOL",
+    "timeframe": "1h",
+    "started_seconds": 363.625,
+    "finished_seconds": 363.82800000000134,
+    "elapsed_seconds": 0.20300000000133878,
+    "status": 200,
+    "body_bytes": 690397,
+    "correct": true
+  },
+  {
+    "base": "SOL",
+    "timeframe": "4h",
+    "started_seconds": 363.82800000000134,
+    "finished_seconds": 364.0149999999994,
+    "elapsed_seconds": 0.18699999999807915,
+    "status": 200,
+    "body_bytes": 690249,
+    "correct": true
+  },
+  {
+    "base": "SOL",
+    "timeframe": "1d",
+    "started_seconds": 364.0149999999994,
+    "finished_seconds": 364.07800000000134,
+    "elapsed_seconds": 0.06300000000192085,
+    "status": 200,
+    "body_bytes": 244496,
+    "correct": true
+  },
+  {
+    "base": "XRP",
+    "timeframe": "1m",
+    "started_seconds": 364.07800000000134,
+    "finished_seconds": 364.28099999999904,
+    "elapsed_seconds": 0.2029999999977008,
+    "status": 200,
+    "body_bytes": 695285,
+    "correct": true
+  },
+  {
+    "base": "XRP",
+    "timeframe": "5m",
+    "started_seconds": 364.28099999999904,
+    "finished_seconds": 364.45300000000134,
+    "elapsed_seconds": 0.1720000000022992,
+    "status": 200,
+    "body_bytes": 691664,
+    "correct": true
+  },
+  {
+    "base": "XRP",
+    "timeframe": "15m",
+    "started_seconds": 364.45300000000134,
+    "finished_seconds": 364.6090000000004,
+    "elapsed_seconds": 0.15599999999903957,
+    "status": 200,
+    "body_bytes": 690757,
+    "correct": true
+  },
+  {
+    "base": "XRP",
+    "timeframe": "1h",
+    "started_seconds": 364.6090000000004,
+    "finished_seconds": 364.8120000000017,
+    "elapsed_seconds": 0.20300000000133878,
+    "status": 200,
+    "body_bytes": 690396,
+    "correct": true
+  },
+  {
+    "base": "XRP",
+    "timeframe": "4h",
+    "started_seconds": 364.8120000000017,
+    "finished_seconds": 365.0,
+    "elapsed_seconds": 0.18799999999828287,
+    "status": 200,
+    "body_bytes": 690248,
+    "correct": true
+  },
+  {
+    "base": "XRP",
+    "timeframe": "1d",
+    "started_seconds": 365.0,
+    "finished_seconds": 365.07800000000134,
+    "elapsed_seconds": 0.07800000000133878,
+    "status": 200,
+    "body_bytes": 244495,
+    "correct": true
+  },
+  {
+    "base": "BTC",
+    "timeframe": "1m",
+    "started_seconds": 420.09300000000076,
+    "finished_seconds": 420.28099999999904,
+    "elapsed_seconds": 0.18799999999828287,
+    "status": 200,
+    "body_bytes": 695281,
+    "correct": true
+  },
+  {
+    "base": "BTC",
+    "timeframe": "5m",
+    "started_seconds": 420.28099999999904,
+    "finished_seconds": 420.46800000000076,
+    "elapsed_seconds": 0.18700000000171713,
+    "status": 200,
+    "body_bytes": 691664,
+    "correct": true
+  },
+  {
+    "base": "BTC",
+    "timeframe": "15m",
+    "started_seconds": 420.46800000000076,
+    "finished_seconds": 420.6090000000004,
+    "elapsed_seconds": 0.14099999999962165,
+    "status": 200,
+    "body_bytes": 690758,
+    "correct": true
+  },
+  {
+    "base": "BTC",
+    "timeframe": "1h",
+    "started_seconds": 420.6090000000004,
+    "finished_seconds": 420.84300000000076,
+    "elapsed_seconds": 0.23400000000037835,
+    "status": 200,
+    "body_bytes": 690397,
+    "correct": true
+  },
+  {
+    "base": "BTC",
+    "timeframe": "4h",
+    "started_seconds": 420.84300000000076,
+    "finished_seconds": 421.0149999999994,
+    "elapsed_seconds": 0.17199999999866122,
+    "status": 200,
+    "body_bytes": 690249,
+    "correct": true
+  },
+  {
+    "base": "BTC",
+    "timeframe": "1d",
+    "started_seconds": 421.0149999999994,
+    "finished_seconds": 421.1090000000004,
+    "elapsed_seconds": 0.09400000000096043,
+    "status": 200,
+    "body_bytes": 244496,
+    "correct": true
+  },
+  {
+    "base": "DOGE",
+    "timeframe": "1m",
+    "started_seconds": 421.1090000000004,
+    "finished_seconds": 421.29599999999846,
+    "elapsed_seconds": 0.18699999999807915,
+    "status": 200,
+    "body_bytes": 695282,
+    "correct": true
+  },
+  {
+    "base": "DOGE",
+    "timeframe": "5m",
+    "started_seconds": 421.29599999999846,
+    "finished_seconds": 421.46800000000076,
+    "elapsed_seconds": 0.1720000000022992,
+    "status": 200,
+    "body_bytes": 691665,
+    "correct": true
+  },
+  {
+    "base": "DOGE",
+    "timeframe": "15m",
+    "started_seconds": 421.46800000000076,
+    "finished_seconds": 421.625,
+    "elapsed_seconds": 0.1569999999992433,
+    "status": 200,
+    "body_bytes": 690759,
+    "correct": true
+  },
+  {
+    "base": "DOGE",
+    "timeframe": "1h",
+    "started_seconds": 421.625,
+    "finished_seconds": 421.84300000000076,
+    "elapsed_seconds": 0.2180000000007567,
+    "status": 200,
+    "body_bytes": 690398,
+    "correct": true
+  },
+  {
+    "base": "DOGE",
+    "timeframe": "4h",
+    "started_seconds": 421.84300000000076,
+    "finished_seconds": 422.125,
+    "elapsed_seconds": 0.2819999999992433,
+    "status": 200,
+    "body_bytes": 690250,
+    "correct": true
+  },
+  {
+    "base": "DOGE",
+    "timeframe": "1d",
+    "started_seconds": 422.125,
+    "finished_seconds": 422.20300000000134,
+    "elapsed_seconds": 0.07800000000133878,
+    "status": 200,
+    "body_bytes": 244497,
+    "correct": true
+  },
+  {
+    "base": "ETH",
+    "timeframe": "1m",
+    "started_seconds": 422.20300000000134,
+    "finished_seconds": 422.3899999999994,
+    "elapsed_seconds": 0.18699999999807915,
+    "status": 200,
+    "body_bytes": 695283,
+    "correct": true
+  },
+  {
+    "base": "ETH",
+    "timeframe": "5m",
+    "started_seconds": 422.3899999999994,
+    "finished_seconds": 422.57800000000134,
+    "elapsed_seconds": 0.18800000000192085,
+    "status": 200,
+    "body_bytes": 691665,
+    "correct": true
+  },
+  {
+    "base": "ETH",
+    "timeframe": "15m",
+    "started_seconds": 422.57800000000134,
+    "finished_seconds": 422.71800000000076,
+    "elapsed_seconds": 0.13999999999941792,
+    "status": 200,
+    "body_bytes": 690758,
+    "correct": true
+  },
+  {
+    "base": "ETH",
+    "timeframe": "1h",
+    "started_seconds": 422.71800000000076,
+    "finished_seconds": 422.9370000000017,
+    "elapsed_seconds": 0.21900000000096043,
+    "status": 200,
+    "body_bytes": 690397,
+    "correct": true
+  },
+  {
+    "base": "ETH",
+    "timeframe": "4h",
+    "started_seconds": 422.9370000000017,
+    "finished_seconds": 423.09300000000076,
+    "elapsed_seconds": 0.15599999999903957,
+    "status": 200,
+    "body_bytes": 690249,
+    "correct": true
+  },
+  {
+    "base": "ETH",
+    "timeframe": "1d",
+    "started_seconds": 423.09300000000076,
+    "finished_seconds": 423.1870000000017,
+    "elapsed_seconds": 0.09400000000096043,
+    "status": 200,
+    "body_bytes": 244496,
+    "correct": true
+  },
+  {
+    "base": "SOL",
+    "timeframe": "1m",
+    "started_seconds": 423.1870000000017,
+    "finished_seconds": 423.3590000000004,
+    "elapsed_seconds": 0.17199999999866122,
+    "status": 200,
+    "body_bytes": 695286,
+    "correct": true
+  },
+  {
+    "base": "SOL",
+    "timeframe": "5m",
+    "started_seconds": 423.3590000000004,
+    "finished_seconds": 423.54599999999846,
+    "elapsed_seconds": 0.18699999999807915,
+    "status": 200,
+    "body_bytes": 691665,
+    "correct": true
+  },
+  {
+    "base": "SOL",
+    "timeframe": "15m",
+    "started_seconds": 423.54599999999846,
+    "finished_seconds": 423.6870000000017,
+    "elapsed_seconds": 0.14100000000325963,
+    "status": 200,
+    "body_bytes": 690758,
+    "correct": true
+  },
+  {
+    "base": "SOL",
+    "timeframe": "1h",
+    "started_seconds": 423.6870000000017,
+    "finished_seconds": 423.90599999999904,
+    "elapsed_seconds": 0.21899999999732245,
+    "status": 200,
+    "body_bytes": 690397,
+    "correct": true
+  },
+  {
+    "base": "SOL",
+    "timeframe": "4h",
+    "started_seconds": 423.90599999999904,
+    "finished_seconds": 424.0620000000017,
+    "elapsed_seconds": 0.15600000000267755,
+    "status": 200,
+    "body_bytes": 690249,
+    "correct": true
+  },
+  {
+    "base": "SOL",
+    "timeframe": "1d",
+    "started_seconds": 424.0620000000017,
+    "finished_seconds": 424.15599999999904,
+    "elapsed_seconds": 0.09399999999732245,
+    "status": 200,
+    "body_bytes": 244496,
+    "correct": true
+  },
+  {
+    "base": "XRP",
+    "timeframe": "1m",
+    "started_seconds": 424.15599999999904,
+    "finished_seconds": 424.34300000000076,
+    "elapsed_seconds": 0.18700000000171713,
+    "status": 200,
+    "body_bytes": 695285,
+    "correct": true
+  },
+  {
+    "base": "XRP",
+    "timeframe": "5m",
+    "started_seconds": 424.34300000000076,
+    "finished_seconds": 424.53099999999904,
+    "elapsed_seconds": 0.18799999999828287,
+    "status": 200,
+    "body_bytes": 691665,
+    "correct": true
+  },
+  {
+    "base": "XRP",
+    "timeframe": "15m",
+    "started_seconds": 424.53099999999904,
+    "finished_seconds": 424.67099999999846,
+    "elapsed_seconds": 0.13999999999941792,
+    "status": 200,
+    "body_bytes": 690758,
+    "correct": true
+  },
+  {
+    "base": "XRP",
+    "timeframe": "1h",
+    "started_seconds": 424.67099999999846,
+    "finished_seconds": 424.8899999999994,
+    "elapsed_seconds": 0.21900000000096043,
+    "status": 200,
+    "body_bytes": 690397,
+    "correct": true
+  },
+  {
+    "base": "XRP",
+    "timeframe": "4h",
+    "started_seconds": 424.8899999999994,
+    "finished_seconds": 425.0620000000017,
+    "elapsed_seconds": 0.1720000000022992,
+    "status": 200,
+    "body_bytes": 690249,
+    "correct": true
+  },
+  {
+    "base": "XRP",
+    "timeframe": "1d",
+    "started_seconds": 425.0620000000017,
+    "finished_seconds": 425.125,
+    "elapsed_seconds": 0.06299999999828287,
+    "status": 200,
+    "body_bytes": 244496,
+    "correct": true
+  },
+  {
+    "base": "BTC",
+    "timeframe": "1m",
+    "started_seconds": 480.09300000000076,
+    "finished_seconds": 480.3120000000017,
+    "elapsed_seconds": 0.21900000000096043,
+    "status": 200,
+    "body_bytes": 695281,
+    "correct": true
+  },
+  {
+    "base": "BTC",
+    "timeframe": "5m",
+    "started_seconds": 480.3120000000017,
+    "finished_seconds": 480.5,
+    "elapsed_seconds": 0.18799999999828287,
+    "status": 200,
+    "body_bytes": 691664,
+    "correct": true
+  },
+  {
+    "base": "BTC",
+    "timeframe": "15m",
+    "started_seconds": 480.5,
+    "finished_seconds": 480.65599999999904,
+    "elapsed_seconds": 0.15599999999903957,
+    "status": 200,
+    "body_bytes": 690758,
+    "correct": true
+  },
+  {
+    "base": "BTC",
+    "timeframe": "1h",
+    "started_seconds": 480.65599999999904,
+    "finished_seconds": 480.875,
+    "elapsed_seconds": 0.21900000000096043,
+    "status": 200,
+    "body_bytes": 690397,
+    "correct": true
+  },
+  {
+    "base": "BTC",
+    "timeframe": "4h",
+    "started_seconds": 480.875,
+    "finished_seconds": 481.04599999999846,
+    "elapsed_seconds": 0.1709999999984575,
+    "status": 200,
+    "body_bytes": 690249,
+    "correct": true
+  },
+  {
+    "base": "BTC",
+    "timeframe": "1d",
+    "started_seconds": 481.04599999999846,
+    "finished_seconds": 481.1090000000004,
+    "elapsed_seconds": 0.06300000000192085,
+    "status": 200,
+    "body_bytes": 244496,
+    "correct": true
+  },
+  {
+    "base": "DOGE",
+    "timeframe": "1m",
+    "started_seconds": 481.1090000000004,
+    "finished_seconds": 481.32800000000134,
+    "elapsed_seconds": 0.21900000000096043,
+    "status": 200,
+    "body_bytes": 695282,
+    "correct": true
+  },
+  {
+    "base": "DOGE",
+    "timeframe": "5m",
+    "started_seconds": 481.32800000000134,
+    "finished_seconds": 481.53099999999904,
+    "elapsed_seconds": 0.2029999999977008,
+    "status": 200,
+    "body_bytes": 691665,
+    "correct": true
+  },
+  {
+    "base": "DOGE",
+    "timeframe": "15m",
+    "started_seconds": 481.53099999999904,
+    "finished_seconds": 481.67099999999846,
+    "elapsed_seconds": 0.13999999999941792,
+    "status": 200,
+    "body_bytes": 690759,
+    "correct": true
+  },
+  {
+    "base": "DOGE",
+    "timeframe": "1h",
+    "started_seconds": 481.67099999999846,
+    "finished_seconds": 481.90599999999904,
+    "elapsed_seconds": 0.23500000000058208,
+    "status": 200,
+    "body_bytes": 690398,
+    "correct": true
+  },
+  {
+    "base": "DOGE",
+    "timeframe": "4h",
+    "started_seconds": 481.90599999999904,
+    "finished_seconds": 482.0620000000017,
+    "elapsed_seconds": 0.15600000000267755,
+    "status": 200,
+    "body_bytes": 690250,
+    "correct": true
+  },
+  {
+    "base": "DOGE",
+    "timeframe": "1d",
+    "started_seconds": 482.0620000000017,
+    "finished_seconds": 482.1399999999994,
+    "elapsed_seconds": 0.0779999999977008,
+    "status": 200,
+    "body_bytes": 244497,
+    "correct": true
+  },
+  {
+    "base": "ETH",
+    "timeframe": "1m",
+    "started_seconds": 482.1399999999994,
+    "finished_seconds": 482.375,
+    "elapsed_seconds": 0.23500000000058208,
+    "status": 200,
+    "body_bytes": 695283,
+    "correct": true
+  },
+  {
+    "base": "ETH",
+    "timeframe": "5m",
+    "started_seconds": 482.375,
+    "finished_seconds": 482.53099999999904,
+    "elapsed_seconds": 0.15599999999903957,
+    "status": 200,
+    "body_bytes": 691665,
+    "correct": true
+  },
+  {
+    "base": "ETH",
+    "timeframe": "15m",
+    "started_seconds": 482.53099999999904,
+    "finished_seconds": 482.70300000000134,
+    "elapsed_seconds": 0.1720000000022992,
+    "status": 200,
+    "body_bytes": 690758,
+    "correct": true
+  },
+  {
+    "base": "ETH",
+    "timeframe": "1h",
+    "started_seconds": 482.70300000000134,
+    "finished_seconds": 482.9370000000017,
+    "elapsed_seconds": 0.23400000000037835,
+    "status": 200,
+    "body_bytes": 690397,
+    "correct": true
+  },
+  {
+    "base": "ETH",
+    "timeframe": "4h",
+    "started_seconds": 482.9370000000017,
+    "finished_seconds": 483.1090000000004,
+    "elapsed_seconds": 0.17199999999866122,
+    "status": 200,
+    "body_bytes": 690249,
+    "correct": true
+  },
+  {
+    "base": "ETH",
+    "timeframe": "1d",
+    "started_seconds": 483.1090000000004,
+    "finished_seconds": 483.17099999999846,
+    "elapsed_seconds": 0.06199999999807915,
+    "status": 200,
+    "body_bytes": 244496,
+    "correct": true
+  },
+  {
+    "base": "SOL",
+    "timeframe": "1m",
+    "started_seconds": 483.17099999999846,
+    "finished_seconds": 483.3899999999994,
+    "elapsed_seconds": 0.21900000000096043,
+    "status": 200,
+    "body_bytes": 695286,
+    "correct": true
+  },
+  {
+    "base": "SOL",
+    "timeframe": "5m",
+    "started_seconds": 483.3899999999994,
+    "finished_seconds": 483.54599999999846,
+    "elapsed_seconds": 0.15599999999903957,
+    "status": 200,
+    "body_bytes": 691665,
+    "correct": true
+  },
+  {
+    "base": "SOL",
+    "timeframe": "15m",
+    "started_seconds": 483.54599999999846,
+    "finished_seconds": 483.71800000000076,
+    "elapsed_seconds": 0.1720000000022992,
+    "status": 200,
+    "body_bytes": 690758,
+    "correct": true
+  },
+  {
+    "base": "SOL",
+    "timeframe": "1h",
+    "started_seconds": 483.71800000000076,
+    "finished_seconds": 483.92099999999846,
+    "elapsed_seconds": 0.2029999999977008,
+    "status": 200,
+    "body_bytes": 690397,
+    "correct": true
+  },
+  {
+    "base": "SOL",
+    "timeframe": "4h",
+    "started_seconds": 483.92099999999846,
+    "finished_seconds": 484.1090000000004,
+    "elapsed_seconds": 0.18800000000192085,
+    "status": 200,
+    "body_bytes": 690249,
+    "correct": true
+  },
+  {
+    "base": "SOL",
+    "timeframe": "1d",
+    "started_seconds": 484.1090000000004,
+    "finished_seconds": 484.17099999999846,
+    "elapsed_seconds": 0.06199999999807915,
+    "status": 200,
+    "body_bytes": 244496,
+    "correct": true
+  },
+  {
+    "base": "XRP",
+    "timeframe": "1m",
+    "started_seconds": 484.17099999999846,
+    "finished_seconds": 484.375,
+    "elapsed_seconds": 0.2040000000015425,
+    "status": 200,
+    "body_bytes": 695285,
+    "correct": true
+  },
+  {
+    "base": "XRP",
+    "timeframe": "5m",
+    "started_seconds": 484.375,
+    "finished_seconds": 484.54599999999846,
+    "elapsed_seconds": 0.1709999999984575,
+    "status": 200,
+    "body_bytes": 691665,
+    "correct": true
+  },
+  {
+    "base": "XRP",
+    "timeframe": "15m",
+    "started_seconds": 484.54599999999846,
+    "finished_seconds": 484.71800000000076,
+    "elapsed_seconds": 0.1720000000022992,
+    "status": 200,
+    "body_bytes": 690758,
+    "correct": true
+  },
+  {
+    "base": "XRP",
+    "timeframe": "1h",
+    "started_seconds": 484.71800000000076,
+    "finished_seconds": 484.92099999999846,
+    "elapsed_seconds": 0.2029999999977008,
+    "status": 200,
+    "body_bytes": 690397,
+    "correct": true
+  },
+  {
+    "base": "XRP",
+    "timeframe": "4h",
+    "started_seconds": 484.92099999999846,
+    "finished_seconds": 485.09300000000076,
+    "elapsed_seconds": 0.1720000000022992,
+    "status": 200,
+    "body_bytes": 690249,
+    "correct": true
+  },
+  {
+    "base": "XRP",
+    "timeframe": "1d",
+    "started_seconds": 485.09300000000076,
+    "finished_seconds": 485.17099999999846,
+    "elapsed_seconds": 0.0779999999977008,
+    "status": 200,
+    "body_bytes": 244496,
+    "correct": true
+  },
+  {
+    "base": "BTC",
+    "timeframe": "1m",
+    "started_seconds": 540.1090000000004,
+    "finished_seconds": 540.3280000000013,
+    "elapsed_seconds": 0.21900000000096043,
+    "status": 200,
+    "body_bytes": 695217,
+    "correct": true
+  },
+  {
+    "base": "BTC",
+    "timeframe": "5m",
+    "started_seconds": 540.3280000000013,
+    "finished_seconds": 540.4840000000004,
+    "elapsed_seconds": 0.15599999999903957,
+    "status": 200,
+    "body_bytes": 691667,
+    "correct": true
+  },
+  {
+    "base": "BTC",
+    "timeframe": "15m",
+    "started_seconds": 540.4840000000004,
+    "finished_seconds": 540.655999999999,
+    "elapsed_seconds": 0.17199999999866122,
+    "status": 200,
+    "body_bytes": 690756,
+    "correct": true
+  },
+  {
+    "base": "BTC",
+    "timeframe": "1h",
+    "started_seconds": 540.655999999999,
+    "finished_seconds": 540.8590000000004,
+    "elapsed_seconds": 0.20300000000133878,
+    "status": 200,
+    "body_bytes": 690395,
+    "correct": true
+  },
+  {
+    "base": "BTC",
+    "timeframe": "4h",
+    "started_seconds": 540.8590000000004,
+    "finished_seconds": 541.0459999999985,
+    "elapsed_seconds": 0.18699999999807915,
+    "status": 200,
+    "body_bytes": 690247,
+    "correct": true
+  },
+  {
+    "base": "BTC",
+    "timeframe": "1d",
+    "started_seconds": 541.0459999999985,
+    "finished_seconds": 541.125,
+    "elapsed_seconds": 0.0790000000015425,
+    "status": 200,
+    "body_bytes": 244494,
+    "correct": true
+  },
+  {
+    "base": "DOGE",
+    "timeframe": "1m",
+    "started_seconds": 541.125,
+    "finished_seconds": 541.3430000000008,
+    "elapsed_seconds": 0.2180000000007567,
+    "status": 200,
+    "body_bytes": 695282,
+    "correct": true
+  },
+  {
+    "base": "DOGE",
+    "timeframe": "5m",
+    "started_seconds": 541.3430000000008,
+    "finished_seconds": 541.5,
+    "elapsed_seconds": 0.1569999999992433,
+    "status": 200,
+    "body_bytes": 691665,
+    "correct": true
+  },
+  {
+    "base": "DOGE",
+    "timeframe": "15m",
+    "started_seconds": 541.5,
+    "finished_seconds": 541.6870000000017,
+    "elapsed_seconds": 0.18700000000171713,
+    "status": 200,
+    "body_bytes": 690759,
+    "correct": true
+  },
+  {
+    "base": "DOGE",
+    "timeframe": "1h",
+    "started_seconds": 541.6870000000017,
+    "finished_seconds": 541.875,
+    "elapsed_seconds": 0.18799999999828287,
+    "status": 200,
+    "body_bytes": 690398,
+    "correct": true
+  },
+  {
+    "base": "DOGE",
+    "timeframe": "4h",
+    "started_seconds": 541.875,
+    "finished_seconds": 542.0620000000017,
+    "elapsed_seconds": 0.18700000000171713,
+    "status": 200,
+    "body_bytes": 690250,
+    "correct": true
+  },
+  {
+    "base": "DOGE",
+    "timeframe": "1d",
+    "started_seconds": 542.0620000000017,
+    "finished_seconds": 542.125,
+    "elapsed_seconds": 0.06299999999828287,
+    "status": 200,
+    "body_bytes": 244497,
+    "correct": true
+  },
+  {
+    "base": "ETH",
+    "timeframe": "1m",
+    "started_seconds": 542.125,
+    "finished_seconds": 542.3430000000008,
+    "elapsed_seconds": 0.2180000000007567,
+    "status": 200,
+    "body_bytes": 695283,
+    "correct": true
+  },
+  {
+    "base": "ETH",
+    "timeframe": "5m",
+    "started_seconds": 542.3430000000008,
+    "finished_seconds": 542.5,
+    "elapsed_seconds": 0.1569999999992433,
+    "status": 200,
+    "body_bytes": 691665,
+    "correct": true
+  },
+  {
+    "base": "ETH",
+    "timeframe": "15m",
+    "started_seconds": 542.5,
+    "finished_seconds": 542.6870000000017,
+    "elapsed_seconds": 0.18700000000171713,
+    "status": 200,
+    "body_bytes": 690758,
+    "correct": true
+  },
+  {
+    "base": "ETH",
+    "timeframe": "1h",
+    "started_seconds": 542.6870000000017,
+    "finished_seconds": 542.8899999999994,
+    "elapsed_seconds": 0.2029999999977008,
+    "status": 200,
+    "body_bytes": 690397,
+    "correct": true
+  },
+  {
+    "base": "ETH",
+    "timeframe": "4h",
+    "started_seconds": 542.8899999999994,
+    "finished_seconds": 543.0780000000013,
+    "elapsed_seconds": 0.18800000000192085,
+    "status": 200,
+    "body_bytes": 690249,
+    "correct": true
+  },
+  {
+    "base": "ETH",
+    "timeframe": "1d",
+    "started_seconds": 543.0780000000013,
+    "finished_seconds": 543.1399999999994,
+    "elapsed_seconds": 0.06199999999807915,
+    "status": 200,
+    "body_bytes": 244496,
+    "correct": true
+  },
+  {
+    "base": "SOL",
+    "timeframe": "1m",
+    "started_seconds": 543.1399999999994,
+    "finished_seconds": 543.375,
+    "elapsed_seconds": 0.23500000000058208,
+    "status": 200,
+    "body_bytes": 695286,
+    "correct": true
+  },
+  {
+    "base": "SOL",
+    "timeframe": "5m",
+    "started_seconds": 543.375,
+    "finished_seconds": 543.5459999999985,
+    "elapsed_seconds": 0.1709999999984575,
+    "status": 200,
+    "body_bytes": 691665,
+    "correct": true
+  },
+  {
+    "base": "SOL",
+    "timeframe": "15m",
+    "started_seconds": 543.5459999999985,
+    "finished_seconds": 543.7340000000004,
+    "elapsed_seconds": 0.18800000000192085,
+    "status": 200,
+    "body_bytes": 690758,
+    "correct": true
+  },
+  {
+    "base": "SOL",
+    "timeframe": "1h",
+    "started_seconds": 543.7340000000004,
+    "finished_seconds": 543.9370000000017,
+    "elapsed_seconds": 0.20300000000133878,
+    "status": 200,
+    "body_bytes": 690397,
+    "correct": true
+  },
+  {
+    "base": "SOL",
+    "timeframe": "4h",
+    "started_seconds": 543.9370000000017,
+    "finished_seconds": 544.125,
+    "elapsed_seconds": 0.18799999999828287,
+    "status": 200,
+    "body_bytes": 690249,
+    "correct": true
+  },
+  {
+    "base": "SOL",
+    "timeframe": "1d",
+    "started_seconds": 544.125,
+    "finished_seconds": 544.1870000000017,
+    "elapsed_seconds": 0.062000000001717126,
+    "status": 200,
+    "body_bytes": 244496,
+    "correct": true
+  },
+  {
+    "base": "XRP",
+    "timeframe": "1m",
+    "started_seconds": 544.1870000000017,
+    "finished_seconds": 544.375,
+    "elapsed_seconds": 0.18799999999828287,
+    "status": 200,
+    "body_bytes": 695285,
+    "correct": true
+  },
+  {
+    "base": "XRP",
+    "timeframe": "5m",
+    "started_seconds": 544.375,
+    "finished_seconds": 544.5620000000017,
+    "elapsed_seconds": 0.18700000000171713,
+    "status": 200,
+    "body_bytes": 691665,
+    "correct": true
+  },
+  {
+    "base": "XRP",
+    "timeframe": "15m",
+    "started_seconds": 544.5620000000017,
+    "finished_seconds": 544.7340000000004,
+    "elapsed_seconds": 0.17199999999866122,
+    "status": 200,
+    "body_bytes": 690758,
+    "correct": true
+  },
+  {
+    "base": "XRP",
+    "timeframe": "1h",
+    "started_seconds": 544.7340000000004,
+    "finished_seconds": 544.9370000000017,
+    "elapsed_seconds": 0.20300000000133878,
+    "status": 200,
+    "body_bytes": 690397,
+    "correct": true
+  },
+  {
+    "base": "XRP",
+    "timeframe": "4h",
+    "started_seconds": 544.9370000000017,
+    "finished_seconds": 545.125,
+    "elapsed_seconds": 0.18799999999828287,
+    "status": 200,
+    "body_bytes": 690249,
+    "correct": true
+  },
+  {
+    "base": "XRP",
+    "timeframe": "1d",
+    "started_seconds": 545.125,
+    "finished_seconds": 545.1870000000017,
+    "elapsed_seconds": 0.062000000001717126,
+    "status": 200,
+    "body_bytes": 244496,
+    "correct": true
+  }
+]

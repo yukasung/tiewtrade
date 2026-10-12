@@ -1,0 +1,11 @@
+{
+  "R2-C1": "PASSED",
+  "R2-C2": "FAILED_API_RESOURCE_LIMIT",
+  "R2-C3": "NOT_RUN_C2_FAILED",
+  "R2-C4": "PARTIAL_PHASE_TRACE_AND_R2_S_COVERAGE_PENDING",
+  "R2-C5": "NOT_RUN_C2_FAILED",
+  "R2-C6": "FAILED",
+  "R2-7": "PARTIAL_EXACT_525600_SLOT_CASE_MISSING",
+  "production_activation_allowed": false,
+  "note": "No threshold/workload/concurrency changes. This is not a rollout activation evidence bundle."
+}

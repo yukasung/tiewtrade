@@ -1,0 +1,4 @@
+﻿{
+    "R2-C1":  "ABORTED_HARNESS_ERROR",
+    "reason":  "Measurement wrapper SELECT denied by builder role. Removed extra query. Container stopped PID0 and removed, builder sessions and advisory lock absent. Dedicated fixture reset only; CLI reap rejected a container name because an immutable container ID is required."
+}

@@ -1,0 +1,242 @@
+"""Bounded, consistent candle scan for F-11."""
+
+import asyncio
+import hashlib
+import json
+from dataclasses import dataclass
+from datetime import UTC, datetime
+from decimal import Decimal
+from time import monotonic
+from typing import cast
+
+from sqlalchemy import RowMapping
+
+from tiewtrade.core.indicators import FORMULA_VERSION, IndicatorPoint, IndicatorStream
+from tiewtrade.core.market_data import (
+    Candle,
+    CandleFinality,
+    CandleSeries,
+    CandleWindow,
+    Timeframe,
+    bounded_windows,
+    expected_opens,
+)
+from tiewtrade.core.moments import require_aware
+from tiewtrade.core.money import Money, Quantity
+from tiewtrade.infra.crypto.indicator_cursor import DatasetChangedError
+from tiewtrade.infra.db.session import UserSession
+from tiewtrade.infra.indicators.session import IndicatorSourceSession
+from tiewtrade.infra.market_data.catalog import SOURCE
+from tiewtrade.infra.market_data.records import StoredCandle
+from tiewtrade.infra.market_data.storage import parameters
+
+
+def timestamp(moment: datetime) -> str:
+    return moment.astimezone(UTC).isoformat(timespec="microseconds")
+
+
+@dataclass(frozen=True, slots=True)
+class IndicatorRead:
+    points: tuple[IndicatorPoint, ...]
+    revision: str
+    refresh_first: datetime | None
+    refresh_more: bool
+    queue_status: str | None
+    failure_code: str | None
+
+
+async def query_budget(session: UserSession | IndicatorSourceSession, deadline: float) -> None:
+    remaining = int((deadline - monotonic()) * 1000)
+    if remaining <= 0:
+        raise TimeoutError()
+    await session.execute(
+        "SELECT set_config('statement_timeout', :value, true)", {"value": str(min(500, remaining))}
+    )
+    await session.execute(
+        "SELECT set_config('lock_timeout', :value, true)", {"value": str(min(200, remaining))}
+    )
+
+
+async def fetch_rows(
+    session: UserSession | IndicatorSourceSession,
+    base: str,
+    quote: str,
+    timeframe: Timeframe,
+    window: CandleWindow,
+) -> tuple[RowMapping, ...]:
+    result = await session.execute(
+        "SELECT source,base,quote,timeframe,open_at,end_at,open,high,low,close,volume,"
+        "finality,observed_at,fetch_started_at,last_checked_at FROM market_candles "
+        "WHERE source=:source AND base=:base AND quote=:quote AND timeframe=:timeframe "
+        "AND open_at>=:start AND open_at<:end ORDER BY open_at LIMIT 1000",
+        parameters(base, quote, timeframe) | {"start": window.start, "end": window.end},
+    )
+    return tuple(result.mappings())
+
+
+def decode_row(row: RowMapping, series: CandleSeries) -> StoredCandle:
+    if (row["source"], row["base"], row["quote"], row["timeframe"]) != (
+        SOURCE,
+        series.base,
+        series.quote,
+        series.timeframe.value,
+    ):
+        raise ValueError("different stored series")
+    candle = Candle(
+        series.base,
+        series.quote,
+        series.timeframe,
+        cast(datetime, row["open_at"]),
+        cast(datetime, row["end_at"]),
+        Money(cast(Decimal, row["open"]), series.quote),
+        Money(cast(Decimal, row["high"]), series.quote),
+        Money(cast(Decimal, row["low"]), series.quote),
+        Money(cast(Decimal, row["close"]), series.quote),
+        Quantity(cast(Decimal, row["volume"]), series.base),
+        CandleFinality(row["finality"]),
+        cast(datetime, row["observed_at"]),
+        series,
+    )
+    fetched, checked = (
+        cast(datetime, row["fetch_started_at"]),
+        cast(datetime, row["last_checked_at"]),
+    )
+    if fetched is not None:
+        require_aware("fetch_started_at", fetched)
+    require_aware("last_checked_at", checked)
+    if fetched is not None and fetched > checked:
+        raise ValueError("invalid fetch observation")
+    return StoredCandle(candle, fetched, checked)
+
+
+class IndicatorDigest:
+    """Canonical full dataset hash shared by API reference and prepared builder."""
+
+    def __init__(
+        self, base: str, quote: str, timeframe: Timeframe, calculation: CandleWindow
+    ) -> None:
+        self._digest = hashlib.sha256()
+        self._record(
+            [
+                1,
+                SOURCE,
+                base,
+                quote,
+                timeframe.value,
+                FORMULA_VERSION,
+                timestamp(calculation.start),
+                timestamp(calculation.end),
+            ]
+        )
+
+    def _record(self, value: list[object]) -> None:
+        self._digest.update(
+            json.dumps(value, separators=(",", ":"), ensure_ascii=True).encode() + b"\n"
+        )
+
+    def feed(self, moment: datetime, row: StoredCandle | None) -> None:
+        if row is None:
+            self._record([timestamp(moment), "MISSING"])
+        else:
+            candle = row.candle
+            self._record(
+                [
+                    timestamp(moment),
+                    timestamp(candle.end_at),
+                    candle.open.as_parts()["amount"],
+                    candle.high.as_parts()["amount"],
+                    candle.low.as_parts()["amount"],
+                    candle.close.as_parts()["amount"],
+                    candle.volume.as_parts()["quantity"],
+                    candle.finality.value,
+                    timestamp(candle.observed_at),
+                    timestamp(row.fetch_started_at) if row.fetch_started_at else None,
+                ]
+            )
+
+    def hexdigest(self) -> str:
+        return self._digest.hexdigest()
+
+
+async def read_indicators(
+    session: UserSession,
+    base: str,
+    quote: str,
+    timeframe: Timeframe,
+    calculation: CandleWindow,
+    output: CandleWindow,
+    as_of: datetime,
+    deadline: float,
+    revision: str | None = None,
+    *,
+    restored: IndicatorStream | None = None,
+    prepared_revision: str | None = None,
+) -> IndicatorRead:
+    parameters(base, quote, timeframe)
+    if (restored is None) != (prepared_revision is None):
+        raise ValueError("prepared stream and revision required together")
+    digest = IndicatorDigest(base, quote, timeframe, calculation) if restored is None else None
+    stream = restored or IndicatorStream(base, quote, timeframe, as_of)
+    points: list[IndicatorPoint] = []
+    refresh_first: datetime | None = None
+    refresh_more = False
+    for batch in bounded_windows(calculation, timeframe):
+        await query_budget(session, deadline)
+        rows = {
+            cast(datetime, row["open_at"]): row
+            for row in await fetch_rows(session, base, quote, timeframe, batch)
+        }
+        opens = iter(expected_opens(batch, timeframe))
+        while True:
+            moments = tuple(next(opens, None) for _ in range(16))
+            slots: list[tuple[datetime, Candle | None, datetime | None]] = []
+            for moment in moments:
+                if moment is None:
+                    break
+                raw = rows.get(moment)
+                row = decode_row(raw, stream.series) if raw is not None else None
+                if digest is not None:
+                    digest.feed(moment, row)
+                slots.append(
+                    (moment, row.candle if row else None, row.fetch_started_at if row else None)
+                )
+            if not slots:
+                break
+            selected = tuple(
+                i for i, (moment, _, _) in enumerate(slots) if output.start <= moment < output.end
+            )
+            result = stream.feed_batch(tuple(slots), output_indices=selected)
+            points.extend(result.points)
+            for index in selected:
+                dependency = result.refresh_dependencies[index]
+                if dependency is not None:
+                    if refresh_first is None:
+                        refresh_first = dependency
+                    elif dependency >= refresh_first + timeframe.span * 1000:
+                        refresh_more = True
+            if monotonic() >= deadline:
+                raise TimeoutError()
+            await asyncio.sleep(0)
+    result_revision = digest.hexdigest() if digest is not None else cast(str, prepared_revision)
+    if revision is not None and result_revision != revision:
+        raise DatasetChangedError()
+    await query_budget(session, deadline)
+    demand = (
+        (
+            await session.execute(
+                "SELECT status,failure_code FROM market_candle_demand "
+                "WHERE source=:source AND base=:base AND quote=:quote AND timeframe=:timeframe",
+                parameters(base, quote, timeframe),
+            )
+        )
+        .mappings()
+        .first()
+    )
+    return IndicatorRead(
+        tuple(points),
+        result_revision,
+        refresh_first,
+        refresh_more,
+        str(demand["status"]) if demand else None,
+        str(demand["failure_code"]) if demand and demand["failure_code"] else None,
+    )

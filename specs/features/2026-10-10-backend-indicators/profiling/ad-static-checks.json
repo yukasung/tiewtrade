@@ -1,0 +1,35 @@
+[
+  {
+    "command": [
+      "ruff.exe",
+      "check",
+      "."
+    ],
+    "exit_code": 0,
+    "output": "All checks passed!\n"
+  },
+  {
+    "command": [
+      "ruff.exe",
+      "format",
+      "--check",
+      "."
+    ],
+    "exit_code": 0,
+    "output": "380 files already formatted\n"
+  },
+  {
+    "command": [
+      "mypy.exe"
+    ],
+    "exit_code": 0,
+    "output": "Success: no issues found in 352 source files\n"
+  },
+  {
+    "command": [
+      "lint-imports.exe"
+    ],
+    "exit_code": 0,
+    "output": "\n╔══╗─────────▶╔╗ ╔╗      ╔╗◀───┐\n╚╣╠╝◀─────┐  ╔╝╚╗║║────▶╔╝╚╗   │\n ║║   ╔══╦══╦╩╗╔╝║║  ╔╦═╩╗╔╝╔═╦══╗\n ║║╔══╣╔╗║╔╗║╔╣║ ║║ ╔╬╣╔╗║║ ║│║╔═╝\n╔╣╠╣║║║╚╝║╚╝║║║╚╗║╚═╝║║║║║╚╗║═╣║\n╚══╩╩╩╣╔═╩══╩╝╚═╝╚═══╩╩╝╚╩═╩╩═╩╝\n  └──▶║║                    ▲ \n      ╚╝────────────────────┘\n\n\n---------\nContracts\n---------\n\nAnalyzed 186 files, 1055 dependencies.\n--------------------------------------\n\ncore ไม่พึ่งอะไรเลยนอกจาก standard library KEPT\nstrategies, venues, infra พึ่งกันเองไม่ได้ และพึ่ง service ไม่ได้ KEPT\nstrategies, venues, infra ห้ามพึ่ง service KEPT\nservice ห้าม import กันเอง KEPT\nส่วนกลางของ venues ห้ามพึ่งไลบรารีเครือข่าย KEPT\nการแปลข้อมูลของตัวเชื่อม Binance TH ห้ามรู้จักเครือข่าย KEPT\nstrategies must not reach realtime network clients KEPT\n\nContracts: 7 kept, 0 broken.\n"
+  }
+]
