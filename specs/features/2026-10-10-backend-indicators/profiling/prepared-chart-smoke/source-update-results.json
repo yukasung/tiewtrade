@@ -1,0 +1,113 @@
+{
+  "results": [
+    {
+      "label": "initial-1h",
+      "timeframe": "1h",
+      "requestMs": 204.2876,
+      "bodyMs": 777,
+      "displayMs": 1196.4462,
+      "candlePixels": 45094,
+      "generation": "03ea7f44-cc88-4986-957e-f3cbdcbda807",
+      "candles": 1000,
+      "rows": 1000,
+      "lastOpen": "2026-10-13T13:00:00Z",
+      "close": "100.285",
+      "ema20": "100.293195605937993115"
+    },
+    {
+      "label": "source-proof",
+      "http": 200,
+      "body": {
+        "status": "CHANGED",
+        "checked_at": "2026-10-13T14:18:57.638633Z",
+        "calculation_start": "2025-10-13T14:10:00Z",
+        "calculation_end": "2026-10-13T14:05:00Z"
+      }
+    },
+    {
+      "label": "source-update",
+      "proofStatus": "CHANGED",
+      "indicatorsHidden": true,
+      "note": "Write triggered after request start; completion ordering is not a transaction barrier test."
+    }
+  ],
+  "errors": [],
+  "http": [
+    {
+      "path": "/api/auth/csrf",
+      "status": 200
+    },
+    {
+      "path": "/api/auth/me",
+      "status": 401
+    },
+    {
+      "path": "/api/auth/csrf",
+      "status": 200
+    },
+    {
+      "path": "/api/auth/me",
+      "status": 401
+    },
+    {
+      "path": "/api/auth/login",
+      "status": 200
+    },
+    {
+      "path": "/api/auth/me",
+      "status": 200
+    },
+    {
+      "path": "/api/market-data/candles",
+      "status": 200
+    },
+    {
+      "path": "/api/market-data/chart/live",
+      "status": 200
+    },
+    {
+      "path": "/api/market-data/chart/history",
+      "status": 200
+    },
+    {
+      "path": "/api/market-data/candles",
+      "status": 200
+    },
+    {
+      "path": "/api/market-data/chart/live",
+      "status": 200
+    },
+    {
+      "path": "/api/market-data/chart/history",
+      "status": 200
+    },
+    {
+      "path": "/api/market-data/chart/verify",
+      "status": 200
+    },
+    {
+      "path": "/api/market-data/chart/live",
+      "status": 200
+    },
+    {
+      "path": "/api/market-data/chart/live",
+      "status": 200
+    },
+    {
+      "path": "/api/market-data/chart/live",
+      "status": 200
+    },
+    {
+      "path": "/api/market-data/chart/live",
+      "status": 200
+    },
+    {
+      "path": "/api/market-data/chart/live",
+      "status": 200
+    },
+    {
+      "path": "/api/market-data/chart/live",
+      "status": 200
+    }
+  ]
+}

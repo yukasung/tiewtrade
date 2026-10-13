@@ -15,10 +15,11 @@ from tiewtrade.core.money.indicator_batch import (
     IndicatorBatchInput,
     IndicatorBatchState,
     advance_indicator_batch,
+    reset_indicator_batch,
 )
 
 ROUNDING = RoundingDirection.TOWARD_NEGATIVE
-NAMES = ("ema20", "ema50", "ema200", "rsi14", "macd_line", "macd_signal", "macd_histogram", "atr14")
+NAMES = ("ema20", "ema50", "ema200", "rsi14", "atr14")
 
 
 class IndicatorStatus(StrEnum):
@@ -169,6 +170,28 @@ class IndicatorStream:
                 raise ValueError("different candle series")
             if fetched is not None:
                 require_aware("fetch_started_at", fetched)
+        if all(candle is None for _, candle, _ in slots):
+            result = reset_indicator_batch(
+                self.state,
+                tuple(moment for moment, _, _ in slots),
+                output_indices=output_indices,
+            )
+            self.state = result.state
+            self.seed = None
+            self.blocked = self.unconfirmed = False
+            self.refresh_dependency = None
+            return StreamBatch(
+                tuple(
+                    IndicatorPoint(
+                        slots[index][0],
+                        None,
+                        None,
+                        {name: IndicatorValue(None, IndicatorStatus.GAP) for name in NAMES},
+                    )
+                    for index, _ in result.outputs
+                ),
+                (None,) * len(slots),
+            )
         seed, blocked, unconfirmed, dependency = (
             self.seed,
             self.blocked,

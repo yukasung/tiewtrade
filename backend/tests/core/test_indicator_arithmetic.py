@@ -20,6 +20,7 @@ from tiewtrade.core.money import (
     advance_indicator_batch,
     divide_money,
     percentage_share,
+    reset_indicator_batch,
     weighted_mean_money,
 )
 from tiewtrade.core.money.rounding import rounded_quotient
@@ -83,7 +84,7 @@ def test_batch_rejects_invalid_public_state_and_events() -> None:
     state = IndicatorBatchState("BTC", "USDT", "1m", timedelta(minutes=1))
     moment = datetime(2026, 10, 10, tzinfo=UTC)
     bad_gain = list(state.averages)
-    bad_gain[6] = AverageState(value=Money.of(-1, "USDT"))
+    bad_gain[3] = AverageState(value=Money.of(-1, "USDT"))
     with pytest.raises(InvalidInputTypeError):
         replace(state, last_open=moment, previous=Money.of(100, "USDT"), averages=tuple(bad_gain))
     with pytest.raises(InvalidInputTypeError):
@@ -113,6 +114,110 @@ def test_batch_rejects_invalid_public_state_and_events() -> None:
         )
 
 
+@pytest.mark.parametrize("batch_size", [1, 2, 16])
+@pytest.mark.parametrize("populated", [False, True])
+def test_all_reset_batch_exactly_clears_state(batch_size: int, populated: bool) -> None:
+    span = timedelta(minutes=1)
+    start = datetime(2026, 10, 10, tzinfo=UTC)
+    state = IndicatorBatchState("BTC", "USDT", "1m", span)
+    if populated:
+        price = Money.of(100, "USDT")
+        state = advance_indicator_batch(
+            state,
+            (
+                IndicatorBatchInput(
+                    start,
+                    BatchAction.ACCEPT,
+                    "BTC",
+                    "USDT",
+                    "1m",
+                    price,
+                    Money.of(101, "USDT"),
+                    Money.of(99, "USDT"),
+                ),
+            ),
+            output_indices=(),
+            rounding=FLOOR,
+        ).state
+        first_reset = start + span
+    else:
+        first_reset = start
+    inputs = tuple(
+        IndicatorBatchInput(
+            first_reset + index * span,
+            BatchAction.RESET,
+            "BTC",
+            "USDT",
+            "1m",
+        )
+        for index in range(batch_size)
+    )
+    output_sets = ((), (0,), tuple(range(batch_size)))
+    for output_indices in output_sets:
+        result = advance_indicator_batch(
+            state,
+            inputs,
+            output_indices=output_indices,
+            rounding=FLOOR,
+        )
+        assert result == reset_indicator_batch(
+            state, tuple(i.open_at for i in inputs), output_indices=output_indices
+        )
+        assert result.state == IndicatorBatchState(
+            "BTC",
+            "USDT",
+            "1m",
+            span,
+            last_open=inputs[-1].open_at,
+        )
+        assert result.outputs == tuple((index, (None,) * 5) for index in output_indices)
+
+
+def test_reset_batch_matches_mature_transition_and_rejects_bad_bounds() -> None:
+    span = timedelta(minutes=1)
+    start = datetime(2026, 10, 10, tzinfo=UTC)
+    price = Money.of(100, "USDT")
+    state = IndicatorBatchState("BTC", "USDT", "1m", span)
+    for offset in range(0, 208, 16):
+        accepted = tuple(
+            IndicatorBatchInput(
+                start + index * span,
+                BatchAction.ACCEPT,
+                "BTC",
+                "USDT",
+                "1m",
+                price,
+                Money.of(101, "USDT"),
+                Money.of(99, "USDT"),
+            )
+            for index in range(offset, offset + 16)
+        )
+        state = advance_indicator_batch(state, accepted, output_indices=(), rounding=FLOOR).state
+    assert state.accepted_count == 208
+    opens = tuple(start + (208 + index) * span for index in range(16))
+    resets = tuple(
+        IndicatorBatchInput(moment, BatchAction.RESET, "BTC", "USDT", "1m") for moment in opens
+    )
+    expected = advance_indicator_batch(
+        state,
+        resets,
+        output_indices=(0, 7, 15),
+        rounding=FLOOR,
+    )
+    assert reset_indicator_batch(state, opens, output_indices=(0, 7, 15)) == expected
+    invalid = (
+        (),
+        (*opens, opens[-1] + span),
+        (opens[0], opens[0] + 2 * span),
+        (opens[0].replace(tzinfo=None),),
+    )
+    for moments in invalid:
+        with pytest.raises(InvalidInputTypeError):
+            reset_indicator_batch(state, moments, output_indices=())
+    with pytest.raises(InvalidInputTypeError):
+        reset_indicator_batch(state, opens, output_indices=(True,))
+
+
 def test_warm_gain_loss_validation_handles_up_down_flat_and_hold() -> None:
     state = IndicatorBatchState("BTC", "USDT", "1m", timedelta(minutes=1))
     start = datetime(2026, 10, 10, tzinfo=UTC)
@@ -140,8 +245,8 @@ def test_warm_gain_loss_validation_handles_up_down_flat_and_hold() -> None:
     )
     state = advance_indicator_batch(state, inputs, output_indices=(), rounding=FLOOR).state
     zero, tick = Money.of(0, "USDT"), Money.of("0.000000000000000001", "USDT")
-    assert state.averages[6].pending == (tick, zero, zero)
-    assert state.averages[7].pending == (zero, tick, zero)
+    assert state.averages[3].pending == (tick, zero, zero)
+    assert state.averages[4].pending == (zero, tick, zero)
     held = advance_indicator_batch(
         state,
         (IndicatorBatchInput(start + timedelta(minutes=4), BatchAction.HOLD, "BTC", "USDT", "1m"),),
@@ -151,11 +256,11 @@ def test_warm_gain_loss_validation_handles_up_down_flat_and_hold() -> None:
     assert held.accepted_count == state.accepted_count
     assert held.averages == state.averages
     invalid = list(state.averages)
-    invalid[7] = AverageState(pending=(tick, tick, zero))
+    invalid[4] = AverageState(pending=(tick, tick, zero))
     with pytest.raises(InvalidInputTypeError, match="both be positive"):
         replace(state, averages=tuple(invalid))
     invalid_range = list(state.averages)
-    invalid_range[8] = AverageState(pending=(zero, Money.of(2, "USDT"), Money.of(2, "USDT")))
+    invalid_range[5] = AverageState(pending=(zero, Money.of(2, "USDT"), Money.of(2, "USDT")))
     with pytest.raises(InvalidInputTypeError, match="true range is below gain plus loss"):
         replace(state, averages=tuple(invalid_range))
 
@@ -179,18 +284,18 @@ def test_mature_wilder_gain_and_loss_can_both_be_positive() -> None:
     )
     state = advance_indicator_batch(state, inputs, output_indices=(), rounding=FLOOR).state
     assert state.accepted_count == 16
-    assert state.averages[6].value is not None and state.averages[7].value is not None
-    assert state.averages[6].value > Money.of(0, "USDT")
-    assert state.averages[7].value > Money.of(0, "USDT")
-    lower_bound = state.averages[6].value + state.averages[7].value
+    assert state.averages[3].value is not None and state.averages[4].value is not None
+    assert state.averages[3].value > Money.of(0, "USDT")
+    assert state.averages[4].value > Money.of(0, "USDT")
+    lower_bound = state.averages[3].value + state.averages[4].value
     averages = list(state.averages)
-    averages[8] = AverageState(value=lower_bound)
+    averages[5] = AverageState(value=lower_bound)
     boundary = replace(state, averages=tuple(averages))
-    assert boundary.averages[8].value == lower_bound
-    averages[8] = AverageState(value=lower_bound - Money.of("0.000000000000000001", "USDT"))
+    assert boundary.averages[5].value == lower_bound
+    averages[5] = AverageState(value=lower_bound - Money.of("0.000000000000000001", "USDT"))
     with pytest.raises(InvalidInputTypeError, match="mature ATR is below"):
         replace(state, averages=tuple(averages))
-    averages[6] = averages[7] = AverageState(value=Money.of("90000000000000000000", "USDT"))
-    averages[8] = AverageState(value=Money.of("90000000000000000000", "USDT"))
+    averages[3] = averages[4] = AverageState(value=Money.of("90000000000000000000", "USDT"))
+    averages[5] = AverageState(value=Money.of("90000000000000000000", "USDT"))
     with pytest.raises(InvalidInputTypeError, match="mature ATR is below"):
         replace(state, averages=tuple(averages))

@@ -4,6 +4,7 @@ import { ApiRequestError, send } from "../auth";
 export type ChartHistory = components["schemas"]["ChartHistoryView"];
 export type ChartLive = components["schemas"]["ChartLiveView"];
 export type ChartProof = components["schemas"]["ChartProofView"];
+export type CandleHistory = components["schemas"]["CandleHistoryView"];
 export type Candle = components["schemas"]["CandleView"];
 export type Point = components["schemas"]["IndicatorPointView"];
 export type Timeframe = components["schemas"]["Timeframe"];
@@ -14,7 +15,7 @@ export type HistoryParameters = (Series & Partial<Window>) | { cursor: string };
 /** Bound bytes before JSON decoding or caching, including responses without Content-Length. */
 async function get<T>(path: string, parameters: object, signal: AbortSignal): Promise<T> {
   const query = new URLSearchParams(parameters as Record<string, string>);
-  const response = await fetch(`/api/market-data/chart/${path}?${query}`, {
+  const response = await fetch(`/api/market-data/${path}?${query}`, {
     credentials: "same-origin", signal,
   });
   const reader = response.body?.getReader();
@@ -50,10 +51,22 @@ async function get<T>(path: string, parameters: object, signal: AbortSignal): Pr
 }
 
 export function history(parameters: HistoryParameters, signal: AbortSignal): Promise<ChartHistory> {
-  return get("history", parameters, signal);
+  return get("chart/history", parameters, signal);
 }
 export function live(series: Series, signal: AbortSignal): Promise<ChartLive> {
-  return get("live", series, signal);
+  return get("chart/live", series, signal);
+}
+export async function candles(series: Series, window: Window | undefined, signal: AbortSignal): Promise<CandleHistory> {
+  const result = await get<CandleHistory>("candles", { ...series, ...window, limit: "1000" }, signal);
+  if (signal.aborted) throw signal.reason;
+  if (result.base !== series.base || result.quote !== series.quote || result.timeframe !== series.timeframe ||
+      !Array.isArray(result.rows) || result.rows.length > 1000 ||
+      !["PRESENT", "INCOMPLETE", "UNAVAILABLE"].includes(result.coverage) ||
+      !Array.isArray(result.gaps) || !result.requested ||
+      !Number.isFinite(Date.parse(result.observed_at))) {
+    throw new ApiRequestError("CHART_INVALID_RESPONSE", 503);
+  }
+  return result;
 }
 export function verify(display_proof: string, signal: AbortSignal): Promise<ChartProof> {
   return send("/market-data/chart/verify", { display_proof }, undefined, "POST", signal);

@@ -1,8 +1,41 @@
 # F-11 — คำนวณ indicator ที่ backend — Plan
 
 สถานะ: **Approved** — เจ้าของอนุมัติทั้งฉบับเมื่อ 2026-10-10 ตามคำสั่ง “approve”; requirements อนุมัติและ NC-30..33 ปิดแล้ว; รวมNC-35 amendmentsที่อนุมัติเมื่อ2026-10-10
+การลบ MACD ด้านล่าง: **Approved** — เจ้าของอนุมัติ amendment เมื่อ 2026-10-13
 วันที่: 2026-10-10
 Branch: feature/f-11-backend-indicators
+
+## Amendment — ลบ MACD ทั้งระบบ (Approved 2026-10-13)
+
+ขอบเขต: แทนเฉพาะชุดผล indicator และ state/rollout ที่พึ่ง MACD ในแผนเดิม;
+สูตร EMA20/50/200, RSI14, ATR14 และสัญญาความปลอดภัยอื่นคงเดิม.
+
+1. ใช้ `core/money/indicator_batch.py` และ `core/indicators.py` เดิมต่อ:
+   ตัด EMA12/26, MACD signal state และผล MACD ทั้งสามออกจาก kernel, NAMES,
+   output tuple และ guard ของ state. ปรับ index/seed/RESET/HOLD อย่างเป็นระบบ;
+   ไม่เปลี่ยนสูตร/การปัดของ EMA20/50/200, RSI14, ATR14. เพิ่ม parity oracle
+   ของชุดที่เหลือและกรณี gap, overflow, warm-up, checkpoint restore.
+2. กำหนด `FORMULA_VERSION = indicators-v2` และ `CODEC_VERSION = 2` เพราะ state
+   และผลลัพธ์เปลี่ยนรูป. ปรับ `infra/indicators/codec.py`, capabilities, claims,
+   reader/builder/cursor ให้รับเฉพาะ schema และรุ่นที่ตรงกัน; ไม่ decode checkpoint
+   v1 เป็น v2. ไม่ให้ cache หรือ ready head v1 ปรากฏใน API v2.
+3. เพิ่ม migration ใหม่ (ไม่แก้ migration เดิม) เพื่อเปลี่ยน SQL functions/job
+   และ rollout gates ที่ฝัง `indicators-v1`/codec 1 ให้รองรับรุ่นใหม่.
+   ก่อนเปลี่ยน control ต้อง PAUSED, drain writer/API/worker เก่า และตรวจ inventory
+   replica; ใช้ rollout epoch ใหม่. เก็บผล/ checkpoint v1 แยกด้วย version เดิม
+   ตาม retention/rollback policy เดิม ไม่ลบหรือแปลงเป็น v2. สร้างงาน v2 ใหม่;
+   ให้ LEGACY v2 กลับมาอ่านได้ก่อนพิจารณา PREPARED v2 ตาม gate เดิม.
+4. ปรับ API/generated contract เฉพาะรายการผลที่ส่ง: ไม่มี MACD ในผลใหม่;
+   error, auth, pagination, exact-value, proof และ retry contract เดิมคงอยู่.
+   ข้อมูลหรือ cursor v1 ที่ส่งเข้าระบบ v2 ต้องถูกปฏิเสธอย่างมีขอบเขต
+   ไม่ตอบข้อมูลผสมหรือ fallback เป็น v1.
+5. ตรวจ diff/dependencies ก่อนทดสอบ. รัน core arithmetic/parity/codec,
+   actual-role PostgreSQL migration/rollout/readers, API contract และ
+   concurrency/retry regression ที่กระทบ; ไม่ส่งออเดอร์ Live.
+   บันทึก full workload ที่เลื่อนเป็น Pending Full Validation ตามกฎเดิม.
+
+หยุด implementation หาก inventory/drain หรือ migration รองรับการแยกรุ่นอย่าง
+ปลอดภัยไม่ได้; เสนอ amendment เพิ่มก่อนเปลี่ยนสัญญา rollout ที่อนุมัติไว้.
 
 ## R2-D1 first-release amendment — Approved 2026-10-11
 

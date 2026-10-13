@@ -25,6 +25,14 @@ async function registerAccount(page: Page): Promise<string> {
   return email;
 }
 
+function waitForLiveStatus(page: Page, expected: string[]) {
+  return page.waitForResponse(async response => {
+    if (!response.url().includes("/market-data/chart/live") || response.status() !== 200) return false;
+    const body = await response.json() as { status?: string };
+    return body.status !== undefined && expected.includes(body.status);
+  });
+}
+
 function producer(script: string) {
   const directory = mkdtempSync(join(tmpdir(), "tiewtrade-chart-"));
   const control = join(directory, "control");
@@ -66,7 +74,7 @@ test.beforeEach(({ page }) => {
   }
 });
 
-test("actual chart panes, exact values, languages and keyboard selection", async ({ page }) => {
+test("actual chart panes, exact values and keyboard selection", async ({ page }) => {
   const errors: string[] = [];
   const requests: string[] = [];
   page.on("pageerror", error => errors.push(error.message));
@@ -83,18 +91,18 @@ test("actual chart panes, exact values, languages and keyboard selection", async
   await expect(chart).toBeVisible();
   await expect(chart.getByText("100.000000000000000001 USDT", { exact: true })).toBeVisible({ timeout: 60_000 });
   await expect(chart.locator("canvas").first()).toBeVisible();
-  await chart.getByLabel("RSI14", { exact: true }).check();
-  await chart.getByLabel("MACD_LINE", { exact: true }).check();
-  await chart.getByLabel("ATR14", { exact: true }).check();
-  await chart.getByRole("button", { name: "แท่งก่อนหน้า" }).click();
-  await chart.getByRole("combobox", { name: "ภาษา", exact: true }).selectOption("en");
-  await expect(chart.getByRole("heading", { name: "Candlestick chart" })).toBeVisible();
+  await expect(chart.getByRole("button", { name: "รีเซ็ตกราฟ" })).toBeEnabled();
+  await expect(chart.getByLabel("MACD_LINE", { exact: true })).toHaveCount(0);
+  for (const name of ["EMA20", "EMA50", "EMA200", "RSI14", "ATR14"]) {
+    await expect(chart.getByText(name, { exact: true })).toHaveCount(0);
+  }
+  await expect(chart.getByRole("combobox", { name: "ภาษา", exact: true })).toHaveCount(0);
+  await expect(chart.getByRole("heading", { name: "กราฟแท่งเทียน" })).toBeVisible();
   for (const width of [375, 768, 1440]) {
     await page.setViewportSize({ width, height: 1000 });
     await expect(chart.locator("canvas").first()).toBeVisible();
     await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= globalThis.innerWidth)).toBe(true);
   }
-  await expect(chart.getByRole("link", { name: /TradingView Lightweight Charts/ })).toBeVisible();
   await expect(chart.getByRole("link", { name: "Charting by TradingView", exact: true })).toBeVisible();
   await page.screenshot({ path: "../specs/features/2026-10-12-candlestick-chart/evidence/chart-browser.png", fullPage: true });
   expect(errors).toEqual([]);
@@ -149,12 +157,16 @@ test("source mutation hides overlays and live snapshots recover after disconnect
   await registerAccount(page);
   const chart = page.getByTestId("candlestick-chart");
   await expect(chart.getByText("100.000000000000000001 USDT", { exact: true })).toBeVisible({ timeout: 60_000 });
+  let live = waitForLiveStatus(page, ["READY"]);
   fixture("preview");
-  await expect(chart.getByText("ท่อแท่งเทียนสด: พร้อม ณ เวลาที่ server ตรวจ")).toBeVisible({ timeout: 10_000 });
+  await live;
+  live = waitForLiveStatus(page, ["RECOVERING", "STALE"]);
   fixture("disconnect");
-  await expect(chart.getByText(/ท่อแท่งเทียนสด: กำลังกู้คืน|ท่อแท่งเทียนสด: ข้อมูลเก่า/)).toBeVisible({ timeout: 10_000 });
+  await live;
+  live = waitForLiveStatus(page, ["READY"]);
   fixture("preview");
-  await expect(chart.getByText("ท่อแท่งเทียนสด: พร้อม ณ เวลาที่ server ตรวจ")).toBeVisible({ timeout: 10_000 });
+  await live;
+  await expect(chart.locator(".chart-status")).toHaveCount(0);
   const rebuilt = page.waitForResponse(response => response.url().includes("/chart/history") && response.status() === 200);
   fixture("mutate");
   const changed = page.waitForResponse(async response => response.url().endsWith("/chart/verify") &&
@@ -164,17 +176,15 @@ test("source mutation hides overlays and live snapshots recover after disconnect
   await expect.poll(() => reads).toBe(2);
 });
 
-test("gap selection has no fabricated OHLC and logout stops chart requests", async ({ page }) => {
+test("removed manual controls stay absent and logout stops chart requests", async ({ page }) => {
   fixture("gap");
   await registerAccount(page);
   const chart = page.getByTestId("candlestick-chart");
   await expect(chart.getByText("100.000000000000000001 USDT", { exact: true })).toBeVisible({ timeout: 60_000 });
-  await expect(chart.getByRole("button", { name: "แท่งถัดไป" })).toBeDisabled();
-  // Keyboard activation avoids moving the pointer across the chart while scrolling
-  // to the control, which would change the selection through the crosshair.
-  await chart.getByRole("button", { name: "แท่งก่อนหน้า" }).press("Enter");
-  await expect(chart.locator(".chart-selection")).toContainText("ช่องว่างของข้อมูล");
-  await expect(chart.locator(".chart-selection dl")).toHaveCount(0);
+  for (const name of ["กลับช่วงล่าสุด", "เพิ่มประวัติก่อนหน้า", "ลองใหม่", "ขอ refresh ประวัติ",
+    "แท่งก่อนหน้า", "แท่งถัดไป"]) {
+    await expect(chart.getByRole("button", { name })).toHaveCount(0);
+  }
   let calls = 0;
   page.on("request", request => { if (request.url().includes("/market-data/chart/")) calls += 1; });
   await page.getByRole("link", { name: "บัญชี", exact: true }).click();
@@ -208,7 +218,7 @@ test("password login, series switching and actual latest-price worker", async ({
   } finally { await quotes.stop(); }
 });
 
-test("ended preview waits for actual REST commit before new indicator bundle", async ({ page }) => {
+test("ended preview waits for actual REST commit before the revised history response", async ({ page }) => {
   fixture("needs-refresh");
   await registerAccount(page);
   const chart = page.getByTestId("candlestick-chart");
@@ -216,37 +226,9 @@ test("ended preview waits for actual REST commit before new indicator bundle", a
   fixture("rollover");
   const revised = page.waitForResponse(response => response.url().includes("/chart/history") && response.status() === 200);
   fixture("repair");
-  await revised;
-  // The newest selected slot is still the open preview; inspect the last ended
-  // history slot to prove that the real REST value reached the bundle and UI.
-  await chart.getByRole("button", { name: "แท่งก่อนหน้า" }).press("Enter");
-  await expect(chart.locator(".chart-selection").getByText("100.75 USDT", { exact: true }).first()).toBeVisible();
-});
-
-test("manual refresh reaches the real worker and failed polling stops", async ({ page }) => {
-  fixture("needs-refresh");
-  await registerAccount(page);
-  const chart = page.getByTestId("candlestick-chart");
-  const posted = page.waitForResponse(response => response.url().endsWith("/candles/requests") &&
-    response.request().method() === "POST" && response.status() === 202);
-  await chart.getByRole("button", { name: "ขอ refresh ประวัติ", exact: true }).click();
-  await posted;
-  fixture("repair");
-  await expect(chart.locator(".chart-selection").getByText("100.75 USDT", { exact: true }).first()).toBeVisible({ timeout: 20_000 }).catch(async (error: unknown) => {
-    if (process.env.CHART_E2E_DIAGNOSTICS === "1") process.stdout.write(await chart.innerText());
-    throw error;
-  });
-  fixture("needs-refresh");
-  await chart.getByRole("button", { name: "ลองใหม่", exact: true }).click();
-  // Failure injection is confined to F-09 polling; the successful path above is real.
-  await page.route(/\/api\/market-data\/candles\?/, route => route.fulfill({
-    status: 200, contentType: "application/json", body: JSON.stringify({ status: "FAILED" }),
-  }));
-  const failedPost = page.waitForResponse(response => response.url().endsWith("/candles/requests") &&
-    response.request().method() === "POST");
-  await chart.getByRole("button", { name: "ขอ refresh ประวัติ", exact: true }).click();
-  await failedPost;
-  await expect(chart.getByRole("alert")).toBeVisible({ timeout: 15_000 });
+  const response = await revised;
+  const body = await response.json() as { candles: Array<{ close: string }> };
+  expect(body.candles.some(candle => candle.close === "100.75")).toBe(true);
 });
 
 test("browser network loss and a restarted fenced candle worker recover from PG", async ({ page, context }) => {
@@ -254,14 +236,18 @@ test("browser network loss and a restarted fenced candle worker recover from PG"
   try {
     await registerAccount(page);
     const chart = page.getByTestId("candlestick-chart");
-    await expect(chart.getByText("ท่อแท่งเทียนสด: พร้อม ณ เวลาที่ server ตรวจ")).toBeVisible({ timeout: 15_000 });
+    await waitForLiveStatus(page, ["READY"]);
     await context.setOffline(true);
-    await expect(chart.getByText(/ท่อแท่งเทียนสด: การเชื่อมต่อขาด|ท่อแท่งเทียนสด: ออฟไลน์/)).toBeVisible();
+    await expect.poll(() => page.evaluate(() => globalThis.navigator.onLine)).toBe(false);
+    const online = waitForLiveStatus(page, ["READY"]);
     await context.setOffline(false);
-    await expect(chart.getByText("ท่อแท่งเทียนสด: พร้อม ณ เวลาที่ server ตรวจ")).toBeVisible({ timeout: 15_000 });
+    await online;
+    const recovering = waitForLiveStatus(page, ["RECOVERING", "STALE"]);
     await worker.stop();
-    await expect(chart.getByText(/ท่อแท่งเทียนสด: กำลังกู้คืน|ท่อแท่งเทียนสด: ข้อมูลเก่า/)).toBeVisible({ timeout: 10_000 });
+    await recovering;
+    const ready = waitForLiveStatus(page, ["READY"]);
     worker = producer("tests/e2e_candle_runner.py");
-    await expect(chart.getByText("ท่อแท่งเทียนสด: พร้อม ณ เวลาที่ server ตรวจ")).toBeVisible({ timeout: 15_000 });
+    await ready;
+    await expect(chart.locator(".chart-status")).toHaveCount(0);
   } finally { await worker.stop(); }
 });

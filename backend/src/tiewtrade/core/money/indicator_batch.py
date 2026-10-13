@@ -13,15 +13,12 @@ from tiewtrade.core.money.rounding import RoundingDirection
 from tiewtrade.core.money.types import Money, Quantity
 from tiewtrade.core.money.validation import ensure_canonical_unit, ensure_in_range
 
-FORMULA_VERSION = "indicators-v1"
+FORMULA_VERSION = "indicators-v2"
 # NC-30 transition parameters; the single-step entry point uses this same kernel.
 _AVERAGES = (
-    (12, 11, 2),
     (20, 19, 2),
-    (26, 25, 2),
     (50, 49, 2),
     (200, 199, 2),
-    (9, 8, 2),
     (14, 13, 1),
     (14, 13, 1),
     (14, 13, 1),
@@ -83,9 +80,7 @@ class IndicatorBatchState:
                 raise InvalidInputTypeError("invalid warm-up state")
             count = (
                 self.accepted_count
-                if index < 5
-                else max(0, self.accepted_count - 25)
-                if index == 5
+                if index < 3
                 else max(0, self.accepted_count - 1)
             )
             if len(state.pending) != (count if count < period else 0) or (
@@ -98,7 +93,7 @@ class IndicatorBatchState:
                 _average_value(state.value, self.quote, index)
             if self.previous is None and (state.pending or state.value is not None):
                 raise InvalidInputTypeError("average state without previous close")
-        warm_prices = [state.pending for state in self.averages[:5] if state.pending]
+        warm_prices = [state.pending for state in self.averages[:3] if state.pending]
         if warm_prices and (
             any(pending != warm_prices[0] for pending in warm_prices)
             or warm_prices[0][-1] != self.previous
@@ -107,14 +102,14 @@ class IndicatorBatchState:
         if 1 < self.accepted_count <= 14:
             # Before Wilder seeding, gain/loss buffers contain raw ACCEPT deltas.
             # EMA200 retains all those closes, including across HOLD events.
-            closes = self.averages[4].pending
+            closes = self.averages[2].pending
             zero = Money.of(0, self.quote)
             for before, after, gain, loss, true_range in zip(
                 closes[:-1],
                 closes[1:],
-                self.averages[6].pending,
-                self.averages[7].pending,
-                self.averages[8].pending,
+                self.averages[3].pending,
+                self.averages[4].pending,
+                self.averages[5].pending,
                 strict=True,
             ):
                 if gain > zero and loss > zero:
@@ -128,7 +123,7 @@ class IndicatorBatchState:
                     raise InvalidInputTypeError("warm-up true range is below gain plus loss")
         if self.accepted_count >= 15:
             average_gain, average_loss, average_atr = (
-                self.averages[index].value for index in (6, 7, 8)
+                self.averages[index].value for index in (3, 4, 5)
             )
             assert average_gain is not None and average_loss is not None and average_atr is not None
             # All three use the same Wilder seed/weights and floor rounding.
@@ -156,6 +151,55 @@ class IndicatorBatchResult:
     outputs: tuple[tuple[int, tuple[Money | Scalar | None, ...]], ...]
 
 
+def _reset_result(
+    state: IndicatorBatchState,
+    opens: tuple[datetime, ...],
+    output_indices: tuple[int, ...],
+) -> IndicatorBatchResult:
+    return IndicatorBatchResult(
+        IndicatorBatchState(
+            state.base,
+            state.quote,
+            state.timeframe,
+            state.span,
+            state.formula_version,
+            opens[-1],
+        ),
+        tuple((index, (None,) * 5) for index in output_indices),
+    )
+
+
+@guarded
+def reset_indicator_batch(
+    state: IndicatorBatchState,
+    opens: tuple[datetime, ...],
+    *,
+    output_indices: tuple[int, ...],
+) -> IndicatorBatchResult:
+    if (
+        type(state) is not IndicatorBatchState
+        or type(opens) is not tuple
+        or not 1 <= len(opens) <= 16
+    ):
+        raise InvalidInputTypeError("bounded indicator reset required")
+    if type(output_indices) is not tuple or any(type(i) is not int for i in output_indices):
+        raise InvalidInputTypeError("invalid output indices")
+    if tuple(sorted(set(output_indices))) != output_indices or any(
+        not 0 <= i < len(opens) for i in output_indices
+    ):
+        raise InvalidInputTypeError("invalid output indices")
+    previous = state.last_open
+    for moment in opens:
+        if (
+            not isinstance(moment, datetime)
+            or moment.tzinfo is None
+            or (previous is not None and moment != previous + state.span)
+        ):
+            raise InvalidInputTypeError("unordered indicator resets")
+        previous = moment
+    return _reset_result(state, opens, output_indices)
+
+
 def _unit(value: Money, quote: str) -> None:
     if type(value) is not Money:
         raise InvalidInputTypeError("Money state required")
@@ -165,7 +209,7 @@ def _unit(value: Money, quote: str) -> None:
 
 def _average_value(value: Money, quote: str, index: int) -> None:
     _unit(value, quote)
-    if (index < 5 and value.amount <= 0) or (index >= 6 and value.amount < 0):
+    if (index < 3 and value.amount <= 0) or (index >= 3 and value.amount < 0):
         raise InvalidInputTypeError("invalid indicator average state")
 
 
@@ -259,6 +303,7 @@ def advance_indicator_batch(
     ):
         raise InvalidInputTypeError("invalid output indices")
     previous_open = state.last_open
+    all_reset = True
     for item in inputs:
         if type(item) is not IndicatorBatchInput or type(item.action) is not BatchAction:
             raise InvalidInputTypeError("invalid indicator event")
@@ -272,6 +317,7 @@ def advance_indicator_batch(
             raise InvalidInputTypeError("unordered indicator events")
         previous_open = item.open_at
         if item.action is BatchAction.ACCEPT:
+            all_reset = False
             for value in (item.close, item.high, item.low):
                 if value is None:
                     raise InvalidInputTypeError("missing indicator prices")
@@ -279,8 +325,12 @@ def advance_indicator_batch(
             assert item.close is not None and item.high is not None and item.low is not None
             if not 0 < item.low.amount <= item.close.amount <= item.high.amount:
                 raise InvalidInputTypeError("invalid indicator price event")
-        elif any(value is not None for value in (item.close, item.high, item.low)):
-            raise InvalidInputTypeError("prices on control event")
+        else:
+            all_reset &= item.action is BatchAction.RESET
+            if item.close is not None or item.high is not None or item.low is not None:
+                raise InvalidInputTypeError("prices on control event")
+    if all_reset:
+        return _reset_result(state, tuple(item.open_at for item in inputs), output_indices)
     averages = [
         _Average(value, parameters)
         for value, parameters in zip(state.averages, _AVERAGES, strict=True)
@@ -296,30 +346,27 @@ def advance_indicator_batch(
             accepted_count = 0
         if item.action is not BatchAction.ACCEPT:
             if index in output_indices:
-                outputs.append((index, (None,) * 8))
+                outputs.append((index, (None,) * 5))
             continue
         assert item.close is not None and item.high is not None and item.low is not None
         accepted_count += 1
         close, high, low = (
             _coefficient(value.amount) for value in (item.close, item.high, item.low)
         )
-        ema = [average.feed(close, rounding) for average in averages[:5]]
-        line = _difference(ema[0], ema[2]) if ema[0] is not None and ema[2] is not None else None
-        signal = averages[5].feed(line, rounding) if line is not None else None
-        histogram = _difference(line, signal) if line is not None and signal is not None else None
+        ema = [average.feed(close, rounding) for average in averages[:3]]
         rsi: Decimal | None = None
         atr: int | None = None
         if previous is not None:
             delta = _difference(close, previous)
-            gain = averages[6].feed(max(delta, 0), rounding)
-            loss = averages[7].feed(_difference(0, min(delta, 0)), rounding)
+            gain = averages[3].feed(max(delta, 0), rounding)
+            loss = averages[4].feed(_difference(0, min(delta, 0)), rounding)
             high_delta, low_delta = _difference(high, previous), _difference(low, previous)
             tr = max(
                 _difference(high, low),
                 max(high_delta, _difference(0, high_delta)),
                 max(low_delta, _difference(0, low_delta)),
             )
-            atr = averages[8].feed(tr, rounding)
+            atr = averages[5].feed(tr, rounding)
             if gain is not None and loss is not None:
                 if gain == 0 or loss == 0:
                     rsi = Decimal(50 if gain == loss == 0 else 100 if loss == 0 else 0)
@@ -327,7 +374,7 @@ def advance_indicator_batch(
                     rsi = _ratio(100 * gain * _coefficient(Decimal(1)), gain + loss, rounding)
         previous, previous_money = close, item.close
         if index in output_indices:
-            money_values = (ema[1], ema[3], ema[4], line, signal, histogram, atr)
+            money_values = (*ema, atr)
             values = [
                 Money(_amount(value), state.quote) if value is not None else None
                 for value in money_values
@@ -341,9 +388,6 @@ def advance_indicator_batch(
                         values[2],
                         Scalar(rsi) if rsi is not None else None,
                         values[3],
-                        values[4],
-                        values[5],
-                        values[6],
                     ),
                 )
             )

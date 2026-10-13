@@ -1,0 +1,217 @@
+[
+  {
+    "seconds": 1.7339999999967404,
+    "series": [
+      {
+        "base": "BTC",
+        "timeframe": "1m",
+        "valid": false,
+        "age_seconds": 1568.769942,
+        "observed_at": "2026-10-13 14:34:22.180949+00:00"
+      },
+      {
+        "base": "BTC",
+        "timeframe": "5m",
+        "valid": false,
+        "age_seconds": 1519.878497,
+        "observed_at": "2026-10-13 14:34:22.180949+00:00"
+      },
+      {
+        "base": "BTC",
+        "timeframe": "15m",
+        "valid": false,
+        "age_seconds": 1510.188113,
+        "observed_at": "2026-10-13 14:34:22.180949+00:00"
+      },
+      {
+        "base": "BTC",
+        "timeframe": "1h",
+        "valid": false,
+        "age_seconds": 1506.872355,
+        "observed_at": "2026-10-13 14:34:22.180949+00:00"
+      },
+      {
+        "base": "BTC",
+        "timeframe": "4h",
+        "valid": false,
+        "age_seconds": 1505.999163,
+        "observed_at": "2026-10-13 14:34:22.180949+00:00"
+      },
+      {
+        "base": "BTC",
+        "timeframe": "1d",
+        "valid": false,
+        "age_seconds": 1505.724223,
+        "observed_at": "2026-10-13 14:34:22.180949+00:00"
+      },
+      {
+        "base": "DOGE",
+        "timeframe": "1m",
+        "valid": false,
+        "age_seconds": 1505.620331,
+        "observed_at": "2026-10-13 14:34:22.180949+00:00"
+      },
+      {
+        "base": "DOGE",
+        "timeframe": "5m",
+        "valid": false,
+        "age_seconds": 1289.394487,
+        "observed_at": "2026-10-13 14:34:22.180949+00:00"
+      },
+      {
+        "base": "DOGE",
+        "timeframe": "15m",
+        "valid": false,
+        "age_seconds": 1279.335814,
+        "observed_at": "2026-10-13 14:34:22.180949+00:00"
+      },
+      {
+        "base": "DOGE",
+        "timeframe": "1h",
+        "valid": false,
+        "age_seconds": 1275.89758,
+        "observed_at": "2026-10-13 14:34:22.180949+00:00"
+      },
+      {
+        "base": "DOGE",
+        "timeframe": "4h",
+        "valid": false,
+        "age_seconds": 1275.010553,
+        "observed_at": "2026-10-13 14:34:22.180949+00:00"
+      },
+      {
+        "base": "DOGE",
+        "timeframe": "1d",
+        "valid": false,
+        "age_seconds": 1274.740288,
+        "observed_at": "2026-10-13 14:34:22.180949+00:00"
+      },
+      {
+        "base": "ETH",
+        "timeframe": "1m",
+        "valid": false,
+        "age_seconds": null,
+        "observed_at": "2026-10-13 14:34:22.180949+00:00"
+      },
+      {
+        "base": "ETH",
+        "timeframe": "5m",
+        "valid": false,
+        "age_seconds": 1234.493743,
+        "observed_at": "2026-10-13 14:34:22.180949+00:00"
+      },
+      {
+        "base": "ETH",
+        "timeframe": "15m",
+        "valid": false,
+        "age_seconds": 1224.543532,
+        "observed_at": "2026-10-13 14:34:22.180949+00:00"
+      },
+      {
+        "base": "ETH",
+        "timeframe": "1h",
+        "valid": false,
+        "age_seconds": 1221.236685,
+        "observed_at": "2026-10-13 14:34:22.180949+00:00"
+      },
+      {
+        "base": "ETH",
+        "timeframe": "4h",
+        "valid": false,
+        "age_seconds": 1220.373516,
+        "observed_at": "2026-10-13 14:34:22.180949+00:00"
+      },
+      {
+        "base": "ETH",
+        "timeframe": "1d",
+        "valid": false,
+        "age_seconds": 1220.108251,
+        "observed_at": "2026-10-13 14:34:22.180949+00:00"
+      },
+      {
+        "base": "SOL",
+        "timeframe": "1m",
+        "valid": false,
+        "age_seconds": 1408.059638,
+        "observed_at": "2026-10-13 14:34:22.180949+00:00"
+      },
+      {
+        "base": "SOL",
+        "timeframe": "5m",
+        "valid": false,
+        "age_seconds": 926.470606,
+        "observed_at": "2026-10-13 14:34:22.180949+00:00"
+      },
+      {
+        "base": "SOL",
+        "timeframe": "15m",
+        "valid": false,
+        "age_seconds": 916.575508,
+        "observed_at": "2026-10-13 14:34:22.180949+00:00"
+      },
+      {
+        "base": "SOL",
+        "timeframe": "1h",
+        "valid": false,
+        "age_seconds": 913.199925,
+        "observed_at": "2026-10-13 14:34:22.180949+00:00"
+      },
+      {
+        "base": "SOL",
+        "timeframe": "4h",
+        "valid": false,
+        "age_seconds": 912.312097,
+        "observed_at": "2026-10-13 14:34:22.180949+00:00"
+      },
+      {
+        "base": "SOL",
+        "timeframe": "1d",
+        "valid": false,
+        "age_seconds": 912.041999,
+        "observed_at": "2026-10-13 14:34:22.180949+00:00"
+      },
+      {
+        "base": "XRP",
+        "timeframe": "1m",
+        "valid": false,
+        "age_seconds": 911.929945,
+        "observed_at": "2026-10-13 14:34:22.180949+00:00"
+      },
+      {
+        "base": "XRP",
+        "timeframe": "5m",
+        "valid": false,
+        "age_seconds": 1583.381305,
+        "observed_at": "2026-10-13 14:34:22.180949+00:00"
+      },
+      {
+        "base": "XRP",
+        "timeframe": "15m",
+        "valid": false,
+        "age_seconds": 1573.487695,
+        "observed_at": "2026-10-13 14:34:22.180949+00:00"
+      },
+      {
+        "base": "XRP",
+        "timeframe": "1h",
+        "valid": false,
+        "age_seconds": 1570.068793,
+        "observed_at": "2026-10-13 14:34:22.180949+00:00"
+      },
+      {
+        "base": "XRP",
+        "timeframe": "4h",
+        "valid": false,
+        "age_seconds": 1569.163935,
+        "observed_at": "2026-10-13 14:34:22.180949+00:00"
+      },
+      {
+        "base": "XRP",
+        "timeframe": "1d",
+        "valid": false,
+        "age_seconds": 1568.886818,
+        "observed_at": "2026-10-13 14:34:22.180949+00:00"
+      }
+    ]
+  }
+]

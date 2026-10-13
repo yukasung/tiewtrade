@@ -85,9 +85,6 @@ def test_constant_price_golden_and_exact_warmup() -> None:
             ("ema50", 50, 100),
             ("ema200", 200, 100),
             ("atr14", 15, 2),
-            ("macd_line", 26, 0),
-            ("macd_signal", 34, 0),
-            ("macd_histogram", 34, 0),
         ]:
             value = point.values[name]
             if index + 1 < boundary:
@@ -134,23 +131,14 @@ def _oracle(prices: list[int]) -> list[dict[str, int | None]]:
     gains: list[int] = []
     losses: list[int] = []
     ranges: list[int] = []
-    lines: list[int] = []
-    gain = loss = atr = signal = None
+    gain = loss = atr = None
     results = []
     for i, price in enumerate(prices):
-        for n in (12, 20, 26, 50, 200):
+        for n in (20, 50, 200):
             if i + 1 == n:
                 ema[n] = floor(Fraction(sum(prices[:n]), n))
             elif i + 1 > n:
                 ema[n] = floor(Fraction((n - 1) * ema[n] + 2 * price, n + 1))
-        line = ema[12] - ema[26] if 26 in ema else None
-        if line is not None:
-            lines.append(line)
-            if len(lines) == 9:
-                signal = floor(Fraction(sum(lines), 9))
-            elif len(lines) > 9:
-                assert signal is not None
-                signal = floor(Fraction(8 * signal + 2 * line, 10))
         if i:
             delta = price - prices[i - 1]
             gains.append(max(delta, 0))
@@ -185,11 +173,6 @@ def _oracle(prices: list[int]) -> list[dict[str, int | None]]:
                 "ema200": ema.get(200),
                 "rsi14": rsi,
                 "atr14": atr,
-                "macd_line": line,
-                "macd_signal": signal,
-                "macd_histogram": line - signal
-                if line is not None and signal is not None
-                else None,
             }
         )
     return results
@@ -254,3 +237,26 @@ def test_batch_controls_and_only_requested_outputs() -> None:
         stream.feed_batch(
             ((candle(3).open_at, candle(3), candle(3).end_at),), output_indices=(True,)
         )
+
+
+def test_repeated_gap_batch_preserves_metadata_and_restarts_seed() -> None:
+    stream = IndicatorStream("BTC", "USDT", Timeframe.M1, START + timedelta(days=1))
+    first = candle(0)
+    stream.feed(first.open_at, first, first.open_at)
+    gaps = tuple((candle(index).open_at, None, None) for index in range(1, 17))
+    result = stream.feed_batch(gaps, output_indices=(0, 7, 15))
+    assert result.refresh_dependencies == (None,) * 16
+    assert [point.open_at for point in result.points] == [
+        candle(1).open_at,
+        candle(8).open_at,
+        candle(16).open_at,
+    ]
+    for point in result.points:
+        assert point.seed_open_at is None
+        assert point.finality is None
+        assert all(value.status is IndicatorStatus.GAP for value in point.values.values())
+        assert all(value.value is None for value in point.values.values())
+    resumed = candle(17)
+    point = stream.feed(resumed.open_at, resumed, resumed.end_at)
+    assert point.seed_open_at == resumed.open_at
+    assert stream.state.accepted_count == 1

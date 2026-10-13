@@ -13,6 +13,7 @@ import json
 import os
 import sys
 from collections.abc import Awaitable, Callable
+from contextlib import suppress
 from datetime import datetime, timedelta
 from pathlib import Path
 from time import monotonic
@@ -123,7 +124,7 @@ async def seed(engine: AsyncEngine) -> dict[str, datetime]:
         # activation bundle. Empty-derived API readiness must be observable.
         await c.execute(
             text("""UPDATE indicator_rollout_control SET mode='PREPARED',
-          retention_policy='GRACE',codec_version=1,protocol_version=1,
+          retention_policy='GRACE',codec_version=2,protocol_version=1,
           active_cursor_format=2 WHERE id=1""")
         )
     return ends
@@ -151,6 +152,16 @@ async def append(engine: AsyncEngine, ends: dict[str, datetime]) -> None:
                 )
                 changed[key] = hi
     ends.update(changed)  # Advance only after commit; never rewrite existing input.
+
+
+async def maintain_source(
+    engine: AsyncEngine, ends: dict[str, datetime], stop: asyncio.Event
+) -> None:
+    """Keep source arrivals independent of HTTP probes and readiness polling."""
+    while not stop.is_set():
+        await append(engine, ends)
+        with suppress(TimeoutError):
+            await asyncio.wait_for(stop.wait(), 0.25)
 
 
 async def snapshot(engine: AsyncEngine) -> dict[str, Any]:
@@ -469,6 +480,8 @@ async def run(
     trace: list[dict[str, Any]] = []
     rounds: list[asyncio.Task[list[dict[str, Any]]]] = []
     cold_passed = metrics is None
+    source_stop = asyncio.Event()
+    producer: asyncio.Task[None] | None = None
     try:
         if reuse_source:
             async with migrator.connect() as c:
@@ -518,7 +531,25 @@ async def run(
         if reuse_source:
             from tests.services.indicator_builder.profile_capacity_steady import login
 
-            clients, users = await login()
+            account_count = int(
+                await docker(
+                    "exec",
+                    PG,
+                    "psql",
+                    "-U",
+                    "postgres",
+                    "-d",
+                    "tiewtrade",
+                    "-Atc",
+                    "SELECT count(*) FROM user_credentials "
+                    "WHERE email LIKE 'capacity-%@example.com'",
+                )
+            )
+            if account_count == 0:
+                clients, users = await authenticate(api_container)
+            else:
+                assert account_count == 5
+                clients, users = await login()
         else:
             clients, users = await authenticate(api_container)
         worker = await create_runtime(image_id, "builder", metrics)
@@ -532,12 +563,14 @@ async def run(
         async with migrator.connect() as c:
             db_t0: datetime = (await c.execute(text("SELECT clock_timestamp()"))).scalar_one()
         started = monotonic()  # Includes cold process startup; no excluded prewarm.
+        producer = asyncio.create_task(maintain_source(source, ends, source_stop))
         await docker("start", worker)
         for tick in range(60):
             await asyncio.sleep(max(0, started + tick * 10 - monotonic()))
             if monotonic() - started >= 600:
                 break
-            await append(source, ends)
+            if producer.done():
+                await producer
             observed = await observe(api, users[0])
             elapsed = monotonic() - started
             observations.append({"seconds": elapsed, "series": observed})
@@ -679,6 +712,10 @@ async def run(
         )
         return 0 if passed and cold_passed else 1
     finally:
+        source_stop.set()
+        if producer is not None:
+            producer.cancel()
+            await asyncio.gather(producer, return_exceptions=True)
         for task in rounds:
             if not task.done():
                 task.cancel()

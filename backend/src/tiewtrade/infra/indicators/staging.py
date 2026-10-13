@@ -10,7 +10,7 @@ from tiewtrade.core.indicators import IndicatorStream
 from tiewtrade.core.market_data import CandleWindow, align_ceil, align_floor
 from tiewtrade.infra.db.errors import IndicatorBuildOwnershipError
 from tiewtrade.infra.indicators.claims import BuildClaim
-from tiewtrade.infra.indicators.codec import encode_checkpoint
+from tiewtrade.infra.indicators.codec import CODEC_VERSION, encode_checkpoint
 from tiewtrade.infra.indicators.pinned import PinnedIndicatorWriter
 from tiewtrade.infra.indicators.session import (
     IndicatorSourceSession,
@@ -46,7 +46,7 @@ async def capture_snapshot(session: IndicatorSourceSession, claim: BuildClaim) -
     if (
         row["rollout_epoch"] != claim.rollout_epoch
         or row["mode"] not in ("PREPARING", "PREPARED")
-        or row["codec_version"] != 1
+        or row["codec_version"] != CODEC_VERSION
         or row["protocol_version"] != 1
         or row["retention_policy"] != "GRACE"
         or row["source_proof_state"] != "READY"

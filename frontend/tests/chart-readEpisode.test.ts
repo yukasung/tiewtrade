@@ -4,9 +4,27 @@ import { readEpisode } from "../src/chart/readEpisode";
 import { chartPage as page, chartSeries as input } from "./chartFixture";
 afterEach(() => vi.useRealTimers());
 describe("finite chart reads", () => {
-  it("allows exactly twelve readiness requests with no reset", async () => {
+  it.each([["1", 2000], ["5", 5000]] as const)("recovers from busy after Retry-After %s", async (header, delay) => {
     vi.useFakeTimers();
-    const reader = vi.fn().mockRejectedValue(new ApiRequestError("INDICATOR_DATA_NOT_READY", 503, "10"));
+    const reader = vi.fn().mockRejectedValueOnce(new ApiRequestError("INDICATOR_BUSY", 503, header))
+      .mockResolvedValueOnce(page());
+    const work = readEpisode(input, new AbortController().signal, reader);
+    await vi.advanceTimersByTimeAsync(delay - 1);
+    expect(reader).toHaveBeenCalledTimes(1);
+    await vi.advanceTimersByTimeAsync(1);
+    expect((await work).pages).toHaveLength(1);
+    expect(reader).toHaveBeenCalledTimes(2);
+  });
+  it("does not retry busy on a cursor page", async () => {
+    const reader = vi.fn().mockResolvedValueOnce(page("a", "next"))
+      .mockRejectedValueOnce(new ApiRequestError("INDICATOR_BUSY", 503));
+    await expect(readEpisode(input, new AbortController().signal, reader))
+      .rejects.toMatchObject({ message: "INDICATOR_BUSY" });
+    expect(reader).toHaveBeenCalledTimes(2);
+  });
+  it.each(["INDICATOR_DATA_NOT_READY", "INDICATOR_BUSY"])("bounds twelve requests for %s", async code => {
+    vi.useFakeTimers();
+    const reader = vi.fn().mockRejectedValue(new ApiRequestError(code, 503, "10"));
     const work = readEpisode(input, new AbortController().signal, reader);
     const rejected = expect(work).rejects.toMatchObject({ message: "CHART_READ_BUDGET_EXHAUSTED" });
     await vi.runAllTimersAsync();
@@ -40,10 +58,15 @@ describe("finite chart reads", () => {
     await expect(readEpisode(input, new AbortController().signal, reader))
       .rejects.toMatchObject({ message: "CHART_INVALID_RESPONSE" });
   });
-  it("cancels waiting without sending another readiness request", async () => {
+  it("rejects a cached response from the retired MACD formula version", async () => {
+    const reader = vi.fn().mockResolvedValue({ ...page(), formula_version: "indicators-v1" });
+    await expect(readEpisode(input, new AbortController().signal, reader))
+      .rejects.toMatchObject({ message: "CHART_INVALID_RESPONSE" });
+  });
+  it.each(["INDICATOR_DATA_NOT_READY", "INDICATOR_BUSY"])("cancels %s waiting without another request", async code => {
     vi.useFakeTimers();
     const controller = new AbortController();
-    const reader = vi.fn().mockRejectedValue(new ApiRequestError("INDICATOR_DATA_NOT_READY", 503));
+    const reader = vi.fn().mockRejectedValue(new ApiRequestError(code, 503));
     const work = readEpisode(input, controller.signal, reader);
     const rejected = expect(work).rejects.toMatchObject({ name: "AbortError" });
     await vi.advanceTimersByTimeAsync(1);

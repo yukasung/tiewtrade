@@ -1,11 +1,145 @@
 # F-12 — กราฟแท่งเทียนบนหน้าเว็บ — Validation
 
-สถานะ: **Approved** — เจ้าของอนุมัติพร้อม plan.md วันที่ 2026-10-12; ผลแต่ละด่านติดตามตามหลักฐานจริง
+สถานะ: **Approved** — เจ้าของอนุมัติวันที่ 2026-10-13 — เกณฑ์ amendment วันที่ 2026-10-13 สำหรับการแสดงแท่งเทียนก่อน indicator; เกณฑ์เดิมส่วนอื่นยังมีผล
+การลบ MACD ด้านล่าง: **Approved** — เจ้าของอนุมัติ amendment เมื่อ 2026-10-13; เกณฑ์ใหม่ยังไม่ได้รันและไม่แทนผล Partial/Pending เดิม
+การย้ายรายละเอียดแท่งเข้า chart ด้านล่าง: **Approved** — เจ้าของอนุมัติเมื่อ 2026-10-13
+การลบแถบสถานะถาวรด้านล่าง: **Approved** — เจ้าของอนุมัติเมื่อ 2026-10-13
+การลบ Indicator จาก UI ด้านล่าง: **Approved** — เจ้าของอนุมัติเมื่อ 2026-10-13
+การลด controls และข้อความใต้กราฟด้านล่าง: **Approved** — เจ้าของอนุมัติเมื่อ 2026-10-14
+การเพิ่มปุ่มรีเซ็ตกราฟภาษาไทย: **Approved** — เจ้าของยืนยันเมื่อ 2026-10-14
+การลบตัวเลือกภาษาออกจากหน้า Chart: **Approved** — เจ้าของยืนยันเมื่อ 2026-10-14
 วันที่: 2026-10-12
 Branch: feature/f-12-candlestick-chart
 อ้างอิง: [requirements](requirements.md), [plan](plan.md), [หลักฐานต้นทาง](source-evidence.md)
 
+## Amendment — ตรวจการลบตัวเลือกภาษา (Approved 2026-10-14)
+
+| รหัส | เกณฑ์ตรวจ | ผล |
+|---|---|---|
+| LNG-01 | หน้า Chart ไม่มี label หรือ combobox ชื่อ `ภาษา` | Passed — component test และ served-source smoke |
+| LNG-02 | ข้อความและวันเวลาบน Chart ยังแสดงภาษาไทย | Passed — fixed Thai locale และ component test ตรวจหัวข้อ/วันที่ไทย |
+| LNG-03 | pair/TF, ปุ่ม `รีเซ็ตกราฟ`, viewport และข้อมูล exact OHLCV ยังทำงาน และไม่มี backend/API change | Passed — targeted component/renderer tests และ diff review |
+
+ตรวจด้วย targeted component/renderer tests, type-check, scoped ESLint และ frontend smoke;
+ไม่รัน full suite หรือ performance validation สำหรับการลด control เฉพาะ UI นี้.
+
+หลักฐานรอบ 2026-10-14: targeted component/renderer ผ่าน 2 files/28 tests,
+`npm run typecheck`, scoped ESLint และ `git diff --check` ผ่าน. `GET /chart` ตอบ 200;
+source ที่ Vite เสิร์ฟไม่มี language key/change handler และใช้ fixed Thai locale. ไม่ใช้ผลนี้แทน full E2E.
+
+## Amendment — ตรวจปุ่มรีเซ็ตกราฟภาษาไทย (Approved 2026-10-14)
+
+| รหัส | เกณฑ์ตรวจ | ผล |
+|---|---|---|
+| RST-01 | หน้า Chart มีปุ่ม accessible ชื่อ `รีเซ็ตกราฟ` เป็นภาษาไทย | Passed — component test และ frontend smoke |
+| RST-02 | หลัง pan/zoom แล้วกดปุ่ม viewport กลับช่วงเริ่มต้นที่ยึดแท่งล่าสุด | Passed — component test ตรวจ logical range เดียวกับ initial viewport |
+| RST-03 | การกดปุ่มไม่เปลี่ยน pair/TF/language และไม่ส่ง refresh/retry/history request เพิ่ม | Passed — component test ตรวจค่าตัวเลือกเดิมและ diff review ยืนยันว่า handler เรียกเฉพาะ chart time scale |
+
+ตรวจด้วย targeted component/renderer tests, type-check, scoped ESLint และ frontend smoke;
+ไม่รัน full suite หรือ performance validation สำหรับการเพิ่ม control เฉพาะ UI นี้.
+
+หลักฐานรอบ 2026-10-14: targeted component/renderer ผ่าน 2 files/27 tests,
+`npm run typecheck` และ scoped ESLint ผ่าน. `GET /chart` ตอบ 200 และ Vite HMR
+โหลด handler `resetViewport` จาก source ใหม่แล้ว. ไม่ใช้ผลนี้แทน full E2E หรือด่าน candidate เดิม.
+
+## Amendment — ตรวจการลด controls และข้อความใต้กราฟ (Approved 2026-10-14)
+
+| รหัส | เกณฑ์ตรวจ | ผล |
+|---|---|---|
+| U-01 | ไม่มี scale note และปุ่ม latest/older/retry/refresh/previous/next ในหน้า Chart | Passed — component test และ source ที่ Vite เสิร์ฟไม่พบ controls/ข้อความดังกล่าว |
+| U-02 | pair/TF/language, automatic loading, pan/zoom/crosshair, exact OHLCV และ error alert ยังทำงาน | Partial — targeted component/renderer tests ผ่าน; ยังไม่ได้รัน browser E2E เต็มชุดในรอบแก้ UI นี้ |
+| U-03 | ไม่มี dead handler/state/import/CSS จาก controls ที่ลบ และ backend/API ไม่เปลี่ยน | Passed — type check, scoped ESLint และ diff review ผ่าน |
+
+หลักฐานรอบ 2026-10-14: `npm test -- --run tests/CandlestickChartPanel.test.tsx tests/AccountLayout.test.tsx tests/chart-renderer.test.ts`
+ผ่าน 3 files/32 tests; `npm run typecheck`, scoped ESLint และ `git diff --check` ผ่าน.
+`GET http://localhost:5173/chart` ตอบ 200 และ source ที่ Vite เสิร์ฟไม่พบชื่อ controls หรือ `chart-scale-note`.
+การสร้าง Docker image ใหม่ยังทำไม่ได้ในรอบนี้เพราะ Docker DNS หา `auth.docker.io` ไม่พบ;
+จึงอัปเดต source ใน frontend container ที่รันอยู่และยืนยัน Vite HMR แล้ว. Full E2E/build ยังคงอยู่ในด่าน candidate เดิม.
+
+ตรวจด้วย targeted component tests, type-check, ESLint และ frontend smoke;
+ไม่รัน full suite หรือ performance validation สำหรับการลด UI นี้.
+
+## Amendment — ตรวจการลบ Indicator จาก UI (Approved 2026-10-13)
+
+| รหัส | เกณฑ์ตรวจ | ผล |
+|---|---|---|
+| I-01 | ไม่มีตัวเลือก ชื่อ ค่า เส้น หรือ pane ของ EMA/RSI/ATR ในหน้า Chart | Passed — component/smoke 2026-10-13 |
+| I-02 | แท่งเทียน, exact OHLCV, pair/TF, crosshair, viewport และ gap navigation ยังทำงาน | Partial — targeted component/renderer ผ่าน; ยังไม่รัน full E2E |
+| I-03 | Backend/API F-11 และ proof/consistency contract ไม่ถูกเปลี่ยนจากงาน UI นี้ | Passed — diff review 2026-10-13 |
+
+ตรวจด้วย targeted component/renderer tests, type-check, ESLint และ frontend smoke;
+ไม่รัน full suite หรือ performance validation สำหรับการลด UI นี้.
+
+ผลรอบ implementation: targeted component/renderer/layout tests 31/31, TypeScript
+type-check, ESLint และ `git diff --check` ผ่าน. Rebuild/restart frontend สำเร็จ,
+`/chart` ตอบ 200 และ source ที่ให้บริการไม่มีชื่อหรือ controls ของ Indicator.
+
+## Amendment — ตรวจการลบแถบสถานะถาวร (Approved 2026-10-13)
+
+| รหัส | เกณฑ์ตรวจ | ผล |
+|---|---|---|
+| S-01 | ไม่มี block ข้อความประวัติ/Indicator/gap/feed/as-of/server-check เหนือกราฟ | Passed — component/smoke 2026-10-13 |
+| S-02 | Error/alert, finality, disabled/loading controls และ gap ของตำแหน่งที่เลือกยังทำงาน | Passed — targeted component 2026-10-13 |
+| S-03 | การลบ presentation ไม่เปลี่ยน request, retry, proof หรือ consistency gate | Partial — E2E ปรับไปตรวจ API state แล้ว; ยังไม่รัน full E2E |
+
+ตรวจด้วย targeted component tests, type-check, ESLint และ frontend smoke;
+ไม่รัน full suite หรือ performance validation สำหรับการลบ presentation นี้.
+
+ผลรอบ implementation: targeted component/layout tests 19/19, TypeScript type-check,
+ESLint และ `git diff --check` ผ่าน. Rebuild/restart frontend สำเร็จ, `/chart` ตอบ 200
+และ source ที่ให้บริการไม่มี `chart-status`. ยังไม่ใช้ผลนี้แทน full E2E หรือ V-17/V-18.
+
+## Amendment — ตรวจรายละเอียดแท่งใน chart (Approved 2026-10-13)
+
+| รหัส | เกณฑ์ตรวจ | ผล |
+|---|---|---|
+| C-01 | ภายในกรอบกราฟแสดงคู่/TF/ตลาด วันเวลา finality และ O/H/L/C/V exact ของแท่งล่าสุดหรือแท่งที่เลือก โดย V ใช้หน่วยเหรียญฐานและไม่มี Volume pane | Passed — component 2026-10-13 |
+| C-02 | Crosshair และปุ่มก่อนหน้า/ถัดไปเปลี่ยนข้อมูลชุดเดียวกัน; ออกจากแท่งแล้วกลับแท่งล่าสุด; indicator ที่ proof ผ่านยังอ่านได้ | Partial — โค้ดและ E2E ปรับแล้ว; ยังไม่รัน full E2E |
+| C-03 | ไม่มีชุดวันเวลา/OHLCV ซ้ำใต้กราฟ, header ไม่บังแกนราคาที่ความกว้างเป้าหมาย และ accessibility labels ยังอ่านได้ | Partial — DOM/targeted test ผ่าน; รอตรวจภาพหลายความกว้าง |
+
+ตรวจด้วย targeted component tests, TypeScript type-check, ESLint และ frontend smoke;
+ไม่รัน full suite หรือ performance validation สำหรับการย้าย presentation นี้.
+
+ผลรอบ implementation: targeted component tests 12/12, TypeScript type-check และ
+ESLint ของไฟล์ที่แก้ผ่าน; `git diff --check` ผ่าน. Rebuild/restart เฉพาะ frontend สำเร็จ
+และ `/chart` ตอบ 200. ยังไม่ใช้ผลนี้แทน browser E2E หรือ V-17/V-18 ชุดเต็ม.
+
+## Amendment — ตรวจรับกราฟหลังลบ MACD (Approved 2026-10-13)
+
+| รหัส | เกณฑ์ตรวจ | ผล |
+|---|---|---|
+| M-01 | ไม่มีชื่อ ตัวเลือก pane/series หรือค่ารายละเอียด MACD ใน UI; EMA20/50/200, RSI14, ATR14 ยังเปิด/ปิดได้ และ ATR อยู่ pane แยกจาก RSI | Pending |
+| M-02 | Component/renderer/E2E ตรวจชุดชื่อใหม่และ no-MACD รวม latest/selected candle, pair/TF switch, loading และ proof mismatch; exact string/projection boundary คงเดิม | Pending |
+| M-03 | Browser→API รุ่นใหม่แสดงชุด indicator ที่สอดคล้องกับ candle; ไม่มีค่า MACD จาก response/cache เก่าหรือคำตอบมาช้า; auth/routing ไม่ถดถอย | Pending |
+
+รัน targeted tests, lint/type-check/build ที่เกี่ยวข้องและ browser smoke หลัง
+backend v2 พร้อม. V-01..18 เดิมยังต้องตรวจตาม checkpoint ที่กำหนด; V-17
+ยังเป็น Pending Full Validation ไม่ใช้ M-01..03 แทนเกณฑ์เดิม.
+
 ## เสร็จหมายถึงอะไร
+
+ภาพกราฟตามคำสั่งเจ้าของ 2026-10-13: ตรวจแถบคู่/TF/OHLC exact และ finality
+บนกราฟ, พื้นสีขาวเริ่มต้น/กริด/เส้นราคาล่าสุด, สถานะข้อมูลที่อ่านได้ และไม่เพิ่ม
+ราคา bid/ask หรือปุ่มซื้อขายจากภาพอ้างอิง. ตรวจผ่าน targeted component/renderer
+tests, lint/type-check และเปิดหน้าเว็บจริง; ไม่ใช้แทน V-17/V-18 ชุดเต็ม.
+
+ผลรอบภาพกราฟ: targeted component/renderer 21/21 ผ่าน, ESLint ของไฟล์ที่แก้,
+TypeScript type-check และ Vite build ผ่าน. Build/restart frontend สำเร็จ; `/chart`
+และ API health ตอบ 200 ในรอบก่อนเปลี่ยนพื้นเป็นสีขาว. ฐาน app มี BTC/USDT
+1d 364 แท่งและ 1h 1,082 แท่ง ณ รอบตรวจ จึงมีประวัติพอสำหรับ viewport เริ่มต้น.
+ยังไม่ได้ตรวจภาพหลังเข้าสู่ระบบด้วย browser automation ในรอบนี้; เกณฑ์ V-17/V-18
+และผล Failed/Partial เดิมยังคงตามหลักฐานเดิม.
+
+แกนเวลา 2026-10-13: แก้ tick label ที่เคยแสดงวันเวลาเต็มทุกขีดจนทับกัน
+ให้ใช้เวลาสั้น/วัน/เดือน/ปีตามชนิด tick ของ Lightweight Charts โดยแสดง
+Asia/Bangkok; crosshair ยังอ่านวันเวลาเต็ม. Targeted renderer tests 11/11,
+type-check และ ESLint ผ่าน; build/restart frontend สำเร็จ.
+
+แถบค่าแท่งเทียนบนกราฟ 2026-10-13: ใช้ O/H/L/C แบบกระชับบน chart จาก
+exact candle cache; คั่นหลักพันในข้อความโดยไม่แปลงราคาเป็น Number หรือปัดค่า.
+Crosshair แสดงแท่งที่ชี้ และกลับแท่งล่าสุดเมื่อออกจากแท่ง; แผงรายละเอียดเดิม
+ยังแสดง exact OHLCV/indicator และ finality เต็ม. Targeted component/renderer/
+MarketValue tests 25/25, type-check และ ESLint ผ่าน. ไม่เพิ่ม bid/ask หรือคำสั่งซื้อขาย.
 
 ก่อน Completed/release ทุก V ด้านล่างต้องมีหลักฐานและผ่าน
 ไม่ใช้การอนุมัติ spec หรือ smoke แทนผลทดสอบชุดเต็ม.
@@ -133,8 +267,31 @@ V-03/04 ใช้ PostgreSQL snapshot barriers จริงกับ rolesจร
 
 ## V-11..16: Controller และ browser
 
+Staged-history amendment (RQ-3/5/7/10/18):
+
+- ทั้ง initial mount และเปลี่ยน TF: delay coherent history อย่างควบคุมแล้วให้ candle-only
+  สำเร็จก่อน; ต้องวาด candles/อ่านข้อความ exact ได้ก่อนปล่อย history response และไม่มี
+  indicator series/tooltip จนผ่าน proof. ใช้ controlled response order ไม่ตั้ง latency SLA จาก sample.
+- ยืนยัน candle-only เริ่มโดยไม่รอ history cleanup 2s; StrictMode ไม่ซ้อนงาน,
+  timeout10s/2MiB/1000rows/identity ถูกบังคับก่อน cache; ไม่มี implicit retry/POST.
+- COVERAGE incomplete/unavailable, gaps, zero-volume, empty, error และ finality แสดงจริง.
+  Candle-only failure ไม่ยกเลิก coherent read; 401 ไม่คงข้อมูลผู้ใช้เดิม.
+- Live ซ้ำ open-time กับ provisional candle ให้เห็นเพียงแท่งเดียว; exact source ไม่ถูกแก้.
+  เมื่อ bundle มี correction/different OHLC ต้องแทนทั้งชุดก่อนแสดง indicator;
+  ไม่แสดง hybrid history/indicator และไม่ย้อนกลับ provisional เมื่อ bundle refetch/error.
+- Candle-only response หลัง bundle/หลัง A→B→A/หลัง retry หรือ logout ถูกกัน;
+  cancellation ครบใน hidden/unmount/session lifecycle ตาม controller policy.
+- Browser smoke ทั้ง login→default และ 1h→1m: หน่วง history แล้วแสดงกราฟจาก candle-only
+  ก่อน history พร้อม; จากนั้นตรวจ coherent handoff และไม่มี page error.
+  บันทึกเวลาสองช่วงแยกกัน (first historical candles / coherent indicators) โดยไม่อ้างว่า
+  ทดสอบ capacity หรือรับรอง PREPARED แล้ว.
+
 ใช้ fake timers ที่ monotonic + controlled HTTP delays ตรวจ actual query calls:
 - initial503notready→poll≥10s/Retry-After→200bundleที่MATCH แสดงได้;
+  initial503busy→poll≥2s/Retry-After โดยไม่ซ้อน request และยังอยู่ในงบ12ครั้ง/300s→200bundleแสดงได้;
+  amendment อนุมัติ 2026-10-13: initial/idle TF switch เริ่ม history ทันที;
+  ยกเลิก history/proof ที่กำลัง fetch ต้องรอ cleanup 2s, เปลี่ยน TF ซ้ำต้องรักษา deadline
+  ที่เหลือ, StrictMode ไม่ส่งซ้ำและ late response ไม่เขียนทับ episode ใหม่.
   503รหัสอื่น/429/504/422หยุด ไม่มีrefetchจากfocus/networkมาเปิดงานเอง.
 - episodeรวม12คำขอ/300sตรงขอบ; request30sและลดdeadlineตามremaining;
   คำขอช้ากับevent100ครั้งไม่resetbudgetและไม่ส่งrequestซ้อน.
@@ -150,8 +307,8 @@ V-03/04 ใช้ PostgreSQL snapshot barriers จริงกับ rolesจร
   StrictMode doubleeffect; stalecallbackไม่เขียนcache/render.
 - 12,000slotscap: pagination/evictionรักษาviewportและseed; เปิดช่วงเก่าได้ใหม่
   ไม่เดาว่าข้อมูลตลาดหมดเพราะbrowsercacheevict.
-- realchartอ่านexacttextกับapproximateaxisถูกต้อง; Gaps/WARM_UP/
-  REFRESH_REQUIREDไม่ลากเส้นเชื่อม; volumezeroจริงต่างจากmissing.
+- realchartอ่านexacttextกับapproximateaxisถูกต้องและไม่มี Volume pane; Gaps/WARM_UP/
+  REFRESH_REQUIREDไม่ลากเส้นเชื่อม; ค่า volume แบบข้อความแยก zero จริงจาก missing.
 - widths375/768/1440และthemeเดิม, pane scale/legend/keyboardlabels/ThaiEnglish,
   timezoneขอบวันUTC→Bangkok, attribution/logo/linkไม่ถูกUIทับ.
 

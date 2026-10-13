@@ -140,7 +140,77 @@ Browser smoke ที่ `http://localhost:5173/chart` หลังรอ live po
 และไม่มี JavaScript page error.
 ผลนี้ปิดเฉพาะ feedback เรื่อง initial candle size; owner manual รายการอื่นยังค้าง.
 
+## Owner amendment: remove Volume pane
+
+เจ้าของอนุมัติ requirements/plan/validation amendment วันที่ 2026-10-13 ให้ลบ Volume pane
+โดยคงค่า volume แบบข้อความ exact ในรายละเอียดแท่งเทียน. Renderer ไม่สร้าง HistogramSeries
+และปรับ pane ของ RSI/MACD/ATR ขึ้นมาใช้ลำดับ 1/2/3 หลัง price pane.
+
+Targeted renderer/panel tests **16/16 passed**, ESLint และ TypeScript `--noEmit` ผ่าน.
+Build/restart เฉพาะ frontend สำเร็จด้วย image
+`sha256:e20d8e061da5faf76ce7f137b4190bfc8e8cf9a507d0f523d8e5c8ae1e232ce9`.
+Browser smoke ที่ `http://localhost:5173/chart` ยืนยันว่าไม่เห็น Volume pane,
+ยังมีค่า volume หน่วย BTC ใน textual OHLCV panel และไม่มี JavaScript page error.
+
+## Owner correction: timeframe switch preview
+
+เจ้าของพบว่าเมื่อเปลี่ยนจาก timeframe ใหญ่เป็น `1m` ระหว่างที่ history ยังโหลด
+live preview เพียงหนึ่งถึงสองแท่งถูก autoscale จนดูเหมือนกราฟแสดงไม่ครบ. การแก้รอบแรกที่รอ
+history ก่อนวาดทำให้กราฟว่างเมื่อ history ถูก admission ปฏิเสธเป็นบางครั้ง จึงแก้ฉบับสุดท้ายให้
+live snapshot เริ่มทันทีผ่าน dedicated endpoint และหน่วงเฉพาะ history reader 2 วินาทีตาม cleanup
+เดิม. Renderer แสดง live candle เสมอและเพิ่ม visual price padding เมื่อมี candle น้อยกว่า 10 แท่ง;
+เมื่อ history พร้อมจะกลับไปใช้ autoscale ปกติ ตั้ง viewport ล่าสุด และแสดง live candle ร่วมกัน.
+Terminal history error ยังคงหยุด auto work และต้อง manual retry ตามสัญญาเดิม.
+
+Targeted controller/panel/renderer tests **30/30 passed**, ESLint และ TypeScript `--noEmit` ผ่าน.
+Build/restart เฉพาะ frontend สำเร็จด้วย image
+`sha256:a6a229a1c22d0313656b4a863ab4d2f190b5e28e1f4d02f34159a7d54406eecb`.
+การจำลองครั้งแรกยืนยัน `1d → 1m` ได้ history HTTP 200 จำนวน 1,000 rows/candles
+และเข้าสถานะสอดคล้องภายในประมาณ 10 วินาที. Browser fault injection หลัง deploy บังคับ
+`503 INDICATOR_BUSY` และยืนยันว่า UI แสดง typed error/สถานะหยุดพร้อม live `1m` candle,
+ไม่เป็นกราฟว่าง ไม่ขยาย candle เต็ม pane ไม่มี JavaScript error และไม่เพิ่ม auto-retry นอกแผน.
+
 ## งานที่ยังค้าง
+
+### Approved staged-history implementation — 2026-10-13
+
+Reuse F-09 candle-only GET through the existing bounded decoder. Start it immediately,
+independent of the 2s indicator-reader cleanup. Keep original exact strings, coverage,
+gaps and observed_at. Before the coherent bundle arrives, display provisional candles
+with live rows deduplicated by open-time; indicators remain hidden. Once the bundle
+arrives, use only its historical candles/points and the existing proof/live policy.
+Late provisional responses cannot replace the bundle.
+
+Targeted API/panel/controller/session tests: 36 passed across the latest valid runs.
+ESLint, TypeScript and diff whitespace checks passed. Tests include delayed startup,
+StrictMode, candle-only failure while coherent read succeeds, series cancellation/
+late responses, exact display and atomic correction handoff. No full suite rerun.
+
+Browser smoke used real F-09/history endpoints while delaying coherent history by
+6s at interception. Login/default 1h returned 999 provisional candles in 260ms;
+switching to 1m returned 805 provisional candles in 101ms. Both displayed OHLC and
+chart before the coherent response, completed handoff, and had no page errors.
+These are individual observations under a controlled delay, not latency/capacity guarantees.
+The incomplete 1m history remains reported as incomplete rather than filled.
+Frontend rebuilt/restarted with image
+`sha256:d10c2369e97eaff7806b7083cbe216c4556a1854db70993e1992b288ecd955b5`.
+Indicator computation remains LEGACY and can still take longer than the first candle
+display. Full release criteria and owner manual acceptance below remain pending.
+
+### Approved busy recovery amendment — 2026-10-13
+
+Initial history now retries only typed 503 INDICATOR_BUSY with spacing at least 2s
+and Retry-After, sharing the existing 12-request/300s episode budget.
+Cursor-page refusals and other terminal errors retain their previous behavior.
+Targeted readEpisode/controller/panel checks: 40 passed; ESLint and TypeScript passed.
+Browser injection returned busy once, then forwarded to the real history API:
+2 requests, 3017ms between requests for Retry-After 3s, 1000 candles returned,
+OHLC text and chart canvas visible, no page errors.
+The first browser probe could not retrieve the response body through DevTools;
+the subsequent probe captured it through route.fetch and passed.
+Frontend rebuilt/restarted with image
+`sha256:6447a32109032324943f9afa818778a78c58a0758ed0f6130a8b57ee011b33bd`.
+This verifies busy recovery, not every possible cause of a blank chart.
 
 - Required CI ต้องรันกับ commit สุดท้ายหลังเจ้าของสั่ง commit/push; local results
   ไม่ใช้แทนสถานะ CI.
@@ -150,3 +220,39 @@ Browser smoke ที่ `http://localhost:5173/chart` หลังรอ live po
   **Pending Full Validation** สำหรับ release checkpoint/ชุดที่ 9 ตาม validation เดิม.
 - F-12 ยังไม่เปลี่ยนเป็น Completed และไม่รับรอง production PREPARED, Live Trading
   หรือการเปิดใช้เงินจริงจนงานค้างข้างต้นผ่านตามระยะของมัน.
+
+### LEGACY indicator latency correction — 2026-10-13
+
+Follow-up approved conditional startup — 2026-10-13: initial/idle series reads now
+start on a cancelable zero-delay timer. Cancelling an active history/proof query
+records a monotonic 2s cleanup deadline, retained across rapid subsequent selections.
+Live/provisional queries do not trigger this reader delay; server busy policy is unchanged.
+Controller tests 17 passed, targeted ESLint and TypeScript passed.
+Frontend rebuilt/restarted as image
+`sha256:2552d137728e1f18d6044f3970dfbdfa625a4e9d80551db4e73e226b2e0b20be`.
+Real browser initial 1h succeeded; subsequent idle 1h→1m switch sent history in 16ms
+and received its complete response body in 3777ms (request 3761ms), no page errors.
+This measures response completion, not proof of the exact instant indicators painted.
+The previous approximately 2s unconditional startup wait is removed; backend scan
+latency remains. No full tests or capacity benchmarks were rerun.
+
+Approved F-11 v3 and stream-gap amendments optimize only repeated sparse RESET work
+and canonical missing-record serialization. Formula, rounding, Money/Quantity,
+seed/finality/refresh rules, calculation bounds, admission limits and PREPARED rollout
+remain unchanged.
+
+The measured sparse 1m request scans 525,599 slots with 5,845 stored candles. Baseline
+was 7.870049s. Final three-run read-only snapshot samples were 3.568926s, 3.508940s and
+3.554133s; median 3.554133s (45.2% of baseline). Scalar and batched digest revisions
+and all 1,000 indicator points matched.
+
+Focused core/digest tests passed 36 cases; isolated PostgreSQL reader/snapshot tests
+passed 5 cases. Ruff/check-format, strict mypy 371 files and 7 import contracts passed.
+The disposable integration database was dropped after testing. No full suite was run.
+
+API-only build/restart used image
+`sha256:f0add4466c1cfe5ffcf6b52367b78d830b97714784e406e8ffb482a7c63308d3`.
+Real browser smoke showed the chart in 420ms, initial 1h history in 363ms and the 1m
+history request in 3.749s; the complete 1m switch became indicator-ready in 5.799s.
+Candles remained visible during loading, with no busy refusal, blank chart or page error.
+These observations do not replace V-17 release-checkpoint workload validation.

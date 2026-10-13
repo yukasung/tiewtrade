@@ -75,7 +75,7 @@ async def synthetic_heads(engine: AsyncEngine) -> None:
             text("""INSERT INTO indicator_build_jobs
           (source,base,quote,timeframe,formula_version,desired_start,desired_end,
            first_eligible_at,availability_deadline,generation_sequence)
-          SELECT 'primary_spot',b,'USDT',t,'indicators-v1',clock_timestamp()-interval '1 day',
+          SELECT 'primary_spot',b,'USDT',t,'indicators-v2',clock_timestamp()-interval '1 day',
             clock_timestamp()-interval '1 hour',clock_timestamp(),
             clock_timestamp()+interval '600s',1
           FROM unnest(ARRAY['BTC','ETH','DOGE','SOL','XRP']) b
@@ -87,7 +87,7 @@ async def synthetic_heads(engine: AsyncEngine) -> None:
            as_of,source_epoch,source_fence,dataset_revision,checkpoint_count,codec_version,
            build_rollout_epoch,candidate_sequence,claim_token,status,expires_at,prepared_at)
           SELECT gen_random_uuid(),j.id,j.source,j.base,j.quote,j.timeframe,j.formula_version,
-            j.desired_start,j.desired_end,now(),s.epoch,s.revision,repeat('a',64),2,1,
+            j.desired_start,j.desired_end,now(),s.epoch,s.revision,repeat('a',64),2,2,
             c.rollout_epoch,1,gen_random_uuid(),'READY',now()+interval '6 hours 10 minutes',now()
           FROM indicator_build_jobs j CROSS JOIN indicator_source_guard s
             CROSS JOIN indicator_rollout_control c""")
@@ -167,7 +167,7 @@ async def test_activation_requires_all_fresh_valid_heads(
                     "(SELECT id FROM indicator_generations LIMIT 1)",
                     "numeric": "UPDATE indicator_build_jobs SET failed_calculation_key='{}',"
                     "generation_sequence=2",
-                    "codec": "UPDATE indicator_generations SET codec_version=2",
+                    "codec": "UPDATE indicator_generations SET codec_version=1",
                     "policy": "UPDATE indicator_rollout_control SET protocol_version=2",
                 }[fault]
             )
@@ -365,7 +365,7 @@ class Docker:
             return json.dumps(
                 {
                     "cursor_formats": [1, 2] if self.fault != "legacy" else [1],
-                    "codec_version": 1,
+                    "codec_version": 2,
                     "protocol_version": 1,
                     "source_scope": 1,
                     "physical_grace_seconds": 22500,

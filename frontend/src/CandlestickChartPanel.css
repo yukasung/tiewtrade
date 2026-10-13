@@ -2,20 +2,64 @@
   min-width: 0;
   overflow-wrap: anywhere;
 }
-.chart-controls, .chart-indicators, .chart-selection dl {
+.chart-controls {
   display: flex;
   flex-wrap: wrap;
   gap: var(--account-space-sm);
 }
 .chart-controls label { display: grid; gap: var(--account-field-gap); }
-.chart-controls button, .chart-selection button, .chart-controls select {
+.chart-controls select {
   padding: var(--account-space-sm) var(--account-space-md);
   border: var(--account-border-width) solid var(--account-line);
   border-radius: var(--account-radius);
 }
-.chart-indicators { margin-block: var(--account-space-md); min-inline-size: 0; }
 .chart-controls select { max-width: 100%; }
-.chart-canvas { width: 100%; min-width: 0; height: 580px; }
-.chart-selection dl > div { min-width: 0; overflow-wrap: anywhere; }
-.chart-selection dt { font-weight: var(--account-emphasis-weight); }
-.chart-attribution { margin-block: var(--account-space-sm); }
+.chart-frame {
+  --chart-background: #ffffff;
+  --chart-text: #667085;
+  --chart-grid: #f2f4f7;
+  --chart-border: #d0d5dd;
+  --chart-up: #089981;
+  --chart-down: #f23645;
+  --chart-price-line: #089981;
+  --chart-indicator-1: #2962ff;
+  --chart-indicator-2: #ff9800;
+  --chart-indicator-3: #ab47bc;
+  --chart-indicator-4: #26a69a;
+  --chart-indicator-5: #b7791f;
+  position: relative;
+  isolation: isolate;
+  min-width: 0;
+  background: var(--chart-background);
+  border: 1px solid var(--chart-border);
+  color: var(--chart-text);
+}
+.chart-canvas {
+  position: relative;
+  z-index: 0;
+  width: 100%;
+  min-width: 0;
+  height: clamp(520px, 72vh, 900px);
+}
+.chart-chart-header {
+  position: absolute;
+  z-index: 10;
+  inset: 8px 88px auto 10px;
+  pointer-events: none;
+  display: grid;
+  gap: 4px;
+  font-size: 12px;
+  line-height: 1.25;
+  text-shadow: 0 1px 2px var(--chart-background);
+}
+.chart-chart-title, .chart-candle-meta, .chart-ohlc { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; }
+.chart-chart-title strong { color: #101828; font-size: 14px; }
+.chart-candle-meta { color: #344054; }
+.chart-ohlc { color: #344054; }
+.chart-ohlc-label { color: var(--chart-text); margin-inline-end: 3px; }
+.chart-finality { color: #9a6700; }
+.chart-finality-closed { color: var(--chart-up); }
+@media (max-width: 640px) {
+  .chart-canvas { height: clamp(420px, 65vh, 680px); }
+  .chart-chart-header { inset-inline-end: 58px; }
+}

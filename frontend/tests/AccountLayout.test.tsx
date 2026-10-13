@@ -6,6 +6,14 @@ import { Input } from "../src/components/ui/Input";
 import { Label } from "../src/components/ui/Label";
 import { Select } from "../src/components/ui/Select";
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
+it("lets the chart page use the full workspace width", () => {
+  const { container } = render(<AccountLayout page="chart"><p>chart</p></AccountLayout>);
+  expect(container.querySelector(".account-content-chart")).toBeTruthy();
+});
+it("keeps the standard content width on other module pages", () => {
+  const { container } = render(<AccountLayout page="account"><p>account</p></AccountLayout>);
+  expect(container.querySelector(".account-content-chart")).toBeNull();
+});
 it("toggles the desktop icon rail without hiding the current module", () => {
   vi.stubGlobal("innerWidth", 1440);
   const { container } = render(<AccountLayout><p>current module</p></AccountLayout>);

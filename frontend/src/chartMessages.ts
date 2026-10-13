@@ -1,7 +1,7 @@
 import { createInstance } from "i18next";
 
 const th = {
-  heading: "กราฟแท่งเทียน", pair: "คู่เทรด", timeframe: "Timeframe", language: "ภาษา",
+  heading: "กราฟแท่งเทียน", pair: "คู่เทรด", timeframe: "Timeframe", reset: "รีเซ็ตกราฟ", market: "Binance TH Spot",
   selectionOutside: "แท่งที่เลือกอยู่นอกช่วงที่โหลด",
   reason: "เหตุผลจาก server", unknownReason: "ไม่ทราบเหตุผลจาก server",
   streamReasons: { RECOVERING: "กำลังกู้คืน", VENUE_PROTOCOL: "รูปแบบข้อมูลตลาดใช้ไม่ได้",
@@ -11,15 +11,16 @@ const th = {
   previous: "แท่งก่อนหน้า", next: "แท่งถัดไป", indicators: "Indicator", missing: "ไม่มีข้อมูล",
   scale: "สเกลภาพเป็นค่าประมาณ; ข้อความ OHLCV และ indicator ใช้ค่าต้นฉบับ exact",
   disclaimer: "กราฟ Spot · Asia/Bangkok · ราคาล่าสุดแสดงแยกในเมนูราคาสด",
-  attribution: "TradingView Lightweight Charts™ · Copyright (с) 2025 TradingView, Inc.",
   asOf: "ข้อมูลอ้างอิง", checked: "เวลาที่ server ตรวจ", selected: "แท่งที่เลือก", preview: "ท่อแท่งเทียนสด",
   history: "ประวัติ", open: "Open", high: "High", low: "Low", close: "Close", volume: "Volume",
+  compactFinality: { OPEN: "กำลังก่อตัว", UNCONFIRMED: "รอยืนยัน", CLOSED: "ปิดแล้ว" },
   LOADING: "กำลังโหลด", CHECKING: "กำลังตรวจความสอดคล้อง", MATCHED: "ข้อมูลสอดคล้อง ณ เวลาที่ตรวจ",
   CHANGED: "ข้อมูลเปลี่ยน กำลังรอชุดที่สอดคล้อง", UNVERIFIABLE: "ยังพิสูจน์ความสอดคล้องไม่ได้",
   READY: "พร้อม ณ เวลาที่ server ตรวจ", RECOVERING: "กำลังกู้คืน", STALE: "ข้อมูลเก่า",
   NO_DATA: "ยังไม่มีข้อมูลสด", UNAVAILABLE: "ข้อมูลใช้ไม่ได้", HIDDEN: "หยุดรับข้อมูลระหว่างซ่อนหน้า",
   OFFLINE: "การเชื่อมต่อขาด", STOPPED: "หยุดรอบอัตโนมัติแล้ว กรุณาลองใหม่",
   EMPTY: "ไม่มีแท่งเทียนในช่วงนี้", PARTIAL: "ประวัติยังไม่ครบ", REFRESH_REQUIRED: "ต้อง refresh ข้อมูล",
+  PRESENT: "มีประวัติแท่งเทียน",
   WARM_UP: "ข้อมูล warm-up ยังไม่พอ", GAP: "ช่องว่างของข้อมูล", OPEN: "แท่งยังเปิด",
   UNCONFIRMED: "ยังไม่มีหลักฐานยืนยัน CLOSED", CLOSED: "ยืนยัน CLOSED แล้ว",
   CHART_RENDER_LIMIT: "ข้อมูลบางชุดวาดด้วยสเกลนี้ไม่ได้; ค่าต้นฉบับยังอ่านได้",
@@ -38,7 +39,7 @@ const th = {
   },
 };
 const en = {
-  heading: "Candlestick chart", pair: "Trading pair", timeframe: "Timeframe", language: "Language",
+  heading: "Candlestick chart", pair: "Trading pair", timeframe: "Timeframe", reset: "Reset chart", market: "Binance TH Spot",
   selectionOutside: "Selected candle is outside the loaded range",
   reason: "Server reason", unknownReason: "Unknown server reason",
   streamReasons: { RECOVERING: "Recovering", VENUE_PROTOCOL: "Invalid exchange data protocol",
@@ -48,14 +49,16 @@ const en = {
   previous: "Previous candle", next: "Next candle", indicators: "Indicators", missing: "No data",
   scale: "Visual scales are approximate; OHLCV and indicator text preserves the exact source values",
   disclaimer: "Spot chart · Asia/Bangkok · Latest trades appear separately on the live prices page",
-  attribution: th.attribution, asOf: "Data as of", checked: "Server check time", selected: "Selected candle",
+  asOf: "Data as of", checked: "Server check time", selected: "Selected candle",
   preview: "Live candle delivery", history: "History", open: "Open", high: "High", low: "Low", close: "Close", volume: "Volume",
+  compactFinality: { OPEN: "Open", UNCONFIRMED: "Unconfirmed", CLOSED: "Closed" },
   LOADING: "Loading", CHECKING: "Checking consistency", MATCHED: "Consistent at last check",
   CHANGED: "Data changed; awaiting a consistent dataset", UNVERIFIABLE: "Consistency cannot be verified",
   READY: "Ready at the server check time", RECOVERING: "Recovering", STALE: "Stale data",
   NO_DATA: "No live candle data", UNAVAILABLE: "Data unavailable", HIDDEN: "Updates paused while page is hidden",
   OFFLINE: "Delivery disconnected", STOPPED: "Automatic work stopped; try again", EMPTY: "No candles in this range",
   PARTIAL: "Incomplete history", REFRESH_REQUIRED: "History refresh required", WARM_UP: "Insufficient warm-up data",
+  PRESENT: "Candle history available",
   GAP: "Data gap", OPEN: "Candle still open", UNCONFIRMED: "No proof of CLOSED finality", CLOSED: "Confirmed CLOSED",
   CHART_RENDER_LIMIT: "Some data cannot be drawn at this scale; exact source values remain readable",
   errors: {

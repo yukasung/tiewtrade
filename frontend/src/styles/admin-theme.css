@@ -63,6 +63,10 @@
   max-width: 100rem;
   min-width: 0;
 }
+.account-content-chart {
+  width: 100%;
+  max-width: none;
+}
 .account-workspace { margin-inline-start: var(--account-sidebar-width); min-width: 0; }
 .page-breadcrumb ol { list-style: none; padding: 0; margin: 0; font-size: var(--app-caption-size); }
 .page-breadcrumb a { color: var(--account-muted-color); text-decoration: none; }

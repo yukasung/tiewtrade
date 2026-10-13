@@ -46,7 +46,7 @@ export function AccountLayout({ children, page = "chart" }: { children: ReactNod
       <div className="account-workspace flex-1">
         <AccountHeader open={desktop ? expanded : open} mobileOpen={open} trigger={trigger}
           toggle={() => { if (desktop) setExpanded(value => !value); else setOpen(value => !value); }} />
-        <div className="account-content mx-auto p-4 md:p-6">
+        <div className={`account-content mx-auto p-4 md:p-6 ${page === "chart" ? "account-content-chart" : ""}`}>
           <PageBreadcrumb title={page === "chart" ? chartText("heading") : t(page === "api-keys" ? "keys" : page === "trading-account" ? "trading" : page)} />
           {children}
         </div>

@@ -134,10 +134,12 @@ def test_checkpoint_ambient_decimal_context_parity() -> None:
     ("field", "value"),
     [
         ("version", True),
+        ("version", 1),
         ("generation_id", "other"),
         ("source", "other"),
         ("quote", "EUR"),
         ("formula_version", "future"),
+        ("formula_version", "indicators-v1"),
         ("next_open_at", "2026-10-01T16:41:00.000000+00:00"),
         ("last_open_at", None),
         ("blocked", 1),
@@ -185,7 +187,7 @@ def mature_checkpoint() -> dict[str, object]:
     return payload
 
 
-@pytest.mark.parametrize(("first", "second"), [(1, 3), (6, 7), (6, 8)])
+@pytest.mark.parametrize(("first", "second"), [(0, 1), (3, 4), (3, 5)])
 def test_checkpoint_rejects_reordered_mature_averages(
     mature_checkpoint: dict[str, object],
     first: int,
@@ -352,16 +354,16 @@ def test_checkpoint_rejects_warm_gain_loss_inconsistent_with_closes(corruption: 
 
     assert restore(payload).export_state() == original
     averages = cast(list[dict[str, object]], payload["averages"])
-    assert averages[6]["pending"] == ["1", "0", "0", "2"]
-    assert averages[7]["pending"] == ["0", "1", "0", "0"]
+    assert averages[3]["pending"] == ["1", "0", "0", "2"]
+    assert averages[4]["pending"] == ["0", "1", "0", "0"]
     if corruption == "both_positive":
-        averages[7]["pending"] = ["1", "1", "0", "0"]
+        averages[4]["pending"] = ["1", "1", "0", "0"]
     elif corruption == "wrong_gain":
-        averages[6]["pending"] = ["2", "0", "0", "2"]
+        averages[3]["pending"] = ["2", "0", "0", "2"]
     elif corruption == "wrong_loss":
-        averages[7]["pending"] = ["0", "2", "0", "0"]
+        averages[4]["pending"] = ["0", "2", "0", "0"]
     else:
-        averages[6]["pending"] = ["2", "0", "0", "1"]
+        averages[3]["pending"] = ["2", "0", "0", "1"]
     with pytest.raises(CheckpointCodecError):
         restore(payload)
     assert stream.export_state() == original
@@ -372,11 +374,11 @@ def test_checkpoint_accepts_warm_true_range_at_or_above_price_change(minimal_ran
     stream = _mixed_warm_stream(minimal_range=minimal_range)
     window = CandleWindow(START, START + stream.state.accepted_count * SPAN)
     zero = Money.of(0, "USDT")
-    assert stream.state.averages[8].pending[2] == (zero if minimal_range else Money.of(2, "USDT"))
+    assert stream.state.averages[5].pending[2] == (zero if minimal_range else Money.of(2, "USDT"))
     for gain, loss, true_range in zip(
-        stream.state.averages[6].pending,
-        stream.state.averages[7].pending,
-        stream.state.averages[8].pending,
+        stream.state.averages[3].pending,
+        stream.state.averages[4].pending,
+        stream.state.averages[5].pending,
         strict=True,
     ):
         if minimal_range:
@@ -408,7 +410,7 @@ def test_checkpoint_rejects_warm_true_range_below_gain_plus_loss(index: int, val
     window = CandleWindow(START, START + stream.state.accepted_count * SPAN)
     payload = encode_checkpoint(stream, **IDENTITY, calculation=window, next_open_at=window.end)
     averages = cast(list[dict[str, object]], payload["averages"])
-    cast(list[str], averages[8]["pending"])[index] = value
+    cast(list[str], averages[5]["pending"])[index] = value
     with pytest.raises(CheckpointCodecError) as error:
         decode_checkpoint(
             payload,
@@ -432,17 +434,17 @@ def test_checkpoint_rejects_mature_atr_below_average_price_change(
 ) -> None:
     payload = copy.deepcopy(mature_checkpoint)
     averages = cast(list[dict[str, object]], payload["averages"])
-    gain = Money.of(cast(str, averages[6]["value"]), "USDT")
-    loss = Money.of(cast(str, averages[7]["value"]), "USDT")
+    gain = Money.of(cast(str, averages[3]["value"]), "USDT")
+    loss = Money.of(cast(str, averages[4]["value"]), "USDT")
     assert gain > Money.of(0, "USDT") and loss > Money.of(0, "USDT")
     if corruption == "zero_atr":
-        averages[8]["value"] = "0"
+        averages[5]["value"] = "0"
     elif corruption == "below_by_tick":
         below = gain + loss - Money.of("0.000000000000000001", "USDT")
-        averages[8]["value"] = below.as_parts()["amount"]
+        averages[5]["value"] = below.as_parts()["amount"]
     else:
-        averages[6]["value"] = averages[7]["value"] = "90000000000000000000"
-        averages[8]["value"] = "90000000000000000000"
+        averages[3]["value"] = averages[4]["value"] = "90000000000000000000"
+        averages[5]["value"] = "90000000000000000000"
     with pytest.raises(CheckpointCodecError) as error:
         _decode(payload, 2000)
     assert isinstance(error.value.__cause__, InvalidInputTypeError)
@@ -459,7 +461,7 @@ def test_mature_atr_accepts_equal_and_floor_rounded_price_change(count: int, pat
         "large": ("1", "90000000000000000000"),
     }[pattern]
     stream = _price_stream(tuple(pair[index % 2] for index in range(count)), minimal_range=True)
-    gain, loss, atr = (stream.state.averages[index].value for index in (6, 7, 8))
+    gain, loss, atr = (stream.state.averages[index].value for index in (3, 4, 5))
     assert gain is not None and loss is not None and atr is not None
     assert not atr < gain + loss
     if pattern == "flat":

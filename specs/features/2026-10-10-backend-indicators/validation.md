@@ -1,10 +1,38 @@
 # F-11 — คำนวณ indicator ที่ backend — Validation
 
 สถานะ: **Approved** — เจ้าของอนุมัติทั้งฉบับเมื่อ 2026-10-10 ตามคำสั่ง “approve”; เริ่มตรวจ implementation แล้ว แต่ยังไม่ผ่านครบทุกด่าน; รวมNC-35 amendmentsที่อนุมัติเมื่อ2026-10-10
+การลบ MACD ด้านล่าง: **Approved** — เจ้าของอนุมัติ amendment เมื่อ 2026-10-13; เกณฑ์ใหม่ยังไม่ได้รันและไม่แทนผล Failed/Partial/Pending เดิม
 วันที่: 2026-10-10
 Branch: feature/f-11-backend-indicators
 
+## Amendment — ตรวจรับการลบ MACD (Approved 2026-10-13)
+
+| รหัส | เกณฑ์ตรวจ | ผล |
+|---|---|---|
+| M-01 | API ใหม่และ core ให้เฉพาะ EMA20/50/200, RSI14, ATR14; ไม่มี MACD ทั้ง READY/WARM_UP/GAP/REFRESH_REQUIRED; generated contract/fixture ตรงกัน | Pending |
+| M-02 | ค่า EMA/RSI/ATR หลังลบ MACD เท่ากับ oracle/ผล v1 สำหรับ input เดียวกันทุก seed, gap, HOLD, RESET, overflow boundary และ batch size ที่รองรับ; ความผิดพลาดไม่ถูกกลืน | Pending |
+| M-03 | checkpoint v1/v2 และ result v1/v2 แยกด้วย version; decode v1 เป็น v2 ไม่ได้; cursor/cache/generation เก่าไม่สร้างผลผสมหรือรั่วเข้า API ใหม่ | Pending |
+| M-04 | actual-role DB migration และ rollout PAUSED→drain→epoch ใหม่→LEGACY v2 ผ่าน พร้อม mixed-version negative controls, rollback/restart, replica/readiness และ no stale ready head | Pending |
+| M-05 | auth, exact value, pagination, proof, 409/422/429/503/504 และ retry/concurrency/lease/fencing ไม่ถดถอย; ไม่มีการส่งออเดอร์ Live ในการทดสอบ | Pending |
+
+ระหว่างพัฒนาใช้ targeted core/infra/API tests ตามผลกระทบ; ก่อน merge ต้องผ่าน
+ด่าน correctness/security/contract/DB ที่บังคับสำหรับ code ฉบับสุดท้าย.
+เกณฑ์ workload/stress/endurance/resource เดิมคงเวลา release checkpoint และ
+สถานะ Pending Full Validation ตามเดิม; การลบ MACD ไม่ถือว่าผ่านเกณฑ์เหล่านั้น.
+
 ## ผลตรวจด่านพัฒนาและ merge — 2026-10-12
+
+Release checkpoint 2026-10-13: เจ้าของอนุมัติ Milestone B รอบเต็มแล้ว;
+ติดตามผล candidate ปัจจุบันใน [รายงานรอบเต็ม](profiling/release-20261013/README.md).
+ผล smoke ที่แก้ producer แล้วครบ 30/30 และ HTTP 60/60 อยู่ใน
+[follow-up](profiling/prepared-chart-smoke-fixed-r2/README.md); ไม่ใช้แทน full acceptance
+และยังไม่อนุมัติ Milestone C/เปิด PREPARED ใน application DB.
+
+Follow-up 2026-10-13: [Milestone A smoke](profiling/prepared-chart-smoke/README.md)
+วัด PREPARED ในระบบแยก; browser idle TF switch body 473ms, source invalidation ผ่าน
+แต่ readiness สูงสุด 29/30 และ ETH 1m FAILED_SUPERSEDED หลัง source changes
+ไม่ใช่ full capacity/parity acceptance; คง C2/C6 Failed และ Pending Full Validation เดิม
+ไม่เปิด PREPARED ใน application DB
 
 Implementation/A–D และการแก้ cleanup/refresh deadline ผ่านรีวิวซ้ำแล้ว;
 refactor ล่าสุดทั้ง3ไฟล์ผ่าน deep review APPROVED โดยคงพฤติกรรมเดิม.

@@ -15,16 +15,13 @@ from tiewtrade.core.money import Money
 from tiewtrade.core.money.errors import MoneyError
 from tiewtrade.core.money.indicator_batch import AverageState, IndicatorBatchState
 
-CODEC_VERSION = 1
+CODEC_VERSION = 2
 MAX_PAYLOAD_BYTES = 16 * 1024
-# The ordered identities belong to indicators-v1; equal periods are not equal states.
+# The ordered identities belong to indicators-v2; equal periods are not equal states.
 AVERAGE_SCHEMA = (
-    ("ema12", 12),
     ("ema20", 20),
-    ("ema26", 26),
     ("ema50", 50),
     ("ema200", 200),
-    ("macd_signal", 9),
     ("rsi_gain14", 14),
     ("rsi_loss14", 14),
     ("atr14", 14),

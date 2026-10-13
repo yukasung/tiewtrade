@@ -92,7 +92,7 @@ def test_restored_accept_transition_ignores_hostile_decimal_context() -> None:
     payload = encode_checkpoint(
         stream, **IDENTITY, calculation=calculation, next_open_at=START + 1000 * SPAN
     )
-    assert stream.state.averages[4].value is None
+    assert stream.state.averages[2].value is None
     with localcontext() as context:
         context.prec = 2
         context.rounding = ROUND_UP
@@ -109,7 +109,7 @@ def test_restored_accept_transition_ignores_hostile_decimal_context() -> None:
         )
         first = restored.feed(*slots[1000])
         assert restored.state.accepted_count == 200
-        assert restored.state.averages[4].value is not None
+        assert restored.state.averages[2].value is not None
         assert first.finality is CandleFinality.UNCONFIRMED
         assert (first, *scan(restored, slots[1001:], 16, 7)) == expected[1000:]
         assert restored.export_state() == full.export_state()

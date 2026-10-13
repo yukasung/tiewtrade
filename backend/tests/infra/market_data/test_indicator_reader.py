@@ -55,7 +55,7 @@ async def test_fetch_sizes_and_canonical_digest(
                 "BTC",
                 "USDT",
                 "1m",
-                "indicators-v1",
+                "indicators-v2",
                 stamp(window.start),
                 stamp(window.end),
             ]
@@ -191,7 +191,7 @@ async def test_checkpoint_replay_matches_database_full_scan(
         first = CandleWindow(window.start, window.start + 1000 * SPAN)
         first_slots = await load(first)
         assert scan(builder, first_slots, batch_size, fetch_size) == expected_points[:1000]
-        assert len(builder.state.averages[4].pending) == 199
+        assert len(builder.state.averages[2].pending) == 199
         checkpoint = encode_checkpoint(
             builder, **identity, calculation=window, next_open_at=first.end
         )

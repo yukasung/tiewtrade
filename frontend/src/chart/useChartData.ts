@@ -1,7 +1,7 @@
 import { skipToken, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { ApiRequestError, send } from "../auth";
-import { live, verify, type ChartLive, type Series, type Window } from "./api";
+import { candles, live, verify, type ChartLive, type Series, type Window } from "./api";
 import { readEpisode, wait } from "./readEpisode";
 
 export function useChartData(user: string, series: Series, window?: Window) {
@@ -14,6 +14,7 @@ export function useChartData(user: string, series: Series, window?: Window) {
   const cooldown = useRef(0);
   const cooldownErrors = useRef(new WeakSet<ApiRequestError>());
   const liveDue = useRef(0);
+  const readerCleanupUntil = useRef(0);
   const episodeKey = ["chart", user, "primary_spot", series.base, series.quote, series.timeframe, window, nonce] as const;
   const query = useQuery({ queryKey: episodeKey, enabled: false, retry: false, gcTime: 0,
     refetchOnWindowFocus: false, refetchOnReconnect: false, networkMode: "always",
@@ -25,6 +26,10 @@ export function useChartData(user: string, series: Series, window?: Window) {
     },
   });
   const first = query.data?.pages[0];
+  const provisional = useQuery({ queryKey: [...episodeKey, "candles"], enabled: false, retry: false, gcTime: 0,
+    refetchOnWindowFocus: false, refetchOnReconnect: false, networkMode: "always",
+    queryFn: ({ signal }) => candles(series, window, AbortSignal.any([signal, AbortSignal.timeout(10_000)])),
+  });
   const proofKey = [...episodeKey, "proof", first?.dataset_revision] as const;
   const proof = useQuery({ queryKey: proofKey, enabled: false, retry: false, gcTime: 0,
     refetchOnWindowFocus: false, refetchOnReconnect: false, networkMode: "always",
@@ -44,8 +49,8 @@ export function useChartData(user: string, series: Series, window?: Window) {
   const refreshState = useQuery<boolean>({ queryKey: [...episodeKey, "refresh"], enabled: false,
     queryFn: skipToken, retry: false, gcTime: 0, refetchOnWindowFocus: false, refetchOnReconnect: false });
   const stopped = Boolean(query.error || proof.error || preview.error || refreshState.error);
-  const actions = useRef({ query, proof, preview, first, refreshState });
-  actions.current = { query, proof, preview, first, refreshState };
+  const actions = useRef({ query, proof, preview, provisional, first, refreshState });
+  actions.current = { query, proof, preview, provisional, first, refreshState };
 
   useEffect(() => {
     if (stopped) void client.cancelQueries({ queryKey: episodeKey });
@@ -54,17 +59,28 @@ export function useChartData(user: string, series: Series, window?: Window) {
   useEffect(() => {
     successfulAt.current = -Infinity; proofAt.current = -Infinity;
     rebuilt.current = null;
-    // Allow the cancelled server reader its approved 2s cleanup window before
-    // starting another reader on mount/remount or a new series. This is not a 429 retry.
+    // Only a cancelled history/proof reader needs the server cleanup window.
     liveDue.current = globalThis.performance.now() + 4000;
+    const previewStart = globalThis.setTimeout(() => {
+      if (document.visibilityState !== "hidden" && globalThis.navigator.onLine) {
+        void actions.current.preview.refetch();
+        void actions.current.provisional.refetch();
+      }
+    }, 0);
     const start = globalThis.setTimeout(() => {
       if (document.visibilityState !== "hidden" && globalThis.navigator.onLine) {
         void actions.current.query.refetch();
-        liveDue.current = globalThis.performance.now() + 2000;
-        void actions.current.preview.refetch();
       }
-    }, 2000);
-    return () => { globalThis.clearTimeout(start); void client.cancelQueries({ queryKey: episodeKey }); };
+    }, Math.max(0, readerCleanupUntil.current - globalThis.performance.now()));
+    return () => {
+      globalThis.clearTimeout(previewStart);
+      globalThis.clearTimeout(start);
+      if (client.isFetching({ queryKey: episodeKey, exact: true }) ||
+          client.isFetching({ queryKey: [...episodeKey, "proof"] })) {
+        readerCleanupUntil.current = globalThis.performance.now() + 2000;
+      }
+      void client.cancelQueries({ queryKey: episodeKey });
+    };
     // episodeKey is determined by these scalar UI selections.
   }, [client, user, series.base, series.quote, series.timeframe, window?.start, window?.end, nonce]);
 
@@ -80,7 +96,11 @@ export function useChartData(user: string, series: Series, window?: Window) {
         liveDue.current = globalThis.performance.now() + 2000;
         void actions.current.preview.refetch();
         if (actions.current.first) void actions.current.proof.refetch();
-        else void actions.current.query.refetch();
+        else {
+          void actions.current.query.refetch();
+          if (!actions.current.provisional.data && !actions.current.provisional.error &&
+              !actions.current.provisional.isFetching) void actions.current.provisional.refetch();
+        }
       }
     };
     document.addEventListener("visibilitychange", visibility);
@@ -129,7 +149,7 @@ export function useChartData(user: string, series: Series, window?: Window) {
     void client.resetQueries({ queryKey: proofKey, exact: true });
   }, [client, query.dataUpdatedAt]);
 
-  for (const error of [query.error, proof.error, preview.error, refreshState.error]) {
+  for (const error of [query.error, proof.error, preview.error, refreshState.error, provisional.error]) {
     if (error instanceof ApiRequestError && error.retryAt && !cooldownErrors.current.has(error)) {
       cooldownErrors.current.add(error);
       const retryAt = Date.parse(error.retryAt);
@@ -147,7 +167,7 @@ export function useChartData(user: string, series: Series, window?: Window) {
     // Retry-After so the manual retry control does not remain disabled forever.
     const cooldownTimer = globalThis.setTimeout(() => setTick(value => value + 1), cooldownRemaining + 1);
     return () => globalThis.clearTimeout(cooldownTimer);
-  }, [query.error, proof.error, preview.error, refreshState.error, nonce]);
+  }, [query.error, proof.error, preview.error, refreshState.error, provisional.error, nonce]);
   const retry = () => {
     if (globalThis.performance.now() >= cooldown.current) setNonce(value => value + 1);
   };
@@ -181,5 +201,5 @@ export function useChartData(user: string, series: Series, window?: Window) {
   const valid = visible && !stopped && !query.isFetching && !proof.isFetching && !refreshState.isFetching &&
     proof.data?.status !== "CHANGED" && proof.data?.status !== "UNVERIFIABLE" &&
     globalThis.performance.now() - proofAt.current <= 45_000;
-  return { query, proof, preview, refreshState, visible, valid, stopped, retry, refresh, cooldownActive };
+  return { query, proof, preview, provisional, refreshState, visible, valid, stopped, retry, refresh, cooldownActive };
 }

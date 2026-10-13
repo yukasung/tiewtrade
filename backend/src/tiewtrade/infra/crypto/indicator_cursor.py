@@ -47,7 +47,7 @@ class CursorClaims(BaseModel):
 class PreparedCursorClaims(CursorClaims):
     format_version: Literal[2] = 2  # type: ignore[assignment]
     generation_id: UUID
-    codec_version: Literal[1] = 1
+    codec_version: Literal[2] = 2
     rollout_epoch: UUID
     dataset_revision: str = Field(pattern=r"^[0-9a-f]{64}$")
 

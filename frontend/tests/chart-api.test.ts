@@ -1,8 +1,19 @@
 import { afterEach, expect, it, vi } from "vitest";
-import { history } from "../src/chart/api";
-import { chartPage, chartSeries } from "./chartFixture";
+import { candles, history } from "../src/chart/api";
+import { candleHistory, chartPage, chartSeries } from "./chartFixture";
 
 afterEach(() => vi.unstubAllGlobals());
+
+it("uses server bounds for candle-only history and rejects a different series or excess rows", async () => {
+  const fetch = vi.fn().mockResolvedValueOnce(new Response(JSON.stringify(candleHistory())))
+    .mockResolvedValueOnce(new Response(JSON.stringify({ ...candleHistory(), base: "ETH" })))
+    .mockResolvedValueOnce(new Response(JSON.stringify({ ...candleHistory(), rows: Array.from({ length: 1001 }, () => ({})) })));
+  vi.stubGlobal("fetch", fetch);
+  await expect(candles(chartSeries, undefined, new AbortController().signal)).resolves.toMatchObject({ coverage: "INCOMPLETE" });
+  expect(fetch.mock.calls[0]?.[0]).toBe("/api/market-data/candles?base=BTC&quote=USDT&timeframe=1h&limit=1000");
+  await expect(candles(chartSeries, undefined, new AbortController().signal)).rejects.toMatchObject({ message: "CHART_INVALID_RESPONSE" });
+  await expect(candles(chartSeries, undefined, new AbortController().signal)).rejects.toMatchObject({ message: "CHART_INVALID_RESPONSE" });
+});
 
 it("reads a complete streamed response without cancelling its successful body", async () => {
   const cancelled = vi.fn();

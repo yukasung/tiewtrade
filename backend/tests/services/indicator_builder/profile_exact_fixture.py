@@ -65,7 +65,7 @@ async def test_exact_dense_fixture_and_independent_digest(
     def stamp(moment: datetime) -> str:
         return moment.isoformat(timespec="microseconds")
 
-    feed([1, "primary_spot", "BTC", "USDT", "1m", "indicators-v1", stamp(start), stamp(end)])
+    feed([1, "primary_spot", "BTC", "USDT", "1m", "indicators-v2", stamp(start), stamp(end)])
     for index in range(525600):
         opened = start + timedelta(minutes=index)
         feed(

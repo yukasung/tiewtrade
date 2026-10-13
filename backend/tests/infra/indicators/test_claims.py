@@ -72,7 +72,7 @@ async def prepared(active: None, migrator_engine: AsyncEngine) -> AsyncIterator[
     async with migrator_engine.begin() as connection:
         await connection.execute(
             text("""UPDATE indicator_rollout_control SET mode='PREPARING',
-            codec_version=1,protocol_version=1,retention_policy='GRACE' WHERE id=1""")
+            codec_version=2,protocol_version=1,retention_policy='GRACE' WHERE id=1""")
         )
     try:
         yield
@@ -260,6 +260,31 @@ async def test_seed_fixed_catalog_and_exclusive_claim(
     released = await job(migrator_engine, claim)
     assert released["status"] == "QUEUED" and released["attempts_used"] == 1
     assert released["retry_not_before"] > live["last_heartbeat"]
+
+
+async def test_retired_v1_job_is_never_claimed_by_v2_builder(
+    prepared: None,
+    builder_engine: AsyncEngine,
+    migrator_engine: AsyncEngine,
+) -> None:
+    async with migrator_engine.begin() as connection:
+        await connection.execute(text("""INSERT INTO indicator_build_jobs
+          (source,base,quote,timeframe,formula_version,desired_start,desired_end,
+           first_eligible_at,availability_deadline,retry_not_before)
+          VALUES('primary_spot','BTC','USDT','1m','indicators-v1',
+            clock_timestamp()-interval '1 day',clock_timestamp(),
+            clock_timestamp()-interval '1 day',clock_timestamp()-interval '1 day',
+            clock_timestamp()-interval '1 day')"""))
+    async with pinned_indicator_writer(builder_engine, connection_mode="direct") as writer:
+        assert writer is not None
+        assert await writer.seed() == 30
+        claim = await writer.claim(uuid4())
+        assert claim is not None and claim.formula_version == "indicators-v2"
+        await writer.finish(AttemptOutcome.SOURCE_CHANGED)
+    async with migrator_engine.connect() as connection:
+        old_status = (await connection.execute(text("""SELECT status FROM indicator_build_jobs
+          WHERE formula_version='indicators-v1'"""))).scalar_one()
+    assert old_status == "QUEUED"
 
 
 async def test_no_due_job_and_rollback_do_not_consume_round_or_attempt(

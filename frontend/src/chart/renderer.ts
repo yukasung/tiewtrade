@@ -1,6 +1,6 @@
 import {
-  CandlestickSeries, HistogramSeries, LineSeries, createChart,
-  type IChartApi, type ISeriesApi, type Time, type UTCTimestamp,
+  CandlestickSeries, LineSeries, TickMarkType, createChart,
+  type AutoscaleInfoProvider, type IChartApi, type ISeriesApi, type Time, type UTCTimestamp,
 } from "lightweight-charts";
 import type { Candle, Point } from "./api";
 
@@ -19,43 +19,70 @@ export function chartTime(iso: string): UTCTimestamp {
 const thaiTime = (time: Time, locale: string) => typeof time === "number"
   ? new Intl.DateTimeFormat(locale, { timeZone: "Asia/Bangkok", dateStyle: "short", timeStyle: "short" })
     .format(new Date(time * 1000)) : typeof time === "string" ? time : `${time.year}-${time.month}-${time.day}`;
+const axisTime = (time: Time, type: TickMarkType, locale: string) => {
+  const date = typeof time === "number" ? new Date(time * 1000) : typeof time === "string"
+    ? new Date(`${time}T00:00:00Z`) : new Date(Date.UTC(time.year, time.month - 1, time.day));
+  const options: Intl.DateTimeFormatOptions = { timeZone: "Asia/Bangkok" };
+  if (type === TickMarkType.Year) {
+    return new Intl.DateTimeFormat(locale, { ...options, year: "2-digit" })
+      .formatToParts(date).find(part => part.type === "year")?.value ?? "";
+  }
+  else if (type === TickMarkType.Month) { options.month = "short"; options.year = "2-digit"; }
+  else if (type === TickMarkType.DayOfMonth) { options.day = "numeric"; options.month = "short"; }
+  else {
+    options.hour = "2-digit"; options.minute = "2-digit"; options.hourCycle = "h23";
+    if (type === TickMarkType.TimeWithSeconds) options.second = "2-digit";
+  }
+  return new Intl.DateTimeFormat(locale, options).format(date);
+};
 
 export type ChartRenderer = {
   chart: IChartApi;
   draw(candles: Candle[], points: Point[], enabled: Set<string>, indicatorsValid: boolean): string | null;
   remove(): void;
 };
-export function mountChart(element: HTMLElement, locale: string, selected: (iso: string) => void): ChartRenderer {
+export function mountChart(element: HTMLElement, locale: string, selected: (iso: string | null) => void): ChartRenderer {
   const style = globalThis.getComputedStyle(element);
   const token = (name: string) => style.getPropertyValue(name).trim();
-  const colors = ["--account-brand", "--app-warning-ink", "--account-muted-color",
-    "--account-focus-color", "--account-line"].map(token);
+  const colors = ["--chart-indicator-1", "--chart-indicator-2", "--chart-indicator-3",
+    "--chart-indicator-4", "--chart-indicator-5"].map(token);
   const chart = createChart(element, {
     autoSize: true, height: 580,
-    layout: { attributionLogo: true, background: { color: token("--account-surface") }, textColor: token("--account-ink") },
-    grid: { vertLines: { color: token("--color-gray-100") }, horzLines: { color: token("--color-gray-100") } },
-    rightPriceScale: { borderColor: token("--color-gray-200") },
+    layout: { attributionLogo: true, background: { color: token("--chart-background") }, textColor: token("--chart-text") },
+    grid: { vertLines: { color: token("--chart-grid") }, horzLines: { color: token("--chart-grid") } },
+    rightPriceScale: { borderColor: token("--chart-border") },
     crosshair: { horzLine: { labelVisible: false } },
     localization: { locale, timeFormatter: (time: Time) => thaiTime(time, locale) },
-    timeScale: { timeVisible: true, tickMarkFormatter: (time: Time) => thaiTime(time, locale) },
+    timeScale: { timeVisible: true, borderColor: token("--chart-border"),
+      tickMarkFormatter: (time: Time, type: TickMarkType) => axisTime(time, type, locale) },
   });
-  const candlesSeries = chart.addSeries(CandlestickSeries, { priceLineVisible: false, lastValueVisible: false,
-    upColor: token("--color-success-500"), downColor: token("--color-error-500"),
-    wickUpColor: token("--color-success-500"), wickDownColor: token("--color-error-500"),
-    borderUpColor: token("--color-success-500"), borderDownColor: token("--color-error-500") });
-  const volume = chart.addSeries(HistogramSeries, { priceFormat: { type: "volume" },
-    priceLineVisible: false, lastValueVisible: false, color: token("--account-muted-color") }, 1);
+  let sparseCandles = false;
+  const sparseAutoscale: AutoscaleInfoProvider = original => {
+    const info = original();
+    if (!sparseCandles || !info?.priceRange) return info;
+    const { minValue, maxValue } = info.priceRange;
+    const span = maxValue - minValue;
+    const padding = span > 0 ? span * 2 : Math.max(Math.abs(maxValue), 1) * 0.001;
+    return { ...info, priceRange: { minValue: minValue - padding, maxValue: maxValue + padding } };
+  };
+  const candlesSeries = chart.addSeries(CandlestickSeries, { priceLineVisible: true, lastValueVisible: true,
+    priceLineColor: token("--chart-price-line"),
+    autoscaleInfoProvider: sparseAutoscale,
+    upColor: token("--chart-up"), downColor: token("--chart-down"),
+    wickUpColor: token("--chart-up"), wickDownColor: token("--chart-down"),
+    borderUpColor: token("--chart-up"), borderDownColor: token("--chart-down") });
   const lines: ISeriesApi<"Line">[] = [];
   let previousPoints: Point[] | undefined;
   let previousEnabled: Set<string> | undefined;
   let previousValid = false;
   const listener = (event: { time?: Time }) => {
-    if (typeof event.time === "number") selected(new Date(event.time * 1000).toISOString());
+    selected(typeof event.time === "number" ? new Date(event.time * 1000).toISOString() : null);
   };
   chart.subscribeCrosshairMove(listener);
   return {
     chart,
     draw(candles, points, enabled, indicatorsValid) {
+      sparseCandles = candles.length < 10;
       const slots = new Map<string, Candle>(candles.map(candle => [candle.open_at, candle]));
       try {
         const times = [...new Set([...candles.map(row => row.open_at), ...points.map(row => row.open_at)])].sort();
@@ -67,14 +94,10 @@ export function mountChart(element: HTMLElement, locale: string, selected: (iso:
           if (low > high || low > open || low > close || high < open || high < close) throw new Error("CHART_RENDER_LIMIT");
           return { time, open, high, low, close };
         }));
-        volume.setData(times.map(iso => {
-          const candle = slots.get(iso), time = chartTime(iso);
-          return candle ? { time, value: projection(candle.volume) } : { time };
-        }));
       } catch {
         for (const line of lines.splice(0)) chart.removeSeries(line);
         previousValid = false;
-        candlesSeries.setData([]); volume.setData([]);
+        candlesSeries.setData([]);
         return "CHART_RENDER_LIMIT";
       }
       if (previousValid === indicatorsValid && previousPoints === points && previousEnabled === enabled) return null;
@@ -83,7 +106,7 @@ export function mountChart(element: HTMLElement, locale: string, selected: (iso:
       if (!indicatorsValid) return null;
       let color = 0;
       for (const name of enabled) {
-        const pane = name.startsWith("ema") ? 0 : name.startsWith("rsi") ? 2 : name.startsWith("macd") ? 3 : 4;
+        const pane = name.startsWith("ema") ? 0 : name.startsWith("rsi") ? 1 : 2;
         // Separate segments ensure that the library never joins an indicator across unavailable slots.
         let segment: { time: UTCTimestamp; value: number }[] = [];
         const flush = () => {

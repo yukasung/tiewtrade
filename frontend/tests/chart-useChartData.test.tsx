@@ -3,13 +3,13 @@ import { act, cleanup, renderHook } from "@testing-library/react";
 import { StrictMode, type ReactNode } from "react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { ApiRequestError, send } from "../src/auth";
-import { history, live, verify, type Series, type Window } from "../src/chart/api";
+import { candles, history, live, verify, type Series, type Window } from "../src/chart/api";
 import { useChartData } from "../src/chart/useChartData";
-import { chartLive, chartPage, chartSeries } from "./chartFixture";
+import { candleHistory, chartLive, chartPage, chartSeries } from "./chartFixture";
 
 vi.mock("../src/chart/api", async (original) => ({
   ...await original<typeof import("../src/chart/api")>(),
-  history: vi.fn(), live: vi.fn(), verify: vi.fn(),
+  candles: vi.fn(), history: vi.fn(), live: vi.fn(), verify: vi.fn(),
 }));
 vi.mock("../src/auth", async (original) => ({
   ...await original<typeof import("../src/auth")>(), send: vi.fn(),
@@ -20,6 +20,7 @@ beforeEach(() => {
   vi.mocked(history).mockImplementation(parameters => Promise.resolve({ ...chartPage(),
     ...("base" in parameters ? { base: parameters.base, quote: parameters.quote, timeframe: parameters.timeframe } : {}) }));
   vi.mocked(live).mockResolvedValue(chartLive());
+  vi.mocked(candles).mockResolvedValue(candleHistory());
   vi.mocked(verify).mockResolvedValue({ status: "MATCHED", checked_at: chartPage().as_of });
 });
 afterEach(() => {
@@ -51,9 +52,45 @@ it("StrictMode starts one read and never polls live sooner than two seconds", as
   expect(live).toHaveBeenCalledTimes(2);
 });
 
+it("starts provisional and coherent history immediately without duplicate StrictMode calls", async () => {
+  const hook = mount(true);
+  await tick(10);
+  expect(candles).toHaveBeenCalledTimes(1);
+  expect(history).toHaveBeenCalledTimes(1);
+  expect(hook.result.current.provisional.data?.coverage).toBe("INCOMPLETE");
+  await tick(2010);
+  expect(history).toHaveBeenCalledTimes(1);
+});
+
+it("allows coherent history to finish after candle-only failure", async () => {
+  vi.mocked(candles).mockRejectedValue(new Error("candle-only unavailable"));
+  const hook = mount();
+  await tick(2010);
+  expect(hook.result.current.provisional.error).toBeTruthy();
+  expect(hook.result.current.query.data?.pages[0]?.dataset_revision).toBe("a");
+  expect(hook.result.current.stopped).toBe(false);
+});
+
+it("cancels candle-only reads on series change and ignores their late result", async () => {
+  let finish!: (value: ReturnType<typeof candleHistory>) => void;
+  vi.mocked(candles).mockImplementationOnce(() => new Promise(resolve => { finish = resolve; }))
+    .mockResolvedValueOnce({ ...candleHistory(), base: "ETH" });
+  const hook = mount();
+  await tick(10);
+  const oldSignal = vi.mocked(candles).mock.calls[0]![2];
+  hook.rerender({ series: { ...chartSeries, base: "ETH" } });
+  await tick(10);
+  expect(oldSignal.aborted).toBe(true);
+  await act(async () => { finish(candleHistory()); await Promise.resolve(); });
+  expect(hook.result.current.provisional.data?.base).toBe("ETH");
+  hook.unmount();
+  await tick(10);
+  expect(hook.client.getQueryCache().getAll()).toHaveLength(0);
+});
+
 it.each([new ApiRequestError("INDICATOR_NUMERIC_ERROR", 422),
   new ApiRequestError("INDICATOR_DEADLINE_EXCEEDED", 504)])(
-  "terminal history errors stop automatic work", async error => {
+  "terminal history errors retain the initial live snapshot and stop automatic work", async error => {
     vi.mocked(history).mockRejectedValue(error);
     const hook = mount();
     await tick(2010);
@@ -62,17 +99,18 @@ it.each([new ApiRequestError("INDICATOR_NUMERIC_ERROR", 422),
     expect(live).toHaveBeenCalledTimes(calls);
     expect(history).toHaveBeenCalledTimes(1);
     expect(verify).not.toHaveBeenCalled();
+    expect(hook.result.current.preview.data?.status).toBe("NO_DATA");
     expect(hook.result.current.valid).toBe(false);
   });
 
 it("enables manual retry after Retry-After despite a backward wall-clock change", async () => {
   vi.mocked(history)
     .mockImplementationOnce(() => {
-      throw new ApiRequestError("INDICATOR_BUSY", 503, "1");
+      throw new ApiRequestError("INDICATOR_RATE_LIMITED", 429, "1");
     })
     .mockResolvedValue(chartPage("retried"));
   const hook = mount();
-  await tick(2010);
+  await tick(10);
   expect(history).toHaveBeenCalledTimes(1);
   expect(hook.result.current.stopped).toBe(true);
   expect(hook.result.current.cooldownActive).toBe(true);
@@ -88,6 +126,20 @@ it("enables manual retry after Retry-After despite a backward wall-clock change"
   await tick(2010);
   expect(history).toHaveBeenCalledTimes(2);
   expect(hook.result.current.query.data?.pages[0]?.dataset_revision).toBe("retried");
+});
+
+it("recovers busy history while keeping the same active read", async () => {
+  vi.mocked(history).mockImplementationOnce(() => Promise.reject(new ApiRequestError("INDICATOR_BUSY", 503, "3")))
+    .mockResolvedValueOnce(chartPage("recovered"));
+  const hook = mount();
+  await tick(10);
+  expect(hook.result.current.stopped).toBe(false);
+  expect(hook.result.current.query.isFetching).toBe(true);
+  await tick(2900);
+  expect(history).toHaveBeenCalledTimes(1);
+  await tick(200);
+  expect(history).toHaveBeenCalledTimes(2);
+  expect(hook.result.current.query.data?.pages[0]?.dataset_revision).toBe("recovered");
 });
 
 it("failed admission cancels a readiness wait and stops proof polling", async () => {
@@ -108,6 +160,11 @@ it("switching series aborts the old read and rejects a late response", async () 
   await tick(2010);
   const signal = vi.mocked(history).mock.calls[0]![1];
   hook.rerender({ series: { ...chartSeries, base: "ETH" } });
+  await tick(1000);
+  expect(history).toHaveBeenCalledTimes(1);
+  hook.rerender({ series: { ...chartSeries, base: "SOL" } });
+  await tick(990);
+  expect(history).toHaveBeenCalledTimes(1);
   await tick(2010);
   expect(signal.aborted).toBe(true);
   await act(async () => { resolve(chartPage("old")); await Promise.resolve(); });
@@ -116,6 +173,15 @@ it("switching series aborts the old read and rejects a late response", async () 
   hook.unmount();
   await tick(2010);
   expect(hook.client.getQueryCache().getAll()).toHaveLength(0);
+});
+
+it("switches immediately when the previous history and proof are idle", async () => {
+  const hook = mount();
+  await tick(10);
+  expect(history).toHaveBeenCalledTimes(1);
+  hook.rerender({ series: { ...chartSeries, base: "ETH" } });
+  await tick(10);
+  expect(history).toHaveBeenCalledTimes(2);
 });
 
 it("hidden pages cancel work and retain no valid freshness claim", async () => {

@@ -25,6 +25,7 @@ from tests.services.indicator_builder.profile_capacity import (
     append,
     audit,
     docker,
+    maintain_source,
     observe,
     probes,
     progress,
@@ -239,6 +240,8 @@ async def run(
     recovered_at: float | None = None
     rejected: list[dict[str, Any]] = []
     metric_offset = 0
+    source_stop = asyncio.Event()
+    producer: asyncio.Task[None] | None = None
     worker_offset = 0
     metric_file = load_metrics or (
         metrics_directory / "api-metrics.jsonl" if metrics_directory else None
@@ -289,13 +292,15 @@ async def run(
         await docker("start", "tiewtrade-f11-capacity-api")
         clients, users = await login()
         await append(source, ends)
+        producer = asyncio.create_task(maintain_source(source, ends, source_stop))
         await docker("start", "tiewtrade-f11-capacity-builder")
         # C1 has passed already. Record any pre-phase refresh needed after the
         # independent C1 audit; this is not an excluded C1 prewarm.
         warm_started = monotonic()
         warm = []
         while True:
-            await append(source, ends)
+            if producer.done():
+                await producer
             ready = await observe(api, users[0])
             warm.append({"seconds": monotonic() - warm_started, "series": ready})
             save(output / "before-phase.json", warm)
@@ -374,7 +379,8 @@ async def run(
         consumer = asyncio.create_task(oracle())
         for tick in range(360):
             await asyncio.sleep(max(0, started + tick * 10 - monotonic()))
-            await append(source, ends)
+            if producer.done():
+                await producer
             ready = await observe(api, users[0])
             samples.append({"seconds": monotonic() - started, "series": ready})
             save(output / "observations.json", samples)
@@ -519,6 +525,10 @@ async def run(
         )
         return 0 if passed else 1
     finally:
+        source_stop.set()
+        if producer is not None:
+            producer.cancel()
+            await asyncio.gather(producer, return_exceptions=True)
         if pending is not None:
             pending.cancel()
             await asyncio.gather(pending, return_exceptions=True)

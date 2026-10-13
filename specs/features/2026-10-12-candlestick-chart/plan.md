@@ -1,12 +1,84 @@
 # F-12 — กราฟแท่งเทียนบนหน้าเว็บ — Plan
 
-สถานะ: **Approved** — เจ้าของอนุมัติ plan/validation และให้เริ่ม implementation วันที่ 2026-10-12;
-เจ้าของอนุมัติให้ initial viewport แสดงแบบ TradingView วันที่ 2026-10-13
+สถานะ: **Approved** — เจ้าของอนุมัติวันที่ 2026-10-13 — แผน amendment วันที่ 2026-10-13 สำหรับการแสดงแท่งเทียนก่อน indicator;
+การอนุมัติเดิม, การลบ Volume pane และ initial viewport แบบ TradingView ยังมีผลกับส่วนที่ไม่ถูกแก้
+การลบ MACD ด้านล่าง: **Approved** — เจ้าของอนุมัติ amendment เมื่อ 2026-10-13
+การย้ายรายละเอียดแท่งเข้า chart ด้านล่าง: **Approved** — เจ้าของอนุมัติเมื่อ 2026-10-13
+การลบแถบสถานะถาวรด้านล่าง: **Approved** — เจ้าของอนุมัติเมื่อ 2026-10-13
+การลบ Indicator จาก UI ด้านล่าง: **Approved** — เจ้าของอนุมัติเมื่อ 2026-10-13
+การลด controls และข้อความใต้กราฟด้านล่าง: **Approved** — เจ้าของอนุมัติเมื่อ 2026-10-14
+การเพิ่มปุ่มรีเซ็ตกราฟภาษาไทย: **Approved** — เจ้าของยืนยันเมื่อ 2026-10-14
+การลบตัวเลือกภาษาออกจากหน้า Chart: **Approved** — เจ้าของยืนยันเมื่อ 2026-10-14
 วันที่: 2026-10-12
 Branch: feature/f-12-candlestick-chart
 Requirements: [ฉบับที่รีวิวผ่าน](requirements.md)
 หลักฐานต้นทาง: [source-evidence.md](source-evidence.md)
 บันทึกสถาปัตยกรรมที่เสนอ: [ADR-003](../../decisions/003-chart-market-data.md)
+
+## Amendment — ลบตัวเลือกภาษาออกจากหน้า Chart (Approved 2026-10-14)
+
+- ลบ language `Select` และ locale state/change handler จาก `CandlestickChartPanel.tsx`.
+- ใช้ locale ภาษาไทยคงที่กับ renderer และ `MarketTime`; ไม่แตะ i18n หรือหน้าจอ module อื่น.
+- ปรับ component/E2E assertions ให้เหลือคู่เทรด, timeframe และปุ่ม `รีเซ็ตกราฟ` แล้วรัน
+  targeted component/renderer tests, type-check และ scoped ESLint.
+
+## Amendment — ปุ่มรีเซ็ตกราฟภาษาไทย (Approved 2026-10-14)
+
+- เพิ่มปุ่ม `รีเซ็ตกราฟ` ใน `CandlestickChartPanel.tsx` โดยใช้ Button component เดิมของ frontend.
+- ใช้ renderer/time-scale ที่มีอยู่คืน visible logical range ให้ viewport เริ่มต้นซึ่งยึดแท่งล่าสุด;
+  ไม่เพิ่ม query, API call, data mutation หรือ backend change.
+- เพิ่ม component test ตรวจข้อความภาษาไทย, keyboard-accessible button, viewport reset และยืนยันว่า
+  pair/TF/language ไม่เปลี่ยน. รัน targeted component/renderer tests, type-check และ scoped ESLint.
+
+## Amendment — ลด controls และข้อความใต้กราฟ (Approved 2026-10-14)
+
+- ลบปุ่ม manual navigation/history/retry/refresh และ scale note จาก
+  `CandlestickChartPanel.tsx`; ลบ handler/state/import และ CSS ที่ไม่ใช้แล้ว.
+- คง pair/TF/language controls, automatic query/recovery, chart pan/zoom/crosshair,
+  exact OHLCV header และ error alert.
+- ปรับ component/E2E assertions แล้วรัน targeted tests, type-check, ESLint และ
+  rebuild/restart เฉพาะ frontend.
+
+## Amendment — ลบ Indicator จาก UI (Approved 2026-10-13)
+
+- ลบ fieldset ตัวเลือก indicator, state/toggle และรายละเอียด indicator จาก
+  `CandlestickChartPanel.tsx`; ส่งชุด indicator ว่างให้ renderer เพื่อไม่สร้างเส้นหรือ pane.
+- คง candle/gap timeline และ contract การอ่าน history เดิมในรอบนี้ เพื่อไม่เปลี่ยน backend
+  หรือ proof/consistency boundary นอกขอบเขต UI.
+- ลบ CSS/tests/E2E ที่อ้าง controls และ pane; ยืนยันว่า chart ยังแสดง OHLCV exact,
+  เปลี่ยนคู่/TF และเลือกแท่งได้. รัน targeted tests, type-check, ESLint และ rebuild frontend.
+
+## Amendment — ลบแถบสถานะถาวร (Approved 2026-10-13)
+
+- ลบ `chart-status` จาก `CandlestickChartPanel.tsx` และ CSS ที่ใช้เฉพาะ block นี้.
+- คง `role="alert"` สำหรับ request/render failure, finality ใน chart, disabled/loading
+  state ของ controls และข้อความ gap เมื่อผู้ใช้เลือกตำแหน่งที่ไม่มีแท่ง.
+- ปรับ component/E2E assertions ที่อ้างข้อความสถานะถาวร; รัน targeted tests,
+  type-check และ ESLint แล้ว rebuild/restart เฉพาะ frontend.
+
+## Amendment — ย้ายรายละเอียดแท่งเข้า chart (Approved 2026-10-13)
+
+- ใช้ `CandlestickChartPanel.tsx` และ `MarketTime`/`MarketValue` เดิม เพิ่มเวลาและ V
+  ใน `chart-chart-header` โดยอ่าน exact string จาก candle cache; ไม่คำนวณหรือปัดราคา.
+- ลบเฉพาะข้อความวันเวลา/OHLCV ที่ซ้ำใน `chart-selection`; คงปุ่มก่อนหน้า/ถัดไป
+  และรายการ indicator เพื่อรักษา keyboard access และข้อมูลที่ proof ผ่าน.
+- ปรับ CSS ให้ header wrap บนจอแคบโดยไม่บังแกนราคา และปรับ component tests
+  ให้ตรวจ latest/crosshair/keyboard selection, exact O/H/L/C/V และไม่มีข้อมูลซ้ำใต้กราฟ.
+- รัน targeted component test, type-check และ ESLint แล้ว rebuild/restart เฉพาะ frontend.
+
+## Amendment — ลบ MACD จากกราฟ (Approved 2026-10-13)
+
+- ใช้ `CandlestickChartPanel.tsx` เดิม: ลบชื่อ MACD ทั้งสามจากรายการตัวเลือก
+  และค่ารายละเอียด. ค่าเริ่มต้น EMA20/50/200 ไม่เปลี่ยน.
+- ใช้ `chart/renderer.ts` เดิม: ลบการจัด pane ของ MACD แล้วจัด ATR ต่อจาก RSI;
+  ไม่กระทบ price pane, candle viewport, exact-value boundary หรือ proof gate.
+  ไม่เพิ่มการคำนวณ indicator ใน frontend.
+- ปรับ fixture/unit/component/E2E ที่ตรวจรายการตัวเลือกและ pane ให้ยืนยันว่า
+  ไม่มี MACD ใน UI และค่าที่เหลือยังเลือก/แสดงได้. ตรวจการเปลี่ยนคู่/timeframe,
+  unavailable/proof mismatch และ browser smoke ของกราฟ; lint/type-check/build
+  ตามผลกระทบ. ห้ามรัน full workload ซ้ำเพียงเพราะลบตัวเลือก UI.
+- เปิด frontend ที่ใช้ชุดใหม่หลัง API v2 พร้อมแล้วเท่านั้น; ไม่แสดงค่า v1 ค้าง
+  และไม่ลดเงื่อนไข consistency ของ bundle.
 
 ## แนวทาง
 
@@ -44,6 +116,44 @@ F-12 ไม่สั่ง activate source proof หรือ PREPARED และ
 
 ## 1. หน้ากราฟและขอบเขตข้อมูลในเว็บ
 
+### Amendment: staged history loading
+
+ใช้ของเดิม: GET `/market-data/candles` ใน
+`backend/src/tiewtrade/services/api/candle_routes.py`, CandleHistoryView ใน
+`frontend/src/api-types.ts`, TanStack Query/controller ใน
+`frontend/src/chart/useChartData.ts` และ bounded decoder ใน `frontend/src/chart/api.ts`.
+API เดิมใช้ server initial_window และ read_candles ไม่คำนวณ indicator;
+อ่านสูงสุด 1,000 slots พร้อม coverage/gaps/observed_at และ finality.
+ไม่เพิ่ม endpoint หรือเปลี่ยน seed/rollout mode.
+
+- เพิ่ม candle-only query เริ่มทันทีหลัง mount/เปลี่ยนคู่หรือ TF ผ่าน timer ที่ cleanup ได้ใน
+  StrictMode. ใช้ query key ผูก user/source/series/read epoch/window เช่นเดิม;
+  หนึ่งคำขอต่อ episode, timeout 10s, payload limit 2MiB, retry=false.
+  GET ล่าสุดส่ง series และ limit=1000 โดยไม่ส่งเวลา browser;
+  explicit window ส่ง bounds ของการดูช่วงนั้นและ limit=1000.
+- Live snapshot และ history/indicator controller คงงบและ failure policy เดิม.
+  เจ้าของอนุมัติ 2026-10-13 ให้ History เริ่มผ่าน cancelable timer ทันทีเมื่อไม่มี
+  reader เดิมค้าง. เมื่อเปลี่ยน episode และยกเลิก history/proof ที่กำลัง fetch ให้เก็บ
+  monotonic cleanup deadline 2s; การเปลี่ยน TF ซ้ำก่อนเริ่ม request ต้องรักษาเวลาที่เหลือ.
+  ไม่รอเพราะ candle-only/live query และไม่กั้นสอง query นี้. Server admission และ busy
+  retry เดิมยังรองรับ contention จากแท็บอื่นหรือการ remount ใหม่.
+  Candle-only error ไม่ยกเลิก coherent read ที่ยังทำงาน; session 401 ใช้ auth flow เดิม.
+- ก่อน bundle แรกพร้อม ใช้ candle-only rows สำหรับกราฟและ exact selection พร้อม coverage,
+  gaps และ observed_at ของคำตอบนั้น; indicator ทั้ง series/tooltip ถูกซ่อนไว้.
+  รวม live เฉพาะ open-time ที่ไม่ซ้ำ โดย live ใช้แทน candle ชั่วคราวที่เวลาเดียวกัน;
+  นี่เป็น display เท่านั้น ไม่คำนวณ indicator/finality และไม่เปลี่ยน cache ต้นฉบับ.
+- เมื่อ bundle แรกพร้อม ใช้ candles/points/as_of ของ bundle ทั้งชุดใน render เดียวกัน
+  และใช้นโยบาย proof/preview เดิมในหัวข้อ 5. คำตอบ candle-only ที่มาภายหลังถูกเพิกเฉยต่อ display.
+  Refetch/error ของ bundle ภายหลังไม่ย้อนกลับไป candle-only ของ episode นั้น.
+- Reset provisional viewport หนึ่งครั้งเมื่อ bundle แรกพร้อมตามกลไกเดิม; update ถัดไปคง
+  user viewport. เปลี่ยนคู่/TF, retry, window, logout หรือ unmount ยกเลิก candle-only งานเก่า.
+  ไม่ retain ข้อมูลข้าม user/series หรืออ้างข้อมูลชั่วคราวเป็น proof.
+- แสดงสถานะแยกประวัติแท่งเทียนกับ indicator; empty/partial/failed ใช้ coverage/error จริง,
+  ไม่เรียก PRESENT ว่า CLOSED. ไม่ POST หรือวน polling candle-only เอง.
+
+ข้อเพิ่มเติมนี้แทนเฉพาะช่วงก่อน coherent bundle แรกในหัวข้อ 5;
+ข้อกำหนด snapshot/proof เดิมยังใช้เมื่อแสดง indicator.
+
 การ mount/anchor ในหัวข้อนี้และรายการไฟล์ด้านล่างถูกแทนโดย
 [navigation plan ส่วนเพิ่มที่อนุมัติ](navigation-plan-amendment.md) ตามคำสั่ง
 เจ้าของ “implement” วันที่ 2026-10-12: หนึ่ง module ต่อหนึ่งหน้า และ chart เป็น default.
@@ -55,8 +165,9 @@ F-12 ไม่สั่ง activate source proof หรือ PREPARED และ
   แท่งจำนวนน้อยจึงยังเห็นชัดโดยไม่ fit เต็มพื้นที่หรือกองชิดขอบ. เมื่อข้อมูลอัปเดต
   ให้คง logical viewport ที่ผู้ใช้ปรับไว้.
   ไม่ persist ตัวเลือกใน localStorage รอบนี้.
-- Candlestick + EMA บน price pane, volume/RSI/MACD/ATR มี pane แยกสเกล
+- Candlestick + EMA อยู่บน price pane; ไม่สร้าง Volume pane. RSI/MACD/ATR มี pane แยกสเกล
   โดยใช้ time scale เดียวกัน. EMA20/50/200 เปิดเริ่มต้น; indicator อื่นเปิด/ปิดได้.
+  ข้อมูล volume ยังคงอยู่ใน exact-data cache และ textual OHLCV panel แต่ไม่ส่งเข้า chart series.
 - ทุกข้อความมีไทย/อังกฤษใน chartMessages; ภาษาผูกตัวเลือกที่มีใน UI ของ panel
   ยังไม่แปลหน้าเดิมทั้งระบบ. เวลาใช้ UTC identity และแสดง Asia/Bangkok ชัดเจน.
 - ใช้ exact-data cache ใน AccountSession; chart series เป็น projection สำหรับวาด
@@ -78,6 +189,12 @@ F-12 ไม่สั่ง activate source proof หรือ PREPARED และ
   ที่อ่านได้และไม่ถูก controls ทับ ตรวจ bundle/license ก่อนรับ dependency.
 
 ## 2. Numeric boundary
+
+การปรับภาพตามคำสั่งเจ้าของ 2026-10-13: ใช้ `CandlestickChartPanel` และ
+`chart/renderer` เดิมเพิ่มแถบชื่อคู่/TF/OHLC exact ใน chart frame, สีขาวเป็นค่าเริ่มต้น
+chart frame ผ่าน CSS variables, เส้น/ป้ายราคาสุดท้ายของ Lightweight Charts และ
+จัดสถานะให้กระชับ. ไม่เพิ่ม data source หรือคำนวณส่วนต่าง/เปอร์เซ็นต์ใน frontend;
+ไม่เพิ่ม bid/ask หรือ order controls เพราะไม่มีสัญญาข้อมูลใน F-12.
 
 เพิ่ม `frontend/src/chart/renderer.ts` เป็นจุดเดียวที่แปลง decimal string เป็น Number
 ตาม NC-41. ใช้ Number.isFinite; ค่าบวกที่ underflow เป็นศูนย์หรือไม่มี representation
@@ -202,8 +319,9 @@ indicator จน bundle ใหม่สอดคล้องกัน. เมื
 Verify ทุก15s สูงสุดหนึ่งงาน ไม่ทับ bundle/readiness request; หาก request ยังไม่จบ
 ไม่สะสม timer. เมื่อเริ่ม verify ให้แสดงกำลังตรวจ ไม่อ้างว่าเป็นข้อมูลปัจจุบัน.
 Last successful proof เกิน45s ให้ซ่อน overlay จนตรวจใหม่; machine clock ใช้
-delivery timeout เท่านั้น ไม่ตัดสิน finality. Error หยุด auto work และให้ลองใหม่เอง
-ตาม RQ-16; source change ที่ตรวจได้เริ่ม bounded logical read ใหม่ได้หนึ่งรอบ
+delivery timeout เท่านั้น ไม่ตัดสิน finality. Error อื่นหยุด auto work และให้ลองใหม่เอง
+ตาม RQ-16; initial history `INDICATOR_BUSY` รออย่างน้อย 2s และไม่น้อยกว่า Retry-After
+ภายในงบ readiness เดิม; source change ที่ตรวจได้เริ่ม bounded logical read ใหม่ได้หนึ่งรอบ
 โดยไม่วนจาก same changed response.
 
 ## 6. งบ HTTP/controller ที่เสนอ
@@ -213,7 +331,7 @@ delivery timeout เท่านั้น ไม่ตัดสิน finality. 
 | History/verify | ใช้ IndicatorBudget/admission/DB pool เดียวกับ F-11, deadline30s, cleanup2s, query500ms/lock200ms, output≤1,000 slots/หน้า |
 | Live GET | dedicated API pool1/overflow0, deadline2s/cleanup2s, statement500ms/lock200ms; admission namespace chart.live global6000/min, subject user120/min; Redis admission ใช้งานไม่ได้ให้ fail closed ตามรายละเอียดด้านล่าง |
 | Live browser poll | ทุก2s หนึ่งงาน timeout3s; errorหยุดและแสดง delivery failure; reconnect จาก online/visibility หรือผู้ใช้ให้เริ่ม snapshot ใหม่โดยคง cooldown Retry-After |
-| Readiness episode | รวม initial GET + polls + 409 restart ≤12 requests, elapsed≤300s, หนึ่งงาน; polling spacing≥10s และ≥Retry-After นับหลัง response; timeout30s/request โดยลดตามเวลารวมที่เหลือ |
+| Readiness episode | รวม initial GET + INDICATOR_DATA_NOT_READY/INDICATOR_BUSY polls + 409 restart ≤12 requests, elapsed≤300s, หนึ่งงาน; not-ready spacing≥10s, busy spacing≥2s และทุกกรณี≥Retry-After นับหลัง response; timeout30s/request โดยลดตามเวลารวมที่เหลือ |
 | 409 | หนึ่ง restart/logical read รวมทุก pagination/verify/readiness ไม่ reset งบเพราะ token expiry/เหตุผลต่างกัน |
 | Refresh F-09 | POSTหนึ่งครั้งแล้ว GETทุก10s ≤6ครั้ง/60s; 200อ่าน bundleใหม่, 202รอ progress; status/error/401/timeout หยุดตาม F-11 |
 | Browser display | ≤12,000 slots; หนึ่ง live/หนึ่ง proof-or-history request ต่อ active series; payload decode reject ก่อน cache เมื่อเกิน2MiB |

@@ -1,0 +1,8 @@
+{
+  "status": "DIAGNOSTIC_ONLY",
+  "setup_seconds": 253.48500000000058,
+  "measured_seconds": 76.20300000000134,
+  "responses": 60,
+  "http_200": 60,
+  "note": "No full-scan parity audit in timed phase; not C1/C2/C6 acceptance."
+}

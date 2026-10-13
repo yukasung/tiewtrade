@@ -1,0 +1,16 @@
+﻿{
+    "candidate":  "b3f03be4513d71ddba26a67d49b28935ea2a23a7",
+    "working_tree":  "uncommitted F-11 gap/reset/digest and F-12 changes",
+    "api_image":  "sha256:f0add4466c1cfe5ffcf6b52367b78d830b97714784e406e8ffb482a7c63308d3",
+    "frontend_image":  "sha256:2552d137728e1f18d6044f3970dfbdfa625a4e9d80551db4e73e226b2e0b20be",
+    "cpu_limit":  2,
+    "memory_limit_bytes":  1073741824,
+    "database":  "isolated capacity postgres 55434/tiewtrade",
+    "schema":  "0024",
+    "application_database_changed":  false,
+    "application_mode_changed":  false,
+    "full_suite_run":  false,
+    "full_capacity_run":  false,
+    "profile_base":  "XRP",
+    "profile_timeframe":  "1m"
+}

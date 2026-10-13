@@ -117,7 +117,7 @@ def test_v2_domain_schema_and_v1_bytes_are_compatible() -> None:
             "format_version": 2,
             "generation_id": uuid4(),
             "rollout_epoch": uuid4(),
-            "codec_version": 1,
+            "codec_version": 2,
         }
     )
     token = issue(prepared, keys, user, "session")

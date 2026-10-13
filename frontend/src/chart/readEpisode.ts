@@ -38,7 +38,8 @@ export async function readEpisode(
           page.quote !== initial.quote || page.timeframe !== initial.timeframe)) {
         throw new ApiRequestError("CHART_INVALID_RESPONSE", 503);
       }
-      if (page.rows.length > 1000 || page.candles.length > 1000 ||
+      if (page.formula_version !== "indicators-v2" ||
+          page.rows.length > 1000 || page.candles.length > 1000 ||
           (first && (first.dataset_revision !== page.dataset_revision || first.as_of !== page.as_of ||
           first.formula_version !== page.formula_version || first.base !== page.base ||
           first.quote !== page.quote || first.timeframe !== page.timeframe))) {
@@ -56,8 +57,10 @@ export async function readEpisode(
         continue;
       }
       if (error instanceof ApiRequestError && error.status === 503 &&
-          error.message === "INDICATOR_DATA_NOT_READY" && !pages.length && !("cursor" in parameters)) {
-        const spacing = Math.max(10_000, error.retryAt ? Date.parse(error.retryAt) - Date.now() : 0);
+          (error.message === "INDICATOR_DATA_NOT_READY" || error.message === "INDICATOR_BUSY") &&
+          !pages.length && !("cursor" in parameters)) {
+        const minimumSpacing = error.message === "INDICATOR_BUSY" ? 2000 : 10_000;
+        const spacing = Math.max(minimumSpacing, error.retryAt ? Date.parse(error.retryAt) - Date.now() : 0);
         if (spacing >= 300_000 - (clock() - started) || attempts >= 12) break;
         await wait(spacing, signal);
         continue;
