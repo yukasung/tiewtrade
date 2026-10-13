@@ -131,15 +131,39 @@ it("omits manual chart controls and the scale note", () => {
 
 it("resets the chart viewport with the Thai reset button", () => {
   vi.mocked(useChartData).mockReturnValue(state(false, false, true, 120));
-  render(<CandlestickChartPanel userId="fixture" />);
+  const panel = render(<CandlestickChartPanel userId="fixture" />);
   timeScale.setVisibleLogicalRange.mockClear();
 
   fireEvent.click(screen.getByRole("button", { name: "รีเซ็ตกราฟ" }));
 
   expect(timeScale.setVisibleLogicalRange).toHaveBeenCalledOnce();
   expect(timeScale.setVisibleLogicalRange).toHaveBeenCalledWith({ from: 20, to: 124 });
-  expect(screen.getAllByRole("combobox").map(control => (control as HTMLSelectElement).value))
+  expect(within(panel.container.querySelector(".chart-controls") as HTMLElement)
+    .getAllByRole("combobox").map(control => (control as HTMLSelectElement).value))
     .toEqual(["BTC", "1h"]);
+});
+
+it("renders a disabled order placeholder without a form or default financial values", () => {
+  vi.mocked(useChartData).mockReturnValue(state(false, false, true));
+  const panel = render(<CandlestickChartPanel userId="fixture" />);
+  const order = within(screen.getByTestId("trading-order-placeholder"));
+  expect(panel.container.querySelector("form")).toBeNull();
+  for (const control of [...order.getAllByRole("button"), ...order.getAllByRole("textbox"),
+    ...order.getAllByRole("combobox")]) {
+    expect(control.hasAttribute("disabled")).toBe(true);
+  }
+  expect(order.getAllByRole("textbox").every(input => (input as HTMLInputElement).value === "")).toBe(true);
+  expect(order.getByRole("button", { name: "ยังไม่เปิดใช้งาน" })).toBeTruthy();
+});
+
+it("renders semantic empty trading history without mock rows", () => {
+  vi.mocked(useChartData).mockReturnValue(state(false, false, true));
+  render(<CandlestickChartPanel userId="fixture" />);
+  const history = within(screen.getByTestId("trade-history-placeholder"));
+  expect(history.getByRole("table")).toBeTruthy();
+  expect(history.getAllByRole("columnheader")).toHaveLength(6);
+  expect(history.getAllByRole("row")).toHaveLength(2);
+  expect(history.getByText("ยังไม่มีข้อมูลออเดอร์หรือการเทรดจากระบบ", { exact: true })).toBeTruthy();
 });
 
 it("disables chart reset until chart slots are available", () => {
@@ -148,11 +172,16 @@ it("disables chart reset until chart slots are available", () => {
   expect(screen.getByRole("button", { name: "รีเซ็ตกราฟ" }).hasAttribute("disabled")).toBe(true);
 });
 
-it("keeps the chart in Thai without a language selector", () => {
+it("keeps chart content in Thai without visible market-bar labels", () => {
   vi.mocked(useChartData).mockReturnValue(state(false, false, true));
-  render(<CandlestickChartPanel userId="fixture" />);
+  const panel = render(<CandlestickChartPanel userId="fixture" />);
+  const marketBar = within(panel.container.querySelector(".trading-market-bar") as HTMLElement);
   expect(screen.queryByRole("combobox", { name: "ภาษา" })).toBeNull();
-  expect(screen.getByRole("heading", { name: "กราฟแท่งเทียน" })).toBeTruthy();
+  expect(marketBar.queryByText("กราฟแท่งเทียน", { exact: true })).toBeNull();
+  expect(marketBar.queryByText("คู่เทรด", { exact: true })).toBeNull();
+  expect(marketBar.queryByText("Timeframe", { exact: true })).toBeNull();
+  expect(marketBar.getByRole("combobox", { name: "คู่เทรด" })).toBeTruthy();
+  expect(marketBar.getByRole("combobox", { name: "Timeframe" })).toBeTruthy();
   expect(screen.getByText(/12 ต\.ค\. 2569/)).toBeTruthy();
 });
 

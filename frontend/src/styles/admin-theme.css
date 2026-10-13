@@ -2,6 +2,7 @@
 @layer theme, utilities;
 @import "tailwindcss/theme.css" layer(theme);
 @import "tailwindcss/utilities.css" layer(utilities) source(none);
+@custom-variant dark (&:is(.dark *));
 @import "./admin-colors.css";
 @source "../";
 @import "../accountPanels.css";
@@ -30,6 +31,7 @@
   top: 0;
   z-index: var(--account-z-header);
 }
+.account-theme-toggle { margin-inline-start: auto; padding: 0; }
 .account-sidebar {
   display: flex;
   flex-direction: column;
@@ -48,15 +50,19 @@
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  color: var(--color-gray-700);
+  color: var(--account-ink);
   padding: var(--account-space-sm) var(--account-space-md);
   border-radius: var(--account-radius);
   text-decoration: none;
 }
-.account-sidebar a:hover { background: var(--color-gray-100); color: var(--color-gray-700); }
+.account-sidebar a:hover { background: var(--account-bg); color: var(--account-ink); }
 .account-sidebar a[aria-current="page"] {
   background: var(--color-brand-50);
   color: var(--account-brand);
+}
+.dark .account-sidebar a[aria-current="page"] {
+  background: rgb(70 95 255 / 16%);
+  color: var(--color-brand-400);
 }
 .account-content {
   padding: var(--account-space-lg);
@@ -101,10 +107,10 @@
   height: 2.75rem;
   width: 2.75rem;
   padding: 0;
-  background: var(--color-white);
-  color: var(--color-gray-500);
+  background: var(--account-surface);
+  color: var(--account-muted-color);
 }
-.account-menu-trigger:hover { background: var(--color-gray-50); color: var(--color-gray-700); }
+.account-menu-trigger:hover { background: var(--account-bg); color: var(--account-ink); }
 .sidebar-toggle-icon { width: 1rem; height: 0.75rem; background: currentColor; mask: url("../assets/admin-icons/sidebar-toggle.svg") center / contain no-repeat; }
 .sidebar-toggle-icon.is-close { width: 1.5rem; height: 1.5rem; mask-image: url("../assets/admin-icons/close.svg"); }
 .sidebar-icon { flex: 0 0 1.5rem; height: 1.5rem; background: currentColor; mask-position: center; mask-repeat: no-repeat; mask-size: contain; }
@@ -169,7 +175,9 @@
 /* AuthPageLayout and form presentation adapted from TailAdmin Pro 2.4.0. */
 body:has(.app-theme) {
   margin: 0;
+  background: var(--color-gray-50);
 }
+.dark body:has(.app-theme) { background: var(--color-gray-950); }
 .app-theme h1,
 .app-theme h2,
 .app-theme h3 {
@@ -189,6 +197,9 @@ body:has(.app-theme) {
 }
 .app-theme input::placeholder {
   color: var(--account-muted-color);
+}
+.account-content.account-content-chart {
+  padding: 0;
 }
 .auth-layout {
   display: flex;

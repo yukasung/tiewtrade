@@ -1,5 +1,6 @@
 import type { RefObject } from "react";
 import { Button } from "../components/ui/Button";
+import { ThemeToggleButton } from "../components/common/ThemeToggleButton";
 import { accountText as t } from "../accountMessages";
 /** Adapted from TailAdmin Pro 2.4.0 layout/AppHeader.tsx. */
 export function AccountHeader({
@@ -28,6 +29,7 @@ export function AccountHeader({
       </Button>
       <strong>TiewTrade</strong>
       <span>{t("navigation")}</span>
+      <ThemeToggleButton />
     </header>
   );
 }

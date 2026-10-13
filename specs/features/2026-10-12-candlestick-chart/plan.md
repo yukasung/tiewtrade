@@ -9,11 +9,77 @@
 การลด controls และข้อความใต้กราฟด้านล่าง: **Approved** — เจ้าของอนุมัติเมื่อ 2026-10-14
 การเพิ่มปุ่มรีเซ็ตกราฟภาษาไทย: **Approved** — เจ้าของยืนยันเมื่อ 2026-10-14
 การลบตัวเลือกภาษาออกจากหน้า Chart: **Approved** — เจ้าของยืนยันเมื่อ 2026-10-14
+การจัดหน้าแบบ Trading Workspace ด้านล่าง: **Approved** — เจ้าของสั่งเริ่มปรับ UI เมื่อ 2026-10-14
+การปรับสัดส่วนและความสูง workspace: **Approved** — เจ้าของสั่งแก้เมื่อ 2026-10-14
+การย่อ market bar และลบ visible labels: **Approved** — เจ้าของสั่งแก้เมื่อ 2026-10-14
+การจัดตำแหน่ง history tabs ตาม Admin Template: **Approved** — เจ้าของสั่งแก้เมื่อ 2026-10-14
+โหมด Light/Dark จาก Admin Template: **Approved** — เจ้าของสั่งเพิ่มเมื่อ 2026-10-14
 วันที่: 2026-10-12
 Branch: feature/f-12-candlestick-chart
 Requirements: [ฉบับที่รีวิวผ่าน](requirements.md)
 หลักฐานต้นทาง: [source-evidence.md](source-evidence.md)
 บันทึกสถาปัตยกรรมที่เสนอ: [ADR-003](../../decisions/003-chart-market-data.md)
+
+## Amendment — จัดหน้าแบบ Trading Workspace (Approved 2026-10-14)
+
+### โครงสร้างและของเดิมที่ใช้ซ้ำ
+
+- คง `AccountLayout`, `AccountHeader` และ `AccountSidebar` เพื่อให้ module อื่นยังอยู่คนละหน้า;
+  สำหรับ page `chart` ลด presentation ของ breadcrumb/card header ที่กินพื้นที่ และใช้ content width เต็มเดิม.
+- ปรับ `CandlestickChartPanel.tsx` ให้เป็น workspace grid โดยย้าย pair/timeframe/reset เข้า market bar,
+  วาง chart ใน grid area หลัก และไม่เปลี่ยน `useChartData`, renderer, exact OHLCV, viewport หรือ query key.
+- ใช้ `frontend/src/components/ui/{Input,Select,Label,Button}.tsx` สำหรับ form placeholder.
+  Controls ทุกตัวใส่ `disabled` จาก markup, ไม่มี submit handler และไม่สร้าง form action.
+- เพิ่ม shared table primitives ที่ `frontend/src/components/ui/Table.tsx` โดยปรับจาก
+  `references/admin-template/src/components/ui/table/` และใช้โครงสี/spacing จาก
+  `references/admin-template/src/components/tables/BasicTables/BasicTableOne.tsx`.
+- เพิ่ม horizontal tab presentation ขนาดเล็กใน shared UI โดยปรับ interaction/style จาก
+  `references/admin-template/src/components/ui/tabs/VerticalTabs.tsx`; ใน placeholder ใช้เพียง
+  active state ด้านภาพและไม่เรียกข้อมูลออเดอร์.
+- สร้าง presentation components สำหรับ `TradingOrderPlaceholder` และ `TradeHistoryPlaceholder`
+  แยกจาก chart data controller เพื่อให้งาน F-13–F-16/F-28 แทนที่ได้โดยไม่แตะ renderer.
+
+### Layout และ responsive behavior
+
+- Desktop ใช้ CSS grid areas: market bar เต็มความกว้าง, chart ด้านซ้าย, order placeholder ด้านขวา,
+  history ใต้ chart โดย order placeholder อยู่ต่อเนื่องด้านขวา. ใช้ border/background/spacing/radius
+  จาก Admin Template tokens และไม่คัดลอกสีหรือตราสินค้า Binance.
+- ให้ grid สูงเท่าพื้นที่ viewport ใต้ account header, ปิด document overflow ที่เกิดจาก workspace และแบ่ง
+  แถวเนื้อหาให้ history สูงกว่า chart; chart canvas ยืดตาม grid row แทนการกำหนดด้วย viewport height ซ้ำ.
+- ลบ heading/label ที่มองเห็นใน market bar, ย้ายชื่อ pair/TF ไปเป็น `aria-label` ของ Select และลด
+  padding/spacing เฉพาะแถบ โดยคง shared Select/Button และ touch target เดิม.
+- เปลี่ยน shared `Tabs` ไปใช้โครง underline tabs จาก Admin Template โดยตรง และวาง history tabs ชิดซ้าย
+  ใน header ที่มี border แยกจาก chart; คง disabled semantics ของ placeholder และไม่มี handler.
+- เพิ่ม `ThemeProvider` และ `ThemeToggleButton` โดยปรับจาก Admin Template, ใช้ root `.dark`, บันทึก
+  `light|dark` ใน local storage และวาง toggle ด้านขวาของ account header.
+- เพิ่ม dark tokens/variants ให้ shared controls และ workspace; renderer เพิ่ม `applyTheme()` เพื่ออ่าน CSS
+  chart tokens ใหม่แล้วเรียก Lightweight Charts `applyOptions` โดยไม่สร้าง chart/data controller ใหม่.
+- กำหนดคอลัมน์ขวาด้วยช่วงความกว้างที่ bounded และให้ chart ใช้พื้นที่ที่เหลือ (`minmax(0, 1fr)`)
+  เพื่อไม่ทำให้ canvas ล้น. ความสูง chart ยัง responsive และไม่ลดพื้นที่ต่ำกว่าเกณฑ์เดิมบนจอแคบ.
+- ต่ำกว่า desktop breakpoint ให้เรียง market bar → chart → order placeholder → history;
+  คืนความสูงเป็น auto เพื่อให้หน้าเลื่อนแนวตั้งได้, table ใช้ container overflow เฉพาะแนวนอน
+  และหน้าทั้งหน้าต้องไม่มี horizontal overflow.
+- กราฟยังพื้นขาวและ controls ใช้ Admin Template states. ไม่เพิ่ม dark theme ใน amendment นี้.
+
+### ขอบเขตความปลอดภัย
+
+- Placeholder ไม่รับค่าใช้งานจริง: input/select/action disabled, ไม่มีค่า balance/quantity/price เริ่มต้น,
+  ไม่มีการคำนวณเงินและไม่มีข้อความที่อ้างว่า Paper หรือ Live พร้อมใช้งาน. ปุ่ม placeholder ใช้ข้อความ
+  `ยังไม่เปิดใช้งาน` ไม่ใช้ข้อความซื้อ/ขายหรือข้อความที่ทำให้เข้าใจว่าเป็นปุ่มส่งออเดอร์.
+- History แสดงเฉพาะหัวตารางและ empty state; ไม่มี mock order/trade และไม่อ่าน endpoint ใหม่.
+- ห้ามแก้ backend, OpenAPI, database, auth, trading domain หรือ exchange adapter.
+- ตรวจ diff ให้ไม่มี request ใหม่ชนิด POST/PUT/PATCH/DELETE และ browser smoke ต้องยืนยันว่า interaction
+  กับ placeholder ไม่ก่อ order/trading network request.
+
+### ลำดับทำงานและการตรวจระหว่างพัฒนา
+
+1. เพิ่ม shared Table/Tabs จาก source path ของ Admin Template พร้อม focused component tests.
+2. เพิ่ม placeholder components แบบ disabled และ assertions ด้าน accessibility/ไม่มี handler.
+3. จัด workspace grid และย้าย chart เดิมเข้า area ใหม่โดยไม่แก้ data/rendering behavior.
+4. รัน targeted component/layout/renderer tests, type-check และ scoped ESLint เป็นชุดเดียว.
+5. อัปเดตเฉพาะ frontend ที่กำลังรัน แล้วทำ browser smoke ที่ desktop/mobile รวม TF switch,
+   computed styles ของ controls และ network log. ไม่รัน full suite เพราะ amendment นี้ไม่แตะ contract
+   หรือ trading logic; full validation เดิมยังค้างตาม checkpoint F-12.
 
 ## Amendment — ลบตัวเลือกภาษาออกจากหน้า Chart (Approved 2026-10-14)
 

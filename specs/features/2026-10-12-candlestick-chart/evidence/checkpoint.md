@@ -76,3 +76,26 @@
    Commit/push/merge ต้องเจ้าของสั่งแยก; CI ที่ยังไม่รันห้ามนับว่าผ่าน.
 
 F-12 คง **In Progress**. รายงานนี้ไม่อนุมัติ merge, production PREPARED หรือ Live Trading.
+
+## Trading Workspace layout — 2026-10-14
+
+- Targeted frontend tests: `CandlestickChartPanel`, `AccountNavigation` และ `chart-renderer` ผ่าน **35 tests / 3 files**.
+- Frontend type-check และ scoped ESLint ของไฟล์ที่แก้ผ่าน (exit 0).
+- Authenticated Chromium smoke ที่ 1440, 1280, 768 และ 390px ยืนยันว่า desktop แบ่ง chart/order และ mobile เรียง market→chart→order→history โดยไม่มี horizontal overflow.
+- Placeholder controls ถูก disabled ทั้งหมดและ request log หลังเข้า Chart ไม่มี POST/PUT/PATCH/DELETE; ไม่มี form action, balance, ราคา, จำนวน หรือ order/trade จำลอง.
+- ภาพหลักฐาน: [desktop](workspace-desktop.png) และ [mobile](workspace-mobile.png).
+- Automated computed-style state matrix ของ TW-07 ยังไม่ครบ จึงคงผล **Partial**; เกณฑ์ V-01..V-18 และ Pending Full Validation เดิมไม่เปลี่ยน.
+- ปรับ desktop workspace ให้สูงพอดีกับพื้นที่ใต้ header: ที่ 1440×1000 ได้ workspace 923px,
+  chart 347.02px และ history 433.80px; ที่ 1280×900 ได้ workspace 823px, chart 302.58px
+  และ history 378.23px. ทั้งสอง viewport มี `scrollHeight === innerHeight` และไม่มี page scrollbar.
+- ที่ mobile 390×844 คงการเรียงแนวตั้งและ page scroll ตาม responsive requirement; browser smoke ไม่พบ page error.
+- Market bar หลังย่อสูง 65px ที่ desktop, ไม่แสดง `กราฟแท่งเทียน`, `คู่เทรด` หรือ `Timeframe`;
+  pair/TF Select ยังคง accessible names เดิม. Targeted component tests **19 passed**, type-check และ scoped ESLint ผ่าน.
+- เปลี่ยน order/history tabs เป็น underline pattern จาก Admin Template และย้าย history tabs ชิดซ้ายใน header.
+  Chromium ยืนยัน chart bottom และ history top อยู่ที่ 523.44px เดียวกัน, tabs เริ่มภายใน history, ไม่ซ้อนแกนเวลา,
+  ไม่มี page scrollbar และไม่พบ page error.
+- เพิ่ม Light/Dark ThemeProvider และ toggle จาก Admin Template. Light ใช้ chart `rgb(255,255,255)`;
+  Dark ใช้ page `rgb(12,17,29)`, surface/chart `rgb(16,24,40)` และค่าคงอยู่หลัง reload.
+  ทั้งสองโหมดยังมี OHLC, ไม่มี page scrollbar; request log ระหว่าง toggle ว่างและไม่พบ page error.
+  หลักฐาน: [Light](workspace-light.png) และ [Dark](workspace-dark.png). Targeted tests **40 passed / 3 files**,
+  type-check และ scoped ESLint ผ่าน.

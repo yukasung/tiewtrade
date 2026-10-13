@@ -5,7 +5,13 @@ import { Button } from "../src/components/ui/Button";
 import { Input } from "../src/components/ui/Input";
 import { Label } from "../src/components/ui/Label";
 import { Select } from "../src/components/ui/Select";
-afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
+afterEach(() => {
+  cleanup();
+  vi.unstubAllGlobals();
+  window.localStorage.clear();
+  document.documentElement.classList.remove("dark");
+  delete document.documentElement.dataset.colorScheme;
+});
 it("lets the chart page use the full workspace width", () => {
   const { container } = render(<AccountLayout page="chart"><p>chart</p></AccountLayout>);
   expect(container.querySelector(".account-content-chart")).toBeTruthy();
@@ -26,6 +32,15 @@ it("toggles the desktop icon rail without hiding the current module", () => {
   expect(screen.queryByRole("button", { name: "ปิดเมนูบัญชี" })).toBeNull();
   fireEvent.click(trigger);
   expect(container.querySelector(".sidebar-collapsed")).toBeNull();
+});
+it("toggles and persists the Admin Template light and dark theme", () => {
+  render(<AccountLayout><p>content</p></AccountLayout>);
+  const toggle = screen.getByRole("button", { name: "เปลี่ยนเป็นโหมดมืด" });
+  fireEvent.click(toggle);
+  expect(document.documentElement.classList.contains("dark")).toBe(true);
+  expect(document.documentElement.dataset.colorScheme).toBe("dark");
+  expect(window.localStorage.getItem("theme")).toBe("dark");
+  expect(screen.getByRole("button", { name: "เปลี่ยนเป็นโหมดสว่าง" })).toBeTruthy();
 });
 it("removes the mobile backdrop when resizing into desktop layout", () => {
   vi.stubGlobal("innerWidth", 375);

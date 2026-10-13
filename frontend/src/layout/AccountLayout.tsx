@@ -4,10 +4,13 @@ import { AccountSidebar } from "./AccountSidebar";
 import { accountText as t } from "../accountMessages";
 import type { AccountPage } from "../accountNavigation";
 import { PageBreadcrumb } from "./PageBreadcrumb";
-import { chartText } from "../chartMessages";
+import { ThemeProvider } from "../context/ThemeContext";
 import "../styles/admin-theme.css";
 /** Adapted from TailAdmin Pro 2.4.0 AppLayout/SidebarContext; children replace Outlet. */
 export function AccountLayout({ children, page = "chart" }: { children: ReactNode; page?: AccountPage }) {
+  return <ThemeProvider><AccountLayoutContent page={page}>{children}</AccountLayoutContent></ThemeProvider>;
+}
+function AccountLayoutContent({ children, page }: { children: ReactNode; page: AccountPage }) {
   const [open, setOpen] = useState(false);
   const [expanded, setExpanded] = useState(true);
   const [desktop, setDesktop] = useState(() => window.innerWidth >= 1280);
@@ -47,7 +50,7 @@ export function AccountLayout({ children, page = "chart" }: { children: ReactNod
         <AccountHeader open={desktop ? expanded : open} mobileOpen={open} trigger={trigger}
           toggle={() => { if (desktop) setExpanded(value => !value); else setOpen(value => !value); }} />
         <div className={`account-content mx-auto p-4 md:p-6 ${page === "chart" ? "account-content-chart" : ""}`}>
-          <PageBreadcrumb title={page === "chart" ? chartText("heading") : t(page === "api-keys" ? "keys" : page === "trading-account" ? "trading" : page)} />
+          {page !== "chart" && <PageBreadcrumb title={t(page === "api-keys" ? "keys" : page === "trading-account" ? "trading" : page)} />}
           {children}
         </div>
       </div>

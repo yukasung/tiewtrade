@@ -39,6 +39,7 @@ const axisTime = (time: Time, type: TickMarkType, locale: string) => {
 export type ChartRenderer = {
   chart: IChartApi;
   draw(candles: Candle[], points: Point[], enabled: Set<string>, indicatorsValid: boolean): string | null;
+  applyTheme(): void;
   remove(): void;
 };
 export function mountChart(element: HTMLElement, locale: string, selected: (iso: string | null) => void): ChartRenderer {
@@ -81,6 +82,18 @@ export function mountChart(element: HTMLElement, locale: string, selected: (iso:
   chart.subscribeCrosshairMove(listener);
   return {
     chart,
+    applyTheme() {
+      chart.applyOptions({
+        layout: { background: { color: token("--chart-background") }, textColor: token("--chart-text") },
+        grid: { vertLines: { color: token("--chart-grid") }, horzLines: { color: token("--chart-grid") } },
+        rightPriceScale: { borderColor: token("--chart-border") },
+        timeScale: { borderColor: token("--chart-border") },
+      });
+      candlesSeries.applyOptions({ priceLineColor: token("--chart-price-line"),
+        upColor: token("--chart-up"), downColor: token("--chart-down"),
+        wickUpColor: token("--chart-up"), wickDownColor: token("--chart-down"),
+        borderUpColor: token("--chart-up"), borderDownColor: token("--chart-down") });
+    },
     draw(candles, points, enabled, indicatorsValid) {
       sparseCandles = candles.length < 10;
       const slots = new Map<string, Candle>(candles.map(candle => [candle.open_at, candle]));

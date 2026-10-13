@@ -1,6 +1,15 @@
 import { createInstance } from "i18next";
 
 const th = {
+  workspace: {
+    orderHeading: "คำสั่งซื้อขาย", unavailable: "ยังไม่เปิดใช้งาน", orderSide: "ฝั่งคำสั่ง",
+    buy: "ซื้อ", sell: "ขาย", orderType: "ประเภทคำสั่ง", price: "ราคา", quantity: "จำนวน",
+    total: "ยอดรวม", orderNotice: "พื้นที่นี้เตรียมไว้สำหรับงานส่งออเดอร์ในอนาคต และยังไม่รับข้อมูลหรือส่งคำสั่งซื้อขาย",
+    historyHeading: "รายการซื้อขาย", historyTabs: "ประเภทประวัติ", openOrders: "ออเดอร์ที่เปิดอยู่",
+    orderHistory: "ประวัติออเดอร์", tradeHistory: "ประวัติการเทรด", date: "วันเวลา",
+    pairColumn: "คู่เทรด", side: "ฝั่ง", status: "สถานะ",
+    historyEmpty: "ยังไม่มีข้อมูลออเดอร์หรือการเทรดจากระบบ",
+  },
   heading: "กราฟแท่งเทียน", pair: "คู่เทรด", timeframe: "Timeframe", reset: "รีเซ็ตกราฟ", market: "Binance TH Spot",
   selectionOutside: "แท่งที่เลือกอยู่นอกช่วงที่โหลด",
   reason: "เหตุผลจาก server", unknownReason: "ไม่ทราบเหตุผลจาก server",
@@ -39,6 +48,15 @@ const th = {
   },
 };
 const en = {
+  workspace: {
+    orderHeading: "Trading order", unavailable: "Not available yet", orderSide: "Order side",
+    buy: "Buy", sell: "Sell", orderType: "Order type", price: "Price", quantity: "Quantity",
+    total: "Total", orderNotice: "This area is reserved for future order execution and does not accept input or submit trades.",
+    historyHeading: "Trading activity", historyTabs: "History category", openOrders: "Open orders",
+    orderHistory: "Order history", tradeHistory: "Trade history", date: "Date and time",
+    pairColumn: "Pair", side: "Side", status: "Status",
+    historyEmpty: "No order or trade data is available from the system yet.",
+  },
   heading: "Candlestick chart", pair: "Trading pair", timeframe: "Timeframe", reset: "Reset chart", market: "Binance TH Spot",
   selectionOutside: "Selected candle is outside the loaded range",
   reason: "Server reason", unknownReason: "Unknown server reason",

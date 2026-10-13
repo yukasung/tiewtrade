@@ -9,15 +9,16 @@ type ChartConfig = { layout?: { attributionLogo?: boolean }; timeScale?: {
   tickMarkFormatter?: (time: Time, type: TickMarkType, locale: string) => string | null;
 } };
 const plots = vi.hoisted(() => {
-  const series: { setData: ReturnType<typeof vi.fn<Setter>> }[] = [];
+  const series: { setData: ReturnType<typeof vi.fn<Setter>>; applyOptions: ReturnType<typeof vi.fn> }[] = [];
   const added: { kind: string; pane: number | undefined }[] = [];
   const seriesOptions: unknown[] = [];
   const chart = {
     addSeries: vi.fn((kind: string, options: unknown, pane?: number) => {
-      const plot = { setData: vi.fn<Setter>() };
+      const plot = { setData: vi.fn<Setter>(), applyOptions: vi.fn() };
       series.push(plot); added.push({ kind, pane }); seriesOptions.push(options); return plot;
     }),
     removeSeries: vi.fn(), subscribeCrosshairMove: vi.fn(), unsubscribeCrosshairMove: vi.fn(), remove: vi.fn(),
+    applyOptions: vi.fn(),
   };
   const createChart = vi.fn((element: HTMLElement, options: ChartConfig) => {
     void element;
@@ -60,6 +61,24 @@ it("keeps the built-in TradingView attribution link enabled", () => {
   renderer();
   const options = plots.createChart.mock.calls[0]?.[1];
   expect(options?.layout?.attributionLogo).toBe(true);
+});
+
+it("applies changed theme tokens without rebuilding chart data", () => {
+  const host = document.createElement("div");
+  host.style.setProperty("--chart-background", "#101828");
+  host.style.setProperty("--chart-text", "#98a2b3");
+  host.style.setProperty("--chart-grid", "#1d2939");
+  host.style.setProperty("--chart-border", "#344054");
+  host.style.setProperty("--chart-price-line", "#089981");
+  host.style.setProperty("--chart-up", "#089981");
+  host.style.setProperty("--chart-down", "#f23645");
+  document.body.append(host);
+  const view = mountChart(host, "th", vi.fn());
+  view.applyTheme();
+  expect(plots.chart.applyOptions).toHaveBeenLastCalledWith(expect.objectContaining({
+    layout: { background: { color: "#101828" }, textColor: "#98a2b3" },
+  }));
+  expect(plots.series[0]?.applyOptions).toHaveBeenCalledOnce();
 });
 
 it("uses short Bangkok axis labels while keeping day boundaries readable", () => {

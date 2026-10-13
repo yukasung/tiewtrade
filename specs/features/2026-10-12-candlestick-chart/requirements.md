@@ -8,8 +8,53 @@
 การลด controls และข้อความใต้กราฟด้านล่าง: **Approved** — เจ้าของอนุมัติเมื่อ 2026-10-14
 การเพิ่มปุ่มรีเซ็ตกราฟภาษาไทย: **Approved** — เจ้าของยืนยันเมื่อ 2026-10-14
 การลบตัวเลือกภาษาออกจากหน้า Chart: **Approved** — เจ้าของยืนยันเมื่อ 2026-10-14
+การจัดหน้าแบบ Trading Workspace ด้านล่าง: **Approved** — เจ้าของอนุมัติ requirements เมื่อ 2026-10-14
+การปรับสัดส่วนและความสูง workspace: **Approved** — เจ้าของสั่งแก้เมื่อ 2026-10-14
+การย่อ market bar และลบ visible labels: **Approved** — เจ้าของสั่งแก้เมื่อ 2026-10-14
+การจัดตำแหน่ง history tabs ตาม Admin Template: **Approved** — เจ้าของสั่งแก้เมื่อ 2026-10-14
+โหมด Light/Dark จาก Admin Template: **Approved** — เจ้าของสั่งเพิ่มเมื่อ 2026-10-14
 วันที่: 2026-10-12
 Branch: feature/f-12-candlestick-chart
+
+## Amendment — จัดหน้าแบบ Trading Workspace (Approved 2026-10-14)
+
+ใช้ภาพหน้าเทรด Binance ที่เจ้าของให้เป็น **ข้อมูลอ้างอิงเฉพาะการจัดพื้นที่** ของหน้าแรกหลังเข้าสู่ระบบ
+ไม่ใช้เป็นข้อกำหนดให้คัดลอกตราสินค้า สี หรือความสามารถซื้อขายของ Binance. หน้า Chart ยังคงใช้
+component, design token, interaction state และ responsive pattern จาก `references/admin-template/`
+ตาม `specs/standards/frontend.md`; กราฟยังใช้พื้นสีขาวเป็นค่าเริ่มต้นตามข้อกำหนดที่อนุมัติแล้ว.
+
+บนจอ desktop พื้นที่เนื้อหาของหน้าแรกแบ่งเป็น Trading Workspace ดังนี้:
+
+1. แถบสรุปตลาดและตัวเลือกคู่เทรด/timeframe อยู่เหนือพื้นที่หลัก โดยใช้ข้อมูลตลาดที่ F-12 มีอยู่แล้ว
+   และไม่สร้าง bid/ask, สถิติ 24 ชั่วโมง หรือยอดคงเหลือจำลองขึ้นเอง
+2. กราฟแท่งเทียนเป็นพื้นที่หลักด้านซ้ายและใช้พฤติกรรม/ข้อมูลเดิมของ F-12 ทั้งหมด
+3. ด้านขวามีพื้นที่เตรียม form ซื้อขายเพื่อกำหนด layout เท่านั้น. Input/select/tab และปุ่ม action
+   ต้องแสดงเป็น disabled พร้อมข้อความชัดเจนว่ายังใช้งานไม่ได้; ห้ามส่งคำขอ, คำนวณจำนวนเงิน,
+   แสดง balance จำลอง หรือเปลี่ยนสถานะ Paper/Live. การเปิดใช้งานจริงเป็นขอบเขต F-13–F-16/F-22.
+4. ใต้กราฟมีพื้นที่ตารางประวัติ/รายการออเดอร์เพื่อกำหนด layout เท่านั้น. แสดงหัวตารางและ empty state
+   ที่บอกว่ายังไม่มีข้อมูลจากระบบ ห้ามสร้างรายการซื้อขายจำลอง; ข้อมูลจริงเป็นขอบเขต F-15/F-16/F-28.
+5. Account navigation เดิมยังเข้าถึงแต่ละ module แยกหน้าได้ และหน้า Chart ยังคงเป็นหน้าเริ่มต้น
+   หลังเข้าสู่ระบบตาม plan ที่อนุมัติแล้ว.
+6. บนจอแคบให้เรียง market summary, chart, form และ history ลงมาตามลำดับโดยไม่มี horizontal overflow;
+   chart ต้องยังซูม เลื่อน ใช้ crosshair และรีเซ็ตได้ตามเดิม.
+
+บนจอ desktop ให้ workspace สูงพอดีกับพื้นที่ใต้ account header โดยไม่สร้าง scrollbar ของ document.
+พื้นที่ history ใต้กราฟต้องสูงกว่าพื้นที่ chart ตามสัดส่วนของภาพอ้างอิง ส่วน mobile คงการเรียงแนวตั้ง
+และอนุญาตให้เลื่อนหน้าเพื่อรักษาขนาดกราฟและ controls ที่ใช้งานได้.
+Market bar ไม่แสดงข้อความ `กราฟแท่งเทียน`, `คู่เทรด` และ `Timeframe`; dropdown ยังต้องมี accessible name
+เดิมสำหรับ screen reader และลด padding/spacing ของแถบโดยไม่ลดขนาด control ของ Admin Template.
+Tabs ของรายการซื้อขายต้องอยู่ชิดซ้ายในแถบหัวของ history โดยไม่ซ้อนพื้นที่ chart/แกนเวลา และใช้รูปแบบ
+underline tab จาก `references/admin-template/src/components/ui/tabs/TabWithUnderline.tsx`.
+
+หน้า account ต้องมีปุ่มสลับ Light/Dark ใน header ตาม ThemeToggleButton/ThemeContext ของ Admin Template.
+ค่าเริ่มต้นเมื่อยังไม่เคยเลือกคือ Light และบันทึกค่าที่เลือกใน browser เพื่อใช้ในการเปิดหน้าครั้งถัดไป.
+Sidebar, header, workspace, form controls, tabs, table และ chart ต้องใช้ theme เดียวกัน; การสลับ theme
+ต้องไม่ล้างข้อมูล เปลี่ยน pair/TF/viewport หรือเรียก API เพิ่ม และปุ่มต้องมี accessible name บอกโหมดปลายทาง.
+
+Amendment นี้เปลี่ยนเฉพาะ layout และ placeholder UI. ไม่เพิ่มหรือเปลี่ยน API, database, order domain,
+balance/position/PnL, idempotency, exchange integration หรือ trading safety rule ใด ๆ. ก่อนเขียนโค้ดต้องมี
+plan/validation amendment ที่ระบุ component ของ admin template ที่นำมาใช้ซ้ำและเกณฑ์ยืนยันว่า controls
+ทั้งหมดในพื้นที่ซื้อขายยัง disabled และไม่มี network request สำหรับการส่งออเดอร์.
 
 ## Amendment — ลบตัวเลือกภาษาออกจากหน้า Chart (Approved 2026-10-14)
 

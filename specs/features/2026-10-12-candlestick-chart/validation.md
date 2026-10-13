@@ -8,9 +8,40 @@
 การลด controls และข้อความใต้กราฟด้านล่าง: **Approved** — เจ้าของอนุมัติเมื่อ 2026-10-14
 การเพิ่มปุ่มรีเซ็ตกราฟภาษาไทย: **Approved** — เจ้าของยืนยันเมื่อ 2026-10-14
 การลบตัวเลือกภาษาออกจากหน้า Chart: **Approved** — เจ้าของยืนยันเมื่อ 2026-10-14
+การจัดหน้าแบบ Trading Workspace ด้านล่าง: **Approved** — เจ้าของสั่งเริ่มปรับ UI เมื่อ 2026-10-14
+การปรับสัดส่วนและความสูง workspace: **Approved** — เจ้าของสั่งแก้เมื่อ 2026-10-14
+การย่อ market bar และลบ visible labels: **Approved** — เจ้าของสั่งแก้เมื่อ 2026-10-14
+การจัดตำแหน่ง history tabs ตาม Admin Template: **Approved** — เจ้าของสั่งแก้เมื่อ 2026-10-14
+โหมด Light/Dark จาก Admin Template: **Approved** — เจ้าของสั่งเพิ่มเมื่อ 2026-10-14
 วันที่: 2026-10-12
 Branch: feature/f-12-candlestick-chart
 อ้างอิง: [requirements](requirements.md), [plan](plan.md), [หลักฐานต้นทาง](source-evidence.md)
+
+## Amendment — ตรวจ Trading Workspace layout (Approved 2026-10-14)
+
+| รหัส | เกณฑ์ตรวจ | ผล |
+|---|---|---|
+| TW-01 | Desktop แสดง market bar ด้านบน, chart ด้านซ้าย, order placeholder ด้านขวา และ history ใต้ chart ตาม grid ที่อนุมัติ | Passed — browser screenshot และ bounding boxes ที่ 1440/1280px |
+| TW-02 | Chart ยังแสดงพื้นขาว, OHLCV exact, live candle, pan/zoom/crosshair/reset และสลับ pair/TF ได้โดยไม่มี regression | Passed — targeted panel/renderer tests 35 tests และ browser smoke เห็น chart จริง |
+| TW-03 | Order placeholder ใช้ shared Admin Template Input/Select/Label/Button; controls ทุกตัว disabled, มี accessible label, ใช้ปุ่มข้อความ `ยังไม่เปิดใช้งาน` และไม่มีปุ่มที่อ้างว่าส่งคำสั่งซื้อ/ขายได้ | Passed — component assertions และ browser disabled-control check |
+| TW-04 | ไม่มี submit handler/form action, ไม่มีค่าราคา/จำนวน/balance จำลอง และการกด/พยายามกรอกไม่สร้าง POST/PUT/PATCH/DELETE หรือ order/trading request | Passed — source/component assertions และ browser request log ไม่มี mutation |
+| TW-05 | History ใช้ semantic shared table, แสดงหัวตารางกับ empty state เท่านั้น และไม่มี mock order/trade | Passed — component assertions และ visual smoke |
+| TW-06 | ที่ viewport 1440px และ 1280px grid ไม่ทับกัน; ที่ 768px และ 390px เรียง market→chart→order→history และ document ไม่มี horizontal overflow | Passed — browser bounding/overflow assertions ทั้ง 4 viewport |
+| TW-07 | Default/hover/focus/disabled ของ controls, border, spacing, radius และสีตรง Admin Template โดยตรวจ component assertions และ computed style ของ state ที่เกี่ยวข้อง | Partial — ใช้ shared Admin Template components/tokens และภาพจริงตรงรูปแบบ; automated computed-style state matrix ยังไม่ได้หลักฐานครบ |
+| TW-08 | Account navigation/module routes, chart-as-default route, authentication และ sidebar toggle ยังทำงาน | Passed — targeted navigation tests และ authenticated browser smoke |
+| TW-09 | Diff ไม่มีการเปลี่ยน backend, OpenAPI, database, money/order/balance/position/PnL หรือ exchange integration | Passed — scoped diff review มีเฉพาะ frontend/spec/evidence |
+| TW-10 | Type-check, scoped ESLint, targeted component/layout/renderer tests และ browser smoke ผ่านกับโค้ดฉบับสุดท้าย | Passed — type-check/lint exit 0, 35 targeted tests passed, browser smoke ไม่มี page error |
+| TW-11 | Desktop workspace พอดีกับพื้นที่ใต้ header, document ไม่มี vertical scrollbar และ history สูงกว่า chart; mobile ยังเรียงแนวตั้งและเลื่อนได้ | Passed — Chromium geometry ที่ 1440×1000 และ 1280×900 ไม่มี page scrollbar, history:chart เป็น 5:4; mobile 390×844 ยังเลื่อนได้ |
+| TW-12 | Market bar ไม่แสดง `กราฟแท่งเทียน`, `คู่เทรด`, `Timeframe`, ยังมี accessible select names และมีความสูงลดลงโดยไม่เปลี่ยน control size | Passed — component test และ Chromium ยืนยัน visible labels ไม่มี, select names ครบ, bar สูง 65px และไม่มี page scrollbar |
+| TW-13 | History tabs ใช้ underline pattern ของ Admin Template, อยู่ชิดซ้ายใน history header และไม่ทับ chart หรือแกนเวลา | Passed — ใช้ TabWithUnderline source pattern; Chromium ยืนยัน chart bottom เท่ากับ history top, tabs อยู่ภายใน history และไม่มี page scrollbar |
+| TW-14 | Header มี theme toggle ตาม Admin Template; default Light, สลับ Light/Dark ได้, accessible name ถูกต้อง และค่าคงอยู่หลัง reload | Passed — component test และ Chromium ตรวจ root class/data attribute/local storage/reload |
+| TW-15 | Sidebar/header/workspace/controls/tabs/table/chart เปลี่ยนสีพร้อมกัน โดยข้อมูลกราฟและ viewport ไม่ถูกล้างและไม่มี API request เพิ่ม | Passed — computed colors เปลี่ยนครบ, OHLC ยังแสดง และ request log ระหว่าง toggle ว่าง |
+| TW-16 | Targeted theme/layout/renderer tests, type-check, scoped ESLint และ browser smoke ทั้งสองโหมดผ่าน | Passed — 40 tests / 3 files, type-check/ESLint exit 0, Chromium ไม่มี page error |
+
+หลักฐานขั้นต่ำ: test output ของไฟล์ที่ได้รับผลกระทบ, browser screenshots desktop/mobile,
+bounding/overflow assertions, computed styles ของ control states และ network request log ระหว่างลองใช้
+placeholder กับสลับ timeframe. เก็บผลใน `evidence/checkpoint.md`; เกณฑ์ V-01..V-18 และ
+Pending Full Validation เดิมยังคงผลเดิมและไม่ถูกแทนด้วย TW-01..TW-10.
 
 ## Amendment — ตรวจการลบตัวเลือกภาษา (Approved 2026-10-14)
 

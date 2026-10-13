@@ -3,11 +3,11 @@ import { ApiRequestError } from "./auth";
 import { MarketTime, MarketValue } from "./components/MarketValue";
 import { Button } from "./components/ui/Button";
 import { Select } from "./components/ui/Select";
-import { ComponentCard } from "./components/ui/ComponentCard";
 import { chartI18n } from "./chartMessages";
 import { mountChart, type ChartRenderer } from "./chart/renderer";
 import { useChartData } from "./chart/useChartData";
 import type { Series, Timeframe } from "./chart/api";
+import { TradeHistoryPlaceholder, TradingOrderPlaceholder } from "./TradingWorkspacePlaceholders";
 import "./CandlestickChartPanel.css";
 
 const pairs = ["BTC", "ETH", "SOL", "XRP", "DOGE"];
@@ -65,6 +65,11 @@ export function CandlestickChartPanel({ userId }: { userId: string }) {
     return () => { renderer.current?.remove(); renderer.current = undefined; };
   }, [base, timeframe]);
   useEffect(() => {
+    const applyTheme = () => renderer.current?.applyTheme();
+    window.addEventListener("tiewtrade-theme-change", applyTheme);
+    return () => window.removeEventListener("tiewtrade-theme-change", applyTheme);
+  }, []);
+  useEffect(() => {
     const view = renderer.current;
     if (!view) return;
     const range = view.chart.timeScale().getVisibleLogicalRange();
@@ -89,34 +94,46 @@ export function CandlestickChartPanel({ userId }: { userId: string }) {
     if (!selectionTimes.length) return;
     renderer.current?.chart.timeScale().setVisibleLogicalRange(initialViewport(selectionTimes.length));
   };
-  return <ComponentCard className="candlestick-panel" headingId="market-chart-heading" title={t("heading")} desc={t("disclaimer")} data-testid="candlestick-chart">
-    <div className="chart-controls">
-      <label>{t("pair")}<Select value={base} onChange={event => changeSeries(event.target.value, timeframe)}>
-        {pairs.map(pair => <option key={pair} value={pair}>{pair}/USDT</option>)}</Select></label>
-      <label>{t("timeframe")}<Select value={timeframe} onChange={event => changeSeries(base, event.target.value as Timeframe)}>
-        {timeframes.map(value => <option key={value}>{value}</option>)}</Select></label>
-      <Button onClick={resetViewport} disabled={!selectionTimes.length}>{t("reset")}</Button>
-    </div>
-    {error && <p role="alert">{t(`errors.${error instanceof ApiRequestError ? error.message : "unknown"}`,
-      { defaultValue: t("errors.unknown") })}</p>}
-    {renderLimit && <p role="alert">{t(renderLimit)}</p>}
-    <div className="chart-frame">
-      <div className="chart-chart-header" data-testid="chart-summary">
-        <div className="chart-chart-title"><strong>{base}/USDT</strong><span>· {timeframe} · {t("market")}</span></div>
-        {summaryCandle && <div className="chart-candle-meta"><MarketTime value={summaryCandle.open_at} locale={chartLocale}/>
-          <span>·</span><span className={`chart-finality chart-finality-${summaryCandle.finality.toLowerCase()}`}>
-            {t(summaryCandle.finality)}</span></div>}
-        {summaryCandle && <div className="chart-ohlc">
-          {(["open", "high", "low", "close", "volume"] as const).map(name =>
-            <span key={name}><span className="chart-ohlc-label" aria-label={t(name)}>{ohlcvLabels[name]}</span>{" "}
-              <MarketValue amount={summaryCandle[name]} unit={name === "volume" ? base : "USDT"} grouped/></span>)}
-        </div>}
+  return <section className="candlestick-panel trading-workspace" aria-label={t("heading")}
+    data-testid="candlestick-chart">
+    <header className="trading-market-bar">
+      <div className="trading-market-identity">
+        <strong>{base}/USDT</strong><span>{t("market")}</span>
       </div>
-      <div ref={host} className="chart-canvas" data-testid="chart-canvas"/>
+      <div className="chart-controls">
+        <div><Select id="chart-pair" aria-label={t("pair")} value={base}
+          onChange={event => changeSeries(event.target.value, timeframe)}>
+            {pairs.map(pair => <option key={pair} value={pair}>{pair}/USDT</option>)}</Select></div>
+        <div><Select id="chart-timeframe" aria-label={t("timeframe")} value={timeframe}
+            onChange={event => changeSeries(base, event.target.value as Timeframe)}>
+            {timeframes.map(value => <option key={value}>{value}</option>)}</Select></div>
+        <Button onClick={resetViewport} disabled={!selectionTimes.length}>{t("reset")}</Button>
+      </div>
+    </header>
+    <div className="trading-chart-area">
+      {error && <p role="alert">{t(`errors.${error instanceof ApiRequestError ? error.message : "unknown"}`,
+        { defaultValue: t("errors.unknown") })}</p>}
+      {renderLimit && <p role="alert">{t(renderLimit)}</p>}
+      <div className="chart-frame">
+        <div className="chart-chart-header" data-testid="chart-summary">
+          <div className="chart-chart-title"><strong>{base}/USDT</strong><span>· {timeframe} · {t("market")}</span></div>
+          {summaryCandle && <div className="chart-candle-meta"><MarketTime value={summaryCandle.open_at} locale={chartLocale}/>
+            <span>·</span><span className={`chart-finality chart-finality-${summaryCandle.finality.toLowerCase()}`}>
+              {t(summaryCandle.finality)}</span></div>}
+          {summaryCandle && <div className="chart-ohlc">
+            {(["open", "high", "low", "close", "volume"] as const).map(name =>
+              <span key={name}><span className="chart-ohlc-label" aria-label={t(name)}>{ohlcvLabels[name]}</span>{" "}
+                <MarketValue amount={summaryCandle[name]} unit={name === "volume" ? base : "USDT"} grouped/></span>)}
+          </div>}
+        </div>
+        <div ref={host} className="chart-canvas" data-testid="chart-canvas"/>
+      </div>
+      {!candle && selectedTime !== undefined && <div className="chart-selection" aria-label={t("selected")}>
+        <p><MarketTime value={new Date(selectedTime).toISOString()} locale={chartLocale}/>
+          {" · "}{t(point ? "GAP" : selected !== null ? "selectionOutside" : "missing")}</p>
+      </div>}
     </div>
-    {!candle && selectedTime !== undefined && <div className="chart-selection" aria-label={t("selected")}>
-      <p><MarketTime value={new Date(selectedTime).toISOString()} locale={chartLocale}/>
-        {" · "}{t(point ? "GAP" : selected !== null ? "selectionOutside" : "missing")}</p>
-    </div>}
-  </ComponentCard>;
+    <TradingOrderPlaceholder/>
+    <TradeHistoryPlaceholder/>
+  </section>;
 }
