@@ -75,41 +75,6 @@
 .template-card-header h2 { margin: 0; }
 .template-card-header p { color: var(--account-muted-color); margin-bottom: 0; }
 .template-card-body { border-top: var(--account-border-width) solid var(--account-line); }
-.account-button {
-  min-height: var(--account-control-height);
-  padding: var(--account-space-sm) var(--account-space-md);
-  border: var(--account-border-width) solid var(--account-line);
-  background: var(--account-surface);
-  color: var(--account-ink);
-  font: inherit;
-  cursor: pointer;
-}
-.account-button[type="submit"] {
-  background: var(--account-brand);
-  color: var(--account-surface);
-  border-color: var(--account-brand);
-}
-.account-button:hover:not(:disabled) {
-  border-color: var(--account-brand);
-}
-.account-button[type="submit"]:hover:not(:disabled) { background: var(--color-brand-600); }
-.account-button:not([type="submit"]):hover:not(:disabled) { background: var(--color-gray-50); }
-.account-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-.account-input {
-  width: 100%;
-  min-height: var(--account-control-height);
-  padding: var(--account-space-sm);
-  border: var(--account-border-width) solid var(--color-gray-300);
-  font: inherit;
-  background: var(--account-surface);
-  color: var(--account-ink);
-}
-.account-label {
-  color: var(--account-muted-color);
-}
 .app-theme :focus-visible {
   outline: var(--account-focus-width) solid var(--account-focus-color);
   outline-offset: var(--account-focus-offset);

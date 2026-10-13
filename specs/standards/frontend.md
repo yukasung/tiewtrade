@@ -18,6 +18,10 @@
   เพื่อให้รูปแบบเหมือนกันทุกหน้า
 - ก่อนสร้าง component ใหม่ ให้ค้นของเดิมก่อน
 - สี ระยะห่าง และตัวอักษร มาจากชุดค่ากลาง ห้ามใส่ค่าดิบในแต่ละที่
+- control แบบมาตรฐานทุกหน้า เช่น input, select/dropdown, label และ button ต้องใช้
+  component กลางใน `frontend/src/components/ui/` ที่ปรับจาก `references/admin-template/`;
+  ห้ามสร้าง style หรือเขียน native control ซ้ำในแต่ละหน้า ยกเว้น control เฉพาะทางของ layout
+  ที่ admin template ใช้ native element โดยตรง เช่น backdrop หรือ sidebar toggle
 
 ## 3. ข้อมูล
 

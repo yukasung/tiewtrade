@@ -198,13 +198,47 @@ it("keeps the live preview visible while the new timeframe history loads", () =>
   const panel = render(<CandlestickChartPanel userId="fixture" />);
   rendererDraw.mockClear();
 
-  vi.mocked(useChartData).mockReturnValue(state(true, false, false, 0, true));
+  const loading = state(true, false, false, 0, true);
+  loading.preview.data!.timeframe = "1m";
+  vi.mocked(useChartData).mockReturnValue(loading);
   fireEvent.change(panel.container.querySelectorAll("select")[1]!, { target: { value: "1m" } });
   expect(rendererDraw.mock.calls.at(-1)?.[0]).toHaveLength(1);
   expect(rendererDraw.mock.calls.at(-1)?.[1]).toEqual([]);
 
-  vi.mocked(useChartData).mockReturnValue(state(false, false, true, 120, true));
+  const loaded = state(false, false, true, 120, true);
+  loaded.query.data!.pages[0]!.timeframe = "1m";
+  loaded.preview.data!.timeframe = "1m";
+  vi.mocked(useChartData).mockReturnValue(loaded);
   panel.rerender(<CandlestickChartPanel userId="fixture" />);
   expect(rendererDraw.mock.calls.at(-1)?.[0].length).toBeGreaterThan(0);
   expect(rendererDraw.mock.calls.at(-1)?.[1]).toHaveLength(120);
+});
+
+it("does not reuse stale candles or viewport state from the previous timeframe", () => {
+  const previous = state(false, false, true, 120);
+  vi.mocked(useChartData).mockReturnValue(previous);
+  const panel = render(<CandlestickChartPanel userId="fixture" />);
+  expect(rendererDraw.mock.calls.at(-1)?.[0]).toHaveLength(1);
+
+  rendererDraw.mockClear();
+  timeScale.setVisibleLogicalRange.mockClear();
+  vi.mocked(useChartData).mockReturnValue(previous);
+  fireEvent.change(panel.container.querySelectorAll("select")[1]!, { target: { value: "1m" } });
+  expect(rendererDraw.mock.calls.at(-1)?.[0]).toEqual([]);
+  expect(rendererDraw.mock.calls.at(-1)?.[1]).toEqual([]);
+
+  const current = state(true, false);
+  const currentHistory = candleHistory();
+  currentHistory.timeframe = "1m";
+  currentHistory.rows = Array.from({ length: 100 }, (_, index) => ({
+    ...candle(),
+    open_at: new Date(Date.parse("2026-10-12T00:00:00Z") + index * 60_000).toISOString(),
+    end_at: new Date(Date.parse("2026-10-12T00:01:00Z") + index * 60_000).toISOString(),
+  }));
+  current.provisional = { data: currentHistory, error: null } as ReturnType<typeof useChartData>["provisional"];
+  vi.mocked(useChartData).mockReturnValue(current);
+  panel.rerender(<CandlestickChartPanel userId="fixture" />);
+
+  expect(rendererDraw.mock.calls.at(-1)?.[0]).toHaveLength(100);
+  expect(timeScale.setVisibleLogicalRange).toHaveBeenLastCalledWith({ from: 0, to: 104 });
 });

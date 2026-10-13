@@ -46,7 +46,7 @@ test("สมัคร เข้าสู่ระบบ แล้วออกจ
       await page
         .getByTestId("submit")
         .evaluate((element) => window.getComputedStyle(element).opacity),
-    ).toBe("0.6");
+    ).toBe("0.5");
     await captureUi(page, testInfo, "register-pending");
   } finally {
     releaseRegistration();

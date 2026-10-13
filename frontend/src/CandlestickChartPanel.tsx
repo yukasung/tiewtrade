@@ -21,6 +21,8 @@ const initialViewport = (slotCount: number) => ({
   from: slotCount - initialVisibleSlots,
   to: slotCount - 1 + initialRightOffset,
 });
+const belongsToSeries = (value: Series | undefined, series: Series) => Boolean(value &&
+  value.base === series.base && value.quote === series.quote && value.timeframe === series.timeframe);
 
 export function CandlestickChartPanel({ userId }: { userId: string }) {
   const [base, setBase] = useState("BTC");
@@ -31,12 +33,15 @@ export function CandlestickChartPanel({ userId }: { userId: string }) {
   const historyViewportInitialized = useRef(false);
   const series: Series = { base, quote: "USDT", timeframe };
   const state = useChartData(userId, series);
-  const first = state.query.data?.pages[0];
-  const provisional = state.provisional?.data;
-  const rows = useMemo(() => state.query.data?.pages.flatMap(page => page.candles) ?? provisional?.rows ?? [],
-    [state.query.data, provisional]);
-  const points = useMemo(() => state.query.data?.pages.flatMap(page => page.rows) ?? [], [state.query.data]);
-  const liveRows = state.preview.data?.rows ?? [];
+  const pages = useMemo(() => state.query.data?.pages.filter(page => belongsToSeries(page, series)) ?? [],
+    [state.query.data, base, timeframe]);
+  const first = pages[0];
+  const provisional = belongsToSeries(state.provisional?.data, series) ? state.provisional.data : undefined;
+  const preview = belongsToSeries(state.preview.data, series) ? state.preview.data : undefined;
+  const rows = useMemo(() => pages.length ? pages.flatMap(page => page.candles) : provisional?.rows ?? [],
+    [pages, provisional]);
+  const points = useMemo(() => pages.flatMap(page => page.rows), [pages]);
+  const liveRows = preview?.rows ?? [];
   const displayed = useMemo(() => {
     if (first) return [...rows, ...liveRows.filter(row => row.open_at >= first.calculation_end)]
       .sort((a, b) => Date.parse(a.open_at) - Date.parse(b.open_at));

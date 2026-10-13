@@ -5,15 +5,10 @@
 .chart-controls {
   display: flex;
   flex-wrap: wrap;
+  align-items: flex-end;
   gap: var(--account-space-sm);
 }
 .chart-controls label { display: grid; gap: var(--account-field-gap); }
-.chart-controls select {
-  padding: var(--account-space-sm) var(--account-space-md);
-  border: var(--account-border-width) solid var(--account-line);
-  border-radius: var(--account-radius);
-}
-.chart-controls select { max-width: 100%; }
 .chart-frame {
   --chart-background: #ffffff;
   --chart-text: #667085;
