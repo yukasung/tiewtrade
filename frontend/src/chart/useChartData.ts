@@ -12,6 +12,7 @@ export function useChartData(user: string, series: Series, window?: Window) {
   const successfulAt = useRef(-Infinity), proofAt = useRef(-Infinity);
   const rebuilt = useRef<string | null>(null);
   const cooldown = useRef(0);
+  const cooldownErrors = useRef(new WeakSet<ApiRequestError>());
   const liveDue = useRef(0);
   const episodeKey = ["chart", user, "primary_spot", series.base, series.quote, series.timeframe, window, nonce] as const;
   const query = useQuery({ queryKey: episodeKey, enabled: false, retry: false, gcTime: 0,
@@ -74,7 +75,8 @@ export function useChartData(user: string, series: Series, window?: Window) {
       proofAt.current = -Infinity;
       if (!active) void client.cancelQueries({ queryKey: episodeKey });
       else if (!actions.current.query.isFetching && !actions.current.query.error &&
-          !actions.current.proof.error && !actions.current.refreshState.error && Date.now() >= cooldown.current) {
+          !actions.current.proof.error && !actions.current.refreshState.error &&
+          globalThis.performance.now() >= cooldown.current) {
         liveDue.current = globalThis.performance.now() + 2000;
         void actions.current.preview.refetch();
         if (actions.current.first) void actions.current.proof.refetch();
@@ -127,13 +129,32 @@ export function useChartData(user: string, series: Series, window?: Window) {
     void client.resetQueries({ queryKey: proofKey, exact: true });
   }, [client, query.dataUpdatedAt]);
 
-  for (const error of [query.error, proof.error, preview.error]) {
-    if (error instanceof ApiRequestError && error.retryAt) cooldown.current = Math.max(cooldown.current, Date.parse(error.retryAt));
+  for (const error of [query.error, proof.error, preview.error, refreshState.error]) {
+    if (error instanceof ApiRequestError && error.retryAt && !cooldownErrors.current.has(error)) {
+      cooldownErrors.current.add(error);
+      const retryAt = Date.parse(error.retryAt);
+      if (Number.isFinite(retryAt)) {
+        const cooldownDuration = Math.max(0, retryAt - Date.now());
+        cooldown.current = Math.max(cooldown.current, globalThis.performance.now() + cooldownDuration);
+      }
+    }
   }
-  const retry = () => { if (Date.now() >= cooldown.current) setNonce(value => value + 1); };
+  const cooldownActive = globalThis.performance.now() < cooldown.current;
+  useEffect(() => {
+    const cooldownRemaining = cooldown.current - globalThis.performance.now();
+    if (cooldownRemaining <= 0) return;
+    // Terminal errors intentionally stop network timers. Wake the view once at
+    // Retry-After so the manual retry control does not remain disabled forever.
+    const cooldownTimer = globalThis.setTimeout(() => setTick(value => value + 1), cooldownRemaining + 1);
+    return () => globalThis.clearTimeout(cooldownTimer);
+  }, [query.error, proof.error, preview.error, refreshState.error, nonce]);
+  const retry = () => {
+    if (globalThis.performance.now() >= cooldown.current) setNonce(value => value + 1);
+  };
   const refresh = async () => {
     const target = first?.refresh.target;
-    if (!target || query.isFetching || refreshState.isFetching || Date.now() < cooldown.current) return;
+    if (!target || query.isFetching || refreshState.isFetching ||
+        globalThis.performance.now() < cooldown.current) return;
     const key = [...episodeKey, "refresh"];
     await client.fetchQuery({ queryKey: key, retry: false, gcTime: 0, queryFn: async ({ signal }) => {
       const posted = await send<{ accepted: boolean }>("/market-data/candles/requests", target, undefined, "POST",
@@ -160,5 +181,5 @@ export function useChartData(user: string, series: Series, window?: Window) {
   const valid = visible && !stopped && !query.isFetching && !proof.isFetching && !refreshState.isFetching &&
     proof.data?.status !== "CHANGED" && proof.data?.status !== "UNVERIFIABLE" &&
     globalThis.performance.now() - proofAt.current <= 45_000;
-  return { query, proof, preview, refreshState, visible, valid, stopped, retry, refresh, cooldown: cooldown.current };
+  return { query, proof, preview, refreshState, visible, valid, stopped, retry, refresh, cooldownActive };
 }

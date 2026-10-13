@@ -15,6 +15,7 @@ const timeframes: Timeframe[] = ["1m", "5m", "15m", "1h", "4h", "1d"];
 const spans: Record<Timeframe, number> = { "1m": 60_000, "5m": 300_000, "15m": 900_000,
   "1h": 3_600_000, "4h": 14_400_000, "1d": 86_400_000 };
 const names = ["ema20", "ema50", "ema200", "rsi14", "macd_line", "macd_signal", "macd_histogram", "atr14"];
+const initialVisibleSlots = 100, initialRightOffset = 5;
 
 export function CandlestickChartPanel({ userId }: { userId: string }) {
   const [base, setBase] = useState("BTC");
@@ -25,6 +26,7 @@ export function CandlestickChartPanel({ userId }: { userId: string }) {
   const [enabled, setEnabled] = useState(new Set(names.slice(0, 3)));
   const [renderLimit, setRenderLimit] = useState<string | null>(null);
   const host = useRef<HTMLDivElement>(null), renderer = useRef<ChartRenderer>();
+  const historyViewportInitialized = useRef(false);
   const series: Series = { base, quote: "USDT", timeframe };
   const state = useChartData(userId, series, window);
   const first = state.query.data?.pages[0];
@@ -46,24 +48,30 @@ export function CandlestickChartPanel({ userId }: { userId: string }) {
 
   useEffect(() => {
     if (!host.current) return;
+    historyViewportInitialized.current = false;
     renderer.current = mountChart(host.current, locale, iso => setSelected(Date.parse(iso)));
     return () => { renderer.current?.remove(); renderer.current = undefined; };
   }, [locale, base, timeframe]);
   useEffect(() => {
     const view = renderer.current;
     if (!view) return;
-    const range = view.chart.timeScale().getVisibleRange();
+    const range = view.chart.timeScale().getVisibleLogicalRange();
     const result = view.draw(displayed, points, enabled, state.valid && !overlap);
     setRenderLimit(result);
-    // A reset or rendering failure can empty the chart. The library has no
-    // time points on which to restore a range until the next bundle arrives.
-    if (!result && displayed.length) {
-      if (range) view.chart.timeScale().setVisibleRange(range);
-      else view.chart.timeScale().setVisibleLogicalRange({
-        from: Math.max(0, displayed.length - 100), to: displayed.length - 1,
-      });
+    // Preserve a user-adjusted viewport across data updates. On first load,
+    // include empty logical slots so sparse data remains readable without stretching.
+    if (!result && selectionTimes.length) {
+      if (first && historyViewportInitialized.current && range) {
+        view.chart.timeScale().setVisibleLogicalRange(range);
+      } else {
+        view.chart.timeScale().setVisibleLogicalRange({
+        from: selectionTimes.length - initialVisibleSlots,
+        to: selectionTimes.length - 1 + initialRightOffset,
+        });
+        if (first) historyViewportInitialized.current = true;
+      }
     }
-  }, [displayed, points, enabled, state.valid, overlap, locale, base, timeframe]);
+  }, [displayed, points, enabled, state.valid, overlap, locale, base, timeframe, selectionTimes.length, first]);
 
   const changeSeries = (base: string, timeframe: Timeframe) => {
     setBase(base); setTimeframe(timeframe); setWindow(undefined); setSelected(null);
@@ -110,7 +118,7 @@ export function CandlestickChartPanel({ userId }: { userId: string }) {
       <Button type="button" disabled={!first || state.query.isFetching || first.result_start === first.calculation_start}
         onClick={older}>{t("older")}</Button>
       <Button type="button" disabled={state.query.isFetching || state.proof.isFetching ||
-        state.refreshState.isFetching || Date.now() < state.cooldown} onClick={state.retry}>{t("retry")}</Button>
+        state.refreshState.isFetching || state.cooldownActive} onClick={state.retry}>{t("retry")}</Button>
       <Button type="button" disabled={!first?.refresh.target || state.query.isFetching || state.proof.isFetching || state.refreshState.isFetching}
         onClick={() => { void state.refresh().catch(() => undefined); }}>{t("refresh")}</Button>
     </div>

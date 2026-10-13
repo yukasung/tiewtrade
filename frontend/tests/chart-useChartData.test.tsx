@@ -65,6 +65,31 @@ it.each([new ApiRequestError("INDICATOR_NUMERIC_ERROR", 422),
     expect(hook.result.current.valid).toBe(false);
   });
 
+it("enables manual retry after Retry-After despite a backward wall-clock change", async () => {
+  vi.mocked(history)
+    .mockImplementationOnce(() => {
+      throw new ApiRequestError("INDICATOR_BUSY", 503, "1");
+    })
+    .mockResolvedValue(chartPage("retried"));
+  const hook = mount();
+  await tick(2010);
+  expect(history).toHaveBeenCalledTimes(1);
+  expect(hook.result.current.stopped).toBe(true);
+  expect(hook.result.current.cooldownActive).toBe(true);
+
+  act(() => hook.result.current.retry());
+  expect(history).toHaveBeenCalledTimes(1);
+  vi.setSystemTime(new Date(Date.now() - 60_000));
+  await tick(1001);
+  expect(history).toHaveBeenCalledTimes(1);
+  expect(hook.result.current.cooldownActive).toBe(false);
+
+  act(() => hook.result.current.retry());
+  await tick(2010);
+  expect(history).toHaveBeenCalledTimes(2);
+  expect(hook.result.current.query.data?.pages[0]?.dataset_revision).toBe("retried");
+});
+
 it("failed admission cancels a readiness wait and stops proof polling", async () => {
   vi.mocked(history).mockRejectedValue(new ApiRequestError("INDICATOR_DATA_NOT_READY", 503));
   vi.mocked(live).mockRejectedValue(new ApiRequestError("CHART_ADMISSION_UNAVAILABLE", 503));

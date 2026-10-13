@@ -536,6 +536,50 @@ async def test_expanded_window_fetches_only_missing_stored_slots() -> None:
         await engine.dispose()
 
 
+async def test_right_expansion_preserves_completed_cursor_and_fetches_only_new_tail() -> None:
+    engine = create_engine_for(DatabaseRole.MARKET_DATA)
+    try:
+        window = await isolated_window(engine, 2)
+        await run_round(engine, FakeVenue(), "seed", datetime.now(UTC))
+        async with market_data_session(engine) as session:
+            await session.execute("""UPDATE market_candle_demand SET status='PENDING',
+                attemptcount=0,fetch_unit_id=NULL,fetch_start=NULL,fetch_end=NULL,
+                cursor=NULL,leased_start=NULL,leased_end=NULL
+                WHERE base='BTC' AND timeframe='1m'""")
+        await only_btc_ready(engine)
+        await run_round(engine, FullSource(), "initial", datetime.now(UTC))
+        expanded_end = window.end + timedelta(minutes=1)
+        async with market_data_session(engine) as session:
+            await session.execute(
+                """UPDATE market_candle_demand SET desired_end=:end
+                WHERE base='BTC' AND timeframe='1m'""",
+                {"end": expanded_end},
+            )
+        await only_btc_ready(engine)
+        async with market_data_session(engine) as session:
+            claim = await claim_next(session, "expand-right")
+            assert claim is not None
+            assert await ingestion._prepare(session, claim) is None
+            row = (
+                (
+                    await session.execute("""SELECT * FROM market_candle_demand
+                    WHERE base='BTC' AND timeframe='1m'""")
+                )
+                .mappings()
+                .one()
+            )
+            assert row["cursor"] == window.end
+            assert row["leased_end"] == expanded_end
+            assert row["status"] == "PENDING"
+
+        await only_btc_ready(engine)
+        source = LaterFailureSource(datetime.now(UTC) + timedelta(days=1))
+        await run_round(engine, source, "new-tail", datetime.now(UTC))
+        assert source.requests == [CandleWindow(window.end, expanded_end)]
+    finally:
+        await engine.dispose()
+
+
 async def test_partial_observation_refreshes_without_changing_finality() -> None:
     engine = create_engine_for(DatabaseRole.MARKET_DATA)
     api = create_engine_for(DatabaseRole.API)

@@ -218,12 +218,21 @@ async def _prepare(
                     row["desired_start"] < row["leased_start"]
                     or row["desired_end"] > row["leased_end"]
                 ):
+                    # A right-only extension has already proved every slot in the
+                    # old lease. Continue at that boundary instead of restarting
+                    # the full retention window. A left extension still has to
+                    # begin at the newly requested start.
+                    expansion_cursor = (
+                        row["desired_start"]
+                        if row["desired_start"] < row["leased_start"]
+                        else row["leased_end"]
+                    )
                     changes.update(
                         status="PENDING",
                         phase="FORWARD",
                         leased_start=row["desired_start"],
                         leased_end=row["desired_end"],
-                        cursor=row["desired_start"],
+                        cursor=expansion_cursor,
                         refresh_cursor=None,
                         refresh_as_of=None,
                     )

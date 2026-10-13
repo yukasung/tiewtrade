@@ -17,8 +17,13 @@ full runs, targeted follow-ups และผลตรวจ frontend ที่ de
 NC-42 ได้รับอนุมัติและแก้ history แล้ว; ผลล่าสุดกับ preview blocker NC-43 อยู่ใน
 [history recovery checkpoint](history-recovery.md).
 NC-43 ได้รับอนุมัติและแก้ empty→first-trade ordering แล้ว; ดู
-[ผลตรวจล่าสุด](first-trade-recovery.md). Local live API ยังแสดง RECOVERING ตามจริง;
-ยังไม่รับรอง READY หรือเสร็จครบทุก validation.
+[ผลตรวจ first-trade](first-trade-recovery.md). Defect ที่ right-only history expansion
+ย้อน cursor ได้รับการแก้และ default BTC 1h แสดง latest history พร้อม live READY แล้ว;
+ดู [latest-history / READY checkpoint](latest-history-ready.md).
+ผลนี้ยังไม่รับรองว่าเสร็จครบทุก validation.
+ผล local candidate ล่าสุด (full regression/static/generated contract/E2E/review)
+อยู่ใน [final candidate validation](final-candidate.md); required CI และ V-17 ยังรอ
+checkpoint ของตนเอง.
 รายงาน local preview ด้านล่างเป็นหลักฐานรอบก่อน ไม่ใช่สถานะปัจจุบันทั้งหมด.
 
 ## V-01 — contract/dependency (Partial)

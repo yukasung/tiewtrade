@@ -45,3 +45,10 @@ snapshots must still fail closed.
 
 F-12 remains In Progress. Owner manual, complete coverage/review/CI and V-17
 Pending Full Validation remain; bounded observations do not close those gates.
+
+## Subsequent checkpoint
+
+The RECOVERING result above was the state of this bounded observation. A later fix
+for right-only history expansion closed the default BTC 1h REST settlement gap and
+demonstrated live READY with changing OPEN rows in a real browser. See
+[latest-history-ready.md](latest-history-ready.md). Remaining F-12 gates are unchanged.

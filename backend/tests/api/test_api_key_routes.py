@@ -479,6 +479,10 @@ def test_no_route_hands_back_the_secret(client: TestClient, ending: bool) -> Non
                 assert (
                     response.status_code == 404
                 )  # Disabled by default; refusal must also be secret-free.
+            elif template == "/market-data/indicators" and response.status_code == 503:
+                # Empty indicator data must fail closed without exposing secrets.
+                # Accept only this documented error, independent of prior fixtures.
+                assert response.json() == {"detail": "INDICATOR_DATA_NOT_READY"}
             else:
                 assert response.status_code == 200, (method, template, response.status_code)
         elif method == "DELETE":

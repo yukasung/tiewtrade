@@ -1,6 +1,7 @@
 # F-12 — กราฟแท่งเทียนบนหน้าเว็บ — Plan
 
-สถานะ: **Approved** — เจ้าของอนุมัติ plan/validation และให้เริ่ม implementation วันที่ 2026-10-12
+สถานะ: **Approved** — เจ้าของอนุมัติ plan/validation และให้เริ่ม implementation วันที่ 2026-10-12;
+เจ้าของอนุมัติให้ initial viewport แสดงแบบ TradingView วันที่ 2026-10-13
 วันที่: 2026-10-12
 Branch: feature/f-12-candlestick-chart
 Requirements: [ฉบับที่รีวิวผ่าน](requirements.md)
@@ -49,8 +50,11 @@ F-12 ไม่สั่ง activate source proof หรือ PREPARED และ
 ข้ออื่นของแผนนี้ยังมีผลตามเดิม.
 
 - เพิ่ม panel `#market-chart-heading` และ sidebar anchor ใน AccountLayout เดิม
-  ไม่เพิ่ม router/framework. ค่าเริ่มต้น BTCUSDT/1h, โหลดล่าสุด ≤1,000 slots
-  แสดง viewport ล่าสุด 100 slots; ไม่ persist ตัวเลือกใน localStorage รอบนี้.
+  ไม่เพิ่ม router/framework. ค่าเริ่มต้น BTCUSDT/1h, โหลดล่าสุด ≤1,000 slots.
+  Initial viewport แสดง 100 logical slots ล่าสุดและเว้นด้านขวา 5 slots แบบ TradingView;
+  แท่งจำนวนน้อยจึงยังเห็นชัดโดยไม่ fit เต็มพื้นที่หรือกองชิดขอบ. เมื่อข้อมูลอัปเดต
+  ให้คง logical viewport ที่ผู้ใช้ปรับไว้.
+  ไม่ persist ตัวเลือกใน localStorage รอบนี้.
 - Candlestick + EMA บน price pane, volume/RSI/MACD/ATR มี pane แยกสเกล
   โดยใช้ time scale เดียวกัน. EMA20/50/200 เปิดเริ่มต้น; indicator อื่นเปิด/ปิดได้.
 - ทุกข้อความมีไทย/อังกฤษใน chartMessages; ภาษาผูกตัวเลือกที่มีใน UI ของ panel
