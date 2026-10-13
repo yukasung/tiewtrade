@@ -79,6 +79,10 @@
   outline: var(--account-focus-width) solid var(--account-focus-color);
   outline-offset: var(--account-focus-offset);
 }
+.app-theme .account-input:focus-visible {
+  outline: none;
+  outline-offset: 0;
+}
 .account-layout .api-key-panel,
 .account-layout .trading-account-panel {
   padding: var(--account-space-lg);
@@ -97,8 +101,10 @@
   height: 2.75rem;
   width: 2.75rem;
   padding: 0;
+  background: var(--color-white);
   color: var(--color-gray-500);
 }
+.account-menu-trigger:hover { background: var(--color-gray-50); color: var(--color-gray-700); }
 .sidebar-toggle-icon { width: 1rem; height: 0.75rem; background: currentColor; mask: url("../assets/admin-icons/sidebar-toggle.svg") center / contain no-repeat; }
 .sidebar-toggle-icon.is-close { width: 1.5rem; height: 1.5rem; mask-image: url("../assets/admin-icons/close.svg"); }
 .sidebar-icon { flex: 0 0 1.5rem; height: 1.5rem; background: currentColor; mask-position: center; mask-repeat: no-repeat; mask-size: contain; }

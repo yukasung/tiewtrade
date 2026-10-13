@@ -104,6 +104,20 @@ roadmap → requirements.md → [เจ้าของอนุมัติ]
 ก่อนเขียนอะไรใหม่ **ให้ค้นก่อนว่ามีอยู่แล้วหรือไม่** แล้วเขียนใน `plan.md` ว่าจะใช้ของไหนซ้ำ
 พร้อม path ถ้าตรรกะเดียวกันโผล่ครั้งที่สาม ให้ย้ายไปไว้ที่เดียว
 
+### UI ต้องยึด admin template
+
+- งาน frontend ต้องใช้ `references/admin-template/` เป็นแหล่งอ้างอิงหลักอย่างเคร่งครัด ก่อนแก้ UI
+  ต้องค้น component หรือ pattern ที่ตรงกันใน template และใช้ component กลางที่ปรับไว้ใน
+  `frontend/src/components/ui/` ก่อนเสมอ
+- layout, component, สี, typography, spacing, ขนาด, border, radius, shadow และสถานะ
+  default/hover/focus/disabled/error/responsive ต้องตรงกับ admin template ห้ามสร้างรูปแบบใหม่หรือใช้
+  native browser appearance เมื่อ template มีรูปแบบนั้นอยู่แล้ว
+- ถ้ายังไม่มี component กลาง ให้ปรับจาก component ที่ตรงกันใน admin template และระบุ source path ในโค้ด
+  ห้ามคัดลอก style แยกลงแต่ละหน้า
+- เบี่ยงเบนจาก admin template ได้เฉพาะเมื่อ spec ที่อนุมัติแล้ว กฎ accessibility หรือ trading safety บังคับ
+  และต้องบันทึกเหตุผลไว้ใน `plan.md` หรือเอกสารมาตรฐานที่เกี่ยวข้อง
+- รายละเอียดและ checklist การตรวจอยู่ใน `specs/standards/frontend.md`
+
 ---
 
 ## การตรวจสอบ

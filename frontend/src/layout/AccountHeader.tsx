@@ -17,6 +17,7 @@ export function AccountHeader({
     <header className="account-header">
       <Button
         ref={trigger}
+        variant="outline"
         className="account-menu-trigger"
         aria-label={t("menu")}
         aria-expanded={open}
