@@ -38,6 +38,17 @@ function waitForLiveStatus(page: Page, expected: string[]) {
   });
 }
 
+async function expectLiveStatus(page: Page, expected: string[]) {
+  await expect.poll(async () => {
+    const response = await page.request.get(
+      "/api/market-data/chart/live?base=BTC&quote=USDT&timeframe=1h",
+    );
+    if (response.status() !== 200) return false;
+    const body = await response.json() as { status?: string };
+    return body.status !== undefined && expected.includes(body.status);
+  }).toBe(true);
+}
+
 function producer(script: string) {
   const directory = mkdtempSync(join(tmpdir(), "tiewtrade-chart-"));
   const control = join(directory, "control");
@@ -166,15 +177,12 @@ test("live snapshots recover after disconnect without indicator reads", async ({
   await registerAccount(page);
   const chart = page.getByTestId("candlestick-chart");
   await expect(chart.getByText("100.000000000000000001 USDT", { exact: true })).toBeVisible({ timeout: 60_000 });
-  let live = waitForLiveStatus(page, ["READY"]);
   fixture("preview");
-  await live;
-  live = waitForLiveStatus(page, ["RECOVERING", "STALE"]);
+  await expectLiveStatus(page, ["READY"]);
   fixture("disconnect");
-  await live;
-  live = waitForLiveStatus(page, ["READY"]);
+  await expectLiveStatus(page, ["RECOVERING", "STALE"]);
   fixture("preview");
-  await live;
+  await expectLiveStatus(page, ["READY"]);
   await expect(chart.locator(".chart-status")).toHaveCount(0);
   expect(legacyReads).toEqual([]);
 });
