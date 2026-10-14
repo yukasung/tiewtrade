@@ -235,9 +235,9 @@ async def read_prepared(
         if continuation:
             raise DatasetChangedError()
         raise PreparedNotReadyError()
-    if (
-        checkpoint["next_open_at"] > selected.next_open_at
-        or slot_count(
+    if checkpoint["next_open_at"] > selected.next_open_at or (
+        checkpoint["next_open_at"] < selected.next_open_at
+        and slot_count(
             CandleWindow(checkpoint["next_open_at"], selected.next_open_at),
             selected.timeframe,
         )

@@ -92,7 +92,7 @@ async def test_failed_manifest_proof_is_required_for_numeric_http(
             "expiry": "UPDATE indicator_generations SET as_of=as_of-interval '7h',"
             "expires_at=expires_at-interval '7h',calculation_start=calculation_start-interval '7h',"
             "calculation_end=calculation_end-interval '7h' WHERE status='FAILED_NUMERIC'",
-            "codec": "UPDATE indicator_generations SET codec_version=2 "
+            "codec": "UPDATE indicator_generations SET codec_version=1 "
             "WHERE status='FAILED_NUMERIC'",
             "gc": "UPDATE indicator_generations SET status='EXPIRED' WHERE status='FAILED_NUMERIC'",
         }[fault]

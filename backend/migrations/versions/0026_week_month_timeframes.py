@@ -1,7 +1,7 @@
 # ruff: noqa: E501
 """Add native UTC week/month candle schedules without rewriting observations."""
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
 from alembic import op
 from sqlalchemy import text
@@ -282,6 +282,22 @@ def downgrade() -> None:
         OR EXISTS(SELECT 1 FROM public.indicator_generations WHERE timeframe IN ('1w','1M'))
       THEN RAISE EXCEPTION 'WEEK_MONTH_DOWNGRADE_NOT_DRAINED'; END IF;
     END $$""")
+    now = datetime.now(UTC)
+    start = now.replace(year=now.year - 5, day=1, hour=0, minute=0, second=0, microsecond=0)
+    original_start = (now - timedelta(days=365)).replace(
+        day=1, hour=0, minute=0, second=0, microsecond=0
+    )
+    while start < original_start:
+        following = start.replace(year=start.year + start.month // 12, month=start.month % 12 + 1)
+        name = f"market_candles_{start:%Y%m}"
+        op.execute(f"""DO $$ BEGIN
+          IF to_regclass('public.{name}') IS NOT NULL
+            AND EXISTS(SELECT 1 FROM public.{name}) THEN
+            RAISE EXCEPTION 'WEEK_MONTH_DOWNGRADE_HISTORY_NOT_DRAINED';
+          END IF;
+        END $$""")
+        op.execute(f"DROP TABLE IF EXISTS public.{name}")
+        start = following
     _replace_function(
         "publish_indicator_generation(uuid,bigint,uuid,uuid,uuid,uuid,boolean)",
         (

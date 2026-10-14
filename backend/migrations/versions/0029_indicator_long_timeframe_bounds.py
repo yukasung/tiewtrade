@@ -9,22 +9,31 @@ branch_labels = None
 depends_on = None
 
 _TRANSITION = "transition_indicator_rollout(indicator_rollout_mode,uuid,indicator_rollout_mode)"
+_NUMERIC_ALLOWED = "indicator_numeric_candidate_allowed(public.indicator_build_jobs)"
 
 
-def _replace_ready_count(before: str, after: str) -> None:
+def _replace_function_fragment(signature: str, before: str, after: str) -> None:
     connection = op.get_bind()
     definition: str | None = connection.execute(
         text("SELECT pg_get_functiondef(to_regprocedure(:signature))"),
-        {"signature": f"public.{_TRANSITION}"},
+        {"signature": f"public.{signature}"},
     ).scalar_one()
     if definition is None or definition.count(before) != 1:
-        raise RuntimeError("unexpected indicator rollout transition definition")
+        raise RuntimeError(f"unexpected {signature} definition")
     op.execute(definition.replace(before, after))
 
 
 def upgrade() -> None:
     op.execute("SELECT public.begin_indicator_source_maintenance()")
-    _replace_ready_count("ready_count<>30", "ready_count<>40")
+    _replace_function_fragment(_TRANSITION, "ready_count<>30", "ready_count<>40")
+    _replace_function_fragment(
+        _NUMERIC_ALLOWED,
+        "failed_start>=failed_end OR failed_end-failed_start>interval '365 days'",
+        "failed_start>=failed_end OR (j.timeframe IN ('1w','1M') "
+        "AND failed_start<failed_end-interval '5 years') OR "
+        "(j.timeframe NOT IN ('1w','1M') "
+        "AND failed_end-failed_start>interval '365 days')",
+    )
     op.execute("""ALTER TABLE public.indicator_build_jobs
       DROP CONSTRAINT indicator_build_jobs_check,
       ADD CONSTRAINT indicator_build_jobs_check CHECK (
@@ -53,7 +62,15 @@ def downgrade() -> None:
       END IF;
     END $$""")
     op.execute("SELECT public.begin_indicator_source_maintenance()")
-    _replace_ready_count("ready_count<>40", "ready_count<>30")
+    _replace_function_fragment(_TRANSITION, "ready_count<>40", "ready_count<>30")
+    _replace_function_fragment(
+        _NUMERIC_ALLOWED,
+        "failed_start>=failed_end OR (j.timeframe IN ('1w','1M') "
+        "AND failed_start<failed_end-interval '5 years') OR "
+        "(j.timeframe NOT IN ('1w','1M') "
+        "AND failed_end-failed_start>interval '365 days')",
+        "failed_start>=failed_end OR failed_end-failed_start>interval '365 days'",
+    )
     op.execute("""ALTER TABLE public.indicator_generations
       DROP CONSTRAINT indicator_generations_check,
       ADD CONSTRAINT indicator_generations_check CHECK (

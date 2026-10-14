@@ -467,6 +467,7 @@ def test_no_route_hands_back_the_secret(client: TestClient, ending: bool) -> Non
             if template
             in {
                 "/market-data/candles",
+                "/market-data/candles/pages",
                 "/market-data/indicators",
                 "/market-data/chart/history",
                 "/market-data/chart/live",

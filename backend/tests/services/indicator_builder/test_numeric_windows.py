@@ -29,8 +29,11 @@ from tiewtrade.core.market_data import (
     CandleWindow,
     Timeframe,
     advance,
+    align_ceil,
+    align_floor,
     expected_opens,
     next_open,
+    retention_cutoff,
 )
 from tiewtrade.core.money import Money, OutOfRangeError, Quantity
 from tiewtrade.core.money.limits import MAX_ABS
@@ -202,7 +205,8 @@ async def test_numeric_key_before_at_after_db_alignment_boundary(
     migrator_engine: AsyncEngine,
     timeframe: Timeframe,
 ) -> None:
-    before = BOUNDARY - timedelta(microseconds=1)
+    boundary = align_ceil(BOUNDARY, timeframe)
+    before = boundary - timedelta(microseconds=1)
     await db_clock(before)
     await one_series(builder_engine, migrator_engine, timeframe)
     original = await job(migrator_engine, timeframe)
@@ -212,7 +216,7 @@ async def test_numeric_key_before_at_after_db_alignment_boundary(
         await run_attempt(builder_engine, uuid4(), scheduled=True)
     ).status is AttemptStatus.FAILED_NUMERIC
     failed = await job(migrator_engine, timeframe)
-    for moment in (before, BOUNDARY):
+    for moment in (before, boundary):
         await db_clock(moment)
         await asyncio.gather(coalesce_jobs(builder_engine), coalesce_jobs(builder_engine))
         current = await job(migrator_engine, timeframe)
@@ -225,11 +229,14 @@ async def test_numeric_key_before_at_after_db_alignment_boundary(
             assert (
                 await run_attempt(builder_engine, uuid4(), scheduled=True)
             ).status is AttemptStatus.FAILED_NUMERIC
-    await db_clock(BOUNDARY + timedelta(microseconds=1))
+    after = (
+        advance(boundary, timeframe, 1) if timeframe is Timeframe.W1 else boundary
+    ) + timedelta(microseconds=1)
+    await db_clock(after)
     await coalesce_jobs(builder_engine)
     current = await job(migrator_engine, timeframe)
-    assert current["desired_start"] == next_open(failed["desired_start"], timeframe)
-    assert current["desired_end"] == BOUNDARY
+    assert current["desired_start"] == align_ceil(retention_cutoff(after, timeframe), timeframe)
+    assert current["desired_end"] == align_floor(after, timeframe)
     assert current["status"] == "QUEUED"
     assert current["first_eligible_at"] == failed["first_eligible_at"]
     assert current["availability_deadline"] == failed["availability_deadline"]
