@@ -14,7 +14,7 @@ from tests.infra.indicators.test_claims import prepared as prepared
 from tests.infra.indicators.test_claims import slot
 from tests.infra.indicators.test_source import active as active
 from tests.services.indicator_builder.test_attempt import metadata, seed
-from tiewtrade.core.market_data import Timeframe, align_ceil, align_floor
+from tiewtrade.core.market_data import Timeframe, align_ceil, align_floor, retention_cutoff
 from tiewtrade.core.money import OutOfRangeError
 from tiewtrade.infra.db import DatabaseRole, create_engine_for
 from tiewtrade.infra.db.errors import DatabaseTimeoutError, SourceProofStateError
@@ -94,10 +94,10 @@ async def test_catalog_and_control_gate(
             .mappings()
             .all()
         )
-    assert len(rows) == (30 if mode in ("PREPARING", "PREPARED") else 0)
+    assert len(rows) == (40 if mode in ("PREPARING", "PREPARED") else 0)
     for j in rows:
         tf = Timeframe(j["timeframe"])
-        assert j["desired_start"] == align_ceil(j["observed"] - timedelta(days=365), tf)
+        assert j["desired_start"] == align_ceil(retention_cutoff(j["observed"], tf), tf)
         assert j["desired_end"] == align_floor(j["observed"], tf)
         assert j["attempts_used"] == 0 and j["last_served_round"] == 0
     assert (await slot(migrator_engine))["fence"] == 0

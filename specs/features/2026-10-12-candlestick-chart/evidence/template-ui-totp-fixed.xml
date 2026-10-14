@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="5" failures="0" errors="0" time="0.211456">
+    <testsuite name="tests/TotpPanel.test.tsx" timestamp="2026-10-12T17:10:28.843Z" hostname="DESKTOP-RONGMEV" tests="5" failures="0" errors="0" skipped="0" time="0.211456">
+        <testcase classname="tests/TotpPanel.test.tsx" name="การยืนยันสองชั้นบนหน้าเว็บ &gt; บอกว่าปิดอยู่เมื่อบัญชียังไม่เปิดใช้" time="0.0476814">
+        </testcase>
+        <testcase classname="tests/TotpPanel.test.tsx" name="การยืนยันสองชั้นบนหน้าเว็บ &gt; แสดง QR และข้อความให้สแกน แล้วแสดงรหัสสำรองหลังยืนยัน" time="0.0658677">
+        </testcase>
+        <testcase classname="tests/TotpPanel.test.tsx" name="การยืนยันสองชั้นบนหน้าเว็บ &gt; ขอรหัสจากแอปเป็นขั้นที่สองหลังกรอกรหัสผ่านถูก" time="0.0311602">
+        </testcase>
+        <testcase classname="tests/TotpPanel.test.tsx" name="การยืนยันสองชั้นบนหน้าเว็บ &gt; บอกจำนวนรหัสสำรองที่เหลือเมื่อเข้าสู่ระบบด้วยรหัสสำรอง" time="0.0320906">
+        </testcase>
+        <testcase classname="tests/TotpPanel.test.tsx" name="การยืนยันสองชั้นบนหน้าเว็บ &gt; แสดงข้อความที่หลังบ้านส่งมาเมื่อรหัสไม่ผ่าน" time="0.0323658">
+        </testcase>
+    </testsuite>
+</testsuites>

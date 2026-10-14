@@ -22,6 +22,7 @@ from sqlalchemy.ext.asyncio import AsyncEngine
 from tiewtrade.infra.db import DatabaseRole
 from tiewtrade.infra.db.errors import InfraError
 from tiewtrade.infra.db.session import _assert_role, _begin, _execute
+from tiewtrade.infra.indicators.codec import CODEC_VERSION
 from tiewtrade.infra.indicators.recovery import OwnerStopUnverifiedError, Runner, docker_command
 
 
@@ -234,7 +235,7 @@ async def verify_capabilities(inventory: Inventory, runner: Runner = docker_comm
                 await asyncio.shield(runner(("rm", "--force", probe)))
         if json.loads(raw) != {
             "cursor_formats": [1, 2],
-            "codec_version": 1,
+            "codec_version": CODEC_VERSION,
             "protocol_version": 1,
             "source_scope": 1,
             "physical_grace_seconds": 22500,

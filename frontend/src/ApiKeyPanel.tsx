@@ -9,6 +9,7 @@ import {
 } from "./apiKeys";
 import { keyText as t, keyTime, keyState } from "./apiKeyMessages";
 import { ApiRequestError, type Me } from "./auth";
+import { navigateAccountPage } from "./accountNavigation";
 import "./ApiKeyPanel.css";
 import { Button } from "./components/ui/Button";
 import { Input } from "./components/ui/Input";
@@ -233,7 +234,7 @@ export function ApiKeyPanel({ identity }: { identity: Me }): JSX.Element {
             </form>
           ) : (
             <p>
-              {t("totpRequired")} <a href="#totp-panel">{t("enableTotp")}</a>
+              {t("totpRequired")} <a href="/security" onClick={navigateAccountPage}>{t("enableTotp")}</a>
             </p>
           )}
           {actionError !== null && notice === null && (

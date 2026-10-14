@@ -1,0 +1,10 @@
+<testsuites id="" name="" tests="3" failures="0" skipped="0" errors="0" time="30.329248">
+<testsuite name="candlestick-chart.spec.ts" timestamp="2026-10-12T17:09:49.432Z" hostname="" tests="3" failures="0" skipped="0" time="27.98" errors="0">
+<testcase name="actual chart panes, exact values, languages and keyboard selection" classname="candlestick-chart.spec.ts" time="6.232">
+</testcase>
+<testcase name="module pages preserve navigation history, deep links and cancel inactive chart work" classname="candlestick-chart.spec.ts" time="9.935">
+</testcase>
+<testcase name="password login, series switching and actual latest-price worker" classname="candlestick-chart.spec.ts" time="11.813">
+</testcase>
+</testsuite>
+</testsuites>

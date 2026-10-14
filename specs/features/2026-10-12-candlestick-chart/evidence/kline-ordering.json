@@ -1,0 +1,715 @@
+{
+  "series": {
+    "btcusdt@kline_1h": 9,
+    "ethusdt@kline_4h": 8,
+    "btcusdt@kline_1d": 9,
+    "ethusdt@kline_1d": 8,
+    "ethusdt@kline_1h": 7,
+    "ethusdt@kline_15m": 7,
+    "ethusdt@kline_5m": 8,
+    "btcusdt@kline_5m": 9,
+    "ethusdt@kline_1m": 8,
+    "btcusdt@kline_1m": 8,
+    "btcusdt@kline_4h": 9,
+    "btcusdt@kline_15m": 9
+  },
+  "closed": 0,
+  "comparisons": [
+    {
+      "series": "btcusdt@kline_1h",
+      "old_n": 46495,
+      "new_n": 46498,
+      "duplicate": false,
+      "dominates": true,
+      "conflict": false
+    },
+    {
+      "series": "btcusdt@kline_1h",
+      "old_n": 46498,
+      "new_n": 46500,
+      "duplicate": false,
+      "dominates": true,
+      "conflict": false
+    },
+    {
+      "series": "btcusdt@kline_1h",
+      "old_n": 46500,
+      "new_n": 46508,
+      "duplicate": false,
+      "dominates": true,
+      "conflict": false
+    },
+    {
+      "series": "btcusdt@kline_1h",
+      "old_n": 46508,
+      "new_n": 46520,
+      "duplicate": false,
+      "dominates": true,
+      "conflict": false
+    },
+    {
+      "series": "btcusdt@kline_1h",
+      "old_n": 46520,
+      "new_n": 46617,
+      "duplicate": false,
+      "dominates": true,
+      "conflict": false
+    },
+    {
+      "series": "btcusdt@kline_1h",
+      "old_n": 46617,
+      "new_n": 46629,
+      "duplicate": false,
+      "dominates": true,
+      "conflict": false
+    },
+    {
+      "series": "btcusdt@kline_1h",
+      "old_n": 46629,
+      "new_n": 46646,
+      "duplicate": false,
+      "dominates": true,
+      "conflict": false
+    },
+    {
+      "series": "btcusdt@kline_1h",
+      "old_n": 46646,
+      "new_n": 46650,
+      "duplicate": false,
+      "dominates": true,
+      "conflict": false
+    },
+    {
+      "series": "ethusdt@kline_4h",
+      "old_n": 429246,
+      "new_n": 429250,
+      "duplicate": false,
+      "dominates": true,
+      "conflict": false
+    },
+    {
+      "series": "ethusdt@kline_4h",
+      "old_n": 429250,
+      "new_n": 429276,
+      "duplicate": false,
+      "dominates": true,
+      "conflict": false
+    },
+    {
+      "series": "ethusdt@kline_4h",
+      "old_n": 429276,
+      "new_n": 429293,
+      "duplicate": false,
+      "dominates": true,
+      "conflict": false
+    },
+    {
+      "series": "ethusdt@kline_4h",
+      "old_n": 429293,
+      "new_n": 429294,
+      "duplicate": false,
+      "dominates": true,
+      "conflict": false
+    },
+    {
+      "series": "ethusdt@kline_4h",
+      "old_n": 429294,
+      "new_n": 429377,
+      "duplicate": false,
+      "dominates": true,
+      "conflict": false
+    },
+    {
+      "series": "ethusdt@kline_4h",
+      "old_n": 429377,
+      "new_n": 429389,
+      "duplicate": false,
+      "dominates": true,
+      "conflict": false
+    },
+    {
+      "series": "ethusdt@kline_4h",
+      "old_n": 429389,
+      "new_n": 429390,
+      "duplicate": false,
+      "dominates": true,
+      "conflict": false
+    },
+    {
+      "series": "btcusdt@kline_1d",
+      "old_n": 662322,
+      "new_n": 662325,
+      "duplicate": false,
+      "dominates": true,
+      "conflict": false
+    },
+    {
+      "series": "btcusdt@kline_1d",
+      "old_n": 662325,
+      "new_n": 662327,
+      "duplicate": false,
+      "dominates": true,
+      "conflict": false
+    },
+    {
+      "series": "btcusdt@kline_1d",
+      "old_n": 662327,
+      "new_n": 662335,
+      "duplicate": false,
+      "dominates": true,
+      "conflict": false
+    },
+    {
+      "series": "btcusdt@kline_1d",
+      "old_n": 662335,
+      "new_n": 662347,
+      "duplicate": false,
+      "dominates": true,
+      "conflict": false
+    },
+    {
+      "series": "btcusdt@kline_1d",
+      "old_n": 662347,
+      "new_n": 662444,
+      "duplicate": false,
+      "dominates": true,
+      "conflict": false
+    },
+    {
+      "series": "btcusdt@kline_1d",
+      "old_n": 662444,
+      "new_n": 662456,
+      "duplicate": false,
+      "dominates": true,
+      "conflict": false
+    },
+    {
+      "series": "btcusdt@kline_1d",
+      "old_n": 662456,
+      "new_n": 662473,
+      "duplicate": false,
+      "dominates": true,
+      "conflict": false
+    },
+    {
+      "series": "btcusdt@kline_1d",
+      "old_n": 662473,
+      "new_n": 662477,
+      "duplicate": false,
+      "dominates": true,
+      "conflict": false
+    },
+    {
+      "series": "ethusdt@kline_1d",
+      "old_n": 784614,
+      "new_n": 784618,
+      "duplicate": false,
+      "dominates": true,
+      "conflict": false
+    },
+    {
+      "series": "ethusdt@kline_1d",
+      "old_n": 784618,
+      "new_n": 784644,
+      "duplicate": false,
+      "dominates": true,
+      "conflict": false
+    },
+    {
+      "series": "ethusdt@kline_1d",
+      "old_n": 784644,
+      "new_n": 784661,
+      "duplicate": false,
+      "dominates": true,
+      "conflict": false
+    },
+    {
+      "series": "ethusdt@kline_1d",
+      "old_n": 784661,
+      "new_n": 784662,
+      "duplicate": false,
+      "dominates": true,
+      "conflict": false
+    },
+    {
+      "series": "ethusdt@kline_1d",
+      "old_n": 784662,
+      "new_n": 784745,
+      "duplicate": false,
+      "dominates": true,
+      "conflict": false
+    },
+    {
+      "series": "ethusdt@kline_1d",
+      "old_n": 784745,
+      "new_n": 784757,
+      "duplicate": false,
+      "dominates": true,
+      "conflict": false
+    },
+    {
+      "series": "ethusdt@kline_1d",
+      "old_n": 784757,
+      "new_n": 784758,
+      "duplicate": false,
+      "dominates": true,
+      "conflict": false
+    },
+    {
+      "series": "ethusdt@kline_1h",
+      "old_n": 58742,
+      "new_n": 58746,
+      "duplicate": false,
+      "dominates": true,
+      "conflict": false
+    },
+    {
+      "series": "ethusdt@kline_1h",
+      "old_n": 58746,
+      "new_n": 58772,
+      "duplicate": false,
+      "dominates": true,
+      "conflict": false
+    },
+    {
+      "series": "ethusdt@kline_1h",
+      "old_n": 58772,
+      "new_n": 58789,
+      "duplicate": false,
+      "dominates": true,
+      "conflict": false
+    },
+    {
+      "series": "ethusdt@kline_1h",
+      "old_n": 58789,
+      "new_n": 58790,
+      "duplicate": false,
+      "dominates": true,
+      "conflict": false
+    },
+    {
+      "series": "ethusdt@kline_1h",
+      "old_n": 58790,
+      "new_n": 58873,
+      "duplicate": false,
+      "dominates": true,
+      "conflict": false
+    },
+    {
+      "series": "ethusdt@kline_1h",
+      "old_n": 58873,
+      "new_n": 58885,
+      "duplicate": false,
+      "dominates": true,
+      "conflict": false
+    },
+    {
+      "series": "ethusdt@kline_15m",
+      "old_n": 21388,
+      "new_n": 21392,
+      "duplicate": false,
+      "dominates": true,
+      "conflict": false
+    },
+    {
+      "series": "ethusdt@kline_15m",
+      "old_n": 21392,
+      "new_n": 21418,
+      "duplicate": false,
+      "dominates": true,
+      "conflict": false
+    },
+    {
+      "series": "ethusdt@kline_15m",
+      "old_n": 21418,
+      "new_n": 21435,
+      "duplicate": false,
+      "dominates": true,
+      "conflict": false
+    },
+    {
+      "series": "ethusdt@kline_15m",
+      "old_n": 21435,
+      "new_n": 21436,
+      "duplicate": false,
+      "dominates": true,
+      "conflict": false
+    },
+    {
+      "series": "ethusdt@kline_15m",
+      "old_n": 21436,
+      "new_n": 21519,
+      "duplicate": false,
+      "dominates": true,
+      "conflict": false
+    },
+    {
+      "series": "ethusdt@kline_15m",
+      "old_n": 21519,
+      "new_n": 21531,
+      "duplicate": false,
+      "dominates": true,
+      "conflict": false
+    },
+    {
+      "series": "ethusdt@kline_5m",
+      "old_n": 3933,
+      "new_n": 3937,
+      "duplicate": false,
+      "dominates": true,
+      "conflict": false
+    },
+    {
+      "series": "ethusdt@kline_5m",
+      "old_n": 3937,
+      "new_n": 3963,
+      "duplicate": false,
+      "dominates": true,
+      "conflict": false
+    },
+    {
+      "series": "ethusdt@kline_5m",
+      "old_n": 3963,
+      "new_n": 3980,
+      "duplicate": false,
+      "dominates": true,
+      "conflict": false
+    },
+    {
+      "series": "ethusdt@kline_5m",
+      "old_n": 3980,
+      "new_n": 3981,
+      "duplicate": false,
+      "dominates": true,
+      "conflict": false
+    },
+    {
+      "series": "ethusdt@kline_5m",
+      "old_n": 3981,
+      "new_n": 4064,
+      "duplicate": false,
+      "dominates": true,
+      "conflict": false
+    },
+    {
+      "series": "ethusdt@kline_5m",
+      "old_n": 4064,
+      "new_n": 4076,
+      "duplicate": false,
+      "dominates": true,
+      "conflict": false
+    },
+    {
+      "series": "ethusdt@kline_5m",
+      "old_n": 4076,
+      "new_n": 4077,
+      "duplicate": false,
+      "dominates": true,
+      "conflict": false
+    },
+    {
+      "series": "btcusdt@kline_5m",
+      "old_n": 2772,
+      "new_n": 2775,
+      "duplicate": false,
+      "dominates": true,
+      "conflict": false
+    },
+    {
+      "series": "btcusdt@kline_5m",
+      "old_n": 2775,
+      "new_n": 2777,
+      "duplicate": false,
+      "dominates": true,
+      "conflict": false
+    },
+    {
+      "series": "btcusdt@kline_5m",
+      "old_n": 2777,
+      "new_n": 2785,
+      "duplicate": false,
+      "dominates": true,
+      "conflict": false
+    },
+    {
+      "series": "btcusdt@kline_5m",
+      "old_n": 2785,
+      "new_n": 2797,
+      "duplicate": false,
+      "dominates": true,
+      "conflict": false
+    },
+    {
+      "series": "btcusdt@kline_5m",
+      "old_n": 2797,
+      "new_n": 2894,
+      "duplicate": false,
+      "dominates": true,
+      "conflict": false
+    },
+    {
+      "series": "btcusdt@kline_5m",
+      "old_n": 2894,
+      "new_n": 2906,
+      "duplicate": false,
+      "dominates": true,
+      "conflict": false
+    },
+    {
+      "series": "btcusdt@kline_5m",
+      "old_n": 2906,
+      "new_n": 2923,
+      "duplicate": false,
+      "dominates": true,
+      "conflict": false
+    },
+    {
+      "series": "btcusdt@kline_5m",
+      "old_n": 2923,
+      "new_n": 2927,
+      "duplicate": false,
+      "dominates": true,
+      "conflict": false
+    },
+    {
+      "series": "ethusdt@kline_1m",
+      "old_n": 288,
+      "new_n": 292,
+      "duplicate": false,
+      "dominates": true,
+      "conflict": false
+    },
+    {
+      "series": "ethusdt@kline_1m",
+      "old_n": 292,
+      "new_n": 318,
+      "duplicate": false,
+      "dominates": true,
+      "conflict": false
+    },
+    {
+      "series": "ethusdt@kline_1m",
+      "old_n": 318,
+      "new_n": 335,
+      "duplicate": false,
+      "dominates": true,
+      "conflict": false
+    },
+    {
+      "series": "ethusdt@kline_1m",
+      "old_n": 335,
+      "new_n": 336,
+      "duplicate": false,
+      "dominates": true,
+      "conflict": false
+    },
+    {
+      "series": "ethusdt@kline_1m",
+      "old_n": 336,
+      "new_n": 419,
+      "duplicate": false,
+      "dominates": true,
+      "conflict": false
+    },
+    {
+      "series": "ethusdt@kline_1m",
+      "old_n": 419,
+      "new_n": 431,
+      "duplicate": false,
+      "dominates": true,
+      "conflict": false
+    },
+    {
+      "series": "ethusdt@kline_1m",
+      "old_n": 431,
+      "new_n": 432,
+      "duplicate": false,
+      "dominates": true,
+      "conflict": false
+    },
+    {
+      "series": "btcusdt@kline_1m",
+      "old_n": 111,
+      "new_n": 114,
+      "duplicate": false,
+      "dominates": true,
+      "conflict": false
+    },
+    {
+      "series": "btcusdt@kline_1m",
+      "old_n": 114,
+      "new_n": 116,
+      "duplicate": false,
+      "dominates": true,
+      "conflict": false
+    },
+    {
+      "series": "btcusdt@kline_1m",
+      "old_n": 116,
+      "new_n": 124,
+      "duplicate": false,
+      "dominates": true,
+      "conflict": false
+    },
+    {
+      "series": "btcusdt@kline_1m",
+      "old_n": 124,
+      "new_n": 136,
+      "duplicate": false,
+      "dominates": true,
+      "conflict": false
+    },
+    {
+      "series": "btcusdt@kline_1m",
+      "old_n": 136,
+      "new_n": 233,
+      "duplicate": false,
+      "dominates": true,
+      "conflict": false
+    },
+    {
+      "series": "btcusdt@kline_1m",
+      "old_n": 233,
+      "new_n": 245,
+      "duplicate": false,
+      "dominates": true,
+      "conflict": false
+    },
+    {
+      "series": "btcusdt@kline_1m",
+      "old_n": 245,
+      "new_n": 262,
+      "duplicate": false,
+      "dominates": true,
+      "conflict": false
+    },
+    {
+      "series": "btcusdt@kline_4h",
+      "old_n": 338049,
+      "new_n": 338052,
+      "duplicate": false,
+      "dominates": true,
+      "conflict": false
+    },
+    {
+      "series": "btcusdt@kline_4h",
+      "old_n": 338052,
+      "new_n": 338054,
+      "duplicate": false,
+      "dominates": true,
+      "conflict": false
+    },
+    {
+      "series": "btcusdt@kline_4h",
+      "old_n": 338054,
+      "new_n": 338062,
+      "duplicate": false,
+      "dominates": true,
+      "conflict": false
+    },
+    {
+      "series": "btcusdt@kline_4h",
+      "old_n": 338062,
+      "new_n": 338074,
+      "duplicate": false,
+      "dominates": true,
+      "conflict": false
+    },
+    {
+      "series": "btcusdt@kline_4h",
+      "old_n": 338074,
+      "new_n": 338171,
+      "duplicate": false,
+      "dominates": true,
+      "conflict": false
+    },
+    {
+      "series": "btcusdt@kline_4h",
+      "old_n": 338171,
+      "new_n": 338183,
+      "duplicate": false,
+      "dominates": true,
+      "conflict": false
+    },
+    {
+      "series": "btcusdt@kline_4h",
+      "old_n": 338183,
+      "new_n": 338200,
+      "duplicate": false,
+      "dominates": true,
+      "conflict": false
+    },
+    {
+      "series": "btcusdt@kline_4h",
+      "old_n": 338200,
+      "new_n": 338204,
+      "duplicate": false,
+      "dominates": true,
+      "conflict": false
+    },
+    {
+      "series": "btcusdt@kline_15m",
+      "old_n": 18227,
+      "new_n": 18230,
+      "duplicate": false,
+      "dominates": true,
+      "conflict": false
+    },
+    {
+      "series": "btcusdt@kline_15m",
+      "old_n": 18230,
+      "new_n": 18232,
+      "duplicate": false,
+      "dominates": true,
+      "conflict": false
+    },
+    {
+      "series": "btcusdt@kline_15m",
+      "old_n": 18232,
+      "new_n": 18240,
+      "duplicate": false,
+      "dominates": true,
+      "conflict": false
+    },
+    {
+      "series": "btcusdt@kline_15m",
+      "old_n": 18240,
+      "new_n": 18252,
+      "duplicate": false,
+      "dominates": true,
+      "conflict": false
+    },
+    {
+      "series": "btcusdt@kline_15m",
+      "old_n": 18252,
+      "new_n": 18349,
+      "duplicate": false,
+      "dominates": true,
+      "conflict": false
+    },
+    {
+      "series": "btcusdt@kline_15m",
+      "old_n": 18349,
+      "new_n": 18361,
+      "duplicate": false,
+      "dominates": true,
+      "conflict": false
+    },
+    {
+      "series": "btcusdt@kline_15m",
+      "old_n": 18361,
+      "new_n": 18378,
+      "duplicate": false,
+      "dominates": true,
+      "conflict": false
+    },
+    {
+      "series": "btcusdt@kline_15m",
+      "old_n": 18378,
+      "new_n": 18382,
+      "duplicate": false,
+      "dominates": true,
+      "conflict": false
+    }
+  ]
+}

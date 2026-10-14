@@ -38,6 +38,8 @@ class RouteRule:
 
     #: เรียกได้โดยไม่ต้องมี session
     public: bool = False
+    #: F-12 read-only POST validates browser Origin in addition to the shared CSRF check.
+    checks_browser_origin: bool = False
     #: นับว่าเป็น "การใช้งาน" จึงเลื่อนเวลาหมดอายุของ session
     renews: bool = False
     #: ต้องยืนยันปัจจัยที่สองซ้ำ (`security.md` หัวข้อ 1)
@@ -93,6 +95,7 @@ ROUTE_RULES: Final[dict[tuple[str, str], RouteRule]] = {
     # ── ต้องมี session แต่ **ไม่ต่ออายุ** เพราะหน้าเว็บเรียกเป็นรอบ ๆ (Q-2) ──
     ("GET", "/auth/me"): RouteRule(),
     ("GET", "/market-data/candles"): RouteRule(),
+    ("GET", "/market-data/candles/pages"): RouteRule(),
     ("GET", "/market-data/indicators"): RouteRule(),
     ("GET", "/market-data/prices"): RouteRule(),
     ("WEBSOCKET", "/market-data/prices/stream"): RouteRule(),
@@ -127,6 +130,9 @@ ROUTE_RULES: Final[dict[tuple[str, str], RouteRule]] = {
     ("DELETE", "/api-keys/{key_id}"): RouteRule(renews=True),
     ("POST", "/api-keys/{key_id}/retry"): RouteRule(renews=True),
     # Metadata only; initial account-use selection requires a fresh non-recovery TOTP.
+    ("GET", "/market-data/chart/history"): RouteRule(),
+    ("GET", "/market-data/chart/live"): RouteRule(),
+    ("POST", "/market-data/chart/verify"): RouteRule(checks_browser_origin=True),
     ("GET", "/trading-account"): RouteRule(),
     ("POST", "/trading-account/use"): RouteRule(renews=True, reverify=True),
     # ขั้นที่สองของการเข้าสู่ระบบ — สาธารณะเพราะยังไม่มี session

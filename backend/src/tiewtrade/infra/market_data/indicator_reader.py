@@ -18,6 +18,7 @@ from tiewtrade.core.market_data import (
     CandleSeries,
     CandleWindow,
     Timeframe,
+    advance,
     bounded_windows,
     expected_opens,
 )
@@ -154,6 +155,23 @@ class IndicatorDigest:
                 ]
             )
 
+    def feed_batch(self, slots: tuple[tuple[datetime, StoredCandle | None], ...]) -> None:
+        if type(slots) is not tuple or not 1 <= len(slots) <= 1000:
+            raise ValueError("bounded digest slots required")
+        missing = bytearray()
+        for moment, row in slots:
+            if row is None:
+                missing.extend(b'["')
+                missing.extend(timestamp(moment).encode("ascii"))
+                missing.extend(b'","MISSING"]\n')
+                continue
+            if missing:
+                self._digest.update(missing)
+                missing.clear()
+            self.feed(moment, row)
+        if missing:
+            self._digest.update(missing)
+
     def hexdigest(self) -> str:
         return self._digest.hexdigest()
 
@@ -190,18 +208,21 @@ async def read_indicators(
         while True:
             moments = tuple(next(opens, None) for _ in range(16))
             slots: list[tuple[datetime, Candle | None, datetime | None]] = []
+            digest_slots: list[tuple[datetime, StoredCandle | None]] = []
             for moment in moments:
                 if moment is None:
                     break
                 raw = rows.get(moment)
                 row = decode_row(raw, stream.series) if raw is not None else None
                 if digest is not None:
-                    digest.feed(moment, row)
+                    digest_slots.append((moment, row))
                 slots.append(
                     (moment, row.candle if row else None, row.fetch_started_at if row else None)
                 )
             if not slots:
                 break
+            if digest is not None:
+                digest.feed_batch(tuple(digest_slots))
             selected = tuple(
                 i for i, (moment, _, _) in enumerate(slots) if output.start <= moment < output.end
             )
@@ -212,7 +233,7 @@ async def read_indicators(
                 if dependency is not None:
                     if refresh_first is None:
                         refresh_first = dependency
-                    elif dependency >= refresh_first + timeframe.span * 1000:
+                    elif dependency >= advance(refresh_first, timeframe, 1000):
                         refresh_more = True
             if monotonic() >= deadline:
                 raise TimeoutError()

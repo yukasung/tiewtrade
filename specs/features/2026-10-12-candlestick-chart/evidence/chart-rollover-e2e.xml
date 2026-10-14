@@ -1,0 +1,19 @@
+<testsuites id="" name="" tests="1" failures="0" skipped="0" errors="0" time="23.895376">
+<testsuite name="candlestick-chart.spec.ts" timestamp="2026-10-12T14:54:00.264Z" hostname="" tests="1" failures="0" skipped="0" time="21.656" errors="0">
+<testcase name="ended preview waits for actual REST commit before new indicator bundle" classname="candlestick-chart.spec.ts" time="21.656">
+<system-out>
+<![CDATA[{"path":"/api/market-data/chart/live","http":200,"status":"NO_DATA","rows":0}
+{"path":"/api/market-data/chart/history","http":200,"refresh":true,"rows":1000}
+{"path":"/api/market-data/chart/live","http":200,"status":"RECOVERING","rows":2}
+{"path":"/api/market-data/chart/live","http":200,"status":"READY","rows":1}
+{"path":"/api/market-data/chart/live","http":200,"status":"READY","rows":1}
+{"path":"/api/market-data/chart/live","http":200,"status":"STALE","rows":1}
+{"path":"/api/market-data/chart/live","http":200,"status":"STALE","rows":1}
+{"path":"/api/market-data/chart/live","http":200,"status":"STALE","rows":1}
+{"path":"/api/market-data/chart/verify","http":200,"status":"CHANGED"}
+{"path":"/api/market-data/chart/live","http":200,"status":"STALE","rows":1}
+]]>
+</system-out>
+</testcase>
+</testsuite>
+</testsuites>

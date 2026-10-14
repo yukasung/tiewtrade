@@ -12,13 +12,15 @@ from tiewtrade.core.market_data import (
     CandleFinality,
     CandleWindow,
     Timeframe,
+    advance,
     align_floor,
     expected_opens,
+    next_open,
 )
 from tiewtrade.core.money import Money, Quantity
 from tiewtrade.infra.db import DatabaseRole, create_engine_for, user_session
 from tiewtrade.infra.db.session import MarketDataSession, market_data_session
-from tiewtrade.infra.market_data.claims import Claim, claim_next, update_claim
+from tiewtrade.infra.market_data.claims import Claim, claim_next, lock_claim, update_claim
 from tiewtrade.infra.market_data.storage import database_now, enqueue
 from tiewtrade.services.market_data import ingestion
 from tiewtrade.services.market_data.ingestion import _validate, run_round
@@ -136,7 +138,7 @@ class FullSource(FakeVenue):
                 symbol.quote,
                 timeframe,
                 moment,
-                moment + timeframe.span,
+                next_open(moment, timeframe),
                 Money.of("2", symbol.quote),
                 Money.of("2", symbol.quote),
                 Money.of("2", symbol.quote),
@@ -148,6 +150,351 @@ class FullSource(FakeVenue):
             for moment in expected_opens(window, timeframe)
         )
         return CandlePage(symbol, timeframe, window, candles, datetime.now(UTC))
+
+
+class SpanLimitedSource(FullSource):
+    max_request_span = timedelta(days=7)
+
+    def __init__(self, first_page_missing: str | None = None) -> None:
+        super().__init__()
+        self.windows: list[CandleWindow] = []
+        self.first_page_missing = first_page_missing
+
+    async def fetch_candles(
+        self, symbol: Symbol, timeframe: Timeframe, start: datetime, end: datetime, limit: int
+    ) -> CandlePage:
+        assert end - start <= self.max_request_span
+        self.windows.append(CandleWindow(start, end))
+        page = await super().fetch_candles(symbol, timeframe, start, end, limit)
+        if len(self.windows) == 1 and self.first_page_missing:
+            candles = (
+                () if self.first_page_missing == "empty" else page.candles[:1] + page.candles[2:]
+            )
+            return replace(page, candles=candles)
+        return page
+
+
+class SlotLimitedSource(FullSource):
+    def __init__(self, calendar_slots: int = 1) -> None:
+        super().__init__()
+        self.windows: list[CandleWindow] = []
+        self.calendar_slots = calendar_slots
+
+    def max_request_slots(self, timeframe: Timeframe) -> int | None:
+        return self.calendar_slots if timeframe in (Timeframe.W1, Timeframe.MN1) else None
+
+    async def fetch_candles(
+        self, symbol: Symbol, timeframe: Timeframe, start: datetime, end: datetime, limit: int
+    ) -> CandlePage:
+        self.windows.append(CandleWindow(start, end))
+        return await super().fetch_candles(symbol, timeframe, start, end, limit)
+
+
+async def test_discovered_monthly_history_can_store_beyond_indicator_retention() -> None:
+    class DiscoveredSource(SlotLimitedSource):
+        async def earliest_open(self, symbol: Symbol, timeframe: Timeframe) -> datetime:
+            return datetime(2017, 8, 1, tzinfo=UTC)
+
+    engine = create_engine_for(DatabaseRole.MARKET_DATA)
+    try:
+        await isolated_window(engine)
+        async with market_data_session(engine) as session:
+            await ingestion._seed_initial_demand(session)
+            await session.execute("""UPDATE market_candle_demand SET next_attempt_at=
+                CASE WHEN base='BTC' AND timeframe='1M' THEN '-infinity'::timestamptz
+                ELSE clock_timestamp()+interval '1 hour' END""")
+        source = DiscoveredSource()
+        first = await run_round(engine, source, "discover", datetime.now(UTC))
+        assert first.attempts == 4  # One discovery and three ordinary native requests.
+        async with market_data_session(engine) as session:
+            row = (
+                (
+                    await session.execute("""SELECT * FROM market_candle_demand
+                WHERE base='BTC' AND timeframe='1M'""")
+                )
+                .mappings()
+                .one()
+            )
+            assert row["history_start"] == datetime(2017, 8, 1, tzinfo=UTC)
+            # Complete the priority pass to exercise old partitions immediately.
+            await session.execute("""UPDATE market_candle_demand SET
+                recent_cursor=desired_start,recent_end=desired_start
+                WHERE base='BTC' AND timeframe='1M'""")
+        await run_round(engine, source, "old-months", datetime.now(UTC))
+        async with market_data_session(engine) as session:
+            assert (
+                await session.execute("""SELECT min(open_at) FROM market_candles
+                WHERE base='BTC' AND timeframe='1M'""")
+            ).scalar_one() == datetime(2017, 8, 1, tzinfo=UTC)
+    finally:
+        await engine.dispose()
+
+
+@pytest.mark.parametrize(
+    ("timeframe", "calendar_slots"),
+    [
+        (Timeframe.H4, 1),
+        (Timeframe.D1, 1),
+        (Timeframe.W1, 1),
+        (Timeframe.W1, 1000),
+        (Timeframe.MN1, 1),
+        (Timeframe.MN1, 1000),
+    ],
+)
+async def test_recent_history_precedes_deep_history_without_skipping_slots(
+    timeframe: Timeframe,
+    calendar_slots: int,
+) -> None:
+    engine = create_engine_for(DatabaseRole.MARKET_DATA)
+    try:
+        await isolated_window(engine)
+        async with market_data_session(engine) as session:
+            await ingestion._seed_initial_demand(session)
+            now = await database_now(session)
+            end = align_floor(now, timeframe)
+            # Monthly retention contains fewer than 100 slots, so the whole
+            # retained window is already the recent viewport.
+            start = advance(end, timeframe, -50 if timeframe == Timeframe.MN1 else -120)
+            await session.execute("""UPDATE market_candle_demand SET
+                next_attempt_at=clock_timestamp()+interval '1 hour'""")
+            await session.execute(
+                """UPDATE market_candle_demand SET desired_start=:start,desired_end=:end,
+                next_attempt_at='-infinity' WHERE base='BTC' AND timeframe=:tf""",
+                {"start": start, "end": end, "tf": timeframe.value},
+            )
+        source = SlotLimitedSource(calendar_slots)
+        first = await run_round(engine, source, "priority-first", now)
+        recent_start = max(start, advance(end, timeframe, -100))
+        assert source.windows[0].end == end
+        assert source.windows[0].start >= recent_start
+        assert first.attempts <= 4
+        expected_end = end
+        if timeframe == Timeframe.W1 and calendar_slots == 1:
+            # A live extension must not move the frozen recent horizon or the
+            # deep cursor before its old lease has been processed.
+            expected_end = next_open(end, timeframe)
+            async with market_data_session(engine) as session:
+                await session.execute(
+                    """UPDATE market_candle_demand SET desired_end=:end
+                    WHERE base='BTC' AND timeframe=:tf""",
+                    {"end": expected_end, "tf": timeframe.value},
+                )
+                progress = (
+                    (
+                        await session.execute(
+                            """SELECT cursor,recent_end FROM market_candle_demand
+                            WHERE base='BTC' AND timeframe=:tf""",
+                            {"tf": timeframe.value},
+                        )
+                    )
+                    .mappings()
+                    .one()
+                )
+                assert progress["recent_end"] == end
+                assert progress["cursor"] == start
+        # New worker identity simulates restart; recent progress is durable.
+        for _ in range(35):
+            await run_round(engine, source, "priority-resumed", now)
+            async with market_data_session(engine) as session:
+                row = (
+                    (
+                        await session.execute(
+                            "SELECT * FROM market_candle_demand WHERE base='BTC' AND timeframe=:tf",
+                            {"tf": timeframe.value},
+                        )
+                    )
+                    .mappings()
+                    .one()
+                )
+            if row["status"] == "COMPLETE":
+                break
+        assert row["status"] == "COMPLETE"
+        assert row["cursor"] == expected_end
+        expected_slots = 50 if timeframe == Timeframe.MN1 else 120
+        if timeframe == Timeframe.W1 and calendar_slots == 1:
+            expected_slots = 121
+        fetched_opens = {
+            opened for window in source.windows for opened in expected_opens(window, timeframe)
+        }
+        assert len(fetched_opens) == expected_slots
+        if timeframe != Timeframe.MN1:
+            deep_index = next(i for i, window in enumerate(source.windows) if window.start == start)
+            assert all(window.start >= recent_start for window in source.windows[:deep_index])
+    finally:
+        await engine.dispose()
+
+
+@pytest.mark.parametrize("calendar_slots", [1, 1000])
+@pytest.mark.parametrize("timeframe", [Timeframe.W1, Timeframe.MN1])
+async def test_calendar_backfill_respects_source_batch_size(
+    timeframe: Timeframe,
+    calendar_slots: int,
+) -> None:
+    engine = create_engine_for(DatabaseRole.MARKET_DATA)
+    try:
+        await isolated_window(engine)
+        async with market_data_session(engine) as session:
+            await ingestion._seed_initial_demand(session)
+            now = await database_now(session)
+            end = align_floor(now, timeframe)
+            start = advance(end, timeframe, -3)
+            await session.execute(
+                """UPDATE market_candle_demand SET
+                next_attempt_at=clock_timestamp()+interval '1 hour'"""
+            )
+            await session.execute(
+                """UPDATE market_candle_demand SET desired_start=:start,
+                desired_end=:end,next_attempt_at='-infinity'
+                WHERE base='BTC' AND quote='USDT' AND timeframe=:timeframe""",
+                {"start": start, "end": end, "timeframe": timeframe.value},
+            )
+        source = SlotLimitedSource(calendar_slots)
+        result = await run_round(engine, source, "calendar-slot-limit", now)
+        assert result.attempts == (3 if calendar_slots == 1 else 1)
+        expected_windows = (
+            [
+                CandleWindow(advance(start, timeframe, index), advance(start, timeframe, index + 1))
+                for index in (reversed(range(3)) if timeframe == Timeframe.MN1 else range(3))
+            ]
+            if calendar_slots == 1
+            else [CandleWindow(start, end)]
+        )
+        assert source.windows == expected_windows
+        async with market_data_session(engine) as session:
+            row = (
+                (
+                    await session.execute(
+                        """SELECT status,cursor FROM market_candle_demand
+                        WHERE base='BTC' AND quote='USDT' AND timeframe=:timeframe""",
+                        {"timeframe": timeframe.value},
+                    )
+                )
+                .mappings()
+                .one()
+            )
+            assert row["status"] == "COMPLETE"
+            assert row["cursor"] == end
+            opens = (
+                (
+                    await session.execute(
+                        """SELECT open_at FROM market_candles
+                        WHERE base='BTC' AND quote='USDT' AND timeframe=:timeframe
+                        ORDER BY open_at""",
+                        {"timeframe": timeframe.value},
+                    )
+                )
+                .scalars()
+                .all()
+            )
+            assert opens == [advance(start, timeframe, index) for index in range(3)]
+    finally:
+        await engine.dispose()
+
+
+@pytest.mark.parametrize("timeframe", [Timeframe.M15, Timeframe.H1, Timeframe.H4, Timeframe.D1])
+@pytest.mark.parametrize("first_page_missing", [None, "gap", "empty"])
+async def test_source_span_splits_units_without_skipping_the_remaining_tail(
+    timeframe: Timeframe,
+    first_page_missing: str | None,
+) -> None:
+    engine = create_engine_for(DatabaseRole.MARKET_DATA)
+    try:
+        await isolated_window(engine)
+        async with market_data_session(engine) as session:
+            await ingestion._seed_initial_demand(session)
+            now = await database_now(session)
+            end = align_floor(now, timeframe)
+            start = end - timedelta(days=7) - timeframe.span
+            await session.execute("""UPDATE market_candle_demand SET
+              next_attempt_at=clock_timestamp()+interval '1 hour'""")
+            await session.execute(
+                """UPDATE market_candle_demand SET desired_start=:start,
+              desired_end=:end,recent_cursor=:start,recent_end=:start,
+              next_attempt_at='-infinity' WHERE base='BTC' AND timeframe=:tf""",
+                {"start": start, "end": end, "tf": timeframe.value},
+            )
+        source = SpanLimitedSource(first_page_missing)
+        summary = await run_round(engine, source, "span-limit", now)
+        assert summary.attempts == 2
+        assert source.windows == [
+            CandleWindow(start, start + timedelta(days=7)),
+            CandleWindow(start + timedelta(days=7), end),
+        ]
+        if first_page_missing:
+            async with market_data_session(engine) as session:
+                await session.execute(
+                    """UPDATE market_candle_demand SET next_attempt_at='-infinity'
+                  WHERE base='BTC' AND timeframe=:tf""",
+                    {"tf": timeframe.value},
+                )
+            repaired = await run_round(engine, source, "span-repair", now)
+            assert repaired.attempts == 1
+            assert all(w.end - w.start <= source.max_request_span for w in source.windows)
+        async with market_data_session(engine) as session:
+            row = (
+                (
+                    await session.execute(
+                        """SELECT status,cursor,attemptcount FROM
+              market_candle_demand WHERE base='BTC' AND timeframe=:tf""",
+                        {"tf": timeframe.value},
+                    )
+                )
+                .mappings()
+                .one()
+            )
+            assert row["status"] == "COMPLETE"
+            assert row["cursor"] == end
+            assert row["attemptcount"] == 0
+            opens = (
+                (
+                    await session.execute(
+                        """SELECT open_at FROM market_candles
+              WHERE base='BTC' AND timeframe=:tf ORDER BY open_at""",
+                        {"tf": timeframe.value},
+                    )
+                )
+                .scalars()
+                .all()
+            )
+            assert opens == list(expected_opens(CandleWindow(start, end), timeframe))
+    finally:
+        await engine.dispose()
+
+
+async def test_reclaimed_oversized_unit_keeps_attempts_and_claim_identity() -> None:
+    engine = create_engine_for(DatabaseRole.MARKET_DATA)
+    try:
+        await isolated_window(engine)
+        async with market_data_session(engine) as session:
+            await ingestion._seed_initial_demand(session)
+            now = await database_now(session)
+            end = align_floor(now, Timeframe.H1)
+            start = end - timedelta(days=8)
+            await session.execute("""UPDATE market_candle_demand SET
+              next_attempt_at=clock_timestamp()+interval '1 hour'""")
+            await session.execute(
+                """UPDATE market_candle_demand SET desired_start=:start,
+              desired_end=:end,next_attempt_at='-infinity' WHERE base='BTC' AND timeframe='1h'""",
+                {"start": start, "end": end},
+            )
+            claim = await claim_next(session, "old-unit")
+            assert claim is not None
+            unit = uuid4()
+            await update_claim(
+                session, claim, fetch_unit_id=unit, fetch_start=start, fetch_end=end, attemptcount=2
+            )
+        async with market_data_session(engine) as session:
+            window = await ingestion._prepare(session, claim, timedelta(days=7))
+            row = await lock_claim(session, claim)
+            assert window == CandleWindow(start, start + timedelta(days=7))
+            assert row["fetch_unit_id"] == unit
+            assert row["attemptcount"] == 2
+            assert row["token"] == claim.token
+            assert row["fetch_end"] == window.end
+            assert row["desired_end"] == end
+            assert row["cursor"] == start
+    finally:
+        await engine.dispose()
 
 
 class RemainingGapSource(FullSource):
@@ -331,7 +678,8 @@ async def test_five_pages_have_independent_retry_units() -> None:
         async with market_data_session(engine) as session:
             await session.execute("""UPDATE market_candle_demand SET status='PENDING',
                 attemptcount=0,fetch_unit_id=NULL,fetch_start=NULL,fetch_end=NULL,
-                cursor=NULL,leased_start=NULL,leased_end=NULL
+                cursor=NULL,leased_start=NULL,leased_end=NULL,
+                recent_cursor=desired_start,recent_end=desired_start,fetch_recent=false
                 WHERE base='BTC' AND timeframe='1m'""")
         await only_btc_ready(engine)
         source = LaterFailureSource(window.start + timedelta(minutes=3000))
@@ -405,6 +753,50 @@ async def test_expanded_window_fetches_only_missing_stored_slots() -> None:
         source = LaterFailureSource(datetime.now(UTC) + timedelta(days=1))
         await run_round(engine, source, "expanded", datetime.now(UTC))
         assert source.requests == [CandleWindow(expanded_start, window.start)]
+    finally:
+        await engine.dispose()
+
+
+async def test_right_expansion_preserves_completed_cursor_and_fetches_only_new_tail() -> None:
+    engine = create_engine_for(DatabaseRole.MARKET_DATA)
+    try:
+        window = await isolated_window(engine, 2)
+        await run_round(engine, FakeVenue(), "seed", datetime.now(UTC))
+        async with market_data_session(engine) as session:
+            await session.execute("""UPDATE market_candle_demand SET status='PENDING',
+                attemptcount=0,fetch_unit_id=NULL,fetch_start=NULL,fetch_end=NULL,
+                cursor=NULL,leased_start=NULL,leased_end=NULL
+                WHERE base='BTC' AND timeframe='1m'""")
+        await only_btc_ready(engine)
+        await run_round(engine, FullSource(), "initial", datetime.now(UTC))
+        expanded_end = window.end + timedelta(minutes=1)
+        async with market_data_session(engine) as session:
+            await session.execute(
+                """UPDATE market_candle_demand SET desired_end=:end
+                WHERE base='BTC' AND timeframe='1m'""",
+                {"end": expanded_end},
+            )
+        await only_btc_ready(engine)
+        async with market_data_session(engine) as session:
+            claim = await claim_next(session, "expand-right")
+            assert claim is not None
+            assert await ingestion._prepare(session, claim) is None
+            row = (
+                (
+                    await session.execute("""SELECT * FROM market_candle_demand
+                    WHERE base='BTC' AND timeframe='1m'""")
+                )
+                .mappings()
+                .one()
+            )
+            assert row["cursor"] == window.end
+            assert row["leased_end"] == expanded_end
+            assert row["status"] == "PENDING"
+
+        await only_btc_ready(engine)
+        source = LaterFailureSource(datetime.now(UTC) + timedelta(days=1))
+        await run_round(engine, source, "new-tail", datetime.now(UTC))
+        assert source.requests == [CandleWindow(window.end, expanded_end)]
     finally:
         await engine.dispose()
 
@@ -647,19 +1039,22 @@ async def test_identical_duplicate_observations_are_deduplicated() -> None:
     assert validated.candles == page.candles
 
 
-async def test_page_and_cursor_rollback_together(monkeypatch: pytest.MonkeyPatch) -> None:
+@pytest.mark.parametrize("slots", [1, 120])
+async def test_page_and_cursor_rollback_together(
+    monkeypatch: pytest.MonkeyPatch, slots: int
+) -> None:
     engine = create_engine_for(DatabaseRole.MARKET_DATA)
     original = update_claim
 
     async def fail_cursor(
         session: MarketDataSession, claim: Claim, *, release: bool = False, **changes: Any
     ) -> None:
-        if "cursor" in changes:
+        if release and ("cursor" in changes or "recent_cursor" in changes):
             raise RuntimeError("simulated crash before cursor commit")
         await original(session, claim, release=release, **changes)
 
     try:
-        window = await isolated_window(engine, 1)
+        window = await isolated_window(engine, slots)
         await run_round(engine, FakeVenue(), "seed", datetime.now(UTC))
         async with market_data_session(engine) as session:
             await session.execute("""UPDATE market_candle_demand SET status='PENDING',
@@ -732,10 +1127,10 @@ async def test_seed_uses_database_clock_despite_two_hour_caller_skew() -> None:
         async with market_data_session(engine) as session:
             for row in (await session.execute("SELECT * FROM market_candle_demand")).mappings():
                 timeframe = Timeframe(row["timeframe"])
-                assert row["desired_end"] <= align_floor(now, timeframe) + timeframe.span
+                assert row["desired_end"] <= next_open(align_floor(now, timeframe), timeframe)
                 assert row["requested_at"] < now + timedelta(seconds=10)
         assert all(
-            call.end <= align_floor(now, call.timeframe) + call.timeframe.span
+            call.end <= next_open(align_floor(now, call.timeframe), call.timeframe)
             for call in source.candle_calls
         )
     finally:
@@ -948,6 +1343,11 @@ async def test_actual_rows_commit_and_complete_after_observations() -> None:
             await session.execute("DELETE FROM market_candle_demand")
             await session.execute("DELETE FROM market_candles")
         source = FullSource()
+        async with market_data_session(engine) as session:
+            await ingestion._seed_initial_demand(session)
+            # Exercise deep-history completion independently of priority scheduling.
+            await session.execute("""UPDATE market_candle_demand SET
+                recent_cursor=desired_start,recent_end=desired_start""")
         await run_round(engine, source, "seed", datetime.now(UTC))
         async with market_data_session(engine) as session:
             assert (await session.execute("SELECT count(*) FROM market_candles")).scalar_one() > 0
@@ -982,7 +1382,7 @@ async def test_seed_is_idempotent_and_round_has_four_attempts() -> None:
         async with market_data_session(engine) as session:
             assert (
                 await session.execute("SELECT count(*) FROM market_candle_demand")
-            ).scalar_one() == 30
+            ).scalar_one() == 40
     finally:
         await engine.dispose()
 
@@ -1011,7 +1411,7 @@ async def test_rate_limit_defers_entire_source(retry_seconds: int | None) -> Non
                 WHERE next_attempt_at>clock_timestamp()+make_interval(secs=>:seconds)""",
                     {"seconds": minimum},
                 )
-            ).scalar_one() == 30
+            ).scalar_one() == 40
         restarted = await run_round(engine, source, "restarted", datetime.now(UTC))
         assert restarted.attempts == 0
     finally:
@@ -1077,5 +1477,82 @@ async def test_transient_attempt_count_survives_reclaim() -> None:
             assert row["status"] == "FAILED"
             now = (await session.execute("SELECT clock_timestamp()")).scalar_one()
             assert row["next_attempt_at"] > now + timedelta(seconds=110)
+    finally:
+        await engine.dispose()
+
+
+@pytest.mark.parametrize("timeframe", [Timeframe.W1, Timeframe.MN1])
+@pytest.mark.parametrize("resume", [False, True])
+async def test_calendar_batch_repairs_sparse_response_and_resumes_reserved_slot(
+    timeframe: Timeframe, resume: bool
+) -> None:
+    class SparseBatch(SlotLimitedSource):
+        omitted = False
+
+        async def fetch_candles(
+            self, symbol: Symbol, timeframe: Timeframe, start: datetime, end: datetime, limit: int
+        ) -> CandlePage:
+            page = await super().fetch_candles(symbol, timeframe, start, end, limit)
+            if len(page.candles) > 1 and not self.omitted:
+                self.omitted = True
+                return replace(page, candles=page.candles[:1] + page.candles[2:])
+            return page
+
+    engine = create_engine_for(DatabaseRole.MARKET_DATA)
+    try:
+        await isolated_window(engine)
+        async with market_data_session(engine) as session:
+            await ingestion._seed_initial_demand(session)
+            now = await database_now(session)
+            end = align_floor(now, timeframe)
+            start = advance(end, timeframe, -4)
+            await session.execute(
+                """UPDATE market_candle_demand
+                SET next_attempt_at=clock_timestamp()+interval '1 hour'"""
+            )
+            await session.execute(
+                """UPDATE market_candle_demand SET desired_start=:start, desired_end=:end,
+                next_attempt_at='-infinity' WHERE base='BTC' AND timeframe=:tf""",
+                {"start": start, "end": end, "tf": timeframe.value},
+            )
+            if resume:
+                claim = await claim_next(session, "old-worker")
+                assert claim is not None
+                reserved = await ingestion._prepare(session, claim, max_request_slots=1)
+                assert reserved is not None
+                await session.execute(
+                    """UPDATE market_candle_demand
+                    SET lease_until=clock_timestamp()-interval '1 second'
+                    WHERE token IS NOT NULL"""
+                )
+        source = SparseBatch(1000)
+        result = await run_round(engine, source, "new-worker", now)
+        assert result.attempts <= 4
+        if resume:
+            assert source.windows[0] == reserved
+        # Fixed-time delay belongs to repair scheduling, not to the test clock.
+        for _ in range(3):
+            async with market_data_session(engine) as session:
+                await session.execute(
+                    """UPDATE market_candle_demand SET next_attempt_at=clock_timestamp()
+                    WHERE base='BTC' AND timeframe=:tf""",
+                    {"tf": timeframe.value},
+                )
+            await run_round(engine, source, "resumed", now)
+        async with market_data_session(engine) as session:
+            count = (
+                await session.execute(
+                    "SELECT count(*) FROM market_candles WHERE base='BTC' AND timeframe=:tf",
+                    {"tf": timeframe.value},
+                )
+            ).scalar_one()
+            assert count == 4
+            status = (
+                await session.execute(
+                    "SELECT status FROM market_candle_demand WHERE base='BTC' AND timeframe=:tf",
+                    {"tf": timeframe.value},
+                )
+            ).scalar_one()
+            assert status == "COMPLETE"
     finally:
         await engine.dispose()

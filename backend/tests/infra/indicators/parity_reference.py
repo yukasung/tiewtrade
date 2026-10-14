@@ -115,9 +115,6 @@ def reference_points(slots: tuple[Slot, ...]) -> tuple[IndicatorPoint, ...]:
         "ema50",
         "ema200",
         "rsi14",
-        "macd_line",
-        "macd_signal",
-        "macd_histogram",
         "atr14",
     )
     for (moment, _, _), (point_seed, finality, status, segment, position) in zip(
@@ -156,7 +153,7 @@ def canonical_digest(
             "BTC",
             "USDT",
             timeframe.value,
-            "indicators-v1",
+            "indicators-v2",
             stamp(calculation.start),
             stamp(calculation.end),
         ]

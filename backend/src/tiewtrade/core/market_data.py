@@ -2,26 +2,36 @@
 
 from collections.abc import Iterable, Iterator
 from dataclasses import InitVar, dataclass, field
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 from enum import StrEnum
 
 from tiewtrade.core.moments import require_aware
 from tiewtrade.core.money import InvalidUnitError, Money, Quantity
 from tiewtrade.core.money.indicator_batch import validate_ohlcv
-
-
-class Timeframe(StrEnum):
-    M1 = "1m"
-    M5 = "5m"
-    M15 = "15m"
-    H1 = "1h"
-    H4 = "4h"
-    D1 = "1d"
-
-    @property
-    def span(self) -> timedelta:
-        seconds = {"1m": 60, "5m": 300, "15m": 900, "1h": 3600, "4h": 14400, "1d": 86400}
-        return timedelta(seconds=seconds[self.value])
+from tiewtrade.core.timeframes import (
+    Timeframe as Timeframe,
+)
+from tiewtrade.core.timeframes import (
+    advance as advance,
+)
+from tiewtrade.core.timeframes import (
+    align_ceil as align_ceil,
+)
+from tiewtrade.core.timeframes import (
+    align_floor as align_floor,
+)
+from tiewtrade.core.timeframes import (
+    next_open as next_open,
+)
+from tiewtrade.core.timeframes import (
+    previous_open as previous_open,
+)
+from tiewtrade.core.timeframes import (
+    retention_cutoff as retention_cutoff,
+)
+from tiewtrade.core.timeframes import (
+    slot_count as count_slots,
+)
 
 
 class CandleFinality(StrEnum):
@@ -109,37 +119,25 @@ class Candle:
             object.__setattr__(self, name, moment.astimezone(UTC))
         if align_floor(self.open_at, self.timeframe) != self.open_at:
             raise ValueError("unaligned candle open")
-        if self.end_at != self.open_at + self.timeframe.span:
+        if self.end_at != next_open(self.open_at, self.timeframe):
             raise ValueError("wrong candle span")
-
-
-def align_floor(moment: datetime, timeframe: Timeframe) -> datetime:
-    require_aware("moment", moment)
-    epoch = datetime(1970, 1, 1, tzinfo=UTC)
-    return epoch + ((moment - epoch) // timeframe.span) * timeframe.span
-
-
-def align_ceil(moment: datetime, timeframe: Timeframe) -> datetime:
-    floor = align_floor(moment, timeframe)
-    return floor if floor == moment else floor + timeframe.span
 
 
 def expected_opens(window: CandleWindow, timeframe: Timeframe) -> Iterator[datetime]:
     current = align_ceil(window.start, timeframe)
     while current < window.end:
         yield current
-        current += timeframe.span
+        current = next_open(current, timeframe)
 
 
 def slot_count(window: CandleWindow, timeframe: Timeframe) -> int:
-    first = align_ceil(window.start, timeframe)
-    return (window.end - first + timeframe.span - timedelta(microseconds=1)) // timeframe.span
+    return count_slots(window.start, window.end, timeframe)
 
 
 def bounded_windows(window: CandleWindow, timeframe: Timeframe) -> Iterator[CandleWindow]:
     cursor = window.start
     while cursor < window.end:
-        end = min(align_ceil(cursor, timeframe) + timeframe.span * 1000, window.end)
+        end = min(advance(align_ceil(cursor, timeframe), timeframe, 1000), window.end)
         yield CandleWindow(cursor, end)
         cursor = end
 
@@ -157,25 +155,25 @@ def missing_windows(
                 beginning = moment
             last = moment
         elif beginning is not None and last is not None:
-            result.append(CandleWindow(beginning, last + timeframe.span))
+            result.append(CandleWindow(beginning, next_open(last, timeframe)))
             beginning = None
     if beginning is not None and last is not None:
-        result.append(CandleWindow(beginning, last + timeframe.span))
+        result.append(CandleWindow(beginning, next_open(last, timeframe)))
     return tuple(result)
 
 
-def retention_cutoff(as_of: datetime) -> datetime:
-    require_aware("as_of", as_of)
-    return as_of.astimezone(UTC) - timedelta(days=365)
-
-
-def retention_window(window: CandleWindow, as_of: datetime) -> CandleWindow | None:
-    start = max(window.start, retention_cutoff(as_of))
+def retention_window(
+    window: CandleWindow, as_of: datetime, timeframe: Timeframe
+) -> CandleWindow | None:
+    start = max(window.start, retention_cutoff(as_of, timeframe))
     end = min(window.end, as_of)
     return CandleWindow(start, end) if start < end else None
 
 
 def initial_window(timeframe: Timeframe, as_of: datetime) -> CandleWindow:
-    end = align_floor(as_of, timeframe) + timeframe.span
-    start = max(end - 1000 * timeframe.span, align_ceil(retention_cutoff(as_of), timeframe))
+    end = next_open(align_floor(as_of, timeframe), timeframe)
+    start = max(
+        advance(end, timeframe, -1000),
+        align_ceil(retention_cutoff(as_of, timeframe), timeframe),
+    )
     return CandleWindow(start, end)

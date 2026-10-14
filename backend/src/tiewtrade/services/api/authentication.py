@@ -56,6 +56,7 @@ from tiewtrade.services.api.settings import (
     SESSION_COOKIE,
     TOTP_HEADER,
     cookie_secure,
+    price_origins,
 )
 from tiewtrade.services.api.throttling import AuthRejectedError, refuse_if_throttled, throttled
 
@@ -272,6 +273,15 @@ async def authenticate_request(engine: AsyncEngine, request: Request) -> None:
     request.state.route_key = classified
 
     ensure_csrf(request)
+    rule = rule_for(*classified)
+    origin = request.headers.get("origin")
+    if (
+        rule is not None
+        and rule.checks_browser_origin
+        and origin is not None
+        and origin not in price_origins()
+    ):
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "CSRF_ORIGIN_REJECTED")
     found = await identify(engine, request)
     request.state.authenticated = found
     if found is None:

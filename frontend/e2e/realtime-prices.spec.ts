@@ -16,7 +16,7 @@ test("actual quote producer → PostgreSQL → Redis → API → browser recover
     cwd: "../backend", env: e2eEnvironment(), stdio: "ignore",
   });
   try {
-    await page.goto("/");
+    await page.goto("/prices");
     await page.getByTestId("switch-mode").click();
     await page.getByLabel("อีเมล").fill(`e2e-prices-${String(Date.now())}@example.com`);
     await page.getByLabel("รหัสผ่าน", { exact: true }).fill(PASSWORD);

@@ -1,0 +1,6 @@
+<testsuites id="" name="" tests="1" failures="0" skipped="0" errors="0" time="12.799359">
+<testsuite name="candlestick-chart.spec.ts" timestamp="2026-10-12T17:00:30.918Z" hostname="" tests="1" failures="0" skipped="0" time="10.511" errors="0">
+<testcase name="module pages preserve navigation history, deep links and cancel inactive chart work" classname="candlestick-chart.spec.ts" time="10.511">
+</testcase>
+</testsuite>
+</testsuites>

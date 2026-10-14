@@ -1,7 +1,9 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { AuthPanel } from "../src/AuthPanel";
+
+beforeEach(() => { window.history.replaceState(null, "", "/security"); });
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -138,6 +140,7 @@ describe("การยืนยันสองชั้นบนหน้าเ�
   });
 
   it("บอกจำนวนรหัสสำรองที่เหลือเมื่อเข้าสู่ระบบด้วยรหัสสำรอง", async () => {
+    window.history.replaceState(null, "", "/account");
     let signedIn = false;
     vi.stubGlobal(
       "fetch",

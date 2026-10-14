@@ -1,0 +1,19 @@
+{
+  "views": [
+    {
+      "timeframe": "1h",
+      "http": 200,
+      "status": "RECOVERING",
+      "reason": null,
+      "rows": 2
+    },
+    {
+      "timeframe": "1m",
+      "http": 200,
+      "status": "RECOVERING",
+      "reason": null,
+      "rows": 2
+    }
+  ],
+  "errors": []
+}

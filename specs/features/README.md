@@ -74,11 +74,16 @@ migration ที่ต้องมี
 
 ## validation.md
 
+แยกเวลารันตาม `standards/testing.md` หัวข้อ 7: ระหว่างพัฒนา, candidate ก่อน merge,
+และ release checkpoint ใช้ plan ที่อนุมัติแล้วต่อ ไม่ลดเกณฑ์ตรวจรับ
+ชุดเต็ม performance/workload/stress/endurance/resource ระบุ `Pending Full Validation`
+พร้อม checkpoint และหลักฐานเดิม; ส่วน correctness/trading safety ตรวจตามผลกระทบทันที
+
 ```markdown
 # <ชื่องาน> — Validation
 
 ## "เสร็จ" หมายถึง
-| # | เกณฑ์ | ตรวจอย่างไร |
+| # | เกณฑ์ | ตรวจอย่างไร | ระยะรัน | ผล / หลักฐาน |
 
 ## เทสต์ที่ต้องมี
 - ตัวเลขจริง:
@@ -89,5 +94,7 @@ migration ที่ต้องมี
 ขั้นตอนที่คนต้องลองเอง
 
 ## ด่านที่ต้องเขียว
-lint / types / imports / tests
+ระหว่างพัฒนา: targeted Tests และ checks ตามผลกระทบ
+ก่อน merge: lint / types / imports / full regression / required CI ตามมาตรฐาน
+ก่อน Completed/release: เกณฑ์ตรวจรับครบ รวม Pending Full Validation
 ```

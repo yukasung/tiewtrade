@@ -11,14 +11,16 @@ from sqlalchemy.ext.asyncio import AsyncEngine
 from tiewtrade.core.market_data import (
     CandleWindow,
     Timeframe,
+    advance,
     align_ceil,
     align_floor,
     bounded_windows,
     expected_opens,
     initial_window,
     missing_windows,
-    retention_cutoff,
+    next_open,
 )
+from tiewtrade.core.timeframes import candle_storage_cutoff as retention_cutoff
 from tiewtrade.infra.db.errors import DatabaseTimeoutError
 from tiewtrade.infra.db.session import MarketDataSession, market_data_session
 from tiewtrade.infra.indicators.source import begin_source_write, source_write_timeouts
@@ -79,6 +81,9 @@ async def _next_fetch_window(
     cursor: datetime,
     end: datetime,
     refresh_at: datetime | None = None,
+    max_request_span: timedelta | None = None,
+    max_request_slots: int | None = None,
+    newest_gap: bool = False,
 ) -> CandleWindow | None:
     if cursor >= end:
         return None
@@ -94,15 +99,37 @@ async def _next_fetch_window(
                 (t for t in expected_opens(window, claim.timeframe) if t not in eligible),
             )
         if gaps:
-            return CandleWindow(gaps[0].start, min(gaps[0].end, end))
+            if newest_gap:
+                gaps = gaps[-1:]
+            fetch_end = min(gaps[0].end, end)
+            if max_request_span is not None:
+                fetch_end = min(
+                    fetch_end, align_floor(gaps[0].start + max_request_span, claim.timeframe)
+                )
+                if fetch_end <= gaps[0].start:
+                    raise ValueError("source span limit is shorter than one candle")
+            if max_request_slots is not None:
+                fetch_end = min(
+                    fetch_end,
+                    advance(gaps[0].start, claim.timeframe, max_request_slots),
+                )
+            return CandleWindow(gaps[0].start, fetch_end)
     return None
 
 
-async def _prepare(session: MarketDataSession, claim: Claim) -> CandleWindow | None:
+async def _prepare(
+    session: MarketDataSession,
+    claim: Claim,
+    max_request_span: timedelta | None = None,
+    max_request_slots: int | None = None,
+) -> CandleWindow | None:
     row = await lock_claim(session, claim)
     now = await database_now(session)
-    start = max(row["leased_start"], align_ceil(retention_cutoff(now), claim.timeframe))
-    end = min(row["leased_end"], align_floor(now, claim.timeframe) + claim.timeframe.span)
+    start = max(
+        row["leased_start"],
+        align_ceil(retention_cutoff(now, claim.timeframe), claim.timeframe),
+    )
+    end = min(row["leased_end"], next_open(align_floor(now, claim.timeframe), claim.timeframe))
     if row["fetch_unit_id"] is not None:
         if row["attemptcount"] >= 3:
             await update_claim(
@@ -116,16 +143,88 @@ async def _prepare(session: MarketDataSession, claim: Claim) -> CandleWindow | N
             return None
         fetch_start = max(row["fetch_start"], start)
         fetch_end = min(row["fetch_end"], end)
+        if max_request_span is not None:
+            fetch_end = min(fetch_end, align_floor(fetch_start + max_request_span, claim.timeframe))
+        if max_request_slots is not None:
+            fetch_end = min(fetch_end, advance(fetch_start, claim.timeframe, max_request_slots))
         if fetch_start < fetch_end:
+            # Reclaimed pre-upgrade units may exceed the newly declared limit.
+            # Keep their attempt budget/identity and leave the remaining tail for the cursor.
+            await update_claim(session, claim, fetch_start=fetch_start, fetch_end=fetch_end)
             return CandleWindow(fetch_start, fetch_end)
     phase = row["phase"]
     cursor = max(row["cursor"] or start, start)
     refresh_at = row["refresh_as_of"] or row["refresh_requested_at"]
     window: CandleWindow | None = None
-    if phase == "FORWARD" and cursor < end:
-        window = await _next_fetch_window(session, claim, cursor, end)
+    forward_end = end
+    if phase == "FORWARD" and (
+        start < advance(end, claim.timeframe, -100) or claim.timeframe == Timeframe.MN1
+    ):
+        # Fix the priority horizon once per lease. New live candles cannot keep
+        # extending it and starving deep history. An existing fetch above wins.
+        recent_end = row["recent_end"] or end
+        recent_start = max(advance(recent_end, claim.timeframe, -100), start)
+        recent_cursor = row["recent_cursor"] or recent_end
+        while recent_cursor > recent_start:
+            chunk_start = max(
+                recent_start, advance(recent_cursor, claim.timeframe, -(max_request_slots or 100))
+            )
+            if max_request_span is not None:
+                chunk_start = max(
+                    chunk_start, align_ceil(recent_cursor - max_request_span, claim.timeframe)
+                )
+            if chunk_start >= recent_cursor:
+                raise ValueError("source span limit is shorter than one candle")
+            window = await _next_fetch_window(
+                session,
+                claim,
+                chunk_start,
+                recent_cursor,
+                max_request_span=max_request_span,
+                max_request_slots=max_request_slots,
+                newest_gap=True,
+            )
+            if window is not None:
+                break
+            recent_cursor = chunk_start
+        if window is not None:
+            await update_claim(
+                session,
+                claim,
+                recent_cursor=recent_cursor,
+                recent_end=recent_end,
+                fetch_recent=True,
+                fetch_unit_id=uuid4(),
+                fetch_start=window.start,
+                fetch_end=window.end,
+                attemptcount=0,
+            )
+            return window
+        await update_claim(session, claim, recent_cursor=recent_cursor, recent_end=recent_end)
+        if recent_end > start:
+            forward_end = recent_start
+    if phase == "FORWARD" and cursor < forward_end:
+        window = await _next_fetch_window(
+            session,
+            claim,
+            cursor,
+            forward_end,
+            max_request_span=max_request_span,
+            max_request_slots=max_request_slots,
+        )
     if window is None:
-        gap = await _next_fetch_window(session, claim, start, end) if start < end else None
+        gap = (
+            await _next_fetch_window(
+                session,
+                claim,
+                start,
+                end,
+                max_request_span=max_request_span,
+                max_request_slots=max_request_slots,
+            )
+            if start < end
+            else None
+        )
         if phase == "FORWARD" and gap is not None:
             await update_claim(
                 session,
@@ -139,7 +238,12 @@ async def _prepare(session: MarketDataSession, claim: Claim) -> CandleWindow | N
             return None
         if phase == "REPAIR":
             window = await _next_fetch_window(
-                session, claim, max(row["repair_cursor"] or start, start), end
+                session,
+                claim,
+                max(row["repair_cursor"] or start, start),
+                end,
+                max_request_span=max_request_span,
+                max_request_slots=max_request_slots,
             )
             if window is None and gap is not None and row["repair_pass"] < 2:
                 await update_claim(
@@ -156,7 +260,13 @@ async def _prepare(session: MarketDataSession, claim: Claim) -> CandleWindow | N
         if window is None:
             if refresh_at is not None:
                 window = await _next_fetch_window(
-                    session, claim, max(row["refresh_cursor"] or start, start), end, refresh_at
+                    session,
+                    claim,
+                    max(row["refresh_cursor"] or start, start),
+                    end,
+                    refresh_at,
+                    max_request_span=max_request_span,
+                    max_request_slots=max_request_slots,
                 )
                 phase = "REFRESH"
             if window is None:
@@ -166,8 +276,11 @@ async def _prepare(session: MarketDataSession, claim: Claim) -> CandleWindow | N
                     "fetch_unit_id": None,
                     "fetch_start": None,
                     "fetch_end": None,
+                    "fetch_recent": False,
                     "attemptcount": 0,
                 }
+                if phase == "FORWARD" and gap is None:
+                    changes["cursor"] = end
                 if refresh_at is not None:
                     changes["refresh_served_at"] = refresh_at
                 if requested is not None and refresh_at is not None and requested > refresh_at:
@@ -188,14 +301,25 @@ async def _prepare(session: MarketDataSession, claim: Claim) -> CandleWindow | N
                     row["desired_start"] < row["leased_start"]
                     or row["desired_end"] > row["leased_end"]
                 ):
+                    # A right-only extension has already proved every slot in the
+                    # old lease. Continue at that boundary instead of restarting
+                    # the full retention window. A left extension still has to
+                    # begin at the newly requested start.
+                    expansion_cursor = (
+                        row["desired_start"]
+                        if row["desired_start"] < row["leased_start"]
+                        else row["leased_end"]
+                    )
                     changes.update(
                         status="PENDING",
                         phase="FORWARD",
                         leased_start=row["desired_start"],
                         leased_end=row["desired_end"],
-                        cursor=row["desired_start"],
+                        cursor=expansion_cursor,
                         refresh_cursor=None,
                         refresh_as_of=None,
+                        recent_cursor=None,
+                        recent_end=None,
                     )
                 else:
                     changes.update(status="COMPLETE", failure_code=None)
@@ -210,6 +334,7 @@ async def _prepare(session: MarketDataSession, claim: Claim) -> CandleWindow | N
         fetch_unit_id=uuid4(),
         fetch_start=window.start,
         fetch_end=window.end,
+        fetch_recent=False,
         attemptcount=0,
     )
     return window
@@ -278,6 +403,9 @@ async def _failure(session: MarketDataSession, claim: Claim, error: Exception) -
 async def run_round(
     engine: AsyncEngine, source: CandleSource, worker: str, as_of: datetime
 ) -> RoundSummary:
+    max_span = source.max_request_span
+    if max_span is not None and max_span <= timedelta(0):
+        raise ValueError("source span limit must be positive")
     async with market_data_session(engine) as session:
         await _seed_initial_demand(session)
     try:
@@ -297,7 +425,76 @@ async def run_round(
             claim = await claim_next(session, worker)
             if claim is None:
                 break
-            window = await _prepare(session, claim)
+            row = await lock_claim(session, claim)
+            discover = getattr(source, "earliest_open", None)
+            needs_discovery = (
+                discover is not None
+                and claim.timeframe in (Timeframe.W1, Timeframe.MN1)
+                and row["history_start"] is None
+                and row["fetch_unit_id"] is None
+            )
+            if needs_discovery:
+                if row["attemptcount"] >= 3:
+                    await update_claim(
+                        session,
+                        claim,
+                        release=True,
+                        status="FAILED",
+                        failure_code="SOURCE_FAILURE",
+                        next_attempt_at=await database_now(session) + timedelta(seconds=120),
+                    )
+                    continue
+                await update_claim(session, claim, attemptcount=row["attemptcount"] + 1)
+        if needs_discovery:
+            assert discover is not None
+            attempts += 1
+            try:
+                async with asyncio.timeout(MARKET_TIMEOUT.total_seconds()):
+                    earliest = await discover(Symbol(claim.base, claim.quote), claim.timeframe)
+                async with market_data_session(engine) as session:
+                    await lock_claim(session, claim)
+                    now = await database_now(session)
+                    if earliest != align_floor(earliest, claim.timeframe) or earliest > now:
+                        raise VenueProtocolError()
+                    await update_claim(
+                        session,
+                        claim,
+                        release=True,
+                        status="PENDING",
+                        history_start=earliest,
+                        history_checked_at=now,
+                        desired_start=earliest,
+                        leased_start=None,
+                        leased_end=None,
+                        cursor=None,
+                        phase="FORWARD",
+                        recent_cursor=None,
+                        recent_end=None,
+                        attemptcount=0,
+                        checked_at=now,
+                        failure_code=None,
+                    )
+            except (VenueError, TimeoutError, DatabaseTimeoutError, ValueError) as error:
+                try:
+                    async with market_data_session(engine) as session:
+                        if await _failure(session, claim, error):
+                            break
+                except StaleClaimError:
+                    stale += 1
+            except StaleClaimError:
+                stale += 1
+            continue
+        async with market_data_session(engine) as session:
+            slot_limit_method = getattr(source, "max_request_slots", None)
+            max_slots = slot_limit_method(claim.timeframe) if slot_limit_method else None
+            if max_slots is not None and not 1 <= max_slots <= 1000:
+                raise ValueError("source slot limit must be from 1 to 1000")
+            window = await _prepare(
+                session,
+                claim,
+                None if max_slots is not None else max_span,
+                max_slots,
+            )
             if window is None:
                 continue
             row = await lock_claim(session, claim)
@@ -329,12 +526,16 @@ async def run_round(
                 if refresh_unserved:
                     await _failure(session, claim, VenueUnavailableError())
                 else:
-                    column = {
-                        "FORWARD": "cursor",
-                        "REPAIR": "repair_cursor",
-                        "REFRESH": "refresh_cursor",
-                    }[row["phase"]]
-                    progress = window.end
+                    column = (
+                        "recent_cursor"
+                        if row["fetch_recent"]
+                        else {
+                            "FORWARD": "cursor",
+                            "REPAIR": "repair_cursor",
+                            "REFRESH": "refresh_cursor",
+                        }[row["phase"]]
+                    )
+                    progress = window.start if row["fetch_recent"] else window.end
                     if row["phase"] == "FORWARD" and len(page.candles) == 1000:
                         progress = page.candles[-1].end_at
                     await update_claim(
@@ -346,6 +547,7 @@ async def run_round(
                         fetch_unit_id=None,
                         fetch_start=None,
                         fetch_end=None,
+                        fetch_recent=False,
                         attemptcount=0,
                         failure_code=None,
                         **{column: progress},

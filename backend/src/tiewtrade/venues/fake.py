@@ -18,11 +18,12 @@
 from __future__ import annotations
 
 from collections import deque
-from collections.abc import AsyncIterator, Iterable, Mapping
-from datetime import datetime
+from collections.abc import AsyncGenerator, AsyncIterator, Iterable, Mapping
+from datetime import datetime, timedelta
 
-from tiewtrade.core.market_data import Timeframe
+from tiewtrade.core.market_data import CandleSeries, Timeframe
 from tiewtrade.core.realtime_prices import QuoteObservation
+from tiewtrade.venues.candle_streams import CandleFeedEvent
 from tiewtrade.venues.candles import (
     DEFAULT_CANDLES_COST,
     CandlePage,
@@ -45,6 +46,13 @@ from tiewtrade.venues.wallets import DEFAULT_HOLDINGS_COST, WalletHoldings
 
 class FakeVenue:
     """ตลาดปลอมที่ทำตามทั้งสามสัญญาของ F-33"""
+
+    max_request_span: timedelta | None = None
+
+    def max_request_slots(self, timeframe: Timeframe) -> int | None:
+        if not isinstance(timeframe, Timeframe):
+            raise ValueError("unsupported timeframe")
+        return None
 
     def __init__(
         self,
@@ -140,5 +148,18 @@ class FakePriceFeed:
         return quote
 
     async def events(self, symbols: tuple[Symbol, ...]) -> AsyncIterator[FeedEvent]:
+        for event in self._events:
+            yield event
+
+
+class FakeCandleFeed:
+    """Finite scripted candle events; no financial calculation or external I/O."""
+
+    def __init__(self, events: tuple[CandleFeedEvent, ...] = ()) -> None:
+        self._events = events
+
+    async def events(
+        self, series: tuple[CandleSeries, ...]
+    ) -> AsyncGenerator[CandleFeedEvent, None]:
         for event in self._events:
             yield event

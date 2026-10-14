@@ -1,0 +1,6 @@
+{
+  "status": 200,
+  "wall_seconds": 0.8536224359995686,
+  "cpu_seconds": 0.830368917,
+  "note": "Instrumented in-process ASGI, not browser/HTTP latency or parity acceptance"
+}

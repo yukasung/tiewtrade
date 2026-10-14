@@ -47,7 +47,7 @@ class CursorClaims(BaseModel):
 class PreparedCursorClaims(CursorClaims):
     format_version: Literal[2] = 2  # type: ignore[assignment]
     generation_id: UUID
-    codec_version: Literal[1] = 1
+    codec_version: Literal[2] = 2
     rollout_epoch: UUID
     dataset_revision: str = Field(pattern=r"^[0-9a-f]{64}$")
 
@@ -84,10 +84,19 @@ def _canonical(claims: CursorClaims) -> bytes:
     return json.dumps(data, sort_keys=True, separators=(",", ":"), ensure_ascii=True).encode()
 
 
-def _message(signed: str, user_id: UUID, token_hash: str, format_version: int = 1) -> bytes:
+def _message(
+    signed: str,
+    user_id: UUID,
+    token_hash: str,
+    format_version: int = 1,
+    *,
+    purpose: Literal["cursor", "chart-display-v1"] = "cursor",
+) -> bytes:
     return (
         (
-            b"tiewtrade.indicator.cursor.v1\0"
+            b"tiewtrade.chart.display.v1\0"
+            if purpose == "chart-display-v1"
+            else b"tiewtrade.indicator.cursor.v1\0"
             if format_version == 1
             else b"tiewtrade.indicator.cursor.v2\0"
         )
@@ -109,19 +118,37 @@ def validate_keys(keys: KeySource, others: tuple[KeySource, ...]) -> None:
         seen.add(key)
 
 
-def issue(claims: CursorClaims, keys: KeySource, user_id: UUID, token_hash: str) -> str:
+def issue(
+    claims: CursorClaims,
+    keys: KeySource,
+    user_id: UUID,
+    token_hash: str,
+    *,
+    purpose: Literal["cursor", "chart-display-v1"] = "cursor",
+) -> str:
     version, key = keys.current()
     signed = version + "." + _encode(_canonical(claims))
     return (
         signed
         + "."
         + _encode(
-            hmac.digest(key, _message(signed, user_id, token_hash, claims.format_version), "sha256")
+            hmac.digest(
+                key,
+                _message(signed, user_id, token_hash, claims.format_version, purpose=purpose),
+                "sha256",
+            )
         )
     )
 
 
-def verify(raw: str, keys: KeySource, user_id: UUID, token_hash: str) -> CursorClaims:
+def verify(
+    raw: str,
+    keys: KeySource,
+    user_id: UUID,
+    token_hash: str,
+    *,
+    purpose: Literal["cursor", "chart-display-v1"] = "cursor",
+) -> CursorClaims:
     try:
         if not raw.isascii() or len(raw) > 4096:
             raise CursorRejectedError()
@@ -144,7 +171,9 @@ def verify(raw: str, keys: KeySource, user_id: UUID, token_hash: str) -> CursorC
         except KeyConfigurationError:
             raise DatasetChangedError() from None
         expected = hmac.digest(
-            key, _message(version + "." + payload, user_id, token_hash, format_version), "sha256"
+            key,
+            _message(version + "." + payload, user_id, token_hash, format_version, purpose=purpose),
+            "sha256",
         )
         if not hmac.compare_digest(signature, expected):
             raise CursorRejectedError()

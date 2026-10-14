@@ -1,0 +1,781 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="15" failures="0" skipped="0" tests="49" time="3.425" timestamp="2026-10-12T20:15:54.210377+07:00" hostname="DESKTOP-RONGMEV"><properties><property name="hypothesis-statistics-tests/venues/binance_th/test_candle_stream_mapping.py::test_cumulative_order_ignores_event_time_and_detects_equal_progress_conflict" value="dGVzdHMvdmVudWVzL2JpbmFuY2VfdGgvdGVzdF9jYW5kbGVfc3RyZWFtX21hcHBpbmcucHk6OnRlc3RfY3VtdWxhdGl2ZV9vcmRlcl9pZ25vcmVzX2V2ZW50X3RpbWVfYW5kX2RldGVjdHNfZXF1YWxfcHJvZ3Jlc3NfY29uZmxpY3Q6CgogIC0gZHVyaW5nIGdlbmVyYXRlIHBoYXNlICgwLjExIHNlY29uZHMpOgogICAgLSBUeXBpY2FsIHJ1bnRpbWVzOiB+IDAtMSBtcywgb2Ygd2hpY2ggPCAxbXMgaW4gZGF0YSBnZW5lcmF0aW9uCiAgICAtIDEwMCBwYXNzaW5nLCAwIGZhaWxpbmcsIGFuZCAwIGludmFsaWQgdGVzdCBjYXNlcwoKICAtIFN0b3BwZWQgYmVjYXVzZSBzZXR0aW5ncy5tYXhfZXhhbXBsZXM9MTAw" /></properties><testcase classname="tests.api.test_chart_routes" name="test_bundle_matches_indicator_page_and_proof_invalidates_seed" time="1.187" /><testcase classname="tests.api.test_chart_routes" name="test_chart_auth_csrf_and_sanitized_input" time="0.224" /><testcase classname="tests.api.test_chart_routes" name="test_live_snapshot_is_role_read_only_and_admission_fails_closed" time="0.354" /><testcase classname="tests.infra.market_data.test_chart_preview" name="test_single_owner_fencing_and_two_slot_cap" time="0.208" /><testcase classname="tests.infra.crypto.test_chart_proof" name="test_proof_and_cursor_domains_never_interchange[False]" time="0.002" /><testcase classname="tests.infra.crypto.test_chart_proof" name="test_proof_and_cursor_domains_never_interchange[True]" time="0.001" /><testcase classname="tests.venues.binance_th.test_candle_stream_mapping" name="test_recorded_frames_all_decode_with_exact_ohlcv" time="0.009" /><testcase classname="tests.venues.binance_th.test_candle_stream_mapping" name="test_invalid_fields_fail_closed[n-True]" time="0.001" /><testcase classname="tests.venues.binance_th.test_candle_stream_mapping" name="test_invalid_fields_fail_closed[x-1]" time="0.001" /><testcase classname="tests.venues.binance_th.test_candle_stream_mapping" name="test_invalid_fields_fail_closed[o-1.2]" time="0.001" /><testcase classname="tests.venues.binance_th.test_candle_stream_mapping" name="test_invalid_fields_fail_closed[i-9m]" time="0.001" /><testcase classname="tests.venues.binance_th.test_candle_stream_mapping" name="test_invalid_fields_fail_closed[t-True]" time="0.001" /><testcase classname="tests.venues.binance_th.test_candle_stream_mapping" name="test_invalid_fields_fail_closed[v-NaN]" time="0.001" /><testcase classname="tests.venues.binance_th.test_candle_stream_mapping" name="test_invalid_fields_fail_closed[s-UNKNOWN]" time="0.001" /><testcase classname="tests.venues.binance_th.test_candle_stream_mapping" name="test_closure_hint_never_becomes_closed_history" time="0.001" /><testcase classname="tests.venues.binance_th.test_candle_stream_mapping" name="test_cumulative_order_ignores_event_time_and_detects_equal_progress_conflict" time="0.115" /><testcase classname="tests.venues.binance_th.test_stream_mapping" name="test_stream_trade_uses_trade_time_and_exact_price" time="0.001" /><testcase classname="tests.venues.binance_th.test_stream_mapping" name="test_stream_rejects_invalid_contract[t-True]" time="0.001" /><testcase classname="tests.venues.binance_th.test_stream_mapping" name="test_stream_rejects_invalid_contract[t--1]" time="0.001" /><testcase classname="tests.venues.binance_th.test_stream_mapping" name="test_stream_rejects_invalid_contract[p-1.2]" time="0.001" /><testcase classname="tests.venues.binance_th.test_stream_mapping" name="test_stream_rejects_invalid_contract[T-True]" time="0.001" /><testcase classname="tests.venues.binance_th.test_stream_mapping" name="test_stream_rejects_invalid_contract[s-BTCBUSD]" time="0.001" /><testcase classname="tests.venues.binance_th.test_stream_mapping" name="test_stream_rejects_invalid_contract[e-aggTrade]" time="0.001" /><testcase classname="tests.venues.binance_th.test_stream_mapping" name="test_ack_requires_exact_success_id" time="0.001" /><testcase classname="tests.venues.binance_th.test_stream_mapping" name="test_trade_ids_match_the_persistence_range[0-stream]" time="0.001" /><testcase classname="tests.venues.binance_th.test_stream_mapping" name="test_trade_ids_match_the_persistence_range[0-snapshot]" time="0.001" /><testcase classname="tests.venues.binance_th.test_stream_mapping" name="test_trade_ids_match_the_persistence_range[9223372036854775807-stream]" time="0.001" /><testcase classname="tests.venues.binance_th.test_stream_mapping" name="test_trade_ids_match_the_persistence_range[9223372036854775807-snapshot]" time="0.001" /><testcase classname="tests.venues.binance_th.test_stream_mapping" name="test_trade_ids_match_the_persistence_range[9223372036854775808-stream]" time="0.001" /><testcase classname="tests.venues.binance_th.test_stream_mapping" name="test_trade_ids_match_the_persistence_range[9223372036854775808-snapshot]" time="0.001" /><testcase classname="tests.venues.binance_th.test_stream_mapping" name="test_trade_ids_match_the_persistence_range[10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000-stream]" time="0.001" /><testcase classname="tests.venues.binance_th.test_stream_mapping" name="test_trade_ids_match_the_persistence_range[10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000-snapshot]" time="0.001" /><testcase classname="tests.venues.binance_th.test_stream_mapping" name="test_recorded_public_rest_and_stream_contract_covers_all_five_pairs" time="0.003" /><testcase classname="tests.venues.binance_th.test_stream_deadlines" name="test_ack_boundary_timeout_wins_without_duplicate_transition[4.999-True]" time="0.001"><error message="failed on setup with &quot;AssertionError: เทสต์ปกติต้องไม่เรียกเครือข่ายออกไปจริง&quot;">self = &lt;Coroutine test_ack_boundary_timeout_wins_without_duplicate_transition[4.999-True]&gt;
+
+    def setup(self) -&gt; None:
+        runner_fixture_id = f"_{self._loop_scope}_scoped_runner"
+        if runner_fixture_id not in self.fixturenames:
+            self.fixturenames.append(runner_fixture_id)
+        # When loop factories are configured, resolve the loop factory
+        # fixture early so that a factory variant change cascades cache
+        # invalidation before any async fixture checks its cache.
+        hook_caller = self.config.hook.pytest_asyncio_loop_factories
+        if hook_caller.get_hookimpls():
+            _ = self._request.getfixturevalue(_asyncio_loop_factory.__name__)
+&gt;       return super().setup()
+               ^^^^^^^^^^^^^^^
+
+.venv\Lib\site-packages\pytest_asyncio\plugin.py:558: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+.venv\Lib\site-packages\pytest_asyncio\plugin.py:926: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+.venv\Lib\site-packages\pytest_asyncio\plugin.py:1039: in _scoped_runner
+    ).__enter__()
+      ^^^^^^^^^^^
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\runners.py:58: in __enter__
+    self._lazy_init()
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\runners.py:137: in _lazy_init
+    self._loop = events.new_event_loop()
+                 ^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\events.py:823: in new_event_loop
+    return get_event_loop_policy().new_event_loop()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\events.py:720: in new_event_loop
+    return self._loop_factory()
+           ^^^^^^^^^^^^^^^^^^^^
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\windows_events.py:316: in __init__
+    super().__init__(proactor)
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\proactor_events.py:640: in __init__
+    self._make_self_pipe()
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\proactor_events.py:785: in _make_self_pipe
+    self._ssock, self._csock = socket.socketpair()
+                               ^^^^^^^^^^^^^^^^^^^
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\socket.py:642: in socketpair
+    csock.connect((addr, port))
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+args = (&lt;socket.socket [closed] fd=-1, family=2, type=1, proto=0&gt;, ('127.0.0.1', 12045))
+kwargs = {}
+
+    def refuse(*args: object, **kwargs: object) -&gt; None:
+&gt;       raise AssertionError("เทสต์ปกติต้องไม่เรียกเครือข่ายออกไปจริง")
+E       AssertionError: เทสต์ปกติต้องไม่เรียกเครือข่ายออกไปจริง
+
+tests\venues\binance_th\conftest.py:43: AssertionError</error></testcase><testcase classname="tests.venues.binance_th.test_stream_deadlines" name="test_ack_boundary_timeout_wins_without_duplicate_transition[5.0-False]" time="0.001"><error message="failed on setup with &quot;AssertionError: เทสต์ปกติต้องไม่เรียกเครือข่ายออกไปจริง&quot;">self = &lt;Coroutine test_ack_boundary_timeout_wins_without_duplicate_transition[5.0-False]&gt;
+
+    def setup(self) -&gt; None:
+        runner_fixture_id = f"_{self._loop_scope}_scoped_runner"
+        if runner_fixture_id not in self.fixturenames:
+            self.fixturenames.append(runner_fixture_id)
+        # When loop factories are configured, resolve the loop factory
+        # fixture early so that a factory variant change cascades cache
+        # invalidation before any async fixture checks its cache.
+        hook_caller = self.config.hook.pytest_asyncio_loop_factories
+        if hook_caller.get_hookimpls():
+            _ = self._request.getfixturevalue(_asyncio_loop_factory.__name__)
+&gt;       return super().setup()
+               ^^^^^^^^^^^^^^^
+
+.venv\Lib\site-packages\pytest_asyncio\plugin.py:558: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+.venv\Lib\site-packages\pytest_asyncio\plugin.py:926: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+.venv\Lib\site-packages\pytest_asyncio\plugin.py:1039: in _scoped_runner
+    ).__enter__()
+      ^^^^^^^^^^^
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\runners.py:58: in __enter__
+    self._lazy_init()
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\runners.py:137: in _lazy_init
+    self._loop = events.new_event_loop()
+                 ^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\events.py:823: in new_event_loop
+    return get_event_loop_policy().new_event_loop()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\events.py:720: in new_event_loop
+    return self._loop_factory()
+           ^^^^^^^^^^^^^^^^^^^^
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\windows_events.py:316: in __init__
+    super().__init__(proactor)
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\proactor_events.py:640: in __init__
+    self._make_self_pipe()
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\proactor_events.py:785: in _make_self_pipe
+    self._ssock, self._csock = socket.socketpair()
+                               ^^^^^^^^^^^^^^^^^^^
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\socket.py:642: in socketpair
+    csock.connect((addr, port))
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+args = (&lt;socket.socket [closed] fd=-1, family=2, type=1, proto=0&gt;, ('127.0.0.1', 12046))
+kwargs = {}
+
+    def refuse(*args: object, **kwargs: object) -&gt; None:
+&gt;       raise AssertionError("เทสต์ปกติต้องไม่เรียกเครือข่ายออกไปจริง")
+E       AssertionError: เทสต์ปกติต้องไม่เรียกเครือข่ายออกไปจริง
+
+tests\venues\binance_th\conftest.py:43: AssertionError</error></testcase><testcase classname="tests.venues.binance_th.test_stream_deadlines" name="test_ack_boundary_timeout_wins_without_duplicate_transition[5.001-False]" time="0.003"><error message="failed on setup with &quot;AssertionError: เทสต์ปกติต้องไม่เรียกเครือข่ายออกไปจริง&quot;">self = &lt;Coroutine test_ack_boundary_timeout_wins_without_duplicate_transition[5.001-False]&gt;
+
+    def setup(self) -&gt; None:
+        runner_fixture_id = f"_{self._loop_scope}_scoped_runner"
+        if runner_fixture_id not in self.fixturenames:
+            self.fixturenames.append(runner_fixture_id)
+        # When loop factories are configured, resolve the loop factory
+        # fixture early so that a factory variant change cascades cache
+        # invalidation before any async fixture checks its cache.
+        hook_caller = self.config.hook.pytest_asyncio_loop_factories
+        if hook_caller.get_hookimpls():
+            _ = self._request.getfixturevalue(_asyncio_loop_factory.__name__)
+&gt;       return super().setup()
+               ^^^^^^^^^^^^^^^
+
+.venv\Lib\site-packages\pytest_asyncio\plugin.py:558: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+.venv\Lib\site-packages\pytest_asyncio\plugin.py:926: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+.venv\Lib\site-packages\pytest_asyncio\plugin.py:1039: in _scoped_runner
+    ).__enter__()
+      ^^^^^^^^^^^
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\runners.py:58: in __enter__
+    self._lazy_init()
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\runners.py:137: in _lazy_init
+    self._loop = events.new_event_loop()
+                 ^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\events.py:823: in new_event_loop
+    return get_event_loop_policy().new_event_loop()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\events.py:720: in new_event_loop
+    return self._loop_factory()
+           ^^^^^^^^^^^^^^^^^^^^
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\windows_events.py:316: in __init__
+    super().__init__(proactor)
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\proactor_events.py:640: in __init__
+    self._make_self_pipe()
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\proactor_events.py:785: in _make_self_pipe
+    self._ssock, self._csock = socket.socketpair()
+                               ^^^^^^^^^^^^^^^^^^^
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\socket.py:642: in socketpair
+    csock.connect((addr, port))
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+args = (&lt;socket.socket [closed] fd=-1, family=2, type=1, proto=0&gt;, ('127.0.0.1', 12047))
+kwargs = {}
+
+    def refuse(*args: object, **kwargs: object) -&gt; None:
+&gt;       raise AssertionError("เทสต์ปกติต้องไม่เรียกเครือข่ายออกไปจริง")
+E       AssertionError: เทสต์ปกติต้องไม่เรียกเครือข่ายออกไปจริง
+
+tests\venues\binance_th\conftest.py:43: AssertionError</error></testcase><testcase classname="tests.venues.binance_th.test_stream_deadlines" name="test_wrong_generation_and_pre_ack_trade_do_not_extend_deadline[{&quot;result&quot;:null,&quot;id&quot;:6}]" time="0.001"><error message="failed on setup with &quot;AssertionError: เทสต์ปกติต้องไม่เรียกเครือข่ายออกไปจริง&quot;">self = &lt;Coroutine test_wrong_generation_and_pre_ack_trade_do_not_extend_deadline[{"result":null,"id":6}]&gt;
+
+    def setup(self) -&gt; None:
+        runner_fixture_id = f"_{self._loop_scope}_scoped_runner"
+        if runner_fixture_id not in self.fixturenames:
+            self.fixturenames.append(runner_fixture_id)
+        # When loop factories are configured, resolve the loop factory
+        # fixture early so that a factory variant change cascades cache
+        # invalidation before any async fixture checks its cache.
+        hook_caller = self.config.hook.pytest_asyncio_loop_factories
+        if hook_caller.get_hookimpls():
+            _ = self._request.getfixturevalue(_asyncio_loop_factory.__name__)
+&gt;       return super().setup()
+               ^^^^^^^^^^^^^^^
+
+.venv\Lib\site-packages\pytest_asyncio\plugin.py:558: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+.venv\Lib\site-packages\pytest_asyncio\plugin.py:926: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+.venv\Lib\site-packages\pytest_asyncio\plugin.py:1039: in _scoped_runner
+    ).__enter__()
+      ^^^^^^^^^^^
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\runners.py:58: in __enter__
+    self._lazy_init()
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\runners.py:137: in _lazy_init
+    self._loop = events.new_event_loop()
+                 ^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\events.py:823: in new_event_loop
+    return get_event_loop_policy().new_event_loop()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\events.py:720: in new_event_loop
+    return self._loop_factory()
+           ^^^^^^^^^^^^^^^^^^^^
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\windows_events.py:316: in __init__
+    super().__init__(proactor)
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\proactor_events.py:640: in __init__
+    self._make_self_pipe()
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\proactor_events.py:785: in _make_self_pipe
+    self._ssock, self._csock = socket.socketpair()
+                               ^^^^^^^^^^^^^^^^^^^
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\socket.py:642: in socketpair
+    csock.connect((addr, port))
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+args = (&lt;socket.socket [closed] fd=-1, family=2, type=1, proto=0&gt;, ('127.0.0.1', 12049))
+kwargs = {}
+
+    def refuse(*args: object, **kwargs: object) -&gt; None:
+&gt;       raise AssertionError("เทสต์ปกติต้องไม่เรียกเครือข่ายออกไปจริง")
+E       AssertionError: เทสต์ปกติต้องไม่เรียกเครือข่ายออกไปจริง
+
+tests\venues\binance_th\conftest.py:43: AssertionError</error></testcase><testcase classname="tests.venues.binance_th.test_stream_deadlines" name="test_wrong_generation_and_pre_ack_trade_do_not_extend_deadline[{&quot;stream&quot;: &quot;btcusdt@trade&quot;, &quot;data&quot;: {&quot;e&quot;: &quot;trade&quot;, &quot;s&quot;: &quot;BTCUSDT&quot;, &quot;t&quot;: 1, &quot;p&quot;: &quot;10&quot;, &quot;T&quot;: 1791331200000}}]" time="0.001"><error message="failed on setup with &quot;AssertionError: เทสต์ปกติต้องไม่เรียกเครือข่ายออกไปจริง&quot;">self = &lt;Coroutine test_wrong_generation_and_pre_ack_trade_do_not_extend_deadline[{"stream": "btcusdt@trade", "data": {"e": "trade", "s": "BTCUSDT", "t": 1, "p": "10", "T": 1791331200000}}]&gt;
+
+    def setup(self) -&gt; None:
+        runner_fixture_id = f"_{self._loop_scope}_scoped_runner"
+        if runner_fixture_id not in self.fixturenames:
+            self.fixturenames.append(runner_fixture_id)
+        # When loop factories are configured, resolve the loop factory
+        # fixture early so that a factory variant change cascades cache
+        # invalidation before any async fixture checks its cache.
+        hook_caller = self.config.hook.pytest_asyncio_loop_factories
+        if hook_caller.get_hookimpls():
+            _ = self._request.getfixturevalue(_asyncio_loop_factory.__name__)
+&gt;       return super().setup()
+               ^^^^^^^^^^^^^^^
+
+.venv\Lib\site-packages\pytest_asyncio\plugin.py:558: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+.venv\Lib\site-packages\pytest_asyncio\plugin.py:926: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+.venv\Lib\site-packages\pytest_asyncio\plugin.py:1039: in _scoped_runner
+    ).__enter__()
+      ^^^^^^^^^^^
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\runners.py:58: in __enter__
+    self._lazy_init()
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\runners.py:137: in _lazy_init
+    self._loop = events.new_event_loop()
+                 ^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\events.py:823: in new_event_loop
+    return get_event_loop_policy().new_event_loop()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\events.py:720: in new_event_loop
+    return self._loop_factory()
+           ^^^^^^^^^^^^^^^^^^^^
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\windows_events.py:316: in __init__
+    super().__init__(proactor)
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\proactor_events.py:640: in __init__
+    self._make_self_pipe()
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\proactor_events.py:785: in _make_self_pipe
+    self._ssock, self._csock = socket.socketpair()
+                               ^^^^^^^^^^^^^^^^^^^
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\socket.py:642: in socketpair
+    csock.connect((addr, port))
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+args = (&lt;socket.socket [closed] fd=-1, family=2, type=1, proto=0&gt;, ('127.0.0.1', 12050))
+kwargs = {}
+
+    def refuse(*args: object, **kwargs: object) -&gt; None:
+&gt;       raise AssertionError("เทสต์ปกติต้องไม่เรียกเครือข่ายออกไปจริง")
+E       AssertionError: เทสต์ปกติต้องไม่เรียกเครือข่ายออกไปจริง
+
+tests\venues\binance_th\conftest.py:43: AssertionError</error></testcase><testcase classname="tests.venues.binance_th.test_stream_deadlines" name="test_send_wait_is_included_in_subscription_deadline" time="0.002"><error message="failed on setup with &quot;AssertionError: เทสต์ปกติต้องไม่เรียกเครือข่ายออกไปจริง&quot;">self = &lt;Coroutine test_send_wait_is_included_in_subscription_deadline&gt;
+
+    def setup(self) -&gt; None:
+        runner_fixture_id = f"_{self._loop_scope}_scoped_runner"
+        if runner_fixture_id not in self.fixturenames:
+            self.fixturenames.append(runner_fixture_id)
+        # When loop factories are configured, resolve the loop factory
+        # fixture early so that a factory variant change cascades cache
+        # invalidation before any async fixture checks its cache.
+        hook_caller = self.config.hook.pytest_asyncio_loop_factories
+        if hook_caller.get_hookimpls():
+            _ = self._request.getfixturevalue(_asyncio_loop_factory.__name__)
+&gt;       return super().setup()
+               ^^^^^^^^^^^^^^^
+
+.venv\Lib\site-packages\pytest_asyncio\plugin.py:558: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+.venv\Lib\site-packages\pytest_asyncio\plugin.py:926: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+.venv\Lib\site-packages\pytest_asyncio\plugin.py:1039: in _scoped_runner
+    ).__enter__()
+      ^^^^^^^^^^^
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\runners.py:58: in __enter__
+    self._lazy_init()
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\runners.py:137: in _lazy_init
+    self._loop = events.new_event_loop()
+                 ^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\events.py:823: in new_event_loop
+    return get_event_loop_policy().new_event_loop()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\events.py:720: in new_event_loop
+    return self._loop_factory()
+           ^^^^^^^^^^^^^^^^^^^^
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\windows_events.py:316: in __init__
+    super().__init__(proactor)
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\proactor_events.py:640: in __init__
+    self._make_self_pipe()
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\proactor_events.py:785: in _make_self_pipe
+    self._ssock, self._csock = socket.socketpair()
+                               ^^^^^^^^^^^^^^^^^^^
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\socket.py:642: in socketpair
+    csock.connect((addr, port))
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+args = (&lt;socket.socket [closed] fd=-1, family=2, type=1, proto=0&gt;, ('127.0.0.1', 12051))
+kwargs = {}
+
+    def refuse(*args: object, **kwargs: object) -&gt; None:
+&gt;       raise AssertionError("เทสต์ปกติต้องไม่เรียกเครือข่ายออกไปจริง")
+E       AssertionError: เทสต์ปกติต้องไม่เรียกเครือข่ายออกไปจริง
+
+tests\venues\binance_th\conftest.py:43: AssertionError</error></testcase><testcase classname="tests.venues.binance_th.test_stream_deadlines" name="test_blocked_send_is_cancelled_by_total_deadline" time="0.001"><error message="failed on setup with &quot;AssertionError: เทสต์ปกติต้องไม่เรียกเครือข่ายออกไปจริง&quot;">self = &lt;Coroutine test_blocked_send_is_cancelled_by_total_deadline&gt;
+
+    def setup(self) -&gt; None:
+        runner_fixture_id = f"_{self._loop_scope}_scoped_runner"
+        if runner_fixture_id not in self.fixturenames:
+            self.fixturenames.append(runner_fixture_id)
+        # When loop factories are configured, resolve the loop factory
+        # fixture early so that a factory variant change cascades cache
+        # invalidation before any async fixture checks its cache.
+        hook_caller = self.config.hook.pytest_asyncio_loop_factories
+        if hook_caller.get_hookimpls():
+            _ = self._request.getfixturevalue(_asyncio_loop_factory.__name__)
+&gt;       return super().setup()
+               ^^^^^^^^^^^^^^^
+
+.venv\Lib\site-packages\pytest_asyncio\plugin.py:558: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+.venv\Lib\site-packages\pytest_asyncio\plugin.py:926: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+.venv\Lib\site-packages\pytest_asyncio\plugin.py:1039: in _scoped_runner
+    ).__enter__()
+      ^^^^^^^^^^^
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\runners.py:58: in __enter__
+    self._lazy_init()
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\runners.py:137: in _lazy_init
+    self._loop = events.new_event_loop()
+                 ^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\events.py:823: in new_event_loop
+    return get_event_loop_policy().new_event_loop()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\events.py:720: in new_event_loop
+    return self._loop_factory()
+           ^^^^^^^^^^^^^^^^^^^^
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\windows_events.py:316: in __init__
+    super().__init__(proactor)
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\proactor_events.py:640: in __init__
+    self._make_self_pipe()
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\proactor_events.py:785: in _make_self_pipe
+    self._ssock, self._csock = socket.socketpair()
+                               ^^^^^^^^^^^^^^^^^^^
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\socket.py:642: in socketpair
+    csock.connect((addr, port))
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+args = (&lt;socket.socket [closed] fd=-1, family=2, type=1, proto=0&gt;, ('127.0.0.1', 12052))
+kwargs = {}
+
+    def refuse(*args: object, **kwargs: object) -&gt; None:
+&gt;       raise AssertionError("เทสต์ปกติต้องไม่เรียกเครือข่ายออกไปจริง")
+E       AssertionError: เทสต์ปกติต้องไม่เรียกเครือข่ายออกไปจริง
+
+tests\venues\binance_th\conftest.py:43: AssertionError</error></testcase><testcase classname="tests.venues.binance_th.test_stream_deadlines" name="test_send_error_invalidates_once" time="0.003"><error message="failed on setup with &quot;AssertionError: เทสต์ปกติต้องไม่เรียกเครือข่ายออกไปจริง&quot;">self = &lt;Coroutine test_send_error_invalidates_once&gt;
+
+    def setup(self) -&gt; None:
+        runner_fixture_id = f"_{self._loop_scope}_scoped_runner"
+        if runner_fixture_id not in self.fixturenames:
+            self.fixturenames.append(runner_fixture_id)
+        # When loop factories are configured, resolve the loop factory
+        # fixture early so that a factory variant change cascades cache
+        # invalidation before any async fixture checks its cache.
+        hook_caller = self.config.hook.pytest_asyncio_loop_factories
+        if hook_caller.get_hookimpls():
+            _ = self._request.getfixturevalue(_asyncio_loop_factory.__name__)
+&gt;       return super().setup()
+               ^^^^^^^^^^^^^^^
+
+.venv\Lib\site-packages\pytest_asyncio\plugin.py:558: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+.venv\Lib\site-packages\pytest_asyncio\plugin.py:926: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+.venv\Lib\site-packages\pytest_asyncio\plugin.py:1039: in _scoped_runner
+    ).__enter__()
+      ^^^^^^^^^^^
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\runners.py:58: in __enter__
+    self._lazy_init()
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\runners.py:137: in _lazy_init
+    self._loop = events.new_event_loop()
+                 ^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\events.py:823: in new_event_loop
+    return get_event_loop_policy().new_event_loop()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\events.py:720: in new_event_loop
+    return self._loop_factory()
+           ^^^^^^^^^^^^^^^^^^^^
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\windows_events.py:316: in __init__
+    super().__init__(proactor)
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\proactor_events.py:640: in __init__
+    self._make_self_pipe()
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\proactor_events.py:785: in _make_self_pipe
+    self._ssock, self._csock = socket.socketpair()
+                               ^^^^^^^^^^^^^^^^^^^
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\socket.py:642: in socketpair
+    csock.connect((addr, port))
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+args = (&lt;socket.socket [closed] fd=-1, family=2, type=1, proto=0&gt;, ('127.0.0.1', 12053))
+kwargs = {}
+
+    def refuse(*args: object, **kwargs: object) -&gt; None:
+&gt;       raise AssertionError("เทสต์ปกติต้องไม่เรียกเครือข่ายออกไปจริง")
+E       AssertionError: เทสต์ปกติต้องไม่เรียกเครือข่ายออกไปจริง
+
+tests\venues\binance_th\conftest.py:43: AssertionError</error></testcase><testcase classname="tests.venues.binance_th.test_stream_deadlines" name="test_duplicate_ack_does_not_repeat_connected" time="0.001"><error message="failed on setup with &quot;AssertionError: เทสต์ปกติต้องไม่เรียกเครือข่ายออกไปจริง&quot;">self = &lt;Coroutine test_duplicate_ack_does_not_repeat_connected&gt;
+
+    def setup(self) -&gt; None:
+        runner_fixture_id = f"_{self._loop_scope}_scoped_runner"
+        if runner_fixture_id not in self.fixturenames:
+            self.fixturenames.append(runner_fixture_id)
+        # When loop factories are configured, resolve the loop factory
+        # fixture early so that a factory variant change cascades cache
+        # invalidation before any async fixture checks its cache.
+        hook_caller = self.config.hook.pytest_asyncio_loop_factories
+        if hook_caller.get_hookimpls():
+            _ = self._request.getfixturevalue(_asyncio_loop_factory.__name__)
+&gt;       return super().setup()
+               ^^^^^^^^^^^^^^^
+
+.venv\Lib\site-packages\pytest_asyncio\plugin.py:558: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+.venv\Lib\site-packages\pytest_asyncio\plugin.py:926: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+.venv\Lib\site-packages\pytest_asyncio\plugin.py:1039: in _scoped_runner
+    ).__enter__()
+      ^^^^^^^^^^^
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\runners.py:58: in __enter__
+    self._lazy_init()
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\runners.py:137: in _lazy_init
+    self._loop = events.new_event_loop()
+                 ^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\events.py:823: in new_event_loop
+    return get_event_loop_policy().new_event_loop()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\events.py:720: in new_event_loop
+    return self._loop_factory()
+           ^^^^^^^^^^^^^^^^^^^^
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\windows_events.py:316: in __init__
+    super().__init__(proactor)
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\proactor_events.py:640: in __init__
+    self._make_self_pipe()
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\proactor_events.py:785: in _make_self_pipe
+    self._ssock, self._csock = socket.socketpair()
+                               ^^^^^^^^^^^^^^^^^^^
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\socket.py:642: in socketpair
+    csock.connect((addr, port))
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+args = (&lt;socket.socket [closed] fd=-1, family=2, type=1, proto=0&gt;, ('127.0.0.1', 12054))
+kwargs = {}
+
+    def refuse(*args: object, **kwargs: object) -&gt; None:
+&gt;       raise AssertionError("เทสต์ปกติต้องไม่เรียกเครือข่ายออกไปจริง")
+E       AssertionError: เทสต์ปกติต้องไม่เรียกเครือข่ายออกไปจริง
+
+tests\venues\binance_th\conftest.py:43: AssertionError</error></testcase><testcase classname="tests.venues.binance_th.test_stream_deadlines" name="test_oversized_trade_id_invalidates_without_emitting_a_quote" time="0.003"><error message="failed on setup with &quot;AssertionError: เทสต์ปกติต้องไม่เรียกเครือข่ายออกไปจริง&quot;">self = &lt;Coroutine test_oversized_trade_id_invalidates_without_emitting_a_quote&gt;
+
+    def setup(self) -&gt; None:
+        runner_fixture_id = f"_{self._loop_scope}_scoped_runner"
+        if runner_fixture_id not in self.fixturenames:
+            self.fixturenames.append(runner_fixture_id)
+        # When loop factories are configured, resolve the loop factory
+        # fixture early so that a factory variant change cascades cache
+        # invalidation before any async fixture checks its cache.
+        hook_caller = self.config.hook.pytest_asyncio_loop_factories
+        if hook_caller.get_hookimpls():
+            _ = self._request.getfixturevalue(_asyncio_loop_factory.__name__)
+&gt;       return super().setup()
+               ^^^^^^^^^^^^^^^
+
+.venv\Lib\site-packages\pytest_asyncio\plugin.py:558: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+.venv\Lib\site-packages\pytest_asyncio\plugin.py:926: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+.venv\Lib\site-packages\pytest_asyncio\plugin.py:1039: in _scoped_runner
+    ).__enter__()
+      ^^^^^^^^^^^
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\runners.py:58: in __enter__
+    self._lazy_init()
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\runners.py:137: in _lazy_init
+    self._loop = events.new_event_loop()
+                 ^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\events.py:823: in new_event_loop
+    return get_event_loop_policy().new_event_loop()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\events.py:720: in new_event_loop
+    return self._loop_factory()
+           ^^^^^^^^^^^^^^^^^^^^
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\windows_events.py:316: in __init__
+    super().__init__(proactor)
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\proactor_events.py:640: in __init__
+    self._make_self_pipe()
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\proactor_events.py:785: in _make_self_pipe
+    self._ssock, self._csock = socket.socketpair()
+                               ^^^^^^^^^^^^^^^^^^^
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\socket.py:642: in socketpair
+    csock.connect((addr, port))
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+args = (&lt;socket.socket [closed] fd=-1, family=2, type=1, proto=0&gt;, ('127.0.0.1', 12055))
+kwargs = {}
+
+    def refuse(*args: object, **kwargs: object) -&gt; None:
+&gt;       raise AssertionError("เทสต์ปกติต้องไม่เรียกเครือข่ายออกไปจริง")
+E       AssertionError: เทสต์ปกติต้องไม่เรียกเครือข่ายออกไปจริง
+
+tests\venues\binance_th\conftest.py:43: AssertionError</error></testcase><testcase classname="tests.venues.binance_th.test_stream_deadlines" name="test_bad_ack_uses_protocol_failure[{&quot;result&quot;:null,&quot;id&quot;:true}]" time="0.001"><error message="failed on setup with &quot;AssertionError: เทสต์ปกติต้องไม่เรียกเครือข่ายออกไปจริง&quot;">self = &lt;Coroutine test_bad_ack_uses_protocol_failure[{"result":null,"id":true}]&gt;
+
+    def setup(self) -&gt; None:
+        runner_fixture_id = f"_{self._loop_scope}_scoped_runner"
+        if runner_fixture_id not in self.fixturenames:
+            self.fixturenames.append(runner_fixture_id)
+        # When loop factories are configured, resolve the loop factory
+        # fixture early so that a factory variant change cascades cache
+        # invalidation before any async fixture checks its cache.
+        hook_caller = self.config.hook.pytest_asyncio_loop_factories
+        if hook_caller.get_hookimpls():
+            _ = self._request.getfixturevalue(_asyncio_loop_factory.__name__)
+&gt;       return super().setup()
+               ^^^^^^^^^^^^^^^
+
+.venv\Lib\site-packages\pytest_asyncio\plugin.py:558: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+.venv\Lib\site-packages\pytest_asyncio\plugin.py:926: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+.venv\Lib\site-packages\pytest_asyncio\plugin.py:1039: in _scoped_runner
+    ).__enter__()
+      ^^^^^^^^^^^
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\runners.py:58: in __enter__
+    self._lazy_init()
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\runners.py:137: in _lazy_init
+    self._loop = events.new_event_loop()
+                 ^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\events.py:823: in new_event_loop
+    return get_event_loop_policy().new_event_loop()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\events.py:720: in new_event_loop
+    return self._loop_factory()
+           ^^^^^^^^^^^^^^^^^^^^
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\windows_events.py:316: in __init__
+    super().__init__(proactor)
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\proactor_events.py:640: in __init__
+    self._make_self_pipe()
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\proactor_events.py:785: in _make_self_pipe
+    self._ssock, self._csock = socket.socketpair()
+                               ^^^^^^^^^^^^^^^^^^^
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\socket.py:642: in socketpair
+    csock.connect((addr, port))
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+args = (&lt;socket.socket [closed] fd=-1, family=2, type=1, proto=0&gt;, ('127.0.0.1', 12056))
+kwargs = {}
+
+    def refuse(*args: object, **kwargs: object) -&gt; None:
+&gt;       raise AssertionError("เทสต์ปกติต้องไม่เรียกเครือข่ายออกไปจริง")
+E       AssertionError: เทสต์ปกติต้องไม่เรียกเครือข่ายออกไปจริง
+
+tests\venues\binance_th\conftest.py:43: AssertionError</error></testcase><testcase classname="tests.venues.binance_th.test_stream_deadlines" name="test_bad_ack_uses_protocol_failure[{&quot;code&quot;:2,&quot;id&quot;:7}]" time="0.001"><error message="failed on setup with &quot;AssertionError: เทสต์ปกติต้องไม่เรียกเครือข่ายออกไปจริง&quot;">self = &lt;Coroutine test_bad_ack_uses_protocol_failure[{"code":2,"id":7}]&gt;
+
+    def setup(self) -&gt; None:
+        runner_fixture_id = f"_{self._loop_scope}_scoped_runner"
+        if runner_fixture_id not in self.fixturenames:
+            self.fixturenames.append(runner_fixture_id)
+        # When loop factories are configured, resolve the loop factory
+        # fixture early so that a factory variant change cascades cache
+        # invalidation before any async fixture checks its cache.
+        hook_caller = self.config.hook.pytest_asyncio_loop_factories
+        if hook_caller.get_hookimpls():
+            _ = self._request.getfixturevalue(_asyncio_loop_factory.__name__)
+&gt;       return super().setup()
+               ^^^^^^^^^^^^^^^
+
+.venv\Lib\site-packages\pytest_asyncio\plugin.py:558: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+.venv\Lib\site-packages\pytest_asyncio\plugin.py:926: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+.venv\Lib\site-packages\pytest_asyncio\plugin.py:1039: in _scoped_runner
+    ).__enter__()
+      ^^^^^^^^^^^
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\runners.py:58: in __enter__
+    self._lazy_init()
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\runners.py:137: in _lazy_init
+    self._loop = events.new_event_loop()
+                 ^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\events.py:823: in new_event_loop
+    return get_event_loop_policy().new_event_loop()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\events.py:720: in new_event_loop
+    return self._loop_factory()
+           ^^^^^^^^^^^^^^^^^^^^
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\windows_events.py:316: in __init__
+    super().__init__(proactor)
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\proactor_events.py:640: in __init__
+    self._make_self_pipe()
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\proactor_events.py:785: in _make_self_pipe
+    self._ssock, self._csock = socket.socketpair()
+                               ^^^^^^^^^^^^^^^^^^^
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\socket.py:642: in socketpair
+    csock.connect((addr, port))
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+args = (&lt;socket.socket [closed] fd=-1, family=2, type=1, proto=0&gt;, ('127.0.0.1', 12057))
+kwargs = {}
+
+    def refuse(*args: object, **kwargs: object) -&gt; None:
+&gt;       raise AssertionError("เทสต์ปกติต้องไม่เรียกเครือข่ายออกไปจริง")
+E       AssertionError: เทสต์ปกติต้องไม่เรียกเครือข่ายออกไปจริง
+
+tests\venues\binance_th\conftest.py:43: AssertionError</error></testcase><testcase classname="tests.venues.binance_th.test_stream_deadlines" name="test_bad_ack_uses_protocol_failure[{]" time="0.003"><error message="failed on setup with &quot;AssertionError: เทสต์ปกติต้องไม่เรียกเครือข่ายออกไปจริง&quot;">self = &lt;Coroutine test_bad_ack_uses_protocol_failure[{]&gt;
+
+    def setup(self) -&gt; None:
+        runner_fixture_id = f"_{self._loop_scope}_scoped_runner"
+        if runner_fixture_id not in self.fixturenames:
+            self.fixturenames.append(runner_fixture_id)
+        # When loop factories are configured, resolve the loop factory
+        # fixture early so that a factory variant change cascades cache
+        # invalidation before any async fixture checks its cache.
+        hook_caller = self.config.hook.pytest_asyncio_loop_factories
+        if hook_caller.get_hookimpls():
+            _ = self._request.getfixturevalue(_asyncio_loop_factory.__name__)
+&gt;       return super().setup()
+               ^^^^^^^^^^^^^^^
+
+.venv\Lib\site-packages\pytest_asyncio\plugin.py:558: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+.venv\Lib\site-packages\pytest_asyncio\plugin.py:926: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+.venv\Lib\site-packages\pytest_asyncio\plugin.py:1039: in _scoped_runner
+    ).__enter__()
+      ^^^^^^^^^^^
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\runners.py:58: in __enter__
+    self._lazy_init()
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\runners.py:137: in _lazy_init
+    self._loop = events.new_event_loop()
+                 ^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\events.py:823: in new_event_loop
+    return get_event_loop_policy().new_event_loop()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\events.py:720: in new_event_loop
+    return self._loop_factory()
+           ^^^^^^^^^^^^^^^^^^^^
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\windows_events.py:316: in __init__
+    super().__init__(proactor)
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\proactor_events.py:640: in __init__
+    self._make_self_pipe()
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\proactor_events.py:785: in _make_self_pipe
+    self._ssock, self._csock = socket.socketpair()
+                               ^^^^^^^^^^^^^^^^^^^
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\socket.py:642: in socketpair
+    csock.connect((addr, port))
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+args = (&lt;socket.socket [closed] fd=-1, family=2, type=1, proto=0&gt;, ('127.0.0.1', 12058))
+kwargs = {}
+
+    def refuse(*args: object, **kwargs: object) -&gt; None:
+&gt;       raise AssertionError("เทสต์ปกติต้องไม่เรียกเครือข่ายออกไปจริง")
+E       AssertionError: เทสต์ปกติต้องไม่เรียกเครือข่ายออกไปจริง
+
+tests\venues\binance_th\conftest.py:43: AssertionError</error></testcase><testcase classname="tests.venues.binance_th.test_stream_deadlines" name="test_rotation_does_not_emit_a_trade_received_at_expiry" time="0.001"><error message="failed on setup with &quot;AssertionError: เทสต์ปกติต้องไม่เรียกเครือข่ายออกไปจริง&quot;">self = &lt;Coroutine test_rotation_does_not_emit_a_trade_received_at_expiry&gt;
+
+    def setup(self) -&gt; None:
+        runner_fixture_id = f"_{self._loop_scope}_scoped_runner"
+        if runner_fixture_id not in self.fixturenames:
+            self.fixturenames.append(runner_fixture_id)
+        # When loop factories are configured, resolve the loop factory
+        # fixture early so that a factory variant change cascades cache
+        # invalidation before any async fixture checks its cache.
+        hook_caller = self.config.hook.pytest_asyncio_loop_factories
+        if hook_caller.get_hookimpls():
+            _ = self._request.getfixturevalue(_asyncio_loop_factory.__name__)
+&gt;       return super().setup()
+               ^^^^^^^^^^^^^^^
+
+.venv\Lib\site-packages\pytest_asyncio\plugin.py:558: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+.venv\Lib\site-packages\pytest_asyncio\plugin.py:926: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+.venv\Lib\site-packages\pytest_asyncio\plugin.py:1039: in _scoped_runner
+    ).__enter__()
+      ^^^^^^^^^^^
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\runners.py:58: in __enter__
+    self._lazy_init()
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\runners.py:137: in _lazy_init
+    self._loop = events.new_event_loop()
+                 ^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\events.py:823: in new_event_loop
+    return get_event_loop_policy().new_event_loop()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\events.py:720: in new_event_loop
+    return self._loop_factory()
+           ^^^^^^^^^^^^^^^^^^^^
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\windows_events.py:316: in __init__
+    super().__init__(proactor)
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\proactor_events.py:640: in __init__
+    self._make_self_pipe()
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\proactor_events.py:785: in _make_self_pipe
+    self._ssock, self._csock = socket.socketpair()
+                               ^^^^^^^^^^^^^^^^^^^
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\socket.py:642: in socketpair
+    csock.connect((addr, port))
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+args = (&lt;socket.socket [closed] fd=-1, family=2, type=1, proto=0&gt;, ('127.0.0.1', 12059))
+kwargs = {}
+
+    def refuse(*args: object, **kwargs: object) -&gt; None:
+&gt;       raise AssertionError("เทสต์ปกติต้องไม่เรียกเครือข่ายออกไปจริง")
+E       AssertionError: เทสต์ปกติต้องไม่เรียกเครือข่ายออกไปจริง
+
+tests\venues\binance_th\conftest.py:43: AssertionError</error></testcase><testcase classname="tests.venues.binance_th.test_stream_deadlines" name="test_ack_validation_finishing_at_deadline_is_timeout" time="0.003"><error message="failed on setup with &quot;AssertionError: เทสต์ปกติต้องไม่เรียกเครือข่ายออกไปจริง&quot;">self = &lt;Coroutine test_ack_validation_finishing_at_deadline_is_timeout&gt;
+
+    def setup(self) -&gt; None:
+        runner_fixture_id = f"_{self._loop_scope}_scoped_runner"
+        if runner_fixture_id not in self.fixturenames:
+            self.fixturenames.append(runner_fixture_id)
+        # When loop factories are configured, resolve the loop factory
+        # fixture early so that a factory variant change cascades cache
+        # invalidation before any async fixture checks its cache.
+        hook_caller = self.config.hook.pytest_asyncio_loop_factories
+        if hook_caller.get_hookimpls():
+            _ = self._request.getfixturevalue(_asyncio_loop_factory.__name__)
+&gt;       return super().setup()
+               ^^^^^^^^^^^^^^^
+
+.venv\Lib\site-packages\pytest_asyncio\plugin.py:558: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+.venv\Lib\site-packages\pytest_asyncio\plugin.py:926: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+.venv\Lib\site-packages\pytest_asyncio\plugin.py:1039: in _scoped_runner
+    ).__enter__()
+      ^^^^^^^^^^^
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\runners.py:58: in __enter__
+    self._lazy_init()
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\runners.py:137: in _lazy_init
+    self._loop = events.new_event_loop()
+                 ^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\events.py:823: in new_event_loop
+    return get_event_loop_policy().new_event_loop()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\events.py:720: in new_event_loop
+    return self._loop_factory()
+           ^^^^^^^^^^^^^^^^^^^^
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\windows_events.py:316: in __init__
+    super().__init__(proactor)
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\proactor_events.py:640: in __init__
+    self._make_self_pipe()
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\asyncio\proactor_events.py:785: in _make_self_pipe
+    self._ssock, self._csock = socket.socketpair()
+                               ^^^^^^^^^^^^^^^^^^^
+C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\socket.py:642: in socketpair
+    csock.connect((addr, port))
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+args = (&lt;socket.socket [closed] fd=-1, family=2, type=1, proto=0&gt;, ('127.0.0.1', 12060))
+kwargs = {}
+
+    def refuse(*args: object, **kwargs: object) -&gt; None:
+&gt;       raise AssertionError("เทสต์ปกติต้องไม่เรียกเครือข่ายออกไปจริง")
+E       AssertionError: เทสต์ปกติต้องไม่เรียกเครือข่ายออกไปจริง
+
+tests\venues\binance_th\conftest.py:43: AssertionError</error></testcase><testcase classname="tests.venues.binance_th.test_stream_deadlines" name="test_control_budget_counts_subscription_ping_and_pong_in_one_window" time="0.001" /></testsuite></testsuites>

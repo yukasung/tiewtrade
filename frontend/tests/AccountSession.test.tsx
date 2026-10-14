@@ -164,6 +164,7 @@ it("real panels ignore late key and account responses after identity switch", as
   expect(screen.getAllByText(/NEW KEY/).length).toBeGreaterThan(0);
 });
 it("account 401 unmounts the authenticated account boundary", async () => {
+  window.history.replaceState(null, "", "/trading-account");
   const { AuthPanel } = await import("../src/AuthPanel");
   vi.stubGlobal(
     "fetch",

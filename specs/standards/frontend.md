@@ -18,6 +18,27 @@
   เพื่อให้รูปแบบเหมือนกันทุกหน้า
 - ก่อนสร้าง component ใหม่ ให้ค้นของเดิมก่อน
 - สี ระยะห่าง และตัวอักษร มาจากชุดค่ากลาง ห้ามใส่ค่าดิบในแต่ละที่
+- control แบบมาตรฐานทุกหน้า เช่น input, select/dropdown, label และ button ต้องใช้
+  component กลางใน `frontend/src/components/ui/` ที่ปรับจาก `references/admin-template/`;
+  ห้ามสร้าง style หรือเขียน native control ซ้ำในแต่ละหน้า ยกเว้น control เฉพาะทางของ layout
+  ที่ admin template ใช้ native element โดยตรง เช่น backdrop หรือ sidebar toggle
+
+### 2.1 Admin template เป็น UI source of truth
+
+- ก่อนสร้างหรือแก้ UI ให้ค้น `references/admin-template/` ด้วยชื่อ component และหน้าที่ใช้งานก่อนทุกครั้ง
+  แล้วบันทึก path ของต้นแบบใน comment ของ shared component หรือใน `plan.md`
+- ต้องใช้โครงสร้าง component, design token และ interaction pattern จากต้นแบบ รวมถึง layout, สี,
+  typography, spacing, width/height, border, radius, shadow, icon และ responsive breakpoint
+- ต้องตรวจสถานะที่เกี่ยวข้องให้ตรงกับต้นแบบครบ: default, hover, focus, focus-visible, active,
+  disabled, loading, error และ responsive ห้ามตรวจเฉพาะภาพเริ่มต้น
+- ห้ามใช้ค่าสีหรือระยะ hard-coded, user-agent style หรือ CSS เฉพาะหน้ามาทับ shared component
+  เพื่อสร้าง appearance ใหม่ เมื่อ admin template มี component หรือ token สำหรับกรณีนั้นแล้ว
+- ถ้าต้นแบบมี component อยู่แล้วแต่โปรเจกต์ยังไม่มี ให้สร้างหรือขยาย shared component ใน
+  `frontend/src/components/ui/` จากต้นแบบก่อน แล้วให้หน้าต่าง ๆ เรียกใช้ shared component นั้น
+- การตรวจ UI ระหว่างพัฒนาให้ใช้ targeted component test และ browser smoke ของ state ที่เปลี่ยน
+  โดยตรวจ computed style เมื่อความต่างของสี, border, focus ring หรือ responsive มองจาก assertion ปกติไม่ได้
+- spec ที่อนุมัติแล้ว, accessibility และ trading safety มีลำดับเหนือ appearance ของ template;
+  เมื่อจำเป็นต้องต่างจาก template ต้องระบุข้อกำหนดและเหตุผลของข้อยกเว้นไว้ชัดเจน ห้ามตัดสินใจต่างเอง
 
 ## 3. ข้อมูล
 

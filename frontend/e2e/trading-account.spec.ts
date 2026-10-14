@@ -41,7 +41,7 @@ test("fake key → explicit account use → reload → key deletion retains pref
   test.setTimeout(60000);
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
-  await page.goto("/");
+  await page.goto("/security");
   await expect(page.getByTestId("submit")).toHaveClass(/account-button/);
   const authStyle = await page.getByTestId("submit").evaluate((element) => {
     const style = window.getComputedStyle(element);
@@ -69,6 +69,7 @@ test("fake key → explicit account use → reload → key deletion retains pref
     .fill(codeFor(secret, stepAt(Date.now()) - 1));
   await page.getByTestId("confirm-totp").click();
   await expect(page.getByTestId("totp-state")).toHaveText("เปิดอยู่");
+  await page.goto("/api-keys");
   const keys = page.getByTestId("api-key-panel");
   await keys.getByLabel("ชื่อ key").fill("บัญชีทดสอบ F08");
   await keys
@@ -87,6 +88,7 @@ test("fake key → explicit account use → reload → key deletion retains pref
   await expect(keys.getByText("ใช้งานได้", { exact: true })).toBeVisible({
     timeout: 10000,
   });
+  await page.goto("/trading-account");
   const panel = page.getByTestId("trading-account-panel");
   await panel.getByRole("button", { name: "ดึงข้อมูลบัญชีใหม่" }).click();
   await expect(
@@ -147,8 +149,10 @@ test("fake key → explicit account use → reload → key deletion retains pref
     .getByRole("button", { name: "ปิดเมนูบัญชี", exact: true })
     .click({ position: { x: 350, y: 400 } });
   await expect(menu).toBeFocused();
+  await page.goto("/api-keys");
   await keys.getByRole("button", { name: "ลบ key", exact: true }).click();
   await keys.getByRole("button", { name: "ยืนยันลบ", exact: true }).click();
+  await page.goto("/trading-account");
   await expect(
     panel.getByText("ยังไม่เชื่อมต่อ", { exact: true }),
   ).toBeVisible();
@@ -158,14 +162,15 @@ test("fake key → explicit account use → reload → key deletion retains pref
   await expect(panel.getByText("•••• ABCD", { exact: true })).toHaveCount(0);
   expect(
     await page.evaluate(() => [
-      window.localStorage.length,
-      window.sessionStorage.length,
+      Object.keys(window.localStorage),
+      Object.keys(window.sessionStorage),
     ]),
-  ).toEqual([0, 0]);
+  ).toEqual([["theme"], []]);
+  await page.goto("/account");
   await page.getByTestId("log-out").click();
   await expect(panel).toBeHidden();
-  expect(
-    await page.getByTestId("submit").evaluate((element) => {
+  await expect(page.getByTestId("submit")).toBeEnabled();
+  await expect.poll(() => page.getByTestId("submit").evaluate((element) => {
       const style = window.getComputedStyle(element);
       return [
         style.fontFamily,

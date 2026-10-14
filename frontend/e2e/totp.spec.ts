@@ -18,7 +18,7 @@ test("เปิดการยืนยันสองชั้น แล้ว�
 }, testInfo) => {
   const email = `e2e-totp-${String(Date.now())}@example.com`;
 
-  await page.goto("/");
+  await page.goto("/security");
   await page.getByTestId("switch-mode").click();
   await page.getByLabel("อีเมล").fill(email);
   await page.getByLabel("รหัสผ่าน").fill(PASSWORD);
@@ -50,6 +50,7 @@ test("เปิดการยืนยันสองชั้น แล้ว�
   await expect(page.getByTestId("totp-state")).toHaveText("เปิดอยู่");
 
   // ── เข้าสู่ระบบใหม่ต้องผ่านสองขั้น ──
+  await page.goto("/account");
   await page.getByTestId("log-out").click();
   await expect(page.getByTestId("signed-out")).toBeVisible();
 
@@ -74,7 +75,7 @@ test("รหัสยืนยันผิดไม่พาเข้าระ�
 }, testInfo) => {
   const email = `e2e-totp-bad-${String(Date.now())}@example.com`;
 
-  await page.goto("/");
+  await page.goto("/security");
   await page.getByTestId("switch-mode").click();
   await page.getByLabel("อีเมล").fill(email);
   await page.getByLabel("รหัสผ่าน").fill(PASSWORD);
@@ -91,6 +92,7 @@ test("รหัสยืนยันผิดไม่พาเข้าระ�
   await page.getByTestId("confirm-totp").click();
   await expect(page.getByTestId("totp-state")).toHaveText("เปิดอยู่");
 
+  await page.goto("/account");
   await page.getByTestId("log-out").click();
   await page.getByLabel("อีเมล").fill(email);
   await page.getByLabel("รหัสผ่าน").fill(PASSWORD);

@@ -7,7 +7,7 @@ from sqlalchemy import event
 from sqlalchemy.ext.asyncio import AsyncEngine
 
 from tests.infra.market_data.test_retention import insert_raw
-from tiewtrade.core.market_data import CandleWindow, Timeframe, align_floor
+from tiewtrade.core.market_data import CandleWindow, Timeframe, align_floor, initial_window
 from tiewtrade.infra.db import DatabaseRole, create_engine_for, user_session
 from tiewtrade.infra.db.session import market_data_session
 from tiewtrade.infra.market_data import storage
@@ -50,6 +50,12 @@ def test_future_open_is_not_in_current_window() -> None:
     future = align_floor(now, Timeframe.M1) + Timeframe.M1.span
     with pytest.raises(RetentionError):
         validate_window(CandleWindow(future, future + timedelta(seconds=1)), now, Timeframe.M1)
+
+
+@pytest.mark.parametrize("timeframe", [Timeframe.W1, Timeframe.MN1])
+def test_calendar_initial_window_satisfies_storage_retention(timeframe: Timeframe) -> None:
+    now = datetime(2026, 10, 14, 3, 30, tzinfo=UTC)
+    validate_window(initial_window(timeframe, now), now, timeframe)
 
 
 async def test_pending_refresh_in_another_window_does_not_leak(api_engine: AsyncEngine) -> None:

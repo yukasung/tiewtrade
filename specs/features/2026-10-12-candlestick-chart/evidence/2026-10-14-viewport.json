@@ -1,0 +1,20 @@
+{
+  "browserOnlyFixtures": true,
+  "before": {
+    "range": {
+      "from": 25.5,
+      "to": 130.75
+    },
+    "anchor": 1791900900,
+    "x": 300.76
+  },
+  "after": {
+    "range": {
+      "from": 825.5,
+      "to": 930.75
+    },
+    "x": 300.76
+  },
+  "drift": 0,
+  "errors": []
+}

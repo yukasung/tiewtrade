@@ -1,0 +1,135 @@
+{
+  "results": [
+    {
+      "label": "initial-1h",
+      "timeframe": "1h",
+      "requestMs": 194.56259999999997,
+      "bodyMs": 624.0999999977648,
+      "displayMs": 1050.1503,
+      "candlePixels": 45094,
+      "generation": "03ea7f44-cc88-4986-957e-f3cbdcbda807",
+      "candles": 1000,
+      "rows": 1000,
+      "lastOpen": "2026-10-13T13:00:00Z",
+      "close": "100.285",
+      "ema20": "100.293195605937993115"
+    },
+    {
+      "label": "switch-1m",
+      "timeframe": "1m",
+      "requestMs": 13.656999999999925,
+      "bodyMs": 473,
+      "displayMs": 881.8643999999999,
+      "candlePixels": 45062,
+      "generation": "b8beb6a6-e423-45d5-b55f-75adcb1e6f1e",
+      "candles": 1000,
+      "rows": 1000,
+      "lastOpen": "2026-10-13T14:07:00Z",
+      "close": "100.245",
+      "ema20": "100.304001155902938433"
+    },
+    {
+      "label": "return-1h",
+      "timeframe": "1h",
+      "requestMs": 22.403799999999592,
+      "bodyMs": 464.5,
+      "displayMs": 1016.9797999999996,
+      "candlePixels": 45094,
+      "generation": "03ea7f44-cc88-4986-957e-f3cbdcbda807",
+      "candles": 1000,
+      "rows": 1000,
+      "lastOpen": "2026-10-13T13:00:00Z",
+      "close": "100.285",
+      "ema20": "100.293195605937993115"
+    },
+    {
+      "label": "rapid-final-1m",
+      "timeframe": "1m",
+      "requestMs": 2066.6393000000003,
+      "bodyMs": 2404.199999999255,
+      "displayMs": 3019.0656999999997,
+      "candlePixels": 45062,
+      "generation": "b8beb6a6-e423-45d5-b55f-75adcb1e6f1e",
+      "candles": 1000,
+      "rows": 1000,
+      "lastOpen": "2026-10-13T14:07:00Z",
+      "close": "100.245",
+      "ema20": "100.304001155902938433"
+    }
+  ],
+  "errors": [],
+  "http": [
+    {
+      "path": "/api/auth/csrf",
+      "status": 200
+    },
+    {
+      "path": "/api/auth/csrf",
+      "status": 200
+    },
+    {
+      "path": "/api/auth/me",
+      "status": 401
+    },
+    {
+      "path": "/api/auth/me",
+      "status": 401
+    },
+    {
+      "path": "/api/auth/login",
+      "status": 200
+    },
+    {
+      "path": "/api/auth/me",
+      "status": 200
+    },
+    {
+      "path": "/api/market-data/candles",
+      "status": 200
+    },
+    {
+      "path": "/api/market-data/chart/live",
+      "status": 200
+    },
+    {
+      "path": "/api/market-data/chart/history",
+      "status": 200
+    },
+    {
+      "path": "/api/market-data/candles",
+      "status": 200
+    },
+    {
+      "path": "/api/market-data/chart/live",
+      "status": 200
+    },
+    {
+      "path": "/api/market-data/chart/history",
+      "status": 200
+    },
+    {
+      "path": "/api/market-data/candles",
+      "status": 200
+    },
+    {
+      "path": "/api/market-data/chart/live",
+      "status": 200
+    },
+    {
+      "path": "/api/market-data/chart/history",
+      "status": 200
+    },
+    {
+      "path": "/api/market-data/candles",
+      "status": 200
+    },
+    {
+      "path": "/api/market-data/chart/live",
+      "status": 200
+    },
+    {
+      "path": "/api/market-data/chart/history",
+      "status": 200
+    }
+  ]
+}

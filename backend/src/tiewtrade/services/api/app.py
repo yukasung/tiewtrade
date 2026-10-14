@@ -34,6 +34,7 @@ from tiewtrade.services.api.api_key_routes import router as api_key_router
 from tiewtrade.services.api.auth_routes import router as auth_router
 from tiewtrade.services.api.authentication import authenticate_request
 from tiewtrade.services.api.candle_routes import router as candle_router
+from tiewtrade.services.api.chart_routes import router as chart_router
 from tiewtrade.services.api.indicator_admission import IndicatorBudget
 from tiewtrade.services.api.indicator_routes import router as indicator_router
 from tiewtrade.services.api.price_admission import ProcessBudget
@@ -75,6 +76,16 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         DatabaseRole.API, pool_size=1, max_overflow=0, pool_timeout=0.25
     )
     app.state.indicator_budget = IndicatorBudget()
+    app.state.chart_engine = create_engine_for(
+        DatabaseRole.API, pool_size=1, max_overflow=0, pool_timeout=0.25
+    )
+    app.state.chart_admission = RedisAdmission(
+        cast(AdmissionRedis, redis),
+        global_limit=6000,
+        ip_limit=120,
+        namespace="chart.live",
+        subject="user",
+    )
     app.state.indicator_admission = RedisAdmission(
         cast(AdmissionRedis, redis),
         global_limit=30,
@@ -106,6 +117,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         await asyncio.gather(broadcast_task, return_exceptions=True)
         await redis.aclose()
         await app.state.indicator_engine.dispose()
+        await app.state.chart_engine.dispose()
         await app.state.price_engine.dispose()
         await app.state.api_engine.dispose()
         await app.state.auth_engine.dispose()
@@ -155,6 +167,7 @@ app.include_router(totp_router)
 app.include_router(api_key_router)
 app.include_router(trading_account_router)
 app.include_router(candle_router)
+app.include_router(chart_router)
 app.include_router(indicator_router)
 app.include_router(price_router)
 

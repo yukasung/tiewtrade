@@ -2,15 +2,15 @@
 
 import json
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import cast
 from uuid import UUID
 
 from tiewtrade.core.indicators import IndicatorStream
-from tiewtrade.core.market_data import CandleWindow, align_ceil, align_floor
+from tiewtrade.core.market_data import CandleWindow, align_ceil, align_floor, retention_cutoff
 from tiewtrade.infra.db.errors import IndicatorBuildOwnershipError
 from tiewtrade.infra.indicators.claims import BuildClaim
-from tiewtrade.infra.indicators.codec import encode_checkpoint
+from tiewtrade.infra.indicators.codec import CODEC_VERSION, encode_checkpoint
 from tiewtrade.infra.indicators.pinned import PinnedIndicatorWriter
 from tiewtrade.infra.indicators.session import (
     IndicatorSourceSession,
@@ -46,7 +46,7 @@ async def capture_snapshot(session: IndicatorSourceSession, claim: BuildClaim) -
     if (
         row["rollout_epoch"] != claim.rollout_epoch
         or row["mode"] not in ("PREPARING", "PREPARED")
-        or row["codec_version"] != 1
+        or row["codec_version"] != CODEC_VERSION
         or row["protocol_version"] != 1
         or row["retention_policy"] != "GRACE"
         or row["source_proof_state"] != "READY"
@@ -58,7 +58,7 @@ async def capture_snapshot(session: IndicatorSourceSession, claim: BuildClaim) -
         as_of,
         SourceFence(cast(UUID, row["epoch"]), int(row["revision"])),
         CandleWindow(
-            align_ceil(as_of - timedelta(days=365), claim.timeframe),
+            align_ceil(retention_cutoff(as_of, claim.timeframe), claim.timeframe),
             align_floor(as_of, claim.timeframe),
         ),
     )

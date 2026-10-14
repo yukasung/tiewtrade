@@ -1,0 +1,37 @@
+{
+  "observer_blocked_seconds": 33.209521,
+  "writes": [
+    {
+      "base": "BTC",
+      "open_at": "2026-10-13 14:31:00+00:00",
+      "created_at": "2026-10-13 14:32:00.063814+00:00",
+      "arrival_delay_seconds": "0.063814"
+    },
+    {
+      "base": "DOGE",
+      "open_at": "2026-10-13 14:31:00+00:00",
+      "created_at": "2026-10-13 14:32:00.064798+00:00",
+      "arrival_delay_seconds": "0.064798"
+    },
+    {
+      "base": "ETH",
+      "open_at": "2026-10-13 14:31:00+00:00",
+      "created_at": "2026-10-13 14:32:00.065678+00:00",
+      "arrival_delay_seconds": "0.065678"
+    },
+    {
+      "base": "SOL",
+      "open_at": "2026-10-13 14:31:00+00:00",
+      "created_at": "2026-10-13 14:32:00.066562+00:00",
+      "arrival_delay_seconds": "0.066562"
+    },
+    {
+      "base": "XRP",
+      "open_at": "2026-10-13 14:31:00+00:00",
+      "created_at": "2026-10-13 14:32:00.067460+00:00",
+      "arrival_delay_seconds": "0.067460"
+    }
+  ],
+  "max_delay_seconds": 0.06746,
+  "note": "Real isolated PostgreSQL source producer only; no readiness or production acceptance"
+}

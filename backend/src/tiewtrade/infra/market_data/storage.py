@@ -1,5 +1,6 @@
+from collections.abc import Mapping
 from datetime import datetime, timedelta
-from typing import Literal
+from typing import Any, Literal
 
 from sqlalchemy import RowMapping
 
@@ -10,9 +11,10 @@ from tiewtrade.core.market_data import (
     Timeframe,
     align_floor,
     missing_windows,
-    retention_cutoff,
+    next_open,
     slot_count,
 )
+from tiewtrade.core.timeframes import candle_storage_cutoff as retention_cutoff
 from tiewtrade.infra.db import money_from_columns, quantity_from_columns, require_user_session
 from tiewtrade.infra.db.session import MarketDataSession, UserSession, require_market_data_session
 from tiewtrade.infra.market_data.catalog import PAIRS as PAIRS
@@ -49,18 +51,20 @@ async def database_now(session: Session) -> datetime:
 def validate_window(
     window: CandleWindow, as_of: datetime, timeframe: Timeframe, *, reading: bool = False
 ) -> None:
-    if (
-        window.start < retention_cutoff(as_of)
-        or window.end > align_floor(as_of, timeframe) + timeframe.span
+    duration_cutoff = retention_cutoff(window.end, timeframe)
+    if timeframe in (Timeframe.W1, Timeframe.MN1):
+        duration_cutoff = align_floor(duration_cutoff, timeframe)
+    if window.start < retention_cutoff(as_of, timeframe) or window.end > next_open(
+        align_floor(as_of, timeframe), timeframe
     ):
         raise RetentionError()
-    if window.end - window.start > timedelta(days=365):
+    if window.start < duration_cutoff:
         raise RetentionError()
     if reading and slot_count(window, timeframe) > 1000:
         raise WindowTooLargeError()
 
 
-def _stored(row: RowMapping) -> StoredCandle:
+def _stored(row: RowMapping | Mapping[str, Any]) -> StoredCandle:
     candle = Candle(
         base=row["base"],
         quote=row["quote"],
@@ -183,6 +187,14 @@ async def enqueue(
     session: UserSession, base: str, quote: str, timeframe: Timeframe, window: CandleWindow
 ) -> bool:
     session = require_user_session(session)
+    return await coalesce_demand(session, base, quote, timeframe, window)
+
+
+async def coalesce_demand(
+    session: Session, base: str, quote: str, timeframe: Timeframe, window: CandleWindow
+) -> bool:
+    """Shared row-locked demand; never resets worker claims, attempts or backoff."""
+    session = _session(session)
     now = await database_now(session)
     validate_window(window, now, timeframe)
     missing, refresh = await window_needs_work(session, base, quote, timeframe, window, now)
@@ -216,10 +228,13 @@ async def enqueue(
     if not missing and not refresh:
         return False
     end = max(row["desired_end"], window.end)
+    duration_cutoff = retention_cutoff(end, timeframe)
+    if timeframe in (Timeframe.W1, Timeframe.MN1):
+        duration_cutoff = align_floor(duration_cutoff, timeframe)
     start = max(
         min(row["desired_start"], window.start),
-        retention_cutoff(now),
-        retention_cutoff(end),
+        retention_cutoff(now, timeframe),
+        duration_cutoff,
     )
     params.update(start=start, end=end, refresh=now if refresh else None)
     await session.execute(

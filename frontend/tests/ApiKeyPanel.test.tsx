@@ -376,7 +376,7 @@ describe("หน้าจัดการ API key", () => {
       screen
         .getByRole("link", { name: /เปิดการยืนยันสองชั้น/ })
         .getAttribute("href"),
-    ).toBe("#totp-panel");
+    ).toBe("/security");
   });
 
   it("poll เปลี่ยนสถานะเองและหยุดเมื่อออกจากหน้าจอ", async () => {

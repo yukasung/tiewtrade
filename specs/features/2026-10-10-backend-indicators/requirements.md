@@ -1,8 +1,23 @@
 # F-11 — คำนวณ indicator ที่ backend — Requirements
 
 สถานะ: **Approved** — เจ้าของอนุมัติทั้งฉบับและปิด NC-30..33 เมื่อ 2026-10-10 ตามคำสั่ง “approve”; รวมNC-35 amendmentsที่อนุมัติเมื่อ2026-10-10
+การเปลี่ยนแปลง MACD ด้านล่าง: **Approved** — เจ้าของยืนยันขอบเขตให้ลบทั้งระบบและอนุมัติ amendment เมื่อ 2026-10-13
 วันที่: 2026-10-10
 Branch: feature/f-11-backend-indicators
+
+## Amendment — ลบ MACD ทั้งระบบ (Approved 2026-10-13)
+
+เจ้าของระบุให้ลบกลุ่ม MACD ทั้ง UI และ code รวม backend. Amendment นี้
+ให้แทนทุกข้อที่ระบุชุด indicator เดิมด้วย EMA20/50/200, RSI14 และ ATR14 เท่านั้น;
+เลิกคำนวณและส่ง `macd_line`, `macd_signal`, `macd_histogram` ในผล F-11 และ
+สัญญาข้อมูลกราฟ F-12. ห้ามเปลี่ยนสูตร พารามิเตอร์ การปัด หรือสถานะของ indicator ที่เหลือ.
+
+ข้อมูลผลลัพธ์และ checkpoint ที่สร้างด้วยชุดสูตรเดิมต้องไม่ถูกอ่านเป็นชุดสูตรใหม่หรือ
+แสดงผลปนกัน. แผนต้องกำหนด formula/schema version, การรับมือข้อมูลที่เก็บไว้,
+การเปลี่ยนผ่าน LEGACY/PREPARED และความเข้ากันได้ระหว่าง replica ก่อนแก้โค้ด;
+ห้ามให้ cache/cursor/generation เก่าถูกตีความเป็นผลใหม่. ตรวจ regression ของค่า
+indicator ที่เหลือ รวมถึง error/refresh/retry และการอ่านข้าม replica ตาม validation.
+ไม่แตะกฎออเดอร์ เงิน ความเสี่ยง หรือเปิด Live Trading จากการลบนี้.
 
 ## R2-D1 first-release amendment — Approved 2026-10-11
 

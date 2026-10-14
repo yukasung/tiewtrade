@@ -13,6 +13,7 @@ import json
 import os
 import sys
 from collections.abc import Awaitable, Callable
+from contextlib import suppress
 from datetime import datetime, timedelta
 from pathlib import Path
 from time import monotonic
@@ -24,7 +25,15 @@ from redis.asyncio import Redis
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncEngine
 
-from tiewtrade.core.market_data import CandleWindow, Timeframe, align_ceil, align_floor
+from tiewtrade.core.market_data import (
+    CandleWindow,
+    Timeframe,
+    advance,
+    align_ceil,
+    align_floor,
+    retention_cutoff,
+    slot_count,
+)
 from tiewtrade.core.money import Money, Scalar
 from tiewtrade.infra.db import DatabaseRole, create_engine_for
 from tiewtrade.infra.db.session import indicator_read_session, market_data_session
@@ -41,16 +50,21 @@ REDIS = "tiewtrade-f11-capacity-redis"
 INSERT = """INSERT INTO market_candles
  (source,base,quote,timeframe,open_at,end_at,open,high,low,close,volume,finality,
  observed_at,fetch_started_at,last_checked_at,ingestion_generation)
- SELECT 'primary_spot',:base,'USDT',:tf,moment,moment+make_interval(secs=>:seconds),
+ SELECT 'primary_spot',:base,'USDT',:tf,moment,
+ CASE WHEN :tf='1M' THEN moment+interval '1 month'
+ ELSE moment+make_interval(secs=>:seconds) END,
  100.125+mod(n,17)/100.0,101.375+mod(n,17)/100.0,
  99.025+mod(n,17)/100.0,100.225+mod(n,17)/100.0,1.125,
- CASE WHEN moment+make_interval(secs=>:seconds)<=CAST(:now AS timestamptz)-interval '24 hours'
+ CASE WHEN (CASE WHEN :tf='1M' THEN moment+interval '1 month'
+ ELSE moment+make_interval(secs=>:seconds) END)<=CAST(:now AS timestamptz)-interval '24 hours'
  THEN 'CLOSED' ELSE 'UNCONFIRMED' END,CAST(:now AS timestamptz),
  CAST(:now AS timestamptz),CAST(:now AS timestamptz),1
- FROM (SELECT moment,floor(extract(epoch FROM moment)/:seconds)::bigint AS n
+ FROM (SELECT moment,row_number() OVER (ORDER BY moment)::bigint AS n
  FROM generate_series(CAST(:lo AS timestamptz),
- CAST(:hi AS timestamptz)-make_interval(secs=>:seconds),
- make_interval(secs=>:seconds)) moment) slots
+ CAST(:hi AS timestamptz)-CASE WHEN :tf='1M' THEN interval '1 month'
+ ELSE make_interval(secs=>:seconds) END,
+ CASE WHEN :tf='1M' THEN interval '1 month'
+ ELSE make_interval(secs=>:seconds) END) moment) slots
  ON CONFLICT(source,base,quote,timeframe,open_at) DO NOTHING"""
 
 
@@ -87,7 +101,7 @@ async def insert_range(
         {
             "base": base,
             "tf": tf.value,
-            "seconds": int(tf.span.total_seconds()),
+            "seconds": int(tf.fixed_span.total_seconds()) if tf.fixed_span else 0,
             "lo": lo,
             "hi": hi,
             "now": now,
@@ -108,9 +122,9 @@ async def seed(engine: AsyncEngine) -> dict[str, datetime]:
     ends: dict[str, datetime] = {}
     for base, tf in SERIES:
         hi = align_floor(now, tf)
-        lo = align_floor(now - timedelta(days=365, hours=6, minutes=15), tf)
+        lo = align_floor(retention_cutoff(now, tf) - timedelta(hours=6, minutes=15), tf)
         while lo < hi:
-            stop = min(hi, lo + 50000 * tf.span)
+            stop = min(hi, advance(lo, tf, 50000))
             async with engine.begin() as c:
                 await insert_range(c, base, tf, lo, stop, now)
             lo = stop
@@ -123,7 +137,7 @@ async def seed(engine: AsyncEngine) -> dict[str, datetime]:
         # activation bundle. Empty-derived API readiness must be observable.
         await c.execute(
             text("""UPDATE indicator_rollout_control SET mode='PREPARED',
-          retention_policy='GRACE',codec_version=1,protocol_version=1,
+          retention_policy='GRACE',codec_version=2,protocol_version=1,
           active_cursor_format=2 WHERE id=1""")
         )
     return ends
@@ -143,7 +157,7 @@ async def append(engine: AsyncEngine, ends: dict[str, datetime]) -> None:
                     {
                         "base": base,
                         "tf": tf.value,
-                        "seconds": int(tf.span.total_seconds()),
+                        "seconds": int(tf.fixed_span.total_seconds()) if tf.fixed_span else 0,
                         "lo": ends[key],
                         "hi": hi,
                         "now": now,
@@ -151,6 +165,16 @@ async def append(engine: AsyncEngine, ends: dict[str, datetime]) -> None:
                 )
                 changed[key] = hi
     ends.update(changed)  # Advance only after commit; never rewrite existing input.
+
+
+async def maintain_source(
+    engine: AsyncEngine, ends: dict[str, datetime], stop: asyncio.Event
+) -> None:
+    """Keep source arrivals independent of HTTP probes and readiness polling."""
+    while not stop.is_set():
+        await append(engine, ends)
+        with suppress(TimeoutError):
+            await asyncio.wait_for(stop.wait(), 0.25)
 
 
 async def snapshot(engine: AsyncEngine) -> dict[str, Any]:
@@ -368,7 +392,8 @@ async def audit(engine: AsyncEngine, user: UUID, probes: list[dict[str, Any]]) -
             )
             expected_end = generation["calculation_end"]
             expected_start = max(
-                align_ceil(requested_at - timedelta(days=365), tf), expected_end - 1000 * tf.span
+                align_ceil(retention_cutoff(requested_at, tf), tf),
+                advance(expected_end, tf, -1000),
             )
             metadata_ok = (
                 body["source"] == "primary_spot" == generation["source"]
@@ -382,14 +407,14 @@ async def audit(engine: AsyncEngine, user: UUID, probes: list[dict[str, Any]]) -
                 )
                 and datetime.fromisoformat(body["result_start"]) == expected_start
                 and datetime.fromisoformat(body["result_end"]) == expected_end
-                and len(body["rows"]) == (expected_end - expected_start) // tf.span
+                and len(body["rows"]) == slot_count(CandleWindow(expected_start, expected_end), tf)
                 and timedelta(0) <= requested_at - generation["as_of"] <= timedelta(seconds=600)
                 and await proof_valid(session, generation, requested_at)
             )
         probe["generation_id"] = body["generation_id"]
-        probe["calculation_slots"] = (
-            generation["calculation_end"] - generation["calculation_start"]
-        ) // tf.span
+        probe["calculation_slots"] = slot_count(
+            CandleWindow(generation["calculation_start"], generation["calculation_end"]), tf
+        )
         probe["response_rows"] = len(body["rows"])
         probe["response_rows_sha256"] = hashlib.sha256(
             json.dumps(body["rows"], sort_keys=True).encode()
@@ -469,6 +494,8 @@ async def run(
     trace: list[dict[str, Any]] = []
     rounds: list[asyncio.Task[list[dict[str, Any]]]] = []
     cold_passed = metrics is None
+    source_stop = asyncio.Event()
+    producer: asyncio.Task[None] | None = None
     try:
         if reuse_source:
             async with migrator.connect() as c:
@@ -491,7 +518,7 @@ async def run(
                         )
                     ).mappings()
                 }
-                assert len(ends) == 30
+                assert len(ends) == 40
         else:
             ends = await seed(migrator)
         image_id = await docker("image", "inspect", "--format", "{{.Id}}", image)
@@ -518,7 +545,25 @@ async def run(
         if reuse_source:
             from tests.services.indicator_builder.profile_capacity_steady import login
 
-            clients, users = await login()
+            account_count = int(
+                await docker(
+                    "exec",
+                    PG,
+                    "psql",
+                    "-U",
+                    "postgres",
+                    "-d",
+                    "tiewtrade",
+                    "-Atc",
+                    "SELECT count(*) FROM user_credentials "
+                    "WHERE email LIKE 'capacity-%@example.com'",
+                )
+            )
+            if account_count == 0:
+                clients, users = await authenticate(api_container)
+            else:
+                assert account_count == 5
+                clients, users = await login()
         else:
             clients, users = await authenticate(api_container)
         worker = await create_runtime(image_id, "builder", metrics)
@@ -532,12 +577,14 @@ async def run(
         async with migrator.connect() as c:
             db_t0: datetime = (await c.execute(text("SELECT clock_timestamp()"))).scalar_one()
         started = monotonic()  # Includes cold process startup; no excluded prewarm.
+        producer = asyncio.create_task(maintain_source(source, ends, source_stop))
         await docker("start", worker)
         for tick in range(60):
             await asyncio.sleep(max(0, started + tick * 10 - monotonic()))
             if monotonic() - started >= 600:
                 break
-            await append(source, ends)
+            if producer.done():
+                await producer
             observed = await observe(api, users[0])
             elapsed = monotonic() - started
             observations.append({"seconds": elapsed, "series": observed})
@@ -662,7 +709,7 @@ async def run(
                     and len(accepted) == 10,
                 }
             )
-        passed = len(summaries) == 30 and all(s["passed"] for s in summaries)
+        passed = len(summaries) == 40 and all(s["passed"] for s in summaries)
         save(
             output / "result.json",
             {
@@ -679,6 +726,10 @@ async def run(
         )
         return 0 if passed and cold_passed else 1
     finally:
+        source_stop.set()
+        if producer is not None:
+            producer.cancel()
+            await asyncio.gather(producer, return_exceptions=True)
         for task in rounds:
             if not task.done():
                 task.cancel()

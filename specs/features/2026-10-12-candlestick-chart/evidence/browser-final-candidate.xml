@@ -1,0 +1,20 @@
+<testsuites id="" name="" tests="8" failures="0" skipped="0" errors="0" time="136.098862">
+<testsuite name="candlestick-chart.spec.ts" timestamp="2026-10-13T04:31:22.681Z" hostname="" tests="8" failures="0" skipped="0" time="133.729" errors="0">
+<testcase name="actual chart panes, exact values, languages and keyboard selection" classname="candlestick-chart.spec.ts" time="12.009">
+</testcase>
+<testcase name="module pages preserve navigation history, deep links and cancel inactive chart work" classname="candlestick-chart.spec.ts" time="10.187">
+</testcase>
+<testcase name="source mutation hides overlays and live snapshots recover after disconnect" classname="candlestick-chart.spec.ts" time="21.463">
+</testcase>
+<testcase name="gap selection has no fabricated OHLC and logout stops chart requests" classname="candlestick-chart.spec.ts" time="9.642">
+</testcase>
+<testcase name="password login, series switching and actual latest-price worker" classname="candlestick-chart.spec.ts" time="12.316">
+</testcase>
+<testcase name="ended preview waits for actual REST commit before new indicator bundle" classname="candlestick-chart.spec.ts" time="21.224">
+</testcase>
+<testcase name="manual refresh reaches the real worker and failed polling stops" classname="candlestick-chart.spec.ts" time="33.29">
+</testcase>
+<testcase name="browser network loss and a restarted fenced candle worker recover from PG" classname="candlestick-chart.spec.ts" time="13.598">
+</testcase>
+</testsuite>
+</testsuites>

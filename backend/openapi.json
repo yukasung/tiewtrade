@@ -287,6 +287,470 @@
         "title": "CandleView",
         "type": "object"
       },
+      "ChartCandlePage": {
+        "properties": {
+          "base": {
+            "title": "Base",
+            "type": "string"
+          },
+          "coverage": {
+            "enum": [
+              "PRESENT",
+              "INCOMPLETE",
+              "UNAVAILABLE"
+            ],
+            "title": "Coverage",
+            "type": "string"
+          },
+          "display_end": {
+            "format": "date-time",
+            "title": "Display End",
+            "type": "string"
+          },
+          "display_start": {
+            "format": "date-time",
+            "title": "Display Start",
+            "type": "string"
+          },
+          "earliest_known": {
+            "title": "Earliest Known",
+            "type": "boolean"
+          },
+          "failure_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Failure Code"
+          },
+          "gaps": {
+            "items": {
+              "$ref": "#/components/schemas/WindowView"
+            },
+            "title": "Gaps",
+            "type": "array"
+          },
+          "newer_after": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Newer After"
+          },
+          "observed": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/WindowView"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "observed_at": {
+            "format": "date-time",
+            "title": "Observed At",
+            "type": "string"
+          },
+          "older_before": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Older Before"
+          },
+          "quote": {
+            "title": "Quote",
+            "type": "string"
+          },
+          "refresh_pending": {
+            "title": "Refresh Pending",
+            "type": "boolean"
+          },
+          "requested": {
+            "$ref": "#/components/schemas/WindowView"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/CandleView"
+            },
+            "title": "Rows",
+            "type": "array"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          },
+          "timeframe": {
+            "$ref": "#/components/schemas/Timeframe"
+          }
+        },
+        "required": [
+          "base",
+          "quote",
+          "timeframe",
+          "requested",
+          "observed",
+          "rows",
+          "gaps",
+          "coverage",
+          "observed_at",
+          "refresh_pending",
+          "status",
+          "failure_code",
+          "display_start",
+          "display_end",
+          "earliest_known",
+          "older_before",
+          "newer_after"
+        ],
+        "title": "ChartCandlePage",
+        "type": "object"
+      },
+      "ChartHistoryView": {
+        "properties": {
+          "as_of": {
+            "format": "date-time",
+            "title": "As Of",
+            "type": "string"
+          },
+          "base": {
+            "title": "Base",
+            "type": "string"
+          },
+          "calculation_end": {
+            "format": "date-time",
+            "title": "Calculation End",
+            "type": "string"
+          },
+          "calculation_start": {
+            "format": "date-time",
+            "title": "Calculation Start",
+            "type": "string"
+          },
+          "candles": {
+            "items": {
+              "$ref": "#/components/schemas/CandleView"
+            },
+            "title": "Candles",
+            "type": "array"
+          },
+          "dataset_revision": {
+            "title": "Dataset Revision",
+            "type": "string"
+          },
+          "display_proof": {
+            "title": "Display Proof",
+            "type": "string"
+          },
+          "formula_version": {
+            "title": "Formula Version",
+            "type": "string"
+          },
+          "generation_age_seconds": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Generation Age Seconds"
+          },
+          "generation_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Generation Id"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          },
+          "prepared_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prepared At"
+          },
+          "quote": {
+            "title": "Quote",
+            "type": "string"
+          },
+          "refresh": {
+            "$ref": "#/components/schemas/RefreshView"
+          },
+          "result_end": {
+            "format": "date-time",
+            "title": "Result End",
+            "type": "string"
+          },
+          "result_start": {
+            "format": "date-time",
+            "title": "Result Start",
+            "type": "string"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/IndicatorPointView"
+            },
+            "title": "Rows",
+            "type": "array"
+          },
+          "source": {
+            "title": "Source",
+            "type": "string"
+          },
+          "timeframe": {
+            "$ref": "#/components/schemas/Timeframe"
+          }
+        },
+        "required": [
+          "source",
+          "base",
+          "quote",
+          "timeframe",
+          "formula_version",
+          "dataset_revision",
+          "as_of",
+          "calculation_start",
+          "calculation_end",
+          "result_start",
+          "result_end",
+          "rows",
+          "refresh",
+          "next_cursor",
+          "candles",
+          "display_proof"
+        ],
+        "title": "ChartHistoryView",
+        "type": "object"
+      },
+      "ChartLiveView": {
+        "properties": {
+          "base": {
+            "title": "Base",
+            "type": "string"
+          },
+          "epoch": {
+            "title": "Epoch",
+            "type": "string"
+          },
+          "event_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Event At"
+          },
+          "history_end": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "History End"
+          },
+          "quote": {
+            "title": "Quote",
+            "type": "string"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "received_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Received At"
+          },
+          "revision": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revision"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/CandleView"
+            },
+            "title": "Rows",
+            "type": "array"
+          },
+          "server_time": {
+            "format": "date-time",
+            "title": "Server Time",
+            "type": "string"
+          },
+          "source": {
+            "title": "Source",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "READY",
+              "RECOVERING",
+              "STALE",
+              "NO_DATA",
+              "UNAVAILABLE"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "timeframe": {
+            "$ref": "#/components/schemas/Timeframe"
+          }
+        },
+        "required": [
+          "source",
+          "base",
+          "quote",
+          "timeframe",
+          "rows",
+          "status",
+          "reason",
+          "server_time",
+          "epoch",
+          "revision",
+          "event_at",
+          "received_at",
+          "history_end"
+        ],
+        "title": "ChartLiveView",
+        "type": "object"
+      },
+      "ChartProofRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "display_proof": {
+            "maxLength": 4096,
+            "title": "Display Proof",
+            "type": "string"
+          }
+        },
+        "required": [
+          "display_proof"
+        ],
+        "title": "ChartProofRequest",
+        "type": "object"
+      },
+      "ChartProofView": {
+        "properties": {
+          "calculation_end": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Calculation End"
+          },
+          "calculation_start": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Calculation Start"
+          },
+          "checked_at": {
+            "format": "date-time",
+            "title": "Checked At",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "MATCHED",
+              "CHANGED",
+              "UNVERIFIABLE"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "checked_at"
+        ],
+        "title": "ChartProofView",
+        "type": "object"
+      },
       "CodesIssued": {
         "description": "ชุดรหัสสำรองใหม่ — **แสดงครั้งเดียว ไม่มีทางอ่านกลับ**",
         "properties": {
@@ -1240,7 +1704,9 @@
           "15m",
           "1h",
           "4h",
-          "1d"
+          "1d",
+          "1w",
+          "1M"
         ],
         "title": "Timeframe",
         "type": "string"
@@ -2103,6 +2569,99 @@
         ]
       }
     },
+    "/market-data/candles/pages": {
+      "get": {
+        "operationId": "candle_page_market_data_candles_pages_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "base",
+            "required": true,
+            "schema": {
+              "title": "Base",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "quote",
+            "required": true,
+            "schema": {
+              "title": "Quote",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "timeframe",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Timeframe"
+            }
+          },
+          {
+            "in": "query",
+            "name": "before",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Before"
+            }
+          },
+          {
+            "in": "query",
+            "name": "after",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "After"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChartCandlePage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RejectedCandleInput"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "summary": "Candle Page",
+        "tags": [
+          "market-data"
+        ]
+      }
+    },
     "/market-data/candles/requests": {
       "post": {
         "operationId": "request_candles_market_data_candles_requests_post",
@@ -2149,6 +2708,256 @@
           }
         },
         "summary": "Request Candles",
+        "tags": [
+          "market-data"
+        ]
+      }
+    },
+    "/market-data/chart/history": {
+      "get": {
+        "operationId": "history_market_data_chart_history_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "base",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Base"
+            }
+          },
+          {
+            "in": "query",
+            "name": "quote",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Quote"
+            }
+          },
+          {
+            "in": "query",
+            "name": "timeframe",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/Timeframe"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Timeframe"
+            }
+          },
+          {
+            "in": "query",
+            "name": "start",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Start"
+            }
+          },
+          {
+            "in": "query",
+            "name": "end",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "End"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page_size",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 1000,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Page Size"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 4096,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChartHistoryView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "History",
+        "tags": [
+          "market-data"
+        ]
+      }
+    },
+    "/market-data/chart/live": {
+      "get": {
+        "operationId": "live_market_data_chart_live_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "base",
+            "required": true,
+            "schema": {
+              "title": "Base",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "quote",
+            "required": true,
+            "schema": {
+              "title": "Quote",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "timeframe",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Timeframe"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChartLiveView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Live",
+        "tags": [
+          "market-data"
+        ]
+      }
+    },
+    "/market-data/chart/verify": {
+      "post": {
+        "operationId": "verify_chart_market_data_chart_verify_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChartProofRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChartProofView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Verify Chart",
         "tags": [
           "market-data"
         ]

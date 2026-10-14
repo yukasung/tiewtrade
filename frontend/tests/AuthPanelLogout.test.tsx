@@ -39,11 +39,20 @@ const endpoints = [
   ["log-out-everywhere", "/api/auth/logout-all"],
 ] as const;
 
+async function goTo(page: string): Promise<void> {
+  await act(async () => {
+    window.history.replaceState(null, "", `/${page}`);
+    window.dispatchEvent(new PopStateEvent("popstate"));
+    await Promise.resolve();
+  });
+}
+
 function response(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), { status });
 }
 beforeEach(() => {
   captured.clients = [];
+  window.history.replaceState(null, "", "/api-keys");
 });
 afterEach(() => {
   cleanup();
@@ -89,13 +98,14 @@ it.each(endpoints.flatMap(([button, endpoint]) =>
   });
   vi.stubGlobal("fetch", fetcher);
   render(<AuthPanel />);
-  await screen.findByText("เทรดมือ", { exact: true });
+  await screen.findByText("OLD KEY", { exact: true });
   const client = captured.clients[0]!;
   expect(client.getQueryData(["api-keys", identity.user_id])).toEqual([key]);
-  expect(client.getQueryData(["trading-account", identity.user_id])).toEqual(account);
+  client.setQueryData(["trading-account", identity.user_id], account);
   refetch = true;
   fireEvent.click(screen.getByRole("button", { name: "ดึงรายการใหม่" }));
   await waitFor(() => expect(resolveOld).toBeTypeOf("function"));
+  await goTo("account");
   fireEvent.click(screen.getByTestId(button));
   await screen.findByTestId("signed-out");
   expect(screen.queryByTestId("signed-in")).toBeNull();
@@ -119,10 +129,14 @@ it.each(endpoints)("%s retains the authenticated boundary when POST %s fails", a
       url.endsWith("api-keys") ? [key] : url.endsWith("trading-account") ? account : { csrf_token: "t" }));
   }));
   render(<AuthPanel />);
-  await screen.findByText("เทรดมือ", { exact: true });
+  await screen.findByText("OLD KEY", { exact: true });
+  await goTo("account");
   fireEvent.click(screen.getByTestId(button));
   await screen.findByText("Logout rejected");
   expect(screen.getByTestId("signed-in")).toBeTruthy();
+  await goTo("api-keys");
+  await screen.findByText("OLD KEY", { exact: true });
+  expect(captured.clients).toHaveLength(1);
   expect(captured.clients[0]?.getQueryData(["api-keys", identity.user_id])).toEqual([key]);
 });
 
@@ -140,9 +154,11 @@ it("a TOTP identity response started before logout cannot restore the old bounda
       url.endsWith("trading-account") ? account : url.endsWith("auth/logout") ? { ended: 1 } : { csrf_token: "t" }));
   }));
   render(<AuthPanel />);
-  await screen.findByText("เทรดมือ", { exact: true });
+  await screen.findByText("OLD KEY", { exact: true });
+  await goTo("security");
   fireEvent.click(screen.getByRole("button", { name: "TOTP changed" }));
   await waitFor(() => expect(resolveIdentity).toBeTypeOf("function"));
+  await goTo("account");
   fireEvent.click(screen.getByTestId("log-out"));
   await screen.findByTestId("signed-out");
   await act(async () => {
@@ -166,12 +182,13 @@ it.each(endpoints)("%s clears a pending key mutation after POST %s succeeds", as
       url.endsWith("api-keys") ? [key] : url.endsWith("trading-account") ? account : { csrf_token: "t" }));
   }));
   render(<AuthPanel />);
-  await screen.findByText("เทรดมือ", { exact: true });
+  await screen.findByText("OLD KEY", { exact: true });
   const client = captured.clients[0]!;
   fireEvent.click(screen.getByRole("button", { name: "ลบ key" }));
   fireEvent.click(screen.getByRole("button", { name: "ยืนยันลบ" }));
   await waitFor(() => expect(resolveDeletion).toBeTypeOf("function"));
   expect(client.getMutationCache().getAll()).toHaveLength(1);
+  await goTo("account");
   fireEvent.click(screen.getByTestId(button));
   await screen.findByTestId("signed-out");
   expect(client.getMutationCache().getAll()).toHaveLength(0);

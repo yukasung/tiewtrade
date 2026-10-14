@@ -14,9 +14,15 @@ from sqlalchemy.ext.asyncio import AsyncEngine
 
 from tiewtrade.infra.db import DatabaseRole, create_engine_for
 from tiewtrade.infra.realtime.notifications import RedisNotifications
+from tiewtrade.services.market_data.candle_realtime import CandleSupervisor
 from tiewtrade.services.market_data.ingestion import MARKET_TIMEOUT, run_round
 from tiewtrade.services.market_data.realtime import QuoteSupervisor
-from tiewtrade.venues import live_candle_source, live_price_feed, public_rate_limit_guard
+from tiewtrade.venues import (
+    live_candle_feed,
+    live_candle_source,
+    live_price_feed,
+    public_rate_limit_guard,
+)
 from tiewtrade.venues.candles import CandleSource
 from tiewtrade.venues.price_streams import PriceFeed
 
@@ -67,6 +73,16 @@ async def serve(
                 asyncio.create_task(candles()),
                 asyncio.create_task(QuoteSupervisor(engine, feed, notification).run()),
             ]
+            if os.environ.get("TIEWTRADE_CHART_ENABLED") == "1":
+                tasks.append(
+                    asyncio.create_task(
+                        CandleSupervisor(
+                            engine,
+                            live_candle_feed(clock=_now),
+                            RedisNotifications(redis, channel="market.candles.changed"),
+                        ).run()
+                    )
+                )
             try:
                 done, _ = await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
                 for task in done:

@@ -1,5 +1,6 @@
 import asyncio
 from collections import Counter
+from collections.abc import Awaitable, Callable
 from typing import cast
 
 import pytest
@@ -37,12 +38,26 @@ async def test_actual_redis_atomic_limits_and_bounded_keys() -> None:
     import os
 
     from redis.asyncio import Redis
+    from redis.asyncio.connection import AbstractConnection
 
     url = os.environ.get("TIEWTRADE_TEST_REDIS_URL")
     if not url:
         pytest.skip("isolated Redis test URL required")
     client = Redis.from_url(url)
     try:
+        # This check proves atomic quota accounting, not cold TCP/DNS capacity.
+        # Reserve the burst's connections before admission starts its unchanged
+        # 500ms deadline. Cold/stalled requests still fail closed in the tests above.
+        connections: list[AbstractConnection] = []
+        prepare = cast(
+            Callable[[], Awaitable[AbstractConnection]], client.connection_pool.get_connection
+        )
+        try:
+            async with asyncio.timeout(5):
+                for _ in range(170):
+                    connections.append(await prepare())
+        finally:
+            await asyncio.gather(*(client.connection_pool.release(c) for c in connections))
         await client.flushdb()
         admission = RedisAdmission(cast(AdmissionRedis, client))
         same = Counter(await asyncio.gather(*(admission.outcome("127.0.0.1") for _ in range(40))))

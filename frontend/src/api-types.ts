@@ -410,6 +410,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/market-data/candles/pages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Candle Page */
+        get: operations["candle_page_market_data_candles_pages_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/market-data/candles/requests": {
         parameters: {
             query?: never;
@@ -421,6 +438,57 @@ export interface paths {
         put?: never;
         /** Request Candles */
         post: operations["request_candles_market_data_candles_requests_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/market-data/chart/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** History */
+        get: operations["history_market_data_chart_history_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/market-data/chart/live": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Live */
+        get: operations["live_market_data_chart_live_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/market-data/chart/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Verify Chart */
+        post: operations["verify_chart_market_data_chart_verify_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -614,6 +682,162 @@ export interface components {
             open_at: string;
             /** Volume */
             volume: string;
+        };
+        /** ChartCandlePage */
+        ChartCandlePage: {
+            /** Base */
+            base: string;
+            /**
+             * Coverage
+             * @enum {string}
+             */
+            coverage: "PRESENT" | "INCOMPLETE" | "UNAVAILABLE";
+            /**
+             * Display End
+             * Format: date-time
+             */
+            display_end: string;
+            /**
+             * Display Start
+             * Format: date-time
+             */
+            display_start: string;
+            /** Earliest Known */
+            earliest_known: boolean;
+            /** Failure Code */
+            failure_code: string | null;
+            /** Gaps */
+            gaps: components["schemas"]["WindowView"][];
+            /** Newer After */
+            newer_after: string | null;
+            observed: components["schemas"]["WindowView"] | null;
+            /**
+             * Observed At
+             * Format: date-time
+             */
+            observed_at: string;
+            /** Older Before */
+            older_before: string | null;
+            /** Quote */
+            quote: string;
+            /** Refresh Pending */
+            refresh_pending: boolean;
+            requested: components["schemas"]["WindowView"];
+            /** Rows */
+            rows: components["schemas"]["CandleView"][];
+            /** Status */
+            status: string | null;
+            timeframe: components["schemas"]["Timeframe"];
+        };
+        /** ChartHistoryView */
+        ChartHistoryView: {
+            /**
+             * As Of
+             * Format: date-time
+             */
+            as_of: string;
+            /** Base */
+            base: string;
+            /**
+             * Calculation End
+             * Format: date-time
+             */
+            calculation_end: string;
+            /**
+             * Calculation Start
+             * Format: date-time
+             */
+            calculation_start: string;
+            /** Candles */
+            candles: components["schemas"]["CandleView"][];
+            /** Dataset Revision */
+            dataset_revision: string;
+            /** Display Proof */
+            display_proof: string;
+            /** Formula Version */
+            formula_version: string;
+            /** Generation Age Seconds */
+            generation_age_seconds?: number | null;
+            /** Generation Id */
+            generation_id?: string | null;
+            /** Next Cursor */
+            next_cursor: string | null;
+            /** Prepared At */
+            prepared_at?: string | null;
+            /** Quote */
+            quote: string;
+            refresh: components["schemas"]["RefreshView"];
+            /**
+             * Result End
+             * Format: date-time
+             */
+            result_end: string;
+            /**
+             * Result Start
+             * Format: date-time
+             */
+            result_start: string;
+            /** Rows */
+            rows: components["schemas"]["IndicatorPointView"][];
+            /** Source */
+            source: string;
+            timeframe: components["schemas"]["Timeframe"];
+        };
+        /** ChartLiveView */
+        ChartLiveView: {
+            /** Base */
+            base: string;
+            /** Epoch */
+            epoch: string;
+            /** Event At */
+            event_at: string | null;
+            /** History End */
+            history_end: string | null;
+            /** Quote */
+            quote: string;
+            /** Reason */
+            reason: string | null;
+            /** Received At */
+            received_at: string | null;
+            /** Revision */
+            revision: string | null;
+            /** Rows */
+            rows: components["schemas"]["CandleView"][];
+            /**
+             * Server Time
+             * Format: date-time
+             */
+            server_time: string;
+            /** Source */
+            source: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "READY" | "RECOVERING" | "STALE" | "NO_DATA" | "UNAVAILABLE";
+            timeframe: components["schemas"]["Timeframe"];
+        };
+        /** ChartProofRequest */
+        ChartProofRequest: {
+            /** Display Proof */
+            display_proof: string;
+        };
+        /** ChartProofView */
+        ChartProofView: {
+            /** Calculation End */
+            calculation_end?: string | null;
+            /** Calculation Start */
+            calculation_start?: string | null;
+            /**
+             * Checked At
+             * Format: date-time
+             */
+            checked_at: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "MATCHED" | "CHANGED" | "UNVERIFIABLE";
         };
         /**
          * CodesIssued
@@ -1025,7 +1249,7 @@ export interface components {
          * Timeframe
          * @enum {string}
          */
-        Timeframe: "1m" | "5m" | "15m" | "1h" | "4h" | "1d";
+        Timeframe: "1m" | "5m" | "15m" | "1h" | "4h" | "1d" | "1w" | "1M";
         /** TradingAccountView */
         TradingAccountView: {
             key: components["schemas"]["KeyView"] | null;
@@ -1633,6 +1857,41 @@ export interface operations {
             };
         };
     };
+    candle_page_market_data_candles_pages_get: {
+        parameters: {
+            query: {
+                base: string;
+                quote: string;
+                timeframe: components["schemas"]["Timeframe"];
+                before?: string | null;
+                after?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChartCandlePage"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RejectedCandleInput"];
+                };
+            };
+        };
+    };
     request_candles_market_data_candles_requests_post: {
         parameters: {
             query?: never;
@@ -1671,6 +1930,109 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["RejectedCandleInput"];
+                };
+            };
+        };
+    };
+    history_market_data_chart_history_get: {
+        parameters: {
+            query?: {
+                base?: string | null;
+                quote?: string | null;
+                timeframe?: components["schemas"]["Timeframe"] | null;
+                start?: string | null;
+                end?: string | null;
+                page_size?: number | null;
+                cursor?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChartHistoryView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    live_market_data_chart_live_get: {
+        parameters: {
+            query: {
+                base: string;
+                quote: string;
+                timeframe: components["schemas"]["Timeframe"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChartLiveView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    verify_chart_market_data_chart_verify_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChartProofRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChartProofView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

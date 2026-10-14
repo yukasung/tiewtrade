@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { ApiRequestError, type Me } from "./auth";
+import { navigateAccountPage } from "./accountNavigation";
 import { keyText, keyState, keyTime } from "./apiKeyMessages";
 import {
   fetchTradingAccount,
@@ -129,7 +130,7 @@ export function TradingAccountPanel({ identity }: { identity: Me }) {
                 <p>{t("keyRequired")}</p>
               ) : !identity.totp_enabled ? (
                 <p>
-                  <a href="#totp-panel">{t("totpRequired")}</a>
+                  <a href="/security" onClick={navigateAccountPage}>{t("totpRequired")}</a>
                 </p>
               ) : (
                 <form

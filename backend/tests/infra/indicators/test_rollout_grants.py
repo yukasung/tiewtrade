@@ -128,7 +128,11 @@ async def test_partial_control_or_trigger_fails_closed(
             elif fault == "control":
                 await c.execute(text("DELETE FROM indicator_rollout_control"))
             else:
-                await c.execute(text(f"UPDATE indicator_rollout_control SET {fault}_version=2"))
+                unsupported = 1 if fault == "codec" else 2
+                await c.execute(
+                    text(f"UPDATE indicator_rollout_control SET {fault}_version=:version"),
+                    {"version": unsupported},
+                )
             state = text("SELECT to_jsonb(c) FROM indicator_rollout_control c")
             before: Sequence[dict[str, Any]] = (await c.execute(state)).scalars().all()
             attempt = await c.begin_nested()

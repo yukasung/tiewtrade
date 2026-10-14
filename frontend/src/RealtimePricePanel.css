@@ -1,4 +1,4 @@
-.realtime-price-panel { margin-top: var(--account-space-lg); padding: var(--account-space-md); border: var(--account-border-width) solid var(--account-line); border-radius: var(--account-radius); background: var(--account-surface); }
+.realtime-price-panel { min-width: 0; }
 .realtime-price-list { padding: 0; list-style: none; display: grid; gap: var(--account-space-md); }
 .realtime-price-list li { min-width: 0; border-top: var(--account-border-width) solid var(--account-line); padding-top: var(--account-space-sm); overflow-wrap: anywhere; }
 .realtime-price-list p { margin-block: var(--account-space-sm); }

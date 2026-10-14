@@ -54,6 +54,7 @@ describe("AuthPanel", () => {
       }),
     );
 
+    window.history.replaceState(null, "", "/account");
     render(<AuthPanel />);
 
     await waitFor(() => {
@@ -74,6 +75,7 @@ describe("AuthPanel", () => {
       }),
     );
 
+    window.history.replaceState(null, "", "/account");
     render(<AuthPanel />);
 
     await waitFor(() => {
@@ -98,6 +100,7 @@ describe("AuthPanel", () => {
       }),
     );
 
+    window.history.replaceState(null, "", "/account");
     render(<AuthPanel />);
     await waitFor(() => {
       expect(screen.getByTestId("signed-out")).toBeTruthy();
@@ -129,6 +132,7 @@ describe("AuthPanel", () => {
       }),
     );
 
+    window.history.replaceState(null, "", "/account");
     render(<AuthPanel />);
     await waitFor(() => {
       expect(screen.getByTestId("signed-out")).toBeTruthy();
@@ -167,6 +171,7 @@ describe("AuthPanel", () => {
       }),
     );
 
+    window.history.replaceState(null, "", "/account");
     render(<AuthPanel />);
     await waitFor(() => {
       expect(screen.getByTestId("signed-in")).toBeTruthy();

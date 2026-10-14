@@ -168,7 +168,7 @@ async def test_first_page_fails_closed(
             "floor": """UPDATE indicator_source_guard SET
                 revision=revision+1,journal_floor=revision+1""",
             "epoch": "UPDATE indicator_source_guard SET epoch=gen_random_uuid()",
-            "codec": "UPDATE indicator_generations SET codec_version=2",
+            "codec": "UPDATE indicator_generations SET codec_version=1",
             "checkpoint": "DELETE FROM indicator_checkpoints",
             "payload": "UPDATE indicator_checkpoints SET payload='{}'",
             "mode": "UPDATE indicator_rollout_control SET mode='PAUSED'",

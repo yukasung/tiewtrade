@@ -1,0 +1,22 @@
+﻿[
+    {
+        "Path":  "D:\\Projects\\TiewTrade\\Projects\\TiewTrade\\backend\\src\\tiewtrade\\core\\indicators.py",
+        "Hash":  "5D27EBA518568BF96B795B8F3E97854CB8DAA1390C90180CCD22A4703642E721"
+    },
+    {
+        "Path":  "D:\\Projects\\TiewTrade\\Projects\\TiewTrade\\backend\\src\\tiewtrade\\core\\money\\indicator_batch.py",
+        "Hash":  "5BB523591E8B831AE1A80044CEFADD037D8BC377FB39B4A6B4A66E72ED1F99F2"
+    },
+    {
+        "Path":  "D:\\Projects\\TiewTrade\\Projects\\TiewTrade\\backend\\src\\tiewtrade\\infra\\market_data\\indicator_reader.py",
+        "Hash":  "34DC54C7B9CA4253B5622935983AE792891B2AFB64CAC6D3BA7654B6FB39D2B5"
+    },
+    {
+        "Path":  "D:\\Projects\\TiewTrade\\Projects\\TiewTrade\\backend\\tests\\services\\indicator_builder\\profile_capacity.py",
+        "Hash":  "2CCF6F5C9185BBFFEB37AC3D83137BA63EB73253DA32830C3D00FDBDB3A60B49"
+    },
+    {
+        "Path":  "D:\\Projects\\TiewTrade\\Projects\\TiewTrade\\backend\\tests\\services\\indicator_builder\\profile_capacity_app.py",
+        "Hash":  "A4AE690D30ED3564C84005ABEEDEB4E73B19B6C1E7B79DC2D622394D8A4D63C9"
+    }
+]

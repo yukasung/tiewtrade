@@ -1,0 +1,21 @@
+{
+  "status": "SETUP_TERMINAL_FAILURE",
+  "seconds": 1.75,
+  "terminal_jobs": [
+    {
+      "base": "ETH",
+      "timeframe": "1m",
+      "status": "FAILED_SUPERSEDED",
+      "generation_sequence": 12,
+      "first_eligible_at": "2026-10-13 14:04:47.854763+00:00",
+      "availability_deadline": "2026-10-13 14:14:47.854763+00:00",
+      "attempts_used": 3,
+      "retry_not_before": "2026-10-13 14:11:54.075940+00:00",
+      "last_served_round": 12,
+      "deadline_missed_at": "2026-10-13 14:18:55.661480+00:00",
+      "failure_category": "SUPERSEDED",
+      "failure_reason": "SOURCE_CHANGED",
+      "failed_at": "2026-10-13 14:12:52.745931+00:00"
+    }
+  ]
+}

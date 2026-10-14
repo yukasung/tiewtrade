@@ -29,6 +29,7 @@ from tiewtrade.core.money.indicator_batch import (
     IndicatorBatchResult,
     IndicatorBatchState,
     advance_indicator_batch,
+    reset_indicator_batch,
 )
 from tiewtrade.core.money.rounding import RoundingDirection
 from tiewtrade.core.money.types import Money, Quantity
@@ -56,5 +57,6 @@ __all__ = [
     "advance_indicator_batch",
     "divide_money",
     "percentage_share",
+    "reset_indicator_batch",
     "weighted_mean_money",
 ]

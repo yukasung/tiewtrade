@@ -6,11 +6,15 @@ import asyncio
 import json
 from collections import deque
 from collections.abc import AsyncGenerator, Callable
+from contextlib import aclosing
+from dataclasses import dataclass
 from datetime import datetime, timedelta
+from typing import cast
 
 from websockets.asyncio.client import ClientConnection, connect
 from websockets.exceptions import InvalidStatus, WebSocketException
 
+from tiewtrade.core.realtime_prices import QuoteObservation
 from tiewtrade.venues.binance_th.failures import retry_after_of
 from tiewtrade.venues.binance_th.mapping import market_symbol
 from tiewtrade.venues.binance_th.stream_mapping import quote_from_stream, subscription_ack
@@ -52,6 +56,12 @@ class _ControlBoundConnection(ClientConnection):
                 self.transport.close()
 
 
+@dataclass(frozen=True, slots=True)
+class StreamFrame:
+    generation: int
+    value: object
+
+
 class BinanceThStreamTransport:
     def __init__(
         self,
@@ -67,6 +77,24 @@ class BinanceThStreamTransport:
     async def connection(
         self, symbols: tuple[Symbol, ...], *, generation: int
     ) -> AsyncGenerator[FeedEvent, None]:
+        def decode(payload: object, received_at: datetime) -> object:
+            return quote_from_stream(payload=payload, symbols=symbols, received_at=received_at)
+
+        params = tuple(f"{market_symbol(pair).lower()}@trade" for pair in symbols)
+        async with aclosing(self.frames(params, generation=generation, decode=decode)) as events:
+            async for event in events:
+                if isinstance(event, StreamFrame):
+                    yield FeedQuote(event.generation, cast(QuoteObservation, event.value))
+                else:
+                    yield event
+
+    async def frames(
+        self,
+        params: tuple[str, ...],
+        *,
+        generation: int,
+        decode: Callable[[object, datetime], object],
+    ) -> AsyncGenerator[FeedConnected | FeedDisconnected | StreamFrame, None]:
         failure = "VENUE_UNAVAILABLE"
         retry_after = None
         try:
@@ -91,10 +119,7 @@ class BinanceThStreamTransport:
                                 json.dumps(
                                     {
                                         "method": "SUBSCRIBE",
-                                        "params": [
-                                            f"{market_symbol(pair).lower()}@trade"
-                                            for pair in symbols
-                                        ],
+                                        "params": list(params),
                                         "id": generation,
                                     }
                                 )
@@ -105,9 +130,7 @@ class BinanceThStreamTransport:
                                     raise TimeoutError
                                 if isinstance(payload, dict) and "stream" in payload:
                                     # Validate but discard pre-ack trades; no unbounded queue.
-                                    quote_from_stream(
-                                        payload=payload, symbols=symbols, received_at=self._clock()
-                                    )
+                                    decode(payload, self._clock())
                                     continue
                                 if subscription_ack(payload, generation):
                                     if loop.time() >= deadline:
@@ -125,10 +148,8 @@ class BinanceThStreamTransport:
                             if loop.time() >= expires:
                                 raise TimeoutError
                             if isinstance(payload, dict) and "stream" in payload:
-                                quote = quote_from_stream(
-                                    payload=payload, symbols=symbols, received_at=self._clock()
-                                )
-                                yield FeedQuote(generation, quote)
+                                quote = decode(payload, self._clock())
+                                yield StreamFrame(generation, quote)
                             else:
                                 # Duplicate success ack doesn't restart recovery/deadline.
                                 subscription_ack(payload, generation)

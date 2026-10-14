@@ -75,7 +75,12 @@ def test_only_the_transport_reaches_the_network() -> None:
     stream_reaching = {path.name for path in adapter.glob("*.py")} - {
         path.name for path in modules_not_reaching(adapter, "stream_transport")
     }
-    assert stream_reaching == {"__init__.py", "price_feed.py", "stream_transport.py"}
+    assert stream_reaching == {
+        "__init__.py",
+        "price_feed.py",
+        "candle_feed.py",
+        "stream_transport.py",
+    }
 
 
 def test_public_stream_gateway_and_feed_composition_are_allowed(tmp_path: Path) -> None:

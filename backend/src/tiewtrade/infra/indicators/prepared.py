@@ -5,7 +5,14 @@ from datetime import datetime, timedelta
 
 from sqlalchemy import RowMapping
 
-from tiewtrade.core.market_data import CandleWindow, Timeframe, align_ceil, retention_cutoff
+from tiewtrade.core.market_data import (
+    CandleWindow,
+    Timeframe,
+    advance,
+    align_ceil,
+    retention_cutoff,
+    slot_count,
+)
 from tiewtrade.infra.crypto.indicator_cursor import (
     CursorClaims,
     DatasetChangedError,
@@ -182,8 +189,8 @@ async def read_prepared(
             claims.result_start
             if explicit_range
             else max(
-                align_ceil(retention_cutoff(now), claims.timeframe),
-                end - 1000 * claims.timeframe.span,
+                align_ceil(retention_cutoff(now, claims.timeframe), claims.timeframe),
+                advance(end, claims.timeframe, -1000),
             )
         )
         if (
@@ -210,7 +217,8 @@ async def read_prepared(
             }
         )
     page_end = min(
-        selected.result_end, selected.next_open_at + selected.page_size * selected.timeframe.span
+        selected.result_end,
+        advance(selected.next_open_at, selected.timeframe, selected.page_size),
     )
     checkpoint = (
         (
@@ -227,10 +235,13 @@ async def read_prepared(
         if continuation:
             raise DatasetChangedError()
         raise PreparedNotReadyError()
-    if (
-        not timedelta(0)
-        <= selected.next_open_at - checkpoint["next_open_at"]
-        < 1000 * selected.timeframe.span
+    if checkpoint["next_open_at"] > selected.next_open_at or (
+        checkpoint["next_open_at"] < selected.next_open_at
+        and slot_count(
+            CandleWindow(checkpoint["next_open_at"], selected.next_open_at),
+            selected.timeframe,
+        )
+        >= 1000
     ):
         if continuation:
             raise DatasetChangedError()
