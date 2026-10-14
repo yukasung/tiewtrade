@@ -495,3 +495,12 @@ Export `uv run python -m tiewtrade.services.api.openapi_export`,
 venue_contractแยกจากเทสต์ปกติ ไม่มีkeyและใช้boundedpublicrequestsเท่านั้น.
 review/finalcheckต้องผ่านแล้วจึงอัปเดตroadmapตามผลจริง;
 commit/push/mergeยังต้องเจ้าของสั่งแยกต่างหาก.
+# Calendar history batch follow-up — 2026-10-14
+
+Approved scope: [calendar-history-batch-amendment.md](calendar-history-batch-amendment.md).
+The calendar one-slot request expectation is superseded by bounded start-only
+requests; fixed-timeframe seven-day limits remain unchanged. Validation covers
+native batches, invalid response bounds/order, legacy in-flight requests, sparse
+page repair, durable progress, fencing, rollback and existing retry budgets.
+Results: [calendar batch evidence](evidence/2026-10-14-calendar-batch.md).
+Full regression and workload acceptance retain their existing pending status.

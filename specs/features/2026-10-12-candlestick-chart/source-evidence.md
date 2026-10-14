@@ -53,6 +53,14 @@ ordering, boundary, closure, 24h rotation หรือความเสถี�
 การยืนยันความสอดคล้องต้องอ่าน OHLC กับผลใน DB snapshot เดียวกัน
 ไม่เอา CandleHistoryView กับ IndicatorHistoryView สอง HTTP requests มา join เอง.
 
+## Follow-up — calendar history without endTime (2026-10-14)
+
+Public probes using `startTime=1501545600000&limit=1000` without `endTime`
+returned BTC 479 weekly rows and 111 monthly rows, starting in August 2017.
+See [approved batch amendment](calendar-history-batch-amendment.md).
+The evidence below still applies to requests supplying both bounds, but its
+single-slot implementation conclusion is superseded for calendar history.
+
 ## Amendment — native `1w`/`1M` และ REST 7-day limit (2026-10-14)
 
 เอกสารทางการ Binance TH ระบุทั้ง REST Kline และ WebSocket Kline รองรับ `1w` กับ `1M`

@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
+from itertools import pairwise
 
 from tiewtrade.core.market_data import Candle, CandleFinality, Timeframe, slot_count
 from tiewtrade.core.money import Money, Quantity
@@ -37,8 +38,8 @@ class BinanceThCandles:
             Timeframe.H1: 168,
             Timeframe.H4: 42,
             Timeframe.D1: 7,
-            Timeframe.W1: 1,
-            Timeframe.MN1: 1,
+            Timeframe.W1: 1000,
+            Timeframe.MN1: 1000,
         }
         return limits[timeframe]
 
@@ -81,7 +82,9 @@ class BinanceThCandles:
         self, symbol: Symbol, timeframe: Timeframe, start: datetime, end: datetime, limit: int
     ) -> CandlePage:
         window = validate_request(timeframe, start, end, limit)
-        if slot_count(window, timeframe) > self.max_request_slots(timeframe):
+        slots = slot_count(window, timeframe)
+        calendar = timeframe in (Timeframe.W1, Timeframe.MN1)
+        if slots > self.max_request_slots(timeframe):
             raise ValueError("candle request exceeds source span limit")
         epoch = datetime(1970, 1, 1, tzinfo=UTC)
         millisecond = timedelta(milliseconds=1)
@@ -89,11 +92,10 @@ class BinanceThCandles:
         # preserves exactly start <= open_time < end for arbitrary datetimes.
         start_ms = -((epoch - window.start) // millisecond)
         # Binance TH rejects every interval when startTime/endTime span more
-        # than seven days. A monthly row is still identified by its open time
-        # and carries the native next-month close time in the response.
+        # than seven days. Fixed intervals retain this explicit-bound request.
         query_end = min(window.end, window.start + self.max_request_span)
         end_ms = -((epoch - query_end) // millisecond)
-        if start_ms >= end_ms:
+        if start_ms >= end_ms or (calendar and slots == 0):
             return CandlePage(symbol, timeframe, window, (), self._clock())
         if self._known is None:
             discovery = await self._transport.get(Endpoint.EXCHANGE_INFO, cost=CONSTRAINTS_COST)
@@ -106,19 +108,24 @@ class BinanceThCandles:
             raise VenueProtocolError()
         if pair.get("type") not in ("SITE", "GLOBAL"):
             raise VenueProtocolError()
+        # Calendar history supports oldest-first batches without endTime.
+        # Bound the response size by native slots; CandlePage checks actual bounds.
+        request_limit = min(limit, slots) if calendar else limit
+        params = {
+            "symbol": name,
+            "interval": timeframe.value,
+            "startTime": str(start_ms),
+            "limit": str(request_limit),
+        }
+        if not calendar:
+            params["endTime"] = str(end_ms - 1)
         response = await self._transport.get(
             Endpoint.KLINES,
             cost=CANDLES_COST,
-            params={
-                "symbol": name,
-                "interval": timeframe.value,
-                "startTime": str(start_ms),
-                "endTime": str(end_ms - 1),
-                "limit": str(limit),
-            },
+            params=params,
         )
         rows = _sequence(response.payload)
-        if len(rows) > limit:
+        if len(rows) > request_limit:
             raise VenueProtocolError()
         observations: list[Candle] = []
         for item in rows:
@@ -142,5 +149,7 @@ class BinanceThCandles:
                         observed_at=response.received_at,
                     )
                 )
+        if any(left.open_at >= right.open_at for left, right in pairwise(observations)):
+            raise VenueProtocolError()
         with _readable():
             return CandlePage(symbol, timeframe, window, tuple(observations), response.received_at)

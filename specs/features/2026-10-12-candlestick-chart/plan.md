@@ -84,6 +84,14 @@ Requirements: [ฉบับที่รีวิวผ่าน](requirements.md
 หลักฐานต้นทาง: [source-evidence.md](source-evidence.md)
 บันทึกสถาปัตยกรรมที่เสนอ: [ADR-003](../../decisions/003-chart-market-data.md)
 
+## Amendment — calendar history batch retrieval (Approved 2026-10-14)
+
+ใช้ [calendar-history-batch-amendment.md](calendar-history-batch-amendment.md)
+แทนข้อจำกัดหนึ่งแท่งต่อคำขอของ `1w`/`1M` ในหัวข้อด้านล่าง: ส่ง `startTime`
+และ `limit` ตามจำนวน native slots สูงสุด 1,000 โดยไม่ส่ง `endTime`.
+ข้อจำกัดเจ็ดวันของคำขอที่ส่งทั้งสองขอบเวลายังเป็นหลักฐานเดิมที่ถูกต้อง;
+fixed timeframe, worker budget, retry และ fencing ไม่เปลี่ยน.
+
 ## Amendment — native timeframe `1w` และ `1M` ทั้งระบบ (Approved 2026-10-14)
 
 Amendment นี้แทนส่วนของแผนเดิมที่กำหนด 6 timeframes, 30 live series, fixed-span arithmetic,

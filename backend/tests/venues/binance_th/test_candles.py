@@ -7,7 +7,7 @@ import pytest
 
 from tests.venues.binance_th.conftest import FakeClock, RecordingGuard, transport_for
 from tiewtrade import venues
-from tiewtrade.core.market_data import CandleFinality, Timeframe, align_floor, next_open
+from tiewtrade.core.market_data import CandleFinality, Timeframe, advance, align_floor, next_open
 from tiewtrade.venues.binance_th.candles import CANDLES_COST, BinanceThCandles
 from tiewtrade.venues.binance_th.rate_limit import IpWeightLimiter, WeightWindow
 from tiewtrade.venues.errors import VenueProtocolError, VenueRateLimitedError
@@ -48,8 +48,12 @@ async def test_public_candles_explicit_bounds_cost_and_unknown_finality(
                 },
             )
         assert request.url.params["startTime"] == str(millis)
-        assert request.url.params["endTime"] == str(query_end_ms - 1)
-        assert request.url.params["limit"] == "1000"
+        if tf in (Timeframe.W1, Timeframe.MN1):
+            assert "endTime" not in request.url.params
+            assert request.url.params["limit"] == "1"
+        else:
+            assert request.url.params["endTime"] == str(query_end_ms - 1)
+            assert request.url.params["limit"] == "1000"
         assert request.url.params["interval"] == tf.value
         return httpx.Response(
             200, json=[[millis, "2", "3", "1", "2", "0", end_ms - 1, "0", 0, "0", "0", "0"]]
@@ -306,7 +310,7 @@ async def test_oversized_source_span_rejected_before_http_or_budget() -> None:
         ),
     ],
 )
-async def test_week_and_month_fetch_one_native_slot_with_at_most_seven_upstream_days(
+async def test_week_and_month_resume_one_native_slot_without_end_time(
     timeframe: Timeframe, start: datetime, end: datetime
 ) -> None:
     calls: list[httpx.Request] = []
@@ -328,7 +332,8 @@ async def test_week_and_month_fetch_one_native_slot_with_at_most_seven_upstream_
                 },
             )
         assert request.url.params["interval"] == timeframe.value
-        assert int(request.url.params["endTime"]) - int(request.url.params["startTime"]) < 604800000
+        assert "endTime" not in request.url.params
+        assert request.url.params["limit"] == "1"
         return httpx.Response(200, json=[])
 
     source = BinanceThCandles(transport_for(reply), clock=FakeClock())
@@ -338,11 +343,11 @@ async def test_week_and_month_fetch_one_native_slot_with_at_most_seven_upstream_
 
 
 @pytest.mark.parametrize("timeframe", [Timeframe.W1, Timeframe.MN1])
-async def test_week_and_month_reject_more_than_one_slot_before_http(
+async def test_week_and_month_reject_more_than_1000_slots_before_http(
     timeframe: Timeframe,
 ) -> None:
     start = datetime(2026, 1, 5 if timeframe is Timeframe.W1 else 1, tzinfo=UTC)
-    end = next_open(next_open(start, timeframe), timeframe)
+    end = advance(start, timeframe, 1001)
     calls: list[httpx.Request] = []
 
     def reply(request: httpx.Request) -> httpx.Response:
@@ -354,6 +359,7 @@ async def test_week_and_month_reject_more_than_one_slot_before_http(
         await source.fetch_candles(Symbol("BTC", "USDT"), timeframe, start, end, 1000)
     assert calls == []
 
+
 @pytest.mark.parametrize("payload", [[], [[]], [[-1] * 12], [[0] * 11]])
 async def test_history_discovery_rejects_empty_or_malformed_evidence(payload: list) -> None:
     source = BinanceThCandles(
@@ -362,3 +368,90 @@ async def test_history_discovery_rejects_empty_or_malformed_evidence(payload: li
     )
     with pytest.raises(VenueProtocolError):
         await source.earliest_open(Symbol("BTC", "USDT"), Timeframe.MN1)
+
+
+@pytest.mark.parametrize("tf", [Timeframe.W1, Timeframe.MN1])
+@pytest.mark.parametrize("count,limit", [(3, 1000), (1000, 1000), (3, 2)])
+async def test_calendar_batch_preserves_native_rows_and_bounded_limit(
+    tf: Timeframe, count: int, limit: int
+) -> None:
+    start = align_floor(datetime(2017, 8, 14, tzinfo=UTC), tf)
+    epoch = datetime(1970, 1, 1, tzinfo=UTC)
+    unit = timedelta(milliseconds=1)
+    expected = min(count, limit)
+    payload = [
+        [
+            (advance(start, tf, i) - epoch) // unit,
+            "2",
+            "3",
+            "1",
+            "2",
+            "0",
+            (advance(start, tf, i + 1) - epoch) // unit - 1,
+            "0",
+            0,
+            "0",
+            "0",
+            "0",
+        ]
+        for i in range(expected)
+    ]
+    discovery = json.loads((Path(__file__).parent / "fixtures/02-exchange-info.json").read_text())
+
+    def reply(request: httpx.Request) -> httpx.Response:
+        if request.url.path.endswith("exchangeInfo"):
+            return httpx.Response(200, text=discovery["body"])
+        assert "endTime" not in request.url.params
+        assert request.url.params["startTime"] == str((start - epoch) // unit)
+        assert request.url.params["limit"] == str(expected)
+        return httpx.Response(200, json=payload)
+
+    page = await BinanceThCandles(transport_for(reply), clock=FakeClock()).fetch_candles(
+        Symbol("BTC", "USDT"), tf, start, advance(start, tf, count), limit
+    )
+    assert [c.open_at for c in page.candles] == [advance(start, tf, i) for i in range(expected)]
+
+
+@pytest.mark.parametrize("tf", [Timeframe.W1, Timeframe.MN1])
+@pytest.mark.parametrize("kind", ["duplicate", "reversed", "outside", "unaligned", "over_limit"])
+async def test_calendar_batch_rejects_invalid_observations(tf: Timeframe, kind: str) -> None:
+    start = align_floor(datetime(2026, 1, 5, tzinfo=UTC), tf)
+    epoch = datetime(1970, 1, 1, tzinfo=UTC)
+    unit = timedelta(milliseconds=1)
+    offsets = {
+        "duplicate": [0, 0],
+        "reversed": [1, 0],
+        "outside": [0, 2],
+        "unaligned": [0, 1],
+        "over_limit": [0, 1, 2],
+    }[kind]
+    payload = [
+        [
+            (advance(start, tf, i) - epoch) // unit,
+            "2",
+            "3",
+            "1",
+            "2",
+            "0",
+            (advance(start, tf, i + 1) - epoch) // unit - 1,
+            "0",
+            0,
+            "0",
+            "0",
+            "0",
+        ]
+        for i in offsets
+    ]
+    if kind == "unaligned":
+        payload[0][0] += 1
+    discovery = json.loads((Path(__file__).parent / "fixtures/02-exchange-info.json").read_text())
+
+    def reply(request: httpx.Request) -> httpx.Response:
+        if request.url.path.endswith("exchangeInfo"):
+            return httpx.Response(200, text=discovery["body"])
+        return httpx.Response(200, json=payload)
+
+    with pytest.raises(VenueProtocolError):
+        await BinanceThCandles(transport_for(reply), clock=FakeClock()).fetch_candles(
+            Symbol("BTC", "USDT"), tf, start, advance(start, tf, 2), 1000
+        )
