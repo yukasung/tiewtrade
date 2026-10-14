@@ -1,5 +1,9 @@
 # F-12 — Test and local-preview checkpoint
 
+> หลักฐานประวัติรอบพัฒนา: สถานะ merge/CI ล่าสุดอยู่ที่
+> [post-merge validation checkpoint](2026-10-14-post-merge.md). ข้อความ “ยังไม่พร้อม merge”
+> ด้านล่างเป็นผล ณ วันที่บันทึก ไม่ใช่สถานะปัจจุบัน.
+
 วันที่: 2026-10-12 (Asia/Bangkok)
 สถานะผลตรวจ: **Partial — ยังไม่พร้อมรับรอง Completed หรือ merge**
 

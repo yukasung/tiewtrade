@@ -1,5 +1,8 @@
 # F-12 final candidate validation
 
+> หลักฐานประวัติของ candidate ก่อน merge: ผล CI และ runtime ล่าสุดอยู่ที่
+> [post-merge validation checkpoint](2026-10-14-post-merge.md).
+
 วันที่: 2026-10-13 (Asia/Bangkok)
 
 สถานะ: **Automated local checks recorded; acceptance ยัง Partial**
