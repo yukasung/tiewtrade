@@ -1,5 +1,6 @@
 # F-12 — กราฟแท่งเทียนบนหน้าเว็บ — Validation
 
+ผลหลัง merge ล่าสุด: [post-merge validation checkpoint](evidence/2026-10-14-post-merge.md).
 ผลแก้ viewport ตาม P-H3: [anchor regression evidence](evidence/2026-10-14-viewport.md).
 
 ## Candle-only chart reads — Approved 2026-10-14
@@ -76,13 +77,16 @@ workload checkpoint และต้องบันทึก command, commit/sour
 | TF-11 | Indicator batch/stream รับลำดับ calendar ของ `1w`/`1M`; สูตร/rounding/Money/Quantity ของ TF เดิมไม่เปลี่ยน และข้อมูลไม่พอคืน WARM_UP โดยไม่เติมศูนย์/ลด period/อ่านนอก retention | ระหว่างพัฒนา | Partial - core indicator arithmetic/stream regression passed with no new float or bare Decimal path; calendar warm-up/retention integration remains |
 | TF-12 | Checkpoint codec v2 fixture เดิม decode/round-trip เหมือนเดิม; checkpoint weekly/monthly strict round-trip และ reject skipped/repeated/misaligned calendar slot | ระหว่างพัฒนา | Partial - codec suite and weekly/monthly round trips passed; calendar-specific skipped/repeated/misaligned rejection matrix remains |
 | TF-13 | Authenticated candle/chart/indicator APIs รับ `1w`/`1M`; ปฏิเสธ `1W`, `1mo` และ casing อื่นตาม contract; auth/CSRF/error/retry budgets เดิมไม่ถดถอย | ระหว่างพัฒนา | Partial - enum/OpenAPI accept exact `1w`/`1M`, and contract tests now cover `1W`/`1mo`; authenticated route suite remains |
-| TF-14 | Exported OpenAPI และ generated TypeScript มี enum 8 ค่าและ `npm run check:api` ผ่านโดยไม่มี manual divergence | Candidate | Partial - OpenAPI and generated TypeScript contain all 8 values and frontend typecheck passed; `check:api` remains blocked by Windows symlink `EPERM` |
+| TF-14 | Exported OpenAPI และ generated TypeScript มี enum 8 ค่าและ `npm run check:api` ผ่านโดยไม่มี manual divergence | Candidate | Passed — required CI API contract gate ผ่านบน final source head; exported OpenAPI/generated TypeScript มี enum ครบ 8 ค่าโดยไม่มี generated diff |
 | TF-15 | UI ใช้ Admin Template Select แสดง 8 ค่า, default `1h`; การสลับ `1m`↔`1M` เร็ว ๆ ยกเลิก/กัน stale response และไม่ aggregate candle ใน browser | ระหว่างพัฒนา | Passed - 42 frontend targeted tests passed on unchanged UI source, covering 8 options, default `1h`, and existing stale-response behavior |
-| TF-16 | Browser smoke เห็น history และ live candle ของ `1w`/`1M`, reset/theme ยังทำงาน, ไม่มี blank chart จากการสลับ TF และ network log ไม่มี order/live-trading request | Candidate | Not Run |
-| TF-17 | Targeted lint/type/import checks และ tests ของ core, migration/storage, ingestion, venue stream, indicator, API และ frontend ที่ได้รับผลผ่านบน source เดียวกัน | Candidate | Partial - 151 core/indicator/codec/stream tests, 22 REST cases, 5 DB storage/ingestion/preview cases, ruff, and mypy for 156 source files passed; broader API/migration matrix remains |
-| TF-18 | Full regression, migration gate, generated contracts และ required CI ผ่าน; workload วัด backfill ห้าปีและ live 40 streams ตามเกณฑ์เดิมโดยไม่ลด safety/error bounds | ก่อน merge/release | Pending Full Validation |
+| TF-16 | Browser smoke เห็น history และ live candle ของ `1w`/`1M`, reset/theme ยังทำงาน, ไม่มี blank chart จากการสลับ TF และ network log ไม่มี order/live-trading request | Candidate | Passed — post-merge runtime smoke แสดง `1w` 479 rows และ `1M` 111 rows พร้อม live OHLCV; reset/theme ผ่าน, ไม่มี page error หรือ order/live-trading request |
+| TF-17 | Targeted lint/type/import checks และ tests ของ core, migration/storage, ingestion, venue stream, indicator, API และ frontend ที่ได้รับผลผ่านบน source เดียวกัน | Candidate | Passed — targeted evidence เดิมและ required CI บน final source head ผ่าน: backend 2,710, frontend 237, browser 17 พร้อม static/contracts/container gates |
+| TF-18 | Full regression, migration gate, generated contracts และ required CI ผ่าน; workload วัด backfill ห้าปีและ live 40 streams ตามเกณฑ์เดิมโดยไม่ลด safety/error bounds | ก่อน merge/release | Partial — full regression/migration/contracts/required CI ผ่านก่อน merge; workload/resource/endurance ส่วน release ยังคง Pending Full Validation ตาม V-17 |
 
 ### Development evidence 2026-10-14 - `1w` / `1M`
+
+รายการด้านล่างเป็น snapshot ระหว่างพัฒนาก่อน post-merge checkpoint; สถานะล่าสุดของ
+TF-16..18 และ CI ให้อ้างอิง [หลักฐานหลัง merge](evidence/2026-10-14-post-merge.md).
 
 - Core/indicator/codec/stream mapping: 151 targeted tests passed.
 - Binance TH REST adapter and public fixtures `16`/`17`: 22 targeted cases passed via a direct async harness because the existing Windows socket monkeypatch conflicts with the Proactor event loop.
@@ -90,7 +94,9 @@ workload checkpoint และต้องบันทึก command, commit/sour
 - Alembic replay `0026 -> 0025 -> 0026` passed after correcting the calendar-retention constraint and SQL-helper teardown order; the populated downgrade guard also rejected atomically.
 - Scoped ruff and `mypy src/tiewtrade` (156 source files) passed. Earlier frontend targeted 42 tests, typecheck, and scoped ESLint remain valid because frontend source has not changed since those runs.
 - The targeted scheduler catalog gate could not start because the current local database has revoked `CONNECT` from `tiewtrade_indicator_builder`; this is recorded as environment-blocked and is not counted as passed.
-- Full regression, browser smoke for `1w`/`1M`, five-year workload, 40-stream workload, and release performance gates have not run; TF-18 remains `Pending Full Validation`.
+- ณ development snapshot นี้ full regression/browser smoke ยังไม่ได้รัน; หลักฐานหลัง merge
+  ปิดสองส่วนนั้นแล้ว. Five-year/40-stream workload และ release performance gates ยังคง
+  `Pending Full Validation` ใน TF-18/V-17.
 
 
 ### ชุดทดสอบตามผลกระทบ
@@ -295,9 +301,10 @@ F-12 ไม่รับรอง production PREPARED หรือ Live readiness
 | V-15 | Browser→API→PG→fake venue worker→bundle/preview/refresh ครบทาง ไม่ mock APIทั้ง flow | 1/3/7/12/13/25/27/28 | Partial |
 | V-16 | ภาพ/ข้อความ loading/empty/partial/unconfirmed/stale/failure แยก และไม่มี trading action | 8/9/14/15/23/24 | Partial |
 | V-17 | วัดทรัพยากร/latency/budgets ตาม workload ที่กำหนด ไม่มี starvation จาก chart | 10/16/18/25/27/28 | Pending Full Validation |
-| V-18 | ด่าน CI/full regression/security/architecture/generated API/build + review/manualผ่าน | ทุกข้อ | Partial |
+| V-18 | ด่าน CI/full regression/security/architecture/generated API/build + review/manualผ่าน | ทุกข้อ | Partial — required CI/full regression ของ final PR head ผ่าน; manual/criteria closure และส่วนที่พึ่ง V-17 ยังค้าง |
 
-ผล Partial อ้างอิง [สรุปผลและรายการค้างล่าสุด](evidence/checkpoint.md),
+ผล Partial อ้างอิง [หลักฐานหลัง merge](evidence/2026-10-14-post-merge.md),
+[สรุปผลและรายการค้างเดิม](evidence/checkpoint.md),
 [รายงาน local preview รอบก่อน](evidence/dev-preview.md) และ snapshot ที่ระบุในรายงาน
 ยังไม่ถือว่าผ่านทั้งด่าน; V-17 และเกณฑ์ที่ยังขาดต้องตรวจครบตามระยะรันด้านล่าง
 
