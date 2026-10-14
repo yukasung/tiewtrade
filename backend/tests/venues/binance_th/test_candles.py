@@ -380,7 +380,9 @@ async def test_week_and_month_reject_more_than_1000_slots_before_http(
 
 
 @pytest.mark.parametrize("payload", [[], [[]], [[-1] * 12], [[0] * 11]])
-async def test_history_discovery_rejects_empty_or_malformed_evidence(payload: list) -> None:
+async def test_history_discovery_rejects_empty_or_malformed_evidence(
+    payload: list[object],
+) -> None:
     source = BinanceThCandles(
         transport_for(lambda request: httpx.Response(200, json=payload), guard=RecordingGuard()),
         clock=FakeClock(),
@@ -428,6 +430,7 @@ async def test_calendar_batch_rejects_invalid_observations(tf: Timeframe, kind: 
     }[kind]
     payload = [_calendar_kline(advance(start, tf, i), tf) for i in offsets]
     if kind == "unaligned":
+        assert isinstance(payload[0][0], int)
         payload[0][0] += 1
     discovery = json.loads((Path(__file__).parent / "fixtures/02-exchange-info.json").read_text())
 

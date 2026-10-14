@@ -284,7 +284,7 @@ async def test_retired_v1_job_is_never_claimed_by_v2_builder(
         assert claim is not None and claim.formula_version == "indicators-v2"
         await writer.finish(AttemptOutcome.SOURCE_CHANGED)
     async with migrator_engine.connect() as connection:
-        old_status = (
+        old_status: str = (
             await connection.execute(
                 text("""SELECT status FROM indicator_build_jobs
           WHERE formula_version='indicators-v1'""")

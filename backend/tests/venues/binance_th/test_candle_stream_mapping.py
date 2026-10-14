@@ -2,6 +2,7 @@ import json
 from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
+from typing import cast
 
 import pytest
 from hypothesis import given
@@ -69,7 +70,9 @@ def test_week_and_month_stream_names_and_calendar_close_are_native(
     ended = next_open(opened, timeframe)
     epoch = datetime(1970, 1, 1, tzinfo=UTC)
     payload["stream"] = f"btcusdt@kline_{timeframe.value}"
-    payload["data"]["k"].update(  # type: ignore[index, union-attr]
+    data = cast(dict[str, object], payload["data"])
+    kline = cast(dict[str, object], data["k"])
+    kline.update(
         {
             "i": timeframe.value,
             "t": (opened - epoch) // timedelta(milliseconds=1),
