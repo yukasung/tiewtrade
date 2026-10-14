@@ -79,7 +79,7 @@ async def synthetic_heads(engine: AsyncEngine) -> None:
             clock_timestamp()-interval '1 hour',clock_timestamp(),
             clock_timestamp()+interval '600s',1
           FROM unnest(ARRAY['BTC','ETH','DOGE','SOL','XRP']) b
-          CROSS JOIN unnest(ARRAY['1m','5m','15m','1h','4h','1d']) t""")
+          CROSS JOIN unnest(ARRAY['1m','5m','15m','1h','4h','1d','1w','1M']) t""")
         )
         await c.execute(
             text("""INSERT INTO indicator_generations
