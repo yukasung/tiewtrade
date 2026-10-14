@@ -143,7 +143,7 @@ async def test_graph_replay_pause_cutoff_and_reenable(
     async with migrator_engine.connect() as c:
         assert (
             await c.execute(text("SELECT count(*) FROM indicator_generations WHERE status='READY'"))
-        ).scalar_one() == 30
+        ).scalar_one() == 40
 
 
 @pytest.mark.parametrize(

@@ -3,100 +3,99 @@ import { afterEach, expect, it, vi } from "vitest";
 import { CandlestickChartPanel } from "../src/CandlestickChartPanel";
 import { useChartData } from "../src/chart/useChartData";
 import type { ChartRenderer } from "../src/chart/renderer";
-import { candleHistory, chartLive, chartPage } from "./chartFixture";
+import { candleHistory, chartLive } from "./chartFixture";
 
-const timeScale = vi.hoisted(() => ({
-  getVisibleLogicalRange: vi.fn<() => { from: number; to: number } | null>(() => null),
-  setVisibleLogicalRange: vi.fn(),
-  scrollToRealTime: vi.fn(),
-}));
-const rendererDraw = vi.hoisted(() => vi.fn<ChartRenderer["draw"]>(() => null));
+const scale = vi.hoisted(() => ({ getVisibleLogicalRange: vi.fn<() => { from: number; to: number } | null>(() => null), getVisibleRange: vi.fn(() => null),
+  setVisibleLogicalRange: vi.fn(), setVisibleRange: vi.fn(), subscribeVisibleLogicalRangeChange: vi.fn(),
+  unsubscribeVisibleLogicalRangeChange: vi.fn() }));
+const draw = vi.hoisted(() => vi.fn<ChartRenderer["draw"]>(() => null));
 vi.mock("../src/chart/useChartData", () => ({ useChartData: vi.fn() }));
-vi.mock("../src/chart/renderer", () => ({ mountChart: () => ({
-  chart: { timeScale: () => timeScale },
-  draw: rendererDraw, remove: () => undefined,
-} as unknown as ChartRenderer) }));
-afterEach(() => { cleanup(); vi.clearAllMocks(); });
-
-const candle = () => ({
-  open_at: "2026-10-12T00:00:00Z", end_at: "2026-10-12T01:00:00Z",
-  open: "100", high: "101", low: "99", close: "100.5", volume: "2",
-  finality: "UNCONFIRMED" as const, observed_at: "2026-10-12T01:00:00Z",
-  last_checked_at: "2026-10-12T01:00:00Z",
-});
-
-function state(pending: boolean, stopped: boolean, withCandle = false, pointCount = 0, withPreview = false) {
-  const page = chartPage();
-  if (withCandle) page.candles.push(candle());
-  for (let index = 0; index < pointCount; index += 1) page.rows.push({
-    open_at: new Date(Date.parse("2026-10-07T01:00:00Z") + index * 3_600_000).toISOString(),
-    finality: "UNCONFIRMED", seed_open_at: null, values: {},
-  });
-  const preview = chartLive();
-  if (withPreview) preview.rows.push(candle());
-  return {
-    query: { isPending: pending, isFetching: false, data: pending ? undefined : { pages: [page] }, error: null },
-    proof: { isFetching: false, data: undefined, error: null },
-    preview: { data: preview, error: stopped ? new Error("delivery unavailable") : null },
-    refreshState: { isFetching: false, error: null },
-    visible: true, valid: false, stopped, cooldownActive: false, retry: vi.fn(), refresh: vi.fn(),
+vi.mock("../src/chart/renderer", () => ({ mountChart: () => ({ chart: { timeScale: () => scale },
+  draw, remove: vi.fn(), applyTheme: vi.fn() }) }));
+afterEach(() => { cleanup(); vi.clearAllMocks(); scale.getVisibleLogicalRange.mockReturnValue(null); });
+const candle = () => ({ open_at: "2026-10-12T00:00:00Z", end_at: "2026-10-12T01:00:00Z",
+  open: "100", high: "101", low: "99", close: "100.5", volume: "2", finality: "UNCONFIRMED" as const,
+  observed_at: "2026-10-12T00:30:00Z", last_checked_at: "2026-10-12T00:30:00Z" });
+function state() {
+  return { preview: { data: chartLive(), isFetching: false }, error: null, visible: true,
+    cooldownActive: false, retry: vi.fn(), browsing: { latest: { ...candleHistory(), rows: [candle()],
+      display_start: "2026-07-12T00:00:00Z", display_end: "2026-10-12T01:00:00Z", earliest_known: true,
+      older_before: null, newer_after: null }, navigate: vi.fn(), reset: vi.fn(), retry: vi.fn() },
   } as unknown as ReturnType<typeof useChartData>;
 }
-
-it("does not show the persistent status block while the first request is scheduled", () => {
-  vi.mocked(useChartData).mockReturnValue(state(true, false));
-  render(<CandlestickChartPanel userId="fixture" />);
-  expect(screen.queryByRole("status")).toBeNull();
+it("renders exact candle data without indicator points or controls", () => {
+  vi.mocked(useChartData).mockReturnValue(state()); render(<CandlestickChartPanel userId="one"/>);
+  expect(draw.mock.calls.at(-1)?.[0][0]?.close).toBe("100.5");
+  expect(draw.mock.calls.at(-1)?.[1]).toEqual([]);
+  expect(draw.mock.calls.at(-1)?.[2].size).toBe(0);
+  expect(screen.queryByRole("checkbox")).toBeNull();
+  expect(screen.getByTestId("chart-summary").textContent).toContain("100.5");
+});
+it("keeps newer history when live is older, and deduplicates newer live", () => {
+  const current = state(); current.preview.data!.rows = [{ ...candle(), close: "100.1", observed_at: "2026-10-12T00:20:00Z" }];
+  vi.mocked(useChartData).mockReturnValue(current); const panel = render(<CandlestickChartPanel userId="one"/>);
+  expect(draw.mock.calls.at(-1)?.[0][0]?.close).toBe("100.5");
+  current.preview.data = { ...current.preview.data!, rows: [{ ...candle(), close: "100.8", observed_at: "2026-10-12T00:40:00Z" }] };
+  panel.rerender(<CandlestickChartPanel userId="one"/>);
+  expect(draw.mock.calls.at(-1)?.[0]).toHaveLength(1);
+  expect(draw.mock.calls.at(-1)?.[0][0]?.close).toBe("100.8");
+});
+it("never downgrades closed history with a live preview", () => {
+  const current = state(); current.browsing.latest!.rows[0]!.finality = "CLOSED";
+  current.preview.data!.rows = [{ ...candle(), close: "100.9", observed_at: "2026-10-12T02:00:00Z" }];
+  vi.mocked(useChartData).mockReturnValue(current); render(<CandlestickChartPanel userId="one"/>);
+  expect(draw.mock.calls.at(-1)?.[0][0]?.close).toBe("100.5");
+});
+it("does not append live candles while browsing an older page", () => {
+  const current = state(); current.browsing.page = { ...current.browsing.latest! };
+  current.preview.data!.rows = [{ ...candle(), open_at: "2026-10-12T02:00:00Z" }];
+  vi.mocked(useChartData).mockReturnValue(current); render(<CandlestickChartPanel userId="one"/>);
+  expect(draw.mock.calls.at(-1)?.[0]).toHaveLength(1);
+});
+it("reset only changes viewport, and supports weekly/monthly selection", () => {
+  const current = state(); vi.mocked(useChartData).mockReturnValue(current);
+  render(<CandlestickChartPanel userId="one"/>);
+  fireEvent.click(screen.getByRole("button", { name: /รีเซ็ต/ }));
+  expect(current.retry).not.toHaveBeenCalled(); expect(current.browsing.retry).not.toHaveBeenCalled();
+  expect(scale.setVisibleLogicalRange).toHaveBeenCalled();
+  expect(screen.getByRole("option", { name: "1w" })).toBeTruthy();
+  fireEvent.change(document.querySelector("#chart-timeframe")!, { target: { value: "1M" } });
+  expect(vi.mocked(useChartData).mock.calls.at(-1)?.[1].timeframe).toBe("1M");
+});
+it("blocks manual retry during cooldown", () => {
+  const current = state(); current.error = new Error("unavailable"); current.cooldownActive = true;
+  vi.mocked(useChartData).mockReturnValue(current); const panel = render(<CandlestickChartPanel userId="one"/>);
+  const button = screen.getByRole("button", { name: /ลองใหม่/ });
+  fireEvent.click(button); expect(current.retry).not.toHaveBeenCalled();
+  current.cooldownActive = false; panel.rerender(<CandlestickChartPanel userId="one"/>);
+  fireEvent.click(button); expect(current.retry).toHaveBeenCalledOnce();
 });
 
-it("deduplicates provisional/live candles and hands off atomically to corrected bundle candles", () => {
-  const initial = state(true, false, false, 0, true);
-  const history = { ...candleHistory(), rows: [{ ...candle(), close: "100.1" }] };
-  initial.provisional = { data: history, error: null } as ReturnType<typeof useChartData>["provisional"];
-  vi.mocked(useChartData).mockReturnValue(initial);
-  const panel = render(<CandlestickChartPanel userId="fixture" />);
-  expect(rendererDraw.mock.calls.at(-1)?.[0]).toHaveLength(1);
-  expect(rendererDraw.mock.calls.at(-1)?.[0][0]?.close).toBe("100.5");
-  expect(rendererDraw.mock.calls.at(-1)?.[3]).toBe(false);
-  const coherent = state(false, false, true);
-  coherent.provisional = initial.provisional;
-  coherent.query.data!.pages[0]!.candles[0]!.close = "100.7";
-  vi.mocked(useChartData).mockReturnValue(coherent);
-  panel.rerender(<CandlestickChartPanel userId="fixture" />);
-  expect(rendererDraw.mock.calls.at(-1)?.[0][0]?.close).toBe("100.7");
-  coherent.provisional = { data: { ...history, rows: [{ ...candle(), close: "100.2" }] }, error: null } as ReturnType<typeof useChartData>["provisional"];
-  panel.rerender(<CandlestickChartPanel userId="fixture" />);
-  expect(rendererDraw.mock.calls.at(-1)?.[0][0]?.close).toBe("100.7");
-});
-
-it("does not show a persistent empty-history status", () => {
-  vi.mocked(useChartData).mockReturnValue(state(false, false));
-  render(<CandlestickChartPanel userId="fixture" />);
-  expect(screen.queryByRole("status")).toBeNull();
-});
 
 it("keeps volume available as exact text inside the chart without a volume pane", () => {
-  vi.mocked(useChartData).mockReturnValue(state(false, false, true));
+  vi.mocked(useChartData).mockReturnValue(state());
   render(<CandlestickChartPanel userId="fixture" />);
   const summary = within(screen.getByTestId("chart-summary"));
   expect(summary.getByText("2 BTC", { exact: true }).textContent).toBe("2 BTC");
   expect(screen.getAllByText("2 BTC", { exact: true })).toHaveLength(1);
 });
 
+
 it("does not expose indicator controls or values in the chart UI", () => {
-  vi.mocked(useChartData).mockReturnValue(state(false, false, true));
+  vi.mocked(useChartData).mockReturnValue(state());
   render(<CandlestickChartPanel userId="fixture" />);
   expect(screen.queryByRole("group", { name: "Indicator" })).toBeNull();
   for (const name of ["EMA20", "EMA50", "EMA200", "RSI14", "ATR14"]) {
     expect(screen.queryByText(name, { exact: true })).toBeNull();
   }
-  expect(rendererDraw.mock.calls.at(-1)?.[2].size).toBe(0);
-  expect(rendererDraw.mock.calls.at(-1)?.[3]).toBe(false);
+  expect(draw.mock.calls.at(-1)?.[2].size).toBe(0);
+  expect(draw.mock.calls.at(-1)?.[3]).toBe(false);
 });
 
+
 it("shows the selected candle's exact time, OHLCV and finality only on the chart", () => {
-  const current = state(false, false, true);
-  current.query.data!.pages[0]!.candles[0]!.open = "83262.00";
+  const current = state();
+  current.browsing.latest!.rows[0]!.open = "83262.00";
   vi.mocked(useChartData).mockReturnValue(current);
   render(<CandlestickChartPanel userId="fixture" />);
   const summary = within(screen.getByTestId("chart-summary"));
@@ -108,19 +107,12 @@ it("shows the selected candle's exact time, OHLCV and finality only on the chart
   expect(summary.getByText("ยังไม่มีหลักฐานยืนยัน CLOSED")).toBeTruthy();
   expect(summary.getByText(/12 ต\.ค\. 2569/)).toBeTruthy();
   expect(screen.getAllByText("100.5 USDT", { exact: true })).toHaveLength(1);
-  expect(current.query.data!.pages[0]!.candles[0]!.open).toBe("83262.00");
+  expect(current.browsing.latest!.rows[0]!.open).toBe("83262.00");
 });
 
-it("keeps actionable errors after removing the persistent status block", () => {
-  vi.mocked(useChartData).mockReturnValue(state(true, true));
-  render(<CandlestickChartPanel userId="fixture" />);
-  expect(screen.queryByRole("status")).toBeNull();
-  expect(screen.getByRole("alert")).toBeTruthy();
-  expect(screen.queryByRole("button", { name: "ลองใหม่" })).toBeNull();
-});
 
 it("omits manual chart controls and the scale note", () => {
-  vi.mocked(useChartData).mockReturnValue(state(false, false, true));
+  vi.mocked(useChartData).mockReturnValue(state());
   render(<CandlestickChartPanel userId="fixture" />);
   for (const name of ["กลับช่วงล่าสุด", "เพิ่มประวัติก่อนหน้า", "ลองใหม่", "ขอ refresh ประวัติ",
     "แท่งก่อนหน้า", "แท่งถัดไป"]) {
@@ -129,22 +121,9 @@ it("omits manual chart controls and the scale note", () => {
   expect(screen.queryByText(/สเกลภาพเป็นค่าประมาณ/)).toBeNull();
 });
 
-it("resets the chart viewport with the Thai reset button", () => {
-  vi.mocked(useChartData).mockReturnValue(state(false, false, true, 120));
-  const panel = render(<CandlestickChartPanel userId="fixture" />);
-  timeScale.setVisibleLogicalRange.mockClear();
-
-  fireEvent.click(screen.getByRole("button", { name: "รีเซ็ตกราฟ" }));
-
-  expect(timeScale.setVisibleLogicalRange).toHaveBeenCalledOnce();
-  expect(timeScale.setVisibleLogicalRange).toHaveBeenCalledWith({ from: 20, to: 124 });
-  expect(within(panel.container.querySelector(".chart-controls") as HTMLElement)
-    .getAllByRole("combobox").map(control => (control as HTMLSelectElement).value))
-    .toEqual(["BTC", "1h"]);
-});
 
 it("renders a disabled order placeholder without a form or default financial values", () => {
-  vi.mocked(useChartData).mockReturnValue(state(false, false, true));
+  vi.mocked(useChartData).mockReturnValue(state());
   const panel = render(<CandlestickChartPanel userId="fixture" />);
   const order = within(screen.getByTestId("trading-order-placeholder"));
   expect(panel.container.querySelector("form")).toBeNull();
@@ -156,8 +135,9 @@ it("renders a disabled order placeholder without a form or default financial val
   expect(order.getByRole("button", { name: "ยังไม่เปิดใช้งาน" })).toBeTruthy();
 });
 
+
 it("renders semantic empty trading history without mock rows", () => {
-  vi.mocked(useChartData).mockReturnValue(state(false, false, true));
+  vi.mocked(useChartData).mockReturnValue(state());
   render(<CandlestickChartPanel userId="fixture" />);
   const history = within(screen.getByTestId("trade-history-placeholder"));
   expect(history.getByRole("table")).toBeTruthy();
@@ -166,14 +146,9 @@ it("renders semantic empty trading history without mock rows", () => {
   expect(history.getByText("ยังไม่มีข้อมูลออเดอร์หรือการเทรดจากระบบ", { exact: true })).toBeTruthy();
 });
 
-it("disables chart reset until chart slots are available", () => {
-  vi.mocked(useChartData).mockReturnValue(state(false, false));
-  render(<CandlestickChartPanel userId="fixture" />);
-  expect(screen.getByRole("button", { name: "รีเซ็ตกราฟ" }).hasAttribute("disabled")).toBe(true);
-});
 
 it("keeps chart content in Thai without visible market-bar labels", () => {
-  vi.mocked(useChartData).mockReturnValue(state(false, false, true));
+  vi.mocked(useChartData).mockReturnValue(state());
   const panel = render(<CandlestickChartPanel userId="fixture" />);
   const marketBar = within(panel.container.querySelector(".trading-market-bar") as HTMLElement);
   expect(screen.queryByRole("combobox", { name: "ภาษา" })).toBeNull();
@@ -185,89 +160,28 @@ it("keeps chart content in Thai without visible market-bar labels", () => {
   expect(screen.getByText(/12 ต\.ค\. 2569/)).toBeTruthy();
 });
 
-it("shows a TradingView-style latest viewport on first data load", () => {
-  vi.mocked(useChartData).mockReturnValue(state(false, false, true));
-  render(<CandlestickChartPanel userId="fixture" />);
-  expect(timeScale.setVisibleLogicalRange).toHaveBeenCalledWith({ from: -99, to: 5 });
+it("does not paginate after programmatic range changes, but loads on user pan", () => {
+  vi.useFakeTimers();
+  try {
+    const current = state(); current.browsing.latest!.older_before = "2026-10-11T00:00:00Z";
+    vi.mocked(useChartData).mockReturnValue(current); render(<CandlestickChartPanel userId="one"/>);
+    const changed = scale.subscribeVisibleLogicalRangeChange.mock.calls[0]![0] as (range: { from: number; to: number }) => void;
+    changed({ from: 0, to: 99 }); vi.advanceTimersByTime(300);
+    expect(current.browsing.navigate).not.toHaveBeenCalled();
+    fireEvent.pointerDown(screen.getByTestId("chart-canvas"));
+    changed({ from: 0, to: 99 }); vi.advanceTimersByTime(300);
+    expect(current.browsing.navigate).toHaveBeenCalledWith("older");
+  } finally { vi.useRealTimers(); }
 });
 
-it("anchors the initial viewport to the latest combined chart slots", () => {
-  vi.mocked(useChartData).mockReturnValue(state(false, false, true, 120));
-  render(<CandlestickChartPanel userId="fixture" />);
-  expect(timeScale.setVisibleLogicalRange).toHaveBeenCalledWith({ from: 20, to: 124 });
-});
-
-it("replaces a provisional preview viewport when the first history bundle arrives", () => {
-  timeScale.getVisibleLogicalRange
-    .mockReturnValueOnce(null)
-    .mockReturnValue({ from: -99, to: 5 });
-  vi.mocked(useChartData).mockReturnValue(state(true, false, false, 0, true));
-  const panel = render(<CandlestickChartPanel userId="fixture" />);
-  expect(timeScale.setVisibleLogicalRange).toHaveBeenLastCalledWith({ from: -99, to: 5 });
-
-  vi.mocked(useChartData).mockReturnValue(state(false, false, true, 120));
-  panel.rerender(<CandlestickChartPanel userId="fixture" />);
-  expect(timeScale.setVisibleLogicalRange).toHaveBeenLastCalledWith({ from: 20, to: 124 });
-});
-
-it("preserves logical spacing when chart data updates", () => {
-  const range = { from: -150, to: 1 };
-  vi.mocked(useChartData).mockReturnValue(state(false, false, true));
-  const panel = render(<CandlestickChartPanel userId="fixture" />);
-  expect(timeScale.setVisibleLogicalRange).toHaveBeenLastCalledWith({ from: -99, to: 5 });
-
-  timeScale.getVisibleLogicalRange.mockReturnValue(range);
-  vi.mocked(useChartData).mockReturnValue(state(false, false, true, 0, true));
-  panel.rerender(<CandlestickChartPanel userId="fixture" />);
-  expect(timeScale.setVisibleLogicalRange).toHaveBeenLastCalledWith(range);
-});
-
-it("keeps the live preview visible while the new timeframe history loads", () => {
-  vi.mocked(useChartData).mockReturnValue(state(false, false, true));
-  const panel = render(<CandlestickChartPanel userId="fixture" />);
-  rendererDraw.mockClear();
-
-  const loading = state(true, false, false, 0, true);
-  loading.preview.data!.timeframe = "1m";
-  vi.mocked(useChartData).mockReturnValue(loading);
-  fireEvent.change(panel.container.querySelectorAll("select")[1]!, { target: { value: "1m" } });
-  expect(rendererDraw.mock.calls.at(-1)?.[0]).toHaveLength(1);
-  expect(rendererDraw.mock.calls.at(-1)?.[1]).toEqual([]);
-
-  const loaded = state(false, false, true, 120, true);
-  loaded.query.data!.pages[0]!.timeframe = "1m";
-  loaded.preview.data!.timeframe = "1m";
-  vi.mocked(useChartData).mockReturnValue(loaded);
-  panel.rerender(<CandlestickChartPanel userId="fixture" />);
-  expect(rendererDraw.mock.calls.at(-1)?.[0].length).toBeGreaterThan(0);
-  expect(rendererDraw.mock.calls.at(-1)?.[1]).toHaveLength(120);
-});
-
-it("does not reuse stale candles or viewport state from the previous timeframe", () => {
-  const previous = state(false, false, true, 120);
-  vi.mocked(useChartData).mockReturnValue(previous);
-  const panel = render(<CandlestickChartPanel userId="fixture" />);
-  expect(rendererDraw.mock.calls.at(-1)?.[0]).toHaveLength(1);
-
-  rendererDraw.mockClear();
-  timeScale.setVisibleLogicalRange.mockClear();
-  vi.mocked(useChartData).mockReturnValue(previous);
-  fireEvent.change(panel.container.querySelectorAll("select")[1]!, { target: { value: "1m" } });
-  expect(rendererDraw.mock.calls.at(-1)?.[0]).toEqual([]);
-  expect(rendererDraw.mock.calls.at(-1)?.[1]).toEqual([]);
-
-  const current = state(true, false);
-  const currentHistory = candleHistory();
-  currentHistory.timeframe = "1m";
-  currentHistory.rows = Array.from({ length: 100 }, (_, index) => ({
-    ...candle(),
-    open_at: new Date(Date.parse("2026-10-12T00:00:00Z") + index * 60_000).toISOString(),
-    end_at: new Date(Date.parse("2026-10-12T00:01:00Z") + index * 60_000).toISOString(),
-  }));
-  current.provisional = { data: currentHistory, error: null } as ReturnType<typeof useChartData>["provisional"];
-  vi.mocked(useChartData).mockReturnValue(current);
-  panel.rerender(<CandlestickChartPanel userId="fixture" />);
-
-  expect(rendererDraw.mock.calls.at(-1)?.[0]).toHaveLength(100);
-  expect(timeScale.setVisibleLogicalRange).toHaveBeenLastCalledWith({ from: 0, to: 104 });
+it("keeps the user's fractional viewport when live data redraws", () => {
+  const current = state(); vi.mocked(useChartData).mockReturnValue(current);
+  const panel = render(<CandlestickChartPanel userId="one"/>);
+  const range = { from: -12.75, to: 8.5 };
+  scale.getVisibleLogicalRange.mockReturnValue(range);
+  scale.setVisibleLogicalRange.mockClear();
+  current.preview.data = { ...chartLive(), rows: [{ ...candle(), close: "100.8" }] };
+  panel.rerender(<CandlestickChartPanel userId="one"/>);
+  expect(scale.setVisibleLogicalRange).toHaveBeenLastCalledWith(range);
+  expect(scale.setVisibleRange).not.toHaveBeenCalled();
 });

@@ -154,3 +154,12 @@ it("removes unverified lines and closes the library subscriptions on teardown", 
   expect(plots.chart.unsubscribeCrosshairMove).toHaveBeenCalledOnce();
   expect(plots.chart.remove).toHaveBeenCalledOnce();
 });
+
+it("preserves missing candle slots without indicator points or duplicate timestamps", () => {
+  renderer().draw([candle()], [], new Set(), false,
+    ["2026-10-12T00:00:00.000Z", "2026-10-12T01:00:00.000Z"]);
+  const rows = plots.series[0]!.setData.mock.calls[0]![0];
+  expect(rows).toHaveLength(2);
+  expect(rows[0]).toHaveProperty("open"); expect(rows[1]).not.toHaveProperty("open");
+  expect(plots.added.map(({ kind }) => kind)).toEqual(["candle"]);
+});

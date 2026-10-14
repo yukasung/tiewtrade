@@ -6,7 +6,8 @@ from uuid import UUID, uuid4
 
 from sqlalchemy import RowMapping
 
-from tiewtrade.core.market_data import Candle, Timeframe, retention_cutoff
+from tiewtrade.core.market_data import Candle, Timeframe
+from tiewtrade.core.timeframes import candle_storage_cutoff as retention_cutoff
 from tiewtrade.infra.db import money_to_columns, quantity_to_columns
 from tiewtrade.infra.db.session import MarketDataSession, require_market_data_session
 from tiewtrade.infra.indicators.source import begin_source_write, require_source_write
@@ -125,6 +126,12 @@ _WORKER_COLUMNS = frozenset(
         "failure_code",
         "leased_start",
         "leased_end",
+        "recent_cursor",
+        "recent_end",
+        "fetch_recent",
+        "history_start",
+        "history_checked_at",
+        "desired_start",
     }
 )
 
@@ -176,7 +183,7 @@ async def write_candles(
     await require_source_write(session)
     await lock_claim(session, claim)
     now = await database_now(session)
-    cutoff = retention_cutoff(now)
+    cutoff = retention_cutoff(now, claim.timeframe)
     entries: list[tuple[Candle, dict[str, object]]] = []
     for candle in candles:
         if candle.open_at < cutoff:
@@ -214,7 +221,13 @@ async def write_candles(
         .all()
     )
     if any(partition["relation"] is None for partition in found):
-        raise PartitionUnavailableError()
+        if claim.timeframe not in (Timeframe.W1, Timeframe.MN1):
+            raise PartitionUnavailableError()
+        for candle, _ in entries:
+            await session.execute(
+                "SELECT ensure_history_partition(:base,:tf,:opened)",
+                {"base": claim.base, "tf": claim.timeframe.value, "opened": candle.open_at},
+            )
     params = claim.parameters() | {
         "opens": sorted({candle.open_at for candle, _ in entries}),
         "fetch_started_at": fetch_started_at,
@@ -287,14 +300,20 @@ async def cleanup(session: MarketDataSession) -> int:
             "SELECT retention_policy FROM public.indicator_rollout_control WHERE id=1"
         )
     ).scalar_one()
-    cutoff = retention_cutoff(await database_now(session))
+    now = await database_now(session)
+    ordinary_cutoff = retention_cutoff(now, Timeframe.D1)
+    extended_cutoff = retention_cutoff(now, Timeframe.W1)
     if policy == "GRACE":
-        cutoff -= timedelta(hours=6, minutes=15)
+        grace = timedelta(hours=6, minutes=15)
+        ordinary_cutoff -= grace
+        extended_cutoff -= grace
     result = await session.execute(
         """DELETE FROM market_candles WHERE (tableoid,ctid) IN (
         SELECT tableoid,ctid FROM market_candles
-        WHERE open_at<:cutoff LIMIT 10000)
+        WHERE (timeframe IN ('1w','1M') AND open_at<:extended_cutoff)
+           OR (timeframe NOT IN ('1w','1M') AND open_at<:ordinary_cutoff)
+        LIMIT 10000)
         RETURNING open_at""",
-        {"cutoff": cutoff},
+        {"ordinary_cutoff": ordinary_cutoff, "extended_cutoff": extended_cutoff},
     )
     return len(result.all())

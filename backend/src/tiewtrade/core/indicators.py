@@ -4,7 +4,16 @@ from dataclasses import dataclass
 from datetime import datetime
 from enum import StrEnum
 
-from tiewtrade.core.market_data import Candle, CandleFinality, CandleSeries, Timeframe, align_floor
+from tiewtrade.core.market_data import (
+    Candle,
+    CandleFinality,
+    CandleSeries,
+    CandleWindow,
+    Timeframe,
+    align_floor,
+    next_open,
+    slot_count,
+)
 from tiewtrade.core.moments import require_aware
 from tiewtrade.core.money import Money, RoundingDirection, Scalar
 from tiewtrade.core.money.indicator_batch import (
@@ -68,7 +77,7 @@ class IndicatorStream:
             timeframe,
             as_of,
         )
-        self.state = IndicatorBatchState(self.base, self.quote, timeframe.value, timeframe.span)
+        self.state = IndicatorBatchState(self.base, self.quote, timeframe.value)
         self.seed: datetime | None = None
         self.blocked = False
         self.unconfirmed = False
@@ -87,9 +96,8 @@ class IndicatorStream:
             numeric.base,
             numeric.quote,
             numeric.timeframe,
-            numeric.span,
             numeric.formula_version,
-        ) != (self.base, self.quote, self.timeframe.value, self.timeframe.span, FORMULA_VERSION):
+        ) != (self.base, self.quote, self.timeframe.value, FORMULA_VERSION):
             raise ValueError("different indicator checkpoint identity")
         if type(checkpoint.blocked) is not bool or type(checkpoint.unconfirmed) is not bool:
             raise ValueError("invalid indicator checkpoint flags")
@@ -104,7 +112,7 @@ class IndicatorStream:
                     raise ValueError("invalid indicator checkpoint time")
                 if moment != align_floor(moment, self.timeframe):
                     raise ValueError("unaligned indicator checkpoint time")
-                if moment + self.timeframe.span > self.as_of:
+                if next_open(moment, self.timeframe) > self.as_of:
                     raise ValueError("ineligible indicator checkpoint time")
         if (
             (checkpoint.blocked != (checkpoint.refresh_dependency is not None))
@@ -124,10 +132,14 @@ class IndicatorStream:
         if checkpoint.seed_open_at is not None:
             assert numeric.last_open is not None
             # Inputs after a refresh dependency are HOLD, including the dependency slot.
-            end = min(numeric.last_open + self.timeframe.span, self.as_of)
+            end = min(next_open(numeric.last_open, self.timeframe), self.as_of)
             if checkpoint.refresh_dependency is not None:
                 end = min(end, checkpoint.refresh_dependency)
-            possible_count = (end - checkpoint.seed_open_at) // self.timeframe.span
+            possible_count = (
+                0
+                if checkpoint.seed_open_at >= end
+                else slot_count(CandleWindow(checkpoint.seed_open_at, end), self.timeframe)
+            )
             if numeric.accepted_count > possible_count:
                 raise ValueError("accepted input count exceeds seed history")
         self.state = numeric
@@ -158,7 +170,7 @@ class IndicatorStream:
         previous = self.state.last_open
         for moment, candle, fetched in slots:
             require_aware("open_at", moment)
-            if previous is not None and moment != previous + self.timeframe.span:
+            if previous is not None and moment != next_open(previous, self.timeframe):
                 raise ValueError("input slots must be consecutive")
             previous = moment
             if candle is not None and (

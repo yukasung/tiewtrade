@@ -25,7 +25,7 @@ class BinanceThCandleFeed:
     ) -> AsyncGenerator[CandleFeedEvent, None]:
         if (
             not series
-            or len(series) > 30
+            or len(series) > 40
             or len(set(series)) != len(series)
             or any(
                 item.quote != "USDT" or item.base not in ("BTC", "ETH", "SOL", "XRP", "DOGE")

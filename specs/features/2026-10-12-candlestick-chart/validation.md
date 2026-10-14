@@ -1,5 +1,41 @@
 # F-12 — กราฟแท่งเทียนบนหน้าเว็บ — Validation
 
+ผลแก้ viewport ตาม P-H3: [anchor regression evidence](evidence/2026-10-14-viewport.md).
+
+## Candle-only chart reads — Approved 2026-10-14
+
+เพิ่ม [continuity validation](candle-continuity-amendment.md): delayed REST, cold reload,
+หลายขอบแท่ง, buffer cap, source precedence และ gap จริง.
+
+ใช้ [validation amendment](candle-only-chart-amendment.md) สำหรับหน้ากราฟที่ไม่มี
+indicator; bundle/proof checks เดิมคงใช้กับ service ที่ยังรองรับ indicator.
+
+## Amendment — ช่วงประวัติที่เลื่อนดูได้
+
+สถานะ: **Approved** — สำหรับ requirements RQ-37..42 ที่อนุมัติ 2026-10-14;
+validation เดิมส่วนอื่นยัง Approved. ผลตรวจและรายการค้างอยู่ใน [history checkpoint](evidence/2026-10-14-history-window.md); ยังไม่ถือว่าผ่านครบ.
+
+| เกณฑ์ | สิ่งที่ต้องพิสูจน์ | Traceability |
+|---|---|---|
+| V-H1 | ทั้งหก TF 1m–1d ดูถึงสามเดือนปฏิทินจาก server UTC; เดือน 28/29/30/31 วัน, leap year, ขอบที่คร่อมแท่ง, timezone และ client clock skew ถูกต้อง | RQ-37; P-H1 |
+| V-H2 | 1w/1M อ่านข้อมูลเกินห้าปีได้เมื่อมีข้อมูลจริง; calendar alignment และขอบเก่าสุดแยกตามคู่/TF; timeout, rate limit, หน้า empty และ gap ไม่ทำให้แจ้งหมดประวัติผิด | RQ-38/41; P-H2 |
+| V-H3 | เลื่อนเกิน 1,000 แท่งและหลายหน้าถึงขอบสามเดือนโดยไม่ซ้ำ/ขาดรอยต่อ; โหลดเพิ่มไม่กระโดด viewport และไม่ทับแท่งสดด้วยข้อมูลเก่า | RQ-39/40; P-H3 |
+| V-H4 | สลับ TF/คู่, logout, unmount และสลับเร็วระหว่าง 1m/1M ยกเลิกงานเก่า; concurrency, dedup, Retry-After และ manual retry ไม่เกิด request storm | RQ-40; P-H3 |
+| V-H5 | Migration อัปเกรดฐานเดิมโดยไม่ลบ/แก้ candles เดิม; constraints, grants, partition/cleanup, restart, lease takeover, rollback และ source failure รักษา progress/idempotency | RQ-41/42; P-H2 |
+| V-H6 | exact OHLCV/finality คงเดิม; indicator สูตร/seed ไม่เปลี่ยน และ proof ไม่รับรองหน้าที่อยู่นอก calculation window; ไม่มี order requests | RQ-42; P-H1..3 |
+| V-H7 | Initial chart ไม่รอทุกหน้า; หน้าประวัติไม่เกิน 1,000 slots, request ต่อ episode และจำนวนหน้าใน memory ไม่เกิน bound ที่กำหนด; evict แล้วเลื่อนกลับโหลดได้ | RQ-39; P-H3 |
+| V-H8 | Browser กับ API จริงตรวจ 1m/5m/15m/1h/4h/1d และ 1w/1M รวม pan/retry/reset; หลักฐานแยก source unavailable จากข้อผิดพลาดโปรแกรม ไม่ใช้ mock smoke แทนการตรวจข้อมูลจริง | RQ-37..42; P-H4 |
+
+ระหว่างพัฒนาเลือก targeted tests ตาม impact รวม calendar/storage/API/pagination,
+concurrency และ safety ที่เกี่ยวข้อง พร้อม lint/type-check. ห้ามรัน destructive fixtures
+บนฐานที่ UI ใช้อยู่. Full regression/workload เป็น **Pending Full Validation**
+จนถึง checkpoint เดิม; ห้ามรายงานดูได้ครบก่อน V-H1..8 มีหลักฐานครบตามข้อจำกัดของต้นทาง.
+
+ผลตรวจ backfill ช่วงล่าสุด: [recent-history priority amendment](recent-history-priority-amendment.md).
+
+เกณฑ์และผลตรวจการกู้กราฟหลัง history error อยู่ใน
+[amendment ที่อนุมัติ](chart-error-recovery-amendment.md); ไม่ทดแทน full validation เดิม.
+
 สถานะ: **Approved** — เจ้าของอนุมัติวันที่ 2026-10-13 — เกณฑ์ amendment วันที่ 2026-10-13 สำหรับการแสดงแท่งเทียนก่อน indicator; เกณฑ์เดิมส่วนอื่นยังมีผล
 การลบ MACD ด้านล่าง: **Approved** — เจ้าของอนุมัติ amendment เมื่อ 2026-10-13; เกณฑ์ใหม่ยังไม่ได้รันและไม่แทนผล Partial/Pending เดิม
 การย้ายรายละเอียดแท่งเข้า chart ด้านล่าง: **Approved** — เจ้าของอนุมัติเมื่อ 2026-10-13
@@ -13,9 +49,71 @@
 การย่อ market bar และลบ visible labels: **Approved** — เจ้าของสั่งแก้เมื่อ 2026-10-14
 การจัดตำแหน่ง history tabs ตาม Admin Template: **Approved** — เจ้าของสั่งแก้เมื่อ 2026-10-14
 โหมด Light/Dark จาก Admin Template: **Approved** — เจ้าของสั่งเพิ่มเมื่อ 2026-10-14
+การเพิ่ม timeframe `1w` และ `1M` ทั้งระบบด้านล่าง: **Approved** — เจ้าของอนุมัติ plan/validation amendment เมื่อ 2026-10-14; ผลล่าสุดอยู่ในตาราง TF-01..TF-18
+ข้อจำกัด REST 7 วันสำหรับ `1w`/`1M`: **Approved** — เจ้าของยืนยัน amendment เมื่อ 2026-10-14
 วันที่: 2026-10-12
 Branch: feature/f-12-candlestick-chart
 อ้างอิง: [requirements](requirements.md), [plan](plan.md), [หลักฐานต้นทาง](source-evidence.md)
+
+## Amendment — ตรวจ native timeframe `1w` และ `1M` ทั้งระบบ (Approved 2026-10-14)
+
+ผลในตารางอัปเดตจากหลักฐานรอบล่าสุด; ข้อที่ยังไม่ครบคงเป็น **Partial/Not Run**. Targeted checks ระหว่างพัฒนาไม่แทน full regression หรือ
+workload checkpoint และต้องบันทึก command, commit/source hash, fixture/database และเวลารันตาม
+`specs/standards/testing.md` §7.
+
+| รหัส | เกณฑ์ตรวจรับ | ระยะรัน | ผล |
+|---|---|---|---|
+| TF-01 | หลักฐานทางการยืนยัน REST/WebSocket รองรับ `1w`/`1M`, stream naming, close-time fields, update/reconnect, เพดาน connection และ public observation ยืนยัน REST จำกัดช่วงไม่เกิน 7 วัน; fixture ระบุวันเก็บและ checksum | ก่อน implementation | Passed — เอกสารทางการ, REST error `-4088` และ public fixtures `16`/`17` พร้อม SHA-256 ใน source-evidence |
+| TF-02 | Unit/property tests พิสูจน์ floor/ceil/next/previous/advance/slot count ของ 8 TF; `1w` เริ่ม Monday UTC และ `1M` ผ่าน Feb 28/29, เดือน 30/31, Dec→Jan โดยไม่ใช้ fixed month duration | ระหว่างพัฒนา | Passed - targeted core calendar/property regression passed; 8 TFs, Monday UTC, leap/month/year transitions, and slot iteration covered |
+| TF-03 | Regression ของ 6 TF เดิมให้ boundary/window/gap/initial-window เท่าเดิม; retention ยังคง 365 วัน ส่วน `1w`/`1M` ใช้ calendar five-year cutoff และไม่เกิน 1,000 slots ต่อ page | ระหว่างพัฒนา | Passed - the same core regression covers the original 6 TFs, 365-day retention, calendar five-year cutoffs, and 1,000-slot bounds |
+| TF-04 | Migration upgrade จาก 0025 บนฐานที่มีข้อมูลเดิมไม่ rewrite/change checksum แถวเดิม; constraints รับ boundary ถูกของ 8 TF และปฏิเสธค่า/casing/open/end ผิด | ระหว่างพัฒนา | Partial - local PostgreSQL replay `0025 -> 0026` and `0026 -> 0025 -> 0026` passed; `1w`/`1M` schedule inserts passed, but old-row checksums and the full invalid-input matrix remain |
+| TF-05 | Migration สร้าง partitions ครบห้าปีย้อนหลังและ horizon เดิมพร้อม grants; rerun/recovery ไม่ชนของเดิม และ downgrade ปฏิเสธแบบไม่สูญข้อมูลเมื่อมี `1w`/`1M` | ระหว่างพัฒนา | Partial - migration replay passed and the downgrade guard rejected `WEEK_MONTH_DOWNGRADE_NOT_DRAINED` atomically; automated partition/grant evidence for every month remains |
+| TF-06 | SQL indicator functions ให้ boundary/page/next slot ตรงกับ Python schedule สำหรับทุก TF รวม leap/month transition และไม่ตีความ unknown TF เป็น `1d` | ระหว่างพัฒนา | Partial - representative SQL floor/advance/slot checks passed for week/month and 1,000 monthly slots; the complete all-TF/leap parity matrix remains |
+| TF-07 | REST adapter ส่ง `interval=1w`/`1M`, จำกัดหนึ่ง native candle และ upstream range ≤7 วัน, รักษา case และ map native open/close/OHLCV exact โดย `1M` ใช้ monthly end จริง; payload ผิด boundary, ลำดับ หรือ interval fail closed โดยไม่ commit บางส่วน | ระหว่างพัฒนา | Passed - 22 targeted adapter/fixture cases passed, including native `1w`/`1M`, one-slot cap, upstream range <= 7 days, exact OHLCV/end, and rejection above one slot |
+| TF-08 | Initial/backfill/refresh/gap repair ของ `1w`/`1M` อยู่ใน retention 5 ปี, แบ่ง weekly/monthly ครั้งละหนึ่งแท่งโดยไม่ขอ REST เกิน 7 วัน, claim fenced/idempotent และ retry ไม่สร้าง duplicate candle/cursor advance ซ้ำ | ระหว่างพัฒนา | Partial - DB ingestion regression passed three contiguous slots each for `1w`/`1M`, one candle per unit, ending COMPLETE; refresh/gap/retry/fence matrix remains |
+| TF-09 | Shared live feed สมัครครบ 40 unique streams บน connection กลางเดียว; mapper รับ `kline_1w`/`kline_1M`, กัน duplicate/out-of-order/conflict และไม่สร้าง per-user venue connection | ระหว่างพัฒนา | Partial - stream mapping passed name/case/calendar-close/duplicate/order/conflict tests and preview persistence passed for 40 series; reconnect/shared-connection integration remains |
+| TF-10 | Disconnect/reconnect/bootstrap กู้ช่วงขาดด้วย REST timeframe เดียวกัน, ไม่ทำแท่งหาย/ซ้ำ และไม่ประกาศ CLOSED จากเวลา/แท่งถัดไปโดยไม่มีหลักฐาน | ระหว่างพัฒนา | Not Run |
+| TF-11 | Indicator batch/stream รับลำดับ calendar ของ `1w`/`1M`; สูตร/rounding/Money/Quantity ของ TF เดิมไม่เปลี่ยน และข้อมูลไม่พอคืน WARM_UP โดยไม่เติมศูนย์/ลด period/อ่านนอก retention | ระหว่างพัฒนา | Partial - core indicator arithmetic/stream regression passed with no new float or bare Decimal path; calendar warm-up/retention integration remains |
+| TF-12 | Checkpoint codec v2 fixture เดิม decode/round-trip เหมือนเดิม; checkpoint weekly/monthly strict round-trip และ reject skipped/repeated/misaligned calendar slot | ระหว่างพัฒนา | Partial - codec suite and weekly/monthly round trips passed; calendar-specific skipped/repeated/misaligned rejection matrix remains |
+| TF-13 | Authenticated candle/chart/indicator APIs รับ `1w`/`1M`; ปฏิเสธ `1W`, `1mo` และ casing อื่นตาม contract; auth/CSRF/error/retry budgets เดิมไม่ถดถอย | ระหว่างพัฒนา | Partial - enum/OpenAPI accept exact `1w`/`1M`, and contract tests now cover `1W`/`1mo`; authenticated route suite remains |
+| TF-14 | Exported OpenAPI และ generated TypeScript มี enum 8 ค่าและ `npm run check:api` ผ่านโดยไม่มี manual divergence | Candidate | Partial - OpenAPI and generated TypeScript contain all 8 values and frontend typecheck passed; `check:api` remains blocked by Windows symlink `EPERM` |
+| TF-15 | UI ใช้ Admin Template Select แสดง 8 ค่า, default `1h`; การสลับ `1m`↔`1M` เร็ว ๆ ยกเลิก/กัน stale response และไม่ aggregate candle ใน browser | ระหว่างพัฒนา | Passed - 42 frontend targeted tests passed on unchanged UI source, covering 8 options, default `1h`, and existing stale-response behavior |
+| TF-16 | Browser smoke เห็น history และ live candle ของ `1w`/`1M`, reset/theme ยังทำงาน, ไม่มี blank chart จากการสลับ TF และ network log ไม่มี order/live-trading request | Candidate | Not Run |
+| TF-17 | Targeted lint/type/import checks และ tests ของ core, migration/storage, ingestion, venue stream, indicator, API และ frontend ที่ได้รับผลผ่านบน source เดียวกัน | Candidate | Partial - 151 core/indicator/codec/stream tests, 22 REST cases, 5 DB storage/ingestion/preview cases, ruff, and mypy for 156 source files passed; broader API/migration matrix remains |
+| TF-18 | Full regression, migration gate, generated contracts และ required CI ผ่าน; workload วัด backfill ห้าปีและ live 40 streams ตามเกณฑ์เดิมโดยไม่ลด safety/error bounds | ก่อน merge/release | Pending Full Validation |
+
+### Development evidence 2026-10-14 - `1w` / `1M`
+
+- Core/indicator/codec/stream mapping: 151 targeted tests passed.
+- Binance TH REST adapter and public fixtures `16`/`17`: 22 targeted cases passed via a direct async harness because the existing Windows socket monkeypatch conflicts with the Proactor event loop.
+- PostgreSQL storage, ingestion, and 40-series preview persistence: 5 targeted cases passed on migration `0026`.
+- Alembic replay `0026 -> 0025 -> 0026` passed after correcting the calendar-retention constraint and SQL-helper teardown order; the populated downgrade guard also rejected atomically.
+- Scoped ruff and `mypy src/tiewtrade` (156 source files) passed. Earlier frontend targeted 42 tests, typecheck, and scoped ESLint remain valid because frontend source has not changed since those runs.
+- The targeted scheduler catalog gate could not start because the current local database has revoked `CONNECT` from `tiewtrade_indicator_builder`; this is recorded as environment-blocked and is not counted as passed.
+- Full regression, browser smoke for `1w`/`1M`, five-year workload, 40-stream workload, and release performance gates have not run; TF-18 remains `Pending Full Validation`.
+
+
+### ชุดทดสอบตามผลกระทบ
+
+- Core: `tests/core/test_market_data.py`, `test_indicators.py` และ test ใหม่สำหรับ calendar schedule.
+- Database/infra: migration, partitions, permissions, retention, claims, storage, preview และ
+  indicator codec/claims/staging/publication/source tests.
+- Services/venue/API: ingestion, Binance TH REST/stream mapping/feed, candle/chart/indicator routes,
+  numeric windows และ failure contracts.
+- Frontend: `CandlestickChartPanel`, chart query/realtime/renderer tests ที่เกี่ยวข้อง พร้อม
+  `npm run typecheck`, scoped lint และ API generation check.
+- ก่อน merge รัน full backend/frontend gates ตาม testing standard เมื่อ candidate นิ่ง; ไม่รันซ้ำ
+  หาก source และ dependencies ไม่เปลี่ยน. Performance/endurance เต็มคงเป็น TF-18/V-17
+  `Pending Full Validation` จนถึง release checkpoint.
+
+### Fixtures และ edge cases บังคับ
+
+- Weekly: Sunday ก่อน boundary, Monday 00:00 UTC, year crossing และ window ที่ไม่มีข้อมูล.
+- Monthly: Jan 31→Feb 1, Feb leap/non-leap, Apr/Jun/Sep/Nov, Dec→Jan และ five-year cutoff จาก Feb 29.
+- Exact case: `1m` กับ `1M` อยู่ร่วมกันใน DB/API/cache/query key โดยไม่ชนกัน.
+- Failure: 429/5xx/timeout, malformed close time, partial page, stale HTTP response, duplicate stream,
+  reconnect gap, missing partition และ lease/fence loss; retry ต้องไม่เพิ่มข้อมูลหรือ cursor ซ้ำ.
+- Safety: ไม่มี test ใดส่ง Live order หรือแก้ balance/position; log/error ห้ามมี API key/secret.
 
 ## Amendment — ตรวจ Trading Workspace layout (Approved 2026-10-14)
 

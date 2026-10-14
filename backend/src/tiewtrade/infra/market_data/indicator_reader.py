@@ -18,6 +18,7 @@ from tiewtrade.core.market_data import (
     CandleSeries,
     CandleWindow,
     Timeframe,
+    advance,
     bounded_windows,
     expected_opens,
 )
@@ -232,7 +233,7 @@ async def read_indicators(
                 if dependency is not None:
                     if refresh_first is None:
                         refresh_first = dependency
-                    elif dependency >= refresh_first + timeframe.span * 1000:
+                    elif dependency >= advance(refresh_first, timeframe, 1000):
                         refresh_more = True
             if monotonic() >= deadline:
                 raise TimeoutError()

@@ -410,6 +410,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/market-data/candles/pages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Candle Page */
+        get: operations["candle_page_market_data_candles_pages_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/market-data/candles/requests": {
         parameters: {
             query?: never;
@@ -665,6 +682,52 @@ export interface components {
             open_at: string;
             /** Volume */
             volume: string;
+        };
+        /** ChartCandlePage */
+        ChartCandlePage: {
+            /** Base */
+            base: string;
+            /**
+             * Coverage
+             * @enum {string}
+             */
+            coverage: "PRESENT" | "INCOMPLETE" | "UNAVAILABLE";
+            /**
+             * Display End
+             * Format: date-time
+             */
+            display_end: string;
+            /**
+             * Display Start
+             * Format: date-time
+             */
+            display_start: string;
+            /** Earliest Known */
+            earliest_known: boolean;
+            /** Failure Code */
+            failure_code: string | null;
+            /** Gaps */
+            gaps: components["schemas"]["WindowView"][];
+            /** Newer After */
+            newer_after: string | null;
+            observed: components["schemas"]["WindowView"] | null;
+            /**
+             * Observed At
+             * Format: date-time
+             */
+            observed_at: string;
+            /** Older Before */
+            older_before: string | null;
+            /** Quote */
+            quote: string;
+            /** Refresh Pending */
+            refresh_pending: boolean;
+            requested: components["schemas"]["WindowView"];
+            /** Rows */
+            rows: components["schemas"]["CandleView"][];
+            /** Status */
+            status: string | null;
+            timeframe: components["schemas"]["Timeframe"];
         };
         /** ChartHistoryView */
         ChartHistoryView: {
@@ -1186,7 +1249,7 @@ export interface components {
          * Timeframe
          * @enum {string}
          */
-        Timeframe: "1m" | "5m" | "15m" | "1h" | "4h" | "1d";
+        Timeframe: "1m" | "5m" | "15m" | "1h" | "4h" | "1d" | "1w" | "1M";
         /** TradingAccountView */
         TradingAccountView: {
             key: components["schemas"]["KeyView"] | null;
@@ -1781,6 +1844,41 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CandleHistoryView"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RejectedCandleInput"];
+                };
+            };
+        };
+    };
+    candle_page_market_data_candles_pages_get: {
+        parameters: {
+            query: {
+                base: string;
+                quote: string;
+                timeframe: components["schemas"]["Timeframe"];
+                before?: string | null;
+                after?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChartCandlePage"];
                 };
             };
             /** @description Unprocessable Entity */

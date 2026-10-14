@@ -3,8 +3,9 @@
 from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
 
-from tiewtrade.core.market_data import Candle, CandleFinality, Timeframe
+from tiewtrade.core.market_data import Candle, CandleFinality, Timeframe, slot_count
 from tiewtrade.core.money import Money, Quantity
+from tiewtrade.core.timeframes import align_floor
 from tiewtrade.venues.binance_th.constraints import CONSTRAINTS_COST
 from tiewtrade.venues.binance_th.endpoints import Endpoint
 from tiewtrade.venues.binance_th.mapping import (
@@ -28,23 +29,70 @@ CANDLES_COST = CallCost(weight=1, orders=0)
 class BinanceThCandles:
     max_request_span = timedelta(days=7)
 
+    def max_request_slots(self, timeframe: Timeframe) -> int:
+        limits = {
+            Timeframe.M1: 1000,
+            Timeframe.M5: 1000,
+            Timeframe.M15: 672,
+            Timeframe.H1: 168,
+            Timeframe.H4: 42,
+            Timeframe.D1: 7,
+            Timeframe.W1: 1,
+            Timeframe.MN1: 1,
+        }
+        return limits[timeframe]
+
     def __init__(self, transport: BinanceThTransport, *, clock: Callable[[], datetime]) -> None:
         self._transport = transport
         self._clock = clock
         self._known: dict[str, dict[str, object]] | None = None
 
+    async def earliest_open(self, symbol: Symbol, timeframe: Timeframe) -> datetime:
+        """Oldest-first public discovery; an empty response is not an inception proof."""
+        if timeframe not in (Timeframe.W1, Timeframe.MN1):
+            raise ValueError("discovery is only for native calendar history")
+        response = await self._transport.get(
+            Endpoint.KLINES,
+            cost=CANDLES_COST,
+            params={
+                "symbol": market_symbol(symbol),
+                "interval": timeframe.value,
+                "startTime": "0",
+                "limit": "1",
+            },
+        )
+        with _readable():
+            rows = _sequence(response.payload)
+            if len(rows) != 1:
+                raise VenueProtocolError()
+            row = _sequence(rows[0])
+            if len(row) != 12:
+                raise VenueProtocolError()
+            opened = moment_from_millis(_integer(row[0]))
+            if (
+                opened < datetime(1970, 1, 1, tzinfo=UTC)
+                or opened != align_floor(opened, timeframe)
+                or opened > response.received_at
+            ):
+                raise VenueProtocolError()
+            return opened
+
     async def fetch_candles(
         self, symbol: Symbol, timeframe: Timeframe, start: datetime, end: datetime, limit: int
     ) -> CandlePage:
         window = validate_request(timeframe, start, end, limit)
-        if window.end - window.start > self.max_request_span:
+        if slot_count(window, timeframe) > self.max_request_slots(timeframe):
             raise ValueError("candle request exceeds source span limit")
         epoch = datetime(1970, 1, 1, tzinfo=UTC)
         millisecond = timedelta(milliseconds=1)
         # Upstream open times are integer milliseconds. Ceiling both bounds
         # preserves exactly start <= open_time < end for arbitrary datetimes.
         start_ms = -((epoch - window.start) // millisecond)
-        end_ms = -((epoch - window.end) // millisecond)
+        # Binance TH rejects every interval when startTime/endTime span more
+        # than seven days. A monthly row is still identified by its open time
+        # and carries the native next-month close time in the response.
+        query_end = min(window.end, window.start + self.max_request_span)
+        end_ms = -((epoch - query_end) // millisecond)
         if start_ms >= end_ms:
             return CandlePage(symbol, timeframe, window, (), self._clock())
         if self._known is None:

@@ -59,6 +59,10 @@ class CandleSource(Protocol):
         """Maximum time range per fetch; None means only the slot limit applies."""
         ...
 
+    def max_request_slots(self, timeframe: Timeframe) -> int | None:
+        """Maximum aligned candle slots per fetch; takes precedence over duration."""
+        ...
+
     async def fetch_candles(
         self, symbol: Symbol, timeframe: Timeframe, start: datetime, end: datetime, limit: int
     ) -> CandlePage: ...

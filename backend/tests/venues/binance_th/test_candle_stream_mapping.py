@@ -1,6 +1,6 @@
 import json
 from dataclasses import replace
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
@@ -8,7 +8,7 @@ from hypothesis import given
 from hypothesis import strategies as st
 
 from tiewtrade.core.candle_preview import Progress, compare
-from tiewtrade.core.market_data import CandleFinality, CandleSeries, Timeframe
+from tiewtrade.core.market_data import CandleFinality, CandleSeries, Timeframe, next_open
 from tiewtrade.core.money import Money, Quantity
 from tiewtrade.venues.binance_th.candle_stream_mapping import candle_from_stream
 from tiewtrade.venues.errors import VenueProtocolError
@@ -58,6 +58,32 @@ def test_closure_hint_never_becomes_closed_history() -> None:
     payload["data"]["k"]["x"] = True  # type: ignore[index]
     result = candle_from_stream(payload=payload, series=SERIES, received_at=datetime.now(UTC))
     assert result.closed_hint and result.candle.finality is CandleFinality.UNCONFIRMED
+
+
+@pytest.mark.parametrize("timeframe", [Timeframe.W1, Timeframe.MN1])
+def test_week_and_month_stream_names_and_calendar_close_are_native(
+    timeframe: Timeframe,
+) -> None:
+    payload = sample()
+    opened = datetime(2026, 2, 1 if timeframe is Timeframe.MN1 else 2, tzinfo=UTC)
+    ended = next_open(opened, timeframe)
+    epoch = datetime(1970, 1, 1, tzinfo=UTC)
+    payload["stream"] = f"btcusdt@kline_{timeframe.value}"
+    payload["data"]["k"].update(  # type: ignore[index, union-attr]
+        {
+            "i": timeframe.value,
+            "t": (opened - epoch) // timedelta(milliseconds=1),
+            "T": (ended - epoch) // timedelta(milliseconds=1) - 1,
+        }
+    )
+    result = candle_from_stream(
+        payload=payload,
+        series=SERIES,
+        received_at=opened + timedelta(seconds=1),
+    )
+    assert result.candle.timeframe is timeframe
+    assert result.candle.open_at == opened
+    assert result.candle.end_at == ended
 
 
 @given(st.integers(min_value=1, max_value=10000), st.integers(min_value=1, max_value=10000))

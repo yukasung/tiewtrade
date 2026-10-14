@@ -1,5 +1,28 @@
 # F-12 — กราฟแท่งเทียนบนหน้าเว็บ — Requirements
 
+## Amendment — ช่วงประวัติที่เลื่อนดูได้ (Approved 2026-10-14)
+
+เจ้าของอนุมัติให้ `1m`–`1d` ดูย้อนหลังสามเดือนปฏิทิน และ `1w`/`1M`
+ดูได้ทั้งหมดเท่าที่ Binance TH ให้ข้อมูล; `1M` คือรายเดือน ไม่ใช่ `1m` รายหนึ่งนาที.
+Amendment นี้แทน RQ-10/RQ-32 ในส่วนขอบเขตที่ผู้ใช้ดูได้ และเพดานห้าปีสำหรับ
+ประวัติ `1w`/`1M`; กฎ authorization, exact OHLCV, finality, retry และ bounded work ยังใช้เดิม.
+
+| รหัส | ข้อกำหนด | ที่มา |
+|---|---|---|
+| RQ-37 | `1m`, `5m`, `15m`, `1h`, `4h`, `1d` เลื่อนดูย้อนหลังได้สามเดือนปฏิทินจากเวลา server ไม่ใช้ 90 วันคงที่หรือเวลาเครื่องผู้ใช้; ใช้ UTC ตาม schedule เดิม และรวมแท่งที่คร่อมขอบเริ่มช่วง | เจ้าของอนุมัติ 2026-10-14 |
+| RQ-38 | `1w`/`1M` เลื่อนดูได้ถึงประวัติเก่าสุดที่ต้นทางมีให้สำหรับแต่ละคู่/TF โดยไม่ตัดที่ห้าปี; ไม่รับรองว่าทุกคู่มีอายุหรือข้อมูลเท่ากัน | เจ้าของอนุมัติ 2026-10-14 |
+| RQ-39 | โหลดช่วงล่าสุดก่อน และโหลดช่วงก่อนหน้าเมื่อผู้ใช้เลื่อนใกล้ขอบซ้าย; ไม่โหลดทั้งสามเดือนของ 1m หรือทุกคู่/TF เข้าหน่วยความจำทันที และไม่บังคับให้รอ deep backfill ทั้งหมดก่อนวาด | RQ-10, recent-history-priority amendment |
+| RQ-40 | รวมหน้าโดยใช้ source/pair/TF/open-time ไม่ซ้ำ ไม่หายบริเวณรอยต่อ; การเติมทางซ้ายต้องคงแท่งที่ผู้ใช้กำลังดู และต้องยกเลิก/กันผลเก่าเมื่อเปลี่ยน TF, คู่ หรือผู้ใช้ | RQ-18, RQ-31/35 |
+| RQ-41 | แยกกรณีโหลดไม่เสร็จ, ช่องว่าง, ต้นทางล้มเหลว และถึงข้อมูลเก่าสุดที่พิสูจน์แล้ว; คำตอบว่างหรือ timeout เพียงครั้งเดียวไม่ใช่หลักฐานว่าถึงจุดเริ่มประวัติ | coverage/finality และ exchange-failure contracts เดิม |
+| RQ-42 | ช่วงแสดงสามเดือนไม่ใช่คำสั่งลบข้อมูลที่เก็บอยู่เดิม. การขยายประวัติ weekly/monthly ต้องไม่เปลี่ยนสูตร/seed/period ของ indicator หรือแก้ข้อมูลเงิน/ออเดอร์ และห้าม aggregate native candles เอง | trading safety, RQ-30/34 |
+
+สถานะ plan/validation สำหรับ amendment นี้ดูที่หัวข้อของแต่ละไฟล์แยกจากการอนุมัติ requirements.
+
+การเติมประวัติช่วงล่าสุดก่อน: [amendment ที่อนุมัติ](recent-history-priority-amendment.md).
+
+การกู้กราฟหลัง history error: ใช้ [amendment ที่อนุมัติ](chart-error-recovery-amendment.md)
+สำหรับคำขอแท่งเทียนที่กำลังโหลดและปุ่มลองใหม่เฉพาะ error state.
+
 สถานะ: **Approved** — เจ้าของอนุมัติแนวทางวันที่ 2026-10-13 ให้แสดงแท่งเทียนก่อน indicator ทั้งการเปิดหน้าครั้งแรกและเปลี่ยนคู่/TF; amendment ที่อนุมัติก่อนหน้ายังมีผลกับส่วนอื่น การอนุมัติ implementation ดู plan/validation
 การเปลี่ยนแปลง MACD ด้านล่าง: **Approved** — เจ้าของยืนยันขอบเขตให้ลบทั้งระบบและอนุมัติ amendment เมื่อ 2026-10-13
 การย้ายรายละเอียดแท่งเข้า chart ด้านล่าง: **Approved** — เจ้าของอนุมัติเมื่อ 2026-10-13
@@ -13,8 +36,36 @@
 การย่อ market bar และลบ visible labels: **Approved** — เจ้าของสั่งแก้เมื่อ 2026-10-14
 การจัดตำแหน่ง history tabs ตาม Admin Template: **Approved** — เจ้าของสั่งแก้เมื่อ 2026-10-14
 โหมด Light/Dark จาก Admin Template: **Approved** — เจ้าของสั่งเพิ่มเมื่อ 2026-10-14
+การเพิ่ม timeframe `1w` และ `1M` ทั้งระบบด้านล่าง: **Approved** — เจ้าของอนุมัติ requirements amendment เมื่อ 2026-10-14; รออนุมัติ plan/validation ก่อน implementation
 วันที่: 2026-10-12
 Branch: feature/f-12-candlestick-chart
+
+## Amendment — native timeframe `1w` และ `1M` ทั้งระบบ (Approved 2026-10-14)
+
+เจ้าของขอเพิ่ม `1w` และ `1M` เป็น timeframe จริงตลอดเส้นทางข้อมูล ไม่ใช่การรวมแท่งที่ frontend.
+Binance TH ระบุ `1w` และ `1M` เป็น interval ที่รองรับโดยตรงทั้ง REST Kline และ WebSocket
+Kline stream; ระบบจึงต้องขอข้อมูล native interval จาก venue ผ่าน adapter เดิม และห้ามสร้างสอง timeframe นี้
+จากแท่งย่อยใน frontend หรือ API. `1M` ต้องคงตัวพิมพ์ใหญ่เพื่อไม่ให้สับสนกับ `1m`.
+
+Amendment นี้แทนข้อจำกัด “6 timeframes” ใน RQ-2 และข้อกำหนด retention 365 วันแบบเดียวกันทุก
+timeframe ใน RQ-10 เฉพาะส่วนที่ขัดกัน โดยข้อกำหนดด้าน authorization, exact values, finality,
+ordering, consistency, bounded work, retry และ error handling เดิมยังมีผลทั้งหมด.
+
+| รหัส | ข้อกำหนดเพิ่มเติม | ที่มา |
+|---|---|---|
+| RQ-29 | เพิ่ม `1w` และ `1M` ใน domain enum, REST request/response schema, OpenAPI/generated frontend type, database constraints/index-compatible values, backfill/coverage/gap/claim/storage/retention, live-candle subscription และตัวเลือก timeframe ของหน้า Chart โดยยังจำกัดคู่เทรดเดิม ระบบต้องแยก `1m` กับ `1M` แบบ case-sensitive ตลอดเส้นทาง | คำสั่งเจ้าของ 2026-10-14; Binance TH REST/WebSocket Kline intervals |
+| RQ-30 | ใช้แท่ง `1w`/`1M` จาก native Binance TH Kline เท่านั้น ไม่ aggregate จาก timeframe ย่อยใน frontend, API หรือ worker. REST backfill และ live stream ของ timeframe เดียวกันต้องมี identity เดียวกันตาม source/pair/timeframe/open-time และผ่านกฎ duplicate/out-of-order/finality/recovery เดิม | คำสั่งเจ้าของ 2026-10-14; RQ-3/25/26/27 |
+| RQ-31 | ขอบเขตเวลาใช้ UTC: `1w` เปิดวันจันทร์ 00:00:00 UTC และสิ้นสุดเมื่อเปิดสัปดาห์ถัดไป; `1M` เปิดวันที่ 1 เวลา 00:00:00 UTC และสิ้นสุดเมื่อเปิดเดือนถัดไป. การตรวจ alignment, `end_at`, slot ถัดไป, จำนวน slot, window, gap และ pagination ต้องใช้ calendar boundary นี้ ห้ามแทน `1M` ด้วย `timedelta` หรือจำนวนวินาที/วันคงที่ | database §2; semantics ของ calendar interval; คำตัดสินเจ้าของ 2026-10-14 |
+| RQ-32 | คง logical retention ของ `1m`–`1d` ที่ 365 วัน. `1w` เก็บย้อนหลัง 5 ปีโดยจัด cutoff เข้าขอบสัปดาห์ และ `1M` เก็บย้อนหลัง 5 ปีโดยจัด cutoff เข้าขอบเดือน. Backfill ยังต้อง bounded ตามเพดาน venue/API และไม่รับรองว่าคู่ที่เพิ่งเปิดตลาดจะมีข้อมูลครบทั้งช่วง | คำแนะนำที่เจ้าของอนุมัติ 2026-10-14; F-09 bounded backfill |
+| RQ-33 | schema migration ต้องยอมรับค่าใหม่โดยไม่เขียนข้อมูลแท่งเดิมใหม่และไม่ลด constraint เรื่อง timeframe/alignment/end-time. การ deploy ต้องรองรับลำดับ migration ก่อน process รุ่นใหม่เริ่มเขียน `1w`/`1M`; rollback ของ application ห้ามทำให้ข้อมูลใหม่ถูกตีความเป็น timeframe อื่น | database §3/4; architecture §4 |
+| RQ-34 | indicator backend ที่รับ timeframe ร่วมกันต้องประมวลผล `1w`/`1M` ด้วยลำดับ calendar เดียวกับ candle. หากประวัติ 5 ปีหรืออายุคู่เทรดไม่พอสำหรับ warm-up ให้คืนสถานะ WARM_UP/ไม่มีค่าตามสัญญาเดิม ห้ามประมาณค่า เติมศูนย์ ลด period หรือดึงข้อมูลนอก retention มาแอบคำนวณ | F-11 RQ-3/5/8/9; RQ-7/8/17 |
+| RQ-35 | API และ UI ต้องรักษา `1M` แบบ case-sensitive ใน URL/query/cache key/query key/serialization และ invalid input รวมถึง `1W`, `1mo` หรือ casing อื่นต้องถูกปฏิเสธตาม validation contract เดิม. การเปลี่ยน timeframe ต้องยกเลิก/กันผลคำขอเก่าตาม RQ-18 และไม่ทำให้ข้อมูล timeframe ก่อนหน้าทับชุดใหม่ | RQ-16/18; backend/frontend standards |
+| RQ-36 | live-candle subscription ต้องสมัคร stream native `<symbol>@kline_1w` หรือ `<symbol>@kline_1M` ตาม timeframe ที่ใช้งาน รักษา bounded shared subscription/reconnect เดิม และกู้ช่องว่างผ่าน REST timeframe เดียวกันหลัง disconnect โดยไม่สร้างการเชื่อมต่อตลาดต่อผู้ใช้ | Binance TH Kline stream; architecture §1/3; RQ-25/27 |
+
+การเพิ่ม timeframe ไม่เปลี่ยนสูตรราคา ปริมาณ เงิน ออเดอร์ balance/position/PnL, Paper/Live mode
+หรือสิทธิ์ส่งออเดอร์ และ automated validation ห้ามส่ง Live order. ก่อน implementation ต้องมี
+plan/validation amendment ที่แจกแจง migration, calendar-aware time operations, compatibility ของ API,
+backfill/live recovery และ targeted regression สำหรับ timeframe เดิมกับ case-sensitive `1m`/`1M`.
 
 ## Amendment — จัดหน้าแบบ Trading Workspace (Approved 2026-10-14)
 
@@ -75,6 +126,16 @@ plan/validation amendment ที่ระบุ component ของ admin templa
 เพิ่มประวัติก่อนหน้า, ลองใหม่ และขอ refresh ประวัติออกจากหน้า Chart. คงตัวเลือกคู่เทรด,
 timeframe และภาษา พร้อม interaction ซูม/เลื่อน/crosshair ของกราฟและการโหลดอัตโนมัติ.
 Error ที่ต้องให้ผู้ใช้ทราบยังแสดงได้; ไม่เปลี่ยน API หรือข้อมูล backend.
+
+## Amendment — Candle-only chart reads (Approved 2026-10-14)
+
+[Continuity amendment](candle-continuity-amendment.md) ได้รับอนุมัติแล้ว: รักษา native
+stream observations ระหว่างรอ REST ด้วย buffer จำกัด 120 แท่ง/series และ candle-page overlay;
+ห้ามสร้างแท่งที่ไม่เคยได้รับข้อมูลจริง และไม่เปลี่ยน canonical indicator input.
+
+เจ้าของอนุมัติ [ข้อกำหนด/แผน/validation](candle-only-chart-amendment.md) ให้หน้า Chart
+ใช้เฉพาะ candle history/pagination และ live; ไม่เรียก indicator-backed history/proof.
+ข้อกำหนด bundle/proof เดิมไม่ใช้กับหน้ากราฟที่ไม่มี indicator; backend F-11 ยังคงเดิม.
 
 ## Amendment — ลบ Indicator จาก UI (Approved 2026-10-13)
 

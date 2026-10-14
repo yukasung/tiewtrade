@@ -12,8 +12,10 @@ from tiewtrade.core.market_data import (
     CandleSeries,
     CandleWindow,
     Timeframe,
+    advance,
     align_ceil,
     align_floor,
+    previous_open,
     retention_cutoff,
 )
 from tiewtrade.infra.db.session import MarketDataSession, UserSession, require_market_data_session
@@ -94,7 +96,7 @@ async def bootstrap_or_recover(session: MarketDataSession, lease: PreviewLease) 
     for base, quote in sorted(PAIRS):
         for tf in Timeframe:
             upper = align_floor(now, tf)
-            lower = align_ceil(retention_cutoff(now), tf)
+            lower = align_ceil(retention_cutoff(now, tf), tf)
             last = (
                 await session.execute(
                     """SELECT max(open_at) FROM market_candles
@@ -103,7 +105,7 @@ async def bootstrap_or_recover(session: MarketDataSession, lease: PreviewLease) 
                     parameters(base, quote, tf),
                 )
             ).scalar_one()
-            start = max(lower, last if last is not None else upper - 1000 * tf.span)
+            start = max(lower, last if last is not None else advance(upper, tf, -1000))
             if start < upper:
                 await coalesce_demand(session, base, quote, tf, CandleWindow(start, upper))
     await session.execute(
@@ -129,13 +131,13 @@ async def enqueue_ended(
         previous = datetime.fromisoformat(metadata[key]) if key in metadata else None
         if previous is not None and previous >= window.end:
             continue
-        start = max(window.start, align_ceil(retention_cutoff(now), tf))
+        start = max(window.start, align_ceil(retention_cutoff(now, tf), tf))
         if previous is not None:
             start = max(start, previous)
         if start < window.end:
             await coalesce_demand(session, base, quote, tf, CandleWindow(start, window.end))
         metadata[key] = window.end.isoformat()
-    if len(metadata) > 30:
+    if len(metadata) > len(PAIRS) * len(Timeframe):
         raise ValueError("unbounded preview metadata")
     await session.execute(
         """UPDATE market_candle_feed_state SET metadata=CAST(:metadata AS jsonb)
@@ -148,7 +150,7 @@ async def flush(
     session: MarketDataSession, lease: PreviewLease, rows: tuple[tuple[CandleObservation, int], ...]
 ) -> None:
     await fence(session, lease)
-    if len(rows) > 30 or len(
+    if len(rows) > len(PAIRS) * len(Timeframe) or len(
         {(r.candle.base, r.candle.quote, r.candle.timeframe) for r, _ in rows}
     ) != len(rows):
         raise ValueError("unbounded preview batch")
@@ -177,7 +179,11 @@ async def flush(
           ON CONFLICT(source,base,quote,timeframe,open_at) DO UPDATE SET
             open=excluded.open,high=excluded.high,low=excluded.low,close=excluded.close,
             volume=excluded.volume,finality=excluded.finality,event_at=excluded.event_at,
-            received_at=excluded.received_at,epoch=excluded.epoch,revision=excluded.revision""",
+            received_at=excluded.received_at,epoch=excluded.epoch,revision=excluded.revision
+          WHERE excluded.event_at>=market_candle_preview.event_at
+            AND (excluded.epoch>market_candle_preview.epoch OR
+              (excluded.epoch=market_candle_preview.epoch AND
+               excluded.revision>market_candle_preview.revision))""",
             params,
         )
         await session.execute(
@@ -185,7 +191,7 @@ async def flush(
           source=:source AND base=:base AND quote=:quote AND timeframe=:timeframe AND
           open_at NOT IN(SELECT open_at FROM market_candle_preview WHERE source=:source
             AND base=:base AND quote=:quote AND timeframe=:timeframe
-            ORDER BY open_at DESC LIMIT 2)""",
+            ORDER BY open_at DESC LIMIT 120)""",
             params,
         )
 
@@ -219,7 +225,7 @@ async def read_live(
     )
     recovered = False
     if rows:
-        previous = rows[0]["open_at"] - series.timeframe.span
+        previous = previous_open(rows[0]["open_at"], series.timeframe)
         recovered = bool(
             (
                 await session.execute(

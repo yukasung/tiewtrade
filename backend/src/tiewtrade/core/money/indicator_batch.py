@@ -12,6 +12,7 @@ from tiewtrade.core.money.limits import STORED_SCALE
 from tiewtrade.core.money.rounding import RoundingDirection
 from tiewtrade.core.money.types import Money, Quantity
 from tiewtrade.core.money.validation import ensure_canonical_unit, ensure_in_range
+from tiewtrade.core.timeframes import Timeframe, next_open
 
 FORMULA_VERSION = "indicators-v2"
 # NC-30 transition parameters; the single-step entry point uses this same kernel.
@@ -42,7 +43,7 @@ class IndicatorBatchState:
     base: str
     quote: str
     timeframe: str
-    span: timedelta
+    span: timedelta | None = None
     formula_version: str = FORMULA_VERSION
     last_open: datetime | None = None
     previous: Money | None = None
@@ -56,9 +57,13 @@ class IndicatorBatchState:
         ensure_canonical_unit(self.quote)
         if self.base == self.quote or self.formula_version != FORMULA_VERSION:
             raise InvalidInputTypeError("invalid indicator identity")
-        spans = {"1m": 60, "5m": 300, "15m": 900, "1h": 3600, "4h": 14400, "1d": 86400}
-        if self.timeframe not in spans or self.span != timedelta(seconds=spans[self.timeframe]):
+        try:
+            timeframe = Timeframe(self.timeframe)
+        except ValueError as exc:
+            raise InvalidInputTypeError("invalid indicator timeframe") from exc
+        if self.span is not None and self.span != timeframe.fixed_span:
             raise InvalidInputTypeError("invalid indicator timeframe")
+        object.__setattr__(self, "span", timeframe.fixed_span)
         if self.last_open is not None and (
             not isinstance(self.last_open, datetime) or self.last_open.tzinfo is None
         ):
@@ -193,7 +198,10 @@ def reset_indicator_batch(
         if (
             not isinstance(moment, datetime)
             or moment.tzinfo is None
-            or (previous is not None and moment != previous + state.span)
+            or (
+                previous is not None
+                and moment != next_open(previous, Timeframe(state.timeframe))
+            )
         ):
             raise InvalidInputTypeError("unordered indicator resets")
         previous = moment
@@ -312,7 +320,10 @@ def advance_indicator_batch(
         if (
             not isinstance(item.open_at, datetime)
             or item.open_at.tzinfo is None
-            or (previous_open is not None and item.open_at != previous_open + state.span)
+            or (
+                previous_open is not None
+                and item.open_at != next_open(previous_open, Timeframe(state.timeframe))
+            )
         ):
             raise InvalidInputTypeError("unordered indicator events")
         previous_open = item.open_at

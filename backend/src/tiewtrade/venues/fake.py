@@ -49,6 +49,11 @@ class FakeVenue:
 
     max_request_span: timedelta | None = None
 
+    def max_request_slots(self, timeframe: Timeframe) -> int | None:
+        if not isinstance(timeframe, Timeframe):
+            raise ValueError("unsupported timeframe")
+        return None
+
     def __init__(
         self,
         *,

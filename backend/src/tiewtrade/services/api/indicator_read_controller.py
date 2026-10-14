@@ -14,6 +14,7 @@ from tiewtrade.core.indicators import FORMULA_VERSION
 from tiewtrade.core.market_data import (
     CandleWindow,
     Timeframe,
+    advance,
     align_ceil,
     align_floor,
     retention_cutoff,
@@ -130,11 +131,11 @@ def _claims(
     except MoneyError:
         raise CursorRejectedError() from None
     parameters(base, quote, query.timeframe)
-    lower = align_ceil(retention_cutoff(now), query.timeframe)
+    lower = align_ceil(retention_cutoff(now, query.timeframe), query.timeframe)
     upper = align_floor(now, query.timeframe)
     if (query.start is None) != (query.end is None):
         raise CursorRejectedError()
-    start = query.start or max(lower, upper - 1000 * query.timeframe.span)
+    start = query.start or max(lower, advance(upper, query.timeframe, -1000))
     end = query.end or upper
     if start.tzinfo is None or end.tzinfo is None:
         raise CursorRejectedError()
@@ -197,7 +198,10 @@ async def read_history(
                 explicit_range=query.start is not None,
             )
             claims = prepared.claims
-        end = min(claims.next_open_at + claims.page_size * claims.timeframe.span, claims.result_end)
+        end = min(
+            advance(claims.next_open_at, claims.timeframe, claims.page_size),
+            claims.result_end,
+        )
         result = (
             prepared.result
             if prepared is not None
@@ -239,13 +243,15 @@ async def read_history(
         issue(next_claims, keys, who.user_id, who.token_hash) if end < claims.result_end else None
     )
     target = None
-    if result.refresh_first is not None and result.refresh_first >= retention_cutoff(now):
+    if result.refresh_first is not None and result.refresh_first >= retention_cutoff(
+        now, claims.timeframe
+    ):
         target = RefreshTarget(
             base=claims.base,
             quote=claims.quote,
             timeframe=claims.timeframe,
             start=result.refresh_first,
-            end=min(result.refresh_first + 1000 * claims.timeframe.span, claims.calculation_end),
+            end=min(advance(result.refresh_first, claims.timeframe, 1000), claims.calculation_end),
         )
     rows = [
         IndicatorPointView(

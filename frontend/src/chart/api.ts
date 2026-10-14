@@ -5,6 +5,18 @@ export type ChartHistory = components["schemas"]["ChartHistoryView"];
 export type ChartLive = components["schemas"]["ChartLiveView"];
 export type ChartProof = components["schemas"]["ChartProofView"];
 export type CandleHistory = components["schemas"]["CandleHistoryView"];
+export type CandlePage = components["schemas"]["ChartCandlePage"];
+export type PageDirection = { before?: string; after?: string };
+
+export async function candlePage(series: Series, direction: PageDirection, signal: AbortSignal): Promise<CandlePage> {
+  const page = await get<CandlePage>("candles/pages", { ...series, ...direction }, signal);
+  if (signal.aborted) throw signal.reason;
+  if (page.base !== series.base || page.quote !== series.quote || page.timeframe !== series.timeframe ||
+      !Array.isArray(page.rows) || page.rows.length > 1000 || !Array.isArray(page.gaps) ||
+      !page.requested || !Number.isFinite(Date.parse(page.display_start)) ||
+      !Number.isFinite(Date.parse(page.display_end))) throw new ApiRequestError("CHART_INVALID_RESPONSE", 503);
+  return page;
+}
 export type Candle = components["schemas"]["CandleView"];
 export type Point = components["schemas"]["IndicatorPointView"];
 export type Timeframe = components["schemas"]["Timeframe"];

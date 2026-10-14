@@ -28,7 +28,9 @@ from tiewtrade.core.market_data import (
     CandleFinality,
     CandleWindow,
     Timeframe,
+    advance,
     expected_opens,
+    next_open,
 )
 from tiewtrade.core.money import Money, OutOfRangeError, Quantity
 from tiewtrade.core.money.limits import MAX_ABS
@@ -159,7 +161,7 @@ async def insert_bad(admin: AsyncEngine, timeframe: Timeframe, opened: datetime)
             {
                 "tf": timeframe.value,
                 "opened": opened,
-                "end": opened + timeframe.span,
+                "end": next_open(opened, timeframe),
                 "high": str(MAX_ABS),
             },
         )
@@ -187,7 +189,7 @@ async def full_scan_failure(api: AsyncEngine, admin: AsyncEngine, timeframe: Tim
                 "USDT",
                 timeframe,
                 window,
-                CandleWindow(window.end - 2 * timeframe.span, window.end),
+                CandleWindow(advance(window.end, timeframe, -2), window.end),
                 generation["as_of"],
                 monotonic() + 30,
             )
@@ -205,7 +207,7 @@ async def test_numeric_key_before_at_after_db_alignment_boundary(
     await one_series(builder_engine, migrator_engine, timeframe)
     original = await job(migrator_engine, timeframe)
     await insert_bad(migrator_engine, timeframe, original["desired_start"])
-    await insert_bad(migrator_engine, timeframe, original["desired_start"] + timeframe.span)
+    await insert_bad(migrator_engine, timeframe, next_open(original["desired_start"], timeframe))
     assert (
         await run_attempt(builder_engine, uuid4(), scheduled=True)
     ).status is AttemptStatus.FAILED_NUMERIC
@@ -226,7 +228,7 @@ async def test_numeric_key_before_at_after_db_alignment_boundary(
     await db_clock(BOUNDARY + timedelta(microseconds=1))
     await coalesce_jobs(builder_engine)
     current = await job(migrator_engine, timeframe)
-    assert current["desired_start"] == failed["desired_start"] + timeframe.span
+    assert current["desired_start"] == next_open(failed["desired_start"], timeframe)
     assert current["desired_end"] == BOUNDARY
     assert current["status"] == "QUEUED"
     assert current["first_eligible_at"] == failed["first_eligible_at"]

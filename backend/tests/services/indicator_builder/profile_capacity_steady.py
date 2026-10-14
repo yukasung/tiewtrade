@@ -32,6 +32,7 @@ from tests.services.indicator_builder.profile_capacity import (
     save,
     snapshot,
 )
+from tiewtrade.core.market_data import Timeframe, advance
 from tiewtrade.infra.db import DatabaseRole, create_engine_for
 from tiewtrade.infra.db.session import indicator_read_session, market_data_session
 from tiewtrade.infra.indicators.prepared import proof_valid
@@ -124,8 +125,7 @@ async def dirty_burst(migrator: AsyncEngine, source: AsyncEngine) -> list[RowMap
                 )
             ).mappings()
         )
-    assert len(generations) == 30
-    spans = {tf.value: tf.span for _, tf in SERIES}
+    assert len(generations) == 40
     async with market_data_session(source) as session:
         await session.execute("SELECT begin_indicator_source_write()")
         for g in generations:
@@ -139,7 +139,7 @@ async def dirty_burst(migrator: AsyncEngine, source: AsyncEngine) -> list[RowMap
                 {
                     "base": g["base"],
                     "tf": g["timeframe"],
-                    "moment": g["calculation_start"] + 10 * spans[g["timeframe"]],
+                    "moment": advance(g["calculation_start"], Timeframe(g["timeframe"]), 10),
                 },
             )
             assert changed.scalar_one() == 1

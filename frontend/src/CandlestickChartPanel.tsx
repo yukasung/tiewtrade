@@ -6,12 +6,14 @@ import { Select } from "./components/ui/Select";
 import { chartI18n } from "./chartMessages";
 import { mountChart, type ChartRenderer } from "./chart/renderer";
 import { useChartData } from "./chart/useChartData";
+import { candleTimeline } from "./chart/candleTimeline";
+import { anchoredRange } from "./chart/viewport";
 import type { Series, Timeframe } from "./chart/api";
 import { TradeHistoryPlaceholder, TradingOrderPlaceholder } from "./TradingWorkspacePlaceholders";
 import "./CandlestickChartPanel.css";
 
 const pairs = ["BTC", "ETH", "SOL", "XRP", "DOGE"];
-const timeframes: Timeframe[] = ["1m", "5m", "15m", "1h", "4h", "1d"];
+const timeframes: Timeframe[] = ["1m", "5m", "15m", "1h", "4h", "1d", "1w", "1M"];
 const noIndicators = new Set<string>();
 const chartLocale = "th";
 const t = chartI18n.getFixedT(chartLocale);
@@ -31,38 +33,73 @@ export function CandlestickChartPanel({ userId }: { userId: string }) {
   const [renderLimit, setRenderLimit] = useState<string | null>(null);
   const host = useRef<HTMLDivElement>(null), renderer = useRef<ChartRenderer>();
   const historyViewportInitialized = useRef(false);
+  const drawing = useRef(false);
+  const preservePageRange = useRef(false);
+  const renderedSlotCount = useRef(0);
+  const renderedTimes = useRef<number[]>([]);
   const series: Series = { base, quote: "USDT", timeframe };
   const state = useChartData(userId, series);
-  const pages = useMemo(() => state.query.data?.pages.filter(page => belongsToSeries(page, series)) ?? [],
-    [state.query.data, base, timeframe]);
-  const first = pages[0];
-  const provisional = belongsToSeries(state.provisional?.data, series) ? state.provisional.data : undefined;
+  const browsing = state.browsing;
+  const browsingActions = useRef(browsing); browsingActions.current = browsing;
+  const history = browsing.page ?? browsing.latest;
+  const timeline = useMemo(() => candleTimeline(history), [history]);
+  const rows = history?.rows ?? [];
   const preview = belongsToSeries(state.preview.data, series) ? state.preview.data : undefined;
-  const rows = useMemo(() => pages.length ? pages.flatMap(page => page.candles) : provisional?.rows ?? [],
-    [pages, provisional]);
-  const points = useMemo(() => pages.flatMap(page => page.rows), [pages]);
-  const liveRows = preview?.rows ?? [];
   const displayed = useMemo(() => {
-    if (first) return [...rows, ...liveRows.filter(row => row.open_at >= first.calculation_end)]
-      .sort((a, b) => Date.parse(a.open_at) - Date.parse(b.open_at));
     const merged = new Map(rows.map(row => [row.open_at, row]));
-    for (const row of liveRows) merged.set(row.open_at, row);
+    if (!browsing.page) for (const row of preview?.retained ?? []) {
+      if (!merged.has(row.open_at) && (!history || Date.parse(row.open_at) >= Date.parse(history.requested.start))) {
+        merged.set(row.open_at, row);
+      }
+    }
+    if (!browsing.page) for (const row of preview?.rows ?? []) {
+      const existing = merged.get(row.open_at);
+      if (!existing || (existing.finality !== "CLOSED" && Date.parse(row.observed_at) >= Date.parse(existing.observed_at))) {
+        merged.set(row.open_at, row);
+      }
+    }
     return [...merged.values()].sort((a, b) => Date.parse(a.open_at) - Date.parse(b.open_at));
-  }, [rows, liveRows, first]);
-  const selectionTimes = useMemo(() => [...new Set([...points.map(point => Date.parse(point.open_at)),
-    ...displayed.map(row => Date.parse(row.open_at))])].sort((a, b) => a - b), [points, displayed]);
-  const selectedTime = selected ?? selectionTimes.at(-1);
+  }, [rows, preview, browsing.page]);
+  const selectionTimes = useMemo(() => [...new Set([...timeline.map(Date.parse),
+    ...displayed.map(row => Date.parse(row.open_at))])].sort((a, b) => a - b), [displayed, timeline]);
+  const selectedTime = selected ?? (displayed.length ? Date.parse(displayed.at(-1)!.open_at) : undefined);
   const candle = displayed.find(row => Date.parse(row.open_at) === selectedTime);
-  const point = points.find(point => Date.parse(point.open_at) === selectedTime);
+  const selectedGap = selectedTime !== undefined && history?.gaps.some(gap =>
+    selectedTime >= Date.parse(gap.start) && selectedTime < Date.parse(gap.end));
   const summaryCandle = candle ?? (selected === null ? displayed.at(-1) : undefined);
-  const error = state.query.error ?? state.proof.error ?? state.preview.error ?? state.refreshState.error ??
-    (!first ? state.provisional?.error : null);
+  const error = state.error;
 
   useEffect(() => {
     if (!host.current) return;
     historyViewportInitialized.current = false;
+    renderedTimes.current = [];
     renderer.current = mountChart(host.current, chartLocale, iso => setSelected(iso === null ? null : Date.parse(iso)));
-    return () => { renderer.current?.remove(); renderer.current = undefined; };
+    const scale = renderer.current.chart.timeScale();
+    let timer: ReturnType<typeof globalThis.setTimeout> | undefined;
+    let navigationRequested = false;
+    const requestNavigation = () => { navigationRequested = true; };
+    const element = host.current;
+    element.addEventListener("pointerdown", requestNavigation);
+    element.addEventListener("wheel", requestNavigation, { passive: true });
+    const changed = (range: { from: number; to: number } | null) => {
+      if (drawing.current || !range || !navigationRequested) return;
+      globalThis.clearTimeout(timer);
+      timer = globalThis.setTimeout(() => {
+        navigationRequested = false;
+        const current = browsingActions.current;
+        if (current.loading || current.error) return;
+        const count = renderedSlotCount.current;
+        if (!count) return;
+        const direction = range.from < 100 ? "older" : range.to > count - 100 ? "newer" : null;
+        const page = current.page ?? current.latest;
+        const boundary = direction === "older" ? page?.older_before : page?.newer_after;
+        if (direction && boundary) { preservePageRange.current = true; current.navigate(direction); }
+      }, 250);
+    };
+    scale.subscribeVisibleLogicalRangeChange(changed);
+    return () => { globalThis.clearTimeout(timer); scale.unsubscribeVisibleLogicalRangeChange(changed);
+      element.removeEventListener("pointerdown", requestNavigation); element.removeEventListener("wheel", requestNavigation);
+      renderer.current?.remove(); renderer.current = undefined; };
   }, [base, timeframe]);
   useEffect(() => {
     const applyTheme = () => renderer.current?.applyTheme();
@@ -73,24 +110,33 @@ export function CandlestickChartPanel({ userId }: { userId: string }) {
     const view = renderer.current;
     if (!view) return;
     const range = view.chart.timeScale().getVisibleLogicalRange();
-    const result = view.draw(displayed, points, noIndicators, false);
+    const preserved = range && (historyViewportInitialized.current || preservePageRange.current)
+      ? anchoredRange(range, renderedTimes.current, selectionTimes) : null;
+    drawing.current = true;
+    renderedSlotCount.current = selectionTimes.length;
+    const result = view.draw(displayed, [], noIndicators, false, timeline);
     setRenderLimit(result);
     // Preserve a user-adjusted viewport across data updates. On first load,
     // include empty logical slots so sparse data remains readable without stretching.
     if (!result && selectionTimes.length) {
-      if (first && historyViewportInitialized.current && range) {
-        view.chart.timeScale().setVisibleLogicalRange(range);
+      if (preserved) {
+        view.chart.timeScale().setVisibleLogicalRange(preserved);
       } else {
         view.chart.timeScale().setVisibleLogicalRange(initialViewport(selectionTimes.length));
-        if (first) historyViewportInitialized.current = true;
+        if (history) historyViewportInitialized.current = true;
       }
     }
-  }, [displayed, points, base, timeframe, selectionTimes.length, first]);
+    if (!result) renderedTimes.current = selectionTimes;
+    drawing.current = false;
+  }, [displayed, base, timeframe, selectionTimes.length, history, timeline]);
 
   const changeSeries = (base: string, timeframe: Timeframe) => {
+    preservePageRange.current = false;
     setBase(base); setTimeframe(timeframe); setSelected(null);
   };
   const resetViewport = () => {
+    preservePageRange.current = false;
+    if (browsing.page) { browsing.reset(); historyViewportInitialized.current = false; return; }
     if (!selectionTimes.length) return;
     renderer.current?.chart.timeScale().setVisibleLogicalRange(initialViewport(selectionTimes.length));
   };
@@ -113,6 +159,10 @@ export function CandlestickChartPanel({ userId }: { userId: string }) {
     <div className="trading-chart-area">
       {error && <p role="alert">{t(`errors.${error instanceof ApiRequestError ? error.message : "unknown"}`,
         { defaultValue: t("errors.unknown") })}</p>}
+      {error && <Button onClick={state.retry} disabled={state.cooldownActive || !state.visible ||
+        browsing.loading || state.preview.isFetching}>{t("retry")}</Button>}
+      {!error && browsing.page && browsing.page.coverage !== "PRESENT" && <Button onClick={browsing.retry}
+        disabled={browsing.loading || globalThis.performance.now() < (browsing.retryAt ?? 0)}>{t("retry")}</Button>}
       {renderLimit && <p role="alert">{t(renderLimit)}</p>}
       <div className="chart-frame">
         <div className="chart-chart-header" data-testid="chart-summary">
@@ -130,7 +180,7 @@ export function CandlestickChartPanel({ userId }: { userId: string }) {
       </div>
       {!candle && selectedTime !== undefined && <div className="chart-selection" aria-label={t("selected")}>
         <p><MarketTime value={new Date(selectedTime).toISOString()} locale={chartLocale}/>
-          {" · "}{t(point ? "GAP" : selected !== null ? "selectionOutside" : "missing")}</p>
+          {" · "}{t(selectedGap ? "GAP" : selected !== null ? "selectionOutside" : "missing")}</p>
       </div>}
     </div>
     <TradingOrderPlaceholder/>

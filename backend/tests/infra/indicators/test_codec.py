@@ -10,7 +10,14 @@ from typing import cast
 import pytest
 
 from tiewtrade.core.indicators import IndicatorPoint, IndicatorStream
-from tiewtrade.core.market_data import Candle, CandleFinality, CandleWindow, Timeframe
+from tiewtrade.core.market_data import (
+    Candle,
+    CandleFinality,
+    CandleWindow,
+    Timeframe,
+    advance,
+    align_floor,
+)
 from tiewtrade.core.money import InvalidInputTypeError, Money, Quantity
 from tiewtrade.infra.indicators.codec import (
     CheckpointCodecError,
@@ -24,6 +31,29 @@ COUNT = 2003
 WINDOW = CandleWindow(START, START + COUNT * SPAN)
 AS_OF = WINDOW.end + SPAN
 IDENTITY = {"generation_id": "gen-1", "source": "primary_spot"}
+
+
+@pytest.mark.parametrize("timeframe", [Timeframe.W1, Timeframe.MN1])
+def test_calendar_timeframe_checkpoint_round_trip(timeframe: Timeframe) -> None:
+    start = align_floor(datetime(2026, 1, 1, tzinfo=UTC), timeframe)
+    end = advance(start, timeframe, 2)
+    stream = IndicatorStream("BTC", "USDT", timeframe, end)
+    for opened in (start, advance(start, timeframe, 1)):
+        stream.feed(opened, None, None)
+    payload = encode_checkpoint(
+        stream, **IDENTITY, calculation=CandleWindow(start, end), next_open_at=end
+    )
+    restored = decode_checkpoint(
+        payload,
+        **IDENTITY,
+        base="BTC",
+        quote="USDT",
+        timeframe=timeframe,
+        as_of=end,
+        calculation=CandleWindow(start, end),
+        next_open_at=end,
+    )
+    assert restored.export_state() == stream.export_state()
 
 
 def _slot(index: int) -> tuple[datetime, Candle | None, datetime | None]:

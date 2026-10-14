@@ -10,7 +10,13 @@ from tiewtrade.core.indicators import (
     IndicatorCheckpointState,
     IndicatorStream,
 )
-from tiewtrade.core.market_data import CandleWindow, Timeframe, align_floor
+from tiewtrade.core.market_data import (
+    CandleWindow,
+    Timeframe,
+    align_floor,
+    previous_open,
+    slot_count,
+)
 from tiewtrade.core.money import Money
 from tiewtrade.core.money.errors import MoneyError
 from tiewtrade.core.money.indicator_batch import AverageState, IndicatorBatchState
@@ -91,8 +97,8 @@ def _boundary(calculation: CandleWindow, timeframe: Timeframe, next_open_at: dat
         or next_open_at != align_floor(next_open_at, timeframe)
         or not calculation.start <= next_open_at <= calculation.end
         or (
-            (next_open_at - calculation.start) // timeframe.span % 1000 != 0
-            and next_open_at != calculation.end
+            next_open_at not in (calculation.start, calculation.end)
+            and slot_count(CandleWindow(calculation.start, next_open_at), timeframe) % 1000 != 0
         )
     ):
         raise CheckpointCodecError("invalid checkpoint boundary")
@@ -126,7 +132,9 @@ def encode_checkpoint(
     stream.restore_state(state)
     _state_bounds(state, calculation, stream.timeframe, next_open_at)
     expected_last = (
-        None if next_open_at == calculation.start else next_open_at - stream.timeframe.span
+        None
+        if next_open_at == calculation.start
+        else previous_open(next_open_at, stream.timeframe)
     )
     if state.numeric.last_open != expected_last:
         raise CheckpointCodecError("checkpoint skips or repeats a slot")
@@ -225,7 +233,9 @@ def decode_checkpoint(
         )
     ):
         raise CheckpointCodecError("checkpoint identity mismatch")
-    expected_last = None if next_open_at == calculation.start else next_open_at - timeframe.span
+    expected_last = (
+        None if next_open_at == calculation.start else previous_open(next_open_at, timeframe)
+    )
     last_open = _optional_time(data["last_open_at"])
     if last_open != expected_last:
         raise CheckpointCodecError("checkpoint skips or repeats a slot")
@@ -253,15 +263,14 @@ def decode_checkpoint(
         raise CheckpointCodecError("invalid accepted input count")
     try:
         numeric = IndicatorBatchState(
-            base,
-            quote,
-            timeframe.value,
-            timeframe.span,
-            FORMULA_VERSION,
-            last_open,
-            None if data["previous"] is None else _read_money(data["previous"], quote),
-            tuple(averages),
-            count,
+            base=base,
+            quote=quote,
+            timeframe=timeframe.value,
+            formula_version=FORMULA_VERSION,
+            last_open=last_open,
+            previous=None if data["previous"] is None else _read_money(data["previous"], quote),
+            averages=tuple(averages),
+            accepted_count=count,
         )
         state = IndicatorCheckpointState(
             numeric,

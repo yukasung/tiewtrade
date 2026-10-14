@@ -34,6 +34,39 @@ def test_read_requires_authentication(client: TestClient) -> None:
     )
 
 
+def test_chart_pages_require_authentication(client: TestClient) -> None:
+    assert (
+        client.get(
+            "/market-data/candles/pages", params={"base": "BTC", "quote": "USDT", "timeframe": "1m"}
+        ).status_code
+        == 401
+    )
+
+
+@pytest.mark.parametrize("timeframe", ["1m", "5m", "15m", "1h", "4h", "1d"])
+def test_chart_pages_cover_three_months_with_bounded_pages(
+    client: TestClient, timeframe: str
+) -> None:
+    register(client)
+    params = {"base": "BTC", "quote": "USDT", "timeframe": timeframe}
+    result = client.get("/market-data/candles/pages", params=params)
+    assert result.status_code == 200, result.text
+    page = result.json()
+    assert page["earliest_known"] is True
+    assert page["display_start"] < page["requested"]["end"]
+    if page["older_before"]:
+        older = client.get(
+            "/market-data/candles/pages", params=params | {"before": page["older_before"]}
+        )
+        assert older.status_code == 200, older.text
+        assert older.json()["requested"]["start"] < page["requested"]["start"]
+        assert older.json()["requested"]["end"] > page["requested"]["start"]
+    outside = client.get(
+        "/market-data/candles/pages", params=params | {"before": "2000-01-01T00:00:00Z"}
+    )
+    assert outside.status_code == 422
+
+
 def test_read_and_request_need_no_totp(client: TestClient) -> None:
     register(client)
     series = {"base": "DOGE", "quote": "USDT", "timeframe": "5m"}
@@ -46,10 +79,11 @@ def test_read_and_request_need_no_totp(client: TestClient) -> None:
     assert request.status_code == 202, request.text
 
 
-def test_invalid_timeframe_has_fixed_error(client: TestClient) -> None:
+@pytest.mark.parametrize("timeframe", ["9m", "1W", "1mo"])
+def test_invalid_timeframe_has_fixed_error(client: TestClient, timeframe: str) -> None:
     register(client)
     result = client.get(
-        "/market-data/candles", params={"base": "BTC", "quote": "USDT", "timeframe": "9m"}
+        "/market-data/candles", params={"base": "BTC", "quote": "USDT", "timeframe": timeframe}
     )
     assert result.status_code == 422
     assert result.json() == {"detail": "INPUT_REJECTED"}

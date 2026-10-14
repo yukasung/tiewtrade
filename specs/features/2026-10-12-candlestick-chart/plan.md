@@ -1,5 +1,67 @@
 # F-12 — กราฟแท่งเทียนบนหน้าเว็บ — Plan
 
+## Amendment — ช่วงประวัติที่เลื่อนดูได้
+
+สถานะ: **Approved** — requirements RQ-37..42 อนุมัติแล้ว 2026-10-14;
+แผนเดิมส่วนอื่นยัง Approved. เจ้าของอนุมัติ plan/validation amendment นี้แล้วในบทสนทนา.
+
+### P-H1: ขอบเวลาและสัญญาข้อมูล
+
+- ใช้ `core/timeframes.py` เพิ่มการลบเดือนปฏิทินแบบ clamp วันสิ้นเดือน และ
+  `align_floor` ขอบเริ่มเพื่อรวมแท่งคร่อมขอบ; cutoff มาจาก server UTC.
+- แยก display-history bounds จาก storage retention และ indicator calculation bounds.
+  ไม่ลด storage retention ของ TF เดิม ไม่ลบข้อมูล และไม่เปลี่ยนสูตร/seed ของ F-11.
+- ใช้ `services/api/candle_routes.py`, `infra/market_data/storage.py`, `CandleWindow`
+  และ `read_candles` เดิม. เพิ่ม metadata ของช่วงที่ขอได้/หน้าก่อนหน้า/ความคืบหน้า
+  ให้ชัดเจน โดยคงเพดาน 1,000 slots ต่อคำขอและ authorization เดิม.
+  Export OpenAPI และ regenerate `frontend/src/api-types.ts` ไม่แก้ generated code มือ.
+- หน้าเก่าของกราฟใช้ candle-only contract ไม่ขยาย indicator bundle หรืออ้าง proof
+  ครอบคลุมข้อมูลนอกช่วงของ bundle; ข้อมูลชั่วคราวไม่ถูกเรียกว่า verified/CLOSED.
+
+### P-H2: Weekly/monthly history และ backfill
+
+- ตรวจหลักฐาน earliest-history ของ Binance TH ต่อคู่/TF ก่อนเลือก discovery protocol;
+  บันทึก source contract/ตัวอย่างใน `source-evidence.md`. ห้ามใช้วันที่เดาหรือคำตอบว่าง
+  ครั้งเดียวเป็น market inception. ถ้าต้นทางไม่มีหลักฐานขอบเก่าสุด ให้แสดงยังไม่ทราบ
+  และหยุด discovery ตามงบของรอบ ไม่รายงานว่าครบทั้งหมด.
+- ใช้ demand/claim/fencing/upsert และ recent-priority pass เดิมต่อ. โหลดช่วงล่าสุดก่อน;
+  demand สำหรับช่วงที่ผู้ใช้เลื่อนดูต้องผ่านคิวและ rate/retry budgets เดิม.
+- เพิ่ม migration สำหรับขอบประวัติที่ตรวจพบและ progress ของ discovery หากต้องเก็บ state;
+  ปรับ constraints, partition provisioning และ cleanup ของ weekly/monthly ที่ปัจจุบันตัดห้าปี
+  ให้ยอมรับช่วงที่ต้นทางให้ได้ โดยยังแบ่งงานและสร้าง partition แบบมีขอบเขตต่อรอบ.
+- ไม่สร้าง connection ตลาดต่อผู้ใช้ ไม่เพิ่ม worker เพื่อข้าม limiter ไม่เลื่อน cursor
+  ข้ามช่องว่าง และไม่เปลี่ยน historical indicator seed โดยอัตโนมัติเมื่อพบข้อมูลเก่าขึ้น.
+
+### P-H3: เลื่อนกราฟและโหลดเพิ่ม
+
+- ใช้ `frontend/src/chart/renderer.ts` time-scale visible-range callback,
+  `chart/api.ts`, `chart/useChartData.ts` และ `CandlestickChartPanel.tsx` เดิม.
+- เมื่อใกล้ขอบซ้าย ให้ขอหน้าก่อนหน้าครั้งละไม่เกิน 1,000 slots; มีคำขอประวัติเพิ่ม
+  ได้ครั้งละหนึ่งงานต่อ episode พร้อม debounce/dedup. 429 เคารพ Retry-After และปุ่มลองใหม่เดิม.
+- แยก query key ตาม user/series/window/epoch; ใช้ server page bounds และรวม OHLCV
+  แบบ exact ตาม open-time โดยไม่ให้หน้าเก่าทับ current live candle.
+- หลัง prepend คง viewport ด้วยเวลาของแท่ง anchor ไม่ใช่ logical index เดิมที่เลื่อนตำแหน่ง.
+  cache/render ต้องมีจำนวนหน้าสูงสุดและ evict หน้าที่ห่าง viewport; กลับไปดูได้ด้วย refetch.
+  กำหนดค่า bound จากงบ renderer/API ที่ตรวจพบก่อน implementation ไม่ใช้ unbounded array.
+- คงปุ่มรีเซ็ตแบบ viewport-only และใช้ admin-template components เดิมหากต้องแสดงสถานะ
+  โหลดเพิ่ม/ถึงขอบประวัติ ไม่เพิ่ม controls ที่ไม่จำเป็น.
+
+### P-H4: ลำดับและการตรวจรับ
+
+1. พิสูจน์ source-history bounds และกำหนด API metadata/memory bounds ให้ review ได้ก่อน.
+2. เพิ่ม calendar/boundary tests; migration/storage/backfill tests บนฐานข้อมูลแยกเท่านั้น.
+3. เพิ่ม API/frontend pagination และ viewport tests แล้วตรวจ browser กับ API จริง.
+4. บันทึกข้อที่ยัง Partial; full regression/workload ที่ release checkpoint ตามกฎเดิม.
+
+ความเสี่ยง: การดู 1m สามเดือนมีมากกว่า 100,000 slots จึงต้องแบ่งหน้าและจำกัด memory;
+การพิสูจน์ข้อมูลเก่าสุดอาจต้อง discovery หลายรอบ และข้อมูลที่ต้นทางไม่มีไม่สามารถสร้างแทนได้.
+
+ลำดับ backfill ใช้ [recent-history priority amendment](recent-history-priority-amendment.md)
+ที่อนุมัติแล้ว; migration 0027 เพิ่ม recent_cursor/recent_end/fetch_recent แยกจาก cursor เดิม.
+
+การกู้กราฟหลัง history error: [amendment ที่อนุมัติ](chart-error-recovery-amendment.md)
+แทนที่ cancellation scope และการลบปุ่ม retry ในส่วนที่ระบุ; reset ยังเปลี่ยน viewport เท่านั้น.
+
 สถานะ: **Approved** — เจ้าของอนุมัติวันที่ 2026-10-13 — แผน amendment วันที่ 2026-10-13 สำหรับการแสดงแท่งเทียนก่อน indicator;
 การอนุมัติเดิม, การลบ Volume pane และ initial viewport แบบ TradingView ยังมีผลกับส่วนที่ไม่ถูกแก้
 การลบ MACD ด้านล่าง: **Approved** — เจ้าของอนุมัติ amendment เมื่อ 2026-10-13
@@ -14,11 +76,131 @@
 การย่อ market bar และลบ visible labels: **Approved** — เจ้าของสั่งแก้เมื่อ 2026-10-14
 การจัดตำแหน่ง history tabs ตาม Admin Template: **Approved** — เจ้าของสั่งแก้เมื่อ 2026-10-14
 โหมด Light/Dark จาก Admin Template: **Approved** — เจ้าของสั่งเพิ่มเมื่อ 2026-10-14
+การเพิ่ม timeframe `1w` และ `1M` ทั้งระบบด้านล่าง: **Approved** — เจ้าของอนุมัติ plan/validation amendment เมื่อ 2026-10-14
+ข้อจำกัด REST 7 วันสำหรับ `1w`/`1M` ด้านล่าง: **Approved** — เจ้าของยืนยัน amendment เมื่อ 2026-10-14
 วันที่: 2026-10-12
 Branch: feature/f-12-candlestick-chart
 Requirements: [ฉบับที่รีวิวผ่าน](requirements.md)
 หลักฐานต้นทาง: [source-evidence.md](source-evidence.md)
 บันทึกสถาปัตยกรรมที่เสนอ: [ADR-003](../../decisions/003-chart-market-data.md)
+
+## Amendment — native timeframe `1w` และ `1M` ทั้งระบบ (Approved 2026-10-14)
+
+Amendment นี้แทนส่วนของแผนเดิมที่กำหนด 6 timeframes, 30 live series, fixed-span arithmetic,
+retention 365 วันสำหรับทุก timeframe และข้อความว่าไม่ต้องมี migration; ส่วนอื่นของแผนเดิมยังมีผล.
+
+### แนวทางและของเดิมที่ใช้ซ้ำ
+
+- ใช้ `Timeframe`, `Candle`, `CandleWindow`, claim/storage/backfill, candle preview, shared
+  `BinanceThCandleFeed`, chart API และ TanStack Query flow เดิม โดยเพิ่ม schedule primitive กลางแทน
+  การสร้างเส้นทางข้อมูลชุดใหม่.
+- ใช้ native interval `1w`/`1M` ของ Binance TH ทั้ง REST `/klines` และ WebSocket
+  `<symbol>@kline_<interval>`. บันทึกหลักฐาน interval, payload, close-time, update cadence,
+  reconnect และเพดาน 1,024 streams ต่อ connection ใน `source-evidence.md` ก่อนแก้ production code.
+- เพิ่ม `backend/src/tiewtrade/core/timeframes.py` เป็นโมดูลมาตรฐานเวลาแบบ pure ซึ่งประกาศ
+  `Timeframe` และ operation `floor`, `ceil`, `next_open`, `previous_open`, `advance`,
+  `slot_count` และ cutoff ตาม timeframe. `market_data.py` re-export `Timeframe` เพื่อรักษา
+  import เดิม และ callers ใช้ operation เหล่านี้แทน `.span`.
+- `1w` ยึด Monday 00:00 UTC. `1M` ยึดวันที่ 1 เวลา 00:00 UTC และเลื่อนด้วย calendar month;
+  การลบ 5 ปีใช้ปีปฏิทิน UTC โดย clamp 29 ก.พ. เป็นวันสุดท้ายของเดือน แล้ว align ตาม timeframe.
+  ห้ามมี fallback ที่ตีความ `1M` เป็น 30 วันหรือ `1w` จาก epoch วันพฤหัสบดี.
+- เก็บเพดาน 1,000 slots ต่อ API page/window แต่ Binance TH REST บังคับช่วง
+  `startTime`–`endTime` ไม่เกิน 7 วันสำหรับทุก interval. Adapter จึงคง duration cap เดิมและประกาศ
+  source slot cap ของ `1w`/`1M` เป็นหนึ่งแท่งต่อคำขอ. สำหรับ `1M` logical window ยังคงถึง
+  เดือนถัดไป แต่ upstream query ใช้เจ็ดวันแรกนับจาก monthly open; native monthly row ที่ตอบกลับ
+  ยังคงมี close time เป็น monthly boundary จริง. Backfill ห้าปีจึงแบ่งเป็นคำขอ bounded ประมาณ
+  261 ครั้งสำหรับ `1w` และ 60 ครั้งสำหรับ `1M` แทนการขอทั้งช่วงในครั้งเดียว.
+
+### 1. Domain schedule และ retention
+
+1. เพิ่ม enum `W1="1w"` และ `MN1="1M"`; แยก parsing แบบ case-sensitive และไม่ normalize input.
+2. ปรับ `Candle` validation, `expected_opens`, missing/bounded windows, initial window และ storage
+   bounds ให้ใช้ schedule operation. Retention helper รับ timeframe: `1m`–`1d` เท่ากับ 365 วัน,
+   `1w`/`1M` เท่ากับ 5 ปี และ callers ทุกตัวต้องส่ง timeframe ชัดเจน.
+3. เปลี่ยน arithmetic ใน ingestion, preview, claims, storage, chart/indicator reader และ API
+   controller จากการบวก/ลบ/คูณ `.span` เป็น `advance`/`next_open`/`previous_open`/slot count.
+   ใช้ iterator แบบ bounded และหยุดเมื่อเกิน end เพื่อกัน loop ไม่จบจาก calendar bug.
+4. คง half-open window `[start,end)`, identity และ exact OHLCV เดิม; ไม่มีการคำนวณราคา/ปริมาณใหม่.
+
+### 2. Database migration และ rollout
+
+1. เพิ่ม migration `0026_week_month_timeframes.py` ต่อจาก `0025`. Migration เปลี่ยน CHECK
+   constraints ของ `market_candles`, `market_candle_demand`, `market_candle_preview` และตาราง
+   prepared/indicator ที่เก็บ timeframe ให้รับสองค่าใหม่ โดยคงชื่อ key/index/grant เดิม.
+2. Constraint ของ candle ตรวจ `1w` ว่า open เป็น Monday UTC และ end คือสัปดาห์ถัดไป;
+   ตรวจ `1M` ว่า open เป็นวันแรก UTC และ end คือเดือนถัดไป. Fixed intervals เดิมคงสูตรเดิม.
+   Constraint ของ demand ใช้ 365 วันสำหรับค่าเดิมและ 5 ปีสำหรับสองค่าใหม่.
+3. สร้าง monthly partitions ของ `market_candles` ให้ครอบคลุมย้อนหลังห้าปีถึง horizon อนาคตเดิม
+   ด้วยรูปแบบชื่อและ grants เดิม; `IF NOT EXISTS`/catalog check ทำให้ migration retry ได้โดยไม่ชน
+   partition ที่มีอยู่ และไม่ update/rewrite แถว candle เดิม.
+4. แทน fixed-second/date_bin logic ใน SQL functions ของ indicator scheduler/staging/publication
+   ด้วย SQL calendar helpers ที่ให้ผลตรงกับ Python schedule. ก่อนแทน definition ให้ตรวจ signature
+   และรูปแบบที่คาดไว้แบบ fail closed เช่น migration 0025.
+5. Upgrade ต้องมาก่อน API/worker/feed รุ่นใหม่. Downgrade ต้องปฏิเสธเมื่อยังมี `1w`/`1M` ใน
+   candle, demand, preview หรือ indicator state/job/generation และห้ามลบ/แปลงข้อมูลเพื่อฝืน rollback.
+
+### 3. REST backfill, storage และ live candle
+
+1. `BinanceThCandles` ส่ง interval ตรงตาม enumและยืนยัน open/end จาก payloadกับ schedule;
+   จำกัด `1w`/`1M` ครั้งละหนึ่ง native candle และจำกัด upstream time range ไม่เกิน 7 วัน.
+   สำหรับ `1M` ให้ query เจ็ดวันแรกของเดือนโดยไม่เปลี่ยน logical monthly window หรือ `end_at`.
+   แถวผิด boundary, timeframe หรือลำดับ fail เป็น venue protocol โดยไม่ commit cursor/partial page.
+2. Ingestion แบ่ง request ด้วย slot cap, เก็บ claim/fetch fencing, retry budget และ idempotent upsert
+   เดิม. Gap repair ของ `1w`/`1M` ใช้ native slot และ REST interval เดียวกันกับ series เท่านั้น.
+3. เพิ่ม 10 series ใหม่ใน supervisor (5 คู่ × 2 TF) รวม 40 streams บน shared connection เดิม;
+   ปรับ internal bound เป็น 40 โดยยังต่ำกว่า source limit 1,024 และไม่สร้าง connection ต่อผู้ใช้.
+4. Stream mapper ตรวจชื่อ `kline_1w`/`kline_1M`, payload interval, calendar open/end และ
+   progression counters. Reconnect/bootstrap/enqueue-ended ใช้ identity/fencing เดิมและกู้ gap
+   ผ่าน REST โดยไม่ประกาศ CLOSED จากนาฬิกาหรือแท่งถัดไป.
+
+### 4. Indicator backend
+
+1. `IndicatorBatchState` ใช้ timeframe identity และ schedule operation แทนการเก็บ fixed span;
+   ลำดับ ACCEPT/RESET/HOLD ต้องติดกันตาม calendar. สูตร, period, rounding, Money/Quantity และ
+   `FORMULA_VERSION=indicators-v2` ไม่เปลี่ยน.
+2. Checkpoint JSON shape และ `CODEC_VERSION=2` คงเดิม เพราะ payload ไม่ได้เก็บ span;
+   encoder/decoder เปลี่ยนเฉพาะการตรวจ previous/next/boundary/page ด้วย schedule. Fixture v2 เดิม
+   ต้อง decode ได้เหมือนเดิม และ checkpoint `1w`/`1M` ต้อง round-trip แบบ strict.
+3. ปรับ scheduler, staging, prepared reader, publication และ refresh dependency ให้ใช้ slot advance.
+   `1M` ที่มีไม่ถึง period คืน WARM_UP ตามจริง; ห้ามอ่านก่อน retention หรือลด period.
+
+### 5. API contract และ frontend
+
+1. Enum ที่ FastAPI ใช้ร่วมกันเปิดรับ `1w`/`1M`; invalid casing คืน validation error เดิม.
+   Export `backend/openapi.json` แล้ว generate `frontend/src/api-types.ts` ด้วยคำสั่งเดิม ห้ามแก้มือ.
+2. เพิ่ม `1w` และ `1M` ใน timeframe select ของ `CandlestickChartPanel.tsx` โดยใช้ Admin Template
+   `Select` เดิม; ค่า default ยังคง `1h` และ label ที่แสดงคือค่าจริง case-sensitive.
+3. Query/cache keys, cancellation และ stale-response guard ใช้ string เต็ม จึงต้องพิสูจน์ว่า
+   `1m` กับ `1M` ไม่ชนกัน และการสลับเร็วไม่ทำให้ candle เก่าทับ series ใหม่.
+4. Chart renderer ใช้ timestamp ของ native candle เดิม ไม่มี frontend aggregation และไม่เพิ่ม
+   indicator UI, volume pane, order action หรือ network request สำหรับส่งออเดอร์.
+
+### 6. ลำดับลงมือและ checkpoints
+
+1. อัปเดต source evidence แล้วเพิ่ม schedule tests ก่อน; จากนั้นเปลี่ยน core/callers จน targeted
+   pure tests และ type/lint ของ backend ผ่าน.
+2. เพิ่ม migration และ database integration tests รวม upgrade จาก 0025 ด้วยข้อมูลเดิม,
+   constraints, permissions, partitions, SQL functions และ downgrade guard.
+3. ปรับ REST ingestion/live feed แล้วรัน venue mapping, ingestion, preview/reconnect/gap tests.
+4. ปรับ indicator path แล้วรัน batch/stream/codec/scheduler/staging/publication/API tests ที่ได้รับผล.
+5. Export OpenAPI/generate frontend type, ปรับ UI และรัน panel/query/renderer tests, typecheck/lint.
+6. ทำ browser smoke สำหรับ `1w`/`1M`, สลับ `1m`↔`1M`, reset/theme และยืนยันไม่มี order request.
+   บันทึกผลตาม `validation.md`; workload/full regression รันเมื่อ candidate นิ่งตาม testing §7.
+
+### ไฟล์หลักที่คาดว่าจะเปลี่ยน
+
+- `backend/src/tiewtrade/core/{timeframes,market_data,indicators}.py`
+- `backend/src/tiewtrade/core/money/indicator_batch.py`
+- `backend/src/tiewtrade/services/{market_data,api,indicator_builder}/` เฉพาะ callers ของ schedule
+- `backend/src/tiewtrade/infra/{market_data,indicators}/` เฉพาะ retention/window/checkpoint callers
+- `backend/src/tiewtrade/venues/{candles.py,binance_th/candles.py,binance_th/candle_feed.py,binance_th/candle_stream_mapping.py}`
+- `backend/migrations/versions/0026_week_month_timeframes.py`, `backend/openapi.json`
+- `frontend/src/{CandlestickChartPanel.tsx,api-types.ts}` และ tests ที่เกี่ยวข้อง
+- `specs/features/2026-10-12-candlestick-chart/{source-evidence.md,validation.md}`
+
+ไม่แก้ order, balance, position, PnL, leverage, margin, liquidation หรือ exchange credential path.
+ถ้าระหว่าง implementation พบว่าต้องเปลี่ยน formula/codec payload, source finality contract หรือ
+retention ที่อนุมัติ ให้หยุดและกลับมาแก้ requirements/plan ก่อน.
 
 ## Amendment — จัดหน้าแบบ Trading Workspace (Approved 2026-10-14)
 
@@ -104,6 +286,14 @@ Requirements: [ฉบับที่รีวิวผ่าน](requirements.md
   exact OHLCV header และ error alert.
 - ปรับ component/E2E assertions แล้วรัน targeted tests, type-check, ESLint และ
   rebuild/restart เฉพาะ frontend.
+
+## Amendment — Candle-only chart reads (Approved 2026-10-14)
+
+ใช้ [แผนแก้ dependency](candle-only-chart-amendment.md) ที่เจ้าของอนุมัติแทนข้อคง
+history/proof เดิมด้านล่าง: `useChartData` ใช้ live + `useChartPages` เท่านั้น.
+`candleTimeline` สร้างช่องเวลาจาก requested bounds สูงสุด 1,000 slots เพื่อแสดง gap
+โดยไม่พึ่ง indicator points; ไม่มีการคำนวณราคาหรือเปลี่ยน financial precision.
+UI ใช้ Button เดิมจาก admin template ไม่มี style/control ใหม่.
 
 ## Amendment — ลบ Indicator จาก UI (Approved 2026-10-13)
 
@@ -298,7 +488,9 @@ identity ต้องเหมือนกัน, exact duplicate เป็น n
 หรือได้รับ x=true; x เป็น upstream hint เท่านั้นในรอบนี้ ไม่เขียน CLOSED history.
 ไม่ส่ง preview ให้ indicator reader และไม่ overwrite `market_candles` จาก stream.
 
-เก็บ preview ในตาราง `market_candle_preview` สูงสุดสองแท่งล่าสุด/series (≤60 rows)
+ตาม [continuity amendment ที่อนุมัติ 2026-10-14](candle-continuity-amendment.md)
+เก็บ preview ในตาราง `market_candle_preview` สูงสุด 120 แท่งล่าสุด/series (40 series ≤4,800 rows);
+`/chart/live` ยังส่งสูงสุดสองแท่ง ส่วน candle pages ใช้ bounded overlay ระหว่างรอ REST.
 พร้อม event time, received_at, epoch, revision และสถานะ. market-data เขียน,
 API อ่านเท่านั้น; Redis ส่ง invalidation หลัง commit และหายได้.
 ไม่มีข้อมูลผู้ใช้/secret ไม่ต้อง RLS และไม่ใช่ประวัติ 365 วัน.

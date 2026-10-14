@@ -33,7 +33,7 @@ from tests.infra.indicators.test_rollout import reset_transition_history as rese
 from tests.infra.indicators.test_source import active as active
 from tests.services.indicator_builder.profile_container_recovery import docker
 from tiewtrade.core.indicators import IndicatorPoint
-from tiewtrade.core.market_data import CandleWindow, Timeframe
+from tiewtrade.core.market_data import CandleWindow, Timeframe, advance
 from tiewtrade.core.money import Money, Scalar
 from tiewtrade.infra.auth.sessions import hash_token, owner_of_presented
 from tiewtrade.infra.crypto.indicator_cursor import (
@@ -379,8 +379,9 @@ async def check_d2_cross_replica_parity_restart_and_cursor_lifecycle(
         assert isinstance(next_claims, PreparedCursorClaims)
         assert next_claims == claims.model_copy(
             update={
-                "next_open_at": claims.result_start
-                + (offset + claims.page_size) * claims.timeframe.span
+                "next_open_at": advance(
+                    claims.result_start, claims.timeframe, offset + claims.page_size
+                )
             }
         )
         return next_token

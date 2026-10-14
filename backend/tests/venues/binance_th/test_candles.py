@@ -7,10 +7,10 @@ import pytest
 
 from tests.venues.binance_th.conftest import FakeClock, RecordingGuard, transport_for
 from tiewtrade import venues
-from tiewtrade.core.market_data import CandleFinality, Timeframe
+from tiewtrade.core.market_data import CandleFinality, Timeframe, align_floor, next_open
 from tiewtrade.venues.binance_th.candles import CANDLES_COST, BinanceThCandles
 from tiewtrade.venues.binance_th.rate_limit import IpWeightLimiter, WeightWindow
-from tiewtrade.venues.errors import VenueRateLimitedError
+from tiewtrade.venues.errors import VenueProtocolError, VenueRateLimitedError
 from tiewtrade.venues.limits import CallCost
 from tiewtrade.venues.symbols import Symbol
 
@@ -20,10 +20,13 @@ from tiewtrade.venues.symbols import Symbol
 async def test_public_candles_explicit_bounds_cost_and_unknown_finality(
     tf: Timeframe, kind: str
 ) -> None:
-    start = datetime(2026, 10, 7, tzinfo=UTC)
+    start = align_floor(datetime(2026, 10, 7, tzinfo=UTC), tf)
+    end = next_open(start, tf)
+    query_end = min(end, start + timedelta(days=7))
     epoch = datetime(1970, 1, 1, tzinfo=UTC)
     millis = (start - epoch) // timedelta(milliseconds=1)
-    end_ms = millis + tf.span // timedelta(milliseconds=1)
+    end_ms = (end - epoch) // timedelta(milliseconds=1)
+    query_end_ms = (query_end - epoch) // timedelta(milliseconds=1)
     guard = RecordingGuard()
     calls: list[httpx.Request] = []
 
@@ -45,7 +48,7 @@ async def test_public_candles_explicit_bounds_cost_and_unknown_finality(
                 },
             )
         assert request.url.params["startTime"] == str(millis)
-        assert request.url.params["endTime"] == str(end_ms - 1)
+        assert request.url.params["endTime"] == str(query_end_ms - 1)
         assert request.url.params["limit"] == "1000"
         assert request.url.params["interval"] == tf.value
         return httpx.Response(
@@ -53,9 +56,9 @@ async def test_public_candles_explicit_bounds_cost_and_unknown_finality(
         )
 
     source = BinanceThCandles(transport_for(reply, guard=guard), clock=FakeClock())
-    page = await source.fetch_candles(Symbol("BTC", "USDT"), tf, start, start + tf.span, 1000)
+    page = await source.fetch_candles(Symbol("BTC", "USDT"), tf, start, end, 1000)
     assert page.candles[0].finality is CandleFinality.UNCONFIRMED
-    assert page.candles[0].end_at == start + tf.span
+    assert page.candles[0].end_at == end
     assert guard.reserved[-1] == CANDLES_COST == CallCost(weight=1, orders=0)
     assert len(calls) == 2
 
@@ -165,6 +168,8 @@ async def test_submillisecond_bounds_preserve_exact_half_open_membership() -> No
         "13-btc-usdt-15m",
         "14-btc-usdt-1h",
         "15-btc-usdt-4h",
+        "16-btc-usdt-1w",
+        "17-btc-usdt-1M",
     ],
 )
 async def test_saved_public_fixture_contract(name: str) -> None:
@@ -284,3 +289,76 @@ async def test_oversized_source_span_rejected_before_http_or_budget() -> None:
             1000,
         )
     assert guard.reserved == []
+
+
+@pytest.mark.parametrize(
+    ("timeframe", "start", "end"),
+    [
+        (
+            Timeframe.W1,
+            datetime(2026, 1, 5, tzinfo=UTC),
+            datetime(2026, 1, 12, tzinfo=UTC),
+        ),
+        (
+            Timeframe.MN1,
+            datetime(2026, 1, 1, tzinfo=UTC),
+            datetime(2026, 2, 1, tzinfo=UTC),
+        ),
+    ],
+)
+async def test_week_and_month_fetch_one_native_slot_with_at_most_seven_upstream_days(
+    timeframe: Timeframe, start: datetime, end: datetime
+) -> None:
+    calls: list[httpx.Request] = []
+
+    def reply(request: httpx.Request) -> httpx.Response:
+        calls.append(request)
+        if request.url.path.endswith("exchangeInfo"):
+            return httpx.Response(
+                200,
+                json={
+                    "symbols": [
+                        {
+                            "symbol": "BTCUSDT",
+                            "baseAsset": "BTC",
+                            "quoteAsset": "USDT",
+                            "type": "GLOBAL",
+                        }
+                    ]
+                },
+            )
+        assert request.url.params["interval"] == timeframe.value
+        assert int(request.url.params["endTime"]) - int(request.url.params["startTime"]) < 604800000
+        return httpx.Response(200, json=[])
+
+    source = BinanceThCandles(transport_for(reply), clock=FakeClock())
+    page = await source.fetch_candles(Symbol("BTC", "USDT"), timeframe, start, end, 1000)
+    assert page.window.start == start and page.window.end == end
+    assert len(calls) == 2
+
+
+@pytest.mark.parametrize("timeframe", [Timeframe.W1, Timeframe.MN1])
+async def test_week_and_month_reject_more_than_one_slot_before_http(
+    timeframe: Timeframe,
+) -> None:
+    start = datetime(2026, 1, 5 if timeframe is Timeframe.W1 else 1, tzinfo=UTC)
+    end = next_open(next_open(start, timeframe), timeframe)
+    calls: list[httpx.Request] = []
+
+    def reply(request: httpx.Request) -> httpx.Response:
+        calls.append(request)
+        raise AssertionError("oversized range must not reach the transport")
+
+    source = BinanceThCandles(transport_for(reply), clock=FakeClock())
+    with pytest.raises(ValueError, match="span limit"):
+        await source.fetch_candles(Symbol("BTC", "USDT"), timeframe, start, end, 1000)
+    assert calls == []
+
+@pytest.mark.parametrize("payload", [[], [[]], [[-1] * 12], [[0] * 11]])
+async def test_history_discovery_rejects_empty_or_malformed_evidence(payload: list) -> None:
+    source = BinanceThCandles(
+        transport_for(lambda request: httpx.Response(200, json=payload), guard=RecordingGuard()),
+        clock=FakeClock(),
+    )
+    with pytest.raises(VenueProtocolError):
+        await source.earliest_open(Symbol("BTC", "USDT"), Timeframe.MN1)

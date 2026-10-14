@@ -1,4 +1,4 @@
-"""One fenced candle supervisor; frame input is coalesced into thirty latest slots."""
+"""One fenced candle supervisor; frame input is coalesced into forty latest slots."""
 
 import asyncio
 import logging

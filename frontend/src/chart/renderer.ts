@@ -38,7 +38,7 @@ const axisTime = (time: Time, type: TickMarkType, locale: string) => {
 
 export type ChartRenderer = {
   chart: IChartApi;
-  draw(candles: Candle[], points: Point[], enabled: Set<string>, indicatorsValid: boolean): string | null;
+  draw(candles: Candle[], points: Point[], enabled: Set<string>, indicatorsValid: boolean, slots?: string[]): string | null;
   applyTheme(): void;
   remove(): void;
 };
@@ -94,13 +94,14 @@ export function mountChart(element: HTMLElement, locale: string, selected: (iso:
         wickUpColor: token("--chart-up"), wickDownColor: token("--chart-down"),
         borderUpColor: token("--chart-up"), borderDownColor: token("--chart-down") });
     },
-    draw(candles, points, enabled, indicatorsValid) {
+    draw(candles, points, enabled, indicatorsValid, timeline = []) {
       sparseCandles = candles.length < 10;
-      const slots = new Map<string, Candle>(candles.map(candle => [candle.open_at, candle]));
+      const slots = new Map<number, Candle>(candles.map(candle => [Date.parse(candle.open_at), candle]));
       try {
-        const times = [...new Set([...candles.map(row => row.open_at), ...points.map(row => row.open_at)])].sort();
-        candlesSeries.setData(times.map(iso => {
-          const candle = slots.get(iso), time = chartTime(iso);
+        const times = [...new Set([...candles.map(row => row.open_at), ...points.map(row => row.open_at), ...timeline]
+          .map(Date.parse))].sort((a, b) => a - b);
+        candlesSeries.setData(times.map(timestamp => {
+          const candle = slots.get(timestamp), time = (timestamp / 1000) as UTCTimestamp;
           if (!candle) return { time };
           const open = projection(candle.open), high = projection(candle.high);
           const low = projection(candle.low), close = projection(candle.close);

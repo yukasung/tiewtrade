@@ -34,7 +34,7 @@ const th = {
   UNCONFIRMED: "ยังไม่มีหลักฐานยืนยัน CLOSED", CLOSED: "ยืนยัน CLOSED แล้ว",
   CHART_RENDER_LIMIT: "ข้อมูลบางชุดวาดด้วยสเกลนี้ไม่ได้; ค่าต้นฉบับยังอ่านได้",
   errors: {
-    INDICATOR_BUSY: "กำลังอ่านผลชุดอื่น กรุณาลองใหม่", INDICATOR_RATE_LIMITED: "เรียก indicator ถึงขีดจำกัด",
+    INDICATOR_BUSY: "กำลังอ่านผลชุดอื่น กรุณาลองใหม่", INDICATOR_RATE_LIMITED: "โหลดข้อมูลกราฟบ่อยเกินไป กรุณารอสักครู่แล้วกดลองใหม่",
     INDICATOR_DATA_UNAVAILABLE: "ข้อมูล indicator ไม่พร้อม", CHART_DATA_UNAVAILABLE: "ข้อมูลแท่งสดไม่พร้อม",
     CHART_DEADLINE_EXCEEDED: "อ่านข้อมูลสดไม่ทันเวลาที่กำหนด",
     INDICATOR_DATA_NOT_READY: "รอผล indicator ชุดใหม่", INDICATOR_DATASET_CHANGED: "ชุดข้อมูลเปลี่ยน",
@@ -80,7 +80,7 @@ const en = {
   GAP: "Data gap", OPEN: "Candle still open", UNCONFIRMED: "No proof of CLOSED finality", CLOSED: "Confirmed CLOSED",
   CHART_RENDER_LIMIT: "Some data cannot be drawn at this scale; exact source values remain readable",
   errors: {
-    INDICATOR_BUSY: "Another indicator read is active; try again", INDICATOR_RATE_LIMITED: "Indicator request limit reached",
+    INDICATOR_BUSY: "Another indicator read is active; try again", INDICATOR_RATE_LIMITED: "Chart request limit reached. Please wait, then select Retry.",
     INDICATOR_DATA_UNAVAILABLE: "Indicator data unavailable", CHART_DATA_UNAVAILABLE: "Live candle data unavailable",
     CHART_DEADLINE_EXCEEDED: "Live read deadline exceeded",
     INDICATOR_DATA_NOT_READY: "Waiting for new indicator data", INDICATOR_DATASET_CHANGED: "Dataset changed",

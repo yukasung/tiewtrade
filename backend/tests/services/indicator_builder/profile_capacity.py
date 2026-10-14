@@ -25,7 +25,15 @@ from redis.asyncio import Redis
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncEngine
 
-from tiewtrade.core.market_data import CandleWindow, Timeframe, align_ceil, align_floor
+from tiewtrade.core.market_data import (
+    CandleWindow,
+    Timeframe,
+    advance,
+    align_ceil,
+    align_floor,
+    retention_cutoff,
+    slot_count,
+)
 from tiewtrade.core.money import Money, Scalar
 from tiewtrade.infra.db import DatabaseRole, create_engine_for
 from tiewtrade.infra.db.session import indicator_read_session, market_data_session
@@ -42,16 +50,21 @@ REDIS = "tiewtrade-f11-capacity-redis"
 INSERT = """INSERT INTO market_candles
  (source,base,quote,timeframe,open_at,end_at,open,high,low,close,volume,finality,
  observed_at,fetch_started_at,last_checked_at,ingestion_generation)
- SELECT 'primary_spot',:base,'USDT',:tf,moment,moment+make_interval(secs=>:seconds),
+ SELECT 'primary_spot',:base,'USDT',:tf,moment,
+ CASE WHEN :tf='1M' THEN moment+interval '1 month'
+ ELSE moment+make_interval(secs=>:seconds) END,
  100.125+mod(n,17)/100.0,101.375+mod(n,17)/100.0,
  99.025+mod(n,17)/100.0,100.225+mod(n,17)/100.0,1.125,
- CASE WHEN moment+make_interval(secs=>:seconds)<=CAST(:now AS timestamptz)-interval '24 hours'
+ CASE WHEN (CASE WHEN :tf='1M' THEN moment+interval '1 month'
+ ELSE moment+make_interval(secs=>:seconds) END)<=CAST(:now AS timestamptz)-interval '24 hours'
  THEN 'CLOSED' ELSE 'UNCONFIRMED' END,CAST(:now AS timestamptz),
  CAST(:now AS timestamptz),CAST(:now AS timestamptz),1
- FROM (SELECT moment,floor(extract(epoch FROM moment)/:seconds)::bigint AS n
+ FROM (SELECT moment,row_number() OVER (ORDER BY moment)::bigint AS n
  FROM generate_series(CAST(:lo AS timestamptz),
- CAST(:hi AS timestamptz)-make_interval(secs=>:seconds),
- make_interval(secs=>:seconds)) moment) slots
+ CAST(:hi AS timestamptz)-CASE WHEN :tf='1M' THEN interval '1 month'
+ ELSE make_interval(secs=>:seconds) END,
+ CASE WHEN :tf='1M' THEN interval '1 month'
+ ELSE make_interval(secs=>:seconds) END) moment) slots
  ON CONFLICT(source,base,quote,timeframe,open_at) DO NOTHING"""
 
 
@@ -88,7 +101,7 @@ async def insert_range(
         {
             "base": base,
             "tf": tf.value,
-            "seconds": int(tf.span.total_seconds()),
+            "seconds": int(tf.fixed_span.total_seconds()) if tf.fixed_span else 0,
             "lo": lo,
             "hi": hi,
             "now": now,
@@ -109,9 +122,9 @@ async def seed(engine: AsyncEngine) -> dict[str, datetime]:
     ends: dict[str, datetime] = {}
     for base, tf in SERIES:
         hi = align_floor(now, tf)
-        lo = align_floor(now - timedelta(days=365, hours=6, minutes=15), tf)
+        lo = align_floor(retention_cutoff(now, tf) - timedelta(hours=6, minutes=15), tf)
         while lo < hi:
-            stop = min(hi, lo + 50000 * tf.span)
+            stop = min(hi, advance(lo, tf, 50000))
             async with engine.begin() as c:
                 await insert_range(c, base, tf, lo, stop, now)
             lo = stop
@@ -144,7 +157,7 @@ async def append(engine: AsyncEngine, ends: dict[str, datetime]) -> None:
                     {
                         "base": base,
                         "tf": tf.value,
-                        "seconds": int(tf.span.total_seconds()),
+                        "seconds": int(tf.fixed_span.total_seconds()) if tf.fixed_span else 0,
                         "lo": ends[key],
                         "hi": hi,
                         "now": now,
@@ -379,7 +392,8 @@ async def audit(engine: AsyncEngine, user: UUID, probes: list[dict[str, Any]]) -
             )
             expected_end = generation["calculation_end"]
             expected_start = max(
-                align_ceil(requested_at - timedelta(days=365), tf), expected_end - 1000 * tf.span
+                align_ceil(retention_cutoff(requested_at, tf), tf),
+                advance(expected_end, tf, -1000),
             )
             metadata_ok = (
                 body["source"] == "primary_spot" == generation["source"]
@@ -393,14 +407,15 @@ async def audit(engine: AsyncEngine, user: UUID, probes: list[dict[str, Any]]) -
                 )
                 and datetime.fromisoformat(body["result_start"]) == expected_start
                 and datetime.fromisoformat(body["result_end"]) == expected_end
-                and len(body["rows"]) == (expected_end - expected_start) // tf.span
+                and len(body["rows"])
+                == slot_count(CandleWindow(expected_start, expected_end), tf)
                 and timedelta(0) <= requested_at - generation["as_of"] <= timedelta(seconds=600)
                 and await proof_valid(session, generation, requested_at)
             )
         probe["generation_id"] = body["generation_id"]
-        probe["calculation_slots"] = (
-            generation["calculation_end"] - generation["calculation_start"]
-        ) // tf.span
+        probe["calculation_slots"] = slot_count(
+            CandleWindow(generation["calculation_start"], generation["calculation_end"]), tf
+        )
         probe["response_rows"] = len(body["rows"])
         probe["response_rows_sha256"] = hashlib.sha256(
             json.dumps(body["rows"], sort_keys=True).encode()
@@ -504,7 +519,7 @@ async def run(
                         )
                     ).mappings()
                 }
-                assert len(ends) == 30
+                assert len(ends) == 40
         else:
             ends = await seed(migrator)
         image_id = await docker("image", "inspect", "--format", "{{.Id}}", image)
@@ -695,7 +710,7 @@ async def run(
                     and len(accepted) == 10,
                 }
             )
-        passed = len(summaries) == 30 and all(s["passed"] for s in summaries)
+        passed = len(summaries) == 40 and all(s["passed"] for s in summaries)
         save(
             output / "result.json",
             {

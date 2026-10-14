@@ -27,7 +27,7 @@ class ControlledCandleFeed:
     async def events(
         self, series: tuple[CandleSeries, ...]
     ) -> AsyncGenerator[CandleFeedEvent, None]:
-        assert len(series) == 30
+        assert len(series) == 40
         generation, count = 0, 0
         connected = False
         while True:

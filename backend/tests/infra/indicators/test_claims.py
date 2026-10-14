@@ -16,7 +16,7 @@ from sqlalchemy.exc import DBAPIError
 from sqlalchemy.ext.asyncio import AsyncEngine
 
 from tests.infra.indicators.test_source import active as active
-from tiewtrade.core.market_data import Timeframe, align_ceil, align_floor
+from tiewtrade.core.market_data import Timeframe, align_ceil, align_floor, retention_cutoff
 from tiewtrade.infra.db import DatabaseRole, create_engine_for
 from tiewtrade.infra.db.errors import (
     IndicatorBuildConfigurationError,
@@ -230,7 +230,7 @@ async def test_seed_fixed_catalog_and_exclusive_claim(
 ) -> None:
     async with pinned_indicator_writer(builder_engine, connection_mode="direct") as first:
         assert first is not None
-        assert await first.seed() == 30
+        assert await first.seed() == 40
         assert await first.seed() == 0
         claim = await first.claim(uuid4())
         assert claim is not None
@@ -277,7 +277,7 @@ async def test_retired_v1_job_is_never_claimed_by_v2_builder(
             clock_timestamp()-interval '1 day')"""))
     async with pinned_indicator_writer(builder_engine, connection_mode="direct") as writer:
         assert writer is not None
-        assert await writer.seed() == 30
+        assert await writer.seed() == 40
         claim = await writer.claim(uuid4())
         assert claim is not None and claim.formula_version == "indicators-v2"
         await writer.finish(AttemptOutcome.SOURCE_CHANGED)
@@ -322,13 +322,15 @@ async def test_seed_bounds_are_utc_and_do_not_leak_session_timezone(
 ) -> None:
     async with indicator_writer_session(builder_engine) as session:
         await session.execute("SELECT set_config('TimeZone','America/New_York',true)")
-        assert await seed_jobs(session) == 30
+        assert await seed_jobs(session) == 40
         assert (await session.execute("SHOW TimeZone")).scalar_one() == "America/New_York"
     async with migrator_engine.connect() as connection:
         rows = (await connection.execute(text("SELECT * FROM indicator_build_jobs"))).mappings()
         for row in rows:
             timeframe = Timeframe(row["timeframe"])
-            expected_start = align_ceil(row["first_eligible_at"] - timedelta(days=365), timeframe)
+            expected_start = align_ceil(
+                retention_cutoff(row["first_eligible_at"], timeframe), timeframe
+            )
             assert row["desired_start"] == expected_start
             assert row["desired_end"] == align_floor(row["first_eligible_at"], timeframe)
         settings: Any = (
