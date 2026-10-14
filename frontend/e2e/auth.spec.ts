@@ -22,8 +22,8 @@ test("สมัคร เข้าสู่ระบบ แล้วออกจ
   expect(
     await page
       .getByLabel("อีเมล")
-      .evaluate((element) => window.getComputedStyle(element).outlineStyle),
-  ).toBe("solid");
+      .evaluate((element) => window.getComputedStyle(element).boxShadow),
+  ).not.toBe("none");
   await page.keyboard.press("Tab");
   await expect(page.getByLabel("รหัสผ่าน")).toBeFocused();
   await captureUi(page, testInfo, "login");

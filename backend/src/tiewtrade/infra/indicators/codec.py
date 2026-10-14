@@ -132,9 +132,7 @@ def encode_checkpoint(
     stream.restore_state(state)
     _state_bounds(state, calculation, stream.timeframe, next_open_at)
     expected_last = (
-        None
-        if next_open_at == calculation.start
-        else previous_open(next_open_at, stream.timeframe)
+        None if next_open_at == calculation.start else previous_open(next_open_at, stream.timeframe)
     )
     if state.numeric.last_open != expected_last:
         raise CheckpointCodecError("checkpoint skips or repeats a slot")

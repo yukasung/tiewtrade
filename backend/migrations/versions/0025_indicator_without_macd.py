@@ -45,8 +45,13 @@ _FUNCTIONS = (
     ),
     (
         "append_indicator_checkpoint(uuid,bigint,uuid,uuid,uuid,uuid,timestamptz,jsonb)",
-        (("p_payload->>'version' IS DISTINCT FROM '1'",
-          "p_payload->>'version' IS DISTINCT FROM '2'", 1),),
+        (
+            (
+                "p_payload->>'version' IS DISTINCT FROM '1'",
+                "p_payload->>'version' IS DISTINCT FROM '2'",
+                1,
+            ),
+        ),
     ),
     (
         "publish_indicator_generation(uuid,bigint,uuid,uuid,uuid,uuid,boolean)",
@@ -92,12 +97,14 @@ def _replace_functions(reverse: bool = False) -> None:
 
 def upgrade() -> None:
     connection = op.get_bind()
-    safe: bool | None = connection.execute(text("""SELECT s.state='IDLE'
+    safe: bool | None = connection.execute(
+        text("""SELECT s.state='IDLE'
       AND (c.mode='PAUSED' OR (c.mode='LEGACY' AND NOT EXISTS(
         SELECT 1 FROM indicator_build_jobs)))
       AND c.codec_version=1 AND c.protocol_version=1
       FROM indicator_rollout_control c CROSS JOIN indicator_build_slot s
-      WHERE c.id=1 AND s.id=1 FOR UPDATE OF c,s""")).scalar_one()
+      WHERE c.id=1 AND s.id=1 FOR UPDATE OF c,s""")
+    ).scalar_one()
     if not safe:
         raise RuntimeError("INDICATOR_MACD_REMOVAL_REQUIRES_PAUSED_DRAINED_ROLLOUT")
     _replace_functions()
@@ -108,12 +115,14 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     connection = op.get_bind()
-    safe: bool | None = connection.execute(text("""SELECT c.mode IN ('PAUSED','LEGACY')
+    safe: bool | None = connection.execute(
+        text("""SELECT c.mode IN ('PAUSED','LEGACY')
       AND s.state='IDLE'
       AND c.codec_version=2 AND NOT EXISTS(
         SELECT 1 FROM indicator_generations WHERE formula_version='indicators-v2')
       FROM indicator_rollout_control c CROSS JOIN indicator_build_slot s
-      WHERE c.id=1 AND s.id=1 FOR UPDATE OF c,s""")).scalar_one()
+      WHERE c.id=1 AND s.id=1 FOR UPDATE OF c,s""")
+    ).scalar_one()
     if not safe:
         raise RuntimeError("INDICATOR_V2_DOWNGRADE_REQUIRES_PAUSED_EMPTY_ROLLOUT")
     _replace_functions(reverse=True)

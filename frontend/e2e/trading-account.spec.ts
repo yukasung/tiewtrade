@@ -162,10 +162,10 @@ test("fake key → explicit account use → reload → key deletion retains pref
   await expect(panel.getByText("•••• ABCD", { exact: true })).toHaveCount(0);
   expect(
     await page.evaluate(() => [
-      window.localStorage.length,
-      window.sessionStorage.length,
+      Object.keys(window.localStorage),
+      Object.keys(window.sessionStorage),
     ]),
-  ).toEqual([0, 0]);
+  ).toEqual([["theme"], []]);
   await page.goto("/account");
   await page.getByTestId("log-out").click();
   await expect(panel).toBeHidden();

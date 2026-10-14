@@ -122,9 +122,7 @@ def test_gap_merge_is_exact_and_duplicate_presence_is_idempotent(
     timeframe: market_data.Timeframe, presence: list[bool]
 ) -> None:
     start = market_data.align_floor(datetime(2026, 10, 7, tzinfo=UTC), timeframe)
-    window = market_data.CandleWindow(
-        start, market_data.advance(start, timeframe, len(presence))
-    )
+    window = market_data.CandleWindow(start, market_data.advance(start, timeframe, len(presence)))
     present = [
         market_data.advance(start, timeframe, index)
         for index, value in enumerate(presence)

@@ -268,13 +268,15 @@ async def test_retired_v1_job_is_never_claimed_by_v2_builder(
     migrator_engine: AsyncEngine,
 ) -> None:
     async with migrator_engine.begin() as connection:
-        await connection.execute(text("""INSERT INTO indicator_build_jobs
+        await connection.execute(
+            text("""INSERT INTO indicator_build_jobs
           (source,base,quote,timeframe,formula_version,desired_start,desired_end,
            first_eligible_at,availability_deadline,retry_not_before)
           VALUES('primary_spot','BTC','USDT','1m','indicators-v1',
             clock_timestamp()-interval '1 day',clock_timestamp(),
             clock_timestamp()-interval '1 day',clock_timestamp()-interval '1 day',
-            clock_timestamp()-interval '1 day')"""))
+            clock_timestamp()-interval '1 day')""")
+        )
     async with pinned_indicator_writer(builder_engine, connection_mode="direct") as writer:
         assert writer is not None
         assert await writer.seed() == 40
@@ -282,8 +284,12 @@ async def test_retired_v1_job_is_never_claimed_by_v2_builder(
         assert claim is not None and claim.formula_version == "indicators-v2"
         await writer.finish(AttemptOutcome.SOURCE_CHANGED)
     async with migrator_engine.connect() as connection:
-        old_status = (await connection.execute(text("""SELECT status FROM indicator_build_jobs
-          WHERE formula_version='indicators-v1'"""))).scalar_one()
+        old_status = (
+            await connection.execute(
+                text("""SELECT status FROM indicator_build_jobs
+          WHERE formula_version='indicators-v1'""")
+            )
+        ).scalar_one()
     assert old_status == "QUEUED"
 
 

@@ -83,7 +83,10 @@ export function useChartData(user: string, series: Series) {
   useEffect(() => {
     const end = preview.data?.rows.at(-1)?.open_at;
     const latest = browsing.latest;
-    if (end && latest && Date.parse(end) >= Date.parse(latest.requested.end) && !error && visible) browsing.refreshLatest(end);
+    const lastStored = latest?.rows.at(-1)?.open_at;
+    if (end && latest && (!lastStored || Date.parse(end) > Date.parse(lastStored)) && !error && visible) {
+      browsing.refreshLatest(end);
+    }
   }, [preview.data, browsing.latest, browsing.loading, error, visible]);
   return { preview, browsing, error, visible,
     cooldownActive: globalThis.performance.now() < Math.max(cooldown.current, retryAt, browsing.retryAt ?? 0),

@@ -97,7 +97,7 @@ test("actual chart panes, exact values and keyboard selection", async ({ page })
     await expect(chart.getByText(name, { exact: true })).toHaveCount(0);
   }
   await expect(chart.getByRole("combobox", { name: "ภาษา", exact: true })).toHaveCount(0);
-  await expect(chart.getByRole("heading", { name: "กราฟแท่งเทียน" })).toBeVisible();
+  await expect(chart.getByRole("heading", { name: "กราฟแท่งเทียน" })).toHaveCount(0);
   for (const width of [375, 768, 1440]) {
     await page.setViewportSize({ width, height: 1000 });
     await expect(chart.locator("canvas").first()).toBeVisible();
@@ -151,9 +151,13 @@ test("module pages preserve navigation history, deep links and cancel inactive c
   await expect(page.getByTestId("candlestick-chart")).toBeVisible();
 });
 
-test("source mutation hides overlays and live snapshots recover after disconnect", async ({ page }) => {
-  let reads = 0;
-  page.on("request", request => { if (request.url().includes("/chart/history")) reads += 1; });
+test("live snapshots recover after disconnect without indicator reads", async ({ page }) => {
+  const legacyReads: string[] = [];
+  page.on("request", request => {
+    if (request.url().includes("/chart/history") || request.url().endsWith("/chart/verify")) {
+      legacyReads.push(request.url());
+    }
+  });
   await registerAccount(page);
   const chart = page.getByTestId("candlestick-chart");
   await expect(chart.getByText("100.000000000000000001 USDT", { exact: true })).toBeVisible({ timeout: 60_000 });
@@ -167,13 +171,7 @@ test("source mutation hides overlays and live snapshots recover after disconnect
   fixture("preview");
   await live;
   await expect(chart.locator(".chart-status")).toHaveCount(0);
-  const rebuilt = page.waitForResponse(response => response.url().includes("/chart/history") && response.status() === 200);
-  fixture("mutate");
-  const changed = page.waitForResponse(async response => response.url().endsWith("/chart/verify") &&
-    response.status() === 200 && (await response.json() as { status: string }).status === "CHANGED");
-  await changed;
-  await rebuilt;
-  await expect.poll(() => reads).toBe(2);
+  expect(legacyReads).toEqual([]);
 });
 
 test("removed manual controls stay absent and logout stops chart requests", async ({ page }) => {
@@ -224,11 +222,11 @@ test("ended preview waits for actual REST commit before the revised history resp
   const chart = page.getByTestId("candlestick-chart");
   await expect(chart.getByText("100.000000000000000001 USDT", { exact: true })).toBeVisible({ timeout: 60_000 });
   fixture("rollover");
-  const revised = page.waitForResponse(response => response.url().includes("/chart/history") && response.status() === 200);
+  const revised = page.waitForResponse(response => response.url().includes("/candles/pages") && response.status() === 200);
   fixture("repair");
   const response = await revised;
-  const body = await response.json() as { candles: Array<{ close: string }> };
-  expect(body.candles.some(candle => candle.close === "100.75")).toBe(true);
+  const body = await response.json() as { rows: Array<{ close: string }> };
+  expect(body.rows.some(candle => candle.close === "100.75")).toBe(true);
 });
 
 test("browser network loss and a restarted fenced candle worker recover from PG", async ({ page, context }) => {

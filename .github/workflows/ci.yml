@@ -221,6 +221,9 @@ jobs:
       TIEWTRADE_PRICE_ORIGINS: http://localhost:5173,http://127.0.0.1:5173
       TIEWTRADE_SIGNUP_OPEN: "1"
       TIEWTRADE_COOKIE_SECURE: "0"
+      # The chart is the authenticated default page for F-12.
+      VITE_CHART_ENABLED: "1"
+      TIEWTRADE_CHART_ENABLED: "1"
       # กุญแจปิดผนึก secret ของ TOTP (F-06) — **ค่านี้ใช้ได้เฉพาะเครื่องพัฒนาและ CI**
       # บนเครื่องจริงยังเป็นข้อที่ต้องตัดสิน (T-03) ซึ่งเป็นงาน F-31
       TIEWTRADE_SEALING_KEY_TOTP_SECRET: "1:ZGV2LW9ubHkta2V5LW5vdC1hLXNlY3JldC0zMmJ5dGU="

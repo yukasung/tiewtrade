@@ -83,11 +83,7 @@ class IndicatorBatchState:
                 raise InvalidInputTypeError("invalid average state")
             if len(state.pending) >= period or (state.value is not None and state.pending):
                 raise InvalidInputTypeError("invalid warm-up state")
-            count = (
-                self.accepted_count
-                if index < 3
-                else max(0, self.accepted_count - 1)
-            )
+            count = self.accepted_count if index < 3 else max(0, self.accepted_count - 1)
             if len(state.pending) != (count if count < period else 0) or (
                 (state.value is not None) != (count >= period)
             ):
@@ -198,10 +194,7 @@ def reset_indicator_batch(
         if (
             not isinstance(moment, datetime)
             or moment.tzinfo is None
-            or (
-                previous is not None
-                and moment != next_open(previous, Timeframe(state.timeframe))
-            )
+            or (previous is not None and moment != next_open(previous, Timeframe(state.timeframe)))
         ):
             raise InvalidInputTypeError("unordered indicator resets")
         previous = moment

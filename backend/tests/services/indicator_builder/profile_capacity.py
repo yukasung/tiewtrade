@@ -407,8 +407,7 @@ async def audit(engine: AsyncEngine, user: UUID, probes: list[dict[str, Any]]) -
                 )
                 and datetime.fromisoformat(body["result_start"]) == expected_start
                 and datetime.fromisoformat(body["result_end"]) == expected_end
-                and len(body["rows"])
-                == slot_count(CandleWindow(expected_start, expected_end), tf)
+                and len(body["rows"]) == slot_count(CandleWindow(expected_start, expected_end), tf)
                 and timedelta(0) <= requested_at - generation["as_of"] <= timedelta(seconds=600)
                 and await proof_valid(session, generation, requested_at)
             )

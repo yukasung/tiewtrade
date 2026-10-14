@@ -118,10 +118,10 @@ test("เพิ่ม key ยืนยัน TOTP → ตรวจชั่ว�
   });
   expect(
     await page.evaluate(() => [
-      window.localStorage.length,
-      window.sessionStorage.length,
+      Object.keys(window.localStorage),
+      Object.keys(window.sessionStorage),
     ]),
-  ).toEqual([0, 0]);
+  ).toEqual([["theme"], []]);
 
   await panel.getByRole("button", { name: "ลบ key", exact: true }).click();
   await panel.getByRole("button", { name: "ยืนยันลบ", exact: true }).click();
@@ -143,6 +143,7 @@ test("มือถือ: บัญชีไม่มี TOTP เห็นทา
     .fill(`e2e-key-mobile-${String(Date.now())}@example.com`);
   await page.getByLabel("รหัสผ่าน", { exact: true }).fill(PASSWORD);
   await page.getByTestId("submit").click();
+  await expect(page.getByTestId("signed-in")).toBeVisible();
   await page.goto("/api-keys");
   const panel = page.getByTestId("api-key-panel");
   await expect(panel).toBeVisible();

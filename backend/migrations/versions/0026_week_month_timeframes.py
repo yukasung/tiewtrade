@@ -23,10 +23,14 @@ _TF_TABLES = (
 
 
 def _definition(signature: str) -> str:
-    value = op.get_bind().execute(
-        text("SELECT pg_get_functiondef(to_regprocedure(:signature))"),
-        {"signature": f"public.{signature}"},
-    ).scalar_one()
+    value = (
+        op.get_bind()
+        .execute(
+            text("SELECT pg_get_functiondef(to_regprocedure(:signature))"),
+            {"signature": f"public.{signature}"},
+        )
+        .scalar_one()
+    )
     if value is None:
         raise RuntimeError(f"missing function: {signature}")
     return value
@@ -42,13 +46,17 @@ def _replace_function(signature: str, replacements: tuple[tuple[str, str], ...])
 
 
 def _drop_check_containing(table: str, fragments: tuple[str, ...]) -> None:
-    rows = op.get_bind().execute(
-        text(
-            """SELECT conname,pg_get_constraintdef(oid) AS definition
+    rows = (
+        op.get_bind()
+        .execute(
+            text(
+                """SELECT conname,pg_get_constraintdef(oid) AS definition
             FROM pg_constraint WHERE conrelid=CAST(:table AS regclass) AND contype='c'"""
-        ),
-        {"table": f"public.{table}"},
-    ).mappings()
+            ),
+            {"table": f"public.{table}"},
+        )
+        .mappings()
+    )
     matches = [
         row["conname"]
         for row in rows
@@ -182,7 +190,9 @@ def upgrade() -> None:
         WHEN '1w' THEN open_at+interval '7 days' ELSE open_at+make_interval(secs=>CASE timeframe
           WHEN '1m' THEN 60 WHEN '5m' THEN 300 WHEN '15m' THEN 900
           WHEN '1h' THEN 3600 WHEN '4h' THEN 14400 ELSE 86400 END) END) NOT VALID""")
-    op.execute("ALTER TABLE public.market_candles VALIDATE CONSTRAINT market_candles_schedule_check")
+    op.execute(
+        "ALTER TABLE public.market_candles VALIDATE CONSTRAINT market_candles_schedule_check"
+    )
 
     _drop_check_containing("market_candle_demand", ("desired_end", "desired_start", "365 days"))
     op.execute("""ALTER TABLE public.market_candle_demand
@@ -234,15 +244,24 @@ def upgrade() -> None:
         "append_indicator_checkpoint(uuid,bigint,uuid,uuid,uuid,uuid,timestamptz,jsonb)",
         (
             ("; seconds integer; expected timestamptz", "; expected timestamptz"),
-            ("seconds:=CASE g.timeframe WHEN '1m' THEN 60 WHEN '5m' THEN 300\n            WHEN '15m' THEN 900 WHEN '1h' THEN 3600 WHEN '4h' THEN 14400 ELSE 86400 END;\n          expected:=least(g.calculation_start+make_interval(secs=>seconds*1000)*g.checkpoint_count,\n            g.calculation_end);", "expected:=least(public.market_timeframe_advance(g.timeframe,g.calculation_start,\n            1000*g.checkpoint_count),g.calculation_end);"),
+            (
+                "seconds:=CASE g.timeframe WHEN '1m' THEN 60 WHEN '5m' THEN 300\n            WHEN '15m' THEN 900 WHEN '1h' THEN 3600 WHEN '4h' THEN 14400 ELSE 86400 END;\n          expected:=least(g.calculation_start+make_interval(secs=>seconds*1000)*g.checkpoint_count,\n            g.calculation_end);",
+                "expected:=least(public.market_timeframe_advance(g.timeframe,g.calculation_start,\n            1000*g.checkpoint_count),g.calculation_end);",
+            ),
         ),
     )
     _replace_function(
         "publish_indicator_generation(uuid,bigint,uuid,uuid,uuid,uuid,boolean)",
         (
             ("seconds integer; expected_count integer", "expected_count integer"),
-            ("seconds:=CASE g.timeframe WHEN '1m' THEN 60 WHEN '5m' THEN 300\n      WHEN '15m' THEN 900 WHEN '1h' THEN 3600 WHEN '4h' THEN 14400 ELSE 86400 END;\n    expected_count:=ceil(extract(epoch FROM (g.calculation_end-g.calculation_start))\n      /(seconds*1000))::integer+1;", "expected_count:=ceil(public.market_timeframe_slots(g.timeframe,g.calculation_start,\n      g.calculation_end)/1000.0)::integer+1;"),
-            ("g.calculation_start+make_interval(secs=>seconds*1000)*n,g.calculation_end", "public.market_timeframe_advance(g.timeframe,g.calculation_start,1000*n),\n            g.calculation_end"),
+            (
+                "seconds:=CASE g.timeframe WHEN '1m' THEN 60 WHEN '5m' THEN 300\n      WHEN '15m' THEN 900 WHEN '1h' THEN 3600 WHEN '4h' THEN 14400 ELSE 86400 END;\n    expected_count:=ceil(extract(epoch FROM (g.calculation_end-g.calculation_start))\n      /(seconds*1000))::integer+1;",
+                "expected_count:=ceil(public.market_timeframe_slots(g.timeframe,g.calculation_start,\n      g.calculation_end)/1000.0)::integer+1;",
+            ),
+            (
+                "g.calculation_start+make_interval(secs=>seconds*1000)*n,g.calculation_end",
+                "public.market_timeframe_advance(g.timeframe,g.calculation_start,1000*n),\n            g.calculation_end",
+            ),
         ),
     )
     for signature in (
@@ -267,15 +286,24 @@ def downgrade() -> None:
         "publish_indicator_generation(uuid,bigint,uuid,uuid,uuid,uuid,boolean)",
         (
             ("expected_count integer", "seconds integer; expected_count integer"),
-            ("expected_count:=ceil(public.market_timeframe_slots(g.timeframe,g.calculation_start,\n      g.calculation_end)/1000.0)::integer+1;", "seconds:=CASE g.timeframe WHEN '1m' THEN 60 WHEN '5m' THEN 300\n      WHEN '15m' THEN 900 WHEN '1h' THEN 3600 WHEN '4h' THEN 14400 ELSE 86400 END;\n    expected_count:=ceil(extract(epoch FROM (g.calculation_end-g.calculation_start))\n      /(seconds*1000))::integer+1;"),
-            ("public.market_timeframe_advance(g.timeframe,g.calculation_start,1000*n),\n            g.calculation_end", "g.calculation_start+make_interval(secs=>seconds*1000)*n,g.calculation_end"),
+            (
+                "expected_count:=ceil(public.market_timeframe_slots(g.timeframe,g.calculation_start,\n      g.calculation_end)/1000.0)::integer+1;",
+                "seconds:=CASE g.timeframe WHEN '1m' THEN 60 WHEN '5m' THEN 300\n      WHEN '15m' THEN 900 WHEN '1h' THEN 3600 WHEN '4h' THEN 14400 ELSE 86400 END;\n    expected_count:=ceil(extract(epoch FROM (g.calculation_end-g.calculation_start))\n      /(seconds*1000))::integer+1;",
+            ),
+            (
+                "public.market_timeframe_advance(g.timeframe,g.calculation_start,1000*n),\n            g.calculation_end",
+                "g.calculation_start+make_interval(secs=>seconds*1000)*n,g.calculation_end",
+            ),
         ),
     )
     _replace_function(
         "append_indicator_checkpoint(uuid,bigint,uuid,uuid,uuid,uuid,timestamptz,jsonb)",
         (
             ("; expected timestamptz", "; seconds integer; expected timestamptz"),
-            ("expected:=least(public.market_timeframe_advance(g.timeframe,g.calculation_start,\n            1000*g.checkpoint_count),g.calculation_end);", "seconds:=CASE g.timeframe WHEN '1m' THEN 60 WHEN '5m' THEN 300\n            WHEN '15m' THEN 900 WHEN '1h' THEN 3600 WHEN '4h' THEN 14400 ELSE 86400 END;\n          expected:=least(g.calculation_start+make_interval(secs=>seconds*1000)*g.checkpoint_count,\n            g.calculation_end);"),
+            (
+                "expected:=least(public.market_timeframe_advance(g.timeframe,g.calculation_start,\n            1000*g.checkpoint_count),g.calculation_end);",
+                "seconds:=CASE g.timeframe WHEN '1m' THEN 60 WHEN '5m' THEN 300\n            WHEN '15m' THEN 900 WHEN '1h' THEN 3600 WHEN '4h' THEN 14400 ELSE 86400 END;\n          expected:=least(g.calculation_start+make_interval(secs=>seconds*1000)*g.checkpoint_count,\n            g.calculation_end);",
+            ),
         ),
     )
     _replace_function(
@@ -283,7 +311,9 @@ def downgrade() -> None:
         (("('4h',14400),('1d',86400),('1w',604800),('1M',NULL)", "('4h',14400),('1d',86400)"),),
     )
     op.execute(_OLD_BOUNDS)
-    op.execute("ALTER TABLE public.market_candle_demand DROP CONSTRAINT market_candle_demand_retention_check")
+    op.execute(
+        "ALTER TABLE public.market_candle_demand DROP CONSTRAINT market_candle_demand_retention_check"
+    )
     op.execute("""ALTER TABLE public.market_candle_demand ADD CONSTRAINT
       market_candle_demand_retention_check CHECK(desired_end-desired_start<=interval '365 days')""")
     for signature in (
@@ -293,7 +323,9 @@ def downgrade() -> None:
     ):
         op.execute(f"DROP FUNCTION public.{signature}")
 
-    op.execute("ALTER TABLE public.market_candle_preview DROP CONSTRAINT market_candle_preview_schedule_check")
+    op.execute(
+        "ALTER TABLE public.market_candle_preview DROP CONSTRAINT market_candle_preview_schedule_check"
+    )
     op.execute("ALTER TABLE public.market_candles DROP CONSTRAINT market_candles_schedule_check")
     op.execute("""ALTER TABLE public.market_candles ADD CONSTRAINT market_candles_span_check
       CHECK(extract(epoch FROM end_at-open_at)=CASE timeframe

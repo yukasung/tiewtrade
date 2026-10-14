@@ -136,16 +136,10 @@ async def main() -> None:
                 await s.execute("""UPDATE market_candle_demand
                     SET next_attempt_at=clock_timestamp()+interval '1 hour'
                     WHERE NOT(base IN ('BTC','ETH') AND timeframe='1h')""")
-            venue = FakeVenue()
-            rows = tuple(candle(window.start + n * Timeframe.H1.span, now) for n in range(1000))
-            ethereum = tuple(replace(row, base="ETH", volume=Quantity.of(1, "ETH")) for row in rows)
-            venue.queue_candle_pages(
-                [
-                    CandlePage(Symbol("BTC", "USDT"), Timeframe.H1, window, rows, now),
-                    CandlePage(Symbol("ETH", "USDT"), Timeframe.H1, window, ethereum, now),
-                ]
-            )
-            result = await run_round(market, venue, "f12-browser", now)
+            # The scheduler may split a demand into recent and deep-history
+            # windows. Generate the exact window it requests instead of
+            # coupling this browser fixture to the scheduler's batching order.
+            result = await run_round(market, RepairSource(), "f12-browser", now)
             if result.stored != 2000:
                 raise RuntimeError("F12_FIXTURE_REJECTED")
         elif action == "repair":
