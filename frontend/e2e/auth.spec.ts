@@ -45,8 +45,8 @@ test("สมัคร เข้าสู่ระบบ แล้วออกจ
     expect(
       await page
         .getByTestId("submit")
-        .evaluate((element) => window.getComputedStyle(element).opacity),
-    ).toBe("0.5");
+        .evaluate((element) => window.getComputedStyle(element).backgroundColor),
+    ).toBe("rgb(156, 185, 255)");
     await captureUi(page, testInfo, "register-pending");
   } finally {
     releaseRegistration();

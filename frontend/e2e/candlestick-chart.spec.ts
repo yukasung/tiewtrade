@@ -28,8 +28,13 @@ async function registerAccount(page: Page): Promise<string> {
 function waitForLiveStatus(page: Page, expected: string[]) {
   return page.waitForResponse(async response => {
     if (!response.url().includes("/market-data/chart/live") || response.status() !== 200) return false;
-    const body = await response.json() as { status?: string };
-    return body.status !== undefined && expected.includes(body.status);
+    try {
+      const body = await response.json() as { status?: string };
+      return body.status !== undefined && expected.includes(body.status);
+    } catch {
+      // Navigation and offline transitions may discard a completed response body.
+      return false;
+    }
   });
 }
 
