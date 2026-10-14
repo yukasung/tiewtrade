@@ -15,6 +15,25 @@ from tiewtrade.venues.limits import CallCost
 from tiewtrade.venues.symbols import Symbol
 
 
+def _calendar_kline(open_at: datetime, timeframe: Timeframe) -> list[object]:
+    epoch = datetime(1970, 1, 1, tzinfo=UTC)
+    millisecond = timedelta(milliseconds=1)
+    return [
+        (open_at - epoch) // millisecond,
+        "2",
+        "3",
+        "1",
+        "2",
+        "0",
+        (next_open(open_at, timeframe) - epoch) // millisecond - 1,
+        "0",
+        0,
+        "0",
+        "0",
+        "0",
+    ]
+
+
 @pytest.mark.parametrize("tf", list(Timeframe))
 @pytest.mark.parametrize("kind", ["SITE", "GLOBAL"])
 async def test_public_candles_explicit_bounds_cost_and_unknown_finality(
@@ -379,23 +398,7 @@ async def test_calendar_batch_preserves_native_rows_and_bounded_limit(
     epoch = datetime(1970, 1, 1, tzinfo=UTC)
     unit = timedelta(milliseconds=1)
     expected = min(count, limit)
-    payload = [
-        [
-            (advance(start, tf, i) - epoch) // unit,
-            "2",
-            "3",
-            "1",
-            "2",
-            "0",
-            (advance(start, tf, i + 1) - epoch) // unit - 1,
-            "0",
-            0,
-            "0",
-            "0",
-            "0",
-        ]
-        for i in range(expected)
-    ]
+    payload = [_calendar_kline(advance(start, tf, i), tf) for i in range(expected)]
     discovery = json.loads((Path(__file__).parent / "fixtures/02-exchange-info.json").read_text())
 
     def reply(request: httpx.Request) -> httpx.Response:
@@ -416,8 +419,6 @@ async def test_calendar_batch_preserves_native_rows_and_bounded_limit(
 @pytest.mark.parametrize("kind", ["duplicate", "reversed", "outside", "unaligned", "over_limit"])
 async def test_calendar_batch_rejects_invalid_observations(tf: Timeframe, kind: str) -> None:
     start = align_floor(datetime(2026, 1, 5, tzinfo=UTC), tf)
-    epoch = datetime(1970, 1, 1, tzinfo=UTC)
-    unit = timedelta(milliseconds=1)
     offsets = {
         "duplicate": [0, 0],
         "reversed": [1, 0],
@@ -425,23 +426,7 @@ async def test_calendar_batch_rejects_invalid_observations(tf: Timeframe, kind: 
         "unaligned": [0, 1],
         "over_limit": [0, 1, 2],
     }[kind]
-    payload = [
-        [
-            (advance(start, tf, i) - epoch) // unit,
-            "2",
-            "3",
-            "1",
-            "2",
-            "0",
-            (advance(start, tf, i + 1) - epoch) // unit - 1,
-            "0",
-            0,
-            "0",
-            "0",
-            "0",
-        ]
-        for i in offsets
-    ]
+    payload = [_calendar_kline(advance(start, tf, i), tf) for i in offsets]
     if kind == "unaligned":
         payload[0][0] += 1
     discovery = json.loads((Path(__file__).parent / "fixtures/02-exchange-info.json").read_text())

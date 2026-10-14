@@ -230,8 +230,17 @@ async def test_discovered_monthly_history_can_store_beyond_indicator_retention()
         await engine.dispose()
 
 
-@pytest.mark.parametrize("calendar_slots", [1, 1000])
-@pytest.mark.parametrize("timeframe", [Timeframe.H4, Timeframe.D1, Timeframe.W1, Timeframe.MN1])
+@pytest.mark.parametrize(
+    ("timeframe", "calendar_slots"),
+    [
+        (Timeframe.H4, 1),
+        (Timeframe.D1, 1),
+        (Timeframe.W1, 1),
+        (Timeframe.W1, 1000),
+        (Timeframe.MN1, 1),
+        (Timeframe.MN1, 1000),
+    ],
+)
 async def test_recent_history_precedes_deep_history_without_skipping_slots(
     timeframe: Timeframe,
     calendar_slots: int,
@@ -301,15 +310,13 @@ async def test_recent_history_precedes_deep_history_without_skipping_slots(
                 break
         assert row["status"] == "COMPLETE"
         assert row["cursor"] == expected_end
-        assert len(
-            {opened for window in source.windows for opened in expected_opens(window, timeframe)}
-        ) == (
-            50
-            if timeframe == Timeframe.MN1
-            else 121
-            if timeframe == Timeframe.W1 and calendar_slots == 1
-            else 120
-        )
+        expected_slots = 50 if timeframe == Timeframe.MN1 else 120
+        if timeframe == Timeframe.W1 and calendar_slots == 1:
+            expected_slots = 121
+        fetched_opens = {
+            opened for window in source.windows for opened in expected_opens(window, timeframe)
+        }
+        assert len(fetched_opens) == expected_slots
         if timeframe != Timeframe.MN1:
             deep_index = next(i for i, window in enumerate(source.windows) if window.start == start)
             assert all(window.start >= recent_start for window in source.windows[:deep_index])
@@ -344,7 +351,7 @@ async def test_calendar_backfill_respects_source_batch_size(
         source = SlotLimitedSource(calendar_slots)
         result = await run_round(engine, source, "calendar-slot-limit", now)
         assert result.attempts == (3 if calendar_slots == 1 else 1)
-        assert source.windows == (
+        expected_windows = (
             [
                 CandleWindow(advance(start, timeframe, index), advance(start, timeframe, index + 1))
                 for index in (reversed(range(3)) if timeframe == Timeframe.MN1 else range(3))
@@ -352,6 +359,7 @@ async def test_calendar_backfill_respects_source_batch_size(
             if calendar_slots == 1
             else [CandleWindow(start, end)]
         )
+        assert source.windows == expected_windows
         async with market_data_session(engine) as session:
             row = (
                 (

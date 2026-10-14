@@ -91,12 +91,15 @@ class BinanceThCandles:
         # Upstream open times are integer milliseconds. Ceiling both bounds
         # preserves exactly start <= open_time < end for arbitrary datetimes.
         start_ms = -((epoch - window.start) // millisecond)
-        # Binance TH rejects every interval when startTime/endTime span more
-        # than seven days. Fixed intervals retain this explicit-bound request.
-        query_end = min(window.end, window.start + self.max_request_span)
-        end_ms = -((epoch - query_end) // millisecond)
-        if start_ms >= end_ms or (calendar and slots == 0):
+        if slots == 0:
             return CandlePage(symbol, timeframe, window, (), self._clock())
+        end_ms: int | None = None
+        if not calendar:
+            # Binance TH rejects explicit start/end ranges longer than seven days.
+            query_end = min(window.end, window.start + self.max_request_span)
+            end_ms = -((epoch - query_end) // millisecond)
+            if start_ms >= end_ms:
+                return CandlePage(symbol, timeframe, window, (), self._clock())
         if self._known is None:
             discovery = await self._transport.get(Endpoint.EXCHANGE_INFO, cost=CONSTRAINTS_COST)
             self._known = pairs_from_exchange_info(discovery.payload)
@@ -118,6 +121,7 @@ class BinanceThCandles:
             "limit": str(request_limit),
         }
         if not calendar:
+            assert end_ms is not None
             params["endTime"] = str(end_ms - 1)
         response = await self._transport.get(
             Endpoint.KLINES,
