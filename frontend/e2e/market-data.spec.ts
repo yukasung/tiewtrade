@@ -15,7 +15,8 @@ from datetime import UTC, datetime
 from tiewtrade.core.market_data import Candle, CandleFinality, CandleWindow, Timeframe, expected_opens
 from tiewtrade.core.money import Money, Quantity
 from tiewtrade.infra.db import DatabaseRole, create_engine_for
-from tiewtrade.services.market_data.ingestion import run_round
+from tiewtrade.infra.db.session import market_data_session
+from tiewtrade.services.market_data.ingestion import _seed_initial_demand, run_round
 from tiewtrade.venues import FakeVenue, Symbol
 from tiewtrade.venues.candles import CandlePage
 async def run():
@@ -29,6 +30,11 @@ async def run():
     venue.queue_candle_pages([CandlePage(Symbol('BTC','USDT'),Timeframe.M1,window,rows,now)])
     engine = create_engine_for(DatabaseRole.MARKET_DATA)
     try:
+        async with market_data_session(engine) as session:
+            await _seed_initial_demand(session)
+            await session.execute("""UPDATE market_candle_demand
+                SET next_attempt_at=clock_timestamp()+interval '1 hour'
+                WHERE NOT(base='BTC' AND quote='USDT' AND timeframe='1m')""")
         summary = await run_round(engine,venue,'e2e-market-worker',now)
         assert summary.stored == len(rows), summary
     finally:

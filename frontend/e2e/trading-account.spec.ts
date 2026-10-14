@@ -170,8 +170,7 @@ test("fake key → explicit account use → reload → key deletion retains pref
   await page.getByTestId("log-out").click();
   await expect(panel).toBeHidden();
   await expect(page.getByTestId("submit")).toBeEnabled();
-  expect(
-    await page.getByTestId("submit").evaluate((element) => {
+  await expect.poll(() => page.getByTestId("submit").evaluate((element) => {
       const style = window.getComputedStyle(element);
       return [
         style.fontFamily,

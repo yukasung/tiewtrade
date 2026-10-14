@@ -42,10 +42,9 @@ test("สมัคร เข้าสู่ระบบ แล้วออกจ
   try {
     await page.getByTestId("submit").click();
     await expect(page.getByTestId("submit")).toBeDisabled();
-    expect(
-      await page
-        .getByTestId("submit")
-        .evaluate((element) => window.getComputedStyle(element).backgroundColor),
+    await expect.poll(() => page
+      .getByTestId("submit")
+      .evaluate((element) => window.getComputedStyle(element).backgroundColor),
     ).toBe("rgb(156, 185, 255)");
     await captureUi(page, testInfo, "register-pending");
   } finally {
