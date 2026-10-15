@@ -5,11 +5,11 @@ import { join } from "node:path";
 import { randomUUID } from "node:crypto";
 import { setTimeout, clearTimeout } from "node:timers";
 import { expect, test, type Page } from "@playwright/test";
-import { e2eEnvironment } from "./helpers/environment";
+import { backendPython, e2eEnvironment } from "./helpers/environment";
 import { PASSWORD } from "./helpers/totp";
 
 function fixture(action: string): void {
-  execFileSync(process.platform === "win32" ? ".venv/Scripts/python.exe" : ".venv/bin/python",
+  execFileSync(backendPython,
     ["-X", "utf8", "../specs/features/2026-10-12-candlestick-chart/evidence/browser_fixture.py", action],
     { cwd: "../backend", env: e2eEnvironment(), stdio: "pipe" });
 }
@@ -41,7 +41,7 @@ function producer(script: string) {
   const control = join(directory, "control");
   const mode = (value: string) => writeFileSync(control, value);
   mode("healthy");
-  const worker = spawn(process.platform === "win32" ? ".venv/Scripts/python.exe" : ".venv/bin/python",
+  const worker = spawn(backendPython,
     ["-B", script, "--control-file", control], { cwd: "../backend", env: e2eEnvironment(), stdio: "ignore" });
   const exited = new Promise<void>((resolve, reject) => {
     worker.once("exit", () => resolve());

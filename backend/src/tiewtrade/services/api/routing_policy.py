@@ -135,6 +135,10 @@ ROUTE_RULES: Final[dict[tuple[str, str], RouteRule]] = {
     ("POST", "/market-data/chart/verify"): RouteRule(checks_browser_origin=True),
     ("GET", "/trading-account"): RouteRule(),
     ("POST", "/trading-account/use"): RouteRule(renews=True, reverify=True),
+    ("GET", "/paper-wallet"): RouteRule(),
+    ("POST", "/paper-wallet"): RouteRule(renews=True),
+    ("POST", "/paper-wallet/reset"): RouteRule(renews=True),
+    ("GET", "/paper-wallet/commands/{command_id}"): RouteRule(),
     # ขั้นที่สองของการเข้าสู่ระบบ — สาธารณะเพราะยังไม่มี session
     # และ **ไม่ต่ออายุ** เพราะยังไม่มี session ให้ต่อ
     ("POST", "/auth/totp/login"): RouteRule(public=True),

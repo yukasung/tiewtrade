@@ -449,7 +449,7 @@ def test_no_route_hands_back_the_secret(client: TestClient, ending: bool) -> Non
             )
             assert renewed.status_code == 200
         assert client.get("/auth/me").status_code == 200
-        path = template.replace("{key_id}", key_id)
+        path = template.replace("{key_id}", key_id).replace("{command_id}", key_id)
         assert "{" not in path, f"missing canary path value for {template}"
         if method == "WEBSOCKET":
             with client.websocket_connect(
@@ -480,6 +480,9 @@ def test_no_route_hands_back_the_secret(client: TestClient, ending: bool) -> Non
                 assert (
                     response.status_code == 404
                 )  # Disabled by default; refusal must also be secret-free.
+            elif template == "/paper-wallet/commands/{command_id}":
+                assert response.status_code == 404
+                assert response.json() == {"detail": "PAPER_COMMAND_NOT_FOUND"}
             elif template == "/market-data/indicators" and response.status_code == 503:
                 # Empty indicator data must fail closed without exposing secrets.
                 # Accept only this documented error, independent of prior fixtures.

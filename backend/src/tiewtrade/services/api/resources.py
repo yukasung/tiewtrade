@@ -13,33 +13,13 @@ from __future__ import annotations
 from typing import Final
 
 from fastapi import Request
-from sqlalchemy.ext.asyncio import AsyncEngine
 
 from tiewtrade.infra.auth import key_of
 from tiewtrade.infra.crypto import KeySource
-from tiewtrade.infra.db import DatabaseRole
-
-#: ชื่อที่ `lifespan` ใช้เก็บ engine ของแต่ละบทบาทใน `app.state`
-_ENGINE_ATTRIBUTE: Final[dict[DatabaseRole, str]] = {
-    DatabaseRole.API: "api_engine",
-    DatabaseRole.AUTH: "auth_engine",
-}
+from tiewtrade.services.api.db_resources import engine_for as engine_for
 
 #: ที่มาของคำขอที่อ่านไม่ได้ — นับเป็นแหล่งเดียวกันทั้งหมด ไม่ใช่ข้ามการนับ
 _UNKNOWN_CLIENT: Final[str] = "unknown"
-
-
-def engine_for(request: Request, role: DatabaseRole) -> AsyncEngine:
-    """engine ของบทบาทนั้น ตามที่ lifespan ของแอปสร้างไว้
-
-    **เส้นทางที่แตะข้อมูลเข้าสู่ระบบต้องขอบทบาท `AUTH` เท่านั้น** การเลือกบทบาท
-    จึงเขียนไว้ที่จุดเรียกให้เห็นชัด ไม่ซ่อนอยู่ในชื่อฟังก์ชันสองตัวที่ต่างกันทีละคำ
-    """
-    attribute = _ENGINE_ATTRIBUTE[role]
-    engine = getattr(request.app.state, attribute, None)
-    if not isinstance(engine, AsyncEngine):  # pragma: no cover - ตั้งค่าแอปผิด
-        raise RuntimeError(f"แอปยังไม่ได้ตั้ง engine ของบทบาท {role.role_name}")
-    return engine
 
 
 def totp_keys(request: Request) -> KeySource:

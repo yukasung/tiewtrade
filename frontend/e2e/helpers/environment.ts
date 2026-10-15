@@ -1,5 +1,9 @@
 const roles = ["API", "AUTH", "ENGINE", "ENGINE_SCAN", "MIGRATOR", "MARKET_DATA"] as const;
 
+export const backendPython = process.platform === "win32"
+  ? ".venv/Scripts/python.exe"
+  : ".venv/bin/python";
+
 /** Fail before starting servers or connecting to any database. Never echo URLs. */
 export function e2eEnvironment(
   source: Record<string, string | undefined> = process.env,

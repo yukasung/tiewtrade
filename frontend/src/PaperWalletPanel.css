@@ -1,0 +1,54 @@
+@import "./accountPanels.css";
+
+.paper-wallet-panel {
+  margin-block: var(--account-space-lg);
+  max-width: var(--account-panel-width);
+}
+
+.paper-wallet-panel p {
+  max-width: var(--account-text-width);
+  line-height: var(--account-line-height);
+}
+
+.paper-wallet-form label {
+  display: flex;
+  max-width: 28rem;
+  flex-direction: column;
+  gap: var(--account-field-gap);
+}
+
+.paper-wallet-summary dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--account-space-md);
+  margin: 0 0 var(--account-space-lg);
+}
+
+.paper-wallet-summary dl div {
+  min-width: 0;
+}
+
+.paper-wallet-summary dt {
+  color: var(--account-muted-color);
+  font-size: 0.875rem;
+}
+
+.paper-wallet-summary dd {
+  margin: var(--account-field-gap) 0 0;
+  overflow-wrap: anywhere;
+}
+
+.paper-wallet-error {
+  color: var(--color-error-600);
+}
+
+.paper-wallet-panel :focus-visible {
+  outline: var(--account-focus-width) solid var(--account-focus-color);
+  outline-offset: var(--account-focus-offset);
+}
+
+@media (max-width: 40rem) {
+  .paper-wallet-summary dl {
+    grid-template-columns: 1fr;
+  }
+}

@@ -10,6 +10,7 @@ import {
   type TradingAccountView,
 } from "./tradingAccount";
 import { tradingAccountText as t } from "./tradingAccountMessages";
+import { PaperWalletPanel } from "./PaperWalletPanel";
 import { Button } from "./components/ui/Button";
 import { Input } from "./components/ui/Input";
 import { Label } from "./components/ui/Label";
@@ -83,7 +84,7 @@ export function TradingAccountPanel({ identity }: { identity: Me }) {
     use === "" ||
     !identity.totp_enabled ||
     account?.use !== null;
-  return (
+  return <>
     <section
       className="trading-account-panel"
       aria-labelledby="trading-account-heading"
@@ -217,5 +218,6 @@ export function TradingAccountPanel({ identity }: { identity: Me }) {
       )}
       {notice && <p role="status">{notice}</p>}
     </section>
-  );
+    <PaperWalletPanel identity={identity} />
+  </>;
 }

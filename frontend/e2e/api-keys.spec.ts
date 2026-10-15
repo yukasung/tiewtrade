@@ -1,4 +1,4 @@
-import { e2eEnvironment } from "./helpers/environment";
+import { backendPython, e2eEnvironment } from "./helpers/environment";
 import { execFileSync } from "node:child_process";
 import { expect, test } from "./helpers/test";
 
@@ -10,7 +10,7 @@ const SECRET = "e2e-only-secret-not-a-real-credential";
 /** เรียก worker จริงกับ FakeVenue เดิม: ไม่มี HTTP ไปตลาดและไม่แก้สถานะด้วย SQL */
 function verify(outcome: "temporary" | "success"): void {
   execFileSync(
-    ".venv/bin/python",
+    backendPython,
     [
       "-B",
       "-c",

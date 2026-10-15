@@ -24,6 +24,7 @@ dependencies = [
 
 [project.scripts]
 indicator-builder = "tiewtrade.services.indicator_builder.main:main"
+paper-wallet-worker = "tiewtrade.services.engine.paper_wallet_main:main"
 
 [dependency-groups]
 dev = [

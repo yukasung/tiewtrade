@@ -205,9 +205,14 @@ domain ของเงินที่ปฏิเสธค่าที่เก�
 
 ## ชุดที่ 4 — Paper Trading
 
+**แนวทางร่วม Approved 2026-10-15:** งาน Paper/Live ที่เกี่ยวข้องต้องยึด
+[ADR-004 — ใช้โค้ดการเทรดร่วมกัน](decisions/004-shared-paper-live-trading.md)
+และนำเกณฑ์ parity/isolation ไปใส่ใน spec ของแต่ละ feature ก่อนขออนุมัติ implementation
+ไม่เปลี่ยนสถานะการอนุมัติเอกสารหรือเงื่อนไข reset ของ F-13
+
 | รหัส | งาน | สถานะ | หมายเหตุ |
 |---|---|---|---|
-| F-13 | กระเป๋า Paper และเงินตั้งต้น | Planned | ติด **NC-03** |
+| F-13 | กระเป๋า Paper และเงินตั้งต้น | **In Progress** | requirements/plan/validation อนุมัติ 2026-10-15; implement create/read และ reset fail-closed พร้อม targeted validation แล้ว; NC-F13-02 ปิดโดยให้ reset คืน `ACTIVITY_UNKNOWN` จน F-14/F-15 มี authoritative activity; reset success, browser E2E, fault/recovery/concurrency ชุดเต็ม และ required CI ยังเป็น `Pending Full Validation` จึงยังไม่ปิด Completed |
 | F-14 | การคิด position, margin, PnL | Planned | ใช้ร่วมกันทั้ง Paper และ Live |
 | F-15 | จำลองการจับคู่ออเดอร์ Paper | Planned | ต้องเหมือนจริงที่สุด (R-17) |
 | F-16 | สั่งออเดอร์เองผ่านหน้าจอ | Planned | ติด **NC-08** — ต้องมี F-37 (รายการเหรียญ) เสร็จก่อน |

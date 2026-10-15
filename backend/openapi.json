@@ -1262,6 +1262,236 @@
         "title": "Me",
         "type": "object"
       },
+      "MoneyView": {
+        "properties": {
+          "amount": {
+            "title": "Amount",
+            "type": "string"
+          },
+          "currency": {
+            "const": "USDT",
+            "default": "USDT",
+            "title": "Currency",
+            "type": "string"
+          }
+        },
+        "required": [
+          "amount"
+        ],
+        "title": "MoneyView",
+        "type": "object"
+      },
+      "PaperCommandSnapshotView": {
+        "properties": {
+          "balance": {
+            "$ref": "#/components/schemas/MoneyView"
+          },
+          "episode_id": {
+            "format": "uuid",
+            "title": "Episode Id",
+            "type": "string"
+          },
+          "initial_capital": {
+            "$ref": "#/components/schemas/MoneyView"
+          },
+          "wallet_id": {
+            "format": "uuid",
+            "title": "Wallet Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "wallet_id",
+          "episode_id",
+          "initial_capital",
+          "balance"
+        ],
+        "title": "PaperCommandSnapshotView",
+        "type": "object"
+      },
+      "PaperCommandState": {
+        "enum": [
+          "PENDING",
+          "SUCCEEDED",
+          "REJECTED"
+        ],
+        "title": "PaperCommandState",
+        "type": "string"
+      },
+      "PaperCommandView": {
+        "properties": {
+          "command_id": {
+            "format": "uuid",
+            "title": "Command Id",
+            "type": "string"
+          },
+          "failure_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Failure Code"
+          },
+          "snapshot": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PaperCommandSnapshotView"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "state": {
+            "$ref": "#/components/schemas/PaperCommandState"
+          },
+          "status_url": {
+            "title": "Status Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "command_id",
+          "state",
+          "failure_code",
+          "snapshot",
+          "status_url"
+        ],
+        "title": "PaperCommandView",
+        "type": "object"
+      },
+      "PaperWalletEnvelope": {
+        "properties": {
+          "wallet": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PaperWalletView"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "wallet"
+        ],
+        "title": "PaperWalletEnvelope",
+        "type": "object"
+      },
+      "PaperWalletMutation": {
+        "additionalProperties": false,
+        "properties": {
+          "initial_capital": {
+            "maxLength": 256,
+            "minLength": 1,
+            "title": "Initial Capital",
+            "type": "string"
+          }
+        },
+        "required": [
+          "initial_capital"
+        ],
+        "title": "PaperWalletMutation",
+        "type": "object"
+      },
+      "PaperWalletReset": {
+        "additionalProperties": false,
+        "properties": {
+          "expected_episode_id": {
+            "format": "uuid",
+            "title": "Expected Episode Id",
+            "type": "string"
+          },
+          "initial_capital": {
+            "maxLength": 256,
+            "minLength": 1,
+            "title": "Initial Capital",
+            "type": "string"
+          }
+        },
+        "required": [
+          "initial_capital",
+          "expected_episode_id"
+        ],
+        "title": "PaperWalletReset",
+        "type": "object"
+      },
+      "PaperWalletView": {
+        "properties": {
+          "balance": {
+            "$ref": "#/components/schemas/MoneyView"
+          },
+          "episode_id": {
+            "format": "uuid",
+            "title": "Episode Id",
+            "type": "string"
+          },
+          "initial_capital": {
+            "$ref": "#/components/schemas/MoneyView"
+          },
+          "mode": {
+            "const": "PAPER",
+            "default": "PAPER",
+            "title": "Mode",
+            "type": "string"
+          },
+          "reset_available": {
+            "title": "Reset Available",
+            "type": "boolean"
+          },
+          "reset_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reset Reason"
+          },
+          "revision": {
+            "title": "Revision",
+            "type": "integer"
+          },
+          "sequence": {
+            "title": "Sequence",
+            "type": "integer"
+          },
+          "snapshot_at": {
+            "title": "Snapshot At",
+            "type": "string"
+          },
+          "started_at": {
+            "title": "Started At",
+            "type": "string"
+          },
+          "wallet_id": {
+            "format": "uuid",
+            "title": "Wallet Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "wallet_id",
+          "episode_id",
+          "sequence",
+          "initial_capital",
+          "balance",
+          "started_at",
+          "snapshot_at",
+          "revision",
+          "reset_available",
+          "reset_reason"
+        ],
+        "title": "PaperWalletView",
+        "type": "object"
+      },
       "PasswordChange": {
         "description": "การเปลี่ยนรหัสผ่าน — ต้องยืนยันค่าปัจจุบัน (Q-5)",
         "properties": {
@@ -3143,6 +3373,174 @@
         "summary": "Prices",
         "tags": [
           "market-data"
+        ]
+      }
+    },
+    "/paper-wallet": {
+      "get": {
+        "operationId": "read_paper_wallet_paper_wallet_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaperWalletEnvelope"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Read Paper Wallet",
+        "tags": [
+          "paper-wallet"
+        ]
+      },
+      "post": {
+        "operationId": "create_paper_wallet_paper_wallet_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Idempotency-Key",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PaperWalletMutation"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaperCommandView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Paper Wallet",
+        "tags": [
+          "paper-wallet"
+        ]
+      }
+    },
+    "/paper-wallet/commands/{command_id}": {
+      "get": {
+        "operationId": "read_paper_command_paper_wallet_commands__command_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "command_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Command Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaperCommandView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Read Paper Command",
+        "tags": [
+          "paper-wallet"
+        ]
+      }
+    },
+    "/paper-wallet/reset": {
+      "post": {
+        "operationId": "reset_paper_wallet_paper_wallet_reset_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Idempotency-Key",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PaperWalletReset"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaperCommandView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Reset Paper Wallet",
+        "tags": [
+          "paper-wallet"
         ]
       }
     },

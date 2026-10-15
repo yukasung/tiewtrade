@@ -529,6 +529,58 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/paper-wallet": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read Paper Wallet */
+        get: operations["read_paper_wallet_paper_wallet_get"];
+        put?: never;
+        /** Create Paper Wallet */
+        post: operations["create_paper_wallet_paper_wallet_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/paper-wallet/commands/{command_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read Paper Command */
+        get: operations["read_paper_command_paper_wallet_commands__command_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/paper-wallet/reset": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reset Paper Wallet */
+        post: operations["reset_paper_wallet_paper_wallet_reset_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/trading-account": {
         parameters: {
             query?: never;
@@ -1065,6 +1117,103 @@ export interface components {
              * Format: uuid
              */
             user_id: string;
+        };
+        /** MoneyView */
+        MoneyView: {
+            /** Amount */
+            amount: string;
+            /**
+             * Currency
+             * @default USDT
+             * @constant
+             */
+            currency: "USDT";
+        };
+        /** PaperCommandSnapshotView */
+        PaperCommandSnapshotView: {
+            balance: components["schemas"]["MoneyView"];
+            /**
+             * Episode Id
+             * Format: uuid
+             */
+            episode_id: string;
+            initial_capital: components["schemas"]["MoneyView"];
+            /**
+             * Wallet Id
+             * Format: uuid
+             */
+            wallet_id: string;
+        };
+        /**
+         * PaperCommandState
+         * @enum {string}
+         */
+        PaperCommandState: "PENDING" | "SUCCEEDED" | "REJECTED";
+        /** PaperCommandView */
+        PaperCommandView: {
+            /**
+             * Command Id
+             * Format: uuid
+             */
+            command_id: string;
+            /** Failure Code */
+            failure_code: string | null;
+            snapshot: components["schemas"]["PaperCommandSnapshotView"] | null;
+            state: components["schemas"]["PaperCommandState"];
+            /** Status Url */
+            status_url: string;
+        };
+        /** PaperWalletEnvelope */
+        PaperWalletEnvelope: {
+            wallet: components["schemas"]["PaperWalletView"] | null;
+        };
+        /** PaperWalletMutation */
+        PaperWalletMutation: {
+            /** Initial Capital */
+            initial_capital: string;
+        };
+        /** PaperWalletReset */
+        PaperWalletReset: {
+            /**
+             * Expected Episode Id
+             * Format: uuid
+             */
+            expected_episode_id: string;
+            /** Initial Capital */
+            initial_capital: string;
+        };
+        /** PaperWalletView */
+        PaperWalletView: {
+            balance: components["schemas"]["MoneyView"];
+            /**
+             * Episode Id
+             * Format: uuid
+             */
+            episode_id: string;
+            initial_capital: components["schemas"]["MoneyView"];
+            /**
+             * Mode
+             * @default PAPER
+             * @constant
+             */
+            mode: "PAPER";
+            /** Reset Available */
+            reset_available: boolean;
+            /** Reset Reason */
+            reset_reason: string | null;
+            /** Revision */
+            revision: number;
+            /** Sequence */
+            sequence: number;
+            /** Snapshot At */
+            snapshot_at: string;
+            /** Started At */
+            started_at: string;
+            /**
+             * Wallet Id
+             * Format: uuid
+             */
+            wallet_id: string;
         };
         /**
          * PasswordChange
@@ -2093,6 +2242,127 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PricesView"];
+                };
+            };
+        };
+    };
+    read_paper_wallet_paper_wallet_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaperWalletEnvelope"];
+                };
+            };
+        };
+    };
+    create_paper_wallet_paper_wallet_post: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PaperWalletMutation"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaperCommandView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_paper_command_paper_wallet_commands__command_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                command_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaperCommandView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reset_paper_wallet_paper_wallet_reset_post: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PaperWalletReset"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaperCommandView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

@@ -105,12 +105,13 @@ it("keeps the same cache when auth callback changes within one identity", async 
   );
   expect(client?.getQueryData(["trading-account", "old"])).toBe("same user");
 });
-it("real panels ignore late key and account responses after identity switch", async () => {
+it("real panels ignore late account responses after identity switch", async () => {
   const { ApiKeyPanel } = await import("../src/ApiKeyPanel");
   const { TradingAccountPanel } = await import("../src/TradingAccountPanel");
   const pending: {
     resolve: (value: Response) => void;
     signal: AbortSignal | undefined;
+    url: string;
   }[] = [];
   let old = true;
   const key = {
@@ -127,11 +128,17 @@ it("real panels ignore late key and account responses after identity switch", as
     vi.fn((url: string, init?: RequestInit) =>
       old
         ? new Promise<Response>((resolve) =>
-            pending.push({ resolve, signal: init?.signal ?? undefined }),
+            pending.push({ resolve, signal: init?.signal ?? undefined, url }),
           )
         : Promise.resolve(
             new Response(
-              JSON.stringify(url.endsWith("api-keys") ? [key] : account),
+              JSON.stringify(
+                url.endsWith("api-keys")
+                  ? [key]
+                  : url.endsWith("paper-wallet")
+                    ? { wallet: null }
+                    : account,
+              ),
               { status: 200 },
             ),
           ),
@@ -144,20 +151,21 @@ it("real panels ignore late key and account responses after identity switch", as
     </AccountSession>
   );
   const view = render(panels(identity));
-  await waitFor(() => expect(pending).toHaveLength(2));
+  await waitFor(() => expect(pending).toHaveLength(3));
   old = false;
   view.rerender(panels({ ...identity, user_id: "new" }));
   await screen.findByText("ยังไม่ได้เลือกประเภทการใช้งาน");
   expect(pending.every((request) => request.signal?.aborted)).toBe(true);
   await act(async () => {
-    pending[0]?.resolve(
-      new Response(JSON.stringify([{ ...key, label: "OLD KEY" }])),
-    );
-    pending[1]?.resolve(
-      new Response(
-        JSON.stringify({ ...account, key: { ...key, label: "OLD KEY" } }),
-      ),
-    );
+    for (const request of pending) {
+      request.resolve(new Response(JSON.stringify(
+        request.url.endsWith("api-keys")
+          ? [{ ...key, label: "OLD KEY" }]
+          : request.url.endsWith("paper-wallet")
+            ? { wallet: null }
+            : { ...account, key: { ...key, label: "OLD KEY" } },
+      )));
+    }
     await Promise.resolve();
   });
   expect(screen.queryByText(/OLD KEY/)).toBeNull();

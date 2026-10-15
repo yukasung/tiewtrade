@@ -26,6 +26,24 @@ TEST_SEALING_KEY: Final[str] = "1:" + base64.b64encode(b"T" * KEY_BYTES).decode(
 #: สองงานใช้กุญแจคนละดอกมีของจริงให้เทียบ (F-07 RQ-4)
 TEST_VENUE_KEY: Final[str] = "1:" + base64.b64encode(b"V" * KEY_BYTES).decode("ascii")
 
+_DESTRUCTIVE_MIGRATION_MODULES: Final[frozenset[str]] = frozenset(
+    {
+        "tests/infra/db/test_migrations.py",
+        "tests/infra/market_data/test_migration.py",
+        "tests/infra/market_data/test_realtime_migration.py",
+    }
+)
+
+
+def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
+    """Run destructive schema replay before immutable integration fixtures."""
+
+    items.sort(
+        key=lambda item: (
+            0 if item.path.as_posix().endswith(tuple(_DESTRUCTIVE_MIGRATION_MODULES)) else 1
+        )
+    )
+
 
 @pytest.fixture(autouse=True)
 def _sealing_key(monkeypatch: pytest.MonkeyPatch) -> None:

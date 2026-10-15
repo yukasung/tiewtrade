@@ -2,7 +2,7 @@ import { spawn } from "node:child_process";
 import { mkdtempSync, writeFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { e2eEnvironment } from "./helpers/environment";
+import { backendPython, e2eEnvironment } from "./helpers/environment";
 import { expect, test } from "./helpers/test";
 import { PASSWORD } from "./helpers/totp";
 import { supportedBases } from "../src/marketCatalog";
@@ -13,7 +13,7 @@ test("actual quote producer → PostgreSQL → Redis → API → browser recover
   const control = join(directory, "control");
   const mode = (value: string) => writeFileSync(control, value);
   mode("healthy");
-  const producer = spawn(".venv/bin/python", ["-B", "tests/e2e_realtime_runner.py", "--control-file", control], {
+  const producer = spawn(backendPython, ["-B", "tests/e2e_realtime_runner.py", "--control-file", control], {
     cwd: "../backend", env: e2eEnvironment(), stdio: "ignore",
   });
   try {

@@ -1,5 +1,5 @@
 import { execFileSync } from "node:child_process";
-import { e2eEnvironment } from "./helpers/environment";
+import { backendPython, e2eEnvironment } from "./helpers/environment";
 import { expect, test } from "./helpers/test";
 import { PASSWORD } from "./helpers/totp";
 import type { components } from "../src/api-types";
@@ -8,7 +8,7 @@ type CandleHistory = components["schemas"]["CandleHistoryView"];
 
 function ingest(start: string, end: string): void {
   execFileSync(
-    ".venv/bin/python",
+    backendPython,
     ["-B", "-c", `
 import asyncio, sys
 from datetime import UTC, datetime
@@ -48,7 +48,7 @@ asyncio.run(run())
 // The shared public demand queue survives previous E2E runs, including unconfirmed repairs.
 // Reset only these fixtures after the existing isolation guard validates the disposable target.
 test.beforeEach(() => {
-  execFileSync(".venv/bin/python", ["-B", "-c", `
+  execFileSync(backendPython, ["-B", "-c", `
 import asyncio
 from sqlalchemy import text
 from tiewtrade.infra.db import DatabaseRole, create_engine_for
