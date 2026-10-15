@@ -47,7 +47,7 @@ async def test_durable_fencing_latch_and_revision(api_engine: AsyncEngine) -> No
             assert renewed.lease_until > lease.lease_until
             lease = renewed
             snapshot = await read_snapshot(session)
-            assert len(snapshot.rows) == 5
+            assert len(snapshot.rows) == 2
             now = await database_now(session)
             row = next(r for r in snapshot.rows if r.base == "BTC")
             quote = QuoteObservation(
@@ -75,7 +75,7 @@ async def test_durable_fencing_latch_and_revision(api_engine: AsyncEngine) -> No
             assert persisted.revision > row.revision
             assert new.generation == lease.generation + 1
         async with user_session(api_engine, uuid4()) as session:
-            assert len((await read_snapshot(session)).rows) == 5
+            assert len((await read_snapshot(session)).rows) == 2
     finally:
         await engine.dispose()
 

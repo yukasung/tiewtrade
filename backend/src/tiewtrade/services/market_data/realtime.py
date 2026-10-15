@@ -233,8 +233,8 @@ class QuoteSupervisor:
                     await self.notifications.publish(SOURCE, lease.generation)
                     await asyncio.gather(*old_jobs, return_exceptions=True)
                     self.jobs.clear()
-                    for pair in PAIRS:
-                        self._recover(pair)
+                    for supported_pair in PAIRS:
+                        self._recover(supported_pair)
                 elif isinstance(event, FeedDisconnected):
                     if self.epoch is not None and event.generation < self.epoch:
                         continue

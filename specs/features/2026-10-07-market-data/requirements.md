@@ -4,6 +4,10 @@
 วันที่: 2026-10-07
 Branch: feature/f-09-market-data
 
+**Pair-scope amendment — Approved 2026-10-15:** F-38 แทนรายการ 5 คู่ในเอกสารนี้
+ด้วย BTCUSDT และ ETHUSDT เท่านั้นสำหรับ runtime ปัจจุบัน โดยไม่เปลี่ยนกฎ OHLCV,
+retention, finality, idempotency หรือการซ่อมช่องว่าง
+
 Amendmentที่เสนอโดยF-11 NC-35: [prepared indicators รอบ2](../2026-10-10-backend-indicators/performance-plan-v2.md)
 เป็น **Approved** เจ้าของอนุมัติamendmentเมื่อ2026-10-10 ตามคำสั่ง “approve”; แยกlogical365วัน/physicalgraceและsourcejournal proof
 รวมsourcewrite scopeก่อนpre-locks/DMLและmaintenance relation-firstตามADR-002

@@ -4,6 +4,7 @@ import asyncio
 import random
 from collections.abc import AsyncIterator
 
+from tiewtrade.core.market_catalog import PAIRS
 from tiewtrade.core.realtime_prices import QuoteObservation
 from tiewtrade.venues.binance_th.endpoints import Endpoint
 from tiewtrade.venues.binance_th.mapping import market_symbol
@@ -36,12 +37,9 @@ class BinanceThPriceFeed:
     async def events(self, symbols: tuple[Symbol, ...]) -> AsyncIterator[FeedEvent]:
         if (
             not symbols
-            or len(symbols) > 5
+            or len(symbols) > len(PAIRS)
             or len(set(symbols)) != len(symbols)
-            or any(
-                pair.quote != "USDT" or pair.base not in ("BTC", "ETH", "SOL", "XRP", "DOGE")
-                for pair in symbols
-            )
+            or any((pair.base, pair.quote) not in PAIRS for pair in symbols)
         ):
             raise ValueError("unsupported public feed symbols")
         attempt = 0

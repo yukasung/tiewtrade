@@ -40,7 +40,7 @@ async def acquire(session: MarketDataSession, owner: UUID) -> PreviewLease | Non
             await session.execute(
                 """UPDATE market_candle_feed_state SET owner=:owner,
       epoch=epoch+1,lease_until=clock_timestamp()+interval '20 seconds',connected=false,
-      failure_code='RECOVERING'
+      bootstrapped=false,failure_code='RECOVERING'
       WHERE source=:source AND lease_until<=clock_timestamp() RETURNING epoch""",
                 {"owner": owner, "source": SOURCE},
             )
@@ -79,7 +79,7 @@ async def connection(
         (
             await session.execute(
                 """UPDATE market_candle_feed_state SET epoch=epoch+1,
-      connected=:connected,failure_code=:failure
+      connected=:connected,bootstrapped=false,failure_code=:failure
       WHERE source=:source RETURNING epoch""",
                 {"source": SOURCE, "connected": connected, "failure": failure},
             )
@@ -90,24 +90,37 @@ async def connection(
     return PreviewLease(lease.owner, row["epoch"])
 
 
-async def bootstrap_or_recover(session: MarketDataSession, lease: PreviewLease) -> None:
+async def bootstrap_series(
+    session: MarketDataSession, lease: PreviewLease, series: CandleSeries
+) -> None:
     await fence(session, lease)
     now = await database_now(session)
-    for base, quote in sorted(PAIRS):
-        for tf in Timeframe:
-            upper = align_floor(now, tf)
-            lower = align_ceil(retention_cutoff(now, tf), tf)
-            last = (
-                await session.execute(
-                    """SELECT max(open_at) FROM market_candles
-              WHERE source=:source AND base=:base AND quote=:quote AND timeframe=:timeframe
-                AND fetch_started_at>=end_at""",
-                    parameters(base, quote, tf),
-                )
-            ).scalar_one()
-            start = max(lower, last if last is not None else advance(upper, tf, -1000))
-            if start < upper:
-                await coalesce_demand(session, base, quote, tf, CandleWindow(start, upper))
+    upper = align_floor(now, series.timeframe)
+    lower = align_ceil(retention_cutoff(now, series.timeframe), series.timeframe)
+    last = (
+        await session.execute(
+            """SELECT max(open_at) FROM market_candles
+      WHERE source=:source AND base=:base AND quote=:quote AND timeframe=:timeframe
+        AND fetch_started_at>=end_at""",
+            parameters(series.base, series.quote, series.timeframe),
+        )
+    ).scalar_one()
+    start = max(
+        lower,
+        last if last is not None else advance(upper, series.timeframe, -1000),
+    )
+    if start < upper:
+        await coalesce_demand(
+            session,
+            series.base,
+            series.quote,
+            series.timeframe,
+            CandleWindow(start, upper),
+        )
+
+
+async def complete_bootstrap(session: MarketDataSession, lease: PreviewLease) -> None:
+    await fence(session, lease)
     await session.execute(
         """UPDATE market_candle_feed_state SET bootstrapped=true
       WHERE source=:source""",

@@ -115,17 +115,20 @@ def signature(body: dict[str, Any]) -> str:
 
 async def dirty_burst(migrator: AsyncEngine, source: AsyncEngine) -> list[RowMapping]:
     async with migrator.connect() as c:
-        generations = list(
-            (
-                await c.execute(
-                    text(
-                        "SELECT g.* FROM indicator_ready_heads h "
-                        "JOIN indicator_generations g ON g.id=h.generation_id"
-                    )
+        rows = (
+            await c.execute(
+                text(
+                    "SELECT g.* FROM indicator_ready_heads h "
+                    "JOIN indicator_generations g ON g.id=h.generation_id"
                 )
-            ).mappings()
-        )
-    assert len(generations) == 40
+            )
+        ).mappings()
+        generations = [
+            generation
+            for generation in rows
+            if (generation["base"], Timeframe(generation["timeframe"])) in SERIES
+        ]
+    assert len(generations) == len(SERIES)
     async with market_data_session(source) as session:
         await session.execute("SELECT begin_indicator_source_write()")
         for g in generations:
@@ -415,7 +418,7 @@ async def run(
                     round(monotonic() - started),
                     "seconds; valid",
                     sum(s["valid"] for s in ready),
-                    "/30",
+                    "/" + str(len(ready)),
                 )
             metadata = {"seconds": monotonic() - started, **await snapshot(migrator)}
             save(output / "latest-metadata.json", metadata)

@@ -84,9 +84,10 @@ async def test_cleanup_removes_only_expired_observations() -> None:
         await engine.dispose()
 
 
-async def test_direct_db_rejects_unsupported_series() -> None:
+@pytest.mark.parametrize("base", ["SOL", "XRP", "DOGE", "UNSUPPORTED"])
+async def test_direct_db_rejects_unsupported_series(base: str) -> None:
     with pytest.raises(ValueRejectedError):
-        await insert_raw("1", base="UNSUPPORTED")
+        await insert_raw("1", base=base)
 
 
 async def test_active_fetch_unit_requires_both_bounds() -> None:

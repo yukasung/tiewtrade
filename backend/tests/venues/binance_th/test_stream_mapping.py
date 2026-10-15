@@ -88,13 +88,13 @@ def test_trade_ids_match_the_persistence_range(kind: str, trade_id: int) -> None
         assert result.trade_id == trade_id
 
 
-def test_recorded_public_rest_and_stream_contract_covers_all_five_pairs() -> None:
+def test_recorded_public_rest_and_stream_contract_covers_supported_pairs() -> None:
     import json
     from pathlib import Path
 
     fixtures = Path(__file__).parents[4] / "specs/research/2026-10-07-f10-public-contract"
     rest = json.loads((fixtures / "01-rest-and-query-stream.json").read_text())["rest"]
-    pairs = tuple(Symbol(base, "USDT") for base in ("BTC", "ETH", "SOL", "XRP", "DOGE"))
+    pairs = tuple(Symbol(base, "USDT") for base in ("BTC", "ETH"))
     for pair in pairs:
         response = rest[f"{pair.base}USDT"]
         quote = stream_mapping.quote_from_trades(
@@ -106,9 +106,10 @@ def test_recorded_public_rest_and_stream_contract_covers_all_five_pairs() -> Non
         assert quote.amount == Money.of(response["payload"][-1]["price"], "USDT")
     frames = json.loads((fixtures / "03-all-pairs.json").read_text())["frames"]
     observed = set()
+    supported_symbols = {f"{pair.base}{pair.quote}" for pair in pairs}
     for frame in frames:
         payload = frame["payload"]
-        if "stream" not in payload:
+        if "stream" not in payload or payload["data"]["s"] not in supported_symbols:
             continue
         quote = stream_mapping.quote_from_stream(
             payload=payload,

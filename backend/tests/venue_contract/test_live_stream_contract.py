@@ -5,6 +5,7 @@ from datetime import UTC, datetime
 
 import pytest
 
+from tiewtrade.core.market_catalog import SUPPORTED_BASES
 from tiewtrade.venues.binance_th.stream_transport import BinanceThStreamTransport
 from tiewtrade.venues.price_streams import FeedConnected, FeedDisconnected, FeedQuote
 from tiewtrade.venues.symbols import Symbol
@@ -12,8 +13,8 @@ from tiewtrade.venues.symbols import Symbol
 pytestmark = pytest.mark.venue_contract
 
 
-async def test_public_trade_stream_has_ack_and_all_five_pairs_within_capture() -> None:
-    pairs = tuple(Symbol(base, "USDT") for base in ("BTC", "ETH", "SOL", "XRP", "DOGE"))
+async def test_public_trade_stream_has_ack_and_supported_pairs_within_capture() -> None:
+    pairs = tuple(Symbol(base, "USDT") for base in SUPPORTED_BASES)
     events = BinanceThStreamTransport(clock=lambda: datetime.now(UTC)).connection(
         pairs, generation=1
     )

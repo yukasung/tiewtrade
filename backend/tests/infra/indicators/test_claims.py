@@ -36,6 +36,7 @@ from tiewtrade.infra.indicators.claims import (
 from tiewtrade.infra.indicators.pinned import pinned_indicator_writer
 from tiewtrade.infra.indicators.session import indicator_writer_session
 from tiewtrade.infra.indicators.source import begin_source_write
+from tiewtrade.infra.market_data.catalog import PAIRS
 
 
 @pytest_asyncio.fixture
@@ -230,7 +231,7 @@ async def test_seed_fixed_catalog_and_exclusive_claim(
 ) -> None:
     async with pinned_indicator_writer(builder_engine, connection_mode="direct") as first:
         assert first is not None
-        assert await first.seed() == 40
+        assert await first.seed() == len(PAIRS) * len(Timeframe)
         assert await first.seed() == 0
         claim = await first.claim(uuid4())
         assert claim is not None
@@ -279,7 +280,7 @@ async def test_retired_v1_job_is_never_claimed_by_v2_builder(
         )
     async with pinned_indicator_writer(builder_engine, connection_mode="direct") as writer:
         assert writer is not None
-        assert await writer.seed() == 40
+        assert await writer.seed() == len(PAIRS) * len(Timeframe)
         claim = await writer.claim(uuid4())
         assert claim is not None and claim.formula_version == "indicators-v2"
         await writer.finish(AttemptOutcome.SOURCE_CHANGED)
@@ -328,7 +329,7 @@ async def test_seed_bounds_are_utc_and_do_not_leak_session_timezone(
 ) -> None:
     async with indicator_writer_session(builder_engine) as session:
         await session.execute("SELECT set_config('TimeZone','America/New_York',true)")
-        assert await seed_jobs(session) == 40
+        assert await seed_jobs(session) == len(PAIRS) * len(Timeframe)
         assert (await session.execute("SHOW TimeZone")).scalar_one() == "America/New_York"
     async with migrator_engine.connect() as connection:
         rows = (await connection.execute(text("SELECT * FROM indicator_build_jobs"))).mappings()
@@ -381,7 +382,7 @@ async def test_durable_fair_round_serves_other_series_before_retry(
     async with migrator_engine.begin() as connection:
         await connection.execute(
             text("""UPDATE indicator_build_jobs SET status='FAILED_OPERATIONAL'
-            WHERE id<>:a AND NOT (base='DOGE' AND timeframe='1m')"""),
+            WHERE id<>:a AND NOT (base='ETH' AND timeframe='1m')"""),
             {"a": a.job_id},
         )
         await connection.execute(
@@ -393,7 +394,7 @@ async def test_durable_fair_round_serves_other_series_before_retry(
     async with pinned_indicator_writer(builder_engine, connection_mode="direct") as writer:
         assert writer is not None
         b = await writer.claim(uuid4())
-        assert b is not None and b.base == "DOGE" and b.dispatch_round == a.dispatch_round
+        assert b is not None and b.base == "ETH" and b.dispatch_round == a.dispatch_round
         await writer.finish(AttemptOutcome.TRANSIENT)
     async with pinned_indicator_writer(builder_engine, connection_mode="direct") as writer:
         assert writer is not None

@@ -122,7 +122,7 @@ def report(phase: Path, metrics: Path) -> None:
                 ],
             }
         )
-    complete = len(rows) == 40 and all(
+    complete = len(rows) == len(SERIES) and all(
         row["claims"] and all(c["first_eligible_at"] and c["published_at"] for c in row["claims"])
         for row in rows
     )

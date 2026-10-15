@@ -1,5 +1,9 @@
 # F-12 — กราฟแท่งเทียนบนหน้าเว็บ — Requirements
 
+**Pair-scope amendment — Approved 2026-10-15:** F-38 แทนรายการ 5 คู่ใน baseline
+ด้วย BTCUSDT และ ETHUSDT เท่านั้น รวม 16 live candle series; BTCUSDT ยังเป็นค่าเริ่มต้น
+และกฎ history/finality/exact OHLCV/live update เดิมไม่เปลี่ยน
+
 ## Amendment — ช่วงประวัติที่เลื่อนดูได้ (Approved 2026-10-14)
 
 เจ้าของอนุมัติให้ `1m`–`1d` ดูย้อนหลังสามเดือนปฏิทิน และ `1w`/`1M`

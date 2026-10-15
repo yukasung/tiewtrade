@@ -1,0 +1,310 @@
+{
+  "R2-C2": "PASSED",
+  "T0": "2026-10-14 16:28:01.145484+00:00",
+  "recovered_seconds": 0.06300000000010186,
+  "measured_seconds": 3600.0159999999996,
+  "failure": null,
+  "series": [
+    {
+      "base": "BTC",
+      "timeframe": "1m",
+      "valid_samples": 360,
+      "first_correct_200_seconds": 0.3289999999997235,
+      "scheduled_samples": 360,
+      "correct_probes": 60,
+      "scheduled_probes": 60,
+      "passed": true
+    },
+    {
+      "base": "BTC",
+      "timeframe": "5m",
+      "valid_samples": 360,
+      "first_correct_200_seconds": 0.46899999999914144,
+      "scheduled_samples": 360,
+      "correct_probes": 60,
+      "scheduled_probes": 60,
+      "passed": true
+    },
+    {
+      "base": "BTC",
+      "timeframe": "15m",
+      "valid_samples": 360,
+      "first_correct_200_seconds": 0.6720000000004802,
+      "scheduled_samples": 360,
+      "correct_probes": 60,
+      "scheduled_probes": 60,
+      "passed": true
+    },
+    {
+      "base": "BTC",
+      "timeframe": "1h",
+      "valid_samples": 360,
+      "first_correct_200_seconds": 0.8600000000005821,
+      "scheduled_samples": 360,
+      "correct_probes": 60,
+      "scheduled_probes": 60,
+      "passed": true
+    },
+    {
+      "base": "BTC",
+      "timeframe": "4h",
+      "valid_samples": 360,
+      "first_correct_200_seconds": 1.0159999999996217,
+      "scheduled_samples": 360,
+      "correct_probes": 60,
+      "scheduled_probes": 60,
+      "passed": true
+    },
+    {
+      "base": "BTC",
+      "timeframe": "1d",
+      "valid_samples": 360,
+      "first_correct_200_seconds": 1.0939999999991414,
+      "scheduled_samples": 360,
+      "correct_probes": 60,
+      "scheduled_probes": 60,
+      "passed": true
+    },
+    {
+      "base": "DOGE",
+      "timeframe": "1m",
+      "valid_samples": 360,
+      "first_correct_200_seconds": 1.3289999999997235,
+      "scheduled_samples": 360,
+      "correct_probes": 60,
+      "scheduled_probes": 60,
+      "passed": true
+    },
+    {
+      "base": "DOGE",
+      "timeframe": "5m",
+      "valid_samples": 360,
+      "first_correct_200_seconds": 1.4689999999991414,
+      "scheduled_samples": 360,
+      "correct_probes": 60,
+      "scheduled_probes": 60,
+      "passed": true
+    },
+    {
+      "base": "DOGE",
+      "timeframe": "15m",
+      "valid_samples": 360,
+      "first_correct_200_seconds": 1.6569999999992433,
+      "scheduled_samples": 360,
+      "correct_probes": 60,
+      "scheduled_probes": 60,
+      "passed": true
+    },
+    {
+      "base": "DOGE",
+      "timeframe": "1h",
+      "valid_samples": 360,
+      "first_correct_200_seconds": 1.8439999999991414,
+      "scheduled_samples": 360,
+      "correct_probes": 60,
+      "scheduled_probes": 60,
+      "passed": true
+    },
+    {
+      "base": "DOGE",
+      "timeframe": "4h",
+      "valid_samples": 360,
+      "first_correct_200_seconds": 2.0,
+      "scheduled_samples": 360,
+      "correct_probes": 60,
+      "scheduled_probes": 60,
+      "passed": true
+    },
+    {
+      "base": "DOGE",
+      "timeframe": "1d",
+      "valid_samples": 360,
+      "first_correct_200_seconds": 2.0789999999997235,
+      "scheduled_samples": 360,
+      "correct_probes": 60,
+      "scheduled_probes": 60,
+      "passed": true
+    },
+    {
+      "base": "ETH",
+      "timeframe": "1m",
+      "valid_samples": 360,
+      "first_correct_200_seconds": 2.2819999999992433,
+      "scheduled_samples": 360,
+      "correct_probes": 60,
+      "scheduled_probes": 60,
+      "passed": true
+    },
+    {
+      "base": "ETH",
+      "timeframe": "5m",
+      "valid_samples": 360,
+      "first_correct_200_seconds": 2.42200000000048,
+      "scheduled_samples": 360,
+      "correct_probes": 60,
+      "scheduled_probes": 60,
+      "passed": true
+    },
+    {
+      "base": "ETH",
+      "timeframe": "15m",
+      "valid_samples": 360,
+      "first_correct_200_seconds": 2.610000000000582,
+      "scheduled_samples": 360,
+      "correct_probes": 60,
+      "scheduled_probes": 60,
+      "passed": true
+    },
+    {
+      "base": "ETH",
+      "timeframe": "1h",
+      "valid_samples": 360,
+      "first_correct_200_seconds": 2.79700000000048,
+      "scheduled_samples": 360,
+      "correct_probes": 60,
+      "scheduled_probes": 60,
+      "passed": true
+    },
+    {
+      "base": "ETH",
+      "timeframe": "4h",
+      "valid_samples": 360,
+      "first_correct_200_seconds": 2.9539999999997235,
+      "scheduled_samples": 360,
+      "correct_probes": 60,
+      "scheduled_probes": 60,
+      "passed": true
+    },
+    {
+      "base": "ETH",
+      "timeframe": "1d",
+      "valid_samples": 360,
+      "first_correct_200_seconds": 3.0159999999996217,
+      "scheduled_samples": 360,
+      "correct_probes": 60,
+      "scheduled_probes": 60,
+      "passed": true
+    },
+    {
+      "base": "SOL",
+      "timeframe": "1m",
+      "valid_samples": 360,
+      "first_correct_200_seconds": 3.235000000000582,
+      "scheduled_samples": 360,
+      "correct_probes": 60,
+      "scheduled_probes": 60,
+      "passed": true
+    },
+    {
+      "base": "SOL",
+      "timeframe": "5m",
+      "valid_samples": 360,
+      "first_correct_200_seconds": 3.375,
+      "scheduled_samples": 360,
+      "correct_probes": 60,
+      "scheduled_probes": 60,
+      "passed": true
+    },
+    {
+      "base": "SOL",
+      "timeframe": "15m",
+      "valid_samples": 360,
+      "first_correct_200_seconds": 3.563000000000102,
+      "scheduled_samples": 360,
+      "correct_probes": 60,
+      "scheduled_probes": 60,
+      "passed": true
+    },
+    {
+      "base": "SOL",
+      "timeframe": "1h",
+      "valid_samples": 360,
+      "first_correct_200_seconds": 3.7659999999996217,
+      "scheduled_samples": 360,
+      "correct_probes": 60,
+      "scheduled_probes": 60,
+      "passed": true
+    },
+    {
+      "base": "SOL",
+      "timeframe": "4h",
+      "valid_samples": 360,
+      "first_correct_200_seconds": 3.92200000000048,
+      "scheduled_samples": 360,
+      "correct_probes": 60,
+      "scheduled_probes": 60,
+      "passed": true
+    },
+    {
+      "base": "SOL",
+      "timeframe": "1d",
+      "valid_samples": 360,
+      "first_correct_200_seconds": 4.0,
+      "scheduled_samples": 360,
+      "correct_probes": 60,
+      "scheduled_probes": 60,
+      "passed": true
+    },
+    {
+      "base": "XRP",
+      "timeframe": "1m",
+      "valid_samples": 360,
+      "first_correct_200_seconds": 4.218999999999141,
+      "scheduled_samples": 360,
+      "correct_probes": 60,
+      "scheduled_probes": 60,
+      "passed": true
+    },
+    {
+      "base": "XRP",
+      "timeframe": "5m",
+      "valid_samples": 360,
+      "first_correct_200_seconds": 4.360000000000582,
+      "scheduled_samples": 360,
+      "correct_probes": 60,
+      "scheduled_probes": 60,
+      "passed": true
+    },
+    {
+      "base": "XRP",
+      "timeframe": "15m",
+      "valid_samples": 360,
+      "first_correct_200_seconds": 4.515999999999622,
+      "scheduled_samples": 360,
+      "correct_probes": 60,
+      "scheduled_probes": 60,
+      "passed": true
+    },
+    {
+      "base": "XRP",
+      "timeframe": "1h",
+      "valid_samples": 360,
+      "first_correct_200_seconds": 4.718999999999141,
+      "scheduled_samples": 360,
+      "correct_probes": 60,
+      "scheduled_probes": 60,
+      "passed": true
+    },
+    {
+      "base": "XRP",
+      "timeframe": "4h",
+      "valid_samples": 360,
+      "first_correct_200_seconds": 4.860000000000582,
+      "scheduled_samples": 360,
+      "correct_probes": 60,
+      "scheduled_probes": 60,
+      "passed": true
+    },
+    {
+      "base": "XRP",
+      "timeframe": "1d",
+      "valid_samples": 360,
+      "first_correct_200_seconds": 4.938000000000102,
+      "scheduled_samples": 360,
+      "correct_probes": 60,
+      "scheduled_probes": 60,
+      "passed": true
+    }
+  ],
+  "note": "Early failure is not a completed 60-minute acceptance run."
+}

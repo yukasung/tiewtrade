@@ -3,6 +3,7 @@ from collections.abc import Iterator
 
 import pytest
 from fastapi.testclient import TestClient
+from sqlalchemy import text
 
 from tests.api.conftest import csrf_headers, register
 from tiewtrade.infra.db import DatabaseRole, create_engine_for
@@ -69,7 +70,7 @@ def test_chart_pages_cover_three_months_with_bounded_pages(
 
 def test_read_and_request_need_no_totp(client: TestClient) -> None:
     register(client)
-    series = {"base": "DOGE", "quote": "USDT", "timeframe": "5m"}
+    series = {"base": "ETH", "quote": "USDT", "timeframe": "5m"}
     result = client.get("/market-data/candles", params=series)
     assert result.status_code == 200, result.text
     assert result.json()["coverage"] == "INCOMPLETE"
@@ -104,6 +105,36 @@ def test_invalid_unit_returns_fixed_error(client: TestClient) -> None:
     )
     assert result.status_code == 422
     assert result.json() == {"detail": "INPUT_REJECTED"}
+
+
+@pytest.mark.parametrize("base", ["SOL", "XRP", "DOGE", "UNKNOWN"])
+def test_unsupported_pair_is_rejected_without_creating_demand(
+    client: TestClient, base: str
+) -> None:
+    register(client)
+    series = {"base": base, "quote": "USDT", "timeframe": "1m"}
+    read = client.get("/market-data/candles", params=series)
+    request = client.post(
+        "/market-data/candles/requests", json=series, headers=csrf_headers(client)
+    )
+    assert read.status_code == 422
+    assert read.json() == {"detail": "UNSUPPORTED_SERIES"}
+    assert request.status_code == 422
+    assert request.json() == {"detail": "UNSUPPORTED_SERIES"}
+
+    async def demand_count() -> int:
+        engine = create_engine_for(DatabaseRole.MARKET_DATA)
+        try:
+            async with engine.connect() as connection:
+                return int(
+                    (
+                        await connection.execute(text("SELECT count(*) FROM market_candle_demand"))
+                    ).scalar_one()
+                )
+        finally:
+            await engine.dispose()
+
+    assert asyncio.get_event_loop().run_until_complete(demand_count()) == 0
 
 
 @pytest.mark.parametrize("method", ["GET", "POST"])

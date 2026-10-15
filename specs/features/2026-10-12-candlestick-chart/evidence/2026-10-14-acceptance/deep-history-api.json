@@ -1,0 +1,840 @@
+{
+  "checked_at": "2026-10-14T18:01:55.321730+00:00",
+  "base_url": "http://127.0.0.1:18000",
+  "series_checked": 40,
+  "checks": {
+    "historical_http_status": 200,
+    "historical_coverage": "PRESENT",
+    "historical_gaps_empty": true,
+    "page_size_at_most": 1000,
+    "reached_display_start": true,
+    "page_boundaries_move_older": true,
+    "overlap_payloads_consistent": true
+  },
+  "series": [
+    {
+      "base": "BTC",
+      "quote": "USDT",
+      "timeframe": "1m",
+      "pages": 166,
+      "unique_rows": 132478,
+      "overlap_rows": 33000,
+      "freshness_waits": 0,
+      "excluded_live_tail_gaps": [
+        {
+          "start": "2026-10-14T17:59:00Z",
+          "end": "2026-10-14T18:01:00Z"
+        }
+      ],
+      "display_start": "2026-07-14T18:01:00Z",
+      "display_end": "2026-10-14T18:01:00Z",
+      "oldest_open_at": "2026-07-14T18:01:00Z",
+      "newest_open_at": "2026-10-14T17:58:00Z",
+      "coverage": "PRESENT",
+      "gaps": [],
+      "reached_display_start": true,
+      "overlap_payloads_consistent": true
+    },
+    {
+      "base": "ETH",
+      "quote": "USDT",
+      "timeframe": "1m",
+      "pages": 166,
+      "unique_rows": 132478,
+      "overlap_rows": 33000,
+      "freshness_waits": 0,
+      "excluded_live_tail_gaps": [
+        {
+          "start": "2026-10-14T17:59:00Z",
+          "end": "2026-10-14T18:01:00Z"
+        }
+      ],
+      "display_start": "2026-07-14T18:01:00Z",
+      "display_end": "2026-10-14T18:01:00Z",
+      "oldest_open_at": "2026-07-14T18:01:00Z",
+      "newest_open_at": "2026-10-14T17:58:00Z",
+      "coverage": "PRESENT",
+      "gaps": [],
+      "reached_display_start": true,
+      "overlap_payloads_consistent": true
+    },
+    {
+      "base": "SOL",
+      "quote": "USDT",
+      "timeframe": "1m",
+      "pages": 166,
+      "unique_rows": 132478,
+      "overlap_rows": 33000,
+      "freshness_waits": 0,
+      "excluded_live_tail_gaps": [
+        {
+          "start": "2026-10-14T17:59:00Z",
+          "end": "2026-10-14T18:01:00Z"
+        }
+      ],
+      "display_start": "2026-07-14T18:01:00Z",
+      "display_end": "2026-10-14T18:01:00Z",
+      "oldest_open_at": "2026-07-14T18:01:00Z",
+      "newest_open_at": "2026-10-14T17:58:00Z",
+      "coverage": "PRESENT",
+      "gaps": [],
+      "reached_display_start": true,
+      "overlap_payloads_consistent": true
+    },
+    {
+      "base": "XRP",
+      "quote": "USDT",
+      "timeframe": "1m",
+      "pages": 166,
+      "unique_rows": 132478,
+      "overlap_rows": 33000,
+      "freshness_waits": 0,
+      "excluded_live_tail_gaps": [
+        {
+          "start": "2026-10-14T17:59:00Z",
+          "end": "2026-10-14T18:01:00Z"
+        }
+      ],
+      "display_start": "2026-07-14T18:01:00Z",
+      "display_end": "2026-10-14T18:01:00Z",
+      "oldest_open_at": "2026-07-14T18:01:00Z",
+      "newest_open_at": "2026-10-14T17:58:00Z",
+      "coverage": "PRESENT",
+      "gaps": [],
+      "reached_display_start": true,
+      "overlap_payloads_consistent": true
+    },
+    {
+      "base": "DOGE",
+      "quote": "USDT",
+      "timeframe": "1m",
+      "pages": 166,
+      "unique_rows": 132478,
+      "overlap_rows": 33000,
+      "freshness_waits": 0,
+      "excluded_live_tail_gaps": [
+        {
+          "start": "2026-10-14T17:59:00Z",
+          "end": "2026-10-14T18:01:00Z"
+        }
+      ],
+      "display_start": "2026-07-14T18:01:00Z",
+      "display_end": "2026-10-14T18:01:00Z",
+      "oldest_open_at": "2026-07-14T18:01:00Z",
+      "newest_open_at": "2026-10-14T17:58:00Z",
+      "coverage": "PRESENT",
+      "gaps": [],
+      "reached_display_start": true,
+      "overlap_payloads_consistent": true
+    },
+    {
+      "base": "BTC",
+      "quote": "USDT",
+      "timeframe": "5m",
+      "pages": 33,
+      "unique_rows": 26496,
+      "overlap_rows": 6400,
+      "freshness_waits": 0,
+      "excluded_live_tail_gaps": [
+        {
+          "start": "2026-10-14T18:00:00Z",
+          "end": "2026-10-14T18:05:00Z"
+        }
+      ],
+      "display_start": "2026-07-14T18:00:00Z",
+      "display_end": "2026-10-14T18:05:00Z",
+      "oldest_open_at": "2026-07-14T18:00:00Z",
+      "newest_open_at": "2026-10-14T17:55:00Z",
+      "coverage": "PRESENT",
+      "gaps": [],
+      "reached_display_start": true,
+      "overlap_payloads_consistent": true
+    },
+    {
+      "base": "ETH",
+      "quote": "USDT",
+      "timeframe": "5m",
+      "pages": 33,
+      "unique_rows": 26496,
+      "overlap_rows": 6400,
+      "freshness_waits": 0,
+      "excluded_live_tail_gaps": [
+        {
+          "start": "2026-10-14T18:00:00Z",
+          "end": "2026-10-14T18:05:00Z"
+        }
+      ],
+      "display_start": "2026-07-14T18:00:00Z",
+      "display_end": "2026-10-14T18:05:00Z",
+      "oldest_open_at": "2026-07-14T18:00:00Z",
+      "newest_open_at": "2026-10-14T17:55:00Z",
+      "coverage": "PRESENT",
+      "gaps": [],
+      "reached_display_start": true,
+      "overlap_payloads_consistent": true
+    },
+    {
+      "base": "SOL",
+      "quote": "USDT",
+      "timeframe": "5m",
+      "pages": 33,
+      "unique_rows": 26496,
+      "overlap_rows": 6400,
+      "freshness_waits": 0,
+      "excluded_live_tail_gaps": [
+        {
+          "start": "2026-10-14T18:00:00Z",
+          "end": "2026-10-14T18:05:00Z"
+        }
+      ],
+      "display_start": "2026-07-14T18:00:00Z",
+      "display_end": "2026-10-14T18:05:00Z",
+      "oldest_open_at": "2026-07-14T18:00:00Z",
+      "newest_open_at": "2026-10-14T17:55:00Z",
+      "coverage": "PRESENT",
+      "gaps": [],
+      "reached_display_start": true,
+      "overlap_payloads_consistent": true
+    },
+    {
+      "base": "XRP",
+      "quote": "USDT",
+      "timeframe": "5m",
+      "pages": 33,
+      "unique_rows": 26496,
+      "overlap_rows": 6400,
+      "freshness_waits": 0,
+      "excluded_live_tail_gaps": [
+        {
+          "start": "2026-10-14T18:00:00Z",
+          "end": "2026-10-14T18:05:00Z"
+        }
+      ],
+      "display_start": "2026-07-14T18:00:00Z",
+      "display_end": "2026-10-14T18:05:00Z",
+      "oldest_open_at": "2026-07-14T18:00:00Z",
+      "newest_open_at": "2026-10-14T17:55:00Z",
+      "coverage": "PRESENT",
+      "gaps": [],
+      "reached_display_start": true,
+      "overlap_payloads_consistent": true
+    },
+    {
+      "base": "DOGE",
+      "quote": "USDT",
+      "timeframe": "5m",
+      "pages": 33,
+      "unique_rows": 26496,
+      "overlap_rows": 6400,
+      "freshness_waits": 0,
+      "excluded_live_tail_gaps": [
+        {
+          "start": "2026-10-14T18:00:00Z",
+          "end": "2026-10-14T18:05:00Z"
+        }
+      ],
+      "display_start": "2026-07-14T18:00:00Z",
+      "display_end": "2026-10-14T18:05:00Z",
+      "oldest_open_at": "2026-07-14T18:00:00Z",
+      "newest_open_at": "2026-10-14T17:55:00Z",
+      "coverage": "PRESENT",
+      "gaps": [],
+      "reached_display_start": true,
+      "overlap_payloads_consistent": true
+    },
+    {
+      "base": "BTC",
+      "quote": "USDT",
+      "timeframe": "15m",
+      "pages": 11,
+      "unique_rows": 8832,
+      "overlap_rows": 2000,
+      "freshness_waits": 0,
+      "excluded_live_tail_gaps": [
+        {
+          "start": "2026-10-14T18:00:00Z",
+          "end": "2026-10-14T18:15:00Z"
+        }
+      ],
+      "display_start": "2026-07-14T18:00:00Z",
+      "display_end": "2026-10-14T18:15:00Z",
+      "oldest_open_at": "2026-07-14T18:00:00Z",
+      "newest_open_at": "2026-10-14T17:45:00Z",
+      "coverage": "PRESENT",
+      "gaps": [],
+      "reached_display_start": true,
+      "overlap_payloads_consistent": true
+    },
+    {
+      "base": "ETH",
+      "quote": "USDT",
+      "timeframe": "15m",
+      "pages": 11,
+      "unique_rows": 8832,
+      "overlap_rows": 2000,
+      "freshness_waits": 0,
+      "excluded_live_tail_gaps": [
+        {
+          "start": "2026-10-14T18:00:00Z",
+          "end": "2026-10-14T18:15:00Z"
+        }
+      ],
+      "display_start": "2026-07-14T18:00:00Z",
+      "display_end": "2026-10-14T18:15:00Z",
+      "oldest_open_at": "2026-07-14T18:00:00Z",
+      "newest_open_at": "2026-10-14T17:45:00Z",
+      "coverage": "PRESENT",
+      "gaps": [],
+      "reached_display_start": true,
+      "overlap_payloads_consistent": true
+    },
+    {
+      "base": "SOL",
+      "quote": "USDT",
+      "timeframe": "15m",
+      "pages": 11,
+      "unique_rows": 8832,
+      "overlap_rows": 2000,
+      "freshness_waits": 0,
+      "excluded_live_tail_gaps": [
+        {
+          "start": "2026-10-14T18:00:00Z",
+          "end": "2026-10-14T18:15:00Z"
+        }
+      ],
+      "display_start": "2026-07-14T18:00:00Z",
+      "display_end": "2026-10-14T18:15:00Z",
+      "oldest_open_at": "2026-07-14T18:00:00Z",
+      "newest_open_at": "2026-10-14T17:45:00Z",
+      "coverage": "PRESENT",
+      "gaps": [],
+      "reached_display_start": true,
+      "overlap_payloads_consistent": true
+    },
+    {
+      "base": "XRP",
+      "quote": "USDT",
+      "timeframe": "15m",
+      "pages": 11,
+      "unique_rows": 8832,
+      "overlap_rows": 2000,
+      "freshness_waits": 0,
+      "excluded_live_tail_gaps": [
+        {
+          "start": "2026-10-14T18:00:00Z",
+          "end": "2026-10-14T18:15:00Z"
+        }
+      ],
+      "display_start": "2026-07-14T18:00:00Z",
+      "display_end": "2026-10-14T18:15:00Z",
+      "oldest_open_at": "2026-07-14T18:00:00Z",
+      "newest_open_at": "2026-10-14T17:45:00Z",
+      "coverage": "PRESENT",
+      "gaps": [],
+      "reached_display_start": true,
+      "overlap_payloads_consistent": true
+    },
+    {
+      "base": "DOGE",
+      "quote": "USDT",
+      "timeframe": "15m",
+      "pages": 11,
+      "unique_rows": 8832,
+      "overlap_rows": 2000,
+      "freshness_waits": 0,
+      "excluded_live_tail_gaps": [
+        {
+          "start": "2026-10-14T18:00:00Z",
+          "end": "2026-10-14T18:15:00Z"
+        }
+      ],
+      "display_start": "2026-07-14T18:00:00Z",
+      "display_end": "2026-10-14T18:15:00Z",
+      "oldest_open_at": "2026-07-14T18:00:00Z",
+      "newest_open_at": "2026-10-14T17:45:00Z",
+      "coverage": "PRESENT",
+      "gaps": [],
+      "reached_display_start": true,
+      "overlap_payloads_consistent": true
+    },
+    {
+      "base": "BTC",
+      "quote": "USDT",
+      "timeframe": "1h",
+      "pages": 3,
+      "unique_rows": 2208,
+      "overlap_rows": 400,
+      "freshness_waits": 0,
+      "excluded_live_tail_gaps": [
+        {
+          "start": "2026-10-14T18:00:00Z",
+          "end": "2026-10-14T19:00:00Z"
+        }
+      ],
+      "display_start": "2026-07-14T18:00:00Z",
+      "display_end": "2026-10-14T19:00:00Z",
+      "oldest_open_at": "2026-07-14T18:00:00Z",
+      "newest_open_at": "2026-10-14T17:00:00Z",
+      "coverage": "PRESENT",
+      "gaps": [],
+      "reached_display_start": true,
+      "overlap_payloads_consistent": true
+    },
+    {
+      "base": "ETH",
+      "quote": "USDT",
+      "timeframe": "1h",
+      "pages": 3,
+      "unique_rows": 2208,
+      "overlap_rows": 400,
+      "freshness_waits": 0,
+      "excluded_live_tail_gaps": [
+        {
+          "start": "2026-10-14T18:00:00Z",
+          "end": "2026-10-14T19:00:00Z"
+        }
+      ],
+      "display_start": "2026-07-14T18:00:00Z",
+      "display_end": "2026-10-14T19:00:00Z",
+      "oldest_open_at": "2026-07-14T18:00:00Z",
+      "newest_open_at": "2026-10-14T17:00:00Z",
+      "coverage": "PRESENT",
+      "gaps": [],
+      "reached_display_start": true,
+      "overlap_payloads_consistent": true
+    },
+    {
+      "base": "SOL",
+      "quote": "USDT",
+      "timeframe": "1h",
+      "pages": 3,
+      "unique_rows": 2208,
+      "overlap_rows": 400,
+      "freshness_waits": 0,
+      "excluded_live_tail_gaps": [
+        {
+          "start": "2026-10-14T18:00:00Z",
+          "end": "2026-10-14T19:00:00Z"
+        }
+      ],
+      "display_start": "2026-07-14T18:00:00Z",
+      "display_end": "2026-10-14T19:00:00Z",
+      "oldest_open_at": "2026-07-14T18:00:00Z",
+      "newest_open_at": "2026-10-14T17:00:00Z",
+      "coverage": "PRESENT",
+      "gaps": [],
+      "reached_display_start": true,
+      "overlap_payloads_consistent": true
+    },
+    {
+      "base": "XRP",
+      "quote": "USDT",
+      "timeframe": "1h",
+      "pages": 3,
+      "unique_rows": 2208,
+      "overlap_rows": 400,
+      "freshness_waits": 0,
+      "excluded_live_tail_gaps": [
+        {
+          "start": "2026-10-14T18:00:00Z",
+          "end": "2026-10-14T19:00:00Z"
+        }
+      ],
+      "display_start": "2026-07-14T18:00:00Z",
+      "display_end": "2026-10-14T19:00:00Z",
+      "oldest_open_at": "2026-07-14T18:00:00Z",
+      "newest_open_at": "2026-10-14T17:00:00Z",
+      "coverage": "PRESENT",
+      "gaps": [],
+      "reached_display_start": true,
+      "overlap_payloads_consistent": true
+    },
+    {
+      "base": "DOGE",
+      "quote": "USDT",
+      "timeframe": "1h",
+      "pages": 3,
+      "unique_rows": 2208,
+      "overlap_rows": 400,
+      "freshness_waits": 0,
+      "excluded_live_tail_gaps": [
+        {
+          "start": "2026-10-14T18:00:00Z",
+          "end": "2026-10-14T19:00:00Z"
+        }
+      ],
+      "display_start": "2026-07-14T18:00:00Z",
+      "display_end": "2026-10-14T19:00:00Z",
+      "oldest_open_at": "2026-07-14T18:00:00Z",
+      "newest_open_at": "2026-10-14T17:00:00Z",
+      "coverage": "PRESENT",
+      "gaps": [],
+      "reached_display_start": true,
+      "overlap_payloads_consistent": true
+    },
+    {
+      "base": "BTC",
+      "quote": "USDT",
+      "timeframe": "4h",
+      "pages": 1,
+      "unique_rows": 553,
+      "overlap_rows": 0,
+      "freshness_waits": 0,
+      "excluded_live_tail_gaps": [],
+      "display_start": "2026-07-14T16:00:00Z",
+      "display_end": "2026-10-14T20:00:00Z",
+      "oldest_open_at": "2026-07-14T16:00:00Z",
+      "newest_open_at": "2026-10-14T16:00:00Z",
+      "coverage": "PRESENT",
+      "gaps": [],
+      "reached_display_start": true,
+      "overlap_payloads_consistent": true
+    },
+    {
+      "base": "ETH",
+      "quote": "USDT",
+      "timeframe": "4h",
+      "pages": 1,
+      "unique_rows": 553,
+      "overlap_rows": 0,
+      "freshness_waits": 0,
+      "excluded_live_tail_gaps": [],
+      "display_start": "2026-07-14T16:00:00Z",
+      "display_end": "2026-10-14T20:00:00Z",
+      "oldest_open_at": "2026-07-14T16:00:00Z",
+      "newest_open_at": "2026-10-14T16:00:00Z",
+      "coverage": "PRESENT",
+      "gaps": [],
+      "reached_display_start": true,
+      "overlap_payloads_consistent": true
+    },
+    {
+      "base": "SOL",
+      "quote": "USDT",
+      "timeframe": "4h",
+      "pages": 1,
+      "unique_rows": 553,
+      "overlap_rows": 0,
+      "freshness_waits": 0,
+      "excluded_live_tail_gaps": [],
+      "display_start": "2026-07-14T16:00:00Z",
+      "display_end": "2026-10-14T20:00:00Z",
+      "oldest_open_at": "2026-07-14T16:00:00Z",
+      "newest_open_at": "2026-10-14T16:00:00Z",
+      "coverage": "PRESENT",
+      "gaps": [],
+      "reached_display_start": true,
+      "overlap_payloads_consistent": true
+    },
+    {
+      "base": "XRP",
+      "quote": "USDT",
+      "timeframe": "4h",
+      "pages": 1,
+      "unique_rows": 553,
+      "overlap_rows": 0,
+      "freshness_waits": 0,
+      "excluded_live_tail_gaps": [],
+      "display_start": "2026-07-14T16:00:00Z",
+      "display_end": "2026-10-14T20:00:00Z",
+      "oldest_open_at": "2026-07-14T16:00:00Z",
+      "newest_open_at": "2026-10-14T16:00:00Z",
+      "coverage": "PRESENT",
+      "gaps": [],
+      "reached_display_start": true,
+      "overlap_payloads_consistent": true
+    },
+    {
+      "base": "DOGE",
+      "quote": "USDT",
+      "timeframe": "4h",
+      "pages": 1,
+      "unique_rows": 553,
+      "overlap_rows": 0,
+      "freshness_waits": 0,
+      "excluded_live_tail_gaps": [],
+      "display_start": "2026-07-14T16:00:00Z",
+      "display_end": "2026-10-14T20:00:00Z",
+      "oldest_open_at": "2026-07-14T16:00:00Z",
+      "newest_open_at": "2026-10-14T16:00:00Z",
+      "coverage": "PRESENT",
+      "gaps": [],
+      "reached_display_start": true,
+      "overlap_payloads_consistent": true
+    },
+    {
+      "base": "BTC",
+      "quote": "USDT",
+      "timeframe": "1d",
+      "pages": 1,
+      "unique_rows": 93,
+      "overlap_rows": 0,
+      "freshness_waits": 0,
+      "excluded_live_tail_gaps": [],
+      "display_start": "2026-07-14T00:00:00Z",
+      "display_end": "2026-10-15T00:00:00Z",
+      "oldest_open_at": "2026-07-14T00:00:00Z",
+      "newest_open_at": "2026-10-14T00:00:00Z",
+      "coverage": "PRESENT",
+      "gaps": [],
+      "reached_display_start": true,
+      "overlap_payloads_consistent": true
+    },
+    {
+      "base": "ETH",
+      "quote": "USDT",
+      "timeframe": "1d",
+      "pages": 1,
+      "unique_rows": 93,
+      "overlap_rows": 0,
+      "freshness_waits": 0,
+      "excluded_live_tail_gaps": [],
+      "display_start": "2026-07-14T00:00:00Z",
+      "display_end": "2026-10-15T00:00:00Z",
+      "oldest_open_at": "2026-07-14T00:00:00Z",
+      "newest_open_at": "2026-10-14T00:00:00Z",
+      "coverage": "PRESENT",
+      "gaps": [],
+      "reached_display_start": true,
+      "overlap_payloads_consistent": true
+    },
+    {
+      "base": "SOL",
+      "quote": "USDT",
+      "timeframe": "1d",
+      "pages": 1,
+      "unique_rows": 93,
+      "overlap_rows": 0,
+      "freshness_waits": 0,
+      "excluded_live_tail_gaps": [],
+      "display_start": "2026-07-14T00:00:00Z",
+      "display_end": "2026-10-15T00:00:00Z",
+      "oldest_open_at": "2026-07-14T00:00:00Z",
+      "newest_open_at": "2026-10-14T00:00:00Z",
+      "coverage": "PRESENT",
+      "gaps": [],
+      "reached_display_start": true,
+      "overlap_payloads_consistent": true
+    },
+    {
+      "base": "XRP",
+      "quote": "USDT",
+      "timeframe": "1d",
+      "pages": 1,
+      "unique_rows": 93,
+      "overlap_rows": 0,
+      "freshness_waits": 0,
+      "excluded_live_tail_gaps": [],
+      "display_start": "2026-07-14T00:00:00Z",
+      "display_end": "2026-10-15T00:00:00Z",
+      "oldest_open_at": "2026-07-14T00:00:00Z",
+      "newest_open_at": "2026-10-14T00:00:00Z",
+      "coverage": "PRESENT",
+      "gaps": [],
+      "reached_display_start": true,
+      "overlap_payloads_consistent": true
+    },
+    {
+      "base": "DOGE",
+      "quote": "USDT",
+      "timeframe": "1d",
+      "pages": 1,
+      "unique_rows": 93,
+      "overlap_rows": 0,
+      "freshness_waits": 0,
+      "excluded_live_tail_gaps": [],
+      "display_start": "2026-07-14T00:00:00Z",
+      "display_end": "2026-10-15T00:00:00Z",
+      "oldest_open_at": "2026-07-14T00:00:00Z",
+      "newest_open_at": "2026-10-14T00:00:00Z",
+      "coverage": "PRESENT",
+      "gaps": [],
+      "reached_display_start": true,
+      "overlap_payloads_consistent": true
+    },
+    {
+      "base": "BTC",
+      "quote": "USDT",
+      "timeframe": "1w",
+      "pages": 1,
+      "unique_rows": 479,
+      "overlap_rows": 0,
+      "freshness_waits": 0,
+      "excluded_live_tail_gaps": [],
+      "display_start": "2017-08-14T00:00:00Z",
+      "display_end": "2026-10-19T00:00:00Z",
+      "oldest_open_at": "2017-08-14T00:00:00Z",
+      "newest_open_at": "2026-10-12T00:00:00Z",
+      "coverage": "PRESENT",
+      "gaps": [],
+      "reached_display_start": true,
+      "overlap_payloads_consistent": true
+    },
+    {
+      "base": "ETH",
+      "quote": "USDT",
+      "timeframe": "1w",
+      "pages": 1,
+      "unique_rows": 479,
+      "overlap_rows": 0,
+      "freshness_waits": 0,
+      "excluded_live_tail_gaps": [],
+      "display_start": "2017-08-14T00:00:00Z",
+      "display_end": "2026-10-19T00:00:00Z",
+      "oldest_open_at": "2017-08-14T00:00:00Z",
+      "newest_open_at": "2026-10-12T00:00:00Z",
+      "coverage": "PRESENT",
+      "gaps": [],
+      "reached_display_start": true,
+      "overlap_payloads_consistent": true
+    },
+    {
+      "base": "SOL",
+      "quote": "USDT",
+      "timeframe": "1w",
+      "pages": 1,
+      "unique_rows": 323,
+      "overlap_rows": 0,
+      "freshness_waits": 0,
+      "excluded_live_tail_gaps": [],
+      "display_start": "2020-08-10T00:00:00Z",
+      "display_end": "2026-10-19T00:00:00Z",
+      "oldest_open_at": "2020-08-10T00:00:00Z",
+      "newest_open_at": "2026-10-12T00:00:00Z",
+      "coverage": "PRESENT",
+      "gaps": [],
+      "reached_display_start": true,
+      "overlap_payloads_consistent": true
+    },
+    {
+      "base": "XRP",
+      "quote": "USDT",
+      "timeframe": "1w",
+      "pages": 1,
+      "unique_rows": 442,
+      "overlap_rows": 0,
+      "freshness_waits": 0,
+      "excluded_live_tail_gaps": [],
+      "display_start": "2018-04-30T00:00:00Z",
+      "display_end": "2026-10-19T00:00:00Z",
+      "oldest_open_at": "2018-04-30T00:00:00Z",
+      "newest_open_at": "2026-10-12T00:00:00Z",
+      "coverage": "PRESENT",
+      "gaps": [],
+      "reached_display_start": true,
+      "overlap_payloads_consistent": true
+    },
+    {
+      "base": "DOGE",
+      "quote": "USDT",
+      "timeframe": "1w",
+      "pages": 1,
+      "unique_rows": 381,
+      "overlap_rows": 0,
+      "freshness_waits": 0,
+      "excluded_live_tail_gaps": [],
+      "display_start": "2019-07-01T00:00:00Z",
+      "display_end": "2026-10-19T00:00:00Z",
+      "oldest_open_at": "2019-07-01T00:00:00Z",
+      "newest_open_at": "2026-10-12T00:00:00Z",
+      "coverage": "PRESENT",
+      "gaps": [],
+      "reached_display_start": true,
+      "overlap_payloads_consistent": true
+    },
+    {
+      "base": "BTC",
+      "quote": "USDT",
+      "timeframe": "1M",
+      "pages": 1,
+      "unique_rows": 111,
+      "overlap_rows": 0,
+      "freshness_waits": 0,
+      "excluded_live_tail_gaps": [],
+      "display_start": "2017-08-01T00:00:00Z",
+      "display_end": "2026-11-01T00:00:00Z",
+      "oldest_open_at": "2017-08-01T00:00:00Z",
+      "newest_open_at": "2026-10-01T00:00:00Z",
+      "coverage": "PRESENT",
+      "gaps": [],
+      "reached_display_start": true,
+      "overlap_payloads_consistent": true
+    },
+    {
+      "base": "ETH",
+      "quote": "USDT",
+      "timeframe": "1M",
+      "pages": 1,
+      "unique_rows": 111,
+      "overlap_rows": 0,
+      "freshness_waits": 0,
+      "excluded_live_tail_gaps": [],
+      "display_start": "2017-08-01T00:00:00Z",
+      "display_end": "2026-11-01T00:00:00Z",
+      "oldest_open_at": "2017-08-01T00:00:00Z",
+      "newest_open_at": "2026-10-01T00:00:00Z",
+      "coverage": "PRESENT",
+      "gaps": [],
+      "reached_display_start": true,
+      "overlap_payloads_consistent": true
+    },
+    {
+      "base": "SOL",
+      "quote": "USDT",
+      "timeframe": "1M",
+      "pages": 1,
+      "unique_rows": 75,
+      "overlap_rows": 0,
+      "freshness_waits": 0,
+      "excluded_live_tail_gaps": [],
+      "display_start": "2020-08-01T00:00:00Z",
+      "display_end": "2026-11-01T00:00:00Z",
+      "oldest_open_at": "2020-08-01T00:00:00Z",
+      "newest_open_at": "2026-10-01T00:00:00Z",
+      "coverage": "PRESENT",
+      "gaps": [],
+      "reached_display_start": true,
+      "overlap_payloads_consistent": true
+    },
+    {
+      "base": "XRP",
+      "quote": "USDT",
+      "timeframe": "1M",
+      "pages": 1,
+      "unique_rows": 102,
+      "overlap_rows": 0,
+      "freshness_waits": 0,
+      "excluded_live_tail_gaps": [],
+      "display_start": "2018-05-01T00:00:00Z",
+      "display_end": "2026-11-01T00:00:00Z",
+      "oldest_open_at": "2018-05-01T00:00:00Z",
+      "newest_open_at": "2026-10-01T00:00:00Z",
+      "coverage": "PRESENT",
+      "gaps": [],
+      "reached_display_start": true,
+      "overlap_payloads_consistent": true
+    },
+    {
+      "base": "DOGE",
+      "quote": "USDT",
+      "timeframe": "1M",
+      "pages": 1,
+      "unique_rows": 88,
+      "overlap_rows": 0,
+      "freshness_waits": 0,
+      "excluded_live_tail_gaps": [],
+      "display_start": "2019-07-01T00:00:00Z",
+      "display_end": "2026-11-01T00:00:00Z",
+      "oldest_open_at": "2019-07-01T00:00:00Z",
+      "newest_open_at": "2026-10-01T00:00:00Z",
+      "coverage": "PRESENT",
+      "gaps": [],
+      "reached_display_start": true,
+      "overlap_payloads_consistent": true
+    }
+  ],
+  "scope": "Deep-history pagination through the last contiguous historical candle; an unavailable in-progress live tail is recorded separately.",
+  "deep_history_passed": true,
+  "live_tail_series_count": 20,
+  "live_tail_freshness_passed": false
+}

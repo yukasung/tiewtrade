@@ -1,0 +1,83 @@
+{
+  "recorded_at": "2026-10-14T13:29:28.992Z",
+  "baseURL": "http://localhost:5173",
+  "initial_timeframe": "1h",
+  "timeframes": [
+    {
+      "timeframe": "1m",
+      "status": 200,
+      "summary": "BTC/USDT · 1m · Binance TH Spot 14 ต.ค. 2569 20 นาฬิกา 29 นาที 00 วินาที GMT+7 · แท่งยังเปิด O 82,603.06 USDT H 82,614.66 USDT L 82,601.3 USDT C 82,614.66 USDT V 6.37116 BTC"
+    },
+    {
+      "timeframe": "5m",
+      "status": 200,
+      "summary": "BTC/USDT · 5m · Binance TH Spot 14 ต.ค. 2569 20 นาฬิกา 25 นาที 00 วินาที GMT+7 · แท่งยังเปิด O 82,499.5 USDT H 82,622 USDT L 82,482.86 USDT C 82,618.79 USDT V 104.96159 BTC"
+    },
+    {
+      "timeframe": "15m",
+      "status": 200,
+      "summary": "BTC/USDT · 15m · Binance TH Spot 14 ต.ค. 2569 20 นาฬิกา 15 นาที 00 วินาที GMT+7 · แท่งยังเปิด O 82,407.5 USDT H 82,622 USDT L 82,364.49 USDT C 82,618.79 USDT V 337.29751 BTC"
+    },
+    {
+      "timeframe": "1h",
+      "status": 200,
+      "summary": "BTC/USDT · 1h · Binance TH Spot 14 ต.ค. 2569 20 นาฬิกา 00 นาที 00 วินาที GMT+7 · แท่งยังเปิด O 82,743.76 USDT H 82,825.38 USDT L 82,364.49 USDT C 82,618.79 USDT V 818.73545 BTC"
+    },
+    {
+      "timeframe": "4h",
+      "status": 200,
+      "summary": "BTC/USDT · 4h · Binance TH Spot 14 ต.ค. 2569 19 นาฬิกา 00 นาที 00 วินาที GMT+7 · แท่งยังเปิด O 83,465.94 USDT H 83,933 USDT L 82,364.49 USDT C 82,618.79 USDT V 2,981.77729 BTC"
+    },
+    {
+      "timeframe": "1d",
+      "status": 200,
+      "summary": "BTC/USDT · 1d · Binance TH Spot 14 ต.ค. 2569 7 นาฬิกา 00 นาที 00 วินาที GMT+7 · แท่งยังเปิด O 83,169.01 USDT H 84,146.72 USDT L 82,364.49 USDT C 82,618.79 USDT V 9,414.6182 BTC"
+    },
+    {
+      "timeframe": "1w",
+      "status": 200,
+      "summary": "BTC/USDT · 1w · Binance TH Spot 12 ต.ค. 2569 7 นาฬิกา 00 นาที 00 วินาที GMT+7 · แท่งยังเปิด O 83,773.12 USDT H 84,352 USDT L 81,033.66 USDT C 82,618.79 USDT V 37,728.58202 BTC"
+    },
+    {
+      "timeframe": "1M",
+      "status": 200,
+      "summary": "BTC/USDT · 1M · Binance TH Spot 1 ต.ค. 2569 7 นาฬิกา 00 นาที 00 วินาที GMT+7 · แท่งยังเปิด O 83,623.59 USDT H 87,220 USDT L 80,393.56 USDT C 82,618.79 USDT V 193,894.45107 BTC"
+    }
+  ],
+  "layouts": [
+    {
+      "width": 375,
+      "height": 812,
+      "innerWidth": 375,
+      "innerHeight": 812,
+      "scrollWidth": 375,
+      "scrollHeight": 1652,
+      "canvasVisible": true,
+      "screenshot": "../specs/features/2026-10-12-candlestick-chart/evidence/2026-10-14-browser-acceptance/chart-375.png"
+    },
+    {
+      "width": 768,
+      "height": 900,
+      "innerWidth": 768,
+      "innerHeight": 900,
+      "scrollWidth": 768,
+      "scrollHeight": 1639,
+      "canvasVisible": true,
+      "screenshot": "../specs/features/2026-10-12-candlestick-chart/evidence/2026-10-14-browser-acceptance/chart-768.png"
+    },
+    {
+      "width": 1440,
+      "height": 900,
+      "innerWidth": 1440,
+      "innerHeight": 900,
+      "scrollWidth": 1440,
+      "scrollHeight": 900,
+      "canvasVisible": true,
+      "screenshot": "../specs/features/2026-10-12-candlestick-chart/evidence/2026-10-14-browser-acceptance/chart-1440.png"
+    }
+  ],
+  "theme_changed": true,
+  "page_errors": [],
+  "forbidden_requests": [],
+  "candle_requests": 9
+}

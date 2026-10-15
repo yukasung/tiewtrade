@@ -29,7 +29,7 @@ def test_authenticated_prices_no_store(client: TestClient) -> None:
     response = client.get("/market-data/prices")
     assert response.status_code == 200
     assert response.headers["cache-control"] == "no-store"
-    assert len(response.json()["rows"]) == 5
+    assert len(response.json()["rows"]) == 2
 
 
 def test_stream_full_schema_and_commands_rejected(client: TestClient) -> None:

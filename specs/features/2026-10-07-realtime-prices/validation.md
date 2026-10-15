@@ -1,5 +1,9 @@
 # F-10 — รับราคาเรียลไทม์และต่อกลับเมื่อหลุด — Validation
 
+**Pair-scope amendment — Approved 2026-10-15:** ใช้ F-38 เป็นเกณฑ์ปัจจุบัน:
+price snapshot/subscription ต้องมี BTCUSDT และ ETHUSDT รวม 2 คู่ ส่วนผลตรวจรายการเดิม
+ด้านล่างเป็นหลักฐาน historical และไม่ใช้รับรอง candidate หลัง F-38.
+
 สถานะ: **Approved** — เจ้าของตอบ approve วันที่2026-10-07 พร้อมplan.mdฉบับแก้ตามNC-26/NC-27
 วันที่: 2026-10-07
 

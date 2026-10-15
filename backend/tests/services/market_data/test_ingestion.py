@@ -20,6 +20,7 @@ from tiewtrade.core.market_data import (
 from tiewtrade.core.money import Money, Quantity
 from tiewtrade.infra.db import DatabaseRole, create_engine_for, user_session
 from tiewtrade.infra.db.session import MarketDataSession, market_data_session
+from tiewtrade.infra.market_data.catalog import PAIRS
 from tiewtrade.infra.market_data.claims import Claim, claim_next, lock_claim, update_claim
 from tiewtrade.infra.market_data.storage import database_now, enqueue
 from tiewtrade.services.market_data import ingestion
@@ -1382,7 +1383,7 @@ async def test_seed_is_idempotent_and_round_has_four_attempts() -> None:
         async with market_data_session(engine) as session:
             assert (
                 await session.execute("SELECT count(*) FROM market_candle_demand")
-            ).scalar_one() == 40
+            ).scalar_one() == len(PAIRS) * len(Timeframe)
     finally:
         await engine.dispose()
 
@@ -1411,7 +1412,7 @@ async def test_rate_limit_defers_entire_source(retry_seconds: int | None) -> Non
                 WHERE next_attempt_at>clock_timestamp()+make_interval(secs=>:seconds)""",
                     {"seconds": minimum},
                 )
-            ).scalar_one() == 40
+            ).scalar_one() == len(PAIRS) * len(Timeframe)
         restarted = await run_round(engine, source, "restarted", datetime.now(UTC))
         assert restarted.attempts == 0
     finally:
