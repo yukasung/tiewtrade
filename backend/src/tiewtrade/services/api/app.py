@@ -37,6 +37,7 @@ from tiewtrade.services.api.candle_routes import router as candle_router
 from tiewtrade.services.api.chart_routes import router as chart_router
 from tiewtrade.services.api.indicator_admission import IndicatorBudget
 from tiewtrade.services.api.indicator_routes import router as indicator_router
+from tiewtrade.services.api.paper_wallet_routes import router as paper_wallet_router
 from tiewtrade.services.api.price_admission import ProcessBudget
 from tiewtrade.services.api.price_broadcast import PriceBroadcaster
 from tiewtrade.services.api.price_guard import PriceScopeGuard
@@ -61,6 +62,9 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     # Reapply after server logging configuration/repeated application startups.
     install_query_redaction()
     app.state.api_engine = create_engine_for(DatabaseRole.API)
+    app.state.paper_mutation_engine = create_engine_for(
+        DatabaseRole.API, pool_size=1, max_overflow=0, pool_timeout=0.5
+    )
     app.state.auth_engine = create_engine_for(DatabaseRole.AUTH)
     app.state.totp_keys = KeySource.from_environment(KeyPurpose.TOTP_SECRET)
     # **กุญแจของ API key เป็นคนละดอก** และฝั่งนี้ใช้ปิดผนึกอย่างเดียว —
@@ -119,6 +123,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         await app.state.indicator_engine.dispose()
         await app.state.chart_engine.dispose()
         await app.state.price_engine.dispose()
+        await app.state.paper_mutation_engine.dispose()
         await app.state.api_engine.dispose()
         await app.state.auth_engine.dispose()
 
@@ -166,6 +171,7 @@ app.include_router(auth_router)
 app.include_router(totp_router)
 app.include_router(api_key_router)
 app.include_router(trading_account_router)
+app.include_router(paper_wallet_router)
 app.include_router(candle_router)
 app.include_router(chart_router)
 app.include_router(indicator_router)

@@ -81,6 +81,7 @@ export async function send<T>(
   code?: string,
   method: "POST" | "GET" | "DELETE" = "POST",
   signal?: AbortSignal,
+  additionalHeaders?: Readonly<Record<string, string>>,
 ): Promise<T> {
   const headers: Record<string, string> =
     method === "GET"
@@ -92,6 +93,7 @@ export async function send<T>(
   if (code !== undefined) {
     headers[TOTP_HEADER] = code;
   }
+  Object.assign(headers, additionalHeaders);
   const response = await fetch(`/api${path}`, {
     method,
     credentials: "same-origin",

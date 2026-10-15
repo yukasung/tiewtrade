@@ -69,6 +69,20 @@ services:
     restart: "no"
     stop_grace_period: 130s
 
+  # Paper-only durable command processor. It intentionally receives no venue URL
+  # or sealing key, so this process cannot read credentials or submit Live orders.
+  paper-wallet-worker:
+    build:
+      context: ./backend
+    command: ["python", "-m", "tiewtrade.services.engine.paper_wallet_main"]
+    environment:
+      TIEWTRADE_DATABASE_URL_ENGINE: postgresql+asyncpg://tiewtrade_engine:dev_engine@postgres:5432/tiewtrade
+      TIEWTRADE_DATABASE_URL_ENGINE_SCAN: postgresql+asyncpg://tiewtrade_engine_scan:dev_engine_scan@postgres:5432/tiewtrade
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
   # รันครั้งเดียวแล้วจบ — api รอให้เสร็จก่อนเริ่ม
   migrate:
     build:

@@ -1,11 +1,11 @@
-import { e2eEnvironment } from "./helpers/environment";
+import { backendPython, e2eEnvironment } from "./helpers/environment";
 import { execFileSync } from "node:child_process";
 import { expect, test } from "./helpers/test";
 import { PASSWORD, codeFor, secretOf, stepAt } from "./helpers/totp";
 /** Actual verification worker against FakeVenue; never updates key status by SQL. */
 function verify(): void {
   execFileSync(
-    ".venv/bin/python",
+    backendPython,
     [
       "-B",
       "-c",

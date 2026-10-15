@@ -1,6 +1,6 @@
 import { execFileSync } from "node:child_process";
 import { test as base } from "@playwright/test";
-import { e2eEnvironment } from "./environment";
+import { backendPython, e2eEnvironment } from "./environment";
 export { expect } from "@playwright/test";
 /** Matches backend API fixture: isolate test state, keep the real throttle rules active. */
 export const test = base.extend<{ throttleIsolation: void }>({
@@ -11,7 +11,7 @@ export const test = base.extend<{ throttleIsolation: void }>({
       const environment = e2eEnvironment();
       try {
         execFileSync(
-          ".venv/bin/python",
+          backendPython,
           [
             "-B",
             "-c",

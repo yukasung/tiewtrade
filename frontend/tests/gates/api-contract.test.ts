@@ -68,17 +68,30 @@ function typecheckRealFrontendAgainst(schema: unknown): Result {
     cpSync(join(FRONTEND_ROOT, entry), join(dir, entry), { recursive: true });
   }
   // ใช้ node_modules ชุดเดียวกัน ไม่ติดตั้งใหม่ เพื่อให้เวอร์ชันเครื่องมือตรงกับด่านจริง
-  symlinkSync(join(FRONTEND_ROOT, "node_modules"), join(dir, "node_modules"), "dir");
+  symlinkSync(
+    join(FRONTEND_ROOT, "node_modules"),
+    join(dir, "node_modules"),
+    process.platform === "win32" ? "junction" : "dir",
+  );
 
   writeFileSync(join(dir, "openapi.json"), JSON.stringify(schema));
   const generated = run(
-    "npx",
-    ["openapi-typescript", "openapi.json", "-o", join("src", "api-types.ts")],
+    process.execPath,
+    [
+      join(FRONTEND_ROOT, "node_modules", "openapi-typescript", "bin", "cli.js"),
+      "openapi.json",
+      "-o",
+      join("src", "api-types.ts"),
+    ],
     dir,
   );
   expect(generated.code, `สร้างชนิดข้อมูลไม่สำเร็จ:\n${generated.output}`).toBe(0);
 
-  return run("npx", ["tsc", "--noEmit", "-p", "tsconfig.json"], dir);
+  return run(
+    process.execPath,
+    [join(FRONTEND_ROOT, "node_modules", "typescript", "bin", "tsc"), "--noEmit", "-p", "tsconfig.json"],
+    dir,
+  );
 }
 
 describe("ด่านชนิดข้อมูลของหน้าบ้าน", () => {

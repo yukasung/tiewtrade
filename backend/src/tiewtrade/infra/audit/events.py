@@ -64,11 +64,20 @@ class AuditAction(Enum):
     API_KEY_REJECTED = "API_KEY_REJECTED"
     API_KEY_VERIFICATION_DEFERRED = "API_KEY_VERIFICATION_DEFERRED"
     TRADING_USE_SELECTED = "TRADING_USE_SELECTED"
+    PAPER_WALLET_CREATED = "PAPER_WALLET_CREATED"
+    PAPER_WALLET_CREATE_REJECTED = "PAPER_WALLET_CREATE_REJECTED"
+    PAPER_WALLET_RESET_REJECTED = "PAPER_WALLET_RESET_REJECTED"
 
 
 #: ชนิดเหตุการณ์ที่เป็นการเทรด — ต้องระบุ PAPER หรือ LIVE เสมอ (RQ-19)
 #: ยังว่างเพราะยังไม่มีงานที่แตะการเทรด งานที่เพิ่มต้องใส่ชื่อเหตุการณ์ของตัวเองที่นี่
-TRADING_ACTIONS: frozenset[AuditAction] = frozenset()
+TRADING_ACTIONS: frozenset[AuditAction] = frozenset(
+    {
+        AuditAction.PAPER_WALLET_CREATED,
+        AuditAction.PAPER_WALLET_CREATE_REJECTED,
+        AuditAction.PAPER_WALLET_RESET_REJECTED,
+    }
+)
 
 
 class ActorKind(Enum):
@@ -102,6 +111,8 @@ class SubjectKind(Enum):
     USER = "USER"
     #: API key หนึ่งใบ — `subject_id` คือรหัสของแถว **ไม่ใช่ค่าของ key** (F-07 RQ-9.1)
     API_KEY = "API_KEY"
+    PAPER_WALLET = "PAPER_WALLET"
+    PAPER_WALLET_COMMAND = "PAPER_WALLET_COMMAND"
 
 
 @runtime_checkable
@@ -242,8 +253,33 @@ class TradingUseDetails:
         return {"use": self.use.value}
 
 
+@dataclass(frozen=True, slots=True)
+class PaperWalletCreatedDetails:
+    command_id: UUID
+    episode_id: UUID
+    capital: Money
+
+    def as_details(self) -> dict[str, object]:
+        amount = money_detail(self.capital)
+        return {
+            "command_id": str(self.command_id),
+            "episode_id": str(self.episode_id),
+            "amount": amount["amount"],
+            "currency": amount["unit"],
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class PaperWalletRejectedDetails:
+    def as_details(self) -> dict[str, object]:
+        return {}
+
+
 DETAILS_TYPES: dict[AuditAction, type[object]] = {
     AuditAction.TRADING_USE_SELECTED: TradingUseDetails,
+    AuditAction.PAPER_WALLET_CREATED: PaperWalletCreatedDetails,
+    AuditAction.PAPER_WALLET_CREATE_REJECTED: PaperWalletRejectedDetails,
+    AuditAction.PAPER_WALLET_RESET_REJECTED: PaperWalletRejectedDetails,
     AuditAction.USER_CREATED: UserCreatedDetails,
     AuditAction.SESSION_STARTED: SessionDetails,
     AuditAction.SESSION_ENDED: SessionDetails,
@@ -280,6 +316,13 @@ ALLOWED_FAILURE_CODES: frozenset[str] = frozenset(
         "VENUE_OUTCOME_UNKNOWN",
         "VENUE_PROTOCOL",
         "VERIFICATION_EXPIRED",
+        "INITIAL_CAPITAL_INVALID",
+        "INITIAL_CAPITAL_TOO_SMALL",
+        "IDEMPOTENCY_CONFLICT",
+        "WALLET_EXISTS",
+        "ACTIVITY_UNKNOWN",
+        "EPISODE_CONFLICT",
+        "RESET_UNSAFE",
     }
 )
 
@@ -362,6 +405,23 @@ def _check_system_api_key_outcome(event: AuditEvent) -> None:
         raise AuditEventError(f"{name} ต้องมีรหัสเหตุผล")
 
 
+def _check_paper_wallet_event(event: AuditEvent) -> None:
+    if event.actor_kind is not ActorKind.USER or event.actor_id != event.owner_user_id:
+        raise AuditEventError("เหตุการณ์ Paper wallet ต้องระบุผู้ใช้เจ้าของเป็นผู้กระทำ")
+    if event.mode is not AuditMode.PAPER:
+        raise AuditEventError("เหตุการณ์ Paper wallet ต้องอยู่ในโหมด PAPER")
+    if event.action is AuditAction.PAPER_WALLET_CREATED:
+        if event.subject_kind is not SubjectKind.PAPER_WALLET:
+            raise AuditEventError("ผลสร้างกระเป๋าต้องมีเป้าหมายเป็น Paper wallet")
+        if event.outcome is not AuditOutcome.SUCCEEDED:
+            raise AuditEventError("PAPER_WALLET_CREATED ต้องสำเร็จ")
+        return
+    if event.subject_kind is not SubjectKind.PAPER_WALLET_COMMAND:
+        raise AuditEventError("ผลปฏิเสธต้องมีเป้าหมายเป็นคำขอ Paper wallet")
+    if event.outcome is not AuditOutcome.REJECTED or event.failure_code is None:
+        raise AuditEventError("ผลปฏิเสธ Paper wallet ต้องมีรหัสเหตุผล")
+
+
 #: ข้อบังคับเฉพาะของแต่ละเหตุการณ์ — **ทุกชนิดที่เพิ่มใหม่ต้องมีตัวตรวจของตัวเองที่นี่**
 #: ถ้าไม่มี การสร้างบันทึกของชนิดนั้นจะล้มเหลวทันที ซึ่งเป็นผลที่ต้องการ
 #: (ดังตอนเขียนโค้ด ดีกว่าปล่อยให้บันทึกที่ไม่มีใครตรวจไหลลงตารางที่ลบไม่ได้)
@@ -383,6 +443,9 @@ _ACTION_INVARIANTS: dict[AuditAction, Callable[[AuditEvent], None]] = {
     AuditAction.API_KEY_VERIFIED: _check_system_api_key_outcome,
     AuditAction.API_KEY_REJECTED: _check_system_api_key_outcome,
     AuditAction.API_KEY_VERIFICATION_DEFERRED: _check_system_api_key_outcome,
+    AuditAction.PAPER_WALLET_CREATED: _check_paper_wallet_event,
+    AuditAction.PAPER_WALLET_CREATE_REJECTED: _check_paper_wallet_event,
+    AuditAction.PAPER_WALLET_RESET_REJECTED: _check_paper_wallet_event,
 }
 
 

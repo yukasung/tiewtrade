@@ -321,6 +321,24 @@ async def indicator_read_session(engine: AsyncEngine, user_id: UUID) -> AsyncIte
 
 
 @asynccontextmanager
+async def repeatable_user_session(engine: AsyncEngine, user_id: UUID) -> AsyncIterator[UserSession]:
+    """Owner-scoped repeatable-read snapshot for multi-statement financial reads."""
+    async with _begin(engine) as connection:
+        await _execute(
+            connection,
+            "SET TRANSACTION ISOLATION LEVEL REPEATABLE READ, READ ONLY",
+            None,
+        )
+        await _assert_role(connection, DatabaseRole.API)
+        await _execute(
+            connection,
+            "SELECT set_config(:setting, :value, true)",
+            {"setting": CURRENT_USER_SETTING, "value": str(user_id)},
+        )
+        yield UserSession(connection, user_id)
+
+
+@asynccontextmanager
 async def presented_session(
     engine: AsyncEngine,
     *,

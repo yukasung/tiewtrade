@@ -115,6 +115,8 @@ def test_routes_that_renew_the_session_are_declared_and_few() -> None:
                 ("DELETE", "/api-keys/{key_id}"),
                 ("POST", "/api-keys/{key_id}/retry"),
                 ("POST", "/trading-account/use"),
+                ("POST", "/paper-wallet"),
+                ("POST", "/paper-wallet/reset"),
             }
         )
         == RENEWING_ROUTES

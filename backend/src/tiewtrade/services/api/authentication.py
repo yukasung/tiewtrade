@@ -18,11 +18,9 @@
 from __future__ import annotations
 
 import secrets
-from dataclasses import dataclass, replace
+from dataclasses import replace
 from datetime import UTC, datetime
-from enum import Enum
 from typing import Final
-from uuid import UUID
 
 from fastapi import HTTPException, Request, Response, status
 from sqlalchemy.ext.asyncio import AsyncEngine
@@ -41,6 +39,10 @@ from tiewtrade.infra.auth import (
 from tiewtrade.infra.auth.sessions import SessionOwner
 from tiewtrade.infra.db import DatabaseRole
 from tiewtrade.infra.db.session import PresentedSession, presented_session, user_session
+from tiewtrade.services.api.request_identity import NOT_AUTHENTICATED
+from tiewtrade.services.api.request_identity import Authenticated as Authenticated
+from tiewtrade.services.api.request_identity import SecondFactor as SecondFactor
+from tiewtrade.services.api.request_identity import current_user as current_user
 from tiewtrade.services.api.resources import client_key, engine_for, totp_keys
 from tiewtrade.services.api.routing_policy import (
     accepts_recovery_grant,
@@ -62,8 +64,6 @@ from tiewtrade.services.api.throttling import AuthRejectedError, refuse_if_throt
 
 #: ข้อความเดียวสำหรับทุกกรณีที่ไม่มีสิทธิ์ — ไม่บอกว่าเพราะไม่มี session,
 #: session หมดอายุ หรือโทเคนไม่มีในระบบ
-NOT_AUTHENTICATED: Final[str] = "ต้องเข้าสู่ระบบก่อน"
-
 #: ข้อความเดียวสำหรับทุกกรณีที่ปัจจัยที่สองไม่ผ่าน — ไม่บอกว่าเพราะไม่ได้เปิด TOTP,
 #: รหัสผิด, รหัสถูกใช้แล้ว หรือไม่มีสิทธิ์กู้ (RQ-11 เจตนาเดียวกัน)
 SECOND_FACTOR_REQUIRED: Final[str] = "ต้องยืนยันด้วยรหัสจากแอปยืนยันตัวตน"
@@ -81,44 +81,6 @@ UNCLASSIFIED_ROUTE: Final[str] = "เส้นทางนี้ยังไม�
 CSRF_BYTES: Final[int] = 32
 
 _SAFE_METHODS: Final[frozenset[str]] = frozenset({"GET", "HEAD", "OPTIONS"})
-
-
-class SecondFactor(Enum):
-    """ปัจจัยที่สองที่คำขอนี้ใช้ผ่าน
-
-    `RECOVERY_GRANT` **ยังไม่ถูกใช้ไป** — `usable()` แค่ตรวจ ส่วนการใช้เกิดใน
-    transaction ของ endpoint เพื่อไม่ให้คำขอที่ล้มเหลวทีหลังเผาสิทธิ์ใบเดียว
-    ที่ผู้ใช้มีไปฟรี ๆ
-    """
-
-    TOTP_CODE = "TOTP_CODE"
-    RECOVERY_GRANT = "RECOVERY_GRANT"
-
-
-@dataclass(frozen=True, slots=True)
-class Authenticated:
-    """ตัวตนของคำขอหนึ่ง — **ชนิดนี้เพิ่มช่องได้โดยผู้เรียกเดิมไม่ต้องแก้**
-
-    F-06 เพิ่ม `second_factor` ซึ่ง **มีค่าเฉพาะคำขอที่เส้นทางบังคับให้ยืนยันซ้ำ**
-    และผ่านแล้ว · ผู้เรียกเดิมไม่ต้องแก้เพราะมีค่าปริยาย
-    """
-
-    user_id: UUID
-    token_hash: str
-    absolute_expires_at: datetime
-    second_factor: SecondFactor | None = None
-
-
-def current_user(request: Request) -> Authenticated:
-    """ตัวตนของคำขอ — ใช้ใน endpoint ที่ต้องรู้ว่าใครเรียก
-
-    ถ้า middleware ปล่อยคำขอที่ไม่มีตัวตนมาถึง endpoint ที่เรียกฟังก์ชันนี้
-    ให้ดังทันที เพราะหมายถึงรายการเส้นทางสาธารณะกับโค้ดไม่ตรงกัน
-    """
-    found = getattr(request.state, "authenticated", None)
-    if not isinstance(found, Authenticated):
-        raise HTTPException(status.HTTP_401_UNAUTHORIZED, NOT_AUTHENTICATED)
-    return found
 
 
 def new_csrf_token() -> str:
