@@ -1238,6 +1238,10 @@
         "title": "KeyView",
         "type": "object"
       },
+      "MarketSource": {
+        "const": "primary_spot",
+        "type": "string"
+      },
       "Me": {
         "description": "ตัวตนของคำขอ พร้อมสถานะปัจจัยที่สอง (F-06 RQ-12)",
         "properties": {
@@ -1300,8 +1304,7 @@
             "title": "Amount"
           },
           "base": {
-            "title": "Base",
-            "type": "string"
+            "$ref": "#/components/schemas/SupportedBase"
           },
           "generation": {
             "pattern": "^[0-9]+$",
@@ -1309,8 +1312,7 @@
             "type": "string"
           },
           "quote": {
-            "title": "Quote",
-            "type": "string"
+            "$ref": "#/components/schemas/SupportedQuote"
           },
           "readiness": {
             "enum": [
@@ -1344,8 +1346,7 @@
             "type": "string"
           },
           "source": {
-            "title": "Source",
-            "type": "string"
+            "$ref": "#/components/schemas/MarketSource"
           },
           "trade_at": {
             "anyOf": [
@@ -1696,6 +1697,17 @@
         ],
         "title": "SignedIn",
         "type": "object"
+      },
+      "SupportedBase": {
+        "enum": [
+          "BTC",
+          "ETH"
+        ],
+        "type": "string"
+      },
+      "SupportedQuote": {
+        "const": "USDT",
+        "type": "string"
       },
       "Timeframe": {
         "enum": [

@@ -1,5 +1,9 @@
 # F-09 — Candle history Validation
 
+**Pair-scope amendment — Approved 2026-10-15:** ใช้ F-38 เป็นเกณฑ์ปัจจุบัน:
+runtime รองรับ BTCUSDT และ ETHUSDT เท่านั้น ส่วนผลตรวจจำนวนคู่เดิมด้านล่างเป็นหลักฐาน
+historical และไม่ใช้รับรอง candidate หลัง F-38.
+
 สถานะ: **Approved** — เจ้าของตอบ approve วันที่2026-10-07 พร้อม plan.md หลังแก้ไขและรีวิว; รวมNC-35 amendmentsที่เจ้าของอนุมัติเมื่อ2026-10-10
 วันที่: 2026-10-07
 requirements.md: Approved; NC-09/T-04 Closed

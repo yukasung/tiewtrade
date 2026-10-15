@@ -1,0 +1,11 @@
+{
+  "R2-C2": "FAILED",
+  "phase": "pre-measurement warm-up",
+  "failure": "CAPACITY_C2_BASELINE_NOT_READY",
+  "warmup_limit_seconds": 600,
+  "observed_seconds": 600.86,
+  "valid_series_at_final_observation": 0,
+  "scheduled_series": 30,
+  "measurement_started": false,
+  "note": "The 60-minute acceptance interval did not start. The worker attempts completed without a recorded attempt failure, but all 30 source proofs were not simultaneously valid before the baseline deadline. After the producer and worker stopped, a direct database proof check was true for 30/30 series; this post-stop state does not make C2 pass."
+}

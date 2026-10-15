@@ -213,7 +213,8 @@ async def test_controlled_interleaving_latches_before_batch_and_rejects_pre_dete
         assert committed.order_ambiguous_at is None
         assert committed.effective_readiness == "READY"
         assert notifications.snapshots[-1].rows == (await _snapshot(price_engine)).rows
-        assert len(supervisor.dirty) <= 5 and len(supervisor.states) == 5
+        assert len(supervisor.dirty) <= len(PAIRS)
+        assert len(supervisor.states) == len(PAIRS)
     finally:
         events.cancel()
         for job in supervisor.jobs.values():
@@ -321,7 +322,7 @@ async def test_known_disconnect_commits_immediately_and_old_epoch_cannot_mutate(
         assert row.unavailable_since is not None
         assert notifications.snapshots[-1].feed is not None
         assert notifications.snapshots[-1].feed.connected is False
-        assert len(supervisor.dirty) <= 5
+        assert len(supervisor.dirty) <= len(PAIRS)
     finally:
         events.cancel()
         await asyncio.gather(events, return_exceptions=True)

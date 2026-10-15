@@ -1,8 +1,8 @@
 import type { components } from "./api-types";
 import { ApiRequestError, send } from "./auth";
+import { supportedBases, supportedBaseSet } from "./marketCatalog";
 export type PricesView = components["schemas"]["PricesView"];
 export const priceQueryKey = ["market-data", "prices"] as const;
-const bases = new Set(["BTC", "ETH", "SOL", "XRP", "DOGE"]);
 function record(value: unknown): value is Record<string, unknown> {
     return value !== null && typeof value === "object" && !Array.isArray(value);
 }
@@ -12,11 +12,11 @@ function time(value: unknown): boolean {
 /** Reject untrusted transport data without retaining raw payload/error text. */
 export function decodePrices(value: unknown): PricesView {
     const invalid = () => new ApiRequestError("PRICE_DELIVERY_FAILED", 0);
-    if (!record(value) || value.schema_version !== 1 || !time(value.server_time) || !["CONNECTED", "RECOVERING"].includes(String(value.delivery_status)) || !Array.isArray(value.rows) || value.rows.length !== 5)
+    if (!record(value) || value.schema_version !== 1 || !time(value.server_time) || !["CONNECTED", "RECOVERING"].includes(String(value.delivery_status)) || !Array.isArray(value.rows) || value.rows.length !== supportedBases.length)
         throw invalid();
     const seen = new Set<string>();
     for (const row of value.rows) {
-        if (!record(row) || typeof row.base !== "string" || !bases.has(row.base) || seen.has(row.base) || row.quote !== "USDT" || row.source !== "primary_spot" || (row.amount !== null && (typeof row.amount !== "string" || !/^\d+(?:\.\d+)?$/.test(row.amount))) || !["MISSING", "RECOVERING", "STALE", "READY"].includes(String(row.readiness)) || typeof row.reason !== "string" || !/^[A-Z_]+$/.test(row.reason) || typeof row.alert_due !== "boolean")
+        if (!record(row) || typeof row.base !== "string" || !supportedBaseSet.has(row.base) || seen.has(row.base) || row.quote !== "USDT" || row.source !== "primary_spot" || (row.amount !== null && (typeof row.amount !== "string" || !/^\d+(?:\.\d+)?$/.test(row.amount))) || !["MISSING", "RECOVERING", "STALE", "READY"].includes(String(row.readiness)) || typeof row.reason !== "string" || !/^[A-Z_]+$/.test(row.reason) || typeof row.alert_due !== "boolean")
             throw invalid();
         for (const key of ["revision", "generation"])
             if (typeof row[key] !== "string" || !/^\d{1,20}$/.test(row[key]))

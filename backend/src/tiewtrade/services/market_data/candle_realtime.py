@@ -1,4 +1,4 @@
-"""One fenced candle supervisor; frame input is coalesced into forty latest slots."""
+"""One fenced candle supervisor; frame input is coalesced into the supported slots."""
 
 import asyncio
 import logging
@@ -17,7 +17,8 @@ from tiewtrade.infra.market_data.candle_preview import (
     PreviewLease,
     PreviewLeaseLostError,
     acquire,
-    bootstrap_or_recover,
+    bootstrap_series,
+    complete_bootstrap,
     connection,
     enqueue_ended,
     fence,
@@ -47,6 +48,7 @@ class CandleSupervisor:
         self.dirty: set[tuple[str, str, Timeframe]] = set()
         self.demands: dict[tuple[str, str, Timeframe], CandleWindow] = {}
         self.lock = asyncio.Lock()
+        self.bootstrap: asyncio.Task[None] | None = None
 
     async def _connection(self, connected: bool, failure: str | None = None) -> None:
         async with self.lock:
@@ -142,8 +144,45 @@ class CandleSupervisor:
         next_tick = asyncio.get_running_loop().time() + 2
         while True:
             await asyncio.sleep(max(0, next_tick - asyncio.get_running_loop().time()))
+            if self.bootstrap is not None and self.bootstrap.done():
+                completed, self.bootstrap = self.bootstrap, None
+                completed.result()
             await self._flush()
             next_tick = max(next_tick + 2, asyncio.get_running_loop().time())
+
+    async def _cancel_bootstrap(self) -> None:
+        if self.bootstrap is None:
+            return
+        self.bootstrap.cancel()
+        await asyncio.gather(self.bootstrap, return_exceptions=True)
+        self.bootstrap = None
+
+    async def _bootstrap(self, generation: int) -> None:
+        for series in SERIES:
+            while self.epoch == generation:
+                try:
+                    async with self.lock:
+                        if self.lease is None or self.epoch != generation:
+                            return
+                        lease = self.lease
+                        async with (
+                            asyncio.timeout(4),
+                            market_data_session(self.engine) as session,
+                        ):
+                            await session.execute("SET LOCAL statement_timeout='500ms'")
+                            await session.execute("SET LOCAL lock_timeout='200ms'")
+                            await bootstrap_series(session, lease, series)
+                    break
+                except (InfraError, TimeoutError):
+                    logging.getLogger(__name__).warning("candle preview bootstrap series retrying")
+                    await asyncio.sleep(1)
+        async with self.lock:
+            if self.lease is None or self.epoch != generation:
+                return
+            async with asyncio.timeout(4), market_data_session(self.engine) as session:
+                await session.execute("SET LOCAL statement_timeout='500ms'")
+                await session.execute("SET LOCAL lock_timeout='200ms'")
+                await complete_bootstrap(session, self.lease)
 
     async def _consume(self) -> None:
         async with aclosing(self.feed.events(SERIES)) as events:
@@ -152,17 +191,10 @@ class CandleSupervisor:
                     if event.generation <= self.last_generation:
                         continue
                     self.last_generation = event.generation
+                    await self._cancel_bootstrap()
                     await self._connection(True)
                     self.epoch = event.generation
-                    assert self.lease is not None
-                    async with (
-                        self.lock,
-                        asyncio.timeout(4),
-                        market_data_session(self.engine) as session,
-                    ):
-                        await session.execute("SET LOCAL statement_timeout='500ms'")
-                        await session.execute("SET LOCAL lock_timeout='200ms'")
-                        await bootstrap_or_recover(session, self.lease)
+                    self.bootstrap = asyncio.create_task(self._bootstrap(event.generation))
                 elif isinstance(event, FeedDisconnected):
                     if self.epoch is None or event.generation >= self.epoch:
                         if event.generation < self.last_generation or (
@@ -170,6 +202,7 @@ class CandleSupervisor:
                         ):
                             continue
                         self.last_generation = event.generation
+                        await self._cancel_bootstrap()
                         await self._connection(False, event.failure_code)
                         self.epoch = None
                 else:
@@ -197,6 +230,7 @@ class CandleSupervisor:
             except (InfraError, PreviewLeaseLostError, TimeoutError):
                 logging.getLogger(__name__).warning("candle preview writer unavailable")
             finally:
+                await self._cancel_bootstrap()
                 for task in (consumer, heartbeat):
                     task.cancel()
                 await asyncio.gather(consumer, heartbeat, return_exceptions=True)

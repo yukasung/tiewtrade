@@ -43,7 +43,11 @@ from tiewtrade.infra.market_data.indicator_reader import query_budget, read_indi
 from tiewtrade.services.api.indicator_routes import IndicatorPointView, IndicatorValueView
 from tiewtrade.services.api.settings import CSRF_COOKIE, CSRF_HEADER
 
-SERIES = [(base, tf) for base, _ in sorted(PAIRS) for tf in Timeframe]
+CAPACITY_TIMEFRAMES = tuple(Timeframe)
+READINESS_SERIES = [(base, tf) for base, _ in sorted(PAIRS) for tf in CAPACITY_TIMEFRAMES]
+# Long-running accepted/rejected load is deliberately BTC-only. Runtime readiness
+# remains all supported pairs so PREPARED never certifies an unprepared ETH series.
+SERIES = [("BTC", tf) for tf in CAPACITY_TIMEFRAMES]
 NETWORK = "tiewtrade-f11-capacity-net"
 PG = "tiewtrade-f11-capacity-postgres"
 REDIS = "tiewtrade-f11-capacity-redis"
@@ -120,7 +124,7 @@ async def seed(engine: AsyncEngine) -> dict[str, datetime]:
         assert (await c.execute(text("SELECT count(*) FROM market_candles"))).scalar_one() == 0
         now: datetime = (await c.execute(text("SELECT clock_timestamp()"))).scalar_one()
     ends: dict[str, datetime] = {}
-    for base, tf in SERIES:
+    for base, tf in READINESS_SERIES:
         hi = align_floor(now, tf)
         lo = align_floor(retention_cutoff(now, tf) - timedelta(hours=6, minutes=15), tf)
         while lo < hi:
@@ -144,26 +148,34 @@ async def seed(engine: AsyncEngine) -> dict[str, datetime]:
 
 
 async def append(engine: AsyncEngine, ends: dict[str, datetime]) -> None:
+    async with engine.connect() as connection:
+        current: datetime = (
+            await connection.execute(text("SELECT clock_timestamp()"))
+        ).scalar_one()
+    pending = [
+        (base, tf, base + "/" + tf.value, align_floor(current, tf))
+        for base, tf in READINESS_SERIES
+        if align_floor(current, tf) > ends[base + "/" + tf.value]
+    ]
+    if not pending:
+        return
     async with market_data_session(engine) as session:
         await session.execute("SELECT begin_indicator_source_write()")
         now = (await session.execute("SELECT clock_timestamp()")).scalar_one()
         changed = {}
-        for base, tf in SERIES:
-            key = base + "/" + tf.value
-            hi = align_floor(now, tf)
-            if hi > ends[key]:
-                await session.execute(
-                    INSERT,
-                    {
-                        "base": base,
-                        "tf": tf.value,
-                        "seconds": int(tf.fixed_span.total_seconds()) if tf.fixed_span else 0,
-                        "lo": ends[key],
-                        "hi": hi,
-                        "now": now,
-                    },
-                )
-                changed[key] = hi
+        for base, tf, key, hi in pending:
+            await session.execute(
+                INSERT,
+                {
+                    "base": base,
+                    "tf": tf.value,
+                    "seconds": int(tf.fixed_span.total_seconds()) if tf.fixed_span else 0,
+                    "lo": ends[key],
+                    "hi": hi,
+                    "now": now,
+                },
+            )
+            changed[key] = hi
     ends.update(changed)  # Advance only after commit; never rewrite existing input.
 
 
@@ -207,7 +219,7 @@ async def observe(engine: AsyncEngine, user: UUID) -> list[dict[str, Any]]:
                 JOIN indicator_ready_generations g ON g.id=h.generation_id""")
             ).mappings()
         }
-        for base, tf in SERIES:
+        for base, tf in READINESS_SERIES:
             g = generations.get((base, tf.value))
             age = (now - g["as_of"]).total_seconds() if g is not None else None
             valid = g is not None and age is not None and 0 <= age <= 600
@@ -498,7 +510,7 @@ async def run(
     producer: asyncio.Task[None] | None = None
     try:
         if reuse_source:
-            async with migrator.connect() as c:
+            async with migrator.begin() as c:
                 for table in (
                     "indicator_build_jobs",
                     "indicator_generations",
@@ -518,7 +530,12 @@ async def run(
                         )
                     ).mappings()
                 }
-                assert len(ends) == 40
+                assert len(ends) == len(READINESS_SERIES)
+                await c.execute(
+                    text("""UPDATE indicator_rollout_control SET mode='PREPARED',
+                    retention_policy='GRACE',codec_version=2,protocol_version=1,
+                    active_cursor_format=2 WHERE id=1""")
+                )
         else:
             ends = await seed(migrator)
         image_id = await docker("image", "inspect", "--format", "{{.Id}}", image)
@@ -599,7 +616,7 @@ async def run(
                     round(elapsed, 1),
                     "seconds; valid",
                     sum(r["valid"] for r in observed),
-                    "/30",
+                    "/" + str(len(READINESS_SERIES)),
                 )
             save(output / "trace.json", trace)
             save(output / "observations.json", observations)
@@ -709,7 +726,20 @@ async def run(
                     and len(accepted) == 10,
                 }
             )
-        passed = len(summaries) == 40 and all(s["passed"] for s in summaries)
+        readiness_passed = all(
+            any(
+                sample["valid"]
+                for observation in observations
+                for sample in observation["series"]
+                if sample["base"] == base and sample["timeframe"] == tf.value
+            )
+            for base, tf in READINESS_SERIES
+        )
+        passed = (
+            readiness_passed
+            and len(summaries) == len(SERIES)
+            and all(s["passed"] for s in summaries)
+        )
         save(
             output / "result.json",
             {
@@ -720,6 +750,9 @@ async def run(
                 "R2-C4": "PARTIAL_TRACE",
                 "R2-C5": "NOT_RUN",
                 "R2-C6": "NOT_PASSED",
+                "runtime_readiness_series": len(READINESS_SERIES),
+                "workload_series": len(SERIES),
+                "runtime_readiness_passed": readiness_passed,
                 "series": summaries,
                 "note": "No capacity approval: C2-C6/resource gates require separate evidence.",
             },

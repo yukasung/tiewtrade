@@ -25,19 +25,6 @@ async function registerAccount(page: Page): Promise<string> {
   return email;
 }
 
-function waitForLiveStatus(page: Page, expected: string[]) {
-  return page.waitForResponse(async response => {
-    if (!response.url().includes("/market-data/chart/live") || response.status() !== 200) return false;
-    try {
-      const body = await response.json() as { status?: string };
-      return body.status !== undefined && expected.includes(body.status);
-    } catch {
-      // Navigation and offline transitions may discard a completed response body.
-      return false;
-    }
-  });
-}
-
 async function expectLiveStatus(page: Page, expected: string[]) {
   await expect.poll(async () => {
     const response = await page.request.get(
@@ -247,18 +234,15 @@ test("browser network loss and a restarted fenced candle worker recover from PG"
   try {
     await registerAccount(page);
     const chart = page.getByTestId("candlestick-chart");
-    await waitForLiveStatus(page, ["READY"]);
+    await expectLiveStatus(page, ["READY"]);
     await context.setOffline(true);
     await expect.poll(() => page.evaluate(() => globalThis.navigator.onLine)).toBe(false);
-    const online = waitForLiveStatus(page, ["READY"]);
     await context.setOffline(false);
-    await online;
-    const recovering = waitForLiveStatus(page, ["RECOVERING", "STALE"]);
+    await expectLiveStatus(page, ["READY"]);
     await worker.stop();
-    await recovering;
-    const ready = waitForLiveStatus(page, ["READY"]);
+    await expectLiveStatus(page, ["RECOVERING", "STALE"]);
     worker = producer("tests/e2e_candle_runner.py");
-    await ready;
+    await expectLiveStatus(page, ["READY"]);
     await expect(chart.locator(".chart-status")).toHaveCount(0);
   } finally { await worker.stop(); }
 });

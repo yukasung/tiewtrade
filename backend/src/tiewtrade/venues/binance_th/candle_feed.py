@@ -8,7 +8,8 @@ from datetime import datetime
 from typing import cast
 
 from tiewtrade.core.candle_preview import CandleObservation
-from tiewtrade.core.market_data import CandleSeries
+from tiewtrade.core.market_catalog import PAIRS
+from tiewtrade.core.market_data import CandleSeries, Timeframe
 from tiewtrade.venues.binance_th.candle_stream_mapping import candle_from_stream
 from tiewtrade.venues.binance_th.stream_transport import BinanceThStreamTransport, StreamFrame
 from tiewtrade.venues.candle_streams import CandleFeedEvent, FeedCandle
@@ -25,12 +26,9 @@ class BinanceThCandleFeed:
     ) -> AsyncGenerator[CandleFeedEvent, None]:
         if (
             not series
-            or len(series) > 40
+            or len(series) > len(PAIRS) * len(Timeframe)
             or len(set(series)) != len(series)
-            or any(
-                item.quote != "USDT" or item.base not in ("BTC", "ETH", "SOL", "XRP", "DOGE")
-                for item in series
-            )
+            or any((item.base, item.quote) not in PAIRS for item in series)
         ):
             raise ValueError("unsupported candle series")
         params = tuple(

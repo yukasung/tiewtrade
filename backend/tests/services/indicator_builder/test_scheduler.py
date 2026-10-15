@@ -14,6 +14,7 @@ from tests.infra.indicators.test_claims import prepared as prepared
 from tests.infra.indicators.test_claims import slot
 from tests.infra.indicators.test_source import active as active
 from tests.services.indicator_builder.test_attempt import metadata, seed
+from tiewtrade.core.market_catalog import PAIRS
 from tiewtrade.core.market_data import Timeframe, align_ceil, align_floor, retention_cutoff
 from tiewtrade.core.money import OutOfRangeError
 from tiewtrade.infra.db import DatabaseRole, create_engine_for
@@ -94,7 +95,8 @@ async def test_catalog_and_control_gate(
             .mappings()
             .all()
         )
-    assert len(rows) == (40 if mode in ("PREPARING", "PREPARED") else 0)
+    expected_rows = len(PAIRS) * len(Timeframe) if mode in ("PREPARING", "PREPARED") else 0
+    assert len(rows) == expected_rows
     for j in rows:
         tf = Timeframe(j["timeframe"])
         assert j["desired_start"] == align_ceil(retention_cutoff(j["observed"], tf), tf)

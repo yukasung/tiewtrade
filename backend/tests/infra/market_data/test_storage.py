@@ -101,7 +101,7 @@ async def test_concurrent_users_coalesce_one_demand(api_engine: AsyncEngine) -> 
 
     async def request() -> bool:
         async with user_session(api_engine, uuid4()) as session:
-            return await enqueue(session, "XRP", "USDT", Timeframe.M1, window)
+            return await enqueue(session, "ETH", "USDT", Timeframe.M1, window)
 
     assert all(await asyncio.gather(request(), request(), request()))
     async with user_session(api_engine, uuid4()) as session:

@@ -62,6 +62,14 @@ it("reset only changes viewport, and supports weekly/monthly selection", () => {
   fireEvent.change(document.querySelector("#chart-timeframe")!, { target: { value: "1M" } });
   expect(vi.mocked(useChartData).mock.calls.at(-1)?.[1].timeframe).toBe("1M");
 });
+it("offers only the supported pairs and defaults to BTC", () => {
+  vi.mocked(useChartData).mockReturnValue(state());
+  render(<CandlestickChartPanel userId="one"/>);
+  const pair = screen.getByRole<HTMLSelectElement>("combobox", { name: "คู่เทรด" });
+  expect([...pair.options].map(option => option.textContent)).toEqual(["BTC/USDT", "ETH/USDT"]);
+  expect(pair.value).toBe("BTC");
+  expect(vi.mocked(useChartData).mock.calls.at(-1)?.[1].base).toBe("BTC");
+});
 it("blocks manual retry during cooldown", () => {
   const current = state(); current.error = new Error("unavailable"); current.cooldownActive = true;
   vi.mocked(useChartData).mockReturnValue(current); const panel = render(<CandlestickChartPanel userId="one"/>);

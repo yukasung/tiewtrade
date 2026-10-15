@@ -23,6 +23,7 @@ from sqlalchemy.ext.asyncio import AsyncEngine
 
 from tests.infra.indicators.test_claims import prepared as prepared
 from tests.infra.indicators.test_source import active as active
+from tiewtrade.core.market_data import Timeframe
 from tiewtrade.infra.db import DatabaseRole, create_engine_for
 from tiewtrade.infra.indicators.rollout import (
     GATES,
@@ -36,6 +37,7 @@ from tiewtrade.infra.indicators.rollout import (
     verify_evidence,
     verify_inventory,
 )
+from tiewtrade.infra.market_data.catalog import PAIRS
 
 
 @pytest_asyncio.fixture(autouse=True)
@@ -78,7 +80,7 @@ async def synthetic_heads(engine: AsyncEngine) -> None:
           SELECT 'primary_spot',b,'USDT',t,'indicators-v2',clock_timestamp()-interval '1 day',
             clock_timestamp()-interval '1 hour',clock_timestamp(),
             clock_timestamp()+interval '600s',1
-          FROM unnest(ARRAY['BTC','ETH','DOGE','SOL','XRP']) b
+          FROM unnest(ARRAY['BTC','ETH']) b
           CROSS JOIN unnest(ARRAY['1m','5m','15m','1h','4h','1d','1w','1M']) t""")
         )
         await c.execute(
@@ -143,7 +145,7 @@ async def test_graph_replay_pause_cutoff_and_reenable(
     async with migrator_engine.connect() as c:
         assert (
             await c.execute(text("SELECT count(*) FROM indicator_generations WHERE status='READY'"))
-        ).scalar_one() == 40
+        ).scalar_one() == len(PAIRS) * len(Timeframe)
 
 
 @pytest.mark.parametrize(

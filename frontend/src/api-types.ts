@@ -1051,6 +1051,8 @@ export interface components {
             /** Verified At */
             verified_at?: string | null;
         };
+        /** @constant */
+        MarketSource: "primary_spot";
         /**
          * Me
          * @description ตัวตนของคำขอ พร้อมสถานะปัจจัยที่สอง (F-06 RQ-12)
@@ -1080,12 +1082,10 @@ export interface components {
             alert_due: boolean;
             /** Amount */
             amount: string | null;
-            /** Base */
-            base: string;
+            base: components["schemas"]["SupportedBase"];
             /** Generation */
             generation: string;
-            /** Quote */
-            quote: string;
+            quote: components["schemas"]["SupportedQuote"];
             /**
              * Readiness
              * @enum {string}
@@ -1097,8 +1097,7 @@ export interface components {
             received_at: string | null;
             /** Revision */
             revision: string;
-            /** Source */
-            source: string;
+            source: components["schemas"]["MarketSource"];
             /** Trade At */
             trade_at: string | null;
             /** Unavailable Since */
@@ -1245,6 +1244,10 @@ export interface components {
              */
             user_id: string;
         };
+        /** @enum {string} */
+        SupportedBase: "BTC" | "ETH";
+        /** @constant */
+        SupportedQuote: "USDT";
         /**
          * Timeframe
          * @enum {string}

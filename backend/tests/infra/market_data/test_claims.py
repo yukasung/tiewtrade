@@ -16,7 +16,7 @@ async def test_expired_worker_cannot_lock(api_engine: AsyncEngine) -> None:
     async with user_session(api_engine, uuid4()) as session:
         now = await database_now(session)
         await enqueue(
-            session, "SOL", "USDT", Timeframe.M5, CandleWindow(now - timedelta(minutes=10), now)
+            session, "ETH", "USDT", Timeframe.M5, CandleWindow(now - timedelta(minutes=10), now)
         )
     engine = create_engine_for(DatabaseRole.MARKET_DATA)
     try:

@@ -27,6 +27,7 @@ from tiewtrade.infra.market_data.candle_preview import (
     enqueue_ended,
     flush,
 )
+from tiewtrade.infra.market_data.catalog import PAIRS
 
 
 def observation() -> CandleObservation:
@@ -88,6 +89,32 @@ async def test_single_owner_fencing_and_buffer_cap(
         assert len(rows) == 120 and rows[0][0] == initial.candle.open_at + timedelta(hours=1)
 
 
+async def test_new_owner_starts_recovering_even_after_previous_bootstrap(
+    market_data_engine: AsyncEngine,
+    migrator_engine: AsyncEngine,
+) -> None:
+    async with migrator_engine.begin() as c:
+        await c.execute(
+            text(
+                """UPDATE market_candle_feed_state SET bootstrapped=true,connected=true,
+                failure_code=NULL,lease_until=clock_timestamp()"""
+            )
+        )
+    async with market_data_session(market_data_engine) as s:
+        lease = await acquire(s, uuid4())
+        assert lease is not None
+    async with migrator_engine.connect() as c:
+        state = (
+            await c.execute(
+                text(
+                    """SELECT bootstrapped,connected,failure_code
+                    FROM market_candle_feed_state"""
+                )
+            )
+        ).one()
+    assert state == (False, False, "RECOVERING")
+
+
 async def test_failed_preview_transaction_rolls_back_and_old_owner_cannot_publish(
     market_data_engine: AsyncEngine,
     migrator_engine: AsyncEngine,
@@ -120,7 +147,7 @@ async def test_failed_preview_transaction_rolls_back_and_old_owner_cannot_publis
         ).scalar_one() == successor.epoch
 
 
-async def test_forty_series_obey_buffer_cap(
+async def test_supported_series_obey_buffer_cap(
     market_data_engine: AsyncEngine,
     migrator_engine: AsyncEngine,
 ) -> None:
@@ -133,7 +160,7 @@ async def test_forty_series_obey_buffer_cap(
     now = datetime.now(UTC)
     for slot in range(121):
         batch = []
-        for base in ("BTC", "ETH", "SOL", "XRP", "DOGE"):
+        for base, _ in sorted(PAIRS):
             for tf in Timeframe:
                 opened = advance(align_floor(now, tf), tf, slot)
                 original = observation()
@@ -151,7 +178,7 @@ async def test_forty_series_obey_buffer_cap(
     async with migrator_engine.connect() as c:
         assert (
             await c.execute(text("SELECT count(*) FROM market_candle_preview"))
-        ).scalar_one() == 4800
+        ).scalar_one() == len(PAIRS) * len(Timeframe) * 120
         counts = [
             int(row[0])
             for row in (
@@ -160,7 +187,7 @@ async def test_forty_series_obey_buffer_cap(
                 )
             ).all()
         ]
-        assert len(counts) == 40 and set(counts) == {120}
+        assert len(counts) == len(PAIRS) * len(Timeframe) and set(counts) == {120}
 
 
 async def test_ended_demand_is_transactional_and_never_resets_a_worker_claim(

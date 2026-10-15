@@ -5,12 +5,14 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, StrictStr
 
+from tiewtrade.core.market_catalog import MarketSource, SupportedBase, SupportedQuote
+
 
 class PriceRow(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    source: str
-    base: str
-    quote: str
+    source: MarketSource
+    base: SupportedBase
+    quote: SupportedQuote
     amount: StrictStr | None
     trade_at: datetime | None
     received_at: datetime | None

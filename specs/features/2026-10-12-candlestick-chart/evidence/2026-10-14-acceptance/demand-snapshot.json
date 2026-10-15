@@ -1,0 +1,90 @@
+{
+  "recorded_at": "2026-10-14T18:04:19.114004+00:00",
+  "scope": "Queue status after deep-history traversal; recent live-tail requests may be pending independently of completed stored history.",
+  "historical_contiguous_series": 40,
+  "by_timeframe": [
+    {
+      "timeframe": "1m",
+      "status": "PENDING",
+      "series": 5,
+      "desired_start": "2026-07-14T13:07:00+00:00",
+      "min_cursor": "2026-10-14T17:58:00+00:00",
+      "max_cursor": "2026-10-14T17:59:00+00:00",
+      "min_desired_end": "2026-10-14T18:04:00+00:00",
+      "max_desired_end": "2026-10-14T18:04:00+00:00"
+    },
+    {
+      "timeframe": "5m",
+      "status": "PENDING",
+      "series": 5,
+      "desired_start": "2026-07-14T13:05:00+00:00",
+      "min_cursor": "2026-10-14T18:00:00+00:00",
+      "max_cursor": "2026-10-14T18:00:00+00:00",
+      "min_desired_end": "2026-10-14T18:05:00+00:00",
+      "max_desired_end": "2026-10-14T18:05:00+00:00"
+    },
+    {
+      "timeframe": "15m",
+      "status": "PENDING",
+      "series": 5,
+      "desired_start": "2026-07-14T13:00:00+00:00",
+      "min_cursor": "2026-10-14T18:00:00+00:00",
+      "max_cursor": "2026-10-14T18:00:00+00:00",
+      "min_desired_end": "2026-10-14T18:15:00+00:00",
+      "max_desired_end": "2026-10-14T18:15:00+00:00"
+    },
+    {
+      "timeframe": "1h",
+      "status": "PENDING",
+      "series": 5,
+      "desired_start": "2026-07-14T13:00:00+00:00",
+      "min_cursor": "2026-10-14T18:00:00+00:00",
+      "max_cursor": "2026-10-14T18:00:00+00:00",
+      "min_desired_end": "2026-10-14T19:00:00+00:00",
+      "max_desired_end": "2026-10-14T19:00:00+00:00"
+    },
+    {
+      "timeframe": "4h",
+      "status": "COMPLETE",
+      "series": 5,
+      "desired_start": "2026-04-30T12:00:00+00:00",
+      "min_cursor": "2026-10-14T16:00:00+00:00",
+      "max_cursor": "2026-10-14T16:00:00+00:00",
+      "min_desired_end": "2026-10-14T20:00:00+00:00",
+      "max_desired_end": "2026-10-14T20:00:00+00:00"
+    },
+    {
+      "timeframe": "1d",
+      "status": "COMPLETE",
+      "series": 5,
+      "desired_start": "2025-10-15T00:00:00+00:00",
+      "min_cursor": "2026-07-07T00:00:00+00:00",
+      "max_cursor": "2026-10-15T00:00:00+00:00",
+      "min_desired_end": "2026-10-15T00:00:00+00:00",
+      "max_desired_end": "2026-10-15T00:00:00+00:00"
+    },
+    {
+      "timeframe": "1w",
+      "status": "COMPLETE",
+      "series": 5,
+      "desired_start": "2017-08-14T00:00:00+00:00",
+      "min_cursor": "2024-11-18T00:00:00+00:00",
+      "max_cursor": "2026-10-19T00:00:00+00:00",
+      "min_desired_end": "2026-10-19T00:00:00+00:00",
+      "max_desired_end": "2026-10-19T00:00:00+00:00"
+    },
+    {
+      "timeframe": "1M",
+      "status": "COMPLETE",
+      "series": 5,
+      "desired_start": "2017-08-01T00:00:00+00:00",
+      "min_cursor": "2018-07-01T00:00:00+00:00",
+      "max_cursor": "2026-11-01T00:00:00+00:00",
+      "min_desired_end": "2026-11-01T00:00:00+00:00",
+      "max_desired_end": "2026-11-01T00:00:00+00:00"
+    }
+  ],
+  "complete_series": 20,
+  "pending_or_running_series": 20,
+  "failed_series": 0
+}

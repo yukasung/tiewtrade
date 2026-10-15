@@ -9,10 +9,10 @@ import { useChartData } from "./chart/useChartData";
 import { candleTimeline } from "./chart/candleTimeline";
 import { anchoredRange } from "./chart/viewport";
 import type { Series, Timeframe } from "./chart/api";
+import { supportedBases } from "./marketCatalog";
 import { TradeHistoryPlaceholder, TradingOrderPlaceholder } from "./TradingWorkspacePlaceholders";
 import "./CandlestickChartPanel.css";
 
-const pairs = ["BTC", "ETH", "SOL", "XRP", "DOGE"];
 const timeframes: Timeframe[] = ["1m", "5m", "15m", "1h", "4h", "1d", "1w", "1M"];
 const noIndicators = new Set<string>();
 const chartLocale = "th";
@@ -149,7 +149,7 @@ export function CandlestickChartPanel({ userId }: { userId: string }) {
       <div className="chart-controls">
         <div><Select id="chart-pair" aria-label={t("pair")} value={base}
           onChange={event => changeSeries(event.target.value, timeframe)}>
-            {pairs.map(pair => <option key={pair} value={pair}>{pair}/USDT</option>)}</Select></div>
+            {supportedBases.map(pair => <option key={pair} value={pair}>{pair}/USDT</option>)}</Select></div>
         <div><Select id="chart-timeframe" aria-label={t("timeframe")} value={timeframe}
             onChange={event => changeSeries(base, event.target.value as Timeframe)}>
             {timeframes.map(value => <option key={value}>{value}</option>)}</Select></div>

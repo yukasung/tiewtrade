@@ -1,5 +1,9 @@
 # F-11 — คำนวณ indicator ที่ backend — Validation
 
+**Pair-scope amendment — Approved 2026-10-15:** ใช้ F-38 เป็นเกณฑ์ปัจจุบัน:
+readiness เตรียม BTCUSDT และ ETHUSDT × 8 timeframe รวม 16 series ส่วน workload ชุดยาว
+วัด BTCUSDT 8 series. ผล 30/30 หรือ 40-series เดิมด้านล่างเป็นหลักฐาน historical เท่านั้น.
+
 สถานะ: **Approved** — เจ้าของอนุมัติทั้งฉบับเมื่อ 2026-10-10 ตามคำสั่ง “approve”; เริ่มตรวจ implementation แล้ว แต่ยังไม่ผ่านครบทุกด่าน; รวมNC-35 amendmentsที่อนุมัติเมื่อ2026-10-10
 การลบ MACD ด้านล่าง: **Approved** — เจ้าของอนุมัติ amendment เมื่อ 2026-10-13; เกณฑ์ใหม่ยังไม่ได้รันและไม่แทนผล Failed/Partial/Pending เดิม
 วันที่: 2026-10-10
@@ -24,6 +28,11 @@ Branch: feature/f-11-backend-indicators
 
 Release checkpoint 2026-10-13: เจ้าของอนุมัติ Milestone B รอบเต็มแล้ว;
 ติดตามผล candidate ปัจจุบันใน [รายงานรอบเต็ม](profiling/release-20261013/README.md).
+รอบต่อ 2026-10-14/15 อยู่ใน [release checkpoint ใหม่](profiling/release-20261014/README.md):
+หลังแก้ harness capacity/freshness แล้ว C1 ผ่าน 30/30 และ C2 ผ่านช่วงวัดเต็ม 3,600.016s;
+ทุก series ได้ valid 360/360 และ correct probe 60/60, API max lag 75.283ms,
+API max RSS 63.219MiB และ worker max attempt 50.053008s. R2-7 cold/warm resource
+ยัง Failed, C3/C5 ยังไม่รัน และ C6 Failed เดิมยังคงอยู่ จึงยังไม่เปิด PREPARED.
 ผล smoke ที่แก้ producer แล้วครบ 30/30 และ HTTP 60/60 อยู่ใน
 [follow-up](profiling/prepared-chart-smoke-fixed-r2/README.md); ไม่ใช้แทน full acceptance
 และยังไม่อนุมัติ Milestone C/เปิด PREPARED ใน application DB.
@@ -54,7 +63,7 @@ lint/types/tests, API contract, PostgreSQL version, container และ browser 
 ด่าน correctness/security/transaction/concurrency/parity, functional
 mixed-version/GC และ V-17/PV-9 ที่ไม่ได้เลื่อนผ่านและรีวิวครบ.
 สถานะ feature ใช้ [roadmap](../../roadmap.md) เป็นแหล่งเดียว.
-ยังไม่ปิด aggregate ที่พึ่ง capacity/release: R2-7 measurements, C2/C3/C5,
+ยังไม่ปิด aggregate ที่พึ่ง capacity/release: R2-7 measurements, C3/C5,
 C4 ส่วนรอบเต็ม, C6, S5/G7/D7 ส่วนที่เลื่อน รวม production inventory/release checks.
 ผล Failed/Partial เดิมคงไว้; ไม่ได้รันทดสอบยาวใหม่ ไม่อนุมัติ production PREPARED
 และไม่ถือว่าผ่านเกณฑ์ Completed.

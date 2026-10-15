@@ -2,7 +2,7 @@ import { expect, it } from "vitest";
 import { decodePrices, acceptPrices } from "../src/realtimePrices";
 import { snapshot } from "./priceFixture";
 it("decodes only bounded complete snapshots with string prices and counters", () => {
-    expect(decodePrices(snapshot()).rows).toHaveLength(5);
+    expect(decodePrices(snapshot()).rows).toHaveLength(2);
     expect(() => decodePrices({ ...snapshot(), rows: [{ ...snapshot().rows[0], amount: 12 }] })).toThrow();
     expect(() => decodePrices({ ...snapshot(), schema_version: 2 })).toThrow();
 });

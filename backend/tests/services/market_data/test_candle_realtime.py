@@ -1,6 +1,9 @@
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 from dataclasses import replace
 from datetime import timedelta
 from typing import cast
+from uuid import uuid4
 
 import pytest
 from hypothesis import given
@@ -9,8 +12,14 @@ from hypothesis import strategies as st
 from tests.infra.market_data.test_chart_preview import observation
 from tiewtrade.core.candle_preview import CandleObservation, Progress, compare
 from tiewtrade.core.money import Money, Quantity
+from tiewtrade.infra.market_data.candle_preview import PreviewLease
 from tiewtrade.infra.realtime.notifications import RedisNotifications
-from tiewtrade.services.market_data.candle_realtime import CandleConflictError, CandleSupervisor
+from tiewtrade.services.market_data import candle_realtime
+from tiewtrade.services.market_data.candle_realtime import (
+    SERIES,
+    CandleConflictError,
+    CandleSupervisor,
+)
 from tiewtrade.venues.candle_streams import FeedCandle
 from tiewtrade.venues.fake import FakeCandleFeed
 
@@ -24,6 +33,43 @@ def supervisor() -> CandleSupervisor:
     )
     result.epoch = 1
     return result
+
+
+async def test_bootstrap_commits_each_series_before_marking_ready(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    state = supervisor()
+    state.lease = PreviewLease(uuid4(), 1)
+    calls: list[object] = []
+    sessions = 0
+    completed = False
+
+    class Session:
+        async def execute(self, statement: str) -> None:
+            assert statement.startswith("SET LOCAL")
+
+    @asynccontextmanager
+    async def session(_engine: object) -> AsyncIterator[Session]:
+        nonlocal sessions
+        sessions += 1
+        yield Session()
+
+    async def bootstrap(_session: object, _lease: PreviewLease, series: object) -> None:
+        calls.append(series)
+
+    async def complete(_session: object, _lease: PreviewLease) -> None:
+        nonlocal completed
+        completed = True
+
+    monkeypatch.setattr(candle_realtime, "market_data_session", session)
+    monkeypatch.setattr(candle_realtime, "bootstrap_series", bootstrap)
+    monkeypatch.setattr(candle_realtime, "complete_bootstrap", complete)
+
+    await state._bootstrap(1)
+
+    assert calls == list(SERIES)
+    assert sessions == len(SERIES) + 1
+    assert completed is True
 
 
 @given(st.lists(st.integers(min_value=1, max_value=1000), min_size=1, max_size=100))

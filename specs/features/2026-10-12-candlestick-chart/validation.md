@@ -1,5 +1,9 @@
 # F-12 — กราฟแท่งเทียนบนหน้าเว็บ — Validation
 
+**Pair-scope amendment — Approved 2026-10-15:** ใช้ F-38 เป็นเกณฑ์ปัจจุบัน:
+กราฟรองรับ BTCUSDT และ ETHUSDT × 8 timeframe รวม 16 series และ workload ชุดยาววัด
+BTCUSDT 8 series. ผล deep history 40/40 เดิมด้านล่างเป็นหลักฐาน historical เท่านั้น.
+
 ผลหลัง merge ล่าสุด: [post-merge validation checkpoint](evidence/2026-10-14-post-merge.md).
 ผลแก้ viewport ตาม P-H3: [anchor regression evidence](evidence/2026-10-14-viewport.md).
 
@@ -33,6 +37,13 @@ concurrency และ safety ที่เกี่ยวข้อง พร้�
 จนถึง checkpoint เดิม; ห้ามรายงานดูได้ครบก่อน V-H1..8 มีหลักฐานครบตามข้อจำกัดของต้นทาง.
 
 ผลตรวจ backfill ช่วงล่าสุด: [recent-history priority amendment](recent-history-priority-amendment.md).
+
+ผลตรวจรับหลัง merge ล่าสุดอยู่ใน [acceptance progress 2026-10-14](evidence/2026-10-14-acceptance-progress.md):
+browser จริงผ่าน 8 TF; backfill เดิมอีก 15 series จบแล้วและ deep history 40/40 series
+ผ่าน continuity กับ API traversal ถึง `display_start`. PREPARED C2 rerun ผ่านช่วงวัดเต็มแล้ว;
+V-17 ยังเป็น Pending Full Validation เพราะ F-12 workload, C3/C5, C6/R2-7 และเกณฑ์ release
+ที่เหลือยังไม่ครบ. ช่องว่างแท่งสดจาก preview writer unavailable บันทึกแยก ไม่ใช้ deep-history
+pass กลบ freshness risk.
 
 เกณฑ์และผลตรวจการกู้กราฟหลัง history error อยู่ใน
 [amendment ที่อนุมัติ](chart-error-recovery-amendment.md); ไม่ทดแทน full validation เดิม.

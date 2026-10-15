@@ -1,5 +1,10 @@
 # F-11 — คำนวณ indicator ที่ backend — Requirements
 
+**Pair-scope amendment — Approved 2026-10-15:** F-38 แทนรายการ 5 คู่ใน baseline
+ด้วย BTCUSDT และ ETHUSDT × 8 timeframe รวม 16 runtime series; workload รอบยาว
+ของ F-38 วัด BTCUSDT 8 series และคง ETH workloadเป็น Pending โดยไม่ลดเกณฑ์ต่อ series
+หรือกฎความถูกต้องของ indicator
+
 สถานะ: **Approved** — เจ้าของอนุมัติทั้งฉบับและปิด NC-30..33 เมื่อ 2026-10-10 ตามคำสั่ง “approve”; รวมNC-35 amendmentsที่อนุมัติเมื่อ2026-10-10
 การเปลี่ยนแปลง MACD ด้านล่าง: **Approved** — เจ้าของยืนยันขอบเขตให้ลบทั้งระบบและอนุมัติ amendment เมื่อ 2026-10-13
 วันที่: 2026-10-10

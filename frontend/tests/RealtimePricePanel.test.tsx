@@ -3,6 +3,7 @@ import { afterEach, expect, it, vi } from "vitest";
 import { realtimePriceI18n } from "../src/realtimePriceMessages";
 import { onlineManager } from "@tanstack/react-query";
 import { AccountSession } from "../src/AccountSession";
+import { supportedBases } from "../src/marketCatalog";
 import { RealtimePricePanel } from "../src/RealtimePricePanel";
 import { snapshot } from "./priceFixture";
 class Socket {
@@ -28,8 +29,8 @@ function mount(onExpired = vi.fn(), get: Promise<Response> = Promise.resolve(new
 it("reports readiness only at server reference, preserves exact decimals and trade time", async () => {
     mount();
     await screen.findAllByText("พร้อม ณ เวลาที่ตรวจ");
-    expect(screen.getAllByText("12.34000000 USDT")).toHaveLength(5);
-    expect(document.querySelectorAll("time[datetime]").length).toBe(6);
+    expect(screen.getAllByText("12.34000000 USDT")).toHaveLength(supportedBases.length);
+    expect(document.querySelectorAll("time[datetime]").length).toBe(supportedBases.length + 1);
 });
 it("late GET cannot overwrite stream and offline warns without changing snapshot", async () => {
     let resolve!: (value: Response) => void;
@@ -38,7 +39,7 @@ it("late GET cannot overwrite stream and offline warns without changing snapshot
     await act(() => Promise.resolve(resolve(new Response(JSON.stringify(snapshot())))));
     void act(() => window.dispatchEvent(new Event("offline")));
     expect(screen.getByText(/การเชื่อมต่อขาด/)).toBeTruthy();
-    expect(screen.getAllByText("พร้อม ณ เวลาที่ตรวจ")).toHaveLength(5);
+    expect(screen.getAllByText("พร้อม ณ เวลาที่ตรวจ")).toHaveLength(supportedBases.length);
     expect(Socket.all[0]!.close).toHaveBeenCalled();
 });
 it("reconnect awaits full snapshot and rejects callbacks from old transport", async () => {
@@ -81,7 +82,7 @@ it("heartbeat detection warns immediately and does not infer a market outage", a
     void act(() => vi.advanceTimersByTime(3001));
     expect(screen.getByText(/การเชื่อมต่อขาด/)).toBeTruthy();
     expect(screen.queryByText(/ครบ 60 วินาที/)).toBeNull();
-    expect(screen.getAllByText("พร้อม ณ เวลาที่ตรวจ")).toHaveLength(5);
+    expect(screen.getAllByText("พร้อม ณ เวลาที่ตรวจ")).toHaveLength(supportedBases.length);
 });
 it("market alert remains visible beside delivery failure and is not cleared by opening", async () => {
     mount();
@@ -114,7 +115,7 @@ it("invalid schema warns and preserves last valid snapshot",async()=>{
  mount(); await screen.findAllByText("พร้อม ณ เวลาที่ตรวจ");
  void act(()=>Socket.all[0]!.onmessage?.({data:'{"schema_version":9,"secret":"never-render"}'}));
  expect(screen.getByText(/การเชื่อมต่อขาด/)).toBeTruthy();
- expect(screen.getAllByText("12.34000000 USDT")).toHaveLength(5);
+ expect(screen.getAllByText("12.34000000 USDT")).toHaveLength(supportedBases.length);
  expect(screen.queryByText(/never-render/)).toBeNull();
 });
 
@@ -125,7 +126,7 @@ it("English snapshot labels and reference timestamps remain observational across
   const reference=document.querySelector("time")!.getAttribute("datetime");
   vi.spyOn(Date,"now").mockReturnValue(0);
   expect(document.querySelector("time")!.getAttribute("datetime")).toBe(reference);
-  expect(screen.getAllByText("Ready at last check")).toHaveLength(5);
+  expect(screen.getAllByText("Ready at last check")).toHaveLength(supportedBases.length);
  } finally {vi.restoreAllMocks();await realtimePriceI18n.changeLanguage("th");}
 });
 
