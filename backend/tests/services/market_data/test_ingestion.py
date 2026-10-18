@@ -1122,16 +1122,18 @@ async def test_seed_uses_database_clock_despite_two_hour_caller_skew() -> None:
     try:
         async with market_data_session(engine) as session:
             await session.execute("DELETE FROM market_candle_demand")
-            now = await database_now(session)
+            before = await database_now(session)
         source = FakeVenue()
-        await run_round(engine, source, "skewed", now + timedelta(hours=2))
+        await run_round(engine, source, "skewed", before + timedelta(hours=2))
         async with market_data_session(engine) as session:
-            for row in (await session.execute("SELECT * FROM market_candle_demand")).mappings():
+            rows = (await session.execute("SELECT * FROM market_candle_demand")).mappings().all()
+            after = await database_now(session)
+            for row in rows:
                 timeframe = Timeframe(row["timeframe"])
-                assert row["desired_end"] <= next_open(align_floor(now, timeframe), timeframe)
-                assert row["requested_at"] < now + timedelta(seconds=10)
+                assert row["desired_end"] <= next_open(align_floor(after, timeframe), timeframe)
+                assert before <= row["requested_at"] <= after
         assert all(
-            call.end <= next_open(align_floor(now, call.timeframe), call.timeframe)
+            call.end <= next_open(align_floor(after, call.timeframe), call.timeframe)
             for call in source.candle_calls
         )
     finally:
@@ -1316,7 +1318,7 @@ async def test_source_deadline_bounds_attempts_and_persists_timeout_retry(
         await isolated_window(engine, 1)
         monkeypatch.setattr(ingestion, "MARKET_TIMEOUT", timedelta(0), raising=False)
         result = await asyncio.wait_for(
-            run_round(engine, BlockedSource(), "deadline", datetime.now(UTC)), 1
+            run_round(engine, BlockedSource(), "deadline", datetime.now(UTC)), 10
         )
         assert result.attempts == 4
         async with market_data_session(engine) as session:

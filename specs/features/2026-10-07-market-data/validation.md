@@ -211,6 +211,20 @@ TypeScript checks และ contract gate **2 passed** (positive/negative canary
 ข้อ1–3backend/frontend/E2E/contractตรวจใหม่ผ่านแล้ว; เหลือ final review ไม่มี commit/push
 
 Final review: Standards และ Spec reviewers ไม่พบ actionable findings; ผล **APPROVED**
+
+## Maintenance checkpoint — 2026-10-18
+
+- แก้ flaky test `test_seed_uses_database_clock_despite_two_hour_caller_skew` ให้ตรวจ DB clock
+  ด้วยช่วงเวลาก่อน–หลัง `run_round()` แทนการใช้ timestamp ก่อนเริ่มเป็นขอบบนคงที่ ซึ่งผิดได้เมื่อ
+  การทำงานข้าม timeframe boundary
+- แก้ `test_source_deadline_bounds_attempts_and_persists_timeout_retry` โดยขยาย deadlock guard
+  ของ test จาก 1 เป็น 10 วินาทีให้ครอบคลุม DB I/O ของ 4 attempts; production
+  `MARKET_TIMEOUT` และ retry semantics ไม่เปลี่ยน
+- สองเคสรันต่อเนื่อง 10 รอบผ่าน **20 executions**; `test_ingestion.py` ผ่าน **57 tests**;
+  Ruff check/format และ `git diff --check` ผ่านบน branch `fix/f09-flaky-timing-tests`
+- ไม่เปลี่ยน production code, market-data behavior, API contract หรือ trading behavior และไม่มี
+  network call ไปยังตลาดจริง
+
 Docker final verification หลังแก้ issue1–5: Linux images build/migrate/APIhealth/UIproxyhealthผ่าน
 actual CLI `--once` ผ่าน FakeVenue บันทึก1,000observations ไม่มีตลาดจริง
 ครบทุกด่าน local validation; เจ้าของสั่งดำเนินการ commit/push/PR/CI/merge ต่อ
