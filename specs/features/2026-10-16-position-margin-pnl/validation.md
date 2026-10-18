@@ -22,7 +22,7 @@
 | V-13 | RQ-8/RQ-18 | Paper entrypoint/tests ทำงานโดยไม่มี venue key/network/Live executor; negative fixtures ที่ import/call dependency ต้องทำ gate แดง | พัฒนา + candidate | **Development Passed** — AST negative fixture + isolated runtime import; candidate pending |
 | V-14 | RQ-10/RQ-17 | position changes/corrections/conflicts มี typed audit exact owner/episode/pair/result หนึ่งครั้ง ไม่มี secret/raw payload และแก้ย้อนหลังไม่ได้ | พัฒนา + candidate | **Development Passed**; candidate pending |
 | V-15 | RQ-7/RQ-8/RQ-10 | migration `0031→0032→0031→0032` บนฐานว่างผ่าน; downgrade เมื่อมี F-14 data ปฏิเสธโดย data เดิมอยู่ครบ | candidate | **Passed 2026-10-16** บน PostgreSQL แยกพอร์ต 55439 |
-| V-16 | RQ-1 to RQ-19 | relevant backend regression, lint, format, types, import contracts, migration/security/secret gates และ required CI ผ่านบน source สุดท้าย | candidate ก่อน merge | **Local candidate passed 2026-10-18**; required CI บน F-14 source ยัง pending |
+| V-16 | RQ-1 to RQ-19 | relevant backend regression, lint, format, types, import contracts, migration/security/secret gates และ required CI ผ่านบน source สุดท้าย | candidate ก่อน merge | **Passed 2026-10-18** - local full backend 100%; CI run 39097281613 ผ่านครบ 6 jobs, backend 2818 passed |
 | V-17 | nonfunctional | deterministic rebuild และ snapshot workload ตามงบที่อนุมัติ ไม่ล็อก owner อื่นและไม่มี unbounded memory/query growth | release checkpoint | **Pending Full Validation** |
 
 F-14 จะเป็น **Development Complete** ได้เมื่อ V-1–V-16 ผ่านและ review ไม่มี Critical/High
@@ -238,4 +238,10 @@ required CI บน source สุดท้าย; V-17 คง **Pending Full Vali
 - การรันสองครั้งแรกหยุดด้วย FileNotFoundError เพราะ candidate harness ไม่ได้ mount README.md/frontend และ backend/scripts; หลังแก้เฉพาะ harness และสร้างฐานข้อมูลใหม่ การรันครบผ่าน ผลสองครั้งแรกไม่นับเป็น product failure
 - static gates ของ F-14 source ผ่านก่อนหน้า: Ruff check/format 441 files, mypy 407 files และ import-linter 7 contracts; F-09 commit ที่เพิ่มเข้ามาผ่าน static/full CI ของ PR #16
 - final Critical/High review ของ diff F-14 และ dependencies ที่เกี่ยวข้องไม่พบ finding ใหม่
-- V-16 ยังไม่ปิด เพราะ required CI ต้องรันบน commit ของ F-14 source สุดท้าย; F-14 จึงยังเป็น **In Progress** จนกว่าจะ commit/push และ CI ผ่าน
+- V-16 ปิดแล้ว: local candidate ผ่าน และ required CI run 39097281613 ผ่านครบ 6 jobs หลัง rerun backend disconnect timing variation; F-14 พร้อมสถานะ **Development Complete**
+## Required CI checkpoint - 2026-10-18
+
+- PR #17 commit 86a8edc รัน CI 39097281613 ผ่านครบ 6 jobs: config, API contract, frontend, container, browser E2E และ backend
+- backend รอบแรกผ่าน 2817 tests และล้ม 1 F-11 disconnect test เพราะ SQLSTATE 08003 ถูกแปลเป็น InfraError; failed-job rerun โดยไม่แก้ source ผ่าน 2818 tests, 2 deselected
+- V-16 ผ่านครบและ final Critical/High review ไม่มี finding; F-14 เลื่อนเป็น **Development Complete**
+- V-17 ยังคง **Pending Full Validation** และไม่ถือว่า F-14 Completed หรือพร้อม production
