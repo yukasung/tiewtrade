@@ -240,7 +240,7 @@ def _fee_parts(
         return amount, quote_fee, None
     if amount.asset == pair.quote:
         raise InvalidPositionInputError("quote fee must use Money")
-    return base_fee, quote_fee, _zero_quantity(PositionPair(amount.asset, pair.quote)) - amount
+    return base_fee, quote_fee, Quantity.of(0, amount.asset) - amount
 
 
 @guarded
