@@ -31,6 +31,7 @@ from tiewtrade.core.money.indicator_batch import (
     advance_indicator_batch,
     reset_indicator_batch,
 )
+from tiewtrade.core.money.position_arithmetic import allocate_money, money_for_quantity
 from tiewtrade.core.money.rounding import RoundingDirection
 from tiewtrade.core.money.types import Money, Quantity
 
@@ -55,7 +56,9 @@ __all__ = [
     "TooManyDecimalPlacesError",
     "UnitMismatchError",
     "advance_indicator_batch",
+    "allocate_money",
     "divide_money",
+    "money_for_quantity",
     "percentage_share",
     "reset_indicator_batch",
     "weighted_mean_money",

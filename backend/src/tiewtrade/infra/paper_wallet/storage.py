@@ -477,6 +477,11 @@ async def process_claimed(session: UserSession, claimed: ClaimedPaperCommand) ->
         {"wallet": wallet_id, "owner": session.user_id, "episode": episode_id},
     )
     await session.execute(
+        """INSERT INTO paper_position_activity(episode_id,wallet_id,user_id)
+           VALUES (:episode,:wallet,:owner)""",
+        {"episode": episode_id, "wallet": wallet_id, "owner": session.user_id},
+    )
+    await session.execute(
         """INSERT INTO paper_wallet_ledger
            (id,user_id,wallet_id,episode_id,kind,amount,currency,source_command_id)
            VALUES (:id,:owner,:wallet,:episode,'EXTERNAL_CAPITAL',:amount,:currency,:command)""",
