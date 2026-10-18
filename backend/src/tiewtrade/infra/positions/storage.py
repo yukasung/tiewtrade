@@ -222,10 +222,37 @@ async def _record_source_conflict(
         )
     ).first()
     if inserted is None:
-        latest = await read_position_activity(session, current.episode_id)
-        if latest is None:
-            raise PositionIntegrityError("position activity disappeared")
-        return latest
+        return await _require_current_activity(session, current.episode_id)
+    updated = await _mark_activity_conflicted(session, current, failure_code)
+    await record_event(
+        session,
+        AuditEvent(
+            owner_user_id=session.user_id,
+            action=AuditAction.PAPER_POSITION_CONFLICTED,
+            actor_kind=ActorKind.SYSTEM,
+            subject_kind=SubjectKind.PAPER_POSITION_ACTIVITY,
+            subject_id=str(current.episode_id),
+            outcome=AuditOutcome.FAILED,
+            failure_code=failure_code,
+            mode=AuditMode.PAPER,
+            details=PaperPositionConflictDetails(
+                episode_id=current.episode_id, initialization_id=initialization_id
+            ),
+        ),
+    )
+    return updated
+
+
+async def _require_current_activity(session: UserSession, episode_id: UUID) -> PositionActivity:
+    activity = await read_position_activity(session, episode_id)
+    if activity is None:
+        raise PositionIntegrityError("position activity disappeared")
+    return activity
+
+
+async def _mark_activity_conflicted(
+    session: UserSession, current: PositionActivity, failure_code: str
+) -> PositionActivity:
     revision = current.revision + 1
     await session.execute(
         """UPDATE paper_position_projections SET revision=:revision
@@ -247,22 +274,6 @@ async def _record_source_conflict(
         )
         .mappings()
         .one()
-    )
-    await record_event(
-        session,
-        AuditEvent(
-            owner_user_id=session.user_id,
-            action=AuditAction.PAPER_POSITION_CONFLICTED,
-            actor_kind=ActorKind.SYSTEM,
-            subject_kind=SubjectKind.PAPER_POSITION_ACTIVITY,
-            subject_id=str(current.episode_id),
-            outcome=AuditOutcome.FAILED,
-            failure_code=failure_code,
-            mode=AuditMode.PAPER,
-            details=PaperPositionConflictDetails(
-                episode_id=current.episode_id, initialization_id=initialization_id
-            ),
-        ),
     )
     return _activity(updated)
 
@@ -668,34 +679,11 @@ async def _record_event_conflict(
         )
     ).first()
     if inserted is None:
-        latest = await read_position_activity(session, current.episode_id)
-        if latest is None:
-            raise PositionIntegrityError("position activity disappeared")
+        latest = await _require_current_activity(session, current.episode_id)
         return PositionWriteResult(
             PositionWriteStatus.CONFLICTED, event_id, latest, failure_code=failure_code
         )
-    revision = current.revision + 1
-    await session.execute(
-        """UPDATE paper_position_projections SET revision=:revision
-        WHERE episode_id=:episode""",
-        {"episode": current.episode_id, "revision": revision},
-    )
-    updated = (
-        (
-            await session.execute(
-                """UPDATE paper_position_activity SET availability='CONFLICTED',
-                revision=:revision,observed_at=clock_timestamp(),failure_code=:failure
-                WHERE episode_id=:episode RETURNING *""",
-                {
-                    "episode": current.episode_id,
-                    "failure": failure_code,
-                    "revision": revision,
-                },
-            )
-        )
-        .mappings()
-        .one()
-    )
+    updated = await _mark_activity_conflicted(session, current, failure_code)
     await record_event(
         session,
         AuditEvent(
@@ -718,7 +706,7 @@ async def _record_event_conflict(
     return PositionWriteResult(
         PositionWriteStatus.CONFLICTED,
         event_id,
-        _activity(updated),
+        updated,
         failure_code=failure_code,
     )
 
@@ -732,6 +720,26 @@ def _validate_projection_completeness(
         or int(row["source_max_sequence"]) != activity.source_sequence
     ):
         raise PositionIntegrityError("position projection is incomplete")
+
+
+def _position_state(row: Mapping[str, Any] | RowMapping) -> PositionState:
+    return PositionState(
+        pair=PositionPair(row["base"], row["quote"]),
+        held_quantity=quantity_from_columns(row["held_quantity"], row["base"]),
+        total_cost=money_from_columns(row["total_cost"], row["quote"]),
+        realized_pnl=money_from_columns(row["realized_pnl"], row["quote"]),
+        last_sequence=int(row["last_sequence"]),
+    )
+
+
+def _validate_projection_revision(
+    row: Mapping[str, Any] | RowMapping, activity: PositionActivity
+) -> None:
+    if (
+        int(row["projection_revision"]) != activity.revision
+        or int(row["last_sequence"]) != activity.source_sequence
+    ):
+        raise PositionIntegrityError("position projection does not match activity revision")
 
 
 async def read_position_snapshot(session: UserSession, episode_id: UUID) -> PositionSnapshot | None:
@@ -766,24 +774,10 @@ async def read_position_snapshot(session: UserSession, episode_id: UUID) -> Posi
         return None
     activity = _activity(rows[0])
     _validate_projection_completeness(rows[0], activity)
-    positions = tuple(
-        PositionState(
-            pair=PositionPair(row["base"], row["quote"]),
-            held_quantity=quantity_from_columns(row["held_quantity"], row["base"]),
-            total_cost=money_from_columns(row["total_cost"], row["quote"]),
-            realized_pnl=money_from_columns(row["realized_pnl"], row["quote"]),
-            last_sequence=int(row["last_sequence"]),
-        )
-        for row in rows
-        if row["base"] is not None
-    )
-    if any(
-        int(row["projection_revision"]) != activity.revision
-        or int(row["last_sequence"]) != activity.source_sequence
-        for row in rows
-        if row["base"] is not None
-    ):
-        raise PositionIntegrityError("position projection does not match activity revision")
+    position_rows = [row for row in rows if row["base"] is not None]
+    positions = tuple(_position_state(row) for row in position_rows)
+    for row in position_rows:
+        _validate_projection_revision(row, activity)
     return PositionSnapshot(activity, positions, rows[0]["snapshot_at"])
 
 
@@ -833,18 +827,8 @@ async def read_valued_position_snapshot(
     for row in rows:
         if row["base"] is None:
             continue
-        if (
-            int(row["projection_revision"]) != activity.revision
-            or int(row["last_sequence"]) != activity.source_sequence
-        ):
-            raise PositionIntegrityError("position projection does not match activity revision")
-        state = PositionState(
-            pair=PositionPair(row["base"], row["quote"]),
-            held_quantity=quantity_from_columns(row["held_quantity"], row["base"]),
-            total_cost=money_from_columns(row["total_cost"], row["quote"]),
-            realized_pnl=money_from_columns(row["realized_pnl"], row["quote"]),
-            last_sequence=int(row["last_sequence"]),
-        )
+        _validate_projection_revision(row, activity)
+        state = _position_state(row)
         reason: str | None = None
         pnl: Money | None = None
         if activity.availability is not PositionAvailability.READY:
