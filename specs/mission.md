@@ -272,6 +272,14 @@ TiewTrade ไม่ใช่ UID หรือ API key ของ Binance TH
 
 | รหัส | เรื่อง | บล็อกอะไร |
 |---|---|---|
+| **NC-51 — Closed (2026-10-16)** | เจ้าของยืนยันให้ source initialization conflict ใช้ `PAPER_POSITION_CONFLICTED` เดิม แต่ subject เป็น `PAPER_POSITION_ACTIVITY` และ details มี episode/initialization ID โดยไม่สร้าง pair สมมติ; execution conflict ยังคงผูก event/pair | ปิด activity initialization conflict/audit contract ของ F-14 |
+| **NC-50 — Closed (2026-10-16)** | เจ้าของยืนยันให้ `REPLACE`/`VOID` คง source sequence และ execution identity ของ execution ที่ถูกแก้ โดยมี event append identity/recorded order แยกต่างหาก | ปิด correction ordering ของ F-14; rebuild วาง effective leaf ไว้ที่ลำดับเดิมและ correction ไม่ขยับ source completeness |
+| **NC-44 — Closed (2026-10-16)** | เจ้าของอนุมัติให้ Spot position แยกต่อคู่เทรด ไม่รวมสินทรัพย์ฐานข้ามคู่ | ปิดขอบเขต position ของ F-14 |
+| **NC-45 — Closed (2026-10-16)** | เจ้าของอนุมัติ weighted-average cost; ปิดหมดแล้วการซื้อใหม่เริ่มฐานต้นทุนใหม่ | ปิดสูตร realized PnL ของ F-14 |
+| **NC-46 — Closed (2026-10-16)** | เจ้าของอนุมัติใช้ fee/rebate จริง: base ปรับปริมาณ, quote ปรับต้นทุน/รายรับ, สินทรัพย์ที่สามเก็บค่าใช้จ่ายแยกโดยไม่แปลงหน่วยเอง | ปิด fee treatment ของ F-14; อัตราจำลองยังอยู่ F-15 |
+| **NC-47 — Closed (2026-10-16)** | เจ้าของอนุมัติใช้ราคาซื้อขายล่าสุดที่ยัง fresh และไม่หัก estimated exit fee; ราคาไม่พร้อมให้ PnL unavailable | ปิดสูตร unrealized PnL ของ F-14 |
+| **NC-48 — Closed (2026-10-16)** | เจ้าของอนุมัติ append-only correction แล้ว rebuild projection แบบ deterministic; ข้อมูลขัดกันให้ unknown | ปิด correction semantics ของ F-14 |
+| **NC-49 — Closed (2026-10-16)** | เจ้าของอนุมัติให้ Live position/cost basis เป็น unknown จน F-23 กระทบยอด Binance สำเร็จ | F-14 ทำ shared core/Paper source ได้โดยไม่กล่าวอ้าง Live authority |
 | **NC-39 — Closed (2026-10-12)** | เจ้าของเลือกรวมแท่งเทียนสดใน F-12 — [คำตัดสิน/ขอบเขต](features/2026-10-12-candlestick-chart/requirements.md#nc-39--closed-ขอบเขตแท่งเทียนสด) | ปิดการเลือกขอบเขต; สถานะการอนุมัติขั้นเอกสารดูหัวไฟล์แต่ละฉบับ ไม่เปลี่ยน finality ของงานเดิม |
 | **NC-42 — Closed (2026-10-13)** | เจ้าของอนุมัติ source max-span และ fetch-unit splitting สำหรับ F-12 history recovery — [แผน](features/2026-10-12-candlestick-chart/recovery-plan-amendment.md) | implementation/targeted checks ผ่าน; ประวัติกำลังทยอยโหลดตามงบเดิม ไม่ถือว่า coverage ทุก series ครบแล้ว |
 | **NC-43 — Closed (2026-10-13)** | เจ้าของอนุมัติกฎ empty baseline เฉพาะ empty→first-trade transition — [ข้อกำหนด/แผน/validation](features/2026-10-12-candlestick-chart/preview-first-trade-amendment.md) | ไม่บล็อก implementation; conflict ของ nonempty snapshots, malformed baseline และ closure ambiguity ยังคง fail closed |

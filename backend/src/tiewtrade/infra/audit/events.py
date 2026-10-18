@@ -19,9 +19,9 @@ from enum import Enum
 from typing import Protocol, runtime_checkable
 from uuid import UUID
 
-from tiewtrade.core.money import Money, Quantity
+from tiewtrade.core.money import Money, MoneyError, Quantity
+from tiewtrade.core.trading_account import AccountUse
 from tiewtrade.infra.db.errors import InfraError
-from tiewtrade.infra.trading_account.records import AccountUse
 
 
 class AuditEventError(InfraError):
@@ -67,6 +67,9 @@ class AuditAction(Enum):
     PAPER_WALLET_CREATED = "PAPER_WALLET_CREATED"
     PAPER_WALLET_CREATE_REJECTED = "PAPER_WALLET_CREATE_REJECTED"
     PAPER_WALLET_RESET_REJECTED = "PAPER_WALLET_RESET_REJECTED"
+    PAPER_POSITION_APPLIED = "PAPER_POSITION_APPLIED"
+    PAPER_POSITION_CORRECTED = "PAPER_POSITION_CORRECTED"
+    PAPER_POSITION_CONFLICTED = "PAPER_POSITION_CONFLICTED"
 
 
 #: ชนิดเหตุการณ์ที่เป็นการเทรด — ต้องระบุ PAPER หรือ LIVE เสมอ (RQ-19)
@@ -76,6 +79,9 @@ TRADING_ACTIONS: frozenset[AuditAction] = frozenset(
         AuditAction.PAPER_WALLET_CREATED,
         AuditAction.PAPER_WALLET_CREATE_REJECTED,
         AuditAction.PAPER_WALLET_RESET_REJECTED,
+        AuditAction.PAPER_POSITION_APPLIED,
+        AuditAction.PAPER_POSITION_CORRECTED,
+        AuditAction.PAPER_POSITION_CONFLICTED,
     }
 )
 
@@ -113,6 +119,8 @@ class SubjectKind(Enum):
     API_KEY = "API_KEY"
     PAPER_WALLET = "PAPER_WALLET"
     PAPER_WALLET_COMMAND = "PAPER_WALLET_COMMAND"
+    PAPER_POSITION_EVENT = "PAPER_POSITION_EVENT"
+    PAPER_POSITION_ACTIVITY = "PAPER_POSITION_ACTIVITY"
 
 
 @runtime_checkable
@@ -275,11 +283,97 @@ class PaperWalletRejectedDetails:
         return {}
 
 
+@dataclass(frozen=True, slots=True)
+class PaperPositionDetails:
+    event_id: UUID
+    execution_id: UUID
+    episode_id: UUID
+    base: str
+    quote: str
+    quantity: Quantity
+    quote_amount: Money
+
+    def __post_init__(self) -> None:
+        if (
+            type(self.quantity) is not Quantity
+            or self.quantity.asset != self.base
+            or type(self.quote_amount) is not Money
+            or self.quote_amount.currency != self.quote
+            or self.base == self.quote
+        ):
+            raise AuditEventError("position audit amounts do not match the declared pair")
+
+    def as_details(self) -> dict[str, object]:
+        quantity = quantity_detail(self.quantity)
+        quote_amount = money_detail(self.quote_amount)
+        return {
+            "event_id": str(self.event_id),
+            "execution_id": str(self.execution_id),
+            "episode_id": str(self.episode_id),
+            "base": self.base,
+            "quote": self.quote,
+            "quantity": quantity["amount"],
+            "quantity_unit": quantity["unit"],
+            "quote_amount": quote_amount["amount"],
+            "quote_currency": quote_amount["unit"],
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class PaperPositionConflictDetails:
+    episode_id: UUID
+    event_id: UUID | None = None
+    initialization_id: UUID | None = None
+    base: str | None = None
+    quote: str | None = None
+
+    def __post_init__(self) -> None:
+        event_shape = (
+            self.event_id is not None
+            and self.initialization_id is None
+            and self.base is not None
+            and self.quote is not None
+        )
+        initialization_shape = (
+            self.event_id is None
+            and self.initialization_id is not None
+            and self.base is None
+            and self.quote is None
+        )
+        if not (event_shape or initialization_shape):
+            raise AuditEventError("position conflict details use one declared shape")
+        if event_shape and self.base == self.quote:
+            raise AuditEventError("position conflict pair must contain different units")
+        if event_shape:
+            assert self.base is not None and self.quote is not None
+            try:
+                Quantity.of(0, self.base)
+                Money.of(0, self.quote)
+            except MoneyError as cause:
+                raise AuditEventError("position conflict pair is invalid") from cause
+
+    def as_details(self) -> dict[str, object]:
+        if self.event_id is not None:
+            return {
+                "event_id": str(self.event_id),
+                "episode_id": str(self.episode_id),
+                "base": self.base,
+                "quote": self.quote,
+            }
+        return {
+            "initialization_id": str(self.initialization_id),
+            "episode_id": str(self.episode_id),
+        }
+
+
 DETAILS_TYPES: dict[AuditAction, type[object]] = {
     AuditAction.TRADING_USE_SELECTED: TradingUseDetails,
     AuditAction.PAPER_WALLET_CREATED: PaperWalletCreatedDetails,
     AuditAction.PAPER_WALLET_CREATE_REJECTED: PaperWalletRejectedDetails,
     AuditAction.PAPER_WALLET_RESET_REJECTED: PaperWalletRejectedDetails,
+    AuditAction.PAPER_POSITION_APPLIED: PaperPositionDetails,
+    AuditAction.PAPER_POSITION_CORRECTED: PaperPositionDetails,
+    AuditAction.PAPER_POSITION_CONFLICTED: PaperPositionConflictDetails,
     AuditAction.USER_CREATED: UserCreatedDetails,
     AuditAction.SESSION_STARTED: SessionDetails,
     AuditAction.SESSION_ENDED: SessionDetails,
@@ -323,6 +417,13 @@ ALLOWED_FAILURE_CODES: frozenset[str] = frozenset(
         "ACTIVITY_UNKNOWN",
         "EPISODE_CONFLICT",
         "RESET_UNSAFE",
+        "POSITION_SEQUENCE_GAP",
+        "POSITION_DUPLICATE_CONFLICT",
+        "POSITION_CORRECTION_CONFLICT",
+        "POSITION_SOURCE_UNKNOWN",
+        "POSITION_INSUFFICIENT",
+        "POSITION_EXECUTION_INVALID",
+        "POSITION_PRICE_UNAVAILABLE",
     }
 )
 
@@ -422,6 +523,35 @@ def _check_paper_wallet_event(event: AuditEvent) -> None:
         raise AuditEventError("ผลปฏิเสธ Paper wallet ต้องมีรหัสเหตุผล")
 
 
+def _check_paper_position_event(event: AuditEvent) -> None:
+    if event.actor_kind is not ActorKind.SYSTEM or event.actor_id is not None:
+        raise AuditEventError("เหตุการณ์ Paper position ต้องมีระบบเป็นผู้กระทำ")
+    if event.mode is not AuditMode.PAPER:
+        raise AuditEventError("เหตุการณ์ Paper position ต้องอยู่ในโหมด PAPER")
+    if event.action is AuditAction.PAPER_POSITION_CONFLICTED:
+        details = event.details
+        if not isinstance(details, PaperPositionConflictDetails):
+            raise AuditEventError("position conflict details required")
+        expected_subject = (
+            SubjectKind.PAPER_POSITION_EVENT
+            if details.event_id is not None
+            else SubjectKind.PAPER_POSITION_ACTIVITY
+        )
+        expected_id = str(details.event_id or details.episode_id)
+        if event.subject_kind is not expected_subject or event.subject_id != expected_id:
+            raise AuditEventError("position conflict subject does not match its details")
+        if event.outcome is not AuditOutcome.FAILED or event.failure_code is None:
+            raise AuditEventError("position conflict ต้องล้มเหลวพร้อมรหัสเหตุผล")
+        return
+    if event.subject_kind is not SubjectKind.PAPER_POSITION_EVENT:
+        raise AuditEventError("เหตุการณ์ Paper position ต้องมีเป้าหมายเป็น position event")
+    details = event.details
+    if not isinstance(details, PaperPositionDetails) or event.subject_id != str(details.event_id):
+        raise AuditEventError("position event subject does not match its details")
+    if event.outcome is not AuditOutcome.SUCCEEDED or event.failure_code is not None:
+        raise AuditEventError("position apply/correction ต้องสำเร็จโดยไม่มีรหัสความล้มเหลว")
+
+
 #: ข้อบังคับเฉพาะของแต่ละเหตุการณ์ — **ทุกชนิดที่เพิ่มใหม่ต้องมีตัวตรวจของตัวเองที่นี่**
 #: ถ้าไม่มี การสร้างบันทึกของชนิดนั้นจะล้มเหลวทันที ซึ่งเป็นผลที่ต้องการ
 #: (ดังตอนเขียนโค้ด ดีกว่าปล่อยให้บันทึกที่ไม่มีใครตรวจไหลลงตารางที่ลบไม่ได้)
@@ -446,6 +576,9 @@ _ACTION_INVARIANTS: dict[AuditAction, Callable[[AuditEvent], None]] = {
     AuditAction.PAPER_WALLET_CREATED: _check_paper_wallet_event,
     AuditAction.PAPER_WALLET_CREATE_REJECTED: _check_paper_wallet_event,
     AuditAction.PAPER_WALLET_RESET_REJECTED: _check_paper_wallet_event,
+    AuditAction.PAPER_POSITION_APPLIED: _check_paper_position_event,
+    AuditAction.PAPER_POSITION_CORRECTED: _check_paper_position_event,
+    AuditAction.PAPER_POSITION_CONFLICTED: _check_paper_position_event,
 }
 
 

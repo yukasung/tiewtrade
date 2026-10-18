@@ -8,6 +8,7 @@ import sys
 from pathlib import Path
 from uuid import UUID, uuid4
 
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncEngine
 
 from tiewtrade.infra.db import user_session
@@ -20,6 +21,7 @@ _BACKEND_ROOT = Path(__file__).parents[3]
 
 async def test_populated_downgrade_is_refused_without_deleting_command(
     api_engine: AsyncEngine,
+    migrator_engine: AsyncEngine,
     owner: UUID,
 ) -> None:
     command = await _submit(api_engine, owner, uuid4())
@@ -36,5 +38,12 @@ async def test_populated_downgrade_is_refused_without_deleting_command(
 
     assert result.returncode != 0
     assert "paper wallet data exists; downgrade refused" in result.stderr
+    async with migrator_engine.connect() as connection:
+        assert (
+            await connection.execute(text("SELECT version_num FROM alembic_version"))
+        ).scalar_one() == "0032"
+        assert (
+            await connection.execute(text("SELECT to_regclass('public.paper_position_activity')"))
+        ).scalar_one() == "paper_position_activity"
     async with user_session(api_engine, owner) as session:
         assert await get_command(session, command.command_id) == command

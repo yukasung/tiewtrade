@@ -1,16 +1,11 @@
 """Single-account metadata never grants permission to trade."""
 
 from dataclasses import dataclass, field
-from enum import StrEnum
 from typing import ClassVar
 
+from tiewtrade.core.trading_account import AccountUse as AccountUse
 from tiewtrade.infra.api_keys.records import ApiKeySummary
 from tiewtrade.infra.db.errors import InfraError
-
-
-class AccountUse(StrEnum):
-    MANUAL = "MANUAL"
-    BOT = "BOT"
 
 
 class TradingAccountError(InfraError):
