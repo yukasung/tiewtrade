@@ -59,6 +59,137 @@ it("renders exact server amounts and keeps reset fail-closed", async () => {
   expect(screen.getByText(t("resetUnavailable"))).toBeTruthy();
 });
 
+it("confirms reset and retries the exact episode request with the same key", async () => {
+  const key = "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee";
+  vi.spyOn(globalThis.crypto, "randomUUID").mockReturnValue(key);
+  let posts = 0;
+  let resetDone = false;
+  const fetcher = mount((url, init) => {
+    if (url.endsWith("/reset") && init?.method === "POST") {
+      posts += 1;
+      if (posts === 1) return Promise.reject(new Error("uncertain"));
+      return Promise.resolve(answer({
+        command_id: "reset-command",
+        state: "PENDING",
+        failure_code: null,
+        snapshot: null,
+        status_url: "/paper-wallet/commands/reset-command",
+      }, 202));
+    }
+    if (url.includes("/commands/reset-command")) {
+      resetDone = true;
+      return Promise.resolve(answer({
+        command_id: "reset-command",
+        state: "SUCCEEDED",
+        failure_code: null,
+        snapshot: null,
+        status_url: "/paper-wallet/commands/reset-command",
+      }));
+    }
+    return Promise.resolve(answer({
+      wallet: {
+        mode: "PAPER",
+        wallet_id: "wallet-one",
+        episode_id: resetDone ? "episode-two" : "episode-one",
+        sequence: resetDone ? 2 : 1,
+        initial_capital: { amount: resetDone ? "2500.125" : "1500", currency: "USDT" },
+        balance: { amount: resetDone ? "2500.125" : "1500", currency: "USDT" },
+        started_at: "2026-10-18T00:00:00Z",
+        snapshot_at: "2026-10-18T00:00:01Z",
+        revision: resetDone ? 4 : 2,
+        reset_available: true,
+        reset_reason: null,
+      },
+    }));
+  });
+
+  fireEvent.click(await screen.findByRole("button", { name: t("reset") }));
+  expect(screen.getByRole("dialog", { name: t("resetTitle") })).toBeTruthy();
+  expect(screen.getByText(t("resetDescription", { episode: 1 }))).toBeTruthy();
+  fireEvent.click(screen.getByRole("button", { name: t("resetCancel") }));
+  expect(fetcher.mock.calls.filter(([, init]) => init?.method === "POST")).toHaveLength(0);
+
+  fireEvent.click(screen.getByRole("button", { name: t("reset") }));
+  fireEvent.change(screen.getByLabelText(t("resetCapital")), {
+    target: { value: "2500.125" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: t("resetConfirm") }));
+  fireEvent.click(await screen.findByRole("button", { name: t("retry") }));
+  expect(await screen.findAllByText("2,500.125 USDT")).toHaveLength(2);
+
+  const requests = fetcher.mock.calls.filter(([, init]) => init?.method === "POST");
+  expect(requests).toHaveLength(2);
+  for (const [url, init] of requests) {
+    expect(url).toContain("/paper-wallet/reset");
+    expect(init?.headers).toMatchObject({ "Idempotency-Key": key });
+    expect(init?.body).toBe(JSON.stringify({
+      initial_capital: "2500.125",
+      expected_episode_id: "episode-one",
+    }));
+  }
+});
+
+it("closes reset with Escape and refetches after an episode conflict", async () => {
+  vi.spyOn(globalThis.crypto, "randomUUID").mockReturnValue(
+    "ffffffff-ffff-4fff-8fff-ffffffffffff",
+  );
+  let walletReads = 0;
+  let posts = 0;
+  mount((url, init) => {
+    if (url.endsWith("/reset") && init?.method === "POST") {
+      posts += 1;
+      return Promise.resolve(answer({
+        command_id: "conflicted-reset",
+        state: "PENDING",
+        failure_code: null,
+        snapshot: null,
+        status_url: "/paper-wallet/commands/conflicted-reset",
+      }, 202));
+    }
+    if (url.includes("/commands/conflicted-reset")) return Promise.resolve(answer({
+      command_id: "conflicted-reset",
+      state: "REJECTED",
+      failure_code: "EPISODE_CONFLICT",
+      snapshot: null,
+      status_url: "/paper-wallet/commands/conflicted-reset",
+    }));
+    walletReads += 1;
+    return Promise.resolve(answer({ wallet: {
+      mode: "PAPER",
+      wallet_id: "wallet-one",
+      episode_id: walletReads > 1 ? "episode-two" : "episode-one",
+      sequence: walletReads > 1 ? 2 : 1,
+      initial_capital: { amount: "1500", currency: "USDT" },
+      balance: { amount: "1500", currency: "USDT" },
+      started_at: "2026-10-18T00:00:00Z",
+      snapshot_at: "2026-10-18T00:00:01Z",
+      revision: walletReads > 1 ? 3 : 2,
+      reset_available: true,
+      reset_reason: null,
+    } }));
+  });
+
+  const reset = await screen.findByRole("button", { name: t("reset") });
+  reset.focus();
+  fireEvent.click(reset);
+  const resetCapital = screen.getByLabelText(t("resetCapital"));
+  expect(document.activeElement).toBe(resetCapital);
+  fireEvent.keyDown(document, { key: "Tab", shiftKey: true });
+  expect(document.activeElement).toBe(
+    screen.getByRole("button", { name: t("resetCancel") }),
+  );
+  fireEvent.keyDown(document, { key: "Escape" });
+  await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+  await waitFor(() => expect(document.activeElement).toBe(reset));
+
+  fireEvent.click(reset);
+  fireEvent.change(screen.getByLabelText(t("resetCapital")), { target: { value: "2500" } });
+  fireEvent.click(screen.getByRole("button", { name: t("resetConfirm") }));
+  expect((await screen.findByRole("alert")).textContent).toBe(t("resetConflict"));
+  await waitFor(() => expect(screen.getByText("2")).toBeTruthy());
+  expect(posts).toBe(1);
+});
+
 it("retries an uncertain create with the same key and exact payload", async () => {
   const key = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
   vi.spyOn(globalThis.crypto, "randomUUID").mockReturnValue(key);

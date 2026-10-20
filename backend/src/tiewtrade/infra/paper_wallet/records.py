@@ -28,6 +28,7 @@ class PaperWalletError(InfraError):
 
 
 ACTIVITY_UNKNOWN: Final[str] = "ACTIVITY_UNKNOWN"
+RESET_UNSAFE: Final[str] = "RESET_UNSAFE"
 
 
 class PaperWalletIntegrityError(PaperWalletError):
@@ -61,7 +62,7 @@ class PaperWalletSnapshot:
     snapshot_at: datetime
     revision: int
     reset_available: bool = False
-    reset_reason: str = ACTIVITY_UNKNOWN
+    reset_reason: str | None = ACTIVITY_UNKNOWN
 
 
 @dataclass(frozen=True, slots=True)

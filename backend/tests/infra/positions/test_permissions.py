@@ -17,20 +17,20 @@ from tiewtrade.infra.positions import (
 
 
 @pytest.mark.parametrize(
-    ("fixture_name", "role"),
+    "role",
     [
-        ("api_engine", DatabaseRole.API),
-        ("scan_engine", DatabaseRole.ENGINE_SCAN),
+        DatabaseRole.API,
+        DatabaseRole.ENGINE_SCAN,
     ],
 )
 async def test_non_writer_roles_cannot_read_position_state(
-    request: pytest.FixtureRequest,
-    fixture_name: str,
     role: DatabaseRole,
+    api_engine: AsyncEngine,
+    scan_engine: AsyncEngine,
     owner: UUID,
     wallet: PaperWalletSnapshot,
 ) -> None:
-    engine: AsyncEngine = request.getfixturevalue(fixture_name)
+    engine = api_engine if role is DatabaseRole.API else scan_engine
     with pytest.raises(NotPermittedError):
         context = (
             scan_session_bypassing_rls(engine)

@@ -42,6 +42,34 @@
   color: var(--color-error-600);
 }
 
+.paper-wallet-reset-form {
+  display: grid;
+  gap: var(--account-space-md);
+}
+
+.paper-wallet-reset-form h3,
+.paper-wallet-reset-form p {
+  margin: 0;
+}
+
+.paper-wallet-reset-form h3 {
+  color: var(--color-gray-800);
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.paper-wallet-reset-form label {
+  display: grid;
+  gap: var(--account-field-gap);
+}
+
+.paper-wallet-reset-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--account-space-md);
+  margin-top: var(--account-space-md);
+}
+
 .paper-wallet-panel :focus-visible {
   outline: var(--account-focus-width) solid var(--account-focus-color);
   outline-offset: var(--account-focus-offset);

@@ -66,12 +66,27 @@ test("สร้าง Paper wallet ด้วยจำนวน exact และ�
   });
   await expect(panel.getByText("PAPER", { exact: true })).toBeVisible();
   await expect(panel.getByText("รอบ", { exact: true })).toBeVisible();
-  await expect(panel.getByRole("button", { name: "เริ่มรอบใหม่" })).toBeDisabled();
-  await expect(panel.getByText(/ยังตรวจสอบ position และออเดอร์ค้างได้ไม่ครบ/)).toBeVisible();
+  const reset = panel.getByRole("button", { name: "เริ่มรอบใหม่" });
+  await expect(reset).toBeEnabled();
+  await reset.click();
+  const dialog = page.getByRole("dialog", { name: "ยืนยันการเริ่มรอบใหม่" });
+  await expect(dialog.getByText(/รอบปัจจุบัน 1/)).toBeVisible();
+  await dialog.getByRole("button", { name: "ยกเลิก" }).click();
+  await expect(dialog).toBeHidden();
+
+  await reset.click();
+  await dialog.getByLabel("ทุนตั้งต้นของรอบใหม่ (USDT)").fill("2500.125");
+  await dialog.getByRole("button", { name: "ยืนยันเริ่มรอบใหม่" }).click();
+  await expect(panel.getByText("กำลังส่งคำขอเริ่มรอบใหม่…")).toBeVisible();
+  processPaperCommand();
+  await expect(panel.getByText("2,500.125 USDT", { exact: true })).toHaveCount(2, {
+    timeout: 10000,
+  });
+  await expect(panel.getByText("2", { exact: true })).toBeVisible();
 
   await captureUi(page, testInfo, "paper-wallet");
 
   await page.reload();
-  await expect(panel.getByText("1,500.000000000000000001 USDT", { exact: true })).toHaveCount(2);
+  await expect(panel.getByText("2,500.125 USDT", { exact: true })).toHaveCount(2);
   expect(errors).toEqual([]);
 });

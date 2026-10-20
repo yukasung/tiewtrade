@@ -2,6 +2,7 @@
 
 from tiewtrade.infra.paper_wallet.records import (
     ACTIVITY_UNKNOWN,
+    RESET_UNSAFE,
     ClaimedPaperCommand,
     DuePaperCommand,
     PaperCommand,
@@ -25,6 +26,7 @@ from tiewtrade.infra.paper_wallet.storage import (
 
 __all__ = [
     "ACTIVITY_UNKNOWN",
+    "RESET_UNSAFE",
     "ClaimedPaperCommand",
     "DuePaperCommand",
     "PaperCommand",

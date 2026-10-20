@@ -76,7 +76,17 @@ def test_the_adapter_never_holds_a_secret() -> None:
                 names = {(node.module or "").split(".")[0]}
             else:
                 names = set()
-            assert not names & {"hmac", "hashlib"}, f"{module.name} คำนวณลายเซ็นเอง"
+            # F-15 fingerprints the public exchangeInfo document. Permit only
+            # that unkeyed primitive; general hashing and HMAC remain forbidden.
+            public_digest_import = (
+                module.name == "order_book_mapping.py"
+                and isinstance(node, ast.ImportFrom)
+                and node.module == "hashlib"
+                and [(alias.name, alias.asname) for alias in node.names] == [("sha256", None)]
+            )
+            assert not names & {"hmac", "hashlib"} or public_digest_import, (
+                f"{module.name} คำนวณลายเซ็นเอง"
+            )
 
             identifier = ""
             if isinstance(node, ast.Name):

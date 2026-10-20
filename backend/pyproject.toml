@@ -25,6 +25,7 @@ dependencies = [
 [project.scripts]
 indicator-builder = "tiewtrade.services.indicator_builder.main:main"
 paper-wallet-worker = "tiewtrade.services.engine.paper_wallet_main:main"
+paper-order-worker = "tiewtrade.services.engine.paper_order_main:main"
 
 [dependency-groups]
 dev = [
@@ -148,6 +149,7 @@ source_modules = [
     "tiewtrade.venues.moments",
     "tiewtrade.venues.prices",
     "tiewtrade.venues.price_streams",
+    "tiewtrade.venues.order_books",
     "tiewtrade.venues.signing",
     "tiewtrade.venues.symbols",
     "tiewtrade.venues.wallets",
@@ -167,6 +169,7 @@ source_modules = [
     "tiewtrade.venues.binance_th.mapping",
     "tiewtrade.venues.binance_th.stream_mapping",
     "tiewtrade.venues.binance_th.candle_stream_mapping",
+    "tiewtrade.venues.binance_th.order_book_mapping",
     "tiewtrade.venues.binance_th.rate_limit",
 ]
 forbidden_modules = ["httpx", "urllib", "socket", "websockets", "aiohttp", "requests"]

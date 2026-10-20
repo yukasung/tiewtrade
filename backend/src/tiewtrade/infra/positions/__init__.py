@@ -15,6 +15,7 @@ from tiewtrade.infra.positions.records import (
 from tiewtrade.infra.positions.storage import (
     apply_position_event,
     initialize_position_source,
+    read_effective_executions,
     read_position_activity,
     read_position_snapshot,
     read_valued_position_snapshot,
@@ -33,6 +34,7 @@ __all__ = [
     "ValuedPositionSnapshot",
     "apply_position_event",
     "initialize_position_source",
+    "read_effective_executions",
     "read_position_activity",
     "read_position_snapshot",
     "read_valued_position_snapshot",

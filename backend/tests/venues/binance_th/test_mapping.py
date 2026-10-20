@@ -115,7 +115,11 @@ def test_no_fallback_price_is_returned_from_anywhere() -> None:
     for module in ADAPTER.glob("*.py"):
         for text in code_strings(module):
             assert "ticker" not in text, f"{module.name} อ้าง endpoint ราคาอื่นเป็นทางสำรอง"
-            assert "avgPrice" not in text, f"{module.name} อ้างราคาเฉลี่ยเป็นทางสำรอง"
+            # F-15 reads this filter field to reject an unavailable reference;
+            # it does not request an average-price endpoint or synthesize a price.
+            assert "avgPrice" not in text or text == "avgPriceMins", (
+                f"{module.name} อ้างราคาเฉลี่ยเป็นทางสำรอง"
+            )
 
 
 def test_missing_fields_are_a_protocol_error() -> None:

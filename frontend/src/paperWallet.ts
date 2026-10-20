@@ -4,6 +4,7 @@ import { ApiRequestError, send } from "./auth";
 export type PaperCommandView = components["schemas"]["PaperCommandView"];
 export type PaperWalletEnvelope = components["schemas"]["PaperWalletEnvelope"];
 export type PaperWalletMutation = components["schemas"]["PaperWalletMutation"];
+export type PaperWalletReset = components["schemas"]["PaperWalletReset"];
 
 const documentedCodes = new Set([
   "ACTIVITY_UNKNOWN",
@@ -42,6 +43,17 @@ export function createPaperWallet(
 ): Promise<PaperCommandView> {
   return safe(
     send<PaperCommandView>("/paper-wallet", input, undefined, "POST", undefined, {
+      "Idempotency-Key": idempotencyKey,
+    }),
+  );
+}
+
+export function resetPaperWallet(
+  input: PaperWalletReset,
+  idempotencyKey: string,
+): Promise<PaperCommandView> {
+  return safe(
+    send<PaperCommandView>("/paper-wallet/reset", input, undefined, "POST", undefined, {
       "Idempotency-Key": idempotencyKey,
     }),
   );

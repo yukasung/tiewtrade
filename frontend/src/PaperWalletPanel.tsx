@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import type { Me } from "./auth";
 import { ApiRequestError } from "./auth";
@@ -8,20 +8,21 @@ import { Button } from "./components/ui/Button";
 import { ComponentCard } from "./components/ui/ComponentCard";
 import { Input } from "./components/ui/Input";
 import { Label } from "./components/ui/Label";
+import { Modal } from "./components/ui/Modal";
 import {
   createPaperWallet,
   fetchPaperCommand,
   fetchPaperWallet,
   type PaperWalletMutation,
+  type PaperWalletReset,
+  resetPaperWallet,
 } from "./paperWallet";
 import { paperWalletLocale, paperWalletText as t } from "./paperWalletMessages";
 import "./PaperWalletPanel.css";
 
-type Attempt = {
-  idempotencyKey: string;
-  payload: PaperWalletMutation;
-  commandId?: string;
-};
+type Attempt =
+  | { action: "CREATE"; idempotencyKey: string; payload: PaperWalletMutation; commandId?: string }
+  | { action: "RESET"; idempotencyKey: string; payload: PaperWalletReset; commandId?: string };
 
 function failure(error: unknown): string {
   if (!(error instanceof ApiRequestError)) return t("uncertain");
@@ -35,6 +36,12 @@ function failure(error: unknown): string {
       return t("exists");
     case "IDEMPOTENCY_CONFLICT":
       return t("conflict");
+    case "EPISODE_CONFLICT":
+      return t("resetConflict");
+    case "ACTIVITY_UNKNOWN":
+      return t("resetUnavailable");
+    case "RESET_UNSAFE":
+      return t("resetUnsafe");
     default:
       if (error.status === 401) return t("unauthorized");
       if (error.status === 429) return t("limited");
@@ -48,23 +55,33 @@ export function PaperWalletPanel({ identity }: { identity: Me }) {
 
 function PaperWalletPanelForIdentity({ identity }: { identity: Me }) {
   const client = useQueryClient();
-  const walletKey = ["paper-wallet", identity.user_id] as const;
+  const walletKey = useMemo(() => ["paper-wallet", identity.user_id] as const, [identity.user_id]);
   const [capital, setCapital] = useState("");
+  const [resetCapital, setResetCapital] = useState("");
+  const [resetOpen, setResetOpen] = useState(false);
   const [attempt, setAttempt] = useState<Attempt | null>(null);
   const [commandFailure, setCommandFailure] = useState<string | null>(null);
+  const resetButton = useRef<HTMLButtonElement>(null);
 
+  const closeReset = useCallback(() => setResetOpen(false), []);
+  const finishSuccessfulAttempt = useCallback(() => {
+    void client.invalidateQueries({ queryKey: walletKey });
+    setAttempt(null);
+    setCapital("");
+    setResetCapital("");
+    setResetOpen(false);
+  }, [client, walletKey]);
   const walletQuery = useQuery({
     queryKey: walletKey,
     queryFn: ({ signal }) => fetchPaperWallet(signal),
   });
   const mutation = useMutation({
-    mutationFn: (request: Attempt) =>
-      createPaperWallet(request.payload, request.idempotencyKey),
+    mutationFn: (request: Attempt) => request.action === "CREATE"
+      ? createPaperWallet(request.payload, request.idempotencyKey)
+      : resetPaperWallet(request.payload, request.idempotencyKey),
     onSuccess: command => {
       if (command.state === "SUCCEEDED") {
-        void client.invalidateQueries({ queryKey: walletKey });
-        setAttempt(null);
-        setCapital("");
+        finishSuccessfulAttempt();
         return;
       }
       setAttempt(current =>
@@ -72,6 +89,10 @@ function PaperWalletPanelForIdentity({ identity }: { identity: Me }) {
       );
     },
     onError: error => {
+      if (error instanceof ApiRequestError && error.message === "EPISODE_CONFLICT") {
+        void client.invalidateQueries({ queryKey: walletKey });
+        setResetOpen(false);
+      }
       if (
         error instanceof ApiRequestError &&
         error.status >= 400 &&
@@ -92,14 +113,14 @@ function PaperWalletPanelForIdentity({ identity }: { identity: Me }) {
   const commandState = commandQuery.data?.state;
   useEffect(() => {
     if (commandState === "SUCCEEDED") {
-      void client.invalidateQueries({ queryKey: walletKey });
-      setAttempt(null);
-      setCapital("");
+      finishSuccessfulAttempt();
     } else if (commandState === "REJECTED") {
-      setCommandFailure(commandQuery.data?.failure_code ?? "PAPER_WALLET_REJECTED");
+      const code = commandQuery.data?.failure_code ?? "PAPER_WALLET_REJECTED";
+      setCommandFailure(code);
+      if (code === "EPISODE_CONFLICT") void client.invalidateQueries({ queryKey: walletKey });
       setAttempt(null);
     }
-  }, [client, commandQuery.data?.failure_code, commandState, walletKey]);
+  }, [client, commandQuery.data?.failure_code, commandState, finishSuccessfulAttempt, walletKey]);
 
   const wallet = walletQuery.data?.wallet;
   const uncertain = mutation.isError && attempt !== null;
@@ -111,16 +132,36 @@ function PaperWalletPanelForIdentity({ identity }: { identity: Me }) {
         ? failure(commandQuery.error)
         : null;
   const pending = attempt !== null && !mutation.isError && !commandQuery.isError;
+  const resetReason = wallet?.reset_reason === "RESET_UNSAFE"
+    ? t("resetUnsafe")
+    : wallet?.reset_reason === null || wallet?.reset_reason === undefined
+      ? null
+      : t("resetUnavailable");
 
-  function submit(retry: boolean): void {
-    const request = retry && attempt !== null
-      ? attempt
-      : {
-          idempotencyKey: globalThis.crypto.randomUUID(),
-          payload: { initial_capital: capital },
-        };
-    if (!retry) setCommandFailure(null);
+  function submitCreate(): void {
+    setCommandFailure(null);
+    const request: Attempt = {
+      action: "CREATE",
+      idempotencyKey: globalThis.crypto.randomUUID(),
+      payload: { initial_capital: capital },
+    };
     setAttempt(request);
+    mutation.mutate(request);
+  }
+
+  function submitReset(): void {
+    if (wallet === null || wallet === undefined) return;
+    setCommandFailure(null);
+    const request: Attempt = {
+      action: "RESET",
+      idempotencyKey: globalThis.crypto.randomUUID(),
+      payload: {
+        initial_capital: resetCapital,
+        expected_episode_id: wallet.episode_id,
+      },
+    };
+    setAttempt(request);
+    setResetOpen(false);
     mutation.mutate(request);
   }
 
@@ -143,17 +184,22 @@ function PaperWalletPanelForIdentity({ identity }: { identity: Me }) {
             <div><dt>{t("started")}</dt><dd><MarketTime value={wallet.started_at} locale={paperWalletLocale} /></dd></div>
             <div><dt>{t("snapshot")}</dt><dd><MarketTime value={wallet.snapshot_at} locale={paperWalletLocale} /></dd></div>
           </dl>
-          <Button disabled aria-describedby="paper-wallet-reset-reason">
+          <Button
+            ref={resetButton}
+            disabled={!wallet.reset_available || attempt !== null}
+            aria-describedby={resetReason === null ? undefined : "paper-wallet-reset-reason"}
+            onClick={() => setResetOpen(true)}
+          >
             {t("reset")}
           </Button>
-          <p id="paper-wallet-reset-reason">{t("resetUnavailable")}</p>
+          {resetReason !== null && <p id="paper-wallet-reset-reason">{resetReason}</p>}
         </div>
       ) : walletQuery.data !== undefined ? (
         <form
           className="paper-wallet-form"
           onSubmit={event => {
             event.preventDefault();
-            submit(false);
+            submitCreate();
           }}
         >
           <Label htmlFor="paper-wallet-capital">
@@ -177,7 +223,7 @@ function PaperWalletPanelForIdentity({ identity }: { identity: Me }) {
           </Button>
         </form>
       ) : null}
-      {pending && <p role="status">{t("pending")}</p>}
+      {pending && <p role="status">{t(attempt?.action === "RESET" ? "resetting" : "pending")}</p>}
       {actionError !== null && <p className="paper-wallet-error" role="alert">{actionError}</p>}
       {(uncertain || commandQuery.isError) && (
         <Button
@@ -186,8 +232,8 @@ function PaperWalletPanelForIdentity({ identity }: { identity: Me }) {
           onClick={() => {
             if (commandQuery.isError && attempt?.commandId !== undefined) {
               void commandQuery.refetch();
-            } else {
-              submit(true);
+            } else if (attempt !== null) {
+              mutation.mutate(attempt);
             }
           }}
         >
@@ -205,6 +251,46 @@ function PaperWalletPanelForIdentity({ identity }: { identity: Me }) {
       >
         {t("refresh")}
       </Button>
+      <Modal
+        isOpen={resetOpen}
+        onClose={closeReset}
+        titleId="paper-wallet-reset-title"
+        closeLabel={t("resetDismiss")}
+        returnFocusRef={resetButton}
+      >
+        <form
+          className="paper-wallet-reset-form"
+          onSubmit={event => {
+            event.preventDefault();
+            submitReset();
+          }}
+        >
+          <h3 id="paper-wallet-reset-title">{t("resetTitle")}</h3>
+          <p>{t("resetDescription", { episode: wallet?.sequence ?? "" })}</p>
+          <Label htmlFor="paper-wallet-reset-capital">
+            {t("resetCapital")}
+            <Input
+              id="paper-wallet-reset-capital"
+              type="text"
+              inputMode="decimal"
+              autoComplete="off"
+              required
+              autoFocus
+              value={resetCapital}
+              disabled={attempt !== null}
+              onChange={event => setResetCapital(event.target.value)}
+            />
+          </Label>
+          <div className="paper-wallet-reset-actions">
+            <Button type="button" variant="outline" onClick={closeReset}>
+              {t("resetCancel")}
+            </Button>
+            <Button type="submit" disabled={attempt !== null || resetCapital === ""}>
+              {t("resetConfirm")}
+            </Button>
+          </div>
+        </form>
+      </Modal>
     </ComponentCard>
   );
 }

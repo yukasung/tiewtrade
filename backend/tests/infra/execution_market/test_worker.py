@@ -1,0 +1,1033 @@
+"""End-to-end Paper command worker transactions against real PostgreSQL roles."""
+
+import asyncio
+from collections.abc import Mapping
+from dataclasses import replace
+from datetime import UTC, datetime
+from typing import Any
+from uuid import NAMESPACE_URL, UUID, uuid4, uuid5
+
+import pytest
+from sqlalchemy import Result
+from sqlalchemy.ext.asyncio import AsyncEngine
+
+from tests.infra.execution_market.test_dispatch import intent
+from tests.infra.execution_market.test_storage import prepared
+from tiewtrade.core.money import Money, Quantity
+from tiewtrade.core.order_book import BookState
+from tiewtrade.core.orders import (
+    BaseSize,
+    OrderConflictError,
+    OrderIntent,
+    OrderType,
+    QuoteBudget,
+    TimeInForce,
+    TradingMode,
+    standard_execution_fee,
+)
+from tiewtrade.core.positions import ExecutionFact
+from tiewtrade.core.realtime_prices import ObservationKind, QuoteObservation
+from tiewtrade.infra.db import DatabaseRole, create_engine_for, user_session
+from tiewtrade.infra.db.session import UserSession, market_data_session
+from tiewtrade.infra.market_data.order_book_storage import (
+    BookLease,
+    ExecutionMetadata,
+    publish_input,
+    renew_book_writer,
+)
+from tiewtrade.infra.market_data.realtime_storage import (
+    acquire_writer,
+    read_snapshot,
+    set_connected,
+    write_price,
+)
+from tiewtrade.infra.paper_orders.codec import execution_from_payload
+from tiewtrade.infra.paper_orders.corrections import correct_fill
+from tiewtrade.infra.paper_orders.dispatch import get_order_command, submit_cancel, submit_order
+from tiewtrade.infra.paper_orders.initialization import (
+    enable_financial_writer,
+    initialize_order_source,
+)
+from tiewtrade.infra.paper_wallet import (
+    PaperCommandState,
+    PaperWalletAction,
+    admit_command,
+    get_wallet,
+)
+from tiewtrade.infra.paper_wallet import get_command as get_wallet_command
+from tiewtrade.infra.paper_wallet.records import PaperWalletSnapshot
+from tiewtrade.infra.positions import PositionEventKind, apply_position_event
+from tiewtrade.services.engine.paper_order import run_paper_order_round
+from tiewtrade.services.engine.paper_wallet import run_paper_wallet_round
+
+
+class AllowPolicy:
+    def check(self, value: OrderIntent) -> None:
+        assert value.scope.mode is TradingMode.PAPER
+
+
+async def ready_public_sources() -> tuple[AsyncEngine, BookLease, BookState, ExecutionMetadata]:
+    market = create_engine_for(DatabaseRole.MARKET_DATA)
+    lease, book, metadata = await prepared(market)
+    async with market_data_session(market) as session:
+        await publish_input(session, lease, book, metadata)
+        await session.execute(
+            "UPDATE market_price_feed SET lease_until=clock_timestamp()-interval '1 second'"
+        )
+        price_lease = await acquire_writer(session, uuid4())
+        assert price_lease is not None
+        price_lease = await set_connected(session, price_lease, True)
+        snapshot = await read_snapshot(session)
+        row = next(value for value in snapshot.rows if value.base == "BTC")
+        now = snapshot.server_time
+        quote = QuoteObservation(
+            "primary_spot",
+            "BTC",
+            "USDT",
+            book.asks[0].price,
+            100,
+            now,
+            now,
+            ObservationKind.STREAM,
+        )
+        assert await write_price(
+            session,
+            price_lease,
+            replace(
+                row,
+                observation=quote,
+                reconciled_generation=price_lease.generation,
+                effective_readiness="READY",
+                reason=None,
+                unavailable_since=None,
+                order_ambiguous_at=None,
+            ),
+        )
+    return market, lease, book, metadata
+
+
+async def test_missing_policy_rejects_without_order_or_reservation(
+    engine_engine: AsyncEngine,
+    scan_engine: AsyncEngine,
+    owner: UUID,
+    wallet: PaperWalletSnapshot,
+) -> None:
+    market, _, _, _ = await ready_public_sources()
+    value = intent(owner, wallet.episode_id)
+    try:
+        async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+            command = await submit_order(session, wallet_id=wallet.wallet_id, intent=value)
+        await run_paper_order_round(
+            engine=engine_engine,
+            scan_engine=scan_engine,
+            worker="missing-policy",
+            policy=None,
+        )
+        async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+            result = await get_order_command(session, command.command_id)
+            orders = (
+                await session.execute(
+                    "SELECT count(*) FROM paper_orders WHERE episode_id=:episode",
+                    {"episode": wallet.episode_id},
+                )
+            ).scalar_one()
+            reserves = (
+                await session.execute(
+                    "SELECT count(*) FROM paper_reservations WHERE episode_id=:episode",
+                    {"episode": wallet.episode_id},
+                )
+            ).scalar_one()
+        assert result is not None and result.failure_code == "ORDER_SAFETY_UNAVAILABLE"
+        assert orders == reserves == 0
+    finally:
+        await market.dispose()
+
+
+async def test_pending_order_command_blocks_wallet_reset(
+    api_engine: AsyncEngine,
+    engine_engine: AsyncEngine,
+    scan_engine: AsyncEngine,
+    owner: UUID,
+    wallet: PaperWalletSnapshot,
+) -> None:
+    value = intent(owner, wallet.episode_id)
+    async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+        await submit_order(session, wallet_id=wallet.wallet_id, intent=value)
+    async with user_session(api_engine, owner) as session:
+        snapshot = await get_wallet(session)
+        assert snapshot is not None
+        assert not snapshot.reset_available and snapshot.reset_reason == "RESET_UNSAFE"
+        reset = await admit_command(
+            session,
+            action=PaperWalletAction.RESET,
+            idempotency_key=uuid4(),
+            capital_text="2000",
+            expected_episode_id=wallet.episode_id,
+        )
+    outcome = await run_paper_wallet_round(
+        engine=engine_engine,
+        scan_engine=scan_engine,
+        worker="pending-order-reset",
+    )
+    assert outcome.rejected == 1
+    async with user_session(api_engine, owner) as session:
+        result = await get_wallet_command(session, reset.command_id)
+        unchanged = await get_wallet(session)
+    assert result is not None and result.state is PaperCommandState.REJECTED
+    assert result.failure_code == "RESET_UNSAFE"
+    assert unchanged is not None and unchanged.episode_id == wallet.episode_id
+
+
+async def test_reset_and_admission_linearize_without_moving_stale_intent(
+    monkeypatch: pytest.MonkeyPatch,
+    api_engine: AsyncEngine,
+    engine_engine: AsyncEngine,
+    scan_engine: AsyncEngine,
+    owner: UUID,
+    wallet: PaperWalletSnapshot,
+) -> None:
+    async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+        await initialize_order_source(
+            session,
+            wallet_id=wallet.wallet_id,
+            episode_id=wallet.episode_id,
+            initialization_id=uuid4(),
+        )
+    async with user_session(api_engine, owner) as session:
+        reset = await admit_command(
+            session,
+            action=PaperWalletAction.RESET,
+            idempotency_key=uuid4(),
+            capital_text="2000",
+            expected_episode_id=wallet.episode_id,
+        )
+    original_execute = UserSession.execute
+    reset_holds_lock = asyncio.Event()
+    admission_waiting = asyncio.Event()
+    release_reset = asyncio.Event()
+
+    async def controlled_execute(
+        session: UserSession,
+        statement: str,
+        parameters: Mapping[str, object] | None = None,
+    ) -> Result[Any]:
+        task = asyncio.current_task()
+        name = "" if task is None else task.get_name()
+        if name == "reset-race-admission" and "pg_advisory_xact_lock" in statement:
+            admission_waiting.set()
+        result = await original_execute(session, statement, parameters)
+        if (
+            name == "reset-race-worker"
+            and "FROM paper_wallets w LEFT JOIN" in statement
+            and not reset_holds_lock.is_set()
+        ):
+            reset_holds_lock.set()
+            await release_reset.wait()
+        return result
+
+    monkeypatch.setattr(UserSession, "execute", controlled_execute)
+    reset_task = asyncio.create_task(
+        run_paper_wallet_round(
+            engine=engine_engine,
+            scan_engine=scan_engine,
+            worker="reset-race-worker",
+        ),
+        name="reset-race-worker",
+    )
+    await reset_holds_lock.wait()
+
+    async def admit_stale_order() -> None:
+        async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+            await submit_order(
+                session,
+                wallet_id=wallet.wallet_id,
+                intent=intent(owner, wallet.episode_id),
+            )
+
+    admission_task = asyncio.create_task(admit_stale_order(), name="reset-race-admission")
+    await admission_waiting.wait()
+    assert not admission_task.done()
+    release_reset.set()
+    reset_round = await reset_task
+    assert reset_round.processed == 1
+    with pytest.raises(OrderConflictError):
+        await admission_task
+
+    async with user_session(api_engine, owner) as session:
+        current = await get_wallet(session)
+        reset_result = await get_wallet_command(session, reset.command_id)
+    assert current is not None and current.sequence == 2
+    assert reset_result is not None and reset_result.state is PaperCommandState.SUCCEEDED
+
+
+async def test_fill_and_reset_linearize_on_the_financial_lock(
+    monkeypatch: pytest.MonkeyPatch,
+    api_engine: AsyncEngine,
+    engine_engine: AsyncEngine,
+    scan_engine: AsyncEngine,
+    owner: UUID,
+    wallet: PaperWalletSnapshot,
+) -> None:
+    market, lease, book, metadata = await ready_public_sources()
+    value = intent(owner, wallet.episode_id)
+    try:
+        async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+            command = await submit_order(session, wallet_id=wallet.wallet_id, intent=value)
+        await run_paper_order_round(
+            engine=engine_engine,
+            scan_engine=scan_engine,
+            worker="fill-reset-accept",
+            policy=AllowPolicy(),
+        )
+        await asyncio.sleep(0.12)
+        async with market_data_session(market) as market_session:
+            lease = await renew_book_writer(market_session, lease)
+            now = (await market_session.execute("SELECT clock_timestamp()")).scalar_one()
+            second = replace(
+                book,
+                input_id=book.input_id + 1,
+                received_at=now,
+                verified_at=now,
+                rebase=False,
+            )
+            await publish_input(market_session, lease, second, metadata)
+        await asyncio.sleep(0.03)
+        async with user_session(api_engine, owner) as session:
+            reset = await admit_command(
+                session,
+                action=PaperWalletAction.RESET,
+                idempotency_key=uuid4(),
+                capital_text="2000",
+                expected_episode_id=wallet.episode_id,
+            )
+
+        original_execute = UserSession.execute
+        fill_holds_lock = asyncio.Event()
+        reset_waiting = asyncio.Event()
+        release_fill = asyncio.Event()
+
+        async def controlled_execute(
+            session: UserSession,
+            statement: str,
+            parameters: Mapping[str, object] | None = None,
+        ) -> Result[Any]:
+            task = asyncio.current_task()
+            name = "" if task is None else task.get_name()
+            if name == "reset-behind-fill" and "pg_advisory_xact_lock" in statement:
+                reset_waiting.set()
+            result = await original_execute(session, statement, parameters)
+            if name == "fill-holds-lock" and "pg_advisory_xact_lock" in statement:
+                fill_holds_lock.set()
+                await release_fill.wait()
+            return result
+
+        monkeypatch.setattr(UserSession, "execute", controlled_execute)
+        fill_task = asyncio.create_task(
+            run_paper_order_round(
+                engine=engine_engine,
+                scan_engine=scan_engine,
+                worker="fill-holds-lock",
+                policy=AllowPolicy(),
+            ),
+            name="fill-holds-lock",
+        )
+        await fill_holds_lock.wait()
+        reset_task = asyncio.create_task(
+            run_paper_wallet_round(
+                engine=engine_engine,
+                scan_engine=scan_engine,
+                worker="reset-behind-fill",
+            ),
+            name="reset-behind-fill",
+        )
+        await reset_waiting.wait()
+        assert not reset_task.done()
+        release_fill.set()
+        fill_round, reset_round = await asyncio.gather(fill_task, reset_task)
+        assert fill_round.processed >= 1 and reset_round.rejected >= 1
+
+        async with user_session(api_engine, owner) as session:
+            current = await get_wallet(session)
+            reset_result = await get_wallet_command(session, reset.command_id)
+        async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+            old_cash = (
+                await session.execute(
+                    """SELECT sum(amount) FROM paper_wallet_ledger
+                    WHERE episode_id=:episode""",
+                    {"episode": wallet.episode_id},
+                )
+            ).scalar_one()
+            links = (
+                await session.execute(
+                    "SELECT count(*) FROM paper_execution_links WHERE order_id=:order",
+                    {"order": value.order_id},
+                )
+            ).scalar_one()
+            order_result = await get_order_command(session, command.command_id)
+        assert current is not None and current.episode_id == wallet.episode_id
+        assert current.balance.amount == 9900
+        assert reset_result is not None and reset_result.state is PaperCommandState.REJECTED
+        assert reset_result.failure_code == "RESET_UNSAFE"
+        assert order_result is not None and order_result.state == "SUCCEEDED"
+        assert old_cash == 9900 and links == 1
+    finally:
+        await market.dispose()
+
+
+async def test_closed_expected_episode_is_rejected_without_retry(
+    api_engine: AsyncEngine,
+    engine_engine: AsyncEngine,
+    scan_engine: AsyncEngine,
+    owner: UUID,
+    wallet: PaperWalletSnapshot,
+) -> None:
+    market, _, _, _ = await ready_public_sources()
+    value = intent(owner, wallet.episode_id)
+    try:
+        async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+            command = await submit_order(session, wallet_id=wallet.wallet_id, intent=value)
+        async with user_session(api_engine, owner) as session:
+            reset = await admit_command(
+                session,
+                action=PaperWalletAction.RESET,
+                idempotency_key=uuid4(),
+                capital_text="10000",
+                expected_episode_id=wallet.episode_id,
+            )
+        async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+            await enable_financial_writer(session)
+            await session.execute(
+                """INSERT INTO paper_wallet_episode_closures
+                (episode_id,wallet_id,user_id,reset_command_id)
+                VALUES(:episode,:wallet,:owner,:command)""",
+                {
+                    "episode": wallet.episode_id,
+                    "wallet": wallet.wallet_id,
+                    "owner": owner,
+                    "command": reset.command_id,
+                },
+            )
+        await run_paper_order_round(
+            engine=engine_engine,
+            scan_engine=scan_engine,
+            worker="closed-episode",
+            policy=AllowPolicy(),
+        )
+        async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+            result = await get_order_command(session, command.command_id)
+            dispatch = (
+                await session.execute(
+                    "SELECT state FROM paper_order_dispatch WHERE command_id=:command",
+                    {"command": command.command_id},
+                )
+            ).scalar_one()
+            order_count = (
+                await session.execute(
+                    "SELECT count(*) FROM paper_orders WHERE episode_id=:episode",
+                    {"episode": wallet.episode_id},
+                )
+            ).scalar_one()
+        assert result is not None and result.failure_code == "EPISODE_CONFLICT"
+        assert dispatch == "TERMINAL" and order_count == 0
+    finally:
+        await market.dispose()
+
+
+async def test_accept_restart_fill_and_cash_are_atomic(
+    engine_engine: AsyncEngine,
+    scan_engine: AsyncEngine,
+    owner: UUID,
+    wallet: PaperWalletSnapshot,
+) -> None:
+    market, lease, book, metadata = await ready_public_sources()
+    value = intent(owner, wallet.episode_id)
+    try:
+        async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+            command = await submit_order(session, wallet_id=wallet.wallet_id, intent=value)
+        await run_paper_order_round(
+            engine=engine_engine,
+            scan_engine=scan_engine,
+            worker="accept",
+            policy=AllowPolicy(),
+        )
+        await asyncio.sleep(0.12)
+        async with market_data_session(market) as session:
+            lease = await renew_book_writer(session, lease)
+            now = (await session.execute("SELECT clock_timestamp()")).scalar_one()
+            second = replace(
+                book,
+                input_id=book.input_id + 1,
+                received_at=now,
+                verified_at=now,
+                rebase=False,
+            )
+            await publish_input(session, lease, second, metadata)
+        await asyncio.sleep(0.03)
+        await run_paper_order_round(
+            engine=engine_engine,
+            scan_engine=scan_engine,
+            worker="restart",
+            policy=AllowPolicy(),
+        )
+        async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+            result = await get_order_command(session, command.command_id)
+            projection = (
+                await session.execute(
+                    """SELECT p.status,r.quote_reserved FROM paper_order_projections p
+                    JOIN paper_reservations r USING(order_id) WHERE p.order_id=:order""",
+                    {"order": value.order_id},
+                )
+            ).one()
+            current = await get_wallet(session)
+            links = (
+                await session.execute(
+                    "SELECT count(*) FROM paper_execution_links WHERE order_id=:order",
+                    {"order": value.order_id},
+                )
+            ).scalar_one()
+        assert result is not None and result.state == "SUCCEEDED"
+        assert projection.status == "FILLED" and projection.quote_reserved == 0
+        assert current is not None and current.balance.amount == 9900
+        assert not current.reset_available and current.reset_reason == "RESET_UNSAFE"
+        assert links == 1
+        async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+            recovered = await submit_order(session, wallet_id=wallet.wallet_id, intent=value)
+        assert recovered == result
+
+        async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+            late_cancel = await submit_cancel(
+                session,
+                wallet_id=wallet.wallet_id,
+                episode_id=wallet.episode_id,
+                order_id=value.order_id,
+                idempotency_key=uuid4(),
+            )
+        await run_paper_order_round(
+            engine=engine_engine,
+            scan_engine=scan_engine,
+            worker="cancel-after-fill",
+            policy=AllowPolicy(),
+        )
+        async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+            late_result = await get_order_command(session, late_cancel.command_id)
+        assert late_result is not None and late_result.snapshot == {
+            "order_id": str(value.order_id),
+            "status": "FILLED",
+        }
+
+        async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+            linked = (
+                (
+                    await session.execute(
+                        """SELECT l.position_event_id,l.order_event_id,e.payload
+                        FROM paper_execution_links l JOIN paper_order_events e
+                          ON e.id=l.order_event_id
+                        WHERE l.order_id=:order AND l.position_event_kind='RECORD'""",
+                        {"order": value.order_id},
+                    )
+                )
+                .mappings()
+                .one()
+            )
+            original = execution_from_payload(linked["payload"]["execution"])
+            replacement_quantity = original.gross_quantity.__class__.of("0.5", "BTC")
+            replacement_quote = original.quote_amount.__class__.of("50", "USDT")
+            replacement = ExecutionFact(
+                original.execution_id,
+                original.pair,
+                original.side,
+                replacement_quantity,
+                replacement_quote,
+                standard_execution_fee(original.side, replacement_quantity, replacement_quote),
+                original.source_sequence,
+                original.occurred_at,
+            )
+            correction_id = uuid4()
+            corrected = await correct_fill(
+                session,
+                wallet_id=wallet.wallet_id,
+                episode_id=wallet.episode_id,
+                order_event_id=linked["order_event_id"],
+                correction_event_id=correction_id,
+                supersedes_position_event_id=linked["position_event_id"],
+                kind=PositionEventKind.REPLACE,
+                fact=replacement,
+            )
+        assert corrected is not None
+        async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+            replay = await correct_fill(
+                session,
+                wallet_id=wallet.wallet_id,
+                episode_id=wallet.episode_id,
+                order_event_id=linked["order_event_id"],
+                correction_event_id=correction_id,
+                supersedes_position_event_id=linked["position_event_id"],
+                kind=PositionEventKind.REPLACE,
+                fact=replacement,
+            )
+            corrected_projection = (
+                await session.execute(
+                    """SELECT status,filled_quantity FROM paper_order_projections
+                    WHERE order_id=:order""",
+                    {"order": value.order_id},
+                )
+            ).one()
+            corrected_wallet = await get_wallet(session)
+            correction_cash = (
+                await session.execute(
+                    """SELECT count(*) FROM paper_wallet_ledger
+                    WHERE episode_id=:episode AND kind='CORRECTION_CASH'""",
+                    {"episode": wallet.episode_id},
+                )
+            ).scalar_one()
+        assert replay is None
+        assert corrected_projection.status == "CANCELED"
+        assert str(corrected_projection.filled_quantity) == "0.5"
+        assert corrected_wallet is not None and corrected_wallet.balance.amount == 9950
+        assert correction_cash == 1
+
+        void_id = uuid4()
+        async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+            voided = await correct_fill(
+                session,
+                wallet_id=wallet.wallet_id,
+                episode_id=wallet.episode_id,
+                order_event_id=linked["order_event_id"],
+                correction_event_id=void_id,
+                supersedes_position_event_id=correction_id,
+                kind=PositionEventKind.VOID,
+                fact=replacement,
+            )
+        assert voided is not None
+        async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+            void_replay = await correct_fill(
+                session,
+                wallet_id=wallet.wallet_id,
+                episode_id=wallet.episode_id,
+                order_event_id=linked["order_event_id"],
+                correction_event_id=void_id,
+                supersedes_position_event_id=correction_id,
+                kind=PositionEventKind.VOID,
+                fact=replacement,
+            )
+            void_projection = (
+                await session.execute(
+                    """SELECT status,filled_quantity FROM paper_order_projections
+                    WHERE order_id=:order""",
+                    {"order": value.order_id},
+                )
+            ).one()
+            void_wallet = await get_wallet(session)
+            correction_cash = (
+                await session.execute(
+                    """SELECT count(*) FROM paper_wallet_ledger
+                    WHERE episode_id=:episode AND kind='CORRECTION_CASH'""",
+                    {"episode": wallet.episode_id},
+                )
+            ).scalar_one()
+        assert void_replay is None
+        assert void_projection.status == "CANCELED" and void_projection.filled_quantity == 0
+        assert void_wallet is not None and void_wallet.balance.amount == 10000
+        assert correction_cash == 2
+    finally:
+        await market.dispose()
+
+
+async def test_downstream_position_conflict_is_durable_without_partial_fill(
+    engine_engine: AsyncEngine,
+    scan_engine: AsyncEngine,
+    owner: UUID,
+    wallet: PaperWalletSnapshot,
+) -> None:
+    market, lease, book, metadata = await ready_public_sources()
+    value = intent(owner, wallet.episode_id)
+    try:
+        async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+            command = await submit_order(session, wallet_id=wallet.wallet_id, intent=value)
+        await run_paper_order_round(
+            engine=engine_engine,
+            scan_engine=scan_engine,
+            worker="conflict-accept",
+            policy=AllowPolicy(),
+        )
+        async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+            before_conflict = await get_wallet(session)
+        assert before_conflict is not None and before_conflict.balance == wallet.balance
+        predicted_execution = uuid5(
+            NAMESPACE_URL,
+            f"tiewtrade:paper:{wallet.episode_id}:fill:BTC:USDT:"
+            f"{lease.generation}:{book.input_id + 1}:0",
+        )
+        injected = ExecutionFact(
+            predicted_execution,
+            value.pair,
+            value.side,
+            Quantity.of("0.25", value.pair.base),
+            Money.of("25", value.pair.quote),
+            standard_execution_fee(
+                value.side,
+                Quantity.of("0.25", value.pair.base),
+                Money.of("25", value.pair.quote),
+            ),
+            1,
+            datetime.now(UTC),
+        )
+        async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+            await enable_financial_writer(session)
+            await apply_position_event(
+                session,
+                wallet.episode_id,
+                uuid4(),
+                PositionEventKind.RECORD,
+                injected,
+            )
+        await asyncio.sleep(0.12)
+        async with market_data_session(market) as session:
+            lease = await renew_book_writer(session, lease)
+            now = (await session.execute("SELECT clock_timestamp()")).scalar_one()
+            await publish_input(
+                session,
+                lease,
+                replace(
+                    book,
+                    input_id=book.input_id + 1,
+                    received_at=now,
+                    verified_at=now,
+                    rebase=False,
+                ),
+                metadata,
+            )
+        await asyncio.sleep(0.03)
+        result = await run_paper_order_round(
+            engine=engine_engine,
+            scan_engine=scan_engine,
+            worker="conflict-fill",
+            policy=AllowPolicy(),
+        )
+        assert result.processed == 1 and result.deferred == 0
+        async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+            order_result = await get_order_command(session, command.command_id)
+            snapshot = await get_wallet(session)
+            row = (
+                await session.execute(
+                    """SELECT a.availability,d.state,
+                    (SELECT count(*) FROM paper_position_conflicts
+                     WHERE episode_id=:episode) AS conflicts,
+                    (SELECT count(*) FROM paper_order_events
+                     WHERE order_id=:order AND event_kind='FILL') AS fills,
+                    (SELECT count(*) FROM paper_wallet_ledger
+                     WHERE episode_id=:episode AND kind='TRADE_CASH') AS cash,
+                    (SELECT count(*) FROM audit_events
+                     WHERE owner_user_id=:owner AND action='PAPER_POSITION_CONFLICTED'
+                    ) AS conflict_audits
+                    FROM paper_order_activity a JOIN paper_order_dispatch d
+                      ON d.command_id=:command WHERE a.episode_id=:episode""",
+                    {
+                        "episode": wallet.episode_id,
+                        "order": value.order_id,
+                        "owner": owner,
+                        "command": command.command_id,
+                    },
+                )
+            ).one()
+        assert order_result is not None and order_result.state == "SUCCEEDED"
+        assert snapshot is not None and snapshot.balance == wallet.balance
+        assert row.availability == "CONFLICTED" and row.state == "TERMINAL"
+        assert row.conflicts == row.conflict_audits == 1
+        assert row.fills == row.cash == 0
+    finally:
+        await market.dispose()
+
+
+async def test_market_order_crossing_levels_links_every_fill_once(
+    engine_engine: AsyncEngine,
+    scan_engine: AsyncEngine,
+    owner: UUID,
+    wallet: PaperWalletSnapshot,
+) -> None:
+    market, lease, book, metadata = await ready_public_sources()
+    value = replace(intent(owner, wallet.episode_id), size=QuoteBudget(Money.of(1100, "USDT")))
+    try:
+        async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+            command = await submit_order(session, wallet_id=wallet.wallet_id, intent=value)
+        await run_paper_order_round(
+            engine=engine_engine,
+            scan_engine=scan_engine,
+            worker="multi-level-accept",
+            policy=AllowPolicy(),
+        )
+        await asyncio.sleep(0.12)
+        async with market_data_session(market) as session:
+            lease = await renew_book_writer(session, lease)
+            now = (await session.execute("SELECT clock_timestamp()")).scalar_one()
+            await publish_input(
+                session,
+                lease,
+                replace(
+                    book,
+                    input_id=book.input_id + 1,
+                    received_at=now,
+                    verified_at=now,
+                    rebase=False,
+                ),
+                metadata,
+            )
+        await asyncio.sleep(0.03)
+        await run_paper_order_round(
+            engine=engine_engine,
+            scan_engine=scan_engine,
+            worker="multi-level-fill",
+            policy=AllowPolicy(),
+        )
+        async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+            result = await get_order_command(session, command.command_id)
+            projection = (
+                await session.execute(
+                    """SELECT status,filled_quantity,spent FROM paper_order_projections
+                    WHERE order_id=:order""",
+                    {"order": value.order_id},
+                )
+            ).one()
+            links = (
+                await session.execute(
+                    "SELECT count(*) FROM paper_execution_links WHERE order_id=:order",
+                    {"order": value.order_id},
+                )
+            ).scalar_one()
+            current = await get_wallet(session)
+        assert result is not None and result.state == "SUCCEEDED"
+        assert projection.status == "FILLED"
+        assert Quantity.of(projection.filled_quantity, "BTC") == Quantity.of("10.5", "BTC")
+        assert Money.of(projection.spent, "USDT") == Money.of(1100, "USDT")
+        assert links == 2
+        assert current is not None and current.balance.amount == 8900
+    finally:
+        await market.dispose()
+
+
+async def test_cancel_before_next_input_releases_remaining_reservation(
+    engine_engine: AsyncEngine,
+    scan_engine: AsyncEngine,
+    owner: UUID,
+    wallet: PaperWalletSnapshot,
+) -> None:
+    market, _, _, _ = await ready_public_sources()
+    value = intent(owner, wallet.episode_id)
+    try:
+        async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+            await submit_order(session, wallet_id=wallet.wallet_id, intent=value)
+        await run_paper_order_round(
+            engine=engine_engine,
+            scan_engine=scan_engine,
+            worker="accept-before-cancel",
+            policy=AllowPolicy(),
+        )
+        async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+            cancellation = await submit_cancel(
+                session,
+                wallet_id=wallet.wallet_id,
+                episode_id=wallet.episode_id,
+                order_id=value.order_id,
+                idempotency_key=uuid4(),
+            )
+        await asyncio.sleep(0.03)
+        await run_paper_order_round(
+            engine=engine_engine,
+            scan_engine=scan_engine,
+            worker="old-order-first",
+            policy=AllowPolicy(),
+        )
+        await run_paper_order_round(
+            engine=engine_engine,
+            scan_engine=scan_engine,
+            worker="cancel",
+            policy=AllowPolicy(),
+        )
+        async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+            result = await get_order_command(session, cancellation.command_id)
+            projection = (
+                await session.execute(
+                    """SELECT p.status,r.quote_reserved FROM paper_order_projections p
+                    JOIN paper_reservations r USING(order_id) WHERE p.order_id=:order""",
+                    {"order": value.order_id},
+                )
+            ).one()
+        assert result is not None and result.state == "SUCCEEDED"
+        assert projection.status == "CANCELED" and projection.quote_reserved == 0
+    finally:
+        await market.dispose()
+
+
+async def test_duplicate_order_identity_is_terminal_and_does_not_block_cancel(
+    engine_engine: AsyncEngine,
+    scan_engine: AsyncEngine,
+    owner: UUID,
+    wallet: PaperWalletSnapshot,
+) -> None:
+    market, _, _, _ = await ready_public_sources()
+    original = intent(owner, wallet.episode_id)
+    try:
+        async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+            await submit_order(session, wallet_id=wallet.wallet_id, intent=original)
+        await run_paper_order_round(
+            engine=engine_engine,
+            scan_engine=scan_engine,
+            worker="duplicate-original",
+            policy=AllowPolicy(),
+        )
+
+        duplicate = replace(original, idempotency_key=uuid4())
+        async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+            duplicate_command = await submit_order(
+                session, wallet_id=wallet.wallet_id, intent=duplicate
+            )
+        await run_paper_order_round(
+            engine=engine_engine,
+            scan_engine=scan_engine,
+            worker="duplicate-reject",
+            policy=AllowPolicy(),
+        )
+        async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+            duplicate_result = await get_order_command(session, duplicate_command.command_id)
+            cancellation = await submit_cancel(
+                session,
+                wallet_id=wallet.wallet_id,
+                episode_id=wallet.episode_id,
+                order_id=original.order_id,
+                idempotency_key=uuid4(),
+            )
+        assert duplicate_result is not None
+        assert duplicate_result.state == "REJECTED"
+        assert duplicate_result.failure_code == "ORDER_CONFLICT"
+
+        await asyncio.sleep(0.03)
+        for worker in ("duplicate-original-drain", "duplicate-cancel"):
+            await run_paper_order_round(
+                engine=engine_engine,
+                scan_engine=scan_engine,
+                worker=worker,
+                policy=AllowPolicy(),
+            )
+        async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+            cancel_result = await get_order_command(session, cancellation.command_id)
+            projection = (
+                await session.execute(
+                    "SELECT status FROM paper_order_projections WHERE order_id=:order",
+                    {"order": original.order_id},
+                )
+            ).one()
+        assert cancel_result is not None and cancel_result.state == "SUCCEEDED"
+        assert projection.status == "CANCELED"
+
+        terminal_duplicate = replace(original, idempotency_key=uuid4())
+        async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+            terminal_command = await submit_order(
+                session, wallet_id=wallet.wallet_id, intent=terminal_duplicate
+            )
+        await run_paper_order_round(
+            engine=engine_engine,
+            scan_engine=scan_engine,
+            worker="terminal-duplicate-reject",
+            policy=AllowPolicy(),
+        )
+        async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+            terminal_result = await get_order_command(session, terminal_command.command_id)
+        assert terminal_result is not None
+        assert terminal_result.state == "REJECTED"
+        assert terminal_result.failure_code == "ORDER_CONFLICT"
+    finally:
+        await market.dispose()
+
+
+async def test_two_buys_cannot_reserve_the_same_quote_cash(
+    engine_engine: AsyncEngine,
+    scan_engine: AsyncEngine,
+    owner: UUID,
+    wallet: PaperWalletSnapshot,
+) -> None:
+    market, lease, book, metadata = await ready_public_sources()
+    first = replace(
+        intent(owner, wallet.episode_id),
+        kind=OrderType.LIMIT,
+        size=BaseSize(Quantity.of(61, "BTC")),
+        limit_price=Money.of(99, "USDT"),
+        time_in_force=TimeInForce.GTC,
+    )
+    second = replace(
+        intent(owner, wallet.episode_id),
+        kind=OrderType.LIMIT,
+        size=BaseSize(Quantity.of(61, "BTC")),
+        limit_price=Money.of(99, "USDT"),
+        time_in_force=TimeInForce.GTC,
+    )
+    try:
+        async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+            first_command = await submit_order(session, wallet_id=wallet.wallet_id, intent=first)
+            second_command = await submit_order(session, wallet_id=wallet.wallet_id, intent=second)
+        await run_paper_order_round(
+            engine=engine_engine,
+            scan_engine=scan_engine,
+            worker="first-reservation",
+            policy=AllowPolicy(),
+        )
+        await asyncio.sleep(0.12)
+        async with market_data_session(market) as session:
+            lease = await renew_book_writer(session, lease)
+            now = (await session.execute("SELECT clock_timestamp()")).scalar_one()
+            await publish_input(
+                session,
+                lease,
+                replace(
+                    book,
+                    input_id=book.input_id + 1,
+                    received_at=now,
+                    verified_at=now,
+                    rebase=False,
+                ),
+                metadata,
+            )
+        await asyncio.gather(
+            run_paper_order_round(
+                engine=engine_engine,
+                scan_engine=scan_engine,
+                worker="reserve-race-a",
+                policy=AllowPolicy(),
+            ),
+            run_paper_order_round(
+                engine=engine_engine,
+                scan_engine=scan_engine,
+                worker="reserve-race-b",
+                policy=AllowPolicy(),
+            ),
+        )
+        await run_paper_order_round(
+            engine=engine_engine,
+            scan_engine=scan_engine,
+            worker="reserve-race-drain",
+            policy=AllowPolicy(),
+        )
+        async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+            outcomes = (
+                await get_order_command(session, first_command.command_id),
+                await get_order_command(session, second_command.command_id),
+            )
+            order_count = (
+                await session.execute(
+                    "SELECT count(*) FROM paper_orders WHERE episode_id=:episode",
+                    {"episode": wallet.episode_id},
+                )
+            ).scalar_one()
+            reserved = (
+                await session.execute(
+                    "SELECT sum(quote_reserved) FROM paper_reservations WHERE episode_id=:episode",
+                    {"episode": wallet.episode_id},
+                )
+            ).scalar_one()
+        assert all(value is not None for value in outcomes)
+        assert {value.failure_code for value in outcomes if value is not None} == {
+            None,
+            "ORDER_INSUFFICIENT_FUNDS",
+        }
+        assert order_count == 1 and reserved == 6039
+    finally:
+        await market.dispose()

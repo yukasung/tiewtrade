@@ -5,7 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 from datetime import timedelta
-from uuid import UUID, uuid4
+from uuid import NAMESPACE_URL, UUID, uuid4, uuid5
 
 from tiewtrade.core.money import Money, MoneyError
 from tiewtrade.core.paper_wallet import (
@@ -22,6 +22,7 @@ from tiewtrade.infra.audit import (
     AuditOutcome,
     PaperWalletCreatedDetails,
     PaperWalletRejectedDetails,
+    PaperWalletResetDetails,
     SubjectKind,
     record_event,
 )
@@ -29,6 +30,7 @@ from tiewtrade.infra.db import money_from_columns, money_to_columns
 from tiewtrade.infra.db.session import ScanSession, UserSession, require_user_session
 from tiewtrade.infra.paper_wallet.records import (
     ACTIVITY_UNKNOWN,
+    RESET_UNSAFE,
     ClaimedPaperCommand,
     DuePaperCommand,
     PaperCommand,
@@ -285,11 +287,13 @@ async def get_wallet(session: UserSession) -> PaperWalletSnapshot | None:
                       e.initial_capital,e.currency,e.started_at,s.revision,
                       EXISTS(SELECT 1 FROM paper_wallet_episode_closures c
                              WHERE c.episode_id=s.active_episode_id) episode_closed,
+                      rr.*,
                       clock_timestamp() snapshot_at
                FROM paper_wallets w LEFT JOIN paper_wallet_state s
                  ON s.wallet_id=w.id AND s.user_id=w.user_id
                LEFT JOIN paper_wallet_episodes e
                  ON e.id=s.active_episode_id AND e.wallet_id=w.id AND e.user_id=w.user_id
+               LEFT JOIN LATERAL paper_wallet_reset_readiness(s.active_episode_id) rr ON true
                WHERE w.user_id=:owner""",
             {"owner": session.user_id},
         )
@@ -322,6 +326,41 @@ async def get_wallet(session: UserSession) -> PaperWalletSnapshot | None:
     ledger_capital = money_from_columns(capital_entries[0].amount, capital_entries[0].currency)
     if ledger_capital != stored_capital:
         raise PaperWalletIntegrityError("Paper wallet episode capital does not match its ledger")
+    position_complete = (
+        row.position_availability == "READY"
+        and row.position_proof is not None
+        and row.position_proof == row.initialized_position_proof
+        and int(row.position_record_count) == int(row.position_sequence)
+        and int(row.position_max_sequence) == int(row.position_sequence)
+        and int(row.position_pair_count) == int(row.position_projection_count)
+        and int(row.position_revision_mismatch) == 0
+    )
+    order_complete = (
+        row.order_availability == "READY"
+        and row.order_proof is not None
+        and row.order_proof == row.initialized_order_proof
+        and int(row.order_count) == int(row.order_projection_count)
+        and int(row.order_count) == int(row.reservation_count)
+        and int(row.order_projection_mismatch) == 0
+        and int(row.reservation_revision_mismatch) == 0
+    )
+    reset_reason = (
+        ACTIVITY_UNKNOWN
+        if not position_complete or not order_complete
+        else (
+            RESET_UNSAFE
+            if any(
+                int(value) != 0
+                for value in (
+                    row.open_position_count,
+                    row.active_order_count,
+                    row.active_reservation_count,
+                    row.pending_order_command_count,
+                )
+            )
+            else None
+        )
+    )
     return PaperWalletSnapshot(
         wallet_id=row.wallet_id,
         episode_id=row.episode_id,
@@ -331,6 +370,8 @@ async def get_wallet(session: UserSession) -> PaperWalletSnapshot | None:
         started_at=row.started_at,
         snapshot_at=row.snapshot_at,
         revision=row.revision,
+        reset_available=reset_reason is None,
+        reset_reason=reset_reason,
     )
 
 
@@ -422,6 +463,159 @@ async def _reject_claimed(session: UserSession, claimed: ClaimedPaperCommand, fa
     )
 
 
+async def _initialize_sources(
+    session: UserSession, *, wallet_id: UUID, episode_id: UUID, initialization_id: UUID
+) -> None:
+    # The integration is transaction-bound; defer this import to avoid a module cycle.
+    from tiewtrade.infra.paper_orders.initialization import initialize_order_source
+
+    await initialize_order_source(
+        session,
+        wallet_id=wallet_id,
+        episode_id=episode_id,
+        initialization_id=initialization_id,
+    )
+
+
+async def _enable_f15_writer(session: UserSession) -> None:
+    # The integration is transaction-bound; defer this import to avoid a module cycle.
+    from tiewtrade.infra.paper_orders.initialization import enable_financial_writer
+
+    await enable_financial_writer(session)
+
+
+async def _process_reset(session: UserSession, claimed: ClaimedPaperCommand) -> PaperCommand:
+    expected = claimed.expected_episode_id
+    if expected is None:
+        await _reject_claimed(session, claimed, "EPISODE_CONFLICT")
+        return PaperCommand(claimed.command_id, PaperCommandState.REJECTED, "EPISODE_CONFLICT")
+    expected = UUID(str(expected))
+    state = (
+        await session.execute(
+            """SELECT wallet_id,active_episode_id,revision FROM paper_wallet_state
+            WHERE user_id=:owner FOR UPDATE""",
+            {"owner": session.user_id},
+        )
+    ).one_or_none()
+    if state is None or UUID(str(state.active_episode_id)) != expected:
+        await _reject_claimed(session, claimed, "EPISODE_CONFLICT")
+        return PaperCommand(claimed.command_id, PaperCommandState.REJECTED, "EPISODE_CONFLICT")
+    current = await get_wallet(session)
+    if current is None or current.reset_reason is not None:
+        failure = ACTIVITY_UNKNOWN if current is None else current.reset_reason
+        assert failure is not None
+        await _reject_claimed(session, claimed, failure)
+        return PaperCommand(claimed.command_id, PaperCommandState.REJECTED, failure)
+
+    await _enable_f15_writer(session)
+    wallet_id = UUID(str(state.wallet_id))
+    episode_id = uuid5(NAMESPACE_URL, f"tiewtrade:paper-reset:{claimed.command_id}:episode")
+    ledger_id = uuid5(NAMESPACE_URL, f"tiewtrade:paper-reset:{claimed.command_id}:capital")
+    initialization_id = uuid5(NAMESPACE_URL, f"tiewtrade:paper-reset:{claimed.command_id}:sources")
+    amount, currency = money_to_columns(claimed.initial_capital)
+    await session.execute(
+        """INSERT INTO paper_wallet_episode_closures
+        (episode_id,wallet_id,user_id,reset_command_id)
+        VALUES(:old_episode,:wallet,:owner,:command)""",
+        {
+            "old_episode": expected,
+            "wallet": wallet_id,
+            "owner": session.user_id,
+            "command": claimed.command_id,
+        },
+    )
+    await session.execute(
+        """INSERT INTO paper_wallet_episodes
+        (id,wallet_id,user_id,sequence,initial_capital,currency)
+        VALUES(:episode,:wallet,:owner,:sequence,:amount,:currency)""",
+        {
+            "episode": episode_id,
+            "wallet": wallet_id,
+            "owner": session.user_id,
+            "sequence": current.sequence + 1,
+            "amount": amount,
+            "currency": currency,
+        },
+    )
+    await session.execute(
+        """INSERT INTO paper_position_activity(episode_id,wallet_id,user_id)
+        VALUES(:episode,:wallet,:owner)""",
+        {"episode": episode_id, "wallet": wallet_id, "owner": session.user_id},
+    )
+    await session.execute(
+        """INSERT INTO paper_wallet_ledger
+        (id,user_id,wallet_id,episode_id,kind,amount,currency,source_command_id)
+        VALUES(:ledger,:owner,:wallet,:episode,'EXTERNAL_CAPITAL',:amount,:currency,:command)""",
+        {
+            "ledger": ledger_id,
+            "owner": session.user_id,
+            "wallet": wallet_id,
+            "episode": episode_id,
+            "amount": amount,
+            "currency": currency,
+            "command": claimed.command_id,
+        },
+    )
+    moved = (
+        await session.execute(
+            """UPDATE paper_wallet_state SET active_episode_id=:episode,revision=revision+1
+            WHERE wallet_id=:wallet AND active_episode_id=:old_episode
+            RETURNING revision""",
+            {"episode": episode_id, "wallet": wallet_id, "old_episode": expected},
+        )
+    ).one_or_none()
+    if moved is None:
+        raise PaperWalletIntegrityError("Paper reset lost the active episode fence")
+    await _initialize_sources(
+        session,
+        wallet_id=wallet_id,
+        episode_id=episode_id,
+        initialization_id=initialization_id,
+    )
+    snapshot = await get_wallet(session)
+    if snapshot is None or snapshot.episode_id != episode_id or not snapshot.reset_available:
+        raise PaperWalletIntegrityError("new Paper episode sources are not ready")
+    await session.execute(
+        """INSERT INTO paper_wallet_command_results
+        (command_id,user_id,state,wallet_id,episode_id,initial_capital,balance,currency)
+        VALUES(:command,:owner,'SUCCEEDED',:wallet,:episode,:amount,:amount,:currency)""",
+        {
+            "command": claimed.command_id,
+            "owner": session.user_id,
+            "wallet": wallet_id,
+            "episode": episode_id,
+            "amount": amount,
+            "currency": currency,
+        },
+    )
+    await record_event(
+        session,
+        AuditEvent(
+            owner_user_id=session.user_id,
+            action=AuditAction.PAPER_WALLET_RESET,
+            actor_kind=ActorKind.USER,
+            actor_id=session.user_id,
+            subject_kind=SubjectKind.PAPER_WALLET,
+            subject_id=str(wallet_id),
+            outcome=AuditOutcome.SUCCEEDED,
+            details=PaperWalletResetDetails(
+                claimed.command_id, expected, episode_id, claimed.initial_capital
+            ),
+            mode=AuditMode.PAPER,
+        ),
+    )
+    return PaperCommand(
+        claimed.command_id,
+        PaperCommandState.SUCCEEDED,
+        snapshot=PaperCommandSnapshot(
+            wallet_id=wallet_id,
+            episode_id=episode_id,
+            initial_capital=claimed.initial_capital,
+            balance=claimed.initial_capital,
+        ),
+    )
+
+
 async def process_claimed(session: UserSession, claimed: ClaimedPaperCommand) -> PaperCommand:
     """Apply a claimed command atomically under the per-owner financial lock."""
     session = require_user_session(session)
@@ -442,8 +636,7 @@ async def process_claimed(session: UserSession, claimed: ClaimedPaperCommand) ->
     if prior is not None and prior.state is not PaperCommandState.PENDING:
         return prior
     if claimed.action is PaperWalletAction.RESET:
-        await _reject_claimed(session, claimed, ACTIVITY_UNKNOWN)
-        return PaperCommand(claimed.command_id, PaperCommandState.REJECTED, ACTIVITY_UNKNOWN)
+        return await _process_reset(session, claimed)
     exists = (
         await session.execute(
             "SELECT 1 FROM paper_wallets WHERE user_id=:owner",
@@ -494,6 +687,14 @@ async def process_claimed(session: UserSession, claimed: ClaimedPaperCommand) ->
             "currency": currency,
             "command": claimed.command_id,
         },
+    )
+    await _initialize_sources(
+        session,
+        wallet_id=wallet_id,
+        episode_id=episode_id,
+        initialization_id=uuid5(
+            NAMESPACE_URL, f"tiewtrade:paper-create:{claimed.command_id}:sources"
+        ),
     )
     await session.execute(
         """INSERT INTO paper_wallet_command_results
