@@ -119,3 +119,51 @@ def test_strict_input_authentication_and_rate_limit(client: TestClient) -> None:
     )
     assert limited.status_code == 429
     assert "Retry-After" in limited.headers
+
+
+def test_reset_uses_server_readiness_and_preserves_terminal_replay(
+    client: TestClient,
+) -> None:
+    register(client)
+    create_key = str(uuid4())
+    created = client.post(
+        "/paper-wallet",
+        json={"initial_capital": "1500"},
+        headers={**csrf_headers(client), "Idempotency-Key": create_key},
+    )
+    assert created.status_code == 202, created.text
+    _run_worker()
+    before = client.get("/paper-wallet").json()["wallet"]
+    assert before["reset_available"] is True
+    assert before["reset_reason"] is None
+
+    reset_key = str(uuid4())
+    payload = {
+        "initial_capital": "2500.125",
+        "expected_episode_id": before["episode_id"],
+    }
+    accepted = client.post(
+        "/paper-wallet/reset",
+        json=payload,
+        headers={**csrf_headers(client), "Idempotency-Key": reset_key},
+    )
+    assert accepted.status_code == 202, accepted.text
+    _run_worker()
+    terminal = client.get(accepted.json()["status_url"])
+    assert terminal.status_code == 200
+    assert terminal.json()["state"] == "SUCCEEDED"
+    after = client.get("/paper-wallet").json()["wallet"]
+    assert after["episode_id"] != before["episode_id"]
+    assert after["sequence"] == 2
+    assert after["initial_capital"] == {"amount": "2500.125", "currency": "USDT"}
+    assert after["balance"] == after["initial_capital"]
+    assert after["reset_available"] is True
+    assert after["reset_reason"] is None
+
+    replay = client.post(
+        "/paper-wallet/reset",
+        json={**payload, "initial_capital": "2500.1250"},
+        headers={**csrf_headers(client), "Idempotency-Key": reset_key},
+    )
+    assert replay.status_code == 200
+    assert replay.json() == terminal.json()

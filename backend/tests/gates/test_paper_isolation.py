@@ -8,10 +8,16 @@ from pathlib import Path
 SOURCE = Path(__file__).parents[2] / "src"
 PAPER_FILES = (
     SOURCE / "tiewtrade/core/paper_wallet.py",
+    SOURCE / "tiewtrade/core/orders.py",
+    SOURCE / "tiewtrade/core/order_book.py",
+    SOURCE / "tiewtrade/core/paper_matching.py",
     *(SOURCE / "tiewtrade/infra/paper_wallet").glob("*.py"),
+    *(SOURCE / "tiewtrade/infra/paper_orders").glob("*.py"),
     SOURCE / "tiewtrade/services/api/paper_wallet_routes.py",
     SOURCE / "tiewtrade/services/engine/paper_wallet.py",
     SOURCE / "tiewtrade/services/engine/paper_wallet_main.py",
+    SOURCE / "tiewtrade/services/engine/paper_order.py",
+    SOURCE / "tiewtrade/services/engine/paper_order_main.py",
 )
 FORBIDDEN = (
     "aiohttp",
@@ -37,7 +43,14 @@ FORBIDDEN_MARKERS = (
 ALLOWED_INTERNAL_IMPORTS = frozenset(
     {
         "tiewtrade.core.money",
+        "tiewtrade.core.market_catalog",
+        "tiewtrade.core.orders",
+        "tiewtrade.core.order_book",
+        "tiewtrade.core.paper_matching",
+        "tiewtrade.core.positions",
+        "tiewtrade.core.trading_limits",
         "tiewtrade.core.paper_wallet",
+        "tiewtrade.core.realtime_prices",
         "tiewtrade.infra.audit",
         "tiewtrade.infra.auth",
         "tiewtrade.infra.auth.throttle",
@@ -47,11 +60,25 @@ ALLOWED_INTERNAL_IMPORTS = frozenset(
         "tiewtrade.infra.paper_wallet",
         "tiewtrade.infra.paper_wallet.records",
         "tiewtrade.infra.paper_wallet.storage",
+        "tiewtrade.infra.paper_orders.records",
+        "tiewtrade.infra.paper_orders.storage",
+        "tiewtrade.infra.paper_orders.initialization",
+        "tiewtrade.infra.paper_orders.executions",
+        "tiewtrade.infra.paper_orders.codec",
+        "tiewtrade.infra.paper_orders.corrections",
+        "tiewtrade.infra.paper_orders.dispatch",
+        "tiewtrade.infra.paper_orders.matching_storage",
+        "tiewtrade.infra.paper_orders.worker",
+        "tiewtrade.infra.positions",
+        "tiewtrade.infra.market_data.order_book_codec",
+        "tiewtrade.infra.market_data.order_book_storage",
+        "tiewtrade.infra.market_data.realtime_storage",
         "tiewtrade.services.api.db_resources",
         "tiewtrade.services.api.request_identity",
         "tiewtrade.services.api.safe_input_routes",
         "tiewtrade.services.api.throttling",
         "tiewtrade.services.engine.paper_wallet",
+        "tiewtrade.services.engine.paper_order",
     }
 )
 

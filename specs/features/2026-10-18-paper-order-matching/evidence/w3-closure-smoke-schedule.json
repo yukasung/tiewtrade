@@ -1,0 +1,10 @@
+{
+  "profile": "F15_W3_CLOSURE_SMOKE",
+  "duration_seconds": 18,
+  "cycles_per_owner": 3,
+  "events": [
+    {"offset_seconds": 0.2, "duration_seconds": 1, "kind": "WORKER_RESTART"},
+    {"offset_seconds": 6, "duration_seconds": 1, "kind": "CONNECTION_CHURN"},
+    {"offset_seconds": 10, "duration_seconds": 1, "kind": "REDIS_OUTAGE"}
+  ]
+}

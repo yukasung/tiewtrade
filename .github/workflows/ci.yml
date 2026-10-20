@@ -290,7 +290,12 @@ jobs:
           curl --fail --silent --show-error http://localhost:8000/health | tee /dev/stderr | grep -q '"status":"ok"'
 
       - name: หน้าบ้านตอบจาก container
-        run: curl --fail --silent --show-error http://localhost:5173/ > /dev/null
+        # Compose can report a service without a healthcheck as started just before
+        # Vite begins accepting HTTP. Bound the readiness race instead of failing
+        # the container gate on the first connection reset.
+        run: >-
+          curl --fail --silent --show-error --retry 10 --retry-delay 1
+          --retry-all-errors http://localhost:5173/ > /dev/null
 
       - name: log ถ้าพัง
         if: failure()

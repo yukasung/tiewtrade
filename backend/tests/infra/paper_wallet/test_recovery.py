@@ -17,6 +17,7 @@ from tiewtrade.infra.db import (
     scan_session_bypassing_rls,
     user_session,
 )
+from tiewtrade.infra.paper_orders.initialization import initialize_order_source
 from tiewtrade.infra.paper_wallet import (
     ClaimedPaperCommand,
     PaperCommand,
@@ -31,7 +32,7 @@ from tiewtrade.infra.paper_wallet import (
 )
 from tiewtrade.services.engine import paper_wallet as worker
 
-from .test_storage import _submit
+from .test_storage import _reset, _submit
 
 
 async def _force_due(engine: AsyncEngine, owner: UUID, command_id: UUID) -> None:
@@ -123,6 +124,193 @@ async def test_create_rolls_back_every_financial_write_and_recovers(
 
     assert recovered.processed == 1
     assert await _financial_counts(api_engine, owner, command.command_id) == (1, 1, 1, 1, 1, 1)
+
+
+@pytest.mark.parametrize(
+    "fault_after",
+    [
+        "INSERT INTO paper_wallet_episode_closures",
+        "INSERT INTO paper_wallet_episodes",
+        "INSERT INTO paper_position_activity",
+        "INSERT INTO paper_wallet_ledger",
+        "UPDATE paper_wallet_state SET active_episode_id",
+        "INSERT INTO paper_order_initializations",
+        "INSERT INTO paper_wallet_command_results",
+        "INSERT INTO audit_events",
+    ],
+)
+async def test_reset_rolls_back_every_financial_stage_and_recovers(
+    monkeypatch: pytest.MonkeyPatch,
+    api_engine: AsyncEngine,
+    engine_engine: AsyncEngine,
+    scan_engine: AsyncEngine,
+    owner: UUID,
+    fault_after: str,
+) -> None:
+    await _submit(api_engine, owner, uuid4(), "1500")
+    await worker.run_paper_wallet_round(
+        engine=engine_engine, scan_engine=scan_engine, worker="reset-fault-create"
+    )
+    async with user_session(api_engine, owner) as session:
+        original = await get_wallet(session)
+    assert original is not None
+    async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+        await initialize_order_source(
+            session,
+            wallet_id=original.wallet_id,
+            episode_id=original.episode_id,
+            initialization_id=uuid4(),
+        )
+    command = await _reset(api_engine, owner, uuid4(), original.episode_id, "2500")
+    original_execute = UserSession.execute
+    injected = False
+
+    async def fail_after_write(
+        session: UserSession,
+        statement: str,
+        parameters: Mapping[str, object] | None = None,
+    ) -> Result[Any]:
+        nonlocal injected
+        result = await original_execute(session, statement, parameters)
+        if session.user_id == owner and not injected and fault_after in statement:
+            injected = True
+            raise InfraError("injected paper-wallet reset failure")
+        return result
+
+    monkeypatch.setattr(UserSession, "execute", fail_after_write)
+    failed = await worker.run_paper_wallet_round(
+        engine=engine_engine, scan_engine=scan_engine, worker="reset-fault"
+    )
+    assert injected
+    assert failed.deferred == 1
+    async with user_session(api_engine, owner) as session:
+        after_failure = await get_wallet(session)
+        counts = (
+            await session.execute(
+                """SELECT
+                  (SELECT count(*) FROM paper_wallet_episodes WHERE wallet_id=:wallet),
+                  (SELECT count(*) FROM paper_wallet_episode_closures WHERE wallet_id=:wallet),
+                  (SELECT count(*) FROM paper_wallet_ledger WHERE wallet_id=:wallet),
+                  (SELECT count(*) FROM paper_wallet_command_results WHERE command_id=:command),
+                  (SELECT count(*) FROM audit_events WHERE owner_user_id=:owner
+                    AND action='PAPER_WALLET_RESET')""",
+                {"wallet": original.wallet_id, "command": command.command_id, "owner": owner},
+            )
+        ).one()
+    assert after_failure is not None and after_failure.episode_id == original.episode_id
+    assert tuple(counts) == (1, 0, 1, 0, 0)
+
+    await _force_due(engine_engine, owner, command.command_id)
+    recovered = await worker.run_paper_wallet_round(
+        engine=engine_engine, scan_engine=scan_engine, worker="reset-recovery"
+    )
+    assert recovered.processed == 1
+    async with user_session(api_engine, owner) as session:
+        after_recovery = await get_wallet(session)
+        result = await get_command(session, command.command_id)
+    assert after_recovery is not None and after_recovery.sequence == 2
+    assert result is not None and result.state is PaperCommandState.SUCCEEDED
+
+
+@pytest.mark.parametrize("interruption", ["cancel", "timeout"])
+async def test_reset_interruption_rolls_back_and_same_command_recovers(
+    monkeypatch: pytest.MonkeyPatch,
+    api_engine: AsyncEngine,
+    engine_engine: AsyncEngine,
+    scan_engine: AsyncEngine,
+    owner: UUID,
+    interruption: str,
+) -> None:
+    await _submit(api_engine, owner, uuid4(), "1500")
+    await worker.run_paper_wallet_round(
+        engine=engine_engine, scan_engine=scan_engine, worker="reset-interrupt-create"
+    )
+    async with user_session(api_engine, owner) as session:
+        original = await get_wallet(session)
+    assert original is not None
+    async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+        await initialize_order_source(
+            session,
+            wallet_id=original.wallet_id,
+            episode_id=original.episode_id,
+            initialization_id=uuid4(),
+        )
+    command = await _reset(api_engine, owner, uuid4(), original.episode_id, "2500")
+    original_execute = UserSession.execute
+    reached = asyncio.Event()
+    release = asyncio.Event()
+    paused = False
+
+    async def pause_after_capital_write(
+        session: UserSession,
+        statement: str,
+        parameters: Mapping[str, object] | None = None,
+    ) -> Result[Any]:
+        nonlocal paused
+        result = await original_execute(session, statement, parameters)
+        if (
+            session.user_id == owner
+            and not paused
+            and "INSERT INTO paper_wallet_ledger" in statement
+        ):
+            paused = True
+            reached.set()
+            await release.wait()
+        return result
+
+    monkeypatch.setattr(UserSession, "execute", pause_after_capital_write)
+    if interruption == "cancel":
+        task = asyncio.create_task(
+            worker.run_paper_wallet_round(
+                engine=engine_engine,
+                scan_engine=scan_engine,
+                worker="reset-cancelled",
+            )
+        )
+        await reached.wait()
+        task.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await task
+    else:
+        with pytest.raises(TimeoutError):
+            async with asyncio.timeout(0.05):
+                await worker.run_paper_wallet_round(
+                    engine=engine_engine,
+                    scan_engine=scan_engine,
+                    worker="reset-timeout",
+                )
+        assert reached.is_set()
+
+    async with user_session(api_engine, owner) as session:
+        after_interruption = await get_wallet(session)
+        counts = (
+            await session.execute(
+                """SELECT
+                (SELECT count(*) FROM paper_wallet_episodes WHERE wallet_id=:wallet),
+                (SELECT count(*) FROM paper_wallet_episode_closures WHERE wallet_id=:wallet),
+                (SELECT count(*) FROM paper_wallet_ledger WHERE wallet_id=:wallet),
+                (SELECT count(*) FROM paper_wallet_command_results WHERE command_id=:command),
+                (SELECT count(*) FROM audit_events WHERE owner_user_id=:owner
+                  AND action='PAPER_WALLET_RESET')""",
+                {"wallet": original.wallet_id, "command": command.command_id, "owner": owner},
+            )
+        ).one()
+    assert after_interruption is not None
+    assert after_interruption.episode_id == original.episode_id
+    assert tuple(counts) == (1, 0, 1, 0, 0)
+
+    await _force_due(engine_engine, owner, command.command_id)
+    recovered = await worker.run_paper_wallet_round(
+        engine=engine_engine,
+        scan_engine=scan_engine,
+        worker="reset-interrupt-recovery",
+    )
+    assert recovered.processed == 1
+    async with user_session(api_engine, owner) as session:
+        current = await get_wallet(session)
+        result = await get_command(session, command.command_id)
+    assert current is not None and current.sequence == 2
+    assert result is not None and result.state is PaperCommandState.SUCCEEDED
 
 
 @pytest.mark.parametrize(
@@ -378,6 +566,15 @@ async def test_repeatable_snapshot_cannot_mix_episodes_during_pointer_race(
     await worker.run_paper_wallet_round(
         engine=engine_engine, scan_engine=scan_engine, worker="snapshot-setup"
     )
+    async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+        wallet = await get_wallet(session)
+        assert wallet is not None
+        await initialize_order_source(
+            session,
+            wallet_id=wallet.wallet_id,
+            episode_id=wallet.episode_id,
+            initialization_id=uuid4(),
+        )
     async with repeatable_user_session(api_engine, owner) as session:
         original = await get_wallet(session)
     assert original is not None
@@ -416,40 +613,14 @@ async def test_repeatable_snapshot_cannot_mix_episodes_during_pointer_race(
 
     reader = asyncio.create_task(read_during_change())
     await first_select_done.wait()
-    new_episode = uuid4()
     reset_command = reset.command_id
-    new_ledger = uuid4()
     try:
-        async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as writer_session:
-            parameters = {
-                "command": reset_command,
-                "owner": owner,
-                "old_episode": original.episode_id,
-                "new_episode": new_episode,
-                "wallet": original.wallet_id,
-                "ledger": new_ledger,
-            }
-            statements = (
-                """INSERT INTO paper_wallet_episodes
-                   (id,wallet_id,user_id,sequence,initial_capital,currency)
-                   VALUES (:new_episode,:wallet,:owner,2,2500,'USDT')""",
-                """INSERT INTO paper_wallet_episode_closures
-                   (episode_id,wallet_id,user_id,reset_command_id)
-                   VALUES (:old_episode,:wallet,:owner,:command)""",
-                """INSERT INTO paper_wallet_ledger
-                   (id,user_id,wallet_id,episode_id,kind,amount,currency,source_command_id)
-                   VALUES (:ledger,:owner,:wallet,:new_episode,'EXTERNAL_CAPITAL',
-                           2500,'USDT',:command)""",
-                """UPDATE paper_wallet_state SET active_episode_id=:new_episode,
-                          revision=revision+1 WHERE wallet_id=:wallet""",
-                """INSERT INTO paper_wallet_command_results
-                   (command_id,user_id,state,wallet_id,episode_id,
-                    initial_capital,balance,currency)
-                   VALUES (:command,:owner,'SUCCEEDED',:wallet,:new_episode,
-                           2500,2500,'USDT')""",
-            )
-            for statement in statements:
-                await writer_session.execute(statement, parameters)
+        reset_round = await worker.run_paper_wallet_round(
+            engine=engine_engine,
+            scan_engine=scan_engine,
+            worker="snapshot-production-reset",
+        )
+        assert reset_round.processed == 1
     finally:
         writer_done.set()
 
@@ -463,10 +634,10 @@ async def test_repeatable_snapshot_cannot_mix_episodes_during_pointer_race(
     async with repeatable_user_session(api_engine, owner) as session:
         after = await get_wallet(session)
     assert after is not None
-    assert after.episode_id == new_episode
+    assert after.episode_id != original.episode_id
     assert after.initial_capital.as_parts()["amount"] == "2500"
     assert after.balance.as_parts()["amount"] == "2500"
-    assert after.revision == original.revision + 1
+    assert after.revision == original.revision + 2
     async with user_session(api_engine, owner) as session:
         create_replay = await get_command(session, create.command_id)
         replay = await get_command(session, reset_command)
@@ -481,6 +652,6 @@ async def test_repeatable_snapshot_cannot_mix_episodes_during_pointer_race(
     assert replay.state is PaperCommandState.SUCCEEDED
     assert replay.snapshot is not None
     assert replay.snapshot.wallet_id == original.wallet_id
-    assert replay.snapshot.episode_id == new_episode
+    assert replay.snapshot.episode_id == after.episode_id
     assert replay.snapshot.initial_capital.as_parts()["amount"] == "2500"
     assert replay.snapshot.balance.as_parts()["amount"] == "2500"

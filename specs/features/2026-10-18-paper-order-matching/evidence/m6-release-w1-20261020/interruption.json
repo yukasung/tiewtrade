@@ -1,0 +1,6 @@
+{
+  "status": "INTERRUPTED",
+  "acceptance_passed": false,
+  "recorded_at": "2026-10-20T15:33:24.999689+00:00",
+  "reason": "Owner requested avoiding long validation; stopped workload container. W1 remains Pending Full Validation. Partial artifacts and database retained."
+}

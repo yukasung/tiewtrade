@@ -71,6 +71,7 @@ def test_only_the_transport_reaches_the_network() -> None:
         "wallets.py",
         "candles.py",
         "price_feed.py",  # F-10 REST recovery goes through the existing HTTP gateway.
+        "order_book.py",  # F-15 public depth recovery uses that same gateway.
     }
     stream_reaching = {path.name for path in adapter.glob("*.py")} - {
         path.name for path in modules_not_reaching(adapter, "stream_transport")
@@ -79,6 +80,7 @@ def test_only_the_transport_reaches_the_network() -> None:
         "__init__.py",
         "price_feed.py",
         "candle_feed.py",
+        "order_book.py",
         "stream_transport.py",
     }
 

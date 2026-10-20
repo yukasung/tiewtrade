@@ -1,0 +1,14 @@
+{
+  "profile": "F15_W3_FAULTS_V1",
+  "duration_seconds": 14400,
+  "cycles_per_owner": 282,
+  "events": [
+    {"offset_seconds": 1800, "duration_seconds": 30, "kind": "WORKER_RESTART"},
+    {"offset_seconds": 3600, "duration_seconds": 30, "kind": "CONNECTION_CHURN"},
+    {"offset_seconds": 5400, "duration_seconds": 60, "kind": "REDIS_OUTAGE"},
+    {"offset_seconds": 7200, "duration_seconds": 30, "kind": "WORKER_RESTART"},
+    {"offset_seconds": 9000, "duration_seconds": 30, "kind": "CONNECTION_CHURN"},
+    {"offset_seconds": 10800, "duration_seconds": 60, "kind": "REDIS_OUTAGE"},
+    {"offset_seconds": 12600, "duration_seconds": 30, "kind": "WORKER_RESTART"}
+  ]
+}

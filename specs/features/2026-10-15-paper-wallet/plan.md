@@ -6,6 +6,12 @@
 
 Requirements: [ฉบับอนุมัติ](requirements.md) · Branch: `feature/f13-paper-wallet`
 
+**Integration amendment อนุมัติ 2026-10-18:** เจ้าของอนุมัติ [F-15 plan §6](../2026-10-18-paper-order-matching/plan.md#6-financial-writer-และ-f-13-reset-integration-amendment)
+ให้ขยาย signed trade/correction cash ledger, authoritative source initialization,
+reset writer และ coherent reset readiness/API/UI โดยคง command replay snapshots เดิม
+และ financial lock เดียวกัน ผล reset success ยังไม่ Passed จนผ่าน F-15 V-13/V-14/V-15
+และเกณฑ์ F-13 ที่อ้างกลับครบ; ก่อน integration พร้อม runtime ยังคง ACTIVITY_UNKNOWN
+
 ## 1. แนวทางและขอบเขต
 
 ใช้ `core` ตรวจทุนและคำนวณยอดด้วย `Money` เท่านั้น, PostgreSQL เป็นแหล่งจริงของ

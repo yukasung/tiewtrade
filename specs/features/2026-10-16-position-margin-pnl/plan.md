@@ -3,6 +3,12 @@
 สถานะ: **Approved** — เจ้าของอนุมัติวันที่ 2026-10-16
 วันที่: 2026-10-16
 
+**Integration amendment อนุมัติ 2026-10-18:** [F-15 plan §6](../2026-10-18-paper-order-matching/plan.md#6-financial-writer-และ-f-13-reset-integration-amendment)
+เป็น owner ของ Paper source initialization และประกอบ order/reservation/ledger กับ
+F-14 session-bound writer ใน transaction เดียว; ใช้ exact effects/compensating effects
+เดิม ไม่เปลี่ยน cost/PnL หรือ correction contract ของ F-14 การเปิด reset และการปิด
+pending validations ต้องมีหลักฐาน F-15 integration จริง ไม่ถือว่าผ่านจาก core tests
+
 ## 1. แนวทางและขอบเขต implementation
 
 ทำ F-14 เป็นสองส่วนที่มีขอบเขตชัด:

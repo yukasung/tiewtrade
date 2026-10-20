@@ -30,6 +30,11 @@ class ConstraintViolation(Enum):
     QUANTITY_NOT_ON_STEP = "QUANTITY_NOT_ON_STEP"
     #: มูลค่ารวมน้อยกว่าที่ตลาดยอมรับ
     BELOW_MINIMUM_NOTIONAL = "BELOW_MINIMUM_NOTIONAL"
+    ABOVE_MAXIMUM_QUANTITY = "ABOVE_MAXIMUM_QUANTITY"
+    ABOVE_MAXIMUM_NOTIONAL = "ABOVE_MAXIMUM_NOTIONAL"
+    PRICE_NOT_ON_TICK = "PRICE_NOT_ON_TICK"
+    BELOW_MINIMUM_PRICE = "BELOW_MINIMUM_PRICE"
+    ABOVE_MAXIMUM_PRICE = "ABOVE_MAXIMUM_PRICE"
 
 
 def unmet_constraints(
@@ -39,6 +44,12 @@ def unmet_constraints(
     minimum_quantity: Quantity,
     quantity_step: Quantity,
     minimum_notional: Money,
+    maximum_quantity: Quantity | None = None,
+    maximum_notional: Money | None = None,
+    price: Money | None = None,
+    price_tick: Money | None = None,
+    minimum_price: Money | None = None,
+    maximum_price: Money | None = None,
 ) -> tuple[ConstraintViolation, ...]:
     """คืนข้อที่ไม่ผ่านทั้งหมด — ว่างเปล่าแปลว่าผ่านทุกข้อ
 
@@ -58,5 +69,17 @@ def unmet_constraints(
 
     if notional < minimum_notional:
         violations.append(ConstraintViolation.BELOW_MINIMUM_NOTIONAL)
+
+    if maximum_quantity is not None and quantity > maximum_quantity:
+        violations.append(ConstraintViolation.ABOVE_MAXIMUM_QUANTITY)
+    if maximum_notional is not None and notional > maximum_notional:
+        violations.append(ConstraintViolation.ABOVE_MAXIMUM_NOTIONAL)
+    if price is not None:
+        if price_tick is not None and not price.is_multiple_of(price_tick):
+            violations.append(ConstraintViolation.PRICE_NOT_ON_TICK)
+        if minimum_price is not None and price < minimum_price:
+            violations.append(ConstraintViolation.BELOW_MINIMUM_PRICE)
+        if maximum_price is not None and price > maximum_price:
+            violations.append(ConstraintViolation.ABOVE_MAXIMUM_PRICE)
 
     return tuple(violations)

@@ -13,6 +13,7 @@
 
 from __future__ import annotations
 
+import re
 from collections.abc import Callable
 from dataclasses import dataclass
 from enum import Enum
@@ -65,11 +66,14 @@ class AuditAction(Enum):
     API_KEY_VERIFICATION_DEFERRED = "API_KEY_VERIFICATION_DEFERRED"
     TRADING_USE_SELECTED = "TRADING_USE_SELECTED"
     PAPER_WALLET_CREATED = "PAPER_WALLET_CREATED"
+    PAPER_WALLET_RESET = "PAPER_WALLET_RESET"
     PAPER_WALLET_CREATE_REJECTED = "PAPER_WALLET_CREATE_REJECTED"
     PAPER_WALLET_RESET_REJECTED = "PAPER_WALLET_RESET_REJECTED"
     PAPER_POSITION_APPLIED = "PAPER_POSITION_APPLIED"
     PAPER_POSITION_CORRECTED = "PAPER_POSITION_CORRECTED"
     PAPER_POSITION_CONFLICTED = "PAPER_POSITION_CONFLICTED"
+    PAPER_ORDER_SOURCE_INITIALIZED = "PAPER_ORDER_SOURCE_INITIALIZED"
+    PAPER_ORDER_DECISION = "PAPER_ORDER_DECISION"
 
 
 #: ชนิดเหตุการณ์ที่เป็นการเทรด — ต้องระบุ PAPER หรือ LIVE เสมอ (RQ-19)
@@ -77,11 +81,14 @@ class AuditAction(Enum):
 TRADING_ACTIONS: frozenset[AuditAction] = frozenset(
     {
         AuditAction.PAPER_WALLET_CREATED,
+        AuditAction.PAPER_WALLET_RESET,
         AuditAction.PAPER_WALLET_CREATE_REJECTED,
         AuditAction.PAPER_WALLET_RESET_REJECTED,
         AuditAction.PAPER_POSITION_APPLIED,
         AuditAction.PAPER_POSITION_CORRECTED,
         AuditAction.PAPER_POSITION_CONFLICTED,
+        AuditAction.PAPER_ORDER_SOURCE_INITIALIZED,
+        AuditAction.PAPER_ORDER_DECISION,
     }
 )
 
@@ -121,6 +128,7 @@ class SubjectKind(Enum):
     PAPER_WALLET_COMMAND = "PAPER_WALLET_COMMAND"
     PAPER_POSITION_EVENT = "PAPER_POSITION_EVENT"
     PAPER_POSITION_ACTIVITY = "PAPER_POSITION_ACTIVITY"
+    PAPER_ORDER_ACTIVITY = "PAPER_ORDER_ACTIVITY"
 
 
 @runtime_checkable
@@ -278,6 +286,24 @@ class PaperWalletCreatedDetails:
 
 
 @dataclass(frozen=True, slots=True)
+class PaperWalletResetDetails:
+    command_id: UUID
+    previous_episode_id: UUID
+    episode_id: UUID
+    capital: Money
+
+    def as_details(self) -> dict[str, object]:
+        amount = money_detail(self.capital)
+        return {
+            "command_id": str(self.command_id),
+            "previous_episode_id": str(self.previous_episode_id),
+            "episode_id": str(self.episode_id),
+            "amount": amount["amount"],
+            "currency": amount["unit"],
+        }
+
+
+@dataclass(frozen=True, slots=True)
 class PaperWalletRejectedDetails:
     def as_details(self) -> dict[str, object]:
         return {}
@@ -366,9 +392,60 @@ class PaperPositionConflictDetails:
         }
 
 
+@dataclass(frozen=True, slots=True)
+class PaperOrderSourceDetails:
+    episode_id: UUID
+    initialization_id: UUID
+    source_proof: str
+
+    def __post_init__(self) -> None:
+        if (
+            not isinstance(self.episode_id, UUID)
+            or not isinstance(self.initialization_id, UUID)
+            or type(self.source_proof) is not str
+            or re.fullmatch(r"[0-9a-f]{64}", self.source_proof) is None
+        ):
+            raise AuditEventError("invalid Paper order source details")
+
+    def as_details(self) -> dict[str, object]:
+        return {
+            "episode_id": str(self.episode_id),
+            "initialization_id": str(self.initialization_id),
+            "source_proof": self.source_proof,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class PaperOrderDecisionDetails:
+    episode_id: UUID
+    decision_id: UUID
+    kind: str
+
+    def __post_init__(self) -> None:
+        if (
+            not isinstance(self.episode_id, UUID)
+            or not isinstance(self.decision_id, UUID)
+            or (
+                self.kind
+                not in {"ACCEPT", "CANCEL", "INPUT", "REBASE", "REJECT", "CORRECTION", "CONFLICT"}
+            )
+        ):
+            raise AuditEventError("invalid Paper order decision details")
+
+    def as_details(self) -> dict[str, object]:
+        return {
+            "episode_id": str(self.episode_id),
+            "decision_id": str(self.decision_id),
+            "kind": self.kind,
+        }
+
+
 DETAILS_TYPES: dict[AuditAction, type[object]] = {
+    AuditAction.PAPER_ORDER_DECISION: PaperOrderDecisionDetails,
+    AuditAction.PAPER_ORDER_SOURCE_INITIALIZED: PaperOrderSourceDetails,
     AuditAction.TRADING_USE_SELECTED: TradingUseDetails,
     AuditAction.PAPER_WALLET_CREATED: PaperWalletCreatedDetails,
+    AuditAction.PAPER_WALLET_RESET: PaperWalletResetDetails,
     AuditAction.PAPER_WALLET_CREATE_REJECTED: PaperWalletRejectedDetails,
     AuditAction.PAPER_WALLET_RESET_REJECTED: PaperWalletRejectedDetails,
     AuditAction.PAPER_POSITION_APPLIED: PaperPositionDetails,
@@ -511,11 +588,11 @@ def _check_paper_wallet_event(event: AuditEvent) -> None:
         raise AuditEventError("เหตุการณ์ Paper wallet ต้องระบุผู้ใช้เจ้าของเป็นผู้กระทำ")
     if event.mode is not AuditMode.PAPER:
         raise AuditEventError("เหตุการณ์ Paper wallet ต้องอยู่ในโหมด PAPER")
-    if event.action is AuditAction.PAPER_WALLET_CREATED:
+    if event.action in {AuditAction.PAPER_WALLET_CREATED, AuditAction.PAPER_WALLET_RESET}:
         if event.subject_kind is not SubjectKind.PAPER_WALLET:
-            raise AuditEventError("ผลสร้างกระเป๋าต้องมีเป้าหมายเป็น Paper wallet")
+            raise AuditEventError("ผลเปลี่ยนรอบต้องมีเป้าหมายเป็น Paper wallet")
         if event.outcome is not AuditOutcome.SUCCEEDED:
-            raise AuditEventError("PAPER_WALLET_CREATED ต้องสำเร็จ")
+            raise AuditEventError("เหตุการณ์ Paper wallet สำเร็จต้องมีผล SUCCEEDED")
         return
     if event.subject_kind is not SubjectKind.PAPER_WALLET_COMMAND:
         raise AuditEventError("ผลปฏิเสธต้องมีเป้าหมายเป็นคำขอ Paper wallet")
@@ -555,7 +632,23 @@ def _check_paper_position_event(event: AuditEvent) -> None:
 #: ข้อบังคับเฉพาะของแต่ละเหตุการณ์ — **ทุกชนิดที่เพิ่มใหม่ต้องมีตัวตรวจของตัวเองที่นี่**
 #: ถ้าไม่มี การสร้างบันทึกของชนิดนั้นจะล้มเหลวทันที ซึ่งเป็นผลที่ต้องการ
 #: (ดังตอนเขียนโค้ด ดีกว่าปล่อยให้บันทึกที่ไม่มีใครตรวจไหลลงตารางที่ลบไม่ได้)
+def _check_paper_order_source(event: AuditEvent) -> None:
+    if (
+        event.actor_kind is not ActorKind.SYSTEM
+        or event.actor_id is not None
+        or event.mode is not AuditMode.PAPER
+        or event.subject_kind is not SubjectKind.PAPER_ORDER_ACTIVITY
+        or not isinstance(event.details, (PaperOrderSourceDetails, PaperOrderDecisionDetails))
+        or event.subject_id != str(event.details.episode_id)
+        or event.outcome is not AuditOutcome.SUCCEEDED
+        or event.failure_code is not None
+    ):
+        raise AuditEventError("invalid Paper order source audit event")
+
+
 _ACTION_INVARIANTS: dict[AuditAction, Callable[[AuditEvent], None]] = {
+    AuditAction.PAPER_ORDER_DECISION: _check_paper_order_source,
+    AuditAction.PAPER_ORDER_SOURCE_INITIALIZED: _check_paper_order_source,
     AuditAction.TRADING_USE_SELECTED: _check_own_account_action,
     AuditAction.USER_CREATED: _check_user_created,
     AuditAction.SESSION_STARTED: _check_own_account_action,
@@ -574,6 +667,7 @@ _ACTION_INVARIANTS: dict[AuditAction, Callable[[AuditEvent], None]] = {
     AuditAction.API_KEY_REJECTED: _check_system_api_key_outcome,
     AuditAction.API_KEY_VERIFICATION_DEFERRED: _check_system_api_key_outcome,
     AuditAction.PAPER_WALLET_CREATED: _check_paper_wallet_event,
+    AuditAction.PAPER_WALLET_RESET: _check_paper_wallet_event,
     AuditAction.PAPER_WALLET_CREATE_REJECTED: _check_paper_wallet_event,
     AuditAction.PAPER_WALLET_RESET_REJECTED: _check_paper_wallet_event,
     AuditAction.PAPER_POSITION_APPLIED: _check_paper_position_event,

@@ -346,6 +346,20 @@ def _effective_slots(
     return tuple(slots)
 
 
+async def read_effective_executions(
+    session: UserSession, episode_id: UUID, pair: PositionPair
+) -> tuple[ExecutionFact, ...]:
+    """Expose the canonical F-14 correction fold without duplicating its chain rules."""
+    checked = require_user_session(session)
+    activity = await _require_current_activity(checked, episode_id)
+    if activity.availability is not PositionAvailability.READY:
+        raise PositionIntegrityError("position source is not ready")
+    rows = await _event_rows(checked, episode_id)
+    return tuple(
+        fact for fact in _effective_slots(rows, pair, activity.source_sequence) if fact is not None
+    )
+
+
 def _candidate_row(
     event_id: UUID,
     kind: PositionEventKind,
