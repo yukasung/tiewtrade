@@ -1,11 +1,12 @@
 # F-15 M5 — Candidate review and validation checkpoint
 
 วันที่: 2026-10-19–20; branch `feature/f-15-paper-order-matching`; base HEAD
-`2eb3000711353e76d81f32e9c9c08287f6788702`; ยังไม่ commit/push
+`2eb3000711353e76d81f32e9c9c08287f6788702`; candidate commit
+`77210cdf71a6d93003c18fcaced9b170ef28105e`; [Draft PR #19](https://github.com/yukasung/tiewtrade/pull/19)
 
 M5 ทำ deep review, ปิด Critical/High finding ที่พบ และรัน candidate gates ในเครื่องแล้ว
-backend full regression ผ่านใน invocation เดียวเมื่อ 2026-10-20; checkpoint นี้ยังเป็น **Partial**
-เฉพาะ required CI ที่ต้องรอบน final commit ตามกฎ Git ของ repo
+backend full regression ผ่านใน invocation เดียวเมื่อ 2026-10-20 และ required CI ของ
+candidate commit ผ่านครบ 6 jobs; fault matrix ที่ระบุใน V-13/V-15 และ V-19 ยังคงตามสถานะเดิม
 
 ## Review findings ที่แก้แล้ว
 
@@ -66,7 +67,7 @@ runtime roles จริง และ Chromium Playwright; clean full rerun ใ�
 | OpenAPI/generated TypeScript | OpenAPI SHA-256 คงเดิม `C66CDC88D54C80EA67A874278DDD68B31B15F734E5430F0813AED4E089A8F021`; generated diff ไม่มี semantic drift |
 | Docker Compose build | **PASS**: api, migrate, market-data, paper-wallet-worker และ frontend images |
 | `git diff --check` | **PASS**; มีเฉพาะคำเตือน LF/CRLF ของไฟล์ frontend เดิม |
-| required CI บน final commit | **Pending** — ยังไม่มีคำสั่ง commit/push |
+| required CI บน candidate commit | **PASS** — [run #116 / 39398771492](https://github.com/yukasung/tiewtrade/actions/runs/39398771492) ผ่านครบ 6 jobs บน `77210cdf71a6d93003c18fcaced9b170ef28105e` |
 
 full run ที่ mount เฉพาะ `backend` ถูกตัดทิ้งเพราะ tests อ่าน `/repo/specs`, `.github` และ
 `compose.yaml`; diagnostic ที่ชนกับ container full run บน DB เดียวกันถูกตัดทิ้งเช่นกัน
@@ -80,9 +81,9 @@ full run ที่ mount เฉพาะ `backend` ถูกตัดทิ้�
 - V-14 เพิ่ม controlled admission/fill/GET barriers และ browser full regression
 - V-15 เพิ่ม cancellation/timeout recovery; unknown commit/process kill และ Redis/generation matrix
   แบบเต็มยังคง Partial แม้ Paper workers ใช้ PostgreSQL scan และไม่มี Redis dependency
-- V-18 เป็น Partial: review/static/frontend/contracts/browser/container และ backend full invocation
-  เดียวผ่านแล้ว; required CI ยังไม่ได้รันเพราะยังไม่มี final commit
+- V-18 ผ่าน: review/static/frontend/contracts/browser/container, backend full invocation
+  เดียว และ required CI run #116 ผ่านครบแล้ว
 - V-19 คง Pending Full Validation สำหรับ M6 workload/endurance/restore
 
-final diff review/checkpoint หลัง full run ไม่พบ Critical/High ใหม่ งานถัดไปคือเมื่อเจ้าของสั่ง
-commit/push ให้รัน required CI บน final commit; M6 ยังแยกเป็น release checkpoint ตามแผน
+final diff review/checkpoint หลัง full run ไม่พบ Critical/High ใหม่; M6 ยังแยกเป็น release
+checkpoint ตามแผน และ fault matrix ที่ระบุ Partial ต้องเก็บสถานะเดิมจนมีหลักฐานครบ
