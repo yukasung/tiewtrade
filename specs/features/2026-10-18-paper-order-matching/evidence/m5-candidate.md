@@ -410,3 +410,7 @@ The prior 13.55s publication stall was **not reproduced**, so CPU saturation, WA
 ## Owner-directed deferral of long validation — 2026-10-20
 
 W1 release run `m6-release-w1-20261020` was started, then interrupted at the owner request to avoid long validation. The dedicated runner container was stopped; PostgreSQL/Redis and partial evidence/database were retained. No acceptance result is claimed. W1-W3 and final-schema W4 remain Pending Full Validation at the release checkpoint. Existing passing affected safety and smoke evidence remains valid; no production code changed during this attempt. Do not automatically restart long validation under the earlier completion instruction.
+
+## Final development candidate — 2026-10-20
+
+Commit `47281ad7d10f64be207dc75a04d2b87fcc1d6181` carries the final runtime changes and a bounded frontend readiness retry after CI exposed the same startup race twice. Required CI run #122 validates backend full regression, static/import gates, frontend lint/types/unit, OpenAPI generation, browser E2E and containers. V-1..V-18 are reconciled as Passed for Development Complete. W1–W3 and W4 on schema 0038 remain Pending Full Validation and prevent Completed status.
