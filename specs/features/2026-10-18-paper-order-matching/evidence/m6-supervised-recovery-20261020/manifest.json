@@ -1,0 +1,44 @@
+{
+  "profile": "F15_W1_W2_W3_V2",
+  "phase": "W3_SMOKE",
+  "run_id": "e5da3773-3049-4658-9661-9c829f1baac7",
+  "started_at": "2026-10-20 15:20:38.721155+00:00",
+  "platform": "Linux-6.18.54.1-microsoft-standard-WSL2-x86_64-with-glibc2.36",
+  "python": "3.12.12",
+  "owners": 1,
+  "baseline_orders_per_owner": 1,
+  "cycles_per_owner": 3,
+  "command_rate": 1,
+  "workers": 1,
+  "baseline_manifest": "../specs/features/2026-10-18-paper-order-matching/evidence/m6-baseline-smoke-20261020/baseline.json",
+  "expected_commands": 15,
+  "expected_cycles": 3,
+  "fault_schedule_digest": "1743c6de6fc7816535c330fc5596cb6e97368b38658c2a79eca13dd0117392ce",
+  "fault_schedule": [
+    {
+      "offset_seconds": 0.2,
+      "duration_seconds": 1.0,
+      "kind": "WORKER_RESTART"
+    },
+    {
+      "offset_seconds": 6.0,
+      "duration_seconds": 1.0,
+      "kind": "CONNECTION_CHURN"
+    },
+    {
+      "offset_seconds": 10.0,
+      "duration_seconds": 1.0,
+      "kind": "REDIS_OUTAGE"
+    }
+  ],
+  "expected_fixture_digest": "cd80e4e0afa9c618b45985141697578dde772371dd81dc3a65a24e0fc33961ac",
+  "database": {
+    "alembic_revision": "0038",
+    "postgresql": {
+      "server_version": "16.15 (Debian 16.15-1.pgdg13+2)",
+      "max_connections": "100",
+      "shared_buffers": "128MB",
+      "work_mem": "4MB"
+    }
+  }
+}

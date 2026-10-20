@@ -2,6 +2,7 @@
 
 import hashlib
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Any
 from uuid import NAMESPACE_URL, UUID, uuid4, uuid5
 
@@ -28,6 +29,7 @@ class OrderClaimLostError(OrderConflictError):
 class DueOrder:
     command_id: UUID
     user_id: UUID
+    next_attempt_at: datetime
 
 
 @dataclass(frozen=True, slots=True)
@@ -225,34 +227,63 @@ async def due_orders(session: ScanSession, *, limit: int = 20) -> tuple[DueOrder
         raise ValueError("bounded order batch required")
     rows = (
         await session.execute(
-            """WITH due AS (
-      SELECT command_id,user_id,next_attempt_at,
-        row_number() OVER(PARTITION BY user_id ORDER BY next_attempt_at,command_id) rank
-      FROM paper_order_dispatch WHERE state<>'TERMINAL' AND next_attempt_at<=clock_timestamp()
-        AND (lease_until IS NULL OR lease_until<=clock_timestamp()))
-      SELECT command_id,user_id FROM due WHERE rank=1
+            """WITH busy AS MATERIALIZED (
+      SELECT DISTINCT user_id FROM paper_order_dispatch
+      WHERE state='CLAIMED' AND lease_until>clock_timestamp()), due AS (
+      SELECT d.command_id,d.user_id,d.next_attempt_at,
+        row_number() OVER(PARTITION BY d.user_id ORDER BY d.next_attempt_at,d.command_id) rank
+      FROM paper_order_dispatch d WHERE d.state<>'TERMINAL'
+        AND d.next_attempt_at<=clock_timestamp()
+        AND (d.lease_until IS NULL OR d.lease_until<=clock_timestamp())
+        AND NOT EXISTS(SELECT 1 FROM busy WHERE busy.user_id=d.user_id))
+      SELECT command_id,user_id,next_attempt_at FROM due WHERE rank=1
       ORDER BY next_attempt_at,command_id LIMIT :limit""",
             {"limit": limit},
         )
     ).all()
-    return tuple(DueOrder(row.command_id, row.user_id) for row in rows)
+    return tuple(DueOrder(row.command_id, row.user_id, row.next_attempt_at) for row in rows)
 
 
 async def claim_order(session: UserSession, due: DueOrder, *, worker: str) -> ClaimedOrder | None:
     session = require_user_session(session)
     if session.user_id != due.user_id or not worker or len(worker) > 128:
         raise OrderConflictError("invalid claim scope")
+    # Serialize the check with admissions, reset and other claims without waiting
+    # behind a financial writer. The scanner's busy-owner filter is only a hint.
+    acquired = (
+        await session.execute(
+            "SELECT pg_try_advisory_xact_lock(hashtextextended(:key,0))",
+            {"key": f"paper-wallet:{session.user_id}"},
+        )
+    ).scalar_one()
+    if not acquired:
+        return None
     token = uuid4()
+    # A delayed batch must not claim the next scheduled round of the same command.
     row = (
         await session.execute(
-            """UPDATE paper_order_dispatch
-      SET state='CLAIMED',worker=:worker,claim_id=:token,claim_revision=claim_revision+1,
-        lease_until=clock_timestamp()+interval '30 seconds',attempts=attempts+1
+            """WITH candidate AS (
+      SELECT command_id FROM paper_order_dispatch
       WHERE command_id=:id AND user_id=:user AND state<>'TERMINAL'
+        AND next_attempt_at=:expected_due
         AND next_attempt_at<=clock_timestamp()
         AND (lease_until IS NULL OR lease_until<=clock_timestamp())
+        AND NOT EXISTS(SELECT 1 FROM paper_order_dispatch busy
+          WHERE busy.user_id=:user AND busy.state='CLAIMED'
+            AND busy.lease_until>clock_timestamp())
+      FOR UPDATE SKIP LOCKED)
+      UPDATE paper_order_dispatch
+      SET state='CLAIMED',worker=:worker,claim_id=:token,claim_revision=claim_revision+1,
+        lease_until=clock_timestamp()+interval '30 seconds',attempts=attempts+1
+      WHERE command_id IN (SELECT command_id FROM candidate)
       RETURNING claim_revision""",
-            {"id": due.command_id, "user": session.user_id, "worker": worker, "token": token},
+            {
+                "id": due.command_id,
+                "user": session.user_id,
+                "worker": worker,
+                "token": token,
+                "expected_due": due.next_attempt_at,
+            },
         )
     ).first()
     return (
@@ -285,14 +316,26 @@ async def require_claim(session: UserSession, claim: ClaimedOrder) -> None:
         raise OrderClaimLostError("order claim expired or replaced")
 
 
-async def finish_claim(session: UserSession, claim: ClaimedOrder, *, terminal: bool) -> None:
+async def finish_claim(
+    session: UserSession,
+    claim: ClaimedOrder,
+    *,
+    terminal: bool,
+    retry_delay_ms: int = 20,
+) -> None:
+    if type(retry_delay_ms) is not int or not 20 <= retry_delay_ms <= 1000:
+        raise ValueError("bounded dispatch retry delay required")
     await require_claim(session, claim)
     await session.execute(
         """UPDATE paper_order_dispatch
       SET state=:state,worker=NULL,claim_id=NULL,lease_until=NULL,
-        next_attempt_at=clock_timestamp()+interval '20 milliseconds'
+        next_attempt_at=clock_timestamp()+CAST(:retry_delay AS integer)*interval '1 millisecond'
       WHERE command_id=:id""",
-        {"id": claim.command_id, "state": "TERMINAL" if terminal else "PENDING"},
+        {
+            "id": claim.command_id,
+            "state": "TERMINAL" if terminal else "PENDING",
+            "retry_delay": retry_delay_ms,
+        },
     )
 
 
@@ -312,4 +355,29 @@ async def defer_claim(session: UserSession, claim: ClaimedOrder) -> None:
             "token": claim.claim_id,
             "revision": claim.revision,
         },
+    )
+
+
+async def reschedule_processed_orders(
+    session: UserSession, claim: ClaimedOrder, *, order_ids: tuple[UUID, ...]
+) -> None:
+    """Finish the scheduling work already covered by the pair's persisted checkpoint.
+
+    Only admitted NEW commands in PENDING state qualify. New admissions, cancels,
+    other pairs and live claims retain their schedules and claim fences.
+    """
+    session = require_user_session(session)
+    await require_claim(session, claim)
+    await session.execute(
+        """UPDATE paper_order_dispatch AS d
+        SET state=CASE WHEN p.status IN ('FILLED','CANCELED','EXPIRED','REJECTED')
+                       THEN 'TERMINAL' ELSE 'PENDING' END,
+            next_attempt_at=clock_timestamp()+interval '200 milliseconds'
+        FROM paper_orders o
+        JOIN paper_order_projections p ON p.order_id=o.id
+        JOIN paper_order_command_results r ON r.command_id=o.command_id
+        WHERE d.command_id=o.command_id AND d.command_id<>:claim
+          AND d.state='PENDING' AND r.state='SUCCEEDED'
+          AND o.id=ANY(CAST(:orders AS uuid[]))""",
+        {"claim": claim.command_id, "orders": list(order_ids)},
     )

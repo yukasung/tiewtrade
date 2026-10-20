@@ -185,6 +185,53 @@ async def test_owner_evidence_atomic_replay_and_cross_owner_isolation(
         )
 
 
+async def test_rebase_evidence_preserves_and_authenticates_public_source(
+    engine_engine: AsyncEngine,
+    owner: UUID,
+    wallet: PaperWalletSnapshot,
+) -> None:
+    original = source_record()
+    assert isinstance(original.market, BookState)
+    source_market = replace(original.market, rebase=False)
+    record = StoredExecutionInput(
+        source_market,
+        original.metadata,
+        hashlib.sha256(
+            (input_payload(source_market) + "\n" + metadata_payload(original.metadata)).encode()
+        ).hexdigest(),
+    )
+    decision = replace(source_market, rebase=True)
+    async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+        await pin_execution_profile(
+            session,
+            wallet_id=wallet.wallet_id,
+            episode_id=wallet.episode_id,
+            profile=SimulationProfile(),
+        )
+        saved = await append_execution_input(
+            session,
+            wallet_id=wallet.wallet_id,
+            episode_id=wallet.episode_id,
+            evidence_id=uuid4(),
+            record=record,
+            decision_market=decision,
+        )
+        assert saved.record.market == decision
+        replayed = await read_execution_inputs(
+            session, episode_id=wallet.episode_id, pair=decision.pair
+        )
+        assert replayed == (saved,)
+        with pytest.raises(OrderConflictError, match="changed source content"):
+            await append_execution_input(
+                session,
+                wallet_id=wallet.wallet_id,
+                episode_id=wallet.episode_id,
+                evidence_id=uuid4(),
+                record=record,
+                decision_market=replace(decision, ready=False),
+            )
+
+
 async def test_evidence_parent_and_child_reject_privileged_mutation(
     engine_engine: AsyncEngine,
     migrator_engine: AsyncEngine,

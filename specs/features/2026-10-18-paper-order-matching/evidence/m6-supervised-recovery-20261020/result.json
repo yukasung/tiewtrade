@@ -1,0 +1,122 @@
+{
+  "phase": "W3_SMOKE",
+  "status": "PASSED",
+  "smoke_only": true,
+  "elapsed_seconds": 15.606773504998273,
+  "target_seconds": 15.0,
+  "drain_seconds": 0.05524753599820542,
+  "counters": {
+    "offered": 15,
+    "admitted": 15,
+    "completed": 15,
+    "rejected": 0,
+    "fills": 6,
+    "cancels": 3,
+    "replays": 3,
+    "cycles": 3
+  },
+  "engine_transaction_seconds": {
+    "p95": 0.04086976100006723,
+    "p99": 0.06881108199740993,
+    "max": 0.06881108199740993,
+    "samples": 73
+  },
+  "end_to_end_command_seconds": {
+    "p95": 1.2825709050011938,
+    "p99": 1.2825709050011938,
+    "max": 1.2825709050011938
+  },
+  "publisher": {
+    "target_hz": 10,
+    "stage": "publish_market",
+    "published": 164,
+    "last_input_id": 168,
+    "last_progress_at": "2026-10-20T15:20:56.346513+00:00",
+    "max_publish_seconds": 0.030679446997964988
+  },
+  "measured_book_inputs": 156,
+  "required_book_inputs": 156,
+  "resources": {
+    "samples": 4,
+    "peak_process_rss_bytes": 58208256,
+    "peak_rss_by_pid": {
+      "17": 57876480,
+      "20": 57077760,
+      "23": 58208256
+    },
+    "peak_connections": 6,
+    "connections_start": 6,
+    "connections_end": 5,
+    "peak_lock_waits": 0,
+    "lock_waits_end": 0,
+    "peak_buffer_rows": 160,
+    "buffer_rows_start": 10,
+    "buffer_rows_end": 160,
+    "database_bytes_start": 19242007,
+    "database_bytes_end": 20266007,
+    "database_growth_bytes": 1024000
+  },
+  "resource_assertions_passed": true,
+  "global_invariants": {
+    "orders": 10,
+    "fills": 6,
+    "cancels": 3,
+    "pending_dispatch": 1,
+    "unlinked_fills": 0,
+    "invalid_reservations": 0,
+    "invalid_positions": 0,
+    "wrong_mode": 0,
+    "input_lag": 1,
+    "duplicate_fill_effects": 0,
+    "expected_orders": 10,
+    "expected_fills": 6,
+    "expected_cancels": 3,
+    "expected_pending_dispatch": 1,
+    "passed": true
+  },
+  "fault": null,
+  "fault_observations": [
+    {
+      "kind": "WORKER_RESTART",
+      "scheduled_offset_seconds": 0.2,
+      "scheduled_duration_seconds": 1.0,
+      "active_cycles_at_fault": 1,
+      "actual_duration_seconds": 1.8697199470007035,
+      "status": "RECOVERED"
+    },
+    {
+      "kind": "CONNECTION_CHURN",
+      "scheduled_offset_seconds": 6.0,
+      "scheduled_duration_seconds": 1.0,
+      "active_cycles_at_fault": 0,
+      "actual_duration_seconds": 1.0046304190000228,
+      "status": "RECOVERED"
+    },
+    {
+      "kind": "REDIS_OUTAGE",
+      "scheduled_offset_seconds": 10.0,
+      "scheduled_duration_seconds": 1.0,
+      "active_cycles_at_fault": 0,
+      "actual_duration_seconds": 1.1571629210011452,
+      "status": "RECOVERED"
+    }
+  ],
+  "endurance_rss": null,
+  "worker_failures": [],
+  "owners": [
+    {
+      "user_id": "caa6a48c-66fb-4a3c-a29a-937ba20d674a",
+      "episode_id": "61e0a397-eb58-4008-8104-51e8bf4a092b",
+      "balance": "9996.406297",
+      "expected_balance": "9996.406297",
+      "accepted": 1,
+      "filled": 6,
+      "canceled": 3,
+      "quote_reserved": "1.000000000000000000",
+      "base_reserved": "0",
+      "held": "0",
+      "cost": "0",
+      "passed": true
+    }
+  ]
+}

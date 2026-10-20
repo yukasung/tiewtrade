@@ -43,10 +43,10 @@ class FixtureFeed:
         self.closed = asyncio.Event()
 
     async def snapshot(self, symbol: Symbol) -> DepthSnapshot:
-        return snapshot(self.at - timedelta(milliseconds=20))
+        return snapshot(self.at - timedelta(milliseconds=20), symbol=symbol)
 
     async def capability(self, symbol: Symbol) -> ExecutionCapability:
-        return capability(self.at)
+        return capability(self.at, symbol=symbol)
 
     async def events(
         self, symbols: tuple[Symbol, ...], *, generation: int
@@ -54,7 +54,9 @@ class FixtureFeed:
         try:
             yield FeedConnected(generation)
             at = self.at - timedelta(milliseconds=10)
-            observation = observation_from_stream(depth_payload(at=at), symbols, at)
+            observation = observation_from_stream(
+                depth_payload(at=at, symbol=symbols[0]), symbols, at
+            )
             yield ExecutionFeedData(generation, observation)
             await self.disconnect.wait()
             yield FeedDisconnected(generation, "FIXTURE_DISCONNECTED")
@@ -99,23 +101,30 @@ async def test_bootstrap_queue_overflow_invalidates_without_a_ready_book(
         await engine.dispose()
 
 
+@pytest.mark.parametrize("base", ["BTC", "ETH"])
 async def test_fake_public_pipeline_matches_exactly_and_disconnect_invalidates(
     engine_engine: AsyncEngine,
+    base: str,
 ) -> None:
     engine = create_engine_for(DatabaseRole.MARKET_DATA)
-    pair = PositionPair("BTC", "USDT")
+    pair = PositionPair(base, "USDT")
+    symbol = Symbol(base, "USDT")
     try:
         async with market_data_session(engine) as session:
-            await session.execute("""UPDATE market_execution_state
-              SET lease_until=clock_timestamp()-interval '1 second' WHERE base='BTC'""")
+            await session.execute(
+                """UPDATE market_execution_state
+                SET lease_until=clock_timestamp()-interval '1 second' WHERE base=:base""",
+                {"base": base},
+            )
             prior = (
                 await session.execute(
-                    "SELECT last_input_id FROM market_execution_state WHERE base='BTC'"
+                    "SELECT last_input_id FROM market_execution_state WHERE base=:base",
+                    {"base": base},
                 )
             ).scalar_one_or_none() or 0
         feed = FixtureFeed(datetime.now(UTC))
         task = asyncio.create_task(
-            ingest_execution_pair(engine=engine, feed=feed, symbol=SYMBOL, owner=uuid4())
+            ingest_execution_pair(engine=engine, feed=feed, symbol=symbol, owner=uuid4())
         )
         try:
             async with asyncio.timeout(3):
@@ -149,7 +158,7 @@ async def test_fake_public_pipeline_matches_exactly_and_disconnect_invalidates(
                 now=feed.at - timedelta(seconds=1),
                 sequence=1,
                 cash=Money.of(2500, "USDT"),
-                held=Quantity.of(0, "BTC"),
+                held=Quantity.of(0, base),
                 constraints=record.metadata.market,
                 reference_price=Money.of(100, "USDT"),
                 policy=FixturePolicy(),
@@ -163,7 +172,7 @@ async def test_fake_public_pipeline_matches_exactly_and_disconnect_invalidates(
             )
             assert len(result.fills) == 1
             effect = apply_execution(PositionState.empty(pair), result.fills[0])
-            assert effect.state.held_quantity == Quantity.of("0.999", "BTC")
+            assert effect.state.held_quantity == Quantity.of("0.999", base)
             assert Money.of(2500, "USDT") + effect.quote_cash_delta == Money.of(2400, "USDT")
             assert record.market.source_at is not None
             feed.disconnect.set()

@@ -1,0 +1,82 @@
+[
+  {
+    "at": "2026-10-20 15:20:40.621319+00:00",
+    "processes": [
+      {
+        "Id": 17,
+        "CPU": 0.45,
+        "WorkingSet64": 57057280
+      },
+      {
+        "Id": 20,
+        "CPU": 0.41,
+        "WorkingSet64": 57077760
+      }
+    ],
+    "total_rss_bytes": 114135040,
+    "database_bytes": 19242007,
+    "connections": 6,
+    "lock_waits": 0,
+    "buffer_rows": 10
+  },
+  {
+    "at": "2026-10-20 15:20:45.626119+00:00",
+    "processes": [
+      {
+        "Id": 17,
+        "CPU": 0.79,
+        "WorkingSet64": 57384960
+      },
+      {
+        "Id": 23,
+        "CPU": 1.05,
+        "WorkingSet64": 58044416
+      }
+    ],
+    "total_rss_bytes": 115429376,
+    "database_bytes": 19676183,
+    "connections": 6,
+    "lock_waits": 0,
+    "buffer_rows": 60
+  },
+  {
+    "at": "2026-10-20 15:20:50.631123+00:00",
+    "processes": [
+      {
+        "Id": 17,
+        "CPU": 1.16,
+        "WorkingSet64": 57712640
+      },
+      {
+        "Id": 23,
+        "CPU": 2.01,
+        "WorkingSet64": 58044416
+      }
+    ],
+    "total_rss_bytes": 115757056,
+    "database_bytes": 19971095,
+    "connections": 5,
+    "lock_waits": 0,
+    "buffer_rows": 110
+  },
+  {
+    "at": "2026-10-20 15:20:55.659048+00:00",
+    "processes": [
+      {
+        "Id": 17,
+        "CPU": 1.54,
+        "WorkingSet64": 57876480
+      },
+      {
+        "Id": 23,
+        "CPU": 2.93,
+        "WorkingSet64": 58208256
+      }
+    ],
+    "total_rss_bytes": 116084736,
+    "database_bytes": 20266007,
+    "connections": 5,
+    "lock_waits": 0,
+    "buffer_rows": 160
+  }
+]

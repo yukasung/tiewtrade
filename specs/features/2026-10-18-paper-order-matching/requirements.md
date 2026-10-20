@@ -309,3 +309,9 @@ confirmed zero → 0/0/0; กลับ 10 → 10/0/10
   ที่มาก่อน พร้อม append rebase fact; ไม่คง queue-ahead เดิมโดยไม่มี proof
 - ยังคงข้อกำหนด solvency/reservation/F-14 rebuild และ conflict เมื่อ downstream
   liabilities ไม่ปลอดภัย; คำตัดสินนี้ไม่อนุญาตให้แก้ immutable history หรือข้าม safety gate
+
+## NC-F15-10 — Approved (2026-10-20)
+
+เจ้าของอนุมัติให้คง revision ของ terminal history เดิม และอัปเดตเฉพาะ active orders/รายการที่เพิ่งจบใน transaction ปัจจุบัน พร้อม reservation ที่ปล่อยเป็นศูนย์อย่าง atomic. Terminal revision ต้องไม่เกิน activity revision; projection/reservation ของรายการเดียวกันต้องสอดคล้องกัน. ใช้ additive migration ปรับ F-13 reset coherence โดยรักษา source proof, event linkage, owner isolation และการปฏิเสธข้อมูลผิด/ไม่ครบ; ไม่แก้ migration 0037. Downgrade ต้องปฏิเสธเมื่อมีข้อมูลที่ contract เดิมรับไม่ได้ ไม่ rewrite ประวัติ.
+
+ใช้ `matching_storage.persist_checkpoint` และ `paper_wallet_reset_readiness` เดิม; เพิ่ม real PostgreSQL safety tests สำหรับ active/current-terminal revision, old terminal rows ไม่ถูกเขียนซ้ำ, corruption, reset, correction, rollback/retry และ migration. กฎเงิน/การจับคู่และเกณฑ์ W1–W4 คงเดิม; ผลที่ได้รับผลกระทบต้องตรวจใหม่ก่อน Completed.

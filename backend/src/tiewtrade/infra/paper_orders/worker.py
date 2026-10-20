@@ -1,6 +1,7 @@
 """One owner-scoped Paper order worker transaction."""
 
 from dataclasses import dataclass, replace
+from datetime import timedelta
 from typing import Any
 from uuid import NAMESPACE_URL, UUID, uuid5
 
@@ -43,6 +44,7 @@ from tiewtrade.infra.paper_orders.dispatch import (
     complete_command,
     finish_claim,
     require_claim,
+    reschedule_processed_orders,
 )
 from tiewtrade.infra.paper_orders.executions import execution_payload, stage_fill_cash
 from tiewtrade.infra.paper_orders.initialization import enable_financial_writer
@@ -69,6 +71,10 @@ from tiewtrade.infra.positions import (
 
 class OrderWorkerIntegrityError(OrderError):
     code = "ORDER_WORKER_INTEGRITY"
+
+
+class NoNewExecutionInputError(SourceUnavailableError):
+    """The verified stream is healthy but has not advanced yet."""
 
 
 class OrderFinancialConflictError(Exception):
@@ -185,7 +191,34 @@ async def _process_new(
     result_exists = row["result_state"] is not None
     if not result_exists:
         try:
-            record = await _admission_record(session, state)
+            bootstrap_evidence = None
+            if state.inputs:
+                record = await _admission_record(session, state)
+            else:
+                record = await read_latest_book(session, state.pair)
+                market = record.market
+                assert isinstance(market, BookState)
+                bootstrap = advance_matching(
+                    state,
+                    market,
+                    now=(await session.execute("SELECT clock_timestamp()")).scalar_one(),
+                    constraints=record.metadata.limit,
+                    execution_ids=(),
+                )
+                if bootstrap.fills:
+                    raise OrderWorkerIntegrityError("empty source bootstrap created a fill")
+                state = bootstrap.state
+                pair_key = f"{state.pair.base}:{state.pair.quote}"
+                bootstrap_evidence = await append_execution_input(
+                    session,
+                    wallet_id=row["wallet_id"],
+                    episode_id=row["episode_id"],
+                    evidence_id=_identity(
+                        row["episode_id"],
+                        f"evidence:{pair_key}:{market.generation}:{market.input_id}:True",
+                    ),
+                    record=record,
+                )
             reference = await _reference_price(session, intent)
             wallet = await get_wallet(session)
             positions = await read_position_snapshot(session, intent.scope.episode_id)
@@ -246,6 +279,12 @@ async def _process_new(
                 event_kind="ACCEPTED",
                 decision_kind="ACCEPT",
                 occurred_at=order.accepted_at,
+                input_recorded_at=(
+                    None if bootstrap_evidence is None else bootstrap_evidence.recorded_at
+                ),
+                input_evidence_id=(
+                    None if bootstrap_evidence is None else bootstrap_evidence.evidence_id
+                ),
                 decision_id=_identity(intent.scope.episode_id, f"accept:{row['id']}"),
             )
             await complete_command(
@@ -281,27 +320,46 @@ async def _process_new(
         )
         await finish_claim(session, claim, terminal=True)
         return
-    decision = await _next_or_recovery_input(session, state)
-    await _apply_input(session, claim, row, state, decision)
+    try:
+        decisions = await _next_or_recovery_inputs(session, state)
+    except NoNewExecutionInputError:
+        await set_pair_dependency(
+            session,
+            wallet_id=row["wallet_id"],
+            episode_id=intent.scope.episode_id,
+            pair=intent.pair,
+            needed=True,
+        )
+        await finish_claim(session, claim, terminal=False)
+        return
+    await _apply_inputs(session, claim, row, state, decisions)
 
 
-async def _next_or_recovery_input(session: UserSession, state: MatchingState) -> _InputDecision:
+async def _next_or_recovery_inputs(
+    session: UserSession, state: MatchingState
+) -> tuple[_InputDecision, ...]:
     after = state.inputs[-1].input_id if state.inputs else 0
     try:
-        values = await read_inputs(session, state.pair, after=after, limit=1)
+        values = await read_inputs(session, state.pair, after=after, limit=20)
     except ExecutionInputGapError:
         record = await read_latest_book(session, state.pair)
         market = record.market
         assert isinstance(market, BookState)
-        return _InputDecision(record, replace(market, rebase=True))
+        return (_InputDecision(record, replace(market, rebase=True)),)
     if not values:
-        raise SourceUnavailableError("no new verified execution input")
-    return _InputDecision(values[0], values[0].market)
+        raise NoNewExecutionInputError("no new verified execution input")
+    now = (await session.execute("SELECT clock_timestamp()")).scalar_one()
+    if now - values[0].market.received_at > timedelta(seconds=1):
+        record = await read_latest_book(session, state.pair)
+        market = record.market
+        assert isinstance(market, BookState)
+        return (_InputDecision(record, replace(market, rebase=True)),)
+    return tuple(_InputDecision(value, value.market) for value in values)
 
 
 async def _admission_record(session: UserSession, state: MatchingState) -> StoredExecutionInput:
     if not state.inputs:
-        return (await _next_or_recovery_input(session, state)).source
+        return (await _next_or_recovery_inputs(session, state))[0].source
     identity = state.inputs[-1].input_id
     try:
         values = await read_inputs(session, state.pair, after=identity - 1, limit=1)
@@ -337,113 +395,126 @@ async def _reference_price(session: UserSession, intent: OrderIntent) -> Money:
     return row.observation.amount
 
 
-async def _apply_input(
+async def _apply_inputs(
     session: UserSession,
     claim: ClaimedOrder,
     command: Any,
     state: MatchingState,
-    decision: _InputDecision,
+    decisions: tuple[_InputDecision, ...],
 ) -> None:
     row = command
-    record = decision.source
-    market = decision.market
-    recovery = int(isinstance(market, BookState) and market.rebase)
     pair_key = f"{state.pair.base}:{state.pair.quote}"
-    evidence_key = (
-        f"evidence:{pair_key}:{record.market.generation}:{record.market.input_id}:{recovery}"
-    )
-    evidence_id = _identity(row["episode_id"], evidence_key)
-    saved = await append_execution_input(
-        session,
-        wallet_id=row["wallet_id"],
-        episode_id=row["episode_id"],
-        evidence_id=evidence_id,
-        record=record,
-        decision_market=market,
-    )
-    constraints = record.metadata.limit
-    identity_count = (
-        len(state.orders)
-        if not isinstance(market, BookState)
-        else len(state.orders) * (len(market.bids) + len(market.asks))
-    )
-    execution_ids = tuple(
-        _identity(
-            row["episode_id"],
-            f"fill:{pair_key}:{record.market.generation}:{record.market.input_id}:{i}",
+    anchor = row["order_id"]
+    rebased = False
+    saved = None
+    market = None
+    record = None
+    for decision in decisions:
+        record = decision.source
+        market = decision.market
+        recovery = int(isinstance(market, BookState) and market.rebase)
+        evidence_key = (
+            f"evidence:{pair_key}:{record.market.generation}:{record.market.input_id}:{recovery}"
         )
-        for i in range(identity_count)
-    )
-    transition = advance_matching(
-        state,
-        market,
-        now=(await session.execute("SELECT clock_timestamp()")).scalar_one(),
-        constraints=constraints,
-        execution_ids=execution_ids,
-    )
-    for index, (fact, order_id) in enumerate(
-        zip(transition.fills, transition.fill_order_ids, strict=True)
-    ):
-        order_event_id = _identity(row["episode_id"], f"order-fill:{fact.execution_id}")
-        await append_fill_event(
-            session,
-            order_id=order_id,
-            fact_id=fact.execution_id,
-            payload=canonical({"execution": execution_payload(fact)}),
-            evidence_id=saved.evidence_id,
-            evidence_recorded_at=saved.recorded_at,
-            pair=fact.pair,
-            episode_id=row["episode_id"],
-            occurred_at=fact.occurred_at,
-            event_id=order_event_id,
-        )
-        result = await stage_fill_cash(
+        saved = await append_execution_input(
             session,
             wallet_id=row["wallet_id"],
             episode_id=row["episode_id"],
-            order_event_id=order_event_id,
-            position_event_id=_identity(row["episode_id"], f"position:{fact.execution_id}"),
-            fact=fact,
+            evidence_id=_identity(row["episode_id"], evidence_key),
+            record=record,
+            decision_market=market,
         )
-        if result.status is PositionWriteStatus.CONFLICTED:
-            raise OrderFinancialConflictError(
-                claim,
-                row["wallet_id"],
-                row["episode_id"],
-                _identity(row["episode_id"], f"position:{fact.execution_id}"),
-                fact,
+        identity_count = (
+            len(state.orders)
+            if not isinstance(market, BookState)
+            else len(state.orders) * (len(market.bids) + len(market.asks))
+        )
+        transition = advance_matching(
+            state,
+            market,
+            now=(await session.execute("SELECT clock_timestamp()")).scalar_one(),
+            constraints=record.metadata.limit,
+            execution_ids=tuple(
+                _identity(
+                    row["episode_id"],
+                    f"fill:{pair_key}:{record.market.generation}:{record.market.input_id}:{index}",
+                )
+                for index in range(identity_count)
+            ),
+        )
+        for index, (fact, order_id) in enumerate(
+            zip(transition.fills, transition.fill_order_ids, strict=True)
+        ):
+            order_event_id = _identity(row["episode_id"], f"order-fill:{fact.execution_id}")
+            await append_fill_event(
+                session,
+                order_id=order_id,
+                fact_id=fact.execution_id,
+                payload=canonical({"execution": execution_payload(fact)}),
+                evidence_id=saved.evidence_id,
+                evidence_recorded_at=saved.recorded_at,
+                pair=fact.pair,
+                episode_id=row["episode_id"],
+                occurred_at=fact.occurred_at,
+                event_id=order_event_id,
             )
-        if result.status is not PositionWriteStatus.APPLIED:
-            raise OrderWorkerIntegrityError(f"fill {index} did not apply atomically")
-    anchor = transition.fill_order_ids[-1] if transition.fill_order_ids else row["order_id"]
+            result = await stage_fill_cash(
+                session,
+                wallet_id=row["wallet_id"],
+                episode_id=row["episode_id"],
+                order_event_id=order_event_id,
+                position_event_id=_identity(row["episode_id"], f"position:{fact.execution_id}"),
+                fact=fact,
+            )
+            if result.status is PositionWriteStatus.CONFLICTED:
+                raise OrderFinancialConflictError(
+                    claim,
+                    row["wallet_id"],
+                    row["episode_id"],
+                    _identity(row["episode_id"], f"position:{fact.execution_id}"),
+                    fact,
+                )
+            if result.status is not PositionWriteStatus.APPLIED:
+                raise OrderWorkerIntegrityError(f"fill {index} did not apply atomically")
+        if transition.fill_order_ids:
+            anchor = transition.fill_order_ids[-1]
+        rebased = rebased or transition.rebased
+        state = transition.state
+    assert record is not None and market is not None and saved is not None
     await persist_checkpoint(
         session,
         wallet_id=row["wallet_id"],
-        state=transition.state,
+        state=state,
         anchor_order_id=anchor,
         event_kind="INPUT_APPLIED",
-        decision_kind="REBASE" if transition.rebased else "INPUT",
+        decision_kind="REBASE" if rebased else "INPUT",
         occurred_at=market.received_at,
         input_recorded_at=saved.recorded_at,
         input_evidence_id=saved.evidence_id,
         decision_id=_identity(
             row["episode_id"],
-            f"input:{pair_key}:{record.market.generation}:"
-            f"{record.market.input_id}:{int(transition.rebased)}",
+            f"input:{pair_key}:{record.market.generation}:{record.market.input_id}:{int(rebased)}",
         ),
     )
     terminal = next(
-        order for order in transition.state.orders if order.intent.order_id == row["order_id"]
+        order for order in state.orders if order.intent.order_id == row["order_id"]
     ).status.terminal
     await set_pair_dependency(
         session,
         wallet_id=row["wallet_id"],
         episode_id=row["episode_id"],
         pair=state.pair,
-        needed=any(not order.status.terminal for order in transition.state.orders),
+        needed=any(not order.status.terminal for order in state.orders),
     )
-    await require_claim(session, claim)
-    await finish_claim(session, claim, terminal=terminal)
+    await reschedule_processed_orders(
+        session, claim, order_ids=tuple(order.intent.order_id for order in state.orders)
+    )
+    await finish_claim(
+        session,
+        claim,
+        terminal=terminal,
+        retry_delay_ms=20 if terminal else 200,
+    )
 
 
 async def persist_financial_conflict(

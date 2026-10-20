@@ -13,9 +13,9 @@ SYMBOL = Symbol("BTC", "USDT")
 NOW = datetime(2026, 10, 18, tzinfo=UTC)
 
 
-def snapshot(at: datetime = NOW, identity: int = 10) -> DepthSnapshot:
+def snapshot(at: datetime = NOW, identity: int = 10, *, symbol: Symbol = SYMBOL) -> DepthSnapshot:
     return snapshot_from_payload(
-        SYMBOL,
+        symbol,
         {
             "lastUpdateId": identity,
             "bids": [["99", "2"], ["1", "10"]],
@@ -25,7 +25,7 @@ def snapshot(at: datetime = NOW, identity: int = 10) -> DepthSnapshot:
     )
 
 
-def pair_payload(*, venue_rules: bool = False) -> dict[str, object]:
+def pair_payload(*, venue_rules: bool = False, symbol: Symbol = SYMBOL) -> dict[str, object]:
     filters: list[dict[str, object]] = [
         {
             "filterType": "PRICE_FILTER",
@@ -54,30 +54,34 @@ def pair_payload(*, venue_rules: bool = False) -> dict[str, object]:
             ]
         )
     return {
-        "symbol": "BTCUSDT",
-        "baseAsset": "BTC",
-        "quoteAsset": "USDT",
+        "symbol": f"{symbol.base}{symbol.quote}",
+        "baseAsset": symbol.base,
+        "quoteAsset": symbol.quote,
         "status": "TRADING",
         "orderTypes": ["LIMIT", "MARKET"],
         "filters": filters,
     }
 
 
-def capability(at: datetime = NOW, *, venue_rules: bool = False) -> ExecutionCapability:
-    return capability_from_pair(SYMBOL, pair_payload(venue_rules=venue_rules), at)
+def capability(
+    at: datetime = NOW, *, venue_rules: bool = False, symbol: Symbol = SYMBOL
+) -> ExecutionCapability:
+    return capability_from_pair(symbol, pair_payload(venue_rules=venue_rules, symbol=symbol), at)
 
 
 def millis(at: datetime) -> int:
     return (at - datetime(1970, 1, 1, tzinfo=UTC)) // timedelta(milliseconds=1)
 
 
-def depth_payload(first: int = 11, last: int = 11, at: datetime = NOW) -> dict[str, object]:
+def depth_payload(
+    first: int = 11, last: int = 11, at: datetime = NOW, *, symbol: Symbol = SYMBOL
+) -> dict[str, object]:
     return {
-        "stream": "btcusdt@depth@100ms",
+        "stream": f"{symbol.base.lower()}{symbol.quote.lower()}@depth@100ms",
         "data": {
             "e": "depthUpdate",
             "E": millis(at),
-            "s": "BTCUSDT",
+            "s": f"{symbol.base}{symbol.quote}",
             "U": first,
             "u": last,
             "b": [],

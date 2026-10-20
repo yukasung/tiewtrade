@@ -2,6 +2,7 @@
 
 import hashlib
 import json
+from dataclasses import replace
 from typing import Any
 from uuid import UUID
 
@@ -101,18 +102,24 @@ def _decode_checked(row: Any) -> SavedExecutionInput:
     payload = json.loads(row["payload"]) if isinstance(row["payload"], str) else row["payload"]
     if hashlib.sha256(canonical(payload).encode()).hexdigest() != row["digest"]:
         raise OrderConflictError("Paper evidence digest mismatch")
-    record = StoredExecutionInput(
-        input_from_payload(payload["market"]),
-        metadata_from_payload(payload["metadata"]),
-        row["source_digest"],
-    )
-    if _source_digest(record) != record.digest:
+    market = input_from_payload(payload["market"])
+    source_market = input_from_payload(payload.get("source_market", payload["market"]))
+    metadata = metadata_from_payload(payload["metadata"])
+    source = StoredExecutionInput(source_market, metadata, row["source_digest"])
+    if _source_digest(source) != source.digest:
         raise OrderConflictError("Paper source evidence mismatch")
-    if (record.market.input_id, record.market.generation, record.market.pair) != (
+    if market != source_market and not (
+        isinstance(market, BookState)
+        and isinstance(source_market, BookState)
+        and market == replace(source_market, rebase=True)
+    ):
+        raise OrderConflictError("Paper decision evidence changed source content")
+    record = StoredExecutionInput(market, metadata, row["source_digest"])
+    if (market.input_id, market.generation, market.pair) != (
         row["input_id"],
         row["generation"],
         PositionPair(row["base"], row["quote"]),
-    ) or record.metadata.market.pair != record.market.pair:
+    ) or metadata.market.pair != market.pair:
         raise OrderConflictError("Paper evidence provenance mismatch")
     SimulationProfile(payload["fee_version"], payload["model_version"])
     return SavedExecutionInput(
@@ -148,6 +155,12 @@ async def append_execution_input(
         or market.received_at != record.market.received_at
     ):
         raise OrderConflictError("consumer rebase changed source identity")
+    if market != record.market and not (
+        isinstance(market, BookState)
+        and isinstance(record.market, BookState)
+        and market == replace(record.market, rebase=True)
+    ):
+        raise OrderConflictError("consumer rebase changed source content")
     profile = (
         (
             await session.execute(
@@ -161,14 +174,15 @@ async def append_execution_input(
     )
     if profile is None:
         raise OrderConflictError("Paper profile not initialized")
-    payload = canonical(
-        {
-            "market": json.loads(input_payload(market)),
-            "metadata": json.loads(metadata_payload(record.metadata)),
-            "fee_version": profile["fee_version"],
-            "model_version": profile["model_version"],
-        }
-    )
+    evidence = {
+        "market": json.loads(input_payload(market)),
+        "metadata": json.loads(metadata_payload(record.metadata)),
+        "fee_version": profile["fee_version"],
+        "model_version": profile["model_version"],
+    }
+    if market != record.market:
+        evidence["source_market"] = json.loads(input_payload(record.market))
+    payload = canonical(evidence)
     digest = hashlib.sha256(payload.encode()).hexdigest()
     pair = market.pair
     params: dict[str, object] = {

@@ -1,0 +1,28 @@
+{
+  "profile": "F15_W1_W2_W3_V2",
+  "phase": "SMOKE",
+  "run_id": "2fecf4cf-4905-4054-b275-6ca9e4432241",
+  "started_at": "2026-10-20 15:18:11.629373+00:00",
+  "platform": "Linux-6.18.54.1-microsoft-standard-WSL2-x86_64-with-glibc2.36",
+  "python": "3.12.12",
+  "owners": 100,
+  "baseline_orders_per_owner": 20,
+  "cycles_per_owner": 1,
+  "command_rate": 10,
+  "workers": 20,
+  "baseline_manifest": "../specs/features/2026-10-18-paper-order-matching/evidence/m6-baseline-final-20261020/baseline.json",
+  "expected_commands": 500,
+  "expected_cycles": 100,
+  "fault_schedule_digest": null,
+  "fault_schedule": [],
+  "expected_fixture_digest": "e3f07facc03311210421e1d0c4e326f193f6b8a419d6d35171bc523a46b3eab0",
+  "database": {
+    "alembic_revision": "0038",
+    "postgresql": {
+      "server_version": "16.15 (Debian 16.15-1.pgdg13+2)",
+      "max_connections": "100",
+      "shared_buffers": "128MB",
+      "work_mem": "4MB"
+    }
+  }
+}

@@ -1,7 +1,8 @@
 """End-to-end Paper command worker transactions against real PostgreSQL roles."""
 
 import asyncio
-from collections.abc import Mapping
+from collections.abc import AsyncIterator, Mapping
+from contextlib import asynccontextmanager
 from dataclasses import replace
 from datetime import UTC, datetime
 from typing import Any
@@ -9,8 +10,9 @@ from uuid import NAMESPACE_URL, UUID, uuid4, uuid5
 
 import pytest
 from sqlalchemy import Result
-from sqlalchemy.ext.asyncio import AsyncEngine
+from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine, create_async_engine
 
+from tests.infra.execution_market.commit_proxy import drop_commit_reply
 from tests.infra.execution_market.test_dispatch import intent
 from tests.infra.execution_market.test_storage import prepared
 from tiewtrade.core.money import Money, Quantity
@@ -19,13 +21,15 @@ from tiewtrade.core.orders import (
     BaseSize,
     OrderConflictError,
     OrderIntent,
+    OrderOrigin,
+    OrderScope,
     OrderType,
     QuoteBudget,
     TimeInForce,
     TradingMode,
     standard_execution_fee,
 )
-from tiewtrade.core.positions import ExecutionFact
+from tiewtrade.core.positions import ExecutionFact, ExecutionSide, PositionPair
 from tiewtrade.core.realtime_prices import ObservationKind, QuoteObservation
 from tiewtrade.infra.db import DatabaseRole, create_engine_for, user_session
 from tiewtrade.infra.db.session import UserSession, market_data_session
@@ -433,7 +437,30 @@ async def test_closed_expected_episode_is_rejected_without_retry(
         await market.dispose()
 
 
+@pytest.mark.parametrize(
+    "fault",
+    [
+        None,
+        "second_input",
+        "input_key",
+        "fill_event",
+        "checkpoint_event",
+        "projection_revision",
+        "projections",
+        "reservation_revision",
+        "reservations",
+        "order_activity",
+        "wallet_revision",
+        "finish_claim",
+        "pair_dispatch",
+        "init_fill",
+        "lost_commit_reply",
+        "commit_disconnect",
+    ],
+)
 async def test_accept_restart_fill_and_cash_are_atomic(
+    monkeypatch: pytest.MonkeyPatch,
+    fault: str | None,
     engine_engine: AsyncEngine,
     scan_engine: AsyncEngine,
     owner: UUID,
@@ -442,6 +469,17 @@ async def test_accept_restart_fill_and_cash_are_atomic(
     market, lease, book, metadata = await ready_public_sources()
     value = intent(owner, wallet.episode_id)
     try:
+        async with market_data_session(market) as market_session:
+            lease = await renew_book_writer(market_session, lease)
+            now = (await market_session.execute("SELECT clock_timestamp()")).scalar_one()
+            book = replace(
+                book,
+                input_id=book.input_id + 1,
+                received_at=now,
+                verified_at=now,
+                rebase=False,
+            )
+            lease = await publish_input(market_session, lease, book, metadata)
         async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
             command = await submit_order(session, wallet_id=wallet.wallet_id, intent=value)
         await run_paper_order_round(
@@ -450,10 +488,48 @@ async def test_accept_restart_fill_and_cash_are_atomic(
             worker="accept",
             policy=AllowPolicy(),
         )
-        await asyncio.sleep(0.12)
-        async with market_data_session(market) as session:
-            lease = await renew_book_writer(session, lease)
-            now = (await session.execute("SELECT clock_timestamp()")).scalar_one()
+        async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+            accepted = (
+                await session.execute(
+                    "SELECT status FROM paper_order_projections WHERE order_id=:order",
+                    {"order": value.order_id},
+                )
+            ).scalar_one()
+            evidence = (
+                (
+                    await session.execute(
+                        """SELECT count(*) AS total,min(decision_kind) AS decision_kind
+                    FROM paper_execution_inputs WHERE episode_id=:episode""",
+                        {"episode": wallet.episode_id},
+                    )
+                )
+                .mappings()
+                .one()
+            )
+        assert accepted == "ACCEPTED"
+        assert evidence["total"] == 1 and evidence["decision_kind"] == "INPUT"
+        await asyncio.sleep(0.03)
+        idle = await run_paper_order_round(
+            engine=engine_engine,
+            scan_engine=scan_engine,
+            worker="idle-poll",
+            policy=AllowPolicy(),
+        )
+        assert idle.processed >= 1
+        async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+            idle_without_backoff = (
+                await session.execute(
+                    """SELECT state='PENDING'
+                    AND next_attempt_at<clock_timestamp()+interval '500 milliseconds'
+                    FROM paper_order_dispatch WHERE command_id=:command""",
+                    {"command": command.command_id},
+                )
+            ).scalar_one()
+        assert idle_without_backoff
+        await asyncio.sleep(0.09)
+        async with market_data_session(market) as market_session:
+            lease = await renew_book_writer(market_session, lease)
+            now = (await market_session.execute("SELECT clock_timestamp()")).scalar_one()
             second = replace(
                 book,
                 input_id=book.input_id + 1,
@@ -461,8 +537,275 @@ async def test_accept_restart_fill_and_cash_are_atomic(
                 verified_at=now,
                 rebase=False,
             )
-            await publish_input(session, lease, second, metadata)
+            lease = await publish_input(market_session, lease, second, metadata)
+            third = replace(
+                second,
+                input_id=second.input_id + 1,
+                received_at=now,
+                verified_at=now,
+            )
+            await publish_input(market_session, lease, third, metadata)
         await asyncio.sleep(0.03)
+        if fault == "commit_disconnect":
+            armed, dropped = asyncio.Event(), asyncio.Event()
+            original_execute = UserSession.execute
+
+            async def arm_disconnect(
+                session: UserSession,
+                statement: str,
+                parameters: Mapping[str, object] | None = None,
+            ) -> Result[Any]:
+                result = await original_execute(session, statement, parameters)
+                if session.user_id == owner and "INSERT INTO paper_reservations" in statement:
+                    armed.set()
+                return result
+
+            async with drop_commit_reply(
+                engine_engine.url.host or "localhost",
+                engine_engine.url.port or 5432,
+                armed,
+                dropped,
+            ) as port:
+                proxy_engine = create_async_engine(
+                    engine_engine.url.set(host="127.0.0.1", port=port),
+                    connect_args={"ssl": False},
+                    hide_parameters=True,
+                )
+                try:
+                    with monkeypatch.context() as patch:
+                        patch.setattr(UserSession, "execute", arm_disconnect)
+                        async with asyncio.timeout(10):
+                            outcome = await run_paper_order_round(
+                                engine=proxy_engine,
+                                scan_engine=scan_engine,
+                                worker="commit-disconnect",
+                                policy=AllowPolicy(),
+                            )
+                    assert dropped.is_set() and outcome.deferred >= 1
+                finally:
+                    await proxy_engine.dispose()
+        elif fault == "lost_commit_reply":
+            original_begin = AsyncEngine.begin
+            original_execute = UserSession.execute
+            committed_connection: AsyncConnection | None = None
+            reply_lost = False
+
+            async def mark_fill_transaction(
+                session: UserSession,
+                statement: str,
+                parameters: Mapping[str, object] | None = None,
+            ) -> Result[Any]:
+                nonlocal committed_connection
+                result = await original_execute(session, statement, parameters)
+                if session.user_id == owner and "INSERT INTO paper_reservations" in statement:
+                    committed_connection = session._connection
+                return result
+
+            @asynccontextmanager
+            async def lose_commit_reply(engine: AsyncEngine) -> AsyncIterator[AsyncConnection]:
+                nonlocal reply_lost
+                async with original_begin(engine) as connection:
+                    yield connection
+                if connection is committed_connection and not reply_lost:
+                    reply_lost = True
+                    raise ConnectionResetError("injected lost commit acknowledgement")
+
+            with monkeypatch.context() as patch:
+                patch.setattr(UserSession, "execute", mark_fill_transaction)
+                patch.setattr(AsyncEngine, "begin", lose_commit_reply)
+                outcome = await run_paper_order_round(
+                    engine=engine_engine,
+                    scan_engine=scan_engine,
+                    worker="lost-commit-reply",
+                    policy=AllowPolicy(),
+                )
+            assert reply_lost and outcome.deferred >= 1
+        elif fault == "init_fill":
+            original_execute = UserSession.execute
+            fill_written = asyncio.Event()
+            init_waiting = asyncio.Event()
+            release_fill = asyncio.Event()
+
+            async def synchronize_init(
+                session: UserSession,
+                statement: str,
+                parameters: Mapping[str, object] | None = None,
+            ) -> Result[Any]:
+                task = asyncio.current_task()
+                name = "" if task is None else task.get_name()
+                if name == "init-during-fill" and "pg_advisory_xact_lock" in statement:
+                    init_waiting.set()
+                result = await original_execute(session, statement, parameters)
+                if (
+                    session.user_id == owner
+                    and name == "fill-before-init"
+                    and "INSERT INTO paper_reservations" in statement
+                ):
+                    fill_written.set()
+                    await release_fill.wait()
+                return result
+
+            async def initialize_during_fill() -> None:
+                async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+                    await initialize_order_source(
+                        session,
+                        wallet_id=wallet.wallet_id,
+                        episode_id=wallet.episode_id,
+                        initialization_id=uuid4(),
+                    )
+                    observed = await get_wallet(session)
+                    assert observed is not None and observed.balance.amount == 9900
+                    assert not observed.reset_available
+
+            with monkeypatch.context() as patch:
+                patch.setattr(UserSession, "execute", synchronize_init)
+                tasks: list[asyncio.Task[Any]] = []
+                try:
+                    async with asyncio.timeout(5):
+                        tasks.append(
+                            asyncio.create_task(
+                                run_paper_order_round(
+                                    engine=engine_engine,
+                                    scan_engine=scan_engine,
+                                    worker="fill-before-init",
+                                    policy=AllowPolicy(),
+                                ),
+                                name="fill-before-init",
+                            )
+                        )
+                        await fill_written.wait()
+                        tasks.append(
+                            asyncio.create_task(initialize_during_fill(), name="init-during-fill")
+                        )
+                        await init_waiting.wait()
+                        assert not tasks[-1].done()
+                        release_fill.set()
+                        await asyncio.gather(*tasks)
+                finally:
+                    release_fill.set()
+                    for task in tasks:
+                        if not task.done():
+                            task.cancel()
+                    await asyncio.gather(*tasks, return_exceptions=True)
+        elif fault is not None:
+            async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+                before_failure = await get_wallet(session)
+                assert before_failure is not None
+            original_execute = UserSession.execute
+            injected = False
+            input_writes = 0
+
+            async def fail_batch(
+                session: UserSession,
+                statement: str,
+                parameters: Mapping[str, object] | None = None,
+            ) -> Result[Any]:
+                nonlocal injected, input_writes
+                result = await original_execute(session, statement, parameters)
+                if session.user_id != owner:
+                    return result
+                if "INSERT INTO paper_execution_inputs" in statement:
+                    input_writes += 1
+                matches = (
+                    (
+                        fault == "second_input"
+                        and "INSERT INTO paper_execution_inputs" in statement
+                        and input_writes == 2
+                    )
+                    or (
+                        fault == "projections"
+                        and "INSERT INTO paper_order_projections" in statement
+                    )
+                    or (fault == "reservations" and "INSERT INTO paper_reservations" in statement)
+                    or (
+                        fault == "input_key"
+                        and "INSERT INTO paper_execution_input_keys" in statement
+                    )
+                    or (
+                        fault == "fill_event"
+                        and "INSERT INTO paper_order_events" in statement
+                        and parameters is not None
+                        and "execution" in str(parameters.get("payload", ""))
+                        and "matching" not in str(parameters.get("payload", ""))
+                    )
+                    or (
+                        fault == "checkpoint_event"
+                        and "INSERT INTO paper_order_events" in statement
+                        and parameters is not None
+                        and parameters.get("kind") == "INPUT_APPLIED"
+                    )
+                    or (
+                        fault == "projection_revision"
+                        and "UPDATE paper_order_projections SET revision" in statement
+                    )
+                    or (
+                        fault == "reservation_revision"
+                        and "UPDATE paper_reservations SET revision" in statement
+                    )
+                    or (
+                        fault == "order_activity"
+                        and "UPDATE paper_order_activity SET source_sequence" in statement
+                    )
+                    or (
+                        fault == "wallet_revision"
+                        and "UPDATE paper_wallet_state SET revision" in statement
+                    )
+                    or (
+                        fault == "pair_dispatch" and "UPDATE paper_order_dispatch AS d" in statement
+                    )
+                    or (
+                        fault == "finish_claim"
+                        and "UPDATE paper_order_dispatch" in statement
+                        and "retry_delay" in statement
+                    )
+                )
+                if matches and not injected:
+                    injected = True
+                    raise RuntimeError("injected batch failure after write")
+                return result
+
+            with monkeypatch.context() as patch:
+                patch.setattr(UserSession, "execute", fail_batch)
+                await run_paper_order_round(
+                    engine=engine_engine,
+                    scan_engine=scan_engine,
+                    worker="batch-fault",
+                    policy=AllowPolicy(),
+                )
+            assert injected
+            async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+                unchanged = await get_wallet(session)
+                projection = (
+                    await session.execute(
+                        """SELECT p.status,p.filled_quantity,r.quote_reserved
+                        FROM paper_order_projections p JOIN paper_reservations r USING(order_id)
+                        WHERE p.order_id=:order""",
+                        {"order": value.order_id},
+                    )
+                ).one()
+                assert unchanged is not None and unchanged.balance.amount == 10000
+                assert unchanged.revision == before_failure.revision
+                assert projection.status == "ACCEPTED" and projection.filled_quantity == 0
+                assert projection.quote_reserved == 100
+                for table, expected in (
+                    ("paper_execution_inputs", 1),
+                    ("paper_execution_links", 0),
+                    ("paper_wallet_ledger", 1),
+                    ("paper_order_events", 1),
+                ):
+                    count = (
+                        await session.execute(
+                            f"SELECT count(*) FROM {table} WHERE episode_id=:episode",
+                            {"episode": wallet.episode_id},
+                        )
+                    ).scalar_one()
+                    assert count == expected, table
+                # Advance the retry schedule only; reuse the same command and market inputs.
+                await session.execute(
+                    """UPDATE paper_order_dispatch SET next_attempt_at=clock_timestamp()
+                    WHERE command_id=:id""",
+                    {"id": command.command_id},
+                )
         await run_paper_order_round(
             engine=engine_engine,
             scan_engine=scan_engine,
@@ -485,11 +828,39 @@ async def test_accept_restart_fill_and_cash_are_atomic(
                     {"order": value.order_id},
                 )
             ).scalar_one()
+            evidence_count = (
+                await session.execute(
+                    "SELECT count(*) FROM paper_execution_inputs WHERE episode_id=:episode",
+                    {"episode": wallet.episode_id},
+                )
+            ).scalar_one()
+            input_events = (
+                await session.execute(
+                    """SELECT count(*) FROM paper_order_events
+                    WHERE episode_id=:episode AND event_kind='INPUT_APPLIED'""",
+                    {"episode": wallet.episode_id},
+                )
+            ).scalar_one()
+            mismatched_projections = (
+                await session.execute(
+                    """SELECT count(*) FROM paper_order_projections p
+                    JOIN paper_reservations r USING(order_id)
+                    JOIN paper_order_activity a ON a.episode_id=p.episode_id
+                    WHERE p.episode_id=:episode AND (
+                      p.revision<>r.revision OR p.revision<>a.revision
+                      OR p.last_event_id IS DISTINCT FROM (
+                        SELECT e.id FROM paper_order_events e WHERE e.order_id=p.order_id
+                        ORDER BY e.sequence DESC LIMIT 1))""",
+                    {"episode": wallet.episode_id},
+                )
+            ).scalar_one()
         assert result is not None and result.state == "SUCCEEDED"
         assert projection.status == "FILLED" and projection.quote_reserved == 0
         assert current is not None and current.balance.amount == 9900
         assert not current.reset_available and current.reset_reason == "RESET_UNSAFE"
         assert links == 1
+        assert evidence_count == 3 and input_events == 1
+        assert mismatched_projections == 0
         async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
             recovered = await submit_order(session, wallet_id=wallet.wallet_id, intent=value)
         assert recovered == result
@@ -633,6 +1004,70 @@ async def test_accept_restart_fill_and_cash_are_atomic(
         await market.dispose()
 
 
+async def test_new_command_is_not_starved_by_an_active_order(
+    engine_engine: AsyncEngine,
+    scan_engine: AsyncEngine,
+    owner: UUID,
+    wallet: PaperWalletSnapshot,
+) -> None:
+    market, _, _, _ = await ready_public_sources()
+
+    def resting_order() -> OrderIntent:
+        return OrderIntent(
+            uuid4(),
+            uuid4(),
+            OrderScope(owner, UUID(str(wallet.episode_id)), TradingMode.PAPER),
+            PositionPair("BTC", "USDT"),
+            OrderOrigin.MANUAL,
+            ExecutionSide.BUY,
+            OrderType.LIMIT,
+            BaseSize(Quantity.of(1, "BTC")),
+            Money.of(90, "USDT"),
+            TimeInForce.GTC,
+        )
+
+    first = resting_order()
+    second = resting_order()
+    try:
+        async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+            first_command = await submit_order(session, wallet_id=wallet.wallet_id, intent=first)
+        await run_paper_order_round(
+            engine=engine_engine,
+            scan_engine=scan_engine,
+            worker="first-active",
+            policy=AllowPolicy(),
+        )
+        await asyncio.sleep(0.03)
+        async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+            second_command = await submit_order(session, wallet_id=wallet.wallet_id, intent=second)
+        # The overdue active order keeps its turn; the next scan admits the new command.
+        for index in range(2):
+            await run_paper_order_round(
+                engine=engine_engine,
+                scan_engine=scan_engine,
+                worker=f"new-command-{index}",
+                policy=AllowPolicy(),
+            )
+        async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+            first_result = await get_order_command(session, first_command.command_id)
+            second_result = await get_order_command(session, second_command.command_id)
+            statuses = (
+                await session.execute(
+                    """SELECT order_id,status FROM paper_order_projections
+                    WHERE order_id IN (:first,:second)""",
+                    {"first": first.order_id, "second": second.order_id},
+                )
+            ).all()
+        assert first_result is not None and first_result.failure_code is None
+        assert second_result is not None and second_result.failure_code is None
+        assert {row.order_id: row.status for row in statuses} == {
+            first.order_id: "ACCEPTED",
+            second.order_id: "ACCEPTED",
+        }
+    finally:
+        await market.dispose()
+
+
 async def test_downstream_position_conflict_is_durable_without_partial_fill(
     engine_engine: AsyncEngine,
     scan_engine: AsyncEngine,
@@ -704,7 +1139,7 @@ async def test_downstream_position_conflict_is_durable_without_partial_fill(
             worker="conflict-fill",
             policy=AllowPolicy(),
         )
-        assert result.processed == 1 and result.deferred == 0
+        assert result.processed >= 1 and result.deferred == 0
         async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
             order_result = await get_order_command(session, command.command_id)
             snapshot = await get_wallet(session)
@@ -881,12 +1316,13 @@ async def test_duplicate_order_identity_is_terminal_and_does_not_block_cancel(
             duplicate_command = await submit_order(
                 session, wallet_id=wallet.wallet_id, intent=duplicate
             )
-        await run_paper_order_round(
-            engine=engine_engine,
-            scan_engine=scan_engine,
-            worker="duplicate-reject",
-            policy=AllowPolicy(),
-        )
+        for worker in ("duplicate-original-poll", "duplicate-reject"):
+            await run_paper_order_round(
+                engine=engine_engine,
+                scan_engine=scan_engine,
+                worker=worker,
+                policy=AllowPolicy(),
+            )
         async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
             duplicate_result = await get_order_command(session, duplicate_command.command_id)
             cancellation = await submit_cancel(
@@ -924,12 +1360,13 @@ async def test_duplicate_order_identity_is_terminal_and_does_not_block_cancel(
             terminal_command = await submit_order(
                 session, wallet_id=wallet.wallet_id, intent=terminal_duplicate
             )
-        await run_paper_order_round(
-            engine=engine_engine,
-            scan_engine=scan_engine,
-            worker="terminal-duplicate-reject",
-            policy=AllowPolicy(),
-        )
+        for worker in ("canceled-original-drain", "terminal-duplicate-reject"):
+            await run_paper_order_round(
+                engine=engine_engine,
+                scan_engine=scan_engine,
+                worker=worker,
+                policy=AllowPolicy(),
+            )
         async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
             terminal_result = await get_order_command(session, terminal_command.command_id)
         assert terminal_result is not None
@@ -939,28 +1376,58 @@ async def test_duplicate_order_identity_is_terminal_and_does_not_block_cancel(
         await market.dispose()
 
 
-async def test_two_buys_cannot_reserve_the_same_quote_cash(
+@pytest.mark.parametrize("side", [ExecutionSide.BUY, ExecutionSide.SELL])
+async def test_two_orders_cannot_reserve_the_same_available_funds(
     engine_engine: AsyncEngine,
     scan_engine: AsyncEngine,
     owner: UUID,
     wallet: PaperWalletSnapshot,
+    side: ExecutionSide,
 ) -> None:
     market, lease, book, metadata = await ready_public_sources()
+    selling = side is ExecutionSide.SELL
     first = replace(
         intent(owner, wallet.episode_id),
+        side=side,
         kind=OrderType.LIMIT,
-        size=BaseSize(Quantity.of(61, "BTC")),
-        limit_price=Money.of(99, "USDT"),
+        size=BaseSize(Quantity.of("0.6" if selling else "61", "BTC")),
+        limit_price=Money.of(110 if selling else 99, "USDT"),
         time_in_force=TimeInForce.GTC,
     )
     second = replace(
         intent(owner, wallet.episode_id),
+        side=side,
         kind=OrderType.LIMIT,
-        size=BaseSize(Quantity.of(61, "BTC")),
-        limit_price=Money.of(99, "USDT"),
+        size=BaseSize(Quantity.of("0.6" if selling else "61", "BTC")),
+        limit_price=Money.of(110 if selling else 99, "USDT"),
         time_in_force=TimeInForce.GTC,
     )
     try:
+        if selling:
+            async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+                await submit_order(
+                    session, wallet_id=wallet.wallet_id, intent=intent(owner, wallet.episode_id)
+                )
+            await run_paper_order_round(
+                engine=engine_engine,
+                scan_engine=scan_engine,
+                worker="seed-buy-admit",
+                policy=AllowPolicy(),
+            )
+            await asyncio.sleep(0.12)
+            async with market_data_session(market) as session:
+                lease = await renew_book_writer(session, lease)
+                now = (await session.execute("SELECT clock_timestamp()")).scalar_one()
+                book = replace(
+                    book, input_id=book.input_id + 1, received_at=now, verified_at=now, rebase=False
+                )
+                lease = await publish_input(session, lease, book, metadata)
+            await run_paper_order_round(
+                engine=engine_engine,
+                scan_engine=scan_engine,
+                worker="seed-buy-fill",
+                policy=AllowPolicy(),
+            )
         async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
             first_command = await submit_order(session, wallet_id=wallet.wallet_id, intent=first)
             second_command = await submit_order(session, wallet_id=wallet.wallet_id, intent=second)
@@ -1019,15 +1486,18 @@ async def test_two_buys_cannot_reserve_the_same_quote_cash(
             ).scalar_one()
             reserved = (
                 await session.execute(
-                    "SELECT sum(quote_reserved) FROM paper_reservations WHERE episode_id=:episode",
+                    """SELECT sum(quote_reserved) AS quote,sum(base_reserved) AS base
+                    FROM paper_reservations WHERE episode_id=:episode""",
                     {"episode": wallet.episode_id},
                 )
-            ).scalar_one()
+            ).one()
         assert all(value is not None for value in outcomes)
         assert {value.failure_code for value in outcomes if value is not None} == {
             None,
             "ORDER_INSUFFICIENT_FUNDS",
         }
-        assert order_count == 1 and reserved == 6039
+        assert order_count == (2 if selling else 1)
+        assert reserved.quote == (0 if selling else 6039)
+        assert reserved.base == Quantity.of("0.6" if selling else "0", "BTC").amount
     finally:
         await market.dispose()

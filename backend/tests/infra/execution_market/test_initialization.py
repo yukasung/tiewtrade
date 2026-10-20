@@ -347,15 +347,18 @@ async def test_managed_history_refuses_fence_downgrade_and_keeps_force_rls(
         "managed Paper episodes prevent writer fence downgrade" in result.stderr
         or "matching decision history prevents downgrade" in result.stderr
         or "Paper reset audit history prevents downgrade" in result.stderr
+        or "historical Paper order revisions prevent downgrade" in result.stderr
     )
     async with migrator_engine.connect() as connection:
         assert (
             await connection.execute(text("SELECT version_num FROM alembic_version"))
-        ).scalar_one() in {"0035", "0036", "0037"}
+        ).scalar_one() in {"0035", "0036", "0037", "0038"}
     async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
         assert (
-            await session.execute("""SELECT relforcerowsecurity FROM pg_class
-            WHERE oid='paper_order_initializations'::regclass""")
+            await session.execute("""SELECT bool_and(relforcerowsecurity) FROM pg_class
+            WHERE oid IN ('paper_order_initializations'::regclass,
+              'paper_order_activity'::regclass,'paper_order_projections'::regclass,
+              'paper_reservations'::regclass)""")
         ).scalar_one()
     restored = subprocess.run(
         [

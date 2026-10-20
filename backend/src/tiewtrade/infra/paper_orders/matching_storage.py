@@ -1,6 +1,7 @@
 """Durable matching checkpoints and rebuildable order projections."""
 
 import hashlib
+import json
 from dataclasses import dataclass
 from datetime import datetime
 from uuid import UUID, uuid4
@@ -384,55 +385,77 @@ async def persist_checkpoint(
             "occurred": occurred_at,
         },
     )
-    for order in state.orders:
-        last_event = (
-            event_id
-            if order.intent.order_id == anchor_order_id
-            else await _last_event(session, order.intent.order_id)
-        )
-        params = {
-            "order": order.intent.order_id,
+    rows = json.dumps(
+        [
+            {
+                "order_id": str(order.intent.order_id),
+                "status": order.status.value,
+                "filled": str(order.filled.amount),
+                "spent": str(order.spent.amount),
+                "resting": order.resting,
+                "queue_ahead": (
+                    None if order.queue_ahead is None else str(order.queue_ahead.amount)
+                ),
+                "reserved_quote": str(order.reservation.quote.amount),
+                "reserved_base": str(order.reservation.base.amount),
+            }
+            for order in state.orders
+        ],
+        separators=(",", ":"),
+    )
+    await session.execute(
+        """UPDATE paper_order_projections SET revision=:revision WHERE episode_id=:episode
+        AND status NOT IN ('FILLED','CANCELED','EXPIRED','REJECTED')""",
+        {"episode": state.scope.episode_id, "revision": revision},
+    )
+    await session.execute(
+        """INSERT INTO paper_order_projections
+        (order_id,user_id,episode_id,base,quote,status,filled_quantity,spent,resting,
+         queue_ahead,revision,last_event_id)
+        SELECT r.order_id,:user,:episode,:base,:quote,r.status,r.filled,r.spent,r.resting,
+          r.queue_ahead,:revision,
+          (SELECT e.id FROM paper_order_events e WHERE e.order_id=r.order_id
+           ORDER BY e.sequence DESC LIMIT 1)
+        FROM jsonb_to_recordset(CAST(:rows AS jsonb)) AS r(
+          order_id uuid,status text,filled numeric,spent numeric,resting boolean,
+          queue_ahead numeric,reserved_quote numeric,reserved_base numeric)
+        ON CONFLICT(order_id) DO UPDATE SET status=EXCLUDED.status,
+          filled_quantity=EXCLUDED.filled_quantity,spent=EXCLUDED.spent,
+          resting=EXCLUDED.resting,queue_ahead=EXCLUDED.queue_ahead,
+          revision=EXCLUDED.revision,last_event_id=EXCLUDED.last_event_id""",
+        {
+            "rows": rows,
             "user": session.user_id,
             "episode": state.scope.episode_id,
             "base": state.pair.base,
             "quote": state.pair.quote,
-            "status": order.status.value,
-            "filled": order.filled.amount,
-            "spent": order.spent.amount,
-            "resting": order.resting,
-            "ahead": None if order.queue_ahead is None else order.queue_ahead.amount,
             "revision": revision,
-            "event": last_event,
-            "reserved_quote": order.reservation.quote.amount,
-            "reserved_base": order.reservation.base.amount,
-        }
-        await session.execute(
-            """INSERT INTO paper_order_projections
-            (order_id,user_id,episode_id,base,quote,status,filled_quantity,spent,resting,
-             queue_ahead,revision,last_event_id)
-            VALUES(:order,:user,:episode,:base,:quote,:status,:filled,:spent,:resting,
-             :ahead,:revision,:event)
-            ON CONFLICT(order_id) DO UPDATE SET status=EXCLUDED.status,
-             filled_quantity=EXCLUDED.filled_quantity,spent=EXCLUDED.spent,
-             resting=EXCLUDED.resting,queue_ahead=EXCLUDED.queue_ahead,
-             revision=EXCLUDED.revision,last_event_id=EXCLUDED.last_event_id""",
-            params,
-        )
-        await session.execute(
-            """INSERT INTO paper_reservations
-            (order_id,user_id,episode_id,base,quote,quote_reserved,base_reserved,revision)
-            VALUES(:order,:user,:episode,:base,:quote,:reserved_quote,:reserved_base,:revision)
-            ON CONFLICT(order_id) DO UPDATE SET quote_reserved=EXCLUDED.quote_reserved,
-             base_reserved=EXCLUDED.base_reserved,revision=EXCLUDED.revision""",
-            params,
-        )
+        },
+    )
     await session.execute(
-        """UPDATE paper_order_projections SET revision=:revision WHERE episode_id=:episode""",
+        """UPDATE paper_reservations SET revision=:revision WHERE episode_id=:episode
+        AND order_id IN (SELECT order_id FROM paper_order_projections
+          WHERE episode_id=:episode
+          AND status NOT IN ('FILLED','CANCELED','EXPIRED','REJECTED'))""",
         {"episode": state.scope.episode_id, "revision": revision},
     )
     await session.execute(
-        """UPDATE paper_reservations SET revision=:revision WHERE episode_id=:episode""",
-        {"episode": state.scope.episode_id, "revision": revision},
+        """INSERT INTO paper_reservations
+        (order_id,user_id,episode_id,base,quote,quote_reserved,base_reserved,revision)
+        SELECT r.order_id,:user,:episode,:base,:quote,r.reserved_quote,r.reserved_base,:revision
+        FROM jsonb_to_recordset(CAST(:rows AS jsonb)) AS r(
+          order_id uuid,status text,filled numeric,spent numeric,resting boolean,
+          queue_ahead numeric,reserved_quote numeric,reserved_base numeric)
+        ON CONFLICT(order_id) DO UPDATE SET quote_reserved=EXCLUDED.quote_reserved,
+          base_reserved=EXCLUDED.base_reserved,revision=EXCLUDED.revision""",
+        {
+            "rows": rows,
+            "user": session.user_id,
+            "episode": state.scope.episode_id,
+            "base": state.pair.base,
+            "quote": state.pair.quote,
+            "revision": revision,
+        },
     )
     await session.execute(
         """UPDATE paper_order_activity SET source_sequence=:sequence,revision=:revision,
@@ -454,16 +477,3 @@ async def persist_checkpoint(
         ),
     )
     return MatchingCheckpoint(sequence, event_id, state)
-
-
-async def _last_event(session: UserSession, order_id: UUID) -> UUID:
-    value = (
-        await session.execute(
-            """SELECT id FROM paper_order_events WHERE order_id=:order
-            ORDER BY sequence DESC LIMIT 1""",
-            {"order": order_id},
-        )
-    ).scalar_one_or_none()
-    if value is None:
-        raise OrderConflictError("order projection has no immutable event")
-    return UUID(str(value))

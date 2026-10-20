@@ -1,0 +1,1382 @@
+[
+  {
+    "at": "2026-10-20 15:18:14.986658+00:00",
+    "processes": [
+      {
+        "Id": 17,
+        "CPU": 1.23,
+        "WorkingSet64": 59138048
+      },
+      {
+        "Id": 21,
+        "CPU": 0.99,
+        "WorkingSet64": 55967744
+      },
+      {
+        "Id": 22,
+        "CPU": 0.94,
+        "WorkingSet64": 55984128
+      },
+      {
+        "Id": 23,
+        "CPU": 0.99,
+        "WorkingSet64": 56020992
+      },
+      {
+        "Id": 24,
+        "CPU": 1.0,
+        "WorkingSet64": 55554048
+      },
+      {
+        "Id": 25,
+        "CPU": 0.97,
+        "WorkingSet64": 55668736
+      },
+      {
+        "Id": 26,
+        "CPU": 0.99,
+        "WorkingSet64": 55877632
+      },
+      {
+        "Id": 27,
+        "CPU": 1.0,
+        "WorkingSet64": 55582720
+      },
+      {
+        "Id": 28,
+        "CPU": 1.02,
+        "WorkingSet64": 56426496
+      },
+      {
+        "Id": 29,
+        "CPU": 1.03,
+        "WorkingSet64": 56299520
+      },
+      {
+        "Id": 30,
+        "CPU": 0.97,
+        "WorkingSet64": 55967744
+      },
+      {
+        "Id": 31,
+        "CPU": 0.95,
+        "WorkingSet64": 55451648
+      },
+      {
+        "Id": 32,
+        "CPU": 1.02,
+        "WorkingSet64": 55779328
+      },
+      {
+        "Id": 33,
+        "CPU": 0.99,
+        "WorkingSet64": 56483840
+      },
+      {
+        "Id": 34,
+        "CPU": 1.01,
+        "WorkingSet64": 56545280
+      },
+      {
+        "Id": 35,
+        "CPU": 0.97,
+        "WorkingSet64": 55738368
+      },
+      {
+        "Id": 36,
+        "CPU": 0.91,
+        "WorkingSet64": 55988224
+      },
+      {
+        "Id": 37,
+        "CPU": 0.99,
+        "WorkingSet64": 56655872
+      },
+      {
+        "Id": 38,
+        "CPU": 0.91,
+        "WorkingSet64": 55599104
+      },
+      {
+        "Id": 39,
+        "CPU": 0.98,
+        "WorkingSet64": 55439360
+      },
+      {
+        "Id": 40,
+        "CPU": 1.0,
+        "WorkingSet64": 56168448
+      }
+    ],
+    "total_rss_bytes": 1178337280,
+    "database_bytes": 685300759,
+    "connections": 52,
+    "lock_waits": 0,
+    "buffer_rows": 1757
+  },
+  {
+    "at": "2026-10-20 15:18:20.006867+00:00",
+    "processes": [
+      {
+        "Id": 17,
+        "CPU": 2.33,
+        "WorkingSet64": 59138048
+      },
+      {
+        "Id": 21,
+        "CPU": 4.08,
+        "WorkingSet64": 56623104
+      },
+      {
+        "Id": 22,
+        "CPU": 3.99,
+        "WorkingSet64": 57458688
+      },
+      {
+        "Id": 23,
+        "CPU": 4.0,
+        "WorkingSet64": 57331712
+      },
+      {
+        "Id": 24,
+        "CPU": 4.11,
+        "WorkingSet64": 55881728
+      },
+      {
+        "Id": 25,
+        "CPU": 3.98,
+        "WorkingSet64": 57307136
+      },
+      {
+        "Id": 26,
+        "CPU": 4.09,
+        "WorkingSet64": 56532992
+      },
+      {
+        "Id": 27,
+        "CPU": 4.04,
+        "WorkingSet64": 56893440
+      },
+      {
+        "Id": 28,
+        "CPU": 4.1,
+        "WorkingSet64": 56754176
+      },
+      {
+        "Id": 29,
+        "CPU": 4.08,
+        "WorkingSet64": 57610240
+      },
+      {
+        "Id": 30,
+        "CPU": 4.08,
+        "WorkingSet64": 57442304
+      },
+      {
+        "Id": 31,
+        "CPU": 3.99,
+        "WorkingSet64": 56598528
+      },
+      {
+        "Id": 32,
+        "CPU": 4.12,
+        "WorkingSet64": 57090048
+      },
+      {
+        "Id": 33,
+        "CPU": 4.04,
+        "WorkingSet64": 57303040
+      },
+      {
+        "Id": 34,
+        "CPU": 4.06,
+        "WorkingSet64": 57200640
+      },
+      {
+        "Id": 35,
+        "CPU": 4.02,
+        "WorkingSet64": 57376768
+      },
+      {
+        "Id": 36,
+        "CPU": 3.95,
+        "WorkingSet64": 56807424
+      },
+      {
+        "Id": 37,
+        "CPU": 4.03,
+        "WorkingSet64": 57475072
+      },
+      {
+        "Id": 38,
+        "CPU": 3.96,
+        "WorkingSet64": 57401344
+      },
+      {
+        "Id": 39,
+        "CPU": 4.03,
+        "WorkingSet64": 56586240
+      },
+      {
+        "Id": 40,
+        "CPU": 4.05,
+        "WorkingSet64": 57151488
+      }
+    ],
+    "total_rss_bytes": 1199964160,
+    "database_bytes": 693615639,
+    "connections": 52,
+    "lock_waits": 0,
+    "buffer_rows": 1807
+  },
+  {
+    "at": "2026-10-20 15:18:25.017742+00:00",
+    "processes": [
+      {
+        "Id": 17,
+        "CPU": 4.02,
+        "WorkingSet64": 59465728
+      },
+      {
+        "Id": 21,
+        "CPU": 7.13,
+        "WorkingSet64": 56786944
+      },
+      {
+        "Id": 22,
+        "CPU": 7.07,
+        "WorkingSet64": 59097088
+      },
+      {
+        "Id": 23,
+        "CPU": 7.04,
+        "WorkingSet64": 58478592
+      },
+      {
+        "Id": 24,
+        "CPU": 7.16,
+        "WorkingSet64": 57520128
+      },
+      {
+        "Id": 25,
+        "CPU": 7.07,
+        "WorkingSet64": 58617856
+      },
+      {
+        "Id": 26,
+        "CPU": 7.1,
+        "WorkingSet64": 58171392
+      },
+      {
+        "Id": 27,
+        "CPU": 7.08,
+        "WorkingSet64": 57876480
+      },
+      {
+        "Id": 28,
+        "CPU": 7.2,
+        "WorkingSet64": 58064896
+      },
+      {
+        "Id": 29,
+        "CPU": 7.11,
+        "WorkingSet64": 57774080
+      },
+      {
+        "Id": 30,
+        "CPU": 7.19,
+        "WorkingSet64": 58589184
+      },
+      {
+        "Id": 31,
+        "CPU": 7.02,
+        "WorkingSet64": 57909248
+      },
+      {
+        "Id": 32,
+        "CPU": 7.17,
+        "WorkingSet64": 57417728
+      },
+      {
+        "Id": 33,
+        "CPU": 7.03,
+        "WorkingSet64": 58122240
+      },
+      {
+        "Id": 34,
+        "CPU": 7.09,
+        "WorkingSet64": 58183680
+      },
+      {
+        "Id": 35,
+        "CPU": 7.11,
+        "WorkingSet64": 58032128
+      },
+      {
+        "Id": 36,
+        "CPU": 6.96,
+        "WorkingSet64": 58118144
+      },
+      {
+        "Id": 37,
+        "CPU": 7.04,
+        "WorkingSet64": 58294272
+      },
+      {
+        "Id": 38,
+        "CPU": 7.01,
+        "WorkingSet64": 57729024
+      },
+      {
+        "Id": 39,
+        "CPU": 7.11,
+        "WorkingSet64": 57241600
+      },
+      {
+        "Id": 40,
+        "CPU": 7.11,
+        "WorkingSet64": 57315328
+      }
+    ],
+    "total_rss_bytes": 1218805760,
+    "database_bytes": 702217239,
+    "connections": 52,
+    "lock_waits": 0,
+    "buffer_rows": 1857
+  },
+  {
+    "at": "2026-10-20 15:18:30.100786+00:00",
+    "processes": [
+      {
+        "Id": 17,
+        "CPU": 5.63,
+        "WorkingSet64": 59629568
+      },
+      {
+        "Id": 21,
+        "CPU": 10.18,
+        "WorkingSet64": 57769984
+      },
+      {
+        "Id": 22,
+        "CPU": 10.11,
+        "WorkingSet64": 59752448
+      },
+      {
+        "Id": 23,
+        "CPU": 10.12,
+        "WorkingSet64": 58478592
+      },
+      {
+        "Id": 24,
+        "CPU": 10.25,
+        "WorkingSet64": 57683968
+      },
+      {
+        "Id": 25,
+        "CPU": 10.15,
+        "WorkingSet64": 59437056
+      },
+      {
+        "Id": 26,
+        "CPU": 10.14,
+        "WorkingSet64": 58499072
+      },
+      {
+        "Id": 27,
+        "CPU": 10.16,
+        "WorkingSet64": 58368000
+      },
+      {
+        "Id": 28,
+        "CPU": 10.28,
+        "WorkingSet64": 58884096
+      },
+      {
+        "Id": 29,
+        "CPU": 10.15,
+        "WorkingSet64": 58265600
+      },
+      {
+        "Id": 30,
+        "CPU": 10.26,
+        "WorkingSet64": 59244544
+      },
+      {
+        "Id": 31,
+        "CPU": 10.06,
+        "WorkingSet64": 58236928
+      },
+      {
+        "Id": 32,
+        "CPU": 10.25,
+        "WorkingSet64": 57581568
+      },
+      {
+        "Id": 33,
+        "CPU": 10.12,
+        "WorkingSet64": 58777600
+      },
+      {
+        "Id": 34,
+        "CPU": 10.14,
+        "WorkingSet64": 58839040
+      },
+      {
+        "Id": 35,
+        "CPU": 10.12,
+        "WorkingSet64": 58359808
+      },
+      {
+        "Id": 36,
+        "CPU": 9.98,
+        "WorkingSet64": 59265024
+      },
+      {
+        "Id": 37,
+        "CPU": 10.1,
+        "WorkingSet64": 59113472
+      },
+      {
+        "Id": 38,
+        "CPU": 10.09,
+        "WorkingSet64": 58220544
+      },
+      {
+        "Id": 39,
+        "CPU": 10.19,
+        "WorkingSet64": 57569280
+      },
+      {
+        "Id": 40,
+        "CPU": 10.18,
+        "WorkingSet64": 57806848
+      }
+    ],
+    "total_rss_bytes": 1229783040,
+    "database_bytes": 711433239,
+    "connections": 52,
+    "lock_waits": 0,
+    "buffer_rows": 1907
+  },
+  {
+    "at": "2026-10-20 15:18:35.116433+00:00",
+    "processes": [
+      {
+        "Id": 17,
+        "CPU": 7.43,
+        "WorkingSet64": 60121088
+      },
+      {
+        "Id": 21,
+        "CPU": 13.26,
+        "WorkingSet64": 57769984
+      },
+      {
+        "Id": 22,
+        "CPU": 13.18,
+        "WorkingSet64": 59752448
+      },
+      {
+        "Id": 23,
+        "CPU": 13.16,
+        "WorkingSet64": 59297792
+      },
+      {
+        "Id": 24,
+        "CPU": 13.3,
+        "WorkingSet64": 58175488
+      },
+      {
+        "Id": 25,
+        "CPU": 13.22,
+        "WorkingSet64": 59437056
+      },
+      {
+        "Id": 26,
+        "CPU": 13.2,
+        "WorkingSet64": 59154432
+      },
+      {
+        "Id": 27,
+        "CPU": 13.28,
+        "WorkingSet64": 59187200
+      },
+      {
+        "Id": 28,
+        "CPU": 13.36,
+        "WorkingSet64": 58884096
+      },
+      {
+        "Id": 29,
+        "CPU": 13.22,
+        "WorkingSet64": 58757120
+      },
+      {
+        "Id": 30,
+        "CPU": 13.32,
+        "WorkingSet64": 59244544
+      },
+      {
+        "Id": 31,
+        "CPU": 13.1,
+        "WorkingSet64": 58400768
+      },
+      {
+        "Id": 32,
+        "CPU": 13.29,
+        "WorkingSet64": 57581568
+      },
+      {
+        "Id": 33,
+        "CPU": 13.21,
+        "WorkingSet64": 58777600
+      },
+      {
+        "Id": 34,
+        "CPU": 13.21,
+        "WorkingSet64": 58839040
+      },
+      {
+        "Id": 35,
+        "CPU": 13.27,
+        "WorkingSet64": 58851328
+      },
+      {
+        "Id": 36,
+        "CPU": 13.06,
+        "WorkingSet64": 59592704
+      },
+      {
+        "Id": 37,
+        "CPU": 13.14,
+        "WorkingSet64": 59768832
+      },
+      {
+        "Id": 38,
+        "CPU": 13.18,
+        "WorkingSet64": 58548224
+      },
+      {
+        "Id": 39,
+        "CPU": 13.25,
+        "WorkingSet64": 57896960
+      },
+      {
+        "Id": 40,
+        "CPU": 13.3,
+        "WorkingSet64": 58953728
+      }
+    ],
+    "total_rss_bytes": 1236992000,
+    "database_bytes": 720174103,
+    "connections": 53,
+    "lock_waits": 0,
+    "buffer_rows": 1958
+  },
+  {
+    "at": "2026-10-20 15:18:40.132109+00:00",
+    "processes": [
+      {
+        "Id": 17,
+        "CPU": 9.47,
+        "WorkingSet64": 60940288
+      },
+      {
+        "Id": 21,
+        "CPU": 16.29,
+        "WorkingSet64": 57769984
+      },
+      {
+        "Id": 22,
+        "CPU": 16.2,
+        "WorkingSet64": 59752448
+      },
+      {
+        "Id": 23,
+        "CPU": 16.21,
+        "WorkingSet64": 59625472
+      },
+      {
+        "Id": 24,
+        "CPU": 16.36,
+        "WorkingSet64": 58175488
+      },
+      {
+        "Id": 25,
+        "CPU": 16.26,
+        "WorkingSet64": 59437056
+      },
+      {
+        "Id": 26,
+        "CPU": 16.25,
+        "WorkingSet64": 59318272
+      },
+      {
+        "Id": 27,
+        "CPU": 16.29,
+        "WorkingSet64": 59351040
+      },
+      {
+        "Id": 28,
+        "CPU": 16.38,
+        "WorkingSet64": 59047936
+      },
+      {
+        "Id": 29,
+        "CPU": 16.21,
+        "WorkingSet64": 58757120
+      },
+      {
+        "Id": 30,
+        "CPU": 16.3,
+        "WorkingSet64": 59408384
+      },
+      {
+        "Id": 31,
+        "CPU": 16.13,
+        "WorkingSet64": 58564608
+      },
+      {
+        "Id": 32,
+        "CPU": 16.34,
+        "WorkingSet64": 57909248
+      },
+      {
+        "Id": 33,
+        "CPU": 16.19,
+        "WorkingSet64": 58777600
+      },
+      {
+        "Id": 34,
+        "CPU": 16.24,
+        "WorkingSet64": 58839040
+      },
+      {
+        "Id": 35,
+        "CPU": 16.24,
+        "WorkingSet64": 58851328
+      },
+      {
+        "Id": 36,
+        "CPU": 16.07,
+        "WorkingSet64": 59592704
+      },
+      {
+        "Id": 37,
+        "CPU": 16.15,
+        "WorkingSet64": 60096512
+      },
+      {
+        "Id": 38,
+        "CPU": 16.14,
+        "WorkingSet64": 59039744
+      },
+      {
+        "Id": 39,
+        "CPU": 16.31,
+        "WorkingSet64": 58060800
+      },
+      {
+        "Id": 40,
+        "CPU": 16.3,
+        "WorkingSet64": 59117568
+      }
+    ],
+    "total_rss_bytes": 1240432640,
+    "database_bytes": 726064151,
+    "connections": 53,
+    "lock_waits": 0,
+    "buffer_rows": 2008
+  },
+  {
+    "at": "2026-10-20 15:18:45.169324+00:00",
+    "processes": [
+      {
+        "Id": 17,
+        "CPU": 11.46,
+        "WorkingSet64": 61104128
+      },
+      {
+        "Id": 21,
+        "CPU": 19.28,
+        "WorkingSet64": 58261504
+      },
+      {
+        "Id": 22,
+        "CPU": 19.16,
+        "WorkingSet64": 59752448
+      },
+      {
+        "Id": 23,
+        "CPU": 19.18,
+        "WorkingSet64": 59789312
+      },
+      {
+        "Id": 24,
+        "CPU": 19.38,
+        "WorkingSet64": 58339328
+      },
+      {
+        "Id": 25,
+        "CPU": 19.3,
+        "WorkingSet64": 59437056
+      },
+      {
+        "Id": 26,
+        "CPU": 19.2,
+        "WorkingSet64": 59318272
+      },
+      {
+        "Id": 27,
+        "CPU": 19.27,
+        "WorkingSet64": 59514880
+      },
+      {
+        "Id": 28,
+        "CPU": 19.4,
+        "WorkingSet64": 59047936
+      },
+      {
+        "Id": 29,
+        "CPU": 19.17,
+        "WorkingSet64": 58757120
+      },
+      {
+        "Id": 30,
+        "CPU": 19.28,
+        "WorkingSet64": 59408384
+      },
+      {
+        "Id": 31,
+        "CPU": 19.09,
+        "WorkingSet64": 58728448
+      },
+      {
+        "Id": 32,
+        "CPU": 19.35,
+        "WorkingSet64": 58236928
+      },
+      {
+        "Id": 33,
+        "CPU": 19.16,
+        "WorkingSet64": 58941440
+      },
+      {
+        "Id": 34,
+        "CPU": 19.28,
+        "WorkingSet64": 59002880
+      },
+      {
+        "Id": 35,
+        "CPU": 19.21,
+        "WorkingSet64": 58851328
+      },
+      {
+        "Id": 36,
+        "CPU": 19.07,
+        "WorkingSet64": 59592704
+      },
+      {
+        "Id": 37,
+        "CPU": 19.1,
+        "WorkingSet64": 60096512
+      },
+      {
+        "Id": 38,
+        "CPU": 19.11,
+        "WorkingSet64": 59367424
+      },
+      {
+        "Id": 39,
+        "CPU": 19.32,
+        "WorkingSet64": 58388480
+      },
+      {
+        "Id": 40,
+        "CPU": 19.27,
+        "WorkingSet64": 59117568
+      }
+    ],
+    "total_rss_bytes": 1243054080,
+    "database_bytes": 732183575,
+    "connections": 53,
+    "lock_waits": 0,
+    "buffer_rows": 2058
+  },
+  {
+    "at": "2026-10-20 15:18:50.184979+00:00",
+    "processes": [
+      {
+        "Id": 17,
+        "CPU": 13.34,
+        "WorkingSet64": 61104128
+      },
+      {
+        "Id": 21,
+        "CPU": 22.3,
+        "WorkingSet64": 58753024
+      },
+      {
+        "Id": 22,
+        "CPU": 22.19,
+        "WorkingSet64": 59916288
+      },
+      {
+        "Id": 23,
+        "CPU": 22.23,
+        "WorkingSet64": 60116992
+      },
+      {
+        "Id": 24,
+        "CPU": 22.39,
+        "WorkingSet64": 58339328
+      },
+      {
+        "Id": 25,
+        "CPU": 22.3,
+        "WorkingSet64": 59600896
+      },
+      {
+        "Id": 26,
+        "CPU": 22.25,
+        "WorkingSet64": 59482112
+      },
+      {
+        "Id": 27,
+        "CPU": 22.3,
+        "WorkingSet64": 59514880
+      },
+      {
+        "Id": 28,
+        "CPU": 22.4,
+        "WorkingSet64": 59211776
+      },
+      {
+        "Id": 29,
+        "CPU": 22.21,
+        "WorkingSet64": 58920960
+      },
+      {
+        "Id": 30,
+        "CPU": 22.33,
+        "WorkingSet64": 59408384
+      },
+      {
+        "Id": 31,
+        "CPU": 22.12,
+        "WorkingSet64": 58892288
+      },
+      {
+        "Id": 32,
+        "CPU": 22.38,
+        "WorkingSet64": 58728448
+      },
+      {
+        "Id": 33,
+        "CPU": 22.19,
+        "WorkingSet64": 59432960
+      },
+      {
+        "Id": 34,
+        "CPU": 22.34,
+        "WorkingSet64": 59002880
+      },
+      {
+        "Id": 35,
+        "CPU": 22.25,
+        "WorkingSet64": 59015168
+      },
+      {
+        "Id": 36,
+        "CPU": 22.09,
+        "WorkingSet64": 59756544
+      },
+      {
+        "Id": 37,
+        "CPU": 22.13,
+        "WorkingSet64": 60096512
+      },
+      {
+        "Id": 38,
+        "CPU": 22.1,
+        "WorkingSet64": 59531264
+      },
+      {
+        "Id": 39,
+        "CPU": 22.33,
+        "WorkingSet64": 58880000
+      },
+      {
+        "Id": 40,
+        "CPU": 22.37,
+        "WorkingSet64": 59936768
+      }
+    ],
+    "total_rss_bytes": 1247641600,
+    "database_bytes": 738262039,
+    "connections": 53,
+    "lock_waits": 0,
+    "buffer_rows": 2109
+  },
+  {
+    "at": "2026-10-20 15:18:55.198260+00:00",
+    "processes": [
+      {
+        "Id": 17,
+        "CPU": 15.2,
+        "WorkingSet64": 61595648
+      },
+      {
+        "Id": 21,
+        "CPU": 25.24,
+        "WorkingSet64": 58916864
+      },
+      {
+        "Id": 22,
+        "CPU": 25.1,
+        "WorkingSet64": 60407808
+      },
+      {
+        "Id": 23,
+        "CPU": 25.11,
+        "WorkingSet64": 60280832
+      },
+      {
+        "Id": 24,
+        "CPU": 25.35,
+        "WorkingSet64": 58339328
+      },
+      {
+        "Id": 25,
+        "CPU": 25.17,
+        "WorkingSet64": 59600896
+      },
+      {
+        "Id": 26,
+        "CPU": 25.21,
+        "WorkingSet64": 59645952
+      },
+      {
+        "Id": 27,
+        "CPU": 25.15,
+        "WorkingSet64": 59514880
+      },
+      {
+        "Id": 28,
+        "CPU": 25.28,
+        "WorkingSet64": 59211776
+      },
+      {
+        "Id": 29,
+        "CPU": 25.13,
+        "WorkingSet64": 58871808
+      },
+      {
+        "Id": 30,
+        "CPU": 25.2,
+        "WorkingSet64": 59899904
+      },
+      {
+        "Id": 31,
+        "CPU": 25.11,
+        "WorkingSet64": 58892288
+      },
+      {
+        "Id": 32,
+        "CPU": 25.37,
+        "WorkingSet64": 58728448
+      },
+      {
+        "Id": 33,
+        "CPU": 25.08,
+        "WorkingSet64": 59432960
+      },
+      {
+        "Id": 34,
+        "CPU": 25.26,
+        "WorkingSet64": 59166720
+      },
+      {
+        "Id": 35,
+        "CPU": 25.1,
+        "WorkingSet64": 59015168
+      },
+      {
+        "Id": 36,
+        "CPU": 25.01,
+        "WorkingSet64": 59756544
+      },
+      {
+        "Id": 37,
+        "CPU": 25.07,
+        "WorkingSet64": 60096512
+      },
+      {
+        "Id": 38,
+        "CPU": 25.0,
+        "WorkingSet64": 59695104
+      },
+      {
+        "Id": 39,
+        "CPU": 25.25,
+        "WorkingSet64": 58880000
+      },
+      {
+        "Id": 40,
+        "CPU": 25.2,
+        "WorkingSet64": 59936768
+      }
+    ],
+    "total_rss_bytes": 1249886208,
+    "database_bytes": 744250391,
+    "connections": 53,
+    "lock_waits": 0,
+    "buffer_rows": 2159
+  },
+  {
+    "at": "2026-10-20 15:19:00.225324+00:00",
+    "processes": [
+      {
+        "Id": 17,
+        "CPU": 17.06,
+        "WorkingSet64": 61759488
+      },
+      {
+        "Id": 21,
+        "CPU": 28.19,
+        "WorkingSet64": 58916864
+      },
+      {
+        "Id": 22,
+        "CPU": 28.07,
+        "WorkingSet64": 60571648
+      },
+      {
+        "Id": 23,
+        "CPU": 28.05,
+        "WorkingSet64": 60280832
+      },
+      {
+        "Id": 24,
+        "CPU": 28.34,
+        "WorkingSet64": 58339328
+      },
+      {
+        "Id": 25,
+        "CPU": 28.18,
+        "WorkingSet64": 59600896
+      },
+      {
+        "Id": 26,
+        "CPU": 28.21,
+        "WorkingSet64": 59645952
+      },
+      {
+        "Id": 27,
+        "CPU": 28.14,
+        "WorkingSet64": 60006400
+      },
+      {
+        "Id": 28,
+        "CPU": 28.3,
+        "WorkingSet64": 59211776
+      },
+      {
+        "Id": 29,
+        "CPU": 28.12,
+        "WorkingSet64": 58871808
+      },
+      {
+        "Id": 30,
+        "CPU": 28.21,
+        "WorkingSet64": 59899904
+      },
+      {
+        "Id": 31,
+        "CPU": 28.12,
+        "WorkingSet64": 58892288
+      },
+      {
+        "Id": 32,
+        "CPU": 28.32,
+        "WorkingSet64": 58728448
+      },
+      {
+        "Id": 33,
+        "CPU": 28.08,
+        "WorkingSet64": 59432960
+      },
+      {
+        "Id": 34,
+        "CPU": 28.22,
+        "WorkingSet64": 59166720
+      },
+      {
+        "Id": 35,
+        "CPU": 28.09,
+        "WorkingSet64": 59015168
+      },
+      {
+        "Id": 36,
+        "CPU": 28.01,
+        "WorkingSet64": 59756544
+      },
+      {
+        "Id": 37,
+        "CPU": 28.1,
+        "WorkingSet64": 60260352
+      },
+      {
+        "Id": 38,
+        "CPU": 27.97,
+        "WorkingSet64": 59695104
+      },
+      {
+        "Id": 39,
+        "CPU": 28.27,
+        "WorkingSet64": 58880000
+      },
+      {
+        "Id": 40,
+        "CPU": 28.16,
+        "WorkingSet64": 60100608
+      }
+    ],
+    "total_rss_bytes": 1251033088,
+    "database_bytes": 750246935,
+    "connections": 53,
+    "lock_waits": 0,
+    "buffer_rows": 2209
+  },
+  {
+    "at": "2026-10-20 15:19:05.257566+00:00",
+    "processes": [
+      {
+        "Id": 17,
+        "CPU": 18.86,
+        "WorkingSet64": 61923328
+      },
+      {
+        "Id": 21,
+        "CPU": 31.08,
+        "WorkingSet64": 59080704
+      },
+      {
+        "Id": 22,
+        "CPU": 31.06,
+        "WorkingSet64": 60571648
+      },
+      {
+        "Id": 23,
+        "CPU": 31.01,
+        "WorkingSet64": 60280832
+      },
+      {
+        "Id": 24,
+        "CPU": 31.35,
+        "WorkingSet64": 58339328
+      },
+      {
+        "Id": 25,
+        "CPU": 31.17,
+        "WorkingSet64": 59600896
+      },
+      {
+        "Id": 26,
+        "CPU": 31.18,
+        "WorkingSet64": 59645952
+      },
+      {
+        "Id": 27,
+        "CPU": 31.13,
+        "WorkingSet64": 60170240
+      },
+      {
+        "Id": 28,
+        "CPU": 31.3,
+        "WorkingSet64": 59211776
+      },
+      {
+        "Id": 29,
+        "CPU": 31.07,
+        "WorkingSet64": 59199488
+      },
+      {
+        "Id": 30,
+        "CPU": 31.16,
+        "WorkingSet64": 60227584
+      },
+      {
+        "Id": 31,
+        "CPU": 31.1,
+        "WorkingSet64": 58892288
+      },
+      {
+        "Id": 32,
+        "CPU": 31.28,
+        "WorkingSet64": 58728448
+      },
+      {
+        "Id": 33,
+        "CPU": 31.03,
+        "WorkingSet64": 59760640
+      },
+      {
+        "Id": 34,
+        "CPU": 31.18,
+        "WorkingSet64": 59166720
+      },
+      {
+        "Id": 35,
+        "CPU": 31.07,
+        "WorkingSet64": 59015168
+      },
+      {
+        "Id": 36,
+        "CPU": 31.03,
+        "WorkingSet64": 59756544
+      },
+      {
+        "Id": 37,
+        "CPU": 31.09,
+        "WorkingSet64": 60424192
+      },
+      {
+        "Id": 38,
+        "CPU": 30.94,
+        "WorkingSet64": 59695104
+      },
+      {
+        "Id": 39,
+        "CPU": 31.25,
+        "WorkingSet64": 59043840
+      },
+      {
+        "Id": 40,
+        "CPU": 31.13,
+        "WorkingSet64": 60264448
+      }
+    ],
+    "total_rss_bytes": 1252999168,
+    "database_bytes": 756276247,
+    "connections": 53,
+    "lock_waits": 0,
+    "buffer_rows": 2259
+  },
+  {
+    "at": "2026-10-20 15:19:10.273016+00:00",
+    "processes": [
+      {
+        "Id": 17,
+        "CPU": 20.17,
+        "WorkingSet64": 62087168
+      },
+      {
+        "Id": 21,
+        "CPU": 34.07,
+        "WorkingSet64": 59080704
+      },
+      {
+        "Id": 22,
+        "CPU": 34.16,
+        "WorkingSet64": 60571648
+      },
+      {
+        "Id": 23,
+        "CPU": 34.0,
+        "WorkingSet64": 60280832
+      },
+      {
+        "Id": 24,
+        "CPU": 34.39,
+        "WorkingSet64": 58503168
+      },
+      {
+        "Id": 25,
+        "CPU": 34.17,
+        "WorkingSet64": 59600896
+      },
+      {
+        "Id": 26,
+        "CPU": 34.17,
+        "WorkingSet64": 59973632
+      },
+      {
+        "Id": 27,
+        "CPU": 34.18,
+        "WorkingSet64": 60334080
+      },
+      {
+        "Id": 28,
+        "CPU": 34.3,
+        "WorkingSet64": 59211776
+      },
+      {
+        "Id": 29,
+        "CPU": 34.08,
+        "WorkingSet64": 59363328
+      },
+      {
+        "Id": 30,
+        "CPU": 34.19,
+        "WorkingSet64": 60555264
+      },
+      {
+        "Id": 31,
+        "CPU": 34.13,
+        "WorkingSet64": 59056128
+      },
+      {
+        "Id": 32,
+        "CPU": 34.37,
+        "WorkingSet64": 58728448
+      },
+      {
+        "Id": 33,
+        "CPU": 34.01,
+        "WorkingSet64": 59924480
+      },
+      {
+        "Id": 34,
+        "CPU": 34.22,
+        "WorkingSet64": 59166720
+      },
+      {
+        "Id": 35,
+        "CPU": 34.08,
+        "WorkingSet64": 59179008
+      },
+      {
+        "Id": 36,
+        "CPU": 34.02,
+        "WorkingSet64": 59756544
+      },
+      {
+        "Id": 37,
+        "CPU": 34.07,
+        "WorkingSet64": 60424192
+      },
+      {
+        "Id": 38,
+        "CPU": 33.96,
+        "WorkingSet64": 59695104
+      },
+      {
+        "Id": 39,
+        "CPU": 34.26,
+        "WorkingSet64": 59043840
+      },
+      {
+        "Id": 40,
+        "CPU": 34.09,
+        "WorkingSet64": 60428288
+      }
+    ],
+    "total_rss_bytes": 1254965248,
+    "database_bytes": 762584087,
+    "connections": 53,
+    "lock_waits": 0,
+    "buffer_rows": 2310
+  }
+]
