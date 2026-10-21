@@ -1,6 +1,7 @@
 # F-13 — กระเป๋า Paper และเงินตั้งต้น — Validation
 
-สถานะ: **Approved** — เจ้าของอนุมัติวันที่ 2026-10-15; F-15 M4 เพิ่ม authoritative reset success ที่ development checkpoint แล้ว แต่ candidate integration gates ยังค้าง
+สถานะ: **Approved / Development Complete** — เจ้าของอนุมัติวันที่ 2026-10-15;
+reconcile integration gates กับ F-15 final development candidate วันที่ 2026-10-21 แล้ว
 
 วันที่: 2026-10-15
 
@@ -21,16 +22,16 @@ NC-F13-02 บล็อกเกณฑ์ reset ที่ต้องมีแห
 | V-1 | RQ-2/10 | strict string → Money, USDT, ทุน >1000, precision/range เดิม, input ผิดไม่เหลือเงิน/episode; golden cases และ Hypothesis | พัฒนา + candidate | **Passed 2026-10-15** — Money boundary/precision และ invalid-input rollback ผ่านใน targeted และ candidate backend |
 | V-2 | RQ-2/4/9 | DB round-trip exact, ledger fold ผ่าน Money; ทุนเป็น EXTERNAL_CAPITAL ไม่ใช่ PnL; ไม่ปัดที่ insert | พัฒนา + candidate | **Passed 2026-10-15** — exact PostgreSQL round-trip, ledger fold และ browser amount ทุกหลักผ่าน |
 | V-3 | RQ-1/11/13 | real PostgreSQL roles/RLS/FORCE RLS; missing user context และ foreign UUID อ่าน/เขียนไม่ได้; composite FK/mode/unit/unique constraints | พัฒนา + candidate | **Passed 2026-10-15** — real PostgreSQL RLS/ownership/FK/constraints และ migration cycle ผ่าน |
-| V-4 | RQ-4/5/9 | UPDATE/DELETE/TRUNCATE ledger/episode/closure/result/input ไม่ได้; reset ไม่เปลี่ยนประวัติ; ไม่มี top-up endpoint/UI หรือ mutable balance | พัฒนา + candidate | Partial — M4 reset เก็บ episode/ledger/closure/audit history และไม่มี top-up surface; candidate ค้าง |
+| V-4 | RQ-4/5/9 | UPDATE/DELETE/TRUNCATE ledger/episode/closure/result/input ไม่ได้; reset ไม่เปลี่ยนประวัติ; ไม่มี top-up endpoint/UI หรือ mutable balance | พัฒนา + candidate | **Passed 2026-10-21** — append-only/history gates เดิมผ่าน; F-15 V-14 และ final candidate ยืนยัน reset/reload ยังคง episode, ledger, closure, terminal result และ audit เดิม |
 | V-5 | RQ-1/8/12 | retry เดิม/parallel same key → command/admission result/terminal result/ทุน/audit ชุดเดียว; canonical payload เท่ากัน replay, ต่างกัน conflict และ rejection audit ครั้งเดียว; key แยก user/action | พัฒนา + candidate | **Passed 2026-10-15** — parallel admission, canonical replay/conflict, terminal replay และ audited rejection ผ่าน |
-| V-6 | RQ-3/7/12 | fault injection ทุกจุดก่อน commit และ audit failure รวม API admission rejection; CREATE/RESET rollback ทั้งชุด ไม่มี dangling command/dispatch/wallet/episode/closure/pointer/ledger/result/audit ครึ่งชุด | พัฒนา + candidate | Partial — CREATE/RESET write/audit rollback และ M5 cancellation/timeout หลัง capital write recover ผ่าน; unknown commit ยังรอ |
-| V-7 | RQ-6/7/8 | real connections/workers reset พร้อมกันต่าง key จาก episode เดิม → สำเร็จไม่เกินหนึ่ง; writer แข่ง reset ใช้ lock เดียวกัน; old episode ปฏิเสธ | พัฒนา + candidate | Partial — reset/reset, stale admission และ controlled fill/reset ใช้ lock เดียวกันผ่าน; explicit init/fill/process-kill matrix ยังรอ |
-| V-8 | RQ-6/15 | authoritative idle สำเร็จได้; position/open order/unknown/source error/revision เปลี่ยนตรวจแล้ว fail-closed; ไม่มี false-safe fallback | พัฒนา + candidate | Partial — authoritative idle/absent/pending/open และ M5 proof mismatch/CONFLICTED position+order 4 cases fail closed ผ่าน; full candidate ยังรอ |
-| V-9 | RQ-3/7/8/15 | restart ก่อน/หลัง commit, lost response, duplicate delivery, cancellation/timeout/worker สองตัว; claim expiry/backoff/fairness และคำขอล้มซ้ำไม่ขวางผู้ใช้อื่น; recovery ไม่เพิ่มทุนซ้ำ; scan ไม่เขียน/อ่านยอด | พัฒนา + candidate | Partial — restart/claim expiry, duplicate scan, workers, backoff/fairness, unknown failure และ M5 cancellation/timeout ผ่าน; post-commit unknown/process kill ยังรอ |
-| V-10 | RQ-4/9/14 | GET แข่ง reset ได้ snapshot เก่าหรือใหม่ที่ครบชุด; ไม่มี pointer/ทุน/ยอดปน episode; replay คืนผลเดิมแม้เปลี่ยนรอบแล้ว | พัฒนา + candidate | Partial — terminal replay ข้าม episode, M5 controlled production GET/reset barrier, final clean backend full run 2935 tests และ required CI run #116 ผ่าน; fault matrix ที่เหลือยังรอ |
+| V-6 | RQ-3/7/12 | fault injection ทุกจุดก่อน commit และ audit failure รวม API admission rejection; CREATE/RESET rollback ทั้งชุด ไม่มี dangling command/dispatch/wallet/episode/closure/pointer/ledger/result/audit ครึ่งชุด | พัฒนา + candidate | **Passed 2026-10-21** — CREATE/RESET write และ audit rollback, cancellation/timeout, lost acknowledgement, TCP disconnect และ process kill ก่อน/หลัง RESET commit ผ่าน; retry ไม่เหลือข้อมูลครึ่งชุดหรือเพิ่มทุนซ้ำ |
+| V-7 | RQ-6/7/8 | real connections/workers reset พร้อมกันต่าง key จาก episode เดิม → สำเร็จไม่เกินหนึ่ง; writer แข่ง reset ใช้ lock เดียวกัน; old episode ปฏิเสธ | พัฒนา + candidate | **Passed 2026-10-21** — reset/reset, stale admission และ controlled reset/fill/init/admission barriers ผ่านด้วย financial lock เดียวกัน; F-15 V-14/V-15 candidate gates ผ่าน |
+| V-8 | RQ-6/15 | authoritative idle สำเร็จได้; position/open order/unknown/source error/revision เปลี่ยนตรวจแล้ว fail-closed; ไม่มี false-safe fallback | พัฒนา + candidate | **Passed 2026-10-21** — authoritative idle success และ absent/pending/open/proof mismatch/CONFLICTED position+order fail-closed ผ่าน; F-15 final candidate ยืนยัน source coherence บน schema 0038 |
+| V-9 | RQ-3/7/8/15 | restart ก่อน/หลัง commit, lost response, duplicate delivery, cancellation/timeout/worker สองตัว; claim expiry/backoff/fairness และคำขอล้มซ้ำไม่ขวางผู้ใช้อื่น; recovery ไม่เพิ่มทุนซ้ำ; scan ไม่เขียน/อ่านยอด | พัฒนา + candidate | **Passed 2026-10-21** — restart/claim expiry, duplicate scan, worker concurrency, backoff/fairness, cancellation/timeout, lost acknowledgement, TCP disconnect และ RESET process kill ก่อน/หลัง commit ผ่านโดยไม่มีทุนซ้ำ |
+| V-10 | RQ-4/9/14 | GET แข่ง reset ได้ snapshot เก่าหรือใหม่ที่ครบชุด; ไม่มี pointer/ทุน/ยอดปน episode; replay คืนผลเดิมแม้เปลี่ยนรอบแล้ว | พัฒนา + candidate | **Passed 2026-10-21** — controlled GET/reset/admission barriers คืน snapshot เก่าหรือใหม่ที่ครบชุด; terminal replay ข้าม episode และ final F-15 candidate/CI ผ่าน |
 | V-11 | RQ-12/13/15 | success/rejection audit ถูก owner/action/mode/outcome, ไม่มี secret/log echo; Paper entrypoint ทำงานโดยไม่มี venue key และไม่เรียก network/credential; negative gate fixtures ต้องแดง | พัฒนา + candidate | **Passed 2026-10-15** — audit/secret canary/Paper isolation gate ผ่าน และ E2E ทำงานโดยไม่มี venue key/TOTP |
 | V-12 | RQ-1/2/10/15 | component tests exact amounts, loading/pending/error/stale/disabled/retry, no optimistic balance, no Number/float, i18n และ admin-template states | พัฒนา + candidate | **Passed 2026-10-15** — frontend full suite 244 tests, lint/type/build และ responsive screenshots ผ่าน |
-| V-13 | RQ-1..15 | browser → API → durable command → real Paper worker → PG → UI: create/reload/retry/reset/retained history และสอง user; ไม่ mock ledger หรือ idle proof เพื่อรับรอง reset | พัฒนา smoke + candidate E2E | Partial — real source browser reset/reload, M5 full Chromium 18 tests, final clean backend full run 2935 tests และ required CI run #116 ผ่าน; DB retained history/owner isolation และ component retry/conflict ผ่าน แต่ explicit browser สอง user ยังค้าง |
+| V-13 | RQ-1..15 | browser → API → durable command → real Paper worker → PG → UI: create/reload/retry/reset/retained history และสอง user; ไม่ mock ledger หรือ idle proof เพื่อรับรอง reset | พัฒนา smoke + candidate E2E | **Passed 2026-10-21** — F-15 V-14 ผ่าน real-source browser reset/reload/history, session/CSRF owner isolation, retry/conflict และ two-owner integration; final browser/CI gates ผ่านบน candidate สุดท้าย |
 | V-14 | RQ-11/14/15 | identity swap/logout/401/late response, generated OpenAPI types, CSRF/auth/route policy, safe errors และ PAPER_WALLET_MUTATION quota/replay semantics; no API key/TOTP เป็นเงื่อนไขใช้ Paper | พัฒนา + candidate | **Passed 2026-10-15** — identity isolation, route policy/quota, safe errors และ generated contract gate ผ่าน |
 | V-15 | ทุกข้อ | review diff/dependencies, full regression, lint/types/imports/build/generated contracts/required CI ครบสำหรับ candidate สุดท้าย | ก่อน merge | **Passed 2026-10-16** — final review, local full candidate และ required push/PR/post-merge CI ผ่าน |
 
@@ -237,3 +238,17 @@ required CI รวม backend/frontend/api-contract/E2E/container ต้อง�
   activity-writer/GET races, worker cancellation/timeout, unknown commit และ integration candidate
   ยังไม่มีหลักฐานครบ
 - F-13 จึงคง **In Progress** และยังไม่ใช่ Development Complete หรือ Completed
+
+## F-15 integration reconciliation — 2026-10-21
+
+- [F-15 validation](../2026-10-18-paper-order-matching/validation.md) V-14 และ V-15 ผ่านวันที่
+  2026-10-20 หลังปิด real-source reset, reset/reset/admission/fill/GET barriers,
+  source conflict/error, cancellation/timeout, lost acknowledgement, TCP disconnect และ
+  process kill ก่อน/หลัง commit โดยไม่มีผลการเงินซ้ำ
+- [F-15 final development candidate](../2026-10-18-paper-order-matching/evidence/m5-candidate.md#final-development-candidate--2026-10-20)
+  ผ่าน required CI run #124 attempt 2 และ post-merge run #125 ครบ 6 jobs; source ล่าสุด
+  ผ่านอีกครั้งใน docs-correction PR run #127 โดยไม่มี production change หลัง candidate
+- หลักฐานนี้ปิด V-4, V-6–V-10 และ V-13 ที่ค้างจาก checkpoint เดิม ทำให้ V-1–V-15
+  ผ่านครบและไม่มี Needs Clarification ของ F-13 ค้างอยู่ จึงยกระดับ F-13 เป็น
+  **Development Complete** เพื่อรอตรวจรับระบบตาม roadmap; ไม่อ้างผล workload W1–W4
+  ของ F-15 ซึ่งยังเป็น `Pending Full Validation` และไม่ใช่เกณฑ์ของ F-13
