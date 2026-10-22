@@ -11,6 +11,7 @@ from hypothesis import strategies as st
 
 from tests.infra.market_data.test_chart_preview import observation
 from tiewtrade.core.candle_preview import CandleObservation, Progress, compare
+from tiewtrade.core.market_data import CandleFinality, Timeframe, advance, align_floor, next_open
 from tiewtrade.core.money import Money, Quantity
 from tiewtrade.infra.market_data.candle_preview import PreviewLease
 from tiewtrade.infra.realtime.notifications import RedisNotifications
@@ -67,6 +68,8 @@ async def test_bootstrap_commits_each_series_before_marking_ready(
 
     await state._bootstrap(1)
 
+    assert len(SERIES) == 16
+    assert {series.timeframe for series in SERIES} == set(Timeframe)
     assert calls == list(SERIES)
     assert sessions == len(SERIES) + 1
     assert completed is True
@@ -123,18 +126,36 @@ def test_old_epoch_and_old_candle_cannot_change_the_current_slot() -> None:
     assert list(state.rows.values()) == [(original, 1)]
 
 
-def test_skipped_intervals_coalesce_one_ended_demand() -> None:
+@pytest.mark.parametrize("timeframe", [Timeframe.H1, Timeframe.W1, Timeframe.MN1])
+def test_skipped_intervals_coalesce_one_same_timeframe_ended_demand(
+    timeframe: Timeframe,
+) -> None:
     state = supervisor()
     original = observation()
+    opened = align_floor(original.event_at, timeframe)
+    original = replace(
+        original,
+        candle=replace(
+            original.candle,
+            timeframe=timeframe,
+            open_at=opened,
+            end_at=next_open(opened, timeframe),
+        ),
+    )
     state.observe(FeedCandle(1, original))
+    next_opened = advance(opened, timeframe, 3)
     next_candle = replace(
         original.candle,
-        open_at=original.candle.open_at + timedelta(hours=3),
-        end_at=original.candle.end_at + timedelta(hours=3),
+        open_at=next_opened,
+        end_at=next_open(next_opened, timeframe),
     )
     state.observe(FeedCandle(1, replace(original, candle=next_candle)))
-    demand = next(iter(state.demands.values()))
+    key = next(iter(state.demands))
+    demand = state.demands[key]
+    stored, _ = state.rows[key]
     assert demand.start == original.candle.open_at and demand.end == next_candle.open_at
+    assert key[2] is timeframe
+    assert stored.candle.finality is CandleFinality.OPEN
     assert len(state.rows) == len(state.demands) == 1
 
 

@@ -106,10 +106,33 @@ test("actual chart panes, exact values and keyboard selection", async ({ page })
     await expect(chart.locator("canvas").first()).toBeVisible();
     await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= globalThis.innerWidth)).toBe(true);
   }
+  const pair = chart.getByRole("combobox", { name: "คู่เทรด", exact: true });
+  const pairStyle = await pair.evaluate(element => {
+    const style = globalThis.getComputedStyle(element);
+    return {
+      appearance: style.appearance,
+      borderColor: style.borderColor,
+      borderRadius: style.borderRadius,
+      height: style.height,
+    };
+  });
+  expect(pairStyle).toEqual({
+    appearance: "none",
+    borderColor: "rgb(208, 213, 221)",
+    borderRadius: "8px",
+    height: "44px",
+  });
+  await pair.focus();
+  await expect(pair).toHaveCSS("border-color", "rgb(156, 185, 255)");
+  const disabled = chart.getByRole("button", { name: "ยังไม่เปิดใช้งาน", exact: true });
+  await expect(disabled).toBeDisabled();
+  await expect(disabled).toHaveCSS("cursor", "not-allowed");
+  await expect(disabled).toHaveCSS("opacity", "0.5");
+  await expect(disabled).toHaveCSS("border-radius", "8px");
   await expect(chart.getByRole("link", { name: "Charting by TradingView", exact: true })).toBeVisible();
   await page.screenshot({ path: "../specs/features/2026-10-12-candlestick-chart/evidence/chart-browser.png", fullPage: true });
   expect(errors).toEqual([]);
-  expect(requests.some(url => /binance|\/orders|\/trading-account\/use/i.test(url))).toBe(false);
+  expect(requests.some(url => /binance|\/orders|\/trading-account\/use|\/indicators/i.test(url))).toBe(false);
 });
 
 test("module pages preserve navigation history, deep links and cancel inactive chart work", async ({ page }) => {

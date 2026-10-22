@@ -7,7 +7,7 @@ from hypothesis import given, settings
 from hypothesis import strategies as st
 
 from tiewtrade.core.indicators import IndicatorStatus, IndicatorStream
-from tiewtrade.core.market_data import Candle, CandleFinality, Timeframe
+from tiewtrade.core.market_data import Candle, CandleFinality, Timeframe, advance, align_floor
 from tiewtrade.core.money import Money, Quantity, Scalar
 
 START = datetime(2026, 10, 9, tzinfo=UTC)
@@ -57,14 +57,20 @@ def test_accepted_count_preserves_hold_and_resets_on_gap() -> None:
     stream.restore_state(stream.export_state())
 
 
-def candle(index: int, finality: CandleFinality = CandleFinality.UNCONFIRMED) -> Candle:
-    moment = START + timedelta(minutes=index)
+def candle(
+    index: int,
+    finality: CandleFinality = CandleFinality.UNCONFIRMED,
+    *,
+    timeframe: Timeframe = Timeframe.M1,
+    start: datetime = START,
+) -> Candle:
+    moment = advance(start, timeframe, index)
     return Candle(
         "BTC",
         "USDT",
-        Timeframe.M1,
+        timeframe,
         moment,
-        moment + timedelta(minutes=1),
+        advance(moment, timeframe, 1),
         Money.of(100, "USDT"),
         Money.of(101, "USDT"),
         Money.of(99, "USDT"),
@@ -94,6 +100,35 @@ def test_constant_price_golden_and_exact_warmup() -> None:
         if index >= 14:
             assert point.values["rsi14"].value == Scalar.of(50)
         assert point.finality is CandleFinality.UNCONFIRMED
+
+
+@pytest.mark.parametrize(
+    ("timeframe", "count", "ema200_ready"),
+    [(Timeframe.W1, 201, True), (Timeframe.MN1, 60, False)],
+)
+def test_calendar_indicator_warmup_respects_native_slots_and_five_year_history(
+    timeframe: Timeframe, count: int, ema200_ready: bool
+) -> None:
+    start = align_floor(datetime(2021, 1, 15, tzinfo=UTC), timeframe)
+    as_of = advance(start, timeframe, count)
+    stream = IndicatorStream("BTC", "USDT", timeframe, as_of)
+    for index in range(count):
+        bar = candle(
+            index,
+            CandleFinality.CLOSED,
+            timeframe=timeframe,
+            start=start,
+        )
+        point = stream.feed(bar.open_at, bar, bar.end_at)
+        if index == 18:
+            assert point.values["ema20"].status is IndicatorStatus.WARM_UP
+        elif index == 19:
+            assert point.values["ema20"].value == Money.of(100, "USDT")
+        if ema200_ready and index == 199:
+            assert point.values["ema200"].value == Money.of(100, "USDT")
+    if not ema200_ready:
+        assert point.values["ema200"].status is IndicatorStatus.WARM_UP
+        assert point.values["ema200"].value is None
 
 
 def test_refresh_blocks_until_gap_and_taints_closed_input() -> None:
