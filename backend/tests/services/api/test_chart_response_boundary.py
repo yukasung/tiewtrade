@@ -13,7 +13,7 @@ from pydantic import BaseModel
 from tiewtrade.infra.realtime.admission import AdmissionOutcome
 from tiewtrade.services.api.authentication import Authenticated
 from tiewtrade.services.api.indicator_admission import IndicatorBudget
-from tiewtrade.services.api.indicator_http import indicator_response
+from tiewtrade.services.api.indicator_http import _model_json_bytes, indicator_response
 
 
 class Allowed:
@@ -23,6 +23,11 @@ class Allowed:
 
 class Payload(BaseModel):
     text: str
+
+
+class RowsPayload(BaseModel):
+    rows: list[Payload]
+    tail: str
 
 
 def request(disconnected: asyncio.Event) -> tuple[Request, IndicatorBudget, Authenticated]:
@@ -67,6 +72,18 @@ async def test_combined_chart_payload_exact_byte_limit(extra: int) -> None:
         assert len(result.body) == 2 * 1024 * 1024
         assert result.headers["cache-control"] == "private, no-store"
     assert not budget.busy
+
+
+async def test_chunked_serialization_matches_pydantic() -> None:
+    payload = RowsPayload(rows=[Payload(text=str(index)) for index in range(33)], tail="done")
+    body = await _model_json_bytes(payload, 2, lambda: 1)
+    assert body == payload.model_dump_json().encode()
+
+
+async def test_chunked_serialization_checks_deadline_at_slice_boundary() -> None:
+    payload = RowsPayload(rows=[Payload(text=str(index)) for index in range(16)], tail="done")
+    with pytest.raises(TimeoutError):
+        await _model_json_bytes(payload, 1, lambda: 1)
 
 
 @pytest.mark.parametrize("repeated_cancel", [False, True])

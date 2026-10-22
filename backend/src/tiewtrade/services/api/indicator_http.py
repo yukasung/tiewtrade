@@ -8,6 +8,7 @@ from typing import cast
 from fastapi import HTTPException, Request
 from fastapi.responses import Response
 from pydantic import BaseModel
+from pydantic_core import to_json
 
 from tiewtrade.core.money import MoneyError
 from tiewtrade.infra.crypto.indicator_cursor import CursorRejectedError, DatasetChangedError
@@ -23,6 +24,40 @@ from tiewtrade.services.api.indicator_settings import INDICATOR_SETTINGS
 
 class ClientDisconnectedError(asyncio.CancelledError):
     """A peer disconnect, distinct from cancellation of the server task."""
+
+
+def _json_value(value: object) -> bytes:
+    if isinstance(value, BaseModel):
+        value = value.model_dump(mode="json")
+    return to_json(value)
+
+
+async def _model_json_bytes(
+    result: BaseModel, deadline: float, clock: Callable[[], float]
+) -> bytes:
+    """Serialize bounded slices without sending a partial HTTP body."""
+    body = bytearray(b"{")
+    for field_index, name in enumerate(type(result).model_fields):
+        if field_index:
+            body.extend(b",")
+        body.extend(to_json(name))
+        body.extend(b":")
+        value = getattr(result, name)
+        if not isinstance(value, list):
+            body.extend(_json_value(value))
+            continue
+        body.extend(b"[")
+        for item_index, item in enumerate(value):
+            if item_index:
+                body.extend(b",")
+            body.extend(_json_value(item))
+            if (item_index + 1) % 16 == 0:
+                if clock() >= deadline:
+                    raise TimeoutError()
+                await asyncio.sleep(0)
+        body.extend(b"]")
+    body.extend(b"}")
+    return bytes(body)
 
 
 async def until_disconnect[T](request: Request, work: Awaitable[T]) -> T:
@@ -73,7 +108,11 @@ async def indicator_response(
         async with asyncio.timeout_at(deadline):
             async with budget.reserve(admission, who.user_id):
                 result = await until_disconnect(request, work(deadline))
-                body = result.model_dump_json().encode()
+                body = (
+                    await _model_json_bytes(result, deadline, clock)
+                    if isinstance(result, BaseModel)
+                    else result.model_dump_json().encode()
+                )
                 if clock() >= deadline:
                     raise TimeoutError()
                 if len(body) > INDICATOR_SETTINGS.response_bytes:

@@ -198,7 +198,10 @@ async def read_indicators(
     points: list[IndicatorPoint] = []
     refresh_first: datetime | None = None
     refresh_more = False
-    for batch in bounded_windows(calculation, timeframe):
+    # Keep cold asyncpg result materialization below the 100 ms event-loop budget.
+    # The builder keeps the 1,000-slot default; the latency-sensitive API reader
+    # uses the smaller size authorized by the F-11 performance plan.
+    for batch in bounded_windows(calculation, timeframe, 250):
         await query_budget(session, deadline)
         rows = {
             cast(datetime, row["open_at"]): row

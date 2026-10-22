@@ -68,6 +68,23 @@ C4 ส่วนรอบเต็ม, C6, S5/G7/D7 ส่วนที่เล�
 ผล Failed/Partial เดิมคงไว้; ไม่ได้รันทดสอบยาวใหม่ ไม่อนุมัติ production PREPARED
 และไม่ถือว่าผ่านเกณฑ์ Completed.
 
+Targeted follow-up 2026-10-22: ลดเฉพาะ API reader batch จาก 500 เป็น 250 ตาม
+performance plan หลังพบ async materialization 104–130ms; builder batch ยังคง 1,000.
+targeted regression 85 tests, Ruff, mypy ผ่าน. บน Linux candidate image ใหม่ cold1/warm5
+ตอบ 200/1,000 rows ครบ, 7 candle queries/request, lag สูงสุด 75.400ms และ RSS delta
+upper bound 66,772,992 bytes จึงผ่านงบเฉพาะ regression ที่ได้รับผลกระทบ:
+[หลักฐาน](profiling/release-20261022/r2-7-targeted-final250.json). C1 diagnostic ที่หยุดตาม
+คำสั่งมี readiness 16/16 ที่ T+240s แต่ไม่ถือว่าผ่าน C1; ไม่ใช้ผล targeted นี้แทน
+C2/C3/C5/C4/C6 หรือ F-12 V-17 รอบเต็ม และไม่เปลี่ยน production rollout status.
+
+Final candidate checkpoint 2026-10-22: Critical/High diff review ไม่พบ finding;
+Ruff check และ format 493 files, mypy 450 source files และ import contracts 7/7 ผ่าน.
+backend regression collect 2,979 tests และเดินถึง 100% โดยไม่มี assertion failure;
+มี setup error สองรายการใน `tests/test_health.py` เพราะคำสั่งแรกไม่ได้ส่ง
+`TIEWTRADE_REDIS_URL_API`. หลังระบุ Redis URL ของ isolated test stack แล้วรันซ้ำ
+ไฟล์ที่ได้รับผลกระทบผ่าน 3/3. จึงเก็บผลของ tests อื่นจากรอบเต็มไว้และไม่รันทั้งชุดซ้ำ
+โดยไม่มีผลกระทบใหม่ ตาม testing standard หัวข้อ 7. มีเพียง Starlette deprecation warnings เดิม.
+
 ## A–D implementation / NC-38 corrected — 2026-10-12
 
 แก้สองข้อจากรีวิว A–D ตามคำสั่งเจ้าของแล้ว: cleanup มี bounded abort/quarantine

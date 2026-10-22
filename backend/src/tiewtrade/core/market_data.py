@@ -134,10 +134,14 @@ def slot_count(window: CandleWindow, timeframe: Timeframe) -> int:
     return count_slots(window.start, window.end, timeframe)
 
 
-def bounded_windows(window: CandleWindow, timeframe: Timeframe) -> Iterator[CandleWindow]:
+def bounded_windows(
+    window: CandleWindow, timeframe: Timeframe, limit: int = 1000
+) -> Iterator[CandleWindow]:
+    if not 1 <= limit <= 1000:
+        raise ValueError("invalid window limit")
     cursor = window.start
     while cursor < window.end:
-        end = min(advance(align_ceil(cursor, timeframe), timeframe, 1000), window.end)
+        end = min(advance(align_ceil(cursor, timeframe), timeframe, limit), window.end)
         yield CandleWindow(cursor, end)
         cursor = end
 

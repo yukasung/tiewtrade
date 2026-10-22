@@ -1,8 +1,10 @@
 """Authenticated, read-only F-11 API."""
 
+import asyncio
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from time import monotonic
 from typing import cast
 from uuid import UUID
 
@@ -253,26 +255,31 @@ async def read_history(
             start=result.refresh_first,
             end=min(advance(result.refresh_first, claims.timeframe, 1000), claims.calculation_end),
         )
-    rows = [
-        IndicatorPointView(
-            open_at=point.open_at,
-            seed_open_at=point.seed_open_at,
-            finality=point.finality.value if point.finality else None,
-            values={
-                name: IndicatorValueView(
-                    value=value.value.as_text()
-                    if isinstance(value.value, Scalar)
-                    else value.value.as_parts()["amount"]
-                    if value.value is not None
-                    else None,
-                    unit=value.value.currency if isinstance(value.value, Money) else None,
-                    status=value.status.value,
-                )
-                for name, value in point.values.items()
-            },
+    rows: list[IndicatorPointView] = []
+    for index, point in enumerate(result.points, start=1):
+        rows.append(
+            IndicatorPointView(
+                open_at=point.open_at,
+                seed_open_at=point.seed_open_at,
+                finality=point.finality.value if point.finality else None,
+                values={
+                    name: IndicatorValueView(
+                        value=value.value.as_text()
+                        if isinstance(value.value, Scalar)
+                        else value.value.as_parts()["amount"]
+                        if value.value is not None
+                        else None,
+                        unit=value.value.currency if isinstance(value.value, Money) else None,
+                        status=value.status.value,
+                    )
+                    for name, value in point.values.items()
+                },
+            )
         )
-        for point in result.points
-    ]
+        if index % 16 == 0:
+            if monotonic() >= deadline:
+                raise TimeoutError()
+            await asyncio.sleep(0)
     view = IndicatorHistoryView(
         source=SOURCE,
         base=claims.base,

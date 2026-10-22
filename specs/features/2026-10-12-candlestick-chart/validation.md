@@ -45,6 +45,18 @@ V-17 ยังเป็น Pending Full Validation เพราะ F-12 workload
 ที่เหลือยังไม่ครบ. ช่องว่างแท่งสดจาก preview writer unavailable บันทึกแยก ไม่ใช้ deep-history
 pass กลบ freshness risk.
 
+ผลติดตาม 2026-10-22 อยู่ใน [live-preview recovery](evidence/2026-10-22-live-preview-recovery.md):
+development containers ถูกสร้างจาก base Compose โดยไม่มี chart override ทำให้ candle supervisor
+ไม่เริ่ม; recreate ทั้ง market-data/API/frontend ด้วย override เดิมแล้วได้ 16/16 live series.
+warning ทั้ง price/candle เกิดหนึ่งครั้งหลัง macOS ตื่นจาก Deep Idle (power log ตรงเวลา),
+จากนั้น supervisor reacquire/bootstrap เอง; snapshot หลังเหตุการณ์ยืนยัน connected/bootstrapped,
+lease ต่ออายุและ preview อายุ 0.29 วินาที โดยไม่มี warning ซ้ำหลัง recovery.
+browser session จริงตรวจ pan แล้วขอหน้าเก่า 1,000 rows ด้วย cursor จริง, รักษา viewport,
+reset กลับช่วงล่าสุดโดยไม่ยิง API และ recovery จาก controlled 429 เคารพ Retry-After
+ก่อน manual retry ไปยัง API จริงสำเร็จ. เมื่อรวมกับ browser 8 TF และ API traversal เดิม
+V-H8 และ history-window V-H1..8 ผ่านแล้ว. ผลนี้ไม่แทน V-17/workload, soak,
+release gates หรือ owner manual acceptance.
+
 เกณฑ์และผลตรวจการกู้กราฟหลัง history error อยู่ใน
 [amendment ที่อนุมัติ](chart-error-recovery-amendment.md); ไม่ทดแทน full validation เดิม.
 
