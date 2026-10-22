@@ -33,27 +33,66 @@ AS_OF = WINDOW.end + SPAN
 IDENTITY = {"generation_id": "gen-1", "source": "primary_spot"}
 
 
-@pytest.mark.parametrize("timeframe", [Timeframe.W1, Timeframe.MN1])
-def test_calendar_timeframe_checkpoint_round_trip(timeframe: Timeframe) -> None:
-    start = align_floor(datetime(2026, 1, 1, tzinfo=UTC), timeframe)
-    end = advance(start, timeframe, 2)
-    stream = IndicatorStream("BTC", "USDT", timeframe, end)
-    for opened in (start, advance(start, timeframe, 1)):
+def _calendar_checkpoint(
+    timeframe: Timeframe, anchor: datetime
+) -> tuple[IndicatorStream, dict[str, object], CandleWindow]:
+    start = align_floor(anchor, timeframe)
+    calculation = CandleWindow(start, advance(start, timeframe, 2))
+    stream = IndicatorStream("BTC", "USDT", timeframe, calculation.end)
+    for opened in (calculation.start, advance(calculation.start, timeframe, 1)):
         stream.feed(opened, None, None)
     payload = encode_checkpoint(
-        stream, **IDENTITY, calculation=CandleWindow(start, end), next_open_at=end
+        stream, **IDENTITY, calculation=calculation, next_open_at=calculation.end
     )
+    return stream, payload, calculation
+
+
+@pytest.mark.parametrize("timeframe", [Timeframe.W1, Timeframe.MN1])
+def test_calendar_timeframe_checkpoint_round_trip(timeframe: Timeframe) -> None:
+    stream, payload, calculation = _calendar_checkpoint(timeframe, datetime(2026, 1, 1, tzinfo=UTC))
     restored = decode_checkpoint(
         payload,
         **IDENTITY,
         base="BTC",
         quote="USDT",
         timeframe=timeframe,
-        as_of=end,
-        calculation=CandleWindow(start, end),
-        next_open_at=end,
+        as_of=calculation.end,
+        calculation=calculation,
+        next_open_at=calculation.end,
     )
     assert restored.export_state() == stream.export_state()
+
+
+@pytest.mark.parametrize("timeframe", [Timeframe.W1, Timeframe.MN1])
+@pytest.mark.parametrize("fault", ["skipped", "repeated", "misaligned"])
+def test_calendar_checkpoint_rejects_nonconsecutive_or_misaligned_boundary(
+    timeframe: Timeframe, fault: str
+) -> None:
+    _, payload, calculation = _calendar_checkpoint(timeframe, datetime(2026, 1, 15, tzinfo=UTC))
+    next_open_at = calculation.end
+    if fault == "skipped":
+        payload["last_open_at"] = calculation.end.isoformat(timespec="microseconds")
+    elif fault == "repeated":
+        payload["last_open_at"] = calculation.start.isoformat(timespec="microseconds")
+    else:
+        next_open_at = calculation.start + timedelta(seconds=1)
+        payload["next_open_at"] = next_open_at.isoformat(timespec="microseconds")
+    expected_error = (
+        "invalid checkpoint boundary"
+        if fault == "misaligned"
+        else "checkpoint skips or repeats a slot"
+    )
+    with pytest.raises(CheckpointCodecError, match=expected_error):
+        decode_checkpoint(
+            payload,
+            **IDENTITY,
+            base="BTC",
+            quote="USDT",
+            timeframe=timeframe,
+            as_of=calculation.end,
+            calculation=calculation,
+            next_open_at=next_open_at,
+        )
 
 
 def _slot(index: int) -> tuple[datetime, Candle | None, datetime | None]:

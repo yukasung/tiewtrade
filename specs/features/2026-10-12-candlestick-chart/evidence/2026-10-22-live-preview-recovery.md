@@ -152,3 +152,129 @@ owner manual acceptance ที่ยังค้าง.
 จึงยืนยันซ้ำว่า development Chart ใช้ server-side session และ data path จริงได้หลัง recovery.
 warning สองข้อความยังคงถูกจัดประเภทเป็น host-sleep transient ที่ recover ได้ตามหลักฐานด้านบน;
 ไม่เปลี่ยน lease/fencing timeout และผลนี้ไม่แทน V-17/owner manual/release gates.
+
+## Development-closure automation — 2026-10-22
+
+เพิ่ม automated evidence สำหรับช่องว่างที่ยังระบุเป็น Partial/Not Run ใน TF-04..13 และ TW-07
+บน branch `fix/f12-development-closure`, base source `4d2eec4c58a5`. การเปลี่ยนแปลงรอบนี้
+เพิ่ม tests เท่านั้น ไม่เปลี่ยน production runtime, schema, trading logic หรือ safety bounds.
+
+หลักฐานที่เพิ่ม:
+
+- PostgreSQL migration tests ตรวจ checksum แถวเดิมข้าม `0025 -> 0026`, inventory/grants
+  ของ monthly partitions ทุกเดือนใน five-year retention ถึง horizon, invalid casing/open/end
+  ของ `1w`/`1M` และ SQL/Python schedule parity ครบ 8 TF ที่ leap/year edges;
+- core indicator test ตรวจ weekly warm-up 201 slots ถึง EMA200 และ monthly 60 slots ยัง
+  WARM_UP โดยไม่เติมข้อมูลหรือเปลี่ยน Money/Quantity arithmetic;
+- checkpoint codec test ปฏิเสธ W1/MN1 ที่ skipped, repeated หรือ misaligned;
+- mocked bootstrap test ยืนยัน effective F-38 inventory เป็น 16 series และ state-machine gap
+  coalescing ใช้ timeframe เดิมสำหรับ H1/W1/MN1 โดยไม่ประกาศ preview เป็น CLOSED;
+- authenticated candle-page route tests ครบ 8 TF; `1W`/`1mo` ยังคงถูกปฏิเสธ;
+- frontend E2E เพิ่ม computed-style assertions ของ Admin Template controls และยืนยันว่า
+  candle-only page ไม่เรียก `/indicators`.
+
+ผล targeted checks ของ source เดียวกันก่อนบันทึก:
+
+- backend pure affected suites (`test_candle_realtime.py`, `test_indicators.py`,
+  `test_codec.py`) ผ่าน;
+- candle authenticated route suite **24 passed**;
+- migration module บน isolated PostgreSQL ฉบับสุดท้ายผ่าน **18 passed**; ชุด tests ใหม่
+  โดยตรงผ่าน **15 passed**. รอบแรกหลัง Docker daemon กลับมาพบ downgrade-guard เดิม
+  1 case เห็น row count เป็น 0 หลังการรันที่ถูกขัดจังหวะ; case เดียวกันผ่านเมื่อรันแยก
+  และ clean-state full module ผ่าน 18/18 จึงจัดเป็น fixture state จากรอบที่ถูกตัด ไม่ใช่
+  production/migration regression และยังเก็บผลล้มนี้ไว้ในบันทึก;
+- chart-related backend selection ผ่านทุก assertion; `test_chart_routes.py` ที่เคย setup
+  error เพราะ Redis ไม่มี host port ผ่าน **16 passed** หลังใช้ Redis แยกที่ port 56379;
+- frontend chart selection ผ่าน **71 tests / 8 files**, type-check และ ESLint ผ่าน;
+- Ruff check/format ของ backend files ที่เปลี่ยนและ `git diff --check` ผ่าน.
+
+Chromium จริงจาก Linux container เข้า `http://localhost:5173` ผ่าน development stack,
+สมัคร disposable account ด้วยแบบฟอร์มจริงและได้ server-side session. ผลสุดท้าย:
+
+- URL `/chart`, renderer **7 canvases**, options ครบ
+  `1m/5m/15m/1h/4h/1d/1w/1M`;
+- authenticated candle pages ของ `1w` และ `1M` ตอบ HTTP 200;
+- select computed style เป็น `appearance: none`, border `rgb(208, 213, 221)`, radius
+  `8px`, height `44px`; focus border `rgb(156, 185, 255)`;
+- disabled button เป็น disabled จริง, cursor `not-allowed`, opacity `0.5`, radius `8px`;
+- viewport 375/768/1440 ไม่มี document horizontal overflow หลัง responsive layout settle
+  และ canvas ยังมองเห็นได้;
+- ไม่มี page error และ request log ไม่มี Binance, order, trading-account-use หรือ
+  `/indicators` request.
+
+รอบนี้เพิ่มหลักฐานส่วนใหญ่ แต่ review ถัดมาพบว่า TF-10 ยังขาด integration recovery ครบ flow
+และ TF-13 ยังขาด chart/indicator API matrix; ทั้งสองช่องว่างถูกปิดใน post-review closure
+ด้านล่าง. F-12 ยังคง **In Progress** เพราะ V-17/workload/resource/endurance กับ release gates
+ยังเป็น **Pending Full Validation** ตามกำหนดเดิม. ยังไม่มี commit หรือ push ในรอบนี้.
+
+หลังตรวจเสร็จลบ isolated database `tiewtrade_f12_validation`, temporary Redis container
+และ browser-validation images ที่สร้างในรอบนี้แล้ว; ไม่ลบหรือแก้ข้อมูลใน development database.
+
+## Owner Manual Acceptance — 2026-10-22
+
+เปิด development stack ด้วย `compose.yaml` + `compose.chart.dev.yaml`; API health ตอบ 200,
+frontend `/chart` ตอบ 200 และ services ที่เกี่ยวข้อง healthy. เปิดหน้า Chart ใน Google Chrome
+ให้เจ้าของตรวจด้วย session จริง แล้วเจ้าของยืนยันในบทสนทนาว่า **“ตรวจแล้วผ่าน”**.
+
+บันทึกผล owner manual เป็น Passed โดยใช้ร่วมกับ browser/network evidence ด้านบน. F-12
+ยังคง **In Progress** เพราะ V-17 workload/resource/endurance และ release gates ที่พึ่ง V-17
+ยังเป็น Pending Full Validation; branch ปัจจุบันยังไม่ได้ commit หรือ push.
+
+## Review/refactor checkpoint — 2026-10-22
+
+รีวิวเฉพาะ tests ที่เพิ่ม/แก้ใน development closure แล้ว refactor โดยไม่แตะ production code:
+ใช้ `Timeframe` enum แทน timeframe strings ซ้ำ, reuse candle fixture และ calendar schedule,
+รวม checkpoint setup, รวม SQL candle insert/checksum helper, ลด intermediate collections และ
+เปลี่ยน finality assertion ที่ซ้ำค่าต้นทางให้ตรวจ state ที่ supervisor เก็บจริง. ฝั่ง E2E จัด
+computed-style assertion ให้อ่านง่ายและรวม forbidden-request scan โดยคงเงื่อนไขเดิม.
+
+ผลหลัง refactor: backend affected pure suites ผ่าน, migration **18 passed**, authenticated
+candle routes **24 passed**, Ruff ทั้ง **493 files**, mypy **450 files** และ import contracts
+**7/7** ผ่าน. Frontend ESLint/typecheck ผ่านและ Playwright compile/discovery พบ Chart stories
+ครบ **7 tests**. ไม่รัน browser flow ซ้ำเพราะไม่มี runtime/UI behavior เปลี่ยน และ real-browser
+หลักฐานก่อน refactor ยังใช้ source runtime เดิม. ลบ PostgreSQL/Redis ชั่วคราวหลังตรวจแล้ว.
+
+## Post-review TF-10/TF-13 closure — 2026-10-22
+
+แก้ findings จาก deep review โดยเพิ่มหลักฐานที่ขาดโดยไม่เปลี่ยน production code:
+
+- TF-10: actual-role PostgreSQL integration 3 cases สำหรับ H1/W1/MN1 จำลอง preview gap,
+  disconnect, reconnect/bootstrap และให้ fake REST source ผ่าน ingestion จริงจน demand เป็น
+  COMPLETE; ตรวจว่าทุก request ใช้ timeframe เดิม, จำนวน `open_at` ไม่ซ้ำ, จำนวนแถวตรง
+  calendar window และทั้ง preview/REST ไม่ถูกประกาศ CLOSED;
+- TF-13: authenticated chart-history และ indicator routes รับ `1w`/`1M` ถึง controller
+  boundary และปฏิเสธ `1W`, `1mo`, trailing-space ด้วย sanitized `INPUT_REJECTED` รวม 8 cases;
+- แก้ migration grant assertion ให้ `bool_and` ตรวจ market-data worker ครบทุกสิทธิ์
+  SELECT/INSERT/UPDATE/DELETE และแยก codec misalignment ให้อยู่ใน calculation window.
+
+ผลตรวจบน isolated PostgreSQL/Redis: TF-10 ใหม่ **3 passed**, TF-13 ใหม่ **8 passed**,
+codec **88 passed**, focused migration grant regressionผ่าน; Ruff check/format และ
+`git diff --check` ผ่าน. การลองรัน chart-route module ทั้งไฟล์ต่อจาก fresh isolated DB พบ
+prepared-indicator cases เดิม setup error `SOURCE_BOOTSTRAP_REQUIRED` เพราะ source-proof
+bootstrap ของ full-suite ordering ยังไม่ได้รัน; tests ใหม่ทั้ง 11 cases ผ่านแยกและไม่ถูกนับกลบ
+ด้วย setup error นี้. ลบฐาน/Redis ชั่วคราวและคืน test container เป็นสถานะเดิมหลังตรวจ.
+
+## Candidate-gate attempt — 2026-10-22
+
+รัน candidate gates กับ uncommitted source บน branch `fix/f12-development-closure`
+โดยใช้ containers และ PostgreSQL/Redis แยกจาก development stack:
+
+- backend Ruff check/format, mypy **450 files** และ import contracts **7/7** ผ่าน;
+- frontend ESLint/typecheck ผ่าน, Vitest **246 passed**, production build ผ่าน;
+- exported OpenAPI และ generated TypeScript ตรงกับไฟล์ใน repo;
+- full backend รอบแรกพบว่า
+  `0030_supported_pairs_reduction.downgrade()` เปลี่ยน constraint ของ `market_candles`
+  โดยไม่เปิด source-maintenance scope และ PostgreSQL ปฏิเสธด้วย
+  `SOURCE_MAINTENANCE_SCOPE_REQUIRED`; เจ้าของอนุมัติขยาย scope ให้แก้ migration 0030;
+- เพิ่ม maintenance scope ใน downgrade และ actual-PostgreSQL regression ที่ยืนยันว่า event
+  trigger เปิดอยู่, downgrade ขยาย constraint ได้ และ upgrade คืน head; focused migration
+  regression ผ่าน **3 passed**;
+- full run บนฐานที่ใช้ซ้ำพบ resource/setup errors ซึ่งผ่านทันทีเมื่อ rerun **3 passed**;
+  ไม่ใช้ผลนั้นเป็น acceptance. จากนั้นสร้าง PostgreSQL/Redis ชั่วคราวใหม่, bootstrap และ
+  migrate จาก clean state แล้ว full backend ผ่าน exit 0: **3017 passed, 1 skipped,
+  2 deselected** ใน 501.46 วินาที.
+
+รอบ diagnostic ที่ย้ายเฉพาะ `backend/` เข้า container ไม่ใช้เป็น acceptance result เพราะ
+repo-relative fixtures หา `specs/`, `.github/`, `config/` และไฟล์ root ไม่พบ; บันทึกไว้เป็น
+harness failure เท่านั้น. V-18 ยังคง **Partial** เฉพาะเพราะ branch ยังไม่ commit/push/CI และ
+ส่วนที่พึ่ง V-17 ยังเป็น Pending Full Validation; local candidate gates ที่รันในรอบนี้ผ่านแล้ว.

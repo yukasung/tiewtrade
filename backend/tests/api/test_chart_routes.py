@@ -1,6 +1,6 @@
 from dataclasses import replace
 from datetime import datetime, timedelta
-from typing import Any
+from typing import Any, cast
 from uuid import uuid4
 
 import pytest
@@ -15,10 +15,12 @@ from tests.infra.indicators.test_claims import builder_engine as builder_engine
 from tests.infra.indicators.test_claims import prepared as prepared
 from tests.infra.indicators.test_source import active as active
 from tests.infra.market_data.test_chart_preview import observation
+from tiewtrade.core.market_data import Timeframe
 from tiewtrade.infra.db import DatabaseRole, create_engine_for
 from tiewtrade.infra.db.session import market_data_session
 from tiewtrade.infra.market_data.candle_preview import acquire, connection, flush
 from tiewtrade.infra.realtime.admission import AdmissionOutcome
+from tiewtrade.services.api.indicator_read_controller import IndicatorHistoryView
 
 
 @pytest.fixture(autouse=True)
@@ -80,6 +82,54 @@ def test_chart_auth_csrf_and_sanitized_input(client: TestClient) -> None:
     )
     assert rejected_origin.status_code == 403
     assert rejected_origin.json() == {"detail": "CSRF_ORIGIN_REJECTED"}
+
+
+@pytest.mark.parametrize("timeframe", ["1w", "1M"])
+def test_calendar_timeframes_are_accepted_by_authenticated_chart_and_indicator_routes(
+    timeframe: str,
+    client: TestClient,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from tiewtrade.services.api import chart_routes, indicator_routes
+
+    observed: list[tuple[str, Timeframe | None]] = []
+
+    class Serialized:
+        def model_dump_json(self) -> str:
+            return "{}"
+
+    async def chart_read(
+        query: object, _request: object, _who: object, _deadline: float
+    ) -> chart_routes.ChartHistoryView:
+        observed.append(("chart", cast(Any, query).timeframe))
+        return cast(chart_routes.ChartHistoryView, Serialized())
+
+    async def indicator_read(
+        query: object, _request: object, _who: object, _deadline: float
+    ) -> IndicatorHistoryView:
+        observed.append(("indicator", cast(Any, query).timeframe))
+        return cast(IndicatorHistoryView, Serialized())
+
+    monkeypatch.setattr(chart_routes, "_history", chart_read)
+    monkeypatch.setattr(indicator_routes, "_read", indicator_read)
+    register(client)
+    params = {"base": "BTC", "quote": "USDT", "timeframe": timeframe}
+    chart = client.get("/market-data/chart/history", params=params)
+    indicator = client.get("/market-data/indicators", params=params)
+    assert chart.status_code == indicator.status_code == 200
+    expected = Timeframe(timeframe)
+    assert observed == [("chart", expected), ("indicator", expected)]
+
+
+@pytest.mark.parametrize("timeframe", ["1W", "1mo", "1m "])
+@pytest.mark.parametrize("path", ["/market-data/chart/history", "/market-data/indicators"])
+def test_chart_and_indicator_routes_reject_noncanonical_calendar_timeframes(
+    path: str, timeframe: str, client: TestClient
+) -> None:
+    register(client)
+    response = client.get(path, params={"base": "BTC", "quote": "USDT", "timeframe": timeframe})
+    assert response.status_code == 422
+    assert response.json() == {"detail": "INPUT_REJECTED"}
 
 
 async def test_live_snapshot_is_role_read_only_and_admission_fails_closed(

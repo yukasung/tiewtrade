@@ -1,6 +1,8 @@
 from collections.abc import AsyncIterator
 from dataclasses import replace
 from datetime import UTC, datetime, timedelta
+from typing import cast
+from unittest.mock import AsyncMock
 from uuid import uuid4
 
 import pytest
@@ -12,10 +14,13 @@ from tiewtrade.core.candle_preview import CandleObservation
 from tiewtrade.core.market_data import (
     Candle,
     CandleFinality,
+    CandleSeries,
+    CandleWindow,
     Timeframe,
     advance,
     align_floor,
     next_open,
+    slot_count,
 )
 from tiewtrade.core.money import Money, Quantity
 from tiewtrade.infra.db import DatabaseRole, create_engine_for
@@ -28,6 +33,13 @@ from tiewtrade.infra.market_data.candle_preview import (
     flush,
 )
 from tiewtrade.infra.market_data.catalog import PAIRS
+from tiewtrade.infra.realtime.notifications import RedisNotifications
+from tiewtrade.services.market_data import candle_realtime, ingestion
+from tiewtrade.services.market_data.candle_realtime import CandleSupervisor
+from tiewtrade.venues.candle_streams import FeedCandle
+from tiewtrade.venues.candles import CandlePage
+from tiewtrade.venues.fake import FakeCandleFeed
+from tiewtrade.venues.symbols import Symbol
 
 
 def observation() -> CandleObservation:
@@ -194,8 +206,6 @@ async def test_ended_demand_is_transactional_and_never_resets_a_worker_claim(
     market_data_engine: AsyncEngine,
     migrator_engine: AsyncEngine,
 ) -> None:
-    from tiewtrade.core.market_data import CandleWindow
-
     async with migrator_engine.begin() as c:
         await c.execute(
             text("UPDATE market_candle_feed_state SET lease_until=clock_timestamp(),metadata='{}'")
@@ -257,6 +267,156 @@ async def test_competing_owners_have_exactly_one_winner(
     assert sum(result is not None for result in results) == 1
 
 
+@pytest.mark.parametrize("timeframe", [Timeframe.H1, Timeframe.W1, Timeframe.MN1])
+async def test_reconnect_bootstrap_recovers_same_timeframe_without_duplicates_or_closed_rows(
+    timeframe: Timeframe,
+    market_data_engine: AsyncEngine,
+    migrator_engine: AsyncEngine,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from tests.services.market_data.test_ingestion import FullSource
+    from tiewtrade.services.market_data.ingestion import run_round
+
+    class RecordingSource(FullSource):
+        def __init__(self) -> None:
+            super().__init__()
+            self.timeframes: list[Timeframe] = []
+
+        async def fetch_candles(
+            self,
+            symbol: Symbol,
+            requested_timeframe: Timeframe,
+            start: datetime,
+            end: datetime,
+            limit: int,
+        ) -> CandlePage:
+            self.timeframes.append(requested_timeframe)
+            return await super().fetch_candles(symbol, requested_timeframe, start, end, limit)
+
+    async with migrator_engine.begin() as connection:
+        await connection.execute(
+            text(
+                """UPDATE market_candle_feed_state SET lease_until=clock_timestamp(),
+                metadata='{}'"""
+            )
+        )
+        await connection.execute(text("DELETE FROM market_candle_preview"))
+    async with market_data_session(market_data_engine) as session:
+        lease = await acquire(session, uuid4())
+        assert lease is not None
+
+    notifications = cast(RedisNotifications, AsyncMock())
+    state = CandleSupervisor(market_data_engine, FakeCandleFeed(), notifications)
+    state.lease = lease
+    await state._connection(True)
+    state.epoch = 1
+
+    now = datetime.now(UTC)
+    current_open = align_floor(now, timeframe)
+    first_open = advance(current_open, timeframe, -3)
+    original = observation()
+    for sequence, opened in enumerate((first_open, current_open), start=1):
+        candle = replace(
+            original.candle,
+            timeframe=timeframe,
+            open_at=opened,
+            end_at=next_open(opened, timeframe),
+        )
+        state.observe(
+            FeedCandle(
+                1,
+                replace(
+                    original,
+                    candle=candle,
+                    event_at=now,
+                    received_at=now,
+                    trade_count=sequence,
+                    first_trade_id=1,
+                    last_trade_id=sequence,
+                ),
+            )
+        )
+    await state._flush()
+
+    await state._connection(False, "VENUE_UNAVAILABLE")
+    state.epoch = None
+    await state._connection(True)
+    state.epoch = 2
+    series = CandleSeries("BTC", "USDT", timeframe)
+    monkeypatch.setattr(candle_realtime, "SERIES", (series,))
+    await state._bootstrap(2)
+
+    async with market_data_session(market_data_engine) as session:
+        await ingestion._seed_initial_demand(session)
+        await session.execute(
+            """UPDATE market_candle_demand
+            SET next_attempt_at=clock_timestamp()+interval '1 hour'"""
+        )
+        await session.execute(
+            """UPDATE market_candle_demand SET next_attempt_at='-infinity'
+            WHERE base=:base AND quote=:quote AND timeframe=:timeframe""",
+            {"base": series.base, "quote": series.quote, "timeframe": timeframe.value},
+        )
+        demand = (
+            (
+                await session.execute(
+                    """SELECT desired_start,desired_end FROM market_candle_demand
+                    WHERE base=:base AND quote=:quote AND timeframe=:timeframe""",
+                    {"base": series.base, "quote": series.quote, "timeframe": timeframe.value},
+                )
+            )
+            .mappings()
+            .one()
+        )
+    recovery_window = CandleWindow(demand["desired_start"], demand["desired_end"])
+
+    source = RecordingSource()
+    await run_round(market_data_engine, source, "preview-recovery", now)
+
+    async with migrator_engine.connect() as connection:
+        demand_status: str = (
+            await connection.execute(
+                text(
+                    """SELECT status FROM market_candle_demand
+                    WHERE base=:base AND quote=:quote AND timeframe=:timeframe"""
+                ),
+                {"base": series.base, "quote": series.quote, "timeframe": timeframe.value},
+            )
+        ).scalar_one()
+        candle_count, unique_count, all_unconfirmed = (
+            await connection.execute(
+                text(
+                    """SELECT count(*),count(DISTINCT open_at),
+                    bool_and(finality='UNCONFIRMED') FROM market_candles
+                    WHERE base=:base AND quote=:quote AND timeframe=:timeframe"""
+                ),
+                {"base": series.base, "quote": series.quote, "timeframe": timeframe.value},
+            )
+        ).one()
+        preview_finality: str = (
+            await connection.execute(
+                text(
+                    """SELECT finality FROM market_candle_preview
+                    WHERE base=:base AND quote=:quote AND timeframe=:timeframe"""
+                ),
+                {"base": series.base, "quote": series.quote, "timeframe": timeframe.value},
+            )
+        ).scalar_one()
+        connected, bootstrapped = (
+            await connection.execute(
+                text("SELECT connected,bootstrapped FROM market_candle_feed_state")
+            )
+        ).one()
+
+    expected_count = slot_count(recovery_window, timeframe)
+    assert demand_status == "COMPLETE"
+    assert source.timeframes and set(source.timeframes) == {timeframe}
+    assert candle_count == unique_count == expected_count
+    assert all_unconfirmed is True
+    assert preview_finality == CandleFinality.OPEN.value
+    assert connected is True and bootstrapped is True
+
+
 @pytest.mark.parametrize("tf", [Timeframe.M1, Timeframe.W1, Timeframe.MN1])
 async def test_chart_overlay_bridges_rest_lag_preserves_real_gap_and_rest_precedence(
     tf: Timeframe,
@@ -264,7 +424,6 @@ async def test_chart_overlay_bridges_rest_lag_preserves_real_gap_and_rest_preced
     migrator_engine: AsyncEngine,
     api_engine: AsyncEngine,
 ) -> None:
-    from tiewtrade.core.market_data import CandleWindow
     from tiewtrade.infra.db.session import indicator_read_session
     from tiewtrade.infra.market_data.chart_overlay import overlay_preview
     from tiewtrade.infra.market_data.storage import read_candles

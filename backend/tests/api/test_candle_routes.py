@@ -6,6 +6,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy import text
 
 from tests.api.conftest import csrf_headers, register
+from tiewtrade.core.market_data import Timeframe
 from tiewtrade.infra.db import DatabaseRole, create_engine_for
 from tiewtrade.infra.db.session import market_data_session
 
@@ -44,16 +45,16 @@ def test_chart_pages_require_authentication(client: TestClient) -> None:
     )
 
 
-@pytest.mark.parametrize("timeframe", ["1m", "5m", "15m", "1h", "4h", "1d"])
+@pytest.mark.parametrize("timeframe", list(Timeframe))
 def test_chart_pages_cover_three_months_with_bounded_pages(
-    client: TestClient, timeframe: str
+    client: TestClient, timeframe: Timeframe
 ) -> None:
     register(client)
     params = {"base": "BTC", "quote": "USDT", "timeframe": timeframe}
     result = client.get("/market-data/candles/pages", params=params)
     assert result.status_code == 200, result.text
     page = result.json()
-    assert page["earliest_known"] is True
+    assert page["earliest_known"] is (timeframe not in {Timeframe.W1, Timeframe.MN1})
     assert page["display_start"] < page["requested"]["end"]
     if page["older_before"]:
         older = client.get(

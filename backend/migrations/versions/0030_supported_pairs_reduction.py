@@ -173,6 +173,9 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
+    # The protected candle source rejects constraint DDL outside the same
+    # maintenance scope used by the forward catalog migration.
+    op.execute("SELECT public.begin_indicator_source_maintenance()")
     for table, name in (
         ("market_candles", "market_candles_check"),
         ("market_candle_demand", "market_candle_demand_check"),

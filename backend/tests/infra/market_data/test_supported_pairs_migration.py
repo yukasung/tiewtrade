@@ -17,13 +17,53 @@ def _run(migration: Any, direction: str, connection: Connection) -> None:
         getattr(migration, direction)()
 
 
-async def test_catalog_migration_failure_rolls_back_every_change(
-    migrator_engine: AsyncEngine, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    migration = load_python_file(
+def _migration() -> Any:
+    return load_python_file(
         Path(__file__).resolve().parents[3] / "migrations/versions",
         "0030_supported_pairs_reduction.py",
     )
+
+
+async def test_catalog_downgrade_uses_source_maintenance_for_protected_candles(
+    migrator_engine: AsyncEngine,
+) -> None:
+    migration = _migration()
+    downgraded = False
+    try:
+        async with migrator_engine.begin() as connection:
+            enabled: str = (
+                await connection.execute(
+                    text(
+                        "SELECT evtenabled::text FROM pg_event_trigger "
+                        "WHERE evtname='tiewtrade_indicator_trigger_ddl'"
+                    )
+                )
+            ).scalar_one()
+            assert enabled == "O"
+            await connection.run_sync(lambda sync: _run(migration, "downgrade", sync))
+        downgraded = True
+
+        async with migrator_engine.connect() as connection:
+            constraint: str = (
+                await connection.execute(
+                    text(
+                        "SELECT pg_get_constraintdef(oid) FROM pg_constraint "
+                        "WHERE conname='market_candles_check' "
+                        "AND conrelid='market_candles'::regclass"
+                    )
+                )
+            ).scalar_one()
+            assert "SOL" in constraint
+    finally:
+        if downgraded:
+            async with migrator_engine.begin() as connection:
+                await connection.run_sync(lambda sync: _run(migration, "upgrade", sync))
+
+
+async def test_catalog_migration_failure_rolls_back_every_change(
+    migrator_engine: AsyncEngine, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    migration = _migration()
     original_digests = cast(Callable[[], dict[str, tuple[int, str]]], migration._supported_digests)
 
     try:
