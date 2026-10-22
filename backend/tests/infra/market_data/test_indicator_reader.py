@@ -86,7 +86,10 @@ async def test_fetch_sizes_and_canonical_digest(
         for size in (16, 64, 1000):
 
             def windows(
-                value: CandleWindow, tf: Timeframe, size: int = size
+                value: CandleWindow,
+                tf: Timeframe,
+                _limit: int = 250,
+                size: int = size,
             ) -> Iterator[CandleWindow]:
                 cursor = value.start
                 while cursor < value.end:
@@ -148,7 +151,7 @@ async def test_checkpoint_replay_matches_database_full_scan(
     finally:
         await md_engine.dispose()
 
-    def windows(value: CandleWindow, tf: Timeframe) -> Iterator[CandleWindow]:
+    def windows(value: CandleWindow, tf: Timeframe, _limit: int = 250) -> Iterator[CandleWindow]:
         cursor = value.start
         while cursor < value.end:
             stop = min(cursor + fetch_size * tf.span, value.end)

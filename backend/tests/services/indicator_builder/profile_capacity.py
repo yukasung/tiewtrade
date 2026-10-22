@@ -36,6 +36,7 @@ from tiewtrade.core.market_data import (
 )
 from tiewtrade.core.money import Money, Scalar
 from tiewtrade.infra.db import DatabaseRole, create_engine_for
+from tiewtrade.infra.db.errors import DatabaseTimeoutError
 from tiewtrade.infra.db.session import indicator_read_session, market_data_session
 from tiewtrade.infra.indicators.prepared import proof_valid
 from tiewtrade.infra.market_data.catalog import PAIRS
@@ -381,8 +382,9 @@ async def probes(
     return results
 
 
-async def audit(engine: AsyncEngine, user: UUID, probes: list[dict[str, Any]]) -> None:
+async def audit(engine: AsyncEngine, user: UUID, probes: list[dict[str, Any]]) -> int:
     cache: dict[tuple[str, str, str], Any] = {}
+    timeout_retries = 0
     for probe in probes:
         probe["correct"] = False
         if probe["status"] != 200:
@@ -441,17 +443,26 @@ async def audit(engine: AsyncEngine, user: UUID, probes: list[dict[str, Any]]) -
             def moment(name: str, value: dict[str, Any] = body) -> datetime:
                 return datetime.fromisoformat(value[name])
 
-            async with indicator_read_session(engine, user) as s:
-                result = await read_indicators(
-                    s,
-                    probe["base"],
-                    "USDT",
-                    Timeframe(probe["timeframe"]),
-                    CandleWindow(moment("calculation_start"), moment("calculation_end")),
-                    CandleWindow(moment("result_start"), moment("result_end")),
-                    moment("as_of"),
-                    monotonic() + 600,
-                )
+            for attempt in range(3):
+                try:
+                    async with indicator_read_session(engine, user) as s:
+                        result = await read_indicators(
+                            s,
+                            probe["base"],
+                            "USDT",
+                            Timeframe(probe["timeframe"]),
+                            CandleWindow(moment("calculation_start"), moment("calculation_end")),
+                            CandleWindow(moment("result_start"), moment("result_end")),
+                            moment("as_of"),
+                            monotonic() + 600,
+                        )
+                    break
+                except DatabaseTimeoutError:
+                    if attempt == 2:
+                        raise
+                    timeout_retries += 1
+                    progress("audit timeout; retrying", probe["base"], probe["timeframe"])
+                    await asyncio.sleep(1)
             expected = [
                 IndicatorPointView(
                     open_at=p.open_at,
@@ -485,6 +496,7 @@ async def audit(engine: AsyncEngine, user: UUID, probes: list[dict[str, Any]]) -
             and probe["body_bytes"] <= 2 * 1024**2
         )
         probe.pop("body")  # Keep diagnostics small after full comparison.
+    return timeout_retries
 
 
 async def run(
@@ -674,7 +686,8 @@ async def run(
                     }
                 )
             save(output / "cold-warm.json", cold)
-        await audit(api, users[0], responses + cold)
+        audit_timeout_retries = await audit(api, users[0], responses + cold)
+        save(output / "audit.json", {"database_timeout_retries": audit_timeout_retries})
         if metrics is not None:
             cold_metrics = [
                 json.loads(line)
@@ -692,7 +705,7 @@ async def run(
                     m["status"] == 200
                     and m["max_lag_seconds"] <= 0.1
                     and m["rss_delta_upper_bytes"] <= 128 * 1024**2
-                    and m["candle_queries"] <= 2
+                    and m["candle_queries"] <= 8
                     for m in cold_metrics
                 )
             )

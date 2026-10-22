@@ -156,6 +156,24 @@ def test_bounded_windows_preserve_unaligned_boundaries_and_slot_limit() -> None:
         len(tuple(market_data.expected_opens(chunk, market_data.Timeframe.M1))) <= 1000
         for chunk in chunks
     )
+    limited = tuple(market_data.bounded_windows(window, market_data.Timeframe.M1, 250))
+    assert all(
+        len(tuple(market_data.expected_opens(chunk, market_data.Timeframe.M1))) <= 250
+        for chunk in limited
+    )
+
+
+@pytest.mark.parametrize("limit", [0, 1001])
+def test_bounded_windows_reject_invalid_limit(limit: int) -> None:
+    origin = datetime(2026, 10, 7, tzinfo=UTC)
+    with pytest.raises(ValueError, match="invalid window limit"):
+        tuple(
+            market_data.bounded_windows(
+                market_data.CandleWindow(origin, origin + timedelta(minutes=1)),
+                market_data.Timeframe.M1,
+                limit,
+            )
+        )
 
 
 @pytest.mark.parametrize("timeframe", list(market_data.Timeframe))

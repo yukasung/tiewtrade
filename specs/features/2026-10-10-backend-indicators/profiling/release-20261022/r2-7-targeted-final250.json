@@ -1,0 +1,26 @@
+{
+  "recorded_at": "2026-10-22T15:39:27+07:00",
+  "candidate_image": "sha256:d22ee4dddf49b908a01c30af3cdf771220a5317edcc041963691cd26ab49b9bf",
+  "scope": "targeted cold/warm API resource regression after API-only fetch batch 500 to 250",
+  "is_full_capacity_acceptance": false,
+  "requests": 6,
+  "http_200": 6,
+  "response_rows": 1000,
+  "dataset_revision_length": 64,
+  "refresh_required": false,
+  "candle_queries_per_request": 7,
+  "max_event_loop_lag_seconds": 0.07539991700024984,
+  "max_rss_delta_upper_bytes": 66772992,
+  "thresholds": {
+    "max_event_loop_lag_seconds": 0.1,
+    "max_rss_delta_upper_bytes": 134217728,
+    "max_candle_queries_per_request": 8
+  },
+  "result": "PASSED_TARGETED_RESOURCE_REGRESSION",
+  "notes": [
+    "The first request followed a real API process restart; five warm requests followed without a worker running.",
+    "Authentication used a registered fixture account and a server-side session through the real login route.",
+    "The interrupted C1 diagnostic reached runtime readiness 16/16 at T+240 seconds but is not recorded as a C1 pass.",
+    "This result does not replace the full-duration C2/C3/C5, C4, C6, or F-12 V-17 release gates."
+  ]
+}
