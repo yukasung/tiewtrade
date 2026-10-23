@@ -40,7 +40,7 @@ async function navigate(page: string) {
 it("defaults to chart and mounts only the selected module without replacing the session", async () => {
   render(<StrictMode><AuthPanel /></StrictMode>);
   await screen.findByTestId("module-chart");
-  expect(window.location.pathname).toBe("/chart");
+  await waitFor(() => expect(window.location.pathname).toBe("/chart"));
   expect(observed.mounts.every(name => name === "chart")).toBe(true);
   const client = observed.clients.at(-1);
   for (const page of ["security", "api-keys", "trading-account", "prices", "chart"]) {
@@ -79,12 +79,14 @@ it("keeps the disabled chart default without mounting modules or starting their 
 it("navigates a plain internal click without reloading and preserves modified clicks", async () => {
   render(<AuthPanel />);
   await screen.findByTestId("module-chart");
+  // Chart DOM can appear before the navigation effect installs its popstate listener.
+  await waitFor(() => expect(window.location.pathname).toBe("/chart"));
   const client = observed.clients.at(-1);
   const link = screen.getByRole<HTMLAnchorElement>("link", { name: "API key" });
   fireEvent.click(link);
   expect(window.location.pathname).toBe("/api-keys");
   expect(window.location.hash).toBe("");
-  expect(screen.getByTestId("module-api-keys")).toBeTruthy();
+  expect(await screen.findByTestId("module-api-keys")).toBeTruthy();
   expect(observed.clients.at(-1)).toBe(client);
   for (const modifier of ["ctrlKey", "metaKey", "shiftKey", "altKey"]) {
     const preventDefault = vi.fn();
