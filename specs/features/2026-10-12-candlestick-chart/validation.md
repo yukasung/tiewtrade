@@ -4,7 +4,14 @@
 กราฟรองรับ BTCUSDT และ ETHUSDT × 8 timeframe รวม 16 series และ workload ชุดยาววัด
 BTCUSDT 8 series. ผล deep history 40/40 เดิมด้านล่างเป็นหลักฐาน historical เท่านั้น.
 
-ผลหลัง merge ล่าสุด: [post-merge validation checkpoint](evidence/2026-10-14-post-merge.md).
+**TF-18 clarification — Approved 2026-10-24:** เจ้าของอนุมัติใช้หลักฐาน backfill จริง
+ร่วมกับ V-17 เพื่อปิด TF-18 (NC-F12-TF18). ใช้ all-available calendar history ตาม
+RQ-38 และ pair/workload scope ของ F-38; ไม่เพิ่ม backfill completion-time SLA
+หรืออ้างว่ารัน supplemental benchmark. ผล Partial/Pending ด้านล่างที่เป็น snapshot
+เก็บไว้เป็นประวัติ; ผลปัจจุบันอ้างตารางเกณฑ์และ final acceptance closure ในหลักฐาน.
+
+ผลหลัง merge ล่าสุด: [PR #25 checkpoint](evidence/2026-10-23-v17-full-rerun.md#pr-25--post-merge-reconciliation-2026-10-24).
+ผลหลัง merge รอบเดิม: [2026-10-14 checkpoint](evidence/2026-10-14-post-merge.md).
 ผลแก้ viewport ตาม P-H3: [anchor regression evidence](evidence/2026-10-14-viewport.md).
 
 ## Candle-only chart reads — Approved 2026-10-14
@@ -104,7 +111,7 @@ workload checkpoint และต้องบันทึก command, commit/sour
 | TF-15 | UI ใช้ Admin Template Select แสดง 8 ค่า, default `1h`; การสลับ `1m`↔`1M` เร็ว ๆ ยกเลิก/กัน stale response และไม่ aggregate candle ใน browser | ระหว่างพัฒนา | Passed - 42 frontend targeted tests passed on unchanged UI source, covering 8 options, default `1h`, and existing stale-response behavior |
 | TF-16 | Browser smoke เห็น history และ live candle ของ `1w`/`1M`, reset/theme ยังทำงาน, ไม่มี blank chart จากการสลับ TF และ network log ไม่มี order/live-trading request | Candidate | Passed — post-merge runtime smoke แสดง `1w` 479 rows และ `1M` 111 rows พร้อม live OHLCV; reset/theme ผ่าน, ไม่มี page error หรือ order/live-trading request |
 | TF-17 | Targeted lint/type/import checks และ tests ของ core, migration/storage, ingestion, venue stream, indicator, API และ frontend ที่ได้รับผลผ่านบน source เดียวกัน | Candidate | Passed — targeted evidence เดิมและ required CI บน final source head ผ่าน: backend 2,710, frontend 237, browser 17 พร้อม static/contracts/container gates |
-| TF-18 | Full regression, migration gate, generated contracts และ required CI ผ่าน; workload วัด backfill ห้าปีและ live 40 streams ตามเกณฑ์เดิมโดยไม่ลด safety/error bounds | ก่อน merge/release | Partial — full regression/migration/contracts/required CI ผ่านก่อน merge; workload/resource/endurance ส่วน release ยังคง Pending Full Validation ตาม V-17 |
+| TF-18 | Full regression, migration gate, generated contracts และ required CI ผ่าน; real backfill correctness ร่วมกับ V-17 workload ตาม NC-F12-TF18; history/pair scope ตาม RQ-38/F-38 โดยไม่ลด safety/error bounds | ก่อน merge/release | Passed 2026-10-24 — เจ้าของอนุมัติหลักฐานร่วม: calendar batch/real history traversal, V-17 deterministic LEGACY/PREPARED และ PR #25 candidate/post-merge CI; ไม่มี backfill SLA หรือ benchmark ใหม่ |
 
 ### Development evidence 2026-10-14 - `1w` / `1M`
 
@@ -205,7 +212,7 @@ source ที่ Vite เสิร์ฟไม่มี language key/change hand
 | รหัส | เกณฑ์ตรวจ | ผล |
 |---|---|---|
 | U-01 | ไม่มี scale note และปุ่ม latest/older/retry/refresh/previous/next ในหน้า Chart | Passed — component test และ source ที่ Vite เสิร์ฟไม่พบ controls/ข้อความดังกล่าว |
-| U-02 | pair/TF/language, automatic loading, pan/zoom/crosshair, exact OHLCV และ error alert ยังทำงาน | Partial — targeted component/renderer tests ผ่าน; ยังไม่ได้รัน browser E2E เต็มชุดในรอบแก้ UI นี้ |
+| U-02 | pair/TF/language, automatic loading, pan/zoom/crosshair, exact OHLCV และ error alert ยังทำงาน | Passed/Superseded — full E2E ของ PR #25 ผ่าน; browser 8 TF/pan/reset/retry และ exact/crosshair component/renderer ครบ; language control ถูก LNG amendment แทนด้วยภาษาไทยคงที่ |
 | U-03 | ไม่มี dead handler/state/import/CSS จาก controls ที่ลบ และ backend/API ไม่เปลี่ยน | Passed — type check, scoped ESLint และ diff review ผ่าน |
 
 หลักฐานรอบ 2026-10-14: `npm test -- --run tests/CandlestickChartPanel.test.tsx tests/AccountLayout.test.tsx tests/chart-renderer.test.ts`
@@ -222,7 +229,7 @@ source ที่ Vite เสิร์ฟไม่มี language key/change hand
 | รหัส | เกณฑ์ตรวจ | ผล |
 |---|---|---|
 | I-01 | ไม่มีตัวเลือก ชื่อ ค่า เส้น หรือ pane ของ EMA/RSI/ATR ในหน้า Chart | Passed — component/smoke 2026-10-13 |
-| I-02 | แท่งเทียน, exact OHLCV, pair/TF, crosshair, viewport และ gap navigation ยังทำงาน | Partial — targeted component/renderer ผ่าน; ยังไม่รัน full E2E |
+| I-02 | แท่งเทียน, exact OHLCV, pair/TF, crosshair, viewport และ gap navigation ยังทำงาน | Passed/Superseded — candle-only hook/renderer/panel tests และ full E2E ผ่าน; history-window browser พิสูจน์ viewport/pagination, gaps เป็น whitespace; ปุ่ม gap navigation ถูก U-01 ลบแล้ว |
 | I-03 | Backend/API F-11 และ proof/consistency contract ไม่ถูกเปลี่ยนจากงาน UI นี้ | Passed — diff review 2026-10-13 |
 
 ตรวจด้วย targeted component/renderer tests, type-check, ESLint และ frontend smoke;
@@ -238,7 +245,7 @@ type-check, ESLint และ `git diff --check` ผ่าน. Rebuild/restart fr
 |---|---|---|
 | S-01 | ไม่มี block ข้อความประวัติ/Indicator/gap/feed/as-of/server-check เหนือกราฟ | Passed — component/smoke 2026-10-13 |
 | S-02 | Error/alert, finality, disabled/loading controls และ gap ของตำแหน่งที่เลือกยังทำงาน | Passed — targeted component 2026-10-13 |
-| S-03 | การลบ presentation ไม่เปลี่ยน request, retry, proof หรือ consistency gate | Partial — E2E ปรับไปตรวจ API state แล้ว; ยังไม่รัน full E2E |
+| S-03 | การลบ presentation ไม่เปลี่ยน request, retry, proof หรือ consistency gate | Passed/Superseded — candle-only amendment แทน indicator-backed request/proof เฉพาะ UI; hook tests และ browser network ยืนยัน candle/live retry/cancellation และไม่มี indicator requests; backend proof คงตรวจใน V-03..06 |
 
 ตรวจด้วย targeted component tests, type-check, ESLint และ frontend smoke;
 ไม่รัน full suite หรือ performance validation สำหรับการลบ presentation นี้.
@@ -252,8 +259,8 @@ ESLint และ `git diff --check` ผ่าน. Rebuild/restart frontend ส�
 | รหัส | เกณฑ์ตรวจ | ผล |
 |---|---|---|
 | C-01 | ภายในกรอบกราฟแสดงคู่/TF/ตลาด วันเวลา finality และ O/H/L/C/V exact ของแท่งล่าสุดหรือแท่งที่เลือก โดย V ใช้หน่วยเหรียญฐานและไม่มี Volume pane | Passed — component 2026-10-13 |
-| C-02 | Crosshair และปุ่มก่อนหน้า/ถัดไปเปลี่ยนข้อมูลชุดเดียวกัน; ออกจากแท่งแล้วกลับแท่งล่าสุด; indicator ที่ proof ผ่านยังอ่านได้ | Partial — โค้ดและ E2E ปรับแล้ว; ยังไม่รัน full E2E |
-| C-03 | ไม่มีชุดวันเวลา/OHLCV ซ้ำใต้กราฟ, header ไม่บังแกนราคาที่ความกว้างเป้าหมาย และ accessibility labels ยังอ่านได้ | Partial — DOM/targeted test ผ่าน; รอตรวจภาพหลายความกว้าง |
+| C-02 | Crosshair และปุ่มก่อนหน้า/ถัดไปเปลี่ยนข้อมูลชุดเดียวกัน; ออกจากแท่งแล้วกลับแท่งล่าสุด; indicator ที่ proof ผ่านยังอ่านได้ | Passed/Superseded — chart-renderer test returns to the latest candle when the crosshair leaves a candle และ panel exact selected-candle test ผ่านใน final CI; browser 768px เห็น selected crosshair; previous/next และ indicator UI ถูก amendments ลบแล้ว |
+| C-03 | ไม่มีชุดวันเวลา/OHLCV ซ้ำใต้กราฟ, header ไม่บังแกนราคาที่ความกว้างเป้าหมาย และ accessibility labels ยังอ่านได้ | Passed — ตรวจภาพ acceptance 375/768/1440 แล้ว OHLCV อยู่ใน chart ไม่ซ้ำใต้กราฟ/ไม่บังแกนราคา; CSS/renderer ไม่เปลี่ยนจากหลักฐานเดิม, panel เปลี่ยนเฉพาะ pair catalog; accessible labels/overflow ผ่าน final E2E |
 
 ตรวจด้วย targeted component tests, TypeScript type-check, ESLint และ frontend smoke;
 ไม่รัน full suite หรือ performance validation สำหรับการย้าย presentation นี้.
@@ -328,12 +335,17 @@ F-12 ไม่รับรอง production PREPARED หรือ Live readiness
 
 ผล audit ล่าสุดปิด mapping และ coverage gaps ของ V-01..13/V-15..16 ครบ 15/15 แล้วตาม
 [acceptance audit](evidence/2026-10-23-v17-full-rerun.md); backend targeted regressions 220 ผ่าน.
-Tests ที่เพิ่มยังรอ commit/push/CI และ V-18 gate สำหรับ revision ที่รวม tests ใหม่นี้ยัง pending;
-ผล CI ของ runtime เดิมก่อน/หลัง PR #24 ยังคงเป็นหลักฐานตาม revision เดิม.
+Tests และ navigation timing remediation merge แล้วใน PR #25: final head `b79736c`
+ผ่าน push/PR CI ครบ 6/6 และ merge SHA `51f0e27` ผ่าน post-merge CI attempt 3 ครบ 6/6.
+V-18 ส่วน candidate/merge gate ของ revision นี้จึงปิดแล้ว; ไม่ใช้ผลนี้แทน amendment acceptance
+ที่ยังไม่มี mapping ครบ ดู checkpoint ล่าสุดสำหรับรายการค้างจริง.
 ผล Partial ใน checkpoint เก่ายังคงเป็นประวัติ อ้างอิง [หลักฐานหลัง merge](evidence/2026-10-14-post-merge.md),
 [สรุปผลและรายการค้างเดิม](evidence/checkpoint.md),
 [รายงาน local preview รอบก่อน](evidence/dev-preview.md) และ snapshot ที่ระบุในรายงาน
-ไม่ใช้สถานะในประวัติมาแทนผลปัจจุบัน; F-12 คง In Progress จน branch นี้ผ่าน candidate/merge gates.
+ไม่ใช้สถานะในประวัติมาแทนผลปัจจุบัน; U-02/I-02/S-03/C-02/C-03 ปิดแล้วตาม
+amendment evidence reconciliation 2026-10-24 ใน acceptance audit.
+TF-18 ปิดตาม NC-F12-TF18 ที่เจ้าของอนุมัติ 2026-10-24 แล้ว; เกณฑ์ F-12 ครบตาม
+final acceptance closure. สถานะ feature อ้าง roadmap; ไม่รับรอง F-11/production/Live เพิ่ม.
 
 ## ระยะรัน — เจ้าของอนุมัติปรับ workflow 2026-10-12
 
