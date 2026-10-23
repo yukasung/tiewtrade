@@ -1,0 +1,142 @@
+{
+  "duration": 60,
+  "warmup": 10,
+  "clients": 20,
+  "browser_version": "153.0.8010.12",
+  "mount_unmount_cycles": 2,
+  "maximum_page_rows": 1000,
+  "maximum_retained_slots": 5120,
+  "measurement_started_at": "2026-10-23T03:54:37.290Z",
+  "measurement_ended_at": "2026-10-23T03:55:38.175Z",
+  "live": [
+    {
+      "client": 0,
+      "status": 503,
+      "seconds": 0.061
+    },
+    {
+      "client": 3,
+      "status": 503,
+      "seconds": 0.064
+    },
+    {
+      "client": 1,
+      "status": 503,
+      "seconds": 0.093
+    },
+    {
+      "client": 4,
+      "status": 503,
+      "seconds": 0.071
+    }
+  ],
+  "history": [
+    {
+      "client": 1,
+      "status": 503,
+      "seconds": 0.865,
+      "outcome": "5m:INDICATOR_BUSY"
+    },
+    {
+      "client": 2,
+      "status": 503,
+      "seconds": 0.85,
+      "outcome": "5m:INDICATOR_BUSY"
+    },
+    {
+      "client": 3,
+      "status": 503,
+      "seconds": 0.967,
+      "outcome": "5m:INDICATOR_BUSY"
+    },
+    {
+      "client": 4,
+      "status": 503,
+      "seconds": 0.866,
+      "outcome": "5m:INDICATOR_BUSY"
+    },
+    {
+      "client": 0,
+      "status": 200,
+      "seconds": 2.185,
+      "rows": 1000,
+      "outcome": "5m:OK"
+    }
+  ],
+  "proofs": [
+    {
+      "client": 0,
+      "status": 200,
+      "seconds": 0.035,
+      "outcome": "MATCHED"
+    },
+    {
+      "client": 0,
+      "status": 200,
+      "seconds": 0.033,
+      "outcome": "MATCHED"
+    }
+  ],
+  "browser_text_seconds": [],
+  "errors": [
+    [
+      "ข้อมูลแท่งสดไม่พร้อม"
+    ],
+    [
+      "ข้อมูลแท่งสดไม่พร้อม"
+    ],
+    [],
+    [
+      "ข้อมูลแท่งสดไม่พร้อม"
+    ],
+    [
+      "ข้อมูลแท่งสดไม่พร้อม"
+    ],
+    [
+      "รับข้อมูลไม่สำเร็จ"
+    ],
+    [
+      "รับข้อมูลไม่สำเร็จ"
+    ],
+    [
+      "รับข้อมูลไม่สำเร็จ"
+    ],
+    [
+      "รับข้อมูลไม่สำเร็จ"
+    ],
+    [
+      "ข้อมูลแท่งสดไม่พร้อม"
+    ],
+    [
+      "รับข้อมูลไม่สำเร็จ"
+    ],
+    [
+      "ข้อมูลแท่งสดไม่พร้อม"
+    ],
+    [
+      "รับข้อมูลไม่สำเร็จ"
+    ],
+    [
+      "รับข้อมูลไม่สำเร็จ"
+    ],
+    [
+      "ข้อมูลแท่งสดไม่พร้อม"
+    ],
+    [
+      "ข้อมูลแท่งสดไม่พร้อม"
+    ],
+    [
+      "ข้อมูลแท่งสดไม่พร้อม"
+    ],
+    [
+      "ข้อมูลแท่งสดไม่พร้อม"
+    ],
+    [
+      "ข้อมูลแท่งสดไม่พร้อม"
+    ],
+    [
+      "ข้อมูลแท่งสดไม่พร้อม"
+    ]
+  ],
+  "forbidden_requests": []
+}

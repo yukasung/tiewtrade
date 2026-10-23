@@ -1,0 +1,3 @@
+FROM tiewtrade-frontend:latest
+
+RUN npx playwright install --with-deps chromium

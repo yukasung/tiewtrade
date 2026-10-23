@@ -499,6 +499,188 @@ async def audit(engine: AsyncEngine, user: UUID, probes: list[dict[str, Any]]) -
     return timeout_retries
 
 
+async def prepare_exact_r2_7_generation(
+    migrator: AsyncEngine, source: AsyncEngine, worker: str, clock_marker: Path
+) -> dict[str, Any]:
+    """Build the approved 525,600-slot fixture at an exact minute boundary.
+
+    A live scheduler snapshot intentionally excludes the candle intersecting a
+    non-aligned retention cutoff, so it contains 525,599 one-minute slots.  R2-7
+    instead requires the existing exact max-input fixture.  Pin only the
+    indicator SQL clock in this isolated database while the source is idle;
+    production clock/window behavior remains unchanged.
+    """
+    originals: list[str] = []
+    async with migrator.connect() as connection:
+        observed: datetime = (
+            await connection.execute(text("SELECT clock_timestamp()"))
+        ).scalar_one()
+        boundary: datetime = (
+            await connection.execute(
+                text(
+                    "SELECT max(end_at) FROM market_candles "
+                    "WHERE source='primary_spot' AND base='BTC' AND quote='USDT' "
+                    "AND timeframe='1m'"
+                )
+            )
+        ).scalar_one()
+        assert boundary is not None and boundary == align_floor(boundary, Timeframe.M1)
+        boundary_age = observed - boundary
+        assert timedelta(0) <= boundary_age <= timedelta(seconds=10)
+        ready_end: datetime = (
+            await connection.execute(
+                text(
+                    "SELECT g.calculation_end FROM indicator_ready_heads h "
+                    "JOIN indicator_generations g ON g.id=h.generation_id "
+                    "WHERE g.source='primary_spot' AND g.base='BTC' "
+                    "AND g.quote='USDT' AND g.timeframe='1m'"
+                )
+            )
+        ).scalar_one()
+        start = boundary - timedelta(days=365)
+        source_rows = int(
+            (
+                await connection.execute(
+                    text(
+                        "SELECT count(*) FROM market_candles "
+                        "WHERE source='primary_spot' AND base='BTC' AND quote='USDT' "
+                        "AND timeframe='1m' AND open_at>=:start AND open_at<:end"
+                    ),
+                    {"start": start, "end": boundary},
+                )
+            ).scalar_one()
+        )
+        assert source_rows == 525600
+
+    invalidation_open_at = advance(ready_end, Timeframe.M1, -1)
+    async with market_data_session(source) as session:
+        await session.execute("SELECT begin_indicator_source_write()")
+        changed = await session.execute(
+            """UPDATE market_candles SET
+              close=CASE WHEN close=100.625 THEN 100.725 ELSE 100.625 END,
+              last_checked_at=clock_timestamp()
+            WHERE source='primary_spot' AND base='BTC' AND quote='USDT'
+              AND timeframe='1m' AND open_at=:moment RETURNING 1""",
+            {"moment": invalidation_open_at},
+        )
+        assert changed.scalar_one() == 1
+
+    async with migrator.begin() as connection:
+        await connection.execute(
+            text("CREATE TABLE capacity_indicator_clock_state(moment timestamptz NOT NULL)")
+        )
+        await connection.execute(
+            text("INSERT INTO capacity_indicator_clock_state VALUES(:moment)"),
+            {"moment": boundary},
+        )
+        await connection.execute(
+            text(
+                """CREATE FUNCTION capacity_indicator_clock() RETURNS timestamptz
+                LANGUAGE sql VOLATILE SECURITY DEFINER
+                SET search_path=pg_catalog,public AS $$
+                SELECT moment FROM public.capacity_indicator_clock_state $$"""
+            )
+        )
+        await connection.execute(
+            text("REVOKE ALL ON FUNCTION capacity_indicator_clock() FROM PUBLIC")
+        )
+        await connection.execute(
+            text(
+                "GRANT EXECUTE ON FUNCTION capacity_indicator_clock() "
+                "TO tiewtrade_indicator_builder"
+            )
+        )
+        originals = list(
+            (
+                await connection.execute(
+                    text(
+                        """SELECT pg_get_functiondef(p.oid)
+                        FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace
+                        WHERE n.nspname='public' AND p.proname LIKE '%indicator%'
+                          AND pg_get_functiondef(p.oid) LIKE '%clock_timestamp()%'
+                        ORDER BY p.proname"""
+                    )
+                )
+            ).scalars()
+        )
+        assert originals
+        for definition in originals:
+            await connection.execute(
+                text(definition.replace("clock_timestamp()", "public.capacity_indicator_clock()"))
+            )
+
+    exact: dict[str, Any] | None = None
+    try:
+        clock_marker.write_text(str(boundary), encoding="ascii")
+        await docker("start", worker)
+        deadline = monotonic() + 600
+        while monotonic() < deadline:
+            async with migrator.connect() as connection:
+                row = (
+                    (
+                        await connection.execute(
+                            text(
+                                """SELECT g.id,g.calculation_start,g.calculation_end,
+                                g.as_of,g.checkpoint_count
+                                FROM indicator_ready_heads h
+                                JOIN indicator_generations g ON g.id=h.generation_id
+                                WHERE g.source='primary_spot' AND g.base='BTC'
+                                  AND g.quote='USDT' AND g.timeframe='1m'"""
+                            )
+                        )
+                    )
+                    .mappings()
+                    .one_or_none()
+                )
+                job = (
+                    (
+                        await connection.execute(
+                            text(
+                                """SELECT status,attempts_used,failure_category,failure_reason
+                                FROM indicator_build_jobs
+                                WHERE source='primary_spot' AND base='BTC'
+                                  AND quote='USDT' AND timeframe='1m'"""
+                            )
+                        )
+                    )
+                    .mappings()
+                    .one()
+                )
+            if (
+                row is not None
+                and row["calculation_start"] == start
+                and row["calculation_end"] == boundary
+                and slot_count(CandleWindow(start, boundary), Timeframe.M1) == 525600
+            ):
+                exact = dict(row)
+                break
+            if job["attempts_used"] and job["failure_reason"]:
+                raise RuntimeError(
+                    "CAPACITY_EXACT_FIXTURE_BUILD_FAILED:"
+                    f"{job['status']}:{job['failure_category']}:{job['failure_reason']}"
+                )
+            await asyncio.sleep(0.5)
+        if exact is None:
+            raise RuntimeError("CAPACITY_EXACT_FIXTURE_NOT_READY")
+    finally:
+        await docker("stop", "--time", "130", worker, timeout=140)
+        clock_marker.unlink(missing_ok=True)
+        async with migrator.begin() as connection:
+            for definition in originals:
+                await connection.execute(text(definition))
+            await connection.execute(text("DROP FUNCTION capacity_indicator_clock()"))
+            await connection.execute(text("DROP TABLE capacity_indicator_clock_state"))
+
+    return {
+        "boundary": boundary,
+        "boundary_age_seconds": boundary_age.total_seconds(),
+        "source_rows": source_rows,
+        "logical_slots": 525600,
+        "invalidation_open_at": invalidation_open_at,
+        "generation": exact,
+    }
+
+
 async def run(
     output: Path, image: str, metrics: Path | None = None, reuse_source: bool = False
 ) -> int:
@@ -649,6 +831,22 @@ async def run(
         cold: list[dict[str, Any]] = []
         cold_offset = 0
         if metrics is not None:
+            while True:
+                seconds, _ = await redis.time()
+                if seconds % 60 <= 1:
+                    break
+                await asyncio.sleep(0.2)
+            source_stop.set()
+            if producer is not None:
+                await producer
+                producer = None
+            await append(source, ends)
+            save(
+                output / "exact-fixture-preparation.json",
+                await prepare_exact_r2_7_generation(
+                    migrator, source, worker, metrics / "exact-clock-enabled"
+                ),
+            )
             cold_offset = len((metrics / "api-metrics.jsonl").read_text().splitlines())
             await docker("restart", "--time", "5", api_container)
             port = (await docker("port", api_container, "8000/tcp")).rsplit(":", 1)[1]

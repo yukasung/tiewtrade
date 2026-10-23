@@ -13,6 +13,7 @@ from uuid import uuid4
 import pytest
 from sqlalchemy import text
 from sqlalchemy.engine import make_url
+from sqlalchemy.exc import TimeoutError as SQLAlchemyTimeoutError
 from sqlalchemy.ext.asyncio import AsyncEngine
 
 from tiewtrade.infra.db import (
@@ -24,6 +25,7 @@ from tiewtrade.infra.db import (
     database_url,
     user_session,
 )
+from tiewtrade.infra.db.errors import DatabaseTimeoutError, translate_database_error
 
 #: ค่าจำลองที่ต้องไม่โผล่ที่ไหนเลย
 FAKE_PASSWORD = "PASSWORD-THAT-MUST-NEVER-APPEAR"
@@ -83,6 +85,12 @@ def test_engine_is_configured_to_hide_parameters() -> None:
     engine = create_engine_for(DatabaseRole.API)
     assert engine.echo is False
     assert engine.sync_engine.hide_parameters is True
+
+
+def test_pool_checkout_timeout_is_typed_without_driver_detail() -> None:
+    translated = translate_database_error(SQLAlchemyTimeoutError(FAKE_SECRET))
+    assert isinstance(translated, DatabaseTimeoutError)
+    assert FAKE_SECRET not in str(translated)
 
 
 async def test_unreachable_database_becomes_a_typed_error(

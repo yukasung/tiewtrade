@@ -1,3 +1,4 @@
+import asyncio
 from collections.abc import Mapping
 from datetime import datetime, timedelta
 from typing import Any, Literal
@@ -83,18 +84,27 @@ def _stored(row: RowMapping | Mapping[str, Any]) -> StoredCandle:
 
 
 async def stored_rows(
-    session: Session, base: str, quote: str, timeframe: Timeframe, window: CandleWindow
+    session: Session,
+    base: str,
+    quote: str,
+    timeframe: Timeframe,
+    window: CandleWindow,
+    *,
+    offload_conversion: bool = False,
 ) -> tuple[StoredCandle, ...]:
     params = parameters(base, quote, timeframe) | {"start": window.start, "end": window.end}
-    rows = (
-        await _session(session).execute(
-            """SELECT * FROM market_candles
+    result = await _session(session).execute(
+        """SELECT * FROM market_candles
         WHERE source=:source AND base=:base AND quote=:quote AND timeframe=:timeframe
           AND open_at>=:start AND open_at<:end ORDER BY open_at LIMIT 1000""",
-            params,
-        )
-    ).mappings()
-    return tuple(_stored(row) for row in rows)
+        params,
+    )
+    rows = tuple(result.mappings())
+
+    def convert() -> tuple[StoredCandle, ...]:
+        return tuple(_stored(row) for row in rows)
+
+    return await asyncio.to_thread(convert) if offload_conversion else convert()
 
 
 async def read_candles(
@@ -104,12 +114,20 @@ async def read_candles(
     timeframe: Timeframe,
     window: CandleWindow,
     limit: int,
+    *,
+    offload_conversion: bool = False,
 ) -> CandleRead:
     session = require_user_session(session)
     now = await database_now(session)
     validate_window(window, now, timeframe, reading=True)
-    rows = await stored_rows(session, base, quote, timeframe, window)
-    gaps = missing_windows(window, timeframe, (row.candle.open_at for row in rows))
+    rows = await stored_rows(
+        session,
+        base,
+        quote,
+        timeframe,
+        window,
+        offload_conversion=offload_conversion,
+    )
     demand = (
         (
             await session.execute(
@@ -126,19 +144,30 @@ async def read_candles(
     failure = demand["failure_code"] if demand else None
     requested = demand["refresh_requested_at"] if demand else None
     served = demand["refresh_served_at"] if demand else None
-    pending = (
-        requested is not None
-        and (served is None or requested > served)
-        and any(refresh_due(row, requested) for row in rows)
-    )
-    coverage: Literal["PRESENT", "INCOMPLETE", "UNAVAILABLE"] = (
-        "PRESENT"
-        if not gaps
-        else ("UNAVAILABLE" if status in {"UNAVAILABLE", "FAILED"} else "INCOMPLETE")
-    )
-    return CandleRead(
-        rows[-limit:] if limit < len(rows) else rows, gaps, coverage, now, pending, status, failure
-    )
+
+    def finish() -> CandleRead:
+        gaps = missing_windows(window, timeframe, (row.candle.open_at for row in rows))
+        pending = (
+            requested is not None
+            and (served is None or requested > served)
+            and any(refresh_due(row, requested) for row in rows)
+        )
+        coverage: Literal["PRESENT", "INCOMPLETE", "UNAVAILABLE"] = (
+            "PRESENT"
+            if not gaps
+            else ("UNAVAILABLE" if status in {"UNAVAILABLE", "FAILED"} else "INCOMPLETE")
+        )
+        return CandleRead(
+            rows[-limit:] if limit < len(rows) else rows,
+            gaps,
+            coverage,
+            now,
+            pending,
+            status,
+            failure,
+        )
+
+    return await asyncio.to_thread(finish) if offload_conversion else finish()
 
 
 async def window_needs_work(

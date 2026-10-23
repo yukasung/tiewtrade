@@ -1,0 +1,27 @@
+{
+  "mode": "LEGACY",
+  "checks": {
+    "clients_20": true,
+    "mount_unmount_cycles": true,
+    "browser_slots_bounded": true,
+    "preview_commit_p95": true,
+    "browser_text_p95": true,
+    "live_p95": true,
+    "live_max": true,
+    "history_deadline": true,
+    "prepared_history_p95": true,
+    "api_rss": true,
+    "market_rss": true
+  },
+  "passed": true,
+  "metrics": {
+    "preview_commit_p95_seconds": 0.5579427,
+    "browser_text_p95_seconds": 2.53755,
+    "live_p95_seconds": 0.10468942470005231,
+    "live_max_seconds": 0.6786379169999464,
+    "history_p95_seconds": 9.106340088000024,
+    "history_max_seconds": 9.106340088000024,
+    "api_max_rss_delta_bytes": 774144,
+    "market_max_rss_delta_bytes": 2154496
+  }
+}

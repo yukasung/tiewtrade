@@ -1,0 +1,217 @@
+{
+  "duration": 35,
+  "warmup": 2,
+  "clients": 20,
+  "mount_unmount_cycles": 2,
+  "maximum_page_rows": 999,
+  "maximum_retained_slots": 5115,
+  "live": [
+    {
+      "client": 19,
+      "status": 503,
+      "seconds": 0.108
+    },
+    {
+      "client": 11,
+      "status": 503,
+      "seconds": 0.066
+    },
+    {
+      "client": 1,
+      "status": 503,
+      "seconds": 0.11
+    },
+    {
+      "client": 4,
+      "status": 503,
+      "seconds": 0.041
+    },
+    {
+      "client": 5,
+      "status": 503,
+      "seconds": 0.035
+    },
+    {
+      "client": 2,
+      "status": 503,
+      "seconds": 0.074
+    },
+    {
+      "client": 3,
+      "status": 503,
+      "seconds": 0.029
+    },
+    {
+      "client": 9,
+      "status": 503,
+      "seconds": 0.018
+    },
+    {
+      "client": 18,
+      "status": 503,
+      "seconds": 0.029
+    },
+    {
+      "client": 12,
+      "status": 503,
+      "seconds": 0.028
+    },
+    {
+      "client": 7,
+      "status": 503,
+      "seconds": 0.044
+    },
+    {
+      "client": 14,
+      "status": 503,
+      "seconds": 0.035
+    },
+    {
+      "client": 6,
+      "status": 503,
+      "seconds": 0.025
+    },
+    {
+      "client": 10,
+      "status": 503,
+      "seconds": 0.047
+    },
+    {
+      "client": 15,
+      "status": 503,
+      "seconds": 0.038
+    },
+    {
+      "client": 13,
+      "status": 503,
+      "seconds": 0.056
+    },
+    {
+      "client": 16,
+      "status": 503,
+      "seconds": 0.055
+    },
+    {
+      "client": 0,
+      "status": 200,
+      "seconds": 0.013,
+      "rows": 1
+    },
+    {
+      "client": 2,
+      "status": 503,
+      "seconds": 0.014
+    },
+    {
+      "client": 3,
+      "status": 503,
+      "seconds": 0.018
+    },
+    {
+      "client": 1,
+      "status": 503,
+      "seconds": 0.025
+    }
+  ],
+  "history": [
+    {
+      "client": 1,
+      "status": 503,
+      "seconds": 0.213,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 4,
+      "status": 503,
+      "seconds": 0.219,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 2,
+      "status": 503,
+      "seconds": 0.232,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 3,
+      "status": 503,
+      "seconds": 0.253,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 0,
+      "status": 200,
+      "seconds": 9.461,
+      "rows": 1000
+    }
+  ],
+  "proofs": [
+    {
+      "client": 0,
+      "status": 403,
+      "seconds": 0.019,
+      "outcome": "โทเคนกัน CSRF ไม่ถูกต้อง"
+    }
+  ],
+  "browser_text_seconds": [
+    0.647
+  ],
+  "errors": [
+    [],
+    [
+      "ข้อมูลแท่งสดไม่พร้อม"
+    ],
+    [
+      "ข้อมูลแท่งสดไม่พร้อม"
+    ],
+    [
+      "ข้อมูลแท่งสดไม่พร้อม"
+    ],
+    [],
+    [
+      "ข้อมูลแท่งสดไม่พร้อม"
+    ],
+    [
+      "ข้อมูลแท่งสดไม่พร้อม"
+    ],
+    [
+      "ข้อมูลแท่งสดไม่พร้อม"
+    ],
+    [
+      "รับข้อมูลไม่สำเร็จ"
+    ],
+    [
+      "ข้อมูลแท่งสดไม่พร้อม"
+    ],
+    [
+      "ข้อมูลแท่งสดไม่พร้อม"
+    ],
+    [
+      "ข้อมูลแท่งสดไม่พร้อม"
+    ],
+    [
+      "ข้อมูลแท่งสดไม่พร้อม"
+    ],
+    [
+      "ข้อมูลแท่งสดไม่พร้อม"
+    ],
+    [
+      "ข้อมูลแท่งสดไม่พร้อม"
+    ],
+    [
+      "ข้อมูลแท่งสดไม่พร้อม"
+    ],
+    [
+      "ข้อมูลแท่งสดไม่พร้อม"
+    ],
+    [
+      "รับข้อมูลไม่สำเร็จ"
+    ],
+    [
+      "ข้อมูลแท่งสดไม่พร้อม"
+    ],
+    [
+      "ข้อมูลแท่งสดไม่พร้อม"
+    ]
+  ]
+}

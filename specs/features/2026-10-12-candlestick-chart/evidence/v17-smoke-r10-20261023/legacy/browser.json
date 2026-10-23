@@ -1,0 +1,134 @@
+{
+  "duration": 35,
+  "warmup": 2,
+  "clients": 20,
+  "mount_unmount_cycles": 1,
+  "maximum_page_rows": 999,
+  "maximum_retained_slots": 5115,
+  "measurement_started_at": "2026-10-23T03:11:32.092Z",
+  "measurement_ended_at": "2026-10-23T03:12:24.256Z",
+  "live": [
+    {
+      "client": 0,
+      "status": 200,
+      "seconds": 0.024,
+      "rows": 1
+    },
+    {
+      "client": 3,
+      "status": 503,
+      "seconds": 0.014
+    },
+    {
+      "client": 2,
+      "status": 200,
+      "seconds": 0.034,
+      "rows": 1
+    },
+    {
+      "client": 2,
+      "status": 200,
+      "seconds": 0.021,
+      "rows": 1
+    }
+  ],
+  "history": [
+    {
+      "client": 3,
+      "status": 503,
+      "seconds": 0.307,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 1,
+      "status": 503,
+      "seconds": 0.318,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 2,
+      "status": 503,
+      "seconds": 0.489,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 4,
+      "status": 503,
+      "seconds": 0.495,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 0,
+      "status": 200,
+      "seconds": 10.383,
+      "rows": 1000
+    }
+  ],
+  "proofs": [
+    {
+      "client": 0,
+      "status": 200,
+      "seconds": 10.873,
+      "outcome": "MATCHED"
+    }
+  ],
+  "browser_text_seconds": [
+    1.843,
+    2.232,
+    1.008
+  ],
+  "errors": [
+    [],
+    [],
+    [],
+    [
+      "ข้อมูลแท่งสดไม่พร้อม"
+    ],
+    [],
+    [
+      "ข้อมูลแท่งสดไม่พร้อม"
+    ],
+    [
+      "ข้อมูลแท่งสดไม่พร้อม"
+    ],
+    [
+      "ข้อมูลแท่งสดไม่พร้อม"
+    ],
+    [
+      "ข้อมูลแท่งสดไม่พร้อม"
+    ],
+    [
+      "ข้อมูลแท่งสดไม่พร้อม"
+    ],
+    [
+      "ข้อมูลแท่งสดไม่พร้อม"
+    ],
+    [
+      "ข้อมูลแท่งสดไม่พร้อม"
+    ],
+    [
+      "ข้อมูลแท่งสดไม่พร้อม"
+    ],
+    [
+      "ข้อมูลแท่งสดไม่พร้อม"
+    ],
+    [
+      "ข้อมูลแท่งสดไม่พร้อม"
+    ],
+    [
+      "ข้อมูลแท่งสดไม่พร้อม"
+    ],
+    [
+      "ข้อมูลแท่งสดไม่พร้อม"
+    ],
+    [
+      "ข้อมูลแท่งสดไม่พร้อม"
+    ],
+    [
+      "ข้อมูลแท่งสดไม่พร้อม"
+    ],
+    [
+      "ข้อมูลแท่งสดไม่พร้อม"
+    ]
+  ]
+}

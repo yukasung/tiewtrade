@@ -1,8 +1,10 @@
 """Public preview persistence with singleton writer fencing and bounded rows."""
 
 import json
+from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import datetime
+from typing import Any
 from uuid import UUID
 
 from sqlalchemy import RowMapping
@@ -211,30 +213,59 @@ async def flush(
 
 async def read_live(
     session: UserSession, series: CandleSeries
-) -> tuple[RowMapping, tuple[RowMapping, ...], datetime, bool]:
+) -> tuple[RowMapping, tuple[Mapping[str, Any], ...], datetime, bool]:
     params = parameters(series.base, series.quote, series.timeframe)
     now = await database_now(session)
-    state = (
+    snapshot = tuple(
         (
             await session.execute(
-                "SELECT * FROM market_candle_feed_state WHERE source=:source", params
-            )
-        )
-        .mappings()
-        .one()
-    )
-    rows = tuple(
-        (
-            await session.execute(
-                """SELECT p.*,EXISTS(SELECT 1 FROM market_candles h
-      WHERE h.source=p.source AND h.base=p.base AND h.quote=p.quote AND h.timeframe=p.timeframe
-        AND h.open_at=p.open_at AND h.end_at<=:now AND h.finality<>'OPEN'
-        AND (h.finality='CLOSED' OR h.fetch_started_at>=h.end_at)) AS settled
-      FROM market_candle_preview p WHERE p.source=:source AND p.base=:base
-        AND p.quote=:quote AND p.timeframe=:timeframe ORDER BY p.open_at DESC LIMIT 2""",
+                """WITH snapshot AS MATERIALIZED (SELECT CAST(:now AS timestamptz) AS now),
+      preview AS MATERIALIZED (
+        SELECT p.open_at,p.end_at,p.open,p.high,p.low,p.close,p.volume,p.finality,
+          p.event_at,p.received_at,p.epoch,p.revision,
+          EXISTS(SELECT 1 FROM market_candles h,snapshot
+            WHERE h.source=p.source AND h.base=p.base AND h.quote=p.quote
+              AND h.timeframe=p.timeframe AND h.open_at=p.open_at
+              AND h.end_at<=snapshot.now AND h.finality<>'OPEN'
+              AND (h.finality='CLOSED' OR h.fetch_started_at>=h.end_at)) AS settled
+        FROM market_candle_preview p WHERE p.source=:source AND p.base=:base
+          AND p.quote=:quote AND p.timeframe=:timeframe
+        ORDER BY p.open_at DESC LIMIT 2)
+      SELECT state.*,snapshot.now AS server_time,
+        preview.open_at AS preview_open_at,preview.end_at AS preview_end_at,
+        preview.open AS preview_open,preview.high AS preview_high,
+        preview.low AS preview_low,preview.close AS preview_close,
+        preview.volume AS preview_volume,preview.finality AS preview_finality,
+        preview.event_at AS preview_event_at,preview.received_at AS preview_received_at,
+        preview.epoch AS preview_epoch,preview.revision AS preview_revision,
+        preview.settled AS preview_settled
+      FROM market_candle_feed_state state CROSS JOIN snapshot
+      LEFT JOIN preview ON true WHERE state.source=:source
+      ORDER BY preview.open_at DESC NULLS LAST""",
                 params | {"now": now},
             )
         ).mappings()
+    )
+    state = snapshot[0]
+    now = state["server_time"]
+    rows = tuple(
+        {
+            "open_at": row["preview_open_at"],
+            "end_at": row["preview_end_at"],
+            "open": row["preview_open"],
+            "high": row["preview_high"],
+            "low": row["preview_low"],
+            "close": row["preview_close"],
+            "volume": row["preview_volume"],
+            "finality": row["preview_finality"],
+            "event_at": row["preview_event_at"],
+            "received_at": row["preview_received_at"],
+            "epoch": row["preview_epoch"],
+            "revision": row["preview_revision"],
+            "settled": row["preview_settled"],
+        }
+        for row in snapshot
+        if row["preview_open_at"] is not None
     )
     recovered = False
     if rows:

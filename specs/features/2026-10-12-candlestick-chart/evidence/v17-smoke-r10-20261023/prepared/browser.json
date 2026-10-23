@@ -1,0 +1,127 @@
+{
+  "duration": 35,
+  "warmup": 2,
+  "clients": 20,
+  "mount_unmount_cycles": 1,
+  "maximum_page_rows": 1000,
+  "maximum_retained_slots": 5120,
+  "measurement_started_at": "2026-10-23T03:14:14.609Z",
+  "measurement_ended_at": "2026-10-23T03:14:50.401Z",
+  "live": [
+    {
+      "client": 0,
+      "status": 200,
+      "seconds": 0.012,
+      "rows": 1
+    },
+    {
+      "client": 4,
+      "status": 503,
+      "seconds": 0.024
+    },
+    {
+      "client": 1,
+      "status": 503,
+      "seconds": 0.038
+    },
+    {
+      "client": 3,
+      "status": 200,
+      "seconds": 0.082,
+      "rows": 1
+    }
+  ],
+  "history": [
+    {
+      "client": 3,
+      "status": 503,
+      "seconds": 0.436,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 2,
+      "status": 503,
+      "seconds": 0.44,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 1,
+      "status": 503,
+      "seconds": 0.523,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 4,
+      "status": 503,
+      "seconds": 0.521,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 0,
+      "status": 503,
+      "seconds": 1.075,
+      "outcome": "INDICATOR_DATA_NOT_READY"
+    }
+  ],
+  "proofs": [],
+  "browser_text_seconds": [
+    2.659,
+    1.593
+  ],
+  "errors": [
+    [],
+    [
+      "ข้อมูลแท่งสดไม่พร้อม"
+    ],
+    [],
+    [],
+    [
+      "ข้อมูลแท่งสดไม่พร้อม"
+    ],
+    [
+      "ข้อมูลแท่งสดไม่พร้อม"
+    ],
+    [
+      "ข้อมูลแท่งสดไม่พร้อม"
+    ],
+    [
+      "รับข้อมูลไม่สำเร็จ"
+    ],
+    [
+      "รับข้อมูลไม่สำเร็จ"
+    ],
+    [
+      "รับข้อมูลไม่สำเร็จ"
+    ],
+    [
+      "รับข้อมูลไม่สำเร็จ"
+    ],
+    [
+      "ข้อมูลแท่งสดไม่พร้อม"
+    ],
+    [
+      "ข้อมูลแท่งสดไม่พร้อม"
+    ],
+    [
+      "รับข้อมูลไม่สำเร็จ"
+    ],
+    [
+      "รับข้อมูลไม่สำเร็จ"
+    ],
+    [
+      "รับข้อมูลไม่สำเร็จ"
+    ],
+    [
+      "รับข้อมูลไม่สำเร็จ"
+    ],
+    [
+      "ข้อมูลแท่งสดไม่พร้อม"
+    ],
+    [
+      "ข้อมูลแท่งสดไม่พร้อม"
+    ],
+    [
+      "รับข้อมูลไม่สำเร็จ"
+    ]
+  ]
+}

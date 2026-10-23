@@ -1,28 +1,35 @@
-"""Optional measurement-only import in the dedicated supervised worker image.
+"""Optional measurement import in the dedicated supervised worker image.
 
 Mount this directory as PYTHONPATH and /evidence as a test output directory.
-No replacement claims, source scans, publications, timers or retry decisions.
+It records attempts without replacing claims, scans, publications or retries.
+The explicit R2-7 fixture may also pin the source-snapshot clock to the isolated
+database clock while ``/evidence/exact-clock-enabled`` exists.
 """
 
 import asyncio
 import json
 import os
+from collections.abc import Mapping
 from contextvars import ContextVar
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from time import monotonic
-from typing import Literal
+from typing import Any, Literal
 from uuid import UUID
 
+from sqlalchemy.engine import Result
 from sqlalchemy.ext.asyncio import AsyncEngine
 
 from tiewtrade.infra.indicators.claims import BuildClaim
 from tiewtrade.infra.indicators.pinned import PinnedIndicatorWriter
+from tiewtrade.infra.indicators.session import IndicatorSourceSession
 from tiewtrade.services.indicator_builder import attempt
 
 CLAIM = PinnedIndicatorWriter.claim
 ATTEMPT = attempt.run_attempt
+SOURCE_EXECUTE = IndicatorSourceSession.execute
 CURRENT: ContextVar[BuildClaim | None] = ContextVar("measured_claim", default=None)
+EXACT_CLOCK_MARKER = Path("/evidence/exact-clock-enabled")
 
 
 def memory(field: str) -> int:
@@ -40,6 +47,16 @@ async def claim(self: PinnedIndicatorWriter, owner: UUID) -> BuildClaim | None:
     result = await CLAIM(self, owner)
     CURRENT.set(result)
     return result
+
+
+async def source_execute(
+    self: IndicatorSourceSession,
+    statement: str,
+    parameters: Mapping[str, object] | None = None,
+) -> Result[Any]:
+    if EXACT_CLOCK_MARKER.exists():
+        statement = statement.replace("clock_timestamp()", "public.capacity_indicator_clock()")
+    return await SOURCE_EXECUTE(self, statement, parameters)
 
 
 async def run_attempt(
@@ -106,4 +123,5 @@ async def run_attempt(
 
 if os.environ.get("TIEWTRADE_INDICATOR_OWNER"):
     PinnedIndicatorWriter.claim = claim  # type: ignore[method-assign]
+    IndicatorSourceSession.execute = source_execute  # type: ignore[method-assign]
     attempt.run_attempt = run_attempt

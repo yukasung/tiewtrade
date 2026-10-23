@@ -1,0 +1,90 @@
+{
+  "R2-C2": "FAILED",
+  "T0": "2026-10-22 08:19:00.194655+00:00",
+  "recovered_seconds": 0.034062374999848544,
+  "measured_seconds": 190.07700612499866,
+  "failure": "API_RESOURCE_LIMIT",
+  "series": [
+    {
+      "base": "BTC",
+      "timeframe": "1m",
+      "valid_samples": 20,
+      "first_correct_200_seconds": 0.442024207999566,
+      "scheduled_samples": 360,
+      "correct_probes": 4,
+      "scheduled_probes": 60,
+      "passed": false
+    },
+    {
+      "base": "BTC",
+      "timeframe": "5m",
+      "valid_samples": 20,
+      "first_correct_200_seconds": 0.6114851670008647,
+      "scheduled_samples": 360,
+      "correct_probes": 4,
+      "scheduled_probes": 60,
+      "passed": false
+    },
+    {
+      "base": "BTC",
+      "timeframe": "15m",
+      "valid_samples": 20,
+      "first_correct_200_seconds": 0.8147278750002442,
+      "scheduled_samples": 360,
+      "correct_probes": 4,
+      "scheduled_probes": 60,
+      "passed": false
+    },
+    {
+      "base": "BTC",
+      "timeframe": "1h",
+      "valid_samples": 20,
+      "first_correct_200_seconds": 0.9815029580004193,
+      "scheduled_samples": 360,
+      "correct_probes": 4,
+      "scheduled_probes": 60,
+      "passed": false
+    },
+    {
+      "base": "BTC",
+      "timeframe": "4h",
+      "valid_samples": 20,
+      "first_correct_200_seconds": 1.1224326249994192,
+      "scheduled_samples": 360,
+      "correct_probes": 4,
+      "scheduled_probes": 60,
+      "passed": false
+    },
+    {
+      "base": "BTC",
+      "timeframe": "1d",
+      "valid_samples": 20,
+      "first_correct_200_seconds": 1.1892477920009696,
+      "scheduled_samples": 360,
+      "correct_probes": 4,
+      "scheduled_probes": 60,
+      "passed": false
+    },
+    {
+      "base": "BTC",
+      "timeframe": "1w",
+      "valid_samples": 20,
+      "first_correct_200_seconds": 1.2806583330002468,
+      "scheduled_samples": 360,
+      "correct_probes": 4,
+      "scheduled_probes": 60,
+      "passed": false
+    },
+    {
+      "base": "BTC",
+      "timeframe": "1M",
+      "valid_samples": 20,
+      "first_correct_200_seconds": 1.331542707999688,
+      "scheduled_samples": 360,
+      "correct_probes": 4,
+      "scheduled_probes": 60,
+      "passed": false
+    }
+  ],
+  "note": "Early failure is not a completed 60-minute acceptance run."
+}

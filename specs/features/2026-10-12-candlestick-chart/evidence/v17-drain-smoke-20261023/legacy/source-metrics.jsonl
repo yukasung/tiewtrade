@@ -1,0 +1,14 @@
+{"recorded_at": "2026-10-23 07:22:41.218016+00:00", "base": "BTC", "timeframe": "1m", "attempt": 1, "outcome": "SOURCE_UNAVAILABLE", "rows": 0}
+{"recorded_at": "2026-10-23 07:22:41.254371+00:00", "base": "BTC", "timeframe": "5m", "attempt": 1, "outcome": "SOURCE_UNAVAILABLE", "rows": 0}
+{"recorded_at": "2026-10-23 07:22:41.296927+00:00", "base": "BTC", "timeframe": "15m", "attempt": 1, "outcome": "SOURCE_UNAVAILABLE", "rows": 0}
+{"recorded_at": "2026-10-23 07:22:41.330618+00:00", "base": "BTC", "timeframe": "1h", "attempt": 1, "outcome": "SOURCE_UNAVAILABLE", "rows": 0}
+{"recorded_at": "2026-10-23 07:23:11.539047+00:00", "base": "BTC", "timeframe": "4h", "attempt": 1, "outcome": "SOURCE_UNAVAILABLE", "rows": 0}
+{"recorded_at": "2026-10-23 07:23:11.575051+00:00", "base": "BTC", "timeframe": "1m", "attempt": 2, "outcome": "PARTIAL_GAP", "rows": 0}
+{"recorded_at": "2026-10-23 07:23:11.659496+00:00", "base": "BTC", "timeframe": "5m", "attempt": 2, "outcome": "PARTIAL_GAP", "rows": 0}
+{"recorded_at": "2026-10-23 07:23:11.701572+00:00", "base": "BTC", "timeframe": "15m", "attempt": 2, "outcome": "PARTIAL_GAP", "rows": 0}
+{"recorded_at": "2026-10-23 07:23:41.833635+00:00", "base": "BTC", "timeframe": "1h", "attempt": 2, "outcome": "PARTIAL_GAP", "rows": 0}
+{"recorded_at": "2026-10-23 07:23:41.867241+00:00", "base": "BTC", "timeframe": "4h", "attempt": 2, "outcome": "PARTIAL_GAP", "rows": 0}
+{"recorded_at": "2026-10-23 07:24:11.977108+00:00", "base": "BTC", "timeframe": "1m", "attempt": 3, "outcome": "COMPLETE", "rows": 1}
+{"recorded_at": "2026-10-23 07:24:12.045324+00:00", "base": "BTC", "timeframe": "5m", "attempt": 3, "outcome": "COMPLETE", "rows": 1}
+{"recorded_at": "2026-10-23 07:24:12.065083+00:00", "base": "BTC", "timeframe": "15m", "attempt": 3, "outcome": "COMPLETE", "rows": 1}
+{"recorded_at": "2026-10-23 07:24:12.094424+00:00", "base": "BTC", "timeframe": "1m", "attempt": 4, "outcome": "COMPLETE", "rows": 3}

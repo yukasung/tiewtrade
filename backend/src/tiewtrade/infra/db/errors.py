@@ -9,6 +9,8 @@ from __future__ import annotations
 
 from typing import ClassVar, Final
 
+from sqlalchemy.exc import TimeoutError as SQLAlchemyTimeoutError
+
 
 class InfraError(Exception):
     """ฐานร่วมของข้อผิดพลาดทั้งหมดในชั้นนี้ — ผู้เรียกดักตัวนี้ตัวเดียวได้"""
@@ -161,6 +163,8 @@ def translate_database_error(error: BaseException) -> InfraError:
 
     ผู้เรียกต้อง `raise ... from None` เพื่อไม่ให้ traceback ของ driver ติดไปด้วย
     """
+    if isinstance(error, SQLAlchemyTimeoutError):
+        return DatabaseTimeoutError("หมดเวลารอฐานข้อมูล")
     code = sqlstate_of(error)
     if code is not None:
         kind = _BY_SQLSTATE.get(code)

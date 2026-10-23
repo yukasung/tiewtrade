@@ -41,9 +41,9 @@ concurrency และ safety ที่เกี่ยวข้อง พร้�
 ผลตรวจรับหลัง merge ล่าสุดอยู่ใน [acceptance progress 2026-10-14](evidence/2026-10-14-acceptance-progress.md):
 browser จริงผ่าน 8 TF; backfill เดิมอีก 15 series จบแล้วและ deep history 40/40 series
 ผ่าน continuity กับ API traversal ถึง `display_start`. PREPARED C2 rerun ผ่านช่วงวัดเต็มแล้ว;
-V-17 ยังเป็น Pending Full Validation เพราะ F-12 workload, C3/C5, C6/R2-7 และเกณฑ์ release
-ที่เหลือยังไม่ครบ. ช่องว่างแท่งสดจาก preview writer unavailable บันทึกแยก ไม่ใช้ deep-history
-pass กลบ freshness risk.
+V-17 ผ่าน deterministic full rerun 2026-10-23 แล้วตามหลักฐานด้านล่าง. C3/C5, C4/C6
+และเกณฑ์ release อื่นที่อยู่นอก V-17 ยังไม่ครบ. ช่องว่างแท่งสดจาก preview writer unavailable
+บันทึกแยก ไม่ใช้ deep-history pass กลบ freshness risk.
 
 ผลติดตาม 2026-10-22 อยู่ใน [live-preview recovery](evidence/2026-10-22-live-preview-recovery.md):
 development containers ถูกสร้างจาก base Compose โดยไม่มี chart override ทำให้ candle supervisor
@@ -323,8 +323,8 @@ F-12 ไม่รับรอง production PREPARED หรือ Live readiness
 | V-14 | จริงใน Chromium: chart/panes/crosshair/keyboard/resize/ไทยอังกฤษ/attribution | 4/5/6/20/21/22 | Passed — automated Chromium ครอบ renderer/keyboard/resize/attribution และเจ้าของตรวจ Chart จริงบน development stack ผ่านวันที่ 2026-10-22 |
 | V-15 | Browser→API→PG→fake venue worker→bundle/preview/refresh ครบทาง ไม่ mock APIทั้ง flow | 1/3/7/12/13/25/27/28 | Partial |
 | V-16 | ภาพ/ข้อความ loading/empty/partial/unconfirmed/stale/failure แยก และไม่มี trading action | 8/9/14/15/23/24 | Partial |
-| V-17 | วัดทรัพยากร/latency/budgets ตาม workload ที่กำหนด ไม่มี starvation จาก chart | 10/16/18/25/27/28 | Pending Full Validation |
-| V-18 | ด่าน CI/full regression/security/architecture/generated API/build + review/manualผ่าน | ทุกข้อ | Partial — owner manual, static/import, frontend 246 tests/build, generated contracts และ clean-state full backend `3017 passed, 1 skipped, 2 deselected` ผ่าน 2026-10-22 หลังแก้ migration 0030 downgrade ตาม scope ที่เจ้าของอนุมัติ; branch ยังไม่ commit/push/CI และส่วนที่พึ่ง V-17 ยังค้าง |
+| V-17 | วัดทรัพยากร/latency/budgets ตาม workload ที่กำหนด ไม่มี starvation จาก chart | 10/16/18/25/27/28 | Passed 2026-10-23 — deterministic full rerun LEGACY/PREPARED 600s หลัง warmup 60s, 20 clients และ 100 lifecycle cycles ผ่าน threshold เดิมครบ; [หลักฐาน rerun](evidence/2026-10-23-v17-full-rerun.md) |
+| V-18 | ด่าน CI/full regression/security/architecture/generated API/build + review/manualผ่าน | ทุกข้อ | Partial — owner manual ผ่าน 2026-10-22; [final candidate 2026-10-23](evidence/2026-10-23-v17-full-rerun.md) ผ่าน full backend `3033 passed, 2 deselected`, harness regressions 15, static/types/import 7/7, frontend 246 tests/build, generated contracts และ final review หลังแก้ findings; V-17 ผ่านแล้ว. ยังรอ commit/push และ required CI ของ candidate สุดท้าย |
 
 ผล Partial อ้างอิง [หลักฐานหลัง merge](evidence/2026-10-14-post-merge.md),
 [สรุปผลและรายการค้างเดิม](evidence/checkpoint.md),
@@ -343,7 +343,8 @@ F-12 ไม่รับรอง production PREPARED หรือ Live readiness
 | Candidate ก่อน merge | V-01..16 ครบพร้อม review/manual ที่กำหนด และ full regression/static/build/contracts/required CI ใน V-18 เมื่อโค้ดนิ่ง |
 | Release checkpoint / ชุดที่ 9 | V-17 ชุดเต็มทั้ง LEGACY/PREPARED และส่วนสรุปผล V-18 ที่พึ่ง V-17 ก่อน Completed/production activation/ใช้เงินจริง/เปิดให้คนนอก |
 
-V-17 เป็น `Pending Full Validation` จนรันครบ workload/ระยะเวลา/thresholds เดิม.
+V-17 ผ่าน full workload/ระยะเวลา/thresholds เดิมแล้วเมื่อ 2026-10-23 ตาม
+[หลักฐาน deterministic rerun](evidence/2026-10-23-v17-full-rerun.md).
 หากพบความเสี่ยงจากการเปลี่ยนแปลงที่ smoke พิสูจน์ไม่ได้ ให้ตรวจส่วนที่จำเป็นเร็วขึ้น
 ตาม `standards/testing.md` หัวข้อ 7 โดยไม่เลื่อน correctness/trading safety ตาม benchmark.
 เก็บ Failed/Partial เดิมและหลักฐานไว้ ไม่ใช้สถานะ Pending กลบผลที่ล้ม.
@@ -480,7 +481,26 @@ E2Eขั้นต่ำ 6 flows: (1) login→เลือกคู่/timeframe
 ที่ต้องทดสอบclientและมีbackendintegrationแยกพิสูจน์สัญญาเดียวกัน.
 Browser networkassertไม่มี Binance requests หรือ order/modechange endpoints.
 
-## V-17: Workload / acceptance — Pending Full Validation ที่ release checkpoint
+## V-17: Workload / acceptance — Passed หลัง deterministic rerun 2026-10-23
+
+รอบแก้ไขรัน LEGACY/PREPARED แยก mode ครบ 600 วินาทีหลัง warmup 60 วินาที,
+20 authenticated clients และ 100 mount/unmount cycles. ทุก threshold เดิมผ่าน:
+LEGACY live p95/max 0.092/0.411 วินาที; PREPARED live p95/max 0.245/1.848 วินาที
+และ history p95 0.744 วินาที. Controlled source fault/recovery ครบ 5/5 series ต่อ mode,
+preview เหลือ 22/24 rows และทุก client ได้ live success. PREPARED non-success 10 ครั้ง
+เป็น typed `504 CHART_DEADLINE_EXCEEDED` ทั้งหมดตาม contract. ดูคำสั่ง, digest,
+environment, raw artifact และ final checks ใน
+[หลักฐาน rerun](evidence/2026-10-23-v17-full-rerun.md).
+
+### Historical Failed / Partial รอบแรก — เก็บไว้ตามกฎหลักฐาน
+
+รอบเต็ม LEGACY/PREPARED 600 วินาทีหลัง warmup 60 วินาทีรันแล้วตาม
+[หลักฐาน 2026-10-23](evidence/2026-10-23-v17-full-workload.md). ผลรวมยังไม่ผ่าน:
+LEGACY Live GET p95/max เกินเกณฑ์, PREPARED history p95 เกิน 3 วินาที และทั้งสองโหมด
+มี live success เพียง 5/20 clients พร้อม `CHART_DATA_UNAVAILABLE`. Controlled source fault
+เกิดครบลำดับเพียง 3/5 series และ preview count ปน state จาก persistent smoke fixture,
+จึงคง coverage ส่วนนั้นเป็น Partial. ห้ามใช้รอบนี้เปิด PREPARED/production หรือเปลี่ยน F-12
+เป็น Completed; rerun ภายหลังต้องเก็บผล Failed นี้ไว้.
 
 สภาพแวดล้อม Linux2vCPU/1GiB สำหรับAPI/market-data ตามฐานF-11,
 PG/RedisแยกตามComposeเดิม; ChromiumNode22 บันทึกversion/seed/digest.

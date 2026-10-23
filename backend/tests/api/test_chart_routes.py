@@ -17,6 +17,7 @@ from tests.infra.indicators.test_source import active as active
 from tests.infra.market_data.test_chart_preview import observation
 from tiewtrade.core.market_data import Timeframe
 from tiewtrade.infra.db import DatabaseRole, create_engine_for
+from tiewtrade.infra.db.errors import DatabaseTimeoutError
 from tiewtrade.infra.db.session import market_data_session
 from tiewtrade.infra.market_data.candle_preview import acquire, connection, flush
 from tiewtrade.infra.realtime.admission import AdmissionOutcome
@@ -82,6 +83,23 @@ def test_chart_auth_csrf_and_sanitized_input(client: TestClient) -> None:
     )
     assert rejected_origin.status_code == 403
     assert rejected_origin.json() == {"detail": "CSRF_ORIGIN_REJECTED"}
+
+
+def test_live_database_timeout_is_typed(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from tiewtrade.services.api import chart_routes
+
+    async def timed_out(*args: object) -> None:
+        raise DatabaseTimeoutError("controlled timeout")
+
+    monkeypatch.setattr(chart_routes, "_live", timed_out)
+    register(client)
+    response = client.get(
+        "/market-data/chart/live", params={"base": "BTC", "quote": "USDT", "timeframe": "1h"}
+    )
+    assert response.status_code == 504
+    assert response.json() == {"detail": "CHART_DEADLINE_EXCEEDED"}
 
 
 @pytest.mark.parametrize("timeframe", ["1w", "1M"])
