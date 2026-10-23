@@ -14,11 +14,14 @@ from tests.api.test_prepared_indicators import ready as ready
 from tests.infra.indicators.test_claims import builder_engine as builder_engine
 from tests.infra.indicators.test_claims import prepared as prepared
 from tests.infra.indicators.test_source import active as active
+from tests.infra.indicators.test_source import md as md
 from tests.infra.market_data.test_chart_preview import observation
-from tiewtrade.core.market_data import Timeframe
+from tiewtrade.core.market_data import Timeframe, align_floor, next_open
 from tiewtrade.infra.db import DatabaseRole, create_engine_for
 from tiewtrade.infra.db.errors import DatabaseTimeoutError
 from tiewtrade.infra.db.session import market_data_session
+from tiewtrade.infra.indicators.maintenance import collect
+from tiewtrade.infra.market_data import claims as candle_claims
 from tiewtrade.infra.market_data.candle_preview import acquire, connection, flush
 from tiewtrade.infra.realtime.admission import AdmissionOutcome
 from tiewtrade.services.api.indicator_read_controller import IndicatorHistoryView
@@ -298,31 +301,48 @@ async def test_bundle_ohlc_and_indicators_use_one_snapshot_during_writer_commit(
 
 
 @pytest.mark.parametrize(
-    "fault,expected",
+    "mode,fault,expected",
     [
-        ("gap", "CHANGED"),
-        ("finality", "CHANGED"),
-        ("fetch_start", "CHANGED"),
-        ("floor", "UNVERIFIABLE"),
-        ("rollout_epoch", "CHANGED"),
-        ("maintenance", "UNVERIFIABLE"),
-        ("expiry", "UNVERIFIABLE"),
+        (mode, fault, "CHANGED")
+        for mode in ("LEGACY", "PREPARED")
+        for fault in ("gap", "finality", "fetch_start", "ohlc", "volume", "retention")
+    ]
+    + [
+        ("PREPARED", "floor", "UNVERIFIABLE"),
+        ("PREPARED", "rollout_epoch", "CHANGED"),
+        ("PREPARED", "maintenance", "UNVERIFIABLE"),
+        ("PREPARED", "expiry", "UNVERIFIABLE"),
+        ("PREPARED", "generation_cleanup", "UNVERIFIABLE"),
+        ("PREPARED", "ddl", "UNVERIFIABLE"),
+        # An unrelated future partition leaves the LEGACY content hash unchanged.
+        ("LEGACY", "ddl", "MATCHED"),
+        ("LEGACY", "detach_seed_partition", "CHANGED"),
+        ("PREPARED", "detach_seed_partition", "UNVERIFIABLE"),
     ],
 )
-async def test_display_proof_rejects_source_and_generation_faults(
+async def test_display_proof_tracks_source_and_generation_faults(
+    mode: str,
     fault: str,
     expected: str,
     ready: dict[str, Any],
     client: TestClient,
     migrator_engine: AsyncEngine,
+    md: AsyncEngine,
+    builder_engine: AsyncEngine,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    async with migrator_engine.begin() as c:
+        await c.execute(text("UPDATE indicator_rollout_control SET mode=:mode"), {"mode": mode})
     register(client)
     response = client.get(
         "/market-data/chart/history", params={"base": "BTC", "quote": "USDT", "timeframe": "4h"}
     )
     assert response.status_code == 200, response.text
+    partition_start = align_floor(ready["calculation_start"], Timeframe.MN1)
+    partition_end = next_open(partition_start, Timeframe.MN1)
+    partition_name = f"market_candles_{partition_start:%Y%m}"
     async with migrator_engine.begin() as c:
-        if fault in ("gap", "finality", "fetch_start"):
+        if fault in ("gap", "finality", "fetch_start", "ohlc", "volume"):
             await c.execute(text("SELECT begin_indicator_source_write()"))
             statement = {
                 "gap": """DELETE FROM market_candles
@@ -332,9 +352,31 @@ async def test_display_proof_rejects_source_and_generation_faults(
                 "fetch_start": """UPDATE market_candles
                     SET fetch_started_at=end_at-interval '1 second'
                     WHERE base='BTC' AND timeframe='4h' AND open_at=:seed""",
+                "ohlc": """UPDATE market_candles SET close=open
+                    WHERE base='BTC' AND timeframe='4h' AND open_at=:seed""",
+                "volume": """UPDATE market_candles SET volume=volume+1
+                    WHERE base='BTC' AND timeframe='4h' AND open_at=:seed""",
             }[fault]
             await c.execute(text(statement), {"seed": ready["calculation_start"]})
-        else:
+        elif fault == "generation_cleanup":
+            # Preserve expiry/window constraints while aging the collected generation.
+            await c.execute(
+                text("""UPDATE indicator_generations
+                SET as_of=as_of-interval '7 hours', expires_at=expires_at-interval '7 hours',
+                calculation_end=calculation_end-interval '7 hours',
+                calculation_start=calculation_start-interval '7 hours'""")
+            )
+        elif fault == "ddl":
+            await c.execute(text("SELECT begin_indicator_source_maintenance()"))
+            await c.execute(
+                text("""CREATE TABLE test_chart_proof_2035
+                PARTITION OF market_candles
+                FOR VALUES FROM ('2035-01-01') TO ('2035-02-01')""")
+            )
+        elif fault == "detach_seed_partition":
+            await c.execute(text("SELECT begin_indicator_source_maintenance()"))
+            await c.execute(text(f"ALTER TABLE market_candles DETACH PARTITION {partition_name}"))
+        elif fault != "retention":
             await c.execute(
                 text(
                     {
@@ -347,10 +389,50 @@ async def test_display_proof_rejects_source_and_generation_faults(
                     }[fault]
                 )
             )
-    checked = client.post(
-        "/market-data/chart/verify",
-        json={"display_proof": response.json()["display_proof"]},
-        headers=csrf_headers(client),
-    )
-    assert checked.status_code == 200, checked.text
-    assert checked.json()["status"] == expected
+    try:
+        if fault == "retention":
+
+            async def cleanup_clock(session: object) -> datetime:
+                return cast(datetime, ready["calculation_start"]) + timedelta(
+                    days=365, hours=6, minutes=15, seconds=1
+                )
+
+            # Advance only the retention worker clock, not display-proof expiry.
+            monkeypatch.setattr(candle_claims, "database_now", cleanup_clock)
+            async with market_data_session(md) as session:
+                assert await candle_claims.cleanup(session) > 0
+            async with migrator_engine.connect() as c:
+                assert (
+                    await c.execute(
+                        text("""SELECT count(*) FROM market_candles
+                    WHERE base='BTC' AND timeframe='4h' AND open_at=:seed"""),
+                        {"seed": ready["calculation_start"]},
+                    )
+                ).scalar_one() == 0
+        elif fault == "generation_cleanup":
+            assert (await collect(builder_engine))["generations"] == 1
+            async with migrator_engine.connect() as c:
+                assert (
+                    await c.execute(text("SELECT count(*) FROM indicator_generations"))
+                ).scalar_one() == 0
+        checked = client.post(
+            "/market-data/chart/verify",
+            json={"display_proof": response.json()["display_proof"]},
+            headers=csrf_headers(client),
+        )
+        assert checked.status_code == 200, checked.text
+        assert checked.json()["status"] == expected
+    finally:
+        if fault == "ddl":
+            async with migrator_engine.begin() as c:
+                await c.execute(text("SELECT begin_indicator_source_maintenance()"))
+                await c.execute(text("DROP TABLE test_chart_proof_2035"))
+        elif fault == "detach_seed_partition":
+            async with migrator_engine.begin() as c:
+                await c.execute(text("SELECT begin_indicator_source_maintenance()"))
+                await c.execute(
+                    text(f"""ALTER TABLE market_candles
+                    ATTACH PARTITION {partition_name}
+                    FOR VALUES FROM ('{partition_start:%Y-%m-%d}')
+                    TO ('{partition_end:%Y-%m-%d}')""")
+                )

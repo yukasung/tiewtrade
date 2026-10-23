@@ -307,29 +307,33 @@ F-12 ไม่รับรอง production PREPARED หรือ Live readiness
 
 | รหัส | เกณฑ์ / วิธีตรวจ | Requirements | ผล |
 |---|---|---|---|
-| V-01 | Public contract/fixture, adapter partial ordering และ dependency/license checks ตามรายละเอียดด้านล่าง | 2/9/22/25/26 | Partial |
-| V-02 | Parser/feed state properties: หน่วย/UTC/รูปร่าง/ordering/conflict/duplicate/reconnect/epoch | 2/3/9/25/26 | Partial |
-| V-03 | Bundle OHLC/indicator อ่าน snapshotเดียวและค่าตรง F-11 แบบ LEGACY/PREPARED | 3/6/7/9 | Partial |
-| V-04 | Proof ครอบ seed/gap/finality/retention/DDL; CHANGED/UNKNOWN ไม่มี overlay/tooltip | 7/8/11 | Partial |
-| V-05 | Cursor/display proof tamper/MAC/purpose/session/expiry/cross replica;ไม่มี token log | 7/11/17/19 | Partial |
-| V-06 | Budget/abort/timeout cleanup, no partial bundle; endpoint F-11 เดิมไม่เปลี่ยน | 10/11/16/18 | Partial |
-| V-07 | Actual-role migration/grants/lease/fenced preview≤60 rows และ rollback | 1/17/23/25 | Partial |
-| V-08 | Internal demand coalescing กับ F-09 users/worker; end boundary/fetch proof/commit | 9/12/13/25/28 | Partial |
-| V-09 | Freshness/recovery/Restart/Redis failure/slowconsumer/control limits | 14/15/25/26/27 | Partial |
-| V-10 | Auth/CSRF/routingไม่ต่อ session/machine/hidden/401/unsupported input | 1/2/18/19/23 | Partial |
-| V-11 | Readiness/refresh controller finite state และเงื่อนไข retry/stop | 11/12/13/16/18/28 | Partial |
-| V-12 | Exact text/numeric boundary/renderer whitespace/continuoussegments | 3/5/7/8/17/21 | Partial |
-| V-13 | Viewport/page load/history cap/series switch/late response/StrictMode cleanup | 2/5/10/18/20 | Partial |
+| V-01 | Public contract/fixture, adapter partial ordering และ dependency/license checks ตามรายละเอียดด้านล่าง | 2/9/22/25/26 | Passed — raw public fixture/ordering, synthetic closure, pinned dependency/license และ actual chart build/E2E ครบตาม [acceptance audit 2026-10-23](evidence/2026-10-23-v17-full-rerun.md) |
+| V-02 | Parser/feed state properties: หน่วย/UTC/รูปร่าง/ordering/conflict/duplicate/reconnect/epoch | 2/3/9/25/26 | Passed 2026-10-23 — adapter malformed/missing envelope/event/kline และ numeric/decimal/identity/alignment/progress matrix ผ่านร่วมกับ state properties ตาม [acceptance audit](evidence/2026-10-23-v17-full-rerun.md) |
+| V-03 | Bundle OHLC/indicator อ่าน snapshotเดียวและค่าตรง F-11 แบบ LEGACY/PREPARED | 3/6/7/9 | Passed — criterion-to-test/artifact mapping ครบตาม [acceptance audit 2026-10-23](evidence/2026-10-23-v17-full-rerun.md); runtime เดิมและ targeted regressions ที่เพิ่มผ่าน |
+| V-04 | Proof ครอบ seed/gap/finality/retention/DDL; CHANGED/UNKNOWN ไม่มี overlay/tooltip | 7/8/11 | Passed 2026-10-23 — chart verify 21 actual-role fault cases รวม LEGACY/PREPARED mutations/retention, dependent/unrelated partition DDL และ actual generation cleanup ตาม [acceptance audit](evidence/2026-10-23-v17-full-rerun.md) |
+| V-05 | Cursor/display proof tamper/MAC/purpose/session/expiry/cross replica;ไม่มี token log | 7/11/17/19 | Passed — criterion-to-test/artifact mapping ครบตาม [acceptance audit 2026-10-23](evidence/2026-10-23-v17-full-rerun.md); runtime เดิมและ targeted regressions ที่เพิ่มผ่าน |
+| V-06 | Budget/abort/timeout cleanup, no partial bundle; endpoint F-11 เดิมไม่เปลี่ยน | 10/11/16/18 | Passed — criterion-to-test/artifact mapping ครบตาม [acceptance audit 2026-10-23](evidence/2026-10-23-v17-full-rerun.md); runtime เดิมและ targeted regressions ที่เพิ่มผ่าน |
+| V-07 | Actual-role migration/grants/lease/fenced preview≤60 rows และ rollback | 1/17/23/25 | Passed — criterion-to-test/artifact mapping ครบตาม [acceptance audit 2026-10-23](evidence/2026-10-23-v17-full-rerun.md); runtime เดิมและ targeted regressions ที่เพิ่มผ่าน |
+| V-08 | Internal demand coalescing กับ F-09 users/worker; end boundary/fetch proof/commit | 9/12/13/25/28 | Passed — criterion-to-test/artifact mapping ครบตาม [acceptance audit 2026-10-23](evidence/2026-10-23-v17-full-rerun.md); runtime เดิมและ targeted regressions ที่เพิ่มผ่าน |
+| V-09 | Freshness/recovery/Restart/Redis failure/slowconsumer/control limits | 14/15/25/26/27 | Passed 2026-10-23 — freshness/admission/notification-loss/PG recovery และ direct candle-feed generation/backoff/stability reset/protocol pause/Retry-After/cleanup ผ่านตาม [acceptance audit](evidence/2026-10-23-v17-full-rerun.md) |
+| V-10 | Auth/CSRF/routingไม่ต่อ session/machine/hidden/401/unsupported input | 1/2/18/19/23 | Passed — criterion-to-test/artifact mapping ครบตาม [acceptance audit 2026-10-23](evidence/2026-10-23-v17-full-rerun.md); runtime เดิมและ targeted regressions ที่เพิ่มผ่าน |
+| V-11 | Readiness/refresh controller finite state และเงื่อนไข retry/stop | 11/12/13/16/18/28 | Passed — criterion-to-test/artifact mapping ครบตาม [acceptance audit 2026-10-23](evidence/2026-10-23-v17-full-rerun.md); runtime เดิมและ targeted regressions ที่เพิ่มผ่าน |
+| V-12 | Exact text/numeric boundary/renderer whitespace/continuoussegments | 3/5/7/8/17/21 | Passed — criterion-to-test/artifact mapping ครบตาม [acceptance audit 2026-10-23](evidence/2026-10-23-v17-full-rerun.md); runtime เดิมและ targeted regressions ที่เพิ่มผ่าน |
+| V-13 | Viewport/page load/history cap/series switch/late response/StrictMode cleanup | 2/5/10/18/20 | Passed — criterion-to-test/artifact mapping ครบตาม [acceptance audit 2026-10-23](evidence/2026-10-23-v17-full-rerun.md); runtime เดิมและ targeted regressions ที่เพิ่มผ่าน |
 | V-14 | จริงใน Chromium: chart/panes/crosshair/keyboard/resize/ไทยอังกฤษ/attribution | 4/5/6/20/21/22 | Passed — automated Chromium ครอบ renderer/keyboard/resize/attribution และเจ้าของตรวจ Chart จริงบน development stack ผ่านวันที่ 2026-10-22 |
-| V-15 | Browser→API→PG→fake venue worker→bundle/preview/refresh ครบทาง ไม่ mock APIทั้ง flow | 1/3/7/12/13/25/27/28 | Partial |
-| V-16 | ภาพ/ข้อความ loading/empty/partial/unconfirmed/stale/failure แยก และไม่มี trading action | 8/9/14/15/23/24 | Partial |
+| V-15 | Browser→API→PG→fake venue worker→bundle/preview/refresh ครบทาง ไม่ mock APIทั้ง flow | 1/3/7/12/13/25/27/28 | Passed — criterion-to-test/artifact mapping ครบตาม [acceptance audit 2026-10-23](evidence/2026-10-23-v17-full-rerun.md); runtime เดิมและ targeted regressions ที่เพิ่มผ่าน |
+| V-16 | ภาพ/ข้อความ loading/empty/partial/unconfirmed/stale/failure แยก และไม่มี trading action | 8/9/14/15/23/24 | Passed — criterion-to-test/artifact mapping ครบตาม [acceptance audit 2026-10-23](evidence/2026-10-23-v17-full-rerun.md); runtime เดิมและ targeted regressions ที่เพิ่มผ่าน |
 | V-17 | วัดทรัพยากร/latency/budgets ตาม workload ที่กำหนด ไม่มี starvation จาก chart | 10/16/18/25/27/28 | Passed 2026-10-23 — deterministic full rerun LEGACY/PREPARED 600s หลัง warmup 60s, 20 clients และ 100 lifecycle cycles ผ่าน threshold เดิมครบ; [หลักฐาน rerun](evidence/2026-10-23-v17-full-rerun.md) |
-| V-18 | ด่าน CI/full regression/security/architecture/generated API/build + review/manualผ่าน | ทุกข้อ | Partial — owner manual ผ่าน 2026-10-22; [final candidate 2026-10-23](evidence/2026-10-23-v17-full-rerun.md) ผ่าน full backend `3033 passed, 2 deselected`, harness regressions 15, static/types/import 7/7, frontend 246 tests/build, generated contracts และ final review หลังแก้ findings; V-17 ผ่านแล้ว. ยังรอ commit/push และ required CI ของ candidate สุดท้าย |
+| V-18 | ด่าน CI/full regression/security/architecture/generated API/build + review/manualผ่าน | ทุกข้อ | Passed 2026-10-23 — owner manual ผ่าน 2026-10-22; [final candidate](evidence/2026-10-23-v17-full-rerun.md) ผ่าน full backend `3033 passed, 2 deselected`, harness regressions 15, static/types/import 7/7, frontend 246 tests/build, generated contracts และ final review หลังแก้ findings. V-17 ผ่านแล้ว; candidate `785470c` ผ่าน CI ครบ 6/6 ทั้ง push และ PR; [PR #24](https://github.com/yukasung/tiewtrade/pull/24) merge เข้า main เป็น `27a7718` แล้ว. เกณฑ์อื่นที่ยัง Partial และ release dependencies คงสถานะเดิม |
 
-ผล Partial อ้างอิง [หลักฐานหลัง merge](evidence/2026-10-14-post-merge.md),
+ผล audit ล่าสุดปิด mapping และ coverage gaps ของ V-01..13/V-15..16 ครบ 15/15 แล้วตาม
+[acceptance audit](evidence/2026-10-23-v17-full-rerun.md); backend targeted regressions 220 ผ่าน.
+Tests ที่เพิ่มยังรอ commit/push/CI และ V-18 gate สำหรับ revision ที่รวม tests ใหม่นี้ยัง pending;
+ผล CI ของ runtime เดิมก่อน/หลัง PR #24 ยังคงเป็นหลักฐานตาม revision เดิม.
+ผล Partial ใน checkpoint เก่ายังคงเป็นประวัติ อ้างอิง [หลักฐานหลัง merge](evidence/2026-10-14-post-merge.md),
 [สรุปผลและรายการค้างเดิม](evidence/checkpoint.md),
 [รายงาน local preview รอบก่อน](evidence/dev-preview.md) และ snapshot ที่ระบุในรายงาน
-ยังไม่ถือว่าผ่านทั้งด่าน; V-17 และเกณฑ์ที่ยังขาดต้องตรวจครบตามระยะรันด้านล่าง
+ไม่ใช้สถานะในประวัติมาแทนผลปัจจุบัน; F-12 คง In Progress จน branch นี้ผ่าน candidate/merge gates.
 
 ## ระยะรัน — เจ้าของอนุมัติปรับ workflow 2026-10-12
 

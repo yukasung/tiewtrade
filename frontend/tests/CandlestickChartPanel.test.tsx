@@ -4,6 +4,7 @@ import { CandlestickChartPanel } from "../src/CandlestickChartPanel";
 import { useChartData } from "../src/chart/useChartData";
 import type { ChartRenderer } from "../src/chart/renderer";
 import { candleHistory, chartLive } from "./chartFixture";
+import { ApiRequestError } from "../src/auth";
 
 const scale = vi.hoisted(() => ({ getVisibleLogicalRange: vi.fn<() => { from: number; to: number } | null>(() => null), getVisibleRange: vi.fn(() => null),
   setVisibleLogicalRange: vi.fn(), setVisibleRange: vi.fn(), subscribeVisibleLogicalRangeChange: vi.fn(),
@@ -30,6 +31,41 @@ it("renders exact candle data without indicator points or controls", () => {
   expect(draw.mock.calls.at(-1)?.[2].size).toBe(0);
   expect(screen.queryByRole("checkbox")).toBeNull();
   expect(screen.getByTestId("chart-summary").textContent).toContain("100.5");
+});
+
+it.each(["OPEN", "UNCONFIRMED", "CLOSED"] as const)("preserves zero volume and %s finality", finality => {
+  const current = state();
+  current.browsing.latest!.rows[0] = { ...candle(), finality, volume: "0" };
+  vi.mocked(useChartData).mockReturnValue(current);
+  render(<CandlestickChartPanel userId="one"/>);
+  expect(screen.getByTestId("chart-summary").textContent).toContain("0 BTC");
+  expect(draw.mock.calls.at(-1)?.[0][0]?.finality).toBe(finality);
+  expect(current.browsing.latest!.rows[0].volume).toBe("0");
+});
+
+it("keeps empty calendar slots without fabricating OHLC and disables reset before any page", () => {
+  const current = state(); current.browsing.latest!.rows = [];
+  vi.mocked(useChartData).mockReturnValue(current);
+  const panel = render(<CandlestickChartPanel userId="one"/>);
+  expect(draw.mock.calls.at(-1)?.[0]).toEqual([]);
+  expect(screen.getByTestId("chart-summary").querySelector(".chart-ohlc")).toBeNull();
+  expect(draw.mock.calls.at(-1)?.[4]).toHaveLength(24);
+  expect(screen.getByRole<HTMLButtonElement>("button", { name: /รีเซ็ต/ }).disabled).toBe(false);
+  current.browsing.latest = undefined;
+  panel.rerender(<CandlestickChartPanel userId="one"/>);
+  expect(screen.getByRole<HTMLButtonElement>("button", { name: /รีเซ็ต/ }).disabled).toBe(true);
+});
+
+it("shows a typed live failure with retained exact data and disables retry during work", () => {
+  const current = state();
+  current.error = new ApiRequestError("CHART_DEADLINE_EXCEEDED", 504);
+  current.preview.isFetching = true;
+  vi.mocked(useChartData).mockReturnValue(current);
+  render(<CandlestickChartPanel userId="one"/>);
+  expect(screen.getByRole("alert").textContent).toBe("อ่านข้อมูลสดไม่ทันเวลาที่กำหนด");
+  expect(screen.getByRole<HTMLButtonElement>("button", { name: /ลองใหม่/ }).disabled).toBe(true);
+  expect(screen.getByTestId("chart-summary").textContent).toContain("100.5");
+  expect(screen.getByTestId("chart-summary").textContent).toContain("ยังไม่มีหลักฐานยืนยัน CLOSED");
 });
 it("keeps newer history when live is older, and deduplicates newer live", () => {
   const current = state(); current.preview.data!.rows = [{ ...candle(), close: "100.1", observed_at: "2026-10-12T00:20:00Z" }];
