@@ -169,6 +169,18 @@ domain ของเงินที่ปฏิเสธค่าที่เก�
 
 ## ชุดที่ 1 — ฐานราก
 
+F-01 follow-up: [Self-hosted CI / ลดรอบซ้ำ](features/2026-10-23-self-hosted-ci/requirements.md)
+**Retired / ไม่เปิดใช้ self-hosted CI (2026-10-24)** — เจ้าของเปลี่ยน repository เป็น Public
+และให้ปิดงานทดลอง; ใช้ GitHub-hosted workflow เดิมต่อโดยไม่เปลี่ยน triggers/storage.
+Post-merge CI [39972554569 attempt 3](https://github.com/yukasung/tiewtrade/actions/runs/39972554569/attempts/3)
+บน `51f0e2700e5c478e5b13b52f2cedcff2f6961d8d` ผ่านครบ 6/6;
+`main` บังคับ checks ทั้ง 6 (strict/up-to-date, enforce admins), ห้าม force push/delete.
+ผล Failed/Partial ของ isolation proof ยังอยู่ตามเดิม ไม่ถือว่า self-hosted validation ผ่าน;
+NC-52 ถูกพักตามการเลิกใช้แนวทางนี้ ไม่ใช่ข้อพิสูจน์สำเร็จ. ไม่เคยลงทะเบียน runner.
+VM/cache/runtime ถูกลบและถอน Lima แล้ว แต่ disabled account/home ยังเหลือจากข้อจำกัด macOS.
+Helper/test ทดลองเก็บนอก repo ไม่รวมใน PR; ดู [checkpoint](features/2026-10-23-self-hosted-ci/evidence/closure-checkpoint.md).
+ไม่เปลี่ยนสถานะ F-01/F-12 หรือรับรอง release/Live gates เพิ่มจากผล CI นี้.
+
 | รหัส | งาน | สถานะ | หมายเหตุ |
 |---|---|---|---|
 | F-01 | วางโครง repo, เครื่องมือ, CI | **Completed** | เสร็จ 2026-09-27 — PR #1 merge เข้า main, CI เขียวครบ 5 job, เกณฑ์ใน `validation.md` ครบ 16 ข้อ |

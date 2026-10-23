@@ -1,0 +1,136 @@
+{
+  "vm_before": {
+    "name": "tiewtrade-ci-proof",
+    "hostname": "lima-tiewtrade-ci-proof",
+    "status": "Stopped",
+    "dir": "/Users/tiewtrade_ci/.lima/tiewtrade-ci-proof",
+    "vmType": "vz",
+    "arch": "aarch64",
+    "cpus": 4,
+    "memory": 4294967296,
+    "disk": 64424509440,
+    "sshConfigFile": "/Users/tiewtrade_ci/.lima/tiewtrade-ci-proof/ssh.config",
+    "config": {
+      "minimumLimaVersion": "2.2.1",
+      "vmType": "vz",
+      "os": "Linux",
+      "arch": "aarch64",
+      "images": [
+        {
+          "location": "https://cloud-images.ubuntu.com/releases/noble/release-20260926/ubuntu-24.04-server-cloudimg-arm64.img",
+          "arch": "aarch64",
+          "digest": "sha256:1d6bffe64b848468ac97f821d369a4846d983de1800ccf6b5ec8853e85cefc55"
+        }
+      ],
+      "cpus": 4,
+      "memory": "4GiB",
+      "disk": "60GiB",
+      "mountInotify": false,
+      "ssh": {
+        "localPort": 0,
+        "loadDotSSHPubKeys": false,
+        "forwardAgent": false,
+        "forwardX11": false,
+        "forwardX11Trusted": false,
+        "overVsock": true
+      },
+      "firmware": {
+        "legacyBIOS": false
+      },
+      "audio": {
+        "device": "",
+        "interface": ""
+      },
+      "video": {
+        "display": "none"
+      },
+      "provision": [
+        {
+          "mode": "system",
+          "script": "#!/bin/sh\nset -eu\nexport DEBIAN_FRONTEND=noninteractive\napt-get update\napt-get install -y docker.io python3 curl iputils-ping dnsutils netcat-openbsd\nsystemctl enable --now docker\n"
+        }
+      ],
+      "upgradePackages": false,
+      "containerd": {
+        "system": false,
+        "user": false,
+        "archives": [
+          {
+            "location": "https://github.com/containerd/nerdctl/releases/download/v2.4.1/nerdctl-full-2.4.1-linux-amd64.tar.gz",
+            "arch": "x86_64",
+            "digest": "sha256:ff018f11ac2f1354bf7b3aaaca6e0b52d81139c746a89134744d0b7be3a0e62f"
+          },
+          {
+            "location": "https://github.com/containerd/nerdctl/releases/download/v2.4.1/nerdctl-full-2.4.1-linux-arm64.tar.gz",
+            "arch": "aarch64",
+            "digest": "sha256:2deffe14625f93866f90a8f265d0f59d6fa476c7dc54b98adb327b1b4613efd4"
+          }
+        ]
+      },
+      "guestInstallPrefix": "/usr/local",
+      "portForwards": [
+        {
+          "guestIPMustBeZero": false,
+          "guestIP": "127.0.0.1",
+          "guestPortRange": [
+            1,
+            65535
+          ],
+          "hostIP": "127.0.0.1",
+          "hostPortRange": [
+            1,
+            65535
+          ],
+          "proto": "any",
+          "ignore": true
+        }
+      ],
+      "dns": [
+        "1.1.1.1"
+      ],
+      "hostResolver": {
+        "enabled": false,
+        "ipv6": false
+      },
+      "propagateProxyEnv": false,
+      "caCerts": {
+        "removeDefaults": false
+      },
+      "plain": false,
+      "timezone": "Asia/Bangkok",
+      "nestedVirtualization": false,
+      "user": {
+        "name": "tiewtrade_ci",
+        "comment": "",
+        "home": "/home/tiewtrade_ci.guest",
+        "shell": "/bin/bash",
+        "uid": 550,
+        "passwordlessSudo": true
+      },
+      "tpm": false
+    },
+    "sshAddress": "127.0.0.1",
+    "protected": false,
+    "limaVersion": "2.2.1",
+    "HostOS": "darwin",
+    "HostArch": "aarch64",
+    "LimaHome": "/Users/tiewtrade_ci/.lima",
+    "IdentityFile": "/Users/tiewtrade_ci/.lima/_config/user"
+  },
+  "pf_before": {
+    "info": "Status: Disabled for 0 days 00:39:23          Debug: Urgent\n\nState Table                          Total             Rate\n  current entries                        0               \n  searches                             287            0.1/s\n  inserts                                0            0.0/s\n  removals                               0            0.0/s\nCounters\n  match                                237            0.1/s\n  bad-offset                             0            0.0/s\n  fragment                               0            0.0/s\n  short                                  0            0.0/s\n  normalize                              0            0.0/s\n  memory                                 0            0.0/s\n  bad-timestamp                          0            0.0/s\n  congestion                             0            0.0/s\n  ip-option                              0            0.0/s\n  proto-cksum                            0            0.0/s\n  state-mismatch                         0            0.0/s\n  state-insert                           0            0.0/s\n  state-limit                            0            0.0/s\n  src-limit                              0            0.0/s\n  synproxy                               0            0.0/s\n  dummynet                               0            0.0/s\n  invalid-port                           0            0.0/s\nNo ALTQ support in kernel\nALTQ related functions disabled\n",
+    "filter": "scrub-anchor \"com.apple/*\" all fragment reassemble\nanchor \"com.apple/*\" all",
+    "nat": "nat-anchor \"com.apple/*\" all\nrdr-anchor \"com.apple/*\" all",
+    "anchors": "com.apple\ntiewtrade-ci-proof",
+    "nested_filter": "anchor \"200.AirDrop/*\" all\nanchor \"250.ApplicationFirewall/*\" all",
+    "nested_nat": "",
+    "nested_anchors": "com.apple/200.AirDrop\ncom.apple/250.ApplicationFirewall",
+    "interfaces": "ALL\nanpi0\nanpi1\nap1\nawdl0\nbridge0\nen0\nen1\nen2\nen3\nen4\ngif0\nllw0\nlo0\nstf0\nutun0\nutun1\nutun2\nutun3"
+  },
+  "policy": "block drop out quick inet proto { tcp, udp } to { 0.0.0.0/8, 10.0.0.0/8, 100.64.0.0/10, 127.0.0.0/8, 169.254.0.0/16, 172.16.0.0/12, 172.20.10.0/28, 192.0.0.0/24, 192.0.2.0/24, 192.168.0.0/16, 192.88.99.0/24, 198.18.0.0/15, 198.51.100.0/24, 203.0.113.0/24, 224.0.0.0/4, 240.0.0.0/4 } user 550\npass out quick inet proto tcp to any port { 80, 443 } user 550 keep state\npass out quick inet proto { tcp, udp } to 1.1.1.1 port 53 user 550 keep state\nblock drop out quick proto { tcp, udp } to any user 550 label \"tiewtrade-ci-proof\"\n",
+  "status": "failed",
+  "pf_reference": "16756678932797025516",
+  "error": "Command '['/usr/bin/sudo', '-n', '-H', '-u', 'tiewtrade_ci', '/opt/homebrew/bin/limactl', 'start', '--tty=false', 'tiewtrade-ci-proof']' returned non-zero exit status 1.",
+  "cleanup": "manual_reconciliation_required",
+  "cleanup_error": "Command '['/usr/bin/sudo', '-n', '-H', '-u', 'tiewtrade_ci', '/opt/homebrew/bin/limactl', 'stop', 'tiewtrade-ci-proof']' returned non-zero exit status 1."
+}
