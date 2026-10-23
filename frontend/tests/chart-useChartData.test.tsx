@@ -68,6 +68,54 @@ it("401 cancels an in-flight page and stops polling", async () => {
   expect(live).toHaveBeenCalledTimes(1);
 });
 
+it.each([
+  [429, "CHART_RATE_LIMITED"], [503, "CHART_ADMISSION_UNAVAILABLE"], [504, "CHART_DEADLINE_EXCEEDED"],
+] as const)("stops automatic live work after terminal HTTP %s", async (status, code) => {
+  vi.mocked(live).mockRejectedValueOnce(new ApiRequestError(code, status));
+  const hook = mount(); await tick();
+  await tick(30_000);
+  globalThis.dispatchEvent(new Event("focus")); await tick();
+  expect(live).toHaveBeenCalledTimes(1);
+  expect(history).not.toHaveBeenCalled(); expect(verify).not.toHaveBeenCalled();
+  act(() => hook.result.current.retry()); await tick();
+  expect(live).toHaveBeenCalledTimes(2);
+});
+
+it.each(["hidden", "offline"])("cancels live reads while %s and resumes once", async transition => {
+  let active = true;
+  const property = transition === "hidden" ? vi.spyOn(document, "visibilityState", "get")
+    .mockImplementation(() => active ? "visible" : "hidden")
+    : vi.spyOn(globalThis.navigator, "onLine", "get").mockImplementation(() => active);
+  try {
+    vi.mocked(live).mockImplementationOnce(() => new Promise(() => undefined));
+    mount(); await tick();
+    const signal = vi.mocked(live).mock.calls[0]![1];
+    act(() => { active = false;
+      if (transition === "hidden") document.dispatchEvent(new Event("visibilitychange"));
+      else globalThis.dispatchEvent(new Event("offline"));
+    });
+    await tick(10_000);
+    expect(signal.aborted).toBe(true); expect(live).toHaveBeenCalledTimes(1);
+    act(() => { active = true;
+      if (transition === "hidden") document.dispatchEvent(new Event("visibilitychange"));
+      else globalThis.dispatchEvent(new Event("online"));
+    });
+    await tick(); expect(live).toHaveBeenCalledTimes(2);
+  } finally { property.mockRestore(); }
+});
+
+it("keeps Retry-After monotonic when the browser wall clock jumps", async () => {
+  vi.mocked(candlePage).mockRejectedValueOnce(new ApiRequestError("CHART_RATE_LIMITED", 429, "60"));
+  const hook = mount(); await tick();
+  vi.setSystemTime(Date.now() + 3_600_000);
+  act(() => hook.result.current.retry()); await tick(30_000);
+  expect(candlePage).toHaveBeenCalledTimes(1);
+  vi.setSystemTime(Date.now() - 7_200_000);
+  await tick(30_001);
+  act(() => hook.result.current.retry()); await tick();
+  expect(candlePage).toHaveBeenCalledTimes(2);
+});
+
 it("keeps rate-limit recovery available after switching timeframe during cooldown", async () => {
   vi.mocked(candlePage).mockRejectedValueOnce(new ApiRequestError("CHART_RATE_LIMITED", 429, "60"));
   const hook = mount(); await tick();

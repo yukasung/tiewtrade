@@ -24,13 +24,15 @@ from tiewtrade.core.market_data import (
 )
 from tiewtrade.core.money import Money, Quantity
 from tiewtrade.infra.db import DatabaseRole, create_engine_for
-from tiewtrade.infra.db.session import market_data_session
+from tiewtrade.infra.db.session import indicator_read_session, market_data_session
 from tiewtrade.infra.market_data.candle_preview import (
     PreviewLeaseLostError,
     acquire,
+    complete_bootstrap,
     connection,
     enqueue_ended,
     flush,
+    read_live,
 )
 from tiewtrade.infra.market_data.catalog import PAIRS
 from tiewtrade.infra.realtime.notifications import RedisNotifications
@@ -60,6 +62,44 @@ def observation() -> CandleObservation:
         now,
     )
     return CandleObservation(candle, now, now, 1, 1, 1, False)
+
+
+async def test_notification_loss_preserves_committed_preview_and_readiness(
+    market_data_engine: AsyncEngine, migrator_engine: AsyncEngine, api_engine: AsyncEngine
+) -> None:
+    async with migrator_engine.begin() as connection_:
+        await connection_.execute(text("DELETE FROM market_candle_preview"))
+        await connection_.execute(
+            text("UPDATE market_candle_feed_state SET lease_until=clock_timestamp()")
+        )
+    async with market_data_session(market_data_engine) as session:
+        lease = await acquire(session, uuid4())
+        assert lease is not None
+        lease = await connection(session, lease, True)
+        await complete_bootstrap(session, lease)
+    publisher = AsyncMock()
+    publisher.publish.side_effect = ConnectionError("controlled notification outage")
+    notifications = RedisNotifications(publisher, channel="market.candles.changed")
+    state = CandleSupervisor(market_data_engine, FakeCandleFeed(), notifications)
+    state.lease, state.epoch = lease, 1
+    first = observation()
+    state.observe(FeedCandle(1, first))
+    await state._flush()
+    newer = replace(
+        first,
+        trade_count=2,
+        last_trade_id=2,
+        candle=replace(first.candle, close=Money.of("100.5", "USDT"), volume=Quantity.of(2, "BTC")),
+    )
+    state.observe(FeedCandle(1, newer))
+    await state._flush()
+    assert publisher.publish.await_count == 2
+    assert not state.dirty and not state.demands
+    async with indicator_read_session(api_engine, uuid4()) as session:
+        feed, rows, _, _ = await read_live(session, CandleSeries("BTC", "USDT", Timeframe.H1))
+    assert feed["connected"] and feed["bootstrapped"] and feed["failure_code"] is None
+    assert len(rows) == 1 and rows[0]["close"] == Money.of("100.5", "USDT").amount
+    assert rows[0]["revision"] == 2
 
 
 @pytest_asyncio.fixture

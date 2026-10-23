@@ -54,6 +54,103 @@ def test_invalid_fields_fail_closed(field: str, value: object) -> None:
         candle_from_stream(payload=payload, series=SERIES, received_at=datetime.now(UTC))
 
 
+@pytest.mark.parametrize("field", ["E", "t", "T", "n", "f", "L"])
+@pytest.mark.parametrize("value", [True, False, None, "1", 1.5])
+def test_numeric_stream_fields_reject_wrong_types(field: str, value: object) -> None:
+    payload = sample()
+    data = cast(dict[str, object], payload["data"])
+    target = data if field == "E" else cast(dict[str, object], data["k"])
+    target[field] = value
+    with pytest.raises(VenueProtocolError):
+        candle_from_stream(payload=payload, series=SERIES, received_at=datetime.now(UTC))
+
+
+@pytest.mark.parametrize("field", ["o", "h", "l", "c", "v"])
+@pytest.mark.parametrize("value", [True, 1, 1.5, "NaN", "Infinity", "-Infinity", "bad", "1e99999"])
+def test_amount_fields_reject_non_string_non_finite_and_overflow(field: str, value: object) -> None:
+    payload = sample()
+    cast(dict[str, object], cast(dict[str, object], payload["data"])["k"])[field] = value
+    with pytest.raises(VenueProtocolError):
+        candle_from_stream(payload=payload, series=SERIES, received_at=datetime.now(UTC))
+
+
+@pytest.mark.parametrize("field", ["t", "T", "o", "h", "l", "c", "v", "x", "n", "f", "L", "s", "i"])
+def test_missing_kline_fields_fail_closed(field: str) -> None:
+    payload = sample()
+    cast(dict[str, object], cast(dict[str, object], payload["data"])["k"]).pop(field)
+    with pytest.raises(VenueProtocolError):
+        candle_from_stream(payload=payload, series=SERIES, received_at=datetime.now(UTC))
+
+
+@pytest.mark.parametrize("level", ["envelope", "data", "kline"])
+@pytest.mark.parametrize("value", [None, [], True, "malformed"])
+def test_malformed_envelope_levels_fail_closed(level: str, value: object) -> None:
+    payload: object = sample()
+    envelope = cast(dict[str, object], payload)
+    if level == "envelope":
+        payload = value
+    elif level == "data":
+        envelope["data"] = value
+    else:
+        cast(dict[str, object], envelope["data"])["k"] = value
+    with pytest.raises(VenueProtocolError):
+        candle_from_stream(payload=payload, series=SERIES, received_at=datetime.now(UTC))
+
+
+@pytest.mark.parametrize(
+    "level,field",
+    [
+        ("envelope", "stream"),
+        ("envelope", "data"),
+        ("data", "e"),
+        ("data", "s"),
+        ("data", "E"),
+        ("data", "k"),
+    ],
+)
+def test_missing_envelope_and_event_fields_fail_closed(level: str, field: str) -> None:
+    payload = sample()
+    target = payload if level == "envelope" else cast(dict[str, object], payload["data"])
+    target.pop(field)
+    with pytest.raises(VenueProtocolError):
+        candle_from_stream(payload=payload, series=SERIES, received_at=datetime.now(UTC))
+
+
+@pytest.mark.parametrize("field,value", [("n", -1), ("f", -2), ("L", -2), ("f", 10**30)])
+def test_invalid_cumulative_progress_fails_closed(field: str, value: int) -> None:
+    payload = sample()
+    cast(dict[str, object], cast(dict[str, object], payload["data"])["k"])[field] = value
+    with pytest.raises(VenueProtocolError):
+        candle_from_stream(payload=payload, series=SERIES, received_at=datetime.now(UTC))
+
+
+@pytest.mark.parametrize(
+    "fault",
+    ["stream", "event", "outer-symbol", "inner-symbol", "event-time", "open", "end", "volume"],
+)
+def test_identity_timestamp_alignment_and_quantity_faults_are_rejected(fault: str) -> None:
+    payload = sample()
+    data = cast(dict[str, object], payload["data"])
+    kline = cast(dict[str, object], data["k"])
+    if fault == "stream":
+        payload["stream"] = "ethusdt@kline_1h"
+    elif fault == "event":
+        data["e"] = "trade"
+    elif fault == "outer-symbol":
+        data["s"] = "BTCBUSD"
+    elif fault == "inner-symbol":
+        kline["s"] = "ETHUSDT"
+    elif fault == "event-time":
+        data["E"] = True
+    elif fault in ("open", "end"):
+        field = "t" if fault == "open" else "T"
+        kline[field] = cast(int, kline[field]) + 1
+    else:
+        kline["v"] = "-1"
+    with pytest.raises(VenueProtocolError):
+        candle_from_stream(payload=payload, series=SERIES, received_at=datetime.now(UTC))
+
+
 def test_closure_hint_never_becomes_closed_history() -> None:
     payload = sample()
     payload["data"]["k"]["x"] = True  # type: ignore[index]
