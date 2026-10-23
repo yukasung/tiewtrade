@@ -1,0 +1,38 @@
+{
+  "uid": 550,
+  "owner_uid": 501,
+  "before": {
+    "info": "Status: Disabled                              Debug: Urgent\n\nState Table                          Total             Rate\n  current entries                        0               \n  searches                               0            0.0/s\n  inserts                                0            0.0/s\n  removals                               0            0.0/s\nCounters\n  match                                  0            0.0/s\n  bad-offset                             0            0.0/s\n  fragment                               0            0.0/s\n  short                                  0            0.0/s\n  normalize                              0            0.0/s\n  memory                                 0            0.0/s\n  bad-timestamp                          0            0.0/s\n  congestion                             0            0.0/s\n  ip-option                              0            0.0/s\n  proto-cksum                            0            0.0/s\n  state-mismatch                         0            0.0/s\n  state-insert                           0            0.0/s\n  state-limit                            0            0.0/s\n  src-limit                              0            0.0/s\n  synproxy                               0            0.0/s\n  dummynet                               0            0.0/s\n  invalid-port                           0            0.0/s\nNo ALTQ support in kernel\nALTQ related functions disabled\n",
+    "filter": "scrub-anchor \"com.apple/*\" all fragment reassemble\nanchor \"com.apple/*\" all",
+    "nat": "nat-anchor \"com.apple/*\" all\nrdr-anchor \"com.apple/*\" all",
+    "anchors": "com.apple",
+    "nested_filter": "anchor \"200.AirDrop/*\" all\nanchor \"250.ApplicationFirewall/*\" all",
+    "nested_nat": "",
+    "nested_anchors": "com.apple/200.AirDrop\ncom.apple/250.ApplicationFirewall",
+    "interfaces": "ALL\nanpi0\nanpi1\nap1\nawdl0\nbridge0\nen0\nen1\nen2\nen3\nen4\ngif0\nllw0\nlo0\nstf0\nutun0\nutun1\nutun2\nutun3"
+  },
+  "filtered": {
+    "ipv4": {
+      "probe_connected": false,
+      "owner_connected": true
+    },
+    "ipv6": {
+      "probe_connected": false,
+      "owner_connected": true
+    }
+  },
+  "counters": "@0 block drop out quick proto tcp all user = 550 label \"tiewtrade-ci-proof\"\n  [ Owner : nil          Priority : 0     ]\n  [ Evaluations: 232       Packets: 11        Bytes: 724         States: 0     ]\n  [ Inserted: uid 0 pid 6502 ]\n@1 block drop out quick proto udp all user = 550 label \"tiewtrade-ci-proof\"\n  [ Owner : nil          Priority : 0     ]\n  [ Evaluations: 126       Packets: 0         Bytes: 0           States: 0     ]\n  [ Inserted: uid 0 pid 6502 ]\nNo ALTQ support in kernel\nALTQ related functions disabled\n",
+  "after": {
+    "info": "Status: Disabled for 0 days 00:00:00          Debug: Urgent\n\nState Table                          Total             Rate\n  current entries                        0               \n  searches                             287               \n  inserts                                0               \n  removals                               0               \nCounters\n  match                                237               \n  bad-offset                             0               \n  fragment                               0               \n  short                                  0               \n  normalize                              0               \n  memory                                 0               \n  bad-timestamp                          0               \n  congestion                             0               \n  ip-option                              0               \n  proto-cksum                            0               \n  state-mismatch                         0               \n  state-insert                           0               \n  state-limit                            0               \n  src-limit                              0               \n  synproxy                               0               \n  dummynet                               0               \n  invalid-port                           0               \nNo ALTQ support in kernel\nALTQ related functions disabled\n",
+    "filter": "scrub-anchor \"com.apple/*\" all fragment reassemble\nanchor \"com.apple/*\" all",
+    "nat": "nat-anchor \"com.apple/*\" all\nrdr-anchor \"com.apple/*\" all",
+    "anchors": "com.apple\ntiewtrade-ci-proof",
+    "nested_filter": "anchor \"200.AirDrop/*\" all\nanchor \"250.ApplicationFirewall/*\" all",
+    "nested_nat": "",
+    "nested_anchors": "com.apple/200.AirDrop\ncom.apple/250.ApplicationFirewall",
+    "interfaces": "ALL\nanpi0\nanpi1\nap1\nawdl0\nbridge0\nen0\nen1\nen2\nen3\nen4\ngif0\nllw0\nlo0\nstf0\nutun0\nutun1\nutun2\nutun3"
+  },
+  "root_rules_restored": true,
+  "pf_disabled_again": true,
+  "apple_references_unchanged": true
+}
