@@ -1,3 +1,4 @@
+import asyncio
 from datetime import datetime
 from typing import Annotated, Literal
 
@@ -16,7 +17,7 @@ from tiewtrade.core.timeframes import (
 from tiewtrade.infra.db import DatabaseRole, user_session
 from tiewtrade.infra.db.session import indicator_read_session
 from tiewtrade.infra.market_data.chart_overlay import overlay_preview
-from tiewtrade.infra.market_data.records import MarketDataInputError, StoredCandle
+from tiewtrade.infra.market_data.records import CandleRead, MarketDataInputError, StoredCandle
 from tiewtrade.infra.market_data.storage import database_now, enqueue, parameters, read_candles
 from tiewtrade.services.api.authentication import Authenticated, current_user
 from tiewtrade.services.api.resources import engine_for
@@ -106,12 +107,48 @@ class ChartCandlePage(CandleHistoryView):
     newer_after: datetime | None
 
 
-@router.get("/pages")
+def _chart_page_json(
+    result: CandleRead,
+    *,
+    base: str,
+    quote: str,
+    timeframe: Timeframe,
+    start: datetime,
+    end: datetime,
+    lower: datetime,
+    upper: datetime,
+    earliest_known: bool,
+) -> str:
+    """Serialize a large candle page away from the request event loop."""
+    rows = [_candle_view(stored) for stored in result.candles]
+    view = ChartCandlePage(
+        base=base,
+        quote=quote,
+        timeframe=timeframe,
+        requested=WindowView(start=start, end=end),
+        observed=WindowView(start=rows[0].open_at, end=rows[-1].end_at) if rows else None,
+        rows=rows,
+        gaps=[WindowView(start=g.start, end=g.end) for g in result.gaps],
+        coverage=result.coverage,
+        observed_at=result.observed_at,
+        refresh_pending=result.refresh_pending,
+        status=result.status,
+        failure_code=result.failure_code,
+        display_start=lower,
+        display_end=upper,
+        earliest_known=earliest_known,
+        older_before=min(end, advance(start, timeframe, 200)) if start > lower else None,
+        newer_after=max(start, advance(end, timeframe, -200)) if end < upper else None,
+    )
+    return view.model_dump_json()
+
+
+@router.get("/pages", response_model=ChartCandlePage)
 async def candle_page(
     query: Annotated[ChartPageQuery, Query()],
     request: Request,
     who: Annotated[Authenticated, Depends(current_user)],
-) -> ChartCandlePage:
+) -> Response:
     try:
         tf = query.timeframe
         base, quote = Quantity.of(0, query.base).asset, Quantity.of(0, query.quote).asset
@@ -146,32 +183,27 @@ async def candle_page(
                 end = query.before or upper
                 start = max(lower, advance(end, tf, -1000))
             window = CandleWindow(start, end)
-            result = await read_candles(session, base, quote, tf, window, 1000)
+            result = await read_candles(
+                session, base, quote, tf, window, 1000, offload_conversion=True
+            )
             needs_backfill = result.coverage != "PRESENT"
             result = await overlay_preview(session, base, quote, tf, window, result)
         if needs_backfill:
             async with user_session(engine, who.user_id) as session:
                 await enqueue(session, base, quote, tf, window)
-        rows = [_candle_view(stored) for stored in result.candles]
-        return ChartCandlePage(
+        body = await asyncio.to_thread(
+            _chart_page_json,
+            result,
             base=base,
             quote=quote,
             timeframe=tf,
-            requested=WindowView(start=start, end=end),
-            observed=WindowView(start=rows[0].open_at, end=rows[-1].end_at) if rows else None,
-            rows=rows,
-            gaps=[WindowView(start=g.start, end=g.end) for g in result.gaps],
-            coverage=result.coverage,
-            observed_at=result.observed_at,
-            refresh_pending=result.refresh_pending,
-            status=result.status,
-            failure_code=result.failure_code,
-            display_start=lower,
-            display_end=upper,
+            start=start,
+            end=end,
+            lower=lower,
+            upper=upper,
             earliest_known=known,
-            older_before=min(end, advance(start, tf, 200)) if start > lower else None,
-            newer_after=max(start, advance(end, tf, -200)) if end < upper else None,
         )
+        return Response(body, media_type="application/json")
     except MarketDataInputError as error:
         raise HTTPException(422, error.code) from None
     except (ValueError, TypeError, MoneyError, OverflowError):

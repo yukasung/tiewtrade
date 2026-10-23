@@ -1,0 +1,519 @@
+{
+  "duration": 120,
+  "warmup": 15,
+  "clients": 20,
+  "browser_version": "153.0.8010.12",
+  "mount_unmount_cycles": 10,
+  "maximum_page_rows": 1000,
+  "maximum_retained_slots": 5120,
+  "measurement_started_at": "2026-10-23T04:02:25.939Z",
+  "measurement_ended_at": "2026-10-23T04:04:27.856Z",
+  "live": [
+    {
+      "client": 11,
+      "status": 200,
+      "seconds": 0.056,
+      "rows": 1
+    },
+    {
+      "client": 2,
+      "status": 200,
+      "seconds": 0.036,
+      "rows": 1
+    },
+    {
+      "client": 18,
+      "status": 200,
+      "seconds": 0.039,
+      "rows": 1
+    },
+    {
+      "client": 12,
+      "status": 200,
+      "seconds": 0.038,
+      "rows": 1
+    },
+    {
+      "client": 1,
+      "status": 200,
+      "seconds": 0.035,
+      "rows": 1
+    },
+    {
+      "client": 8,
+      "status": 200,
+      "seconds": 0.019,
+      "rows": 1
+    },
+    {
+      "client": 16,
+      "status": 200,
+      "seconds": 0.019,
+      "rows": 1
+    },
+    {
+      "client": 13,
+      "status": 200,
+      "seconds": 0.071,
+      "rows": 1
+    },
+    {
+      "client": 13,
+      "status": 200,
+      "seconds": 0.091,
+      "rows": 1
+    },
+    {
+      "client": 18,
+      "status": 200,
+      "seconds": 0.026,
+      "rows": 1
+    },
+    {
+      "client": 0,
+      "status": 200,
+      "seconds": 0.027,
+      "rows": 1
+    },
+    {
+      "client": 18,
+      "status": 200,
+      "seconds": 0.034,
+      "rows": 1
+    },
+    {
+      "client": 17,
+      "status": 200,
+      "seconds": 0.761,
+      "rows": 1
+    },
+    {
+      "client": 6,
+      "status": 200,
+      "seconds": 0.058,
+      "rows": 1
+    },
+    {
+      "client": 1,
+      "status": 503,
+      "seconds": 0.021
+    },
+    {
+      "client": 11,
+      "status": 503,
+      "seconds": 0.087
+    },
+    {
+      "client": 9,
+      "status": 503,
+      "seconds": 0.06
+    },
+    {
+      "client": 0,
+      "status": 503,
+      "seconds": 0.07
+    },
+    {
+      "client": 15,
+      "status": 503,
+      "seconds": 0.047
+    },
+    {
+      "client": 2,
+      "status": 503,
+      "seconds": 0.08
+    },
+    {
+      "client": 12,
+      "status": 503,
+      "seconds": 0.085
+    },
+    {
+      "client": 4,
+      "status": 503,
+      "seconds": 0.178
+    },
+    {
+      "client": 5,
+      "status": 503,
+      "seconds": 0.119
+    },
+    {
+      "client": 14,
+      "status": 503,
+      "seconds": 0.166
+    },
+    {
+      "client": 8,
+      "status": 503,
+      "seconds": 0.12
+    },
+    {
+      "client": 13,
+      "status": 503,
+      "seconds": 0.203
+    },
+    {
+      "client": 18,
+      "status": 503,
+      "seconds": 0.024
+    },
+    {
+      "client": 17,
+      "status": 200,
+      "seconds": 0.616,
+      "rows": 1
+    },
+    {
+      "client": 16,
+      "status": 503,
+      "seconds": 0.081
+    },
+    {
+      "client": 19,
+      "status": 200,
+      "seconds": 0.044,
+      "rows": 1
+    },
+    {
+      "client": 17,
+      "status": 200,
+      "seconds": 0.046,
+      "rows": 1
+    },
+    {
+      "client": 19,
+      "status": 200,
+      "seconds": 0.024,
+      "rows": 1
+    },
+    {
+      "client": 1,
+      "status": 503,
+      "seconds": 0.03
+    },
+    {
+      "client": 0,
+      "status": 503,
+      "seconds": 0.027
+    },
+    {
+      "client": 4,
+      "status": 503,
+      "seconds": 0.014
+    },
+    {
+      "client": 2,
+      "status": 200,
+      "seconds": 0.055,
+      "rows": 1
+    },
+    {
+      "client": 19,
+      "status": 200,
+      "seconds": 0.057,
+      "rows": 1
+    },
+    {
+      "client": 4,
+      "status": 503,
+      "seconds": 0.015
+    },
+    {
+      "client": 0,
+      "status": 503,
+      "seconds": 0.028
+    },
+    {
+      "client": 1,
+      "status": 503,
+      "seconds": 0.011
+    },
+    {
+      "client": 17,
+      "status": 200,
+      "seconds": 0.057,
+      "rows": 1
+    },
+    {
+      "client": 3,
+      "status": 503,
+      "seconds": 0.08
+    },
+    {
+      "client": 19,
+      "status": 503,
+      "seconds": 0.019
+    },
+    {
+      "client": 6,
+      "status": 503,
+      "seconds": 0.068
+    },
+    {
+      "client": 2,
+      "status": 200,
+      "seconds": 0.052,
+      "rows": 1
+    },
+    {
+      "client": 2,
+      "status": 200,
+      "seconds": 0.032,
+      "rows": 1
+    }
+  ],
+  "history": [
+    {
+      "client": 2,
+      "status": 503,
+      "seconds": 1.626,
+      "outcome": "5m:INDICATOR_BUSY"
+    },
+    {
+      "client": 3,
+      "status": 503,
+      "seconds": 1.767,
+      "outcome": "5m:INDICATOR_BUSY"
+    },
+    {
+      "client": 4,
+      "status": 503,
+      "seconds": 1.048,
+      "outcome": "5m:INDICATOR_BUSY"
+    },
+    {
+      "client": 0,
+      "status": 503,
+      "seconds": 1.307,
+      "outcome": "5m:INDICATOR_BUSY"
+    },
+    {
+      "client": 1,
+      "status": 200,
+      "seconds": 16.87,
+      "rows": 1000,
+      "outcome": "5m:OK"
+    },
+    {
+      "client": 1,
+      "status": 503,
+      "seconds": 0.288,
+      "outcome": "15m:INDICATOR_BUSY"
+    },
+    {
+      "client": 0,
+      "status": 503,
+      "seconds": 0.396,
+      "outcome": "15m:INDICATOR_BUSY"
+    },
+    {
+      "client": 2,
+      "status": 503,
+      "seconds": 0.406,
+      "outcome": "15m:INDICATOR_BUSY"
+    },
+    {
+      "client": 4,
+      "status": 503,
+      "seconds": 0.681,
+      "outcome": "15m:INDICATOR_BUSY"
+    },
+    {
+      "client": 3,
+      "status": 200,
+      "seconds": 7.034,
+      "rows": 1000,
+      "outcome": "15m:OK"
+    },
+    {
+      "client": 4,
+      "status": 503,
+      "seconds": 0.522,
+      "outcome": "1h:INDICATOR_BUSY"
+    },
+    {
+      "client": 3,
+      "status": 503,
+      "seconds": 0.648,
+      "outcome": "1h:INDICATOR_BUSY"
+    },
+    {
+      "client": 2,
+      "status": 503,
+      "seconds": 0.75,
+      "outcome": "1h:INDICATOR_BUSY"
+    },
+    {
+      "client": 1,
+      "status": 503,
+      "seconds": 0.774,
+      "outcome": "1h:INDICATOR_BUSY"
+    },
+    {
+      "client": 0,
+      "status": 200,
+      "seconds": 3.075,
+      "rows": 1000,
+      "outcome": "1h:OK"
+    }
+  ],
+  "proofs": [
+    {
+      "client": 1,
+      "status": 200,
+      "seconds": 9.404,
+      "outcome": "CHANGED"
+    },
+    {
+      "client": 1,
+      "status": 200,
+      "seconds": 9.537,
+      "outcome": "CHANGED"
+    },
+    {
+      "client": 3,
+      "status": 503,
+      "seconds": 0.056,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 1,
+      "status": 200,
+      "seconds": 10.175,
+      "outcome": "CHANGED"
+    },
+    {
+      "client": 3,
+      "status": 503,
+      "seconds": 0.02,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 1,
+      "status": 200,
+      "seconds": 9.28,
+      "outcome": "CHANGED"
+    },
+    {
+      "client": 0,
+      "status": 503,
+      "seconds": 0.046,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 3,
+      "status": 503,
+      "seconds": 0.048,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 1,
+      "status": 200,
+      "seconds": 12.018,
+      "outcome": "CHANGED"
+    },
+    {
+      "client": 1,
+      "status": 503,
+      "seconds": 0.12,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 0,
+      "status": 503,
+      "seconds": 0.118,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 3,
+      "status": 200,
+      "seconds": 4.86,
+      "outcome": "CHANGED"
+    }
+  ],
+  "browser_text_seconds": [
+    1.155,
+    1.725,
+    2.271,
+    1.618,
+    1.644,
+    2.055,
+    0.704,
+    2.218,
+    2.244,
+    2.222,
+    0.712,
+    1.974,
+    2.004,
+    2.013,
+    2.533,
+    1.447,
+    0.896,
+    2.063,
+    1.428,
+    1.435,
+    1.605,
+    2.085,
+    0.752
+  ],
+  "errors": [
+    [
+      "ข้อมูลแท่งสดไม่พร้อม"
+    ],
+    [
+      "ข้อมูลแท่งสดไม่พร้อม"
+    ],
+    [],
+    [
+      "ข้อมูลแท่งสดไม่พร้อม"
+    ],
+    [
+      "ข้อมูลแท่งสดไม่พร้อม"
+    ],
+    [
+      "ข้อมูลแท่งสดไม่พร้อม"
+    ],
+    [
+      "ข้อมูลแท่งสดไม่พร้อม"
+    ],
+    [
+      "ข้อมูลแท่งสดไม่พร้อม"
+    ],
+    [
+      "ข้อมูลแท่งสดไม่พร้อม"
+    ],
+    [
+      "ข้อมูลแท่งสดไม่พร้อม"
+    ],
+    [
+      "ข้อมูลแท่งสดไม่พร้อม"
+    ],
+    [
+      "ข้อมูลแท่งสดไม่พร้อม"
+    ],
+    [
+      "ข้อมูลแท่งสดไม่พร้อม"
+    ],
+    [
+      "ข้อมูลแท่งสดไม่พร้อม"
+    ],
+    [
+      "ข้อมูลแท่งสดไม่พร้อม"
+    ],
+    [
+      "ข้อมูลแท่งสดไม่พร้อม"
+    ],
+    [
+      "ข้อมูลแท่งสดไม่พร้อม"
+    ],
+    [],
+    [
+      "ข้อมูลแท่งสดไม่พร้อม"
+    ],
+    [
+      "ข้อมูลแท่งสดไม่พร้อม"
+    ]
+  ],
+  "forbidden_requests": []
+}

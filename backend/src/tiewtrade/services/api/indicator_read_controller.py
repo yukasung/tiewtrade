@@ -314,17 +314,25 @@ async def read_history(
     )
 
 
-async def check_read_session(session: UserSession, who: Authenticated, finished: datetime) -> None:
+async def check_read_session(
+    session: UserSession, who: Authenticated, finished: datetime | None = None
+) -> None:
     await session.execute(
         "SELECT set_config(:setting,:value,true)",
         {"setting": PRESENTED_TOKEN_SETTING, "value": who.token_hash},
     )
     valid = (
         await session.execute(
-            """SELECT EXISTS(SELECT 1 FROM sessions
-        WHERE token_hash=:hash AND user_id=:user
-          AND idle_expires_at>:finished AND absolute_expires_at>:finished)""",
-            {"hash": who.token_hash, "user": who.user_id, "finished": finished},
+            """WITH checked AS MATERIALIZED (
+          SELECT COALESCE(CAST(:finished AS timestamptz),clock_timestamp()) AS finished)
+        SELECT EXISTS(SELECT 1 FROM sessions AS s,checked
+        WHERE s.token_hash=:hash AND s.user_id=:user
+          AND s.idle_expires_at>checked.finished AND s.absolute_expires_at>checked.finished)""",
+            {
+                "hash": who.token_hash,
+                "user": who.user_id,
+                "finished": finished,
+            },
         )
     ).scalar_one()
     if not valid:

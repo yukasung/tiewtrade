@@ -1,0 +1,15 @@
+{
+  "candidate_image": "sha256:5e94ba9b762c9682bcf60ee2ba0a17aeb7471838b1ae3fd9baf699c0872241f0",
+  "browser_image": "sha256:3e94be8a5c97e5d20e49ec11ea221a24e474a156de70cba19866a3047d3dbb91",
+  "docker": "linux aarch64 CPUs=8 RAM=4106604544",
+  "browser_runtime": "v22.23.4\nVersion 1.63.0",
+  "api_market_limits": {
+    "cpus": 2,
+    "memory_bytes": 1073741824
+  },
+  "fixture_seed": "deterministic-sequence-0",
+  "seconds": 40,
+  "warmup_seconds": 5,
+  "lifecycle_cycles": 1,
+  "lifecycle_allowance_seconds": 315
+}

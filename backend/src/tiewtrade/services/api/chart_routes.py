@@ -20,7 +20,7 @@ from tiewtrade.infra.crypto.indicator_cursor import (
     check_expiry,
 )
 from tiewtrade.infra.crypto.keys import KeySource
-from tiewtrade.infra.db.errors import InfraError
+from tiewtrade.infra.db.errors import DatabaseTimeoutError, InfraError
 from tiewtrade.infra.db.session import indicator_read_session
 from tiewtrade.infra.indicators.prepared import PreparedNotReadyError
 from tiewtrade.infra.market_data.candle_preview import read_live
@@ -99,11 +99,11 @@ def require_enabled() -> None:
 async def _live(query: ChartLiveQuery, request: Request, who: Authenticated) -> ChartLiveView:
     series = CandleSeries(query.base, query.quote, query.timeframe)
     engine = cast(AsyncEngine, request.app.state.chart_engine)
-    async with indicator_read_session(engine, who.user_id) as session:
-        await session.execute("SET LOCAL statement_timeout='500ms'")
-        await session.execute("SET LOCAL lock_timeout='200ms'")
+    async with indicator_read_session(
+        engine, who.user_id, statement_timeout_ms=500, lock_timeout_ms=200
+    ) as session:
         state, rows, now, recovered = await read_live(session, series)
-        await check_read_session(session, who, await database_now(session))
+        await check_read_session(session, who)
     latest = rows[-1] if rows else None
     status: Literal["READY", "RECOVERING", "STALE", "NO_DATA", "UNAVAILABLE"] = "NO_DATA"
     if latest is None and state["failure_code"] not in (None, "RECOVERING"):
@@ -186,7 +186,7 @@ async def live(
         return Response(status_code=499, headers={"Cache-Control": "private, no-store"})
     except (MoneyError, MarketDataInputError):
         raise HTTPException(422, "INPUT_REJECTED") from None
-    except TimeoutError:
+    except (TimeoutError, DatabaseTimeoutError):
         raise HTTPException(504, "CHART_DEADLINE_EXCEEDED") from None
     except InfraError:
         raise HTTPException(503, "CHART_DATA_UNAVAILABLE") from None

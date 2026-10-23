@@ -1,0 +1,90 @@
+[
+  {
+    "recorded_at": "2026-10-22 07:09:00.910617+00:00",
+    "kind": "accepted",
+    "status": 200,
+    "seconds": 0.6952745839989802,
+    "max_lag_seconds": 0.11384012500013341,
+    "rss_delta_upper_bytes": 66449408,
+    "body_bytes": 458812,
+    "candle_queries": 2,
+    "barrier": false
+  },
+  {
+    "recorded_at": "2026-10-22 07:09:01.109086+00:00",
+    "kind": "accepted",
+    "status": 200,
+    "seconds": 0.1830540419996396,
+    "max_lag_seconds": 0.005211458000412676,
+    "rss_delta_upper_bytes": 59056128,
+    "body_bytes": 455257,
+    "candle_queries": 2,
+    "barrier": false
+  },
+  {
+    "recorded_at": "2026-10-22 07:09:01.476356+00:00",
+    "kind": "accepted",
+    "status": 200,
+    "seconds": 0.3494127499998285,
+    "max_lag_seconds": 0.06982200000049488,
+    "rss_delta_upper_bytes": 58662912,
+    "body_bytes": 454236,
+    "candle_queries": 2,
+    "barrier": false
+  },
+  {
+    "recorded_at": "2026-10-22 07:09:01.720123+00:00",
+    "kind": "accepted",
+    "status": 200,
+    "seconds": 0.21818337500008056,
+    "max_lag_seconds": 0.003216583000830724,
+    "rss_delta_upper_bytes": 58650624,
+    "body_bytes": 453875,
+    "candle_queries": 2,
+    "barrier": false
+  },
+  {
+    "recorded_at": "2026-10-22 07:09:01.888045+00:00",
+    "kind": "accepted",
+    "status": 200,
+    "seconds": 0.15423079199899803,
+    "max_lag_seconds": 0.003513416001733276,
+    "rss_delta_upper_bytes": 58650624,
+    "body_bytes": 453793,
+    "candle_queries": 2,
+    "barrier": false
+  },
+  {
+    "recorded_at": "2026-10-22 07:09:02.001038+00:00",
+    "kind": "accepted",
+    "status": 200,
+    "seconds": 0.10099912499936181,
+    "max_lag_seconds": 0.03689841699917452,
+    "rss_delta_upper_bytes": 58646528,
+    "body_bytes": 160126,
+    "candle_queries": 1,
+    "barrier": false
+  },
+  {
+    "recorded_at": "2026-10-22 07:09:02.142253+00:00",
+    "kind": "accepted",
+    "status": 200,
+    "seconds": 0.12722570799996902,
+    "max_lag_seconds": 0.010522875000897328,
+    "rss_delta_upper_bytes": 58646528,
+    "body_bytes": 112953,
+    "candle_queries": 1,
+    "barrier": false
+  },
+  {
+    "recorded_at": "2026-10-22 07:09:02.173832+00:00",
+    "kind": "accepted",
+    "status": 200,
+    "seconds": 0.02402737500051444,
+    "max_lag_seconds": 0.0006042500000330618,
+    "rss_delta_upper_bytes": 58646528,
+    "body_bytes": 24603,
+    "candle_queries": 1,
+    "barrier": false
+  }
+]

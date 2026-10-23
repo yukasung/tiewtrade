@@ -77,6 +77,20 @@ upper bound 66,772,992 bytes จึงผ่านงบเฉพาะ regressi
 คำสั่งมี readiness 16/16 ที่ T+240s แต่ไม่ถือว่าผ่าน C1; ไม่ใช้ผล targeted นี้แทน
 C2/C3/C5/C4/C6 หรือ F-12 V-17 รอบเต็ม และไม่เปลี่ยน production rollout status.
 
+Release checkpoint 2026-10-23: R2-C1 และ R2-7 รันใหม่บน isolated PostgreSQL 16/
+Redis 7 ด้วย immutable candidate image `tiewtrade-f12-v17:83077c7`. R2-C1 **Passed**:
+runtime readiness BTC/ETH 16/16 series, BTC workload 8/8 series และไม่มี failed
+series. R2-7 **Passed** ด้วย controlled exact fixture 525,600 source rows/slots,
+generation bounds ครบ 365 วันและ 527 checkpoints; cold1/warm5 ตอบ 200 ครบ
+6/6, 1,000 rows/request, 7 candle queries/request, response 458,808 bytes, max event-loop
+lag 36.344ms และ max RSS delta upper bound 6,615,040 bytes. Harness pin เฉพาะ
+snapshot clock ของ exact fixture ใน isolated worker/database และ restore ก่อนจบ;
+ไม่เปลี่ยน production logic, duration หรือ threshold. หลักฐานอยู่ที่
+[`profiling/release-20261023/c1-exact-r2`](profiling/release-20261023/c1-exact-r2/)
+และ [`metrics-exact-r2`](profiling/release-20261023/metrics-exact-r2/).
+C3/C5, C4 fairness รอบเต็ม, C6 และ F-12 V-17 ยังคงสถานะเดิม;
+ผลนี้ไม่อนุญาต production PREPARED หรือ Live Trading.
+
 Final candidate checkpoint 2026-10-22: Critical/High diff review ไม่พบ finding;
 Ruff check และ format 493 files, mypy 450 source files และ import contracts 7/7 ผ่าน.
 backend regression collect 2,979 tests และเดินถึง 100% โดยไม่มี assertion failure;

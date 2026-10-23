@@ -1,0 +1,16 @@
+{"recorded_at": "2026-10-23 04:09:57.089383+00:00", "base": "BTC", "timeframe": "5m", "attempt": 1, "outcome": "SOURCE_UNAVAILABLE", "rows": 0}
+{"recorded_at": "2026-10-23 04:09:57.128309+00:00", "base": "BTC", "timeframe": "15m", "attempt": 1, "outcome": "SOURCE_UNAVAILABLE", "rows": 0}
+{"recorded_at": "2026-10-23 04:09:57.141800+00:00", "base": "BTC", "timeframe": "1h", "attempt": 1, "outcome": "SOURCE_UNAVAILABLE", "rows": 0}
+{"recorded_at": "2026-10-23 04:09:57.149856+00:00", "base": "BTC", "timeframe": "4h", "attempt": 1, "outcome": "SOURCE_UNAVAILABLE", "rows": 0}
+{"recorded_at": "2026-10-23 04:09:58.245491+00:00", "base": "ETH", "timeframe": "1m", "attempt": 1, "outcome": "COMPLETE", "rows": 4}
+{"recorded_at": "2026-10-23 04:10:27.574661+00:00", "base": "BTC", "timeframe": "5m", "attempt": 2, "outcome": "PARTIAL_GAP", "rows": 0}
+{"recorded_at": "2026-10-23 04:10:27.592886+00:00", "base": "BTC", "timeframe": "15m", "attempt": 2, "outcome": "PARTIAL_GAP", "rows": 0}
+{"recorded_at": "2026-10-23 04:10:27.603454+00:00", "base": "BTC", "timeframe": "1h", "attempt": 2, "outcome": "PARTIAL_GAP", "rows": 0}
+{"recorded_at": "2026-10-23 04:10:27.611836+00:00", "base": "BTC", "timeframe": "4h", "attempt": 2, "outcome": "PARTIAL_GAP", "rows": 0}
+{"recorded_at": "2026-10-23 04:11:27.673206+00:00", "base": "BTC", "timeframe": "5m", "attempt": 3, "outcome": "COMPLETE", "rows": 1}
+{"recorded_at": "2026-10-23 04:11:27.706347+00:00", "base": "BTC", "timeframe": "15m", "attempt": 3, "outcome": "COMPLETE", "rows": 1}
+{"recorded_at": "2026-10-23 04:11:27.718407+00:00", "base": "BTC", "timeframe": "1h", "attempt": 3, "outcome": "COMPLETE", "rows": 1}
+{"recorded_at": "2026-10-23 04:11:27.728652+00:00", "base": "BTC", "timeframe": "4h", "attempt": 3, "outcome": "COMPLETE", "rows": 1}
+{"recorded_at": "2026-10-23 04:11:59.047180+00:00", "base": "BTC", "timeframe": "5m", "attempt": 4, "outcome": "COMPLETE", "rows": 2}
+{"recorded_at": "2026-10-23 04:12:01.389827+00:00", "base": "BTC", "timeframe": "1m", "attempt": 1, "outcome": "SOURCE_UNAVAILABLE", "rows": 0}
+{"recorded_at": "2026-10-23 04:12:31.695775+00:00", "base": "BTC", "timeframe": "1m", "attempt": 2, "outcome": "PARTIAL_GAP", "rows": 5}

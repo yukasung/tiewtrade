@@ -1,0 +1,95 @@
+{
+  "R2-C1": "PASSED",
+  "T0": "2026-10-22 07:15:00.295902+00:00",
+  "R2-C2": "NOT_RUN",
+  "R2-C3": "NOT_RUN",
+  "R2-C4": "PARTIAL_TRACE",
+  "R2-C5": "NOT_RUN",
+  "R2-C6": "NOT_PASSED",
+  "runtime_readiness_series": 16,
+  "workload_series": 8,
+  "runtime_readiness_passed": true,
+  "series": [
+    {
+      "base": "BTC",
+      "timeframe": "1m",
+      "first_correct_200_seconds": 60.6732549999997,
+      "valid_samples": 54,
+      "scheduled_samples": 60,
+      "correct_probes": 9,
+      "scheduled_probes": 10,
+      "passed": true
+    },
+    {
+      "base": "BTC",
+      "timeframe": "5m",
+      "first_correct_200_seconds": 60.914815833999455,
+      "valid_samples": 54,
+      "scheduled_samples": 60,
+      "correct_probes": 9,
+      "scheduled_probes": 10,
+      "passed": true
+    },
+    {
+      "base": "BTC",
+      "timeframe": "15m",
+      "first_correct_200_seconds": 120.75569808399996,
+      "valid_samples": 53,
+      "scheduled_samples": 60,
+      "correct_probes": 8,
+      "scheduled_probes": 10,
+      "passed": true
+    },
+    {
+      "base": "BTC",
+      "timeframe": "1h",
+      "first_correct_200_seconds": 121.02117329199973,
+      "valid_samples": 53,
+      "scheduled_samples": 60,
+      "correct_probes": 8,
+      "scheduled_probes": 10,
+      "passed": true
+    },
+    {
+      "base": "BTC",
+      "timeframe": "4h",
+      "first_correct_200_seconds": 121.1730134999998,
+      "valid_samples": 53,
+      "scheduled_samples": 60,
+      "correct_probes": 8,
+      "scheduled_probes": 10,
+      "passed": true
+    },
+    {
+      "base": "BTC",
+      "timeframe": "1d",
+      "first_correct_200_seconds": 121.2435879170007,
+      "valid_samples": 53,
+      "scheduled_samples": 60,
+      "correct_probes": 8,
+      "scheduled_probes": 10,
+      "passed": true
+    },
+    {
+      "base": "BTC",
+      "timeframe": "1w",
+      "first_correct_200_seconds": 121.3157014999997,
+      "valid_samples": 53,
+      "scheduled_samples": 60,
+      "correct_probes": 8,
+      "scheduled_probes": 10,
+      "passed": true
+    },
+    {
+      "base": "BTC",
+      "timeframe": "1M",
+      "first_correct_200_seconds": 121.3387076250001,
+      "valid_samples": 53,
+      "scheduled_samples": 60,
+      "correct_probes": 8,
+      "scheduled_probes": 10,
+      "passed": true
+    }
+  ],
+  "note": "No capacity approval: C2-C6/resource gates require separate evidence."
+}

@@ -305,18 +305,44 @@ async def user_session(
 
 
 @asynccontextmanager
-async def indicator_read_session(engine: AsyncEngine, user_id: UUID) -> AsyncIterator[UserSession]:
+async def indicator_read_session(
+    engine: AsyncEngine,
+    user_id: UUID,
+    *,
+    statement_timeout_ms: int | None = None,
+    lock_timeout_ms: int | None = None,
+) -> AsyncIterator[UserSession]:
     """F-11 snapshot: transaction characteristics precede every SELECT."""
+    if (statement_timeout_ms is None) != (lock_timeout_ms is None):
+        raise ValueError("indicator read timeouts must be configured together")
+    if statement_timeout_ms is not None and not 0 < statement_timeout_ms <= 500:
+        raise ValueError("indicator read statement timeout must be at most 500ms")
+    if lock_timeout_ms is not None and not 0 < lock_timeout_ms <= 200:
+        raise ValueError("indicator read lock timeout must be at most 200ms")
     async with _begin(engine, cleanup_seconds=2) as connection:
         await _execute(
             connection, "SET TRANSACTION ISOLATION LEVEL REPEATABLE READ, READ ONLY", None
         )
         await _assert_role(connection, DatabaseRole.API)
-        await _execute(
-            connection,
-            "SELECT set_config(:setting, :value, true)",
-            {"setting": CURRENT_USER_SETTING, "value": str(user_id)},
-        )
+        if statement_timeout_ms is None:
+            await _execute(
+                connection,
+                "SELECT set_config(:setting, :value, true)",
+                {"setting": CURRENT_USER_SETTING, "value": str(user_id)},
+            )
+        else:
+            await _execute(
+                connection,
+                """SELECT set_config(:setting,:value,true),
+                set_config('statement_timeout',:statement_timeout,true),
+                set_config('lock_timeout',:lock_timeout,true)""",
+                {
+                    "setting": CURRENT_USER_SETTING,
+                    "value": str(user_id),
+                    "statement_timeout": str(statement_timeout_ms),
+                    "lock_timeout": str(lock_timeout_ms),
+                },
+            )
         yield UserSession(connection, user_id)
 
 

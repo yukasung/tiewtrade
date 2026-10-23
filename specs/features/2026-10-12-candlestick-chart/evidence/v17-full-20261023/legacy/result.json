@@ -1,0 +1,37 @@
+{
+  "mode": "LEGACY",
+  "checks": {
+    "clients_20": true,
+    "mount_unmount_cycles": true,
+    "browser_slots_bounded": true,
+    "preview_commit_p95": true,
+    "browser_text_p95": true,
+    "live_p95": false,
+    "live_max": false,
+    "live_failures_typed": false,
+    "all_clients_received_live": false,
+    "history_deadline": true,
+    "prepared_history_p95": true,
+    "api_rss": true,
+    "market_rss": true,
+    "preview_rows_bounded": true,
+    "process_queue_bounded": true,
+    "source_faults_five_series": false,
+    "source_recovered": true,
+    "source_writes_progress": true,
+    "prepared_jobs_progress": true,
+    "api_connections_bounded": true,
+    "market_connections_bounded": true
+  },
+  "passed": false,
+  "metrics": {
+    "preview_commit_p95_seconds": 0.5689974,
+    "browser_text_p95_seconds": 2.6,
+    "live_p95_seconds": 0.5123258168002394,
+    "live_max_seconds": 2.877037000999735,
+    "history_p95_seconds": 12.721877247799966,
+    "history_max_seconds": 13.01056904699999,
+    "api_max_rss_delta_bytes": 12697600,
+    "market_max_rss_delta_bytes": 7393280
+  }
+}

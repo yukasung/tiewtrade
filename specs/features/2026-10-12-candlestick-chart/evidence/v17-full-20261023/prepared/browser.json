@@ -1,0 +1,1956 @@
+{
+  "duration": 600,
+  "warmup": 60,
+  "clients": 20,
+  "browser_version": "153.0.8010.12",
+  "mount_unmount_cycles": 100,
+  "maximum_page_rows": 1000,
+  "maximum_retained_slots": 5120,
+  "measurement_started_at": "2026-10-23T03:31:55.345Z",
+  "measurement_ended_at": "2026-10-23T03:41:56.115Z",
+  "live": [
+    {
+      "client": 3,
+      "status": 503,
+      "seconds": 0.023
+    },
+    {
+      "client": 2,
+      "status": 503,
+      "seconds": 0.066
+    },
+    {
+      "client": 1,
+      "status": 503,
+      "seconds": 0.049
+    },
+    {
+      "client": 4,
+      "status": 200,
+      "seconds": 0.027,
+      "rows": 1
+    },
+    {
+      "client": 3,
+      "status": 503,
+      "seconds": 0.011
+    },
+    {
+      "client": 1,
+      "status": 503,
+      "seconds": 0.068
+    },
+    {
+      "client": 2,
+      "status": 503,
+      "seconds": 0.051
+    },
+    {
+      "client": 0,
+      "status": 200,
+      "seconds": 0.029,
+      "rows": 1
+    },
+    {
+      "client": 4,
+      "status": 200,
+      "seconds": 0.038,
+      "rows": 1
+    },
+    {
+      "client": 0,
+      "status": 200,
+      "seconds": 0.055,
+      "rows": 1
+    },
+    {
+      "client": 0,
+      "status": 200,
+      "seconds": 0.041,
+      "rows": 1
+    },
+    {
+      "client": 0,
+      "status": 200,
+      "seconds": 0.048,
+      "rows": 1
+    },
+    {
+      "client": 0,
+      "status": 200,
+      "seconds": 0.078,
+      "rows": 1
+    },
+    {
+      "client": 2,
+      "status": 503,
+      "seconds": 0.075
+    },
+    {
+      "client": 4,
+      "status": 503,
+      "seconds": 0.225
+    },
+    {
+      "client": 0,
+      "status": 504,
+      "seconds": 0.2
+    },
+    {
+      "client": 2,
+      "status": 503,
+      "seconds": 0.157
+    },
+    {
+      "client": 1,
+      "status": 503,
+      "seconds": 0.128
+    },
+    {
+      "client": 0,
+      "status": 503,
+      "seconds": 0.122
+    },
+    {
+      "client": 4,
+      "status": 503,
+      "seconds": 0.171
+    },
+    {
+      "client": 3,
+      "status": 200,
+      "seconds": 0.037,
+      "rows": 1
+    },
+    {
+      "client": 0,
+      "status": 503,
+      "seconds": 0.003
+    },
+    {
+      "client": 4,
+      "status": 200,
+      "seconds": 0.065,
+      "rows": 1
+    },
+    {
+      "client": 2,
+      "status": 503,
+      "seconds": 0.058
+    },
+    {
+      "client": 4,
+      "status": 200,
+      "seconds": 0.028,
+      "rows": 1
+    },
+    {
+      "client": 4,
+      "status": 200,
+      "seconds": 0.006,
+      "rows": 1
+    },
+    {
+      "client": 2,
+      "status": 503,
+      "seconds": 0.038
+    },
+    {
+      "client": 1,
+      "status": 200,
+      "seconds": 0.007,
+      "rows": 1
+    },
+    {
+      "client": 1,
+      "status": 200,
+      "seconds": 0.044,
+      "rows": 1
+    },
+    {
+      "client": 4,
+      "status": 503,
+      "seconds": 0.068
+    },
+    {
+      "client": 0,
+      "status": 200,
+      "seconds": 0.032,
+      "rows": 1
+    },
+    {
+      "client": 4,
+      "status": 200,
+      "seconds": 0.01,
+      "rows": 1
+    },
+    {
+      "client": 1,
+      "status": 200,
+      "seconds": 0.033,
+      "rows": 1
+    },
+    {
+      "client": 2,
+      "status": 200,
+      "seconds": 0.032,
+      "rows": 1
+    },
+    {
+      "client": 1,
+      "status": 200,
+      "seconds": 0.051,
+      "rows": 1
+    },
+    {
+      "client": 3,
+      "status": 200,
+      "seconds": 0.036,
+      "rows": 1
+    },
+    {
+      "client": 0,
+      "status": 200,
+      "seconds": 0.055,
+      "rows": 1
+    },
+    {
+      "client": 0,
+      "status": 200,
+      "seconds": 0.02,
+      "rows": 1
+    },
+    {
+      "client": 3,
+      "status": 200,
+      "seconds": 0.047,
+      "rows": 1
+    },
+    {
+      "client": 4,
+      "status": 200,
+      "seconds": 0.032,
+      "rows": 1
+    },
+    {
+      "client": 0,
+      "status": 200,
+      "seconds": 0.026,
+      "rows": 1
+    },
+    {
+      "client": 2,
+      "status": 200,
+      "seconds": 0.036,
+      "rows": 1
+    },
+    {
+      "client": 1,
+      "status": 200,
+      "seconds": 0.011,
+      "rows": 1
+    },
+    {
+      "client": 1,
+      "status": 503,
+      "seconds": 0.085
+    },
+    {
+      "client": 4,
+      "status": 503,
+      "seconds": 0.058
+    },
+    {
+      "client": 2,
+      "status": 503,
+      "seconds": 0.075
+    },
+    {
+      "client": 0,
+      "status": 503,
+      "seconds": 0.069
+    },
+    {
+      "client": 3,
+      "status": 200,
+      "seconds": 0.102,
+      "rows": 1
+    },
+    {
+      "client": 4,
+      "status": 503,
+      "seconds": 0.023
+    },
+    {
+      "client": 3,
+      "status": 503,
+      "seconds": 0.013
+    },
+    {
+      "client": 1,
+      "status": 503,
+      "seconds": 0.011
+    },
+    {
+      "client": 0,
+      "status": 200,
+      "seconds": 0.053,
+      "rows": 1
+    },
+    {
+      "client": 3,
+      "status": 503,
+      "seconds": 0.096
+    },
+    {
+      "client": 1,
+      "status": 503,
+      "seconds": 0.083
+    },
+    {
+      "client": 0,
+      "status": 503,
+      "seconds": 0.031
+    },
+    {
+      "client": 2,
+      "status": 503,
+      "seconds": 0.067
+    },
+    {
+      "client": 1,
+      "status": 503,
+      "seconds": 0.045
+    },
+    {
+      "client": 2,
+      "status": 503,
+      "seconds": 0.045
+    },
+    {
+      "client": 3,
+      "status": 503,
+      "seconds": 0.057
+    },
+    {
+      "client": 0,
+      "status": 503,
+      "seconds": 0.02
+    },
+    {
+      "client": 3,
+      "status": 200,
+      "seconds": 0.056,
+      "rows": 1
+    },
+    {
+      "client": 4,
+      "status": 503,
+      "seconds": 0.036
+    },
+    {
+      "client": 2,
+      "status": 503,
+      "seconds": 0.037
+    },
+    {
+      "client": 1,
+      "status": 200,
+      "seconds": 0.027,
+      "rows": 1
+    },
+    {
+      "client": 4,
+      "status": 503,
+      "seconds": 0.021
+    },
+    {
+      "client": 3,
+      "status": 200,
+      "seconds": 0.313,
+      "rows": 1
+    },
+    {
+      "client": 2,
+      "status": 200,
+      "seconds": 0.04,
+      "rows": 1
+    },
+    {
+      "client": 0,
+      "status": 200,
+      "seconds": 0.055,
+      "rows": 1
+    },
+    {
+      "client": 0,
+      "status": 200,
+      "seconds": 0.039,
+      "rows": 1
+    },
+    {
+      "client": 1,
+      "status": 200,
+      "seconds": 0.057,
+      "rows": 1
+    },
+    {
+      "client": 0,
+      "status": 200,
+      "seconds": 0.083,
+      "rows": 1
+    },
+    {
+      "client": 0,
+      "status": 503,
+      "seconds": 0.012
+    },
+    {
+      "client": 3,
+      "status": 503,
+      "seconds": 0.025
+    },
+    {
+      "client": 2,
+      "status": 200,
+      "seconds": 0.03,
+      "rows": 1
+    },
+    {
+      "client": 2,
+      "status": 200,
+      "seconds": 0.037,
+      "rows": 1
+    },
+    {
+      "client": 4,
+      "status": 200,
+      "seconds": 0.018,
+      "rows": 1
+    },
+    {
+      "client": 1,
+      "status": 200,
+      "seconds": 0.051,
+      "rows": 1
+    },
+    {
+      "client": 0,
+      "status": 200,
+      "seconds": 0.015,
+      "rows": 1
+    },
+    {
+      "client": 4,
+      "status": 200,
+      "seconds": 0.024,
+      "rows": 1
+    },
+    {
+      "client": 3,
+      "status": 200,
+      "seconds": 0.03,
+      "rows": 1
+    },
+    {
+      "client": 4,
+      "status": 200,
+      "seconds": 0.008,
+      "rows": 1
+    },
+    {
+      "client": 0,
+      "status": 200,
+      "seconds": 0.006,
+      "rows": 1
+    },
+    {
+      "client": 1,
+      "status": 200,
+      "seconds": 0.023,
+      "rows": 1
+    },
+    {
+      "client": 3,
+      "status": 200,
+      "seconds": 0.014,
+      "rows": 1
+    },
+    {
+      "client": 2,
+      "status": 200,
+      "seconds": 0.006,
+      "rows": 1
+    },
+    {
+      "client": 1,
+      "status": 200,
+      "seconds": 0.011,
+      "rows": 1
+    },
+    {
+      "client": 4,
+      "status": 200,
+      "seconds": 0.011,
+      "rows": 1
+    },
+    {
+      "client": 3,
+      "status": 200,
+      "seconds": 0.005,
+      "rows": 1
+    },
+    {
+      "client": 2,
+      "status": 200,
+      "seconds": 0.057,
+      "rows": 1
+    },
+    {
+      "client": 3,
+      "status": 200,
+      "seconds": 0.013,
+      "rows": 1
+    },
+    {
+      "client": 4,
+      "status": 200,
+      "seconds": 0.041,
+      "rows": 1
+    },
+    {
+      "client": 3,
+      "status": 200,
+      "seconds": 0.027,
+      "rows": 1
+    },
+    {
+      "client": 4,
+      "status": 503,
+      "seconds": 0.042
+    },
+    {
+      "client": 3,
+      "status": 503,
+      "seconds": 0.036
+    },
+    {
+      "client": 2,
+      "status": 503,
+      "seconds": 0.088
+    },
+    {
+      "client": 0,
+      "status": 503,
+      "seconds": 0.044
+    },
+    {
+      "client": 3,
+      "status": 503,
+      "seconds": 0.103
+    },
+    {
+      "client": 4,
+      "status": 503,
+      "seconds": 0.04
+    },
+    {
+      "client": 1,
+      "status": 503,
+      "seconds": 0.066
+    },
+    {
+      "client": 2,
+      "status": 200,
+      "seconds": 0.029,
+      "rows": 1
+    },
+    {
+      "client": 0,
+      "status": 200,
+      "seconds": 0.103,
+      "rows": 1
+    },
+    {
+      "client": 2,
+      "status": 503,
+      "seconds": 0.023
+    },
+    {
+      "client": 4,
+      "status": 503,
+      "seconds": 0.013
+    },
+    {
+      "client": 3,
+      "status": 503,
+      "seconds": 0.07
+    },
+    {
+      "client": 1,
+      "status": 503,
+      "seconds": 0.09
+    },
+    {
+      "client": 1,
+      "status": 503,
+      "seconds": 0.093
+    },
+    {
+      "client": 2,
+      "status": 503,
+      "seconds": 0.069
+    },
+    {
+      "client": 3,
+      "status": 503,
+      "seconds": 0.072
+    },
+    {
+      "client": 0,
+      "status": 503,
+      "seconds": 0.077
+    }
+  ],
+  "history": [
+    {
+      "client": 1,
+      "status": 503,
+      "seconds": 0.717,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 2,
+      "status": 503,
+      "seconds": 0.753,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 4,
+      "status": 503,
+      "seconds": 0.837,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 0,
+      "status": 503,
+      "seconds": 0.654,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 3,
+      "status": 503,
+      "seconds": 1.993,
+      "outcome": "INDICATOR_DATA_NOT_READY"
+    },
+    {
+      "client": 1,
+      "status": 503,
+      "seconds": 0.354,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 0,
+      "status": 503,
+      "seconds": 0.524,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 2,
+      "status": 503,
+      "seconds": 0.527,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 3,
+      "status": 503,
+      "seconds": 0.537,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 4,
+      "status": 503,
+      "seconds": 0.992,
+      "outcome": "INDICATOR_DATA_NOT_READY"
+    },
+    {
+      "client": 4,
+      "status": 503,
+      "seconds": 0.088,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 1,
+      "status": 503,
+      "seconds": 0.171,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 2,
+      "status": 503,
+      "seconds": 0.438,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 3,
+      "status": 503,
+      "seconds": 0.908,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 0,
+      "status": 200,
+      "seconds": 5.092,
+      "rows": 1000
+    },
+    {
+      "client": 2,
+      "status": 503,
+      "seconds": 0.39,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 3,
+      "status": 503,
+      "seconds": 0.385,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 0,
+      "status": 503,
+      "seconds": 0.359,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 4,
+      "status": 503,
+      "seconds": 0.349,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 1,
+      "status": 200,
+      "seconds": 2.11,
+      "rows": 1000
+    },
+    {
+      "client": 1,
+      "status": 503,
+      "seconds": 0.244,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 0,
+      "status": 503,
+      "seconds": 0.238,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 2,
+      "status": 503,
+      "seconds": 0.217,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 4,
+      "status": 503,
+      "seconds": 0.21,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 3,
+      "status": 200,
+      "seconds": 0.871,
+      "rows": 364
+    },
+    {
+      "client": 3,
+      "status": 503,
+      "seconds": 0.432,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 4,
+      "status": 503,
+      "seconds": 0.423,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 0,
+      "status": 503,
+      "seconds": 0.419,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 2,
+      "status": 503,
+      "seconds": 0.393,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 1,
+      "status": 200,
+      "seconds": 0.901,
+      "rows": 260
+    },
+    {
+      "client": 0,
+      "status": 503,
+      "seconds": 0.339,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 3,
+      "status": 503,
+      "seconds": 0.347,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 4,
+      "status": 503,
+      "seconds": 0.335,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 2,
+      "status": 503,
+      "seconds": 0.323,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 1,
+      "status": 200,
+      "seconds": 0.646,
+      "rows": 59
+    },
+    {
+      "client": 2,
+      "status": 503,
+      "seconds": 0.418,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 4,
+      "status": 503,
+      "seconds": 0.428,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 1,
+      "status": 503,
+      "seconds": 0.412,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 0,
+      "status": 503,
+      "seconds": 0.43,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 3,
+      "status": 200,
+      "seconds": 1.823,
+      "rows": 1000
+    },
+    {
+      "client": 2,
+      "status": 503,
+      "seconds": 0.173,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 0,
+      "status": 503,
+      "seconds": 0.191,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 4,
+      "status": 503,
+      "seconds": 0.235,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 1,
+      "status": 503,
+      "seconds": 0.259,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 3,
+      "status": 200,
+      "seconds": 1.705,
+      "rows": 1000
+    },
+    {
+      "client": 2,
+      "status": 503,
+      "seconds": 0.338,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 3,
+      "status": 503,
+      "seconds": 0.336,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 4,
+      "status": 503,
+      "seconds": 0.301,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 1,
+      "status": 503,
+      "seconds": 0.332,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 0,
+      "status": 200,
+      "seconds": 2.297,
+      "rows": 1000
+    },
+    {
+      "client": 2,
+      "status": 503,
+      "seconds": 0.253,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 1,
+      "status": 503,
+      "seconds": 0.279,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 4,
+      "status": 503,
+      "seconds": 0.306,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 3,
+      "status": 503,
+      "seconds": 0.237,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 0,
+      "status": 200,
+      "seconds": 2.286,
+      "rows": 1000
+    },
+    {
+      "client": 1,
+      "status": 503,
+      "seconds": 0.557,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 4,
+      "status": 503,
+      "seconds": 0.552,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 3,
+      "status": 503,
+      "seconds": 0.522,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 2,
+      "status": 503,
+      "seconds": 0.599,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 0,
+      "status": 200,
+      "seconds": 1.313,
+      "rows": 1000
+    },
+    {
+      "client": 3,
+      "status": 503,
+      "seconds": 0.161,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 4,
+      "status": 503,
+      "seconds": 0.177,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 1,
+      "status": 503,
+      "seconds": 0.184,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 2,
+      "status": 503,
+      "seconds": 0.182,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 0,
+      "status": 200,
+      "seconds": 1.012,
+      "rows": 364
+    },
+    {
+      "client": 2,
+      "status": 503,
+      "seconds": 0.145,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 3,
+      "status": 503,
+      "seconds": 0.154,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 0,
+      "status": 503,
+      "seconds": 0.15,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 4,
+      "status": 503,
+      "seconds": 0.131,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 1,
+      "status": 200,
+      "seconds": 0.675,
+      "rows": 260
+    },
+    {
+      "client": 1,
+      "status": 503,
+      "seconds": 0.15,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 2,
+      "status": 503,
+      "seconds": 0.14,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 4,
+      "status": 503,
+      "seconds": 0.129,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 0,
+      "status": 503,
+      "seconds": 0.17,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 3,
+      "status": 200,
+      "seconds": 0.536,
+      "rows": 59
+    },
+    {
+      "client": 2,
+      "status": 503,
+      "seconds": 0.324,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 0,
+      "status": 503,
+      "seconds": 0.282,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 3,
+      "status": 503,
+      "seconds": 0.308,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 1,
+      "status": 503,
+      "seconds": 0.319,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 4,
+      "status": 200,
+      "seconds": 1.953,
+      "rows": 1000
+    },
+    {
+      "client": 4,
+      "status": 503,
+      "seconds": 0.679,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 2,
+      "status": 503,
+      "seconds": 0.755,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 0,
+      "status": 503,
+      "seconds": 0.669,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 1,
+      "status": 503,
+      "seconds": 0.65,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 3,
+      "status": 200,
+      "seconds": 2.573,
+      "rows": 1000
+    },
+    {
+      "client": 0,
+      "status": 503,
+      "seconds": 0.228,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 3,
+      "status": 503,
+      "seconds": 0.18,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 4,
+      "status": 503,
+      "seconds": 0.194,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 1,
+      "status": 503,
+      "seconds": 0.216,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 2,
+      "status": 200,
+      "seconds": 1.588,
+      "rows": 1000
+    },
+    {
+      "client": 2,
+      "status": 503,
+      "seconds": 1.151,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 3,
+      "status": 503,
+      "seconds": 0.997,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 0,
+      "status": 503,
+      "seconds": 1.037,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 1,
+      "status": 503,
+      "seconds": 1.004,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 4,
+      "status": 200,
+      "seconds": 5.713,
+      "rows": 1000
+    }
+  ],
+  "proofs": [
+    {
+      "client": 0,
+      "status": 200,
+      "seconds": 0.307,
+      "outcome": "MATCHED"
+    },
+    {
+      "client": 0,
+      "status": 200,
+      "seconds": 0.06,
+      "outcome": "MATCHED"
+    },
+    {
+      "client": 0,
+      "status": 503,
+      "seconds": 0.033,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 1,
+      "status": 200,
+      "seconds": 0.05,
+      "outcome": "MATCHED"
+    },
+    {
+      "client": 1,
+      "status": 503,
+      "seconds": 0.071,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 0,
+      "status": 200,
+      "seconds": 0.093,
+      "outcome": "MATCHED"
+    },
+    {
+      "client": 3,
+      "status": 503,
+      "seconds": 0.097,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 0,
+      "status": 503,
+      "seconds": 0.101,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 1,
+      "status": 200,
+      "seconds": 0.132,
+      "outcome": "MATCHED"
+    },
+    {
+      "client": 0,
+      "status": 503,
+      "seconds": 0.066,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 3,
+      "status": 503,
+      "seconds": 0.06,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 1,
+      "status": 200,
+      "seconds": 0.079,
+      "outcome": "MATCHED"
+    },
+    {
+      "client": 3,
+      "status": 503,
+      "seconds": 0.03,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 1,
+      "status": 503,
+      "seconds": 0.031,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 0,
+      "status": 200,
+      "seconds": 0.045,
+      "outcome": "MATCHED"
+    },
+    {
+      "client": 1,
+      "status": 503,
+      "seconds": 0.082,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 0,
+      "status": 503,
+      "seconds": 0.093,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 3,
+      "status": 200,
+      "seconds": 0.103,
+      "outcome": "MATCHED"
+    },
+    {
+      "client": 1,
+      "status": 503,
+      "seconds": 0.061,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 3,
+      "status": 503,
+      "seconds": 0.062,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 0,
+      "status": 200,
+      "seconds": 0.083,
+      "outcome": "MATCHED"
+    },
+    {
+      "client": 0,
+      "status": 503,
+      "seconds": 0.053,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 1,
+      "status": 503,
+      "seconds": 0.052,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 3,
+      "status": 200,
+      "seconds": 0.084,
+      "outcome": "MATCHED"
+    },
+    {
+      "client": 1,
+      "status": 503,
+      "seconds": 0.09,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 3,
+      "status": 503,
+      "seconds": 0.089,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 0,
+      "status": 200,
+      "seconds": 0.099,
+      "outcome": "MATCHED"
+    },
+    {
+      "client": 1,
+      "status": 503,
+      "seconds": 0.071,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 3,
+      "status": 503,
+      "seconds": 0.071,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 0,
+      "status": 200,
+      "seconds": 0.081,
+      "outcome": "MATCHED"
+    },
+    {
+      "client": 1,
+      "status": 503,
+      "seconds": 0.049,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 3,
+      "status": 503,
+      "seconds": 0.049,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 0,
+      "status": 200,
+      "seconds": 0.059,
+      "outcome": "MATCHED"
+    },
+    {
+      "client": 3,
+      "status": 503,
+      "seconds": 0.116,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 1,
+      "status": 503,
+      "seconds": 0.123,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 0,
+      "status": 200,
+      "seconds": 0.143,
+      "outcome": "MATCHED"
+    },
+    {
+      "client": 1,
+      "status": 503,
+      "seconds": 0.037,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 3,
+      "status": 503,
+      "seconds": 0.038,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 0,
+      "status": 200,
+      "seconds": 0.061,
+      "outcome": "MATCHED"
+    },
+    {
+      "client": 3,
+      "status": 503,
+      "seconds": 0.046,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 1,
+      "status": 503,
+      "seconds": 0.048,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 0,
+      "status": 200,
+      "seconds": 0.061,
+      "outcome": "MATCHED"
+    },
+    {
+      "client": 3,
+      "status": 503,
+      "seconds": 0.038,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 0,
+      "status": 503,
+      "seconds": 0.04,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 1,
+      "status": 200,
+      "seconds": 0.048,
+      "outcome": "MATCHED"
+    },
+    {
+      "client": 1,
+      "status": 503,
+      "seconds": 0.051,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 3,
+      "status": 503,
+      "seconds": 0.05,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 0,
+      "status": 200,
+      "seconds": 0.08,
+      "outcome": "MATCHED"
+    },
+    {
+      "client": 3,
+      "status": 503,
+      "seconds": 0.03,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 1,
+      "status": 503,
+      "seconds": 0.031,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 0,
+      "status": 200,
+      "seconds": 0.046,
+      "outcome": "MATCHED"
+    },
+    {
+      "client": 3,
+      "status": 503,
+      "seconds": 0.201,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 1,
+      "status": 503,
+      "seconds": 0.207,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 0,
+      "status": 200,
+      "seconds": 0.29,
+      "outcome": "MATCHED"
+    },
+    {
+      "client": 3,
+      "status": 503,
+      "seconds": 0.195,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 0,
+      "status": 503,
+      "seconds": 0.207,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 1,
+      "status": 200,
+      "seconds": 0.232,
+      "outcome": "MATCHED"
+    },
+    {
+      "client": 1,
+      "status": 503,
+      "seconds": 0.086,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 3,
+      "status": 503,
+      "seconds": 0.086,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 0,
+      "status": 200,
+      "seconds": 0.104,
+      "outcome": "MATCHED"
+    },
+    {
+      "client": 0,
+      "status": 503,
+      "seconds": 0.029,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 3,
+      "status": 503,
+      "seconds": 0.029,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 1,
+      "status": 200,
+      "seconds": 0.036,
+      "outcome": "MATCHED"
+    },
+    {
+      "client": 3,
+      "status": 503,
+      "seconds": 0.04,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 1,
+      "status": 503,
+      "seconds": 0.042,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 0,
+      "status": 200,
+      "seconds": 0.059,
+      "outcome": "MATCHED"
+    },
+    {
+      "client": 1,
+      "status": 503,
+      "seconds": 0.059,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 3,
+      "status": 503,
+      "seconds": 0.058,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 0,
+      "status": 200,
+      "seconds": 0.065,
+      "outcome": "MATCHED"
+    },
+    {
+      "client": 1,
+      "status": 503,
+      "seconds": 0.087,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 3,
+      "status": 503,
+      "seconds": 0.086,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 0,
+      "status": 200,
+      "seconds": 0.123,
+      "outcome": "MATCHED"
+    },
+    {
+      "client": 3,
+      "status": 503,
+      "seconds": 0.052,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 4,
+      "status": 503,
+      "seconds": 0.051,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 0,
+      "status": 503,
+      "seconds": 0.054,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 1,
+      "status": 200,
+      "seconds": 0.116,
+      "outcome": "MATCHED"
+    },
+    {
+      "client": 1,
+      "status": 503,
+      "seconds": 0.088,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 4,
+      "status": 503,
+      "seconds": 0.086,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 3,
+      "status": 503,
+      "seconds": 0.087,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 0,
+      "status": 200,
+      "seconds": 0.112,
+      "outcome": "MATCHED"
+    },
+    {
+      "client": 0,
+      "status": 503,
+      "seconds": 0.258,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 1,
+      "status": 503,
+      "seconds": 0.191,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 3,
+      "status": 503,
+      "seconds": 0.187,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 4,
+      "status": 200,
+      "seconds": 0.196,
+      "outcome": "MATCHED"
+    },
+    {
+      "client": 1,
+      "status": 503,
+      "seconds": 0.098,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 4,
+      "status": 503,
+      "seconds": 0.097,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 3,
+      "status": 503,
+      "seconds": 0.098,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 0,
+      "status": 200,
+      "seconds": 0.117,
+      "outcome": "MATCHED"
+    },
+    {
+      "client": 2,
+      "status": 503,
+      "seconds": 0.039,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 4,
+      "status": 503,
+      "seconds": 0.044,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 0,
+      "status": 503,
+      "seconds": 0.056,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 1,
+      "status": 503,
+      "seconds": 0.047,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 3,
+      "status": 200,
+      "seconds": 0.053,
+      "outcome": "MATCHED"
+    },
+    {
+      "client": 2,
+      "status": 503,
+      "seconds": 0.048,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 0,
+      "status": 503,
+      "seconds": 0.059,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 1,
+      "status": 503,
+      "seconds": 0.057,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 4,
+      "status": 503,
+      "seconds": 0.056,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 3,
+      "status": 200,
+      "seconds": 0.072,
+      "outcome": "MATCHED"
+    },
+    {
+      "client": 1,
+      "status": 503,
+      "seconds": 1.26,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 0,
+      "status": 503,
+      "seconds": 1.271,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 2,
+      "status": 503,
+      "seconds": 1.261,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 4,
+      "status": 503,
+      "seconds": 1.265,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 3,
+      "status": 200,
+      "seconds": 1.372,
+      "outcome": "MATCHED"
+    },
+    {
+      "client": 0,
+      "status": 503,
+      "seconds": 0.154,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 4,
+      "status": 503,
+      "seconds": 0.15,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 1,
+      "status": 503,
+      "seconds": 0.152,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 3,
+      "status": 503,
+      "seconds": 0.151,
+      "outcome": "INDICATOR_BUSY"
+    },
+    {
+      "client": 2,
+      "status": 200,
+      "seconds": 0.169,
+      "outcome": "MATCHED"
+    }
+  ],
+  "browser_text_seconds": [
+    1.323,
+    1.469,
+    1.464,
+    1.502,
+    1.893,
+    1.555,
+    2.15,
+    1.446,
+    0.367,
+    1.75,
+    1.456,
+    2.185,
+    1.527,
+    2.416,
+    0.157,
+    2.428,
+    2.04,
+    1.867,
+    1.757,
+    2.245,
+    2.064,
+    1.776,
+    1.987,
+    2.095,
+    1.683,
+    1.664,
+    0.705,
+    1.727,
+    2.361,
+    2.506,
+    0.847,
+    2.218,
+    2.241,
+    1.892,
+    0.418,
+    0.418,
+    2.065,
+    2.041,
+    1.807,
+    2.149,
+    2.302,
+    2.311,
+    2.316,
+    1.459,
+    1.477,
+    1.949,
+    1.6,
+    1.612,
+    1.416,
+    1.428,
+    1.44,
+    1.84,
+    1.855,
+    1.54,
+    1.544,
+    2.752,
+    1.989
+  ],
+  "errors": [
+    [
+      "ข้อมูลแท่งสดไม่พร้อม"
+    ],
+    [
+      "ข้อมูลแท่งสดไม่พร้อม"
+    ],
+    [
+      "ข้อมูลแท่งสดไม่พร้อม"
+    ],
+    [
+      "ข้อมูลแท่งสดไม่พร้อม"
+    ],
+    [],
+    [
+      "ข้อมูลแท่งสดไม่พร้อม"
+    ],
+    [
+      "ข้อมูลแท่งสดไม่พร้อม"
+    ],
+    [
+      "ข้อมูลแท่งสดไม่พร้อม"
+    ],
+    [
+      "ข้อมูลแท่งสดไม่พร้อม"
+    ],
+    [
+      "ข้อมูลแท่งสดไม่พร้อม"
+    ],
+    [
+      "ข้อมูลแท่งสดไม่พร้อม"
+    ],
+    [
+      "ข้อมูลแท่งสดไม่พร้อม"
+    ],
+    [
+      "ข้อมูลแท่งสดไม่พร้อม"
+    ],
+    [
+      "ข้อมูลแท่งสดไม่พร้อม"
+    ],
+    [
+      "ข้อมูลแท่งสดไม่พร้อม"
+    ],
+    [
+      "ข้อมูลแท่งสดไม่พร้อม"
+    ],
+    [
+      "ข้อมูลแท่งสดไม่พร้อม"
+    ],
+    [
+      "ข้อมูลแท่งสดไม่พร้อม"
+    ],
+    [
+      "ข้อมูลแท่งสดไม่พร้อม"
+    ],
+    [
+      "รับข้อมูลไม่สำเร็จ"
+    ]
+  ]
+}

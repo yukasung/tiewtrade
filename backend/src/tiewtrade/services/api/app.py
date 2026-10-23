@@ -81,7 +81,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     )
     app.state.indicator_budget = IndicatorBudget()
     app.state.chart_engine = create_engine_for(
-        DatabaseRole.API, pool_size=1, max_overflow=0, pool_timeout=0.25
+        DatabaseRole.API, pool_size=1, max_overflow=0, pool_timeout=0.5
     )
     app.state.chart_admission = RedisAdmission(
         cast(AdmissionRedis, redis),

@@ -1,0 +1,15 @@
+{"recorded_at": "2026-10-23 03:54:00.087402+00:00", "base": "BTC", "timeframe": "5m", "attempt": 1, "outcome": "SOURCE_UNAVAILABLE", "rows": 0}
+{"recorded_at": "2026-10-23 03:54:00.129176+00:00", "base": "BTC", "timeframe": "15m", "attempt": 1, "outcome": "SOURCE_UNAVAILABLE", "rows": 0}
+{"recorded_at": "2026-10-23 03:54:00.152344+00:00", "base": "BTC", "timeframe": "1h", "attempt": 1, "outcome": "SOURCE_UNAVAILABLE", "rows": 0}
+{"recorded_at": "2026-10-23 03:54:00.167803+00:00", "base": "BTC", "timeframe": "4h", "attempt": 1, "outcome": "SOURCE_UNAVAILABLE", "rows": 0}
+{"recorded_at": "2026-10-23 03:54:01.290042+00:00", "base": "ETH", "timeframe": "1m", "attempt": 1, "outcome": "COMPLETE", "rows": 4}
+{"recorded_at": "2026-10-23 03:54:30.704848+00:00", "base": "BTC", "timeframe": "5m", "attempt": 2, "outcome": "PARTIAL_GAP", "rows": 0}
+{"recorded_at": "2026-10-23 03:54:30.714966+00:00", "base": "BTC", "timeframe": "15m", "attempt": 2, "outcome": "PARTIAL_GAP", "rows": 0}
+{"recorded_at": "2026-10-23 03:54:30.724457+00:00", "base": "BTC", "timeframe": "1h", "attempt": 2, "outcome": "PARTIAL_GAP", "rows": 0}
+{"recorded_at": "2026-10-23 03:54:30.731073+00:00", "base": "BTC", "timeframe": "4h", "attempt": 2, "outcome": "PARTIAL_GAP", "rows": 0}
+{"recorded_at": "2026-10-23 03:55:31.176060+00:00", "base": "BTC", "timeframe": "5m", "attempt": 3, "outcome": "COMPLETE", "rows": 1}
+{"recorded_at": "2026-10-23 03:55:31.210756+00:00", "base": "BTC", "timeframe": "15m", "attempt": 3, "outcome": "COMPLETE", "rows": 1}
+{"recorded_at": "2026-10-23 03:55:31.229786+00:00", "base": "BTC", "timeframe": "1h", "attempt": 3, "outcome": "COMPLETE", "rows": 1}
+{"recorded_at": "2026-10-23 03:55:31.268871+00:00", "base": "BTC", "timeframe": "4h", "attempt": 3, "outcome": "COMPLETE", "rows": 1}
+{"recorded_at": "2026-10-23 03:56:02.731523+00:00", "base": "BTC", "timeframe": "1m", "attempt": 1, "outcome": "SOURCE_UNAVAILABLE", "rows": 0}
+{"recorded_at": "2026-10-23 03:56:02.756982+00:00", "base": "BTC", "timeframe": "5m", "attempt": 4, "outcome": "COMPLETE", "rows": 1}
