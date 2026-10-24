@@ -117,4 +117,8 @@ contract เดียวกับ API และแสดงเพียงสอ
 1. contract/allowlist และ migration tests ผ่าน
 2. runtime 2 คู่/16 series พร้อม post-migration verification
 3. targeted backend/frontend regression ผ่าน
-4. runtime readiness 16 series และ BTC-only workload 8 series ผ่าน threshold พร้อมอัปเดตหลักฐาน
+4. **Release checkpoint/ชุดที่ 9**: runtime readiness 16 series และ BTC-only workload
+   8 series ผ่าน threshold พร้อมอัปเดตหลักฐาน V-12/V-13/V-15 ตาม validation;
+   คง Pending Full Validation จนหลักฐานครบ ไม่รันโหลดหรือ timed smoke ซ้ำท้ายงาน
+   (workflow amendment Approved 2026-10-24, testing หัวข้อ 7).
+   ขั้นก่อน merge และ runtime correctness/safety ที่ validation บังคับยังต้องผ่าน

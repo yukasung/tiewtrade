@@ -123,6 +123,19 @@ stress/endurance/resource ชุดเต็มไป release checkpoint ตา�
 
 ### ระยะรันและความหมายของผล
 
+**Amendment — Approved 2026-10-24:** ไม่รัน workload/endurance หรือ smoke
+แบบจับเวลาอัตโนมัติเมื่อจบแต่ละงาน/feature หรือกลับมาทำงานต่อ. รวมชุดตรวจโหลด
+และความเสถียรที่เลื่อนได้ไว้ที่ release checkpoint/ชุดที่ 9 เมื่อระบบพร้อม
+ตามลำดับที่อนุมัติ; ไม่ต้องแก้ requirements/plan ทุก feature เพื่อย้ำกฎเดียวกัน.
+ปรับเฉพาะ plan/validation ที่มีคำสั่งรันซึ่งขัดกับการเลื่อนที่เจ้าของอนุมัติ
+และติดตามเกณฑ์ค้างใน roadmap โดยไม่ลด scope, duration หรือ threshold ของชุดเต็ม.
+ระหว่างพัฒนาใช้ targeted correctness/safety/regression ตามผลกระทบและหลักฐานเดิม
+ที่ยัง valid. หากต้องรัน timed smoke หรือ workload ก่อน checkpoint ให้แจ้งความเสี่ยง
+ที่ต้องพิสูจน์ เหตุที่หลักฐานเดิมหรือ tests ที่เล็กกว่าไม่พอ และขอบเขต/เวลาคาดหมาย
+ก่อนรัน พร้อมบันทึกใน checkpoint เดิม; ไม่รันเพียงเพื่อความมั่นใจหรือเพราะจบงาน.
+ข้อยกเว้นนี้ไม่อนุญาตเลื่อน correctness/trading safety ที่จำเป็นหรือข้าม candidate
+gates ก่อน merge; จุดอนุมัติเมื่อเปลี่ยน spec ยังบังคับตาม AGENTS.md.
+
 | ระยะ | ตรวจอะไร |
 |---|---|
 | ระหว่างพัฒนา | targeted Tests, lint/types และ smoke ตาม diff กับ dependencies ที่ได้รับผลกระทบ |

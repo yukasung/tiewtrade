@@ -51,6 +51,13 @@ requirements.md → [เจ้าของอนุมัติ] → plan.md + v
 
 ## plan.md
 
+ทุก feature ใหม่และงานที่กลับมาทำต่อใช้ `standards/testing.md` หัวข้อ 7
+(workflow amendment Approved 2026-10-24): ไม่เพิ่ม workload/endurance หรือ timed
+smoke เป็นขั้นบังคับท้ายแต่ละ milestone. วาง targeted correctness/safety checks
+ตามผลกระทบ แยก candidate gates ก่อน merge และโหลดเต็มที่ชุดที่ 9 ให้ชัดเจน.
+ใช้ผลเดิมที่ยัง valid; หากต้องรัน timed workload ก่อนกำหนด ให้แจ้งเหตุผลและขอบเขต
+ตามมาตรฐานก่อนรัน ไม่คัดลอกกฎทั้งหมดลงทุก feature หรือเปลี่ยน requirements ผลิตภัณฑ์.
+
 ```markdown
 # <ชื่องาน> — Plan
 
@@ -70,6 +77,12 @@ migration ที่ต้องมี
 
 ## ความเสี่ยง
 อะไรอาจพัง และจะรู้ได้อย่างไร
+
+## Checkpoints การตรวจ
+ระหว่างพัฒนา: targeted checks ตามความเสี่ยงและหลักฐานเดิมที่ยังใช้ได้
+ก่อน merge: candidate gates ที่มาตรฐานบังคับ
+ชุดที่ 9: full workload/endurance ที่เลื่อน พร้อมรหัสเกณฑ์ใน validation
+ไม่รัน timed smoke อัตโนมัติท้าย milestone; ใช้ testing หัวข้อ 7
 ```
 
 ## validation.md
@@ -93,6 +106,7 @@ migration ที่ต้องมี
 ระบุสั้น ๆ: พฤติกรรม/ความเสี่ยง → Tests หรือหลักฐานเดิม → ช่องว่างที่ต้องตรวจเพิ่ม
 ระบุการเปลี่ยนแปลงที่ทำให้ผลเดิมใช้ไม่ได้ และ checkpoint ของรายการที่เลื่อน
 ใช้รายการนี้ต่อระหว่างพัฒนา อัปเดตเฉพาะเมื่อผลกระทบหรือหลักฐานเปลี่ยน
+ไม่รัน workload/endurance/timed smoke ซ้ำเพราะจบงาน; ระบุเหตุผลก่อนรันตาม testing หัวข้อ 7
 
 ## เทสต์ที่ต้องมี
 - ตัวเลขจริง:

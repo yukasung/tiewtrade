@@ -206,6 +206,17 @@ async def loaded_probes(
     return result
 
 
+def phase_plan(phase: str, loaded: bool, smoke: bool) -> tuple[str, str | None, int]:
+    """Keep short diagnostic results outside the full-acceptance prerequisite chain."""
+    assert phase in ("steady", "dirty")
+    if smoke:
+        assert (phase == "dirty") == loaded
+        return "SMOKE-" + phase, "SMOKE-steady" if phase == "dirty" else None, 300
+    if loaded:
+        return "R2-C5-" + phase, "R2-C5-steady" if phase == "dirty" else "R2-C3", 3600
+    return ("R2-C3", "R2-C2", 3600) if phase == "dirty" else ("R2-C2", None, 3600)
+
+
 async def run(
     output: Path,
     c1: Path,
@@ -213,12 +224,13 @@ async def run(
     load_metrics: Path | None = None,
     requires: Path | None = None,
     metrics_directory: Path | None = None,
+    smoke: bool = False,
 ) -> int:
     assert json.loads((c1 / "result.json").read_text(encoding="utf-8"))["R2-C1"] == "PASSED"
-    gate = ("R2-C5-" + phase) if load_metrics else ("R2-C3" if phase == "dirty" else "R2-C2")
-    if phase == "dirty" or load_metrics is not None:
+    gate, required, duration = phase_plan(phase, load_metrics is not None, smoke)
+    sample_count, probe_count = duration // 10, duration // 60
+    if required is not None:
         assert requires is not None
-        required = ("R2-C5-steady" if phase == "dirty" else "R2-C3") if load_metrics else "R2-C2"
         assert (
             json.loads((requires / "result.json").read_text(encoding="utf-8"))[required] == "PASSED"
         )
@@ -305,6 +317,9 @@ async def run(
             if producer.done():
                 await producer
             ready = await observe(api, users[0])
+            if smoke:
+                ready = [s for s in ready if (s["base"], Timeframe(s["timeframe"])) in SERIES]
+                assert len(ready) == len(SERIES)
             warm.append({"seconds": monotonic() - warm_started, "series": ready})
             save(output / "before-phase.json", warm)
             if all(s["valid"] for s in ready):
@@ -380,11 +395,14 @@ async def run(
                 for old in old_generations:
                     assert not await proof_valid(session, old, now)
         consumer = asyncio.create_task(oracle())
-        for tick in range(360):
+        for tick in range(sample_count):
             await asyncio.sleep(max(0, started + tick * 10 - monotonic()))
             if producer.done():
                 await producer
             ready = await observe(api, users[0])
+            if smoke:
+                ready = [s for s in ready if (s["base"], Timeframe(s["timeframe"])) in SERIES]
+                assert len(ready) == len(SERIES)
             samples.append({"seconds": monotonic() - started, "series": ready})
             save(output / "observations.json", samples)
             all_valid = all(s["valid"] for s in ready)
@@ -427,7 +445,7 @@ async def run(
             if load_metrics:
                 save(output / "rejected.json", rejected)
         if failure is None:
-            await asyncio.sleep(max(0, started + 3600 - monotonic()))
+            await asyncio.sleep(max(0, started + duration - monotonic()))
         measured_seconds = monotonic() - started
         if pending is not None:
             await accept(await pending)
@@ -471,13 +489,13 @@ async def run(
                 if recovered_at is not None and p["started_seconds"] >= recovered_at
             )
             threshold_ok = (
-                valid_count * 5 >= 360 * 4
-                and correct * 5 >= 60 * 4
+                valid_count * 5 >= sample_count * 4
+                and correct * 5 >= probe_count * 4
                 and first_correct is not None
                 and first_correct <= 600
                 and post_recovery_ok
                 if phase == "dirty"
-                else valid_count == 360 and correct == 60
+                else valid_count == sample_count and correct == probe_count
             )
             summaries.append(
                 {
@@ -485,11 +503,11 @@ async def run(
                     "timeframe": tf.value,
                     "valid_samples": valid_count,
                     "first_correct_200_seconds": first_correct,
-                    "scheduled_samples": 360,
+                    "scheduled_samples": sample_count,
                     "correct_probes": correct,
-                    "scheduled_probes": 60,
-                    "passed": len(series_samples) == 360
-                    and len(series_probes) == 60
+                    "scheduled_probes": probe_count,
+                    "passed": len(series_samples) == sample_count
+                    and len(series_probes) == probe_count
                     and threshold_ok,
                 }
             )
@@ -501,8 +519,8 @@ async def run(
             save(output / "api-metrics.json", metrics)
             negatives = [m for m in metrics if m["kind"].startswith("rejected-")]
             if (
-                len(negatives) != 2400
-                or len(rejected) != 2400
+                len(negatives) != probe_count * 40
+                or len(rejected) != probe_count * 40
                 or any(m["candle_queries"] != 0 for m in negatives)
             ):
                 failure = "REJECTED_LOAD_COVERAGE_OR_QUERY"
@@ -512,7 +530,7 @@ async def run(
             ):
                 failure = "API_RESOURCE_LIMIT"
         passed = (
-            measured_seconds >= 3600 and failure is None and all(s["passed"] for s in summaries)
+            measured_seconds >= duration and failure is None and all(s["passed"] for s in summaries)
         )
         save(
             output / "result.json",
@@ -523,6 +541,10 @@ async def run(
                 "measured_seconds": measured_seconds,
                 "failure": failure,
                 "series": summaries,
+                "smoke": smoke,
+                "scheduled_seconds": duration,
+                "readiness_scope": "BTCUSDT 8 timeframes" if smoke else "runtime catalog",
+                "full_validation_credit": False if smoke else passed,
                 "note": "Early failure is not a completed 60-minute acceptance run.",
             },
         )
@@ -555,9 +577,18 @@ if __name__ == "__main__":
     parser.add_argument("--load-metrics", type=Path)
     parser.add_argument("--requires", type=Path)
     parser.add_argument("--metrics", type=Path)
+    parser.add_argument("--smoke", action="store_true")
     args = parser.parse_args()
     raise SystemExit(
         asyncio.run(
-            run(args.output, args.c1, args.phase, args.load_metrics, args.requires, args.metrics)
+            run(
+                args.output,
+                args.c1,
+                args.phase,
+                args.load_metrics,
+                args.requires,
+                args.metrics,
+                args.smoke,
+            )
         )
     )

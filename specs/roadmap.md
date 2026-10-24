@@ -19,6 +19,16 @@
 
 ### การตรวจรับระบบหลังชุดที่ 8 (เจ้าของอนุมัติ 2026-10-11)
 
+**ใช้กับงานถัดไปทั้งหมด — Approved 2026-10-24:** กฎ testing หัวข้อ 7 เรื่องไม่รัน
+workload/endurance/timed smoke อัตโนมัติท้ายงาน ใช้กับทุก feature รวม F-37,
+F-16–F-32 และ F-36 ที่ยัง Planned ตลอดจนงานที่กลับมาพัฒนาต่อ.
+spec ใหม่ต้องแบ่ง development/candidate/release checkpoints ตาม
+[แม่แบบ feature](features/README.md); ไม่ใช่การอนุมัติ spec ล่วงหน้าหรือข้าม safety gates.
+ตรวจเอกสารงานค้างแล้ว: F-13 ไม่มี full workload เพิ่มที่ต้องสร้าง,
+F-14 V-17 และ F-15 V-19/W1–W4 รวม F-38 V-12/V-13/V-15 คงชุดที่ 9
+ตามทะเบียนเดิม. ปรับ F-15 timed smoke และ F-38 checkpoint ให้ชัด;
+ไม่รันผลที่ผ่านแล้วซ้ำโดยไม่มีผลกระทบใหม่ และไม่เปลี่ยน Pending/Failed เป็น Passed.
+
 - เลื่อนการทดสอบโหลดและความเสถียรระยะยาวของ F-11 ไปตรวจรับรวมในชุดที่ 9 หลังพัฒนาชุดที่ 8 เสร็จ ไม่รันทดสอบยาวระหว่างพัฒนาโดยอัตโนมัติ
 - ระหว่างพัฒนายังต้องทดสอบความถูกต้อง ความปลอดภัย การคำนวณเงิน และ regression ที่เกี่ยวข้อง; การเลื่อนนี้ไม่ยกเว้นด่านเหล่านั้น
 - ใช้สถานะ **Development Complete — พัฒนาเสร็จ รอตรวจรับระบบ** ได้เมื่อ implementation/review และด่านที่ไม่เลื่อนผ่านครบแล้ว; ยังไม่ใช่ Completed และไม่รับรองพร้อมใช้งานจริง สถานะปัจจุบันของแต่ละ feature ดูตารางงานด้านล่าง
@@ -205,6 +215,38 @@ Helper/test ทดลองเก็บนอก repo ไม่รวมใน P
 การพิสูจน์ UID เพื่อแยกหลายกระเป๋ายกเลิกจากขอบเขตแล้ว
 
 ## ชุดที่ 3 — ข้อมูลตลาด
+
+**F-11 เลื่อน full validation — Approved 2026-10-24:** เจ้าของอนุมัติให้พัฒนาต่อ
+และเลื่อน C5, C4/C6 ส่วนที่พึ่ง full workload รวมการตรวจครบ 8 timeframe ไปชุดที่ 9
+หลังพัฒนาชุดที่ 8 เสร็จ ไม่ลดเหลือ timeframe เดียว. คง BTC-only checkpoint scope
+และ ETH Pending ตาม amendment. ต่อมาเพิ่มโหมด smoke BTC8timeframe ตามอนุมัติ;
+เจ้าของสั่งหยุด steady (exit130, progress ล่าสุด180s; ไม่ใช่ Passed), dirty ยังไม่รัน.
+อนุมัติเลื่อน timed smoke ไปตรวจรับรวม ไม่รันซ้ำท้ายทุกงาน ตาม testing หัวข้อ7;
+หลักฐานและข้อจำกัดอยู่ใน F-11 validation/README checkpoint เดิม.
+ผล Failed/Partial และ Pending Full Validation คงอยู่; ต้องผ่าน review/candidate gates
+ที่ไม่เลื่อนก่อน merge และตรวจรับครบก่อนใช้เงินจริงหรือเปิดให้คนนอก.
+F-11 ยังคง Development Complete; ไม่ใช่ Completed หรืออนุมัติ production PREPARED.
+
+**F-11 BTC-only checkpoint amendment — Approved 2026-10-24:** เจ้าของยืนยันให้
+checkpoint ปัจจุบันตรวจ workload/readiness เฉพาะ BTCUSDT 8 timeframe ตาม
+[validation amendment](features/2026-10-10-backend-indicators/validation.md).
+ETH คง Pending Full Validation; ไม่เปลี่ยน production/F-38 ไม่ลดเวลา/threshold
+และไม่ปิด Completed หรือ production PREPARED. เพิ่ม BTC-only scope เฉพาะโหมด smoke แล้ว;
+default full harness ยังใช้ runtime catalog เดิม การปรับ full scope ยัง Pending;
+C5 ยังไม่ได้เริ่ม ผล C1/C2/C3 เดิมคงไว้ตาม scope ที่วัดจริง.
+
+**F-11 checkpoint ล่าสุด 2026-10-24:** C1 resumed audit และ R2-7 exact cold/warm ผ่าน;
+แก้ publication timeout ด้วย migration0039 ตาม amendment ที่อนุมัติแล้ว.
+Regression149testsและ exact workerผ่าน; C2 บน0039 **Passed** ครบ3,600.000502s,
+readiness16/16ตลอด360samples, API correctness480/480, worker127attemptsทั้งหมดREADY.
+ผล Failedก่อนแก้ที่1,270.13sยังเก็บไว้ ไม่ทับประวัติ.
+C3 บน0039 **Passed** ครบ3,600.002226s: readinessฟื้น16/16ใน70.07s,
+correct200ครบทุกseriesภายใน120.31sและไม่เกิดgapหลังrecovery;
+availabilityขั้นต่ำhead98.06%/API96.67%, worker128attemptsทั้งหมดREADY.
+ยังเหลือ C5/C4/C6 ส่วน full workload ซึ่งเลื่อนไปชุดที่ 9 ตามอนุมัติข้างต้น;
+candidate gates ที่ไม่เลื่อนและ required CI ยังต้องผ่านก่อน merge;
+ยังไม่ Completed และยังไม่รับรอง production PREPARED.
+ดู [หลักฐานและงานค้าง](features/2026-10-10-backend-indicators/profiling/release-20261024/README.md).
 
 | รหัส | งาน | สถานะ | หมายเหตุ |
 |---|---|---|---|

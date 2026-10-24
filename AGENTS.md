@@ -161,7 +161,9 @@ roadmap → requirements.md → [เจ้าของอนุมัติ]
 - ไม่รัน full suite หลังทุกงานหรือทุก fix; รันเมื่อ candidate นิ่งที่ checkpoint ก่อน merge
   หรือเมื่อผลกระทบ/ความเสี่ยงทำให้ targeted Tests ไม่เพียงพอ
 - performance/workload/stress/endurance/resource ชุดเต็มรันที่ release checkpoint
-  ระหว่างพัฒนาใช้ smoke ตามความเสี่ยง; ต้องรันเร็วขึ้นเมื่อจำเป็นต่อการพิสูจน์ความปลอดภัย
+  ไม่รัน workload/endurance หรือ smoke แบบจับเวลาอัตโนมัติท้ายทุกงาน;
+  ระหว่างพัฒนาใช้เฉพาะเมื่อมีความเสี่ยงที่หลักฐานเดิมไม่พอ พร้อมแจ้งเหตุผลก่อนรัน
+  ตาม testing หัวข้อ 7 (เจ้าของอนุมัติ 2026-10-24); ไม่เลื่อนการพิสูจน์ความปลอดภัยที่จำเป็น
 - ก่อน merge ตรวจด่านบังคับครบ; ก่อน Completed/release ตรวจครบทุกเกณฑ์ใน `validation.md`
   พร้อมหลักฐานสำหรับโค้ดฉบับสุดท้าย และรักษาผล Failed/Partial เดิมของด่านที่เลื่อน
 - เมื่อเงิน ออเดอร์ balance/position, risk, concurrency/idempotency หรือ dependencies เปลี่ยน
