@@ -1,5 +1,85 @@
 # F-11 — คำนวณ indicator ที่ backend — Plan
 
+## Development smoke — Approved 2026-10-24
+
+**คำสั่งล่าสุด — Deferred, Approved 2026-10-24:** เจ้าของอนุมัติหยุดการรัน
+smoke แบบจับเวลาในรอบพัฒนานี้และเลื่อนไปตรวจรับรวมชุดที่ 9 ตาม testing หัวข้อ 7.
+ข้อความอนุมัติด้านล่างเก็บเป็นประวัติ/ขอบเขต harness ไม่ใช่คำสั่งให้รันต่อทันที
+หรือรันซ้ำท้ายทุกงาน. steady ถูกหยุดตามคำสั่ง (exit130; progress ล่าสุด180s,
+BTC8/8) ไม่ใช่ Passed; dirty/rejected-load ยังไม่รัน. หลักฐานอยู่ใน
+`profiling/release-20261024/README.md`. คง C5/C4/C6 ส่วนโหลดเต็มและ ETH เป็น
+Pending Full Validation พร้อมผล Failed/Partial เดิม; correctness/safety และ
+candidate gates ที่ไม่เลื่อนยังบังคับ. ไม่เปลี่ยนข้อกำหนดผลิตภัณฑ์หรือ production.
+
+เจ้าของอนุมัติ smoke BTCUSDT ครบ 8 timeframe: steady 300s และ dirty พร้อม
+rejected load 300s; ใช้ harness `profile_capacity_steady.py` เดิม เพิ่มโหมด
+`--smoke` ที่แยกชื่อผล SMOKE ออกจาก R2-C*. Default full run ยังคง3600s.
+ตรวจ readiness เฉพาะ BTC ใน smoke แต่ไม่แก้ catalog/production และไม่ลบ ETH
+จาก isolated fixture; background worker/source ของ fixture เดิมยังทำงานตามจริง.
+คง cadence observer10s/probe60s, parity/resource/error assertions เดิม;
+รายงาน30observations/5probe rounds ต่อseries และ200rejectionsในdirty phase.
+สัดส่วน availability เดิมใช้กับจำนวนรอบ smoke ไม่ใช่หลักฐาน full acceptance.
+ตรวจ duration/counts/gate separation และ prerequisite ไม่ให้ smoke ปิด full gate;
+รัน lint/types และ tests ที่กระทบก่อนใช้จริง. คง C5/C4/C6 และ ETH Pending
+Full Validation; ผล smoke ไม่แทนการวัด60+60นาทีในชุดที่9หรือเปิด production.
+
+## เลื่อน full validation เพื่อพัฒนาต่อ — Approved 2026-10-24
+
+เจ้าของอนุมัติด้วย “approve” ให้เลื่อน C5, C4/C6 ส่วนที่พึ่ง full workload และ
+การตรวจรับครบทุก timeframe ไปชุดที่ 9 หลังพัฒนาชุดที่ 8 เสร็จ ตามลำดับเดิม.
+คงขอบเขต 8 timeframe ไม่ลดเหลือ 1m; BTC-only amendment ด้านล่างยังเป็น
+ขอบเขตของ checkpoint ที่เลื่อน ไม่ใช่การรับรอง ETH หรือเปลี่ยน production/F-38.
+ยังไม่ปรับ harness scope หรือเริ่มโหลดเพื่อ checkpoint นี้ในรอบพัฒนาปัจจุบัน.
+คง Pending Full Validation และผล Failed/Partial เดิมจนมีหลักฐานครบ;
+ผล C1/C2/C3 ที่ผ่านเก็บตาม scope/รุ่นที่วัดจริงและตรวจความใช้ได้ก่อนนำกลับมาใช้.
+ระหว่างพัฒนาต้องตรวจ correctness, safety และ regression ตามผลกระทบ;
+ก่อน merge ต้องผ่าน candidate gates ที่ไม่เลื่อนทั้งหมด รวม review และ required CI.
+F-11 คง Development Complete ไม่ใช่ Completed; ต้องตรวจรับครบก่อนใช้เงินจริง
+หรือเปิดให้คนนอก และไม่อนุมัติ production PREPARED, commit/push/merge
+หรือข้ามจุดอนุมัติ spec ของ feature ถัดไป.
+
+
+## BTC-only checkpoint amendment — Approved 2026-10-24
+
+เจ้าของยืนยันขอบเขตพร้อม requirements/validation: F-11 checkpoint ปัจจุบัน
+ตรวจ workload และ readiness เฉพาะ BTCUSDT ครบ 8 timeframe.
+ใช้ `backend/tests/services/indicator_builder/profile_capacity.py` และ
+`profile_capacity_steady.py` เดิม โดยเพิ่มการเลือก scope เฉพาะการรัน checkpoint;
+ค่า default ของ harness ยังตรวจ runtime ทุกคู่ตาม catalog เดิม และไม่แก้ production.
+รายงานต้องระบุ scope ที่เลือกและ ETH Pending แยกจาก runtime readiness ทั้งระบบ;
+ไม่เรียก BTC 8/8 ว่า BTC+ETH 16/16. ตรวจ selector/observer/report และ callers
+ที่ได้รับผลกระทบก่อนใช้จริง โดยไม่ตัด safety regression หรือเปลี่ยน threshold.
+ผล C1/C2/C3 เดิมที่ตรวจขอบเขตกว้างกว่ายังคงใช้เป็นหลักฐานเดิมได้เมื่อ dependencies
+ไม่เปลี่ยน; ห้ามแก้ artifact ย้อนหลังหรือปิดผล Failed/Pending โดยไม่มีหลักฐาน.
+การอนุมัตินี้ไม่ใช่คำสั่งเริ่มโหลดทันทีหรือ commit/push/merge.
+
+## Publication checkpoint-boundary optimization — Approved (2026-10-24)
+
+เจ้าของสั่ง “เริ่มทำต่อ” หลังเสนอขออนุมัติ amendment นี้และ validation คู่กัน.
+
+ขอบเขตที่เสนอหลัง bounded diagnosis: เพิ่ม migration ใหม่ถัดจาก head ปัจจุบัน
+เพื่อปรับเฉพาะ checkpoint completeness predicate ใน `publish_indicator_generation`.
+ใช้ `market_timeframe_advance` เดิมและสูตร expected_count/bounds เดิม; materialize
+expected boundaries ครั้งเดียวก่อน anti-join ป้องกัน planner เรียกฟังก์ชันซ้ำต่อคู่.
+ไม่แก้ migration เดิม, timeout500ms, retry30/60s/budget3, attempt120s,
+freshness600s, locks/fences/publication atomicity หรือกฎ trading/เงิน.
+ตรวจ migration head อีกครั้งก่อนกำหนดเลข; downgrade คืน predicate เดิมอย่างแม่นยำ.
+ใช้ pattern การแทน function definition จาก `backend/migrations/versions/0026_week_month_timeframes.py`
+และ actual-role publication tests เดิมใน `backend/tests/infra/indicators/` ก่อนเพิ่มของใหม่.
+เริ่ม implementation ตามขอบเขตที่อนุมัติข้างต้น; ไม่ขยายไปเปลี่ยน threshold.
+
+## Exact fixture lifecycle clock amendment — Approved 2026-10-24
+
+เจ้าของสั่งเริ่มทำหลังเสนอ NC-F11-CLOCK: แยก calculation snapshot/bounds ของ
+525,600-slot fixture ออกจาก wall clock ของ retry/lease/deadline เฉพาะ harness.
+ใช้ `tests/services/indicator_builder/profile_capacity.py` และ
+`capacity_instrumentation/sitecustomize.py` เดิม; ไม่แก้ production/migration/threshold.
+เปลี่ยนเฉพาะ SQL calculation-bounds function ในฐาน isolated และ calculation window
+ของ captured snapshot; เก็บ snapshot as_of จริงเพื่อคง attempt/query deadline เดิม.
+คืน definition/marker ใน cleanup; ห้าม replace clock_timestamp ทั้งกลุ่มอีก.
+Harness รอ nonterminal transient ตาม retry/backoff เดิมภายใน deadline600s;
+terminal failure ต้องหยุด. ตรวจ exact bounds, lifecycle time และ cleanup ก่อน reproduction.
+
 สถานะ: **Approved** — เจ้าของอนุมัติทั้งฉบับเมื่อ 2026-10-10 ตามคำสั่ง “approve”; requirements อนุมัติและ NC-30..33 ปิดแล้ว; รวมNC-35 amendmentsที่อนุมัติเมื่อ2026-10-10
 การลบ MACD ด้านล่าง: **Approved** — เจ้าของอนุมัติ amendment เมื่อ 2026-10-13
 วันที่: 2026-10-10

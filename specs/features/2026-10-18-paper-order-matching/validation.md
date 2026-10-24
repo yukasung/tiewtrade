@@ -257,7 +257,11 @@ worker RSS ไม่เกิน 1GiB ต่อ process, ไม่มี connect
 ETHUSDT ยังต้องผ่าน V-1..17 ครบ ไม่ถือว่า BTC-only workload รับรอง ETH capacity
 หากต้องรับรอง workload ของ ETH ต้องขออนุมัติเพิ่มและเก็บ Pending Full Validation แยก
 
-ระหว่างพัฒนาใช้ smoke W1 60s/10 episodes เพื่อตรวจ harness และ resource regressions
+**Workflow amendment — Approved 2026-10-24:** ไม่รัน W1 smoke อัตโนมัติท้ายงาน
+หรือเมื่อกลับมาพัฒนาต่อ; ใช้หลักฐานเดิมที่ยัง valid ตาม testing หัวข้อ 7.
+smoke W1 60s/10 episodes เป็นขอบเขตสำหรับกรณีมีความเสี่ยงของ harness/resource
+ที่ tests เล็กกว่าหรือหลักฐานเดิมพิสูจน์ไม่ได้เท่านั้น ต้องแจ้งเหตุผลก่อนรัน.
+W1–W4 ชุดเต็มคงตรวจที่ release checkpoint/ชุดที่ 9 ตามเกณฑ์เดิม
 แต่ไม่ปิด W1..W4 หรือแทน safety/concurrency tests ถ้า smoke ไม่พอพิสูจน์ความปลอดภัย
 ต้องรันส่วนที่จำเป็นทันที ไม่รอ release และคงผล Failed/Partial พร้อมสาเหตุของรอบเก่า
 

@@ -1,5 +1,54 @@
 # F-11 — คำนวณ indicator ที่ backend — Requirements
 
+## Development smoke — Approved 2026-10-24
+
+**คำสั่งล่าสุด — Deferred, Approved 2026-10-24:** เจ้าของอนุมัติหยุดการรัน
+smoke แบบจับเวลาในรอบพัฒนานี้และเลื่อนไปตรวจรับรวมชุดที่ 9 ตาม testing หัวข้อ 7.
+ข้อความอนุมัติด้านล่างเก็บเป็นประวัติ/ขอบเขต harness ไม่ใช่คำสั่งให้รันต่อทันที
+หรือรันซ้ำท้ายทุกงาน. steady ถูกหยุดตามคำสั่ง (exit130; progress ล่าสุด180s,
+BTC8/8) ไม่ใช่ Passed; dirty/rejected-load ยังไม่รัน. หลักฐานอยู่ใน
+`profiling/release-20261024/README.md`. คง C5/C4/C6 ส่วนโหลดเต็มและ ETH เป็น
+Pending Full Validation พร้อมผล Failed/Partial เดิม; correctness/safety และ
+candidate gates ที่ไม่เลื่อนยังบังคับ. ไม่เปลี่ยนข้อกำหนดผลิตภัณฑ์หรือ production.
+
+เจ้าของอนุมัติ smoke BTCUSDT ครบ 8 timeframe: steady 300s และ dirty พร้อม
+rejected load 300s; ใช้ harness `profile_capacity_steady.py` เดิม เพิ่มโหมด
+`--smoke` ที่แยกชื่อผล SMOKE ออกจาก R2-C*. Default full run ยังคง3600s.
+ตรวจ readiness เฉพาะ BTC ใน smoke แต่ไม่แก้ catalog/production และไม่ลบ ETH
+จาก isolated fixture; background worker/source ของ fixture เดิมยังทำงานตามจริง.
+คง cadence observer10s/probe60s, parity/resource/error assertions เดิม;
+รายงาน30observations/5probe rounds ต่อseries และ200rejectionsในdirty phase.
+สัดส่วน availability เดิมใช้กับจำนวนรอบ smoke ไม่ใช่หลักฐาน full acceptance.
+ตรวจ duration/counts/gate separation และ prerequisite ไม่ให้ smoke ปิด full gate;
+รัน lint/types และ tests ที่กระทบก่อนใช้จริง. คง C5/C4/C6 และ ETH Pending
+Full Validation; ผล smoke ไม่แทนการวัด60+60นาทีในชุดที่9หรือเปิด production.
+
+## เลื่อน full validation เพื่อพัฒนาต่อ — Approved 2026-10-24
+
+เจ้าของอนุมัติด้วย “approve” ให้เลื่อน C5, C4/C6 ส่วนที่พึ่ง full workload และ
+การตรวจรับครบทุก timeframe ไปชุดที่ 9 หลังพัฒนาชุดที่ 8 เสร็จ ตามลำดับเดิม.
+คงขอบเขต 8 timeframe ไม่ลดเหลือ 1m; BTC-only amendment ด้านล่างยังเป็น
+ขอบเขตของ checkpoint ที่เลื่อน ไม่ใช่การรับรอง ETH หรือเปลี่ยน production/F-38.
+ยังไม่ปรับ harness scope หรือเริ่มโหลดเพื่อ checkpoint นี้ในรอบพัฒนาปัจจุบัน.
+คง Pending Full Validation และผล Failed/Partial เดิมจนมีหลักฐานครบ;
+ผล C1/C2/C3 ที่ผ่านเก็บตาม scope/รุ่นที่วัดจริงและตรวจความใช้ได้ก่อนนำกลับมาใช้.
+ระหว่างพัฒนาต้องตรวจ correctness, safety และ regression ตามผลกระทบ;
+ก่อน merge ต้องผ่าน candidate gates ที่ไม่เลื่อนทั้งหมด รวม review และ required CI.
+F-11 คง Development Complete ไม่ใช่ Completed; ต้องตรวจรับครบก่อนใช้เงินจริง
+หรือเปิดให้คนนอก และไม่อนุมัติ production PREPARED, commit/push/merge
+หรือข้ามจุดอนุมัติ spec ของ feature ถัดไป.
+
+
+## BTC-only checkpoint amendment — Approved 2026-10-24
+
+เจ้าของยืนยัน “ยืนยัน” ให้ F-11 release checkpoint ปัจจุบันตรวจเฉพาะ BTCUSDT
+ทั้ง workload และ readiness ครบ 8 timeframe. ขอบเขตนี้แทน readiness BTC+ETH
+ของ amendment 2026-10-15 เฉพาะ checkpoint นี้ ไม่เปลี่ยน production catalog,
+คู่เหรียญที่รองรับ หรือข้อกำหนดของ F-38/feature อื่น. ETH validation คงเป็น
+**Pending Full Validation** ไม่ถือว่าผ่านจากผล BTC และไม่ใช้ผล BTC-only รับรอง
+production PREPARED ทั้งระบบหรือ Completed ที่ยังขาดเกณฑ์อื่น.
+คงระยะเวลาโหลด threshold ความถูกต้องและความปลอดภัยเดิม รวม regression ที่จำเป็น.
+
 **Pair-scope amendment — Approved 2026-10-15:** F-38 แทนรายการ 5 คู่ใน baseline
 ด้วย BTCUSDT และ ETHUSDT × 8 timeframe รวม 16 runtime series; workload รอบยาว
 ของ F-38 วัด BTCUSDT 8 series และคง ETH workloadเป็น Pending โดยไม่ลดเกณฑ์ต่อ series
