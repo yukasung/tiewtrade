@@ -22,7 +22,7 @@
 | V-13 | RQ-8/RQ-18 | Paper entrypoint/tests ทำงานโดยไม่มี venue key/network/Live executor; negative fixtures ที่ import/call dependency ต้องทำ gate แดง | พัฒนา + candidate | **Passed — historical candidate 2026-10-18**; AST negative fixture/runtime isolation ตาม Required CI checkpoint |
 | V-14 | RQ-10/RQ-17 | position changes/corrections/conflicts มี typed audit exact owner/episode/pair/result หนึ่งครั้ง ไม่มี secret/raw payload และแก้ย้อนหลังไม่ได้ | พัฒนา + candidate | **Passed — historical candidate 2026-10-18**; typed immutable audit gates ตาม Required CI checkpoint |
 | V-15 | RQ-7/RQ-8/RQ-10 | migration `0031→0032→0031→0032` บนฐานว่างผ่าน; downgrade เมื่อมี F-14 data ปฏิเสธโดย data เดิมอยู่ครบ | candidate | **Passed 2026-10-16** บน PostgreSQL แยกพอร์ต 55439 |
-| V-16 | RQ-1 to RQ-19 | relevant backend regression, lint, format, types, import contracts, migration/security/secret gates และ required CI ผ่านบน source สุดท้าย | candidate ก่อน merge | **Passed — historical candidate 2026-10-18** — local full backend และ CI 39097281613, 2818 passed; remediation 2026-10-25 local candidate coverage ครบ 3258 tests และ static gates ผ่านตาม checkpoint ด้านล่าง; required CI บน commit สุดท้ายยัง Pending |
+| V-16 | RQ-1 to RQ-19 | relevant backend regression, lint, format, types, import contracts, migration/security/secret gates และ required CI ผ่านบน source สุดท้าย | candidate ก่อน merge | **Passed - final combined candidate 2026-10-25**; PR #34 commit `3be912c` push/PR CI each passed 6/6 jobs, backend 3270 passed; merge `80d5d04` post-merge CI 40176371957 passed 6/6 jobs, backend 3270 passed. See post-merge closeout below; local Failed/Partial results remain preserved. |
 | V-17 | nonfunctional | deterministic rebuild และ snapshot workload ตามงบที่อนุมัติ ไม่ล็อก owner อื่นและไม่มี unbounded memory/query growth | release checkpoint | **Pending Full Validation** |
 
 F-14 จะเป็น **Development Complete** ได้เมื่อ V-1–V-16 ผ่านและ review ไม่มี Critical/High
@@ -547,3 +547,39 @@ full mypy passed (477 files); diff check passed. Use the prior full/static evide
 for unchanged inputs and require final-commit CI to verify the combined candidate.
 This is publication only: required CI Pending, no merge performed; V-17 remains
 Pending Full Validation. Git operations/wait/review time not measured separately.
+
+
+## Post-merge closeout - 2026-10-25
+
+Owner authorized recording the merged result and cleaning the merged F-14 local
+branches/worktree. This checkpoint updates evidence only; requirements, calculation
+rules and acceptance criteria are unchanged.
+
+| Candidate / merge | CI evidence | Result |
+|---|---|---|
+| PR #32 head `1282477`, merge `eb8c7d8` | [Post-merge run 40170755797](https://github.com/yukasung/tiewtrade/actions/runs/40170755797) | 6/6 jobs passed; backend 3261 passed, 2 deselected in 745.11s; no post-merge retry |
+| PR #34 head `3be912c` | [Push run 40175401987](https://github.com/yukasung/tiewtrade/actions/runs/40175401987) | 6/6 jobs passed; backend 3270 passed, 2 deselected in 749.75s; first attempt |
+| PR #34 head `3be912c` | [PR run 40175425894](https://github.com/yukasung/tiewtrade/actions/runs/40175425894) | 6/6 jobs passed; backend 3270 passed, 2 deselected in 718.16s; first attempt |
+| PR #34 merge `80d5d04` | [Post-merge run 40176371957](https://github.com/yukasung/tiewtrade/actions/runs/40176371957) | 6/6 jobs passed; backend 3270 passed, 2 deselected in 792.94s; first attempt |
+
+[PR #32](https://github.com/yukasung/tiewtrade/pull/32) merged at
+2026-10-25 06:53:58 UTC; [PR #34](https://github.com/yukasung/tiewtrade/pull/34)
+merged at 2026-10-25 08:22:42 UTC. PR #34 merge tree equals its reviewed candidate:
+`cd080ad4f797c718c4637803fb6911845adba1b7`.
+
+Final-commit and post-merge CI satisfy the previously pending remote candidate gate.
+Historical Pending/Failed/Partial entries above describe their original checkpoints;
+they remain preserved and do not override these final results. No new test run is
+needed for this evidence-only edit. No Live order or Binance call was performed.
+
+F-14 remains **Development Complete**. V-17 remains **Pending Full Validation** at
+the release checkpoint: rebuild/snapshot/concurrency workload and resource evidence
+are still required before Completed/release. Passing candidate CI does not close V-17.
+
+Removed clean worktree `/tmp/tiewtrade-f14-review` and local branches
+`fix/f14-review-findings` / `fix/f14-integration-replay` using `git branch -d`.
+Before removal, verified both heads are ancestors of `origin/main`, their exact
+heads are published on remote, and post-merge CI is green. Remote history and
+unrelated worktrees are preserved. The owner authorized publishing this evidence-only
+closeout on `docs/f14-postmerge-checkpoint`; document publication does not alter
+the V-17 release-validation gate.
