@@ -185,7 +185,12 @@ async def correct_fill(
             record=public,
             decision_market=market,
         )
-        state = rebase_order_queues(state, market)
+        state = rebase_order_queues(
+            state,
+            market,
+            constraints=public.metadata.limit,
+            market_constraints=public.metadata.market,
+        )
     await _prove_reservations(session, wallet_id, episode_id, state)
     saved = await persist_checkpoint(
         session,

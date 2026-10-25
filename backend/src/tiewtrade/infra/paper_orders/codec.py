@@ -90,6 +90,37 @@ def intent_from_payload(payload: Any) -> OrderIntent:
     return value
 
 
+def order_payload(value: OrderState) -> dict[str, object]:
+    """Full order state for immutable terminal facts as well as active checkpoints."""
+    return {
+        "intent": intent_payload(value.intent),
+        "sequence": value.sequence,
+        "accepted_at": value.accepted_at.isoformat(),
+        "status": value.status.value,
+        "filled": value.filled.as_parts()["quantity"],
+        "spent": value.spent.as_parts()["amount"],
+        "constraints": constraints_payload(value.admission_constraints),
+        "resting": value.resting,
+        "ahead": None if value.queue_ahead is None else value.queue_ahead.as_parts()["quantity"],
+    }
+
+
+def order_from_payload(payload: Any) -> OrderState:
+    row = object_payload(payload)
+    intent = intent_from_payload(row["intent"])
+    return OrderState(
+        intent,
+        row["sequence"],
+        datetime.fromisoformat(row["accepted_at"]),
+        OrderStatus(row["status"]),
+        Quantity.of(row["filled"], intent.pair.base),
+        Money.of(row["spent"], intent.pair.quote),
+        constraints_from_payload(row["constraints"]),
+        row["resting"],
+        None if row["ahead"] is None else Quantity.of(row["ahead"], intent.pair.base),
+    )
+
+
 def compact_state(state: MatchingState) -> MatchingState:
     # Retain the last trade across intervening books, so a source trade cannot fill twice.
     keep = {state.inputs[-1].input_id} if state.inputs else set()
@@ -97,15 +128,21 @@ def compact_state(state: MatchingState) -> MatchingState:
     if trade is not None:
         keep.add(trade.input_id)
     retained = [
-        (v, c)
-        for v, c in zip(state.inputs, state.input_constraints, strict=True)
+        (v, c, mc)
+        for v, c, mc in zip(
+            state.inputs,
+            state.input_constraints,
+            state.input_market_constraints or state.input_constraints,
+            strict=True,
+        )
         if v.input_id in keep
     ]
     return replace(
         state,
         orders=tuple(order for order in state.orders if not order.status.terminal),
-        inputs=tuple(v for v, _ in retained),
-        input_constraints=tuple(c for _, c in retained),
+        inputs=tuple(v for v, _, _ in retained),
+        input_constraints=tuple(c for _, c, _ in retained),
+        input_market_constraints=tuple(mc for _, _, mc in retained),
         executions=(),
     )
 
@@ -120,20 +157,7 @@ def state_payload(value: MatchingState) -> dict[str, object]:
         "fee": value.profile.fee_version,
         "model": value.profile.liquidity_version,
         "sequence": value.execution_sequence,
-        "orders": [
-            {
-                "intent": intent_payload(o.intent),
-                "sequence": o.sequence,
-                "accepted_at": o.accepted_at.isoformat(),
-                "status": o.status.value,
-                "filled": o.filled.as_parts()["quantity"],
-                "spent": o.spent.as_parts()["amount"],
-                "constraints": constraints_payload(o.admission_constraints),
-                "resting": o.resting,
-                "ahead": None if o.queue_ahead is None else o.queue_ahead.as_parts()["quantity"],
-            }
-            for o in value.orders
-        ],
+        "orders": [order_payload(o) for o in value.orders],
         "liquidity": [
             {
                 "side": v.side.value,
@@ -145,6 +169,7 @@ def state_payload(value: MatchingState) -> dict[str, object]:
         ],
         "inputs": [json.loads(input_payload(v)) for v in value.inputs],
         "constraints": [constraints_payload(c) for c in value.input_constraints],
+        "market_constraints": [constraints_payload(c) for c in value.input_market_constraints],
         "book": None if value.book is None else json.loads(input_payload(value.book)),
     }
 
@@ -153,20 +178,7 @@ def state_from_payload(payload: Any) -> MatchingState:
     row = object_payload(payload)
     scope = OrderScope(UUID(row["owner"]), UUID(row["episode"]), TradingMode.PAPER)
     pair = PositionPair(row["base"], row["quote"])
-    orders = tuple(
-        OrderState(
-            intent_from_payload(o["intent"]),
-            o["sequence"],
-            datetime.fromisoformat(o["accepted_at"]),
-            OrderStatus(o["status"]),
-            Quantity.of(o["filled"], pair.base),
-            Money.of(o["spent"], pair.quote),
-            constraints_from_payload(o["constraints"]),
-            o["resting"],
-            None if o["ahead"] is None else Quantity.of(o["ahead"], pair.base),
-        )
-        for o in row["orders"]
-    )
+    orders = tuple(order_from_payload(o) for o in row["orders"])
     liquidity = tuple(
         ShadowLevel(
             ExecutionSide(v["side"]),
@@ -190,6 +202,9 @@ def state_from_payload(payload: Any) -> MatchingState:
         (),
         book,
         row["sequence"],
+        tuple(
+            constraints_from_payload(c) for c in row.get("market_constraints", row["constraints"])
+        ),
     )
 
 
