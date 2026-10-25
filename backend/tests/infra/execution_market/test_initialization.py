@@ -348,11 +348,14 @@ async def test_managed_history_refuses_fence_downgrade_and_keeps_force_rls(
         or "matching decision history prevents downgrade" in result.stderr
         or "Paper reset audit history prevents downgrade" in result.stderr
         or "historical Paper order revisions prevent downgrade" in result.stderr
+        or "supported-symbol runtime history prevents downgrade" in result.stderr
+        or "manual order request history prevents downgrade" in result.stderr
+        or "manual order admission history prevents downgrade" in result.stderr
     )
     async with migrator_engine.connect() as connection:
         assert (
             await connection.execute(text("SELECT version_num FROM alembic_version"))
-        ).scalar_one() in {"0035", "0036", "0037", "0038"}
+        ).scalar_one() in {"0035", "0036", "0037", "0038", "0040", "0041", "0042"}
     async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
         assert (
             await session.execute("""SELECT bool_and(relforcerowsecurity) FROM pg_class

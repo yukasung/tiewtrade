@@ -64,7 +64,9 @@ async def test_other_runtime_roles_have_no_preference_access(role: DatabaseRole)
     try:
         with pytest.raises(SQLAlchemyError):
             async with engine.begin() as connection:
-                await connection.execute(text("SELECT user_id FROM user_trading_preferences"))
+                # F-16 permits the engine to read only owner-bound user_id/use, not metadata.
+                column = "created_at" if role is DatabaseRole.ENGINE else "user_id"
+                await connection.execute(text(f"SELECT {column} FROM user_trading_preferences"))
     finally:
         await engine.dispose()
 

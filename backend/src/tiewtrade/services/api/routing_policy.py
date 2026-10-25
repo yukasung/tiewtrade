@@ -94,6 +94,15 @@ ROUTE_RULES: Final[dict[tuple[str, str], RouteRule]] = {
     ("POST", "/auth/password"): RouteRule(renews=True),
     # ── ต้องมี session แต่ **ไม่ต่ออายุ** เพราะหน้าเว็บเรียกเป็นรอบ ๆ (Q-2) ──
     ("GET", "/auth/me"): RouteRule(),
+    # Manual order intent is classified by the shared domain gate, never by URL side.
+    ("GET", "/paper/trade"): RouteRule(),
+    ("GET", "/paper/orders"): RouteRule(),
+    ("GET", "/paper/orders/{order_id}"): RouteRule(),
+    ("GET", "/paper/order-requests"): RouteRule(),
+    ("GET", "/paper/order-requests/{request_id}"): RouteRule(),
+    ("GET", "/paper/order-requests/by-key/{key}"): RouteRule(),
+    ("POST", "/paper/orders"): RouteRule(renews=True),
+    ("POST", "/paper/orders/{order_id}/cancel"): RouteRule(renews=True, risk_reducing=True),
     ("GET", "/market-data/candles"): RouteRule(),
     ("GET", "/market-data/candles/pages"): RouteRule(),
     ("GET", "/market-data/indicators"): RouteRule(),

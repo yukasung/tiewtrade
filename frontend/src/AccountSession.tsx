@@ -1,3 +1,4 @@
+import { clearAttempt } from "./manualOrderJournal";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { ApiRequestError, type Me } from "./auth";
@@ -12,15 +13,17 @@ export function AccountSession({
   onExpired?: () => void;
 }) {
   return (
-    <Session key={identity.user_id} onExpired={onExpired}>
+    <Session key={identity.user_id} owner={identity.user_id} onExpired={onExpired}>
       {children}
     </Session>
   );
 }
 function Session({
+  owner,
   children,
   onExpired,
 }: {
+  owner: string;
   children: ReactNode;
   onExpired: (() => void) | undefined;
 }) {
@@ -33,6 +36,13 @@ function Session({
         },
       }),
   );
+  const lifecycle = useRef(0);
+  useEffect(() => {
+    const generation = ++lifecycle.current;
+    return () => { window.queueMicrotask(() => {
+      if (lifecycle.current === generation) { try { clearAttempt(owner); } catch { /* Storage stays blocked until readable. */ } }
+    }); };
+  }, [owner]);
   const expiryHandler = useRef(onExpired);
   expiryHandler.current = onExpired;
   useEffect(() => {

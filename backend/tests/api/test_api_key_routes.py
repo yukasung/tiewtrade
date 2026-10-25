@@ -452,6 +452,9 @@ def test_no_route_hands_back_the_secret(client: TestClient, ending: bool) -> Non
         path = (
             template.replace("{key_id}", key_id)
             .replace("{command_id}", key_id)
+            .replace("{request_id}", key_id)
+            .replace("{order_id}", key_id)
+            .replace("{key}", key_id)
             .replace("{base}", "BTC")
             .replace("{quote}", "USDT")
         )
@@ -477,6 +480,10 @@ def test_no_route_hands_back_the_secret(client: TestClient, ending: bool) -> Non
                 "/market-data/chart/history",
                 "/market-data/chart/live",
             }
+            else {"action": "NEW"}
+            if template == "/paper/order-requests/by-key/{key}"
+            else {"episode_id": key_id}
+            if template == "/paper/orders"
             else None,
             **({"json": {}} if method == "POST" else {}),
         )
@@ -491,6 +498,15 @@ def test_no_route_hands_back_the_secret(client: TestClient, ending: bool) -> Non
             elif template == "/paper-wallet/commands/{command_id}":
                 assert response.status_code == 404
                 assert response.json() == {"detail": "PAPER_COMMAND_NOT_FOUND"}
+            elif template in {
+                "/paper/order-requests/by-key/{key}",
+                "/paper/order-requests/{request_id}",
+            }:
+                assert response.status_code == 404
+                assert response.json() == {"detail": "MANUAL_REQUEST_NOT_FOUND"}
+            elif template == "/paper/orders/{order_id}":
+                assert response.status_code == 404
+                assert response.json() == {"detail": "PAPER_ORDER_NOT_FOUND"}
             elif template == "/market-data/indicators" and response.status_code == 503:
                 # Empty indicator data must fail closed without exposing secrets.
                 # Accept only this documented error, independent of prior fixtures.
