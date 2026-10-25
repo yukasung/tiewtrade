@@ -14,7 +14,14 @@ from tiewtrade.core.money import Money, Quantity
 from tiewtrade.infra.db import DatabaseRole, user_session
 from tiewtrade.infra.db.session import market_data_session
 from tiewtrade.infra.market_data.order_book_storage import publish_input, renew_book_writer
-from tiewtrade.infra.paper_orders.dispatch import get_order_command, submit_order
+from tiewtrade.infra.paper_orders.dispatch import (
+    ClaimedOrder,
+    DueOrder,
+    claim_order,
+    get_order_command,
+    submit_order,
+)
+from tiewtrade.infra.paper_orders.worker import process_claimed_order
 from tiewtrade.infra.paper_wallet import (
     PaperCommandState,
     PaperWalletAction,
@@ -25,7 +32,6 @@ from tiewtrade.infra.paper_wallet import (
 )
 from tiewtrade.infra.paper_wallet.records import PaperWalletSnapshot
 from tiewtrade.infra.positions import read_position_snapshot
-from tiewtrade.services.engine.paper_order import run_paper_order_round
 from tiewtrade.services.engine.paper_wallet import run_paper_wallet_round
 
 CHILD = """
@@ -90,7 +96,6 @@ async def marker(process: asyncio.subprocess.Process, expected: bytes) -> None:
 @pytest.mark.parametrize("boundary", ["before_commit", "after_commit"])
 async def test_worker_kill_recovers_without_duplicate_economic_effects(
     engine_engine: AsyncEngine,
-    scan_engine: AsyncEngine,
     owner: UUID,
     wallet: PaperWalletSnapshot,
     boundary: str,
@@ -109,12 +114,27 @@ async def test_worker_kill_recovers_without_duplicate_economic_effects(
             )
             lease = await publish_input(session, lease, book, metadata)
 
+    async def claim_target(command_id: UUID) -> ClaimedOrder:
+        # The recovery boundary is owner-scoped; scanner fairness has separate tests.
+        async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+            scheduled = (
+                await session.execute(
+                    "SELECT next_attempt_at FROM paper_order_dispatch WHERE command_id=:id",
+                    {"id": command_id},
+                )
+            ).scalar_one()
+            claimed = await claim_order(
+                session, DueOrder(command_id, owner, scheduled), worker="kill-recovery"
+            )
+        assert claimed is not None
+        return claimed
+
     try:
         async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
             command = await submit_order(session, wallet_id=wallet.wallet_id, intent=value)
-        await run_paper_order_round(
-            engine=engine_engine, scan_engine=scan_engine, worker="accept", policy=AllowPolicy()
-        )
+        accepted = await claim_target(command.command_id)
+        async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+            await process_claimed_order(session, accepted, policy=AllowPolicy())
         # Eligibility delay only; the kill interleaving uses child stdout/stdin barriers.
         await asyncio.sleep(0.12)
         process = await asyncio.create_subprocess_exec(
@@ -150,20 +170,13 @@ async def test_worker_kill_recovers_without_duplicate_economic_effects(
                 WHERE command_id=:command AND state<>'TERMINAL'""",
                 {"command": command.command_id},
             )
-        for index in range(3):
+        if boundary == "before_commit":
+            recovered = await claim_target(command.command_id)
+            # Publish after the claim barrier. A global scan can legitimately process
+            # unrelated owners long enough to expire a one-shot 1s book, then back off.
             await publish_fresh()
-            await run_paper_order_round(
-                engine=engine_engine,
-                scan_engine=scan_engine,
-                worker=f"recover-{index}",
-                policy=AllowPolicy(),
-            )
             async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
-                current = await get_wallet(session)
-                assert current is not None
-                if current.balance.amount == 9900:
-                    break
-            await asyncio.sleep(0.03)
+                await process_claimed_order(session, recovered, policy=AllowPolicy())
 
         async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
             replay = await submit_order(session, wallet_id=wallet.wallet_id, intent=value)

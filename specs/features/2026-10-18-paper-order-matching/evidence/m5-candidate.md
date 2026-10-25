@@ -414,3 +414,237 @@ W1 release run `m6-release-w1-20261020` was started, then interrupted at the own
 ## Final development candidate — 2026-10-20
 
 Commit `47281ad7d10f64be207dc75a04d2b87fcc1d6181` carries the final runtime changes and a bounded frontend readiness retry after CI exposed the same startup race twice; docs-only candidate head was `9a3b6c878074c41f79ba93a5dffe80db4e7ac963`. Required CI run #124 attempt 2 passed backend full regression, static/import gates, frontend lint/types/unit, OpenAPI generation, browser E2E and containers; run #125 passed all six jobs again after merge commit `dcaffe10b99360c7344b90283effa54fbd82bddd`. V-1..V-18 are reconciled as Passed for Development Complete. W1–W3 and W4 on schema 0038 remain Pending Full Validation and prevent Completed status.
+
+
+## Deep-review remediation — 2026-10-25
+
+Scope: owner requested fixes for the two High and one Medium findings from the F-15
+implementation review. Base `96bae0e`; uncommitted branch `fix/f15-review-findings` in
+`../TiewTrade-f15-review`. The original `fix/f13-review-findings` working tree is preserved.
+The approved requirements/plan/validation remain the implementation contract; no new
+matching, fee, quantity-sizing or admission policy is introduced.
+
+- Correction queue rebase now records its consumed input boundary and both capability
+  variants in the durable checkpoint. A current book ahead of the old cursor skips older
+  backlog; a current book preceding an already-consumed trade retains the newer cursor.
+  Existing queue/consumption rules, F-14 compensation and financial locks are reused.
+- Matching receives MARKET and LIMIT capabilities separately, preserves both for replay,
+  selects the order-specific quantity step/capability, and uses existing
+  `trading_limits.unmet_constraints` to reject cumulative maximum quantity/notional
+  violations before financial persistence. Partial executions retain their approved
+  minimum/step semantics. A failed execution transaction retains reservations and can
+  be canceled through the existing path; it does not silently resize or invent a fill.
+- MARKET remainder expiry appends an `EXPIRED` event with
+  `MARKET_REMAINDER_UNMATCHED`, final cumulative amounts and source evidence in the
+  same transaction as fills/reservation release. Immutable checkpoint terminal snapshots
+  support historical reads and corrections without trusting a modified projection.
+  Legacy checkpoint reads remain supported; old history is not rewritten.
+- Regression coverage includes serialize/reload after rebase, historical trade rejection,
+  newer valid trade, price movement and cumulative multi-level maximum quantity,
+  distinct MARKET steps/unavailable capability/replay mismatch, real-DB active correction
+  and cash invariants, constraint rollback/cancel, expiry reason and terminal history
+  despite projection corruption. Existing codec/order serialization and event schema are
+  reused; no migration, route, grant, credential or Live activation change.
+
+Validation environment: Python 3.12.15, PostgreSQL 16.15 in dedicated container
+`tiewtrade-f15-review-pg`, database `tiewtrade`, Docker-assigned loopback port 59318;
+bootstrap scripts and migrations through head, actual MIGRATOR/API/ENGINE/ENGINE_SCAN/
+MARKET_DATA roles using the repository's development credentials. Runner
+`/tmp/tiewtrade-f15-review-run.py` sets the corresponding role URLs and PYTHONPATH to
+this worktree, then executes the backend venv Python. No Binance requests or Live orders.
+
+Initial core/new integration subset: 50 passed. Affected safety suite: 246 passed,
+0 failed/skipped in 97.962s (`/tmp/tiewtrade-f15-review-safety.xml`). Full-backend static
+checks passed: Ruff check/format (522 files), mypy (477 source files), and all seven
+import contracts. `Ready for Code Review` was reported before final diff review.
+Review also added the existing matching-index predicate to the terminal-history query.
+
+Retained unsuccessful validation attempts (not acceptance): the first container port
+was occupied and a later invocation had no published port; those DB results were not
+used as evidence. The first correction fixture consumed its entire order because its
+visible queue was smaller than intended; the fixture now pins external queue=10.
+An expanded follow-up initially lacked the worktree-local venv console-script path and
+ran after a legacy migration test had left schema 0038; the harness now links the venv
+and migrates a fresh database. Two follow-up invocations were accidentally concurrent,
+causing WriterLeaseLost/claim failures; neither run is acceptance. Their JUnit files
+remain `/tmp/tiewtrade-f15-review-followup.xml`,
+`/tmp/tiewtrade-f15-review-followup-final.xml` and
+`/tmp/tiewtrade-f15-review-final-regressions.xml`. Final confirmation runs serially on a
+new database, with all affected suites and gates in one invocation.
+
+Final serial safety result: **302 passed, 0 failed/errors/skipped** in
+90.517s on the final runtime/test source, JUnit
+`/tmp/tiewtrade-f15-review-final-safety.xml`. Command (through the runner):
+
+```text
+python -m pytest -p no:cacheprovider tests/infra/execution_market tests/infra/positions
+  tests/infra/paper_wallet tests/core/test_paper_matching.py tests/core/test_positions.py
+  tests/core/test_position_parity.py tests/core/test_paper_wallet.py tests/gates
+  tests/services/market_data/test_order_book.py tests/venues/binance_th/test_order_books.py
+  -q --tb=short --junitxml=/tmp/tiewtrade-f15-review-final-safety.xml
+```
+
+The command above is one invocation (line-wrapped for readability). Final source SHA-256
+(sorted seven changed runtime/test paths, each path + NUL + file bytes + NUL):
+`53c0bdc7e3efeb3bd7f98b4531fbeaf8d5bd21f17986e1a4ac666702113cca3c`.
+Final diff/dependency review found no remaining Critical/High finding within this
+remediation. Ruff check/format and diff whitespace checks passed again after the final
+query predicate/reason change; full mypy/import results remain valid (no type/import
+change since those checks). V-3/V-4/V-5/V-8/V-10/V-12/V-15 have affected safety evidence.
+
+Full backend regression and
+required CI on a final commit remain Pending Candidate Validation; no commit/push/merge
+has been requested. V-19 remains Pending Full Validation under the approved release
+checkpoint; no timed workload smoke is used as a substitute. Reading/editing/review time
+was not separately measured; test durations come from JUnit.
+
+
+## Full backend candidate continuation — 2026-10-25
+
+Owner requested the next candidate step after the local 302-test safety checkpoint.
+Same branch/base and approved F-15 scope. Runtime source remains unchanged; the only
+additional code change is stabilization of the existing process-kill recovery test.
+
+Environment: dedicated PostgreSQL 16.15 container `tiewtrade-f15-review-pg` and dedicated
+Redis 7 container `tiewtrade-f15-review-redis`; ports are obtained with `docker port` at
+invocation time (container restart reassigns the random loopback bindings). Fresh DBs
+`tiewtrade_f15_candidate_20261025` and `tiewtrade_f15_candidate_20261025_r2` preserve the
+first-attempt state separately. Bootstrap and Alembic through head use actual role URLs;
+API/signup/cookie/origin/Redis settings match CI using development-only values.
+`/tmp/tiewtrade-f15-candidate-run.py` runs backend commands with the worktree PYTHONPATH
+and records output in `/tmp/tiewtrade-f15-candidate-full-20261025.log`. Only one test
+invocation uses these dependencies at a time. No Binance/Live order validation.
+
+- Full attempt 1: `python -m pytest -p no:cacheprovider -x --tb=short
+  --junitxml=/tmp/tiewtrade-f15-candidate-full-20261025.xml` stopped with **1300 passed,
+  1 failed, 2 deselected** in **548.72s**. Retained JUnit copy:
+  `/tmp/tiewtrade-f15-candidate-full-20261025-attempt1.xml`.
+- Failure: process recovery `test_worker_kill_recovers_without_duplicate_economic_effects`
+  at `before_commit`. Read-only diagnosis found ACCEPTED/filled=0/spent=0, balance=10000,
+  quote reservation=100, and dispatch attempts=3 with next retry at +30s. The first
+  recovery book was received at 05:55:24.765316 UTC; deferral occurred by
+  05:55:26.103695 UTC. Global scanning processed unrelated owners before the target,
+  exhausting the approved 1s freshness window. The following two 30ms retry loops could
+  not reach the real 30s retry schedule. This is preserved as a failed acceptance attempt;
+  the safe absence of a fill is not labeled a passed recovery criterion.
+- The kill test now admits/reclaims its target using actual `DueOrder`/`claim_order` and
+  session-bound `process_claimed_order`, with claim committed separately. It publishes
+  fresh input after the recovery claim barrier. Real child process kill before/after
+  commit, lease-expiry simulation, immutable command replay and exact money/position/
+  reservation/history assertions remain. Scanner/fairness coverage stays in dispatch/
+  worker tests. No production timing, freshness, retry or matching rule was changed.
+- Process recovery + dispatch regression: **12 passed** in **5.696s** on the first-attempt
+  database, JUnit `/tmp/tiewtrade-f15-candidate-recovery-20261025.xml`. Ruff check/format
+  for the changed test and full mypy (**477 source files**) passed. A tests-only mypy
+  invocation initially resolved source imports as installed/untyped; full configured
+  mypy resolved the source tree correctly and passed. Diff whitespace check passed.
+- `Ready for Code Review` was reported for the test stabilization. Diff review confirms
+  real role/claim/transaction/kill barriers and exact safety assertions remain; no
+  production bypass or weakened criterion. Existing runtime static/import evidence is
+  still valid because runtime code/dependencies have not changed.
+- Full attempt 2 was started serially on the new `_r2` database with the same full pytest
+  invocation and JUnit `/tmp/tiewtrade-f15-candidate-full-20261025-attempt2.xml`; its retained
+  result and complete-suite continuation are recorded below.
+
+The checkpoint above was pending until the full run finished; final local results follow.
+Required CI still needs
+an owner-directed commit/push; V-19 remains at the approved release checkpoint. No Git
+commit/push/merge operation is authorized by this validation continuation.
+
+
+### Full attempt 2 and complete-suite confirmation
+
+Full attempt 2 stopped at the unrelated prepared-indicator test
+`tests/api/test_prepared_indicators.py::test_empty_derived_scheduler_refresh_and_rebuild`:
+**228 passed, 1 failed, 2 deselected** in **310.79s**. The refresh consumer returned
+STOPPED rather than READY after one candle-status poll. This same test passed in full
+attempt 1 and passed unchanged when re-run alone on the `_r2` database; JUnit
+`/tmp/tiewtrade-f15-candidate-indicator-recheck-20261025.xml`. The exact cause of this
+intermittent failure is not established; no F-11 source/test or timeout was changed,
+and the failed full run is retained rather than relabeled Passed.
+
+Full attempt 3 runs on fresh `tiewtrade_f15_candidate_20261025_r3`, without fail-fast so
+that every collected backend test has a result. Command:
+`python -m pytest -p no:cacheprovider --tb=short
+--junitxml=/tmp/tiewtrade-f15-candidate-full-20261025-attempt3.xml`.
+Final runtime/test SHA-256 uses the same path/NUL/bytes/NUL procedure above over eight
+changed runtime/test paths, now including `test_process_recovery.py`:
+`f8a69ddb42b06c743c3152e33ffa00a9ce04fec940f4e193ce9ce832ed1a80b9`.
+Result: **Passed — 3267 passed, 0 failed/errors/skipped, 2 venue-contract tests deselected**
+in **795.874s (13m15s)**. Five deprecation warnings came from existing Starlette/TestClient
+usage. No runtime/test edits during the run; the eight-file fingerprint above was
+rechecked after completion and matches. Both earlier full-run failures remain retained;
+the prepared-indicator test passed in this complete run and its earlier intermittent
+failure's exact cause remains unresolved.
+
+Local backend candidate regression is now passed. The current test stabilization has
+Ruff/format and full mypy evidence; all other static/import results remain valid on the
+unchanged runtime/dependencies. Final scoped diff review found no new Critical/High
+finding. Required CI on the eventual final commit is still pending, and V-19 remains
+Pending Full Validation. No commit/push/merge and no production activation occurred.
+The temporary worktree venv link is removed; only this task's dedicated PostgreSQL/Redis
+containers are stopped after validation, retaining their databases for inspection.
+
+
+## Owner-directed commit / PR / CI handoff — 2026-10-25
+
+After the passing local full backend checkpoint, the owner instructed continuation of
+the proposed commit/push and required-CI step. The runtime/test fingerprint still matches
+`f8a69ddb42b06c743c3152e33ffa00a9ce04fec940f4e193ce9ce832ed1a80b9`.
+Remote main advanced to `f6bd712` (F-13 review remediation, PR #31); its five changed files
+do not overlap this F-15 branch. The PR CI merge candidate will verify their integration;
+the existing local full result remains evidence for the F-15 branch source.
+
+This handoff authorizes commit/push, opening the scoped F-15 PR and checking required CI.
+Required CI is pending until the pushed candidate finishes. Merge has not been requested;
+V-19 and production activation remain subject to their approved checkpoints.
+
+
+## Required CI and main synchronization — 2026-10-25
+
+Runtime/test commit `f2240a46e9140e5872e667dd42d90ab9e62133c4` was pushed and
+[PR #33](https://github.com/yukasung/tiewtrade/pull/33) opened against main `f6bd712`.
+Both CI runs passed all six jobs without reruns:
+
+- [Push CI 40169303759](https://github.com/yukasung/tiewtrade/actions/runs/40169303759):
+  backend **3267 passed, 2 deselected** in **737.31s**, plus config, API contract,
+  frontend, container and browser E2E jobs.
+- [PR CI 40169323746](https://github.com/yukasung/tiewtrade/actions/runs/40169323746):
+  backend **3270 passed, 2 deselected** in **746.87s**, plus the same five jobs.
+  This includes the main-branch F-13 remediation. Mypy checked 477 files and all seven
+  import contracts passed. Earlier local failures remain recorded above.
+
+GitHub then reported the head as BEHIND main. Main was merged into the F-15 feature
+branch using the owner's authorized commit/push continuation. Before documentation
+updates, `git write-tree` exactly matched the PR merge tree that CI had just tested:
+`84ce403365ad4a27b6059a539969736f1dec9a17`. No additional runtime/test changes were
+made in the synchronization; the evidence/validation/roadmap updates only record these
+results. Required CI for the synchronized head is tracked on PR #33 and must complete
+before merging that PR. The feature PR remains open; no merge into main or production
+activation is part of this continuation. V-19 remains Pending Full Validation.
+
+
+## Synchronized-head CI and subsequent F-14 integration — 2026-10-25
+
+Head `1160a4a13d76493696df8161ada47fa9fb46c14a` passed all six push CI jobs
+([40170345394](https://github.com/yukasung/tiewtrade/actions/runs/40170345394));
+backend **3270 passed, 2 deselected** in **775.98s**. PR CI
+[40170347596](https://github.com/yukasung/tiewtrade/actions/runs/40170347596)
+passed all six jobs after one backend-only rerun: **3270 passed, 2 deselected**
+in **723.61s**. Mypy checked 477 files and all seven import contracts passed.
+
+The PR's first backend attempt had **1 failed, 3269 passed, 2 deselected** in
+**728.36s**: `test_account_summary_is_isolated_from_the_previous_owner` failed
+inside unchanged `enable_totp`, returning an invalid-code 403 before account
+assertions. That helper creates the previous-step TOTP before obtaining CSRF;
+crossing the 30s boundary can expire that code. A deterministic core check confirmed
+this mechanism, but CI logs do not prove that exact cause. No auth runtime/test
+was changed; this failed attempt remains evidence, not relabeled Passed.
+
+During CI, main advanced to `eb8c7d8` via F-14 PR #32. Its position replay fix and
+regression tests merge automatically; the only conflict is adjacent F-14/F-15
+roadmap rows, resolved by preserving each feature's own row. Main is synchronized
+again within the owner-directed commit/push continuation. The final combined
+candidate requires fresh required CI on PR #33 because position storage is a
+matching dependency. No merge into main or production activation is authorized;
+V-19 remains Pending Full Validation.

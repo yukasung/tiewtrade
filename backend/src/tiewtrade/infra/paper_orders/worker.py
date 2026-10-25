@@ -50,6 +50,7 @@ from tiewtrade.infra.paper_orders.dispatch import (
 from tiewtrade.infra.paper_orders.executions import execution_payload, stage_fill_cash
 from tiewtrade.infra.paper_orders.initialization import enable_financial_writer
 from tiewtrade.infra.paper_orders.matching_storage import (
+    append_expiry_event,
     append_fill_event,
     insert_order_header,
     load_matching_state,
@@ -231,6 +232,7 @@ async def _process_new(
                     market,
                     now=(await session.execute("SELECT clock_timestamp()")).scalar_one(),
                     constraints=record.metadata.limit,
+                    market_constraints=record.metadata.market,
                     execution_ids=(),
                     catalog=catalog,
                 )
@@ -527,6 +529,7 @@ async def _apply_inputs(
             market,
             now=(await session.execute("SELECT clock_timestamp()")).scalar_one(),
             constraints=record.metadata.limit,
+            market_constraints=record.metadata.market,
             execution_ids=tuple(
                 _identity(
                     row["episode_id"],
@@ -570,6 +573,20 @@ async def _apply_inputs(
                 )
             if result.status is not PositionWriteStatus.APPLIED:
                 raise OrderWorkerIntegrityError(f"fill {index} did not apply atomically")
+        previous_status = {order.intent.order_id: order.status for order in state.orders}
+        for order in transition.state.orders:
+            if (
+                order.status is OrderStatus.EXPIRED
+                and previous_status[order.intent.order_id] is not OrderStatus.EXPIRED
+            ):
+                await append_expiry_event(
+                    session,
+                    order=order,
+                    evidence_id=saved.evidence_id,
+                    evidence_recorded_at=saved.recorded_at,
+                    occurred_at=market.received_at,
+                    event_id=_identity(row["episode_id"], f"expired:{order.intent.order_id}"),
+                )
         if transition.fill_order_ids:
             anchor = transition.fill_order_ids[-1]
         rebased = rebased or transition.rebased
