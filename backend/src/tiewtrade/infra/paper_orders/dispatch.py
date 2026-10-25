@@ -135,6 +135,7 @@ async def _submit(
     action: str,
     payload: dict[str, object],
     opening_pair: PositionPair | None = None,
+    admitted_catalog_revision: int | None = None,
 ) -> OrderCommand:
     session = require_user_session(session)
     request_payload = {"wallet": str(wallet_id), "episode": str(episode_id), **payload}
@@ -161,6 +162,21 @@ async def _submit(
     catalog_revision = None
     if opening_pair is not None:
         catalog_revision = await lock_opening_pair_catalog(session, opening_pair)
+        if admitted_catalog_revision is not None:
+            fence = await lock_pair_catalog(session, opening_pair)
+            if (
+                type(admitted_catalog_revision) is not int
+                or admitted_catalog_revision <= 0
+                or admitted_catalog_revision > catalog_revision
+                or (
+                    fence.latest_removed_revision is not None
+                    and fence.latest_removed_revision > admitted_catalog_revision
+                )
+            ):
+                raise UnsupportedOrderError("opening catalog revision was invalidated")
+            catalog_revision = admitted_catalog_revision
+    elif admitted_catalog_revision is not None:
+        raise OrderConflictError("catalog revision is only valid for opening orders")
     receipt = await initialize_order_source(
         session,
         wallet_id=wallet_id,
@@ -215,7 +231,11 @@ async def _submit(
 
 
 async def submit_order(
-    session: UserSession, *, wallet_id: UUID, intent: OrderIntent
+    session: UserSession,
+    *,
+    wallet_id: UUID,
+    intent: OrderIntent,
+    admitted_catalog_revision: int | None = None,
 ) -> OrderCommand:
     session = require_user_session(session)
     if intent.scope.owner_id != session.user_id or intent.scope.mode is not TradingMode.PAPER:
@@ -229,6 +249,7 @@ async def submit_order(
         action="NEW",
         payload={"intent": intent_payload(intent)},
         opening_pair=intent.pair if intent.side is ExecutionSide.BUY else None,
+        admitted_catalog_revision=admitted_catalog_revision,
     )
 
 

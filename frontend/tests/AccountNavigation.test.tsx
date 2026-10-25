@@ -22,6 +22,8 @@ vi.mock("../src/TotpPanel", () => ({ TotpPanel: () => <Panel name="security" /> 
 vi.mock("../src/ApiKeyPanel", () => ({ ApiKeyPanel: () => <Panel name="api-keys" /> }));
 vi.mock("../src/TradingAccountPanel", () => ({ TradingAccountPanel: () => <Panel name="trading-account" /> }));
 vi.mock("../src/RealtimePricePanel", () => ({ RealtimePricePanel: () => <Panel name="prices" /> }));
+vi.mock("../src/PaperTradePage", () => ({ PaperTradePage: () => <Panel name="paper/trade"/> }));
+vi.mock("../src/LiveTradePage", () => ({ LiveTradePage: () => <Panel name="live/trade"/> }));
 vi.mock("../src/SupportedSymbolPanel", () => ({ SupportedSymbolPanel: () => <Panel name="supported-symbols" /> }));
 beforeEach(() => {
   observed.mounts = []; observed.exits = []; observed.clients = [];
@@ -46,7 +48,7 @@ it("defaults to chart and mounts only the selected module without replacing the 
   await waitFor(() => expect(window.location.pathname).toBe("/chart"));
   expect(observed.mounts.every(name => name === "chart")).toBe(true);
   const client = observed.clients.at(-1);
-  for (const page of ["security", "api-keys", "trading-account", "prices", "chart"]) {
+  for (const page of ["security", "api-keys", "trading-account", "prices", "paper/trade", "live/trade", "chart"]) {
     await navigate(page);
     expect(screen.getAllByTestId(/^module-/)).toHaveLength(1);
     expect(screen.getByTestId(`module-${page}`)).toBeTruthy();

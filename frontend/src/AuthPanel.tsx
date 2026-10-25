@@ -1,3 +1,5 @@
+import { PaperTradePage } from "./PaperTradePage";
+import { LiveTradePage } from "./LiveTradePage";
 import { type JSX, useEffect, useState } from "react";
 
 import {
@@ -220,6 +222,8 @@ export function AuthPanel(): JSX.Element {
             {page === "api-keys" && <ApiKeyPanel identity={identity} />}
             {page === "trading-account" && <TradingAccountPanel identity={identity} />}
             {page === "prices" && <RealtimePricePanel />}
+            {page === "paper/trade" && <PaperTradePage owner={identity.user_id}/>}
+            {page === "live/trade" && <LiveTradePage/>}
             {page === "supported-symbols" && <SupportedSymbolPanel />}
             {page === "chart" && (import.meta.env.VITE_CHART_ENABLED === "1"
               ? <CandlestickChartPanel userId={identity.user_id}/>

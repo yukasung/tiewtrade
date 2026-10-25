@@ -49,6 +49,7 @@ from tiewtrade.infra.paper_orders.dispatch import (
 )
 from tiewtrade.infra.paper_orders.executions import execution_payload, stage_fill_cash
 from tiewtrade.infra.paper_orders.initialization import enable_financial_writer
+from tiewtrade.infra.paper_orders.manual_policy import manual_policy_for
 from tiewtrade.infra.paper_orders.matching_storage import (
     append_fill_event,
     insert_order_header,
@@ -282,6 +283,15 @@ async def _process_new(
                     )
                 ).scalar_one()
             )
+            effective_policy = policy
+            manual_request = (
+                await session.execute(
+                    "SELECT 1 FROM paper_order_request_results WHERE command_id=:command",
+                    {"command": row["id"]},
+                )
+            ).first()
+            if manual_request is not None:
+                effective_policy = await manual_policy_for(session, intent, delegate=policy)
             accepted = admit_order(
                 state,
                 intent,
@@ -291,7 +301,7 @@ async def _process_new(
                 held=held,
                 constraints=constraints,
                 reference_price=reference,
-                policy=policy,
+                policy=effective_policy,
                 catalog=catalog,
             )
             order = next(v for v in accepted.orders if v.intent.order_id == intent.order_id)

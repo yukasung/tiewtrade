@@ -8,6 +8,7 @@ void accountI18n.init({
     th: {
       translation: {
         account: "บัญชี",
+        "paper/trade": "เทรด Paper", "live/trade": "เทรด Live",
         menu: "เปิดเมนูบัญชี",
         close: "ปิดเมนูบัญชี",
         navigation: "จัดการบัญชี",
@@ -22,7 +23,7 @@ void accountI18n.init({
         lightTheme: "เปลี่ยนเป็นโหมดสว่าง",
       },
     },
-    en: { translation: { account: "Account", menu: "Open account menu", close: "Close account menu",
+    en: { translation: { account: "Account", "paper/trade": "Paper trading", "live/trade": "Live trading", menu: "Open account menu", close: "Close account menu",
       navigation: "Account navigation", keys: "API keys", trading: "Trading account", security: "TOTP / 2FA",
       prices: "Live prices", home: "Home", breadcrumb: "Breadcrumb", darkTheme: "Switch to dark mode",
       "supported-symbols": "Supported symbols",

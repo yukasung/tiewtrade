@@ -25,7 +25,7 @@ export function AccountSidebar({
         (item !== "supported-symbols" || isPlatformAdmin)
       ).map(item => (
         <a key={item} href={`/${item}`} aria-current={page === item ? "page" : undefined} onClick={event => { navigateAccountPage(event); close(); }}>
-          <span className={`sidebar-icon icon-${item}`} aria-hidden="true" />
+          <span className={`sidebar-icon icon-${item === "paper/trade" || item === "live/trade" ? "trading-account" : item}`} aria-hidden="true" />
           <span className="sidebar-label">{item === "chart" ? chartText("heading") : t(item === "api-keys" ? "keys" : item === "trading-account" ? "trading" : item)}</span>
         </a>
       ))}

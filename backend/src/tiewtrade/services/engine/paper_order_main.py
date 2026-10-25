@@ -5,6 +5,7 @@ import logging
 import os
 
 from tiewtrade.infra.db import DatabaseRole, create_engine_for
+from tiewtrade.services.engine.manual_order import run_manual_order_round
 from tiewtrade.services.engine.paper_order import run_paper_order_round
 
 
@@ -15,6 +16,12 @@ async def serve() -> None:
     worker = f"paper-order:{host}:{os.getpid()}"
     try:
         while True:
+            await run_manual_order_round(
+                engine=engine,
+                scan_engine=scan_engine,
+                worker=worker,
+                policy=None,
+            )
             await run_paper_order_round(
                 engine=engine,
                 scan_engine=scan_engine,

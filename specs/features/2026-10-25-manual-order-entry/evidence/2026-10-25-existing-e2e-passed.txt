@@ -1,0 +1,30 @@
+
+> test:e2e
+> playwright test
+
+[WebServer] INFO:     Started server process [2325]
+[WebServer] INFO:     Waiting for application startup.
+[WebServer] INFO:     Application startup complete.
+[WebServer] INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+[WebServer] (node:2355) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 18 tests using 1 worker
+(node:2357) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+·····[WebServer] INFO:     127.0.0.1:49669 - "WebSocket /market-data/prices/stream" [accepted]
+[WebServer] INFO:     connection open
+[WebServer] INFO:     127.0.0.1:49691 - "WebSocket /market-data/prices/stream" [accepted]
+[WebServer] INFO:     connection open
+···[WebServer] INFO:     127.0.0.1:49809 - "WebSocket /market-data/prices/stream" [accepted]
+[WebServer] INFO:     connection open
+[WebServer] INFO:     127.0.0.1:49817 - "WebSocket /market-data/prices/stream" [accepted]
+[WebServer] INFO:     connection open
+······[WebServer] INFO:     127.0.0.1:50100 - "WebSocket /market-data/prices/stream" [accepted]
+[WebServer] INFO:     connection open
+[WebServer] INFO:     127.0.0.1:50105 - "WebSocket /market-data/prices/stream" [accepted]
+[WebServer] INFO:     connection open
+[WebServer] INFO:     127.0.0.1:50120 - "WebSocket /market-data/prices/stream" [accepted]
+[WebServer] INFO:     connection open
+····
+  18 passed (1.7m)

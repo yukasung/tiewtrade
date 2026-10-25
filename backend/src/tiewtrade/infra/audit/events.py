@@ -74,6 +74,9 @@ class AuditAction(Enum):
     PAPER_POSITION_CONFLICTED = "PAPER_POSITION_CONFLICTED"
     PAPER_ORDER_SOURCE_INITIALIZED = "PAPER_ORDER_SOURCE_INITIALIZED"
     PAPER_ORDER_DECISION = "PAPER_ORDER_DECISION"
+    PAPER_ORDER_REQUESTED = "PAPER_ORDER_REQUESTED"
+    PAPER_ORDER_REQUEST_TRANSFERRED = "PAPER_ORDER_REQUEST_TRANSFERRED"
+    PAPER_ORDER_REQUEST_REJECTED = "PAPER_ORDER_REQUEST_REJECTED"
     PLATFORM_OWNER_BOOTSTRAPPED = "PLATFORM_OWNER_BOOTSTRAPPED"
     CATALOG_MUTATIONS_ENABLED = "CATALOG_MUTATIONS_ENABLED"
     CATALOG_ADD_REQUESTED = "CATALOG_ADD_REQUESTED"
@@ -96,6 +99,9 @@ TRADING_ACTIONS: frozenset[AuditAction] = frozenset(
         AuditAction.PAPER_POSITION_CONFLICTED,
         AuditAction.PAPER_ORDER_SOURCE_INITIALIZED,
         AuditAction.PAPER_ORDER_DECISION,
+        AuditAction.PAPER_ORDER_REQUESTED,
+        AuditAction.PAPER_ORDER_REQUEST_TRANSFERRED,
+        AuditAction.PAPER_ORDER_REQUEST_REJECTED,
     }
 )
 
@@ -511,7 +517,48 @@ class PaperOrderDecisionDetails:
         }
 
 
+PAPER_REQUEST_FAILURES = frozenset(
+    {
+        "CATALOG_PAIR_REMOVED",
+        "EPISODE_CONFLICT",
+        "ORDER_CONFLICT",
+        "ORDER_SAFETY_UNAVAILABLE",
+        "MANUAL_USE_REQUIRED",
+        "ORDER_UNSUPPORTED",
+        "ORDER_INPUT_INVALID",
+    }
+)
+
+
+@dataclass(frozen=True, slots=True)
+class PaperOrderRequestDetails:
+    request_id: UUID
+    episode_id: UUID
+    request_action: str
+    command_id: UUID | None = None
+
+    def __post_init__(self) -> None:
+        if (
+            type(self.request_id) is not UUID
+            or type(self.episode_id) is not UUID
+            or self.request_action not in {"NEW", "CANCEL"}
+            or (self.command_id is not None and type(self.command_id) is not UUID)
+        ):
+            raise AuditEventError("invalid Paper request audit details")
+
+    def as_details(self) -> dict[str, object]:
+        return {
+            "request_id": str(self.request_id),
+            "episode_id": str(self.episode_id),
+            "request_action": self.request_action,
+            "command_id": None if self.command_id is None else str(self.command_id),
+        }
+
+
 DETAILS_TYPES: dict[AuditAction, type[object]] = {
+    AuditAction.PAPER_ORDER_REQUESTED: PaperOrderRequestDetails,
+    AuditAction.PAPER_ORDER_REQUEST_TRANSFERRED: PaperOrderRequestDetails,
+    AuditAction.PAPER_ORDER_REQUEST_REJECTED: PaperOrderRequestDetails,
     AuditAction.CATALOG_MUTATIONS_ENABLED: CatalogProtocolDetails,
     AuditAction.CATALOG_ADD_REQUESTED: CatalogMutationDetails,
     AuditAction.CATALOG_PREPARING: CatalogMutationDetails,
@@ -558,6 +605,7 @@ DETAILS_TYPES: dict[AuditAction, type[object]] = {
 #: (ครบเส้นตาย 24 ชั่วโมงโดยยังตรวจไม่ผ่าน)
 ALLOWED_FAILURE_CODES: frozenset[str] = frozenset(
     {
+        *PAPER_REQUEST_FAILURES,
         "VENUE_CREDENTIAL_REJECTED",
         "VENUE_REJECTED",
         "VENUE_RATE_LIMITED",
@@ -774,7 +822,35 @@ def _check_paper_order_source(event: AuditEvent) -> None:
         raise AuditEventError("invalid Paper order source audit event")
 
 
+def _check_paper_order_request(event: AuditEvent) -> None:
+    if (
+        not isinstance(event.details, PaperOrderRequestDetails)
+        or event.mode is not AuditMode.PAPER
+        or event.subject_kind is not SubjectKind.PAPER_ORDER_ACTIVITY
+        or event.subject_id != str(event.details.episode_id)
+    ):
+        raise AuditEventError("invalid Paper request audit scope")
+    requested = event.action is AuditAction.PAPER_ORDER_REQUESTED
+    rejected = event.action is AuditAction.PAPER_ORDER_REQUEST_REJECTED
+    transferred = event.action is AuditAction.PAPER_ORDER_REQUEST_TRANSFERRED
+    if (
+        event.actor_kind is not (ActorKind.USER if requested else ActorKind.SYSTEM)
+        or event.actor_id != (event.owner_user_id if requested else None)
+        or (event.details.command_id is not None) != transferred
+        or event.outcome is not (AuditOutcome.REJECTED if rejected else AuditOutcome.SUCCEEDED)
+        or (
+            event.failure_code not in PAPER_REQUEST_FAILURES
+            if rejected
+            else event.failure_code is not None
+        )
+    ):
+        raise AuditEventError("invalid Paper request audit outcome")
+
+
 _ACTION_INVARIANTS: dict[AuditAction, Callable[[AuditEvent], None]] = {
+    AuditAction.PAPER_ORDER_REQUESTED: _check_paper_order_request,
+    AuditAction.PAPER_ORDER_REQUEST_TRANSFERRED: _check_paper_order_request,
+    AuditAction.PAPER_ORDER_REQUEST_REJECTED: _check_paper_order_request,
     AuditAction.CATALOG_MUTATIONS_ENABLED: _check_catalog_event,
     AuditAction.CATALOG_ADD_REQUESTED: _check_catalog_event,
     AuditAction.CATALOG_PREPARING: _check_catalog_event,

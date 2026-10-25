@@ -100,8 +100,9 @@ def test_the_reset_and_restart_exceptions_are_not_risk_reducing() -> None:
     risk_reducing = {path for path, rule in ROUTE_RULES.items() if rule.risk_reducing}
 
     assert not_reverifying, "ไม่มีเส้นทางที่ไม่ต้องยืนยันซ้ำเลย ซึ่งแปลว่าเทสต์อ่านผิด"
-    assert risk_reducing == set(), "ยังไม่ควรมีเส้นทางลดความเสี่ยงในระบบ"
-    assert not_reverifying - risk_reducing == not_reverifying
+    assert risk_reducing == {("POST", "/paper/orders/{order_id}/cancel")}
+    # NEW includes both opening and reducing orders; its classification is checked in core.
+    assert risk_reducing <= not_reverifying
 
 
 def test_the_routes_that_require_reverification_are_pinned() -> None:

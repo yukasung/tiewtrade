@@ -1465,17 +1465,52 @@ async def test_downstream_position_conflict_is_durable_without_partial_fill(
         await market.dispose()
 
 
+@pytest.mark.parametrize("via_manual_inbox", [False, True])
 async def test_market_order_crossing_levels_links_every_fill_once(
+    api_engine: AsyncEngine,
     engine_engine: AsyncEngine,
     scan_engine: AsyncEngine,
     owner: UUID,
     wallet: PaperWalletSnapshot,
+    via_manual_inbox: bool,
 ) -> None:
     market, lease, book, metadata = await ready_public_sources()
     value = replace(intent(owner, wallet.episode_id), size=QuoteBudget(Money.of(1100, "USDT")))
     try:
-        async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
-            command = await submit_order(session, wallet_id=wallet.wallet_id, intent=value)
+        if via_manual_inbox:
+            from tiewtrade.infra.paper_orders.request_dispatch import DueRequest, claim_request
+            from tiewtrade.infra.paper_orders.request_worker import process_request
+            from tiewtrade.infra.paper_orders.requests import admit_new_request
+            from tiewtrade.infra.paper_orders.views import request_view
+
+            async with user_session(api_engine, owner) as session:
+                await session.execute(
+                    "INSERT INTO user_trading_preferences(user_id,use) VALUES(:owner,'MANUAL')",
+                    {"owner": owner},
+                )
+                receipt = await admit_new_request(session, wallet_id=wallet.wallet_id, intent=value)
+            async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+                due_at = (
+                    await session.execute(
+                        "SELECT next_attempt_at FROM paper_order_request_dispatch "
+                        "WHERE request_id=:id",
+                        {"id": receipt.request_id},
+                    )
+                ).scalar_one()
+                claim = await claim_request(
+                    session, DueRequest(receipt.request_id, owner, due_at), worker="parity-bridge"
+                )
+                assert claim is not None
+            async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+                await process_request(session, claim, policy=AllowPolicy())
+                view = await request_view(session, receipt.request_id)
+                assert view is not None and view.command_id is not None
+                linked = await get_order_command(session, view.command_id)
+                assert linked is not None
+                command = linked
+        else:
+            async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+                command = await submit_order(session, wallet_id=wallet.wallet_id, intent=value)
         await run_paper_order_round(
             engine=engine_engine,
             scan_engine=scan_engine,

@@ -142,6 +142,8 @@ class Bucket(Enum):
     API_KEY_RETRY = "API_KEY_RETRY"
     PRICE_STREAM_HANDSHAKE = "PRICE_STREAM_HANDSHAKE"
     PAPER_WALLET_MUTATION = "PAPER_WALLET_MUTATION"
+    PAPER_ORDER_NEW = "PAPER_ORDER_NEW"
+    PAPER_ORDER_CANCEL = "PAPER_ORDER_CANCEL"
 
     @property
     def table(self) -> str:
@@ -151,6 +153,8 @@ class Bucket(Enum):
             Bucket.API_KEY_RETRY,
             Bucket.PRICE_STREAM_HANDSHAKE,
             Bucket.PAPER_WALLET_MUTATION,
+            Bucket.PAPER_ORDER_NEW,
+            Bucket.PAPER_ORDER_CANCEL,
         ):
             return "api_throttle"
         return "auth_throttle"
@@ -454,6 +458,8 @@ RULES: Final[dict[Bucket, Rule | TokenRule]] = {
     # เพิ่ม key: ทำติดกันได้สามครั้ง แล้วเติมคืนทีละหนึ่งทุกยี่สิบนาที
     Bucket.PRICE_STREAM_HANDSHAKE: TokenRule(6, timedelta(seconds=10)),
     Bucket.PAPER_WALLET_MUTATION: TokenRule(3, timedelta(minutes=20)),
+    Bucket.PAPER_ORDER_NEW: TokenRule(20, timedelta(seconds=1)),
+    Bucket.PAPER_ORDER_CANCEL: TokenRule(20, timedelta(seconds=1)),
     Bucket.API_KEY_ADD: TokenRule(
         capacity=API_KEY_ADD_CAPACITY,
         refill_interval=API_KEY_ADD_REFILL,

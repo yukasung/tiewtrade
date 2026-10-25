@@ -47,7 +47,7 @@ function AccountLayoutContent({ children, page, isPlatformAdmin }: { children: R
         />
       )}
       <div className="account-workspace flex-1">
-        <AccountHeader open={desktop ? expanded : open} mobileOpen={open} trigger={trigger}
+        <AccountHeader mode={page === "paper/trade" ? "PAPER" : page === "live/trade" ? "LIVE" : undefined} open={desktop ? expanded : open} mobileOpen={open} trigger={trigger}
           toggle={() => { if (desktop) setExpanded(value => !value); else setOpen(value => !value); }} />
         <div className={`account-content mx-auto p-4 md:p-6 ${page === "chart" ? "account-content-chart" : ""}`}>
           {page !== "chart" && <PageBreadcrumb title={t(page === "api-keys" ? "keys" : page === "trading-account" ? "trading" : page)} />}
