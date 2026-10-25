@@ -1,0 +1,10 @@
+{
+  "image": "sha256:5e94ba9b762c9682bcf60ee2ba0a17aeb7471838b1ae3fd9baf699c0872241f0",
+  "worker_api_cpu": 2,
+  "worker_api_memory_bytes": 1073741824,
+  "docker": "linux aarch64 CPUs=8 RAM=4106604544",
+  "c1_seconds": 600,
+  "observer_interval_seconds": 10,
+  "probe_interval_seconds": 60,
+  "fixture": "365 days plus physical grace; fractional changing OHLC; append only"
+}
