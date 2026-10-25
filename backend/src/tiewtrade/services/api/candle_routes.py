@@ -18,7 +18,13 @@ from tiewtrade.infra.db import DatabaseRole, user_session
 from tiewtrade.infra.db.session import indicator_read_session
 from tiewtrade.infra.market_data.chart_overlay import overlay_preview
 from tiewtrade.infra.market_data.records import CandleRead, MarketDataInputError, StoredCandle
-from tiewtrade.infra.market_data.storage import database_now, enqueue, parameters, read_candles
+from tiewtrade.infra.market_data.storage import (
+    database_now,
+    enqueue,
+    parameters,
+    read_candles,
+    require_active_pair,
+)
 from tiewtrade.services.api.authentication import Authenticated, current_user
 from tiewtrade.services.api.resources import engine_for
 from tiewtrade.services.api.safe_input_routes import SafeInputRoute
@@ -156,6 +162,7 @@ async def candle_page(
             raise ValueError("only one page direction")
         engine = engine_for(request, DatabaseRole.API)
         async with indicator_read_session(engine, who.user_id) as session:
+            await require_active_pair(session, base, quote)
             now = await database_now(session)
             upper = next_open(align_floor(now, tf), tf)
             known = True
@@ -250,6 +257,7 @@ async def candles(
     try:
         base, quote = _units(query)
         async with user_session(engine_for(request, DatabaseRole.API), who.user_id) as session:
+            await require_active_pair(session, base, quote)
             window = _window(query, await database_now(session))
             result = await read_candles(session, base, quote, query.timeframe, window, query.limit)
     except MarketDataInputError as error:

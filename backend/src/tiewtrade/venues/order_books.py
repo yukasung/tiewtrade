@@ -73,3 +73,10 @@ class ExecutionFeed(Protocol):
     def events(
         self, symbols: tuple[Symbol, ...], *, generation: int
     ) -> AsyncGenerator[ExecutionFeedEvent, None]: ...
+
+
+class ExecutionCapabilitySource(Protocol):
+    """Read-only venue capability used before a catalog pair may prepare."""
+
+    async def capability(self, symbol: Symbol) -> ExecutionCapability: ...
+    async def close(self) -> None: ...

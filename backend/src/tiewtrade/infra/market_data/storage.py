@@ -15,10 +15,10 @@ from tiewtrade.core.market_data import (
     next_open,
     slot_count,
 )
+from tiewtrade.core.money import Quantity
 from tiewtrade.core.timeframes import candle_storage_cutoff as retention_cutoff
 from tiewtrade.infra.db import money_from_columns, quantity_from_columns, require_user_session
 from tiewtrade.infra.db.session import MarketDataSession, UserSession, require_market_data_session
-from tiewtrade.infra.market_data.catalog import PAIRS as PAIRS
 from tiewtrade.infra.market_data.catalog import SOURCE as SOURCE
 from tiewtrade.infra.market_data.records import (
     CandleRead,
@@ -32,15 +32,38 @@ Session = UserSession | MarketDataSession
 
 
 def parameters(base: str, quote: str, timeframe: Timeframe) -> dict[str, object]:
-    if (base, quote) not in PAIRS or not isinstance(timeframe, Timeframe):
+    normalized_base = Quantity.of(0, base).asset
+    normalized_quote = Quantity.of(0, quote).asset
+    if (
+        normalized_quote != "USDT"
+        or normalized_base == normalized_quote
+        or not isinstance(timeframe, Timeframe)
+    ):
         raise UnsupportedSeriesError()
-    return {"source": SOURCE, "base": base, "quote": quote, "timeframe": timeframe.value}
+    return {
+        "source": SOURCE,
+        "base": normalized_base,
+        "quote": normalized_quote,
+        "timeframe": timeframe.value,
+    }
 
 
 def _session(session: Session) -> Session:
     if isinstance(session, UserSession):
         return require_user_session(session)
     return require_market_data_session(session)
+
+
+async def require_active_pair(session: UserSession, base: str, quote: str) -> None:
+    active = (
+        await require_user_session(session).execute(
+            """SELECT EXISTS(SELECT 1 FROM active_supported_symbols
+            WHERE base=:base AND quote=:quote)""",
+            {"base": base, "quote": quote},
+        )
+    ).scalar_one()
+    if not active:
+        raise UnsupportedSeriesError()
 
 
 async def database_now(session: Session) -> datetime:
@@ -223,6 +246,8 @@ async def coalesce_demand(
     session: Session, base: str, quote: str, timeframe: Timeframe, window: CandleWindow
 ) -> bool:
     """Shared row-locked demand; never resets worker claims, attempts or backoff."""
+    if isinstance(session, UserSession):
+        await require_active_pair(session, base, quote)
     session = _session(session)
     now = await database_now(session)
     validate_window(window, now, timeframe)

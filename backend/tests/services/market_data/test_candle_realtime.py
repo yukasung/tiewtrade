@@ -11,18 +11,29 @@ from hypothesis import strategies as st
 
 from tests.infra.market_data.test_chart_preview import observation
 from tiewtrade.core.candle_preview import CandleObservation, Progress, compare
-from tiewtrade.core.market_data import CandleFinality, Timeframe, advance, align_floor, next_open
+from tiewtrade.core.market_data import (
+    CandleFinality,
+    CandleSeries,
+    Timeframe,
+    advance,
+    align_floor,
+    next_open,
+)
 from tiewtrade.core.money import Money, Quantity
 from tiewtrade.infra.market_data.candle_preview import PreviewLease
+from tiewtrade.infra.platform import RuntimeSymbol
 from tiewtrade.infra.realtime.notifications import RedisNotifications
 from tiewtrade.services.market_data import candle_realtime
 from tiewtrade.services.market_data.candle_realtime import (
-    SERIES,
     CandleConflictError,
     CandleSupervisor,
 )
 from tiewtrade.venues.candle_streams import FeedCandle
 from tiewtrade.venues.fake import FakeCandleFeed
+
+SERIES = tuple(
+    CandleSeries(base, "USDT", timeframe) for base in ("BTC", "ETH") for timeframe in Timeframe
+)
 
 
 def supervisor() -> CandleSupervisor:
@@ -33,7 +44,42 @@ def supervisor() -> CandleSupervisor:
         cast(AsyncEngine, None), FakeCandleFeed(()), cast(RedisNotifications, None)
     )
     result.epoch = 1
+    result.series = SERIES
+    result.catalog = {
+        (base, "USDT"): RuntimeSymbol(base, "USDT", "ACTIVE", revision, 2, "ACTIVE")
+        for revision, base in enumerate(("BTC", "ETH"), start=1)
+    }
     return result
+
+
+async def test_candle_feed_excludes_removed_maintenance_pairs(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    state = supervisor()
+    rows = (
+        RuntimeSymbol("BTC", "USDT", "ACTIVE", 1, 4, "PUBLIC"),
+        RuntimeSymbol("SOL", "USDT", "PREPARING", 3, 4, "PREPARING"),
+        RuntimeSymbol("ETH", "USDT", "REMOVED", 4, 4, "MAINTENANCE"),
+    )
+
+    @asynccontextmanager
+    async def session(_engine: object) -> AsyncIterator[object]:
+        yield object()
+
+    async def catalog(
+        _session: object, *, modes: frozenset[str] | None = None
+    ) -> dict[tuple[str, str], RuntimeSymbol]:
+        assert modes == candle_realtime.PUBLIC_CATALOG_MODES
+        assert modes is not None
+        return {(row.base, row.quote): row for row in rows if row.mode in modes}
+
+    monkeypatch.setattr(candle_realtime, "market_data_session", session)
+    monkeypatch.setattr(candle_realtime, "runtime_symbol_map", catalog)
+
+    await state._reload_catalog()
+
+    assert set(state.catalog) == {("BTC", "USDT"), ("SOL", "USDT")}
+    assert len(state.series) == 2 * len(Timeframe)
 
 
 async def test_bootstrap_commits_each_series_before_marking_ready(

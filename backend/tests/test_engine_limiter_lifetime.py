@@ -43,9 +43,13 @@ async def test_serve_keeps_ip_usage_between_rounds(monkeypatch: pytest.MonkeyPat
     async def sleep(_: float) -> None:
         pass
 
+    async def activate_ready_symbols(*args: object, **kwargs: object) -> int:
+        return 0
+
     monkeypatch.setattr(main, "_now", FakeClock())
     monkeypatch.setattr(main, "create_engine_for", lambda role: object())
     monkeypatch.setattr(main, "run_round", run_round)
+    monkeypatch.setattr(main, "activate_ready_symbols", activate_ready_symbols)
     monkeypatch.setattr(asyncio, "sleep", sleep)
     monkeypatch.setattr(
         httpx,

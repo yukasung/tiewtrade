@@ -1,13 +1,21 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { ApiRequestError } from "./auth";
+import { marketCatalogQueryKey, useMarketCatalog } from "./marketCatalog";
 import { acceptPrices, decodePrices, fetchPrices, priceQueryKey, type PricesView } from "./realtimePrices";
 export type Delivery = "CONNECTING" | "CONNECTED" | "DISCONNECTED" | "AWAITING_SNAPSHOT";
 export function useRealtimePrices() {
     const client = useQueryClient();
+    const catalog = useMarketCatalog();
     const [delivery, setDelivery] = useState<Delivery>("CONNECTING");
-    const query = useQuery<PricesView>({ queryKey: priceQueryKey, enabled: false, queryFn: ({ signal }) => fetchPrices(signal), structuralSharing: (old, next) => acceptPrices(old as PricesView | undefined, next as PricesView) });
+    const query = useQuery<PricesView>({ queryKey: priceQueryKey, enabled: false, queryFn: ({ signal }) => {
+        if (!catalog.data) throw new ApiRequestError("CATALOG_UNAVAILABLE", 0);
+        return fetchPrices(signal, catalog.data);
+    }, structuralSharing: (old, next) => acceptPrices(old as PricesView | undefined, next as PricesView) });
     useEffect(() => {
+        if (!catalog.data) return;
+        const currentCatalog = catalog.data;
+        client.removeQueries({ queryKey: priceQueryKey, exact: true });
         let receivedSnapshot = false;
         let active = true, epoch = 0, attempt = 0, socket: WebSocket | undefined;
         let retry: number | undefined, watchdog: number | undefined;
@@ -45,7 +53,7 @@ export function useRealtimePrices() {
                     try {
                         if (typeof event.data !== "string" || event.data.length > 65536)
                             throw new Error();
-                        const next = decodePrices(JSON.parse(event.data));
+                        const next = decodePrices(JSON.parse(event.data), currentCatalog);
                         const old = client.getQueryData<PricesView>(priceQueryKey);
                         const accepted = acceptPrices(old, next);
                         arm(current);
@@ -57,6 +65,7 @@ export function useRealtimePrices() {
                         attempt = 0;
                     }
                     catch {
+                        void client.invalidateQueries({ queryKey: marketCatalogQueryKey });
                         fail();
                     }
                 };
@@ -81,7 +90,7 @@ export function useRealtimePrices() {
             }
         }
         void client.fetchQuery({ queryKey: priceQueryKey, queryFn: async () => {
-                const next = await fetchPrices(controller.signal);
+                const next = await fetchPrices(controller.signal, currentCatalog);
                 if (!active)
                     throw new ApiRequestError("PRICE_DELIVERY_FAILED", 0);
                 return acceptPrices(client.getQueryData<PricesView>(priceQueryKey), next);
@@ -98,6 +107,6 @@ export function useRealtimePrices() {
         document.addEventListener("resume", resume);
         connect();
         return () => { active = false; invalidate(); controller.abort(); window.removeEventListener("offline", offline); window.removeEventListener("online", resume); window.removeEventListener("pageshow", resume); document.removeEventListener("visibilitychange", visibility); document.removeEventListener("freeze", resume); document.removeEventListener("resume", resume); };
-    }, [client]);
-    return { view: query.data, delivery };
+    }, [client, catalog.data]);
+    return { view: query.data, delivery, catalog };
 }

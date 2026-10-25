@@ -15,7 +15,7 @@ from tiewtrade.core.market_data import Candle, CandleFinality, CandleSeries, Tim
 from tiewtrade.core.money import Money, Quantity
 from tiewtrade.infra.db import DatabaseRole, create_engine_for
 from tiewtrade.infra.realtime.notifications import RedisNotifications
-from tiewtrade.services.market_data.candle_realtime import SERIES, CandleSupervisor
+from tiewtrade.services.market_data.candle_realtime import CandleSupervisor
 from tiewtrade.venues.candle_streams import CandleFeedEvent, FeedCandle
 from tiewtrade.venues.price_streams import FeedConnected, FeedDisconnected
 
@@ -27,7 +27,7 @@ class ControlledCandleFeed:
     async def events(
         self, series: tuple[CandleSeries, ...]
     ) -> AsyncGenerator[CandleFeedEvent, None]:
-        assert len(series) == len(SERIES)
+        assert len(series) == 2 * len(Timeframe)
         generation, count = 0, 0
         connected = False
         while True:

@@ -7,12 +7,15 @@ import os
 import socket
 from contextlib import suppress
 from datetime import UTC, datetime, timedelta
+from uuid import UUID, uuid4
 
 import httpx
 from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncEngine
 
 from tiewtrade.infra.db import DatabaseRole, create_engine_for
+from tiewtrade.infra.db.session import market_data_session
+from tiewtrade.infra.platform import record_protocol_heartbeat
 from tiewtrade.infra.realtime.notifications import RedisNotifications
 from tiewtrade.services.market_data.candle_realtime import CandleSupervisor
 from tiewtrade.services.market_data.ingestion import MARKET_TIMEOUT, run_round
@@ -43,6 +46,9 @@ async def serve(
     owned = engine is None
     engine = engine or create_engine_for(DatabaseRole.MARKET_DATA)
     worker = f"{socket.gethostname()}:{os.getpid()}"
+    generation_text = os.environ.get("TIEWTRADE_CATALOG_DEPLOYMENT_GENERATION")
+    generation = None if not generation_text else UUID(generation_text)
+    instance_id = uuid4()
     try:
         async with httpx.AsyncClient() as client:
             guard = public_rate_limit_guard(clock=_now)
@@ -58,7 +64,33 @@ async def serve(
                         return
                     await asyncio.sleep(ROUND_INTERVAL.total_seconds())
 
+            async def heartbeat() -> None:
+                assert generation is not None
+                while True:
+                    now = _now()
+                    async with market_data_session(engine) as session:
+                        await record_protocol_heartbeat(
+                            session,
+                            process_kind="MARKET_DATA",
+                            instance_id=instance_id,
+                            protocol_version=1,
+                            deployment_generation=generation,
+                            lease_expires_at=now + ROUND_INTERVAL * 3,
+                        )
+                    await asyncio.sleep(10)
+
             if once:
+                if generation is not None:
+                    now = _now()
+                    async with market_data_session(engine) as session:
+                        await record_protocol_heartbeat(
+                            session,
+                            process_kind="MARKET_DATA",
+                            instance_id=instance_id,
+                            protocol_version=1,
+                            deployment_generation=generation,
+                            lease_expires_at=now + ROUND_INTERVAL * 3,
+                        )
                 await candles()
                 return
             feed = price_feed or live_price_feed(
@@ -73,6 +105,8 @@ async def serve(
                 asyncio.create_task(candles()),
                 asyncio.create_task(QuoteSupervisor(engine, feed, notification).run()),
             ]
+            if generation is not None:
+                tasks.append(asyncio.create_task(heartbeat()))
             if os.environ.get("TIEWTRADE_CHART_ENABLED") == "1":
                 tasks.append(
                     asyncio.create_task(

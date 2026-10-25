@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncEngine
 
 from tests.infra.execution_market.test_dispatch import intent
 from tests.infra.execution_market.test_worker import AllowPolicy
+from tiewtrade.core.market_catalog import CatalogSnapshot
 from tiewtrade.core.money import Money, Quantity
 from tiewtrade.core.orders import BaseSize, OrderConstraints, OrderScope, OrderType, TimeInForce
 from tiewtrade.core.paper_matching import admit_order, cancel_order
@@ -86,6 +87,7 @@ async def test_bulk_checkpoint_preserves_other_pair_and_rebuilds_multiple_orders
                 ),
                 reference_price=Money.of(100, "USDT"),
                 policy=AllowPolicy(),
+                catalog=CatalogSnapshot(1, frozenset({(base, "USDT")})),
             )
             await insert_order_header(
                 session,

@@ -449,7 +449,12 @@ def test_no_route_hands_back_the_secret(client: TestClient, ending: bool) -> Non
             )
             assert renewed.status_code == 200
         assert client.get("/auth/me").status_code == 200
-        path = template.replace("{key_id}", key_id).replace("{command_id}", key_id)
+        path = (
+            template.replace("{key_id}", key_id)
+            .replace("{command_id}", key_id)
+            .replace("{base}", "BTC")
+            .replace("{quote}", "USDT")
+        )
         assert "{" not in path, f"missing canary path value for {template}"
         if method == "WEBSOCKET":
             with client.websocket_connect(
@@ -476,7 +481,10 @@ def test_no_route_hands_back_the_secret(client: TestClient, ending: bool) -> Non
             **({"json": {}} if method == "POST" else {}),
         )
         if method == "GET":
-            if template.startswith("/market-data/chart/"):
+            if template.startswith("/admin/supported-symbols"):
+                assert response.status_code == 403
+                assert response.json() == {"detail": "CATALOG_NOT_AUTHORIZED"}
+            elif template.startswith("/market-data/chart/"):
                 assert (
                     response.status_code == 404
                 )  # Disabled by default; refusal must also be secret-free.
@@ -490,7 +498,10 @@ def test_no_route_hands_back_the_secret(client: TestClient, ending: bool) -> Non
             else:
                 assert response.status_code == 200, (method, template, response.status_code)
         elif method == "DELETE":
-            assert response.status_code == 204
+            if template.startswith("/admin/supported-symbols"):
+                assert response.status_code in (403, 429)
+            else:
+                assert response.status_code == 204
         elif template == "/api-keys/{key_id}/retry":
             assert response.status_code == 409
         else:

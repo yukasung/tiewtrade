@@ -5,6 +5,7 @@ from datetime import timedelta
 from typing import Any
 from uuid import NAMESPACE_URL, UUID, uuid5
 
+from tiewtrade.core.market_catalog import CatalogSnapshot
 from tiewtrade.core.money import Money, Quantity
 from tiewtrade.core.order_book import BookState, MarketInput
 from tiewtrade.core.orders import (
@@ -16,7 +17,7 @@ from tiewtrade.core.orders import (
     SourceUnavailableError,
 )
 from tiewtrade.core.paper_matching import MatchingState, admit_order, advance_matching, cancel_order
-from tiewtrade.core.positions import ExecutionFact
+from tiewtrade.core.positions import ExecutionFact, ExecutionSide
 from tiewtrade.core.realtime_prices import Readiness, readiness
 from tiewtrade.infra.audit import (
     ActorKind,
@@ -59,6 +60,7 @@ from tiewtrade.infra.paper_orders.storage import (
     append_execution_input,
     increment_wallet_revision,
     lock_active_episode,
+    lock_pair_catalog,
 )
 from tiewtrade.infra.paper_wallet import get_wallet
 from tiewtrade.infra.positions import (
@@ -160,7 +162,16 @@ async def process_claimed_order(
     if command["action"] == "CANCEL":
         await _process_cancel(session, claim, command)
         return
-    await _process_new(session, claim, command, policy)
+    intent = intent_from_payload(object_payload(command["payload"])["intent"])
+    fence = await lock_pair_catalog(session, intent.pair)
+    await _process_new(
+        session,
+        claim,
+        command,
+        policy,
+        fence.snapshot,
+        fence.latest_removed_revision,
+    )
 
 
 async def _process_new(
@@ -168,10 +179,20 @@ async def _process_new(
     claim: ClaimedOrder,
     command: Any,
     policy: AdmissionPolicy | None,
+    catalog: CatalogSnapshot,
+    latest_removed_revision: int | None,
 ) -> None:
     row = command
     payload = object_payload(row["payload"])
     intent = intent_from_payload(payload["intent"])
+    admitted_revision_value = payload.get("catalog_revision", 0)
+    if type(admitted_revision_value) is not int or admitted_revision_value < 0:
+        raise OrderWorkerIntegrityError("opening catalog revision is invalid")
+    invalidated = (
+        intent.side is ExecutionSide.BUY
+        and latest_removed_revision is not None
+        and latest_removed_revision > admitted_revision_value
+    )
     accepted_command = (
         await session.execute(
             "SELECT command_id FROM paper_orders WHERE id=:order",
@@ -189,6 +210,13 @@ async def _process_new(
     )
     state = checkpoint.state
     result_exists = row["result_state"] is not None
+    if (
+        not result_exists
+        and intent.side is ExecutionSide.BUY
+        and (invalidated or not catalog.supports(intent.pair.base, intent.pair.quote))
+    ):
+        await _reject(session, claim, row, "CATALOG_PAIR_REMOVED")
+        return
     if not result_exists:
         try:
             bootstrap_evidence = None
@@ -204,6 +232,7 @@ async def _process_new(
                     now=(await session.execute("SELECT clock_timestamp()")).scalar_one(),
                     constraints=record.metadata.limit,
                     execution_ids=(),
+                    catalog=catalog,
                 )
                 if bootstrap.fills:
                     raise OrderWorkerIntegrityError("empty source bootstrap created a fill")
@@ -263,6 +292,7 @@ async def _process_new(
                 constraints=constraints,
                 reference_price=reference,
                 policy=policy,
+                catalog=catalog,
             )
             order = next(v for v in accepted.orders if v.intent.order_id == intent.order_id)
             await insert_order_header(
@@ -320,6 +350,31 @@ async def _process_new(
         )
         await finish_claim(session, claim, terminal=True)
         return
+    if target.intent.side is ExecutionSide.BUY and (
+        invalidated or not catalog.supports(target.intent.pair.base, target.intent.pair.quote)
+    ):
+        changed = cancel_order(state, target.intent.order_id, scope=target.intent.scope)
+        await persist_checkpoint(
+            session,
+            wallet_id=row["wallet_id"],
+            state=changed,
+            anchor_order_id=target.intent.order_id,
+            event_kind="CANCELED",
+            decision_kind="CANCEL",
+            occurred_at=(await session.execute("SELECT clock_timestamp()")).scalar_one(),
+            decision_id=_identity(
+                target.intent.scope.episode_id, f"catalog-cancel:{target.intent.order_id}"
+            ),
+        )
+        await set_pair_dependency(
+            session,
+            wallet_id=row["wallet_id"],
+            episode_id=target.intent.scope.episode_id,
+            pair=target.intent.pair,
+            needed=any(not order.status.terminal for order in changed.orders),
+        )
+        await finish_claim(session, claim, terminal=True)
+        return
     try:
         decisions = await _next_or_recovery_inputs(session, state)
     except NoNewExecutionInputError:
@@ -332,7 +387,7 @@ async def _process_new(
         )
         await finish_claim(session, claim, terminal=False)
         return
-    await _apply_inputs(session, claim, row, state, decisions)
+    await _apply_inputs(session, claim, row, state, decisions, catalog)
 
 
 async def _next_or_recovery_inputs(
@@ -401,6 +456,7 @@ async def _apply_inputs(
     command: Any,
     state: MatchingState,
     decisions: tuple[_InputDecision, ...],
+    catalog: CatalogSnapshot,
 ) -> None:
     row = command
     pair_key = f"{state.pair.base}:{state.pair.quote}"
@@ -441,6 +497,7 @@ async def _apply_inputs(
                 )
                 for index in range(identity_count)
             ),
+            catalog=catalog,
         )
         for index, (fact, order_id) in enumerate(
             zip(transition.fills, transition.fill_order_ids, strict=True)

@@ -5,7 +5,7 @@ import { live, type Candle, type ChartLive, type Series } from "./api";
 import { useChartPages } from "./useChartPages";
 
 /** Candle-only chart: the indicator reader and its proof endpoint are never started. */
-export function useChartData(user: string, series: Series) {
+export function useChartData(user: string, series: Series, enabled = true) {
   const client = useQueryClient();
   const [visible, setVisible] = useState(document.visibilityState !== "hidden" && globalThis.navigator.onLine);
   const [retryAt, setRetryAt] = useState(0);
@@ -28,7 +28,13 @@ export function useChartData(user: string, series: Series) {
           ? { ...row, finality: "UNCONFIRMED" as const } : row) };
     },
   });
-  const browsing = useChartPages(user, series, Boolean(preview.error || rateError.current), cooldown.current);
+  const browsing = useChartPages(
+    user,
+    series,
+    !enabled || Boolean(preview.error || rateError.current),
+    cooldown.current,
+    enabled,
+  );
   const sourceError = browsing.error ?? preview.error;
   if (sourceError instanceof ApiRequestError && sourceError.status === 429) rateError.current = sourceError;
   const error = sourceError ?? rateError.current;
@@ -48,7 +54,7 @@ export function useChartData(user: string, series: Series) {
   useEffect(() => {
     const read = () => {
       const current = actions.current;
-      if (document.visibilityState === "hidden" || !globalThis.navigator.onLine ||
+      if (!enabled || document.visibilityState === "hidden" || !globalThis.navigator.onLine ||
           current.preview.isFetching || current.error ||
           globalThis.performance.now() < cooldown.current) return;
       void current.preview.refetch();
@@ -71,7 +77,7 @@ export function useChartData(user: string, series: Series) {
       globalThis.removeEventListener("offline", visibility);
       void client.cancelQueries({ queryKey: key });
     };
-  }, [client, user, series.base, series.quote, series.timeframe]);
+  }, [client, enabled, user, series.base, series.quote, series.timeframe]);
   useEffect(() => {
     if (error instanceof ApiRequestError && error.status === 401) {
       void client.cancelQueries({ queryKey: key });

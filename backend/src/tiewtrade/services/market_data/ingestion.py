@@ -24,6 +24,7 @@ from tiewtrade.core.timeframes import candle_storage_cutoff as retention_cutoff
 from tiewtrade.infra.db.errors import DatabaseTimeoutError
 from tiewtrade.infra.db.session import MarketDataSession, market_data_session
 from tiewtrade.infra.indicators.source import begin_source_write, source_write_timeouts
+from tiewtrade.infra.market_data.catalog import runtime_catalog
 from tiewtrade.infra.market_data.claims import (
     Claim,
     claim_next,
@@ -33,7 +34,13 @@ from tiewtrade.infra.market_data.claims import (
     write_candles,
 )
 from tiewtrade.infra.market_data.records import PartitionUnavailableError, StaleClaimError
-from tiewtrade.infra.market_data.storage import PAIRS, database_now, refresh_due, stored_rows
+from tiewtrade.infra.market_data.storage import (
+    coalesce_demand,
+    database_now,
+    refresh_due,
+    stored_rows,
+)
+from tiewtrade.infra.platform import record_timeframe_readiness
 from tiewtrade.venues.candles import CandlePage, CandleSource
 from tiewtrade.venues.errors import (
     VenueError,
@@ -56,22 +63,53 @@ class RoundSummary:
 
 async def _seed_initial_demand(session: MarketDataSession) -> None:
     as_of = await database_now(session)
-    for base, quote in sorted(PAIRS):
+    catalog = await runtime_catalog(session)
+    for row in sorted(
+        (row for row in catalog if row.mode in {"PUBLIC", "PREPARING"}),
+        key=lambda item: (item.base, item.quote),
+    ):
         for timeframe in Timeframe:
             window = initial_window(timeframe, as_of)
-            await session.execute(
-                """INSERT INTO market_candle_demand
-                (source,base,quote,timeframe,desired_start,desired_end,requested_at)
-                VALUES ('primary_spot',:base,:quote,:timeframe,:start,:end,:now)
-                ON CONFLICT DO NOTHING""",
-                {
-                    "base": base,
-                    "quote": quote,
-                    "timeframe": timeframe.value,
-                    "start": window.start,
-                    "end": window.end,
-                    "now": as_of,
-                },
+            if row.mode == "PREPARING":
+                await coalesce_demand(session, row.base, row.quote, timeframe, window)
+            else:
+                await session.execute(
+                    """INSERT INTO market_candle_demand
+                    (source,base,quote,timeframe,desired_start,desired_end,requested_at)
+                    VALUES ('primary_spot',:base,:quote,:timeframe,:start,:end,:now)
+                    ON CONFLICT DO NOTHING""",
+                    {
+                        "base": row.base,
+                        "quote": row.quote,
+                        "timeframe": timeframe.value,
+                        "start": window.start,
+                        "end": window.end,
+                        "now": as_of,
+                    },
+                )
+
+
+async def _publish_preparation_readiness(session: MarketDataSession) -> None:
+    now = await database_now(session)
+    for row in await runtime_catalog(session):
+        if row.mode != "PREPARING":
+            continue
+        result = await session.execute(
+            """SELECT timeframe FROM market_candle_demand
+            WHERE source='primary_spot' AND base=:base AND quote=:quote
+              AND status='COMPLETE'
+              AND (refresh_requested_at IS NULL
+                OR refresh_requested_at<=refresh_served_at)""",
+            {"base": row.base, "quote": row.quote},
+        )
+        for timeframe in result.scalars():
+            await record_timeframe_readiness(
+                session,
+                base=row.base,
+                quote=row.quote,
+                catalog_revision=row.revision,
+                timeframe=Timeframe(timeframe),
+                ready_at=now,
             )
 
 
@@ -576,4 +614,6 @@ async def run_round(
                 # retrying an aborted write/claim update in a hot loop.
                 logging.getLogger(__name__).warning("market-data failure record: DATABASE_TIMEOUT")
                 break
+    async with market_data_session(engine) as session:
+        await _publish_preparation_readiness(session)
     return RoundSummary(attempts, stored, stale)

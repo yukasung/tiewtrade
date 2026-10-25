@@ -287,6 +287,255 @@
         "title": "CandleView",
         "type": "object"
       },
+      "CatalogCleanupView": {
+        "properties": {
+          "attempts": {
+            "title": "Attempts",
+            "type": "integer"
+          },
+          "bots_stopped": {
+            "title": "Bots Stopped",
+            "type": "integer"
+          },
+          "commands_rejected": {
+            "title": "Commands Rejected",
+            "type": "integer"
+          },
+          "error_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Code"
+          },
+          "orders_canceled": {
+            "title": "Orders Canceled",
+            "type": "integer"
+          },
+          "orders_unresolved": {
+            "title": "Orders Unresolved",
+            "type": "integer"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "attempts",
+          "bots_stopped",
+          "commands_rejected",
+          "orders_canceled",
+          "orders_unresolved",
+          "error_code",
+          "updated_at"
+        ],
+        "title": "CatalogCleanupView",
+        "type": "object"
+      },
+      "CatalogCommandResponse": {
+        "properties": {
+          "action": {
+            "title": "Action",
+            "type": "string"
+          },
+          "base": {
+            "title": "Base",
+            "type": "string"
+          },
+          "command_id": {
+            "format": "uuid",
+            "title": "Command Id",
+            "type": "string"
+          },
+          "completed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "quote": {
+            "title": "Quote",
+            "type": "string"
+          },
+          "revision": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revision"
+          },
+          "state": {
+            "title": "State",
+            "type": "string"
+          }
+        },
+        "required": [
+          "command_id",
+          "action",
+          "base",
+          "quote",
+          "state",
+          "revision",
+          "created_at",
+          "completed_at"
+        ],
+        "title": "CatalogCommandResponse",
+        "type": "object"
+      },
+      "CatalogMutation": {
+        "properties": {
+          "base": {
+            "maxLength": 16,
+            "minLength": 1,
+            "title": "Base",
+            "type": "string"
+          },
+          "expected_revision": {
+            "minimum": 0.0,
+            "title": "Expected Revision",
+            "type": "integer"
+          },
+          "quote": {
+            "maxLength": 16,
+            "minLength": 1,
+            "title": "Quote",
+            "type": "string"
+          },
+          "reason_code": {
+            "$ref": "#/components/schemas/CatalogReason"
+          }
+        },
+        "required": [
+          "base",
+          "quote",
+          "expected_revision",
+          "reason_code"
+        ],
+        "title": "CatalogMutation",
+        "type": "object"
+      },
+      "CatalogPairView": {
+        "properties": {
+          "base": {
+            "title": "Base",
+            "type": "string"
+          },
+          "cleanup": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CatalogCleanupView"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "quote": {
+            "title": "Quote",
+            "type": "string"
+          },
+          "revision": {
+            "title": "Revision",
+            "type": "integer"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "base",
+          "quote",
+          "status",
+          "revision",
+          "updated_at"
+        ],
+        "title": "CatalogPairView",
+        "type": "object"
+      },
+      "CatalogReason": {
+        "enum": [
+          "ADMIN_LIQUIDITY_REVIEWED",
+          "ADMIN_RISK_REVIEW"
+        ],
+        "title": "CatalogReason",
+        "type": "string"
+      },
+      "CatalogResponse": {
+        "properties": {
+          "active_pairs": {
+            "items": {
+              "maxItems": 2,
+              "minItems": 2,
+              "prefixItems": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "string"
+                }
+              ],
+              "type": "array"
+            },
+            "title": "Active Pairs",
+            "type": "array"
+          },
+          "entries": {
+            "items": {
+              "$ref": "#/components/schemas/CatalogPairView"
+            },
+            "title": "Entries",
+            "type": "array"
+          },
+          "mutations_enabled": {
+            "title": "Mutations Enabled",
+            "type": "boolean"
+          },
+          "revision": {
+            "title": "Revision",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "revision",
+          "active_pairs",
+          "entries",
+          "mutations_enabled"
+        ],
+        "title": "CatalogResponse",
+        "type": "object"
+      },
       "ChartCandlePage": {
         "properties": {
           "base": {
@@ -940,6 +1189,60 @@
         "title": "Identity",
         "type": "object"
       },
+      "ImpactResponse": {
+        "properties": {
+          "base": {
+            "title": "Base",
+            "type": "string"
+          },
+          "bots": {
+            "title": "Bots",
+            "type": "integer"
+          },
+          "complete": {
+            "title": "Complete",
+            "type": "boolean"
+          },
+          "open_entry_orders": {
+            "title": "Open Entry Orders",
+            "type": "integer"
+          },
+          "positions": {
+            "title": "Positions",
+            "type": "integer"
+          },
+          "protective_orders": {
+            "title": "Protective Orders",
+            "type": "integer"
+          },
+          "quote": {
+            "title": "Quote",
+            "type": "string"
+          },
+          "reduce_risk_orders": {
+            "title": "Reduce Risk Orders",
+            "type": "integer"
+          },
+          "snapshot_at": {
+            "format": "date-time",
+            "title": "Snapshot At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "base",
+          "quote",
+          "bots",
+          "open_entry_orders",
+          "protective_orders",
+          "reduce_risk_orders",
+          "positions",
+          "complete",
+          "snapshot_at"
+        ],
+        "title": "ImpactResponse",
+        "type": "object"
+      },
       "IndicatorHistoryView": {
         "properties": {
           "as_of": {
@@ -1245,6 +1548,17 @@
       "Me": {
         "description": "ตัวตนของคำขอ พร้อมสถานะปัจจัยที่สอง (F-06 RQ-12)",
         "properties": {
+          "platform_role": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Platform Role"
+          },
           "totp_enabled": {
             "title": "Totp Enabled",
             "type": "boolean"
@@ -1257,7 +1571,8 @@
         },
         "required": [
           "user_id",
-          "totp_enabled"
+          "totp_enabled",
+          "platform_role"
         ],
         "title": "Me",
         "type": "object"
@@ -1534,7 +1849,8 @@
             "title": "Amount"
           },
           "base": {
-            "$ref": "#/components/schemas/SupportedBase"
+            "title": "Base",
+            "type": "string"
           },
           "generation": {
             "pattern": "^[0-9]+$",
@@ -1542,7 +1858,8 @@
             "type": "string"
           },
           "quote": {
-            "$ref": "#/components/schemas/SupportedQuote"
+            "title": "Quote",
+            "type": "string"
           },
           "readiness": {
             "enum": [
@@ -1636,6 +1953,11 @@
       "PricesView": {
         "additionalProperties": false,
         "properties": {
+          "catalog_revision": {
+            "pattern": "^[0-9]+$",
+            "title": "Catalog Revision",
+            "type": "string"
+          },
           "delivery_status": {
             "enum": [
               "CONNECTED",
@@ -1664,11 +1986,63 @@
           }
         },
         "required": [
+          "catalog_revision",
           "server_time",
           "delivery_status",
           "rows"
         ],
         "title": "PricesView",
+        "type": "object"
+      },
+      "ProtocolEnableRequest": {
+        "properties": {
+          "deployment_generation": {
+            "format": "uuid",
+            "title": "Deployment Generation",
+            "type": "string"
+          },
+          "expected_revision": {
+            "minimum": 0.0,
+            "title": "Expected Revision",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "deployment_generation",
+          "expected_revision"
+        ],
+        "title": "ProtocolEnableRequest",
+        "type": "object"
+      },
+      "PublicCatalogResponse": {
+        "properties": {
+          "active_pairs": {
+            "items": {
+              "maxItems": 2,
+              "minItems": 2,
+              "prefixItems": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "string"
+                }
+              ],
+              "type": "array"
+            },
+            "title": "Active Pairs",
+            "type": "array"
+          },
+          "revision": {
+            "title": "Revision",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "revision",
+          "active_pairs"
+        ],
+        "title": "PublicCatalogResponse",
         "type": "object"
       },
       "RefreshTarget": {
@@ -1928,17 +2302,6 @@
         "title": "SignedIn",
         "type": "object"
       },
-      "SupportedBase": {
-        "enum": [
-          "BTC",
-          "ETH"
-        ],
-        "type": "string"
-      },
-      "SupportedQuote": {
-        "const": "USDT",
-        "type": "string"
-      },
       "Timeframe": {
         "enum": [
           "1m",
@@ -2064,6 +2427,236 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/admin/supported-symbols": {
+      "get": {
+        "operationId": "admin_catalog_admin_supported_symbols_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CatalogResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Admin Catalog",
+        "tags": [
+          "supported-symbols"
+        ]
+      },
+      "post": {
+        "operationId": "add_symbol_admin_supported_symbols_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "maxLength": 128,
+              "minLength": 1,
+              "title": "Idempotency-Key",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CatalogMutation"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CatalogCommandResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Add Symbol",
+        "tags": [
+          "supported-symbols"
+        ]
+      }
+    },
+    "/admin/supported-symbols/protocol/enable": {
+      "post": {
+        "operationId": "enable_catalog_mutations_admin_supported_symbols_protocol_enable_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProtocolEnableRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Enable Catalog Mutations",
+        "tags": [
+          "supported-symbols"
+        ]
+      }
+    },
+    "/admin/supported-symbols/{base}/{quote}": {
+      "delete": {
+        "operationId": "remove_symbol_admin_supported_symbols__base___quote__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "base",
+            "required": true,
+            "schema": {
+              "title": "Base",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "quote",
+            "required": true,
+            "schema": {
+              "title": "Quote",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "maxLength": 128,
+              "minLength": 1,
+              "title": "Idempotency-Key",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CatalogMutation"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CatalogCommandResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Remove Symbol",
+        "tags": [
+          "supported-symbols"
+        ]
+      }
+    },
+    "/admin/supported-symbols/{base}/{quote}/impact": {
+      "get": {
+        "operationId": "preview_admin_supported_symbols__base___quote__impact_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "base",
+            "required": true,
+            "schema": {
+              "title": "Base",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "quote",
+            "required": true,
+            "schema": {
+              "title": "Quote",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImpactResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Preview",
+        "tags": [
+          "supported-symbols"
+        ]
+      }
+    },
     "/api-keys": {
       "get": {
         "description": "รายการ key ของผู้ใช้คนนี้ — หน้าเว็บเรียกเป็นรอบ ๆ เพื่อดูสถานะ\n\nเส้นทางนี้ **ไม่ต่ออายุ session** (`routing_policy.py`) เพราะการ poll\nไม่ควรทำให้ session ไม่มีวันหมดอายุ",
@@ -2704,6 +3297,27 @@
           }
         },
         "summary": "Read Health"
+      }
+    },
+    "/market-catalog": {
+      "get": {
+        "operationId": "catalog_market_catalog_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicCatalogResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Catalog",
+        "tags": [
+          "supported-symbols"
+        ]
       }
     },
     "/market-data/candles": {

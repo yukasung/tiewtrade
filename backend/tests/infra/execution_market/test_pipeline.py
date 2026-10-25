@@ -9,6 +9,7 @@ import pytest
 from sqlalchemy.ext.asyncio import AsyncEngine
 
 from tests.order_book_fixtures import SYMBOL, capability, depth_payload, snapshot
+from tiewtrade.core.market_catalog import CatalogSnapshot
 from tiewtrade.core.money import Money, Quantity
 from tiewtrade.core.orders import (
     OrderIntent,
@@ -162,6 +163,7 @@ async def test_fake_public_pipeline_matches_exactly_and_disconnect_invalidates(
                 constraints=record.metadata.market,
                 reference_price=Money.of(100, "USDT"),
                 policy=FixturePolicy(),
+                catalog=CatalogSnapshot(1, frozenset({(base, "USDT")})),
             )
             result = advance_matching(
                 state,
@@ -169,6 +171,7 @@ async def test_fake_public_pipeline_matches_exactly_and_disconnect_invalidates(
                 now=datetime.now(UTC),
                 constraints=record.metadata.market,
                 execution_ids=(UUID(int=5),),
+                catalog=CatalogSnapshot(1, frozenset({(base, "USDT")})),
             )
             assert len(result.fills) == 1
             effect = apply_execution(PositionState.empty(pair), result.fills[0])

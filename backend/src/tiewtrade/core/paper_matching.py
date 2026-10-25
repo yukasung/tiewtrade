@@ -4,7 +4,7 @@ from dataclasses import dataclass, field, replace
 from datetime import datetime, timedelta
 from uuid import UUID
 
-from tiewtrade.core.market_catalog import PAIRS
+from tiewtrade.core.market_catalog import CatalogSnapshot
 from tiewtrade.core.money import (
     Money,
     Quantity,
@@ -97,6 +97,7 @@ def admit_order(
     constraints: OrderConstraints,
     reference_price: Money,
     policy: AdmissionPolicy | None,
+    catalog: CatalogSnapshot,
 ) -> MatchingState:
     """Validate funds after other-pair reserves; caller applies F-14 effects before next command."""
     aware(now)
@@ -114,7 +115,9 @@ def admit_order(
         raise OrderConflictError("nonmonotonic command sequence")
     if policy is None:
         raise SafetyUnavailableError("shared safety policy is unavailable")
-    if intent.side is ExecutionSide.BUY and (intent.pair.base, intent.pair.quote) not in PAIRS:
+    if intent.side is ExecutionSide.BUY and not catalog.supports(
+        intent.pair.base, intent.pair.quote
+    ):
         raise UnsupportedOrderError("opening pair is not in catalog")
     if (
         cash.currency != intent.pair.quote
@@ -287,6 +290,7 @@ def advance_matching(
     now: datetime,
     constraints: OrderConstraints,
     execution_ids: tuple[UUID, ...],
+    catalog: CatalogSnapshot,
 ) -> MatchingTransition:
     """Consume one durable input; caller supplies episode-wide sequence and fill identities."""
     aware(now)
@@ -377,6 +381,14 @@ def advance_matching(
 
     for order in state.orders:
         if order.status.terminal or market.received_at <= order.eligible_at:
+            orders.append(order)
+            continue
+        # A removed pair may still consume verified inputs for risk-reducing SELL
+        # orders, but an opening BUY can never fill from that input. The database
+        # pair fence held by the caller serializes this snapshot with removal.
+        if order.intent.side is ExecutionSide.BUY and not catalog.supports(
+            state.pair.base, state.pair.quote
+        ):
             orders.append(order)
             continue
         if isinstance(market, MarketTrade):

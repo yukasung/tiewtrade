@@ -4,6 +4,75 @@
  */
 
 export interface paths {
+    "/admin/supported-symbols": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Admin Catalog */
+        get: operations["admin_catalog_admin_supported_symbols_get"];
+        put?: never;
+        /** Add Symbol */
+        post: operations["add_symbol_admin_supported_symbols_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/supported-symbols/protocol/enable": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Enable Catalog Mutations */
+        post: operations["enable_catalog_mutations_admin_supported_symbols_protocol_enable_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/supported-symbols/{base}/{quote}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Remove Symbol */
+        delete: operations["remove_symbol_admin_supported_symbols__base___quote__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/supported-symbols/{base}/{quote}/impact": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Preview */
+        get: operations["preview_admin_supported_symbols__base___quote__impact_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api-keys": {
         parameters: {
             query?: never;
@@ -393,6 +462,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/market-catalog": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Catalog */
+        get: operations["catalog_market_catalog_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/market-data/candles": {
         parameters: {
             query?: never;
@@ -735,6 +821,99 @@ export interface components {
             /** Volume */
             volume: string;
         };
+        /** CatalogCleanupView */
+        CatalogCleanupView: {
+            /** Attempts */
+            attempts: number;
+            /** Bots Stopped */
+            bots_stopped: number;
+            /** Commands Rejected */
+            commands_rejected: number;
+            /** Error Code */
+            error_code: string | null;
+            /** Orders Canceled */
+            orders_canceled: number;
+            /** Orders Unresolved */
+            orders_unresolved: number;
+            /** Status */
+            status: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /** CatalogCommandResponse */
+        CatalogCommandResponse: {
+            /** Action */
+            action: string;
+            /** Base */
+            base: string;
+            /**
+             * Command Id
+             * Format: uuid
+             */
+            command_id: string;
+            /** Completed At */
+            completed_at: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Quote */
+            quote: string;
+            /** Revision */
+            revision: number | null;
+            /** State */
+            state: string;
+        };
+        /** CatalogMutation */
+        CatalogMutation: {
+            /** Base */
+            base: string;
+            /** Expected Revision */
+            expected_revision: number;
+            /** Quote */
+            quote: string;
+            reason_code: components["schemas"]["CatalogReason"];
+        };
+        /** CatalogPairView */
+        CatalogPairView: {
+            /** Base */
+            base: string;
+            cleanup?: components["schemas"]["CatalogCleanupView"] | null;
+            /** Quote */
+            quote: string;
+            /** Revision */
+            revision: number;
+            /** Status */
+            status: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /**
+         * CatalogReason
+         * @enum {string}
+         */
+        CatalogReason: "ADMIN_LIQUIDITY_REVIEWED" | "ADMIN_RISK_REVIEW";
+        /** CatalogResponse */
+        CatalogResponse: {
+            /** Active Pairs */
+            active_pairs: [
+                string,
+                string
+            ][];
+            /** Entries */
+            entries: components["schemas"]["CatalogPairView"][];
+            /** Mutations Enabled */
+            mutations_enabled: boolean;
+            /** Revision */
+            revision: number;
+        };
         /** ChartCandlePage */
         ChartCandlePage: {
             /** Base */
@@ -990,6 +1169,30 @@ export interface components {
              */
             user_id: string;
         };
+        /** ImpactResponse */
+        ImpactResponse: {
+            /** Base */
+            base: string;
+            /** Bots */
+            bots: number;
+            /** Complete */
+            complete: boolean;
+            /** Open Entry Orders */
+            open_entry_orders: number;
+            /** Positions */
+            positions: number;
+            /** Protective Orders */
+            protective_orders: number;
+            /** Quote */
+            quote: string;
+            /** Reduce Risk Orders */
+            reduce_risk_orders: number;
+            /**
+             * Snapshot At
+             * Format: date-time
+             */
+            snapshot_at: string;
+        };
         /** IndicatorHistoryView */
         IndicatorHistoryView: {
             /**
@@ -1110,6 +1313,8 @@ export interface components {
          * @description ตัวตนของคำขอ พร้อมสถานะปัจจัยที่สอง (F-06 RQ-12)
          */
         Me: {
+            /** Platform Role */
+            platform_role: string | null;
             /** Totp Enabled */
             totp_enabled: boolean;
             /**
@@ -1231,10 +1436,12 @@ export interface components {
             alert_due: boolean;
             /** Amount */
             amount: string | null;
-            base: components["schemas"]["SupportedBase"];
+            /** Base */
+            base: string;
             /** Generation */
             generation: string;
-            quote: components["schemas"]["SupportedQuote"];
+            /** Quote */
+            quote: string;
             /**
              * Readiness
              * @enum {string}
@@ -1256,6 +1463,8 @@ export interface components {
         };
         /** PricesView */
         PricesView: {
+            /** Catalog Revision */
+            catalog_revision: string;
             /**
              * Delivery Status
              * @enum {string}
@@ -1274,6 +1483,26 @@ export interface components {
              * Format: date-time
              */
             server_time: string;
+        };
+        /** ProtocolEnableRequest */
+        ProtocolEnableRequest: {
+            /**
+             * Deployment Generation
+             * Format: uuid
+             */
+            deployment_generation: string;
+            /** Expected Revision */
+            expected_revision: number;
+        };
+        /** PublicCatalogResponse */
+        PublicCatalogResponse: {
+            /** Active Pairs */
+            active_pairs: [
+                string,
+                string
+            ][];
+            /** Revision */
+            revision: number;
         };
         /** RefreshTarget */
         RefreshTarget: {
@@ -1393,10 +1622,6 @@ export interface components {
              */
             user_id: string;
         };
-        /** @enum {string} */
-        SupportedBase: "BTC" | "ETH";
-        /** @constant */
-        SupportedQuote: "USDT";
         /**
          * Timeframe
          * @enum {string}
@@ -1454,6 +1679,162 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    admin_catalog_admin_supported_symbols_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogResponse"];
+                };
+            };
+        };
+    };
+    add_symbol_admin_supported_symbols_post: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CatalogMutation"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogCommandResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    enable_catalog_mutations_admin_supported_symbols_protocol_enable_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProtocolEnableRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    remove_symbol_admin_supported_symbols__base___quote__delete: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                base: string;
+                quote: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CatalogMutation"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogCommandResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    preview_admin_supported_symbols__base___quote__impact_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                base: string;
+                quote: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImpactResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_keys_api_keys_get: {
         parameters: {
             query?: never;
@@ -1969,6 +2350,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Health"];
+                };
+            };
+        };
+    };
+    catalog_market_catalog_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicCatalogResponse"];
                 };
             };
         };

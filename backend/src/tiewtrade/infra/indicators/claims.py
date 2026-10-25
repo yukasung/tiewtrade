@@ -11,6 +11,7 @@ from tiewtrade.infra.indicators.session import (
     IndicatorWriterSession,
     require_indicator_writer_session,
 )
+from tiewtrade.infra.platform import record_timeframe_readiness, runtime_symbols
 
 
 class AttemptOutcome(StrEnum):
@@ -144,8 +145,30 @@ async def publish(
     session = require_indicator_writer_session(session)
     await _timeouts(session)
     function = "publish_indicator_numeric_failure" if numeric else "publish_indicator_ready"
-    return PublicationResult(
+    result = PublicationResult(
         (
             await session.execute(f"SELECT public.{function}({_IDENTITY})", claim.parameters())
         ).scalar_one()
     )
+    if result is PublicationResult.READY:
+        catalog = next(
+            (
+                row
+                for row in await runtime_symbols(session)
+                if (row.base, row.quote) == (claim.base, claim.quote) and row.mode == "PREPARING"
+            ),
+            None,
+        )
+        if catalog is not None:
+            ready_at = cast(
+                datetime, (await session.execute("SELECT clock_timestamp()")).scalar_one()
+            )
+            await record_timeframe_readiness(
+                session,
+                base=claim.base,
+                quote=claim.quote,
+                catalog_revision=catalog.revision,
+                timeframe=claim.timeframe,
+                ready_at=ready_at,
+            )
+    return result

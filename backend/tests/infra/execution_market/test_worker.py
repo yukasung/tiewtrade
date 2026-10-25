@@ -9,7 +9,7 @@ from typing import Any
 from uuid import NAMESPACE_URL, UUID, uuid4, uuid5
 
 import pytest
-from sqlalchemy import Result
+from sqlalchemy import Result, text
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine, create_async_engine
 
 from tests.infra.execution_market.commit_proxy import drop_commit_reply
@@ -1066,6 +1066,158 @@ async def test_new_command_is_not_starved_by_an_active_order(
         }
     finally:
         await market.dispose()
+
+
+async def test_catalog_removal_rejects_queued_buy_and_cancels_resting_buy(
+    engine_engine: AsyncEngine,
+    scan_engine: AsyncEngine,
+    migrator_engine: AsyncEngine,
+    owner: UUID,
+    wallet: PaperWalletSnapshot,
+) -> None:
+    market, _, _, _ = await ready_public_sources()
+    resting = OrderIntent(
+        uuid4(),
+        uuid4(),
+        OrderScope(owner, UUID(str(wallet.episode_id)), TradingMode.PAPER),
+        PositionPair("BTC", "USDT"),
+        OrderOrigin.MANUAL,
+        ExecutionSide.BUY,
+        OrderType.LIMIT,
+        BaseSize(Quantity.of(1, "BTC")),
+        Money.of(90, "USDT"),
+        TimeInForce.GTC,
+    )
+    queued = replace(resting, order_id=uuid4(), idempotency_key=uuid4())
+    catalog_events: tuple[UUID, UUID] | None = None
+    try:
+        async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+            resting_command = await submit_order(
+                session, wallet_id=wallet.wallet_id, intent=resting
+            )
+        await run_paper_order_round(
+            engine=engine_engine,
+            scan_engine=scan_engine,
+            worker="catalog-resting-admit",
+            policy=AllowPolicy(),
+        )
+        async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+            queued_command = await submit_order(session, wallet_id=wallet.wallet_id, intent=queued)
+            revisions = (
+                (
+                    await session.execute(
+                        "SELECT payload->>'catalog_revision' FROM paper_order_commands "
+                        "WHERE id IN (:resting,:queued) ORDER BY id",
+                        {
+                            "resting": resting_command.command_id,
+                            "queued": queued_command.command_id,
+                        },
+                    )
+                )
+                .scalars()
+                .all()
+            )
+            assert revisions and all(int(value) >= 2 for value in revisions)
+
+        # The pair is active again before the worker resumes. Commands admitted
+        # before the intervening removal must still be terminally rejected/canceled.
+        catalog_events = await _simulate_btc_remove_and_readd(migrator_engine)
+        await asyncio.sleep(0.22)
+        for index in range(3):
+            await run_paper_order_round(
+                engine=engine_engine,
+                scan_engine=scan_engine,
+                worker=f"catalog-removal-{index}",
+                policy=AllowPolicy(),
+            )
+
+        async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+            resting_result = await get_order_command(session, resting_command.command_id)
+            queued_result = await get_order_command(session, queued_command.command_id)
+            projection = (
+                await session.execute(
+                    "SELECT status,filled_quantity FROM paper_order_projections "
+                    "WHERE order_id=:order",
+                    {"order": resting.order_id},
+                )
+            ).one()
+            canceled = (
+                await session.execute(
+                    "SELECT count(*) FROM paper_order_events "
+                    "WHERE order_id=:order AND event_kind='CANCELED'",
+                    {"order": resting.order_id},
+                )
+            ).scalar_one()
+            current = await get_wallet(session)
+        assert resting_result is not None and resting_result.state == "SUCCEEDED"
+        assert queued_result is not None
+        assert queued_result.failure_code == "CATALOG_PAIR_REMOVED"
+        assert projection.status == "CANCELED" and projection.filled_quantity == 0
+        assert canceled == 1
+        assert current is not None and current.balance == wallet.balance
+    finally:
+        if catalog_events is not None:
+            await _restore_btc_seed_catalog(migrator_engine, catalog_events)
+        await market.dispose()
+
+
+async def _simulate_btc_remove_and_readd(engine: AsyncEngine) -> tuple[UUID, UUID]:
+    removed_command, active_command = uuid4(), uuid4()
+    async with engine.begin() as connection:
+        await connection.execute(
+            text(
+                """INSERT INTO supported_symbol_events(
+                revision,command_id,base,quote,status,reason_code)
+                VALUES(3,:removed,'BTC','USDT','REMOVED','F38_INITIAL_CATALOG'),
+                  (4,:active,'BTC','USDT','ACTIVE','F38_INITIAL_CATALOG')"""
+            ),
+            {"removed": removed_command, "active": active_command},
+        )
+        await connection.execute(
+            text(
+                "UPDATE supported_symbol_fences SET status='ACTIVE',revision=4,"
+                "command_id=:active WHERE base='BTC' AND quote='USDT'"
+            ),
+            {"active": active_command},
+        )
+        await connection.execute(
+            text("UPDATE supported_symbol_catalog_control SET current_revision=4 WHERE id=1")
+        )
+    return removed_command, active_command
+
+
+async def _restore_btc_seed_catalog(engine: AsyncEngine, commands: tuple[UUID, UUID]) -> None:
+    async with engine.begin() as connection:
+        for table in (
+            "supported_symbol_events",
+            "supported_symbol_fences",
+            "supported_symbol_catalog_control",
+        ):
+            await connection.execute(text(f"ALTER TABLE {table} DISABLE TRIGGER USER"))
+        try:
+            await connection.execute(
+                text(
+                    "UPDATE supported_symbol_fences SET status='ACTIVE',revision=1,"
+                    "command_id='00000000-0000-0000-0000-000000000001' "
+                    "WHERE base='BTC' AND quote='USDT'"
+                )
+            )
+            await connection.execute(
+                text("UPDATE supported_symbol_catalog_control SET current_revision=2 WHERE id=1")
+            )
+            await connection.execute(
+                text("DELETE FROM supported_symbol_events WHERE command_id IN (:removed,:active)"),
+                {"removed": commands[0], "active": commands[1]},
+            )
+        finally:
+            for table in reversed(
+                (
+                    "supported_symbol_events",
+                    "supported_symbol_fences",
+                    "supported_symbol_catalog_control",
+                )
+            ):
+                await connection.execute(text(f"ALTER TABLE {table} ENABLE TRIGGER USER"))
 
 
 async def test_downstream_position_conflict_is_durable_without_partial_fill(

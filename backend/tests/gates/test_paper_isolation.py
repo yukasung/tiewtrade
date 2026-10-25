@@ -70,6 +70,7 @@ ALLOWED_INTERNAL_IMPORTS = frozenset(
         "tiewtrade.infra.paper_orders.matching_storage",
         "tiewtrade.infra.paper_orders.worker",
         "tiewtrade.infra.positions",
+        "tiewtrade.infra.platform.effects",
         "tiewtrade.infra.market_data.order_book_codec",
         "tiewtrade.infra.market_data.order_book_storage",
         "tiewtrade.infra.market_data.realtime_storage",

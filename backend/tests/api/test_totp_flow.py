@@ -882,7 +882,11 @@ def test_a_challenge_opens_no_protected_route(client: TestClient) -> None:
         client.cookies.clear()
         client.cookies.set(SESSION_COOKIE, challenge)
         client.get("/auth/csrf")
-        target = path.replace("{key_id}", str(uuid4()))
+        target = (
+            path.replace("{key_id}", str(uuid4()))
+            .replace("{base}", "BTC")
+            .replace("{quote}", "USDT")
+        )
         response = client.request(
             method,
             target,
@@ -1027,7 +1031,11 @@ def test_a_confirmed_secret_never_appears_on_any_route(client: TestClient) -> No
     # — การเดาเมธอดจากชื่อ path จะทำให้เส้นทางที่เดาผิดตอบ 405 แล้วด่านนี้จะ "เขียว"
     # โดยไม่เคยเห็นคำตอบจริงของมันเลย
     for (method, path), rule in sorted(ROUTE_RULES.items()):
-        target = path.replace("{key_id}", str(uuid4()))
+        target = (
+            path.replace("{key_id}", str(uuid4()))
+            .replace("{base}", "BTC")
+            .replace("{quote}", "USDT")
+        )
         response = client.request(
             method,
             target,

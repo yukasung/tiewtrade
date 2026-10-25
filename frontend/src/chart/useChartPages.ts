@@ -3,7 +3,7 @@ import { ApiRequestError } from "../auth";
 import { candlePage, type CandlePage, type PageDirection, type Series } from "./api";
 
 /** Five bounded pages per user/series, one request at a time; never cache across users. */
-export function useChartPages(user: string, series: Series, halted = false, blockedUntil = 0) {
+export function useChartPages(user: string, series: Series, halted = false, blockedUntil = 0, startEnabled = true) {
   const identity = `${user}/${series.base}/${series.quote}/${series.timeframe}`;
   const [state, setState] = useState<{ identity: string; latest?: CandlePage | undefined; page?: CandlePage | undefined;
     error?: unknown; loading: boolean; retryAt: number }>({ identity, loading: false, retryAt: 0 });
@@ -51,7 +51,9 @@ export function useChartPages(user: string, series: Series, halted = false, bloc
     epoch.current += 1; cache.current.clear(); selected.current = {};
     refreshedBoundary.current = undefined;
     setState({ identity, loading: false, retryAt: cooldown.current });
-    const timer = globalThis.setTimeout(() => { void actions.current.load({}); }, 0);
+    const timer = globalThis.setTimeout(() => {
+      if (startEnabled && !actions.current.halted) void actions.current.load({});
+    }, 0);
     const suspend = () => {
       if (document.visibilityState === "hidden" || !globalThis.navigator.onLine) {
         controller.current?.abort(); controller.current = undefined;
@@ -68,7 +70,7 @@ export function useChartPages(user: string, series: Series, halted = false, bloc
       document.removeEventListener("visibilitychange", suspend); globalThis.removeEventListener("offline", suspend);
       globalThis.removeEventListener("online", suspend);
     };
-  }, [identity]);
+  }, [identity, startEnabled]);
   const current = state.identity === identity ? state : undefined;
   useEffect(() => {
     const remaining = state.retryAt - globalThis.performance.now();

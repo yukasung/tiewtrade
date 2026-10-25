@@ -11,9 +11,9 @@ from fastapi import APIRouter, Depends, Request, Response, WebSocket
 from tiewtrade.core.realtime_prices import MAX_PRICE_AGE, Readiness, readiness
 from tiewtrade.infra.db import DatabaseRole, user_session
 from tiewtrade.infra.db.session import presented_session
-from tiewtrade.infra.market_data.catalog import PAIRS, SOURCE
+from tiewtrade.infra.market_data.catalog import SOURCE
 from tiewtrade.infra.market_data.realtime_records import PriceSnapshot
-from tiewtrade.infra.market_data.realtime_storage import database_now, read_snapshot
+from tiewtrade.infra.market_data.realtime_storage import database_now, read_public_snapshot
 from tiewtrade.infra.realtime.connections import ConnectionLease
 from tiewtrade.infra.realtime.connections import renew as renew_connection
 from tiewtrade.services.api.authentication import Authenticated, current_user, presented_owner
@@ -29,7 +29,8 @@ def snapshot_view(snapshot: PriceSnapshot, *, delivery_connected: bool) -> Price
     now = snapshot.server_time
     stored = {(r.base, r.quote): r for r in snapshot.rows}
     rows: list[PriceRow] = []
-    for base, unit in sorted(PAIRS):
+    pairs = snapshot.catalog_pairs or frozenset((row.base, row.quote) for row in snapshot.rows)
+    for base, unit in sorted(pairs):
         row = stored.get((base, unit))
         q = None if row is None else row.observation
         reconciled = (
@@ -91,6 +92,7 @@ def snapshot_view(snapshot: PriceSnapshot, *, delivery_connected: bool) -> Price
             )
         )
     return PricesView(
+        catalog_revision=str(snapshot.catalog_revision or 0),
         server_time=now,
         delivery_status="CONNECTED" if delivery_connected else "RECOVERING",
         rows=rows,
@@ -102,7 +104,7 @@ async def prices(
     request: Request, response: Response, who: Annotated[Authenticated, Depends(current_user)]
 ) -> PricesView:
     async with user_session(engine_for(request, DatabaseRole.API), who.user_id) as session:
-        snapshot = await read_snapshot(session)
+        snapshot = await read_public_snapshot(session)
     response.headers["Cache-Control"] = "no-store"
     broadcaster = getattr(request.app.state, "price_broadcaster", None)
     return snapshot_view(

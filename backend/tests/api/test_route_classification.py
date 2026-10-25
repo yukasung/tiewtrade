@@ -117,6 +117,9 @@ def test_the_routes_that_require_reverification_are_pinned() -> None:
         ("POST", "/auth/totp/recovery-codes"),
         ("POST", "/api-keys"),
         ("POST", "/trading-account/use"),
+        ("POST", "/admin/supported-symbols"),
+        ("DELETE", "/admin/supported-symbols/{base}/{quote}"),
+        ("POST", "/admin/supported-symbols/protocol/enable"),
     }
 
 

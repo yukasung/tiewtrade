@@ -26,6 +26,7 @@ dependencies = [
 indicator-builder = "tiewtrade.services.indicator_builder.main:main"
 paper-wallet-worker = "tiewtrade.services.engine.paper_wallet_main:main"
 paper-order-worker = "tiewtrade.services.engine.paper_order_main:main"
+platform-owner-bootstrap = "tiewtrade.services.platform_bootstrap.main:main"
 
 [dependency-groups]
 dev = [

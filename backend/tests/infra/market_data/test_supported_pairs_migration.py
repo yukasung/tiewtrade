@@ -11,6 +11,8 @@ from alembic.util import load_python_file
 from sqlalchemy import Connection, text
 from sqlalchemy.ext.asyncio import AsyncEngine
 
+from tests.infra.db.test_migrations import _alembic
+
 
 def _run(migration: Any, direction: str, connection: Connection) -> None:
     with Operations.context(MigrationContext.configure(connection)):
@@ -27,6 +29,7 @@ def _migration() -> Any:
 async def test_catalog_downgrade_uses_source_maintenance_for_protected_candles(
     migrator_engine: AsyncEngine,
 ) -> None:
+    _alembic("downgrade", "0030")
     migration = _migration()
     downgraded = False
     try:
@@ -58,11 +61,13 @@ async def test_catalog_downgrade_uses_source_maintenance_for_protected_candles(
         if downgraded:
             async with migrator_engine.begin() as connection:
                 await connection.run_sync(lambda sync: _run(migration, "upgrade", sync))
+        _alembic("upgrade", "head")
 
 
 async def test_catalog_migration_failure_rolls_back_every_change(
     migrator_engine: AsyncEngine, monkeypatch: pytest.MonkeyPatch
 ) -> None:
+    _alembic("downgrade", "0030")
     migration = _migration()
     original_digests = cast(Callable[[], dict[str, tuple[int, str]]], migration._supported_digests)
 
@@ -118,6 +123,7 @@ async def test_catalog_migration_failure_rolls_back_every_change(
             ).scalar_one()
             if "SOL" in constraint:
                 await connection.run_sync(lambda sync: _run(migration, "upgrade", sync))
+        _alembic("upgrade", "head")
 
     async with migrator_engine.connect() as connection:
         assert (
