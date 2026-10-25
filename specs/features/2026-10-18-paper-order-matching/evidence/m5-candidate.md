@@ -622,3 +622,29 @@ made in the synchronization; the evidence/validation/roadmap updates only record
 results. Required CI for the synchronized head is tracked on PR #33 and must complete
 before merging that PR. The feature PR remains open; no merge into main or production
 activation is part of this continuation. V-19 remains Pending Full Validation.
+
+
+## Synchronized-head CI and subsequent F-14 integration — 2026-10-25
+
+Head `1160a4a13d76493696df8161ada47fa9fb46c14a` passed all six push CI jobs
+([40170345394](https://github.com/yukasung/tiewtrade/actions/runs/40170345394));
+backend **3270 passed, 2 deselected** in **775.98s**. PR CI
+[40170347596](https://github.com/yukasung/tiewtrade/actions/runs/40170347596)
+passed all six jobs after one backend-only rerun: **3270 passed, 2 deselected**
+in **723.61s**. Mypy checked 477 files and all seven import contracts passed.
+
+The PR's first backend attempt had **1 failed, 3269 passed, 2 deselected** in
+**728.36s**: `test_account_summary_is_isolated_from_the_previous_owner` failed
+inside unchanged `enable_totp`, returning an invalid-code 403 before account
+assertions. That helper creates the previous-step TOTP before obtaining CSRF;
+crossing the 30s boundary can expire that code. A deterministic core check confirmed
+this mechanism, but CI logs do not prove that exact cause. No auth runtime/test
+was changed; this failed attempt remains evidence, not relabeled Passed.
+
+During CI, main advanced to `eb8c7d8` via F-14 PR #32. Its position replay fix and
+regression tests merge automatically; the only conflict is adjacent F-14/F-15
+roadmap rows, resolved by preserving each feature's own row. Main is synchronized
+again within the owner-directed commit/push continuation. The final combined
+candidate requires fresh required CI on PR #33 because position storage is a
+matching dependency. No merge into main or production activation is authorized;
+V-19 remains Pending Full Validation.
