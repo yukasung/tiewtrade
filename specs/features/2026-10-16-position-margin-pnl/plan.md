@@ -288,3 +288,15 @@ F-13 reset success หรือ Live writer เพื่อทำให้ F-14 
 `tiewtrade.core.trading_account` และ re-export ผ่าน path เดิม เพื่อให้การ import Paper position/audit
 ไม่โหลด credential/signing storage; เพิ่ม snapshot completeness/time, initialization replay และ
 projection revision/permission constraints โดยไม่เปลี่ยนสูตร position/PnL หรือขอบเขต F-15
+
+### Review remediation — เจ้าของสั่งแก้ 2026-10-25
+
+รักษา exact replay contract ใน §3.5/§4.2 หลัง reset: ใช้ owner advisory lock และ
+`paper_position_activity`/`paper_wallet_state` ใน `infra/positions/storage.py` เดิม
+อ่าน immutable event ของ episode ที่ปิดแล้วเพื่อคืนผล replay โดยไม่มี write;
+ทุกคำขอที่ไม่ใช่ durable replay ยังต้องผ่าน active-episode fence ก่อนบันทึก conflict
+หรือผลการเงินใหม่ รวมถึง source initialization ที่ยังต้องอยู่ใน active episode เท่านั้น
+ใช้ production fill/correction/reset flow ใน
+`backend/tests/infra/execution_market/test_worker.py` พิสูจน์ RECORD/REPLACE/VOID replay,
+owner isolation และการปฏิเสธ new/conflicting event ในรอบเก่า โดยตรวจ ledger,
+position/activity/revision และ audit ไม่เปลี่ยน ไม่แก้สูตรหรือเพิ่ม trading rule

@@ -75,7 +75,9 @@ def _activity(row: Mapping[str, Any] | RowMapping) -> PositionActivity:
     )
 
 
-async def _lock_active(session: UserSession, episode_id: UUID) -> RowMapping:
+async def _lock_episode(
+    session: UserSession, episode_id: UUID, *, require_active: bool = True
+) -> RowMapping:
     await session.execute(
         "SELECT pg_advisory_xact_lock(hashtextextended(:scope,0))",
         {"scope": f"paper-wallet:{session.user_id}"},
@@ -83,13 +85,18 @@ async def _lock_active(session: UserSession, episode_id: UUID) -> RowMapping:
     row = (
         (
             await session.execute(
-                """SELECT a.* FROM paper_wallet_state s
+                """SELECT a.*,s.active_episode_id FROM paper_wallet_state s
                 JOIN paper_position_activity a
                   ON a.wallet_id=s.wallet_id AND a.user_id=s.user_id
-                 AND a.episode_id=s.active_episode_id
-                WHERE s.user_id=:owner AND s.active_episode_id=:episode
+                 AND a.episode_id=:episode
+                WHERE s.user_id=:owner
+                  AND (NOT :require_active OR s.active_episode_id=:episode)
                 FOR UPDATE OF s,a""",
-                {"owner": session.user_id, "episode": episode_id},
+                {
+                    "owner": session.user_id,
+                    "episode": episode_id,
+                    "require_active": require_active,
+                },
             )
         )
         .mappings()
@@ -171,7 +178,7 @@ async def initialize_position_source(
     checked = require_user_session(session)
     if type(initialization_id) is not UUID or _PROOF.fullmatch(source_proof) is None:
         raise PositionIntegrityError("invalid position source proof")
-    row = await _lock_active(checked, episode_id)
+    row = await _lock_episode(checked, episode_id)
     current = _activity(row)
     if current.availability is PositionAvailability.READY and row["source_proof"] == source_proof:
         return current
@@ -419,7 +426,7 @@ async def apply_position_event(
     if kind is not PositionEventKind.RECORD and type(supersedes_event_id) is not UUID:
         raise PositionIntegrityError("correction must identify its predecessor")
 
-    activity_row = await _lock_active(checked, episode_id)
+    activity_row = await _lock_episode(checked, episode_id, require_active=False)
     current = _activity(activity_row)
     rows = await _event_rows(checked, episode_id)
     by_id = {row["id"]: row for row in rows}
@@ -446,15 +453,20 @@ async def apply_position_event(
         )
 
     existing = by_id.get(event_id)
+    if existing is not None and existing["request_fingerprint"] == fingerprint:
+        return PositionWriteResult(PositionWriteStatus.REPLAYED, event_id, current)
+    if existing is None:
+        matching = next((row for row in rows if row["request_fingerprint"] == fingerprint), None)
+        if matching is not None:
+            return PositionWriteResult(PositionWriteStatus.REPLAYED, matching["id"], current)
+    # Closed episodes permit durable replay only. Fence every new write, including
+    # conflict/audit writes, after reading history under the same financial lock.
+    if activity_row["active_episode_id"] != episode_id:
+        raise PositionIntegrityError("active Paper episode is unavailable")
     if existing is not None:
-        if existing["request_fingerprint"] == fingerprint:
-            return PositionWriteResult(PositionWriteStatus.REPLAYED, event_id, current)
         return await _record_event_conflict(
             checked, current, event_id, fact.pair, fingerprint, "POSITION_DUPLICATE_CONFLICT"
         )
-    matching = next((row for row in rows if row["request_fingerprint"] == fingerprint), None)
-    if matching is not None:
-        return PositionWriteResult(PositionWriteStatus.REPLAYED, matching["id"], current)
     if current.availability is not PositionAvailability.READY:
         return await _record_event_conflict(
             checked, current, event_id, fact.pair, fingerprint, "POSITION_SOURCE_UNKNOWN"

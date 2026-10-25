@@ -7,27 +7,28 @@
 
 | # | ครอบคลุม | เกณฑ์ | ระยะรัน | ผล / หลักฐาน |
 |---|---|---|---|---|
-| V-1 | RQ-1/RQ-2/RQ-3 | core ใช้ `Money`/`Quantity` เท่านั้น ไม่มี float/Decimal ภายนอก money package; Spot position ติดลบ/short/margin/liquidation ถูกปฏิเสธ | พัฒนา + candidate | **Development Passed**; candidate pending |
-| V-2 | RQ-1/RQ-9/RQ-13 | weighted-average examples และ properties ให้ quantity, total cost, realized PnL และ full-close remainder ตรงทุกหลัก | พัฒนา + candidate | **Development Passed**; candidate pending |
-| V-3 | RQ-4/RQ-13 | order intent/ack ไม่เปลี่ยน position; partial fill เปลี่ยนเฉพาะปริมาณ/quote ที่ยืนยันแล้ว | พัฒนา + candidate | **Development Passed** — writer รับเฉพาะ confirmed `ExecutionFact`; F-15 producer gate pending |
-| V-4 | RQ-5/RQ-6 | exact replay ไม่เปลี่ยน revision/audit/effect; ID/payload conflict, gap, duplicate sequence และ reverse order fail closed; retry conflict fingerprint เดิมไม่เพิ่ม conflict/audit ซ้ำ | พัฒนา + candidate | **Development Passed**; candidate pending |
-| V-5 | RQ-7/RQ-9/RQ-10 | RECORD/REPLACE/VOID append-only และ rebuild จาก effective stream ให้ projection เดิมทุกครั้ง; correction คืน exact compensating effects และ append external-fee history; chain แตกแขนง/ขาดเป็น conflict ส่วน ledger/wallet parity เป็น F-15 integration gate | พัฒนา + candidate | **Development Passed**; F-15 ledger integration pending |
-| V-6 | RQ-2/RQ-13/RQ-16 | base/quote/third-asset fee และ rebate ทุกฝั่ง BUY/SELL ให้ exact effects; invalid unit/sign/fee เกิน quantity/proceeds ถูกปฏิเสธ | พัฒนา + candidate | **Development Passed**; candidate pending |
-| V-7 | RQ-11/RQ-12 | fresh latest trade คำนวณ unrealized ตรง; stale/disconnected/unreconciled/generation mismatch/unit mismatch คืน unavailable ไม่มีเลขเก่าหรือศูนย์ปลอม | พัฒนา + candidate | **Development Passed**; candidate pending |
-| V-8 | RQ-7/RQ-8/RQ-9/RQ-10 | PostgreSQL FK/CHECK/FORCE RLS/grants/append-only triggers กันข้าม owner/mode/episode; API/SCAN อ่านหรือเขียน F-14 state ไม่ได้ | พัฒนา + candidate | **Development Passed**; candidate security gates pending |
-| V-9 | RQ-7/RQ-15/RQ-19 | fill writers พร้อมกัน, fill แข่ง episode/reset lock และ snapshot readers ให้ผล serializable; writer ไม่เขียน closed/stale episode | พัฒนา + candidate | **Partial** — writer/snapshot race ผ่าน; reset/open-order integration รอ F-15 |
-| V-10 | RQ-5/RQ-7/RQ-9/RQ-16 | fault injection ทุก F-14 write boundary รวม event/projection/activity/external-fee/audit, cancellation, statement timeout และ deferred commit failure rollback ทั้งชุด; retry เดิมมีผลครั้งเดียว ส่วน order/ledger faults เป็น F-15 integration gate | พัฒนา + candidate | **Development Passed** สำหรับ F-14 boundaries; F-15 order/ledger pending |
-| V-11 | RQ-14/RQ-15 | activity tri-state/lifecycle: missing/UNKNOWN/CONFLICTED/error/stale revision ไม่เป็น idle; READY ต้องมาจาก atomic source initialization; conflict ไม่กลับ READY เอง; READY zero/positive แยกถูก; F-13 reset ยังคง `ACTIVITY_UNKNOWN` ใน F-14 | พัฒนา + candidate | **Development Passed**; candidate pending |
-| V-12 | RQ-1/RQ-18 | fixture เดียวผ่าน shared fold สำหรับ Paper/Live adapter boundary ให้ state/effects/errors ตรงกัน ไม่มี implementation สูตรคู่ขนาน | พัฒนา + candidate | **Development Passed** — scenario matrix และ correction parity; candidate pending |
-| V-13 | RQ-8/RQ-18 | Paper entrypoint/tests ทำงานโดยไม่มี venue key/network/Live executor; negative fixtures ที่ import/call dependency ต้องทำ gate แดง | พัฒนา + candidate | **Development Passed** — AST negative fixture + isolated runtime import; candidate pending |
-| V-14 | RQ-10/RQ-17 | position changes/corrections/conflicts มี typed audit exact owner/episode/pair/result หนึ่งครั้ง ไม่มี secret/raw payload และแก้ย้อนหลังไม่ได้ | พัฒนา + candidate | **Development Passed**; candidate pending |
+| V-1 | RQ-1/RQ-2/RQ-3 | core ใช้ `Money`/`Quantity` เท่านั้น ไม่มี float/Decimal ภายนอก money package; Spot position ติดลบ/short/margin/liquidation ถูกปฏิเสธ | พัฒนา + candidate | **Passed — historical candidate 2026-10-18**; Required CI checkpoint ด้านล่าง |
+| V-2 | RQ-1/RQ-9/RQ-13 | weighted-average examples และ properties ให้ quantity, total cost, realized PnL และ full-close remainder ตรงทุกหลัก | พัฒนา + candidate | **Passed — historical candidate 2026-10-18**; weighted-cost/property gates ตาม Required CI checkpoint |
+| V-3 | RQ-4/RQ-13 | order intent/ack ไม่เปลี่ยน position; partial fill เปลี่ยนเฉพาะปริมาณ/quote ที่ยืนยันแล้ว | พัฒนา + candidate | **Passed** — F-14 candidate 2026-10-18; F-15 V-3/V-10 และ V-18 final candidate ยืนยัน confirmed partial fills |
+| V-4 | RQ-5/RQ-6 | exact replay ไม่เปลี่ยน revision/audit/effect; ID/payload conflict, gap, duplicate sequence และ reverse order fail closed; retry conflict fingerprint เดิมไม่เพิ่ม conflict/audit ซ้ำ | พัฒนา + candidate | **Passed — historical candidate 2026-10-18**; closed-episode replay เป็น remediation 2026-10-25 ด้านล่าง |
+| V-5 | RQ-7/RQ-9/RQ-10 | RECORD/REPLACE/VOID append-only และ rebuild จาก effective stream ให้ projection เดิมทุกครั้ง; correction คืน exact compensating effects และ append external-fee history; chain แตกแขนง/ขาดเป็น conflict ส่วน ledger/wallet parity เป็น F-15 integration gate | พัฒนา + candidate | **Passed** — F-14 candidate 2026-10-18; [F-15 V-10/V-15/V-18](../2026-10-18-paper-order-matching/validation.md) ปิด ledger/wallet parity และ fault integration |
+| V-6 | RQ-2/RQ-13/RQ-16 | base/quote/third-asset fee และ rebate ทุกฝั่ง BUY/SELL ให้ exact effects; invalid unit/sign/fee เกิน quantity/proceeds ถูกปฏิเสธ | พัฒนา + candidate | **Passed — historical candidate 2026-10-18**; exact fee/rebate gates ตาม Required CI checkpoint |
+| V-7 | RQ-11/RQ-12 | fresh latest trade คำนวณ unrealized ตรง; stale/disconnected/unreconciled/generation mismatch/unit mismatch คืน unavailable ไม่มีเลขเก่าหรือศูนย์ปลอม | พัฒนา + candidate | **Passed — historical candidate 2026-10-18**; freshness/generation/valuation gates ตาม Required CI checkpoint |
+| V-8 | RQ-7/RQ-8/RQ-9/RQ-10 | PostgreSQL FK/CHECK/FORCE RLS/grants/append-only triggers กันข้าม owner/mode/episode; API/SCAN อ่านหรือเขียน F-14 state ไม่ได้ | พัฒนา + candidate | **Passed** — F-14 candidate 2026-10-18; F-15 V-9/V-14 ปิด owner-scoped reset readiness ตาม integration amendment |
+| V-9 | RQ-7/RQ-15/RQ-19 | fill writers พร้อมกัน, fill แข่ง episode/reset lock และ snapshot readers ให้ผล serializable; writer ไม่เขียน closed/stale episode | พัฒนา + candidate | **Passed — historical integration** — [F-15 V-11/V-14/V-15/V-18](../2026-10-18-paper-order-matching/validation.md) ปิด reset/open-order races; closed-episode replay เป็น remediation 2026-10-25 |
+| V-10 | RQ-5/RQ-7/RQ-9/RQ-16 | fault injection ทุก F-14 write boundary รวม event/projection/activity/external-fee/audit, cancellation, statement timeout และ deferred commit failure rollback ทั้งชุด; retry เดิมมีผลครั้งเดียว ส่วน order/ledger faults เป็น F-15 integration gate | พัฒนา + candidate | **Passed** — F-14 candidate 2026-10-18; F-15 V-10/V-15/V-18 ปิด order/ledger rollback และ lost-ack recovery |
+| V-11 | RQ-14/RQ-15 | activity tri-state/lifecycle: missing/UNKNOWN/CONFLICTED/error/stale revision ไม่เป็น idle; READY ต้องมาจาก atomic source initialization; conflict ไม่กลับ READY เอง; READY zero/positive แยกถูก; F-13 reset ยังคง `ACTIVITY_UNKNOWN` ใน F-14 | พัฒนา + candidate | **Passed** — F-14 candidate 2026-10-18; F-15 V-13/V-14 ยืนยัน atomic initialization และ reset success หลัง authoritative sources พร้อม |
+| V-12 | RQ-1/RQ-18 | fixture เดียวผ่าน shared fold สำหรับ Paper/Live adapter boundary ให้ state/effects/errors ตรงกัน ไม่มี implementation สูตรคู่ขนาน | พัฒนา + candidate | **Passed — historical candidate 2026-10-18**; shared-fold/parity gates ตาม Required CI checkpoint |
+| V-13 | RQ-8/RQ-18 | Paper entrypoint/tests ทำงานโดยไม่มี venue key/network/Live executor; negative fixtures ที่ import/call dependency ต้องทำ gate แดง | พัฒนา + candidate | **Passed — historical candidate 2026-10-18**; AST negative fixture/runtime isolation ตาม Required CI checkpoint |
+| V-14 | RQ-10/RQ-17 | position changes/corrections/conflicts มี typed audit exact owner/episode/pair/result หนึ่งครั้ง ไม่มี secret/raw payload และแก้ย้อนหลังไม่ได้ | พัฒนา + candidate | **Passed — historical candidate 2026-10-18**; typed immutable audit gates ตาม Required CI checkpoint |
 | V-15 | RQ-7/RQ-8/RQ-10 | migration `0031→0032→0031→0032` บนฐานว่างผ่าน; downgrade เมื่อมี F-14 data ปฏิเสธโดย data เดิมอยู่ครบ | candidate | **Passed 2026-10-16** บน PostgreSQL แยกพอร์ต 55439 |
-| V-16 | RQ-1 to RQ-19 | relevant backend regression, lint, format, types, import contracts, migration/security/secret gates และ required CI ผ่านบน source สุดท้าย | candidate ก่อน merge | **Passed 2026-10-18** - local full backend 100%; CI run 39097281613 ผ่านครบ 6 jobs, backend 2818 passed |
+| V-16 | RQ-1 to RQ-19 | relevant backend regression, lint, format, types, import contracts, migration/security/secret gates และ required CI ผ่านบน source สุดท้าย | candidate ก่อน merge | **Passed — historical candidate 2026-10-18** — local full backend และ CI 39097281613, 2818 passed; remediation 2026-10-25 local candidate coverage ครบ 3258 tests และ static gates ผ่านตาม checkpoint ด้านล่าง; required CI บน commit สุดท้ายยัง Pending |
 | V-17 | nonfunctional | deterministic rebuild และ snapshot workload ตามงบที่อนุมัติ ไม่ล็อก owner อื่นและไม่มี unbounded memory/query growth | release checkpoint | **Pending Full Validation** |
 
 F-14 จะเป็น **Development Complete** ได้เมื่อ V-1–V-16 ผ่านและ review ไม่มี Critical/High
-โดย V-17 คง Pending Full Validation ตาม testing standard งานนี้ไม่ทำให้ F-13 Completed:
-reset success/open-order race ยังต้องรอ F-15 และ validation amendment ของ F-13
+โดย V-17 คง Pending Full Validation ตาม testing standard; reset success/open-order races
+ปิดด้วย F-15 integration ตาม amendment แล้ว แต่ F-13/F-14 ยังไม่ใช่ Completed ก่อนตรวจรับระบบ
+ผล historical candidate ไม่ใช่หลักฐาน required CI ของ remediation ที่ยังไม่ commit
 
 ## ตัวเลขตัวอย่างที่ต้องพิสูจน์
 
@@ -245,3 +246,124 @@ required CI บน source สุดท้าย; V-17 คง **Pending Full Vali
 - backend รอบแรกผ่าน 2817 tests และล้ม 1 F-11 disconnect test เพราะ SQLSTATE 08003 ถูกแปลเป็น InfraError; failed-job rerun โดยไม่แก้ source ผ่าน 2818 tests, 2 deselected
 - V-16 ผ่านครบและ final Critical/High review ไม่มี finding; F-14 เลื่อนเป็น **Development Complete**
 - V-17 ยังคง **Pending Full Validation** และไม่ถือว่า F-14 Completed หรือพร้อม production
+
+## Review remediation — 2026-10-25
+
+เจ้าของสั่งแก้ Medium/Low findings บนฐาน `96bae0e`; branch
+`fix/f14-review-findings`, uncommitted diff ใน worktree `/tmp/tiewtrade-f14-review`.
+ใช้ PostgreSQL 16 แยก `tiewtrade-f14-review-pg`, พอร์ต `55452`, database `tiewtrade`,
+bootstrap roles จริงและ Alembic upgrade ถึง head ผ่าน; ไม่ใช้ฐานข้อมูล application
+และไม่มี Binance call หรือ Live order
+
+- V-4/V-9/V-10: owner advisory lock และ row locks เดิมครอบการอ่าน immutable replay
+  ของ episode เก่า; RECORD/REPLACE/VOID exact retry คืน `REPLAYED` และไม่มี effects
+  ทุกคำขอที่จะเขียนใหม่ รวม conflict/audit ต้องผ่าน active-episode fence ก่อน
+- เพิ่ม regression ใน `tests/infra/execution_market/test_worker.py` ต่อจาก production
+  fill/correction/VOID และ real wallet reset; ตรวจ canonical replay ด้วย event ID เดิม/ใหม่,
+  new/conflicting event, new correction, foreign owner และ initialization ของ closed episode
+  พร้อมเทียบ ledger/event/external-fee/conflict/audit rows และ position/activity/revision
+  ทั้งรอบเก่าและรอบใหม่ว่าไม่เปลี่ยน
+- Regression บน writer เดิมล้มที่ `_lock_active` หลัง reset ตาม finding; หลังแก้ผ่าน
+  ชุด 16 fault/restart/commit-outcome scenarios ของ test เดิมทั้งหมด
+- คำสั่ง targeted: `pytest -p no:cacheprovider tests/core/test_positions.py
+  tests/core/test_position_parity.py tests/infra/positions
+  tests/infra/execution_market/test_worker.py tests/infra/execution_market/test_executions.py
+  tests/infra/paper_wallet/test_storage.py -q --tb=short`.
+  ผลรอบรวม **103 passed / 1 failed** จาก 104 tests: catalog re-add test ล้มที่
+  `publish_input` ด้วย `WriterLeaseLost` หลังจำลอง remove/re-add (นอก position writer).
+  Test ถือ lease เดิมข้ามขั้นตอนฐานข้อมูลและไม่มี renewal ก่อน publish นั้น;
+  รัน test เดิมแยกเพื่อแยก timing variation แล้ว **1 passed** โดยไม่แก้ source/test.
+  เก็บ failure รอบรวมไว้ ไม่อ้างว่ารอบรวมนั้นเขียวครบ
+- Ruff check/format ของ source และ test ที่แก้ผ่าน; mypy ของ
+  `src/tiewtrade/infra/positions/storage.py` ผ่าน; `git diff --check` ผ่าน
+- แจ้ง **Ready for Code Review** แล้ว; final review ตรวจ active/new-write fence,
+  replay fingerprint/identity precedence, owner/RLS และ lock/reset ordering ไม่พบ
+  Critical/High หรือ finding ค้างในขอบเขตการแก้
+- ตาราง V-1–V-16 ชี้ historical F-14 candidate และ F-15 integration evidence ล่าสุดแล้ว
+  โดยไม่ใช้หลักฐานเก่าอ้างว่า remediation ผ่าน required CI
+- ยังไม่รัน full candidate/required CI ของ diff นี้; ต้องผ่านก่อน merge
+  V-17 คง **Pending Full Validation**; ไม่มี commit/push/merge และไม่เลื่อนเป็น Completed
+- เวลาอ่าน/เขียน/tests/review ไม่ได้จับแยกครบ จึงไม่อ้างเวลารวม
+
+
+## Local candidate checkpoint — 2026-10-25
+
+เจ้าของสั่งเริ่ม candidate validation ของ `fix/f14-review-findings` บนฐาน `96bae0e`.
+Source/test diff SHA-256 ก่อนและหลังตรวจตรงกัน:
+`4fb5bc2fceaf288ebcc8b5253a71b1ddab4f86b0aff467c72cabccf49ba3e6cc`
+(`git diff -- backend/src/tiewtrade/infra/positions/storage.py
+backend/tests/infra/execution_market/test_worker.py | shasum -a 256`).
+ไม่มี source/test/config/dependency change ระหว่างชุดตรวจ
+
+### Environment และ static gates
+
+- Python 3.12.15; ใช้ venv เดิมกับ `uv.lock` ที่ checksum ตรงกับ worktree;
+  pytest ชี้ source ของ candidate ผ่าน `PYTHONPATH`/`pythonpath=src`
+- PostgreSQL 16 แยก container `tiewtrade-f14-review-pg`, พอร์ต `55452`,
+  database ใหม่ `tiewtrade_candidate`; bootstrap roles/event triggers และ
+  `alembic upgrade head` ถึง `0040` ผ่านก่อนเริ่ม suite
+- Redis แยก `tiewtrade-f14-review-redis`, พอร์ต `56396`; API/MARKET_DATA/test URLs
+  ชี้ instance นี้ทั้งหมด ไม่ใช้ application database/Redis
+- `ruff check .` ผ่าน; `ruff format --check .` ผ่าน **521 files**;
+  `mypy` ผ่าน **476 source files**; import-linter ผ่าน **7 contracts**
+- `git diff --check` ผ่าน; automated suite ไม่ส่ง Live order และไม่เรียก Binance;
+  สอง `venue_contract` tests ถูกแยกตาม pytest/CI configuration เดิม
+
+### Full backend regression และการใช้หลักฐานต่อ
+
+เริ่ม suite ทั้งชุดด้วย `pytest -p no:cacheprovider
+--junitxml=/tmp/tiewtrade-f14-candidate.xml --tb=short` ผ่าน runner
+`/tmp/tiewtrade-f14-run.py` ที่ตั้ง role URLs ของฐาน/Redis แยกข้างต้น
+
+| รอบ | ผล | เวลา pytest | หลักฐาน |
+|---|---|---|---|
+| Initial full collection; หยุดเพื่อวิเคราะห์ failures | **839 passed / 2 failed**, 2 venue-contract deselected; ยังรันไม่ครบ | 490.56s | `/tmp/tiewtrade-f14-candidate.xml` |
+| Failed tests แยกเพื่อวินิจฉัย | TOTP **1 passed**, prepared refresh ยัง failed | 3.47s | `/tmp/tiewtrade-f14-diagnostic.xml` |
+| Prepared refresh บน candidate เดิม ไม่มี instrumentation | **1 passed** | 4.18s | `/tmp/tiewtrade-f14-refresh-confirm.xml` |
+| Continuation 1: ใช้ 841 passed เดิมต่อ | **1460 passed / 1 failed**; หยุดด้วย `-x` | 540.80s | `/tmp/tiewtrade-f14-candidate-continuation-1.xml` |
+| Failed ingestion test แยก | **1 passed** โดยไม่แก้ source/test | 2.74s | `/tmp/tiewtrade-f14-ingestion-confirm.xml` |
+| Continuation 2: ใช้ 2302 passed เดิมต่อ | **956 passed**, ไม่มี failure | 26.12s | `/tmp/tiewtrade-f14-candidate-continuation-2.xml` |
+
+ใช้ผลที่ผ่านแล้วต่อบน diff เดิมตาม testing §7; ไม่แก้ tests, ไม่ใส่ skip/xfail,
+ไม่ลด assertions/timeouts/thresholds. Harness ชั่วคราว `/tmp/f14_candidate_resume.py`
+เทียบ pytest JUnit identities กับ collection จริงและเลือกรันเฉพาะ tests ที่ยังไม่มี
+ผล Passed; มี guard ปฏิเสธ identity ซ้ำหรือผลเดิมที่ไม่ตรง collection. รายงาน
+`/tmp/tiewtrade-f14-candidate-coverage.json` ยืนยัน **3258 selected / 3258 unique passed /
+0 missing / 0 extra**; เป็น coverage รวมจากหลายรอบ ไม่ใช่การอ้างว่ารอบแรกเขียวครบ
+หรือว่ามี single uninterrupted green run
+
+### Failures ที่เก็บไว้และข้อจำกัด
+
+- `tests/api/test_totp_flow.py::test_the_second_step_completes_the_sign_in`:
+  confirm ได้ 403 invalid code; helper สร้างรหัสของช่วงก่อนหน้าจาก wall clock.
+  รันแยกผ่านโดยไม่แก้ source; time-step boundary เป็นความเสี่ยงของ test แต่ยังไม่ได้
+  พิสูจน์เวลาข้าม boundary ของ failure รอบแรก จึงไม่อ้าง root cause ที่ยืนยันแล้ว
+- `tests/api/test_prepared_indicators.py::test_empty_derived_scheduler_refresh_and_rebuild`:
+  consumer ได้ STOPPED; รอบ diagnostic แรกยังเกิดซ้ำ จากนั้น HTTP diagnostic ได้
+  COMPLETE/200 และผ่าน. Test เดียวกันผ่านทั้ง source ก่อนแก้ F-14 และ candidate
+  โดยไม่แก้ source; รอบ candidate ไม่มี instrumentation ผ่านด้วย. ยังไม่ยืนยัน
+  สาเหตุย่อยของ STOPPED รอบแรก จึงเก็บเป็น intermittent validation risk
+- `tests/services/market_data/test_ingestion.py::test_actual_rows_commit_and_complete_after_observations`:
+  COMPLETE ได้ 3 แทน 4; ตรวจฐานทันทีพบ BTC/15m มี `SOURCE_FAILURE` หนึ่งรายการ.
+  รันแยกผ่านโดยไม่แก้ source/test; ไม่ยืนยันสาเหตุย่อยของ source failure
+- Failures ทั้งสามอยู่ใน paths นอก position writer ที่แก้; ไม่มีการแก้โค้ดนอกขอบเขต
+  ผล Failed/partial ข้างต้นยังอยู่ครบ และ CI ต้องเป็นผู้ยืนยัน candidate บน commit สุดท้าย
+
+Local backend regression coverage และ static gates ครบแล้ว; **required CI ยัง Pending**
+เพราะยังไม่มีคำสั่ง commit/push. ไม่อ้างว่าพร้อม merge ก่อน CI ผ่าน และไม่เลื่อนเป็น
+Completed; V-17 คง **Pending Full Validation** ที่ release checkpoint ตามเดิม.
+ช่วงอ่าน/วินิจฉัย/รีวิว/static ไม่ได้จับเวลาแยกครบ จึงไม่อ้างเวลารวมทั้งงาน
+
+
+## Publication checkpoint — 2026-10-25
+
+เจ้าของสั่ง commit/push และเปิด PR หลัง local candidate checkpoint.
+นำ remediation ขึ้นบน `main` ล่าสุด `f6bd712` (PR #31: F-13 reset confirmation และ
+command-status safe errors); ไม่มี conflict หรือ source/test change ของ F-14.
+Diff SHA-256 ของ position writer/regression เทียบ base ใหม่ยังเป็น
+`4fb5bc2fceaf288ebcc8b5253a71b1ddab4f86b0aff467c72cabccf49ba3e6cc`.
+หลัง rebase รัน `tests/services/api/test_paper_wallet_transaction.py` ผ่าน **5 tests**
+ใน 0.37s; `git diff --check` ผ่าน. ใช้ผล F-14 correctness/safety เดิมที่ไม่เปลี่ยนต่อ
+และให้ required CI ของ PR ตรวจ combined candidate บน commit สุดท้าย.
+สถานะ required CI ณ checkpoint นี้ยัง Pending; ติดตามผลจาก PR/Actions ของ branch
+`fix/f14-review-findings`. ไม่มีคำสั่ง merge และ V-17 คง Pending Full Validation
