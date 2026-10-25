@@ -73,7 +73,7 @@ async def test_populated_downgrade_is_refused_without_deleting_command(
     assert result.returncode != 0
     # A newer schema can stop earlier; require its specific safety guard, not any error.
     guards = {
-        "supported-symbol runtime history prevents downgrade": "0039",
+        "supported-symbol runtime history prevents downgrade": "0040",
         "historical Paper order revisions prevent downgrade": "0038",
         "Paper reset audit history prevents downgrade": "0037",
         "matching decision history prevents downgrade": "0036",

@@ -25,7 +25,7 @@
 
 | การตรวจ | ผล |
 |---|---|
-| Alembic single head | `0039 (head)` |
+| Alembic single head | `0040 (head)` |
 | migration `0040 → 0039 → 0040` | ผ่าน |
 | clean schema replay `base → head → base → head` | ผ่าน |
 | F-37 catalog/privilege/bootstrap integration | 7 passed |
