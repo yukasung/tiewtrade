@@ -341,3 +341,20 @@ V-18 local backend regression is **Passed**; required CI on a final commit remai
 pending. Runtime/static/import evidence remains valid; full mypy after the final test
 change passed 477 files. No commit/push/merge is included. V-19 stays
 `Pending Full Validation`; this does not declare Completed or activation.
+
+
+## Required CI checkpoint — 2026-10-25
+
+Remediation commit `f2240a4` passed all six jobs in push CI
+[40169303759](https://github.com/yukasung/tiewtrade/actions/runs/40169303759)
+and PR CI [40169323746](https://github.com/yukasung/tiewtrade/actions/runs/40169323746).
+Backend totals are 3267 and 3270 respectively (2 venue-contract tests deselected);
+PR CI includes main's F-13 remediation. Config, API contract, frontend, containers,
+browser E2E, backend static/import checks and full regression all passed without reruns.
+
+The branch is synchronized with main to satisfy the up-to-date branch requirement.
+Its pre-documentation tree exactly matches the PR merge tree verified by that CI;
+there are no further runtime/test changes. The latest-head required CI is tracked in
+[PR #33](https://github.com/yukasung/tiewtrade/pull/33). This closes the runtime candidate
+CI evidence; merging the PR still requires the synchronized head's checks. V-19 remains
+`Pending Full Validation` at the approved release checkpoint; F-15 is not Completed.

@@ -7,6 +7,7 @@ from uuid import uuid4
 import pytest
 from fastapi import HTTPException, Request, Response
 
+from tiewtrade.infra.db.errors import DatabaseUnavailableError
 from tiewtrade.infra.paper_wallet import (
     PaperCommand,
     PaperCommandState,
@@ -98,3 +99,42 @@ async def test_inconsistent_wallet_is_reported_as_safe_dependency_failure(
 
     assert caught.value.status_code == 503
     assert caught.value.detail == "PAPER_WALLET_DEPENDENCY_UNAVAILABLE"
+
+
+@pytest.mark.parametrize("failure_stage", ["connect", "query", "commit"])
+async def test_command_dependency_failure_is_safe_and_retry_returns_original_result(
+    monkeypatch: pytest.MonkeyPatch, failure_stage: str
+) -> None:
+    unavailable = True
+    command_id = uuid4()
+    terminal = PaperCommand(command_id, PaperCommandState.REJECTED, "EPISODE_CONFLICT")
+
+    def fail(stage: str) -> None:
+        if unavailable and failure_stage == stage:
+            raise DatabaseUnavailableError("internal database detail")
+
+    @asynccontextmanager
+    async def transaction(*args: object, **kwargs: object) -> AsyncIterator[object]:
+        fail("connect")
+        yield object()
+        fail("commit")
+
+    async def read(*args: object, **kwargs: object) -> PaperCommand:
+        fail("query")
+        return terminal
+
+    monkeypatch.setattr(paper_wallet_routes, "engine_for", lambda *args: object())
+    monkeypatch.setattr(paper_wallet_routes, "user_session", transaction)
+    monkeypatch.setattr(paper_wallet_routes, "get_command", read)
+    request = cast(Request, SimpleNamespace())
+    who = cast(Authenticated, SimpleNamespace(user_id=uuid4()))
+    with pytest.raises(HTTPException) as caught:
+        await paper_wallet_routes.read_paper_command(command_id, request, who)
+    assert caught.value.status_code == 503
+    assert caught.value.detail == "PAPER_WALLET_DEPENDENCY_UNAVAILABLE"
+
+    unavailable = False
+    result = await paper_wallet_routes.read_paper_command(command_id, request, who)
+    assert result.command_id == command_id
+    assert result.state is PaperCommandState.REJECTED
+    assert result.failure_code == "EPISODE_CONFLICT"

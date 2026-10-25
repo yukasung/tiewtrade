@@ -598,3 +598,27 @@ the existing local full result remains evidence for the F-15 branch source.
 This handoff authorizes commit/push, opening the scoped F-15 PR and checking required CI.
 Required CI is pending until the pushed candidate finishes. Merge has not been requested;
 V-19 and production activation remain subject to their approved checkpoints.
+
+
+## Required CI and main synchronization — 2026-10-25
+
+Runtime/test commit `f2240a46e9140e5872e667dd42d90ab9e62133c4` was pushed and
+[PR #33](https://github.com/yukasung/tiewtrade/pull/33) opened against main `f6bd712`.
+Both CI runs passed all six jobs without reruns:
+
+- [Push CI 40169303759](https://github.com/yukasung/tiewtrade/actions/runs/40169303759):
+  backend **3267 passed, 2 deselected** in **737.31s**, plus config, API contract,
+  frontend, container and browser E2E jobs.
+- [PR CI 40169323746](https://github.com/yukasung/tiewtrade/actions/runs/40169323746):
+  backend **3270 passed, 2 deselected** in **746.87s**, plus the same five jobs.
+  This includes the main-branch F-13 remediation. Mypy checked 477 files and all seven
+  import contracts passed. Earlier local failures remain recorded above.
+
+GitHub then reported the head as BEHIND main. Main was merged into the F-15 feature
+branch using the owner's authorized commit/push continuation. Before documentation
+updates, `git write-tree` exactly matched the PR merge tree that CI had just tested:
+`84ce403365ad4a27b6059a539969736f1dec9a17`. No additional runtime/test changes were
+made in the synchronization; the evidence/validation/roadmap updates only record these
+results. Required CI for the synchronized head is tracked on PR #33 and must complete
+before merging that PR. The feature PR remains open; no merge into main or production
+activation is part of this continuation. V-19 remains Pending Full Validation.
