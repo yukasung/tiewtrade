@@ -69,7 +69,10 @@ from tiewtrade.infra.paper_wallet import get_command as get_wallet_command
 from tiewtrade.infra.paper_wallet.records import PaperWalletSnapshot
 from tiewtrade.infra.positions import (
     PositionEventKind,
+    PositionIntegrityError,
+    PositionWriteStatus,
     apply_position_event,
+    initialize_position_source,
     read_position_snapshot,
 )
 from tiewtrade.services.engine.paper_order import run_paper_order_round
@@ -472,6 +475,7 @@ async def test_closed_expected_episode_is_rejected_without_retry(
 async def test_accept_restart_fill_and_cash_are_atomic(
     monkeypatch: pytest.MonkeyPatch,
     fault: str | None,
+    api_engine: AsyncEngine,
     engine_engine: AsyncEngine,
     scan_engine: AsyncEngine,
     owner: UUID,
@@ -1011,6 +1015,104 @@ async def test_accept_restart_fill_and_cash_are_atomic(
         assert void_projection.status == "CANCELED" and void_projection.filled_quantity == 0
         assert void_wallet is not None and void_wallet.balance.amount == 10000
         assert correction_cash == 2
+
+        # A lost acknowledgement may be retried after the now-idle episode is reset.
+        async with user_session(api_engine, owner) as session:
+            reset = await admit_command(
+                session,
+                action=PaperWalletAction.RESET,
+                idempotency_key=uuid4(),
+                capital_text="2500",
+                expected_episode_id=wallet.episode_id,
+            )
+        await run_paper_wallet_round(
+            engine=engine_engine, scan_engine=scan_engine, worker="reset-before-position-replay"
+        )
+        async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+            reset_result = await get_wallet_command(session, reset.command_id)
+            current = await get_wallet(session)
+            old_position = await read_position_snapshot(session, wallet.episode_id)
+            assert reset_result is not None and reset_result.state is PaperCommandState.SUCCEEDED
+            assert current is not None and current.episode_id != wallet.episode_id
+            assert old_position is not None
+            new_position = await read_position_snapshot(session, current.episode_id)
+            ledger = (await session.execute("SELECT * FROM paper_wallet_ledger ORDER BY id")).all()
+            audits = (await session.execute("SELECT id FROM audit_events ORDER BY id")).all()
+            history = {}
+            for table in (
+                "paper_position_events",
+                "paper_position_external_fees",
+                "paper_position_conflicts",
+            ):
+                history[table] = (await session.execute(f"SELECT * FROM {table} ORDER BY id")).all()
+
+        for kind, event_id, fact, predecessor in (
+            (PositionEventKind.RECORD, UUID(str(linked["position_event_id"])), original, None),
+            (PositionEventKind.RECORD, uuid4(), original, None),
+            (
+                PositionEventKind.REPLACE,
+                correction_id,
+                replacement,
+                UUID(str(linked["position_event_id"])),
+            ),
+            (PositionEventKind.VOID, void_id, replacement, correction_id),
+        ):
+            async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+                retried = await apply_position_event(
+                    session, wallet.episode_id, event_id, kind, fact, predecessor
+                )
+                assert retried.status is PositionWriteStatus.REPLAYED
+                assert retried.effects is None
+                assert retried.activity == old_position.activity
+
+        for kind, event_id, fact, predecessor in (
+            (PositionEventKind.RECORD, uuid4(), replace(original, execution_id=uuid4()), None),
+            (PositionEventKind.RECORD, UUID(str(linked["position_event_id"])), replacement, None),
+            (PositionEventKind.REPLACE, uuid4(), replacement, void_id),
+        ):
+            with pytest.raises(PositionIntegrityError):
+                async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+                    await apply_position_event(
+                        session, wallet.episode_id, event_id, kind, fact, predecessor
+                    )
+        with pytest.raises(PositionIntegrityError):
+            async with user_session(engine_engine, uuid4(), role=DatabaseRole.ENGINE) as session:
+                await apply_position_event(
+                    session,
+                    wallet.episode_id,
+                    UUID(str(linked["position_event_id"])),
+                    PositionEventKind.RECORD,
+                    original,
+                )
+        with pytest.raises(PositionIntegrityError):
+            async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+                assert old_position.activity.source_proof is not None
+                await initialize_position_source(
+                    session, wallet.episode_id, uuid4(), old_position.activity.source_proof
+                )
+        async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+            after = await get_wallet(session)
+            old_after = await read_position_snapshot(session, wallet.episode_id)
+            new_after = await read_position_snapshot(session, current.episode_id)
+            assert after is not None
+            assert (after.episode_id, after.balance, after.revision) == (
+                current.episode_id,
+                Money.of("2500", "USDT"),
+                current.revision,
+            )
+            assert old_after is not None and old_after.activity == old_position.activity
+            assert old_after.positions == old_position.positions
+            assert new_after is not None and new_position is not None
+            assert new_after.activity == new_position.activity
+            assert new_after.positions == new_position.positions
+            assert (
+                await session.execute("SELECT * FROM paper_wallet_ledger ORDER BY id")
+            ).all() == ledger
+            assert (
+                await session.execute("SELECT id FROM audit_events ORDER BY id")
+            ).all() == audits
+            for table, rows in history.items():
+                assert (await session.execute(f"SELECT * FROM {table} ORDER BY id")).all() == rows
     finally:
         await market.dispose()
 
