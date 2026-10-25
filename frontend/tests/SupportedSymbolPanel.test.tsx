@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { SupportedSymbolPanel } from "../src/SupportedSymbolPanel";
 import { supportedSymbolI18n } from "../src/supportedSymbolMessages";
@@ -18,7 +18,7 @@ function response(body: unknown, status = 200): Response {
 
 function mount() {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
-  return render(<QueryClientProvider client={client}><SupportedSymbolPanel /></QueryClientProvider>);
+  return { ...render(<QueryClientProvider client={client}><SupportedSymbolPanel /></QueryClientProvider>), client };
 }
 
 beforeEach(() => { document.cookie = "tiewtrade_csrf=csrf-value; path=/"; });
@@ -89,4 +89,45 @@ it("refreshes asynchronous catalog transitions without a page reload", async () 
   expect(await screen.findByText("REQUESTED")).toBeTruthy();
   expect(await screen.findByText("ACTIVE", {}, { timeout: 2_000 })).toBeTruthy();
   expect(reads).toBeGreaterThanOrEqual(2);
+});
+
+it.each(["POST", "DELETE"])("replays the same %s payload and key after a lost response and catalog refresh", async method => {
+  const requests: RequestInit[] = [];
+  let revision = 7;
+  vi.stubGlobal("fetch", vi.fn((_url: string, init?: RequestInit) => {
+    if (init?.method === method) {
+      requests.push(init);
+      revision = 8;
+      if (requests.length === 1) return Promise.reject(new TypeError("lost response"));
+      return Promise.resolve(response({}));
+    }
+    if (_url.includes("/impact")) return Promise.resolve(response({
+      bots: 0, open_entry_orders: 0, protective_orders: 0, reduce_risk_orders: 0,
+      positions: 0, complete: false, snapshot_at: "2026-10-24T00:00:00Z",
+    }));
+    return Promise.resolve(response({ ...catalog, revision }));
+  }));
+  const { client } = mount();
+  fireEvent.click(await screen.findByRole("button", { name: method === "POST" ? "เพิ่มคู่เทรด" : "ถอนคู่" }));
+  if (method === "POST") fireEvent.change(screen.getByLabelText("Base asset"), { target: { value: "sol" } });
+  else await screen.findByText("ข้อมูลผลกระทบยังไม่ครบ ห้ามตีความว่าไม่มีรายการที่ได้รับผล");
+  fireEvent.change(screen.getByLabelText("รหัส TOTP ใหม่"), { target: { value: "123456" } });
+  const confirm = method === "POST" ? "ยืนยันเพิ่ม" : "ยืนยันถอนคู่";
+  fireEvent.click(screen.getByRole("button", { name: confirm }));
+  await screen.findByText("lost response");
+  await act(async () => { await client.invalidateQueries({ queryKey: ["supported-symbols"] }); });
+  expect(client.getQueryData<{ revision: number }>(["supported-symbols"])?.revision).toBe(8);
+  if (method === "POST") expect(screen.getByLabelText<HTMLInputElement>("Base asset").disabled).toBe(true);
+  fireEvent.change(screen.getByLabelText("รหัส TOTP ใหม่"), { target: { value: "654321" } });
+  fireEvent.click(screen.getByRole("button", { name: confirm }));
+  await waitFor(() => expect(requests).toHaveLength(2));
+  const original = requests[0]!;
+  const replay = requests[1]!;
+  expect(replay.body).toBe(original.body);
+  expect(JSON.parse(replay.body as string) as { expected_revision: number }).toMatchObject({ expected_revision: 7 });
+  const originalHeaders = original.headers as Record<string, string>;
+  const replayHeaders = replay.headers as Record<string, string>;
+  expect(replayHeaders["Idempotency-Key"]).toBe(originalHeaders["Idempotency-Key"]);
+  expect(replayHeaders["X-TiewTrade-TOTP"]).toBe("654321");
+  await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
 });

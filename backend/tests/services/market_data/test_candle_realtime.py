@@ -82,10 +82,17 @@ async def test_candle_feed_excludes_removed_maintenance_pairs(
     assert len(state.series) == 2 * len(Timeframe)
 
 
-async def test_bootstrap_commits_each_series_before_marking_ready(
+@pytest.mark.parametrize("preparing", [False, True])
+async def test_bootstrap_only_queues_each_series_before_completing_preview(
     monkeypatch: pytest.MonkeyPatch,
+    preparing: bool,
 ) -> None:
     state = supervisor()
+    if preparing:
+        state.catalog = {
+            pair: replace(row, status="PREPARING", mode="PREPARING")
+            for pair, row in state.catalog.items()
+        }
     state.lease = PreviewLease(uuid4(), 1)
     calls: list[object] = []
     sessions = 0

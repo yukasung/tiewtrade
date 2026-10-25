@@ -107,12 +107,19 @@ function AddModal({ isOpen, onClose, revision, onDone, returnFocusRef }: {
   const [base, setBase] = useState("");
   const [code, setCode] = useState("");
   const idempotencyKey = useRef(globalThis.crypto.randomUUID());
-  const mutation = useMutation({ mutationFn: () => addSupportedSymbol(base.trim().toUpperCase(), revision, code, idempotencyKey.current), onSuccess: async () => { await onDone(); onClose(); } });
+  const submitted = useRef<{ base: string; revision: number } | null>(null);
+  const mutation = useMutation({
+    mutationFn: () => {
+      const payload = submitted.current ??= { base: base.trim().toUpperCase(), revision };
+      return addSupportedSymbol(payload.base, payload.revision, code, idempotencyKey.current);
+    },
+    onSuccess: async () => { await onDone(); onClose(); },
+  });
   const submit = (event: FormEvent) => { event.preventDefault(); mutation.mutate(); };
   return <Modal isOpen={isOpen} onClose={onClose} titleId="add-symbol-title" closeLabel={t("close")} returnFocusRef={returnFocusRef}>
     <h2 id="add-symbol-title">{t("addTitle")}</h2><p>{t("addHelp")}</p>
     <form onSubmit={submit} className="symbol-form">
-      <Label htmlFor="symbol-base">{t("base")}</Label><Input id="symbol-base" value={base} onChange={e => setBase(e.target.value)} maxLength={16} required />
+      <Label htmlFor="symbol-base">{t("base")}</Label><Input id="symbol-base" value={base} onChange={e => setBase(e.target.value)} maxLength={16} disabled={submitted.current !== null} required />
       <Label htmlFor="add-reason">{t("reason")}</Label><Select id="add-reason" value="ADMIN_LIQUIDITY_REVIEWED" disabled><option value="ADMIN_LIQUIDITY_REVIEWED">{t("liquidityReviewed")}</option></Select>
       <Label htmlFor="add-totp">{t("freshTotp")}</Label><Input id="add-totp" inputMode="numeric" autoComplete="one-time-code" value={code} onChange={e => setCode(e.target.value)} required />
       {mutation.isError ? <p role="alert">{message(mutation.error)}</p> : null}
@@ -127,8 +134,15 @@ function RemoveModal({ entry, onClose, revision, onDone, returnFocusRef }: {
 }) {
   const [code, setCode] = useState("");
   const idempotencyKey = useRef(globalThis.crypto.randomUUID());
+  const submitted = useRef<{ base: string; quote: string; revision: number } | null>(null);
   const impact = useQuery({ queryKey: ["symbol-impact", entry?.base, entry?.quote], queryFn: ({ signal }) => readSymbolImpact(entry!.base, entry!.quote, signal), enabled: entry !== null });
-  const mutation = useMutation({ mutationFn: () => removeSupportedSymbol(entry!.base, entry!.quote, revision, code, idempotencyKey.current), onSuccess: async () => { await onDone(); onClose(); } });
+  const mutation = useMutation({
+    mutationFn: () => {
+      const payload = submitted.current ??= { base: entry!.base, quote: entry!.quote, revision };
+      return removeSupportedSymbol(payload.base, payload.quote, payload.revision, code, idempotencyKey.current);
+    },
+    onSuccess: async () => { await onDone(); onClose(); },
+  });
   return <Modal isOpen={entry !== null} onClose={onClose} titleId="remove-symbol-title" closeLabel={t("close")} returnFocusRef={returnFocusRef}>
     <h2 id="remove-symbol-title">{t("removeTitle", { pair: `${entry?.base}/${entry?.quote}` })}</h2>
     <p className="symbol-danger">{t("removeWarning")}</p>

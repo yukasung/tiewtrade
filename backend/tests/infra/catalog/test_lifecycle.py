@@ -10,7 +10,7 @@ import pytest
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncEngine
 
-from tiewtrade.core.market_data import initial_window
+from tiewtrade.core.market_data import CandleSeries, initial_window
 from tiewtrade.core.positions import PositionPair
 from tiewtrade.core.timeframes import Timeframe
 from tiewtrade.infra.db import (
@@ -22,6 +22,7 @@ from tiewtrade.infra.db import (
 )
 from tiewtrade.infra.db.session import market_data_session, presented_session
 from tiewtrade.infra.indicators.session import indicator_writer_session
+from tiewtrade.infra.market_data.candle_preview import acquire as acquire_preview
 from tiewtrade.infra.market_data.claims import claim_next, lock_claim
 from tiewtrade.infra.market_data.realtime_storage import database_now
 from tiewtrade.infra.market_data.records import StaleClaimError
@@ -31,6 +32,7 @@ from tiewtrade.infra.platform import (
     CatalogCommand,
     CatalogReason,
     ConstraintEvidence,
+    RuntimeSymbol,
     activate,
     enable_mutations,
     fail_preparation,
@@ -46,7 +48,11 @@ from tiewtrade.infra.platform import (
     request_remove,
     runtime_symbols,
 )
+from tiewtrade.infra.realtime.notifications import RedisNotifications
 from tiewtrade.infra.users import create_user
+from tiewtrade.services.market_data.candle_realtime import CandleSupervisor
+from tiewtrade.services.market_data.ingestion import _publish_preparation_readiness
+from tiewtrade.venues.fake import FakeCandleFeed
 
 
 async def test_third_pair_completes_prepare_activate_remove_and_readd_lifecycle(
@@ -161,6 +167,35 @@ async def test_third_pair_completes_prepare_activate_remove_and_readd_lifecycle(
                 await prepare(prepare_session, base="SOL", quote="USDT", expected_revision=3) == 4
             )
 
+        # Preview bootstrap enqueues backfill; it must not certify candle readiness.
+        preview = CandleSupervisor(
+            market_engine, FakeCandleFeed(()), cast(RedisNotifications, None)
+        )
+        preview.catalog = {
+            ("SOL", "USDT"): RuntimeSymbol("SOL", "USDT", "PREPARING", 4, 4, "PREPARING")
+        }
+        preview.series = tuple(CandleSeries("SOL", "USDT", tf) for tf in Timeframe)
+        async with market_data_session(market_engine) as market_writer:
+            await market_writer.execute(
+                """UPDATE market_candle_feed_state
+                SET lease_until=clock_timestamp()-interval '1 second'"""
+            )
+            preview.lease = await acquire_preview(market_writer, uuid4())
+        assert preview.lease is not None
+        preview.epoch = preview.lease.epoch
+        await preview._bootstrap(preview.epoch)
+        async with market_data_session(market_engine) as market_writer:
+            await _publish_preparation_readiness(market_writer)
+        async with migrator_engine.connect() as connection:
+            assert (
+                await connection.execute(
+                    text(
+                        """SELECT count(*) FROM supported_symbol_timeframe_readiness
+                    WHERE base='SOL' AND candles_ready_at IS NOT NULL"""
+                    )
+                )
+            ).scalar_one() == 0
+
         with pytest.raises(CatalogStateError):
             async with market_data_session(market_engine) as stale_session:
                 await record_timeframe_readiness(
@@ -181,15 +216,6 @@ async def test_third_pair_completes_prepare_activate_remove_and_readd_lifecycle(
                 catalog_revision=4,
                 price_at=ready_at,
             )
-            for timeframe in Timeframe:
-                await record_timeframe_readiness(
-                    market_writer,
-                    base="SOL",
-                    quote="USDT",
-                    catalog_revision=4,
-                    timeframe=timeframe,
-                    ready_at=ready_at,
-                )
         async with indicator_writer_session(indicator_engine) as indicator_writer:
             for timeframe in Timeframe:
                 await record_timeframe_readiness(
@@ -199,6 +225,29 @@ async def test_third_pair_completes_prepare_activate_remove_and_readd_lifecycle(
                     catalog_revision=4,
                     timeframe=timeframe,
                     ready_at=ready_at,
+                )
+
+        with pytest.raises(CatalogStateError):
+            async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+                started_at = datetime.now(UTC)
+                await activate(
+                    session,
+                    base="SOL",
+                    quote="USDT",
+                    expected_revision=4,
+                    validation_started_at=started_at,
+                    evidence=_evidence(datetime.now(UTC)),
+                )
+        async with market_data_session(market_engine) as market_writer:
+            await market_writer.execute("DELETE FROM market_candle_demand WHERE base='SOL'")
+            for timeframe in Timeframe:
+                await record_timeframe_readiness(
+                    market_writer,
+                    base="SOL",
+                    quote="USDT",
+                    catalog_revision=4,
+                    timeframe=timeframe,
+                    ready_at=await database_now(market_writer),
                 )
 
         async with user_session(

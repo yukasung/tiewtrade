@@ -114,3 +114,22 @@
 - required CI และ merge ยังไม่เกิด; milestone `Catalog/Order Safety Ready` ยังไม่ประกาศ
 
 ไม่มีการส่ง Live order ระหว่าง validation
+
+## Follow-up deep review — 2026-10-25
+
+เจ้าของสั่งแก้ findings เพิ่มเติม 4 ข้อบน `deb2a06`; แจ้ง `Ready for Code Review` ก่อนตรวจ
+corrections และตรวจ diff/dependencies ที่ได้รับผลกระทบซ้ำแล้ว:
+
+| ระดับ / Finding | Resolution |
+|---|---|
+| High — claim ของคำสั่งใหม่ยัง match BUY เก่าหลัง remove/re-add ได้ | **Fixed** — `infra/paper_orders/worker.py` ตรวจ admitted revision ของ BUY ทุกใบใน checkpoint ภายใต้ wallet lock/pair fence แล้ว cancel/persist ก่อน advance state ใช้ cancellation/audit/reservation pattern เดิม; PostgreSQL regression ให้คำสั่งใหม่ consume trade ที่อาจ fill ออเดอร์เก่า และยืนยันว่าเฉพาะคำสั่งใหม่ fill ในภายหลัง |
+| High — preview bootstrap สร้าง candle readiness ก่อน backfill เสร็จ | **Fixed** — เอาการเขียน proof ออกจาก `services/market_data/candle_realtime.py`; ใช้ ingestion completion เดิมเท่านั้น lifecycle test เรียก bootstrap จริงและพิสูจน์ว่า pending demand ไม่สร้าง candle proof และ activation ยังถูกปฏิเสธแม้ indicator/price พร้อม |
+| Medium — delayed venue result เปลี่ยนคำขอใหม่ของ pair/requester เดิม | **Fixed** — `services/engine/catalog.py` ตรวจ pair revision และเก็บ expected global revision ก่อน venue call แล้วใช้ค่าเดิมทั้ง activate/fail; ไม่มีการอ่าน revision ใหม่เพื่อรับรองผลเก่า tests ครอบคลุม replacement ก่อนตรวจและระหว่าง venue I/O ทั้ง success/failure |
+| Medium — UI retry ใช้ key เดิมกับ revision/payload ใหม่ | **Fixed** — `SupportedSymbolPanel.tsx` ตรึง payload เมื่อ submit และคง key เดิมขณะ retry; ADD base ถูกล็อกหลัง submit แต่ TOTP เปลี่ยนได้ tests จำลอง lost response แล้ว refresh catalog revision ทั้ง ADD/REMOVE และตรวจ body/key เดิม |
+
+หลักฐาน correction ชุดสุดท้าย: **225 backend tests passed**, frontend affected **6 passed**,
+Ruff/format/mypy/import checks และ frontend ESLint/TypeScript/build ผ่าน รายละเอียดการเลือกตรวจ,
+exploratory failures และ runtime patch digest อยู่ใน [M5 evidence](../../features/2026-10-24-supported-symbol-management/evidence/m5-local-candidate.md#follow-up-review-corrections--2026-10-25)
+
+ผล: **ไม่มี Critical/High ค้างใน corrections ที่รีวิว** แต่ full candidate/required CI ต้องผ่าน
+สำหรับ source ที่รวม corrections ก่อน merge; V-10 Live, V-18/V-19 ยัง Pending ตามเดิม

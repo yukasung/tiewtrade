@@ -34,10 +34,15 @@ async def activate_ready_symbols(
     async with presented_session(engine, role=DatabaseRole.ENGINE) as session:
         await reconcile_maintenance_proofs(session)
         requested = await requested_symbols(session)
-    for base, quote, _, requester in requested:
+    for base, quote, pair_revision, requester in requested:
         try:
             async with user_session(engine, requester, role=DatabaseRole.ENGINE) as session:
                 current = await read_catalog(session)
+                if not any(
+                    entry.base == base and entry.quote == quote and entry.revision == pair_revision
+                    for entry in current.entries
+                ):
+                    continue
                 await prepare(
                     session,
                     base=base,
@@ -51,7 +56,19 @@ async def activate_ready_symbols(
     async with presented_session(engine, role=DatabaseRole.ENGINE) as session:
         pending = await preparing_symbols(session)
     activated = 0
-    for base, quote, _, requester in pending:
+    for base, quote, pair_revision, requester in pending:
+        try:
+            async with user_session(engine, requester, role=DatabaseRole.ENGINE) as session:
+                current = await read_catalog(session)
+        except InfraError:
+            # No venue result may transition a command without its original revision.
+            continue
+        if not any(
+            entry.base == base and entry.quote == quote and entry.revision == pair_revision
+            for entry in current.entries
+        ):
+            continue
+        expected_revision = current.snapshot.revision
         symbol = Symbol(base, quote)
         started_at = clock()
         try:
@@ -59,7 +76,7 @@ async def activate_ready_symbols(
         except (VenueRateLimitedError, VenueUnavailableError):
             continue
         except VenueError as error:
-            await _fail_preparation(engine, requester, base, quote, error.code)
+            await _fail_preparation(engine, requester, base, quote, expected_revision, error.code)
             continue
         completed_at = clock()
         invalid = (
@@ -70,16 +87,17 @@ async def activate_ready_symbols(
             or capability.limit.unsupported_rules
         )
         if invalid:
-            await _fail_preparation(engine, requester, base, quote, "VENUE_PROTOCOL")
+            await _fail_preparation(
+                engine, requester, base, quote, expected_revision, "VENUE_PROTOCOL"
+            )
             continue
         try:
             async with user_session(engine, requester, role=DatabaseRole.ENGINE) as session:
-                current = await read_catalog(session)
                 await activate(
                     session,
                     base=base,
                     quote=quote,
-                    expected_revision=current.snapshot.revision,
+                    expected_revision=expected_revision,
                     validation_started_at=started_at,
                     evidence=ConstraintEvidence(
                         venue_symbol=f"{base}{quote}",
@@ -97,16 +115,20 @@ async def activate_ready_symbols(
 
 
 async def _fail_preparation(
-    engine: AsyncEngine, requester: UUID, base: str, quote: str, failure_code: str
+    engine: AsyncEngine,
+    requester: UUID,
+    base: str,
+    quote: str,
+    expected_revision: int,
+    failure_code: str,
 ) -> None:
     try:
         async with user_session(engine, requester, role=DatabaseRole.ENGINE) as session:
-            current = await read_catalog(session)
             await fail_preparation(
                 session,
                 base=base,
                 quote=quote,
-                expected_revision=current.snapshot.revision,
+                expected_revision=expected_revision,
                 failure_code=failure_code,
             )
     except InfraError:

@@ -25,7 +25,7 @@ from tiewtrade.infra.market_data.candle_preview import (
     flush,
 )
 from tiewtrade.infra.market_data.catalog import SOURCE, runtime_symbol_map
-from tiewtrade.infra.platform import RuntimeSymbol, record_timeframe_readiness
+from tiewtrade.infra.platform import RuntimeSymbol
 from tiewtrade.infra.realtime.notifications import RedisNotifications
 from tiewtrade.venues.candle_streams import CandleFeed, FeedCandle
 from tiewtrade.venues.price_streams import FeedConnected, FeedDisconnected
@@ -184,16 +184,6 @@ class CandleSupervisor:
                             await session.execute("SET LOCAL statement_timeout='500ms'")
                             await session.execute("SET LOCAL lock_timeout='200ms'")
                             await bootstrap_series(session, lease, series)
-                            catalog = self.catalog[(series.base, series.quote)]
-                            if catalog.mode == "PREPARING":
-                                await record_timeframe_readiness(
-                                    session,
-                                    base=series.base,
-                                    quote=series.quote,
-                                    catalog_revision=catalog.revision,
-                                    timeframe=series.timeframe,
-                                    ready_at=datetime.now(UTC),
-                                )
                     break
                 except (InfraError, TimeoutError):
                     logging.getLogger(__name__).warning("candle preview bootstrap series retrying")

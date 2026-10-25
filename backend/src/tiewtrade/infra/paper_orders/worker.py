@@ -185,9 +185,7 @@ async def _process_new(
     row = command
     payload = object_payload(row["payload"])
     intent = intent_from_payload(payload["intent"])
-    admitted_revision_value = payload.get("catalog_revision", 0)
-    if type(admitted_revision_value) is not int or admitted_revision_value < 0:
-        raise OrderWorkerIntegrityError("opening catalog revision is invalid")
+    admitted_revision_value = _catalog_revision(payload)
     invalidated = (
         intent.side is ExecutionSide.BUY
         and latest_removed_revision is not None
@@ -208,7 +206,9 @@ async def _process_new(
         scope=intent.scope,
         pair=intent.pair,
     )
-    state = checkpoint.state
+    state = await _cancel_removed_openings(
+        session, row["wallet_id"], checkpoint.state, catalog, latest_removed_revision
+    )
     result_exists = row["result_state"] is not None
     if (
         not result_exists
@@ -350,31 +350,6 @@ async def _process_new(
         )
         await finish_claim(session, claim, terminal=True)
         return
-    if target.intent.side is ExecutionSide.BUY and (
-        invalidated or not catalog.supports(target.intent.pair.base, target.intent.pair.quote)
-    ):
-        changed = cancel_order(state, target.intent.order_id, scope=target.intent.scope)
-        await persist_checkpoint(
-            session,
-            wallet_id=row["wallet_id"],
-            state=changed,
-            anchor_order_id=target.intent.order_id,
-            event_kind="CANCELED",
-            decision_kind="CANCEL",
-            occurred_at=(await session.execute("SELECT clock_timestamp()")).scalar_one(),
-            decision_id=_identity(
-                target.intent.scope.episode_id, f"catalog-cancel:{target.intent.order_id}"
-            ),
-        )
-        await set_pair_dependency(
-            session,
-            wallet_id=row["wallet_id"],
-            episode_id=target.intent.scope.episode_id,
-            pair=target.intent.pair,
-            needed=any(not order.status.terminal for order in changed.orders),
-        )
-        await finish_claim(session, claim, terminal=True)
-        return
     try:
         decisions = await _next_or_recovery_inputs(session, state)
     except NoNewExecutionInputError:
@@ -388,6 +363,68 @@ async def _process_new(
         await finish_claim(session, claim, terminal=False)
         return
     await _apply_inputs(session, claim, row, state, decisions, catalog)
+
+
+def _catalog_revision(payload: dict[str, Any]) -> int:
+    revision = payload.get("catalog_revision", 0)
+    if type(revision) is not int or revision < 0:
+        raise OrderWorkerIntegrityError("opening catalog revision is invalid")
+    return revision
+
+
+async def _cancel_removed_openings(
+    session: UserSession,
+    wallet_id: UUID,
+    state: MatchingState,
+    catalog: CatalogSnapshot,
+    latest_removed_revision: int | None,
+) -> MatchingState:
+    """Fence every opening order before any claim advances the shared pair state."""
+    active = catalog.supports(state.pair.base, state.pair.quote)
+    if active and latest_removed_revision is None:
+        return state
+    openings = tuple(
+        order
+        for order in state.orders
+        if order.intent.side is ExecutionSide.BUY and not order.status.terminal
+    )
+    if not openings:
+        return state
+    rows = (
+        (
+            await session.execute(
+                """SELECT o.id,c.payload FROM paper_orders o
+            JOIN paper_order_commands c ON c.id=o.command_id
+            WHERE o.id=ANY(:orders)""",
+                {"orders": [order.intent.order_id for order in openings]},
+            )
+        )
+        .mappings()
+        .all()
+    )
+    revisions = {row["id"]: _catalog_revision(object_payload(row["payload"])) for row in rows}
+    if len(revisions) != len(openings):
+        raise OrderWorkerIntegrityError("opening catalog evidence is unavailable")
+    for order in openings:
+        if active and (
+            latest_removed_revision is None
+            or revisions[order.intent.order_id] >= latest_removed_revision
+        ):
+            continue
+        state = cancel_order(state, order.intent.order_id, scope=order.intent.scope)
+        await persist_checkpoint(
+            session,
+            wallet_id=wallet_id,
+            state=state,
+            anchor_order_id=order.intent.order_id,
+            event_kind="CANCELED",
+            decision_kind="CANCEL",
+            occurred_at=(await session.execute("SELECT clock_timestamp()")).scalar_one(),
+            decision_id=_identity(
+                order.intent.scope.episode_id, f"catalog-cancel:{order.intent.order_id}"
+            ),
+        )
+    return state
 
 
 async def _next_or_recovery_inputs(
