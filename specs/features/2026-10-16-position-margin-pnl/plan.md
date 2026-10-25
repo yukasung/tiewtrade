@@ -300,3 +300,15 @@ projection revision/permission constraints โดยไม่เปลี่ย�
 `backend/tests/infra/execution_market/test_worker.py` พิสูจน์ RECORD/REPLACE/VOID replay,
 owner isolation และการปฏิเสธ new/conflicting event ในรอบเก่า โดยตรวจ ledger,
 position/activity/revision และ audit ไม่เปลี่ยน ไม่แก้สูตรหรือเพิ่ม trading rule
+
+### Integration replay remediation - owner authorized 2026-10-25
+
+Preserve the existing replay contract through `paper_orders/executions.py` and
+`corrections.py`, reusing the owner advisory lock and wallet/episode ownership
+check in `paper_orders/storage.py`. Read committed linkage before the active-episode
+fence for exact replay only; new writes retain the active/nonclosed fence. Replay
+must not load a matching checkpoint from a new episode. Extend the existing real
+fill/correction/reset regression in `tests/infra/execution_market/test_worker.py`
+through stage_fill_cash, stage_correction_cash and correct_fill, including identity,
+payload, owner and wallet mismatch and unchanged history/projections. This closes
+the owner-authorized RQ-5/7/9/15 finding without changing trading rules or formulas.

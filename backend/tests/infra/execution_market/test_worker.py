@@ -5,7 +5,7 @@ from collections.abc import AsyncIterator, Mapping
 from contextlib import asynccontextmanager
 from dataclasses import replace
 from datetime import UTC, datetime
-from typing import Any
+from typing import Any, TypedDict
 from uuid import NAMESPACE_URL, UUID, uuid4, uuid5
 
 import pytest
@@ -54,6 +54,7 @@ from tiewtrade.infra.paper_orders.dispatch import (
     submit_cancel,
     submit_order,
 )
+from tiewtrade.infra.paper_orders.executions import stage_correction_cash, stage_fill_cash
 from tiewtrade.infra.paper_orders.initialization import (
     enable_financial_writer,
     initialize_order_source,
@@ -70,6 +71,7 @@ from tiewtrade.infra.paper_wallet.records import PaperWalletSnapshot
 from tiewtrade.infra.positions import (
     PositionEventKind,
     PositionIntegrityError,
+    PositionWriteResult,
     PositionWriteStatus,
     apply_position_event,
     initialize_position_source,
@@ -77,6 +79,24 @@ from tiewtrade.infra.positions import (
 )
 from tiewtrade.services.engine.paper_order import run_paper_order_round
 from tiewtrade.services.engine.paper_wallet import run_paper_wallet_round
+
+
+class FillReplayRequest(TypedDict):
+    wallet_id: UUID
+    episode_id: UUID
+    order_event_id: UUID
+    position_event_id: UUID
+    fact: ExecutionFact
+
+
+class CorrectionReplayRequest(TypedDict):
+    wallet_id: UUID
+    episode_id: UUID
+    order_event_id: UUID
+    correction_event_id: UUID
+    supersedes_position_event_id: UUID
+    kind: PositionEventKind
+    fact: ExecutionFact
 
 
 class AllowPolicy:
@@ -1043,8 +1063,83 @@ async def test_accept_restart_fill_and_cash_are_atomic(
                 "paper_position_events",
                 "paper_position_external_fees",
                 "paper_position_conflicts",
+                "paper_execution_links",
+                "paper_order_events",
+                "paper_order_projections",
+                "paper_order_activity",
+                "paper_reservations",
             ):
-                history[table] = (await session.execute(f"SELECT * FROM {table} ORDER BY id")).all()
+                history[table] = (
+                    await session.execute(f"SELECT * FROM {table} ORDER BY to_jsonb({table})::text")
+                ).all()
+
+        fill_request: FillReplayRequest = {
+            "wallet_id": wallet.wallet_id,
+            "episode_id": wallet.episode_id,
+            "order_event_id": UUID(str(linked["order_event_id"])),
+            "position_event_id": UUID(str(linked["position_event_id"])),
+            "fact": original,
+        }
+        async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+            replayed_fill = await stage_fill_cash(session, **fill_request)
+            assert replayed_fill.status is PositionWriteStatus.REPLAYED
+            assert replayed_fill.effects is None
+
+        for kind, correction, linked_predecessor in (
+            (PositionEventKind.REPLACE, correction_id, UUID(str(linked["position_event_id"]))),
+            (PositionEventKind.VOID, void_id, correction_id),
+        ):
+            request: CorrectionReplayRequest = {
+                "wallet_id": wallet.wallet_id,
+                "episode_id": wallet.episode_id,
+                "order_event_id": UUID(str(linked["order_event_id"])),
+                "correction_event_id": correction,
+                "supersedes_position_event_id": linked_predecessor,
+                "kind": kind,
+                "fact": replacement,
+            }
+            for writer in (stage_correction_cash, correct_fill):
+                async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+                    replayed = await writer(session, **request)
+                    if writer is correct_fill:
+                        assert replayed is None
+                    else:
+                        assert isinstance(replayed, PositionWriteResult)
+                        assert replayed.status is PositionWriteStatus.REPLAYED
+                        assert replayed.effects is None
+                invalid_corrections: tuple[CorrectionReplayRequest, ...] = (
+                    {**request, "wallet_id": uuid4()},
+                    {**request, "episode_id": current.episode_id},
+                    {**request, "order_event_id": uuid4()},
+                    {**request, "correction_event_id": uuid4()},
+                    {**request, "supersedes_position_event_id": uuid4()},
+                    {**request, "fact": replace(replacement, execution_id=uuid4())},
+                )
+                for invalid_correction in invalid_corrections:
+                    with pytest.raises((OrderConflictError, PositionIntegrityError)):
+                        async with user_session(
+                            engine_engine, owner, role=DatabaseRole.ENGINE
+                        ) as session:
+                            await writer(session, **invalid_correction)
+                with pytest.raises(OrderConflictError):
+                    async with user_session(
+                        engine_engine, uuid4(), role=DatabaseRole.ENGINE
+                    ) as session:
+                        await writer(session, **request)
+        invalid_fills: tuple[FillReplayRequest, ...] = (
+            {**fill_request, "wallet_id": uuid4()},
+            {**fill_request, "episode_id": current.episode_id},
+            {**fill_request, "order_event_id": uuid4()},
+            {**fill_request, "position_event_id": uuid4()},
+            {**fill_request, "fact": replacement},
+        )
+        for invalid_fill in invalid_fills:
+            with pytest.raises(OrderConflictError):
+                async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+                    await stage_fill_cash(session, **invalid_fill)
+        with pytest.raises(OrderConflictError):
+            async with user_session(engine_engine, uuid4(), role=DatabaseRole.ENGINE) as session:
+                await stage_fill_cash(session, **fill_request)
 
         for kind, event_id, fact, predecessor in (
             (PositionEventKind.RECORD, UUID(str(linked["position_event_id"])), original, None),
@@ -1112,7 +1207,9 @@ async def test_accept_restart_fill_and_cash_are_atomic(
                 await session.execute("SELECT id FROM audit_events ORDER BY id")
             ).all() == audits
             for table, rows in history.items():
-                assert (await session.execute(f"SELECT * FROM {table} ORDER BY id")).all() == rows
+                assert (
+                    await session.execute(f"SELECT * FROM {table} ORDER BY to_jsonb({table})::text")
+                ).all() == rows
     finally:
         await market.dispose()
 
