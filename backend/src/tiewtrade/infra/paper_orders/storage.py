@@ -32,6 +32,13 @@ class LockedPairCatalog:
 
 
 async def lock_active_episode(session: UserSession, wallet_id: UUID, episode_id: UUID) -> None:
+    await lock_episode(session, wallet_id, episode_id)
+
+
+async def lock_episode(
+    session: UserSession, wallet_id: UUID, episode_id: UUID, *, require_active: bool = True
+) -> None:
+    """Serialize owner work and validate episode ownership; closed episodes allow reads only."""
     session = require_user_session(session)
     await session.execute(
         "SELECT pg_advisory_xact_lock(hashtextextended(:key,0))",
@@ -40,10 +47,17 @@ async def lock_active_episode(session: UserSession, wallet_id: UUID, episode_id:
     row = (
         await session.execute(
             """SELECT 1 FROM paper_wallet_state s
-      WHERE s.wallet_id=:wallet AND s.user_id=:user AND s.active_episode_id=:episode
-      AND NOT EXISTS(SELECT 1 FROM paper_wallet_episode_closures c WHERE c.episode_id=:episode)
-      FOR UPDATE""",
-            {"wallet": wallet_id, "user": session.user_id, "episode": episode_id},
+      JOIN paper_wallet_episodes e ON e.wallet_id=s.wallet_id AND e.user_id=s.user_id
+      WHERE s.wallet_id=:wallet AND s.user_id=:user AND e.id=:episode
+      AND (NOT :require_active OR (s.active_episode_id=:episode
+        AND NOT EXISTS(SELECT 1 FROM paper_wallet_episode_closures c WHERE c.episode_id=:episode)))
+      FOR UPDATE OF s""",
+            {
+                "wallet": wallet_id,
+                "user": session.user_id,
+                "episode": episode_id,
+                "require_active": require_active,
+            },
         )
     ).first()
     if row is None:

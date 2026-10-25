@@ -295,3 +295,28 @@ an explicitly committed/pushed candidate.** Prior intermittent504/fixture failur
 a reproducibility risk to monitor in CI; this run does not justify relaxing deadlines or
 skipping tests. V-18 Pending F-18 and V-20 Pending Full Validation are unchanged. No commit,
 push, merge, release workload or Live order was performed.
+
+
+### PR integration checkpoint — 2026-10-25
+
+Owner authorized commit/push and opening the PR. Initial candidate `7f51fdc` passed all6
+[push CI jobs](https://github.com/yukasung/tiewtrade/actions/runs/40205436852), including
+Chromium18+2+7. [PR #36](https://github.com/yukasung/tiewtrade/pull/36) targets main.
+Main subsequently includes the approved F-14/F-15 replay/matching fixes through `95b2f98`.
+Merged that main into this feature branch; only roadmap text conflicted. Resolution preserves
+main's F-14/F-15 statuses and this branch's F-16 entry. Reviewed automatic merging of the
+worker and its integration tests: new market-constraint/expiry behavior is retained alongside
+manual admission policy; committed financial replay remains protected after reset.
+
+Affected safety validation on freshly bootstrapped schema0042 database
+`tiewtrade_e2e_f16_merge`:134 tests passed across core Paper matching, manual-order API,
+manual inbox/bridge/recovery, execution worker, review regressions and process recovery.
+Ruff passed; mypy src passed214 files; staged diff check passed. Initial test setup failed
+because the dedicated local DB container had stopped; restarted only F-16 test containers,
+then created the isolated DB and ran the suite successfully. No business-rule change was
+introduced during conflict resolution, and no Live order was sent.
+
+PR/push CI on the integrated head supersede the initial candidate's CI for merge acceptance;
+check [PR checks](https://github.com/yukasung/tiewtrade/pull/36/checks) for the exact final SHA.
+V-19 remains pending those checks at this checkpoint. V-18/F-18 and V-20 full validation
+remain pending independently; PR creation does not authorize merging or activation.

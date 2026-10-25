@@ -288,3 +288,27 @@ F-13 reset success หรือ Live writer เพื่อทำให้ F-14 
 `tiewtrade.core.trading_account` และ re-export ผ่าน path เดิม เพื่อให้การ import Paper position/audit
 ไม่โหลด credential/signing storage; เพิ่ม snapshot completeness/time, initialization replay และ
 projection revision/permission constraints โดยไม่เปลี่ยนสูตร position/PnL หรือขอบเขต F-15
+
+### Review remediation — เจ้าของสั่งแก้ 2026-10-25
+
+รักษา exact replay contract ใน §3.5/§4.2 หลัง reset: ใช้ owner advisory lock และ
+`paper_position_activity`/`paper_wallet_state` ใน `infra/positions/storage.py` เดิม
+อ่าน immutable event ของ episode ที่ปิดแล้วเพื่อคืนผล replay โดยไม่มี write;
+ทุกคำขอที่ไม่ใช่ durable replay ยังต้องผ่าน active-episode fence ก่อนบันทึก conflict
+หรือผลการเงินใหม่ รวมถึง source initialization ที่ยังต้องอยู่ใน active episode เท่านั้น
+ใช้ production fill/correction/reset flow ใน
+`backend/tests/infra/execution_market/test_worker.py` พิสูจน์ RECORD/REPLACE/VOID replay,
+owner isolation และการปฏิเสธ new/conflicting event ในรอบเก่า โดยตรวจ ledger,
+position/activity/revision และ audit ไม่เปลี่ยน ไม่แก้สูตรหรือเพิ่ม trading rule
+
+### Integration replay remediation - owner authorized 2026-10-25
+
+Preserve the existing replay contract through `paper_orders/executions.py` and
+`corrections.py`, reusing the owner advisory lock and wallet/episode ownership
+check in `paper_orders/storage.py`. Read committed linkage before the active-episode
+fence for exact replay only; new writes retain the active/nonclosed fence. Replay
+must not load a matching checkpoint from a new episode. Extend the existing real
+fill/correction/reset regression in `tests/infra/execution_market/test_worker.py`
+through stage_fill_cash, stage_correction_cash and correct_fill, including identity,
+payload, owner and wallet mismatch and unchanged history/projections. This closes
+the owner-authorized RQ-5/7/9/15 finding without changing trading rules or formulas.

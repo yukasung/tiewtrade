@@ -35,6 +35,8 @@ from tiewtrade.infra.market_data.order_book_codec import (
 from tiewtrade.infra.paper_orders.codec import (
     intent_from_payload,
     object_payload,
+    order_from_payload,
+    order_payload,
     state_from_payload,
     state_payload,
 )
@@ -53,7 +55,12 @@ def _matching_document(state: MatchingState, sequence: int) -> tuple[str, str]:
     matching = state_payload(state)
     digest = hashlib.sha256(canonical(matching).encode()).hexdigest()
     document = canonical(
-        {"decision_sequence": sequence, "matching": matching, "matching_digest": digest}
+        {
+            "decision_sequence": sequence,
+            "matching": matching,
+            "matching_digest": digest,
+            "terminal_orders": [order_payload(o) for o in state.orders if o.status.terminal],
+        }
     )
     return document, digest
 
@@ -152,6 +159,7 @@ async def load_matching_state(
         state.executions,
         state.book,
         await _position_sequence(session, scope.episode_id),
+        state.input_market_constraints,
     )
     await _verify_projections(session, state)
     return MatchingCheckpoint(int(payload["decision_sequence"]), row["id"], state)
@@ -212,6 +220,24 @@ async def _verify_projections(session: UserSession, state: MatchingState) -> Non
 async def load_order_state(session: UserSession, order_id: UUID) -> OrderState:
     """Rebuild one historical order for late cancel or append-only correction."""
     session = require_user_session(session)
+    terminal = (
+        await session.execute(
+            """SELECT terminal.value FROM paper_orders o
+            JOIN paper_order_events e ON e.episode_id=o.episode_id
+              AND e.base=o.base AND e.quote=o.quote
+            CROSS JOIN LATERAL jsonb_array_elements(e.payload->'terminal_orders') terminal(value)
+            WHERE o.id=:order AND e.payload ? 'matching'
+              AND terminal.value->'intent'->>'order_id'=CAST(:order AS text)
+            ORDER BY ((e.payload->>'decision_sequence')::bigint) DESC LIMIT 1""",
+            {"order": order_id},
+        )
+    ).scalar_one_or_none()
+    if terminal is not None:
+        state = order_from_payload(terminal)
+        if state.intent.scope.owner_id != session.user_id or not state.status.terminal:
+            raise OrderConflictError("terminal order provenance is invalid")
+        return state
+    # Legacy checkpoints predate terminal snapshots; preserve their existing read path.
     row = (
         (
             await session.execute(
@@ -325,6 +351,46 @@ async def append_fill_event(
         },
     )
     return identity
+
+
+async def append_expiry_event(
+    session: UserSession,
+    *,
+    order: OrderState,
+    evidence_id: UUID,
+    evidence_recorded_at: datetime,
+    occurred_at: datetime,
+    event_id: UUID,
+) -> None:
+    """Record MARKET remainder expiry independently of compact active checkpoints."""
+    session = require_user_session(session)
+    if order.status is not OrderStatus.EXPIRED:
+        raise OrderConflictError("expiry event requires an expired order")
+    await session.execute(
+        """INSERT INTO paper_order_events
+        (id,order_id,user_id,episode_id,base,quote,sequence,event_kind,
+         input_recorded_at,input_evidence_id,payload,occurred_at)
+        SELECT :id,:order,:user,:episode,:base,:quote,coalesce(max(sequence),0)+1,'EXPIRED',
+          :recorded,:evidence,CAST(:payload AS jsonb),:occurred
+        FROM paper_order_events WHERE order_id=:order""",
+        {
+            "id": event_id,
+            "order": order.intent.order_id,
+            "user": session.user_id,
+            "episode": order.intent.scope.episode_id,
+            "base": order.intent.pair.base,
+            "quote": order.intent.pair.quote,
+            "recorded": evidence_recorded_at,
+            "evidence": evidence_id,
+            "occurred": occurred_at,
+            "payload": canonical(
+                {
+                    "reason": "MARKET_REMAINDER_UNMATCHED",
+                    "order": order_payload(order),
+                }
+            ),
+        },
+    )
 
 
 async def persist_checkpoint(

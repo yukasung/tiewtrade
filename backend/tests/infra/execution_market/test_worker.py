@@ -5,7 +5,7 @@ from collections.abc import AsyncIterator, Mapping
 from contextlib import asynccontextmanager
 from dataclasses import replace
 from datetime import UTC, datetime
-from typing import Any
+from typing import Any, TypedDict
 from uuid import NAMESPACE_URL, UUID, uuid4, uuid5
 
 import pytest
@@ -54,6 +54,7 @@ from tiewtrade.infra.paper_orders.dispatch import (
     submit_cancel,
     submit_order,
 )
+from tiewtrade.infra.paper_orders.executions import stage_correction_cash, stage_fill_cash
 from tiewtrade.infra.paper_orders.initialization import (
     enable_financial_writer,
     initialize_order_source,
@@ -69,11 +70,33 @@ from tiewtrade.infra.paper_wallet import get_command as get_wallet_command
 from tiewtrade.infra.paper_wallet.records import PaperWalletSnapshot
 from tiewtrade.infra.positions import (
     PositionEventKind,
+    PositionIntegrityError,
+    PositionWriteResult,
+    PositionWriteStatus,
     apply_position_event,
+    initialize_position_source,
     read_position_snapshot,
 )
 from tiewtrade.services.engine.paper_order import run_paper_order_round
 from tiewtrade.services.engine.paper_wallet import run_paper_wallet_round
+
+
+class FillReplayRequest(TypedDict):
+    wallet_id: UUID
+    episode_id: UUID
+    order_event_id: UUID
+    position_event_id: UUID
+    fact: ExecutionFact
+
+
+class CorrectionReplayRequest(TypedDict):
+    wallet_id: UUID
+    episode_id: UUID
+    order_event_id: UUID
+    correction_event_id: UUID
+    supersedes_position_event_id: UUID
+    kind: PositionEventKind
+    fact: ExecutionFact
 
 
 class AllowPolicy:
@@ -472,6 +495,7 @@ async def test_closed_expected_episode_is_rejected_without_retry(
 async def test_accept_restart_fill_and_cash_are_atomic(
     monkeypatch: pytest.MonkeyPatch,
     fault: str | None,
+    api_engine: AsyncEngine,
     engine_engine: AsyncEngine,
     scan_engine: AsyncEngine,
     owner: UUID,
@@ -1011,6 +1035,181 @@ async def test_accept_restart_fill_and_cash_are_atomic(
         assert void_projection.status == "CANCELED" and void_projection.filled_quantity == 0
         assert void_wallet is not None and void_wallet.balance.amount == 10000
         assert correction_cash == 2
+
+        # A lost acknowledgement may be retried after the now-idle episode is reset.
+        async with user_session(api_engine, owner) as session:
+            reset = await admit_command(
+                session,
+                action=PaperWalletAction.RESET,
+                idempotency_key=uuid4(),
+                capital_text="2500",
+                expected_episode_id=wallet.episode_id,
+            )
+        await run_paper_wallet_round(
+            engine=engine_engine, scan_engine=scan_engine, worker="reset-before-position-replay"
+        )
+        async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+            reset_result = await get_wallet_command(session, reset.command_id)
+            current = await get_wallet(session)
+            old_position = await read_position_snapshot(session, wallet.episode_id)
+            assert reset_result is not None and reset_result.state is PaperCommandState.SUCCEEDED
+            assert current is not None and current.episode_id != wallet.episode_id
+            assert old_position is not None
+            new_position = await read_position_snapshot(session, current.episode_id)
+            ledger = (await session.execute("SELECT * FROM paper_wallet_ledger ORDER BY id")).all()
+            audits = (await session.execute("SELECT id FROM audit_events ORDER BY id")).all()
+            history = {}
+            for table in (
+                "paper_position_events",
+                "paper_position_external_fees",
+                "paper_position_conflicts",
+                "paper_execution_links",
+                "paper_order_events",
+                "paper_order_projections",
+                "paper_order_activity",
+                "paper_reservations",
+            ):
+                history[table] = (
+                    await session.execute(f"SELECT * FROM {table} ORDER BY to_jsonb({table})::text")
+                ).all()
+
+        fill_request: FillReplayRequest = {
+            "wallet_id": wallet.wallet_id,
+            "episode_id": wallet.episode_id,
+            "order_event_id": UUID(str(linked["order_event_id"])),
+            "position_event_id": UUID(str(linked["position_event_id"])),
+            "fact": original,
+        }
+        async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+            replayed_fill = await stage_fill_cash(session, **fill_request)
+            assert replayed_fill.status is PositionWriteStatus.REPLAYED
+            assert replayed_fill.effects is None
+
+        for kind, correction, linked_predecessor in (
+            (PositionEventKind.REPLACE, correction_id, UUID(str(linked["position_event_id"]))),
+            (PositionEventKind.VOID, void_id, correction_id),
+        ):
+            request: CorrectionReplayRequest = {
+                "wallet_id": wallet.wallet_id,
+                "episode_id": wallet.episode_id,
+                "order_event_id": UUID(str(linked["order_event_id"])),
+                "correction_event_id": correction,
+                "supersedes_position_event_id": linked_predecessor,
+                "kind": kind,
+                "fact": replacement,
+            }
+            for writer in (stage_correction_cash, correct_fill):
+                async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+                    replayed = await writer(session, **request)
+                    if writer is correct_fill:
+                        assert replayed is None
+                    else:
+                        assert isinstance(replayed, PositionWriteResult)
+                        assert replayed.status is PositionWriteStatus.REPLAYED
+                        assert replayed.effects is None
+                invalid_corrections: tuple[CorrectionReplayRequest, ...] = (
+                    {**request, "wallet_id": uuid4()},
+                    {**request, "episode_id": current.episode_id},
+                    {**request, "order_event_id": uuid4()},
+                    {**request, "correction_event_id": uuid4()},
+                    {**request, "supersedes_position_event_id": uuid4()},
+                    {**request, "fact": replace(replacement, execution_id=uuid4())},
+                )
+                for invalid_correction in invalid_corrections:
+                    with pytest.raises((OrderConflictError, PositionIntegrityError)):
+                        async with user_session(
+                            engine_engine, owner, role=DatabaseRole.ENGINE
+                        ) as session:
+                            await writer(session, **invalid_correction)
+                with pytest.raises(OrderConflictError):
+                    async with user_session(
+                        engine_engine, uuid4(), role=DatabaseRole.ENGINE
+                    ) as session:
+                        await writer(session, **request)
+        invalid_fills: tuple[FillReplayRequest, ...] = (
+            {**fill_request, "wallet_id": uuid4()},
+            {**fill_request, "episode_id": current.episode_id},
+            {**fill_request, "order_event_id": uuid4()},
+            {**fill_request, "position_event_id": uuid4()},
+            {**fill_request, "fact": replacement},
+        )
+        for invalid_fill in invalid_fills:
+            with pytest.raises(OrderConflictError):
+                async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+                    await stage_fill_cash(session, **invalid_fill)
+        with pytest.raises(OrderConflictError):
+            async with user_session(engine_engine, uuid4(), role=DatabaseRole.ENGINE) as session:
+                await stage_fill_cash(session, **fill_request)
+
+        for kind, event_id, fact, predecessor in (
+            (PositionEventKind.RECORD, UUID(str(linked["position_event_id"])), original, None),
+            (PositionEventKind.RECORD, uuid4(), original, None),
+            (
+                PositionEventKind.REPLACE,
+                correction_id,
+                replacement,
+                UUID(str(linked["position_event_id"])),
+            ),
+            (PositionEventKind.VOID, void_id, replacement, correction_id),
+        ):
+            async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+                retried = await apply_position_event(
+                    session, wallet.episode_id, event_id, kind, fact, predecessor
+                )
+                assert retried.status is PositionWriteStatus.REPLAYED
+                assert retried.effects is None
+                assert retried.activity == old_position.activity
+
+        for kind, event_id, fact, predecessor in (
+            (PositionEventKind.RECORD, uuid4(), replace(original, execution_id=uuid4()), None),
+            (PositionEventKind.RECORD, UUID(str(linked["position_event_id"])), replacement, None),
+            (PositionEventKind.REPLACE, uuid4(), replacement, void_id),
+        ):
+            with pytest.raises(PositionIntegrityError):
+                async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+                    await apply_position_event(
+                        session, wallet.episode_id, event_id, kind, fact, predecessor
+                    )
+        with pytest.raises(PositionIntegrityError):
+            async with user_session(engine_engine, uuid4(), role=DatabaseRole.ENGINE) as session:
+                await apply_position_event(
+                    session,
+                    wallet.episode_id,
+                    UUID(str(linked["position_event_id"])),
+                    PositionEventKind.RECORD,
+                    original,
+                )
+        with pytest.raises(PositionIntegrityError):
+            async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+                assert old_position.activity.source_proof is not None
+                await initialize_position_source(
+                    session, wallet.episode_id, uuid4(), old_position.activity.source_proof
+                )
+        async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+            after = await get_wallet(session)
+            old_after = await read_position_snapshot(session, wallet.episode_id)
+            new_after = await read_position_snapshot(session, current.episode_id)
+            assert after is not None
+            assert (after.episode_id, after.balance, after.revision) == (
+                current.episode_id,
+                Money.of("2500", "USDT"),
+                current.revision,
+            )
+            assert old_after is not None and old_after.activity == old_position.activity
+            assert old_after.positions == old_position.positions
+            assert new_after is not None and new_position is not None
+            assert new_after.activity == new_position.activity
+            assert new_after.positions == new_position.positions
+            assert (
+                await session.execute("SELECT * FROM paper_wallet_ledger ORDER BY id")
+            ).all() == ledger
+            assert (
+                await session.execute("SELECT id FROM audit_events ORDER BY id")
+            ).all() == audits
+            for table, rows in history.items():
+                assert (
+                    await session.execute(f"SELECT * FROM {table} ORDER BY to_jsonb({table})::text")
+                ).all() == rows
     finally:
         await market.dispose()
 

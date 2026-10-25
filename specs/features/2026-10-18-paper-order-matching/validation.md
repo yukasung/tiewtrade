@@ -304,3 +304,57 @@ NC-F15-10 checkpoint: migration up/down/up และ affected order/wallet/posit
 Dispatch checkpoint 2026-10-20: affected safety 118 tests ผ่าน; smoke หนึ่งรอบครบ 500 commands/100 cycles และ post-stop economics ผ่านทุก owner แต่ไม่ถือเป็น acceptance เพราะ drain Failed. รอบยืนยันถัดไปยัง Failed (publisher/progress); เก็บทั้งสองผลตาม M5 evidence และคง Pending Full Validation.
 
 Publisher/worker checkpoint 2026-10-20: supervision และ atomic per-owner claim แก้ครบ; affected safety 125 tests และ follow-up dispatch/supervision 12 tests ผ่าน. `evidence/m6-supervised-smoke-20261020/` ผ่าน 500 commands/100 cycles พร้อม financial oracle; `evidence/m6-supervised-recovery-20261020/` ผ่าน restart/churn/Redis recovery smoke. เก็บผล Failed เดิมและคง W1–W3/V-19, W4 บน final schema และ final candidate gates เป็น Pending Full Validation; smoke ไม่แทน acceptance ชุดเต็ม.
+
+
+## Deep-review remediation candidate — 2026-10-25
+
+Owner requested remediation of two High findings (correction rebase cursor and
+execution-time type-specific/cumulative maximum constraints) and one Medium finding
+(immutable MARKET expiry outcome). The uncommitted candidate is on
+`fix/f15-review-findings`; scope, regression mapping, retained failed harness attempts
+and final evidence are recorded in [M5 checkpoint](evidence/m5-candidate.md#deep-review-remediation--2026-10-25).
+V-3/V-4/V-5/V-8/V-10/V-12/V-15 are affected and receive new targeted evidence.
+Historical V-18/CI results above apply to the earlier merged candidate; this remediation
+still requires full candidate/required CI gates before merge. V-19 remains
+`Pending Full Validation`; this checkpoint does not declare Completed or activation.
+
+Final local serial confirmation: **302 tests passed** in 90.517s,
+including the new real-role PostgreSQL regressions, affected order/wallet/position safety,
+core/Hypothesis, market input/adapter and gate tests. Ruff/format, mypy (477 files), seven
+import contracts and final diff review passed. These results close the scoped local
+remediation; final-commit full candidate/required CI and V-19 remain pending as above.
+
+
+## Local full backend candidate — 2026-10-25
+
+Full backend confirmation on the final remediation source passed **3267 tests**,
+with **2 venue-contract tests deselected**, in **795.874s**. Real-role PostgreSQL/Redis,
+migration cycles, API, domain/property, financial transaction/race/recovery, security,
+import/purity and F-15 regression tests all completed in one serial pytest invocation.
+Full attempt 1 exposed a process-kill test's dependence on global scan duration; the
+owner-scoped real-claim/barrier correction passed targeted tests and the full run.
+Full attempt 2 had an unrelated intermittent prepared-indicator failure; its unchanged
+standalone recheck and the final full run passed. Earlier failed results are retained
+with diagnosis/limitations in [M5 checkpoint](evidence/m5-candidate.md#full-backend-candidate-continuation--2026-10-25).
+
+V-18 local backend regression is **Passed**; required CI on a final commit remains
+pending. Runtime/static/import evidence remains valid; full mypy after the final test
+change passed 477 files. No commit/push/merge is included. V-19 stays
+`Pending Full Validation`; this does not declare Completed or activation.
+
+
+## Required CI checkpoint — 2026-10-25
+
+Remediation commit `f2240a4` passed all six jobs in push CI
+[40169303759](https://github.com/yukasung/tiewtrade/actions/runs/40169303759)
+and PR CI [40169323746](https://github.com/yukasung/tiewtrade/actions/runs/40169323746).
+Backend totals are 3267 and 3270 respectively (2 venue-contract tests deselected);
+PR CI includes main's F-13 remediation. Config, API contract, frontend, containers,
+browser E2E, backend static/import checks and full regression all passed without reruns.
+
+The branch is synchronized with main to satisfy the up-to-date branch requirement.
+Its pre-documentation tree exactly matches the PR merge tree verified by that CI;
+there are no further runtime/test changes. The latest-head required CI is tracked in
+[PR #33](https://github.com/yukasung/tiewtrade/pull/33). This closes the runtime candidate
+CI evidence; merging the PR still requires the synchronized head's checks. V-19 remains
+`Pending Full Validation` at the approved release checkpoint; F-15 is not Completed.

@@ -174,3 +174,12 @@ Local Docker/catalog2/2/manual7/7 evidence remains valid. See [M4 evidence](evid
 and its retained run log. Earlier failures remain recorded and their root cause is not
 established. V-19 remains **Partial — required CI on final commit pending**; V-18/V-20
 unchanged. No commit/push/merge or production activation.
+
+
+### PR integration — 2026-10-25
+
+Initial candidate7f51fdc passed6/6 push CI jobs. PR#36 now integrates main's approved
+F-14/F-15 fixes; affected financial/recovery tests134 passed, Ruff and mypy src passed.
+V-19 merge acceptance must use CI on the integrated final head, tracked by
+[PR#36 checks](https://github.com/yukasung/tiewtrade/pull/36/checks), not the superseded
+initial candidate. V-18/V-20 remain pending. See M4 ledger for conflict resolution/evidence.

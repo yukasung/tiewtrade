@@ -787,5 +787,114 @@ def test_correction_rebase_recalculates_queue_from_current_book_and_older_orders
         bids=(BookLevel(m(99), q(5)), BookLevel(m(1), q(10))),
         rebase=True,
     )
-    rebased = rebase_order_queues(state, current)
+    rebased = rebase_order_queues(state, current, constraints=constraints())
     assert [value.queue_ahead for value in rebased.orders] == [q(5), q(7)]
+
+
+def test_correction_rebase_advances_durable_cursor_and_rejects_older_trade() -> None:
+    from tiewtrade.infra.paper_orders.codec import state_from_payload, state_payload
+
+    state = admit(MatchingState(SCOPE, PAIR), intent(limit="99", size="2"))
+    state = advance(state, book()).state
+    state = advance(state, trade(2, "10.5")).state
+    current = replace(
+        book(4, at_ms=401, rebase=True),
+        bids=(BookLevel(m(99), q(0)), BookLevel(m(1), q(10))),
+    )
+    state = rebase_order_queues(state, current, constraints=constraints())
+    recovered = state_from_payload(state_payload(state))
+    assert recovered.inputs[-1] == current
+    assert recovered.orders[0].queue_ahead == q(0)
+    with pytest.raises(SourceUnavailableError):
+        advance(recovered, trade(3, "1", trade_id=2, at_ms=301))
+    result = advance(recovered, trade(5, "1", trade_id=3, at_ms=501))
+    assert result.state.orders[0].filled == q("1.5")
+    assert len(result.fills) == 1
+
+
+@pytest.mark.parametrize("levels", [(("50", "2"),), (("50", "0.5"), ("60", "1"))])
+def test_market_budget_cannot_exceed_cumulative_quantity_maximum(
+    levels: tuple[tuple[str, str], ...],
+) -> None:
+    rules = replace(constraints(), maximum_quantity=q(1))
+    state = admit_order(
+        MatchingState(SCOPE, PAIR),
+        intent(budget="100"),
+        now=T0,
+        sequence=1,
+        cash=m(2500),
+        held=q(0),
+        constraints=rules,
+        reference_price=m(100),
+        policy=FixturePolicy(),
+        catalog=CATALOG,
+    )
+    # Both a falling price and cumulative multi-level fills must obey maxQty.
+    event = replace(book(bid="49", ask="50"), asks=tuple(BookLevel(m(p), q(v)) for p, v in levels))
+    with pytest.raises(OrderConstraintError) as caught:
+        advance_matching(
+            state,
+            event,
+            now=event.received_at,
+            constraints=constraints(),
+            market_constraints=rules,
+            execution_ids=(UUID(int=900), UUID(int=901)),
+            catalog=CATALOG,
+        )
+    assert caught.value.violations == (ConstraintViolation.ABOVE_MAXIMUM_QUANTITY,)
+    assert state.orders[0].filled == q(0)
+
+
+def test_matching_uses_market_capability_and_persists_its_replay_contract() -> None:
+    from tiewtrade.infra.paper_orders.codec import state_from_payload, state_payload
+
+    state = admit(MatchingState(SCOPE, PAIR), intent(budget="150"))
+    market_rules = replace(constraints("0.03"), supported_types=(OrderType.MARKET,))
+    event = replace(book(ask="110", bid="109"), asks=(BookLevel(m(110), q(10)),))
+    result = advance_matching(
+        state,
+        event,
+        now=event.received_at,
+        constraints=constraints(),
+        market_constraints=market_rules,
+        execution_ids=(UUID(int=900),),
+        catalog=CATALOG,
+    )
+    assert result.state.orders[0].filled == q("1.35")
+    recovered = state_from_payload(state_payload(result.state))
+    assert recovered.input_market_constraints == (market_rules,)
+    with pytest.raises(OrderConflictError):
+        advance_matching(
+            recovered,
+            event,
+            now=event.received_at,
+            constraints=constraints(),
+            market_constraints=replace(market_rules, version="changed"),
+            execution_ids=(),
+            catalog=CATALOG,
+        )
+    for unavailable in (
+        replace(market_rules, unsupported_rules=("MARKET_RULE_UNAVAILABLE",)),
+        replace(market_rules, supported_types=(OrderType.LIMIT,)),
+    ):
+        with pytest.raises(UnsupportedOrderError):
+            advance_matching(
+                state,
+                event,
+                now=event.received_at,
+                constraints=constraints(),
+                market_constraints=unavailable,
+                execution_ids=(),
+                catalog=CATALOG,
+            )
+
+
+def test_correction_rebase_keeps_cursor_when_latest_book_precedes_consumed_trade() -> None:
+    state = advance(admit(MatchingState(SCOPE, PAIR), intent(limit="99", size="2")), book()).state
+    state = advance(state, trade(2, "10.5")).state
+    current = replace(book(), rebase=True)
+    rebased = rebase_order_queues(state, current, constraints=constraints())
+    assert rebased.inputs == state.inputs
+    assert rebased.input_market_constraints == state.input_market_constraints
+    assert rebased.orders[0].filled == q("0.5")
+    assert rebased.orders[0].queue_ahead == q(10)
