@@ -2,8 +2,8 @@
 
 วันที่:2026-10-25 · branch `feat/f16-manual-order-entry` · uncommitted working tree
 
-**สถานะ: Partial — ยังไม่พร้อม merge/Completed.** Required CI บน final commit
-ยังต้องผ่านก่อน merge; local Chromium และ Docker gates ผ่านแล้วตาม follow-up ด้านล่าง.
+**สถานะ: Development Complete — merged PR#36; V-19 Passed.**
+Final candidate และ post-merge CI ผ่านแล้วตาม checkpoint ด้านล่าง; ยังไม่ Completed.
 V-18 Pending Dependency F-18; V-20 Pending Full Validation ที่ release checkpoint.
 
 Ready for Code Review แจ้งใน session ทันทีหลัง implementation ครบ โดยสรุป code/tests/
@@ -320,3 +320,13 @@ PR/push CI on the integrated head supersede the initial candidate's CI for merge
 check [PR checks](https://github.com/yukasung/tiewtrade/pull/36/checks) for the exact final SHA.
 V-19 remains pending those checks at this checkpoint. V-18/F-18 and V-20 full validation
 remain pending independently; PR creation does not authorize merging or activation.
+
+
+### Post-merge result
+
+Owner authorized merge after final-head verification. PR#36 merged into main as
+`1f16ddbd3c8a6b33b24d6e150d09dc2565801b1b`, retaining candidate
+`ab248fe190bc814cc8d7b0f84b4bef264d811a2b` whose push/PR checks passed12/12.
+[Post-merge CI40208544618](https://github.com/yukasung/tiewtrade/actions/runs/40208544618)
+completed successfully with6/6 jobs. Local main was fast-forwarded to the merge commit.
+V-19 Passed; V-18/F-18 and V-20 remain pending. No Live activation or release workload.

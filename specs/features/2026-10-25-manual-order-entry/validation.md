@@ -29,7 +29,7 @@ Requirements: **Approved 2026-10-25**
 | V-16 | เส้นทาง browser→API→DB→engine→UI ต่อครบ | Chromium isolated Paper harness ใช้ real PostgreSQL/production API/inbox/bridge/F-15 และ recorded source พร้อม explicit test policy: MARKET BUY/SELL, LIMIT partial→cancel, receipt loss→reload→lookup/discovery→same-key retry, command rejected หลัง transfer โดยไม่มี order row, partial cancel/target already FILLED, episode reset race, route reload/back/forward, logout/login owner เดิมและสลับ owner, journal storage failure และ Live unavailable; assert DB identities/effects ไม่ใช่ screenshot อย่างเดียว | M3 | Passed — local M1–M4 evidence; test composition only |
 | V-17 | Dependency ไม่พร้อมไม่เปิดคำสั่งโดยอ้อม | production composition ใช้ policy=None; GET readiness blocked และ POST NEW 503 ไม่มี executable inbox row; forged request/UI enabled flag/test env ใช้เปิดไม่ได้; queued execution recheck gate; cancel ของ order เดิมไม่ต้องผ่าน opening policy | M2/M3 | Passed — local M1–M4 evidence; test composition only |
 | V-18 | Production Paper order admission พร้อมจริง | หลัง F-18 ได้รับอนุมัติ/implement: เชื่อม risk policy จริงกับ account/price/catalog/order gates, safety/parity tests สำหรับ loss-limit/unknown/price outage/ลดความเสี่ยงตาม trading-safety; full browser→engine acceptance ด้วย production composition และเกณฑ์ที่ F-18 กำหนด | Integration checkpoint หลัง F-18 ก่อน activation/Completed | Pending Dependency — F-18; ห้ามแทนด้วย test policy |
-| V-19 | Final candidate ผ่าน review และด่านก่อน merge | แจ้ง Ready for Code Review; resolve Critical/High และ findings ใน scope, backend full regression/lint/format/mypy/import-linter, frontend lint/types/tests/build, API generation/check, Chromium E2E, config/docker/required CI บน candidate สุดท้าย | M4 ก่อน merge | Partial — local review/checks ผ่าน; existing E2E/Docker/required CI ยัง Pending |
+| V-19 | Final candidate ผ่าน review และด่านก่อน merge | แจ้ง Ready for Code Review; resolve Critical/High และ findings ใน scope, backend full regression/lint/format/mypy/import-linter, frontend lint/types/tests/build, API generation/check, Chromium E2E, config/docker/required CI บน candidate สุดท้าย | M4 ก่อน merge | Passed — final candidate ab248fe push/PR CI12/12 and merge1f16ddb post-merge CI40208544618 6/6; see post-merge checkpoint |
 | V-20 | Release acceptance รวมเส้นทาง F-16 ไม่ทำให้ order/resource guarantees เสื่อม | ตรวจรวมเส้นทางใหม่นี้ใน release profile ที่อนุมัติ โดยคงเกณฑ์/duration/threshold ของ F-15 V-19/W1–W4 และ dependency release validation ที่เกี่ยวข้อง; บันทึก affected frontend/API intake/queue/recovery/resource evidence บน final candidate ไม่ใช้ targeted smoke รับรองแทน | ชุดที่ 9 / release checkpoint ก่อน Completed | Pending Full Validation — ยังไม่รัน; ต้องมี approved integrated release profile ก่อนเริ่ม |
 
 V-18 เป็น dependency ด้าน correctness/safety ที่ยังไม่พร้อม ไม่ใช่งานโหลดที่เลื่อนแล้ว
@@ -183,3 +183,12 @@ F-14/F-15 fixes; affected financial/recovery tests134 passed, Ruff and mypy src 
 V-19 merge acceptance must use CI on the integrated final head, tracked by
 [PR#36 checks](https://github.com/yukasung/tiewtrade/pull/36/checks), not the superseded
 initial candidate. V-18/V-20 remain pending. See M4 ledger for conflict resolution/evidence.
+
+
+### Post-merge checkpoint — 2026-10-25 (Asia/Bangkok)
+
+Owner authorized merging PR#36. Final candidate `ab248fe` passed push/PR CI12/12;
+merge commit `1f16ddb` passed all6 [post-merge CI jobs](https://github.com/yukasung/tiewtrade/actions/runs/40208544618).
+V-19 now Passed. Development milestone is complete; V-18 Pending F-18 and V-20 Pending
+Full Validation remain unchanged, so F-16 is not Completed and production admission/Live
+execution remain unavailable. Historical Partial/Failed attempts above are retained.
