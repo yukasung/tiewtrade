@@ -142,7 +142,7 @@ Paper order ที่ยังไม่ fill ต้องไม่ fill หล�
 
 ### 5. Rolling deployment และ rollback
 
-- migration 0039 เริ่มด้วย catalog mutation disabled และ seed BTC/ETH ให้ runtime เดิมอ่านได้
+- migration 0040 เริ่มด้วย catalog mutation disabled และ seed BTC/ETH ให้ runtime เดิมอ่านได้
 - deploy readers/writers รุ่นใหม่ทุก process ก่อน โดยแต่ละ process เขียน heartbeat ที่มี
   `catalog_protocol_version`, deployment generation และ lease expiry
 - mutation endpoint ปฏิเสธจน owner รัน enable command หลัง drain process รุ่นเก่า, รอ lease เก่า
@@ -177,7 +177,7 @@ Paper order ที่ยังไม่ fill ต้องไม่ fill หล�
 |---|---|
 | `specs/decisions/005-dynamic-supported-symbol-catalog.md` | ADR ของ source of truth, fence/lock order, audit ownership, bootstrap และ rollout gate |
 | `specs/standards/database.md`, config/provisioning/Compose | บันทึกและสร้าง bootstrap role แบบ deployment-only; ไม่ mount ให้ runtime |
-| `backend/migrations/versions/0039_supported_symbol_catalog.py` | additive registry/fence/events/views/functions/grants/triggers, seed BTC/ETH, membership/bootstrap, revision/idempotency/effect/readiness/constraints/protocol heartbeats และ audit shapes; downgrade มี guard เมื่อมี post-seed events |
+| `backend/migrations/versions/0040_supported_symbol_catalog.py` | additive registry/fence/events/views/functions/grants/triggers, seed BTC/ETH, membership/bootstrap, revision/idempotency/effect/readiness/constraints/protocol heartbeats และ audit shapes; downgrade มี guard เมื่อมี post-seed events |
 | `backend/src/tiewtrade/core/market_catalog.py` | แทน Literal/static pairs ด้วย immutable snapshot/status/value contracts ที่ไม่พึ่ง infra |
 | `backend/src/tiewtrade/core/paper_matching.py` และ callers | รับ snapshot/revision จาก caller; ลดความเสี่ยงไม่อิง active set เปิดความเสี่ยงต้อง active |
 | `backend/src/tiewtrade/infra/platform/` (ใหม่) | storage ของ membership, catalog commands/snapshots/history/effects/impact aggregates และ bootstrap client |

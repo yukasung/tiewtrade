@@ -34,7 +34,7 @@ fresh migration และ browser จริง การตรวจ `PARTIAL` �
 fence ของ Paper BUY, indicator catalog filtering, runtime maintenance ของ re-add, candle metadata
 pruning, quote-supervisor restart และ UI polling จึงคงผล full regression เดิมเฉพาะส่วนที่ไม่กระทบ
 และ rerun affected set 207 tests บน source สุดท้ายตาม testing §7 นอกจากนี้ migration
-`0039 -> 0038 -> 0039` ผ่าน และ quality gates backend/frontend ที่ได้รับผลกระทบผ่าน
+`0040 -> 0039 -> 0040` ผ่าน และ quality gates backend/frontend ที่ได้รับผลกระทบผ่าน
 
 ## Coverage สำคัญ
 

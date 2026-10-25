@@ -14,8 +14,8 @@ from __future__ import annotations
 from alembic import op
 from sqlalchemy import text
 
-revision = "0039"
-down_revision = "0038"
+revision = "0040"
+down_revision = "0039"
 branch_labels = None
 depends_on = None
 

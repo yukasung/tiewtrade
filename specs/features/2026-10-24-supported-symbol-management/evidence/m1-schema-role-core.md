@@ -8,7 +8,7 @@
 
 - บันทึก ADR-005 เรื่อง PostgreSQL source of truth, pair fence/lock order, audit ownership,
   bootstrap role และ rolling protocol gate
-- เพิ่ม migration `0039_supported_symbol_catalog.py` แบบ additive โดยเริ่มจาก BTC/USDT และ
+- เพิ่ม migration `0040_supported_symbol_catalog.py` แบบ additive โดยเริ่มจาก BTC/USDT และ
   ETH/USDT, ปิด catalog mutation ไว้ และคง static compatibility snapshot
 - เพิ่ม registry, global revision control, pair fence/projection, append-only events,
   idempotent command state, immutable constraints snapshots, readiness/effects และ protocol heartbeat
@@ -26,7 +26,7 @@
 | การตรวจ | ผล |
 |---|---|
 | Alembic single head | `0039 (head)` |
-| migration `0039 → 0038 → 0039` | ผ่าน |
+| migration `0040 → 0039 → 0040` | ผ่าน |
 | clean schema replay `base → head → base → head` | ผ่าน |
 | F-37 catalog/privilege/bootstrap integration | 7 passed |
 | M1 affected tests รวม migration replay/audit/core/CLI | 42 passed |

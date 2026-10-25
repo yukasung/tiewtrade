@@ -31,7 +31,7 @@
 
 - File/location: `backend/src/tiewtrade/infra/paper_orders/dispatch.py`,
   `backend/src/tiewtrade/infra/paper_orders/storage.py`,
-  `backend/src/tiewtrade/infra/paper_orders/worker.py` และ migration `0039`
+  `backend/src/tiewtrade/infra/paper_orders/worker.py` และ migration `0040`
 - Problem: worker ตรวจเฉพาะสถานะ ACTIVE ปัจจุบัน จึงแยกไม่ออกว่า command ถูก admit ก่อน removal
   ที่เกิดคั่นกลางแล้ว pair ถูก re-add
 - Impact: queued/resting BUY เก่าอาจถูก execute หลังเจ้าของถอนคู่ไปแล้ว ทำให้เกิด unintended trade,
@@ -44,7 +44,7 @@
 
 ### High — indicator scheduler ยังเลือกงานของคู่ที่ถอนออก
 
-- File/location: `backend/migrations/versions/0039_supported_symbol_catalog.py`
+- File/location: `backend/migrations/versions/0040_supported_symbol_catalog.py`
 - Problem: claim/coalesce/rollout readiness ยังอิง job เดิมโดยไม่กรอง catalog และ dispatch modulus
   ยังอิงจำนวนคู่คงที่
 - Impact: ใช้ทรัพยากรกับคู่ที่ถอน, readiness count ผิด และ scheduler อาจคำนวณ dispatch ผิดเมื่อ
@@ -66,7 +66,7 @@
 
 ### High — re-add ระยะ REQUESTED/FAILED ตัด maintenance feed ของ exposure เดิม
 
-- File/location: `backend/migrations/versions/0039_supported_symbol_catalog.py`
+- File/location: `backend/migrations/versions/0040_supported_symbol_catalog.py`
 - Problem: runtime view รวม maintenance เฉพาะ REMOVED; เมื่อเริ่ม re-add สถานะเปลี่ยนเป็น REQUESTED
   หรือ FAILED ทั้งที่ยังมี position/order เดิม คู่จะหายจาก runtime feed
 - Impact: position เดิมขาดข้อมูลราคา/แท่งสำหรับ risk และ reduce-risk path
