@@ -367,3 +367,183 @@ Diff SHA-256 ของ position writer/regression เทียบ base ใหม
 และให้ required CI ของ PR ตรวจ combined candidate บน commit สุดท้าย.
 สถานะ required CI ณ checkpoint นี้ยัง Pending; ติดตามผลจาก PR/Actions ของ branch
 `fix/f14-review-findings`. ไม่มีคำสั่ง merge และ V-17 คง Pending Full Validation
+
+
+## Financial integration replay follow-up - 2026-10-25
+
+Owner authorized the Medium integration finding fix. Base `eb8c7d8` (PR #32),
+branch `fix/f14-integration-replay`, uncommitted changes in `/tmp/tiewtrade-f14-review`.
+PR #32 itself was merged and post-merge CI run `40170755797` passed all six jobs;
+that result does not validate this new diff.
+
+- Reuse the per-owner advisory lock and wallet/episode ownership check through
+  `paper_orders/storage.lock_episode`; `lock_active_episode` retains the default
+  active/nonclosed fence for existing callers. Closed-episode reads are explicit.
+- `stage_fill_cash` and `stage_correction_cash` verify committed linkage and exact
+  F-14 replay before requiring active status for new writes. `correct_fill` avoids
+  loading matching state on replay while preserving checkpoint validation before
+  new corrections. No calculation, schema, trading policy or network change.
+- Extend the real fill/REPLACE/VOID/reset test through all three financial callers.
+  Verify unchanged old/new position/activity/revision, cash ledger, order events,
+  projections, reservations, execution links and audit IDs. Reject wrong wallet,
+  owner, episode, event/predecessor identity and payload/execution identity.
+- Regression against base source fails at `stage_fill_cash` after successful reset:
+  `OrderConflictError: Paper episode is not active`. Restored candidate source
+  passes the same scenario. Base check artifact:
+  `/tmp/tiewtrade-f14-replay-before-confirm.xml`.
+
+Environment: Python 3.12.15 and unchanged lockfile/venv; dedicated PostgreSQL 16
+container on port 55452, real API/ENGINE/SCAN/MIGRATOR/MARKET_DATA roles; Redis on
+56396. New database `tiewtrade_f14_replay`, bootstrap scripts and Alembic upgrade
+head (`0040`) passed. No application DB, Live order or Binance request.
+Runner `/tmp/tiewtrade-f14-replay-run.py` sets the dedicated role/Redis URLs.
+
+Commands and results (pytest uses `-p no:cacheprovider -q --tb=short`):
+
+1. `tests/infra/execution_market tests/infra/paper_wallet tests/infra/positions
+   tests/services/api/test_paper_wallet_transaction.py` on the reused candidate DB:
+   **161 passed / 3 failed**, 108.288s, `/tmp/tiewtrade-f14-integration-replay.xml`.
+   Downgrade refusal encountered supported-symbol runtime history not accepted by
+   the older test's expected guard list; `second_input` had no admission projection;
+   reset timeout expired before the injected barrier (`reached` false).
+2. Same selection on the fresh DB with final control flow: **159 passed / 5 failed**,
+   169.551s, `/tmp/tiewtrade-f14-integration-replay-fresh.xml`. Downgrade test passed.
+   Failures: process recovery `after_commit` could not claim; `reservations` recovery
+   remained ACCEPTED; `lost_commit_reply` did not reach reply-loss barrier; fairness
+   test had no projections; SELL reservation race had no successful outcome.
+3. Recheck all 16 `test_accept_restart_fill_and_cash_are_atomic` cases plus the
+   failed process/fairness/SELL/timeout tests: **19 passed / 1 failed**, 44.449s,
+   `/tmp/tiewtrade-f14-replay-confirm.xml`. The remaining failure was a different
+   fault parameter, `projection_revision`, which remained ACCEPTED after recovery.
+4. Diagnostic run of `projection_revision` passed (temporary plugin only prints
+   defer exception type/reason; observed the intended injected RuntimeError).
+   Uninstrumented same-source confirmation **1 passed**, 2.641s,
+   `/tmp/tiewtrade-f14-replay-projection-confirm.xml`.
+
+Final-flow JUnit identity union of rounds 2-4 covers **164 unique Passed tests**,
+including all 16 replay/fault cases. This is combined evidence, not a single green
+164-test run. Preserve all Failed results above. Exact causes of scheduling/source
+failures are not proven; do not claim that isolated success establishes root cause.
+No test assertion, timeout or threshold was weakened. The populated downgrade test
+can leave the shared test DB at 0038; upgrade head was explicitly rerun before
+subsequent execution-market checks. The first baseline attempt on that downgraded
+schema failed with 42P01 and is harness evidence only, not a product regression.
+A mistyped test path and a diagnostic plugin import attempt failed collection;
+corrected harness paths without modifying tests.
+
+Targeted Ruff check/format passed (4 changed Python files), mypy passed (3 source
+files); Paper isolation gate **2 passed**. `Ready for Code Review` checkpoint sent.
+Final diff review checked owner/RLS scope, lock ordering, active fence before new
+writes, replay identity/payload precedence, correction checkpoint behavior and
+unchanged ledger/order/position/audit effects; no remaining finding in this fix.
+
+Full candidate/static gates and required CI on a future committed candidate remain
+Pending before merge. No commit, push or merge authorized for this follow-up.
+V-17 remains Pending Full Validation; feature remains Development Complete rather
+than Completed. Read/write/review durations were not separately measured.
+
+### Final review adjustment and verification
+
+Kept `enable_financial_writer` as the transaction-local marker immediately after
+the owner lock for both financial helpers, preserving active conflict/error
+behavior; setting the marker does not append financial history. Rechecked the
+affected execution/cash tests and all 16 replay/fault cases on final source:
+`pytest -p no:cacheprovider tests/infra/execution_market/test_executions.py
+tests/infra/execution_market/test_worker.py::test_accept_restart_fill_and_cash_are_atomic
+-q --tb=short --junitxml=/tmp/tiewtrade-f14-replay-final.xml`: **23 passed**,
+33.099s, no failures. Ruff check/format and mypy recheck passed.
+Source/test diff SHA-256 against `eb8c7d8`: `f5a112927ad119f745349a0ec3e8685c1c1a57a5b4fd78ca9afc362ff261a5fa`.
+Final review after this adjustment found no remaining finding; candidate/full CI
+and V-17 statuses above remain Pending.
+
+
+## Follow-up local candidate validation - 2026-10-25
+
+Owner authorized full candidate validation of `fix/f14-integration-replay`, base
+`eb8c7d8`, uncommitted diff. Before running the full suite, strict mypy found 30
+errors in the new test's untyped kwargs dictionaries and union result handling.
+Added explicit TypedDict request contracts, type narrowing and a distinct loop
+variable; preserved existing assertions and runtime scenarios. No production
+source change in this validation milestone. Final test-file edit preceded full
+suite start (14:44:47 +07). Reviewed this test-only diff after validation.
+
+Fresh isolated database `tiewtrade_f14_followup_candidate` on dedicated PostgreSQL
+16 port 55452, real application roles, bootstrap SQL and Alembic head 0040 passed.
+Redis 7 on dedicated port 56396. Python 3.12.15, worktree lockfile matches the shared
+venv lockfile. Temporary worktree `.venv` link supported the existing gate runner;
+removed after validation. Runner `/tmp/tiewtrade-f14-followup-run.py` sets candidate
+source and dedicated DB/Redis URLs. No Binance call or Live order.
+
+Static gates on the final Python diff:
+- `ruff check .`: passed.
+- `ruff format --check .`: passed, 521 files.
+- `mypy`: passed, 476 files including tests.
+- `.venv/bin/lint-imports` from backend: passed, 7 contracts. An initial invocation
+  from the repository root could not find config; corrected the working directory.
+
+Full candidate command from backend via the dedicated runner:
+`python -m pytest -p no:cacheprovider
+--junitxml=/tmp/tiewtrade-f14-followup-candidate.xml --tb=short`.
+Result: **3260 passed / 1 failed / 2 venue-contract deselected**, 977.54s.
+All execution-market, position, wallet, transaction, concurrency, idempotency,
+security, migration and isolation tests in this collection passed, including the
+new caller-level post-reset regression's 16 fault/recovery parameters.
+
+Only failure:
+`tests/api/test_chart_routes.py::test_live_age_is_decided_by_server_snapshot_at_exact_boundaries[age1-STALE]`
+expected 200 but got 504 `CHART_DEADLINE_EXCEEDED`. The route has a bounded request
+deadline. This failed before a status/boundary value could be asserted; exact
+latency/root cause is unconfirmed. Do not infer that boundary arithmetic failed.
+Same-source uninstrumented isolated rerun passed **1 test**, 1.563s:
+`python -m pytest -p no:cacheprovider
+ 'tests/api/test_chart_routes.py::test_live_age_is_decided_by_server_snapshot_at_exact_boundaries[age1-STALE]'
+ -q --tb=short --junitxml=/tmp/tiewtrade-f14-followup-chart-confirm.xml`.
+No timeout/assertion/source change was made to obtain that pass. Preserve the full
+run's Failed result; it is not a single uninterrupted green full run.
+
+JUnit identity union: **3261 unique Passed tests**, zero remaining failures without
+subsequent same-source Passed evidence. Local candidate coverage/static gates are
+complete; the chart deadline variation remains a validation risk for remote CI.
+Final source/test content checksums:
+- `backend/src/tiewtrade/infra/paper_orders/storage.py`: `494b6be456f175c3f3292d827c895bc647c15065bb95ed6dc9facb56e6a6bc59`
+- `backend/src/tiewtrade/infra/paper_orders/executions.py`: `2dbf243ba9560ff1d38fe4e03af9be654576234abca58a7e164bda144affbb4f`
+- `backend/src/tiewtrade/infra/paper_orders/corrections.py`: `513a3fbb46d103afbcdf349808fb6f49da266b71d857654f1ae1d0ea50952c8b`
+- `backend/tests/infra/execution_market/test_worker.py`: `5abbf9790de4e2b9f012409d0191c68f16167b3e3095d19387eafbbc22fd79a7`
+
+Final review of the typed-test adjustment, caller active/new-write fences, owner
+scope, financial marker, replay identity and correction checkpoint ordering found
+no remaining finding in this remediation. `git diff --check` passed. No commit,
+push or merge performed. Required CI on the future final commit remains Pending;
+V-17 remains Pending Full Validation at release checkpoint. Read/review/wait time
+was not measured separately; pytest durations above are measured, not total time.
+
+
+## Follow-up publication checkpoint - 2026-10-25
+
+Owner authorized commit/push and PR publication. Remote main advanced to `1435548`
+(PR #33: F-15 matching/recovery remediation). Rebased this follow-up onto it;
+production source merged without conflict, retaining F-15 queue-rebase constraint
+arguments. Resolved only the adjacent roadmap rows by retaining both F-14 and F-15
+status/evidence. Range-diff preserves the F-14 implementation patch.
+
+Combined-candidate safety regression:
+`pytest -p no:cacheprovider tests/core/test_paper_matching.py
+ tests/infra/execution_market/test_executions.py
+ tests/infra/execution_market/test_worker.py
+ tests/infra/execution_market/test_matching_storage.py
+ tests/infra/execution_market/test_review_regressions.py
+ tests/infra/execution_market/test_pipeline.py
+ tests/infra/execution_market/test_process_recovery.py -q --tb=short
+ --junitxml=/tmp/tiewtrade-f14-rebase-safety.xml`
+Result **99 passed / 1 failed**, 59.058s. Only `second_input` fault/recovery parameter
+remained ACCEPTED instead of FILLED after the intentional batch exception.
+Same-source isolated confirmation passed **1 test**, 5.394s,
+`/tmp/tiewtrade-f14-rebase-safety-confirm.xml`. This parameter had also failed in an
+earlier grouped run; the exact recovery scheduling/source cause remains unproven.
+Keep the failed result; combined evidence covers all 100 selected safety cases.
+
+Ruff check/format of Paper-order modules and changed test passed (11 files);
+full mypy passed (477 files); diff check passed. Use the prior full/static evidence
+for unchanged inputs and require final-commit CI to verify the combined candidate.
+This is publication only: required CI Pending, no merge performed; V-17 remains
+Pending Full Validation. Git operations/wait/review time not measured separately.
