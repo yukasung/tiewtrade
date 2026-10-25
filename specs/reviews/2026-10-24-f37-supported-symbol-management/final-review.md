@@ -111,7 +111,8 @@
 - Live cancellation/fill/partial/unknown reconciliation ของ V-10 รอ F-22/F-23
 - V-18 bot stop/in-app notification รอ F-20/F-26
 - V-19 workload/stress/resource profile รอ numeric plan ที่เจ้าของอนุมัติ
-- required CI และ merge ยังไม่เกิด; milestone `Catalog/Order Safety Ready` ยังไม่ประกาศ
+- candidate CI และ PR #29 merge ผ่านแล้ว ตาม merge checkpoint ใน M5 evidence;
+  post-merge CI: [40160909137](https://github.com/yukasung/tiewtrade/actions/runs/40160909137)
 
 ไม่มีการส่ง Live order ระหว่าง validation
 
@@ -131,5 +132,8 @@ corrections และตรวจ diff/dependencies ที่ได้รับ�
 Ruff/format/mypy/import checks และ frontend ESLint/TypeScript/build ผ่าน รายละเอียดการเลือกตรวจ,
 exploratory failures และ runtime patch digest อยู่ใน [M5 evidence](../../features/2026-10-24-supported-symbol-management/evidence/m5-local-candidate.md#follow-up-review-corrections--2026-10-25)
 
-ผล: **ไม่มี Critical/High ค้างใน corrections ที่รีวิว** แต่ full candidate/required CI ต้องผ่าน
-สำหรับ source ที่รวม corrections ก่อน merge; V-10 Live, V-18/V-19 ยัง Pending ตามเดิม
+ผล: **ไม่มี Critical/High ค้างใน corrections ที่รีวิว**; full candidate/required CI บน
+`cf2efd9` ผ่าน 12/12 checks และ PR #29 merge เป็น `033671f` แล้ว
+Backend 3258 tests, frontend 265 tests และ Chromium 18+2 tests ผ่าน รายละเอียดและ post-merge
+run อยู่ใน [M5 evidence](../../features/2026-10-24-supported-symbol-management/evidence/m5-local-candidate.md#candidate-ci-และ-merge-checkpoint--2026-10-25)
+Milestone **Catalog/Order Safety Ready** ไม่ใช่ Completed; V-10 Live, V-18/V-19 ยัง Pending ตามเดิม

@@ -2,7 +2,7 @@
 
 วันที่: 2026-10-25
 
-สถานะ: **Local candidate + review fixes passed — Pending required CI และ merge**
+สถานะ: **Development Complete — Catalog/Order Safety Ready; Pending Integration / Full Validation**
 
 ## Candidate source
 
@@ -54,11 +54,12 @@ pruning, quote-supervisor restart และ UI polling จึงคงผล ful
   ที่เจ้าของอนุมัติ 2026-10-25; Paper/catalog contract ผ่านแล้ว
 - V-18 รอ F-20/F-26 integration จริง
 - V-19 รอ approved numeric release-validation profile และ full workload
-- required CI สำหรับ corrections, merge และ post-merge evidence ยัง Pending;
-  เจ้าของสั่ง commit/push ชุดแก้ทั้ง 4 findings แล้ว 2026-10-25
+- candidate CI ของ corrections ผ่านครบและ [PR #29](https://github.com/yukasung/tiewtrade/pull/29)
+  merge แล้วเป็น `033671f`; post-merge CI ติดตามที่
+  [run 40160909137](https://github.com/yukasung/tiewtrade/actions/runs/40160909137)
 
-ดังนั้นหลักฐานนี้ไม่เรียก F-37 ว่า Completed และยังไม่ประกาศ milestone
-**Catalog/Order Safety Ready** จน review, required CI และ merge ผ่านตามแผน
+F-37 ไม่ใช่ Completed; candidate review/required CI และ merge ผ่านตาม milestone
+**Catalog/Order Safety Ready** ซึ่งไม่เปลี่ยน V-10 Live, V-18 หรือ V-19 เป็น Passed
 
 ## Follow-up review corrections — 2026-10-25
 
@@ -92,3 +93,22 @@ order-activity หนึ่งกรณี fail จึงหยุดรอบ�
 affected set ตาม testing §7 ไม่มี schema/API contract หรือสูตรการเงินเปลี่ยน ต้องให้ required CI
 และ candidate gates ครบสำหรับ source ที่รวม corrections ก่อน merge ยังไม่ใช่ Completed;
 V-10 Live, V-18 และ V-19 คง Pending ตามเดิม ไม่มีการส่ง Live order
+
+## Candidate CI และ merge checkpoint — 2026-10-25
+
+- Correction commit: `cf2efd9592fd1d4035398a0016ae36e82c6fe23c`
+- [PR CI 40159910410](https://github.com/yukasung/tiewtrade/actions/runs/40159910410) และ
+  [push CI 40159907464](https://github.com/yukasung/tiewtrade/actions/runs/40159907464)
+  ผ่านครบ 6/6 jobs ต่อรอบ รวม 12/12 checks บน source เดียวกัน
+- Backend full regression: **3258 passed, 2 deselected, 5 warnings**; PR run ใช้ 696.29s
+- Frontend full regression: **265 passed / 27 files**; lint/types ผ่าน
+- Chromium baseline **18 passed** และ F-37 catalog **2 passed**; API contract และ container checks ผ่าน
+- เจ้าของสั่ง merge แล้ว; PR #29 merge เข้า main เป็น
+  `033671f197e673bde2eafcb0bdc2e7b8ef01732a` เวลา 2026-10-25 04:10:22 UTC
+- Post-merge CI: [40160909137](https://github.com/yukasung/tiewtrade/actions/runs/40160909137)
+  เอกสาร milestone ชุดนี้นำเข้า main หลัง run นี้และ required checks ของ PR เอกสารผ่านเท่านั้น
+
+Milestone นี้ปิด dependency ด้าน catalog/order safety ของ F-16 ตาม amendment ที่อนุมัติ
+โดย F-16 ยังต้องผ่าน NC-08 และ approval/spec ของงานตัวเอง ไม่เริ่ม implementation ของ F-16
+จากการปลด dependency เพียงอย่างเดียว V-10 Live รอ F-22/F-23, V-18 รอ F-20/F-26 และ
+V-19 ยัง Pending Full Validation ตาม approved release workflow ไม่มีการเปิด Live Trading
