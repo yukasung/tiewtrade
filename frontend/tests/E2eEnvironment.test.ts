@@ -30,6 +30,20 @@ describe("E2E destructive fixture isolation", () => {
     expect(env.API_URL).toBe("https://unrelated.invalid");
   });
 
+  it("validates extra task-specific roles against the same isolated database", () => {
+    const env = isolated();
+    env.TIEWTRADE_DATABASE_URL_INDICATOR_BUILDER =
+      "postgresql+asyncpg://tiewtrade_indicator_builder:synthetic@127.0.0.1:55432/tiewtrade_e2e_review";
+    env.TIEWTRADE_DATABASE_URL_PLATFORM_BOOTSTRAP =
+      "postgresql+asyncpg://tiewtrade_platform_bootstrap:synthetic@127.0.0.1:55432/tiewtrade_e2e_review";
+
+    expect(() => e2eEnvironment(env, ["INDICATOR_BUILDER", "PLATFORM_BOOTSTRAP"])).not.toThrow();
+    env.TIEWTRADE_DATABASE_URL_PLATFORM_BOOTSTRAP =
+      "postgresql+asyncpg://tiewtrade_platform_bootstrap:synthetic@remote.invalid:55432/tiewtrade_e2e_review";
+    expect(() => e2eEnvironment(env, ["INDICATOR_BUILDER", "PLATFORM_BOOTSTRAP"]))
+      .toThrow(/^E2E_DATABASE_REJECTED$/);
+  });
+
   it.each([undefined, "", "tiewtrade", "production", "tiewtrade_e2e/other"])(
     "rejects absent or unsafe database declaration %s",
     (name) => {
