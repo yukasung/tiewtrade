@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncEngine
 
 from tiewtrade.core.orders import AdmissionPolicy, SourceUnavailableError
 from tiewtrade.infra.db import DatabaseRole, scan_session_bypassing_rls, user_session
+from tiewtrade.infra.db.session import presented_session
 from tiewtrade.infra.paper_orders.dispatch import (
     OrderClaimLostError,
     claim_order,
@@ -17,6 +18,10 @@ from tiewtrade.infra.paper_orders.worker import (
     OrderFinancialConflictError,
     persist_financial_conflict,
     process_claimed_order,
+)
+from tiewtrade.infra.platform.effects import (
+    reconcile_maintenance_proofs,
+    reconcile_removal_effects,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -80,4 +85,7 @@ async def run_paper_order_round(
                 except Exception:
                     _LOGGER.exception("paper order defer failed command_id=%s", due.command_id)
             deferred += 1
+    async with presented_session(engine, role=DatabaseRole.ENGINE) as session:
+        await reconcile_removal_effects(session)
+        await reconcile_maintenance_proofs(session)
     return PaperOrderRound(processed, deferred, skipped)

@@ -11,10 +11,12 @@ F-01 ส่งมอบเส้นทางเดียวเพื่อพิ
 """
 
 import asyncio
+import os
 from collections.abc import AsyncIterator, Awaitable, Callable
 from contextlib import asynccontextmanager
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from typing import cast
+from uuid import UUID, uuid4
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
@@ -27,13 +29,15 @@ from tiewtrade.infra.crypto.indicator_cursor import validate_keys
 from tiewtrade.infra.db import DatabaseRole, create_engine_for
 from tiewtrade.infra.db.session import presented_session
 from tiewtrade.infra.market_data.realtime_records import PriceSnapshot
-from tiewtrade.infra.market_data.realtime_storage import read_snapshot
+from tiewtrade.infra.market_data.realtime_storage import read_public_snapshot
+from tiewtrade.infra.platform import record_protocol_heartbeat
 from tiewtrade.infra.realtime.admission import AdmissionRedis, RedisAdmission
 from tiewtrade.infra.realtime.notifications import RedisNotifications
 from tiewtrade.services.api.api_key_routes import router as api_key_router
 from tiewtrade.services.api.auth_routes import router as auth_router
 from tiewtrade.services.api.authentication import authenticate_request
 from tiewtrade.services.api.candle_routes import router as candle_router
+from tiewtrade.services.api.catalog_routes import router as catalog_router
 from tiewtrade.services.api.chart_routes import router as chart_router
 from tiewtrade.services.api.indicator_admission import IndicatorBudget
 from tiewtrade.services.api.indicator_routes import router as indicator_router
@@ -47,6 +51,7 @@ from tiewtrade.services.api.settings import PRICE_SETTINGS, price_redis_url
 from tiewtrade.services.api.throttling import AuthRejectedError
 from tiewtrade.services.api.totp_routes import router as totp_router
 from tiewtrade.services.api.trading_account_routes import router as trading_account_router
+from tiewtrade.venues import live_execution_capability_source, public_rate_limit_guard
 
 # Install before Uvicorn can log a request, including when lifespan is disabled.
 install_query_redaction()
@@ -66,6 +71,12 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         DatabaseRole.API, pool_size=1, max_overflow=0, pool_timeout=0.5
     )
     app.state.auth_engine = create_engine_for(DatabaseRole.AUTH)
+    catalog_capability_source = live_execution_capability_source(
+        clock=lambda: datetime.now(UTC),
+        timeout=timedelta(seconds=5),
+        guard=public_rate_limit_guard(clock=lambda: datetime.now(UTC)),
+    )
+    app.state.catalog_capability_source = catalog_capability_source
     app.state.totp_keys = KeySource.from_environment(KeyPurpose.TOTP_SECRET)
     # **กุญแจของ API key เป็นคนละดอก** และฝั่งนี้ใช้ปิดผนึกอย่างเดียว —
     # การเปิดผนึกทำได้เฉพาะใน `engine` (`tech-stack.md` หัวข้อ 8 · F-07 RQ-4)
@@ -110,16 +121,52 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
             async with presented_session(app.state.price_engine) as session:
                 await session.execute("SET LOCAL statement_timeout = '500ms'")
                 await session.execute("SET LOCAL lock_timeout = '500ms'")
-                return await read_snapshot(session)
+                return await read_public_snapshot(session)
 
     app.state.price_broadcaster = PriceBroadcaster(RedisNotifications(redis), public_read)
+    generation_text = os.environ.get("TIEWTRADE_CATALOG_DEPLOYMENT_GENERATION")
+    heartbeat_task: asyncio.Task[None] | None = None
+    if generation_text:
+        generation = UUID(generation_text)
+        instance_id = uuid4()
+
+        async def heartbeat() -> None:
+            while True:
+                now = datetime.now(UTC)
+                async with presented_session(app.state.api_engine) as session:
+                    await record_protocol_heartbeat(
+                        session,
+                        process_kind="API",
+                        instance_id=instance_id,
+                        protocol_version=1,
+                        deployment_generation=generation,
+                        lease_expires_at=now + timedelta(seconds=30),
+                    )
+                await asyncio.sleep(10)
+
+        async with presented_session(app.state.api_engine) as session:
+            await record_protocol_heartbeat(
+                session,
+                process_kind="API",
+                instance_id=instance_id,
+                protocol_version=1,
+                deployment_generation=generation,
+                lease_expires_at=datetime.now(UTC) + timedelta(seconds=30),
+            )
+        heartbeat_task = asyncio.create_task(heartbeat())
     broadcast_task = asyncio.create_task(app.state.price_broadcaster.run())
     try:
         yield
     finally:
         broadcast_task.cancel()
-        await asyncio.gather(broadcast_task, return_exceptions=True)
+        if heartbeat_task is not None:
+            heartbeat_task.cancel()
+        await asyncio.gather(
+            *(task for task in (broadcast_task, heartbeat_task) if task is not None),
+            return_exceptions=True,
+        )
         await redis.aclose()
+        await catalog_capability_source.close()
         await app.state.indicator_engine.dispose()
         await app.state.chart_engine.dispose()
         await app.state.price_engine.dispose()
@@ -176,6 +223,7 @@ app.include_router(candle_router)
 app.include_router(chart_router)
 app.include_router(indicator_router)
 app.include_router(price_router)
+app.include_router(catalog_router)
 
 
 class Health(BaseModel):

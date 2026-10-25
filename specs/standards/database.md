@@ -51,6 +51,11 @@
   เหตุผล: เจ้าของตารางข้าม policy ของตารางตัวเองได้ ถ้าบทบาทที่รับคำขอจากเว็บเป็นเจ้าของตาราง
   กลไก RLS และตารางที่แก้ย้อนหลังไม่ได้ก็ถูกปิดได้จากโค้ดที่รันทุกวัน
 - **ไม่มีบทบาทที่ใช้ตอนทำงานปกติเป็น superuser หรือเป็นเจ้าของตาราง**
+- **`tiewtrade_platform_bootstrap`** — deployment-only login role สำหรับสร้าง
+  Platform Owner คนแรกเท่านั้น; ไม่เป็น superuser/owner/`BYPASSRLS`, ไม่มีสิทธิ์
+  ตารางโดยตรง และเรียกได้เฉพาะ `SECURITY DEFINER` bootstrap function ที่ปิดตาย
+  หลังสร้าง owner คนแรกสำเร็จ credential ห้าม mount เข้า runtime process ใด ๆ;
+  รายละเอียดตาม [ADR-005](../decisions/005-dynamic-supported-symbol-catalog.md)
 
 ## 6. Migration
 

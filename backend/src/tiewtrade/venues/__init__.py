@@ -27,6 +27,7 @@ from tiewtrade.venues.errors import (
 )
 from tiewtrade.venues.fake import FakeCandleFeed, FakePriceFeed, FakeVenue
 from tiewtrade.venues.limits import CallCost, NoRateLimit, RateLimitGuard
+from tiewtrade.venues.order_books import ExecutionCapabilitySource
 from tiewtrade.venues.price_streams import PriceFeed
 from tiewtrade.venues.prices import DEFAULT_LATEST_PRICE_COST, Price, PriceSource
 from tiewtrade.venues.signing import RequestSigner
@@ -91,6 +92,29 @@ def live_price_feed(
     return BinanceThPriceFeed(transport, BinanceThStreamTransport(clock=clock))
 
 
+def live_execution_capability_source(
+    *,
+    client: object | None = None,
+    clock: Callable[[], datetime],
+    timeout: timedelta,
+    guard: RateLimitGuard | None = None,
+) -> ExecutionCapabilitySource:
+    """Compose the public Spot capability reader behind the venue boundary."""
+    from tiewtrade.venues.binance_th import BinanceThTransport, IpWeightLimiter
+    from tiewtrade.venues.binance_th.order_book import BinanceThOrderBookFeed
+    from tiewtrade.venues.binance_th.stream_transport import BinanceThStreamTransport
+
+    transport = BinanceThTransport(
+        client=client,  # type: ignore[arg-type]
+        guard=guard
+        if guard is not None
+        else IpWeightLimiter(clock=clock, reservation_weight_floor=10),
+        clock=clock,
+        timeout=timeout,
+    )
+    return BinanceThOrderBookFeed(transport, BinanceThStreamTransport(clock=clock))
+
+
 def public_rate_limit_guard(*, clock: Callable[[], datetime]) -> RateLimitGuard:
     """A single public-data reservation guard for all sources in one process."""
     from tiewtrade.venues.binance_th import IpWeightLimiter
@@ -142,6 +166,7 @@ __all__ = [
     "CandleFeed",
     "CandlePage",
     "CandleSource",
+    "ExecutionCapabilitySource",
     "FakeCandleFeed",
     "FakePriceFeed",
     "FakeVenue",
@@ -167,6 +192,7 @@ __all__ = [
     "WalletSource",
     "live_candle_feed",
     "live_candle_source",
+    "live_execution_capability_source",
     "live_price_feed",
     "live_wallet_factory",
     "public_rate_limit_guard",

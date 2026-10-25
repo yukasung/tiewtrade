@@ -85,9 +85,18 @@ async def test_cleanup_removes_only_expired_observations() -> None:
 
 
 @pytest.mark.parametrize("base", ["SOL", "XRP", "DOGE", "UNSUPPORTED"])
-async def test_direct_db_rejects_unsupported_series(base: str) -> None:
-    with pytest.raises(ValueRejectedError):
-        await insert_raw("1", base=base)
+async def test_direct_db_preserves_inactive_historical_series(
+    base: str, migrator_engine: AsyncEngine
+) -> None:
+    async with migrator_engine.begin() as connection:
+        await connection.execute(
+            text(
+                "INSERT INTO supported_symbol_registry(base,quote) VALUES(:base,'USDT') "
+                "ON CONFLICT DO NOTHING"
+            ),
+            {"base": base},
+        )
+    await insert_raw("1", base=base)
 
 
 async def test_active_fetch_unit_requires_both_bounds() -> None:

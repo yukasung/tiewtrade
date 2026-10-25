@@ -7,6 +7,7 @@ import { navigateAccountPage } from "../src/accountNavigation";
 import type { MouseEvent } from "react";
 
 const observed = vi.hoisted(() => ({ mounts: [] as string[], exits: [] as string[], clients: [] as unknown[] }));
+let platformRole: string | null = null;
 function Panel({ name }: { name: string }) {
   const client = useQueryClient();
   useEffect(() => {
@@ -21,12 +22,14 @@ vi.mock("../src/TotpPanel", () => ({ TotpPanel: () => <Panel name="security" /> 
 vi.mock("../src/ApiKeyPanel", () => ({ ApiKeyPanel: () => <Panel name="api-keys" /> }));
 vi.mock("../src/TradingAccountPanel", () => ({ TradingAccountPanel: () => <Panel name="trading-account" /> }));
 vi.mock("../src/RealtimePricePanel", () => ({ RealtimePricePanel: () => <Panel name="prices" /> }));
+vi.mock("../src/SupportedSymbolPanel", () => ({ SupportedSymbolPanel: () => <Panel name="supported-symbols" /> }));
 beforeEach(() => {
   observed.mounts = []; observed.exits = []; observed.clients = [];
+  platformRole = null;
   window.history.replaceState(null, "", "/");
   vi.stubEnv("VITE_CHART_ENABLED", "1");
   vi.stubGlobal("fetch", vi.fn((url: string) => Promise.resolve(new Response(JSON.stringify(
-    url.endsWith("auth/me") ? { user_id: "nav-owner", totp_enabled: false } : { csrf_token: "t" },
+    url.endsWith("auth/me") ? { user_id: "nav-owner", totp_enabled: false, platform_role: platformRole } : { csrf_token: "t" },
   )))));
 });
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); vi.unstubAllEnvs(); });
@@ -74,6 +77,19 @@ it("keeps the disabled chart default without mounting modules or starting their 
   expect(screen.queryByRole("link", { name: "กราฟแท่งเทียน" })).toBeNull();
   expect(observed.mounts).toEqual([]);
   await waitFor(() => expect(window.location.pathname).toBe("/chart"));
+});
+
+it("shows catalog management only to a platform role and rejects a trader deep link", async () => {
+  window.history.replaceState(null, "", "/supported-symbols");
+  render(<AuthPanel />);
+  await screen.findByTestId("module-chart");
+  expect(screen.queryByRole("link", { name: "คู่เทรดที่รองรับ" })).toBeNull();
+  cleanup();
+  platformRole = "PLATFORM_ADMIN";
+  window.history.replaceState(null, "", "/supported-symbols");
+  render(<AuthPanel />);
+  expect(await screen.findByTestId("module-supported-symbols")).toBeTruthy();
+  expect(screen.getByRole("link", { name: "คู่เทรดที่รองรับ", current: "page" })).toBeTruthy();
 });
 
 it("navigates a plain internal click without reloading and preserves modified clicks", async () => {

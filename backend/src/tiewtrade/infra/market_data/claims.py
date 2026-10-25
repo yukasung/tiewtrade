@@ -37,16 +37,19 @@ async def claim_next(session: MarketDataSession, worker: str) -> Claim | None:
     session = require_market_data_session(session)
     row = (
         (
-            await session.execute("""SELECT * FROM market_candle_demand
-        WHERE next_attempt_at<=clock_timestamp() AND
-          (token IS NULL OR lease_until<=clock_timestamp()) AND
-          (status IN ('PENDING','RUNNING') OR
-           (status IN ('FAILED','UNAVAILABLE') AND requested_at>checked_at
-             AND requested_at>=next_attempt_at) OR
-           (status='COMPLETE' AND (desired_start<leased_start OR desired_end>leased_end
-             OR refresh_requested_at>coalesce(refresh_served_at,'-infinity'))))
-        ORDER BY checked_at NULLS FIRST, requested_at,base,timeframe
-        FOR UPDATE SKIP LOCKED LIMIT 1""")
+            await session.execute("""SELECT d.* FROM market_candle_demand d
+        JOIN runtime_supported_symbols s ON s.base=d.base AND s.quote=d.quote
+          AND s.runtime_mode IN ('PUBLIC','PREPARING')
+        WHERE d.next_attempt_at<=clock_timestamp() AND
+          (d.token IS NULL OR d.lease_until<=clock_timestamp()) AND
+          (d.status IN ('PENDING','RUNNING') OR
+           (d.status IN ('FAILED','UNAVAILABLE') AND d.requested_at>d.checked_at
+             AND d.requested_at>=d.next_attempt_at) OR
+           (d.status='COMPLETE' AND (d.desired_start<d.leased_start
+             OR d.desired_end>d.leased_end
+             OR d.refresh_requested_at>coalesce(d.refresh_served_at,'-infinity'))))
+        ORDER BY d.checked_at NULLS FIRST,d.requested_at,d.base,d.timeframe
+        FOR UPDATE OF d SKIP LOCKED LIMIT 1""")
         )
         .mappings()
         .first()
@@ -91,10 +94,13 @@ async def lock_claim(session: MarketDataSession, claim: Claim) -> RowMapping:
     row = (
         (
             await session.execute(
-                """SELECT * FROM market_candle_demand
-        WHERE base=:base AND quote=:quote AND timeframe=:timeframe
-          AND token=:token AND generation=:generation AND lease_until>clock_timestamp()
-        FOR UPDATE""",
+                """SELECT d.* FROM market_candle_demand d
+        JOIN runtime_supported_symbols s ON s.base=d.base AND s.quote=d.quote
+          AND s.runtime_mode IN ('PUBLIC','PREPARING')
+        WHERE d.base=:base AND d.quote=:quote AND d.timeframe=:timeframe
+          AND d.token=:token AND d.generation=:generation
+          AND d.lease_until>clock_timestamp()
+        FOR UPDATE OF d""",
                 claim.parameters(),
             )
         )

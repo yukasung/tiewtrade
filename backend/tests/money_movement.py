@@ -393,7 +393,11 @@ def _check_composition_uses(
         for node in nodes
         if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
     }
-    approved_factories = {"live_wallet_factory", "live_candle_source"}
+    approved_factories = {
+        "live_wallet_factory",
+        "live_candle_source",
+        "live_execution_capability_source",
+    }
     if path.parts[-4:] == ("tiewtrade", "services", "market_data", "main.py"):
         approved_factories.add("live_price_feed")
     venue_factories = {

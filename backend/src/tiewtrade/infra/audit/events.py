@@ -74,6 +74,13 @@ class AuditAction(Enum):
     PAPER_POSITION_CONFLICTED = "PAPER_POSITION_CONFLICTED"
     PAPER_ORDER_SOURCE_INITIALIZED = "PAPER_ORDER_SOURCE_INITIALIZED"
     PAPER_ORDER_DECISION = "PAPER_ORDER_DECISION"
+    PLATFORM_OWNER_BOOTSTRAPPED = "PLATFORM_OWNER_BOOTSTRAPPED"
+    CATALOG_MUTATIONS_ENABLED = "CATALOG_MUTATIONS_ENABLED"
+    CATALOG_ADD_REQUESTED = "CATALOG_ADD_REQUESTED"
+    CATALOG_PREPARING = "CATALOG_PREPARING"
+    CATALOG_PREPARATION_REJECTED = "CATALOG_PREPARATION_REJECTED"
+    CATALOG_REMOVED = "CATALOG_REMOVED"
+    CATALOG_ACTIVATED = "CATALOG_ACTIVATED"
 
 
 #: ชนิดเหตุการณ์ที่เป็นการเทรด — ต้องระบุ PAPER หรือ LIVE เสมอ (RQ-19)
@@ -129,6 +136,8 @@ class SubjectKind(Enum):
     PAPER_POSITION_EVENT = "PAPER_POSITION_EVENT"
     PAPER_POSITION_ACTIVITY = "PAPER_POSITION_ACTIVITY"
     PAPER_ORDER_ACTIVITY = "PAPER_ORDER_ACTIVITY"
+    PLATFORM_MEMBERSHIP = "PLATFORM_MEMBERSHIP"
+    SUPPORTED_SYMBOL = "SUPPORTED_SYMBOL"
 
 
 @runtime_checkable
@@ -253,6 +262,68 @@ class ApiKeyDetails:
 
     def as_details(self) -> dict[str, object]:
         return {}
+
+
+@dataclass(frozen=True, slots=True)
+class PlatformOwnerBootstrapDetails:
+    """Typed, non-free-form details for the one-shot owner bootstrap."""
+
+    role: str = "PLATFORM_OWNER"
+
+    def __post_init__(self) -> None:
+        if self.role != "PLATFORM_OWNER":
+            raise AuditEventError("bootstrap role must be PLATFORM_OWNER")
+
+    def as_details(self) -> dict[str, object]:
+        return {"role": self.role}
+
+
+@dataclass(frozen=True, slots=True)
+class CatalogProtocolDetails:
+    deployment_generation: UUID
+    revision: int
+
+    def __post_init__(self) -> None:
+        if self.revision < 0:
+            raise AuditEventError("catalog revision cannot be negative")
+
+    def as_details(self) -> dict[str, object]:
+        return {
+            "deployment_generation": str(self.deployment_generation),
+            "revision": self.revision,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class CatalogMutationDetails:
+    command_id: UUID
+    base: str
+    quote: str
+    revision_before: int
+    revision_after: int
+    reason_code: str
+
+    def __post_init__(self) -> None:
+        if (
+            self.quote != "USDT"
+            or not self.base
+            or self.base != self.base.upper()
+            or self.base == self.quote
+            or self.revision_before < 0
+            or self.revision_after != self.revision_before + 1
+            or self.reason_code not in {"ADMIN_LIQUIDITY_REVIEWED", "ADMIN_RISK_REVIEW"}
+        ):
+            raise AuditEventError("invalid supported-symbol catalog audit details")
+
+    def as_details(self) -> dict[str, object]:
+        return {
+            "command_id": str(self.command_id),
+            "base": self.base,
+            "quote": self.quote,
+            "revision_before": self.revision_before,
+            "revision_after": self.revision_after,
+            "reason_code": self.reason_code,
+        }
 
 
 @dataclass(frozen=True, slots=True)
@@ -441,6 +512,13 @@ class PaperOrderDecisionDetails:
 
 
 DETAILS_TYPES: dict[AuditAction, type[object]] = {
+    AuditAction.CATALOG_MUTATIONS_ENABLED: CatalogProtocolDetails,
+    AuditAction.CATALOG_ADD_REQUESTED: CatalogMutationDetails,
+    AuditAction.CATALOG_PREPARING: CatalogMutationDetails,
+    AuditAction.CATALOG_PREPARATION_REJECTED: CatalogMutationDetails,
+    AuditAction.CATALOG_REMOVED: CatalogMutationDetails,
+    AuditAction.CATALOG_ACTIVATED: CatalogMutationDetails,
+    AuditAction.PLATFORM_OWNER_BOOTSTRAPPED: PlatformOwnerBootstrapDetails,
     AuditAction.PAPER_ORDER_DECISION: PaperOrderDecisionDetails,
     AuditAction.PAPER_ORDER_SOURCE_INITIALIZED: PaperOrderSourceDetails,
     AuditAction.TRADING_USE_SELECTED: TradingUseDetails,
@@ -521,6 +599,56 @@ def _check_user_created(event: AuditEvent) -> None:
         raise AuditEventError("USER_CREATED ต้องมีเป้าหมายเป็นรหัสของผู้ใช้ที่ถูกสร้าง")
     if event.outcome is not AuditOutcome.SUCCEEDED:
         raise AuditEventError("USER_CREATED บันทึกเฉพาะกรณีที่สร้างสำเร็จ")
+
+
+def _check_platform_owner_bootstrap(event: AuditEvent) -> None:
+    if (
+        event.actor_kind is not ActorKind.SYSTEM
+        or event.actor_id is not None
+        or event.subject_kind is not SubjectKind.PLATFORM_MEMBERSHIP
+        or event.subject_id != str(event.owner_user_id)
+        or event.outcome is not AuditOutcome.SUCCEEDED
+        or event.failure_code is not None
+    ):
+        raise AuditEventError("invalid Platform Owner bootstrap audit event")
+
+
+def _check_catalog_event(event: AuditEvent) -> None:
+    details = event.details
+    if event.subject_kind is not SubjectKind.SUPPORTED_SYMBOL:
+        raise AuditEventError("catalog audit subject must be a supported symbol")
+    if isinstance(details, CatalogProtocolDetails):
+        if (
+            event.actor_kind is not ActorKind.PLATFORM
+            or event.actor_id != event.owner_user_id
+            or event.subject_id != "CATALOG"
+        ):
+            raise AuditEventError("invalid catalog protocol audit actor")
+    elif isinstance(details, CatalogMutationDetails):
+        system_action = event.action in {
+            AuditAction.CATALOG_PREPARING,
+            AuditAction.CATALOG_PREPARATION_REJECTED,
+            AuditAction.CATALOG_ACTIVATED,
+        }
+        if system_action != (event.actor_kind is ActorKind.SYSTEM):
+            raise AuditEventError("invalid catalog transition audit actor")
+        if not system_action and (
+            event.actor_kind is not ActorKind.PLATFORM or event.actor_id != event.owner_user_id
+        ):
+            raise AuditEventError("invalid catalog mutation audit actor")
+        if event.subject_id != f"{details.base}/{details.quote}":
+            raise AuditEventError("catalog audit subject does not match details")
+    failed = event.action is AuditAction.CATALOG_PREPARATION_REJECTED
+    if failed:
+        if event.outcome is not AuditOutcome.FAILED or event.failure_code not in {
+            "VENUE_CREDENTIAL_REJECTED",
+            "VENUE_REJECTED",
+            "VENUE_OUTCOME_UNKNOWN",
+            "VENUE_PROTOCOL",
+        }:
+            raise AuditEventError("catalog failure audit has an invalid outcome")
+    elif event.outcome is not AuditOutcome.SUCCEEDED or event.failure_code is not None:
+        raise AuditEventError("catalog success audit has an invalid outcome")
 
 
 def _check_own_account_action(event: AuditEvent) -> None:
@@ -647,6 +775,13 @@ def _check_paper_order_source(event: AuditEvent) -> None:
 
 
 _ACTION_INVARIANTS: dict[AuditAction, Callable[[AuditEvent], None]] = {
+    AuditAction.CATALOG_MUTATIONS_ENABLED: _check_catalog_event,
+    AuditAction.CATALOG_ADD_REQUESTED: _check_catalog_event,
+    AuditAction.CATALOG_PREPARING: _check_catalog_event,
+    AuditAction.CATALOG_PREPARATION_REJECTED: _check_catalog_event,
+    AuditAction.CATALOG_REMOVED: _check_catalog_event,
+    AuditAction.CATALOG_ACTIVATED: _check_catalog_event,
+    AuditAction.PLATFORM_OWNER_BOOTSTRAPPED: _check_platform_owner_bootstrap,
     AuditAction.PAPER_ORDER_DECISION: _check_paper_order_source,
     AuditAction.PAPER_ORDER_SOURCE_INITIALIZED: _check_paper_order_source,
     AuditAction.TRADING_USE_SELECTED: _check_own_account_action,

@@ -39,6 +39,11 @@ BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'tiewtrade_auth') THEN
         CREATE ROLE tiewtrade_auth LOGIN PASSWORD 'dev_auth';
     END IF;
+    -- F-37: credential แบบ offline สำหรับสร้าง Platform Owner คนแรกเท่านั้น
+    -- ไม่ mount เข้า service ใดใน Compose และไม่มี table privilege โดยตรง
+    IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'tiewtrade_platform_bootstrap') THEN
+        CREATE ROLE tiewtrade_platform_bootstrap LOGIN PASSWORD 'dev_platform_bootstrap';
+    END IF;
 END
 $$;
 
@@ -78,11 +83,13 @@ REVOKE ALL ON DATABASE :"DBNAME" FROM PUBLIC;
 
 GRANT CONNECT ON DATABASE :"DBNAME" TO
     tiewtrade_migrator, tiewtrade_api, tiewtrade_engine,
-    tiewtrade_engine_scan, tiewtrade_market_data, tiewtrade_auth, tiewtrade_indicator_builder;
+    tiewtrade_engine_scan, tiewtrade_market_data, tiewtrade_auth, tiewtrade_indicator_builder,
+    tiewtrade_platform_bootstrap;
 
 GRANT USAGE ON SCHEMA public TO
     tiewtrade_migrator, tiewtrade_api, tiewtrade_engine,
-    tiewtrade_engine_scan, tiewtrade_market_data, tiewtrade_auth, tiewtrade_indicator_builder;
+    tiewtrade_engine_scan, tiewtrade_market_data, tiewtrade_auth, tiewtrade_indicator_builder,
+    tiewtrade_platform_bootstrap;
 
 -- เจ้าของโครงสร้างเท่านั้นที่สร้างของใน schema ได้ (RQ-5.1)
 GRANT CREATE ON SCHEMA public TO tiewtrade_migrator;

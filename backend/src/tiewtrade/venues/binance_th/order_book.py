@@ -31,6 +31,9 @@ class BinanceThOrderBookFeed:
         self._transport = transport
         self._stream = stream
 
+    async def close(self) -> None:
+        await self._transport.close()
+
     async def snapshot(self, symbol: Symbol) -> DepthSnapshot:
         response = await self._transport.get(
             Endpoint.DEPTH,

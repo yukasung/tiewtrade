@@ -2,6 +2,7 @@ from dataclasses import replace
 from datetime import timedelta
 from uuid import UUID, uuid4
 
+import pytest
 from sqlalchemy.ext.asyncio import AsyncEngine
 
 from tests.infra.db.test_migrations import _alembic
@@ -9,6 +10,7 @@ from tiewtrade.core.money import Money
 from tiewtrade.core.realtime_prices import ObservationKind, QuoteObservation
 from tiewtrade.infra.db import DatabaseRole, create_engine_for, user_session
 from tiewtrade.infra.db.session import market_data_session
+from tiewtrade.infra.market_data import realtime_storage
 from tiewtrade.infra.market_data.realtime_storage import (
     acquire_writer,
     database_now,
@@ -19,7 +21,13 @@ from tiewtrade.infra.market_data.realtime_storage import (
 from tiewtrade.services.api.price_routes import snapshot_view
 
 
-async def test_upgrade_starts_durable_outage_before_first_producer(api_engine: AsyncEngine) -> None:
+async def test_upgrade_starts_durable_outage_before_first_producer(
+    api_engine: AsyncEngine, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    async def legacy_pairs(_session: object) -> tuple[tuple[str, str], ...]:
+        return tuple((base, "USDT") for base in ("BTC", "ETH", "SOL", "XRP", "DOGE"))
+
+    monkeypatch.setattr(realtime_storage, "runtime_pairs", legacy_pairs)
     _alembic("downgrade", "0013")
     _alembic("upgrade", "0014")
     market_engine = create_engine_for(DatabaseRole.MARKET_DATA)
@@ -53,16 +61,16 @@ async def test_upgrade_starts_durable_outage_before_first_producer(api_engine: A
             restarted = await read_snapshot(session)
         assert restarted.rows == initial.rows
 
-        async with market_data_session(market_engine) as session:
-            lease = await acquire_writer(session, uuid4())
+        async with market_data_session(market_engine) as market_session:
+            lease = await acquire_writer(market_session, uuid4())
             assert lease is not None
             assert lease.generation == 2
-            assert await acquire_writer(session, uuid4()) is None
-            acquired = await read_snapshot(session)
+            assert await acquire_writer(market_session, uuid4()) is None
+            acquired = await read_snapshot(market_session)
             assert all(row.unavailable_since == since for row in acquired.rows)
             assert all(row.observation is None for row in acquired.rows)
-            lease = await set_connected(session, lease, True)
-            now = await database_now(session)
+            lease = await set_connected(market_session, lease, True)
+            now = await database_now(market_session)
             btc = next(row for row in acquired.rows if row.base == "BTC")
             healthy = replace(
                 btc,
@@ -81,7 +89,7 @@ async def test_upgrade_starts_durable_outage_before_first_producer(api_engine: A
                 reason=None,
                 unavailable_since=None,
             )
-            assert await write_price(session, lease, healthy)
+            assert await write_price(market_session, lease, healthy)
         async with user_session(restarted_api_engine, uuid4()) as session:
             recovered = snapshot_view(await read_snapshot(session), delivery_connected=True)
         btc_view = next(row for row in recovered.rows if row.base == "BTC")

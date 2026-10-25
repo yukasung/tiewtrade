@@ -143,7 +143,7 @@ class BinanceThTransport:
     def __init__(
         self,
         *,
-        client: httpx.AsyncClient,
+        client: httpx.AsyncClient | None = None,
         guard: RateLimitGuard,
         clock: Callable[[], datetime],
         timeout: timedelta,
@@ -151,11 +151,16 @@ class BinanceThTransport:
     ) -> None:
         if timeout <= timedelta(0):
             raise ValueError("timeout ต้องมากกว่าศูนย์")
-        self._client = client
+        self._client = client or httpx.AsyncClient()
+        self._owns_client = client is None
         self._guard = guard
         self._clock = clock
         self._timeout = timeout
         self._base_url = base_url.rstrip("/")
+
+    async def close(self) -> None:
+        if self._owns_client:
+            await self._client.aclose()
 
     async def get(
         self,

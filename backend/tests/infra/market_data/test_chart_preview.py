@@ -1,3 +1,4 @@
+import json
 from collections.abc import AsyncIterator
 from dataclasses import replace
 from datetime import UTC, datetime, timedelta
@@ -36,7 +37,7 @@ from tiewtrade.infra.market_data.candle_preview import (
 )
 from tiewtrade.infra.market_data.catalog import PAIRS
 from tiewtrade.infra.realtime.notifications import RedisNotifications
-from tiewtrade.services.market_data import candle_realtime, ingestion
+from tiewtrade.services.market_data import ingestion
 from tiewtrade.services.market_data.candle_realtime import CandleSupervisor
 from tiewtrade.venues.candle_streams import FeedCandle
 from tiewtrade.venues.candles import CandlePage
@@ -81,6 +82,7 @@ async def test_notification_loss_preserves_committed_preview_and_readiness(
     publisher.publish.side_effect = ConnectionError("controlled notification outage")
     notifications = RedisNotifications(publisher, channel="market.candles.changed")
     state = CandleSupervisor(market_data_engine, FakeCandleFeed(), notifications)
+    await state._reload_catalog()
     state.lease, state.epoch = lease, 1
     first = observation()
     state.observe(FeedCandle(1, first))
@@ -290,6 +292,42 @@ async def test_ended_demand_is_transactional_and_never_resets_a_worker_claim(
         assert dict(before) == dict(after)
 
 
+async def test_retired_pair_metadata_is_pruned_before_runtime_bound_check(
+    market_data_engine: AsyncEngine,
+    migrator_engine: AsyncEngine,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    metadata = {
+        f"{base}/USDT/{timeframe.value}": "2026-10-24T00:00:00+00:00"
+        for base in ("BTC", "ETH")
+        for timeframe in Timeframe
+    }
+    async with migrator_engine.begin() as connection:
+        await connection.execute(
+            text(
+                "UPDATE market_candle_feed_state SET lease_until=clock_timestamp(),"
+                "metadata=CAST(:metadata AS jsonb)"
+            ),
+            {"metadata": json.dumps(metadata)},
+        )
+    async with market_data_session(market_data_engine) as session:
+        lease = await acquire(session, uuid4())
+        assert lease is not None
+
+    async def btc_only(_session: object) -> frozenset[tuple[str, str]]:
+        return frozenset({("BTC", "USDT")})
+
+    monkeypatch.setattr("tiewtrade.infra.market_data.candle_preview.runtime_pairs", btc_only)
+    async with market_data_session(market_data_engine) as session:
+        await enqueue_ended(session, lease, {})
+    async with migrator_engine.connect() as connection:
+        stored: dict[str, str] = (
+            await connection.execute(text("SELECT metadata FROM market_candle_feed_state"))
+        ).scalar_one()
+    assert len(stored) == len(Timeframe)
+    assert all(key.startswith("BTC/USDT/") for key in stored)
+
+
 async def test_competing_owners_have_exactly_one_winner(
     market_data_engine: AsyncEngine,
     migrator_engine: AsyncEngine,
@@ -312,7 +350,6 @@ async def test_reconnect_bootstrap_recovers_same_timeframe_without_duplicates_or
     timeframe: Timeframe,
     market_data_engine: AsyncEngine,
     migrator_engine: AsyncEngine,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     from tests.services.market_data.test_ingestion import FullSource
     from tiewtrade.services.market_data.ingestion import run_round
@@ -347,6 +384,7 @@ async def test_reconnect_bootstrap_recovers_same_timeframe_without_duplicates_or
 
     notifications = cast(RedisNotifications, AsyncMock())
     state = CandleSupervisor(market_data_engine, FakeCandleFeed(), notifications)
+    await state._reload_catalog()
     state.lease = lease
     await state._connection(True)
     state.epoch = 1
@@ -383,7 +421,7 @@ async def test_reconnect_bootstrap_recovers_same_timeframe_without_duplicates_or
     await state._connection(True)
     state.epoch = 2
     series = CandleSeries("BTC", "USDT", timeframe)
-    monkeypatch.setattr(candle_realtime, "SERIES", (series,))
+    state.series = (series,)
     await state._bootstrap(2)
 
     async with market_data_session(market_data_engine) as session:

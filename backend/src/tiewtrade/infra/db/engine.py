@@ -34,6 +34,8 @@ class DatabaseRole(Enum):
     #: เส้นทางยืนยันตัวตน (F-05) — บทบาทเดียวที่แตะข้อมูลเข้าสู่ระบบและออก session ได้
     #: อยู่ใต้ RLS เหมือน `api` และ `engine`
     AUTH = "tiewtrade_auth"
+    #: deployment-only credential สำหรับ bootstrap Platform Owner คนแรก
+    PLATFORM_BOOTSTRAP = "tiewtrade_platform_bootstrap"
 
     @property
     def role_name(self) -> str:

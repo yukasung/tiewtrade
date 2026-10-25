@@ -24,12 +24,13 @@ from tiewtrade.infra.market_data.candle_preview import (
     fence,
     flush,
 )
-from tiewtrade.infra.market_data.catalog import PAIRS, SOURCE
+from tiewtrade.infra.market_data.catalog import SOURCE, runtime_symbol_map
+from tiewtrade.infra.platform import RuntimeSymbol
 from tiewtrade.infra.realtime.notifications import RedisNotifications
 from tiewtrade.venues.candle_streams import CandleFeed, FeedCandle
 from tiewtrade.venues.price_streams import FeedConnected, FeedDisconnected
 
-SERIES = tuple(CandleSeries(base, quote, tf) for base, quote in sorted(PAIRS) for tf in Timeframe)
+PUBLIC_CATALOG_MODES = frozenset({"PUBLIC", "PREPARING"})
 
 
 class CandleConflictError(ValueError):
@@ -49,6 +50,17 @@ class CandleSupervisor:
         self.demands: dict[tuple[str, str, Timeframe], CandleWindow] = {}
         self.lock = asyncio.Lock()
         self.bootstrap: asyncio.Task[None] | None = None
+        self.catalog: dict[tuple[str, str], RuntimeSymbol] = {}
+        self.series: tuple[CandleSeries, ...] = ()
+
+    async def _reload_catalog(self) -> None:
+        async with market_data_session(self.engine) as session:
+            self.catalog = await runtime_symbol_map(session, modes=PUBLIC_CATALOG_MODES)
+        self.series = tuple(
+            CandleSeries(base, quote, timeframe)
+            for base, quote in sorted(self.catalog)
+            for timeframe in Timeframe
+        )
 
     async def _connection(self, connected: bool, failure: str | None = None) -> None:
         async with self.lock:
@@ -66,7 +78,7 @@ class CandleSupervisor:
         incoming = event.observation
         candle = incoming.candle
         key = candle.base, candle.quote, candle.timeframe
-        if candle.timeframe not in Timeframe or (candle.base, candle.quote) not in PAIRS:
+        if candle.timeframe not in Timeframe or (candle.base, candle.quote) not in self.catalog:
             raise CandleConflictError()
         old = self.rows.get(key)
         revision = 1
@@ -158,7 +170,7 @@ class CandleSupervisor:
         self.bootstrap = None
 
     async def _bootstrap(self, generation: int) -> None:
-        for series in SERIES:
+        for series in self.series:
             while self.epoch == generation:
                 try:
                     async with self.lock:
@@ -185,7 +197,7 @@ class CandleSupervisor:
                 await complete_bootstrap(session, self.lease)
 
     async def _consume(self) -> None:
-        async with aclosing(self.feed.events(SERIES)) as events:
+        async with aclosing(self.feed.events(self.series)) as events:
             async for event in events:
                 if isinstance(event, FeedConnected):
                     if event.generation <= self.last_generation:
@@ -209,9 +221,20 @@ class CandleSupervisor:
                     async with self.lock:
                         self.observe(event)
 
+    async def _catalog_changed(self) -> None:
+        revision = max((row.catalog_revision for row in self.catalog.values()), default=0)
+        while True:
+            await asyncio.sleep(1)
+            async with market_data_session(self.engine) as session:
+                current = await runtime_symbol_map(session, modes=PUBLIC_CATALOG_MODES)
+            current_revision = max((row.catalog_revision for row in current.values()), default=0)
+            if current_revision != revision or current.keys() != self.catalog.keys():
+                return
+
     async def run(self) -> None:
         owner = uuid4()
         while True:
+            await self._reload_catalog()
             async with market_data_session(self.engine) as session:
                 self.lease = await acquire(session, owner)
             if self.lease is None:
@@ -219,10 +242,13 @@ class CandleSupervisor:
                 continue
             consumer = asyncio.create_task(self._consume())
             heartbeat = asyncio.create_task(self._heartbeat())
+            catalog_watch = asyncio.create_task(self._catalog_changed())
+            catalog_reloaded = False
             try:
                 done, _ = await asyncio.wait(
-                    (consumer, heartbeat), return_when=asyncio.FIRST_COMPLETED
+                    (consumer, heartbeat, catalog_watch), return_when=asyncio.FIRST_COMPLETED
                 )
+                catalog_reloaded = catalog_watch in done
                 for task in done:
                     task.result()
             except CandleConflictError:
@@ -231,9 +257,9 @@ class CandleSupervisor:
                 logging.getLogger(__name__).warning("candle preview writer unavailable")
             finally:
                 await self._cancel_bootstrap()
-                for task in (consumer, heartbeat):
+                for task in (consumer, heartbeat, catalog_watch):
                     task.cancel()
-                await asyncio.gather(consumer, heartbeat, return_exceptions=True)
+                await asyncio.gather(consumer, heartbeat, catalog_watch, return_exceptions=True)
                 # A cancelled owner relinquishes only its own current epoch.
                 if self.lease is not None:
                     try:
@@ -248,4 +274,5 @@ class CandleSupervisor:
                         pass  # Expired/fenced owners have no right to alter the current lease.
                 self.lease = None
                 self.epoch = None
-            await asyncio.sleep(30)
+            if not catalog_reloaded:
+                await asyncio.sleep(30)

@@ -45,6 +45,10 @@ def worker_environment(owner: UUID) -> dict[str, str]:
     variable = DatabaseRole.INDICATOR_BUILDER.url_variable
     if variable in os.environ:
         environment[variable] = os.environ[variable]
+    if "TIEWTRADE_CATALOG_DEPLOYMENT_GENERATION" in os.environ:
+        environment["TIEWTRADE_CATALOG_DEPLOYMENT_GENERATION"] = os.environ[
+            "TIEWTRADE_CATALOG_DEPLOYMENT_GENERATION"
+        ]
     environment["TIEWTRADE_INDICATOR_OWNER"] = str(owner)
     environment["PYTHONUNBUFFERED"] = "1"
     return environment

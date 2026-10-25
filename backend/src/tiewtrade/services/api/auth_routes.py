@@ -48,6 +48,7 @@ from tiewtrade.infra.auth.challenges import issue as issue_challenge
 from tiewtrade.infra.db import DatabaseRole
 from tiewtrade.infra.db.errors import DuplicateValueError
 from tiewtrade.infra.db.session import UserSession, presented_session, user_session
+from tiewtrade.infra.platform import role_for
 from tiewtrade.infra.users import create_user_in
 from tiewtrade.services.api.authentication import (
     Authenticated,
@@ -76,6 +77,7 @@ class Me(BaseModel):
 
     user_id: UUID
     totp_enabled: bool
+    platform_role: str | None
 
 
 class SignInStarted(BaseModel):
@@ -359,4 +361,12 @@ async def read_me(request: Request, who: Annotated[Authenticated, Depends(curren
     engine = engine_for(request, DatabaseRole.AUTH)
     async with user_session(engine, who.user_id, role=DatabaseRole.AUTH) as session:
         enabled = await totp.is_enabled(session)
-    return Me(user_id=who.user_id, totp_enabled=enabled)
+    async with user_session(
+        engine_for(request, DatabaseRole.API), who.user_id, role=DatabaseRole.API
+    ) as session:
+        role = await role_for(session)
+    return Me(
+        user_id=who.user_id,
+        totp_enabled=enabled,
+        platform_role=None if role is None else role.value,
+    )

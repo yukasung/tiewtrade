@@ -3,6 +3,11 @@
 from tiewtrade.infra.db.engine import ROLES_UNDER_RLS, DatabaseRole, create_engine_for, database_url
 from tiewtrade.infra.db.errors import (
     AppendOnlyViolationError,
+    CatalogAuthorizationError,
+    CatalogIdempotencyConflictError,
+    CatalogProtocolError,
+    CatalogRevisionConflictError,
+    CatalogStateError,
     DatabaseConfigurationError,
     DatabaseRoleError,
     DatabaseUnavailableError,
@@ -32,6 +37,11 @@ __all__ = [
     "CURRENT_USER_SETTING",
     "ROLES_UNDER_RLS",
     "AppendOnlyViolationError",
+    "CatalogAuthorizationError",
+    "CatalogIdempotencyConflictError",
+    "CatalogProtocolError",
+    "CatalogRevisionConflictError",
+    "CatalogStateError",
     "DatabaseConfigurationError",
     "DatabaseRole",
     "DatabaseRoleError",

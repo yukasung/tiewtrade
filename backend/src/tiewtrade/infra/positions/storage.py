@@ -45,7 +45,6 @@ from tiewtrade.infra.db import (
     quantity_to_columns,
 )
 from tiewtrade.infra.db.session import UserSession, require_user_session
-from tiewtrade.infra.market_data.catalog import PAIRS
 from tiewtrade.infra.positions.records import (
     PairEconomicEffects,
     PositionActivity,
@@ -415,8 +414,6 @@ async def apply_position_event(
         raise PositionIntegrityError("invalid position event identity")
     if not isinstance(fact, ExecutionFact):
         raise PositionIntegrityError("position event requires an execution identity")
-    if (fact.pair.base, fact.pair.quote) not in PAIRS:
-        raise PositionIntegrityError("unsupported Paper position pair")
     if kind is PositionEventKind.RECORD and supersedes_event_id is not None:
         raise PositionIntegrityError("record cannot supersede another event")
     if kind is not PositionEventKind.RECORD and type(supersedes_event_id) is not UUID:

@@ -1,5 +1,4 @@
 from datetime import UTC, datetime, timedelta
-from uuid import uuid4
 
 import pytest
 from sqlalchemy import text
@@ -8,15 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine
 
 from tests.infra.db.test_migrations import _alembic, _failed_upgrade_or_downgrade, _snapshot
 from tests.infra.market_data.test_retention import insert_raw
-from tiewtrade.core.market_data import (
-    CandleWindow,
-    Timeframe,
-    advance,
-    align_floor,
-    slot_count,
-)
-from tiewtrade.infra.db import user_session
-from tiewtrade.infra.market_data.storage import enqueue
+from tiewtrade.core.market_data import CandleWindow, Timeframe, advance, align_floor, slot_count
 
 _INSERT_CANDLE = text(
     """INSERT INTO market_candles
@@ -54,7 +45,7 @@ async def _candle_checksum(connection: AsyncConnection, opened: datetime) -> str
 
 @pytest.mark.parametrize("table", ["market_candles", "market_candle_demand"])
 async def test_populated_candle_downgrade_refuses_atomically(
-    migrator_engine: AsyncEngine, api_engine: AsyncEngine, table: str
+    migrator_engine: AsyncEngine, table: str
 ) -> None:
     # F-09 tests its own migration boundary; later migrations may downgrade separately.
     _alembic("downgrade", "0013")
@@ -63,13 +54,14 @@ async def test_populated_candle_downgrade_refuses_atomically(
             await insert_raw("1")
         else:
             now = datetime.now(UTC)
-            async with user_session(api_engine, uuid4()) as session:
-                await enqueue(
-                    session,
-                    "BTC",
-                    "USDT",
-                    Timeframe.M1,
-                    CandleWindow(now - timedelta(minutes=1), now),
+            async with migrator_engine.begin() as connection:
+                await connection.execute(
+                    text(
+                        "INSERT INTO market_candle_demand("
+                        "base,quote,timeframe,desired_start,desired_end) "
+                        "VALUES('BTC','USDT','1m',:start,:end)"
+                    ),
+                    {"start": now - timedelta(minutes=1), "end": now},
                 )
         before = await _snapshot(migrator_engine)
         failure = _failed_upgrade_or_downgrade("downgrade", "0012")

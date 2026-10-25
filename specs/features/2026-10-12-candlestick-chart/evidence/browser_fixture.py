@@ -167,6 +167,7 @@ async def main() -> None:
                 (FeedConnected(1), FeedCandle(1, previous), FeedCandle(1, current))
             )
             supervisor = CandleSupervisor(market, feed, LostNotifications())  # type: ignore[arg-type]
+            await supervisor._reload_catalog()
             async with market_data_session(market) as s:
                 supervisor.lease = await acquire(s, uuid4())
             async for event in feed.events(()):
@@ -184,6 +185,7 @@ async def main() -> None:
             feed = FakeCandleFeed((FeedConnected(1), FeedCandle(1, observation)))
 
             supervisor = CandleSupervisor(market, feed, LostNotifications())  # type: ignore[arg-type]
+            await supervisor._reload_catalog()
             async with market_data_session(market) as s:
                 supervisor.lease = await acquire(s, uuid4())
             async for event in feed.events(()):

@@ -36,6 +36,8 @@ class PriceSnapshot:
     feed: FeedLease | None
     rows: tuple[StoredPrice, ...]
     server_time: datetime
+    catalog_revision: int | None = None
+    catalog_pairs: frozenset[tuple[str, str]] | None = None
 
 
 class WriterLeaseLost(Exception):  # noqa: N818

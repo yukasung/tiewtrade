@@ -13,6 +13,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:e2e": "playwright test",
+    "test:e2e:supported-symbols": "playwright test --config=playwright.supported-symbols.config.ts",
     "gen:api": "openapi-typescript ../backend/openapi.json -o src/api-types.ts",
     "check:api": "npm run gen:api && git diff --exit-code -- src/api-types.ts"
   },

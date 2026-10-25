@@ -1,4 +1,5 @@
 const roles = ["API", "AUTH", "ENGINE", "ENGINE_SCAN", "MIGRATOR", "MARKET_DATA"] as const;
+type DatabaseRole = typeof roles[number] | "INDICATOR_BUILDER" | "PLATFORM_BOOTSTRAP";
 
 export const backendPython = process.platform === "win32"
   ? ".venv/Scripts/python.exe"
@@ -7,13 +8,14 @@ export const backendPython = process.platform === "win32"
 /** Fail before starting servers or connecting to any database. Never echo URLs. */
 export function e2eEnvironment(
   source: Record<string, string | undefined> = process.env,
+  additionalRoles: readonly DatabaseRole[] = [],
 ): Record<string, string> {
   const name = source.TIEWTRADE_E2E_DATABASE_NAME;
   if (!name || !/^tiewtrade_e2e(?:_[a-zA-Z0-9]+)*$/.test(name)) {
     throw new Error("E2E_DATABASE_REJECTED");
   }
   let target: string | undefined;
-  const configuredRoles = roles;
+  const configuredRoles: readonly DatabaseRole[] = [...roles, ...additionalRoles];
   for (const role of configuredRoles) {
     try {
       const url = new URL(source[`TIEWTRADE_DATABASE_URL_${role}`] ?? "");

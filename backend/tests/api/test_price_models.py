@@ -23,7 +23,9 @@ def test_snapshot_prices_are_exact_strings_and_checked_time_is_explicit() -> Non
         unavailable_since=None,
         alert_due=False,
     )
-    view = PricesView(server_time=now, delivery_status="CONNECTED", rows=[row])
+    view = PricesView(
+        catalog_revision="2", server_time=now, delivery_status="CONNECTED", rows=[row]
+    )
     assert view.model_dump(mode="json")["rows"][0]["amount"] == "9007199254740993.12345678"
     assert view.model_dump(mode="json")["server_time"].endswith("Z")
     with pytest.raises(ValidationError):

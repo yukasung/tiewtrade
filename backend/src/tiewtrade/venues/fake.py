@@ -38,6 +38,7 @@ from tiewtrade.venues.errors import (
     VenueUnavailableError,
 )
 from tiewtrade.venues.limits import CallCost, NoRateLimit, RateLimitGuard
+from tiewtrade.venues.order_books import ExecutionCapability
 from tiewtrade.venues.price_streams import FeedEvent
 from tiewtrade.venues.prices import DEFAULT_LATEST_PRICE_COST, Price
 from tiewtrade.venues.symbols import Symbol, SymbolConstraints
@@ -48,6 +49,9 @@ class FakeVenue:
     """ตลาดปลอมที่ทำตามทั้งสามสัญญาของ F-33"""
 
     max_request_span: timedelta | None = None
+
+    async def close(self) -> None:
+        return None
 
     def max_request_slots(self, timeframe: Timeframe) -> int | None:
         if not isinstance(timeframe, Timeframe):
@@ -60,6 +64,7 @@ class FakeVenue:
         prices: Mapping[Symbol, Price] | None = None,
         holdings: WalletHoldings | None = None,
         constraints: Mapping[Symbol, SymbolConstraints] | None = None,
+        capabilities: Mapping[Symbol, ExecutionCapability] | None = None,
         guard: RateLimitGuard | None = None,
         latest_price_cost: CallCost = DEFAULT_LATEST_PRICE_COST,
         holdings_cost: CallCost = DEFAULT_HOLDINGS_COST,
@@ -68,6 +73,7 @@ class FakeVenue:
         self._prices = dict(prices or {})
         self._holdings = holdings
         self._constraints = dict(constraints or {})
+        self._capabilities = dict(capabilities or {})
         self._guard = guard if guard is not None else NoRateLimit()
         self._latest_price_cost = latest_price_cost
         self._holdings_cost = holdings_cost
@@ -119,6 +125,14 @@ class FakeVenue:
         if constraints is None:
             raise VenueRejectedError(RejectionReason.UNKNOWN_SYMBOL)
         return constraints
+
+    async def capability(self, symbol: Symbol) -> ExecutionCapability:
+        """Exact public execution capability supplied by a catalog test fixture."""
+        await self._before_call(self._constraints_cost)
+        capability = self._capabilities.get(symbol)
+        if capability is None:
+            raise VenueRejectedError(RejectionReason.UNKNOWN_SYMBOL)
+        return capability
 
     async def _before_call(self, cost: CallCost) -> None:
         """จองโควตาก่อน แล้วค่อยดูว่ามีข้อผิดพลาดที่ถูกสั่งไว้หรือไม่

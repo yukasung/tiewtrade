@@ -13,7 +13,7 @@ from tiewtrade.infra.db.session import (
     require_market_data_session,
     require_user_session,
 )
-from tiewtrade.infra.market_data.catalog import PAIRS, SOURCE
+from tiewtrade.infra.market_data.catalog import SOURCE, runtime_pairs
 from tiewtrade.infra.market_data.realtime_records import (
     FeedLease,
     PriceSnapshot,
@@ -80,7 +80,7 @@ async def acquire_writer(session: MarketDataSession, owner: UUID) -> FeedLease |
     if row is None:
         return None
     lease = _feed(row)
-    for base, quote in sorted(PAIRS):
+    for base, quote in sorted(await runtime_pairs(session)):
         await session.execute(
             """INSERT INTO market_latest_prices(source,base,quote,unavailable_since)
           VALUES(:source,:base,:quote,clock_timestamp()) ON CONFLICT DO NOTHING""",
@@ -163,7 +163,7 @@ async def set_connected(
 
 async def write_price(session: MarketDataSession, lease: FeedLease, row: StoredPrice) -> bool:
     await _locked(session, lease)
-    if row.source != lease.source or (row.base, row.quote) not in PAIRS:
+    if row.source != lease.source or (row.base, row.quote) not in await runtime_pairs(session):
         raise ValueError("unsupported realtime pair")
     observation = row.observation
     if observation is not None and (observation.source, observation.base, observation.quote) != (
@@ -261,3 +261,85 @@ async def read_snapshot(session: Session) -> PriceSnapshot:
             )
         )
     return PriceSnapshot(feed, tuple(prices), await database_now(session))
+
+
+async def read_public_snapshot(session: UserSession | PresentedSession) -> PriceSnapshot:
+    """Read the active catalog fence and public price rows in one statement."""
+    checked = session if isinstance(session, PresentedSession) else require_user_session(session)
+    rows = (
+        (
+            await checked.execute(
+                """SELECT c.current_revision,a.base,a.quote,p.source,p.amount,p.trade_id,
+              p.trade_at,p.received_at,p.observation_kind,p.reconciled_generation,p.revision,
+              p.effective_readiness,p.reason,p.unavailable_since,p.order_ambiguous_at,
+              f.generation AS feed_generation,f.owner,f.lease_until,f.connected,
+              f.last_failure_code,clock_timestamp() AS server_time
+            FROM supported_symbol_catalog_control c
+            LEFT JOIN active_supported_symbols a ON true
+            LEFT JOIN market_latest_prices p ON p.source=:source
+              AND p.base=a.base AND p.quote=a.quote
+            LEFT JOIN market_price_feed f ON f.source=:source
+            WHERE c.id=1 ORDER BY a.base""",
+                {"source": SOURCE},
+            )
+        )
+        .mappings()
+        .all()
+    )
+    if not rows:
+        raise RuntimeError("supported-symbol catalog control is missing")
+    first = rows[0]
+    feed = (
+        None
+        if first["feed_generation"] is None
+        else FeedLease(
+            SOURCE,
+            first["feed_generation"],
+            first["owner"],
+            first["lease_until"],
+            first["connected"],
+            first["last_failure_code"],
+        )
+    )
+    pairs: set[tuple[str, str]] = set()
+    prices: list[StoredPrice] = []
+    for row in rows:
+        if row["base"] is None:
+            continue
+        pair = str(row["base"]), str(row["quote"])
+        pairs.add(pair)
+        observation = (
+            None
+            if row["amount"] is None
+            else QuoteObservation(
+                source=SOURCE,
+                base=pair[0],
+                quote=pair[1],
+                amount=money_from_columns(row["amount"], pair[1]),
+                trade_id=row["trade_id"],
+                trade_time=row["trade_at"],
+                received_at=row["received_at"],
+                observation_kind=ObservationKind(row["observation_kind"]),
+            )
+        )
+        prices.append(
+            StoredPrice(
+                SOURCE,
+                pair[0],
+                pair[1],
+                observation,
+                0 if row["reconciled_generation"] is None else row["reconciled_generation"],
+                0 if row["revision"] is None else row["revision"],
+                "MISSING" if row["effective_readiness"] is None else row["effective_readiness"],
+                row["reason"],
+                row["unavailable_since"],
+                row["order_ambiguous_at"],
+            )
+        )
+    return PriceSnapshot(
+        feed,
+        tuple(prices),
+        first["server_time"],
+        int(first["current_revision"]),
+        frozenset(pairs),
+    )

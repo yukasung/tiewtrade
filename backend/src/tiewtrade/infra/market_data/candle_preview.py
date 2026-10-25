@@ -21,7 +21,7 @@ from tiewtrade.core.market_data import (
     retention_cutoff,
 )
 from tiewtrade.infra.db.session import MarketDataSession, UserSession, require_market_data_session
-from tiewtrade.infra.market_data.catalog import PAIRS, SOURCE
+from tiewtrade.infra.market_data.catalog import SOURCE, runtime_pairs
 from tiewtrade.infra.market_data.storage import coalesce_demand, database_now, parameters
 
 
@@ -138,6 +138,9 @@ async def enqueue_ended(
     state = await fence(session, lease)
     metadata = dict(state["metadata"])
     now = await database_now(session)
+    pairs = await runtime_pairs(session)
+    valid_keys = {f"{base}/{quote}/{tf.value}" for base, quote in pairs for tf in Timeframe}
+    metadata = {key: value for key, value in metadata.items() if key in valid_keys}
     for (base, quote, tf), window in demands.items():
         parameters(base, quote, tf)
         if window.end > align_floor(now, tf):
@@ -152,7 +155,7 @@ async def enqueue_ended(
         if start < window.end:
             await coalesce_demand(session, base, quote, tf, CandleWindow(start, window.end))
         metadata[key] = window.end.isoformat()
-    if len(metadata) > len(PAIRS) * len(Timeframe):
+    if len(metadata) > len(pairs) * len(Timeframe):
         raise ValueError("unbounded preview metadata")
     await session.execute(
         """UPDATE market_candle_feed_state SET metadata=CAST(:metadata AS jsonb)
@@ -165,7 +168,7 @@ async def flush(
     session: MarketDataSession, lease: PreviewLease, rows: tuple[tuple[CandleObservation, int], ...]
 ) -> None:
     await fence(session, lease)
-    if len(rows) > len(PAIRS) * len(Timeframe) or len(
+    if len(rows) > len(await runtime_pairs(session)) * len(Timeframe) or len(
         {(r.candle.base, r.candle.quote, r.candle.timeframe) for r, _ in rows}
     ) != len(rows):
         raise ValueError("unbounded preview batch")

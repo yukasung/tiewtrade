@@ -5,14 +5,14 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, StrictStr
 
-from tiewtrade.core.market_catalog import MarketSource, SupportedBase, SupportedQuote
+from tiewtrade.core.market_catalog import MarketSource
 
 
 class PriceRow(BaseModel):
     model_config = ConfigDict(extra="forbid")
     source: MarketSource
-    base: SupportedBase
-    quote: SupportedQuote
+    base: str
+    quote: str
     amount: StrictStr | None
     trade_at: datetime | None
     received_at: datetime | None
@@ -28,6 +28,7 @@ class PriceRow(BaseModel):
 class PricesView(BaseModel):
     model_config = ConfigDict(extra="forbid")
     schema_version: Literal[1] = 1
+    catalog_revision: str = Field(pattern=r"^[0-9]+$")
     server_time: datetime
     delivery_status: Literal["CONNECTED", "RECOVERING"]
     rows: list[PriceRow]

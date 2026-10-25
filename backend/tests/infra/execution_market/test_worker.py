@@ -9,14 +9,14 @@ from typing import Any
 from uuid import NAMESPACE_URL, UUID, uuid4, uuid5
 
 import pytest
-from sqlalchemy import Result
+from sqlalchemy import Result, text
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine, create_async_engine
 
 from tests.infra.execution_market.commit_proxy import drop_commit_reply
 from tests.infra.execution_market.test_dispatch import intent
 from tests.infra.execution_market.test_storage import prepared
 from tiewtrade.core.money import Money, Quantity
-from tiewtrade.core.order_book import BookState
+from tiewtrade.core.order_book import BookLevel, BookState, MarketTrade
 from tiewtrade.core.orders import (
     BaseSize,
     OrderConflictError,
@@ -47,11 +47,18 @@ from tiewtrade.infra.market_data.realtime_storage import (
 )
 from tiewtrade.infra.paper_orders.codec import execution_from_payload
 from tiewtrade.infra.paper_orders.corrections import correct_fill
-from tiewtrade.infra.paper_orders.dispatch import get_order_command, submit_cancel, submit_order
+from tiewtrade.infra.paper_orders.dispatch import (
+    DueOrder,
+    claim_order,
+    get_order_command,
+    submit_cancel,
+    submit_order,
+)
 from tiewtrade.infra.paper_orders.initialization import (
     enable_financial_writer,
     initialize_order_source,
 )
+from tiewtrade.infra.paper_orders.worker import process_claimed_order
 from tiewtrade.infra.paper_wallet import (
     PaperCommandState,
     PaperWalletAction,
@@ -60,7 +67,11 @@ from tiewtrade.infra.paper_wallet import (
 )
 from tiewtrade.infra.paper_wallet import get_command as get_wallet_command
 from tiewtrade.infra.paper_wallet.records import PaperWalletSnapshot
-from tiewtrade.infra.positions import PositionEventKind, apply_position_event
+from tiewtrade.infra.positions import (
+    PositionEventKind,
+    apply_position_event,
+    read_position_snapshot,
+)
 from tiewtrade.services.engine.paper_order import run_paper_order_round
 from tiewtrade.services.engine.paper_wallet import run_paper_wallet_round
 
@@ -1066,6 +1077,286 @@ async def test_new_command_is_not_starved_by_an_active_order(
         }
     finally:
         await market.dispose()
+
+
+async def test_catalog_removal_rejects_queued_buy_and_cancels_resting_buy(
+    engine_engine: AsyncEngine,
+    scan_engine: AsyncEngine,
+    migrator_engine: AsyncEngine,
+    owner: UUID,
+    wallet: PaperWalletSnapshot,
+) -> None:
+    market, _, _, _ = await ready_public_sources()
+    resting = OrderIntent(
+        uuid4(),
+        uuid4(),
+        OrderScope(owner, UUID(str(wallet.episode_id)), TradingMode.PAPER),
+        PositionPair("BTC", "USDT"),
+        OrderOrigin.MANUAL,
+        ExecutionSide.BUY,
+        OrderType.LIMIT,
+        BaseSize(Quantity.of(1, "BTC")),
+        Money.of(90, "USDT"),
+        TimeInForce.GTC,
+    )
+    queued = replace(resting, order_id=uuid4(), idempotency_key=uuid4())
+    catalog_events: tuple[UUID, UUID] | None = None
+    try:
+        async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+            resting_command = await submit_order(
+                session, wallet_id=wallet.wallet_id, intent=resting
+            )
+        await run_paper_order_round(
+            engine=engine_engine,
+            scan_engine=scan_engine,
+            worker="catalog-resting-admit",
+            policy=AllowPolicy(),
+        )
+        async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+            queued_command = await submit_order(session, wallet_id=wallet.wallet_id, intent=queued)
+            revisions = (
+                (
+                    await session.execute(
+                        "SELECT payload->>'catalog_revision' FROM paper_order_commands "
+                        "WHERE id IN (:resting,:queued) ORDER BY id",
+                        {
+                            "resting": resting_command.command_id,
+                            "queued": queued_command.command_id,
+                        },
+                    )
+                )
+                .scalars()
+                .all()
+            )
+            assert revisions and all(int(value) >= 2 for value in revisions)
+
+        # The pair is active again before the worker resumes. Commands admitted
+        # before the intervening removal must still be terminally rejected/canceled.
+        catalog_events = await _simulate_btc_remove_and_readd(migrator_engine)
+        await asyncio.sleep(0.22)
+        for index in range(3):
+            await run_paper_order_round(
+                engine=engine_engine,
+                scan_engine=scan_engine,
+                worker=f"catalog-removal-{index}",
+                policy=AllowPolicy(),
+            )
+
+        async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+            resting_result = await get_order_command(session, resting_command.command_id)
+            queued_result = await get_order_command(session, queued_command.command_id)
+            projection = (
+                await session.execute(
+                    "SELECT status,filled_quantity FROM paper_order_projections "
+                    "WHERE order_id=:order",
+                    {"order": resting.order_id},
+                )
+            ).one()
+            canceled = (
+                await session.execute(
+                    "SELECT count(*) FROM paper_order_events "
+                    "WHERE order_id=:order AND event_kind='CANCELED'",
+                    {"order": resting.order_id},
+                )
+            ).scalar_one()
+            current = await get_wallet(session)
+        assert resting_result is not None and resting_result.state == "SUCCEEDED"
+        assert queued_result is not None
+        assert queued_result.failure_code == "CATALOG_PAIR_REMOVED"
+        assert projection.status == "CANCELED" and projection.filled_quantity == 0
+        assert canceled == 1
+        assert current is not None and current.balance == wallet.balance
+    finally:
+        if catalog_events is not None:
+            await _restore_btc_seed_catalog(migrator_engine, catalog_events)
+        await market.dispose()
+
+
+async def test_new_buy_cannot_match_an_old_buy_after_catalog_readd(
+    engine_engine: AsyncEngine,
+    migrator_engine: AsyncEngine,
+    owner: UUID,
+    wallet: PaperWalletSnapshot,
+) -> None:
+    market, lease, book, metadata = await ready_public_sources()
+    old = OrderIntent(
+        uuid4(),
+        uuid4(),
+        OrderScope(owner, UUID(str(wallet.episode_id)), TradingMode.PAPER),
+        PositionPair("BTC", "USDT"),
+        OrderOrigin.MANUAL,
+        ExecutionSide.BUY,
+        OrderType.LIMIT,
+        BaseSize(Quantity.of(1, "BTC")),
+        Money.of(90, "USDT"),
+        TimeInForce.GTC,
+    )
+    events: tuple[UUID, UUID] | None = None
+
+    async def process(command_id: UUID) -> None:
+        async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+            due_at = (
+                await session.execute(
+                    "SELECT next_attempt_at FROM paper_order_dispatch WHERE command_id=:id",
+                    {"id": command_id},
+                )
+            ).scalar_one()
+            claim = await claim_order(
+                session, DueOrder(command_id, owner, due_at), worker="catalog-readd-regression"
+            )
+            assert claim is not None
+        async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+            await process_claimed_order(session, claim, policy=AllowPolicy())
+
+    try:
+        async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+            old_command = await submit_order(session, wallet_id=wallet.wallet_id, intent=old)
+        async with market_data_session(market) as market_session:
+            now = (await market_session.execute("SELECT clock_timestamp()")).scalar_one()
+            book = replace(book, input_id=book.input_id + 1, received_at=now, verified_at=now)
+            lease = await publish_input(market_session, lease, book, metadata)
+        await process(old_command.command_id)
+        await asyncio.sleep(0.22)
+        events = await _simulate_btc_remove_and_readd(migrator_engine)
+        new = replace(
+            old, order_id=uuid4(), idempotency_key=uuid4(), limit_price=Money.of(110, "USDT")
+        )
+        async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+            command = await submit_order(session, wallet_id=wallet.wallet_id, intent=new)
+        async with market_data_session(market) as market_session:
+            now = (await market_session.execute("SELECT clock_timestamp()")).scalar_one()
+            book = replace(
+                book, input_id=book.input_id + 1, received_at=now, verified_at=now, rebase=False
+            )
+            lease = await publish_input(market_session, lease, book, metadata)
+            now = (await market_session.execute("SELECT clock_timestamp()")).scalar_one()
+            lease = await publish_input(
+                market_session,
+                lease,
+                MarketTrade(
+                    old.pair,
+                    book.input_id + 1,
+                    book.generation,
+                    now,
+                    101,
+                    ExecutionSide.BUY,
+                    Money.of(90, "USDT"),
+                    Quantity.of(1, "BTC"),
+                    True,
+                ),
+                metadata,
+            )
+        # This trade could fill the old resting BUY. Only the new command gets a turn.
+        await process(command.command_id)
+        async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+            assert (
+                await session.execute(
+                    "SELECT status FROM paper_order_projections WHERE order_id=:id",
+                    {"id": old.order_id},
+                )
+            ).scalar_one() == "CANCELED"
+            current = await get_wallet(session)
+            assert current is not None and current.balance == wallet.balance
+        await asyncio.sleep(0.22)
+        async with market_data_session(market) as market_session:
+            now = (await market_session.execute("SELECT clock_timestamp()")).scalar_one()
+            await publish_input(
+                market_session,
+                lease,
+                replace(
+                    book,
+                    input_id=book.input_id + 2,
+                    received_at=now,
+                    verified_at=now,
+                    rebase=False,
+                    bids=(BookLevel(Money.of(88, "USDT"), Quantity.of(10, "BTC")),),
+                    asks=(BookLevel(Money.of(89, "USDT"), Quantity.of(10, "BTC")),),
+                ),
+                metadata,
+            )
+        await process(command.command_id)
+        async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+            rows = (
+                await session.execute(
+                    """SELECT order_id,status,filled_quantity FROM paper_order_projections
+                    WHERE episode_id=:episode""",
+                    {"episode": wallet.episode_id},
+                )
+            ).all()
+            current = await get_wallet(session)
+            positions = await read_position_snapshot(session, UUID(str(wallet.episode_id)))
+        assert {row.order_id: (row.status, row.filled_quantity) for row in rows} == {
+            old.order_id: ("CANCELED", 0),
+            new.order_id: ("FILLED", 1),
+        }
+        assert positions is not None
+        assert next(
+            p.held_quantity for p in positions.positions if p.pair == old.pair
+        ) == Quantity.of("0.999", "BTC")
+        assert current is not None and current.balance == wallet.balance - Money.of(89, "USDT")
+    finally:
+        if events is not None:
+            await _restore_btc_seed_catalog(migrator_engine, events)
+        await market.dispose()
+
+
+async def _simulate_btc_remove_and_readd(engine: AsyncEngine) -> tuple[UUID, UUID]:
+    removed_command, active_command = uuid4(), uuid4()
+    async with engine.begin() as connection:
+        await connection.execute(
+            text(
+                """INSERT INTO supported_symbol_events(
+                revision,command_id,base,quote,status,reason_code)
+                VALUES(3,:removed,'BTC','USDT','REMOVED','F38_INITIAL_CATALOG'),
+                  (4,:active,'BTC','USDT','ACTIVE','F38_INITIAL_CATALOG')"""
+            ),
+            {"removed": removed_command, "active": active_command},
+        )
+        await connection.execute(
+            text(
+                "UPDATE supported_symbol_fences SET status='ACTIVE',revision=4,"
+                "command_id=:active WHERE base='BTC' AND quote='USDT'"
+            ),
+            {"active": active_command},
+        )
+        await connection.execute(
+            text("UPDATE supported_symbol_catalog_control SET current_revision=4 WHERE id=1")
+        )
+    return removed_command, active_command
+
+
+async def _restore_btc_seed_catalog(engine: AsyncEngine, commands: tuple[UUID, UUID]) -> None:
+    async with engine.begin() as connection:
+        for table in (
+            "supported_symbol_events",
+            "supported_symbol_fences",
+            "supported_symbol_catalog_control",
+        ):
+            await connection.execute(text(f"ALTER TABLE {table} DISABLE TRIGGER USER"))
+        try:
+            await connection.execute(
+                text(
+                    "UPDATE supported_symbol_fences SET status='ACTIVE',revision=1,"
+                    "command_id='00000000-0000-0000-0000-000000000001' "
+                    "WHERE base='BTC' AND quote='USDT'"
+                )
+            )
+            await connection.execute(
+                text("UPDATE supported_symbol_catalog_control SET current_revision=2 WHERE id=1")
+            )
+            await connection.execute(
+                text("DELETE FROM supported_symbol_events WHERE command_id IN (:removed,:active)"),
+                {"removed": commands[0], "active": commands[1]},
+            )
+        finally:
+            for table in reversed(
+                (
+                    "supported_symbol_events",
+                    "supported_symbol_fences",
+                    "supported_symbol_catalog_control",
+                )
+            ):
+                await connection.execute(text(f"ALTER TABLE {table} ENABLE TRIGGER USER"))
 
 
 async def test_downstream_position_conflict_is_durable_without_partial_fill(
