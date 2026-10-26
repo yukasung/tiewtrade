@@ -1,6 +1,6 @@
 # F-38 release checkpoint — 2026-10-24 ถึง 2026-10-26
 
-สถานะ: **Local acceptance Passed — รอ commit/push และ required candidate CI**
+สถานะ: **Passed — F-38 Completed**
 
 อ้างอิง `release-checkpoint-plan.md` และ `release-checkpoint-validation.md` ที่เจ้าของอนุมัติ
 รวม amendments สำหรับ dedicated validation, V-15 quiesced fixture และการรวม capacity เหลือ
@@ -38,8 +38,8 @@
 | RC-11 restore/upgrade | **Passed** | restore pre-0030 → verify → upgrade 0030; revisions/digests/FK/RLS/grants ตรง |
 | RC-12 RPO/RTO | **Passed** | RPO=0 committed rows; RTO 2.247043s ≤1,800s |
 | RC-13 non-market/no Live | **Passed** | non-market digests ตรง, private venue requests 0, Live orders 0 |
-| RC-14 source/harness gates | **Pending required CI** | local backend/frontend/static/review ผ่าน; ยังไม่มี final commit และ remote candidate CI |
-| RC-15 crosswalk/docs | **Passed locally** | V-12/V-13/V-15 และ roadmap registry map ไปหลักฐานชุดนี้โดยไม่เปลี่ยน F-11/F-15/production status |
+| RC-14 source/harness gates | **Passed** | local backend/frontend/static/review ผ่าน; candidate `bfb6ab0` ผ่าน [required CI 40270868788](https://github.com/yukasung/tiewtrade/actions/runs/40270868788) ครบ 6 jobs |
+| RC-15 crosswalk/docs | **Passed** | V-12/V-13/V-15 และ roadmap registry map ไปหลักฐานชุดนี้โดยไม่เปลี่ยน F-11/F-15/production status |
 
 ## Capacity acceptance
 
@@ -121,8 +121,8 @@ recovery อย่างต่อเนื่อง และ evaluator ทุ�
 - ผล final ใช้ c1-r36, combined-steady-r7, combined-dirty-r1, scheduler-r1, s5-r5,
   aggregate-r5 และ restore-r8 เท่านั้น
 
-## งานที่ยังบล็อก Completed
+## ผลการปิดงาน
 
-RC-14 ยังต้องมี required GitHub candidate CI บน final commit ตาม `standards/testing.md`.
-ยังไม่ commit หรือ push เพราะกฎ Git กำหนดให้เจ้าของสั่งโดยตรง; ผล local ห้ามใช้แทน CI.
-จนกว่าด่านนี้ผ่าน F-38 ยังไม่เปลี่ยนเป็น `Completed` และยังไม่เปิด production PREPARED/Live.
+RC-01–RC-15 ผ่านครบ และ candidate `bfb6ab0` ผ่าน required GitHub CI ครบ 6 jobs เมื่อ
+2026-10-26 จึงปิด F-38 เป็น `Completed`. การปิดนี้ไม่เปลี่ยนสถานะ F-11, F-15,
+production PREPARED หรือ Live Trading.

@@ -88,8 +88,9 @@
 - BTC-only profile config, metrics และ result JSON
 - backup/restore drill log ที่ไม่มี secret
 
-## งานตรวจรับที่เลื่อนได้
+## ผล release checkpoint
 
-V-12, V-13 และ V-15 ผ่าน release checkpoint แล้วตามหลักฐาน 2026-10-25/26 แต่ F-38
-ยังห้ามเป็น Completed และห้ามใช้ PREPARED production จน required candidate CI ของ
-release-checkpoint candidate ผ่านบน final commit; ผล local ไม่แทน CI ตาม `standards/testing.md`
+V-12, V-13 และ V-15 ผ่าน release checkpoint ตามหลักฐาน 2026-10-25/26 และ candidate
+`bfb6ab0` ผ่าน [required CI 40270868788](https://github.com/yukasung/tiewtrade/actions/runs/40270868788)
+ครบ 6 jobs เมื่อ 2026-10-26 จึงปิด F-38 เป็น Completed. ผลนี้ไม่เปิด PREPARED production
+หรือ Live Trading และไม่เปลี่ยนสถานะ F-11/F-15
