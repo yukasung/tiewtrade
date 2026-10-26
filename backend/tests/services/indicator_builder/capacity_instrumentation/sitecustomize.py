@@ -2,32 +2,35 @@
 
 Mount this directory as PYTHONPATH and /evidence as a test output directory.
 It records attempts without replacing claims, scans, publications or retries.
-The explicit R2-7 fixture may also pin the source-snapshot clock to the isolated
-database clock while ``/evidence/exact-clock-enabled`` exists.
+The explicit R2-7 fixture pins calculation bounds while
+``/evidence/exact-clock-enabled`` exists, preserving the real snapshot timestamp.
 """
 
 import asyncio
 import json
 import os
-from collections.abc import Mapping
 from contextvars import ContextVar
+from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from time import monotonic
-from typing import Any, Literal
+from typing import Literal
 from uuid import UUID
 
-from sqlalchemy.engine import Result
 from sqlalchemy.ext.asyncio import AsyncEngine
 
+import tiewtrade.infra.indicators.scan as scan
+import tiewtrade.services.indicator_builder.attempt as attempt
+from tiewtrade.core.market_data import CandleWindow, align_ceil, align_floor, retention_cutoff
 from tiewtrade.infra.indicators.claims import BuildClaim
 from tiewtrade.infra.indicators.pinned import PinnedIndicatorWriter
 from tiewtrade.infra.indicators.session import IndicatorSourceSession
-from tiewtrade.services.indicator_builder import attempt
+from tiewtrade.infra.indicators.staging import StagingSnapshot
+from tiewtrade.infra.indicators.staging import capture_snapshot as original_capture_snapshot
 
 CLAIM = PinnedIndicatorWriter.claim
 ATTEMPT = attempt.run_attempt
-SOURCE_EXECUTE = IndicatorSourceSession.execute
+CAPTURE_SNAPSHOT = original_capture_snapshot
 CURRENT: ContextVar[BuildClaim | None] = ContextVar("measured_claim", default=None)
 EXACT_CLOCK_MARKER = Path("/evidence/exact-clock-enabled")
 
@@ -49,14 +52,18 @@ async def claim(self: PinnedIndicatorWriter, owner: UUID) -> BuildClaim | None:
     return result
 
 
-async def source_execute(
-    self: IndicatorSourceSession,
-    statement: str,
-    parameters: Mapping[str, object] | None = None,
-) -> Result[Any]:
-    if EXACT_CLOCK_MARKER.exists():
-        statement = statement.replace("clock_timestamp()", "public.capacity_indicator_clock()")
-    return await SOURCE_EXECUTE(self, statement, parameters)
+async def capture_snapshot(session: IndicatorSourceSession, claim: BuildClaim) -> StagingSnapshot:
+    snapshot = await CAPTURE_SNAPSHOT(session, claim)
+    if not EXACT_CLOCK_MARKER.exists():
+        return snapshot
+    boundary = datetime.fromisoformat(EXACT_CLOCK_MARKER.read_text(encoding="ascii"))
+    return replace(
+        snapshot,
+        calculation=CandleWindow(
+            align_ceil(retention_cutoff(boundary, claim.timeframe), claim.timeframe),
+            align_floor(boundary, claim.timeframe),
+        ),
+    )
 
 
 async def run_attempt(
@@ -123,5 +130,6 @@ async def run_attempt(
 
 if os.environ.get("TIEWTRADE_INDICATOR_OWNER"):
     PinnedIndicatorWriter.claim = claim  # type: ignore[method-assign]
-    IndicatorSourceSession.execute = source_execute  # type: ignore[method-assign]
+    # Patch the scan module's imported binding, not the production function.
+    scan.capture_snapshot = capture_snapshot  # type: ignore[attr-defined]
     attempt.run_attempt = run_attempt

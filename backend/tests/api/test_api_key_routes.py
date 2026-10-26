@@ -449,7 +449,15 @@ def test_no_route_hands_back_the_secret(client: TestClient, ending: bool) -> Non
             )
             assert renewed.status_code == 200
         assert client.get("/auth/me").status_code == 200
-        path = template.replace("{key_id}", key_id).replace("{command_id}", key_id)
+        path = (
+            template.replace("{key_id}", key_id)
+            .replace("{command_id}", key_id)
+            .replace("{request_id}", key_id)
+            .replace("{order_id}", key_id)
+            .replace("{key}", key_id)
+            .replace("{base}", "BTC")
+            .replace("{quote}", "USDT")
+        )
         assert "{" not in path, f"missing canary path value for {template}"
         if method == "WEBSOCKET":
             with client.websocket_connect(
@@ -472,17 +480,33 @@ def test_no_route_hands_back_the_secret(client: TestClient, ending: bool) -> Non
                 "/market-data/chart/history",
                 "/market-data/chart/live",
             }
+            else {"action": "NEW"}
+            if template == "/paper/order-requests/by-key/{key}"
+            else {"episode_id": key_id}
+            if template == "/paper/orders"
             else None,
             **({"json": {}} if method == "POST" else {}),
         )
         if method == "GET":
-            if template.startswith("/market-data/chart/"):
+            if template.startswith("/admin/supported-symbols"):
+                assert response.status_code == 403
+                assert response.json() == {"detail": "CATALOG_NOT_AUTHORIZED"}
+            elif template.startswith("/market-data/chart/"):
                 assert (
                     response.status_code == 404
                 )  # Disabled by default; refusal must also be secret-free.
             elif template == "/paper-wallet/commands/{command_id}":
                 assert response.status_code == 404
                 assert response.json() == {"detail": "PAPER_COMMAND_NOT_FOUND"}
+            elif template in {
+                "/paper/order-requests/by-key/{key}",
+                "/paper/order-requests/{request_id}",
+            }:
+                assert response.status_code == 404
+                assert response.json() == {"detail": "MANUAL_REQUEST_NOT_FOUND"}
+            elif template == "/paper/orders/{order_id}":
+                assert response.status_code == 404
+                assert response.json() == {"detail": "PAPER_ORDER_NOT_FOUND"}
             elif template == "/market-data/indicators" and response.status_code == 503:
                 # Empty indicator data must fail closed without exposing secrets.
                 # Accept only this documented error, independent of prior fixtures.
@@ -490,7 +514,10 @@ def test_no_route_hands_back_the_secret(client: TestClient, ending: bool) -> Non
             else:
                 assert response.status_code == 200, (method, template, response.status_code)
         elif method == "DELETE":
-            assert response.status_code == 204
+            if template.startswith("/admin/supported-symbols"):
+                assert response.status_code in (403, 429)
+            else:
+                assert response.status_code == 204
         elif template == "/api-keys/{key_id}/retry":
             assert response.status_code == 409
         else:

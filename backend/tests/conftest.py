@@ -31,6 +31,7 @@ _DESTRUCTIVE_MIGRATION_MODULES: Final[frozenset[str]] = frozenset(
         "tests/infra/db/test_migrations.py",
         "tests/infra/market_data/test_migration.py",
         "tests/infra/market_data/test_realtime_migration.py",
+        "tests/infra/market_data/test_supported_pairs_migration.py",
     }
 )
 

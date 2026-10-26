@@ -1,0 +1,36 @@
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { afterEach, expect, it, vi } from "vitest";
+import { ManualOrderForm } from "../src/ManualOrderForm";
+import { LiveTradePage } from "../src/LiveTradePage";
+import { manualOrderText as t } from "../src/manualOrderMessages";
+afterEach(cleanup);
+it("submits exact strings and only the fields/units for each supported variant", () => {
+  const onSubmit = vi.fn();
+  const onBase = vi.fn();
+  render(<ManualOrderForm base="BTC" bases={["BTC", "ETH"]} onBase={onBase} scope={{ expected_wallet_id: "w", expected_episode_id: "e" }} canSubmit={() => true} onSubmit={onSubmit}/>);
+  fireEvent.change(screen.getByLabelText(t("budget")), { target: { value: "100.000000000000000001" } });
+  fireEvent.click(screen.getByRole("button", { name: t("submit") }));
+  expect(onSubmit.mock.calls[0]?.[0]).toEqual({ expected_wallet_id: "w", expected_episode_id: "e", base: "BTC", quote: "USDT", side: "BUY", kind: "MARKET", quote_budget: "100.000000000000000001" });
+  fireEvent.change(screen.getByLabelText(t("side")), { target: { value: "SELL" } });
+  const quantity = screen.getByLabelText(`${t("quantity")} (BTC)`);
+  expect((quantity as HTMLInputElement).value).toBe("");
+  fireEvent.change(quantity, { target: { value: "0.012345678901234567" } });
+  fireEvent.click(screen.getByRole("button", { name: t("submit") }));
+  expect(onSubmit.mock.calls[1]?.[0]).toMatchObject({ side: "SELL", kind: "MARKET", base_quantity: "0.012345678901234567" });
+  expect(onSubmit.mock.calls[1]?.[0]).not.toHaveProperty("quote_budget");
+  fireEvent.change(screen.getByLabelText(t("kind")), { target: { value: "LIMIT" } });
+  fireEvent.change(quantity, { target: { value: "0.01" } });
+  fireEvent.change(screen.getByLabelText(t("price")), { target: { value: "9000.01" } });
+  fireEvent.click(screen.getByRole("button", { name: t("submit") }));
+  expect(onSubmit.mock.calls[2]?.[0]).toMatchObject({ side: "SELL", kind: "LIMIT", base_quantity: "0.01", limit_price: "9000.01", time_in_force: "GTC" });
+  fireEvent.change(screen.getByLabelText(t("pair")), { target: { value: "ETH" } });
+  expect(onBase).toHaveBeenCalledWith("ETH");
+  expect((quantity as HTMLInputElement).value).toBe("");
+  expect(screen.getByLabelText<HTMLInputElement>(t("price")).value).toBe("");
+  expect(screen.getByRole<HTMLButtonElement>("button", { name: t("submit") }).disabled).toBe(true);
+});
+it("has no mutation or enabled control on the Live route", () => {
+  render(<LiveTradePage/>);
+  for (const control of document.querySelectorAll<HTMLInputElement>("input,select,button")) expect(control.disabled).toBe(true);
+  expect(screen.getByRole("status").textContent).toBe(t("liveUnavailable"));
+});

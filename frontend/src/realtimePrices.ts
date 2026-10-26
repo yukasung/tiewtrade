@@ -1,6 +1,6 @@
 import type { components } from "./api-types";
 import { ApiRequestError, send } from "./auth";
-import { supportedBases, supportedBaseSet } from "./marketCatalog";
+import { activePairSet, type MarketCatalog } from "./marketCatalog";
 export type PricesView = components["schemas"]["PricesView"];
 export const priceQueryKey = ["market-data", "prices"] as const;
 function record(value: unknown): value is Record<string, unknown> {
@@ -10,13 +10,14 @@ function time(value: unknown): boolean {
     return typeof value === "string" && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?(?:Z|\+00:00)$/.test(value) && Number.isFinite(Date.parse(value));
 }
 /** Reject untrusted transport data without retaining raw payload/error text. */
-export function decodePrices(value: unknown): PricesView {
+export function decodePrices(value: unknown, catalog: MarketCatalog): PricesView {
     const invalid = () => new ApiRequestError("PRICE_DELIVERY_FAILED", 0);
-    if (!record(value) || value.schema_version !== 1 || !time(value.server_time) || !["CONNECTED", "RECOVERING"].includes(String(value.delivery_status)) || !Array.isArray(value.rows) || value.rows.length !== supportedBases.length)
+    const pairs = activePairSet(catalog);
+    if (!record(value) || value.schema_version !== 1 || String(value.catalog_revision) !== String(catalog.revision) || !time(value.server_time) || !["CONNECTED", "RECOVERING"].includes(String(value.delivery_status)) || !Array.isArray(value.rows) || value.rows.length !== pairs.size)
         throw invalid();
     const seen = new Set<string>();
     for (const row of value.rows) {
-        if (!record(row) || typeof row.base !== "string" || !supportedBaseSet.has(row.base) || seen.has(row.base) || row.quote !== "USDT" || row.source !== "primary_spot" || (row.amount !== null && (typeof row.amount !== "string" || !/^\d+(?:\.\d+)?$/.test(row.amount))) || !["MISSING", "RECOVERING", "STALE", "READY"].includes(String(row.readiness)) || typeof row.reason !== "string" || !/^[A-Z_]+$/.test(row.reason) || typeof row.alert_due !== "boolean")
+        if (!record(row) || typeof row.base !== "string" || typeof row.quote !== "string" || !pairs.has(`${row.base}/${row.quote}`) || seen.has(`${row.base}/${row.quote}`) || row.source !== "primary_spot" || (row.amount !== null && (typeof row.amount !== "string" || !/^\d+(?:\.\d+)?$/.test(row.amount))) || !["MISSING", "RECOVERING", "STALE", "READY"].includes(String(row.readiness)) || typeof row.reason !== "string" || !/^[A-Z_]+$/.test(row.reason) || typeof row.alert_due !== "boolean")
             throw invalid();
         for (const key of ["revision", "generation"])
             if (typeof row[key] !== "string" || !/^\d{1,20}$/.test(row[key]))
@@ -24,7 +25,7 @@ export function decodePrices(value: unknown): PricesView {
         for (const key of ["trade_at", "received_at", "valid_until", "unavailable_since"])
             if (row[key] !== null && !time(row[key]))
                 throw invalid();
-        seen.add(row.base);
+        seen.add(`${row.base}/${row.quote}`);
     }
     return value as PricesView;
 }
@@ -45,9 +46,9 @@ export function acceptPrices(current: PricesView | undefined, next: PricesView):
     }
     return next;
 }
-export async function fetchPrices(signal: AbortSignal): Promise<PricesView> {
+export async function fetchPrices(signal: AbortSignal, catalog: MarketCatalog): Promise<PricesView> {
     try {
-        return decodePrices(await send<unknown>("/market-data/prices", undefined, undefined, "GET", signal));
+        return decodePrices(await send<unknown>("/market-data/prices", undefined, undefined, "GET", signal), catalog);
     }
     catch (error) {
         throw new ApiRequestError("PRICE_DELIVERY_FAILED", error instanceof ApiRequestError ? error.status : 0);

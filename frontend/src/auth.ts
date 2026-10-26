@@ -6,7 +6,11 @@ import type { components } from "./api-types";
  * มาจากไฟล์ที่สร้างจากสัญญา API ของหลังบ้าน (P-9) ห้ามเขียนชนิดเหล่านี้เอง
  */
 export type Identity = components["schemas"]["Identity"];
-export type Me = components["schemas"]["Me"];
+type MeContract = components["schemas"]["Me"];
+/** Optional only for a rolling frontend/backend deployment; the current API always emits it. */
+export type Me = Omit<MeContract, "platform_role"> & {
+  platform_role?: MeContract["platform_role"];
+};
 export type SessionsEnded = components["schemas"]["SessionsEnded"];
 export type SignInStarted = components["schemas"]["SignInStarted"];
 export type SignedIn = components["schemas"]["SignedIn"];

@@ -6,7 +6,15 @@ from datetime import datetime
 from typing import Any
 from uuid import NAMESPACE_URL, UUID, uuid4, uuid5
 
-from tiewtrade.core.orders import OrderConflictError, OrderIntent, TradingMode
+from tiewtrade.core.orders import (
+    OrderConflictError,
+    OrderIntent,
+    SafetyUnavailableError,
+    SourceUnavailableError,
+    TradingMode,
+    UnsupportedOrderError,
+)
+from tiewtrade.core.positions import ExecutionSide, PositionPair
 from tiewtrade.infra.db.session import (
     ScanSession,
     UserSession,
@@ -18,7 +26,11 @@ from tiewtrade.infra.paper_orders.initialization import (
     enable_financial_writer,
     initialize_order_source,
 )
-from tiewtrade.infra.paper_orders.storage import increment_wallet_revision, lock_active_episode
+from tiewtrade.infra.paper_orders.storage import (
+    increment_wallet_revision,
+    lock_active_episode,
+    lock_pair_catalog,
+)
 
 
 class OrderClaimLostError(OrderConflictError):
@@ -102,6 +114,17 @@ async def complete_command(
     return result
 
 
+async def lock_opening_pair_catalog(session: UserSession, pair: PositionPair) -> int:
+    """Hold a row-share lock so removal cannot pass this opening submission."""
+    try:
+        catalog = await lock_pair_catalog(session, pair)
+    except SourceUnavailableError:
+        raise SafetyUnavailableError("supported-symbol catalog is unavailable") from None
+    if not catalog.snapshot.supports(pair.base, pair.quote):
+        raise UnsupportedOrderError("opening pair is not in catalog")
+    return catalog.snapshot.revision
+
+
 async def _submit(
     session: UserSession,
     *,
@@ -111,10 +134,12 @@ async def _submit(
     key: UUID,
     action: str,
     payload: dict[str, object],
+    opening_pair: PositionPair | None = None,
+    admitted_catalog_revision: int | None = None,
 ) -> OrderCommand:
     session = require_user_session(session)
-    encoded = canonical({"wallet": str(wallet_id), "episode": str(episode_id), **payload})
-    fingerprint = hashlib.sha256(encoded.encode()).hexdigest()
+    request_payload = {"wallet": str(wallet_id), "episode": str(episode_id), **payload}
+    fingerprint = hashlib.sha256(canonical(request_payload).encode()).hexdigest()
     # Serialize replay lookup with admission, including retries across episode closure.
     await session.execute(
         "SELECT pg_advisory_xact_lock(hashtextextended(:key,0))",
@@ -134,6 +159,24 @@ async def _submit(
         assert prior is not None
         return prior
     await lock_active_episode(session, wallet_id, episode_id)
+    catalog_revision = None
+    if opening_pair is not None:
+        catalog_revision = await lock_opening_pair_catalog(session, opening_pair)
+        if admitted_catalog_revision is not None:
+            fence = await lock_pair_catalog(session, opening_pair)
+            if (
+                type(admitted_catalog_revision) is not int
+                or admitted_catalog_revision <= 0
+                or admitted_catalog_revision > catalog_revision
+                or (
+                    fence.latest_removed_revision is not None
+                    and fence.latest_removed_revision > admitted_catalog_revision
+                )
+            ):
+                raise UnsupportedOrderError("opening catalog revision was invalidated")
+            catalog_revision = admitted_catalog_revision
+    elif admitted_catalog_revision is not None:
+        raise OrderConflictError("catalog revision is only valid for opening orders")
     receipt = await initialize_order_source(
         session,
         wallet_id=wallet_id,
@@ -156,6 +199,9 @@ async def _submit(
     if ready is None:
         raise OrderConflictError("Paper financial sources are not ready")
     await enable_financial_writer(session)
+    stored_payload = dict(request_payload)
+    if catalog_revision is not None:
+        stored_payload["catalog_revision"] = catalog_revision
     identity = uuid4()
     params = {
         "id": identity,
@@ -166,7 +212,7 @@ async def _submit(
         "key": key,
         "action": action,
         "fingerprint": fingerprint,
-        "payload": encoded,
+        "payload": canonical(stored_payload),
     }
     await session.execute(
         """INSERT INTO paper_order_commands
@@ -185,7 +231,11 @@ async def _submit(
 
 
 async def submit_order(
-    session: UserSession, *, wallet_id: UUID, intent: OrderIntent
+    session: UserSession,
+    *,
+    wallet_id: UUID,
+    intent: OrderIntent,
+    admitted_catalog_revision: int | None = None,
 ) -> OrderCommand:
     session = require_user_session(session)
     if intent.scope.owner_id != session.user_id or intent.scope.mode is not TradingMode.PAPER:
@@ -198,6 +248,8 @@ async def submit_order(
         key=intent.idempotency_key,
         action="NEW",
         payload={"intent": intent_payload(intent)},
+        opening_pair=intent.pair if intent.side is ExecutionSide.BUY else None,
+        admitted_catalog_revision=admitted_catalog_revision,
     )
 
 

@@ -1,9 +1,10 @@
 import { useEffect, useState, type MouseEvent } from "react";
 
-export const accountPages = ["chart", "account", "security", "api-keys", "trading-account", "prices"] as const;
+export const accountPages = ["chart", "paper/trade", "live/trade", "account", "security", "api-keys", "trading-account", "prices", "supported-symbols"] as const;
 export type AccountPage = (typeof accountPages)[number];
-function currentPage(): AccountPage {
-  return accountPages.find(page => window.location.pathname === `/${page}`) ?? "chart";
+function currentPage(isPlatformAdmin: boolean): AccountPage {
+  const found = accountPages.find(page => window.location.pathname === `/${page}`);
+  return found === "supported-symbols" && !isPlatformAdmin ? "chart" : found ?? "chart";
 }
 /** Preserve native modified clicks, new tabs and downloads. */
 export function navigateAccountPage(event: MouseEvent<HTMLAnchorElement>): void {
@@ -16,17 +17,17 @@ export function navigateAccountPage(event: MouseEvent<HTMLAnchorElement>): void 
   window.dispatchEvent(new PopStateEvent("popstate"));
 }
 /** Mounted only after authentication; page changes preserve the session provider. */
-export function useAccountPage(): AccountPage {
-  const [page, setPage] = useState(currentPage);
+export function useAccountPage(isPlatformAdmin = false): AccountPage {
+  const [page, setPage] = useState(() => currentPage(isPlatformAdmin));
   useEffect(() => {
     const changed = () => {
-      const next = currentPage();
+      const next = currentPage(isPlatformAdmin);
       if (window.location.pathname !== `/${next}`) window.history.replaceState(window.history.state, "", `/${next}${window.location.search}`);
       setPage(next);
     };
     changed();
     window.addEventListener("popstate", changed);
     return () => window.removeEventListener("popstate", changed);
-  }, []);
+  }, [isPlatformAdmin]);
   return page;
 }

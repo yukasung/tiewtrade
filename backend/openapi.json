@@ -59,6 +59,34 @@
         "title": "AddedKey",
         "type": "object"
       },
+      "BaseBalanceView": {
+        "properties": {
+          "asset": {
+            "title": "Asset",
+            "type": "string"
+          },
+          "available": {
+            "title": "Available",
+            "type": "string"
+          },
+          "held": {
+            "title": "Held",
+            "type": "string"
+          },
+          "reserved": {
+            "title": "Reserved",
+            "type": "string"
+          }
+        },
+        "required": [
+          "asset",
+          "held",
+          "reserved",
+          "available"
+        ],
+        "title": "BaseBalanceView",
+        "type": "object"
+      },
       "CandleFinality": {
         "enum": [
           "UNCONFIRMED",
@@ -285,6 +313,255 @@
           "last_checked_at"
         ],
         "title": "CandleView",
+        "type": "object"
+      },
+      "CatalogCleanupView": {
+        "properties": {
+          "attempts": {
+            "title": "Attempts",
+            "type": "integer"
+          },
+          "bots_stopped": {
+            "title": "Bots Stopped",
+            "type": "integer"
+          },
+          "commands_rejected": {
+            "title": "Commands Rejected",
+            "type": "integer"
+          },
+          "error_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Code"
+          },
+          "orders_canceled": {
+            "title": "Orders Canceled",
+            "type": "integer"
+          },
+          "orders_unresolved": {
+            "title": "Orders Unresolved",
+            "type": "integer"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "attempts",
+          "bots_stopped",
+          "commands_rejected",
+          "orders_canceled",
+          "orders_unresolved",
+          "error_code",
+          "updated_at"
+        ],
+        "title": "CatalogCleanupView",
+        "type": "object"
+      },
+      "CatalogCommandResponse": {
+        "properties": {
+          "action": {
+            "title": "Action",
+            "type": "string"
+          },
+          "base": {
+            "title": "Base",
+            "type": "string"
+          },
+          "command_id": {
+            "format": "uuid",
+            "title": "Command Id",
+            "type": "string"
+          },
+          "completed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "quote": {
+            "title": "Quote",
+            "type": "string"
+          },
+          "revision": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revision"
+          },
+          "state": {
+            "title": "State",
+            "type": "string"
+          }
+        },
+        "required": [
+          "command_id",
+          "action",
+          "base",
+          "quote",
+          "state",
+          "revision",
+          "created_at",
+          "completed_at"
+        ],
+        "title": "CatalogCommandResponse",
+        "type": "object"
+      },
+      "CatalogMutation": {
+        "properties": {
+          "base": {
+            "maxLength": 16,
+            "minLength": 1,
+            "title": "Base",
+            "type": "string"
+          },
+          "expected_revision": {
+            "minimum": 0.0,
+            "title": "Expected Revision",
+            "type": "integer"
+          },
+          "quote": {
+            "maxLength": 16,
+            "minLength": 1,
+            "title": "Quote",
+            "type": "string"
+          },
+          "reason_code": {
+            "$ref": "#/components/schemas/CatalogReason"
+          }
+        },
+        "required": [
+          "base",
+          "quote",
+          "expected_revision",
+          "reason_code"
+        ],
+        "title": "CatalogMutation",
+        "type": "object"
+      },
+      "CatalogPairView": {
+        "properties": {
+          "base": {
+            "title": "Base",
+            "type": "string"
+          },
+          "cleanup": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CatalogCleanupView"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "quote": {
+            "title": "Quote",
+            "type": "string"
+          },
+          "revision": {
+            "title": "Revision",
+            "type": "integer"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "base",
+          "quote",
+          "status",
+          "revision",
+          "updated_at"
+        ],
+        "title": "CatalogPairView",
+        "type": "object"
+      },
+      "CatalogReason": {
+        "enum": [
+          "ADMIN_LIQUIDITY_REVIEWED",
+          "ADMIN_RISK_REVIEW"
+        ],
+        "title": "CatalogReason",
+        "type": "string"
+      },
+      "CatalogResponse": {
+        "properties": {
+          "active_pairs": {
+            "items": {
+              "maxItems": 2,
+              "minItems": 2,
+              "prefixItems": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "string"
+                }
+              ],
+              "type": "array"
+            },
+            "title": "Active Pairs",
+            "type": "array"
+          },
+          "entries": {
+            "items": {
+              "$ref": "#/components/schemas/CatalogPairView"
+            },
+            "title": "Entries",
+            "type": "array"
+          },
+          "mutations_enabled": {
+            "title": "Mutations Enabled",
+            "type": "boolean"
+          },
+          "revision": {
+            "title": "Revision",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "revision",
+          "active_pairs",
+          "entries",
+          "mutations_enabled"
+        ],
+        "title": "CatalogResponse",
         "type": "object"
       },
       "ChartCandlePage": {
@@ -768,6 +1045,43 @@
         "title": "CodesIssued",
         "type": "object"
       },
+      "CommandAmount": {
+        "properties": {
+          "amount": {
+            "title": "Amount",
+            "type": "string"
+          },
+          "currency": {
+            "const": "USDT",
+            "title": "Currency",
+            "type": "string"
+          }
+        },
+        "required": [
+          "amount",
+          "currency"
+        ],
+        "title": "CommandAmount",
+        "type": "object"
+      },
+      "CommandQuantity": {
+        "properties": {
+          "asset": {
+            "title": "Asset",
+            "type": "string"
+          },
+          "quantity": {
+            "title": "Quantity",
+            "type": "string"
+          }
+        },
+        "required": [
+          "quantity",
+          "asset"
+        ],
+        "title": "CommandQuantity",
+        "type": "object"
+      },
       "Confirmation": {
         "description": "รหัสจาก secret ที่เพิ่งตั้งค่า",
         "properties": {
@@ -887,6 +1201,27 @@
         "title": "Enrollment",
         "type": "object"
       },
+      "ExpectedPaperEpisode": {
+        "additionalProperties": false,
+        "properties": {
+          "expected_episode_id": {
+            "format": "uuid",
+            "title": "Expected Episode Id",
+            "type": "string"
+          },
+          "expected_wallet_id": {
+            "format": "uuid",
+            "title": "Expected Wallet Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "expected_wallet_id",
+          "expected_episode_id"
+        ],
+        "title": "ExpectedPaperEpisode",
+        "type": "object"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -938,6 +1273,60 @@
           "user_id"
         ],
         "title": "Identity",
+        "type": "object"
+      },
+      "ImpactResponse": {
+        "properties": {
+          "base": {
+            "title": "Base",
+            "type": "string"
+          },
+          "bots": {
+            "title": "Bots",
+            "type": "integer"
+          },
+          "complete": {
+            "title": "Complete",
+            "type": "boolean"
+          },
+          "open_entry_orders": {
+            "title": "Open Entry Orders",
+            "type": "integer"
+          },
+          "positions": {
+            "title": "Positions",
+            "type": "integer"
+          },
+          "protective_orders": {
+            "title": "Protective Orders",
+            "type": "integer"
+          },
+          "quote": {
+            "title": "Quote",
+            "type": "string"
+          },
+          "reduce_risk_orders": {
+            "title": "Reduce Risk Orders",
+            "type": "integer"
+          },
+          "snapshot_at": {
+            "format": "date-time",
+            "title": "Snapshot At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "base",
+          "quote",
+          "bots",
+          "open_entry_orders",
+          "protective_orders",
+          "reduce_risk_orders",
+          "positions",
+          "complete",
+          "snapshot_at"
+        ],
+        "title": "ImpactResponse",
         "type": "object"
       },
       "IndicatorHistoryView": {
@@ -1238,6 +1627,471 @@
         "title": "KeyView",
         "type": "object"
       },
+      "LimitOrderInput": {
+        "additionalProperties": false,
+        "properties": {
+          "base": {
+            "pattern": "^[A-Z][A-Z0-9]{0,19}$",
+            "title": "Base",
+            "type": "string"
+          },
+          "base_quantity": {
+            "maxLength": 256,
+            "minLength": 1,
+            "title": "Base Quantity",
+            "type": "string"
+          },
+          "expected_episode_id": {
+            "format": "uuid",
+            "title": "Expected Episode Id",
+            "type": "string"
+          },
+          "expected_wallet_id": {
+            "format": "uuid",
+            "title": "Expected Wallet Id",
+            "type": "string"
+          },
+          "kind": {
+            "const": "LIMIT",
+            "title": "Kind",
+            "type": "string"
+          },
+          "limit_price": {
+            "maxLength": 256,
+            "minLength": 1,
+            "title": "Limit Price",
+            "type": "string"
+          },
+          "quote": {
+            "const": "USDT",
+            "title": "Quote",
+            "type": "string"
+          },
+          "side": {
+            "enum": [
+              "BUY",
+              "SELL"
+            ],
+            "title": "Side",
+            "type": "string"
+          },
+          "time_in_force": {
+            "const": "GTC",
+            "title": "Time In Force",
+            "type": "string"
+          }
+        },
+        "required": [
+          "expected_wallet_id",
+          "expected_episode_id",
+          "base",
+          "quote",
+          "kind",
+          "side",
+          "base_quantity",
+          "limit_price",
+          "time_in_force"
+        ],
+        "title": "LimitOrderInput",
+        "type": "object"
+      },
+      "ManualOrderRefusal": {
+        "properties": {
+          "detail": {
+            "title": "Detail",
+            "type": "string"
+          }
+        },
+        "required": [
+          "detail"
+        ],
+        "title": "ManualOrderRefusal",
+        "type": "object"
+      },
+      "ManualOrderSummary": {
+        "properties": {
+          "base": {
+            "title": "Base",
+            "type": "string"
+          },
+          "base_quantity": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Base Quantity"
+          },
+          "kind": {
+            "enum": [
+              "MARKET",
+              "LIMIT"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "limit_price": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Limit Price"
+          },
+          "quote": {
+            "const": "USDT",
+            "title": "Quote",
+            "type": "string"
+          },
+          "quote_budget": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quote Budget"
+          },
+          "side": {
+            "enum": [
+              "BUY",
+              "SELL"
+            ],
+            "title": "Side",
+            "type": "string"
+          },
+          "time_in_force": {
+            "anyOf": [
+              {
+                "const": "GTC",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Time In Force"
+          }
+        },
+        "required": [
+          "base",
+          "quote",
+          "side",
+          "kind",
+          "quote_budget",
+          "base_quantity",
+          "limit_price",
+          "time_in_force"
+        ],
+        "title": "ManualOrderSummary",
+        "type": "object"
+      },
+      "ManualRequestPage": {
+        "properties": {
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          },
+          "requests": {
+            "items": {
+              "$ref": "#/components/schemas/ManualRequestView"
+            },
+            "title": "Requests",
+            "type": "array"
+          }
+        },
+        "required": [
+          "requests",
+          "next_cursor"
+        ],
+        "title": "ManualRequestPage",
+        "type": "object"
+      },
+      "ManualRequestView": {
+        "properties": {
+          "action": {
+            "enum": [
+              "NEW",
+              "CANCEL"
+            ],
+            "title": "Action",
+            "type": "string"
+          },
+          "command_failure_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Command Failure Code"
+          },
+          "command_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Command Id"
+          },
+          "command_snapshot": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/OrderCommandSnapshot"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "command_state": {
+            "anyOf": [
+              {
+                "enum": [
+                  "PENDING",
+                  "SUCCEEDED",
+                  "REJECTED"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Command State"
+          },
+          "episode_id": {
+            "format": "uuid",
+            "title": "Episode Id",
+            "type": "string"
+          },
+          "idempotency_key": {
+            "format": "uuid",
+            "title": "Idempotency Key",
+            "type": "string"
+          },
+          "intake_failure_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Intake Failure Code"
+          },
+          "intake_state": {
+            "enum": [
+              "PENDING",
+              "TRANSFERRED",
+              "REJECTED"
+            ],
+            "title": "Intake State",
+            "type": "string"
+          },
+          "mode": {
+            "const": "PAPER",
+            "default": "PAPER",
+            "title": "Mode",
+            "type": "string"
+          },
+          "order_id": {
+            "format": "uuid",
+            "title": "Order Id",
+            "type": "string"
+          },
+          "order_state": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Order State"
+          },
+          "recorded_at": {
+            "title": "Recorded At",
+            "type": "string"
+          },
+          "request_id": {
+            "format": "uuid",
+            "title": "Request Id",
+            "type": "string"
+          },
+          "request_summary": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ManualOrderSummary"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "snapshot_at": {
+            "title": "Snapshot At",
+            "type": "string"
+          },
+          "status_url": {
+            "title": "Status Url",
+            "type": "string"
+          },
+          "wallet_id": {
+            "format": "uuid",
+            "title": "Wallet Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "request_id",
+          "wallet_id",
+          "episode_id",
+          "order_id",
+          "action",
+          "idempotency_key",
+          "request_summary",
+          "recorded_at",
+          "intake_state",
+          "intake_failure_code",
+          "command_id",
+          "command_state",
+          "command_failure_code",
+          "command_snapshot",
+          "order_state",
+          "snapshot_at",
+          "status_url"
+        ],
+        "title": "ManualRequestView",
+        "type": "object"
+      },
+      "MarketBuyInput": {
+        "additionalProperties": false,
+        "properties": {
+          "base": {
+            "pattern": "^[A-Z][A-Z0-9]{0,19}$",
+            "title": "Base",
+            "type": "string"
+          },
+          "expected_episode_id": {
+            "format": "uuid",
+            "title": "Expected Episode Id",
+            "type": "string"
+          },
+          "expected_wallet_id": {
+            "format": "uuid",
+            "title": "Expected Wallet Id",
+            "type": "string"
+          },
+          "kind": {
+            "const": "MARKET",
+            "title": "Kind",
+            "type": "string"
+          },
+          "quote": {
+            "const": "USDT",
+            "title": "Quote",
+            "type": "string"
+          },
+          "quote_budget": {
+            "maxLength": 256,
+            "minLength": 1,
+            "title": "Quote Budget",
+            "type": "string"
+          },
+          "side": {
+            "const": "BUY",
+            "title": "Side",
+            "type": "string"
+          }
+        },
+        "required": [
+          "expected_wallet_id",
+          "expected_episode_id",
+          "base",
+          "quote",
+          "kind",
+          "side",
+          "quote_budget"
+        ],
+        "title": "MarketBuyInput",
+        "type": "object"
+      },
+      "MarketSellInput": {
+        "additionalProperties": false,
+        "properties": {
+          "base": {
+            "pattern": "^[A-Z][A-Z0-9]{0,19}$",
+            "title": "Base",
+            "type": "string"
+          },
+          "base_quantity": {
+            "maxLength": 256,
+            "minLength": 1,
+            "title": "Base Quantity",
+            "type": "string"
+          },
+          "expected_episode_id": {
+            "format": "uuid",
+            "title": "Expected Episode Id",
+            "type": "string"
+          },
+          "expected_wallet_id": {
+            "format": "uuid",
+            "title": "Expected Wallet Id",
+            "type": "string"
+          },
+          "kind": {
+            "const": "MARKET",
+            "title": "Kind",
+            "type": "string"
+          },
+          "quote": {
+            "const": "USDT",
+            "title": "Quote",
+            "type": "string"
+          },
+          "side": {
+            "const": "SELL",
+            "title": "Side",
+            "type": "string"
+          }
+        },
+        "required": [
+          "expected_wallet_id",
+          "expected_episode_id",
+          "base",
+          "quote",
+          "kind",
+          "side",
+          "base_quantity"
+        ],
+        "title": "MarketSellInput",
+        "type": "object"
+      },
       "MarketSource": {
         "const": "primary_spot",
         "type": "string"
@@ -1245,6 +2099,17 @@
       "Me": {
         "description": "ตัวตนของคำขอ พร้อมสถานะปัจจัยที่สอง (F-06 RQ-12)",
         "properties": {
+          "platform_role": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Platform Role"
+          },
           "totp_enabled": {
             "title": "Totp Enabled",
             "type": "boolean"
@@ -1257,7 +2122,8 @@
         },
         "required": [
           "user_id",
-          "totp_enabled"
+          "totp_enabled",
+          "platform_role"
         ],
         "title": "Me",
         "type": "object"
@@ -1279,6 +2145,46 @@
           "amount"
         ],
         "title": "MoneyView",
+        "type": "object"
+      },
+      "OrderCommandSnapshot": {
+        "additionalProperties": false,
+        "properties": {
+          "filled": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CommandQuantity"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "order_id": {
+            "format": "uuid",
+            "title": "Order Id",
+            "type": "string"
+          },
+          "spent": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CommandAmount"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "order_id",
+          "status"
+        ],
+        "title": "OrderCommandSnapshot",
         "type": "object"
       },
       "PaperCommandSnapshotView": {
@@ -1362,6 +2268,325 @@
           "status_url"
         ],
         "title": "PaperCommandView",
+        "type": "object"
+      },
+      "PaperOrderPage": {
+        "properties": {
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          },
+          "orders": {
+            "items": {
+              "$ref": "#/components/schemas/PaperOrderView"
+            },
+            "title": "Orders",
+            "type": "array"
+          },
+          "snapshot_at": {
+            "title": "Snapshot At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "orders",
+          "snapshot_at",
+          "next_cursor"
+        ],
+        "title": "PaperOrderPage",
+        "type": "object"
+      },
+      "PaperOrderView": {
+        "properties": {
+          "accepted_at": {
+            "title": "Accepted At",
+            "type": "string"
+          },
+          "base": {
+            "title": "Base",
+            "type": "string"
+          },
+          "episode_id": {
+            "format": "uuid",
+            "title": "Episode Id",
+            "type": "string"
+          },
+          "failure_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Failure Code"
+          },
+          "filled_quantity": {
+            "title": "Filled Quantity",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "MARKET",
+              "LIMIT"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "limit_price": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Limit Price"
+          },
+          "mode": {
+            "const": "PAPER",
+            "title": "Mode",
+            "type": "string"
+          },
+          "order_id": {
+            "format": "uuid",
+            "title": "Order Id",
+            "type": "string"
+          },
+          "quantity": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quantity"
+          },
+          "quote": {
+            "const": "USDT",
+            "title": "Quote",
+            "type": "string"
+          },
+          "quote_budget": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quote Budget"
+          },
+          "remaining_budget": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Remaining Budget"
+          },
+          "remaining_quantity": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Remaining Quantity"
+          },
+          "reserved_base": {
+            "title": "Reserved Base",
+            "type": "string"
+          },
+          "reserved_quote": {
+            "title": "Reserved Quote",
+            "type": "string"
+          },
+          "sequence": {
+            "title": "Sequence",
+            "type": "integer"
+          },
+          "side": {
+            "enum": [
+              "BUY",
+              "SELL"
+            ],
+            "title": "Side",
+            "type": "string"
+          },
+          "snapshot_at": {
+            "title": "Snapshot At",
+            "type": "string"
+          },
+          "spent": {
+            "title": "Spent",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "time_in_force": {
+            "anyOf": [
+              {
+                "const": "GTC",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Time In Force"
+          },
+          "wallet_id": {
+            "format": "uuid",
+            "title": "Wallet Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "order_id",
+          "wallet_id",
+          "episode_id",
+          "sequence",
+          "mode",
+          "base",
+          "quote",
+          "side",
+          "kind",
+          "status",
+          "quantity",
+          "quote_budget",
+          "limit_price",
+          "time_in_force",
+          "failure_code",
+          "filled_quantity",
+          "spent",
+          "remaining_quantity",
+          "remaining_budget",
+          "reserved_quote",
+          "reserved_base",
+          "accepted_at",
+          "snapshot_at"
+        ],
+        "title": "PaperOrderView",
+        "type": "object"
+      },
+      "PaperTradeView": {
+        "properties": {
+          "account_use": {
+            "anyOf": [
+              {
+                "enum": [
+                  "MANUAL",
+                  "BOT"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Account Use"
+          },
+          "admission_ready": {
+            "title": "Admission Ready",
+            "type": "boolean"
+          },
+          "admission_reasons": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Admission Reasons",
+            "type": "array"
+          },
+          "base": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Base"
+          },
+          "catalog_revision": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Catalog Revision"
+          },
+          "market_observed_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Market Observed At"
+          },
+          "mode": {
+            "const": "PAPER",
+            "title": "Mode",
+            "type": "string"
+          },
+          "quote": {
+            "const": "USDT",
+            "title": "Quote",
+            "type": "string"
+          },
+          "snapshot_at": {
+            "title": "Snapshot At",
+            "type": "string"
+          },
+          "wallet": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TradeWalletView"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "mode",
+          "wallet",
+          "account_use",
+          "base",
+          "quote",
+          "catalog_revision",
+          "snapshot_at",
+          "admission_ready",
+          "admission_reasons"
+        ],
+        "title": "PaperTradeView",
         "type": "object"
       },
       "PaperWalletEnvelope": {
@@ -1534,7 +2759,8 @@
             "title": "Amount"
           },
           "base": {
-            "$ref": "#/components/schemas/SupportedBase"
+            "title": "Base",
+            "type": "string"
           },
           "generation": {
             "pattern": "^[0-9]+$",
@@ -1542,7 +2768,8 @@
             "type": "string"
           },
           "quote": {
-            "$ref": "#/components/schemas/SupportedQuote"
+            "title": "Quote",
+            "type": "string"
           },
           "readiness": {
             "enum": [
@@ -1636,6 +2863,11 @@
       "PricesView": {
         "additionalProperties": false,
         "properties": {
+          "catalog_revision": {
+            "pattern": "^[0-9]+$",
+            "title": "Catalog Revision",
+            "type": "string"
+          },
           "delivery_status": {
             "enum": [
               "CONNECTED",
@@ -1664,11 +2896,63 @@
           }
         },
         "required": [
+          "catalog_revision",
           "server_time",
           "delivery_status",
           "rows"
         ],
         "title": "PricesView",
+        "type": "object"
+      },
+      "ProtocolEnableRequest": {
+        "properties": {
+          "deployment_generation": {
+            "format": "uuid",
+            "title": "Deployment Generation",
+            "type": "string"
+          },
+          "expected_revision": {
+            "minimum": 0.0,
+            "title": "Expected Revision",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "deployment_generation",
+          "expected_revision"
+        ],
+        "title": "ProtocolEnableRequest",
+        "type": "object"
+      },
+      "PublicCatalogResponse": {
+        "properties": {
+          "active_pairs": {
+            "items": {
+              "maxItems": 2,
+              "minItems": 2,
+              "prefixItems": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "string"
+                }
+              ],
+              "type": "array"
+            },
+            "title": "Active Pairs",
+            "type": "array"
+          },
+          "revision": {
+            "title": "Revision",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "revision",
+          "active_pairs"
+        ],
+        "title": "PublicCatalogResponse",
         "type": "object"
       },
       "RefreshTarget": {
@@ -1928,17 +3212,6 @@
         "title": "SignedIn",
         "type": "object"
       },
-      "SupportedBase": {
-        "enum": [
-          "BTC",
-          "ETH"
-        ],
-        "type": "string"
-      },
-      "SupportedQuote": {
-        "const": "USDT",
-        "type": "string"
-      },
       "Timeframe": {
         "enum": [
           "1m",
@@ -1952,6 +3225,77 @@
         ],
         "title": "Timeframe",
         "type": "string"
+      },
+      "TradeWalletView": {
+        "properties": {
+          "available_quote": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Available Quote"
+          },
+          "balance": {
+            "title": "Balance",
+            "type": "string"
+          },
+          "base_balances": {
+            "items": {
+              "$ref": "#/components/schemas/BaseBalanceView"
+            },
+            "title": "Base Balances",
+            "type": "array"
+          },
+          "episode_id": {
+            "format": "uuid",
+            "title": "Episode Id",
+            "type": "string"
+          },
+          "reserved_quote": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reserved Quote"
+          },
+          "revision": {
+            "title": "Revision",
+            "type": "integer"
+          },
+          "source_availability": {
+            "enum": [
+              "READY",
+              "UNKNOWN"
+            ],
+            "title": "Source Availability",
+            "type": "string"
+          },
+          "wallet_id": {
+            "format": "uuid",
+            "title": "Wallet Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "wallet_id",
+          "episode_id",
+          "balance",
+          "reserved_quote",
+          "available_quote",
+          "base_balances",
+          "source_availability",
+          "revision"
+        ],
+        "title": "TradeWalletView",
+        "type": "object"
       },
       "TradingAccountView": {
         "properties": {
@@ -2064,6 +3408,236 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/admin/supported-symbols": {
+      "get": {
+        "operationId": "admin_catalog_admin_supported_symbols_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CatalogResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Admin Catalog",
+        "tags": [
+          "supported-symbols"
+        ]
+      },
+      "post": {
+        "operationId": "add_symbol_admin_supported_symbols_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "maxLength": 128,
+              "minLength": 1,
+              "title": "Idempotency-Key",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CatalogMutation"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CatalogCommandResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Add Symbol",
+        "tags": [
+          "supported-symbols"
+        ]
+      }
+    },
+    "/admin/supported-symbols/protocol/enable": {
+      "post": {
+        "operationId": "enable_catalog_mutations_admin_supported_symbols_protocol_enable_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProtocolEnableRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Enable Catalog Mutations",
+        "tags": [
+          "supported-symbols"
+        ]
+      }
+    },
+    "/admin/supported-symbols/{base}/{quote}": {
+      "delete": {
+        "operationId": "remove_symbol_admin_supported_symbols__base___quote__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "base",
+            "required": true,
+            "schema": {
+              "title": "Base",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "quote",
+            "required": true,
+            "schema": {
+              "title": "Quote",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "maxLength": 128,
+              "minLength": 1,
+              "title": "Idempotency-Key",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CatalogMutation"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CatalogCommandResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Remove Symbol",
+        "tags": [
+          "supported-symbols"
+        ]
+      }
+    },
+    "/admin/supported-symbols/{base}/{quote}/impact": {
+      "get": {
+        "operationId": "preview_admin_supported_symbols__base___quote__impact_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "base",
+            "required": true,
+            "schema": {
+              "title": "Base",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "quote",
+            "required": true,
+            "schema": {
+              "title": "Quote",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImpactResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Preview",
+        "tags": [
+          "supported-symbols"
+        ]
+      }
+    },
     "/api-keys": {
       "get": {
         "description": "รายการ key ของผู้ใช้คนนี้ — หน้าเว็บเรียกเป็นรอบ ๆ เพื่อดูสถานะ\n\nเส้นทางนี้ **ไม่ต่ออายุ session** (`routing_policy.py`) เพราะการ poll\nไม่ควรทำให้ session ไม่มีวันหมดอายุ",
@@ -2704,6 +4278,27 @@
           }
         },
         "summary": "Read Health"
+      }
+    },
+    "/market-catalog": {
+      "get": {
+        "operationId": "catalog_market_catalog_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicCatalogResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Catalog",
+        "tags": [
+          "supported-symbols"
+        ]
       }
     },
     "/market-data/candles": {
@@ -3541,6 +5136,948 @@
         "summary": "Reset Paper Wallet",
         "tags": [
           "paper-wallet"
+        ]
+      }
+    },
+    "/paper/order-requests": {
+      "get": {
+        "operationId": "read_unresolved_paper_order_requests_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "state",
+            "required": false,
+            "schema": {
+              "const": "unresolved",
+              "default": "unresolved",
+              "title": "State",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 512,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManualRequestPage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManualOrderRefusal"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManualOrderRefusal"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManualOrderRefusal"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManualOrderRefusal"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManualOrderRefusal"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManualOrderRefusal"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManualOrderRefusal"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Read Unresolved",
+        "tags": [
+          "manual-orders"
+        ]
+      }
+    },
+    "/paper/order-requests/by-key/{key}": {
+      "get": {
+        "operationId": "read_request_key_paper_order_requests_by_key__key__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "key",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Key",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "action",
+            "required": true,
+            "schema": {
+              "enum": [
+                "NEW",
+                "CANCEL"
+              ],
+              "title": "Action",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManualRequestView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManualOrderRefusal"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManualOrderRefusal"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManualOrderRefusal"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManualOrderRefusal"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManualOrderRefusal"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManualOrderRefusal"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManualOrderRefusal"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Read Request Key",
+        "tags": [
+          "manual-orders"
+        ]
+      }
+    },
+    "/paper/order-requests/{request_id}": {
+      "get": {
+        "operationId": "read_request_paper_order_requests__request_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "request_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Request Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManualRequestView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManualOrderRefusal"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManualOrderRefusal"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManualOrderRefusal"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManualOrderRefusal"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManualOrderRefusal"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManualOrderRefusal"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManualOrderRefusal"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Read Request",
+        "tags": [
+          "manual-orders"
+        ]
+      }
+    },
+    "/paper/orders": {
+      "get": {
+        "operationId": "read_orders_paper_orders_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "episode_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Episode Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 128,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaperOrderPage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManualOrderRefusal"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManualOrderRefusal"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManualOrderRefusal"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManualOrderRefusal"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManualOrderRefusal"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManualOrderRefusal"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManualOrderRefusal"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Read Orders",
+        "tags": [
+          "manual-orders"
+        ]
+      },
+      "post": {
+        "operationId": "new_order_paper_orders_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Idempotency-Key",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/MarketBuyInput"
+                  },
+                  {
+                    "$ref": "#/components/schemas/MarketSellInput"
+                  },
+                  {
+                    "$ref": "#/components/schemas/LimitOrderInput"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManualRequestView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManualOrderRefusal"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManualOrderRefusal"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManualOrderRefusal"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManualOrderRefusal"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManualOrderRefusal"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManualOrderRefusal"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManualOrderRefusal"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "New Order",
+        "tags": [
+          "manual-orders"
+        ]
+      }
+    },
+    "/paper/orders/{order_id}": {
+      "get": {
+        "operationId": "read_order_paper_orders__order_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "order_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Order Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaperOrderView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManualOrderRefusal"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManualOrderRefusal"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManualOrderRefusal"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManualOrderRefusal"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManualOrderRefusal"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManualOrderRefusal"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManualOrderRefusal"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Read Order",
+        "tags": [
+          "manual-orders"
+        ]
+      }
+    },
+    "/paper/orders/{order_id}/cancel": {
+      "post": {
+        "operationId": "cancel_order_paper_orders__order_id__cancel_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "order_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Order Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Idempotency-Key",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExpectedPaperEpisode"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManualRequestView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManualOrderRefusal"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManualOrderRefusal"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManualOrderRefusal"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManualOrderRefusal"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManualOrderRefusal"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManualOrderRefusal"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManualOrderRefusal"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Cancel Order",
+        "tags": [
+          "manual-orders"
+        ]
+      }
+    },
+    "/paper/trade": {
+      "get": {
+        "operationId": "read_trade_paper_trade_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "base",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "pattern": "^[A-Z][A-Z0-9]{0,19}$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Base"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaperTradeView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManualOrderRefusal"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManualOrderRefusal"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManualOrderRefusal"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManualOrderRefusal"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManualOrderRefusal"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManualOrderRefusal"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManualOrderRefusal"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Read Trade",
+        "tags": [
+          "manual-orders"
         ]
       }
     },

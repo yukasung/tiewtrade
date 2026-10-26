@@ -568,7 +568,7 @@ async def prepare_exact_r2_7_generation(
     A live scheduler snapshot intentionally excludes the candle intersecting a
     non-aligned retention cutoff, so it contains 525,599 one-minute slots.  R2-7
     instead requires the existing exact max-input fixture.  Pin only the
-    indicator SQL clock in this isolated database while the source is idle;
+    calculation bounds in this isolated database while the source is idle;
     production clock/window behavior remains unchanged.
     """
     originals: list[str] = []
@@ -657,17 +657,21 @@ async def prepare_exact_r2_7_generation(
                     text(
                         """SELECT pg_get_functiondef(p.oid)
                         FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace
-                        WHERE n.nspname='public' AND p.proname LIKE '%indicator%'
-                          AND pg_get_functiondef(p.oid) LIKE '%clock_timestamp()%'
+                        WHERE n.nspname='public' AND p.proname='indicator_calculation_bounds'
                         ORDER BY p.proname"""
                     )
                 )
             ).scalars()
         )
-        assert originals
+        assert len(originals) == 1
         for definition in originals:
+            assert definition.count("BEGIN\n") == 1
             await connection.execute(
-                text(definition.replace("clock_timestamp()", "public.capacity_indicator_clock()"))
+                text(
+                    definition.replace("IMMUTABLE", "VOLATILE").replace(
+                        "BEGIN\n", "BEGIN\n  p_as_of:=public.capacity_indicator_clock();\n", 1
+                    )
+                )
             )
 
     exact: dict[str, Any] | None = None

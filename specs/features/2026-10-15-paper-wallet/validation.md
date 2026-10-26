@@ -252,3 +252,75 @@ required CI รวม backend/frontend/api-contract/E2E/container ต้อง�
   ผ่านครบและไม่มี Needs Clarification ของ F-13 ค้างอยู่ จึงยกระดับ F-13 เป็น
   **Development Complete** เพื่อรอตรวจรับระบบตาม roadmap; ไม่อ้างผล workload W1–W4
   ของ F-15 ซึ่งยังเป็น `Pending Full Validation` และไม่ใช่เกณฑ์ของ F-13
+
+## Review remediation — 2026-10-25
+
+- ขอบเขต: ปิด Medium findings จาก deep review สองข้อบนฐาน `96bae0e`
+  ใน branch `fix/f13-review-findings` (uncommitted changes); ไม่มี schema หรือ financial writer change
+- V-7/V-12/V-14: reset confirmation ตรึง episode ID/sequence ตอนเปิด; หาก refetch
+  เปลี่ยน episode ให้ปิด modal และแจ้ง `EPISODE_CONFLICT` ก่อนยืนยันใหม่ ไม่ย้ายเป้าหมาย
+  reset ไป episode ใหม่เงียบ ๆ และยังคง idempotency key/payload เดิมเมื่อ retry
+- V-14/RQ-15: GET command status แปลง `InfraError` จาก connection/query/transaction exit
+  เป็น `503 PAPER_WALLET_DEPENDENCY_UNAVAILABLE` เช่นเดียวกับ wallet read/mutation
+- การเลือก tests: เปลี่ยนเฉพาะ confirmation intent และ HTTP error mapping จึงตรวจ
+  component/identity/retry และ injected transaction failure; ไม่ใช้ DB integration ใหม่
+  เพื่อพิสูจน์ locking/ledger ซึ่งไม่ได้เปลี่ยน และไม่รัน workload/endurance
+- Backend: `.venv/bin/python -m pytest -p no:cacheprovider tests/core/test_paper_wallet.py
+  tests/services/api/test_paper_wallet_transaction.py tests/gates/test_paper_isolation.py -q`
+  ผ่าน 17 tests; regression ใหม่ครอบ connect/query/commit failure และ retry อ่านผลเดิม
+  ผ่าน Ruff check/format สำหรับสองไฟล์ที่เปลี่ยน และ mypy 476 source files
+- Frontend: Node 22.20.0, `npm ci --no-audit --no-fund` ตาม lockfile;
+  `npm test -- tests/PaperWalletPanel.test.tsx tests/AccountSession.test.tsx` ผ่าน 15 tests
+  ใน 3.14s รวม refetch ที่เปลี่ยน/ไม่เปลี่ยน episode, confirmation/retry และ identity isolation
+- Frontend `npm run lint`, `npm run typecheck`, `npm run build` ผ่าน; production build
+  ใช้ 1.74s. รีวิว diff รอบสุดท้ายไม่พบ Critical/High หรือ finding เพิ่มในขอบเขตที่แก้;
+  `git diff --check` ผ่าน. ไม่ได้จับเวลารวมช่วงอ่าน/แก้/รีวิวแยก จึงไม่อ้างเวลารวม
+- ยังไม่ใช่ผล full candidate/required CI ของการแก้รอบนี้; ไม่มี commit/push/merge
+  และไม่เปลี่ยนสถานะ full validation ที่เลื่อนไป release checkpoint
+
+### Candidate validation — 2026-10-25 (review remediation)
+
+- Source: `96bae0e` + uncommitted remediation ใน branch `fix/f13-review-findings`;
+  ไม่มี runtime/test change หลัง targeted checkpoint ด้านบน
+- Environment: macOS arm64, Python 3.12.15, Node 22.20.0; PostgreSQL 16 และ Redis 7
+  ใน container ใหม่เฉพาะรอบนี้ ไม่ใช้ฐานข้อมูล development/release ที่มีอยู่
+- Static/contracts: Ruff check ทั้ง backend ผ่าน, format check 521 files ผ่าน,
+  import-linter ผ่านครบ 7 contracts. ใช้ mypy 476 files และ frontend lint/types/build
+  จาก checkpoint เดิมเพราะ source/dependencies ไม่เปลี่ยน. Export OpenAPI และสร้าง
+  TypeScript ใหม่แล้ว `git diff --exit-code -- backend/openapi.json frontend/src/api-types.ts`
+  ไม่พบ drift
+- Frontend full regression: 267 tests / 27 files ผ่านใน 14.63s
+- Browser: Linux arm64 container, Python 3.12.15 / Node 22 / Chromium;
+  browser → API → real Paper worker → PG → UI รวม reset/history/reload ผ่าน.
+  รอบแรก 11 passed / 7 failed ใน 1.8m เพราะ container snapshot ขาด
+  `specs/features/2026-10-12-candlestick-chart/evidence/browser_fixture.py`;
+  เติม fixture ในสภาพแวดล้อมทดสอบโดยไม่แก้ application แล้ว rerun เฉพาะชุดที่ล้ม
+  ผ่าน 7 tests ใน 1.2m จึงครบ normal E2E 18 tests. ชุด supported-symbols เพิ่มเติม
+  ตาม CI ผ่าน 2 tests ใน 34.5s
+- Backend full attempt 1: 3,259 passed / 2 failed / 2 deselected ใน 934.17s.
+  เก็บ failure เดิม: WebSocket authorization deadline ใช้ 0.611645s เกิน assertion
+  `< 0.6s` แม้ disconnect code ถูกต้อง; chart reconnect `[1h]` ได้ demand `PENDING`
+  แทน `COMPLETE`. ทั้งสองอยู่นอก F-13 remediation; ยังไม่สรุปว่าเป็น code defect
+  หรือ environment/order variation จาก failure รอบเดียว
+- Diagnostic rerun เฉพาะสองข้อผ่านใน 2.01s; rerun ทั้งสองโมดูล
+  `tests/api/test_realtime_prices.py tests/infra/market_data/test_chart_preview.py`
+  ผ่าน 24 tests ใน 12.22s โดยไม่เปลี่ยน source
+- Full retry บนฐานเดิมถูกยกเลิกหลัง 39.91s: 12 failed / 54 passed เพราะฐานมี
+  immutable supported-symbol history จากรอบก่อน ทำให้ downgrade guard ปฏิเสธ
+  `supported-symbol runtime history prevents downgrade`. เป็น environment preparation
+  failure ไม่ใช้ผลนี้ตัดสิน runtime และไม่แก้ guard เพื่อให้เทสต์ผ่าน
+- เตรียมฐานใหม่ `tiewtrade_f13_final` พร้อม bootstrap/migration และ Redis DB 1;
+  รัน full อีกครั้งโดยไม่มี build/E2E คู่ขนานเพื่อปิด full gate;
+  **Passed: 3,261 tests / 2 deselected / 5 deprecation warnings ใน 708.58s (11:48)**.
+  สองข้อที่ล้มใน full attempt แรกผ่านใน full รอบสุดท้ายโดยไม่เปลี่ยน source;
+  จึงปิด local full regression gate และเก็บ attempt แรก/diagnostic/aborted run ไว้ตามจริง
+- สรุป local candidate: regression, safety/transaction/concurrency/recovery/isolation tests
+  ใน full suite, frontend full regression, browser E2E 18+2, lint/types/imports/build
+  และ generated contracts ผ่านทั้งหมด. Final diff review ไม่พบ finding เพิ่มในขอบเขต
+  remediation; `git diff --check` ผ่าน. ไม่เปลี่ยน requirement หรือแผนที่อนุมัติแล้ว
+- `source-manifest.json` ใน evidence directory เก็บ SHA-256 ของ runtime/test files
+  ที่แก้และ lockfiles; ตรวจตรงกับ source หลังรันเสร็จ. เวลาที่รายงานเป็นเวลาจริง
+  ของแต่ละคำสั่ง ไม่บวกเวลาที่รันคู่ขนานเป็นเวลารวม; ไม่ได้จับเวลารวมแยกอ่าน/แก้/รีวิว
+- Logs/JUnit/browser artifacts อยู่ที่ `/tmp/tiewtrade-f13-candidate/` บนเครื่องนี้
+  (temporary local evidence); ไม่ใช้ผล local แทน hosted required CI และไม่อ้างว่า
+  งานพร้อม merge ก่อน CI ของ final commit ผ่าน

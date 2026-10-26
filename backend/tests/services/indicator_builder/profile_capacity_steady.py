@@ -163,21 +163,24 @@ def readiness_baseline_is_quiescent(rows: list[dict[str, Any]], metadata: dict[s
 
 
 def rejected_load_is_complete(
-    rejected: list[dict[str, Any]], metrics: list[dict[str, Any]]
+    rejected: list[dict[str, Any]],
+    metrics: list[dict[str, Any]],
+    *,
+    expected_each: int = 1200,
 ) -> bool:
     """Require every scheduled rejection, response contract, and zero-query proof."""
     busy = [item for item in rejected if item["kind"] == "busy"]
     rate = [item for item in rejected if item["kind"] == "rate"]
     negative_metrics = [item for item in metrics if item["kind"].startswith("rejected-")]
     return (
-        len(rejected) == 2400
-        and len(busy) == 1200
-        and len(rate) == 1200
+        len(rejected) == expected_each * 2
+        and len(busy) == expected_each
+        and len(rate) == expected_each
         and all(item["status"] == 503 and item["detail"] == "INDICATOR_BUSY" for item in busy)
         and all(
             item["status"] == 429 and item["detail"] == "INDICATOR_RATE_LIMITED" for item in rate
         )
-        and len(negative_metrics) == 2400
+        and len(negative_metrics) == expected_each * 2
         and all(
             item["status"] == (503 if item["kind"] == "rejected-busy" else 429)
             and item["candle_queries"] == 0
@@ -289,6 +292,17 @@ async def loaded_probes(
     return result
 
 
+def phase_plan(phase: str, loaded: bool, smoke: bool) -> tuple[str, str | None, int]:
+    """Keep short diagnostic results outside the full-acceptance prerequisite chain."""
+    assert phase in ("steady", "dirty")
+    if smoke:
+        assert (phase == "dirty") == loaded
+        return "SMOKE-" + phase, "SMOKE-steady" if phase == "dirty" else None, 300
+    if loaded:
+        return "R2-C5-" + phase, "R2-C5-steady" if phase == "dirty" else "R2-C3", 3600
+    return ("R2-C3", "R2-C2", 3600) if phase == "dirty" else ("R2-C2", None, 3600)
+
+
 async def run(
     output: Path,
     c1: Path,
@@ -296,12 +310,26 @@ async def run(
     load_metrics: Path | None = None,
     requires: Path | None = None,
     metrics_directory: Path | None = None,
+    smoke: bool = False,
     combined: bool = False,
 ) -> int:
     assert json.loads((c1 / "result.json").read_text(encoding="utf-8"))["R2-C1"] == "PASSED"
-    gates = capacity_gates(phase, under_load=load_metrics is not None, combined=combined)
+    gates: tuple[str, ...]
+    required: tuple[str, ...]
+    if smoke:
+        if combined:
+            raise ValueError("smoke evidence cannot emit combined acceptance gates")
+        smoke_gate, smoke_required, duration = phase_plan(phase, load_metrics is not None, smoke)
+        gates = (smoke_gate,)
+        required = (smoke_required,) if smoke_required is not None else ()
+    else:
+        gates = capacity_gates(phase, under_load=load_metrics is not None, combined=combined)
+        required = capacity_prerequisites(
+            phase, under_load=load_metrics is not None, combined=combined
+        )
+        duration = 3600
     gate = "+".join(gates)
-    required = capacity_prerequisites(phase, under_load=load_metrics is not None, combined=combined)
+    sample_count, probe_count = duration // 10, duration // 60
     if required:
         assert requires is not None
         prerequisite = json.loads((requires / "result.json").read_text(encoding="utf-8"))
@@ -391,6 +419,9 @@ async def run(
         while True:
             await append(source, ends)
             ready = await observe(api, users[0])
+            if smoke:
+                ready = [s for s in ready if (s["base"], Timeframe(s["timeframe"])) in SERIES]
+                assert len(ready) == len(SERIES)
             metadata = await snapshot(migrator)
             warm.append(
                 {
@@ -489,11 +520,14 @@ async def run(
                 for old in old_generations:
                     assert not await proof_valid(session, old, now)
         consumer = asyncio.create_task(oracle())
-        for tick in range(360):
+        for tick in range(sample_count):
             await asyncio.sleep(max(0, started + tick * 10 - monotonic()))
             if producer.done():
                 await producer
             ready = await observe(api, users[0])
+            if smoke:
+                ready = [s for s in ready if (s["base"], Timeframe(s["timeframe"])) in SERIES]
+                assert len(ready) == len(SERIES)
             samples.append({"seconds": monotonic() - started, "series": ready})
             save(output / "observations.json", samples)
             workload_ready = workload_readiness(ready)
@@ -537,7 +571,7 @@ async def run(
             if load_metrics:
                 save(output / "rejected.json", rejected)
         if failure is None:
-            await asyncio.sleep(max(0, started + 3600 - monotonic()))
+            await asyncio.sleep(max(0, started + duration - monotonic()))
         measured_seconds = monotonic() - started
         if pending is not None:
             await accept(await pending)
@@ -581,13 +615,13 @@ async def run(
                 if recovered_at is not None and p["started_seconds"] >= recovered_at
             )
             threshold_ok = (
-                valid_count * 5 >= 360 * 4
-                and correct * 5 >= 60 * 4
+                valid_count * 5 >= sample_count * 4
+                and correct * 5 >= probe_count * 4
                 and first_correct is not None
                 and first_correct <= 600
                 and post_recovery_ok
                 if phase == "dirty"
-                else valid_count == 360 and correct == 60
+                else valid_count == sample_count and correct == probe_count
             )
             summaries.append(
                 {
@@ -595,11 +629,11 @@ async def run(
                     "timeframe": tf.value,
                     "valid_samples": valid_count,
                     "first_correct_200_seconds": first_correct,
-                    "scheduled_samples": 360,
+                    "scheduled_samples": sample_count,
                     "correct_probes": correct,
-                    "scheduled_probes": 60,
-                    "passed": len(series_samples) == 360
-                    and len(series_probes) == 60
+                    "scheduled_probes": probe_count,
+                    "passed": len(series_samples) == sample_count
+                    and len(series_probes) == probe_count
                     and threshold_ok,
                 }
             )
@@ -609,7 +643,7 @@ async def run(
                 for line in load_metrics.read_text(encoding="utf-8").splitlines()[metric_offset:]
             ]
             save(output / "api-metrics.json", metrics)
-            if not rejected_load_is_complete(rejected, metrics):
+            if not rejected_load_is_complete(rejected, metrics, expected_each=probe_count * 20):
                 failure = failure or "REJECTED_LOAD_COVERAGE_STATUS_OR_QUERY"
             if any(
                 m["max_lag_seconds"] > 0.1 or m["rss_delta_upper_bytes"] > 128 * 1024**2
@@ -617,7 +651,7 @@ async def run(
             ):
                 failure = failure or "API_RESOURCE_LIMIT"
         passed = (
-            measured_seconds >= 3600 and failure is None and all(s["passed"] for s in summaries)
+            measured_seconds >= duration and failure is None and all(s["passed"] for s in summaries)
         )
         gate_result = "PASSED" if passed else "FAILED"
         save(
@@ -630,6 +664,10 @@ async def run(
                 "failure": failure,
                 **capacity_scope_metadata(),
                 "series": summaries,
+                "smoke": smoke,
+                "scheduled_seconds": duration,
+                "readiness_scope": "BTCUSDT 8 timeframes" if smoke else "runtime catalog",
+                "full_validation_credit": False if smoke else passed,
                 "note": (
                     "Combined gates share one 60-minute run and always have the same result. "
                     if combined
@@ -668,6 +706,7 @@ if __name__ == "__main__":
     parser.add_argument("--requires", type=Path)
     parser.add_argument("--metrics", type=Path)
     parser.add_argument("--combined", action="store_true")
+    parser.add_argument("--smoke", action="store_true")
     args = parser.parse_args()
     raise SystemExit(
         asyncio.run(
@@ -678,6 +717,7 @@ if __name__ == "__main__":
                 args.load_metrics,
                 args.requires,
                 args.metrics,
+                args.smoke,
                 args.combined,
             )
         )

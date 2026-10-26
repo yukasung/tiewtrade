@@ -31,7 +31,7 @@ from tiewtrade.infra.paper_orders.matching_storage import (
 from tiewtrade.infra.paper_orders.storage import (
     append_execution_input,
     increment_wallet_revision,
-    lock_active_episode,
+    lock_episode,
 )
 from tiewtrade.infra.paper_wallet import get_wallet
 from tiewtrade.infra.positions import (
@@ -60,7 +60,7 @@ async def correct_fill(
     order_event_id = UUID(str(order_event_id))
     correction_event_id = UUID(str(correction_event_id))
     supersedes_position_event_id = UUID(str(supersedes_position_event_id))
-    await lock_active_episode(session, wallet_id, episode_id)
+    await lock_episode(session, wallet_id, episode_id, require_active=False)
     source = (
         (
             await session.execute(
@@ -77,8 +77,20 @@ async def correct_fill(
     if source is None or fact.pair != fact.pair.__class__(source["base"], source["quote"]):
         raise OrderConflictError("correction source fill is unavailable")
     intent = intent_from_payload(object_payload(source["command_payload"])["intent"])
-    checkpoint = await load_matching_state(
-        session, wallet_id=wallet_id, scope=intent.scope, pair=intent.pair
+    linked = (
+        await session.execute(
+            "SELECT 1 FROM paper_execution_links WHERE position_event_id=:event",
+            {"event": correction_event_id},
+        )
+    ).first()
+    # Preserve checkpoint validation before a new correction. Committed replay
+    # needs only its immutable linkage, never the active episode's matching state.
+    checkpoint = (
+        await load_matching_state(
+            session, wallet_id=wallet_id, scope=intent.scope, pair=intent.pair
+        )
+        if linked is None
+        else None
     )
     result = await stage_correction_cash(
         session,
@@ -113,6 +125,7 @@ async def correct_fill(
             ),
         )
         return None
+    assert checkpoint is not None
     effective = await read_effective_executions(session, episode_id, fact.pair)
     identities = {
         row.execution_id
@@ -185,7 +198,12 @@ async def correct_fill(
             record=public,
             decision_market=market,
         )
-        state = rebase_order_queues(state, market)
+        state = rebase_order_queues(
+            state,
+            market,
+            constraints=public.metadata.limit,
+            market_constraints=public.metadata.market,
+        )
     await _prove_reservations(session, wallet_id, episode_id, state)
     saved = await persist_checkpoint(
         session,

@@ -1,5 +1,116 @@
 # F-11 — คำนวณ indicator ที่ backend — Validation
 
+## Local candidate checkpoint — 2026-10-24
+
+รีวิว diff/migration/fixture clock/smoke gate ไม่พบ Critical/High ค้าง;
+backend Ruff/format502files, mypy458files และ import contracts7ข้อผ่าน.
+Candidate regression รวม3214ข้อผ่าน/ไม่มีskip: รอบแรก929ผ่านและ1environment failure
+จาก log-redaction bootstrap ของฐานทดสอบ; ตั้งค่า bootstrap เดิมแล้วตรวจข้อที่ล้ม
+และข้อที่เหลือ2285ผ่าน โดยไม่รัน929ข้อแรกซ้ำ. เก็บผลทั้งสองรอบและวิธีเลือกตรวจใน
+`profiling/release-20261024/README.md` กับ candidate-tests XML ทั้งสองไฟล์.
+ไม่มีการรัน workload/timed smoke ใหม่. Required CI บน final commit ยัง Pending;
+ไม่อ้าง local แทน CI หรือปิดด่านชุดที่9 และยังไม่ได้ commit/push/merge.
+
+## Development smoke — Approved 2026-10-24
+
+**คำสั่งล่าสุด — Deferred, Approved 2026-10-24:** เจ้าของอนุมัติหยุดการรัน
+smoke แบบจับเวลาในรอบพัฒนานี้และเลื่อนไปตรวจรับรวมชุดที่ 9 ตาม testing หัวข้อ 7.
+ข้อความอนุมัติด้านล่างเก็บเป็นประวัติ/ขอบเขต harness ไม่ใช่คำสั่งให้รันต่อทันที
+หรือรันซ้ำท้ายทุกงาน. steady ถูกหยุดตามคำสั่ง (exit130; progress ล่าสุด180s,
+BTC8/8) ไม่ใช่ Passed; dirty/rejected-load ยังไม่รัน. หลักฐานอยู่ใน
+`profiling/release-20261024/README.md`. คง C5/C4/C6 ส่วนโหลดเต็มและ ETH เป็น
+Pending Full Validation พร้อมผล Failed/Partial เดิม; correctness/safety และ
+candidate gates ที่ไม่เลื่อนยังบังคับ. ไม่เปลี่ยนข้อกำหนดผลิตภัณฑ์หรือ production.
+
+เจ้าของอนุมัติ smoke BTCUSDT ครบ 8 timeframe: steady 300s และ dirty พร้อม
+rejected load 300s; ใช้ harness `profile_capacity_steady.py` เดิม เพิ่มโหมด
+`--smoke` ที่แยกชื่อผล SMOKE ออกจาก R2-C*. Default full run ยังคง3600s.
+ตรวจ readiness เฉพาะ BTC ใน smoke แต่ไม่แก้ catalog/production และไม่ลบ ETH
+จาก isolated fixture; background worker/source ของ fixture เดิมยังทำงานตามจริง.
+คง cadence observer10s/probe60s, parity/resource/error assertions เดิม;
+รายงาน30observations/5probe rounds ต่อseries และ200rejectionsในdirty phase.
+สัดส่วน availability เดิมใช้กับจำนวนรอบ smoke ไม่ใช่หลักฐาน full acceptance.
+ตรวจ duration/counts/gate separation และ prerequisite ไม่ให้ smoke ปิด full gate;
+รัน lint/types และ tests ที่กระทบก่อนใช้จริง. คง C5/C4/C6 และ ETH Pending
+Full Validation; ผล smoke ไม่แทนการวัด60+60นาทีในชุดที่9หรือเปิด production.
+
+## เลื่อน full validation เพื่อพัฒนาต่อ — Approved 2026-10-24
+
+เจ้าของอนุมัติด้วย “approve” ให้เลื่อน C5, C4/C6 ส่วนที่พึ่ง full workload และ
+การตรวจรับครบทุก timeframe ไปชุดที่ 9 หลังพัฒนาชุดที่ 8 เสร็จ ตามลำดับเดิม.
+คงขอบเขต 8 timeframe ไม่ลดเหลือ 1m; BTC-only amendment ด้านล่างยังเป็น
+ขอบเขตของ checkpoint ที่เลื่อน ไม่ใช่การรับรอง ETH หรือเปลี่ยน production/F-38.
+ยังไม่ปรับ harness scope หรือเริ่มโหลดเพื่อ checkpoint นี้ในรอบพัฒนาปัจจุบัน.
+คง Pending Full Validation และผล Failed/Partial เดิมจนมีหลักฐานครบ;
+ผล C1/C2/C3 ที่ผ่านเก็บตาม scope/รุ่นที่วัดจริงและตรวจความใช้ได้ก่อนนำกลับมาใช้.
+ระหว่างพัฒนาต้องตรวจ correctness, safety และ regression ตามผลกระทบ;
+ก่อน merge ต้องผ่าน candidate gates ที่ไม่เลื่อนทั้งหมด รวม review และ required CI.
+F-11 คง Development Complete ไม่ใช่ Completed; ต้องตรวจรับครบก่อนใช้เงินจริง
+หรือเปิดให้คนนอก และไม่อนุมัติ production PREPARED, commit/push/merge
+หรือข้ามจุดอนุมัติ spec ของ feature ถัดไป.
+
+
+## BTC-only checkpoint amendment — Approved 2026-10-24
+
+เจ้าของยืนยันให้ checkpoint ปัจจุบันใช้ BTCUSDT 8 timeframe ทั้ง workload และ
+readiness แทน BTC+ETH 16 series เฉพาะ checkpoint นี้. C5 steady และ dirty
+ยังต้องวัด 60 นาทีต่อ phase; งบ resource, freshness, parity, retry และ safety
+threshold เดิมทุกข้อยังมีผล. C4/C6 รายงานได้เฉพาะขอบเขต BTC ที่หลักฐานครบ;
+ETH เป็น **Pending Full Validation** ไม่ใช่ Passed และไม่รับรอง production PREPARED.
+ไม่ตัด regression ที่จำเป็นหรือเปลี่ยนเกณฑ์ F-38/feature อื่น.
+ต้องตรวจ harness scope selection, default ทุกคู่เดิม, observer/denominator และ
+report labeling ก่อนเริ่มรัน BTC-only. การปรับ harness และหลักฐานใหม่ยัง Pending;
+การอนุมัติไม่ใช่ผลทดสอบผ่าน. เก็บ artifact C1/C2/C3 และผล Failed เดิมโดยไม่แก้ย้อนหลัง.
+
+## Publication checkpoint-boundary optimization — Approved (2026-10-24)
+
+เจ้าของสั่ง “เริ่มทำต่อ” หลังเสนอ amendment; เกณฑ์ตรวจรับที่อนุมัติ:
+- actual-role migration upgrade/downgrade และ publication/fencing/atomicity regression;
+- fresh generation ที่ยังไม่มี statistics: 527 checkpoints และ query budget500ms เดิม;
+  ตรวจทั้ง custom/generic plans โดยไม่พึ่ง ANALYZE ต่อ generation;
+- completeness ต้องยังปฏิเสธ missing first/interior/end, จำนวนผิด, boundaryผิด,
+  wrong generation และครอบคลุม fixed timeframe/week/month ตาม tests เดิม;
+- bounded real-worker reproduction, scoped lint/types และ candidate gates ตามผลกระทบ;
+- เมื่อ candidate นิ่งและ prerequisite ผ่าน จึง rerun C2 เต็ม3600s ไม่ใช้ smokeแทน;
+  คง C2 Failed ล่าสุดและด่าน C3/C5/C4/C6 ที่ยังไม่ผ่านจนมีหลักฐานจริง.
+
+Diagnostic ก่อน implementation ผ่านเฉพาะ complete/missing-end smoke;
+ไม่ใช้แทนเกณฑ์ตรวจรับ. ผล implementation ล่าสุด: migration0039 และ focused
+regression149testsผ่าน, Ruff/format5filesผ่าน, type checks ผ่าน. Exact worker
+525600slots/527checkpointsผ่านใน `migration0039-exact-r2/`.
+C2 **Passed** บน0039 ครบ3600.000502333s ใน `profiling/release-20261024/c2-migration0039/`:
+readiness16/16ทุก360samples, BTC8seriesถูกต้อง60/60probesต่อseries (รวม480),
+API maxlag88.037791ms/RSS66,838,528bytes, worker127attemptsทั้งหมดREADY,
+maxattempt45.777892s/RSS3,715,072bytes. ไม่เปลี่ยน timeout/retry/threshold.
+ผล Failed ก่อน0039เก็บไว้. C3 รอบต่อบน0039 **Passed** ครบ3600.002225791s:
+readinessฟื้น16/16ใน70.074796s, ทุกseriesได้correct200ภายใน120.305785s,
+หลังrecoveryไม่มีgap; availabilityขั้นต่ำhead98.06%/API96.67%รวมช่วงrecovery.
+Worker128attemptsทั้งหมดREADY; APImaxlag87.476667ms/RSS66,969,600bytes.
+หลักฐาน `profiling/release-20261024/c3-migration0039/`; ยังเหลือC5/C4/C6และ
+full candidate/required CIก่อนmerge จึงยังไม่Completedหรือproduction PREPARED.
+
+## Exact fixture lifecycle clock — Approved 2026-10-24
+
+NC-F11-CLOCK: เจ้าของสั่งเริ่มทำหลังเสนอแยก snapshot/bounds จาก lifecycle clock.
+ตรวจ exact525600 slots พร้อม as_of/deadline จริง, SQL calculation bounds ตรง Python,
+30/60s transient retry ไม่ถูก clock pin บล็อก, terminal failure หยุด และคืน
+function/marker หลัง success/failure/cancellation. Production timeout500ms และ
+attempt120s/backoff/budget เดิมไม่เปลี่ยน; ผล workload เก่าไม่ถูกแทนด้วย smoke.
+
+ผลพัฒนา: unit8ผ่าน (exact bounds และ deadline ณ elapsed1/30/60/121s,
+QUEUED transient ไม่ abort และคืน SQL/marker หลัง success/error/cancellation),
+SQL smoke บน isolated PG ยืนยัน525600และ lifecycle functions ไม่ถูกแก้ พร้อม rollback
+คืน definition/ลบ clock; scoped Ruff/format ผ่าน, mypy198filesผ่าน.
+actual worker รอบ bounded reproduction ได้ READY exact525600/527 checkpoints หลัง
+publication timeout และ retry โดย as_of/deadline เดินจริง; ตรวจ cleanup จริงแล้ว.
+Follow-up: resumed C1 audit และ R2-7 cold1/warm5 ผ่านแล้วใน
+`profiling/release-20261024/c1-audit-resume/` และ `cold-warm-resume/`.
+C2 ก่อน migration0039 **Failed** ที่1270.129650375s ด้วย VALID_FRESH_HEAD_GAP:
+BTC1m อายุ606.757808s หลัง publication statement timeoutสองครั้ง; API resource
+ยังผ่านงบ (max lag74.592417ms/RSS66,904,064bytes). ไม่ใช่การผ่านรอบ3600s,
+ไม่แทนผล Failed/Partial เดิม และยังไม่เริ่ม C3. ต้องวินิจฉัย SQL publication ต่อ.
+หลักฐานใน profiling/release-20261024/README.md.
+
 **Pair-scope amendment — Approved 2026-10-15:** ใช้ F-38 เป็นเกณฑ์ปัจจุบัน:
 readiness เตรียม BTCUSDT และ ETHUSDT × 8 timeframe รวม 16 series ส่วน workload ชุดยาว
 วัด BTCUSDT 8 series. ผล 30/30 หรือ 40-series เดิมด้านล่างเป็นหลักฐาน historical เท่านั้น.

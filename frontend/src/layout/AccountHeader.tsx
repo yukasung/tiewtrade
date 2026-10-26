@@ -1,14 +1,17 @@
+import { Badge } from "../components/ui/Badge";
 import type { RefObject } from "react";
 import { Button } from "../components/ui/Button";
 import { ThemeToggleButton } from "../components/common/ThemeToggleButton";
 import { accountText as t } from "../accountMessages";
 /** Adapted from TailAdmin Pro 2.4.0 layout/AppHeader.tsx. */
 export function AccountHeader({
+  mode,
   open,
   mobileOpen,
   toggle,
   trigger,
 }: {
+  mode?: "PAPER" | "LIVE" | undefined;
   open: boolean;
   mobileOpen: boolean;
   toggle: () => void;
@@ -28,7 +31,7 @@ export function AccountHeader({
         <span className={`sidebar-toggle-icon ${mobileOpen ? "is-close" : ""}`} aria-hidden="true" />
       </Button>
       <strong>TiewTrade</strong>
-      <span>{t("navigation")}</span>
+      {mode ? <Badge color={mode === "LIVE" ? "warning" : "primary"}>{mode}</Badge> : <span>{t("navigation")}</span>}
       <ThemeToggleButton />
     </header>
   );

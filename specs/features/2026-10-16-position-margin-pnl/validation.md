@@ -7,27 +7,28 @@
 
 | # | ครอบคลุม | เกณฑ์ | ระยะรัน | ผล / หลักฐาน |
 |---|---|---|---|---|
-| V-1 | RQ-1/RQ-2/RQ-3 | core ใช้ `Money`/`Quantity` เท่านั้น ไม่มี float/Decimal ภายนอก money package; Spot position ติดลบ/short/margin/liquidation ถูกปฏิเสธ | พัฒนา + candidate | **Development Passed**; candidate pending |
-| V-2 | RQ-1/RQ-9/RQ-13 | weighted-average examples และ properties ให้ quantity, total cost, realized PnL และ full-close remainder ตรงทุกหลัก | พัฒนา + candidate | **Development Passed**; candidate pending |
-| V-3 | RQ-4/RQ-13 | order intent/ack ไม่เปลี่ยน position; partial fill เปลี่ยนเฉพาะปริมาณ/quote ที่ยืนยันแล้ว | พัฒนา + candidate | **Development Passed** — writer รับเฉพาะ confirmed `ExecutionFact`; F-15 producer gate pending |
-| V-4 | RQ-5/RQ-6 | exact replay ไม่เปลี่ยน revision/audit/effect; ID/payload conflict, gap, duplicate sequence และ reverse order fail closed; retry conflict fingerprint เดิมไม่เพิ่ม conflict/audit ซ้ำ | พัฒนา + candidate | **Development Passed**; candidate pending |
-| V-5 | RQ-7/RQ-9/RQ-10 | RECORD/REPLACE/VOID append-only และ rebuild จาก effective stream ให้ projection เดิมทุกครั้ง; correction คืน exact compensating effects และ append external-fee history; chain แตกแขนง/ขาดเป็น conflict ส่วน ledger/wallet parity เป็น F-15 integration gate | พัฒนา + candidate | **Development Passed**; F-15 ledger integration pending |
-| V-6 | RQ-2/RQ-13/RQ-16 | base/quote/third-asset fee และ rebate ทุกฝั่ง BUY/SELL ให้ exact effects; invalid unit/sign/fee เกิน quantity/proceeds ถูกปฏิเสธ | พัฒนา + candidate | **Development Passed**; candidate pending |
-| V-7 | RQ-11/RQ-12 | fresh latest trade คำนวณ unrealized ตรง; stale/disconnected/unreconciled/generation mismatch/unit mismatch คืน unavailable ไม่มีเลขเก่าหรือศูนย์ปลอม | พัฒนา + candidate | **Development Passed**; candidate pending |
-| V-8 | RQ-7/RQ-8/RQ-9/RQ-10 | PostgreSQL FK/CHECK/FORCE RLS/grants/append-only triggers กันข้าม owner/mode/episode; API/SCAN อ่านหรือเขียน F-14 state ไม่ได้ | พัฒนา + candidate | **Development Passed**; candidate security gates pending |
-| V-9 | RQ-7/RQ-15/RQ-19 | fill writers พร้อมกัน, fill แข่ง episode/reset lock และ snapshot readers ให้ผล serializable; writer ไม่เขียน closed/stale episode | พัฒนา + candidate | **Partial** — writer/snapshot race ผ่าน; reset/open-order integration รอ F-15 |
-| V-10 | RQ-5/RQ-7/RQ-9/RQ-16 | fault injection ทุก F-14 write boundary รวม event/projection/activity/external-fee/audit, cancellation, statement timeout และ deferred commit failure rollback ทั้งชุด; retry เดิมมีผลครั้งเดียว ส่วน order/ledger faults เป็น F-15 integration gate | พัฒนา + candidate | **Development Passed** สำหรับ F-14 boundaries; F-15 order/ledger pending |
-| V-11 | RQ-14/RQ-15 | activity tri-state/lifecycle: missing/UNKNOWN/CONFLICTED/error/stale revision ไม่เป็น idle; READY ต้องมาจาก atomic source initialization; conflict ไม่กลับ READY เอง; READY zero/positive แยกถูก; F-13 reset ยังคง `ACTIVITY_UNKNOWN` ใน F-14 | พัฒนา + candidate | **Development Passed**; candidate pending |
-| V-12 | RQ-1/RQ-18 | fixture เดียวผ่าน shared fold สำหรับ Paper/Live adapter boundary ให้ state/effects/errors ตรงกัน ไม่มี implementation สูตรคู่ขนาน | พัฒนา + candidate | **Development Passed** — scenario matrix และ correction parity; candidate pending |
-| V-13 | RQ-8/RQ-18 | Paper entrypoint/tests ทำงานโดยไม่มี venue key/network/Live executor; negative fixtures ที่ import/call dependency ต้องทำ gate แดง | พัฒนา + candidate | **Development Passed** — AST negative fixture + isolated runtime import; candidate pending |
-| V-14 | RQ-10/RQ-17 | position changes/corrections/conflicts มี typed audit exact owner/episode/pair/result หนึ่งครั้ง ไม่มี secret/raw payload และแก้ย้อนหลังไม่ได้ | พัฒนา + candidate | **Development Passed**; candidate pending |
+| V-1 | RQ-1/RQ-2/RQ-3 | core ใช้ `Money`/`Quantity` เท่านั้น ไม่มี float/Decimal ภายนอก money package; Spot position ติดลบ/short/margin/liquidation ถูกปฏิเสธ | พัฒนา + candidate | **Passed — historical candidate 2026-10-18**; Required CI checkpoint ด้านล่าง |
+| V-2 | RQ-1/RQ-9/RQ-13 | weighted-average examples และ properties ให้ quantity, total cost, realized PnL และ full-close remainder ตรงทุกหลัก | พัฒนา + candidate | **Passed — historical candidate 2026-10-18**; weighted-cost/property gates ตาม Required CI checkpoint |
+| V-3 | RQ-4/RQ-13 | order intent/ack ไม่เปลี่ยน position; partial fill เปลี่ยนเฉพาะปริมาณ/quote ที่ยืนยันแล้ว | พัฒนา + candidate | **Passed** — F-14 candidate 2026-10-18; F-15 V-3/V-10 และ V-18 final candidate ยืนยัน confirmed partial fills |
+| V-4 | RQ-5/RQ-6 | exact replay ไม่เปลี่ยน revision/audit/effect; ID/payload conflict, gap, duplicate sequence และ reverse order fail closed; retry conflict fingerprint เดิมไม่เพิ่ม conflict/audit ซ้ำ | พัฒนา + candidate | **Passed — historical candidate 2026-10-18**; closed-episode replay เป็น remediation 2026-10-25 ด้านล่าง |
+| V-5 | RQ-7/RQ-9/RQ-10 | RECORD/REPLACE/VOID append-only และ rebuild จาก effective stream ให้ projection เดิมทุกครั้ง; correction คืน exact compensating effects และ append external-fee history; chain แตกแขนง/ขาดเป็น conflict ส่วน ledger/wallet parity เป็น F-15 integration gate | พัฒนา + candidate | **Passed** — F-14 candidate 2026-10-18; [F-15 V-10/V-15/V-18](../2026-10-18-paper-order-matching/validation.md) ปิด ledger/wallet parity และ fault integration |
+| V-6 | RQ-2/RQ-13/RQ-16 | base/quote/third-asset fee และ rebate ทุกฝั่ง BUY/SELL ให้ exact effects; invalid unit/sign/fee เกิน quantity/proceeds ถูกปฏิเสธ | พัฒนา + candidate | **Passed — historical candidate 2026-10-18**; exact fee/rebate gates ตาม Required CI checkpoint |
+| V-7 | RQ-11/RQ-12 | fresh latest trade คำนวณ unrealized ตรง; stale/disconnected/unreconciled/generation mismatch/unit mismatch คืน unavailable ไม่มีเลขเก่าหรือศูนย์ปลอม | พัฒนา + candidate | **Passed — historical candidate 2026-10-18**; freshness/generation/valuation gates ตาม Required CI checkpoint |
+| V-8 | RQ-7/RQ-8/RQ-9/RQ-10 | PostgreSQL FK/CHECK/FORCE RLS/grants/append-only triggers กันข้าม owner/mode/episode; API/SCAN อ่านหรือเขียน F-14 state ไม่ได้ | พัฒนา + candidate | **Passed** — F-14 candidate 2026-10-18; F-15 V-9/V-14 ปิด owner-scoped reset readiness ตาม integration amendment |
+| V-9 | RQ-7/RQ-15/RQ-19 | fill writers พร้อมกัน, fill แข่ง episode/reset lock และ snapshot readers ให้ผล serializable; writer ไม่เขียน closed/stale episode | พัฒนา + candidate | **Passed — historical integration** — [F-15 V-11/V-14/V-15/V-18](../2026-10-18-paper-order-matching/validation.md) ปิด reset/open-order races; closed-episode replay เป็น remediation 2026-10-25 |
+| V-10 | RQ-5/RQ-7/RQ-9/RQ-16 | fault injection ทุก F-14 write boundary รวม event/projection/activity/external-fee/audit, cancellation, statement timeout และ deferred commit failure rollback ทั้งชุด; retry เดิมมีผลครั้งเดียว ส่วน order/ledger faults เป็น F-15 integration gate | พัฒนา + candidate | **Passed** — F-14 candidate 2026-10-18; F-15 V-10/V-15/V-18 ปิด order/ledger rollback และ lost-ack recovery |
+| V-11 | RQ-14/RQ-15 | activity tri-state/lifecycle: missing/UNKNOWN/CONFLICTED/error/stale revision ไม่เป็น idle; READY ต้องมาจาก atomic source initialization; conflict ไม่กลับ READY เอง; READY zero/positive แยกถูก; F-13 reset ยังคง `ACTIVITY_UNKNOWN` ใน F-14 | พัฒนา + candidate | **Passed** — F-14 candidate 2026-10-18; F-15 V-13/V-14 ยืนยัน atomic initialization และ reset success หลัง authoritative sources พร้อม |
+| V-12 | RQ-1/RQ-18 | fixture เดียวผ่าน shared fold สำหรับ Paper/Live adapter boundary ให้ state/effects/errors ตรงกัน ไม่มี implementation สูตรคู่ขนาน | พัฒนา + candidate | **Passed — historical candidate 2026-10-18**; shared-fold/parity gates ตาม Required CI checkpoint |
+| V-13 | RQ-8/RQ-18 | Paper entrypoint/tests ทำงานโดยไม่มี venue key/network/Live executor; negative fixtures ที่ import/call dependency ต้องทำ gate แดง | พัฒนา + candidate | **Passed — historical candidate 2026-10-18**; AST negative fixture/runtime isolation ตาม Required CI checkpoint |
+| V-14 | RQ-10/RQ-17 | position changes/corrections/conflicts มี typed audit exact owner/episode/pair/result หนึ่งครั้ง ไม่มี secret/raw payload และแก้ย้อนหลังไม่ได้ | พัฒนา + candidate | **Passed — historical candidate 2026-10-18**; typed immutable audit gates ตาม Required CI checkpoint |
 | V-15 | RQ-7/RQ-8/RQ-10 | migration `0031→0032→0031→0032` บนฐานว่างผ่าน; downgrade เมื่อมี F-14 data ปฏิเสธโดย data เดิมอยู่ครบ | candidate | **Passed 2026-10-16** บน PostgreSQL แยกพอร์ต 55439 |
-| V-16 | RQ-1 to RQ-19 | relevant backend regression, lint, format, types, import contracts, migration/security/secret gates และ required CI ผ่านบน source สุดท้าย | candidate ก่อน merge | **Passed 2026-10-18** - local full backend 100%; CI run 39097281613 ผ่านครบ 6 jobs, backend 2818 passed |
+| V-16 | RQ-1 to RQ-19 | relevant backend regression, lint, format, types, import contracts, migration/security/secret gates และ required CI ผ่านบน source สุดท้าย | candidate ก่อน merge | **Passed - final combined candidate 2026-10-25**; PR #34 commit `3be912c` push/PR CI each passed 6/6 jobs, backend 3270 passed; merge `80d5d04` post-merge CI 40176371957 passed 6/6 jobs, backend 3270 passed. See post-merge closeout below; local Failed/Partial results remain preserved. |
 | V-17 | nonfunctional | deterministic rebuild และ snapshot workload ตามงบที่อนุมัติ ไม่ล็อก owner อื่นและไม่มี unbounded memory/query growth | release checkpoint | **Pending Full Validation** |
 
 F-14 จะเป็น **Development Complete** ได้เมื่อ V-1–V-16 ผ่านและ review ไม่มี Critical/High
-โดย V-17 คง Pending Full Validation ตาม testing standard งานนี้ไม่ทำให้ F-13 Completed:
-reset success/open-order race ยังต้องรอ F-15 และ validation amendment ของ F-13
+โดย V-17 คง Pending Full Validation ตาม testing standard; reset success/open-order races
+ปิดด้วย F-15 integration ตาม amendment แล้ว แต่ F-13/F-14 ยังไม่ใช่ Completed ก่อนตรวจรับระบบ
+ผล historical candidate ไม่ใช่หลักฐาน required CI ของ remediation ที่ยังไม่ commit
 
 ## ตัวเลขตัวอย่างที่ต้องพิสูจน์
 
@@ -245,3 +246,340 @@ required CI บน source สุดท้าย; V-17 คง **Pending Full Vali
 - backend รอบแรกผ่าน 2817 tests และล้ม 1 F-11 disconnect test เพราะ SQLSTATE 08003 ถูกแปลเป็น InfraError; failed-job rerun โดยไม่แก้ source ผ่าน 2818 tests, 2 deselected
 - V-16 ผ่านครบและ final Critical/High review ไม่มี finding; F-14 เลื่อนเป็น **Development Complete**
 - V-17 ยังคง **Pending Full Validation** และไม่ถือว่า F-14 Completed หรือพร้อม production
+
+## Review remediation — 2026-10-25
+
+เจ้าของสั่งแก้ Medium/Low findings บนฐาน `96bae0e`; branch
+`fix/f14-review-findings`, uncommitted diff ใน worktree `/tmp/tiewtrade-f14-review`.
+ใช้ PostgreSQL 16 แยก `tiewtrade-f14-review-pg`, พอร์ต `55452`, database `tiewtrade`,
+bootstrap roles จริงและ Alembic upgrade ถึง head ผ่าน; ไม่ใช้ฐานข้อมูล application
+และไม่มี Binance call หรือ Live order
+
+- V-4/V-9/V-10: owner advisory lock และ row locks เดิมครอบการอ่าน immutable replay
+  ของ episode เก่า; RECORD/REPLACE/VOID exact retry คืน `REPLAYED` และไม่มี effects
+  ทุกคำขอที่จะเขียนใหม่ รวม conflict/audit ต้องผ่าน active-episode fence ก่อน
+- เพิ่ม regression ใน `tests/infra/execution_market/test_worker.py` ต่อจาก production
+  fill/correction/VOID และ real wallet reset; ตรวจ canonical replay ด้วย event ID เดิม/ใหม่,
+  new/conflicting event, new correction, foreign owner และ initialization ของ closed episode
+  พร้อมเทียบ ledger/event/external-fee/conflict/audit rows และ position/activity/revision
+  ทั้งรอบเก่าและรอบใหม่ว่าไม่เปลี่ยน
+- Regression บน writer เดิมล้มที่ `_lock_active` หลัง reset ตาม finding; หลังแก้ผ่าน
+  ชุด 16 fault/restart/commit-outcome scenarios ของ test เดิมทั้งหมด
+- คำสั่ง targeted: `pytest -p no:cacheprovider tests/core/test_positions.py
+  tests/core/test_position_parity.py tests/infra/positions
+  tests/infra/execution_market/test_worker.py tests/infra/execution_market/test_executions.py
+  tests/infra/paper_wallet/test_storage.py -q --tb=short`.
+  ผลรอบรวม **103 passed / 1 failed** จาก 104 tests: catalog re-add test ล้มที่
+  `publish_input` ด้วย `WriterLeaseLost` หลังจำลอง remove/re-add (นอก position writer).
+  Test ถือ lease เดิมข้ามขั้นตอนฐานข้อมูลและไม่มี renewal ก่อน publish นั้น;
+  รัน test เดิมแยกเพื่อแยก timing variation แล้ว **1 passed** โดยไม่แก้ source/test.
+  เก็บ failure รอบรวมไว้ ไม่อ้างว่ารอบรวมนั้นเขียวครบ
+- Ruff check/format ของ source และ test ที่แก้ผ่าน; mypy ของ
+  `src/tiewtrade/infra/positions/storage.py` ผ่าน; `git diff --check` ผ่าน
+- แจ้ง **Ready for Code Review** แล้ว; final review ตรวจ active/new-write fence,
+  replay fingerprint/identity precedence, owner/RLS และ lock/reset ordering ไม่พบ
+  Critical/High หรือ finding ค้างในขอบเขตการแก้
+- ตาราง V-1–V-16 ชี้ historical F-14 candidate และ F-15 integration evidence ล่าสุดแล้ว
+  โดยไม่ใช้หลักฐานเก่าอ้างว่า remediation ผ่าน required CI
+- ยังไม่รัน full candidate/required CI ของ diff นี้; ต้องผ่านก่อน merge
+  V-17 คง **Pending Full Validation**; ไม่มี commit/push/merge และไม่เลื่อนเป็น Completed
+- เวลาอ่าน/เขียน/tests/review ไม่ได้จับแยกครบ จึงไม่อ้างเวลารวม
+
+
+## Local candidate checkpoint — 2026-10-25
+
+เจ้าของสั่งเริ่ม candidate validation ของ `fix/f14-review-findings` บนฐาน `96bae0e`.
+Source/test diff SHA-256 ก่อนและหลังตรวจตรงกัน:
+`4fb5bc2fceaf288ebcc8b5253a71b1ddab4f86b0aff467c72cabccf49ba3e6cc`
+(`git diff -- backend/src/tiewtrade/infra/positions/storage.py
+backend/tests/infra/execution_market/test_worker.py | shasum -a 256`).
+ไม่มี source/test/config/dependency change ระหว่างชุดตรวจ
+
+### Environment และ static gates
+
+- Python 3.12.15; ใช้ venv เดิมกับ `uv.lock` ที่ checksum ตรงกับ worktree;
+  pytest ชี้ source ของ candidate ผ่าน `PYTHONPATH`/`pythonpath=src`
+- PostgreSQL 16 แยก container `tiewtrade-f14-review-pg`, พอร์ต `55452`,
+  database ใหม่ `tiewtrade_candidate`; bootstrap roles/event triggers และ
+  `alembic upgrade head` ถึง `0040` ผ่านก่อนเริ่ม suite
+- Redis แยก `tiewtrade-f14-review-redis`, พอร์ต `56396`; API/MARKET_DATA/test URLs
+  ชี้ instance นี้ทั้งหมด ไม่ใช้ application database/Redis
+- `ruff check .` ผ่าน; `ruff format --check .` ผ่าน **521 files**;
+  `mypy` ผ่าน **476 source files**; import-linter ผ่าน **7 contracts**
+- `git diff --check` ผ่าน; automated suite ไม่ส่ง Live order และไม่เรียก Binance;
+  สอง `venue_contract` tests ถูกแยกตาม pytest/CI configuration เดิม
+
+### Full backend regression และการใช้หลักฐานต่อ
+
+เริ่ม suite ทั้งชุดด้วย `pytest -p no:cacheprovider
+--junitxml=/tmp/tiewtrade-f14-candidate.xml --tb=short` ผ่าน runner
+`/tmp/tiewtrade-f14-run.py` ที่ตั้ง role URLs ของฐาน/Redis แยกข้างต้น
+
+| รอบ | ผล | เวลา pytest | หลักฐาน |
+|---|---|---|---|
+| Initial full collection; หยุดเพื่อวิเคราะห์ failures | **839 passed / 2 failed**, 2 venue-contract deselected; ยังรันไม่ครบ | 490.56s | `/tmp/tiewtrade-f14-candidate.xml` |
+| Failed tests แยกเพื่อวินิจฉัย | TOTP **1 passed**, prepared refresh ยัง failed | 3.47s | `/tmp/tiewtrade-f14-diagnostic.xml` |
+| Prepared refresh บน candidate เดิม ไม่มี instrumentation | **1 passed** | 4.18s | `/tmp/tiewtrade-f14-refresh-confirm.xml` |
+| Continuation 1: ใช้ 841 passed เดิมต่อ | **1460 passed / 1 failed**; หยุดด้วย `-x` | 540.80s | `/tmp/tiewtrade-f14-candidate-continuation-1.xml` |
+| Failed ingestion test แยก | **1 passed** โดยไม่แก้ source/test | 2.74s | `/tmp/tiewtrade-f14-ingestion-confirm.xml` |
+| Continuation 2: ใช้ 2302 passed เดิมต่อ | **956 passed**, ไม่มี failure | 26.12s | `/tmp/tiewtrade-f14-candidate-continuation-2.xml` |
+
+ใช้ผลที่ผ่านแล้วต่อบน diff เดิมตาม testing §7; ไม่แก้ tests, ไม่ใส่ skip/xfail,
+ไม่ลด assertions/timeouts/thresholds. Harness ชั่วคราว `/tmp/f14_candidate_resume.py`
+เทียบ pytest JUnit identities กับ collection จริงและเลือกรันเฉพาะ tests ที่ยังไม่มี
+ผล Passed; มี guard ปฏิเสธ identity ซ้ำหรือผลเดิมที่ไม่ตรง collection. รายงาน
+`/tmp/tiewtrade-f14-candidate-coverage.json` ยืนยัน **3258 selected / 3258 unique passed /
+0 missing / 0 extra**; เป็น coverage รวมจากหลายรอบ ไม่ใช่การอ้างว่ารอบแรกเขียวครบ
+หรือว่ามี single uninterrupted green run
+
+### Failures ที่เก็บไว้และข้อจำกัด
+
+- `tests/api/test_totp_flow.py::test_the_second_step_completes_the_sign_in`:
+  confirm ได้ 403 invalid code; helper สร้างรหัสของช่วงก่อนหน้าจาก wall clock.
+  รันแยกผ่านโดยไม่แก้ source; time-step boundary เป็นความเสี่ยงของ test แต่ยังไม่ได้
+  พิสูจน์เวลาข้าม boundary ของ failure รอบแรก จึงไม่อ้าง root cause ที่ยืนยันแล้ว
+- `tests/api/test_prepared_indicators.py::test_empty_derived_scheduler_refresh_and_rebuild`:
+  consumer ได้ STOPPED; รอบ diagnostic แรกยังเกิดซ้ำ จากนั้น HTTP diagnostic ได้
+  COMPLETE/200 และผ่าน. Test เดียวกันผ่านทั้ง source ก่อนแก้ F-14 และ candidate
+  โดยไม่แก้ source; รอบ candidate ไม่มี instrumentation ผ่านด้วย. ยังไม่ยืนยัน
+  สาเหตุย่อยของ STOPPED รอบแรก จึงเก็บเป็น intermittent validation risk
+- `tests/services/market_data/test_ingestion.py::test_actual_rows_commit_and_complete_after_observations`:
+  COMPLETE ได้ 3 แทน 4; ตรวจฐานทันทีพบ BTC/15m มี `SOURCE_FAILURE` หนึ่งรายการ.
+  รันแยกผ่านโดยไม่แก้ source/test; ไม่ยืนยันสาเหตุย่อยของ source failure
+- Failures ทั้งสามอยู่ใน paths นอก position writer ที่แก้; ไม่มีการแก้โค้ดนอกขอบเขต
+  ผล Failed/partial ข้างต้นยังอยู่ครบ และ CI ต้องเป็นผู้ยืนยัน candidate บน commit สุดท้าย
+
+Local backend regression coverage และ static gates ครบแล้ว; **required CI ยัง Pending**
+เพราะยังไม่มีคำสั่ง commit/push. ไม่อ้างว่าพร้อม merge ก่อน CI ผ่าน และไม่เลื่อนเป็น
+Completed; V-17 คง **Pending Full Validation** ที่ release checkpoint ตามเดิม.
+ช่วงอ่าน/วินิจฉัย/รีวิว/static ไม่ได้จับเวลาแยกครบ จึงไม่อ้างเวลารวมทั้งงาน
+
+
+## Publication checkpoint — 2026-10-25
+
+เจ้าของสั่ง commit/push และเปิด PR หลัง local candidate checkpoint.
+นำ remediation ขึ้นบน `main` ล่าสุด `f6bd712` (PR #31: F-13 reset confirmation และ
+command-status safe errors); ไม่มี conflict หรือ source/test change ของ F-14.
+Diff SHA-256 ของ position writer/regression เทียบ base ใหม่ยังเป็น
+`4fb5bc2fceaf288ebcc8b5253a71b1ddab4f86b0aff467c72cabccf49ba3e6cc`.
+หลัง rebase รัน `tests/services/api/test_paper_wallet_transaction.py` ผ่าน **5 tests**
+ใน 0.37s; `git diff --check` ผ่าน. ใช้ผล F-14 correctness/safety เดิมที่ไม่เปลี่ยนต่อ
+และให้ required CI ของ PR ตรวจ combined candidate บน commit สุดท้าย.
+สถานะ required CI ณ checkpoint นี้ยัง Pending; ติดตามผลจาก PR/Actions ของ branch
+`fix/f14-review-findings`. ไม่มีคำสั่ง merge และ V-17 คง Pending Full Validation
+
+
+## Financial integration replay follow-up - 2026-10-25
+
+Owner authorized the Medium integration finding fix. Base `eb8c7d8` (PR #32),
+branch `fix/f14-integration-replay`, uncommitted changes in `/tmp/tiewtrade-f14-review`.
+PR #32 itself was merged and post-merge CI run `40170755797` passed all six jobs;
+that result does not validate this new diff.
+
+- Reuse the per-owner advisory lock and wallet/episode ownership check through
+  `paper_orders/storage.lock_episode`; `lock_active_episode` retains the default
+  active/nonclosed fence for existing callers. Closed-episode reads are explicit.
+- `stage_fill_cash` and `stage_correction_cash` verify committed linkage and exact
+  F-14 replay before requiring active status for new writes. `correct_fill` avoids
+  loading matching state on replay while preserving checkpoint validation before
+  new corrections. No calculation, schema, trading policy or network change.
+- Extend the real fill/REPLACE/VOID/reset test through all three financial callers.
+  Verify unchanged old/new position/activity/revision, cash ledger, order events,
+  projections, reservations, execution links and audit IDs. Reject wrong wallet,
+  owner, episode, event/predecessor identity and payload/execution identity.
+- Regression against base source fails at `stage_fill_cash` after successful reset:
+  `OrderConflictError: Paper episode is not active`. Restored candidate source
+  passes the same scenario. Base check artifact:
+  `/tmp/tiewtrade-f14-replay-before-confirm.xml`.
+
+Environment: Python 3.12.15 and unchanged lockfile/venv; dedicated PostgreSQL 16
+container on port 55452, real API/ENGINE/SCAN/MIGRATOR/MARKET_DATA roles; Redis on
+56396. New database `tiewtrade_f14_replay`, bootstrap scripts and Alembic upgrade
+head (`0040`) passed. No application DB, Live order or Binance request.
+Runner `/tmp/tiewtrade-f14-replay-run.py` sets the dedicated role/Redis URLs.
+
+Commands and results (pytest uses `-p no:cacheprovider -q --tb=short`):
+
+1. `tests/infra/execution_market tests/infra/paper_wallet tests/infra/positions
+   tests/services/api/test_paper_wallet_transaction.py` on the reused candidate DB:
+   **161 passed / 3 failed**, 108.288s, `/tmp/tiewtrade-f14-integration-replay.xml`.
+   Downgrade refusal encountered supported-symbol runtime history not accepted by
+   the older test's expected guard list; `second_input` had no admission projection;
+   reset timeout expired before the injected barrier (`reached` false).
+2. Same selection on the fresh DB with final control flow: **159 passed / 5 failed**,
+   169.551s, `/tmp/tiewtrade-f14-integration-replay-fresh.xml`. Downgrade test passed.
+   Failures: process recovery `after_commit` could not claim; `reservations` recovery
+   remained ACCEPTED; `lost_commit_reply` did not reach reply-loss barrier; fairness
+   test had no projections; SELL reservation race had no successful outcome.
+3. Recheck all 16 `test_accept_restart_fill_and_cash_are_atomic` cases plus the
+   failed process/fairness/SELL/timeout tests: **19 passed / 1 failed**, 44.449s,
+   `/tmp/tiewtrade-f14-replay-confirm.xml`. The remaining failure was a different
+   fault parameter, `projection_revision`, which remained ACCEPTED after recovery.
+4. Diagnostic run of `projection_revision` passed (temporary plugin only prints
+   defer exception type/reason; observed the intended injected RuntimeError).
+   Uninstrumented same-source confirmation **1 passed**, 2.641s,
+   `/tmp/tiewtrade-f14-replay-projection-confirm.xml`.
+
+Final-flow JUnit identity union of rounds 2-4 covers **164 unique Passed tests**,
+including all 16 replay/fault cases. This is combined evidence, not a single green
+164-test run. Preserve all Failed results above. Exact causes of scheduling/source
+failures are not proven; do not claim that isolated success establishes root cause.
+No test assertion, timeout or threshold was weakened. The populated downgrade test
+can leave the shared test DB at 0038; upgrade head was explicitly rerun before
+subsequent execution-market checks. The first baseline attempt on that downgraded
+schema failed with 42P01 and is harness evidence only, not a product regression.
+A mistyped test path and a diagnostic plugin import attempt failed collection;
+corrected harness paths without modifying tests.
+
+Targeted Ruff check/format passed (4 changed Python files), mypy passed (3 source
+files); Paper isolation gate **2 passed**. `Ready for Code Review` checkpoint sent.
+Final diff review checked owner/RLS scope, lock ordering, active fence before new
+writes, replay identity/payload precedence, correction checkpoint behavior and
+unchanged ledger/order/position/audit effects; no remaining finding in this fix.
+
+Full candidate/static gates and required CI on a future committed candidate remain
+Pending before merge. No commit, push or merge authorized for this follow-up.
+V-17 remains Pending Full Validation; feature remains Development Complete rather
+than Completed. Read/write/review durations were not separately measured.
+
+### Final review adjustment and verification
+
+Kept `enable_financial_writer` as the transaction-local marker immediately after
+the owner lock for both financial helpers, preserving active conflict/error
+behavior; setting the marker does not append financial history. Rechecked the
+affected execution/cash tests and all 16 replay/fault cases on final source:
+`pytest -p no:cacheprovider tests/infra/execution_market/test_executions.py
+tests/infra/execution_market/test_worker.py::test_accept_restart_fill_and_cash_are_atomic
+-q --tb=short --junitxml=/tmp/tiewtrade-f14-replay-final.xml`: **23 passed**,
+33.099s, no failures. Ruff check/format and mypy recheck passed.
+Source/test diff SHA-256 against `eb8c7d8`: `f5a112927ad119f745349a0ec3e8685c1c1a57a5b4fd78ca9afc362ff261a5fa`.
+Final review after this adjustment found no remaining finding; candidate/full CI
+and V-17 statuses above remain Pending.
+
+
+## Follow-up local candidate validation - 2026-10-25
+
+Owner authorized full candidate validation of `fix/f14-integration-replay`, base
+`eb8c7d8`, uncommitted diff. Before running the full suite, strict mypy found 30
+errors in the new test's untyped kwargs dictionaries and union result handling.
+Added explicit TypedDict request contracts, type narrowing and a distinct loop
+variable; preserved existing assertions and runtime scenarios. No production
+source change in this validation milestone. Final test-file edit preceded full
+suite start (14:44:47 +07). Reviewed this test-only diff after validation.
+
+Fresh isolated database `tiewtrade_f14_followup_candidate` on dedicated PostgreSQL
+16 port 55452, real application roles, bootstrap SQL and Alembic head 0040 passed.
+Redis 7 on dedicated port 56396. Python 3.12.15, worktree lockfile matches the shared
+venv lockfile. Temporary worktree `.venv` link supported the existing gate runner;
+removed after validation. Runner `/tmp/tiewtrade-f14-followup-run.py` sets candidate
+source and dedicated DB/Redis URLs. No Binance call or Live order.
+
+Static gates on the final Python diff:
+- `ruff check .`: passed.
+- `ruff format --check .`: passed, 521 files.
+- `mypy`: passed, 476 files including tests.
+- `.venv/bin/lint-imports` from backend: passed, 7 contracts. An initial invocation
+  from the repository root could not find config; corrected the working directory.
+
+Full candidate command from backend via the dedicated runner:
+`python -m pytest -p no:cacheprovider
+--junitxml=/tmp/tiewtrade-f14-followup-candidate.xml --tb=short`.
+Result: **3260 passed / 1 failed / 2 venue-contract deselected**, 977.54s.
+All execution-market, position, wallet, transaction, concurrency, idempotency,
+security, migration and isolation tests in this collection passed, including the
+new caller-level post-reset regression's 16 fault/recovery parameters.
+
+Only failure:
+`tests/api/test_chart_routes.py::test_live_age_is_decided_by_server_snapshot_at_exact_boundaries[age1-STALE]`
+expected 200 but got 504 `CHART_DEADLINE_EXCEEDED`. The route has a bounded request
+deadline. This failed before a status/boundary value could be asserted; exact
+latency/root cause is unconfirmed. Do not infer that boundary arithmetic failed.
+Same-source uninstrumented isolated rerun passed **1 test**, 1.563s:
+`python -m pytest -p no:cacheprovider
+ 'tests/api/test_chart_routes.py::test_live_age_is_decided_by_server_snapshot_at_exact_boundaries[age1-STALE]'
+ -q --tb=short --junitxml=/tmp/tiewtrade-f14-followup-chart-confirm.xml`.
+No timeout/assertion/source change was made to obtain that pass. Preserve the full
+run's Failed result; it is not a single uninterrupted green full run.
+
+JUnit identity union: **3261 unique Passed tests**, zero remaining failures without
+subsequent same-source Passed evidence. Local candidate coverage/static gates are
+complete; the chart deadline variation remains a validation risk for remote CI.
+Final source/test content checksums:
+- `backend/src/tiewtrade/infra/paper_orders/storage.py`: `494b6be456f175c3f3292d827c895bc647c15065bb95ed6dc9facb56e6a6bc59`
+- `backend/src/tiewtrade/infra/paper_orders/executions.py`: `2dbf243ba9560ff1d38fe4e03af9be654576234abca58a7e164bda144affbb4f`
+- `backend/src/tiewtrade/infra/paper_orders/corrections.py`: `513a3fbb46d103afbcdf349808fb6f49da266b71d857654f1ae1d0ea50952c8b`
+- `backend/tests/infra/execution_market/test_worker.py`: `5abbf9790de4e2b9f012409d0191c68f16167b3e3095d19387eafbbc22fd79a7`
+
+Final review of the typed-test adjustment, caller active/new-write fences, owner
+scope, financial marker, replay identity and correction checkpoint ordering found
+no remaining finding in this remediation. `git diff --check` passed. No commit,
+push or merge performed. Required CI on the future final commit remains Pending;
+V-17 remains Pending Full Validation at release checkpoint. Read/review/wait time
+was not measured separately; pytest durations above are measured, not total time.
+
+
+## Follow-up publication checkpoint - 2026-10-25
+
+Owner authorized commit/push and PR publication. Remote main advanced to `1435548`
+(PR #33: F-15 matching/recovery remediation). Rebased this follow-up onto it;
+production source merged without conflict, retaining F-15 queue-rebase constraint
+arguments. Resolved only the adjacent roadmap rows by retaining both F-14 and F-15
+status/evidence. Range-diff preserves the F-14 implementation patch.
+
+Combined-candidate safety regression:
+`pytest -p no:cacheprovider tests/core/test_paper_matching.py
+ tests/infra/execution_market/test_executions.py
+ tests/infra/execution_market/test_worker.py
+ tests/infra/execution_market/test_matching_storage.py
+ tests/infra/execution_market/test_review_regressions.py
+ tests/infra/execution_market/test_pipeline.py
+ tests/infra/execution_market/test_process_recovery.py -q --tb=short
+ --junitxml=/tmp/tiewtrade-f14-rebase-safety.xml`
+Result **99 passed / 1 failed**, 59.058s. Only `second_input` fault/recovery parameter
+remained ACCEPTED instead of FILLED after the intentional batch exception.
+Same-source isolated confirmation passed **1 test**, 5.394s,
+`/tmp/tiewtrade-f14-rebase-safety-confirm.xml`. This parameter had also failed in an
+earlier grouped run; the exact recovery scheduling/source cause remains unproven.
+Keep the failed result; combined evidence covers all 100 selected safety cases.
+
+Ruff check/format of Paper-order modules and changed test passed (11 files);
+full mypy passed (477 files); diff check passed. Use the prior full/static evidence
+for unchanged inputs and require final-commit CI to verify the combined candidate.
+This is publication only: required CI Pending, no merge performed; V-17 remains
+Pending Full Validation. Git operations/wait/review time not measured separately.
+
+
+## Post-merge closeout - 2026-10-25
+
+Owner authorized recording the merged result and cleaning the merged F-14 local
+branches/worktree. This checkpoint updates evidence only; requirements, calculation
+rules and acceptance criteria are unchanged.
+
+| Candidate / merge | CI evidence | Result |
+|---|---|---|
+| PR #32 head `1282477`, merge `eb8c7d8` | [Post-merge run 40170755797](https://github.com/yukasung/tiewtrade/actions/runs/40170755797) | 6/6 jobs passed; backend 3261 passed, 2 deselected in 745.11s; no post-merge retry |
+| PR #34 head `3be912c` | [Push run 40175401987](https://github.com/yukasung/tiewtrade/actions/runs/40175401987) | 6/6 jobs passed; backend 3270 passed, 2 deselected in 749.75s; first attempt |
+| PR #34 head `3be912c` | [PR run 40175425894](https://github.com/yukasung/tiewtrade/actions/runs/40175425894) | 6/6 jobs passed; backend 3270 passed, 2 deselected in 718.16s; first attempt |
+| PR #34 merge `80d5d04` | [Post-merge run 40176371957](https://github.com/yukasung/tiewtrade/actions/runs/40176371957) | 6/6 jobs passed; backend 3270 passed, 2 deselected in 792.94s; first attempt |
+
+[PR #32](https://github.com/yukasung/tiewtrade/pull/32) merged at
+2026-10-25 06:53:58 UTC; [PR #34](https://github.com/yukasung/tiewtrade/pull/34)
+merged at 2026-10-25 08:22:42 UTC. PR #34 merge tree equals its reviewed candidate:
+`cd080ad4f797c718c4637803fb6911845adba1b7`.
+
+Final-commit and post-merge CI satisfy the previously pending remote candidate gate.
+Historical Pending/Failed/Partial entries above describe their original checkpoints;
+they remain preserved and do not override these final results. No new test run is
+needed for this evidence-only edit. No Live order or Binance call was performed.
+
+F-14 remains **Development Complete**. V-17 remains **Pending Full Validation** at
+the release checkpoint: rebuild/snapshot/concurrency workload and resource evidence
+are still required before Completed/release. Passing candidate CI does not close V-17.
+
+Removed clean worktree `/tmp/tiewtrade-f14-review` and local branches
+`fix/f14-review-findings` / `fix/f14-integration-replay` using `git branch -d`.
+Before removal, verified both heads are ancestors of `origin/main`, their exact
+heads are published on remote, and post-merge CI is green. Remote history and
+unrelated worktrees are preserved. The owner authorized publishing this evidence-only
+closeout on `docs/f14-postmerge-checkpoint`; document publication does not alter
+the V-17 release-validation gate.

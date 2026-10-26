@@ -1,5 +1,5 @@
 import { createInstance } from "i18next";
-const accountI18n = createInstance();
+export const accountI18n = createInstance();
 void accountI18n.init({
   lng: "th",
   fallbackLng: "th",
@@ -8,6 +8,7 @@ void accountI18n.init({
     th: {
       translation: {
         account: "บัญชี",
+        "paper/trade": "เทรด Paper", "live/trade": "เทรด Live",
         menu: "เปิดเมนูบัญชี",
         close: "ปิดเมนูบัญชี",
         navigation: "จัดการบัญชี",
@@ -15,15 +16,17 @@ void accountI18n.init({
         trading: "บัญชีเทรด",
         security: "TOTP / 2FA",
         prices: "ราคาสด",
+        "supported-symbols": "คู่เทรดที่รองรับ",
         home: "หน้าหลัก",
         breadcrumb: "เส้นทางหน้า",
         darkTheme: "เปลี่ยนเป็นโหมดมืด",
         lightTheme: "เปลี่ยนเป็นโหมดสว่าง",
       },
     },
-    en: { translation: { account: "Account", menu: "Open account menu", close: "Close account menu",
+    en: { translation: { account: "Account", "paper/trade": "Paper trading", "live/trade": "Live trading", menu: "Open account menu", close: "Close account menu",
       navigation: "Account navigation", keys: "API keys", trading: "Trading account", security: "TOTP / 2FA",
       prices: "Live prices", home: "Home", breadcrumb: "Breadcrumb", darkTheme: "Switch to dark mode",
+      "supported-symbols": "Supported symbols",
       lightTheme: "Switch to light mode" } },
   },
   interpolation: { escapeValue: false },

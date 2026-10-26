@@ -11,6 +11,10 @@ const scale = vi.hoisted(() => ({ getVisibleLogicalRange: vi.fn<() => { from: nu
   unsubscribeVisibleLogicalRangeChange: vi.fn() }));
 const draw = vi.hoisted(() => vi.fn<ChartRenderer["draw"]>(() => null));
 vi.mock("../src/chart/useChartData", () => ({ useChartData: vi.fn() }));
+vi.mock("../src/marketCatalog", () => ({
+  activeBases: () => ["BTC", "ETH"],
+  useMarketCatalog: () => ({ data: { revision: 2, active_pairs: [["BTC", "USDT"], ["ETH", "USDT"]] } }),
+}));
 vi.mock("../src/chart/renderer", () => ({ mountChart: () => ({ chart: { timeScale: () => scale },
   draw, remove: vi.fn(), applyTheme: vi.fn() }) }));
 afterEach(() => { cleanup(); vi.clearAllMocks(); scale.getVisibleLogicalRange.mockReturnValue(null); });

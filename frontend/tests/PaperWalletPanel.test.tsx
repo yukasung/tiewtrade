@@ -129,6 +129,42 @@ it("confirms reset and retries the exact episode request with the same key", asy
   }
 });
 
+it.each([false, true])("keeps reset bound to the confirmed episode across refetch (changed=%s)", async changed => {
+  let reads = 0;
+  const fetcher = mount(() => {
+    reads += 1;
+    const newEpisode = changed && reads > 1;
+    return Promise.resolve(answer({ wallet: {
+      mode: "PAPER",
+      wallet_id: "wallet-one",
+      episode_id: newEpisode ? "episode-two" : "episode-one",
+      sequence: newEpisode ? 2 : 1,
+      initial_capital: { amount: "1500", currency: "USDT" },
+      balance: { amount: "1500", currency: "USDT" },
+      started_at: "2026-10-18T00:00:00Z",
+      snapshot_at: "2026-10-18T00:00:01Z",
+      revision: reads,
+      reset_available: true,
+      reset_reason: null,
+    } }));
+  });
+  fireEvent.click(await screen.findByRole("button", { name: t("reset") }));
+  fireEvent.change(screen.getByLabelText(t("resetCapital")), { target: { value: "2500" } });
+  fireEvent.click(screen.getByRole("button", { name: t("refresh") }));
+  await waitFor(() => expect(reads).toBe(2));
+  await waitFor(() => expect(screen.getByRole<HTMLButtonElement>("button", { name: t("refresh") }).disabled).toBe(false));
+  if (changed) {
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+    expect((await screen.findByRole("alert")).textContent).toBe(t("resetConflict"));
+    fireEvent.click(screen.getByRole("button", { name: t("reset") }));
+    expect(screen.getByText(t("resetDescription", { episode: 2 }))).toBeTruthy();
+  } else {
+    expect(screen.getByRole("dialog")).toBeTruthy();
+    expect(screen.getByText(t("resetDescription", { episode: 1 }))).toBeTruthy();
+  }
+  expect(fetcher.mock.calls.filter(([, init]) => init?.method === "POST")).toHaveLength(0);
+});
+
 it("closes reset with Escape and refetches after an episode conflict", async () => {
   vi.spyOn(globalThis.crypto, "randomUUID").mockReturnValue(
     "ffffffff-ffff-4fff-8fff-ffffffffffff",

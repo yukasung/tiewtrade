@@ -7,10 +7,10 @@ import { PageBreadcrumb } from "./PageBreadcrumb";
 import { ThemeProvider } from "../context/ThemeContext";
 import "../styles/admin-theme.css";
 /** Adapted from TailAdmin Pro 2.4.0 AppLayout/SidebarContext; children replace Outlet. */
-export function AccountLayout({ children, page = "chart" }: { children: ReactNode; page?: AccountPage }) {
-  return <ThemeProvider><AccountLayoutContent page={page}>{children}</AccountLayoutContent></ThemeProvider>;
+export function AccountLayout({ children, page = "chart", isPlatformAdmin = false }: { children: ReactNode; page?: AccountPage; isPlatformAdmin?: boolean }) {
+  return <ThemeProvider><AccountLayoutContent page={page} isPlatformAdmin={isPlatformAdmin}>{children}</AccountLayoutContent></ThemeProvider>;
 }
-function AccountLayoutContent({ children, page }: { children: ReactNode; page: AccountPage }) {
+function AccountLayoutContent({ children, page, isPlatformAdmin }: { children: ReactNode; page: AccountPage; isPlatformAdmin: boolean }) {
   const [open, setOpen] = useState(false);
   const [expanded, setExpanded] = useState(true);
   const [desktop, setDesktop] = useState(() => window.innerWidth >= 1280);
@@ -37,7 +37,7 @@ function AccountLayoutContent({ children, page }: { children: ReactNode; page: A
   }, [open]);
   return (
     <div className={`app-theme account-layout min-h-screen xl:flex ${desktop && !expanded ? "sidebar-collapsed" : ""}`}>
-      <AccountSidebar open={open} close={close} page={page} />
+      <AccountSidebar open={open} close={close} page={page} isPlatformAdmin={isPlatformAdmin} />
       {open && (
         <button
           type="button"
@@ -47,7 +47,7 @@ function AccountLayoutContent({ children, page }: { children: ReactNode; page: A
         />
       )}
       <div className="account-workspace flex-1">
-        <AccountHeader open={desktop ? expanded : open} mobileOpen={open} trigger={trigger}
+        <AccountHeader mode={page === "paper/trade" ? "PAPER" : page === "live/trade" ? "LIVE" : undefined} open={desktop ? expanded : open} mobileOpen={open} trigger={trigger}
           toggle={() => { if (desktop) setExpanded(value => !value); else setOpen(value => !value); }} />
         <div className={`account-content mx-auto p-4 md:p-6 ${page === "chart" ? "account-content-chart" : ""}`}>
           {page !== "chart" && <PageBreadcrumb title={t(page === "api-keys" ? "keys" : page === "trading-account" ? "trading" : page)} />}

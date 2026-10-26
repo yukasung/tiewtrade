@@ -1,1 +1,8 @@
-export const snapshot = (revision = "1", server_time = "2026-10-07T00:00:01Z") => ({ schema_version: 1, server_time, delivery_status: "CONNECTED", rows: ["BTC", "ETH"].map(base => ({ source: "primary_spot", base, quote: "USDT", amount: "12.34000000", trade_at: "2026-10-07T00:00:00Z", received_at: "2026-10-07T00:00:00Z", revision, generation: "1", readiness: "READY", reason: "READY", valid_until: "2026-10-07T00:00:10Z", unavailable_since: null, alert_due: false })) });
+import type { MarketCatalog } from "../src/marketCatalog";
+
+export const catalog = (): MarketCatalog => ({
+  revision: 2,
+  active_pairs: [["BTC", "USDT"], ["ETH", "USDT"]],
+});
+
+export const snapshot = (revision = "1", server_time = "2026-10-07T00:00:01Z") => ({ schema_version: 1, catalog_revision: "2", server_time, delivery_status: "CONNECTED", rows: ["BTC", "ETH"].map(base => ({ source: "primary_spot", base, quote: "USDT", amount: "12.34000000", trade_at: "2026-10-07T00:00:00Z", received_at: "2026-10-07T00:00:00Z", revision, generation: "1", readiness: "READY", reason: "READY", valid_until: "2026-10-07T00:00:10Z", unavailable_since: null, alert_due: false })) });

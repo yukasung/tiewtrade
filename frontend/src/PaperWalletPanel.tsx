@@ -58,18 +58,18 @@ function PaperWalletPanelForIdentity({ identity }: { identity: Me }) {
   const walletKey = useMemo(() => ["paper-wallet", identity.user_id] as const, [identity.user_id]);
   const [capital, setCapital] = useState("");
   const [resetCapital, setResetCapital] = useState("");
-  const [resetOpen, setResetOpen] = useState(false);
+  const [resetTarget, setResetTarget] = useState<{ episodeId: string; sequence: number } | null>(null);
   const [attempt, setAttempt] = useState<Attempt | null>(null);
   const [commandFailure, setCommandFailure] = useState<string | null>(null);
   const resetButton = useRef<HTMLButtonElement>(null);
 
-  const closeReset = useCallback(() => setResetOpen(false), []);
+  const closeReset = useCallback(() => setResetTarget(null), []);
   const finishSuccessfulAttempt = useCallback(() => {
     void client.invalidateQueries({ queryKey: walletKey });
     setAttempt(null);
     setCapital("");
     setResetCapital("");
-    setResetOpen(false);
+    setResetTarget(null);
   }, [client, walletKey]);
   const walletQuery = useQuery({
     queryKey: walletKey,
@@ -91,7 +91,7 @@ function PaperWalletPanelForIdentity({ identity }: { identity: Me }) {
     onError: error => {
       if (error instanceof ApiRequestError && error.message === "EPISODE_CONFLICT") {
         void client.invalidateQueries({ queryKey: walletKey });
-        setResetOpen(false);
+        setResetTarget(null);
       }
       if (
         error instanceof ApiRequestError &&
@@ -123,6 +123,12 @@ function PaperWalletPanelForIdentity({ identity }: { identity: Me }) {
   }, [client, commandQuery.data?.failure_code, commandState, finishSuccessfulAttempt, walletKey]);
 
   const wallet = walletQuery.data?.wallet;
+  useEffect(() => {
+    if (resetTarget !== null && wallet?.episode_id !== resetTarget.episodeId) {
+      setResetTarget(null);
+      setCommandFailure("EPISODE_CONFLICT");
+    }
+  }, [resetTarget, wallet?.episode_id]);
   const uncertain = mutation.isError && attempt !== null;
   const actionError = mutation.isError
     ? failure(mutation.error)
@@ -150,18 +156,23 @@ function PaperWalletPanelForIdentity({ identity }: { identity: Me }) {
   }
 
   function submitReset(): void {
-    if (wallet === null || wallet === undefined) return;
+    if (resetTarget === null) return;
+    if (wallet?.episode_id !== resetTarget.episodeId) {
+      setResetTarget(null);
+      setCommandFailure("EPISODE_CONFLICT");
+      return;
+    }
     setCommandFailure(null);
     const request: Attempt = {
       action: "RESET",
       idempotencyKey: globalThis.crypto.randomUUID(),
       payload: {
         initial_capital: resetCapital,
-        expected_episode_id: wallet.episode_id,
+        expected_episode_id: resetTarget.episodeId,
       },
     };
     setAttempt(request);
-    setResetOpen(false);
+    setResetTarget(null);
     mutation.mutate(request);
   }
 
@@ -188,7 +199,7 @@ function PaperWalletPanelForIdentity({ identity }: { identity: Me }) {
             ref={resetButton}
             disabled={!wallet.reset_available || attempt !== null}
             aria-describedby={resetReason === null ? undefined : "paper-wallet-reset-reason"}
-            onClick={() => setResetOpen(true)}
+            onClick={() => setResetTarget({ episodeId: wallet.episode_id, sequence: wallet.sequence })}
           >
             {t("reset")}
           </Button>
@@ -252,7 +263,7 @@ function PaperWalletPanelForIdentity({ identity }: { identity: Me }) {
         {t("refresh")}
       </Button>
       <Modal
-        isOpen={resetOpen}
+        isOpen={resetTarget !== null}
         onClose={closeReset}
         titleId="paper-wallet-reset-title"
         closeLabel={t("resetDismiss")}
@@ -266,7 +277,7 @@ function PaperWalletPanelForIdentity({ identity }: { identity: Me }) {
           }}
         >
           <h3 id="paper-wallet-reset-title">{t("resetTitle")}</h3>
-          <p>{t("resetDescription", { episode: wallet?.sequence ?? "" })}</p>
+          <p>{t("resetDescription", { episode: resetTarget?.sequence ?? "" })}</p>
           <Label htmlFor="paper-wallet-reset-capital">
             {t("resetCapital")}
             <Input

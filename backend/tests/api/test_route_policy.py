@@ -117,6 +117,11 @@ def test_routes_that_renew_the_session_are_declared_and_few() -> None:
                 ("POST", "/trading-account/use"),
                 ("POST", "/paper-wallet"),
                 ("POST", "/paper-wallet/reset"),
+                ("POST", "/paper/orders"),
+                ("POST", "/paper/orders/{order_id}/cancel"),
+                ("POST", "/admin/supported-symbols"),
+                ("DELETE", "/admin/supported-symbols/{base}/{quote}"),
+                ("POST", "/admin/supported-symbols/protocol/enable"),
             }
         )
         == RENEWING_ROUTES

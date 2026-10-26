@@ -102,5 +102,6 @@ def test_the_response_of_a_successful_login_carries_only_the_user_id(client: Tes
     """
     email = register(client)
     body = client.get("/auth/me").json()
-    assert set(body) == {"user_id", "totp_enabled"}
+    assert set(body) == {"user_id", "totp_enabled", "platform_role"}
+    assert body["platform_role"] is None
     assert email not in str(body)

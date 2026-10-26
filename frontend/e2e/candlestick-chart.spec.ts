@@ -132,7 +132,7 @@ test("actual chart panes, exact values and keyboard selection", async ({ page })
   await expect(chart.getByRole("link", { name: "Charting by TradingView", exact: true })).toBeVisible();
   await page.screenshot({ path: "../specs/features/2026-10-12-candlestick-chart/evidence/chart-browser.png", fullPage: true });
   expect(errors).toEqual([]);
-  expect(requests.some(url => /binance|\/orders|\/trading-account\/use|\/indicators/i.test(url))).toBe(false);
+  expect(requests.some(url => /binance|\/(?:orders|trading-account\/use|indicators)(?:[/?#]|$)/i.test(url))).toBe(false);
 });
 
 test("module pages preserve navigation history, deep links and cancel inactive chart work", async ({ page }) => {

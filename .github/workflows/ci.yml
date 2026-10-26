@@ -215,6 +215,8 @@ jobs:
       TIEWTRADE_DATABASE_URL_ENGINE: postgresql+asyncpg://tiewtrade_engine:dev_engine@127.0.0.1:5432/tiewtrade_e2e
       TIEWTRADE_DATABASE_URL_ENGINE_SCAN: postgresql+asyncpg://tiewtrade_engine_scan:dev_engine_scan@127.0.0.1:5432/tiewtrade_e2e
       TIEWTRADE_DATABASE_URL_MARKET_DATA: postgresql+asyncpg://tiewtrade_market_data:dev_market_data@127.0.0.1:5432/tiewtrade_e2e
+      TIEWTRADE_DATABASE_URL_INDICATOR_BUILDER: postgresql+asyncpg://tiewtrade_indicator_builder:dev_indicator_builder@127.0.0.1:5432/tiewtrade_e2e
+      TIEWTRADE_DATABASE_URL_PLATFORM_BOOTSTRAP: postgresql+asyncpg://tiewtrade_platform_bootstrap:dev_platform_bootstrap@127.0.0.1:5432/tiewtrade_e2e
       TIEWTRADE_REDIS_URL_API: redis://127.0.0.1:6379/0
       TIEWTRADE_REDIS_URL_MARKET_DATA: redis://127.0.0.1:6379/0
       TIEWTRADE_TEST_REDIS_URL: redis://127.0.0.1:6379/0
@@ -231,6 +233,8 @@ jobs:
       TIEWTRADE_SEALING_KEY_VENUE_API_SECRET: "1:VlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlY="
       # F-11 cursor key: public test fixture only, distinct from TOTP and venue keys.
       TIEWTRADE_SEALING_KEY_INDICATOR_CURSOR: "1:SUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUk="
+      # Test-only generation opens the catalog protocol gate; it never enables Live Trading.
+      TIEWTRADE_CATALOG_DEPLOYMENT_GENERATION: "00000000-0000-4000-8000-000000000037"
     steps:
       - uses: actions/checkout@v4
 
@@ -264,6 +268,18 @@ jobs:
         run: uv run alembic upgrade head
 
       - run: npm run test:e2e
+        working-directory: frontend
+        env:
+          CI: "1"
+
+      - name: F-37 supported-symbol catalog E2E
+        run: npm run test:e2e:supported-symbols
+        working-directory: frontend
+        env:
+          CI: "1"
+
+      - name: F-16 manual order Paper E2E
+        run: npm run test:e2e:manual-orders
         working-directory: frontend
         env:
           CI: "1"

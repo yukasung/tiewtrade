@@ -4,6 +4,75 @@
  */
 
 export interface paths {
+    "/admin/supported-symbols": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Admin Catalog */
+        get: operations["admin_catalog_admin_supported_symbols_get"];
+        put?: never;
+        /** Add Symbol */
+        post: operations["add_symbol_admin_supported_symbols_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/supported-symbols/protocol/enable": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Enable Catalog Mutations */
+        post: operations["enable_catalog_mutations_admin_supported_symbols_protocol_enable_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/supported-symbols/{base}/{quote}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Remove Symbol */
+        delete: operations["remove_symbol_admin_supported_symbols__base___quote__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/supported-symbols/{base}/{quote}/impact": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Preview */
+        get: operations["preview_admin_supported_symbols__base___quote__impact_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api-keys": {
         parameters: {
             query?: never;
@@ -393,6 +462,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/market-catalog": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Catalog */
+        get: operations["catalog_market_catalog_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/market-data/candles": {
         parameters: {
             query?: never;
@@ -581,6 +667,126 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/paper/order-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read Unresolved */
+        get: operations["read_unresolved_paper_order_requests_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/paper/order-requests/by-key/{key}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read Request Key */
+        get: operations["read_request_key_paper_order_requests_by_key__key__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/paper/order-requests/{request_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read Request */
+        get: operations["read_request_paper_order_requests__request_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/paper/orders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read Orders */
+        get: operations["read_orders_paper_orders_get"];
+        put?: never;
+        /** New Order */
+        post: operations["new_order_paper_orders_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/paper/orders/{order_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read Order */
+        get: operations["read_order_paper_orders__order_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/paper/orders/{order_id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Cancel Order */
+        post: operations["cancel_order_paper_orders__order_id__cancel_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/paper/trade": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read Trade */
+        get: operations["read_trade_paper_trade_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/trading-account": {
         parameters: {
             query?: never;
@@ -648,6 +854,17 @@ export interface components {
             id: string;
             /** Status */
             status: string;
+        };
+        /** BaseBalanceView */
+        BaseBalanceView: {
+            /** Asset */
+            asset: string;
+            /** Available */
+            available: string;
+            /** Held */
+            held: string;
+            /** Reserved */
+            reserved: string;
         };
         /**
          * CandleFinality
@@ -734,6 +951,99 @@ export interface components {
             open_at: string;
             /** Volume */
             volume: string;
+        };
+        /** CatalogCleanupView */
+        CatalogCleanupView: {
+            /** Attempts */
+            attempts: number;
+            /** Bots Stopped */
+            bots_stopped: number;
+            /** Commands Rejected */
+            commands_rejected: number;
+            /** Error Code */
+            error_code: string | null;
+            /** Orders Canceled */
+            orders_canceled: number;
+            /** Orders Unresolved */
+            orders_unresolved: number;
+            /** Status */
+            status: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /** CatalogCommandResponse */
+        CatalogCommandResponse: {
+            /** Action */
+            action: string;
+            /** Base */
+            base: string;
+            /**
+             * Command Id
+             * Format: uuid
+             */
+            command_id: string;
+            /** Completed At */
+            completed_at: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Quote */
+            quote: string;
+            /** Revision */
+            revision: number | null;
+            /** State */
+            state: string;
+        };
+        /** CatalogMutation */
+        CatalogMutation: {
+            /** Base */
+            base: string;
+            /** Expected Revision */
+            expected_revision: number;
+            /** Quote */
+            quote: string;
+            reason_code: components["schemas"]["CatalogReason"];
+        };
+        /** CatalogPairView */
+        CatalogPairView: {
+            /** Base */
+            base: string;
+            cleanup?: components["schemas"]["CatalogCleanupView"] | null;
+            /** Quote */
+            quote: string;
+            /** Revision */
+            revision: number;
+            /** Status */
+            status: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /**
+         * CatalogReason
+         * @enum {string}
+         */
+        CatalogReason: "ADMIN_LIQUIDITY_REVIEWED" | "ADMIN_RISK_REVIEW";
+        /** CatalogResponse */
+        CatalogResponse: {
+            /** Active Pairs */
+            active_pairs: [
+                string,
+                string
+            ][];
+            /** Entries */
+            entries: components["schemas"]["CatalogPairView"][];
+            /** Mutations Enabled */
+            mutations_enabled: boolean;
+            /** Revision */
+            revision: number;
         };
         /** ChartCandlePage */
         ChartCandlePage: {
@@ -899,6 +1209,23 @@ export interface components {
             /** Recovery Codes */
             recovery_codes: string[];
         };
+        /** CommandAmount */
+        CommandAmount: {
+            /** Amount */
+            amount: string;
+            /**
+             * Currency
+             * @constant
+             */
+            currency: "USDT";
+        };
+        /** CommandQuantity */
+        CommandQuantity: {
+            /** Asset */
+            asset: string;
+            /** Quantity */
+            quantity: string;
+        };
         /**
          * Confirmation
          * @description รหัสจาก secret ที่เพิ่งตั้งค่า
@@ -959,6 +1286,19 @@ export interface components {
             /** Otpauth Uri */
             otpauth_uri: string;
         };
+        /** ExpectedPaperEpisode */
+        ExpectedPaperEpisode: {
+            /**
+             * Expected Episode Id
+             * Format: uuid
+             */
+            expected_episode_id: string;
+            /**
+             * Expected Wallet Id
+             * Format: uuid
+             */
+            expected_wallet_id: string;
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -989,6 +1329,30 @@ export interface components {
              * Format: uuid
              */
             user_id: string;
+        };
+        /** ImpactResponse */
+        ImpactResponse: {
+            /** Base */
+            base: string;
+            /** Bots */
+            bots: number;
+            /** Complete */
+            complete: boolean;
+            /** Open Entry Orders */
+            open_entry_orders: number;
+            /** Positions */
+            positions: number;
+            /** Protective Orders */
+            protective_orders: number;
+            /** Quote */
+            quote: string;
+            /** Reduce Risk Orders */
+            reduce_risk_orders: number;
+            /**
+             * Snapshot At
+             * Format: date-time
+             */
+            snapshot_at: string;
         };
         /** IndicatorHistoryView */
         IndicatorHistoryView: {
@@ -1103,6 +1467,211 @@ export interface components {
             /** Verified At */
             verified_at?: string | null;
         };
+        /** LimitOrderInput */
+        LimitOrderInput: {
+            /** Base */
+            base: string;
+            /** Base Quantity */
+            base_quantity: string;
+            /**
+             * Expected Episode Id
+             * Format: uuid
+             */
+            expected_episode_id: string;
+            /**
+             * Expected Wallet Id
+             * Format: uuid
+             */
+            expected_wallet_id: string;
+            /**
+             * Kind
+             * @constant
+             */
+            kind: "LIMIT";
+            /** Limit Price */
+            limit_price: string;
+            /**
+             * Quote
+             * @constant
+             */
+            quote: "USDT";
+            /**
+             * Side
+             * @enum {string}
+             */
+            side: "BUY" | "SELL";
+            /**
+             * Time In Force
+             * @constant
+             */
+            time_in_force: "GTC";
+        };
+        /** ManualOrderRefusal */
+        ManualOrderRefusal: {
+            /** Detail */
+            detail: string;
+        };
+        /** ManualOrderSummary */
+        ManualOrderSummary: {
+            /** Base */
+            base: string;
+            /** Base Quantity */
+            base_quantity: string | null;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "MARKET" | "LIMIT";
+            /** Limit Price */
+            limit_price: string | null;
+            /**
+             * Quote
+             * @constant
+             */
+            quote: "USDT";
+            /** Quote Budget */
+            quote_budget: string | null;
+            /**
+             * Side
+             * @enum {string}
+             */
+            side: "BUY" | "SELL";
+            /** Time In Force */
+            time_in_force: "GTC" | null;
+        };
+        /** ManualRequestPage */
+        ManualRequestPage: {
+            /** Next Cursor */
+            next_cursor: string | null;
+            /** Requests */
+            requests: components["schemas"]["ManualRequestView"][];
+        };
+        /** ManualRequestView */
+        ManualRequestView: {
+            /**
+             * Action
+             * @enum {string}
+             */
+            action: "NEW" | "CANCEL";
+            /** Command Failure Code */
+            command_failure_code: string | null;
+            /** Command Id */
+            command_id: string | null;
+            command_snapshot: components["schemas"]["OrderCommandSnapshot"] | null;
+            /** Command State */
+            command_state: ("PENDING" | "SUCCEEDED" | "REJECTED") | null;
+            /**
+             * Episode Id
+             * Format: uuid
+             */
+            episode_id: string;
+            /**
+             * Idempotency Key
+             * Format: uuid
+             */
+            idempotency_key: string;
+            /** Intake Failure Code */
+            intake_failure_code: string | null;
+            /**
+             * Intake State
+             * @enum {string}
+             */
+            intake_state: "PENDING" | "TRANSFERRED" | "REJECTED";
+            /**
+             * Mode
+             * @default PAPER
+             * @constant
+             */
+            mode: "PAPER";
+            /**
+             * Order Id
+             * Format: uuid
+             */
+            order_id: string;
+            /** Order State */
+            order_state: string | null;
+            /** Recorded At */
+            recorded_at: string;
+            /**
+             * Request Id
+             * Format: uuid
+             */
+            request_id: string;
+            request_summary: components["schemas"]["ManualOrderSummary"] | null;
+            /** Snapshot At */
+            snapshot_at: string;
+            /** Status Url */
+            status_url: string;
+            /**
+             * Wallet Id
+             * Format: uuid
+             */
+            wallet_id: string;
+        };
+        /** MarketBuyInput */
+        MarketBuyInput: {
+            /** Base */
+            base: string;
+            /**
+             * Expected Episode Id
+             * Format: uuid
+             */
+            expected_episode_id: string;
+            /**
+             * Expected Wallet Id
+             * Format: uuid
+             */
+            expected_wallet_id: string;
+            /**
+             * Kind
+             * @constant
+             */
+            kind: "MARKET";
+            /**
+             * Quote
+             * @constant
+             */
+            quote: "USDT";
+            /** Quote Budget */
+            quote_budget: string;
+            /**
+             * Side
+             * @constant
+             */
+            side: "BUY";
+        };
+        /** MarketSellInput */
+        MarketSellInput: {
+            /** Base */
+            base: string;
+            /** Base Quantity */
+            base_quantity: string;
+            /**
+             * Expected Episode Id
+             * Format: uuid
+             */
+            expected_episode_id: string;
+            /**
+             * Expected Wallet Id
+             * Format: uuid
+             */
+            expected_wallet_id: string;
+            /**
+             * Kind
+             * @constant
+             */
+            kind: "MARKET";
+            /**
+             * Quote
+             * @constant
+             */
+            quote: "USDT";
+            /**
+             * Side
+             * @constant
+             */
+            side: "SELL";
+        };
         /** @constant */
         MarketSource: "primary_spot";
         /**
@@ -1110,6 +1679,8 @@ export interface components {
          * @description ตัวตนของคำขอ พร้อมสถานะปัจจัยที่สอง (F-06 RQ-12)
          */
         Me: {
+            /** Platform Role */
+            platform_role: string | null;
             /** Totp Enabled */
             totp_enabled: boolean;
             /**
@@ -1128,6 +1699,18 @@ export interface components {
              * @constant
              */
             currency: "USDT";
+        };
+        /** OrderCommandSnapshot */
+        OrderCommandSnapshot: {
+            filled?: components["schemas"]["CommandQuantity"] | null;
+            /**
+             * Order Id
+             * Format: uuid
+             */
+            order_id: string;
+            spent?: components["schemas"]["CommandAmount"] | null;
+            /** Status */
+            status: string;
         };
         /** PaperCommandSnapshotView */
         PaperCommandSnapshotView: {
@@ -1162,6 +1745,113 @@ export interface components {
             state: components["schemas"]["PaperCommandState"];
             /** Status Url */
             status_url: string;
+        };
+        /** PaperOrderPage */
+        PaperOrderPage: {
+            /** Next Cursor */
+            next_cursor: string | null;
+            /** Orders */
+            orders: components["schemas"]["PaperOrderView"][];
+            /** Snapshot At */
+            snapshot_at: string;
+        };
+        /** PaperOrderView */
+        PaperOrderView: {
+            /** Accepted At */
+            accepted_at: string;
+            /** Base */
+            base: string;
+            /**
+             * Episode Id
+             * Format: uuid
+             */
+            episode_id: string;
+            /** Failure Code */
+            failure_code: string | null;
+            /** Filled Quantity */
+            filled_quantity: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "MARKET" | "LIMIT";
+            /** Limit Price */
+            limit_price: string | null;
+            /**
+             * Mode
+             * @constant
+             */
+            mode: "PAPER";
+            /**
+             * Order Id
+             * Format: uuid
+             */
+            order_id: string;
+            /** Quantity */
+            quantity: string | null;
+            /**
+             * Quote
+             * @constant
+             */
+            quote: "USDT";
+            /** Quote Budget */
+            quote_budget: string | null;
+            /** Remaining Budget */
+            remaining_budget: string | null;
+            /** Remaining Quantity */
+            remaining_quantity: string | null;
+            /** Reserved Base */
+            reserved_base: string;
+            /** Reserved Quote */
+            reserved_quote: string;
+            /** Sequence */
+            sequence: number;
+            /**
+             * Side
+             * @enum {string}
+             */
+            side: "BUY" | "SELL";
+            /** Snapshot At */
+            snapshot_at: string;
+            /** Spent */
+            spent: string;
+            /** Status */
+            status: string;
+            /** Time In Force */
+            time_in_force: "GTC" | null;
+            /**
+             * Wallet Id
+             * Format: uuid
+             */
+            wallet_id: string;
+        };
+        /** PaperTradeView */
+        PaperTradeView: {
+            /** Account Use */
+            account_use: ("MANUAL" | "BOT") | null;
+            /** Admission Ready */
+            admission_ready: boolean;
+            /** Admission Reasons */
+            admission_reasons: string[];
+            /** Base */
+            base: string | null;
+            /** Catalog Revision */
+            catalog_revision: number | null;
+            /** Market Observed At */
+            market_observed_at?: string | null;
+            /**
+             * Mode
+             * @constant
+             */
+            mode: "PAPER";
+            /**
+             * Quote
+             * @constant
+             */
+            quote: "USDT";
+            /** Snapshot At */
+            snapshot_at: string;
+            wallet: components["schemas"]["TradeWalletView"] | null;
         };
         /** PaperWalletEnvelope */
         PaperWalletEnvelope: {
@@ -1231,10 +1921,12 @@ export interface components {
             alert_due: boolean;
             /** Amount */
             amount: string | null;
-            base: components["schemas"]["SupportedBase"];
+            /** Base */
+            base: string;
             /** Generation */
             generation: string;
-            quote: components["schemas"]["SupportedQuote"];
+            /** Quote */
+            quote: string;
             /**
              * Readiness
              * @enum {string}
@@ -1256,6 +1948,8 @@ export interface components {
         };
         /** PricesView */
         PricesView: {
+            /** Catalog Revision */
+            catalog_revision: string;
             /**
              * Delivery Status
              * @enum {string}
@@ -1274,6 +1968,26 @@ export interface components {
              * Format: date-time
              */
             server_time: string;
+        };
+        /** ProtocolEnableRequest */
+        ProtocolEnableRequest: {
+            /**
+             * Deployment Generation
+             * Format: uuid
+             */
+            deployment_generation: string;
+            /** Expected Revision */
+            expected_revision: number;
+        };
+        /** PublicCatalogResponse */
+        PublicCatalogResponse: {
+            /** Active Pairs */
+            active_pairs: [
+                string,
+                string
+            ][];
+            /** Revision */
+            revision: number;
         };
         /** RefreshTarget */
         RefreshTarget: {
@@ -1393,15 +2107,39 @@ export interface components {
              */
             user_id: string;
         };
-        /** @enum {string} */
-        SupportedBase: "BTC" | "ETH";
-        /** @constant */
-        SupportedQuote: "USDT";
         /**
          * Timeframe
          * @enum {string}
          */
         Timeframe: "1m" | "5m" | "15m" | "1h" | "4h" | "1d" | "1w" | "1M";
+        /** TradeWalletView */
+        TradeWalletView: {
+            /** Available Quote */
+            available_quote: string | null;
+            /** Balance */
+            balance: string;
+            /** Base Balances */
+            base_balances: components["schemas"]["BaseBalanceView"][];
+            /**
+             * Episode Id
+             * Format: uuid
+             */
+            episode_id: string;
+            /** Reserved Quote */
+            reserved_quote: string | null;
+            /** Revision */
+            revision: number;
+            /**
+             * Source Availability
+             * @enum {string}
+             */
+            source_availability: "READY" | "UNKNOWN";
+            /**
+             * Wallet Id
+             * Format: uuid
+             */
+            wallet_id: string;
+        };
         /** TradingAccountView */
         TradingAccountView: {
             key: components["schemas"]["KeyView"] | null;
@@ -1454,6 +2192,162 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    admin_catalog_admin_supported_symbols_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogResponse"];
+                };
+            };
+        };
+    };
+    add_symbol_admin_supported_symbols_post: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CatalogMutation"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogCommandResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    enable_catalog_mutations_admin_supported_symbols_protocol_enable_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProtocolEnableRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    remove_symbol_admin_supported_symbols__base___quote__delete: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                base: string;
+                quote: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CatalogMutation"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogCommandResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    preview_admin_supported_symbols__base___quote__impact_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                base: string;
+                quote: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImpactResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_keys_api_keys_get: {
         parameters: {
             query?: never;
@@ -1973,6 +2867,26 @@ export interface operations {
             };
         };
     };
+    catalog_market_catalog_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicCatalogResponse"];
+                };
+            };
+        };
+    };
     candles_market_data_candles_get: {
         parameters: {
             query: {
@@ -2363,6 +3277,702 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_unresolved_paper_order_requests_get: {
+        parameters: {
+            query?: {
+                state?: "unresolved";
+                cursor?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManualRequestPage"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManualOrderRefusal"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManualOrderRefusal"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManualOrderRefusal"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManualOrderRefusal"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManualOrderRefusal"];
+                };
+            };
+            /** @description Too Many Requests */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManualOrderRefusal"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManualOrderRefusal"];
+                };
+            };
+        };
+    };
+    read_request_key_paper_order_requests_by_key__key__get: {
+        parameters: {
+            query: {
+                action: "NEW" | "CANCEL";
+            };
+            header?: never;
+            path: {
+                key: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManualRequestView"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManualOrderRefusal"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManualOrderRefusal"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManualOrderRefusal"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManualOrderRefusal"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManualOrderRefusal"];
+                };
+            };
+            /** @description Too Many Requests */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManualOrderRefusal"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManualOrderRefusal"];
+                };
+            };
+        };
+    };
+    read_request_paper_order_requests__request_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManualRequestView"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManualOrderRefusal"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManualOrderRefusal"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManualOrderRefusal"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManualOrderRefusal"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManualOrderRefusal"];
+                };
+            };
+            /** @description Too Many Requests */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManualOrderRefusal"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManualOrderRefusal"];
+                };
+            };
+        };
+    };
+    read_orders_paper_orders_get: {
+        parameters: {
+            query: {
+                episode_id: string;
+                cursor?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaperOrderPage"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManualOrderRefusal"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManualOrderRefusal"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManualOrderRefusal"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManualOrderRefusal"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManualOrderRefusal"];
+                };
+            };
+            /** @description Too Many Requests */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManualOrderRefusal"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManualOrderRefusal"];
+                };
+            };
+        };
+    };
+    new_order_paper_orders_post: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MarketBuyInput"] | components["schemas"]["MarketSellInput"] | components["schemas"]["LimitOrderInput"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManualRequestView"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManualOrderRefusal"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManualOrderRefusal"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManualOrderRefusal"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManualOrderRefusal"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManualOrderRefusal"];
+                };
+            };
+            /** @description Too Many Requests */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManualOrderRefusal"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManualOrderRefusal"];
+                };
+            };
+        };
+    };
+    read_order_paper_orders__order_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                order_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaperOrderView"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManualOrderRefusal"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManualOrderRefusal"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManualOrderRefusal"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManualOrderRefusal"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManualOrderRefusal"];
+                };
+            };
+            /** @description Too Many Requests */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManualOrderRefusal"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManualOrderRefusal"];
+                };
+            };
+        };
+    };
+    cancel_order_paper_orders__order_id__cancel_post: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                order_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExpectedPaperEpisode"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManualRequestView"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManualOrderRefusal"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManualOrderRefusal"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManualOrderRefusal"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManualOrderRefusal"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManualOrderRefusal"];
+                };
+            };
+            /** @description Too Many Requests */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManualOrderRefusal"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManualOrderRefusal"];
+                };
+            };
+        };
+    };
+    read_trade_paper_trade_get: {
+        parameters: {
+            query?: {
+                base?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaperTradeView"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManualOrderRefusal"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManualOrderRefusal"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManualOrderRefusal"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManualOrderRefusal"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManualOrderRefusal"];
+                };
+            };
+            /** @description Too Many Requests */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManualOrderRefusal"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManualOrderRefusal"];
                 };
             };
         };

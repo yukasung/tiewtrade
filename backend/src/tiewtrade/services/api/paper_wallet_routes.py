@@ -251,8 +251,11 @@ async def read_paper_command(
     request: Request,
     who: Annotated[Authenticated, Depends(current_user)],
 ) -> PaperCommandView:
-    async with user_session(engine_for(request, DatabaseRole.API), who.user_id) as session:
-        command = await get_command(session, command_id)
+    try:
+        async with user_session(engine_for(request, DatabaseRole.API), who.user_id) as session:
+            command = await get_command(session, command_id)
+    except InfraError:
+        raise _dependency_unavailable() from None
     if command is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "PAPER_COMMAND_NOT_FOUND")
     return _command(command)

@@ -94,6 +94,15 @@ ROUTE_RULES: Final[dict[tuple[str, str], RouteRule]] = {
     ("POST", "/auth/password"): RouteRule(renews=True),
     # ── ต้องมี session แต่ **ไม่ต่ออายุ** เพราะหน้าเว็บเรียกเป็นรอบ ๆ (Q-2) ──
     ("GET", "/auth/me"): RouteRule(),
+    # Manual order intent is classified by the shared domain gate, never by URL side.
+    ("GET", "/paper/trade"): RouteRule(),
+    ("GET", "/paper/orders"): RouteRule(),
+    ("GET", "/paper/orders/{order_id}"): RouteRule(),
+    ("GET", "/paper/order-requests"): RouteRule(),
+    ("GET", "/paper/order-requests/{request_id}"): RouteRule(),
+    ("GET", "/paper/order-requests/by-key/{key}"): RouteRule(),
+    ("POST", "/paper/orders"): RouteRule(renews=True),
+    ("POST", "/paper/orders/{order_id}/cancel"): RouteRule(renews=True, risk_reducing=True),
     ("GET", "/market-data/candles"): RouteRule(),
     ("GET", "/market-data/candles/pages"): RouteRule(),
     ("GET", "/market-data/indicators"): RouteRule(),
@@ -139,6 +148,14 @@ ROUTE_RULES: Final[dict[tuple[str, str], RouteRule]] = {
     ("POST", "/paper-wallet"): RouteRule(renews=True),
     ("POST", "/paper-wallet/reset"): RouteRule(renews=True),
     ("GET", "/paper-wallet/commands/{command_id}"): RouteRule(),
+    # F-37 catalog reads do not extend sessions; every mutation requires a fresh
+    # non-recovery TOTP and is authorized again by its stored function.
+    ("GET", "/market-catalog"): RouteRule(),
+    ("GET", "/admin/supported-symbols"): RouteRule(),
+    ("GET", "/admin/supported-symbols/{base}/{quote}/impact"): RouteRule(),
+    ("POST", "/admin/supported-symbols"): RouteRule(renews=True, reverify=True),
+    ("DELETE", "/admin/supported-symbols/{base}/{quote}"): RouteRule(renews=True, reverify=True),
+    ("POST", "/admin/supported-symbols/protocol/enable"): RouteRule(renews=True, reverify=True),
     # ขั้นที่สองของการเข้าสู่ระบบ — สาธารณะเพราะยังไม่มี session
     # และ **ไม่ต่ออายุ** เพราะยังไม่มี session ให้ต่อ
     ("POST", "/auth/totp/login"): RouteRule(public=True),

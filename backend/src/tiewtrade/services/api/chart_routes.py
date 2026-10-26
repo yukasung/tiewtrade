@@ -26,7 +26,7 @@ from tiewtrade.infra.indicators.prepared import PreparedNotReadyError
 from tiewtrade.infra.market_data.candle_preview import read_live
 from tiewtrade.infra.market_data.chart_reader import verify_prepared
 from tiewtrade.infra.market_data.records import MarketDataInputError
-from tiewtrade.infra.market_data.storage import database_now
+from tiewtrade.infra.market_data.storage import database_now, require_active_pair
 from tiewtrade.infra.realtime.admission import AdmissionOutcome, RedisAdmission
 from tiewtrade.services.api.authentication import Authenticated, current_user
 from tiewtrade.services.api.candle_routes import CandleView, _candle_view
@@ -105,6 +105,7 @@ async def _live(query: ChartLiveQuery, request: Request, who: Authenticated) -> 
     async with indicator_read_session(
         engine, who.user_id, statement_timeout_ms=500, lock_timeout_ms=200
     ) as session:
+        await require_active_pair(session, series.base, series.quote)
         state, rows, now, recovered = await read_live(session, series)
         await check_read_session(session, who)
     latest = rows[-1] if rows else None

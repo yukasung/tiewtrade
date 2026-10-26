@@ -10,6 +10,8 @@ const environment = e2eEnvironment();
  */
 export default defineConfig({
   testDir: "./e2e",
+  // F-37 needs its test-only catalog bootstrap/reconcile app and runs via its dedicated config.
+  testIgnore: ["supported-symbols.spec.ts", "manual-orders.spec.ts"],
   // FakeVenue workers scan shared pending jobs; serialize with per-test DB throttle isolation.
   workers: 1,
   use: { baseURL: "http://localhost:5173" },

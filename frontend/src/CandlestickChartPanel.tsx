@@ -9,7 +9,7 @@ import { useChartData } from "./chart/useChartData";
 import { candleTimeline } from "./chart/candleTimeline";
 import { anchoredRange } from "./chart/viewport";
 import type { Series, Timeframe } from "./chart/api";
-import { supportedBases } from "./marketCatalog";
+import { activeBases, useMarketCatalog } from "./marketCatalog";
 import { TradeHistoryPlaceholder, TradingOrderPlaceholder } from "./TradingWorkspacePlaceholders";
 import "./CandlestickChartPanel.css";
 
@@ -28,6 +28,8 @@ const belongsToSeries = (value: Series | undefined, series: Series) => Boolean(v
 
 export function CandlestickChartPanel({ userId }: { userId: string }) {
   const [base, setBase] = useState("BTC");
+  const catalog = useMarketCatalog();
+  const supportedBases = useMemo(() => activeBases(catalog.data), [catalog.data]);
   const [timeframe, setTimeframe] = useState<Timeframe>("1h");
   const [selected, setSelected] = useState<number | null>(null);
   const [renderLimit, setRenderLimit] = useState<string | null>(null);
@@ -38,7 +40,7 @@ export function CandlestickChartPanel({ userId }: { userId: string }) {
   const renderedSlotCount = useRef(0);
   const renderedTimes = useRef<number[]>([]);
   const series: Series = { base, quote: "USDT", timeframe };
-  const state = useChartData(userId, series);
+  const state = useChartData(userId, series, supportedBases.includes(base));
   const browsing = state.browsing;
   const browsingActions = useRef(browsing); browsingActions.current = browsing;
   const history = browsing.page ?? browsing.latest;
@@ -68,6 +70,13 @@ export function CandlestickChartPanel({ userId }: { userId: string }) {
     selectedTime >= Date.parse(gap.start) && selectedTime < Date.parse(gap.end));
   const summaryCandle = candle ?? (selected === null ? displayed.at(-1) : undefined);
   const error = state.error;
+
+  useEffect(() => {
+    if (supportedBases.length && !supportedBases.includes(base)) {
+      setBase(supportedBases[0]!);
+      setSelected(null);
+    }
+  }, [base, supportedBases]);
 
   useEffect(() => {
     if (!host.current) return;

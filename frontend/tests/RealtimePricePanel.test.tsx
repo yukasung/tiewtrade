@@ -3,9 +3,22 @@ import { afterEach, expect, it, vi } from "vitest";
 import { realtimePriceI18n } from "../src/realtimePriceMessages";
 import { onlineManager } from "@tanstack/react-query";
 import { AccountSession } from "../src/AccountSession";
-import { supportedBases } from "../src/marketCatalog";
 import { RealtimePricePanel } from "../src/RealtimePricePanel";
-import { snapshot } from "./priceFixture";
+import { catalog, snapshot } from "./priceFixture";
+
+vi.mock("../src/marketCatalog", async (importOriginal) => {
+    const original = await importOriginal<typeof import("../src/marketCatalog")>();
+    const data = {
+        revision: 2,
+        active_pairs: [["BTC", "USDT"], ["ETH", "USDT"]],
+    } as const;
+    return {
+        ...original,
+        useMarketCatalog: () => ({ data }),
+    };
+});
+
+const supportedCount = catalog().active_pairs.length;
 class Socket {
     static all: Socket[] = [];
     onopen: (() => void) | null = null;
@@ -23,30 +36,36 @@ class Socket {
 afterEach(() => { cleanup(); onlineManager.setOnline(true); vi.unstubAllGlobals(); vi.useRealTimers(); Socket.all = []; });
 function mount(onExpired = vi.fn(), get: Promise<Response> = Promise.resolve(new Response(JSON.stringify(snapshot())))) {
     vi.stubGlobal("WebSocket", Socket);
-    vi.stubGlobal("fetch", vi.fn(() => get));
+    vi.stubGlobal("fetch", vi.fn((input: string | URL | Request) =>
+      (typeof input === "string" ? input : input instanceof URL ? input.href : input.url).endsWith("/market-catalog")
+        ? Promise.resolve(new Response(JSON.stringify(catalog())))
+        : get));
     return render(<AccountSession identity={{ user_id: "one", totp_enabled: false }} onExpired={onExpired}><RealtimePricePanel /></AccountSession>);
+}
+function firstSocket(): Socket {
+    return Socket.all[0]!;
 }
 it("reports readiness only at server reference, preserves exact decimals and trade time", async () => {
     mount();
     await screen.findAllByText("พร้อม ณ เวลาที่ตรวจ");
-    expect(screen.getAllByText("12.34000000 USDT")).toHaveLength(supportedBases.length);
-    expect(document.querySelectorAll("time[datetime]").length).toBe(supportedBases.length + 1);
+    expect(screen.getAllByText("12.34000000 USDT")).toHaveLength(supportedCount);
+    expect(document.querySelectorAll("time[datetime]").length).toBe(supportedCount + 1);
 });
 it("late GET cannot overwrite stream and offline warns without changing snapshot", async () => {
     let resolve!: (value: Response) => void;
     mount(vi.fn(), new Promise(r => { resolve = r; }));
-    await act(() => Promise.resolve(Socket.all[0]!.push(snapshot("2", "2026-10-07T00:00:02Z"))));
+    const socket = firstSocket();
+    await act(() => Promise.resolve(socket.push(snapshot("2", "2026-10-07T00:00:02Z"))));
     await act(() => Promise.resolve(resolve(new Response(JSON.stringify(snapshot())))));
     void act(() => window.dispatchEvent(new Event("offline")));
     expect(screen.getByText(/การเชื่อมต่อขาด/)).toBeTruthy();
-    expect(screen.getAllByText("พร้อม ณ เวลาที่ตรวจ")).toHaveLength(supportedBases.length);
-    expect(Socket.all[0]!.close).toHaveBeenCalled();
+    expect(screen.getAllByText("พร้อม ณ เวลาที่ตรวจ")).toHaveLength(supportedCount);
+    expect(socket.close).toHaveBeenCalled();
 });
-it("reconnect awaits full snapshot and rejects callbacks from old transport", async () => {
+it("reconnect awaits full snapshot and rejects callbacks from old transport", () => {
     vi.useFakeTimers();
     mount();
-    await act(() => Promise.resolve());
-    const old = Socket.all[0]!;
+    const old = firstSocket();
     act(() => old.onclose?.({ code: 1006 }));
     void act(() => vi.advanceTimersByTime(2000));
     const next = Socket.all.at(-1)!;
@@ -60,11 +79,11 @@ it("reconnect awaits full snapshot and rejects callbacks from old transport", as
 it("session 4401 uses existing expiry flow and cleanup closes socket", async () => {
     const expired = vi.fn();
     const view = mount(expired);
-    await act(() => Promise.resolve());
-    await act(() => Promise.resolve(Socket.all[0]!.onclose?.({ code: 4401 })));
+    const socket = firstSocket();
+    await act(() => Promise.resolve(socket.onclose?.({ code: 4401 })));
     expect(expired).toHaveBeenCalledOnce();
     view.unmount();
-    expect(Socket.all[0]!.close).toHaveBeenCalled();
+    expect(socket.close).toHaveBeenCalled();
 });
 it("observed resume invalidates transport; wall clock alone does not certify readiness", async () => {
     mount();
@@ -74,30 +93,30 @@ it("observed resume invalidates transport; wall clock alone does not certify rea
     expect(screen.getByText(/รอสถานะใหม่/)).toBeTruthy();
     expect(old.close).toHaveBeenCalled();
 });
-it("heartbeat detection warns immediately and does not infer a market outage", async () => {
+it("heartbeat detection warns immediately and does not infer a market outage", () => {
     vi.useFakeTimers();
     mount();
-    await act(() => Promise.resolve());
-    void act(() => Socket.all[0]!.push());
+    const socket = firstSocket();
+    void act(() => socket.push());
     void act(() => vi.advanceTimersByTime(3001));
     expect(screen.getByText(/การเชื่อมต่อขาด/)).toBeTruthy();
     expect(screen.queryByText(/ครบ 60 วินาที/)).toBeNull();
-    expect(screen.getAllByText("พร้อม ณ เวลาที่ตรวจ")).toHaveLength(supportedBases.length);
+    expect(screen.getAllByText("พร้อม ณ เวลาที่ตรวจ")).toHaveLength(supportedCount);
 });
-it("market alert remains visible beside delivery failure and is not cleared by opening", async () => {
+it("market alert remains visible beside delivery failure and is not cleared by opening", () => {
     mount();
-    await act(() => Promise.resolve());
+    const socket = firstSocket();
     const body = snapshot("2", "2026-10-07T00:00:02Z");
     body.rows[0]!.alert_due = true;
-    void act(() => Socket.all[0]!.push(body));
-    void act(() => Socket.all[0]!.onclose?.({ code: 1006 }));
+    void act(() => socket.push(body));
+    void act(() => socket.onclose?.({ code: 1006 }));
     expect(screen.getByText(/ครบ 60 วินาที/)).toBeTruthy();
     expect(screen.getByText(/การเชื่อมต่อขาด/)).toBeTruthy();
 });
 it("identity replacement prevents late old socket and GET callbacks entering new cache", async () => {
     let release!: (response: Response) => void;
     const view = mount(vi.fn(), new Promise(r => { release = r; }));
-    const old = Socket.all[0]!;
+    const old = firstSocket();
     view.rerender(<AccountSession identity={{ user_id: "two", totp_enabled: false }}><RealtimePricePanel /></AccountSession>);
     void act(() => old.push(snapshot("99", "2026-10-07T00:00:09Z")));
     expect(screen.queryByText("12.34000000 USDT")).toBeNull();
@@ -107,7 +126,8 @@ it("identity replacement prevents late old socket and GET callbacks entering new
 it("a late failed GET cannot demote a valid newer socket delivery",async()=>{
  let reject!: (error:Error)=>void;
  mount(vi.fn(),new Promise((_resolve,r)=>{reject=r;}));
- void act(()=>Socket.all[0]!.push());
+ const socket = firstSocket();
+ void act(()=>socket.push());
  await act(()=>Promise.resolve(reject(new Error("unsafe raw error"))));
  expect(screen.getByRole("status").textContent).toBe("เชื่อมต่อการส่งข้อมูลแล้ว");
 });
@@ -115,7 +135,7 @@ it("invalid schema warns and preserves last valid snapshot",async()=>{
  mount(); await screen.findAllByText("พร้อม ณ เวลาที่ตรวจ");
  void act(()=>Socket.all[0]!.onmessage?.({data:'{"schema_version":9,"secret":"never-render"}'}));
  expect(screen.getByText(/การเชื่อมต่อขาด/)).toBeTruthy();
- expect(screen.getAllByText("12.34000000 USDT")).toHaveLength(supportedBases.length);
+ expect(screen.getAllByText("12.34000000 USDT")).toHaveLength(supportedCount);
  expect(screen.queryByText(/never-render/)).toBeNull();
 });
 
@@ -126,7 +146,7 @@ it("English snapshot labels and reference timestamps remain observational across
   const reference=document.querySelector("time")!.getAttribute("datetime");
   vi.spyOn(Date,"now").mockReturnValue(0);
   expect(document.querySelector("time")!.getAttribute("datetime")).toBe(reference);
-  expect(screen.getAllByText("Ready at last check")).toHaveLength(supportedBases.length);
+  expect(screen.getAllByText("Ready at last check")).toHaveLength(supportedCount);
  } finally {vi.restoreAllMocks();await realtimePriceI18n.changeLanguage("th");}
 });
 

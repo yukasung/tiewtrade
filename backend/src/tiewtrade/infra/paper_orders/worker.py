@@ -5,6 +5,7 @@ from datetime import timedelta
 from typing import Any
 from uuid import NAMESPACE_URL, UUID, uuid5
 
+from tiewtrade.core.market_catalog import CatalogSnapshot
 from tiewtrade.core.money import Money, Quantity
 from tiewtrade.core.order_book import BookState, MarketInput
 from tiewtrade.core.orders import (
@@ -16,7 +17,7 @@ from tiewtrade.core.orders import (
     SourceUnavailableError,
 )
 from tiewtrade.core.paper_matching import MatchingState, admit_order, advance_matching, cancel_order
-from tiewtrade.core.positions import ExecutionFact
+from tiewtrade.core.positions import ExecutionFact, ExecutionSide
 from tiewtrade.core.realtime_prices import Readiness, readiness
 from tiewtrade.infra.audit import (
     ActorKind,
@@ -48,7 +49,9 @@ from tiewtrade.infra.paper_orders.dispatch import (
 )
 from tiewtrade.infra.paper_orders.executions import execution_payload, stage_fill_cash
 from tiewtrade.infra.paper_orders.initialization import enable_financial_writer
+from tiewtrade.infra.paper_orders.manual_policy import manual_policy_for
 from tiewtrade.infra.paper_orders.matching_storage import (
+    append_expiry_event,
     append_fill_event,
     insert_order_header,
     load_matching_state,
@@ -59,6 +62,7 @@ from tiewtrade.infra.paper_orders.storage import (
     append_execution_input,
     increment_wallet_revision,
     lock_active_episode,
+    lock_pair_catalog,
 )
 from tiewtrade.infra.paper_wallet import get_wallet
 from tiewtrade.infra.positions import (
@@ -160,7 +164,16 @@ async def process_claimed_order(
     if command["action"] == "CANCEL":
         await _process_cancel(session, claim, command)
         return
-    await _process_new(session, claim, command, policy)
+    intent = intent_from_payload(object_payload(command["payload"])["intent"])
+    fence = await lock_pair_catalog(session, intent.pair)
+    await _process_new(
+        session,
+        claim,
+        command,
+        policy,
+        fence.snapshot,
+        fence.latest_removed_revision,
+    )
 
 
 async def _process_new(
@@ -168,10 +181,18 @@ async def _process_new(
     claim: ClaimedOrder,
     command: Any,
     policy: AdmissionPolicy | None,
+    catalog: CatalogSnapshot,
+    latest_removed_revision: int | None,
 ) -> None:
     row = command
     payload = object_payload(row["payload"])
     intent = intent_from_payload(payload["intent"])
+    admitted_revision_value = _catalog_revision(payload)
+    invalidated = (
+        intent.side is ExecutionSide.BUY
+        and latest_removed_revision is not None
+        and latest_removed_revision > admitted_revision_value
+    )
     accepted_command = (
         await session.execute(
             "SELECT command_id FROM paper_orders WHERE id=:order",
@@ -187,8 +208,17 @@ async def _process_new(
         scope=intent.scope,
         pair=intent.pair,
     )
-    state = checkpoint.state
+    state = await _cancel_removed_openings(
+        session, row["wallet_id"], checkpoint.state, catalog, latest_removed_revision
+    )
     result_exists = row["result_state"] is not None
+    if (
+        not result_exists
+        and intent.side is ExecutionSide.BUY
+        and (invalidated or not catalog.supports(intent.pair.base, intent.pair.quote))
+    ):
+        await _reject(session, claim, row, "CATALOG_PAIR_REMOVED")
+        return
     if not result_exists:
         try:
             bootstrap_evidence = None
@@ -203,7 +233,9 @@ async def _process_new(
                     market,
                     now=(await session.execute("SELECT clock_timestamp()")).scalar_one(),
                     constraints=record.metadata.limit,
+                    market_constraints=record.metadata.market,
                     execution_ids=(),
+                    catalog=catalog,
                 )
                 if bootstrap.fills:
                     raise OrderWorkerIntegrityError("empty source bootstrap created a fill")
@@ -253,6 +285,15 @@ async def _process_new(
                     )
                 ).scalar_one()
             )
+            effective_policy = policy
+            manual_request = (
+                await session.execute(
+                    "SELECT 1 FROM paper_order_request_results WHERE command_id=:command",
+                    {"command": row["id"]},
+                )
+            ).first()
+            if manual_request is not None:
+                effective_policy = await manual_policy_for(session, intent, delegate=policy)
             accepted = admit_order(
                 state,
                 intent,
@@ -262,7 +303,8 @@ async def _process_new(
                 held=held,
                 constraints=constraints,
                 reference_price=reference,
-                policy=policy,
+                policy=effective_policy,
+                catalog=catalog,
             )
             order = next(v for v in accepted.orders if v.intent.order_id == intent.order_id)
             await insert_order_header(
@@ -332,7 +374,69 @@ async def _process_new(
         )
         await finish_claim(session, claim, terminal=False)
         return
-    await _apply_inputs(session, claim, row, state, decisions)
+    await _apply_inputs(session, claim, row, state, decisions, catalog)
+
+
+def _catalog_revision(payload: dict[str, Any]) -> int:
+    revision = payload.get("catalog_revision", 0)
+    if type(revision) is not int or revision < 0:
+        raise OrderWorkerIntegrityError("opening catalog revision is invalid")
+    return revision
+
+
+async def _cancel_removed_openings(
+    session: UserSession,
+    wallet_id: UUID,
+    state: MatchingState,
+    catalog: CatalogSnapshot,
+    latest_removed_revision: int | None,
+) -> MatchingState:
+    """Fence every opening order before any claim advances the shared pair state."""
+    active = catalog.supports(state.pair.base, state.pair.quote)
+    if active and latest_removed_revision is None:
+        return state
+    openings = tuple(
+        order
+        for order in state.orders
+        if order.intent.side is ExecutionSide.BUY and not order.status.terminal
+    )
+    if not openings:
+        return state
+    rows = (
+        (
+            await session.execute(
+                """SELECT o.id,c.payload FROM paper_orders o
+            JOIN paper_order_commands c ON c.id=o.command_id
+            WHERE o.id=ANY(:orders)""",
+                {"orders": [order.intent.order_id for order in openings]},
+            )
+        )
+        .mappings()
+        .all()
+    )
+    revisions = {row["id"]: _catalog_revision(object_payload(row["payload"])) for row in rows}
+    if len(revisions) != len(openings):
+        raise OrderWorkerIntegrityError("opening catalog evidence is unavailable")
+    for order in openings:
+        if active and (
+            latest_removed_revision is None
+            or revisions[order.intent.order_id] >= latest_removed_revision
+        ):
+            continue
+        state = cancel_order(state, order.intent.order_id, scope=order.intent.scope)
+        await persist_checkpoint(
+            session,
+            wallet_id=wallet_id,
+            state=state,
+            anchor_order_id=order.intent.order_id,
+            event_kind="CANCELED",
+            decision_kind="CANCEL",
+            occurred_at=(await session.execute("SELECT clock_timestamp()")).scalar_one(),
+            decision_id=_identity(
+                order.intent.scope.episode_id, f"catalog-cancel:{order.intent.order_id}"
+            ),
+        )
+    return state
 
 
 async def _next_or_recovery_inputs(
@@ -401,6 +505,7 @@ async def _apply_inputs(
     command: Any,
     state: MatchingState,
     decisions: tuple[_InputDecision, ...],
+    catalog: CatalogSnapshot,
 ) -> None:
     row = command
     pair_key = f"{state.pair.base}:{state.pair.quote}"
@@ -434,6 +539,7 @@ async def _apply_inputs(
             market,
             now=(await session.execute("SELECT clock_timestamp()")).scalar_one(),
             constraints=record.metadata.limit,
+            market_constraints=record.metadata.market,
             execution_ids=tuple(
                 _identity(
                     row["episode_id"],
@@ -441,6 +547,7 @@ async def _apply_inputs(
                 )
                 for index in range(identity_count)
             ),
+            catalog=catalog,
         )
         for index, (fact, order_id) in enumerate(
             zip(transition.fills, transition.fill_order_ids, strict=True)
@@ -476,6 +583,20 @@ async def _apply_inputs(
                 )
             if result.status is not PositionWriteStatus.APPLIED:
                 raise OrderWorkerIntegrityError(f"fill {index} did not apply atomically")
+        previous_status = {order.intent.order_id: order.status for order in state.orders}
+        for order in transition.state.orders:
+            if (
+                order.status is OrderStatus.EXPIRED
+                and previous_status[order.intent.order_id] is not OrderStatus.EXPIRED
+            ):
+                await append_expiry_event(
+                    session,
+                    order=order,
+                    evidence_id=saved.evidence_id,
+                    evidence_recorded_at=saved.recorded_at,
+                    occurred_at=market.received_at,
+                    event_id=_identity(row["episode_id"], f"expired:{order.intent.order_id}"),
+                )
         if transition.fill_order_ids:
             anchor = transition.fill_order_ids[-1]
         rebased = rebased or transition.rebased

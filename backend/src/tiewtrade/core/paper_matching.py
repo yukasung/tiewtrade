@@ -4,7 +4,7 @@ from dataclasses import dataclass, field, replace
 from datetime import datetime, timedelta
 from uuid import UUID
 
-from tiewtrade.core.market_catalog import PAIRS
+from tiewtrade.core.market_catalog import CatalogSnapshot
 from tiewtrade.core.money import (
     Money,
     Quantity,
@@ -18,6 +18,7 @@ from tiewtrade.core.orders import (
     BaseSize,
     InsufficientFundsError,
     OrderConflictError,
+    OrderConstraintError,
     OrderConstraints,
     OrderError,
     OrderIntent,
@@ -35,6 +36,7 @@ from tiewtrade.core.orders import (
     standard_execution_fee,
 )
 from tiewtrade.core.positions import ExecutionFact, ExecutionSide, PositionPair
+from tiewtrade.core.trading_limits import ConstraintViolation, unmet_constraints
 
 
 @dataclass(frozen=True, slots=True)
@@ -49,6 +51,7 @@ class MatchingState:
     executions: tuple[ExecutionFact, ...] = ()
     book: BookState | None = None
     execution_sequence: int = 0
+    input_market_constraints: tuple[OrderConstraints, ...] = ()
 
     def __post_init__(self) -> None:
         if not isinstance(self.scope, OrderScope) or self.scope.mode is not TradingMode.PAPER:
@@ -65,9 +68,12 @@ class MatchingState:
             self.inputs,
             self.executions,
             self.input_constraints,
+            self.input_market_constraints,
         ):
             if type(values) is not tuple:
                 raise OrderError("immutable matching state required")
+        if self.input_market_constraints and len(self.inputs) != len(self.input_market_constraints):
+            raise OrderError("every consumed input needs its MARKET constraints")
         if len(self.inputs) != len(self.input_constraints):
             raise OrderError("every consumed input needs its exact constraints")
         if any(o.intent.scope != self.scope or o.intent.pair != self.pair for o in self.orders):
@@ -97,6 +103,7 @@ def admit_order(
     constraints: OrderConstraints,
     reference_price: Money,
     policy: AdmissionPolicy | None,
+    catalog: CatalogSnapshot,
 ) -> MatchingState:
     """Validate funds after other-pair reserves; caller applies F-14 effects before next command."""
     aware(now)
@@ -114,7 +121,9 @@ def admit_order(
         raise OrderConflictError("nonmonotonic command sequence")
     if policy is None:
         raise SafetyUnavailableError("shared safety policy is unavailable")
-    if intent.side is ExecutionSide.BUY and (intent.pair.base, intent.pair.quote) not in PAIRS:
+    if intent.side is ExecutionSide.BUY and not catalog.supports(
+        intent.pair.base, intent.pair.quote
+    ):
         raise UnsupportedOrderError("opening pair is not in catalog")
     if (
         cash.currency != intent.pair.quote
@@ -219,16 +228,54 @@ def _queue(order: OrderState, older: list[OrderState], book: BookState) -> Order
     return replace(order, resting=True, queue_ahead=ahead)
 
 
-def rebase_order_queues(state: MatchingState, book: BookState) -> MatchingState:
+def rebase_order_queues(
+    state: MatchingState,
+    book: BookState,
+    *,
+    constraints: OrderConstraints,
+    market_constraints: OrderConstraints | None = None,
+) -> MatchingState:
     """Rebuild active LIMIT queue-ahead from a current verified book and older orders."""
     if book.pair != state.pair or not book.rebase:
         raise OrderConflictError("explicit pair rebase book required")
+    if constraints.pair != state.pair or (market_constraints or constraints).pair != state.pair:
+        raise OrderConflictError("rebase capability scope mismatch")
+    if state.book is not None and (
+        book.generation < state.book.generation or book.input_id < state.book.input_id
+    ):
+        raise SourceUnavailableError("rebase book cannot move backwards")
+    advance_cursor = not state.inputs or book.input_id >= state.inputs[-1].input_id
+    retained = tuple(
+        (value, limit, market)
+        for value, limit, market in zip(
+            state.inputs,
+            state.input_constraints,
+            state.input_market_constraints or state.input_constraints,
+            strict=True,
+        )
+        if not advance_cursor or value.input_id != book.input_id
+    )
     orders: list[OrderState] = []
     for order in state.orders:
         if order.resting and not order.status.terminal:
             order = _queue(order, orders, book)
         orders.append(order)
-    return replace(state, orders=tuple(orders), liquidity=_sync_liquidity(state, book), book=book)
+    return replace(
+        state,
+        orders=tuple(orders),
+        liquidity=_sync_liquidity(state, book),
+        book=book,
+        inputs=(*(value for value, _, _ in retained), book) if advance_cursor else state.inputs,
+        input_constraints=(*(limit for _, limit, _ in retained), constraints)
+        if advance_cursor
+        else state.input_constraints,
+        input_market_constraints=(
+            *(market for _, _, market in retained),
+            market_constraints or constraints,
+        )
+        if advance_cursor
+        else state.input_market_constraints,
+    )
 
 
 def _fill(
@@ -287,14 +334,28 @@ def advance_matching(
     now: datetime,
     constraints: OrderConstraints,
     execution_ids: tuple[UUID, ...],
+    catalog: CatalogSnapshot,
+    market_constraints: OrderConstraints | None = None,
 ) -> MatchingTransition:
     """Consume one durable input; caller supplies episode-wide sequence and fill identities."""
     aware(now)
+    market_constraints = market_constraints or constraints
+    if market_constraints.pair != state.pair:
+        raise OrderConflictError("MARKET capability scope mismatch")
     if market.pair != state.pair or constraints.pair != state.pair:
         raise OrderConflictError("market input scope mismatch")
-    for previous, previous_constraints in zip(state.inputs, state.input_constraints, strict=True):
+    for previous, previous_constraints, previous_market in zip(
+        state.inputs,
+        state.input_constraints,
+        state.input_market_constraints or state.input_constraints,
+        strict=True,
+    ):
         if previous.input_id == market.input_id:
-            if previous != market or previous_constraints != constraints:
+            if (
+                previous != market
+                or previous_constraints != constraints
+                or previous_market != market_constraints
+            ):
                 raise OrderConflictError("market identity payload conflict")
             return MatchingTransition(state, (), isinstance(market, MarketTrade))
     if state.inputs and market.input_id <= state.inputs[-1].input_id:
@@ -307,7 +368,7 @@ def advance_matching(
         )
     ):
         raise SourceUnavailableError("input gap/time reversal requires recovery")
-    if constraints.unsupported_rules:
+    if constraints.unsupported_rules and market_constraints.unsupported_rules:
         raise UnsupportedOrderError("unsupported execution rules")
     if market.received_at > now:
         raise SourceUnavailableError("future market input")
@@ -370,6 +431,28 @@ def advance_matching(
             state.execution_sequence + len(fills) + 1,
             market.received_at,
         )
+        rules = market_constraints if order.intent.kind is OrderType.MARKET else constraints
+        violations = unmet_constraints(
+            quantity=updated.filled,
+            notional=updated.spent,
+            minimum_quantity=rules.minimum_quantity,
+            quantity_step=rules.quantity_step,
+            minimum_notional=rules.minimum_notional,
+            maximum_quantity=rules.maximum_quantity,
+            maximum_notional=rules.maximum_notional,
+        )
+        # Partial fills may be below admission minima/step; cumulative maxima still apply.
+        maximum_violations = tuple(
+            v
+            for v in violations
+            if v
+            in (
+                ConstraintViolation.ABOVE_MAXIMUM_QUANTITY,
+                ConstraintViolation.ABOVE_MAXIMUM_NOTIONAL,
+            )
+        )
+        if maximum_violations:
+            raise OrderConstraintError(maximum_violations)
         used_ids.add(identity)
         fills.append(fact)
         fill_order_ids.append(order.intent.order_id)
@@ -379,6 +462,17 @@ def advance_matching(
         if order.status.terminal or market.received_at <= order.eligible_at:
             orders.append(order)
             continue
+        # A removed pair may still consume verified inputs for risk-reducing SELL
+        # orders, but an opening BUY can never fill from that input. The database
+        # pair fence held by the caller serializes this snapshot with removal.
+        if order.intent.side is ExecutionSide.BUY and not catalog.supports(
+            state.pair.base, state.pair.quote
+        ):
+            orders.append(order)
+            continue
+        rules = market_constraints if order.intent.kind is OrderType.MARKET else constraints
+        if rules.unsupported_rules or order.intent.kind not in rules.supported_types:
+            raise UnsupportedOrderError("unsupported type-specific execution capability")
         if isinstance(market, MarketTrade):
             if (
                 not duplicate_trade
@@ -417,7 +511,7 @@ def advance_matching(
                         quantity_for_budget(
                             order.intent.size.amount - order.spent,
                             level.price,
-                            constraints.quantity_step,
+                            rules.quantity_step,
                         ),
                     )
                 else:
@@ -447,6 +541,10 @@ def advance_matching(
             book=book,
             inputs=(*state.inputs, market),
             input_constraints=(*state.input_constraints, constraints),
+            input_market_constraints=(
+                *(state.input_market_constraints or state.input_constraints),
+                market_constraints,
+            ),
             executions=(*state.executions, *fills),
             execution_sequence=state.execution_sequence + len(fills),
         ),

@@ -15,6 +15,7 @@ from tiewtrade.infra.paper_orders.initialization import enable_financial_writer
 from tiewtrade.infra.paper_orders.storage import (
     increment_wallet_revision,
     lock_active_episode,
+    lock_episode,
     read_execution_inputs,
 )
 from tiewtrade.infra.paper_wallet import get_wallet
@@ -59,7 +60,7 @@ async def stage_fill_cash(
     This helper does not complete a command or update the caller's order/reservation projection.
     """
     session = require_user_session(session)
-    await lock_active_episode(session, wallet_id, episode_id)
+    await lock_episode(session, wallet_id, episode_id, require_active=False)
     await enable_financial_writer(session)
     source = (
         (
@@ -192,6 +193,7 @@ async def stage_fill_cash(
         ):
             raise OrderConflictError("economic linkage replay is incomplete")
         return result
+    await lock_active_episode(session, wallet_id, episode_id)
     if source["availability"] != "READY":
         raise OrderConflictError("order source is not ready")
     records = await read_inputs(session, fact.pair, after=source["input_id"] - 1, limit=1)
@@ -278,7 +280,7 @@ async def stage_correction_cash(
     session = require_user_session(session)
     if kind not in (PositionEventKind.REPLACE, PositionEventKind.VOID):
         raise OrderConflictError("correction kind required")
-    await lock_active_episode(session, wallet_id, episode_id)
+    await lock_episode(session, wallet_id, episode_id, require_active=False)
     await enable_financial_writer(session)
     source = (
         (
@@ -312,6 +314,8 @@ async def stage_correction_cash(
         .mappings()
         .one_or_none()
     )
+    if prior is None:
+        await lock_active_episode(session, wallet_id, episode_id)
     result = await apply_position_event(
         session,
         episode_id,

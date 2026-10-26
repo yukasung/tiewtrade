@@ -19,8 +19,9 @@ from tiewtrade.core.realtime_prices import (
     readiness,
     reconcile,
 )
+from tiewtrade.infra.db.errors import CatalogStateError
 from tiewtrade.infra.db.session import market_data_session
-from tiewtrade.infra.market_data.catalog import PAIRS, SOURCE
+from tiewtrade.infra.market_data.catalog import SOURCE, runtime_symbol_map
 from tiewtrade.infra.market_data.realtime_records import FeedLease, StoredPrice, WriterLeaseLost
 from tiewtrade.infra.market_data.realtime_storage import (
     acquire_writer,
@@ -31,6 +32,7 @@ from tiewtrade.infra.market_data.realtime_storage import (
     set_connected,
     write_price,
 )
+from tiewtrade.infra.platform import RuntimeSymbol, record_price_readiness
 from tiewtrade.infra.realtime.notifications import RedisNotifications
 from tiewtrade.venues.errors import VenueError, VenueProtocolError, VenueRateLimitedError
 from tiewtrade.venues.price_streams import FeedConnected, FeedDisconnected, FeedQuote, PriceFeed
@@ -96,11 +98,20 @@ class QuoteSupervisor:
         self.dirty: set[tuple[str, str]] = set()
         self.failures: dict[tuple[str, str], str] = {}
         self.ambiguity_versions: dict[tuple[str, str], int] = {}
+        self.catalog: dict[tuple[str, str], RuntimeSymbol] = {}
+
+    async def _reload_catalog(self) -> None:
+        async with market_data_session(self.engine) as session:
+            self.catalog = await runtime_symbol_map(session)
 
     async def _load(self) -> None:
+        if not self.catalog:
+            await self._reload_catalog()
         async with market_data_session(self.engine) as session:
             snapshot = await read_snapshot(session)
-        self.rows = {(r.base, r.quote): r for r in snapshot.rows}
+        self.rows = {
+            (r.base, r.quote): r for r in snapshot.rows if (r.base, r.quote) in self.catalog
+        }
         self.states = {}
         for pair, row in self.rows.items():
             q = row.observation
@@ -130,6 +141,19 @@ class QuoteSupervisor:
                 if pair in self.failures and pair not in self.reconciled:
                     row = replace(row, reason=self.failures[pair])
                 written = await write_price(session, lease, row)
+                catalog = self.catalog[pair]
+                if (
+                    catalog.mode == "PREPARING"
+                    and row.effective_readiness == Readiness.READY.value
+                    and row.observation is not None
+                ):
+                    await record_price_readiness(
+                        session,
+                        base=pair[0],
+                        quote=pair[1],
+                        catalog_revision=catalog.revision,
+                        price_at=row.observation.trade_time,
+                    )
                 changed = written or changed
                 pending[pair] = replace(row, revision=row.revision + int(written))
         self.rows.update(pending)
@@ -216,7 +240,8 @@ class QuoteSupervisor:
         return jobs
 
     async def _events(self) -> None:
-        async for event in self.feed.events(tuple(Symbol(*p) for p in sorted(PAIRS))):
+        pairs = frozenset(self.catalog)
+        async for event in self.feed.events(tuple(Symbol(*p) for p in sorted(pairs))):
             async with self.lock:
                 lease = self.lease
                 if lease is None:
@@ -233,7 +258,7 @@ class QuoteSupervisor:
                     await self.notifications.publish(SOURCE, lease.generation)
                     await asyncio.gather(*old_jobs, return_exceptions=True)
                     self.jobs.clear()
-                    for supported_pair in PAIRS:
+                    for supported_pair in pairs:
                         self._recover(supported_pair)
                 elif isinstance(event, FeedDisconnected):
                     if self.epoch is not None and event.generation < self.epoch:
@@ -255,7 +280,7 @@ class QuoteSupervisor:
                     self.jobs.clear()
                 elif isinstance(event, FeedQuote) and event.generation == self.epoch:
                     pair = (event.quote.base, event.quote.quote)
-                    if pair not in PAIRS or not lease.connected:
+                    if pair not in pairs or not lease.connected:
                         continue
                     before = self.states[pair]
                     state = observe(before, event.quote)
@@ -299,9 +324,20 @@ class QuoteSupervisor:
                     self.dirty.update(self.states)
                 await self._flush()
 
+    async def _catalog_changed(self) -> None:
+        revision = max((row.catalog_revision for row in self.catalog.values()), default=0)
+        while True:
+            await asyncio.sleep(1)
+            async with market_data_session(self.engine) as session:
+                current = await runtime_symbol_map(session)
+            current_revision = max((row.catalog_revision for row in current.values()), default=0)
+            if current_revision != revision or current.keys() != self.catalog.keys():
+                return
+
     async def run(self) -> None:
         owner = uuid4()
         while True:
+            await self._reload_catalog()
             async with market_data_session(self.engine) as session:
                 self.lease = await acquire_writer(session, owner)
             if self.lease is None:
@@ -309,15 +345,21 @@ class QuoteSupervisor:
                 continue
             await self._load()
             self.recovery_failure = asyncio.get_running_loop().create_future()
-            tasks = [asyncio.create_task(self._events()), asyncio.create_task(self._ticker())]
+            tasks = [
+                asyncio.create_task(self._events()),
+                asyncio.create_task(self._ticker()),
+                asyncio.create_task(self._catalog_changed()),
+            ]
             try:
                 done, _ = await asyncio.wait(
                     [*tasks, self.recovery_failure], return_when=asyncio.FIRST_COMPLETED
                 )
                 for task in done:
                     task.result()
-            except WriterLeaseLost:
-                logging.getLogger(__name__).warning("price producer lease lost")
+            except (WriterLeaseLost, CatalogStateError) as error:
+                logging.getLogger(__name__).warning(
+                    "price producer catalog/lease changed: %s", type(error).__name__
+                )
             finally:
                 for task in [*tasks, *self.jobs.values()]:
                     task.cancel()

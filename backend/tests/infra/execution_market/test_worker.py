@@ -5,18 +5,18 @@ from collections.abc import AsyncIterator, Mapping
 from contextlib import asynccontextmanager
 from dataclasses import replace
 from datetime import UTC, datetime
-from typing import Any
+from typing import Any, TypedDict
 from uuid import NAMESPACE_URL, UUID, uuid4, uuid5
 
 import pytest
-from sqlalchemy import Result
+from sqlalchemy import Result, text
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine, create_async_engine
 
 from tests.infra.execution_market.commit_proxy import drop_commit_reply
 from tests.infra.execution_market.test_dispatch import intent
 from tests.infra.execution_market.test_storage import prepared
 from tiewtrade.core.money import Money, Quantity
-from tiewtrade.core.order_book import BookState
+from tiewtrade.core.order_book import BookLevel, BookState, MarketTrade
 from tiewtrade.core.orders import (
     BaseSize,
     OrderConflictError,
@@ -47,11 +47,19 @@ from tiewtrade.infra.market_data.realtime_storage import (
 )
 from tiewtrade.infra.paper_orders.codec import execution_from_payload
 from tiewtrade.infra.paper_orders.corrections import correct_fill
-from tiewtrade.infra.paper_orders.dispatch import get_order_command, submit_cancel, submit_order
+from tiewtrade.infra.paper_orders.dispatch import (
+    DueOrder,
+    claim_order,
+    get_order_command,
+    submit_cancel,
+    submit_order,
+)
+from tiewtrade.infra.paper_orders.executions import stage_correction_cash, stage_fill_cash
 from tiewtrade.infra.paper_orders.initialization import (
     enable_financial_writer,
     initialize_order_source,
 )
+from tiewtrade.infra.paper_orders.worker import process_claimed_order
 from tiewtrade.infra.paper_wallet import (
     PaperCommandState,
     PaperWalletAction,
@@ -60,9 +68,35 @@ from tiewtrade.infra.paper_wallet import (
 )
 from tiewtrade.infra.paper_wallet import get_command as get_wallet_command
 from tiewtrade.infra.paper_wallet.records import PaperWalletSnapshot
-from tiewtrade.infra.positions import PositionEventKind, apply_position_event
+from tiewtrade.infra.positions import (
+    PositionEventKind,
+    PositionIntegrityError,
+    PositionWriteResult,
+    PositionWriteStatus,
+    apply_position_event,
+    initialize_position_source,
+    read_position_snapshot,
+)
 from tiewtrade.services.engine.paper_order import run_paper_order_round
 from tiewtrade.services.engine.paper_wallet import run_paper_wallet_round
+
+
+class FillReplayRequest(TypedDict):
+    wallet_id: UUID
+    episode_id: UUID
+    order_event_id: UUID
+    position_event_id: UUID
+    fact: ExecutionFact
+
+
+class CorrectionReplayRequest(TypedDict):
+    wallet_id: UUID
+    episode_id: UUID
+    order_event_id: UUID
+    correction_event_id: UUID
+    supersedes_position_event_id: UUID
+    kind: PositionEventKind
+    fact: ExecutionFact
 
 
 class AllowPolicy:
@@ -461,6 +495,7 @@ async def test_closed_expected_episode_is_rejected_without_retry(
 async def test_accept_restart_fill_and_cash_are_atomic(
     monkeypatch: pytest.MonkeyPatch,
     fault: str | None,
+    api_engine: AsyncEngine,
     engine_engine: AsyncEngine,
     scan_engine: AsyncEngine,
     owner: UUID,
@@ -1000,6 +1035,181 @@ async def test_accept_restart_fill_and_cash_are_atomic(
         assert void_projection.status == "CANCELED" and void_projection.filled_quantity == 0
         assert void_wallet is not None and void_wallet.balance.amount == 10000
         assert correction_cash == 2
+
+        # A lost acknowledgement may be retried after the now-idle episode is reset.
+        async with user_session(api_engine, owner) as session:
+            reset = await admit_command(
+                session,
+                action=PaperWalletAction.RESET,
+                idempotency_key=uuid4(),
+                capital_text="2500",
+                expected_episode_id=wallet.episode_id,
+            )
+        await run_paper_wallet_round(
+            engine=engine_engine, scan_engine=scan_engine, worker="reset-before-position-replay"
+        )
+        async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+            reset_result = await get_wallet_command(session, reset.command_id)
+            current = await get_wallet(session)
+            old_position = await read_position_snapshot(session, wallet.episode_id)
+            assert reset_result is not None and reset_result.state is PaperCommandState.SUCCEEDED
+            assert current is not None and current.episode_id != wallet.episode_id
+            assert old_position is not None
+            new_position = await read_position_snapshot(session, current.episode_id)
+            ledger = (await session.execute("SELECT * FROM paper_wallet_ledger ORDER BY id")).all()
+            audits = (await session.execute("SELECT id FROM audit_events ORDER BY id")).all()
+            history = {}
+            for table in (
+                "paper_position_events",
+                "paper_position_external_fees",
+                "paper_position_conflicts",
+                "paper_execution_links",
+                "paper_order_events",
+                "paper_order_projections",
+                "paper_order_activity",
+                "paper_reservations",
+            ):
+                history[table] = (
+                    await session.execute(f"SELECT * FROM {table} ORDER BY to_jsonb({table})::text")
+                ).all()
+
+        fill_request: FillReplayRequest = {
+            "wallet_id": wallet.wallet_id,
+            "episode_id": wallet.episode_id,
+            "order_event_id": UUID(str(linked["order_event_id"])),
+            "position_event_id": UUID(str(linked["position_event_id"])),
+            "fact": original,
+        }
+        async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+            replayed_fill = await stage_fill_cash(session, **fill_request)
+            assert replayed_fill.status is PositionWriteStatus.REPLAYED
+            assert replayed_fill.effects is None
+
+        for kind, correction, linked_predecessor in (
+            (PositionEventKind.REPLACE, correction_id, UUID(str(linked["position_event_id"]))),
+            (PositionEventKind.VOID, void_id, correction_id),
+        ):
+            request: CorrectionReplayRequest = {
+                "wallet_id": wallet.wallet_id,
+                "episode_id": wallet.episode_id,
+                "order_event_id": UUID(str(linked["order_event_id"])),
+                "correction_event_id": correction,
+                "supersedes_position_event_id": linked_predecessor,
+                "kind": kind,
+                "fact": replacement,
+            }
+            for writer in (stage_correction_cash, correct_fill):
+                async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+                    replayed = await writer(session, **request)
+                    if writer is correct_fill:
+                        assert replayed is None
+                    else:
+                        assert isinstance(replayed, PositionWriteResult)
+                        assert replayed.status is PositionWriteStatus.REPLAYED
+                        assert replayed.effects is None
+                invalid_corrections: tuple[CorrectionReplayRequest, ...] = (
+                    {**request, "wallet_id": uuid4()},
+                    {**request, "episode_id": current.episode_id},
+                    {**request, "order_event_id": uuid4()},
+                    {**request, "correction_event_id": uuid4()},
+                    {**request, "supersedes_position_event_id": uuid4()},
+                    {**request, "fact": replace(replacement, execution_id=uuid4())},
+                )
+                for invalid_correction in invalid_corrections:
+                    with pytest.raises((OrderConflictError, PositionIntegrityError)):
+                        async with user_session(
+                            engine_engine, owner, role=DatabaseRole.ENGINE
+                        ) as session:
+                            await writer(session, **invalid_correction)
+                with pytest.raises(OrderConflictError):
+                    async with user_session(
+                        engine_engine, uuid4(), role=DatabaseRole.ENGINE
+                    ) as session:
+                        await writer(session, **request)
+        invalid_fills: tuple[FillReplayRequest, ...] = (
+            {**fill_request, "wallet_id": uuid4()},
+            {**fill_request, "episode_id": current.episode_id},
+            {**fill_request, "order_event_id": uuid4()},
+            {**fill_request, "position_event_id": uuid4()},
+            {**fill_request, "fact": replacement},
+        )
+        for invalid_fill in invalid_fills:
+            with pytest.raises(OrderConflictError):
+                async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+                    await stage_fill_cash(session, **invalid_fill)
+        with pytest.raises(OrderConflictError):
+            async with user_session(engine_engine, uuid4(), role=DatabaseRole.ENGINE) as session:
+                await stage_fill_cash(session, **fill_request)
+
+        for kind, event_id, fact, predecessor in (
+            (PositionEventKind.RECORD, UUID(str(linked["position_event_id"])), original, None),
+            (PositionEventKind.RECORD, uuid4(), original, None),
+            (
+                PositionEventKind.REPLACE,
+                correction_id,
+                replacement,
+                UUID(str(linked["position_event_id"])),
+            ),
+            (PositionEventKind.VOID, void_id, replacement, correction_id),
+        ):
+            async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+                retried = await apply_position_event(
+                    session, wallet.episode_id, event_id, kind, fact, predecessor
+                )
+                assert retried.status is PositionWriteStatus.REPLAYED
+                assert retried.effects is None
+                assert retried.activity == old_position.activity
+
+        for kind, event_id, fact, predecessor in (
+            (PositionEventKind.RECORD, uuid4(), replace(original, execution_id=uuid4()), None),
+            (PositionEventKind.RECORD, UUID(str(linked["position_event_id"])), replacement, None),
+            (PositionEventKind.REPLACE, uuid4(), replacement, void_id),
+        ):
+            with pytest.raises(PositionIntegrityError):
+                async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+                    await apply_position_event(
+                        session, wallet.episode_id, event_id, kind, fact, predecessor
+                    )
+        with pytest.raises(PositionIntegrityError):
+            async with user_session(engine_engine, uuid4(), role=DatabaseRole.ENGINE) as session:
+                await apply_position_event(
+                    session,
+                    wallet.episode_id,
+                    UUID(str(linked["position_event_id"])),
+                    PositionEventKind.RECORD,
+                    original,
+                )
+        with pytest.raises(PositionIntegrityError):
+            async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+                assert old_position.activity.source_proof is not None
+                await initialize_position_source(
+                    session, wallet.episode_id, uuid4(), old_position.activity.source_proof
+                )
+        async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+            after = await get_wallet(session)
+            old_after = await read_position_snapshot(session, wallet.episode_id)
+            new_after = await read_position_snapshot(session, current.episode_id)
+            assert after is not None
+            assert (after.episode_id, after.balance, after.revision) == (
+                current.episode_id,
+                Money.of("2500", "USDT"),
+                current.revision,
+            )
+            assert old_after is not None and old_after.activity == old_position.activity
+            assert old_after.positions == old_position.positions
+            assert new_after is not None and new_position is not None
+            assert new_after.activity == new_position.activity
+            assert new_after.positions == new_position.positions
+            assert (
+                await session.execute("SELECT * FROM paper_wallet_ledger ORDER BY id")
+            ).all() == ledger
+            assert (
+                await session.execute("SELECT id FROM audit_events ORDER BY id")
+            ).all() == audits
+            for table, rows in history.items():
+                assert (
+                    await session.execute(f"SELECT * FROM {table} ORDER BY to_jsonb({table})::text")
+                ).all() == rows
     finally:
         await market.dispose()
 
@@ -1066,6 +1276,286 @@ async def test_new_command_is_not_starved_by_an_active_order(
         }
     finally:
         await market.dispose()
+
+
+async def test_catalog_removal_rejects_queued_buy_and_cancels_resting_buy(
+    engine_engine: AsyncEngine,
+    scan_engine: AsyncEngine,
+    migrator_engine: AsyncEngine,
+    owner: UUID,
+    wallet: PaperWalletSnapshot,
+) -> None:
+    market, _, _, _ = await ready_public_sources()
+    resting = OrderIntent(
+        uuid4(),
+        uuid4(),
+        OrderScope(owner, UUID(str(wallet.episode_id)), TradingMode.PAPER),
+        PositionPair("BTC", "USDT"),
+        OrderOrigin.MANUAL,
+        ExecutionSide.BUY,
+        OrderType.LIMIT,
+        BaseSize(Quantity.of(1, "BTC")),
+        Money.of(90, "USDT"),
+        TimeInForce.GTC,
+    )
+    queued = replace(resting, order_id=uuid4(), idempotency_key=uuid4())
+    catalog_events: tuple[UUID, UUID] | None = None
+    try:
+        async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+            resting_command = await submit_order(
+                session, wallet_id=wallet.wallet_id, intent=resting
+            )
+        await run_paper_order_round(
+            engine=engine_engine,
+            scan_engine=scan_engine,
+            worker="catalog-resting-admit",
+            policy=AllowPolicy(),
+        )
+        async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+            queued_command = await submit_order(session, wallet_id=wallet.wallet_id, intent=queued)
+            revisions = (
+                (
+                    await session.execute(
+                        "SELECT payload->>'catalog_revision' FROM paper_order_commands "
+                        "WHERE id IN (:resting,:queued) ORDER BY id",
+                        {
+                            "resting": resting_command.command_id,
+                            "queued": queued_command.command_id,
+                        },
+                    )
+                )
+                .scalars()
+                .all()
+            )
+            assert revisions and all(int(value) >= 2 for value in revisions)
+
+        # The pair is active again before the worker resumes. Commands admitted
+        # before the intervening removal must still be terminally rejected/canceled.
+        catalog_events = await _simulate_btc_remove_and_readd(migrator_engine)
+        await asyncio.sleep(0.22)
+        for index in range(3):
+            await run_paper_order_round(
+                engine=engine_engine,
+                scan_engine=scan_engine,
+                worker=f"catalog-removal-{index}",
+                policy=AllowPolicy(),
+            )
+
+        async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+            resting_result = await get_order_command(session, resting_command.command_id)
+            queued_result = await get_order_command(session, queued_command.command_id)
+            projection = (
+                await session.execute(
+                    "SELECT status,filled_quantity FROM paper_order_projections "
+                    "WHERE order_id=:order",
+                    {"order": resting.order_id},
+                )
+            ).one()
+            canceled = (
+                await session.execute(
+                    "SELECT count(*) FROM paper_order_events "
+                    "WHERE order_id=:order AND event_kind='CANCELED'",
+                    {"order": resting.order_id},
+                )
+            ).scalar_one()
+            current = await get_wallet(session)
+        assert resting_result is not None and resting_result.state == "SUCCEEDED"
+        assert queued_result is not None
+        assert queued_result.failure_code == "CATALOG_PAIR_REMOVED"
+        assert projection.status == "CANCELED" and projection.filled_quantity == 0
+        assert canceled == 1
+        assert current is not None and current.balance == wallet.balance
+    finally:
+        if catalog_events is not None:
+            await _restore_btc_seed_catalog(migrator_engine, catalog_events)
+        await market.dispose()
+
+
+async def test_new_buy_cannot_match_an_old_buy_after_catalog_readd(
+    engine_engine: AsyncEngine,
+    migrator_engine: AsyncEngine,
+    owner: UUID,
+    wallet: PaperWalletSnapshot,
+) -> None:
+    market, lease, book, metadata = await ready_public_sources()
+    old = OrderIntent(
+        uuid4(),
+        uuid4(),
+        OrderScope(owner, UUID(str(wallet.episode_id)), TradingMode.PAPER),
+        PositionPair("BTC", "USDT"),
+        OrderOrigin.MANUAL,
+        ExecutionSide.BUY,
+        OrderType.LIMIT,
+        BaseSize(Quantity.of(1, "BTC")),
+        Money.of(90, "USDT"),
+        TimeInForce.GTC,
+    )
+    events: tuple[UUID, UUID] | None = None
+
+    async def process(command_id: UUID) -> None:
+        async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+            due_at = (
+                await session.execute(
+                    "SELECT next_attempt_at FROM paper_order_dispatch WHERE command_id=:id",
+                    {"id": command_id},
+                )
+            ).scalar_one()
+            claim = await claim_order(
+                session, DueOrder(command_id, owner, due_at), worker="catalog-readd-regression"
+            )
+            assert claim is not None
+        async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+            await process_claimed_order(session, claim, policy=AllowPolicy())
+
+    try:
+        async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+            old_command = await submit_order(session, wallet_id=wallet.wallet_id, intent=old)
+        async with market_data_session(market) as market_session:
+            now = (await market_session.execute("SELECT clock_timestamp()")).scalar_one()
+            book = replace(book, input_id=book.input_id + 1, received_at=now, verified_at=now)
+            lease = await publish_input(market_session, lease, book, metadata)
+        await process(old_command.command_id)
+        await asyncio.sleep(0.22)
+        events = await _simulate_btc_remove_and_readd(migrator_engine)
+        new = replace(
+            old, order_id=uuid4(), idempotency_key=uuid4(), limit_price=Money.of(110, "USDT")
+        )
+        async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+            command = await submit_order(session, wallet_id=wallet.wallet_id, intent=new)
+        async with market_data_session(market) as market_session:
+            now = (await market_session.execute("SELECT clock_timestamp()")).scalar_one()
+            book = replace(
+                book, input_id=book.input_id + 1, received_at=now, verified_at=now, rebase=False
+            )
+            lease = await publish_input(market_session, lease, book, metadata)
+            now = (await market_session.execute("SELECT clock_timestamp()")).scalar_one()
+            lease = await publish_input(
+                market_session,
+                lease,
+                MarketTrade(
+                    old.pair,
+                    book.input_id + 1,
+                    book.generation,
+                    now,
+                    101,
+                    ExecutionSide.BUY,
+                    Money.of(90, "USDT"),
+                    Quantity.of(1, "BTC"),
+                    True,
+                ),
+                metadata,
+            )
+        # This trade could fill the old resting BUY. Only the new command gets a turn.
+        await process(command.command_id)
+        async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+            assert (
+                await session.execute(
+                    "SELECT status FROM paper_order_projections WHERE order_id=:id",
+                    {"id": old.order_id},
+                )
+            ).scalar_one() == "CANCELED"
+            current = await get_wallet(session)
+            assert current is not None and current.balance == wallet.balance
+        await asyncio.sleep(0.22)
+        async with market_data_session(market) as market_session:
+            now = (await market_session.execute("SELECT clock_timestamp()")).scalar_one()
+            await publish_input(
+                market_session,
+                lease,
+                replace(
+                    book,
+                    input_id=book.input_id + 2,
+                    received_at=now,
+                    verified_at=now,
+                    rebase=False,
+                    bids=(BookLevel(Money.of(88, "USDT"), Quantity.of(10, "BTC")),),
+                    asks=(BookLevel(Money.of(89, "USDT"), Quantity.of(10, "BTC")),),
+                ),
+                metadata,
+            )
+        await process(command.command_id)
+        async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+            rows = (
+                await session.execute(
+                    """SELECT order_id,status,filled_quantity FROM paper_order_projections
+                    WHERE episode_id=:episode""",
+                    {"episode": wallet.episode_id},
+                )
+            ).all()
+            current = await get_wallet(session)
+            positions = await read_position_snapshot(session, UUID(str(wallet.episode_id)))
+        assert {row.order_id: (row.status, row.filled_quantity) for row in rows} == {
+            old.order_id: ("CANCELED", 0),
+            new.order_id: ("FILLED", 1),
+        }
+        assert positions is not None
+        assert next(
+            p.held_quantity for p in positions.positions if p.pair == old.pair
+        ) == Quantity.of("0.999", "BTC")
+        assert current is not None and current.balance == wallet.balance - Money.of(89, "USDT")
+    finally:
+        if events is not None:
+            await _restore_btc_seed_catalog(migrator_engine, events)
+        await market.dispose()
+
+
+async def _simulate_btc_remove_and_readd(engine: AsyncEngine) -> tuple[UUID, UUID]:
+    removed_command, active_command = uuid4(), uuid4()
+    async with engine.begin() as connection:
+        await connection.execute(
+            text(
+                """INSERT INTO supported_symbol_events(
+                revision,command_id,base,quote,status,reason_code)
+                VALUES(3,:removed,'BTC','USDT','REMOVED','F38_INITIAL_CATALOG'),
+                  (4,:active,'BTC','USDT','ACTIVE','F38_INITIAL_CATALOG')"""
+            ),
+            {"removed": removed_command, "active": active_command},
+        )
+        await connection.execute(
+            text(
+                "UPDATE supported_symbol_fences SET status='ACTIVE',revision=4,"
+                "command_id=:active WHERE base='BTC' AND quote='USDT'"
+            ),
+            {"active": active_command},
+        )
+        await connection.execute(
+            text("UPDATE supported_symbol_catalog_control SET current_revision=4 WHERE id=1")
+        )
+    return removed_command, active_command
+
+
+async def _restore_btc_seed_catalog(engine: AsyncEngine, commands: tuple[UUID, UUID]) -> None:
+    async with engine.begin() as connection:
+        for table in (
+            "supported_symbol_events",
+            "supported_symbol_fences",
+            "supported_symbol_catalog_control",
+        ):
+            await connection.execute(text(f"ALTER TABLE {table} DISABLE TRIGGER USER"))
+        try:
+            await connection.execute(
+                text(
+                    "UPDATE supported_symbol_fences SET status='ACTIVE',revision=1,"
+                    "command_id='00000000-0000-0000-0000-000000000001' "
+                    "WHERE base='BTC' AND quote='USDT'"
+                )
+            )
+            await connection.execute(
+                text("UPDATE supported_symbol_catalog_control SET current_revision=2 WHERE id=1")
+            )
+            await connection.execute(
+                text("DELETE FROM supported_symbol_events WHERE command_id IN (:removed,:active)"),
+                {"removed": commands[0], "active": commands[1]},
+            )
+        finally:
+            for table in reversed(
+                (
+                    "supported_symbol_events",
+                    "supported_symbol_fences",
+                    "supported_symbol_catalog_control",
+                )
+            ):
+                await connection.execute(text(f"ALTER TABLE {table} ENABLE TRIGGER USER"))
 
 
 async def test_downstream_position_conflict_is_durable_without_partial_fill(
@@ -1174,17 +1664,52 @@ async def test_downstream_position_conflict_is_durable_without_partial_fill(
         await market.dispose()
 
 
+@pytest.mark.parametrize("via_manual_inbox", [False, True])
 async def test_market_order_crossing_levels_links_every_fill_once(
+    api_engine: AsyncEngine,
     engine_engine: AsyncEngine,
     scan_engine: AsyncEngine,
     owner: UUID,
     wallet: PaperWalletSnapshot,
+    via_manual_inbox: bool,
 ) -> None:
     market, lease, book, metadata = await ready_public_sources()
     value = replace(intent(owner, wallet.episode_id), size=QuoteBudget(Money.of(1100, "USDT")))
     try:
-        async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
-            command = await submit_order(session, wallet_id=wallet.wallet_id, intent=value)
+        if via_manual_inbox:
+            from tiewtrade.infra.paper_orders.request_dispatch import DueRequest, claim_request
+            from tiewtrade.infra.paper_orders.request_worker import process_request
+            from tiewtrade.infra.paper_orders.requests import admit_new_request
+            from tiewtrade.infra.paper_orders.views import request_view
+
+            async with user_session(api_engine, owner) as session:
+                await session.execute(
+                    "INSERT INTO user_trading_preferences(user_id,use) VALUES(:owner,'MANUAL')",
+                    {"owner": owner},
+                )
+                receipt = await admit_new_request(session, wallet_id=wallet.wallet_id, intent=value)
+            async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+                due_at = (
+                    await session.execute(
+                        "SELECT next_attempt_at FROM paper_order_request_dispatch "
+                        "WHERE request_id=:id",
+                        {"id": receipt.request_id},
+                    )
+                ).scalar_one()
+                claim = await claim_request(
+                    session, DueRequest(receipt.request_id, owner, due_at), worker="parity-bridge"
+                )
+                assert claim is not None
+            async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+                await process_request(session, claim, policy=AllowPolicy())
+                view = await request_view(session, receipt.request_id)
+                assert view is not None and view.command_id is not None
+                linked = await get_order_command(session, view.command_id)
+                assert linked is not None
+                command = linked
+        else:
+            async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+                command = await submit_order(session, wallet_id=wallet.wallet_id, intent=value)
         await run_paper_order_round(
             engine=engine_engine,
             scan_engine=scan_engine,

@@ -2,13 +2,14 @@
 
 import hashlib
 import json
-from dataclasses import replace
+from dataclasses import dataclass, replace
 from typing import Any
 from uuid import UUID
 
+from tiewtrade.core.market_catalog import CatalogSnapshot
 from tiewtrade.core.money import MoneyError
 from tiewtrade.core.order_book import BookState, MarketInput
-from tiewtrade.core.orders import OrderConflictError, SimulationProfile
+from tiewtrade.core.orders import OrderConflictError, SimulationProfile, SourceUnavailableError
 from tiewtrade.core.positions import PositionPair
 from tiewtrade.infra.db.session import UserSession, require_user_session
 from tiewtrade.infra.market_data.order_book_codec import (
@@ -24,7 +25,20 @@ from tiewtrade.infra.market_data.order_book_storage import (
 from tiewtrade.infra.paper_orders.records import SavedExecutionInput
 
 
+@dataclass(frozen=True, slots=True)
+class LockedPairCatalog:
+    snapshot: CatalogSnapshot
+    latest_removed_revision: int | None
+
+
 async def lock_active_episode(session: UserSession, wallet_id: UUID, episode_id: UUID) -> None:
+    await lock_episode(session, wallet_id, episode_id)
+
+
+async def lock_episode(
+    session: UserSession, wallet_id: UUID, episode_id: UUID, *, require_active: bool = True
+) -> None:
+    """Serialize owner work and validate episode ownership; closed episodes allow reads only."""
     session = require_user_session(session)
     await session.execute(
         "SELECT pg_advisory_xact_lock(hashtextextended(:key,0))",
@@ -33,14 +47,41 @@ async def lock_active_episode(session: UserSession, wallet_id: UUID, episode_id:
     row = (
         await session.execute(
             """SELECT 1 FROM paper_wallet_state s
-      WHERE s.wallet_id=:wallet AND s.user_id=:user AND s.active_episode_id=:episode
-      AND NOT EXISTS(SELECT 1 FROM paper_wallet_episode_closures c WHERE c.episode_id=:episode)
-      FOR UPDATE""",
-            {"wallet": wallet_id, "user": session.user_id, "episode": episode_id},
+      JOIN paper_wallet_episodes e ON e.wallet_id=s.wallet_id AND e.user_id=s.user_id
+      WHERE s.wallet_id=:wallet AND s.user_id=:user AND e.id=:episode
+      AND (NOT :require_active OR (s.active_episode_id=:episode
+        AND NOT EXISTS(SELECT 1 FROM paper_wallet_episode_closures c WHERE c.episode_id=:episode)))
+      FOR UPDATE OF s""",
+            {
+                "wallet": wallet_id,
+                "user": session.user_id,
+                "episode": episode_id,
+                "require_active": require_active,
+            },
         )
     ).first()
     if row is None:
         raise OrderConflictError("Paper episode is not active")
+
+
+async def lock_pair_catalog(session: UserSession, pair: PositionPair) -> LockedPairCatalog:
+    """Pin one pair fence after the wallet lock and hold it through transaction commit."""
+    session = require_user_session(session)
+    row = (
+        await session.execute(
+            "SELECT * FROM lock_supported_symbol_pair(:base,:quote)",
+            {"base": pair.base, "quote": pair.quote},
+        )
+    ).one_or_none()
+    if row is None or row.protocol_version != 1:
+        raise SourceUnavailableError("supported-symbol pair fence is unavailable")
+    return LockedPairCatalog(
+        CatalogSnapshot(
+            int(row.current_revision),
+            frozenset({(pair.base, pair.quote)}) if row.status == "ACTIVE" else frozenset(),
+        ),
+        None if row.latest_removed_revision is None else int(row.latest_removed_revision),
+    )
 
 
 async def increment_wallet_revision(session: UserSession, wallet_id: UUID) -> None:

@@ -1,3 +1,5 @@
+import { PaperTradePage } from "./PaperTradePage";
+import { LiveTradePage } from "./LiveTradePage";
 import { type JSX, useEffect, useState } from "react";
 
 import {
@@ -17,6 +19,7 @@ import { CandlestickChartPanel } from "./CandlestickChartPanel";
 import { TradingAccountPanel } from "./TradingAccountPanel";
 import { AccountLayout } from "./layout/AccountLayout";
 import { AccountPages } from "./AccountPages";
+import { SupportedSymbolPanel } from "./SupportedSymbolPanel";
 import { chartText } from "./chartMessages";
 import { ApiKeyPanel } from "./ApiKeyPanel";
 
@@ -169,7 +172,7 @@ export function AuthPanel(): JSX.Element {
   if (identity !== null) {
     return (
       <AccountSession identity={identity} onExpired={() => setIdentity(null)}>
-        <AccountPages>{page => <AccountLayout page={page}>
+        <AccountPages isPlatformAdmin={identity.platform_role !== null && identity.platform_role !== undefined}>{page => <AccountLayout page={page} isPlatformAdmin={identity.platform_role !== null && identity.platform_role !== undefined}>
           <div data-testid="signed-in">
           {page === "account" && <section id="account-details">
             <h1>{t("accountHeading")}</h1>
@@ -219,6 +222,9 @@ export function AuthPanel(): JSX.Element {
             {page === "api-keys" && <ApiKeyPanel identity={identity} />}
             {page === "trading-account" && <TradingAccountPanel identity={identity} />}
             {page === "prices" && <RealtimePricePanel />}
+            {page === "paper/trade" && <PaperTradePage owner={identity.user_id}/>}
+            {page === "live/trade" && <LiveTradePage/>}
+            {page === "supported-symbols" && <SupportedSymbolPanel />}
             {page === "chart" && (import.meta.env.VITE_CHART_ENABLED === "1"
               ? <CandlestickChartPanel userId={identity.user_id}/>
               : <p role="status">{chartText("errors.CHART_DISABLED")}</p>)}

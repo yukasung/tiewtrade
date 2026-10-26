@@ -5,7 +5,6 @@ import { join } from "node:path";
 import { backendPython, e2eEnvironment } from "./helpers/environment";
 import { expect, test } from "./helpers/test";
 import { PASSWORD } from "./helpers/totp";
-import { supportedBases } from "../src/marketCatalog";
 
 test("actual quote producer → PostgreSQL → Redis → API → browser recovery", async ({ page, context }) => {
   test.setTimeout(90000);
@@ -28,7 +27,9 @@ test("actual quote producer → PostgreSQL → Redis → API → browser recover
     await expect(btc).toContainText("83348.47 USDT", { timeout: 15000 });
     await expect(btc).toContainText("พร้อม ณ เวลาที่ตรวจ");
     await expect(panel.getByRole("status")).toHaveText("เชื่อมต่อการส่งข้อมูลแล้ว");
-    await expect(panel.getByRole("listitem")).toHaveCount(supportedBases.length);
+    const catalogResponse = await page.request.get("/api/market-catalog");
+    const catalog = await catalogResponse.json() as { active_pairs: [string, string][] };
+    await expect(panel.getByRole("listitem")).toHaveCount(catalog.active_pairs.length);
     await expect(panel).toContainText("เวลาที่ตรวจโดย server");
     await expect(btc).toContainText("เวลาซื้อขาย");
 

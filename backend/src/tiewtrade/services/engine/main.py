@@ -16,13 +16,21 @@ import os
 import socket
 from datetime import UTC, datetime, timedelta
 from typing import Final
+from uuid import UUID, uuid4
 
 import httpx
 
 from tiewtrade.infra.crypto import KeyPurpose, KeySource
 from tiewtrade.infra.db import DatabaseRole, create_engine_for
+from tiewtrade.infra.db.session import presented_session
+from tiewtrade.infra.platform import record_protocol_heartbeat
+from tiewtrade.services.engine.catalog import activate_ready_symbols
 from tiewtrade.services.engine.verification import RoundSummary, WalletFactory, run_round
-from tiewtrade.venues import live_wallet_factory
+from tiewtrade.venues import (
+    live_execution_capability_source,
+    live_wallet_factory,
+    public_rate_limit_guard,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,8 +65,28 @@ async def serve() -> None:
 
     async with httpx.AsyncClient() as client:
         wallet_for = _wallet_factory(client)
+        capability_source = live_execution_capability_source(
+            client=client,
+            clock=_now,
+            timeout=MARKET_TIMEOUT,
+            guard=public_rate_limit_guard(clock=_now),
+        )
+        generation_text = os.environ.get("TIEWTRADE_CATALOG_DEPLOYMENT_GENERATION")
+        generation = None if not generation_text else UUID(generation_text)
+        instance_id = uuid4()
         _LOGGER.info("engine เริ่มทำงานในชื่อ %s", worker)
         while True:
+            if generation is not None:
+                now = _now()
+                async with presented_session(engine, role=DatabaseRole.ENGINE) as session:
+                    await record_protocol_heartbeat(
+                        session,
+                        process_kind="ENGINE",
+                        instance_id=instance_id,
+                        protocol_version=1,
+                        deployment_generation=generation,
+                        lease_expires_at=now + ROUND_INTERVAL * 3,
+                    )
             summary = await run_round(
                 engine=engine,
                 scan_engine=scan_engine,
@@ -68,6 +96,9 @@ async def serve() -> None:
             )
             if summary != RoundSummary():
                 _LOGGER.info("รอบตรวจ API key: %s", summary)
+            activated = await activate_ready_symbols(engine, capability_source, clock=_now)
+            if activated:
+                _LOGGER.info("activated supported symbols: %s", activated)
             await asyncio.sleep(ROUND_INTERVAL.total_seconds())
 
 

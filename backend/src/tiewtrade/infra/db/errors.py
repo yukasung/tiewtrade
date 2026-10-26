@@ -110,6 +110,26 @@ class IndicatorBuildCounterError(InfraError):
     code: ClassVar[str] = "INDICATOR_BUILD_COUNTER_EXHAUSTED"
 
 
+class CatalogProtocolError(InfraError):
+    code: ClassVar[str] = "CATALOG_PROTOCOL_NOT_READY"
+
+
+class CatalogAuthorizationError(InfraError):
+    code: ClassVar[str] = "CATALOG_NOT_AUTHORIZED"
+
+
+class CatalogRevisionConflictError(InfraError):
+    code: ClassVar[str] = "CATALOG_REVISION_CONFLICT"
+
+
+class CatalogIdempotencyConflictError(InfraError):
+    code: ClassVar[str] = "CATALOG_IDEMPOTENCY_CONFLICT"
+
+
+class CatalogStateError(InfraError):
+    code: ClassVar[str] = "CATALOG_STATE_INVALID"
+
+
 #: SQLSTATE ที่กลไกของ F-03 ใช้ ประกาศไว้ที่เดียว
 SQLSTATE_APPEND_ONLY: Final[str] = "TT001"
 SQLSTATE_INSUFFICIENT_PRIVILEGE: Final[str] = "42501"
@@ -129,6 +149,11 @@ _BY_SQLSTATE: Final[dict[str, type[InfraError]]] = {
     "TT014": IndicatorBuildOwnershipError,
     "TT015": IndicatorBuildConfigurationError,
     "TT016": IndicatorBuildCounterError,
+    "TT023": CatalogProtocolError,
+    "TT024": CatalogAuthorizationError,
+    "TT025": CatalogRevisionConflictError,
+    "TT026": CatalogIdempotencyConflictError,
+    "TT027": CatalogStateError,
     SQLSTATE_APPEND_ONLY: AppendOnlyViolationError,
     SQLSTATE_INSUFFICIENT_PRIVILEGE: NotPermittedError,
     SQLSTATE_CHECK_VIOLATION: ValueRejectedError,

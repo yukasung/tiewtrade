@@ -41,7 +41,12 @@ from tiewtrade.infra.indicators.prepared import (
 from tiewtrade.infra.market_data.catalog import SOURCE
 from tiewtrade.infra.market_data.indicator_reader import query_budget, read_indicators
 from tiewtrade.infra.market_data.records import StoredCandle
-from tiewtrade.infra.market_data.storage import database_now, parameters, stored_rows
+from tiewtrade.infra.market_data.storage import (
+    database_now,
+    parameters,
+    require_active_pair,
+    stored_rows,
+)
 from tiewtrade.services.api.authentication import Authenticated
 from tiewtrade.services.api.indicator_http import (
     JSON_YIELD_ITEMS,
@@ -188,6 +193,7 @@ async def read_history(
     async with indicator_read_session(engine, who.user_id) as session:
         now = await clock(session)
         claims = claims_override or _claims(query, who, now, keys)
+        await require_active_pair(session, claims.base, claims.quote)
         check_expiry(claims, now)
         continuation = query.cursor is not None or claims_override is not None
         control = await rollout_control(session, deadline)
