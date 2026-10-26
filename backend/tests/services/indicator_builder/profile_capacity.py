@@ -12,6 +12,7 @@ import hashlib
 import json
 import os
 import sys
+import sys
 from collections.abc import Awaitable, Callable, Sequence
 from contextlib import suppress
 from datetime import datetime, timedelta
@@ -1069,6 +1070,7 @@ async def run(
         )
         return 0 if passed and cold_passed else 1
     finally:
+        active_error = sys.exception()
         source_stop.set()
         if producer is not None:
             producer.cancel()
@@ -1080,7 +1082,14 @@ async def run(
         for client in clients:
             await client.aclose()
         for container in reversed(containers):
-            await docker("stop", "--time", "130", container, timeout=140)
+            try:
+                await docker("stop", "--time", "130", container, timeout=140)
+            except BaseException:
+                # Preserve the workload/setup failure that triggered cleanup;
+                # otherwise a later Docker timeout hides the actionable cause.
+                if active_error is None:
+                    raise
+                await docker("kill", container)
         await redis.aclose()
         for engine in (migrator, api, source):
             await engine.dispose()
