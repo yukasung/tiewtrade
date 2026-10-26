@@ -22,7 +22,7 @@ def environment() -> tuple[dict[str, object], dict[str, object]]:
             "redis_endpoint": "127.0.0.1:56420/0",
             "redis_dbsize_before_runtime": 0,
             "redis_url_mode": "plain-unauthenticated",
-            "database_revision": "0038",
+            "database_revision": "0042",
             "api_cpuset": "6-7",
             "builder_cpuset": "4-5",
             "runtime_containers_created": {

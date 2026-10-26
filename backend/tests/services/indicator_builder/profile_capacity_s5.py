@@ -55,6 +55,7 @@ from tiewtrade.core.market_data import (
 from tiewtrade.infra.db.engine import DatabaseRole, create_engine_for
 from tiewtrade.infra.db.session import market_data_session
 
+EXPECTED_DATABASE_REVISION = "0042"
 S5_SERIES = {(base, timeframe.value) for base, timeframe in SERIES}
 CHURN_SERIES = ("BTC", Timeframe.M1)
 S5_DEADLINE_SECONDS = 600
@@ -101,7 +102,7 @@ def s5_environment_valid(environment: dict[str, Any], c1_environment: dict[str, 
         and len(set(containers.values())) == len(RUNTIME_ROLES)
         and environment.get("redis_dbsize_before_runtime") == 0
         and environment.get("redis_url_mode") == "plain-unauthenticated"
-        and environment.get("database_revision") == "0038"
+        and environment.get("database_revision") == EXPECTED_DATABASE_REVISION
         and environment.get("source_fixture")
         == "fresh 16-series source; empty derived/jobs before runtime start"
         and environment.get("source_runtime_series") == len(READINESS_SERIES)

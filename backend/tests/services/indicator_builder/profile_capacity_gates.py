@@ -9,6 +9,7 @@ from typing import Any, TypeGuard
 from xml.etree import ElementTree
 
 from tests.services.indicator_builder.profile_capacity_s5 import (
+    EXPECTED_DATABASE_REVISION,
     RUNTIME_ROLES,
     evaluate_s5,
     s5_environment_valid,
@@ -223,7 +224,7 @@ def s5_raw_checks(directory: Path, c1_directory: Path) -> dict[str, bool]:
         == "fresh 16-series source; empty derived/jobs before runtime start"
         and environment.get("redis_dbsize_before_runtime") == 0
         and environment.get("redis_url_mode") == "plain-unauthenticated"
-        and environment.get("database_revision") == "0038"
+        and environment.get("database_revision") == EXPECTED_DATABASE_REVISION
         and environment.get("source_runtime_series") == 16,
         "R2-S5_runtime_shape": environment.get("historical_series") == "BTC/1m"
         and environment.get("append_only_runtime_series") == 15
