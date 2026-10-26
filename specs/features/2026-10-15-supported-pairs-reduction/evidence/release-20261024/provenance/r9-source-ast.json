@@ -1,0 +1,15 @@
+{
+  "candidate_image": "tiewtrade-f38-release-20261025-r9:latest",
+  "candidate_image_digest": "sha256:c194273af4d61c86ff267e11fcc13420858cf4d826e944474dac01a84665635b",
+  "comparison": "Python AST without source-location attributes",
+  "all_equal": true,
+  "files": {
+    "tiewtrade/infra/market_data/indicator_reader.py": "51fa1ff5128d761a481231d1547581b00c19404a948c8380491ffc2513792e47",
+    "tiewtrade/services/api/app.py": "70ccaa7299708b3faeb6a302006b14fe91cb9fff659c88bff0bed4a2b6f07cc6",
+    "tiewtrade/services/api/chart_routes.py": "842c78c5f932471a869b88e121ed3f4035f66aacfa8d21e56a5a669f2afd5c0d",
+    "tiewtrade/services/api/indicator_http.py": "004c78bd4eab54bcaa8948c6bcf290226f405179ad9883569b405395448863ef",
+    "tiewtrade/services/api/indicator_read_controller.py": "00de4943ee9b5d87a79b08ac767a19be379b8f1a6b32e497487c3173783e3447",
+    "tiewtrade/services/api/indicator_routes.py": "4076a14faa4383954f480f27b83dfade4740777b60d2a492a902af0d21288524"
+  },
+  "note": "The only post-image production-source change was formatter output; the measured image and current working tree have identical executable ASTs for every changed production module."
+}

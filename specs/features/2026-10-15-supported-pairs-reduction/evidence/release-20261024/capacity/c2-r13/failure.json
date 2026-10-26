@@ -1,0 +1,7 @@
+{
+  "stage": "launcher import before phase setup",
+  "error_type": "ModuleNotFoundError",
+  "error": "tests package was not on PYTHONPATH when invoking profile_capacity_steady.py directly",
+  "measured_phase_started": false,
+  "remediation": "Rerun with repository backend root on PYTHONPATH; no runtime state or thresholds changed."
+}

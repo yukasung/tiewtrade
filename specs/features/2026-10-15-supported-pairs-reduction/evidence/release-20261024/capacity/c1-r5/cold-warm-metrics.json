@@ -1,0 +1,68 @@
+[
+  {
+    "recorded_at": "2026-10-24 21:41:00.330727+00:00",
+    "kind": "accepted",
+    "status": 200,
+    "seconds": 0.30581004200030293,
+    "max_lag_seconds": 0.049563166000662025,
+    "rss_delta_upper_bytes": 6451200,
+    "body_bytes": 458801,
+    "candle_queries": 7,
+    "barrier": false
+  },
+  {
+    "recorded_at": "2026-10-24 21:41:00.489351+00:00",
+    "kind": "accepted",
+    "status": 200,
+    "seconds": 0.14433679200010374,
+    "max_lag_seconds": 0.0015910829998756525,
+    "rss_delta_upper_bytes": 544768,
+    "body_bytes": 458801,
+    "candle_queries": 7,
+    "barrier": false
+  },
+  {
+    "recorded_at": "2026-10-24 21:41:00.662053+00:00",
+    "kind": "accepted",
+    "status": 200,
+    "seconds": 0.16157320800084563,
+    "max_lag_seconds": 0.02327741600049194,
+    "rss_delta_upper_bytes": 0,
+    "body_bytes": 458801,
+    "candle_queries": 7,
+    "barrier": false
+  },
+  {
+    "recorded_at": "2026-10-24 21:41:00.812312+00:00",
+    "kind": "accepted",
+    "status": 200,
+    "seconds": 0.13697295800011489,
+    "max_lag_seconds": 0.002292667000001529,
+    "rss_delta_upper_bytes": 0,
+    "body_bytes": 458801,
+    "candle_queries": 7,
+    "barrier": false
+  },
+  {
+    "recorded_at": "2026-10-24 21:41:00.960985+00:00",
+    "kind": "accepted",
+    "status": 200,
+    "seconds": 0.14102900000034424,
+    "max_lag_seconds": 0.002203332999779377,
+    "rss_delta_upper_bytes": 0,
+    "body_bytes": 458801,
+    "candle_queries": 7,
+    "barrier": false
+  },
+  {
+    "recorded_at": "2026-10-24 21:41:01.181507+00:00",
+    "kind": "accepted",
+    "status": 200,
+    "seconds": 0.20951800100010587,
+    "max_lag_seconds": 0.026385583000883343,
+    "rss_delta_upper_bytes": 57344,
+    "body_bytes": 458801,
+    "candle_queries": 7,
+    "barrier": false
+  }
+]

@@ -1,0 +1,20 @@
+{
+  "image": "sha256:ee5556fab113a394bc6bcaa0e4d67759811ecbb66aad4ae892251cea829b2ad6",
+  "worker_api_cpu": 2,
+  "worker_api_memory_bytes": 1073741824,
+  "api_cpuset": "2-3",
+  "builder_cpuset": "4-5",
+  "docker": "linux aarch64 CPUs=8 RAM=4106604544",
+  "c1_seconds": 600,
+  "observer_interval_seconds": 10,
+  "probe_interval_seconds": 60,
+  "fixture": "365 days plus physical grace; fractional changing OHLC; append only",
+  "capacity_prefix": "tiewtrade-f38-release-r6a-20261025",
+  "api_probe_host": "127.0.0.1",
+  "postgres_endpoint": "127.0.0.1:55451/tiewtrade",
+  "redis_endpoint": "127.0.0.1:56395/0",
+  "supported_runtime_pairs": 2,
+  "runtime_readiness_series": 16,
+  "profile_pairs": 1,
+  "profile_series": 8
+}

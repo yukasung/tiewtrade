@@ -19,6 +19,7 @@ from tiewtrade.infra.realtime.admission import AdmissionOutcome
 from tiewtrade.services.api import indicator_routes as routes
 from tiewtrade.services.api.authentication import Authenticated
 from tiewtrade.services.api.indicator_admission import IndicatorBudget
+from tiewtrade.services.api.indicator_http import ChunkedJSON
 
 
 class _AcceptedAdmission:
@@ -178,7 +179,7 @@ async def test_fast_reader_does_not_restart_receive_after_swallowed_cancel(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     calls = 0
-    expected = cast(routes.IndicatorHistoryView, object())
+    expected = cast(ChunkedJSON, object())
 
     async def receive() -> dict[str, Any]:
         nonlocal calls
@@ -191,7 +192,7 @@ async def test_fast_reader_does_not_restart_receive_after_swallowed_cancel(
             return {"type": "http.request", "body": b"", "more_body": False}
         raise AssertionError("unreachable")
 
-    async def read(*args: Any) -> routes.IndicatorHistoryView:
+    async def read(*args: Any) -> ChunkedJSON:
         return expected
 
     monkeypatch.setattr(routes, "_read", read)

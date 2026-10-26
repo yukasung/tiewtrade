@@ -1,0 +1,15 @@
+{
+  "boundary": "2026-10-25 02:17:00+00:00",
+  "boundary_age_seconds": 0.129773,
+  "source_rows": 525600,
+  "logical_slots": 525600,
+  "released_retry_backoffs": 1,
+  "invalidation_open_at": "2026-10-25 02:12:00+00:00",
+  "generation": {
+    "id": "870236ca-91a2-4033-a849-d3087a8e4350",
+    "calculation_start": "2025-10-25 02:17:00+00:00",
+    "calculation_end": "2026-10-25 02:17:00+00:00",
+    "as_of": "2026-10-25 02:17:00+00:00",
+    "checkpoint_count": 527
+  }
+}

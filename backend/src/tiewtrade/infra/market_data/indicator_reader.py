@@ -21,6 +21,7 @@ from tiewtrade.core.market_data import (
     advance,
     bounded_windows,
     expected_opens,
+    slot_count,
 )
 from tiewtrade.core.moments import require_aware
 from tiewtrade.core.money import Money, Quantity
@@ -64,9 +65,17 @@ async def fetch_rows(
     quote: str,
     timeframe: Timeframe,
     window: CandleWindow,
+    *,
+    numeric_text: bool = False,
 ) -> tuple[RowMapping, ...]:
+    numeric_columns = (
+        "open::text AS open,high::text AS high,low::text AS low,"
+        "close::text AS close,volume::text AS volume"
+        if numeric_text
+        else "open,high,low,close,volume"
+    )
     result = await session.execute(
-        "SELECT source,base,quote,timeframe,open_at,end_at,open,high,low,close,volume,"
+        "SELECT source,base,quote,timeframe,open_at,end_at," + numeric_columns + ","
         "finality,observed_at,fetch_started_at,last_checked_at FROM market_candles "
         "WHERE source=:source AND base=:base AND quote=:quote AND timeframe=:timeframe "
         "AND open_at>=:start AND open_at<:end ORDER BY open_at LIMIT 1000",
@@ -83,17 +92,37 @@ def decode_row(row: RowMapping, series: CandleSeries) -> StoredCandle:
         series.timeframe.value,
     ):
         raise ValueError("different stored series")
+    # asyncpg already returns validated PostgreSQL numeric columns as Decimal.
+    # Construct the domain values directly so their mandatory __post_init__
+    # invariants run once instead of paying the public text-normalisation path
+    # and a second guarded Decimal context for every OHLCV field.  Text remains
+    # supported for the API's lower-materialisation query path.
+    open_value = cast(Decimal | str, row["open"])
+    high_value = cast(Decimal | str, row["high"])
+    low_value = cast(Decimal | str, row["low"])
+    close_value = cast(Decimal | str, row["close"])
+    volume_value = cast(Decimal | str, row["volume"])
     candle = Candle(
         series.base,
         series.quote,
         series.timeframe,
         cast(datetime, row["open_at"]),
         cast(datetime, row["end_at"]),
-        Money(cast(Decimal, row["open"]), series.quote),
-        Money(cast(Decimal, row["high"]), series.quote),
-        Money(cast(Decimal, row["low"]), series.quote),
-        Money(cast(Decimal, row["close"]), series.quote),
-        Quantity(cast(Decimal, row["volume"]), series.base),
+        Money(open_value, series.quote)
+        if isinstance(open_value, Decimal)
+        else Money.of(open_value, series.quote),
+        Money(high_value, series.quote)
+        if isinstance(high_value, Decimal)
+        else Money.of(high_value, series.quote),
+        Money(low_value, series.quote)
+        if isinstance(low_value, Decimal)
+        else Money.of(low_value, series.quote),
+        Money(close_value, series.quote)
+        if isinstance(close_value, Decimal)
+        else Money.of(close_value, series.quote),
+        Quantity(volume_value, series.base)
+        if isinstance(volume_value, Decimal)
+        else Quantity.of(volume_value, series.base),
         CandleFinality(row["finality"]),
         cast(datetime, row["observed_at"]),
         series,
@@ -198,14 +227,16 @@ async def read_indicators(
     points: list[IndicatorPoint] = []
     refresh_first: datetime | None = None
     refresh_more = False
-    # Keep cold asyncpg result materialization below the 100 ms event-loop budget.
-    # The builder keeps the 1,000-slot default; the latency-sensitive API reader
-    # uses the smaller size authorized by the F-11 performance plan.
-    for batch in bounded_windows(calculation, timeframe, 250):
+    # Keep cold asyncpg result materialization below the 100 ms event-loop budget
+    # while preserving the accepted maximum of eight candle queries. Sparse long
+    # timeframes need smaller batches than dense minute/hour calculations.
+    total_slots = slot_count(calculation, timeframe)
+    api_batch_size = min(250, max(1, (total_slots + 7) // 8))
+    for batch in bounded_windows(calculation, timeframe, api_batch_size):
         await query_budget(session, deadline)
         rows = {
             cast(datetime, row["open_at"]): row
-            for row in await fetch_rows(session, base, quote, timeframe, batch)
+            for row in await fetch_rows(session, base, quote, timeframe, batch, numeric_text=True)
         }
         opens = iter(expected_opens(batch, timeframe))
         while True:

@@ -1,0 +1,6 @@
+{
+  "failed_at": "2026-10-25 05:30:22.212469+00:00",
+  "error_type": "RuntimeError",
+  "error": "docker failed: ERROR:  SOURCE_BOOTSTRAP_REQUIRED\nCONTEXT:  PL/pgSQL function activate_indicator_source_proof() line 8 at RAISE",
+  "sanitized_commands": []
+}

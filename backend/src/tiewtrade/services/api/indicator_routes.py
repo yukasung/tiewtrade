@@ -8,7 +8,7 @@ from fastapi.responses import Response
 
 from tiewtrade.infra.market_data.storage import database_now
 from tiewtrade.services.api.authentication import Authenticated, current_user
-from tiewtrade.services.api.indicator_http import indicator_response, until_disconnect
+from tiewtrade.services.api.indicator_http import ChunkedJSON, indicator_response, until_disconnect
 from tiewtrade.services.api.indicator_read_controller import (
     IndicatorHistoryView as IndicatorHistoryView,
 )
@@ -39,13 +39,13 @@ router = APIRouter(
 
 async def _read(
     query: IndicatorQuery, request: Request, who: Authenticated, deadline: float
-) -> IndicatorHistoryView:
+) -> ChunkedJSON:
     return (await read_history(query, request, who, deadline, clock=database_now)).view
 
 
 async def _read_until_disconnect(
     query: IndicatorQuery, request: Request, who: Authenticated, deadline: float
-) -> IndicatorHistoryView:
+) -> ChunkedJSON:
     return await until_disconnect(request, _read(query, request, who, deadline))
 
 

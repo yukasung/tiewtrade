@@ -17,10 +17,10 @@
 | V-09 | ไม่มี order/balance/position/user/credential/audit row ถูกแก้ | before/after counts+digest ของตารางนอกขอบเขตที่มีอยู่ | Candidate | **Passed 2026-10-15** — 13 ตารางนอกขอบเขต digest ตรง; schema นี้ยังไม่มี order/balance/position |
 | V-10 | Price snapshot schema/decoder ใช้สอง rows และ generated contract ตรงกัน | OpenAPI drift check + backend/frontend contract tests | ระหว่างพัฒนา | **Passed 2026-10-15** — regenerate OpenAPI/API types แล้ว hash คงเดิม |
 | V-11 | BTC/ETH candle, price, indicator และ chart correctness เดิมไม่ถดถอย | targeted tests ตาม callers/dependencies; exact OHLCV/indicator parity | Candidate | **Passed candidate 2026-10-22** — clean-state backend 3,017 passed / 1 skipped / 2 deselected; frontend 246 passed; lint/types/imports/build/contracts passed |
-| V-12 | Runtime readiness/bootstrap ครบ BTC+ETH 16 series และ BTC-only capacity/workload ครบ 8 timeframe ผ่าน threshold เดิมต่อ series/request | readiness ตรวจ 16 heads; profile runner สร้างโหลด/observe/probe BTC 8 seriesและแยก evidence | Release checkpoint | Pending Full Validation |
-| V-13 | resource/queue bounds สอดคล้อง runtime 16 และ test profile 8 โดยไม่เกิด unbounded growth | RSS/lag/queue metrics และ post-run database counts | Release checkpoint | Pending Full Validation |
+| V-12 | Runtime readiness/bootstrap ครบ BTC+ETH 16 series และ BTC-only capacity/workload ครบ 8 timeframe ผ่าน threshold เดิมต่อ series/request | readiness ตรวจ 16 heads; profile runner สร้างโหลด/observe/probe BTC 8 seriesและแยก evidence | Release checkpoint | **Passed 2026-10-26** — C1/R2-7, combined steady+dirty, S1–S5 และ C6 ผ่านตาม `evidence/release-20261024/` |
+| V-13 | resource/queue bounds สอดคล้อง runtime 16 และ test profile 8 โดยไม่เกิด unbounded growth | RSS/lag/queue metrics และ post-run database counts | Release checkpoint | **Passed 2026-10-26** — worker ≤120s, API/worker RSS ≤128MiB, lag ≤100ms และ raw aggregate checks ผ่าน |
 | V-14 | restart/reconnect/freshness หลัง purge ทำงานและไม่มี stream ของคู่ที่ถอด | disconnect/reconnect integration + runtime smoke | Candidate | **Passed 2026-10-15** — restart สองรอบกลับเป็น connected/bootstrapped และ preview สดครบ 16 |
-| V-15 | backup และ restore ขั้นตอนจริงคืนข้อมูลก่อน migration ได้ | disposable production-like DB backup/restore drill | Release checkpoint | Pending Full Validation |
+| V-15 | backup และ restore ขั้นตอนจริงคืนข้อมูลก่อน migration ได้ | disposable production-like DB backup/restore drill | Release checkpoint | **Passed 2026-10-25** — quiesced pre-0030 backup/restore/upgrade, RPO=0 และ RTO=2.247043s ใน `restore/r8` |
 | V-16 | เอกสาร F-09–F-12/mission/roadmap ระบุตัวเลขใหม่และเก็บหลักฐานเดิม | link/diff review และค้นหา 5/30/40 ที่เกี่ยวข้อง | ก่อน merge | **Passed 2026-10-15** — เพิ่ม amendment และเก็บข้อความ/หลักฐานเก่าเป็น historical |
 
 ## Test matrix
@@ -90,6 +90,6 @@
 
 ## งานตรวจรับที่เลื่อนได้
 
-V-12, V-13 และ V-15 เป็น `Pending Full Validation` จนถึง release checkpoint ได้ แต่ F-38
-ห้ามเป็น Completed และห้ามใช้ PREPARED production จนด่านเหล่านี้ผ่าน ส่วน V-01–V-11,
-V-14 และ V-16 ต้องผ่านก่อน merge
+V-12, V-13 และ V-15 ผ่าน release checkpoint แล้วตามหลักฐาน 2026-10-25/26 แต่ F-38
+ยังห้ามเป็น Completed และห้ามใช้ PREPARED production จน required candidate CI ของ
+release-checkpoint candidate ผ่านบน final commit; ผล local ไม่แทน CI ตาม `standards/testing.md`

@@ -43,6 +43,12 @@ from tiewtrade.infra.market_data.indicator_reader import query_budget, read_indi
 from tiewtrade.infra.market_data.records import StoredCandle
 from tiewtrade.infra.market_data.storage import database_now, parameters, stored_rows
 from tiewtrade.services.api.authentication import Authenticated
+from tiewtrade.services.api.indicator_http import (
+    JSON_YIELD_ITEMS,
+    ChunkedJSON,
+    JSONFragments,
+    encode_json_fragment,
+)
 
 
 class IndicatorQuery(BaseModel):
@@ -108,7 +114,7 @@ class IndicatorHistoryView(BaseModel):
 
 @dataclass(frozen=True, slots=True)
 class HistoryRead:
-    view: IndicatorHistoryView
+    view: ChunkedJSON
     claims: CursorClaims
     candles: tuple[StoredCandle, ...]
     checked_at: datetime
@@ -255,32 +261,34 @@ async def read_history(
             start=result.refresh_first,
             end=min(advance(result.refresh_first, claims.timeframe, 1000), claims.calculation_end),
         )
-    rows: list[IndicatorPointView] = []
+    rows: list[bytes] = []
     for index, point in enumerate(result.points, start=1):
         rows.append(
-            IndicatorPointView(
-                open_at=point.open_at,
-                seed_open_at=point.seed_open_at,
-                finality=point.finality.value if point.finality else None,
-                values={
-                    name: IndicatorValueView(
-                        value=value.value.as_text()
-                        if isinstance(value.value, Scalar)
-                        else value.value.as_parts()["amount"]
-                        if value.value is not None
-                        else None,
-                        unit=value.value.currency if isinstance(value.value, Money) else None,
-                        status=value.status.value,
-                    )
-                    for name, value in point.values.items()
-                },
+            encode_json_fragment(
+                IndicatorPointView(
+                    open_at=point.open_at,
+                    seed_open_at=point.seed_open_at,
+                    finality=point.finality.value if point.finality else None,
+                    values={
+                        name: IndicatorValueView(
+                            value=value.value.as_text()
+                            if isinstance(value.value, Scalar)
+                            else value.value.as_parts()["amount"]
+                            if value.value is not None
+                            else None,
+                            unit=value.value.currency if isinstance(value.value, Money) else None,
+                            status=value.status.value,
+                        )
+                        for name, value in point.values.items()
+                    },
+                )
             )
         )
-        if index % 16 == 0:
+        if index % JSON_YIELD_ITEMS == 0:
             if monotonic() >= deadline:
                 raise TimeoutError()
             await asyncio.sleep(0)
-    view = IndicatorHistoryView(
+    validated = IndicatorHistoryView(
         source=SOURCE,
         base=claims.base,
         quote=claims.quote,
@@ -292,7 +300,7 @@ async def read_history(
         calculation_end=claims.calculation_end,
         result_start=claims.result_start,
         result_end=claims.result_end,
-        rows=rows,
+        rows=[],
         next_cursor=next_cursor,
         generation_id=claims.generation_id if isinstance(claims, PreparedCursorClaims) else None,
         prepared_at=prepared.generation["prepared_at"] if prepared is not None else None,
@@ -308,6 +316,7 @@ async def read_history(
             observed_at=now,
         ),
     )
+    view = ChunkedJSON.from_model(validated, rows=JSONFragments(tuple(rows)))
 
     return HistoryRead(
         view, claims.model_copy(update={"dataset_revision": result.revision}), candles, finished

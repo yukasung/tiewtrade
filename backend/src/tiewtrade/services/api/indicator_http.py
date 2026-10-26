@@ -1,9 +1,11 @@
 """Shared indicator admission, cancellation, error and response boundaries."""
 
 import asyncio
+import gc
 from collections.abc import Awaitable, Callable
+from dataclasses import dataclass
 from time import monotonic
-from typing import cast
+from typing import Self, cast
 
 from fastapi import HTTPException, Request
 from fastapi.responses import Response
@@ -26,23 +28,88 @@ class ClientDisconnectedError(asyncio.CancelledError):
     """A peer disconnect, distinct from cancellation of the server task."""
 
 
+JSON_YIELD_ITEMS = 8
+
+
+@dataclass(frozen=True, slots=True)
+class JSONFragments:
+    items: tuple[bytes, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class ChunkedJSON:
+    """A schema-validated model whose large arrays are already encoded by row."""
+
+    fields: tuple[tuple[str, object], ...]
+
+    @classmethod
+    def from_model(cls, model: BaseModel, **fragments: JSONFragments) -> Self:
+        return cls(
+            tuple(
+                (name, fragments[name] if name in fragments else getattr(model, name))
+                for name in type(model).model_fields
+            )
+        )
+
+    def extended(self, *fields: tuple[str, object]) -> Self:
+        return type(self)(self.fields + fields)
+
+
 def _json_value(value: object) -> bytes:
     if isinstance(value, BaseModel):
         value = value.model_dump(mode="json")
     return to_json(value)
 
 
+def encode_json_fragment(value: object) -> bytes:
+    return _json_value(value)
+
+
+async def _without_automatic_gc[T](work: Awaitable[T]) -> T:
+    """Keep cyclic GC away from a bounded large graph, then collect after it is released."""
+    enabled = gc.isenabled()
+    if enabled:
+        gc.disable()
+    try:
+        return await work
+    finally:
+        if enabled:
+            try:
+                # Reset young-generation pressure without scanning the long-lived
+                # heap. A full collection here scales with the retained dataset and
+                # becomes an event-loop pause on maximum-size indicator reads.
+                gc.collect(0)
+            finally:
+                gc.enable()
+
+
 async def _model_json_bytes(
-    result: BaseModel, deadline: float, clock: Callable[[], float]
+    result: BaseModel | ChunkedJSON, deadline: float, clock: Callable[[], float]
 ) -> bytes:
     """Serialize bounded slices without sending a partial HTTP body."""
     body = bytearray(b"{")
-    for field_index, name in enumerate(type(result).model_fields):
+    fields = (
+        result.fields
+        if isinstance(result, ChunkedJSON)
+        else tuple((name, getattr(result, name)) for name in type(result).model_fields)
+    )
+    for field_index, (name, value) in enumerate(fields):
         if field_index:
             body.extend(b",")
         body.extend(to_json(name))
         body.extend(b":")
-        value = getattr(result, name)
+        if isinstance(value, JSONFragments):
+            body.extend(b"[")
+            for item_index, item in enumerate(value.items):
+                if item_index:
+                    body.extend(b",")
+                body.extend(item)
+                if (item_index + 1) % JSON_YIELD_ITEMS == 0:
+                    if clock() >= deadline:
+                        raise TimeoutError()
+                    await asyncio.sleep(0)
+            body.extend(b"]")
+            continue
         if not isinstance(value, list):
             body.extend(_json_value(value))
             continue
@@ -51,7 +118,7 @@ async def _model_json_bytes(
             if item_index:
                 body.extend(b",")
             body.extend(_json_value(item))
-            if (item_index + 1) % 16 == 0:
+            if (item_index + 1) % JSON_YIELD_ITEMS == 0:
                 if clock() >= deadline:
                     raise TimeoutError()
                 await asyncio.sleep(0)
@@ -95,7 +162,7 @@ async def until_disconnect[T](request: Request, work: Awaitable[T]) -> T:
 async def indicator_response(
     request: Request,
     who: Authenticated,
-    work: Callable[[float], Awaitable[BaseModel]],
+    work: Callable[[float], Awaitable[BaseModel | ChunkedJSON]],
     *,
     clock: Callable[[], float] = monotonic,
     deadline_seconds: float = INDICATOR_SETTINGS.deadline_seconds,
@@ -107,10 +174,13 @@ async def indicator_response(
     try:
         async with asyncio.timeout_at(deadline):
             async with budget.reserve(admission, who.user_id):
-                result = await until_disconnect(request, work(deadline))
+                result = await until_disconnect(
+                    request,
+                    _without_automatic_gc(work(deadline)),
+                )
                 body = (
                     await _model_json_bytes(result, deadline, clock)
-                    if isinstance(result, BaseModel)
+                    if isinstance(result, (BaseModel, ChunkedJSON))
                     else result.model_dump_json().encode()
                 )
                 if clock() >= deadline:

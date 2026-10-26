@@ -6,6 +6,7 @@ No metrics contain request parameters, credentials, bodies or cursor tokens.
 """
 
 import asyncio
+import gc
 import json
 from collections.abc import AsyncIterator, Mapping
 from contextlib import asynccontextmanager
@@ -26,8 +27,25 @@ from tiewtrade.services.api.indicator_admission import IndicatorBudget
 
 COUNTS: ContextVar[list[int] | None] = ContextVar("capacity_counts", default=None)
 BARRIER: ContextVar[bool] = ContextVar("capacity_barrier", default=False)
+GC_EVENTS: ContextVar[dict[str, Any] | None] = ContextVar("capacity_gc_events", default=None)
 EXECUTE = UserSession.execute
 RESERVE = IndicatorBudget.reserve
+
+
+def observe_gc(phase: str, info: dict[str, int]) -> None:
+    events = GC_EVENTS.get()
+    if events is None:
+        return
+    generation = info["generation"]
+    if phase == "start":
+        events["started"][generation] = monotonic()
+        return
+    started = events["started"].pop(generation, None)
+    if started is not None:
+        events["pauses"].append((generation, monotonic() - started))
+
+
+gc.callbacks.append(observe_gc)
 
 
 async def execute(
@@ -71,6 +89,8 @@ async def app(scope: Scope, receive: Receive, send: Send) -> None:
     counts = [0]
     count_token = COUNTS.set(counts)
     barrier_token = BARRIER.set((b"x-capacity-barrier", b"1") in scope["headers"])
+    gc_events: dict[str, Any] = {"started": {}, "pauses": []}
+    gc_token = GC_EVENTS.set(gc_events)
     baseline = memory_bytes("VmRSS")
     started = previous = monotonic()
     max_lag = 0.0
@@ -123,6 +143,12 @@ async def app(scope: Scope, receive: Receive, send: Send) -> None:
                         "rss_delta_upper_bytes": peak_delta,
                         "body_bytes": body_bytes,
                         "candle_queries": counts[0],
+                        "gc_collections": len(gc_events["pauses"]),
+                        "gc_max_pause_seconds": max(
+                            (pause for _, pause in gc_events["pauses"]), default=0.0
+                        ),
+                        "gc_generations": [generation for generation, _ in gc_events["pauses"]],
+                        "frozen_objects": gc.get_freeze_count(),
                         "barrier": BARRIER.get(),
                     }
                 )
@@ -130,3 +156,4 @@ async def app(scope: Scope, receive: Receive, send: Send) -> None:
             )
         COUNTS.reset(count_token)
         BARRIER.reset(barrier_token)
+        GC_EVENTS.reset(gc_token)

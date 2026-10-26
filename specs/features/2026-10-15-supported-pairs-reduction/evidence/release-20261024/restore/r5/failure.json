@@ -1,0 +1,8 @@
+{
+  "failed_at": "2026-10-25T12:32:00+07:00",
+  "stage": "pre-fixture migration setup",
+  "error_type": "InsufficientPrivilegeError",
+  "error": "Fresh source database was initially created with postgres ownership, so tiewtrade_migrator could not create alembic_version in public schema.",
+  "data_or_product_failure": false,
+  "remediation": "Recreate the disposable source database owned by tiewtrade_migrator; no production code, migration, thresholds, or retained data changed."
+}

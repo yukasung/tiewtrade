@@ -13,6 +13,16 @@ def moment(value: str) -> datetime:
     return datetime.fromisoformat(value)
 
 
+def failure_occurs_in_phase(job: dict[str, Any], start: datetime, end: datetime) -> bool:
+    """Exclude retained failures from before T0 while failing closed on missing timestamps."""
+    deadline = job.get("deadline_missed_at")
+    failed = job.get("failed_at")
+    deadline_in_phase = deadline is not None and start <= moment(deadline) <= end
+    if not str(job.get("status", "")).startswith("FAILED"):
+        return deadline_in_phase
+    return failed is None or start <= moment(failed) <= end or deadline_in_phase
+
+
 def report(phase: Path, metrics: Path) -> None:
     result = json.loads((phase / "result.json").read_text(encoding="utf-8-sig"))
     start = moment(result["T0"])
@@ -72,6 +82,12 @@ def report(phase: Path, metrics: Path) -> None:
                     if job
                     else None,
                     "published_at": published,
+                    "terminal_at": attempt.get("finished_at"),
+                    "claim_to_terminal_seconds": (
+                        moment(attempt["finished_at"]) - claimed
+                    ).total_seconds()
+                    if attempt.get("finished_at")
+                    else None,
                     "claim_to_publish_seconds": (moment(published) - claimed).total_seconds()
                     if published
                     else None,
@@ -117,13 +133,28 @@ def report(phase: Path, metrics: Path) -> None:
                     }
                     for sample in trace
                     for job in sample["jobs"]
-                    if same(job)
-                    and (job["status"].startswith("FAILED") or job["deadline_missed_at"])
+                    if same(job) and failure_occurs_in_phase(job, start, end)
                 ],
             }
         )
     complete = len(rows) == len(SERIES) and all(
-        row["claims"] and all(c["first_eligible_at"] and c["published_at"] for c in row["claims"])
+        row["claims"]
+        and all(
+            claim["first_eligible_at"]
+            and claim["terminal_at"]
+            and claim["status"] in {"READY", "RELEASED"}
+            and (claim["status"] != "READY" or claim["published_at"])
+            for claim in row["claims"]
+        )
+        and all(
+            any(
+                claim["status"] == "READY"
+                and claim["first_eligible_at"] == episode
+                and claim["published_at"]
+                for claim in row["claims"]
+            )
+            for episode in {claim["first_eligible_at"] for claim in row["claims"]}
+        )
         for row in rows
     )
     save(

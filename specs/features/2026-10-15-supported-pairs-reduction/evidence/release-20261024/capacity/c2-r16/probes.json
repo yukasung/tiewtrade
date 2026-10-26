@@ -1,0 +1,102 @@
+[
+  {
+    "base": "BTC",
+    "timeframe": "1m",
+    "started_seconds": 0.029199374999734573,
+    "finished_seconds": 0.2755307499974151,
+    "elapsed_seconds": 0.24633145799452905,
+    "status": 200,
+    "body_bytes": 458798,
+    "reference": "ab5c51cfc5e3af91de441021d7589e1fce3d9593866b80067f001b4bd62bb926",
+    "generation_id": "b49d55af-c95d-4744-9c6d-2d4486e60a33",
+    "dataset_revision": "3cd433424b9a932642e4b4c8a7630cd853d3b0a388a4ea697b56d485426bc232",
+    "envelope_ok": true
+  },
+  {
+    "base": "BTC",
+    "timeframe": "5m",
+    "started_seconds": 0.2755320829965058,
+    "finished_seconds": 0.46137508299580077,
+    "elapsed_seconds": 0.1858431250002468,
+    "status": 200,
+    "body_bytes": 455257,
+    "reference": "031f4455f517f0fa3e8b13bf4575d04200b34d2a1d30a78ed2a693e25f48c92c",
+    "generation_id": "3d8582d9-4325-4a0b-aac9-780c04cb294b",
+    "dataset_revision": "7c64d9651ba9ad450b948f704455d8650a4d6757ecd40a0543620f2490b92cc4",
+    "envelope_ok": true
+  },
+  {
+    "base": "BTC",
+    "timeframe": "15m",
+    "started_seconds": 0.46137770799396094,
+    "finished_seconds": 0.6069453329982935,
+    "elapsed_seconds": 0.14556775000528432,
+    "status": 200,
+    "body_bytes": 454230,
+    "reference": "8961eeb9951041509695d8bb82748b15c48c65260777180a319db670c9e79af4",
+    "generation_id": "988832d1-5d82-45e9-aaf1-5bb1c7617191",
+    "dataset_revision": "f338180e4029e83e8d43ec69f42b235ae5a3130366ba72d9390840afba12a6c9",
+    "envelope_ok": true
+  },
+  {
+    "base": "BTC",
+    "timeframe": "1h",
+    "started_seconds": 0.6069474579999223,
+    "finished_seconds": 0.8462255419944995,
+    "elapsed_seconds": 0.23927820899552898,
+    "status": 200,
+    "body_bytes": 453870,
+    "reference": "3d7d6691959112d7467193944caba725316c23c0db00911c132de2c2d0d7368d",
+    "generation_id": "bbf5fe9a-a29b-4dd2-800a-2b2a149050ce",
+    "dataset_revision": "13602079d294a1469e952e3722313ae26e72aee4267b796ab9ddd519d21ff1fb",
+    "envelope_ok": true
+  },
+  {
+    "base": "BTC",
+    "timeframe": "4h",
+    "started_seconds": 0.8462280419989838,
+    "finished_seconds": 0.8520054580003489,
+    "elapsed_seconds": 0.0057774999950197525,
+    "status": 429,
+    "body_bytes": 35,
+    "reference": null,
+    "error": "INDICATOR_RATE_LIMITED"
+  },
+  {
+    "base": "BTC",
+    "timeframe": "1d",
+    "started_seconds": 0.8520072499959497,
+    "finished_seconds": 0.8566298329969868,
+    "elapsed_seconds": 0.004622667001967784,
+    "status": 429,
+    "body_bytes": 35,
+    "reference": null,
+    "error": "INDICATOR_RATE_LIMITED"
+  },
+  {
+    "base": "BTC",
+    "timeframe": "1w",
+    "started_seconds": 0.8566317499935394,
+    "finished_seconds": 0.9311793329979992,
+    "elapsed_seconds": 0.0745476670053904,
+    "status": 200,
+    "body_bytes": 112544,
+    "reference": "2577b3cf0feb28caa273dfe61937e32a9ecb08860ed0ee2ae91b7a0354de4d3a",
+    "generation_id": "ff825289-2593-48f6-97d6-da075df5687a",
+    "dataset_revision": "0ffc66a51763a155fb0a35faa55e40e2b60aa694a09643db07328cffd13e4d64",
+    "envelope_ok": true
+  },
+  {
+    "base": "BTC",
+    "timeframe": "1M",
+    "started_seconds": 0.9311810829967726,
+    "finished_seconds": 0.9612447919935221,
+    "elapsed_seconds": 0.030063917001825757,
+    "status": 200,
+    "body_bytes": 24603,
+    "reference": "529782b87879ab267dd4defc404ef4130bb9d94ffa67cd39b6c0eab9e1d33005",
+    "generation_id": "d4e8fef8-ec97-4c14-aba7-c5f58748c9dc",
+    "dataset_revision": "31f75455c9b68921bce6b131b32368ca73507b40db323795429511fbb0ddc57b",
+    "envelope_ok": true
+  }
+]

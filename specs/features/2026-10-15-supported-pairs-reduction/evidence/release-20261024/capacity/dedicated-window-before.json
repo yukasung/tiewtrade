@@ -1,0 +1,44 @@
+{
+  "recorded_at": "2026-10-25T12:29:00+07:00",
+  "policy": {
+    "restart_only_previously_running_development_and_f11_containers": true,
+    "delete_volumes": false,
+    "change_persisted_data": false
+  },
+  "development_and_f11_containers_to_restart": [
+    "tiewtrade-api-1",
+    "tiewtrade-f11-capacity-postgres",
+    "tiewtrade-f11-capacity-redis",
+    "tiewtrade-frontend-1",
+    "tiewtrade-market-data-1",
+    "tiewtrade-paper-wallet-worker-1",
+    "tiewtrade-postgres-1",
+    "tiewtrade-redis-1"
+  ],
+  "preexisting_f38_validation_containers": [
+    "tiewtrade-f38-release-r4a-20261025-postgres",
+    "tiewtrade-f38-release-r4a-20261025-redis",
+    "tiewtrade-f38-restore-inspect-20261025-postgres",
+    "tiewtrade-f38-restore-r1-20261025-postgres",
+    "tiewtrade-f38-restore-r2-20261025-postgres",
+    "tiewtrade-f38-restore-r3-20261025-postgres",
+    "tiewtrade-f38-restore-r4-20261025-postgres"
+  ],
+  "snapshot": [
+    {"name":"tiewtrade-api-1","id":"3245dce46cba","image":"tiewtrade-api","status":"Up 13 hours (healthy)"},
+    {"name":"tiewtrade-f11-capacity-postgres","id":"8075d060b59b","image":"postgres:16","status":"Up 13 hours"},
+    {"name":"tiewtrade-f11-capacity-redis","id":"6e83c1bb7bd9","image":"redis:7-alpine","status":"Up 13 hours"},
+    {"name":"tiewtrade-f38-release-r4a-20261025-postgres","id":"193185f52d3d","image":"postgres:16","status":"Up 2 hours"},
+    {"name":"tiewtrade-f38-release-r4a-20261025-redis","id":"582ac52b9746","image":"redis:7","status":"Up 2 hours"},
+    {"name":"tiewtrade-f38-restore-inspect-20261025-postgres","id":"f26137467c58","image":"postgres:16","status":"Up 48 minutes"},
+    {"name":"tiewtrade-f38-restore-r1-20261025-postgres","id":"bf4dfa803472","image":"postgres:16","status":"Up 43 minutes"},
+    {"name":"tiewtrade-f38-restore-r2-20261025-postgres","id":"d7a16be67e87","image":"postgres:16","status":"Up 43 minutes"},
+    {"name":"tiewtrade-f38-restore-r3-20261025-postgres","id":"9544236e7478","image":"postgres:16","status":"Up 41 minutes"},
+    {"name":"tiewtrade-f38-restore-r4-20261025-postgres","id":"f5da52987fe1","image":"postgres:16","status":"Up 40 minutes"},
+    {"name":"tiewtrade-frontend-1","id":"40fd3d079604","image":"tiewtrade-frontend","status":"Up 13 hours"},
+    {"name":"tiewtrade-market-data-1","id":"604ad849d264","image":"tiewtrade-market-data","status":"Up 13 hours"},
+    {"name":"tiewtrade-paper-wallet-worker-1","id":"eb8a5239e65a","image":"tiewtrade-paper-wallet-worker","status":"Up 13 hours"},
+    {"name":"tiewtrade-postgres-1","id":"e62b8d588e76","image":"postgres:16","status":"Up 14 hours (healthy)"},
+    {"name":"tiewtrade-redis-1","id":"315443fb41af","image":"redis:7-alpine","status":"Up 14 hours (healthy)"}
+  ]
+}
