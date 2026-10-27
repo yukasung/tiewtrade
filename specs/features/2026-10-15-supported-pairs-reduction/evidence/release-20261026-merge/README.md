@@ -1,14 +1,15 @@
 # F-38 merged-candidate release checkpoint — 2026-10-27
 
-Status: **Local review/capacity crosswalk complete; Pending final candidate CI.**
+Status: **Passed — merged candidate release validation complete.**
 This supersedes current-candidate handoff instructions in the historical audit
-notes. It does not mark the merged candidate Completed or ready to merge.
+notes. RC-01–RC-15 are closed for validated candidate `aabdfb9`.
 
 ## Candidate and evidence scope
 
-- Local base HEAD: `12bf6328b1d927115c8ac095285a3aeedb53dcb3`, branch
-  `validation/f38-release-checkpoint`; harness/evidence/document changes remain
-  uncommitted. Final Git identity and CI must be recorded after an owner Git instruction.
+- Measured source base: `12bf6328b1d927115c8ac095285a3aeedb53dcb3`; final
+  harness/evidence candidate `aabdfb9dfa68d12bacac9ebacbdaebf4d2a262cb`, branch
+  `validation/f38-release-checkpoint`. Owner-authorized commit/push completed;
+  PR #38 merged as `bf7b847c0c860682bc808b5b1d0c71539ff74267` on 2026-10-27.
 - Measured image: `sha256:6cacc3bc9d9df1ce8b0fb31374fd89e489f2ffa264466d7f6a9372b6ceeb1210`,
   tag `tiewtrade-f38-merge-12bf632`, schema 0042.
 - Capacity stack `tiewtrade-f38-merge-r5-20261026`, PG 55484/Redis 56434;
@@ -35,8 +36,8 @@ notes. It does not mark the merged candidate Completed or ready to merge.
 | RC-08 aggregate | Passed; [raw aggregate](capacity/aggregate-r1/result.json), C4/C6 Passed, 57/57 checks true, failures empty. |
 | RC-09 scope | Passed; raw evaluator verifies 2 runtime pairs /16 readiness series /1 profile pair /8 workload series. |
 | RC-10–RC-13 restore | Reused Passed within approved pre-0030 scope; see restore provenance below. |
-| RC-14 tests/review/CI | Local affected checks/review passed; **final candidate CI Pending**. |
-| RC-15 crosswalk/docs | Current evidence mapped to V-12/V-13/V-15; final closure remains **Pending RC-14**. Historical failures remain retained. |
+| RC-14 tests/review/CI | Passed; affected checks/review and final candidate push/PR CI, 12/12 jobs green; see CI record below. |
+| RC-15 crosswalk/docs | Passed; current evidence mapped to V-12/V-13/V-15, roadmap closure corrected. Historical failures remain retained. |
 
 V-12 maps to RC-03–RC-08, V-13 to RC-04–RC-09, and V-15 to RC-10–RC-13.
 This does not change F-11, F-15, ETH workload, production PREPARED or Live status.
@@ -86,16 +87,24 @@ static checks and 31 scheduler tests passed. No full suite or timed workload was
 repeated during final review. No production change followed the measured runs.
 The experimental response offload remains reverted.
 
-Read-only PR inspection on 2026-10-27: [PR #38](https://github.com/yukasung/tiewtrade/pull/38)
-still points to `fb7ec2f`; old required CI run
-[40279974643](https://github.com/yukasung/tiewtrade/actions/runs/40279974643)
-passed 6/6 but does not cover local HEAD plus uncommitted changes. PR is open;
-its remote head has not received the local main integration.
+Final candidate `aabdfb9` passed both required CI runs on 2026-10-27:
+[PR CI 40431978440](https://github.com/yukasung/tiewtrade/actions/runs/40431978440)
+and [push CI 40431967222](https://github.com/yukasung/tiewtrade/actions/runs/40431967222),
+each 6/6 jobs green. PR backend: **3,462 passed, 2 deselected**, 673.76 s;
+lint/format/types/imports, frontend, API contracts, container and browser E2E passed.
+These replace the old-head CI as current candidate proof.
 
-## Remaining action
+[PR #38](https://github.com/yukasung/tiewtrade/pull/38) merged as `bf7b847`.
+Backend/frontend/Compose trees match `aabdfb9` exactly. Post-merge CI is tracked at
+[40434466982](https://github.com/yukasung/tiewtrade/actions/runs/40434466982);
+its final result is available on that run and does not require another workload.
 
-An explicit owner instruction to commit/push is required by AGENTS.md's Git
-rule. Then run/observe the required CI on the final pushed candidate, resolve
-any failures within the approved scope and record the exact SHA/results before
-closing RC-14/RC-15 and Completed. Merge requires an owner instruction as well.
-No commit, push, merge, deployment or Live activation was performed here.
+## Closure scope
+
+F-38 validation is complete for the final source/harness candidate. This closing
+edit changes documentation only; code, dependencies, migration/config and raw
+evidence are unchanged, so existing validation remains applicable. Required CI
+continues to run through the repository workflow. Failed/partial historical
+attempts remain preserved; no threshold, duration or denominator was relaxed.
+Production hosting/PREPARED, Live activation, F-11/F-15 and ETH workload remain
+outside this closure. No deployment or Live order was performed.

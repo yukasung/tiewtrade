@@ -2,11 +2,12 @@
 
 สถานะ: **Approved — เจ้าของอนุมัติ 2026-10-15**
 
-ผล candidate ล่าสุด 2026-10-27: **Pending final candidate CI** — merged candidate
-`12bf632` พร้อม harness changes ผ่าน capacity C1–C6/S1–S5 และ local review แล้ว;
-V-15 ใช้ผล restore เดิมตาม provenance. ดู [current crosswalk](evidence/release-20261026-merge/README.md).
-ผล Completed และตารางเดิมด้านล่างเป็นประวัติของ candidate `bfb6ab0`;
-ไม่ใช่หลักฐาน required CI ของชุดล่าสุด และยังไม่เรียกชุดล่าสุดว่า Completed.
+ผล candidate ล่าสุด 2026-10-27: **Passed — F-38 Completed** — `aabdfb9` ผ่าน
+capacity C1–C6/S1–S5, local review และ required push/PR CI ครบ 12/12 jobs
+(backend 3,462 passed); PR #38 merge เป็น `bf7b847` แล้ว. V-15 ใช้ผล restore
+เดิมตาม provenance. ดู [current crosswalk](evidence/release-20261026-merge/README.md).
+ตารางเดิมด้านล่างเก็บประวัติ candidate `bfb6ab0`; ผลล่าสุดใช้ crosswalk ข้างต้น
+และไม่เปลี่ยนสถานะ F-11/F-15/ETH workload/production PREPARED/Live.
 
 ## “เสร็จ” หมายถึง
 

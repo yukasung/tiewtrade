@@ -1,7 +1,7 @@
 # F-38 merged candidate checkpoint audit — 2026-10-26
 
-Status: **Merged-candidate capacity/fairness C1–C6 and S1–S5 Passed; local review
-and crosswalk complete; final candidate CI Pending.**
+Status: **Merged-candidate C1–C6/S1–S5, review/crosswalk and final candidate CI
+Passed. PR #38 merged as bf7b847; current closure is in README.md.**
 
 Current handoff: [final crosswalk](README.md). Older next-step/pending statements
 below are historical audit snapshots, superseded by this handoff.
