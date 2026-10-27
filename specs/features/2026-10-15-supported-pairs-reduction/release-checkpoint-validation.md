@@ -4,10 +4,11 @@
 
 อ้างอิงแผน: `release-checkpoint-plan.md`
 
-ผล candidate ล่าสุด 2026-10-27: RC-01–RC-13 ผ่าน/ใช้หลักฐานเดิมได้ตาม
-[current crosswalk](evidence/release-20261026-merge/README.md); RC-14 **Pending final
-candidate CI**, RC-15 mapping/local review ครบแต่การปิดงานยัง **Pending RC-14**.
-ตารางผลเดิมด้านล่างเป็นประวัติ candidate `bfb6ab0` ไม่ปิด validation ของชุดล่าสุด.
+ผล candidate ล่าสุด 2026-10-27: **RC-01–RC-15 Passed** ตาม
+[current crosswalk](evidence/release-20261026-merge/README.md). Candidate `aabdfb9`
+ผ่าน required push/PR CI ครบ 12/12 jobs และ PR #38 merge เป็น `bf7b847` แล้ว;
+V-15 reuse ตาม provenance และไม่มี source/harness เปลี่ยนหลัง validation.
+ตารางผลเดิมด้านล่างเก็บเป็นประวัติ candidate `bfb6ab0`.
 
 ## “ผ่าน” หมายถึง
 
