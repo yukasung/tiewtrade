@@ -412,12 +412,28 @@ async def probes(
             )
             if index == 0 and barrier is not None:
                 pending = asyncio.create_task(request)
+                barrier_task = asyncio.ensure_future(barrier())
                 try:
-                    await barrier()
+                    done, _ = await asyncio.wait(
+                        (pending, barrier_task), return_when=asyncio.FIRST_COMPLETED
+                    )
+                    if (
+                        pending in done
+                        and pending.result().status_code != 200
+                        and not (
+                            pending.result().status_code == 503
+                            and pending.result().json().get("detail") == "INDICATOR_DATA_NOT_READY"
+                        )
+                    ):
+                        raise RuntimeError(
+                            "CAPACITY_BARRIER_REQUEST_REJECTED_" + str(pending.result().status_code)
+                        )
+                    await barrier_task
                     response = await pending
                 except BaseException:
                     pending.cancel()
-                    await asyncio.gather(pending, return_exceptions=True)
+                    barrier_task.cancel()
+                    await asyncio.gather(pending, barrier_task, return_exceptions=True)
                     raise
             else:
                 response = await request

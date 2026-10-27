@@ -1,0 +1,19 @@
+[
+  {
+    "base": "BTC",
+    "job_id": "41540968-52d8-48c2-ba56-d965bd4d6347",
+    "timeframe": "1m",
+    "generation_id": "990d869f-f1c8-43cd-adaa-1787af77cd03",
+    "claimed_at": "2026-10-26 15:06:59.317084+00:00",
+    "attempt_deadline": "2026-10-26 15:08:59.317084+00:00",
+    "finished_at": "2026-10-26 15:07:40.744698+00:00",
+    "dispatch_round": 17,
+    "fence": 258,
+    "owner": "105aec44-0b58-403a-b565-c35637eb58f1",
+    "status": "READY",
+    "reason": null,
+    "seconds_including_acquire_cleanup": 41.42812239399973,
+    "lag_seconds": 0.04428616699828126,
+    "rss_delta_upper_bytes": 258048
+  }
+]

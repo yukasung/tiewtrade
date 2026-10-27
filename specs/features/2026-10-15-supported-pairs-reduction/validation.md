@@ -2,6 +2,12 @@
 
 สถานะ: **Approved — เจ้าของอนุมัติ 2026-10-15**
 
+ผล candidate ล่าสุด 2026-10-27: **Pending final candidate CI** — merged candidate
+`12bf632` พร้อม harness changes ผ่าน capacity C1–C6/S1–S5 และ local review แล้ว;
+V-15 ใช้ผล restore เดิมตาม provenance. ดู [current crosswalk](evidence/release-20261026-merge/README.md).
+ผล Completed และตารางเดิมด้านล่างเป็นประวัติของ candidate `bfb6ab0`;
+ไม่ใช่หลักฐาน required CI ของชุดล่าสุด และยังไม่เรียกชุดล่าสุดว่า Completed.
+
 ## “เสร็จ” หมายถึง
 
 | รหัส | เกณฑ์ | ตรวจอย่างไร | ช่วงรัน | ผล / หลักฐาน |

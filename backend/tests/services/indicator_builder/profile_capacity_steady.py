@@ -303,6 +303,14 @@ def phase_plan(phase: str, loaded: bool, smoke: bool) -> tuple[str, str | None, 
     return ("R2-C3", "R2-C2", 3600) if phase == "dirty" else ("R2-C2", None, 3600)
 
 
+def admission_phase_delay(seconds: int, microseconds: int) -> float:
+    """Start measured probes five seconds inside Redis's real fixed window.
+
+    This changes only pre-T0 alignment, never counters, limits or 60-second cadence.
+    """
+    return (5 - (seconds % 60 + microseconds / 1_000_000)) % 60
+
+
 async def run(
     output: Path,
     c1: Path,
@@ -312,11 +320,18 @@ async def run(
     metrics_directory: Path | None = None,
     smoke: bool = False,
     combined: bool = False,
+    diagnostic_seconds: int | None = None,
 ) -> int:
     assert json.loads((c1 / "result.json").read_text(encoding="utf-8"))["R2-C1"] == "PASSED"
     gates: tuple[str, ...]
     required: tuple[str, ...]
-    if smoke:
+    if diagnostic_seconds is not None:
+        if smoke or combined or phase != "steady" or load_metrics is None:
+            raise ValueError("diagnostic requires steady rejected load without acceptance modes")
+        if diagnostic_seconds < 60 or diagnostic_seconds > 2400 or diagnostic_seconds % 60:
+            raise ValueError("diagnostic duration must be 60..2400 seconds in whole minutes")
+        gates, required, duration = ("DIAGNOSTIC-steady",), (), diagnostic_seconds
+    elif smoke:
         if combined:
             raise ValueError("smoke evidence cannot emit combined acceptance gates")
         smoke_gate, smoke_required, duration = phase_plan(phase, load_metrics is not None, smoke)
@@ -505,6 +520,19 @@ async def run(
                 responses.append(p)
             save(output / "probes.json", responses)
 
+        redis_seconds, redis_microseconds = await redis.time()
+        alignment_delay = admission_phase_delay(redis_seconds, redis_microseconds)
+        save(
+            output / "admission-phase-alignment.json",
+            {
+                "redis_seconds": redis_seconds,
+                "redis_microseconds": redis_microseconds,
+                "wait_seconds": alignment_delay,
+                "probe_interval_seconds": 60,
+                "note": "Pre-T0 alignment only; no quota counter or threshold change.",
+            },
+        )
+        await asyncio.sleep(alignment_delay)
         started = monotonic()
         phase_utc = datetime.now(UTC)
         if metric_file is not None:
@@ -667,7 +695,8 @@ async def run(
                 "smoke": smoke,
                 "scheduled_seconds": duration,
                 "readiness_scope": "BTCUSDT 8 timeframes" if smoke else "runtime catalog",
-                "full_validation_credit": False if smoke else passed,
+                "diagnostic": diagnostic_seconds is not None,
+                "full_validation_credit": False if smoke or diagnostic_seconds else passed,
                 "note": (
                     "Combined gates share one 60-minute run and always have the same result. "
                     if combined

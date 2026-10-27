@@ -1,0 +1,19 @@
+[
+  {
+    "base": "ETH",
+    "job_id": "57ec73ff-b053-4857-956d-8c7b00bcc807",
+    "timeframe": "5m",
+    "generation_id": "60aadec6-8ebe-4608-ac20-650a4475452d",
+    "claimed_at": "2026-10-26 12:46:43.224873+00:00",
+    "attempt_deadline": "2026-10-26 12:48:43.224873+00:00",
+    "finished_at": "2026-10-26 12:46:51.410143+00:00",
+    "dispatch_round": 8,
+    "fence": 108,
+    "owner": "a191fca6-f842-4dd4-bcee-b66e564f4bfc",
+    "status": "READY",
+    "reason": null,
+    "seconds_including_acquire_cleanup": 8.187904794999668,
+    "lag_seconds": 0.032168541999672014,
+    "rss_delta_upper_bytes": 53248
+  }
+]

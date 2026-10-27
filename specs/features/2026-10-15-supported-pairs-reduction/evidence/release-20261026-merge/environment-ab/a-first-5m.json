@@ -1,0 +1,54 @@
+{
+  "diagnostic_only": true,
+  "input": "../specs/features/2026-10-15-supported-pairs-reduction/evidence/release-20261026-merge/native-diagnostic-40m-r1",
+  "phase_seconds": 300.0,
+  "deduplicated_phase_gaps": 13,
+  "phase_gaps_over_100ms": [
+    {
+      "utc_epoch": 1793019947.0647464,
+      "wall_ms": 117.46220799977891,
+      "thread_cpu_ms": 0.035708000000411744,
+      "top": {
+        "file": "/usr/local/lib/python3.12/asyncio/runners.py",
+        "line": 118,
+        "function": "run"
+      },
+      "host_interval": {
+        "start": 1793019945.794712,
+        "end": 1793019947.81175,
+        "churn_mib_per_second": 945.6007394737869,
+        "swapin_pages": 0,
+        "swapout_pages": 0,
+        "gaps": 1
+      },
+      "host_churn_percentile": 84.45945945945945
+    }
+  ],
+  "host_intervals": 148,
+  "all_window_churn_mib_s": {
+    "count": 148,
+    "median": 448.5065326455864,
+    "max": 1815.9102783369406
+  },
+  "gap_window_churn_mib_s": {
+    "count": 11,
+    "median": 945.6007394737869,
+    "max": 1815.9102783369406
+  },
+  "control_window_churn_mib_s": {
+    "count": 137,
+    "median": 413.9838584006273,
+    "max": 1702.4227560576019
+  },
+  "gap_windows_with_swapin": 10,
+  "control_windows_with_swapin": 124,
+  "max_nr_throttled": 0,
+  "max_throttled_usec": 0,
+  "vm_steal_ticks_delta": 0,
+  "limitations": [
+    "Observational association does not establish causation.",
+    "Host samples are about 2 seconds apart, VM samples about 1 second.",
+    "Python stacks cannot resolve native uvloop waits.",
+    "The original request-level API_RESOURCE_LIMIT did not recur."
+  ]
+}

@@ -1,0 +1,92 @@
+{
+  "diagnostic_only": true,
+  "input": "../specs/features/2026-10-15-supported-pairs-reduction/evidence/release-20261026-merge/environment-ab-b5m-r1",
+  "phase_seconds": 300.0,
+  "deduplicated_phase_gaps": 10,
+  "phase_gaps_over_100ms": [
+    {
+      "utc_epoch": 1793023757.6350029,
+      "wall_ms": 155.39987600095628,
+      "thread_cpu_ms": 0.7567090000000221,
+      "top": {
+        "file": "/usr/local/lib/python3.12/asyncio/runners.py",
+        "line": 118,
+        "function": "run"
+      },
+      "host_interval": {
+        "start": 1793023756.194989,
+        "end": 1793023758.209542,
+        "churn_mib_per_second": 1950.4093406021175,
+        "swapin_pages": 96,
+        "swapout_pages": 0,
+        "gaps": 2
+      },
+      "host_churn_percentile": 99.32432432432432
+    },
+    {
+      "utc_epoch": 1793023948.0216348,
+      "wall_ms": 133.06199999897217,
+      "thread_cpu_ms": 0.5579159999999916,
+      "top": {
+        "file": "/usr/local/lib/python3.12/asyncio/runners.py",
+        "line": 118,
+        "function": "run"
+      },
+      "host_interval": {
+        "start": 1793023947.551993,
+        "end": 1793023949.563737,
+        "churn_mib_per_second": 2509.5917740338614,
+        "swapin_pages": 112,
+        "swapout_pages": 0,
+        "gaps": 2
+      },
+      "host_churn_percentile": 100.0
+    },
+    {
+      "utc_epoch": 1793023948.3811657,
+      "wall_ms": 134.24041700091038,
+      "thread_cpu_ms": 8.695249000000516,
+      "top": {
+        "file": "/usr/local/lib/python3.12/asyncio/runners.py",
+        "line": 118,
+        "function": "run"
+      },
+      "host_interval": {
+        "start": 1793023947.551993,
+        "end": 1793023949.563737,
+        "churn_mib_per_second": 2509.5917740338614,
+        "swapin_pages": 112,
+        "swapout_pages": 0,
+        "gaps": 3
+      },
+      "host_churn_percentile": 100.0
+    }
+  ],
+  "host_intervals": 148,
+  "all_window_churn_mib_s": {
+    "count": 148,
+    "median": 285.20960156137585,
+    "max": 2509.5917740338614
+  },
+  "gap_window_churn_mib_s": {
+    "count": 7,
+    "median": 1566.0355787802175,
+    "max": 2509.5917740338614
+  },
+  "control_window_churn_mib_s": {
+    "count": 141,
+    "median": 280.77772045497926,
+    "max": 1163.9527211883178
+  },
+  "gap_windows_with_swapin": 6,
+  "control_windows_with_swapin": 83,
+  "max_nr_throttled": 0,
+  "max_throttled_usec": 0,
+  "vm_steal_ticks_delta": 0,
+  "limitations": [
+    "Observational association does not establish causation.",
+    "Host samples are about 2 seconds apart, VM samples about 1 second.",
+    "Python stacks cannot resolve native uvloop waits.",
+    "The original request-level API_RESOURCE_LIMIT did not recur."
+  ]
+}
