@@ -1,0 +1,938 @@
+[
+  {
+    "seconds": 0.03711300100258086,
+    "series": [
+      {
+        "base": "BTC",
+        "timeframe": "1m",
+        "valid": true,
+        "age_seconds": 421.211865,
+        "observed_at": "2026-10-25 02:00:01.211865+00:00"
+      },
+      {
+        "base": "BTC",
+        "timeframe": "5m",
+        "valid": true,
+        "age_seconds": 36.545311,
+        "observed_at": "2026-10-25 02:00:01.211865+00:00"
+      },
+      {
+        "base": "BTC",
+        "timeframe": "15m",
+        "valid": true,
+        "age_seconds": 28.184774,
+        "observed_at": "2026-10-25 02:00:01.211865+00:00"
+      },
+      {
+        "base": "BTC",
+        "timeframe": "1h",
+        "valid": true,
+        "age_seconds": 25.473166,
+        "observed_at": "2026-10-25 02:00:01.211865+00:00"
+      },
+      {
+        "base": "BTC",
+        "timeframe": "4h",
+        "valid": true,
+        "age_seconds": 24.782378,
+        "observed_at": "2026-10-25 02:00:01.211865+00:00"
+      },
+      {
+        "base": "BTC",
+        "timeframe": "1d",
+        "valid": true,
+        "age_seconds": 24.585214,
+        "observed_at": "2026-10-25 02:00:01.211865+00:00"
+      },
+      {
+        "base": "BTC",
+        "timeframe": "1w",
+        "valid": true,
+        "age_seconds": 24.531993,
+        "observed_at": "2026-10-25 02:00:01.211865+00:00"
+      },
+      {
+        "base": "BTC",
+        "timeframe": "1M",
+        "valid": true,
+        "age_seconds": 24.485778,
+        "observed_at": "2026-10-25 02:00:01.211865+00:00"
+      },
+      {
+        "base": "ETH",
+        "timeframe": "1m",
+        "valid": true,
+        "age_seconds": 421.211865,
+        "observed_at": "2026-10-25 02:00:01.211865+00:00"
+      },
+      {
+        "base": "ETH",
+        "timeframe": "5m",
+        "valid": true,
+        "age_seconds": 14.40831,
+        "observed_at": "2026-10-25 02:00:01.211865+00:00"
+      },
+      {
+        "base": "ETH",
+        "timeframe": "15m",
+        "valid": true,
+        "age_seconds": 5.922619,
+        "observed_at": "2026-10-25 02:00:01.211865+00:00"
+      },
+      {
+        "base": "ETH",
+        "timeframe": "1h",
+        "valid": true,
+        "age_seconds": 3.213585,
+        "observed_at": "2026-10-25 02:00:01.211865+00:00"
+      },
+      {
+        "base": "ETH",
+        "timeframe": "4h",
+        "valid": true,
+        "age_seconds": 421.211865,
+        "observed_at": "2026-10-25 02:00:01.211865+00:00"
+      },
+      {
+        "base": "ETH",
+        "timeframe": "1d",
+        "valid": true,
+        "age_seconds": 421.211865,
+        "observed_at": "2026-10-25 02:00:01.211865+00:00"
+      },
+      {
+        "base": "ETH",
+        "timeframe": "1w",
+        "valid": true,
+        "age_seconds": 421.211865,
+        "observed_at": "2026-10-25 02:00:01.211865+00:00"
+      },
+      {
+        "base": "ETH",
+        "timeframe": "1M",
+        "valid": true,
+        "age_seconds": 421.211865,
+        "observed_at": "2026-10-25 02:00:01.211865+00:00"
+      }
+    ]
+  },
+  {
+    "seconds": 10.045507089002058,
+    "series": [
+      {
+        "base": "BTC",
+        "timeframe": "1m",
+        "valid": true,
+        "age_seconds": 431.210267,
+        "observed_at": "2026-10-25 02:00:11.210267+00:00"
+      },
+      {
+        "base": "BTC",
+        "timeframe": "5m",
+        "valid": true,
+        "age_seconds": 46.543713,
+        "observed_at": "2026-10-25 02:00:11.210267+00:00"
+      },
+      {
+        "base": "BTC",
+        "timeframe": "15m",
+        "valid": true,
+        "age_seconds": 38.183176,
+        "observed_at": "2026-10-25 02:00:11.210267+00:00"
+      },
+      {
+        "base": "BTC",
+        "timeframe": "1h",
+        "valid": true,
+        "age_seconds": 35.471568,
+        "observed_at": "2026-10-25 02:00:11.210267+00:00"
+      },
+      {
+        "base": "BTC",
+        "timeframe": "4h",
+        "valid": true,
+        "age_seconds": 34.78078,
+        "observed_at": "2026-10-25 02:00:11.210267+00:00"
+      },
+      {
+        "base": "BTC",
+        "timeframe": "1d",
+        "valid": true,
+        "age_seconds": 34.583616,
+        "observed_at": "2026-10-25 02:00:11.210267+00:00"
+      },
+      {
+        "base": "BTC",
+        "timeframe": "1w",
+        "valid": true,
+        "age_seconds": 34.530395,
+        "observed_at": "2026-10-25 02:00:11.210267+00:00"
+      },
+      {
+        "base": "BTC",
+        "timeframe": "1M",
+        "valid": true,
+        "age_seconds": 34.48418,
+        "observed_at": "2026-10-25 02:00:11.210267+00:00"
+      },
+      {
+        "base": "ETH",
+        "timeframe": "1m",
+        "valid": true,
+        "age_seconds": 431.210267,
+        "observed_at": "2026-10-25 02:00:11.210267+00:00"
+      },
+      {
+        "base": "ETH",
+        "timeframe": "5m",
+        "valid": true,
+        "age_seconds": 24.406712,
+        "observed_at": "2026-10-25 02:00:11.210267+00:00"
+      },
+      {
+        "base": "ETH",
+        "timeframe": "15m",
+        "valid": true,
+        "age_seconds": 15.921021,
+        "observed_at": "2026-10-25 02:00:11.210267+00:00"
+      },
+      {
+        "base": "ETH",
+        "timeframe": "1h",
+        "valid": true,
+        "age_seconds": 13.211987,
+        "observed_at": "2026-10-25 02:00:11.210267+00:00"
+      },
+      {
+        "base": "ETH",
+        "timeframe": "4h",
+        "valid": true,
+        "age_seconds": 431.210267,
+        "observed_at": "2026-10-25 02:00:11.210267+00:00"
+      },
+      {
+        "base": "ETH",
+        "timeframe": "1d",
+        "valid": true,
+        "age_seconds": 431.210267,
+        "observed_at": "2026-10-25 02:00:11.210267+00:00"
+      },
+      {
+        "base": "ETH",
+        "timeframe": "1w",
+        "valid": true,
+        "age_seconds": 431.210267,
+        "observed_at": "2026-10-25 02:00:11.210267+00:00"
+      },
+      {
+        "base": "ETH",
+        "timeframe": "1M",
+        "valid": true,
+        "age_seconds": 431.210267,
+        "observed_at": "2026-10-25 02:00:11.210267+00:00"
+      }
+    ]
+  },
+  {
+    "seconds": 20.122053676001087,
+    "series": [
+      {
+        "base": "BTC",
+        "timeframe": "1m",
+        "valid": true,
+        "age_seconds": 441.251669,
+        "observed_at": "2026-10-25 02:00:21.251669+00:00"
+      },
+      {
+        "base": "BTC",
+        "timeframe": "5m",
+        "valid": true,
+        "age_seconds": 56.585115,
+        "observed_at": "2026-10-25 02:00:21.251669+00:00"
+      },
+      {
+        "base": "BTC",
+        "timeframe": "15m",
+        "valid": true,
+        "age_seconds": 48.224578,
+        "observed_at": "2026-10-25 02:00:21.251669+00:00"
+      },
+      {
+        "base": "BTC",
+        "timeframe": "1h",
+        "valid": true,
+        "age_seconds": 45.51297,
+        "observed_at": "2026-10-25 02:00:21.251669+00:00"
+      },
+      {
+        "base": "BTC",
+        "timeframe": "4h",
+        "valid": true,
+        "age_seconds": 44.822182,
+        "observed_at": "2026-10-25 02:00:21.251669+00:00"
+      },
+      {
+        "base": "BTC",
+        "timeframe": "1d",
+        "valid": true,
+        "age_seconds": 44.625018,
+        "observed_at": "2026-10-25 02:00:21.251669+00:00"
+      },
+      {
+        "base": "BTC",
+        "timeframe": "1w",
+        "valid": true,
+        "age_seconds": 44.571797,
+        "observed_at": "2026-10-25 02:00:21.251669+00:00"
+      },
+      {
+        "base": "BTC",
+        "timeframe": "1M",
+        "valid": true,
+        "age_seconds": 44.525582,
+        "observed_at": "2026-10-25 02:00:21.251669+00:00"
+      },
+      {
+        "base": "ETH",
+        "timeframe": "1m",
+        "valid": true,
+        "age_seconds": 441.251669,
+        "observed_at": "2026-10-25 02:00:21.251669+00:00"
+      },
+      {
+        "base": "ETH",
+        "timeframe": "5m",
+        "valid": true,
+        "age_seconds": 34.448114,
+        "observed_at": "2026-10-25 02:00:21.251669+00:00"
+      },
+      {
+        "base": "ETH",
+        "timeframe": "15m",
+        "valid": true,
+        "age_seconds": 25.962423,
+        "observed_at": "2026-10-25 02:00:21.251669+00:00"
+      },
+      {
+        "base": "ETH",
+        "timeframe": "1h",
+        "valid": true,
+        "age_seconds": 23.253389,
+        "observed_at": "2026-10-25 02:00:21.251669+00:00"
+      },
+      {
+        "base": "ETH",
+        "timeframe": "4h",
+        "valid": true,
+        "age_seconds": 441.251669,
+        "observed_at": "2026-10-25 02:00:21.251669+00:00"
+      },
+      {
+        "base": "ETH",
+        "timeframe": "1d",
+        "valid": true,
+        "age_seconds": 441.251669,
+        "observed_at": "2026-10-25 02:00:21.251669+00:00"
+      },
+      {
+        "base": "ETH",
+        "timeframe": "1w",
+        "valid": true,
+        "age_seconds": 441.251669,
+        "observed_at": "2026-10-25 02:00:21.251669+00:00"
+      },
+      {
+        "base": "ETH",
+        "timeframe": "1M",
+        "valid": true,
+        "age_seconds": 441.251669,
+        "observed_at": "2026-10-25 02:00:21.251669+00:00"
+      }
+    ]
+  },
+  {
+    "seconds": 30.081718306002585,
+    "series": [
+      {
+        "base": "BTC",
+        "timeframe": "1m",
+        "valid": true,
+        "age_seconds": 451.217409,
+        "observed_at": "2026-10-25 02:00:31.217409+00:00"
+      },
+      {
+        "base": "BTC",
+        "timeframe": "5m",
+        "valid": true,
+        "age_seconds": 66.550855,
+        "observed_at": "2026-10-25 02:00:31.217409+00:00"
+      },
+      {
+        "base": "BTC",
+        "timeframe": "15m",
+        "valid": true,
+        "age_seconds": 58.190318,
+        "observed_at": "2026-10-25 02:00:31.217409+00:00"
+      },
+      {
+        "base": "BTC",
+        "timeframe": "1h",
+        "valid": true,
+        "age_seconds": 55.47871,
+        "observed_at": "2026-10-25 02:00:31.217409+00:00"
+      },
+      {
+        "base": "BTC",
+        "timeframe": "4h",
+        "valid": true,
+        "age_seconds": 54.787922,
+        "observed_at": "2026-10-25 02:00:31.217409+00:00"
+      },
+      {
+        "base": "BTC",
+        "timeframe": "1d",
+        "valid": true,
+        "age_seconds": 54.590758,
+        "observed_at": "2026-10-25 02:00:31.217409+00:00"
+      },
+      {
+        "base": "BTC",
+        "timeframe": "1w",
+        "valid": true,
+        "age_seconds": 54.537537,
+        "observed_at": "2026-10-25 02:00:31.217409+00:00"
+      },
+      {
+        "base": "BTC",
+        "timeframe": "1M",
+        "valid": true,
+        "age_seconds": 54.491322,
+        "observed_at": "2026-10-25 02:00:31.217409+00:00"
+      },
+      {
+        "base": "ETH",
+        "timeframe": "1m",
+        "valid": true,
+        "age_seconds": 451.217409,
+        "observed_at": "2026-10-25 02:00:31.217409+00:00"
+      },
+      {
+        "base": "ETH",
+        "timeframe": "5m",
+        "valid": true,
+        "age_seconds": 44.413854,
+        "observed_at": "2026-10-25 02:00:31.217409+00:00"
+      },
+      {
+        "base": "ETH",
+        "timeframe": "15m",
+        "valid": true,
+        "age_seconds": 35.928163,
+        "observed_at": "2026-10-25 02:00:31.217409+00:00"
+      },
+      {
+        "base": "ETH",
+        "timeframe": "1h",
+        "valid": true,
+        "age_seconds": 33.219129,
+        "observed_at": "2026-10-25 02:00:31.217409+00:00"
+      },
+      {
+        "base": "ETH",
+        "timeframe": "4h",
+        "valid": true,
+        "age_seconds": 451.217409,
+        "observed_at": "2026-10-25 02:00:31.217409+00:00"
+      },
+      {
+        "base": "ETH",
+        "timeframe": "1d",
+        "valid": true,
+        "age_seconds": 451.217409,
+        "observed_at": "2026-10-25 02:00:31.217409+00:00"
+      },
+      {
+        "base": "ETH",
+        "timeframe": "1w",
+        "valid": true,
+        "age_seconds": 451.217409,
+        "observed_at": "2026-10-25 02:00:31.217409+00:00"
+      },
+      {
+        "base": "ETH",
+        "timeframe": "1M",
+        "valid": true,
+        "age_seconds": 451.217409,
+        "observed_at": "2026-10-25 02:00:31.217409+00:00"
+      }
+    ]
+  },
+  {
+    "seconds": 40.08121339400168,
+    "series": [
+      {
+        "base": "BTC",
+        "timeframe": "1m",
+        "valid": true,
+        "age_seconds": 461.21674,
+        "observed_at": "2026-10-25 02:00:41.216740+00:00"
+      },
+      {
+        "base": "BTC",
+        "timeframe": "5m",
+        "valid": true,
+        "age_seconds": 76.550186,
+        "observed_at": "2026-10-25 02:00:41.216740+00:00"
+      },
+      {
+        "base": "BTC",
+        "timeframe": "15m",
+        "valid": true,
+        "age_seconds": 68.189649,
+        "observed_at": "2026-10-25 02:00:41.216740+00:00"
+      },
+      {
+        "base": "BTC",
+        "timeframe": "1h",
+        "valid": true,
+        "age_seconds": 65.478041,
+        "observed_at": "2026-10-25 02:00:41.216740+00:00"
+      },
+      {
+        "base": "BTC",
+        "timeframe": "4h",
+        "valid": true,
+        "age_seconds": 64.787253,
+        "observed_at": "2026-10-25 02:00:41.216740+00:00"
+      },
+      {
+        "base": "BTC",
+        "timeframe": "1d",
+        "valid": true,
+        "age_seconds": 64.590089,
+        "observed_at": "2026-10-25 02:00:41.216740+00:00"
+      },
+      {
+        "base": "BTC",
+        "timeframe": "1w",
+        "valid": true,
+        "age_seconds": 64.536868,
+        "observed_at": "2026-10-25 02:00:41.216740+00:00"
+      },
+      {
+        "base": "BTC",
+        "timeframe": "1M",
+        "valid": true,
+        "age_seconds": 64.490653,
+        "observed_at": "2026-10-25 02:00:41.216740+00:00"
+      },
+      {
+        "base": "ETH",
+        "timeframe": "1m",
+        "valid": true,
+        "age_seconds": 461.21674,
+        "observed_at": "2026-10-25 02:00:41.216740+00:00"
+      },
+      {
+        "base": "ETH",
+        "timeframe": "5m",
+        "valid": true,
+        "age_seconds": 54.413185,
+        "observed_at": "2026-10-25 02:00:41.216740+00:00"
+      },
+      {
+        "base": "ETH",
+        "timeframe": "15m",
+        "valid": true,
+        "age_seconds": 45.927494,
+        "observed_at": "2026-10-25 02:00:41.216740+00:00"
+      },
+      {
+        "base": "ETH",
+        "timeframe": "1h",
+        "valid": true,
+        "age_seconds": 43.21846,
+        "observed_at": "2026-10-25 02:00:41.216740+00:00"
+      },
+      {
+        "base": "ETH",
+        "timeframe": "4h",
+        "valid": true,
+        "age_seconds": 461.21674,
+        "observed_at": "2026-10-25 02:00:41.216740+00:00"
+      },
+      {
+        "base": "ETH",
+        "timeframe": "1d",
+        "valid": true,
+        "age_seconds": 461.21674,
+        "observed_at": "2026-10-25 02:00:41.216740+00:00"
+      },
+      {
+        "base": "ETH",
+        "timeframe": "1w",
+        "valid": true,
+        "age_seconds": 461.21674,
+        "observed_at": "2026-10-25 02:00:41.216740+00:00"
+      },
+      {
+        "base": "ETH",
+        "timeframe": "1M",
+        "valid": true,
+        "age_seconds": 461.21674,
+        "observed_at": "2026-10-25 02:00:41.216740+00:00"
+      }
+    ]
+  },
+  {
+    "seconds": 50.16954789900046,
+    "series": [
+      {
+        "base": "BTC",
+        "timeframe": "1m",
+        "valid": true,
+        "age_seconds": 471.212251,
+        "observed_at": "2026-10-25 02:00:51.212251+00:00"
+      },
+      {
+        "base": "BTC",
+        "timeframe": "5m",
+        "valid": true,
+        "age_seconds": 86.545697,
+        "observed_at": "2026-10-25 02:00:51.212251+00:00"
+      },
+      {
+        "base": "BTC",
+        "timeframe": "15m",
+        "valid": true,
+        "age_seconds": 78.18516,
+        "observed_at": "2026-10-25 02:00:51.212251+00:00"
+      },
+      {
+        "base": "BTC",
+        "timeframe": "1h",
+        "valid": true,
+        "age_seconds": 75.473552,
+        "observed_at": "2026-10-25 02:00:51.212251+00:00"
+      },
+      {
+        "base": "BTC",
+        "timeframe": "4h",
+        "valid": true,
+        "age_seconds": 74.782764,
+        "observed_at": "2026-10-25 02:00:51.212251+00:00"
+      },
+      {
+        "base": "BTC",
+        "timeframe": "1d",
+        "valid": true,
+        "age_seconds": 74.5856,
+        "observed_at": "2026-10-25 02:00:51.212251+00:00"
+      },
+      {
+        "base": "BTC",
+        "timeframe": "1w",
+        "valid": true,
+        "age_seconds": 74.532379,
+        "observed_at": "2026-10-25 02:00:51.212251+00:00"
+      },
+      {
+        "base": "BTC",
+        "timeframe": "1M",
+        "valid": true,
+        "age_seconds": 74.486164,
+        "observed_at": "2026-10-25 02:00:51.212251+00:00"
+      },
+      {
+        "base": "ETH",
+        "timeframe": "1m",
+        "valid": true,
+        "age_seconds": 471.212251,
+        "observed_at": "2026-10-25 02:00:51.212251+00:00"
+      },
+      {
+        "base": "ETH",
+        "timeframe": "5m",
+        "valid": true,
+        "age_seconds": 64.408696,
+        "observed_at": "2026-10-25 02:00:51.212251+00:00"
+      },
+      {
+        "base": "ETH",
+        "timeframe": "15m",
+        "valid": true,
+        "age_seconds": 55.923005,
+        "observed_at": "2026-10-25 02:00:51.212251+00:00"
+      },
+      {
+        "base": "ETH",
+        "timeframe": "1h",
+        "valid": true,
+        "age_seconds": 53.213971,
+        "observed_at": "2026-10-25 02:00:51.212251+00:00"
+      },
+      {
+        "base": "ETH",
+        "timeframe": "4h",
+        "valid": true,
+        "age_seconds": 471.212251,
+        "observed_at": "2026-10-25 02:00:51.212251+00:00"
+      },
+      {
+        "base": "ETH",
+        "timeframe": "1d",
+        "valid": true,
+        "age_seconds": 471.212251,
+        "observed_at": "2026-10-25 02:00:51.212251+00:00"
+      },
+      {
+        "base": "ETH",
+        "timeframe": "1w",
+        "valid": true,
+        "age_seconds": 471.212251,
+        "observed_at": "2026-10-25 02:00:51.212251+00:00"
+      },
+      {
+        "base": "ETH",
+        "timeframe": "1M",
+        "valid": true,
+        "age_seconds": 471.212251,
+        "observed_at": "2026-10-25 02:00:51.212251+00:00"
+      }
+    ]
+  },
+  {
+    "seconds": 60.09135107000111,
+    "series": [
+      {
+        "base": "BTC",
+        "timeframe": "1m",
+        "valid": true,
+        "age_seconds": 481.219387,
+        "observed_at": "2026-10-25 02:01:01.219387+00:00"
+      },
+      {
+        "base": "BTC",
+        "timeframe": "5m",
+        "valid": true,
+        "age_seconds": 96.552833,
+        "observed_at": "2026-10-25 02:01:01.219387+00:00"
+      },
+      {
+        "base": "BTC",
+        "timeframe": "15m",
+        "valid": true,
+        "age_seconds": 88.192296,
+        "observed_at": "2026-10-25 02:01:01.219387+00:00"
+      },
+      {
+        "base": "BTC",
+        "timeframe": "1h",
+        "valid": true,
+        "age_seconds": 85.480688,
+        "observed_at": "2026-10-25 02:01:01.219387+00:00"
+      },
+      {
+        "base": "BTC",
+        "timeframe": "4h",
+        "valid": true,
+        "age_seconds": 84.7899,
+        "observed_at": "2026-10-25 02:01:01.219387+00:00"
+      },
+      {
+        "base": "BTC",
+        "timeframe": "1d",
+        "valid": true,
+        "age_seconds": 84.592736,
+        "observed_at": "2026-10-25 02:01:01.219387+00:00"
+      },
+      {
+        "base": "BTC",
+        "timeframe": "1w",
+        "valid": true,
+        "age_seconds": 84.539515,
+        "observed_at": "2026-10-25 02:01:01.219387+00:00"
+      },
+      {
+        "base": "BTC",
+        "timeframe": "1M",
+        "valid": true,
+        "age_seconds": 84.4933,
+        "observed_at": "2026-10-25 02:01:01.219387+00:00"
+      },
+      {
+        "base": "ETH",
+        "timeframe": "1m",
+        "valid": true,
+        "age_seconds": 481.219387,
+        "observed_at": "2026-10-25 02:01:01.219387+00:00"
+      },
+      {
+        "base": "ETH",
+        "timeframe": "5m",
+        "valid": true,
+        "age_seconds": 74.415832,
+        "observed_at": "2026-10-25 02:01:01.219387+00:00"
+      },
+      {
+        "base": "ETH",
+        "timeframe": "15m",
+        "valid": true,
+        "age_seconds": 65.930141,
+        "observed_at": "2026-10-25 02:01:01.219387+00:00"
+      },
+      {
+        "base": "ETH",
+        "timeframe": "1h",
+        "valid": true,
+        "age_seconds": 63.221107,
+        "observed_at": "2026-10-25 02:01:01.219387+00:00"
+      },
+      {
+        "base": "ETH",
+        "timeframe": "4h",
+        "valid": true,
+        "age_seconds": 9.067221,
+        "observed_at": "2026-10-25 02:01:01.219387+00:00"
+      },
+      {
+        "base": "ETH",
+        "timeframe": "1d",
+        "valid": true,
+        "age_seconds": 8.821595,
+        "observed_at": "2026-10-25 02:01:01.219387+00:00"
+      },
+      {
+        "base": "ETH",
+        "timeframe": "1w",
+        "valid": true,
+        "age_seconds": 8.731777,
+        "observed_at": "2026-10-25 02:01:01.219387+00:00"
+      },
+      {
+        "base": "ETH",
+        "timeframe": "1M",
+        "valid": true,
+        "age_seconds": 8.636807,
+        "observed_at": "2026-10-25 02:01:01.219387+00:00"
+      }
+    ]
+  },
+  {
+    "seconds": 70.01792545000353,
+    "series": [
+      {
+        "base": "BTC",
+        "timeframe": "1m",
+        "valid": true,
+        "age_seconds": 491.201538,
+        "observed_at": "2026-10-25 02:01:11.201538+00:00"
+      },
+      {
+        "base": "BTC",
+        "timeframe": "5m",
+        "valid": true,
+        "age_seconds": 106.534984,
+        "observed_at": "2026-10-25 02:01:11.201538+00:00"
+      },
+      {
+        "base": "BTC",
+        "timeframe": "15m",
+        "valid": true,
+        "age_seconds": 98.174447,
+        "observed_at": "2026-10-25 02:01:11.201538+00:00"
+      },
+      {
+        "base": "BTC",
+        "timeframe": "1h",
+        "valid": true,
+        "age_seconds": 95.462839,
+        "observed_at": "2026-10-25 02:01:11.201538+00:00"
+      },
+      {
+        "base": "BTC",
+        "timeframe": "4h",
+        "valid": true,
+        "age_seconds": 94.772051,
+        "observed_at": "2026-10-25 02:01:11.201538+00:00"
+      },
+      {
+        "base": "BTC",
+        "timeframe": "1d",
+        "valid": true,
+        "age_seconds": 94.574887,
+        "observed_at": "2026-10-25 02:01:11.201538+00:00"
+      },
+      {
+        "base": "BTC",
+        "timeframe": "1w",
+        "valid": true,
+        "age_seconds": 94.521666,
+        "observed_at": "2026-10-25 02:01:11.201538+00:00"
+      },
+      {
+        "base": "BTC",
+        "timeframe": "1M",
+        "valid": true,
+        "age_seconds": 94.475451,
+        "observed_at": "2026-10-25 02:01:11.201538+00:00"
+      },
+      {
+        "base": "ETH",
+        "timeframe": "1m",
+        "valid": true,
+        "age_seconds": 491.201538,
+        "observed_at": "2026-10-25 02:01:11.201538+00:00"
+      },
+      {
+        "base": "ETH",
+        "timeframe": "5m",
+        "valid": true,
+        "age_seconds": 84.397983,
+        "observed_at": "2026-10-25 02:01:11.201538+00:00"
+      },
+      {
+        "base": "ETH",
+        "timeframe": "15m",
+        "valid": true,
+        "age_seconds": 75.912292,
+        "observed_at": "2026-10-25 02:01:11.201538+00:00"
+      },
+      {
+        "base": "ETH",
+        "timeframe": "1h",
+        "valid": true,
+        "age_seconds": 73.203258,
+        "observed_at": "2026-10-25 02:01:11.201538+00:00"
+      },
+      {
+        "base": "ETH",
+        "timeframe": "4h",
+        "valid": true,
+        "age_seconds": 19.049372,
+        "observed_at": "2026-10-25 02:01:11.201538+00:00"
+      },
+      {
+        "base": "ETH",
+        "timeframe": "1d",
+        "valid": true,
+        "age_seconds": 18.803746,
+        "observed_at": "2026-10-25 02:01:11.201538+00:00"
+      },
+      {
+        "base": "ETH",
+        "timeframe": "1w",
+        "valid": true,
+        "age_seconds": 18.713928,
+        "observed_at": "2026-10-25 02:01:11.201538+00:00"
+      },
+      {
+        "base": "ETH",
+        "timeframe": "1M",
+        "valid": true,
+        "age_seconds": 18.618958,
+        "observed_at": "2026-10-25 02:01:11.201538+00:00"
+      }
+    ]
+  }
+]

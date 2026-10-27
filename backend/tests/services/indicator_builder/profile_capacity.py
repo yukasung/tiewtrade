@@ -1,7 +1,7 @@
 """Explicit R2-C1 measurement on dedicated capacity services; never a normal test.
 
-Requires fresh migrated PG at 55434 and Redis at 56380. Leaves source/derived
-evidence in that dedicated DB. Runtime containers are stopped after measurement.
+Requires fresh migrated PG and Redis at the configured isolated ports. Leaves
+source/derived evidence in that dedicated DB. Runtime containers are stopped after measurement.
 C1 failure blocks dependent phases; it never becomes a passing availability gate.
 """
 
@@ -12,7 +12,7 @@ import hashlib
 import json
 import os
 import sys
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Sequence
 from contextlib import suppress
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -49,9 +49,60 @@ READINESS_SERIES = [(base, tf) for base, _ in sorted(PAIRS) for tf in CAPACITY_T
 # Long-running accepted/rejected load is deliberately BTC-only. Runtime readiness
 # remains all supported pairs so PREPARED never certifies an unprepared ETH series.
 SERIES = [("BTC", tf) for tf in CAPACITY_TIMEFRAMES]
-NETWORK = "tiewtrade-f11-capacity-net"
-PG = "tiewtrade-f11-capacity-postgres"
-REDIS = "tiewtrade-f11-capacity-redis"
+CAPACITY_PREFIX = os.environ.get("TIEWTRADE_CAPACITY_PREFIX", "tiewtrade-f11-capacity")
+CAPACITY_HOST = os.environ.get("TIEWTRADE_CAPACITY_HOST", "127.0.0.1")
+CAPACITY_API_HOST = os.environ.get("TIEWTRADE_CAPACITY_API_HOST", "127.0.0.1")
+CAPACITY_POSTGRES_PORT = int(os.environ.get("TIEWTRADE_CAPACITY_POSTGRES_PORT", "55434"))
+CAPACITY_REDIS_PORT = int(os.environ.get("TIEWTRADE_CAPACITY_REDIS_PORT", "56380"))
+NETWORK = CAPACITY_PREFIX + "-net"
+PG = CAPACITY_PREFIX + "-postgres"
+REDIS = CAPACITY_PREFIX + "-redis"
+
+
+def runtime_name(kind: str) -> str:
+    return CAPACITY_PREFIX + "-" + kind
+
+
+def capacity_api_url(port: str) -> str:
+    return f"http://{CAPACITY_API_HOST}:{port}"
+
+
+def exact_build_terminal_failure(job: Any) -> str | None:
+    """Return a terminal exact-fixture failure without rejecting queued retries."""
+    status = str(job["status"])
+    reason = job["failure_reason"]
+    if status.startswith("FAILED_") and reason:
+        return f"{status}:{job['failure_category']}:{reason}"
+    return None
+
+
+def exact_build_retry_is_eligible(job: Any, observed: datetime) -> bool:
+    """Return whether an exact-fixture retry can be claimed by a fresh worker."""
+    return (
+        str(job["status"]) == "QUEUED"
+        and job["retry_not_before"] is not None
+        and job["retry_not_before"] <= observed
+    )
+
+
+def exact_retry_requires_clock_release(
+    job: Any, observed: datetime, pinned_boundary: datetime
+) -> bool:
+    """Bridge elapsed wall backoff into the deliberately pinned fixture clock."""
+    eligible = exact_build_retry_is_eligible(job, observed)
+    return eligible and job["retry_not_before"] > pinned_boundary
+
+
+def capacity_scope_metadata() -> dict[str, int]:
+    """Describe the approved F-38 runtime and measured workload inventories."""
+    return {
+        "supported_runtime_pairs": len(PAIRS),
+        "runtime_readiness_series": len(READINESS_SERIES),
+        "profile_pairs": len({base for base, _ in SERIES}),
+        "profile_series": len(SERIES),
+    }
+
+
 INSERT = """INSERT INTO market_candles
  (source,base,quote,timeframe,open_at,end_at,open,high,low,close,volume,finality,
  observed_at,fetch_started_at,last_checked_at,ingestion_generation)
@@ -148,14 +199,18 @@ async def seed(engine: AsyncEngine) -> dict[str, datetime]:
     return ends
 
 
-async def append(engine: AsyncEngine, ends: dict[str, datetime]) -> None:
+async def append(
+    engine: AsyncEngine,
+    ends: dict[str, datetime],
+    series: Sequence[tuple[str, Timeframe]] = READINESS_SERIES,
+) -> None:
     async with engine.connect() as connection:
         current: datetime = (
             await connection.execute(text("SELECT clock_timestamp()"))
         ).scalar_one()
     pending = [
         (base, tf, base + "/" + tf.value, align_floor(current, tf))
-        for base, tf in READINESS_SERIES
+        for base, tf in series
         if align_floor(current, tf) > ends[base + "/" + tf.value]
     ]
     if not pending:
@@ -181,11 +236,14 @@ async def append(engine: AsyncEngine, ends: dict[str, datetime]) -> None:
 
 
 async def maintain_source(
-    engine: AsyncEngine, ends: dict[str, datetime], stop: asyncio.Event
+    engine: AsyncEngine,
+    ends: dict[str, datetime],
+    stop: asyncio.Event,
+    series: Sequence[tuple[str, Timeframe]] = READINESS_SERIES,
 ) -> None:
     """Keep source arrivals independent of HTTP probes and readiness polling."""
     while not stop.is_set():
-        await append(engine, ends)
+        await append(engine, ends, series)
         with suppress(TimeoutError):
             await asyncio.wait_for(stop.wait(), 0.25)
 
@@ -243,13 +301,16 @@ async def create_runtime(image: str, kind: str, metrics: Path | None = None) -> 
     args = [
         "create",
         "--name",
-        "tiewtrade-f11-capacity-" + kind,
+        runtime_name(kind),
         "--network",
         NETWORK,
         "--restart=no",
         "--cpus=2",
         "--memory=1g",
     ]
+    cpuset = os.environ.get("TIEWTRADE_CAPACITY_" + kind.upper() + "_CPUSET")
+    if cpuset:
+        args += ["--cpuset-cpus", cpuset]
     if kind == "api":
         args += ["-p", "127.0.0.1::8000"]
         environment = {
@@ -307,7 +368,7 @@ async def authenticate(container: str) -> tuple[list[httpx.AsyncClient], list[UU
     users = []
     try:
         for index in range(5):
-            client = httpx.AsyncClient(base_url="http://127.0.0.1:" + port, timeout=32)
+            client = httpx.AsyncClient(base_url=capacity_api_url(port), timeout=32)
             clients.append(client)
             async with asyncio.timeout(20):
                 while True:
@@ -351,12 +412,28 @@ async def probes(
             )
             if index == 0 and barrier is not None:
                 pending = asyncio.create_task(request)
+                barrier_task = asyncio.ensure_future(barrier())
                 try:
-                    await barrier()
+                    done, _ = await asyncio.wait(
+                        (pending, barrier_task), return_when=asyncio.FIRST_COMPLETED
+                    )
+                    if (
+                        pending in done
+                        and pending.result().status_code != 200
+                        and not (
+                            pending.result().status_code == 503
+                            and pending.result().json().get("detail") == "INDICATOR_DATA_NOT_READY"
+                        )
+                    ):
+                        raise RuntimeError(
+                            "CAPACITY_BARRIER_REQUEST_REJECTED_" + str(pending.result().status_code)
+                        )
+                    await barrier_task
                     response = await pending
                 except BaseException:
                     pending.cancel()
-                    await asyncio.gather(pending, return_exceptions=True)
+                    barrier_task.cancel()
+                    await asyncio.gather(pending, barrier_task, return_exceptions=True)
                     raise
             else:
                 response = await request
@@ -614,6 +691,7 @@ async def prepare_exact_r2_7_generation(
             )
 
     exact: dict[str, Any] | None = None
+    released_retry_backoffs = 0
     try:
         clock_marker.write_text(str(boundary), encoding="ascii")
         await docker("start", worker)
@@ -640,7 +718,8 @@ async def prepare_exact_r2_7_generation(
                     (
                         await connection.execute(
                             text(
-                                """SELECT status,attempts_used,failure_category,failure_reason
+                                """SELECT id,status,attempts_used,retry_not_before,
+                                failure_category,failure_reason,clock_timestamp() AS observed
                                 FROM indicator_build_jobs
                                 WHERE source='primary_spot' AND base='BTC'
                                   AND quote='USDT' AND timeframe='1m'"""
@@ -658,11 +737,32 @@ async def prepare_exact_r2_7_generation(
             ):
                 exact = dict(row)
                 break
-            if str(job["status"]).startswith("FAILED_"):
-                raise RuntimeError(
-                    "CAPACITY_EXACT_FIXTURE_BUILD_FAILED:"
-                    f"{job['status']}:{job['failure_category']}:{job['failure_reason']}"
-                )
+            if failure := exact_build_terminal_failure(job):
+                raise RuntimeError("CAPACITY_EXACT_FIXTURE_BUILD_FAILED:" + failure)
+            if exact_retry_requires_clock_release(job, job["observed"], boundary):
+                # The exact fixture pins the indicator SQL clock so the input remains
+                # exactly 525,600 slots. Honor the production backoff against real DB
+                # time first, then expose that elapsed backoff to the pinned clock.
+                async with migrator.begin() as connection:
+                    released = (
+                        await connection.execute(
+                            text(
+                                """UPDATE indicator_build_jobs SET retry_not_before=:boundary
+                                WHERE id=:id AND status='QUEUED'
+                                  AND retry_not_before=:retry_not_before RETURNING id"""
+                            ),
+                            {
+                                "boundary": boundary,
+                                "id": job["id"],
+                                "retry_not_before": job["retry_not_before"],
+                            },
+                        )
+                    ).scalar_one_or_none()
+                released_retry_backoffs += int(released is not None)
+            if exact_build_retry_is_eligible(job, job["observed"]):
+                running = await docker("inspect", "--format", "{{.State.Running}}", worker)
+                if running != "true":
+                    await docker("start", worker)
             await asyncio.sleep(0.5)
         if exact is None:
             raise RuntimeError("CAPACITY_EXACT_FIXTURE_NOT_READY")
@@ -680,6 +780,7 @@ async def prepare_exact_r2_7_generation(
         "boundary_age_seconds": boundary_age.total_seconds(),
         "source_rows": source_rows,
         "logical_slots": 525600,
+        "released_retry_backoffs": released_retry_backoffs,
         "invalidation_open_at": invalidation_open_at,
         "generation": exact,
     }
@@ -689,8 +790,12 @@ async def run(
     output: Path, image: str, metrics: Path | None = None, reuse_source: bool = False
 ) -> int:
     for role in (DatabaseRole.MIGRATOR, DatabaseRole.API, DatabaseRole.MARKET_DATA):
-        assert "@127.0.0.1:55434/tiewtrade" in os.environ[role.url_variable]
-    assert os.environ["TIEWTRADE_TEST_REDIS_URL"] == "redis://127.0.0.1:56380/0"
+        assert (
+            f"@{CAPACITY_HOST}:{CAPACITY_POSTGRES_PORT}/tiewtrade" in os.environ[role.url_variable]
+        )
+    assert os.environ["TIEWTRADE_TEST_REDIS_URL"] == (
+        f"redis://{CAPACITY_HOST}:{CAPACITY_REDIS_PORT}/0"
+    )
     output.mkdir(parents=True, exist_ok=True)
     assert not (output / "result.json").exists()
     migrator = create_engine_for(DatabaseRole.MIGRATOR)
@@ -743,6 +848,8 @@ async def run(
                 "image": image_id,
                 "worker_api_cpu": 2,
                 "worker_api_memory_bytes": 1024**3,
+                "api_cpuset": os.environ.get("TIEWTRADE_CAPACITY_API_CPUSET"),
+                "builder_cpuset": os.environ.get("TIEWTRADE_CAPACITY_BUILDER_CPUSET"),
                 "docker": await docker(
                     "info",
                     "--format",
@@ -752,6 +859,11 @@ async def run(
                 "observer_interval_seconds": 10,
                 "probe_interval_seconds": 60,
                 "fixture": "365 days plus physical grace; fractional changing OHLC; append only",
+                "capacity_prefix": CAPACITY_PREFIX,
+                "api_probe_host": CAPACITY_API_HOST,
+                "postgres_endpoint": f"{CAPACITY_HOST}:{CAPACITY_POSTGRES_PORT}/tiewtrade",
+                "redis_endpoint": f"{CAPACITY_HOST}:{CAPACITY_REDIS_PORT}/0",
+                **capacity_scope_metadata(),
             },
         )
         api_container = await create_runtime(image_id, "api", metrics)
@@ -854,7 +966,7 @@ async def run(
             cold_offset = len((metrics / "api-metrics.jsonl").read_text().splitlines())
             await docker("restart", "--time", "5", api_container)
             port = (await docker("port", api_container, "8000/tcp")).rsplit(":", 1)[1]
-            clients[0].base_url = httpx.URL("http://127.0.0.1:" + port)
+            clients[0].base_url = httpx.URL(capacity_api_url(port))
             async with asyncio.timeout(20):
                 while True:
                     try:
@@ -965,8 +1077,7 @@ async def run(
                 "R2-C4": "PARTIAL_TRACE",
                 "R2-C5": "NOT_RUN",
                 "R2-C6": "NOT_PASSED",
-                "runtime_readiness_series": len(READINESS_SERIES),
-                "workload_series": len(SERIES),
+                **capacity_scope_metadata(),
                 "runtime_readiness_passed": readiness_passed,
                 "series": summaries,
                 "note": "No capacity approval: C2-C6/resource gates require separate evidence.",
@@ -974,6 +1085,7 @@ async def run(
         )
         return 0 if passed and cold_passed else 1
     finally:
+        active_error = sys.exception()
         source_stop.set()
         if producer is not None:
             producer.cancel()
@@ -985,7 +1097,14 @@ async def run(
         for client in clients:
             await client.aclose()
         for container in reversed(containers):
-            await docker("stop", "--time", "130", container, timeout=140)
+            try:
+                await docker("stop", "--time", "130", container, timeout=140)
+            except BaseException:
+                # Preserve the workload/setup failure that triggered cleanup;
+                # otherwise a later Docker timeout hides the actionable cause.
+                if active_error is None:
+                    raise
+                await docker("kill", container)
         await redis.aclose()
         for engine in (migrator, api, source):
             await engine.dispose()

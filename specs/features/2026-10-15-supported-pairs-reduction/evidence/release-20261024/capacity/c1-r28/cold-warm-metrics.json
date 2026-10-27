@@ -1,0 +1,108 @@
+[
+  {
+    "recorded_at": "2026-10-25 05:46:00.709582+00:00",
+    "kind": "accepted",
+    "status": 200,
+    "seconds": 0.5976293340063421,
+    "max_lag_seconds": 0.05044458299846156,
+    "rss_delta_upper_bytes": 4255744,
+    "body_bytes": 458800,
+    "candle_queries": 7,
+    "gc_collections": 5,
+    "gc_max_pause_seconds": 0.001123999994888436,
+    "gc_generations": [
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "frozen_objects": 375,
+    "barrier": false
+  },
+  {
+    "recorded_at": "2026-10-25 05:46:00.913416+00:00",
+    "kind": "accepted",
+    "status": 200,
+    "seconds": 0.17101000000548083,
+    "max_lag_seconds": 0.0045474580011796205,
+    "rss_delta_upper_bytes": 602112,
+    "body_bytes": 458800,
+    "candle_queries": 7,
+    "gc_collections": 1,
+    "gc_max_pause_seconds": 0.00020729199604829773,
+    "gc_generations": [
+      0
+    ],
+    "frozen_objects": 375,
+    "barrier": false
+  },
+  {
+    "recorded_at": "2026-10-25 05:46:01.084489+00:00",
+    "kind": "accepted",
+    "status": 200,
+    "seconds": 0.14820474999578437,
+    "max_lag_seconds": 0.0029861659978632814,
+    "rss_delta_upper_bytes": 729088,
+    "body_bytes": 458800,
+    "candle_queries": 7,
+    "gc_collections": 1,
+    "gc_max_pause_seconds": 0.00018383300630375743,
+    "gc_generations": [
+      0
+    ],
+    "frozen_objects": 375,
+    "barrier": false
+  },
+  {
+    "recorded_at": "2026-10-25 05:46:01.255431+00:00",
+    "kind": "accepted",
+    "status": 200,
+    "seconds": 0.15864316700026393,
+    "max_lag_seconds": 0.003891583995136898,
+    "rss_delta_upper_bytes": 679936,
+    "body_bytes": 458800,
+    "candle_queries": 7,
+    "gc_collections": 1,
+    "gc_max_pause_seconds": 0.00017791699792724103,
+    "gc_generations": [
+      0
+    ],
+    "frozen_objects": 375,
+    "barrier": false
+  },
+  {
+    "recorded_at": "2026-10-25 05:46:01.417813+00:00",
+    "kind": "accepted",
+    "status": 200,
+    "seconds": 0.1441781670000637,
+    "max_lag_seconds": 0.0015791660017566754,
+    "rss_delta_upper_bytes": 614400,
+    "body_bytes": 458800,
+    "candle_queries": 7,
+    "gc_collections": 1,
+    "gc_max_pause_seconds": 0.0001736250051180832,
+    "gc_generations": [
+      0
+    ],
+    "frozen_objects": 375,
+    "barrier": false
+  },
+  {
+    "recorded_at": "2026-10-25 05:46:01.569597+00:00",
+    "kind": "accepted",
+    "status": 200,
+    "seconds": 0.13964245899842354,
+    "max_lag_seconds": 0.0018270000047050415,
+    "rss_delta_upper_bytes": 581632,
+    "body_bytes": 458800,
+    "candle_queries": 7,
+    "gc_collections": 1,
+    "gc_max_pause_seconds": 0.00015816700033610687,
+    "gc_generations": [
+      0
+    ],
+    "frozen_objects": 375,
+    "barrier": false
+  }
+]

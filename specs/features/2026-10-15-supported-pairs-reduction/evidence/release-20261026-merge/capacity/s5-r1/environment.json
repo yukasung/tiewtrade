@@ -1,0 +1,29 @@
+{
+  "image": "sha256:6cacc3bc9d9df1ce8b0fb31374fd89e489f2ffa264466d7f6a9372b6ceeb1210",
+  "capacity_prefix": "tiewtrade-f38-s5-20261027-r1",
+  "postgres_endpoint": "127.0.0.1:55486/tiewtrade",
+  "redis_endpoint": "127.0.0.1:56436/0",
+  "redis_dbsize_before_runtime": 0,
+  "redis_url_mode": "plain-unauthenticated",
+  "database_revision": "0042",
+  "api_cpuset": "6-7",
+  "builder_cpuset": "4-5",
+  "runtime_containers_created": {
+    "api": "f40a286be8f1b9bd887e8194c82e4036d48f9791422607129f4d39f022ab7796",
+    "builder": "cd43215199e06610aa4f791d333d7ae6c0bdc7d648b3d522138cc85d5f11b880",
+    "builder-s5-peer": "1019da908fd51539e8962edf10da700c861283206bf6ad072b378b53f1853915"
+  },
+  "source_fixture": "fresh 16-series source; empty derived/jobs before runtime start",
+  "source_runtime_series": 16,
+  "derived_counts_before_runtime": {
+    "indicator_build_jobs": 0,
+    "indicator_generations": 0,
+    "indicator_checkpoints": 0
+  },
+  "historical_series": "BTC/1m",
+  "append_only_runtime_series": 15,
+  "supported_runtime_pairs": 2,
+  "runtime_readiness_series": 16,
+  "profile_pairs": 1,
+  "profile_series": 8
+}

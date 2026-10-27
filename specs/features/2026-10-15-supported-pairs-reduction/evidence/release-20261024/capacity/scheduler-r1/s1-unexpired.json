@@ -1,0 +1,588 @@
+{
+  "attempts": [
+    {
+      "base": "BTC",
+      "attempt": 1,
+      "round": 1,
+      "holder": [
+        {
+          "component": "indicator-builder",
+          "event": "boot",
+          "owner": "ebf24f11-9a0c-44bc-a381-43c245b35d38"
+        },
+        {
+          "step": "claim_committed",
+          "time_ns": 19065508712462,
+          "cpu_ns": 644320119,
+          "pid": 210,
+          "fence": 1,
+          "job": "433e8848-bda6-44cf-b647-de516343326e",
+          "formula": "indicators-v2"
+        },
+        {
+          "step": "source_open",
+          "time_ns": 19065537451254,
+          "cpu_ns": 664681203,
+          "pid": 211
+        },
+        {
+          "step": "checkpoint_attempt",
+          "time_ns": 19065547581129,
+          "cpu_ns": 667773661,
+          "start": "2025-10-26T00:00:00+00:00",
+          "end": "2026-10-25T20:00:00+00:00",
+          "next_open": "2025-10-26T00:00:00+00:00"
+        },
+        {
+          "step": "checkpoint_committed",
+          "time_ns": 19065551317712,
+          "cpu_ns": 669070120
+        },
+        {
+          "step": "hash_start",
+          "time_ns": 19065558234671,
+          "cpu_ns": 670894869
+        },
+        {
+          "step": "cpu_start",
+          "time_ns": 19065558371754,
+          "cpu_ns": 671030077
+        },
+        {
+          "step": "checkpoint_attempt",
+          "time_ns": 19065567875837,
+          "cpu_ns": 680529495,
+          "start": "2025-10-26T00:00:00+00:00",
+          "end": "2026-10-25T20:00:00+00:00",
+          "next_open": "2026-04-10T16:00:00+00:00"
+        },
+        {
+          "step": "checkpoint_committed",
+          "time_ns": 19065571237379,
+          "cpu_ns": 681944243
+        },
+        {
+          "step": "checkpoint_attempt",
+          "time_ns": 19065582980462,
+          "cpu_ns": 691584868,
+          "start": "2025-10-26T00:00:00+00:00",
+          "end": "2026-10-25T20:00:00+00:00",
+          "next_open": "2026-09-24T08:00:00+00:00"
+        },
+        {
+          "step": "checkpoint_committed",
+          "time_ns": 19065586688921,
+          "cpu_ns": 692913035
+        },
+        {
+          "step": "checkpoint_attempt",
+          "time_ns": 19065590115587,
+          "cpu_ns": 695333702,
+          "start": "2025-10-26T00:00:00+00:00",
+          "end": "2026-10-25T20:00:00+00:00",
+          "next_open": "2026-10-25T20:00:00+00:00"
+        },
+        {
+          "step": "checkpoint_committed",
+          "time_ns": 19065594011879,
+          "cpu_ns": 696824285
+        },
+        {
+          "step": "source_closed",
+          "time_ns": 19065594998421,
+          "cpu_ns": 697518035,
+          "last_cpu_end": 19065590105379,
+          "batches": 138
+        },
+        {
+          "step": "barrier",
+          "time_ns": 19065604604462,
+          "cpu_ns": 700143951,
+          "stage": "before_publish"
+        },
+        {
+          "step": "ready_attempt",
+          "time_ns": 19067292514755,
+          "cpu_ns": 731279878
+        },
+        {
+          "step": "published",
+          "time_ns": 19067308845421,
+          "cpu_ns": 739436001,
+          "status": "SUPERSEDED"
+        },
+        {
+          "step": "actual_unlock_sql",
+          "time_ns": 19067309233838,
+          "cpu_ns": 739822626
+        },
+        {
+          "step": "writer_closed",
+          "time_ns": 19067310623880,
+          "cpu_ns": 740377460
+        },
+        {
+          "step": "result",
+          "time_ns": 19067311776505,
+          "cpu_ns": 741525377,
+          "status": "SUPERSEDED",
+          "reason": null,
+          "peak_connections": 2
+        }
+      ],
+      "contender": [
+        {
+          "component": "indicator-builder",
+          "event": "boot",
+          "owner": "328ff853-e6a4-462c-885d-bf0365783a90"
+        },
+        {
+          "step": "result",
+          "time_ns": 19066857525671,
+          "cpu_ns": 794722229,
+          "status": "LOCK_BUSY",
+          "reason": null,
+          "peak_connections": 1
+        }
+      ]
+    },
+    {
+      "base": "ETH",
+      "attempt": 1,
+      "round": 1,
+      "holder": [
+        {
+          "component": "indicator-builder",
+          "event": "boot",
+          "owner": "07cb71de-a3da-4625-b0fc-d1526ee1d435"
+        },
+        {
+          "step": "claim_committed",
+          "time_ns": 19068599302547,
+          "cpu_ns": 688537361,
+          "pid": 214,
+          "fence": 2,
+          "job": "e21a8537-c0fe-43c4-806a-57b6c725e663",
+          "formula": "indicators-v2"
+        },
+        {
+          "step": "source_open",
+          "time_ns": 19068624787547,
+          "cpu_ns": 707830654,
+          "pid": 215
+        },
+        {
+          "step": "checkpoint_attempt",
+          "time_ns": 19068636138130,
+          "cpu_ns": 711157070,
+          "start": "2025-10-26T00:00:00+00:00",
+          "end": "2026-10-25T20:00:00+00:00",
+          "next_open": "2025-10-26T00:00:00+00:00"
+        },
+        {
+          "step": "checkpoint_committed",
+          "time_ns": 19068639999297,
+          "cpu_ns": 712569112
+        },
+        {
+          "step": "hash_start",
+          "time_ns": 19068645555505,
+          "cpu_ns": 713796155
+        },
+        {
+          "step": "cpu_start",
+          "time_ns": 19068645688964,
+          "cpu_ns": 713927988
+        },
+        {
+          "step": "checkpoint_attempt",
+          "time_ns": 19068654532422,
+          "cpu_ns": 722772780,
+          "start": "2025-10-26T00:00:00+00:00",
+          "end": "2026-10-25T20:00:00+00:00",
+          "next_open": "2026-04-10T16:00:00+00:00"
+        },
+        {
+          "step": "checkpoint_committed",
+          "time_ns": 19068659299047,
+          "cpu_ns": 724519196
+        },
+        {
+          "step": "checkpoint_attempt",
+          "time_ns": 19068674633297,
+          "cpu_ns": 737341196,
+          "start": "2025-10-26T00:00:00+00:00",
+          "end": "2026-10-25T20:00:00+00:00",
+          "next_open": "2026-09-24T08:00:00+00:00"
+        },
+        {
+          "step": "checkpoint_committed",
+          "time_ns": 19068678346672,
+          "cpu_ns": 738880069
+        },
+        {
+          "step": "checkpoint_attempt",
+          "time_ns": 19068682330339,
+          "cpu_ns": 741613861,
+          "start": "2025-10-26T00:00:00+00:00",
+          "end": "2026-10-25T20:00:00+00:00",
+          "next_open": "2026-10-25T20:00:00+00:00"
+        },
+        {
+          "step": "checkpoint_committed",
+          "time_ns": 19068686103130,
+          "cpu_ns": 742888069
+        },
+        {
+          "step": "source_closed",
+          "time_ns": 19068686498589,
+          "cpu_ns": 743195402,
+          "last_cpu_end": 19068682318797,
+          "batches": 138
+        },
+        {
+          "step": "barrier",
+          "time_ns": 19068690866547,
+          "cpu_ns": 744698527,
+          "stage": "before_publish"
+        },
+        {
+          "step": "ready_attempt",
+          "time_ns": 19070270887548,
+          "cpu_ns": 794563987
+        },
+        {
+          "step": "published",
+          "time_ns": 19070300269589,
+          "cpu_ns": 803141195,
+          "status": "READY"
+        },
+        {
+          "step": "actual_unlock_sql",
+          "time_ns": 19070301108131,
+          "cpu_ns": 803981862
+        },
+        {
+          "step": "writer_closed",
+          "time_ns": 19070303727964,
+          "cpu_ns": 805060736
+        },
+        {
+          "step": "result",
+          "time_ns": 19070304129214,
+          "cpu_ns": 805428986,
+          "status": "READY",
+          "reason": null,
+          "peak_connections": 2
+        }
+      ],
+      "contender": [
+        {
+          "component": "indicator-builder",
+          "event": "boot",
+          "owner": "a88f840c-64d2-43ad-8538-66bbb609e51b"
+        },
+        {
+          "step": "result",
+          "time_ns": 19069750062714,
+          "cpu_ns": 709788386,
+          "status": "LOCK_BUSY",
+          "reason": null,
+          "peak_connections": 1
+        }
+      ]
+    },
+    {
+      "base": "BTC",
+      "attempt": 2,
+      "round": 2,
+      "holder": [
+        {
+          "component": "indicator-builder",
+          "event": "boot",
+          "owner": "94de096d-d062-454d-8368-63269d16dd49"
+        },
+        {
+          "step": "claim_committed",
+          "time_ns": 19071909255799,
+          "cpu_ns": 885317868,
+          "pid": 217,
+          "fence": 3,
+          "job": "433e8848-bda6-44cf-b647-de516343326e",
+          "formula": "indicators-v2"
+        },
+        {
+          "step": "source_open",
+          "time_ns": 19071941425215,
+          "cpu_ns": 907611616,
+          "pid": 218
+        },
+        {
+          "step": "checkpoint_attempt",
+          "time_ns": 19071953943174,
+          "cpu_ns": 911279577,
+          "start": "2025-10-26T00:00:00+00:00",
+          "end": "2026-10-25T20:00:00+00:00",
+          "next_open": "2025-10-26T00:00:00+00:00"
+        },
+        {
+          "step": "checkpoint_committed",
+          "time_ns": 19071959034174,
+          "cpu_ns": 912802284
+        },
+        {
+          "step": "hash_start",
+          "time_ns": 19071966363465,
+          "cpu_ns": 914207326
+        },
+        {
+          "step": "cpu_start",
+          "time_ns": 19071966505215,
+          "cpu_ns": 914347409
+        },
+        {
+          "step": "checkpoint_attempt",
+          "time_ns": 19071975525049,
+          "cpu_ns": 923349284,
+          "start": "2025-10-26T00:00:00+00:00",
+          "end": "2026-10-25T20:00:00+00:00",
+          "next_open": "2026-04-10T16:00:00+00:00"
+        },
+        {
+          "step": "checkpoint_committed",
+          "time_ns": 19071980151090,
+          "cpu_ns": 925511741
+        },
+        {
+          "step": "checkpoint_attempt",
+          "time_ns": 19071993055090,
+          "cpu_ns": 935793575,
+          "start": "2025-10-26T00:00:00+00:00",
+          "end": "2026-10-25T20:00:00+00:00",
+          "next_open": "2026-09-24T08:00:00+00:00"
+        },
+        {
+          "step": "checkpoint_committed",
+          "time_ns": 19071997665965,
+          "cpu_ns": 937730784
+        },
+        {
+          "step": "checkpoint_attempt",
+          "time_ns": 19072001794465,
+          "cpu_ns": 940898867,
+          "start": "2025-10-26T00:00:00+00:00",
+          "end": "2026-10-25T20:00:00+00:00",
+          "next_open": "2026-10-25T20:00:00+00:00"
+        },
+        {
+          "step": "checkpoint_committed",
+          "time_ns": 19072007174465,
+          "cpu_ns": 942825992
+        },
+        {
+          "step": "source_closed",
+          "time_ns": 19072007617549,
+          "cpu_ns": 943166076,
+          "last_cpu_end": 19072001771132,
+          "batches": 138
+        },
+        {
+          "step": "barrier",
+          "time_ns": 19072014927257,
+          "cpu_ns": 946619994,
+          "stage": "before_publish"
+        },
+        {
+          "step": "ready_attempt",
+          "time_ns": 19073262309258,
+          "cpu_ns": 964883326
+        },
+        {
+          "step": "published",
+          "time_ns": 19073271724341,
+          "cpu_ns": 968903658,
+          "status": "SUPERSEDED"
+        },
+        {
+          "step": "actual_unlock_sql",
+          "time_ns": 19073271983299,
+          "cpu_ns": 969161117
+        },
+        {
+          "step": "writer_closed",
+          "time_ns": 19073273409341,
+          "cpu_ns": 969779825
+        },
+        {
+          "step": "result",
+          "time_ns": 19073273584758,
+          "cpu_ns": 969954116,
+          "status": "SUPERSEDED",
+          "reason": null,
+          "peak_connections": 2
+        }
+      ],
+      "contender": [
+        {
+          "component": "indicator-builder",
+          "event": "boot",
+          "owner": "d738c068-c6d4-4262-a175-5e69ebea9716"
+        },
+        {
+          "step": "result",
+          "time_ns": 19072935033216,
+          "cpu_ns": 594769119,
+          "status": "LOCK_BUSY",
+          "reason": null,
+          "peak_connections": 1
+        }
+      ]
+    },
+    {
+      "base": "BTC",
+      "attempt": 3,
+      "round": 3,
+      "holder": [
+        {
+          "component": "indicator-builder",
+          "event": "boot",
+          "owner": "c9423149-ccd5-469c-8aec-4234e98ba936"
+        },
+        {
+          "step": "claim_committed",
+          "time_ns": 19074437260550,
+          "cpu_ns": 685582717,
+          "pid": 221,
+          "fence": 4,
+          "job": "433e8848-bda6-44cf-b647-de516343326e",
+          "formula": "indicators-v2"
+        },
+        {
+          "step": "source_open",
+          "time_ns": 19074467761091,
+          "cpu_ns": 708699338,
+          "pid": 222
+        },
+        {
+          "step": "checkpoint_attempt",
+          "time_ns": 19074490108050,
+          "cpu_ns": 720083004,
+          "start": "2025-10-26T00:00:00+00:00",
+          "end": "2026-10-25T20:00:00+00:00",
+          "next_open": "2025-10-26T00:00:00+00:00"
+        },
+        {
+          "step": "checkpoint_committed",
+          "time_ns": 19074503183425,
+          "cpu_ns": 726660172
+        },
+        {
+          "step": "hash_start",
+          "time_ns": 19074513263300,
+          "cpu_ns": 729453714
+        },
+        {
+          "step": "cpu_start",
+          "time_ns": 19074513419633,
+          "cpu_ns": 729608714
+        },
+        {
+          "step": "checkpoint_attempt",
+          "time_ns": 19074525473841,
+          "cpu_ns": 741628296,
+          "start": "2025-10-26T00:00:00+00:00",
+          "end": "2026-10-25T20:00:00+00:00",
+          "next_open": "2026-04-10T16:00:00+00:00"
+        },
+        {
+          "step": "checkpoint_committed",
+          "time_ns": 19074528982425,
+          "cpu_ns": 743179963
+        },
+        {
+          "step": "checkpoint_attempt",
+          "time_ns": 19074541559258,
+          "cpu_ns": 753661337,
+          "start": "2025-10-26T00:00:00+00:00",
+          "end": "2026-10-25T20:00:00+00:00",
+          "next_open": "2026-09-24T08:00:00+00:00"
+        },
+        {
+          "step": "checkpoint_committed",
+          "time_ns": 19074545547591,
+          "cpu_ns": 755047421
+        },
+        {
+          "step": "checkpoint_attempt",
+          "time_ns": 19074549769050,
+          "cpu_ns": 758421880,
+          "start": "2025-10-26T00:00:00+00:00",
+          "end": "2026-10-25T20:00:00+00:00",
+          "next_open": "2026-10-25T20:00:00+00:00"
+        },
+        {
+          "step": "checkpoint_committed",
+          "time_ns": 19074552107216,
+          "cpu_ns": 759588213
+        },
+        {
+          "step": "source_closed",
+          "time_ns": 19074552453716,
+          "cpu_ns": 759879297,
+          "last_cpu_end": 19074549743841,
+          "batches": 138
+        },
+        {
+          "step": "barrier",
+          "time_ns": 19074554749591,
+          "cpu_ns": 760925797,
+          "stage": "before_publish"
+        },
+        {
+          "step": "ready_attempt",
+          "time_ns": 19076041736884,
+          "cpu_ns": 801995513
+        },
+        {
+          "step": "published",
+          "time_ns": 19076066065384,
+          "cpu_ns": 812059720,
+          "status": "SUPERSEDED"
+        },
+        {
+          "step": "actual_unlock_sql",
+          "time_ns": 19076067477634,
+          "cpu_ns": 813364261
+        },
+        {
+          "step": "writer_closed",
+          "time_ns": 19076070436467,
+          "cpu_ns": 814530721
+        },
+        {
+          "step": "result",
+          "time_ns": 19076070809842,
+          "cpu_ns": 814903471,
+          "status": "SUPERSEDED",
+          "reason": null,
+          "peak_connections": 2
+        }
+      ],
+      "contender": [
+        {
+          "component": "indicator-builder",
+          "event": "boot",
+          "owner": "6eb72b1a-d6e9-4009-9659-f4440695f384"
+        },
+        {
+          "step": "result",
+          "time_ns": 19075540383175,
+          "cpu_ns": 707313613,
+          "status": "LOCK_BUSY",
+          "reason": null,
+          "peak_connections": 1
+        }
+      ]
+    }
+  ]
+}

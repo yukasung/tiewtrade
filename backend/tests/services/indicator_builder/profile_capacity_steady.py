@@ -21,14 +21,22 @@ from sqlalchemy import RowMapping, text
 from sqlalchemy.ext.asyncio import AsyncEngine
 
 from tests.services.indicator_builder.profile_capacity import (
+    CAPACITY_HOST,
+    CAPACITY_POSTGRES_PORT,
+    CAPACITY_REDIS_PORT,
+    PG,
+    READINESS_SERIES,
     SERIES,
     append,
     audit,
+    capacity_api_url,
+    capacity_scope_metadata,
     docker,
     maintain_source,
     observe,
     probes,
     progress,
+    runtime_name,
     save,
     snapshot,
 )
@@ -45,7 +53,7 @@ async def login() -> tuple[list[httpx.AsyncClient], list[UUID]]:
     emails = (
         await docker(
             "exec",
-            "tiewtrade-f11-capacity-postgres",
+            PG,
             "psql",
             "-U",
             "postgres",
@@ -57,12 +65,12 @@ async def login() -> tuple[list[httpx.AsyncClient], list[UUID]]:
         )
     ).splitlines()
     assert len(emails) == 5
-    port = (await docker("port", "tiewtrade-f11-capacity-api", "8000/tcp")).rsplit(":", 1)[1]
+    port = (await docker("port", runtime_name("api"), "8000/tcp")).rsplit(":", 1)[1]
     clients = []
     users = []
     try:
         for email in emails:
-            client = httpx.AsyncClient(base_url="http://127.0.0.1:" + port, timeout=32)
+            client = httpx.AsyncClient(base_url=capacity_api_url(port), timeout=32)
             clients.append(client)
             async with asyncio.timeout(20):
                 while True:
@@ -113,6 +121,74 @@ def signature(body: dict[str, Any]) -> str:
     ).hexdigest()
 
 
+def workload_readiness(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Restrict long-running phase decisions to the approved BTC-only workload."""
+    workload = {(base, timeframe.value) for base, timeframe in SERIES}
+    selected = [row for row in rows if (row["base"], row["timeframe"]) in workload]
+    assert len(selected) == len(SERIES)
+    return selected
+
+
+def capacity_gates(phase: str, *, under_load: bool, combined: bool) -> tuple[str, ...]:
+    """Return the machine gates emitted by one measured phase."""
+    if phase not in {"steady", "dirty"}:
+        raise ValueError("unknown capacity phase")
+    if combined:
+        if not under_load:
+            raise ValueError("combined capacity evidence requires rejected load")
+        return ("R2-C3", "R2-C5-dirty") if phase == "dirty" else ("R2-C2", "R2-C5-steady")
+    if under_load:
+        return ("R2-C5-" + phase,)
+    return ("R2-C3",) if phase == "dirty" else ("R2-C2",)
+
+
+def capacity_prerequisites(phase: str, *, under_load: bool, combined: bool) -> tuple[str, ...]:
+    """Return gates that must already be passed before a measured phase."""
+    if combined:
+        return ("R2-C2", "R2-C5-steady") if phase == "dirty" else ()
+    if under_load:
+        return ("R2-C5-steady",) if phase == "dirty" else ("R2-C3",)
+    return ("R2-C2",) if phase == "dirty" else ()
+
+
+def readiness_baseline_is_quiescent(rows: list[dict[str, Any]], metadata: dict[str, Any]) -> bool:
+    """Require the 16-series refresh to finish before a measured BTC phase."""
+    return (
+        all(row["valid"] for row in rows)
+        and len(metadata["jobs"]) == len(READINESS_SERIES)
+        and all(job["status"] == "READY" for job in metadata["jobs"])
+        and len(metadata["slot"]) == 1
+        and metadata["slot"][0]["state"] == "IDLE"
+    )
+
+
+def rejected_load_is_complete(
+    rejected: list[dict[str, Any]],
+    metrics: list[dict[str, Any]],
+    *,
+    expected_each: int = 1200,
+) -> bool:
+    """Require every scheduled rejection, response contract, and zero-query proof."""
+    busy = [item for item in rejected if item["kind"] == "busy"]
+    rate = [item for item in rejected if item["kind"] == "rate"]
+    negative_metrics = [item for item in metrics if item["kind"].startswith("rejected-")]
+    return (
+        len(rejected) == expected_each * 2
+        and len(busy) == expected_each
+        and len(rate) == expected_each
+        and all(item["status"] == 503 and item["detail"] == "INDICATOR_BUSY" for item in busy)
+        and all(
+            item["status"] == 429 and item["detail"] == "INDICATOR_RATE_LIMITED" for item in rate
+        )
+        and len(negative_metrics) == expected_each * 2
+        and all(
+            item["status"] == (503 if item["kind"] == "rejected-busy" else 429)
+            and item["candle_queries"] == 0
+            for item in negative_metrics
+        )
+    )
+
+
 async def dirty_burst(migrator: AsyncEngine, source: AsyncEngine) -> list[RowMapping]:
     async with migrator.connect() as c:
         rows = (
@@ -152,7 +228,7 @@ async def dirty_burst(migrator: AsyncEngine, source: AsyncEngine) -> list[RowMap
 async def loaded_probes(
     clients: list[httpx.AsyncClient], started: float, rejected: list[dict[str, Any]]
 ) -> list[dict[str, Any]]:
-    container = "tiewtrade-f11-capacity-api"
+    container = runtime_name("api")
     await docker(
         "exec",
         container,
@@ -181,9 +257,14 @@ async def loaded_probes(
                     params={"base": "BTC", "quote": "USDT", "timeframe": "1m"},
                     headers={"x-capacity-kind": "rejected-busy"},
                 )
-                rejected.append({"kind": "busy", "status": response.status_code})
-                assert response.status_code == 503
-                assert response.json()["detail"] == "INDICATOR_BUSY"
+                payload = response.json()
+                rejected.append(
+                    {
+                        "kind": "busy",
+                        "status": response.status_code,
+                        "detail": payload.get("detail") if isinstance(payload, dict) else None,
+                    }
+                )
         finally:
             await docker(
                 "exec",
@@ -200,9 +281,14 @@ async def loaded_probes(
             params={"base": "BTC", "quote": "USDT", "timeframe": "1m"},
             headers={"x-capacity-kind": "rejected-rate"},
         )
-        rejected.append({"kind": "rate", "status": response.status_code})
-        assert response.status_code == 429
-        assert response.json()["detail"] == "INDICATOR_RATE_LIMITED"
+        payload = response.json()
+        rejected.append(
+            {
+                "kind": "rate",
+                "status": response.status_code,
+                "detail": payload.get("detail") if isinstance(payload, dict) else None,
+            }
+        )
     return result
 
 
@@ -217,6 +303,14 @@ def phase_plan(phase: str, loaded: bool, smoke: bool) -> tuple[str, str | None, 
     return ("R2-C3", "R2-C2", 3600) if phase == "dirty" else ("R2-C2", None, 3600)
 
 
+def admission_phase_delay(seconds: int, microseconds: int) -> float:
+    """Start measured probes five seconds inside Redis's real fixed window.
+
+    This changes only pre-T0 alignment, never counters, limits or 60-second cadence.
+    """
+    return (5 - (seconds % 60 + microseconds / 1_000_000)) % 60
+
+
 async def run(
     output: Path,
     c1: Path,
@@ -225,18 +319,43 @@ async def run(
     requires: Path | None = None,
     metrics_directory: Path | None = None,
     smoke: bool = False,
+    combined: bool = False,
+    diagnostic_seconds: int | None = None,
 ) -> int:
     assert json.loads((c1 / "result.json").read_text(encoding="utf-8"))["R2-C1"] == "PASSED"
-    gate, required, duration = phase_plan(phase, load_metrics is not None, smoke)
-    sample_count, probe_count = duration // 10, duration // 60
-    if required is not None:
-        assert requires is not None
-        assert (
-            json.loads((requires / "result.json").read_text(encoding="utf-8"))[required] == "PASSED"
+    gates: tuple[str, ...]
+    required: tuple[str, ...]
+    if diagnostic_seconds is not None:
+        if smoke or combined or phase != "steady" or load_metrics is None:
+            raise ValueError("diagnostic requires steady rejected load without acceptance modes")
+        if diagnostic_seconds < 60 or diagnostic_seconds > 2400 or diagnostic_seconds % 60:
+            raise ValueError("diagnostic duration must be 60..2400 seconds in whole minutes")
+        gates, required, duration = ("DIAGNOSTIC-steady",), (), diagnostic_seconds
+    elif smoke:
+        if combined:
+            raise ValueError("smoke evidence cannot emit combined acceptance gates")
+        smoke_gate, smoke_required, duration = phase_plan(phase, load_metrics is not None, smoke)
+        gates = (smoke_gate,)
+        required = (smoke_required,) if smoke_required is not None else ()
+    else:
+        gates = capacity_gates(phase, under_load=load_metrics is not None, combined=combined)
+        required = capacity_prerequisites(
+            phase, under_load=load_metrics is not None, combined=combined
         )
+        duration = 3600
+    gate = "+".join(gates)
+    sample_count, probe_count = duration // 10, duration // 60
+    if required:
+        assert requires is not None
+        prerequisite = json.loads((requires / "result.json").read_text(encoding="utf-8"))
+        assert all(prerequisite[name] == "PASSED" for name in required)
     for role in (DatabaseRole.API, DatabaseRole.MIGRATOR, DatabaseRole.MARKET_DATA):
-        assert "@127.0.0.1:55434/tiewtrade" in os.environ[role.url_variable]
-    assert os.environ["TIEWTRADE_TEST_REDIS_URL"] == "redis://127.0.0.1:56380/0"
+        assert (
+            f"@{CAPACITY_HOST}:{CAPACITY_POSTGRES_PORT}/tiewtrade" in os.environ[role.url_variable]
+        )
+    assert os.environ["TIEWTRADE_TEST_REDIS_URL"] == (
+        f"redis://{CAPACITY_HOST}:{CAPACITY_REDIS_PORT}/0"
+    )
     assert not (output / "result.json").exists()
     output.mkdir(parents=True, exist_ok=True)
     migrator = create_engine_for(DatabaseRole.MIGRATOR)
@@ -304,31 +423,52 @@ async def run(
                     )
                 ).mappings()
             }
-        await docker("start", "tiewtrade-f11-capacity-api")
+        await docker("start", runtime_name("api"))
         clients, users = await login()
         await append(source, ends)
-        producer = asyncio.create_task(maintain_source(source, ends, source_stop))
-        await docker("start", "tiewtrade-f11-capacity-builder")
+        await docker("start", runtime_name("builder"))
         # C1 has passed already. Record any pre-phase refresh needed after the
         # independent C1 audit; this is not an excluded C1 prewarm.
         warm_started = monotonic()
         warm = []
         while True:
-            if producer.done():
-                await producer
+            await append(source, ends)
             ready = await observe(api, users[0])
             if smoke:
                 ready = [s for s in ready if (s["base"], Timeframe(s["timeframe"])) in SERIES]
                 assert len(ready) == len(SERIES)
-            warm.append({"seconds": monotonic() - warm_started, "series": ready})
+            metadata = await snapshot(migrator)
+            warm.append(
+                {
+                    "seconds": monotonic() - warm_started,
+                    "series": ready,
+                    "metadata": metadata,
+                }
+            )
             save(output / "before-phase.json", warm)
-            if all(s["valid"] for s in ready):
-                seconds, _ = await redis.time()
-                if seconds % 60 <= 1:
-                    break
+            if readiness_baseline_is_quiescent(ready, metadata):
+                break
             if monotonic() - warm_started > 600:
                 raise RuntimeError("CAPACITY_C2_BASELINE_NOT_READY")
             await asyncio.sleep(1)
+        workload_ends = {
+            base + "/" + timeframe.value: ends[base + "/" + timeframe.value]
+            for base, timeframe in SERIES
+        }
+        producer = asyncio.create_task(maintain_source(source, workload_ends, source_stop, SERIES))
+        # Warm process/DB paths with separate fixture actors so the measured
+        # clients begin with untouched production admission quotas.
+        prephase_probes = await probes(clients[2:], monotonic())
+        await audit(api, users[2], prephase_probes)
+        save(
+            output / "before-phase-probes.json",
+            [
+                {key: value for key, value in probe.items() if key not in {"body"}}
+                for probe in prephase_probes
+            ],
+        )
+        if not all(probe["status"] == 200 and probe["correct"] for probe in prephase_probes):
+            raise RuntimeError("CAPACITY_C2_PREPHASE_PROBE_NOT_READY")
 
         async def oracle() -> None:
             while (item := await queue.get()) is not None:
@@ -380,6 +520,19 @@ async def run(
                 responses.append(p)
             save(output / "probes.json", responses)
 
+        redis_seconds, redis_microseconds = await redis.time()
+        alignment_delay = admission_phase_delay(redis_seconds, redis_microseconds)
+        save(
+            output / "admission-phase-alignment.json",
+            {
+                "redis_seconds": redis_seconds,
+                "redis_microseconds": redis_microseconds,
+                "wait_seconds": alignment_delay,
+                "probe_interval_seconds": 60,
+                "note": "Pre-T0 alignment only; no quota counter or threshold change.",
+            },
+        )
+        await asyncio.sleep(alignment_delay)
         started = monotonic()
         phase_utc = datetime.now(UTC)
         if metric_file is not None:
@@ -405,7 +558,8 @@ async def run(
                 assert len(ready) == len(SERIES)
             samples.append({"seconds": monotonic() - started, "series": ready})
             save(output / "observations.json", samples)
-            all_valid = all(s["valid"] for s in ready)
+            workload_ready = workload_readiness(ready)
+            all_valid = all(s["valid"] for s in workload_ready)
             if all_valid and recovered_at is None:
                 recovered_at = monotonic() - started
             if not all_valid and (phase == "steady" or recovered_at is not None):
@@ -435,8 +589,8 @@ async def run(
                     gate,
                     round(monotonic() - started),
                     "seconds; valid",
-                    sum(s["valid"] for s in ready),
-                    "/" + str(len(ready)),
+                    sum(s["valid"] for s in workload_ready),
+                    "/" + str(len(workload_ready)),
                 )
             metadata = {"seconds": monotonic() - started, **await snapshot(migrator)}
             save(output / "latest-metadata.json", metadata)
@@ -450,7 +604,7 @@ async def run(
         if pending is not None:
             await accept(await pending)
             pending = None
-        await docker("stop", "--time", "130", "tiewtrade-f11-capacity-builder", timeout=140)
+        await docker("stop", "--time", "130", runtime_name("builder"), timeout=140)
         await queue.put(None)
         await consumer
         consumer = None
@@ -517,35 +671,38 @@ async def run(
                 for line in load_metrics.read_text(encoding="utf-8").splitlines()[metric_offset:]
             ]
             save(output / "api-metrics.json", metrics)
-            negatives = [m for m in metrics if m["kind"].startswith("rejected-")]
-            if (
-                len(negatives) != probe_count * 40
-                or len(rejected) != probe_count * 40
-                or any(m["candle_queries"] != 0 for m in negatives)
-            ):
-                failure = "REJECTED_LOAD_COVERAGE_OR_QUERY"
+            if not rejected_load_is_complete(rejected, metrics, expected_each=probe_count * 20):
+                failure = failure or "REJECTED_LOAD_COVERAGE_STATUS_OR_QUERY"
             if any(
                 m["max_lag_seconds"] > 0.1 or m["rss_delta_upper_bytes"] > 128 * 1024**2
                 for m in metrics
             ):
-                failure = "API_RESOURCE_LIMIT"
+                failure = failure or "API_RESOURCE_LIMIT"
         passed = (
             measured_seconds >= duration and failure is None and all(s["passed"] for s in summaries)
         )
+        gate_result = "PASSED" if passed else "FAILED"
         save(
             output / "result.json",
             {
-                gate: "PASSED" if passed else "FAILED",
+                **dict.fromkeys(gates, gate_result),
                 "T0": phase_utc,
                 "recovered_seconds": recovered_at,
                 "measured_seconds": measured_seconds,
                 "failure": failure,
+                **capacity_scope_metadata(),
                 "series": summaries,
                 "smoke": smoke,
                 "scheduled_seconds": duration,
                 "readiness_scope": "BTCUSDT 8 timeframes" if smoke else "runtime catalog",
-                "full_validation_credit": False if smoke else passed,
-                "note": "Early failure is not a completed 60-minute acceptance run.",
+                "diagnostic": diagnostic_seconds is not None,
+                "full_validation_credit": False if smoke or diagnostic_seconds else passed,
+                "note": (
+                    "Combined gates share one 60-minute run and always have the same result. "
+                    if combined
+                    else ""
+                )
+                + "Early failure is not a completed 60-minute acceptance run.",
             },
         )
         return 0 if passed else 1
@@ -563,7 +720,7 @@ async def run(
         for client in clients:
             await client.aclose()
         for kind in ("builder", "api"):
-            await docker("stop", "--time", "130", "tiewtrade-f11-capacity-" + kind, timeout=140)
+            await docker("stop", "--time", "130", runtime_name(kind), timeout=140)
         await redis.aclose()
         for engine in (migrator, api, source):
             await engine.dispose()
@@ -577,6 +734,7 @@ if __name__ == "__main__":
     parser.add_argument("--load-metrics", type=Path)
     parser.add_argument("--requires", type=Path)
     parser.add_argument("--metrics", type=Path)
+    parser.add_argument("--combined", action="store_true")
     parser.add_argument("--smoke", action="store_true")
     args = parser.parse_args()
     raise SystemExit(
@@ -589,6 +747,7 @@ if __name__ == "__main__":
                 args.requires,
                 args.metrics,
                 args.smoke,
+                args.combined,
             )
         )
     )

@@ -1,0 +1,94 @@
+{
+  "R2-C2": "FAILED",
+  "T0": "2026-10-25 06:18:58.328628+00:00",
+  "recovered_seconds": 0.0287389999939478,
+  "measured_seconds": 10.04510783299338,
+  "failure": "ACCEPTED_PROBE_NOT_200",
+  "supported_runtime_pairs": 2,
+  "runtime_readiness_series": 16,
+  "profile_pairs": 1,
+  "profile_series": 8,
+  "series": [
+    {
+      "base": "BTC",
+      "timeframe": "1m",
+      "valid_samples": 2,
+      "first_correct_200_seconds": 0.2755307499974151,
+      "scheduled_samples": 360,
+      "correct_probes": 1,
+      "scheduled_probes": 60,
+      "passed": false
+    },
+    {
+      "base": "BTC",
+      "timeframe": "5m",
+      "valid_samples": 2,
+      "first_correct_200_seconds": 0.46137508299580077,
+      "scheduled_samples": 360,
+      "correct_probes": 1,
+      "scheduled_probes": 60,
+      "passed": false
+    },
+    {
+      "base": "BTC",
+      "timeframe": "15m",
+      "valid_samples": 2,
+      "first_correct_200_seconds": 0.6069453329982935,
+      "scheduled_samples": 360,
+      "correct_probes": 1,
+      "scheduled_probes": 60,
+      "passed": false
+    },
+    {
+      "base": "BTC",
+      "timeframe": "1h",
+      "valid_samples": 2,
+      "first_correct_200_seconds": 0.8462255419944995,
+      "scheduled_samples": 360,
+      "correct_probes": 1,
+      "scheduled_probes": 60,
+      "passed": false
+    },
+    {
+      "base": "BTC",
+      "timeframe": "4h",
+      "valid_samples": 2,
+      "first_correct_200_seconds": null,
+      "scheduled_samples": 360,
+      "correct_probes": 0,
+      "scheduled_probes": 60,
+      "passed": false
+    },
+    {
+      "base": "BTC",
+      "timeframe": "1d",
+      "valid_samples": 2,
+      "first_correct_200_seconds": null,
+      "scheduled_samples": 360,
+      "correct_probes": 0,
+      "scheduled_probes": 60,
+      "passed": false
+    },
+    {
+      "base": "BTC",
+      "timeframe": "1w",
+      "valid_samples": 2,
+      "first_correct_200_seconds": 0.9311793329979992,
+      "scheduled_samples": 360,
+      "correct_probes": 1,
+      "scheduled_probes": 60,
+      "passed": false
+    },
+    {
+      "base": "BTC",
+      "timeframe": "1M",
+      "valid_samples": 2,
+      "first_correct_200_seconds": 0.9612447919935221,
+      "scheduled_samples": 360,
+      "correct_probes": 1,
+      "scheduled_probes": 60,
+      "passed": false
+    }
+  ],
+  "note": "Early failure is not a completed 60-minute acceptance run."
+}

@@ -1,0 +1,7 @@
+{
+  "redis_seconds": 1793028118,
+  "redis_microseconds": 704991,
+  "wait_seconds": 6.295009,
+  "probe_interval_seconds": 60,
+  "note": "Pre-T0 alignment only; no quota counter or threshold change."
+}

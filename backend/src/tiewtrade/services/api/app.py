@@ -11,6 +11,7 @@ F-01 ส่งมอบเส้นทางเดียวเพื่อพิ
 """
 
 import asyncio
+import gc
 import os
 from collections.abc import AsyncIterator, Awaitable, Callable
 from contextlib import asynccontextmanager
@@ -56,6 +57,29 @@ from tiewtrade.venues import live_execution_capability_source, public_rate_limit
 
 # Install before Uvicorn can log a request, including when lifespan is disabled.
 install_query_redaction()
+
+
+_heap_users = 0
+_owns_frozen_heap = False
+
+
+def _retain_stable_heap() -> None:
+    """Keep startup objects out of latency-sensitive cyclic-GC scans."""
+    global _heap_users, _owns_frozen_heap
+    if _heap_users == 0 and gc.get_freeze_count() == 0:
+        gc.collect()
+        gc.freeze()
+        _owns_frozen_heap = True
+    _heap_users += 1
+
+
+def _release_stable_heap() -> None:
+    """Restore process GC state after the final API lifespan closes."""
+    global _heap_users, _owns_frozen_heap
+    _heap_users -= 1
+    if _heap_users == 0 and _owns_frozen_heap:
+        gc.unfreeze()
+        _owns_frozen_heap = False
 
 
 @asynccontextmanager
@@ -156,24 +180,28 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
             )
         heartbeat_task = asyncio.create_task(heartbeat())
     broadcast_task = asyncio.create_task(app.state.price_broadcaster.run())
+    _retain_stable_heap()
     try:
         yield
     finally:
-        broadcast_task.cancel()
-        if heartbeat_task is not None:
-            heartbeat_task.cancel()
-        await asyncio.gather(
-            *(task for task in (broadcast_task, heartbeat_task) if task is not None),
-            return_exceptions=True,
-        )
-        await redis.aclose()
-        await catalog_capability_source.close()
-        await app.state.indicator_engine.dispose()
-        await app.state.chart_engine.dispose()
-        await app.state.price_engine.dispose()
-        await app.state.paper_mutation_engine.dispose()
-        await app.state.api_engine.dispose()
-        await app.state.auth_engine.dispose()
+        try:
+            broadcast_task.cancel()
+            if heartbeat_task is not None:
+                heartbeat_task.cancel()
+            await asyncio.gather(
+                *(task for task in (broadcast_task, heartbeat_task) if task is not None),
+                return_exceptions=True,
+            )
+            await redis.aclose()
+            await catalog_capability_source.close()
+            await app.state.indicator_engine.dispose()
+            await app.state.chart_engine.dispose()
+            await app.state.price_engine.dispose()
+            await app.state.paper_mutation_engine.dispose()
+            await app.state.api_engine.dispose()
+            await app.state.auth_engine.dispose()
+        finally:
+            _release_stable_heap()
 
 
 app = FastAPI(

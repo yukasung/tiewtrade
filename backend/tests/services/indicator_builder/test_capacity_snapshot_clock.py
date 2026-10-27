@@ -92,12 +92,15 @@ async def test_exact_fixture_retry_and_cleanup(
                 if polls == 2 and outcome == "ready"
                 else None
             )
-        elif "SELECT status,attempts_used" in sql:
+        elif "SELECT id,status,attempts_used" in sql:
             result.mappings.return_value.one.return_value = {
+                "id": 1,
                 "status": "FAILED_TRANSIENT" if polls == 2 and outcome == "failed" else "QUEUED",
                 "attempts_used": 1,
+                "retry_not_before": boundary,
                 "failure_category": "TRANSIENT",
                 "failure_reason": "TRANSIENT",
+                "observed": boundary,
             }
         else:
             result.scalar_one.return_value = 1

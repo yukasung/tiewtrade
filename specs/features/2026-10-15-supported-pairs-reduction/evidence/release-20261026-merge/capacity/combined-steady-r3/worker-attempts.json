@@ -1,0 +1,53 @@
+[
+  {
+    "base": "BTC",
+    "job_id": "0b1f98df-207d-423e-9ba0-59f4b18052e5",
+    "timeframe": "5m",
+    "generation_id": "4847ae5f-fdf2-46f3-a655-409339b08d5b",
+    "claimed_at": "2026-10-26 09:21:39.866554+00:00",
+    "attempt_deadline": "2026-10-26 09:23:39.866554+00:00",
+    "finished_at": "2026-10-26 09:21:48.907772+00:00",
+    "dispatch_round": 3,
+    "fence": 34,
+    "owner": "d9d3110e-671d-4cfa-850c-167debddc70e",
+    "status": "READY",
+    "reason": null,
+    "seconds_including_acquire_cleanup": 9.048061462000987,
+    "lag_seconds": 0.21096445899842364,
+    "rss_delta_upper_bytes": 3792896
+  },
+  {
+    "base": "BTC",
+    "job_id": "da0691d5-91cd-4b1e-abf2-4ca248562148",
+    "timeframe": "15m",
+    "generation_id": "15228d40-03a0-4d27-a4a7-d3071939c069",
+    "claimed_at": "2026-10-26 09:21:48.929586+00:00",
+    "attempt_deadline": "2026-10-26 09:23:48.929586+00:00",
+    "finished_at": "2026-10-26 09:21:51.902130+00:00",
+    "dispatch_round": 3,
+    "fence": 35,
+    "owner": "d9d3110e-671d-4cfa-850c-167debddc70e",
+    "status": "READY",
+    "reason": null,
+    "seconds_including_acquire_cleanup": 2.968491001000075,
+    "lag_seconds": 0.05640854099896387,
+    "rss_delta_upper_bytes": 81920
+  },
+  {
+    "base": "BTC",
+    "job_id": "9a1cfabd-82da-4117-a6a9-faf836190614",
+    "timeframe": "1h",
+    "generation_id": "f72962f9-07f9-458e-8018-299eaaa81752",
+    "claimed_at": "2026-10-26 09:21:51.925477+00:00",
+    "attempt_deadline": "2026-10-26 09:23:51.925477+00:00",
+    "finished_at": "2026-10-26 09:21:52.899698+00:00",
+    "dispatch_round": 3,
+    "fence": 36,
+    "owner": "d9d3110e-671d-4cfa-850c-167debddc70e",
+    "status": "READY",
+    "reason": null,
+    "seconds_including_acquire_cleanup": 0.977450542999577,
+    "lag_seconds": 0.034383042000845306,
+    "rss_delta_upper_bytes": 86016
+  }
+]

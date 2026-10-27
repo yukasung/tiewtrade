@@ -31,7 +31,10 @@ from tiewtrade.infra.realtime.admission import AdmissionOutcome, RedisAdmission
 from tiewtrade.services.api.authentication import Authenticated, current_user
 from tiewtrade.services.api.candle_routes import CandleView, _candle_view
 from tiewtrade.services.api.indicator_http import (
+    ChunkedJSON,
     ClientDisconnectedError,
+    JSONFragments,
+    encode_json_fragment,
     indicator_response,
     until_disconnect,
 )
@@ -195,13 +198,15 @@ async def live(
 
 async def _history(
     query: IndicatorQuery, request: Request, who: Authenticated, deadline: float
-) -> ChartHistoryView:
+) -> ChunkedJSON:
     result = await read_history(query, request, who, deadline, with_candles=True)
     keys = cast(KeySource, request.app.state.indicator_keys)
-    return ChartHistoryView(
-        **result.view.model_dump(),
-        candles=[_candle_view(row) for row in result.candles],
-        display_proof=issue_display(result.claims, keys, who.user_id, who.token_hash),
+    return result.view.extended(
+        (
+            "candles",
+            JSONFragments(tuple(encode_json_fragment(_candle_view(row)) for row in result.candles)),
+        ),
+        ("display_proof", issue_display(result.claims, keys, who.user_id, who.token_hash)),
     )
 
 

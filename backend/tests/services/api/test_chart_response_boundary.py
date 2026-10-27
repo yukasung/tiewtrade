@@ -13,7 +13,14 @@ from pydantic import BaseModel
 from tiewtrade.infra.realtime.admission import AdmissionOutcome
 from tiewtrade.services.api.authentication import Authenticated
 from tiewtrade.services.api.indicator_admission import IndicatorBudget
-from tiewtrade.services.api.indicator_http import _model_json_bytes, indicator_response
+from tiewtrade.services.api.indicator_http import (
+    ChunkedJSON,
+    JSONFragments,
+    _model_json_bytes,
+    _without_automatic_gc,
+    encode_json_fragment,
+    indicator_response,
+)
 
 
 class Allowed:
@@ -78,6 +85,114 @@ async def test_chunked_serialization_matches_pydantic() -> None:
     payload = RowsPayload(rows=[Payload(text=str(index)) for index in range(33)], tail="done")
     body = await _model_json_bytes(payload, 2, lambda: 1)
     assert body == payload.model_dump_json().encode()
+
+
+async def test_preencoded_array_fragments_match_validated_model() -> None:
+    expected = RowsPayload(rows=[Payload(text=str(index)) for index in range(33)], tail="done")
+    shell = RowsPayload(rows=[], tail="done")
+    payload = ChunkedJSON.from_model(
+        shell,
+        rows=JSONFragments(tuple(encode_json_fragment(row) for row in expected.rows)),
+    )
+
+    body = await _model_json_bytes(payload, 2, lambda: 1)
+
+    assert body == expected.model_dump_json().encode()
+
+
+async def test_large_work_restores_gc_after_collecting_released_graph(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    enabled = True
+    calls: list[str] = []
+
+    def disable() -> None:
+        nonlocal enabled
+        enabled = False
+        calls.append("disable")
+
+    def enable() -> None:
+        nonlocal enabled
+        enabled = True
+        calls.append("enable")
+
+    async def work() -> str:
+        assert not enabled
+        return "done"
+
+    monkeypatch.setattr("tiewtrade.services.api.indicator_http.gc.isenabled", lambda: enabled)
+    monkeypatch.setattr("tiewtrade.services.api.indicator_http.gc.disable", disable)
+    monkeypatch.setattr(
+        "tiewtrade.services.api.indicator_http.gc.collect",
+        lambda generation: calls.append(f"collect:{generation}"),
+    )
+    monkeypatch.setattr("tiewtrade.services.api.indicator_http.gc.enable", enable)
+
+    assert await _without_automatic_gc(work()) == "done"
+    assert calls == ["disable", "collect:0", "enable"]
+    assert enabled
+
+
+async def test_large_work_restores_gc_after_failure(monkeypatch: pytest.MonkeyPatch) -> None:
+    enabled = True
+    calls: list[str] = []
+
+    def disable() -> None:
+        nonlocal enabled
+        enabled = False
+
+    def enable() -> None:
+        nonlocal enabled
+        enabled = True
+        calls.append("enable")
+
+    async def failed() -> None:
+        raise RuntimeError("expected")
+
+    monkeypatch.setattr("tiewtrade.services.api.indicator_http.gc.isenabled", lambda: enabled)
+    monkeypatch.setattr("tiewtrade.services.api.indicator_http.gc.disable", disable)
+    monkeypatch.setattr(
+        "tiewtrade.services.api.indicator_http.gc.collect",
+        lambda generation: calls.append(f"collect:{generation}"),
+    )
+    monkeypatch.setattr("tiewtrade.services.api.indicator_http.gc.enable", enable)
+
+    with pytest.raises(RuntimeError, match="expected"):
+        await _without_automatic_gc(failed())
+    assert calls == ["collect:0", "enable"]
+    assert enabled
+
+
+async def test_large_work_restores_gc_after_cancellation(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    enabled = True
+    calls: list[str] = []
+
+    def disable() -> None:
+        nonlocal enabled
+        enabled = False
+
+    def enable() -> None:
+        nonlocal enabled
+        enabled = True
+        calls.append("enable")
+
+    async def cancelled() -> None:
+        raise asyncio.CancelledError()
+
+    monkeypatch.setattr("tiewtrade.services.api.indicator_http.gc.isenabled", lambda: enabled)
+    monkeypatch.setattr("tiewtrade.services.api.indicator_http.gc.disable", disable)
+    monkeypatch.setattr(
+        "tiewtrade.services.api.indicator_http.gc.collect",
+        lambda generation: calls.append(f"collect:{generation}"),
+    )
+    monkeypatch.setattr("tiewtrade.services.api.indicator_http.gc.enable", enable)
+
+    with pytest.raises(asyncio.CancelledError):
+        await _without_automatic_gc(cancelled())
+    assert calls == ["collect:0", "enable"]
+    assert enabled
 
 
 async def test_chunked_serialization_checks_deadline_at_slice_boundary() -> None:

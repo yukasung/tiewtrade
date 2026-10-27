@@ -1,0 +1,1226 @@
+[
+  {
+    "recorded_at": "2026-10-25 06:22:02.194235+00:00",
+    "kind": "accepted",
+    "status": 200,
+    "seconds": 0.19068754099862417,
+    "max_lag_seconds": 0.00557425000180956,
+    "rss_delta_upper_bytes": 62967808,
+    "body_bytes": 458798,
+    "candle_queries": 7,
+    "gc_collections": 1,
+    "gc_max_pause_seconds": 0.00047524999536108226,
+    "gc_generations": [
+      0
+    ],
+    "frozen_objects": 375,
+    "barrier": false
+  },
+  {
+    "recorded_at": "2026-10-25 06:22:02.352138+00:00",
+    "kind": "accepted",
+    "status": 200,
+    "seconds": 0.14156487499712966,
+    "max_lag_seconds": 0.003214834000682458,
+    "rss_delta_upper_bytes": 62996480,
+    "body_bytes": 455267,
+    "candle_queries": 5,
+    "gc_collections": 1,
+    "gc_max_pause_seconds": 0.00020095800573471934,
+    "gc_generations": [
+      0
+    ],
+    "frozen_objects": 375,
+    "barrier": false
+  },
+  {
+    "recorded_at": "2026-10-25 06:22:02.498323+00:00",
+    "kind": "accepted",
+    "status": 200,
+    "seconds": 0.1338592920001247,
+    "max_lag_seconds": 0.0019527910018223337,
+    "rss_delta_upper_bytes": 62984192,
+    "body_bytes": 454235,
+    "candle_queries": 5,
+    "gc_collections": 1,
+    "gc_max_pause_seconds": 0.00018629099940881133,
+    "gc_generations": [
+      0
+    ],
+    "frozen_objects": 375,
+    "barrier": false
+  },
+  {
+    "recorded_at": "2026-10-25 06:22:02.675015+00:00",
+    "kind": "accepted",
+    "status": 200,
+    "seconds": 0.1673731670016423,
+    "max_lag_seconds": 0.004824624998145737,
+    "rss_delta_upper_bytes": 62967808,
+    "body_bytes": 453869,
+    "candle_queries": 8,
+    "gc_collections": 1,
+    "gc_max_pause_seconds": 0.0001845419974415563,
+    "gc_generations": [
+      0
+    ],
+    "frozen_objects": 375,
+    "barrier": false
+  },
+  {
+    "recorded_at": "2026-10-25 06:22:02.872566+00:00",
+    "kind": "accepted",
+    "status": 200,
+    "seconds": 0.17867154099803884,
+    "max_lag_seconds": 0.00430299999890849,
+    "rss_delta_upper_bytes": 62889984,
+    "body_bytes": 453783,
+    "candle_queries": 5,
+    "gc_collections": 1,
+    "gc_max_pause_seconds": 0.0007694169980823062,
+    "gc_generations": [
+      0
+    ],
+    "frozen_objects": 375,
+    "barrier": false
+  },
+  {
+    "recorded_at": "2026-10-25 06:22:02.973321+00:00",
+    "kind": "accepted",
+    "status": 200,
+    "seconds": 0.07733595799800241,
+    "max_lag_seconds": 0.004194917001877911,
+    "rss_delta_upper_bytes": 62869504,
+    "body_bytes": 160163,
+    "candle_queries": 2,
+    "gc_collections": 1,
+    "gc_max_pause_seconds": 0.00015583400090690702,
+    "gc_generations": [
+      0
+    ],
+    "frozen_objects": 375,
+    "barrier": false
+  },
+  {
+    "recorded_at": "2026-10-25 06:22:03.056874+00:00",
+    "kind": "accepted",
+    "status": 200,
+    "seconds": 0.07243229199957568,
+    "max_lag_seconds": 0.004353583001939114,
+    "rss_delta_upper_bytes": 62672896,
+    "body_bytes": 112543,
+    "candle_queries": 2,
+    "gc_collections": 1,
+    "gc_max_pause_seconds": 0.00016741600120440125,
+    "gc_generations": [
+      0
+    ],
+    "frozen_objects": 375,
+    "barrier": false
+  },
+  {
+    "recorded_at": "2026-10-25 06:22:03.095613+00:00",
+    "kind": "accepted",
+    "status": 200,
+    "seconds": 0.03177983300702181,
+    "max_lag_seconds": 0.0019933749982737935,
+    "rss_delta_upper_bytes": 62660608,
+    "body_bytes": 24602,
+    "candle_queries": 1,
+    "gc_collections": 1,
+    "gc_max_pause_seconds": 0.0001224590014317073,
+    "gc_generations": [
+      0
+    ],
+    "frozen_objects": 375,
+    "barrier": false
+  },
+  {
+    "recorded_at": "2026-10-25 06:23:02.294165+00:00",
+    "kind": "accepted",
+    "status": 200,
+    "seconds": 0.2084007079974981,
+    "max_lag_seconds": 0.0052954999965731985,
+    "rss_delta_upper_bytes": 62660608,
+    "body_bytes": 458798,
+    "candle_queries": 7,
+    "gc_collections": 1,
+    "gc_max_pause_seconds": 0.0005791670046164654,
+    "gc_generations": [
+      0
+    ],
+    "frozen_objects": 375,
+    "barrier": false
+  },
+  {
+    "recorded_at": "2026-10-25 06:23:02.467424+00:00",
+    "kind": "accepted",
+    "status": 200,
+    "seconds": 0.16133458300464554,
+    "max_lag_seconds": 0.0031064159967354498,
+    "rss_delta_upper_bytes": 62758912,
+    "body_bytes": 455268,
+    "candle_queries": 5,
+    "gc_collections": 1,
+    "gc_max_pause_seconds": 0.00020975000370526686,
+    "gc_generations": [
+      0
+    ],
+    "frozen_objects": 375,
+    "barrier": false
+  },
+  {
+    "recorded_at": "2026-10-25 06:23:02.608046+00:00",
+    "kind": "accepted",
+    "status": 200,
+    "seconds": 0.1318507089963532,
+    "max_lag_seconds": 0.001965415996091906,
+    "rss_delta_upper_bytes": 62738432,
+    "body_bytes": 454236,
+    "candle_queries": 5,
+    "gc_collections": 1,
+    "gc_max_pause_seconds": 0.00016500000492669642,
+    "gc_generations": [
+      0
+    ],
+    "frozen_objects": 375,
+    "barrier": false
+  },
+  {
+    "recorded_at": "2026-10-25 06:23:02.841573+00:00",
+    "kind": "accepted",
+    "status": 200,
+    "seconds": 0.22542420899844728,
+    "max_lag_seconds": 0.005200249998888466,
+    "rss_delta_upper_bytes": 62722048,
+    "body_bytes": 453870,
+    "candle_queries": 8,
+    "gc_collections": 1,
+    "gc_max_pause_seconds": 0.0003111670012003742,
+    "gc_generations": [
+      0
+    ],
+    "frozen_objects": 375,
+    "barrier": false
+  },
+  {
+    "recorded_at": "2026-10-25 06:23:03.076169+00:00",
+    "kind": "accepted",
+    "status": 200,
+    "seconds": 0.18910629200399853,
+    "max_lag_seconds": 0.0034869159982190466,
+    "rss_delta_upper_bytes": 62648320,
+    "body_bytes": 453784,
+    "candle_queries": 5,
+    "gc_collections": 1,
+    "gc_max_pause_seconds": 0.00020283299818402156,
+    "gc_generations": [
+      0
+    ],
+    "frozen_objects": 375,
+    "barrier": false
+  },
+  {
+    "recorded_at": "2026-10-25 06:23:03.207809+00:00",
+    "kind": "accepted",
+    "status": 200,
+    "seconds": 0.11046229200292146,
+    "max_lag_seconds": 0.005216333997959737,
+    "rss_delta_upper_bytes": 62640128,
+    "body_bytes": 160164,
+    "candle_queries": 2,
+    "gc_collections": 1,
+    "gc_max_pause_seconds": 0.00015558300219709054,
+    "gc_generations": [
+      0
+    ],
+    "frozen_objects": 375,
+    "barrier": false
+  },
+  {
+    "recorded_at": "2026-10-25 06:23:03.397887+00:00",
+    "kind": "accepted",
+    "status": 200,
+    "seconds": 0.1467122090034536,
+    "max_lag_seconds": 0.015760499995958525,
+    "rss_delta_upper_bytes": 62447616,
+    "body_bytes": 112544,
+    "candle_queries": 2,
+    "gc_collections": 1,
+    "gc_max_pause_seconds": 0.00016987499839160591,
+    "gc_generations": [
+      0
+    ],
+    "frozen_objects": 375,
+    "barrier": false
+  },
+  {
+    "recorded_at": "2026-10-25 06:23:03.438784+00:00",
+    "kind": "accepted",
+    "status": 200,
+    "seconds": 0.032920665995334275,
+    "max_lag_seconds": 0.0012202080007409676,
+    "rss_delta_upper_bytes": 62431232,
+    "body_bytes": 24603,
+    "candle_queries": 1,
+    "gc_collections": 1,
+    "gc_max_pause_seconds": 0.00011120900308014825,
+    "gc_generations": [
+      0
+    ],
+    "frozen_objects": 375,
+    "barrier": false
+  },
+  {
+    "recorded_at": "2026-10-25 06:24:02.276356+00:00",
+    "kind": "accepted",
+    "status": 200,
+    "seconds": 0.18987158399977488,
+    "max_lag_seconds": 0.003861209003953263,
+    "rss_delta_upper_bytes": 62431232,
+    "body_bytes": 458809,
+    "candle_queries": 7,
+    "gc_collections": 1,
+    "gc_max_pause_seconds": 0.0004996249990654178,
+    "gc_generations": [
+      0
+    ],
+    "frozen_objects": 375,
+    "barrier": false
+  },
+  {
+    "recorded_at": "2026-10-25 06:24:02.399454+00:00",
+    "kind": "accepted",
+    "status": 200,
+    "seconds": 0.11617945800389862,
+    "max_lag_seconds": 0.0017413329961709677,
+    "rss_delta_upper_bytes": 62570496,
+    "body_bytes": 455268,
+    "candle_queries": 5,
+    "gc_collections": 1,
+    "gc_max_pause_seconds": 0.0001700830034678802,
+    "gc_generations": [
+      0
+    ],
+    "frozen_objects": 375,
+    "barrier": false
+  },
+  {
+    "recorded_at": "2026-10-25 06:24:02.518835+00:00",
+    "kind": "accepted",
+    "status": 200,
+    "seconds": 0.10901970899431035,
+    "max_lag_seconds": 0.001649499999184627,
+    "rss_delta_upper_bytes": 62570496,
+    "body_bytes": 454236,
+    "candle_queries": 5,
+    "gc_collections": 1,
+    "gc_max_pause_seconds": 0.0001437499959138222,
+    "gc_generations": [
+      0
+    ],
+    "frozen_objects": 375,
+    "barrier": false
+  },
+  {
+    "recorded_at": "2026-10-25 06:24:02.684720+00:00",
+    "kind": "accepted",
+    "status": 200,
+    "seconds": 0.1565504169993801,
+    "max_lag_seconds": 0.0026810829996247775,
+    "rss_delta_upper_bytes": 62558208,
+    "body_bytes": 453870,
+    "candle_queries": 8,
+    "gc_collections": 1,
+    "gc_max_pause_seconds": 0.00020829099958064035,
+    "gc_generations": [
+      0
+    ],
+    "frozen_objects": 375,
+    "barrier": false
+  },
+  {
+    "recorded_at": "2026-10-25 06:24:02.811707+00:00",
+    "kind": "accepted",
+    "status": 200,
+    "seconds": 0.11631679200218059,
+    "max_lag_seconds": 0.0016155419990536756,
+    "rss_delta_upper_bytes": 62513152,
+    "body_bytes": 453784,
+    "candle_queries": 5,
+    "gc_collections": 1,
+    "gc_max_pause_seconds": 0.00014312499843072146,
+    "gc_generations": [
+      0
+    ],
+    "frozen_objects": 375,
+    "barrier": false
+  },
+  {
+    "recorded_at": "2026-10-25 06:24:02.900495+00:00",
+    "kind": "accepted",
+    "status": 200,
+    "seconds": 0.0760812079970492,
+    "max_lag_seconds": 0.003870125006069429,
+    "rss_delta_upper_bytes": 62500864,
+    "body_bytes": 160164,
+    "candle_queries": 2,
+    "gc_collections": 1,
+    "gc_max_pause_seconds": 0.00018850000196835026,
+    "gc_generations": [
+      0
+    ],
+    "frozen_objects": 375,
+    "barrier": false
+  },
+  {
+    "recorded_at": "2026-10-25 06:24:03.066065+00:00",
+    "kind": "accepted",
+    "status": 200,
+    "seconds": 0.13039204200322274,
+    "max_lag_seconds": 0.008115583999024237,
+    "rss_delta_upper_bytes": 62308352,
+    "body_bytes": 112544,
+    "candle_queries": 2,
+    "gc_collections": 1,
+    "gc_max_pause_seconds": 0.00019558300118660554,
+    "gc_generations": [
+      0
+    ],
+    "frozen_objects": 375,
+    "barrier": false
+  },
+  {
+    "recorded_at": "2026-10-25 06:24:03.105267+00:00",
+    "kind": "accepted",
+    "status": 200,
+    "seconds": 0.03215254200040363,
+    "max_lag_seconds": 0.0012657499947817995,
+    "rss_delta_upper_bytes": 62291968,
+    "body_bytes": 24603,
+    "candle_queries": 1,
+    "gc_collections": 1,
+    "gc_max_pause_seconds": 0.00011175000690855086,
+    "gc_generations": [
+      0
+    ],
+    "frozen_objects": 375,
+    "barrier": false
+  },
+  {
+    "recorded_at": "2026-10-25 06:25:02.258577+00:00",
+    "kind": "accepted",
+    "status": 200,
+    "seconds": 0.1901034160036943,
+    "max_lag_seconds": 0.00885725000000093,
+    "rss_delta_upper_bytes": 62234624,
+    "body_bytes": 458809,
+    "candle_queries": 7,
+    "gc_collections": 1,
+    "gc_max_pause_seconds": 0.0004911249998258427,
+    "gc_generations": [
+      0
+    ],
+    "frozen_objects": 375,
+    "barrier": false
+  },
+  {
+    "recorded_at": "2026-10-25 06:25:02.394151+00:00",
+    "kind": "accepted",
+    "status": 200,
+    "seconds": 0.12520724999922095,
+    "max_lag_seconds": 0.0016430829974706284,
+    "rss_delta_upper_bytes": 62357504,
+    "body_bytes": 455268,
+    "candle_queries": 5,
+    "gc_collections": 1,
+    "gc_max_pause_seconds": 0.0002195839988416992,
+    "gc_generations": [
+      0
+    ],
+    "frozen_objects": 375,
+    "barrier": false
+  },
+  {
+    "recorded_at": "2026-10-25 06:25:02.514783+00:00",
+    "kind": "accepted",
+    "status": 200,
+    "seconds": 0.10981324999738717,
+    "max_lag_seconds": 0.0019155829987721517,
+    "rss_delta_upper_bytes": 62349312,
+    "body_bytes": 454236,
+    "candle_queries": 5,
+    "gc_collections": 1,
+    "gc_max_pause_seconds": 0.00014266600192058831,
+    "gc_generations": [
+      0
+    ],
+    "frozen_objects": 375,
+    "barrier": false
+  },
+  {
+    "recorded_at": "2026-10-25 06:25:02.675654+00:00",
+    "kind": "accepted",
+    "status": 200,
+    "seconds": 0.14923987500515068,
+    "max_lag_seconds": 0.0014661249998607672,
+    "rss_delta_upper_bytes": 62349312,
+    "body_bytes": 453870,
+    "candle_queries": 8,
+    "gc_collections": 1,
+    "gc_max_pause_seconds": 0.00016124999820021912,
+    "gc_generations": [
+      0
+    ],
+    "frozen_objects": 375,
+    "barrier": false
+  },
+  {
+    "recorded_at": "2026-10-25 06:25:02.803824+00:00",
+    "kind": "accepted",
+    "status": 200,
+    "seconds": 0.11783029200159945,
+    "max_lag_seconds": 0.0019649590004701166,
+    "rss_delta_upper_bytes": 62341120,
+    "body_bytes": 453784,
+    "candle_queries": 5,
+    "gc_collections": 1,
+    "gc_max_pause_seconds": 0.00014341699716169387,
+    "gc_generations": [
+      0
+    ],
+    "frozen_objects": 375,
+    "barrier": false
+  },
+  {
+    "recorded_at": "2026-10-25 06:25:02.880825+00:00",
+    "kind": "accepted",
+    "status": 200,
+    "seconds": 0.06516525000188267,
+    "max_lag_seconds": 0.0040454159944783895,
+    "rss_delta_upper_bytes": 62328832,
+    "body_bytes": 160164,
+    "candle_queries": 2,
+    "gc_collections": 1,
+    "gc_max_pause_seconds": 0.0001772499963408336,
+    "gc_generations": [
+      0
+    ],
+    "frozen_objects": 375,
+    "barrier": false
+  },
+  {
+    "recorded_at": "2026-10-25 06:25:02.987850+00:00",
+    "kind": "accepted",
+    "status": 200,
+    "seconds": 0.08951891600008821,
+    "max_lag_seconds": 0.003608583993918728,
+    "rss_delta_upper_bytes": 62136320,
+    "body_bytes": 112544,
+    "candle_queries": 2,
+    "gc_collections": 1,
+    "gc_max_pause_seconds": 0.0001913330052047968,
+    "gc_generations": [
+      0
+    ],
+    "frozen_objects": 375,
+    "barrier": false
+  },
+  {
+    "recorded_at": "2026-10-25 06:25:03.078061+00:00",
+    "kind": "accepted",
+    "status": 200,
+    "seconds": 0.036710291999042965,
+    "max_lag_seconds": 0.0030067499948199837,
+    "rss_delta_upper_bytes": 62119936,
+    "body_bytes": 24603,
+    "candle_queries": 1,
+    "gc_collections": 1,
+    "gc_max_pause_seconds": 0.00011308299872325733,
+    "gc_generations": [
+      0
+    ],
+    "frozen_objects": 375,
+    "barrier": false
+  },
+  {
+    "recorded_at": "2026-10-25 06:26:02.275054+00:00",
+    "kind": "accepted",
+    "status": 200,
+    "seconds": 0.1843635409968556,
+    "max_lag_seconds": 0.004697624998807441,
+    "rss_delta_upper_bytes": 61710336,
+    "body_bytes": 458809,
+    "candle_queries": 7,
+    "gc_collections": 1,
+    "gc_max_pause_seconds": 0.00042266599484719336,
+    "gc_generations": [
+      0
+    ],
+    "frozen_objects": 375,
+    "barrier": false
+  },
+  {
+    "recorded_at": "2026-10-25 06:26:02.403262+00:00",
+    "kind": "accepted",
+    "status": 200,
+    "seconds": 0.12013504200149328,
+    "max_lag_seconds": 0.0025615829991875215,
+    "rss_delta_upper_bytes": 61898752,
+    "body_bytes": 455268,
+    "candle_queries": 5,
+    "gc_collections": 1,
+    "gc_max_pause_seconds": 0.00020466699788812548,
+    "gc_generations": [
+      0
+    ],
+    "frozen_objects": 375,
+    "barrier": false
+  },
+  {
+    "recorded_at": "2026-10-25 06:26:02.520945+00:00",
+    "kind": "accepted",
+    "status": 200,
+    "seconds": 0.1073962499940535,
+    "max_lag_seconds": 0.0014344589991378597,
+    "rss_delta_upper_bytes": 61890560,
+    "body_bytes": 454236,
+    "candle_queries": 5,
+    "gc_collections": 1,
+    "gc_max_pause_seconds": 0.00013533399760490283,
+    "gc_generations": [
+      0
+    ],
+    "frozen_objects": 375,
+    "barrier": false
+  },
+  {
+    "recorded_at": "2026-10-25 06:26:02.686381+00:00",
+    "kind": "accepted",
+    "status": 200,
+    "seconds": 0.15187449999939417,
+    "max_lag_seconds": 0.0016067079969798214,
+    "rss_delta_upper_bytes": 61890560,
+    "body_bytes": 453870,
+    "candle_queries": 8,
+    "gc_collections": 1,
+    "gc_max_pause_seconds": 0.00017291700351051986,
+    "gc_generations": [
+      0
+    ],
+    "frozen_objects": 375,
+    "barrier": false
+  },
+  {
+    "recorded_at": "2026-10-25 06:26:02.899887+00:00",
+    "kind": "accepted",
+    "status": 200,
+    "seconds": 0.17406587499863235,
+    "max_lag_seconds": 0.004262540996132884,
+    "rss_delta_upper_bytes": 61845504,
+    "body_bytes": 453784,
+    "candle_queries": 5,
+    "gc_collections": 1,
+    "gc_max_pause_seconds": 0.001034959001117386,
+    "gc_generations": [
+      0
+    ],
+    "frozen_objects": 375,
+    "barrier": false
+  },
+  {
+    "recorded_at": "2026-10-25 06:26:02.994688+00:00",
+    "kind": "accepted",
+    "status": 200,
+    "seconds": 0.0797269589966163,
+    "max_lag_seconds": 0.004157708998827729,
+    "rss_delta_upper_bytes": 61542400,
+    "body_bytes": 160164,
+    "candle_queries": 2,
+    "gc_collections": 1,
+    "gc_max_pause_seconds": 0.0001527920030639507,
+    "gc_generations": [
+      0
+    ],
+    "frozen_objects": 375,
+    "barrier": false
+  },
+  {
+    "recorded_at": "2026-10-25 06:26:03.071885+00:00",
+    "kind": "accepted",
+    "status": 200,
+    "seconds": 0.06564329200045904,
+    "max_lag_seconds": 0.0023074579995591192,
+    "rss_delta_upper_bytes": 61542400,
+    "body_bytes": 112544,
+    "candle_queries": 2,
+    "gc_collections": 1,
+    "gc_max_pause_seconds": 0.00016283299919450656,
+    "gc_generations": [
+      0
+    ],
+    "frozen_objects": 375,
+    "barrier": false
+  },
+  {
+    "recorded_at": "2026-10-25 06:26:03.112827+00:00",
+    "kind": "accepted",
+    "status": 200,
+    "seconds": 0.03409533300145995,
+    "max_lag_seconds": 0.002041666998702567,
+    "rss_delta_upper_bytes": 61542400,
+    "body_bytes": 24603,
+    "candle_queries": 1,
+    "gc_collections": 1,
+    "gc_max_pause_seconds": 0.00013833299453835934,
+    "gc_generations": [
+      0
+    ],
+    "frozen_objects": 375,
+    "barrier": false
+  },
+  {
+    "recorded_at": "2026-10-25 06:27:02.295740+00:00",
+    "kind": "accepted",
+    "status": 200,
+    "seconds": 0.1918934999994235,
+    "max_lag_seconds": 0.005917709005298093,
+    "rss_delta_upper_bytes": 61542400,
+    "body_bytes": 458809,
+    "candle_queries": 7,
+    "gc_collections": 1,
+    "gc_max_pause_seconds": 0.0004510420039878227,
+    "gc_generations": [
+      0
+    ],
+    "frozen_objects": 375,
+    "barrier": false
+  },
+  {
+    "recorded_at": "2026-10-25 06:27:02.423992+00:00",
+    "kind": "accepted",
+    "status": 200,
+    "seconds": 0.12052725000103237,
+    "max_lag_seconds": 0.0016726250006468034,
+    "rss_delta_upper_bytes": 61857792,
+    "body_bytes": 455268,
+    "candle_queries": 5,
+    "gc_collections": 1,
+    "gc_max_pause_seconds": 0.00019441599579295143,
+    "gc_generations": [
+      0
+    ],
+    "frozen_objects": 375,
+    "barrier": false
+  },
+  {
+    "recorded_at": "2026-10-25 06:27:02.545781+00:00",
+    "kind": "accepted",
+    "status": 200,
+    "seconds": 0.11020045799523359,
+    "max_lag_seconds": 0.0017849580009351483,
+    "rss_delta_upper_bytes": 61849600,
+    "body_bytes": 454236,
+    "candle_queries": 5,
+    "gc_collections": 1,
+    "gc_max_pause_seconds": 0.0001405000002705492,
+    "gc_generations": [
+      0
+    ],
+    "frozen_objects": 375,
+    "barrier": false
+  },
+  {
+    "recorded_at": "2026-10-25 06:27:02.711310+00:00",
+    "kind": "accepted",
+    "status": 200,
+    "seconds": 0.15132758400432067,
+    "max_lag_seconds": 0.0018635829957202076,
+    "rss_delta_upper_bytes": 61792256,
+    "body_bytes": 453870,
+    "candle_queries": 8,
+    "gc_collections": 1,
+    "gc_max_pause_seconds": 0.0001659580011619255,
+    "gc_generations": [
+      0
+    ],
+    "frozen_objects": 375,
+    "barrier": false
+  },
+  {
+    "recorded_at": "2026-10-25 06:27:02.856124+00:00",
+    "kind": "accepted",
+    "status": 200,
+    "seconds": 0.13183866700273938,
+    "max_lag_seconds": 0.0034771249967161565,
+    "rss_delta_upper_bytes": 61767680,
+    "body_bytes": 453784,
+    "candle_queries": 5,
+    "gc_collections": 1,
+    "gc_max_pause_seconds": 0.00037891700048930943,
+    "gc_generations": [
+      0
+    ],
+    "frozen_objects": 375,
+    "barrier": false
+  },
+  {
+    "recorded_at": "2026-10-25 06:27:02.989841+00:00",
+    "kind": "accepted",
+    "status": 200,
+    "seconds": 0.11836829199455678,
+    "max_lag_seconds": 0.007140458005887922,
+    "rss_delta_upper_bytes": 61767680,
+    "body_bytes": 160164,
+    "candle_queries": 2,
+    "gc_collections": 1,
+    "gc_max_pause_seconds": 0.00023304099886445329,
+    "gc_generations": [
+      0
+    ],
+    "frozen_objects": 375,
+    "barrier": false
+  },
+  {
+    "recorded_at": "2026-10-25 06:27:03.116057+00:00",
+    "kind": "accepted",
+    "status": 200,
+    "seconds": 0.11551645799772814,
+    "max_lag_seconds": 0.015043417003762442,
+    "rss_delta_upper_bytes": 61575168,
+    "body_bytes": 112544,
+    "candle_queries": 2,
+    "gc_collections": 1,
+    "gc_max_pause_seconds": 0.00022754199744667858,
+    "gc_generations": [
+      0
+    ],
+    "frozen_objects": 375,
+    "barrier": false
+  },
+  {
+    "recorded_at": "2026-10-25 06:27:03.162220+00:00",
+    "kind": "accepted",
+    "status": 200,
+    "seconds": 0.03899670900136698,
+    "max_lag_seconds": 0.0021703749999869614,
+    "rss_delta_upper_bytes": 61558784,
+    "body_bytes": 24603,
+    "candle_queries": 1,
+    "gc_collections": 1,
+    "gc_max_pause_seconds": 0.00015800000255694613,
+    "gc_generations": [
+      0
+    ],
+    "frozen_objects": 375,
+    "barrier": false
+  },
+  {
+    "recorded_at": "2026-10-25 06:28:02.306179+00:00",
+    "kind": "accepted",
+    "status": 200,
+    "seconds": 0.21103299999958836,
+    "max_lag_seconds": 0.004802874999877531,
+    "rss_delta_upper_bytes": 61558784,
+    "body_bytes": 458809,
+    "candle_queries": 7,
+    "gc_collections": 1,
+    "gc_max_pause_seconds": 0.0005245840002316982,
+    "gc_generations": [
+      0
+    ],
+    "frozen_objects": 375,
+    "barrier": false
+  },
+  {
+    "recorded_at": "2026-10-25 06:28:02.439613+00:00",
+    "kind": "accepted",
+    "status": 200,
+    "seconds": 0.12677316700137453,
+    "max_lag_seconds": 0.0016508340023574418,
+    "rss_delta_upper_bytes": 61718528,
+    "body_bytes": 455268,
+    "candle_queries": 5,
+    "gc_collections": 1,
+    "gc_max_pause_seconds": 0.00019991699809907004,
+    "gc_generations": [
+      0
+    ],
+    "frozen_objects": 375,
+    "barrier": false
+  },
+  {
+    "recorded_at": "2026-10-25 06:28:02.571991+00:00",
+    "kind": "accepted",
+    "status": 200,
+    "seconds": 0.11966108399792574,
+    "max_lag_seconds": 0.0019096250008442438,
+    "rss_delta_upper_bytes": 61710336,
+    "body_bytes": 454236,
+    "candle_queries": 5,
+    "gc_collections": 1,
+    "gc_max_pause_seconds": 0.00028362499870127067,
+    "gc_generations": [
+      0
+    ],
+    "frozen_objects": 375,
+    "barrier": false
+  },
+  {
+    "recorded_at": "2026-10-25 06:28:02.748390+00:00",
+    "kind": "accepted",
+    "status": 200,
+    "seconds": 0.16267125000013039,
+    "max_lag_seconds": 0.001749583000782877,
+    "rss_delta_upper_bytes": 61710336,
+    "body_bytes": 453870,
+    "candle_queries": 8,
+    "gc_collections": 1,
+    "gc_max_pause_seconds": 0.0002169579965993762,
+    "gc_generations": [
+      0
+    ],
+    "frozen_objects": 375,
+    "barrier": false
+  },
+  {
+    "recorded_at": "2026-10-25 06:28:02.904962+00:00",
+    "kind": "accepted",
+    "status": 200,
+    "seconds": 0.1398018750041956,
+    "max_lag_seconds": 0.0022609580020071006,
+    "rss_delta_upper_bytes": 61677568,
+    "body_bytes": 453784,
+    "candle_queries": 5,
+    "gc_collections": 1,
+    "gc_max_pause_seconds": 0.00041362499905517325,
+    "gc_generations": [
+      0
+    ],
+    "frozen_objects": 375,
+    "barrier": false
+  },
+  {
+    "recorded_at": "2026-10-25 06:28:03.077938+00:00",
+    "kind": "accepted",
+    "status": 200,
+    "seconds": 0.15820445799909066,
+    "max_lag_seconds": 0.012981417004193644,
+    "rss_delta_upper_bytes": 61669376,
+    "body_bytes": 160164,
+    "candle_queries": 2,
+    "gc_collections": 1,
+    "gc_max_pause_seconds": 0.00017429100262233987,
+    "gc_generations": [
+      0
+    ],
+    "frozen_objects": 375,
+    "barrier": false
+  },
+  {
+    "recorded_at": "2026-10-25 06:28:03.163230+00:00",
+    "kind": "accepted",
+    "status": 200,
+    "seconds": 0.07704458299849648,
+    "max_lag_seconds": 0.006300957994535565,
+    "rss_delta_upper_bytes": 61476864,
+    "body_bytes": 112544,
+    "candle_queries": 2,
+    "gc_collections": 1,
+    "gc_max_pause_seconds": 0.0001608340025995858,
+    "gc_generations": [
+      0
+    ],
+    "frozen_objects": 375,
+    "barrier": false
+  },
+  {
+    "recorded_at": "2026-10-25 06:28:03.203470+00:00",
+    "kind": "accepted",
+    "status": 200,
+    "seconds": 0.0347898339969106,
+    "max_lag_seconds": 0.0024875409991363994,
+    "rss_delta_upper_bytes": 61460480,
+    "body_bytes": 24603,
+    "candle_queries": 1,
+    "gc_collections": 1,
+    "gc_max_pause_seconds": 0.00011570900096558034,
+    "gc_generations": [
+      0
+    ],
+    "frozen_objects": 375,
+    "barrier": false
+  },
+  {
+    "recorded_at": "2026-10-25 06:29:02.254518+00:00",
+    "kind": "accepted",
+    "status": 200,
+    "seconds": 0.20373850100440904,
+    "max_lag_seconds": 0.005166749998461455,
+    "rss_delta_upper_bytes": 61460480,
+    "body_bytes": 458809,
+    "candle_queries": 7,
+    "gc_collections": 1,
+    "gc_max_pause_seconds": 0.0005114169980515726,
+    "gc_generations": [
+      0
+    ],
+    "frozen_objects": 375,
+    "barrier": false
+  },
+  {
+    "recorded_at": "2026-10-25 06:29:02.391410+00:00",
+    "kind": "accepted",
+    "status": 200,
+    "seconds": 0.13069812499452382,
+    "max_lag_seconds": 0.001701124999381136,
+    "rss_delta_upper_bytes": 61648896,
+    "body_bytes": 455268,
+    "candle_queries": 5,
+    "gc_collections": 1,
+    "gc_max_pause_seconds": 0.00019674999930430204,
+    "gc_generations": [
+      0
+    ],
+    "frozen_objects": 375,
+    "barrier": false
+  },
+  {
+    "recorded_at": "2026-10-25 06:29:02.531891+00:00",
+    "kind": "accepted",
+    "status": 200,
+    "seconds": 0.12916012499772478,
+    "max_lag_seconds": 0.003669458002259489,
+    "rss_delta_upper_bytes": 61648896,
+    "body_bytes": 454236,
+    "candle_queries": 5,
+    "gc_collections": 1,
+    "gc_max_pause_seconds": 0.0001620419934624806,
+    "gc_generations": [
+      0
+    ],
+    "frozen_objects": 375,
+    "barrier": false
+  },
+  {
+    "recorded_at": "2026-10-25 06:29:02.801204+00:00",
+    "kind": "accepted",
+    "status": 200,
+    "seconds": 0.21301349999703234,
+    "max_lag_seconds": 0.00484683300339384,
+    "rss_delta_upper_bytes": 61648896,
+    "body_bytes": 453870,
+    "candle_queries": 8,
+    "gc_collections": 1,
+    "gc_max_pause_seconds": 0.00021087499771965668,
+    "gc_generations": [
+      0
+    ],
+    "frozen_objects": 375,
+    "barrier": false
+  },
+  {
+    "recorded_at": "2026-10-25 06:29:03.044157+00:00",
+    "kind": "accepted",
+    "status": 200,
+    "seconds": 0.23074391699628904,
+    "max_lag_seconds": 0.012501833994174375,
+    "rss_delta_upper_bytes": 61624320,
+    "body_bytes": 453784,
+    "candle_queries": 5,
+    "gc_collections": 1,
+    "gc_max_pause_seconds": 0.0012315000058151782,
+    "gc_generations": [
+      0
+    ],
+    "frozen_objects": 375,
+    "barrier": false
+  },
+  {
+    "recorded_at": "2026-10-25 06:29:03.375410+00:00",
+    "kind": "accepted",
+    "status": 200,
+    "seconds": 0.19459975000063423,
+    "max_lag_seconds": 0.014980083998234476,
+    "rss_delta_upper_bytes": 61616128,
+    "body_bytes": 160164,
+    "candle_queries": 2,
+    "gc_collections": 1,
+    "gc_max_pause_seconds": 0.00032354099676012993,
+    "gc_generations": [
+      0
+    ],
+    "frozen_objects": 375,
+    "barrier": false
+  },
+  {
+    "recorded_at": "2026-10-25 06:29:03.560187+00:00",
+    "kind": "accepted",
+    "status": 200,
+    "seconds": 0.16554062599607278,
+    "max_lag_seconds": 0.013870666994189377,
+    "rss_delta_upper_bytes": 61423616,
+    "body_bytes": 112544,
+    "candle_queries": 2,
+    "gc_collections": 1,
+    "gc_max_pause_seconds": 0.00038583299465244636,
+    "gc_generations": [
+      0
+    ],
+    "frozen_objects": 375,
+    "barrier": false
+  },
+  {
+    "recorded_at": "2026-10-25 06:29:03.641382+00:00",
+    "kind": "accepted",
+    "status": 200,
+    "seconds": 0.07131283399940003,
+    "max_lag_seconds": 0.0037577500016777775,
+    "rss_delta_upper_bytes": 61407232,
+    "body_bytes": 24603,
+    "candle_queries": 1,
+    "gc_collections": 1,
+    "gc_max_pause_seconds": 0.0002885409994632937,
+    "gc_generations": [
+      0
+    ],
+    "frozen_objects": 375,
+    "barrier": false
+  },
+  {
+    "recorded_at": "2026-10-25 06:30:02.402863+00:00",
+    "kind": "accepted",
+    "status": 200,
+    "seconds": 0.3106034169977647,
+    "max_lag_seconds": 0.008180916997953317,
+    "rss_delta_upper_bytes": 61407232,
+    "body_bytes": 458809,
+    "candle_queries": 7,
+    "gc_collections": 1,
+    "gc_max_pause_seconds": 0.0010990829978254624,
+    "gc_generations": [
+      0
+    ],
+    "frozen_objects": 375,
+    "barrier": false
+  },
+  {
+    "recorded_at": "2026-10-25 06:30:02.611925+00:00",
+    "kind": "accepted",
+    "status": 200,
+    "seconds": 0.19447204200696433,
+    "max_lag_seconds": 0.008449541998852509,
+    "rss_delta_upper_bytes": 61575168,
+    "body_bytes": 455272,
+    "candle_queries": 5,
+    "gc_collections": 1,
+    "gc_max_pause_seconds": 0.00022983400413068011,
+    "gc_generations": [
+      0
+    ],
+    "frozen_objects": 375,
+    "barrier": false
+  },
+  {
+    "recorded_at": "2026-10-25 06:30:02.794438+00:00",
+    "kind": "accepted",
+    "status": 200,
+    "seconds": 0.16201829100464238,
+    "max_lag_seconds": 0.006273665993940085,
+    "rss_delta_upper_bytes": 61534208,
+    "body_bytes": 454235,
+    "candle_queries": 5,
+    "gc_collections": 1,
+    "gc_max_pause_seconds": 0.00019512500148266554,
+    "gc_generations": [
+      0
+    ],
+    "frozen_objects": 375,
+    "barrier": false
+  },
+  {
+    "recorded_at": "2026-10-25 06:30:03.095944+00:00",
+    "kind": "accepted",
+    "status": 200,
+    "seconds": 0.2845707919987035,
+    "max_lag_seconds": 0.007723082996672019,
+    "rss_delta_upper_bytes": 61534208,
+    "body_bytes": 453869,
+    "candle_queries": 8,
+    "gc_collections": 1,
+    "gc_max_pause_seconds": 0.0005090839986223727,
+    "gc_generations": [
+      0
+    ],
+    "frozen_objects": 375,
+    "barrier": false
+  },
+  {
+    "recorded_at": "2026-10-25 06:30:03.627511+00:00",
+    "kind": "accepted",
+    "status": 200,
+    "seconds": 0.5052569170002243,
+    "max_lag_seconds": 0.07662520800397032,
+    "rss_delta_upper_bytes": 61493248,
+    "body_bytes": 453783,
+    "candle_queries": 5,
+    "gc_collections": 1,
+    "gc_max_pause_seconds": 0.000650499998300802,
+    "gc_generations": [
+      0
+    ],
+    "frozen_objects": 375,
+    "barrier": false
+  },
+  {
+    "recorded_at": "2026-10-25 06:30:03.828680+00:00",
+    "kind": "accepted",
+    "status": 200,
+    "seconds": 0.1503232919931179,
+    "max_lag_seconds": 0.009026458004082086,
+    "rss_delta_upper_bytes": 61485056,
+    "body_bytes": 160163,
+    "candle_queries": 2,
+    "gc_collections": 1,
+    "gc_max_pause_seconds": 0.0003724169946508482,
+    "gc_generations": [
+      0
+    ],
+    "frozen_objects": 375,
+    "barrier": false
+  },
+  {
+    "recorded_at": "2026-10-25 06:30:04.240994+00:00",
+    "kind": "accepted",
+    "status": 200,
+    "seconds": 0.3824395830015419,
+    "max_lag_seconds": 0.140811041998968,
+    "rss_delta_upper_bytes": 61292544,
+    "body_bytes": 112543,
+    "candle_queries": 2,
+    "gc_collections": 1,
+    "gc_max_pause_seconds": 0.0010105420005857013,
+    "gc_generations": [
+      0
+    ],
+    "frozen_objects": 375,
+    "barrier": false
+  },
+  {
+    "recorded_at": "2026-10-25 06:30:04.305985+00:00",
+    "kind": "accepted",
+    "status": 200,
+    "seconds": 0.058176332997391,
+    "max_lag_seconds": 0.0026050420029787346,
+    "rss_delta_upper_bytes": 61276160,
+    "body_bytes": 24602,
+    "candle_queries": 1,
+    "gc_collections": 1,
+    "gc_max_pause_seconds": 0.00013458300236379728,
+    "gc_generations": [
+      0
+    ],
+    "frozen_objects": 375,
+    "barrier": false
+  }
+]

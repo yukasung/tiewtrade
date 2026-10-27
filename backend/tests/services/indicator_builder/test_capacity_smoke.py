@@ -45,3 +45,27 @@ async def test_smoke_result_cannot_unlock_full_dirty_gate(tmp_path: Path) -> Non
     with pytest.raises(KeyError, match="R2-C5-steady"):
         await run(tmp_path / "output", c1, "dirty", tmp_path / "metrics", prior)
     assert not (tmp_path / "output").exists()
+
+
+async def test_diagnostic_result_cannot_unlock_full_dirty_gate(tmp_path: Path) -> None:
+    c1, prior = tmp_path / "c1", tmp_path / "prior"
+    c1.mkdir()
+    prior.mkdir()
+    save(c1 / "result.json", {"R2-C1": "PASSED"})
+    save(prior / "result.json", {"DIAGNOSTIC-steady": "PASSED", "full_validation_credit": False})
+    with pytest.raises(KeyError, match="R2-C2"):
+        await run(tmp_path / "output", c1, "dirty", tmp_path / "metrics", prior, combined=True)
+    assert not (tmp_path / "output").exists()
+
+
+@pytest.mark.parametrize("seconds", [0, 59, 61, 301, 2401, 3600])
+async def test_diagnostic_rejects_unbounded_duration(tmp_path: Path, seconds: int) -> None:
+    save(tmp_path / "result.json", {"R2-C1": "PASSED"})
+    with pytest.raises(ValueError, match="diagnostic duration"):
+        await run(
+            tmp_path / "output",
+            tmp_path,
+            load_metrics=tmp_path / "metrics",
+            diagnostic_seconds=seconds,
+        )
+    assert not (tmp_path / "output").exists()

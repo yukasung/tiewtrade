@@ -1,0 +1,770 @@
+[
+  {
+    "base": "BTC",
+    "timeframe": "1m",
+    "started_seconds": 0.22877762499410892,
+    "finished_seconds": 0.44698274999973364,
+    "elapsed_seconds": 0.21820520899927942,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37
+  },
+  {
+    "base": "BTC",
+    "timeframe": "5m",
+    "started_seconds": 0.4469850419991417,
+    "finished_seconds": 0.4901862499973504,
+    "elapsed_seconds": 0.04320137499598786,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37
+  },
+  {
+    "base": "BTC",
+    "timeframe": "15m",
+    "started_seconds": 0.4901879589961027,
+    "finished_seconds": 0.5299756249951315,
+    "elapsed_seconds": 0.03978783300408395,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37
+  },
+  {
+    "base": "BTC",
+    "timeframe": "1h",
+    "started_seconds": 0.5299792499936302,
+    "finished_seconds": 0.5662514169962378,
+    "elapsed_seconds": 0.03627233400038676,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37
+  },
+  {
+    "base": "BTC",
+    "timeframe": "4h",
+    "started_seconds": 0.5662544589940808,
+    "finished_seconds": 0.6093701249992591,
+    "elapsed_seconds": 0.043116166001709644,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37
+  },
+  {
+    "base": "BTC",
+    "timeframe": "1d",
+    "started_seconds": 0.6093757089984138,
+    "finished_seconds": 0.6457524999932502,
+    "elapsed_seconds": 0.036376915995788295,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37
+  },
+  {
+    "base": "BTC",
+    "timeframe": "1w",
+    "started_seconds": 0.6457554589942447,
+    "finished_seconds": 0.6839042919964413,
+    "elapsed_seconds": 0.038148999999975786,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37
+  },
+  {
+    "base": "BTC",
+    "timeframe": "1M",
+    "started_seconds": 0.6839074999952572,
+    "finished_seconds": 0.7234302919969196,
+    "elapsed_seconds": 0.03952295899944147,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37
+  },
+  {
+    "base": "BTC",
+    "timeframe": "1m",
+    "started_seconds": 60.053370624998934,
+    "finished_seconds": 60.62238824999804,
+    "elapsed_seconds": 0.5690177500000573,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37
+  },
+  {
+    "base": "BTC",
+    "timeframe": "5m",
+    "started_seconds": 60.62239033399965,
+    "finished_seconds": 60.686665458997595,
+    "elapsed_seconds": 0.06427524999890011,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37
+  },
+  {
+    "base": "BTC",
+    "timeframe": "15m",
+    "started_seconds": 60.686667916997976,
+    "finished_seconds": 60.81391049999365,
+    "elapsed_seconds": 0.12724270799662918,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37
+  },
+  {
+    "base": "BTC",
+    "timeframe": "1h",
+    "started_seconds": 60.813912666999386,
+    "finished_seconds": 60.86463116699451,
+    "elapsed_seconds": 0.050718667000182904,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37
+  },
+  {
+    "base": "BTC",
+    "timeframe": "4h",
+    "started_seconds": 60.86463287499646,
+    "finished_seconds": 60.900755916998605,
+    "elapsed_seconds": 0.03612316700309748,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37
+  },
+  {
+    "base": "BTC",
+    "timeframe": "1d",
+    "started_seconds": 60.900757583993254,
+    "finished_seconds": 60.936681374994805,
+    "elapsed_seconds": 0.03592387500248151,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37
+  },
+  {
+    "base": "BTC",
+    "timeframe": "1w",
+    "started_seconds": 60.93668262499705,
+    "finished_seconds": 60.97705066699564,
+    "elapsed_seconds": 0.040368125002714805,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37
+  },
+  {
+    "base": "BTC",
+    "timeframe": "1M",
+    "started_seconds": 60.97705224999663,
+    "finished_seconds": 61.0115222089953,
+    "elapsed_seconds": 0.03447008399962215,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37
+  },
+  {
+    "base": "BTC",
+    "timeframe": "1m",
+    "started_seconds": 120.42467233399657,
+    "finished_seconds": 120.68150949999836,
+    "elapsed_seconds": 0.25683725000271806,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37
+  },
+  {
+    "base": "BTC",
+    "timeframe": "5m",
+    "started_seconds": 120.68151187499461,
+    "finished_seconds": 120.71652537499904,
+    "elapsed_seconds": 0.03501358400535537,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37
+  },
+  {
+    "base": "BTC",
+    "timeframe": "15m",
+    "started_seconds": 120.7165268749959,
+    "finished_seconds": 120.74920779199601,
+    "elapsed_seconds": 0.03268104200105881,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37
+  },
+  {
+    "base": "BTC",
+    "timeframe": "1h",
+    "started_seconds": 120.74920945899794,
+    "finished_seconds": 120.78100458399422,
+    "elapsed_seconds": 0.03179524999723071,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37
+  },
+  {
+    "base": "BTC",
+    "timeframe": "4h",
+    "started_seconds": 120.78100599999743,
+    "finished_seconds": 120.81530124999699,
+    "elapsed_seconds": 0.03429541699733818,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37
+  },
+  {
+    "base": "BTC",
+    "timeframe": "1d",
+    "started_seconds": 120.81530304199987,
+    "finished_seconds": 120.84591070899478,
+    "elapsed_seconds": 0.0306077919958625,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37
+  },
+  {
+    "base": "BTC",
+    "timeframe": "1w",
+    "started_seconds": 120.8459123749999,
+    "finished_seconds": 120.87653287499415,
+    "elapsed_seconds": 0.03062058399518719,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37
+  },
+  {
+    "base": "BTC",
+    "timeframe": "1M",
+    "started_seconds": 120.87653445899923,
+    "finished_seconds": 120.90545929200016,
+    "elapsed_seconds": 0.028924915997777134,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37
+  },
+  {
+    "base": "BTC",
+    "timeframe": "1m",
+    "started_seconds": 180.04419708399655,
+    "finished_seconds": 180.48065241699805,
+    "elapsed_seconds": 0.4364555830034078,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37
+  },
+  {
+    "base": "BTC",
+    "timeframe": "5m",
+    "started_seconds": 180.480656791995,
+    "finished_seconds": 180.53039033399546,
+    "elapsed_seconds": 0.04973370800144039,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37
+  },
+  {
+    "base": "BTC",
+    "timeframe": "15m",
+    "started_seconds": 180.53039349999744,
+    "finished_seconds": 180.56053716699535,
+    "elapsed_seconds": 0.03014387499570148,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37
+  },
+  {
+    "base": "BTC",
+    "timeframe": "1h",
+    "started_seconds": 180.56054041699826,
+    "finished_seconds": 180.59772145899478,
+    "elapsed_seconds": 0.03718125000159489,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37
+  },
+  {
+    "base": "BTC",
+    "timeframe": "4h",
+    "started_seconds": 180.59772437499487,
+    "finished_seconds": 180.6482032089989,
+    "elapsed_seconds": 0.05047904200182529,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37
+  },
+  {
+    "base": "BTC",
+    "timeframe": "1d",
+    "started_seconds": 180.6482067919933,
+    "finished_seconds": 180.72975129199767,
+    "elapsed_seconds": 0.08154458300123224,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37
+  },
+  {
+    "base": "BTC",
+    "timeframe": "1w",
+    "started_seconds": 180.72975299999962,
+    "finished_seconds": 180.79231666699343,
+    "elapsed_seconds": 0.06256383399886545,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37
+  },
+  {
+    "base": "BTC",
+    "timeframe": "1M",
+    "started_seconds": 180.79231841699948,
+    "finished_seconds": 180.83099687499634,
+    "elapsed_seconds": 0.03867858299781801,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37
+  },
+  {
+    "base": "BTC",
+    "timeframe": "1m",
+    "started_seconds": 240.0551227919932,
+    "finished_seconds": 240.30347304199677,
+    "elapsed_seconds": 0.24835033300041687,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37
+  },
+  {
+    "base": "BTC",
+    "timeframe": "5m",
+    "started_seconds": 240.30347749999783,
+    "finished_seconds": 240.34856433399545,
+    "elapsed_seconds": 0.045086917001754045,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37
+  },
+  {
+    "base": "BTC",
+    "timeframe": "15m",
+    "started_seconds": 240.34856591699645,
+    "finished_seconds": 240.38688333399477,
+    "elapsed_seconds": 0.03831766700022854,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37
+  },
+  {
+    "base": "BTC",
+    "timeframe": "1h",
+    "started_seconds": 240.38688766699488,
+    "finished_seconds": 240.43171099999745,
+    "elapsed_seconds": 0.04482350000034785,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37
+  },
+  {
+    "base": "BTC",
+    "timeframe": "4h",
+    "started_seconds": 240.43171399999846,
+    "finished_seconds": 240.46476691699354,
+    "elapsed_seconds": 0.03305304199602688,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37
+  },
+  {
+    "base": "BTC",
+    "timeframe": "1d",
+    "started_seconds": 240.46476995899866,
+    "finished_seconds": 240.50137074999657,
+    "elapsed_seconds": 0.03660095799568808,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37
+  },
+  {
+    "base": "BTC",
+    "timeframe": "1w",
+    "started_seconds": 240.5013735839966,
+    "finished_seconds": 240.54107416699844,
+    "elapsed_seconds": 0.03970074999961071,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37
+  },
+  {
+    "base": "BTC",
+    "timeframe": "1M",
+    "started_seconds": 240.54107708399533,
+    "finished_seconds": 240.5747074999963,
+    "elapsed_seconds": 0.03363062500284286,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37
+  },
+  {
+    "base": "BTC",
+    "timeframe": "1m",
+    "started_seconds": 300.15101987499656,
+    "finished_seconds": 300.5234170419935,
+    "elapsed_seconds": 0.37239729199791327,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37
+  },
+  {
+    "base": "BTC",
+    "timeframe": "5m",
+    "started_seconds": 300.52341916699515,
+    "finished_seconds": 300.77032333399984,
+    "elapsed_seconds": 0.24690470800123876,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37
+  },
+  {
+    "base": "BTC",
+    "timeframe": "15m",
+    "started_seconds": 300.77033012499305,
+    "finished_seconds": 300.8658147919996,
+    "elapsed_seconds": 0.09548479200020665,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37
+  },
+  {
+    "base": "BTC",
+    "timeframe": "1h",
+    "started_seconds": 300.8658170419949,
+    "finished_seconds": 300.91161479199945,
+    "elapsed_seconds": 0.04579787499824306,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37
+  },
+  {
+    "base": "BTC",
+    "timeframe": "4h",
+    "started_seconds": 300.91161658399506,
+    "finished_seconds": 300.95555654199416,
+    "elapsed_seconds": 0.043940041003224906,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37
+  },
+  {
+    "base": "BTC",
+    "timeframe": "1d",
+    "started_seconds": 300.95555812499515,
+    "finished_seconds": 301.0042244169963,
+    "elapsed_seconds": 0.04866645899892319,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37
+  },
+  {
+    "base": "BTC",
+    "timeframe": "1w",
+    "started_seconds": 301.00422587499634,
+    "finished_seconds": 301.0688713339987,
+    "elapsed_seconds": 0.06464566700014984,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37
+  },
+  {
+    "base": "BTC",
+    "timeframe": "1M",
+    "started_seconds": 301.06887420899875,
+    "finished_seconds": 301.1817609999998,
+    "elapsed_seconds": 0.11288699999568053,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37
+  },
+  {
+    "base": "BTC",
+    "timeframe": "1m",
+    "started_seconds": 360.0299234169943,
+    "finished_seconds": 360.14630658399983,
+    "elapsed_seconds": 0.11638325000240002,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37
+  },
+  {
+    "base": "BTC",
+    "timeframe": "5m",
+    "started_seconds": 360.1463080839967,
+    "finished_seconds": 360.180749041996,
+    "elapsed_seconds": 0.034441041003447026,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37
+  },
+  {
+    "base": "BTC",
+    "timeframe": "15m",
+    "started_seconds": 360.18075049999607,
+    "finished_seconds": 360.21091258399974,
+    "elapsed_seconds": 0.030162167000526097,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37
+  },
+  {
+    "base": "BTC",
+    "timeframe": "1h",
+    "started_seconds": 360.2109140839966,
+    "finished_seconds": 360.23909399999684,
+    "elapsed_seconds": 0.028180166002130136,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37
+  },
+  {
+    "base": "BTC",
+    "timeframe": "4h",
+    "started_seconds": 360.23909812499915,
+    "finished_seconds": 360.2682240419963,
+    "elapsed_seconds": 0.029126083994924556,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37
+  },
+  {
+    "base": "BTC",
+    "timeframe": "1d",
+    "started_seconds": 360.26822737499606,
+    "finished_seconds": 360.29507866699714,
+    "elapsed_seconds": 0.026851458998862654,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37
+  },
+  {
+    "base": "BTC",
+    "timeframe": "1w",
+    "started_seconds": 360.295081749995,
+    "finished_seconds": 360.33147224999993,
+    "elapsed_seconds": 0.03639087500050664,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37
+  },
+  {
+    "base": "BTC",
+    "timeframe": "1M",
+    "started_seconds": 360.33147770899814,
+    "finished_seconds": 360.36599049999495,
+    "elapsed_seconds": 0.034512958001869265,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37
+  },
+  {
+    "base": "BTC",
+    "timeframe": "1m",
+    "started_seconds": 420.02859187499416,
+    "finished_seconds": 420.25816012499854,
+    "elapsed_seconds": 0.2295683340053074,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37
+  },
+  {
+    "base": "BTC",
+    "timeframe": "5m",
+    "started_seconds": 420.25816154199856,
+    "finished_seconds": 420.30755049999425,
+    "elapsed_seconds": 0.04938916699757101,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37
+  },
+  {
+    "base": "BTC",
+    "timeframe": "15m",
+    "started_seconds": 420.307552667,
+    "finished_seconds": 420.3392209169979,
+    "elapsed_seconds": 0.03166837499884423,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37
+  },
+  {
+    "base": "BTC",
+    "timeframe": "1h",
+    "started_seconds": 420.33922249999887,
+    "finished_seconds": 420.36680795899883,
+    "elapsed_seconds": 0.027585541996813845,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37
+  },
+  {
+    "base": "BTC",
+    "timeframe": "4h",
+    "started_seconds": 420.3668092089938,
+    "finished_seconds": 420.3963472089963,
+    "elapsed_seconds": 0.0295380829993519,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37
+  },
+  {
+    "base": "BTC",
+    "timeframe": "1d",
+    "started_seconds": 420.3963487089932,
+    "finished_seconds": 420.4241260419949,
+    "elapsed_seconds": 0.027777458002674393,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37
+  },
+  {
+    "base": "BTC",
+    "timeframe": "1w",
+    "started_seconds": 420.4241276249959,
+    "finished_seconds": 420.4588289589956,
+    "elapsed_seconds": 0.03470145900064381,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37
+  },
+  {
+    "base": "BTC",
+    "timeframe": "1M",
+    "started_seconds": 420.45883091699943,
+    "finished_seconds": 420.4949343749977,
+    "elapsed_seconds": 0.0361035419991822,
+    "status": 503,
+    "body": {
+      "detail": "INDICATOR_DATA_NOT_READY"
+    },
+    "body_bytes": 37
+  }
+]

@@ -1,0 +1,850 @@
+{
+  "diagnostic_only": true,
+  "image": "sha256:6cacc3bc9d9df1ce8b0fb31374fd89e489f2ffa264466d7f6a9372b6ceeb1210",
+  "max_run_seconds": 240,
+  "rounds": [
+    {
+      "index": 0,
+      "cpu_before": "usage_usec 3971965\nuser_usec 3433276\nsystem_usec 538689\nnice_usec 0\nnr_periods 713\nnr_throttled 0\nthrottled_usec 0\nnr_bursts 0\nburst_usec 0",
+      "cpu_after": "usage_usec 5096043\nuser_usec 4472061\nsystem_usec 623982\nnice_usec 0\nnr_periods 728\nnr_throttled 0\nthrottled_usec 0\nnr_bursts 0\nburst_usec 0",
+      "rejected": [
+        {
+          "kind": "busy",
+          "status": 503,
+          "detail": "INDICATOR_BUSY"
+        },
+        {
+          "kind": "busy",
+          "status": 503,
+          "detail": "INDICATOR_BUSY"
+        },
+        {
+          "kind": "busy",
+          "status": 503,
+          "detail": "INDICATOR_BUSY"
+        },
+        {
+          "kind": "busy",
+          "status": 503,
+          "detail": "INDICATOR_BUSY"
+        },
+        {
+          "kind": "busy",
+          "status": 503,
+          "detail": "INDICATOR_BUSY"
+        },
+        {
+          "kind": "busy",
+          "status": 503,
+          "detail": "INDICATOR_BUSY"
+        },
+        {
+          "kind": "busy",
+          "status": 503,
+          "detail": "INDICATOR_BUSY"
+        },
+        {
+          "kind": "busy",
+          "status": 503,
+          "detail": "INDICATOR_BUSY"
+        },
+        {
+          "kind": "busy",
+          "status": 503,
+          "detail": "INDICATOR_BUSY"
+        },
+        {
+          "kind": "busy",
+          "status": 503,
+          "detail": "INDICATOR_BUSY"
+        },
+        {
+          "kind": "busy",
+          "status": 503,
+          "detail": "INDICATOR_BUSY"
+        },
+        {
+          "kind": "busy",
+          "status": 503,
+          "detail": "INDICATOR_BUSY"
+        },
+        {
+          "kind": "busy",
+          "status": 503,
+          "detail": "INDICATOR_BUSY"
+        },
+        {
+          "kind": "busy",
+          "status": 503,
+          "detail": "INDICATOR_BUSY"
+        },
+        {
+          "kind": "busy",
+          "status": 503,
+          "detail": "INDICATOR_BUSY"
+        },
+        {
+          "kind": "busy",
+          "status": 503,
+          "detail": "INDICATOR_BUSY"
+        },
+        {
+          "kind": "busy",
+          "status": 503,
+          "detail": "INDICATOR_BUSY"
+        },
+        {
+          "kind": "busy",
+          "status": 503,
+          "detail": "INDICATOR_BUSY"
+        },
+        {
+          "kind": "busy",
+          "status": 503,
+          "detail": "INDICATOR_BUSY"
+        },
+        {
+          "kind": "busy",
+          "status": 503,
+          "detail": "INDICATOR_BUSY"
+        },
+        {
+          "kind": "rate",
+          "status": 429,
+          "detail": "INDICATOR_RATE_LIMITED"
+        },
+        {
+          "kind": "rate",
+          "status": 429,
+          "detail": "INDICATOR_RATE_LIMITED"
+        },
+        {
+          "kind": "rate",
+          "status": 429,
+          "detail": "INDICATOR_RATE_LIMITED"
+        },
+        {
+          "kind": "rate",
+          "status": 429,
+          "detail": "INDICATOR_RATE_LIMITED"
+        },
+        {
+          "kind": "rate",
+          "status": 429,
+          "detail": "INDICATOR_RATE_LIMITED"
+        },
+        {
+          "kind": "rate",
+          "status": 429,
+          "detail": "INDICATOR_RATE_LIMITED"
+        },
+        {
+          "kind": "rate",
+          "status": 429,
+          "detail": "INDICATOR_RATE_LIMITED"
+        },
+        {
+          "kind": "rate",
+          "status": 429,
+          "detail": "INDICATOR_RATE_LIMITED"
+        },
+        {
+          "kind": "rate",
+          "status": 429,
+          "detail": "INDICATOR_RATE_LIMITED"
+        },
+        {
+          "kind": "rate",
+          "status": 429,
+          "detail": "INDICATOR_RATE_LIMITED"
+        },
+        {
+          "kind": "rate",
+          "status": 429,
+          "detail": "INDICATOR_RATE_LIMITED"
+        },
+        {
+          "kind": "rate",
+          "status": 429,
+          "detail": "INDICATOR_RATE_LIMITED"
+        },
+        {
+          "kind": "rate",
+          "status": 429,
+          "detail": "INDICATOR_RATE_LIMITED"
+        },
+        {
+          "kind": "rate",
+          "status": 429,
+          "detail": "INDICATOR_RATE_LIMITED"
+        },
+        {
+          "kind": "rate",
+          "status": 429,
+          "detail": "INDICATOR_RATE_LIMITED"
+        },
+        {
+          "kind": "rate",
+          "status": 429,
+          "detail": "INDICATOR_RATE_LIMITED"
+        },
+        {
+          "kind": "rate",
+          "status": 429,
+          "detail": "INDICATOR_RATE_LIMITED"
+        },
+        {
+          "kind": "rate",
+          "status": 429,
+          "detail": "INDICATOR_RATE_LIMITED"
+        },
+        {
+          "kind": "rate",
+          "status": 429,
+          "detail": "INDICATOR_RATE_LIMITED"
+        },
+        {
+          "kind": "rate",
+          "status": 429,
+          "detail": "INDICATOR_RATE_LIMITED"
+        }
+      ],
+      "probes": [
+        {
+          "base": "BTC",
+          "timeframe": "1m",
+          "started_seconds": 0.08208395799988466,
+          "finished_seconds": 0.6211130829999547,
+          "elapsed_seconds": 0.539029292000123,
+          "status": 200,
+          "body_bytes": 458816
+        },
+        {
+          "base": "BTC",
+          "timeframe": "5m",
+          "started_seconds": 0.6211187079998126,
+          "finished_seconds": 0.7622469999998884,
+          "elapsed_seconds": 0.14112845900012871,
+          "status": 200,
+          "body_bytes": 455268
+        },
+        {
+          "base": "BTC",
+          "timeframe": "15m",
+          "started_seconds": 0.7622488749998411,
+          "finished_seconds": 0.9010225419999642,
+          "elapsed_seconds": 0.13877387499996985,
+          "status": 200,
+          "body_bytes": 454236
+        },
+        {
+          "base": "BTC",
+          "timeframe": "1h",
+          "started_seconds": 0.901025749999917,
+          "finished_seconds": 1.0903682499999832,
+          "elapsed_seconds": 0.18934270799991282,
+          "status": 200,
+          "body_bytes": 453875
+        },
+        {
+          "base": "BTC",
+          "timeframe": "4h",
+          "started_seconds": 1.0903718749998461,
+          "finished_seconds": 1.2415375829998538,
+          "elapsed_seconds": 0.1511659170000712,
+          "status": 200,
+          "body_bytes": 453793
+        },
+        {
+          "base": "BTC",
+          "timeframe": "1d",
+          "started_seconds": 1.2415410829999018,
+          "finished_seconds": 1.3071024579999175,
+          "elapsed_seconds": 0.06556162500010032,
+          "status": 200,
+          "body_bytes": 160126
+        },
+        {
+          "base": "BTC",
+          "timeframe": "1w",
+          "started_seconds": 1.3071058329999232,
+          "finished_seconds": 1.3724208329999783,
+          "elapsed_seconds": 0.0653151669998806,
+          "status": 200,
+          "body_bytes": 112958
+        },
+        {
+          "base": "BTC",
+          "timeframe": "1M",
+          "started_seconds": 1.3724237079998147,
+          "finished_seconds": 1.4036192500000197,
+          "elapsed_seconds": 0.031195667000019967,
+          "status": 200,
+          "body_bytes": 24603
+        }
+      ]
+    },
+    {
+      "index": 1,
+      "cpu_before": "usage_usec 6341619\nuser_usec 5464733\nsystem_usec 876885\nnice_usec 0\nnr_periods 1278\nnr_throttled 0\nthrottled_usec 0\nnr_bursts 0\nburst_usec 0",
+      "cpu_after": "usage_usec 7171760\nuser_usec 6229237\nsystem_usec 942522\nnice_usec 0\nnr_periods 1289\nnr_throttled 0\nthrottled_usec 0\nnr_bursts 0\nburst_usec 0",
+      "rejected": [
+        {
+          "kind": "busy",
+          "status": 503,
+          "detail": "INDICATOR_BUSY"
+        },
+        {
+          "kind": "busy",
+          "status": 503,
+          "detail": "INDICATOR_BUSY"
+        },
+        {
+          "kind": "busy",
+          "status": 503,
+          "detail": "INDICATOR_BUSY"
+        },
+        {
+          "kind": "busy",
+          "status": 503,
+          "detail": "INDICATOR_BUSY"
+        },
+        {
+          "kind": "busy",
+          "status": 503,
+          "detail": "INDICATOR_BUSY"
+        },
+        {
+          "kind": "busy",
+          "status": 503,
+          "detail": "INDICATOR_BUSY"
+        },
+        {
+          "kind": "busy",
+          "status": 503,
+          "detail": "INDICATOR_BUSY"
+        },
+        {
+          "kind": "busy",
+          "status": 503,
+          "detail": "INDICATOR_BUSY"
+        },
+        {
+          "kind": "busy",
+          "status": 503,
+          "detail": "INDICATOR_BUSY"
+        },
+        {
+          "kind": "busy",
+          "status": 503,
+          "detail": "INDICATOR_BUSY"
+        },
+        {
+          "kind": "busy",
+          "status": 503,
+          "detail": "INDICATOR_BUSY"
+        },
+        {
+          "kind": "busy",
+          "status": 503,
+          "detail": "INDICATOR_BUSY"
+        },
+        {
+          "kind": "busy",
+          "status": 503,
+          "detail": "INDICATOR_BUSY"
+        },
+        {
+          "kind": "busy",
+          "status": 503,
+          "detail": "INDICATOR_BUSY"
+        },
+        {
+          "kind": "busy",
+          "status": 503,
+          "detail": "INDICATOR_BUSY"
+        },
+        {
+          "kind": "busy",
+          "status": 503,
+          "detail": "INDICATOR_BUSY"
+        },
+        {
+          "kind": "busy",
+          "status": 503,
+          "detail": "INDICATOR_BUSY"
+        },
+        {
+          "kind": "busy",
+          "status": 503,
+          "detail": "INDICATOR_BUSY"
+        },
+        {
+          "kind": "busy",
+          "status": 503,
+          "detail": "INDICATOR_BUSY"
+        },
+        {
+          "kind": "busy",
+          "status": 503,
+          "detail": "INDICATOR_BUSY"
+        },
+        {
+          "kind": "rate",
+          "status": 429,
+          "detail": "INDICATOR_RATE_LIMITED"
+        },
+        {
+          "kind": "rate",
+          "status": 429,
+          "detail": "INDICATOR_RATE_LIMITED"
+        },
+        {
+          "kind": "rate",
+          "status": 429,
+          "detail": "INDICATOR_RATE_LIMITED"
+        },
+        {
+          "kind": "rate",
+          "status": 429,
+          "detail": "INDICATOR_RATE_LIMITED"
+        },
+        {
+          "kind": "rate",
+          "status": 429,
+          "detail": "INDICATOR_RATE_LIMITED"
+        },
+        {
+          "kind": "rate",
+          "status": 429,
+          "detail": "INDICATOR_RATE_LIMITED"
+        },
+        {
+          "kind": "rate",
+          "status": 429,
+          "detail": "INDICATOR_RATE_LIMITED"
+        },
+        {
+          "kind": "rate",
+          "status": 429,
+          "detail": "INDICATOR_RATE_LIMITED"
+        },
+        {
+          "kind": "rate",
+          "status": 429,
+          "detail": "INDICATOR_RATE_LIMITED"
+        },
+        {
+          "kind": "rate",
+          "status": 429,
+          "detail": "INDICATOR_RATE_LIMITED"
+        },
+        {
+          "kind": "rate",
+          "status": 429,
+          "detail": "INDICATOR_RATE_LIMITED"
+        },
+        {
+          "kind": "rate",
+          "status": 429,
+          "detail": "INDICATOR_RATE_LIMITED"
+        },
+        {
+          "kind": "rate",
+          "status": 429,
+          "detail": "INDICATOR_RATE_LIMITED"
+        },
+        {
+          "kind": "rate",
+          "status": 429,
+          "detail": "INDICATOR_RATE_LIMITED"
+        },
+        {
+          "kind": "rate",
+          "status": 429,
+          "detail": "INDICATOR_RATE_LIMITED"
+        },
+        {
+          "kind": "rate",
+          "status": 429,
+          "detail": "INDICATOR_RATE_LIMITED"
+        },
+        {
+          "kind": "rate",
+          "status": 429,
+          "detail": "INDICATOR_RATE_LIMITED"
+        },
+        {
+          "kind": "rate",
+          "status": 429,
+          "detail": "INDICATOR_RATE_LIMITED"
+        },
+        {
+          "kind": "rate",
+          "status": 429,
+          "detail": "INDICATOR_RATE_LIMITED"
+        },
+        {
+          "kind": "rate",
+          "status": 429,
+          "detail": "INDICATOR_RATE_LIMITED"
+        }
+      ],
+      "probes": [
+        {
+          "base": "BTC",
+          "timeframe": "1m",
+          "started_seconds": 0.08409383300022455,
+          "finished_seconds": 0.4581780830003481,
+          "elapsed_seconds": 0.3740843330001553,
+          "status": 200,
+          "body_bytes": 458817
+        },
+        {
+          "base": "BTC",
+          "timeframe": "5m",
+          "started_seconds": 0.4581848330003595,
+          "finished_seconds": 0.46776479100026336,
+          "elapsed_seconds": 0.009580166999967332,
+          "status": 503,
+          "body_bytes": 37
+        },
+        {
+          "base": "BTC",
+          "timeframe": "15m",
+          "started_seconds": 0.46776825000006284,
+          "finished_seconds": 0.47999008300030255,
+          "elapsed_seconds": 0.012222041000313766,
+          "status": 503,
+          "body_bytes": 37
+        },
+        {
+          "base": "BTC",
+          "timeframe": "1h",
+          "started_seconds": 0.47999329100002797,
+          "finished_seconds": 0.676864083000055,
+          "elapsed_seconds": 0.1968709170000693,
+          "status": 200,
+          "body_bytes": 453875
+        },
+        {
+          "base": "BTC",
+          "timeframe": "4h",
+          "started_seconds": 0.6768663750003725,
+          "finished_seconds": 0.8368797500002074,
+          "elapsed_seconds": 0.16001345799986666,
+          "status": 200,
+          "body_bytes": 453793
+        },
+        {
+          "base": "BTC",
+          "timeframe": "1d",
+          "started_seconds": 0.8368828750003559,
+          "finished_seconds": 0.924476333000257,
+          "elapsed_seconds": 0.08759362499995405,
+          "status": 200,
+          "body_bytes": 160126
+        },
+        {
+          "base": "BTC",
+          "timeframe": "1w",
+          "started_seconds": 0.9244798330000776,
+          "finished_seconds": 1.000034874999983,
+          "elapsed_seconds": 0.07555524999997942,
+          "status": 200,
+          "body_bytes": 112958
+        },
+        {
+          "base": "BTC",
+          "timeframe": "1M",
+          "started_seconds": 1.000038250000216,
+          "finished_seconds": 1.0311092910001207,
+          "elapsed_seconds": 0.03107124999996813,
+          "status": 200,
+          "body_bytes": 24603
+        }
+      ]
+    },
+    {
+      "index": 2,
+      "cpu_before": "usage_usec 8679785\nuser_usec 7463390\nsystem_usec 1216395\nnice_usec 0\nnr_periods 1840\nnr_throttled 0\nthrottled_usec 0\nnr_bursts 0\nburst_usec 0",
+      "cpu_after": "usage_usec 9963480\nuser_usec 8640996\nsystem_usec 1322484\nnice_usec 0\nnr_periods 1858\nnr_throttled 0\nthrottled_usec 0\nnr_bursts 0\nburst_usec 0",
+      "rejected": [
+        {
+          "kind": "busy",
+          "status": 503,
+          "detail": "INDICATOR_BUSY"
+        },
+        {
+          "kind": "busy",
+          "status": 503,
+          "detail": "INDICATOR_BUSY"
+        },
+        {
+          "kind": "busy",
+          "status": 503,
+          "detail": "INDICATOR_BUSY"
+        },
+        {
+          "kind": "busy",
+          "status": 503,
+          "detail": "INDICATOR_BUSY"
+        },
+        {
+          "kind": "busy",
+          "status": 503,
+          "detail": "INDICATOR_BUSY"
+        },
+        {
+          "kind": "busy",
+          "status": 503,
+          "detail": "INDICATOR_BUSY"
+        },
+        {
+          "kind": "busy",
+          "status": 503,
+          "detail": "INDICATOR_BUSY"
+        },
+        {
+          "kind": "busy",
+          "status": 503,
+          "detail": "INDICATOR_BUSY"
+        },
+        {
+          "kind": "busy",
+          "status": 503,
+          "detail": "INDICATOR_BUSY"
+        },
+        {
+          "kind": "busy",
+          "status": 503,
+          "detail": "INDICATOR_BUSY"
+        },
+        {
+          "kind": "busy",
+          "status": 503,
+          "detail": "INDICATOR_BUSY"
+        },
+        {
+          "kind": "busy",
+          "status": 503,
+          "detail": "INDICATOR_BUSY"
+        },
+        {
+          "kind": "busy",
+          "status": 503,
+          "detail": "INDICATOR_BUSY"
+        },
+        {
+          "kind": "busy",
+          "status": 503,
+          "detail": "INDICATOR_BUSY"
+        },
+        {
+          "kind": "busy",
+          "status": 503,
+          "detail": "INDICATOR_BUSY"
+        },
+        {
+          "kind": "busy",
+          "status": 503,
+          "detail": "INDICATOR_BUSY"
+        },
+        {
+          "kind": "busy",
+          "status": 503,
+          "detail": "INDICATOR_BUSY"
+        },
+        {
+          "kind": "busy",
+          "status": 503,
+          "detail": "INDICATOR_BUSY"
+        },
+        {
+          "kind": "busy",
+          "status": 503,
+          "detail": "INDICATOR_BUSY"
+        },
+        {
+          "kind": "busy",
+          "status": 503,
+          "detail": "INDICATOR_BUSY"
+        },
+        {
+          "kind": "rate",
+          "status": 429,
+          "detail": "INDICATOR_RATE_LIMITED"
+        },
+        {
+          "kind": "rate",
+          "status": 429,
+          "detail": "INDICATOR_RATE_LIMITED"
+        },
+        {
+          "kind": "rate",
+          "status": 429,
+          "detail": "INDICATOR_RATE_LIMITED"
+        },
+        {
+          "kind": "rate",
+          "status": 429,
+          "detail": "INDICATOR_RATE_LIMITED"
+        },
+        {
+          "kind": "rate",
+          "status": 429,
+          "detail": "INDICATOR_RATE_LIMITED"
+        },
+        {
+          "kind": "rate",
+          "status": 429,
+          "detail": "INDICATOR_RATE_LIMITED"
+        },
+        {
+          "kind": "rate",
+          "status": 429,
+          "detail": "INDICATOR_RATE_LIMITED"
+        },
+        {
+          "kind": "rate",
+          "status": 429,
+          "detail": "INDICATOR_RATE_LIMITED"
+        },
+        {
+          "kind": "rate",
+          "status": 429,
+          "detail": "INDICATOR_RATE_LIMITED"
+        },
+        {
+          "kind": "rate",
+          "status": 429,
+          "detail": "INDICATOR_RATE_LIMITED"
+        },
+        {
+          "kind": "rate",
+          "status": 429,
+          "detail": "INDICATOR_RATE_LIMITED"
+        },
+        {
+          "kind": "rate",
+          "status": 429,
+          "detail": "INDICATOR_RATE_LIMITED"
+        },
+        {
+          "kind": "rate",
+          "status": 429,
+          "detail": "INDICATOR_RATE_LIMITED"
+        },
+        {
+          "kind": "rate",
+          "status": 429,
+          "detail": "INDICATOR_RATE_LIMITED"
+        },
+        {
+          "kind": "rate",
+          "status": 429,
+          "detail": "INDICATOR_RATE_LIMITED"
+        },
+        {
+          "kind": "rate",
+          "status": 429,
+          "detail": "INDICATOR_RATE_LIMITED"
+        },
+        {
+          "kind": "rate",
+          "status": 429,
+          "detail": "INDICATOR_RATE_LIMITED"
+        },
+        {
+          "kind": "rate",
+          "status": 429,
+          "detail": "INDICATOR_RATE_LIMITED"
+        },
+        {
+          "kind": "rate",
+          "status": 429,
+          "detail": "INDICATOR_RATE_LIMITED"
+        },
+        {
+          "kind": "rate",
+          "status": 429,
+          "detail": "INDICATOR_RATE_LIMITED"
+        }
+      ],
+      "probes": [
+        {
+          "base": "BTC",
+          "timeframe": "1m",
+          "started_seconds": 0.08218754199970135,
+          "finished_seconds": 0.5214517079998586,
+          "elapsed_seconds": 0.43926425000017844,
+          "status": 200,
+          "body_bytes": 458817
+        },
+        {
+          "base": "BTC",
+          "timeframe": "5m",
+          "started_seconds": 0.521458832999997,
+          "finished_seconds": 0.675384541999847,
+          "elapsed_seconds": 0.15392579199988177,
+          "status": 200,
+          "body_bytes": 455275
+        },
+        {
+          "base": "BTC",
+          "timeframe": "15m",
+          "started_seconds": 0.6753880829996888,
+          "finished_seconds": 0.8179543329997614,
+          "elapsed_seconds": 0.1425670420003371,
+          "status": 200,
+          "body_bytes": 454239
+        },
+        {
+          "base": "BTC",
+          "timeframe": "1h",
+          "started_seconds": 0.817957166999804,
+          "finished_seconds": 1.0093892499999129,
+          "elapsed_seconds": 0.19143233300019347,
+          "status": 200,
+          "body_bytes": 453874
+        },
+        {
+          "base": "BTC",
+          "timeframe": "4h",
+          "started_seconds": 1.0093910000000506,
+          "finished_seconds": 1.2284147499999563,
+          "elapsed_seconds": 0.21902387499994802,
+          "status": 200,
+          "body_bytes": 453792
+        },
+        {
+          "base": "BTC",
+          "timeframe": "1d",
+          "started_seconds": 1.2284178750001047,
+          "finished_seconds": 1.334611958000096,
+          "elapsed_seconds": 0.10619429199959995,
+          "status": 200,
+          "body_bytes": 160125
+        },
+        {
+          "base": "BTC",
+          "timeframe": "1w",
+          "started_seconds": 1.3346142499999587,
+          "finished_seconds": 1.442781666999963,
+          "elapsed_seconds": 0.10816750000003594,
+          "status": 200,
+          "body_bytes": 112957
+        },
+        {
+          "base": "BTC",
+          "timeframe": "1M",
+          "started_seconds": 1.4427844169999844,
+          "finished_seconds": 1.5064430829997946,
+          "elapsed_seconds": 0.0636587909998525,
+          "status": 200,
+          "body_bytes": 24602
+        }
+      ]
+    }
+  ]
+}

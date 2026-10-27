@@ -1,0 +1,4 @@
+{
+  "log": "{\"component\":\"indicator-builder\",\"event\":\"boot\",\"owner\":\"300d1aaf-a4dc-4e09-8617-d0a3ddabbb7c\"}\n{\"component\":\"indicator-builder\",\"event\":\"worker_started\",\"owner\":\"300d1aaf-a4dc-4e09-8617-d0a3ddabbb7c\"}\n{\"component\":\"indicator-builder\",\"event\":\"stopped\",\"owner\":\"300d1aaf-a4dc-4e09-8617-d0a3ddabbb7c\",\"status\":\"DRAINED\"}",
+  "state": "{\"Status\":\"exited\",\"Running\":false,\"Paused\":false,\"Restarting\":false,\"OOMKilled\":false,\"Dead\":false,\"Pid\":0,\"ExitCode\":0,\"Error\":\"\",\"StartedAt\":\"2026-10-25T01:05:00.217405842Z\",\"FinishedAt\":\"2026-10-25T01:15:02.348756176Z\"}"
+}

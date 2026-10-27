@@ -1,0 +1,8 @@
+{
+  "failed_at": "2026-10-25 04:45:25.610973+00:00",
+  "error_type": "RuntimeError",
+  "error": "alembic executable missing",
+  "sanitized_commands": [
+    "pg_dump custom-format from quiesced 0029 source"
+  ]
+}

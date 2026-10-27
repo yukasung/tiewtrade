@@ -1,0 +1,95 @@
+{
+  "R2-C2": "FAILED",
+  "R2-C5-steady": "FAILED",
+  "T0": "2026-10-25 15:15:54.570109+00:00",
+  "recovered_seconds": 0.030271832999915205,
+  "measured_seconds": 2590.1586720409996,
+  "failure": "API_RESOURCE_LIMIT",
+  "supported_runtime_pairs": 2,
+  "runtime_readiness_series": 16,
+  "profile_pairs": 1,
+  "profile_series": 8,
+  "series": [
+    {
+      "base": "BTC",
+      "timeframe": "1m",
+      "valid_samples": 260,
+      "first_correct_200_seconds": 0.5169537500000843,
+      "scheduled_samples": 360,
+      "correct_probes": 44,
+      "scheduled_probes": 60,
+      "passed": false
+    },
+    {
+      "base": "BTC",
+      "timeframe": "5m",
+      "valid_samples": 260,
+      "first_correct_200_seconds": 0.6566712909998387,
+      "scheduled_samples": 360,
+      "correct_probes": 44,
+      "scheduled_probes": 60,
+      "passed": false
+    },
+    {
+      "base": "BTC",
+      "timeframe": "15m",
+      "valid_samples": 260,
+      "first_correct_200_seconds": 0.7934040830000413,
+      "scheduled_samples": 360,
+      "correct_probes": 44,
+      "scheduled_probes": 60,
+      "passed": false
+    },
+    {
+      "base": "BTC",
+      "timeframe": "1h",
+      "valid_samples": 260,
+      "first_correct_200_seconds": 0.9774157910001122,
+      "scheduled_samples": 360,
+      "correct_probes": 44,
+      "scheduled_probes": 60,
+      "passed": false
+    },
+    {
+      "base": "BTC",
+      "timeframe": "4h",
+      "valid_samples": 260,
+      "first_correct_200_seconds": 1.122050790999765,
+      "scheduled_samples": 360,
+      "correct_probes": 44,
+      "scheduled_probes": 60,
+      "passed": false
+    },
+    {
+      "base": "BTC",
+      "timeframe": "1d",
+      "valid_samples": 260,
+      "first_correct_200_seconds": 1.18894733299976,
+      "scheduled_samples": 360,
+      "correct_probes": 44,
+      "scheduled_probes": 60,
+      "passed": false
+    },
+    {
+      "base": "BTC",
+      "timeframe": "1w",
+      "valid_samples": 260,
+      "first_correct_200_seconds": 1.2522116659997664,
+      "scheduled_samples": 360,
+      "correct_probes": 44,
+      "scheduled_probes": 60,
+      "passed": false
+    },
+    {
+      "base": "BTC",
+      "timeframe": "1M",
+      "valid_samples": 260,
+      "first_correct_200_seconds": 1.2841774160001478,
+      "scheduled_samples": 360,
+      "correct_probes": 44,
+      "scheduled_probes": 60,
+      "passed": false
+    }
+  ],
+  "note": "Combined gates share one 60-minute run and always have the same result. Early failure is not a completed 60-minute acceptance run."
+}
