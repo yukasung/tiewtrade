@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { ApiRequestError } from "./auth";
 import { MarketTime, MarketValue } from "./components/MarketValue";
 import { Button } from "./components/ui/Button";
@@ -29,12 +30,13 @@ const belongsToSeries = (value: Series | undefined, series: Series) => Boolean(v
 export type ChartMarketSnapshot = { base: string; price: string; observedAt: string };
 
 export function CandlestickChartPanel({ userId, base: controlledBase, onBaseChange, embedded = false,
-  onMarketSnapshot }: {
+  onMarketSnapshot, toolbarTargetId }: {
   userId: string;
   base?: string;
   onBaseChange?: (base: string) => void;
   embedded?: boolean;
   onMarketSnapshot?: (snapshot: ChartMarketSnapshot | null) => void;
+  toolbarTargetId?: string;
 }) {
   const [localBase, setLocalBase] = useState("BTC");
   const base = controlledBase ?? localBase;
@@ -44,6 +46,7 @@ export function CandlestickChartPanel({ userId, base: controlledBase, onBaseChan
   const [timeframe, setTimeframe] = useState<Timeframe>("1h");
   const [selected, setSelected] = useState<number | null>(null);
   const [renderLimit, setRenderLimit] = useState<string | null>(null);
+  const [toolbarTarget, setToolbarTarget] = useState<HTMLElement | null>(null);
   const host = useRef<HTMLDivElement>(null), renderer = useRef<ChartRenderer>();
   const historyViewportInitialized = useRef(false);
   const drawing = useRef(false);
@@ -83,6 +86,11 @@ export function CandlestickChartPanel({ userId, base: controlledBase, onBaseChan
   const summaryPrice = summaryCandle?.close;
   const summaryObservedAt = summaryCandle?.observed_at;
   const error = state.error;
+
+  useEffect(() => {
+    if (!toolbarTargetId) { setToolbarTarget(null); return; }
+    setToolbarTarget(document.getElementById(toolbarTargetId));
+  }, [toolbarTargetId]);
 
   useEffect(() => {
     if (supportedBases.length && !supportedBases.includes(base)) {
@@ -170,22 +178,25 @@ export function CandlestickChartPanel({ userId, base: controlledBase, onBaseChan
     if (!selectionTimes.length) return;
     renderer.current?.chart.timeScale().setVisibleLogicalRange(initialViewport(selectionTimes.length));
   };
+  const controls = <div className="chart-controls">
+    {!embedded && <div><Select id="chart-pair" aria-label={t("pair")} value={base}
+      onChange={event => changeSeries(event.target.value, timeframe)}>
+        {supportedBases.map(pair => <option key={pair} value={pair}>{pair}/USDT</option>)}</Select></div>}
+    <div><Select id="chart-timeframe" aria-label={t("timeframe")} value={timeframe}
+        onChange={event => changeSeries(base, event.target.value as Timeframe)}>
+        {timeframes.map(value => <option key={value}>{value}</option>)}</Select></div>
+    <Button size="sm" className="chart-reset-button" onClick={resetViewport}
+      disabled={!selectionTimes.length}>{t("reset")}</Button>
+  </div>;
   return <section className={`candlestick-panel ${embedded ? "candlestick-embedded" : "trading-workspace"}`} aria-label={t("heading")}
     data-testid="candlestick-chart">
-    <header className="trading-market-bar">
+    {toolbarTarget && createPortal(controls, toolbarTarget)}
+    {!toolbarTargetId && <header className="trading-market-bar">
       {!embedded && <div className="trading-market-identity">
         <strong>{base}/USDT</strong><span>{t("market")}</span>
       </div>}
-      <div className="chart-controls">
-        {!embedded && <div><Select id="chart-pair" aria-label={t("pair")} value={base}
-          onChange={event => changeSeries(event.target.value, timeframe)}>
-            {supportedBases.map(pair => <option key={pair} value={pair}>{pair}/USDT</option>)}</Select></div>}
-        <div><Select id="chart-timeframe" aria-label={t("timeframe")} value={timeframe}
-            onChange={event => changeSeries(base, event.target.value as Timeframe)}>
-            {timeframes.map(value => <option key={value}>{value}</option>)}</Select></div>
-        <Button onClick={resetViewport} disabled={!selectionTimes.length}>{t("reset")}</Button>
-      </div>
-    </header>
+      {controls}
+    </header>}
     <div className="trading-chart-area">
       {error && <p role="alert">{t(`errors.${error instanceof ApiRequestError ? error.message : "unknown"}`,
         { defaultValue: t("errors.unknown") })}</p>}

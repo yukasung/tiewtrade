@@ -82,3 +82,74 @@ production build ผ่าน. ไม่มี API/payload/query key/order/risk 
 - Targeted chart + Paper page tests **41/41 Passed**, TypeScript Passed; API และ market-data
   healthy, chart route ตอบ authentication boundary แทน `CHART_DISABLED`
 - การแก้นี้ไม่เปลี่ยน order payload, query, pagination, financial/risk logic หรือ Live execution
+
+## Single-viewport desktop workspace — 2026-10-30
+
+- ปรับ desktop workspace เป็น grid สูงหนึ่ง viewport ตามสัดส่วน reference: market bar ด้านบน,
+  chart และ order history ทางซ้ายในอัตรา 3:2 และ form ด้านขวาครอบสองแถว
+- Open orders/Order history ใช้ component/query/pagination เดิมและ scroll ภายในพื้นที่ล่าง;
+  risk details อยู่ใน form rail ส่วน mobile ยังคงเรียงลงมาและใช้ page scroll
+- Targeted Paper/chart/order tests **43/43 Passed**, TypeScript, ESLint และ production build Passed;
+  คง Vite chunk-size warning เดิม
+- ไม่มี API, order payload, financial/risk logic, Live execution หรือข้อมูลจำลองใหม่
+
+## Compact order history panel — 2026-10-30
+
+- ปรับ order area ตาม information density ของ reference โดยตัด nested card heading/border,
+  วาง Open/History tabs ชิดบน และย้าย snapshot/refresh เป็น toolbar ขนาดเล็ก
+- ตารางใช้พื้นที่เต็มแถว, empty state อยู่กึ่งกลาง และ pagination คง behavior/query เดิม
+- Targeted Paper order/page tests **21/21 Passed**, TypeScript, ESLint และ production build Passed;
+  คง Vite chunk-size warning เดิม
+
+## Shared pair/chart toolbar — 2026-10-30
+
+- ย้าย Timeframe และ Reset chart ไปต่อจาก pair selector ใน market bar เดียวกันบน Paper/Live
+- controls ยังเป็นเจ้าของโดย chart component และเรียก reset/history viewport path เดิมผ่าน portal;
+  standalone chart page คง toolbar เดิม
+- Targeted chart/Paper/order tests **44/44 Passed**, TypeScript, ESLint และ production build Passed;
+  คง Vite chunk-size warning เดิม
+
+## Market toolbar sizing — 2026-10-30
+
+- latest price แสดงเฉพาะตัวเลขโดยไม่ต่อท้าย `USDT`; ค่า exact decimal เดิมไม่เปลี่ยน
+- Reset chart สูง 2.75rem เท่ากับ shared Select และใช้ spacing/button pattern เดิม
+- Targeted chart/Paper tests **43/43 Passed**, TypeScript, ESLint และ production build Passed;
+  คง Vite chunk-size warning เดิม
+
+## Integer latest-price display — 2026-10-30
+
+- latest price ที่ไม่มี decimal point แสดง `.00` โดยเติมข้อความเท่านั้น ไม่แปลงเป็น float
+- Targeted Paper tests **20/20 Passed**, TypeScript และ ESLint Passed
+
+## Risk details control removed — 2026-10-30
+
+- ลบปุ่ม/แผง `รายละเอียด / ตั้งค่าความเสี่ยง` ออกจาก Paper และ Live ตามคำสั่งเจ้าของ
+- คง loss-limit summary, admission reasons, risk stop และ unresolved recovery ใกล้ form
+- Targeted Paper/chart/form tests **46/46 Passed**, TypeScript, ESLint และ production build Passed;
+  คง Vite chunk-size warning เดิม
+
+## Order detail surface removed — 2026-10-30
+
+- ลบ order-detail column/button/modal ออกจาก Open/History table ตามคำสั่งเจ้าของ
+- คง pair, side, kind, status, filled, remaining, reserved และ cancel behavior เดิม
+- Targeted Paper order/page tests **21/21 Passed**, TypeScript, ESLint และ production build Passed;
+  manual-order E2E selectors updated; คง Vite chunk-size warning เดิม
+
+## Reduced market/order metadata — 2026-10-30
+
+- ซ่อน market status, market observed-at, order snapshot timestamp และ manual refresh button
+  ตามคำสั่งเจ้าของ; latest price และ automatic order polling ทุก 5 วินาทียังคงเดิม
+- Targeted chart/Paper/order tests **44/44 Passed**, TypeScript, ESLint และ production build Passed;
+  คง Vite chunk-size warning เดิม
+
+## Recovery detail card removed — 2026-10-30
+
+- ลบการ์ด `คำขอและผลการตรวจ` รวม UUID, episode, request/order summary และ snapshot timestamp
+  ออกจาก workspace ตามคำสั่งเจ้าของ
+- คง idempotency journal, unresolved-request discovery, automatic polling, pending-submit block และ
+  terminal invalidation เดิม; routine pending/terminal state ไม่แสดงซ้ำกับ order table และ recovery
+  pagination ทำอัตโนมัติ แสดงเฉพาะ error/UNKNOWN พร้อม same-key retry เมื่อจำเป็นจริง
+- ลบข้อความ episode draft และ duplicate lifecycle badges จาก form; targeted tests ยืนยันว่า polling
+  ยังทำงานและหยุดตาม visibility/unmount โดยไม่มี status block ปกติบนหน้า
+- Targeted Paper/recovery tests **22/22 Passed**, TypeScript, ESLint และ production build Passed;
+  คง Vite chunk-size warning เดิม

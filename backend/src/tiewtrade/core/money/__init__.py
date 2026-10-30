@@ -32,7 +32,11 @@ from tiewtrade.core.money.indicator_batch import (
     reset_indicator_batch,
 )
 from tiewtrade.core.money.order_arithmetic import align_quantity, quantity_for_budget
-from tiewtrade.core.money.position_arithmetic import allocate_money, money_for_quantity
+from tiewtrade.core.money.position_arithmetic import (
+    allocate_money,
+    money_for_quantity,
+    price_for_notional,
+)
 from tiewtrade.core.money.rounding import RoundingDirection
 from tiewtrade.core.money.types import Money, Quantity
 
@@ -62,6 +66,7 @@ __all__ = [
     "divide_money",
     "money_for_quantity",
     "percentage_share",
+    "price_for_notional",
     "quantity_for_budget",
     "reset_indicator_batch",
     "weighted_mean_money",

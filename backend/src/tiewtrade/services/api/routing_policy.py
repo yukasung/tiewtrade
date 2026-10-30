@@ -135,7 +135,7 @@ ROUTE_RULES: Final[dict[tuple[str, str], RouteRule]] = {
     ("GET", "/live/risk-limit"): RouteRule(),
     ("POST", "/paper/risk-limit"): RouteRule(renews=True),
     ("POST", "/live/risk-limit"): RouteRule(renews=True),
-    ("POST", "/paper/risk-limit/increase"): RouteRule(renews=True, reverify=True),
+    ("POST", "/paper/risk-limit/increase"): RouteRule(renews=True),
     ("POST", "/live/risk-limit/increase"): RouteRule(renews=True, reverify=True),
     # Reset is the explicit F-06 exemption, not a risk-reducing order.
     ("POST", "/paper/risk-limit/reset"): RouteRule(renews=True),
@@ -153,12 +153,12 @@ ROUTE_RULES: Final[dict[tuple[str, str], RouteRule]] = {
     # (เหตุผลเดียวกับ `/auth/me` ของ F-05)
     ("DELETE", "/api-keys/{key_id}"): RouteRule(renews=True),
     ("POST", "/api-keys/{key_id}/retry"): RouteRule(renews=True),
-    # Metadata only; initial account-use selection requires a fresh non-recovery TOTP.
+    # Metadata only; explicit initial selection does not grant trading capability.
     ("GET", "/market-data/chart/history"): RouteRule(),
     ("GET", "/market-data/chart/live"): RouteRule(),
     ("POST", "/market-data/chart/verify"): RouteRule(checks_browser_origin=True),
     ("GET", "/trading-account"): RouteRule(),
-    ("POST", "/trading-account/use"): RouteRule(renews=True, reverify=True),
+    ("POST", "/trading-account/use"): RouteRule(renews=True),
     ("GET", "/paper-wallet"): RouteRule(),
     ("POST", "/paper-wallet"): RouteRule(renews=True),
     ("POST", "/paper-wallet/reset"): RouteRule(renews=True),

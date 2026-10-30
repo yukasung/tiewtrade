@@ -3,13 +3,13 @@
 import hashlib
 import json
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 from functools import lru_cache
 from typing import Any
 from uuid import UUID
 
-from tiewtrade.core.money import MoneyError
-from tiewtrade.core.order_book import BookState, MarketInput
+from tiewtrade.core.money import Money, MoneyError
+from tiewtrade.core.order_book import MAX_BOOK_AGE, BookState, MarketInput
 from tiewtrade.core.orders import (
     OrderConflictError,
     OrderConstraints,
@@ -55,6 +55,9 @@ class ExecutionMetadata:
     limit: OrderConstraints
     observed_at: datetime
     source_document: str
+    average_price: Money | None = None
+    average_window_started_at: datetime | None = None
+    average_observed_through: datetime | None = None
 
     def __post_init__(self) -> None:
         aware(self.observed_at)
@@ -62,6 +65,17 @@ class ExecutionMetadata:
             raise ValueError("inconsistent execution metadata")
         if hashlib.sha256(self.source_document.encode()).hexdigest() != self.market.version:
             raise ValueError("metadata version does not identify the source document")
+        required = max(self.market.average_price_minutes, self.limit.average_price_minutes)
+        if required and (
+            self.average_price is None
+            or self.average_price.currency != self.market.pair.quote
+            or self.average_price.amount <= 0
+            or self.average_window_started_at is None
+            or self.average_observed_through is None
+            or self.average_observed_through - self.average_window_started_at
+            < timedelta(minutes=required)
+        ):
+            raise ValueError("complete average-price evidence required")
 
 
 @dataclass(frozen=True, slots=True)
@@ -78,17 +92,37 @@ def metadata_payload(value: ExecutionMetadata) -> str:
             "limit": constraints_payload(value.limit),
             "observed_at": value.observed_at.isoformat(),
             "source_document": value.source_document,
+            "average_price": None
+            if value.average_price is None
+            else value.average_price.as_parts()["amount"],
+            "average_window_started_at": None
+            if value.average_window_started_at is None
+            else value.average_window_started_at.isoformat(),
+            "average_observed_through": None
+            if value.average_observed_through is None
+            else value.average_observed_through.isoformat(),
         }
     )
 
 
 def metadata_from_payload(value: Any) -> ExecutionMetadata:
     row = json.loads(value) if isinstance(value, str) else value
+    market = constraints_from_payload(row["market"])
+    limit = constraints_from_payload(row["limit"])
     return ExecutionMetadata(
-        constraints_from_payload(row["market"]),
-        constraints_from_payload(row["limit"]),
+        market,
+        limit,
         datetime.fromisoformat(row["observed_at"]),
         row["source_document"],
+        None
+        if row.get("average_price") is None
+        else Money.of(row["average_price"], market.pair.quote),
+        None
+        if row.get("average_window_started_at") is None
+        else datetime.fromisoformat(row["average_window_started_at"]),
+        None
+        if row.get("average_observed_through") is None
+        else datetime.fromisoformat(row["average_observed_through"]),
     )
 
 
@@ -319,7 +353,7 @@ async def read_inputs(
         or (
             rows[0]["verified_at"] is None
             or rows[0]["verified_at"] > rows[0]["db_now"]
-            or (rows[0]["db_now"] - rows[0]["verified_at"]).total_seconds() > 1
+            or rows[0]["db_now"] - rows[0]["verified_at"] > MAX_BOOK_AGE
         )
     ):
         raise SourceUnavailableError("execution source unavailable")

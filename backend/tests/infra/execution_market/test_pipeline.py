@@ -32,6 +32,7 @@ from tiewtrade.venues.order_books import (
     ExecutionCapability,
     ExecutionFeedData,
     ExecutionFeedEvent,
+    TradeSample,
 )
 from tiewtrade.venues.price_streams import FeedConnected, FeedDisconnected
 from tiewtrade.venues.symbols import Symbol
@@ -42,12 +43,25 @@ class FixtureFeed:
         self.at = at
         self.disconnect = asyncio.Event()
         self.closed = asyncio.Event()
+        self.bootstrap_calls: list[str] = []
+
+    async def close(self) -> None:
+        return None
 
     async def snapshot(self, symbol: Symbol) -> DepthSnapshot:
+        self.bootstrap_calls.append("snapshot")
         return snapshot(self.at - timedelta(milliseconds=20), symbol=symbol)
 
     async def capability(self, symbol: Symbol) -> ExecutionCapability:
+        self.bootstrap_calls.append("capability")
         return capability(self.at, symbol=symbol)
+
+    async def trade_history(
+        self, symbol: Symbol, *, started_at: datetime, ended_at: datetime
+    ) -> tuple[TradeSample, ...]:
+        self.bootstrap_calls.append("history")
+        del symbol, started_at, ended_at
+        return ()
 
     async def events(
         self, symbols: tuple[Symbol, ...], *, generation: int
@@ -142,6 +156,7 @@ async def test_fake_public_pipeline_matches_exactly_and_disconnect_invalidates(
                             await task
                     await asyncio.sleep(0.01)
             record = rows[0]
+            assert feed.bootstrap_calls == ["capability", "snapshot"]
             scope = OrderScope(uuid4(), uuid4(), TradingMode.PAPER)
             intent = OrderIntent(
                 uuid4(),

@@ -5549,6 +5549,57 @@ criteria. Required remote CI and manual acceptance remain Pending because no rem
 operation was authorized. V-22/V-23 remain Pending Dependency, so this is not yet
 `F-18 Completed` and does not authorize merge or production activation.
 
+## Local Paper manual acceptance activation — 2026-10-30
+
+Owner approved the local-only amendment. On Docker Compose project
+`tiewtrade-f18-manual`, schema `0058`, the operator opened the protocol in order:
+
+1. publication: watermark advanced from 0 and both BTC/USDT and ETH/USDT reached READY;
+2. financial: the configured Paper owner converged to READY with replay_pending=false;
+3. admission: a guarded update required both earlier flags, matching setting/evaluation
+   revisions, at least one configured READY owner and no configured non-READY owner.
+
+Post-activation evidence: all three flags true, owner
+`f42fbdfb-f3bb-4840-b80c-af1dd81c6a18` setting/evaluation revision 2, READY,
+replay_pending=false, publication cursor equal to watermark 11965 (lag 0). BTC/USDT
+and ETH/USDT execution books were ready with current leases. Browser automation was
+unavailable, so the owner must refresh and perform the manual submit observation.
+
+This is localhost manual-acceptance state only. It is not V-21, production activation,
+Completed or release evidence. Close in reverse order after the manual check.
+
+The first browser check was additionally blocked by Binance TH execution capability:
+`PERCENT_PRICE`, `MAX_NUM_ORDERS` and MARKET `MIN_NOTIONAL.avgPriceMins` were previously
+fail-closed as `ORDER_UNSUPPORTED`. Owner approved NC-F15-13 and the scoped adapter,
+weighted-trade window, constraint and metadata changes passed affected tests/static
+checks. After rebuilding only market-data, API and Paper order worker, the real BTC
+capability has empty MARKET/LIMIT unsupported rules and a complete five-minute weighted
+reference. A read-only invocation of the same `/paper/trade` path for the local owner
+returned `admission_ready=true`, no admission reasons, MANUAL use and an active Paper
+wallet while BTC book, price and all three risk gates were ready. A transient public
+price reconnect correctly returned `ORDER_PRICE_UNAVAILABLE` and then recovered; it was
+not bypassed. The agent did not submit an order. Browser submit observation remains the
+owner's manual action and this evidence does not replace remote/full validation.
+
+Follow-up manual-runtime correction removed two false unavailability loops without
+bypassing a safety gate. F-10's approved same-millisecond amendment treats distinct
+validated stream trade identities as distinct executions in connection frame order;
+same-identity conflicts and cross-generation recovery remain fail closed. F-15
+NC-F15-14 accepts at most 100ms public execution source clock skew after raw evidence
+showed Binance TH leading the host by 8–10ms. The approved 30-second book boundary is
+now used consistently before and after publication. Finally, execution bootstrap loads
+capability and the five-minute weighted trade window before taking the current depth
+snapshot, then replays the already-buffered stream; this prevents history pagination
+from ageing the snapshot before its first bridge.
+
+Affected results are 111/111 core/adapter/matching tests, 10/10 real-role F-10 service
+tests and 3/3 real-role execution-pipeline tests, plus ruff/format, mypy over 236 source
+files and diff check. On the rebuilt localhost runtime, BTC/ETH books and latest prices
+were READY together for every one of 12 samples over 30 seconds. The same read-only
+trade-view path returned `admission_ready=true` with no reasons for BTC/USDT. All three
+local risk flags remained true. No order was submitted by the agent; the owner still
+performs the final browser action.
+
 Final local-gate checkpoint recorded 2026-10-30T00:13:06Z. The regression/static/final
 review stage took approximately 13 minutes against the 10–20 minute estimate.
 
@@ -5580,3 +5631,170 @@ commit. On a fresh schema-0058 database with commit timestamps enabled, both aff
 fixture modules pass 20/20 tests in 12.45 seconds; `git diff --check` also passes.
 The first remote run remains FAILED evidence and F18 remains pending required
 CI/manual acceptance and V22/V23.
+
+### 2026-10-30 — Local Paper protocol reopened for owner manual check
+
+The localhost Docker database was found safely closed after the stack restart: all three
+protocol flags were false and the last risk price frame was about 8h27m old. The configured
+Paper owner still had a 500 USDT setting and was not latched. Operator activation followed
+the approved order rather than forcing admission: publication first, then financial only
+after the watermark advanced and the owner evaluated READY, then admission with a guarded
+all-configured-Paper-owners READY check.
+
+Post-activation, all three flags are true; the watermark advanced from 101949 to 102175,
+the owner setting/evaluation revisions are both 2, evaluation is READY, both replay flags
+are false, and the observed frame age was 67ms. The final read caught an ordinary one-frame
+publisher/evaluator tail (102175 versus 102174), within the approved API tail check. No
+Paper or Live order was submitted by this activation. This remains local manual-acceptance
+state only and must be closed in reverse order after the owner finishes the check.
+
+### 2026-10-30 — Loss-limit settings moved to Trading account
+
+The approved UI placement clarification now reuses the existing `RiskLimitPanel` on
+`/trading-account`, immediately after the Paper wallet. `/paper/trade` keeps only the
+current compact loss-limit value and, when the value is unset, links to Trading account.
+The trade page still shows admission blocking and an active risk-stop beside the order
+form; no financial rule, API, schema, owner/mode scope, latch or reset behavior changed.
+
+Affected frontend verification passed: seven test files and 96 tests, TypeScript
+typecheck, scoped ESLint and the production Vite build. The build retained the existing
+large-chunk warning. This UI check does not replace remote CI or outstanding F18
+acceptance evidence.
+
+### 2026-10-30 — Trading account risk card simplified
+
+The approved compact-card clarification reduces the ready state to authoritative limit,
+adjusted loss, readiness/latch status, last evaluation time and one Adjust limit action.
+Allowance, baseline, realized result, revisions, episode and technical timestamps remain
+available in an admin-template-derived disclosure. Reset is under More actions; refresh
+appears only for failed or unavailable evidence. Pending recovery continues polling with
+no action buttons, while UNKNOWN exposes status lookup first and keeps exact-key retry and
+the request identity inside Request details. No remaining-limit value is invented in the
+browser because the API does not provide one.
+
+Affected verification passed: seven frontend test files and 97 tests, scoped ESLint,
+TypeScript typecheck and the production Vite build. The build retained the existing
+large-chunk warning. No API, schema, Money, TOTP, latch/reset, polling or idempotency
+behavior changed.
+
+### 2026-10-30 — Trading account risk card reduced to one input and Save
+
+The approved compact-form amendment replaces the ready-state summary/actions with one
+authoritative loss-limit input and one Save action. Exact fixed-point parsing determines
+SET, DECREASE or INCREASE without JavaScript floating point. Only INCREASE opens the
+existing TOTP modal. Polling cannot overwrite a dirty draft; a changed revision, wallet
+or episode requires the user to accept the latest snapshot. APPLIED remains blocked
+until its matching snapshot revision arrives, while REJECTED retains the draft and does
+not update the authoritative value optimistically. Reset remains contextual to a latched
+limit, and durable UNKNOWN/AUTHORIZATION_ONLY recovery preserves the original intent and
+idempotency key.
+
+Affected verification passed in approximately four minutes: 57/57 targeted pure,
+component, account-caller and session/recovery tests, frontend ESLint, TypeScript
+typecheck, production Vite build and diff whitespace check. The build retained the
+existing large-chunk warning. The Playwright risk flow was updated but could not run:
+the repository safety guard rejected the local environment before server/browser start
+because no isolated `tiewtrade_e2e...` database was configured. Browser automation was
+also unavailable even though the localhost dev route returned HTTP 200. Those E2E and
+desktop/mobile, theme, language and keyboard screenshots remain Pending and are not
+replaced by the passing unit tests. No API, schema, Money, TOTP, latch/reset, polling or
+business rule changed.
+
+### 2026-10-30 — Recovery details folded into the compact Save flow
+
+The approved recovery-UI amendment removes UNKNOWN, protocol states, request UUIDs,
+status/retry buttons and the request-details disclosure from the main risk-limit card.
+An outstanding durable attempt now keeps its exact amount in the disabled input. While
+the lookup or engine request is pending, Save is disabled with one short user-facing
+status. If the prior result is still unknown, Save retries the original intent and key;
+it cannot create a new UUID or substitute the current draft/snapshot amount. Unknown
+INCREASE still requires a fresh TOTP, while server-confirmed AUTHORIZATION_ONLY reuses
+the existing authorization without collecting another code. APPLIED/snapshot revision,
+REJECTED, journal, owner/mode scope and reset safety remain unchanged.
+
+Affected verification passed: 60/60 targeted amount, component, account-caller and
+session/recovery tests, frontend ESLint, TypeScript typecheck and the production Vite
+build. The build retained the existing large-chunk warning. The previously recorded
+isolated-E2E-database and browser-automation limitations remain Pending; unit tests do
+not replace those gates. No backend, API, schema, Money, TOTP policy, latch/reset,
+polling, order or Live behavior changed.
+
+### 2026-10-30 — Recovery status made visually hidden
+
+The approved hidden-status amendment removes the remaining visible recovery sentence
+from the compact form. The same status remains `sr-only` and is referenced by the input
+and Save button for assistive technology. Pending still disables both controls, while a
+safe exact-key retry enables Save without exposing protocol text. Recovery, TOTP,
+idempotency and authoritative snapshot behavior did not change.
+
+Affected verification passed: 60/60 targeted tests, frontend ESLint, TypeScript
+typecheck, production Vite build and diff whitespace check. The build retained the
+existing large-chunk warning. Browser/E2E limitations remain Pending as previously
+recorded.
+
+### 2026-10-30 — Stale local recovery now clears without user action
+
+The approved stale-recovery amendment removes the final recovery step from the normal
+user flow. A local attempt is discarded only when the exact-key lookup returns
+RISK_REQUEST_NOT_FOUND and the authoritative revision/wallet/episode identity differs
+from the attempt's expected identity. The form then synchronizes the authoritative
+limit and unlocks without posting the old attempt or allocating a UUID. Matching
+identity, network/storage errors, authorization-only, pending and terminal states remain
+fail closed and retain exact-key recovery.
+
+Affected verification passed: 62/62 targeted amount, component, shared durable-caller
+and account/session tests, frontend ESLint, TypeScript typecheck, production Vite build
+and diff whitespace check. The build retained the existing large-chunk warning. No
+backend, API, schema, Money, TOTP policy, order, latch/reset or Live behavior changed.
+
+### 2026-10-30 — Fulfilled local recovery now unlocks automatically
+
+The approved fulfilled-recovery amendment extends the safe local discard predicate for
+the observed localhost case: when exact-key lookup returns RISK_REQUEST_NOT_FOUND and a
+non-RESET attempt's exact fixed-point amount already equals the authoritative limit, the
+desired state is already present and the local journal is discarded even if its scope
+identity still matches. Comparison uses the existing BigInt-scale parser, not raw text
+or floating point. The path performs no POST, UUID allocation or optimistic write.
+Different amounts, RESET, invalid data and non-not-found errors retain recovery.
+
+Affected verification passed: 64/64 targeted amount, component, shared durable-caller
+and account/session tests, frontend ESLint, TypeScript typecheck, production Vite build
+and diff whitespace check. The build retained the existing large-chunk warning. No
+backend, API, schema, Money, TOTP policy, order, latch/reset or Live behavior changed.
+
+### 2026-10-31 — Paper increase no longer asks for TOTP
+
+The approved Paper increase amendment keeps the durable request/worker path but makes
+second-factor authorization mode-specific. PAPER INCREASE is authenticated and CSRF
+protected, writes a normal idempotent inbox request with no authorization row, and is
+still checked against revision, wallet/episode scope, current amount, market evidence
+and the owner financial lock before the engine applies it. LIVE INCREASE retains its
+fresh exact-intent TOTP authorization and authorization-only recovery path. Migration
+0059 enforces this split for new rows, preserves legacy Paper authorization links with
+a `NOT VALID` transition constraint, and refuses downgrade once an authorization-free
+Paper increase exists.
+
+The compact Paper form now sends an increase directly from Save and retries an unknown
+Paper increase with the same key without opening a modal or attaching a TOTP header.
+The same component still opens the TOTP modal for LIVE. No optimistic setting update,
+Money calculation, latch/reset rule, scheduling, order path or Live-order capability
+changed.
+
+Verification passed on an isolated PostgreSQL database: 53 affected API, route,
+request, worker and profile-fixture tests;
+45 frontend risk/account/session tests; backend Ruff and focused strict mypy; frontend
+ESLint, TypeScript typecheck and production Vite build; migration 0058→0059→0058→0059;
+the downgrade data guard; compile and diff whitespace checks. The existing Vite
+large-chunk warning remains. Timed W1–W4 were not rerun because cadence, financial
+calculation and worker scheduling did not change. The local API, risk worker and
+frontend were rebuilt and healthy on migration 0059.
+
+### 2026-10-31 — READY label hidden in the compact limit form
+
+The approved UI amendment removes the `พร้อม` / `Ready` badge only when the snapshot
+reason is READY. Warning, unavailable, stale, latched, stop, loading and error states
+remain visible. No request, recovery, TOTP or financial behavior changed.
+
+Verification passed: 20/20 RiskLimitPanel tests, frontend ESLint, TypeScript typecheck,
+production Vite build and diff whitespace check. The frontend container was rebuilt;
+the existing Vite large-chunk warning remains.

@@ -46,6 +46,17 @@ class TradeObservation:
 
 
 @dataclass(frozen=True, slots=True)
+class TradeSample:
+    symbol: Symbol
+    aggregate_id: int
+    first_trade_id: int
+    last_trade_id: int
+    price: Money
+    quantity: Quantity
+    occurred_at: datetime
+
+
+@dataclass(frozen=True, slots=True)
 class ExecutionCapability:
     symbol: Symbol
     version: str
@@ -70,9 +81,13 @@ type ExecutionFeedEvent = FeedConnected | FeedDisconnected | ExecutionFeedData
 class ExecutionFeed(Protocol):
     async def snapshot(self, symbol: Symbol) -> DepthSnapshot: ...
     async def capability(self, symbol: Symbol) -> ExecutionCapability: ...
+    async def trade_history(
+        self, symbol: Symbol, *, started_at: datetime, ended_at: datetime
+    ) -> tuple[TradeSample, ...]: ...
     def events(
         self, symbols: tuple[Symbol, ...], *, generation: int
     ) -> AsyncGenerator[ExecutionFeedEvent, None]: ...
+    async def close(self) -> None: ...
 
 
 class ExecutionCapabilitySource(Protocol):

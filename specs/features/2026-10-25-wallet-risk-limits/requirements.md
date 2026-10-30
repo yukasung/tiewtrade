@@ -1,6 +1,14 @@
 # F-18 — เพดานความเสี่ยงต่อกระเป๋า — Requirements
 
 สถานะ: **Approved** — เจ้าของตอบ “approve” อนุมัติ requirements และ NC-F18-01..08 วันที่ 2026-10-25
+ข้อกำหนด UI ล่าสุด: **Approved 2026-10-30 — ฟอร์มเพดานขาดทุนแบบสั้น**; ดู [Compact Risk Limit Form Requirements](compact-risk-limit-form-requirements-amendment.md). UI-RQ-01..12 แทนเฉพาะการแสดงข้อมูลพร้อมกันบนหน้าปกติของ RQ-15
+ข้อกำหนด Recovery UI ล่าสุด: **Approved 2026-10-30 — ซ่อน protocol/technical details จากฟอร์มหลัก**; ดู [Compact Risk Recovery UI Requirements](compact-risk-recovery-ui-requirements-amendment.md). RUI-RQ-01..07 แทนเฉพาะ interaction ของ pending/UNKNOWN ใน UI-RQ-08/UI-RQ-10
+ข้อกำหนดข้อความ Recovery ล่าสุด: **Approved 2026-10-30 — ไม่แสดง recovery status ในหน้าหลัก**; ดู [Hidden Recovery Status Requirements](hidden-recovery-status-requirements-amendment.md)
+ข้อกำหนด Stale recovery ล่าสุด: **Approved 2026-10-30 — ล้าง local attempt ที่ serverไม่พบและ scopeหมดอายุ**; ดู [Stale Recovery Auto-clear Requirements](stale-recovery-auto-clear-requirements-amendment.md)
+ข้อกำหนด Fulfilled recovery ล่าสุด: **Approved 2026-10-30 — ล้าง local attempt เมื่อ serverไม่พบและค่าปัจจุบันตรง desired amount**; ดู [Fulfilled Recovery Auto-clear Requirements](fulfilled-recovery-auto-clear-requirements-amendment.md)
+ข้อกำหนด Paper INCREASE ล่าสุด: **Approved 2026-10-31 — เพิ่มเพดาน Paper ไม่ใช้ TOTP; Liveยังใช้**; ดู [Paper Increase No-TOTP Requirements](paper-increase-no-totp-requirements-amendment.md); plan/validation amendment อนุมัติแล้ว
+
+ข้อกำหนด UI ล่าสุด: **Approved 2026-10-31 — ซ่อนคำว่า Ready ในสถานะปกติ**; ดู [Hide Ready Status Requirements](hide-ready-status-requirements-amendment.md); plan/validation amendment อนุมัติแล้ว
 เกณฑ์ปัจจุบัน: **R32 Approved 2026-10-29 — Paper fixture 5Hz**; ดู [amendment](paper-source-cadence-amendment.md) ซึ่งแทนเฉพาะ 10Hz ในข้อความเก่า
 โหมดตรวจรับปัจจุบัน: **R33 Approved 2026-10-29 — explicit child publisher** ตาม [amendment](child-acceptance-mode-amendment.md); ใช้เกณฑ์ล่าสุดด้านล่าง
 วันที่: 2026-10-25

@@ -122,6 +122,15 @@ it("uses a parent-controlled pair when embedded and omits duplicate workspace pl
   expect(vi.mocked(useChartData).mock.calls.at(-1)?.[1].base).toBe("ETH");
   expect(onMarketSnapshot).toHaveBeenLastCalledWith({ base: "ETH", price: "100.5", observedAt: "2026-10-12T00:30:00Z" });
 });
+it("places embedded timeframe and reset controls beside the workspace pair selector", async () => {
+  vi.mocked(useChartData).mockReturnValue(state());
+  render(<><div id="paper-chart-toolbar" data-testid="workspace-chart-toolbar"/>
+    <CandlestickChartPanel userId="one" base="BTC" embedded toolbarTargetId="paper-chart-toolbar"/></>);
+  const toolbar = await screen.findByTestId("workspace-chart-toolbar");
+  expect(within(toolbar).getByRole("combobox", { name: "Timeframe" })).toBeTruthy();
+  expect(within(toolbar).getByRole("button", { name: /รีเซ็ต/ }).className).toContain("chart-reset-button");
+  expect(screen.getByTestId("candlestick-chart").querySelector(".trading-market-bar")).toBeNull();
+});
 it("blocks manual retry during cooldown", () => {
   const current = state(); current.error = new Error("unavailable"); current.cooldownActive = true;
   vi.mocked(useChartData).mockReturnValue(current); const panel = render(<CandlestickChartPanel userId="one"/>);

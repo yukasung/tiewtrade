@@ -320,8 +320,9 @@ queries และ frontend polling เฉพาะหน้าที่เปิ
    และซ่อน breadcrumb ที่ซ้ำกับ mode header
 3. ฟอร์มคง payload/validation เดิม เปลี่ยน side/kind เป็น tabs และซ่อน pair selectorเมื่อ parent
    ควบคุม pair; remount key เดิมยังล้าง draft เมื่อ pair/episode เปลี่ยน
-4. Paper แสดง balance/risk summary, blocking reasons และ uncertain recovery ใกล้ฟอร์ม;
-   รายละเอียด risk/wallet เปิดตามต้องการ และ recovery section แสดงเฉพาะเมื่อมีงานหรือ error
+4. Paper แสดง balance/risk summary และ blocking reasons ใกล้ฟอร์ม; ติดตาม uncertain request
+   และ poll ผลต่อเบื้องหลังโดยไม่แสดง recovery section, UUID, episode หรือสถานะปกติซ้ำกับตารางออเดอร์
+   แสดงเฉพาะ error/UNKNOWN ที่ต้องให้ผู้ใช้ตรวจหรือส่ง key เดิมซ้ำ
 5. รายการ Paper แยก Open/History จาก rows เดิม; ถ้ายังมี page ที่ไม่โหลด ห้ามสรุปว่า tab ว่าง
 6. Live ใช้ catalog+chart เดียวกันและ disabled form โดยไม่ query/render Paper wallet/orders
 
@@ -332,3 +333,12 @@ Source mapping: layout/tabs/forms/tables/modal ยึด
 `frontend/src/components/ui/`. ข้อยกเว้นจาก template คือกราฟต้องใช้พื้นที่ยืดหยุ่นและแถบฟอร์ม
 ประมาณ 360px เพื่อรักษา readability ของ trading workspace; ใช้ theme tokensเดิมทั้งหมด
 และไม่เพิ่ม visual system ใหม่
+
+### F16-R4 UI clarification — 2026-10-30
+
+สถานะ: **Approved — เจ้าของสั่งลบส่วนคำขอและผลการตรวจและยืนยันซ้ำวันที่ 2026-10-30**
+
+การลบเป็น presentation-only: discovery, write-before-send journal, same-key recovery, polling,
+pending-submit protection, terminal invalidation และ episode semantics คงเดิม หน้าไม่แสดง lifecycle
+ปกติซ้ำกับตารางออเดอร์; error หรือ UNKNOWN ที่ต้องมี user action ยังแสดงใกล้ form เพื่อไม่ซ่อน
+สภาวะที่อาจทำให้ส่งซ้ำ

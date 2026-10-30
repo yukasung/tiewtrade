@@ -6,7 +6,7 @@ from enum import Enum
 from typing import Protocol
 from uuid import UUID
 
-from tiewtrade.core.money import Money, Quantity, RoundingDirection, money_for_quantity
+from tiewtrade.core.money import Money, Quantity, RoundingDirection, Scalar, money_for_quantity
 from tiewtrade.core.positions import ExecutionFact, ExecutionSide, FeeEffect, PositionPair
 from tiewtrade.core.trading_limits import ConstraintViolation, unmet_constraints
 
@@ -196,6 +196,10 @@ class OrderConstraints:
     maximum_price: Money | None = None
     supported_types: tuple[OrderType, ...] = (OrderType.MARKET, OrderType.LIMIT)
     unsupported_rules: tuple[str, ...] = ()
+    average_price_minutes: int = 0
+    percent_price_multiplier_down: Scalar | None = None
+    percent_price_multiplier_up: Scalar | None = None
+    maximum_open_orders: int | None = None
 
     def __post_init__(self) -> None:
         if (
@@ -234,6 +238,23 @@ class OrderConstraints:
             or type(self.unsupported_rules) is not tuple
         ):
             raise OrderError("immutable capabilities required")
+        if type(self.average_price_minutes) is not int or self.average_price_minutes < 0:
+            raise OrderError("invalid average-price window")
+        if (self.percent_price_multiplier_down is None) != (
+            self.percent_price_multiplier_up is None
+        ):
+            raise OrderError("complete percent-price rule required")
+        if self.percent_price_multiplier_down is not None and (
+            self.percent_price_multiplier_down.amount <= 0
+            or self.percent_price_multiplier_up is None
+            or self.percent_price_multiplier_up.amount < self.percent_price_multiplier_down.amount
+            or self.average_price_minutes <= 0
+        ):
+            raise OrderError("invalid percent-price rule")
+        if self.maximum_open_orders is not None and (
+            type(self.maximum_open_orders) is not int or self.maximum_open_orders <= 0
+        ):
+            raise OrderError("invalid open-order limit")
         if self.maximum_quantity is not None and self.maximum_quantity < self.minimum_quantity:
             raise OrderError("inverted quantity bounds")
         if self.maximum_notional is not None and self.maximum_notional < self.minimum_notional:
@@ -245,13 +266,35 @@ class OrderConstraints:
         ):
             raise OrderError("inverted price bounds")
 
-    def check(self, intent: OrderIntent, quantity: Quantity, notional: Money) -> None:
+    def check(
+        self,
+        intent: OrderIntent,
+        quantity: Quantity,
+        notional: Money,
+        *,
+        filter_reference_price: Money | None = None,
+        active_orders: int = 0,
+    ) -> None:
         if (
             intent.pair != self.pair
             or self.unsupported_rules
             or intent.kind not in self.supported_types
         ):
             raise UnsupportedOrderError("unsupported execution capability")
+        if self.average_price_minutes and filter_reference_price is None:
+            raise SafetyUnavailableError("average-price filter reference unavailable")
+        percent_minimum = percent_maximum = None
+        if self.percent_price_multiplier_down is not None:
+            assert self.percent_price_multiplier_up is not None
+            assert filter_reference_price is not None
+            percent_minimum = filter_reference_price.times(
+                self.percent_price_multiplier_down.amount,
+                rounding=RoundingDirection.TOWARD_POSITIVE,
+            )
+            percent_maximum = filter_reference_price.times(
+                self.percent_price_multiplier_up.amount,
+                rounding=RoundingDirection.TOWARD_NEGATIVE,
+            )
         violations = unmet_constraints(
             quantity=quantity,
             notional=notional,
@@ -264,6 +307,10 @@ class OrderConstraints:
             price_tick=self.price_tick,
             minimum_price=self.minimum_price,
             maximum_price=self.maximum_price,
+            percent_minimum_price=percent_minimum,
+            percent_maximum_price=percent_maximum,
+            active_orders=active_orders,
+            maximum_open_orders=self.maximum_open_orders,
         )
         if violations:
             raise OrderConstraintError(violations)

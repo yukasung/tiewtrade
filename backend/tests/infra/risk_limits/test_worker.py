@@ -18,7 +18,7 @@ from tiewtrade.infra.risk_limits.dispatch import (
     claim_request,
 )
 from tiewtrade.infra.risk_limits.records import RiskAction, RiskReceipt
-from tiewtrade.infra.risk_limits.requests import authorize_increase, submit_request
+from tiewtrade.infra.risk_limits.requests import submit_request
 from tiewtrade.infra.risk_limits.storage import process_request
 
 
@@ -142,7 +142,6 @@ async def test_queued_setting_change_is_rejected_when_another_request_wins_revis
 
 async def test_limit_edits_and_unavailable_reset_never_clear_an_existing_latch(
     api_engine: AsyncEngine,
-    auth_engine: AsyncEngine,
     engine_engine: AsyncEngine,
     owner: UUID,
     wallet: PaperWalletSnapshot,
@@ -167,9 +166,6 @@ async def test_limit_edits_and_unavailable_reset_never_clear_an_existing_latch(
         decrease, action=RiskAction.RESET, key=uuid4(), expected_revision=3, amount=None
     )
     for value in (decrease, increase, reset):
-        if value.action is RiskAction.INCREASE:
-            async with user_session(auth_engine, owner, role=DatabaseRole.AUTH) as session:
-                await authorize_increase(session, value)
         async with user_session(api_engine, owner) as session:
             receipt = await submit_request(session, value)
         current = await claim(engine_engine, owner, receipt)

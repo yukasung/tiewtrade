@@ -337,6 +337,7 @@ async def _process_new(
                 held=held,
                 constraints=constraints,
                 reference_price=reference,
+                filter_reference_price=record.metadata.average_price,
                 policy=effective_policy,
                 catalog=catalog,
             )

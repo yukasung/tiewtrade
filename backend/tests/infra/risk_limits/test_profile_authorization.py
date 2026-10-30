@@ -1,4 +1,4 @@
-"""Real database contract for R27's post-oracle fixture limit restoration."""
+"""Real database contract for Paper post-oracle fixture limit restoration."""
 
 import asyncio
 from dataclasses import replace
@@ -16,16 +16,12 @@ from tiewtrade.core.orders import TradingMode
 from tiewtrade.infra.db import DatabaseRole, user_session
 from tiewtrade.infra.paper_wallet import get_wallet
 from tiewtrade.infra.paper_wallet.records import PaperWalletSnapshot
-from tiewtrade.infra.risk_limits.records import (
-    RiskAction,
-    RiskAuthorizationError,
-    RiskConflictError,
-)
+from tiewtrade.infra.risk_limits.records import RiskAction, RiskConflictError
 from tiewtrade.infra.risk_limits.requests import receipt_by_key, submit_request
 from tiewtrade.infra.risk_limits.storage import process_request
 
 
-async def test_fixture_restoration_uses_verified_auth_and_applies_once(
+async def test_fixture_restoration_submits_paper_increase_and_applies_once(
     tmp_path: Path,
     api_engine: AsyncEngine,
     engine_engine: AsyncEngine,
@@ -44,9 +40,6 @@ async def test_fixture_restoration_uses_verified_auth_and_applies_once(
         expected_revision=1,
         amount=Money.of(1000, "USDT"),
     )
-    async with user_session(api_engine, owner) as session:
-        with pytest.raises(RiskAuthorizationError):
-            await submit_request(session, value)
     fixture = Fixture(tmp_path)
     task = asyncio.create_task(
         fixture.mutation(
@@ -63,14 +56,7 @@ async def test_fixture_restoration_uses_verified_auth_and_applies_once(
                 if receipt is not None and not receipt.authorization_only:
                     break
                 await asyncio.sleep(0.01)
-            assert receipt.submission == value and receipt.authorization_id is not None
-            async with user_session(fixture.auth, owner, role=DatabaseRole.AUTH) as session:
-                assert (
-                    await session.execute("SELECT last_accepted_step FROM user_totp")
-                ).scalar_one() > 0
-                assert (
-                    await session.execute("SELECT count(*) FROM risk_limit_authorizations")
-                ).scalar_one() == 1
+            assert receipt.submission == value and receipt.authorization_id is None
             current = await claim(engine_engine, owner, receipt)
             async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
                 await process_request(session, current)
@@ -95,7 +81,7 @@ async def test_fixture_restoration_uses_verified_auth_and_applies_once(
             fixture.migrator, [fixture.pools.path], expected_counts=[6]
         )
         auth = next(entry for entry in fixture.pools.entries if entry["role"] == "AUTH")
-        assert (auth["pool_size"], auth["max_overflow"], auth["peak_checked_out"]) == (1, 0, 1)
+        assert (auth["pool_size"], auth["max_overflow"], auth["peak_checked_out"]) == (1, 0, 0)
     finally:
         task.cancel()
         await asyncio.gather(task, return_exceptions=True)

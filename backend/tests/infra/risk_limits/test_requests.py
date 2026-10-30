@@ -43,13 +43,25 @@ def submission(owner: UUID, wallet: PaperWalletSnapshot) -> RiskSubmission:
     )
 
 
-async def seed_setting(engine: AsyncEngine, owner: UUID) -> None:
+async def seed_setting(
+    engine: AsyncEngine, owner: UUID, mode: TradingMode = TradingMode.PAPER
+) -> None:
     async with user_session(engine, owner, role=DatabaseRole.ENGINE) as session:
         await session.execute(
             """INSERT INTO risk_limit_settings(user_id,mode,revision,amount)
-            VALUES(:owner,'PAPER',1,100)""",
-            {"owner": owner},
+            VALUES(:owner,:mode,1,100)""",
+            {"owner": owner, "mode": mode.value},
         )
+
+
+def live_increase(owner: UUID) -> RiskSubmission:
+    return RiskSubmission(
+        RiskScope(owner, TradingMode.LIVE),
+        RiskAction.INCREASE,
+        uuid4(),
+        1,
+        Money.of(200, "USDT"),
+    )
 
 
 async def test_intake_is_durable_replayable_and_does_not_change_applied_state_or_money(
@@ -162,20 +174,15 @@ async def test_authorization_only_receipt_survives_gap_before_intake(
     owner: UUID,
     wallet: PaperWalletSnapshot,
 ) -> None:
-    await seed_setting(engine_engine, owner)
-    value = replace(
-        submission(owner, wallet),
-        action=RiskAction.INCREASE,
-        expected_revision=1,
-        amount=Money.of(200, "USDT"),
-    )
+    await seed_setting(engine_engine, owner, TradingMode.LIVE)
+    value = live_increase(owner)
     async with user_session(auth_engine, owner, role=DatabaseRole.AUTH) as session:
         authorized = await authorize_increase(session, value)
     # This models process death after AUTH commit: no request inbox exists yet.
     async with user_session(api_engine, owner) as session:
-        found = await receipt_by_key(session, TradingMode.PAPER, value.key)
+        found = await receipt_by_key(session, TradingMode.LIVE, value.key)
         assert found == authorized and found.authorization_only
-        assert await receipt_by_id(session, TradingMode.PAPER, authorized.receipt_id) == authorized
+        assert await receipt_by_id(session, TradingMode.LIVE, authorized.receipt_id) == authorized
         accepted = await submit_request(session, value)
         assert not accepted.authorization_only
         assert accepted.receipt_id == authorized.receipt_id
@@ -194,13 +201,8 @@ async def test_authorization_cannot_be_forged_from_api_role_or_reused_for_anothe
     owner: UUID,
     wallet: PaperWalletSnapshot,
 ) -> None:
-    await seed_setting(engine_engine, owner)
-    value = replace(
-        submission(owner, wallet),
-        action=RiskAction.INCREASE,
-        expected_revision=1,
-        amount=Money.of(200, "USDT"),
-    )
+    await seed_setting(engine_engine, owner, TradingMode.LIVE)
+    value = live_increase(owner)
     with pytest.raises(RiskAuthorizationError):
         async with user_session(api_engine, owner) as session:
             await submit_request(session, value)
@@ -212,6 +214,29 @@ async def test_authorization_cannot_be_forged_from_api_role_or_reused_for_anothe
     with pytest.raises(RiskConflictError):
         async with user_session(api_engine, owner) as session:
             await submit_request(session, replace(value, amount=Money.of(201, "USDT")))
+
+
+async def test_paper_increase_needs_no_authorization_receipt(
+    api_engine: AsyncEngine,
+    auth_engine: AsyncEngine,
+    engine_engine: AsyncEngine,
+    owner: UUID,
+    wallet: PaperWalletSnapshot,
+) -> None:
+    await seed_setting(engine_engine, owner)
+    value = replace(
+        submission(owner, wallet),
+        action=RiskAction.INCREASE,
+        expected_revision=1,
+        amount=Money.of(200, "USDT"),
+    )
+    with pytest.raises(RiskAuthorizationError):
+        async with user_session(auth_engine, owner, role=DatabaseRole.AUTH) as session:
+            await authorize_increase(session, value)
+    async with user_session(api_engine, owner) as session:
+        accepted = await submit_request(session, value)
+        assert accepted.authorization_id is None
+        assert not accepted.authorization_only
 
 
 @pytest.mark.parametrize("action", [RiskAction.SET, RiskAction.DECREASE])

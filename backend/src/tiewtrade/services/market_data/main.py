@@ -19,14 +19,17 @@ from tiewtrade.infra.platform import record_protocol_heartbeat
 from tiewtrade.infra.realtime.notifications import RedisNotifications
 from tiewtrade.services.market_data.candle_realtime import CandleSupervisor
 from tiewtrade.services.market_data.ingestion import MARKET_TIMEOUT, run_round
+from tiewtrade.services.market_data.order_book import ExecutionBookSupervisor
 from tiewtrade.services.market_data.realtime import QuoteSupervisor
 from tiewtrade.venues import (
     live_candle_feed,
     live_candle_source,
+    live_execution_feed,
     live_price_feed,
     public_rate_limit_guard,
 )
 from tiewtrade.venues.candles import CandleSource
+from tiewtrade.venues.order_books import ExecutionFeed
 from tiewtrade.venues.price_streams import PriceFeed
 
 ROUND_INTERVAL = timedelta(seconds=30)
@@ -42,6 +45,7 @@ async def serve(
     source: CandleSource | None = None,
     engine: AsyncEngine | None = None,
     price_feed: PriceFeed | None = None,
+    execution_feed: ExecutionFeed | None = None,
 ) -> None:
     owned = engine is None
     engine = engine or create_engine_for(DatabaseRole.MARKET_DATA)
@@ -96,6 +100,9 @@ async def serve(
             feed = price_feed or live_price_feed(
                 client=client, clock=_now, timeout=MARKET_TIMEOUT, guard=guard
             )
+            books = execution_feed or live_execution_feed(
+                client=client, clock=_now, timeout=MARKET_TIMEOUT, guard=guard
+            )
             url = os.environ.get("TIEWTRADE_REDIS_URL_MARKET_DATA", "")
             if not url:
                 raise ValueError("TIEWTRADE_REDIS_URL_MARKET_DATA is required")
@@ -104,6 +111,7 @@ async def serve(
             tasks = [
                 asyncio.create_task(candles()),
                 asyncio.create_task(QuoteSupervisor(engine, feed, notification).run()),
+                asyncio.create_task(ExecutionBookSupervisor(engine, books).run()),
             ]
             if generation is not None:
                 tasks.append(asyncio.create_task(heartbeat()))

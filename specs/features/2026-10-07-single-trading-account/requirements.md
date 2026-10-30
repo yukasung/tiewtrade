@@ -6,6 +6,8 @@
 ส่วนเพิ่ม Approved: [TailAdmin ทุกหน้าปัจจุบัน](ui-template-requirements-amendment.md)
 เจ้าของอนุมัติ 2026-10-07; ขยาย RQ-9 ครอบ auth/TOTP/health presentation
 โดยไม่เปลี่ยน auth หรือ trading logic; แผน/validation ส่วนเพิ่ม Approved แล้ว 2026-10-07
+
+Account dashboard visual refresh: **Approved 2026-10-31**; ดู [Requirements Amendment](account-dashboard-visual-requirements-amendment.md)
 Branch ที่จะใช้: `feature/f-08-single-trading-account` (เปลี่ยนชื่อจาก branch F-08 เดิมแล้ว)
 
 ## คำตัดสินของเจ้าของ

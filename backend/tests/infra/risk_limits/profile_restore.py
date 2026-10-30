@@ -1,4 +1,4 @@
-"""F18 W4: preserve F15 history, risk baselines, pending stops and AUTH-only receipts.
+"""F18 W4: preserve F15 history, risk baselines, pending stops and risk requests.
 
 Only isolated local tiewtrade_f18_release* databases are accepted. No Live capability.
 """
@@ -28,16 +28,13 @@ from tests.infra.risk_limits.profile_workload import (
 from tiewtrade.core.money import Money
 from tiewtrade.core.orders import OrderStatus, TradingMode
 from tiewtrade.core.risk_limits import RiskScope
-from tiewtrade.core.totp import code_for, step_at
-from tiewtrade.infra.auth import totp
-from tiewtrade.infra.crypto import KeyPurpose, KeySource
 from tiewtrade.infra.db import DatabaseRole, create_engine_for, user_session
 from tiewtrade.infra.db.errors import NotPermittedError
 from tiewtrade.infra.db.session import scan_session_bypassing_rls
 from tiewtrade.infra.paper_wallet import get_wallet
 from tiewtrade.infra.risk_limits.policy import TransactionalRiskPolicy
 from tiewtrade.infra.risk_limits.records import RiskAction, RiskSubmission
-from tiewtrade.infra.risk_limits.requests import authorize_increase, receipt_by_key, submit_request
+from tiewtrade.infra.risk_limits.requests import receipt_by_key, submit_request
 from tiewtrade.services.engine.paper_order import run_paper_order_round
 from tiewtrade.services.engine.risk_limit import run_risk_request_round, run_risk_stop_round
 
@@ -117,7 +114,6 @@ async def build(args: argparse.Namespace) -> int:
     risk_output.mkdir()
     fixture = Fixture(risk_output)
     fixture.publisher_mode = getattr(args, "publisher_mode", "inline")
-    auth = create_engine_for(DatabaseRole.AUTH)
     try:
         async with fixture.migrator.begin() as connection:
             await connection.execute(
@@ -199,22 +195,10 @@ async def build(args: argparse.Namespace) -> int:
         submission = RiskSubmission(
             scope, RiskAction.INCREASE, key, state.revision, Money.of(1000, "USDT")
         )
-        keys = KeySource(KeyPurpose.TOTP_SECRET, "f18-w4", {"f18-w4": b"F" * 32})
-        secret = b"F" * 20
-        async with user_session(auth, owner.user_id, role=DatabaseRole.AUTH) as session:
-            now = (await session.execute("SELECT clock_timestamp()")).scalar_one()
-            await totp.stage_secret(session, keys, secret)
-            assert await totp.confirm_secret(
-                session, keys, presented=code_for(secret, step_at(now) - 1), now=now
-            )
-            assert (
-                await totp.verify(session, keys, presented=code_for(secret, step_at(now)), now=now)
-                is totp.CodeOutcome.ACCEPTED
-            )
-            receipt = await authorize_increase(session, submission)
         async with user_session(fixture.api, owner.user_id) as session:
+            receipt = await submit_request(session, submission)
             observed = await receipt_by_key(session, TradingMode.PAPER, key)
-            assert observed is not None and observed.authorization_only
+            assert observed == receipt and not observed.authorization_only
         # Adoption's real Paper worker may already have recovered the legacy
         # expired claim. Stage it again only after every consumer is stopped,
         # using the original fixture's real claim protocol rather than omitting
@@ -247,7 +231,6 @@ async def build(args: argparse.Namespace) -> int:
         return 0
     finally:
         await fixture.close()
-        await auth.dispose()
 
 
 async def extra_security(engine: AsyncEngine) -> list[dict[str, object]]:
@@ -411,7 +394,7 @@ async def verify(args: argparse.Namespace) -> int:
             receipt = await receipt_by_key(session, TradingMode.PAPER, key)
             assert (
                 receipt is not None
-                and receipt.authorization_only
+                and not receipt.authorization_only
                 and str(receipt.receipt_id) == fixture["receipt_id"]
             )
             first = await submit_request(session, receipt.submission)
@@ -522,7 +505,7 @@ async def verify(args: argparse.Namespace) -> int:
             {
                 "status": "PASSED",
                 "real_risk_policy": True,
-                "authorization_only_exact_retry": True,
+                "paper_request_exact_retry": True,
                 "pending_stop_completed": True,
                 "terminal_cancel_states": cancel_counts.events,
                 "duplicate_cancel_effects": 0,

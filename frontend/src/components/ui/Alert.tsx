@@ -1,15 +1,25 @@
+import type { MouseEventHandler } from "react";
+
 /** Adapted from references/admin-template/src/components/ui/alert/Alert.tsx. */
 
 interface AlertProps {
   variant: "success" | "error" | "warning" | "info"; // Alert type
   title: string; // Title of the alert
   message: string; // Message of the alert
+  showLink?: boolean;
+  linkHref?: string;
+  linkText?: string;
+  onLinkClick?: MouseEventHandler<HTMLAnchorElement>;
 }
 
 export const Alert: React.FC<AlertProps> = ({
   variant,
   title,
   message,
+  showLink = false,
+  linkHref = "#",
+  linkText = "Learn more",
+  onLinkClick,
 }) => {
   // Tailwind classes for each variant
   const variantClasses = {
@@ -121,6 +131,16 @@ export const Alert: React.FC<AlertProps> = ({
           </h4>
 
           <p className="text-sm text-gray-500 dark:text-gray-400">{message}</p>
+
+          {showLink && (
+            <a
+              href={linkHref}
+              onClick={onLinkClick}
+              className="mt-3 inline-block text-sm font-medium text-gray-500 underline dark:text-gray-400"
+            >
+              {linkText}
+            </a>
+          )}
         </div>
       </div>
     </div>

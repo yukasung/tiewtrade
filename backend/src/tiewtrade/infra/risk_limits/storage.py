@@ -192,7 +192,11 @@ async def _process_request(session: UserSession, claim: RiskClaim) -> None:
         ).first()
         if active is None:
             failure = "RISK_SCOPE_CONFLICT"
-    if failure is None and value.action is RiskAction.INCREASE:
+    if (
+        failure is None
+        and value.scope.mode is TradingMode.LIVE
+        and value.action is RiskAction.INCREASE
+    ):
         proof = await authorization_for(checked, value)
         if proof is None or proof.authorization_id != receipt.authorization_id:
             failure = "RISK_AUTHORIZATION_REQUIRED"

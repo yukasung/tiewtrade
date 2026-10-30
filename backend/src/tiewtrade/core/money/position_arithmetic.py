@@ -44,6 +44,29 @@ def money_for_quantity(
 
 
 @guarded
+def price_for_notional(
+    total: Money,
+    quantity: Quantity,
+    *,
+    asset: str,
+    rounding: RoundingDirection,
+) -> Money:
+    """Divide exact quote notional by positive base quantity with one explicit rounding."""
+    if type(total) is not Money or type(quantity) is not Quantity:
+        raise InvalidInputTypeError("Money total and Quantity required")
+    ensure_canonical_unit(asset)
+    if quantity.asset != asset or quantity.amount <= 0 or total.amount <= 0:
+        raise InvalidInputTypeError("positive matching-asset quantity and notional required")
+    direction = _rounding(rounding)
+    coefficient = rounded_quotient(
+        _coefficient(total) * _coefficient(Quantity.of(1, asset)),
+        _coefficient(quantity),
+        direction,
+    )
+    return Money(Decimal(coefficient).scaleb(-STORED_SCALE), total.currency)
+
+
+@guarded
 def allocate_money(
     total: Money,
     part: Quantity,

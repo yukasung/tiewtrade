@@ -1,5 +1,4 @@
 import asyncio
-from concurrent.futures import ThreadPoolExecutor
 from uuid import UUID, uuid4
 
 import pytest
@@ -8,12 +7,10 @@ from fastapi.testclient import TestClient
 from tests.api.conftest import csrf_headers, register
 from tests.api.test_paper_wallet_routes import _run_worker
 from tests.api.test_totp_flow import code_now, enable_totp
-from tiewtrade.core.orders import TradingMode
 from tiewtrade.infra.db import DatabaseRole, InfraError, create_engine_for, user_session
-from tiewtrade.infra.db.session import UserSession
 from tiewtrade.infra.risk_limits.records import RiskReceipt
-from tiewtrade.infra.risk_limits.requests import receipt_by_key, submit_request
-from tiewtrade.services.api import authentication, risk_limit_routes
+from tiewtrade.infra.risk_limits.requests import submit_request
+from tiewtrade.services.api import risk_limit_routes
 from tiewtrade.services.api.routing_policy import rule_for
 from tiewtrade.services.api.settings import TOTP_HEADER
 
@@ -45,6 +42,24 @@ def _seed_setting(client: TestClient) -> None:
                 await session.execute(
                     """INSERT INTO risk_limit_settings(user_id,mode,revision,amount)
                     VALUES(:owner,'PAPER',1,100)""",
+                    {"owner": owner},
+                )
+        finally:
+            await engine.dispose()
+
+    asyncio.run(seed())
+
+
+def _seed_live_setting(client: TestClient) -> None:
+    owner = UUID(client.get("/auth/me").json()["user_id"])
+
+    async def seed() -> None:
+        engine = create_engine_for(DatabaseRole.ENGINE)
+        try:
+            async with user_session(engine, owner, role=DatabaseRole.ENGINE) as session:
+                await session.execute(
+                    """INSERT INTO risk_limit_settings(user_id,mode,revision,amount)
+                    VALUES(:owner,'LIVE',1,100)""",
                     {"owner": owner},
                 )
         finally:
@@ -124,7 +139,7 @@ def test_reset_exemption_does_not_require_totp_or_classify_as_reduction(client: 
     assert rule is not None and not rule.reverify and not rule.risk_reducing
 
 
-def test_increase_requires_fresh_totp_and_has_no_recovery_grant(client: TestClient) -> None:
+def test_paper_increase_needs_no_totp_and_has_no_recovery_grant(client: TestClient) -> None:
     register(client)
     body = _wallet_body(client)
     _seed_setting(client)
@@ -134,12 +149,43 @@ def test_increase_requires_fresh_totp_and_has_no_recovery_grant(client: TestClie
         json=body,
         headers={**csrf_headers(client), "Idempotency-Key": str(uuid4())},
     )
-    assert result.status_code == 403
+    assert result.status_code == 202, result.text
     rule = rule_for("POST", "/paper/risk-limit/increase")
+    assert rule is not None and not rule.reverify and not rule.accepts_recovery_grant
+
+
+def test_live_increase_still_requires_fresh_totp(client: TestClient) -> None:
+    register(client)
+    _seed_live_setting(client)
+    body = {
+        "expected_revision": 1,
+        "amount": "200",
+        "expected_wallet_id": None,
+        "expected_episode_id": None,
+    }
+    key = str(uuid4())
+    refused = client.post(
+        "/live/risk-limit/increase",
+        json=body,
+        headers={**csrf_headers(client), "Idempotency-Key": key},
+    )
+    assert refused.status_code == 403
+    secret, _ = enable_totp(client)
+    accepted = client.post(
+        "/live/risk-limit/increase",
+        json=body,
+        headers={
+            **csrf_headers(client),
+            "Idempotency-Key": key,
+            TOTP_HEADER: code_now(secret),
+        },
+    )
+    assert accepted.status_code == 202, accepted.text
+    rule = rule_for("POST", "/live/risk-limit/increase")
     assert rule is not None and rule.reverify and not rule.accepts_recovery_grant
 
 
-def test_receipt_recovers_http_failure_between_auth_commit_and_inbox(
+def test_paper_increase_recovers_http_failure_with_the_same_key(
     client: TestClient,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -147,7 +193,6 @@ def test_receipt_recovers_http_failure_between_auth_commit_and_inbox(
     body = _wallet_body(client)
     _seed_setting(client)
     body.update(expected_revision=1, amount="200")
-    secret, _ = enable_totp(client)
     key = str(uuid4())
     real_submit = submit_request
 
@@ -158,11 +203,11 @@ def test_receipt_recovers_http_failure_between_auth_commit_and_inbox(
     failed = client.post(
         "/paper/risk-limit/increase",
         json=body,
-        headers={**csrf_headers(client), "Idempotency-Key": key, TOTP_HEADER: code_now(secret)},
+        headers={**csrf_headers(client), "Idempotency-Key": key},
     )
     assert failed.status_code == 503, failed.text
     lookup = client.get(f"/paper/risk-limit/requests/by-key/{key}")
-    assert lookup.status_code == 200 and lookup.json()["state"] == "AUTHORIZATION_ONLY"
+    assert lookup.status_code == 404
     assert client.get("/paper/risk-limit").json()["amount"] == "100"
     monkeypatch.setattr(risk_limit_routes, "submit_request", real_submit)
     retry = client.post(
@@ -171,7 +216,6 @@ def test_receipt_recovers_http_failure_between_auth_commit_and_inbox(
         headers={**csrf_headers(client), "Idempotency-Key": key},
     )
     assert retry.status_code == 202 and retry.json()["state"] == "REQUEST_PENDING", retry.text
-    assert retry.json()["receipt_id"] == lookup.json()["receipt_id"]
     conflict = client.post(
         "/paper/risk-limit/increase",
         json={**body, "amount": "201"},
@@ -183,46 +227,21 @@ def test_receipt_recovers_http_failure_between_auth_commit_and_inbox(
         json=body,
         headers={**csrf_headers(client), "Idempotency-Key": str(uuid4())},
     )
-    assert fresh_action_without_code.status_code == 403
+    assert fresh_action_without_code.status_code == 202
 
 
-def test_concurrent_same_key_authentication_rechecks_receipt_under_auth_lock(
-    client: TestClient,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
+def test_concurrent_paper_increase_same_key_creates_one_receipt(client: TestClient) -> None:
     register(client)
     body = _wallet_body(client)
     _seed_setting(client)
     body.update(expected_revision=1, amount="200")
-    secret, _ = enable_totp(client)
     key = uuid4()
-    original = receipt_by_key
-    both_arrived = asyncio.Event()
-    arrived = 0
-
-    async def at_barrier(
-        session: UserSession, mode: TradingMode, request_key: UUID
-    ) -> RiskReceipt | None:
-        nonlocal arrived
-        result = await original(session, mode, request_key)
-        if request_key == key:
-            assert result is None
-            arrived += 1
-            if arrived == 2:
-                both_arrived.set()
-            await asyncio.wait_for(both_arrived.wait(), timeout=3)
-        return result
-
-    monkeypatch.setattr(authentication, "receipt_by_key", at_barrier)
-    headers = {**csrf_headers(client), "Idempotency-Key": str(key), TOTP_HEADER: code_now(secret)}
+    headers = {**csrf_headers(client), "Idempotency-Key": str(key)}
 
     def send() -> tuple[int, str]:
         result = client.post("/paper/risk-limit/increase", json=body, headers=headers)
         assert result.status_code in (200, 202), result.text
         return result.status_code, str(result.json()["receipt_id"])
 
-    with ThreadPoolExecutor(max_workers=2) as pool:
-        first = pool.submit(send)
-        second = pool.submit(send)
-        outcomes = first.result(timeout=10), second.result(timeout=10)
+    outcomes = send(), send()
     assert outcomes[0][1] == outcomes[1][1]

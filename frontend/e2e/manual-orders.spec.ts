@@ -82,11 +82,7 @@ test("real Paper MARKET BUY/SELL and LIMIT partial→cancel reconcile exact serv
   expect(final.reserved_quote).toBe("0"); expect(final.filled_quantity).toBe("10");
   mkdirSync(evidence, { recursive: true });
   await capture(page, "paper-th-light-desktop.png");
-  await page.getByRole("row").filter({ hasText: "ยกเลิกแล้ว" }).getByRole("button", { name: "รายละเอียดออเดอร์" }).click();
-  await expect(page.getByRole("dialog")).toBeVisible();
-  await page.keyboard.press("Escape");
-  await expect(page.getByRole("dialog")).toBeHidden();
-  await expect(page.getByRole("row").filter({ hasText: "ยกเลิกแล้ว" }).getByRole("button", { name: "รายละเอียดออเดอร์" })).toBeFocused();
+  await expect(page.getByRole("button", { name: "รายละเอียดออเดอร์" })).toHaveCount(0);
   await page.setViewportSize({ width: 375, height: 844 });
   const table = page.getByRole("table");
   await expect.poll(() => table.evaluate(node => node.scrollWidth > node.parentElement!.clientWidth)).toBe(true);
@@ -169,7 +165,6 @@ test("logout clears the local journal; login rediscovers the owner's pending req
     await account.accountI18n.changeLanguage("en");
     document.documentElement.classList.add("dark");
   });
-  await page.getByRole("button", { name: "Risk details / settings", exact: true }).click();
   await page.setViewportSize({ width: 375, height: 844 });
   await expect(page.getByLabel("Paper trading", { exact: true })).toBeVisible();
   await page.setViewportSize({ width: 1440, height: 1000 });
@@ -191,7 +186,6 @@ test("logout clears the local journal; login rediscovers the owner's pending req
     const account = await import(/* @vite-ignore */ accountPath) as { accountI18n: { changeLanguage: (value: string) => Promise<unknown> } };
     await account.accountI18n.changeLanguage("th");
   });
-  await page.getByRole("button", { name: "Hide details", exact: true }).click();
   await page.setViewportSize({ width: 1440, height: 1000 });
   await expect(page.getByLabel("เทรด Paper", { exact: true })).toBeVisible();
   await page.setViewportSize({ width: 375, height: 844 });

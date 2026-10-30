@@ -81,9 +81,6 @@ from tiewtrade.core.orders import (
 )
 from tiewtrade.core.realtime_prices import Readiness, readiness
 from tiewtrade.core.risk_limits import RiskScope, RiskUnavailableError
-from tiewtrade.core.totp import code_for, step_at
-from tiewtrade.infra.auth import totp
-from tiewtrade.infra.crypto import KeyPurpose, KeySource
 from tiewtrade.infra.db import DatabaseRole, create_engine_for, user_session
 from tiewtrade.infra.db import session as db_session
 from tiewtrade.infra.db.session import market_data_session
@@ -103,7 +100,7 @@ from tiewtrade.infra.risk_limits.evaluation_requests import request_evaluation
 from tiewtrade.infra.risk_limits.policy import TransactionalRiskPolicy
 from tiewtrade.infra.risk_limits.prices import decode_frame
 from tiewtrade.infra.risk_limits.records import RiskAction, RiskSubmission
-from tiewtrade.infra.risk_limits.requests import authorize_increase, submit_request
+from tiewtrade.infra.risk_limits.requests import submit_request
 from tiewtrade.services.engine.paper_order_main import (
     ALTERNATE_ADMISSION_PRIORITY,
     CANDIDATE_LIMIT,
@@ -633,30 +630,7 @@ class Fixture(SourcePublisher):
                 revision,
                 None if amount is None else Money.of(amount, "USDT"),
             )
-            if action is not RiskAction.INCREASE:
-                receipt = await submit_request(session, submission)
-        if action is RiskAction.INCREASE:
-            # Isolated synthetic owner only, matching W4's real F-06 AUTH path.
-            # Enrollment consumes the preceding step; authorization consumes now.
-            keys = KeySource(KeyPurpose.TOTP_SECRET, "f18-profile", {"f18-profile": b"F" * 32})
-            secret = totp.new_secret()
-            async with user_session(self.auth, owner.user_id, role=DatabaseRole.AUTH) as session:
-                now = (await session.execute("SELECT clock_timestamp()")).scalar_one()
-                await totp.stage_secret(session, keys, secret)
-                if not await totp.confirm_secret(
-                    session, keys, presented=code_for(secret, step_at(now) - 1), now=now
-                ):
-                    raise RuntimeError("F18_FIXTURE_TOTP_ENROLLMENT_FAILED")
-                if (
-                    await totp.verify(
-                        session, keys, presented=code_for(secret, step_at(now)), now=now
-                    )
-                    is not totp.CodeOutcome.ACCEPTED
-                ):
-                    raise RuntimeError("F18_FIXTURE_TOTP_VERIFICATION_FAILED")
-                await authorize_increase(session, submission)
-            async with user_session(self.api, owner.user_id) as session:
-                receipt = await submit_request(session, submission)
+            receipt = await submit_request(session, submission)
         async with asyncio.timeout(60):
             while True:
                 async with user_session(self.api, owner.user_id) as session:

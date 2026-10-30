@@ -64,6 +64,18 @@ export function useDurableAttempt<T extends { key: string }, R>(options: Options
     if (attempt === null || !options.matches(value, attempt) || !options.terminal(value)) return;
     clearResolved(attempt.key);
   }, [attempt, options.matches, options.terminal, clearResolved]);
+  const discard = useCallback((key: string) => {
+    try {
+      const existing = journal.read(scope);
+      if (existing === null || existing.key !== key) return false;
+      journal.clear(scope, key);
+      setAttempt(null);
+      return true;
+    } catch {
+      setStorageError(true);
+      return false;
+    }
+  }, [journal, scope]);
   const send = (value: T, retry = false) => {
     if (gate.current || storageError) return false;
     try {
@@ -77,5 +89,5 @@ export function useDurableAttempt<T extends { key: string }, R>(options: Options
     } catch { setStorageError(true); return false; }
   };
   const error = mutation.error instanceof ApiRequestError ? mutation.error : null;
-  return { attempt, storageError, refusedAttemptKey, send, lookup, finish, busy: mutation.isPending, error };
+  return { attempt, storageError, refusedAttemptKey, send, lookup, finish, discard, busy: mutation.isPending, error };
 }

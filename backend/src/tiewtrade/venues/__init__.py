@@ -27,7 +27,7 @@ from tiewtrade.venues.errors import (
 )
 from tiewtrade.venues.fake import FakeCandleFeed, FakePriceFeed, FakeVenue
 from tiewtrade.venues.limits import CallCost, NoRateLimit, RateLimitGuard
-from tiewtrade.venues.order_books import ExecutionCapabilitySource
+from tiewtrade.venues.order_books import ExecutionCapabilitySource, ExecutionFeed
 from tiewtrade.venues.price_streams import PriceFeed
 from tiewtrade.venues.prices import DEFAULT_LATEST_PRICE_COST, Price, PriceSource
 from tiewtrade.venues.signing import RequestSigner
@@ -100,6 +100,17 @@ def live_execution_capability_source(
     guard: RateLimitGuard | None = None,
 ) -> ExecutionCapabilitySource:
     """Compose the public Spot capability reader behind the venue boundary."""
+    return live_execution_feed(client=client, clock=clock, timeout=timeout, guard=guard)
+
+
+def live_execution_feed(
+    *,
+    client: object | None = None,
+    clock: Callable[[], datetime],
+    timeout: timedelta,
+    guard: RateLimitGuard | None = None,
+) -> ExecutionFeed:
+    """Compose the public Spot depth/trade feed behind the venue boundary."""
     from tiewtrade.venues.binance_th import BinanceThTransport, IpWeightLimiter
     from tiewtrade.venues.binance_th.order_book import BinanceThOrderBookFeed
     from tiewtrade.venues.binance_th.stream_transport import BinanceThStreamTransport
@@ -167,6 +178,7 @@ __all__ = [
     "CandlePage",
     "CandleSource",
     "ExecutionCapabilitySource",
+    "ExecutionFeed",
     "FakeCandleFeed",
     "FakePriceFeed",
     "FakeVenue",
@@ -193,6 +205,7 @@ __all__ = [
     "live_candle_feed",
     "live_candle_source",
     "live_execution_capability_source",
+    "live_execution_feed",
     "live_price_feed",
     "live_wallet_factory",
     "public_rate_limit_guard",

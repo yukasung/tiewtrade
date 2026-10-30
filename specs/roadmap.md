@@ -12,12 +12,47 @@
 | **Planned** | ตกลงแล้วว่าจะทำ แต่ยังไม่มี spec |
 | **Spec Ready** | มีโฟลเดอร์ใน `specs/features/` และ `requirements.md`, `plan.md`, `validation.md` ผ่านการอนุมัติครบทั้งสามฉบับ **และ** ไม่มี Needs Clarification ที่เกี่ยวกับงานนี้ค้างอยู่ — ครบทุกข้อจึงเริ่มเขียนโค้ดได้ (ตาม `AGENTS.md`) |
 | **In Progress** | กำลังทำอยู่ |
-| **Development Complete** | พัฒนาและรีวิวเสร็จ ด่านที่ไม่เลื่อนผ่านครบ รอตรวจรับระบบในชุดที่ 9; ยังไม่รับรองพร้อมใช้งานจริง |
+| **Development Complete** | พัฒนาและรีวิวเสร็จ ด่านที่ไม่เลื่อนผ่านครบ รอตรวจรับรวมท้ายชุด/เกณฑ์ที่ยังค้างตาม testing หัวข้อ 7; ยังไม่รับรองพร้อมใช้งานจริง |
 | **Completed** | โค้ดทำงานได้จริง **และ** มีเทสต์ **และ** `validation.md` ผ่านครบ |
 
 **"มีไฟล์แล้ว" ไม่นับว่า Completed**
 
+### รวมตรวจท้ายแต่ละชุด — Approved 2026-10-27
+
+ใช้ [testing หัวข้อ 7](standards/testing.md#7-เลือกการตรวจตามผลกระทบและลดงานซ้ำ)
+เป็นกฎหลัก: แต่ละ feature ตรวจ targeted correctness/safety/regression, review,
+static checks และ required CI ตามผลกระทบ; รวมชุดยาวเมื่อพัฒนาและรีวิวครบทั้งชุด
+พร้อมด่านที่ไม่เลื่อนผ่านแล้ว บน candidate รวมที่นิ่ง ไม่รอทุก feature เป็น Completed
+การอนุมัตินี้แทนระยะรันเดิมในแผน/validation/คำสั่งที่ให้ตรวจยาวราย feature
+หรือให้ทุกชุดรอชุดที่ 9 โดยไม่เปลี่ยนเกณฑ์หรือผลเดิม
+
+**เป้าหมายเวลา — Approved 2026-10-27:** รอบตรวจชุดยาวปกติประมาณ 1–2 ชั่วโมง
+เป็นงบวางแผน ไม่ใช่เพดานตัดการตรวจ; หากคาดว่าเกิน 2 ชั่วโมง ให้ตรวจงานซ้ำและ
+แจ้งเหตุผล/ขอบเขต/เวลาคาดหมายก่อนเริ่มตาม testing หัวข้อ 7 ไม่เพิ่มจุดขออนุมัติใหม่
+แยกรอบระยะยาวตามเกณฑ์หรือความเสี่ยงที่จำเป็น โดยไม่ลดเกณฑ์หรือระยะต่อเนื่อง
+งานที่ยังตรวจไม่ครบคง Pending Full Validation และเก็บผล Failed/Partial เดิม
+
+| จุดตรวจร่วม | ขอบเขต / งานค้าง |
+|---|---|
+| ท้ายชุดที่ 4 — Paper Trading | หลัง F-13–F-17 พัฒนาและรีวิวครบ: full regression, Paper integration/end-to-end และเกณฑ์ชุดยาวที่เกี่ยวข้อง เช่น F-14 V-17, F-15 V-19/W1–W4, F-16 V-20; ใช้เกณฑ์/profile ที่อนุมัติแล้ว ไม่สร้าง profile ใหม่เอง |
+| ท้ายชุดที่ 5 — ความเสี่ยงและความปลอดภัย | หลัง F-18–F-19 พัฒนาและรีวิวครบ: รวมเกณฑ์ชุดยาวของ risk/stop/recovery และ Paper integration ที่พร้อม เช่น F-18 V-21 และ F-16 V-18 ที่พึ่ง F-18; ไม่เลื่อน safety ที่จำเป็นต่อพฤติกรรมที่เปิดใช้งาน |
+| ท้ายชุดถัดไป | รวมตรวจ feature ในชุดนั้นตามเกณฑ์เดิม; รายการที่รอ dependency ให้ระบุ feature ที่รอและ checkpoint ถัดไปใน validation/ทะเบียนเดิม |
+| ชุดที่ 9 | ตรวจรับระบบรวมก่อนใช้งานจริง พร้อมเกณฑ์ค้างและ F-11 capacity/ระยะยาวเดิม; ใช้หลักฐานท้ายชุดที่ยัง valid ไม่รันทุกชุดยาวซ้ำอัตโนมัติ |
+
+เกณฑ์ที่ยังรอ dependency/profile ที่อนุมัติให้คง Pending Full Validation/Pending Dependency
+ไม่ถือว่าทั้ง feature/ชุดผ่านครบ คงผล Failed/Partial และสถานะปัจจุบันจนมีหลักฐานจริง
+ทะเบียนเดิมด้านล่างใช้ติดตามต่อ โดยอ่านกำหนดเวลาร่วมกับตารางนี้;
+ข้อความอ้างชุดที่ 9 ในบันทึกเดิมเป็นประวัติก่อน amendment นี้ ไม่ใช่คำสั่งให้รอทุกงาน
+
 ### การตรวจรับระบบหลังชุดที่ 8 (เจ้าของอนุมัติ 2026-10-11)
+
+**ปรับการเลือก full regression — Approved 2026-10-26:** ใช้กับงานปัจจุบันและงานถัดไป
+ตาม [testing หัวข้อ 7](standards/testing.md#7-เลือกการตรวจตามผลกระทบและลดงานซ้ำ):
+ไม่บังคับชุดเต็มก่อน merge ทุก feature ใช้ targeted regression และ static checks
+ตามผลกระทบ; บังคับ full regression เมื่อเปลี่ยนส่วนกลาง กระทบหลายระบบ ระบุขอบเขต
+ผลกระทบไม่ได้ หรือ targeted Tests ไม่เพียงพอ และที่ release checkpoint.
+คง safety/integration/concurrency tests ที่เกี่ยวข้องและ required CI; ไม่เปลี่ยนผล
+validation เดิมหรือสถานะ feature จากการปรับ workflow นี้
 
 **ใช้กับงานถัดไปทั้งหมด — Approved 2026-10-24:** กฎ testing หัวข้อ 7 เรื่องไม่รัน
 workload/endurance/timed smoke อัตโนมัติท้ายงาน ใช้กับทุก feature รวม F-37,
@@ -348,6 +383,7 @@ Development Complete เป็น Completed เมื่อเกณฑ์ขอ
 | F-12 history window | RQ-37..42 / V-H1..8 | **Passed 2026-10-22** — [acceptance progress](features/2026-10-12-candlestick-chart/evidence/2026-10-14-acceptance-progress.md): backfill ครบและ stored history 40/40 contiguous/unique; API traversal ทุกคู่ × 8 TF ถึง `display_start`, page overlap ตรงกัน. [หลักฐาน 2026-10-22](features/2026-10-12-candlestick-chart/evidence/2026-10-22-live-preview-recovery.md): 16/16 live series สดและกู้ lease หลัง host sleep สำเร็จ; browser session จริงผ่าน pan→pagination 1,000 rows, controlled Retry-After→manual retry ไป API จริง และ reset กลับล่าสุดโดยไม่ยิง request เพิ่ม |
 | F-12 workload/resource | V-17 ชุดเต็มทั้ง LEGACY/PREPARED และส่วนสรุป V-18 ที่พึ่ง V-17 | **Passed 2026-10-23** — [deterministic full rerun](features/2026-10-12-candlestick-chart/evidence/2026-10-23-v17-full-rerun.md) ผ่าน LEGACY/PREPARED 600s หลัง warmup 60s, 20 clients, 100 lifecycle cycles, fault/recovery 5/5 series และทุก threshold เดิม; [รอบแรกที่ Failed / Partial](features/2026-10-12-candlestick-chart/evidence/2026-10-23-v17-full-workload.md) ยังคงเก็บไว้. ส่วน V-18 ที่พึ่ง V-17 ปิดแล้ว; [PR #24](https://github.com/yukasung/tiewtrade/pull/24) merge เข้า main เป็น `27a7718` แล้ว โดย CI ของ candidate ผ่าน 6/6; [post-merge CI 39934274551](https://github.com/yukasung/tiewtrade/actions/runs/39934274551) ผ่านครบ 6/6 แล้ว และไม่ปิด C3/C5, C4/C6 หรือ release gates อื่น |
 | F-16 manual order entry | V-18 / V-20 | **Development Complete — Pending Integration/Full Validation**; merge PR#36 เป็น1f16ddb และ post-merge CI40208544618ผ่าน6/6. V-19ผ่าน; V-18รอ F-18 ก่อน production activation และ V-20 **Pending Full Validation** ที่release checkpoint/ชุดที่9 โดยคงเกณฑ์ F-15 W1–W4 และรอ approved integrated release profile — [validation](features/2026-10-25-manual-order-entry/validation.md) |
+| F-18 wallet risk limits | V-21 / V-22 / V-23 | V-21 **Paper Validation Passed locally (R34, 2026-10-30)**: W1–W4, 100 owners ×20 orders, fault/endurance, restore, financial/idempotency oracles, affected regression/static checks and final review passed on the final runtime; historical Failed/Partial evidence is preserved in [M5](features/2026-10-25-wallet-risk-limits/evidence/m5-final-candidate.md). Required remote CI and manual acceptance remain Pending. V-22/V-23 **Pending Dependency**: bot/Live authority and notification features. Production/Live activation remains closed; F-18 is not Completed until those gates are satisfied. |
 | F-38 runtime/workload/restore | V-12/V-13/V-15 | **Passed — F-38 Completed 2026-10-27** — current C1 readiness 16, BTC workload 8, combined steady/dirty phase ละ 3,600s, S1–S5/C4/C6 ผ่าน; reuse approved pre-0030 restore ตาม provenance. Final candidate `aabdfb9` ผ่าน required push/PR CI 12/12 jobs และ PR #38 merge เป็น `bf7b847`; [current crosswalk](features/2026-10-15-supported-pairs-reduction/evidence/release-20261026-merge/README.md) |
 | F-13 reset/recovery closure | V-6..V-10/V-13 | **Passed 2026-10-21** — reconcile กับ F-15 V-14/V-15 และ final candidate แล้ว: real-source reset, controlled races, source conflict/error, cancellation/timeout, lost acknowledgement, TCP disconnect และ process-kill ก่อน/หลัง RESET commit ผ่านโดยไม่มีข้อมูลหรือทุนซ้ำ; required CI run #124 attempt 2 และ post-merge run #125 ผ่านครบ ตาม [validation](features/2026-10-15-paper-wallet/validation.md) |
 | F-11 โหลดและระยะยาว | R2-C2/C3/C5 รอบเต็ม; C4 ส่วน trace/fairness ที่ต้องใช้รอบเต็ม; C6 และ R2-G7/D7 เฉพาะส่วนที่พึ่ง capacity | C2 rerun ผ่าน 3,600.016s ใน [release checkpoint เดิม](features/2026-10-10-backend-indicators/profiling/release-20261014/README.md); R2-C1 และ R2-7 ผ่านซ้ำ 2026-10-23 ตาม [validation](features/2026-10-10-backend-indicators/validation.md). C3/C5 ยังไม่รัน, C4 ยังไม่ครบ และ C6 ยัง Failed; ต้องพิสูจน์ด่านที่เหลือตามเกณฑ์เดิม |
@@ -401,3 +437,15 @@ D1 first-release amendment Passedหลังแก้numeric parity/evidence tr
 แต่ตามลำดับนี้ Live อยู่ท้าย เพราะต้องมีกฎความเสี่ยง หยุดฉุกเฉิน กันสั่งซ้ำ และกระทบยอด
 ครบก่อน — ทางเลือกคือ **ปล่อย Paper ให้คนใช้ก่อน แล้วเปิด Live ตามทีหลัง**
 ซึ่งได้ผู้ใช้จริงมาช่วยทดสอบก่อนที่จะมีเงินจริงเข้ามาเกี่ยวข้อง
+
+F-18 follow-up (2026-10-28): source-lease SQL roundtrip reduction passed206affected
+regressions plus21focused checks and relevant static checks. A bounded comparison
+showed partial progress improvement but persistent financial-fence timeouts;
+W1/W2/W3 remain Pending Full Validation, not Completed. Details in
+[the F-18 checkpoint](features/2026-10-25-wallet-risk-limits/evidence/m5-final-candidate.md).
+F-18 W1r20:2000baseline completed; measured60s cycle deadline failed with342
+commands/42cycles completed. API pool checkout was the terminal wait; root cause
+not yet isolated. V21 remains Failed/Pending Full Validation; W2/W3 not run.
+F-18 W1r21: approved R10/source-clock experiment still failed60s cycle after
+425commands/66cycles. Unresolved command retried3times; typed defer reason needs
+evidence. Defaults remain off; W2/W3 not run; Failed/Pending Full Validation.

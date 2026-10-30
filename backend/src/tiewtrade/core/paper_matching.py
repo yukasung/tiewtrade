@@ -115,6 +115,7 @@ def admit_order(
     reference_price: Money,
     policy: AdmissionPolicy | None,
     catalog: CatalogSnapshot,
+    filter_reference_price: Money | None = None,
 ) -> MatchingState:
     """Validate funds after other-pair reserves; caller applies F-14 effects before next command."""
     aware(now)
@@ -151,13 +152,23 @@ def admit_order(
         if isinstance(intent.size, BaseSize)
         else quantity_for_budget(intent.size.amount, price, constraints.quantity_step)
     )
+    filter_price = filter_reference_price if constraints.average_price_minutes else price
+    if constraints.average_price_minutes and filter_price is None:
+        raise SafetyUnavailableError("average-price filter reference unavailable")
+    assert filter_price is not None
     notional = money_for_quantity(
-        price,
+        filter_price,
         quantity,
         asset=state.pair.base,
         rounding=RoundingDirection.AWAY_FROM_ZERO,
     )
-    constraints.check(intent, quantity, notional)
+    constraints.check(
+        intent,
+        quantity,
+        notional,
+        filter_reference_price=filter_reference_price,
+        active_orders=sum(not order.status.terminal for order in state.orders),
+    )
     policy.check(intent)
     candidate = OrderState(
         intent,

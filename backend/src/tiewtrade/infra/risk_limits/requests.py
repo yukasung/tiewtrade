@@ -105,8 +105,11 @@ async def receipt_by_id(
 async def authorize_increase(session: UserSession, submission: RiskSubmission) -> RiskReceipt:
     """Call in the AUTH transaction that consumed F-06 TOTP; never from API role."""
     checked = _owner(session, submission)
-    if submission.action is not RiskAction.INCREASE:
-        raise RiskAuthorizationError("authorization is only for an exact increase action")
+    if (
+        submission.scope.mode is not TradingMode.LIVE
+        or submission.action is not RiskAction.INCREASE
+    ):
+        raise RiskAuthorizationError("authorization is only for an exact Live increase action")
     # AUTH role intentionally cannot read the request inbox or applied settings.
     params: dict[str, object] = {
         "id": uuid4(),
@@ -176,7 +179,11 @@ async def submit_request(session: UserSession, submission: RiskSubmission) -> Ri
         raise RiskConflictError("risk request key already used differently")
     if previous is not None and not previous.authorization_only:
         return previous
-    if submission.action is RiskAction.INCREASE and previous is None:
+    if (
+        submission.scope.mode is TradingMode.LIVE
+        and submission.action is RiskAction.INCREASE
+        and previous is None
+    ):
         raise RiskAuthorizationError("exact TOTP authorization receipt required")
     request_id = uuid4() if previous is None else previous.receipt_id
     try:

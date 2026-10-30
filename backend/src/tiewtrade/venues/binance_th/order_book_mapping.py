@@ -3,8 +3,9 @@
 import json
 from datetime import datetime
 from hashlib import sha256
+from itertools import pairwise
 
-from tiewtrade.core.money import Money, Quantity
+from tiewtrade.core.money import Money, Quantity, Scalar
 from tiewtrade.core.order_book import BookLevel, BookState
 from tiewtrade.core.orders import OrderConstraints, OrderType
 from tiewtrade.core.positions import ExecutionSide, PositionPair
@@ -23,6 +24,7 @@ from tiewtrade.venues.order_books import (
     DepthUpdate,
     ExecutionCapability,
     TradeObservation,
+    TradeSample,
 )
 from tiewtrade.venues.symbols import Symbol
 
@@ -127,6 +129,40 @@ def observation_from_stream(
     )
 
 
+def trade_samples_from_payload(symbol: Symbol, payload: object) -> tuple[TradeSample, ...]:
+    samples: list[TradeSample] = []
+    for value in _sequence(payload):
+        row = _mapping(value)
+        if set(row) != {"a", "p", "q", "f", "l", "T", "m"} or type(row["m"]) is not bool:
+            raise VenueProtocolError()
+        aggregate = _integer(row["a"])
+        first, last = _integer(row["f"]), _integer(row["l"])
+        with _readable():
+            price = Money.of(_text(row["p"]), symbol.quote)
+            quantity = Quantity.of(_text(row["q"]), symbol.base)
+        if aggregate < 0 or first < 0 or last < first or price.amount <= 0 or quantity.amount <= 0:
+            raise VenueProtocolError()
+        samples.append(
+            TradeSample(
+                symbol,
+                aggregate,
+                first,
+                last,
+                price,
+                quantity,
+                moment_from_millis(row["T"]),
+            )
+        )
+    if any(
+        current.aggregate_id != previous.aggregate_id + 1
+        or current.first_trade_id != previous.last_trade_id + 1
+        or current.occurred_at < previous.occurred_at
+        for previous, current in pairwise(samples)
+    ):
+        raise VenueProtocolError()
+    return tuple(samples)
+
+
 def capability_from_pair(
     symbol: Symbol, payload: object, received_at: datetime
 ) -> ExecutionCapability:
@@ -160,19 +196,44 @@ def capability_from_pair(
         raise VenueProtocolError()
     if type(notional["applyToMarket"]) is not bool or _integer(notional["avgPriceMins"]) < 0:
         raise VenueProtocolError()
-    unsupported = set(filters) - required
+    supported = required | {"PERCENT_PRICE", "MAX_NUM_ORDERS"}
+    unsupported = set(filters) - supported
     if row.get("status") != "TRADING":
         unsupported.add("SYMBOL_NOT_TRADING")
+    average_minutes = _integer(notional["avgPriceMins"])
+    percent = filters.get("PERCENT_PRICE")
+    percent_down = percent_up = None
+    percent_minutes = 0
+    if percent is not None:
+        if set(percent) != {
+            "filterType",
+            "avgPriceMins",
+            "multiplierDown",
+            "multiplierUp",
+        }:
+            raise VenueProtocolError()
+        percent_minutes = _integer(percent["avgPriceMins"])
+        with _readable():
+            percent_down = Scalar.of(_text(percent["multiplierDown"]))
+            percent_up = Scalar.of(_text(percent["multiplierUp"]))
+        if percent_minutes <= 0:
+            raise VenueProtocolError()
+    maximum_orders = None
+    order_limit = filters.get("MAX_NUM_ORDERS")
+    if order_limit is not None:
+        if set(order_limit) != {"filterType", "maxNumOrders"}:
+            raise VenueProtocolError()
+        maximum_orders = _integer(order_limit["maxNumOrders"])
+        if maximum_orders <= 0:
+            raise VenueProtocolError()
     rules: list[OrderConstraints] = []
     for kind in (OrderType.MARKET, OrderType.LIMIT):
         failures = set(unsupported)
         if kind.value not in offered:
             failures.add("ORDER_TYPE_UNAVAILABLE")
         # No invented average-price input or fallback to the latest quote.
-        if kind is OrderType.MARKET and (
-            notional["applyToMarket"] is not True or notional["avgPriceMins"] != 0
-        ):
-            failures.add("MARKET_NOTIONAL_REFERENCE_UNAVAILABLE")
+        if kind is OrderType.MARKET and notional["applyToMarket"] is not True:
+            failures.add("MARKET_NOTIONAL_NOT_APPLIED")
         with _readable():
             rules.append(
                 OrderConstraints(
@@ -187,6 +248,14 @@ def capability_from_pair(
                     maximum_price=Money.of(_text(price["maxPrice"]), symbol.quote),
                     supported_types=(kind,),
                     unsupported_rules=tuple(sorted(failures)),
+                    average_price_minutes=(
+                        average_minutes if kind is OrderType.MARKET else percent_minutes
+                    ),
+                    percent_price_multiplier_down=(
+                        percent_down if kind is OrderType.LIMIT else None
+                    ),
+                    percent_price_multiplier_up=(percent_up if kind is OrderType.LIMIT else None),
+                    maximum_open_orders=maximum_orders,
                 )
             )
     return ExecutionCapability(symbol, version, received_at, rules[0], rules[1], document)

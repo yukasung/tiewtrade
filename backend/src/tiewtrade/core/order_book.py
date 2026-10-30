@@ -7,6 +7,8 @@ from tiewtrade.core.money import Money, Quantity
 from tiewtrade.core.orders import OrderError, SourceUnavailableError, aware
 from tiewtrade.core.positions import ExecutionSide, PositionPair
 
+MAX_BOOK_AGE = timedelta(seconds=30)
+
 
 @dataclass(frozen=True, slots=True)
 class BookLevel:
@@ -73,10 +75,10 @@ class BookState:
             not self.ready
             or now < self.received_at
             or now < self.verified_at
-            or now - self.verified_at > timedelta(seconds=1)
+            or now - self.verified_at > MAX_BOOK_AGE
             or (
                 self.source_at is not None
-                and (self.source_at > now or now - self.source_at > timedelta(seconds=1))
+                and (self.source_at > now or now - self.source_at > MAX_BOOK_AGE)
             )
         ):
             raise SourceUnavailableError("book readiness cannot be proved")

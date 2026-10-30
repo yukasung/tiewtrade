@@ -1,6 +1,14 @@
 # F-18 — เพดานความเสี่ยงต่อกระเป๋า — Plan
 
 สถานะ: **Approved** — เจ้าของตอบ “approve” ต่อ plan/validation ฉบับแก้ F18-R1..R4 วันที่ 2026-10-26; อนุมัติปรับเวลา validation W1/W2/W3 เป็น 10/5/30 นาที วันที่ 2026-10-27
+แผน UI ล่าสุด: **Approved 2026-10-30 — ฟอร์มเพดานขาดทุนแบบสั้น**; ดู [Compact Risk Limit Form Plan](compact-risk-limit-form-plan-amendment.md)
+แผน Recovery UI ล่าสุด: **Approved 2026-10-30 — รวม recovery ไว้ใน input/Save**; ดู [Compact Risk Recovery UI Plan](compact-risk-recovery-ui-plan-amendment.md)
+แผนซ่อน Recovery status: **Approved 2026-10-30**; ดู [Hidden Recovery Status Plan](hidden-recovery-status-plan-amendment.md)
+แผน Stale recovery auto-clear: **Approved 2026-10-30**; ดู [Stale Recovery Auto-clear Plan](stale-recovery-auto-clear-plan-amendment.md)
+แผน Fulfilled recovery auto-clear: **Approved 2026-10-30**; ดู [Fulfilled Recovery Auto-clear Plan](fulfilled-recovery-auto-clear-plan-amendment.md)
+แผน Paper INCREASE no-TOTP: **Approved 2026-10-31**; ดู [Paper Increase No-TOTP Plan](paper-increase-no-totp-plan-amendment.md)
+
+แผนซ่อน Ready status: **Approved 2026-10-31**; ดู [Hide Ready Status Plan](hide-ready-status-plan-amendment.md)
 เกณฑ์ปัจจุบัน: **R32 Approved 2026-10-29 — Paper fixture 5Hz**; ดู [amendment](paper-source-cadence-amendment.md) ซึ่งแทนเฉพาะ 10Hz ในข้อความเก่า
 โหมดตรวจรับปัจจุบัน: **R33 Approved 2026-10-29 — explicit child publisher** ตาม [amendment](child-acceptance-mode-amendment.md); ใช้เกณฑ์ล่าสุดด้านล่าง
 วันที่: 2026-10-25
@@ -340,6 +348,33 @@ confirmation ของ reset บอกว่าขาดทุนเดิมถ
 INCREASE มี TOTP prompt ผ่าน auth headerเดิม; reset/decrease ไม่มี TOTP เพิ่ม
 alert พัก5นาทีแยกจาก market warning60s และ breach/cancel issue ไม่รอครบ5นาที
 ไม่สร้าง notification center หรืออ้างว่าส่ง Email/Telegram/LINE แล้ว
+
+### F18 UI placement clarification — 2026-10-30
+
+สถานะ: **Approved — เจ้าของสั่งเริ่มย้ายการตั้งค่าไปหน้าจัดการบัญชีวันที่ 2026-10-30**
+
+- ใช้ `RiskLimitPanel` เดิมในหน้า `/trading-account` ต่อจาก Paper wallet เพื่อรวมการตั้งค่า
+  ระดับบัญชีไว้ที่เดียว; ไม่สร้างฟอร์ม เงิน หรือ recovery protocol ชุดใหม่
+- `/paper/trade` แสดงค่าเพดานปัจจุบันแบบย่อเท่านั้น และเมื่อยังไม่ตั้งค่าให้มีลิงก์ไป
+  `/trading-account`; blocking reason และ risk-stop ที่จำเป็นต่อการตัดสินใจส่งออเดอร์ยังอยู่
+- mapping ใช้ `ComponentCard` เดิมที่ปรับจาก
+  `references/admin-template/src/components/common/ComponentCard.tsx` และรูปแบบลิงก์จาก
+  `references/admin-template/src/components/cards/card-with-link/CardLinkOne.tsx`
+- ไม่เปลี่ยน API/schema, owner/mode scope, Money, TOTP policy, latch/reset หรือ Live activation
+
+### F18 compact risk-card clarification — 2026-10-30
+
+สถานะ: **Approved — เจ้าของอนุมัติแผนลดความซับซ้อนและยืนยันไม่เพิ่มค่าคำนวณเงินวันที่ 2026-10-30**
+
+- หน้า Trading account แสดงเฉพาะ limit, adjusted loss, readiness/latch status และเวลา
+  ประเมินล่าสุด; ไม่แสดง “เพดานคงเหลือ” เพราะ API ไม่มี authoritative value และห้ามคำนวณ
+  เงินเพิ่มใน browser
+- allowance, baseline, adjusted realized, revision, episode และ timestamps ทางเทคนิคยังเข้าถึง
+  ได้ผ่าน disclosure ที่ปรับจาก admin-template; stop effects และ recovery details แสดงตามสถานะ
+- สถานะปกติมีปุ่มหลัก “ปรับเพดาน” หนึ่งปุ่ม; decrease/increase เลือกใน modal เดิม,
+  reset อยู่ในการดำเนินการเพิ่มเติม และ refresh แสดงเฉพาะ failure/unavailable
+- คง durable journal, UNKNOWN/by-key/retry identity, TOTP สำหรับ increase, polling, Money,
+  API/schema และ financial behavior เดิมทั้งหมด
 
 ## 7. Milestones และการตรวจ
 
@@ -1014,6 +1049,14 @@ fresh price BTC/USDT, ETH/USDT อย่างละ5Hzใน F18 Paper fixture 
 100×20, command load, freshness, risk/processing SLA, safety, durations/resources.
 ผล10Hzเดิมไม่เปลี่ยนเป็นPassed; ต้องมีหลักฐาน5Hzสำหรับcandidateสุดท้ายก่อนรับรอง.
 R31childยังdiagnostic-only, ไม่เริ่มworkloadจากการปรับนี้.
+
+### Local Paper manual acceptance — Approved 2026-10-30
+
+เจ้าของอนุมัติ [local Paper manual-acceptance activation](local-paper-manual-activation-amendment.md)
+เพื่อเปิด protocol ชั่วคราวบนฐานข้อมูล Docker Compose ของเครื่องพัฒนาเท่านั้น.
+Operator เปิดตามลำดับ publication → financial → admission หลังตรวจ watermark และ
+Paper evaluation READY; ปิดย้อนลำดับเมื่อจบ. API/worker ไม่ได้รับ migrator credential,
+Live และ production admission ยังคงปิด และผลนี้ไม่แทน V-21.
 
 
 ### Publisher failure evidence — approved follow-up after R34 W3

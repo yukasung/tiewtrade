@@ -136,7 +136,7 @@ async def test_missing_corrupt_overwritten_and_stale_inputs_fail_closed(
                 await read_inputs(session, PAIR, after=book.input_id - 1)
         async with market_data_session(engine) as session:
             await session.execute("""UPDATE market_execution_state
-              SET verified_at=clock_timestamp()-interval '2 seconds' WHERE base='BTC'""")
+              SET verified_at=clock_timestamp()-interval '31 seconds' WHERE base='BTC'""")
             await renew_book_writer(session, lease)
         async with user_session(engine_engine, uuid4(), role=DatabaseRole.ENGINE) as session:
             with pytest.raises(SourceUnavailableError):

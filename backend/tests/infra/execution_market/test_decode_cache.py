@@ -58,7 +58,7 @@ async def test_warm_cache_still_rejects_changed_source(
             "generation": "generation=generation+1",
             "lease": "lease_until=clock_timestamp()-interval '1 second'",
             "ready": "ready=false",
-            "verified": "verified_at=clock_timestamp()-interval '2 seconds'",
+            "verified": "verified_at=clock_timestamp()-interval '31 seconds'",
         }
         async with market_data_session(market) as session:
             if fault == "missing":

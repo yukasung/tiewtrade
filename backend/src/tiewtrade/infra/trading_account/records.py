@@ -12,10 +12,6 @@ class TradingAccountError(InfraError):
     code: ClassVar[str] = "TRADING_ACCOUNT_INPUT_REJECTED"
 
 
-class TradingAccountKeyUnavailableError(TradingAccountError):
-    code: ClassVar[str] = "TRADING_ACCOUNT_KEY_UNAVAILABLE"
-
-
 class TradingAccountActivityUnknownError(TradingAccountError):
     code: ClassVar[str] = "TRADING_ACCOUNT_ACTIVITY_UNKNOWN"
 

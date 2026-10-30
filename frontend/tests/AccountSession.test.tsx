@@ -151,7 +151,7 @@ it("real panels ignore late account responses after identity switch", async () =
     </AccountSession>
   );
   const view = render(panels(identity));
-  await waitFor(() => expect(pending).toHaveLength(3));
+  await waitFor(() => expect(pending).toHaveLength(4));
   old = false;
   view.rerender(panels({ ...identity, user_id: "new" }));
   await screen.findByText("ยังไม่ได้เลือกประเภทการใช้งาน");

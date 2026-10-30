@@ -26,9 +26,8 @@ async function register(page: Page) {
   return identity.user_id;
 }
 async function setLimit(page: Page, amount = "10") {
-  await page.getByRole("button", { name: "ตั้งเพดาน", exact: true }).click();
-  await page.getByRole("dialog").getByLabel("จำนวนเงิน (USDT)").fill(amount);
-  await page.getByRole("dialog").getByRole("button", { name: "ยืนยัน", exact: true }).click();
+  await page.getByLabel("เพดานขาดทุน (USDT)").fill(amount);
+  await page.getByRole("button", { name: "บันทึก", exact: true }).click();
   await expect.poll(async () => (await snapshot(page)).amount).toBe(amount);
   await expect.poll(async () => (await snapshot(page)).reason).toBe("READY");
 }
@@ -163,8 +162,8 @@ test("real AUTH commit survives API disconnect; browser replays authorization-on
   await expect(page.getByTestId("totp-state")).toHaveText("เปิดอยู่");
   await page.getByRole("link", { name: "เทรด Paper", exact: true }).click();
   expect((await page.request.post(`${control}/disconnect-intake`, { data: { user_id: owner } })).status()).toBe(204);
-  await page.getByRole("button", { name: "เพิ่มเพดาน", exact: true }).click();
-  await page.getByRole("dialog").getByLabel("จำนวนเงิน (USDT)").fill("200");
+  await page.getByLabel("เพดานขาดทุน (USDT)").fill("200");
+  await page.getByRole("button", { name: "บันทึก", exact: true }).click();
   await page.getByRole("dialog").getByLabel("รหัสปัจจุบันจากแอปยืนยันตัวตน").fill(codeFor(secret, stepAt(Date.now())));
   await page.getByRole("dialog").getByRole("button", { name: "ยืนยัน", exact: true }).click();
   await expect(page.getByText(/บันทึกการอนุญาตแล้ว แต่ยังไม่บันทึกคำขอ/)).toBeVisible();

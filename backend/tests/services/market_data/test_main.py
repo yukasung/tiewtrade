@@ -42,7 +42,9 @@ async def test_continuous_runner_composes_prices_and_candles(
 
     monkeypatch.setenv("TIEWTRADE_REDIS_URL_MARKET_DATA", "redis://127.0.0.1:56379/0")
     started = asyncio.Event()
-    canceled = asyncio.Event()
+    price_canceled = asyncio.Event()
+    book_started = asyncio.Event()
+    book_canceled = asyncio.Event()
     engine = create_engine_for(DatabaseRole.MARKET_DATA)
     feed = FakePriceFeed(snapshots={})
 
@@ -55,17 +57,36 @@ async def test_continuous_runner_composes_prices_and_candles(
             try:
                 await asyncio.Event().wait()
             finally:
-                canceled.set()
+                price_canceled.set()
+
+    class BookSupervisor:
+        def __init__(self, *args: object) -> None:
+            assert args[1] is execution_feed
+
+        async def run(self) -> None:
+            book_started.set()
+            try:
+                await asyncio.Event().wait()
+            finally:
+                book_canceled.set()
 
     async def one_round(*args: object) -> RoundSummary:
-        await started.wait()
+        await asyncio.gather(started.wait(), book_started.wait())
         raise asyncio.CancelledError()
 
     monkeypatch.setattr(main, "QuoteSupervisor", Supervisor, raising=False)
+    monkeypatch.setattr(main, "ExecutionBookSupervisor", BookSupervisor, raising=False)
     monkeypatch.setattr(main, "run_round", one_round)
+    execution_feed = object()
     try:
         with pytest.raises(asyncio.CancelledError):
-            await main.serve(source=FakeVenue(), engine=engine, price_feed=feed)
-        assert canceled.is_set()
+            await main.serve(
+                source=FakeVenue(),
+                engine=engine,
+                price_feed=feed,
+                execution_feed=execution_feed,  # type: ignore[arg-type]
+            )
+        assert price_canceled.is_set()
+        assert book_canceled.is_set()
     finally:
         await engine.dispose()

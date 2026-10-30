@@ -9,7 +9,7 @@ Branch: feature/f-15-paper-order-matching
 
 ใช้คำตัดสิน NC-F15-01–06 ที่อนุมัติ 2026-10-18: MARKET BUY แบบ quote budget,
 MARKET SELL แบบ base quantity, LIMIT/GTC, depth/trades, latency 100ms,
-book verification ไม่เกิน 1s และ PAPER_STANDARD_V1 ต่อ episode
+book verification ไม่เกิน 30s ตาม NC-F15-11 และ PAPER_STANDARD_V1 ต่อ episode
 รายละเอียดนโยบายอยู่ใน requirements ไม่สร้างค่าปริยายอีกชุดในแผน
 NC-F15-07 Closed: §3 ใช้สูตร amendment ที่อนุมัติแล้วพร้อมแผน/validation นี้
 
@@ -82,6 +82,8 @@ safety dependencies ยังไม่ครบ ห้ามใช้ `skip_risk
   golden trace ต้องตรวจทั้ง A/C/V และ queue ไม่ใช้เพียงยอดเงินปลายทาง
 - input ที่ไม่พอระบุ ordering/side หรือระดับราคานอกขอบเขต snapshot ไม่ใช่ zero liquidity
   ที่รับรองได้: ไม่สร้าง fill นอกขอบเขตนั้น และยก uncertainty เป็น source reason
+- merged input order ใช้ combined-stream receive order ตาม NC-F15-12; ตรวจ continuity
+  ทีละหนึ่งเฉพาะ depth `U/u`, ส่วน trade ID ใช้ bounded economic-identity dedupe
 - rebase หลัง gap ตาม requirements โดยเก็บ rebase fact/เวลา/generation/คิวใหม่ที่ replay ได้
   ไม่จับคู่ย้อนหลังของช่วงหาย และไม่ใช้ snapshot ใหม่ล้างผลเงิน/consumption ที่ commit ไปแล้ว
 - common execution result แปลงเป็น F-14 ExecutionFact; sequence execution ต่อ episode
@@ -286,6 +288,14 @@ commit/push/merge ทำเมื่อเจ้าของสั่งเท�
 เจ้าของอนุมัติให้คง revision ของ terminal history เดิม และอัปเดตเฉพาะ active orders/รายการที่เพิ่งจบใน transaction ปัจจุบัน พร้อม reservation ที่ปล่อยเป็นศูนย์อย่าง atomic. Terminal revision ต้องไม่เกิน activity revision; projection/reservation ของรายการเดียวกันต้องสอดคล้องกัน. ใช้ additive migration ปรับ F-13 reset coherence โดยรักษา source proof, event linkage, owner isolation และการปฏิเสธข้อมูลผิด/ไม่ครบ; ไม่แก้ migration 0037. Downgrade ต้องปฏิเสธเมื่อมีข้อมูลที่ contract เดิมรับไม่ได้ ไม่ rewrite ประวัติ.
 
 ใช้ `matching_storage.persist_checkpoint` และ `paper_wallet_reset_readiness` เดิม; เพิ่ม real PostgreSQL safety tests สำหรับ active/current-terminal revision, old terminal rows ไม่ถูกเขียนซ้ำ, corruption, reset, correction, rollback/retry และ migration. กฎเงิน/การจับคู่และเกณฑ์ W1–W4 คงเดิม; ผลที่ได้รับผลกระทบต้องตรวจใหม่ก่อน Completed.
+
+### NC-F15-13 — Approved Binance TH execution filters (2026-10-30)
+
+ทำตาม [amendment](binance-th-execution-filters-amendment.md): ใช้ public aggregate-trade
+bootstrap + live trade stream สร้าง reference ที่ versioned กับ execution input, ขยาย
+OrderConstraints/codec สำหรับ percent range, average window และ max open orders แล้วตรวจใน
+owner transaction ก่อน accept พร้อม fail-closed recheck ที่ matching. ใช้ Money/Quantity
+และของเดิมด้าน idempotency/owner lock; ไม่เพิ่ม schema หรือ network call ใน API/engine.
 
 
 ### F18 integrated runtime scheduling exception — Approved2026-10-27

@@ -1,13 +1,11 @@
 """Read and select the owner's initial use in an existing user transaction."""
 
-from tiewtrade.infra.api_keys.records import ApiKeyStatus
 from tiewtrade.infra.api_keys.storage import summaries_for
 from tiewtrade.infra.db.errors import DuplicateValueError
 from tiewtrade.infra.db.session import UserSession, require_user_session
 from tiewtrade.infra.trading_account.records import (
     AccountUse,
     TradingAccountActivityUnknownError,
-    TradingAccountKeyUnavailableError,
     TradingAccountSummary,
 )
 
@@ -28,24 +26,6 @@ async def get_account(session: UserSession) -> TradingAccountSummary:
 
 async def select_use(session: UserSession, use: AccountUse) -> TradingAccountSummary:
     session = require_user_session(session)
-    existing = (
-        await session.execute(
-            "SELECT use FROM public.user_trading_preferences WHERE user_id=:owner",
-            {"owner": session.user_id},
-        )
-    ).first()
-    if existing is not None:
-        raise TradingAccountActivityUnknownError("account activity unknown")
-    key = (
-        await session.execute(
-            "SELECT id,status FROM public.user_api_keys WHERE user_id=:owner FOR UPDATE",
-            {"owner": session.user_id},
-        )
-    ).first()
-    if key is None or key.status != ApiKeyStatus.ACTIVE.value:
-        raise TradingAccountKeyUnavailableError("account key unavailable")
-    # Another selection may have committed while this transaction waited for
-    # the credential lock. The unique constraint remains the final DB guard.
     existing = (
         await session.execute(
             "SELECT use FROM public.user_trading_preferences WHERE user_id=:owner",

@@ -1,26 +1,27 @@
 import type { ReactNode } from "react";
-import { MarketTime, MarketValue } from "./components/MarketValue";
+import { MarketValue } from "./components/MarketValue";
 import { Badge } from "./components/ui/Badge";
 import { Select } from "./components/ui/Select";
-import { manualOrderLocale, manualOrderText as t } from "./manualOrderMessages";
+import { manualOrderText as t } from "./manualOrderMessages";
+
+const displayedPrice = (value: string) => /^-?\d+$/.test(value) ? `${value}.00` : value;
 
 /** Layout follows the information hierarchy of an exchange workspace and the TailAdmin theme tokens. */
-export function TradingWorkspace({ mode, bases, base, onBase, marketPrice, marketObservedAt,
-  marketStatus, pairDisabled = false, chart, form, details, orders }: {
+export function TradingWorkspace({ mode, bases, base, onBase, marketPrice,
+  pairDisabled = false, chart, form, details, orders }: {
   mode: "PAPER" | "LIVE";
   bases: string[];
   base: string;
   onBase: (base: string) => void;
   marketPrice?: string | null | undefined;
-  marketObservedAt?: string | null | undefined;
-  marketStatus: string;
   pairDisabled?: boolean;
   chart: ReactNode;
   form: ReactNode;
   details?: ReactNode | undefined;
   orders?: ReactNode | undefined;
 }) {
-  return <section className="trade-workspace" aria-label={t(mode === "PAPER" ? "paper" : "live")}>
+  return <section className={`trade-workspace ${orders ? "trade-workspace-with-orders" : "trade-workspace-without-orders"}`}
+    aria-label={t(mode === "PAPER" ? "paper" : "live")}>
     <header className="trade-workspace-bar">
       <div className="flex min-w-0 flex-wrap items-center gap-3">
         <Badge color={mode === "PAPER" ? "primary" : "warning"}>{mode}</Badge>
@@ -31,20 +32,15 @@ export function TradingWorkspace({ mode, bases, base, onBase, marketPrice, marke
             {bases.map(asset => <option key={asset} value={asset}>{asset}/USDT</option>)}
           </Select>
         </div>
+        <div id={`${mode.toLowerCase()}-chart-toolbar`} className="trade-chart-toolbar"/>
       </div>
       <dl className="trade-market-summary">
         <div><dt>{t("latestPrice")}</dt><dd>{marketPrice && base
-          ? <MarketValue amount={marketPrice} unit="USDT" grouped/> : t("unavailable")}</dd></div>
-        <div><dt>{t("marketStatus")}</dt><dd>{marketStatus}</dd></div>
-        <div><dt>{t("marketObserved")}</dt><dd>{marketObservedAt
-          ? <MarketTime value={marketObservedAt} locale={manualOrderLocale()}/> : t("unavailable")}</dd></div>
+          ? <MarketValue amount={displayedPrice(marketPrice)} unit="" grouped/> : t("unavailable")}</dd></div>
       </dl>
     </header>
-    <div className="trade-workspace-main">
-      <div className="trade-workspace-chart">{chart}</div>
-      <aside className="trade-workspace-form">{form}</aside>
-    </div>
+    <div className="trade-workspace-chart">{chart}</div>
+    <aside className="trade-workspace-form">{form}{details}</aside>
     {orders}
-    {details}
   </section>;
 }

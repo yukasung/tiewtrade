@@ -103,6 +103,20 @@ def observe(state: QuoteState, incoming: QuoteObservation) -> QuoteState:
     if incoming.trade_time < current.trade_time:
         return state
     if incoming.trade_time == current.trade_time:
+        if (
+            current.observation_kind is ObservationKind.STREAM
+            and incoming.observation_kind is ObservationKind.STREAM
+            and current.trade_id != incoming.trade_id
+        ):
+            return replace(
+                state,
+                candidate=incoming,
+                confirmed=(
+                    incoming
+                    if state.order_ambiguous_at is None and not state.protocol_error
+                    else state.confirmed
+                ),
+            )
         if incoming.amount != current.amount:
             at = incoming.trade_time
             return replace(state, order_ambiguous_at=max(at, state.order_ambiguous_at or at))

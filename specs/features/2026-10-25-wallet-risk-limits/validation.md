@@ -1,6 +1,14 @@
 # F-18 — เพดานความเสี่ยงต่อกระเป๋า — Validation
 
 สถานะ: **Approved** — เจ้าของตอบ “approve” ต่อ plan/validation ฉบับแก้ F18-R1..R4 วันที่ 2026-10-26; อนุมัติปรับเวลา W1/W2/W3 เป็น 10/5/30 นาที วันที่ 2026-10-27
+แผนตรวจ UI ล่าสุด: **Approved 2026-10-30 — ฟอร์มเพดานขาดทุนแบบสั้น**; ดู [Compact Risk Limit Form Validation](compact-risk-limit-form-validation-amendment.md)
+แผนตรวจ Recovery UI ล่าสุด: **Approved 2026-10-30 — ฟอร์มหลักไม่มี protocol/technical details**; ดู [Compact Risk Recovery UI Validation](compact-risk-recovery-ui-validation-amendment.md)
+แผนตรวจซ่อน Recovery status: **Approved 2026-10-30**; ดู [Hidden Recovery Status Validation](hidden-recovery-status-validation-amendment.md)
+แผนตรวจ Stale recovery auto-clear: **Approved 2026-10-30**; ดู [Stale Recovery Auto-clear Validation](stale-recovery-auto-clear-validation-amendment.md)
+แผนตรวจ Fulfilled recovery auto-clear: **Approved 2026-10-30**; ดู [Fulfilled Recovery Auto-clear Validation](fulfilled-recovery-auto-clear-validation-amendment.md)
+แผนตรวจ Paper INCREASE no-TOTP: **Approved 2026-10-31**; ดู [Paper Increase No-TOTP Validation](paper-increase-no-totp-validation-amendment.md)
+
+แผนตรวจซ่อน Ready status: **Approved 2026-10-31**; ดู [Hide Ready Status Validation](hide-ready-status-validation-amendment.md)
 เกณฑ์ปัจจุบัน: **R32 Approved 2026-10-29 — Paper fixture 5Hz**; ดู [amendment](paper-source-cadence-amendment.md) ซึ่งแทนเฉพาะ 10Hz ในข้อความเก่า
 โหมดตรวจรับปัจจุบัน: **R33 Approved 2026-10-29 — explicit child publisher** ตาม [amendment](child-acceptance-mode-amendment.md); ใช้เกณฑ์ล่าสุดด้านล่าง
 วันที่: 2026-10-25
@@ -573,3 +581,12 @@ fresh price BTC/USDT, ETH/USDT อย่างละ5Hzใน F18 Paper fixture 
 100×20, command load, freshness, risk/processing SLA, safety, durations/resources.
 ผล10Hzเดิมไม่เปลี่ยนเป็นPassed; ต้องมีหลักฐาน5Hzสำหรับcandidateสุดท้ายก่อนรับรอง.
 R31childยังdiagnostic-only, ไม่เริ่มworkloadจากการปรับนี้.
+
+### Local Paper manual acceptance — Approved 2026-10-30
+
+การเปิด protocol ชั่วคราวตาม
+[local amendment](local-paper-manual-activation-amendment.md) ต้องบันทึก flags,
+publication watermark, configured Paper evaluation READY และผล browser/API/engine.
+ต้องปิด admission → financial → publication หลังจบหรือเมื่อ dependency ล้ม.
+หลักฐานนี้เป็น manual acceptance บน localhost เท่านั้น ไม่เปลี่ยน V-21,
+production activation หรือสถานะ Completed.

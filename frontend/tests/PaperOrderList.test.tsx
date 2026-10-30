@@ -28,6 +28,10 @@ it("separates open orders from history and does not claim an incomplete tab is e
   render(<QueryClientProvider client={client}><PaperOrderList owner="owner" episode="episode"
     visible disabled={false} onCancel={() => {}}/></QueryClientProvider>);
   expect(await screen.findByText("BTC/USDT")).toBeTruthy();
+  expect(screen.queryByText(t("snapshot"))).toBeNull();
+  expect(screen.queryByRole("button", { name: t("refresh") })).toBeNull();
+  expect(screen.queryByRole("button", { name: t("details") })).toBeNull();
+  expect(screen.getAllByRole("columnheader")).toHaveLength(8);
   fireEvent.click(screen.getByRole("tab", { name: t("orderHistory") }));
   expect(screen.getByText(t("incompleteResults"))).toBeTruthy();
   fireEvent.click(screen.getByRole("button", { name: t("more") }));

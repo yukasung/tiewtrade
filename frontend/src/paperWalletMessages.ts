@@ -80,7 +80,7 @@ const en: typeof th = {
 
 const messages = createInstance();
 void messages.init({
-  lng: globalThis.navigator.language.startsWith("th") ? "th" : "en",
+  lng: globalThis.document.documentElement.lang.toLowerCase().startsWith("en") ? "en" : "th",
   fallbackLng: "th",
   initAsync: false,
   resources: { th: { translation: th }, en: { translation: en } },

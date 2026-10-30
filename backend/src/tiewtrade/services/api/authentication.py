@@ -275,10 +275,7 @@ async def authenticate_request(engine: AsyncEngine, request: Request) -> None:
             raise HTTPException(status.HTTP_401_UNAUTHORIZED, NOT_AUTHENTICATED)
         return
 
-    if classified in {
-        ("POST", "/paper/risk-limit/increase"),
-        ("POST", "/live/risk-limit/increase"),
-    }:
+    if classified == ("POST", "/live/risk-limit/increase"):
         try:
             raw = await request.body()
             if len(raw) > 4096:

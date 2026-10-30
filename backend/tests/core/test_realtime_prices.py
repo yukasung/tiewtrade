@@ -48,9 +48,9 @@ def test_readiness_age_boundaries_and_connection_fencing() -> None:
     assert status(NOW - timedelta(seconds=1)) is Readiness.RECOVERING
 
 
-def test_same_time_conflict_is_durable_until_post_latch_recovery() -> None:
+def test_same_stream_identity_conflict_is_durable_until_post_latch_recovery() -> None:
     first = observe(QuoteState(), quote(price="1", trade_id=3))
-    conflict = observe(first, quote(price="2", trade_id=4))
+    conflict = observe(first, quote(price="2", trade_id=3))
     assert conflict.confirmed == first.confirmed
     assert conflict.order_ambiguous_at == NOW
     newer = observe(conflict, quote(1, "3", 2))
@@ -76,7 +76,7 @@ def test_same_time_conflict_is_durable_until_post_latch_recovery() -> None:
 
 
 def test_recovery_equal_time_conflict_expands_latch() -> None:
-    state = observe(observe(QuoteState(), quote()), quote(price="2", trade_id=2))
+    state = observe(observe(QuoteState(), quote()), quote(price="2", trade_id=1))
     state = observe(state, quote(1, "3", 3))
     result = reconcile(
         state,
@@ -116,17 +116,18 @@ def test_observation_accepts_persistable_id_boundaries(trade_id: int) -> None:
 
 
 @pytest.mark.parametrize("ids", [(1, 2), (2, 1)])
-def test_equal_time_price_conflict_is_ambiguous_in_both_arrival_orders(
+def test_equal_time_distinct_stream_trades_advance_in_frame_order(
     ids: tuple[int, int],
 ) -> None:
     state = observe(
         observe(QuoteState(), quote(price="1", trade_id=ids[0])), quote(price="2", trade_id=ids[1])
     )
-    assert state.order_ambiguous_at == NOW
-    assert state.confirmed is not None and state.confirmed.amount == Money.of("1", "USDT")
+    assert state.order_ambiguous_at is None
+    assert state.confirmed == quote(price="2", trade_id=ids[1])
+    assert state.candidate == quote(price="2", trade_id=ids[1])
 
 
-def test_same_price_equal_time_different_id_does_not_refresh_observation() -> None:
+def test_same_price_equal_time_different_id_advances_to_latest_frame() -> None:
     first = quote(trade_id=1)
     newer_receipt = QuoteObservation(
         first.source,
@@ -139,8 +140,8 @@ def test_same_price_equal_time_different_id_does_not_refresh_observation() -> No
         ObservationKind.STREAM,
     )
     state = observe(observe(QuoteState(), first), newer_receipt)
-    assert state.confirmed == first
-    assert state.candidate == first
+    assert state.confirmed == newer_receipt
+    assert state.candidate == newer_receipt
     assert state.order_ambiguous_at is None
 
 

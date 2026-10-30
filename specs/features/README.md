@@ -52,9 +52,9 @@ requirements.md → [เจ้าของอนุมัติ] → plan.md + v
 ## plan.md
 
 ทุก feature ใหม่และงานที่กลับมาทำต่อใช้ `standards/testing.md` หัวข้อ 7
-(workflow amendment Approved 2026-10-24): ไม่เพิ่ม workload/endurance หรือ timed
+(workflow amendments Approved 2026-10-24 และ 2026-10-27): ไม่เพิ่ม workload/endurance หรือ timed
 smoke เป็นขั้นบังคับท้ายแต่ละ milestone. วาง targeted correctness/safety checks
-ตามผลกระทบ แยก candidate gates ก่อน merge และโหลดเต็มที่ชุดที่ 9 ให้ชัดเจน.
+ตามผลกระทบ แยก candidate gates ก่อน merge การตรวจรวมท้ายชุด และระบบรวมที่ชุดที่ 9 ให้ชัดเจน.
 ใช้ผลเดิมที่ยัง valid; หากต้องรัน timed workload ก่อนกำหนด ให้แจ้งเหตุผลและขอบเขต
 ตามมาตรฐานก่อนรัน ไม่คัดลอกกฎทั้งหมดลงทุก feature หรือเปลี่ยน requirements ผลิตภัณฑ์.
 
@@ -81,19 +81,24 @@ migration ที่ต้องมี
 ## Checkpoints การตรวจ
 ระหว่างพัฒนา: targeted checks ตามความเสี่ยงและหลักฐานเดิมที่ยังใช้ได้
 ก่อน merge: candidate gates ที่มาตรฐานบังคับ
-ชุดที่ 9: full workload/endurance ที่เลื่อน พร้อมรหัสเกณฑ์ใน validation
+ท้ายชุด: รวม full regression/integration/end-to-end และ full workload/endurance ที่เกี่ยวข้อง
+ระบุชุดใน roadmap และรหัสเกณฑ์ใน validation; เกณฑ์ที่รอ dependency ระบุ checkpoint ถัดไป
+ชุดที่ 9: ตรวจรับระบบรวมและเกณฑ์ค้าง ใช้หลักฐานท้ายชุดที่ยัง valid ตาม testing หัวข้อ 7
 ไม่รัน timed smoke อัตโนมัติท้าย milestone; ใช้ testing หัวข้อ 7
 ```
 
 ## validation.md
 
 แยกเวลารันตาม `standards/testing.md` หัวข้อ 7: ระหว่างพัฒนา, candidate ก่อน merge,
-และ release checkpoint ใช้ plan ที่อนุมัติแล้วต่อ ไม่ลดเกณฑ์ตรวจรับ
+ท้ายชุด และ release checkpoint/ชุดที่ 9 ใช้ plan ที่อนุมัติแล้วต่อ ไม่ลดเกณฑ์ตรวจรับ
 ชุดเต็ม performance/workload/stress/endurance/resource ระบุ `Pending Full Validation`
 พร้อม checkpoint และหลักฐานเดิม; ส่วน correctness/trading safety ตรวจตามผลกระทบทันที
 
 เลือกชุดตรวจที่เล็กที่สุดซึ่งพิสูจน์เกณฑ์และความเสี่ยงได้ ตาม `standards/testing.md` หัวข้อ 7
 ไม่มีเพดานเวลาทดสอบตายตัว ระบุสิ่งที่ต้องพิสูจน์และใช้ Tests/หลักฐานเดิมก่อนเพิ่มใหม่
+วางแผนรอบตรวจชุดยาวท้ายชุดประมาณ 1–2 ชั่วโมงต่อรอบ; หากคาดว่าเกิน 2 ชั่วโมง
+ให้แจ้งเหตุผล/ขอบเขต/เวลาคาดหมายก่อนเริ่มตาม testing หัวข้อ 7 (Approved 2026-10-27)
+แยกการตรวจระยะยาวเมื่อจำเป็น ไม่ลดเกณฑ์หรือระยะต่อเนื่องเพื่อให้ลงในงบเวลา
 ไม่ต้องเพิ่ม test ทุกประเภทหากไม่เกี่ยวข้อง; เกณฑ์ด้านเงินและ trading safety ที่บังคับยังต้องครบ
 
 ```markdown
@@ -118,6 +123,6 @@ migration ที่ต้องมี
 
 ## ด่านที่ต้องเขียว
 ระหว่างพัฒนา: targeted Tests และ checks ตามผลกระทบ
-ก่อน merge: lint / types / imports / full regression / required CI ตามมาตรฐาน
+ก่อน merge: static checks ที่เกี่ยวข้อง / regression ตามผลกระทบ / full regression เมื่อเข้าเกณฑ์ testing §7 / required CI
 ก่อน Completed/release: เกณฑ์ตรวจรับครบ รวม Pending Full Validation
 ```

@@ -400,6 +400,7 @@ def _check_composition_uses(
     }
     if path.parts[-4:] == ("tiewtrade", "services", "market_data", "main.py"):
         approved_factories.add("live_price_feed")
+        approved_factories.add("live_execution_feed")
     venue_factories = {
         alias.asname or alias.name
         for node in nodes

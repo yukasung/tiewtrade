@@ -188,12 +188,12 @@ function PaperWalletPanelForIdentity({ identity }: { identity: Me }) {
       {wallet !== null && wallet !== undefined ? (
         <div className="paper-wallet-summary">
           <dl>
-            <div><dt>{t("mode")}</dt><dd><strong>{wallet.mode}</strong></dd></div>
-            <div><dt>{t("balance")}</dt><dd><MarketValue amount={wallet.balance.amount} unit={wallet.balance.currency} grouped /></dd></div>
-            <div><dt>{t("capital")}</dt><dd><MarketValue amount={wallet.initial_capital.amount} unit={wallet.initial_capital.currency} grouped /></dd></div>
-            <div><dt>{t("episode")}</dt><dd>{wallet.sequence}</dd></div>
-            <div><dt>{t("started")}</dt><dd><MarketTime value={wallet.started_at} locale={paperWalletLocale} /></dd></div>
-            <div><dt>{t("snapshot")}</dt><dd><MarketTime value={wallet.snapshot_at} locale={paperWalletLocale} /></dd></div>
+            <div className="paper-wallet-stat paper-wallet-stat-primary"><dt>{t("balance")}</dt><dd><MarketValue amount={wallet.balance.amount} unit={wallet.balance.currency} grouped /></dd></div>
+            <div className="paper-wallet-stat"><dt>{t("capital")}</dt><dd><MarketValue amount={wallet.initial_capital.amount} unit={wallet.initial_capital.currency} grouped /></dd></div>
+            <div className="paper-wallet-stat"><dt>{t("mode")}</dt><dd><strong>{wallet.mode}</strong></dd></div>
+            <div className="paper-wallet-stat"><dt>{t("episode")}</dt><dd>{wallet.sequence}</dd></div>
+            <div className="paper-wallet-stat"><dt>{t("started")}</dt><dd><MarketTime value={wallet.started_at} locale={paperWalletLocale} /></dd></div>
+            <div className="paper-wallet-stat"><dt>{t("snapshot")}</dt><dd><MarketTime value={wallet.snapshot_at} locale={paperWalletLocale} /></dd></div>
           </dl>
           <Button
             ref={resetButton}
@@ -257,6 +257,8 @@ function PaperWalletPanelForIdentity({ identity }: { identity: Me }) {
       <Button
         type="button"
         variant="outline"
+        size="sm"
+        className="paper-wallet-refresh"
         disabled={walletQuery.isFetching}
         onClick={() => void walletQuery.refetch()}
       >
