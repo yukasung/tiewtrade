@@ -65,10 +65,57 @@
   border-top: 0;
   background: transparent;
   font-family: inherit;
-  cursor: not-allowed;
+  cursor: pointer;
   opacity: 1;
   white-space: nowrap;
 }
+.account-tab:disabled { cursor: not-allowed; }
+.trade-workspace {
+  min-width: 0;
+  overflow: hidden;
+  border: var(--account-border-width) solid var(--account-line);
+  border-radius: var(--account-radius);
+  background: var(--account-surface);
+}
+.trade-workspace-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--account-space-md);
+  padding: var(--account-space-md);
+  border-bottom: var(--account-border-width) solid var(--account-line);
+}
+.trade-market-summary {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--account-space-lg);
+  margin: 0;
+}
+.trade-market-summary div { min-width: 7rem; }
+.trade-market-summary dt { color: var(--account-muted-color); font-size: 0.75rem; }
+.trade-market-summary dd { margin: 0.25rem 0 0; color: var(--account-ink); font-size: 0.875rem; font-weight: 600; }
+.trade-workspace-main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 22.5rem;
+  min-height: clamp(26rem, 52vh, 34rem);
+}
+.trade-workspace-chart { min-width: 0; min-height: clamp(26rem, 52vh, 34rem); }
+.trade-workspace-form {
+  min-width: 0;
+  padding: var(--account-space-lg);
+  border-inline-start: var(--account-border-width) solid var(--account-line);
+  background: var(--account-bg);
+}
+.trade-workspace-details,
+.trade-workspace-orders {
+  padding: var(--account-space-md);
+  border-top: var(--account-border-width) solid var(--account-line);
+}
+.candlestick-embedded { height: 100%; }
+.candlestick-embedded .trading-market-bar { justify-content: flex-end; }
+.candlestick-embedded .trading-chart-area { height: calc(100% - 4.5rem); }
+.candlestick-embedded .chart-frame { height: 100%; }
 .trading-order-fields { display: grid; grid-template-columns: 1fr; }
 .trading-order-fields .relative { margin-bottom: var(--account-space-md); }
 .trading-order-fields .account-input { margin-bottom: var(--account-space-md); }
@@ -170,6 +217,12 @@
   .chart-chart-header { inset-inline-end: 58px; }
 }
 @media (max-width: 63.999rem) {
+  .trade-workspace-bar { align-items: flex-start; flex-direction: column; }
+  .trade-market-summary { justify-content: flex-start; }
+  .trade-workspace-main { grid-template-columns: minmax(0, 1fr); min-height: 0; }
+  .trade-workspace-chart { min-height: 32rem; }
+  .trade-workspace-form { border-inline-start: 0; border-top: var(--account-border-width) solid var(--account-line); }
+  .candlestick-embedded .trading-chart-area { height: auto; }
   .trading-workspace {
     grid-template-columns: minmax(0, 1fr);
     grid-template-rows: none;
@@ -187,6 +240,11 @@
   }
 }
 @media (max-width: 40rem) {
+  .trade-workspace-bar,
+  .trade-workspace-form,
+  .trade-workspace-details,
+  .trade-workspace-orders { padding: var(--account-space-md); }
+  .trade-market-summary { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; gap: var(--account-space-md); }
   .trading-market-bar,
   .trading-chart-area,
   .trading-order-panel,

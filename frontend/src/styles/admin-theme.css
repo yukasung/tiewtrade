@@ -73,6 +73,10 @@
   width: 100%;
   max-width: none;
 }
+.account-content-trade {
+  width: 100%;
+  max-width: none;
+}
 .account-workspace { margin-inline-start: var(--account-sidebar-width); min-width: 0; }
 .page-breadcrumb ol { list-style: none; padding: 0; margin: 0; font-size: var(--app-caption-size); }
 .page-breadcrumb a { color: var(--account-muted-color); text-decoration: none; }
@@ -200,6 +204,9 @@ body:has(.app-theme) {
 }
 .account-content.account-content-chart {
   padding: 0;
+}
+.account-content.account-content-trade {
+  padding: var(--account-space-md);
 }
 .auth-layout {
   display: flex;

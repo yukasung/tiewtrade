@@ -110,6 +110,18 @@ it("offers only the supported pairs and defaults to BTC", () => {
   expect(pair.value).toBe("BTC");
   expect(vi.mocked(useChartData).mock.calls.at(-1)?.[1].base).toBe("BTC");
 });
+it("uses a parent-controlled pair when embedded and omits duplicate workspace placeholders", () => {
+  const onBaseChange = vi.fn();
+  const onMarketSnapshot = vi.fn();
+  vi.mocked(useChartData).mockReturnValue(state());
+  render(<CandlestickChartPanel userId="one" base="ETH" onBaseChange={onBaseChange}
+    embedded onMarketSnapshot={onMarketSnapshot}/>);
+  expect(screen.queryByRole("combobox", { name: "คู่เทรด" })).toBeNull();
+  expect(screen.queryByTestId("trading-order-placeholder")).toBeNull();
+  expect(screen.queryByTestId("trade-history-placeholder")).toBeNull();
+  expect(vi.mocked(useChartData).mock.calls.at(-1)?.[1].base).toBe("ETH");
+  expect(onMarketSnapshot).toHaveBeenLastCalledWith({ base: "ETH", price: "100.5", observedAt: "2026-10-12T00:30:00Z" });
+});
 it("blocks manual retry during cooldown", () => {
   const current = state(); current.error = new Error("unavailable"); current.cooldownActive = true;
   vi.mocked(useChartData).mockReturnValue(current); const panel = render(<CandlestickChartPanel userId="one"/>);

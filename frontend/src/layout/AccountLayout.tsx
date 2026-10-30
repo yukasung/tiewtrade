@@ -35,6 +35,7 @@ function AccountLayoutContent({ children, page, isPlatformAdmin }: { children: R
     document.addEventListener("keydown", escape);
     return () => document.removeEventListener("keydown", escape);
   }, [open]);
+  const isTradingWorkspace = page === "paper/trade" || page === "live/trade";
   return (
     <div className={`app-theme account-layout min-h-screen xl:flex ${desktop && !expanded ? "sidebar-collapsed" : ""}`}>
       <AccountSidebar open={open} close={close} page={page} isPlatformAdmin={isPlatformAdmin} />
@@ -49,8 +50,8 @@ function AccountLayoutContent({ children, page, isPlatformAdmin }: { children: R
       <div className="account-workspace flex-1">
         <AccountHeader mode={page === "paper/trade" ? "PAPER" : page === "live/trade" ? "LIVE" : undefined} open={desktop ? expanded : open} mobileOpen={open} trigger={trigger}
           toggle={() => { if (desktop) setExpanded(value => !value); else setOpen(value => !value); }} />
-        <div className={`account-content mx-auto p-4 md:p-6 ${page === "chart" ? "account-content-chart" : ""}`}>
-          {page !== "chart" && <PageBreadcrumb title={t(page === "api-keys" ? "keys" : page === "trading-account" ? "trading" : page)} />}
+        <div className={`account-content mx-auto p-4 md:p-6 ${page === "chart" ? "account-content-chart" : isTradingWorkspace ? "account-content-trade" : ""}`}>
+          {page !== "chart" && !isTradingWorkspace && <PageBreadcrumb title={t(page === "api-keys" ? "keys" : page === "trading-account" ? "trading" : page)} />}
           {children}
         </div>
       </div>

@@ -20,7 +20,9 @@ export function RequestSnapshot({ value }: { value: ManualRequest }) {
     <p className="text-sm">{t("snapshot")} <MarketTime value={value.snapshot_at} locale={manualOrderLocale()}/></p>
   </article>;
 }
-export function ManualRequestStatus({ owner, episode, request, visible }: { owner: string; episode: string; request: string; visible: boolean }) {
+export function ManualRequestStatus({ owner, episode, request, visible, onTerminal }: {
+  owner: string; episode: string; request: string; visible: boolean; onTerminal?: (value: ManualRequest) => void;
+}) {
   const client = useQueryClient();
   const notified = useRef(false);
   const query = useQuery({ queryKey: [...manualKey(owner), episode, "request", request],
@@ -37,6 +39,7 @@ export function ManualRequestStatus({ owner, episode, request, visible }: { owne
     void client.invalidateQueries({ queryKey: [...manualKey(owner), episode, "orders"] });
     void client.invalidateQueries({ queryKey: [...manualKey(owner), "trade"] });
     void client.invalidateQueries({ queryKey: ["paper-wallet", owner] });
-  }, [query.data, client, owner, episode]);
+    onTerminal?.(query.data);
+  }, [query.data, client, owner, episode, onTerminal]);
   return <>{query.isError && <p role="alert">{t("loadError")}</p>}{query.data && <RequestSnapshot value={query.data}/>}</>;
 }

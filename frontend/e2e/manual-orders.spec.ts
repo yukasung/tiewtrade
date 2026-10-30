@@ -25,10 +25,12 @@ async function register(page: Page, email = `manual-${Date.now()}@example.com`) 
 }
 async function fresh(page: Page) {
   expect((await page.request.post(`${api}/source`)).status()).toBe(204);
-  await page.getByRole("region", { name: "เงินในกระเป๋า", exact: true }).getByRole("button", { name: "ตรวจข้อมูลอีกครั้ง", exact: true }).click();
+  await page.reload();
+  await expect(page.getByLabel("คู่เทรด")).toBeEnabled();
+  await page.getByLabel("คู่เทรด").selectOption("BTC");
 }
-async function send(page: Page, amount: string) {
-  await fresh(page);
+async function send(page: Page, amount: string, refresh = true) {
+  if (refresh) await fresh(page);
   await page.getByLabel(/งบซื้อ|จำนวนเหรียญ Base/).fill(amount);
   const response = page.waitForResponse(r => r.url().endsWith("/api/paper/orders") && r.request().method() === "POST");
   await page.getByRole("button", { name: "ส่งออเดอร์ Paper", exact: true }).click();
@@ -50,14 +52,17 @@ test("real Paper MARKET BUY/SELL and LIMIT partial→cancel reconcile exact serv
   await waitResolved(page);
   await fresh(page);
   await expect(page.getByText("8,900 USDT", { exact: true }).first()).toBeVisible();
-  await page.getByLabel("ฝั่ง", { exact: true }).selectOption("SELL");
-  const sell = await send(page, "1");
+  await page.getByRole("tab", { name: "SELL", exact: true }).click();
+  await expect(page.getByRole("tab", { name: "SELL", exact: true })).toHaveAttribute("aria-selected", "true");
+  const sell = await send(page, "1", false);
   expect(await drive(page, owner, sell.request_id, true)).toMatchObject({ commands: 1, order_state: "FILLED" });
   await waitResolved(page);
-  await page.getByLabel("ฝั่ง", { exact: true }).selectOption("BUY");
-  await page.getByLabel("ประเภทออเดอร์").selectOption("LIMIT");
+  await fresh(page);
+  await page.getByRole("tab", { name: "BUY", exact: true }).click();
+  await page.getByRole("tab", { name: "LIMIT", exact: true }).click();
+  await expect(page.getByRole("tab", { name: "LIMIT", exact: true })).toHaveAttribute("aria-selected", "true");
   await page.getByLabel("ราคา Limit (USDT)").fill("100");
-  const limit = await send(page, "11");
+  const limit = await send(page, "11", false);
   expect(await drive(page, owner, limit.request_id, true)).toMatchObject({ commands: 1, order_state: "PARTIALLY_FILLED" });
   await waitResolved(page);
   await fresh(page);
@@ -71,6 +76,7 @@ test("real Paper MARKET BUY/SELL and LIMIT partial→cancel reconcile exact serv
   const cancel = await (await response).json() as { request_id: string };
   expect(await drive(page, owner, cancel.request_id)).toMatchObject({ commands: 1, order_state: "CANCELED" });
   await waitResolved(page);
+  await page.getByRole("tab", { name: "ประวัติออเดอร์", exact: true }).click();
   await expect(page.getByRole("row").filter({ hasText: "ยกเลิกแล้ว" })).toHaveCount(1);
   const final = await (await page.request.get(`/api/paper/orders/${limit.order_id}`)).json() as { reserved_quote: string; filled_quantity: string };
   expect(final.reserved_quote).toBe("0"); expect(final.filled_quantity).toBe("10");
@@ -163,9 +169,9 @@ test("logout clears the local journal; login rediscovers the owner's pending req
     await account.accountI18n.changeLanguage("en");
     document.documentElement.classList.add("dark");
   });
-  await page.locator('section[aria-labelledby="manual-wallet-heading"]').getByRole("button").click();
+  await page.getByRole("button", { name: "Risk details / settings", exact: true }).click();
   await page.setViewportSize({ width: 375, height: 844 });
-  await expect(page.getByRole("heading", { name: "Paper trading", exact: true })).toBeVisible();
+  await expect(page.getByLabel("Paper trading", { exact: true })).toBeVisible();
   await page.setViewportSize({ width: 1440, height: 1000 });
   await expect(page.getByRole("heading", { name: "Manual order", exact: true })).toBeVisible();
   mkdirSync(evidence, { recursive: true });
@@ -185,9 +191,9 @@ test("logout clears the local journal; login rediscovers the owner's pending req
     const account = await import(/* @vite-ignore */ accountPath) as { accountI18n: { changeLanguage: (value: string) => Promise<unknown> } };
     await account.accountI18n.changeLanguage("th");
   });
-  await page.locator('section[aria-labelledby="manual-wallet-heading"]').getByRole("button").click();
+  await page.getByRole("button", { name: "Hide details", exact: true }).click();
   await page.setViewportSize({ width: 1440, height: 1000 });
-  await expect(page.getByRole("heading", { name: "เทรด Paper", exact: true })).toBeVisible();
+  await expect(page.getByLabel("เทรด Paper", { exact: true })).toBeVisible();
   await page.setViewportSize({ width: 375, height: 844 });
   await capture(page, "paper-th-dark-mobile.png");
 });
@@ -229,6 +235,7 @@ test("a cancel racing a fill shows FILLED and reset cannot cross pending intake"
   expect(await drive(page, owner, order.request_id, true)).toMatchObject({ commands: 1, order_state: "FILLED" });
   expect(await drive(page, owner, cancel.request_id)).toMatchObject({ commands: 1, command_state: "SUCCEEDED", order_state: "FILLED" });
   await waitResolved(page);
+  await page.getByRole("tab", { name: "ประวัติออเดอร์", exact: true }).click();
   await expect(page.getByRole("row").filter({ hasText: "จับคู่ครบ" })).toHaveCount(1);
   await expect(page.getByRole("row").filter({ hasText: "ยกเลิกแล้ว" })).toHaveCount(0);
 });

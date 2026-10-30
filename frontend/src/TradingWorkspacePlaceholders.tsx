@@ -15,8 +15,8 @@ export function TradingOrderPlaceholder() {
       <h3 id="trading-order-heading">{t("workspace.orderHeading")}</h3>
       <span>{t("workspace.unavailable")}</span>
     </div>
-    <Tabs label={t("workspace.orderSide")} items={[t("workspace.buy"), t("workspace.sell")]}
-      active={t("workspace.buy")}/>
+    <Tabs label={t("workspace.orderSide")} items={[{ id: "BUY", label: t("workspace.buy") }, { id: "SELL", label: t("workspace.sell") }]}
+      active="BUY"/>
     <div className="trading-order-fields">
       <Label htmlFor="placeholder-order-type">{t("workspace.orderType")}</Label>
       <Select id="placeholder-order-type" disabled value="LIMIT" aria-describedby="trading-order-note">
@@ -44,8 +44,9 @@ export function TradeHistoryPlaceholder() {
     <div className="trading-history-heading">
       <h3 id="trade-history-heading" className="sr-only">{t("workspace.historyHeading")}</h3>
       <Tabs label={t("workspace.historyTabs")}
-        items={[t("workspace.openOrders"), t("workspace.orderHistory"), t("workspace.tradeHistory")]}
-        active={t("workspace.openOrders")}/>
+        items={[{ id: "OPEN", label: t("workspace.openOrders") }, { id: "ORDERS", label: t("workspace.orderHistory") },
+          { id: "TRADES", label: t("workspace.tradeHistory") }]}
+        active="OPEN"/>
     </div>
     <div className="trading-table-scroll">
       <Table>

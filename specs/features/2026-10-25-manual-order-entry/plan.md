@@ -307,3 +307,28 @@ queries และ frontend polling เฉพาะหน้าที่เปิ
 
 สถานะการปิดข้างต้นเป็นการแก้ช่องว่างของเอกสาร ยังไม่มี runtime proof และผล validation
 คง Not Run/Pending ตามเดิม; เจ้าของอนุมัติฉบับแก้ไขแล้ว 2026-10-25 ให้เริ่ม M1 ได้
+
+## F16-R4 — Compact Trading Workspace implementation plan — 2026-10-30
+
+สถานะ: **Approved — เจ้าของอนุมัติแผนวันที่ 2026-10-30**
+
+1. ปรับ `CandlestickChartPanel` ให้รับ pair จาก parent และมี embedded presentation โดยหน้า chart
+   เดิมยังคง pair/timeframe/history navigation/resize; embedded presentation ไม่แสดง placeholder
+   order/history ซ้ำ
+2. เพิ่ม shared workspace layout สำหรับ Paper/Live โดยใช้ `Button`, `Select`, `Input`, `Table`,
+   `Modal` และ interactive Tabs ที่ปรับจาก admin template; route สองหน้านี้ใช้ content widthเต็ม
+   และซ่อน breadcrumb ที่ซ้ำกับ mode header
+3. ฟอร์มคง payload/validation เดิม เปลี่ยน side/kind เป็น tabs และซ่อน pair selectorเมื่อ parent
+   ควบคุม pair; remount key เดิมยังล้าง draft เมื่อ pair/episode เปลี่ยน
+4. Paper แสดง balance/risk summary, blocking reasons และ uncertain recovery ใกล้ฟอร์ม;
+   รายละเอียด risk/wallet เปิดตามต้องการ และ recovery section แสดงเฉพาะเมื่อมีงานหรือ error
+5. รายการ Paper แยก Open/History จาก rows เดิม; ถ้ายังมี page ที่ไม่โหลด ห้ามสรุปว่า tab ว่าง
+6. Live ใช้ catalog+chart เดียวกันและ disabled form โดยไม่ query/render Paper wallet/orders
+
+Source mapping: layout/tabs/forms/tables/modal ยึด
+`references/admin-template/src/components/ui/tabs/TabWithUnderline.tsx`,
+`references/admin-template/src/components/form/`,
+`references/admin-template/src/components/tables/` และ shared controls ใน
+`frontend/src/components/ui/`. ข้อยกเว้นจาก template คือกราฟต้องใช้พื้นที่ยืดหยุ่นและแถบฟอร์ม
+ประมาณ 360px เพื่อรักษา readability ของ trading workspace; ใช้ theme tokensเดิมทั้งหมด
+และไม่เพิ่ม visual system ใหม่

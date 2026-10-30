@@ -5,6 +5,9 @@ import { afterEach, expect, it, vi } from "vitest";
 import { PaperTradePage } from "../src/PaperTradePage";
 import { writeAttempt } from "../src/manualOrderJournal";
 import { manualOrderText as t } from "../src/manualOrderMessages";
+vi.mock("../src/CandlestickChartPanel", () => ({ CandlestickChartPanel: ({ base, onMarketSnapshot }: {
+  base: string; onMarketSnapshot: (value: { base: string; price: string; observedAt: string }) => void;
+}) => <button type="button" data-testid="embedded-chart" onClick={() => onMarketSnapshot({ base, price: "100", observedAt: stamp })}>chart</button> }));
 const stamp = "2026-10-25T00:00:00Z";
 const key = "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee";
 const wallet = { wallet_id: "w", episode_id: "e", balance: "10000.000000000000000001", reserved_quote: "0", available_quote: "10000.000000000000000001", base_balances: [], source_availability: "READY", revision: 1 };
@@ -95,6 +98,33 @@ it("continues polling after transfer until the linked command becomes terminal",
   await screen.findByText(`${t("failure")}: ${t("ORDER_INSUFFICIENT_FUNDS")}`, {}, { timeout: 3500 });
   expect(reads).toBeGreaterThanOrEqual(2);
   expect(screen.getAllByRole("status").some(node => node.textContent?.includes(t("command")) && node.getAttribute("aria-live") === "polite")).toBe(true);
+  await waitFor(() => expect(screen.queryByRole("heading", { name: t("recovery") })).toBeNull());
+});
+it("clears a previous pair's displayed market price before the next pair snapshot", async () => {
+  mount(url => {
+    if (url.includes("/market-catalog")) return Promise.resolve(answer({ active_pairs: [["BTC", "USDT"], ["ETH", "USDT"]] }));
+    if (url.includes("/paper/trade")) {
+      const selected = url.includes("base=BTC") ? "BTC" : url.includes("base=ETH") ? "ETH" : null;
+      return Promise.resolve(answer({ mode: "PAPER", wallet, account_use: "MANUAL", base: selected, quote: "USDT", catalog_revision: 1,
+        snapshot_at: stamp, admission_ready: selected !== null, admission_reasons: selected ? [] : ["ORDER_PAIR_REQUIRED"] }));
+    }
+  });
+  await waitFor(() => expect(screen.getByLabelText<HTMLSelectElement>(t("pair")).disabled).toBe(false));
+  fireEvent.change(screen.getByLabelText(t("pair")), { target: { value: "BTC" } });
+  fireEvent.click(screen.getByTestId("embedded-chart"));
+  const latest = screen.getByText(t("latestPrice")).parentElement!;
+  expect(latest.textContent).toContain("100 USDT");
+  fireEvent.change(screen.getByLabelText(t("pair")), { target: { value: "ETH" } });
+  expect(latest.textContent).toContain(t("unavailable"));
+  expect(latest.textContent).not.toContain("100 USDT");
+});
+it("shows a latched risk stop beside the form without opening details", async () => {
+  mount(url => url.includes("/risk-limit") ? Promise.resolve(answer({
+    amount: "1000", latched: true, stop_id: "stop", stop_progress: "STOPPING", reason: "RISK_LOSS_LIMIT_REACHED",
+  })) : undefined);
+  expect(await screen.findByText(t("riskStopStatus"))).toBeTruthy();
+  expect(screen.getByText("กำลังหยุดออเดอร์เพิ่มความเสี่ยง")).toBeTruthy();
+  expect(screen.getByRole("button", { name: t("riskDetails") }).getAttribute("aria-expanded")).toBe("false");
 });
 it("requires every recovery page before permitting new requests", async () => {
   mount(url => url.includes("order-requests?") ? Promise.resolve(answer({ requests: [], next_cursor: url.includes("cursor=") ? null : "next" })) : undefined);

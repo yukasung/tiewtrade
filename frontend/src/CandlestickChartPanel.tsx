@@ -26,8 +26,19 @@ const initialViewport = (slotCount: number) => ({
 const belongsToSeries = (value: Series | undefined, series: Series) => Boolean(value &&
   value.base === series.base && value.quote === series.quote && value.timeframe === series.timeframe);
 
-export function CandlestickChartPanel({ userId }: { userId: string }) {
-  const [base, setBase] = useState("BTC");
+export type ChartMarketSnapshot = { base: string; price: string; observedAt: string };
+
+export function CandlestickChartPanel({ userId, base: controlledBase, onBaseChange, embedded = false,
+  onMarketSnapshot }: {
+  userId: string;
+  base?: string;
+  onBaseChange?: (base: string) => void;
+  embedded?: boolean;
+  onMarketSnapshot?: (snapshot: ChartMarketSnapshot | null) => void;
+}) {
+  const [localBase, setLocalBase] = useState("BTC");
+  const base = controlledBase ?? localBase;
+  const setBase = onBaseChange ?? setLocalBase;
   const catalog = useMarketCatalog();
   const supportedBases = useMemo(() => activeBases(catalog.data), [catalog.data]);
   const [timeframe, setTimeframe] = useState<Timeframe>("1h");
@@ -69,6 +80,8 @@ export function CandlestickChartPanel({ userId }: { userId: string }) {
   const selectedGap = selectedTime !== undefined && history?.gaps.some(gap =>
     selectedTime >= Date.parse(gap.start) && selectedTime < Date.parse(gap.end));
   const summaryCandle = candle ?? (selected === null ? displayed.at(-1) : undefined);
+  const summaryPrice = summaryCandle?.close;
+  const summaryObservedAt = summaryCandle?.observed_at;
   const error = state.error;
 
   useEffect(() => {
@@ -77,6 +90,14 @@ export function CandlestickChartPanel({ userId }: { userId: string }) {
       setSelected(null);
     }
   }, [base, supportedBases]);
+
+  useEffect(() => {
+    onMarketSnapshot?.(summaryPrice && summaryObservedAt ? {
+      base,
+      price: summaryPrice,
+      observedAt: summaryObservedAt,
+    } : null);
+  }, [base, onMarketSnapshot, summaryPrice, summaryObservedAt]);
 
   useEffect(() => {
     if (!host.current) return;
@@ -149,16 +170,16 @@ export function CandlestickChartPanel({ userId }: { userId: string }) {
     if (!selectionTimes.length) return;
     renderer.current?.chart.timeScale().setVisibleLogicalRange(initialViewport(selectionTimes.length));
   };
-  return <section className="candlestick-panel trading-workspace" aria-label={t("heading")}
+  return <section className={`candlestick-panel ${embedded ? "candlestick-embedded" : "trading-workspace"}`} aria-label={t("heading")}
     data-testid="candlestick-chart">
     <header className="trading-market-bar">
-      <div className="trading-market-identity">
+      {!embedded && <div className="trading-market-identity">
         <strong>{base}/USDT</strong><span>{t("market")}</span>
-      </div>
+      </div>}
       <div className="chart-controls">
-        <div><Select id="chart-pair" aria-label={t("pair")} value={base}
+        {!embedded && <div><Select id="chart-pair" aria-label={t("pair")} value={base}
           onChange={event => changeSeries(event.target.value, timeframe)}>
-            {supportedBases.map(pair => <option key={pair} value={pair}>{pair}/USDT</option>)}</Select></div>
+            {supportedBases.map(pair => <option key={pair} value={pair}>{pair}/USDT</option>)}</Select></div>}
         <div><Select id="chart-timeframe" aria-label={t("timeframe")} value={timeframe}
             onChange={event => changeSeries(base, event.target.value as Timeframe)}>
             {timeframes.map(value => <option key={value}>{value}</option>)}</Select></div>
@@ -192,7 +213,7 @@ export function CandlestickChartPanel({ userId }: { userId: string }) {
           {" · "}{t(selectedGap ? "GAP" : selected !== null ? "selectionOutside" : "missing")}</p>
       </div>}
     </div>
-    <TradingOrderPlaceholder/>
-    <TradeHistoryPlaceholder/>
+    {!embedded && <TradingOrderPlaceholder/>}
+    {!embedded && <TradeHistoryPlaceholder/>}
   </section>;
 }
