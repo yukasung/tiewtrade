@@ -5551,3 +5551,32 @@ operation was authorized. V-22/V-23 remain Pending Dependency, so this is not ye
 
 Final local-gate checkpoint recorded 2026-10-30T00:13:06Z. The regression/static/final
 review stage took approximately 13 minutes against the 10–20 minute estimate.
+
+### 2026-10-30 — required CI exposed missing PostgreSQL capability
+
+Commit `a3c141a3d1e2f9f5173cfc0f7ab49ba80a2a9183` was pushed to the F18 branch and
+required CI run `40985534822` executed the committed candidate. PostgreSQL version,
+frontend lint/types/tests, container composition, API contract and all browser E2E
+jobs passed, including the F18 production-composition E2E. Backend ruff, format,
+mypy, import contracts, bootstrap and migration also passed. Full backend pytest
+finished with 3,961 passed, two deselected and seven failed after approximately
+16 minutes.
+
+All seven failures have the same infrastructure root cause. The GitHub Actions
+PostgreSQL service did not enable `track_commit_timestamp`; the F18 publication
+fixtures therefore received SQLSTATE 55000 from `pg_xact_commit_timestamp(xmin)`.
+The child-publisher failures are downstream reports of the same book publisher
+exception. This is not a financial, order, risk-policy or production-runtime
+failure. The accepted local candidate and workload databases explicitly used commit
+timestamps, and the harness preflight already rejects an acceptance run without them.
+
+The scoped correction configures only the backend CI PostgreSQL service: it uses
+`ALTER SYSTEM`, restarts that service before bootstrap/migration, and verifies
+`SHOW track_commit_timestamp` is `on` before continuing. It does not change the
+public API, schema, production business logic, resources, acceptance criteria or
+trading behavior. The seven affected tests and workflow syntax/static checks must
+pass before the correction is pushed; required CI must then run again on the new
+commit. On a fresh schema-0058 database with commit timestamps enabled, both affected
+fixture modules pass 20/20 tests in 12.45 seconds; `git diff --check` also passes.
+The first remote run remains FAILED evidence and F18 remains pending required
+CI/manual acceptance and V22/V23.

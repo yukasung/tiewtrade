@@ -84,6 +84,29 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # F-18 วัด SLA จากเวลาที่ transaction commit จริง ไม่ใช่เวลาที่ process รับผล
+      # ค่า PostgreSQL นี้เป็น postmaster setting จึงต้อง restart service ก่อน bootstrap/migration
+      - name: เปิด commit timestamps สำหรับ F-18 tests
+        run: |
+          container_id="${{ job.services.postgres.id }}"
+          docker exec "$container_id" \
+            psql -U postgres -d tiewtrade -v ON_ERROR_STOP=1 \
+            -c "ALTER SYSTEM SET track_commit_timestamp = on"
+          docker restart "$container_id"
+
+          for attempt in {1..20}; do
+            tracked="$(psql \
+              "postgresql://postgres:postgres@127.0.0.1:5432/tiewtrade" \
+              -Atqc "SHOW track_commit_timestamp" 2>/dev/null || true)"
+            if [ "$tracked" = "on" ]; then
+              exit 0
+            fi
+            sleep 1
+          done
+
+          echo "::error::PostgreSQL ไม่กลับมาพร้อม track_commit_timestamp=on"
+          exit 1
+
       - uses: astral-sh/setup-uv@v5
         with:
           enable-cache: true
