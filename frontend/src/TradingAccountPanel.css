@@ -8,31 +8,14 @@
 .trading-account-panel {
   margin: 0;
   max-width: none;
-  padding: 0 !important;
 }
 .trading-account-panel p {
   max-width: var(--account-text-width);
   line-height: var(--account-line-height);
 }
-.trading-account-heading {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--account-space-md);
-  flex-wrap: wrap;
-  padding: 1.25rem 1.5rem;
-  border-bottom: var(--account-border-width) solid var(--account-line);
-}
-.trading-account-heading h2 {
-  margin: 0;
-  color: var(--account-ink);
-  font-size: 1rem;
-  font-weight: 600;
-}
 .trading-account-body {
   display: grid;
   gap: 1.25rem;
-  padding: 1.5rem;
 }
 .trading-account-limitation {
   margin: 0;
@@ -96,20 +79,10 @@
   width: 100%;
   height: 100%;
 }
-.trading-account-support-grid .paper-wallet-panel {
-  margin: 0;
-  max-width: none;
-}
-.trading-account-panel :focus-visible {
-  outline: var(--account-focus-width) solid var(--account-focus-color);
-  outline-offset: var(--account-focus-offset);
-}
 @media (max-width: 40rem) {
   .trading-account-fields {
     grid-template-columns: 1fr;
   }
-  .trading-account-heading,
-  .trading-account-body { padding: 1rem; }
   .trading-account-use { grid-template-columns: 1fr; }
   .trading-account-use p { grid-column: auto; }
 }

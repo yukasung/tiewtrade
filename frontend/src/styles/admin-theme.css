@@ -82,6 +82,7 @@
 .page-breadcrumb a { color: var(--account-muted-color); text-decoration: none; }
 .page-breadcrumb h1 { margin: 0; font-size: var(--app-section-size); }
 .template-card { min-width: 0; border: var(--account-border-width) solid var(--account-line); background: var(--account-surface); overflow-wrap: anywhere; }
+.template-card-header-with-action { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--account-space-md); }
 .template-card-header h2 { margin: 0; }
 .template-card-header p { color: var(--account-muted-color); margin-bottom: 0; }
 .template-card-body { border-top: var(--account-border-width) solid var(--account-line); }
