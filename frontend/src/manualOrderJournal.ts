@@ -1,3 +1,5 @@
+import { sessionJournal } from "./attemptJournal";
+export { JournalUnavailable } from "./attemptJournal";
 import type { ExpectedEpisode, NewManualOrder } from "./manualOrders";
 
 const prefix = "tiewtrade.manual-order.v1:";
@@ -6,7 +8,6 @@ export type ManualAttempt = Scope & (
   { action: "NEW"; payload: NewManualOrder } |
   { action: "CANCEL"; orderId: string; payload: ExpectedEpisode }
 );
-export class JournalUnavailable extends Error {}
 const record = (value: unknown): value is Record<string, unknown> => typeof value === "object" && value !== null && !Array.isArray(value);
 function valid(value: unknown, owner: string): value is ManualAttempt {
   if (!record(value) || value.version !== 1 || value.owner !== owner || value.mode !== "PAPER" ||
@@ -20,27 +21,7 @@ function valid(value: unknown, owner: string): value is ManualAttempt {
   return p.kind === "LIMIT" && (p.side === "BUY" || p.side === "SELL") && typeof p.base_quantity === "string" &&
     typeof p.limit_price === "string" && p.time_in_force === "GTC" && Object.keys(p).length === 9;
 }
-export function readAttempt(owner: string): ManualAttempt | null {
-  try {
-    const raw = window.sessionStorage.getItem(prefix + owner);
-    if (raw === null) return null;
-    const value: unknown = JSON.parse(raw);
-    if (!valid(value, owner)) throw new JournalUnavailable();
-    return value;
-  } catch { throw new JournalUnavailable(); }
-}
-export function writeAttempt(value: ManualAttempt): void {
-  try {
-    if (!valid(value, value.owner)) throw new JournalUnavailable();
-    const encoded = JSON.stringify(value);
-    window.sessionStorage.setItem(prefix + value.owner, encoded);
-    if (window.sessionStorage.getItem(prefix + value.owner) !== encoded) throw new JournalUnavailable();
-  } catch { throw new JournalUnavailable(); }
-}
-export function clearAttempt(owner: string, expectedKey?: string): void {
-  try {
-    if (expectedKey !== undefined && readAttempt(owner)?.key !== expectedKey) return;
-    window.sessionStorage.removeItem(prefix + owner);
-    if (window.sessionStorage.getItem(prefix + owner) !== null) throw new JournalUnavailable();
-  } catch { throw new JournalUnavailable(); }
-}
+const journal = sessionJournal<ManualAttempt>(prefix, value => value.owner, valid);
+export const readAttempt = journal.read;
+export const writeAttempt = journal.write;
+export const clearAttempt = journal.clear;

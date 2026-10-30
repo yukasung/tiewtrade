@@ -1,5 +1,6 @@
 import { keepPreviousData, useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
+import { RiskLimitPanel } from "./RiskLimitPanel";
 import { ManualOrderForm } from "./ManualOrderForm";
 import { ManualRequestStatus, RequestSnapshot } from "./ManualRequestStatus";
 import { PaperOrderList } from "./PaperOrderList";
@@ -63,11 +64,12 @@ function PaperTradeForOwner({ owner }: { owner: string }) {
   const blocked = !recovered || recovery.storageError || !!recovery.attempt || recovery.busy;
   const fresh = data?.mode === "PAPER" && !snapshot.isError && !snapshot.isPending && !snapshot.isFetching && !catalog.isError && catalog.isSuccess && data.base === (base || null);
   const canSubmit = (side: "BUY" | "SELL") => !!fresh && !blocked && !!wallet && (data?.admission_ready === true ||
-    (side === "SELL" && wallet.source_availability === "READY" && data.admission_reasons.every(reason => ["MANUAL_USE_REQUIRED", "CATALOG_PAIR_REMOVED"].includes(reason))));
+    (side === "SELL" && wallet.source_availability === "READY" && data.admission_reasons.every(reason => ["MANUAL_USE_REQUIRED", "CATALOG_PAIR_REMOVED", "RISK_LIMIT_UNSET", "RISK_LOSS_LIMIT_REACHED", "RISK_SOURCE_UNAVAILABLE", "RISK_PRICE_UNAVAILABLE"].includes(reason))));
   const bases = [...new Set([...activeBases(catalog.data), ...(wallet?.base_balances.map(b => b.asset) ?? [])])];
   return <div className="space-y-6">
     <p className="text-2xl font-semibold"><Badge color="primary">{t("paper")}</Badge></p>
     <p>{t("pendingNotice")}</p>
+    <RiskLimitPanel owner={owner} mode="PAPER" visible={visible}/>
     <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
       <ComponentCard title={t("form")} headingId="manual-form-heading">
         {(snapshot.isError || catalog.isError) && <p role="alert">{t("loadError")}</p>}

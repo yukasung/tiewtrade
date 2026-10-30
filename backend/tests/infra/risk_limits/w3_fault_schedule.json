@@ -1,0 +1,14 @@
+{
+  "profile": "F18_W3_FAULTS_V2",
+  "duration_seconds": 1800,
+  "cycles_per_owner": 30,
+  "events": [
+    {"offset_seconds": 225, "duration_seconds": 30, "kind": "WORKER_RESTART"},
+    {"offset_seconds": 450, "duration_seconds": 30, "kind": "CONNECTION_CHURN"},
+    {"offset_seconds": 675, "duration_seconds": 60, "kind": "REDIS_OUTAGE"},
+    {"offset_seconds": 900, "duration_seconds": 30, "kind": "WORKER_RESTART"},
+    {"offset_seconds": 1125, "duration_seconds": 30, "kind": "CONNECTION_CHURN"},
+    {"offset_seconds": 1350, "duration_seconds": 60, "kind": "REDIS_OUTAGE"},
+    {"offset_seconds": 1575, "duration_seconds": 30, "kind": "WORKER_RESTART"}
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "status": "FAILED",
+  "acceptance_result": false,
+  "error_type": "FileNotFoundError",
+  "error": "[Errno 2] No such file or directory: '/proc/31813/stat'",
+  "counters": {
+    "offered": 10,
+    "admitted": 10,
+    "completed": 10,
+    "rejected": 0,
+    "fills": 4,
+    "cancels": 2,
+    "replays": 2,
+    "cycles": 2
+  },
+  "scenarios": [
+    {
+      "owner": "5f3fe691-f584-46ab-90a3-3dd34f3a1a8c",
+      "scenario": "PARTIAL_FILL_RISK_ORACLE",
+      "loss": "0.05"
+    },
+    {
+      "owner": "5f3fe691-f584-46ab-90a3-3dd34f3a1a8c",
+      "scenario": "PRICE_BREACH_STOP_RESET_RESEED",
+      "targets": 2
+    },
+    {
+      "owner": "5f3fe691-f584-46ab-90a3-3dd34f3a1a8c",
+      "scenario": "EXACT_CORRECTION_AND_REPLAY"
+    }
+  ]
+}

@@ -11,10 +11,13 @@ from tiewtrade.core.orders import (
     OrderConflictError,
     OrderError,
     SafetyUnavailableError,
+    SourceUnavailableError,
 )
 from tiewtrade.core.positions import PositionPair
+from tiewtrade.core.risk_limits import RiskReason
 from tiewtrade.infra.auth.throttle import Bucket
 from tiewtrade.infra.db import DatabaseRole, InfraError, repeatable_user_session, user_session
+from tiewtrade.infra.paper_orders.manual_policy import manual_policy_for
 from tiewtrade.infra.paper_orders.requests import (
     RequestIntegrityError,
     admit_cancel_request,
@@ -25,6 +28,9 @@ from tiewtrade.infra.paper_orders.requests import (
 )
 from tiewtrade.infra.paper_orders.trade_views import order_page, order_view, trade_snapshot
 from tiewtrade.infra.paper_orders.views import RequestView, request_view, unresolved_requests
+from tiewtrade.infra.risk_limits.evaluation_requests import request_evaluation
+from tiewtrade.infra.risk_limits.policy import TransactionalRiskPolicy
+from tiewtrade.infra.risk_limits.views import wallet_evidence
 from tiewtrade.services.api.db_resources import engine_for, paper_mutation_engine
 from tiewtrade.services.api.manual_order_models import (
     ExpectedPaperEpisode,
@@ -59,8 +65,8 @@ Key = Annotated[UUID, Header(alias="Idempotency-Key")]
 
 
 def manual_admission_policy() -> AdmissionPolicy | None:
-    """Production remains closed until approved F-18 integration. No env bypass."""
-    return None
+    """Resolve owner evidence per transaction; DB activation remains fail-closed."""
+    return TransactionalRiskPolicy()
 
 
 Policy = Annotated[AdmissionPolicy | None, Depends(manual_admission_policy)]
@@ -70,6 +76,8 @@ def _http_error(error: InfraError | OrderError | MoneyError) -> HTTPException:
     if isinstance(error, (InfraError, RequestIntegrityError, MoneyError)):
         return HTTPException(503, "MANUAL_ORDER_DEPENDENCY_UNAVAILABLE")
     if isinstance(error, SafetyUnavailableError):
+        return HTTPException(503, error.code)
+    if isinstance(error, SourceUnavailableError):
         return HTTPException(503, error.code)
     if isinstance(error, OrderConflictError):
         return HTTPException(409, error.code)
@@ -140,10 +148,31 @@ async def read_trade(
         async with repeatable_user_session(
             engine_for(request, DatabaseRole.API), who.user_id
         ) as session:
+            risk_ready = policy is not None
+            risk_reason = None
+            if isinstance(policy, TransactionalRiskPolicy):
+                evidence = await wallet_evidence(session)
+                if evidence is None:
+                    risk_reason = "RISK_SOURCE_UNAVAILABLE"
+                else:
+                    setting, proof = evidence
+                    risk_reason = (
+                        "RISK_LIMIT_UNSET"
+                        if setting.limit is None
+                        else "RISK_LOSS_LIMIT_REACHED"
+                        if setting.latched
+                        else "ORDER_SAFETY_UNAVAILABLE"
+                        if not proof.admission_enabled
+                        else proof.evaluation.reason.value
+                        if proof.evaluation.reason is not RiskReason.READY
+                        else None
+                    )
+                risk_ready = risk_reason is None
             value = await trade_snapshot(
                 session,
-                risk_policy_available=policy is not None,
+                risk_policy_available=risk_ready,
                 pair=None if base is None else PositionPair(base, "USDT"),
+                risk_reason=risk_reason,
             )
         return PaperTradeView.model_validate(value)
     except (InfraError, OrderError, MoneyError) as error:
@@ -218,6 +247,8 @@ async def new_order(
         )
     except (MoneyError, OrderError):
         raise HTTPException(422, "MANUAL_ORDER_INPUT_REJECTED") from None
+    admission_error: OrderError | None = None
+    result: ManualRequestView | None = None
     try:
         async with user_session(engine_for(request, DatabaseRole.API), who.user_id) as session:
             await session.execute("SET LOCAL statement_timeout='5s'")
@@ -229,15 +260,27 @@ async def new_order(
                 if policy is None:
                     raise HTTPException(503, "ORDER_SAFETY_UNAVAILABLE")
                 await _spend_order_token(request, who, Bucket.PAPER_ORDER_NEW)
-                receipt = await admit_new_request(
-                    session, wallet_id=body.expected_wallet_id, intent=intent
-                )
+                if isinstance(policy, TransactionalRiskPolicy):
+                    try:
+                        checked = await manual_policy_for(session, intent, delegate=policy)
+                        checked.check(intent)
+                    except OrderError as error:
+                        await request_evaluation(session, intent, body.expected_wallet_id)
+                        admission_error = error
+                if admission_error is None:
+                    receipt = await admit_new_request(
+                        session, wallet_id=body.expected_wallet_id, intent=intent
+                    )
             else:
                 response.status_code = 200
-            value = await request_view(session, receipt.request_id)
-            if value is None:
-                raise RequestIntegrityError("committed request unavailable")
-            result = _view(value)
+            if receipt is not None:
+                value = await request_view(session, receipt.request_id)
+                if value is None:
+                    raise RequestIntegrityError("committed request unavailable")
+                result = _view(value)
+        if admission_error is not None:
+            raise _http_error(admission_error)
+        assert result is not None
         return result
     except (InfraError, OrderError, MoneyError) as error:
         raise _http_error(error) from None

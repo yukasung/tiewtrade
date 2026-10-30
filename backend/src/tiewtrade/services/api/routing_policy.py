@@ -131,6 +131,21 @@ ROUTE_RULES: Final[dict[tuple[str, str], RouteRule]] = {
     #
     # **เพิ่ม key ต้องยืนยันซ้ำ และไม่รับรหัสสำรอง** — เป็นการกระทำที่เพิ่มความเสี่ยง
     # (`security.md` หัวข้อ 1) · `accepts_recovery_grant` ปล่อยเป็นค่าปริยายคือไม่รับ
+    ("GET", "/paper/risk-limit"): RouteRule(),
+    ("GET", "/live/risk-limit"): RouteRule(),
+    ("POST", "/paper/risk-limit"): RouteRule(renews=True),
+    ("POST", "/live/risk-limit"): RouteRule(renews=True),
+    ("POST", "/paper/risk-limit/increase"): RouteRule(renews=True, reverify=True),
+    ("POST", "/live/risk-limit/increase"): RouteRule(renews=True, reverify=True),
+    # Reset is the explicit F-06 exemption, not a risk-reducing order.
+    ("POST", "/paper/risk-limit/reset"): RouteRule(renews=True),
+    ("POST", "/live/risk-limit/reset"): RouteRule(renews=True),
+    ("GET", "/paper/risk-limit/requests/by-key/{key}"): RouteRule(),
+    ("GET", "/live/risk-limit/requests/by-key/{key}"): RouteRule(),
+    ("GET", "/paper/risk-limit/requests/{receipt_id}"): RouteRule(),
+    ("GET", "/live/risk-limit/requests/{receipt_id}"): RouteRule(),
+    ("GET", "/paper/risk-limit/stops/{stop_id}/effects"): RouteRule(),
+    ("GET", "/live/risk-limit/stops/{stop_id}/effects"): RouteRule(),
     ("POST", "/api-keys"): RouteRule(renews=True, reverify=True),
     # **อ่านรายการไม่ต่ออายุและไม่ยืนยันซ้ำ** เพราะหน้าเว็บเรียกเป็นรอบ ๆ
     ("GET", "/api-keys"): RouteRule(),

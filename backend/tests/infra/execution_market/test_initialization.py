@@ -351,11 +351,41 @@ async def test_managed_history_refuses_fence_downgrade_and_keeps_force_rls(
         or "supported-symbol runtime history prevents downgrade" in result.stderr
         or "manual order request history prevents downgrade" in result.stderr
         or "manual order admission history prevents downgrade" in result.stderr
+        or "unconfigured financial boundary history prevents downgrade" in result.stderr
+        or "active risk writer protocol prevents downgrade" in result.stderr
+        or "risk evaluation request history prevents downgrade" in result.stderr
+        or "risk lifecycle history prevents downgrade" in result.stderr
+        or "risk queued cutoff history prevents downgrade" in result.stderr
+        or "risk stop history prevents downgrade" in result.stderr
+        or "versioned risk financial history prevents downgrade" in result.stderr
+        or "risk protocol history prevents downgrade" in result.stderr
+        or "risk boundary history prevents downgrade" in result.stderr
+        or "risk limit history prevents downgrade" in result.stderr
     )
     async with migrator_engine.connect() as connection:
         assert (
             await connection.execute(text("SELECT version_num FROM alembic_version"))
-        ).scalar_one() in {"0035", "0036", "0037", "0038", "0040", "0041", "0042"}
+        ).scalar_one() in {
+            "0035",
+            "0036",
+            "0037",
+            "0038",
+            "0040",
+            "0041",
+            "0042",
+            "0043",
+            "0044",
+            "0045",
+            "0046",
+            "0047",
+            "0048",
+            "0049",
+            "0050",
+            "0051",
+            "0052",
+            "0053",
+            "0054",
+        }
     async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
         assert (
             await session.execute("""SELECT bool_and(relforcerowsecurity) FROM pg_class

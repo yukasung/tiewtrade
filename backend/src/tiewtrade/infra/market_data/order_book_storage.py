@@ -4,6 +4,7 @@ import hashlib
 import json
 from dataclasses import dataclass
 from datetime import datetime
+from functools import lru_cache
 from typing import Any
 from uuid import UUID
 
@@ -132,24 +133,25 @@ async def _locked(session: MarketDataSession, lease: BookLease) -> Any:
     row = (
         (
             await session.execute(
-                """SELECT *,clock_timestamp() AS db_now FROM market_execution_state
-      WHERE source=:source AND base=:base AND quote=:quote FOR UPDATE""",
+                """WITH locked AS MATERIALIZED (
+        SELECT * FROM market_execution_state
+        WHERE source=:source AND base=:base AND quote=:quote FOR UPDATE
+      ) SELECT locked.*,clock_timestamp() AS db_now FROM locked""",
                 _params(lease.pair),
             )
         )
         .mappings()
         .one_or_none()
     )
-    # Evaluate the clock after any row-lock wait, never a transaction-start timestamp.
-    now = (await session.execute("SELECT clock_timestamp()")).scalar_one()
+    # The materialized row is locked before the outer query reads the DB clock.
     if (
         row is None
         or row["owner"] != lease.owner
         or row["generation"] != lease.generation
-        or row["lease_until"] <= now
+        or row["lease_until"] <= row["db_now"]
     ):
         raise WriterLeaseLost()
-    return {**row, "db_now": now}
+    return row
 
 
 async def renew_book_writer(session: MarketDataSession, lease: BookLease) -> BookLease:
@@ -261,6 +263,17 @@ async def publish_input(
     return _lease(lease.pair, final)
 
 
+@lru_cache(maxsize=256)
+def _decode_execution_input(payload: str, capability: str) -> StoredExecutionInput:
+    """Reuse immutable public decoding, never the fresh source/provenance checks."""
+    market = input_from_payload(payload)
+    metadata = metadata_from_payload(capability)
+    digest = hashlib.sha256(
+        (input_payload(market) + "\n" + metadata_payload(metadata)).encode()
+    ).hexdigest()
+    return StoredExecutionInput(market, metadata, digest)
+
+
 async def read_inputs(
     session: UserSession | MarketDataSession,
     pair: PositionPair,
@@ -285,7 +298,9 @@ async def read_inputs(
         (
             await session.execute(
                 """SELECT s.ready,s.failure_code,s.lease_until,s.verified_at,
-      s.last_input_id,s.generation AS current_generation,clock_timestamp() AS db_now,b.*
+      s.last_input_id,s.generation AS current_generation,clock_timestamp() AS db_now,
+      b.input_id,b.generation,b.received_at,b.payload::text AS payload,
+      b.capability::text AS capability,b.digest
       FROM market_execution_state s LEFT JOIN LATERAL
         (SELECT * FROM market_execution_buffer b
          WHERE (b.source,b.base,b.quote)=(s.source,s.base,s.quote)
@@ -317,11 +332,8 @@ async def read_inputs(
                 raise ExecutionInputGapError("retained execution input is missing")
             continue
         try:
-            market = input_from_payload(row["payload"])
-            metadata = metadata_from_payload(row["capability"])
-            digest = hashlib.sha256(
-                (input_payload(market) + "\n" + metadata_payload(metadata)).encode()
-            ).hexdigest()
+            decoded = _decode_execution_input(row["payload"], row["capability"])
+            market, metadata, digest = decoded.market, decoded.metadata, decoded.digest
         except (KeyError, TypeError, ValueError, MoneyError):
             raise ExecutionInputGapError("stored execution input is malformed") from None
         if (market.input_id, market.generation, market.pair, market.received_at) != (
@@ -335,7 +347,7 @@ async def read_inputs(
             raise ExecutionInputGapError("retained execution inputs are incomplete or corrupt")
         if market.generation != rows[0]["current_generation"]:
             raise ExecutionInputGapError("old generation requires consumer recovery")
-        result.append(StoredExecutionInput(market, metadata, digest))
+        result.append(decoded)
     return tuple(result)
 
 

@@ -184,8 +184,176 @@ async def append_execution_input(
     record: StoredExecutionInput,
     decision_market: MarketInput | None = None,
 ) -> SavedExecutionInput:
-    """Copy full evidence before a decision; permanent registry dedupes across daily partitions."""
+    """Copy one input through the same bounded, owner-locked batch path."""
+    return (
+        await append_execution_inputs(
+            session,
+            wallet_id=wallet_id,
+            episode_id=episode_id,
+            inputs=((evidence_id, record, decision_market),),
+        )
+    )[0]
+
+
+async def append_execution_inputs(
+    session: UserSession,
+    *,
+    wallet_id: UUID,
+    episode_id: UUID,
+    inputs: tuple[tuple[UUID, StoredExecutionInput, MarketInput | None], ...],
+) -> tuple[SavedExecutionInput, ...]:
+    """Copy every input before decisions, pinning episode/profile once per transaction.
+
+    The owner/episode lock remains held through commit. Profiles are immutable;
+    each source identity, digest and permanent deduplication key is still checked.
+    No input is dropped or merged and a conflict rolls back the whole batch.
+    """
+    if not 1 <= len(inputs) <= 20:
+        raise ValueError("bounded execution evidence batch required")
     await lock_active_episode(session, wallet_id, episode_id)
+    profile = (
+        (
+            await session.execute(
+                """SELECT fee_version,model_version FROM paper_execution_profiles
+      WHERE episode_id=:episode AND user_id=:user""",
+                {"episode": episode_id, "user": session.user_id},
+            )
+        )
+        .mappings()
+        .one_or_none()
+    )
+    if profile is None:
+        raise OrderConflictError("Paper profile not initialized")
+    prepared = tuple(
+        _prepare_execution_input(
+            session,
+            wallet_id=wallet_id,
+            episode_id=episode_id,
+            evidence_id=identity,
+            record=record,
+            decision_market=market,
+            fee_version=profile["fee_version"],
+            model_version=profile["model_version"],
+        )
+        for identity, record, market in inputs
+    )
+    unique: dict[tuple[object, ...], dict[str, object]] = {}
+    for value in prepared:
+        key = _input_key(value)
+        if key in unique and unique[key]["digest"] != value["digest"]:
+            raise OrderConflictError("Paper input identity payload conflict")
+        unique.setdefault(key, value)
+    params = {
+        "episode": episode_id,
+        "rows": json.dumps(
+            [
+                {
+                    name: value[name]
+                    for name in ("base", "quote", "generation", "input_id", "decision_kind")
+                }
+                for value in unique.values()
+            ]
+        ),
+    }
+    prior = (
+        (
+            await session.execute(
+                """SELECT e.* FROM jsonb_to_recordset(CAST(:rows AS jsonb)) AS r(
+                base text,quote text,generation bigint,input_id bigint,decision_kind text)
+                JOIN paper_execution_input_keys k ON k.episode_id=:episode
+                  AND k.base=r.base AND k.quote=r.quote AND k.generation=r.generation
+                  AND k.input_id=r.input_id AND k.decision_kind=r.decision_kind
+                JOIN paper_execution_inputs e
+                  ON (e.id,e.recorded_at)=(k.evidence_id,k.recorded_at)""",
+                params,
+            )
+        )
+        .mappings()
+        .all()
+    )
+    saved: dict[tuple[object, ...], SavedExecutionInput] = {}
+    for row in prior:
+        key = _input_key(row)
+        if row["digest"] != unique[key]["digest"]:
+            raise OrderConflictError("Paper input identity payload conflict")
+        saved[key] = _decode(row)
+    pending = tuple(value for key, value in unique.items() if key not in saved)
+    if pending:
+        rows = (
+            (
+                await session.execute(
+                    """INSERT INTO paper_execution_inputs
+                    (id,user_id,wallet_id,episode_id,base,quote,input_id,generation,
+                     decision_kind,payload,digest,source_digest)
+                    SELECT id,user_id,wallet_id,episode_id,base,quote,input_id,generation,
+                      decision_kind,payload,digest,source_digest
+                    FROM jsonb_to_recordset(CAST(:rows AS jsonb)) AS r(
+                      id uuid,user_id uuid,wallet_id uuid,episode_id uuid,base text,quote text,
+                      input_id bigint,generation bigint,decision_kind text,payload jsonb,
+                      digest text,source_digest text)
+                    RETURNING *""",
+                    {"rows": json.dumps(pending, default=str)},
+                )
+            )
+            .mappings()
+            .all()
+        )
+        await session.execute(
+            """INSERT INTO paper_execution_input_keys
+            (user_id,wallet_id,episode_id,base,quote,generation,input_id,
+             decision_kind,recorded_at,evidence_id)
+            SELECT user_id,wallet_id,episode_id,base,quote,generation,input_id,
+              decision_kind,recorded_at,id
+            FROM jsonb_to_recordset(CAST(:rows AS jsonb)) AS r(
+              user_id uuid,wallet_id uuid,episode_id uuid,base text,quote text,
+              generation bigint,input_id bigint,decision_kind text,
+              recorded_at timestamptz,id uuid)""",
+            {
+                "rows": json.dumps(
+                    [
+                        {
+                            name: row[name]
+                            for name in (
+                                "user_id",
+                                "wallet_id",
+                                "episode_id",
+                                "base",
+                                "quote",
+                                "generation",
+                                "input_id",
+                                "decision_kind",
+                                "recorded_at",
+                                "id",
+                            )
+                        }
+                        for row in rows
+                    ],
+                    default=str,
+                )
+            },
+        )
+        for row in rows:
+            saved[_input_key(row)] = _decode(row)
+    return tuple(saved[_input_key(value)] for value in prepared)
+
+
+def _input_key(value: Any) -> tuple[object, ...]:
+    return tuple(
+        value[name] for name in ("base", "quote", "generation", "input_id", "decision_kind")
+    )
+
+
+def _prepare_execution_input(
+    session: UserSession,
+    *,
+    wallet_id: UUID,
+    episode_id: UUID,
+    evidence_id: UUID,
+    record: StoredExecutionInput,
+    decision_market: MarketInput | None,
+    fee_version: str,
+    model_version: str,
+) -> dict[str, object]:
     if _source_digest(record) != record.digest:
         raise OrderConflictError("public source input digest mismatch")
     market = record.market if decision_market is None else decision_market
@@ -202,82 +370,31 @@ async def append_execution_input(
         and market == replace(record.market, rebase=True)
     ):
         raise OrderConflictError("consumer rebase changed source content")
-    profile = (
-        (
-            await session.execute(
-                """SELECT fee_version,model_version FROM paper_execution_profiles
-      WHERE episode_id=:episode AND user_id=:user""",
-                {"episode": episode_id, "user": session.user_id},
-            )
-        )
-        .mappings()
-        .one_or_none()
-    )
-    if profile is None:
-        raise OrderConflictError("Paper profile not initialized")
     evidence = {
         "market": json.loads(input_payload(market)),
         "metadata": json.loads(metadata_payload(record.metadata)),
-        "fee_version": profile["fee_version"],
-        "model_version": profile["model_version"],
+        "fee_version": fee_version,
+        "model_version": model_version,
     }
     if market != record.market:
         evidence["source_market"] = json.loads(input_payload(record.market))
     payload = canonical(evidence)
     digest = hashlib.sha256(payload.encode()).hexdigest()
     pair = market.pair
-    params: dict[str, object] = {
-        "user": session.user_id,
-        "wallet": wallet_id,
-        "episode": episode_id,
+    return {
+        "user_id": session.user_id,
+        "wallet_id": wallet_id,
+        "episode_id": episode_id,
         "base": pair.base,
         "quote": pair.quote,
-        "input": market.input_id,
+        "input_id": market.input_id,
         "generation": market.generation,
-        "kind": "REBASE" if isinstance(market, BookState) and market.rebase else "INPUT",
+        "decision_kind": "REBASE" if isinstance(market, BookState) and market.rebase else "INPUT",
         "id": evidence_id,
-        "payload": payload,
+        "payload": evidence,
         "digest": digest,
         "source_digest": record.digest,
     }
-    prior = (
-        (
-            await session.execute(
-                """SELECT e.* FROM paper_execution_input_keys k
-      JOIN paper_execution_inputs e ON (e.id,e.recorded_at)=(k.evidence_id,k.recorded_at)
-      WHERE k.episode_id=:episode AND k.base=:base AND k.quote=:quote AND k.generation=:generation
-        AND k.input_id=:input AND k.decision_kind=:kind""",
-                params,
-            )
-        )
-        .mappings()
-        .one_or_none()
-    )
-    if prior is not None:
-        if prior["digest"] != digest:
-            raise OrderConflictError("Paper input identity payload conflict")
-        return _decode(prior)
-    row = (
-        (
-            await session.execute(
-                """INSERT INTO paper_execution_inputs
-      (id,user_id,wallet_id,episode_id,base,quote,input_id,generation,decision_kind,payload,digest,source_digest)
-      VALUES(:id,:user,:wallet,:episode,:base,:quote,:input,:generation,:kind,
-             CAST(:payload AS jsonb),:digest,:source_digest)
-      RETURNING *""",
-                params,
-            )
-        )
-        .mappings()
-        .one()
-    )
-    await session.execute(
-        """INSERT INTO paper_execution_input_keys
-      (user_id,wallet_id,episode_id,base,quote,generation,input_id,decision_kind,recorded_at,evidence_id)
-      VALUES(:user,:wallet,:episode,:base,:quote,:generation,:input,:kind,:recorded_at,:id)""",
-        {**params, "recorded_at": row["recorded_at"]},
-    )
-    return _decode(row)
 
 
 async def read_execution_inputs(

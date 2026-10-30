@@ -462,6 +462,109 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/live/risk-limit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Risk Status */
+        get: operations["risk_status_live_risk_limit_get"];
+        put?: never;
+        /** Set Limit */
+        post: operations["set_limit_live_risk_limit_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/live/risk-limit/increase": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Increase Limit */
+        post: operations["increase_limit_live_risk_limit_increase_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/live/risk-limit/requests/by-key/{key}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** By Key */
+        get: operations["by_key_live_risk_limit_requests_by_key__key__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/live/risk-limit/requests/{receipt_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** By Id */
+        get: operations["by_id_live_risk_limit_requests__receipt_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/live/risk-limit/reset": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reset Limit */
+        post: operations["reset_limit_live_risk_limit_reset_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/live/risk-limit/stops/{stop_id}/effects": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Risk Effects */
+        get: operations["risk_effects_live_risk_limit_stops__stop_id__effects_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/market-catalog": {
         parameters: {
             query?: never;
@@ -764,6 +867,109 @@ export interface paths {
         put?: never;
         /** Cancel Order */
         post: operations["cancel_order_paper_orders__order_id__cancel_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/paper/risk-limit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Risk Status */
+        get: operations["risk_status_paper_risk_limit_get"];
+        put?: never;
+        /** Set Limit */
+        post: operations["set_limit_paper_risk_limit_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/paper/risk-limit/increase": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Increase Limit */
+        post: operations["increase_limit_paper_risk_limit_increase_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/paper/risk-limit/requests/by-key/{key}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** By Key */
+        get: operations["by_key_paper_risk_limit_requests_by_key__key__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/paper/risk-limit/requests/{receipt_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** By Id */
+        get: operations["by_id_paper_risk_limit_requests__receipt_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/paper/risk-limit/reset": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reset Limit */
+        post: operations["reset_limit_paper_risk_limit_reset_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/paper/risk-limit/stops/{stop_id}/effects": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Risk Effects */
+        get: operations["risk_effects_paper_risk_limit_stops__stop_id__effects_get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -2055,6 +2261,194 @@ export interface components {
             /** Status */
             status: string;
         };
+        /** RiskEffectPage */
+        RiskEffectPage: {
+            /** Effects Revision */
+            effects_revision: number;
+            /** Items */
+            items: components["schemas"]["RiskEffectView"][];
+            /**
+             * Mode
+             * @enum {string}
+             */
+            mode: "PAPER" | "LIVE";
+            /** Next Cursor */
+            next_cursor: string | null;
+            /** Snapshot At */
+            snapshot_at: string;
+            /**
+             * Stop Id
+             * Format: uuid
+             */
+            stop_id: string;
+        };
+        /** RiskEffectView */
+        RiskEffectView: {
+            /** Attempt */
+            attempt: number;
+            /** Details */
+            details: {
+                [key: string]: string;
+            };
+            /**
+             * Order Id
+             * Format: uuid
+             */
+            order_id: string;
+            /** Recorded At */
+            recorded_at: string;
+            /**
+             * State
+             * @enum {string}
+             */
+            state: "PENDING" | "CANCEL_PENDING" | "CANCELED" | "FILLED" | "REJECTED" | "ALREADY_TERMINAL" | "FAILED";
+            /**
+             * Target Id
+             * Format: uuid
+             */
+            target_id: string;
+            /**
+             * Target Kind
+             * @enum {string}
+             */
+            target_kind: "REQUEST" | "COMMAND" | "ORDER";
+        };
+        /** RiskExpectedScope */
+        RiskExpectedScope: {
+            /** Expected Episode Id */
+            expected_episode_id?: string | null;
+            /** Expected Revision */
+            expected_revision: number;
+            /** Expected Wallet Id */
+            expected_wallet_id?: string | null;
+        };
+        /** RiskLimitMutation */
+        RiskLimitMutation: {
+            /** Amount */
+            amount: string;
+            /** Expected Episode Id */
+            expected_episode_id?: string | null;
+            /** Expected Revision */
+            expected_revision: number;
+            /** Expected Wallet Id */
+            expected_wallet_id?: string | null;
+        };
+        /** RiskLimitView */
+        RiskLimitView: {
+            /** Adjusted Realized */
+            adjusted_realized?: string | null;
+            /** Amount */
+            amount: string | null;
+            /** Baseline At */
+            baseline_at?: string | null;
+            /** Baseline Id */
+            baseline_id?: string | null;
+            /** Baseline Source Revision */
+            baseline_source_revision?: number | null;
+            /**
+             * Currency
+             * @default USDT
+             * @constant
+             */
+            currency: "USDT";
+            /** Current Allowance */
+            current_allowance?: string | null;
+            /** Effects Revision */
+            effects_revision?: number | null;
+            /** Episode Id */
+            episode_id: string | null;
+            /** Evaluated At */
+            evaluated_at: string | null;
+            /** Failed Count */
+            failed_count?: number | null;
+            /** Input Ready At */
+            input_ready_at?: string | null;
+            /** Latched */
+            latched: boolean;
+            /** Loss */
+            loss: string | null;
+            /**
+             * Mode
+             * @enum {string}
+             */
+            mode: "PAPER" | "LIVE";
+            /**
+             * Pause Alert Due
+             * @default false
+             */
+            pause_alert_due: boolean;
+            /** Pending Count */
+            pending_count?: number | null;
+            /** Price Watermark */
+            price_watermark?: number | null;
+            /** Reason */
+            reason: string;
+            /** Revision */
+            revision: number;
+            /** Snapshot At */
+            snapshot_at: string;
+            /** Source Revision */
+            source_revision: number | null;
+            /**
+             * Stop Alert Due
+             * @default false
+             */
+            stop_alert_due: boolean;
+            /** Stop Id */
+            stop_id?: string | null;
+            /** Stop Progress */
+            stop_progress?: ("STOPPING" | "STOPPED" | "PROBLEMS") | null;
+            /** Target Count */
+            target_count?: number | null;
+            /** Target Set Complete */
+            target_set_complete?: boolean | null;
+            /** Unavailable Since */
+            unavailable_since?: string | null;
+            /** Wallet Id */
+            wallet_id: string | null;
+        };
+        /** RiskRequestView */
+        RiskRequestView: {
+            /**
+             * Action
+             * @enum {string}
+             */
+            action: "SET" | "DECREASE" | "INCREASE" | "RESET";
+            /** Amount */
+            amount: string | null;
+            /** Applied Revision */
+            applied_revision: number | null;
+            /** Expected Episode Id */
+            expected_episode_id: string | null;
+            /** Expected Revision */
+            expected_revision: number;
+            /** Expected Wallet Id */
+            expected_wallet_id: string | null;
+            /** Failure Code */
+            failure_code: string | null;
+            /**
+             * Idempotency Key
+             * Format: uuid
+             */
+            idempotency_key: string;
+            /**
+             * Mode
+             * @enum {string}
+             */
+            mode: "PAPER" | "LIVE";
+            /**
+             * Receipt Id
+             * Format: uuid
+             */
+            receipt_id: string;
+            /** Recorded At */
+            recorded_at: string;
+            /**
+             * State
+             * @enum {string}
+             */
+            state: "AUTHORIZATION_ONLY" | "REQUEST_PENDING" | "APPLIED" | "REJECTED";
+        };
         /**
          * SecondStep
          * @description ขั้นที่สองของการเข้าสู่ระบบ — รหัสจากแอป **หรือ** รหัสสำรองหนึ่งใบ
@@ -2863,6 +3257,228 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Health"];
+                };
+            };
+        };
+    };
+    risk_status_live_risk_limit_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RiskLimitView"];
+                };
+            };
+        };
+    };
+    set_limit_live_risk_limit_post: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RiskLimitMutation"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RiskRequestView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    increase_limit_live_risk_limit_increase_post: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RiskLimitMutation"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RiskRequestView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    by_key_live_risk_limit_requests_by_key__key__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                key: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RiskRequestView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    by_id_live_risk_limit_requests__receipt_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                receipt_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RiskRequestView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reset_limit_live_risk_limit_reset_post: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RiskExpectedScope"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RiskRequestView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    risk_effects_live_risk_limit_stops__stop_id__effects_get: {
+        parameters: {
+            query?: {
+                cursor?: string | null;
+                limit?: number;
+                filter?: "ALL" | "PENDING" | "FAILED";
+            };
+            header?: never;
+            path: {
+                stop_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RiskEffectPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
@@ -3888,6 +4504,228 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ManualOrderRefusal"];
+                };
+            };
+        };
+    };
+    risk_status_paper_risk_limit_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RiskLimitView"];
+                };
+            };
+        };
+    };
+    set_limit_paper_risk_limit_post: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RiskLimitMutation"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RiskRequestView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    increase_limit_paper_risk_limit_increase_post: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RiskLimitMutation"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RiskRequestView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    by_key_paper_risk_limit_requests_by_key__key__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                key: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RiskRequestView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    by_id_paper_risk_limit_requests__receipt_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                receipt_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RiskRequestView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reset_limit_paper_risk_limit_reset_post: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RiskExpectedScope"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RiskRequestView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    risk_effects_paper_risk_limit_stops__stop_id__effects_get: {
+        parameters: {
+            query?: {
+                cursor?: string | null;
+                limit?: number;
+                filter?: "ALL" | "PENDING" | "FAILED";
+            };
+            header?: never;
+            path: {
+                stop_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RiskEffectPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

@@ -84,6 +84,13 @@ class AuditAction(Enum):
     CATALOG_PREPARATION_REJECTED = "CATALOG_PREPARATION_REJECTED"
     CATALOG_REMOVED = "CATALOG_REMOVED"
     CATALOG_ACTIVATED = "CATALOG_ACTIVATED"
+    RISK_LIMIT_REQUESTED = "RISK_LIMIT_REQUESTED"
+    RISK_LIMIT_SET = "RISK_LIMIT_SET"
+    RISK_LIMIT_RESET = "RISK_LIMIT_RESET"
+    RISK_LIMIT_BREACHED = "RISK_LIMIT_BREACHED"
+    RISK_LIMIT_REJECTED = "RISK_LIMIT_REJECTED"
+    RISK_SOURCE_CONFLICTED = "RISK_SOURCE_CONFLICTED"
+    RISK_STOP_UPDATED = "RISK_STOP_UPDATED"
 
 
 #: ชนิดเหตุการณ์ที่เป็นการเทรด — ต้องระบุ PAPER หรือ LIVE เสมอ (RQ-19)
@@ -102,6 +109,13 @@ TRADING_ACTIONS: frozenset[AuditAction] = frozenset(
         AuditAction.PAPER_ORDER_REQUESTED,
         AuditAction.PAPER_ORDER_REQUEST_TRANSFERRED,
         AuditAction.PAPER_ORDER_REQUEST_REJECTED,
+        AuditAction.RISK_LIMIT_REQUESTED,
+        AuditAction.RISK_LIMIT_SET,
+        AuditAction.RISK_LIMIT_RESET,
+        AuditAction.RISK_LIMIT_BREACHED,
+        AuditAction.RISK_LIMIT_REJECTED,
+        AuditAction.RISK_SOURCE_CONFLICTED,
+        AuditAction.RISK_STOP_UPDATED,
     }
 )
 
@@ -144,6 +158,7 @@ class SubjectKind(Enum):
     PAPER_ORDER_ACTIVITY = "PAPER_ORDER_ACTIVITY"
     PLATFORM_MEMBERSHIP = "PLATFORM_MEMBERSHIP"
     SUPPORTED_SYMBOL = "SUPPORTED_SYMBOL"
+    RISK_LIMIT = "RISK_LIMIT"
 
 
 @runtime_checkable
@@ -555,7 +570,66 @@ class PaperOrderRequestDetails:
         }
 
 
+@dataclass(frozen=True, slots=True)
+class RiskLimitDetails:
+    event_id: UUID
+    request_id: UUID | None
+    risk_revision: int
+    limit_amount: Money | None
+    stop_id: UUID | None = None
+    order_id: UUID | None = None
+
+    def __post_init__(self) -> None:
+        if type(self.event_id) is not UUID:
+            raise AuditEventError("risk event identity required")
+        for identity in (self.request_id, self.stop_id, self.order_id):
+            if identity is not None and type(identity) is not UUID:
+                raise AuditEventError("invalid risk audit identity")
+        if type(self.risk_revision) is not int or self.risk_revision < 0:
+            raise AuditEventError("invalid risk revision")
+        if self.limit_amount is not None and (
+            type(self.limit_amount) is not Money
+            or self.limit_amount.currency != "USDT"
+            or self.limit_amount.amount <= 0
+        ):
+            raise AuditEventError("invalid risk audit amount")
+
+    def as_details(self) -> dict[str, object]:
+        return {
+            "event_id": str(self.event_id),
+            "request_id": None if self.request_id is None else str(self.request_id),
+            "risk_revision": self.risk_revision,
+            "limit_amount": None
+            if self.limit_amount is None
+            else self.limit_amount.as_parts()["amount"],
+            "stop_id": None if self.stop_id is None else str(self.stop_id),
+            "order_id": None if self.order_id is None else str(self.order_id),
+        }
+
+
+RISK_FAILURE_CODES: frozenset[str] = frozenset(
+    {
+        "RISK_REVISION_CONFLICT",
+        "RISK_SCOPE_CONFLICT",
+        "RISK_SOURCE_UNAVAILABLE",
+        "RISK_PRICE_UNAVAILABLE",
+        "RISK_INPUT_INVALID",
+        "RISK_LIMIT_UNSET",
+        "RISK_LOSS_LIMIT_REACHED",
+        "RISK_AUTHORIZATION_REQUIRED",
+        "RISK_CANCEL_FAILED",
+    }
+)
+
+
 DETAILS_TYPES: dict[AuditAction, type[object]] = {
+    AuditAction.RISK_LIMIT_REQUESTED: RiskLimitDetails,
+    AuditAction.RISK_LIMIT_SET: RiskLimitDetails,
+    AuditAction.RISK_LIMIT_RESET: RiskLimitDetails,
+    AuditAction.RISK_LIMIT_BREACHED: RiskLimitDetails,
+    AuditAction.RISK_LIMIT_REJECTED: RiskLimitDetails,
+    AuditAction.RISK_SOURCE_CONFLICTED: RiskLimitDetails,
+    AuditAction.RISK_STOP_UPDATED: RiskLimitDetails,
     AuditAction.PAPER_ORDER_REQUESTED: PaperOrderRequestDetails,
     AuditAction.PAPER_ORDER_REQUEST_TRANSFERRED: PaperOrderRequestDetails,
     AuditAction.PAPER_ORDER_REQUEST_REJECTED: PaperOrderRequestDetails,
@@ -606,6 +680,7 @@ DETAILS_TYPES: dict[AuditAction, type[object]] = {
 ALLOWED_FAILURE_CODES: frozenset[str] = frozenset(
     {
         *PAPER_REQUEST_FAILURES,
+        *RISK_FAILURE_CODES,
         "VENUE_CREDENTIAL_REJECTED",
         "VENUE_REJECTED",
         "VENUE_RATE_LIMITED",
@@ -847,7 +922,35 @@ def _check_paper_order_request(event: AuditEvent) -> None:
         raise AuditEventError("invalid Paper request audit outcome")
 
 
+def _check_risk_event(event: AuditEvent) -> None:
+    requested = event.action is AuditAction.RISK_LIMIT_REQUESTED
+    rejected = event.action in (AuditAction.RISK_LIMIT_REJECTED, AuditAction.RISK_SOURCE_CONFLICTED)
+    if (
+        not isinstance(event.details, RiskLimitDetails)
+        or event.subject_kind is not SubjectKind.RISK_LIMIT
+        or event.subject_id != str(event.owner_user_id)
+        or event.actor_kind is not (ActorKind.USER if requested else ActorKind.SYSTEM)
+        or event.actor_id != (event.owner_user_id if requested else None)
+        or event.mode not in (AuditMode.PAPER, AuditMode.LIVE)
+        or (requested and event.details.request_id != event.details.event_id)
+        or (
+            event.outcome not in (AuditOutcome.FAILED, AuditOutcome.REJECTED)
+            or event.failure_code not in RISK_FAILURE_CODES
+            if rejected
+            else event.outcome is not AuditOutcome.SUCCEEDED or event.failure_code is not None
+        )
+    ):
+        raise AuditEventError("invalid risk audit scope or outcome")
+
+
 _ACTION_INVARIANTS: dict[AuditAction, Callable[[AuditEvent], None]] = {
+    AuditAction.RISK_LIMIT_REQUESTED: _check_risk_event,
+    AuditAction.RISK_LIMIT_SET: _check_risk_event,
+    AuditAction.RISK_LIMIT_RESET: _check_risk_event,
+    AuditAction.RISK_LIMIT_BREACHED: _check_risk_event,
+    AuditAction.RISK_LIMIT_REJECTED: _check_risk_event,
+    AuditAction.RISK_SOURCE_CONFLICTED: _check_risk_event,
+    AuditAction.RISK_STOP_UPDATED: _check_risk_event,
     AuditAction.PAPER_ORDER_REQUESTED: _check_paper_order_request,
     AuditAction.PAPER_ORDER_REQUEST_TRANSFERRED: _check_paper_order_request,
     AuditAction.PAPER_ORDER_REQUEST_REJECTED: _check_paper_order_request,

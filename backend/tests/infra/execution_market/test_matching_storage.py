@@ -209,6 +209,7 @@ async def test_bulk_checkpoint_preserves_other_pair_and_rebuilds_multiple_orders
                         )
                     ).all()
                 }
+                await session.execute("UPDATE paper_order_dispatch SET attempts=7")
                 btc_claim = await claim_order(
                     session,
                     DueOrder(commands[1].command_id, owner, before[commands[1].command_id]),
@@ -223,6 +224,8 @@ async def test_bulk_checkpoint_preserves_other_pair_and_rebuilds_multiple_orders
                     for row in (await session.execute("SELECT * FROM paper_order_dispatch")).all()
                 }
                 assert btc_rows[commands[0].command_id].state == "TERMINAL"
+                assert btc_rows[commands[0].command_id].attempts == 0
+                assert btc_rows[commands[1].command_id].attempts == 8
                 for command in (commands[2], commands[3], pending, cancel):
                     assert (
                         btc_rows[command.command_id].next_attempt_at == before[command.command_id]
@@ -254,6 +257,10 @@ async def test_bulk_checkpoint_preserves_other_pair_and_rebuilds_multiple_orders
                 for command in (commands[2], pending, cancel):
                     assert after[command.command_id].next_attempt_at == before[command.command_id]
                 assert after[commands[1].command_id].next_attempt_at == btc_due
+                assert after[commands[1].command_id].attempts == 0
+                assert after[commands[3].command_id].attempts == 0
+                assert after[commands[2].command_id].attempts == 8
+                assert after[pending.command_id].attempts == after[cancel.command_id].attempts == 7
                 assert after[commands[2].command_id].claim_id == eth_claim.claim_id
                 raise RuntimeError("rollback scheduling fixture")
         async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:

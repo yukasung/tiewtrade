@@ -25,6 +25,7 @@ from tiewtrade.infra.positions import (
     PositionWriteStatus,
     apply_position_event,
 )
+from tiewtrade.infra.risk_limits.boundaries import financial_boundary
 
 
 def execution_payload(fact: ExecutionFact) -> dict[str, object]:
@@ -46,6 +47,26 @@ def execution_payload(fact: ExecutionFact) -> dict[str, object]:
 
 
 async def stage_fill_cash(
+    session: UserSession,
+    *,
+    wallet_id: UUID,
+    episode_id: UUID,
+    order_event_id: UUID,
+    position_event_id: UUID,
+    fact: ExecutionFact,
+) -> PositionWriteResult:
+    async with financial_boundary(session, episode_id=episode_id, kind="FILL"):
+        return await _stage_fill_cash(
+            session,
+            wallet_id=wallet_id,
+            episode_id=episode_id,
+            order_event_id=order_event_id,
+            position_event_id=position_event_id,
+            fact=fact,
+        )
+
+
+async def _stage_fill_cash(
     session: UserSession,
     *,
     wallet_id: UUID,
@@ -266,6 +287,30 @@ async def stage_fill_cash(
 
 
 async def stage_correction_cash(
+    session: UserSession,
+    *,
+    wallet_id: UUID,
+    episode_id: UUID,
+    order_event_id: UUID,
+    correction_event_id: UUID,
+    supersedes_position_event_id: UUID,
+    kind: PositionEventKind,
+    fact: ExecutionFact,
+) -> PositionWriteResult:
+    async with financial_boundary(session, episode_id=episode_id, kind="CORRECTION"):
+        return await _stage_correction_cash(
+            session,
+            wallet_id=wallet_id,
+            episode_id=episode_id,
+            order_event_id=order_event_id,
+            correction_event_id=correction_event_id,
+            supersedes_position_event_id=supersedes_position_event_id,
+            kind=kind,
+            fact=fact,
+        )
+
+
+async def _stage_correction_cash(
     session: UserSession,
     *,
     wallet_id: UUID,

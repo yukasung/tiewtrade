@@ -1,0 +1,17 @@
+{
+  "status": "FAILED",
+  "acceptance_result": false,
+  "error_type": "RiskInputError",
+  "error": "Paper wallet and episode required",
+  "counters": {
+    "offered": 0,
+    "admitted": 0,
+    "completed": 0,
+    "rejected": 0,
+    "fills": 0,
+    "cancels": 0,
+    "replays": 0,
+    "cycles": 0
+  },
+  "scenarios": []
+}

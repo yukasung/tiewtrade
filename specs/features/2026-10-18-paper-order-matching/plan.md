@@ -286,3 +286,23 @@ commit/push/merge ทำเมื่อเจ้าของสั่งเท�
 เจ้าของอนุมัติให้คง revision ของ terminal history เดิม และอัปเดตเฉพาะ active orders/รายการที่เพิ่งจบใน transaction ปัจจุบัน พร้อม reservation ที่ปล่อยเป็นศูนย์อย่าง atomic. Terminal revision ต้องไม่เกิน activity revision; projection/reservation ของรายการเดียวกันต้องสอดคล้องกัน. ใช้ additive migration ปรับ F-13 reset coherence โดยรักษา source proof, event linkage, owner isolation และการปฏิเสธข้อมูลผิด/ไม่ครบ; ไม่แก้ migration 0037. Downgrade ต้องปฏิเสธเมื่อมีข้อมูลที่ contract เดิมรับไม่ได้ ไม่ rewrite ประวัติ.
 
 ใช้ `matching_storage.persist_checkpoint` และ `paper_wallet_reset_readiness` เดิม; เพิ่ม real PostgreSQL safety tests สำหรับ active/current-terminal revision, old terminal rows ไม่ถูกเขียนซ้ำ, corruption, reset, correction, rollback/retry และ migration. กฎเงิน/การจับคู่และเกณฑ์ W1–W4 คงเดิม; ผลที่ได้รับผลกระทบต้องตรวจใหม่ก่อน Completed.
+
+
+### F18 integrated runtime scheduling exception — Approved2026-10-27
+
+Owner approved [F18-R7](../2026-10-25-wallet-risk-limits/worker-round-amendment.md)
+before implementation: F18-integrated production/runtime harness alternates
+manual1/matching1 with the existing20ms tick, instead of two20-candidate phases.
+F15 standalone harness and bounded round-function defaults remain20; all claim,
+FIFO/fairness/lease, financial/freshness/eligibility, backoff and W1–W4 thresholds
+remain unchanged. See F18 manifest/evidence for this explicitly different runtime.
+
+
+### F18 R8 scheduling follow-up — Approved2026-10-27
+
+Owner approved [F18-R8](../2026-10-25-wallet-risk-limits/claim-budget-amendment.md):
+F18 runtime scans at most20ordered candidates but claims at most1per phase,
+including a claimed item that later fails/defers. Skip claimNone candidates with
+unchanged CAS/owner/FIFO rules; defaults/standalone remain20/no claim budget.
+This supersedes only R7's one-candidate limit, keeping its short phase alternation
+and all safety/resource/validation limits. Incorporated before implementation.

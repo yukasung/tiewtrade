@@ -284,6 +284,12 @@ jobs:
         env:
           CI: "1"
 
+      - name: F-18 wallet risk production composition E2E
+        run: npm run test:e2e:risk-limits
+        working-directory: frontend
+        env:
+          CI: "1"
+
       - uses: actions/upload-artifact@v4
         if: failure()
         with:

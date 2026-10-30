@@ -507,9 +507,35 @@ async def _process_reset(session: UserSession, claimed: ClaimedPaperCommand) -> 
         await _reject_claimed(session, claimed, failure)
         return PaperCommand(claimed.command_id, PaperCommandState.REJECTED, failure)
 
-    await _enable_f15_writer(session)
-    wallet_id = UUID(str(state.wallet_id))
+    from tiewtrade.infra.risk_limits.boundaries import financial_boundary
+
     episode_id = uuid5(NAMESPACE_URL, f"tiewtrade:paper-reset:{claimed.command_id}:episode")
+    async with financial_boundary(
+        session,
+        episode_id=expected,
+        kind="EPISODE",
+        after_episode_id=episode_id,
+    ):
+        return await _reset_finances(
+            session,
+            claimed,
+            expected=expected,
+            wallet_id=UUID(str(state.wallet_id)),
+            episode_id=episode_id,
+            previous_sequence=current.sequence,
+        )
+
+
+async def _reset_finances(
+    session: UserSession,
+    claimed: ClaimedPaperCommand,
+    *,
+    expected: UUID,
+    wallet_id: UUID,
+    episode_id: UUID,
+    previous_sequence: int,
+) -> PaperCommand:
+    await _enable_f15_writer(session)
     ledger_id = uuid5(NAMESPACE_URL, f"tiewtrade:paper-reset:{claimed.command_id}:capital")
     initialization_id = uuid5(NAMESPACE_URL, f"tiewtrade:paper-reset:{claimed.command_id}:sources")
     amount, currency = money_to_columns(claimed.initial_capital)
@@ -532,7 +558,7 @@ async def _process_reset(session: UserSession, claimed: ClaimedPaperCommand) -> 
             "episode": episode_id,
             "wallet": wallet_id,
             "owner": session.user_id,
-            "sequence": current.sequence + 1,
+            "sequence": previous_sequence + 1,
             "amount": amount,
             "currency": currency,
         },

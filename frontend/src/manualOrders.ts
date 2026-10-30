@@ -15,7 +15,7 @@ async function safe<T>(request: Promise<T>): Promise<T> {
     if (cause instanceof DOMException && cause.name === "AbortError") throw cause;
     const error = cause instanceof ApiRequestError ? cause : null;
     // Never render arbitrary server/proxy/network text.
-    const allowed = new Set(["MANUAL_ORDER_EPISODE_CLOSED", "MANUAL_ORDER_INPUT_REJECTED", "MANUAL_ORDER_RATE_LIMITED", "ORDER_SAFETY_UNAVAILABLE", "MANUAL_USE_REQUIRED", "EPISODE_CONFLICT", "ORDER_CONFLICT", "ORDER_UNSUPPORTED"]);
+    const allowed = new Set(["RISK_LIMIT_UNSET", "RISK_LOSS_LIMIT_REACHED", "RISK_SOURCE_UNAVAILABLE", "RISK_PRICE_UNAVAILABLE", "MANUAL_ORDER_EPISODE_CLOSED", "MANUAL_ORDER_INPUT_REJECTED", "MANUAL_ORDER_RATE_LIMITED", "ORDER_SAFETY_UNAVAILABLE", "MANUAL_USE_REQUIRED", "EPISODE_CONFLICT", "ORDER_CONFLICT", "ORDER_UNSUPPORTED"]);
     throw new ApiRequestError(error && allowed.has(error.message) ? error.message : "MANUAL_ORDER_REQUEST_FAILED", error?.status ?? 0, error?.retryAt ?? null);
   }
 }

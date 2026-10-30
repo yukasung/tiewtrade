@@ -60,7 +60,7 @@ def test_production_readiness_and_admission_remain_closed(client: TestClient) ->
     assert client.get("/paper/trade?base=USDT").status_code == 422
     assert "market_observed_at" in snapshot.json()
     assert not snapshot.json()["admission_ready"]
-    assert "ORDER_SAFETY_UNAVAILABLE" in snapshot.json()["admission_reasons"]
+    assert "RISK_LIMIT_UNSET" in snapshot.json()["admission_reasons"]
     assert snapshot.json()["wallet"]["available_quote"] == "10000"
     result = client.post(
         "/paper/orders",
@@ -68,7 +68,7 @@ def test_production_readiness_and_admission_remain_closed(client: TestClient) ->
         headers={**csrf_headers(client), "Idempotency-Key": str(uuid4())},
     )
     assert result.status_code == 503, result.text
-    assert result.json()["detail"] == "ORDER_SAFETY_UNAVAILABLE"
+    assert result.json()["detail"] == "RISK_SOURCE_UNAVAILABLE"
     assert client.get("/paper/order-requests").json()["requests"] == []
 
 

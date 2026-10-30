@@ -3108,6 +3108,630 @@
         "title": "RetryAccepted",
         "type": "object"
       },
+      "RiskEffectPage": {
+        "properties": {
+          "effects_revision": {
+            "title": "Effects Revision",
+            "type": "integer"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/RiskEffectView"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "mode": {
+            "enum": [
+              "PAPER",
+              "LIVE"
+            ],
+            "title": "Mode",
+            "type": "string"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          },
+          "snapshot_at": {
+            "title": "Snapshot At",
+            "type": "string"
+          },
+          "stop_id": {
+            "format": "uuid",
+            "title": "Stop Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "stop_id",
+          "mode",
+          "effects_revision",
+          "snapshot_at",
+          "next_cursor",
+          "items"
+        ],
+        "title": "RiskEffectPage",
+        "type": "object"
+      },
+      "RiskEffectView": {
+        "properties": {
+          "attempt": {
+            "title": "Attempt",
+            "type": "integer"
+          },
+          "details": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Details",
+            "type": "object"
+          },
+          "order_id": {
+            "format": "uuid",
+            "title": "Order Id",
+            "type": "string"
+          },
+          "recorded_at": {
+            "title": "Recorded At",
+            "type": "string"
+          },
+          "state": {
+            "enum": [
+              "PENDING",
+              "CANCEL_PENDING",
+              "CANCELED",
+              "FILLED",
+              "REJECTED",
+              "ALREADY_TERMINAL",
+              "FAILED"
+            ],
+            "title": "State",
+            "type": "string"
+          },
+          "target_id": {
+            "format": "uuid",
+            "title": "Target Id",
+            "type": "string"
+          },
+          "target_kind": {
+            "enum": [
+              "REQUEST",
+              "COMMAND",
+              "ORDER"
+            ],
+            "title": "Target Kind",
+            "type": "string"
+          }
+        },
+        "required": [
+          "target_kind",
+          "target_id",
+          "order_id",
+          "state",
+          "attempt",
+          "details",
+          "recorded_at"
+        ],
+        "title": "RiskEffectView",
+        "type": "object"
+      },
+      "RiskExpectedScope": {
+        "additionalProperties": false,
+        "properties": {
+          "expected_episode_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Episode Id"
+          },
+          "expected_revision": {
+            "maximum": 9.223372036854776e+18,
+            "minimum": 0.0,
+            "title": "Expected Revision",
+            "type": "integer"
+          },
+          "expected_wallet_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Wallet Id"
+          }
+        },
+        "required": [
+          "expected_revision"
+        ],
+        "title": "RiskExpectedScope",
+        "type": "object"
+      },
+      "RiskLimitMutation": {
+        "additionalProperties": false,
+        "properties": {
+          "amount": {
+            "maxLength": 256,
+            "minLength": 1,
+            "title": "Amount",
+            "type": "string"
+          },
+          "expected_episode_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Episode Id"
+          },
+          "expected_revision": {
+            "maximum": 9.223372036854776e+18,
+            "minimum": 0.0,
+            "title": "Expected Revision",
+            "type": "integer"
+          },
+          "expected_wallet_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Wallet Id"
+          }
+        },
+        "required": [
+          "expected_revision",
+          "amount"
+        ],
+        "title": "RiskLimitMutation",
+        "type": "object"
+      },
+      "RiskLimitView": {
+        "properties": {
+          "adjusted_realized": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Adjusted Realized"
+          },
+          "amount": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Amount"
+          },
+          "baseline_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Baseline At"
+          },
+          "baseline_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Baseline Id"
+          },
+          "baseline_source_revision": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Baseline Source Revision"
+          },
+          "currency": {
+            "const": "USDT",
+            "default": "USDT",
+            "title": "Currency",
+            "type": "string"
+          },
+          "current_allowance": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current Allowance"
+          },
+          "effects_revision": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Effects Revision"
+          },
+          "episode_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Episode Id"
+          },
+          "evaluated_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Evaluated At"
+          },
+          "failed_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Failed Count"
+          },
+          "input_ready_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Input Ready At"
+          },
+          "latched": {
+            "title": "Latched",
+            "type": "boolean"
+          },
+          "loss": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Loss"
+          },
+          "mode": {
+            "enum": [
+              "PAPER",
+              "LIVE"
+            ],
+            "title": "Mode",
+            "type": "string"
+          },
+          "pause_alert_due": {
+            "default": false,
+            "title": "Pause Alert Due",
+            "type": "boolean"
+          },
+          "pending_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pending Count"
+          },
+          "price_watermark": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Price Watermark"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "revision": {
+            "title": "Revision",
+            "type": "integer"
+          },
+          "snapshot_at": {
+            "title": "Snapshot At",
+            "type": "string"
+          },
+          "source_revision": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Revision"
+          },
+          "stop_alert_due": {
+            "default": false,
+            "title": "Stop Alert Due",
+            "type": "boolean"
+          },
+          "stop_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stop Id"
+          },
+          "stop_progress": {
+            "anyOf": [
+              {
+                "enum": [
+                  "STOPPING",
+                  "STOPPED",
+                  "PROBLEMS"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stop Progress"
+          },
+          "target_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Count"
+          },
+          "target_set_complete": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Set Complete"
+          },
+          "unavailable_since": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unavailable Since"
+          },
+          "wallet_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Wallet Id"
+          }
+        },
+        "required": [
+          "mode",
+          "amount",
+          "revision",
+          "wallet_id",
+          "episode_id",
+          "latched",
+          "loss",
+          "reason",
+          "source_revision",
+          "evaluated_at",
+          "snapshot_at"
+        ],
+        "title": "RiskLimitView",
+        "type": "object"
+      },
+      "RiskRequestView": {
+        "properties": {
+          "action": {
+            "enum": [
+              "SET",
+              "DECREASE",
+              "INCREASE",
+              "RESET"
+            ],
+            "title": "Action",
+            "type": "string"
+          },
+          "amount": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Amount"
+          },
+          "applied_revision": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Applied Revision"
+          },
+          "expected_episode_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Episode Id"
+          },
+          "expected_revision": {
+            "title": "Expected Revision",
+            "type": "integer"
+          },
+          "expected_wallet_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Wallet Id"
+          },
+          "failure_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Failure Code"
+          },
+          "idempotency_key": {
+            "format": "uuid",
+            "title": "Idempotency Key",
+            "type": "string"
+          },
+          "mode": {
+            "enum": [
+              "PAPER",
+              "LIVE"
+            ],
+            "title": "Mode",
+            "type": "string"
+          },
+          "receipt_id": {
+            "format": "uuid",
+            "title": "Receipt Id",
+            "type": "string"
+          },
+          "recorded_at": {
+            "title": "Recorded At",
+            "type": "string"
+          },
+          "state": {
+            "enum": [
+              "AUTHORIZATION_ONLY",
+              "REQUEST_PENDING",
+              "APPLIED",
+              "REJECTED"
+            ],
+            "title": "State",
+            "type": "string"
+          }
+        },
+        "required": [
+          "receipt_id",
+          "mode",
+          "action",
+          "idempotency_key",
+          "amount",
+          "expected_revision",
+          "expected_wallet_id",
+          "expected_episode_id",
+          "state",
+          "applied_revision",
+          "failure_code",
+          "recorded_at"
+        ],
+        "title": "RiskRequestView",
+        "type": "object"
+      },
       "SecondStep": {
         "description": "ขั้นที่สองของการเข้าสู่ระบบ — รหัสจากแอป **หรือ** รหัสสำรองหนึ่งใบ",
         "properties": {
@@ -4278,6 +4902,357 @@
           }
         },
         "summary": "Read Health"
+      }
+    },
+    "/live/risk-limit": {
+      "get": {
+        "operationId": "risk_status_live_risk_limit_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RiskLimitView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Risk Status",
+        "tags": [
+          "risk-limits"
+        ]
+      },
+      "post": {
+        "operationId": "set_limit_live_risk_limit_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Idempotency-Key",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RiskLimitMutation"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RiskRequestView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Set Limit",
+        "tags": [
+          "risk-limits"
+        ]
+      }
+    },
+    "/live/risk-limit/increase": {
+      "post": {
+        "operationId": "increase_limit_live_risk_limit_increase_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Idempotency-Key",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RiskLimitMutation"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RiskRequestView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Increase Limit",
+        "tags": [
+          "risk-limits"
+        ]
+      }
+    },
+    "/live/risk-limit/requests/by-key/{key}": {
+      "get": {
+        "operationId": "by_key_live_risk_limit_requests_by_key__key__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "key",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Key",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RiskRequestView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "By Key",
+        "tags": [
+          "risk-limits"
+        ]
+      }
+    },
+    "/live/risk-limit/requests/{receipt_id}": {
+      "get": {
+        "operationId": "by_id_live_risk_limit_requests__receipt_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "receipt_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Receipt Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RiskRequestView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "By Id",
+        "tags": [
+          "risk-limits"
+        ]
+      }
+    },
+    "/live/risk-limit/reset": {
+      "post": {
+        "operationId": "reset_limit_live_risk_limit_reset_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Idempotency-Key",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RiskExpectedScope"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RiskRequestView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Reset Limit",
+        "tags": [
+          "risk-limits"
+        ]
+      }
+    },
+    "/live/risk-limit/stops/{stop_id}/effects": {
+      "get": {
+        "operationId": "risk_effects_live_risk_limit_stops__stop_id__effects_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "stop_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Stop Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 512,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "filter",
+            "required": false,
+            "schema": {
+              "default": "ALL",
+              "enum": [
+                "ALL",
+                "PENDING",
+                "FAILED"
+              ],
+              "title": "Filter",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RiskEffectPage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Risk Effects",
+        "tags": [
+          "risk-limits"
+        ]
       }
     },
     "/market-catalog": {
@@ -5968,6 +6943,357 @@
         "summary": "Cancel Order",
         "tags": [
           "manual-orders"
+        ]
+      }
+    },
+    "/paper/risk-limit": {
+      "get": {
+        "operationId": "risk_status_paper_risk_limit_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RiskLimitView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Risk Status",
+        "tags": [
+          "risk-limits"
+        ]
+      },
+      "post": {
+        "operationId": "set_limit_paper_risk_limit_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Idempotency-Key",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RiskLimitMutation"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RiskRequestView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Set Limit",
+        "tags": [
+          "risk-limits"
+        ]
+      }
+    },
+    "/paper/risk-limit/increase": {
+      "post": {
+        "operationId": "increase_limit_paper_risk_limit_increase_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Idempotency-Key",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RiskLimitMutation"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RiskRequestView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Increase Limit",
+        "tags": [
+          "risk-limits"
+        ]
+      }
+    },
+    "/paper/risk-limit/requests/by-key/{key}": {
+      "get": {
+        "operationId": "by_key_paper_risk_limit_requests_by_key__key__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "key",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Key",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RiskRequestView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "By Key",
+        "tags": [
+          "risk-limits"
+        ]
+      }
+    },
+    "/paper/risk-limit/requests/{receipt_id}": {
+      "get": {
+        "operationId": "by_id_paper_risk_limit_requests__receipt_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "receipt_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Receipt Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RiskRequestView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "By Id",
+        "tags": [
+          "risk-limits"
+        ]
+      }
+    },
+    "/paper/risk-limit/reset": {
+      "post": {
+        "operationId": "reset_limit_paper_risk_limit_reset_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Idempotency-Key",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RiskExpectedScope"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RiskRequestView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Reset Limit",
+        "tags": [
+          "risk-limits"
+        ]
+      }
+    },
+    "/paper/risk-limit/stops/{stop_id}/effects": {
+      "get": {
+        "operationId": "risk_effects_paper_risk_limit_stops__stop_id__effects_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "stop_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Stop Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 512,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "filter",
+            "required": false,
+            "schema": {
+              "default": "ALL",
+              "enum": [
+                "ALL",
+                "PENDING",
+                "FAILED"
+              ],
+              "title": "Filter",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RiskEffectPage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Risk Effects",
+        "tags": [
+          "risk-limits"
         ]
       }
     },

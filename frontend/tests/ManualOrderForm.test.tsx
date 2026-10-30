@@ -1,3 +1,4 @@
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
 import { ManualOrderForm } from "../src/ManualOrderForm";
@@ -29,8 +30,11 @@ it("submits exact strings and only the fields/units for each supported variant",
   expect(screen.getByLabelText<HTMLInputElement>(t("price")).value).toBe("");
   expect(screen.getByRole<HTMLButtonElement>("button", { name: t("submit") }).disabled).toBe(true);
 });
-it("has no mutation or enabled control on the Live route", () => {
-  render(<LiveTradePage/>);
-  for (const control of document.querySelectorAll<HTMLInputElement>("input,select,button")) expect(control.disabled).toBe(true);
-  expect(screen.getByRole("status").textContent).toBe(t("liveUnavailable"));
+it("keeps all Live order controls disabled while risk settings use a separate panel", () => {
+  vi.stubGlobal("fetch", vi.fn(() => Promise.resolve(new Response("{}", { status: 503 }))));
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  const view = render(<QueryClientProvider client={client}><LiveTradePage owner="owner"/></QueryClientProvider>);
+  for (const control of document.querySelectorAll<HTMLInputElement>("section[aria-labelledby=live-manual-form-heading] input,section[aria-labelledby=live-manual-form-heading] select,section[aria-labelledby=live-manual-form-heading] button")) expect(control.disabled).toBe(true);
+  expect(screen.getByText(t("liveUnavailable"))).toBeTruthy();
+  view.unmount(); client.clear(); vi.unstubAllGlobals();
 });

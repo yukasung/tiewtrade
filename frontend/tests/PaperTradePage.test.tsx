@@ -14,6 +14,7 @@ let queryClient: QueryClient;
 function mount(custom?: (url: string, init?: RequestInit) => Promise<Response> | undefined) {
   const fetcher = vi.fn((url: string, init?: RequestInit) => {
     const override = custom?.(url, init); if (override) return override;
+    if (url.includes("/risk-limit")) return Promise.resolve(answer({ detail: "unavailable" }, 503));
     if (url.includes("/market-catalog")) return Promise.resolve(answer({ active_pairs: [["BTC", "USDT"]] }));
     if (url.includes("/paper/trade")) return Promise.resolve(answer({ mode: "PAPER", wallet, account_use: "MANUAL", base: url.includes("base=BTC") ? "BTC" : null, quote: "USDT", catalog_revision: 1, snapshot_at: stamp, admission_ready: url.includes("base=BTC"), admission_reasons: url.includes("base=BTC") ? [] : ["ORDER_PAIR_REQUIRED"] }));
     if (url.includes("/paper/order-requests?")) return Promise.resolve(answer({ requests: [], next_cursor: null }));

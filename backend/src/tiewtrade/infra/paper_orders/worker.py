@@ -1,24 +1,34 @@
 """One owner-scoped Paper order worker transaction."""
 
 from dataclasses import dataclass, replace
-from datetime import timedelta
+from datetime import datetime, timedelta
 from typing import Any
 from uuid import NAMESPACE_URL, UUID, uuid5
 
 from tiewtrade.core.market_catalog import CatalogSnapshot
-from tiewtrade.core.money import Money, Quantity
+from tiewtrade.core.money import Money, MoneyError, Quantity
 from tiewtrade.core.order_book import BookState, MarketInput
 from tiewtrade.core.orders import (
     AdmissionPolicy,
+    OrderConstraints,
     OrderError,
     OrderIntent,
+    OrderOrigin,
     OrderStatus,
     OrderType,
     SourceUnavailableError,
 )
-from tiewtrade.core.paper_matching import MatchingState, admit_order, advance_matching, cancel_order
-from tiewtrade.core.positions import ExecutionFact, ExecutionSide
+from tiewtrade.core.paper_matching import (
+    ExecutionIdentityBudgetError,
+    MatchingState,
+    MatchingTransition,
+    admit_order,
+    advance_matching,
+    cancel_order,
+)
+from tiewtrade.core.positions import ExecutionFact, ExecutionSide, PositionError
 from tiewtrade.core.realtime_prices import Readiness, readiness
+from tiewtrade.core.risk_limits import RiskExecutionContext
 from tiewtrade.infra.audit import (
     ActorKind,
     AuditAction,
@@ -60,6 +70,7 @@ from tiewtrade.infra.paper_orders.matching_storage import (
 )
 from tiewtrade.infra.paper_orders.storage import (
     append_execution_input,
+    append_execution_inputs,
     increment_wallet_revision,
     lock_active_episode,
     lock_pair_catalog,
@@ -71,6 +82,8 @@ from tiewtrade.infra.positions import (
     apply_position_event,
     read_position_snapshot,
 )
+from tiewtrade.infra.risk_limits.policy import TransactionalRiskPolicy
+from tiewtrade.infra.risk_limits.stops import cancel_stopped_remainders, queued_opening_stopped
 
 
 class OrderWorkerIntegrityError(OrderError):
@@ -211,7 +224,19 @@ async def _process_new(
     state = await _cancel_removed_openings(
         session, row["wallet_id"], checkpoint.state, catalog, latest_removed_revision
     )
+    state = await cancel_stopped_remainders(session, row["wallet_id"], state)
     result_exists = row["result_state"] is not None
+    if (
+        not result_exists
+        and intent.side is ExecutionSide.BUY
+        and await queued_opening_stopped(
+            session,
+            episode_id=row["episode_id"],
+            recorded_at=row["risk_recorded_at"],
+        )
+    ):
+        await _reject(session, claim, row, "ORDER_SAFETY_UNAVAILABLE")
+        return
     if (
         not result_exists
         and intent.side is ExecutionSide.BUY
@@ -292,8 +317,17 @@ async def _process_new(
                     {"command": row["id"]},
                 )
             ).first()
-            if manual_request is not None:
+            if manual_request is not None or (
+                isinstance(policy, TransactionalRiskPolicy) and intent.origin is OrderOrigin.MANUAL
+            ):
                 effective_policy = await manual_policy_for(session, intent, delegate=policy)
+            elif isinstance(policy, TransactionalRiskPolicy):
+                reserved = Quantity.of(0, intent.pair.base)
+                for existing in state.orders:
+                    reserved += existing.reservation.base
+                effective_policy = await policy.resolve(
+                    session, intent, held=held, reserved=reserved
+                )
             accepted = admit_order(
                 state,
                 intent,
@@ -374,7 +408,15 @@ async def _process_new(
         )
         await finish_claim(session, claim, terminal=False)
         return
-    await _apply_inputs(session, claim, row, state, decisions, catalog)
+    await _apply_inputs(
+        session,
+        claim,
+        row,
+        state,
+        decisions,
+        catalog,
+        risk_provider=policy if isinstance(policy, TransactionalRiskPolicy) else None,
+    )
 
 
 def _catalog_revision(payload: dict[str, Any]) -> int:
@@ -446,19 +488,29 @@ async def _next_or_recovery_inputs(
     try:
         values = await read_inputs(session, state.pair, after=after, limit=20)
     except ExecutionInputGapError:
-        record = await read_latest_book(session, state.pair)
-        market = record.market
-        assert isinstance(market, BookState)
-        return (_InputDecision(record, replace(market, rebase=True)),)
+        return await _recovery_inputs(session, state)
     if not values:
         raise NoNewExecutionInputError("no new verified execution input")
     now = (await session.execute("SELECT clock_timestamp()")).scalar_one()
     if now - values[0].market.received_at > timedelta(seconds=1):
-        record = await read_latest_book(session, state.pair)
-        market = record.market
-        assert isinstance(market, BookState)
-        return (_InputDecision(record, replace(market, rebase=True)),)
+        return await _recovery_inputs(session, state)
     return tuple(_InputDecision(value, value.market) for value in values)
+
+
+async def _recovery_inputs(
+    session: UserSession, state: MatchingState
+) -> tuple[_InputDecision, ...]:
+    record = await read_latest_book(session, state.pair)
+    market = record.market
+    assert isinstance(market, BookState)
+    # Rebase skips only the unproved interval. Consume the already committed,
+    # contiguous fresh inputs after that snapshot in the same bounded batch.
+    # Otherwise a slower owner may rebase every round and never see any trade.
+    following = await read_inputs(session, state.pair, after=market.input_id, limit=19)
+    return (
+        _InputDecision(record, replace(market, rebase=True)),
+        *(_InputDecision(value, value.market) for value in following),
+    )
 
 
 async def _admission_record(session: UserSession, state: MatchingState) -> StoredExecutionInput:
@@ -506,6 +558,8 @@ async def _apply_inputs(
     state: MatchingState,
     decisions: tuple[_InputDecision, ...],
     catalog: CatalogSnapshot,
+    *,
+    risk_provider: TransactionalRiskPolicy | None = None,
 ) -> None:
     row = command
     pair_key = f"{state.pair.base}:{state.pair.quote}"
@@ -514,41 +568,104 @@ async def _apply_inputs(
     saved = None
     market = None
     record = None
-    for decision in decisions:
-        record = decision.source
-        market = decision.market
-        recovery = int(isinstance(market, BookState) and market.rebase)
-        evidence_key = (
-            f"evidence:{pair_key}:{record.market.generation}:{record.market.input_id}:{recovery}"
-        )
-        saved = await append_execution_input(
-            session,
-            wallet_id=row["wallet_id"],
-            episode_id=row["episode_id"],
-            evidence_id=_identity(row["episode_id"], evidence_key),
-            record=record,
-            decision_market=market,
-        )
-        identity_count = (
-            len(state.orders)
-            if not isinstance(market, BookState)
-            else len(state.orders) * (len(market.bids) + len(market.asks))
-        )
-        transition = advance_matching(
-            state,
-            market,
-            now=(await session.execute("SELECT clock_timestamp()")).scalar_one(),
-            constraints=record.metadata.limit,
-            market_constraints=record.metadata.market,
-            execution_ids=tuple(
+    risk: RiskExecutionContext | None = None
+    fenced = False
+    risk_intent = intent_from_payload(object_payload(command["payload"])["intent"])
+    # A SELL command can drive the same pair checkpoint as existing BUYs. Use
+    # an actual BUY intent so side-specific size conventions remain valid.
+    risk_intent = next(
+        (
+            order.intent
+            for order in state.orders
+            if order.intent.side is ExecutionSide.BUY and not order.status.terminal
+        ),
+        risk_intent,
+    )
+    evidence = await append_execution_inputs(
+        session,
+        wallet_id=row["wallet_id"],
+        episode_id=row["episode_id"],
+        inputs=tuple(
+            (
                 _identity(
                     row["episode_id"],
-                    f"fill:{pair_key}:{record.market.generation}:{record.market.input_id}:{index}",
+                    f"evidence:{pair_key}:{value.source.market.generation}:"
+                    f"{value.source.market.input_id}:"
+                    f"{int(isinstance(value.market, BookState) and value.market.rebase)}",
+                ),
+                value.source,
+                value.market,
+            )
+            for value in decisions
+        ),
+    )
+    for decision, saved in zip(decisions, evidence, strict=True):
+        record = decision.source
+        market = decision.market
+        if (
+            risk_provider is not None
+            and fenced
+            and (risk is None or (not risk.source_ready and not risk.setting.latched))
+        ):
+            # Only an actually fenced context can be reused in this batch.
+            risk = await risk_provider.execution_context(
+                session, risk_intent, publication_fence=fenced
+            )
+        elif risk is not None and risk.source_ready:
+            # Rollout controls are global, unlike the owner book/settings.
+            # Preserve the per-input fail-closed check if admission is disabled
+            # while this transaction is processing its pinned price snapshot.
+            enabled = (
+                await session.execute(
+                    "SELECT publication_enabled AND admission_enabled FROM risk_protocol_control"
                 )
-                for index in range(identity_count)
-            ),
-            catalog=catalog,
-        )
+            ).scalar_one()
+            if not enabled:
+                risk = replace(risk, source_ready=False)
+        try:
+            # An unrestricted pure preview is conservative: any possible BUY
+            # change requires final authorization. A proven no-op needs neither
+            # a risk context nor a publication lock. Nothing from a preview that
+            # changes BUY is persisted, including provisional SELL fills.
+            transition = _advance_matching_with_ids(
+                state,
+                market,
+                episode_id=row["episode_id"],
+                now=(await session.execute("SELECT clock_timestamp()")).scalar_one(),
+                constraints=record.metadata.limit,
+                market_constraints=record.metadata.market,
+                catalog=catalog,
+                risk=risk,
+            )
+        except (OrderError, MoneyError, PositionError):
+            if risk_provider is None or fenced:
+                raise
+            # An unclassifiable preview must use the authoritative path. Risk
+            # may block a provisional fill before a numeric limit is reached.
+            transition = None
+        if (
+            risk_provider is not None
+            and not fenced
+            and (transition is None or _buy_orders_changed(state, transition.state))
+        ):
+            # Discard the preview: the publisher may have committed a breach,
+            # outage or control change while it was being calculated. Resolve
+            # and drain again under the fence, then recompute from the original
+            # state with fresh time and the same deterministic fill identities.
+            await risk_provider.execution_context(session, risk_intent, publication_fence=False)
+            risk = await risk_provider.execution_context(session, risk_intent)
+            fenced = True
+            transition = _advance_matching_with_ids(
+                state,
+                market,
+                episode_id=row["episode_id"],
+                now=(await session.execute("SELECT clock_timestamp()")).scalar_one(),
+                constraints=record.metadata.limit,
+                market_constraints=record.metadata.market,
+                catalog=catalog,
+                risk=risk,
+            )
+        assert transition is not None
         for index, (fact, order_id) in enumerate(
             zip(transition.fills, transition.fill_order_ids, strict=True)
         ):
@@ -583,6 +700,10 @@ async def _apply_inputs(
                 )
             if result.status is not PositionWriteStatus.APPLIED:
                 raise OrderWorkerIntegrityError(f"fill {index} did not apply atomically")
+        if transition.fills or not fenced:
+            # BUY or SELL changes the authoritative book and may latch the
+            # limit. The next input must resolve that new financial revision.
+            risk = None
         previous_status = {order.intent.order_id: order.status for order in state.orders}
         for order in transition.state.orders:
             if (
@@ -636,6 +757,53 @@ async def _apply_inputs(
         terminal=terminal,
         retry_delay_ms=20 if terminal else 200,
     )
+
+
+def _advance_matching_with_ids(
+    state: MatchingState,
+    market: MarketInput,
+    *,
+    episode_id: UUID,
+    now: datetime,
+    constraints: OrderConstraints,
+    market_constraints: OrderConstraints,
+    catalog: CatalogSnapshot,
+    risk: RiskExecutionContext | None,
+) -> MatchingTransition:
+    """Avoid unused identities; retry only the pure calculation if a fill needs IDs.
+
+    The fallback retains the original full capacity and UUID5 identities. No
+    financial effects are persisted until a complete transition returns; SELL
+    fallback never invokes an opening gate or waits for risk replay.
+    """
+
+    def compute(values: tuple[UUID, ...]) -> MatchingTransition:
+        return advance_matching(
+            state,
+            market,
+            now=now,
+            constraints=constraints,
+            market_constraints=market_constraints,
+            execution_ids=values,
+            catalog=catalog,
+            risk=risk,
+        )
+
+    try:
+        return compute(())
+    except ExecutionIdentityBudgetError:
+        count = len(state.orders) * (
+            len(market.bids) + len(market.asks) if isinstance(market, BookState) else 1
+        )
+        prefix = f"fill:{state.pair.base}:{state.pair.quote}:{market.generation}:{market.input_id}:"
+        identities = tuple(_identity(episode_id, prefix + str(index)) for index in range(count))
+        return compute(identities)
+
+
+def _buy_orders_changed(before: MatchingState, after: MatchingState) -> bool:
+    return tuple(
+        order for order in before.orders if order.intent.side is ExecutionSide.BUY
+    ) != tuple(order for order in after.orders if order.intent.side is ExecutionSide.BUY)
 
 
 async def persist_financial_conflict(
