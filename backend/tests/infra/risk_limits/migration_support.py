@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncEngine
 class MigrationRoundtripState:
     protocol_flags: tuple[bool, bool, bool]
     temporary_settings: tuple[UUID, ...]
+    temporary_decreases: tuple[UUID, ...]
 
 
 async def prepare_migration_roundtrip(engine: AsyncEngine) -> MigrationRoundtripState:
@@ -36,6 +37,15 @@ async def prepare_migration_roundtrip(engine: AsyncEngine) -> MigrationRoundtrip
         await connection.execute(
             text("ALTER TABLE risk_limit_settings NO FORCE ROW LEVEL SECURITY")
         )
+        await connection.execute(
+            text("ALTER TABLE risk_limit_requests NO FORCE ROW LEVEL SECURITY")
+        )
+        await connection.execute(
+            text("ALTER TABLE risk_limit_requests DISABLE TRIGGER tiewtrade_append_only_row")
+        )
+        await connection.execute(
+            text("ALTER TABLE risk_limit_requests DISABLE TRIGGER tiewtrade_append_only_statement")
+        )
         inserted = await connection.execute(
             text(
                 """WITH unconfigured AS (
@@ -48,17 +58,53 @@ async def prepare_migration_roundtrip(engine: AsyncEngine) -> MigrationRoundtrip
                 RETURNING user_id"""
             )
         )
+        changed = await connection.execute(
+            text(
+                """UPDATE risk_limit_requests SET action='DECREASE'
+                WHERE mode='PAPER' AND action='INCREASE' AND authorization_id IS NULL
+                RETURNING id"""
+            )
+        )
+        await connection.execute(
+            text("ALTER TABLE risk_limit_requests ENABLE TRIGGER tiewtrade_append_only_statement")
+        )
+        await connection.execute(
+            text("ALTER TABLE risk_limit_requests ENABLE TRIGGER tiewtrade_append_only_row")
+        )
+        await connection.execute(text("ALTER TABLE risk_limit_requests FORCE ROW LEVEL SECURITY"))
         await connection.execute(text("ALTER TABLE risk_limit_settings FORCE ROW LEVEL SECURITY"))
         await connection.execute(text("ALTER TABLE paper_position_events FORCE ROW LEVEL SECURITY"))
     return MigrationRoundtripState(
         protocol_flags=(bool(row[0]), bool(row[1]), bool(row[2])),
         temporary_settings=tuple(inserted.scalars()),
+        temporary_decreases=tuple(changed.scalars()),
     )
 
 
 async def restore_migration_roundtrip(engine: AsyncEngine, state: MigrationRoundtripState) -> None:
     """Remove test compatibility rows and restore protocol flags after upgrading to head."""
     async with engine.begin() as connection:
+        await connection.execute(
+            text("ALTER TABLE risk_limit_requests NO FORCE ROW LEVEL SECURITY")
+        )
+        await connection.execute(
+            text("ALTER TABLE risk_limit_requests DISABLE TRIGGER tiewtrade_append_only_row")
+        )
+        await connection.execute(
+            text("ALTER TABLE risk_limit_requests DISABLE TRIGGER tiewtrade_append_only_statement")
+        )
+        for request in state.temporary_decreases:
+            await connection.execute(
+                text("UPDATE risk_limit_requests SET action='INCREASE' WHERE id=:request"),
+                {"request": request},
+            )
+        await connection.execute(
+            text("ALTER TABLE risk_limit_requests ENABLE TRIGGER tiewtrade_append_only_statement")
+        )
+        await connection.execute(
+            text("ALTER TABLE risk_limit_requests ENABLE TRIGGER tiewtrade_append_only_row")
+        )
+        await connection.execute(text("ALTER TABLE risk_limit_requests FORCE ROW LEVEL SECURITY"))
         await connection.execute(
             text("ALTER TABLE risk_limit_settings NO FORCE ROW LEVEL SECURITY")
         )

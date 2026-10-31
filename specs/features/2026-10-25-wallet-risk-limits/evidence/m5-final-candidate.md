@@ -6029,3 +6029,15 @@ language after that reload, and keeps every operation-specific assertion and tim
 Only the aggregate browser-test budget increased from 90 to 120 seconds to cover the long
 financial flow and evidence screenshots. The affected production-composition E2E passes 1/1
 in 16.9 seconds in an isolated database. No application business logic, API or schema changed.
+
+CI run `41171683187` then passed the complete E2E job, including F-37, F-16 and all four F-18
+browser cases. Its backend suite reached the next intentionally incompatible history boundary:
+R35 Paper INCREASE requests without an authorization receipt cannot be represented below 0059.
+The same test-only migration state manager now records those exact request IDs, temporarily
+represents their action as DECREASE while the append-only triggers are disabled inside the
+single stopped-writer transaction, and restores INCREASE plus both append-only triggers before
+the protocol flags are re-enabled. A failed transaction restores trigger state automatically.
+The final combined reproduction creates both an authorization-free Paper INCREASE and an
+unconfigured Paper BUY before running the five affected migration parameter cases; all 7/7
+pass. Request IDs, audit records, financial facts and order facts remain present and unchanged
+after restoration.
