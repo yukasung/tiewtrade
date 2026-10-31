@@ -174,7 +174,7 @@ it("leaves terminal discovery results to the order table instead of duplicating 
 it("stops pending polling while hidden and after route unmount", async () => {
   const { fetcher, unmount } = mount(url => url.includes("order-requests?") ? Promise.resolve(answer({ requests: [receipt], next_cursor: null })) : url.includes("order-requests/r") ? Promise.resolve(answer(receipt)) : undefined);
   await waitFor(() => expect(fetcher.mock.calls.some(([url]) => url.includes("order-requests/r"))).toBe(true));
-  expect(screen.getByText(t("TRANSFERRED")).closest("[hidden]")).toBeTruthy();
+  expect((await screen.findByText(t("TRANSFERRED"))).closest("[hidden]")).toBeTruthy();
   expect(screen.queryByText(t("episodeDraftNotice"))).toBeNull();
   vi.useFakeTimers();
   try {

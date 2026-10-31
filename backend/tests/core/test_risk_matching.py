@@ -16,7 +16,7 @@ from tests.core.test_paper_matching import (
     m,
     q,
 )
-from tiewtrade.core.orders import OrderConflictError, OrderStatus, SimulationProfile
+from tiewtrade.core.orders import OrderConflictError, OrderOrigin, OrderStatus, SimulationProfile
 from tiewtrade.core.paper_matching import MatchingState, MatchingTransition, advance_matching
 from tiewtrade.core.positions import ExecutionSide
 from tiewtrade.core.realtime_prices import ObservationKind, QuoteObservation
@@ -45,6 +45,11 @@ def risk(*, ready: bool = True) -> RiskExecutionContext:
     return RiskExecutionContext(
         RiskSetting(scope, 1, m(10)), RiskBook(scope, 2, ()) if ready else None, (price,), ready
     )
+
+
+def unset_risk(*, ready: bool = True) -> RiskExecutionContext:
+    scope = RiskScope(SCOPE.owner_id, SCOPE.mode, UUID(int=3), SCOPE.episode_id)
+    return RiskExecutionContext(RiskSetting(scope, 0, None), None, (), ready)
 
 
 def advance(state: MatchingState, context: RiskExecutionContext) -> MatchingTransition:
@@ -78,6 +83,26 @@ def test_unavailable_risk_does_not_consume_buy_liquidity_or_expire_the_order() -
     assert not result.fills
     assert result.state.orders[0].status is OrderStatus.ACCEPTED
     assert all(level.consumed.amount == 0 for level in result.state.liquidity)
+
+
+def test_unset_paper_limit_allows_buy_only_while_global_opening_is_ready() -> None:
+    state = admit(MatchingState(SCOPE, PAIR, SimulationProfile()), intent())
+    allowed = advance(state, unset_risk())
+    assert len(allowed.fills) == 1
+    blocked = advance(state, unset_risk(ready=False))
+    assert not blocked.fills
+    assert blocked.state.orders[0].status is OrderStatus.ACCEPTED
+
+
+def test_unset_paper_limit_never_authorizes_bot_matching() -> None:
+    state = admit(MatchingState(SCOPE, PAIR, SimulationProfile()), intent())
+    bot_order = replace(
+        state.orders[0], intent=replace(state.orders[0].intent, origin=OrderOrigin.BOT)
+    )
+    state = replace(state, orders=(bot_order,))
+    result = advance(state, unset_risk())
+    assert not result.fills
+    assert result.state.orders[0].status is OrderStatus.ACCEPTED
 
 
 def test_missing_risk_book_does_not_block_existing_bounded_sell() -> None:

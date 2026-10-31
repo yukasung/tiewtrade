@@ -42,6 +42,7 @@
 - Frontend container ถูก rebuild/recreate และ `http://localhost:5173/` ตอบสนองแล้ว
 - Production build ยังมีคำเตือนเดิมเรื่อง JavaScript chunk ใหญ่กว่า 500 kB ซึ่งไม่ได้เกิดจาก
   behavior change รอบนี้
-- การตรวจภาพจริง desktop/mobile และ light/dark ยังต้องยืนยันใน browser หลัง hard refresh
-  เพราะ browser access host/Computer Use permission ไม่พร้อมในรอบนี้; ไม่ถือว่า targeted
-  automated checks แทน visual acceptance ส่วนนี้
+- Visual acceptance ผ่านตามการยืนยันของเจ้าของวันที่ 2026-10-31 หลัง rebuild/hard refresh;
+  desktop/mobile UI ที่ส่งมอบได้รับการยอมรับแล้ว
+- Refactor หลังตรวจรับผ่าน component/session tests **55 tests / 4 files**, ESLint,
+  TypeScript typecheck, production build และ `git diff --check`; ไม่เปลี่ยน business logic

@@ -30,6 +30,7 @@ from tiewtrade.core.realtime_prices import ObservationKind, QuoteObservation
 from tiewtrade.core.risk_limits import (
     LossLimitReachedError,
     PairRiskState,
+    PaperUnsetRiskPolicy,
     RiskBaseline,
     RiskBook,
     RiskEvaluation,
@@ -415,6 +416,20 @@ def test_opening_is_permitted_only_for_ready_configured_policy() -> None:
                 policy.check(intent(ExecutionSide.BUY))
         else:
             policy.check(intent(ExecutionSide.BUY))
+
+
+def test_paper_manual_unset_policy_allows_opening_without_synthetic_evaluation() -> None:
+    policy = PaperUnsetRiskPolicy(
+        SCOPE,
+        Quantity.of(1, "BTC"),
+        Quantity.of(".25", "BTC"),
+    )
+    policy.check(intent(ExecutionSide.BUY))
+    policy.check(intent(ExecutionSide.SELL, ".75"))
+    with pytest.raises(OrderConflictError):
+        policy.check(replace(intent(ExecutionSide.BUY), origin=OrderOrigin.BOT))
+    with pytest.raises(RiskUnavailableError):
+        PaperUnsetRiskPolicy(SCOPE, None, None).check(intent(ExecutionSide.BUY))
 
 
 def test_scope_and_reservation_conflicts_cannot_be_treated_as_reductions() -> None:

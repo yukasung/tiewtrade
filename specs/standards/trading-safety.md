@@ -412,6 +412,12 @@ queued/active order handling และข้อยกเว้น manual ใช�
 [NC-F18-01..08](../features/2026-10-25-wallet-risk-limits/requirements.md)
 เป็นแหล่งรายละเอียดเดียว ไม่เปลี่ยนกฎ TOTP ใน security §1 หรือรับรอง Live พร้อมใช้งาน
 
+**ข้อยกเว้น Approved 2026-10-31:** Paper `MANUAL` อนุญาตให้เปิดความเสี่ยงใหม่ได้
+เมื่อยังไม่มีเพดานขาดทุน โดยไม่สร้าง default/synthetic risk evidence; กฎความปลอดภัยออเดอร์
+อื่นยังบังคับครบ หากตั้งเพดานแล้วให้กลับไปใช้ authoritative evaluation/latch/fence เดิมทันที
+ข้อยกเว้นนี้ไม่ใช้กับ Live หรือ BOT รายละเอียดอยู่ที่
+[Paper optional limit amendment](../features/2026-10-25-wallet-risk-limits/paper-optional-limit-requirements-amendment.md)
+
 
 การแก้ไข 2026-10-07: เจ้าของยกเลิก sub-account/หลายกระเป๋าและยืนยันหนึ่งบัญชีต่อผู้ใช้
 ปรับระดับการหยุดให้ตรงขอบเขตใหม่; ไม่เปลี่ยนกฎ single writer, ลดความเสี่ยง,

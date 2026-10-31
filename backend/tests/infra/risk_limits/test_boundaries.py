@@ -129,7 +129,7 @@ async def test_reservation_only_revision_does_not_need_publication_fence(
         ).scalar_one() == 0
 
 
-async def test_unconfigured_wallet_blocks_legacy_writes_but_keeps_proven_sell_available(
+async def test_unconfigured_wallet_blocks_unfenced_writes_but_keeps_proven_sell_available(
     engine_engine: AsyncEngine,
     migrator_engine: AsyncEngine,
     owner: UUID,
@@ -138,6 +138,7 @@ async def test_unconfigured_wallet_blocks_legacy_writes_but_keeps_proven_sell_av
     from dataclasses import replace
 
     from tiewtrade.core.positions import ExecutionSide
+    from tiewtrade.infra.positions.storage import _apply_position_event
 
     original = _fact(uuid4(), 1)
     async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
@@ -157,7 +158,7 @@ async def test_unconfigured_wallet_blocks_legacy_writes_but_keeps_proven_sell_av
         with pytest.raises(RiskProtocolError):
             async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
                 await enable_financial_writer(session)
-                await apply_position_event(
+                await _apply_position_event(
                     session, wallet.episode_id, uuid4(), PositionEventKind.RECORD, _fact(uuid4(), 2)
                 )
         async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:

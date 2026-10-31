@@ -22,6 +22,7 @@ from tiewtrade.core.orders import (
     OrderConstraints,
     OrderError,
     OrderIntent,
+    OrderOrigin,
     OrderScope,
     OrderState,
     OrderStatus,
@@ -374,6 +375,8 @@ def advance_matching(
     def risk_allows(order: OrderState) -> bool:
         if risk is None or order.intent.side is ExecutionSide.SELL:
             return True
+        if risk.setting.limit is None:
+            return risk.source_ready and order.intent.origin is OrderOrigin.MANUAL
         if risk_book is None or risk_setting is None:
             return False
         return (

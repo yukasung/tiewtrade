@@ -82,6 +82,7 @@ from tiewtrade.infra.positions import (
     apply_position_event,
     read_position_snapshot,
 )
+from tiewtrade.infra.risk_limits.control import paper_opening_protocol_enabled
 from tiewtrade.infra.risk_limits.policy import TransactionalRiskPolicy
 from tiewtrade.infra.risk_limits.stops import cancel_stopped_remainders, queued_opening_stopped
 
@@ -616,11 +617,7 @@ async def _apply_inputs(
             # Rollout controls are global, unlike the owner book/settings.
             # Preserve the per-input fail-closed check if admission is disabled
             # while this transaction is processing its pinned price snapshot.
-            enabled = (
-                await session.execute(
-                    "SELECT publication_enabled AND admission_enabled FROM risk_protocol_control"
-                )
-            ).scalar_one()
+            enabled = await paper_opening_protocol_enabled(session)
             if not enabled:
                 risk = replace(risk, source_ready=False)
         try:

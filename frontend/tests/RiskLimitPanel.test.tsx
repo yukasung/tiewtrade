@@ -132,7 +132,16 @@ it("sends SET and DECREASE directly with canonical exact amounts and no TOTP", a
     }
     if (!url.includes("requests")) return answer(snapshot);
   });
-  await screen.findAllByText(t("RISK_LIMIT_UNSET"));
+  await screen.findByLabelText(t("limit"));
+  expect(screen.queryByText("ไม่บังคับ คุณตั้งเพดานภายหลังได้")).toBeNull();
+  expect(amountInput().value).toBe("");
+  const form = amountInput().closest("form");
+  expect(form?.classList.contains("grid")).toBe(true);
+  expect(form?.classList.contains("grid-cols-1")).toBe(true);
+  expect(form?.classList.contains("sm:grid-cols-[minmax(0,1fr)_7rem]")).toBe(true);
+  expect(saveButton().classList.contains("h-11")).toBe(true);
+  expect(saveButton().classList.contains("w-full")).toBe(true);
+  expect(screen.queryByText(t("RISK_LIMIT_UNSET"))).toBeNull();
   fireEvent.change(amountInput(), { target: { value: "050.000" } });
   fireEvent.click(saveButton());
   await screen.findByText(t("checkingPrevious"));
@@ -494,4 +503,17 @@ it("keeps Live scope separate from a Paper recovery attempt", async () => {
   expect(fetcher.mock.calls.every(([url]) => url.includes("/live/risk-limit"))).toBe(true);
   expect(document.body.textContent).not.toContain("UNKNOWN");
   expect(riskJournal.read(riskScope("owner", "PAPER"))).toEqual(attempt);
+});
+
+it("keeps an unset limit optional only for Paper", async () => {
+  mount((url) => url.includes("requests") ? undefined : answer({
+    ...base,
+    mode: "LIVE",
+    amount: null,
+    wallet_id: null,
+    episode_id: null,
+    reason: "RISK_LIMIT_UNSET",
+  }), "LIVE");
+  expect((await screen.findAllByText(t("liveUnset"))).length).toBeGreaterThan(0);
+  expect(screen.queryByText("Optional. You can set a loss limit later.")).toBeNull();
 });

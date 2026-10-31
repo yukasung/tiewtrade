@@ -7,9 +7,9 @@ from tiewtrade.core.money import Quantity
 from tiewtrade.core.orders import AdmissionPolicy, OrderConflictError, OrderIntent, TradingMode
 from tiewtrade.core.positions import ExecutionSide
 from tiewtrade.core.risk_limits import (
+    PaperUnsetRiskPolicy,
     RiskEvaluation,
     RiskExecutionContext,
-    RiskLimitUnsetError,
     RiskPolicy,
     RiskPriceUnavailableError,
     RiskReason,
@@ -19,6 +19,7 @@ from tiewtrade.core.risk_limits import (
 from tiewtrade.infra.db.session import UserSession, require_user_session
 from tiewtrade.infra.paper_orders.storage import lock_pair_catalog
 from tiewtrade.infra.paper_wallet import get_wallet
+from tiewtrade.infra.risk_limits.control import paper_opening_protocol_enabled
 from tiewtrade.infra.risk_limits.dispatch import lock_risk_owner
 from tiewtrade.infra.risk_limits.monitor import replay_monitor
 from tiewtrade.infra.risk_limits.storage import read_setting
@@ -59,9 +60,13 @@ class TransactionalRiskPolicy:
                 held,
                 reserved,
             )
-        role = (await checked.execute("SELECT current_user")).scalar_one()
         if intent.side is ExecutionSide.BUY:
             await lock_pair_catalog(checked, intent.pair)
+        if intent.side is ExecutionSide.BUY and setting.limit is None:
+            if not await paper_opening_protocol_enabled(checked):
+                raise RiskUnavailableError("risk admission has not passed activation validation")
+            return PaperUnsetRiskPolicy(scope, held, reserved)
+        role = (await checked.execute("SELECT current_user")).scalar_one()
         if role == "tiewtrade_engine" and setting.limit is not None:
             await replay_monitor(checked, setting)
             setting = await read_setting(checked, scope)
@@ -70,8 +75,6 @@ class TransactionalRiskPolicy:
         enabled = evidence.admission_enabled
         if intent.side is ExecutionSide.BUY and not enabled:
             raise RiskUnavailableError("risk admission has not passed activation validation")
-        if intent.side is ExecutionSide.BUY and setting.limit is None:
-            raise RiskLimitUnsetError("wallet loss limit is required before opening")
         if intent.side is ExecutionSide.BUY and not evaluation.latched:
             price = next((row for row in evidence.prices if row.pair == intent.pair), None)
             if price is None or price.price_at(evaluation.evaluated_at) is None:
@@ -95,9 +98,15 @@ class TransactionalRiskPolicy:
             return RiskExecutionContext(setting, None, (), False)
         if publication_fence:
             await checked.execute("SELECT risk_financial_fence()")
-        if setting.limit is not None:
-            await replay_monitor(checked, setting, publication_fence=publication_fence)
-            setting = await read_setting(checked, scope)
+        if setting.limit is None:
+            return RiskExecutionContext(
+                setting,
+                None,
+                (),
+                await paper_opening_protocol_enabled(checked),
+            )
+        await replay_monitor(checked, setting, publication_fence=publication_fence)
+        setting = await read_setting(checked, scope)
         evidence = await read_evidence(checked, setting)
         return RiskExecutionContext(
             setting,

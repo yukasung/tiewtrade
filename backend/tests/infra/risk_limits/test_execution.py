@@ -12,6 +12,7 @@ import pytest
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncEngine
 
+from tests.infra.db.test_migrations import _failed_upgrade_or_downgrade
 from tests.infra.execution_market.test_dispatch import intent
 from tests.infra.execution_market.test_worker import ready_public_sources
 from tests.infra.risk_limits.test_requests import submission
@@ -100,7 +101,7 @@ async def runtime(
     owner: UUID,
     wallet: PaperWalletSnapshot,
     *,
-    limit: str = "0.01",
+    limit: str | None = "0.01",
     account_use: str = "MANUAL",
 ) -> AsyncIterator[Runtime]:
     market, lease, book, metadata = await ready_public_sources()
@@ -119,13 +120,14 @@ async def runtime(
             snapshot = await read_snapshot(session)
             assert snapshot.feed is not None
             await renew_writer(session, snapshot.feed)
-        async with user_session(api, owner) as session:
-            receipt = await submit_request(
-                session, replace(submission(owner, wallet), amount=Money.of(limit, "USDT"))
-            )
-        token = await claim(engine, owner, receipt)
-        async with user_session(engine, owner, role=DatabaseRole.ENGINE) as session:
-            await process_request(session, token)
+        if limit is not None:
+            async with user_session(api, owner) as session:
+                receipt = await submit_request(
+                    session, replace(submission(owner, wallet), amount=Money.of(limit, "USDT"))
+                )
+            token = await claim(engine, owner, receipt)
+            async with user_session(engine, owner, role=DatabaseRole.ENGINE) as session:
+                await process_request(session, token)
         yield Runtime(market, lease, book, metadata)
     finally:
         async with migrator.begin() as connection:
@@ -134,6 +136,122 @@ async def runtime(
               financial_enabled=false,publication_enabled=false""")
             )
         await market.dispose()
+
+
+async def test_matching_reloads_a_limit_created_after_an_unset_intake(
+    api_engine: AsyncEngine,
+    engine_engine: AsyncEngine,
+    migrator_engine: AsyncEngine,
+    owner: UUID,
+    wallet: PaperWalletSnapshot,
+) -> None:
+    policy = TransactionalRiskPolicy()
+    value = intent(owner, wallet.episode_id)
+    async with runtime(api_engine, engine_engine, migrator_engine, owner, wallet, limit=None):
+        async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+            unset = await policy.execution_context(session, value)
+        assert unset.setting.limit is None and unset.source_ready
+
+        async with user_session(api_engine, owner) as session:
+            receipt = await submit_request(
+                session,
+                replace(submission(owner, wallet), amount=Money.of("100", "USDT")),
+            )
+        token = await claim(engine_engine, owner, receipt)
+        async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+            await process_request(session, token)
+        async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+            configured = await policy.execution_context(session, value)
+        assert configured.setting.limit == Money.of("100", "USDT")
+        assert configured.source_ready
+
+
+async def test_unset_manual_request_reaches_one_fill_without_synthetic_risk_rows(
+    api_engine: AsyncEngine,
+    engine_engine: AsyncEngine,
+    migrator_engine: AsyncEngine,
+    owner: UUID,
+    wallet: PaperWalletSnapshot,
+) -> None:
+    from tiewtrade.infra.paper_orders.request_dispatch import DueRequest, claim_request
+    from tiewtrade.infra.paper_orders.request_worker import process_request as transfer
+    from tiewtrade.infra.paper_orders.requests import admit_new_request
+
+    value = intent(owner, wallet.episode_id)
+    async with runtime(
+        api_engine, engine_engine, migrator_engine, owner, wallet, limit=None
+    ) as src:
+        async with user_session(api_engine, owner) as session:
+            receipt = await admit_new_request(
+                session,
+                wallet_id=wallet.wallet_id,
+                intent=value,
+            )
+        async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+            due = (
+                await session.execute(
+                    "SELECT next_attempt_at FROM paper_order_request_dispatch WHERE request_id=:id",
+                    {"id": receipt.request_id},
+                )
+            ).scalar_one()
+            request_claim = await claim_request(
+                session,
+                DueRequest(receipt.request_id, owner, due),
+                worker="optional-limit-intake",
+            )
+        assert request_claim is not None
+        async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+            await transfer(session, request_claim, policy=TransactionalRiskPolicy())
+            command_id = UUID(
+                str(
+                    (
+                        await session.execute(
+                            "SELECT command_id FROM paper_order_request_results "
+                            "WHERE request_id=:id",
+                            {"id": receipt.request_id},
+                        )
+                    ).scalar_one()
+                )
+            )
+
+        await drive(engine_engine, owner, command_id)
+        await asyncio.sleep(0.12)
+        await src.next_book()
+        await drive(engine_engine, owner, command_id)
+
+        async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+            assert (
+                await session.execute(
+                    "SELECT status FROM paper_order_projections WHERE order_id=:id",
+                    {"id": value.order_id},
+                )
+            ).scalar_one() == "FILLED"
+            assert (
+                await session.execute("SELECT count(*) FROM paper_position_events")
+            ).scalar_one() == 1
+            assert (
+                await session.execute("SELECT count(*) FROM risk_limit_settings")
+            ).scalar_one() == 0
+            assert (
+                await session.execute("SELECT count(*) FROM risk_limit_evaluations")
+            ).scalar_one() == 0
+            assert (
+                await session.execute("SELECT count(*) FROM risk_limit_baselines")
+            ).scalar_one() == 0
+            current = await get_wallet(session)
+            assert current is not None and current.balance == Money.of("9900", "USDT")
+
+    # The old schema cannot represent an opening that was valid while the limit
+    # was unset. Downgrade must preserve that history and leave 0060 installed.
+    await api_engine.dispose()
+    await engine_engine.dispose()
+    await migrator_engine.dispose()
+    failed = _failed_upgrade_or_downgrade("downgrade", "0059")
+    assert "unconfigured Paper economic history prevents downgrade" in failed.stderr
+    async with migrator_engine.connect() as connection:
+        assert (
+            await connection.execute(text("SELECT version_num FROM alembic_version"))
+        ).scalar_one() == "0060"
 
 
 async def drive(engine: AsyncEngine, owner: UUID, command_id: UUID) -> None:

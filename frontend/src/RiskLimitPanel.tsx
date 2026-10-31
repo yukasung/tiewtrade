@@ -327,7 +327,7 @@ function RiskForScope({ owner, mode, visible }: {
     : draftStale ? t("draftStale")
     : dirty && parsedDraft === null ? t("invalidAmount")
     : dirty && action === null ? t("unchanged")
-    : data?.amount === null && !dirty ? t("unset")
+    : data?.amount === null && !dirty && mode === "LIVE" ? t("liveUnset")
     : null;
   const helpId = `${id}-amount-help`;
   const recoveryStatusId = `${id}-recovery-status`;
@@ -352,10 +352,10 @@ function RiskForScope({ owner, mode, visible }: {
       )} onClick={() => setResetOpen(true)}>{t("RESET")}</Button>
     </div>}
     {data && <>
-      {data.reason !== "READY" &&
+      {data.reason !== "READY" && !(mode === "PAPER" && data.reason === "RISK_LIMIT_UNSET") &&
         <div role="status"><Badge color={statusColor}>{riskCode(data.reason)}</Badge></div>}
-      <form onSubmit={event => { event.preventDefault(); submitDraft(); }} className="flex flex-col gap-3 sm:flex-row sm:items-end">
-        <div className="min-w-0 flex-1">
+      <form onSubmit={event => { event.preventDefault(); submitDraft(); }} className="grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_7rem] sm:items-end">
+        <div className="min-w-0">
           <Label htmlFor={`${id}-amount`}>{t("limit")}</Label>
           <Input
             id={`${id}-amount`}
@@ -376,7 +376,7 @@ function RiskForScope({ owner, mode, visible }: {
           />
           {help && <p id={helpId} role={draftStale || parsedDraft === null ? "alert" : "status"} className="mt-2 text-sm text-gray-500 dark:text-gray-400">{help}</p>}
         </div>
-        <Button ref={saveButton} type="submit" disabled={saveDisabled} aria-describedby={pendingAttempt ? recoveryStatusId : undefined}>{t("save")}</Button>
+        <Button ref={saveButton} type="submit" className="h-11 w-full" disabled={saveDisabled} aria-describedby={pendingAttempt ? recoveryStatusId : undefined}>{t("save")}</Button>
       </form>
       {draftStale && <Button variant="outline" disabled={snapshot.isFetching} onClick={useLatest}>{t("useLatest")}</Button>}
     </>}

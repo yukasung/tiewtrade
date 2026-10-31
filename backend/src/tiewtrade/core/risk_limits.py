@@ -11,6 +11,7 @@ from tiewtrade.core.orders import (
     BaseSize,
     OrderConflictError,
     OrderIntent,
+    OrderOrigin,
     SafetyUnavailableError,
     TradingMode,
     aware,
@@ -575,21 +576,8 @@ class RiskPolicy:
     reserved: Quantity | None
 
     def check(self, intent: OrderIntent) -> None:
-        scope = self.evaluation.scope
-        if (scope.owner_id, scope.mode) != (intent.scope.owner_id, intent.scope.mode) or (
-            scope.mode is TradingMode.PAPER and scope.episode_id != intent.scope.episode_id
-        ):
-            raise OrderConflictError("risk/order scope mismatch")
-        if type(self.held) is not Quantity or type(self.reserved) is not Quantity:
-            raise RiskUnavailableError("authoritative holdings unavailable")
-        if self.held.asset != intent.pair.base or self.reserved.asset != intent.pair.base:
-            raise RiskInputError("risk holdings pair mismatch")
-        if self.held.amount < 0 or self.reserved.amount < 0 or self.reserved > self.held:
-            raise RiskUnavailableError("invalid authoritative reservations")
-        reducing = (
-            intent.side is ExecutionSide.SELL
-            and isinstance(intent.size, BaseSize)
-            and not intent.size.quantity > self.held - self.reserved
+        reducing = _check_order_scope_and_holdings(
+            self.evaluation.scope, self.held, self.reserved, intent
         )
         if reducing:
             return
@@ -597,6 +585,45 @@ class RiskPolicy:
             raise LossLimitReachedError("loss limit remains latched until owner reset")
         if self.evaluation.reason is not RiskReason.READY:
             raise RiskUnavailableError("risk policy is unavailable")
+
+
+@dataclass(frozen=True, slots=True)
+class PaperUnsetRiskPolicy:
+    """Permit Paper MANUAL opening without fabricating configured risk evidence."""
+
+    scope: RiskScope
+    held: Quantity | None
+    reserved: Quantity | None
+
+    def check(self, intent: OrderIntent) -> None:
+        if self.scope.mode is not TradingMode.PAPER:
+            raise RiskInputError("optional loss limit applies only to Paper")
+        if intent.origin is not OrderOrigin.MANUAL:
+            raise OrderConflictError("optional loss limit applies only to manual orders")
+        _check_order_scope_and_holdings(self.scope, self.held, self.reserved, intent)
+
+
+def _check_order_scope_and_holdings(
+    scope: RiskScope,
+    held: Quantity | None,
+    reserved: Quantity | None,
+    intent: OrderIntent,
+) -> bool:
+    if (scope.owner_id, scope.mode) != (intent.scope.owner_id, intent.scope.mode) or (
+        scope.mode is TradingMode.PAPER and scope.episode_id != intent.scope.episode_id
+    ):
+        raise OrderConflictError("risk/order scope mismatch")
+    if type(held) is not Quantity or type(reserved) is not Quantity:
+        raise RiskUnavailableError("authoritative holdings unavailable")
+    if held.asset != intent.pair.base or reserved.asset != intent.pair.base:
+        raise RiskInputError("risk holdings pair mismatch")
+    if held.amount < 0 or reserved.amount < 0 or reserved > held:
+        raise RiskUnavailableError("invalid authoritative reservations")
+    return (
+        intent.side is ExecutionSide.SELL
+        and isinstance(intent.size, BaseSize)
+        and not intent.size.quantity > held - reserved
+    )
 
 
 @dataclass(frozen=True, slots=True)
@@ -611,6 +638,6 @@ class RiskExecutionContext:
             raise RiskInputError("explicit execution risk evidence required")
         if self.book is not None and self.book.scope != self.setting.scope:
             raise RiskInputError("execution risk scope mismatch")
-        if self.source_ready and self.book is None:
+        if self.source_ready and self.book is None and self.setting.limit is not None:
             raise RiskInputError("ready execution risk requires a complete book")
         _prices(self.prices)

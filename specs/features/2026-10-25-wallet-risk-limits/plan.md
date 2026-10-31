@@ -1,6 +1,10 @@
 # F-18 — เพดานความเสี่ยงต่อกระเป๋า — Plan
 
 สถานะ: **Approved** — เจ้าของตอบ “approve” ต่อ plan/validation ฉบับแก้ F18-R1..R4 วันที่ 2026-10-26; อนุมัติปรับเวลา validation W1/W2/W3 เป็น 10/5/30 นาที วันที่ 2026-10-27
+แผนล่าสุด: **Approved 2026-10-31 — Paper MANUAL ไม่บังคับเพดานขาดทุน**;
+ดู [plan amendment](paper-optional-limit-plan-amendment.md)
+แผน UI R36: **Approved 2026-10-31 — ซ่อน Paper unset helper และจัดฟอร์มกระชับ**;
+ดู [R36 quiet UI plan](paper-optional-limit-quiet-ui-plan-amendment.md)
 แผน UI ล่าสุด: **Approved 2026-10-30 — ฟอร์มเพดานขาดทุนแบบสั้น**; ดู [Compact Risk Limit Form Plan](compact-risk-limit-form-plan-amendment.md)
 แผน Recovery UI ล่าสุด: **Approved 2026-10-30 — รวม recovery ไว้ใน input/Save**; ดู [Compact Risk Recovery UI Plan](compact-risk-recovery-ui-plan-amendment.md)
 แผนซ่อน Recovery status: **Approved 2026-10-30**; ดู [Hidden Recovery Status Plan](hidden-recovery-status-plan-amendment.md)

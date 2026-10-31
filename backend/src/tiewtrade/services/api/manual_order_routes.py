@@ -28,6 +28,7 @@ from tiewtrade.infra.paper_orders.requests import (
 )
 from tiewtrade.infra.paper_orders.trade_views import order_page, order_view, trade_snapshot
 from tiewtrade.infra.paper_orders.views import RequestView, request_view, unresolved_requests
+from tiewtrade.infra.risk_limits.control import paper_opening_protocol_enabled
 from tiewtrade.infra.risk_limits.evaluation_requests import request_evaluation
 from tiewtrade.infra.risk_limits.policy import TransactionalRiskPolicy
 from tiewtrade.infra.risk_limits.views import wallet_evidence
@@ -156,17 +157,18 @@ async def read_trade(
                     risk_reason = "RISK_SOURCE_UNAVAILABLE"
                 else:
                     setting, proof = evidence
-                    risk_reason = (
-                        "RISK_LIMIT_UNSET"
-                        if setting.limit is None
-                        else "RISK_LOSS_LIMIT_REACHED"
-                        if setting.latched
-                        else "ORDER_SAFETY_UNAVAILABLE"
-                        if not proof.admission_enabled
-                        else proof.evaluation.reason.value
-                        if proof.evaluation.reason is not RiskReason.READY
-                        else None
-                    )
+                    if setting.limit is None:
+                        risk_reason = (
+                            None
+                            if await paper_opening_protocol_enabled(session)
+                            else "ORDER_SAFETY_UNAVAILABLE"
+                        )
+                    elif setting.latched:
+                        risk_reason = "RISK_LOSS_LIMIT_REACHED"
+                    elif not proof.admission_enabled:
+                        risk_reason = "ORDER_SAFETY_UNAVAILABLE"
+                    elif proof.evaluation.reason is not RiskReason.READY:
+                        risk_reason = proof.evaluation.reason.value
                 risk_ready = risk_reason is None
             value = await trade_snapshot(
                 session,

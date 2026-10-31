@@ -1,6 +1,10 @@
 # F-18 — เพดานความเสี่ยงต่อกระเป๋า — Requirements
 
 สถานะ: **Approved** — เจ้าของตอบ “approve” อนุมัติ requirements และ NC-F18-01..08 วันที่ 2026-10-25
+ข้อยกเว้นล่าสุด: **Approved 2026-10-31 — Paper MANUAL ไม่ตั้งเพดานก็เปิดออเดอร์ได้**;
+ดู [Paper optional limit requirements amendment](paper-optional-limit-requirements-amendment.md)
+ข้อกำหนด UI ล่าสุด: **Approved 2026-10-31 — ซ่อน Paper unset helper และใช้ฟอร์มกระชับ**;
+ดู [R36 quiet UI requirements](paper-optional-limit-quiet-ui-requirements-amendment.md)
 ข้อกำหนด UI ล่าสุด: **Approved 2026-10-30 — ฟอร์มเพดานขาดทุนแบบสั้น**; ดู [Compact Risk Limit Form Requirements](compact-risk-limit-form-requirements-amendment.md). UI-RQ-01..12 แทนเฉพาะการแสดงข้อมูลพร้อมกันบนหน้าปกติของ RQ-15
 ข้อกำหนด Recovery UI ล่าสุด: **Approved 2026-10-30 — ซ่อน protocol/technical details จากฟอร์มหลัก**; ดู [Compact Risk Recovery UI Requirements](compact-risk-recovery-ui-requirements-amendment.md). RUI-RQ-01..07 แทนเฉพาะ interaction ของ pending/UNKNOWN ใน UI-RQ-08/UI-RQ-10
 ข้อกำหนดข้อความ Recovery ล่าสุด: **Approved 2026-10-30 — ไม่แสดง recovery status ในหน้าหลัก**; ดู [Hidden Recovery Status Requirements](hidden-recovery-status-requirements-amendment.md)

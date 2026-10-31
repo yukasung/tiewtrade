@@ -118,6 +118,65 @@ def test_http_intake_uses_actual_owner_risk_evidence(
     assert response.json()["command_state"] is None
 
 
+def test_paper_manual_intake_allows_an_unset_optional_limit(client: TestClient) -> None:
+    wallet = wallet_for(client)
+    owner = UUID(client.get("/auth/me").json()["user_id"])
+    try:
+        asyncio.run(configure(owner, enabled=True))
+        app.dependency_overrides[manual_admission_policy] = lambda: TransactionalRiskPolicy()
+        snapshot = client.get("/paper/trade?base=BTC")
+        assert snapshot.status_code == 200, snapshot.text
+        assert snapshot.json()["admission_ready"]
+        assert "RISK_LIMIT_UNSET" not in snapshot.json()["admission_reasons"]
+        response = client.post(
+            "/paper/orders",
+            json=buy(wallet),
+            headers={**csrf_headers(client), "Idempotency-Key": str(uuid4())},
+        )
+        assert response.status_code == 202, response.text
+
+        async def count_risk_rows() -> tuple[int, int, int]:
+            api = create_engine_for(DatabaseRole.API)
+            try:
+                async with user_session(api, owner) as session:
+                    return (
+                        int(
+                            (
+                                await session.execute(
+                                    "SELECT count(*) FROM risk_limit_settings WHERE user_id=:owner",
+                                    {"owner": owner},
+                                )
+                            ).scalar_one()
+                        ),
+                        int(
+                            (
+                                await session.execute(
+                                    "SELECT count(*) FROM risk_limit_evaluations "
+                                    "WHERE user_id=:owner",
+                                    {"owner": owner},
+                                )
+                            ).scalar_one()
+                        ),
+                        int(
+                            (
+                                await session.execute(
+                                    "SELECT count(*) FROM risk_limit_baselines "
+                                    "WHERE user_id=:owner",
+                                    {"owner": owner},
+                                )
+                            ).scalar_one()
+                        ),
+                    )
+            finally:
+                await api.dispose()
+
+        assert asyncio.run(count_risk_rows()) == (0, 0, 0)
+
+    finally:
+        app.dependency_overrides.pop(manual_admission_policy, None)
+        asyncio.run(configure(owner, enabled=False))
+
+
 def test_price_disconnect_refusal_commits_one_durable_evaluation_hint(
     client: TestClient,
     risk_composition: tuple[UUID, dict[str, object]],

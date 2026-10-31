@@ -5798,3 +5798,131 @@ remain visible. No request, recovery, TOTP or financial behavior changed.
 Verification passed: 20/20 RiskLimitPanel tests, frontend ESLint, TypeScript typecheck,
 production Vite build and diff whitespace check. The frontend container was rebuilt;
 the existing Vite large-chunk warning remains.
+
+### 2026-10-31 — Manual acceptance isolated from workload data
+
+The previously reused `tiewtrade-f18-manual` database could not safely complete the
+browser acceptance. Read-only inspection found one NEW request transferred from intake
+but still PENDING in order dispatch after 35 retries. The database contained 20 Paper
+risk settings; 19 evaluations were READY and one was latched at
+`RISK_LOSS_LIMIT_REACHED`. Risk-monitor logs also contained repeated DATABASE_TIMEOUT
+deferrals. The execution source temporarily reported BTC RECOVERING, then both BTC and
+ETH were READY for all six samples over a bounded 30-second observation. This is not a
+UI-button failure and does not justify bypassing the source or risk gates.
+
+The local protocol was closed in the required order. A guarded reopen stopped after
+publication because the existing latched owner meant the all-configured-owner READY
+precondition failed; financial and admission were never reopened. Publication was then
+closed again. Final old-database flags were all false, and no request, order, wallet or
+financial row was deleted or rewritten.
+
+The old Compose project was brought down without removing its volume. A separate
+`tiewtrade-f18-manual-clean` project was built from current HEAD with its own fresh
+PostgreSQL and Redis volumes. Migration is 0059, all three protocol flags are false,
+the users table is empty, and PostgreSQL, API and risk-worker health checks pass. This
+clean stack is available at `http://localhost:5173`; the owner must create the local
+account, Paper wallet, MANUAL use and loss limit before the approved activation sequence
+can be run. The agent will not submit an order on the owner's behalf.
+
+Remote CI run 40987641082 passed for commit 462d424. Current HEAD is three commits ahead,
+so that run cannot certify the latest candidate; no push was performed without an
+explicit owner command. W1–W4/local Paper evidence remains applicable as previously
+recorded, while final current-head CI, browser order observation and V-22/V-23 remain
+pending.
+
+### 2026-10-31 — Paper MANUAL loss limit made optional (R35)
+
+The approved optional-limit amendments allow only Paper MANUAL opening orders to proceed
+without a configured loss limit. The path does not create a default setting, evaluation,
+baseline or audit substitute. Intake and every execution pass re-read the setting; a
+setting created after intake immediately returns the order to the configured evaluation,
+price, latch and stop rules. Live and BOT retain the existing configured-limit contract.
+
+Production-composition testing exposed the old 0052 database guard, which rejected every
+unconfigured BUY before evaluating its financial boundary. Approved R35 migration 0060
+removes only that obsolete rejection. The trigger still requires the same F18 publication
+shared lock, owner/wallet/episode transaction claim and finalized boundary. A direct
+unfenced position writer still receives TT028, while the real request → command → order →
+fill path completed exactly one fill with a 9,900 USDT balance and no risk setting,
+evaluation or baseline rows. A downgrade with that unconfigured economic history was
+refused and left revision 0060 installed. Empty-schema downgrade/upgrade/upgrade replay
+and the single-head/order checks passed.
+
+Affected verification passed: 72 core risk/matching tests; the focused closed and optional
+API paths; the real unset-to-SET race; request-to-fill, downgrade-data guard and unfenced
+writer boundary; 27 of 28 configured boundary/execution/concurrency/fence regressions;
+backend Ruff and focused strict mypy; 21 RiskLimitPanel tests, the affected Paper trade UI
+test, frontend ESLint, TypeScript typecheck and production build. The remaining configured
+regression is the pre-existing wall-clock `stale` variant: its 1.05-second sleep did not
+cross the source's stale boundary on this run. The other transient-breach, disconnect and
+protocol-disable variants passed. It was not rerun to obtain a timing-dependent pass and
+does not indicate a new financial or order mismatch.
+
+Timed W1–W4 were not rerun because this amendment does not change cadence, scheduler,
+configured-owner financial calculations or workload resources. Current-head remote CI,
+browser observation and V-22/V-23 remain Pending; no Live order was submitted and no
+commit or push was performed.
+
+The localhost `tiewtrade-f18-manual-clean` stack was rebuilt on migration 0060. Local
+Paper activation then followed the previously approved sequence: publication advanced
+the watermark from 2; both BTC/USDT and ETH/USDT execution sources were READY with current
+leases; the two configured Paper settings had matching READY evaluations and no replay
+pending state; financial was opened; both cursors caught watermark 135; admission was
+then opened with the same guarded checks. Final flags are true/true/true, the configured
+cursors caught watermark 153, API health is OK and `/paper/trade` returns HTTP 200. This
+is local manual-acceptance state only. No Paper or Live order was submitted by the agent;
+the owner must perform the browser submit observation, after which flags must be closed
+in reverse order.
+
+### 2026-10-31 — R36 quiet optional-limit form
+
+The approved R36 UI amendment removes the normal Paper-unset helper sentence without
+replacing it with a badge or alert. The card retains only its heading, associated loss-limit
+label, input and Save action in the normal state. The shared admin-template-derived form is
+now a one-column/full-width action layout on mobile and a flexible input plus fixed action
+column from the `sm` breakpoint; Input and Save both use the existing 44px control height.
+Live-unset guidance, validation, stale/conflict, load failure, latch/stop and visually hidden
+recovery status remain unchanged.
+
+Affected verification passed in under one minute: 41/41 `RiskLimitPanel` and
+`TradingAccountPanel` tests, frontend ESLint, TypeScript typecheck, production Vite build
+and whitespace checks. The existing large-chunk build warning remains. The localhost
+frontend image was rebuilt and the route is available; browser automation remained
+unavailable, so desktop/mobile visual observation is Pending and was not replaced by the
+component tests. No API, schema, financial rule, order, recovery or Live behavior changed.
+
+### 2026-10-31 — R35/R36 owner UI observation and affected review
+
+The owner completed the current localhost account flow in a real browser: selected MANUAL,
+created a Paper wallet with a valid initial balance and saved a Paper loss limit. The owner
+reported the flow passed. This closes the wallet/create-and-save UI observation only; it
+does not claim the separate unconfigured-limit browser order-submit criterion, remote CI or
+V-22/V-23.
+
+The affected review found one High matching-boundary defect before handoff: intake limited
+the unset exception to MANUAL, but matching checked only the global gates and could have
+filled a pre-existing BOT BUY while the limit was unset. Matching now requires
+`OrderOrigin.MANUAL` for that exception as well. A regression constructs an already queued
+BOT order without weakening admission and proves it remains ACCEPTED with no fill.
+
+Post-fix verification passed: 73 core risk/matching tests; 31 isolated real-PostgreSQL API,
+boundary and execution tests on migration 0060; backend Ruff, format and focused strict
+mypy; 62 affected frontend risk/account/Paper-trade tests; frontend ESLint, TypeScript and
+production build. The Paper-trade polling test was corrected to await the React Query DOM
+commit before checking its hidden status, removing a test race without changing runtime
+behavior. The existing Vite chunk-size warning remains. No workload was rerun because the
+fix changes neither scheduler/cadence nor configured-limit calculations.
+
+After the observation, the local manual stack was returned to its safe default in the
+required order: admission, financial and publication were disabled in separate commits;
+the final control row is `false/false/false`. The isolated review database was then dropped
+after confirming it had no active connections. The manual-acceptance volume was preserved.
+
+The owner then approved the affected refactor. The identical three-gate query is now in
+`infra.risk_limits.control` and is reused by intake policy, the trade view and the financial
+worker; the API risk-reason precedence is expressed as explicit branches instead of a
+nested conditional. No policy, SQL predicate or response value changed. Verification passed
+31/31 isolated real-PostgreSQL API/boundary/execution tests, focused Ruff/format/mypy,
+all seven import-linter contracts and whitespace checks. The temporary refactor database
+was dropped after confirming zero active connections; frontend evidence remains valid
+because no frontend source changed during refactoring.

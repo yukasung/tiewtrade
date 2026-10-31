@@ -60,7 +60,7 @@ def test_production_readiness_and_admission_remain_closed(client: TestClient) ->
     assert client.get("/paper/trade?base=USDT").status_code == 422
     assert "market_observed_at" in snapshot.json()
     assert not snapshot.json()["admission_ready"]
-    assert "RISK_LIMIT_UNSET" in snapshot.json()["admission_reasons"]
+    assert "ORDER_SAFETY_UNAVAILABLE" in snapshot.json()["admission_reasons"]
     assert snapshot.json()["wallet"]["available_quote"] == "10000"
     result = client.post(
         "/paper/orders",
