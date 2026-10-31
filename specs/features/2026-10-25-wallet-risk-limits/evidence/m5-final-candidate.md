@@ -6041,3 +6041,44 @@ The final combined reproduction creates both an authorization-free Paper INCREAS
 unconfigured Paper BUY before running the five affected migration parameter cases; all 7/7
 pass. Request IDs, audit records, financial facts and order facts remain present and unchanged
 after restoration.
+
+CI run `41173114518` on commit `6a9bba3` passed all six required jobs. The backend job passed
+Ruff, formatting, mypy, import boundaries, migrations and the full pytest suite in 17m32s. The
+frontend, API contract, container and PostgreSQL-version jobs also passed. The first E2E attempt
+hit a pre-existing timing-sensitive selector in the supported-symbol catalog: the assertion ran
+after both same-named headings were present, whereas the preceding run `41171683187` had passed
+the identical page and test before the second heading resolved. A failed-job-only rerun passed
+the generic browser suite, F-37, F-16 and all four F-18 production-composition cases without any
+code or configuration change. This is recorded as an unrelated flaky assertion, not an F-18
+application failure. No Live order was sent.
+
+The refactor and its affected regression/static checks are therefore complete for the current
+candidate. The recorded W1-W4 evidence remains applicable under the R35/R36 impact analysis:
+those amendments do not change cadence, scheduling, configured-owner risk calculations or
+workload resources, and their new optional-limit boundary is covered by the current-head
+financial, migration and production-composition tests. Paper validation is therefore passed
+for the current candidate. The separate V-22/V-23 dependencies remain pending, so F-18 is not
+yet `Completed` and this evidence does not authorize merge or production activation.
+
+### 2026-10-31 — Local browser manual order-submit observation passed
+
+The owner refreshed the current localhost Paper workspace after the operator opened the
+protocol in the approved order. Publication advanced from watermark 9,765; all three
+configured Paper owners had matching READY evaluations/cursors, no latch or replay pending
+state, and both BTC/USDT and ETH/USDT execution sources had current books, prices and leases.
+Financial was enabled only after an exact fenced watermark check, and admission was enabled
+at watermark 10,057 after repeating the same owner/source guards.
+
+The owner submitted one BTC/USDT MANUAL MARKET BUY for 100 USDT in the browser. It produced
+one NEW request, one transferred command and one accepted order
+`4ff86f72-1d5e-4542-87e4-272bba6480cb`; the engine recorded input application but no fill.
+Admission was then disabled before any further action. The owner canceled that open order in
+the browser, producing exactly one CANCEL request and one CANCELED event. Final order state is
+CANCELED with filled quantity 0, spent 0 and both reservations 0. The episode has zero
+positions and zero nonzero reservations; its only ledger fact remains the original 10,000
+USDT external capital. There was no duplicate request, order, cancel or economic effect.
+
+The operator then disabled financial and publication in separate commits. Final protocol
+flags are false/false/false and the final recorded publication watermark is 14,263. This
+closes the browser manual order-submit observation without a Live order. V-22/V-23 remain
+Pending Dependency, so F-18 remains Development Complete rather than Completed.
