@@ -5,6 +5,9 @@ import { afterEach, expect, it, vi } from "vitest";
 import { PaperTradePage } from "../src/PaperTradePage";
 import { writeAttempt } from "../src/manualOrderJournal";
 import { manualOrderText as t } from "../src/manualOrderMessages";
+vi.mock("../src/CandlestickChartPanel", () => ({ CandlestickChartPanel: ({ base, onMarketSnapshot }: {
+  base: string; onMarketSnapshot: (value: { base: string; price: string; observedAt: string }) => void;
+}) => <button type="button" data-testid="embedded-chart" onClick={() => onMarketSnapshot({ base, price: "100", observedAt: stamp })}>chart</button> }));
 const stamp = "2026-10-25T00:00:00Z";
 const key = "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee";
 const wallet = { wallet_id: "w", episode_id: "e", balance: "10000.000000000000000001", reserved_quote: "0", available_quote: "10000.000000000000000001", base_balances: [], source_availability: "READY", revision: 1 };
@@ -14,6 +17,7 @@ let queryClient: QueryClient;
 function mount(custom?: (url: string, init?: RequestInit) => Promise<Response> | undefined) {
   const fetcher = vi.fn((url: string, init?: RequestInit) => {
     const override = custom?.(url, init); if (override) return override;
+    if (url.includes("/risk-limit")) return Promise.resolve(answer({ detail: "unavailable" }, 503));
     if (url.includes("/market-catalog")) return Promise.resolve(answer({ active_pairs: [["BTC", "USDT"]] }));
     if (url.includes("/paper/trade")) return Promise.resolve(answer({ mode: "PAPER", wallet, account_use: "MANUAL", base: url.includes("base=BTC") ? "BTC" : null, quote: "USDT", catalog_revision: 1, snapshot_at: stamp, admission_ready: url.includes("base=BTC"), admission_reasons: url.includes("base=BTC") ? [] : ["ORDER_PAIR_REQUIRED"] }));
     if (url.includes("/paper/order-requests?")) return Promise.resolve(answer({ requests: [], next_cursor: null }));
@@ -77,10 +81,11 @@ it("polls a transferred command until rejection even without an order and keeps 
   await waitFor(() => expect(window.sessionStorage.getItem("tiewtrade.manual-order.v1:owner")).toBeNull());
   expect(screen.queryByText(t("FILLED"))).toBeNull();
 });
-it("does not treat successful cancel of an already-filled order as canceled", async () => {
+it("does not duplicate a completed cancel recovery result outside the order table", async () => {
   const cancel = { ...receipt, action: "CANCEL", request_summary: null, command_state: "SUCCEEDED", order_state: "FILLED" };
-  mount(url => url.includes("order-requests?") ? Promise.resolve(answer({ requests: [cancel], next_cursor: null })) : url.includes("order-requests/r") ? Promise.resolve(answer(cancel)) : undefined);
-  expect(await screen.findByText(t("FILLED"))).toBeTruthy(); expect(screen.queryByText(t("CANCELED"))).toBeNull();
+  const { fetcher } = mount(url => url.includes("order-requests?") ? Promise.resolve(answer({ requests: [cancel], next_cursor: null })) : url.includes("order-requests/r") ? Promise.resolve(answer(cancel)) : undefined);
+  await waitFor(() => expect(fetcher.mock.calls.some(([url]) => url.includes("order-requests?"))).toBe(true));
+  expect(screen.queryByText(t("FILLED"))).toBeNull(); expect(screen.queryByText(t("CANCELED"))).toBeNull();
 });
 it("does not read a different owner's journal", async () => {
   window.sessionStorage.setItem("tiewtrade.manual-order.v1:other", "malformed");
@@ -93,13 +98,56 @@ it("continues polling after transfer until the linked command becomes terminal",
   mount(url => url.includes("order-requests?") ? Promise.resolve(answer({ requests: [receipt], next_cursor: null })) : url.includes("order-requests/r") ? Promise.resolve(answer(++reads < 2 ? receipt : { ...receipt, command_state: "REJECTED", command_failure_code: "ORDER_INSUFFICIENT_FUNDS" })) : undefined);
   await screen.findByText(`${t("failure")}: ${t("ORDER_INSUFFICIENT_FUNDS")}`, {}, { timeout: 3500 });
   expect(reads).toBeGreaterThanOrEqual(2);
-  expect(screen.getAllByRole("status").some(node => node.textContent?.includes(t("command")) && node.getAttribute("aria-live") === "polite")).toBe(true);
+  expect(screen.queryByText(t("TRANSFERRED"))).toBeNull();
+  await waitFor(() => expect(screen.queryByRole("heading", { name: t("recovery") })).toBeNull());
+});
+it("clears a previous pair's displayed market price before the next pair snapshot", async () => {
+  mount(url => {
+    if (url.includes("/market-catalog")) return Promise.resolve(answer({ active_pairs: [["BTC", "USDT"], ["ETH", "USDT"]] }));
+    if (url.includes("/paper/trade")) {
+      const selected = url.includes("base=BTC") ? "BTC" : url.includes("base=ETH") ? "ETH" : null;
+      return Promise.resolve(answer({ mode: "PAPER", wallet, account_use: "MANUAL", base: selected, quote: "USDT", catalog_revision: 1,
+        snapshot_at: stamp, admission_ready: selected !== null, admission_reasons: selected ? [] : ["ORDER_PAIR_REQUIRED"] }));
+    }
+  });
+  await waitFor(() => expect(screen.getByLabelText<HTMLSelectElement>(t("pair")).disabled).toBe(false));
+  fireEvent.change(screen.getByLabelText(t("pair")), { target: { value: "BTC" } });
+  fireEvent.click(screen.getByTestId("embedded-chart"));
+  const latest = screen.getByText(t("latestPrice")).parentElement!;
+  expect(latest.textContent).toContain("100.00");
+  expect(latest.textContent).not.toContain("USDT");
+  expect(screen.queryByText(t("marketStatus"))).toBeNull();
+  expect(screen.queryByText(t("marketObserved"))).toBeNull();
+  fireEvent.change(screen.getByLabelText(t("pair")), { target: { value: "ETH" } });
+  expect(latest.textContent).toContain(t("unavailable"));
+  expect(latest.textContent).not.toContain("100 USDT");
+});
+it("shows a latched risk stop beside the form without a risk-settings control", async () => {
+  mount(url => url.includes("/risk-limit") ? Promise.resolve(answer({
+    amount: "1000", latched: true, stop_id: "stop", stop_progress: "STOPPING", reason: "RISK_LOSS_LIMIT_REACHED",
+  })) : undefined);
+  expect(await screen.findByText(t("riskStopStatus"))).toBeTruthy();
+  expect(screen.getByText("กำลังหยุดออเดอร์เพิ่มความเสี่ยง")).toBeTruthy();
+  expect(screen.queryByText("รายละเอียด / ตั้งค่าความเสี่ยง")).toBeNull();
+});
+it("links an unset loss limit to Trading account without embedding risk controls", async () => {
+  mount(url => url.includes("/risk-limit") ? Promise.resolve(answer({ amount: null, latched: false, stop_id: null, reason: "RISK_LIMIT_UNSET" })) : undefined);
+  const link = await screen.findByRole<HTMLAnchorElement>("link", { name: t("manageRisk") });
+  expect(new URL(link.href).pathname).toBe("/trading-account");
+  expect(screen.queryByRole("button", { name: "ตั้งเพดาน" })).toBeNull();
+});
+it("keeps the chart, order history and form in one desktop workspace", async () => {
+  const { container } = mount();
+  await screen.findByRole("tab", { name: t("openOrders") });
+  const workspace = container.querySelector(".trade-workspace-with-orders")!;
+  expect(workspace.querySelector(":scope > .trade-workspace-chart")).toBeTruthy();
+  expect(workspace.querySelector(":scope > .trade-workspace-orders")).toBeTruthy();
+  expect(workspace.querySelector(":scope > .trade-workspace-form .trade-workspace-details")).toBeNull();
 });
 it("requires every recovery page before permitting new requests", async () => {
-  mount(url => url.includes("order-requests?") ? Promise.resolve(answer({ requests: [], next_cursor: url.includes("cursor=") ? null : "next" })) : undefined);
-  await screen.findByRole("button", { name: t("more") });
-  expect(screen.getByRole<HTMLButtonElement>("button", { name: t("submit") }).disabled).toBe(true);
-  fireEvent.click(screen.getByRole("button", { name: t("more") }));
+  const { fetcher } = mount(url => url.includes("order-requests?") ? Promise.resolve(answer({ requests: [], next_cursor: url.includes("cursor=") ? null : "next" })) : undefined);
+  await waitFor(() => expect(fetcher.mock.calls.some(([url]) => url.includes("cursor=next"))).toBe(true));
+  expect(screen.queryByRole("button", { name: t("more") })).toBeNull();
   await draft();
 });
 it("a definitive input refusal permits correcting the draft while unknown outcomes retain their journal", async () => {
@@ -117,14 +165,17 @@ it("retains recovery identity for an unrecognized 422 response", async () => {
   expect(document.body.textContent).not.toContain("untrusted-proxy-rejection");
 });
 
-it("displays server expiry without presenting it as a fill", async () => {
+it("leaves terminal discovery results to the order table instead of duplicating them", async () => {
   const expired = { ...receipt, command_state: "SUCCEEDED", order_state: "EXPIRED" };
-  mount(url => url.includes("order-requests?") ? Promise.resolve(answer({ requests: [expired], next_cursor: null })) : url.includes("order-requests/r") ? Promise.resolve(answer(expired)) : undefined);
-  expect(await screen.findByText(t("EXPIRED"))).toBeTruthy(); expect(screen.queryByText(t("FILLED"))).toBeNull();
+  const { fetcher } = mount(url => url.includes("order-requests?") ? Promise.resolve(answer({ requests: [expired], next_cursor: null })) : url.includes("order-requests/r") ? Promise.resolve(answer(expired)) : undefined);
+  await waitFor(() => expect(fetcher.mock.calls.some(([url]) => url.includes("order-requests?"))).toBe(true));
+  expect(screen.queryByText(t("EXPIRED"))).toBeNull(); expect(screen.queryByText(t("FILLED"))).toBeNull();
 });
 it("stops pending polling while hidden and after route unmount", async () => {
   const { fetcher, unmount } = mount(url => url.includes("order-requests?") ? Promise.resolve(answer({ requests: [receipt], next_cursor: null })) : url.includes("order-requests/r") ? Promise.resolve(answer(receipt)) : undefined);
-  await screen.findByText(t("TRANSFERRED"));
+  await waitFor(() => expect(fetcher.mock.calls.some(([url]) => url.includes("order-requests/r"))).toBe(true));
+  expect((await screen.findByText(t("TRANSFERRED"))).closest("[hidden]")).toBeTruthy();
+  expect(screen.queryByText(t("episodeDraftNotice"))).toBeNull();
   vi.useFakeTimers();
   try {
     vi.spyOn(document, "visibilityState", "get").mockReturnValue("hidden");

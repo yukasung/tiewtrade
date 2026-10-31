@@ -136,7 +136,7 @@ async def test_missing_corrupt_overwritten_and_stale_inputs_fail_closed(
                 await read_inputs(session, PAIR, after=book.input_id - 1)
         async with market_data_session(engine) as session:
             await session.execute("""UPDATE market_execution_state
-              SET verified_at=clock_timestamp()-interval '2 seconds' WHERE base='BTC'""")
+              SET verified_at=clock_timestamp()-interval '31 seconds' WHERE base='BTC'""")
             await renew_book_writer(session, lease)
         async with user_session(engine_engine, uuid4(), role=DatabaseRole.ENGINE) as session:
             with pytest.raises(SourceUnavailableError):
@@ -282,4 +282,52 @@ async def test_ring_wrap_is_bounded_and_slow_consumer_must_recover(
             recent = await read_inputs(session, PAIR, after=start + 4097 - 20)
             assert len(recent) == 20 and recent[-1].market.input_id == start + 4097
     finally:
+        await engine.dispose()
+
+
+async def test_book_lease_expiry_is_checked_after_row_lock_wait() -> None:
+    engine = create_engine_for(DatabaseRole.MARKET_DATA)
+    task = None
+    try:
+        lease, _, _ = await prepared(engine)
+        async with market_data_session(engine) as session:
+            await session.execute("""UPDATE market_execution_state
+              SET lease_until=clock_timestamp()+interval '1 second'
+              WHERE base='BTC' AND quote='USDT'""")
+        pid_ready = asyncio.get_running_loop().create_future()
+
+        async def renew() -> None:
+            async with market_data_session(engine) as session:
+                pid_ready.set_result(
+                    (await session.execute("SELECT pg_backend_pid()")).scalar_one()
+                )
+                await renew_book_writer(session, lease)
+
+        async with market_data_session(engine) as observer:
+            async with market_data_session(engine) as blocker:
+                await blocker.execute("""SELECT * FROM market_execution_state
+                  WHERE base='BTC' AND quote='USDT' FOR UPDATE""")
+                task = asyncio.create_task(renew())
+                pid = await asyncio.wait_for(pid_ready, 3)
+                async with asyncio.timeout(3):
+                    while not (
+                        await observer.execute(
+                            "SELECT cardinality(pg_blocking_pids(:pid)) > 0", {"pid": pid}
+                        )
+                    ).scalar_one():
+                        if task.done():
+                            task.result()
+                            pytest.fail("renewal did not wait for the row lock")
+                        await asyncio.sleep(0.01)
+                    while not (
+                        await observer.execute("""SELECT lease_until<=clock_timestamp()
+                      FROM market_execution_state WHERE base='BTC' AND quote='USDT'""")
+                    ).scalar_one():
+                        await asyncio.sleep(0.01)
+            with pytest.raises(WriterLeaseLost):
+                await asyncio.wait_for(task, 3)
+    finally:
+        if task is not None:
+            task.cancel()
+            await asyncio.gather(task, return_exceptions=True)
         await engine.dispose()

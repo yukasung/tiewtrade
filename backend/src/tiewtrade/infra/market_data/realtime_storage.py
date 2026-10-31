@@ -59,6 +59,7 @@ async def database_now(session: Session) -> datetime:
 
 async def acquire_writer(session: MarketDataSession, owner: UUID) -> FeedLease | None:
     session = require_market_data_session(session)
+    await session.execute("SELECT risk_publication_fence()")
     prior = (
         await session.execute(
             "SELECT lease_until FROM market_price_feed WHERE source=:source FOR UPDATE",
@@ -92,16 +93,22 @@ async def acquire_writer(session: MarketDataSession, owner: UUID) -> FeedLease |
 
 async def _locked(session: MarketDataSession, lease: FeedLease) -> FeedLease:
     session = require_market_data_session(session)
+    # Must precede the feed row lock: financial writers hold the shared fence
+    # through commit and never wait on feed row locks (F-18 plan section 5).
+    await session.execute("SELECT risk_publication_fence()")
     result = await session.execute(
-        "SELECT * FROM market_price_feed WHERE source=:source FOR UPDATE", {"source": lease.source}
+        """WITH locked AS MATERIALIZED (
+          SELECT * FROM market_price_feed WHERE source=:source FOR UPDATE
+        ) SELECT locked.*,clock_timestamp() AS db_now FROM locked""",
+        {"source": lease.source},
     )
     row = result.mappings().one_or_none()
-    now = await database_now(session)
+    # Evaluate wall-clock expiry after the materialized row-lock wait.
     if (
         row is None
         or row["owner"] != lease.owner
         or row["generation"] != lease.generation
-        or row["lease_until"] <= now
+        or row["lease_until"] <= row["db_now"]
     ):
         raise WriterLeaseLost()
     return _feed(row)

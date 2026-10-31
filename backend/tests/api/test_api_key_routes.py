@@ -454,6 +454,8 @@ def test_no_route_hands_back_the_secret(client: TestClient, ending: bool) -> Non
             .replace("{command_id}", key_id)
             .replace("{request_id}", key_id)
             .replace("{order_id}", key_id)
+            .replace("{receipt_id}", key_id)
+            .replace("{stop_id}", key_id)
             .replace("{key}", key_id)
             .replace("{base}", "BTC")
             .replace("{quote}", "USDT")
@@ -507,6 +509,12 @@ def test_no_route_hands_back_the_secret(client: TestClient, ending: bool) -> Non
             elif template == "/paper/orders/{order_id}":
                 assert response.status_code == 404
                 assert response.json() == {"detail": "PAPER_ORDER_NOT_FOUND"}
+            elif "/risk-limit/requests/" in template:
+                assert response.status_code == 404
+                assert response.json() == {"detail": "RISK_REQUEST_NOT_FOUND"}
+            elif "/risk-limit/stops/" in template:
+                assert response.status_code == 404
+                assert response.json() == {"detail": "RISK_STOP_NOT_FOUND"}
             elif template == "/market-data/indicators" and response.status_code == 503:
                 # Empty indicator data must fail closed without exposing secrets.
                 # Accept only this documented error, independent of prior fixtures.

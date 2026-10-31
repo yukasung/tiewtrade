@@ -11,6 +11,7 @@ from uuid import UUID, uuid4
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncEngine
 
+from tests.infra.db.test_migrations import _alembic
 from tiewtrade.infra.db import DatabaseRole, user_session
 from tiewtrade.infra.paper_orders.initialization import initialize_order_source
 from tiewtrade.infra.paper_wallet import get_command, get_wallet
@@ -70,30 +71,47 @@ async def test_populated_downgrade_is_refused_without_deleting_command(
         check=False,
     )
 
-    assert result.returncode != 0
-    # A newer schema can stop earlier; require its specific safety guard, not any error.
-    guards = {
-        "manual order admission history prevents downgrade": "0042",
-        "manual order request history prevents downgrade": "0041",
-        "supported-symbol runtime history prevents downgrade": "0040",
-        "historical Paper order revisions prevent downgrade": "0038",
-        "Paper reset audit history prevents downgrade": "0037",
-        "matching decision history prevents downgrade": "0036",
-        "managed Paper episodes prevent writer fence downgrade": "0035",
-        "paper wallet data exists; downgrade refused": "0032",
-        "Paper financial history prevents downgrade": "0034",
-        "Paper cash effects prevent downgrade": "0034",
-        "stop execution producers before downgrade": "0033",
-        "active execution dependencies prevent downgrade": "0033",
-    }
-    refused_at = {revision for reason, revision in guards.items() if reason in result.stderr}
-    assert len(refused_at) == 1, result.stderr
-    async with migrator_engine.connect() as connection:
-        assert (
-            await connection.execute(text("SELECT version_num FROM alembic_version"))
-        ).scalar_one() in refused_at
-        assert (
-            await connection.execute(text("SELECT to_regclass('public.paper_position_activity')"))
-        ).scalar_one() == "paper_position_activity"
-    async with user_session(api_engine, owner) as session:
-        assert await get_command(session, command.command_id) == terminal
+    try:
+        assert result.returncode != 0
+        # A newer schema can stop earlier; require its specific safety guard, not any error.
+        guards = {
+            "unconfigured Paper economic history prevents downgrade": "0060",
+            "risk evaluation request history prevents downgrade": "0053",
+            "active risk writer protocol prevents downgrade": "0052",
+            "unconfigured financial boundary history prevents downgrade": "0052",
+            "risk queued cutoff history prevents downgrade": "0051",
+            "risk lifecycle history prevents downgrade": "0050",
+            "risk stop history prevents downgrade": "0049",
+            "versioned risk financial history prevents downgrade": "0047",
+            "risk protocol history prevents downgrade": "0045",
+            "risk boundary history prevents downgrade": "0045",
+            "risk throttle history prevents downgrade": "0044",
+            "risk history prevents downgrade": "0043",
+            "manual order admission history prevents downgrade": "0042",
+            "manual order request history prevents downgrade": "0041",
+            "supported-symbol runtime history prevents downgrade": "0040",
+            "historical Paper order revisions prevent downgrade": "0038",
+            "Paper reset audit history prevents downgrade": "0037",
+            "matching decision history prevents downgrade": "0036",
+            "managed Paper episodes prevent writer fence downgrade": "0035",
+            "paper wallet data exists; downgrade refused": "0032",
+            "Paper financial history prevents downgrade": "0034",
+            "Paper cash effects prevent downgrade": "0034",
+            "stop execution producers before downgrade": "0033",
+            "active execution dependencies prevent downgrade": "0033",
+        }
+        refused_at = {revision for reason, revision in guards.items() if reason in result.stderr}
+        assert len(refused_at) == 1, result.stderr
+        async with migrator_engine.connect() as connection:
+            assert (
+                await connection.execute(text("SELECT version_num FROM alembic_version"))
+            ).scalar_one() in refused_at
+            assert (
+                await connection.execute(
+                    text("SELECT to_regclass('public.paper_position_activity')")
+                )
+            ).scalar_one() == "paper_position_activity"
+        async with user_session(api_engine, owner) as session:
+            assert await get_command(session, command.command_id) == terminal
+    finally:
+        _alembic("upgrade", "head")

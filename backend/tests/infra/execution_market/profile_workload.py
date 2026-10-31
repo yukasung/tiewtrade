@@ -15,10 +15,10 @@ import json
 import os
 import platform
 import sys
-from collections.abc import AsyncIterator, Awaitable, Callable
-from contextlib import asynccontextmanager, suppress
+from collections.abc import AsyncIterator, Awaitable, Callable, Mapping
+from contextlib import AbstractAsyncContextManager, asynccontextmanager, suppress
 from dataclasses import asdict, dataclass, replace
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from time import monotonic
 from typing import Any
@@ -30,6 +30,7 @@ from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine
 from tiewtrade.core.money import Money, Quantity
 from tiewtrade.core.order_book import BookLevel, BookState
 from tiewtrade.core.orders import (
+    AdmissionPolicy,
     BaseSize,
     OrderConstraints,
     OrderIntent,
@@ -67,10 +68,12 @@ from tiewtrade.infra.paper_orders.dispatch import (
     submit_cancel,
     submit_order,
 )
+from tiewtrade.infra.paper_orders.requests import wallet_lock
 from tiewtrade.infra.paper_wallet import PaperWalletAction, admit_command, get_wallet
 from tiewtrade.infra.paper_wallet.records import PaperWalletSnapshot
 from tiewtrade.infra.users import create_user
-from tiewtrade.services.engine.paper_order import run_paper_order_round
+from tiewtrade.services.engine.manual_order import run_manual_order_round
+from tiewtrade.services.engine.paper_order import matching_round_modes, run_paper_order_round
 from tiewtrade.services.engine.paper_wallet import run_paper_wallet_round
 
 PAIR = PositionPair("BTC", "USDT")
@@ -211,6 +214,7 @@ async def bounded_map(
 
 async def acquire_sources(engine: AsyncEngine) -> tuple[BookLease, FeedLease]:
     async with market_data_session(engine) as session:
+        await session.execute("SELECT risk_publication_fence()")
         await session.execute(
             """UPDATE market_execution_state
             SET lease_until=clock_timestamp()-interval '1 second'
@@ -235,6 +239,7 @@ async def publish_market(
     rebase: bool,
     trade_id: int,
     update_price: bool = True,
+    ask_quantity: Quantity | None = None,
 ) -> tuple[BookLease, FeedLease]:
     async with market_data_session(engine) as session:
         book_lease = await renew_book_writer(session, book_lease)
@@ -250,7 +255,10 @@ async def publish_market(
                 BookLevel(Money.of(1, "USDT"), Quantity.of(1_000_000, "BTC")),
             ),
             (
-                BookLevel(Money.of(100, "USDT"), Quantity.of(1_000_000, "BTC")),
+                BookLevel(
+                    Money.of(100, "USDT"),
+                    Quantity.of(1_000_000, "BTC") if ask_quantity is None else ask_quantity,
+                ),
                 BookLevel(Money.of(120, "USDT"), Quantity.of(1_000_000, "BTC")),
             ),
             True,
@@ -388,11 +396,55 @@ async def seed_owners(
     return list(await bounded_map(users, snapshot))
 
 
-async def run_worker_process(name: str, stop_path: Path, metrics_path: Path) -> None:
+def publish_runtime_pid(metrics_path: Path) -> None:
+    """Expose a complete PID atomically, including when a producer write fails."""
     pid_file = metrics_path.with_suffix(".pid")
     pending_pid = pid_file.with_suffix(".pid.tmp")
     pending_pid.write_text(str(os.getpid()), encoding="ascii")
     pending_pid.replace(pid_file)
+
+
+async def wait_runtime_pid(
+    process: asyncio.subprocess.Process, metrics_path: Path, *, timeout_seconds: float = 10
+) -> int:
+    """Read readiness atomically; bind-mount metadata may precede file visibility."""
+    async with asyncio.timeout(timeout_seconds):
+        while True:
+            if process.returncode is not None:
+                raise RuntimeError("F15_WORKLOAD_WORKER_EXITED_BEFORE_READY")
+            try:
+                pid = int(metrics_path.with_suffix(".pid").read_text())
+            except (FileNotFoundError, ValueError):
+                await asyncio.sleep(0.01)
+                continue
+            if pid <= 0:
+                raise RuntimeError("F15_WORKLOAD_WORKER_PID_INVALID")
+            return pid
+
+
+async def run_worker_process(
+    name: str,
+    stop_path: Path,
+    metrics_path: Path,
+    *,
+    policy: AdmissionPolicy | None = None,
+    manual_intake: bool = False,
+    round_limit: int = 20,
+    claim_limit: int | None = None,
+    prefer_same_pair: bool = False,
+    alternate_admission: bool = False,
+    source_resumption: bool = False,
+) -> None:
+    modes = matching_round_modes(
+        prefer_same_pair=prefer_same_pair, alternate_admission=alternate_admission
+    )
+    if type(round_limit) is not int or not 1 <= round_limit <= 20:
+        raise ValueError("bounded worker round required")
+    if claim_limit is not None and (
+        type(claim_limit) is not int or not 1 <= claim_limit <= round_limit
+    ):
+        raise ValueError("bounded worker claim budget required")
+    publish_runtime_pid(metrics_path)
     engine = create_engine_for(DatabaseRole.ENGINE)
     scan = create_engine_for(DatabaseRole.ENGINE_SCAN)
     original_begin = db_session._begin
@@ -426,17 +478,38 @@ async def run_worker_process(name: str, stop_path: Path, metrics_path: Path) -> 
                     processing = bool(info.pop("f15_processing", False))
         finally:
             if processing:
-                samples.write(f"{monotonic() - started}\n")
+                finished = monotonic()
+                samples.write(
+                    json.dumps(
+                        {"started": started, "finished": finished, "seconds": finished - started}
+                    )
+                    + "\n"
+                )
 
     db_session._begin = measured_begin
     try:
-        policy = AllowPaperPolicy()
+        policy = AllowPaperPolicy() if policy is None else policy
         while not stop_path.exists():
+            if manual_intake:
+                await run_manual_order_round(
+                    engine=engine,
+                    scan_engine=scan,
+                    worker=name,
+                    policy=policy,
+                    limit=round_limit,
+                    claim_limit=claim_limit,
+                )
+            prefer, admission_first = next(modes)
             await run_paper_order_round(
                 engine=engine,
                 scan_engine=scan,
                 worker=name,
                 policy=policy,
+                limit=round_limit,
+                claim_limit=claim_limit,
+                prefer_same_pair=prefer,
+                admission_first=admission_first,
+                source_resumption=source_resumption,
             )
             # Match services/engine/paper_order_main.py, including rounds with stale candidates.
             await asyncio.sleep(0.02)
@@ -444,16 +517,25 @@ async def run_worker_process(name: str, stop_path: Path, metrics_path: Path) -> 
         db_session._begin = original_begin
         samples.close()
         # Materialize only after measurement stops; sample storage stays bounded during W3.
+        records = [json.loads(value) for value in samples_path.read_text().splitlines()]
         save(
             metrics_path,
             {
-                "transaction_seconds": [
-                    float(value) for value in samples_path.read_text().splitlines()
-                ]
+                "transaction_seconds": [value["seconds"] for value in records],
+                "transaction_samples": records,
             },
         )
         await engine.dispose()
         await scan.dispose()
+
+
+def paper_worker_environment() -> dict[str, str]:
+    allowed = {"TIEWTRADE_DATABASE_URL_ENGINE", "TIEWTRADE_DATABASE_URL_ENGINE_SCAN"}
+    return {
+        key: value
+        for key, value in os.environ.items()
+        if not key.startswith("TIEWTRADE_") or key in allowed
+    }
 
 
 async def start_worker_processes(
@@ -473,15 +555,13 @@ async def start_worker_processes(
             str(stop_path),
             "--worker-metrics",
             str(metrics_paths[number]),
+            env=paper_worker_environment(),
         )
         for number in range(count)
     ]
     try:
         for process, metrics in zip(processes, metrics_paths, strict=True):
-            async with asyncio.timeout(10):
-                while not metrics.with_suffix(".pid").exists():
-                    await asyncio.sleep(0.01)
-            WORKER_RUNTIME_PIDS[process.pid] = int(metrics.with_suffix(".pid").read_text())
+            WORKER_RUNTIME_PIDS[process.pid] = await wait_runtime_pid(process, metrics)
     except BaseException:
         await stop_worker_processes(processes, stop_path)
         raise
@@ -493,6 +573,12 @@ async def economic_snapshot(
 ) -> list[dict[str, int | str]]:
     async def one(owner: OwnerState) -> dict[str, int | str]:
         async with user_session(engine, owner.user_id, role=DatabaseRole.ENGINE) as session:
+            # Use the same owner lock as financial writers so the reader's ledger
+            # balance and the event counts describe one economic state.
+            await wallet_lock(session)
+            wallet = await get_wallet(session)
+            if wallet is None or wallet.episode_id != owner.wallet.episode_id:
+                raise RuntimeError("F15_ECONOMIC_SNAPSHOT_EPISODE_CHANGED")
             row = (
                 (
                     await session.execute(
@@ -502,9 +588,7 @@ async def economic_snapshot(
                     (SELECT count(*) FROM paper_wallet_ledger
                       WHERE episode_id=:episode) AS ledger_rows,
                     (SELECT count(*) FROM paper_position_events
-                      WHERE episode_id=:episode) AS position_events,
-                    (SELECT balance FROM paper_wallet_state
-                      WHERE active_episode_id=:episode) AS balance""",
+                      WHERE episode_id=:episode) AS position_events""",
                         {"episode": owner.wallet.episode_id},
                     )
                 )
@@ -515,7 +599,7 @@ async def economic_snapshot(
             "fills": integer(row["fills"]),
             "ledger_rows": integer(row["ledger_rows"]),
             "position_events": integer(row["position_events"]),
-            "balance": str(row["balance"]),
+            "balance": wallet.balance.as_parts()["amount"],
         }
 
     return list(await bounded_map(owners, one))
@@ -607,6 +691,8 @@ async def run_fault_schedule(
     restart_workers: Callable[[], Awaitable[None]],
     churn_connections: Callable[[], Awaitable[None]],
     observations: list[dict[str, object]],
+    on_transition: Callable[[dict[str, object]], None] | None = None,
+    recover: Callable[[dict[str, object]], Awaitable[None]] | None = None,
 ) -> None:
     started = monotonic()
     for fault in events:
@@ -614,6 +700,19 @@ async def run_fault_schedule(
         await gate.pause()
         active_at_fault = gate.active
         fault_started = monotonic()
+        fault_started_at = datetime.now(UTC)
+        observation: dict[str, object] = {
+            "kind": fault.kind,
+            "started_at": fault_started_at.isoformat(),
+            "started": fault_started,
+            "status": "STARTED",
+            "scheduled_offset_seconds": fault.offset_seconds,
+            "scheduled_duration_seconds": fault.duration_seconds,
+            "active_cycles_at_fault": active_at_fault,
+        }
+        if on_transition is not None:
+            observations.append(observation)
+            on_transition(observation)
         progress("fault", fault.kind, "started")
         try:
             if fault.kind == "WORKER_RESTART":
@@ -625,23 +724,36 @@ async def run_fault_schedule(
             await asyncio.sleep(fault.duration_seconds)
             if fault.kind == "REDIS_OUTAGE":
                 await docker_container("unpause", redis_container)
-            observations.append(
-                {
-                    "kind": fault.kind,
-                    "scheduled_offset_seconds": fault.offset_seconds,
-                    "scheduled_duration_seconds": fault.duration_seconds,
-                    "active_cycles_at_fault": active_at_fault,
-                    "actual_duration_seconds": monotonic() - fault_started,
-                    "status": "RECOVERED",
-                }
+            observation.update(
+                ended_at=datetime.now(UTC).isoformat(),
+                restored=monotonic(),
+                actual_duration_seconds=monotonic() - fault_started,
+                status="RESTORED" if recover is not None else "RECOVERED",
             )
-        except BaseException:
+            if on_transition is None:
+                observations.append(observation)
+            else:
+                on_transition(observation)
+        except BaseException as error:
+            if on_transition is not None:
+                observation.update(status="FAILED", error_type=type(error).__name__)
+                on_transition(observation)
             if fault.kind == "REDIS_OUTAGE":
                 with suppress(Exception):
                     await docker_container("unpause", redis_container)
             raise
         finally:
             gate.resume(monotonic() - fault_started)
+        # Restoration ends the fault window; recovery must not hold the gate closed.
+        if recover is not None:
+            await recover(observation)
+            observation.update(
+                recovered_at=datetime.now(UTC).isoformat(),
+                recovered=monotonic(),
+                status="RECOVERED",
+            )
+            if on_transition is not None:
+                on_transition(observation)
 
 
 async def stop_worker_processes(
@@ -658,6 +770,23 @@ async def stop_worker_processes(
         await asyncio.gather(*(process.wait() for process in processes))
 
 
+def mac_process_sample(output: str, pids: list[int]) -> list[dict[str, int | float]]:
+    rows: list[dict[str, int | float]] = []
+    for line in output.splitlines():
+        pid, cpu, rss = line.split()
+        days, separator, clock = cpu.rpartition("-")
+        parts = list(map(float, (clock if separator else cpu).split(":")))
+        seconds = 0.0
+        for part in parts:
+            seconds = seconds * 60 + part
+        if separator:
+            seconds += int(days) * 86400
+        rows.append({"Id": int(pid), "CPU": seconds, "WorkingSet64": int(rss) * 1024})
+    if {int(row["Id"]) for row in rows} != set(pids):
+        raise RuntimeError("F15_RESOURCE_PROCESS_SAMPLE_INCOMPLETE")
+    return rows
+
+
 async def resource_sampler(
     migrator: AsyncEngine,
     source: AsyncEngine,
@@ -665,6 +794,7 @@ async def resource_sampler(
     process_lock: asyncio.Lock,
     stop: asyncio.Event,
     samples: list[dict[str, object]],
+    evidence_path: Path | None = None,
 ) -> None:
     while not stop.is_set():
         async with process_lock:
@@ -698,6 +828,20 @@ async def resource_sampler(
                 process_rows = json.loads(stdout.decode())
                 if isinstance(process_rows, dict):
                     process_rows = [process_rows]
+            elif sys.platform == "darwin":
+                shell = await asyncio.create_subprocess_exec(
+                    "ps",
+                    "-p",
+                    ",".join(map(str, pids)),
+                    "-o",
+                    "pid=,time=,rss=",
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,
+                )
+                stdout, _ = await shell.communicate()
+                if shell.returncode != 0:
+                    raise RuntimeError("F15_RESOURCE_PROCESS_SAMPLE_FAILED")
+                process_rows = mac_process_sample(stdout.decode(), pids)
             else:
                 process_rows = []
                 for pid in pids:
@@ -740,6 +884,8 @@ async def resource_sampler(
         )
         with suppress(TimeoutError):
             await asyncio.wait_for(stop.wait(), timeout=5)
+        if evidence_path is not None:
+            save(evidence_path, samples)
 
 
 def integer(value: object) -> int:
@@ -780,36 +926,87 @@ def summarize_resources(samples: list[dict[str, object]]) -> dict[str, object]:
     }
 
 
-def endurance_rss(samples: list[dict[str, object]]) -> dict[str, object]:
+def endurance_rss(
+    samples: list[dict[str, object]],
+    *,
+    duration_seconds: int = W3_DURATION_SECONDS,
+    measured_start: datetime | None = None,
+) -> dict[str, object]:
+    if duration_seconds <= 0:
+        raise ValueError("positive endurance duration required")
     if len(samples) < 2:
         return {"passed": False, "reason": "insufficient samples"}
     first_at = samples[0]["at"]
     last_at = samples[-1]["at"]
     if not isinstance(first_at, datetime) or not isinstance(last_at, datetime):
         raise AssertionError("resource timestamps are invalid")
-    elapsed = (last_at - first_at).total_seconds()
+    if measured_start is not None:
+        first_at = measured_start
+        last_at = measured_start + timedelta(seconds=duration_seconds)
+        samples = [
+            sample
+            for sample in samples
+            if isinstance(sample["at"], datetime) and first_at <= sample["at"] <= last_at
+        ]
+        if len(samples) < 2:
+            return {"passed": False, "reason": "insufficient measured samples"}
+    observed_end = samples[-1]["at"]
+    assert isinstance(observed_end, datetime)
+    elapsed = (observed_end - first_at).total_seconds()
+    warmup = duration_seconds / 16
+    window = duration_seconds / 4
     first_window = [
         integer(sample["total_rss_bytes"])
         for sample in samples
         if isinstance(sample["at"], datetime)
-        and 900 <= (sample["at"] - first_at).total_seconds() <= 4500
+        and warmup <= (sample["at"] - first_at).total_seconds() <= warmup + window
     ]
     last_window = [
         integer(sample["total_rss_bytes"])
         for sample in samples
-        if isinstance(sample["at"], datetime) and (last_at - sample["at"]).total_seconds() <= 3600
+        if isinstance(sample["at"], datetime) and (last_at - sample["at"]).total_seconds() <= window
     ]
-    if elapsed < 13_500 or not first_window or not last_window:
-        return {"passed": False, "reason": "four-hour windows not available"}
+    if elapsed < duration_seconds - warmup or not first_window or not last_window:
+        return {"passed": False, "reason": "endurance windows not available"}
     first_average = sum(first_window) / len(first_window)
     last_average = sum(last_window) / len(last_window)
     growth = (last_average - first_average) / first_average
-    return {
-        "first_stable_hour_average_bytes": first_average,
-        "last_hour_average_bytes": last_average,
+    result: dict[str, object] = {
+        "duration_seconds": duration_seconds,
+        "warmup_seconds": warmup,
+        "window_seconds": window,
+        "observed_seconds": elapsed,
+        "first_stable_window_average_bytes": first_average,
+        "last_window_average_bytes": last_average,
         "growth_fraction": growth,
         "passed": growth <= 0.20,
     }
+    if measured_start is not None:
+        result.update(
+            measured_start=first_at.isoformat(),
+            measured_end=last_at.isoformat(),
+            first_window_samples=len(first_window),
+            last_window_samples=len(last_window),
+        )
+    if duration_seconds == W3_DURATION_SECONDS:
+        # Retain the existing F15 result contract and four-hour defaults.
+        result.update(
+            first_stable_hour_average_bytes=first_average,
+            last_hour_average_bytes=last_average,
+        )
+    return result
+
+
+def cycle_counts_for(
+    owners: list[OwnerState],
+    cycles: int,
+    counts: Mapping[UUID, int] | None,
+) -> dict[UUID, int]:
+    expected = {owner.user_id for owner in owners}
+    result = dict.fromkeys(expected, cycles) if counts is None else dict(counts)
+    if set(result) != expected or any(type(n) is not int or n < 0 for n in result.values()):
+        raise ValueError("complete nonnegative per-owner cycle counts required")
+    return result
 
 
 async def verify_global_invariants(
@@ -818,11 +1015,15 @@ async def verify_global_invariants(
     *,
     baseline_orders: int,
     cycles_per_owner: int,
+    extra_cancels: int = 0,
+    extra_fills: int = 0,
+    cycle_counts: Mapping[UUID, int] | None = None,
 ) -> dict[str, object]:
     """Check workload-wide safety facts outside owner RLS."""
-    expected_orders = len(owners) * (baseline_orders + cycles_per_owner * 3)
-    expected_fills = len(owners) * cycles_per_owner * 2
-    expected_cancels = len(owners) * cycles_per_owner
+    total_cycles = sum(cycle_counts_for(owners, cycles_per_owner, cycle_counts).values())
+    expected_orders = len(owners) * baseline_orders + total_cycles * 3 + extra_cancels
+    expected_fills = total_cycles * 2 + extra_fills
+    expected_cancels = total_cycles + extra_cancels
     expected_pending_dispatch = len(owners) * baseline_orders
 
     async def inspect(owner: OwnerState) -> dict[str, int]:
@@ -834,8 +1035,10 @@ async def verify_global_invariants(
                     (SELECT count(*) FROM paper_orders WHERE episode_id=:episode) AS orders,
                     (SELECT count(*) FROM paper_order_events
                       WHERE episode_id=:episode AND event_kind='FILL') AS fills,
-                    (SELECT count(*) FROM paper_order_events
-                      WHERE episode_id=:episode AND event_kind='CANCELED') AS cancels,
+                    (SELECT count(DISTINCT terminal->'intent'->>'order_id')
+                      FROM paper_order_events e CROSS JOIN LATERAL
+                        jsonb_array_elements(e.payload->'terminal_orders') terminal
+                      WHERE e.episode_id=:episode AND terminal->>'status'='CANCELED') AS cancels,
                     (SELECT count(*) FROM paper_order_dispatch
                       WHERE episode_id=:episode AND state<>'TERMINAL') AS pending_dispatch,
                     (SELECT count(*) FROM paper_order_events e
@@ -1107,6 +1310,8 @@ async def run_scheduled_cycles(
     counters: Counters,
     latencies: list[float],
     gate: FaultGate | None = None,
+    *,
+    cycle_scope: Callable[[OwnerState, int], AbstractAsyncContextManager[None]] | None = None,
 ) -> float:
     started = monotonic()
     command_interval = 1 / rate
@@ -1118,7 +1323,9 @@ async def run_scheduled_cycles(
             due = first_due + number * owner_interval + (0 if gate is None else gate.pause_seconds)
             await asyncio.sleep(max(0, due - monotonic()))
             if gate is None:
-                async with asyncio.timeout(60):
+                async with (
+                    asyncio.timeout(60) if cycle_scope is None else cycle_scope(owner, number)
+                ):
                     await cycle(engine, owner, run_id, number, counters, latencies)
             else:
                 while True:
@@ -1129,7 +1336,9 @@ async def run_scheduled_cycles(
                         break
                     await gate.leave()
                 try:
-                    async with asyncio.timeout(60):
+                    async with (
+                        asyncio.timeout(60) if cycle_scope is None else cycle_scope(owner, number)
+                    ):
                         await cycle(engine, owner, run_id, number, counters, latencies)
                 finally:
                     await gate.leave()
@@ -1151,10 +1360,14 @@ async def verify(
     *,
     baseline_orders: int,
     cycles_per_owner: int,
+    extra_cancels: dict[UUID, int] | None = None,
+    cycle_counts: Mapping[UUID, int] | None = None,
 ) -> list[dict[str, object]]:
-    expected = Money.of(10_000, "USDT") - EXPECTED_CYCLE_LOSS.times(cycles_per_owner)
+    counts = cycle_counts_for(owners, cycles_per_owner, cycle_counts)
 
     async def one(owner: OwnerState) -> dict[str, object]:
+        count = counts[owner.user_id]
+        expected = Money.of(10_000, "USDT") - EXPECTED_CYCLE_LOSS.times(count)
         async with user_session(engine, owner.user_id, role=DatabaseRole.ENGINE) as session:
             wallet = await get_wallet(session)
             row = (
@@ -1191,8 +1404,8 @@ async def verify(
             wallet is not None
             and wallet.balance == expected
             and row["accepted"] == baseline_orders
-            and row["filled"] == cycles_per_owner * 2
-            and row["canceled"] == cycles_per_owner
+            and row["filled"] == count * 2
+            and row["canceled"] == count + (extra_cancels or {}).get(owner.user_id, 0)
             and Money.of(row["quote_reserved"], "USDT") == Money.of(baseline_orders, "USDT")
             and Quantity.of(row["base_reserved"], "BTC") == Quantity.of(0, "BTC")
             and Quantity.of(position["held"], "BTC") == Quantity.of(0, "BTC")

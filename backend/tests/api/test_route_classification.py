@@ -110,14 +110,14 @@ def test_the_routes_that_require_reverification_are_pinned() -> None:
 
     สามเส้นทางแรกเปลี่ยนหรือถอนปัจจัยที่สอง · **F-07 เพิ่ม `/api-keys`** ซึ่งเป็น
     เส้นทางแรกที่เพิ่มความเสี่ยงทางการเงิน (`security.md` หัวข้อ 1)
-    · ที่ยังไม่มีคือเปิด Live (F-24) และขยายเพดานขาดทุน
+    · F-18 เพิ่มขยายเพดานของ Live; Paper ใช้ authenticated+CSRF ตาม amendment
     """
     assert {key for key, rule in ROUTE_RULES.items() if rule.reverify} == {
         ("POST", "/auth/totp/replace"),
         ("POST", "/auth/totp/disable"),
         ("POST", "/auth/totp/recovery-codes"),
         ("POST", "/api-keys"),
-        ("POST", "/trading-account/use"),
+        ("POST", "/live/risk-limit/increase"),
         ("POST", "/admin/supported-symbols"),
         ("DELETE", "/admin/supported-symbols/{base}/{quote}"),
         ("POST", "/admin/supported-symbols/protocol/enable"),

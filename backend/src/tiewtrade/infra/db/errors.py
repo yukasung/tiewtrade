@@ -130,6 +130,10 @@ class CatalogStateError(InfraError):
     code: ClassVar[str] = "CATALOG_STATE_INVALID"
 
 
+class RiskProtocolError(InfraError):
+    code: ClassVar[str] = "RISK_PROTOCOL_NOT_READY"
+
+
 #: SQLSTATE ที่กลไกของ F-03 ใช้ ประกาศไว้ที่เดียว
 SQLSTATE_APPEND_ONLY: Final[str] = "TT001"
 SQLSTATE_INSUFFICIENT_PRIVILEGE: Final[str] = "42501"
@@ -154,6 +158,7 @@ _BY_SQLSTATE: Final[dict[str, type[InfraError]]] = {
     "TT025": CatalogRevisionConflictError,
     "TT026": CatalogIdempotencyConflictError,
     "TT027": CatalogStateError,
+    "TT028": RiskProtocolError,
     SQLSTATE_APPEND_ONLY: AppendOnlyViolationError,
     SQLSTATE_INSUFFICIENT_PRIVILEGE: NotPermittedError,
     SQLSTATE_CHECK_VIOLATION: ValueRejectedError,

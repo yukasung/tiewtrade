@@ -83,6 +83,39 @@ services:
         condition: service_completed_successfully
     restart: unless-stopped
 
+  # F18 owns no venue credentials. Schema rollout leaves admission disabled;
+  # owner/source/price proofs, rather than container health, authorize execution.
+  risk-limit-worker:
+    build:
+      context: ./backend
+    command: ["python", "-m", "tiewtrade.services.engine.risk_limit_main", "run"]
+    environment:
+      TIEWTRADE_DATABASE_URL_ENGINE: postgresql+asyncpg://tiewtrade_engine:dev_engine@postgres:5432/tiewtrade
+      TIEWTRADE_DATABASE_URL_ENGINE_SCAN: postgresql+asyncpg://tiewtrade_engine_scan:dev_engine_scan@postgres:5432/tiewtrade
+    healthcheck:
+      test: ["CMD", "python", "-m", "tiewtrade.services.engine.risk_limit_main", "health"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+  paper-order-worker:
+    build:
+      context: ./backend
+    command: ["python", "-m", "tiewtrade.services.engine.paper_order_main"]
+    environment:
+      TIEWTRADE_DATABASE_URL_ENGINE: postgresql+asyncpg://tiewtrade_engine:dev_engine@postgres:5432/tiewtrade
+      TIEWTRADE_DATABASE_URL_ENGINE_SCAN: postgresql+asyncpg://tiewtrade_engine_scan:dev_engine_scan@postgres:5432/tiewtrade
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      risk-limit-worker:
+        condition: service_healthy
+    restart: unless-stopped
+
   # รันครั้งเดียวแล้วจบ — api รอให้เสร็จก่อนเริ่ม
   migrate:
     build:
@@ -123,6 +156,8 @@ services:
       timeout: 3s
       retries: 10
     depends_on:
+      risk-limit-worker:
+        condition: service_healthy
       migrate:
         condition: service_completed_successfully
       redis:

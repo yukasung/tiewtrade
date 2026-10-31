@@ -3,7 +3,6 @@
 import asyncio
 from uuid import UUID, uuid4
 
-import pytest
 from sqlalchemy.ext.asyncio import AsyncEngine
 
 from tiewtrade.infra.audit import record_event
@@ -20,10 +19,7 @@ from .conftest import active_key
 from .test_audit import selected_event
 
 
-async def test_initial_selections_one_succeeds(
-    api_engine: AsyncEngine, engine_engine: AsyncEngine, owner: UUID
-) -> None:
-    await active_key(api_engine, engine_engine, owner)
+async def test_initial_selections_one_succeeds(api_engine: AsyncEngine, owner: UUID) -> None:
     barrier = asyncio.Barrier(2)
 
     async def select(use: AccountUse) -> bool:
@@ -70,47 +66,27 @@ async def test_direct_parallel_key_inserts_one_succeeds(
         assert (await session.execute("SELECT count(*) FROM user_api_keys")).scalar_one() == 1
 
 
-@pytest.mark.parametrize("delete_first", [True, False])
-async def test_selection_and_key_delete_both_lock_orders(
-    api_engine: AsyncEngine, engine_engine: AsyncEngine, owner: UUID, delete_first: bool
+async def test_selection_and_key_delete_are_independent(
+    api_engine: AsyncEngine, engine_engine: AsyncEngine, owner: UUID
 ) -> None:
     from tiewtrade.infra.api_keys import delete_key
-    from tiewtrade.infra.trading_account import TradingAccountKeyUnavailableError
 
     key = await active_key(api_engine, engine_engine, owner)
-    first_locked = asyncio.Event()
-    contender_ready = asyncio.Event()
-    release = asyncio.Event()
+    barrier = asyncio.Barrier(2)
 
     async def select() -> None:
-        if delete_first:
-            await first_locked.wait()
-            contender_ready.set()
-            with pytest.raises(TradingAccountKeyUnavailableError):
-                async with user_session(api_engine, owner) as session:
-                    await select_use(session, AccountUse.BOT)
-                    await record_event(session, selected_event(owner, AccountUse.BOT))
-        else:
-            async with user_session(api_engine, owner) as session:
-                await select_use(session, AccountUse.BOT)
-                await record_event(session, selected_event(owner, AccountUse.BOT))
-                first_locked.set()
-                await release.wait()
+        await barrier.wait()
+        async with user_session(api_engine, owner) as session:
+            await select_use(session, AccountUse.BOT)
+            await record_event(session, selected_event(owner, AccountUse.BOT))
 
     async def delete() -> None:
-        if not delete_first:
-            await first_locked.wait()
-            contender_ready.set()
+        await barrier.wait()
         async with user_session(api_engine, owner) as session:
             assert await delete_key(session, key)
-            if delete_first:
-                first_locked.set()
-                await release.wait()
 
     tasks = [asyncio.create_task(select()), asyncio.create_task(delete())]
     try:
-        await asyncio.wait_for(contender_ready.wait(), 5)
-        release.set()
         await asyncio.wait_for(asyncio.gather(*tasks), 5)
     finally:
         for task in tasks:
@@ -120,9 +96,9 @@ async def test_selection_and_key_delete_both_lock_orders(
     async with user_session(api_engine, owner) as session:
         account = await get_account(session)
         assert account.key is None
-        assert account.use is (None if delete_first else AccountUse.BOT)
+        assert account.use is AccountUse.BOT
         assert (
             await session.execute(
                 "SELECT count(*) FROM audit_events WHERE action='TRADING_USE_SELECTED'"
             )
-        ).scalar_one() == (0 if delete_first else 1)
+        ).scalar_one() == 1

@@ -17,7 +17,11 @@ from tiewtrade.infra.paper_wallet import get_wallet
 
 
 async def trade_snapshot(
-    session: UserSession, *, risk_policy_available: bool, pair: PositionPair | None
+    session: UserSession,
+    *,
+    risk_policy_available: bool,
+    pair: PositionPair | None,
+    risk_reason: str | None = None,
 ) -> dict[str, Any]:
     session = require_user_session(session)
     wallet = await get_wallet(session)
@@ -38,7 +42,7 @@ async def trade_snapshot(
     )
     reasons: list[str] = []
     if not risk_policy_available:
-        reasons.append("ORDER_SAFETY_UNAVAILABLE")
+        reasons.append(risk_reason or "ORDER_SAFETY_UNAVAILABLE")
     if use != "MANUAL":
         reasons.append("MANUAL_USE_REQUIRED")
     if wallet is None:

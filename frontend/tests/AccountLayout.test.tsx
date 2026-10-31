@@ -20,6 +20,11 @@ it("keeps the standard content width on other module pages", () => {
   const { container } = render(<AccountLayout page="account"><p>account</p></AccountLayout>);
   expect(container.querySelector(".account-content-chart")).toBeNull();
 });
+it("uses the full-width workspace and removes the duplicate breadcrumb on trade routes", () => {
+  const { container } = render(<AccountLayout page="paper/trade"><p>workspace</p></AccountLayout>);
+  expect(container.querySelector(".account-content-trade")).toBeTruthy();
+  expect(container.querySelector(".page-breadcrumb")).toBeNull();
+});
 it("toggles the desktop icon rail without hiding the current module", () => {
   vi.stubGlobal("innerWidth", 1440);
   const { container } = render(<AccountLayout><p>current module</p></AccountLayout>);
@@ -97,6 +102,7 @@ it("preserves native form props and explicit button types", () => {
       </Select>
       <Button>Cancel</Button>
       <Button type="submit">Save</Button>
+      <Button variant="outline">Secondary</Button>
     </form>,
   );
   expect(screen.getByLabelText("Native").getAttribute("aria-describedby")).toBe(
@@ -109,4 +115,8 @@ it("preserves native form props and explicit button types", () => {
   });
   fireEvent.click(screen.getByRole("button", { name: "Save" }));
   expect(submit).toHaveBeenCalledOnce();
+  const secondary = screen.getByRole("button", { name: "Secondary" });
+  expect(secondary.className).toContain("dark:text-gray-400");
+  expect(secondary.className).toContain("dark:hover:text-gray-300");
+  expect(secondary.className).not.toContain("dark:hover:text-gray-200");
 });

@@ -3,6 +3,8 @@
 สถานะ: **Approved** — เจ้าของสั่งแก้ review issue 3 วันที่ 2026-10-07 ให้ implement บัญชีเดียว/ความเลือกประเภทระดับบัญชีตามฉบับนี้
 วันที่: 2026-10-07
 
+Account dashboard visual refresh: **Approved 2026-10-31**; ดู [Plan Amendment](account-dashboard-visual-plan-amendment.md)
+
 ## เป้าหมายและของเดิมที่ใช้ซ้ำ
 
 ตัด multi-wallet/sub-account implementation เดิมที่ยังไม่ commit ออก แล้วใช้

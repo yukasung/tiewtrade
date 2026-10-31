@@ -83,3 +83,22 @@ plan/validation ฉบับแก้ F16-R1/R2/R3 ในวันเดีย�
 ไม่มีคำตัดสินธุรกิจใหม่ที่เสนอให้เดาระหว่าง implementation ในฉบับนี้
 NC-08 และ NC-F16-01 ปิดแล้ว; requirements ทั้งฉบับได้รับอนุมัติแล้ว
 หากพบช่องว่างใหม่ต้องบันทึก Needs Clarification ใน mission §9 และหยุดส่วนที่เกี่ยวข้อง
+
+## F16-R4 — Compact Trading Workspace amendment — 2026-10-30
+
+สถานะ: **Approved — เจ้าของอนุมัติแผน “ปรับหน้า Paper/Live Trade เป็น Trading Workspace แบบกระชับ” วันที่ 2026-10-30**
+
+- `/paper/trade` และ `/live/trade` ใช้ layout ร่วมแบบ trading workspace: แถบคู่เทรดและสถานะ,
+  กราฟ, ฟอร์ม และรายการออเดอร์ โดย desktop วางกราฟซ้ายและฟอร์มขวา ส่วน mobile เรียงลงมา
+- ใช้สี typography spacing และ shared controls ที่ปรับจาก `references/admin-template/`;
+  ความคล้าย Binance จำกัดที่ลำดับข้อมูลและสัดส่วน ไม่คัดลอกแบรนด์หรือ visual tokens
+- ไม่มี Order book, market trade feed, สถิติ 24 ชั่วโมง, percentage slider หรือ TP/SL
+  เมื่อ backend ยังไม่รองรับ
+- คู่เทรดตัวเดียวควบคุมกราฟและฟอร์ม; การเปลี่ยนคู่ต้องล้าง draft จำนวน/ราคา และรอ
+  snapshot ของคู่ใหม่ก่อนเปิด submit
+- แสดง balance และ risk limit แบบย่อ เปิดรายละเอียดเมื่อต้องการ แต่ blocking reason,
+  stale/disconnected/risk-stop และผลคำขอไม่แน่นอนต้องเห็นใกล้ฟอร์มทันที
+- หน้า Live ใช้กราฟตลาดและรูปลักษณ์เดียวกัน แต่คง execution ปิด ไม่แสดงข้อมูล Paper
+  และห้ามส่ง Live order
+- amendment นี้ไม่เปลี่ยน public API, schema, money/order/risk calculations,
+  idempotency journal, pending-submit protection หรือ episode semantics

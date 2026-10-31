@@ -1,5 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 
 import type { Me } from "./auth";
 import { ApiRequestError } from "./auth";
@@ -23,6 +30,25 @@ import "./PaperWalletPanel.css";
 type Attempt =
   | { action: "CREATE"; idempotencyKey: string; payload: PaperWalletMutation; commandId?: string }
   | { action: "RESET"; idempotencyKey: string; payload: PaperWalletReset; commandId?: string };
+
+function WalletStat({
+  label,
+  primary = false,
+  children,
+}: {
+  label: string;
+  primary?: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <div
+      className={`paper-wallet-stat${primary ? " paper-wallet-stat-primary" : ""}`}
+    >
+      <dt>{label}</dt>
+      <dd>{children}</dd>
+    </div>
+  );
+}
 
 function failure(error: unknown): string {
   if (!(error instanceof ApiRequestError)) return t("uncertain");
@@ -188,12 +214,30 @@ function PaperWalletPanelForIdentity({ identity }: { identity: Me }) {
       {wallet !== null && wallet !== undefined ? (
         <div className="paper-wallet-summary">
           <dl>
-            <div><dt>{t("mode")}</dt><dd><strong>{wallet.mode}</strong></dd></div>
-            <div><dt>{t("balance")}</dt><dd><MarketValue amount={wallet.balance.amount} unit={wallet.balance.currency} grouped /></dd></div>
-            <div><dt>{t("capital")}</dt><dd><MarketValue amount={wallet.initial_capital.amount} unit={wallet.initial_capital.currency} grouped /></dd></div>
-            <div><dt>{t("episode")}</dt><dd>{wallet.sequence}</dd></div>
-            <div><dt>{t("started")}</dt><dd><MarketTime value={wallet.started_at} locale={paperWalletLocale} /></dd></div>
-            <div><dt>{t("snapshot")}</dt><dd><MarketTime value={wallet.snapshot_at} locale={paperWalletLocale} /></dd></div>
+            <WalletStat label={t("balance")} primary>
+              <MarketValue
+                amount={wallet.balance.amount}
+                unit={wallet.balance.currency}
+                grouped
+              />
+            </WalletStat>
+            <WalletStat label={t("capital")}>
+              <MarketValue
+                amount={wallet.initial_capital.amount}
+                unit={wallet.initial_capital.currency}
+                grouped
+              />
+            </WalletStat>
+            <WalletStat label={t("mode")}>
+              <strong>{wallet.mode}</strong>
+            </WalletStat>
+            <WalletStat label={t("episode")}>{wallet.sequence}</WalletStat>
+            <WalletStat label={t("started")}>
+              <MarketTime value={wallet.started_at} locale={paperWalletLocale} />
+            </WalletStat>
+            <WalletStat label={t("snapshot")}>
+              <MarketTime value={wallet.snapshot_at} locale={paperWalletLocale} />
+            </WalletStat>
           </dl>
           <Button
             ref={resetButton}
@@ -257,6 +301,8 @@ function PaperWalletPanelForIdentity({ identity }: { identity: Me }) {
       <Button
         type="button"
         variant="outline"
+        size="sm"
+        className="paper-wallet-refresh"
         disabled={walletQuery.isFetching}
         onClick={() => void walletQuery.refetch()}
       >

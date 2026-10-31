@@ -35,6 +35,9 @@ class ConstraintViolation(Enum):
     PRICE_NOT_ON_TICK = "PRICE_NOT_ON_TICK"
     BELOW_MINIMUM_PRICE = "BELOW_MINIMUM_PRICE"
     ABOVE_MAXIMUM_PRICE = "ABOVE_MAXIMUM_PRICE"
+    BELOW_PERCENT_PRICE = "BELOW_PERCENT_PRICE"
+    ABOVE_PERCENT_PRICE = "ABOVE_PERCENT_PRICE"
+    TOO_MANY_OPEN_ORDERS = "TOO_MANY_OPEN_ORDERS"
 
 
 def unmet_constraints(
@@ -50,6 +53,10 @@ def unmet_constraints(
     price_tick: Money | None = None,
     minimum_price: Money | None = None,
     maximum_price: Money | None = None,
+    percent_minimum_price: Money | None = None,
+    percent_maximum_price: Money | None = None,
+    active_orders: int = 0,
+    maximum_open_orders: int | None = None,
 ) -> tuple[ConstraintViolation, ...]:
     """คืนข้อที่ไม่ผ่านทั้งหมด — ว่างเปล่าแปลว่าผ่านทุกข้อ
 
@@ -81,5 +88,11 @@ def unmet_constraints(
             violations.append(ConstraintViolation.BELOW_MINIMUM_PRICE)
         if maximum_price is not None and price > maximum_price:
             violations.append(ConstraintViolation.ABOVE_MAXIMUM_PRICE)
+        if percent_minimum_price is not None and price < percent_minimum_price:
+            violations.append(ConstraintViolation.BELOW_PERCENT_PRICE)
+        if percent_maximum_price is not None and price > percent_maximum_price:
+            violations.append(ConstraintViolation.ABOVE_PERCENT_PRICE)
+    if maximum_open_orders is not None and active_orders >= maximum_open_orders:
+        violations.append(ConstraintViolation.TOO_MANY_OPEN_ORDERS)
 
     return tuple(violations)

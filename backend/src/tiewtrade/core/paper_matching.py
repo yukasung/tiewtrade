@@ -22,6 +22,7 @@ from tiewtrade.core.orders import (
     OrderConstraints,
     OrderError,
     OrderIntent,
+    OrderOrigin,
     OrderScope,
     OrderState,
     OrderStatus,
@@ -36,7 +37,18 @@ from tiewtrade.core.orders import (
     standard_execution_fee,
 )
 from tiewtrade.core.positions import ExecutionFact, ExecutionSide, PositionPair
+from tiewtrade.core.risk_limits import (
+    RiskExecutionContext,
+    RiskReason,
+    apply_risk_execution,
+    evaluate_risk,
+    latch_risk,
+)
 from tiewtrade.core.trading_limits import ConstraintViolation, unmet_constraints
+
+
+class ExecutionIdentityBudgetError(OrderError):
+    """Caller may recompute the pure transition with more deterministic identities."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -104,6 +116,7 @@ def admit_order(
     reference_price: Money,
     policy: AdmissionPolicy | None,
     catalog: CatalogSnapshot,
+    filter_reference_price: Money | None = None,
 ) -> MatchingState:
     """Validate funds after other-pair reserves; caller applies F-14 effects before next command."""
     aware(now)
@@ -140,13 +153,23 @@ def admit_order(
         if isinstance(intent.size, BaseSize)
         else quantity_for_budget(intent.size.amount, price, constraints.quantity_step)
     )
+    filter_price = filter_reference_price if constraints.average_price_minutes else price
+    if constraints.average_price_minutes and filter_price is None:
+        raise SafetyUnavailableError("average-price filter reference unavailable")
+    assert filter_price is not None
     notional = money_for_quantity(
-        price,
+        filter_price,
         quantity,
         asset=state.pair.base,
         rounding=RoundingDirection.AWAY_FROM_ZERO,
     )
-    constraints.check(intent, quantity, notional)
+    constraints.check(
+        intent,
+        quantity,
+        notional,
+        filter_reference_price=filter_reference_price,
+        active_orders=sum(not order.status.terminal for order in state.orders),
+    )
     policy.check(intent)
     candidate = OrderState(
         intent,
@@ -336,9 +359,33 @@ def advance_matching(
     execution_ids: tuple[UUID, ...],
     catalog: CatalogSnapshot,
     market_constraints: OrderConstraints | None = None,
+    risk: RiskExecutionContext | None = None,
 ) -> MatchingTransition:
     """Consume one durable input; caller supplies episode-wide sequence and fill identities."""
     aware(now)
+    if risk is not None and (
+        risk.setting.scope.owner_id != state.scope.owner_id
+        or risk.setting.scope.mode != state.scope.mode
+        or risk.setting.scope.episode_id != state.scope.episode_id
+    ):
+        raise OrderConflictError("matching risk scope mismatch")
+    risk_book = None if risk is None else risk.book
+    risk_setting = None if risk is None else risk.setting
+
+    def risk_allows(order: OrderState) -> bool:
+        if risk is None or order.intent.side is ExecutionSide.SELL:
+            return True
+        if risk.setting.limit is None:
+            return risk.source_ready and order.intent.origin is OrderOrigin.MANUAL
+        if risk_book is None or risk_setting is None:
+            return False
+        return (
+            evaluate_risk(
+                risk_setting, risk_book, risk.prices, now=now, source_ready=risk.source_ready
+            ).reason
+            is RiskReason.READY
+        )
+
     market_constraints = market_constraints or constraints
     if market_constraints.pair != state.pair:
         raise OrderConflictError("MARKET capability scope mismatch")
@@ -418,8 +465,9 @@ def advance_matching(
     used_ids = {fact.execution_id for fact in state.executions}
 
     def apply(order: OrderState, quantity: Quantity, price: Money) -> OrderState:
+        nonlocal risk_book, risk_setting
         if len(fills) >= len(execution_ids):
-            raise OrderError("insufficient caller-supplied execution identities")
+            raise ExecutionIdentityBudgetError("insufficient caller-supplied execution identities")
         identity = execution_ids[len(fills)]
         if type(identity) is not UUID or identity in used_ids:
             raise OrderConflictError("execution identity reused")
@@ -456,10 +504,29 @@ def advance_matching(
         used_ids.add(identity)
         fills.append(fact)
         fill_order_ids.append(order.intent.order_id)
+        if risk is not None and risk_book is not None and risk_setting is not None:
+            risk_book = apply_risk_execution(
+                risk_book,
+                fact,
+                source_revision=risk_book.source_revision + 1,
+            )
+            risk_setting = latch_risk(
+                risk_setting,
+                evaluate_risk(
+                    risk_setting,
+                    risk_book,
+                    risk.prices,
+                    now=now,
+                    source_ready=risk.source_ready,
+                ),
+            )
         return updated
 
     for order in state.orders:
         if order.status.terminal or market.received_at <= order.eligible_at:
+            orders.append(order)
+            continue
+        if not risk_allows(order):
             orders.append(order)
             continue
         # A removed pair may still consume verified inputs for risk-reducing SELL
@@ -485,7 +552,7 @@ def advance_matching(
                 order = replace(order, queue_ahead=ahead - min(ahead, market.quantity))
                 usable = market.quantity - min(market.quantity, ahead)
                 quantity = min(order.remaining, usable, available_trade)
-                if quantity.amount > 0:
+                if quantity.amount > 0 and risk_allows(order):
                     order = apply(order, quantity, market.price)
                     available_trade -= quantity
         elif not order.resting:
@@ -517,12 +584,15 @@ def advance_matching(
                 else:
                     quantity = min(order.remaining, available)
                 if quantity.amount > 0:
+                    if not risk_allows(order):
+                        break
                     order = apply(order, quantity, level.price)
                     liquidity[index] = liquidity[index].consume(quantity)
                 if order.status.terminal:
                     break
-            if order.intent.kind is OrderType.MARKET and not order.status.terminal:
-                order = replace(order, status=OrderStatus.EXPIRED)
+            if order.intent.kind is OrderType.MARKET:
+                if not order.status.terminal and risk_allows(order):
+                    order = replace(order, status=OrderStatus.EXPIRED)
             elif not order.status.terminal:
                 order = _queue(order, orders, book)
         if (

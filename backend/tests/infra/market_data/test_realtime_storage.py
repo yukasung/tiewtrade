@@ -89,6 +89,7 @@ async def test_writer_rejects_userless_wrong_session() -> None:
     ("operation", "blocked_table", "row_lock"),
     [
         ("renew", "market_price_feed", False),
+        ("renew", "market_price_feed", True),
         ("generation", "market_price_feed", False),
         ("connected", "market_price_feed", False),
         ("write", "market_latest_prices", False),
@@ -169,7 +170,15 @@ async def test_expiry_during_sql_wait_rolls_back_writer_mutation(
             async with engine.begin() as blocker:
                 if row_lock:
                     await blocker.execute(
-                        text("SELECT * FROM market_latest_prices WHERE base='BTC' FOR UPDATE")
+                        text(
+                            f"SELECT * FROM {blocked_table} WHERE "
+                            + (
+                                "source='primary_spot'"
+                                if blocked_table == "market_price_feed"
+                                else "base='BTC'"
+                            )
+                            + " FOR UPDATE"
+                        )
                     )
                 else:
                     # SHARE permits the initial FOR UPDATE, but blocks the later UPDATE.
@@ -188,7 +197,8 @@ async def test_expiry_during_sql_wait_rolls_back_writer_mutation(
                             task.result()
                             pytest.fail("writer did not wait on the SQL lock")
                         await asyncio.sleep(0.01)
-                    # Confirm it passed the lease check and is blocked on the mutation.
+                    # Confirm it is blocked on the intended row or mutation, then let
+                    # the real DB-clock lease expire before releasing that lock.
                     result = await observer.execute(
                         text("SELECT query FROM pg_stat_activity WHERE pid=:pid"), {"pid": pid}
                     )

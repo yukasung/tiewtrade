@@ -18,7 +18,7 @@ from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 
 from tests.infra.execution_market.profile_workload import AllowPaperPolicy
 from tiewtrade.core.money import Money
-from tiewtrade.core.orders import OrderScope, TradingMode
+from tiewtrade.core.orders import AdmissionPolicy, OrderScope, TradingMode
 from tiewtrade.core.positions import PositionPair, rebuild_position
 from tiewtrade.infra.db import DatabaseRole, user_session
 from tiewtrade.infra.paper_orders.matching_storage import load_matching_state
@@ -26,7 +26,7 @@ from tiewtrade.infra.paper_orders.storage import read_execution_inputs
 from tiewtrade.infra.positions import read_effective_executions, read_position_snapshot
 from tiewtrade.services.engine.paper_order import run_paper_order_round
 
-PAPER_TABLES = (
+PAPER_TABLES: tuple[str, ...] = (
     "audit_events",
     "market_execution_state",
     "market_execution_buffer",
@@ -285,7 +285,11 @@ async def replay_restored_domain(admin: AsyncEngine, engine: AsyncEngine) -> dic
 
 
 async def recover_expired_claims(
-    admin: AsyncEngine, engine: AsyncEngine, scan: AsyncEngine
+    admin: AsyncEngine,
+    engine: AsyncEngine,
+    scan: AsyncEngine,
+    *,
+    policy: AdmissionPolicy | None = None,
 ) -> dict[str, int]:
     async with admin.connect() as connection:
         before = int(
@@ -302,7 +306,7 @@ async def recover_expired_claims(
             engine=engine,
             scan_engine=scan,
             worker="f15-w4-claim-recovery",
-            policy=AllowPaperPolicy(),
+            policy=AllowPaperPolicy() if policy is None else policy,
         )
         rounds += 1
         if result.processed + result.deferred + result.skipped == 0:
@@ -319,7 +323,7 @@ async def recover_expired_claims(
     return {"expired_before": before, "expired_after": after, "rounds": rounds}
 
 
-async def run(args: argparse.Namespace) -> int:
+async def run(args: argparse.Namespace, *, recovery_policy: AdmissionPolicy | None = None) -> int:
     output: Path = args.output
     output.mkdir(parents=True, exist_ok=False)
     source_url = os.environ[args.source_url_env]
@@ -390,7 +394,9 @@ async def run(args: argparse.Namespace) -> int:
         after_security = await security_shape(target)
         replay = await replay_restored_domain(target, target_engine)
         economic_before_recovery = await economic_digest(target)
-        claim_recovery = await recover_expired_claims(target, target_engine, target_scan)
+        claim_recovery = await recover_expired_claims(
+            target, target_engine, target_scan, policy=recovery_policy
+        )
         economic_after_recovery = await economic_digest(target)
         passed = (
             before == after

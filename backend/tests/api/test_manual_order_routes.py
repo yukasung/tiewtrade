@@ -68,7 +68,7 @@ def test_production_readiness_and_admission_remain_closed(client: TestClient) ->
         headers={**csrf_headers(client), "Idempotency-Key": str(uuid4())},
     )
     assert result.status_code == 503, result.text
-    assert result.json()["detail"] == "ORDER_SAFETY_UNAVAILABLE"
+    assert result.json()["detail"] == "RISK_SOURCE_UNAVAILABLE"
     assert client.get("/paper/order-requests").json()["requests"] == []
 
 

@@ -1,6 +1,7 @@
 """End-to-end Paper command worker transactions against real PostgreSQL roles."""
 
 import asyncio
+import json
 from collections.abc import AsyncIterator, Mapping
 from contextlib import asynccontextmanager
 from dataclasses import replace
@@ -59,6 +60,7 @@ from tiewtrade.infra.paper_orders.initialization import (
     enable_financial_writer,
     initialize_order_source,
 )
+from tiewtrade.infra.paper_orders.matching_storage import load_order_state
 from tiewtrade.infra.paper_orders.worker import process_claimed_order
 from tiewtrade.infra.paper_wallet import (
     PaperCommandState,
@@ -109,6 +111,7 @@ async def ready_public_sources() -> tuple[AsyncEngine, BookLease, BookState, Exe
     lease, book, metadata = await prepared(market)
     async with market_data_session(market) as session:
         await publish_input(session, lease, book, metadata)
+        await session.execute("SELECT risk_publication_fence()")
         await session.execute(
             "UPDATE market_price_feed SET lease_until=clock_timestamp()-interval '1 second'"
         )
@@ -740,12 +743,18 @@ async def test_accept_restart_fill_and_cash_are_atomic(
                 if session.user_id != owner:
                     return result
                 if "INSERT INTO paper_execution_inputs" in statement:
-                    input_writes += 1
+                    # Evidence may be inserted as one bounded multi-row statement.
+                    # Fail after at least two copied inputs, preserving the rollback oracle.
+                    input_writes += (
+                        len(json.loads(str(parameters["rows"])))
+                        if parameters is not None and "rows" in parameters
+                        else 1
+                    )
                 matches = (
                     (
                         fault == "second_input"
                         and "INSERT INTO paper_execution_inputs" in statement
-                        and input_writes == 2
+                        and input_writes >= 2
                     )
                     or (
                         fault == "projections"
@@ -1929,17 +1938,28 @@ async def test_two_orders_cannot_reserve_the_same_available_funds(
     )
     try:
         if selling:
+            seed_intent = intent(owner, wallet.episode_id)
             async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
-                await submit_order(
-                    session, wallet_id=wallet.wallet_id, intent=intent(owner, wallet.episode_id)
-                )
+                seed = await submit_order(session, wallet_id=wallet.wallet_id, intent=seed_intent)
             await run_paper_order_round(
                 engine=engine_engine,
                 scan_engine=scan_engine,
                 worker="seed-buy-admit",
                 policy=AllowPolicy(),
             )
-            await asyncio.sleep(0.12)
+            async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+                seeded_order = await load_order_state(session, seed_intent.order_id)
+                timing = (
+                    await session.execute(
+                        """SELECT next_attempt_at,clock_timestamp() AS now FROM paper_order_dispatch
+                        WHERE command_id=:id""",
+                        {"id": seed.command_id},
+                    )
+                ).one()
+            delay = max(timing.next_attempt_at, seeded_order.eligible_at) - timing.now
+            # Respect the actual dispatch deadline as well as core eligibility;
+            # a faster checkpoint read must not leave the seed BUY unfilled.
+            await asyncio.sleep(max(0, delay.total_seconds()))
             async with market_data_session(market) as session:
                 lease = await renew_book_writer(session, lease)
                 now = (await session.execute("SELECT clock_timestamp()")).scalar_one()
@@ -1953,6 +1973,16 @@ async def test_two_orders_cannot_reserve_the_same_available_funds(
                 worker="seed-buy-fill",
                 policy=AllowPolicy(),
             )
+            async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+                seeded = (
+                    await session.execute(
+                        """SELECT p.status,p.filled_quantity,p.spent FROM paper_order_projections p
+                        JOIN paper_orders o ON o.id=p.order_id WHERE o.command_id=:id""",
+                        {"id": seed.command_id},
+                    )
+                ).one_or_none()
+                seed_result = await get_order_command(session, seed.command_id)
+            assert seeded is not None and seeded.status == "FILLED", (seeded, seed_result)
         async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
             first_command = await submit_order(session, wallet_id=wallet.wallet_id, intent=first)
             second_command = await submit_order(session, wallet_id=wallet.wallet_id, intent=second)

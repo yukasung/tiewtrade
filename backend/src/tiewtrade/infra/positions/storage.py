@@ -5,7 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 import re
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from datetime import UTC, datetime
 from typing import Any
 from uuid import UUID, uuid4
@@ -56,6 +56,7 @@ from tiewtrade.infra.positions.records import (
     PositionWriteStatus,
     ValuedPositionSnapshot,
 )
+from tiewtrade.infra.risk_limits.boundaries import financial_boundary
 
 _PROOF = re.compile(r"^[0-9a-f]{64}$")
 
@@ -172,6 +173,15 @@ async def read_position_activity(session: UserSession, episode_id: UUID) -> Posi
 
 
 async def initialize_position_source(
+    session: UserSession, episode_id: UUID, initialization_id: UUID, source_proof: str
+) -> PositionActivity:
+    async with financial_boundary(session, episode_id=episode_id, kind="INIT"):
+        return await _initialize_position_source(
+            session, episode_id, initialization_id, source_proof
+        )
+
+
+async def _initialize_position_source(
     session: UserSession, episode_id: UUID, initialization_id: UUID, source_proof: str
 ) -> PositionActivity:
     """Make the new empty Paper source authoritative; retry is proof-idempotent."""
@@ -366,6 +376,63 @@ async def read_effective_executions(
     )
 
 
+async def read_effective_executions_at(
+    session: UserSession,
+    episode_id: UUID,
+    pair: PositionPair,
+    *,
+    source_revision: int,
+    source_sequence: int,
+) -> tuple[ExecutionFact, ...]:
+    """Fold the exact immutable source revision captured by an F18 boundary.
+
+    Pre-protocol rows are included only because every F18 marker follows their
+    migration. Current projections must not replace historical holdings in replay.
+    """
+    checked = require_user_session(session)
+    if type(source_revision) is not int or source_revision < 1:
+        raise PositionIntegrityError("invalid historical source revision")
+    rows = [
+        dict(row)
+        for row in (
+            await checked.execute(
+                """SELECT * FROM paper_position_events WHERE episode_id=:episode
+        AND (risk_source_revision IS NULL OR risk_source_revision<=:revision)""",
+                {"episode": episode_id, "revision": source_revision},
+            )
+        ).mappings()
+    ]
+    return tuple(fact for fact in _effective_slots(rows, pair, source_sequence) if fact is not None)
+
+
+async def read_position_revision(
+    session: UserSession,
+    episode_id: UUID,
+    source_revision: int,
+) -> tuple[PositionPair, PositionEventKind, ExecutionFact | None]:
+    checked = require_user_session(session)
+    rows = (
+        (
+            await checked.execute(
+                """SELECT * FROM paper_position_events WHERE episode_id=:episode
+        AND risk_source_revision=:revision ORDER BY id LIMIT 2""",
+                {"episode": episode_id, "revision": source_revision},
+            )
+        )
+        .mappings()
+        .all()
+    )
+    if len(rows) != 1:
+        raise PositionIntegrityError("financial revision must identify one exact source event")
+    row = rows[0]
+    kind = PositionEventKind(row["event_kind"])
+    return (
+        PositionPair(row["base"], row["quote"]),
+        kind,
+        None if kind is PositionEventKind.VOID else _row_fact(dict(row)),
+    )
+
+
 def _candidate_row(
     event_id: UUID,
     kind: PositionEventKind,
@@ -408,6 +475,29 @@ def _event_parameters(
 
 
 async def apply_position_event(
+    session: UserSession,
+    episode_id: UUID,
+    event_id: UUID,
+    kind: PositionEventKind,
+    fact: ExecutionFact | None = None,
+    supersedes_event_id: UUID | None = None,
+) -> PositionWriteResult:
+    async with financial_boundary(
+        session,
+        episode_id=episode_id,
+        kind="FILL" if kind is PositionEventKind.RECORD else "CORRECTION",
+    ):
+        return await _apply_position_event(
+            session,
+            episode_id,
+            event_id,
+            kind,
+            fact,
+            supersedes_event_id,
+        )
+
+
+async def _apply_position_event(
     session: UserSession,
     episode_id: UUID,
     event_id: UUID,
@@ -765,13 +855,7 @@ def _validate_projection_revision(
         raise PositionIntegrityError("position projection does not match activity revision")
 
 
-async def read_position_snapshot(session: UserSession, episode_id: UUID) -> PositionSnapshot | None:
-    """Read activity and projections from one PostgreSQL statement snapshot."""
-    checked = require_user_session(session)
-    rows = list(
-        (
-            await checked.execute(
-                """SELECT a.*,p.base,p.quote,p.held_quantity,p.total_cost,p.realized_pnl,
+POSITION_SNAPSHOT_SQL = """SELECT a.*,p.base,p.quote,p.held_quantity,p.total_cost,p.realized_pnl,
                           p.last_sequence,p.revision AS projection_revision,
                           statement_timestamp() AS snapshot_at,
                           count(p.base) OVER () AS projection_count,
@@ -788,11 +872,27 @@ async def read_position_snapshot(session: UserSession, episode_id: UUID) -> Posi
                             AS source_pair_count
                 FROM paper_position_activity a
                 LEFT JOIN paper_position_projections p ON p.episode_id=a.episode_id
-                WHERE a.episode_id=:episode ORDER BY p.base,p.quote""",
+                WHERE a.episode_id=:episode ORDER BY p.base,p.quote"""
+
+
+async def read_position_snapshot(session: UserSession, episode_id: UUID) -> PositionSnapshot | None:
+    """Read activity and projections from one PostgreSQL statement snapshot."""
+    checked = require_user_session(session)
+    rows = list(
+        (
+            await checked.execute(
+                POSITION_SNAPSHOT_SQL,
                 {"episode": episode_id},
             )
         ).mappings()
     )
+    return decode_position_snapshot(rows)
+
+
+def decode_position_snapshot(
+    rows: Sequence[Mapping[str, Any] | RowMapping],
+) -> PositionSnapshot | None:
+    """Validate native or exact-text snapshot rows using the same F14 proof."""
     if not rows:
         return None
     activity = _activity(rows[0])

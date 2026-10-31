@@ -21,10 +21,15 @@ import secrets
 from dataclasses import replace
 from datetime import UTC, datetime
 from typing import Final
+from uuid import UUID
 
 from fastapi import HTTPException, Request, Response, status
+from pydantic import ValidationError
 from sqlalchemy.ext.asyncio import AsyncEngine
 
+from tiewtrade.core.money import MoneyError
+from tiewtrade.core.orders import TradingMode
+from tiewtrade.core.risk_limits import RiskInputError
 from tiewtrade.infra.auth import (
     Bucket,
     hash_token,
@@ -37,13 +42,20 @@ from tiewtrade.infra.auth import (
     totp,
 )
 from tiewtrade.infra.auth.sessions import SessionOwner
-from tiewtrade.infra.db import DatabaseRole
+from tiewtrade.infra.db import DatabaseRole, InfraError
 from tiewtrade.infra.db.session import PresentedSession, presented_session, user_session
+from tiewtrade.infra.risk_limits.records import RiskConflictError, RiskSubmission
+from tiewtrade.infra.risk_limits.requests import (
+    authorization_for,
+    authorize_increase,
+    receipt_by_key,
+)
 from tiewtrade.services.api.request_identity import NOT_AUTHENTICATED
 from tiewtrade.services.api.request_identity import Authenticated as Authenticated
 from tiewtrade.services.api.request_identity import SecondFactor as SecondFactor
 from tiewtrade.services.api.request_identity import current_user as current_user
 from tiewtrade.services.api.resources import client_key, engine_for, totp_keys
+from tiewtrade.services.api.risk_limit_models import RiskLimitMutation, risk_submission
 from tiewtrade.services.api.routing_policy import (
     accepts_recovery_grant,
     classify,
@@ -166,7 +178,9 @@ async def identify(engine: AsyncEngine, request: Request) -> Authenticated | Non
     )
 
 
-async def second_factor_of(request: Request, who: Authenticated) -> SecondFactor:
+async def second_factor_of(
+    request: Request, who: Authenticated, *, risk_action: RiskSubmission | None = None
+) -> SecondFactor:
     """ปัจจัยที่สองของคำขอนี้ — ดังเมื่อไม่ผ่าน
 
     **ไม่มีช่วงผ่อนผัน** (`requirements.md` Q-6) ฉะนั้นทุกคำขอที่เส้นทางบังคับ
@@ -194,11 +208,21 @@ async def second_factor_of(request: Request, who: Authenticated) -> SecondFactor
             # สิทธิ์กู้ไม่ใช่การเดารหัส TOTP จึงยังใช้ได้เมื่อถัง TOTP หมด
             if grant_usable and (not presented or guard.blocked):
                 return SecondFactor.RECOVERY_GRANT
-            refuse_if_throttled(guard)
-            await locked_credential(session, who.user_id)
+            if risk_action is not None:
+                await locked_credential(session, who.user_id)
+                # A concurrent request may have committed its receipt after the
+                # API preflight. Recheck under the existing F-06 auth lock order.
+                if await authorization_for(session, risk_action) is not None:
+                    return SecondFactor.TOTP_CODE
+                refuse_if_throttled(guard)
+            else:
+                refuse_if_throttled(guard)
+                await locked_credential(session, who.user_id)
             if presented:
                 outcome = await totp.verify(session, keys, presented=presented, now=now)
                 if outcome is totp.CodeOutcome.ACCEPTED:
+                    if risk_action is not None:
+                        await authorize_increase(session, risk_action)
                     return SecondFactor.TOTP_CODE
                 if outcome is totp.CodeOutcome.ALREADY_USED:
                     # **บอกให้รอรหัสใหม่** มิฉะนั้นผู้ใช้จะคิดว่าเครื่องตัวเองเพี้ยน
@@ -251,7 +275,35 @@ async def authenticate_request(engine: AsyncEngine, request: Request) -> None:
             raise HTTPException(status.HTTP_401_UNAUTHORIZED, NOT_AUTHENTICATED)
         return
 
-    if needs_reverification(*classified):
+    if classified == ("POST", "/live/risk-limit/increase"):
+        try:
+            raw = await request.body()
+            if len(raw) > 4096:
+                raise HTTPException(422, "RISK_INPUT_INVALID")
+            body = RiskLimitMutation.model_validate_json(raw)
+            value = risk_submission(
+                owner=found.user_id,
+                mode=TradingMode.PAPER if classified[1].startswith("/paper/") else TradingMode.LIVE,
+                key=UUID(request.headers.get("Idempotency-Key", "")),
+                body=body,
+                increase=True,
+            )
+            async with user_session(engine, found.user_id) as session:
+                prior = await receipt_by_key(session, value.scope.mode, value.key)
+            if prior is not None:
+                if prior.submission != value:
+                    raise RiskConflictError("risk replay payload mismatch")
+                factor = SecondFactor.TOTP_CODE
+            else:
+                factor = await second_factor_of(request, found, risk_action=value)
+            request.state.authenticated = replace(found, second_factor=factor)
+        except RiskConflictError as error:
+            raise HTTPException(409, error.code) from None
+        except (ValidationError, MoneyError, RiskInputError, ValueError):
+            raise HTTPException(422, "RISK_INPUT_INVALID") from None
+        except InfraError:
+            raise HTTPException(503, "RISK_SOURCE_UNAVAILABLE") from None
+    elif needs_reverification(*classified):
         request.state.authenticated = replace(
             found, second_factor=await second_factor_of(request, found)
         )

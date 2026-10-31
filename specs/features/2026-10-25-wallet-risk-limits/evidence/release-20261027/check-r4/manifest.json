@@ -1,0 +1,35 @@
+{
+  "source_commit": "57626d82814286ea349b5a80e3f8029dccfee04d",
+  "source_tree_sha256": "4506e0a0499de7e1acee8d29c829409517b3a38258ab8512cb75ddeddb1cf987",
+  "source_files": 717,
+  "platform": "macOS-27.0.1-arm64-arm-64bit",
+  "python": "3.12.15",
+  "host_logical_cpus": 8,
+  "market_fixture_sha256": "bd068380d1f251c4c8097cf40a70c7d5e45c2064c7d179e331b6df4ef32b1cfb",
+  "risk_pools": {
+    "monitor": 4,
+    "request": 1,
+    "stop": 2,
+    "scan": 3,
+    "overflow": 0
+  },
+  "profile": "F18_F15_F16_INTEGRATED_V1",
+  "phase": "CHECK",
+  "duration_seconds": 10,
+  "owners": 2,
+  "baseline_orders": 2,
+  "rate": 5,
+  "workers": 2,
+  "run_id": "2e6ba6ae-459b-4db4-ae9b-9ad2d1909059",
+  "started_at": "2026-10-27T03:05:35.282134+00:00",
+  "acceptance_result": false,
+  "database": {
+    "alembic_revision": "0054",
+    "postgresql": {
+      "server_version": "16.15 (Debian 16.15-1.pgdg13+2)",
+      "max_connections": "200",
+      "shared_buffers": "128MB",
+      "work_mem": "4MB"
+    }
+  }
+}

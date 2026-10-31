@@ -192,3 +192,20 @@ merge commit `1f16ddb` passed all6 [post-merge CI jobs](https://github.com/yukas
 V-19 now Passed. Development milestone is complete; V-18 Pending F-18 and V-20 Pending
 Full Validation remain unchanged, so F-16 is not Completed and production admission/Live
 execution remain unavailable. Historical Partial/Failed attempts above are retained.
+
+## F16-R4 — Compact Trading Workspace validation — 2026-10-30
+
+สถานะ: **Approved — เจ้าของอนุมัติแผนวันที่ 2026-10-30**
+
+- Component tests: controlled pair ร่วมระหว่าง chart/form, BUY/SELL, MARKET/LIMIT,
+  pair/episode draft reset, double-submit/recovery, risk details และ Live disabled
+- Chart regression: standalone และ embedded, timeframe, resize, history navigation และ unavailable
+- Orders: Open/History filtering, pagination incomplete state, details/cancel และไม่มี mock market rows
+- Browser: Paper/Live desktop+mobile, light+dark, keyboard/focus/modal/overflow/disabled reason;
+  ห้ามส่ง Live order
+- Static/build: frontend lint, typecheck, affected tests และ build
+- ไม่รัน backend workload เพราะไม่มี backend/API/schema/financial logic change; required CI/manual
+  acceptance ที่ยังไม่มีหลักฐานคง Pending และไม่ถูกแทนด้วย targeted tests
+
+ผล implementation/targeted verification และรายการค้างบันทึกที่
+[F16-R4 checkpoint](evidence/f16-r4-trading-workspace.md).

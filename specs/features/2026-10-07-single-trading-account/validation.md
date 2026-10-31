@@ -2,6 +2,8 @@
 
 สถานะ: **Approved** — เจ้าของสั่งแก้ review issue 3 วันที่ 2026-10-07 ให้ implement บัญชีเดียว/ความเลือกประเภทระดับบัญชีตามฉบับนี้
 วันที่: 2026-10-07
+
+Account dashboard visual refresh: **Approved 2026-10-31**; ดู [Validation Amendment](account-dashboard-visual-validation-amendment.md)
 ผล1510/54/8และภาพก่อนหน้าคือscopeหลายกระเป๋าที่ถูกยกเลิก ไม่ใช่ผลผ่านฉบับนี้
 
 ส่วนเพิ่ม TailAdmin ทุกหน้ามีสถานะ **Approved** ตามหัวข้อท้ายไฟล์

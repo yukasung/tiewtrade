@@ -21,6 +21,7 @@ class Endpoint(Enum):
 
     #: รายการเทรดล่าสุดของคู่หนึ่ง (F-35) — สาธารณะ
     TRADES = "/trades"
+    AGG_TRADES = "/aggTrades"
     DEPTH = "/depth"
     KLINES = "/klines"
     #: รายการคู่เทรดและข้อจำกัดของแต่ละคู่ (F-35) — สาธารณะ

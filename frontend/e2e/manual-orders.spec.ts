@@ -25,13 +25,20 @@ async function register(page: Page, email = `manual-${Date.now()}@example.com`) 
 }
 async function fresh(page: Page) {
   expect((await page.request.post(`${api}/source`)).status()).toBe(204);
-  await page.getByRole("region", { name: "เงินในกระเป๋า", exact: true }).getByRole("button", { name: "ตรวจข้อมูลอีกครั้ง", exact: true }).click();
+  await page.reload();
+  await expect(page.getByLabel("คู่เทรด")).toBeEnabled();
+  await page.getByLabel("คู่เทรด").selectOption("BTC");
 }
-async function send(page: Page, amount: string) {
-  await fresh(page);
+async function submitPaperOrder(page: Page) {
+  const submit = page.getByRole("button", { name: "ส่งออเดอร์ Paper", exact: true });
+  await expect(submit).toBeEnabled();
+  await submit.click();
+}
+async function send(page: Page, amount: string, refresh = true) {
+  if (refresh) await fresh(page);
   await page.getByLabel(/งบซื้อ|จำนวนเหรียญ Base/).fill(amount);
   const response = page.waitForResponse(r => r.url().endsWith("/api/paper/orders") && r.request().method() === "POST");
-  await page.getByRole("button", { name: "ส่งออเดอร์ Paper", exact: true }).click();
+  await submitPaperOrder(page);
   const result = await response; expect(result.status()).toBe(202);
   return await result.json() as { request_id: string; order_id: string; idempotency_key: string };
 }
@@ -50,14 +57,17 @@ test("real Paper MARKET BUY/SELL and LIMIT partial→cancel reconcile exact serv
   await waitResolved(page);
   await fresh(page);
   await expect(page.getByText("8,900 USDT", { exact: true }).first()).toBeVisible();
-  await page.getByLabel("ฝั่ง", { exact: true }).selectOption("SELL");
-  const sell = await send(page, "1");
+  await page.getByRole("tab", { name: "SELL", exact: true }).click();
+  await expect(page.getByRole("tab", { name: "SELL", exact: true })).toHaveAttribute("aria-selected", "true");
+  const sell = await send(page, "1", false);
   expect(await drive(page, owner, sell.request_id, true)).toMatchObject({ commands: 1, order_state: "FILLED" });
   await waitResolved(page);
-  await page.getByLabel("ฝั่ง", { exact: true }).selectOption("BUY");
-  await page.getByLabel("ประเภทออเดอร์").selectOption("LIMIT");
+  await fresh(page);
+  await page.getByRole("tab", { name: "BUY", exact: true }).click();
+  await page.getByRole("tab", { name: "LIMIT", exact: true }).click();
+  await expect(page.getByRole("tab", { name: "LIMIT", exact: true })).toHaveAttribute("aria-selected", "true");
   await page.getByLabel("ราคา Limit (USDT)").fill("100");
-  const limit = await send(page, "11");
+  const limit = await send(page, "11", false);
   expect(await drive(page, owner, limit.request_id, true)).toMatchObject({ commands: 1, order_state: "PARTIALLY_FILLED" });
   await waitResolved(page);
   await fresh(page);
@@ -71,18 +81,15 @@ test("real Paper MARKET BUY/SELL and LIMIT partial→cancel reconcile exact serv
   const cancel = await (await response).json() as { request_id: string };
   expect(await drive(page, owner, cancel.request_id)).toMatchObject({ commands: 1, order_state: "CANCELED" });
   await waitResolved(page);
+  await page.getByRole("tab", { name: "ประวัติออเดอร์", exact: true }).click();
   await expect(page.getByRole("row").filter({ hasText: "ยกเลิกแล้ว" })).toHaveCount(1);
   const final = await (await page.request.get(`/api/paper/orders/${limit.order_id}`)).json() as { reserved_quote: string; filled_quantity: string };
   expect(final.reserved_quote).toBe("0"); expect(final.filled_quantity).toBe("10");
   mkdirSync(evidence, { recursive: true });
   await capture(page, "paper-th-light-desktop.png");
-  await page.getByRole("row").filter({ hasText: "ยกเลิกแล้ว" }).getByRole("button", { name: "รายละเอียดออเดอร์" }).click();
-  await expect(page.getByRole("dialog")).toBeVisible();
-  await page.keyboard.press("Escape");
-  await expect(page.getByRole("dialog")).toBeHidden();
-  await expect(page.getByRole("row").filter({ hasText: "ยกเลิกแล้ว" }).getByRole("button", { name: "รายละเอียดออเดอร์" })).toBeFocused();
+  await expect(page.getByRole("button", { name: "รายละเอียดออเดอร์" })).toHaveCount(0);
   await page.setViewportSize({ width: 375, height: 844 });
-  const table = page.getByRole("table");
+  const table = page.locator("#manual-orders-table").getByRole("table");
   await expect.poll(() => table.evaluate(node => node.scrollWidth > node.parentElement!.clientWidth)).toBe(true);
   await capture(page, "paper-th-light-mobile.png");
 });
@@ -98,13 +105,18 @@ test("receipt loss→reload→discovery preserves identity and Live never mutate
     await route.abort("connectionreset");
   });
   await fresh(page); await page.getByLabel("งบซื้อ (USDT)").fill("100000");
-  await page.getByRole("button", { name: "ส่งออเดอร์ Paper", exact: true }).click();
+  await submitPaperOrder(page);
   await expect.poll(() => committed?.request_id).toBeTruthy();
   expect(posts).toBe(1);
   await page.unroute("**/api/paper/orders");
   await page.route("**/api/paper/order-requests/by-key/**", route => route.fulfill({ status: 404, contentType: "application/json", body: '{"detail":"MANUAL_REQUEST_NOT_FOUND"}' }));
   await page.reload();
-  await expect(page.getByText(committed!.order_id, { exact: false }).first()).toBeVisible();
+  await expect.poll(() => page.evaluate(() => {
+    const stored = Object.keys(window.sessionStorage)
+      .find(key => key.startsWith("tiewtrade.manual-order.v1:"));
+    if (!stored) return null;
+    return (JSON.parse(window.sessionStorage.getItem(stored)!) as { key: string }).key;
+  })).toBe(committed!.idempotency_key);
   expect(posts).toBe(1);
   const retried = page.waitForResponse(response => response.url().endsWith("/api/paper/orders") && response.request().method() === "POST");
   await page.getByRole("button", { name: "ส่งคำขอเดิมอีกครั้ง" }).click();
@@ -149,8 +161,14 @@ test("logout clears the local journal; login rediscovers the owner's pending req
   await page.getByLabel("รหัสผ่าน", { exact: true }).fill(PASSWORD);
   await page.getByTestId("submit").click();
   await expect(page.getByTestId("signed-in")).toBeVisible();
+  const rediscovered = page.waitForResponse(response =>
+    response.url().includes("/api/paper/order-requests?") && response.request().method() === "GET",
+  );
   await page.getByRole("link", { name: "เทรด Paper", exact: true }).click();
-  await expect(page.getByText(recorded.order_id, { exact: false })).toBeVisible();
+  const recovered = await (await rediscovered).json() as {
+    requests: Array<{ request_id: string }>;
+  };
+  expect(recovered.requests.some(request => request.request_id === recorded.request_id)).toBe(true);
   expect(await drive(page, owner, recorded.request_id)).toMatchObject({ commands: 1, order_state: "ACCEPTED" });
   await expect(page.getByRole("row").filter({ hasText: "รับออเดอร์แล้ว" })).toHaveCount(1);
   // English/dark is driven through the established message layer, with no new language UI.
@@ -163,9 +181,8 @@ test("logout clears the local journal; login rediscovers the owner's pending req
     await account.accountI18n.changeLanguage("en");
     document.documentElement.classList.add("dark");
   });
-  await page.locator('section[aria-labelledby="manual-wallet-heading"]').getByRole("button").click();
   await page.setViewportSize({ width: 375, height: 844 });
-  await expect(page.getByRole("heading", { name: "Paper trading", exact: true })).toBeVisible();
+  await expect(page.getByLabel("Paper trading", { exact: true })).toBeVisible();
   await page.setViewportSize({ width: 1440, height: 1000 });
   await expect(page.getByRole("heading", { name: "Manual order", exact: true })).toBeVisible();
   mkdirSync(evidence, { recursive: true });
@@ -185,25 +202,24 @@ test("logout clears the local journal; login rediscovers the owner's pending req
     const account = await import(/* @vite-ignore */ accountPath) as { accountI18n: { changeLanguage: (value: string) => Promise<unknown> } };
     await account.accountI18n.changeLanguage("th");
   });
-  await page.locator('section[aria-labelledby="manual-wallet-heading"]').getByRole("button").click();
   await page.setViewportSize({ width: 1440, height: 1000 });
-  await expect(page.getByRole("heading", { name: "เทรด Paper", exact: true })).toBeVisible();
+  await expect(page.getByLabel("เทรด Paper", { exact: true })).toBeVisible();
   await page.setViewportSize({ width: 375, height: 844 });
   await capture(page, "paper-th-dark-mobile.png");
 });
 test("browser storage denial blocks the POST before transmission", async ({ page }) => {
-  await register(page);
-  let posts = 0;
-  page.on("request", request => { if (request.url().endsWith("/api/paper/orders") && request.method() === "POST") posts += 1; });
-  await page.evaluate(() => {
+  await page.addInitScript(() => {
     const original = Object.getOwnPropertyDescriptor(Storage.prototype, "setItem")!.value as (this: Storage, key: string, value: string) => void;
     Storage.prototype.setItem = function(key: string, value: string) {
       if (key.startsWith("tiewtrade.manual-order.v1:")) throw new DOMException("denied", "SecurityError");
       original.call(this, key, value);
     };
   });
+  await register(page);
+  let posts = 0;
+  page.on("request", request => { if (request.url().endsWith("/api/paper/orders") && request.method() === "POST") posts += 1; });
   await fresh(page); await page.getByLabel("งบซื้อ (USDT)").fill("100");
-  await page.getByRole("button", { name: "ส่งออเดอร์ Paper", exact: true }).click();
+  await submitPaperOrder(page);
   await expect(page.getByText("ใช้พื้นที่กู้คืนคำขอไม่ได้ จึงยังส่งคำขอใหม่ไม่ได้")).toBeVisible();
   expect(posts).toBe(0);
 });
@@ -229,6 +245,7 @@ test("a cancel racing a fill shows FILLED and reset cannot cross pending intake"
   expect(await drive(page, owner, order.request_id, true)).toMatchObject({ commands: 1, order_state: "FILLED" });
   expect(await drive(page, owner, cancel.request_id)).toMatchObject({ commands: 1, command_state: "SUCCEEDED", order_state: "FILLED" });
   await waitResolved(page);
+  await page.getByRole("tab", { name: "ประวัติออเดอร์", exact: true }).click();
   await expect(page.getByRole("row").filter({ hasText: "จับคู่ครบ" })).toHaveCount(1);
   await expect(page.getByRole("row").filter({ hasText: "ยกเลิกแล้ว" })).toHaveCount(0);
 });
@@ -237,7 +254,7 @@ test("DB connection loss before intake commit rolls back and same-key recovery c
   expect((await page.request.post(`${api}/disconnect-before-commit`, { data: { user_id: owner } })).status()).toBe(204);
   await fresh(page); await page.getByLabel("งบซื้อ (USDT)").fill("100");
   const failed = page.waitForResponse(response => response.url().endsWith("/api/paper/orders") && response.request().method() === "POST");
-  await page.getByRole("button", { name: "ส่งออเดอร์ Paper", exact: true }).click();
+  await submitPaperOrder(page);
   expect((await failed).status()).toBe(503);
   expect(await (await page.request.get(`${api}/disconnect-result`)).json()).toEqual({ result: "CONNECTION_TERMINATED" });
   await expect(page.getByText("UNKNOWN — ยังยืนยันผลไม่ได้ ตรวจสถานะหรือส่งซ้ำด้วย key เดิม")).toBeVisible();
@@ -288,7 +305,7 @@ test("reset replaces an unsent draft and a lost closed-episode refusal recovers 
     refusalLost = true;
   });
   await page.getByLabel("งบซื้อ (USDT)").fill("100");
-  await page.getByRole("button", { name: "ส่งออเดอร์ Paper", exact: true }).click();
+  await submitPaperOrder(page);
   await expect(page.getByText(/UNKNOWN —/)).toBeVisible();
   await expect.poll(() => refusalLost).toBe(true);
   await page.unroute("**/api/paper/orders");

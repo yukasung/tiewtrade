@@ -16,12 +16,12 @@ from tests.order_book_fixtures import (
     trade_payload,
 )
 from tiewtrade.core.money import Money, Quantity
-from tiewtrade.core.orders import OrderType
 from tiewtrade.core.positions import ExecutionSide
 from tiewtrade.venues.binance_th.order_book_mapping import (
     capability_from_pair,
     observation_from_stream,
     snapshot_from_payload,
+    trade_samples_from_payload,
 )
 from tiewtrade.venues.errors import VenueProtocolError
 from tiewtrade.venues.order_books import DepthUpdate, TradeObservation
@@ -57,6 +57,25 @@ def test_depth_and_trade_parser_preserves_ids_sides_and_source_time() -> None:
     assert isinstance(trade, TradeObservation) and trade.resting_side is ExecutionSide.SELL
 
 
+def test_aggregate_trade_history_is_contiguous_and_exact() -> None:
+    result = trade_samples_from_payload(
+        SYMBOL,
+        [
+            {"a": 7, "p": "100", "q": "1.5", "f": 10, "l": 11, "T": 1792291200000, "m": True},
+            {"a": 8, "p": "101", "q": "2", "f": 12, "l": 12, "T": 1792291200001, "m": False},
+        ],
+    )
+    assert result[0].price == Money.of(100, "USDT")
+    assert result[0].quantity == Quantity.of("1.5", "BTC")
+    assert (result[-1].aggregate_id, result[-1].last_trade_id) == (8, 12)
+    broken = [
+        {"a": 7, "p": "100", "q": "1", "f": 10, "l": 10, "T": 1792291200000, "m": True},
+        {"a": 9, "p": "100", "q": "1", "f": 12, "l": 12, "T": 1792291200001, "m": True},
+    ]
+    with pytest.raises(VenueProtocolError):
+        trade_samples_from_payload(SYMBOL, broken)
+
+
 @pytest.mark.parametrize(
     "field,value", [("m", 1), ("t", True), ("p", "0"), ("q", "-1"), ("s", "ETHUSDT"), ("new", 1)]
 )
@@ -67,17 +86,19 @@ def test_unknown_or_malformed_trade_is_not_a_fill(field: str, value: object) -> 
         observation_from_stream(row, (SYMBOL,), NOW)
 
 
-def test_unsupported_required_rules_are_preserved_and_block_each_order_type() -> None:
+def test_real_execution_filters_are_strictly_mapped_for_each_order_type() -> None:
     result = capability(venue_rules=True)
-    assert result.constraints(OrderType.LIMIT).unsupported_rules == (
-        "MAX_NUM_ORDERS",
-        "PERCENT_PRICE",
-    )
-    assert result.market.unsupported_rules == (
-        "MARKET_NOTIONAL_REFERENCE_UNAVAILABLE",
-        "MAX_NUM_ORDERS",
-        "PERCENT_PRICE",
-    )
+    assert result.limit.unsupported_rules == ()
+    assert result.market.unsupported_rules == ()
+    assert result.limit.average_price_minutes == 5
+    assert result.market.average_price_minutes == 5
+    assert result.limit.percent_price_multiplier_down is not None
+    assert result.limit.percent_price_multiplier_down.as_text() == "0.2"
+    assert result.limit.percent_price_multiplier_up is not None
+    assert result.limit.percent_price_multiplier_up.as_text() == "5"
+    assert result.market.percent_price_multiplier_down is None
+    assert result.limit.maximum_open_orders == 201
+    assert result.market.maximum_open_orders == 201
     assert '"PERCENT_PRICE"' in result.source_document
     assert result.limit.maximum_quantity == Quantity.of(9000, "BTC")
     assert result.version == capability(venue_rules=True).version

@@ -3,12 +3,13 @@
 import hashlib
 import json
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
+from functools import lru_cache
 from typing import Any
 from uuid import UUID
 
-from tiewtrade.core.money import MoneyError
-from tiewtrade.core.order_book import BookState, MarketInput
+from tiewtrade.core.money import Money, MoneyError
+from tiewtrade.core.order_book import MAX_BOOK_AGE, BookState, MarketInput
 from tiewtrade.core.orders import (
     OrderConflictError,
     OrderConstraints,
@@ -54,6 +55,9 @@ class ExecutionMetadata:
     limit: OrderConstraints
     observed_at: datetime
     source_document: str
+    average_price: Money | None = None
+    average_window_started_at: datetime | None = None
+    average_observed_through: datetime | None = None
 
     def __post_init__(self) -> None:
         aware(self.observed_at)
@@ -61,6 +65,17 @@ class ExecutionMetadata:
             raise ValueError("inconsistent execution metadata")
         if hashlib.sha256(self.source_document.encode()).hexdigest() != self.market.version:
             raise ValueError("metadata version does not identify the source document")
+        required = max(self.market.average_price_minutes, self.limit.average_price_minutes)
+        if required and (
+            self.average_price is None
+            or self.average_price.currency != self.market.pair.quote
+            or self.average_price.amount <= 0
+            or self.average_window_started_at is None
+            or self.average_observed_through is None
+            or self.average_observed_through - self.average_window_started_at
+            < timedelta(minutes=required)
+        ):
+            raise ValueError("complete average-price evidence required")
 
 
 @dataclass(frozen=True, slots=True)
@@ -77,17 +92,37 @@ def metadata_payload(value: ExecutionMetadata) -> str:
             "limit": constraints_payload(value.limit),
             "observed_at": value.observed_at.isoformat(),
             "source_document": value.source_document,
+            "average_price": None
+            if value.average_price is None
+            else value.average_price.as_parts()["amount"],
+            "average_window_started_at": None
+            if value.average_window_started_at is None
+            else value.average_window_started_at.isoformat(),
+            "average_observed_through": None
+            if value.average_observed_through is None
+            else value.average_observed_through.isoformat(),
         }
     )
 
 
 def metadata_from_payload(value: Any) -> ExecutionMetadata:
     row = json.loads(value) if isinstance(value, str) else value
+    market = constraints_from_payload(row["market"])
+    limit = constraints_from_payload(row["limit"])
     return ExecutionMetadata(
-        constraints_from_payload(row["market"]),
-        constraints_from_payload(row["limit"]),
+        market,
+        limit,
         datetime.fromisoformat(row["observed_at"]),
         row["source_document"],
+        None
+        if row.get("average_price") is None
+        else Money.of(row["average_price"], market.pair.quote),
+        None
+        if row.get("average_window_started_at") is None
+        else datetime.fromisoformat(row["average_window_started_at"]),
+        None
+        if row.get("average_observed_through") is None
+        else datetime.fromisoformat(row["average_observed_through"]),
     )
 
 
@@ -132,24 +167,25 @@ async def _locked(session: MarketDataSession, lease: BookLease) -> Any:
     row = (
         (
             await session.execute(
-                """SELECT *,clock_timestamp() AS db_now FROM market_execution_state
-      WHERE source=:source AND base=:base AND quote=:quote FOR UPDATE""",
+                """WITH locked AS MATERIALIZED (
+        SELECT * FROM market_execution_state
+        WHERE source=:source AND base=:base AND quote=:quote FOR UPDATE
+      ) SELECT locked.*,clock_timestamp() AS db_now FROM locked""",
                 _params(lease.pair),
             )
         )
         .mappings()
         .one_or_none()
     )
-    # Evaluate the clock after any row-lock wait, never a transaction-start timestamp.
-    now = (await session.execute("SELECT clock_timestamp()")).scalar_one()
+    # The materialized row is locked before the outer query reads the DB clock.
     if (
         row is None
         or row["owner"] != lease.owner
         or row["generation"] != lease.generation
-        or row["lease_until"] <= now
+        or row["lease_until"] <= row["db_now"]
     ):
         raise WriterLeaseLost()
-    return {**row, "db_now": now}
+    return row
 
 
 async def renew_book_writer(session: MarketDataSession, lease: BookLease) -> BookLease:
@@ -261,6 +297,17 @@ async def publish_input(
     return _lease(lease.pair, final)
 
 
+@lru_cache(maxsize=256)
+def _decode_execution_input(payload: str, capability: str) -> StoredExecutionInput:
+    """Reuse immutable public decoding, never the fresh source/provenance checks."""
+    market = input_from_payload(payload)
+    metadata = metadata_from_payload(capability)
+    digest = hashlib.sha256(
+        (input_payload(market) + "\n" + metadata_payload(metadata)).encode()
+    ).hexdigest()
+    return StoredExecutionInput(market, metadata, digest)
+
+
 async def read_inputs(
     session: UserSession | MarketDataSession,
     pair: PositionPair,
@@ -285,7 +332,9 @@ async def read_inputs(
         (
             await session.execute(
                 """SELECT s.ready,s.failure_code,s.lease_until,s.verified_at,
-      s.last_input_id,s.generation AS current_generation,clock_timestamp() AS db_now,b.*
+      s.last_input_id,s.generation AS current_generation,clock_timestamp() AS db_now,
+      b.input_id,b.generation,b.received_at,b.payload::text AS payload,
+      b.capability::text AS capability,b.digest
       FROM market_execution_state s LEFT JOIN LATERAL
         (SELECT * FROM market_execution_buffer b
          WHERE (b.source,b.base,b.quote)=(s.source,s.base,s.quote)
@@ -304,7 +353,7 @@ async def read_inputs(
         or (
             rows[0]["verified_at"] is None
             or rows[0]["verified_at"] > rows[0]["db_now"]
-            or (rows[0]["db_now"] - rows[0]["verified_at"]).total_seconds() > 1
+            or rows[0]["db_now"] - rows[0]["verified_at"] > MAX_BOOK_AGE
         )
     ):
         raise SourceUnavailableError("execution source unavailable")
@@ -317,11 +366,8 @@ async def read_inputs(
                 raise ExecutionInputGapError("retained execution input is missing")
             continue
         try:
-            market = input_from_payload(row["payload"])
-            metadata = metadata_from_payload(row["capability"])
-            digest = hashlib.sha256(
-                (input_payload(market) + "\n" + metadata_payload(metadata)).encode()
-            ).hexdigest()
+            decoded = _decode_execution_input(row["payload"], row["capability"])
+            market, metadata, digest = decoded.market, decoded.metadata, decoded.digest
         except (KeyError, TypeError, ValueError, MoneyError):
             raise ExecutionInputGapError("stored execution input is malformed") from None
         if (market.input_id, market.generation, market.pair, market.received_at) != (
@@ -335,7 +381,7 @@ async def read_inputs(
             raise ExecutionInputGapError("retained execution inputs are incomplete or corrupt")
         if market.generation != rows[0]["current_generation"]:
             raise ExecutionInputGapError("old generation requires consumer recovery")
-        result.append(StoredExecutionInput(market, metadata, digest))
+        result.append(decoded)
     return tuple(result)
 
 

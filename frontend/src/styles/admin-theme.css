@@ -73,11 +73,16 @@
   width: 100%;
   max-width: none;
 }
+.account-content-trade {
+  width: 100%;
+  max-width: none;
+}
 .account-workspace { margin-inline-start: var(--account-sidebar-width); min-width: 0; }
 .page-breadcrumb ol { list-style: none; padding: 0; margin: 0; font-size: var(--app-caption-size); }
 .page-breadcrumb a { color: var(--account-muted-color); text-decoration: none; }
 .page-breadcrumb h1 { margin: 0; font-size: var(--app-section-size); }
 .template-card { min-width: 0; border: var(--account-border-width) solid var(--account-line); background: var(--account-surface); overflow-wrap: anywhere; }
+.template-card-header-with-action { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--account-space-md); }
 .template-card-header h2 { margin: 0; }
 .template-card-header p { color: var(--account-muted-color); margin-bottom: 0; }
 .template-card-body { border-top: var(--account-border-width) solid var(--account-line); }
@@ -200,6 +205,9 @@ body:has(.app-theme) {
 }
 .account-content.account-content-chart {
   padding: 0;
+}
+.account-content.account-content-trade {
+  padding: var(--account-space-md);
 }
 .auth-layout {
   display: flex;

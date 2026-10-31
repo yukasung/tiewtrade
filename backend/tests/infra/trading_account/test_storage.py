@@ -14,7 +14,6 @@ from tiewtrade.infra.db.session import UserSession
 from tiewtrade.infra.trading_account import (
     AccountUse,
     TradingAccountActivityUnknownError,
-    TradingAccountKeyUnavailableError,
     get_account,
     select_use,
 )
@@ -28,8 +27,8 @@ async def test_initial_account_is_null_and_disabled(api_engine: AsyncEngine, own
         assert account.use is None and account.key is None
         assert not account.may_trade and not account.may_change_use
         assert {f.name for f in fields(account)} == {"use", "key", "may_trade", "may_change_use"}
-        with pytest.raises(TradingAccountKeyUnavailableError):
-            await select_use(session, AccountUse.MANUAL)
+        selected = await select_use(session, AccountUse.MANUAL)
+        assert selected.use is AccountUse.MANUAL and selected.key is None
 
 
 @pytest.mark.parametrize("use", list(AccountUse))
@@ -56,7 +55,7 @@ async def test_select_and_delete_preserve_use(
 
 
 @pytest.mark.parametrize("status", ["PENDING", "UNVERIFIABLE", "REJECTED"])
-async def test_non_active_key_refused(
+async def test_non_active_key_does_not_block_selection(
     api_engine: AsyncEngine, engine_engine: AsyncEngine, owner: UUID, status: str
 ) -> None:
     key = await active_key(api_engine, engine_engine, owner)
@@ -72,9 +71,10 @@ async def test_non_active_key_refused(
                 "id": key,
             },
         )
-    with pytest.raises(TradingAccountKeyUnavailableError):
-        async with user_session(api_engine, owner) as session:
-            await select_use(session, AccountUse.BOT)
+    async with user_session(api_engine, owner) as session:
+        selected = await select_use(session, AccountUse.BOT)
+        assert selected.use is AccountUse.BOT
+        assert selected.key is not None and selected.key.status.value == status
 
 
 async def test_ownership_never_adopts_other_users_key(
@@ -90,8 +90,8 @@ async def test_ownership_never_adopts_other_users_key(
     async with user_session(api_engine, other) as session:
         account = await get_account(session)
         assert account.use is None and account.key is None
-        with pytest.raises(TradingAccountKeyUnavailableError):
-            await select_use(session, AccountUse.MANUAL)
+        selected = await select_use(session, AccountUse.MANUAL)
+        assert selected.use is AccountUse.MANUAL and selected.key is None
 
 
 @pytest.mark.parametrize("operation", ["read", "select"])

@@ -5,7 +5,6 @@ export type SelectTradingUseRequest =
   components["schemas"]["SelectTradingUseRequest"];
 const codes = new Set([
   "TRADING_ACCOUNT_ACTIVITY_UNKNOWN",
-  "TRADING_ACCOUNT_KEY_UNAVAILABLE",
   "TRADING_ACCOUNT_INPUT_REJECTED",
 ]);
 /** Preserve documented codes/status only; never retain raw proxy/server errors. */
@@ -37,7 +36,6 @@ export function fetchTradingAccount(
 }
 export function selectTradingUse(
   input: SelectTradingUseRequest,
-  code: string,
 ): Promise<TradingAccountView> {
-  return safe(send<TradingAccountView>("/trading-account/use", input, code));
+  return safe(send<TradingAccountView>("/trading-account/use", input));
 }

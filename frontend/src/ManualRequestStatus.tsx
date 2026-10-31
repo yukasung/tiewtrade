@@ -20,7 +20,10 @@ export function RequestSnapshot({ value }: { value: ManualRequest }) {
     <p className="text-sm">{t("snapshot")} <MarketTime value={value.snapshot_at} locale={manualOrderLocale()}/></p>
   </article>;
 }
-export function ManualRequestStatus({ owner, episode, request, visible }: { owner: string; episode: string; request: string; visible: boolean }) {
+export function ManualRequestStatus({ owner, episode, request, visible, onTerminal, showSnapshot = true }: {
+  owner: string; episode: string; request: string; visible: boolean; onTerminal?: (value: ManualRequest) => void;
+  showSnapshot?: boolean;
+}) {
   const client = useQueryClient();
   const notified = useRef(false);
   const query = useQuery({ queryKey: [...manualKey(owner), episode, "request", request],
@@ -37,6 +40,15 @@ export function ManualRequestStatus({ owner, episode, request, visible }: { owne
     void client.invalidateQueries({ queryKey: [...manualKey(owner), episode, "orders"] });
     void client.invalidateQueries({ queryKey: [...manualKey(owner), "trade"] });
     void client.invalidateQueries({ queryKey: ["paper-wallet", owner] });
-  }, [query.data, client, owner, episode]);
-  return <>{query.isError && <p role="alert">{t("loadError")}</p>}{query.data && <RequestSnapshot value={query.data}/>}</>;
+    onTerminal?.(query.data);
+  }, [query.data, client, owner, episode, onTerminal]);
+  return <>
+    {query.isError && <p role="alert">{t("loadError")}</p>}
+    {showSnapshot && query.data && <RequestSnapshot value={query.data}/>}
+    {!showSnapshot && query.data && <dl className="flex flex-wrap gap-3" role="status" aria-live="polite" aria-atomic="true">
+      <div><dt>{t("intake")}</dt><dd><OrderStatus status={query.data.intake_state}/></dd></div>
+      <div><dt>{t("command")}</dt><dd><OrderStatus status={query.data.command_state}/></dd></div>
+      {query.data.order_state && <div><dt>{t("status")}</dt><dd><OrderStatus status={query.data.order_state}/></dd></div>}
+    </dl>}
+  </>;
 }

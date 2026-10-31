@@ -190,10 +190,11 @@ async def test_controlled_interleaving_latches_before_batch_and_rejects_pre_dete
     pair = ("BTC", "USDT")
     async with market_data_session(price_engine) as session:
         now = await database_now(session)
+    seed = observation(now, "1", 8, kind=ObservationKind.SNAPSHOT)
+    supervisor.states[pair] = QuoteState(seed, seed)
     supervisor._recover(pair)
     _, old_reply = await feed.requests.get()
     try:
-        await feed.queue.put(FeedQuote(1, observation(now, "1", 8)))
         await feed.queue.put(FeedQuote(1, observation(now, "2", 9)))
         await wait_for(lambda: supervisor.states[pair].order_ambiguous_at is not None)
         async with supervisor.lock:
@@ -265,7 +266,7 @@ async def test_restart_keeps_latch_and_generation_scopes_stream_ids(
         now = await database_now(session)
     first = observation(now, "1", 8)
     state = observe(QuoteState(), first)
-    state = observe(state, observation(now, "2", 9))
+    state = observe(state, observation(now, "2", 8))
     supervisor.states[pair] = state
     await supervisor._flush()
     # A new process loads the durable latch and treats old IDs as snapshot metadata.

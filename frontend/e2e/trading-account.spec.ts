@@ -35,7 +35,7 @@ asyncio.run(check())
     { cwd: "../backend", stdio: "pipe", env: e2eEnvironment() },
   );
 }
-test("fake key → explicit account use → reload → key deletion retains preference", async ({
+test("Paper use without key/TOTP → key setup → deletion retains preference", async ({
   page,
 }, testInfo) => {
   test.setTimeout(60000);
@@ -59,6 +59,25 @@ test("fake key → explicit account use → reload → key deletion retains pref
   await page.getByLabel("รหัสผ่าน", { exact: true }).fill(PASSWORD);
   await page.getByTestId("submit").click();
   await expect(page.getByTestId("signed-in")).toBeVisible();
+  await page.goto("/trading-account");
+  const panel = page.getByTestId("trading-account-panel");
+  await expect(
+    panel.getByText("Paper Trading ไม่ต้องใช้ API key หรือ 2FA", { exact: true }),
+  ).toBeVisible();
+  await expect(panel.getByText("ยังไม่เชื่อมต่อ", { exact: true })).toBeVisible();
+  await expect(panel.getByLabel("ประเภทการใช้งานบัญชี")).toHaveValue("");
+  await expect(panel.getByLabel("รหัส TOTP สำหรับเลือกประเภท")).toHaveCount(0);
+  await panel.getByLabel("ประเภทการใช้งานบัญชี").selectOption("BOT");
+  await panel
+    .getByRole("button", { name: "เลือกประเภทการใช้งาน", exact: true })
+    .click();
+  await expect(
+    panel.getByText("เลือกประเภทการใช้งานแล้ว", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    panel.getByRole("heading", { name: "บอท", exact: true }),
+  ).toBeVisible();
+  await page.goto("/security");
   await page.getByLabel("รหัสผ่านปัจจุบัน").fill(PASSWORD);
   await page.getByTestId("start-totp").click();
   const secret = secretOf(
@@ -89,33 +108,15 @@ test("fake key → explicit account use → reload → key deletion retains pref
     timeout: 10000,
   });
   await page.goto("/trading-account");
-  const panel = page.getByTestId("trading-account-panel");
   await panel.getByRole("button", { name: "ดึงข้อมูลบัญชีใหม่" }).click();
-  await expect(
-    panel.getByText("ยังไม่ได้เลือกประเภทการใช้งาน", { exact: true }),
-  ).toBeVisible();
-  await expect(panel.getByLabel("ประเภทการใช้งานบัญชี")).toHaveValue("");
-  await expect(
-    panel.getByRole("button", { name: "เลือกประเภทการใช้งาน", exact: true }),
-  ).toBeDisabled();
-  await panel.getByLabel("ประเภทการใช้งานบัญชี").selectOption("BOT");
-  await expect
-    .poll(() => stepAt(Date.now()), { timeout: 35000, intervals: [250] })
-    .toBeGreaterThan(keyStep);
-  await panel
-    .getByLabel("รหัส TOTP สำหรับเลือกประเภท")
-    .fill(codeFor(secret, stepAt(Date.now())));
-  await panel
-    .getByRole("button", { name: "เลือกประเภทการใช้งาน", exact: true })
-    .click();
-  await expect(
-    panel.getByText("เลือกประเภทการใช้งานแล้ว", { exact: true }),
-  ).toBeVisible();
   await expect(
     panel.getByRole("heading", { name: "บอท", exact: true }),
   ).toBeVisible();
   await expect(
-    panel.getByText("บัญชีนี้ยังใช้เทรดไม่ได้", { exact: true }),
+    panel.getByText(
+      "Paper Trading ใช้เงินจำลองและไม่เปิด Live Trading โดยอัตโนมัติ",
+      { exact: true },
+    ),
   ).toBeVisible();
   await expect(panel.getByLabel("รหัส TOTP สำหรับเลือกประเภท")).toHaveCount(0);
   await expect(panel.getByRole("button", { name: "เริ่มบอท" })).toHaveCount(0);

@@ -173,13 +173,17 @@ plan.md และ validation.md ยังต้องผ่านการอน
   โดยใช้ venue/rate-limit infrastructure เดิม ไม่ให้ simulator เรียกตลาดเอง
 - เมื่อ sequence ขาดหรือ reconnect ให้ source ไม่พร้อมทันทีและประกอบ snapshot ใหม่
   ไม่ใช้ latest-trade price แทน book เพื่อ fill
-- เสนอ stream ความถี่ 100ms และเกณฑ์ book verification อายุไม่เกิน 1 วินาที ณ จุดใช้
+- ใช้ stream target 100ms และเกณฑ์ book verification อายุไม่เกิน 30 วินาที ณ จุดใช้
+  ตาม [NC-F15-11](paper-book-freshness-amendment.md); feed/gap/conflict fail closed ทันที
   ต้องมีหลักฐาน source liveness, sequence continuity และ server reference time ประกอบ;
   F-10 latest-trade freshness 10 วินาทียังคงเดิมและไม่ใช้รับรอง depth
 - คู่ที่ถูกถอนจาก allowlist แต่ยังมี position/open order ต้องมีข้อมูลตลาดสำหรับจัดการ
   สถานะเดิมต่อไปจนไม่มีภาระค้าง; ไม่เปิดคำสั่งเพิ่มความเสี่ยงให้คู่นั้นกลับมา
 - แหล่งข้อมูล/ข้อความที่ไม่รองรับรูปแบบหรือไม่ผ่าน capability checks ทำให้ไม่พร้อม
   และหยุด matching ของคู่ที่ได้รับผล ไม่สร้างข้อมูลตลาดทดแทน
+- ลำดับร่วม depth/trade ของ Paper ใช้ combined-stream receive order ตาม
+  [NC-F15-12](combined-stream-order-amendment.md); depth ยังตรวจ `U/u` ต่อเนื่อง ส่วน
+  trade ID ใช้ bounded dedupe โดยไม่บังคับ monotonic และ economic duplicate ห้าม transition ซ้ำ
 - ทางเลือกใช้ latest trade อย่างเดียวมีงานน้อยกว่า แต่ไม่แสดง spread/depth slippage
   จึงไม่ใช่ตัวเลือกที่แนะนำสำหรับ R-17
 
@@ -201,6 +205,8 @@ plan.md และ validation.md ยังต้องผ่านการอน
   จากปริมาณ trade ที่เหลือ การลด depth หรือราคาเพียงแตะ limit ไม่ใช่ fill
 - โมเดลนี้ไม่รู้คิว/hidden liquidity จริง จึงอาจให้ผลต่างจากตลาด โดยเฉพาะ limit order
   trade ที่ระบุฝั่งหรือ ordering ไม่ได้ต้องไม่สร้าง fill
+- ordering ที่พิสูจน์ใน Paper หมายถึง durable combined-stream receive order ตาม NC-F15-12;
+  source timestamps ยังคงเป็น provenance แต่ไม่ใช้เรียง event ข้าม depth/trade ใหม่
 - แยก virtual liquidity ต่อ episode เพื่อไม่ให้ผู้ใช้หนึ่งคนเปลี่ยนผลของอีกคน;
   ภายใน episode เดียวกันแต่ละ input revision/trade ID ถูกใช้ครั้งเดียวตามลำดับถาวร
   ใช้ shared counter ต่อระดับราคาเพื่อไม่ให้ออเดอร์หลายใบใช้ปริมาณเดียวกันซ้ำ
@@ -214,6 +220,10 @@ plan.md และ validation.md ยังต้องผ่านการอน
   ถ้า consumption/ordering ยังพิสูจน์ไม่ได้ให้ source unknown จน rebuild สำเร็จ
 - การจำลอง filters/execution constraints ต้องอิง metadata ที่พิสูจน์ได้ของคู่/เวลา
   หากกฎที่จำเป็นต่อคำสั่งยังไม่รองรับต้องปฏิเสธ ไม่อ้างว่าเดิน depth อย่างเดียวเหมือนตลาดครบ
+- NC-F15-13 รองรับ `PERCENT_PRICE`, `MAX_NUM_ORDERS` และ MARKET
+  `MIN_NOTIONAL.avgPriceMins` ตาม
+  [amendment ที่อนุมัติ](binance-th-execution-filters-amendment.md); reference/history ไม่ครบ
+  ต้องปิดคำสั่งและ unknown rules ยังคง fail closed
 
 ### NC-F15-04 — เสนอ fee profile คงที่ต่อ episode
 

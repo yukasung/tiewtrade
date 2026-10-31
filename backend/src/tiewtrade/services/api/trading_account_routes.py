@@ -18,7 +18,6 @@ from tiewtrade.infra.db import DatabaseRole, user_session
 from tiewtrade.infra.trading_account import (
     AccountUse,
     TradingAccountActivityUnknownError,
-    TradingAccountKeyUnavailableError,
     TradingAccountSummary,
     get_account,
     select_use,
@@ -82,7 +81,7 @@ async def select_account_use(
     async with user_session(engine_for(request, DatabaseRole.API), who.user_id) as session:
         try:
             summary = await select_use(session, body.use)
-        except (TradingAccountKeyUnavailableError, TradingAccountActivityUnknownError) as error:
+        except TradingAccountActivityUnknownError as error:
             raise HTTPException(status.HTTP_409_CONFLICT, error.code) from None
         await record_event(
             session,

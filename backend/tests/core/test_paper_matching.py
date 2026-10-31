@@ -15,6 +15,7 @@ from tiewtrade.core.money import (
     InvalidInputTypeError,
     Money,
     Quantity,
+    Scalar,
     UnitMismatchError,
     align_quantity,
     quantity_for_budget,
@@ -124,6 +125,79 @@ def admit(
         policy=FixturePolicy(),
         catalog=CATALOG,
     )
+
+
+def test_percent_price_uses_exact_average_reference_boundaries() -> None:
+    rules = replace(
+        constraints(),
+        average_price_minutes=5,
+        percent_price_multiplier_down=Scalar.of("0.2"),
+        percent_price_multiplier_up=Scalar.of("5"),
+    )
+    allowed = intent(limit="20")
+    admit_order(
+        MatchingState(SCOPE, PAIR),
+        allowed,
+        now=T0,
+        sequence=1,
+        cash=m(2500),
+        held=q(0),
+        constraints=rules,
+        reference_price=m(100),
+        filter_reference_price=m(100),
+        policy=FixturePolicy(),
+        catalog=CATALOG,
+    )
+    with pytest.raises(OrderConstraintError) as failure:
+        admit_order(
+            MatchingState(SCOPE, PAIR),
+            intent(limit="19"),
+            now=T0,
+            sequence=1,
+            cash=m(2500),
+            held=q(0),
+            constraints=rules,
+            reference_price=m(100),
+            filter_reference_price=m(100),
+            policy=FixturePolicy(),
+            catalog=CATALOG,
+        )
+    assert failure.value.violations == (ConstraintViolation.BELOW_PERCENT_PRICE,)
+
+
+def test_market_average_notional_and_open_order_limit_fail_closed() -> None:
+    market_rules = replace(constraints(), minimum_notional=m(50), average_price_minutes=5)
+    with pytest.raises(OrderConstraintError) as failure:
+        admit_order(
+            MatchingState(SCOPE, PAIR),
+            intent(budget="100"),
+            now=T0,
+            sequence=1,
+            cash=m(2500),
+            held=q(0),
+            constraints=market_rules,
+            reference_price=m(100),
+            filter_reference_price=m(10),
+            policy=FixturePolicy(),
+            catalog=CATALOG,
+        )
+    assert failure.value.violations == (ConstraintViolation.BELOW_MINIMUM_NOTIONAL,)
+
+    first = admit(MatchingState(SCOPE, PAIR), intent())
+    with pytest.raises(OrderConstraintError) as failure:
+        admit_order(
+            first,
+            intent(20),
+            now=T0,
+            sequence=2,
+            cash=m(2500),
+            held=q(0),
+            constraints=replace(constraints(), maximum_open_orders=1),
+            reference_price=m(100),
+            policy=FixturePolicy(),
+            catalog=CATALOG,
+        )
+    assert failure.value.violations == (ConstraintViolation.TOO_MANY_OPEN_ORDERS,)
 
 
 def book(
@@ -332,13 +406,16 @@ def test_book_freshness_disconnect_future_and_generation_fail_closed() -> None:
     ok = advance_matching(
         state,
         event,
-        now=event.verified_at + timedelta(seconds=1),
+        now=event.verified_at + timedelta(seconds=30),
         constraints=constraints(),
         execution_ids=(UUID(int=50),),
         catalog=CATALOG,
     )
     assert len(ok.fills) == 1
-    for bad in (replace(event, ready=False), replace(event, verified_at=T0 - timedelta(seconds=2))):
+    for bad in (
+        replace(event, ready=False),
+        replace(event, verified_at=T0 - timedelta(seconds=31)),
+    ):
         with pytest.raises(SourceUnavailableError):
             advance(state, bad)
     with pytest.raises(SourceUnavailableError):

@@ -4,7 +4,7 @@ import json
 from datetime import datetime
 from typing import Any
 
-from tiewtrade.core.money import Money, Quantity
+from tiewtrade.core.money import Money, Quantity, Scalar
 from tiewtrade.core.order_book import BookLevel, BookState, MarketInput, MarketTrade
 from tiewtrade.core.orders import OrderConstraints, OrderType
 from tiewtrade.core.positions import ExecutionSide, PositionPair
@@ -130,6 +130,14 @@ def constraints_payload(value: OrderConstraints) -> dict[str, object]:
         else value.maximum_price.as_parts()["amount"],
         "supported_types": [v.value for v in value.supported_types],
         "unsupported_rules": list(value.unsupported_rules),
+        "average_price_minutes": value.average_price_minutes,
+        "percent_price_multiplier_down": None
+        if value.percent_price_multiplier_down is None
+        else value.percent_price_multiplier_down.as_text(),
+        "percent_price_multiplier_up": None
+        if value.percent_price_multiplier_up is None
+        else value.percent_price_multiplier_up.as_text(),
+        "maximum_open_orders": value.maximum_open_orders,
     }
 
 
@@ -154,4 +162,12 @@ def constraints_from_payload(payload: object) -> OrderConstraints:
         maximum_price=money("maximum_price"),
         supported_types=tuple(OrderType(v) for v in row["supported_types"]),
         unsupported_rules=tuple(row["unsupported_rules"]),
+        average_price_minutes=row.get("average_price_minutes", 0),
+        percent_price_multiplier_down=None
+        if row.get("percent_price_multiplier_down") is None
+        else Scalar.of(row["percent_price_multiplier_down"]),
+        percent_price_multiplier_up=None
+        if row.get("percent_price_multiplier_up") is None
+        else Scalar.of(row["percent_price_multiplier_up"]),
+        maximum_open_orders=row.get("maximum_open_orders"),
     )

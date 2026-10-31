@@ -26,6 +26,14 @@ from tiewtrade.infra.paper_orders.initialization import (
     enable_financial_writer,
     initialize_order_source,
 )
+from tiewtrade.infra.paper_orders.routing import (
+    ADMISSION_FIRST_DUE_SQL,
+    LEGACY_DUE_SQL,
+    PREFERENCE_PROOF_SQL,
+    SAME_PAIR_DUE_SQL,
+    SOURCE_RESUME_PROOF_SQL,
+    source_resume_due_sql,
+)
 from tiewtrade.infra.paper_orders.storage import (
     increment_wallet_revision,
     lock_active_episode,
@@ -42,6 +50,10 @@ class DueOrder:
     command_id: UUID
     user_id: UUID
     next_attempt_at: datetime
+    anchor_command_id: UUID | None = None
+    anchor_due_at: datetime | None = None
+    source_resumption: bool = False
+    source_wait_revision: int | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -50,6 +62,7 @@ class ClaimedOrder:
     user_id: UUID
     claim_id: UUID
     revision: int
+    source_resumption: bool = False
 
 
 @dataclass(frozen=True, slots=True)
@@ -272,34 +285,61 @@ async def submit_cancel(
     )
 
 
-async def due_orders(session: ScanSession, *, limit: int = 20) -> tuple[DueOrder, ...]:
+async def due_orders(
+    session: ScanSession,
+    *,
+    limit: int = 20,
+    prefer_same_pair: bool = False,
+    admission_first: bool = False,
+    source_resumption: bool = False,
+) -> tuple[DueOrder, ...]:
     if not isinstance(session, ScanSession):
         raise TypeError("scanner session required")
     if type(limit) is not int or not 1 <= limit <= 20:
         raise ValueError("bounded order batch required")
-    rows = (
-        await session.execute(
-            """WITH busy AS MATERIALIZED (
-      SELECT DISTINCT user_id FROM paper_order_dispatch
-      WHERE state='CLAIMED' AND lease_until>clock_timestamp()), due AS (
-      SELECT d.command_id,d.user_id,d.next_attempt_at,
-        row_number() OVER(PARTITION BY d.user_id ORDER BY d.next_attempt_at,d.command_id) rank
-      FROM paper_order_dispatch d WHERE d.state<>'TERMINAL'
-        AND d.next_attempt_at<=clock_timestamp()
-        AND (d.lease_until IS NULL OR d.lease_until<=clock_timestamp())
-        AND NOT EXISTS(SELECT 1 FROM busy WHERE busy.user_id=d.user_id))
-      SELECT command_id,user_id,next_attempt_at FROM due WHERE rank=1
-      ORDER BY next_attempt_at,command_id LIMIT :limit""",
-            {"limit": limit},
+    if type(prefer_same_pair) is not bool:
+        raise ValueError("explicit same-pair selector option required")
+    if type(admission_first) is not bool or (admission_first and not prefer_same_pair):
+        raise ValueError("admission priority requires explicit same-pair preference")
+    if type(source_resumption) is not bool:
+        raise ValueError("explicit source-resumption option required")
+    if source_resumption:
+        query = source_resume_due_sql(
+            prefer_same_pair=prefer_same_pair, admission_first=admission_first
         )
-    ).all()
-    return tuple(DueOrder(row.command_id, row.user_id, row.next_attempt_at) for row in rows)
+    elif admission_first:
+        query = ADMISSION_FIRST_DUE_SQL
+    else:
+        query = SAME_PAIR_DUE_SQL if prefer_same_pair else LEGACY_DUE_SQL
+    rows = await session.execute(query, {"limit": limit})
+    return tuple(
+        DueOrder(
+            row.command_id,
+            row.user_id,
+            row.next_attempt_at,
+            row.anchor_command_id if prefer_same_pair else None,
+            row.anchor_due_at if prefer_same_pair else None,
+            source_resumption,
+            row.probe_revision if source_resumption else None,
+        )
+        for row in rows
+    )
 
 
 async def claim_order(session: UserSession, due: DueOrder, *, worker: str) -> ClaimedOrder | None:
     session = require_user_session(session)
     if session.user_id != due.user_id or not worker or len(worker) > 128:
         raise OrderConflictError("invalid claim scope")
+    if type(due.source_resumption) is not bool or (
+        due.source_wait_revision is not None
+        and (
+            not due.source_resumption
+            or type(due.source_wait_revision) is not int
+            or due.source_wait_revision < 1
+            or due.anchor_command_id is not None
+        )
+    ):
+        raise OrderConflictError("invalid source-resumption hint")
     # Serialize the check with admissions, reset and other claims without waiting
     # behind a financial writer. The scanner's busy-owner filter is only a hint.
     acquired = (
@@ -310,15 +350,61 @@ async def claim_order(session: UserSession, due: DueOrder, *, worker: str) -> Cl
     ).scalar_one()
     if not acquired:
         return None
+    if (due.anchor_command_id is None) != (due.anchor_due_at is None):
+        raise OrderConflictError("incomplete same-pair preference anchor")
+    if due.anchor_command_id is not None:
+        proof = (
+            await session.execute(
+                PREFERENCE_PROOF_SQL,
+                {
+                    "user": session.user_id,
+                    "id": due.command_id,
+                    "expected_due": due.next_attempt_at,
+                    "anchor": due.anchor_command_id,
+                    "anchor_due": due.anchor_due_at,
+                },
+            )
+        ).first()
+        if proof is None:
+            return None
+    if due.source_wait_revision is not None:
+        proof = (
+            await session.execute(
+                SOURCE_RESUME_PROOF_SQL,
+                {
+                    "id": due.command_id,
+                    "user": session.user_id,
+                    "expected_due": due.next_attempt_at,
+                    "wait_revision": due.source_wait_revision,
+                },
+            )
+        ).first()
+        if proof is None:
+            return None
     token = uuid4()
+    probe = due.source_wait_revision is not None
+    due_predicate = (
+        "state='PENDING' AND next_attempt_at>clock_timestamp() "
+        "AND source_wait_revision=:wait_revision AND claim_revision=:wait_revision "
+        "AND NOT source_resume_used AND NOT source_resume_claim"
+        if probe
+        else "next_attempt_at<=clock_timestamp()"
+    )
+    claim_update = (
+        "lease_until=least(clock_timestamp()+interval '30 seconds',next_attempt_at),"
+        "source_resume_used=true,source_resume_claim=true"
+        if probe
+        else "lease_until=clock_timestamp()+interval '30 seconds',attempts=attempts+1"
+        + (",source_resume_claim=false" if due.source_resumption else "")
+    )
     # A delayed batch must not claim the next scheduled round of the same command.
     row = (
         await session.execute(
-            """WITH candidate AS (
+            f"""WITH candidate AS (
       SELECT command_id FROM paper_order_dispatch
       WHERE command_id=:id AND user_id=:user AND state<>'TERMINAL'
         AND next_attempt_at=:expected_due
-        AND next_attempt_at<=clock_timestamp()
+        AND {due_predicate}
         AND (lease_until IS NULL OR lease_until<=clock_timestamp())
         AND NOT EXISTS(SELECT 1 FROM paper_order_dispatch busy
           WHERE busy.user_id=:user AND busy.state='CLAIMED'
@@ -326,7 +412,7 @@ async def claim_order(session: UserSession, due: DueOrder, *, worker: str) -> Cl
       FOR UPDATE SKIP LOCKED)
       UPDATE paper_order_dispatch
       SET state='CLAIMED',worker=:worker,claim_id=:token,claim_revision=claim_revision+1,
-        lease_until=clock_timestamp()+interval '30 seconds',attempts=attempts+1
+        {claim_update}
       WHERE command_id IN (SELECT command_id FROM candidate)
       RETURNING claim_revision""",
             {
@@ -335,13 +421,27 @@ async def claim_order(session: UserSession, due: DueOrder, *, worker: str) -> Cl
                 "worker": worker,
                 "token": token,
                 "expected_due": due.next_attempt_at,
+                "wait_revision": due.source_wait_revision,
             },
         )
     ).first()
+    if row is not None and due.anchor_command_id is not None:
+        guarded = (
+            await session.execute(
+                """UPDATE paper_order_dispatch SET preferred_for_due=:anchor_due
+                WHERE command_id=:anchor AND next_attempt_at=:anchor_due
+                  AND preferred_for_due IS DISTINCT FROM next_attempt_at RETURNING command_id""",
+                {"anchor": due.anchor_command_id, "anchor_due": due.anchor_due_at},
+            )
+        ).first()
+        if guarded is None:
+            raise OrderClaimLostError("same-pair preference anchor changed")
     return (
         None
         if row is None
-        else ClaimedOrder(due.command_id, due.user_id, token, row.claim_revision)
+        else ClaimedOrder(
+            due.command_id, due.user_id, token, row.claim_revision, due.source_resumption
+        )
     )
 
 
@@ -377,10 +477,12 @@ async def finish_claim(
 ) -> None:
     if type(retry_delay_ms) is not int or not 20 <= retry_delay_ms <= 1000:
         raise ValueError("bounded dispatch retry delay required")
+    # A healthy poll/decision ends the failure streak. claim_revision remains
+    # monotonic and continues to fence stale workers independently of retries.
     await require_claim(session, claim)
     await session.execute(
         """UPDATE paper_order_dispatch
-      SET state=:state,worker=NULL,claim_id=NULL,lease_until=NULL,
+      SET state=:state,worker=NULL,claim_id=NULL,lease_until=NULL,attempts=0,
         next_attempt_at=clock_timestamp()+CAST(:retry_delay AS integer)*interval '1 millisecond'
       WHERE command_id=:id""",
         {
@@ -391,14 +493,30 @@ async def finish_claim(
     )
 
 
-async def defer_claim(session: UserSession, claim: ClaimedOrder) -> None:
-    # CAS prevents an expired worker from changing the new worker's schedule.
-    await session.execute(
-        """UPDATE paper_order_dispatch
-      SET state='PENDING',worker=NULL,claim_id=NULL,lease_until=NULL,
-        next_attempt_at=clock_timestamp()+CASE WHEN attempts<=1 THEN interval '1 second'
+async def defer_claim(
+    session: UserSession, claim: ClaimedOrder, *, source_unavailable: bool = False
+) -> None:
+    session = require_user_session(session)
+    if type(source_unavailable) is not bool:
+        raise ValueError("explicit source-unavailable outcome required")
+    # Only a source exception establishes a wait. A failed early probe retains
+    # its original due/attempt count; generic failures never create a wait.
+    schedule = """clock_timestamp()+CASE WHEN attempts<=1 THEN interval '1 second'
           WHEN attempts=2 THEN interval '5 seconds' WHEN attempts=3 THEN interval '30 seconds'
-          ELSE interval '5 minutes' END
+          ELSE interval '5 minutes' END"""
+    marker = ""
+    if claim.source_resumption:
+        schedule = f"CASE WHEN source_resume_claim THEN next_attempt_at ELSE {schedule} END"
+        marker = """,source_resume_claim=false,
+          source_wait_since=CASE WHEN :source_unavailable AND NOT source_resume_used
+            THEN clock_timestamp() ELSE NULL END,
+          source_wait_revision=CASE WHEN :source_unavailable AND NOT source_resume_used
+            THEN claim_revision ELSE NULL END"""
+    # CAS prevents an expired/replaced worker from changing a new claim's schedule.
+    await session.execute(
+        f"""UPDATE paper_order_dispatch
+      SET state='PENDING',worker=NULL,claim_id=NULL,lease_until=NULL,
+        next_attempt_at={schedule}{marker}
       WHERE command_id=:id AND user_id=:user AND state='CLAIMED'
         AND claim_id=:token AND claim_revision=:revision""",
         {
@@ -406,6 +524,7 @@ async def defer_claim(session: UserSession, claim: ClaimedOrder) -> None:
             "user": claim.user_id,
             "token": claim.claim_id,
             "revision": claim.revision,
+            "source_unavailable": source_unavailable,
         },
     )
 
@@ -422,7 +541,8 @@ async def reschedule_processed_orders(
     await require_claim(session, claim)
     await session.execute(
         """UPDATE paper_order_dispatch AS d
-        SET state=CASE WHEN p.status IN ('FILLED','CANCELED','EXPIRED','REJECTED')
+        SET attempts=0,
+            state=CASE WHEN p.status IN ('FILLED','CANCELED','EXPIRED','REJECTED')
                        THEN 'TERMINAL' ELSE 'PENDING' END,
             next_attempt_at=clock_timestamp()+interval '200 milliseconds'
         FROM paper_orders o

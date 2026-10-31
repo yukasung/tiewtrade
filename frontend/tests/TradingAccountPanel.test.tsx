@@ -42,16 +42,13 @@ function mount(
   );
   return fetcher;
 }
-function select(use = "MANUAL", code = "123456") {
+function select(use = "MANUAL") {
   fireEvent.change(screen.getByLabelText("ประเภทการใช้งานบัญชี"), {
     target: { value: use },
   });
-  fireEvent.change(screen.getByLabelText("รหัส TOTP สำหรับเลือกประเภท"), {
-    target: { value: code },
-  });
   fireEvent.click(screen.getByRole("button", { name: "เลือกประเภทการใช้งาน" }));
 }
-it("initial choice is empty and needs explicit selection with fresh TOTP", async () => {
+it("initial choice is explicit without requiring a key or TOTP", async () => {
   mount(() => Promise.resolve(answer(account)));
   await screen.findByText("ยังไม่ได้เลือกประเภทการใช้งาน");
   expect(
@@ -62,12 +59,21 @@ it("initial choice is empty and needs explicit selection with fresh TOTP", async
       name: "เลือกประเภทการใช้งาน",
     }).disabled,
   ).toBe(true);
-  expect(screen.getByText("บัญชีนี้ยังใช้เทรดไม่ได้")).toBeTruthy();
+  expect(
+    screen.getByText("Paper Trading ใช้เงินจำลองและไม่เปิด Live Trading โดยอัตโนมัติ"),
+  ).toBeTruthy();
+  expect(screen.queryByLabelText("รหัส TOTP สำหรับเลือกประเภท")).toBeNull();
+  expect(
+    screen.getByText("Paper Trading ไม่ต้องใช้ API key หรือ 2FA"),
+  ).toBeTruthy();
+  expect(
+    screen.getByRole("heading", { name: "เพดานความเสี่ยงต่อกระเป๋า · Paper" }),
+  ).toBeTruthy();
   expect(screen.queryByRole("button", { name: "เริ่มบอท" })).toBeNull();
   expect(screen.queryByLabelText("API secret")).toBeNull();
 });
 it.each(["MANUAL", "BOT"])(
-  "selects %s with CSRF/TOTP and refetches server choice",
+  "selects %s with CSRF, no TOTP and refetches server choice",
   async (use) => {
     let selected = false;
     const fetcher = mount((_url, init) => {
@@ -89,8 +95,8 @@ it.each(["MANUAL", "BOT"])(
     )?.[1];
     expect(request?.headers).toMatchObject({
       "X-CSRF-Token": "csrf-test",
-      "X-TiewTrade-TOTP": "123456",
     });
+    expect(request?.headers).not.toHaveProperty("X-TiewTrade-TOTP");
     expect(
       JSON.parse(typeof request?.body === "string" ? request.body : "{}"),
     ).toEqual({ use });
@@ -105,15 +111,23 @@ it.each([
   { ...key, status: "PENDING" },
   { ...key, status: "REJECTED" },
   { ...key, status: "UNVERIFIABLE" },
-])("cannot select without ACTIVE sole key %j", async (sole) => {
+])("can select without an ACTIVE sole key %j", async (sole) => {
   mount(() => Promise.resolve(answer({ ...account, key: sole })));
   await screen.findByText("ยังไม่ได้เลือกประเภทการใช้งาน");
   expect(
-    screen.queryByRole("button", { name: "เลือกประเภทการใช้งาน" }),
-  ).toBeNull();
-  expect(screen.getByText(/เพิ่ม API key แล้วรอผลตรวจ/)).toBeTruthy();
+    screen.getByRole("button", { name: "เลือกประเภทการใช้งาน" }),
+  ).toBeTruthy();
+  const notice = within(screen.getByTestId("trading-account-panel")).getByRole("status");
+  expect(
+    within(notice).getByText("Paper Trading ไม่ต้องใช้ API key หรือ 2FA"),
+  ).toBeTruthy();
+  expect(
+    within(notice).getByRole<HTMLAnchorElement>("link", {
+      name: "ตั้งค่า 2FA สำหรับ Live",
+    }).getAttribute("href"),
+  ).toBe("/security");
 });
-it("uncertain POST clears code, does not retry and keeps choice unconfirmed", async () => {
+it("uncertain POST does not retry and keeps choice unconfirmed", async () => {
   const fetcher = mount((_url, init) =>
     init?.method === "POST"
       ? Promise.reject(new Error("RAW-SECRET"))
@@ -124,26 +138,17 @@ it("uncertain POST clears code, does not retry and keeps choice unconfirmed", as
   await screen.findByText(/ยังยืนยันผลคำขอไม่ได้/);
   expect(document.body.textContent).not.toContain("RAW-SECRET");
   expect(
-    screen.getByLabelText<HTMLInputElement>("รหัส TOTP สำหรับเลือกประเภท")
-      .value,
-  ).toBe("");
-  expect(
     fetcher.mock.calls.filter(([, init]) => init?.method === "POST"),
   ).toHaveLength(1);
   expect(screen.getByText("ยังไม่ได้เลือกประเภทการใช้งาน")).toBeTruthy();
 });
 it.each([
   [
-    "TRADING_ACCOUNT_KEY_UNAVAILABLE",
-    409,
-    "API key ยังไม่พร้อม ดึงข้อมูลล่าสุดก่อนลองอีกครั้ง",
-  ],
-  [
     "TRADING_ACCOUNT_ACTIVITY_UNKNOWN",
     409,
     "ยังเปลี่ยนประเภทไม่ได้ เพราะยังไม่มีหลักฐานสถานะบอท ออเดอร์ และ position ครบ",
   ],
-  ["RAW-SECRET", 403, "ยืนยัน TOTP ไม่ผ่าน หากใช้รหัสเดิมแล้วให้รอรหัสชุดใหม่"],
+  ["RAW-SECRET", 403, "คำขอไม่ได้รับอนุญาต กรุณาโหลดหน้าใหม่แล้วลองอีกครั้ง"],
 ])("sanitizes and explains %s", async (detail, status, message) => {
   mount((_url, init) =>
     Promise.resolve(
@@ -153,10 +158,6 @@ it.each([
   await screen.findByText("ยังไม่ได้เลือกประเภทการใช้งาน");
   select();
   await screen.findByText(message);
-  expect(
-    screen.getByLabelText<HTMLInputElement>("รหัส TOTP สำหรับเลือกประเภท")
-      .value,
-  ).toBe("");
   expect(document.body.textContent).not.toContain("RAW-SECRET");
 });
 it("loading/read failure does not invent an empty or disconnected account", async () => {
@@ -204,7 +205,9 @@ it("existing selection persists when sole key is deleted and both panels refetch
   await screen.findByText("ยังไม่เชื่อมต่อ");
   await screen.findByText(/ยังไม่มี API key/);
   expect(screen.getByText("บอท", { exact: true })).toBeTruthy();
-  expect(screen.getByText("บัญชีนี้ยังใช้เทรดไม่ได้")).toBeTruthy();
+  expect(
+    screen.getByText("Paper Trading ใช้เงินจำลองและไม่เปิด Live Trading โดยอัตโนมัติ"),
+  ).toBeTruthy();
 });
 it("DELETE followed by summary refetch failure clearly marks retained old data stale", async () => {
   let deleted = false;
@@ -245,7 +248,7 @@ it("DELETE followed by summary refetch failure clearly marks retained old data s
   expect(screen.getByText("เทรดมือ", { exact: true })).toBeTruthy();
   expect(document.body.textContent).not.toContain("RAW-SECRET");
 });
-it("TOTP never enters mutation variables/query keys and mutation cache clears after settle", async () => {
+it("selection keeps no input in mutation variables and clears its cache after settle", async () => {
   const { useQueryClient } = await import("@tanstack/react-query");
   let client: ReturnType<typeof useQueryClient> | undefined;
   function Capture() {
@@ -270,24 +273,12 @@ it("TOTP never enters mutation variables/query keys and mutation cache clears af
     </AccountSession>,
   );
   await screen.findByText("ยังไม่ได้เลือกประเภทการใช้งาน");
-  select("BOT", "987654");
+  select("BOT");
   await waitFor(() => expect(resolve).toBeTypeOf("function"));
   expect(
     client?.getMutationCache().getAll()[0]?.state.variables,
   ).toBeUndefined();
-  expect(
-    JSON.stringify(
-      client
-        ?.getQueryCache()
-        .getAll()
-        .map((query) => query.queryKey),
-    ),
-  ).not.toContain("987654");
-  expect(
-    screen.getByLabelText<HTMLInputElement>("รหัส TOTP สำหรับเลือกประเภท")
-      .value,
-  ).toBe("");
-  resolve(answer({ detail: "RAW-SECRET-987654" }, 500));
+  resolve(answer({ detail: "RAW-SECRET" }, 500));
   await screen.findByText(/ยังยืนยันผลคำขอไม่ได้/);
   await waitFor(() =>
     expect(client?.getMutationCache().getAll()).toHaveLength(0),
@@ -469,7 +460,10 @@ it("key polling updates the sole account summary when worker verification comple
   });
   const panel = screen.getByTestId("trading-account-panel");
   expect(within(panel).getByText("กำลังตรวจ")).toBeTruthy();
-  expect(within(panel).queryByLabelText("ประเภทการใช้งานบัญชี")).toBeNull();
+  expect(
+    within(panel).getByLabelText<HTMLSelectElement>("ประเภทการใช้งานบัญชี")
+      .value,
+  ).toBe("");
   verified = true;
   await act(async () => {
     await vi.advanceTimersByTimeAsync(5000);
@@ -480,7 +474,7 @@ it("key polling updates the sole account summary when worker verification comple
       .value,
   ).toBe("");
 });
-it("ACTIVE key without TOTP points to setup instead of showing selection fields", async () => {
+it("account without TOTP can select Paper use and sees optional Live setup", async () => {
   vi.stubGlobal(
     "fetch",
     vi.fn(() => Promise.resolve(answer(account))),
@@ -490,8 +484,7 @@ it("ACTIVE key without TOTP points to setup instead of showing selection fields"
       <TradingAccountPanel identity={{ ...identity, totp_enabled: false }} />
     </AccountSession>,
   );
-  await screen.findByRole("link", {
-    name: "เปิด TOTP ก่อนเลือกประเภทการใช้งาน",
-  });
+  await screen.findByRole("link", { name: "ตั้งค่า 2FA สำหรับ Live" });
+  expect(screen.getByLabelText("ประเภทการใช้งานบัญชี")).toBeTruthy();
   expect(screen.queryByLabelText("รหัส TOTP สำหรับเลือกประเภท")).toBeNull();
 });

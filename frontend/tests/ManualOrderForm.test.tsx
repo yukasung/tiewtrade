@@ -1,8 +1,10 @@
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
 import { ManualOrderForm } from "../src/ManualOrderForm";
 import { LiveTradePage } from "../src/LiveTradePage";
 import { manualOrderText as t } from "../src/manualOrderMessages";
+vi.mock("../src/CandlestickChartPanel", () => ({ CandlestickChartPanel: () => <div data-testid="embedded-chart"/> }));
 afterEach(cleanup);
 it("submits exact strings and only the fields/units for each supported variant", () => {
   const onSubmit = vi.fn();
@@ -11,14 +13,14 @@ it("submits exact strings and only the fields/units for each supported variant",
   fireEvent.change(screen.getByLabelText(t("budget")), { target: { value: "100.000000000000000001" } });
   fireEvent.click(screen.getByRole("button", { name: t("submit") }));
   expect(onSubmit.mock.calls[0]?.[0]).toEqual({ expected_wallet_id: "w", expected_episode_id: "e", base: "BTC", quote: "USDT", side: "BUY", kind: "MARKET", quote_budget: "100.000000000000000001" });
-  fireEvent.change(screen.getByLabelText(t("side")), { target: { value: "SELL" } });
+  fireEvent.click(screen.getByRole("tab", { name: t("SELL") }));
   const quantity = screen.getByLabelText(`${t("quantity")} (BTC)`);
   expect((quantity as HTMLInputElement).value).toBe("");
   fireEvent.change(quantity, { target: { value: "0.012345678901234567" } });
   fireEvent.click(screen.getByRole("button", { name: t("submit") }));
   expect(onSubmit.mock.calls[1]?.[0]).toMatchObject({ side: "SELL", kind: "MARKET", base_quantity: "0.012345678901234567" });
   expect(onSubmit.mock.calls[1]?.[0]).not.toHaveProperty("quote_budget");
-  fireEvent.change(screen.getByLabelText(t("kind")), { target: { value: "LIMIT" } });
+  fireEvent.click(screen.getByRole("tab", { name: t("LIMIT") }));
   fireEvent.change(quantity, { target: { value: "0.01" } });
   fireEvent.change(screen.getByLabelText(t("price")), { target: { value: "9000.01" } });
   fireEvent.click(screen.getByRole("button", { name: t("submit") }));
@@ -29,8 +31,21 @@ it("submits exact strings and only the fields/units for each supported variant",
   expect(screen.getByLabelText<HTMLInputElement>(t("price")).value).toBe("");
   expect(screen.getByRole<HTMLButtonElement>("button", { name: t("submit") }).disabled).toBe(true);
 });
-it("has no mutation or enabled control on the Live route", () => {
-  render(<LiveTradePage/>);
-  for (const control of document.querySelectorAll<HTMLInputElement>("input,select,button")) expect(control.disabled).toBe(true);
-  expect(screen.getByRole("status").textContent).toBe(t("liveUnavailable"));
+it("keeps all Live order controls disabled while risk settings use a separate panel", () => {
+  vi.stubGlobal("fetch", vi.fn(() => Promise.resolve(new Response("{}", { status: 503 }))));
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  const view = render(<QueryClientProvider client={client}><LiveTradePage owner="owner"/></QueryClientProvider>);
+  for (const control of document.querySelectorAll<HTMLInputElement>("section[aria-labelledby=live-manual-form-heading] input,section[aria-labelledby=live-manual-form-heading] select,section[aria-labelledby=live-manual-form-heading] button")) expect(control.disabled).toBe(true);
+  expect(screen.getByText(t("liveUnavailable"))).toBeTruthy();
+  view.unmount(); client.clear(); vi.unstubAllGlobals();
+});
+it("supports arrow-key navigation for order tabs", () => {
+  render(<ManualOrderForm base="BTC" bases={["BTC"]} onBase={() => {}}
+    scope={{ expected_wallet_id: "w", expected_episode_id: "e" }} canSubmit={() => true} onSubmit={() => {}}/>);
+  const buy = screen.getByRole("tab", { name: t("BUY") });
+  fireEvent.keyDown(buy, { key: "ArrowRight" });
+  const sell = screen.getByRole("tab", { name: t("SELL") });
+  expect(sell.getAttribute("aria-selected")).toBe("true");
+  expect(document.activeElement).toBe(sell);
+  expect(sell.getAttribute("aria-controls")).toBe("manual-order-fields");
 });

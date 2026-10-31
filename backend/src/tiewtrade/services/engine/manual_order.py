@@ -13,7 +13,7 @@ from tiewtrade.infra.paper_orders.request_dispatch import (
     defer_request_claim,
     due_requests,
 )
-from tiewtrade.infra.paper_orders.request_worker import process_request
+from tiewtrade.infra.paper_orders.request_worker import RequestOutcome, process_request
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,7 +32,10 @@ async def run_manual_order_round(
     worker: str,
     policy: AdmissionPolicy | None,
     limit: int = 20,
+    claim_limit: int | None = None,
 ) -> ManualOrderRound:
+    if claim_limit is not None and (type(claim_limit) is not int or not 1 <= claim_limit <= limit):
+        raise ValueError("bounded successful claim budget required")
     try:
         async with scan_session_bypassing_rls(scan_engine) as scan:
             await scan.execute("SET LOCAL statement_timeout='5s'")
@@ -42,22 +45,31 @@ async def run_manual_order_round(
         # This pre-financial queue must not prevent F-15 from servicing existing orders/cancels.
         _LOGGER.warning("manual request scan unavailable")
         return ManualOrderRound()
-    processed = deferred = skipped = 0
+    processed = deferred = skipped = claimed = 0
     for hint in hints:
+        if claim_limit is not None and claimed >= claim_limit:
+            break
         claim = None
         try:
             async with user_session(engine, hint.user_id, role=DatabaseRole.ENGINE) as session:
                 await session.execute("SET LOCAL statement_timeout='5s'")
                 await session.execute("SET LOCAL lock_timeout='5s'")
                 claim = await claim_request(session, hint, worker=worker)
+                if claim is not None:
+                    # Count before commit: a lost commit reply must not permit
+                    # a second claimed item in the same phase.
+                    claimed += 1
             if claim is None:
                 skipped += 1
                 continue
             async with user_session(engine, hint.user_id, role=DatabaseRole.ENGINE) as session:
                 await session.execute("SET LOCAL statement_timeout='5s'")
                 await session.execute("SET LOCAL lock_timeout='5s'")
-                await process_request(session, claim, policy=policy)
-            processed += 1
+                outcome = await process_request(session, claim, policy=policy)
+            if outcome is RequestOutcome.DEFERRED:
+                deferred += 1
+            else:
+                processed += 1
         except RequestClaimLostError:
             skipped += 1
         except Exception:

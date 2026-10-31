@@ -469,13 +469,11 @@ async def persist_checkpoint(
         ],
         separators=(",", ":"),
     )
+    # Upsert this pair once and advance the other pairs' global revision in the
+    # same statement. The two disjoint sets preserve episode-wide completeness
+    # without rewriting every active row twice per no-op input checkpoint.
     await session.execute(
-        """UPDATE paper_order_projections SET revision=:revision WHERE episode_id=:episode
-        AND status NOT IN ('FILLED','CANCELED','EXPIRED','REJECTED')""",
-        {"episode": state.scope.episode_id, "revision": revision},
-    )
-    await session.execute(
-        """INSERT INTO paper_order_projections
+        """WITH projected AS (INSERT INTO paper_order_projections
         (order_id,user_id,episode_id,base,quote,status,filled_quantity,spent,resting,
          queue_ahead,revision,last_event_id)
         SELECT r.order_id,:user,:episode,:base,:quote,r.status,r.filled,r.spent,r.resting,
@@ -488,7 +486,11 @@ async def persist_checkpoint(
         ON CONFLICT(order_id) DO UPDATE SET status=EXCLUDED.status,
           filled_quantity=EXCLUDED.filled_quantity,spent=EXCLUDED.spent,
           resting=EXCLUDED.resting,queue_ahead=EXCLUDED.queue_ahead,
-          revision=EXCLUDED.revision,last_event_id=EXCLUDED.last_event_id""",
+          revision=EXCLUDED.revision,last_event_id=EXCLUDED.last_event_id
+          RETURNING order_id)
+        UPDATE paper_order_projections SET revision=:revision WHERE episode_id=:episode
+        AND (base,quote)<>(:base,:quote)
+        AND status NOT IN ('FILLED','CANCELED','EXPIRED','REJECTED')""",
         {
             "rows": rows,
             "user": session.user_id,
@@ -499,21 +501,20 @@ async def persist_checkpoint(
         },
     )
     await session.execute(
-        """UPDATE paper_reservations SET revision=:revision WHERE episode_id=:episode
-        AND order_id IN (SELECT order_id FROM paper_order_projections
-          WHERE episode_id=:episode
-          AND status NOT IN ('FILLED','CANCELED','EXPIRED','REJECTED'))""",
-        {"episode": state.scope.episode_id, "revision": revision},
-    )
-    await session.execute(
-        """INSERT INTO paper_reservations
+        """WITH reserved AS (INSERT INTO paper_reservations
         (order_id,user_id,episode_id,base,quote,quote_reserved,base_reserved,revision)
         SELECT r.order_id,:user,:episode,:base,:quote,r.reserved_quote,r.reserved_base,:revision
         FROM jsonb_to_recordset(CAST(:rows AS jsonb)) AS r(
           order_id uuid,status text,filled numeric,spent numeric,resting boolean,
           queue_ahead numeric,reserved_quote numeric,reserved_base numeric)
         ON CONFLICT(order_id) DO UPDATE SET quote_reserved=EXCLUDED.quote_reserved,
-          base_reserved=EXCLUDED.base_reserved,revision=EXCLUDED.revision""",
+          base_reserved=EXCLUDED.base_reserved,revision=EXCLUDED.revision
+          RETURNING order_id)
+        UPDATE paper_reservations SET revision=:revision WHERE episode_id=:episode
+        AND (base,quote)<>(:base,:quote)
+        AND order_id IN (SELECT order_id FROM paper_order_projections
+          WHERE episode_id=:episode
+          AND status NOT IN ('FILLED','CANCELED','EXPIRED','REJECTED'))""",
         {
             "rows": rows,
             "user": session.user_id,

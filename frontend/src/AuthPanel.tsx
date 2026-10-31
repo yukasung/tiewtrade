@@ -223,7 +223,7 @@ export function AuthPanel(): JSX.Element {
             {page === "trading-account" && <TradingAccountPanel identity={identity} />}
             {page === "prices" && <RealtimePricePanel />}
             {page === "paper/trade" && <PaperTradePage owner={identity.user_id}/>}
-            {page === "live/trade" && <LiveTradePage/>}
+            {page === "live/trade" && <LiveTradePage owner={identity.user_id}/>}
             {page === "supported-symbols" && <SupportedSymbolPanel />}
             {page === "chart" && (import.meta.env.VITE_CHART_ENABLED === "1"
               ? <CandlestickChartPanel userId={identity.user_id}/>

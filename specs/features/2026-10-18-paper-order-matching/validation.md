@@ -80,9 +80,11 @@ golden fixtures ระบุ raw input, units, profile version, event order แ�
    duplicate trade ไม่เปลี่ยนผล; การถอน depth อย่างเดียวไม่ fill A หรือ B
 6. **Latency/freshness:** t0 acceptance → eligible t0+100ms; book ก่อน eligible
    ใช้ไม่ได้ และต้องมี input received หลัง eligibility ตาม requirements;
-   book verification อายุเท่ากับ 1s ยังผ่านอายุ มากกว่า 1s ไม่ผ่าน
+   book verification อายุเท่ากับ 30s ยังผ่านอายุ มากกว่า 30s ไม่ผ่านตาม NC-F15-11
    แต่ disconnect/lease/sequence fail ทำให้ไม่พร้อมแม้อายุยังน้อย
-   latest-trade boundary 10s ยังผ่านอายุ, >10s ไม่ผ่าน โดยไม่สับสนกับ book 1s
+   latest-trade boundary 10s ยังผ่านอายุ, >10s ไม่ผ่าน และยังใช้ provenance คนละชุดกับ book
+   NC-F15-12 ต้องครอบคลุม trade ID ที่กระโดด/ย้อนลำดับ, bounded economic dedupe ซึ่ง
+   event time ต่าง, conflicting duplicate, stale depth `u`, depth gap และ receive-order replay
 7. **Limits:** partial ที่ราคาดีกว่า limit ได้ แต่ไม่ซื้อแพง/ขายต่ำกว่า limit;
    quantity step ที่ไม่ใช่กำลังสิบ, price ticks, minimum/maximum boundary,
    unknown required metadata, dust และ unsupported size/type ต้องได้ typed result
@@ -298,6 +300,36 @@ fingerprint, fixture/profile/input digest, result/count/time, criterion IDs, fai
 เจ้าของอนุมัติให้คง revision ของ terminal history เดิม และอัปเดตเฉพาะ active orders/รายการที่เพิ่งจบใน transaction ปัจจุบัน พร้อม reservation ที่ปล่อยเป็นศูนย์อย่าง atomic. Terminal revision ต้องไม่เกิน activity revision; projection/reservation ของรายการเดียวกันต้องสอดคล้องกัน. ใช้ additive migration ปรับ F-13 reset coherence โดยรักษา source proof, event linkage, owner isolation และการปฏิเสธข้อมูลผิด/ไม่ครบ; ไม่แก้ migration 0037. Downgrade ต้องปฏิเสธเมื่อมีข้อมูลที่ contract เดิมรับไม่ได้ ไม่ rewrite ประวัติ.
 
 ใช้ `matching_storage.persist_checkpoint` และ `paper_wallet_reset_readiness` เดิม; เพิ่ม real PostgreSQL safety tests สำหรับ active/current-terminal revision, old terminal rows ไม่ถูกเขียนซ้ำ, corruption, reset, correction, rollback/retry และ migration. กฎเงิน/การจับคู่และเกณฑ์ W1–W4 คงเดิม; ผลที่ได้รับผลกระทบต้องตรวจใหม่ก่อน Completed.
+
+### NC-F15-13 — Binance TH execution filters
+
+ก่อน manual acceptance ต้องผ่าน parser/codec/history pagination และ gap tests,
+weighted-average/percent/min-notional exact boundaries, max-open concurrent/idempotent
+admission, restart/recovery และ affected API/worker/matching tests ตาม
+[amendment](binance-th-execution-filters-amendment.md). Unknown/incomplete evidence ต้องยัง
+ได้ typed unavailable/unsupported; localhost result ไม่แทน full validation.
+
+Checkpoint 2026-10-30: Binance TH `BTC/USDT` และ `ETH/USDT` จริงถูก decode เป็น
+capability ที่ `unsupported_rules=[]` สำหรับ MARKET/LIMIT; `PERCENT_PRICE`,
+`MIN_NOTIONAL.applyToMarket` และ `MAX_NUM_ORDERS` ถูกเก็บพร้อม weighted public-trade
+reference 5 นาที. ชุด affected venue/core/service ผ่าน รวม 67 tests ในชุดยืนยันย่อย
+และชุดขยายที่เกี่ยวข้องทั้งหมดไม่มี failure; ruff, mypy 236 source files และ
+`git diff --check` ผ่าน. API read-only ด้วย owner ปัจจุบันให้ `admission_ready=true`
+และ `admission_reasons=[]` เมื่อ BTC price/book/risk พร้อม. ระหว่างตรวจพบ price feed
+recovery ชั่วคราวทำให้ `ORDER_PRICE_UNAVAILABLE` ตาม fail-closed contract แล้วฟื้นเอง;
+ไม่มี Live order หรือ manual submit โดย agent. Full F-15 validation ยังคงสถานะเดิม.
+
+Follow-up runtime checkpoint 2026-10-30: NC-F15-11 implementation ยังมี hard-coded
+1-second pre-publication check แม้ `BookState` ใช้ approved 30-second boundary แล้ว;
+แก้ให้ใช้ `MAX_BOOK_AGE` จุดเดียวและเพิ่ม exact boundary test. NC-F15-14 เพิ่ม public
+execution source-clock tolerance 100ms ตามอนุมัติ พร้อม depth/trade 100ms และ
+100ms+1us cases. Bootstrap เดิมจับ depth snapshot ก่อน paginate weighted trade history
+จน snapshot อายุเกินระหว่าง catch-up; แก้ตาม NC-F15-13 ให้เรียง capability → history →
+current snapshot → buffered stream. Targeted core/adapter/matching tests ผ่าน 111/111,
+real-role pipeline ผ่าน 3/3, F-10 real-role integration ผ่าน 10/10, ruff/format,
+mypy 236 source files และ diff check ผ่าน. หลัง rebuild BTC/ETH book และ price เป็น READY
+พร้อมกัน 12/12 samples ต่อเนื่อง 30 วินาที; owner read-only API คืน
+`admission_ready=true`, reasons ว่าง, MANUAL และมีกระเป๋า Paper. Agent ไม่ส่งออเดอร์.
 
 NC-F15-10 checkpoint: migration up/down/up และ affected order/wallet/position safety ผ่าน; readiness smoke 100 owners บน 0038 Failed ที่ positive-cycle timeout โดย cancel ยังรอ dispatch. คง W1–W3/V-19 Pending Full Validation; W4 เดิมเป็นหลักฐาน schema 0037 ต้องตรวจ final candidate ใหม่. ดู M5 evidence สำหรับคำสั่ง/ฐานข้อมูล/ผลตรวจ.
 
