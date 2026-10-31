@@ -19,11 +19,23 @@ from tiewtrade.core.risk_limits import (
 from tiewtrade.infra.db.session import UserSession, require_user_session
 from tiewtrade.infra.paper_orders.storage import lock_pair_catalog
 from tiewtrade.infra.paper_wallet import get_wallet
-from tiewtrade.infra.risk_limits.control import paper_opening_protocol_enabled
 from tiewtrade.infra.risk_limits.dispatch import lock_risk_owner
 from tiewtrade.infra.risk_limits.monitor import replay_monitor
 from tiewtrade.infra.risk_limits.storage import read_setting
 from tiewtrade.infra.risk_limits.views import read_evidence
+
+
+async def paper_opening_protocol_enabled(session: UserSession) -> bool:
+    """Require every global gate used by Paper intake and financial writers."""
+    checked = require_user_session(session)
+    return bool(
+        (
+            await checked.execute(
+                "SELECT publication_enabled AND financial_enabled AND admission_enabled "
+                "FROM risk_protocol_control"
+            )
+        ).scalar_one()
+    )
 
 
 class TransactionalRiskPolicy:

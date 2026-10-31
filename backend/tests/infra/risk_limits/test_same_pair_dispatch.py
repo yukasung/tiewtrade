@@ -10,6 +10,10 @@ import pytest
 from sqlalchemy.ext.asyncio import AsyncEngine
 
 from tests.infra.execution_market.test_dispatch import intent
+from tests.infra.risk_limits.migration_support import (
+    restore_risk_protocol,
+    stop_risk_protocol,
+)
 from tests.infra.risk_limits.test_execution import Runtime, drive, runtime
 from tiewtrade.core.money import Money, Quantity
 from tiewtrade.core.orders import BaseSize, OrderIntent, OrderType, TimeInForce
@@ -455,7 +459,10 @@ async def test_real_lost_claim_ack_commits_guard_and_fences_old_worker(
 
 
 async def test_projection_only_migration_roundtrip_preserves_facts_and_r8_default(
-    queue: Queue, engine_engine: AsyncEngine, scan_engine: AsyncEngine
+    queue: Queue,
+    engine_engine: AsyncEngine,
+    scan_engine: AsyncEngine,
+    migrator_engine: AsyncEngine,
 ) -> None:
     from tests.infra.db.test_migrations import _alembic
     from tiewtrade.infra.db import create_engine_for
@@ -476,6 +483,7 @@ async def test_projection_only_migration_roundtrip_preserves_facts_and_r8_defaul
             )
 
     before = await snapshot(engine_engine)
+    flags = await stop_risk_protocol(migrator_engine)
     try:
         _alembic("downgrade", "0055")
         # A legacy snapshot in flight cannot cause partial FORCE-RLS changes or
@@ -493,6 +501,7 @@ async def test_projection_only_migration_roundtrip_preserves_facts_and_r8_defaul
         assert (await hint(scan_engine, queue, preferred=False)).command_id == queue.head.command_id
     finally:
         _alembic("upgrade", "head")
+        await restore_risk_protocol(migrator_engine, flags)
     fresh = create_engine_for(DatabaseRole.ENGINE)
     fresh_scan = create_engine_for(DatabaseRole.ENGINE_SCAN)
     try:

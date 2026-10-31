@@ -28,9 +28,11 @@ from tiewtrade.infra.paper_orders.requests import (
 )
 from tiewtrade.infra.paper_orders.trade_views import order_page, order_view, trade_snapshot
 from tiewtrade.infra.paper_orders.views import RequestView, request_view, unresolved_requests
-from tiewtrade.infra.risk_limits.control import paper_opening_protocol_enabled
 from tiewtrade.infra.risk_limits.evaluation_requests import request_evaluation
-from tiewtrade.infra.risk_limits.policy import TransactionalRiskPolicy
+from tiewtrade.infra.risk_limits.policy import (
+    TransactionalRiskPolicy,
+    paper_opening_protocol_enabled,
+)
 from tiewtrade.infra.risk_limits.views import wallet_evidence
 from tiewtrade.services.api.db_resources import engine_for, paper_mutation_engine
 from tiewtrade.services.api.manual_order_models import (

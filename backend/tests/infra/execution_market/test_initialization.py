@@ -352,6 +352,7 @@ async def test_managed_history_refuses_fence_downgrade_and_keeps_force_rls(
         or "manual order request history prevents downgrade" in result.stderr
         or "manual order admission history prevents downgrade" in result.stderr
         or "unconfigured financial boundary history prevents downgrade" in result.stderr
+        or "unconfigured Paper economic history prevents downgrade" in result.stderr
         or "active risk writer protocol prevents downgrade" in result.stderr
         or "risk evaluation request history prevents downgrade" in result.stderr
         or "risk lifecycle history prevents downgrade" in result.stderr
@@ -385,6 +386,7 @@ async def test_managed_history_refuses_fence_downgrade_and_keeps_force_rls(
             "0052",
             "0053",
             "0054",
+            "0060",
         }
     async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
         assert (

@@ -75,6 +75,7 @@ async def test_populated_downgrade_is_refused_without_deleting_command(
         assert result.returncode != 0
         # A newer schema can stop earlier; require its specific safety guard, not any error.
         guards = {
+            "unconfigured Paper economic history prevents downgrade": "0060",
             "risk evaluation request history prevents downgrade": "0053",
             "active risk writer protocol prevents downgrade": "0052",
             "unconfigured financial boundary history prevents downgrade": "0052",

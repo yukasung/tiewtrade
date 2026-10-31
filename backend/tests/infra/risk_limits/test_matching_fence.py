@@ -3,6 +3,7 @@
 import asyncio
 from collections.abc import Mapping
 from dataclasses import replace
+from datetime import timedelta
 from typing import Any
 from uuid import UUID
 
@@ -12,6 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncEngine
 
 from tests.infra.execution_market.test_dispatch import intent
 from tests.infra.risk_limits.test_execution import drive, fill_buy, runtime
+from tiewtrade.core import order_book
 from tiewtrade.core.money import Money, Quantity
 from tiewtrade.core.orders import BaseSize, OrderType, SourceUnavailableError, TimeInForce
 from tiewtrade.core.positions import ExecutionSide
@@ -71,7 +73,9 @@ async def test_preview_cannot_authorize_buy_after_concurrent_change(
                             text("UPDATE risk_protocol_control SET admission_enabled=false")
                         )
                 else:
-                    await asyncio.sleep(1.05)
+                    # Force the verified-book freshness boundary to cross after
+                    # the preview, without depending on suite wall-clock runtime.
+                    patch.setattr(order_book, "MAX_BOOK_AGE", timedelta(0))
             return await original(session, statement, parameters)
 
         with monkeypatch.context() as patch:

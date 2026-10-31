@@ -82,8 +82,10 @@ from tiewtrade.infra.positions import (
     apply_position_event,
     read_position_snapshot,
 )
-from tiewtrade.infra.risk_limits.control import paper_opening_protocol_enabled
-from tiewtrade.infra.risk_limits.policy import TransactionalRiskPolicy
+from tiewtrade.infra.risk_limits.policy import (
+    TransactionalRiskPolicy,
+    paper_opening_protocol_enabled,
+)
 from tiewtrade.infra.risk_limits.stops import cancel_stopped_remainders, queued_opening_stopped
 
 

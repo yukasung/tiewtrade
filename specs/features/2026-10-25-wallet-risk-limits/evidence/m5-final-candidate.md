@@ -5970,3 +5970,20 @@ scenario was also aligned with migration 0059: a Paper increase opens no TOTP di
 disconnect leaves the authoritative amount unchanged, and Save replays the same durable
 intent without an authorization header. Frontend ESLint and TypeScript typecheck pass; no
 production source or financial behavior changed.
+
+The backend full-suite gate then showed that the small `risk_limits.control` module violated
+the existing Paper-owned dependency allow-list even though its query was correct. The helper
+is now colocated with `TransactionalRiskPolicy`, an already permitted dependency of both
+callers, and the extra module was removed. The exact Paper-isolation gate, focused mypy,
+Ruff/format and all seven import-linter contracts pass.
+
+Migration round-trip tests were also updated for migration 0060's intentional downgrade
+barrier. A shared test-only helper records the three protocol flags, stops the protocol with
+the migrator role before DDL, then restores the exact flags only after upgrading back to
+head. Production downgrade guards remain unchanged. The two populated-downgrade tests now
+recognize 0060's specific unconfigured-Paper-history refusal. Finally, the matching fence
+freshness regression no longer depends on how long unrelated tests ran before it: it crosses
+the verified-book freshness boundary under the existing monkeypatch context and proves the
+post-fence recomputation fails closed. All eight previously failing backend cases pass on an
+isolated migration-0060 PostgreSQL database; that temporary database was dropped by the test
+cleanup. No workload or Live order was run.
