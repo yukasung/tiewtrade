@@ -29,11 +29,16 @@ async function fresh(page: Page) {
   await expect(page.getByLabel("คู่เทรด")).toBeEnabled();
   await page.getByLabel("คู่เทรด").selectOption("BTC");
 }
+async function submitPaperOrder(page: Page) {
+  const submit = page.getByRole("button", { name: "ส่งออเดอร์ Paper", exact: true });
+  await expect(submit).toBeEnabled();
+  await submit.click();
+}
 async function send(page: Page, amount: string, refresh = true) {
   if (refresh) await fresh(page);
   await page.getByLabel(/งบซื้อ|จำนวนเหรียญ Base/).fill(amount);
   const response = page.waitForResponse(r => r.url().endsWith("/api/paper/orders") && r.request().method() === "POST");
-  await page.getByRole("button", { name: "ส่งออเดอร์ Paper", exact: true }).click();
+  await submitPaperOrder(page);
   const result = await response; expect(result.status()).toBe(202);
   return await result.json() as { request_id: string; order_id: string; idempotency_key: string };
 }
@@ -100,7 +105,7 @@ test("receipt loss→reload→discovery preserves identity and Live never mutate
     await route.abort("connectionreset");
   });
   await fresh(page); await page.getByLabel("งบซื้อ (USDT)").fill("100000");
-  await page.getByRole("button", { name: "ส่งออเดอร์ Paper", exact: true }).click();
+  await submitPaperOrder(page);
   await expect.poll(() => committed?.request_id).toBeTruthy();
   expect(posts).toBe(1);
   await page.unroute("**/api/paper/orders");
@@ -214,7 +219,7 @@ test("browser storage denial blocks the POST before transmission", async ({ page
   let posts = 0;
   page.on("request", request => { if (request.url().endsWith("/api/paper/orders") && request.method() === "POST") posts += 1; });
   await fresh(page); await page.getByLabel("งบซื้อ (USDT)").fill("100");
-  await page.getByRole("button", { name: "ส่งออเดอร์ Paper", exact: true }).click();
+  await submitPaperOrder(page);
   await expect(page.getByText("ใช้พื้นที่กู้คืนคำขอไม่ได้ จึงยังส่งคำขอใหม่ไม่ได้")).toBeVisible();
   expect(posts).toBe(0);
 });
@@ -249,7 +254,7 @@ test("DB connection loss before intake commit rolls back and same-key recovery c
   expect((await page.request.post(`${api}/disconnect-before-commit`, { data: { user_id: owner } })).status()).toBe(204);
   await fresh(page); await page.getByLabel("งบซื้อ (USDT)").fill("100");
   const failed = page.waitForResponse(response => response.url().endsWith("/api/paper/orders") && response.request().method() === "POST");
-  await page.getByRole("button", { name: "ส่งออเดอร์ Paper", exact: true }).click();
+  await submitPaperOrder(page);
   expect((await failed).status()).toBe(503);
   expect(await (await page.request.get(`${api}/disconnect-result`)).json()).toEqual({ result: "CONNECTION_TERMINATED" });
   await expect(page.getByText("UNKNOWN — ยังยืนยันผลไม่ได้ ตรวจสถานะหรือส่งซ้ำด้วย key เดิม")).toBeVisible();
@@ -300,7 +305,7 @@ test("reset replaces an unsent draft and a lost closed-episode refusal recovers 
     refusalLost = true;
   });
   await page.getByLabel("งบซื้อ (USDT)").fill("100");
-  await page.getByRole("button", { name: "ส่งออเดอร์ Paper", exact: true }).click();
+  await submitPaperOrder(page);
   await expect(page.getByText(/UNKNOWN —/)).toBeVisible();
   await expect.poll(() => refusalLost).toBe(true);
   await page.unroute("**/api/paper/orders");

@@ -5952,3 +5952,11 @@ checks the retained idempotency identity in session storage and unresolved-reque
 instead of restoring hidden technical UI, and installs the storage shim as a persistent
 Playwright init script. Frontend ESLint and TypeScript typecheck pass after these test-only
 changes. Production code and the recovery/idempotency protocol are unchanged.
+
+The following CI attempt confirmed the four updated assertions (six of seven manual-order
+browser cases passed) and exposed one pre-existing readiness race: the disconnect-before-
+commit case attempted to click while the asynchronously refreshed form was still disabled.
+All E2E submits now reuse one helper that waits for the existing submit action to become
+enabled before clicking. This changes neither the readiness predicate nor its timeout in
+the application; it only makes the browser driver observe the same prerequisite a user
+must satisfy. Frontend ESLint and TypeScript typecheck remain green.
