@@ -5996,3 +5996,17 @@ on the Paper workspace. The browser test now clicks the tab roles, observes the 
 increase request and opens the account page before asserting automatic journal cleanup.
 Frontend ESLint and TypeScript typecheck pass. Application behavior and the idempotency
 protocol are unchanged.
+
+An isolated F-18 browser run confirmed the account-page reconciliation and Paper increase
+cases, then found one final presentation-only assertion: the compact workspace intentionally
+renders a risk stop as the immediate alert beside the order form rather than the removed
+standalone heading. The test now asserts that visible risk-stop alert. The authoritative
+latch, completed stop targets and zero pending target count had already passed before this
+UI assertion; no application behavior changed.
+
+The same run also exposed one remaining assertion for the removed risk card on the trading
+workspace after switching its messages to English. The browser test now opens the existing
+Trading Account surface and asserts the English loss-limit field there, preserving language
+coverage on the UI that actually owns the setting. A subsequent isolated run encountered a
+local `DATABASE_TIMEOUT` while restoring readiness after the controlled outage; this is
+recorded as an environment failure rather than an application or acceptance pass.

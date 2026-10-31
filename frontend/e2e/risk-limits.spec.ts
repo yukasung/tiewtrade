@@ -97,7 +97,7 @@ test("production risk composition: unset→set→BUY→breach→cancel→bounded
   await expect.poll(async () => (await order(page, limit.order_id)).status, { timeout: 60_000 }).toBe("CANCELED");
   expect((await order(page, limit.order_id)).reserved_quote).toBe("0");
   await expect.poll(async () => { const risk = await snapshot(page); return risk.target_set_complete && risk.pending_count === 0; }).toBe(true);
-  await expect(page.getByRole("heading", { name: "ขาดทุนถึงเพดานแล้ว", exact: true })).toBeVisible();
+  await expect(page.getByRole("alert").filter({ hasText: "สถานะหยุดความเสี่ยง" })).toBeVisible();
   await capture(page, "breached-th-light-desktop");
   await page.getByRole("tab", { name: "MARKET", exact: true }).click();
   await page.getByRole("tab", { name: "SELL", exact: true }).click();
@@ -136,7 +136,8 @@ test("production risk composition: unset→set→BUY→breach→cancel→bounded
     const messages = await import(/* @vite-ignore */ source) as { riskLimitI18n: { changeLanguage: (language: string) => Promise<unknown> } };
     await messages.riskLimitI18n.changeLanguage("en");
   });
-  await expect(page.getByRole("heading", { name: "Wallet risk limit · Paper" })).toBeVisible();
+  await page.getByRole("link", { name: "บัญชีเทรด", exact: true }).click();
+  await expect(page.getByLabel("Loss limit (USDT)")).toBeVisible();
   await capture(page, "reset-en-dark-tablet");
   await page.evaluate(() => document.documentElement.classList.remove("dark"));
   await page.setViewportSize({ width: 1440, height: 1000 }); await capture(page, "reset-en-light-desktop");
