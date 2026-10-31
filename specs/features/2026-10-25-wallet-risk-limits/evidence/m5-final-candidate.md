@@ -5942,3 +5942,13 @@ original focus on API-key and trading-account recovery without suppressing runti
 Verification passed: the affected API-key file 33/33, the complete frontend suite 339/339,
 frontend ESLint and TypeScript typecheck, focused migration Ruff check/format and whitespace
 checks. No production behavior, API, schema, trading rule or financial calculation changed.
+
+The next remote run passed those frontend and backend static gates, then exposed four stale
+manual-order browser assertions from the approved compact workspace. One selector treated
+the chart's accessible data table and the order table as the same element; two assertions
+still required request/order UUIDs that the UI intentionally hides; and the storage-denial
+shim was lost by the test's own page reload. The E2E now scopes overflow to the order table,
+checks the retained idempotency identity in session storage and unresolved-request API
+instead of restoring hidden technical UI, and installs the storage shim as a persistent
+Playwright init script. Frontend ESLint and TypeScript typecheck pass after these test-only
+changes. Production code and the recovery/idempotency protocol are unchanged.

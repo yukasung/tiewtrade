@@ -84,7 +84,7 @@ test("real Paper MARKET BUY/SELL and LIMIT partial→cancel reconcile exact serv
   await capture(page, "paper-th-light-desktop.png");
   await expect(page.getByRole("button", { name: "รายละเอียดออเดอร์" })).toHaveCount(0);
   await page.setViewportSize({ width: 375, height: 844 });
-  const table = page.getByRole("table");
+  const table = page.locator("#manual-orders-table").getByRole("table");
   await expect.poll(() => table.evaluate(node => node.scrollWidth > node.parentElement!.clientWidth)).toBe(true);
   await capture(page, "paper-th-light-mobile.png");
 });
@@ -106,7 +106,12 @@ test("receipt loss→reload→discovery preserves identity and Live never mutate
   await page.unroute("**/api/paper/orders");
   await page.route("**/api/paper/order-requests/by-key/**", route => route.fulfill({ status: 404, contentType: "application/json", body: '{"detail":"MANUAL_REQUEST_NOT_FOUND"}' }));
   await page.reload();
-  await expect(page.getByText(committed!.order_id, { exact: false }).first()).toBeVisible();
+  await expect.poll(() => page.evaluate(() => {
+    const stored = Object.keys(window.sessionStorage)
+      .find(key => key.startsWith("tiewtrade.manual-order.v1:"));
+    if (!stored) return null;
+    return (JSON.parse(window.sessionStorage.getItem(stored)!) as { key: string }).key;
+  })).toBe(committed!.idempotency_key);
   expect(posts).toBe(1);
   const retried = page.waitForResponse(response => response.url().endsWith("/api/paper/orders") && response.request().method() === "POST");
   await page.getByRole("button", { name: "ส่งคำขอเดิมอีกครั้ง" }).click();
@@ -151,8 +156,14 @@ test("logout clears the local journal; login rediscovers the owner's pending req
   await page.getByLabel("รหัสผ่าน", { exact: true }).fill(PASSWORD);
   await page.getByTestId("submit").click();
   await expect(page.getByTestId("signed-in")).toBeVisible();
+  const rediscovered = page.waitForResponse(response =>
+    response.url().includes("/api/paper/order-requests?") && response.request().method() === "GET",
+  );
   await page.getByRole("link", { name: "เทรด Paper", exact: true }).click();
-  await expect(page.getByText(recorded.order_id, { exact: false })).toBeVisible();
+  const recovered = await (await rediscovered).json() as {
+    requests: Array<{ request_id: string }>;
+  };
+  expect(recovered.requests.some(request => request.request_id === recorded.request_id)).toBe(true);
   expect(await drive(page, owner, recorded.request_id)).toMatchObject({ commands: 1, order_state: "ACCEPTED" });
   await expect(page.getByRole("row").filter({ hasText: "รับออเดอร์แล้ว" })).toHaveCount(1);
   // English/dark is driven through the established message layer, with no new language UI.
@@ -192,16 +203,16 @@ test("logout clears the local journal; login rediscovers the owner's pending req
   await capture(page, "paper-th-dark-mobile.png");
 });
 test("browser storage denial blocks the POST before transmission", async ({ page }) => {
-  await register(page);
-  let posts = 0;
-  page.on("request", request => { if (request.url().endsWith("/api/paper/orders") && request.method() === "POST") posts += 1; });
-  await page.evaluate(() => {
+  await page.addInitScript(() => {
     const original = Object.getOwnPropertyDescriptor(Storage.prototype, "setItem")!.value as (this: Storage, key: string, value: string) => void;
     Storage.prototype.setItem = function(key: string, value: string) {
       if (key.startsWith("tiewtrade.manual-order.v1:")) throw new DOMException("denied", "SecurityError");
       original.call(this, key, value);
     };
   });
+  await register(page);
+  let posts = 0;
+  page.on("request", request => { if (request.url().endsWith("/api/paper/orders") && request.method() === "POST") posts += 1; });
   await fresh(page); await page.getByLabel("งบซื้อ (USDT)").fill("100");
   await page.getByRole("button", { name: "ส่งออเดอร์ Paper", exact: true }).click();
   await expect(page.getByText("ใช้พื้นที่กู้คืนคำขอไม่ได้ จึงยังส่งคำขอใหม่ไม่ได้")).toBeVisible();
