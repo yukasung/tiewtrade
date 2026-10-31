@@ -4,11 +4,12 @@ import asyncio
 from collections.abc import Mapping
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 from unittest.mock import Mock
-from uuid import UUID
+from uuid import UUID, uuid4
 
 import pytest
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncEngine
 
 from tests.infra.execution_market import profile_workload as f15
@@ -62,6 +63,216 @@ def test_original_f15_four_hour_contract_is_preserved() -> None:
     assert result["window_seconds"] == 3600
     assert result["first_stable_hour_average_bytes"] == 10000
     assert result["last_hour_average_bytes"] == 10000
+
+
+async def test_loss_reset_retries_only_source_unavailable_with_new_requests(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from tests.infra.risk_limits import profile_workload as profile
+
+    request_ids = [uuid4(), uuid4(), uuid4()]
+    calls = 0
+    delays: list[float] = []
+
+    async def submit() -> UUID:
+        nonlocal calls
+        request_id = request_ids[calls]
+        calls += 1
+        if calls < 3:
+            raise profile.RiskMutationRejectedError(request_id, "RISK_SOURCE_UNAVAILABLE")
+        return request_id
+
+    async def sleep(delay: float) -> None:
+        delays.append(delay)
+
+    monkeypatch.setattr(asyncio, "sleep", sleep)
+    evidence: list[dict[str, str]] = []
+    assert await profile.retry_source_unavailable_reset(submit, evidence) == request_ids[-1]
+    assert calls == 3 and delays == [0.25, 0.25]
+    assert [row["request_id"] for row in evidence] == [str(value) for value in request_ids]
+    assert [row["state"] for row in evidence] == ["REJECTED", "REJECTED", "APPLIED"]
+
+
+async def test_loss_reset_does_not_retry_another_failure(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from tests.infra.risk_limits import profile_workload as profile
+
+    delays: list[float] = []
+
+    async def submit() -> UUID:
+        raise profile.RiskMutationRejectedError(uuid4(), "RISK_REVISION_CONFLICT")
+
+    async def sleep(delay: float) -> None:
+        delays.append(delay)
+
+    monkeypatch.setattr(asyncio, "sleep", sleep)
+    evidence: list[dict[str, str]] = []
+    with pytest.raises(profile.RiskMutationRejectedError, match="RISK_REVISION_CONFLICT"):
+        await profile.retry_source_unavailable_reset(submit, evidence)
+    assert len(evidence) == 1 and delays == []
+
+
+async def test_loss_reset_stops_after_three_source_unavailable_results(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from tests.infra.risk_limits import profile_workload as profile
+
+    calls = 0
+    delays: list[float] = []
+
+    async def submit() -> UUID:
+        nonlocal calls
+        calls += 1
+        raise profile.RiskMutationRejectedError(uuid4(), "RISK_SOURCE_UNAVAILABLE")
+
+    async def sleep(delay: float) -> None:
+        delays.append(delay)
+
+    monkeypatch.setattr(asyncio, "sleep", sleep)
+    evidence: list[dict[str, str]] = []
+    with pytest.raises(profile.RiskMutationRejectedError, match="RISK_SOURCE_UNAVAILABLE"):
+        await profile.retry_source_unavailable_reset(submit, evidence)
+    assert calls == 3 and len(evidence) == 3 and delays == [0.25, 0.25]
+
+
+def test_dedicated_loss_setup_precedes_core_risk_and_baseline() -> None:
+    from tests.infra.risk_limits import profile_workload as profile
+
+    sequence = profile.SetupSequence()
+    for stage in profile.SETUP_STAGES:
+        sequence.advance(stage)
+    assert sequence.completed == [
+        "DEDICATED_LOSS",
+        "CORE_RISK_SETTINGS",
+        "STOP_OWNER_RISK_SETTINGS",
+        "CORE_BASELINE",
+    ]
+
+    invalid = profile.SetupSequence()
+    with pytest.raises(
+        RuntimeError,
+        match="F19_SETUP_ORDER_INVALID:DEDICATED_LOSS:CORE_BASELINE",
+    ):
+        invalid.advance("CORE_BASELINE")
+
+    missing_stop_owner_state = profile.SetupSequence()
+    missing_stop_owner_state.advance("DEDICATED_LOSS")
+    missing_stop_owner_state.advance("CORE_RISK_SETTINGS")
+    with pytest.raises(
+        RuntimeError,
+        match="F19_SETUP_ORDER_INVALID:STOP_OWNER_RISK_SETTINGS:CORE_BASELINE",
+    ):
+        missing_stop_owner_state.advance("CORE_BASELINE")
+
+
+def test_order_request_rejection_preserves_durable_identities() -> None:
+    from tests.infra.risk_limits import profile_workload as profile
+
+    request_id, command_id = uuid4(), uuid4()
+    error = profile.OrderRequestRejectedError(
+        request_id=request_id,
+        command_id=command_id,
+        intake_failure_code=None,
+        command_failure_code="RISK_SOURCE_UNAVAILABLE",
+    )
+    assert str(error) == "F18_POSITIVE_REQUEST_REJECTED:None:RISK_SOURCE_UNAVAILABLE"
+    assert error.request_id == request_id
+    assert error.command_id == command_id
+    assert error.command_failure_code == "RISK_SOURCE_UNAVAILABLE"
+
+
+async def test_setup_order_waits_for_ready_then_submits_once(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from tests.infra.risk_limits import profile_workload as profile
+
+    readiness = iter((False, False, True))
+    stages: list[str] = []
+    submits = 0
+
+    async def ready() -> bool:
+        return next(readiness)
+
+    async def submit() -> str:
+        nonlocal submits
+        submits += 1
+        return "submitted"
+
+    async def observe(stage: str) -> None:
+        stages.append(stage)
+
+    async def sleep(_: float) -> None:
+        return None
+
+    monkeypatch.setattr(asyncio, "sleep", sleep)
+    assert await profile.submit_setup_order_when_ready(ready, submit, observe) == "submitted"
+    assert submits == 1
+    assert stages == ["WAIT_START", "READY"]
+
+
+async def test_setup_order_timeout_does_not_submit() -> None:
+    from tests.infra.risk_limits import profile_workload as profile
+
+    stages: list[str] = []
+    submits = 0
+
+    async def ready() -> bool:
+        await asyncio.sleep(1)
+        return False
+
+    async def submit() -> None:
+        nonlocal submits
+        submits += 1
+
+    async def observe(stage: str) -> None:
+        stages.append(stage)
+
+    with pytest.raises(RuntimeError, match="F19_SETUP_RISK_NOT_READY"):
+        await profile.submit_setup_order_when_ready(ready, submit, observe, timeout_seconds=0.001)
+    assert submits == 0
+    assert stages == ["WAIT_START", "TIMEOUT"]
+
+
+async def test_setup_order_terminal_rejection_is_not_retried() -> None:
+    from tests.infra.risk_limits import profile_workload as profile
+
+    submits = 0
+
+    async def ready() -> bool:
+        return True
+
+    async def submit() -> None:
+        nonlocal submits
+        submits += 1
+        raise RuntimeError("F15_WORKLOAD_ORDER_REJECTED:RISK_SOURCE_UNAVAILABLE")
+
+    async def observe(_: str) -> None:
+        return None
+
+    with pytest.raises(RuntimeError, match="F15_WORKLOAD_ORDER_REJECTED"):
+        await profile.submit_setup_order_when_ready(ready, submit, observe)
+    assert submits == 1
+
+
+async def test_scheduled_partial_source_window_restores_after_failure(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from tests.infra.risk_limits import profile_workload as profile
+
+    fixture = cast(Any, object.__new__(profile.Fixture))
+    fixture.publisher_stats = {"last_ask_quantity": "1000000"}
+    transitions: list[tuple[str, str]] = []
+
+    async def set_quantity(quantity: str, stage: str) -> None:
+        transitions.append((stage, quantity))
+
+    monkeypatch.setattr(fixture, "set_scheduled_partial_quantity", set_quantity)
+    with pytest.raises(RuntimeError, match="scenario failed"):
+        async with fixture.scheduled_partial_source_window() as (install, _):
+            await install()
+            raise RuntimeError("scenario failed")
+    assert transitions == [("INSTALL", "0.5"), ("RESTORE", "1000000")]
 
 
 def test_short_schedule_preserves_all_faults_and_fits_cycles() -> None:
@@ -158,6 +369,116 @@ async def test_ready_scheduling_hint_never_bypasses_full_intake_policy(
             assert (
                 await session.execute("SELECT count(*) FROM risk_evaluation_requests")
             ).scalar_one() > 0
+
+
+async def test_r6_retry_hint_requires_matching_nonpending_bounded_tail(
+    api_engine: AsyncEngine,
+    engine_engine: AsyncEngine,
+    migrator_engine: AsyncEngine,
+    owner: UUID,
+    wallet: PaperWalletSnapshot,
+) -> None:
+    from tests.infra.risk_limits import profile_workload as profile
+    from tests.infra.risk_limits.test_execution import runtime
+    from tests.infra.risk_limits.test_requests import submission
+    from tiewtrade.infra.risk_limits.monitor import replay_monitor
+    from tiewtrade.infra.risk_limits.storage import read_setting
+
+    async with runtime(api_engine, engine_engine, migrator_engine, owner, wallet, limit="1000"):
+        async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+            setting = await read_setting(session, submission(owner, wallet).scope)
+            await replay_monitor(session, setting)
+        async with migrator_engine.begin() as connection:
+            await connection.execute(
+                text("SELECT set_config('tiewtrade.current_user_id',:owner,true)"),
+                {"owner": str(owner)},
+            )
+            row = (
+                await connection.execute(
+                    text("""SELECT o.cursor,s.revision,e.loss FROM risk_owner_state o
+                    JOIN risk_limit_settings s USING(user_id,mode)
+                    JOIN risk_limit_evaluations e USING(user_id,mode)
+                    WHERE o.user_id=:owner AND o.mode='PAPER'"""),
+                    {"owner": owner},
+                )
+            ).one()
+        cursor, revision, loss = int(row.cursor), int(row.revision), row.loss
+
+        async def set_case(
+            *,
+            lag: int = 0,
+            evaluation_cursor: int | None = None,
+            evaluation_pending: bool = False,
+            owner_pending: bool = False,
+            setting_revision: int | None = None,
+            latched: bool = False,
+            reason: str = "READY",
+        ) -> None:
+            async with migrator_engine.begin() as connection:
+                await connection.execute(
+                    text("SELECT set_config('tiewtrade.current_user_id',:owner,true)"),
+                    {"owner": str(owner)},
+                )
+                await connection.execute(
+                    text("UPDATE risk_price_publication SET watermark=:watermark"),
+                    {"watermark": cursor + lag},
+                )
+                await connection.execute(
+                    text("""UPDATE risk_owner_state SET cursor=:cursor,
+                    replay_pending=:pending WHERE user_id=:owner AND mode='PAPER'"""),
+                    {"cursor": cursor, "pending": owner_pending, "owner": owner},
+                )
+                await connection.execute(
+                    text("""UPDATE risk_limit_settings SET latched=:latched
+                    WHERE user_id=:owner AND mode='PAPER'"""),
+                    {"latched": latched, "owner": owner},
+                )
+                await connection.execute(
+                    text("""UPDATE risk_limit_evaluations SET price_watermark=:cursor,
+                    replay_pending=:pending,setting_revision=:revision,reason=:reason,
+                    loss=CASE WHEN :reason='READY'
+                      THEN CAST(:loss AS tiewtrade_money_amount) ELSE NULL END
+                    WHERE user_id=:owner AND mode='PAPER'"""),
+                    {
+                        "cursor": cursor if evaluation_cursor is None else evaluation_cursor,
+                        "pending": evaluation_pending,
+                        "revision": revision if setting_revision is None else setting_revision,
+                        "reason": reason,
+                        "loss": loss,
+                        "owner": owner,
+                    },
+                )
+
+        async def ready(
+            *, wallet_id: UUID = wallet.wallet_id, episode_id: UUID = wallet.episode_id
+        ) -> bool:
+            async with user_session(api_engine, owner) as session:
+                return await profile.risk_retry_ready(
+                    session, wallet_id=wallet_id, episode_id=episode_id
+                )
+
+        for lag in (0, 1, 100):
+            await set_case(lag=lag)
+            assert await ready()
+        await set_case(lag=-1)
+        assert not await ready()
+        await set_case(lag=101)
+        assert not await ready()
+        await set_case(evaluation_cursor=cursor - 1)
+        assert not await ready()
+        await set_case(evaluation_pending=True)
+        assert not await ready()
+        await set_case(owner_pending=True)
+        assert not await ready()
+        await set_case(setting_revision=revision + 1)
+        assert not await ready()
+        await set_case(latched=True)
+        assert not await ready()
+        await set_case(reason="RISK_SOURCE_UNAVAILABLE")
+        assert not await ready()
+        await set_case()
+        assert not await ready(wallet_id=uuid4())
+        assert not await ready(episode_id=uuid4())
 
 
 def test_transaction_percentiles_exclude_setup_and_recovery_but_keep_slow_tail(

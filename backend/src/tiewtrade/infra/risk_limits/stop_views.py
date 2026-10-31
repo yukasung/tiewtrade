@@ -16,7 +16,7 @@ async def stop_summary(session: UserSession, mode: TradingMode) -> dict[str, Any
         (
             await checked.execute(
                 """SELECT r.risk_revision,p.* FROM risk_stop_requests r
-        JOIN risk_stop_progress p ON p.stop_id=r.id WHERE r.mode=:mode
+        JOIN risk_stop_progress p ON p.stop_id=r.id WHERE r.mode=:mode AND r.cause='LOSS_LIMIT'
         ORDER BY r.recorded_at DESC,r.id DESC LIMIT 1""",
                 {"mode": mode.value},
             )

@@ -3,16 +3,18 @@ import { MarketTime, MarketValue } from "./components/MarketValue";
 import { Button } from "./components/ui/Button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./components/ui/Table";
 import { riskCode, riskLocale, riskText as t } from "./riskLimitMessages";
-import { fetchRiskEffects, riskKey, type RiskMode } from "./riskLimits";
+import { fetchRiskEffects, riskKey, type RiskEffects, type RiskMode } from "./riskLimits";
 
 /** A new effects revision remounts this entire snapshot, including its pagination cursor. */
-export function RiskStopEffects({ owner, mode, stop, revision, visible }: {
+export function RiskStopEffects({ owner, mode, stop, revision, visible, fetchPage, queryPrefix }: {
   owner: string; mode: RiskMode; stop: string; revision: number | null; visible: boolean;
+  fetchPage?: ((cursor: string | null, signal?: AbortSignal) => Promise<RiskEffects>) | undefined;
+  queryPrefix?: readonly unknown[] | undefined;
 }) {
   const effects = useInfiniteQuery({
-    queryKey: [...riskKey(owner, mode), "effects", stop, revision],
+    queryKey: [...(queryPrefix ?? riskKey(owner, mode)), "effects", stop, revision],
     initialPageParam: null as string | null,
-    queryFn: ({ pageParam, signal }) => fetchRiskEffects(mode, stop, pageParam, signal),
+    queryFn: ({ pageParam, signal }) => fetchPage ? fetchPage(pageParam, signal) : fetchRiskEffects(mode, stop, pageParam, signal),
     getNextPageParam: page => page.next_cursor ?? undefined,
     enabled: visible,
   });

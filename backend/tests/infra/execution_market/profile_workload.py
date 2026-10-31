@@ -139,6 +139,8 @@ class FaultGate:
         self.open.set()
         self.active = 0
         self.pause_seconds = 0.0
+        self._holds = 0
+        self._paused_at: float | None = None
 
     async def enter(self) -> None:
         while True:
@@ -152,11 +154,19 @@ class FaultGate:
 
     async def pause(self) -> None:
         # Stop new cycles without draining those already exercising the recovery path.
-        self.open.clear()
+        if self._holds == 0:
+            self.open.clear()
+            self._paused_at = monotonic()
+        self._holds += 1
 
     def resume(self, elapsed: float) -> None:
-        self.pause_seconds += elapsed
-        self.open.set()
+        if elapsed < 0 or self._holds <= 0 or self._paused_at is None:
+            raise RuntimeError("fault gate resume without a matching pause")
+        self._holds -= 1
+        if self._holds == 0:
+            self.pause_seconds += monotonic() - self._paused_at
+            self._paused_at = None
+            self.open.set()
 
 
 def save(path: Path, value: object) -> None:

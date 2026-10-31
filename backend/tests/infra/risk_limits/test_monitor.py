@@ -521,6 +521,15 @@ async def test_monitor_does_not_block_publication_or_skip_a_later_transient_brea
         assert result.reason is RiskReason.BREACHED and result.latched
         assert result.loss == Money.of(0, "USDT")
         assert (await session.execute("SELECT count(*) FROM risk_stop_requests")).scalar_one() == 1
+        shared = (
+            await session.execute(
+                """SELECT s.cause,s.action,d.attempt
+                FROM risk_stop_requests j JOIN trading_stop_requests s
+                  ON s.id=j.authority_request_id
+                JOIN trading_stop_dispatch d ON d.request_id=s.id"""
+            )
+        ).one()
+        assert shared == ("LOSS_LIMIT", "STOP", 0)
 
 
 @pytest.mark.parametrize("frame_budget", [1, 100])

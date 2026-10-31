@@ -497,14 +497,16 @@ runner hashes in manifest. Risk container receives only ENGINE/SCAN credentials.
 Baseline refusal polling reuses existing F15 quarter-second cadence; the measured
 retry cadence remains20ms, and measured command/input rates and oracles unchanged.
 
-Apply the existing bounded catch-up/final-drain protocol to a monitor publishing
-current READY as well: historical replay/source proof before the publication
-fence, then a bounded tail under the compatible shared fence through commit.
-`final_publication_fence` is opted into only by the monitor scheduler. Financial
-callers keep the original full fence; reduction callers keep their nonblocking
-default. Count both replay stages against the same frame budget; do not skip
-transient breach/recovery. This prevents a perpetually stale READY marker when
-publication advances between the first watermark snapshot and its commit.
+R14's later, specific approved amendment supersedes the earlier standalone
+final-drain method: the monitor scheduler calls replay with both
+`publication_fence=False` and `final_publication_fence=False`. It captures the
+committed immutable watermark in the owner snapshot, evaluates every retained
+frame through that cut under the owner lock and leaves later frames for the next
+bounded round. It must not skip/coalesce transient breach/recovery. API R6 still
+verifies the current price tail before intake, while financial callers retain
+their authoritative fenced replay through commit. This correction records the
+already-approved/current runtime; it does not authorize another scheduling or
+admission change.
 
 Checkpoint projection writes upsert the current pair once and advance other
 pairs' global revision in a disjoint writable CTE, preserving the same final

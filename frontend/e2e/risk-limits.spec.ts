@@ -4,10 +4,17 @@ import { PASSWORD } from "./helpers/totp";
 import type { Page } from "@playwright/test";
 const control = "http://127.0.0.1:18018/__e2e/risk";
 const evidence = "../specs/features/2026-10-25-wallet-risk-limits/evidence/ui";
+const killSwitchEvidence = "../specs/features/2026-10-31-kill-switch/evidence/ui";
+const accountRoutes = ["chart", "paper/trade", "live/trade", "account", "security", "api-keys", "trading-account", "prices", "supported-symbols", "system-safety"] as const;
 async function capture(page: Page, name: string) {
   await page.evaluate(() => window.scrollTo(0, 0));
   mkdirSync(evidence, { recursive: true });
   await page.screenshot({ path: `${evidence}/${name}.png`, fullPage: true });
+}
+async function captureKillSwitch(page: Page, name: string) {
+  await page.evaluate(() => window.scrollTo(0, 0));
+  mkdirSync(killSwitchEvidence, { recursive: true });
+  await page.screenshot({ path: `${killSwitchEvidence}/${name}.png`, fullPage: true });
 }
 async function snapshot(page: Page) {
   return await (await page.request.get("/api/paper/risk-limit")).json() as { amount: string | null; loss: string | null; revision: number; latched: boolean; reason: string; stop_id: string | null; target_set_complete: boolean; pending_count: number; current_allowance: string | null };
@@ -165,6 +172,227 @@ test("UNKNOWN reload keeps the same risk key and no optimistic setting is shown"
   expect(posts).toBe(1);
   expect((await snapshot(page)).revision).toBe(1);
   expect((await page.request.get(`/api/paper/risk-limit/requests/by-key/${committed!.idempotency_key}`)).status()).toBe(200);
+});
+
+test("F-19 Paper and Live stops stay separate and UNKNOWN retries the same request", async ({ page }) => {
+  const browserErrors: string[] = [];
+  const requestFailures: string[] = [];
+  const unexpectedHttpErrors: string[] = [];
+  page.on("console", message => {
+    if (message.type() === "error" && !message.text().startsWith("Failed to load resource:")) {
+      browserErrors.push(message.text());
+    }
+  });
+  page.on("pageerror", error => browserErrors.push(error.message));
+  page.on("requestfailed", request => {
+    if (request.url().endsWith("/api/paper/kill-switch/stop")) {
+      requestFailures.push(request.failure()?.errorText ?? "UNKNOWN_REQUEST_FAILURE");
+    }
+  });
+  page.on("response", response => {
+    if (response.status() < 400) return;
+    const url = new URL(response.url());
+    const expectedNotFound = response.status() === 404 && (
+      url.pathname === "/api/market-data/chart/live"
+      || url.pathname.startsWith("/api/paper/order-requests/by-key/")
+    );
+    if (!expectedNotFound) unexpectedHttpErrors.push(`${response.status()} ${url.pathname}`);
+  });
+  const owner = await register(page);
+  browserErrors.length = 0;
+  unexpectedHttpErrors.length = 0;
+  const paperButton = page.getByRole("button", { name: "หยุดบอท Paper", exact: true });
+  const liveButton = page.getByRole("button", { name: "หยุดบอท Live", exact: true });
+  await expect(paperButton).toBeVisible();
+  await expect(liveButton).toBeVisible();
+
+  let committedKey: string | undefined;
+  await page.route("**/api/paper/kill-switch/stop", async route => {
+    if (route.request().method() !== "POST") return route.continue();
+    committedKey = route.request().headers()["idempotency-key"];
+    const response = await route.fetch();
+    expect(response.status()).toBe(202);
+    await route.abort("connectionreset");
+  }, { times: 1 });
+  await paperButton.click();
+  await expect(page.getByRole("alert").filter({ hasText: "ยังไม่ทราบผลการหยุด" })).toBeVisible();
+  expect(requestFailures.some(error => error.includes("ERR_CONNECTION_RESET"))).toBe(true);
+  browserErrors.length = 0;
+  expect(committedKey).toBeTruthy();
+  expect(await page.evaluate(
+    key => window.localStorage.getItem(key),
+    `tiewtrade.kill-switch.stop.v1:${owner}:PAPER`,
+  )).toBe(committedKey);
+
+  await page.reload();
+  const retry = page.waitForRequest(request =>
+    request.url().endsWith("/api/paper/kill-switch/stop") && request.method() === "POST",
+  );
+  const replay = page.waitForResponse(response =>
+    response.url().endsWith("/api/paper/kill-switch/stop") && response.request().method() === "POST",
+  );
+  await page.getByRole("button", { name: "หยุดบอท Paper", exact: true }).click();
+  expect((await retry).headers()["idempotency-key"]).toBe(committedKey);
+  const replayed = await replay;
+  expect(replayed.status()).toBe(200);
+  const firstStop = await replayed.json() as { request_id: string; generation: number };
+  await expect.poll(() => page.evaluate(
+    key => window.localStorage.getItem(key),
+    `tiewtrade.kill-switch.stop.v1:${owner}:PAPER`,
+  )).toBeNull();
+
+  await page.getByLabel("คู่เทรด").selectOption("BTC");
+  await expect.poll(async () => {
+    const trade = await (await page.request.get("/api/paper/trade?base=BTC")).json() as {
+      admission_ready: boolean;
+    };
+    return trade.admission_ready;
+  }, { timeout: 15_000 }).toBe(true);
+  const afterCutoff = await send(page, "11");
+  await expect.poll(async () => (await order(page, afterCutoff.order_id)).status).toBe("FILLED");
+  const repeatedStop = page.waitForResponse(response =>
+    response.url().endsWith("/api/paper/kill-switch/stop")
+      && response.request().method() === "POST",
+  );
+  await page.getByRole("button", { name: "หยุดบอท Paper", exact: true }).click();
+  const repeated = await repeatedStop;
+  expect(repeated.status()).toBe(202);
+  const secondStop = await repeated.json() as { request_id: string; generation: number };
+  expect(secondStop.request_id).not.toBe(firstStop.request_id);
+  expect(secondStop.generation).toBe(firstStop.generation + 1);
+  await expect.poll(async () => {
+    const status = await (await page.request.get("/api/paper/kill-switch")).json() as {
+      stop_id: string | null;
+      progress: string | null;
+    };
+    return status.stop_id !== null && status.progress === "STOPPED";
+  }).toBe(true);
+
+  const liveBefore = await (await page.request.get("/api/live/kill-switch")).json() as {
+    stop_id: string | null;
+  };
+  expect(liveBefore.stop_id).toBeNull();
+  const paperControl = page.getByRole("button", { name: "หยุดบอท Paper", exact: true }).locator("..");
+  await expect(paperControl.getByText("หยุดแล้ว", { exact: true })).toBeVisible();
+  await paperControl.getByRole("button", { name: "ดูรายละเอียด", exact: true }).click();
+  await expect(page.getByRole("dialog").getByText("สรุปการหยุด", { exact: false })).toBeVisible();
+  await expect(page.getByRole("dialog").getByText(/BTC\/USDT:/)).toBeVisible();
+  await page.getByRole("dialog").getByRole("button", { name: "ปิด", exact: true }).click();
+
+  const liveStop = page.waitForResponse(response =>
+    response.url().endsWith("/api/live/kill-switch/stop") && response.request().method() === "POST",
+  );
+  await page.getByRole("button", { name: "หยุดบอท Live", exact: true }).click();
+  expect((await liveStop).status()).toBe(202);
+  const liveControl = page.getByRole("button", { name: "หยุดบอท Live", exact: true }).locator("..");
+  const liveDetails = liveControl.getByRole("button", { name: "ดูรายละเอียด", exact: true });
+  await liveDetails.click();
+  await expect(page.getByRole("dialog").getByText(/Live execution ยังไม่พร้อม/)).toBeVisible();
+  const liveAfter = await (await page.request.get("/api/live/kill-switch")).json() as {
+    stop_id: string | null;
+    target_set_complete: boolean;
+    resume_ready: boolean;
+  };
+  expect(liveAfter.stop_id).not.toBeNull();
+  expect(liveAfter.target_set_complete).toBe(false);
+  expect(liveAfter.resume_ready).toBe(false);
+  await captureKillSwitch(page, "paper-live-separated-th-light-desktop");
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(liveDetails).toBeFocused();
+
+  await page.evaluate(async () => {
+    const source = "/src/killSwitchMessages.ts";
+    const messages = await import(/* @vite-ignore */ source) as {
+      killSwitchI18n: { changeLanguage: (language: string) => Promise<unknown> };
+    };
+    await messages.killSwitchI18n.changeLanguage("en");
+    document.documentElement.classList.add("dark");
+  });
+  await page.setViewportSize({ width: 375, height: 844 });
+  await expect(page.getByRole("button", { name: "Stop Paper bot", exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Stop Live bot", exact: true })).toBeVisible();
+  await captureKillSwitch(page, "paper-live-separated-en-dark-mobile");
+  expect(browserErrors).toEqual([]);
+  expect(unexpectedHttpErrors).toEqual([]);
+});
+
+test("F-19 Platform Owner stop publishes the reason and only resumes after completion", async ({ page }) => {
+  const owner = await register(page);
+  expect((await page.request.post(`${control}/bootstrap-platform-owner`, {
+    data: { user_id: owner },
+  })).status()).toBe(204);
+  await page.reload();
+  await page.getByRole("link", { name: "ความปลอดภัยระบบ", exact: true }).click();
+  await expect(page).toHaveURL(/\/system-safety$/);
+
+  const reason = "<b>planned incident</b>";
+  await page.getByLabel("เหตุผลที่แสดงต่อผู้ใช้").fill(reason);
+  const stopped = page.waitForResponse(response =>
+    response.url().endsWith("/api/admin/kill-switch/stop")
+      && response.request().method() === "POST",
+  );
+  await page.getByRole("button", { name: "หยุดทั้งแพลตฟอร์ม", exact: true }).click();
+  expect((await stopped).status()).toBe(202);
+  await expect.poll(async () => {
+    return await (await page.request.get("/api/admin/kill-switch")).json() as {
+      progress: string | null;
+      can_resume: boolean;
+    };
+  }).toMatchObject({ progress: "STOPPED", can_resume: true });
+  await expect(page.getByRole("alert").filter({ hasText: reason })).toBeVisible();
+  await expect(page.locator("b", { hasText: "planned incident" })).toHaveCount(0);
+  for (const route of accountRoutes) {
+    await page.goto(`/${route}`);
+    await expect(page.getByRole("button", { name: "หยุดบอท Paper", exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: "หยุดบอท Live", exact: true })).toBeVisible();
+    await expect(page.getByRole("alert").filter({ hasText: reason })).toBeVisible();
+  }
+  await page.setViewportSize({ width: 375, height: 844 });
+  for (const route of accountRoutes) {
+    await page.goto(`/${route}`);
+    await expect(page.getByRole("button", { name: "หยุดบอท Paper", exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: "หยุดบอท Live", exact: true })).toBeVisible();
+    await expect(page.getByRole("alert").filter({ hasText: reason })).toBeVisible();
+  }
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.goto("/system-safety");
+
+  const browser = page.context().browser();
+  expect(browser).not.toBeNull();
+  const adminContext = await browser!.newContext({
+    baseURL: "http://127.0.0.1:15118",
+    viewport: { width: 1440, height: 1000 },
+  });
+  const adminPage = await adminContext.newPage();
+  const admin = await register(adminPage);
+  expect((await adminPage.request.post(`${control}/grant-platform-admin`, {
+    data: { user_id: admin },
+  })).status()).toBe(204);
+  await adminPage.reload();
+  await adminPage.getByRole("link", { name: "ความปลอดภัยระบบ", exact: true }).click();
+  await expect(adminPage.getByRole("button", { name: "เปิดแพลตฟอร์มกลับ", exact: true })).toBeDisabled();
+  await expect(adminPage.getByText("เฉพาะ Platform Owner เท่านั้นที่เปิดกลับได้", { exact: true })).toBeVisible();
+  await expect(adminPage.getByRole("alert").filter({ hasText: reason })).toBeVisible();
+  await adminContext.close();
+
+  const resumed = page.waitForResponse(response =>
+    response.url().endsWith("/api/admin/kill-switch/resume")
+      && response.request().method() === "POST",
+  );
+  const resume = page.getByRole("button", { name: "เปิดแพลตฟอร์มกลับ", exact: true });
+  await expect(resume).toBeEnabled();
+  await resume.click();
+  expect((await resumed).status()).toBe(202);
+  await expect.poll(async () => {
+    return await (await page.request.get("/api/admin/kill-switch")).json() as {
+      stop_id: string | null;
+    };
+  }).toMatchObject({ stop_id: null });
+  await expect(page.getByRole("alert").filter({ hasText: reason })).toHaveCount(0);
+  await expect(page.getByText("ระบบกำลังตรวจคำขอเปิดกลับ", { exact: true })).toHaveCount(0);
+  await expect(page.locator(".platform-kill-switch-panel")).toContainText("— · ค้าง: 0 · ล้มเหลว: 0");
+  await captureKillSwitch(page, "platform-owner-resumed-th-light-desktop");
 });
 
 test("Paper increase survives API disconnect and replays the same request without TOTP", async ({ page }) => {

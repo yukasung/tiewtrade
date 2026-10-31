@@ -15,6 +15,10 @@ from tiewtrade.infra.db.session import (
     presented_session,
     scan_session_bypassing_rls,
 )
+from tiewtrade.services.engine.kill_switch import (
+    run_platform_discovery_round,
+    run_stop_request_round,
+)
 from tiewtrade.services.engine.risk_limit import (
     run_risk_monitor_round,
     run_risk_request_round,
@@ -23,6 +27,44 @@ from tiewtrade.services.engine.risk_limit import (
 
 # R21 did not meet the SLA; retain the four-slot runtime.
 MONITOR_CONCURRENCY = 4
+STOP_ACTIVE_POLL_SECONDS = 0.02
+STOP_IDLE_MAX_SECONDS = 0.25
+STOP_IDLE_MAX_ROUNDS = 5
+
+
+def stop_poll_delay(idle_rounds: int) -> float:
+    """Return the approved bounded idle cadence; active rounds pass zero."""
+    if type(idle_rounds) is not int or idle_rounds < 0:
+        raise ValueError("idle stop rounds must be a nonnegative integer")
+    if idle_rounds == 0:
+        return STOP_ACTIVE_POLL_SECONDS
+    if idle_rounds >= STOP_IDLE_MAX_ROUNDS:
+        return STOP_IDLE_MAX_SECONDS
+    return STOP_ACTIVE_POLL_SECONDS * (1 << (idle_rounds - 1))
+
+
+async def _serve_stop_rounds(engine: AsyncEngine, scan: AsyncEngine) -> None:
+    cursor = None
+    idle_rounds = 0
+    while True:
+        requests = await run_stop_request_round(engine=engine, scan_engine=scan)
+        platform = await run_platform_discovery_round(engine=engine, scan_engine=scan)
+        stops = await run_risk_stop_round(engine=engine, scan_engine=scan, after_owner=cursor)
+        cursor = stops.next_owner or cursor
+        active = any(
+            (
+                requests.processed,
+                requests.deferred,
+                platform.discovered,
+                platform.deferred,
+                platform.active,
+                stops.processed,
+                stops.deferred,
+                stops.skipped,
+            )
+        )
+        idle_rounds = 0 if active else min(idle_rounds + 1, STOP_IDLE_MAX_ROUNDS)
+        await asyncio.sleep(stop_poll_delay(idle_rounds))
 
 
 async def _warm_pool(engine: AsyncEngine, role: DatabaseRole, slots: int) -> None:
@@ -74,15 +116,6 @@ async def serve() -> None:
             await run_risk_request_round(engine=request_engine, scan_engine=scan, worker=worker)
             await asyncio.sleep(0.02)
 
-    async def stops() -> None:
-        cursor = None
-        while True:
-            result = await run_risk_stop_round(
-                engine=stop_engine, scan_engine=scan, after_owner=cursor
-            )
-            cursor = result.next_owner or cursor
-            await asyncio.sleep(0.02)
-
     try:
         await _warm_pool(monitor_engine, DatabaseRole.ENGINE, MONITOR_CONCURRENCY)
         await _warm_pool(request_engine, DatabaseRole.ENGINE, 1)
@@ -91,7 +124,7 @@ async def serve() -> None:
         async with asyncio.TaskGroup() as group:
             group.create_task(monitor())
             group.create_task(requests())
-            group.create_task(stops())
+            group.create_task(_serve_stop_rounds(stop_engine, scan))
     finally:
         await monitor_engine.dispose()
         await request_engine.dispose()

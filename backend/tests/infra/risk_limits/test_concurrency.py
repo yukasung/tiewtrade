@@ -298,6 +298,7 @@ async def test_wallet_reset_and_loss_reset_do_not_mix_episode_baselines(
             assert (await read_setting(session, scope)).limit == Money.of(1000, "USDT")
 
 
+@pytest.mark.parametrize("reset_first", [True, False])
 @pytest.mark.parametrize("side", list(ExecutionSide))
 async def test_loss_reset_cannot_revoke_an_old_active_order_cancellation(
     api_engine: AsyncEngine,
@@ -306,6 +307,7 @@ async def test_loss_reset_cannot_revoke_an_old_active_order_cancellation(
     owner: UUID,
     wallet: PaperWalletSnapshot,
     side: ExecutionSide,
+    reset_first: bool,
 ) -> None:
     from tests.infra.execution_market.test_dispatch import intent
     from tests.infra.risk_limits.test_execution import drive, fill_buy, runtime
@@ -377,7 +379,13 @@ async def test_loss_reset_cannot_revoke_an_old_active_order_cancellation(
             ).one()
             return Money.of(row.quote_reserved, "USDT"), Quantity.of(row.base_reserved, "BTC")
 
-        await serialize(engine_engine, migrator_engine, owner, reset, old_stop)
+        await serialize(
+            engine_engine,
+            migrator_engine,
+            owner,
+            reset if reset_first else old_stop,
+            old_stop if reset_first else reset,
+        )
         async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
             assert not (await read_setting(session, scope)).latched
             assert (
@@ -429,3 +437,148 @@ async def test_loss_reset_cannot_revoke_an_old_active_order_cancellation(
                 )
             ).one()
             assert progress.target_set_complete and progress.pending_count == 0
+
+
+@pytest.mark.parametrize("fill_first", [True, False])
+async def test_stop_and_in_flight_fill_serialize_without_duplicate_money_or_cancel(
+    api_engine: AsyncEngine,
+    engine_engine: AsyncEngine,
+    scan_engine: AsyncEngine,
+    migrator_engine: AsyncEngine,
+    owner: UUID,
+    wallet: PaperWalletSnapshot,
+    fill_first: bool,
+) -> None:
+    from tests.infra.execution_market.test_dispatch import intent
+    from tests.infra.risk_limits.test_execution import drive, runtime
+    from tiewtrade.core.orders import TradingMode
+    from tiewtrade.core.trading_stops import StopAction
+    from tiewtrade.infra.paper_orders.dispatch import (
+        ClaimedOrder,
+        DueOrder,
+        claim_order,
+        submit_order,
+    )
+    from tiewtrade.infra.paper_orders.worker import process_claimed_order
+    from tiewtrade.infra.paper_wallet import get_wallet
+    from tiewtrade.infra.risk_limits.policy import TransactionalRiskPolicy
+    from tiewtrade.infra.risk_limits.stops import consume_stop
+    from tiewtrade.infra.trading_stops import submit_request as submit_stop_request
+    from tiewtrade.services.engine.kill_switch import run_stop_request_round
+
+    async with runtime(
+        api_engine, engine_engine, migrator_engine, owner, wallet, limit="1000"
+    ) as sources:
+        value = intent(owner, wallet.episode_id)
+        async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+            command = await submit_order(session, wallet_id=wallet.wallet_id, intent=value)
+        await drive(engine_engine, owner, command.command_id)
+        await asyncio.sleep(0.12)
+        await sources.next_book()
+        async with user_session(api_engine, owner) as session:
+            stop_receipt = await submit_stop_request(
+                session,
+                mode=TradingMode.PAPER,
+                action=StopAction.STOP,
+                key=uuid4(),
+                reason_code="USER_REQUEST",
+            )
+        stop_round = await run_stop_request_round(engine=engine_engine, scan_engine=scan_engine)
+        assert stop_round.processed >= 1 and stop_round.deferred == 0
+        async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+            result = (
+                await session.execute(
+                    "SELECT state FROM trading_stop_results WHERE request_id=:request",
+                    {"request": stop_receipt.request_id},
+                )
+            ).scalar_one()
+            assert result == "APPLIED"
+            await consume_stop(session, stop_receipt.stop_id)
+            cancel_id = UUID(
+                str(
+                    (
+                        await session.execute(
+                            """SELECT id FROM paper_order_commands
+                            WHERE action='CANCEL' AND order_id=:order""",
+                            {"order": value.order_id},
+                        )
+                    ).scalar_one()
+                )
+            )
+
+        async def claim(command_id: UUID, worker: str) -> ClaimedOrder | None:
+            async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+                due = (
+                    await session.execute(
+                        """UPDATE paper_order_dispatch SET next_attempt_at=clock_timestamp()
+                        WHERE command_id=:id RETURNING next_attempt_at""",
+                        {"id": command_id},
+                    )
+                ).scalar_one_or_none()
+                if due is None:
+                    return None
+                return await claim_order(session, DueOrder(command_id, owner, due), worker=worker)
+
+        first_id = command.command_id if fill_first else cancel_id
+        second_id = cancel_id if fill_first else command.command_id
+        first_claim = await claim(first_id, "stop-race-first")
+        assert first_claim is not None
+        blocked_claim = await claim(second_id, "stop-race-blocked")
+        assert blocked_claim is None
+
+        async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+            await process_claimed_order(
+                session,
+                first_claim,
+                policy=TransactionalRiskPolicy() if first_id == command.command_id else None,
+            )
+
+        second_claim = await claim(second_id, "stop-race-after-first")
+        if second_claim is not None:
+            async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+                await process_claimed_order(
+                    session,
+                    second_claim,
+                    policy=TransactionalRiskPolicy() if second_id == command.command_id else None,
+                )
+        async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+            for _ in range(2):
+                await consume_stop(session, stop_receipt.stop_id)
+            projection = (
+                await session.execute(
+                    """SELECT p.status,p.filled_quantity,r.quote_reserved
+                    FROM paper_order_projections p JOIN paper_reservations r USING(order_id)
+                    WHERE p.order_id=:order""",
+                    {"order": value.order_id},
+                )
+            ).one()
+            current = await get_wallet(session)
+            assert current is not None
+            position_events = (
+                await session.execute("SELECT count(*) FROM paper_position_events")
+            ).scalar_one()
+            links = (
+                await session.execute("SELECT count(*) FROM paper_execution_links")
+            ).scalar_one()
+            cancellations = (
+                await session.execute(
+                    """SELECT count(*) FROM paper_order_events
+                    WHERE order_id=:order AND event_kind='CANCELED'""",
+                    {"order": value.order_id},
+                )
+            ).scalar_one()
+            cancel_commands = (
+                await session.execute(
+                    """SELECT count(*) FROM paper_order_commands
+                    WHERE order_id=:order AND action='CANCEL'""",
+                    {"order": value.order_id},
+                )
+            ).scalar_one()
+        # Once STOP is committed, the historical revision fence wins even when
+        # the pre-stop fill command owns the first worker claim.
+        assert projection.status == "CANCELED"
+        assert projection.filled_quantity == 0
+        assert projection.quote_reserved == 0
+        assert current.balance == Money.of(10000, "USDT")
+        assert position_events == links == 0
+        assert cancellations == cancel_commands == 1

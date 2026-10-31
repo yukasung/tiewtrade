@@ -4,6 +4,74 @@
  */
 
 export interface paths {
+    "/admin/kill-switch": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Platform Status */
+        get: operations["platform_status_admin_kill_switch_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/kill-switch/requests/{request_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Platform Request By Id */
+        get: operations["platform_request_by_id_admin_kill_switch_requests__request_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/kill-switch/resume": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Platform Resume */
+        post: operations["platform_resume_admin_kill_switch_resume_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/kill-switch/stop": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Platform Stop */
+        post: operations["platform_stop_admin_kill_switch_stop_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/supported-symbols": {
         parameters: {
             query?: never;
@@ -462,6 +530,125 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/live/kill-switch": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Status */
+        get: operations["status_live_kill_switch_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/live/kill-switch/requests/by-key/{key}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Request By Key */
+        get: operations["request_by_key_live_kill_switch_requests_by_key__key__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/live/kill-switch/requests/{request_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Request By Id */
+        get: operations["request_by_id_live_kill_switch_requests__request_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/live/kill-switch/resume": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Resume */
+        post: operations["resume_live_kill_switch_resume_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/live/kill-switch/stop": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Stop */
+        post: operations["stop_live_kill_switch_stop_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/live/kill-switch/stops/{stop_id}/effects": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Effects */
+        get: operations["effects_live_kill_switch_stops__stop_id__effects_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/live/kill-switch/stops/{stop_id}/resume-summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Resume Summary */
+        get: operations["resume_summary_live_kill_switch_stops__stop_id__resume_summary_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/live/risk-limit": {
         parameters: {
             query?: never;
@@ -764,6 +951,125 @@ export interface paths {
         put?: never;
         /** Reset Paper Wallet */
         post: operations["reset_paper_wallet_paper_wallet_reset_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/paper/kill-switch": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Status */
+        get: operations["status_paper_kill_switch_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/paper/kill-switch/requests/by-key/{key}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Request By Key */
+        get: operations["request_by_key_paper_kill_switch_requests_by_key__key__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/paper/kill-switch/requests/{request_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Request By Id */
+        get: operations["request_by_id_paper_kill_switch_requests__request_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/paper/kill-switch/resume": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Resume */
+        post: operations["resume_paper_kill_switch_resume_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/paper/kill-switch/stop": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Stop */
+        post: operations["stop_paper_kill_switch_stop_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/paper/kill-switch/stops/{stop_id}/effects": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Effects */
+        get: operations["effects_paper_kill_switch_stops__stop_id__effects_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/paper/kill-switch/stops/{stop_id}/resume-summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Resume Summary */
+        get: operations["resume_summary_paper_kill_switch_stops__stop_id__resume_summary_get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1673,6 +1979,47 @@ export interface components {
             /** Verified At */
             verified_at?: string | null;
         };
+        /** KillSwitchStatusView */
+        KillSwitchStatusView: {
+            /**
+             * Capability
+             * @enum {string}
+             */
+            capability: "AVAILABLE" | "LIVE_EXECUTION_UNAVAILABLE";
+            /** Cause */
+            cause: ("USER" | "SYSTEM" | "LOSS_LIMIT" | "PLATFORM") | null;
+            /** Failed Count */
+            failed_count: number;
+            /** Generation */
+            generation: number | null;
+            /**
+             * Mode
+             * @enum {string}
+             */
+            mode: "PAPER" | "LIVE";
+            /** Pending Count */
+            pending_count: number;
+            /** Platform Reason */
+            platform_reason: string | null;
+            /** Platform Stop Id */
+            platform_stop_id: string | null;
+            /** Progress */
+            progress: ("STOPPING" | "STOPPED" | "PROBLEMS") | null;
+            /** Reconciliation Revision */
+            reconciliation_revision: number | null;
+            /** Resume Ready */
+            resume_ready: boolean;
+            /** Revision */
+            revision: number;
+            /** Stop Id */
+            stop_id: string | null;
+            /** Summary Revision */
+            summary_revision: number;
+            /** Target Count */
+            target_count: number;
+            /** Target Set Complete */
+            target_set_complete: boolean;
+        };
         /** LimitOrderInput */
         LimitOrderInput: {
             /** Base */
@@ -2121,6 +2468,36 @@ export interface components {
             /** New Password */
             new_password: string;
         };
+        /** PlatformStatusView */
+        PlatformStatusView: {
+            /** Can Resume */
+            can_resume: boolean;
+            /** Discovery Complete */
+            discovery_complete: boolean;
+            /** Failed Count */
+            failed_count: number;
+            /** Owner Count */
+            owner_count: number;
+            /** Pending Count */
+            pending_count: number;
+            /** Progress */
+            progress: ("STOPPING" | "STOPPED" | "PROBLEMS") | null;
+            /** Reason */
+            reason: string | null;
+            /** Reconciliation Revision */
+            reconciliation_revision: number;
+            /** Revision */
+            revision: number;
+            /** Stop Id */
+            stop_id: string | null;
+            /** Summary Revision */
+            summary_revision: number;
+        };
+        /** PlatformStopInput */
+        PlatformStopInput: {
+            /** Reason */
+            reason: string;
+        };
         /** PriceRow */
         PriceRow: {
             /** Alert Due */
@@ -2247,6 +2624,20 @@ export interface components {
         RejectedTradingAccountInput: {
             /** Detail */
             detail: string;
+        };
+        /** ResumeStopInput */
+        ResumeStopInput: {
+            /** Expected Reconciliation Revision */
+            expected_reconciliation_revision: number;
+            /** Expected Revision */
+            expected_revision: number;
+            /**
+             * Expected Stop Id
+             * Format: uuid
+             */
+            expected_stop_id: string;
+            /** Expected Summary Revision */
+            expected_summary_revision: number;
         };
         /**
          * RetryAccepted
@@ -2502,6 +2893,66 @@ export interface components {
             user_id: string;
         };
         /**
+         * StopAction
+         * @enum {string}
+         */
+        StopAction: "STOP" | "RESUME";
+        /** StopInput */
+        StopInput: Record<string, never>;
+        /** StopRequestView */
+        StopRequestView: {
+            /**
+             * Action
+             * @enum {string}
+             */
+            action: "STOP" | "RESUME";
+            /**
+             * Cause
+             * @enum {string}
+             */
+            cause: "USER" | "SYSTEM" | "LOSS_LIMIT" | "PLATFORM";
+            /** Failure Code */
+            failure_code: string | null;
+            /** Generation */
+            generation: number;
+            /**
+             * Mode
+             * @enum {string}
+             */
+            mode: "PAPER" | "LIVE" | "PLATFORM";
+            /** Recorded At */
+            recorded_at: string;
+            /**
+             * Request Id
+             * Format: uuid
+             */
+            request_id: string;
+            /** Revision */
+            revision: number;
+            /**
+             * State
+             * @enum {string}
+             */
+            state: "REQUEST_PENDING" | "APPLIED" | "REJECTED";
+            /**
+             * Stop Id
+             * Format: uuid
+             */
+            stop_id: string;
+        };
+        /** StopSummaryView */
+        StopSummaryView: {
+            /** Positions */
+            positions: {
+                [key: string]: string;
+            }[];
+            /** Reconciled At */
+            reconciled_at: string | null;
+            /** Snapshot Revision */
+            snapshot_revision: number;
+            status: components["schemas"]["KillSwitchStatusView"];
+        };
+        /**
          * Timeframe
          * @enum {string}
          */
@@ -2586,6 +3037,127 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    platform_status_admin_kill_switch_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlatformStatusView"];
+                };
+            };
+        };
+    };
+    platform_request_by_id_admin_kill_switch_requests__request_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StopRequestView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    platform_resume_admin_kill_switch_resume_post: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResumeStopInput"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StopRequestView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    platform_stop_admin_kill_switch_stop_post: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PlatformStopInput"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StopRequestView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     admin_catalog_admin_supported_symbols_get: {
         parameters: {
             query?: never;
@@ -3261,6 +3833,226 @@ export interface operations {
             };
         };
     };
+    status_live_kill_switch_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KillSwitchStatusView"];
+                };
+            };
+        };
+    };
+    request_by_key_live_kill_switch_requests_by_key__key__get: {
+        parameters: {
+            query: {
+                action: components["schemas"]["StopAction"];
+            };
+            header?: never;
+            path: {
+                key: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StopRequestView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    request_by_id_live_kill_switch_requests__request_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StopRequestView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    resume_live_kill_switch_resume_post: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResumeStopInput"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StopRequestView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    stop_live_kill_switch_stop_post: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["StopInput"] | null;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StopRequestView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    effects_live_kill_switch_stops__stop_id__effects_get: {
+        parameters: {
+            query?: {
+                cursor?: string | null;
+                limit?: number;
+                filter?: "ALL" | "PENDING" | "FAILED";
+            };
+            header?: never;
+            path: {
+                stop_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RiskEffectPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    resume_summary_live_kill_switch_stops__stop_id__resume_summary_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                stop_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StopSummaryView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     risk_status_live_risk_limit_get: {
         parameters: {
             query?: never;
@@ -3884,6 +4676,226 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PaperCommandView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    status_paper_kill_switch_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KillSwitchStatusView"];
+                };
+            };
+        };
+    };
+    request_by_key_paper_kill_switch_requests_by_key__key__get: {
+        parameters: {
+            query: {
+                action: components["schemas"]["StopAction"];
+            };
+            header?: never;
+            path: {
+                key: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StopRequestView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    request_by_id_paper_kill_switch_requests__request_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StopRequestView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    resume_paper_kill_switch_resume_post: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResumeStopInput"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StopRequestView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    stop_paper_kill_switch_stop_post: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["StopInput"] | null;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StopRequestView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    effects_paper_kill_switch_stops__stop_id__effects_get: {
+        parameters: {
+            query?: {
+                cursor?: string | null;
+                limit?: number;
+                filter?: "ALL" | "PENDING" | "FAILED";
+            };
+            header?: never;
+            path: {
+                stop_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RiskEffectPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    resume_summary_paper_kill_switch_stops__stop_id__resume_summary_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                stop_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StopSummaryView"];
                 };
             };
             /** @description Validation Error */

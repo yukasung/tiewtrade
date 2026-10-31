@@ -6,11 +6,12 @@ import type { AccountPage } from "../accountNavigation";
 import { PageBreadcrumb } from "./PageBreadcrumb";
 import { ThemeProvider } from "../context/ThemeContext";
 import "../styles/admin-theme.css";
+import { KillSwitchBanner } from "../KillSwitchControls";
 /** Adapted from TailAdmin Pro 2.4.0 AppLayout/SidebarContext; children replace Outlet. */
-export function AccountLayout({ children, page = "chart", isPlatformAdmin = false }: { children: ReactNode; page?: AccountPage; isPlatformAdmin?: boolean }) {
-  return <ThemeProvider><AccountLayoutContent page={page} isPlatformAdmin={isPlatformAdmin}>{children}</AccountLayoutContent></ThemeProvider>;
+export function AccountLayout({ children, page = "chart", isPlatformAdmin = false, owner }: { children: ReactNode; page?: AccountPage; isPlatformAdmin?: boolean; owner?: string | undefined }) {
+  return <ThemeProvider><AccountLayoutContent page={page} isPlatformAdmin={isPlatformAdmin} owner={owner}>{children}</AccountLayoutContent></ThemeProvider>;
 }
-function AccountLayoutContent({ children, page, isPlatformAdmin }: { children: ReactNode; page: AccountPage; isPlatformAdmin: boolean }) {
+function AccountLayoutContent({ children, page, isPlatformAdmin, owner }: { children: ReactNode; page: AccountPage; isPlatformAdmin: boolean; owner?: string | undefined }) {
   const [open, setOpen] = useState(false);
   const [expanded, setExpanded] = useState(true);
   const [desktop, setDesktop] = useState(() => window.innerWidth >= 1280);
@@ -48,8 +49,9 @@ function AccountLayoutContent({ children, page, isPlatformAdmin }: { children: R
         />
       )}
       <div className="account-workspace flex-1">
-        <AccountHeader mode={page === "paper/trade" ? "PAPER" : page === "live/trade" ? "LIVE" : undefined} open={desktop ? expanded : open} mobileOpen={open} trigger={trigger}
+        <AccountHeader mode={page === "paper/trade" ? "PAPER" : page === "live/trade" ? "LIVE" : undefined} open={desktop ? expanded : open} mobileOpen={open} trigger={trigger} owner={owner}
           toggle={() => { if (desktop) setExpanded(value => !value); else setOpen(value => !value); }} />
+        {owner && <KillSwitchBanner owner={owner} />}
         <div className={`account-content mx-auto p-4 md:p-6 ${page === "chart" ? "account-content-chart" : isTradingWorkspace ? "account-content-trade" : ""}`}>
           {page !== "chart" && !isTradingWorkspace && <PageBreadcrumb title={t(page === "api-keys" ? "keys" : page === "trading-account" ? "trading" : page)} />}
           {children}

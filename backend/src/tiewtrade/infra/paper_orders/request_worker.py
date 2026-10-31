@@ -10,6 +10,7 @@ from tiewtrade.core.orders import (
     OrderError,
     OrderIntent,
     SourceUnavailableError,
+    TradingMode,
     UnsupportedOrderError,
 )
 from tiewtrade.core.positions import ExecutionSide
@@ -29,6 +30,7 @@ from tiewtrade.infra.paper_orders.requests import get_request, request_audit
 from tiewtrade.infra.paper_orders.storage import LockedPairCatalog, lock_pair_catalog
 from tiewtrade.infra.risk_limits.policy import TransactionalRiskPolicy
 from tiewtrade.infra.risk_limits.stops import queued_opening_stopped
+from tiewtrade.infra.trading_stops.storage import global_shared_lock, opening_interrupted
 
 
 class RequestOutcome(Enum):
@@ -86,6 +88,7 @@ async def process_request(
     session: UserSession, claim: ClaimedRequest, *, policy: AdmissionPolicy | None
 ) -> RequestOutcome:
     session = require_user_session(session)
+    await global_shared_lock(session)
     await require_request_claim(session, claim)
     receipt = await get_request(session, claim.request_id)
     if receipt is None:
@@ -113,8 +116,17 @@ async def process_request(
         failure is None
         and receipt.action == "NEW"
         and receipt.payload.get("side") == "BUY"
-        and await queued_opening_stopped(
-            session, episode_id=receipt.episode_id, recorded_at=receipt.recorded_at
+        and (
+            await queued_opening_stopped(
+                session, episode_id=receipt.episode_id, recorded_at=receipt.recorded_at
+            )
+            or await opening_interrupted(
+                session,
+                mode=TradingMode.PAPER,
+                origin=intent_from_payload(receipt.payload).origin,
+                admitted_global_revision=receipt.admitted_global_stop_revision,
+                admitted_owner_revision=receipt.admitted_owner_stop_revision,
+            )
         )
     ):
         failure = "ORDER_SAFETY_UNAVAILABLE"

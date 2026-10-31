@@ -164,6 +164,55 @@ async def prepare_owner(body: Owner) -> None:
         await scan.dispose()
 
 
+@app.post("/__e2e/risk/bootstrap-platform-owner", status_code=204)
+async def bootstrap_platform_owner(body: Owner) -> None:
+    migrator = create_engine_for(DatabaseRole.MIGRATOR)
+    bootstrap = create_engine_for(DatabaseRole.PLATFORM_BOOTSTRAP)
+    try:
+        async with migrator.begin() as connection:
+            await connection.execute(text("ALTER TABLE user_totp NO FORCE ROW LEVEL SECURITY"))
+            await connection.execute(
+                text(
+                    "INSERT INTO user_totp("
+                    "user_id,secret_sealed,key_version,secret_version,last_accepted_step) "
+                    "VALUES(:user_id,decode('00','hex'),'test',1,0)"
+                ),
+                {"user_id": body.user_id},
+            )
+            await connection.execute(text("ALTER TABLE user_totp FORCE ROW LEVEL SECURITY"))
+        async with bootstrap.begin() as connection:
+            await connection.execute(
+                text("SELECT public.bootstrap_platform_owner(:user_id)"),
+                {"user_id": body.user_id},
+            )
+    finally:
+        await migrator.dispose()
+        await bootstrap.dispose()
+
+
+@app.post("/__e2e/risk/grant-platform-admin", status_code=204)
+async def grant_platform_admin(body: Owner) -> None:
+    migrator = create_engine_for(DatabaseRole.MIGRATOR)
+    try:
+        async with migrator.begin() as connection:
+            await connection.execute(
+                text("ALTER TABLE platform_memberships NO FORCE ROW LEVEL SECURITY")
+            )
+            await connection.execute(
+                text(
+                    "INSERT INTO platform_memberships(user_id,role,created_by) "
+                    "SELECT :user_id,'PLATFORM_ADMIN',user_id FROM platform_memberships "
+                    "WHERE role='PLATFORM_OWNER'"
+                ),
+                {"user_id": body.user_id},
+            )
+            await connection.execute(
+                text("ALTER TABLE platform_memberships FORCE ROW LEVEL SECURITY")
+            )
+    finally:
+        await migrator.dispose()
+
+
 @app.post("/__e2e/risk/disconnect-intake", status_code=204)
 async def disconnect_intake(body: Owner) -> None:
     global _disconnect_owner

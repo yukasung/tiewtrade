@@ -2,6 +2,7 @@ import { Badge } from "../components/ui/Badge";
 import type { RefObject } from "react";
 import { Button } from "../components/ui/Button";
 import { ThemeToggleButton } from "../components/common/ThemeToggleButton";
+import { KillSwitchControls } from "../KillSwitchControls";
 import { accountText as t } from "../accountMessages";
 /** Adapted from TailAdmin Pro 2.4.0 layout/AppHeader.tsx. */
 export function AccountHeader({
@@ -10,12 +11,14 @@ export function AccountHeader({
   mobileOpen,
   toggle,
   trigger,
+  owner,
 }: {
   mode?: "PAPER" | "LIVE" | undefined;
   open: boolean;
   mobileOpen: boolean;
   toggle: () => void;
   trigger: RefObject<HTMLButtonElement>;
+  owner?: string | undefined;
 }) {
   return (
     <header className="account-header">
@@ -32,6 +35,7 @@ export function AccountHeader({
       </Button>
       <strong>TiewTrade</strong>
       {mode ? <Badge color={mode === "LIVE" ? "warning" : "primary"}>{mode}</Badge> : <span>{t("navigation")}</span>}
+      {owner && <KillSwitchControls owner={owner} />}
       <ThemeToggleButton />
     </header>
   );

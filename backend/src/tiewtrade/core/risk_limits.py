@@ -27,6 +27,7 @@ from tiewtrade.core.positions import (
     unrealized_pnl,
 )
 from tiewtrade.core.realtime_prices import QuoteObservation, Readiness, readiness
+from tiewtrade.core.trading_stops import StopProgress
 
 
 class RiskInputError(ValueError):
@@ -57,10 +58,7 @@ class RiskReason(Enum):
     BREACHED = "RISK_LOSS_LIMIT_REACHED"
 
 
-class RiskStopProgress(Enum):
-    STOPPING = "STOPPING"
-    STOPPED = "STOPPED"
-    PROBLEMS = "PROBLEMS"
+RiskStopProgress = StopProgress
 
 
 def _usdt(value: Money) -> None:

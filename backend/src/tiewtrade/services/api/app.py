@@ -42,6 +42,7 @@ from tiewtrade.services.api.catalog_routes import router as catalog_router
 from tiewtrade.services.api.chart_routes import router as chart_router
 from tiewtrade.services.api.indicator_admission import IndicatorBudget
 from tiewtrade.services.api.indicator_routes import router as indicator_router
+from tiewtrade.services.api.kill_switch_routes import router as kill_switch_router
 from tiewtrade.services.api.manual_order_routes import router as manual_order_router
 from tiewtrade.services.api.paper_wallet_routes import router as paper_wallet_router
 from tiewtrade.services.api.price_admission import ProcessBudget
@@ -251,6 +252,7 @@ app.include_router(trading_account_router)
 app.include_router(paper_wallet_router)
 app.include_router(manual_order_router)
 app.include_router(risk_limit_router)
+app.include_router(kill_switch_router)
 app.include_router(candle_router)
 app.include_router(chart_router)
 app.include_router(indicator_router)
