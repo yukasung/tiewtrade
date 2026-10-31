@@ -5987,3 +5987,12 @@ the verified-book freshness boundary under the existing monkeypatch context and 
 post-fence recomputation fails closed. All eight previously failing backend cases pass on an
 isolated migration-0060 PostgreSQL database; that temporary database was dropped by the test
 cleanup. No workload or Live order was run.
+
+The completed risk E2E job from the preceding commit exposed four more stale driver
+assumptions from the compact workspace. BUY/SELL and MARKET/LIMIT are accessible tabs, not
+native selects; an increase posts to the action-specific `/increase` endpoint; and durable
+risk reconciliation runs when the account panel is mounted rather than while the user stays
+on the Paper workspace. The browser test now clicks the tab roles, observes the actual
+increase request and opens the account page before asserting automatic journal cleanup.
+Frontend ESLint and TypeScript typecheck pass. Application behavior and the idempotency
+protocol are unchanged.

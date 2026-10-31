@@ -76,14 +76,14 @@ test("production risk composition: unset→set→BUY→breach→cancel→bounded
   const buy = await send(page, "110");
   await expect.poll(async () => (await order(page, buy.order_id)).status).toBe("FILLED");
   await expect.poll(async () => page.evaluate(id => window.sessionStorage.getItem("tiewtrade.manual-order.v1:" + id), owner)).toBeNull();
-  await page.getByLabel("ประเภทออเดอร์").selectOption("LIMIT");
+  await page.getByRole("tab", { name: "LIMIT", exact: true }).click();
   await page.getByLabel("จำนวนเหรียญ Base (BTC)").fill("1");
   await page.getByLabel("ราคา Limit (USDT)").fill("90");
   const limit = await submitManual(page);
   await expect.poll(async () => (await order(page, limit.order_id)).status).toBe("ACCEPTED");
   await expect.poll(async () => page.evaluate(id => window.sessionStorage.getItem("tiewtrade.manual-order.v1:" + id), owner)).toBeNull();
   expect((await page.request.post(`${control}/hold-transfer`, { data: { user_id: owner } })).status()).toBe(204);
-  await page.getByLabel("ประเภทออเดอร์").selectOption("MARKET");
+  await page.getByRole("tab", { name: "MARKET", exact: true }).click();
   const queued = await send(page, "11");
   await expect.poll(async () => (await (await page.request.get(`${control}/transfer-held`)).json() as { held: boolean }).held).toBe(true);
   expect((await page.request.post(`${control}/price`, { data: { amount: "80" } })).status()).toBe(204);
@@ -99,8 +99,8 @@ test("production risk composition: unset→set→BUY→breach→cancel→bounded
   await expect.poll(async () => { const risk = await snapshot(page); return risk.target_set_complete && risk.pending_count === 0; }).toBe(true);
   await expect(page.getByRole("heading", { name: "ขาดทุนถึงเพดานแล้ว", exact: true })).toBeVisible();
   await capture(page, "breached-th-light-desktop");
-  await page.getByLabel("ประเภทออเดอร์").selectOption("MARKET");
-  await page.getByLabel("ฝั่ง", { exact: true }).selectOption("SELL");
+  await page.getByRole("tab", { name: "MARKET", exact: true }).click();
+  await page.getByRole("tab", { name: "SELL", exact: true }).click();
   await page.getByLabel("จำนวนเหรียญ Base (BTC)").fill("0.1");
   await expect(page.getByRole("button", { name: "ส่งออเดอร์ Paper", exact: true })).toBeEnabled();
   const selling = page.waitForResponse(r => r.url().endsWith("/api/paper/orders") && r.request().method() === "POST");
@@ -118,7 +118,7 @@ test("production risk composition: unset→set→BUY→breach→cancel→bounded
   expect((await snapshot(page)).current_allowance).not.toBe("0");
   await openPaperTrade(page);
   await page.getByLabel("คู่เทรด").selectOption("BTC");
-  await page.getByLabel("ฝั่ง", { exact: true }).selectOption("BUY");
+  await page.getByRole("tab", { name: "BUY", exact: true }).click();
   const resumed = await send(page, "11");
   await expect.poll(async () => (await order(page, resumed.order_id)).status).toBe("FILLED");
   const trade = await (await page.request.get("/api/paper/trade?base=BTC")).json() as { wallet: { balance: string; base_balances: { asset: string; held: string }[] } };
@@ -158,6 +158,7 @@ test("UNKNOWN reload keeps the same risk key and no optimistic setting is shown"
   await expect.poll(() => committed?.idempotency_key).toBeTruthy();
   await page.unroute("**/api/paper/risk-limit");
   await page.reload();
+  await openTradingAccount(page);
   await expect.poll(() => page.evaluate(() => Object.keys(window.sessionStorage).filter(k => k.startsWith("tiewtrade.risk-limit.v1:")).length)).toBe(0);
   expect(posts).toBe(1);
   expect((await snapshot(page)).revision).toBe(1);
@@ -171,7 +172,7 @@ test("Paper increase survives API disconnect and replays the same request withou
   expect((await page.request.post(`${control}/disconnect-intake`, { data: { user_id: owner } })).status()).toBe(204);
   await page.getByLabel("เพดานขาดทุน (USDT)").fill("200");
   const disconnected = page.waitForResponse(response =>
-    response.url().endsWith("/api/paper/risk-limit") && response.request().method() === "POST",
+    response.url().endsWith("/api/paper/risk-limit/increase") && response.request().method() === "POST",
   );
   await page.getByRole("button", { name: "บันทึก", exact: true }).click();
   expect((await disconnected).status()).toBe(503);
@@ -206,7 +207,7 @@ test("price outage blocks opening; risk-only cache failure preserves bounded red
   expect((await page.request.post(`${control}/cache-gap`, { data: { user_id: owner } })).status()).toBe(204);
   await expect.poll(async () => (await snapshot(page)).reason).toBe("RISK_SOURCE_UNAVAILABLE");
   await expect(page.getByRole("button", { name: "ส่งออเดอร์ Paper", exact: true })).toBeDisabled();
-  await page.getByLabel("ฝั่ง", { exact: true }).selectOption("SELL");
+  await page.getByRole("tab", { name: "SELL", exact: true }).click();
   await page.getByLabel("จำนวนเหรียญ Base (BTC)").fill("0.1");
   const sell = await submitManual(page);
   await expect.poll(async () => (await order(page, sell.order_id)).status).toBe("FILLED");
