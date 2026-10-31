@@ -6010,3 +6010,22 @@ Trading Account surface and asserts the English loss-limit field there, preservi
 coverage on the UI that actually owns the setting. A subsequent isolated run encountered a
 local `DATABASE_TIMEOUT` while restoring readiness after the controlled outage; this is
 recorded as an environment failure rather than an application or acceptance pass.
+
+### 2026-10-31 — Refactor CI isolation follow-up
+
+CI run `41169466340` passed frontend, API contract, container and PostgreSQL checks. Its full
+backend suite passed 3,977 tests and failed five migration round trips because an earlier R35
+test intentionally left a valid unconfigured Paper BUY in the shared database. The migration
+tests now stop the writer protocol, temporarily add only the missing pre-0060 compatibility
+settings while FORCE RLS is deliberately relaxed, then remove those rows and restore the exact
+protocol flags after upgrading to head. The financial/order history is never deleted or
+rewritten. A targeted sequence that first creates the unconfigured BUY and then runs all five
+affected parameter cases passes 6/6 in an isolated database; Ruff also passes.
+
+The same CI run passed three of four F-18 browser cases. The remaining case attempted to click
+a navigation link after switching to the tablet viewport, where the sidebar is intentionally
+collapsed. It now navigates directly to the Trading Account route, switches the risk-panel
+language after that reload, and keeps every operation-specific assertion and timeout unchanged.
+Only the aggregate browser-test budget increased from 90 to 120 seconds to cover the long
+financial flow and evidence screenshots. The affected production-composition E2E passes 1/1
+in 16.9 seconds in an isolated database. No application business logic, API or schema changed.

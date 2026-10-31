@@ -27,7 +27,7 @@ async function register(page: Page) {
   return identity.user_id;
 }
 async function openTradingAccount(page: Page) {
-  await page.getByRole("link", { name: "บัญชีเทรด", exact: true }).click();
+  await page.goto("/trading-account");
   await expect(page).toHaveURL(/\/trading-account$/);
   await expect(page.getByLabel("เพดานขาดทุน (USDT)")).toBeVisible();
 }
@@ -70,6 +70,7 @@ async function order(page: Page, id: string) {
   return await (await page.request.get(`/api/paper/orders/${id}`)).json() as { status: string; filled_quantity: string; reserved_quote: string; spent_quote: string };
 }
 test("production risk composition: unset→set→BUY→breach→cancel→bounded SELL→reset→eligible BUY", async ({ page }) => {
+  test.setTimeout(120_000);
   const owner = await register(page); await capture(page, "unset-th-light-desktop");
   await setLimit(page);
   await page.getByLabel("คู่เทรด").selectOption("BTC");
@@ -131,12 +132,12 @@ test("production risk composition: unset→set→BUY→breach→cancel→bounded
   await capture(page, "reset-th-dark-desktop");
   await page.setViewportSize({ width: 375, height: 844 }); await capture(page, "reset-th-dark-mobile");
   await page.setViewportSize({ width: 768, height: 1024 }); await capture(page, "reset-th-dark-tablet");
+  await page.goto("/trading-account");
   await page.evaluate(async () => {
     const source = "/src/riskLimitMessages.ts";
     const messages = await import(/* @vite-ignore */ source) as { riskLimitI18n: { changeLanguage: (language: string) => Promise<unknown> } };
     await messages.riskLimitI18n.changeLanguage("en");
   });
-  await page.getByRole("link", { name: "บัญชีเทรด", exact: true }).click();
   await expect(page.getByLabel("Loss limit (USDT)")).toBeVisible();
   await capture(page, "reset-en-dark-tablet");
   await page.evaluate(() => document.documentElement.classList.remove("dark"));

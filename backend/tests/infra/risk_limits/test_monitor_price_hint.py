@@ -9,8 +9,8 @@ from sqlalchemy.ext.asyncio import AsyncEngine
 from tests.infra.db.test_migrations import _alembic, _snapshot
 from tests.infra.execution_market.test_dispatch import intent
 from tests.infra.risk_limits.migration_support import (
-    restore_risk_protocol,
-    stop_risk_protocol,
+    prepare_migration_roundtrip,
+    restore_migration_roundtrip,
 )
 from tests.infra.risk_limits.test_monitor import publish, start
 from tests.infra.risk_limits.test_prices import publication as publication
@@ -160,7 +160,7 @@ async def test_scanner_grants_are_narrow_and_roundtrip(
     migrator_engine: AsyncEngine, scan_engine: AsyncEngine
 ) -> None:
     before = await _snapshot(migrator_engine)
-    flags = await stop_risk_protocol(migrator_engine)
+    migration_state = await prepare_migration_roundtrip(migrator_engine)
     async with scan_session_bypassing_rls(scan_engine) as session:
         await session.execute("SELECT cursor FROM risk_owner_state LIMIT 1")
         await session.execute("SELECT watermark FROM risk_price_publication")
@@ -186,5 +186,5 @@ async def test_scanner_grants_are_narrow_and_roundtrip(
             await session.execute("SELECT user_id,mode,due_at FROM risk_owner_state LIMIT 1")
     finally:
         _alembic("upgrade", "head")
-        await restore_risk_protocol(migrator_engine, flags)
+        await restore_migration_roundtrip(migrator_engine, migration_state)
     assert await _snapshot(migrator_engine) == before

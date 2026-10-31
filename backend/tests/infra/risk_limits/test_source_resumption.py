@@ -10,8 +10,8 @@ import pytest
 from sqlalchemy.ext.asyncio import AsyncEngine
 
 from tests.infra.risk_limits.migration_support import (
-    restore_risk_protocol,
-    stop_risk_protocol,
+    prepare_migration_roundtrip,
+    restore_migration_roundtrip,
 )
 from tests.infra.risk_limits.test_execution import Runtime, runtime
 from tests.infra.risk_limits.test_same_pair_dispatch import Queue, resting
@@ -457,7 +457,7 @@ async def test_0056_default_off_roundtrip_preserves_schedule_and_does_not_rearm(
             probe = await claim_order(s, due, worker="consumed-before-downgrade")
             assert probe is not None
             await defer_claim(s, probe, source_unavailable=True)
-    flags = await stop_risk_protocol(migrator_engine)
+    migration_state = await prepare_migration_roundtrip(migrator_engine)
     try:
         _alembic("downgrade", "0056")
         async with scan_session_bypassing_rls(scan_engine) as s:
@@ -469,7 +469,7 @@ async def test_0056_default_off_roundtrip_preserves_schedule_and_does_not_rearm(
             assert tuple(row) == (waiting.due, 3)
     finally:
         _alembic("upgrade", "head")
-        await restore_risk_protocol(migrator_engine, flags)
+        await restore_migration_roundtrip(migrator_engine, migration_state)
     fresh = create_engine_for(DatabaseRole.ENGINE)
     try:
         async with user_session(fresh, waiting.owner, role=DatabaseRole.ENGINE) as s:
