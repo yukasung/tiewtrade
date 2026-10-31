@@ -5926,3 +5926,19 @@ nested conditional. No policy, SQL predicate or response value changed. Verifica
 all seven import-linter contracts and whitespace checks. The temporary refactor database
 was dropped after confirming zero active connections; frontend evidence remains valid
 because no frontend source changed during refactoring.
+
+### 2026-10-31 — Remote CI remediation after R35/R36 refactor
+
+Remote CI run `41166198702` exposed two deterministic verification issues rather than a
+runtime or financial failure. Backend stopped at the format gate because migration 0059
+contained one multiline call that the current CI Ruff version formats on one line. Frontend
+reached the full Vitest suite, where six `ApiKeyPanel` recovery cases mounted the expanded
+account dashboard but their fetch fixture did not model the Paper risk endpoint; the
+resulting unrelated risk alert made the account-alert assertion fail.
+
+Migration 0059 now matches Ruff's required formatting. The API-key test fixture returns a
+typed, unconfigured Paper risk snapshot for the dashboard dependency, preserving the test's
+original focus on API-key and trading-account recovery without suppressing runtime alerts.
+Verification passed: the affected API-key file 33/33, the complete frontend suite 339/339,
+frontend ESLint and TypeScript typecheck, focused migration Ruff check/format and whitespace
+checks. No production behavior, API, schema, trading rule or financial calculation changed.

@@ -20,6 +20,22 @@ type KeyView = components["schemas"]["KeyView"];
 const IDENTITY = { user_id: "user-one", totp_enabled: true };
 const KEY = "PUBLIC-KEY-MUST-NOT-STAY";
 const SECRET = "SECRET-MUST-NOT-STAY";
+const UNSET_PAPER_RISK = {
+  mode: "PAPER",
+  amount: null,
+  currency: "USDT",
+  revision: 0,
+  wallet_id: null,
+  episode_id: null,
+  latched: false,
+  stop_alert_due: false,
+  pause_alert_due: false,
+  loss: null,
+  reason: "RISK_LIMIT_UNSET",
+  source_revision: null,
+  evaluated_at: null,
+  snapshot_at: "2026-10-31T00:00:00Z",
+} satisfies components["schemas"]["RiskLimitView"];
 
 const mutations = [
   { action: "add", message: "เพิ่ม key แล้ว กำลังรอตรวจ" },
@@ -52,6 +68,9 @@ it.each(mutations.flatMap((mutation) =>
     }
     if (changed && fail && url.endsWith(failedQuery)) {
       return Promise.reject(new Error(SECRET));
+    }
+    if (url.endsWith("paper/risk-limit")) {
+      return Promise.resolve(response(UNSET_PAPER_RISK));
     }
     const rows = changed ? action === "delete" ? [] : [row("PENDING")] :
       action === "add" ? [] : [row("UNVERIFIABLE")];
@@ -93,6 +112,9 @@ it.each(mutations)("$action waits for a delayed account refetch before showing s
     }
     if (changed && url.endsWith("trading-account")) {
       return new Promise<Response>((resolve) => { finish = resolve; });
+    }
+    if (url.endsWith("paper/risk-limit")) {
+      return Promise.resolve(response(UNSET_PAPER_RISK));
     }
     return Promise.resolve(response(url.endsWith("api-keys") ? rows() : {
       use: null, key: rows()[0] ?? null, may_trade: false, may_change_use: false,

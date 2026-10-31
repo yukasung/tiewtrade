@@ -120,9 +120,7 @@ def downgrade() -> None:
       END IF;
     END $$""")
     op.execute("ALTER TABLE risk_limit_requests FORCE ROW LEVEL SECURITY")
-    op.execute(
-        "ALTER TABLE risk_limit_requests DROP CONSTRAINT risk_request_authorization_mode"
-    )
+    op.execute("ALTER TABLE risk_limit_requests DROP CONSTRAINT risk_request_authorization_mode")
     op.execute("""ALTER TABLE risk_limit_requests
       ADD CONSTRAINT risk_request_authorization_required CHECK(
         (action='INCREASE')=(authorization_id IS NOT NULL))""")
