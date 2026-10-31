@@ -5960,3 +5960,13 @@ All E2E submits now reuse one helper that waits for the existing submit action t
 enabled before clicking. This changes neither the readiness predicate nor its timeout in
 the application; it only makes the browser driver observe the same prerequisite a user
 must satisfy. Frontend ESLint and TypeScript typecheck remain green.
+
+That driver wait passed all seven manual-order E2E cases. The subsequent risk-composition
+step then stopped in its shared setup because it still required the removed message that
+an unset Paper limit blocks orders. The risk browser flow now asserts the approved R35/R36
+state instead: the limit is null, the compact trade page offers its Trading-account link,
+and setting/resetting the limit is performed on the account page. Its obsolete Paper AUTH
+scenario was also aligned with migration 0059: a Paper increase opens no TOTP dialog, a
+disconnect leaves the authoritative amount unchanged, and Save replays the same durable
+intent without an authorization header. Frontend ESLint and TypeScript typecheck pass; no
+production source or financial behavior changed.

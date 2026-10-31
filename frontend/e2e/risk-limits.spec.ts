@@ -1,6 +1,6 @@
 import { mkdirSync } from "node:fs";
 import { expect, test } from "./helpers/test";
-import { PASSWORD, codeFor, secretOf, stepAt } from "./helpers/totp";
+import { PASSWORD } from "./helpers/totp";
 import type { Page } from "@playwright/test";
 const control = "http://127.0.0.1:18018/__e2e/risk";
 const evidence = "../specs/features/2026-10-25-wallet-risk-limits/evidence/ui";
@@ -22,14 +22,27 @@ async function register(page: Page) {
   const identity = await (await page.request.get("/api/auth/me")).json() as { user_id: string };
   expect((await page.request.post(`${control}/prepare`, { data: identity })).status()).toBe(204);
   await page.reload();
-  await expect(page.getByText("ยังไม่ได้ตั้งเพดาน จึงยังเปิดออเดอร์ไม่ได้")).toBeVisible();
+  await expect(page.getByRole("link", { name: "ตั้งค่าในหน้าบัญชีเทรด", exact: true })).toBeVisible();
+  expect((await snapshot(page)).amount).toBeNull();
   return identity.user_id;
 }
+async function openTradingAccount(page: Page) {
+  await page.getByRole("link", { name: "บัญชีเทรด", exact: true }).click();
+  await expect(page).toHaveURL(/\/trading-account$/);
+  await expect(page.getByLabel("เพดานขาดทุน (USDT)")).toBeVisible();
+}
+async function openPaperTrade(page: Page) {
+  await page.getByRole("link", { name: "เทรด Paper", exact: true }).click();
+  await expect(page).toHaveURL(/\/paper\/trade$/);
+  await expect(page.getByLabel("คู่เทรด")).toBeEnabled();
+}
 async function setLimit(page: Page, amount = "10") {
+  await openTradingAccount(page);
   await page.getByLabel("เพดานขาดทุน (USDT)").fill(amount);
   await page.getByRole("button", { name: "บันทึก", exact: true }).click();
   await expect.poll(async () => (await snapshot(page)).amount).toBe(amount);
   await expect.poll(async () => (await snapshot(page)).reason).toBe("READY");
+  await openPaperTrade(page);
 }
 async function submitManual(page: Page) {
   let button = page.getByRole("button", { name: "ส่งออเดอร์ Paper", exact: true });
@@ -58,7 +71,6 @@ async function order(page: Page, id: string) {
 }
 test("production risk composition: unset→set→BUY→breach→cancel→bounded SELL→reset→eligible BUY", async ({ page }) => {
   const owner = await register(page); await capture(page, "unset-th-light-desktop");
-  await expect(page.getByRole("button", { name: "ส่งออเดอร์ Paper", exact: true })).toBeDisabled();
   await setLimit(page);
   await page.getByLabel("คู่เทรด").selectOption("BTC");
   const buy = await send(page, "110");
@@ -95,6 +107,7 @@ test("production risk composition: unset→set→BUY→breach→cancel→bounded
   await page.getByRole("button", { name: "ส่งออเดอร์ Paper", exact: true }).click();
   const sell = await (await selling).json() as { order_id: string };
   await expect.poll(async () => (await order(page, sell.order_id)).status).toBe("FILLED");
+  await openTradingAccount(page);
   await expect(page.getByRole("button", { name: "รีเซ็ตการนับขาดทุน", exact: true })).toBeEnabled();
   await page.getByRole("button", { name: "รีเซ็ตการนับขาดทุน", exact: true }).click();
   await expect(page.getByRole("dialog").getByText(/สถานะที่ถือยังเปิดอยู่/)).toBeVisible();
@@ -103,6 +116,8 @@ test("production risk composition: unset→set→BUY→breach→cancel→bounded
   await expect.poll(async () => (await snapshot(page)).latched).toBe(false);
   expect((await snapshot(page)).loss).toBe("0");
   expect((await snapshot(page)).current_allowance).not.toBe("0");
+  await openPaperTrade(page);
+  await page.getByLabel("คู่เทรด").selectOption("BTC");
   await page.getByLabel("ฝั่ง", { exact: true }).selectOption("BUY");
   const resumed = await send(page, "11");
   await expect.poll(async () => (await order(page, resumed.order_id)).status).toBe("FILLED");
@@ -149,29 +164,25 @@ test("UNKNOWN reload keeps the same risk key and no optimistic setting is shown"
   expect((await page.request.get(`/api/paper/risk-limit/requests/by-key/${committed!.idempotency_key}`)).status()).toBe(200);
 });
 
-test("real AUTH commit survives API disconnect; browser replays authorization-only with no new TOTP", async ({ page }) => {
+test("Paper increase survives API disconnect and replays the same request without TOTP", async ({ page }) => {
   const owner = await register(page);
   await setLimit(page, "100");
-  await page.getByRole("link", { name: "TOTP / 2FA", exact: true }).click();
-  await page.getByLabel("รหัสผ่านปัจจุบัน").fill(PASSWORD);
-  await page.getByTestId("start-totp").click();
-  await expect(page.getByTestId("otpauth-qr")).toBeVisible();
-  const secret = secretOf(await page.getByTestId("otpauth-uri").textContent() ?? "");
-  await page.getByLabel("รหัสจากแอป").fill(codeFor(secret, stepAt(Date.now()) - 1));
-  await page.getByTestId("confirm-totp").click();
-  await expect(page.getByTestId("totp-state")).toHaveText("เปิดอยู่");
-  await page.getByRole("link", { name: "เทรด Paper", exact: true }).click();
+  await openTradingAccount(page);
   expect((await page.request.post(`${control}/disconnect-intake`, { data: { user_id: owner } })).status()).toBe(204);
   await page.getByLabel("เพดานขาดทุน (USDT)").fill("200");
+  const disconnected = page.waitForResponse(response =>
+    response.url().endsWith("/api/paper/risk-limit") && response.request().method() === "POST",
+  );
   await page.getByRole("button", { name: "บันทึก", exact: true }).click();
-  await page.getByRole("dialog").getByLabel("รหัสปัจจุบันจากแอปยืนยันตัวตน").fill(codeFor(secret, stepAt(Date.now())));
-  await page.getByRole("dialog").getByRole("button", { name: "ยืนยัน", exact: true }).click();
-  await expect(page.getByText(/บันทึกการอนุญาตแล้ว แต่ยังไม่บันทึกคำขอ/)).toBeVisible();
+  expect((await disconnected).status()).toBe(503);
+  await expect(page.getByRole("dialog")).toHaveCount(0);
   expect((await snapshot(page)).amount).toBe("100");
   await page.reload();
-  await expect(page.getByText(/บันทึกการอนุญาตแล้ว แต่ยังไม่บันทึกคำขอ/)).toBeVisible();
+  await expect(page.getByLabel("เพดานขาดทุน (USDT)")).toHaveValue("200");
   const retry = page.waitForRequest(r => r.url().endsWith("/api/paper/risk-limit/increase") && r.method() === "POST");
-  await page.getByRole("button", { name: "ส่งคำขอเดิมอีกครั้ง", exact: true }).click();
+  const save = page.getByRole("button", { name: "บันทึก", exact: true });
+  await expect(save).toBeEnabled();
+  await save.click();
   expect((await retry).headers()["x-tiewtrade-totp"]).toBeUndefined();
   await expect.poll(async () => (await snapshot(page)).amount).toBe("200");
   expect((await snapshot(page)).revision).toBe(2);
