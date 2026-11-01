@@ -609,3 +609,44 @@ check. Only evidence/status text changes in this sync; content/link consistency
 and `git diff --check` are sufficient local checks. A new commit, if requested,
 still requires CI for the final merge SHA. Merge itself requires an explicit
 owner instruction and has not been performed.
+
+### F-16 browser CI race remediation — 2026-11-01
+
+The documentation candidate `dac8deb` has mixed CI evidence: push run
+41302429881 failed the F-16 storage-denial browser test before its POST-blocking
+assertion, while PR run 41302434060 passed on the same SHA. The failed push
+uploaded no artifacts because its upload path omitted Playwright `test-results`.
+The earlier successful CI remains historical evidence, not a pass for the next
+candidate.
+
+An isolated original storage-denial test passed (9.3s total). A controlled late
+trade-snapshot response reproduced the disabled-submit failure: trace snapshots
+showed the filled amount changing from `100` to empty when the wallet scope
+arrived and remounted the form. This demonstrates a harness timing gap; the
+original remote branch cannot be established conclusively without its lost trace.
+
+Owner authorized the harness/artifact fix. `frontend/e2e/manual-orders.spec.ts`
+now reuses `reloadPaperPair` for registration and source refresh, waiting for the
+BTC trade response with wallet/episode identities and the rendered wallet value
+before filling. The response waiter is armed before reload because the existing
+chart automatically selects the first supported pair. The storage-denial test
+delays snapshots to retain regression coverage while preserving its storage error
+and zero-POST assertions. `.github/workflows/ci.yml` also uploads
+`frontend/test-results/` on failure. No production, trading, schema, timeout or
+safety-assertion changes were made.
+
+The first helper iteration failed because its waiter was armed after the chart
+could select BTC, delaying completion until polling and allowing source expiry.
+That run was stopped and retained as Failed/interrupted, not retried unchanged.
+After moving the waiter before reload, the complete F-16 suite passed on a fresh
+disposable PostgreSQL 16 / Redis 7 database: **7 passed (1.2m)**, including delayed
+snapshot/storage denial, exact financial effects, receipt-loss recovery,
+cancel/fill/reset races and DB-loss same-key recovery. Frontend ESLint and
+TypeScript, workflow YAML/artifact-path checks and `git diff --check` passed.
+
+Logs, failed traces and generated screenshots are retained locally under
+`validation-artifacts/f19-f16-e2e-fix-20261101/`. Tracked UI screenshots were
+restored from their pre-run copies and disposable containers were removed.
+Commit/push and required CI on the resulting candidate are pending owner Git
+instructions; no GitHub rerun or merge was performed. V-20..24 remain pending
+under their existing full-validation/dependency scopes.

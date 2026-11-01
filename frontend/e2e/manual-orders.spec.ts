@@ -1,4 +1,5 @@
 import { mkdirSync } from "node:fs";
+import { setTimeout as delay } from "node:timers/promises";
 import { expect, test } from "./helpers/test";
 import type { Page } from "@playwright/test";
 import { PASSWORD } from "./helpers/totp";
@@ -9,6 +10,26 @@ async function capture(page: Page, name: string) {
   mkdirSync(evidence, { recursive: true });
   await page.screenshot({ path: `${evidence}/${name}`, fullPage: true });
 }
+async function reloadPaperPair(page: Page) {
+  // Arm before reload: the chart can select BTC before the selector is ready.
+  const snapshot = page.waitForResponse(response => {
+    const url = new URL(response.url());
+    return url.pathname === "/api/paper/trade" && url.searchParams.get("base") === "BTC" &&
+      response.request().method() === "GET";
+  });
+  await page.reload();
+  await expect(page.getByLabel("คู่เทรด")).toBeEnabled();
+  await page.getByLabel("คู่เทรด").selectOption("BTC");
+  const response = await snapshot;
+  expect(response.status()).toBe(200);
+  const data: unknown = await response.json();
+  expect(data).toMatchObject({ mode: "PAPER", base: "BTC", wallet: {
+    wallet_id: expect.any(String), episode_id: expect.any(String),
+  } });
+  // The wallet scope must render before filling: its first arrival remounts the form.
+  await expect(page.locator('[aria-labelledby="manual-form-heading"] dl > div').first()
+    .locator("dd .market-value")).toBeVisible();
+}
 async function register(page: Page, email = `manual-${Date.now()}@example.com`) {
   await page.goto("/paper/trade");
   await page.getByTestId("switch-mode").click();
@@ -18,16 +39,12 @@ async function register(page: Page, email = `manual-${Date.now()}@example.com`) 
   await expect(page.getByTestId("signed-in")).toBeVisible();
   const identity = await (await page.request.get("/api/auth/me")).json() as { user_id: string };
   expect((await page.request.post(`${api}/prepare`, { data: identity })).status()).toBe(204);
-  await page.reload();
-  await expect(page.getByLabel("คู่เทรด")).toBeEnabled();
-  await page.getByLabel("คู่เทรด").selectOption("BTC");
+  await reloadPaperPair(page);
   return identity.user_id;
 }
 async function fresh(page: Page) {
   expect((await page.request.post(`${api}/source`)).status()).toBe(204);
-  await page.reload();
-  await expect(page.getByLabel("คู่เทรด")).toBeEnabled();
-  await page.getByLabel("คู่เทรด").selectOption("BTC");
+  await reloadPaperPair(page);
 }
 async function submitPaperOrder(page: Page) {
   const submit = page.getByRole("button", { name: "ส่งออเดอร์ Paper", exact: true });
@@ -216,6 +233,12 @@ test("browser storage denial blocks the POST before transmission", async ({ page
     };
   });
   await register(page);
+  // Reproduce the late wallet snapshot that used to erase the filled amount.
+  await page.route("**/api/paper/trade**", async route => {
+    const response = await route.fetch();
+    await delay(route.request().url().includes("base=BTC") ? 1200 : 3000);
+    await route.fulfill({ response });
+  });
   let posts = 0;
   page.on("request", request => { if (request.url().endsWith("/api/paper/orders") && request.method() === "POST") posts += 1; });
   await fresh(page); await page.getByLabel("งบซื้อ (USDT)").fill("100");
