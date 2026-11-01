@@ -8,12 +8,12 @@ from tiewtrade.infra.trading_stops.records import StopStatus
 
 async def read_status(session: UserSession, mode: TradingMode) -> StopStatus:
     checked = require_user_session(session)
-    active = (
+    unresolved_stops = list(
         await checked.execute(
             """WITH latest AS (
-              SELECT * FROM trading_stop_requests s WHERE s.action='STOP'
+              SELECT DISTINCT ON (cause) * FROM trading_stop_requests s WHERE s.action='STOP'
                 AND s.scope_owner_id=:owner AND s.mode=:mode
-              ORDER BY revision DESC LIMIT 1)
+              ORDER BY cause,revision DESC)
             SELECT s.*,j.id risk_stop_id,p.target_set_complete,p.effects_revision,p.target_count,
               p.pending_count,p.failed_count,x.state result_state
             FROM latest s LEFT JOIN risk_stop_requests j ON j.authority_request_id=s.id
@@ -22,10 +22,12 @@ async def read_status(session: UserSession, mode: TradingMode) -> StopStatus:
             WHERE NOT EXISTS(SELECT 1 FROM trading_stop_requests r
               JOIN trading_stop_results resumed ON resumed.request_id=r.id
                 AND resumed.state='APPLIED'
-              WHERE r.action='RESUME' AND r.expected_stop_id=s.id)""",
+              WHERE r.action='RESUME' AND r.expected_stop_id=s.id)
+            ORDER BY s.revision DESC""",
             {"owner": checked.user_id, "mode": mode.value},
         )
-    ).one_or_none()
+    )
+    active = unresolved_stops[0] if unresolved_stops else None
     platform = (
         await checked.execute(
             """WITH latest AS (
@@ -120,4 +122,5 @@ async def read_status(session: UserSession, mode: TradingMode) -> StopStatus:
             and reconciliation_ready
         ),
         reconciliation_revision=None if active is None else reconciliation_revision,
+        active_causes=tuple(StopCause(str(row.cause)) for row in unresolved_stops),
     )

@@ -5,6 +5,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr, field_validator
 
+OwnerStopCause = Literal["USER", "SYSTEM", "LOSS_LIMIT"]
+
 
 class StopInput(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -60,6 +62,7 @@ class KillSwitchStatusView(BaseModel):
     resume_ready: bool
     reconciliation_revision: int | None
     capability: Literal["AVAILABLE", "LIVE_EXECUTION_UNAVAILABLE"]
+    active_causes: list[OwnerStopCause] = Field(default_factory=list)
 
 
 class StopSummaryView(BaseModel):

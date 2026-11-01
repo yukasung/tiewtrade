@@ -19,6 +19,7 @@ from tiewtrade.infra.audit import (
     record_event,
 )
 from tiewtrade.infra.db import DatabaseRole, scan_session_bypassing_rls, user_session
+from tiewtrade.infra.db.errors import DatabaseTimeoutError
 from tiewtrade.infra.db.session import UserSession
 from tiewtrade.infra.risk_limits.dispatch import lock_risk_owner
 from tiewtrade.infra.trading_stops.storage import global_exclusive_lock, global_shared_lock
@@ -277,11 +278,13 @@ async def _apply_resume(session: UserSession, request: Any) -> None:
         await _resume_failure(session, request, "TRADING_STOP_REVISION_CONFLICT")
         return
     if platform:
+        await session.execute("SELECT lock_trading_reconciliation_clock()")
         ready = (
             await session.execute(
                 """SELECT 1 FROM platform_stop_progress g WHERE stop_id=:stop
               AND discovery_complete AND pending_count=0 AND failed_count=0
               AND revision=:summary
+              AND g.reconciliation_revision=CAST(:reconciliation AS bigint)
               AND (SELECT revision FROM trading_reconciliation_clock WHERE singleton)
                     =CAST(:reconciliation AS bigint)""",
                 {
@@ -418,10 +421,16 @@ async def run_stop_request_round(
     return StopRound(processed=processed, deferred=deferred)
 
 
+async def _set_discovery_timeouts(session: UserSession) -> None:
+    await session.execute("SET LOCAL lock_timeout='100ms'")
+    await session.execute("SET LOCAL statement_timeout='700ms'")
+
+
 async def _create_platform_target(
     engine: AsyncEngine, request: Any, owner_id: UUID, wallet_id: UUID, episode_id: UUID
 ) -> bool:
     async with user_session(engine, owner_id, role=DatabaseRole.ENGINE) as session:
+        await _set_discovery_timeouts(session)
         await global_shared_lock(session)
         await lock_risk_owner(session, TradingMode.PAPER)
         exists = (
@@ -475,7 +484,7 @@ async def run_platform_discovery_round(
         current = (
             (
                 await scan.execute(
-                    """SELECT r.id,r.user_id,r.recorded_at,p.cursor,p.discovery_complete
+                    """SELECT r.id,r.user_id,r.recorded_at,p.cursor,p.revision
             FROM trading_stop_requests r
             JOIN platform_stop_progress p ON p.stop_id=r.id
             WHERE r.cause='PLATFORM' AND r.action='STOP'
@@ -490,19 +499,32 @@ async def run_platform_discovery_round(
         )
         if current is None:
             return StopRound()
-        wallets = []
-        if not current["discovery_complete"]:
-            wallets = list(
-                await scan.execute(
-                    """SELECT user_id,wallet_id,active_episode_id FROM paper_wallet_state
-                WHERE CAST(:cursor AS uuid) IS NULL OR user_id>CAST(:cursor AS uuid)
-                ORDER BY user_id LIMIT :limit""",
-                    {"cursor": current["cursor"], "limit": limit},
-                )
+        # Enrolled owners are durable progress. Rotate over missing owners so a
+        # locked one cannot hold the cursor back or disappear behind it.
+        wallets = list(
+            await scan.execute(
+                """SELECT * FROM (
+                  (SELECT 0 AS phase,user_id,wallet_id,active_episode_id
+                   FROM paper_wallet_state w
+                   WHERE (CAST(:cursor AS uuid) IS NULL OR user_id>CAST(:cursor AS uuid))
+                     AND NOT EXISTS(SELECT 1 FROM platform_stop_targets t
+                       WHERE t.stop_id=:stop AND t.user_id=w.user_id)
+                   ORDER BY user_id LIMIT :limit)
+                  UNION ALL
+                  (SELECT 1 AS phase,user_id,wallet_id,active_episode_id
+                   FROM paper_wallet_state w
+                   WHERE CAST(:cursor AS uuid) IS NOT NULL AND user_id<=CAST(:cursor AS uuid)
+                     AND NOT EXISTS(SELECT 1 FROM platform_stop_targets t
+                       WHERE t.stop_id=:stop AND t.user_id=w.user_id)
+                   ORDER BY user_id LIMIT :limit)
+                ) candidates ORDER BY phase,user_id LIMIT :limit""",
+                {"stop": current["id"], "cursor": current["cursor"], "limit": limit},
             )
+        )
     discovered = deferred = 0
     cursor = current["cursor"]
     for wallet in wallets:
+        cursor = wallet.user_id
         try:
             if await _create_platform_target(
                 engine,
@@ -512,44 +534,58 @@ async def run_platform_discovery_round(
                 UUID(str(wallet.active_episode_id)),
             ):
                 discovered += 1
-            cursor = wallet.user_id
         except Exception:
             deferred += 1
             _LOGGER.exception("platform stop target failed owner=%s", wallet.user_id)
-            break
-    complete = bool(current["discovery_complete"]) or (len(wallets) < limit and deferred == 0)
     async with scan_session_bypassing_rls(scan_engine) as scan:
         counts = (
             await scan.execute(
                 """SELECT count(*) owner_count,coalesce(sum(p.pending_count),0) pending_count,
               coalesce(sum(p.failed_count),0) failed_count,
               coalesce(bool_and(p.target_set_complete
-                AND coalesce(a.availability='READY',false)),true) children_complete
+                AND coalesce(a.availability='READY',false)),true) children_complete,
+              (SELECT revision FROM trading_reconciliation_clock WHERE singleton)
+                reconciliation_revision,
+              NOT EXISTS(SELECT 1 FROM paper_wallet_state w
+                WHERE NOT EXISTS(SELECT 1 FROM platform_stop_targets enrolled
+                  WHERE enrolled.stop_id=:stop AND enrolled.user_id=w.user_id)) inventory_complete
             FROM platform_stop_targets t JOIN risk_stop_progress p ON p.stop_id=t.risk_stop_id
             LEFT JOIN paper_position_activity a ON a.episode_id=t.episode_id
             WHERE t.stop_id=:stop""",
                 {"stop": current["id"]},
             )
         ).one()
-    async with user_session(
-        engine, UUID(str(current["user_id"])), role=DatabaseRole.ENGINE
-    ) as actor:
-        await actor.execute(
-            """UPDATE platform_stop_progress SET cursor=:cursor,
-          discovery_complete=:complete,owner_count=:owners,pending_count=:pending,
-          failed_count=:failed,revision=revision+1,updated_at=clock_timestamp()
-          WHERE stop_id=:stop AND (cursor IS DISTINCT FROM CAST(:cursor AS uuid)
-            OR discovery_complete IS DISTINCT FROM :complete
-            OR owner_count IS DISTINCT FROM :owners
-            OR pending_count IS DISTINCT FROM :pending
-            OR failed_count IS DISTINCT FROM :failed)""",
-            {
-                "cursor": cursor,
-                "complete": complete and bool(counts.children_complete),
-                "owners": counts.owner_count,
-                "pending": counts.pending_count,
-                "failed": counts.failed_count,
-                "stop": current["id"],
-            },
-        )
+    try:
+        async with user_session(
+            engine, UUID(str(current["user_id"])), role=DatabaseRole.ENGINE
+        ) as actor:
+            await _set_discovery_timeouts(actor)
+            await actor.execute(
+                """UPDATE platform_stop_progress SET cursor=:cursor,
+              discovery_complete=:complete,owner_count=:owners,pending_count=:pending,
+              failed_count=:failed,reconciliation_revision=:reconciliation,
+              revision=revision+1,updated_at=clock_timestamp()
+              WHERE stop_id=:stop AND revision=:expected_revision
+                AND (SELECT revision FROM trading_reconciliation_clock WHERE singleton)
+                  =:reconciliation
+                AND (cursor IS DISTINCT FROM CAST(:cursor AS uuid)
+                OR discovery_complete IS DISTINCT FROM :complete
+                OR owner_count IS DISTINCT FROM :owners
+                OR pending_count IS DISTINCT FROM :pending
+                OR failed_count IS DISTINCT FROM :failed
+                OR reconciliation_revision IS DISTINCT FROM CAST(:reconciliation AS bigint))""",
+                {
+                    "cursor": cursor,
+                    "complete": bool(counts.inventory_complete and counts.children_complete),
+                    "owners": counts.owner_count,
+                    "pending": counts.pending_count,
+                    "failed": counts.failed_count,
+                    "stop": current["id"],
+                    "reconciliation": counts.reconciliation_revision,
+                    "expected_revision": current["revision"],
+                },
+            )
+    except DatabaseTimeoutError:
+        deferred += 1
+        _LOGGER.warning("platform stop progress deferred stop=%s", current["id"])
     return StopRound(discovered=discovered, deferred=deferred, active=True)

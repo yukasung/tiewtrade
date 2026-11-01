@@ -1629,6 +1629,18 @@
       },
       "KillSwitchStatusView": {
         "properties": {
+          "active_causes": {
+            "items": {
+              "enum": [
+                "USER",
+                "SYSTEM",
+                "LOSS_LIMIT"
+              ],
+              "type": "string"
+            },
+            "title": "Active Causes",
+            "type": "array"
+          },
           "capability": {
             "enum": [
               "AVAILABLE",

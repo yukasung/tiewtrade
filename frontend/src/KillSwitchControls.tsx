@@ -48,10 +48,13 @@ export function KillSwitchBanner({ owner }: { owner: string }) {
   const status = useQuery({ queryKey: stopKey(owner, "PAPER"), queryFn: ({ signal }) => fetchStopStatus("PAPER", signal), refetchInterval: 1000, refetchOnWindowFocus: true });
   const risk = useQuery({ queryKey: riskKey(owner, "PAPER"), queryFn: ({ signal }) => fetchRisk("PAPER", signal), refetchInterval: 1000, refetchOnWindowFocus: true });
   const platform = status.data?.platform_stop_id;
-  const loss = risk.data?.latched;
-  if (!platform && !loss) return null;
+  const activeCauses = status.data?.active_causes ?? [];
+  const loss = risk.data?.latched || activeCauses.includes("LOSS_LIMIT");
+  const system = activeCauses.includes("SYSTEM");
+  if (!platform && !loss && !system) return null;
   return <div className="kill-switch-banner">
     {platform && <Alert variant="warning" title={t("platformTitle")} message={`${t("platformMessage")}${status.data?.platform_reason ? `: ${status.data.platform_reason}` : ""}`} />}
     {loss && <Alert variant="warning" title={t("lossTitle")} message={t("lossMessage")} />}
+    {system && <Alert variant="warning" title={t("systemTitle")} message={t("systemMessage")} />}
   </div>;
 }

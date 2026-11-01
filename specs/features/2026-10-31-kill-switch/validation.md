@@ -273,6 +273,23 @@ checkpoint และรวม NC-F19-14 → targeted checks → W1 → W2 → W3
 
 ## 6. ด่านและหลักฐาน
 
+### Review-remediation checks — 2026-11-01
+
+- V-03/11: clock เก่าถูก reject; clock ใหม่กับ summary เก่าก็ต้อง reject;
+  position CONFLICTED ต้องไม่ resume แม้ใช้ revision ล่าสุด; refresh หลัง READY จึง resume ได้
+  clock-row lock serialize transactions จริง และ API เรียก definer lock/UPDATE clock ไม่ได้
+- V-14: held owner lock ต้อง defer ภายใน bound และ enroll owner อื่นในรอบเดียวกัน;
+  ปล่อย lock แล้วสอง workers retry ต้องได้ target เดียว ไม่ตกหล่นและไม่ complete ก่อนครบ
+- V-01/03/15: USER กับ LOSS_LIMIT/SYSTEM ทั้งสองลำดับยังแสดง unresolved cause หลัง USER resume;
+  banner ยังเห็น durable loss/system เมื่อ risk latch=false โดยไม่ปลด cause อื่น
+- V-07/08/19: migration 0062 empty round-trip, snapshot-history downgrade guard, narrow grants,
+  schema/client generation, affected financial/concurrency tests และ required CI บน candidate ใหม่
+- ผล/คำสั่ง/limitations บันทึกใน `evidence/implementation-checkpoint.md`
+  หัวข้อ Post-CI deep-review remediation; local backend4056/frontend343/browser2 ผ่าน
+  แต่ required CI ของ candidate ใหม่ยังค้าง และ checks นี้ไม่ปิด V-20..24
+- หลัง owner-authorized refactor: affected backend67/frontend4 พร้อม lint/types ผ่าน;
+  ใช้ full regression/browser evidence เดิมในส่วนไม่กระทบ ตามหัวข้อ refactor ใน checkpoint
+
 - ก่อนทุกชุดตรวจแจ้งขอบเขต สิ่งที่พิสูจน์ และเวลารวมโดยประมาณ; จบแล้วบันทึกเวลาจริง
 - แต่ละ milestone อัปเดต `evidence/mN-*.md` เดิมพร้อม commit/worktree state,
   commands/results/environment และ Pending/Failed/Partial ตามจริง

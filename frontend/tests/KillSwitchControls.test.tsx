@@ -1,12 +1,13 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
-import { KillSwitchControls } from "../src/KillSwitchControls";
+import { KillSwitchBanner, KillSwitchControls } from "../src/KillSwitchControls";
 import { killSwitchText as t } from "../src/killSwitchMessages";
 import { riskText } from "../src/riskLimitMessages";
 import type { StopStatus } from "../src/killSwitch";
 
 const status = (mode: "PAPER" | "LIVE", stop: string | null = null): StopStatus => ({
+  active_causes: stop ? ["USER"] : [],
   mode, stop_id: stop, cause: stop ? "USER" : null, generation: stop ? 1 : null, revision: stop ? 1 : 0, summary_revision: 0,
   progress: stop ? "STOPPED" : null, target_set_complete: mode === "PAPER" && stop !== null,
   target_count: 0, pending_count: 0, failed_count: 0, platform_stop_id: null,
@@ -16,6 +17,20 @@ const status = (mode: "PAPER" | "LIVE", stop: string | null = null): StopStatus 
 });
 
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); window.localStorage.clear(); });
+
+it("keeps durable loss and system banners visible after the risk latch resets", async () => {
+  vi.stubGlobal("fetch", vi.fn((url: string) => {
+    const body = url.includes("/risk-limit") ? { latched: false } : {
+      ...status("PAPER", "latest-user-stop"),
+      active_causes: ["USER", "LOSS_LIMIT", "SYSTEM"],
+    };
+    return Promise.resolve(new Response(JSON.stringify(body)));
+  }));
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  render(<QueryClientProvider client={client}><KillSwitchBanner owner="owner"/></QueryClientProvider>);
+  expect(await screen.findByText(t("lossTitle"))).toBeTruthy();
+  expect(screen.getByText(t("systemTitle"))).toBeTruthy();
+});
 
 it("shows separate Paper and Live stop controls and preserves the unknown request key", async () => {
   let fail = true;

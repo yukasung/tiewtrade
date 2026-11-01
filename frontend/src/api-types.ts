@@ -1981,6 +1981,8 @@ export interface components {
         };
         /** KillSwitchStatusView */
         KillSwitchStatusView: {
+            /** Active Causes */
+            active_causes?: ("USER" | "SYSTEM" | "LOSS_LIMIT")[];
             /**
              * Capability
              * @enum {string}

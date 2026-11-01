@@ -3,6 +3,7 @@ import type { RiskEffects } from "./riskLimits";
 
 export type StopMode = "PAPER" | "LIVE";
 export type StopStatus = {
+  active_causes: Array<"USER" | "SYSTEM" | "LOSS_LIMIT">;
   mode: StopMode; stop_id: string | null; cause: "USER" | "SYSTEM" | "LOSS_LIMIT" | "PLATFORM" | null;
   generation: number | null; revision: number; summary_revision: number; progress: "STOPPING" | "STOPPED" | "PROBLEMS" | null;
   target_set_complete: boolean; target_count: number; pending_count: number; failed_count: number;

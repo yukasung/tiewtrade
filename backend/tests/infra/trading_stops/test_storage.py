@@ -1,9 +1,13 @@
+import asyncio
 from uuid import UUID, uuid4
 
 import pytest
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncEngine
 
+from tests.infra.db.test_migrations import _failed_upgrade_or_downgrade
+from tests.infra.positions.conftest import create_production_wallet
+from tests.infra.risk_limits.test_concurrency import serialize
 from tiewtrade.core.orders import OrderOrigin, TradingMode
 from tiewtrade.core.trading_stops import StopAction, StopProgress
 from tiewtrade.infra.db import (
@@ -13,10 +17,11 @@ from tiewtrade.infra.db import (
     NotPermittedError,
     user_session,
 )
+from tiewtrade.infra.db.session import UserSession
 from tiewtrade.infra.paper_wallet.records import PaperWalletSnapshot
 from tiewtrade.infra.trading_account import AccountUse, select_use
 from tiewtrade.infra.trading_stops import read_status, receipt_by_id, submit_request
-from tiewtrade.infra.trading_stops.records import StopConflictError
+from tiewtrade.infra.trading_stops.records import StopConflictError, StopReceipt
 from tiewtrade.infra.trading_stops.storage import (
     current_opening_blocked,
     opening_interrupted,
@@ -37,6 +42,7 @@ async def _touch_position_activity(
     episode_id: UUID,
     *,
     commit: bool,
+    availability: str | None = None,
 ) -> tuple[int, int]:
     """Exercise the reconciliation trigger without bypassing its RLS policies."""
     async with migrator_engine.connect() as connection:
@@ -63,10 +69,13 @@ async def _touch_position_activity(
             )
             changed = await connection.execute(
                 text(
-                    "UPDATE paper_position_activity SET revision=revision+1 "
+                    "UPDATE paper_position_activity SET revision=revision+1, "
+                    "availability=coalesce(:availability,availability), "
+                    "failure_code=CASE WHEN :availability='CONFLICTED' THEN 'INJECTED_CONFLICT' "
+                    "WHEN :availability='READY' THEN NULL ELSE failure_code END "
                     "WHERE episode_id=:episode RETURNING revision"
                 ),
-                {"episode": episode_id},
+                {"episode": episode_id, "availability": availability},
             )
             assert changed.scalar_one() > 1
             after = int(
@@ -93,6 +102,27 @@ async def _touch_position_activity(
             raise
 
 
+async def _submit_platform_resume(
+    session: UserSession,
+    stop: StopReceipt,
+    *,
+    summary_revision: int,
+    reconciliation_revision: int,
+) -> StopReceipt:
+    return await submit_request(
+        session,
+        mode=None,
+        action=StopAction.RESUME,
+        key=uuid4(),
+        expected_stop_id=stop.stop_id,
+        expected_revision=stop.revision,
+        expected_summary_revision=summary_revision,
+        expected_reconciliation_revision=reconciliation_revision,
+        reason_code="PLATFORM_RESUME",
+        platform=True,
+    )
+
+
 @pytest.mark.asyncio
 async def test_reconciliation_clock_is_not_a_normal_trading_hot_row(
     api_engine: AsyncEngine,
@@ -108,6 +138,22 @@ async def test_reconciliation_clock_is_not_a_normal_trading_hot_row(
             await session.execute(
                 "UPDATE trading_reconciliation_clock SET revision=revision+1 WHERE singleton"
             )
+
+
+async def test_resume_clock_lock_is_engine_only_and_serializes_transactions(
+    api_engine: AsyncEngine,
+    engine_engine: AsyncEngine,
+    migrator_engine: AsyncEngine,
+    owner: UUID,
+) -> None:
+    with pytest.raises(NotPermittedError):
+        async with user_session(api_engine, owner) as session:
+            await session.execute("SELECT lock_trading_reconciliation_clock()")
+
+    async def take_lock(session: UserSession) -> None:
+        await session.execute("SELECT lock_trading_reconciliation_clock()")
+
+    await serialize(engine_engine, migrator_engine, owner, take_lock, take_lock)
 
 
 @pytest.mark.asyncio
@@ -829,17 +875,59 @@ async def test_platform_fence_discovers_targets_and_owner_can_resume_exact_snaps
         assert stale_result is not None
         assert stale_result.state == "REJECTED"
         assert stale_result.failure_code == "TRADING_STOP_NOT_READY"
-        await submit_request(
+        fresh_clock_stale_summary = await _submit_platform_resume(
             session,
-            mode=None,
-            action=StopAction.RESUME,
-            key=uuid4(),
-            expected_stop_id=stop.stop_id,
-            expected_revision=stop.revision,
-            expected_summary_revision=summary_revision,
-            expected_reconciliation_revision=committed_after,
-            reason_code="PLATFORM_RESUME",
-            platform=True,
+            stop,
+            summary_revision=summary_revision,
+            reconciliation_revision=committed_after,
+        )
+    await run_stop_request_round(engine=engine_engine, scan_engine=scan_engine)
+    async with user_session(api_engine, owner) as session:
+        rejected_snapshot = await receipt_by_id(session, fresh_clock_stale_summary.request_id)
+        assert rejected_snapshot is not None and rejected_snapshot.state == "REJECTED"
+
+    await _touch_position_activity(
+        migrator_engine, wallet.episode_id, commit=True, availability="CONFLICTED"
+    )
+    await run_platform_discovery_round(engine=engine_engine, scan_engine=scan_engine)
+    async with user_session(api_engine, owner) as session:
+        invalid = (
+            await session.execute(
+                "SELECT revision,reconciliation_revision,discovery_complete "
+                "FROM platform_stop_progress WHERE stop_id=:stop",
+                {"stop": stop.stop_id},
+            )
+        ).one()
+        assert not invalid.discovery_complete
+        conflicted_resume = await _submit_platform_resume(
+            session,
+            stop,
+            summary_revision=invalid.revision,
+            reconciliation_revision=invalid.reconciliation_revision,
+        )
+    await run_stop_request_round(engine=engine_engine, scan_engine=scan_engine)
+    async with user_session(api_engine, owner) as session:
+        rejected_conflict = await receipt_by_id(session, conflicted_resume.request_id)
+        assert rejected_conflict is not None and rejected_conflict.state == "REJECTED"
+        assert await current_opening_blocked(session, TradingMode.PAPER, OrderOrigin.MANUAL)
+
+    await _touch_position_activity(
+        migrator_engine, wallet.episode_id, commit=True, availability="READY"
+    )
+    await run_platform_discovery_round(engine=engine_engine, scan_engine=scan_engine)
+    async with user_session(api_engine, owner) as session:
+        refreshed = (
+            await session.execute(
+                "SELECT revision,reconciliation_revision FROM platform_stop_progress "
+                "WHERE stop_id=:stop",
+                {"stop": stop.stop_id},
+            )
+        ).one()
+        await _submit_platform_resume(
+            session,
+            stop,
+            summary_revision=refreshed.revision,
+            reconciliation_revision=refreshed.reconciliation_revision,
         )
     resumed = await run_stop_request_round(engine=engine_engine, scan_engine=scan_engine)
     assert resumed.processed >= 1
@@ -849,3 +937,171 @@ async def test_platform_fence_discovers_targets_and_owner_can_resume_exact_snaps
     await create_user(api_engine, other_owner)
     async with user_session(api_engine, other_owner) as session:
         assert not await current_opening_blocked(session, TradingMode.PAPER, OrderOrigin.MANUAL)
+    refused = _failed_upgrade_or_downgrade("downgrade", "0061")
+    assert "platform reconciliation snapshot history prevents downgrade" in refused.stderr
+    async with migrator_engine.connect() as connection:
+        assert (
+            await connection.execute(text("SELECT version_num FROM alembic_version"))
+        ).scalar_one() == "0062"
+
+
+@pytest.mark.parametrize("cause", ["LOSS_LIMIT", "SYSTEM"])
+@pytest.mark.parametrize("user_first", [False, True])
+async def test_resuming_one_cause_keeps_other_cause_visible(
+    api_engine: AsyncEngine,
+    engine_engine: AsyncEngine,
+    scan_engine: AsyncEngine,
+    owner: UUID,
+    cause: str,
+    user_first: bool,
+) -> None:
+    async with user_session(api_engine, owner) as session:
+        await select_use(session, AccountUse.BOT)
+
+    async def stop_user() -> UUID:
+        async with user_session(api_engine, owner) as session:
+            receipt = await submit_request(
+                session,
+                mode=TradingMode.PAPER,
+                action=StopAction.STOP,
+                key=uuid4(),
+                reason_code="USER_REQUEST",
+            )
+        return receipt.stop_id
+
+    async def stop_system() -> UUID:
+        identity = uuid4()
+        async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+            await session.execute(
+                """INSERT INTO trading_stop_requests
+                (id,user_id,scope_owner_id,mode,action,cause,actor_role,idempotency_key,
+                 fingerprint,reason_code,generation)
+                VALUES(:id,:owner,:owner,'PAPER','STOP',:cause,'SYSTEM',:id,
+                  repeat('0',64),'SOURCE_STOP',1)""",
+                {"id": identity, "owner": owner, "cause": cause},
+            )
+            await session.execute(
+                "INSERT INTO trading_stop_dispatch(request_id,user_id) VALUES(:id,:owner)",
+                {"id": identity, "owner": owner},
+            )
+        return identity
+
+    if user_first:
+        user_stop, system_stop = await stop_user(), await stop_system()
+    else:
+        system_stop, user_stop = await stop_system(), await stop_user()
+    for _ in range(2):
+        await run_stop_request_round(engine=engine_engine, scan_engine=scan_engine)
+    async with user_session(api_engine, owner) as session:
+        before = await read_status(session, TradingMode.PAPER)
+        assert {item.value for item in before.active_causes} == {"USER", cause}
+        # The inbox accepts an exact cause-specific resume independently of
+        # which unresolved cause currently owns the primary UI summary.
+        revision = (
+            await session.execute(
+                "SELECT revision FROM trading_stop_requests WHERE id=:id", {"id": user_stop}
+            )
+        ).scalar_one()
+        resume = await submit_request(
+            session,
+            mode=TradingMode.PAPER,
+            action=StopAction.RESUME,
+            key=uuid4(),
+            expected_stop_id=user_stop,
+            expected_revision=revision,
+            expected_summary_revision=0,
+            expected_reconciliation_revision=0,
+            reason_code="USER_RESUME",
+        )
+    await run_stop_request_round(engine=engine_engine, scan_engine=scan_engine)
+    async with user_session(api_engine, owner) as session:
+        outcome = await receipt_by_id(session, resume.request_id)
+        assert outcome is not None and outcome.state == "APPLIED"
+        remaining = await read_status(session, TradingMode.PAPER)
+        assert remaining.stop_id == system_stop
+        assert remaining.cause is not None and remaining.cause.value == cause
+        assert [item.value for item in remaining.active_causes] == [cause]
+        assert remaining.progress is StopProgress.STOPPED
+        assert not remaining.resume_ready
+        assert await current_opening_blocked(session, TradingMode.PAPER, OrderOrigin.BOT)
+
+
+async def test_platform_discovery_skips_locked_owner_then_retries_without_losing_it(
+    api_engine: AsyncEngine,
+    engine_engine: AsyncEngine,
+    scan_engine: AsyncEngine,
+    migrator_engine: AsyncEngine,
+    owner: UUID,
+) -> None:
+    other = uuid4()
+    await create_user(api_engine, other)
+    await create_production_wallet(api_engine, engine_engine, scan_engine, owner)
+    await create_production_wallet(api_engine, engine_engine, scan_engine, other)
+    locked, available = sorted((owner, other))
+    async with migrator_engine.begin() as connection:
+        await connection.execute(
+            text("ALTER TABLE platform_memberships NO FORCE ROW LEVEL SECURITY")
+        )
+        await connection.execute(
+            text("""INSERT INTO platform_memberships(user_id,role,created_by)
+              SELECT :owner,'PLATFORM_ADMIN',user_id FROM platform_memberships
+              WHERE role='PLATFORM_OWNER'"""),
+            {"owner": owner},
+        )
+        await connection.execute(text("ALTER TABLE platform_memberships FORCE ROW LEVEL SECURITY"))
+    async with user_session(api_engine, owner) as session:
+        stop = await submit_request(
+            session,
+            mode=None,
+            action=StopAction.STOP,
+            key=uuid4(),
+            reason_code="PLATFORM_INCIDENT",
+            reason_text="locked owner regression",
+            platform=True,
+        )
+    await run_stop_request_round(engine=engine_engine, scan_engine=scan_engine)
+    async with user_session(engine_engine, locked, role=DatabaseRole.ENGINE) as held:
+        await held.execute(
+            "SELECT pg_advisory_xact_lock(hashtextextended(:key,0))",
+            {"key": f"paper-wallet:{locked}"},
+        )
+        result = await asyncio.wait_for(
+            run_platform_discovery_round(engine=engine_engine, scan_engine=scan_engine, limit=100),
+            timeout=3,
+        )
+        assert result.deferred == 1
+        async with user_session(api_engine, available) as session:
+            assert (
+                await session.execute(
+                    "SELECT count(*) FROM platform_stop_targets WHERE stop_id=:stop",
+                    {"stop": stop.stop_id},
+                )
+            ).scalar_one() == 1
+        async with user_session(api_engine, locked) as session:
+            assert (
+                await session.execute(
+                    "SELECT count(*) FROM platform_stop_targets WHERE stop_id=:stop",
+                    {"stop": stop.stop_id},
+                )
+            ).scalar_one() == 0
+        async with user_session(api_engine, owner) as session:
+            assert not (
+                await session.execute(
+                    "SELECT discovery_complete FROM platform_stop_progress WHERE stop_id=:stop",
+                    {"stop": stop.stop_id},
+                )
+            ).scalar_one()
+    recovered = await asyncio.gather(
+        *(
+            run_platform_discovery_round(engine=engine_engine, scan_engine=scan_engine)
+            for _ in range(2)
+        )
+    )
+    assert sum(result.discovered for result in recovered) == 1
+    async with user_session(api_engine, locked) as session:
+        assert (
+            await session.execute(
+                "SELECT count(*) FROM platform_stop_targets WHERE stop_id=:stop",
+                {"stop": stop.stop_id},
+            )
+        ).scalar_one() == 1

@@ -384,3 +384,25 @@ Needs Clarification และคงเกณฑ์/load/SLA เดิมทั�
 | R5 lifecycle semantics | requirements RQ-07 แยก unsent, sent/unknown, active remainder และ terminal |
 | R6 Live false completeness | คง Live discovery/resume incomplete จนมี activation history+reconciliation จาก F-22/F-23 |
 | R7 protective dependency | targeted stage ตรวจ contract เท่านั้น; real TP/SL integration เป็น V-21 รอ F-17 |
+
+### Review remediation — เจ้าของสั่งแก้ 2026-11-01
+
+แก้ findings จาก review บน candidate `5620843` ให้ตรง RQ-12/15 และ V-03/11/14 เดิม:
+
+- เพิ่ม additive migration `0062_stop_snapshot_revision.py`: progress เก็บ nullable
+  `reconciliation_revision`; ค่าเดิมเป็น NULL จึงไม่ใช้ resume จน discovery ตรวจใหม่
+  counts/completeness/clock มาจาก SQL snapshot เดียวกัน และ publish ด้วย progress-revision CAS
+  พร้อมตรวจ clock ปัจจุบัน; clock เปลี่ยนต้อง refresh snapshot ไม่ใช้ clock ใหม่คู่ progress เก่า
+- resume ถือ global exclusive ตามเดิม แล้วเรียก narrow SECURITY DEFINER function เพื่อล็อก
+  reconciliation-clock row จน commit; ใช้สิทธิ์ migrator/RLS policy เดิม API/engine ยัง UPDATE
+  clock โดยตรงไม่ได้ และ function ให้ EXECUTE เฉพาะ engine; downgrade ปฏิเสธเมื่อมี snapshot history
+- discovery ใช้ timeout 100ms/700ms ตาม risk-worker pattern เดิม, page แบบ bounded และ rotate
+  ผ่าน owners ที่ยังไม่มี durable target; lock/failure ไม่ทำ owners ถัดไปอด และ owner ที่พลาดยังถูก retry
+  completion ต้องไม่มี missing owner พร้อม child/reconciliation complete; concurrent publishers ใช้ CAS
+- status หา latest STOP แยก cause แล้วกรอง resumed ก่อนเลือก primary summary;
+  additive `active_causes` ให้ banner แสดง LOSS_LIMIT/SYSTEM ต่อแม้ latch reset แล้ว
+  resume USER ไม่ซ่อน unresolved cause อื่น; scope, cause-specific proof และ account-use gates เดิมคงอยู่
+- reuse `lock_risk_owner`, global locks, clock trigger, target uniqueness, `serialize` real-DB barrier
+  และ shared wallet fixture factory; ไม่เพิ่ม infrastructure, order retry หรือสูตรการเงิน
+- ตรวจ targeted regression, migration/roles/locking, generated contracts, frontend แล้ว backend
+  สี่ phase ตาม CI พร้อม F-19 browser E2E; ไม่รัน W1–W3 ที่เลื่อนไป Full Validation

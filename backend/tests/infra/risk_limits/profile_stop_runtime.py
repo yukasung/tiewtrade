@@ -398,7 +398,8 @@ class PlatformStopScheduleRunner:
             return (
                 await session.execute(
                     """SELECT p.discovery_complete,p.pending_count,p.failed_count,p.revision,
-                      c.revision reconciliation_revision
+                      p.reconciliation_revision,
+                      p.reconciliation_revision=c.revision snapshot_current
                     FROM platform_stop_progress p CROSS JOIN trading_reconciliation_clock c
                     WHERE p.stop_id=:stop AND c.singleton""",
                     {"stop": stop.stop_id},
@@ -411,6 +412,7 @@ class PlatformStopScheduleRunner:
                 progress = await self._progress(stop)
                 if (
                     progress.discovery_complete
+                    and progress.snapshot_current
                     and progress.pending_count == 0
                     and progress.failed_count == 0
                 ):

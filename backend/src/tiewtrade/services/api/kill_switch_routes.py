@@ -1,7 +1,7 @@
 """Owner and platform kill-switch HTTP composition."""
 
 import os
-from typing import Annotated, Literal
+from typing import Annotated, Literal, cast
 from uuid import UUID
 
 from fastapi import APIRouter, Body, Depends, Header, HTTPException, Query, Request, Response
@@ -23,6 +23,7 @@ from tiewtrade.infra.trading_stops.records import StopConflictError, StopReceipt
 from tiewtrade.services.api.db_resources import engine_for, paper_mutation_engine
 from tiewtrade.services.api.kill_switch_models import (
     KillSwitchStatusView,
+    OwnerStopCause,
     PlatformStatusView,
     PlatformStopInput,
     ResumeStopInput,
@@ -89,6 +90,7 @@ def _status_view(status: StopStatus, mode: TradingMode) -> KillSwitchStatusView:
         resume_ready=status.resume_ready if mode is TradingMode.PAPER else False,
         reconciliation_revision=status.reconciliation_revision,
         capability="AVAILABLE" if mode is TradingMode.PAPER else "LIVE_EXECUTION_UNAVAILABLE",
+        active_causes=[cast(OwnerStopCause, cause.value) for cause in status.active_causes],
     )
 
 
@@ -328,8 +330,9 @@ async def platform_status(request: Request, who: Who) -> PlatformStatusView:
               WHERE cause='PLATFORM' AND action='STOP' ORDER BY revision DESC LIMIT 1)
             SELECT s.id,s.revision,s.reason_text,p.discovery_complete,p.owner_count,
               p.pending_count,p.failed_count,p.revision progress_revision,
-              (SELECT revision FROM trading_reconciliation_clock WHERE singleton)
-                reconciliation_revision,
+              p.reconciliation_revision,
+              (p.reconciliation_revision=(SELECT revision
+                FROM trading_reconciliation_clock WHERE singleton)) snapshot_current,
               EXISTS(SELECT 1 FROM trading_stop_requests r JOIN trading_stop_results x
                 ON x.request_id=r.id AND x.state='APPLIED'
                 WHERE r.action='RESUME' AND r.expected_stop_id=s.id) resumed
@@ -352,7 +355,7 @@ async def platform_status(request: Request, who: Who) -> PlatformStatusView:
             failed_count=0,
             can_resume=False,
         )
-    complete = bool(row.discovery_complete)
+    complete = bool(row.discovery_complete and row.snapshot_current)
     pending = int(row.pending_count or 0)
     failed = int(row.failed_count or 0)
     progress = "PROBLEMS" if failed else "STOPPED" if complete and pending == 0 else "STOPPING"

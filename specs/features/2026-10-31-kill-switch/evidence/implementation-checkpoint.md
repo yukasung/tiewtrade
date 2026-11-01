@@ -491,3 +491,88 @@ Candidate: F-19 development checkpoint; Pending Full Validation / Required CI
 - ผล targeted/local V-01..18 ที่ยัง valid ใช้ต่อ; W1 Failed ทุก attempt และ W2/W3 ไม่ได้เริ่มยังคง
   บันทึกตามจริง. F-19 อยู่สถานะ Development Complete — Pending Full Validation / Required CI,
   ไม่ใช่ Completed และยังไม่พร้อม merge
+
+### Post-CI deep-review remediation — 2026-11-01
+
+Owner requested fixes for the two High and one Medium findings on `5620843`.
+Results below apply to the uncommitted remediation worktree on that base.
+
+- High / platform snapshot: migration 0062 records the reconciliation revision
+  used by each aggregate. Counts, child readiness, inventory completeness and
+  clock are read in one snapshot; publication checks both progress revision and
+  current clock. API exposes the captured revision and disables stale readiness.
+  Resume locks the clock row through commit using an engine-only definer function
+  and verifies both captured/current clock and expected summary. API/engine still
+  have no direct clock UPDATE grant. Pre-upgrade snapshots start NULL and require
+  verification; downgrade refuses persisted snapshot history.
+- High / owner starvation: target enrollment sets 100ms lock / 700ms statement
+  bounds. Discovery rotates over owners without durable targets, continues after
+  a failed owner and retries it later. Completion requires no missing owner.
+  Concurrent projection updates use revision CAS; a timed-out projection write
+  is deferred rather than terminating the stop loop.
+- Medium / mixed causes: latest STOP is selected independently per cause before
+  filtering APPLIED resumes. The primary summary falls back to an older unresolved
+  cause. Additive `active_causes` keeps loss/system banners visible after latch
+  reset, with generated OpenAPI/client types updated. Cause-specific resume and
+  financial policies are unchanged.
+- The platform schedule harness now uses the same captured revision/currentness
+  check as the API. No timed W1–W3 workload was run or reclassified.
+
+Verification on disposable PostgreSQL 16.15 with commit timestamps enabled,
+Redis 7, Python 3.12.15 and frozen dependencies:
+
+| Check | Result |
+| --- | --- |
+| Targeted real-DB stop regressions | 23 passed, 4.74s |
+| Full normal backend suite | 4031 passed, 27 deselected, 900.88s |
+| Fresh isolated writer-fence guard | 1 passed, 3.25s |
+| Fresh isolated optional-limit guard | 1 passed, 2.17s |
+| Fresh global-state suite | 23 passed, 4035 deselected, 6.52s |
+| Frontend | 343 passed / 35 files; lint, types and build passed |
+| F-19 browser stories, independent E2E database | 2 passed, 24.5s |
+| Backend static checks | Ruff/check+format 681 files, mypy 614 source files, import contracts 7/7 |
+
+Collection partition and JUnit audit confirm 4056 distinct executed backend
+tests, each exactly once, with no failures/errors/skips in the final full run.
+Schema remains 0062. Checks include stale clock, fresh clock with stale summary,
+CONFLICTED→READY, engine-only clock lock with actual PostgreSQL blocking,
+LOSS_LIMIT/SYSTEM×both cause orders, locked-owner recovery, two concurrent
+discovery workers and the snapshot-history downgrade guard.
+
+The first targeted run had 21 passed / 2 failed: a missing scanner revision grant
+and a Platform Admin fixture without required creator identity. Both were fixed;
+the logs remain preserved. Existing deprecation and frontend bundle-size warnings
+remain; these are not new functional failures.
+
+Commands, logs, JUnit reports and new browser screenshots are retained in
+`validation-artifacts/f19-review-remediation-20261101/`; the screenshots written
+over tracked historical evidence by E2E were restored after preserving this run.
+Disposable test containers were removed after verification. Required CI must
+run on a new committed candidate; green CI for `5620843` does not cover these
+production/schema changes. V-20..24 remain pending at their approved checkpoints.
+
+### Owner-authorized refactor — 2026-11-01
+
+Reviewed only the preceding remediation diff. Consolidated the two identical
+discovery timeout setups into `_set_discovery_timeouts` and three new platform
+resume test payloads into `_submit_platform_resume`. Renamed the unresolved-stop
+collection and simplified banner/mock setup. SQL predicates, timeout values,
+transaction/lock ordering, generated contracts and all test assertions remain
+unchanged; no financial or trading behavior changed.
+
+Post-refactor verification on disposable PostgreSQL 16 / Redis 7:
+
+- Targeted API, stop/concurrency, schedule-runtime, core and scheduler tests:
+  **44 passed**, 17.64s.
+- Fresh global-state tests, including all remediation cases: **23 passed**, 7.73s.
+- Kill-switch frontend component tests: **4 passed**, 1.47s.
+- Backend Ruff/check+format, mypy and seven import contracts; frontend ESLint and
+  TypeScript; `git diff --check`: **Passed**.
+
+The prior full backend4056/frontend343 and browser2 evidence remains reusable
+for unaffected behavior, with the 67 backend / 4 frontend targeted rechecks
+covering this refactor. No full suite, browser or workload rerun was required
+for unchanged SQL/schema/API contracts and behavior. V-20..24 remain pending.
+Logs/JUnit are retained in `validation-artifacts/f19-refactor-20261101/`.
+Disposable containers were removed. Commit/push and required CI on the final
+candidate remain pending the owner's Git instruction.

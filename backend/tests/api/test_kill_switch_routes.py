@@ -29,6 +29,7 @@ def test_user_stop_is_one_click_replayable_and_mode_scoped(client: TestClient) -
     assert status.status_code == 200
     assert status.json()["stop_id"] == stopped.json()["stop_id"]
     assert status.json()["progress"] == "STOPPING"
+    assert status.json()["active_causes"] == ["USER"]
     assert client.get("/live/kill-switch").json()["stop_id"] is None
 
 

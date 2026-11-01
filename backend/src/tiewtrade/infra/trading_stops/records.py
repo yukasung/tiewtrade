@@ -45,3 +45,4 @@ class StopStatus:
     platform_reason: str | None
     resume_ready: bool
     reconciliation_revision: int | None
+    active_causes: tuple[StopCause, ...] = ()
