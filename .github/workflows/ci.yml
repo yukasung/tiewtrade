@@ -139,21 +139,20 @@ jobs:
       - name: pytest
         run: uv run pytest
 
-      - name: reset database for fresh global-state tests
+      - name: pytest isolated writer-fence migration guard
         run: |
-          psql "postgresql://postgres:postgres@127.0.0.1:5432/postgres" \
-            -v ON_ERROR_STOP=1 \
-            -c "DROP DATABASE tiewtrade WITH (FORCE)" \
-            -c "CREATE DATABASE tiewtrade"
-          for script in db/bootstrap/*.sql; do
-            echo "== $script"
-            psql "postgresql://postgres:postgres@127.0.0.1:5432/tiewtrade" \
-              -v ON_ERROR_STOP=1 -f "$script"
-          done
-          uv run alembic upgrade head
+          bash scripts/reset_ci_test_database.sh "${{ job.services.postgres.id }}"
+          uv run pytest -m isolated_migration tests/infra/execution_market/test_initialization.py::test_managed_history_refuses_fence_downgrade_and_keeps_force_rls
+
+      - name: pytest isolated optional-limit migration guard
+        run: |
+          bash scripts/reset_ci_test_database.sh "${{ job.services.postgres.id }}"
+          uv run pytest -m isolated_migration tests/infra/risk_limits/test_execution.py::test_unset_manual_request_reaches_one_fill_without_synthetic_risk_rows
 
       - name: pytest fresh global state
-        run: uv run pytest -m fresh_global_state
+        run: |
+          bash scripts/reset_ci_test_database.sh "${{ job.services.postgres.id }}"
+          uv run pytest -m fresh_global_state
 
   api-contract:
     name: สัญญา API — ชนิดข้อมูลสองฝั่งต้องตรงกัน

@@ -317,6 +317,7 @@ async def test_database_rejects_invalid_source_audit_shape(
             )
 
 
+@pytest.mark.isolated_migration
 async def test_managed_history_refuses_fence_downgrade_and_keeps_force_rls(
     engine_engine: AsyncEngine,
     migrator_engine: AsyncEngine,
@@ -330,84 +331,86 @@ async def test_managed_history_refuses_fence_downgrade_and_keeps_force_rls(
             episode_id=wallet.episode_id,
             initialization_id=uuid4(),
         )
-    result = subprocess.run(
-        [
-            sys.executable,
-            "-c",
-            "from alembic.config import Config; from alembic import command; "
-            "c=Config(); c.set_main_option('script_location','migrations'); "
-            "command.downgrade(c,'0034')",
-        ],
-        capture_output=True,
-        text=True,
-        check=False,
-    )
-    assert result.returncode != 0
-    assert (
-        "managed Paper episodes prevent writer fence downgrade" in result.stderr
-        or "matching decision history prevents downgrade" in result.stderr
-        or "Paper reset audit history prevents downgrade" in result.stderr
-        or "historical Paper order revisions prevent downgrade" in result.stderr
-        or "supported-symbol runtime history prevents downgrade" in result.stderr
-        or "manual order request history prevents downgrade" in result.stderr
-        or "manual order admission history prevents downgrade" in result.stderr
-        or "unconfigured financial boundary history prevents downgrade" in result.stderr
-        or "unconfigured Paper economic history prevents downgrade" in result.stderr
-        or "active risk writer protocol prevents downgrade" in result.stderr
-        or "risk evaluation request history prevents downgrade" in result.stderr
-        or "risk lifecycle history prevents downgrade" in result.stderr
-        or "risk queued cutoff history prevents downgrade" in result.stderr
-        or "risk stop history prevents downgrade" in result.stderr
-        or "versioned risk financial history prevents downgrade" in result.stderr
-        or "risk protocol history prevents downgrade" in result.stderr
-        or "risk boundary history prevents downgrade" in result.stderr
-        or "risk limit history prevents downgrade" in result.stderr
-    )
-    async with migrator_engine.connect() as connection:
+    try:
+        result = subprocess.run(
+            [
+                sys.executable,
+                "-c",
+                "from alembic.config import Config; from alembic import command; "
+                "c=Config(); c.set_main_option('script_location','migrations'); "
+                "command.downgrade(c,'0034')",
+            ],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        assert result.returncode != 0
         assert (
-            await connection.execute(text("SELECT version_num FROM alembic_version"))
-        ).scalar_one() in {
-            "0035",
-            "0036",
-            "0037",
-            "0038",
-            "0040",
-            "0041",
-            "0042",
-            "0043",
-            "0044",
-            "0045",
-            "0046",
-            "0047",
-            "0048",
-            "0049",
-            "0050",
-            "0051",
-            "0052",
-            "0053",
-            "0054",
-            "0060",
-        }
-    async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
-        assert (
-            await session.execute("""SELECT bool_and(relforcerowsecurity) FROM pg_class
-            WHERE oid IN ('paper_order_initializations'::regclass,
-              'paper_order_activity'::regclass,'paper_order_projections'::regclass,
-              'paper_reservations'::regclass)""")
-        ).scalar_one()
-    restored = subprocess.run(
-        [
-            sys.executable,
-            "-c",
-            "from alembic.config import Config; from alembic import command; "
-            "c=Config(); c.set_main_option('script_location','migrations'); "
-            "command.upgrade(c,'head')",
-        ],
-        capture_output=True,
-        text=True,
-        check=False,
-    )
-    assert restored.returncode == 0, restored.stderr
+            "managed Paper episodes prevent writer fence downgrade" in result.stderr
+            or "matching decision history prevents downgrade" in result.stderr
+            or "Paper reset audit history prevents downgrade" in result.stderr
+            or "historical Paper order revisions prevent downgrade" in result.stderr
+            or "supported-symbol runtime history prevents downgrade" in result.stderr
+            or "manual order request history prevents downgrade" in result.stderr
+            or "manual order admission history prevents downgrade" in result.stderr
+            or "unconfigured financial boundary history prevents downgrade" in result.stderr
+            or "unconfigured Paper economic history prevents downgrade" in result.stderr
+            or "active risk writer protocol prevents downgrade" in result.stderr
+            or "risk evaluation request history prevents downgrade" in result.stderr
+            or "risk lifecycle history prevents downgrade" in result.stderr
+            or "risk queued cutoff history prevents downgrade" in result.stderr
+            or "risk stop history prevents downgrade" in result.stderr
+            or "versioned risk financial history prevents downgrade" in result.stderr
+            or "risk protocol history prevents downgrade" in result.stderr
+            or "risk boundary history prevents downgrade" in result.stderr
+            or "risk limit history prevents downgrade" in result.stderr
+        )
+        async with migrator_engine.connect() as connection:
+            assert (
+                await connection.execute(text("SELECT version_num FROM alembic_version"))
+            ).scalar_one() in {
+                "0035",
+                "0036",
+                "0037",
+                "0038",
+                "0040",
+                "0041",
+                "0042",
+                "0043",
+                "0044",
+                "0045",
+                "0046",
+                "0047",
+                "0048",
+                "0049",
+                "0050",
+                "0051",
+                "0052",
+                "0053",
+                "0054",
+                "0060",
+            }
+        async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+            assert (
+                await session.execute("""SELECT bool_and(relforcerowsecurity) FROM pg_class
+                WHERE oid IN ('paper_order_initializations'::regclass,
+                  'paper_order_activity'::regclass,'paper_order_projections'::regclass,
+                  'paper_reservations'::regclass)""")
+            ).scalar_one()
+    finally:
+        restored = subprocess.run(
+            [
+                sys.executable,
+                "-c",
+                "from alembic.config import Config; from alembic import command; "
+                "c=Config(); c.set_main_option('script_location','migrations'); "
+                "command.upgrade(c,'head')",
+            ],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        assert restored.returncode == 0, restored.stderr
 
 
 async def test_initialization_receipt_is_private_and_append_only_even_for_owner(
