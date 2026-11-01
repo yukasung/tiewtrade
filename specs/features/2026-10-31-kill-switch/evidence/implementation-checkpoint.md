@@ -576,3 +576,36 @@ for unchanged SQL/schema/API contracts and behavior. V-20..24 remain pending.
 Logs/JUnit are retained in `validation-artifacts/f19-refactor-20261101/`.
 Disposable containers were removed. Commit/push and required CI on the final
 candidate remain pending the owner's Git instruction.
+
+### Required CI and pre-merge evidence sync — 2026-11-01
+
+Owner committed and pushed remediation/refactor as
+`f00bac0fb0748ba5cab00efe020c708ff8d17f9c`. Both
+[push CI 41300359252](https://github.com/yukasung/tiewtrade/actions/runs/41300359252)
+and [PR CI 41300363009](https://github.com/yukasung/tiewtrade/actions/runs/41300363009)
+completed successfully on that exact SHA, with all six required jobs green.
+
+| Backend phase | Push CI | PR CI |
+| --- | --- | --- |
+| Normal suite | 4031 passed / 986.20s | 4031 passed / 842.65s |
+| Isolated writer-fence guard | 1 passed / 3.29s | 1 passed / 2.56s |
+| Isolated optional-limit guard | 1 passed / 2.50s | 1 passed / 1.91s |
+| Fresh global state | 23 passed / 8.04s | 23 passed / 6.17s |
+
+Backend total is 4056 passed in each run. Frontend lint/types/tests, API contract,
+container and browser E2E jobs also passed. The remote head matches the local
+candidate; PR #41 is Ready for review and reports CLEAN/MERGEABLE. GitHub has no
+submitted PR review; the owner-requested review, remediation and refactor
+evidence is recorded above, rather than represented as a GitHub approval.
+
+This closes the previously pending required-CI portion of V-19 for `f00bac0`.
+It supersedes earlier pending-CI statements for that runtime candidate while
+preserving historical failures and scope limits. NC-F19-14/W1–W3 remain deferred
+to Set-5 full validation; V-20 remains Pending Full Validation and V-21..24 remain
+Pending Dependency. No release/Live activation or Completed status is asserted.
+
+The owner requested this documentation/PR-description sync after the final gate
+check. Only evidence/status text changes in this sync; content/link consistency
+and `git diff --check` are sufficient local checks. A new commit, if requested,
+still requires CI for the final merge SHA. Merge itself requires an explicit
+owner instruction and has not been performed.

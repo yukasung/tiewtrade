@@ -25,7 +25,7 @@
 | V-16 | RQ-15/20: summary/resume UI | positions+canceled+failed+pending+reconciled timeแสดงจากsnapshotเดียว; stale update disable/refresh; focus trap/return focus/keyboard/live region; exact retry recovery; light/dark ไทย/อังกฤษ | M4 | **Passed (local targeted)** — component PROBLEMS snapshot แสดง position/FAILED/CANCELED/PENDING/reconciled time; stale rejection refetch แล้ว disable resume; browser exact retry, focus/Escape, light/dark และไทย/อังกฤษผ่าน |
 | V-17 | RQ-05/06/20: platform UI/banner | Admin/Owner reason+stop, Owner resume, Admin disabled resume, userไม่มีหน้า; persistent bannerทุกหน้าแสดงreason/source; responsive/template states และ free-text escaped ไม่เป็นHTML | M4 | **Passed (local browser)** — Owner/Admin stop/resume rights, ordinary-user isolation, escaped reason และ persistent banner พร้อม separate Paper/Live controls ผ่านครบ 10 account routes ทั้ง desktop/mobile |
 | V-18 | RQ-21/NC-F19-03: capability isolation | Liveแสดงunavailable/pendingโดยไม่ส่งorderและคง `target_set_complete=false`/`resume_ready=false` แม้ capabilityปิดหรือ queryได้ศูนย์; Paper browser→API→engine→DB/effectsจริง; bot/notification adapters fail-closedเมื่อdependencyไม่มี; ไม่มี production activation จาก feature flag/client payload | M4 | **Passed (current capability)** — browser→API→engine→DB; Live incomplete และ DB ยืนยันไม่มี order request |
-| V-19 | candidate gates | review diff/dependencies Critical/High, affected backend/frontend regression, ruff+format, mypy, lint-imports, frontend lint/types/build, generated OpenAPI diff และ required CI บน candidate สุดท้าย | M5 ก่อน merge | **Partial** — local gates/149 safety tests/340 frontend tests/2 baseline E2E, expanded owner story และ platform route matrix ผ่าน; required remote CI ยังรอ |
+| V-19 | candidate gates | review diff/dependencies Critical/High, affected backend/frontend regression, ruff+format, mypy, lint-imports, frontend lint/types/build, generated OpenAPI diff และ required CI บน candidate สุดท้าย | M5 ก่อน merge | **Passed — runtime candidate `f00bac0` (2026-11-01)** — review findings 2 High/1 Medium แก้แล้วพร้อม refactor; local backend4056/frontend343/browser2 และ post-refactor backend67/frontend4 ผ่าน; required [push CI](https://github.com/yukasung/tiewtrade/actions/runs/41300359252)/[PR CI](https://github.com/yukasung/tiewtrade/actions/runs/41300363009) ผ่านครบ 6/6 jobs ต่อ run รวม backend4056; generated contracts/static gates ผ่าน |
 | V-20 | ท้ายชุดที่5 Paper integration/full validation | candidate รวม F-18/F-19 ที่นิ่งผ่าน full backend/frontend regression, browser→API→engine, fault/recovery, backup/restore และ W1–W4 ที่เกี่ยวข้องโดยคง F-18 thresholds/profileเดิม; stop oraclesด้านล่างครบ | ท้ายชุดที่5 | Pending Full Validation |
 | V-21 | real protective TP/SL integration | หลัง F-17 มี protective orders จริง ตรวจ user/platform stopไม่เลือก TP/SL, fill/partial fillยังสร้าง/ซ่อม protection ตาม policyที่อนุมัติ และไม่สร้าง protection ที่ไม่ได้ขอ | หลัง F-17/ชุด5 | Pending Dependency |
 | V-22 | real bot lifecycle | F-20 botจริงหยุด/ไม่ตื่นเอง/resumeตามcauseและ account use; queued signalsไม่กลายเป็นorderหลังfence | หลัง F-20 | Pending Dependency |
@@ -286,7 +286,7 @@ checkpoint และรวม NC-F19-14 → targeted checks → W1 → W2 → W3
   schema/client generation, affected financial/concurrency tests และ required CI บน candidate ใหม่
 - ผล/คำสั่ง/limitations บันทึกใน `evidence/implementation-checkpoint.md`
   หัวข้อ Post-CI deep-review remediation; local backend4056/frontend343/browser2 ผ่าน
-  แต่ required CI ของ candidate ใหม่ยังค้าง และ checks นี้ไม่ปิด V-20..24
+  และ required CI ของ `f00bac0` ผ่านแล้วทั้ง push/PR; checks นี้ไม่ปิด V-20..24
 - หลัง owner-authorized refactor: affected backend67/frontend4 พร้อม lint/types ผ่าน;
   ใช้ full regression/browser evidence เดิมในส่วนไม่กระทบ ตามหัวข้อ refactor ใน checkpoint
 
@@ -301,5 +301,7 @@ checkpoint และรวม NC-F19-14 → targeted checks → W1 → W2 → W3
   ยัง Pending; Completed ต้อง V-01..24 ผ่านครบตาม dependency/release จริง
 - commit/push/merge ทำเฉพาะเมื่อเจ้าของสั่ง
 
-ผล local ข้างต้นผูกกับ worktree ที่ยังไม่ commit ณ 2026-10-31; รายการ Partial และ
-Pending Full Validation/Pending Dependency ไม่ถือว่าผ่านหรือ Completed และ required CI ยังต้องรันบน candidate เดียวกัน
+ผล local เริ่มต้นผูกกับ worktree ณ 2026-10-31; หลักฐาน review-remediation/refactor และ
+required CI ล่าสุดผูกกับ `f00bac0` ตาม V-19 และ checkpoint. รายการ Partial/
+Pending Full Validation/Pending Dependency ยังคงผลตามจริง ไม่ถือว่าผ่านหรือ Completed.
+หาก candidate เปลี่ยน ต้องตรวจผลกระทบและ required CI บน candidate ที่จะ merge ตามกฎเดิม
