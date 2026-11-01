@@ -484,6 +484,8 @@ def test_no_route_hands_back_the_secret(client: TestClient, ending: bool) -> Non
             }
             else {"action": "NEW"}
             if template == "/paper/order-requests/by-key/{key}"
+            else {"action": "STOP"}
+            if "/kill-switch/requests/by-key/" in template
             else {"episode_id": key_id}
             if template == "/paper/orders"
             else None,
@@ -493,6 +495,9 @@ def test_no_route_hands_back_the_secret(client: TestClient, ending: bool) -> Non
             if template.startswith("/admin/supported-symbols"):
                 assert response.status_code == 403
                 assert response.json() == {"detail": "CATALOG_NOT_AUTHORIZED"}
+            elif template.startswith("/admin/kill-switch"):
+                assert response.status_code == 403
+                assert response.json() == {"detail": "PLATFORM_NOT_AUTHORIZED"}
             elif template.startswith("/market-data/chart/"):
                 assert (
                     response.status_code == 404
@@ -515,6 +520,12 @@ def test_no_route_hands_back_the_secret(client: TestClient, ending: bool) -> Non
             elif "/risk-limit/stops/" in template:
                 assert response.status_code == 404
                 assert response.json() == {"detail": "RISK_STOP_NOT_FOUND"}
+            elif "/kill-switch/requests/" in template:
+                assert response.status_code == 404
+                assert response.json() == {"detail": "TRADING_STOP_REQUEST_NOT_FOUND"}
+            elif "/kill-switch/stops/" in template:
+                assert response.status_code == 404
+                assert response.json() == {"detail": "TRADING_STOP_NOT_FOUND"}
             elif template == "/market-data/indicators" and response.status_code == 503:
                 # Empty indicator data must fail closed without exposing secrets.
                 # Accept only this documented error, independent of prior fixtures.

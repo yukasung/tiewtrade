@@ -952,6 +952,7 @@ class Fixture(SourcePublisher):
             self.output / "cycle-timing.jsonl",
             owner=owner.user_id,
             number=number,
+            # F-19 runs loss-stop recovery before the measured core workload.
             recovery_allowed=False,
         ):
             yield

@@ -16,32 +16,39 @@ from tiewtrade.infra.positions import (
 )
 
 
-@pytest.mark.parametrize(
-    "role",
-    [
-        DatabaseRole.API,
-        DatabaseRole.ENGINE_SCAN,
-    ],
-)
-async def test_non_writer_roles_cannot_read_position_state(
-    role: DatabaseRole,
-    api_engine: AsyncEngine,
+async def test_scanner_cannot_read_position_state(
     scan_engine: AsyncEngine,
     owner: UUID,
     wallet: PaperWalletSnapshot,
 ) -> None:
-    engine = api_engine if role is DatabaseRole.API else scan_engine
     with pytest.raises(NotPermittedError):
-        context = (
-            scan_session_bypassing_rls(engine)
-            if role is DatabaseRole.ENGINE_SCAN
-            else user_session(engine, owner, role=role)
-        )
-        async with context as session:
+        async with scan_session_bypassing_rls(scan_engine) as session:
             await session.execute(
                 "SELECT * FROM paper_position_activity WHERE episode_id=:episode",
                 {"episode": wallet.episode_id},
             )
+
+
+async def test_api_can_read_only_its_own_position_activity_for_stop_summary(
+    api_engine: AsyncEngine,
+    engine_engine: AsyncEngine,
+    owner: UUID,
+    wallet: PaperWalletSnapshot,
+) -> None:
+    async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+        await initialize_position_source(session, wallet.episode_id, uuid4(), "6" * 64)
+    async with user_session(api_engine, owner) as session:
+        rows = await session.execute(
+            "SELECT * FROM paper_position_activity WHERE episode_id=:episode",
+            {"episode": wallet.episode_id},
+        )
+        assert len(rows.all()) == 1
+    async with user_session(api_engine, uuid4()) as session:
+        rows = await session.execute(
+            "SELECT * FROM paper_position_activity WHERE episode_id=:episode",
+            {"episode": wallet.episode_id},
+        )
+        assert rows.all() == []
 
 
 async def test_engine_rls_hides_another_owners_activity(

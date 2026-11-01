@@ -29,21 +29,35 @@ TEST_VENUE_KEY: Final[str] = "1:" + base64.b64encode(b"V" * KEY_BYTES).decode("a
 _DESTRUCTIVE_MIGRATION_MODULES: Final[frozenset[str]] = frozenset(
     {
         "tests/infra/db/test_migrations.py",
+        "tests/infra/execution_market/test_initialization.py",
         "tests/infra/market_data/test_migration.py",
         "tests/infra/market_data/test_realtime_migration.py",
         "tests/infra/market_data/test_supported_pairs_migration.py",
+        "tests/infra/paper_wallet/test_migration.py",
+        "tests/infra/risk_limits/test_execution.py",
+        "tests/infra/risk_limits/test_monitor_price_hint.py",
+        "tests/infra/risk_limits/test_same_pair_dispatch.py",
+        "tests/infra/risk_limits/test_source_resumption.py",
     }
+)
+
+_FRESH_GLOBAL_STATE_MODULES: Final[frozenset[str]] = frozenset(
+    {"tests/infra/trading_stops/test_storage.py"}
 )
 
 
 def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
-    """Run destructive schema replay before immutable integration fixtures."""
+    """Run schema replay and global-stop integration before shared-state fixtures."""
 
-    items.sort(
-        key=lambda item: (
-            0 if item.path.as_posix().endswith(tuple(_DESTRUCTIVE_MIGRATION_MODULES)) else 1
-        )
-    )
+    def rank(item: pytest.Item) -> int:
+        path = item.path.as_posix()
+        if path.endswith(tuple(_DESTRUCTIVE_MIGRATION_MODULES)):
+            return 0
+        if path.endswith(tuple(_FRESH_GLOBAL_STATE_MODULES)):
+            return 1
+        return 2
+
+    items.sort(key=rank)
 
 
 @pytest.fixture(autouse=True)

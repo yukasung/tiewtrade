@@ -326,7 +326,7 @@ async def test_fault_error_is_not_hidden_by_other_task_cleanup() -> None:
     assert caught.value is original and all(e.is_set() for e in joined)
 
 
-async def test_temporary_breach_limit_is_restored_only_after_its_oracles(
+async def test_core_cycle_does_not_repeat_dedicated_loss_recovery(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     from tests.infra.execution_market.test_dispatch import intent
@@ -359,10 +359,7 @@ async def test_temporary_breach_limit_is_restored_only_after_its_oracles(
         calls.append("correction")
 
     async def mutation(who: Any, action: RiskAction, amount: str) -> UUID:
-        assert action is RiskAction.INCREASE and amount == "1000"
-        assert counters.completed == 5 and calls == ["breach/reset/reseed at limit5", "correction"]
-        calls.append("restore standard limit")
-        return UUID(int=700)
+        raise AssertionError("core cycle must not repeat dedicated loss recovery")
 
     fixture.new, fixture.breach_reset = new, breach
     fixture.correction, fixture.mutation = correction, mutation
@@ -374,4 +371,6 @@ async def test_temporary_breach_limit_is_restored_only_after_its_oracles(
     engine: Any = None
     async with workload.Fixture.cycle_scope(fixture, owner, 0):
         await workload.Fixture.cycle(fixture, engine, owner, UUID(int=4), 0, counters, [])
-    assert fixture.recovery_complete.is_set() and fixture.selected_limit_restore == UUID(int=700)
+    assert fixture.recovery_complete.is_set()
+    assert fixture.selected_limit_restore is None
+    assert calls == ["correction"]

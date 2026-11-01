@@ -70,13 +70,18 @@ async function submitManual(page: Page) {
   throw new Error("Risk evidence did not remain ready for intake with the same key");
 }
 async function send(page: Page, amount: string) {
+  await expect.poll(async () => (
+    await (await page.request.get("/api/paper/trade?base=BTC")).json() as {
+      admission_ready: boolean;
+    }
+  ).admission_ready).toBe(true);
   await page.getByLabel("งบซื้อ (USDT)").fill(amount);
   return submitManual(page);
 }
 async function order(page: Page, id: string) {
   return await (await page.request.get(`/api/paper/orders/${id}`)).json() as { status: string; filled_quantity: string; reserved_quote: string; spent_quote: string };
 }
-test("production risk composition: unset→set→BUY→breach→cancel→bounded SELL→reset→eligible BUY", async ({ page }) => {
+test("production risk composition: unset→set→BUY→breach→cancel→bounded SELL→reset keeps opening blocked", async ({ page }) => {
   test.setTimeout(120_000);
   const owner = await register(page); await capture(page, "unset-th-light-desktop");
   await setLimit(page);
@@ -122,19 +127,32 @@ test("production risk composition: unset→set→BUY→breach→cancel→bounded
   await expect(page.getByRole("dialog").getByLabel("รหัสปัจจุบันจากแอปยืนยันตัวตน")).toHaveCount(0);
   await page.getByRole("dialog").getByRole("button", { name: "ยืนยัน", exact: true }).click();
   await expect.poll(async () => (await snapshot(page)).latched).toBe(false);
+  await expect.poll(async () => (
+    await (await page.request.get("/api/paper/kill-switch")).json() as {
+      cause: string | null;
+      resume_ready: boolean;
+    }
+  )).toMatchObject({ cause: "LOSS_LIMIT", resume_ready: false });
   expect((await snapshot(page)).loss).toBe("0");
   expect((await snapshot(page)).current_allowance).not.toBe("0");
   await openPaperTrade(page);
   await page.getByLabel("คู่เทรด").selectOption("BTC");
   await page.getByRole("tab", { name: "BUY", exact: true }).click();
-  const resumed = await send(page, "11");
-  await expect.poll(async () => (await order(page, resumed.order_id)).status).toBe("FILLED");
-  const trade = await (await page.request.get("/api/paper/trade?base=BTC")).json() as { wallet: { balance: string; base_balances: { asset: string; held: string }[] } };
-  // Independent cash/quantity oracle: 10000−110+(0.1×99×0.999)−11;
-  // received base: 1.1×0.999−0.1+0.11×0.999.
-  expect(trade.wallet.balance).toBe("9888.8901");
-  expect(trade.wallet.base_balances.find(row => row.asset === "BTC")?.held).toBe("1.10879");
-  expect((await snapshot(page)).loss).toBe("2.2088");
+  await page.getByLabel("งบซื้อ (USDT)").fill("11");
+  const trade = await (await page.request.get("/api/paper/trade?base=BTC")).json() as {
+    wallet: { balance: string; base_balances: { asset: string; held: string }[] };
+  };
+  const blocked = page.waitForResponse(response =>
+    response.url().endsWith("/api/paper/orders") && response.request().method() === "POST",
+  );
+  await page.getByRole("button", { name: "ส่งออเดอร์ Paper", exact: true }).click();
+  const rejected = await blocked;
+  expect(rejected.status()).toBe(503);
+  expect(await rejected.json()).toEqual({ detail: "ORDER_SAFETY_UNAVAILABLE" });
+  // RESET clears the loss baseline only; it must not create a trade or bypass the shared stop.
+  expect(trade.wallet.balance).toBe("9899.8901");
+  expect(trade.wallet.base_balances.find(row => row.asset === "BTC")?.held).toBe("0.9989");
+  expect((await snapshot(page)).loss).toBe("0");
   await page.evaluate(() => document.documentElement.classList.add("dark"));
   await capture(page, "reset-th-dark-desktop");
   await page.setViewportSize({ width: 375, height: 844 }); await capture(page, "reset-th-dark-mobile");

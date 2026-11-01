@@ -307,6 +307,18 @@ jobs:
         env:
           CI: "1"
 
+      # Dedicated suites create durable append-only operators and stop history.
+      # F-19 must prove bootstrap and stop behavior from its own clean boundary.
+      - name: reset database for F-18/F-19 risk composition
+        working-directory: backend
+        run: |
+          PGPASSWORD=postgres dropdb --force -h 127.0.0.1 -U postgres tiewtrade_e2e
+          PGPASSWORD=postgres createdb -h 127.0.0.1 -U postgres tiewtrade_e2e
+          for script in db/bootstrap/*.sql; do
+            psql "postgresql://postgres:postgres@127.0.0.1:5432/tiewtrade_e2e" -v ON_ERROR_STOP=1 -f "$script"
+          done
+          uv run alembic upgrade head
+
       - name: F-18 wallet risk production composition E2E
         run: npm run test:e2e:risk-limits
         working-directory: frontend
