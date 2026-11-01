@@ -18,6 +18,7 @@ import { RealtimePricePanel } from "./RealtimePricePanel";
 import { CandlestickChartPanel } from "./CandlestickChartPanel";
 import { TradingAccountPanel } from "./TradingAccountPanel";
 import { AccountLayout } from "./layout/AccountLayout";
+import { PlatformKillSwitchPanel } from "./PlatformKillSwitchPanel";
 import { AccountPages } from "./AccountPages";
 import { SupportedSymbolPanel } from "./SupportedSymbolPanel";
 import { chartText } from "./chartMessages";
@@ -172,7 +173,7 @@ export function AuthPanel(): JSX.Element {
   if (identity !== null) {
     return (
       <AccountSession identity={identity} onExpired={() => setIdentity(null)}>
-        <AccountPages isPlatformAdmin={identity.platform_role !== null && identity.platform_role !== undefined}>{page => <AccountLayout page={page} isPlatformAdmin={identity.platform_role !== null && identity.platform_role !== undefined}>
+        <AccountPages isPlatformAdmin={identity.platform_role !== null && identity.platform_role !== undefined}>{page => <AccountLayout page={page} isPlatformAdmin={identity.platform_role !== null && identity.platform_role !== undefined} owner={identity.user_id}>
           <div data-testid="signed-in">
           {page === "account" && <section id="account-details">
             <h1>{t("accountHeading")}</h1>
@@ -225,6 +226,7 @@ export function AuthPanel(): JSX.Element {
             {page === "paper/trade" && <PaperTradePage owner={identity.user_id}/>}
             {page === "live/trade" && <LiveTradePage owner={identity.user_id}/>}
             {page === "supported-symbols" && <SupportedSymbolPanel />}
+            {page === "system-safety" && identity.platform_role && <PlatformKillSwitchPanel owner={identity.user_id} role={identity.platform_role === "PLATFORM_OWNER" ? "PLATFORM_OWNER" : "PLATFORM_ADMIN"} />}
             {page === "chart" && (import.meta.env.VITE_CHART_ENABLED === "1"
               ? <CandlestickChartPanel userId={identity.user_id}/>
               : <p role="status">{chartText("errors.CHART_DISABLED")}</p>)}

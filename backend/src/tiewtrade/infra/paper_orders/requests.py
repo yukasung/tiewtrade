@@ -6,7 +6,13 @@ from datetime import datetime
 from typing import Any, Literal
 from uuid import UUID, uuid4
 
-from tiewtrade.core.orders import OrderConflictError, OrderIntent, OrderOrigin, TradingMode
+from tiewtrade.core.orders import (
+    OrderConflictError,
+    OrderIntent,
+    OrderOrigin,
+    SafetyUnavailableError,
+    TradingMode,
+)
 from tiewtrade.core.positions import ExecutionSide
 from tiewtrade.infra.audit import (
     ActorKind,
@@ -22,6 +28,11 @@ from tiewtrade.infra.db.session import UserSession, require_user_session
 from tiewtrade.infra.market_data.order_book_codec import canonical
 from tiewtrade.infra.paper_orders.codec import intent_from_payload, intent_payload, object_payload
 from tiewtrade.infra.paper_orders.dispatch import lock_opening_pair_catalog
+from tiewtrade.infra.trading_stops.storage import (
+    admission_revisions,
+    current_opening_blocked,
+    global_shared_lock,
+)
 
 RequestAction = Literal["NEW", "CANCEL"]
 
@@ -45,6 +56,8 @@ class ManualRequest:
     idempotency_key: UUID
     fingerprint: str
     admitted_catalog_revision: int | None
+    admitted_global_stop_revision: int
+    admitted_owner_stop_revision: int
     payload: dict[str, Any]
     recorded_at: datetime
 
@@ -62,6 +75,8 @@ def decode_request(row: Any) -> ManualRequest:
         UUID(str(row.idempotency_key)),
         row.request_fingerprint,
         row.admitted_catalog_revision,
+        int(row.admitted_global_stop_revision),
+        int(row.admitted_owner_stop_revision),
         object_payload(row.payload),
         row.recorded_at,
     )
@@ -104,6 +119,7 @@ def _fingerprint(
 
 async def wallet_lock(session: UserSession) -> None:
     session = require_user_session(session)
+    await global_shared_lock(session)
     await session.execute(
         "SELECT pg_advisory_xact_lock(hashtextextended(:key,0))",
         {"key": f"paper-wallet:{session.user_id}"},
@@ -196,7 +212,13 @@ async def _admit(
         await _reject_closed_episode(session, wallet_id=wallet_id, episode_id=episode_id)
         raise OrderConflictError("Paper episode is not active")
     revision = None
+    global_stop_revision = owner_stop_revision = 0
     if intent is not None and intent.side is ExecutionSide.BUY:
+        global_stop_revision, owner_stop_revision = await admission_revisions(
+            session, TradingMode.PAPER
+        )
+        if await current_opening_blocked(session, TradingMode.PAPER, intent.origin):
+            raise SafetyUnavailableError("opening is blocked by a trading stop")
         revision = await lock_opening_pair_catalog(session, intent.pair)
     if action == "CANCEL":
         owned = (
@@ -212,9 +234,11 @@ async def _admit(
         await session.execute(
             """INSERT INTO paper_order_requests
         (id,user_id,wallet_id,episode_id,order_id,action,idempotency_key,
-         request_fingerprint,admitted_catalog_revision,payload)
+         request_fingerprint,admitted_catalog_revision,admitted_global_stop_revision,
+         admitted_owner_stop_revision,payload)
         VALUES(:id,:owner,:wallet,:episode,:order,:action,:key,:fingerprint,
-               :revision,CAST(:payload AS jsonb)) RETURNING *""",
+               :revision,:global_stop_revision,:owner_stop_revision,
+               CAST(:payload AS jsonb)) RETURNING *""",
             {
                 "id": uuid4(),
                 "owner": session.user_id,
@@ -225,6 +249,8 @@ async def _admit(
                 "key": key,
                 "fingerprint": fingerprint,
                 "revision": revision,
+                "global_stop_revision": global_stop_revision,
+                "owner_stop_revision": owner_stop_revision,
                 "payload": canonical(payload),
             },
         )

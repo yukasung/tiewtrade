@@ -91,6 +91,12 @@ class AuditAction(Enum):
     RISK_LIMIT_REJECTED = "RISK_LIMIT_REJECTED"
     RISK_SOURCE_CONFLICTED = "RISK_SOURCE_CONFLICTED"
     RISK_STOP_UPDATED = "RISK_STOP_UPDATED"
+    STOP_REQUESTED = "STOP_REQUESTED"
+    STOP_UPDATED = "STOP_UPDATED"
+    RESUME_REQUESTED = "RESUME_REQUESTED"
+    RESUMED = "RESUMED"
+    RESUME_REJECTED = "RESUME_REJECTED"
+    PLATFORM_STOPPED = "PLATFORM_STOPPED"
 
 
 #: ชนิดเหตุการณ์ที่เป็นการเทรด — ต้องระบุ PAPER หรือ LIVE เสมอ (RQ-19)
@@ -116,6 +122,12 @@ TRADING_ACTIONS: frozenset[AuditAction] = frozenset(
         AuditAction.RISK_LIMIT_REJECTED,
         AuditAction.RISK_SOURCE_CONFLICTED,
         AuditAction.RISK_STOP_UPDATED,
+        AuditAction.STOP_REQUESTED,
+        AuditAction.STOP_UPDATED,
+        AuditAction.RESUME_REQUESTED,
+        AuditAction.RESUMED,
+        AuditAction.RESUME_REJECTED,
+        AuditAction.PLATFORM_STOPPED,
     }
 )
 
@@ -159,6 +171,7 @@ class SubjectKind(Enum):
     PLATFORM_MEMBERSHIP = "PLATFORM_MEMBERSHIP"
     SUPPORTED_SYMBOL = "SUPPORTED_SYMBOL"
     RISK_LIMIT = "RISK_LIMIT"
+    TRADING_STOP = "TRADING_STOP"
 
 
 @runtime_checkable
@@ -607,6 +620,38 @@ class RiskLimitDetails:
         }
 
 
+@dataclass(frozen=True, slots=True)
+class TradingStopDetails:
+    request_id: UUID
+    stop_id: UUID
+    cause: str
+    scope: str
+    revision: int
+    reason_code: str
+
+    def __post_init__(self) -> None:
+        if type(self.request_id) is not UUID or type(self.stop_id) is not UUID:
+            raise AuditEventError("stop request and stop identities required")
+        if self.cause not in {"USER", "SYSTEM", "LOSS_LIMIT", "PLATFORM"}:
+            raise AuditEventError("invalid stop cause")
+        if self.scope not in {"PAPER", "LIVE", "PLATFORM"}:
+            raise AuditEventError("invalid stop scope")
+        if type(self.revision) is not int or self.revision < 1:
+            raise AuditEventError("positive stop revision required")
+        if not self.reason_code or len(self.reason_code) > 64:
+            raise AuditEventError("bounded stop reason code required")
+
+    def as_details(self) -> dict[str, object]:
+        return {
+            "request_id": str(self.request_id),
+            "stop_id": str(self.stop_id),
+            "cause": self.cause,
+            "scope": self.scope,
+            "revision": self.revision,
+            "reason_code": self.reason_code,
+        }
+
+
 RISK_FAILURE_CODES: frozenset[str] = frozenset(
     {
         "RISK_REVISION_CONFLICT",
@@ -623,6 +668,12 @@ RISK_FAILURE_CODES: frozenset[str] = frozenset(
 
 
 DETAILS_TYPES: dict[AuditAction, type[object]] = {
+    AuditAction.STOP_REQUESTED: TradingStopDetails,
+    AuditAction.STOP_UPDATED: TradingStopDetails,
+    AuditAction.RESUME_REQUESTED: TradingStopDetails,
+    AuditAction.RESUMED: TradingStopDetails,
+    AuditAction.RESUME_REJECTED: TradingStopDetails,
+    AuditAction.PLATFORM_STOPPED: TradingStopDetails,
     AuditAction.RISK_LIMIT_REQUESTED: RiskLimitDetails,
     AuditAction.RISK_LIMIT_SET: RiskLimitDetails,
     AuditAction.RISK_LIMIT_RESET: RiskLimitDetails,
@@ -943,7 +994,44 @@ def _check_risk_event(event: AuditEvent) -> None:
         raise AuditEventError("invalid risk audit scope or outcome")
 
 
+def _check_trading_stop_event(event: AuditEvent) -> None:
+    requested = event.action in {AuditAction.STOP_REQUESTED, AuditAction.RESUME_REQUESTED}
+    rejected = event.action is AuditAction.RESUME_REJECTED
+    platform = isinstance(event.details, TradingStopDetails) and event.details.scope == "PLATFORM"
+    if (
+        not isinstance(event.details, TradingStopDetails)
+        or event.subject_kind is not SubjectKind.TRADING_STOP
+        or event.subject_id != str(event.details.stop_id)
+        or event.actor_kind
+        is not (
+            ActorKind.PLATFORM
+            if requested and platform
+            else ActorKind.USER
+            if requested
+            else ActorKind.SYSTEM
+        )
+        or event.actor_id != (event.owner_user_id if requested else None)
+        or event.mode
+        is not (
+            AuditMode.NOT_APPLICABLE
+            if platform
+            else AuditMode.PAPER
+            if event.details.scope == "PAPER"
+            else AuditMode.LIVE
+        )
+        or event.outcome is not (AuditOutcome.REJECTED if rejected else AuditOutcome.SUCCEEDED)
+        or event.failure_code is not None
+    ):
+        raise AuditEventError("invalid trading stop audit event")
+
+
 _ACTION_INVARIANTS: dict[AuditAction, Callable[[AuditEvent], None]] = {
+    AuditAction.STOP_REQUESTED: _check_trading_stop_event,
+    AuditAction.STOP_UPDATED: _check_trading_stop_event,
+    AuditAction.RESUME_REQUESTED: _check_trading_stop_event,
+    AuditAction.RESUMED: _check_trading_stop_event,
+    AuditAction.RESUME_REJECTED: _check_trading_stop_event,
+    AuditAction.PLATFORM_STOPPED: _check_trading_stop_event,
     AuditAction.RISK_LIMIT_REQUESTED: _check_risk_event,
     AuditAction.RISK_LIMIT_SET: _check_risk_event,
     AuditAction.RISK_LIMIT_RESET: _check_risk_event,
@@ -1041,7 +1129,14 @@ class AuditEvent:
                 f" ไม่ใช่ {type(self.details).__name__}"
             )
 
-        if self.action in TRADING_ACTIONS and self.mode is AuditMode.NOT_APPLICABLE:
+        platform_stop = (
+            isinstance(self.details, TradingStopDetails) and self.details.scope == "PLATFORM"
+        )
+        if (
+            self.action in TRADING_ACTIONS
+            and self.mode is AuditMode.NOT_APPLICABLE
+            and not platform_stop
+        ):
             raise AuditEventError(f"เหตุการณ์การเทรด {self.action.value} ต้องระบุ PAPER หรือ LIVE")
         if self.action not in TRADING_ACTIONS and self.mode is not AuditMode.NOT_APPLICABLE:
             raise AuditEventError(

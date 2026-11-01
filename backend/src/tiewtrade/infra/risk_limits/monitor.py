@@ -91,9 +91,25 @@ async def persist_evaluation(
         )
         if setting.scope.mode is TradingMode.PAPER:
             await session.execute(
+                """INSERT INTO trading_stop_requests
+                (id,user_id,scope_owner_id,mode,action,cause,actor_role,idempotency_key,
+                 fingerprint,reason_code,generation,recorded_at)
+                SELECT :id,:owner,:owner,'PAPER','STOP','LOSS_LIMIT','SYSTEM',:id,
+                  repeat('0',64),'RISK_LOSS_LIMIT_REACHED',coalesce(max(generation),0)+1,
+                  clock_timestamp()
+                FROM trading_stop_requests
+                WHERE scope_owner_id=:owner AND mode='PAPER' AND cause='LOSS_LIMIT'""",
+                {**params, "id": identity},
+            )
+            await session.execute(
+                "INSERT INTO trading_stop_dispatch(request_id,user_id) VALUES(:id,:owner)",
+                {**params, "id": identity},
+            )
+            await session.execute(
                 """INSERT INTO risk_stop_requests
-                (id,user_id,mode,event_id,wallet_id,episode_id,risk_revision)
-                VALUES(:id,:owner,'PAPER',:id,:wallet,:episode,:revision)""",
+                (id,user_id,mode,event_id,wallet_id,episode_id,risk_revision,
+                 authority_request_id,cause,target_policy)
+                VALUES(:id,:owner,'PAPER',:id,:wallet,:episode,:revision,:id,'LOSS_LIMIT','ALL')""",
                 {
                     **params,
                     "id": identity,

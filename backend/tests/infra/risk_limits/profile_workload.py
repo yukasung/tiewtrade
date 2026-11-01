@@ -15,7 +15,7 @@ import platform
 import subprocess
 import sys
 from collections import defaultdict
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Awaitable, Callable
 from contextlib import asynccontextmanager
 from dataclasses import asdict, replace
 from datetime import UTC, datetime, timedelta
@@ -63,10 +63,16 @@ from tests.infra.risk_limits.profile_saturation import (
     verify_identities,
 )
 from tests.infra.risk_limits.profile_source_timing import SourceTimeline
+from tests.infra.risk_limits.profile_stop_runtime import (
+    PlatformStopScheduleRunner,
+    UserStopScheduleRunner,
+)
+from tests.infra.risk_limits.profile_stop_schedule import (
+    build_stop_schedule,
+    conservation_summary,
+)
 from tests.infra.risk_limits.profile_timing import (
     cycle_scope,
-    recovery_scope,
-    recovery_stage,
     trading_completed,
 )
 from tiewtrade.core.money import Money, Quantity
@@ -74,16 +80,20 @@ from tiewtrade.core.orders import (
     BaseSize,
     OrderError,
     OrderIntent,
+    OrderOrigin,
     OrderStatus,
     OrderType,
+    QuoteBudget,
+    SafetyUnavailableError,
     TimeInForce,
     TradingMode,
 )
 from tiewtrade.core.realtime_prices import Readiness, readiness
 from tiewtrade.core.risk_limits import RiskScope, RiskUnavailableError
+from tiewtrade.core.trading_stops import StopCause
 from tiewtrade.infra.db import DatabaseRole, create_engine_for, user_session
 from tiewtrade.infra.db import session as db_session
-from tiewtrade.infra.db.session import market_data_session
+from tiewtrade.infra.db.session import UserSession, market_data_session
 from tiewtrade.infra.market_data.realtime_storage import (
     read_snapshot,
 )
@@ -96,11 +106,13 @@ from tiewtrade.infra.paper_orders.requests import (
     inspect_new_request,
 )
 from tiewtrade.infra.paper_orders.views import request_view
+from tiewtrade.infra.paper_wallet import get_wallet
 from tiewtrade.infra.risk_limits.evaluation_requests import request_evaluation
 from tiewtrade.infra.risk_limits.policy import TransactionalRiskPolicy
 from tiewtrade.infra.risk_limits.prices import decode_frame
 from tiewtrade.infra.risk_limits.records import RiskAction, RiskSubmission
 from tiewtrade.infra.risk_limits.requests import submit_request
+from tiewtrade.infra.trading_stops import read_status
 from tiewtrade.services.engine.paper_order_main import (
     ALTERNATE_ADMISSION_PRIORITY,
     CANDIDATE_LIMIT,
@@ -111,6 +123,102 @@ from tiewtrade.services.engine.paper_order_main import (
 from tiewtrade.services.engine.risk_limit_main import serve as serve_risk
 
 MODULE = "tests.infra.risk_limits.profile_workload"
+SETUP_STAGES = (
+    "DEDICATED_LOSS",
+    "CORE_RISK_SETTINGS",
+    "STOP_OWNER_RISK_SETTINGS",
+    "CORE_BASELINE",
+)
+
+
+class SetupSequence:
+    def __init__(self) -> None:
+        self.completed: list[str] = []
+
+    def advance(self, stage: str) -> None:
+        expected = SETUP_STAGES[len(self.completed)]
+        if stage != expected:
+            raise RuntimeError(f"F19_SETUP_ORDER_INVALID:{expected}:{stage}")
+        self.completed.append(stage)
+
+
+class RiskMutationRejectedError(RuntimeError):
+    def __init__(self, request_id: UUID, failure_code: str) -> None:
+        super().__init__(f"F18_RISK_MUTATION_REJECTED:{failure_code}")
+        self.request_id = request_id
+        self.failure_code = failure_code
+
+
+class OrderRequestRejectedError(RuntimeError):
+    def __init__(
+        self,
+        *,
+        request_id: UUID,
+        command_id: UUID | None,
+        intake_failure_code: str | None,
+        command_failure_code: str | None,
+    ) -> None:
+        super().__init__(
+            f"F18_POSITIVE_REQUEST_REJECTED:{intake_failure_code}:{command_failure_code}"
+        )
+        self.request_id = request_id
+        self.command_id = command_id
+        self.intake_failure_code = intake_failure_code
+        self.command_failure_code = command_failure_code
+
+
+async def retry_source_unavailable_reset(
+    submit: Callable[[], Awaitable[UUID]],
+    evidence: list[dict[str, str]],
+) -> UUID:
+    """Retry only a terminal source-unavailable RESET with a new durable request."""
+    async with asyncio.timeout(60):
+        for attempt in range(1, 4):
+            try:
+                request_id = await submit()
+            except RiskMutationRejectedError as error:
+                evidence.append(
+                    {
+                        "attempt": str(attempt),
+                        "request_id": str(error.request_id),
+                        "state": "REJECTED",
+                        "failure_code": error.failure_code,
+                    }
+                )
+                if error.failure_code != "RISK_SOURCE_UNAVAILABLE" or attempt == 3:
+                    raise
+                await asyncio.sleep(0.25)
+            else:
+                evidence.append(
+                    {
+                        "attempt": str(attempt),
+                        "request_id": str(request_id),
+                        "state": "APPLIED",
+                        "failure_code": "",
+                    }
+                )
+                return request_id
+    raise AssertionError("bounded reset attempts exhausted without an outcome")
+
+
+async def submit_setup_order_when_ready[SetupResult](
+    ready: Callable[[], Awaitable[bool]],
+    submit: Callable[[], Awaitable[SetupResult]],
+    observe: Callable[[str], Awaitable[None]],
+    *,
+    timeout_seconds: float = 60,
+) -> SetupResult:
+    """Wait for the read-only R6 hint, then submit a setup NEW exactly once."""
+    await observe("WAIT_START")
+    try:
+        async with asyncio.timeout(timeout_seconds):
+            while not await ready():
+                await asyncio.sleep(f15.RESULT_POLL_SECONDS)
+    except TimeoutError:
+        await observe("TIMEOUT")
+        raise RuntimeError("F19_SETUP_RISK_NOT_READY") from None
+    await observe("READY")
+    return await submit()
 
 
 class OverflowResult(TypedDict):
@@ -260,11 +368,18 @@ class Fixture(SourcePublisher):
         self.metrics: list[Path] = []
         self.stop = output / "workers.stop"
         self.owners: list[f15.OwnerState] = []
+        self.stop_owners: list[f15.OwnerState] = []
+        self.loss_owners: list[f15.OwnerState] = []
         self.selected: UUID | None = None
         self.baseline_orders = 20
         self.partial_ready = asyncio.Event()
         self.recovery_complete = asyncio.Event()
-        self.selected_limit_restore: UUID | None = None
+        self.dedicated_loss_reset_request: UUID | None = None
+        self.dedicated_loss_reset_attempts: list[dict[str, str]] = []
+        self.dedicated_loss_snapshots: list[dict[str, object]] = []
+        self.dedicated_loss_proof: dict[str, object] | None = None
+        self.setup_readiness_evidence: list[dict[str, object]] = []
+        self.partial_source_evidence: list[dict[str, object]] = []
         self.marker_locks: dict[UUID, asyncio.Lock] = defaultdict(asyncio.Lock)
         self.extra_fills = 0
         self.publisher: asyncio.Task[None] | None = None
@@ -299,6 +414,57 @@ class Fixture(SourcePublisher):
             process, metric, timeout_seconds=20
         )
 
+    async def setup_readiness_snapshot(self, owner: f15.OwnerState, stage: str) -> None:
+        async with user_session(self.api, owner.user_id) as session:
+            row = (
+                (
+                    await session.execute(
+                        """SELECT o.cursor,o.replay_pending AS owner_pending,
+                    e.price_watermark,e.replay_pending AS evaluation_pending,e.reason,
+                    e.setting_revision,s.revision AS current_setting_revision,s.latched,
+                    p.watermark AS publication_watermark
+                    FROM risk_owner_state o
+                    JOIN risk_limit_evaluations e USING(user_id,mode)
+                    JOIN risk_limit_settings s USING(user_id,mode)
+                    CROSS JOIN (SELECT watermark FROM risk_price_publication LIMIT 1) p
+                    WHERE o.mode='PAPER' AND o.wallet_id=:wallet AND o.episode_id=:episode""",
+                        {"wallet": owner.wallet.wallet_id, "episode": owner.wallet.episode_id},
+                    )
+                )
+                .mappings()
+                .one_or_none()
+            )
+        evidence: dict[str, object] = {
+            "stage": stage,
+            "observed_at": datetime.now(UTC).isoformat(),
+            "owner": str(owner.user_id),
+            "wallet_id": str(owner.wallet.wallet_id),
+            "episode_id": str(owner.wallet.episode_id),
+        }
+        if row is not None:
+            evidence.update(dict(row))
+            evidence["lag"] = int(row.publication_watermark) - int(row.cursor)
+        self.setup_readiness_evidence.append(evidence)
+        f15.save(self.output / "setup-readiness.json", self.setup_readiness_evidence)
+
+    async def submit_setup_order_when_ready[SetupResult](
+        self,
+        owner: f15.OwnerState,
+        submit: Callable[[], Awaitable[SetupResult]],
+    ) -> SetupResult:
+        async def ready() -> bool:
+            async with user_session(self.api, owner.user_id) as session:
+                return await risk_retry_ready(
+                    session,
+                    wallet_id=owner.wallet.wallet_id,
+                    episode_id=owner.wallet.episode_id,
+                )
+
+        async def observe(stage: str) -> None:
+            await self.setup_readiness_snapshot(owner, stage)
+
+        return await submit_setup_order_when_ready(ready, submit, observe)
+
     async def publish(self) -> None:
         if self.publisher_mode == "child":
             await self.publisher_link.run(self.stop_market)
@@ -309,6 +475,57 @@ class Fixture(SourcePublisher):
         if self.publisher_mode == "child":
             await self.publisher_link.control(values)
         self.configure(values)
+
+    async def set_scheduled_partial_quantity(self, quantity: str, stage: str) -> None:
+        previous_input = int(self.publisher_stats.get("last_input_id", 0))
+        await self.source_control(ask_quantity=quantity)
+        async with asyncio.timeout(10):
+            while (
+                self.publisher_stats.get("last_ask_quantity") != quantity
+                or int(self.publisher_stats.get("last_input_id", 0)) <= previous_input
+            ):
+                if self.publisher is not None and self.publisher.done():
+                    await self.publisher
+                    raise RuntimeError("F19_PARTIAL_SOURCE_PUBLICATION_STOPPED")
+                await asyncio.sleep(0.01)
+        self.partial_source_evidence.append(
+            {
+                "stage": stage,
+                "observed_at": datetime.now(UTC).isoformat(),
+                "ask_quantity": quantity,
+                "previous_input_id": previous_input,
+                "input_id": int(self.publisher_stats["last_input_id"]),
+            }
+        )
+        f15.save(self.output / "partial-source-window.json", self.partial_source_evidence)
+
+    @asynccontextmanager
+    async def scheduled_partial_source_window(
+        self,
+    ) -> AsyncIterator[tuple[Callable[[], Awaitable[None]], Callable[[], Awaitable[None]]]]:
+        active = False
+        restore_quantity: str | None = None
+
+        async def install() -> None:
+            nonlocal active, restore_quantity
+            if active:
+                raise RuntimeError("F19_PARTIAL_SOURCE_WINDOW_ALREADY_ACTIVE")
+            restore_quantity = str(self.publisher_stats.get("last_ask_quantity", "1000000"))
+            active = True
+            await self.set_scheduled_partial_quantity("0.5", "INSTALL")
+
+        async def restore() -> None:
+            nonlocal active
+            if not active:
+                return
+            assert restore_quantity is not None
+            await self.set_scheduled_partial_quantity(restore_quantity, "RESTORE")
+            active = False
+
+        try:
+            yield install, restore
+        finally:
+            await restore()
 
     async def dispose_source_connections(self) -> None:
         if self.publisher_mode == "child":
@@ -561,24 +778,11 @@ class Fixture(SourcePublisher):
                     while True:
                         await asyncio.sleep(0.02 if self.started else f15.RESULT_POLL_SECONDS)
                         async with user_session(self.api, owner.user_id) as session:
-                            ready = (
-                                await session.execute(
-                                    """SELECT EXISTS(SELECT 1 FROM risk_limit_evaluations e
-                                    JOIN risk_owner_state o USING(user_id,mode)
-                                    JOIN risk_limit_settings s USING(user_id,mode)
-                                    CROSS JOIN (SELECT watermark FROM risk_price_publication
-                                      LIMIT 1) p
-                                    WHERE e.mode='PAPER' AND e.reason='READY'
-                                      AND e.setting_revision=s.revision AND NOT s.latched
-                                      AND NOT e.replay_pending AND NOT o.replay_pending
-                                      AND e.price_watermark=p.watermark AND o.cursor=p.watermark
-                                      AND o.wallet_id=:wallet AND o.episode_id=:episode)""",
-                                    {
-                                        "wallet": owner.wallet.wallet_id,
-                                        "episode": owner.wallet.episode_id,
-                                    },
-                                )
-                            ).scalar_one()
+                            ready = await risk_retry_ready(
+                                session,
+                                wallet_id=owner.wallet.wallet_id,
+                                episode_id=owner.wallet.episode_id,
+                            )
                         if ready:
                             break
             assert receipt is not None
@@ -587,8 +791,11 @@ class Fixture(SourcePublisher):
                     view = await request_view(session, receipt.request_id)
                 assert view is not None
                 if view.intake_state == "REJECTED" or view.command_state == "REJECTED":
-                    raise RuntimeError(
-                        f"F18_POSITIVE_REQUEST_REJECTED:{view.intake_failure_code}:{view.command_failure_code}"
+                    raise OrderRequestRejectedError(
+                        request_id=receipt.request_id,
+                        command_id=view.command_id,
+                        intake_failure_code=view.intake_failure_code,
+                        command_failure_code=view.command_failure_code,
                     )
                 if (
                     view.command_id is not None
@@ -643,7 +850,9 @@ class Fixture(SourcePublisher):
                     ).one_or_none()
                 if result is not None:
                     if result.state != "APPLIED":
-                        raise RuntimeError(f"F18_RISK_MUTATION_REJECTED:{result.failure_code}")
+                        raise RiskMutationRejectedError(
+                            receipt.receipt_id, str(result.failure_code)
+                        )
                     await self.record_financial(owner)
                     return receipt.receipt_id
                 await asyncio.sleep(0.02)
@@ -743,7 +952,8 @@ class Fixture(SourcePublisher):
             self.output / "cycle-timing.jsonl",
             owner=owner.user_id,
             number=number,
-            recovery_allowed=owner.user_id == self.selected and number == 0,
+            # F-19 runs loss-stop recovery before the measured core workload.
+            recovery_allowed=False,
         ):
             yield
 
@@ -769,9 +979,6 @@ class Fixture(SourcePublisher):
             )
         await self.new(self.engine, owner, buy, OrderStatus.FILLED, counters, latencies)
         counters.fills += 1
-        if owner.user_id == self.selected and number == 0:
-            async with recovery_scope():
-                await self.breach_reset(owner, run_id)
         resting = f15.limit_sell(owner, run_id, number)
         await self.new(self.engine, owner, resting, OrderStatus.ACCEPTED, counters, latencies)
         started = monotonic()
@@ -811,8 +1018,6 @@ class Fixture(SourcePublisher):
         trading_completed()
         if owner.user_id == self.selected and number == 0:
             await self.correction(owner, buy.order_id)
-            # The temporary breach limit must not require synthetic per-cycle resets.
-            self.selected_limit_restore = await self.mutation(owner, RiskAction.INCREASE, "1000")
             self.recovery_complete.set()
 
     async def correction(self, owner: f15.OwnerState, order_id: UUID) -> None:
@@ -852,23 +1057,180 @@ class Fixture(SourcePublisher):
             {"owner": str(owner.user_id), "scenario": "EXACT_CORRECTION_AND_REPLAY"}
         )
 
-    async def breach_reset(self, owner: f15.OwnerState, run_id: UUID) -> None:
+    async def dedicated_loss_snapshot(
+        self,
+        owner: f15.OwnerState,
+        *,
+        label: str,
+        order_id: UUID,
+        request_id: UUID | None = None,
+        command_id: UUID | None = None,
+        risk_request_id: UUID | None = None,
+        failure_code: str | None = None,
+    ) -> dict[str, object]:
+        async with user_session(self.engine, owner.user_id, role=DatabaseRole.ENGINE) as session:
+            wallet = await get_wallet(session)
+            row = (
+                (
+                    await session.execute(
+                        """SELECT o.cursor,o.boundary_cursor,o.source_revision,o.source_proof,
+                          o.replay_pending AS owner_pending,e.price_watermark,
+                          e.reason AS evaluation_reason,e.replay_pending AS evaluation_pending,
+                          e.setting_revision,e.latched,p.watermark AS publication_watermark,
+                          coalesce((SELECT max(sequence) FROM risk_financial_boundaries
+                            WHERE mode='PAPER'),0) AS latest_boundary,
+                          coalesce((SELECT max(price_watermark) FROM risk_financial_boundaries
+                            WHERE mode='PAPER'),0) AS boundary_watermark,
+                          a.revision AS position_revision,a.source_proof AS position_proof,
+                          (SELECT count(*) FROM paper_position_projections
+                            WHERE episode_id=:episode) AS position_count,
+                          (SELECT count(*) FROM paper_reservations
+                            WHERE episode_id=:episode) AS reservation_count,
+                          (SELECT count(*) FROM paper_orders
+                            WHERE episode_id=:episode) AS order_count,
+                          (SELECT count(*) FROM paper_order_events
+                            WHERE order_id=:order) AS order_event_count,
+                          (SELECT status FROM paper_order_projections
+                            WHERE order_id=:order) AS order_status,
+                          (SELECT filled_quantity::text FROM paper_order_projections
+                            WHERE order_id=:order) AS filled_quantity,
+                          (SELECT state FROM paper_order_request_results
+                            WHERE request_id=CAST(:request AS uuid)) AS request_state,
+                          (SELECT failure_code FROM paper_order_request_results
+                            WHERE request_id=CAST(:request AS uuid)) AS request_failure_code,
+                          (SELECT completed_at FROM paper_order_request_results
+                            WHERE request_id=CAST(:request AS uuid)) AS request_completed_at,
+                          (SELECT state FROM paper_order_command_results
+                            WHERE command_id=CAST(:command AS uuid)) AS command_state,
+                          (SELECT failure_code FROM paper_order_command_results
+                            WHERE command_id=CAST(:command AS uuid)) AS command_failure_code,
+                          (SELECT completed_at FROM paper_order_command_results
+                            WHERE command_id=CAST(:command AS uuid)) AS command_completed_at,
+                          (SELECT state FROM risk_limit_results
+                            WHERE request_id=CAST(:risk_request AS uuid)) AS risk_request_state,
+                          (SELECT failure_code FROM risk_limit_results
+                            WHERE request_id=CAST(:risk_request AS uuid)) AS risk_failure_code,
+                          coalesce((SELECT jsonb_agg(jsonb_build_object(
+                            'base',base,'quote',quote,'held',held_quantity::text,
+                            'cost',total_cost::text) ORDER BY base,quote)
+                            FROM paper_position_projections WHERE episode_id=:episode),'[]')
+                            AS positions,
+                          coalesce((SELECT jsonb_agg(jsonb_build_object(
+                            'order_id',order_id::text,'base',base,'quote',quote,
+                            'quote_reserved',quote_reserved::text,
+                            'base_reserved',base_reserved::text) ORDER BY order_id)
+                            FROM paper_reservations WHERE episode_id=:episode),'[]')
+                            AS reservations
+                        FROM risk_owner_state o
+                        JOIN risk_limit_evaluations e USING(user_id,mode)
+                        CROSS JOIN risk_price_publication p
+                        LEFT JOIN paper_position_activity a
+                          ON a.user_id=o.user_id AND a.episode_id=o.episode_id
+                        WHERE o.mode='PAPER'""",
+                        {
+                            "episode": owner.wallet.episode_id,
+                            "order": order_id,
+                            "request": request_id,
+                            "command": command_id,
+                            "risk_request": risk_request_id,
+                        },
+                    )
+                )
+                .mappings()
+                .one()
+            )
+            status = await read_status(session, TradingMode.PAPER)
+        if wallet is None:
+            raise RuntimeError("F19_DEDICATED_LOSS_WALLET_MISSING")
+        snapshot: dict[str, object] = {
+            "label": label,
+            "observed_at": datetime.now(UTC).isoformat(),
+            "owner": str(owner.user_id),
+            "wallet_id": str(owner.wallet.wallet_id),
+            "episode_id": str(owner.wallet.episode_id),
+            "order_id": str(order_id),
+            "request_id": None if request_id is None else str(request_id),
+            "command_id": None if command_id is None else str(command_id),
+            "risk_request_id": None if risk_request_id is None else str(risk_request_id),
+            "failure_code": failure_code,
+            "wallet_balance": wallet.balance.as_parts(),
+            "stop": {
+                "stop_id": None if status.stop_id is None else str(status.stop_id),
+                "cause": None if status.cause is None else status.cause.value,
+                "generation": status.generation,
+                "revision": status.revision,
+                "target_set_complete": status.target_set_complete,
+                "pending_count": status.pending_count,
+                "failed_count": status.failed_count,
+                "resume_ready": status.resume_ready,
+            },
+            **{
+                key: value.isoformat() if isinstance(value, datetime) else value
+                for key, value in row.items()
+            },
+        }
+        self.dedicated_loss_snapshots.append(snapshot)
+        f15.save(self.output / "dedicated-loss-snapshots.json", self.dedicated_loss_snapshots)
+        return snapshot
+
+    async def dedicated_loss_reset(self, owner: f15.OwnerState, run_id: UUID) -> None:
+        intent = replace(
+            f15.market_buy(owner, run_id, -30),
+            kind=OrderType.LIMIT,
+            size=BaseSize(Quantity.of(1, "BTC")),
+            limit_price=Money.of(100, "USDT"),
+            time_in_force=TimeInForce.GTC,
+        )
+        await self.dedicated_loss_snapshot(owner, label="BEFORE_PARTIAL", order_id=intent.order_id)
+        try:
+            partial_result = await self.request(
+                owner, intent, expected_status=OrderStatus.PARTIALLY_FILLED
+            )
+        except OrderRequestRejectedError as error:
+            await self.dedicated_loss_snapshot(
+                owner,
+                label="PARTIAL_REJECTED",
+                order_id=intent.order_id,
+                request_id=error.request_id,
+                command_id=error.command_id,
+                failure_code=error.command_failure_code or error.intake_failure_code,
+            )
+            raise
+        await f15.wait_status(
+            self.engine, owner.user_id, intent.order_id, OrderStatus.PARTIALLY_FILLED
+        )
+        await self.record_financial(owner)
+        await self.dedicated_loss_snapshot(
+            owner,
+            label="AFTER_PARTIAL",
+            order_id=intent.order_id,
+            command_id=partial_result.command_id,
+        )
         await self.source_control(price="80")
-        async with recovery_stage("breach_stop"), asyncio.timeout(30):
+        async with asyncio.timeout(30):
             while True:
                 async with user_session(self.api, owner.user_id) as session:
-                    row = (
-                        await session.execute("""
-                      SELECT s.latched,p.target_set_complete,p.pending_count
-                      FROM risk_limit_settings s LEFT JOIN risk_stop_requests r USING(user_id,mode)
-                      LEFT JOIN risk_stop_progress p ON p.stop_id=r.id WHERE s.mode='PAPER'""")
-                    ).one()
-                if row.latched and row.target_set_complete and row.pending_count == 0:
+                    latched = bool(
+                        (
+                            await session.execute(
+                                "SELECT latched FROM risk_limit_settings WHERE mode='PAPER'"
+                            )
+                        ).scalar_one()
+                    )
+                    status = await read_status(session, TradingMode.PAPER)
+                if (
+                    latched
+                    and status.cause is StopCause.LOSS_LIMIT
+                    and status.target_set_complete
+                    and status.pending_count == 0
+                    and status.failed_count == 0
+                ):
                     break
                 await asyncio.sleep(0.02)
+        await self.dedicated_loss_snapshot(owner, label="AFTER_LOSS_STOP", order_id=intent.order_id)
         await self.source_control(price="100")
         # Wait for the recorded recovery input, without clearing the durable latch.
-        async with recovery_stage("recovery_price"), asyncio.timeout(10):
+        async with asyncio.timeout(10):
             while True:
                 async with market_data_session(self.market) as session:
                     price_row = next(
@@ -879,22 +1241,71 @@ class Fixture(SourcePublisher):
                 ):
                     break
                 await asyncio.sleep(0.02)
-        async with recovery_stage("reset"):
-            await self.mutation(owner, RiskAction.RESET)
-        ignored = f15.Counters()
-        times: list[float] = []
-        for index in range(self.baseline_orders):
-            intent = f15.baseline(owner, run_id, index + self.baseline_orders)
-            async with recovery_stage(f"reseed-{index + 1}", order_id=intent.order_id):
-                await self.new(self.engine, owner, intent, OrderStatus.ACCEPTED, ignored, times)
-        self.extra_cancels[owner.user_id] = self.baseline_orders
-        self.scenarios.append(
-            {
-                "owner": str(owner.user_id),
-                "scenario": "PRICE_BREACH_STOP_RESET_RESEED",
-                "targets": self.baseline_orders,
-            }
+        reset_request = await retry_source_unavailable_reset(
+            lambda: self.mutation(owner, RiskAction.RESET),
+            self.dedicated_loss_reset_attempts,
         )
+        await self.dedicated_loss_snapshot(
+            owner,
+            label="AFTER_RESET",
+            order_id=intent.order_id,
+            risk_request_id=reset_request,
+        )
+        probe = replace(
+            f15.market_buy(owner, run_id, -31),
+            size=QuoteBudget(Money.of(10, "USDT")),
+        )
+        try:
+            async with user_session(self.api, owner.user_id) as session:
+                await admit_new_request(
+                    session,
+                    wallet_id=owner.wallet.wallet_id,
+                    intent=probe,
+                )
+        except SafetyUnavailableError:
+            blocked = True
+        else:
+            blocked = False
+        async with user_session(self.api, owner.user_id) as session:
+            status = await read_status(session, TradingMode.PAPER)
+        if (
+            not blocked
+            or status.stop_id is None
+            or status.cause is not StopCause.LOSS_LIMIT
+            or status.resume_ready
+        ):
+            raise RuntimeError("F19_DEDICATED_LOSS_STOP_DID_NOT_REMAIN_CLOSED")
+        await self.dedicated_loss_snapshot(
+            owner,
+            label="AFTER_BLOCKED_PROBE",
+            order_id=intent.order_id,
+            risk_request_id=reset_request,
+            failure_code="ORDER_SAFETY_UNAVAILABLE",
+        )
+        proof: dict[str, object] = {
+            "owner": str(owner.user_id),
+            "scenario": "PRICE_BREACH_RESET_REMAINS_BLOCKED",
+            "partial_order_id": str(intent.order_id),
+            "reset_request_id": str(reset_request),
+            "reset_attempts": self.dedicated_loss_reset_attempts,
+            "snapshots": self.dedicated_loss_snapshots,
+            "probe_order_id": str(probe.order_id),
+            "probe_failure_code": "ORDER_SAFETY_UNAVAILABLE",
+            "stop_id": str(status.stop_id),
+            "cause": status.cause.value,
+            "generation": status.generation,
+            "revision": status.revision,
+            "target_set_complete": status.target_set_complete,
+            "pending_count": status.pending_count,
+            "failed_count": status.failed_count,
+            "resume_ready": status.resume_ready,
+            "financial_marker": self.last_markers.get(owner.user_id, 0),
+        }
+        proof["sha256"] = hashlib.sha256(json.dumps(proof, sort_keys=True).encode()).hexdigest()
+        f15.save(self.output / "dedicated-loss.json", proof)
+        self.dedicated_loss_reset_request = reset_request
+        self.dedicated_loss_proof = proof
+        self.scenarios.append(proof)
 
     async def close(self) -> None:
         self.stop_market.set()
@@ -1111,6 +1522,27 @@ def guard_release_database() -> None:
         raise RuntimeError("F18_ISOLATED_RELEASE_DATABASE_REQUIRED")
 
 
+async def risk_retry_ready(session: UserSession, *, wallet_id: UUID, episode_id: UUID) -> bool:
+    """Return only an R6-compatible retry hint; full policy remains authoritative."""
+    return bool(
+        (
+            await session.execute(
+                """SELECT EXISTS(SELECT 1 FROM risk_limit_evaluations e
+                JOIN risk_owner_state o USING(user_id,mode)
+                JOIN risk_limit_settings s USING(user_id,mode)
+                CROSS JOIN (SELECT watermark FROM risk_price_publication LIMIT 1) p
+                WHERE e.mode='PAPER' AND e.reason='READY'
+                  AND e.setting_revision=s.revision AND NOT s.latched
+                  AND NOT e.replay_pending AND NOT o.replay_pending
+                  AND e.price_watermark=o.cursor
+                  AND p.watermark>=o.cursor AND p.watermark-o.cursor<=100
+                  AND o.wallet_id=:wallet AND o.episode_id=:episode)""",
+                {"wallet": wallet_id, "episode": episode_id},
+            )
+        ).scalar_one()
+    )
+
+
 def source_manifest() -> dict[str, object]:
     root = Path(__file__).resolve().parents[4]
     commit = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=root, text=True).strip()
@@ -1150,6 +1582,8 @@ def source_manifest() -> dict[str, object]:
 
 async def run(args: argparse.Namespace) -> int:
     guard_release_database()
+    stop_preflight = bool(getattr(args, "stop_preflight", False))
+    dedicated_loss_diagnostic = bool(getattr(args, "dedicated_loss_diagnostic", False))
     output: Path = args.output
     output.mkdir(parents=True, exist_ok=False)
     fixture = Fixture(output)
@@ -1161,12 +1595,39 @@ async def run(args: argparse.Namespace) -> int:
             output, fixture.source_market, observe_backend=True
         )
     fixture.dispatch_trace = getattr(args, "dispatch_diagnostic_seconds", None) is not None
-    fixture.bounded_saturation = args.phase == "W2" and not fixture.dispatch_trace
-    fixture.baseline_orders = 2 if args.phase == "CHECK" else 20
-    owner_count = 2 if args.phase == "CHECK" else 100
-    workers = 2 if args.phase == "CHECK" else 10
-    duration, rate = DURATION[args.phase], RATE[args.phase]
-    cycles = 1 if args.phase == "CHECK" else duration * rate // (owner_count * 5)
+    fixture.bounded_saturation = (
+        args.phase == "W2" and not fixture.dispatch_trace and not dedicated_loss_diagnostic
+    )
+    fixture.baseline_orders = (
+        0
+        if dedicated_loss_diagnostic
+        else 1
+        if stop_preflight
+        else 2
+        if args.phase == "CHECK"
+        else 20
+    )
+    owner_count = (
+        0 if dedicated_loss_diagnostic else 2 if args.phase == "CHECK" or stop_preflight else 100
+    )
+    stop_owner_count = (
+        0 if dedicated_loss_diagnostic else {"W1": 2, "W2": 10, "W3": 2, "CHECK": 0}[args.phase]
+    )
+    workers = 2 if args.phase == "CHECK" or stop_preflight or dedicated_loss_diagnostic else 10
+    duration, rate = (
+        (0, 0)
+        if dedicated_loss_diagnostic
+        else (10, 5)
+        if stop_preflight
+        else (DURATION[args.phase], RATE[args.phase])
+    )
+    cycles = (
+        0
+        if stop_preflight or dedicated_loss_diagnostic
+        else 1
+        if args.phase == "CHECK"
+        else duration * rate // (owner_count * 5)
+    )
     run_id = uuid4()
     counters = f15.Counters()
     latencies: list[float] = []
@@ -1174,13 +1635,16 @@ async def run(args: argparse.Namespace) -> int:
     sampler_stop = asyncio.Event()
     sampler = None
     fault_task = None
+    stop_schedule_completed = args.phase == "CHECK" or dedicated_loss_diagnostic
     fault_events: list[f15.FaultEvent] = []
     reset_progress = ResetProgress(0)
     saturation: SaturationProgress | None = None
     slots = []
-    gate = None
+    gate = f15.FaultGate() if args.phase == "W3" else None
+    platform_stop_runner: PlatformStopScheduleRunner | None = None
     fault_observations: list[dict[str, object]] = []
     process_lock = asyncio.Lock()
+    setup_sequence = SetupSequence()
     original_submit, original_cycle = f15.submit_new, f15.cycle
     manifest = {
         **source_manifest(),
@@ -1188,6 +1652,8 @@ async def run(args: argparse.Namespace) -> int:
         "phase": args.phase,
         "duration_seconds": duration,
         "owners": owner_count,
+        "dedicated_stop_owners": stop_owner_count,
+        "dedicated_loss_owners": 1,
         "baseline_orders": fixture.baseline_orders,
         "rate": rate,
         "setup_refusal_retry_seconds": f15.RESULT_POLL_SECONDS,
@@ -1199,10 +1665,13 @@ async def run(args: argparse.Namespace) -> int:
         "run_id": str(run_id),
         "started_at": datetime.now(UTC).isoformat(),
         "acceptance_result": False,
+        "stop_preflight": stop_preflight,
+        "dedicated_loss_diagnostic": dedicated_loss_diagnostic,
         "source_diagnostic_seconds": getattr(args, "source_diagnostic_seconds", None),
         "publisher_mode": fixture.publisher_mode,
         "memory_diagnostic_seconds": getattr(args, "memory_diagnostic_seconds", None),
         "dispatch_diagnostic_seconds": getattr(args, "dispatch_diagnostic_seconds", None),
+        "setup_sequence": setup_sequence.completed,
     }
     try:
         if args.phase == "W3":
@@ -1236,6 +1705,17 @@ async def run(args: argparse.Namespace) -> int:
         fixture.owners = await f15.seed_owners(
             fixture.api, fixture.engine, fixture.scan, owner_count
         )
+        fixture.stop_owners = await f15.seed_owners(
+            fixture.api, fixture.engine, fixture.scan, stop_owner_count
+        )
+        fixture.loss_owners = await f15.seed_owners(fixture.api, fixture.engine, fixture.scan, 1)
+        stop_schedule = (
+            None
+            if args.phase == "CHECK" or dedicated_loss_diagnostic
+            else build_stop_schedule(args.phase, [owner.user_id for owner in fixture.stop_owners])
+        )
+        manifest["stop_schedule"] = None if stop_schedule is None else stop_schedule.document()
+        manifest["stop_schedule_sha256"] = None if stop_schedule is None else stop_schedule.digest()
         manifest["dataset"] = [
             {
                 "owner": str(owner.user_id),
@@ -1245,10 +1725,20 @@ async def run(args: argparse.Namespace) -> int:
             }
             for owner in fixture.owners
         ]
+        manifest["dedicated_loss_dataset"] = [
+            {
+                "owner": str(owner.user_id),
+                "wallet": str(owner.wallet.wallet_id),
+                "episode": str(owner.wallet.episode_id),
+                "initial_capital": owner.wallet.initial_capital.as_parts(),
+            }
+            for owner in fixture.loss_owners
+        ]
         manifest["dataset_sha256"] = hashlib.sha256(
             json.dumps(
                 {
                     "dataset": manifest["dataset"],
+                    "dedicated_loss_dataset": manifest["dedicated_loss_dataset"],
                     "run_id": str(run_id),
                     "baseline_orders": fixture.baseline_orders,
                     "market_fixture": f15.CAPABILITY_VERSION,
@@ -1256,7 +1746,7 @@ async def run(args: argparse.Namespace) -> int:
                 sort_keys=True,
             ).encode()
         ).hexdigest()
-        fixture.selected = fixture.owners[0].user_id
+        fixture.selected = None if dedicated_loss_diagnostic else fixture.owners[0].user_id
         if fixture.bounded_saturation:
             slots = demand_slots([owner.user_id for owner in fixture.owners], cycles, rate)
             saturation = SaturationProgress([owner.user_id for owner in fixture.owners], len(slots))
@@ -1268,16 +1758,16 @@ async def run(args: argparse.Namespace) -> int:
                 (output / "w2-demand-plan.json").read_bytes()
             ).hexdigest()
             manifest["server_100_requests_per_second_certified"] = False
-        reset_plan = (
-            []
-            if args.phase == "CHECK"
-            else reset_schedule(
+        if args.phase == "CHECK" or stop_preflight or dedicated_loss_diagnostic:
+            reset_plan = []
+        else:
+            assert fixture.selected is not None
+            reset_plan = reset_schedule(
                 [owner.user_id for owner in fixture.owners],
                 selected=fixture.selected,
                 run_id=run_id,
                 faults=fault_events,
             )
-        )
         reset_progress = ResetProgress(len(reset_plan))
         manifest["selected_post_scenario_limit"] = "1000"
         manifest["scheduled_resets"] = [asdict(item) for item in reset_plan]
@@ -1285,7 +1775,9 @@ async def run(args: argparse.Namespace) -> int:
             json.dumps(manifest["scheduled_resets"], default=str, sort_keys=True).encode()
         ).hexdigest()
         manifest["scheduled_reset_mode"] = (
-            "omitted-nonaccepting-CHECK" if args.phase == "CHECK" else "R27"
+            "omitted-nonaccepting-diagnostic"
+            if args.phase == "CHECK" or stop_preflight or dedicated_loss_diagnostic
+            else "R27"
         )
         f15.save(output / "manifest.json", manifest)
         for owner in fixture.owners:
@@ -1294,6 +1786,34 @@ async def run(args: argparse.Namespace) -> int:
                     "INSERT INTO user_trading_preferences(user_id,use) VALUES(:owner,'MANUAL')",
                     {"owner": owner.user_id},
                 )
+        for index, owner in enumerate(fixture.stop_owners):
+            use = (
+                "BOT"
+                if args.phase == "W2" or (args.phase in {"W1", "W3"} and index == 1)
+                else "MANUAL"
+            )
+            async with user_session(fixture.api, owner.user_id) as session:
+                await session.execute(
+                    "INSERT INTO user_trading_preferences(user_id,use) VALUES(:owner,:use)",
+                    {"owner": owner.user_id, "use": use},
+                )
+        for owner in fixture.loss_owners:
+            async with user_session(fixture.api, owner.user_id) as session:
+                await session.execute(
+                    "INSERT INTO user_trading_preferences(user_id,use) VALUES(:owner,'MANUAL')",
+                    {"owner": owner.user_id},
+                )
+        if args.phase == "W3":
+            assert stop_schedule is not None and gate is not None
+            platform_stop_runner = PlatformStopScheduleRunner(
+                api_engine=fixture.api,
+                migrator_engine=fixture.migrator,
+                schedule=stop_schedule,
+                owners=fixture.stop_owners,
+                journal=output / "stop-schedule.jsonl",
+                gate=gate,
+            )
+            await platform_stop_runner.install_operator()
         fixture.publisher = asyncio.create_task(fixture.publish())
         await fixture.spawn("risk")
         async with asyncio.timeout(20):
@@ -1304,19 +1824,12 @@ async def run(args: argparse.Namespace) -> int:
                 if fixture.publisher.done():
                     await fixture.publisher
                 await asyncio.sleep(0.02)
-        for owner in fixture.owners:
-            await fixture.mutation(
-                owner, RiskAction.SET, "10" if owner.user_id == fixture.selected else "1000"
-            )
+        for owner in fixture.loss_owners:
+            await fixture.mutation(owner, RiskAction.SET, "5")
             await fixture.mutation(owner, RiskAction.RESET)
-        await fixture.mutation(fixture.owners[0], RiskAction.DECREASE, "5")
         for number in range(workers):
             await fixture.spawn(f"paper-{number}")
         f15.submit_new, f15.cycle = fixture.new, fixture.cycle
-        await f15.with_publisher(
-            f15.seed_baseline(fixture.engine, fixture.owners, run_id, fixture.baseline_orders),
-            fixture.publisher,
-        )
         sampler = asyncio.create_task(
             f15.resource_sampler(
                 fixture.migrator,
@@ -1329,14 +1842,111 @@ async def run(args: argparse.Namespace) -> int:
             )
         )
         await fixture.source_control(ask_quantity="0.5")
-        # Begin measurement only after the required partial-fill liquidity is
-        # committed. An in-flight publisher may still hold the prior depth.
         async with asyncio.timeout(10):
             while fixture.publisher_stats.get("last_ask_quantity") != "0.5":
                 if fixture.publisher.done():
                     await fixture.publisher
                     raise RuntimeError("F18_PARTIAL_FIXTURE_PUBLICATION_STOPPED")
                 await asyncio.sleep(0.01)
+        setup_sequence.advance("DEDICATED_LOSS")
+        await fixture.dedicated_loss_reset(fixture.loss_owners[0], run_id)
+        manifest["dedicated_loss_proof"] = fixture.dedicated_loss_proof
+        f15.save(output / "manifest.json", manifest)
+        if dedicated_loss_diagnostic:
+            fixture.phases.mark("complete", dedicated_loss_diagnostic=True)
+            f15.save(
+                output / "result.json",
+                {
+                    **manifest,
+                    "status": "PASSED",
+                    "smoke_only": True,
+                    "dedicated_loss_diagnostic_only": True,
+                    "acceptance_result": False,
+                    "dedicated_loss_reset_request": fixture.dedicated_loss_reset_request,
+                    "dedicated_loss_reset_attempts": fixture.dedicated_loss_reset_attempts,
+                    "dedicated_loss_snapshots": fixture.dedicated_loss_snapshots,
+                    "dedicated_loss_proof": fixture.dedicated_loss_proof,
+                },
+            )
+            return 0
+
+        setup_sequence.advance("CORE_RISK_SETTINGS")
+        for owner in fixture.owners:
+            await fixture.mutation(owner, RiskAction.SET, "1000")
+            await fixture.mutation(owner, RiskAction.RESET)
+        # Every dedicated stop owner needs authoritative risk state before its
+        # read-only readiness gate, including the MANUAL owner in W1/W3.
+        for owner in fixture.stop_owners:
+            await fixture.mutation(owner, RiskAction.SET, "1000")
+        setup_sequence.advance("STOP_OWNER_RISK_SETTINGS")
+        setup_sequence.advance("CORE_BASELINE")
+        await f15.with_publisher(
+            f15.seed_baseline(fixture.engine, fixture.owners, run_id, fixture.baseline_orders),
+            fixture.publisher,
+        )
+        if args.phase == "W3":
+            ignored = f15.Counters()
+            ignored_latencies: list[float] = []
+            manual_owner = fixture.stop_owners[0]
+
+            async def submit_w3_manual() -> None:
+                await f15.seed_baseline(fixture.engine, [manual_owner], run_id, 1)
+
+            await f15.with_publisher(
+                fixture.submit_setup_order_when_ready(manual_owner, submit_w3_manual),
+                fixture.publisher,
+            )
+            bot_order = replace(
+                f15.baseline(fixture.stop_owners[1], run_id, 0),
+                origin=OrderOrigin.BOT,
+            )
+
+            async def submit_w3_bot() -> OrderCommand:
+                return await original_submit(
+                    fixture.engine,
+                    fixture.stop_owners[1],
+                    bot_order,
+                    OrderStatus.ACCEPTED,
+                    ignored,
+                    ignored_latencies,
+                )
+
+            await f15.with_publisher(
+                fixture.submit_setup_order_when_ready(fixture.stop_owners[1], submit_w3_bot),
+                fixture.publisher,
+            )
+        elif fixture.stop_owners:
+            manual_owners = fixture.stop_owners[:1] if args.phase == "W1" else []
+            bot_owners = fixture.stop_owners[1:] if args.phase == "W1" else fixture.stop_owners
+            if manual_owners:
+                manual_owner = manual_owners[0]
+
+                async def submit_manual() -> None:
+                    await f15.seed_baseline(fixture.engine, [manual_owner], run_id, 1)
+
+                await f15.with_publisher(
+                    fixture.submit_setup_order_when_ready(manual_owner, submit_manual),
+                    fixture.publisher,
+                )
+            ignored = f15.Counters()
+
+            async def submit_bot(owner: f15.OwnerState) -> OrderCommand:
+                async def once() -> OrderCommand:
+                    return await original_submit(
+                        fixture.engine,
+                        owner,
+                        replace(f15.baseline(owner, run_id, 0), origin=OrderOrigin.BOT),
+                        OrderStatus.ACCEPTED,
+                        ignored,
+                        [],
+                    )
+
+                return await fixture.submit_setup_order_when_ready(owner, once)
+
+            await f15.with_publisher(
+                asyncio.gather(*(submit_bot(owner) for owner in bot_owners)),
+                fixture.publisher,
+            )
         budget = await connection_budget(
             fixture.migrator,
             [
@@ -1367,7 +1977,7 @@ async def run(args: argparse.Namespace) -> int:
                 },
             )
         if args.phase == "W3":
-            gate = f15.FaultGate()
+            assert gate is not None
             generation = 0
 
             async def restart_workers() -> None:
@@ -1461,7 +2071,9 @@ async def run(args: argparse.Namespace) -> int:
                 await fixture.cycle(fixture.engine, owner, run_id, number, counters, latencies)
 
         cycles_operation = (
-            run_saturation(
+            asyncio.sleep(duration)
+            if stop_preflight
+            else run_saturation(
                 slots,
                 started=started,
                 duration=duration,
@@ -1483,6 +2095,186 @@ async def run(args: argparse.Namespace) -> int:
                 cycle_scope=fixture.cycle_scope,
             )
         )
+
+        async def post_cutoff_probe(owner: f15.OwnerState) -> dict[str, object]:
+            intent = replace(
+                f15.market_buy(owner, run_id, -10),
+                size=QuoteBudget(Money.of(10, "USDT")),
+            )
+            result = await fixture.request(owner, intent, expected_status=OrderStatus.FILLED)
+            return {
+                "order_id": str(intent.order_id),
+                "command_state": result.state,
+                "failure_code": result.failure_code,
+            }
+
+        async def prepare_queued_manual(owner: f15.OwnerState) -> UUID:
+            async with fixture.migrator.begin() as connection:
+                await connection.execute(
+                    text(
+                        f"""CREATE FUNCTION f19_set5_defer_request() RETURNS trigger
+                        LANGUAGE plpgsql AS $$ BEGIN
+                          IF NEW.user_id='{owner.user_id}'::uuid THEN
+                            NEW.next_attempt_at=clock_timestamp()+interval '5 minutes';
+                          END IF;
+                          RETURN NEW;
+                        END $$"""
+                    )
+                )
+                await connection.execute(
+                    text(
+                        """CREATE TRIGGER f19_set5_defer_request BEFORE INSERT
+                        ON paper_order_request_dispatch FOR EACH ROW
+                        EXECUTE FUNCTION f19_set5_defer_request()"""
+                    )
+                )
+            intent = f15.market_buy(owner, run_id, -11)
+            request_id: UUID | None = None
+            try:
+                async with user_session(fixture.api, owner.user_id) as session:
+                    request = await admit_new_request(
+                        session,
+                        wallet_id=owner.wallet.wallet_id,
+                        intent=intent,
+                    )
+                    request_id = request.request_id
+            finally:
+                async with fixture.migrator.begin() as connection:
+                    await connection.execute(
+                        text(
+                            "DROP TRIGGER IF EXISTS f19_set5_defer_request "
+                            "ON paper_order_request_dispatch"
+                        )
+                    )
+                    await connection.execute(
+                        text("DROP FUNCTION IF EXISTS f19_set5_defer_request()")
+                    )
+            if request_id is None:
+                raise RuntimeError("F19_SET5_QUEUED_REQUEST_WAS_NOT_CREATED")
+            return request_id
+
+        async def prepare_partial_bot(
+            owner: f15.OwnerState,
+            install_source: Callable[[], Awaitable[None]],
+        ) -> dict[str, object]:
+            assert fixture.publisher is not None
+            await install_source()
+            intent = replace(
+                f15.market_buy(owner, run_id, -12),
+                origin=OrderOrigin.BOT,
+                kind=OrderType.LIMIT,
+                size=BaseSize(Quantity.of(1, "BTC")),
+                limit_price=Money.of(100, "USDT"),
+                time_in_force=TimeInForce.GTC,
+            )
+            ignored = f15.Counters()
+            await f15.with_publisher(
+                original_submit(
+                    fixture.engine,
+                    owner,
+                    intent,
+                    OrderStatus.PARTIALLY_FILLED,
+                    ignored,
+                    [],
+                ),
+                fixture.publisher,
+            )
+            return {"partially_filled": True, "order_id": str(intent.order_id)}
+
+        async def run_user_stop_schedule() -> None:
+            nonlocal stop_schedule_completed
+            if stop_schedule is None or args.phase not in {"W1", "W2"}:
+                return
+            runner = UserStopScheduleRunner(
+                api_engine=fixture.api,
+                schedule=stop_schedule,
+                owners=fixture.stop_owners,
+                journal=output / "stop-schedule.jsonl",
+                offset_scale=0.001 if stop_preflight else 1,
+            )
+            async with fixture.scheduled_partial_source_window() as (
+                install_partial_source,
+                restore_partial_source,
+            ):
+
+                async def prepare_partial(owner: f15.OwnerState) -> dict[str, object]:
+                    return await prepare_partial_bot(owner, install_partial_source)
+
+                async def finish_partial(_: f15.OwnerState) -> None:
+                    await restore_partial_source()
+
+                await runner.run(
+                    started=started,
+                    post_cutoff_probe=post_cutoff_probe,
+                    prepare_queued=prepare_queued_manual,
+                    prepare_partial=prepare_partial,
+                    finish_partial=finish_partial,
+                )
+            stop_schedule_completed = True
+
+        platform_probe_number = 0
+
+        async def platform_blocked_probe(owner: f15.OwnerState) -> dict[str, object]:
+            nonlocal platform_probe_number
+            intent = f15.market_buy(owner, run_id, -20 - platform_probe_number)
+            platform_probe_number += 1
+            try:
+                async with user_session(fixture.api, owner.user_id) as session:
+                    await admit_new_request(
+                        session,
+                        wallet_id=owner.wallet.wallet_id,
+                        intent=intent,
+                    )
+            except SafetyUnavailableError:
+                return {
+                    "blocked": True,
+                    "order_id": str(intent.order_id),
+                    "failure_code": "ORDER_SAFETY_UNAVAILABLE",
+                }
+            return {"blocked": False, "order_id": str(intent.order_id)}
+
+        bot_rearm_number = 1
+
+        async def rearm_bot_order(owner: f15.OwnerState) -> dict[str, object]:
+            nonlocal bot_rearm_number
+            assert fixture.publisher is not None
+            intent = replace(
+                f15.baseline(owner, run_id, bot_rearm_number),
+                origin=OrderOrigin.BOT,
+            )
+            bot_rearm_number += 1
+            ignored = f15.Counters()
+            await f15.with_publisher(
+                original_submit(
+                    fixture.engine,
+                    owner,
+                    intent,
+                    OrderStatus.ACCEPTED,
+                    ignored,
+                    [],
+                ),
+                fixture.publisher,
+            )
+            return {"accepted": True, "order_id": str(intent.order_id)}
+
+        async def run_platform_stop_schedule() -> None:
+            nonlocal stop_schedule_completed
+            if platform_stop_runner is None:
+                return
+            await platform_stop_runner.run(
+                started=started,
+                blocked_probe=platform_blocked_probe,
+                bot_rearm=rearm_bot_order,
+            )
+            stop_schedule_completed = True
+
+        stop_task = (
+            run_user_stop_schedule()
+            if args.phase in {"W1", "W2"}
+            else run_platform_stop_schedule()
+            if args.phase == "W3"
+            else None
+        )
         scheduled = run_scheduled_work(
             cycles_operation,
             run_resets(
@@ -1495,6 +2287,7 @@ async def run(args: argparse.Namespace) -> int:
                 gate=gate,
             ),
             fault_task,
+            stop_task,
         )
         diagnostic_seconds = getattr(args, "memory_diagnostic_seconds", None) or getattr(
             args, "dispatch_diagnostic_seconds", None
@@ -1632,6 +2425,18 @@ async def run(args: argparse.Namespace) -> int:
             sum(cycle_counts.values()) if cycle_counts is not None else owner_count * cycles
         )
         expected = expected_cycles * 5
+        scheduled_platform_blocks = (
+            platform_stop_runner.blocked_count if platform_stop_runner is not None else 0
+        )
+        stop_conservation = conservation_summary(
+            expected=expected + scheduled_platform_blocks,
+            offered=counters.offered + scheduled_platform_blocks,
+            admitted=counters.admitted,
+            completed=counters.completed,
+            blocked_by_scheduled_platform_stop=scheduled_platform_blocks,
+            other_rejected=counters.rejected,
+            blocked_outside_schedule=0,
+        )
         saturation_summary = saturation.summary() if saturation is not None else None
         saturation_passed = saturation is None or (
             saturation_summary is not None
@@ -1671,43 +2476,51 @@ async def run(args: argparse.Namespace) -> int:
             and connection_cleanup["passed"]
             and (endurance is None or endurance["passed"])
         )
-        passed = (
-            fixture.selected_limit_restore is not None
-            and saturation_passed
-            and identities_passed
-            and reset_progress.passed
+        common_passed = (
+            reset_progress.passed
+            and fixture.dedicated_loss_reset_request is not None
+            and fixture.dedicated_loss_proof is not None
+            and stop_schedule_completed
+            and stop_conservation["passed"] is True
             and counters.offered == expected
             and counters.admitted == expected
             and counters.completed == expected
             and counters.rejected == 0
             and counters.cycles == expected_cycles
-            and counters.fills == expected_cycles * 2
-            and counters.cancels == expected_cycles
-            and counters.replays == expected_cycles
             and elapsed >= duration
             and elapsed <= duration + 60
-            and f15.percentile(metric, 0.95) <= 0.500
-            and f15.percentile(metric, 0.99) <= 1
             and all(row["passed"] for row in observations)
             and invariants["passed"]
-            and sla["passed"]
-            and (
-                args.phase != "W3"
-                or (
-                    sla["idle_coverage_complete"]
-                    and len(fault_observations) == len(events)
-                    and all(row["status"] == "RECOVERED" for row in fault_observations)
-                )
-            )
             and resource_passed
-            and len(fixture.scenarios) == 3
             and cadence["passed"]
             and all(process.returncode == 0 for process in fixture.processes)
-            and (
-                overflow is None
-                or (
-                    overflow["economics_unchanged"] is True
-                    and float(overflow["recovery_seconds"]) <= 60
+        )
+        passed = common_passed and (
+            stop_preflight
+            or (
+                saturation_passed
+                and identities_passed
+                and counters.fills == expected_cycles * 2
+                and counters.cancels == expected_cycles
+                and counters.replays == expected_cycles
+                and f15.percentile(metric, 0.95) <= 0.500
+                and f15.percentile(metric, 0.99) <= 1
+                and sla["passed"]
+                and (
+                    args.phase != "W3"
+                    or (
+                        sla["idle_coverage_complete"]
+                        and len(fault_observations) == len(events)
+                        and all(row["status"] == "RECOVERED" for row in fault_observations)
+                    )
+                )
+                and len(fixture.scenarios) == 3
+                and (
+                    overflow is None
+                    or (
+                        overflow["economics_unchanged"] is True
+                        and float(overflow["recovery_seconds"]) <= 60
+                    )
                 )
             )
         )
@@ -1715,7 +2528,8 @@ async def run(args: argparse.Namespace) -> int:
             **manifest,
             "status": "PASSED" if passed else "FAILED",
             "smoke_only": args.phase == "CHECK",
-            "acceptance_result": passed and args.phase != "CHECK",
+            "stop_preflight_only": stop_preflight,
+            "acceptance_result": passed and args.phase != "CHECK" and not stop_preflight,
             "elapsed_seconds": elapsed,
             "source_cadence": cadence,
             "live_baseline": live_baseline,
@@ -1725,6 +2539,8 @@ async def run(args: argparse.Namespace) -> int:
             "counters": asdict(counters),
             "scheduled_reset_counters": asdict(reset_progress),
             "scheduled_reset_passed": reset_progress.passed,
+            "stop_schedule_passed": stop_schedule_completed,
+            "stop_conservation": stop_conservation,
             "w2_saturation": saturation_summary,
             "w2_actual_logical_rates": (
                 {
@@ -1744,7 +2560,10 @@ async def run(args: argparse.Namespace) -> int:
             "global_invariants": invariants,
             "overflow": overflow,
             "scenarios": fixture.scenarios,
-            "selected_limit_restore_request": fixture.selected_limit_restore,
+            "dedicated_loss_reset_request": fixture.dedicated_loss_reset_request,
+            "dedicated_loss_reset_attempts": fixture.dedicated_loss_reset_attempts,
+            "dedicated_loss_snapshots": fixture.dedicated_loss_snapshots,
+            "dedicated_loss_proof": fixture.dedicated_loss_proof,
             "engine_transaction_seconds": {
                 "p95": f15.percentile(metric, 0.95),
                 "p99": f15.percentile(metric, 0.99),
@@ -1789,7 +2608,10 @@ async def run(args: argparse.Namespace) -> int:
                 "counters": asdict(counters),
                 "scheduled_reset_counters": asdict(reset_progress),
                 "scenarios": fixture.scenarios,
-                "selected_limit_restore_request": fixture.selected_limit_restore,
+                "dedicated_loss_reset_request": fixture.dedicated_loss_reset_request,
+                "dedicated_loss_reset_attempts": fixture.dedicated_loss_reset_attempts,
+                "dedicated_loss_snapshots": fixture.dedicated_loss_snapshots,
+                "dedicated_loss_proof": fixture.dedicated_loss_proof,
             },
         )
         raise
@@ -1824,6 +2646,8 @@ def main() -> int:
     parser.add_argument("--stop", type=Path)
     parser.add_argument("--metrics", type=Path)
     parser.add_argument("--redis-container")
+    parser.add_argument("--stop-preflight", action="store_true")
+    parser.add_argument("--dedicated-loss-diagnostic", action="store_true")
     parser.add_argument("--memory-diagnostic-seconds", type=int, choices=(60,))
     parser.add_argument("--dispatch-diagnostic-seconds", type=int, choices=(60,))
     parser.add_argument("--source-diagnostic-seconds", type=int, choices=(60,))
@@ -1836,6 +2660,26 @@ def main() -> int:
         return asyncio.run(worker(args))
     if args.phase is None or args.output is None:
         parser.error("phase and output are required")
+    if args.stop_preflight and args.phase != "W1":
+        parser.error("stop preflight uses W1 behavior and is never acceptance")
+    if args.dedicated_loss_diagnostic and (args.phase != "W1" or args.publisher_mode != "child"):
+        parser.error("dedicated loss diagnostic requires W1 with child publisher")
+    if args.dedicated_loss_diagnostic and (
+        args.stop_preflight
+        or args.memory_diagnostic_seconds is not None
+        or args.dispatch_diagnostic_seconds is not None
+        or args.source_diagnostic_seconds is not None
+    ):
+        parser.error("dedicated loss diagnostic cannot be combined with another diagnostic")
+    if args.stop_preflight and any(
+        value is not None
+        for value in (
+            args.memory_diagnostic_seconds,
+            args.dispatch_diagnostic_seconds,
+            args.source_diagnostic_seconds,
+        )
+    ):
+        parser.error("stop preflight cannot be combined with another diagnostic")
     if args.dispatch_trace:
         parser.error("dispatch-trace is worker-only")
     if args.source_diagnostic_seconds is not None:

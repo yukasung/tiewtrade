@@ -11,9 +11,9 @@ from sqlalchemy import event, text
 from sqlalchemy.ext.asyncio import AsyncEngine
 from sqlalchemy.pool import QueuePool
 
+import tiewtrade.services.engine.risk_limit_main as risk_runtime
 from tests.infra.execution_market import profile_workload as f15
 from tiewtrade.infra.db import DatabaseRole, create_engine_for
-from tiewtrade.services.engine import risk_limit_main as risk_runtime
 
 
 class PoolEvidence:

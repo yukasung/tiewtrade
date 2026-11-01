@@ -1627,6 +1627,176 @@
         "title": "KeyView",
         "type": "object"
       },
+      "KillSwitchStatusView": {
+        "properties": {
+          "active_causes": {
+            "items": {
+              "enum": [
+                "USER",
+                "SYSTEM",
+                "LOSS_LIMIT"
+              ],
+              "type": "string"
+            },
+            "title": "Active Causes",
+            "type": "array"
+          },
+          "capability": {
+            "enum": [
+              "AVAILABLE",
+              "LIVE_EXECUTION_UNAVAILABLE"
+            ],
+            "title": "Capability",
+            "type": "string"
+          },
+          "cause": {
+            "anyOf": [
+              {
+                "enum": [
+                  "USER",
+                  "SYSTEM",
+                  "LOSS_LIMIT",
+                  "PLATFORM"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cause"
+          },
+          "failed_count": {
+            "title": "Failed Count",
+            "type": "integer"
+          },
+          "generation": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Generation"
+          },
+          "mode": {
+            "enum": [
+              "PAPER",
+              "LIVE"
+            ],
+            "title": "Mode",
+            "type": "string"
+          },
+          "pending_count": {
+            "title": "Pending Count",
+            "type": "integer"
+          },
+          "platform_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Platform Reason"
+          },
+          "platform_stop_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Platform Stop Id"
+          },
+          "progress": {
+            "anyOf": [
+              {
+                "enum": [
+                  "STOPPING",
+                  "STOPPED",
+                  "PROBLEMS"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Progress"
+          },
+          "reconciliation_revision": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reconciliation Revision"
+          },
+          "resume_ready": {
+            "title": "Resume Ready",
+            "type": "boolean"
+          },
+          "revision": {
+            "title": "Revision",
+            "type": "integer"
+          },
+          "stop_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stop Id"
+          },
+          "summary_revision": {
+            "title": "Summary Revision",
+            "type": "integer"
+          },
+          "target_count": {
+            "title": "Target Count",
+            "type": "integer"
+          },
+          "target_set_complete": {
+            "title": "Target Set Complete",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "mode",
+          "stop_id",
+          "cause",
+          "generation",
+          "revision",
+          "summary_revision",
+          "progress",
+          "target_set_complete",
+          "target_count",
+          "pending_count",
+          "failed_count",
+          "platform_stop_id",
+          "platform_reason",
+          "resume_ready",
+          "reconciliation_revision",
+          "capability"
+        ],
+        "title": "KillSwitchStatusView",
+        "type": "object"
+      },
       "LimitOrderInput": {
         "additionalProperties": false,
         "properties": {
@@ -2740,6 +2910,112 @@
         "title": "PasswordChange",
         "type": "object"
       },
+      "PlatformStatusView": {
+        "properties": {
+          "can_resume": {
+            "title": "Can Resume",
+            "type": "boolean"
+          },
+          "discovery_complete": {
+            "title": "Discovery Complete",
+            "type": "boolean"
+          },
+          "failed_count": {
+            "title": "Failed Count",
+            "type": "integer"
+          },
+          "owner_count": {
+            "title": "Owner Count",
+            "type": "integer"
+          },
+          "pending_count": {
+            "title": "Pending Count",
+            "type": "integer"
+          },
+          "progress": {
+            "anyOf": [
+              {
+                "enum": [
+                  "STOPPING",
+                  "STOPPED",
+                  "PROBLEMS"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Progress"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "reconciliation_revision": {
+            "title": "Reconciliation Revision",
+            "type": "integer"
+          },
+          "revision": {
+            "title": "Revision",
+            "type": "integer"
+          },
+          "stop_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stop Id"
+          },
+          "summary_revision": {
+            "title": "Summary Revision",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "stop_id",
+          "revision",
+          "summary_revision",
+          "reconciliation_revision",
+          "reason",
+          "progress",
+          "discovery_complete",
+          "owner_count",
+          "pending_count",
+          "failed_count",
+          "can_resume"
+        ],
+        "title": "PlatformStatusView",
+        "type": "object"
+      },
+      "PlatformStopInput": {
+        "additionalProperties": false,
+        "properties": {
+          "reason": {
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "reason"
+        ],
+        "title": "PlatformStopInput",
+        "type": "object"
+      },
       "PriceRow": {
         "additionalProperties": false,
         "properties": {
@@ -3086,6 +3362,39 @@
           "detail"
         ],
         "title": "RejectedTradingAccountInput",
+        "type": "object"
+      },
+      "ResumeStopInput": {
+        "additionalProperties": false,
+        "properties": {
+          "expected_reconciliation_revision": {
+            "minimum": 0.0,
+            "title": "Expected Reconciliation Revision",
+            "type": "integer"
+          },
+          "expected_revision": {
+            "minimum": 1.0,
+            "title": "Expected Revision",
+            "type": "integer"
+          },
+          "expected_stop_id": {
+            "format": "uuid",
+            "title": "Expected Stop Id",
+            "type": "string"
+          },
+          "expected_summary_revision": {
+            "minimum": 0.0,
+            "title": "Expected Summary Revision",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "expected_stop_id",
+          "expected_revision",
+          "expected_summary_revision",
+          "expected_reconciliation_revision"
+        ],
+        "title": "ResumeStopInput",
         "type": "object"
       },
       "RetryAccepted": {
@@ -3836,6 +4145,147 @@
         "title": "SignedIn",
         "type": "object"
       },
+      "StopAction": {
+        "enum": [
+          "STOP",
+          "RESUME"
+        ],
+        "title": "StopAction",
+        "type": "string"
+      },
+      "StopInput": {
+        "additionalProperties": false,
+        "properties": {},
+        "title": "StopInput",
+        "type": "object"
+      },
+      "StopRequestView": {
+        "properties": {
+          "action": {
+            "enum": [
+              "STOP",
+              "RESUME"
+            ],
+            "title": "Action",
+            "type": "string"
+          },
+          "cause": {
+            "enum": [
+              "USER",
+              "SYSTEM",
+              "LOSS_LIMIT",
+              "PLATFORM"
+            ],
+            "title": "Cause",
+            "type": "string"
+          },
+          "failure_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Failure Code"
+          },
+          "generation": {
+            "title": "Generation",
+            "type": "integer"
+          },
+          "mode": {
+            "enum": [
+              "PAPER",
+              "LIVE",
+              "PLATFORM"
+            ],
+            "title": "Mode",
+            "type": "string"
+          },
+          "recorded_at": {
+            "title": "Recorded At",
+            "type": "string"
+          },
+          "request_id": {
+            "format": "uuid",
+            "title": "Request Id",
+            "type": "string"
+          },
+          "revision": {
+            "title": "Revision",
+            "type": "integer"
+          },
+          "state": {
+            "enum": [
+              "REQUEST_PENDING",
+              "APPLIED",
+              "REJECTED"
+            ],
+            "title": "State",
+            "type": "string"
+          },
+          "stop_id": {
+            "format": "uuid",
+            "title": "Stop Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "request_id",
+          "stop_id",
+          "mode",
+          "action",
+          "cause",
+          "generation",
+          "revision",
+          "state",
+          "failure_code",
+          "recorded_at"
+        ],
+        "title": "StopRequestView",
+        "type": "object"
+      },
+      "StopSummaryView": {
+        "properties": {
+          "positions": {
+            "items": {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "type": "object"
+            },
+            "title": "Positions",
+            "type": "array"
+          },
+          "reconciled_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reconciled At"
+          },
+          "snapshot_revision": {
+            "title": "Snapshot Revision",
+            "type": "integer"
+          },
+          "status": {
+            "$ref": "#/components/schemas/KillSwitchStatusView"
+          }
+        },
+        "required": [
+          "status",
+          "positions",
+          "snapshot_revision",
+          "reconciled_at"
+        ],
+        "title": "StopSummaryView",
+        "type": "object"
+      },
       "Timeframe": {
         "enum": [
           "1m",
@@ -4032,6 +4482,176 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/admin/kill-switch": {
+      "get": {
+        "operationId": "platform_status_admin_kill_switch_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlatformStatusView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Platform Status",
+        "tags": [
+          "kill-switch"
+        ]
+      }
+    },
+    "/admin/kill-switch/requests/{request_id}": {
+      "get": {
+        "operationId": "platform_request_by_id_admin_kill_switch_requests__request_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "request_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Request Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StopRequestView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Platform Request By Id",
+        "tags": [
+          "kill-switch"
+        ]
+      }
+    },
+    "/admin/kill-switch/resume": {
+      "post": {
+        "operationId": "platform_resume_admin_kill_switch_resume_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Idempotency-Key",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResumeStopInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StopRequestView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Platform Resume",
+        "tags": [
+          "kill-switch"
+        ]
+      }
+    },
+    "/admin/kill-switch/stop": {
+      "post": {
+        "operationId": "platform_stop_admin_kill_switch_stop_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Idempotency-Key",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlatformStopInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StopRequestView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Platform Stop",
+        "tags": [
+          "kill-switch"
+        ]
+      }
+    },
     "/admin/supported-symbols": {
       "get": {
         "operationId": "admin_catalog_admin_supported_symbols_get",
@@ -4902,6 +5522,364 @@
           }
         },
         "summary": "Read Health"
+      }
+    },
+    "/live/kill-switch": {
+      "get": {
+        "operationId": "status_live_kill_switch_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KillSwitchStatusView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Status",
+        "tags": [
+          "kill-switch"
+        ]
+      }
+    },
+    "/live/kill-switch/requests/by-key/{key}": {
+      "get": {
+        "operationId": "request_by_key_live_kill_switch_requests_by_key__key__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "key",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Key",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "action",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/StopAction"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StopRequestView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Request By Key",
+        "tags": [
+          "kill-switch"
+        ]
+      }
+    },
+    "/live/kill-switch/requests/{request_id}": {
+      "get": {
+        "operationId": "request_by_id_live_kill_switch_requests__request_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "request_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Request Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StopRequestView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Request By Id",
+        "tags": [
+          "kill-switch"
+        ]
+      }
+    },
+    "/live/kill-switch/resume": {
+      "post": {
+        "operationId": "resume_live_kill_switch_resume_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Idempotency-Key",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResumeStopInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StopRequestView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Resume",
+        "tags": [
+          "kill-switch"
+        ]
+      }
+    },
+    "/live/kill-switch/stop": {
+      "post": {
+        "operationId": "stop_live_kill_switch_stop_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Idempotency-Key",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/StopInput"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": " Body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StopRequestView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Stop",
+        "tags": [
+          "kill-switch"
+        ]
+      }
+    },
+    "/live/kill-switch/stops/{stop_id}/effects": {
+      "get": {
+        "operationId": "effects_live_kill_switch_stops__stop_id__effects_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "stop_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Stop Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 512,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "filter",
+            "required": false,
+            "schema": {
+              "default": "ALL",
+              "enum": [
+                "ALL",
+                "PENDING",
+                "FAILED"
+              ],
+              "title": "Filter",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RiskEffectPage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Effects",
+        "tags": [
+          "kill-switch"
+        ]
+      }
+    },
+    "/live/kill-switch/stops/{stop_id}/resume-summary": {
+      "get": {
+        "operationId": "resume_summary_live_kill_switch_stops__stop_id__resume_summary_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "stop_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Stop Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StopSummaryView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Resume Summary",
+        "tags": [
+          "kill-switch"
+        ]
       }
     },
     "/live/risk-limit": {
@@ -6111,6 +7089,364 @@
         "summary": "Reset Paper Wallet",
         "tags": [
           "paper-wallet"
+        ]
+      }
+    },
+    "/paper/kill-switch": {
+      "get": {
+        "operationId": "status_paper_kill_switch_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KillSwitchStatusView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Status",
+        "tags": [
+          "kill-switch"
+        ]
+      }
+    },
+    "/paper/kill-switch/requests/by-key/{key}": {
+      "get": {
+        "operationId": "request_by_key_paper_kill_switch_requests_by_key__key__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "key",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Key",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "action",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/StopAction"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StopRequestView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Request By Key",
+        "tags": [
+          "kill-switch"
+        ]
+      }
+    },
+    "/paper/kill-switch/requests/{request_id}": {
+      "get": {
+        "operationId": "request_by_id_paper_kill_switch_requests__request_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "request_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Request Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StopRequestView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Request By Id",
+        "tags": [
+          "kill-switch"
+        ]
+      }
+    },
+    "/paper/kill-switch/resume": {
+      "post": {
+        "operationId": "resume_paper_kill_switch_resume_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Idempotency-Key",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResumeStopInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StopRequestView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Resume",
+        "tags": [
+          "kill-switch"
+        ]
+      }
+    },
+    "/paper/kill-switch/stop": {
+      "post": {
+        "operationId": "stop_paper_kill_switch_stop_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Idempotency-Key",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/StopInput"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": " Body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StopRequestView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Stop",
+        "tags": [
+          "kill-switch"
+        ]
+      }
+    },
+    "/paper/kill-switch/stops/{stop_id}/effects": {
+      "get": {
+        "operationId": "effects_paper_kill_switch_stops__stop_id__effects_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "stop_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Stop Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 512,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "filter",
+            "required": false,
+            "schema": {
+              "default": "ALL",
+              "enum": [
+                "ALL",
+                "PENDING",
+                "FAILED"
+              ],
+              "title": "Filter",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RiskEffectPage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Effects",
+        "tags": [
+          "kill-switch"
+        ]
+      }
+    },
+    "/paper/kill-switch/stops/{stop_id}/resume-summary": {
+      "get": {
+        "operationId": "resume_summary_paper_kill_switch_stops__stop_id__resume_summary_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "stop_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Stop Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StopSummaryView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Resume Summary",
+        "tags": [
+          "kill-switch"
         ]
       }
     },

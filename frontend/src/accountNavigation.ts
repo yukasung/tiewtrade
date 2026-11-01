@@ -1,10 +1,10 @@
 import { useEffect, useState, type MouseEvent } from "react";
 
-export const accountPages = ["chart", "paper/trade", "live/trade", "account", "security", "api-keys", "trading-account", "prices", "supported-symbols"] as const;
+export const accountPages = ["chart", "paper/trade", "live/trade", "account", "security", "api-keys", "trading-account", "prices", "supported-symbols", "system-safety"] as const;
 export type AccountPage = (typeof accountPages)[number];
 function currentPage(isPlatformAdmin: boolean): AccountPage {
   const found = accountPages.find(page => window.location.pathname === `/${page}`);
-  return found === "supported-symbols" && !isPlatformAdmin ? "chart" : found ?? "chart";
+  return (found === "supported-symbols" || found === "system-safety") && !isPlatformAdmin ? "chart" : found ?? "chart";
 }
 /** Preserve native modified clicks, new tabs and downloads. */
 export function navigateAccountPage(event: MouseEvent<HTMLAnchorElement>): void {

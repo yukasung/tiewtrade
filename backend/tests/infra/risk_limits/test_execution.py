@@ -12,7 +12,7 @@ import pytest
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncEngine
 
-from tests.infra.db.test_migrations import _failed_upgrade_or_downgrade
+from tests.infra.db.test_migrations import _alembic, _failed_upgrade_or_downgrade
 from tests.infra.execution_market.test_dispatch import intent
 from tests.infra.execution_market.test_worker import ready_public_sources
 from tests.infra.risk_limits.test_requests import submission
@@ -166,6 +166,7 @@ async def test_matching_reloads_a_limit_created_after_an_unset_intake(
         assert configured.source_ready
 
 
+@pytest.mark.isolated_migration
 async def test_unset_manual_request_reaches_one_fill_without_synthetic_risk_rows(
     api_engine: AsyncEngine,
     engine_engine: AsyncEngine,
@@ -246,12 +247,15 @@ async def test_unset_manual_request_reaches_one_fill_without_synthetic_risk_rows
     await api_engine.dispose()
     await engine_engine.dispose()
     await migrator_engine.dispose()
-    failed = _failed_upgrade_or_downgrade("downgrade", "0059")
-    assert "unconfigured Paper economic history prevents downgrade" in failed.stderr
-    async with migrator_engine.connect() as connection:
-        assert (
-            await connection.execute(text("SELECT version_num FROM alembic_version"))
-        ).scalar_one() == "0060"
+    try:
+        failed = _failed_upgrade_or_downgrade("downgrade", "0059")
+        assert "unconfigured Paper economic history prevents downgrade" in failed.stderr
+        async with migrator_engine.connect() as connection:
+            assert (
+                await connection.execute(text("SELECT version_num FROM alembic_version"))
+            ).scalar_one() == "0060"
+    finally:
+        _alembic("upgrade", "head")
 
 
 async def drive(engine: AsyncEngine, owner: UUID, command_id: UUID) -> None:

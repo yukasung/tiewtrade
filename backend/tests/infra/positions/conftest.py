@@ -24,6 +24,15 @@ async def production_wallet(
     scan_engine: AsyncEngine,
     owner: UUID,
 ) -> PaperWalletSnapshot:
+    return await create_production_wallet(api_engine, engine_engine, scan_engine, owner)
+
+
+async def create_production_wallet(
+    api_engine: AsyncEngine,
+    engine_engine: AsyncEngine,
+    scan_engine: AsyncEngine,
+    owner: UUID,
+) -> PaperWalletSnapshot:
     async with user_session(api_engine, owner) as session:
         await admit_command(
             session,

@@ -9,6 +9,7 @@ from uuid import NAMESPACE_URL, UUID, uuid4, uuid5
 from tiewtrade.core.orders import (
     OrderConflictError,
     OrderIntent,
+    OrderOrigin,
     SafetyUnavailableError,
     SourceUnavailableError,
     TradingMode,
@@ -38,6 +39,11 @@ from tiewtrade.infra.paper_orders.storage import (
     increment_wallet_revision,
     lock_active_episode,
     lock_pair_catalog,
+)
+from tiewtrade.infra.trading_stops.storage import (
+    admission_revisions,
+    current_opening_blocked,
+    global_shared_lock,
 )
 
 
@@ -148,11 +154,14 @@ async def _submit(
     action: str,
     payload: dict[str, object],
     opening_pair: PositionPair | None = None,
+    opening_origin: OrderOrigin | None = None,
     admitted_catalog_revision: int | None = None,
 ) -> OrderCommand:
     session = require_user_session(session)
     request_payload = {"wallet": str(wallet_id), "episode": str(episode_id), **payload}
     fingerprint = hashlib.sha256(canonical(request_payload).encode()).hexdigest()
+    if opening_pair is not None:
+        await global_shared_lock(session)
     # Serialize replay lookup with admission, including retries across episode closure.
     await session.execute(
         "SELECT pg_advisory_xact_lock(hashtextextended(:key,0))",
@@ -173,7 +182,15 @@ async def _submit(
         return prior
     await lock_active_episode(session, wallet_id, episode_id)
     catalog_revision = None
+    global_stop_revision = owner_stop_revision = 0
     if opening_pair is not None:
+        if opening_origin is None:
+            raise OrderConflictError("opening origin is required")
+        global_stop_revision, owner_stop_revision = await admission_revisions(
+            session, TradingMode.PAPER
+        )
+        if await current_opening_blocked(session, TradingMode.PAPER, opening_origin):
+            raise SafetyUnavailableError("opening is blocked by a trading stop")
         catalog_revision = await lock_opening_pair_catalog(session, opening_pair)
         if admitted_catalog_revision is not None:
             fence = await lock_pair_catalog(session, opening_pair)
@@ -190,6 +207,8 @@ async def _submit(
             catalog_revision = admitted_catalog_revision
     elif admitted_catalog_revision is not None:
         raise OrderConflictError("catalog revision is only valid for opening orders")
+    elif opening_origin is not None:
+        raise OrderConflictError("opening origin is only valid for opening orders")
     receipt = await initialize_order_source(
         session,
         wallet_id=wallet_id,
@@ -226,12 +245,15 @@ async def _submit(
         "action": action,
         "fingerprint": fingerprint,
         "payload": canonical(stored_payload),
+        "global_stop_revision": global_stop_revision,
+        "owner_stop_revision": owner_stop_revision,
     }
     await session.execute(
         """INSERT INTO paper_order_commands
-      (id,user_id,wallet_id,episode_id,action,idempotency_key,order_id,request_fingerprint,payload)
+      (id,user_id,wallet_id,episode_id,action,idempotency_key,order_id,request_fingerprint,
+       admitted_global_stop_revision,admitted_owner_stop_revision,payload)
       VALUES(:id,:user,:wallet,:episode,:action,:key,:order,:fingerprint,
-             CAST(:payload AS jsonb))""",
+             :global_stop_revision,:owner_stop_revision,CAST(:payload AS jsonb))""",
         params,
     )
     await session.execute(
@@ -262,6 +284,7 @@ async def submit_order(
         action="NEW",
         payload={"intent": intent_payload(intent)},
         opening_pair=intent.pair if intent.side is ExecutionSide.BUY else None,
+        opening_origin=intent.origin if intent.side is ExecutionSide.BUY else None,
         admitted_catalog_revision=admitted_catalog_revision,
     )
 

@@ -31,6 +31,21 @@
   top: 0;
   z-index: var(--account-z-header);
 }
+
+.kill-switch-controls { margin-left: auto; display: flex; align-items: center; gap: .5rem; min-width: 0; }
+.kill-switch-control { display: flex; align-items: center; gap: .35rem; }
+.kill-switch-state { font-size: .75rem; color: var(--color-gray-500); white-space: nowrap; }
+.kill-switch-unknown { position: absolute; top: 4.5rem; right: 1rem; max-width: 22rem; border-radius: .75rem; padding: .75rem; background: var(--color-error-50); color: var(--color-error-700); }
+.kill-switch-banner { display: grid; gap: .5rem; padding: .75rem 1rem 0; }
+.kill-switch-modal-actions { display: flex; flex-wrap: wrap; gap: .75rem; margin-top: 1rem; }
+.platform-kill-switch-panel { display: grid; gap: 1rem; }
+@media (max-width: 767px) {
+  .account-header { flex-wrap: wrap; height: auto; min-height: 4rem; padding-block: .5rem; }
+  .kill-switch-controls { order: 3; width: 100%; margin-left: 0; display: grid; grid-template-columns: 1fr 1fr; }
+  .kill-switch-control { min-width: 0; flex-wrap: wrap; }
+  .kill-switch-control .account-button { min-height: 44px; }
+  .kill-switch-state { width: 100%; }
+}
 .account-theme-toggle { margin-inline-start: auto; padding: 0; }
 .account-sidebar {
   display: flex;
@@ -158,6 +173,7 @@
   }
   .account-sidebar.is-open {
     display: flex;
+    z-index: calc(var(--account-z-header) + 1);
   }
   .account-content {
     margin-inline-start: 0;

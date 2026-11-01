@@ -139,6 +139,21 @@ jobs:
       - name: pytest
         run: uv run pytest
 
+      - name: pytest isolated writer-fence migration guard
+        run: |
+          bash scripts/reset_ci_test_database.sh "${{ job.services.postgres.id }}"
+          uv run pytest -m isolated_migration tests/infra/execution_market/test_initialization.py::test_managed_history_refuses_fence_downgrade_and_keeps_force_rls
+
+      - name: pytest isolated optional-limit migration guard
+        run: |
+          bash scripts/reset_ci_test_database.sh "${{ job.services.postgres.id }}"
+          uv run pytest -m isolated_migration tests/infra/risk_limits/test_execution.py::test_unset_manual_request_reaches_one_fill_without_synthetic_risk_rows
+
+      - name: pytest fresh global state
+        run: |
+          bash scripts/reset_ci_test_database.sh "${{ job.services.postgres.id }}"
+          uv run pytest -m fresh_global_state
+
   api-contract:
     name: สัญญา API — ชนิดข้อมูลสองฝั่งต้องตรงกัน
     runs-on: ubuntu-latest
@@ -307,6 +322,18 @@ jobs:
         env:
           CI: "1"
 
+      # Dedicated suites create durable append-only operators and stop history.
+      # F-19 must prove bootstrap and stop behavior from its own clean boundary.
+      - name: reset database for F-18/F-19 risk composition
+        working-directory: backend
+        run: |
+          PGPASSWORD=postgres dropdb --force -h 127.0.0.1 -U postgres tiewtrade_e2e
+          PGPASSWORD=postgres createdb -h 127.0.0.1 -U postgres tiewtrade_e2e
+          for script in db/bootstrap/*.sql; do
+            psql "postgresql://postgres:postgres@127.0.0.1:5432/tiewtrade_e2e" -v ON_ERROR_STOP=1 -f "$script"
+          done
+          uv run alembic upgrade head
+
       - name: F-18 wallet risk production composition E2E
         run: npm run test:e2e:risk-limits
         working-directory: frontend
@@ -317,7 +344,9 @@ jobs:
         if: failure()
         with:
           name: playwright-report
-          path: frontend/playwright-report/
+          path: |
+            frontend/playwright-report/
+            frontend/test-results/
           retention-days: 7
 
   docker:

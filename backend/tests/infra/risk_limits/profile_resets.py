@@ -109,11 +109,14 @@ async def run_resets(
 
 
 async def run_scheduled_work(
-    cycles: Awaitable[object], resets: Awaitable[object], faults: Awaitable[object] | None = None
+    cycles: Awaitable[object],
+    resets: Awaitable[object],
+    faults: Awaitable[object] | None = None,
+    stops: Awaitable[object] | None = None,
 ) -> None:
     tasks = [
         asyncio.ensure_future(operation)
-        for operation in (cycles, resets, faults)
+        for operation in (cycles, resets, faults, stops)
         if operation is not None
     ]
     try:

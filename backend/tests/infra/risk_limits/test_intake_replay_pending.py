@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncEngine
 
 from tests.infra.execution_market.test_dispatch import intent
 from tests.infra.risk_limits.test_execution import runtime
+from tiewtrade.core.orders import SafetyUnavailableError
 from tiewtrade.infra.db import DatabaseRole, user_session
 from tiewtrade.infra.db.session import ScanSession, UserSession
 from tiewtrade.infra.paper_orders.request_dispatch import (
@@ -149,7 +150,7 @@ async def test_pending_replay_commits_progress_then_transfers_exactly_once(
             )
 
 
-@pytest.mark.parametrize("fault", ["integrity", "wrong_use", "breach"])
+@pytest.mark.parametrize("fault", ["integrity", "wrong_use"])
 async def test_pending_retry_does_not_replace_terminal_safety_refusals(
     api_engine: AsyncEngine,
     engine_engine: AsyncEngine,
@@ -162,7 +163,6 @@ async def test_pending_retry_does_not_replace_terminal_safety_refusals(
 ) -> None:
     from unittest.mock import AsyncMock
 
-    from tests.infra.risk_limits.test_execution import fill_buy
     from tiewtrade.core.risk_limits import RiskUnavailableError
     from tiewtrade.infra.risk_limits import monitor
 
@@ -172,17 +172,15 @@ async def test_pending_retry_does_not_replace_terminal_safety_refusals(
         migrator_engine,
         owner,
         wallet,
-        limit="0.01" if fault == "breach" else "1000",
+        limit="1000",
         account_use="BOT" if fault == "wrong_use" else "MANUAL",
     ) as sources:
-        if fault == "breach":
-            await fill_buy(api_engine, engine_engine, owner, wallet, sources)
         async with user_session(api_engine, owner) as session:
             receipt = await admit_new_request(
                 session, wallet_id=wallet.wallet_id, intent=intent(owner, wallet.episode_id)
             )
         for _ in range(51):
-            await sources.price("50" if fault == "breach" else "100")
+            await sources.price("100")
         if fault == "integrity":
             monkeypatch.setattr(
                 monitor, "read_frames", AsyncMock(side_effect=RiskUnavailableError("corrupt frame"))
@@ -197,7 +195,39 @@ async def test_pending_retry_does_not_replace_terminal_safety_refusals(
         async with user_session(api_engine, owner) as session:
             view = await request_view(session, receipt.request_id)
             assert view is not None and view.intake_state == "REJECTED" and view.command_id is None
-            if fault == "breach":
-                assert (
-                    await session.execute("SELECT latched FROM risk_limit_settings")
-                ).scalar_one()
+
+
+async def test_loss_breach_blocks_opening_before_intake(
+    api_engine: AsyncEngine,
+    engine_engine: AsyncEngine,
+    migrator_engine: AsyncEngine,
+    owner: UUID,
+    wallet: PaperWalletSnapshot,
+) -> None:
+    from tests.infra.risk_limits.test_execution import fill_buy
+
+    async with runtime(
+        api_engine,
+        engine_engine,
+        migrator_engine,
+        owner,
+        wallet,
+        limit="0.01",
+        account_use="MANUAL",
+    ) as sources:
+        await fill_buy(api_engine, engine_engine, owner, wallet, sources)
+        value = intent(owner, wallet.episode_id)
+        async with user_session(api_engine, owner) as session:
+            with pytest.raises(SafetyUnavailableError):
+                await admit_new_request(
+                    session,
+                    wallet_id=wallet.wallet_id,
+                    intent=value,
+                )
+            assert (await session.execute("SELECT latched FROM risk_limit_settings")).scalar_one()
+            assert (
+                await session.execute(
+                    "SELECT 1 FROM paper_order_requests WHERE idempotency_key=:key",
+                    {"key": value.idempotency_key},
+                )
+            ).first() is None

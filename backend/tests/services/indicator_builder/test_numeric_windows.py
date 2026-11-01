@@ -89,6 +89,25 @@ async def db_clock(
                 text(definition.replace("clock_timestamp()", "public.test_indicator_clock()"))
             )
         await c.execute(text("SELECT begin_indicator_source_maintenance()"))
+        # The fixture owns a fixed 2026 clock, while migrations provision the
+        # rolling five-year inventory from the real migration month. Ensure the
+        # fixed clock's oldest month remains available after the calendar rolls.
+        oldest = BOUNDARY.replace(year=BOUNDARY.year - 5, day=1)
+        following = oldest.replace(
+            year=oldest.year + oldest.month // 12,
+            month=oldest.month % 12 + 1,
+        )
+        partition = f"market_candles_{oldest:%Y%m}"
+        await c.execute(
+            text(
+                f"CREATE TABLE IF NOT EXISTS {partition} PARTITION OF market_candles "
+                f"FOR VALUES FROM ('{oldest.isoformat()}') TO ('{following.isoformat()}')"
+            )
+        )
+        await c.execute(text(f"GRANT SELECT ON {partition} TO tiewtrade_api"))
+        await c.execute(
+            text(f"GRANT SELECT,INSERT,UPDATE,DELETE ON {partition} TO tiewtrade_market_data")
+        )
         await c.execute(text("ALTER TABLE market_candles ALTER COLUMN high TYPE numeric"))
     execute = IndicatorSourceSession.execute
 

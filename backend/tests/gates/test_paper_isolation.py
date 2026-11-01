@@ -53,6 +53,7 @@ FORBIDDEN_MARKERS = (
 ALLOWED_INTERNAL_IMPORTS = frozenset(
     {
         "tiewtrade.core.risk_limits",
+        "tiewtrade.core.trading_stops",
         "tiewtrade.infra.positions.views",
         "tiewtrade.infra.positions.storage",
         "tiewtrade.infra.positions.records",
@@ -69,9 +70,11 @@ ALLOWED_INTERNAL_IMPORTS = frozenset(
         "tiewtrade.infra.risk_limits.views",
         "tiewtrade.infra.risk_limits.stops",
         "tiewtrade.infra.risk_limits.stop_views",
+        "tiewtrade.infra.trading_stops.storage",
         "tiewtrade.infra.risk_limits.evaluation_requests",
         "tiewtrade.services.api.risk_limit_models",
         "tiewtrade.services.engine.risk_limit",
+        "tiewtrade.services.engine.kill_switch",
         "tiewtrade.core.money",
         "tiewtrade.core.manual_trading",
         "tiewtrade.core.trading_account",

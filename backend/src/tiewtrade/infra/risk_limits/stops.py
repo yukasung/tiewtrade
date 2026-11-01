@@ -13,6 +13,7 @@ from tiewtrade.infra.audit import (
     AuditOutcome,
     RiskLimitDetails,
     SubjectKind,
+    TradingStopDetails,
     record_event,
 )
 from tiewtrade.infra.db.session import UserSession, require_user_session
@@ -42,6 +43,7 @@ _CANDIDATES = """WITH candidates AS (
    SELECT status FROM risk_order_lifecycle l WHERE l.order_id=o.id AND l.recorded_at<=:cut
    ORDER BY l.recorded_at DESC,l.sequence DESC LIMIT 1) p ON true
  WHERE o.episode_id=:episode AND o.kind IN ('MARKET','LIMIT')
+   AND (:target_policy='ALL' OR o.origin='BOT')
    AND p.status NOT IN ('FILLED','CANCELED','EXPIRED','REJECTED'))
  SELECT kind,id,order_id FROM candidates c WHERE NOT EXISTS(
    SELECT 1 FROM risk_stop_targets t WHERE t.stop_id=:stop AND t.target_kind=c.kind
@@ -143,7 +145,7 @@ async def _command(session: UserSession, target: Any, episode_id: UUID) -> str:
         failure_code="ORDER_SAFETY_UNAVAILABLE",
         snapshot={
             "order_id": str(target["order_id"]),
-            "reason": "RISK_LOSS_LIMIT_REACHED",
+            "reason": target["reason"],
             "stop_id": str(target["stop_id"]),
         },
     )
@@ -195,8 +197,11 @@ async def consume_stop(session: UserSession, stop_id: UUID, *, limit: int = 20) 
     stop = (
         (
             await checked.execute(
-                """SELECT r.*,p.target_set_complete FROM risk_stop_requests r
-        JOIN risk_stop_progress p ON p.stop_id=r.id WHERE r.id=:id FOR UPDATE OF p""",
+                """SELECT r.*,p.target_set_complete,a.revision authority_revision
+        FROM risk_stop_requests r
+        JOIN risk_stop_progress p ON p.stop_id=r.id
+        LEFT JOIN trading_stop_requests a ON a.id=r.authority_request_id
+        WHERE r.id=:id FOR UPDATE OF p""",
                 {"id": stop_id},
             )
         )
@@ -215,6 +220,7 @@ async def consume_stop(session: UserSession, stop_id: UUID, *, limit: int = 20) 
                         "cut": stop["recorded_at"],
                         "stop": stop_id,
                         "limit": limit,
+                        "target_policy": stop["target_policy"],
                     },
                 )
             )
@@ -265,29 +271,37 @@ async def consume_stop(session: UserSession, stop_id: UUID, *, limit: int = 20) 
     changed = False
     for target in targets:
         await checked.execute("SAVEPOINT risk_stop_target")
-        details: dict[str, object] = {"reason": "RISK_LOSS_LIMIT_REACHED"}
+        reason = (
+            "RISK_LOSS_LIMIT_REACHED"
+            if stop["cause"] == "LOSS_LIMIT"
+            else "PLATFORM_TRADING_STOP"
+            if stop["cause"] == "PLATFORM"
+            else "USER_TRADING_STOP"
+        )
+        target_data: Any = {**dict(target), "reason": reason}
+        details: dict[str, object] = {"reason": reason}
         try:
-            if target["target_kind"] == "REQUEST":
-                state = await _request(checked, target, UUID(str(stop["episode_id"])))
+            if target_data["target_kind"] == "REQUEST":
+                state = await _request(checked, target_data, UUID(str(stop["episode_id"])))
                 if state == "CANCEL_PENDING":
-                    state, details = await _order(checked, target, stop)
-            elif target["target_kind"] == "COMMAND":
-                state = await _command(checked, target, UUID(str(stop["episode_id"])))
+                    state, details = await _order(checked, target_data, stop)
+            elif target_data["target_kind"] == "COMMAND":
+                state = await _command(checked, target_data, UUID(str(stop["episode_id"])))
                 if state == "CANCEL_PENDING":
-                    state, details = await _order(checked, target, stop)
+                    state, details = await _order(checked, target_data, stop)
             else:
-                state, details = await _order(checked, target, stop)
+                state, details = await _order(checked, target_data, stop)
         except Exception:
             await checked.execute("ROLLBACK TO SAVEPOINT risk_stop_target")
             state = "FAILED"
             details = {"reason": "RISK_STOP_RETRY_PENDING"}
         await checked.execute("RELEASE SAVEPOINT risk_stop_target")
-        attempt = int(target["attempt"]) + 1
+        attempt = int(target_data["attempt"]) + 1
         delay = min(30, 2 ** min(attempt, 5)) if state == "FAILED" else 0
         await _effect(
-            checked, target, state=state, attempt=attempt, details=details, delay_seconds=delay
+            checked, target_data, state=state, attempt=attempt, details=details, delay_seconds=delay
         )
-        changed = changed or state != target["state"]
+        changed = changed or state != target_data["state"]
     await checked.execute(
         """WITH latest AS (SELECT DISTINCT ON (target_kind,target_id) * FROM risk_stop_effects
           WHERE stop_id=:stop ORDER BY target_kind,target_id,sequence DESC), counts AS (
@@ -303,38 +317,54 @@ async def consume_stop(session: UserSession, stop_id: UUID, *, limit: int = 20) 
         {"stop": stop_id, "cut": stop["recorded_at"]},
     )
     if changed:
-        from tiewtrade.core.risk_limits import RiskScope
-        from tiewtrade.infra.risk_limits.storage import read_setting
+        if stop["cause"] == "LOSS_LIMIT":
+            from tiewtrade.core.risk_limits import RiskScope
+            from tiewtrade.infra.risk_limits.storage import read_setting
 
-        setting = await read_setting(
-            checked,
-            RiskScope(
-                UUID(str(checked.user_id)),
-                TradingMode.PAPER,
-                UUID(str(stop["wallet_id"])),
-                UUID(str(stop["episode_id"])),
-            ),
-        )
+            setting = await read_setting(
+                checked,
+                RiskScope(
+                    UUID(str(checked.user_id)),
+                    TradingMode.PAPER,
+                    UUID(str(stop["wallet_id"])),
+                    UUID(str(stop["episode_id"])),
+                ),
+            )
+            action = AuditAction.RISK_STOP_UPDATED
+            subject = SubjectKind.RISK_LIMIT
+            subject_id = str(checked.user_id)
+            audit_details: RiskLimitDetails | TradingStopDetails = RiskLimitDetails(
+                uuid5(
+                    NAMESPACE_URL, f"{stop_id}:{targets[-1]['target_id']}:{targets[-1]['attempt']}"
+                ),
+                None,
+                setting.revision,
+                setting.limit,
+                stop_id=UUID(str(stop_id)),
+            )
+        else:
+            action = AuditAction.STOP_UPDATED
+            subject = SubjectKind.TRADING_STOP
+            subject_id = str(stop["authority_request_id"])
+            audit_details = TradingStopDetails(
+                UUID(str(stop["authority_request_id"])),
+                UUID(str(stop["authority_request_id"])),
+                str(stop["cause"]),
+                "PAPER",
+                int(stop["authority_revision"]),
+                "STOP_EFFECT_UPDATED",
+            )
         await record_event(
             checked,
             AuditEvent(
                 owner_user_id=checked.user_id,
-                action=AuditAction.RISK_STOP_UPDATED,
+                action=action,
                 actor_kind=ActorKind.SYSTEM,
-                subject_kind=SubjectKind.RISK_LIMIT,
-                subject_id=str(checked.user_id),
+                subject_kind=subject,
+                subject_id=subject_id,
                 outcome=AuditOutcome.SUCCEEDED,
                 mode=AuditMode.PAPER,
-                details=RiskLimitDetails(
-                    uuid5(
-                        NAMESPACE_URL,
-                        f"{stop_id}:{targets[-1]['target_id']}:{targets[-1]['attempt']}",
-                    ),
-                    None,
-                    setting.revision,
-                    setting.limit,
-                    stop_id=UUID(str(stop_id)),
-                ),
+                details=audit_details,
             ),
         )
 
@@ -375,7 +405,9 @@ async def cancel_stopped_remainders(session: UserSession, wallet_id: UUID, state
         CROSS JOIN LATERAL(SELECT 1 FROM risk_order_lifecycle l
           JOIN risk_stop_requests s ON s.user_id=l.user_id
             AND s.episode_id=l.episode_id AND s.mode='PAPER'
+          JOIN paper_orders o ON o.id=l.order_id AND o.user_id=l.user_id
           WHERE l.order_id=candidate.order_id AND l.episode_id=:episode
+            AND (s.target_policy='ALL' OR o.origin='BOT')
             AND l.recorded_at<=s.recorded_at LIMIT 1) stopped""",
             {"episode": state.scope.episode_id, "orders": active},
         )

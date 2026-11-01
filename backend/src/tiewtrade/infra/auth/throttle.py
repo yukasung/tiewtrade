@@ -145,6 +145,7 @@ class Bucket(Enum):
     PAPER_ORDER_NEW = "PAPER_ORDER_NEW"
     PAPER_ORDER_CANCEL = "PAPER_ORDER_CANCEL"
     RISK_LIMIT_MUTATION = "RISK_LIMIT_MUTATION"
+    TRADING_STOP_MUTATION = "TRADING_STOP_MUTATION"
 
     @property
     def table(self) -> str:
@@ -157,6 +158,7 @@ class Bucket(Enum):
             Bucket.PAPER_ORDER_NEW,
             Bucket.PAPER_ORDER_CANCEL,
             Bucket.RISK_LIMIT_MUTATION,
+            Bucket.TRADING_STOP_MUTATION,
         ):
             return "api_throttle"
         return "auth_throttle"
@@ -463,6 +465,7 @@ RULES: Final[dict[Bucket, Rule | TokenRule]] = {
     Bucket.PAPER_ORDER_NEW: TokenRule(20, timedelta(seconds=1)),
     Bucket.PAPER_ORDER_CANCEL: TokenRule(20, timedelta(seconds=1)),
     Bucket.RISK_LIMIT_MUTATION: TokenRule(20, timedelta(seconds=1)),
+    Bucket.TRADING_STOP_MUTATION: TokenRule(20, timedelta(seconds=1)),
     Bucket.API_KEY_ADD: TokenRule(
         capacity=API_KEY_ADD_CAPACITY,
         refill_interval=API_KEY_ADD_REFILL,

@@ -96,7 +96,7 @@ def test_routes_that_renew_the_session_are_declared_and_few() -> None:
     """
     keys = route_keys()
     assert keys >= RENEWING_ROUTES
-    # F-06 เพิ่มห้าเส้นทาง และ F-07 เพิ่มสาม — ทั้งหมดเป็น **การกระทำของผู้ใช้**
+    # เส้นทาง mutation เหล่านี้เป็น **การกระทำของผู้ใช้**
     # จึงนับเป็นการใช้งาน · **`GET /api-keys` ไม่อยู่ในรายการนี้** เพราะหน้าเว็บเรียก
     # เป็นรอบ ๆ เพื่อดูสถานะการตรวจ ซึ่งถ้านับเป็นการใช้งานจะทำให้เปิดหน้าจอทิ้งไว้
     # แล้ว session ไม่มีวันหมดอายุ (Q-2)
@@ -125,6 +125,12 @@ def test_routes_that_renew_the_session_are_declared_and_few() -> None:
                 ("POST", "/live/risk-limit/increase"),
                 ("POST", "/paper/risk-limit/reset"),
                 ("POST", "/live/risk-limit/reset"),
+                ("POST", "/paper/kill-switch/stop"),
+                ("POST", "/live/kill-switch/stop"),
+                ("POST", "/paper/kill-switch/resume"),
+                ("POST", "/live/kill-switch/resume"),
+                ("POST", "/admin/kill-switch/stop"),
+                ("POST", "/admin/kill-switch/resume"),
                 ("POST", "/admin/supported-symbols"),
                 ("DELETE", "/admin/supported-symbols/{base}/{quote}"),
                 ("POST", "/admin/supported-symbols/protocol/enable"),

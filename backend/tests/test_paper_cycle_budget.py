@@ -93,26 +93,16 @@ async def test_normal_and_recovery_budgets_are_independent(
         assert record["stages"][0]["order_id"] == str(UUID(int=2))
 
 
-@pytest.mark.parametrize("owner,number,allowed", [(1, 0, True), (2, 0, False), (1, 1, False)])
-async def test_only_selected_first_cycle_gets_one_recovery(
-    tmp_path: Path, clock: Clock, owner: int, number: int, allowed: bool
+@pytest.mark.parametrize("owner,number", [(1, 0), (2, 0), (1, 1)])
+async def test_core_cycles_do_not_run_the_dedicated_recovery_phase(
+    tmp_path: Path, clock: Clock, owner: int, number: int
 ) -> None:
     fixture: Any = SimpleNamespace(output=tmp_path, selected=UUID(int=1))
     identity: Any = SimpleNamespace(user_id=UUID(int=owner))
     async with Fixture.cycle_scope(fixture, identity, number):
-        if allowed:
+        with pytest.raises(RuntimeError):
             async with timing.recovery_scope():
-                clock.now += 100
-            with pytest.raises(RuntimeError):
-                async with timing.recovery_scope():
-                    pass
-            with pytest.raises(RuntimeError):
-                async with timing.recovery_stage("outside"):
-                    pass
-        else:
-            with pytest.raises(RuntimeError):
-                async with timing.recovery_scope():
-                    pass
+                pass
 
 
 @pytest.mark.parametrize("with_gate", [False, True])

@@ -17,6 +17,7 @@ from tiewtrade.core.orders import (
     OrderStatus,
     OrderType,
     SourceUnavailableError,
+    TradingMode,
 )
 from tiewtrade.core.paper_matching import (
     ExecutionIdentityBudgetError,
@@ -87,6 +88,7 @@ from tiewtrade.infra.risk_limits.policy import (
     paper_opening_protocol_enabled,
 )
 from tiewtrade.infra.risk_limits.stops import cancel_stopped_remainders, queued_opening_stopped
+from tiewtrade.infra.trading_stops.storage import global_shared_lock, opening_interrupted
 
 
 class OrderWorkerIntegrityError(OrderError):
@@ -134,6 +136,7 @@ async def process_claimed_order(
 ) -> None:
     """Process admission/cancel and one bounded market batch in one fenced transaction."""
     session = require_user_session(session)
+    await global_shared_lock(session)
     command = (
         (
             await session.execute(
@@ -232,10 +235,19 @@ async def _process_new(
     if (
         not result_exists
         and intent.side is ExecutionSide.BUY
-        and await queued_opening_stopped(
-            session,
-            episode_id=row["episode_id"],
-            recorded_at=row["risk_recorded_at"],
+        and (
+            await queued_opening_stopped(
+                session,
+                episode_id=row["episode_id"],
+                recorded_at=row["risk_recorded_at"],
+            )
+            or await opening_interrupted(
+                session,
+                mode=TradingMode.PAPER,
+                origin=intent.origin,
+                admitted_global_revision=int(row["admitted_global_stop_revision"]),
+                admitted_owner_revision=int(row["admitted_owner_stop_revision"]),
+            )
         )
     ):
         await _reject(session, claim, row, "ORDER_SAFETY_UNAVAILABLE")

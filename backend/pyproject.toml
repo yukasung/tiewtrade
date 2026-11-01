@@ -85,8 +85,12 @@ testpaths = ["tests"]
 pythonpath = ["src"]
 # เทสต์สัญญากับตลาดจริงไม่อยู่ในชุดปกติ เพราะต้องมีเน็ตและเรียกตลาดออกไปจริง
 # งาน CI `venue-contract` สั่ง `-m venue_contract` ทับค่านี้เอง
-addopts = "-q --strict-markers --strict-config -m 'not venue_contract'"
-markers = ["venue_contract: เทสต์ที่เรียก Binance TH จริง — งาน CI แยกรันรายวัน (F-35)"]
+addopts = "-q --strict-markers --strict-config -m 'not venue_contract and not fresh_global_state and not isolated_migration'"
+markers = [
+  "venue_contract: เทสต์ที่เรียก Binance TH จริง — งาน CI แยกรันรายวัน (F-35)",
+  "fresh_global_state: integration tests that require a newly migrated database",
+  "isolated_migration: migration guard test that requires its own newly migrated database",
+]
 # เทสต์ฐานข้อมูลเป็น async ทั้งหมด (F-03)
 asyncio_mode = "auto"
 
