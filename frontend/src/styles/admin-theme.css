@@ -173,6 +173,7 @@
   }
   .account-sidebar.is-open {
     display: flex;
+    z-index: calc(var(--account-z-header) + 1);
   }
   .account-content {
     margin-inline-start: 0;
