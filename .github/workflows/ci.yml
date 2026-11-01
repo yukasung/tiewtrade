@@ -139,6 +139,22 @@ jobs:
       - name: pytest
         run: uv run pytest
 
+      - name: reset database for fresh global-state tests
+        run: |
+          psql "postgresql://postgres:postgres@127.0.0.1:5432/postgres" \
+            -v ON_ERROR_STOP=1 \
+            -c "DROP DATABASE tiewtrade WITH (FORCE)" \
+            -c "CREATE DATABASE tiewtrade"
+          for script in db/bootstrap/*.sql; do
+            echo "== $script"
+            psql "postgresql://postgres:postgres@127.0.0.1:5432/tiewtrade" \
+              -v ON_ERROR_STOP=1 -f "$script"
+          done
+          uv run alembic upgrade head
+
+      - name: pytest fresh global state
+        run: uv run pytest -m fresh_global_state
+
   api-contract:
     name: สัญญา API — ชนิดข้อมูลสองฝั่งต้องตรงกัน
     runs-on: ubuntu-latest

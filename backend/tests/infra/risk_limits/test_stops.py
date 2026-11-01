@@ -329,12 +329,35 @@ async def test_platform_exclusive_fence_waits_for_shared_order_admission(
             await global_exclusive_lock(session)
 
     admission_task = asyncio.create_task(admit_before_stop())
-    await admission_ready.wait()
-    stop_task = asyncio.create_task(take_platform_fence())
-    await asyncio.sleep(0.05)
-    assert not stop_task.done(), "exclusive platform fence must wait for shared admission fence"
-    release_admission.set()
-    command, _ = await asyncio.gather(admission_task, stop_task)
+    ready_task = asyncio.create_task(admission_ready.wait())
+    stop_task: asyncio.Task[None] | None = None
+    try:
+        done, _ = await asyncio.wait(
+            {admission_task, ready_task}, timeout=5, return_when=asyncio.FIRST_COMPLETED
+        )
+        if not done:
+            raise TimeoutError("shared admission fence did not become ready")
+        if admission_task in done:
+            await admission_task
+        await ready_task
+        stop_task = asyncio.create_task(take_platform_fence())
+        await asyncio.sleep(0.05)
+        assert not stop_task.done(), "exclusive platform fence must wait for shared admission fence"
+        release_admission.set()
+        command, _ = await asyncio.gather(admission_task, stop_task)
+    finally:
+        release_admission.set()
+        ready_task.cancel()
+        if not admission_task.done():
+            admission_task.cancel()
+        if stop_task is not None and not stop_task.done():
+            stop_task.cancel()
+        await asyncio.gather(
+            admission_task,
+            ready_task,
+            *(() if stop_task is None else (stop_task,)),
+            return_exceptions=True,
+        )
 
     async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
         persisted = (

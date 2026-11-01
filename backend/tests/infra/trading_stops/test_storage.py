@@ -29,6 +29,8 @@ from tiewtrade.services.engine.kill_switch import (
 )
 from tiewtrade.services.engine.risk_limit import run_risk_stop_round
 
+pytestmark = pytest.mark.fresh_global_state
+
 
 async def _touch_position_activity(
     migrator_engine: AsyncEngine,

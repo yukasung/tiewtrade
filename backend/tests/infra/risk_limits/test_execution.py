@@ -12,7 +12,7 @@ import pytest
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncEngine
 
-from tests.infra.db.test_migrations import _failed_upgrade_or_downgrade
+from tests.infra.db.test_migrations import _alembic, _failed_upgrade_or_downgrade
 from tests.infra.execution_market.test_dispatch import intent
 from tests.infra.execution_market.test_worker import ready_public_sources
 from tests.infra.risk_limits.test_requests import submission
@@ -252,6 +252,7 @@ async def test_unset_manual_request_reaches_one_fill_without_synthetic_risk_rows
         assert (
             await connection.execute(text("SELECT version_num FROM alembic_version"))
         ).scalar_one() == "0060"
+    _alembic("upgrade", "head")
 
 
 async def drive(engine: AsyncEngine, owner: UUID, command_id: UUID) -> None:
