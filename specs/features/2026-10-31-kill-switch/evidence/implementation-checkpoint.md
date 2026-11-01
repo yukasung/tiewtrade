@@ -650,3 +650,49 @@ restored from their pre-run copies and disposable containers were removed.
 Commit/push and required CI on the resulting candidate are pending owner Git
 instructions; no GitHub rerun or merge was performed. V-20..24 remain pending
 under their existing full-validation/dependency scopes.
+
+### Merge and post-merge CI checkpoint — 2026-11-01
+
+This checkpoint supersedes earlier pending commit/push/merge statements for the
+F-16 harness fix while preserving historical failures and validation limits.
+Owner committed and pushed the three-file fix as
+`de25852cd5b88edd5c0acf214c3a6dc2c172685b`. Both
+[push CI 41305111782](https://github.com/yukasung/tiewtrade/actions/runs/41305111782)
+and [PR CI 41305117314](https://github.com/yukasung/tiewtrade/actions/runs/41305117314)
+passed all six jobs on that exact SHA. Each run passed 4,056 backend tests and
+33 browser tests, including the delayed-snapshot storage-denial regression.
+
+On the owner's explicit merge instruction,
+[PR #41](https://github.com/yukasung/tiewtrade/pull/41) was squash-merged into
+`main` at 2026-11-01 12:28:57 UTC as
+`ccc3ce152061d9f38784ffe66e593f5aeefba068`. The final head and required checks
+were verified before merge; GitHub reported CLEAN/MERGEABLE. No branch was
+deleted and unrelated local changes were preserved.
+
+[Post-merge CI 41306706760](https://github.com/yukasung/tiewtrade/actions/runs/41306706760)
+completed successfully on that merge SHA, with all six jobs passing: backend,
+frontend, browser E2E, API contract, PostgreSQL version and containers.
+
+| Backend phase | Post-merge result |
+| --- | --- |
+| Normal suite | 4031 passed / 703.54s |
+| Isolated writer-fence guard | 1 passed / 2.46s |
+| Isolated optional-limit guard | 1 passed / 1.93s |
+| Fresh global state | 23 passed / 5.97s |
+
+Backend total: **4056 passed**. Browser total: **33 passed** (main 18, F-37 2,
+F-16 7, F-18/F-19 6). No automated Live orders were sent. CI logs downloaded
+during monitoring are retained under `/tmp/f19-ccc3ce1-postmerge-backend.log`
+and `/tmp/f19-ccc3ce1-postmerge-e2e.log`; the linked GitHub runs are the remote
+evidence.
+
+V-19's final-candidate and post-merge CI evidence is now complete. V-20 remains
+Pending Full Validation, including NC-F19-14 and timed W1–W3 at the approved
+Set-5 checkpoint; V-21..24 remain Pending Dependency. Historical Failed/Partial
+results are unchanged. The merge does not mark F-19 Completed or authorize
+production/Live activation.
+
+The owner requested this evidence/validation/roadmap sync after monitoring.
+It changes documentation only; content/link consistency and `git diff --check`
+are the relevant checks. The owner subsequently authorized commit/push of this
+sync on a documentation branch; its candidate still requires CI before merge.
