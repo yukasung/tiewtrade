@@ -19,6 +19,7 @@ from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 from tests.infra.execution_market import profile_restore as restore
 from tests.infra.execution_market import profile_restore_fixture as legacy
 from tests.infra.execution_market import profile_workload as f15
+from tests.infra.risk_limits import profile_stop_restore
 from tests.infra.risk_limits.profile_observations import SOURCE_HZ
 from tests.infra.risk_limits.profile_workload import (
     Fixture,
@@ -68,6 +69,7 @@ RISK_TABLES = (
     "paper_order_request_dispatch",
     "user_totp",
     "user_totp_pending",
+    *profile_stop_restore.STOP_TABLES,
 )
 
 
@@ -213,10 +215,15 @@ async def build(args: argparse.Namespace) -> int:
             next(item for item in fixture.owners if item.user_id == legacy_owner),
             os.environ[args.admin_url_env],
         )
+        stop_fixture = (
+            await profile_stop_restore.stage(fixture, output)
+            if getattr(args, "f19", False)
+            else None
+        )
         f15.save(
             output / "fixture.json",
             {
-                "profile": "F18_W4_V1",
+                "profile": "F19_SET5_W4" if stop_fixture else "F18_W4_V1",
                 "publisher_mode": fixture.publisher_mode,
                 "source_target_hz": SOURCE_HZ,
                 "source_tree_sha256": source_manifest()["source_tree_sha256"],
@@ -226,6 +233,7 @@ async def build(args: argparse.Namespace) -> int:
                 "key": str(key),
                 "pending_count": state.pending_count,
                 "scope": submission.payload(),
+                "f19": stop_fixture,
             },
         )
         return 0
@@ -240,7 +248,8 @@ async def extra_security(engine: AsyncEngine) -> list[dict[str, object]]:
                 await connection.exec_driver_sql("""SELECT c.relname table_name,c.relrowsecurity,
           c.relforcerowsecurity,c.relacl::text grants
           FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace
-          WHERE n.nspname='public' AND (c.relname LIKE 'risk_%' OR c.relname LIKE 'market_risk_%')
+          WHERE n.nspname='public' AND (c.relname LIKE 'risk_%' OR c.relname LIKE 'market_risk_%'
+            OR c.relname LIKE 'trading_%' OR c.relname LIKE 'platform_%')
           AND c.relkind='r' ORDER BY c.relname""")
             )
             .mappings()
@@ -251,7 +260,9 @@ async def extra_security(engine: AsyncEngine) -> list[dict[str, object]]:
                 await connection.exec_driver_sql("""SELECT p.oid::regprocedure::text function_name,
           p.prosecdef,p.proacl::text grants,p.proconfig::text configuration FROM pg_proc p
           JOIN pg_namespace n ON n.oid=p.pronamespace WHERE n.nspname='public'
-          AND p.proname LIKE 'risk_%' ORDER BY p.oid::regprocedure::text""")
+          AND (p.proname LIKE 'risk_%' OR p.proname LIKE 'trading_%'
+            OR p.proname IN ('submit_trading_stop_request','lock_trading_reconciliation_clock'))
+          ORDER BY p.oid::regprocedure::text""")
             )
             .mappings()
             .all()
@@ -347,6 +358,10 @@ async def verify(args: argparse.Namespace) -> int:
     if not args.target_database.startswith("tiewtrade_f18_release"):
         raise RuntimeError("F18_RESTORE_TARGET_REJECTED")
     fixture = json.loads(args.fixture.read_text())
+    if getattr(args, "f19", False) and not fixture.get("f19"):
+        raise RuntimeError("F19_W4_STOP_FIXTURE_REQUIRED")
+    if fixture.get("f19") and fixture.get("publisher_mode") != "child":
+        raise RuntimeError("F19_W4_REQUIRES_CHILD_BUILD")
     original_tables, original_security = restore.PAPER_TABLES, restore.security_shape
 
     async def security_shape(engine: AsyncEngine) -> list[dict[str, object]]:
@@ -500,6 +515,8 @@ async def verify(args: argparse.Namespace) -> int:
             ).scalar_one() == 0
         assert await restore.economic_digest(admin) == before
         assert await restore.table_digest(admin, "risk_limit_baselines") == baseline_before
+        if fixture.get("f19"):
+            await profile_stop_restore.verify(fixture["f19"], role_engines, admin, args.output)
         f15.save(
             args.output / "risk-recovery.json",
             {
@@ -521,6 +538,7 @@ async def verify(args: argparse.Namespace) -> int:
                 "base_restore_passed": True,
                 "risk_recovery_passed": True,
                 "restored_role_access_passed": True,
+                "f19_stop_recovery_passed": bool(fixture.get("f19")),
             },
         )
         return 0
@@ -552,12 +570,17 @@ def main() -> int:
     parser.add_argument("--target-database")
     parser.add_argument("--postgres-container")
     parser.add_argument(
+        "--f19", action="store_true", help="Stage F-19 shared stop recovery coverage"
+    )
+    parser.add_argument(
         "--publisher-mode",
         choices=("inline", "child"),
         default="inline",
         help="Build mode; verify uses the captured fixture mode",
     )
     args = parser.parse_args()
+    if args.f19 and args.action == "build" and args.publisher_mode != "child":
+        parser.error("F19 restore fixture requires explicit child publisher")
     if args.action == "verify" and (args.fixture is None or not args.target_database):
         parser.error("verify requires fixture and target-database")
     return asyncio.run(build(args) if args.action == "build" else verify(args))

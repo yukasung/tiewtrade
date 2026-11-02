@@ -5,6 +5,7 @@ import asyncio
 import logging
 import os
 from contextlib import AsyncExitStack
+from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncEngine
 
@@ -20,7 +21,8 @@ from tiewtrade.services.engine.kill_switch import (
     run_stop_request_round,
 )
 from tiewtrade.services.engine.risk_limit import (
-    run_risk_monitor_round,
+    _evaluate_monitor_owner,
+    _scan_monitor_candidates,
     run_risk_request_round,
     run_risk_stop_round,
 )
@@ -83,6 +85,40 @@ async def _warm_pool(engine: AsyncEngine, role: DatabaseRole, slots: int) -> Non
             await session.execute("SELECT 1")
 
 
+async def _serve_monitor(engine: AsyncEngine, scan: AsyncEngine) -> None:
+    """Refill four evaluation slots without queuing an entire owner page.
+
+    The cursor and active map are disposable scheduling hints. PostgreSQL owner
+    locks and transactions remain authoritative across processes and restarts.
+    """
+    cursor: UUID | None = None
+    active: dict[UUID, asyncio.Task[str]] = {}
+    try:
+        while True:
+            for owner, task in list(active.items()):
+                if task.done():
+                    task.result()  # Propagate unexpected failures to serve's TaskGroup.
+                    del active[owner]
+            free = MONITOR_CONCURRENCY - len(active)
+            if not free:
+                await asyncio.wait(active.values(), return_when=asyncio.FIRST_COMPLETED)
+                continue
+            candidates = await _scan_monitor_candidates(
+                scan, limit=free, after_owner=cursor, excluded=tuple(active)
+            )
+            if not candidates:
+                await asyncio.sleep(0.02)
+                continue
+            cursor = UUID(str(candidates[-1].user_id))
+            for row in sorted(candidates, key=lambda row: (row.due_at is not None, row.due_at)):
+                owner = UUID(str(row.user_id))
+                active[owner] = asyncio.create_task(_evaluate_monitor_owner(engine, owner))
+    finally:
+        for task in active.values():
+            task.cancel()
+        await asyncio.gather(*active.values(), return_exceptions=True)
+
+
 async def serve() -> None:
     monitor_engine = create_engine_for(
         DatabaseRole.ENGINE, pool_size=MONITOR_CONCURRENCY, max_overflow=0, pool_timeout=0.1
@@ -98,19 +134,6 @@ async def serve() -> None:
     )
     worker = f"risk-limit:{os.getpid()}"
 
-    async def monitor() -> None:
-        cursor = None
-        while True:
-            result = await run_risk_monitor_round(
-                engine=monitor_engine,
-                scan_engine=scan,
-                after_owner=cursor,
-                limit=100,
-                concurrency=MONITOR_CONCURRENCY,
-            )
-            cursor = result.next_owner or cursor
-            await asyncio.sleep(0.02)
-
     async def requests() -> None:
         while True:
             await run_risk_request_round(engine=request_engine, scan_engine=scan, worker=worker)
@@ -122,7 +145,7 @@ async def serve() -> None:
         await _warm_pool(stop_engine, DatabaseRole.ENGINE, 2)
         await _warm_pool(scan, DatabaseRole.ENGINE_SCAN, 3)
         async with asyncio.TaskGroup() as group:
-            group.create_task(monitor())
+            group.create_task(_serve_monitor(monitor_engine, scan))
             group.create_task(requests())
             group.create_task(_serve_stop_rounds(stop_engine, scan))
     finally:

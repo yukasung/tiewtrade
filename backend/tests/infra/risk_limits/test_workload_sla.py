@@ -2,6 +2,7 @@
 
 import json
 from pathlib import Path
+from typing import cast
 from uuid import UUID, uuid4
 
 import pytest
@@ -18,11 +19,53 @@ from tiewtrade.infra.risk_limits.monitor import initialize_monitor
 from tiewtrade.infra.risk_limits.storage import read_setting
 
 
+def owner_sla(result: dict[str, object], owner: UUID) -> dict[str, object]:
+    return cast(dict[str, dict[str, object]], result["owners"])[str(owner)]
+
+
+def risk_acknowledgement(
+    owner: UUID, seconds: str, *, cursor: int = 2, pending: bool = False
+) -> dict[str, object]:
+    return {
+        "owner": str(owner),
+        "cursor": cursor,
+        "boundary": 0,
+        "pending": pending,
+        "committed_observed_at": f"2026-10-26T00:00:{seconds}+00:00",
+    }
+
+
+def write_risk_stream(path: Path, rows: list[dict[str, object]]) -> None:
+    path.write_text("\n".join(map(json.dumps, rows)))
+
+
+def write_price_inputs(
+    path: Path,
+    ready_seconds_by_cursor: dict[int, str],
+    *,
+    total: int = 1000,
+    default_ready_seconds: str = "10",
+) -> None:
+    rows = [
+        {
+            "kind": "PRICE",
+            "cursor": cursor,
+            "ready_at": (
+                f"2026-10-26T00:00:"
+                f"{ready_seconds_by_cursor.get(cursor, default_ready_seconds)}+00:00"
+            ),
+            "measured": True,
+        }
+        for cursor in range(1, total + 1)
+    ]
+    (path / "inputs.jsonl").write_text("\n".join(map(json.dumps, rows)))
+
+
 @pytest.mark.parametrize("phase", ["W1", "W2", "W3", "CHECK", None])
 def test_explicit_f19_criteria_keep_strict_owner_quota_and_source_counts(phase: str | None) -> None:
     from tests.infra.risk_limits.profile_workload import acceptance_limits
 
-    assert acceptance_limits("F19_SET5", phase) == (999, 0)
+    assert acceptance_limits("F19_SET5", phase) == (995, 0)
     assert acceptance_limits("F18_R34", phase) == (
         (995, 1) if phase in {"W1", "W2", "W3"} else (999, 0)
     )
@@ -30,60 +73,32 @@ def test_explicit_f19_criteria_keep_strict_owner_quota_and_source_counts(phase: 
         acceptance_limits("unknown", phase)
 
 
-def test_same_receipts_can_pass_f18_but_fail_f19_owner_sla(tmp_path: Path) -> None:
+def test_f19_run_wide_service_can_pass_while_one_owner_fails(tmp_path: Path) -> None:
     owners = [uuid4() for _ in range(10)]
-    rows = [
-        {
-            "kind": "PRICE",
-            "cursor": index,
-            "ready_at": f"2026-10-26T00:00:{'00' if index <= 2 else '10'}+00:00",
-            "measured": True,
-        }
-        for index in range(1, 1001)
-    ]
-    (tmp_path / "inputs.jsonl").write_text("\n".join(map(json.dumps, rows)))
+    write_price_inputs(tmp_path, dict.fromkeys(range(1, 7), "00"))
     receipts = []
     for index, owner in enumerate(owners):
         first_commit = "03.100" if index == 0 else "01"
         receipts.extend(
             [
-                {
-                    "owner": str(owner),
-                    "cursor": 2,
-                    "boundary": 0,
-                    "pending": False,
-                    "committed_observed_at": f"2026-10-26T00:00:{first_commit}+00:00",
-                },
-                {
-                    "owner": str(owner),
-                    "cursor": 1000,
-                    "boundary": 0,
-                    "pending": False,
-                    "committed_observed_at": "2026-10-26T00:00:11+00:00",
-                },
+                risk_acknowledgement(owner, first_commit, cursor=6),
+                risk_acknowledgement(owner, "11", cursor=1000),
             ]
         )
     receipts.sort(key=lambda value: str(value["committed_observed_at"]))
-    (tmp_path / "monitor.risk.jsonl").write_text("\n".join(map(json.dumps, receipts)))
-    f18 = sla_summary(tmp_path, owners, phase="W1")
+    write_risk_stream(tmp_path / "monitor.risk.jsonl", receipts)
     f19 = sla_summary(tmp_path, owners, phase="W1", acceptance_profile="F19_SET5")
-    assert f18["passed"] is True and f19["passed"] is False
-    assert f19["service_passed"] is True and f19["miss_count"] == 0
+    assert f19["passed"] is False
+    assert f19["service_passed"] is True
+    assert owner_sla(f19, owners[0])["passed"] is False
+    assert all(owner_sla(f19, owner)["passed"] for owner in owners[1:])
+    assert f19["tail_passed"] is True and f19["miss_count"] == 0
     assert f19["unacknowledged"] == f19["clock_errors"] == 0
-    assert f19["minimum_owner_service_fraction"] == "0.999"
+    assert f19["minimum_owner_service_fraction"] == "0.995"
 
 
 def inputs(path: Path) -> None:
-    rows = [
-        {"kind": "PRICE", "cursor": 1, "ready_at": "2026-10-26T00:00:00+00:00", "measured": True},
-        {
-            "kind": "PRICE",
-            "cursor": 2,
-            "ready_at": "2026-10-26T00:00:00.200+00:00",
-            "measured": True,
-        },
-    ]
-    (path / "inputs.jsonl").write_text("\n".join(json.dumps(row) for row in rows))
+    write_price_inputs(path, {1: "00", 2: "00.200"}, total=2)
 
 
 def test_one_late_decision_cannot_be_hidden_by_a_fast_average(tmp_path: Path) -> None:
@@ -144,18 +159,154 @@ def test_paper_hard_bound_and_target_are_reported_separately(
     assert result["target_miss_count"] == target_misses
     assert result["service_miss_count"] == service_misses
     assert result["miss_count"] == hard_misses
+    assert "tail_limit_seconds" not in result
+    assert "tail_miss_count" not in result
+    assert "service_passed" not in owner_sla(result, owner)
+    assert "tail_misses" not in owner_sla(result, owner)
+    assert "absolute_misses" not in owner_sla(result, owner)
     assert result["passed"] is (hard_misses == 0 and service_misses == 0)
 
 
-def test_missing_acknowledgements_still_fail_the_acceptance_gate(tmp_path: Path) -> None:
+@pytest.mark.parametrize(
+    ("seconds", "service_misses", "tail_misses", "absolute_misses", "passed"),
+    [
+        ("03.000", 0, 0, 0, True),
+        ("03.001", 1, 0, 0, False),
+        ("05.000", 2, 0, 0, False),
+        ("05.001", 2, 1, 0, False),
+        ("06.000", 2, 2, 0, False),
+        ("06.001", 2, 2, 1, False),
+    ],
+)
+def test_f19_three_five_and_six_second_boundaries(
+    tmp_path: Path,
+    seconds: str,
+    service_misses: int,
+    tail_misses: int,
+    absolute_misses: int,
+    passed: bool,
+) -> None:
     owner = uuid4()
     inputs(tmp_path)
-    result = sla_summary(tmp_path, [owner])
+    write_risk_stream(tmp_path / "monitor.risk.jsonl", [risk_acknowledgement(owner, seconds)])
+
+    result = sla_summary(tmp_path, [owner], acceptance_profile="F19_SET5")
+
+    assert result["service_limit_seconds"] == 3
+    assert result["tail_limit_seconds"] == 5
+    assert result["hard_limit_seconds"] == 6
+    assert result["absolute_limit_seconds"] == 6
+    assert result["minimum_service_fraction"] == "0.995"
+    assert result["minimum_tail_fraction"] == "0.999"
+    assert result["service_miss_count"] == service_misses
+    assert owner_sla(result, owner)["service_passed"] is (service_misses == 0)
+    assert result["tail_miss_count"] == tail_misses
+    assert result["miss_count"] == absolute_misses
+    assert result["absolute_miss_count"] == absolute_misses
+    assert result["passed"] is passed
+
+
+def test_f19_tail_run_wide_can_pass_while_one_owner_fails(tmp_path: Path) -> None:
+    owners = [uuid4(), uuid4()]
+    write_price_inputs(tmp_path, {1: "00", 2: "00"})
+    receipts = [
+        risk_acknowledgement(owners[0], "05.100", cursor=2),
+        risk_acknowledgement(owners[1], "01.000", cursor=2),
+        risk_acknowledgement(owners[0], "11.000", cursor=1000),
+        risk_acknowledgement(owners[1], "11.000", cursor=1000),
+    ]
+    receipts.sort(key=lambda value: str(value["committed_observed_at"]))
+    write_risk_stream(tmp_path / "monitor.risk.jsonl", receipts)
+
+    result = sla_summary(tmp_path, owners, acceptance_profile="F19_SET5")
+
+    assert result["tail_passed"] is True
+    assert owner_sla(result, owners[0])["tail_passed"] is False
+    assert owner_sla(result, owners[1])["tail_passed"] is True
+    assert result["passed"] is False
+
+
+def test_f19_tail_run_wide_can_fail_while_an_owner_passes(tmp_path: Path) -> None:
+    owners = [uuid4(), uuid4()]
+    write_price_inputs(tmp_path, {1: "00", 2: "00.200"})
+    receipts = [
+        risk_acknowledgement(owners[0], "05.300", cursor=2),
+        risk_acknowledgement(owners[1], "05.100", cursor=2),
+        risk_acknowledgement(owners[0], "11.000", cursor=1000),
+        risk_acknowledgement(owners[1], "11.000", cursor=1000),
+    ]
+    receipts.sort(key=lambda value: str(value["committed_observed_at"]))
+    write_risk_stream(tmp_path / "monitor.risk.jsonl", receipts)
+
+    result = sla_summary(tmp_path, owners, acceptance_profile="F19_SET5")
+
+    assert result["service_passed"] is True
+    assert result["tail_passed"] is False
+    assert owner_sla(result, owners[0])["tail_passed"] is False
+    assert owner_sla(result, owners[1])["tail_passed"] is True
+    assert result["passed"] is False
+
+
+def test_f19_run_wide_can_fail_while_an_owner_passes(tmp_path: Path) -> None:
+    owners = [uuid4(), uuid4()]
+    write_price_inputs(
+        tmp_path,
+        {**dict.fromkeys(range(1, 6), "00"), 6: "00.200"},
+    )
+    receipts = [
+        risk_acknowledgement(owners[0], "03.300", cursor=6),
+        risk_acknowledgement(owners[1], "03.100", cursor=6),
+        risk_acknowledgement(owners[0], "11.000", cursor=1000),
+        risk_acknowledgement(owners[1], "11.000", cursor=1000),
+    ]
+    receipts.sort(key=lambda value: str(value["committed_observed_at"]))
+    write_risk_stream(tmp_path / "monitor.risk.jsonl", receipts)
+
+    result = sla_summary(tmp_path, owners, acceptance_profile="F19_SET5")
+
+    assert result["service_passed"] is False
+    assert owner_sla(result, owners[0])["passed"] is False
+    assert owner_sla(result, owners[1])["passed"] is True
+    assert owner_sla(result, owners[0])["service_passed"] is False
+    assert owner_sla(result, owners[1])["service_passed"] is True
+    assert result["passed"] is False
+
+
+def test_f19_absolute_ceiling_fails_even_when_percentage_quotas_pass(tmp_path: Path) -> None:
+    owner = uuid4()
+    write_price_inputs(tmp_path, {1: "00"})
+    write_risk_stream(
+        tmp_path / "monitor.risk.jsonl",
+        [
+            risk_acknowledgement(owner, "06.001", cursor=1),
+            risk_acknowledgement(owner, "11.000", cursor=1000),
+        ],
+    )
+
+    result = sla_summary(tmp_path, [owner], acceptance_profile="F19_SET5")
+
+    assert result["service_passed"] is True
+    assert result["tail_passed"] is True
+    assert result["absolute_passed"] is False
+    assert owner_sla(result, owner)["absolute_passed"] is False
+    assert result["passed"] is False
+
+
+@pytest.mark.parametrize("profile", ["F18_R34", "F19_SET5"])
+def test_missing_acknowledgements_still_fail_the_acceptance_gate(
+    tmp_path: Path, profile: str
+) -> None:
+    owner = uuid4()
+    inputs(tmp_path)
+    result = sla_summary(tmp_path, [owner], acceptance_profile=profile)
     assert result["unacknowledged"] == 2
     assert result["passed"] is False
 
 
-def test_pending_replay_is_not_a_durable_ready_acknowledgement(tmp_path: Path) -> None:
+@pytest.mark.parametrize("profile", ["F18_R34", "F19_SET5"])
+def test_pending_replay_is_not_a_durable_ready_acknowledgement(
+    tmp_path: Path, profile: str
+) -> None:
     owner = uuid4()
     inputs(tmp_path)
     (tmp_path / "monitor.risk.jsonl").write_text(
@@ -170,25 +321,32 @@ def test_pending_replay_is_not_a_durable_ready_acknowledgement(tmp_path: Path) -
         )
         + "\n"
     )
-    result = sla_summary(tmp_path, [owner])
+    result = sla_summary(tmp_path, [owner], acceptance_profile=profile)
     assert result["samples"] == 0 and result["unacknowledged"] == 2
     assert result["passed"] is False
 
 
-def risk_acknowledgement(
-    owner: UUID, seconds: str, *, cursor: int = 2, pending: bool = False
-) -> dict[str, object]:
-    return {
-        "owner": str(owner),
-        "cursor": cursor,
-        "boundary": 0,
-        "pending": pending,
-        "committed_observed_at": f"2026-10-26T00:00:{seconds}+00:00",
-    }
+def test_f19_clock_error_still_fails_measurement(tmp_path: Path) -> None:
+    owner = uuid4()
+    inputs(tmp_path)
+    (tmp_path / "monitor.risk.jsonl").write_text(
+        json.dumps(
+            {
+                "owner": str(owner),
+                "cursor": 2,
+                "boundary": 0,
+                "pending": False,
+                "committed_observed_at": "2026-10-26T00:00:00.100+00:00",
+            }
+        )
+        + "\n"
+    )
 
+    result = sla_summary(tmp_path, [owner], acceptance_profile="F19_SET5")
 
-def write_risk_stream(path: Path, rows: list[dict[str, object]]) -> None:
-    path.write_text("\n".join(map(json.dumps, rows)))
+    assert result["clock_errors"] == 1
+    assert result["unacknowledged"] == 1
+    assert result["passed"] is False
 
 
 @pytest.mark.parametrize("profile", ["F18_R34", "F19_SET5"])

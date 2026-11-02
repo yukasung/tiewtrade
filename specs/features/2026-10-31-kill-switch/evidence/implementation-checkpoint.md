@@ -697,6 +697,468 @@ It changes documentation only; content/link consistency and `git diff --check`
 are the relevant checks. The owner subsequently authorized commit/push of this
 sync on a documentation branch; its candidate still requires CI before merge.
 
+### Set-5 NC-F19-14/15 implementation and failed W1 checkpoint — 2026-11-01
+
+Owner approved the Set-5 plan including NC-F19-14 and NC-F19-15. Work is on
+`validation/f-19-set5`, without commit/push authorization. Unrelated local
+AGENTS/testing-policy edits remain excluded. No production code, public API,
+schema, financial formula, owner/load/rate/duration or resource limits changed.
+
+Implemented bounded one-shot publisher controls with consumed identities,
+unknown-ACK cleanup, committed trade receipts separate from transport ACKs,
+and rejection of duplicate/conflicting controls. Strict F-19 preparation waits
+for a durable resting BUY at2 with zero queue ahead before a single trade0.5;
+F-18's global-window compatibility path is retained for its existing selection.
+Explicit `F19_SET5` selects owner99.9%/aggregate99.9%≤3s, hard5s and no missing
+source allowance; default F-18 R34 remains owner99.5%/one-observation allowance.
+W4 adds shared stop/clock/membership digests, active USER/SYSTEM/PLATFORM staging,
+pending cursor recovery, exact-key replay, stale-resume rejection, balances and
+reservation checks to the existing restore tools. Full backup/restore is not
+claimed from the targeted recovery tests.
+
+P0 evidence, all retained under `validation-artifacts/f19-set5-20261101/p0/`:
+
+- Harness publisher/SLA/profile regression: **64 passed**,10.40s; CLI checks:
+  **6 passed**,0.27s. These groups overlap some earlier checks; no sum is used
+  as a unique full-suite coverage claim.
+- Fresh global-state suite: **25 passed**,15.16s. Includes the real-worker
+  overlapping core BUY/SELL and single partial fill/cancel/resume case, plus
+  restore staging/recovery/stale-resume with financial checks.
+- Frozen Linux runner preflight: **2 passed**,7.28s on a fresh database.
+- Ruff/check+format and mypy for the four modified profile modules passed;
+  existing unaffected regression/CI evidence is reused. No full backend/frontend
+  rerun was added for harness-only changes.
+- The initial one-shot preflight failed because ACCEPTED preceded the resting
+  projection; bounded observation was added without resubmitting NEW. A reused-DB
+  exploratory recheck passed, followed by the fresh-DB matrix above.
+- Combined global-state attempts initially failed from a new immutable platform
+  membership exposing an existing test setup's single-owner SELECT assumption.
+  A teardown DELETE attempt was rejected/rolled back by append-only protection.
+  The final fixture keeps immutable membership history, resumes its global fence,
+  and the affected existing setup selects one owner deterministically. All
+  original fairness assertions remain. Both failed suite logs are retained.
+  Collection-only marker/syntax setup failures are retained as Not Run, not passes.
+
+P1 froze a separate read-only candidate checkout from base `2322d86`, with tree
+SHA-256 `8da984f63d73c70f9fafed2f6810ad4e640efdf11acc805a9163a618727c3633`.
+The candidate file hashes, tracked patch and container/image/lock inventory are
+retained next to the run. The runner derives from the existing image, adds the
+Docker CLI needed by W3 and locked dev tooling for Linux preflight; `uv.lock`
+hash matches the existing image. PostgreSQL uses the prior image identity,
+4CPU/3GiB, commit timestamps and max_connections200. Redis uses the prior image
+and ACL; runner remains uncapped as in the accepted prior resource profile.
+VM reports3043373056bytes/8CPUs. A runner-scoped caffeinate assertion covered W1
+and released on exit. No unrelated containers were stopped or reconfigured.
+
+W1 used fresh schema0062,100 core owners×20 baseline orders,10workers,
+explicit child5Hz, command10/s and strict F-19 criteria. The dedicated LOSS
+partial0.5→breach→effects complete→RESET attempt1 APPLIED→fresh opening rejected
+`ORDER_SAFETY_UNAVAILABLE` passed, with active LOSS_LIMIT/resume_ready=false.
+Core settings/READY evaluations reached100/100 and baseline completed before load.
+Setup phase was15:36:17.087620→15:40:14.457781 UTC (237.37s).
+
+**W1 Failed**, not Partial/Passed: failure phase was15:42:15.555433 UTC,
+**+121.0946s** into the required600s window. The failed owner's cycle1 consumed
+**60.0094s**; traceback ends at `Fixture.request`'s REQUEST_VIEW `user_session`
+entry, canceled while waiting for a parent API pool connection. API peak was15
+against capacity15; all pools finalized at0checked-out. Exact identities and
+timestamps are in `w1-r1/failed-cycle-identities.json`: BUY FILLED, LIMIT later
+CANCELED; SELL request `e629ad9b-6fab-404a-b7e5-97a50ea44888` transferred to command
+`fbcb760d-76b5-4e51-be0b-bb48c6dd78e1`, command SUCCEEDED at15:42:05.601656 UTC,
+but order `ede46d9e-a5e3-54dc-b214-41493e2b7600` remained ACCEPTED at shutdown.
+This establishes the terminal failure branch, not the ultimate cause of queueing.
+
+At failure counters were891offered/792admitted/792completed/0rejected and126cycles;
+the other99active cycles were canceled during failure cleanup. Only the queued
+MANUAL stop/rejection marker completed. No one-shot committed receipt exists,
+so neither the scheduled partial nor its under-load isolation is certified.
+W2/W3/W4 were not started, and strict full-window source/SLA acceptance remains
+unproved. No automatic rerun, NEW retry, pool increase or deadline change followed.
+
+Read-only post-failure diagnostics are explicitly labeled `not_acceptance`:
+1867 worker transaction samples in the observed window give processing p95=1.571s,
+p99=2.965s. Partial risk evidence has90144acknowledgements/103512expected,
+17322above3s,4932above5s,13368unacknowledged and max16.3448s, with0clock errors.
+Shutdown truncates this evidence; it is not a completed-window verdict or proof
+that API pool size alone caused the failure. The timing exceeds the limits on
+observed inputs and requires causal investigation, not a threshold adjustment.
+Raw resource samples peak at923230208RSS bytes/57connections/0sampled lock waits;
+the sampling cannot exclude waits between samples. No OOM occurred.
+
+Safety snapshot: duplicate fill execution0, duplicate RECORD position execution0,
+negative reservations0 and negative position quantity/cost0. This is a partial-run
+snapshot, not all full-validation financial/conservation oracles. W1 container
+ran15:36:13.126379→15:42:18.948864 UTC (~6m06s) and exited1. Remaining DB connections
+were0 after worker cleanup. A failed DB dump, raw logs, diagnostics and candidate
+are preserved; task-owned PostgreSQL/Redis containers were stopped with data kept.
+
+V-20 stays Failed/Pending Full Validation; V-21..24 stay Pending Dependency.
+NC-F19-16 in plan§11 is only a proposed bounded pool/transaction diagnostic to
+separate harness, downstream and environment causes. It requires owner approval
+before instrumentation or another run. No code for that proposal was implemented.
+
+### NC-F19-16 — Approved diagnostic executed once, Failed (2026-11-01)
+
+Owner approved NC16. Added opt-in harness-only pool/transaction tracing, using existing
+PoolEvidence, dispatch and cycle timing. API INTAKE/READY_HINT/REQUEST_VIEW and worker
+transactions carry identities, acquisition/held/query timings and backend PIDs. SQL is
+represented only by SHA256; parameters and exception messages are never serialized by
+the tracer. Existing dispatch defaults remain60s/100 details; NC16 explicitly selects
+180s/aggregate-only dispatch and bounded transaction records. No production, migration,
+resource, pool, polling, deadline, authorization, retry or financial rules changed.
+
+Targeted checks:76 passed/10.131s, zero skips; frozen Linux runner17 passed. Ruff check,
+format and mypy on four affected profile modules passed. XML/logs are in
+`validation-artifacts/f19-set5-20261101/nc16-targeted-final.*` and `nc16-linux-checks.*`.
+
+One fresh-DB diagnostic only: `tiewtrade_f18_release_set5_nc16_r1`, F19_SET5 W1 child,
+100 core owners×20 baseline,10 paper workers,10 commands/s,5Hz publisher. W1 duration
+remains600s in the profile; diagnostic bounds observation at180s and never accepts it.
+Frozen candidate `/tmp/tiewtrade-set5-nc16-candidate-20261101` is based on2322d86 with
+runtime source hash `1abe3f5343f2ad11353a9c0b24a336cb774a517790f366dc2007fc0816e9c4f1`.
+Same VM3043373056 bytes/8 CPUs, PG4CPU/3GiB, uncapped runner and original pool inventory.
+Container16:04:21.272669→16:10:39.456928 UTC, exit1/no OOM; setup200.277s.
+
+**Failed at measured+172.298s, acceptance_result=false.** Dedicated LOSS_LIMIT→RESET
+passed (attempt1 APPLIED, opening probe ORDER_SAFETY_UNAVAILABLE, no auto-resume).
+This failure is the stop scenario's60s `wait_status(PARTIALLY_FILLED)` timeout, not a
+core cycle deadline. Counters:1690 offered/1674 admitted and completed/0 rejected,
+329 completed cycles. No W1 rerun and no W2/W3/W4 execution followed.
+
+Failure identities and timeline, preserved in `nc16-r1/failure-branch.json`:
+
+- Owner `17e9dba1-4380-4288-9036-db17a3711db8`, order
+  `9de0d84b-3b30-57c8-b034-bbc0da1a91a9`, command
+  `75c44660-b41b-4759-8bb8-a559b3dfda8f`; accepted16:09:36.367437 UTC.
+- Resting BUY limit2, quantity1, queue_ahead0. One-shot key
+  `ac055ec2-becf-4e06-b769-f77fef0f340b`, input1568/trade1545/quantity0.5,
+  received16:09:38.377082 and committed16:09:38.380122 UTC exactly once.
+- Owner persisted REBASE1566 at16:09:38.233593, then REBASE1575 at16:09:39.945148;
+  no persisted decision consumes trade1568. Buffer1566..1575 is contiguous and retained.
+  Input1567 was received16:09:38.365071, over1.5s before the next owner processing call.
+  This evidence fits the stale-input recovery branch in
+  `infra/paper_orders/worker.py:_next_or_recovery_inputs`: oldest input>1s selects latest
+  book recovery, skipping the intervening trade. It is not a missing publisher commit.
+- Worker process transaction16:09:39.921335→39.959870 waited0.000659s for pool and
+  held connection0.037846s. Final order stays ACCEPTED, filled0/spent0. Re-publication
+  would change the one-shot scenario and was not attempted.
+
+Thus this run identifies an incompatible harness assumption: one ephemeral trade is
+expected to remain executable until the loaded owner returns, while execution safely
+rebases stale inputs. It does **not** prove that the earlier W1 API-pool failure has the
+same cause, or that all underlying scheduling/performance problems are solved.
+
+Transaction evidence: parent15446, paper69490, risk17107; all12 streams CLOSED without
+truncation. Parent acquisition p99/max0.099687/0.816092s; paper0.008834/0.267298s;
+risk0.038430/0.335116s. Risk includes102 DatabaseTimeoutError transactions.85 DB samples
+observed34 blocking relationships;3862 state observations are unknown due role visibility,
+so NULLs cannot establish absence of locks/waits.77 VM samples show no OOM increase,
+minimum available1097543680 bytes; maximum sample collection1.0773s. Observation itself
+adds overhead; comparison across runs is not controlled performance attribution.
+
+All pools finalized with checked_out0; remaining database connections0. Partial-run
+safety snapshot: duplicate fill execution0, duplicate RECORD execution0, negative
+reservation0, negative position quantity/cost0. These do not replace full conservation
+or other acceptance oracles. Failed DB dump+SHA256, candidate hashes, raw telemetry,
+trace summary, environment/pool closure and branch receipts are retained under the
+same artifact root (`nc16-*`, `nc16-r1/`). Task PG/Redis stopped with data preserved.
+
+**Next checkpoint / Needs Clarification:** propose an approved harness amendment for
+deterministic delivery of the scheduled one-shot to its target under load, preserving
+the1s freshness rule, real workers, one publication, quantity0.5 and all safety checks.
+The design must distinguish fixture coordination from a genuine worker-service delay;
+if it requires production scheduling changes, propose a separate production amendment.
+Do not add a NEW retry, replay the trade, relax freshness, change resources, or rerun
+W1 before the scope is approved. V-20 stays Failed/Pending Full Validation;
+V-21..24 stay Pending Dependency. No commit/push has been authorized for this checkpoint.
+
+### NC-F19-17 — Harness fix verified; full W1 Failed on risk SLA (2026-11-01)
+
+Owner approved NC17 with `apprve`. Implemented `profile_partial_barrier.py` using publisher
+IPC encode/receive and existing real-worker recovery functions. Explicit F19_SET5 child
+scheduled partial scenario arms owner/wallet/episode/order/pair/generation/key. A naturally
+selected recovery reads the real latest book, publishes once through the parent and child,
+then uses the original bounded following read. No production return values/timestamps,
+matching decisions, recovery eligibility, scheduling priorities or locks are replaced.
+Worker waits within captured-book1s freshness budget and W1 partial-stop+120s bound;
+periodic source and core workload continue. Unknown commit/disconnect/duplicates fail
+without another publication. Patch, IPC and pending control cleanup are bounded.
+
+Changes are limited to this helper, workload wiring and targeted tests/specs. Public API,
+schema, production code, pool/resource/load, financial and authorization rules, source
+cadence and existing NEW/RESET retries remain unchanged. Transient harness IPC state is
+not application session/business storage; persistent authority still resides in PostgreSQL.
+
+Checks: targeted regression100 passed/24.627s, real-worker matrix3 passed/12.705s,
+frozen Linux runner16 passed/14.531s; zero skips. Includes protocol faults/cancellation,
+stale/unarmed/other-owner paths, existing matching-fence and process-recovery tests.
+Real PostgreSQL/child/workers prove source visibility without isolation changes or
+publication deadlock, one persisted trade/fill0.5/spent1, overlapping core BUY/SELL,
+wallet9999/position0.4995/cost1, cancel reservation0 and stop/resume. Ruff/format and
+mypy on four affected profile modules passed. Logs/XML and preflight receipts are
+`validation-artifacts/f19-set5-20261101/nc17-*`.
+
+First preflight Failed: restarted workers ran before parent arm, consumed the natural
+recovery boundary and produced no READY. No trade was requested. The failed fixture's
+remaining active orders also caused the later restore check to time out. Preserved
+`nc17-real-worker-checks.log/xml` and DB `tiewtrade_f18_release_set5_nc17_checks`;
+changed only test ordering (arm before restart) and reused run_scheduled_work to cancel/
+join peers on failure. Corrected fresh-DB matrix (`..._checks2`) passes including restore;
+no restore/production assertion was relaxed.
+
+One W1 acceptance attempt, no extra short diagnostic: fresh DB
+`tiewtrade_f18_release_set5_nc17_w1_r1`, core100×20 baseline,10commands/s,5Hz child,
+10paper workers, original dedicated owners/schedules and600s measurement. Candidate
+`/tmp/tiewtrade-set5-nc17-candidate-20261101` based on2322d86, runtime source hash
+`dfd4cce5d4702afcb6dfee1e80347b6783bf035be0e1480201ede9ac1ec17a13` (working runtime
+files still match). VM3043373056 bytes/8CPUs; PG4CPU/3GiB; runner uncapped; pools unchanged.
+Runner16:30:41.738636→16:43:39.403146 UTC (~12m58s), exit1/no runner OOM.
+Setup152.858s, measured elapsed including drain610.629s.
+
+Functional/financial/resource/source evidence passed:
+
+- Dedicated LOSS_LIMIT→RESET attempt1 APPLIED, opening blocked and no auto-resume.
+- 6000 offered/admitted/completed,0 rejected;1200 cycles,2400 core fills,1200 cancels/
+  replays;100/100 scheduled RESETs and stop conservation passed.
+- Barrier target `b4053f1f-5e15-549f-b309-b0fd57883b73`, owner
+  `03aaeb51-c45f-4e22-b161-4ed80afa27a2`: book1323→trade1325, generation1,
+  key `0a7ec244-8084-4867-83e9-ac9f60b47c4e`; trade commit16:35:11.750880 UTC.
+  Original following read consumed[1323,1324,1325]. Single publication, partial prepared,
+  stop/cancel/release/resume completed; manual stop on other owner remains active.
+- BOOK BTC and PRICE BTC/ETH each3000/3000 receipts in nominal600s, no allowance/exemption.
+- All100 per-owner financial oracles and global invariants passed: expected5600 orders,
+  2401 fills including scenario fill,1200 cancels/2000 baseline pending dispatch;
+  unlinked fills/invalid reservations/invalid positions/wrong mode/duplicate effects0,
+  input lag0. Engine transaction p95/p99=0.218810/0.339924s within0.5/1s.
+- Resource assertions passed: peak per-process RSS89645056 bytes,55connections,
+  sampled peak/end lock waits0. All pools returned and remaining connections0.
+
+**Acceptance FAILED solely at the observed risk-SLA gate** (see result/analysis):
+918703/918703 samples acknowledged,0 unacknowledged/clock errors;1302 samples exceed3s,
+service99.8582784643% versus required99.9%, and56/100 owners fail their quota.3 samples
+from one owner exceed hard5s, max5.034698s. The three correspond to inputs3069/3070/3071
+ready16:34:12.308923 and acknowledged16:34:17.343621 UTC, before barrier activation.
+Owner `3baa7030-605b-4b29-a2fe-ef1d1da5fc47` acknowledgment cursor3068 at
+16:34:12.263526→3143 at16:34:17.343621, boundary473 unchanged. This owner has6
+DATABASE_TIMEOUT log entries across the run; untimestamped logs do not attribute those
+entries to this exact gap. Late samples occur in multiple windows, including well after
+the completed barrier. No claim that removing barrier wait solves risk latency is supported.
+
+Risk transaction SQL/lock/queue attribution is still unknown on this candidate. NC16
+instrumentation was disabled for acceptance, so its different-run timings cannot close
+that gap. No retry, threshold relaxation, resource increase or unchanged W1 rerun followed.
+W2/W3/W4 and P6 were not started. Preserve Failed, not Partial/Passed.
+
+Evidence: `nc17-w1-r1/result.json`, risk-late-inputs/worker/source/cycle/stop/barrier logs,
+`nc17-w1-failure-analysis.json`, candidate/resource inventory, container outcome and
+88,350,914-byte failed DB dump+SHA256. Task PG/Redis stopped with all DBs retained.
+Next: use this full-run evidence to propose targeted risk-service latency investigation/
+fix scope before production edits or another timed run. V-20 stays Failed/Pending Full
+Validation; V-21..24 Pending Dependency. No commit/push, CI or merge performed.
+
+### Risk latency analysis checkpoint — 2026-11-02
+
+Executed the owner-requested analysis plan against existing NC17 artifacts only.
+[Detailed analysis](risk-latency-analysis-2026-11-02.md) and reproducible derived scripts/
+JSON are under `validation-artifacts/f19-set5-20261101/risk-latency-audit-20261102/`.
+All21 raw evidence hashes remain unchanged. Independent first-eligible-ack reconstruction
+matches all1302 late identities/918703 expected/3hard/56owner quota failures. No duplicate
+measured inputs, stream timestamp regression or missing ack was found. All11 writers
+were included;1239 late samples first qualify in risk-worker telemetry,63 in paper telemetry.
+
+Measured-flag denominator includes902475 load samples (1293late/3hard) and16228 drain
+samples (9late); no new exemption/verdict change was introduced. Stored successful
+acknowledgements are post-commit observations, not exact historical server commit times.
+
+Read-only retained PostgreSQL logs confirm137 configured owner-advisory-lock timeouts in
+the inspected interval, including11/25 in +50..65/+240..270s. Saved only timestamp/PID/
+classification/hash. These establish contention, not which owner's scheduler/lock/SQL
+stage caused the5.08s ack gap. No production fix/evaluator defect is established.
+
+NC-F19-18 is now a concrete **Proposed / Needs Clarification** amendment in plan/validation:
+one300s fresh-DB diagnostic, risk-only stage spans plus commit-identity proof, unchanged
+profile/thresholds and explicit non-acceptance. The owner's execution request preserves
+its separate approval before instrumentation/run. No new runtime code/tests/services/
+workload/W1, production edit, commit/push/CI or Live activity occurred in this checkpoint.
+Next: owner approval of NC18; V-20 remains Failed/Pending Full Validation.
+
+### NC-F19-18 execution checkpoint — 2026-11-02
+
+Owner approved NC18. Harness-only risk-stage/transaction/commit observers implemented;
+targeted116 passed/30.788s, frozenLinux38 passed/22.555s, zero skips. Ruff/format/mypy
+passed. [Full report](risk-stage-diagnostic-2026-11-02.md) includes raw/derived artifacts,
+coverage, observer overhead, UNKNOWN proofs, planned-cutoff warnings and metadata fix.
+
+One300s fresh-DB diagnostic, unchanged profile, source hash
+`03e4bb431cc77fafbcf55ce9f457446a10f8790707a061a341a7a3a0a0ce29b4`, exit0,
+OBSERVATION_COMPLETE/acceptance_result=false. Core counters intentionally partial;
+100RESETs APPLIED, one-shot/stop/resume complete.13streams CLOSED/no truncation,
+24920proofs (23648VERIFIED/1272UNKNOWN),22547owner spans/234rounds.933observedlate
+samples/155groups;0hard5s,552not-yet-acknowledged atcutoff. No W1 acceptance claim.
+
+Measured sufficient cause of true3s violations:100selected owners queued behind4slots
+and whole-page completion before rescan. Attempt10129/round106 waits3.161157s on
+semaphore; pool0.013317s/ownerlock0.000890s/snapshot0.012062s/replay0.010731s.
+Actualserverlatency3.411689s, clientdelay0.000940s.8groups wait≥3s on semaphore alone.
+150linkedriskgroups allocate97.48%ofoldest-input budgets topreselection/slotwait;
+these are overlapping latency budgets, not CPU seconds.170serverlocktimeouts,
+168linked byPID/time. Prior same-owner timeouts amplify some gaps, not every gap.
+
+148/152verifiedlategroups remainlate atservercommit;4groups/12samples are late only
+atclientobservation.3groups/18samples haveUNKNOWNcommitproof. OldNC17hard5s didnot
+reproduce, so it is not marked solved. No threshold/resource/polling/production change
+was made by the diagnostic, and no unchanged rerun occurred.
+
+Future diagnostic report metadata corrected toreflectactualRESETprogress/counters;
+original300sartifact's `scheduled_resets_not_exercised=true` is inaccurate and retained
+with correction documented inderivedreport. Only those reporting lines differ from
+frozenruntime after the run; staticchecks pass and no diagnostic rerun is warranted.
+
+Allpoolsfinalized/checked_out0, remainingDBconnections0; duplicatefill/RECORDexecution0,
+negativeposition/reservation0 inpartial snapshot. Two cancellation warnings atcutoff
+retained, not hidden. DBdump52678912bytes+SHA256/runnerlog/manifest/candidate/resource
+inventories/rawtraces andderivedanalysis retained. TaskPG/Redisstoppedwithdata kept.
+
+NC-F19-19 is now **Proposed / Needs Clarification**: boundedrollingmonitoradmission
+usingtheexistingownertransaction,4activeslots/faircursor, noretry/resourceincrease.
+Approval would cover production schedulerchange+targetedchecks+oneW1aftercheckspass;
+Git/deployment not included. No production edits/W1/W2/W3/W4/CI/commit/push inNC18.
+V-20 remainsFailed/PendingFullValidation; V-21..24PendingDependency. Next: NC19approval.
+
+## NC-F19-19 checkpoint — approved/implemented, W1 blocked (2026-11-02)
+
+Owner approved NC19. Rolling four slots/shared owner transaction/SQL active exclusion/
+observer inventory implemented. Targeted35, fresh-DB safety26, Linux43 plus explicit
+fresh-global4 and final targeted9 passed. Regression95 passed/1 fixture backlog failure
+preserved and diagnosed; unchanged concurrency assertions pass on a fresh DB.
+Ruff/format/mypy seven changed files and seven import contracts pass. Owner transaction
+AST unchanged.
+
+[NC19 report](rolling-monitor-2026-11-02.md) records a setup abort from missing marker
+selection and subsequent W1 Failed/environment invalid: intended DB differed from all
+nine connected role URLs. Baseline100x20/dedicated LOSS_LIMIT/RESET/opening-blocked passed;
+later BOT resting NEW rejected SOURCE_UNAVAILABLE before load. No risk SLA conclusion
+or proven production cause from this invalid environment. Raw69 files, DB dumps/hashes,
+exact command identity, pending window, slot counts and cleanup evidence retained.
+
+Runner guard now checks parsed URLs/all nine actual database identities/empty schema
+before migration; self-test and real read-only verification passed. Stop after failure;
+await authorization for one replacement W1 on a verified fresh DB with this guard.
+No W2/W3/W4, further production fix, Git or deployment. V-20 Failed/Pending Full Validation;
+V-21..24 Pending Dependency. Next: owner authorization for the replacement W1.
+
+## Authorized replacement W1 — verified fresh DB, Failed (2026-11-02)
+
+Owner authorized `approve W1 fresh DB rerun`; executed `nc19-w1-r3` on the intended
+new DB, all nine actual role identities and empty schema/fixture verified. Same tested
+source/hash/resources. Setup211.108s, baseline100x20/dedicated LOSS_LIMIT/RESET/opening
+blocked and manual/BOT setup completed. At recorded+37.594s of load, child BOOK publisher
+failed with SourceUnavailableError. No600s source/SLA verdict; counters277offered,
+234admitted/233completed/0rejected,29cycles; interruption leaves incomplete work.
+
+Single-recorder wall time reversed16.857ms while monotonic advanced18.732ms immediately
+near the failure. Last committed book was READY/lease valid. This supports a clock/future
+timestamp hypothesis, not proof of the exact failing guard condition or VM/NTP cause.
+All13pools finalized/checked_out0, remaining connections0;92FILL identities no duplicates,
+negative positions/reservations0; get_wallet/Money snapshot103wallets no negative balances.
+These are partial checks, not full financial acceptance. Preserve cancellation warnings,
+raw72files/hashes/fresh DB dump16,414,891bytes. No production edit or repeated tests/static
+checks; no W2/W3/W4/Git/deployment. Task PG/Redis stopped with data retained.
+
+See [fresh rerun evidence](w1-fresh-rerun-2026-11-02.md). Proposed NC-F19-20 scopes exact
+BOOK readiness/clock failure arguments in a test-only observer plus one60s non-acceptance
+diagnostic; awaiting owner approval. Alternative is read-only environment clock review
+before choosing any further experiment. V-20 Failed/Pending Full Validation; dependencies
+unchanged. Next: owner chooses next diagnostic scope, not another unchanged W1.
+
+## NC-F19-20 — approved/implemented, one diagnostic Not Reproduced (2026-11-02)
+
+Child-only BOOK failure-argument observer, bounded/complete trace and explicit exclusive
+60s non-acceptance mode implemented.94Linux tests/zero skips, Ruff/format/mypy six files
+pass; no production changes. All-nine-role/fresh-schema/empty-fixture guards pass.
+
+One `nc20-r1` on tested hash `aa3fcb7009f53678ebe8b9b8765966a49b302ed29740f7df7270ffe094650cc8`:
+setup181.451s, baseline100x20/dedicated LOSS_LIMIT/RESET/manual-BOT setup completed;
+observation60.600486s,1203guard calls,0failures, trace closed/complete. **Not Reproduced**,
+acceptance_result=false. No receipt clock reversal observed, not proof the old issue is
+fixed. Original failed SQL-clock/book arguments remain unknown; no further fix chosen.
+
+Partial safety:194FILL identities no duplicate/null IDs/negative positions/reservations;
+103wallets no negative balances, one breach/audit match. All13pools finalized/checked_out0,
+remaining connections0;14cancellation/termination warnings retained. No full financial/SLA
+acceptance. RESET/later stop/barrier work Not Exercised.73original files/hashes,
+DB dump18,051,985bytes, command/guard/source/resource evidence retained. Task PG/Redis
+stopped with data kept. No rerun/W1/W2/W3/W4/Git/deployment.
+
+[NC20 report](book-clock-diagnostic-2026-11-02.md). Next recommendation: read-only host/VM
+clock configuration and existing-log review (10–20min), awaiting owner instruction under
+the stop-on-no-reproduction rule. V-20 Failed/Pending Full Validation; dependencies unchanged.
+
+## Clock environment review — read-only, no fix selected (2026-11-02)
+
+Owner requested `เริ่มตรวจ clock environment`; reviewed selected host/Docker settings,
+existing timed/kernel/powerd/pmset/VM logs and container privilege inventory. Host timed
+records NTP receipt/apply activity09:29/09:45/10:01; no apply event at the r3 failure09:41:25.
+Startup settimeofday adjustment at09:13 predates VM start09:16:53. No recorded sleep/wake
+or VM restart near failure; caffeinate assertions span the run. Resource bounds match.
+Guest logs lack clock-setter telemetry; exact origin and failing guard condition remain
+unproved. UI switch unreadable: Computer Use denied twice, including owner-requested
+retry; no setting changed. Operational NTP evidence does not depend on that UI read.
+
+[Environment review](clock-environment-review-2026-11-02.md), selected events/scripts/hashes
+in `clock-environment-review/`. No runtime code, new container/services, clock probe,
+workload, system setting, Git or deployment changes. Documentation consistency checks only.
+
+Proposed NC-F19-21 scopes one bounded clock-only host/VM comparison with uncertainty
+and existing-log correlation; no trading/DB workload or privileged clock changes. Await
+owner approval before implementation/sampling. Alternative: environment administrator
+investigates retained evidence. V-20 Failed/Pending Full Validation; dependencies unchanged.
+
+
+### NC-F19-21 execution checkpoint — 2026-11-02
+
+22 probe regressions passed, zero skips; Ruff/format/mypy two files passed. One20min10Hz
+trace completed:12000 contiguous exchanges, no gaps, guest exit0/noOOM, source verified.
+40 guest offset movements recur at median29.999772s, including24 decreases(max2.994309ms).
+Host has no offset decrease;504 increase intervals align with logged positive NTP adjtime,
+not504 discrete steps.11930 conditional transport bounds/70 retained Unknowns; selected
+sequence400 supports guest-relative backward offset movement beyond uncertainty.
+Exact setter and original r3 guard cause remain unproved; no trading failure reproduced.
+No setting/production/criteria changes or W1 rerun. Diagnostic complete/non-acceptance;
+V-20 Failed/Pending Full Validation, dependencies unchanged. Next: separate environment
+remediation proposal/approval; no automatic further diagnostic. See
+[NC21 evidence](clock-comparison-2026-11-02.md).
+
+
+## NC-F19-22 environment plan prepared — 2026-11-02
+
+Owner instructed `เริ่มทำ` to prepare the next plan. Proposed isolated Linux validation
+target, explicit candidate/resource/architecture comparison, reuse of bootstrap/guards/
+clock probe, affected safety checks and one conditional W1 under unchanged criteria.
+No machine purchased/provisioned, configuration/runtime/code/test changed, or workload run.
+Needs Clarification: authorized disposable target/access/budget and approved inventory.
+Plan/validation are Proposed, not approved by this preparation instruction. Next: owner
+provides target and approves NC22 scope/manifest; may approve preflight plus conditional
+W1 together. Stop on mismatch/failure; no automatic extra diagnostic rounds. Existing
+Failed/Pending statuses preserved. Documentation consistency/diff checks only.
+
+
+### NC22 local preparation — owner instructed เริ่มทำ (2026-11-02)
+
+เริ่ม preparation ตามคำสั่งเจ้าของ: ตรวจ connection inventory แบบread-only พบเฉพาะ
+local Docker contexts `default`/`desktop-linux` (active) และไม่มี `~/.ssh/config`;
+ไม่พบ target ที่ยืนยันสิทธิ์ใช้เป็นdisposable Linux validation environment จากข้อมูลที่ตรวจ
+นี่ไม่ใช่ข้อพิสูจน์ว่าเจ้าของไม่มีเครื่องอื่น จึงขอชื่อhost/SSH aliasและสิทธิ์ใช้งานไว้แล้ว
+
+สร้าง local content-hash inventory ของsource/tests/schema/lock/config ที่เกี่ยวข้องใน
+`validation-artifacts/f19-set5-20261101/nc22-preparation/`; ยังไม่ใช่final candidate freeze
+ต้องตรวจซ้ำก่อนexecution ระบุreuse runner/DB guard/clock probeเดิม ไม่มีremote connection,
+service/config/code changesหรือtest/workloadเพิ่ม การเริ่มทำไม่ยกเลิกtarget/manifest gates
+ของNC22; ยังไม่ถือว่าอนุมัติเครื่อง/งบ/profileที่ไม่ระบุ และไม่ต้องขอเริ่มpreparationซ้ำ
+ขั้นถัดไปที่บล็อก: รอเจ้าของระบุtarget/accessและยืนยันdisposable scope แล้วตรวจinventory
+เพื่อเสนอmanifestจริงก่อนเปลี่ยนenvironmentหรือtimed run ผลFailed/Pendingเดิมไม่เปลี่ยน
+
+
 ## NC22 same-machine measurement audit — complete (2026-11-02)
 
 Owner declined external machines and explicitly approved the replacement audit. Linux
@@ -766,3 +1228,128 @@ before-source copies, exact refactor diff, test XML, final hashes and check summ
 This finishes the authorized guard/refactor checkpoint. Next: owner may instruct commit/
 push of this checkpoint under Git rules; no Git action occurred. V-20 Failed/Pending Full
 Validation and clock/old-latency/source-evidence limitations remain; do not infer a W1pass.
+
+
+### NC-F19-23 clock-setter preflight — Incomplete 2026-11-02
+
+Owner approved the same-machine read-only tracefs gate and one conditional90s trace.
+The unchanged VM remained8CPU/3,043,373,056bytes and the pinned runner image ID matched.
+The preflight observer was root/host-PID with only CAP_SYS_ADMIN after cap-drop ALL,
+privileged=false, network none, read-only root and0.1CPU/64MiB. Only tracefs and frozen
+source were read-only mounted; no Docker socket or application/database service was used.
+
+The observer exited1/noOOM after0.565s because `/tracefs/trace_clock` was absent. It could
+not establish private instances, mono or the eight required syscall events. Classification
+is **Incomplete**, not Not Reproduced. No trace instance/event/buffer was created, so there
+was no instance cleanup; no instrumentation/tests/90s run/W1 followed. No install, restart,
+fallback tracer, extra capability, confinement relaxation or setting change was attempted.
+
+Independent current hashes for `risk_limit.py`, `risk_limit_main.py` and the scheduler
+test match the measured NC19 manifest exactly; its prior authoritative transaction/lock,
+concurrency4, UUID fairness and cancellation/engine-cleanup evidence remains valid. No
+production/test source changed or reran. Evidence: [NC23 report](clock-setter-preflight-2026-11-02.md)
+and `validation-artifacts/f19-set5-20261101/nc23-clock-setter/preflight/`.
+V-20 stays Failed/Pending Full Validation. Next requires owner direction and approval of
+a new amendment; NC23 does not authorize tracing enablement, another method/run, settings,
+production changes or W1. No commit/push.
+
+
+### NC-F19-24 amendment prepared and approved — 2026-11-02
+
+At the owner's `เริ่มทำ` instruction, prepared a same-machine amendment only; no
+environment or runtime action was taken. Official kernel documentation confirms tracefs
+must be mounted to expose its controls, while Docker documents SYS_ADMIN/default-seccomp
+capability handling. The proposal uses one ephemeral mount inside the observer's private
+mount namespace, retains privileged=false/CAP_SYS_ADMIN-only/default confinement and all
+NC23 resource/redaction/output/cleanup bounds, and adds an exact rollback verification.
+
+Execution is gated: a confinement denial or missing capability stops without fallback;
+the90s trace is conditional on a passing mount/event preflight in the same execution.
+No restart, install, settings/NTP, production/schema/scheduler, DB/trading service, SLA or
+W1 change is included. V-20 remains Failed/Pending Full Validation. Owner subsequently
+approved `NC-F19-24`; implementation, controlled tests and one conditional execution may
+proceed. No repeat, W1, remediation, production change or Git action is authorized.
+
+
+### NC-F19-24 execution — Incomplete, stopped 2026-11-02
+
+Added the bounded stdlib observer and controlled tests. Final result:45 tests passed,
+zero skips; Ruff check/format and mypy passed. One conditional execution used the exact
+approved container profile and unchanged VM, ran5.772s, exit2/noOOM. Its result was stored
+only on tmpfs and unavailable after exit, so exact mount/trace/cleanup evidence is missing.
+The execution is Incomplete and was not repeated.
+
+The single cleanup-only helper confirmed CAP_SYS_ADMIN-only, NoNewPrivs1 and Seccomp2,
+then hit OSError reading unavailable `/proc/self/attr/current` before mount. Thus its
+reported no-op cleanup values do not verify absence of the exact prior instance; cleanup
+remains unverified and no helper2/fallback was used. Executed source ordering and identical
+profile strongly support the same pre-mount branch for the original, but lost output
+prevents claiming proof.
+
+Fixed only the harness evidence path afterward: stdout result, explicit LSM gate and
+fail-closed cleanup-before-mount; tests/static pass, no execution followed. No production,
+schema/API/financial/scheduler/settings, DB/trading/workload or W1 change. NC19 hashes
+still match. Evidence: [NC24 report](clock-setter-nc24-2026-11-02.md) and
+`validation-artifacts/f19-set5-20261101/nc24-clock-setter/`.
+Setter remains Unknown; V-20 Failed/Pending Full Validation, dependencies unchanged.
+Next action requires a new owner-approved amendment. No commit/push.
+
+
+### NC-F19-25 plan prepared — awaiting owner choice 2026-11-02
+
+At owner instruction `เริ่มทำ`, performed read-only inventory only. Docker advertises
+built-in seccomp/cgroup namespaces but no AppArmor/SELinux; both prior containers have
+empty AppArmorProfile and the approved restrictions. This explains why the guest LSM
+file is not an appropriate standalone gate without relaxing confinement.
+
+Proposed Option A combines exact NC24-residue cleanup, preflight, one conditional90s trace
+and verified cleanup in one execution with durable stdout/Docker-log evidence; missing LSM
+is accepted only under an exact host+guest security match. Tests/static checks precede it;
+no repeated trace follows. Option B stops clock tracing with current Unknown/Incomplete
+evidence. NC25 is explicitly terminal for same-machine ftrace: no automatic NC26.
+
+No code, mount, helper, container, service, setting, workload or W1 action occurred in this
+planning step. V-20 remains Failed/Pending Full Validation. Next: owner chooses and, for
+Option A, explicitly approves `NC-F19-25`. No Git action.
+
+
+### F-19 SLA amendment — requirements approved; plan/validation awaiting approval 2026-11-02
+
+Owner approved per-owner and run-wide99.5%≤3s,99.9%≤5s and every input≤6s, with
+complete acknowledgements and all correctness/safety gates unchanged. Owner selected stop
+NC25 before implementation/execution and requires all-or-nothing Paper+Live production
+activation after the full integrated candidate passes release/dependency gates.
+
+Offline inspection of immutable NC17 result gives run99.858278% and worst owner99.575487%
+within3s; only3/918703inputs exceed5s, giving run99.999673% and affected-owner99.967346%
+within5s; max5.034698s. These support the proposed tiers but do not certify the later NC19
+scheduler/final candidate. Original Failed evidence remains unchanged.
+
+Prepared plan/validation to update only the explicit F19 evaluator and boundary tests,
+derive a separate NC17 re-evaluation, exclude diagnostic observer code from release, and
+defer one workload to the final integrated candidate. No evaluator/test/runtime/mount/
+service/workload change was made at this checkpoint. Next: owner approval of amended
+plan/validation before implementation. No Git action.
+
+
+### F-19 revised SLA amendment — Feature passed 2026-11-02
+
+Owner approved the amended plan/validation. Updated only the explicit F19 evaluator and
+its regression: per-owner/run-wide99.5%≤3s,99.9%≤5s and every input≤6s are independent
+gates; missing/pending/clock/stream-order evidence remains fail-closed. F18 behavior and
+result schema remain unchanged. The final affected non-DB suite passed40 tests; Ruff
+format/check and mypy passed. No production/API/schema/trading code or W1 changed.
+Post-review refactor consolidated repeated price-input and risk-acknowledgement fixtures
+into the existing test helpers; the same40 tests/static checks passed without behavior change.
+
+Re-evaluated NC17 from a temporary copy:918703/918703 acknowledgements, zero clock/order
+errors, run/worst-owner 3s fractions0.998582784643/0.995754871013, run/worst-owner 5s
+fractions0.999996734527/0.999673451616 and max5.034698s. The derived Feature result passes;
+all30 non-SLA acceptance terms are crosswalked (26Passed/4W1 N/A). Original raw hashes and Failed verdict remain
+unchanged. NC23/24 setter observer source/tests were excluded while historical artifacts
+remain; NC25/further tracing stay stopped.
+
+Evidence: [revised SLA report](revised-sla-evaluation-2026-11-02.md) and
+`validation-artifacts/f19-set5-20261101/revised-sla-20261102/derived-result.json`.
+This does not pass Batch/System Ready: final integrated Paper+Live workload and V-20..24/
+release dependencies remain Pending, and both production modes remain off. No Git action.

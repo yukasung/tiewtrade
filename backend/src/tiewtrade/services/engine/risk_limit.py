@@ -3,8 +3,10 @@
 import asyncio
 import logging
 from dataclasses import dataclass
+from typing import Any
 from uuid import UUID
 
+from sqlalchemy import Row
 from sqlalchemy.ext.asyncio import AsyncEngine
 
 from tiewtrade.core.orders import TradingMode
@@ -82,6 +84,74 @@ async def run_risk_request_round(
     return RiskRequestRound(processed, deferred, skipped)
 
 
+async def _scan_monitor_candidates(
+    scan_engine: AsyncEngine,
+    *,
+    limit: int,
+    after_owner: UUID | None = None,
+    excluded: tuple[UUID, ...] = (),
+) -> list[Row[Any]]:
+    """Select a bounded UUID page, excluding local in-flight work before LIMIT."""
+    if type(limit) is not int or not 1 <= limit <= 100:
+        raise ValueError("bounded owner monitor round required")
+    async with scan_session_bypassing_rls(scan_engine) as scan:
+        candidates = list(
+            await scan.execute(
+                """WITH hints AS (SELECT r.user_id,r.mode FROM risk_evaluation_requests r
+                  WHERE NOT EXISTS(SELECT 1 FROM risk_evaluation_results x WHERE x.request_id=r.id)
+                  GROUP BY r.user_id,r.mode)
+                SELECT s.user_id,s.mode,o.due_at FROM risk_limit_settings s
+            LEFT JOIN risk_owner_state o USING(user_id,mode)
+            LEFT JOIN hints h USING(user_id,mode)
+            WHERE s.mode='PAPER' AND NOT (s.user_id=ANY(CAST(:excluded AS uuid[])))
+              AND (o.due_at IS NULL OR o.due_at<=clock_timestamp()
+              OR h.user_id IS NOT NULL
+              OR o.cursor<(SELECT watermark FROM risk_price_publication))
+            ORDER BY CASE WHEN CAST(:after AS uuid) IS NULL OR s.user_id>CAST(:after AS uuid)
+              THEN 0 ELSE 1 END,s.user_id LIMIT :limit""",
+                {"limit": limit, "after": after_owner, "excluded": list(excluded)},
+            )
+        )
+    return candidates
+
+
+async def _evaluate_monitor_owner(engine: AsyncEngine, owner_id: UUID) -> str:
+    """Evaluate one owner under the existing authoritative transaction and fences."""
+    try:
+        async with user_session(engine, owner_id, role=DatabaseRole.ENGINE) as session:
+            await lock_risk_owner(
+                session, TradingMode.PAPER, lock_timeout_ms=100, statement_timeout_ms=700
+            )
+            snapshot = await read_monitor_snapshot(session)
+            owner_state = decode_monitor_owner(session.user_id, snapshot.owner)
+            if owner_state is None:
+                return "skipped"
+            setting, initialized = owner_state
+            if not initialized:
+                try:
+                    evaluation = await initialize_monitor(session, setting)
+                except (RiskUnavailableError, PositionIntegrityError):
+                    evaluation = await mark_unavailable_owner(session, setting)
+            else:
+                # R14: later immutable frames are consumed next round;
+                # financial writers retain their full publication fence.
+                evaluation = await replay_monitor(
+                    session, setting, publication_fence=False, snapshot=snapshot
+                )
+            await acknowledge_evaluations(session, evaluation.reason)
+        return "processed"
+    except RiskUnavailableError:
+        return "deferred"
+    except DatabaseTimeoutError:
+        _LOGGER.warning(
+            "risk monitor deferred owner=%s code=%s", owner_id, DatabaseTimeoutError.code
+        )
+        return "deferred"
+    except Exception:
+        _LOGGER.exception("risk monitor failed owner=%s", owner_id)
+        return "deferred"
+
+
 async def run_risk_monitor_round(
     *,
     engine: AsyncEngine,
@@ -94,60 +164,12 @@ async def run_risk_monitor_round(
         raise ValueError("bounded owner monitor round required")
     if type(concurrency) is not int or not 1 <= concurrency <= MAX_MONITOR_CONCURRENCY:
         raise ValueError("bounded monitor concurrency required")
-    async with scan_session_bypassing_rls(scan_engine) as scan:
-        candidates = list(
-            await scan.execute(
-                """WITH hints AS (SELECT r.user_id,r.mode FROM risk_evaluation_requests r
-                  WHERE NOT EXISTS(SELECT 1 FROM risk_evaluation_results x WHERE x.request_id=r.id)
-                  GROUP BY r.user_id,r.mode)
-                SELECT s.user_id,s.mode,o.due_at FROM risk_limit_settings s
-            LEFT JOIN risk_owner_state o USING(user_id,mode)
-            LEFT JOIN hints h USING(user_id,mode)
-            WHERE s.mode='PAPER' AND (o.due_at IS NULL OR o.due_at<=clock_timestamp()
-              OR h.user_id IS NOT NULL
-              OR o.cursor<(SELECT watermark FROM risk_price_publication))
-            ORDER BY CASE WHEN CAST(:after AS uuid) IS NULL OR s.user_id>CAST(:after AS uuid)
-              THEN 0 ELSE 1 END,s.user_id LIMIT :limit""",
-                {"limit": limit, "after": after_owner},
-            )
-        )
+    candidates = await _scan_monitor_candidates(scan_engine, limit=limit, after_owner=after_owner)
     semaphore = asyncio.Semaphore(concurrency)
 
     async def evaluate(owner_id: UUID) -> str:
         async with semaphore:
-            try:
-                async with user_session(engine, owner_id, role=DatabaseRole.ENGINE) as session:
-                    await lock_risk_owner(
-                        session, TradingMode.PAPER, lock_timeout_ms=100, statement_timeout_ms=700
-                    )
-                    snapshot = await read_monitor_snapshot(session)
-                    owner_state = decode_monitor_owner(session.user_id, snapshot.owner)
-                    if owner_state is None:
-                        return "skipped"
-                    setting, initialized = owner_state
-                    if not initialized:
-                        try:
-                            evaluation = await initialize_monitor(session, setting)
-                        except (RiskUnavailableError, PositionIntegrityError):
-                            evaluation = await mark_unavailable_owner(session, setting)
-                    else:
-                        # R14: later immutable frames are consumed next round;
-                        # financial writers retain their full publication fence.
-                        evaluation = await replay_monitor(
-                            session, setting, publication_fence=False, snapshot=snapshot
-                        )
-                    await acknowledge_evaluations(session, evaluation.reason)
-                return "processed"
-            except RiskUnavailableError:
-                return "deferred"
-            except DatabaseTimeoutError:
-                _LOGGER.warning(
-                    "risk monitor deferred owner=%s code=%s", owner_id, DatabaseTimeoutError.code
-                )
-                return "deferred"
-            except Exception:
-                _LOGGER.exception("risk monitor failed owner=%s", owner_id)
-                return "deferred"
+            return await _evaluate_monitor_owner(engine, owner_id)
 
     # R19 changes execution priority within the selected page, not its fairness cursor.
     execution = sorted(candidates, key=lambda row: (row.due_at is not None, row.due_at))

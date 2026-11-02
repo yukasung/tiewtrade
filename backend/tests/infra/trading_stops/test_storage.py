@@ -1045,7 +1045,7 @@ async def test_platform_discovery_skips_locked_owner_then_retries_without_losing
         await connection.execute(
             text("""INSERT INTO platform_memberships(user_id,role,created_by)
               SELECT :owner,'PLATFORM_ADMIN',user_id FROM platform_memberships
-              WHERE role='PLATFORM_OWNER'"""),
+              WHERE role='PLATFORM_OWNER' ORDER BY user_id LIMIT 1"""),
             {"owner": owner},
         )
         await connection.execute(text("ALTER TABLE platform_memberships FORCE ROW LEVEL SECURITY"))

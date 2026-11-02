@@ -53,7 +53,7 @@ def meminfo_bytes(raw: str) -> dict[str, int]:
     return result
 
 
-def memory_snapshot(parent: str) -> dict[str, Any]:
+def memory_snapshot(parent: str, extra_containers: tuple[str, ...] = ()) -> dict[str, Any]:
     before = monotonic()
     observed = datetime.now(UTC).isoformat()
     vm = meminfo_bytes(Path("/proc/meminfo").read_text())
@@ -62,7 +62,13 @@ def memory_snapshot(parent: str) -> dict[str, Any]:
     for container in docker_json("/containers/json"):
         names = [name.lstrip("/") for name in container["Names"]]
         if not any(
-            name in {parent, "tiewtrade-f18-release-w1-postgres", "tiewtrade-f18-release-redis"}
+            name
+            in {
+                parent,
+                "tiewtrade-f18-release-w1-postgres",
+                "tiewtrade-f18-release-redis",
+                *extra_containers,
+            }
             or name.startswith(parent + "-risk-")
             for name in names
         ):
@@ -120,14 +126,16 @@ def memory_snapshot(parent: str) -> dict[str, Any]:
     }
 
 
-async def sample_memory(path: Path, stop: asyncio.Event) -> None:
+async def sample_memory(
+    path: Path, stop: asyncio.Event, extra_containers: tuple[str, ...] = ()
+) -> None:
     parent = os.environ["F18_PARENT_CONTAINER"]
     if not parent.startswith("tiewtrade-f18-"):
         raise RuntimeError("F18_MEMORY_CONTAINER_REJECTED")
     baseline_oom: int | None = None
     with path.open("x") as stream:
         while not stop.is_set():
-            row = await asyncio.to_thread(memory_snapshot, parent)
+            row = await asyncio.to_thread(memory_snapshot, parent, extra_containers)
             stream.write(json.dumps(row) + "\n")
             stream.flush()
             oom_count = int(row["vm_counters"]["oom_kill"])

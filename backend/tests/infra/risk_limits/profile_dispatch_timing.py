@@ -29,6 +29,8 @@ class Recorder:
         self.setup: dict[str, Any] = {}
         self.last_round_end: float | None = None
         self.detail_count = 0
+        self.seconds = 60
+        self.detail_limit = 100
         self.truncated = False
         self.stream = metrics.with_suffix(".dispatch.jsonl").open("x")
 
@@ -37,6 +39,8 @@ class Recorder:
             control = json.loads(self.control.read_text())
             self.start = float(control["started"])
             self.owners = set(control["owners"])
+            self.seconds = int(control.get("seconds", 60))
+            self.detail_limit = int(control.get("detail_limit", 100))
             self.write({"event": "SETUP_SUMMARY", "calls": self.setup, "observed_at": time()})
 
     def write(self, row: dict[str, Any]) -> None:
@@ -46,11 +50,11 @@ class Recorder:
     def record(self, phase: str, started: float, **fields: Any) -> None:
         self.activate()
         ended = monotonic()
-        measured = self.start is not None and 0 <= started - self.start < 60
+        measured = self.start is not None and 0 <= started - self.start < self.seconds
         if measured:
             assert self.start is not None
             # Late completions have a separate bounded tail bucket.
-            bucket = min(60, int(max(0, ended - self.start)))
+            bucket = min(self.seconds, int(max(0, ended - self.start)))
             target = self.buckets.setdefault(bucket, {})
         else:
             target = self.setup
@@ -62,8 +66,8 @@ class Recorder:
         for key in ("hints", "claimed", "skipped", "processed", "deferred"):
             if key in fields:
                 values[key] = values.get(key, 0) + fields[key]
-        if measured and fields.get("owner") in self.owners:
-            if self.detail_count >= 100:  # Ten workers: <=1000 detail records in total.
+        if measured and self.detail_limit and fields.get("owner") in self.owners:
+            if self.detail_count >= self.detail_limit:
                 self.truncated = True
                 return
             self.detail_count += 1
@@ -82,12 +86,12 @@ class Recorder:
         self.activate()
         if self.start is None:
             return
-        current = min(60, int(max(0, monotonic() - self.start)))
+        current = min(self.seconds, int(max(0, monotonic() - self.start)))
         for bucket in sorted(self.buckets):
             if final or bucket < current:
                 self.write(
                     {
-                        "event": "TAIL" if bucket == 60 else "SECOND",
+                        "event": "TAIL" if bucket == self.seconds else "SECOND",
                         "second": bucket,
                         "phases": self.buckets.pop(bucket),
                     }
