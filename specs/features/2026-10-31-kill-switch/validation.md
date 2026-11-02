@@ -305,3 +305,74 @@ checkpoint และรวม NC-F19-14 → targeted checks → W1 → W2 → W3
 required CI ล่าสุดผูกกับ `f00bac0` ตาม V-19 และ checkpoint. รายการ Partial/
 Pending Full Validation/Pending Dependency ยังคงผลตามจริง ไม่ถือว่าผ่านหรือ Completed.
 หาก candidate เปลี่ยน ต้องตรวจผลกระทบและ required CI บน candidate ที่จะ merge ตามกฎเดิม
+
+### NC-F19-22 replacement validation — Approved / Audit complete 2026-11-02
+
+| Phase | Criterion | Result |
+|---|---|---|
+| Feature / audit | Raw integrity and source provenance across NC17/18/19-r3/20/21; no restored commit substitution |261 hash entries matched;9 source files matched;3 original source contents unavailable, explicitly recorded |
+| Feature / offline regression |3/5s boundaries, owner quota, missing/pending acknowledgements and cross-worker earliest acknowledgement/clock handling without services |18 existing tests passed, zero skips;5 controlled cases retained |
+| Feature / measurement review |All workers, commit versus observation, denominator/setup/load/drain and scoped clock uncertainty |NC17 exact timestamp reconstruction;44 acknowledgement files/zero regressions;23,648 VERIFIED proofs/1,272 UNKNOWN; historical physical-clock bounds incomplete |
+| Feature / defect checkpoint |Document/propose harness defect before fixing |Medium: stream ordering not validated; controlled regression can pass with clock_errors=0. No runtime patch; awaiting approval |
+| Batch / V-20 |Original SLA/load/resource/source/financial criteria |Failed/Pending Full Validation unchanged; no new workload or regrade |
+
+No thresholds, schema, public API, authorization, financial rules or settings changed.
+Existing DB rollback/savepoint evidence reused; not rerun offline. Diagnostics retain
+acceptance_result=false and partial scope. Missing source prevents full historical source
+recertification; NC21 bounds cannot correct old runs. Audit outputs are separate from raw
+results. See [measurement audit](evidence/measurement-audit-2026-11-02.md) for findings,
+proposed patch, uncertainty and commands. Next: owner approval of the narrow stream-order
+guard; no automatic W1 or diagnostic.
+
+
+### NC22 stream-order guard checkpoint — 2026-11-02
+
+Owner approved the narrow guard fix. Implemented in `profile_workload.py::sla_summary`
+and covered in `test_workload_sla.py`. Each stream is validated before pending/owner
+filtering, including trailing rows after all inputs have acknowledgements. Parsed datetime
+keys keep validation and merge ordering consistent. Equal timestamps remain valid; every
+row is preserved, with no sorting/dropping/clamping/clock correction. All regressions are
+counted; only the first20 file/line/timestamp diagnostics are retained. Additive fields
+`stream_order_errors` and `first_stream_order_errors` are separate from `clock_errors`.
+Any ordering error forces overall passed=false; existing numerical SLA counters remain.
+
+27 non-DB regressions passed, zero skips (18 existing +9 cases): would-be pass/miss under
+F18/F19, filtered pending/foreign-owner rows, equality, earliest interleaved worker results,
+and bounded diagnostics with full error count. Ruff/check, format/check and mypy two files
+passed. Initial mypy invocation could not resolve local src and reported235 import/type
+errors; corrected invocation `MYPYPATH=src` passes without source/config suppression.
+DB rollback/savepoint tests reused; no services/workload/settings/production changes.
+
+Artifacts: `validation-artifacts/f19-set5-20261101/nc22-stream-order-guard/` contains test
+XML, static log/summary, exact evaluator patch and candidate hashes. Original audit/run
+artifacts remain unchanged. Historical audit.py expects the prepatch evaluator (matched
+NC20 snapshot retained in audit snapshots); its counterexample assertions must not be
+rerun against the patched evaluator as though they were new acceptance criteria.
+
+Guard defect fixed, not an environment/latency fix. Existing44 real acknowledgement files
+were ordered, so this does not explain or regrade original failures. V-20 remains Failed /
+Pending Full Validation; W2/W3/W4 and dependencies unchanged. Next recommendation: review
+this narrow patch before deciding the next clock/acceptance amendment; no automatic timed
+run or new diagnostic. No commit/push. This subtask does not trigger full-feature Ready
+for Code Review or authorize refactor/full validation.
+
+
+### NC22 guard refactor checkpoint — 2026-11-02
+
+Owner-authorized refactor complete, limited to the guard and its new tests. Named previous
+observed/raw timestamp fields replace tuple indexes; adjacent line identity comes from
+enumeration and filename is computed once per stream. Local `write_risk_stream` removes
+repeated JSONL serialization in the new tests; existing fixtures/ack builders remain in
+use. Preservation test compares original bytes. Verdicts, counters, cap20, diagnostics,
+merge/filter order and all SLA/financial behavior unchanged; no new infrastructure.
+
+27 non-DB tests passed, zero skips; two-file Ruff/check, format/check and mypy passed
+(`MYPYPATH=src`). Validation after refactor covers only the affected Feature/evaluator
+criteria; DB/safety evidence remains valid. Approved stop on timed runs still applies:
+no W1, other workload, new diagnostic or settings change. No production change.
+
+Artifacts in `validation-artifacts/f19-set5-20261101/nc22-stream-order-refactor/` retain
+before-source copies, exact refactor diff, test XML, final hashes and check summary.
+This finishes the authorized guard/refactor checkpoint. Next: owner may instruct commit/
+push of this checkpoint under Git rules; no Git action occurred. V-20 Failed/Pending Full
+Validation and clock/old-latency/source-evidence limitations remain; do not infer a W1pass.
