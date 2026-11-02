@@ -14,7 +14,7 @@ from tests.infra.risk_limits.profile_publisher import SourcePublisher
 from tests.infra.risk_limits.profile_publisher_process import MAX_MESSAGE, QUEUE_LIMIT, encode
 from tests.infra.risk_limits.profile_workload import Fixture
 from tests.infra.risk_limits.test_prices import publication as publication
-from tiewtrade.core.money import Money
+from tiewtrade.core.money import Money, Quantity
 from tiewtrade.infra.db.session import market_data_session
 from tiewtrade.infra.market_data.realtime_storage import read_snapshot
 
@@ -28,12 +28,13 @@ async def wait_publications(fixture: Fixture, count: int) -> None:
             await asyncio.sleep(0.01)
 
 
-@pytest.mark.parametrize("mode", ["inline", "child"])
+@pytest.mark.parametrize("mode,book_clock", [("inline", False), ("child", False), ("child", True)])
 async def test_controls_commit_receipts_and_restart_preserve_cursor(
-    tmp_path: Path, publication: AsyncEngine, mode: str
+    tmp_path: Path, publication: AsyncEngine, mode: str, book_clock: bool
 ) -> None:
     fixture = Fixture(tmp_path)
     fixture.publisher_mode = mode
+    fixture.publisher_link.book_clock = book_clock
     try:
         fixture.publisher = asyncio.create_task(fixture.publish())
         await wait_publications(fixture, 2)
@@ -80,6 +81,11 @@ async def test_controls_commit_receipts_and_restart_preserve_cursor(
     pool = json.loads((tmp_path / "publisher.pools.json").read_text())
     assert pool["finalized"] and pool["pools"][0]["checked_out"] == 0
     assert pool["pools"][0]["pool_size"] == 3 and pool["pools"][0]["max_overflow"] == 0
+
+    if book_clock:
+        summary = json.loads((tmp_path / "publisher.book-clock.summary.json").read_text())
+        assert summary["closed"] and summary["complete"] and summary["calls"] > 0
+        assert summary["failure_records"] == 0 and not summary["acceptance_result"]
 
 
 async def test_child_death_is_not_false_success(tmp_path: Path, publication: AsyncEngine) -> None:
@@ -169,6 +175,30 @@ def test_invalid_control_batch_is_atomic(tmp_path: Path) -> None:
     with pytest.raises(ValueError, match="CONTROL_BOOLEAN"):
         source.configure({"price": "80", "finish_partial": "yes"})
     assert source.price == "100" and not source.finish_partial
+
+
+def test_one_shot_control_is_bounded_and_cannot_replay_after_cleanup(tmp_path: Path) -> None:
+    from uuid import uuid4
+
+    source = SourcePublisher(tmp_path, lambda event: None)
+    key = str(uuid4())
+    value = {"key": key, "price": "2", "quantity": "0.5"}
+    with pytest.raises(ValueError, match="SEPARATE"):
+        source.configure({"price": "80", "one_shot_trade": value})
+    assert source.price == "100" and source.one_shot_trade is None
+    source.configure({"one_shot_trade": value})
+    assert vars(source)["one_shot_trade"] == value
+    with pytest.raises(ValueError, match="DUPLICATE_OR_BUSY"):
+        source.configure({"one_shot_trade": {**value, "key": str(uuid4())}})
+    with pytest.raises(ValueError, match="DUPLICATE_OR_BUSY"):
+        source.configure({"finish_partial": True})
+    source.configure({"clear_one_shot_trade": key})
+    assert source.one_shot_trade is None
+    with pytest.raises(ValueError, match="DUPLICATE_OR_BUSY"):
+        source.configure({"one_shot_trade": value})
+    with pytest.raises(ValueError, match="UNKNOWN_KEY"):
+        source.configure({"clear_one_shot_trade": str(uuid4())})
+    assert source.ask_quantity == Quantity.of(1000000, "BTC")
 
 
 @pytest.mark.parametrize("stage", ["ACQUIRE", "BOOK", "PRICE"])

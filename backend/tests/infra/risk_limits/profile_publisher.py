@@ -11,7 +11,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from time import monotonic
 from typing import Any
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 from sqlalchemy.ext.asyncio import AsyncEngine
 
@@ -69,6 +69,8 @@ class SourcePublisher:
         self.price = "100"
         self.ask_quantity = Quantity.of(1000000, "BTC")
         self.finish_partial = False
+        self.one_shot_trade: dict[str, str] | None = None
+        self.one_shot_keys: set[str] = set()
         self.stop_market = asyncio.Event()
         self.source_timeline: SourceTimeline | None = None
         self.publisher_stats: dict[str, Any] = {"target_hz": SOURCE_HZ}
@@ -90,6 +92,33 @@ class SourcePublisher:
         return self._source_market
 
     def configure(self, values: dict[str, Any]) -> None:
+        if "one_shot_trade" in values or "clear_one_shot_trade" in values:
+            if len(values) != 1:
+                raise ValueError("F19_ONE_SHOT_CONTROL_MUST_BE_SEPARATE")
+            if "clear_one_shot_trade" in values:
+                key = str(UUID(values["clear_one_shot_trade"]))
+                if key not in self.one_shot_keys:
+                    raise ValueError("F19_ONE_SHOT_UNKNOWN_KEY")
+                if self.one_shot_trade is not None and self.one_shot_trade["key"] == key:
+                    self.one_shot_trade = None
+                return
+            value = values["one_shot_trade"]
+            if not isinstance(value, dict) or set(value) != {"key", "price", "quantity"}:
+                raise ValueError("F19_ONE_SHOT_INVALID")
+            key = str(UUID(value["key"]))
+            price = Money.of(value["price"], "USDT")
+            quantity = Quantity.of(value["quantity"], "BTC")
+            if price.amount <= 0 or quantity.amount <= 0:
+                raise ValueError("F19_ONE_SHOT_POSITIVE_AMOUNTS_REQUIRED")
+            if self.one_shot_trade is not None or key in self.one_shot_keys or self.finish_partial:
+                raise ValueError("F19_ONE_SHOT_DUPLICATE_OR_BUSY")
+            self.one_shot_trade = {
+                "key": key,
+                "price": price.as_parts()["amount"],
+                "quantity": quantity.as_parts()["quantity"],
+            }
+            self.one_shot_keys.add(key)
+            return
         allowed = {
             "price",
             "ask_quantity",
@@ -121,6 +150,8 @@ class SourcePublisher:
             and self.source_timeline.started is not None
         ):
             raise ValueError("F18_SOURCE_TRACE_ALREADY_ACTIVE")
+        if prepared.get("finish_partial") and self.one_shot_trade is not None:
+            raise ValueError("F19_ONE_SHOT_DUPLICATE_OR_BUSY")
         for key, value in prepared.items():
             if key == "trace_start":
                 if self.source_timeline is not None:
@@ -128,7 +159,61 @@ class SourcePublisher:
             else:
                 setattr(self, key, value)
 
+    async def publish_one_shot(self, book: BookLease, tick: int) -> BookLease:
+        value = self.one_shot_trade
+        if value is None:
+            return book
+        # An unknown commit stops publication; this intent is never automatically retried.
+        self.one_shot_trade = None
+        async with market_data_session(self.source_market) as session:
+            now = (await session.execute("SELECT clock_timestamp()")).scalar_one()
+            book = await publish_input(
+                session,
+                book,
+                MarketTrade(
+                    f15.PAIR,
+                    book.last_input_id + 1,
+                    book.generation,
+                    now,
+                    tick,
+                    ExecutionSide.BUY,
+                    Money.of(value["price"], "USDT"),
+                    Quantity.of(value["quantity"], "BTC"),
+                    True,
+                ),
+                ExecutionMetadata(
+                    f15.constraints(OrderType.MARKET),
+                    f15.constraints(OrderType.LIMIT),
+                    now,
+                    f15.SOURCE_DOCUMENT,
+                ),
+            )
+        async with market_data_session(self.source_market) as session:
+            committed = (
+                await session.execute(
+                    "SELECT pg_xact_commit_timestamp(xmin) FROM market_execution_buffer "
+                    "WHERE source='primary_spot' AND base='BTC' AND quote='USDT' "
+                    "AND input_id=:input",
+                    {"input": book.last_input_id},
+                )
+            ).scalar_one()
+        if committed is None:
+            raise RuntimeError("F19_ONE_SHOT_COMMIT_PROOF_MISSING")
+        receipt = {
+            "kind": "one_shot",
+            **value,
+            "input_id": book.last_input_id,
+            "generation": book.generation,
+            "trade_id": tick,
+            "committed_at": committed.isoformat(),
+        }
+        with (self.output / "one-shot-trades.jsonl").open("a") as stream:
+            stream.write(json.dumps(receipt) + "\n")
+        await self.send_event(receipt)
+        return book
+
     async def close_source(self) -> None:
+        self.one_shot_trade = None
         if self.source_timeline is not None:
             self.source_timeline.close()
         if self._source_market is not None:
@@ -249,6 +334,7 @@ class SourcePublisher:
                                 f15.SOURCE_DOCUMENT,
                             ),
                         )
+                book = await self.publish_one_shot(book, tick)
                 self.publisher_stats.update(
                     published=int(self.publisher_stats.get("published", 0)) + 1,
                     last_input_id=book.last_input_id,

@@ -9,10 +9,12 @@ import os
 import socket
 import sys
 from collections.abc import Callable
+from contextlib import nullcontext
 from pathlib import Path
 from typing import Any
 
 from tests.infra.execution_market import profile_workload as f15
+from tests.infra.risk_limits.profile_book_clock import observe_book_clock
 from tests.infra.risk_limits.profile_publisher import (
     FAILURE_CATEGORIES,
     FAILURE_STAGES,
@@ -52,6 +54,7 @@ class PublisherLink:
     ) -> None:
         self.output, self.emit, self.processes = output, emit, processes
         self.trace = False
+        self.book_clock = False
         self.process: asyncio.subprocess.Process | None = None
         self.writer: asyncio.StreamWriter | None = None
         self.receiver: asyncio.Task[None] | None = None
@@ -82,6 +85,7 @@ class PublisherLink:
                 "--output",
                 str(self.output),
                 *(["--trace"] if self.trace else []),
+                *(["--book-clock"] if self.book_clock else []),
                 pass_fds=(child.fileno(),),
                 env=environment,
             )
@@ -202,6 +206,22 @@ class PublisherLink:
                 # Failure is delivered through run(); retrieve to avoid orphan warnings.
                 self.running.exception()
 
+        if self.book_clock:
+            try:
+                summary = json.loads(
+                    (self.output / "publisher.book-clock.summary.json").read_text()
+                )
+                complete = (
+                    self.process.returncode == 0
+                    and summary["closed"]
+                    and summary["complete"]
+                    and summary["calls"] > 0
+                )
+            except (OSError, ValueError, KeyError, TypeError):
+                complete = False
+            if not complete:
+                raise RuntimeError("F19_BOOK_CLOCK_TRACE_INCOMPLETE")
+
 
 async def serve(
     reader: asyncio.StreamReader, writer: asyncio.StreamWriter, output: Path, trace: bool = False
@@ -282,11 +302,12 @@ async def serve(
         await writer.wait_closed()
 
 
-async def main_async(fd: int, output: Path, trace: bool) -> None:
+async def main_async(fd: int, output: Path, trace: bool, book_clock: bool = False) -> None:
     sock = socket.socket(fileno=fd)
     sock.setblocking(False)
     reader, writer = await asyncio.open_connection(sock=sock, limit=MAX_MESSAGE)
-    await serve(reader, writer, output, trace)
+    with observe_book_clock(output / "publisher.book-clock.jsonl") if book_clock else nullcontext():
+        await serve(reader, writer, output, trace)
 
 
 def main() -> int:
@@ -294,9 +315,12 @@ def main() -> int:
     parser.add_argument("--fd", type=int, required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--trace", action="store_true")
+    parser.add_argument("--book-clock", action="store_true")
     args = parser.parse_args()
+    if args.trace and args.book_clock:
+        parser.error("book clock diagnostic cannot enable SQL/backend tracing")
     try:
-        asyncio.run(main_async(args.fd, args.output, args.trace))
+        asyncio.run(main_async(args.fd, args.output, args.trace, args.book_clock))
     except Exception:
         sys.stderr.write("F18_SOURCE_CHILD_FAILED\n")
         return 1

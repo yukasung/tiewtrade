@@ -1,6 +1,6 @@
 # F-19 — ปุ่มหยุดบอท (Kill Switch) — Requirements
 
-สถานะ: **Approved 2026-10-31** — รวม RQ-07 deep-review amendment ที่เจ้าของอนุมัติแล้ว
+สถานะ: **Approved 2026-11-02** — รวม RQ-07 deep-review และ RQ-22/23 SLA/activation amendments
 วันที่: 2026-10-31
 
 ## ทำไมต้องมี
@@ -47,6 +47,8 @@ F-19 เป็น safety dependency ก่อน F-22 ตาม roadmap ไม�
 | RQ-19 | แยกพักอัตโนมัติเพราะข้อมูลไม่พร้อมจาก durable stop ให้ชัด: การกลับมาของราคา/การกระทบยอดไม่ปลด user/platform/system stop และไม่แทน loss reset | trading-safety §8/12/13 |
 | RQ-20 | ข้อความปุ่ม สถานะ ผลรายออเดอร์ และสรุปก่อนเปิดกลับรองรับไทย/อังกฤษ ใช้ admin template และ UI components กลางตาม frontend standard | mission R-20; AGENTS.md; frontend standard |
 | RQ-21 | ไม่เปิด Live โดยปริยาย ไม่ส่ง Live orders ใน automated validation และไม่อ้างผล Paper ว่ารับรอง Live หรือ bot integration ที่ยังไม่มี | mission §4; trading-safety; testing §7 |
+| RQ-22 | ภายใต้ workload profile ที่อนุมัติ risk acknowledgement ต้องครบทุก ready input โดยไม่มี missing/clock error; ทั้งราย owner และทั้ง run อย่างน้อย 99.5% ภายใน3วินาที และอย่างน้อย99.9%ภายใน5วินาที; ทุก inputต้องไม่เกิน6วินาที เกณฑ์นี้ไม่อนุญาตให้ลบ/รวม/เลื่อน input เพื่อซ่อน tail และไม่ลด correctness, idempotency, fail-closed, financial หรือ stop safety gates | เจ้าของอนุมัติ 2026-11-02 — SLA amendment จากหลักฐาน NC17 |
+| RQ-23 | ระบบ production เปิด Paper และ Live พร้อมกันเมื่อ candidate รวมผ่าน release/activation gates และ dependencies ทั้งหมดเท่านั้น ระหว่างพัฒนาแต่ละ feature อาจเป็น Development Complete หลัง targeted safety/review/CI โดยยังไม่อนุญาต production activation; ห้ามใช้ Paper เป็น production rollout ระหว่างรอ Live | เจ้าของตัดสิน 2026-11-02 — all-or-nothing activation |
 
 ## ของเดิมที่สำรวจพบ
 
@@ -140,3 +142,20 @@ requirements ฐานเดิมและ NC-F19-01..03 Approved แล้ว 
 เกิดก่อน worker ประมวลผล คำแก้นี้ไม่เปลี่ยนสิทธิ์ MANUAL หลัง user cutoff, ขอบเขต
 user/platform cancellation หรือสิทธิ์ลดความเสี่ยง เจ้าของอนุมัติ amendment พร้อม plan/validation
 วันที่ 2026-10-31 ก่อน implementation
+
+## SLA and activation amendment — Approved 2026-11-02
+
+เจ้าของอนุมัติข้อความ
+`approve F-19 SLA: 99.5% within 3s, 99.9% within 5s, all within 6s; stop NC25`
+หลังพิจารณาหลักฐาน NC17 ซึ่งได้ run-wide99.858278%≤3s, ownerต่ำสุด99.575487%≤3s,
+มี3/918703samplesเกิน5sจากownerเดียว (ownerนั้น99.967346%≤5s) และ max5.034698s.
+
+เกณฑ์ใหม่ใช้ทั้งราย owner และทั้ง run ที่3s/5s พร้อม absolute6s; acknowledgementsต้องครบ
+และ measurement/clock errorsยัง fail closed. Correctness/safety/financial/load/resource/
+duration/source criteriaไม่เปลี่ยน การอนุมัตินี้เลือกหยุด NC-F19-25 ก่อน implementation/
+execution และห้ามสร้าง clock diagnostic ต่ออัตโนมัติ. Historical Failed ตามเกณฑ์เก่าเก็บไว้;
+การประเมินใหม่ต้องเป็น derived evidence แยกและไม่รับรอง current/final candidate แทน run จริง.
+
+เจ้าของกำหนดเพิ่มเติมว่า production ต้องเปิด Paper/Live พร้อมกันเมื่อระบบครบเท่านั้น;
+การแยก Development Complete ออกจาก System Ready มีไว้ลดงานทดสอบซ้ำระหว่างพัฒนา ไม่ใช่
+อนุญาต Paper-only production หรือข้าม release/Live gates.

@@ -275,6 +275,31 @@ async def test_scheduled_partial_source_window_restores_after_failure(
     assert transitions == [("INSTALL", "0.5"), ("RESTORE", "1000000")]
 
 
+async def test_one_shot_unknown_control_ack_clears_without_resubmitting(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from tests.infra.risk_limits.profile_workload import Fixture
+
+    fixture = Fixture(tmp_path)
+    controls: list[dict[str, Any]] = []
+
+    async def control(**values: Any) -> None:
+        controls.append(values)
+        if "one_shot_trade" in values:
+            raise TimeoutError("unknown ack")
+
+    monkeypatch.setattr(fixture, "source_control", control)
+    try:
+        with pytest.raises(TimeoutError, match="unknown ack"):
+            async with fixture.scheduled_partial_trade() as (inject, _):
+                await inject()
+        assert len(controls) == 2
+        assert controls[1] == {"clear_one_shot_trade": controls[0]["one_shot_trade"]["key"]}
+    finally:
+        await fixture.close()
+
+
 def test_short_schedule_preserves_all_faults_and_fits_cycles() -> None:
     path = Path(__file__).with_name("w3_fault_schedule.json")
     events, cycles, digest = f15.load_fault_schedule(path)

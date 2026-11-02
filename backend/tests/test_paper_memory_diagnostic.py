@@ -69,7 +69,7 @@ async def test_sampler_flushes_and_stops_without_extra_samples(
     stop = asyncio.Event()
     calls = []
 
-    def snapshot(parent: str) -> dict[str, Any]:
+    def snapshot(parent: str, _extra_containers: tuple[str, ...] = ()) -> dict[str, Any]:
         calls.append(parent)
         stop.set()
         return {"containers": [{"oom_killed": False}], "vm_counters": {"oom_kill": 0}}
@@ -87,7 +87,10 @@ async def test_sampler_oom_stops_workload_and_joins_collector(
     monkeypatch.setattr(
         memory,
         "memory_snapshot",
-        lambda _: {"containers": [{"oom_killed": True}], "vm_counters": {"oom_kill": 0}},
+        lambda _, _extra=(): {
+            "containers": [{"oom_killed": True}],
+            "vm_counters": {"oom_kill": 0},
+        },
     )
     stopped = asyncio.Event()
 
@@ -134,7 +137,7 @@ async def test_collector_error_stops_and_joins_workload(
     monkeypatch.setenv("F18_PARENT_CONTAINER", "tiewtrade-f18-memory-test")
     stopped = asyncio.Event()
 
-    def broken_snapshot(parent: str) -> dict[str, Any]:
+    def broken_snapshot(parent: str, _extra_containers: tuple[str, ...] = ()) -> dict[str, Any]:
         raise memory.DockerReadError(500)
 
     async def run(args: argparse.Namespace) -> int:
@@ -159,7 +162,7 @@ async def test_vm_oom_increment_is_not_lost_when_container_disappears(
     monkeypatch.setattr(
         memory,
         "memory_snapshot",
-        lambda _: {
+        lambda _, _extra=(): {
             "containers": [],
             "vm_counters": next(samples),
         },

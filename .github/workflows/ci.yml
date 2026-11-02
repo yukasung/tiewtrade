@@ -68,6 +68,8 @@ jobs:
       TIEWTRADE_DATABASE_URL_MARKET_DATA: postgresql+asyncpg://tiewtrade_market_data:dev_market_data@127.0.0.1:5432/tiewtrade
       TIEWTRADE_DATABASE_URL_INDICATOR_BUILDER: postgresql+asyncpg://tiewtrade_indicator_builder:dev_indicator_builder@127.0.0.1:5432/tiewtrade
       TIEWTRADE_DATABASE_URL_AUTH: postgresql+asyncpg://tiewtrade_auth:dev_auth@127.0.0.1:5432/tiewtrade
+      # ใช้เฉพาะ restore tests กับ PostgreSQL service แบบ disposable ของ job นี้
+      TIEWTRADE_TEST_ADMIN_URL: postgresql+asyncpg://postgres:postgres@127.0.0.1:5432/tiewtrade
       # เทสต์ของ F-05 ต้องสมัครได้ และไคลเอนต์ของเทสต์ใช้ http
       # ค่าเริ่มต้นของทั้งสองค่าคือ "ปิดการสมัคร" และ "ตั้งธง Secure"
       TIEWTRADE_REDIS_URL_API: redis://127.0.0.1:6379/0

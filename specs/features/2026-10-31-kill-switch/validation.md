@@ -26,7 +26,7 @@
 | V-17 | RQ-05/06/20: platform UI/banner | Admin/Owner reason+stop, Owner resume, Admin disabled resume, userไม่มีหน้า; persistent bannerทุกหน้าแสดงreason/source; responsive/template states และ free-text escaped ไม่เป็นHTML | M4 | **Passed (local browser)** — Owner/Admin stop/resume rights, ordinary-user isolation, escaped reason และ persistent banner พร้อม separate Paper/Live controls ผ่านครบ 10 account routes ทั้ง desktop/mobile |
 | V-18 | RQ-21/NC-F19-03: capability isolation | Liveแสดงunavailable/pendingโดยไม่ส่งorderและคง `target_set_complete=false`/`resume_ready=false` แม้ capabilityปิดหรือ queryได้ศูนย์; Paper browser→API→engine→DB/effectsจริง; bot/notification adapters fail-closedเมื่อdependencyไม่มี; ไม่มี production activation จาก feature flag/client payload | M4 | **Passed (current capability)** — browser→API→engine→DB; Live incomplete และ DB ยืนยันไม่มี order request |
 | V-19 | candidate gates | review diff/dependencies Critical/High, affected backend/frontend regression, ruff+format, mypy, lint-imports, frontend lint/types/build, generated OpenAPI diff และ required CI บน candidate สุดท้าย | M5 ก่อน merge | **Passed — merged `ccc3ce1` (2026-11-01)** — review findings 2 High/1 Medium แก้แล้วพร้อม refactor; local backend4056/frontend343/browser2 และ affected rechecks ผ่านตาม [evidence](evidence/implementation-checkpoint.md); final candidate `de25852` ผ่าน required [push CI](https://github.com/yukasung/tiewtrade/actions/runs/41305111782)/[PR CI](https://github.com/yukasung/tiewtrade/actions/runs/41305117314) ครบ 6/6 jobs ต่อ run; [PR #41](https://github.com/yukasung/tiewtrade/pull/41) merge เป็น `ccc3ce1` และ [post-merge CI](https://github.com/yukasung/tiewtrade/actions/runs/41306706760) ผ่านครบ 6/6 รวม backend4056/browser33; generated contracts/static gates ผ่าน; V-20..24 ยัง pending ตาม scope เดิม |
-| V-20 | ท้ายชุดที่5 Paper integration/full validation | candidate รวม F-18/F-19 ที่นิ่งผ่าน full backend/frontend regression, browser→API→engine, fault/recovery, backup/restore และ W1–W4 ที่เกี่ยวข้องโดยคง F-18 thresholds/profileเดิม; stop oraclesด้านล่างครบ | ท้ายชุดที่5 | Pending Full Validation |
+| V-20 | ท้ายชุดที่5 Paper integration/full validation | candidate รวม F-18/F-19 ที่นิ่งผ่าน full backend/frontend regression, browser→API→engine, fault/recovery, backup/restore และ W1–W4 ที่เกี่ยวข้องโดยคง F-18 thresholds/profileเดิม; stop oraclesด้านล่างครบ | ท้ายชุดที่5 | **Failed — Set5 W1 r1 (2026-11-01)**; Pending Full Validation ตาม [execution checkpoint](evidence/implementation-checkpoint.md); W2/W3/W4 รอบ Set5 ยัง Not Run |
 | V-21 | real protective TP/SL integration | หลัง F-17 มี protective orders จริง ตรวจ user/platform stopไม่เลือก TP/SL, fill/partial fillยังสร้าง/ซ่อม protection ตาม policyที่อนุมัติ และไม่สร้าง protection ที่ไม่ได้ขอ | หลัง F-17/ชุด5 | Pending Dependency |
 | V-22 | real bot lifecycle | F-20 botจริงหยุด/ไม่ตื่นเอง/resumeตามcauseและ account use; queued signalsไม่กลายเป็นorderหลังfence | หลัง F-20 | Pending Dependency |
 | V-23 | real Live authority/execution | F-22/F-23/F-24 ตรวจ durable activation inventory, fence/reconciliation/unknown/cancel/protection ด้วย environment ที่อนุมัติ ห้าม automated Live order | ชุด7/ชุด9 | Pending Dependency |
@@ -258,7 +258,7 @@ partial0.5 → stop cancel/release → restore → resume ผ่าน แต่
 BUY รายหนึ่ง partial0.833/EXPIRED และ cycle60s timeout ที่ +159.73s. ไม่มี duplicate execution หรือ
 negative reservation; เก็บ Failed และหยุดก่อน W2/W3
 
-### NC-F19-14 owner-isolated one-shot partial trade — Proposed / Needs Clarification
+### NC-F19-14 owner-isolated one-shot partial trade — Approved 2026-11-01
 
 - publisher/control-flow tests ต้องพิสูจน์ one-shot trade ถูก acknowledge/consumeครั้งเดียวหลัง dedicated
   order `ACCEPTED`, unknown/duplicate control ถูกปฏิเสธ และ cancellation/failure clear pending injection
@@ -305,6 +305,258 @@ checkpoint และรวม NC-F19-14 → targeted checks → W1 → W2 → W3
 required CI ล่าสุดผูกกับ `f00bac0` ตาม V-19 และ checkpoint. รายการ Partial/
 Pending Full Validation/Pending Dependency ยังคงผลตามจริง ไม่ถือว่าผ่านหรือ Completed.
 หาก candidate เปลี่ยน ต้องตรวจผลกระทบและ required CI บน candidate ที่จะ merge ตามกฎเดิม
+
+## 7. Set-5 execution crosswalk — Approved 2026-11-01
+
+สถานะส่วนนี้: **Approved — เจ้าของสั่ง `approve Set-5 plan including NC-F19-14 and NC-F19-15`; ยังไม่รันชุดยาว**
+ลำดับ/ไฟล์ reuse/เวลารวมอยู่ใน [plan §11](plan.md#11-full-validation-ท้ายชุดที่-5--approved-2026-11-01)
+การวางแผนไม่เปลี่ยนผล V-20 หรือ dependencies และไม่อนุญาตให้ใช้ F-18 R34 verdictแทน F-19
+
+| ด่าน | หลักฐานที่ต้องมี | ผลปัจจุบัน |
+|---|---|---|
+| NC14 preflight | ราคา2ผ่าน constraints/covered gap/queue0; order ACCEPTEDก่อน injection; one control→one committed trade→one fill0.5; unknown/duplicate/ACK-loss/cleanup paths; core BUY/SELL overlapยัง FILLED; exact cancellation/release/financial identities | Passed targeted — host/Linux real-worker matrix; under-load proofยังไม่ครบเพราะ W1ล้มก่อน injection |
+| NC15 evaluator | Explicit F-19 profile owner99.9%≤3s/run99.9%≤3s/all≤5s, complete acknowledgements/clock/source nominal counts; F-18 R34ไม่เปลี่ยน; boundary casesแยก verdictได้ | Approved / Passed targeted — explicit F19_SET5 owner99.9%/allowance0; W1ไม่ครบจึงไม่มี final SLA verdict |
+| W4 coverage preflight | Real DB fixtureมี USER/SYSTEM/PLATFORM causes, pending cursor/targets/effects, receipts/audit/reconciliation revision; digests/roles/RLS/grantsและ recovery assertionsครบ F-19 | Passed targeted — staging/recovery/stale-resume; full backup/restore Not Run |
+| W1 | Dedicated LOSS partial→breach→effects complete→RESETตามNC09→opening blocked; core baseline100×20; schedule +60/+90/+110/+120/+150ตาม manifest; 600s/10commands/s; complete source/SLA/resource/financial/counter oracles | Failed — Set5 W1 r1 TimeoutErrorที่+121.09s; คง NC13 Failedเดิม |
+| W2 | หลัง W1ผ่าน; 300s/100commands/s; 10 concurrent dedicated stops, exact duplicate/lost ACK/stale resume/fairness/overflow; offered conservationและ core denominatorคงเดิม | Not Run |
+| W3 | หลัง W2ผ่าน; 1800s/10commands/s; 7 faults/JSON digestเดิม, platform windows +210/+660, target failed≥60sพร้อม alert/retry, manual sent ordersคงจริง, recovery/RSSและ financial oracles | Not Run |
+| W4 | หลัง W3ผ่าน; fresh source/restore targets schemaเดียวกัน; pre-recovery canonical/role digestตรง; pending work recoveryและ replay/stale-resumeไม่สร้างผลเศรษฐกิจซ้ำ | Not Run — F-18 W4เดิมไม่ปิด F-19 |
+| Final coverage | Map affected regression/production composition→F-16 V-18/F-18 V-21/F-19 V-20แยกรายข้อ; ใช้ CIเดิมเฉพาะส่วนที่ไม่กระทบ; report source/config/schema/environment/manifestและ candidate identity | Pending Full Validation |
+
+ก่อนรันต้องตรวจ VM/container/CPU/RAM/worker/pool inventory กับ approved runnerเดิมจริง
+เครื่องหรือ DBที่ใช้ CI ไม่ใช่ workload profileโดยอัตโนมัติ ห้ามเพิ่ม resourceเพื่อให้ผ่าน
+cadenceนับ periodic BOOK/PRICE receiptsตาม nominal [start,end) โดยไม่ padding/setup/drain;
+one-shot tradeมี identity/effect evidenceแยก ไม่ใช่ periodic book receiptเพิ่มหรือสิทธิ์หัก miss
+dedicated ownersไม่แทน core100owners แต่รวม resource/connection/fairness inventory
+
+ทุกขั้นมี outputใหม่/manifest hash/เวลา setup+measurement+drain และ failure branch
+ไม่ใช้ short diagnosticหรือ CIเขียวแทน acceptance. ล้มให้เก็บ Failed และหยุดก่อนขั้นถัดไป
+ไม่ retry NEW/rerun unchangedหรือแก้เกณฑ์เพื่อให้ผ่าน; bounded RESET retryคงNC09เท่านั้น
+หากจำเป็นต้องเปลี่ยน production/resource/sourceวิธีอื่นให้เสนอ amendmentก่อนแก้
+
+เมื่อครบให้ปิด V-20 เฉพาะ scopeที่มีหลักฐานจริง V-21..24ยัง Pending Dependencyตามเดิม
+F-16/F-18ยังไม่ Completedจากการผ่านชุดนี้เพียงอย่างเดียว ไม่อนุญาต production/Live activation
+ไม่มีผลทดสอบใหม่เกิดขึ้นจากการเพิ่ม crosswalkนี้
+
+### NC-F19-16 pool/transaction diagnostic — Approved 2026-11-01
+
+เจ้าของตอบ `approve` ต่อข้อเสนอ NC-F19-16 ใน plan.md อนุญาต diagnosticหนึ่งรอบ
+fresh DB, W1 profileเดิม (core100×20, command10/s, child5Hz), observation180s
+หลัง targeted instrumentation checks. แยก INTAKE/READY_HINT/REQUEST_VIEW และ worker
+pool acquisition/transaction/query timing ด้วย identities, SQL hashesเท่านั้น ไม่เก็บ params
+หรือ exception text. ใช้ pool inventory/dispatch/cycle evidenceเดิม พร้อม DB wait metadata
+และ VM/container samples; NULL metadataถือว่า unknown ไม่ใช่ไม่มี wait
+
+ไม่เปลี่ยน pool/resource/deadline/polling/retry/production และไม่ใช้ผลแทน W1 600s acceptance
+ทุกผลต้อง `acceptance_result=false`; หยุดที่ failureแรก เก็บ trace/DB/manifestแล้ววิเคราะห์
+ไม่เริ่ม W2/W3/W4 และไม่ rerun W1. V-20คง Failed/Pending Full Validation
+
+ผล NC16: targeted76/Linux17ผ่าน, Ruff/mypyผ่าน; diagnosticหนึ่งรอบ **Failed**
+ที่+172.298sใน stop scenario ซึ่งรอ partial fill60s ไม่ใช่ core cycle timeout.
+one-shot input1568 commitสำเร็จ แต่ owner REBASE1566→1575ข้าม tradeเมื่อกลับมา
+ประมวลผลหลัง freshness window; pool waitของ transactionนั้น0.000659s.
+เก็บ failed DB/trace/source hash และข้อจำกัดใน evidence/implementation-checkpoint.md.
+acceptance_result=false; ไม่รันซ้ำ/W2/W3/W4. ต้องเสนอ amendmentก่อนเปลี่ยน harness
+หรือ production; ผลนี้ไม่ปิดสาเหตุ API-pool timeoutของ W1รอบก่อนย้อนหลัง
+
+### NC-F19-17 consumer-barrier validation — Approved 2026-11-01
+
+เจ้าของอนุมัติพร้อม NC17ใน plan.mdด้วยคำตอบ `apprve`; ไม่เปลี่ยน requirementsหรือเกณฑ์ V-20เดิม
+ผล NC17: harness targeted100/real-worker3/Linux16ผ่าน; W1หนึ่งรอบ **Failedที่risk SLA**
+รายละเอียดผล/ข้อจำกัดอยู่ท้ายส่วนนี้และใน implementation-checkpoint; ไม่เริ่มW2/W3/W4
+
+| ระยะ | เกณฑ์ | หลักฐานที่ต้องได้ |
+|---|---|---|
+| Feature (harness correctness) | Delivery protocol | Arm/READY/COMMITTED identitiesตรง owner/episode/order/pair/generation/key; duplicate READYไม่เพิ่ม publication; mismatch/lost ACK/unknown commit/disconnectไม่ retry NEWหรือtrade |
+| Feature (harness correctness) | Real consumer path | Original workerเลือก recoveryเอง; captured bookจริง→one committed tradeใน following batchเดิม→persisted INPUT/evidence→exactly one fill0.5/spent1; ไม่ fake decisions/แก้ timestamp/ขยาย limit19 |
+| Feature (safety) | Fail-closed preserved | Delayed/stale inputยังถูก reject/rebase; no-natural-recovery/ข้าม deadlineต้อง Failed; ไม่ refresh/replayและไม่ซ่อน failureด้วย fixture fallback |
+| Feature (safety) | Financial/overlap | Real workers/childบนPostgreSQL; core BUY/SELL FILLEDขณะtargetpartial; stop cancels remainder/reservation releasedตามoracleเดิม, balance/position/feesตรง Money/Quantity และ audit/request identitiesไม่ซ้ำ |
+| Feature (harness regression) | Isolation/cleanup | Unarmed/other-owner/non-recovery/F18/dedicated LOSS pathsไม่ถูก gate; cancellation/process lossคืน patches, IPC/tasksและpoolsครบ ไม่ลบ facts; affected tests/Ruff/format/mypyผ่าน |
+| Batch (V-20 เดิม) | W1หนึ่งรอบ | Fresh DB, core100×20,10commands/s,5Hz child,600s; schedule/SLA/source/resource/financial criteriaเดิมทั้งหมด. Barrier durationนับจริง; ไม่เลื่อน stop/resume offsetsหรือหักเวลาเพื่อให้ผ่าน |
+| Batch (V-20 เดิม) | W2/W3/W4 | เริ่มตาม P3–P6เมื่อ W1ผ่านครบเท่านั้น; ใช้ approved workload/restore criteriaเดิมและ reuseหลักฐานที่ยังตรง |
+
+ทุก receiptต้องแยก armed/READY/publication requested/committed/consumed/fill committed;
+ACKไม่เท่ากับ financial effect. บันทึก captured book, source input/trade, worker/claim/backend,
+owner/order/request/key, wall/monotonic timestampsและdeadline โดยไม่ใส่ secrets/SQL params.
+ถ้าโค้ดจริงต้องเปลี่ยน production, scheduling priority, source cadence, resourceหรือ assertion
+นอก NC17 ให้หยุดขอ amendmentก่อน. W1/NC16 Failedเดิมยังคงอยู่; ผลหลังอนุมัติอยู่ด้านล่าง
+
+ผลหลัง implementation (ไม่เปลี่ยนเกณฑ์): delivery/real-consumer path/safety/financial overlap/
+cleanupผ่าน targeted checks. W1รันครบ600sและตรวจท้ายรอบแล้ว โดย partial0.5/spent1,
+stop/cancel/release/resume, source3000/3000ทุกchannel, commands6000/cycles1200,
+RESET100/100, per-owner financial/global invariants, resource/returned pools/cleanupผ่าน
+
+**Batch V-20 W1 Failed:** risk SLAมี1302/918703 samplesเกิน3s (99.858278%≤3s
+เทียบเกณฑ์99.9%); owner quotaไม่ผ่าน56/100. Hard limitเกิน5sจำนวน3samplesจากownerเดียว
+max5.034698s; unacknowledged0/clock_errors0. ไม่ลดเกณฑ์หรือใช้ผลfunctionalแทนSLA
+Engine transaction p95/p99 0.218810/0.339924sผ่าน. W2/W3/W4ยังNot Run
+ผลpreflightแรกFailedและ failed DBทุกรอบเก็บไว้; ไม่เขียนทับหรือrerun unchanged
+
+### NC-F19-18 diagnostic evidence — Approved 2026-11-02
+
+Ownerอนุมัติ `approve NC-F19-18` พร้อม NC18ในplanแล้ว; ไม่เปลี่ยนV-20criteria
+ผลinstrumentation tests/300sdiagnostic **Not Run**. Analysisเดิมเสร็จแล้ว:
+independent reconstructionตรง1302late/918703expected/3hardทุกidentity, rawfilesไม่เปลี่ยน;
+owner-lock timeoutsยืนยันได้ แต่ causal stage/actor attributionยังไม่พอเลือกproduction fix
+ดู [analysis](evidence/risk-latency-analysis-2026-11-02.md)
+
+| ระยะ | สิ่งที่ต้องพิสูจน์ | เกณฑ์ |
+|---|---|---|
+| Feature (observer correctness) | Scoped stage/queue/pool/lock/snapshot/replay/persist/commit observers | original rows/results/owner selection/slotcount/timeoutsไม่เปลี่ยน; identitiesและtimestampsครบ, disabled pathเดิม, caps/redaction/cleanup/cancellationผ่าน |
+| Feature (measurement correctness) | Commit proof | Real DB success/rollback/savepoint/mismatch/NULL/collector failure; pgcommitต้องมีmatching writer identity, unknownแสดงตามจริงและไม่ใช้restoretimestamp; ไม่เพิ่มackหรือrefreshcursor |
+| Feature (regression safety) | Impacted existing tests/static | Scheduler fairness/slow owner, replay/transient breach/fence/idempotencyตามdiff พร้อมRuff/format/mypyผ่าน; ไม่ใช้mockพิสูจน์DBlocking/commit |
+| Diagnostic only (ไม่ใช่Batch acceptance) | One fresh-DB300s observation | W1resources/load/core100×20/child5Hz/NC17barrierเดิม; originalW1duration600, allartifacts `acceptance_result=false`; stopแรกที่failure, cutoff cancellationระบุแยก |
+| Diagnostic evidence | Latency attribution | input→round/selection/queue/pool/lock/snapshot/replay/persist/commit/observationผูกidentity; coverage/residual/observeroverhead/unknownsครบ. Traceขาดหรือtruncatedไม่สมบูรณ์; ไม่เรียกPassedเพราะไม่เกิดmiss |
+
+ไม่มีW1rerun/production fixในapprovalนี้. หลังได้ผลให้เสนอข้อแก้ที่มีหลักฐานหรือหยุดพร้อม
+ข้อมูลที่ขาด ไม่rerununchanged/ปรับเกณฑ์. ผลFailedเดิมและV-21..24Pending Dependencyคงเดิม
+
+ผล NC18: targeted116/Linux38/staticผ่าน, one300sdiagnostic **OBSERVATION_COMPLETE**
+และacceptance_result=false. Stage/commitstreams13ชุดปิดครบไม่truncated.933observedlate/
+451280nominalinputs,155groups,552ยังไม่ackตอนcutoff; ไม่ใช้เป็นSLA/W1pass.8linkedgroups
+รอsemaphoreอย่างเดียว≥3s; verifiedservercommitยืนยันactual3sdelay.0hard5sในprobe
+ไม่ปิดhard5sจากNC17ย้อนหลัง.23648verified/1272unknownproofs; details/overhead/metadata
+correctionและcutoffwarningsอยู่ใน [report](evidence/risk-stage-diagnostic-2026-11-02.md)
+
+### NC-F19-19 rolling monitor validation — Approved 2026-11-02
+
+เจ้าของอนุมัติ `approve NC-F19-19` พร้อม plan; implementation/targeted checks complete; W1 **Failed / environment invalid**.
+
+| ระยะ | เกณฑ์ |
+|---|---|
+| Feature | LegacyroundAPI/empty-excludeselectionequivalent;4inflightmaximum/selected≤free/noownerduplicate;newreadyownerprogressระหว่างslowpeerโดยไม่รอfullpage |
+| Feature | >100-ownerfairness/wraparound,locked/failed/newlyeligible/continuouslyeligibleowner,settingsdisappear,activeexclusionก่อนLIMIT;scan/taskfailurepropagationและcancel/join/poolcleanup |
+| Feature (real DB) | Two-instanceownerlockserialization,timeout/rollback/cancellation,no duplicatebreach/stop/audit/cursorcorruption;RLS/fence/replay/transientbreach/pending-source/RESET/financial/idempotencyregressionsตามdiff |
+| Feature | Harness/observerrollingturnidentityandmanifestcoverage;Ruff/format/mypy/importchecksที่กระทบผ่าน |
+| Batch (V-20 เดิม) | OnefreshDBW1600s/100owners×20/10commands/s/child5Hz/NC17barrier,allF19SLA/source/stop/financial/resourcecriteriaเดิม;targetedผ่านก่อนเริ่ม |
+
+W1ผ่านครบจึงW2/W3/W4/P6ตามแผนเดิม; failureหยุดเก็บผลก่อนขั้นถัดไป. ไม่ใช้NC18
+diagnosticหรือcontrolledcounterexampleแทนacceptance;ไม่มีthreshold/resource/deadline
+relaxation. Rollbackคืนlegacyloopโดยไม่ลบfacts/ปลดstop.ไม่มีproductionactivation/Gitauthorization
+
+NC19 results: targeted35 passed; regression95 passed/1 failed from global STOP fixture
+backlog beyond20. Fresh-DB concurrency/pending/financial26 passed with unchanged assertions.
+Linux43 passed plus explicit fresh-global4 passed after correcting default marker selection;
+final targeted9 passed. Ruff/format/mypy seven changed files and seven import contracts pass.
+The initial setup abort and original fixture failure remain recorded, not overwritten.
+
+Batch W1 `nc19-w1-r2`: **Failed / environment invalid**, before the measured window.
+Baseline100x20 and dedicated LOSS_LIMIT/RESET passed, subsequent BOT resting NEW rejected
+SOURCE_UNAVAILABLE. All nine role URLs incorrectly referenced the preflight DB instead
+of the newly created intended DB. No600s/SLA conclusion or proven production cause.
+Max in-flight4; all pools finalized/checked_out0, remaining connections0; partial duplicate
+fill/negative position/reservation checks0. W2/W3/W4 remain Not Run in Set5.
+
+Parsed URL/actual connected database/fresh-schema guard prepared and tested. One
+replacement W1 on a verified fresh DB was authorized under the failure stop rule:
+`approve W1 fresh DB rerun` on 2026-11-02. Its outcome is recorded below; no acceptance pass.
+V-20 remains Failed / Pending Full Validation, preserving NC17's prior Failed verdict.
+Details and limitations: [NC19 report](evidence/rolling-monitor-2026-11-02.md).
+
+Replacement W1 `nc19-w1-r3` executed on verified fresh DB with all nine roles checked,
+empty fixture/schema0062/tested source confirmed. Setup/baseline100x20/dedicated LOSS_LIMIT
+and manual/BOT resting setup passed. **Failed** at recorded+37.594s: BOOK child source
+SourceUnavailableError; no completed600s/source/SLA verdict. Wall-time recorder reversal
+-16.857ms with monotonic+18.732ms is confirmed near failure; exact leaf guard timing
+and causal link remain unproved. Partial financial/cleanup checks and original72files,
+dump/hashes are retained. See [fresh rerun report](evidence/w1-fresh-rerun-2026-11-02.md).
+W2/W3/W4 not started; no rerun/production change after failure.
+
+### NC-F19-20 diagnostic validation — Approved 2026-11-02
+
+Owner authorized `approve NC-F19-20` together with the plan. Implemented and checked;
+one diagnostic finished **Not Reproduced / non-acceptance**, as recorded below.
+
+| Phase | Criterion |
+|---|---|
+| Feature | Original BOOK readiness return/exception unchanged for ready, future received/verified/source, stale and not-ready cases; exact captured condition flags and caller clock argument |
+| Feature | Child-only scoped observer restoration, redaction/no financial values or SQL parameters, bounded failure output and explicit incomplete evidence on observer error |
+| Feature | Diagnostic CLI exclusive W1/F19_SET5/child60s; guard asserts all nine actual role DB identities and empty fresh schema; original resources/workers/pools/source cadence preserved |
+| Feature | Relevant publisher regressions and changed-file Ruff/format/mypy pass |
+| Batch diagnostic, non-acceptance | One60s observation after100x20 setup under original load; complete failure timings or Not Reproduced; overhead/limits reported; acceptance_result=false always |
+
+No future-time tolerance/freshness/lease/timeout/resource/quota relaxation, NEW retry or
+production fix. A diagnostic does not pass V-20 or authorize a new acceptance run. Stop
+after failure or no reproduction, and propose next scope only from evidence. Work beyond
+the observation window remains Not Exercised; previous Failed/Pending statuses are kept.
+
+NC20 results:94Linux tests passed, zero skips,10.044s; changed-file Ruff/format/mypy pass.
+Real child observer/restart/cleanup and unchanged guard outcomes/exception identity,
+reason flags, cap/write incompleteness/redaction/restoration and CLI exclusivity covered.
+Original production/runtime code unchanged; existing safety evidence reused.
+
+`nc20-r1`: all nine actual role connections/fresh schema/empty fixture checked, schema0062;
+baseline100x20/dedicated LOSS_LIMIT/RESET/manual-BOT setup completed. One60s observation
+(recorded60.600486s) **OBSERVATION_COMPLETE**, acceptance_result=false.1203guard calls,
+0failure records, closed/complete. **Not Reproduced**. No new publisher error or observed
+receipt clock reversal, neither establishes a fix or global clock stability. Original
+r3 failing guard arguments remain missing. No W1/SLA/source-window acceptance verdict.
+
+All13pools finalized/checked_out0, remaining connections0. Partial194FILL identities with
+0duplicates/nulls/negative positions/reservations;103wallets no negative balances; retained
+14termination warnings. Scheduled RESET and later one-shot/barrier/full stop work Not
+Exercised, not Passed. Raw73files/dump18,051,985bytes/hashes retained. Stop on no reproduction;
+no repeat/W1/W2/W3/W4. V-20 Failed/Pending Full Validation and dependencies unchanged.
+See [NC20 report](evidence/book-clock-diagnostic-2026-11-02.md) for limits and next scope.
+
+Read-only clock environment review completed at owner request: host NTP operation
+confirmed, no matching09:41:25host apply/sleep/wake/VM-restart record, no guest clock setter
+identified. No configuration fix proved or applied. UI value unavailable after denied
+Computer Use retry; operational timed evidence retained. No runtime tests/workloads run.
+[Review](evidence/clock-environment-review-2026-11-02.md). Existing statuses unchanged.
+
+### NC-F19-21 clock-only validation — Approved 2026-11-02
+
+Owner instructed `เริ่มทำ` after the NC21 proposal. Implementation/checks/one trace authorized;
+one trace completed as recorded below. No acceptance or environment fix implied.
+
+| Phase | Criterion |
+|---|---|
+| Feature | Per-domain bracketed wall/monotonic reads distinguish step/no-step and expose slow-read/transport uncertainty; no cross-domain absolute-monotonic subtraction |
+| Feature | Bound30000records/buffers, missing samples/cap/write failure marked incomplete; cancellation closes observer; no clock-setting or trading/DB operations |
+| Feature | Guest observer nonprivileged/read-only/network-none/no capabilities/no secrets;0.1CPU/64MiB cap; original VM/profile settings unchanged; static checks pass |
+| Batch diagnostic, non-acceptance | One20min10Hz trace plus existing-log correlation; report localization or Unknown/Not Reproduced with uncertainty; no repeat or automatic W1 |
+
+No clock-only result passes V-20 or proves r3's missing guard arguments. Configuration
+or production fix needs a separate evidence-backed proposal. Preserve all prior results.
+
+
+### NC-F19-21 execution checkpoint — 2026-11-02
+
+22 probe regressions passed, zero skips; Ruff/format/mypy two files passed. One20min10Hz
+trace completed:12000 contiguous exchanges, no gaps, guest exit0/noOOM, source verified.
+40 guest offset movements recur at median29.999772s, including24 decreases(max2.994309ms).
+Host has no offset decrease;504 increase intervals align with logged positive NTP adjtime,
+not504 discrete steps.11930 conditional transport bounds/70 retained Unknowns; selected
+sequence400 supports guest-relative backward offset movement beyond uncertainty.
+Exact setter and original r3 guard cause remain unproved; no trading failure reproduced.
+No setting/production/criteria changes or W1 rerun. Diagnostic complete/non-acceptance;
+V-20 Failed/Pending Full Validation, dependencies unchanged. Next: separate environment
+remediation proposal/approval; no automatic further diagnostic. See
+[NC21 evidence](evidence/clock-comparison-2026-11-02.md).
+
+
+### NC-F19-22 environment transition — Superseded 2026-11-02
+
+ประวัติข้อเสนอเดิม: เจ้าของปฏิเสธใช้เครื่องอื่นแล้ว ไม่ต้องจัดหาLinux target และไม่รันตามตารางนี้
+ใช้replacement same-machine measurement auditด้านล่างแทน;เก็บNot Runเดิมตามจริง
+ดูขอบเขตและNeeds Clarificationในplan.mdหัวข้อNC-F19-22
+
+| Phase | เกณฑ์ | ผล |
+|---|---|---|
+| Feature / environment gate | Owner-approved disposable target/access/budget, sanitized inventory; candidate content/image/schema/dependency hashes; architecture/resource/enforcement differences disclosed and approved before execution | Not Run — target/approval missing |
+| Feature / affected safety | Existing scheduler/concurrency/DB/fresh-global/publisher tests selected by environment impact; same9actual-role DB/fresh-schema guards, no unexpected skips; relevant static checks only if code changes | Not Run; reuse prior evidence only where unaffected |
+| Batch diagnostic, non-acceptance | One300s10Hz bounded existing clock probe, completeness/uncertainty/overhead and existing logs retained; no detectable backward offset beyond bracket bounds; incomplete/ambiguous evidence blocks W1; acceptance_result=false | Not Run; no new SLA/clock tolerance |
+| Batch / V-20 W1 | Conditional onefreshDB600s approvedF19_SET5 run with baseline100×20/dedicatedLOSS_RESET, source/counter/schedule/financial/resource oracles and owner/run99.9%≤3s/all≤5s unchanged | Not Run on proposed target; previous Failed retained |
+| Batch / checkpoint | Report actual timings, identities/manifest/hashes and exactfailurebranch; preserve Failed, stop without unchanged rerun; W2/W3/W4 wait until W1passes and next authorized scope | Pending Full Validation |
+
+Clock preflight passing is limited observation, not stable-clock guarantee or W1pass.
+NativeLinux does not by itself prove timing reliability or comparability. Changed CPU/I/O/
+clock environment cannot establish NC19's performance improvement by comparison with
+oldMac results; any W1verdict applies to its documented approved target only. No implicit
+resource increase, NEWretry, fail-closed relaxation, trading tolerance or production fix.
+V-20 Failed/Pending Full Validation, V-21..24 Pending Dependency remain unchanged.
+
 
 ### NC-F19-22 replacement validation — Approved / Audit complete 2026-11-02
 
@@ -376,3 +628,117 @@ before-source copies, exact refactor diff, test XML, final hashes and check summ
 This finishes the authorized guard/refactor checkpoint. Next: owner may instruct commit/
 push of this checkpoint under Git rules; no Git action occurred. V-20 Failed/Pending Full
 Validation and clock/old-latency/source-evidence limitations remain; do not infer a W1pass.
+
+
+### NC-F19-23 clock-setter diagnostic — Approved 2026-11-02
+
+| Phase | Criterion | Initial result |
+|---|---|---|
+| Feature / capability gate | Pinned image and exact VM resources; read-only tracefs preflight finds private instances, `mono`, and entry/exit events for all four approved time syscalls under the approved root/host-PID/CAP_SYS_ADMIN-only container profile | Pending |
+| Feature / observer | Paired/redacted bounded records, non-realtime/failed/missing identities, uncertainty, gaps/drops/cap, cancellation/death and own-instance-only cleanup covered by controlled tests plus relevant Ruff/format/mypy | Conditional on capability gate |
+| Batch diagnostic, non-acceptance | One clock-only trace, maximum90s at10Hz; completeness, overhead, hashes and cleanup reported; result classified without causal overclaim and always `acceptance_result=false` | Conditional on capability gate |
+| Feature / NC19 review | Existing local rolling scheduler matches its approved amendment/candidate hashes for authoritative transaction, lock order, concurrency4, fairness and cleanup | Pending read-only comparison |
+| Batch / V-20 | Original owner/run99.9% within3s and every ready input within5s, plus all load/resource/safety criteria | **Failed/Pending Full Validation unchanged; no W1** |
+
+Failure of the capability gate stops before full observer implementation and tests. Do not
+restart/install, relax seccomp/AppArmor, add capabilities, change settings, use another
+tracer, run trading/PG/Redis, or repeat the diagnostic. Any clock or production remedy and
+any W1 run require a separately approved amendment. Preserve NC17/18/19-r3/20/21/22
+results and W2/W3/W4 dependencies exactly as recorded.
+
+
+### NC-F19-23 execution checkpoint — Incomplete 2026-11-02
+
+| Phase | Result |
+|---|---|
+| Feature / capability gate | **Failed / Incomplete** — unchanged VM/image and approved observer profile verified, but read-only tracefs bind lacked `trace_clock`; private instances, `mono` and required syscall events could not be established |
+| Feature / observer tests | **Not Run by gate** — no full instrumentation was created |
+| Batch diagnostic | **Not Run by gate** — no90s trace, trading, PG/Redis or W1 |
+| Feature / NC19 review | **Passed (read-only source identity)** — both production files and scheduler tests exactly match the measured NC19 candidate hashes; prior transaction/lock/concurrency4/fairness/cleanup evidence remains valid |
+| Batch / V-20 | **Failed/Pending Full Validation unchanged**; W2/W3/W4 remain Not Run |
+
+Observer exited1/noOOM after0.565s and created no tracing instance/events, so instance
+cleanup was not applicable. No fallback/configuration/runtime change occurred. The setter
+remains Unknown; this is not evidence that no userspace setter exists. Raw sanitized
+artifacts and analysis are in [NC23 evidence](evidence/clock-setter-preflight-2026-11-02.md).
+A newly approved amendment is required before tracing enablement, another diagnostic,
+environment/production changes or W1.
+
+
+### NC-F19-24 ephemeral tracefs mount validation — Approved 2026-11-02
+
+| Phase | Criterion | Status |
+|---|---|---|
+| Approval gate | Owner approves temporary in-container tracefs mount and its rollback; same-machine/runtime/resources and no persistent settings change | **Passed — `approve NC-F19-24`** |
+| Feature / security | privileged=false; CAP_SYS_ADMIN only; no SYS_TIME/SYS_PTRACE; host PID, network none, read-only root, bounded tmpfs/CPU/memory/PIDs; default seccomp/AppArmor and no Docker socket/host filesystem/secrets | Not Run |
+| Feature / mount gate | Exact inventory plus proc capability/seccomp/LSM evidence; tracefs filesystem present; namespace-local mount exposes private instances, `mono` and all required entry/exit events; denial/mismatch stops without fallback | Not Run |
+| Feature / observer | Paired event parsing, failed/non-realtime calls, missing identity, redaction, sequence/cap/drop/write failure, uncertainty, cancellation/death and exact-instance cleanup covered; Ruff/format/mypy pass | Not Run |
+| Batch diagnostic, non-acceptance | At most one90s/10Hz trace after the mount gate in the same execution; bounded records/overhead/hashes/cleanup reported; `acceptance_result=false` | Not Run |
+| Batch / V-20 | Original SLA/load/resource/source/financial criteria | **Failed/Pending Full Validation unchanged; no W1** |
+
+Owner approval covers implementation, controlled tests and one conditional execution.
+Default confinement
+denial, missing events or unverified cleanup ends NC24 as Incomplete without privileged
+mode, seccomp/AppArmor relaxation, restart/install, alternative tracer or repeat. A result
+may identify a current-run caller only; it cannot retroactively prove NC19-r3 causality.
+Any clock/environment/production repair and W1 still require a later approved amendment.
+
+
+### NC-F19-24 execution checkpoint — Incomplete 2026-11-02
+
+| Phase | Result |
+|---|---|
+| Feature / security and observer | **Passed controlled** —45 tests, zero skips; Ruff check/format and mypy pass; exact privileges, pairing/redaction/caps/errors and cleanup branches covered |
+| Feature / mount gate | **Incomplete** — authorized container exit2/noOOM after5.772s; first result lost with container tmpfs, so exact stage is unavailable |
+| Cleanup-only helper | **Incomplete** — CAP_SYS_ADMIN-only/NoNewPrivs1/Seccomp2 verified, then pre-mount LSM read failed; exact prior instance absence not verified; no second helper |
+| Batch diagnostic | **Not valid** — no captured90s trace/result; no setter classification; `acceptance_result=false`; no repeat |
+| Feature / NC19 identity | **Passed unchanged** — measured production/scheduler hashes still match |
+| Batch / V-20 | **Failed/Pending Full Validation unchanged**; W2/W3/W4 Not Run |
+
+The post-run result-transport/LSM/cleanup-report corrections passed final checks but were
+not executed. Preserve the original missing-result failure and helper output as Incomplete;
+do not infer no trace/no setter or successful cleanup from absence of records. See
+[NC24 evidence](evidence/clock-setter-nc24-2026-11-02.md). A new approved amendment is
+required for any further helper, mount/diagnostic, environment/production change or W1.
+
+
+### NC-F19-25 final same-machine validation — Stopped 2026-11-02
+
+| Phase | Criterion | Status |
+|---|---|---|
+| Approval / choice | Owner chooses Option A final combined cleanup+conditional trace, or Option B stop clock tracing | **Option B selected — stopped before implementation/execution** |
+| Feature / authoritative security gate | Unchanged VM/base; daemon built-in seccomp and no advertised LSM; empty container AppArmor profile; exact Docker restrictions plus guest SYS_ADMIN-only/NoNewPrivs1/Seccomp2. Missing guest LSM file accepted only under this exact combination | Not Run |
+| Feature / durable evidence | Unbuffered bounded stdout stages and final result retained in Docker logs; sequence/cap/write/final-loss fail closed; tmpfs secondary only | Not Run |
+| Feature / residue and cleanup | Check/remove only literal NC24 path, verify absent before new instance; exact NC25 cleanup/unmount; no enumeration/other-instance mutation; one death-only cleanup helper at most | Not Run |
+| Feature / regression | Inventory/LSM combinations, old residue, stdout protocol, mount/events, death/two-name cleanup plus existing NC21/24 tests and Ruff/format/mypy pass | Not Run |
+| Batch diagnostic, non-acceptance | One conditional maximum90s/10Hz trace with existing caps/redaction/uncertainty; no repeat; `acceptance_result=false` | Not Run |
+| Batch / V-20 | Original SLA/load/resource/source/financial criteria | **Failed/Pending Full Validation unchanged; no W1** |
+
+Option A stops before mount on inventory drift and before trace on residue-cleanup/preflight
+failure. Any missing/dropped evidence or unverified cleanup is Incomplete. NC25 is the last
+same-machine ftrace attempt regardless of outcome; no automatic NC26. Option B performs no
+runtime action. Owner's SLA amendment selected Option B; no NC25 code/mount/helper/trace,
+and this historical table is superseded by the amendment below.
+
+
+### F-19 revised SLA and activation validation — Approved / Feature passed 2026-11-02
+
+Owner-approved acceptance criteria replace the earlier F19 strict numerical gate for
+future/derived evaluations; historical verdicts remain labeled under their original rules.
+
+| Phase | Criterion | Result |
+|---|---|---|
+| Feature / evaluator limits | Explicit F19_SET5 only: per-owner and run-wide≥99.5%≤3s,≥99.9%≤5s,every ready input≤6s; complete acknowledgements, zero clock/stream-order errors; F-18/default unchanged | **Passed** — separate service/tail/absolute counters and verdicts; F18 result schema retained |
+| Feature / boundaries | Exact3/5/6-second boundaries, aggregate/owner disagreement, multi-input acknowledgements, missing/pending/clock/order failures and unchanged F-18 behavior | **Passed** — 40 non-DB evaluator tests; missing/pending cover F18 and F19 explicitly |
+| Feature / offline evidence | Re-evaluate immutable NC17 raw inputs with hashes and current ordering guard; separate derived result; verify run99.858278%/worst owner99.575487%≤3s, run99.999673%/worst affected owner99.967346%≤5s,max5.034698s≤6s | **Passed as derived Feature evidence only** — 918703/918703 acknowledged, zero clock/order errors; original Failed unchanged |
+| Feature / unchanged safety | All functional, stop, idempotency, fail-closed, financial, source/resource/counter criteria and prior production/DB tests remain valid because runtime code is unchanged | **Passed by unchanged-runtime diff and retained evidence**; all 30 non-SLA acceptance terms crosswalked (26 Passed, 4 W1 Not Applicable) |
+| Development gate | Affected evaluator regression and Ruff/format/mypy pass; diagnostic observer excluded from release candidate; no workload rerun | **Passed** — 40 tests; Ruff format/check and mypy clean; NC23/24 setter observer source/tests removed, artifacts retained |
+| Batch / System Ready | One workload on final integrated candidate after Paper+Live dependencies complete; all revised SLA plus existing safety/load/source/resource gates pass before simultaneous activation | Pending Full Validation / Dependencies |
+
+Do not use NC17's derived pass as a release pass: NC19 scheduler and final integrated
+candidate postdate that run. Do not run W1 during this amendment. Paper/Live remain off
+together until all release gates pass; automated validation still sends no real Live order.
+NC25 and further clock tracing are stopped. The derived result is in
+`validation-artifacts/f19-set5-20261101/revised-sla-20261102/derived-result.json`; analysis
+and immutable-source hashes are summarized in
+`evidence/revised-sla-evaluation-2026-11-02.md`.

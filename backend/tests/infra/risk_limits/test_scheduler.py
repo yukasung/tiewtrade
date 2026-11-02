@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncEngine
 from tests.infra.risk_limits.test_monitor import publish, start
 from tests.infra.risk_limits.test_prices import publication as publication
 from tests.infra.risk_limits.test_requests import seed_setting, submission
-from tiewtrade.core.risk_limits import RiskEvaluation, RiskSetting
+from tiewtrade.core.risk_limits import RiskEvaluation, RiskReason, RiskSetting
 from tiewtrade.infra.db import DatabaseRole, create_engine_for, user_session
 from tiewtrade.infra.db.session import UserSession
 from tiewtrade.infra.paper_wallet import PaperWalletAction, admit_command, get_wallet
@@ -411,3 +411,141 @@ async def test_monitor_prioritizes_due_work_without_changing_the_selected_page(
         )
         assert entered == [owners[2]]
         assert following.processed == 1 and following.next_owner == owners[2]
+
+
+async def test_active_exclusion_is_applied_before_limit_and_wraps_original_uuid_order(
+    publication: AsyncEngine,
+    api_engine: AsyncEngine,
+    engine_engine: AsyncEngine,
+    scan_engine: AsyncEngine,
+    owner: UUID,
+    wallet: PaperWalletSnapshot,
+) -> None:
+    owners = [UUID(int=owner.int + offset) for offset in range(3)]
+    wallets = [wallet]
+    for identity in owners[1:]:
+        wallets.append(await another_wallet(api_engine, engine_engine, scan_engine, identity))
+    await publish(publication, await start(publication), "1000")
+    for identity, financial in zip(owners, wallets, strict=True):
+        await ready(engine_engine, identity, financial)
+    rows = await worker._scan_monitor_candidates(
+        scan_engine, limit=1, after_owner=UUID(int=owner.int - 1), excluded=(owners[0], owners[1])
+    )
+    assert [UUID(str(r.user_id)) for r in rows] == [owners[2]]
+    # Empty exclusion preserves the legacy page; cursor is the SQL UUID, not due priority.
+    normal = await worker._scan_monitor_candidates(
+        scan_engine, limit=2, after_owner=UUID(int=owner.int - 1)
+    )
+    assert [UUID(str(r.user_id)) for r in normal] == owners[:2]
+    wrapped = await worker._scan_monitor_candidates(
+        scan_engine, limit=1, after_owner=UUID(int=(1 << 128) - 1), excluded=tuple(owners[1:])
+    )
+    assert wrapped and UUID(str(wrapped[0].user_id)) <= owners[0]
+
+
+@pytest.mark.parametrize("exit_kind", ["commit", "cancel", "rollback"])
+async def test_two_monitor_instances_serialize_and_leave_one_breach_after_recovery(
+    publication: AsyncEngine,
+    engine_engine: AsyncEngine,
+    owner: UUID,
+    wallet: PaperWalletSnapshot,
+    monkeypatch: pytest.MonkeyPatch,
+    exit_kind: str,
+) -> None:
+    from tests.infra.positions.test_storage import _fact
+    from tiewtrade.infra.paper_orders.initialization import enable_financial_writer
+    from tiewtrade.infra.positions import PositionEventKind, apply_position_event
+
+    lease = await publish(publication, await start(publication), "1000")
+    await ready(engine_engine, owner, wallet)
+    async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+        await enable_financial_writer(session)
+        await apply_position_event(
+            session,
+            wallet.episode_id,
+            uuid4(),
+            PositionEventKind.RECORD,
+            _fact(uuid4(), 1, quote="1000"),
+        )
+    lease = await publish(publication, lease, "900")
+    await publish(publication, lease, "1200")
+    entered, release = asyncio.Event(), asyncio.Event()
+    original = vars(worker)["acknowledge_evaluations"]
+
+    async def hold_after_persist(session: UserSession, reason: RiskReason) -> None:
+        await original(session, reason)
+        if not entered.is_set():
+            entered.set()
+            await release.wait()
+            if exit_kind == "rollback":
+                raise RuntimeError("injected transaction rollback")
+
+    monkeypatch.setattr(worker, "acknowledge_evaluations", hold_after_persist)
+    peer = create_engine_for(DatabaseRole.ENGINE, pool_size=1, max_overflow=0)
+    first = asyncio.create_task(worker._evaluate_monitor_owner(engine_engine, owner))
+    try:
+        await asyncio.wait_for(entered.wait(), 3)
+        # A different pool/instance sees the same authoritative owner lock.
+        assert await worker._evaluate_monitor_owner(peer, owner) == "deferred"
+        if exit_kind == "cancel":
+            first.cancel()
+        release.set()
+        result = await asyncio.gather(first, return_exceptions=True)
+        if exit_kind == "cancel":
+            assert isinstance(result[0], asyncio.CancelledError)
+        else:
+            assert result[0] == ("processed" if exit_kind == "commit" else "deferred")
+        async with user_session(peer, owner, role=DatabaseRole.ENGINE) as session:
+            count = (await session.execute("SELECT count(*) FROM risk_limit_events")).scalar_one()
+            assert count == (1 if exit_kind == "commit" else 0)
+        assert await worker._evaluate_monitor_owner(peer, owner) == "processed"
+        assert await worker._evaluate_monitor_owner(engine_engine, owner) == "processed"
+        async with user_session(peer, owner, role=DatabaseRole.ENGINE) as session:
+            assert (
+                await session.execute("SELECT count(*) FROM risk_limit_events")
+            ).scalar_one() == 1
+            assert (
+                await session.execute("SELECT count(*) FROM risk_stop_requests")
+            ).scalar_one() == 1
+            assert (
+                await session.execute("SELECT count(*) FROM risk_stop_progress")
+            ).scalar_one() == 1
+            assert (
+                await session.execute("SELECT count(*) FROM risk_owner_state")
+            ).scalar_one() == 1
+    finally:
+        release.set()
+        first.cancel()
+        await asyncio.gather(first, return_exceptions=True)
+        await peer.dispose()
+
+
+async def test_setting_disappearing_after_selection_keeps_authoritative_evaluation(
+    publication: AsyncEngine,
+    engine_engine: AsyncEngine,
+    scan_engine: AsyncEngine,
+    migrator_engine: AsyncEngine,
+    owner: UUID,
+    wallet: PaperWalletSnapshot,
+) -> None:
+    from sqlalchemy import text
+
+    await publish(publication, await start(publication), "1000")
+    await ready(engine_engine, owner, wallet)
+    selected = await worker._scan_monitor_candidates(
+        scan_engine, limit=1, after_owner=UUID(int=owner.int - 1)
+    )
+    assert selected[0].user_id == owner
+    async with migrator_engine.begin() as connection:
+        await connection.execute(
+            text("DELETE FROM risk_limit_settings WHERE user_id=:owner AND mode='PAPER'"),
+            {"owner": owner},
+        )
+    assert await worker._evaluate_monitor_owner(engine_engine, owner) == "processed"
+    async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+        assert (await session.execute("SELECT count(*) FROM risk_limit_events")).scalar_one() == 0
+        assert (await session.execute("SELECT count(*) FROM risk_stop_requests")).scalar_one() == 0
+    following = await worker._scan_monitor_candidates(
+        scan_engine, limit=1, after_owner=UUID(int=owner.int - 1)
+    )
+    assert owner not in [r.user_id for r in following]
