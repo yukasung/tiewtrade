@@ -6,6 +6,7 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from time import monotonic
 from types import SimpleNamespace
+from typing import Any, cast
 from unittest.mock import AsyncMock
 from uuid import uuid4
 
@@ -15,11 +16,13 @@ from tests.infra.risk_limits.profile_partial_barrier import PartialBarrier, cons
 from tests.infra.risk_limits.profile_publisher_process import encode, receive
 from tiewtrade.core.money import Quantity
 from tiewtrade.core.orders import TradingMode
+from tiewtrade.core.paper_matching import MatchingState
+from tiewtrade.infra.db.session import UserSession
 from tiewtrade.infra.paper_orders import worker
 from tiewtrade.services.engine import paper_order
 
 
-def identity() -> dict:
+def identity() -> dict[str, Any]:
     return {
         **{k: str(uuid4()) for k in ("run", "key", "owner", "wallet", "episode", "order")},
         "base": "BTC",
@@ -28,7 +31,7 @@ def identity() -> dict:
     }
 
 
-async def connect(barrier: PartialBarrier) -> tuple:
+async def connect(barrier: PartialBarrier) -> tuple[asyncio.StreamReader, asyncio.StreamWriter]:
     async with asyncio.timeout(1):
         while not barrier.control.exists():
             await asyncio.sleep(0)
@@ -154,10 +157,11 @@ async def test_wrapper_preserves_untargeted_reads_and_rejects_stale_capture(
     book = AsyncMock(return_value=record)
 
     async def original_recovery(session: object, state: object) -> object:
-        return await vars(worker)["read_latest_book"](session, state.pair)
+        typed_state = cast(MatchingState, state)
+        return await vars(worker)["read_latest_book"](session, typed_state.pair)
 
     async def original_process(session: object, claim: object) -> object:
-        return await worker._recovery_inputs(session, state)
+        return await worker._recovery_inputs(cast(UserSession, session), cast(MatchingState, state))
 
     monkeypatch.setattr(worker, "read_latest_book", book)
     monkeypatch.setattr(worker, "_recovery_inputs", original_recovery)

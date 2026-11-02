@@ -8,6 +8,7 @@ from uuid import uuid4
 
 import pytest
 from sqlalchemy import text
+from sqlalchemy.pool import AsyncAdaptedQueuePool
 
 from tests.infra.risk_limits.profile_dispatch_timing import Recorder
 from tests.infra.risk_limits.profile_pool_timing import TransactionTrace, operation_scope
@@ -39,6 +40,7 @@ async def test_cancelled_pool_wait_is_distinct_and_trace_restores(tmp_path: Path
                         pytest.fail("pool is already occupied")
         assert db._begin is original
         assert not trace.listeners
+        assert isinstance(engine.pool, AsyncAdaptedQueuePool)
         assert engine.pool.size() == 1
         assert engine.pool._max_overflow == 0
         rows = [json.loads(line) for line in trace.path.read_text().splitlines()]
