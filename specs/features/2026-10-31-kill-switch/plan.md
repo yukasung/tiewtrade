@@ -406,3 +406,115 @@ Needs Clarification และคงเกณฑ์/load/SLA เดิมทั�
   และ shared wallet fixture factory; ไม่เพิ่ม infrastructure, order retry หรือสูตรการเงิน
 - ตรวจ targeted regression, migration/roles/locking, generated contracts, frontend แล้ว backend
   สี่ phase ตาม CI พร้อม F-19 browser E2E; ไม่รัน W1–W3 ที่เลื่อนไป Full Validation
+
+### NC-F19-22 replacement — same-machine measurement audit / Approved and executed 2026-11-02
+
+สถานะ: **Approved — owner explicitly instructed PLEASE IMPLEMENT THIS PLAN**
+ใช้เครื่องปัจจุบันเท่านั้น ยกเลิกLinux target/access/budgetเป็นprerequisiteของงานนี้
+ไม่เปลี่ยนsettings/production ไม่รันworkloadหรือclock diagnosticใหม่ ไม่ลดSLA/resources/load
+
+ขอบเขตที่อนุมัติ: ใช้รายงานNC17/18/19-r3/20/21เดิม ตรวจhash/source snapshotและช่องว่าง
+commit/clock ทำตารางclock domains/identities/precision ตรวจearliest valid acknowledgement
+ทุกworker, rollback/pending guards, denominator/setup/load/drain แยกserver commitจากclient
+observation และประเมินuncertaintyเฉพาะหลักฐานที่ครอบคลุม ห้ามใช้เวลาหลังrestoreแทนต้นทาง
+ห้ามนำNC21~3msไปชดเชยรอบอื่น ลบsampleหรือเปลี่ยนเป็นmonotonicโดยไม่มีidentityเชื่อม
+ใช้existing non-DB regressions;เก็บผลใหม่แยก ไม่overwriteFailedเดิม คาด20–30นาที
+
+ผล:261rawhash entriesตรงทั้งหมด,9sourcefilesตรงhash; originalNC17/18workloadและNC18
+observer sourceไม่สามารถกู้จากsnapshotที่มีได้ บันทึกgapไม่อ้างsourceใหม่แทนNC17/18
+18non-DB regressionsผ่าน/zero skips และ5controlled cases NC17reconstructตรงเดิม
+918703samples/1302>3s/3>5s/56ownersไม่ผ่านquota NC18มี23648verified sourcecommit proofs
+และmonotonic semaphorewait3.161s;ความช้าไม่อธิบายได้ด้วยclient observationอย่างเดียว
+Clock continuity/oldnormal-telemetry transaction identityยังไม่พอrecertifyphysicalelapsed
+
+พบMedium guard defect: sla_summaryใช้heapq.mergeแต่ไม่ตรวจper-stream timestamp ordering
+controlledย้อนหลัง00.500→00.400ให้passed=true/clock_errors0 ขณะที่4run×11ackstreamsจริง
+ไม่มีtimestampregression จึงไม่ใช่คำอธิบายผลFailedเดิม หยุดตามแผนก่อนแก้harness
+
+**Proposed narrow fix, awaiting approval:** validateorderingทุกstreamก่อนpending/ownerfilter;
+retainfile/line/time metadata, rejectmeasurement evidenceเมื่อregression; equaltimeยังvalid
+ไม่sort/drop/clamp/shiftเพื่อให้ผ่าน Additivestream-order error metadataแยกจากnegative-latency
+counterเดิม Tests:regressedwould-pass/would-miss/equal/interleavedworkers/pending/foreignowner
+พร้อมboundary/quota/missingacksเดิม ไม่เปลี่ยนproduction/settings/schemaหรือเพิ่มtimedrun
+
+[Measurement audit](evidence/measurement-audit-2026-11-02.md) แยกพิสูจน์ได้/defect/หลักฐานไม่พอ
+ครบ งานauditเสร็จ;ขั้นต่อไปรออนุมัติguardpatchเท่านั้น ไม่เริ่มW1หรือdiagnosticต่อเอง
+V-20Failed/Pending Full Validationและdependenciesคงเดิม ไม่มีcommit/push
+
+
+### NC22 stream-order guard — Approved 2026-11-02
+
+Owner instructed `approve` for the narrow patch proposed in the measurement audit.
+Validate every consumed worker acknowledgement stream before pending/owner filtering;
+retain bounded file/line/timestamp diagnostics and the total regression count, permit
+identical timestamps, and reject the overall measurement verdict on any regression.
+Use parsed timestamp keys consistently in the existing streaming merge; preserve every
+row and all existing thresholds/denominators. Reuse the evaluator and its existing tests,
+with cases for would-be pass/miss, ordered interleaving/equality and filtered rows.
+No production/settings/schema/resource/financial change or timed run. After targeted
+non-DB tests and changed-file static checks, report the checkpoint; no automatic W1.
+
+
+### NC22 stream-order guard checkpoint — 2026-11-02
+
+Owner approved the narrow guard fix. Implemented in `profile_workload.py::sla_summary`
+and covered in `test_workload_sla.py`. Each stream is validated before pending/owner
+filtering, including trailing rows after all inputs have acknowledgements. Parsed datetime
+keys keep validation and merge ordering consistent. Equal timestamps remain valid; every
+row is preserved, with no sorting/dropping/clamping/clock correction. All regressions are
+counted; only the first20 file/line/timestamp diagnostics are retained. Additive fields
+`stream_order_errors` and `first_stream_order_errors` are separate from `clock_errors`.
+Any ordering error forces overall passed=false; existing numerical SLA counters remain.
+
+27 non-DB regressions passed, zero skips (18 existing +9 cases): would-be pass/miss under
+F18/F19, filtered pending/foreign-owner rows, equality, earliest interleaved worker results,
+and bounded diagnostics with full error count. Ruff/check, format/check and mypy two files
+passed. Initial mypy invocation could not resolve local src and reported235 import/type
+errors; corrected invocation `MYPYPATH=src` passes without source/config suppression.
+DB rollback/savepoint tests reused; no services/workload/settings/production changes.
+
+Artifacts: `validation-artifacts/f19-set5-20261101/nc22-stream-order-guard/` contains test
+XML, static log/summary, exact evaluator patch and candidate hashes. Original audit/run
+artifacts remain unchanged. Historical audit.py expects the prepatch evaluator (matched
+NC20 snapshot retained in audit snapshots); its counterexample assertions must not be
+rerun against the patched evaluator as though they were new acceptance criteria.
+
+Guard defect fixed, not an environment/latency fix. Existing44 real acknowledgement files
+were ordered, so this does not explain or regrade original failures. V-20 remains Failed /
+Pending Full Validation; W2/W3/W4 and dependencies unchanged. Next recommendation: review
+this narrow patch before deciding the next clock/acceptance amendment; no automatic timed
+run or new diagnostic. No commit/push. This subtask does not trigger full-feature Ready
+for Code Review or authorize refactor/full validation.
+
+
+### NC22 guard refactor — owner authorized 2026-11-02
+
+Owner instructed `refactor the code` after the narrow guard review passed. Reuse existing
+`inputs`, `risk_acknowledgement` and evaluator tests. No existing shared JSONL writer was
+found; the existing F15 `save` writes whole JSON, not JSONL. Consolidate repeated writes
+only in newly added guard tests into a local `write_risk_stream` helper. Replace positional
+previous-row state in the guard with named previous-time fields and derive adjacent line
+number from enumeration. Preserve error counts/cap/metadata, merge keys, input bytes and
+all verdicts. No unrelated refactor. Run27 non-DB regressions and two-file static checks;
+reuse unaffected DB/safety evidence. Existing stop forbids a new W1/diagnostic.
+
+
+### NC22 guard refactor checkpoint — 2026-11-02
+
+Owner-authorized refactor complete, limited to the guard and its new tests. Named previous
+observed/raw timestamp fields replace tuple indexes; adjacent line identity comes from
+enumeration and filename is computed once per stream. Local `write_risk_stream` removes
+repeated JSONL serialization in the new tests; existing fixtures/ack builders remain in
+use. Preservation test compares original bytes. Verdicts, counters, cap20, diagnostics,
+merge/filter order and all SLA/financial behavior unchanged; no new infrastructure.
+
+27 non-DB tests passed, zero skips; two-file Ruff/check, format/check and mypy passed
+(`MYPYPATH=src`). Validation after refactor covers only the affected Feature/evaluator
+criteria; DB/safety evidence remains valid. Approved stop on timed runs still applies:
+no W1, other workload, new diagnostic or settings change. No production change.
+
+Artifacts in `validation-artifacts/f19-set5-20261101/nc22-stream-order-refactor/` retain
+before-source copies, exact refactor diff, test XML, final hashes and check summary.
+This finishes the authorized guard/refactor checkpoint. Next: owner may instruct commit/
+push of this checkpoint under Git rules; no Git action occurred. V-20 Failed/Pending Full
+Validation and clock/old-latency/source-evidence limitations remain; do not infer a W1pass.

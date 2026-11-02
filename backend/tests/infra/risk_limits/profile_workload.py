@@ -15,13 +15,13 @@ import platform
 import subprocess
 import sys
 from collections import defaultdict
-from collections.abc import AsyncIterator, Awaitable, Callable
+from collections.abc import AsyncIterator, Awaitable, Callable, Iterator
 from contextlib import asynccontextmanager
 from dataclasses import asdict, replace
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from time import monotonic
-from typing import Any, TypedDict
+from typing import Any, TextIO, TypedDict
 from urllib.parse import urlparse
 from uuid import UUID, uuid4
 
@@ -232,6 +232,16 @@ class OverflowResult(TypedDict):
 
 
 PROFILE = "F18_F15_F16_INTEGRATED_V2"
+
+
+def acceptance_limits(profile: str, phase: str | None) -> tuple[int, int]:
+    """Return owner service quota per thousand and missing source allowance."""
+    if profile not in {"F18_R34", "F19_SET5"}:
+        raise ValueError("unknown acceptance profile")
+    relaxed = profile == "F18_R34" and phase in {"W1", "W2", "W3"}
+    return (995, 1) if relaxed else (999, 0)
+
+
 DURATION = {"W1": 600, "W2": 300, "W3": 1800, "CHECK": 10}
 RATE = {"W1": 10, "W2": 100, "W3": 10, "CHECK": 5}
 
@@ -1326,12 +1336,18 @@ class Fixture(SourcePublisher):
             self.pools.finish()
 
 
-def sla_summary(output: Path, owners: list[UUID], *, phase: str | None = None) -> dict[str, object]:
+def sla_summary(
+    output: Path,
+    owners: list[UUID],
+    *,
+    phase: str | None = None,
+    acceptance_profile: str = "F18_R34",
+) -> dict[str, object]:
     """Every measured input must have a successful, authoritative cursor COMMIT."""
     import heapq
 
     # R34 extends the Paper acceptance per-owner quota; run-wide stays at 99.9%.
-    owner_required_per_thousand = 995 if phase in ("W1", "W2", "W3") else 999
+    owner_required_per_thousand, _ = acceptance_limits(acceptance_profile, phase)
     prices: list[tuple[int, datetime]] = []
     facts: dict[str, list[tuple[int, datetime]]] = {str(owner): [] for owner in owners}
     fault_windows = []
@@ -1367,18 +1383,45 @@ def sla_summary(output: Path, owners: list[UUID], *, phase: str | None = None) -
     maximum = 0.0
     histogram: dict[int, int] = {}
     failures: list[dict[str, object]] = []
+    stream_order_errors = 0
+    first_stream_order_errors: list[dict[str, object]] = []
+
+    def acknowledgements(stream: TextIO) -> Iterator[tuple[datetime, dict[str, Any]]]:
+        nonlocal stream_order_errors
+        previous_observed: datetime | None = None
+        previous_timestamp = ""
+        file_name = Path(stream.name).name
+        for line_number, line in enumerate(stream, 1):
+            row = json.loads(line)
+            timestamp = row["committed_observed_at"]
+            observed = datetime.fromisoformat(timestamp)
+            # heapq.merge requires ordered inputs, including rows later filtered out.
+            if previous_observed is not None and observed < previous_observed:
+                stream_order_errors += 1
+                if len(first_stream_order_errors) < 20:
+                    first_stream_order_errors.append(
+                        {
+                            "file": file_name,
+                            "previous_line": line_number - 1,
+                            "line": line_number,
+                            "previous_observed_at": previous_timestamp,
+                            "observed_at": timestamp,
+                        }
+                    )
+            previous_observed = observed
+            previous_timestamp = timestamp
+            yield observed, row
+
     streams = [path.open() for path in output.glob("*.risk.jsonl")]
     late_stream = (output / "risk-late-inputs.jsonl").open("w")
     try:
         merged = heapq.merge(
-            *(map(json.loads, stream) for stream in streams),
-            key=lambda row: row["committed_observed_at"],
+            *(acknowledgements(stream) for stream in streams), key=lambda item: item[0]
         )
-        for ack in merged:
+        for observed, ack in merged:
             owner = ack["owner"]
             if owner not in indexes or ack["pending"]:
                 continue
-            observed = datetime.fromisoformat(ack["committed_observed_at"])
             for kind, points, through in (
                 (0, prices, ack["cursor"]),
                 (1, facts[owner], ack["boundary"]),
@@ -1471,6 +1514,8 @@ def sla_summary(output: Path, owners: list[UUID], *, phase: str | None = None) -
         "miss_count": misses,
         "unacknowledged": expected - counts,
         "clock_errors": clock_errors,
+        "stream_order_errors": stream_order_errors,
+        "first_stream_order_errors": first_stream_order_errors,
         "max_seconds": maximum,
         "histogram_milliseconds": histogram,
         "first_misses": failures,
@@ -1478,6 +1523,7 @@ def sla_summary(output: Path, owners: list[UUID], *, phase: str | None = None) -
         and counts > 0
         and misses == 0
         and clock_errors == 0
+        and stream_order_errors == 0
         and service_passed
         and all(value["passed"] for value in owner_counts.values()),
     }
