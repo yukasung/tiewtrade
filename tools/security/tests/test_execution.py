@@ -33,6 +33,21 @@ class ExecutionTests(unittest.TestCase):
             self.assertEqual(cli.entrypoint(), 2)
         self.assertNotIn("PRIVATE_SENTINEL", out.getvalue() + err.getvalue())
 
+    def test_policy_error_diagnostics_are_allowlisted(self) -> None:
+        for error, expected in [
+            (PolicyError("PRIVATE_SENTINEL"), "INVALID_POLICY_DATA"),
+            (PolicyError("MISSING_FILE_COVERAGE"), "MISSING_FILE_COVERAGE"),
+        ]:
+            out, err = io.StringIO(), io.StringIO()
+            with (
+                patch.object(cli, "main", side_effect=error),
+                contextlib.redirect_stdout(out),
+                contextlib.redirect_stderr(err),
+            ):
+                self.assertEqual(cli.entrypoint(), 2)
+            self.assertNotIn("PRIVATE_SENTINEL", out.getvalue() + err.getvalue())
+            self.assertIn(expected, err.getvalue())
+
     def test_tool_stderr_and_failed_exit_remain_private(self) -> None:
         out, err = io.StringIO(), io.StringIO()
         with (

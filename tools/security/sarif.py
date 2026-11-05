@@ -147,3 +147,47 @@ def evaluate(report: object, root: Path, language: str) -> tuple[list[Finding], 
             )
         )
     return findings, len(files)
+
+
+def structure_counts(report: object) -> dict[str, int]:
+    """Safe schema diagnostics: only fixed labels and counts, never input strings."""
+
+    def mapping(value: object) -> dict[str, object]:
+        return value if isinstance(value, dict) else {}
+
+    def sequence(value: object) -> list[object]:
+        return value if isinstance(value, list) else []
+
+    runs = sequence(mapping(report).get("runs"))
+    invocations = [mapping(i) for run in runs for i in sequence(mapping(run).get("invocations"))]
+    metrics = [
+        mapping(m)
+        for run in runs
+        for m in sequence(mapping(mapping(run).get("properties")).get("metricResults"))
+    ]
+    artifacts = [mapping(a) for run in runs for a in sequence(mapping(run).get("artifacts"))]
+    rules = [
+        mapping(rule)
+        for run in runs
+        for component in [
+            mapping(mapping(run).get("tool")).get("driver"),
+            *sequence(mapping(mapping(run).get("tool")).get("extensions")),
+        ]
+        for rule in sequence(mapping(component).get("rules"))
+    ]
+    return {
+        "runs": len(runs),
+        "invocations": len(invocations),
+        "successful_invocations": sum(i.get("executionSuccessful") is True for i in invocations),
+        "metrics": len(metrics),
+        "metric_rule_ids": sum("ruleId" in m for m in metrics),
+        "metric_rule_references": sum("rule" in m for m in metrics),
+        "integer_metric_values": sum(type(m.get("value")) is int for m in metrics),
+        "artifacts": len(artifacts),
+        "analysis_targets": sum("analysisTarget" in sequence(a.get("roles")) for a in artifacts),
+        "artifact_locations": sum("uri" in mapping(a.get("location")) for a in artifacts),
+        "rules": len(rules),
+        "lines_of_code_rules": sum(
+            "lines-of-code" in sequence(mapping(r.get("properties")).get("tags")) for r in rules
+        ),
+    }

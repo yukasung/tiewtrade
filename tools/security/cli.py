@@ -75,7 +75,16 @@ def main() -> int:
         sarif_paths = list(directory.glob("*.sarif"))
         if len(sarif_paths) != 1:
             raise PolicyError("MISSING_OR_AMBIGUOUS_SARIF")
-        findings, coverage = sarif.evaluate(read_json(sarif_paths[0]), root, args.language)
+        report = read_json(sarif_paths[0])
+        try:
+            findings, coverage = sarif.evaluate(report, root, args.language)
+        except PolicyError:
+            sys.stderr.write(
+                "SARIF structure counts: "
+                + json.dumps(sarif.structure_counts(report), sort_keys=True)
+                + "\n"
+            )
+            raise
         component = "codeql-" + args.language
     if candidate(root) != identity or configuration(root) != config:
         raise PolicyError("CANDIDATE_CHANGED_DURING_SCAN")
@@ -98,6 +107,29 @@ def main() -> int:
 def entrypoint() -> int:
     try:
         return main()
+    except PolicyError as error:
+        # Only known constant parser codes may be exposed; arbitrary text stays private.
+        public_codes = {
+            "INVALID_ARRAY",
+            "INVALID_OBJECT",
+            "INVALID_INTEGER",
+            "MISSING_RULE",
+            "MISSING_RULE_INDEX",
+            "MISSING_RULE_COMPONENT",
+            "CONFLICTING_RULE_REFERENCE",
+            "INVALID_SARIF_RUNS",
+            "UNSUCCESSFUL_SARIF_INVOCATION",
+            "SARIF_EXECUTION_ERROR",
+            "MISSING_EXTRACTION_COVERAGE",
+            "MISSING_FILE_COVERAGE",
+            "WRONG_FINDING_LANGUAGE",
+            "INVALID_SOURCE_URI",
+            "INVALID_SOURCE_PATH",
+            "INVALID_SOURCE_LINE",
+        }
+        code = str(error) if str(error) in public_codes else "INVALID_POLICY_DATA"
+        sys.stderr.write("Security gate failed: " + code + "\n")
+        return 2
     except Exception:
         # Even unexpected parser/HTTP/subprocess exceptions may embed secret input.
         # Never print exception text, arguments or traceback to public CI logs.

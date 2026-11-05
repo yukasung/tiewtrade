@@ -119,6 +119,15 @@ class AdapterTests(unittest.TestCase):
         lockfiles(self.root)
         (self.root / "sample.py").write_text("# synthetic source\n")
 
+    def test_schema_diagnostics_do_not_expose_report_values(self) -> None:
+        report = sarif_report()
+        report["PRIVATE_SENTINEL"] = "PRIVATE_SENTINEL"
+        counts = sarif.structure_counts(report)
+        self.assertTrue(all(type(n) is int for n in counts.values()))
+        self.assertNotIn("PRIVATE_SENTINEL", str(counts))
+        self.assertEqual(counts["analysis_targets"], 1)
+        self.assertEqual(counts["metrics"], 1)
+
     def test_inventory_includes_dev_optional_and_normalizes_pypi(self) -> None:
         expected = dependencies.inventory(self.root)
         findings, coverage = dependencies.evaluate(osv_report(self.root), self.root, expected)
