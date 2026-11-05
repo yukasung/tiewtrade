@@ -1,10 +1,11 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { StrictMode } from "react";
 import { afterEach, expect, it, vi } from "vitest";
 import { PaperTradePage } from "../src/PaperTradePage";
 import { writeAttempt } from "../src/manualOrderJournal";
 import { manualOrderText as t } from "../src/manualOrderMessages";
+import { protectionText as pt } from "../src/protectionMessages";
 vi.mock("../src/CandlestickChartPanel", () => ({ CandlestickChartPanel: ({ base, onMarketSnapshot }: {
   base: string; onMarketSnapshot: (value: { base: string; price: string; observedAt: string }) => void;
 }) => <button type="button" data-testid="embedded-chart" onClick={() => onMarketSnapshot({ base, price: "100", observedAt: stamp })}>chart</button> }));
@@ -37,6 +38,33 @@ async function draft() {
   fireEvent.change(screen.getByLabelText(t("budget")), { target: { value: "100" } });
   await waitFor(() => expect(screen.getByRole<HTMLButtonElement>("button", { name: t("submit") }).disabled).toBe(false));
 }
+it("keeps conflicted protections editable after reloading an unavailable balance", async () => {
+  const protection = { protection_id: "g", wallet_id: "w", episode_id: "e", mode: "PAPER", base: "BTC", quote: "USDT", quantity: "0.999", protected_quantity: "0", state: "ARMED", revision: 4, take_profit_price: "110", stop_loss_price: "90", conflicted: true, failure_code: "ORDER_CONFLICT", market_ready: true, entry_order_id: "entry", snapshot_at: stamp };
+  const { fetcher } = mount((url, init) => {
+    if (url.includes("/paper/trade")) return Promise.resolve(answer({ mode: "PAPER", protection_enabled: true,
+      wallet: { ...wallet, source_availability: "UNKNOWN", base_balances: [{ asset: "BTC", held: "0.5", reserved: "0", protection_allocated: "0.999", available: null }] },
+      account_use: "MANUAL", base: url.includes("base=BTC") ? "BTC" : null, quote: "USDT", snapshot_at: stamp,
+      admission_ready: false, admission_reasons: ["ORDER_CONFLICT"] }));
+    if (url.includes("/paper/protections/g/replace") && init?.method === "POST") return Promise.resolve(answer({ request_id: "repair" }, 202));
+    if (url.includes("/paper/protections?")) return Promise.resolve(answer({ protections: [protection], next_cursor: null }));
+    if (url.includes("/paper/protection-requests?")) return Promise.resolve(answer({ requests: [], next_cursor: null }));
+    if (url.includes("/paper/protection-requests/repair")) return Promise.resolve(answer({ state: "PENDING" }));
+  });
+  await waitFor(() => expect(screen.getByLabelText<HTMLSelectElement>(t("pair")).disabled).toBe(false));
+  fireEvent.change(screen.getByLabelText(t("pair")), { target: { value: "BTC" } });
+  const edit = await screen.findByRole<HTMLButtonElement>("button", { name: pt("edit") });
+  await waitFor(() => expect(edit.disabled).toBe(false));
+  expect(screen.getByRole<HTMLButtonElement>("button", { name: t("submit") }).disabled).toBe(true);
+  expect(screen.getAllByText(pt("conflict")).length).toBeGreaterThan(0);
+  fireEvent.click(edit);
+  fireEvent.change(screen.getByLabelText(`${pt("quantity")} (BTC)`), { target: { value: "0.5" } });
+  fireEvent.click(screen.getByRole("button", { name: pt("save") }));
+  await waitFor(() => {
+    const repair = fetcher.mock.calls.find(([url, init]) => url.includes("/protections/g/replace") && init?.method === "POST");
+    expect(repair).toBeTruthy();
+    expect(JSON.parse(repair![1]!.body as string)).toHaveProperty("quantity", "0.5");
+  });
+});
 it("journals before POST, blocks duplicate clicks, and recovers reload with same-key retry after lookup404", async () => {
   vi.spyOn(globalThis.crypto, "randomUUID").mockReturnValue(key);
   const first = mount((url, init) => {
@@ -248,4 +276,40 @@ it("discards a draft on episode replacement while retaining UNKNOWN's original r
   const posts = fetcher.mock.calls.filter(([, init]) => init?.method === "POST");
   expect(posts[0]![1]!.body).toBe(posts[1]![1]!.body);
   expect((JSON.parse(posts[1]![1]!.body as string) as { expected_episode_id: string }).expected_episode_id).toBe("new-episode");
+});
+
+
+it.each([
+  { state: "WAITING_ENTRY", quantity: "0", market_ready: true, editable: true },
+  { state: "ARMING", quantity: "0.3996", market_ready: true, editable: true },
+  { state: "ARMED", quantity: "0.999", market_ready: false, editable: true },
+  { state: "EXITING", quantity: "0.499", market_ready: true, editable: false },
+  { state: "FAILED", quantity: "0.499", market_ready: true, editable: true },
+])("never claims a $state allocation is fully protected or closed", async ({ state, quantity, market_ready, editable }) => {
+  const protection = { protection_id: "g", wallet_id: "w", episode_id: "e", mode: "PAPER", base: "BTC", quote: "USDT", quantity, protected_quantity: "0", state, revision: 4, take_profit_price: "110", stop_loss_price: "90", conflicted: false, failure_code: state === "FAILED" ? "ORDER_INSUFFICIENT_LIQUIDITY" : null, market_ready, entry_order_id: "entry", snapshot_at: stamp,
+    exit_order_id: ["EXITING", "FAILED"].includes(state) ? "exit-order" : null,
+    exit_order_state: state === "FAILED" ? "EXPIRED" : null,
+    exit_command_state: state === "EXITING" ? "PENDING" : null,
+    exit_quantity: "0.999", exit_filled_quantity: "0.5" };
+  mount(url => {
+    if (url.includes("/paper/trade")) return Promise.resolve(answer({ mode: "PAPER", protection_enabled: true, wallet, account_use: "MANUAL", base: url.includes("base=BTC") ? "BTC" : null, quote: "USDT", snapshot_at: stamp, admission_ready: true, admission_reasons: [] }));
+    if (url.includes("/paper/protections?")) return Promise.resolve(answer({ protections: [protection], next_cursor: null }));
+    if (url.includes("/paper/protection-requests?")) return Promise.resolve(answer({ requests: [], next_cursor: null }));
+  });
+  await waitFor(() => expect(screen.getByLabelText<HTMLSelectElement>(t("pair")).disabled).toBe(false));
+  fireEvent.change(screen.getByLabelText(t("pair")), { target: { value: "BTC" } });
+  const panel = screen.getByRole("heading", { name: pt("title") }).closest("section")!;
+  await within(panel).findByText(pt(state as "ARMED"));
+  const covered = within(panel).getByText(pt("covered")).parentElement!;
+  expect(within(covered).getByText("0 BTC").textContent).toBe("0 BTC");
+  expect(within(panel).queryByText(pt("CLOSED"))).toBeNull();
+  await waitFor(() => expect(within(panel).getByRole<HTMLButtonElement>("button", { name: pt("edit") }).disabled).toBe(!editable));
+  expect(within(panel).getByRole<HTMLButtonElement>("button", { name: pt("cancel") }).disabled).toBe(!editable);
+  if (!market_ready) expect(within(panel).getByRole("alert").textContent).toBe(pt("unavailable"));
+  if (state === "FAILED") {
+    expect(within(panel).getByRole("alert").textContent).toBe(pt("failed"));
+    expect(within(panel).getByText("0.499 BTC")).toBeTruthy();
+    expect(within(panel).getByText(t("EXPIRED"))).toBeTruthy();
+  }
+  if (state === "EXITING") expect(within(panel).getByText(t("PENDING"))).toBeTruthy();
 });

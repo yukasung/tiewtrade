@@ -139,7 +139,14 @@ jobs:
         run: uv run alembic upgrade head
 
       - name: pytest
-        run: uv run pytest
+        run: uv run pytest --ignore=tests/infra/protections
+
+      # F-17 tests run the global protection/order workers. Retained fixtures from
+      # other suites must not become inputs to those controlled integration runs.
+      - name: pytest isolated protection integration
+        run: |
+          bash scripts/reset_ci_test_database.sh "${{ job.services.postgres.id }}"
+          uv run pytest tests/infra/protections
 
       - name: pytest isolated writer-fence migration guard
         run: |
@@ -155,6 +162,11 @@ jobs:
         run: |
           bash scripts/reset_ci_test_database.sh "${{ job.services.postgres.id }}"
           uv run pytest -m fresh_global_state
+
+      - name: pytest isolated protection rollback guards
+        run: |
+          bash scripts/reset_ci_test_database.sh "${{ job.services.postgres.id }}"
+          uv run pytest -m isolated_migration tests/infra/protections/test_migration_guards.py
 
   api-contract:
     name: สัญญา API — ชนิดข้อมูลสองฝั่งต้องตรงกัน
@@ -320,6 +332,12 @@ jobs:
 
       - name: F-16 manual order Paper E2E
         run: npm run test:e2e:manual-orders
+        working-directory: frontend
+        env:
+          CI: "1"
+
+      - name: F-17 Paper protection E2E
+        run: npm run test:e2e:protections
         working-directory: frontend
         env:
           CI: "1"

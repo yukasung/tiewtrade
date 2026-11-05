@@ -12,6 +12,10 @@ PAPER_FILES = (
     SOURCE / "tiewtrade/core/orders.py",
     SOURCE / "tiewtrade/core/order_book.py",
     SOURCE / "tiewtrade/core/paper_matching.py",
+    SOURCE / "tiewtrade/core/protections.py",
+    *(SOURCE / "tiewtrade/infra/protections").glob("*.py"),
+    SOURCE / "tiewtrade/services/api/protection_models.py",
+    SOURCE / "tiewtrade/services/api/protection_routes.py",
     SOURCE / "tiewtrade/core/risk_limits.py",
     *(SOURCE / "tiewtrade/infra/risk_limits").glob("*.py"),
     SOURCE / "tiewtrade/services/api/risk_limit_models.py",
@@ -52,6 +56,11 @@ FORBIDDEN_MARKERS = (
 )
 ALLOWED_INTERNAL_IMPORTS = frozenset(
     {
+        "tiewtrade.core.protections",
+        "tiewtrade.infra.protections.codec",
+        "tiewtrade.infra.protections.storage",
+        "tiewtrade.infra.protections.worker",
+        "tiewtrade.services.api.protection_models",
         "tiewtrade.core.risk_limits",
         "tiewtrade.core.trading_stops",
         "tiewtrade.infra.positions.views",
@@ -94,6 +103,7 @@ ALLOWED_INTERNAL_IMPORTS = frozenset(
         "tiewtrade.core.paper_wallet",
         "tiewtrade.core.realtime_prices",
         "tiewtrade.infra.audit",
+        "tiewtrade.infra.audit.events",
         "tiewtrade.infra.auth",
         "tiewtrade.infra.auth.throttle",
         "tiewtrade.infra.db",

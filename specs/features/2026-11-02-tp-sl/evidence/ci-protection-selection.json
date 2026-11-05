@@ -1,0 +1,17 @@
+{
+  "test:e2e": {
+    "protection_tests": 0,
+    "tests": []
+  },
+  "test:e2e:protections": {
+    "protection_tests": 6,
+    "tests": [
+      "protections.spec.ts:84:1 › bracket fill, reload, replace and cancel use durable production requests",
+      "protections.spec.ts:118:1 › lost protection receipt and reload recover the same server request",
+      "protections.spec.ts:151:1 › protection controls support Thai and English keyboard focus; Live sends no mutation",
+      "protections.spec.ts:202:1 › partial bracket entry triggers one exit, cancels entry remainder and closes with exact cash",
+      "protections.spec.ts:247:1 › selected sale reduces two protections once and canceled sale stays unprotected",
+      "protections.spec.ts:294:1 › failed standalone request warns without selling assets and survives reload"
+    ]
+  }
+}

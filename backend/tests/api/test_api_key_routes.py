@@ -456,6 +456,7 @@ def test_no_route_hands_back_the_secret(client: TestClient, ending: bool) -> Non
             .replace("{order_id}", key_id)
             .replace("{receipt_id}", key_id)
             .replace("{stop_id}", key_id)
+            .replace("{protection_id}", key_id)
             .replace("{key}", key_id)
             .replace("{base}", "BTC")
             .replace("{quote}", "USDT")
@@ -484,10 +485,12 @@ def test_no_route_hands_back_the_secret(client: TestClient, ending: bool) -> Non
             }
             else {"action": "NEW"}
             if template == "/paper/order-requests/by-key/{key}"
+            else {"action": "CREATE"}
+            if template == "/paper/protection-requests/by-key/{key}"
             else {"action": "STOP"}
             if "/kill-switch/requests/by-key/" in template
             else {"episode_id": key_id}
-            if template == "/paper/orders"
+            if template in {"/paper/orders", "/paper/protections"}
             else None,
             **({"json": {}} if method == "POST" else {}),
         )
@@ -511,6 +514,12 @@ def test_no_route_hands_back_the_secret(client: TestClient, ending: bool) -> Non
             }:
                 assert response.status_code == 404
                 assert response.json() == {"detail": "MANUAL_REQUEST_NOT_FOUND"}
+            elif template in {
+                "/paper/protection-requests/by-key/{key}",
+                "/paper/protection-requests/{request_id}",
+            }:
+                assert response.status_code == 404
+                assert response.json() == {"detail": "PROTECTION_NOT_FOUND"}
             elif template == "/paper/orders/{order_id}":
                 assert response.status_code == 404
                 assert response.json() == {"detail": "PAPER_ORDER_NOT_FOUND"}

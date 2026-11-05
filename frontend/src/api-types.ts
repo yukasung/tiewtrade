@@ -1179,6 +1179,109 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/paper/protection-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Discover */
+        get: operations["discover_paper_protection_requests_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/paper/protection-requests/by-key/{key}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Lookup Key */
+        get: operations["lookup_key_paper_protection_requests_by_key__key__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/paper/protection-requests/{request_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Lookup */
+        get: operations["lookup_paper_protection_requests__request_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/paper/protections": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Page */
+        get: operations["page_paper_protections_get"];
+        put?: never;
+        /** Create Request */
+        post: operations["create_request_paper_protections_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/paper/protections/{protection_id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Cancel Request */
+        post: operations["cancel_request_paper_protections__protection_id__cancel_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/paper/protections/{protection_id}/replace": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Replace Request */
+        post: operations["replace_request_paper_protections__protection_id__replace_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/paper/risk-limit": {
         parameters: {
             query?: never;
@@ -1372,9 +1475,11 @@ export interface components {
             /** Asset */
             asset: string;
             /** Available */
-            available: string;
+            available: string | null;
             /** Held */
             held: string;
+            /** Protection Allocated */
+            protection_allocated?: string | null;
             /** Reserved */
             reserved: string;
         };
@@ -2045,6 +2150,9 @@ export interface components {
             kind: "LIMIT";
             /** Limit Price */
             limit_price: string;
+            protection?: components["schemas"]["ProtectionPricesInput"] | null;
+            /** Protection Allocations */
+            protection_allocations?: components["schemas"]["ManualProtectionAllocationInput"][];
             /**
              * Quote
              * @constant
@@ -2079,6 +2187,9 @@ export interface components {
             kind: "MARKET" | "LIMIT";
             /** Limit Price */
             limit_price: string | null;
+            protection?: components["schemas"]["ProtectionPricesInput"] | null;
+            /** Protection Allocations */
+            protection_allocations?: components["schemas"]["ManualProtectionAllocationInput"][];
             /**
              * Quote
              * @constant
@@ -2093,6 +2204,18 @@ export interface components {
             side: "BUY" | "SELL";
             /** Time In Force */
             time_in_force: "GTC" | null;
+        };
+        /** ManualProtectionAllocationInput */
+        ManualProtectionAllocationInput: {
+            /** Expected Revision */
+            expected_revision: number;
+            /**
+             * Protection Id
+             * Format: uuid
+             */
+            protection_id: string;
+            /** Quantity */
+            quantity: string;
         };
         /** ManualRequestPage */
         ManualRequestPage: {
@@ -2182,6 +2305,9 @@ export interface components {
              * @constant
              */
             kind: "MARKET";
+            protection?: components["schemas"]["ProtectionPricesInput"] | null;
+            /** Protection Allocations */
+            protection_allocations?: components["schemas"]["ManualProtectionAllocationInput"][];
             /**
              * Quote
              * @constant
@@ -2216,6 +2342,9 @@ export interface components {
              * @constant
              */
             kind: "MARKET";
+            protection?: components["schemas"]["ProtectionPricesInput"] | null;
+            /** Protection Allocations */
+            protection_allocations?: components["schemas"]["ManualProtectionAllocationInput"][];
             /**
              * Quote
              * @constant
@@ -2400,6 +2529,11 @@ export interface components {
              */
             mode: "PAPER";
             /**
+             * Protection Enabled
+             * @default false
+             */
+            protection_enabled: boolean;
+            /**
              * Quote
              * @constant
              */
@@ -2553,6 +2687,194 @@ export interface components {
              * Format: date-time
              */
             server_time: string;
+        };
+        /** ProtectionCancelInput */
+        ProtectionCancelInput: {
+            /**
+             * Expected Episode Id
+             * Format: uuid
+             */
+            expected_episode_id: string;
+            /** Expected Revision */
+            expected_revision: number;
+            /**
+             * Expected Wallet Id
+             * Format: uuid
+             */
+            expected_wallet_id: string;
+        };
+        /** ProtectionCreateInput */
+        ProtectionCreateInput: {
+            /** Base */
+            base: string;
+            /**
+             * Expected Episode Id
+             * Format: uuid
+             */
+            expected_episode_id: string;
+            /**
+             * Expected Wallet Id
+             * Format: uuid
+             */
+            expected_wallet_id: string;
+            /** Quantity */
+            quantity: string;
+            /** Stop Loss Price */
+            stop_loss_price?: string | null;
+            /** Take Profit Price */
+            take_profit_price?: string | null;
+        };
+        /** ProtectionPage */
+        ProtectionPage: {
+            /** Next Cursor */
+            next_cursor: string | null;
+            /** Protections */
+            protections: components["schemas"]["ProtectionView"][];
+        };
+        /** ProtectionPricesInput */
+        ProtectionPricesInput: {
+            /** Stop Loss Price */
+            stop_loss_price?: string | null;
+            /** Take Profit Price */
+            take_profit_price?: string | null;
+        };
+        /** ProtectionReplaceInput */
+        ProtectionReplaceInput: {
+            /**
+             * Expected Episode Id
+             * Format: uuid
+             */
+            expected_episode_id: string;
+            /** Expected Revision */
+            expected_revision: number;
+            /**
+             * Expected Wallet Id
+             * Format: uuid
+             */
+            expected_wallet_id: string;
+            /** Quantity */
+            quantity: string;
+            /** Stop Loss Price */
+            stop_loss_price?: string | null;
+            /** Take Profit Price */
+            take_profit_price?: string | null;
+        };
+        /** ProtectionRequestPage */
+        ProtectionRequestPage: {
+            /** Next Cursor */
+            next_cursor: string | null;
+            /** Requests */
+            requests: components["schemas"]["ProtectionRequestView"][];
+        };
+        /** ProtectionRequestView */
+        ProtectionRequestView: {
+            /**
+             * Action
+             * @enum {string}
+             */
+            action: "CREATE" | "REPLACE" | "CANCEL";
+            /**
+             * Episode Id
+             * Format: uuid
+             */
+            episode_id: string;
+            /** Failure Code */
+            failure_code: string | null;
+            /**
+             * Idempotency Key
+             * Format: uuid
+             */
+            idempotency_key: string;
+            /**
+             * Mode
+             * @default PAPER
+             * @constant
+             */
+            mode: "PAPER";
+            /**
+             * Protection Id
+             * Format: uuid
+             */
+            protection_id: string;
+            /**
+             * Request Id
+             * Format: uuid
+             */
+            request_id: string;
+            /**
+             * Snapshot At
+             * Format: date-time
+             */
+            snapshot_at: string;
+            /**
+             * State
+             * @enum {string}
+             */
+            state: "PENDING" | "APPLIED" | "REJECTED";
+        };
+        /** ProtectionView */
+        ProtectionView: {
+            /** Base */
+            base: string;
+            /** Conflicted */
+            conflicted: boolean;
+            /** Entry Order Id */
+            entry_order_id: string | null;
+            /**
+             * Episode Id
+             * Format: uuid
+             */
+            episode_id: string;
+            /** Exit Command State */
+            exit_command_state?: string | null;
+            /** Exit Filled Quantity */
+            exit_filled_quantity?: string | null;
+            /** Exit Order Id */
+            exit_order_id?: string | null;
+            /** Exit Order State */
+            exit_order_state?: string | null;
+            /** Exit Quantity */
+            exit_quantity?: string | null;
+            /** Failure Code */
+            failure_code: string | null;
+            /** Market Ready */
+            market_ready: boolean;
+            /**
+             * Mode
+             * @default PAPER
+             * @constant
+             */
+            mode: "PAPER";
+            /** Protected Quantity */
+            protected_quantity: string;
+            /**
+             * Protection Id
+             * Format: uuid
+             */
+            protection_id: string;
+            /** Quantity */
+            quantity: string;
+            /**
+             * Quote
+             * @default USDT
+             * @constant
+             */
+            quote: "USDT";
+            /** Revision */
+            revision: number;
+            /** Snapshot At */
+            snapshot_at: string;
+            /** State */
+            state: string;
+            /** Stop Loss Price */
+            stop_loss_price: string | null;
+            /** Take Profit Price */
+            take_profit_price: string | null;
+            /**
+             * Wallet Id
+             * Format: uuid
+             */
+            wallet_id: string;
         };
         /** ProtocolEnableRequest */
         ProtocolEnableRequest: {
@@ -5518,6 +5840,245 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ManualOrderRefusal"];
+                };
+            };
+        };
+    };
+    discover_paper_protection_requests_get: {
+        parameters: {
+            query?: {
+                state?: "unresolved";
+                cursor?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProtectionRequestPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    lookup_key_paper_protection_requests_by_key__key__get: {
+        parameters: {
+            query: {
+                action: "CREATE" | "REPLACE" | "CANCEL";
+            };
+            header?: never;
+            path: {
+                key: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProtectionRequestView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    lookup_paper_protection_requests__request_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProtectionRequestView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    page_paper_protections_get: {
+        parameters: {
+            query: {
+                episode_id: string;
+                cursor?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProtectionPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_request_paper_protections_post: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProtectionCreateInput"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProtectionRequestView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    cancel_request_paper_protections__protection_id__cancel_post: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                protection_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProtectionCancelInput"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProtectionRequestView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    replace_request_paper_protections__protection_id__replace_post: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                protection_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProtectionReplaceInput"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProtectionRequestView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

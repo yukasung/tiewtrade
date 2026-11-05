@@ -2,6 +2,9 @@ import { keepPreviousData, useInfiniteQuery, useQuery } from "@tanstack/react-qu
 import { useCallback, useEffect, useState } from "react";
 import { navigateAccountPage } from "./accountNavigation";
 import { CandlestickChartPanel } from "./CandlestickChartPanel";
+import { ProtectionPanel } from "./ProtectionPanel";
+import { useProtections } from "./useProtections";
+import { protectionText as pt } from "./protectionMessages";
 import { ManualOrderForm } from "./ManualOrderForm";
 import { ManualRequestStatus } from "./ManualRequestStatus";
 import { PaperOrderList } from "./PaperOrderList";
@@ -76,6 +79,8 @@ function PaperTradeForOwner({ owner }: { owner: string }) {
   }, [attemptData, finishAttempt]);
   const data = snapshot.data;
   const wallet = data?.mode === "PAPER" ? data.wallet : null;
+  const baseBalance = wallet?.base_balances.find(balance => balance.asset === base);
+  const protections = useProtections(owner, wallet?.episode_id ?? null, visible);
   const scope = wallet ? { expected_wallet_id: wallet.wallet_id, expected_episode_id: wallet.episode_id } : null;
   // Remount only the local form when its scope or resolved attempt changes.
   // The recovery journal keeps the original payload independently of this key.
@@ -121,7 +126,8 @@ function PaperTradeForOwner({ owner }: { owner: string }) {
     {recoveryNotice}
     {recentResult && (recentResult.intake_failure_code || recentResult.command_failure_code) && <p role="alert">{t("failure")}: {manualCode(recentResult.intake_failure_code ?? recentResult.command_failure_code)}</p>}
     {data && wallet === null && <p>{t("noWallet")}</p>}
-    <ManualOrderForm key={draftKey} bases={bases} base={base} onBase={changeBase} showPairSelector={false} scope={scope} canSubmit={canSubmit} disabled={blocked} onSubmit={payload => recovery.send({ version: 1, mode: "PAPER", owner, action: "NEW", key: globalThis.crypto.randomUUID(), payload })}/>
+    {baseBalance && <p className="text-sm">{pt("unprotected")}: {baseBalance.available === null ? pt("conflict") : <MarketValue amount={baseBalance.available} unit={base}/>}</p>}
+    <ManualOrderForm protectionEnabled={data?.protection_enabled ?? false} protectionsReady={protections.ready} protections={protections.rows.filter(p => p.base === base)} key={draftKey} bases={bases} base={base} onBase={changeBase} showPairSelector={false} scope={scope} canSubmit={canSubmit} disabled={blocked} onSubmit={payload => recovery.send({ version: 1, mode: "PAPER", owner, action: "NEW", key: globalThis.crypto.randomUUID(), payload })}/>
     <div hidden aria-hidden="true">
       {Object.entries(tracked).map(([id, episode]) => <ManualRequestStatus key={id} owner={owner} request={id} episode={episode} visible={visible} onTerminal={completeTracked} showSnapshot={false}/>)}
     </div>
@@ -131,5 +137,7 @@ function PaperTradeForOwner({ owner }: { owner: string }) {
     marketPrice={market?.price}
     chart={<CandlestickChartPanel userId={owner} base={base} onBaseChange={changeBase} embedded
       toolbarTargetId="paper-chart-toolbar" onMarketSnapshot={setMarketSnapshot}/>} form={form}
-    orders={wallet ? <div className="trade-workspace-orders"><PaperOrderList key={wallet.episode_id} owner={owner} episode={wallet.episode_id} visible={visible} disabled={blocked || snapshot.isError || snapshot.isPending} onCancel={row => recovery.send({ version: 1, owner, mode: "PAPER", key: globalThis.crypto.randomUUID(), action: "CANCEL", orderId: row.order_id, payload: { expected_wallet_id: row.wallet_id, expected_episode_id: row.episode_id } })}/></div> : undefined}/>;
+    orders={wallet ? <div className="trade-workspace-orders"><PaperOrderList key={wallet.episode_id} owner={owner} episode={wallet.episode_id} visible={visible} disabled={blocked || snapshot.isError || snapshot.isPending} onCancel={row => recovery.send({ version: 1, owner, mode: "PAPER", key: globalThis.crypto.randomUUID(), action: "CANCEL", orderId: row.order_id, payload: { expected_wallet_id: row.wallet_id, expected_episode_id: row.episode_id } })}/>
+      {scope && <ProtectionPanel key={`${scope.expected_episode_id}:${base}`} owner={owner} base={base} scope={scope} rows={protections.rows} visible={visible} disabled={blocked} enabled={data?.protection_enabled ?? false} ready={protections.ready} error={protections.query.isError} available={baseBalance?.available ?? null}/>}
+    </div> : undefined}/>;
 }

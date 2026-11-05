@@ -7,7 +7,11 @@ import os
 from tiewtrade.infra.db import DatabaseRole, create_engine_for
 from tiewtrade.infra.risk_limits.policy import TransactionalRiskPolicy
 from tiewtrade.services.engine.manual_order import run_manual_order_round
-from tiewtrade.services.engine.paper_order import matching_round_modes, run_paper_order_round
+from tiewtrade.services.engine.paper_order import (
+    matching_round_modes,
+    run_paper_order_round,
+    run_protection_round,
+)
 
 # Approved F18-R8: bounded fallback hints, one claimed item per phase.
 CANDIDATE_LIMIT = 20
@@ -28,6 +32,9 @@ async def serve() -> None:
     worker = f"paper-order:{host}:{os.getpid()}"
     try:
         while True:
+            await run_protection_round(
+                engine=engine, scan_engine=scan_engine, limit=CANDIDATE_LIMIT
+            )
             await run_manual_order_round(
                 engine=engine,
                 scan_engine=scan_engine,

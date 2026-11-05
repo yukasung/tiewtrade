@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="19" skipped="0" tests="72" time="70.901" timestamp="2026-11-05T21:02:50.678275+07:00" hostname="Chainarongs-MacBook-Pro.local"><testcase classname="tests.infra.risk_limits.test_source_resumption" name="test_0056_default_off_roundtrip_preserves_schedule_and_does_not_rearm[False]" time="1.960" /><testcase classname="tests.infra.risk_limits.test_source_resumption" name="test_0056_default_off_roundtrip_preserves_schedule_and_does_not_rearm[True]" time="1.819" /><testcase classname="tests.infra.protections.test_lifecycle" name="test_manual_partial_fill_cancel_releases_only_order_reservation" time="1.998" /><testcase classname="tests.infra.protections.test_lifecycle" name="test_rejected_sell_admission_does_not_release_protection" time="1.175" /><testcase classname="tests.infra.protections.test_lifecycle" name="test_same_key_concurrent_intake_and_replay_apply_once" time="0.891" /><testcase classname="tests.infra.protections.test_lifecycle" name="test_price_trigger_exit_replay_and_exact_financial_effects[10]" time="1.813" /><testcase classname="tests.infra.protections.test_lifecycle" name="test_price_trigger_exit_replay_and_exact_financial_effects[0.1]" time="1.880" /><testcase classname="tests.infra.protections.test_lifecycle" name="test_api_cannot_mutate_projection_and_other_owner_cannot_read" time="0.887" /><testcase classname="tests.infra.protections.test_lifecycle" name="test_setup_retry_deadline_survives_reloaded_owner_sessions" time="1.206" /><testcase classname="tests.infra.protections.test_lifecycle" name="test_request_failure_rolls_back_group_history_and_result_together" time="1.118" /><testcase classname="tests.infra.protections.test_lifecycle" name="test_standalone_groups_do_not_expand_on_a_new_entry_or_overlap" time="1.953" /><testcase classname="tests.infra.protections.test_review_regressions" name="test_replacement_progress_uses_owner_rls_and_narrow_runtime_grants" time="0.333" /><testcase classname="tests.infra.protections.test_review_regressions" name="test_trigger_and_mutation_serialize_in_both_commit_orders[mutation-CANCEL]" time="1.056" /><testcase classname="tests.infra.protections.test_review_regressions" name="test_trigger_and_mutation_serialize_in_both_commit_orders[mutation-REPLACE]" time="1.215" /><testcase classname="tests.infra.protections.test_review_regressions" name="test_trigger_and_mutation_serialize_in_both_commit_orders[mutation-SELL]" time="1.310" /><testcase classname="tests.infra.protections.test_review_regressions" name="test_trigger_and_mutation_serialize_in_both_commit_orders[trigger-CANCEL]" time="1.190" /><testcase classname="tests.infra.protections.test_review_regressions" name="test_trigger_and_mutation_serialize_in_both_commit_orders[trigger-REPLACE]" time="1.183" /><testcase classname="tests.infra.protections.test_review_regressions" name="test_trigger_and_mutation_serialize_in_both_commit_orders[trigger-SELL]" time="0.922" /><testcase classname="tests.infra.protections.test_review_regressions" name="test_bracket_fill_process_kill_preserves_one_financial_effect[before_commit]" time="1.255" /><testcase classname="tests.infra.protections.test_review_regressions" name="test_bracket_fill_process_kill_preserves_one_financial_effect[after_commit]" time="1.127" /><testcase classname="tests.infra.protections.test_review_regressions" name="test_replace_failure_preserves_working_revision[minimum]" time="1.000" /><testcase classname="tests.infra.protections.test_review_regressions" name="test_replace_failure_preserves_working_revision[source]" time="1.196" /><testcase classname="tests.infra.protections.test_review_regressions" name="test_entry_correction_snapshot_remains_repairable_after_reload" time="1.201" /><testcase classname="tests.infra.protections.test_validation" name="test_projection_cannot_move_to_a_different_owner_mode_or_episode[mode-23514]" time="1.117" /><testcase classname="tests.infra.protections.test_validation" name="test_projection_cannot_move_to_a_different_owner_mode_or_episode[owner-42501]" time="1.034" /><testcase classname="tests.infra.protections.test_validation" name="test_projection_cannot_move_to_a_different_owner_mode_or_episode[episode-23503]" time="1.166" /><testcase classname="tests.infra.protections.test_validation" name="test_opposite_trigger_prices_serialize_to_one_winning_leg[110]" time="1.120" /><testcase classname="tests.infra.protections.test_validation" name="test_opposite_trigger_prices_serialize_to_one_winning_leg[90]" time="1.069" /><testcase classname="tests.infra.protections.test_validation" name="test_entry_correction_cannot_repair_or_duplicate_an_unknown_exit[PositionEventKind.REPLACE]" time="1.395" /><testcase classname="tests.infra.protections.test_validation" name="test_entry_correction_cannot_repair_or_duplicate_an_unknown_exit[PositionEventKind.VOID]" time="1.428" /><testcase classname="tests.infra.protections.test_validation" name="test_trigger_commit_ack_loss_preserves_single_unknown_exit_identity" time="1.122" /><testcase classname="tests.infra.protections.test_validation" name="test_legacy_financial_marker_cannot_write_while_protection_exists[True]" time="1.055" /><testcase classname="tests.infra.protections.test_validation" name="test_legacy_financial_marker_cannot_write_while_protection_exists[False]" time="1.012" /><testcase classname="tests.infra.protections.test_validation" name="test_progress_fk_rejects_same_owner_but_different_episode" time="0.227" /><testcase classname="tests.infra.protections.test_validation" name="test_exit_commit_ack_loss_reconciles_original_claim_without_second_trade" time="1.560" /><testcase classname="tests.infra.protections.test_validation" name="test_production_exit_survives_user_stop_or_inactive_catalog[USER]" time="1.703" /><testcase classname="tests.infra.protections.test_validation" name="test_production_exit_survives_user_stop_or_inactive_catalog[REMOVED]" time="1.487" /><testcase classname="tests.infra.protections.test_validation" name="test_reset_and_pending_protection_serialize_on_the_original_episode[request]" time="0.344" /><testcase classname="tests.infra.protections.test_validation" name="test_reset_and_pending_protection_serialize_on_the_original_episode[reset]" time="0.266" /><testcase classname="tests.infra.protections.test_validation" name="test_competing_allocations_serialize_without_overlap[False]" time="1.136" /><testcase classname="tests.infra.protections.test_validation" name="test_competing_allocations_serialize_without_overlap[True]" time="1.228" /><testcase classname="tests.infra.protections.test_validation" name="test_late_entry_fill_and_cancel_race_keep_only_proven_extra_exit[fill]" time="2.915" /><testcase classname="tests.infra.protections.test_validation" name="test_late_entry_fill_and_cancel_race_keep_only_proven_extra_exit[cancel]" time="2.326" /><testcase classname="tests.infra.protections.test_validation" name="test_exit_fill_kill_and_takeover_preserve_exact_cash_position_allocation[before_commit]" time="2.126" /><testcase classname="tests.infra.protections.test_validation" name="test_exit_fill_kill_and_takeover_preserve_exact_cash_position_allocation[after_commit]" time="1.718" /><testcase classname="tests.infra.protections.test_validation" name="test_bracket_fill_after_crossing_triggers_without_rejecting_its_net_quantity[110]" time="0.942" /><testcase classname="tests.infra.protections.test_validation" name="test_bracket_fill_after_crossing_triggers_without_rejecting_its_net_quantity[90]" time="1.084" /><testcase classname="tests.infra.risk_limits.test_source_resumption" name="test_both_publications_required_and_early_head_is_direct[r8]" time="0.445"><failure message="ValueError: not enough values to unpack (expected 1, got 0)">tests/infra/risk_limits/test_source_resumption.py:111: in test_both_publications_required_and_early_head_is_direct
+    (due,) = await hints(scan_engine, waiting, **options)
+    ^^^^^^
+E   ValueError: not enough values to unpack (expected 1, got 0)</failure></testcase><testcase classname="tests.infra.risk_limits.test_source_resumption" name="test_both_publications_required_and_early_head_is_direct[r9]" time="0.344"><failure message="ValueError: not enough values to unpack (expected 1, got 0)">tests/infra/risk_limits/test_source_resumption.py:111: in test_both_publications_required_and_early_head_is_direct
+    (due,) = await hints(scan_engine, waiting, **options)
+    ^^^^^^
+E   ValueError: not enough values to unpack (expected 1, got 0)</failure></testcase><testcase classname="tests.infra.risk_limits.test_source_resumption" name="test_both_publications_required_and_early_head_is_direct[r10]" time="0.341"><failure message="ValueError: not enough values to unpack (expected 1, got 0)">tests/infra/risk_limits/test_source_resumption.py:111: in test_both_publications_required_and_early_head_is_direct
+    (due,) = await hints(scan_engine, waiting, **options)
+    ^^^^^^
+E   ValueError: not enough values to unpack (expected 1, got 0)</failure></testcase><testcase classname="tests.infra.risk_limits.test_source_resumption" name="test_failed_probe_preserves_due_attempts_and_cannot_probe_again[True]" time="0.337"><failure message="assert 0 == 1&#10; +  where 0 = len(())">tests/infra/risk_limits/test_source_resumption.py:144: in test_failed_probe_preserves_due_attempts_and_cannot_probe_again
+    due = await resumed(scan_engine, waiting)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/infra/risk_limits/test_source_resumption.py:98: in resumed
+    assert len(found) == 1
+E   assert 0 == 1
+E    +  where 0 = len(())</failure></testcase><testcase classname="tests.infra.risk_limits.test_source_resumption" name="test_failed_probe_preserves_due_attempts_and_cannot_probe_again[False]" time="0.452"><failure message="assert 0 == 1&#10; +  where 0 = len(())">tests/infra/risk_limits/test_source_resumption.py:144: in test_failed_probe_preserves_due_attempts_and_cannot_probe_again
+    due = await resumed(scan_engine, waiting)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/infra/risk_limits/test_source_resumption.py:98: in resumed
+    assert len(found) == 1
+E   assert 0 == 1
+E    +  where 0 = len(())</failure></testcase><testcase classname="tests.infra.risk_limits.test_source_resumption" name="test_stale_scan_is_rechecked_under_owner_lock[revision]" time="0.346"><failure message="assert 0 == 1&#10; +  where 0 = len(())">tests/infra/risk_limits/test_source_resumption.py:198: in test_stale_scan_is_rechecked_under_owner_lock
+    due = await resumed(scan_engine, waiting)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/infra/risk_limits/test_source_resumption.py:98: in resumed
+    assert len(found) == 1
+E   assert 0 == 1
+E    +  where 0 = len(())</failure></testcase><testcase classname="tests.infra.risk_limits.test_source_resumption" name="test_stale_scan_is_rechecked_under_owner_lock[due]" time="0.334"><failure message="assert 0 == 1&#10; +  where 0 = len(())">tests/infra/risk_limits/test_source_resumption.py:198: in test_stale_scan_is_rechecked_under_owner_lock
+    due = await resumed(scan_engine, waiting)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/infra/risk_limits/test_source_resumption.py:98: in resumed
+    assert len(found) == 1
+E   assert 0 == 1
+E    +  where 0 = len(())</failure></testcase><testcase classname="tests.infra.risk_limits.test_source_resumption" name="test_stale_scan_is_rechecked_under_owner_lock[pair]" time="0.387"><failure message="assert 0 == 1&#10; +  where 0 = len(())">tests/infra/risk_limits/test_source_resumption.py:198: in test_stale_scan_is_rechecked_under_owner_lock
+    due = await resumed(scan_engine, waiting)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/infra/risk_limits/test_source_resumption.py:98: in resumed
+    assert len(found) == 1
+E   assert 0 == 1
+E    +  where 0 = len(())</failure></testcase><testcase classname="tests.infra.risk_limits.test_source_resumption" name="test_stale_scan_is_rechecked_under_owner_lock[cancel]" time="0.339"><failure message="assert 0 == 1&#10; +  where 0 = len(())">tests/infra/risk_limits/test_source_resumption.py:198: in test_stale_scan_is_rechecked_under_owner_lock
+    due = await resumed(scan_engine, waiting)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/infra/risk_limits/test_source_resumption.py:98: in resumed
+    assert len(found) == 1
+E   assert 0 == 1
+E    +  where 0 = len(())</failure></testcase><testcase classname="tests.infra.risk_limits.test_source_resumption" name="test_stale_scan_is_rechecked_under_owner_lock[unknown]" time="0.336"><failure message="assert 0 == 1&#10; +  where 0 = len(())">tests/infra/risk_limits/test_source_resumption.py:198: in test_stale_scan_is_rechecked_under_owner_lock
+    due = await resumed(scan_engine, waiting)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/infra/risk_limits/test_source_resumption.py:98: in resumed
+    assert len(found) == 1
+E   assert 0 == 1
+E    +  where 0 = len(())</failure></testcase><testcase classname="tests.infra.risk_limits.test_source_resumption" name="test_stale_scan_is_rechecked_under_owner_lock[book]" time="0.337"><failure message="assert 0 == 1&#10; +  where 0 = len(())">tests/infra/risk_limits/test_source_resumption.py:198: in test_stale_scan_is_rechecked_under_owner_lock
+    due = await resumed(scan_engine, waiting)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/infra/risk_limits/test_source_resumption.py:98: in resumed
+    assert len(found) == 1
+E   assert 0 == 1
+E    +  where 0 = len(())</failure></testcase><testcase classname="tests.infra.risk_limits.test_source_resumption" name="test_stale_scan_is_rechecked_under_owner_lock[price]" time="0.335"><failure message="assert 0 == 1&#10; +  where 0 = len(())">tests/infra/risk_limits/test_source_resumption.py:198: in test_stale_scan_is_rechecked_under_owner_lock
+    due = await resumed(scan_engine, waiting)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/infra/risk_limits/test_source_resumption.py:98: in resumed
+    assert len(found) == 1
+E   assert 0 == 1
+E    +  where 0 = len(())</failure></testcase><testcase classname="tests.infra.risk_limits.test_source_resumption" name="test_probe_rollback_does_not_consume_guard_and_commit_ack_loss_does" time="0.338"><failure message="assert 0 == 1&#10; +  where 0 = len(())">tests/infra/risk_limits/test_source_resumption.py:240: in test_probe_rollback_does_not_consume_guard_and_commit_ack_loss_does
+    due = await resumed(scan_engine, waiting)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/infra/risk_limits/test_source_resumption.py:98: in resumed
+    assert len(found) == 1
+E   assert 0 == 1
+E    +  where 0 = len(())</failure></testcase><testcase classname="tests.infra.risk_limits.test_source_resumption" name="test_concurrent_claims_have_one_winner" time="0.387"><failure message="assert 0 == 1&#10; +  where 0 = len(())">tests/infra/risk_limits/test_source_resumption.py:273: in test_concurrent_claims_have_one_winner
+    due = await resumed(scan_engine, waiting)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/infra/risk_limits/test_source_resumption.py:98: in resumed
+    assert len(found) == 1
+E   assert 0 == 1
+E    +  where 0 = len(())</failure></testcase><testcase classname="tests.infra.risk_limits.test_source_resumption" name="test_healthy_old_writer_finish_clears_marker" time="0.386" /><testcase classname="tests.infra.risk_limits.test_source_resumption" name="test_native_round_marks_only_source_errors_and_keeps_claim_budget[True]" time="0.352" /><testcase classname="tests.infra.risk_limits.test_source_resumption" name="test_native_round_marks_only_source_errors_and_keeps_claim_budget[False]" time="0.417" /><testcase classname="tests.infra.risk_limits.test_source_resumption" name="test_short_probe_lease_cannot_publish_after_original_due" time="0.528"><failure message="assert 0 == 1&#10; +  where 0 = len(())">tests/infra/risk_limits/test_source_resumption.py:369: in test_short_probe_lease_cannot_publish_after_original_due
+    await resumed(scan_engine, waiting)
+tests/infra/risk_limits/test_source_resumption.py:98: in resumed
+    assert len(found) == 1
+E   assert 0 == 1
+E    +  where 0 = len(())</failure></testcase><testcase classname="tests.infra.risk_limits.test_source_resumption" name="test_scan_grants_are_public_metadata_only" time="0.039" /><testcase classname="tests.infra.risk_limits.test_source_resumption" name="test_source_hint_never_bypasses_native_gate_or_publishes_partial_order" time="0.444"><failure message="assert 0 == 1&#10; +  where 0 = len(())">tests/infra/risk_limits/test_source_resumption.py:423: in test_source_hint_never_bypasses_native_gate_or_publishes_partial_order
+    due = await resumed(scan_engine, waiting)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/infra/risk_limits/test_source_resumption.py:98: in resumed
+    assert len(found) == 1
+E   assert 0 == 1
+E    +  where 0 = len(())</failure></testcase><testcase classname="tests.infra.risk_limits.test_source_resumption" name="test_real_lost_probe_commit_ack_preserves_consumed_guard" time="0.604"><failure message="assert 0 == 1&#10; +  where 0 = len(())">tests/infra/risk_limits/test_source_resumption.py:519: in test_real_lost_probe_commit_ack_preserves_consumed_guard
+    chosen = await resumed(scan_engine, waiting)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/infra/risk_limits/test_source_resumption.py:98: in resumed
+    assert len(found) == 1
+E   assert 0 == 1
+E    +  where 0 = len(())</failure></testcase><testcase classname="tests.infra.risk_limits.test_source_resumption" name="test_source_mode_preserves_ordinary_r9_r10_selection[r9]" time="0.711" /><testcase classname="tests.infra.risk_limits.test_source_resumption" name="test_source_mode_preserves_ordinary_r9_r10_selection[r10]" time="0.541" /><testcase classname="tests.infra.risk_limits.test_source_resumption" name="test_probe_rechecks_latch_without_an_order_or_reservation" time="0.459"><failure message="assert 0 == 1&#10; +  where 0 = len(())">tests/infra/risk_limits/test_source_resumption.py:581: in test_probe_rechecks_latch_without_an_order_or_reservation
+    due = await resumed(scan_engine, waiting)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/infra/risk_limits/test_source_resumption.py:98: in resumed
+    assert len(found) == 1
+E   assert 0 == 1
+E    +  where 0 = len(())</failure></testcase><testcase classname="tests.infra.risk_limits.test_source_resumption" name="test_reset_waits_for_pending_order_then_invalidates_probe_identity" time="0.460"><failure message="assert 0 == 1&#10; +  where 0 = len(())">tests/infra/risk_limits/test_source_resumption.py:605: in test_reset_waits_for_pending_order_then_invalidates_probe_identity
+    due = await resumed(scan_engine, waiting)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/infra/risk_limits/test_source_resumption.py:98: in resumed
+    assert len(found) == 1
+E   assert 0 == 1
+E    +  where 0 = len(())</failure></testcase></testsuite></testsuites>

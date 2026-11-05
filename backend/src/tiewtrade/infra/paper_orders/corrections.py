@@ -40,6 +40,7 @@ from tiewtrade.infra.positions import (
     read_effective_executions,
     read_position_snapshot,
 )
+from tiewtrade.infra.protections.worker import reconcile_allocations
 
 
 async def correct_fill(
@@ -124,6 +125,7 @@ async def correct_fill(
                 details=PaperOrderDecisionDetails(episode_id, correction_event_id, "CONFLICT"),
             ),
         )
+        await reconcile_allocations(session, episode_id, fact.pair)
         return None
     assert checkpoint is not None
     effective = await read_effective_executions(session, episode_id, fact.pair)
@@ -230,6 +232,7 @@ async def correct_fill(
             input_evidence_id=evidence.evidence_id,
             decision_id=UUID(int=correction_event_id.int ^ 3),
         )
+    await reconcile_allocations(session, episode_id, fact.pair)
     return saved
 
 
