@@ -1,0 +1,14 @@
+{
+  "dev": {
+    "html_status": 200,
+    "module_transform_status": 200,
+    "binding": "loopback",
+    "launch_editor_invoked": false
+  },
+  "preview": {
+    "html_status": 200,
+    "assets_loaded": 2,
+    "binding": "loopback"
+  },
+  "vite": "6.4.4"
+}

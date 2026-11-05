@@ -213,6 +213,15 @@ domain ของเงินที่ปฏิเสธค่าที่เก�
 
 ## ชุดที่ 1 — ฐานราก
 
+F-01 follow-up: [Security dependency remediation](features/2026-11-05-security-dependency-remediation/requirements.md)
+**Code review APPROVED — local checks passed; final CI pending (2026-11-05)** — certifi 2026.7.22 → 2026.10.18 และ
+Vite 6.4.3 → 6.4.4; branch `feature/security-dependency-remediation`.
+requirements/plan/validation Approved; เปลี่ยนเฉพาะสอง lock entries แล้ว.
+156 backend + 10 frontend tests, TLS/dev/preview/build และ OSV ผ่าน local;
+OSV ไม่มี High/Critical/Unknown และมี Medium 4 records. DV-10 Pending Full Validation.
+เจ้าของอนุญาต commit/push/PR แล้ว; ขั้นถัดไปติดตาม required CI บน final candidate.
+ยังไม่ merge/Completed และ DV-10 ยังคง Pending Full Validation.
+
 F-01 follow-up: [Self-hosted CI / ลดรอบซ้ำ](features/2026-10-23-self-hosted-ci/requirements.md)
 **Retired / ไม่เปิดใช้ self-hosted CI (2026-10-24)** — เจ้าของเปลี่ยน repository เป็น Public
 และให้ปิดงานทดลอง; ใช้ GitHub-hosted workflow เดิมต่อโดยไม่เปลี่ยน triggers/storage.
