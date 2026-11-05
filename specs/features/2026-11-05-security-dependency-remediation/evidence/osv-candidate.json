@@ -1,0 +1,57 @@
+{
+  "coverage": 464,
+  "counts": {
+    "critical": 0,
+    "high": 0,
+    "low": 0,
+    "medium": 4,
+    "none": 0,
+    "unknown": 0,
+    "excepted": 0,
+    "blocked": 0,
+    "needs_triage": 0
+  },
+  "lock_sha256": {
+    "backend/uv.lock": "f427025bd867333a3cd8628ef7e7c76309866b9fdaee3f968c77c404b074402b",
+    "frontend/package-lock.json": "7d0fb4ab31f0eece2d6fe8ef9e60ca96757c220a9b674e1162fd3c6a9965727b"
+  },
+  "policy_configuration": "684cd168e5d4b3198d04bd4eb0de193aa18a1d5c1fd4b83c6a089b491548c4a6",
+  "findings": [
+    {
+      "severity": "medium",
+      "locator": [
+        "npm",
+        "@vitest/mocker",
+        "4.1.11",
+        "GHSA-qxg6-89mg-rqv8"
+      ]
+    },
+    {
+      "severity": "medium",
+      "locator": [
+        "npm",
+        "@vitest/mocker",
+        "4.1.11",
+        "GHSA-xp26-3454-mjgp"
+      ]
+    },
+    {
+      "severity": "medium",
+      "locator": [
+        "npm",
+        "minimatch",
+        "10.2.6",
+        "GHSA-g3hv-75wg-m249"
+      ]
+    },
+    {
+      "severity": "medium",
+      "locator": [
+        "npm",
+        "vite",
+        "6.4.4",
+        "GHSA-8g5g-mxqh-grgj"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "certifi": "2026.10.18",
+  "httpx": "0.28.1",
+  "bundle_load": "passed",
+  "hostname_check": true,
+  "certificate_required": true,
+  "self_signed_loopback": "rejected",
+  "external_network_used": false
+}
