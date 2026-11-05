@@ -1,0 +1,17 @@
+{
+  "base_sha": "c8d8ca78971fce3d98f624e0c35128195168d831",
+  "status": "uncommitted working-tree candidate",
+  "after_sha256": {
+    "backend/uv.lock": "f427025bd867333a3cd8628ef7e7c76309866b9fdaee3f968c77c404b074402b",
+    "backend/pyproject.toml": "3245f32853fe2dbd4f24ac973197c1547c84119cde3f3276501f5afd46fe513c",
+    "frontend/package-lock.json": "7d0fb4ab31f0eece2d6fe8ef9e60ca96757c220a9b674e1162fd3c6a9965727b",
+    "frontend/package.json": "9be63b912331c1d902b8926d8aa925b8dcc58b2797b2fc2e79797bdfa125a490"
+  },
+  "changed_packages": [
+    "PyPI/certifi:2026.7.22->2026.10.18",
+    "npm/vite:6.4.3->6.4.4"
+  ],
+  "manifest_unchanged": true,
+  "uv_lock_revision_unchanged": true,
+  "scanner_hashes_match": true
+}

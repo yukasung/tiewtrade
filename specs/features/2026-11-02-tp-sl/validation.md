@@ -168,3 +168,17 @@ bounded candidate batch20เต็มด้วยforeign ownersจึงไม�
 API/bridge/same-pair/source-resumption105passed57.78s รวม20กรณีที่ล้มในCIก่อนหน้า
 actionlintผ่าน; rollback16ยังอยู่stepแยกเดิม V-17ยังPartialรอrequiredCIบนcandidateใหม่
 รายละเอียดและหลักฐานอยู่ใน evidence/feature-candidate.md; ไม่อนุญาตmerge/Live
+
+## Required CI isolation result and base synchronization — 2026-11-05
+
+a7c4bee94f2fefd7d84e268f7a67b78698b6096b passed all required CI jobs:
+- push https://github.com/yukasung/tiewtrade/actions/runs/42056045217
+- PR https://github.com/yukasung/tiewtrade/actions/runs/42056057034
+- Both runs: main4242 + isolatedF1748 + writer-fence1 + optional-limit1 +
+  fresh-global-state27 + rollback16 passed, total4335 backend tests; frontend,
+  API contract, container and browser E2E also passed. No tests/assertions reduced.
+
+Main advanced to security patch a3a8652 (#47); strict required status checks require
+base synchronization before merge. Keep the a7c4bee isolation evidence; V-17 remains
+Partial pending required CI on the synchronized candidate. This evidence is combined
+with the actual main synchronization, not a CI-documentation-only commit. No PR merge.

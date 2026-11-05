@@ -606,3 +606,24 @@ Owner explicitly chose A: run F-17 integration on a freshly migrated CI test dat
 
 V-17 remains Partial until required CI on the new candidate finishes. Batch/Release
 remain Pending Full Validation/Dependency. No merge or Live orders authorized.
+
+## Isolation required CI passed; synchronize current main — 2026-11-05
+
+Candidate a7c4bee94f2fefd7d84e268f7a67b78698b6096b:
+- [push CI](https://github.com/yukasung/tiewtrade/actions/runs/42056045217): all6jobs passed.
+  Main **4242 passed**976.54s; F17 **48 passed**51.17s; writer-fence1, optional-limit1,
+  fresh-global-state27 and protection rollback16 passed. Total4335 backend tests.
+- [PR CI](https://github.com/yukasung/tiewtrade/actions/runs/42056057034): all6jobs passed.
+  Main **4242 passed**1039.82s; F17 **48 passed**54.44s; same remaining45 guards passed.
+- Required-check query returned no non-success checks on that SHA. All20 prior missing-hint
+  failures passed under the approved database isolation; scanner/tests/assertions unchanged.
+
+GitHub strict required-status policy also requires the branch to include latest main.
+Main advanced to a3a8652 (security dependency patch #47: certifi/Vite and approved evidence).
+Merge that already approved main change into the feature branch, preserving unrelated local
+work and the F17 workflow; run required CI on the resulting candidate before requesting PR
+merge. This checkpoint evidence is combined with that actual base synchronization, rather
+than creating a CI-documentation-only commit loop. No F17 runtime/source change.
+
+V17 remains Partial pending the synchronized candidate CI; Batch/Release dependencies and
+full validation remain pending. The PR itself is not merged and no Live order was sent.
