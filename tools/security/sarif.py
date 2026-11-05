@@ -57,38 +57,54 @@ def rule_descriptor(
     return descriptor
 
 
+def diagnostic_id(notification: dict[str, object], run: dict[str, object]) -> str | None:
+    """Resolve notification descriptors across driver/pack notification tables."""
+    reference = obj(notification.get("descriptor", {}))
+    identifier = reference.get("id")
+    if "index" in reference:
+        tool = obj(run.get("tool"))
+        components = [obj(tool.get("driver")), *(obj(c) for c in array(tool.get("extensions", [])))]
+        component_index = obj(reference.get("toolComponent", {})).get("index")
+        component = 0 if component_index is None else natural(component_index) + 1
+        if component >= len(components):
+            raise PolicyError("MISSING_RULE_COMPONENT")
+        notifications = array(components[component].get("notifications", []))
+        index = natural(reference["index"])
+        if index >= len(notifications):
+            raise PolicyError("MISSING_RULE_INDEX")
+        resolved = string(obj(notifications[index]).get("id"))
+        if identifier is not None and identifier != resolved:
+            raise PolicyError("CONFLICTING_RULE_REFERENCE")
+        identifier = resolved
+    return None if identifier is None else string(identifier)
+
+
 def extracted_file_count(run: dict[str, object], root: Path, prefix: str) -> int:
-    """Use pinned CodeQL diagnostics emitted from actual database file facts."""
+    """Compare CodeQL's expected-file descriptors with actual extracted File facts."""
     extracted: set[str] = set()
     expected: set[str] = set()
-    baseline = False
+    language = {"py": "python", "js": "javascript", "actions": "actions"}[prefix]
+    success_id = f"{prefix}/diagnostics/successfully-extracted-files"
+    expected_ids = {
+        f"{prefix}/baseline/expected-extracted-files",
+        f"cli/expected-extracted-files/{language}",
+    }
     for invocation in array(run.get("invocations")):
         for value in array(obj(invocation).get("toolExecutionNotifications", [])):
             notification = obj(value)
-            identifier = obj(notification.get("descriptor", {})).get("id")
-            if identifier == "cli/file-coverage-baseline":
-                baseline = True
-            if identifier not in {
-                f"{prefix}/diagnostics/successfully-extracted-files",
-                f"{prefix}/baseline/expected-extracted-files",
-            }:
+            identifier = diagnostic_id(notification, run)
+            if identifier != success_id and identifier not in expected_ids:
                 continue
             for location in array(notification.get("locations", [])):
                 artifact = obj(obj(obj(location).get("physicalLocation")).get("artifactLocation"))
                 uri = string(artifact.get("uri"))
                 source_identity(root, uri)
                 canonical = (root / unquote(uri)).resolve().relative_to(root.resolve()).as_posix()
-                target = (
-                    extracted
-                    if identifier == f"{prefix}/diagnostics/successfully-extracted-files"
-                    else expected
-                )
+                target = extracted if identifier == success_id else expected
                 target.add(canonical)
-    if not baseline or not extracted or not expected <= extracted:
-        raise PolicyError("MISSING_FILE_COVERAGE")
-    # Actions has no LOC metric or expected-file baseline query in this bundle.
-    # Its successfully-extracted-files query enumerates source File facts directly.
-    if prefix != "actions" and not expected:
+    # Expected-file locations attest the calculated baseline even when the CLI
+    # telemetry marker is intentionally omitted by --no-sarif-include-diagnostics.
+    if not expected or not extracted or not expected <= extracted:
         raise PolicyError("MISSING_FILE_COVERAGE")
     return len(extracted)
 

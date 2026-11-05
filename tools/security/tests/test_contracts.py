@@ -50,6 +50,45 @@ class ContractTests(unittest.TestCase):
             with self.assertRaises(PolicyError):
                 sarif.evaluate(report, root, "python")
 
+    def test_action_cli_notification_references_without_telemetry(self) -> None:
+        for language, prefix, baseline in [
+            ("python", "py", "python"),
+            ("javascript-typescript", "js", "javascript"),
+            ("actions", "actions", "actions"),
+        ]:
+            with tempfile.TemporaryDirectory() as temp:
+                root = Path(temp)
+                (root / "sample.py").write_text("# synthetic source\n")
+                report = sarif_report(language)
+                run = obj(array(report["runs"])[0])
+                tool = obj(run["tool"])
+                driver = obj(tool["driver"])
+                driver["notifications"] = [{"id": "cli/expected-extracted-files/" + baseline}]
+                tool["extensions"] = [
+                    {
+                        "name": "queries",
+                        "notifications": [
+                            {"id": prefix + "/diagnostics/successfully-extracted-files"}
+                        ],
+                    }
+                ]
+                invocation = obj(array(run["invocations"])[0])
+                notes = array(invocation["toolExecutionNotifications"])
+                notes.pop(0)
+                obj(notes[0])["descriptor"] = {"index": 0, "toolComponent": {"index": 0}}
+                obj(notes[1])["descriptor"] = {"index": 0}
+                if language == "actions":
+                    run["properties"] = {}
+                _, coverage = sarif.evaluate(report, root, language)
+                self.assertEqual(coverage, 1)
+                obj(notes[0])["descriptor"] = {
+                    "id": "conflicting",
+                    "index": 0,
+                    "toolComponent": {"index": 0},
+                }
+                with self.assertRaises(PolicyError):
+                    sarif.evaluate(report, root, language)
+
     def test_public_summary_excludes_sarif_messages_and_snippets(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)

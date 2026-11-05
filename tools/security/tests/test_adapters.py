@@ -269,7 +269,7 @@ class AdapterTests(unittest.TestCase):
     def test_missing_baseline_or_extraction_diagnostics_fail_closed(self) -> None:
         from tools.security.model import array, obj
 
-        for index in (0, 1):
+        for index in (1, 2):
             report = sarif_report()
             run = obj(array(report["runs"])[0])
             invocation = obj(array(run["invocations"])[0])
