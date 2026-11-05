@@ -1,4 +1,5 @@
 import { clearAttempt } from "./manualOrderJournal";
+import { protectionJournal } from "./protectionJournal";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { ApiRequestError, type Me } from "./auth";
@@ -40,7 +41,11 @@ function Session({
   useEffect(() => {
     const generation = ++lifecycle.current;
     return () => { window.queueMicrotask(() => {
-      if (lifecycle.current === generation) { try { clearAttempt(owner); } catch { /* Storage stays blocked until readable. */ } }
+      if (lifecycle.current === generation) {
+        for (const clear of [() => clearAttempt(owner), () => protectionJournal.clear(owner)]) {
+          try { clear(); } catch { /* Storage stays blocked until readable. */ }
+        }
+      }
     }); };
   }, [owner]);
   const expiryHandler = useRef(onExpired);

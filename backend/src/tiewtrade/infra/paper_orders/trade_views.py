@@ -6,7 +6,7 @@ from uuid import UUID
 from tiewtrade.core.manual_trading import available_base, available_quote
 from tiewtrade.core.money import Money, Quantity
 from tiewtrade.core.order_book import BookState
-from tiewtrade.core.orders import OrderConflictError, SourceUnavailableError
+from tiewtrade.core.orders import OrderConflictError, SafetyUnavailableError, SourceUnavailableError
 from tiewtrade.core.positions import PositionPair
 from tiewtrade.core.realtime_prices import Readiness, readiness
 from tiewtrade.infra.db.session import UserSession, require_user_session
@@ -14,6 +14,7 @@ from tiewtrade.infra.market_data.order_book_storage import read_latest_book
 from tiewtrade.infra.market_data.realtime_storage import read_public_snapshot
 from tiewtrade.infra.paper_orders.requests import RequestIntegrityError
 from tiewtrade.infra.paper_wallet import get_wallet
+from tiewtrade.infra.protections.storage import allocated, enabled
 
 
 async def trade_snapshot(
@@ -80,6 +81,7 @@ async def trade_snapshot(
             reasons.append("ORDER_BOOK_UNAVAILABLE")
     result: dict[str, Any] = {
         "mode": "PAPER",
+        "protection_enabled": await enabled(session),
         "wallet": None,
         "account_use": use,
         "base": None if pair is None else pair.base,
@@ -132,12 +134,26 @@ async def trade_snapshot(
             held,
             tuple(Quantity.of(r.base_reserved, asset) for r in reservations if r.base == asset),
         )
+        protection_quantity = await allocated(
+            session, wallet.episode_id, PositionPair(asset, "USDT")
+        )
+        try:
+            _, available = available_base(available, (protection_quantity,))
+            available_text = available.as_parts()["quantity"]
+        except SafetyUnavailableError:
+            # Keep the repair UI reachable without inventing a solvent balance.
+            available_text = None
+            result["wallet"]["source_availability"] = "UNKNOWN"
+            result["admission_ready"] = False
+            if "ORDER_CONFLICT" not in reasons:
+                reasons.append("ORDER_CONFLICT")
         balances.append(
             {
+                "protection_allocated": protection_quantity.as_parts()["quantity"],
                 "asset": asset,
                 "held": held.as_parts()["quantity"],
                 "reserved": reserved.as_parts()["quantity"],
-                "available": available.as_parts()["quantity"],
+                "available": available_text,
             }
         )
     result["wallet"].update(

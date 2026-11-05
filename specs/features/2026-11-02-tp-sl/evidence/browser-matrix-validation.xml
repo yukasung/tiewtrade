@@ -1,0 +1,16 @@
+<testsuites id="" name="" tests="6" failures="0" skipped="0" errors="0" time="45.690445999999994">
+<testsuite name="protections.spec.ts" timestamp="2026-11-05T13:18:12.811Z" hostname="" tests="6" failures="0" skipped="0" time="41.936" errors="0">
+<testcase name="bracket fill, reload, replace and cancel use durable production requests" classname="protections.spec.ts" time="7.003">
+</testcase>
+<testcase name="lost protection receipt and reload recover the same server request" classname="protections.spec.ts" time="5.598">
+</testcase>
+<testcase name="protection controls support Thai and English keyboard focus; Live sends no mutation" classname="protections.spec.ts" time="4.966">
+</testcase>
+<testcase name="partial bracket entry triggers one exit, cancels entry remainder and closes with exact cash" classname="protections.spec.ts" time="7.861">
+</testcase>
+<testcase name="selected sale reduces two protections once and canceled sale stays unprotected" classname="protections.spec.ts" time="11.012">
+</testcase>
+<testcase name="failed standalone request warns without selling assets and survives reload" classname="protections.spec.ts" time="5.496">
+</testcase>
+</testsuite>
+</testsuites>

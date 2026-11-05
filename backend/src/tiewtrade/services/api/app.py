@@ -49,6 +49,7 @@ from tiewtrade.services.api.price_admission import ProcessBudget
 from tiewtrade.services.api.price_broadcast import PriceBroadcaster
 from tiewtrade.services.api.price_guard import PriceScopeGuard
 from tiewtrade.services.api.price_routes import router as price_router
+from tiewtrade.services.api.protection_routes import router as protection_router
 from tiewtrade.services.api.risk_limit_routes import router as risk_limit_router
 from tiewtrade.services.api.safe_logging import install_query_redaction
 from tiewtrade.services.api.settings import PRICE_SETTINGS, price_redis_url
@@ -251,6 +252,7 @@ app.include_router(api_key_router)
 app.include_router(trading_account_router)
 app.include_router(paper_wallet_router)
 app.include_router(manual_order_router)
+app.include_router(protection_router)
 app.include_router(risk_limit_router)
 app.include_router(kill_switch_router)
 app.include_router(candle_router)

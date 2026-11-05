@@ -39,6 +39,7 @@ from tiewtrade.services.api.manual_order_models import (
     ExpectedPaperEpisode,
     ManualOrderRefusal,
     ManualOrderSummary,
+    ManualProtectionAllocationInput,
     ManualRequestPage,
     ManualRequestView,
     NewOrderInput,
@@ -46,6 +47,8 @@ from tiewtrade.services.api.manual_order_models import (
     PaperOrderPage,
     PaperOrderView,
     PaperTradeView,
+    ProtectionPricesInput,
+    manual_attachments,
     manual_intent,
 )
 from tiewtrade.services.api.request_identity import Authenticated, current_user
@@ -76,7 +79,9 @@ Policy = Annotated[AdmissionPolicy | None, Depends(manual_admission_policy)]
 
 
 def _http_error(error: InfraError | OrderError | MoneyError) -> HTTPException:
-    if isinstance(error, (InfraError, RequestIntegrityError, MoneyError)):
+    if isinstance(error, MoneyError):
+        return HTTPException(422, "MANUAL_ORDER_INPUT_REJECTED")
+    if isinstance(error, (InfraError, RequestIntegrityError)):
         return HTTPException(503, "MANUAL_ORDER_DEPENDENCY_UNAVAILABLE")
     if isinstance(error, SafetyUnavailableError):
         return HTTPException(503, error.code)
@@ -113,6 +118,16 @@ def _view(value: RequestView) -> ManualRequestView:
             base_quantity=payload["quantity"],
             limit_price=payload["limit"],
             time_in_force=payload["tif"],
+            protection=None
+            if item.protection is None
+            else ProtectionPricesInput(
+                take_profit_price=item.protection.get("tp"),
+                stop_loss_price=item.protection.get("sl"),
+            ),
+            protection_allocations=tuple(
+                ManualProtectionAllocationInput.model_validate(s)
+                for s in item.protection_allocations
+            ),
         )
     )
     return ManualRequestView(
@@ -249,6 +264,7 @@ async def new_order(
         intent = manual_intent(
             body, owner_id=who.user_id, order_id=uuid4(), idempotency_key=idempotency_key
         )
+        protection, allocations = manual_attachments(body)
     except (MoneyError, OrderError):
         raise HTTPException(422, "MANUAL_ORDER_INPUT_REJECTED") from None
     admission_error: OrderError | None = None
@@ -258,7 +274,11 @@ async def new_order(
             await session.execute("SET LOCAL statement_timeout='5s'")
             await session.execute("SET LOCAL lock_timeout='5s'")
             receipt = await inspect_new_request(
-                session, wallet_id=body.expected_wallet_id, intent=intent
+                session,
+                wallet_id=body.expected_wallet_id,
+                intent=intent,
+                protection=protection,
+                protection_allocations=allocations,
             )
             if receipt is None:
                 if policy is None:
@@ -273,7 +293,11 @@ async def new_order(
                         admission_error = error
                 if admission_error is None:
                     receipt = await admit_new_request(
-                        session, wallet_id=body.expected_wallet_id, intent=intent
+                        session,
+                        wallet_id=body.expected_wallet_id,
+                        intent=intent,
+                        protection=protection,
+                        protection_allocations=allocations,
                     )
             else:
                 response.status_code = 200

@@ -60,6 +60,8 @@ class ManualRequest:
     admitted_owner_stop_revision: int
     payload: dict[str, Any]
     recorded_at: datetime
+    protection: dict[str, Any] | None = None
+    protection_allocations: tuple[dict[str, Any], ...] = ()
 
 
 def decode_request(row: Any) -> ManualRequest:
@@ -79,6 +81,8 @@ def decode_request(row: Any) -> ManualRequest:
         int(row.admitted_owner_stop_revision),
         object_payload(row.payload),
         row.recorded_at,
+        None if row.protection is None else object_payload(row.protection),
+        tuple(object_payload(v) for v in row.protection_allocations),
     )
 
     if request.action == "NEW":
@@ -93,18 +97,32 @@ def decode_request(row: Any) -> ManualRequest:
         ):
             raise RequestIntegrityError("stored request identity mismatch")
     if request.fingerprint != _fingerprint(
-        request.wallet_id, request.episode_id, request.action, request.payload
+        request.wallet_id,
+        request.episode_id,
+        request.action,
+        request.payload,
+        request.protection,
+        request.protection_allocations,
     ):
         raise RequestIntegrityError("stored request fingerprint mismatch")
     return request
 
 
 def _fingerprint(
-    wallet_id: UUID, episode_id: UUID, action: RequestAction, payload: dict[str, object]
+    wallet_id: UUID,
+    episode_id: UUID,
+    action: RequestAction,
+    payload: dict[str, object],
+    protection: dict[str, Any] | None = None,
+    protection_allocations: tuple[dict[str, Any], ...] = (),
 ) -> str:
     normalized = dict(payload)
     if action == "NEW":
         normalized.pop("order_id", None)
+    if protection is not None:
+        normalized["protection"] = protection
+    if protection_allocations:
+        normalized["protection_allocations"] = list(protection_allocations)
     return hashlib.sha256(
         canonical(
             {
@@ -191,9 +209,13 @@ async def _admit(
     action: RequestAction,
     payload: dict[str, object],
     intent: OrderIntent | None,
+    protection: dict[str, Any] | None = None,
+    protection_allocations: tuple[dict[str, Any], ...] = (),
 ) -> ManualRequest:
     session = require_user_session(session)
-    fingerprint = _fingerprint(wallet_id, episode_id, action, payload)
+    fingerprint = _fingerprint(
+        wallet_id, episode_id, action, payload, protection, protection_allocations
+    )
     await wallet_lock(session)
     previous = await get_request_by_key(session, action=action, key=key)
     if previous is not None:
@@ -211,6 +233,12 @@ async def _admit(
     if active is None:
         await _reject_closed_episode(session, wallet_id=wallet_id, episode_id=episode_id)
         raise OrderConflictError("Paper episode is not active")
+    if (protection is not None or protection_allocations) and not bool(
+        (
+            await session.execute("SELECT enabled FROM paper_protection_protocol WHERE singleton")
+        ).scalar_one()
+    ):
+        raise SafetyUnavailableError("protection protocol unavailable")
     revision = None
     global_stop_revision = owner_stop_revision = 0
     if intent is not None and intent.side is ExecutionSide.BUY:
@@ -235,10 +263,11 @@ async def _admit(
             """INSERT INTO paper_order_requests
         (id,user_id,wallet_id,episode_id,order_id,action,idempotency_key,
          request_fingerprint,admitted_catalog_revision,admitted_global_stop_revision,
-         admitted_owner_stop_revision,payload)
+         admitted_owner_stop_revision,payload,protection,protection_allocations)
         VALUES(:id,:owner,:wallet,:episode,:order,:action,:key,:fingerprint,
                :revision,:global_stop_revision,:owner_stop_revision,
-               CAST(:payload AS jsonb)) RETURNING *""",
+               CAST(:payload AS jsonb),CAST(:protection AS jsonb),
+               CAST(:allocations AS jsonb)) RETURNING *""",
             {
                 "id": uuid4(),
                 "owner": session.user_id,
@@ -252,6 +281,8 @@ async def _admit(
                 "global_stop_revision": global_stop_revision,
                 "owner_stop_revision": owner_stop_revision,
                 "payload": canonical(payload),
+                "protection": None if protection is None else canonical(protection),
+                "allocations": canonical(list(protection_allocations)),
             },
         )
     ).one()
@@ -266,7 +297,12 @@ async def _admit(
 
 
 async def admit_new_request(
-    session: UserSession, *, wallet_id: UUID, intent: OrderIntent
+    session: UserSession,
+    *,
+    wallet_id: UUID,
+    intent: OrderIntent,
+    protection: dict[str, Any] | None = None,
+    protection_allocations: tuple[dict[str, Any], ...] = (),
 ) -> ManualRequest:
     session = require_user_session(session)
     if (
@@ -284,6 +320,8 @@ async def admit_new_request(
         action="NEW",
         payload=intent_payload(intent),
         intent=intent,
+        protection=protection,
+        protection_allocations=protection_allocations,
     )
 
 
@@ -328,13 +366,23 @@ async def _reject_closed_episode(
 
 
 async def inspect_new_request(
-    session: UserSession, *, wallet_id: UUID, intent: OrderIntent
+    session: UserSession,
+    *,
+    wallet_id: UUID,
+    intent: OrderIntent,
+    protection: dict[str, Any] | None = None,
+    protection_allocations: tuple[dict[str, Any], ...] = (),
 ) -> ManualRequest | None:
     session = require_user_session(session)
     await wallet_lock(session)
     previous = await get_request_by_key(session, action="NEW", key=intent.idempotency_key)
     if previous is not None and previous.fingerprint != _fingerprint(
-        wallet_id, intent.scope.episode_id, "NEW", intent_payload(intent)
+        wallet_id,
+        intent.scope.episode_id,
+        "NEW",
+        intent_payload(intent),
+        protection,
+        protection_allocations,
     ):
         raise OrderConflictError("manual request idempotency conflict")
     if previous is None:

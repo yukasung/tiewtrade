@@ -156,6 +156,11 @@ jobs:
           bash scripts/reset_ci_test_database.sh "${{ job.services.postgres.id }}"
           uv run pytest -m fresh_global_state
 
+      - name: pytest isolated protection rollback guards
+        run: |
+          bash scripts/reset_ci_test_database.sh "${{ job.services.postgres.id }}"
+          uv run pytest -m isolated_migration tests/infra/protections/test_migration_guards.py
+
   api-contract:
     name: สัญญา API — ชนิดข้อมูลสองฝั่งต้องตรงกัน
     runs-on: ubuntu-latest
@@ -320,6 +325,12 @@ jobs:
 
       - name: F-16 manual order Paper E2E
         run: npm run test:e2e:manual-orders
+        working-directory: frontend
+        env:
+          CI: "1"
+
+      - name: F-17 Paper protection E2E
+        run: npm run test:e2e:protections
         working-directory: frontend
         env:
           CI: "1"
