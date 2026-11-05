@@ -1,0 +1,11 @@
+name: TiewTrade full candidate security analysis
+disable-default-queries: false
+queries:
+  - uses: security-extended
+paths-ignore:
+  - references/admin-template
+  - '**/node_modules/**'
+  - '**/.venv/**'
+  - '**/dist/**'
+  - '**/test-results/**'
+  - '**/playwright-report/**'

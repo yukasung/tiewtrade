@@ -1,0 +1,82 @@
+{
+  "schema": 1,
+  "tools": {
+    "gitleaks": {
+      "version": "v8.30.1",
+      "platforms": {
+        "Linux-x86_64": {
+          "url": "https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz",
+          "sha256": "551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb",
+          "member": "gitleaks"
+        },
+        "Darwin-arm64": {
+          "url": "https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_darwin_arm64.tar.gz",
+          "sha256": "b40ab0ae55c505963e365f271a8d3846efbc170aa17f2607f13df610a9aeb6a5",
+          "member": "gitleaks"
+        }
+      }
+    },
+    "osv": {
+      "version": "v2.7.0",
+      "platforms": {
+        "Linux-x86_64": {
+          "url": "https://github.com/google/osv-scanner/releases/download/v2.7.0/osv-scanner_linux_amd64",
+          "sha256": "160c6253e2922e9e0a6a9771c5c4c40a4b3c6090b34a3cdd5e80c96cc2e4218b",
+          "member": null
+        },
+        "Darwin-arm64": {
+          "url": "https://github.com/google/osv-scanner/releases/download/v2.7.0/osv-scanner_darwin_arm64",
+          "sha256": "d4926ef8da134332543be276dff157e4c170f99ad91fc48e89448a8816bdf70b",
+          "member": null
+        }
+      }
+    },
+    "codeql": {
+      "version": "codeql-bundle-v2.27.4",
+      "platforms": {
+        "Linux-x86_64": {
+          "url": "https://github.com/github/codeql-action/releases/download/codeql-bundle-v2.27.4/codeql-bundle-linux64.tar.gz",
+          "sha256": "89ed56c8ec6bfccef6a0d2e7fe86da0469ca24b4db08b88016ec134b942c17a4",
+          "member": null
+        }
+      }
+    },
+    "actionlint": {
+      "version": "v1.7.7",
+      "platforms": {
+        "Linux-x86_64": {
+          "url": "https://github.com/rhysd/actionlint/releases/download/v1.7.7/actionlint_1.7.7_linux_amd64.tar.gz",
+          "sha256": "023070a287cd8cccd71515fedc843f1985bf96c436b7effaecce67290e7e0757",
+          "member": "actionlint"
+        },
+        "Darwin-arm64": {
+          "url": "https://github.com/rhysd/actionlint/releases/download/v1.7.7/actionlint_1.7.7_darwin_arm64.tar.gz",
+          "sha256": "2693315b9093aeacb4ebd91a993fea54fc215057bf0da2659056b4bc033873db",
+          "member": "actionlint"
+        }
+      }
+    }
+  },
+  "actions": {
+    "actions/checkout": {
+      "tag": "v4",
+      "sha": "11d5960a326750d5838078e36cf38b85af677262"
+    },
+    "actions/setup-python": {
+      "tag": "v5",
+      "sha": "a26af69be951a213d495a4c3e4e4022e16d87065"
+    },
+    "actions/upload-artifact": {
+      "tag": "v4",
+      "sha": "ea165f8d65b6e75b540449e92b4886f43607fa02"
+    },
+    "actions/download-artifact": {
+      "tag": "v4",
+      "sha": "d3f86a106a0bac45b974a628896c90dbdf5c8093"
+    },
+    "github/codeql-action": {
+      "tag": "v4",
+      "sha": "33d7b85da1a04171e211befe2c739303b9a4c066"
+    }
+  }
+}

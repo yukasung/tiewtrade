@@ -218,7 +218,6 @@ F-01 follow-up: [Security CI](features/2026-11-05-security-ci/requirements.md)
 ใน branch `feature/security-ci-hardening`; requirements/plan/validation Approved.
 เพิ่ม security workflow, pinned scanner config และ policy helpers/tests;
 local 28 tests รวม regression จาก review, Gitleaks/OSV probes และ static checks ผ่าน.
-OSV พบ 3 blocking advisory records ใน 2 packages (`certifi`, `vite`); ไม่ยกเว้น/แก้ dependency อัตโนมัติ.
 local origin snapshot scan 246 commits พบ 92 findings; triage เสนอ 70 false positives
 และ 22 test/dev fixtures ได้ owner approval/ยืนยันไม่ใช้ key ทดสอบในระบบจริงแล้ว;
 registry/re-scan snapshot ผ่าน: 92 excepted, 0 blocked/triage.
@@ -227,18 +226,20 @@ V-19 Release หลัง merge Not Run — Pending Full Validation. ยัง�
 ดู [validation](features/2026-11-05-security-ci/validation.md) และ
 [หลักฐาน](features/2026-11-05-security-ci/evidence/feature-candidate.md).
 แก้ High/Medium และ refactor ที่อนุญาตแล้ว; validation ในเครื่องผ่าน.
-งาน dependency remediation แยก branch แล้วและมี requirements draft รออนุมัติ;
-remote validation รอคำสั่ง Git. ยังไม่พร้อม merge/Completed.
 
+
+Integration checkpoint: main a3a8652 / dependency PR #47 is included; dependency blockers fixed.
+Owner authorized remote validation; CodeQL/rejection/settings gates remain pending.
 
 F-01 follow-up: [Security dependency remediation](features/2026-11-05-security-dependency-remediation/requirements.md)
-**Code review APPROVED — local checks passed; final CI pending (2026-11-05)** — certifi 2026.7.22 → 2026.10.18 และ
+**Completed (2026-11-05)** — certifi 2026.7.22 → 2026.10.18 และ
 Vite 6.4.3 → 6.4.4; branch `feature/security-dependency-remediation`.
 requirements/plan/validation Approved; เปลี่ยนเฉพาะสอง lock entries แล้ว.
 156 backend + 10 frontend tests, TLS/dev/preview/build และ OSV ผ่าน local;
-OSV ไม่มี High/Critical/Unknown และมี Medium 4 records. DV-10 Pending Full Validation.
-เจ้าของอนุญาต commit/push/PR แล้ว; ขั้นถัดไปติดตาม required CI บน final candidate.
-ยังไม่ merge/Completed และ DV-10 ยังคง Pending Full Validation.
+OSV ไม่มี High/Critical/Unknown และมี Medium 4 records.
+[PR #47](https://github.com/yukasung/tiewtrade/pull/47) merge ที่ a3a8652;
+[post-merge CI](https://github.com/yukasung/tiewtrade/actions/runs/42050896249) ผ่าน 6/6; DV-10 Passed.
+ขั้นถัดไปส่งต่อ Security CI integration ซึ่งยังต้องตรวจและเปิดใช้ gates ตามงานเดิม.
 
 F-01 follow-up: [Self-hosted CI / ลดรอบซ้ำ](features/2026-10-23-self-hosted-ci/requirements.md)
 **Retired / ไม่เปิดใช้ self-hosted CI (2026-10-24)** — เจ้าของเปลี่ยน repository เป็น Public
