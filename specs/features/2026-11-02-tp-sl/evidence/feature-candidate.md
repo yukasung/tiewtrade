@@ -572,3 +572,37 @@ Implementationเฉพาะtests:
 
 Owner-approved diagnostic CI runถัดไปมีจุดประสงค์เก็บevidenceจากfull-suite context;
 required CIยังFailedจนแก้สาเหตุและcandidateจริงผ่าน ไม่มี mergeหรือLive order
+
+## Owner-approved CI database isolation — 2026-11-05
+
+Diagnostic SHA `2407df2b66e7cf43385a69fe42542c2180da6ef9` finished:
+- [push CI](https://github.com/yukasung/tiewtrade/actions/runs/42051567850):
+  **20 failed, 4270 passed, 47 deselected**, 735.27s
+- [PR CI](https://github.com/yukasung/tiewtrade/actions/runs/42051582552):
+  **20 failed, 4270 passed, 47 deselected**, 881.01s; other five jobs passed in both runs
+- [diagnostic summary and source snapshot](ci-scheduler-diagnostic-summary.json):
+  20 snapshots per run, every actual batch contained20 foreign-owner candidates and
+  excluded the test owner. Inspected source-resumption snapshot had fresh READY
+  book/price/feed evidence; 23/25 sampled queue rows had protection-owner history.
+  This establishes queue interference, not a complete proof of which prior test
+  produced each command. Global protection/serve tests can process retained owners.
+
+Owner explicitly chose A: run F-17 integration on a freshly migrated CI test database.
+- Only workflow composition changes: main pytest ignores `tests/infra/protections`,
+  then a required step reuses `scripts/reset_ci_test_database.sh` and runs that folder.
+  Existing isolated migration16 tests and all other steps retain their original commands.
+  Production logic, test bodies/assertions, scanner limits and retry policy are unchanged.
+- [collection equality](ci-isolation-collection.json): original4290 = main4242 +
+  protection48; exact node-ID union matches, overlap0. Marker defaults unchanged.
+- [isolated protection integration](ci-isolated-protection-integration.xml):
+  **48 passed, 16 deselected**, 56.11s on a newly bootstrapped/migrated PostgreSQL DB;
+  includes real serve/feed-gap/start<=1s and all non-isolated F-17 integration cases.
+  The16 deselected rollback guards remain in their existing dedicated CI step.
+- [main affected regressions](ci-isolated-main-regressions.xml): **105 passed**,57.78s
+  on a separate newly migrated DB: manual/protection API, real manual bridge, complete
+  same-pair dispatch and source-resumption modules, including the20 CI failures.
+- Workflow actionlint and diff whitespace checks passed. No Python/TS source changed;
+  previous lint/type evidence remains applicable and required CI still runs all gates.
+
+V-17 remains Partial until required CI on the new candidate finishes. Batch/Release
+remain Pending Full Validation/Dependency. No merge or Live orders authorized.

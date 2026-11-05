@@ -139,7 +139,14 @@ jobs:
         run: uv run alembic upgrade head
 
       - name: pytest
-        run: uv run pytest
+        run: uv run pytest --ignore=tests/infra/protections
+
+      # F-17 tests run the global protection/order workers. Retained fixtures from
+      # other suites must not become inputs to those controlled integration runs.
+      - name: pytest isolated protection integration
+        run: |
+          bash scripts/reset_ci_test_database.sh "${{ job.services.postgres.id }}"
+          uv run pytest tests/infra/protections
 
       - name: pytest isolated writer-fence migration guard
         run: |

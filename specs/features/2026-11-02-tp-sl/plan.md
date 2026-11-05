@@ -209,6 +209,19 @@ Numbered migrations คง self-contained ตามของเดิม ไม�
 หลัง refactor ที่อนุมัติให้ validation ต่อทันที ใช้ผลเดิมที่ยัง valid
 commit/push/merge เฉพาะคำสั่งเจ้าของ และติดตาม CI ตาม AGENTS.md
 
+### Approved CI isolation amendment — 2026-11-05
+
+หลัง read-only diagnostic บน 2407df2 เจ้าของเลือก A: แยก F-17 integration tests
+ไปใช้ freshly migrated test database ใน required backend CI โดยคง tests/assertions
+และ production logic เดิมทั้งหมด ใช้ `.github/workflows/ci.yml` และ
+`backend/scripts/reset_ci_test_database.sh` ซ้ำตาม isolated migration/global-state steps เดิม
+
+ชุด pytest หลักใช้ `--ignore=tests/infra/protections` แล้วเพิ่ม required step หลัง reset
+ให้รัน `uv run pytest tests/infra/protections` ภายใต้ marker defaults เดิม;
+`isolated_migration` guards ยังคงรันแยกหลัง reset ตามเดิม ไม่มี test ถูกตัดออกจาก CI
+ตรวจ collection ว่าชุดหลักและชุดแยกรวมกันเท่าชุดเดิมและไม่ซ้ำกัน ก่อนติดตาม required CI
+บน candidate ใหม่ การแยกฐานทดสอบนี้ไม่เปลี่ยน runtime isolation หรือ scheduler policy
+
 ## NC-F17-06 — Approved integration amendment
 
 Correction ที่ทำให้ protection allocation ไม่ปลอดภัยเข้าสู่ conflict/unavailable
