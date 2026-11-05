@@ -1,0 +1,85 @@
+{
+  "tool": "CodeQL 2.27.4",
+  "platform": "Linux amd64, locally emulated; temporary synthetic source only",
+  "results": [
+    {
+      "fixture": "actions",
+      "language": "actions",
+      "files": 1,
+      "counts": {
+        "critical": 0,
+        "high": 0,
+        "low": 0,
+        "medium": 1,
+        "none": 0,
+        "unknown": 0,
+        "excepted": 0,
+        "blocked": 0,
+        "needs_triage": 0
+      },
+      "rule_ids": [
+        "actions/code-injection/medium"
+      ]
+    },
+    {
+      "fixture": "python",
+      "language": "python",
+      "files": 2,
+      "counts": {
+        "critical": 1,
+        "high": 0,
+        "low": 0,
+        "medium": 0,
+        "none": 0,
+        "unknown": 0,
+        "excepted": 0,
+        "blocked": 1,
+        "needs_triage": 0
+      },
+      "rule_ids": [
+        "py/code-injection"
+      ]
+    },
+    {
+      "fixture": "javascript",
+      "language": "javascript-typescript",
+      "files": 2,
+      "counts": {
+        "critical": 1,
+        "high": 0,
+        "low": 0,
+        "medium": 0,
+        "none": 0,
+        "unknown": 0,
+        "excepted": 0,
+        "blocked": 1,
+        "needs_triage": 0
+      },
+      "rule_ids": [
+        "js/code-injection"
+      ]
+    },
+    {
+      "fixture": "actions-fixed",
+      "language": "actions",
+      "files": 1,
+      "counts": {
+        "critical": 0,
+        "high": 0,
+        "low": 0,
+        "medium": 0,
+        "none": 0,
+        "unknown": 0,
+        "excepted": 0,
+        "blocked": 0,
+        "needs_triage": 0
+      },
+      "rule_ids": []
+    }
+  ],
+  "pending": [
+    "python-fixed",
+    "javascript-fixed"
+  ],
+  "no_raw_sarif_uploaded": true
+}

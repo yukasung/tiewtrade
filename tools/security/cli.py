@@ -110,6 +110,9 @@ def entrypoint() -> int:
     except PolicyError as error:
         # Only known constant parser codes may be exposed; arbitrary text stays private.
         public_codes = {
+            "TOOL_HTTP_ERROR",
+            "TOOL_NETWORK_FAILURE",
+            "TOOL_CHECKSUM_MISMATCH",
             "INVALID_ARRAY",
             "INVALID_OBJECT",
             "INVALID_INTEGER",

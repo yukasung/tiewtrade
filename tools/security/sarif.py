@@ -57,6 +57,42 @@ def rule_descriptor(
     return descriptor
 
 
+def extracted_file_count(run: dict[str, object], root: Path, prefix: str) -> int:
+    """Use pinned CodeQL diagnostics emitted from actual database file facts."""
+    extracted: set[str] = set()
+    expected: set[str] = set()
+    baseline = False
+    for invocation in array(run.get("invocations")):
+        for value in array(obj(invocation).get("toolExecutionNotifications", [])):
+            notification = obj(value)
+            identifier = obj(notification.get("descriptor", {})).get("id")
+            if identifier == "cli/file-coverage-baseline":
+                baseline = True
+            if identifier not in {
+                f"{prefix}/diagnostics/successfully-extracted-files",
+                f"{prefix}/baseline/expected-extracted-files",
+            }:
+                continue
+            for location in array(notification.get("locations", [])):
+                artifact = obj(obj(obj(location).get("physicalLocation")).get("artifactLocation"))
+                uri = string(artifact.get("uri"))
+                source_identity(root, uri)
+                canonical = (root / unquote(uri)).resolve().relative_to(root.resolve()).as_posix()
+                target = (
+                    extracted
+                    if identifier == f"{prefix}/diagnostics/successfully-extracted-files"
+                    else expected
+                )
+                target.add(canonical)
+    if not baseline or not extracted or not expected <= extracted:
+        raise PolicyError("MISSING_FILE_COVERAGE")
+    # Actions has no LOC metric or expected-file baseline query in this bundle.
+    # Its successfully-extracted-files query enumerates source File facts directly.
+    if prefix != "actions" and not expected:
+        raise PolicyError("MISSING_FILE_COVERAGE")
+    return len(extracted)
+
+
 def evaluate(report: object, root: Path, language: str) -> tuple[list[Finding], int]:
     data = obj(report)
     if data.get("version") != "2.1.0":
@@ -102,17 +138,9 @@ def evaluate(report: object, root: Path, language: str) -> tuple[list[Finding], 
             expected_prefix + "/"
         ):
             extracted += natural(row.get("value"))
-    if extracted == 0:
+    if language != "actions" and extracted == 0:
         raise PolicyError("MISSING_EXTRACTION_COVERAGE")
-    files: set[str] = set()
-    for value in array(run.get("artifacts", [])):
-        artifact = obj(value)
-        if "analysisTarget" in array(artifact.get("roles", [])):
-            uri = string(obj(artifact.get("location")).get("uri"))
-            source_identity(root, uri)
-            files.add(uri)
-    if not files:
-        raise PolicyError("MISSING_FILE_COVERAGE")
+    files = extracted_file_count(run, root, expected_prefix)
     findings: list[Finding] = []
     for value in array(run.get("results")):
         row = obj(value)
@@ -146,7 +174,7 @@ def evaluate(report: object, root: Path, language: str) -> tuple[list[Finding], 
                 (language, identifier, uri, str(line)),
             )
         )
-    return findings, len(files)
+    return findings, files
 
 
 def structure_counts(report: object) -> dict[str, int]:

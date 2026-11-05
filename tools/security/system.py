@@ -9,6 +9,8 @@ import platform
 import subprocess
 import tarfile
 import tempfile
+import time
+import urllib.error
 import urllib.request
 from pathlib import Path
 
@@ -87,6 +89,33 @@ def candidate(root: Path) -> Candidate:
     )
 
 
+def download_verified(url: str, archive: Path, expected: str) -> None:
+    """Retry only transient reads; every attempt starts fresh and checks the pin."""
+    for attempt in range(3):
+        checksum = hashlib.sha256()
+        total = 0
+        try:
+            with urllib.request.urlopen(url, timeout=60) as response, archive.open("wb") as stream:
+                while chunk := response.read(1024 * 1024):
+                    total += len(chunk)
+                    if total > 4 * 1024 * 1024 * 1024:
+                        raise PolicyError("TOOL_DOWNLOAD_TOO_LARGE")
+                    checksum.update(chunk)
+                    stream.write(chunk)
+        except urllib.error.HTTPError as error:
+            if error.code not in {408, 429, 500, 502, 503, 504}:
+                raise PolicyError("TOOL_HTTP_ERROR") from None
+        except (urllib.error.URLError, TimeoutError, ConnectionError):
+            pass
+        else:
+            if checksum.hexdigest() != expected:
+                raise PolicyError("TOOL_CHECKSUM_MISMATCH")
+            return
+        if attempt < 2:
+            time.sleep(attempt + 1)
+    raise PolicyError("TOOL_NETWORK_FAILURE")
+
+
 def install(root: Path, name: str, destination: Path) -> Path:
     manifest = obj(read_json(root / ".github/security/tools.json"))
     tool = obj(obj(manifest.get("tools")).get(name))
@@ -99,17 +128,7 @@ def install(root: Path, name: str, destination: Path) -> Path:
     target = destination / (name + (".tar.gz" if name == "codeql" else ""))
     with tempfile.TemporaryDirectory(dir=destination) as temporary:
         archive = Path(temporary) / "download"
-        checksum = hashlib.sha256()
-        total = 0
-        with urllib.request.urlopen(url, timeout=60) as response, archive.open("wb") as stream:
-            while chunk := response.read(1024 * 1024):
-                total += len(chunk)
-                if total > 4 * 1024 * 1024 * 1024:
-                    raise PolicyError("TOOL_DOWNLOAD_TOO_LARGE")
-                checksum.update(chunk)
-                stream.write(chunk)
-        if checksum.hexdigest() != expected:
-            raise PolicyError("TOOL_CHECKSUM_MISMATCH")
+        download_verified(url, archive, expected)
         member = asset.get("member")
         if member is None:
             archive.replace(target)

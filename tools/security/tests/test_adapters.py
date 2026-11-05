@@ -84,7 +84,28 @@ def sarif_report(language: str = "python", score: object = "8.1") -> dict[str, o
                         ],
                     }
                 },
-                "invocations": [{"executionSuccessful": True}],
+                "invocations": [
+                    {
+                        "executionSuccessful": True,
+                        "toolExecutionNotifications": [
+                            {"descriptor": {"id": "cli/file-coverage-baseline"}},
+                            {
+                                "descriptor": {
+                                    "id": prefix + "/diagnostics/successfully-extracted-files"
+                                },
+                                "locations": [
+                                    {"physicalLocation": {"artifactLocation": {"uri": "sample.py"}}}
+                                ],
+                            },
+                            {
+                                "descriptor": {"id": prefix + "/baseline/expected-extracted-files"},
+                                "locations": [
+                                    {"physicalLocation": {"artifactLocation": {"uri": "sample.py"}}}
+                                ],
+                            },
+                        ],
+                    }
+                ],
                 "artifacts": [{"location": {"uri": "sample.py"}, "roles": ["analysisTarget"]}],
                 "properties": {
                     "metricResults": [{"ruleId": prefix + "/lines-of-code", "value": 10}]
@@ -231,6 +252,40 @@ class AdapterTests(unittest.TestCase):
         props["tags"] = ["maintainability"]
         findings, _ = sarif.evaluate(report, self.root, "python")
         self.assertEqual(findings, [])
+
+    def test_real_codeql_diagnostic_coverage_without_artifact_roles(self) -> None:
+        from tools.security.model import array, obj
+
+        for language in ("python", "javascript-typescript", "actions"):
+            report = sarif_report(language)
+            run = obj(array(report["runs"])[0])
+            obj(array(run["artifacts"])[0]).pop("roles")
+            if language == "actions":
+                run["properties"] = {}
+            findings, coverage = sarif.evaluate(report, self.root, language)
+            self.assertEqual(coverage, 1)
+            self.assertEqual(len(findings), 1)
+
+    def test_missing_baseline_or_extraction_diagnostics_fail_closed(self) -> None:
+        from tools.security.model import array, obj
+
+        for index in (0, 1):
+            report = sarif_report()
+            run = obj(array(report["runs"])[0])
+            invocation = obj(array(run["invocations"])[0])
+            array(invocation["toolExecutionNotifications"]).pop(index)
+            with self.assertRaises(PolicyError):
+                sarif.evaluate(report, self.root, "python")
+        report = sarif_report()
+        run = obj(array(report["runs"])[0])
+        invocation = obj(array(run["invocations"])[0])
+        expected = obj(array(invocation["toolExecutionNotifications"])[2])
+        (self.root / "omitted.py").write_text("# valid but omitted from extraction\n")
+        array(expected["locations"]).append(
+            {"physicalLocation": {"artifactLocation": {"uri": "omitted.py"}}}
+        )
+        with self.assertRaises(PolicyError):
+            sarif.evaluate(report, self.root, "python")
 
     def test_changed_content_invalidates_exception_identity(self) -> None:
         before, _ = sarif.evaluate(sarif_report(), self.root, "python")

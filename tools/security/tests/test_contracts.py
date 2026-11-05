@@ -3,17 +3,20 @@
 from __future__ import annotations
 
 import copy
+import hashlib
 import io
 import json
 import tempfile
 import unittest
+import urllib.error
+from email.message import Message
 from pathlib import Path
 from unittest.mock import patch
 
 from tools.security import sarif
 from tools.security.model import Candidate, PolicyError, array, digest, manifest, obj, policy_counts
 from tools.security.reporting import summary
-from tools.security.system import install
+from tools.security.system import download_verified, install
 from tools.security.tests.test_adapters import sarif_report
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -76,6 +79,42 @@ class ContractTests(unittest.TestCase):
                 install(ROOT, "gitleaks", target)
             self.assertFalse((target / "gitleaks").exists())
 
+    def test_transient_download_retries_and_still_verifies_checksum(self) -> None:
+        payload = b"synthetic binary fixture"
+        expected = hashlib.sha256(payload).hexdigest()
+        with tempfile.TemporaryDirectory() as temp:
+            target = Path(temp) / "download"
+            transient = urllib.error.HTTPError(
+                "https://github.com/fixture", 503, "private", Message(), None
+            )
+            with (
+                patch(
+                    "urllib.request.urlopen", side_effect=[transient, io.BytesIO(payload)]
+                ) as request,
+                patch("time.sleep"),
+            ):
+                download_verified("https://github.com/fixture", target, expected)
+            self.assertEqual(request.call_count, 2)
+            self.assertEqual(target.read_bytes(), payload)
+            with (
+                patch("urllib.request.urlopen", return_value=io.BytesIO(b"tampered")) as request,
+                self.assertRaisesRegex(PolicyError, "TOOL_CHECKSUM_MISMATCH"),
+            ):
+                download_verified("https://github.com/fixture", target, expected)
+            self.assertEqual(request.call_count, 1)
+
+    def test_permanent_download_error_is_not_retried(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            error = urllib.error.HTTPError(
+                "https://github.com/fixture", 404, "private", Message(), None
+            )
+            with (
+                patch("urllib.request.urlopen", side_effect=error) as request,
+                self.assertRaisesRegex(PolicyError, "TOOL_HTTP_ERROR"),
+            ):
+                download_verified("https://github.com/fixture", Path(temp) / "download", "0" * 64)
+            self.assertEqual(request.call_count, 1)
+
     def test_workflow_pins_match_registry_and_security_contract(self) -> None:
         import re
 
@@ -97,4 +136,5 @@ class ContractTests(unittest.TestCase):
         self.assertIn("if: always()", workflow)
         self.assertIn("upload: never", workflow)
         self.assertIn("CODEQL_ACTION_DIFF_INFORMED_QUERIES: 'false'", workflow)
+        self.assertIn("CODEQL_ACTION_FILE_COVERAGE_ON_PRS: 'true'", workflow)
         self.assertEqual(workflow.count("persist-credentials: false"), 5)
