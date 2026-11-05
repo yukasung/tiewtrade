@@ -213,6 +213,24 @@ domain ของเงินที่ปฏิเสธค่าที่เก�
 
 ## ชุดที่ 1 — ฐานราก
 
+F-01 follow-up: [Security CI](features/2026-11-05-security-ci/requirements.md)
+**Refactored — local validation ผ่าน; Feature validation Partial (2026-11-05)** — implementation
+ใน branch `feature/security-ci-hardening`; requirements/plan/validation Approved.
+เพิ่ม security workflow, pinned scanner config และ policy helpers/tests;
+local 28 tests รวม regression จาก review, Gitleaks/OSV probes และ static checks ผ่าน.
+OSV พบ 3 blocking advisory records ใน 2 packages (`certifi`, `vite`); ไม่ยกเว้น/แก้ dependency อัตโนมัติ.
+local origin snapshot scan 246 commits พบ 92 findings; triage เสนอ 70 false positives
+และ 22 test/dev fixtures ได้ owner approval/ยืนยันไม่ใช้ key ทดสอบในระบบจริงแล้ว;
+registry/re-scan snapshot ผ่าน: 92 excepted, 0 blocked/triage.
+CodeQL จริง 3 ภาษา, latest-origin/final-candidate scan, remote PR/required CI และ settings activation ยังค้าง;
+V-19 Release หลัง merge Not Run — Pending Full Validation. ยังไม่ commit/push หรือเปลี่ยน settings.
+ดู [validation](features/2026-11-05-security-ci/validation.md) และ
+[หลักฐาน](features/2026-11-05-security-ci/evidence/feature-candidate.md).
+แก้ High/Medium และ refactor ที่อนุญาตแล้ว; validation ในเครื่องผ่าน.
+งาน dependency remediation แยก branch แล้วและมี requirements draft รออนุมัติ;
+remote validation รอคำสั่ง Git. ยังไม่พร้อม merge/Completed.
+
+
 F-01 follow-up: [Security dependency remediation](features/2026-11-05-security-dependency-remediation/requirements.md)
 **Code review APPROVED — local checks passed; final CI pending (2026-11-05)** — certifi 2026.7.22 → 2026.10.18 และ
 Vite 6.4.3 → 6.4.4; branch `feature/security-dependency-remediation`.
