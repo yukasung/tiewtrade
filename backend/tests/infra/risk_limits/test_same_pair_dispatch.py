@@ -14,6 +14,7 @@ from tests.infra.risk_limits.migration_support import (
     prepare_migration_roundtrip,
     restore_migration_roundtrip,
 )
+from tests.infra.risk_limits.scheduler_diagnostics import emit_scheduler_diagnostics
 from tests.infra.risk_limits.test_execution import Runtime, drive, runtime
 from tiewtrade.core.money import Money, Quantity
 from tiewtrade.core.orders import BaseSize, OrderIntent, OrderType, TimeInForce
@@ -103,6 +104,13 @@ async def hint(scan: AsyncEngine, queue: Queue, *, preferred: bool = True) -> Du
     async with scan_session_bypassing_rls(scan) as session:
         values = await due_orders(
             session,
+            prefer_same_pair=preferred,
+            admission_first=queue.admission_first if preferred else False,
+        )
+    if not any(value.user_id == queue.owner for value in values):
+        await emit_scheduler_diagnostics(
+            scan,
+            queue.owner,
             prefer_same_pair=preferred,
             admission_first=queue.admission_first if preferred else False,
         )

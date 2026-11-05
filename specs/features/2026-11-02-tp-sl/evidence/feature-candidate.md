@@ -534,3 +534,41 @@ Owner teardown รอบก่อนแก้ orphan CANCEL ของ F-17เอ
 
 จะติดตาม required CI บน SHA ใหม่ต่อ; หากการแก้และตรวจเกณฑ์เดิมยังไม่ผ่านครบ3รอบ
 ให้หยุดเสนอทางเลือกตาม AGENTS.md ก่อนทดลองรอบถัดไป; ยังไม่มี merge/Live orders
+
+
+## Owner-approved read-only CI diagnostic — 2026-11-05
+
+Third candidate888cdffc485aeb9707e508e493966cb5415e6fcb:
+- [push CI](https://github.com/yukasung/tiewtrade/actions/runs/42046195862):
+  **20 failed, 4268 passed, 47 deselected**, 1091.08s
+- [PR CI](https://github.com/yukasung/tiewtrade/actions/runs/42046541839):
+  **20 failed, 4268 passed, 47 deselected**, 1084.84s
+- Same-pair r9 และ source-resumption19 ยังล้ม; อีก5jobsผ่านรวม browserทั้งหมด
+  Local111ยังไม่เทียบเท่าบริบท full CI จึงยังห้ามถือว่า cause ถูกปิดหรือพร้อม merge
+
+หยุดตามกฎ3รอบ แล้วเจ้าของเลือก A อย่าง explicit: เพิ่ม diagnostic แบบอ่านอย่างเดียว
+ก่อนจุดที่ล้มเพื่อดู queue owners, candidate ranking และ source freshness โดยคงทุกเกณฑ์
+
+Implementationเฉพาะtests:
+- `tests/infra/risk_limits/scheduler_diagnostics.py` ใช้ existing ENGINE_SCAN role
+  ซึ่งเขียนไม่ได้และอ่าน secret/order payload/balance ไม่ได้; SELECTเฉพาะ scheduling
+  columns ที่มีสิทธิ์อยู่แล้ว, own rows10, queue sample25, actual bounded candidates20,
+  queue counts และ BTC book/price/feed timestamps/generations/readiness
+- เรียกเฉพาะหลังพบ missing hint ใน same-pair/source-resumption helpers;
+  log marker `F17_SCHEDULER_DIAGNOSTIC` ผ่าน loggerเดิมของpytest captured logs
+- ไม่เปลี่ยน selector, limit, due, retry, protocol หรือ original assertions;
+  ถ้า diagnostic ล้ม logเฉพาะ exception type แล้วปล่อย original test failure ต่อ
+- [fresh validation](ci-diagnostic-fresh-validation.xml): **31 passed**, 15.40s;
+  real scanner role อ่านsnapshotได้/dispatch rowsไม่เปลี่ยน และ error-detail redactionผ่าน
+- [populated local reproduction](ci-diagnostic-populated-reproduction.xml): **22 failed,
+  9 passed** บน DBที่มีประวัติจากก่อนหน้า; รวม2expected migration guard refusals
+  เนื่องจากเลือกฐานไม่ว่าง และ20missing hints; เป็น historical diagnostic context
+  ไม่ใช่ acceptance run หรือเหตุให้ลด migration guard
+- [local bounded sample](ci-diagnostic-local-sample.json): อ่านจาก retained test queue
+  ผ่าน read-only scanner, actual candidates20; หลัง local real-serve runs พบ pending
+  CANCEL14ownersมีprotection และNEW22commands/21ownersมีprotection; ยังต้องใช้
+  snapshotก่อนfailureจริงของ CIระบุบริบท ไม่สรุปว่า owner cleanup/seed fixes ปิดปัญหาแล้ว
+- ruff/format ผ่าน; full backend mypy **643 files** ผ่านหลังเพิ่ม diagnostic helper
+
+Owner-approved diagnostic CI runถัดไปมีจุดประสงค์เก็บevidenceจากfull-suite context;
+required CIยังFailedจนแก้สาเหตุและcandidateจริงผ่าน ไม่มี mergeหรือLive order
