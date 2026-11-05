@@ -497,3 +497,40 @@ Root causes and repair (tests only; no production financial/scheduling behavior 
 จะ push repair commit และติดตาม required CI บน SHA ใหม่จนจบ;
 V-17 ยังคง Partial (first candidate CI Failed) pending final candidate CI ไม่ใช้ผล targeted แทน CI
 ไม่มี merge, ไม่มี Live order; ไฟล์นอกงานยังอยู่นอก commit
+
+
+## Second CI candidate: remaining scheduler fixture leak — 2026-11-05
+
+Candidate385bce83dda4bcd277ee9cdd3b15df65a04b9413:
+- [push CI](https://github.com/yukasung/tiewtrade/actions/runs/42042134191):
+  **20 failed, 4267 passed, 47 deselected**, 783.66s
+- [PR CI](https://github.com/yukasung/tiewtrade/actions/runs/42042143130):
+  **20 failed, 4267 passed, 47 deselected**, 1069.77s
+- Secret canary, Paper isolation and loop doubles ที่แก้ผ่านแล้ว; failures ที่เหลือคือ
+  same-pair r9 และ source-resumption19; อีก5jobsผ่าน รวม browserทั้งหมด
+
+Owner teardown รอบก่อนแก้ orphan CANCEL ของ F-17เอง แต่ยังไม่ครอบ fixture setup
+ที่เรียก run_manual_order_round แบบ global: helper transfer() ของ F-17 seed entry
+และรับคำขอค้างของเจ้าของอื่นจาก API fixtures มาด้วย เป็นสาเหตุที่ sequence local74
+ซึ่งเริ่มจากDBใหม่โดยไม่มี API inbox backlog ยังไม่เทียบเท่าบริบท CI ทั้ง suite
+
+- [cross-owner reproduction](ci-cross-owner-fixture-reproduction.xml): **1 failed**;
+  สร้าง foreign owner/request pending จริง, เรียก seedของownerอีกคน แล้วพบ foreign
+  requestถูกTRANSFERRED (count1 แทน0) โดยไม่ได้เป็นงานที่ fixtureนี้ต้องการประมวลผล
+- เปลี่ยนเฉพาะ transfer helper ให้ใช้ DueRequest/claim_request/real request worker
+  เจาะrequestของfixture ตาม pattern tests/api/test_manual_order_routes.py;
+  ไม่แก้ production global scanner, limits, scheduling, fees หรือ trading policy
+- [cross-owner regression](ci-cross-owner-fixture-regression.xml): **1 passed**,
+  requestของforeignownerยังไม่มีresult/financialcommand; fixtureownerได้net fillปกติ
+- [expanded regression](ci-expanded-fixture-regressions.xml): **111 passed**, 91.21s;
+  API manual orders → API protections → real manual bridge → F-17 infra → same-pair
+  r9/r10 → source-resumptionทั้งmodule; เพิ่มบริบทAPI/inboxก่อนschedulerที่ชุด74เดิมขาด
+- [real serve SLA](ci-owned-seed-sla.xml): **2 passed**, 4.23s; ตรวจ controlled <=1s
+  processing-start และ stale/gap recovery หลังเปลี่ยนhelper; ไม่ใช่ workload SLA
+- [isolated guards](ci-owned-seed-migration-guards.xml): **16 passed**, 6.70s;
+  ตรวจ helperเปลี่ยนกับ populated preservation/rollback guards บน freshly migrated DB
+- ruff/format และ full backend mypy642 files ผ่าน; diffเปลี่ยนเฉพาะtest helper/regression
+  กับเอกสาร ไม่ใช้ผลlocalเหล่านี้แทน required CI ของcandidateถัดไป
+
+จะติดตาม required CI บน SHA ใหม่ต่อ; หากการแก้และตรวจเกณฑ์เดิมยังไม่ผ่านครบ3รอบ
+ให้หยุดเสนอทางเลือกตาม AGENTS.md ก่อนทดลองรอบถัดไป; ยังไม่มี merge/Live orders

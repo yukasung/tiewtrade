@@ -31,13 +31,14 @@ from tiewtrade.infra.market_data.order_book_storage import (
 )
 from tiewtrade.infra.paper_orders.codec import execution_from_payload
 from tiewtrade.infra.paper_orders.dispatch import DueOrder, claim_order, submit_cancel
+from tiewtrade.infra.paper_orders.request_dispatch import DueRequest, claim_request
+from tiewtrade.infra.paper_orders.request_worker import process_request as transfer_request
 from tiewtrade.infra.paper_orders.requests import admit_new_request
 from tiewtrade.infra.paper_orders.worker import process_claimed_order
 from tiewtrade.infra.paper_wallet.records import PaperWalletSnapshot
 from tiewtrade.infra.positions.views import held_and_reserved
 from tiewtrade.infra.protections.storage import admit_request, free_quantity, groups, load
 from tiewtrade.infra.protections.worker import process_group, process_request
-from tiewtrade.services.engine.manual_order import run_manual_order_round
 
 PAIR = PositionPair("BTC", "USDT")
 
@@ -107,9 +108,21 @@ async def transfer(
             protection=bracket,
             protection_allocations=selections,
         )
-    await run_manual_order_round(
-        engine=engine, scan_engine=scan, worker="protection-intake", policy=AllowPolicy()
-    )
+    # Drive the fixture's request directly, like the existing HTTP inbox tests.
+    # A global round would also transfer unrelated owners' pending API fixtures.
+    async with user_session(engine, owner, role=DatabaseRole.ENGINE) as session:
+        due = (
+            await session.execute(
+                "SELECT next_attempt_at FROM paper_order_request_dispatch WHERE request_id=:id",
+                {"id": request.request_id},
+            )
+        ).scalar_one()
+        claim = await claim_request(
+            session, DueRequest(request.request_id, owner, due), worker="protection-intake"
+        )
+        assert claim is not None
+    async with user_session(engine, owner, role=DatabaseRole.ENGINE) as session:
+        await transfer_request(session, claim, policy=AllowPolicy())
     async with user_session(engine, owner, role=DatabaseRole.ENGINE) as session:
         row = (
             await session.execute(
@@ -823,3 +836,45 @@ async def test_standalone_groups_do_not_expand_on_a_new_entry_or_overlap(
             )
     finally:
         await market.dispose()
+
+
+async def test_entry_fixture_does_not_transfer_another_owners_pending_request(
+    api_engine: AsyncEngine,
+    engine_engine: AsyncEngine,
+    scan_engine: AsyncEngine,
+    owner: UUID,
+    wallet: PaperWalletSnapshot,
+) -> None:
+    from tests.infra.positions.conftest import create_production_wallet
+    from tiewtrade.infra.users import create_user
+
+    other = uuid4()
+    await create_user(api_engine, other)
+    other_wallet = await create_production_wallet(api_engine, engine_engine, scan_engine, other)
+    await select_use(api_engine, other)
+    async with user_session(api_engine, other) as session:
+        pending = await admit_new_request(
+            session, wallet_id=other_wallet.wallet_id, intent=intent(other, other_wallet.episode_id)
+        )
+    market = None
+    try:
+        market, _, _, _, _ = await buy(api_engine, engine_engine, scan_engine, owner, wallet)
+        async with user_session(engine_engine, other, role=DatabaseRole.ENGINE) as session:
+            assert (
+                await session.execute(
+                    "SELECT count(*) FROM paper_order_request_results WHERE request_id=:id",
+                    {"id": pending.request_id},
+                )
+            ).scalar_one() == 0
+            assert (
+                await session.execute("SELECT count(*) FROM paper_order_commands")
+            ).scalar_one() == 0
+    finally:
+        if market is not None:
+            await market.dispose()
+        # This test creates a second owner intentionally; preserve facts while
+        # finishing that owner's mutable fixture queues even on a failing proof.
+        async with user_session(engine_engine, other, role=DatabaseRole.ENGINE) as session:
+            for table in ("paper_order_request_dispatch", "paper_order_dispatch"):
+                await session.execute(f"""UPDATE {table} SET state='TERMINAL',
+                    worker=NULL,claim_id=NULL,lease_until=NULL""")
