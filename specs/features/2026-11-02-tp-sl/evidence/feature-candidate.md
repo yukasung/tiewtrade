@@ -454,3 +454,46 @@ commit เฉพาะ F-17 ไม่รวม AGENTS.md, standards/testing.md, 
 validation-artifacts ที่เป็นงานนอกขอบเขต; V-17 รอ required CI บน candidate SHA จริง
 ผล CI ที่เกิดหลังเปิด PR จะรายงานพร้อม SHA/run URL ไม่สร้างเอกสาร commit วนเพื่อบันทึกผล
 ยังไม่อนุญาต merge และไม่ถือว่า Batch/Release/dependencies ผ่าน
+
+
+## Required CI first candidate failure and test integration repair — 2026-11-05
+
+PR [#46](https://github.com/yukasung/tiewtrade/pull/46), candidate6998c22d5af552ab84f64932177c4be84ca249f7:
+- [push CI](https://github.com/yukasung/tiewtrade/actions/runs/42037924735), backend:
+  **24 failed, 4263 passed, 47 deselected**, 993.08s
+- [PR CI](https://github.com/yukasung/tiewtrade/actions/runs/42037960302), backend:
+  **24 failed, 4263 passed, 47 deselected**, 1067.95s
+- ทั้งสอง runs ผ่าน5jobsอื่น รวม browser/dedicated F-17; isolated backend steps ยังไม่ถึง
+  เพราะ main pytest ล้ม ไม่ถือว่าทั้ง CI ผ่าน
+
+Root causes and repair (tests only; no production financial/scheduling behavior change):
+1. API secret canary ไม่มี F-17 UUID substitution/required query arguments และ404 contract;
+   เพิ่ม complete route inputs และ PROTECTION_NOT_FOUND โดยยังตรวจทุก response ห้าม secret รั่ว
+2. Paper isolation gate ยังไม่รู้จัก modules ของ F-17; เพิ่ม core/infra/API protection roots
+   และ exact reviewed internal dependencies รวม audit.events; FORBIDDEN imports/markers
+   กับ alias/transitive helper rejection tests คงเดิม ไม่อนุญาต Live/network dependency
+3. Production-loop unit doubles ยังไม่รองรับ protection phase; เพิ่ม mock และตรวจลำดับ
+   protection→manual→matching กับ dispose ตาม interfaceจริง โดยไม่แก้ runtime
+4. F-17 trigger fixtures ทิ้ง PENDING entry CANCEL20เจ้าของ (รวม pending NEW13commands)
+   ทำให้ bounded20 global due scanner ไม่เห็น owners ใน F-18 scheduler tests ถัดไป;
+   source-resumption รันแยกผ่าน แต่รันหลัง F-17 ล้ม19กรณีตาม
+   [reproduction](ci-scheduler-reproduction.xml) (**19 failed, 53 passed**, 71.06s)
+   เพิ่ม owner-scoped teardown ของ mutable dispatch ใน F-17 conftest ตาม pattern
+   tests/infra/risk_limits/test_same_pair_dispatch.py; ไม่ลบ ledger/order/audit facts,
+   ไม่คืน reservations, ไม่เพิ่ม scanner limit หรือเปลี่ยน production scheduling rules
+
+หลักฐานหลังแก้:
+- [contract regressions](ci-contract-regressions.xml): **7 passed**, 12.35s;
+  ครอบ secret canary, isolation positive/negative gate และ loop doubles
+- [scheduler regressions](ci-scheduler-regressions.xml): **74 passed**, 74.54s;
+  F-17 infra suite (ยกเว้น unchanged feed SLA และ isolated guards) → same-pair runtime
+  ทั้งr9/r10 → source-resumptionทั้งmodule บน real PostgreSQL DB ใหม่ที่แยกจาก development
+- local canary รอบแรก Redisไม่ทำงาน จึงได้ INDICATOR_ADMISSION_UNAVAILABLE ของ baseline;
+  เปิด test Redis container ที่มีอยู่แล้วและใช้ URLของมัน ไม่ลด expected security contract
+- [migration guard regressions](ci-migration-guard-regressions.xml): **16 passed**, 7.55s;
+  ตรวจ fixture teardown ใหม่กับ isolated rollback guards บน freshly migrated DB
+- ruff/format ของ changed tests และ full backend mypy642 files ผ่าน
+
+จะ push repair commit และติดตาม required CI บน SHA ใหม่จนจบ;
+V-17 ยังคง Partial (first candidate CI Failed) pending final candidate CI ไม่ใช้ผล targeted แทน CI
+ไม่มี merge, ไม่มี Live order; ไฟล์นอกงานยังอยู่นอก commit
