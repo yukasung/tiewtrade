@@ -42,10 +42,6 @@ class LossLimitReachedError(SafetyUnavailableError):
     code = "RISK_LOSS_LIMIT_REACHED"
 
 
-class RiskLimitUnsetError(RiskUnavailableError):
-    code = "RISK_LIMIT_UNSET"
-
-
 class RiskPriceUnavailableError(RiskUnavailableError):
     code = "RISK_PRICE_UNAVAILABLE"
 

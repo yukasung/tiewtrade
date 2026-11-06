@@ -516,7 +516,7 @@ describe("หน้าจัดการ API key", () => {
 
   it("คำยืนยันลบที่เปิดไว้ไม่ส่งคำขอเมื่อรายการกลายเป็นข้อมูลเก่า", async () => {
     let fail = false;
-    const fetcher = vi.fn((url: string, init?: RequestInit) =>
+    const fetcher = vi.fn((_url: string, init?: RequestInit) =>
       init?.method === "DELETE"
         ? Promise.resolve(response(null, 204))
         : fail

@@ -8,11 +8,3 @@ import type { components } from "./api-types";
  * ด่านตรวจชนิดข้อมูลของหน้าบ้านต้องแดง (P-10, V-16)
  */
 export type Health = components["schemas"]["Health"];
-
-export async function fetchHealth(): Promise<Health> {
-  const response = await fetch("/api/health");
-  if (!response.ok) {
-    throw new Error(`เรียก /health ไม่สำเร็จ: ${String(response.status)}`);
-  }
-  return (await response.json()) as Health;
-}

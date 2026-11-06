@@ -1,3 +1,4 @@
+import { isRecord } from "./isRecord";
 import { sessionJournal } from "./attemptJournal";
 export { JournalUnavailable } from "./attemptJournal";
 import type { ExpectedEpisode, NewManualOrder } from "./manualOrders";
@@ -8,19 +9,18 @@ export type ManualAttempt = Scope & (
   { action: "NEW"; payload: NewManualOrder } |
   { action: "CANCEL"; orderId: string; payload: ExpectedEpisode }
 );
-const record = (value: unknown): value is Record<string, unknown> => typeof value === "object" && value !== null && !Array.isArray(value);
 function valid(value: unknown, owner: string): value is ManualAttempt {
-  if (!record(value) || value.version !== 1 || value.owner !== owner || value.mode !== "PAPER" ||
-      typeof value.key !== "string" || !/^[0-9a-f-]{36}$/i.test(value.key) || !record(value.payload)) return false;
+  if (!isRecord(value) || value.version !== 1 || value.owner !== owner || value.mode !== "PAPER" ||
+      typeof value.key !== "string" || !/^[0-9a-f-]{36}$/i.test(value.key) || !isRecord(value.payload)) return false;
   const { protection, protection_allocations, ...p } = value.payload;
   if (protection !== undefined && protection !== null) {
-    if (p.side !== "BUY" || !record(protection) ||
+    if (p.side !== "BUY" || !isRecord(protection) ||
         Object.keys(protection).some(k => !["take_profit_price", "stop_loss_price"].includes(k)) ||
         ![protection.take_profit_price, protection.stop_loss_price].some(x => typeof x === "string" && x.length > 0) ||
         ![protection.take_profit_price, protection.stop_loss_price].every(x => x === undefined || x === null || typeof x === "string")) return false;
   }
   if (protection_allocations !== undefined) {
-    if (p.side !== "SELL" || !Array.isArray(protection_allocations) || !protection_allocations.every(a => record(a) &&
+    if (p.side !== "SELL" || !Array.isArray(protection_allocations) || !protection_allocations.every(a => isRecord(a) &&
       Object.keys(a).length === 3 && typeof a.protection_id === "string" && typeof a.quantity === "string" &&
       Number.isSafeInteger(a.expected_revision) && (a.expected_revision as number) >= 1)) return false;
   }

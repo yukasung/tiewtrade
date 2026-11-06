@@ -213,6 +213,18 @@ domain ของเงินที่ปฏิเสธค่าที่เก�
 
 ## ชุดที่ 1 — ฐานราก
 
+งานบำรุงรักษาข้าม feature: [Code cleanup และ shared frontend helpers](features/2026-11-06-code-cleanup/requirements.md)
+**In Progress — Review/Refactor and Local Validation Passed (2026-11-06)** — spec อนุมัติครบ;
+implementation ใน worktree `TiewTrade-code-cleanup`, branch `feature/code-cleanup` จาก main `eeb304e`
+หลัง F-17 PR #46 merge. ลบเจ็ด declarations และรวม API error/journal helpers แล้ว;
+baseline303/affected frontend409/backend73 tests และ targeted static checks ผ่าน.
+[evidence](features/2026-11-06-code-cleanup/evidence/implementation-checkpoint.md) บันทึก format failure ที่แก้แล้ว;
+V-01..V-12 ผ่าน local/review; หลัง authorized refactor full frontend662/39files,
+full static/type/unused/build และ import-linter ผ่าน; build มี non-blocking chunk-size warning.
+V-13/V-14 Not Run. ขั้นถัดไปรอคำสั่ง commit/push/เปิด PR แล้วติดตาม required CI;
+ยังไม่มี commit/push/PR/merge cleanup และยังไม่พร้อม merge จนผ่าน required CI และได้รับคำสั่ง.
+ไม่เปลี่ยน Batch/Release/dependency gates ของ feature เดิม.
+
 F-01 follow-up: [Security CI](features/2026-11-05-security-ci/requirements.md)
 **Completed (2026-11-06)** — [PR #48](https://github.com/yukasung/tiewtrade/pull/48)
 squash merge เป็น `74ca1f4bc8118f119d9bdd96381c061b961650ee` ตามคำสั่งเจ้าของ.
