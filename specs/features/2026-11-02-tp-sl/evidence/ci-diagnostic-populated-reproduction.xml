@@ -1,0 +1,280 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="22" skipped="0" tests="31" time="15.291" timestamp="2026-11-05T22:00:44.918653+07:00" hostname="Chainarongs-MacBook-Pro.local"><testcase classname="tests.infra.risk_limits.test_source_resumption" name="test_0056_default_off_roundtrip_preserves_schedule_and_does_not_rearm[False]" time="2.233"><failure message="AssertionError: alembic downgrade 0056 ล้มเหลว:&#10;  Traceback (most recent call last):&#10;    File &quot;/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py&quot;, line 605, in _prepare_and_execute&#10;      self._rows = deque(await prepared_stmt.fetch(*parameters))&#10;                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^&#10;    File &quot;/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/asyncpg/prepared_stmt.py&quot;, line 177, in fetch&#10;      data = await self.__bind_execute(args, 0, timeout)&#10;             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^&#10;    File &quot;/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/asyncpg/prepared_stmt.py&quot;, line 268, in __bind_execute&#10;      data, status, _ = await self.__do_execute(&#10;                        ^^^^^^^^^^^^^^^^^^^^^^^^&#10;    File &quot;/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/asyncpg/prepared_stmt.py&quot;, line 257, in __do_execute&#10;      return await executor(protocol)&#10;             ^^^^^^^^^^^^^^^^^^^^^^^^&#10;    File &quot;asyncpg/protocol/protocol.pyx&quot;, line 205, in bind_execute&#10;  asyncpg.exceptions.RaiseError: protection history prevents downgrade&#10;  &#10;  The above exception was the direct cause of the following exception:&#10;  &#10;  Traceback (most recent call last):&#10;    File &quot;/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py&quot;, line 1943, in _exec_single_context&#10;      self.dialect.do_execute(&#10;    File &quot;/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/sqlalchemy/engine/default.py&quot;, line 1180, in do_execute&#10;      cursor.execute(statement, parameters)&#10;    File &quot;/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py&quot;, line 656, in execute&#10;      await_(self._prepare_and_execute(operation, parameters))&#10;    File &quot;/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/sqlalchemy/util/concurrency.py&quot;, line 167, in await_&#10;      return current.parent.switch(awaitable)  # type: ignore[no-any-return]&#10;             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^&#10;    File &quot;/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/sqlalchemy/util/concurrency.py&quot;, line 205, in greenlet_spawn&#10;      value = await result&#10;              ^^^^^^^^^^^^&#10;    File &quot;/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py&quot;, line 618, in _prepare_and_execute&#10;      self._handle_exception(error)&#10;    File &quot;/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py&quot;, line 568, in _handle_exception&#10;      self._adapt_connection._handle_exception(error)&#10;    File &quot;/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py&quot;, line 847, in _handle_exception&#10;      super()._handle_exception(error)&#10;    File &quot;/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/sqlalchemy/connectors/asyncio.py&quot;, line 412, in _handle_exception&#10;      self._handle_exception_no_connection(self.dbapi, error)&#10;    File &quot;/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py&quot;, line 840, in _handle_exception_no_connection&#10;      raise translated_error from error&#10;  sqlalchemy.dialects.postgresql.asyncpg.AsyncAdapt_asyncpg_dbapi.Error: protection history prevents downgrade&#10;  &#10;  The above exception was the direct cause of the following exception:&#10;  &#10;  Traceback (most recent call last):&#10;    File &quot;&lt;frozen runpy&gt;&quot;, line 198, in _run_module_as_main&#10;    File &quot;&lt;frozen runpy&gt;&quot;, line 88, in _run_code&#10;    File &quot;/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/alembic/__main__.py&quot;, line 4, in &lt;module&gt;&#10;      main(prog=&quot;alembic&quot;)&#10;    File &quot;/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/alembic/config.py&quot;, line 1039, in main&#10;      CommandLine(prog=prog).main(argv=argv)&#10;    File &quot;/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/alembic/config.py&quot;, line 1029, in main&#10;      self.run_cmd(cfg, options)&#10;    File &quot;/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/alembic/config.py&quot;, line 963, in run_cmd&#10;      fn(&#10;    File &quot;/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/alembic/command.py&quot;, line 534, in downgrade&#10;      script.run_env()&#10;    File &quot;/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/alembic/script/base.py&quot;, line 550, in run_env&#10;      util.load_python_file(self.dir, &quot;env.py&quot;)&#10;    File &quot;/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/alembic/util/pyfiles.py&quot;, line 114, in load_python_file&#10;      module = load_module_py(module_id, path)&#10;               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^&#10;    File &quot;/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/alembic/util/pyfiles.py&quot;, line 132, in load_module_py&#10;      spec.loader.exec_module(module)  # type: ignore&#10;      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^&#10;    File &quot;&lt;frozen importlib._bootstrap_external&gt;&quot;, line 999, in exec_module&#10;    File &quot;&lt;frozen importlib._bootstrap&gt;&quot;, line 488, in _call_with_frames_removed&#10;    File &quot;/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/migrations/env.py&quot;, line 51, in &lt;module&gt;&#10;      asyncio.run(_run_online())&#10;    File &quot;/Users/chainarongjaykeaw/.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/asyncio/runners.py&quot;, line 195, in run&#10;      return runner.run(main)&#10;             ^^^^^^^^^^^^^^^^&#10;    File &quot;/Users/chainarongjaykeaw/.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/asyncio/runners.py&quot;, line 118, in run&#10;      return self._loop.run_until_complete(task)&#10;             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^&#10;    File &quot;/Users/chainarongjaykeaw/.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/asyncio/base_events.py&quot;, line 691, in run_until_complete&#10;      return future.result()&#10;             ^^^^^^^^^^^^^^^&#10;    File &quot;/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/migrations/env.py&quot;, line 43, in _run_online&#10;      await connection.run_sync(_run)&#10;    File &quot;/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/sqlalchemy/ext/asyncio/engine.py&quot;, line 908, in run_sync&#10;      return await greenlet_spawn(&#10;             ^^^^^^^^^^^^^^^^^^^^^&#10;    File &quot;/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/sqlalchemy/util/concurrency.py&quot;, line 212, in greenlet_spawn&#10;      result = context.switch(value)&#10;               ^^^^^^^^^^^^^^^^^^^^^&#10;    File &quot;/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/migrations/env.py&quot;, line 36, in _run&#10;      context.run_migrations()&#10;    File &quot;&lt;string&gt;&quot;, line 8, in run_migrations&#10;    File &quot;/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/alembic/runtime/environment.py&quot;, line 970, in run_migrations&#10;      self.get_context().run_migrations(**kw)&#10;    File &quot;/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/alembic/runtime/migration.py&quot;, line 616, in run_migrations&#10;      step.migration_fn(**kw)&#10;    File &quot;/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/migrations/versions/0064_protection_request_retry.py&quot;, line 56, in downgrade&#10;      op.execute(f&quot;&quot;&quot;DO $$ BEGIN IF EXISTS(SELECT 1 FROM {table}) THEN&#10;    File &quot;&lt;string&gt;&quot;, line 8, in execute&#10;    File &quot;&lt;string&gt;&quot;, line 3, in execute&#10;    File &quot;/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/alembic/operations/ops.py&quot;, line 2645, in execute&#10;      return operations.invoke(op)&#10;             ^^^^^^^^^^^^^^^^^^^^^&#10;    File &quot;/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/alembic/operations/base.py&quot;, line 448, in invoke&#10;      return fn(self, operation)&#10;             ^^^^^^^^^^^^^^^^^^^&#10;    File &quot;/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/alembic/operations/toimpl.py&quot;, line 256, in execute_sql&#10;      operations.migration_context.impl.execute(&#10;    File &quot;/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/alembic/ddl/impl.py&quot;, line 259, in execute&#10;      self._exec(sql, execution_options)&#10;    File &quot;/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/alembic/ddl/impl.py&quot;, line 252, in _exec&#10;      return conn.execute(construct, params)&#10;             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^&#10;    File &quot;/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py&quot;, line 1448, in execute&#10;      return meth(&#10;             ^^^^^&#10;    File &quot;/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/sqlalchemy/sql/elements.py&quot;, line 533, in _execute_on_connection&#10;      return connection._execute_clauseelement(&#10;             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^&#10;    File &quot;/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py&quot;, line 1668, in _execute_clauseelement&#10;      ret = self._execute_context(&#10;            ^^^^^^^^^^^^^^^^^^^^^^&#10;    File &quot;/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py&quot;, line 1822, in _execute_context&#10;      return self._exec_single_context(&#10;             ^^^^^^^^^^^^^^^^^^^^^^^^^^&#10;    File &quot;/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py&quot;, line 1962, in _exec_single_context&#10;      self._handle_dbapi_exception(&#10;    File &quot;/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py&quot;, line 2332, in _handle_dbapi_exception&#10;      raise sqlalchemy_exception.with_traceback(exc_info[2]) from e&#10;    File &quot;/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py&quot;, line 1943, in _exec_single_context&#10;      self.dialect.do_execute(&#10;    File &quot;/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/sqlalchemy/engine/default.py&quot;, line 1180, in do_execute&#10;      cursor.execute(statement, parameters)&#10;    File &quot;/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py&quot;, line 656, in execute&#10;      await_(self._prepare_and_execute(operation, parameters))&#10;    File &quot;/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/sqlalchemy/util/concurrency.py&quot;, line 167, in await_&#10;      return current.parent.switch(awaitable)  # type: ignore[no-any-return]&#10;             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^&#10;    File &quot;/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/sqlalchemy/util/concurrency.py&quot;, line 205, in greenlet_spawn&#10;      value = await result&#10;              ^^^^^^^^^^^^&#10;    File &quot;/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py&quot;, line 618, in _prepare_and_execute&#10;      self._handle_exception(error)&#10;    File &quot;/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py&quot;, line 568, in _handle_exception&#10;      self._adapt_connection._handle_exception(error)&#10;    File &quot;/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py&quot;, line 847, in _handle_exception&#10;      super()._handle_exception(error)&#10;    File &quot;/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/sqlalchemy/connectors/asyncio.py&quot;, line 412, in _handle_exception&#10;      self._handle_exception_no_connection(self.dbapi, error)&#10;    File &quot;/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py&quot;, line 840, in _handle_exception_no_connection&#10;      raise translated_error from error&#10;  sqlalchemy.exc.DBAPIError: (sqlalchemy.dialects.postgresql.asyncpg.Error) protection history prevents downgrade&#10;  [SQL: DO $$ BEGIN IF EXISTS(SELECT 1 FROM paper_protection_request_progress) THEN&#10;              RAISE EXCEPTION 'protection history prevents downgrade'; END IF; END $$]&#10;  (Background on this error at: https://sqlalche.me/e/21/dbapi)&#10;  &#10;assert 1 == 0&#10; +  where 1 = CompletedProcess(args=['/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/bin/python', '-m'...ection history prevents downgrade\'; END IF; END $$]\n(Background on this error at: https://sqlalche.me/e/21/dbapi)\n').returncode">tests/infra/risk_limits/test_source_resumption.py:470: in test_0056_default_off_roundtrip_preserves_schedule_and_does_not_rearm
+    _alembic("downgrade", "0056")
+tests/infra/db/test_migrations.py:64: in _alembic
+    assert done.returncode == 0, f"alembic {' '.join(args)} ล้มเหลว:\n{done.stdout}{done.stderr}"
+E   AssertionError: alembic downgrade 0056 ล้มเหลว:
+E     Traceback (most recent call last):
+E       File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 605, in _prepare_and_execute
+E         self._rows = deque(await prepared_stmt.fetch(*parameters))
+E                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/asyncpg/prepared_stmt.py", line 177, in fetch
+E         data = await self.__bind_execute(args, 0, timeout)
+E                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/asyncpg/prepared_stmt.py", line 268, in __bind_execute
+E         data, status, _ = await self.__do_execute(
+E                           ^^^^^^^^^^^^^^^^^^^^^^^^
+E       File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/asyncpg/prepared_stmt.py", line 257, in __do_execute
+E         return await executor(protocol)
+E                ^^^^^^^^^^^^^^^^^^^^^^^^
+E       File "asyncpg/protocol/protocol.pyx", line 205, in bind_execute
+E     asyncpg.exceptions.RaiseError: protection history prevents downgrade
+E
+E     The above exception was the direct cause of the following exception:
+E
+E     Traceback (most recent call last):
+E       File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1943, in _exec_single_context
+E         self.dialect.do_execute(
+E       File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/sqlalchemy/engine/default.py", line 1180, in do_execute
+E         cursor.execute(statement, parameters)
+E       File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 656, in execute
+E         await_(self._prepare_and_execute(operation, parameters))
+E       File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/sqlalchemy/util/concurrency.py", line 167, in await_
+E         return current.parent.switch(awaitable)  # type: ignore[no-any-return]
+E                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/sqlalchemy/util/concurrency.py", line 205, in greenlet_spawn
+E         value = await result
+E                 ^^^^^^^^^^^^
+E       File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 618, in _prepare_and_execute
+E         self._handle_exception(error)
+E       File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 568, in _handle_exception
+E         self._adapt_connection._handle_exception(error)
+E       File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 847, in _handle_exception
+E         super()._handle_exception(error)
+E       File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/sqlalchemy/connectors/asyncio.py", line 412, in _handle_exception
+E         self._handle_exception_no_connection(self.dbapi, error)
+E       File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 840, in _handle_exception_no_connection
+E         raise translated_error from error
+E     sqlalchemy.dialects.postgresql.asyncpg.AsyncAdapt_asyncpg_dbapi.Error: protection history prevents downgrade
+E
+E     The above exception was the direct cause of the following exception:
+E
+E     Traceback (most recent call last):
+E       File "&lt;frozen runpy&gt;", line 198, in _run_module_as_main
+E       File "&lt;frozen runpy&gt;", line 88, in _run_code
+E       File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/alembic/__main__.py", line 4, in &lt;module&gt;
+E         main(prog="alembic")
+E       File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/alembic/config.py", line 1039, in main
+E         CommandLine(prog=prog).main(argv=argv)
+E       File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/alembic/config.py", line 1029, in main
+E         self.run_cmd(cfg, options)
+E       File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/alembic/config.py", line 963, in run_cmd
+E         fn(
+E       File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/alembic/command.py", line 534, in downgrade
+E         script.run_env()
+E       File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/alembic/script/base.py", line 550, in run_env
+E         util.load_python_file(self.dir, "env.py")
+E       File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/alembic/util/pyfiles.py", line 114, in load_python_file
+E         module = load_module_py(module_id, path)
+E                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/alembic/util/pyfiles.py", line 132, in load_module_py
+E         spec.loader.exec_module(module)  # type: ignore
+E         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       File "&lt;frozen importlib._bootstrap_external&gt;", line 999, in exec_module
+E       File "&lt;frozen importlib._bootstrap&gt;", line 488, in _call_with_frames_removed
+E       File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/migrations/env.py", line 51, in &lt;module&gt;
+E         asyncio.run(_run_online())
+E       File "/Users/chainarongjaykeaw/.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/asyncio/runners.py", line 195, in run
+E         return runner.run(main)
+E                ^^^^^^^^^^^^^^^^
+E       File "/Users/chainarongjaykeaw/.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/asyncio/runners.py", line 118, in run
+E         return self._loop.run_until_complete(task)
+E                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       File "/Users/chainarongjaykeaw/.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/asyncio/base_events.py", line 691, in run_until_complete
+E         return future.result()
+E                ^^^^^^^^^^^^^^^
+E       File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/migrations/env.py", line 43, in _run_online
+E         await connection.run_sync(_run)
+E       File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/sqlalchemy/ext/asyncio/engine.py", line 908, in run_sync
+E         return await greenlet_spawn(
+E                ^^^^^^^^^^^^^^^^^^^^^
+E       File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/sqlalchemy/util/concurrency.py", line 212, in greenlet_spawn
+E         result = context.switch(value)
+E                  ^^^^^^^^^^^^^^^^^^^^^
+E       File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/migrations/env.py", line 36, in _run
+E         context.run_migrations()
+E       File "&lt;string&gt;", line 8, in run_migrations
+E       File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/alembic/runtime/environment.py", line 970, in run_migrations
+E         self.get_context().run_migrations(**kw)
+E       File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/alembic/runtime/migration.py", line 616, in run_migrations
+E         step.migration_fn(**kw)
+E       File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/migrations/versions/0064_protection_request_retry.py", line 56, in downgrade
+E         op.execute(f"""DO $$ BEGIN IF EXISTS(SELECT 1 FROM {table}) THEN
+E       File "&lt;string&gt;", line 8, in execute
+E       File "&lt;string&gt;", line 3, in execute
+E       File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/alembic/operations/ops.py", line 2645, in execute
+E         return operations.invoke(op)
+E                ^^^^^^^^^^^^^^^^^^^^^
+E       File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/alembic/operations/base.py", line 448, in invoke
+E         return fn(self, operation)
+E                ^^^^^^^^^^^^^^^^^^^
+E       File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/alembic/operations/toimpl.py", line 256, in execute_sql
+E         operations.migration_context.impl.execute(
+E       File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/alembic/ddl/impl.py", line 259, in execute
+E         self._exec(sql, execution_options)
+E       File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/alembic/ddl/impl.py", line 252, in _exec
+E         return conn.execute(construct, params)
+E                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1448, in execute
+E         return meth(
+E                ^^^^^
+E       File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/sqlalchemy/sql/elements.py", line 533, in _execute_on_connection
+E         return connection._execute_clauseelement(
+E                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1668, in _execute_clauseelement
+E         ret = self._execute_context(
+E               ^^^^^^^^^^^^^^^^^^^^^^
+E       File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1822, in _execute_context
+E         return self._exec_single_context(
+E                ^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1962, in _exec_single_context
+E         self._handle_dbapi_exception(
+E       File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 2332, in _handle_dbapi_exception
+E         raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+E       File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1943, in _exec_single_context
+E         self.dialect.do_execute(
+E       File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/sqlalchemy/engine/default.py", line 1180, in do_execute
+E         cursor.execute(statement, parameters)
+E       File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 656, in execute
+E         await_(self._prepare_and_execute(operation, parameters))
+E       File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/sqlalchemy/util/concurrency.py", line 167, in await_
+E         return current.parent.switch(awaitable)  # type: ignore[no-any-return]
+E                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/sqlalchemy/util/concurrency.py", line 205, in greenlet_spawn
+E         value = await result
+E                 ^^^^^^^^^^^^
+E       File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 618, in _prepare_and_execute
+E         self._handle_exception(error)
+E       File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 568, in _handle_exception
+E         self._adapt_connection._handle_exception(error)
+E       File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 847, in _handle_exception
+E         super()._handle_exception(error)
+E       File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/sqlalchemy/connectors/asyncio.py", line 412, in _handle_exception
+E         self._handle_exception_no_connection(self.dbapi, error)
+E       File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 840, in _handle_exception_no_connection
+E         raise translated_error from error
+E     sqlalchemy.exc.DBAPIError: (sqlalchemy.dialects.postgresql.asyncpg.Error) protection history prevents downgrade
+E     [SQL: DO $$ BEGIN IF EXISTS(SELECT 1 FROM paper_protection_request_progress) THEN
+E                 RAISE EXCEPTION 'protection history prevents downgrade'; END IF; END $$]
+E     (Background on this error at: https://sqlalche.me/e/21/dbapi)
+E
+E   assert 1 == 0
+E    +  where 1 = CompletedProcess(args=['/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/bin/python', '-m'...ection history prevents downgrade\'; END IF; END $$]\n(Background on this error at: https://sqlalche.me/e/21/dbapi)\n').returncode</failure></testcase><testcase classname="tests.infra.risk_limits.test_source_resumption" name="test_0056_default_off_roundtrip_preserves_schedule_and_does_not_rearm[True]" time="0.432"><failure message="assert 0 == 1&#10; +  where 0 = len(())">tests/infra/risk_limits/test_source_resumption.py:463: in test_0056_default_off_roundtrip_preserves_schedule_and_does_not_rearm
+    due = await resumed(scan_engine, waiting)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/infra/risk_limits/test_source_resumption.py:101: in resumed
+    assert len(found) == 1
+E   assert 0 == 1
+E    +  where 0 = len(())</failure></testcase><testcase classname="tests.infra.risk_limits.test_source_resumption" name="test_both_publications_required_and_early_head_is_direct[r8]" time="0.515"><failure message="ValueError: not enough values to unpack (expected 1, got 0)">tests/infra/risk_limits/test_source_resumption.py:119: in test_both_publications_required_and_early_head_is_direct
+    (due,) = found
+    ^^^^^^
+E   ValueError: not enough values to unpack (expected 1, got 0)</failure></testcase><testcase classname="tests.infra.risk_limits.test_source_resumption" name="test_both_publications_required_and_early_head_is_direct[r9]" time="0.746"><failure message="ValueError: not enough values to unpack (expected 1, got 0)">tests/infra/risk_limits/test_source_resumption.py:119: in test_both_publications_required_and_early_head_is_direct
+    (due,) = found
+    ^^^^^^
+E   ValueError: not enough values to unpack (expected 1, got 0)</failure></testcase><testcase classname="tests.infra.risk_limits.test_source_resumption" name="test_both_publications_required_and_early_head_is_direct[r10]" time="0.379"><failure message="ValueError: not enough values to unpack (expected 1, got 0)">tests/infra/risk_limits/test_source_resumption.py:119: in test_both_publications_required_and_early_head_is_direct
+    (due,) = found
+    ^^^^^^
+E   ValueError: not enough values to unpack (expected 1, got 0)</failure></testcase><testcase classname="tests.infra.risk_limits.test_source_resumption" name="test_failed_probe_preserves_due_attempts_and_cannot_probe_again[True]" time="0.396"><failure message="assert 0 == 1&#10; +  where 0 = len(())">tests/infra/risk_limits/test_source_resumption.py:152: in test_failed_probe_preserves_due_attempts_and_cannot_probe_again
+    due = await resumed(scan_engine, waiting)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/infra/risk_limits/test_source_resumption.py:101: in resumed
+    assert len(found) == 1
+E   assert 0 == 1
+E    +  where 0 = len(())</failure></testcase><testcase classname="tests.infra.risk_limits.test_source_resumption" name="test_failed_probe_preserves_due_attempts_and_cannot_probe_again[False]" time="0.371"><failure message="assert 0 == 1&#10; +  where 0 = len(())">tests/infra/risk_limits/test_source_resumption.py:152: in test_failed_probe_preserves_due_attempts_and_cannot_probe_again
+    due = await resumed(scan_engine, waiting)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/infra/risk_limits/test_source_resumption.py:101: in resumed
+    assert len(found) == 1
+E   assert 0 == 1
+E    +  where 0 = len(())</failure></testcase><testcase classname="tests.infra.risk_limits.test_source_resumption" name="test_stale_scan_is_rechecked_under_owner_lock[revision]" time="0.381"><failure message="assert 0 == 1&#10; +  where 0 = len(())">tests/infra/risk_limits/test_source_resumption.py:206: in test_stale_scan_is_rechecked_under_owner_lock
+    due = await resumed(scan_engine, waiting)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/infra/risk_limits/test_source_resumption.py:101: in resumed
+    assert len(found) == 1
+E   assert 0 == 1
+E    +  where 0 = len(())</failure></testcase><testcase classname="tests.infra.risk_limits.test_source_resumption" name="test_stale_scan_is_rechecked_under_owner_lock[due]" time="0.357"><failure message="assert 0 == 1&#10; +  where 0 = len(())">tests/infra/risk_limits/test_source_resumption.py:206: in test_stale_scan_is_rechecked_under_owner_lock
+    due = await resumed(scan_engine, waiting)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/infra/risk_limits/test_source_resumption.py:101: in resumed
+    assert len(found) == 1
+E   assert 0 == 1
+E    +  where 0 = len(())</failure></testcase><testcase classname="tests.infra.risk_limits.test_source_resumption" name="test_stale_scan_is_rechecked_under_owner_lock[pair]" time="0.354"><failure message="assert 0 == 1&#10; +  where 0 = len(())">tests/infra/risk_limits/test_source_resumption.py:206: in test_stale_scan_is_rechecked_under_owner_lock
+    due = await resumed(scan_engine, waiting)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/infra/risk_limits/test_source_resumption.py:101: in resumed
+    assert len(found) == 1
+E   assert 0 == 1
+E    +  where 0 = len(())</failure></testcase><testcase classname="tests.infra.risk_limits.test_source_resumption" name="test_stale_scan_is_rechecked_under_owner_lock[cancel]" time="0.357"><failure message="assert 0 == 1&#10; +  where 0 = len(())">tests/infra/risk_limits/test_source_resumption.py:206: in test_stale_scan_is_rechecked_under_owner_lock
+    due = await resumed(scan_engine, waiting)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/infra/risk_limits/test_source_resumption.py:101: in resumed
+    assert len(found) == 1
+E   assert 0 == 1
+E    +  where 0 = len(())</failure></testcase><testcase classname="tests.infra.risk_limits.test_source_resumption" name="test_stale_scan_is_rechecked_under_owner_lock[unknown]" time="0.369"><failure message="assert 0 == 1&#10; +  where 0 = len(())">tests/infra/risk_limits/test_source_resumption.py:206: in test_stale_scan_is_rechecked_under_owner_lock
+    due = await resumed(scan_engine, waiting)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/infra/risk_limits/test_source_resumption.py:101: in resumed
+    assert len(found) == 1
+E   assert 0 == 1
+E    +  where 0 = len(())</failure></testcase><testcase classname="tests.infra.risk_limits.test_source_resumption" name="test_stale_scan_is_rechecked_under_owner_lock[book]" time="0.366"><failure message="assert 0 == 1&#10; +  where 0 = len(())">tests/infra/risk_limits/test_source_resumption.py:206: in test_stale_scan_is_rechecked_under_owner_lock
+    due = await resumed(scan_engine, waiting)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/infra/risk_limits/test_source_resumption.py:101: in resumed
+    assert len(found) == 1
+E   assert 0 == 1
+E    +  where 0 = len(())</failure></testcase><testcase classname="tests.infra.risk_limits.test_source_resumption" name="test_stale_scan_is_rechecked_under_owner_lock[price]" time="0.361"><failure message="assert 0 == 1&#10; +  where 0 = len(())">tests/infra/risk_limits/test_source_resumption.py:206: in test_stale_scan_is_rechecked_under_owner_lock
+    due = await resumed(scan_engine, waiting)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/infra/risk_limits/test_source_resumption.py:101: in resumed
+    assert len(found) == 1
+E   assert 0 == 1
+E    +  where 0 = len(())</failure></testcase><testcase classname="tests.infra.risk_limits.test_source_resumption" name="test_probe_rollback_does_not_consume_guard_and_commit_ack_loss_does" time="0.351"><failure message="assert 0 == 1&#10; +  where 0 = len(())">tests/infra/risk_limits/test_source_resumption.py:248: in test_probe_rollback_does_not_consume_guard_and_commit_ack_loss_does
+    due = await resumed(scan_engine, waiting)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/infra/risk_limits/test_source_resumption.py:101: in resumed
+    assert len(found) == 1
+E   assert 0 == 1
+E    +  where 0 = len(())</failure></testcase><testcase classname="tests.infra.risk_limits.test_source_resumption" name="test_concurrent_claims_have_one_winner" time="0.450"><failure message="assert 0 == 1&#10; +  where 0 = len(())">tests/infra/risk_limits/test_source_resumption.py:281: in test_concurrent_claims_have_one_winner
+    due = await resumed(scan_engine, waiting)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/infra/risk_limits/test_source_resumption.py:101: in resumed
+    assert len(found) == 1
+E   assert 0 == 1
+E    +  where 0 = len(())</failure></testcase><testcase classname="tests.infra.risk_limits.test_source_resumption" name="test_healthy_old_writer_finish_clears_marker" time="0.334" /><testcase classname="tests.infra.risk_limits.test_source_resumption" name="test_native_round_marks_only_source_errors_and_keeps_claim_budget[True]" time="0.347" /><testcase classname="tests.infra.risk_limits.test_source_resumption" name="test_native_round_marks_only_source_errors_and_keeps_claim_budget[False]" time="0.350" /><testcase classname="tests.infra.risk_limits.test_source_resumption" name="test_short_probe_lease_cannot_publish_after_original_due" time="0.358"><failure message="assert 0 == 1&#10; +  where 0 = len(())">tests/infra/risk_limits/test_source_resumption.py:377: in test_short_probe_lease_cannot_publish_after_original_due
+    await resumed(scan_engine, waiting)
+tests/infra/risk_limits/test_source_resumption.py:101: in resumed
+    assert len(found) == 1
+E   assert 0 == 1
+E    +  where 0 = len(())</failure></testcase><testcase classname="tests.infra.risk_limits.test_source_resumption" name="test_scan_grants_are_public_metadata_only" time="0.040" /><testcase classname="tests.infra.risk_limits.test_source_resumption" name="test_source_hint_never_bypasses_native_gate_or_publishes_partial_order" time="0.376"><failure message="assert 0 == 1&#10; +  where 0 = len(())">tests/infra/risk_limits/test_source_resumption.py:431: in test_source_hint_never_bypasses_native_gate_or_publishes_partial_order
+    due = await resumed(scan_engine, waiting)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/infra/risk_limits/test_source_resumption.py:101: in resumed
+    assert len(found) == 1
+E   assert 0 == 1
+E    +  where 0 = len(())</failure></testcase><testcase classname="tests.infra.risk_limits.test_source_resumption" name="test_real_lost_probe_commit_ack_preserves_consumed_guard" time="0.364"><failure message="assert 0 == 1&#10; +  where 0 = len(())">tests/infra/risk_limits/test_source_resumption.py:527: in test_real_lost_probe_commit_ack_preserves_consumed_guard
+    chosen = await resumed(scan_engine, waiting)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/infra/risk_limits/test_source_resumption.py:101: in resumed
+    assert len(found) == 1
+E   assert 0 == 1
+E    +  where 0 = len(())</failure></testcase><testcase classname="tests.infra.risk_limits.test_source_resumption" name="test_source_mode_preserves_ordinary_r9_r10_selection[r9]" time="0.572" /><testcase classname="tests.infra.risk_limits.test_source_resumption" name="test_source_mode_preserves_ordinary_r9_r10_selection[r10]" time="0.542" /><testcase classname="tests.infra.risk_limits.test_source_resumption" name="test_probe_rechecks_latch_without_an_order_or_reservation" time="0.445"><failure message="assert 0 == 1&#10; +  where 0 = len(())">tests/infra/risk_limits/test_source_resumption.py:589: in test_probe_rechecks_latch_without_an_order_or_reservation
+    due = await resumed(scan_engine, waiting)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/infra/risk_limits/test_source_resumption.py:101: in resumed
+    assert len(found) == 1
+E   assert 0 == 1
+E    +  where 0 = len(())</failure></testcase><testcase classname="tests.infra.risk_limits.test_source_resumption" name="test_reset_waits_for_pending_order_then_invalidates_probe_identity" time="0.382"><failure message="assert 0 == 1&#10; +  where 0 = len(())">tests/infra/risk_limits/test_source_resumption.py:613: in test_reset_waits_for_pending_order_then_invalidates_probe_identity
+    due = await resumed(scan_engine, waiting)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/infra/risk_limits/test_source_resumption.py:101: in resumed
+    assert len(found) == 1
+E   assert 0 == 1
+E    +  where 0 = len(())</failure></testcase><testcase classname="tests.infra.risk_limits.test_source_resumption" name="test_scheduler_diagnostics_are_read_only_under_the_scanner_role" time="0.346" /><testcase classname="tests.infra.risk_limits.test_source_resumption" name="test_diagnostic_failure_does_not_expose_error_details_or_replace_the_failure" time="0.001" /><testcase classname="tests.infra.risk_limits.test_same_pair_dispatch" name="test_runtime_round_uses_one_preferred_claim_and_reenables_after_pair_progress[r9]" time="1.048"><failure message="RuntimeError: coroutine raised StopIteration">tests/infra/risk_limits/test_same_pair_dispatch.py:117: in hint
+    return next(value for value in values if value.user_id == queue.owner)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   StopIteration
+
+The above exception was the direct cause of the following exception:
+tests/infra/risk_limits/test_same_pair_dispatch.py:653: in test_runtime_round_uses_one_preferred_claim_and_reenables_after_pair_progress
+    following = await hint(scan_engine, queue)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   RuntimeError: coroutine raised StopIteration</failure></testcase><testcase classname="tests.infra.risk_limits.test_same_pair_dispatch" name="test_runtime_round_uses_one_preferred_claim_and_reenables_after_pair_progress[r10]" time="0.876" /></testsuite></testsuites>

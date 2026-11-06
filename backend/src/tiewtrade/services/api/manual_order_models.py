@@ -27,14 +27,41 @@ class ExpectedPaperEpisode(BaseModel):
     expected_episode_id: UUID
 
 
+class ProtectionPricesInput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    take_profit_price: AmountText | None = None
+    stop_loss_price: AmountText | None = None
+
+    @model_validator(mode="after")
+    def one_leg(self) -> Self:
+        if self.take_profit_price is None and self.stop_loss_price is None:
+            raise ValueError("at least one protection leg required")
+        return self
+
+
+class ManualProtectionAllocationInput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    protection_id: UUID
+    expected_revision: Annotated[int, Field(strict=True, ge=1)]
+    quantity: AmountText
+
+
 class _NewOrderBase(ExpectedPaperEpisode):
     base: Annotated[StrictStr, Field(pattern=r"^[A-Z][A-Z0-9]{0,19}$")]
     quote: Literal["USDT"]
+    protection: ProtectionPricesInput | None = None
+    protection_allocations: tuple[ManualProtectionAllocationInput, ...] = Field(
+        default_factory=tuple
+    )
 
     @model_validator(mode="after")
     def distinct_assets(self) -> Self:
         if self.base == self.quote:
             raise ValueError("base and quote must differ")
+        if self.protection is not None and getattr(self, "side", None) != "BUY":
+            raise ValueError("bracket requires a BUY entry")
+        if self.protection_allocations and getattr(self, "side", None) != "SELL":
+            raise ValueError("protection allocations require a SELL")
         return self
 
 
@@ -87,6 +114,10 @@ def manual_intent(
 
 
 class ManualOrderSummary(BaseModel):
+    protection: ProtectionPricesInput | None = None
+    protection_allocations: tuple[ManualProtectionAllocationInput, ...] = Field(
+        default_factory=tuple
+    )
     base: str
     quote: Literal["USDT"]
     side: Literal["BUY", "SELL"]
@@ -142,10 +173,11 @@ class ManualRequestPage(BaseModel):
 
 
 class BaseBalanceView(BaseModel):
+    protection_allocated: str | None = None
     asset: str
     held: str
     reserved: str
-    available: str
+    available: str | None
 
 
 class TradeWalletView(BaseModel):
@@ -160,6 +192,7 @@ class TradeWalletView(BaseModel):
 
 
 class PaperTradeView(BaseModel):
+    protection_enabled: bool = False
     market_observed_at: str | None = None
     mode: Literal["PAPER"]
     wallet: TradeWalletView | None
@@ -206,3 +239,33 @@ class PaperOrderPage(BaseModel):
 
 class ManualOrderRefusal(BaseModel):
     detail: str
+
+
+def manual_attachments(
+    body: NewOrderInput,
+) -> tuple[dict[str, object] | None, tuple[dict[str, object], ...]]:
+    from tiewtrade.core.protections import ProtectionPrices
+
+    price = body.protection
+    bracket: dict[str, object] | None = None
+    if price is not None:
+        prices = ProtectionPrices(
+            PositionPair(body.base, body.quote),
+            None
+            if price.take_profit_price is None
+            else Money.of(price.take_profit_price, body.quote),
+            None if price.stop_loss_price is None else Money.of(price.stop_loss_price, body.quote),
+        )
+        bracket = {
+            "tp": None if prices.take_profit is None else prices.take_profit.as_parts()["amount"],
+            "sl": None if prices.stop_loss is None else prices.stop_loss.as_parts()["amount"],
+        }
+    allocations = tuple(
+        {
+            "protection_id": str(v.protection_id),
+            "expected_revision": v.expected_revision,
+            "quantity": Quantity.of(v.quantity, body.base).as_parts()["quantity"],
+        }
+        for v in body.protection_allocations
+    )
+    return bracket, allocations

@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="0.632" timestamp="2026-11-05T17:05:29.838515+07:00" hostname="Chainarongs-MacBook-Pro.local"><testcase classname="tests.infra.db.test_migrations" name="test_downgrade_then_upgrade_rebuilds_the_same_structure" time="0.593"><failure message="AssertionError: alembic downgrade base ล้มเหลว:&#10;  Traceback (most recent call last):&#10;    File &quot;&lt;frozen runpy&gt;&quot;, line 198, in _run_module_as_main&#10;    File &quot;&lt;frozen runpy&gt;&quot;, line 88, in _run_code&#10;    File &quot;/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/alembic/__main__.py&quot;, line 4, in &lt;module&gt;&#10;      main(prog=&quot;alembic&quot;)&#10;    File &quot;/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/alembic/config.py&quot;, line 1039, in main&#10;      CommandLine(prog=prog).main(argv=argv)&#10;    File &quot;/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/alembic/config.py&quot;, line 1029, in main&#10;      self.run_cmd(cfg, options)&#10;    File &quot;/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/alembic/config.py&quot;, line 963, in run_cmd&#10;      fn(&#10;    File &quot;/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/alembic/command.py&quot;, line 534, in downgrade&#10;      script.run_env()&#10;    File &quot;/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/alembic/script/base.py&quot;, line 550, in run_env&#10;      util.load_python_file(self.dir, &quot;env.py&quot;)&#10;    File &quot;/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/alembic/util/pyfiles.py&quot;, line 114, in load_python_file&#10;      module = load_module_py(module_id, path)&#10;               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^&#10;    File &quot;/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/alembic/util/pyfiles.py&quot;, line 132, in load_module_py&#10;      spec.loader.exec_module(module)  # type: ignore&#10;      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^&#10;    File &quot;&lt;frozen importlib._bootstrap_external&gt;&quot;, line 999, in exec_module&#10;    File &quot;&lt;frozen importlib._bootstrap&gt;&quot;, line 488, in _call_with_frames_removed&#10;    File &quot;/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/migrations/env.py&quot;, line 51, in &lt;module&gt;&#10;      asyncio.run(_run_online())&#10;    File &quot;/Users/chainarongjaykeaw/.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/asyncio/runners.py&quot;, line 195, in run&#10;      return runner.run(main)&#10;             ^^^^^^^^^^^^^^^^&#10;    File &quot;/Users/chainarongjaykeaw/.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/asyncio/runners.py&quot;, line 118, in run&#10;      return self._loop.run_until_complete(task)&#10;             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^&#10;    File &quot;/Users/chainarongjaykeaw/.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/asyncio/base_events.py&quot;, line 691, in run_until_complete&#10;      return future.result()&#10;             ^^^^^^^^^^^^^^^&#10;    File &quot;/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/migrations/env.py&quot;, line 43, in _run_online&#10;      await connection.run_sync(_run)&#10;    File &quot;/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/sqlalchemy/ext/asyncio/engine.py&quot;, line 908, in run_sync&#10;      return await greenlet_spawn(&#10;             ^^^^^^^^^^^^^^^^^^^^^&#10;    File &quot;/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/sqlalchemy/util/concurrency.py&quot;, line 212, in greenlet_spawn&#10;      result = context.switch(value)&#10;               ^^^^^^^^^^^^^^^^^^^^^&#10;    File &quot;/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/migrations/env.py&quot;, line 36, in _run&#10;      context.run_migrations()&#10;    File &quot;&lt;string&gt;&quot;, line 8, in run_migrations&#10;    File &quot;/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/alembic/runtime/environment.py&quot;, line 970, in run_migrations&#10;      self.get_context().run_migrations(**kw)&#10;    File &quot;/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/alembic/runtime/migration.py&quot;, line 616, in run_migrations&#10;      step.migration_fn(**kw)&#10;    File &quot;/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/migrations/versions/0064_protection_request_retry.py&quot;, line 32, in downgrade&#10;      raise RuntimeError(&quot;0064 is forward-only; preserve durable replacement retry state&quot;)&#10;  RuntimeError: 0064 is forward-only; preserve durable replacement retry state&#10;  &#10;assert 1 == 0&#10; +  where 1 = CompletedProcess(args=['/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/bin/python', '-m'...rve durable replacement retry state&quot;)\nRuntimeError: 0064 is forward-only; preserve durable replacement retry state\n').returncode">tests/infra/db/test_migrations.py:115: in test_downgrade_then_upgrade_rebuilds_the_same_structure
+    _alembic("downgrade", "base")
+tests/infra/db/test_migrations.py:64: in _alembic
+    assert done.returncode == 0, f"alembic {' '.join(args)} ล้มเหลว:\n{done.stdout}{done.stderr}"
+E   AssertionError: alembic downgrade base ล้มเหลว:
+E     Traceback (most recent call last):
+E       File "&lt;frozen runpy&gt;", line 198, in _run_module_as_main
+E       File "&lt;frozen runpy&gt;", line 88, in _run_code
+E       File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/alembic/__main__.py", line 4, in &lt;module&gt;
+E         main(prog="alembic")
+E       File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/alembic/config.py", line 1039, in main
+E         CommandLine(prog=prog).main(argv=argv)
+E       File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/alembic/config.py", line 1029, in main
+E         self.run_cmd(cfg, options)
+E       File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/alembic/config.py", line 963, in run_cmd
+E         fn(
+E       File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/alembic/command.py", line 534, in downgrade
+E         script.run_env()
+E       File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/alembic/script/base.py", line 550, in run_env
+E         util.load_python_file(self.dir, "env.py")
+E       File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/alembic/util/pyfiles.py", line 114, in load_python_file
+E         module = load_module_py(module_id, path)
+E                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/alembic/util/pyfiles.py", line 132, in load_module_py
+E         spec.loader.exec_module(module)  # type: ignore
+E         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       File "&lt;frozen importlib._bootstrap_external&gt;", line 999, in exec_module
+E       File "&lt;frozen importlib._bootstrap&gt;", line 488, in _call_with_frames_removed
+E       File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/migrations/env.py", line 51, in &lt;module&gt;
+E         asyncio.run(_run_online())
+E       File "/Users/chainarongjaykeaw/.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/asyncio/runners.py", line 195, in run
+E         return runner.run(main)
+E                ^^^^^^^^^^^^^^^^
+E       File "/Users/chainarongjaykeaw/.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/asyncio/runners.py", line 118, in run
+E         return self._loop.run_until_complete(task)
+E                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       File "/Users/chainarongjaykeaw/.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/asyncio/base_events.py", line 691, in run_until_complete
+E         return future.result()
+E                ^^^^^^^^^^^^^^^
+E       File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/migrations/env.py", line 43, in _run_online
+E         await connection.run_sync(_run)
+E       File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/sqlalchemy/ext/asyncio/engine.py", line 908, in run_sync
+E         return await greenlet_spawn(
+E                ^^^^^^^^^^^^^^^^^^^^^
+E       File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/sqlalchemy/util/concurrency.py", line 212, in greenlet_spawn
+E         result = context.switch(value)
+E                  ^^^^^^^^^^^^^^^^^^^^^
+E       File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/migrations/env.py", line 36, in _run
+E         context.run_migrations()
+E       File "&lt;string&gt;", line 8, in run_migrations
+E       File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/alembic/runtime/environment.py", line 970, in run_migrations
+E         self.get_context().run_migrations(**kw)
+E       File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/lib/python3.12/site-packages/alembic/runtime/migration.py", line 616, in run_migrations
+E         step.migration_fn(**kw)
+E       File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/migrations/versions/0064_protection_request_retry.py", line 32, in downgrade
+E         raise RuntimeError("0064 is forward-only; preserve durable replacement retry state")
+E     RuntimeError: 0064 is forward-only; preserve durable replacement retry state
+E
+E   assert 1 == 0
+E    +  where 1 = CompletedProcess(args=['/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade/backend/.venv/bin/python', '-m'...rve durable replacement retry state")\nRuntimeError: 0064 is forward-only; preserve durable replacement retry state\n').returncode</failure></testcase></testsuite></testsuites>

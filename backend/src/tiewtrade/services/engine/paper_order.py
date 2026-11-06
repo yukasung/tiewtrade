@@ -142,3 +142,51 @@ async def run_paper_order_round(
         await reconcile_removal_effects(session)
         await reconcile_maintenance_proofs(session)
     return PaperOrderRound(processed, deferred, skipped)
+
+
+async def run_protection_round(
+    *, engine: AsyncEngine, scan_engine: AsyncEngine, limit: int = 20
+) -> PaperOrderRound:
+    """DB hints only; every decision reacquires the existing owner/episode lock."""
+    from tiewtrade.infra.protections.worker import process_group, process_request
+
+    async with scan_session_bypassing_rls(scan_engine) as scan:
+        hints = (
+            await scan.execute(
+                """SELECT id,user_id,kind,due FROM (
+            SELECT DISTINCT ON (user_id) id,user_id,kind,due FROM (
+            SELECT q.id,q.user_id,'REQUEST' AS kind,
+              coalesce(p.next_attempt_at,q.recorded_at) AS due
+              FROM paper_protection_requests q
+              LEFT JOIN paper_protection_request_progress p ON p.request_id=q.id
+              WHERE coalesce(p.next_attempt_at,q.recorded_at)<=clock_timestamp() AND NOT EXISTS(
+                SELECT 1 FROM paper_protection_results r WHERE r.request_id=q.id)
+            UNION ALL SELECT id,user_id,'GROUP',next_attempt_at FROM paper_protections
+              WHERE state NOT IN ('CLOSED','CANCELED') AND next_attempt_at<=clock_timestamp()
+           ) candidates ORDER BY user_id,due,id
+          ) owners ORDER BY due,id LIMIT :limit""",
+                {"limit": limit},
+            )
+        ).all()
+    processed = deferred = 0
+    for hint in sorted(hints, key=lambda v: (v.due, str(v.id))):
+        try:
+            async with user_session(engine, hint.user_id, role=DatabaseRole.ENGINE) as session:
+                await session.execute("SET LOCAL statement_timeout='500ms'")
+                await session.execute("SET LOCAL lock_timeout='100ms'")
+                if hint.kind == "REQUEST":
+                    await process_request(session, hint.id)
+                else:
+                    await process_group(session, hint.id)
+                    await session.execute(
+                        """UPDATE paper_protections
+                        SET next_attempt_at=greatest(clock_timestamp()+interval '20 milliseconds',
+                            CAST(document->>'setup_due_at' AS timestamptz))
+                       WHERE id=:id""",
+                        {"id": hint.id},
+                    )
+            processed += 1
+        except Exception:
+            _LOGGER.warning("protection work deferred id=%s", hint.id)
+            deferred += 1
+    return PaperOrderRound(processed, deferred)

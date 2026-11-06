@@ -83,6 +83,15 @@ from tiewtrade.infra.positions import (
     apply_position_event,
     read_position_snapshot,
 )
+from tiewtrade.infra.protections.worker import (
+    commit_admission as commit_protection_admission,
+)
+from tiewtrade.infra.protections.worker import (
+    prepare_admission as prepare_protection_admission,
+)
+from tiewtrade.infra.protections.worker import (
+    record_fill as record_protection_fill,
+)
 from tiewtrade.infra.risk_limits.policy import (
     TransactionalRiskPolicy,
     paper_opening_protocol_enabled,
@@ -260,6 +269,7 @@ async def _process_new(
         await _reject(session, claim, row, "CATALOG_PAIR_REMOVED")
         return
     if not result_exists:
+        await session.execute("SAVEPOINT order_admission")
         try:
             bootstrap_evidence = None
             if state.inputs:
@@ -343,13 +353,16 @@ async def _process_new(
                 effective_policy = await policy.resolve(
                     session, intent, held=held, reserved=reserved
                 )
+            admission_held, protection_changes = await prepare_protection_admission(
+                session, intent, row["wallet_id"], row["id"], held
+            )
             accepted = admit_order(
                 state,
                 intent,
                 now=(await session.execute("SELECT clock_timestamp()")).scalar_one(),
                 sequence=order_sequence,
                 cash=cash,
-                held=held,
+                held=admission_held,
                 constraints=constraints,
                 reference_price=reference,
                 filter_reference_price=record.metadata.average_price,
@@ -362,6 +375,9 @@ async def _process_new(
                 wallet_id=row["wallet_id"],
                 command_id=row["id"],
                 order=order,
+            )
+            await commit_protection_admission(
+                session, intent, row["wallet_id"], row["id"], protection_changes
             )
             await persist_checkpoint(
                 session,
@@ -391,11 +407,19 @@ async def _process_new(
                     "spent": order.spent.as_parts(),
                 },
             )
+            await session.execute("RELEASE SAVEPOINT order_admission")
             state = accepted
         except SourceUnavailableError:
             raise
-        except OrderError as error:
-            await _reject(session, claim, row, error.code)
+        except (OrderError, MoneyError) as error:
+            await session.execute("ROLLBACK TO SAVEPOINT order_admission")
+            await session.execute("RELEASE SAVEPOINT order_admission")
+            await _reject(
+                session,
+                claim,
+                row,
+                error.code if isinstance(error, OrderError) else "ORDER_INPUT_INVALID",
+            )
             return
     target = next((v for v in state.orders if v.intent.order_id == intent.order_id), None)
     if target is None:
@@ -712,6 +736,7 @@ async def _apply_inputs(
                 )
             if result.status is not PositionWriteStatus.APPLIED:
                 raise OrderWorkerIntegrityError(f"fill {index} did not apply atomically")
+            await record_protection_fill(session, order_id, fact)
         if transition.fills or not fenced:
             # BUY or SELL changes the authoritative book and may latch the
             # limit. The next input must resolve that new financial revision.

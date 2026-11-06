@@ -13,6 +13,7 @@ from tests.infra.risk_limits.migration_support import (
     prepare_migration_roundtrip,
     restore_migration_roundtrip,
 )
+from tests.infra.risk_limits.scheduler_diagnostics import emit_scheduler_diagnostics
 from tests.infra.risk_limits.test_execution import Runtime, runtime
 from tests.infra.risk_limits.test_same_pair_dispatch import Queue, resting
 from tests.infra.risk_limits.test_same_pair_dispatch import queue as queue
@@ -95,6 +96,8 @@ async def resumed(scan: AsyncEngine, waiting: Waiting, **options: bool) -> DueOr
     await waiting.sources.next_book()
     await waiting.sources.price("100")
     found = await hints(scan, waiting, **options)
+    if len(found) != 1:
+        await emit_scheduler_diagnostics(scan, waiting.owner, source_resumption=True, **options)
     assert len(found) == 1
     return found[0]
 
@@ -108,7 +111,12 @@ async def test_both_publications_required_and_early_head_is_direct(
     await waiting.sources.next_book()
     assert not await hints(scan_engine, waiting, **options)
     await waiting.sources.price("100")
-    (due,) = await hints(scan_engine, waiting, **options)
+    found = await hints(scan_engine, waiting, **options)
+    if len(found) != 1:
+        await emit_scheduler_diagnostics(
+            scan_engine, waiting.owner, source_resumption=True, **options
+        )
+    (due,) = found
     assert due.source_wait_revision == waiting.failed.revision
     assert due.anchor_command_id is None and due.next_attempt_at == waiting.due
     async with scan_session_bypassing_rls(scan_engine) as s:
@@ -636,3 +644,53 @@ async def test_reset_waits_for_pending_order_then_invalidates_probe_identity(
         assert current is not None and current.episode_id != wallet.episode_id
         assert await claim_order(s, due, worker="old-episode") is None
         assert (await s.execute("SELECT count(*) FROM paper_orders")).scalar_one() == 0
+
+
+async def test_scheduler_diagnostics_are_read_only_under_the_scanner_role(
+    waiting: Waiting, scan_engine: AsyncEngine, engine_engine: AsyncEngine
+) -> None:
+    from tests.infra.risk_limits.scheduler_diagnostics import read_scheduler_diagnostics
+
+    async with user_session(engine_engine, waiting.owner, role=DatabaseRole.ENGINE) as session:
+        before = (
+            (
+                await session.execute(
+                    "SELECT to_jsonb(d) FROM paper_order_dispatch d ORDER BY command_id"
+                )
+            )
+            .scalars()
+            .all()
+        )
+    snapshot = await read_scheduler_diagnostics(scan_engine, waiting.owner, source_resumption=True)
+    assert snapshot["owner"] == waiting.owner
+    assert snapshot["owner_rows"] and snapshot["public_sources"]
+    async with user_session(engine_engine, waiting.owner, role=DatabaseRole.ENGINE) as session:
+        after = (
+            (
+                await session.execute(
+                    "SELECT to_jsonb(d) FROM paper_order_dispatch d ORDER BY command_id"
+                )
+            )
+            .scalars()
+            .all()
+        )
+    assert after == before
+
+
+async def test_diagnostic_failure_does_not_expose_error_details_or_replace_the_failure(
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+    scan_engine: AsyncEngine,
+) -> None:
+    from unittest.mock import AsyncMock
+
+    from tests.infra.risk_limits import scheduler_diagnostics
+
+    monkeypatch.setattr(
+        scheduler_diagnostics,
+        "read_scheduler_diagnostics",
+        AsyncMock(side_effect=RuntimeError("private-diagnostic-connection-details")),
+    )
+    await scheduler_diagnostics.emit_scheduler_diagnostics(scan_engine, uuid4())
+    assert "F17_SCHEDULER_DIAGNOSTIC_ERROR RuntimeError" in caplog.text
+    assert "private-diagnostic-connection-details" not in caplog.text

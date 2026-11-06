@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="27" failures="0" errors="0" time="0.865580458">
+    <testsuite name="tests/PaperTradePage.test.tsx" timestamp="2026-11-05T13:08:39.725Z" hostname="Chainarongs-MacBook-Pro.local" tests="27" failures="0" errors="0" skipped="0" time="0.865580458">
+        <testcase classname="tests/PaperTradePage.test.tsx" name="keeps conflicted protections editable after reloading an unavailable balance" time="0.186332167">
+        </testcase>
+        <testcase classname="tests/PaperTradePage.test.tsx" name="journals before POST, blocks duplicate clicks, and recovers reload with same-key retry after lookup404" time="0.081021333">
+        </testcase>
+        <testcase classname="tests/PaperTradePage.test.tsx" name="does not POST when storage write fails and blocks new requests when discovery fails" time="0.032612584">
+        </testcase>
+        <testcase classname="tests/PaperTradePage.test.tsx" name="shows discovery failure instead of an empty successful recovery" time="0.0153885">
+        </testcase>
+        <testcase classname="tests/PaperTradePage.test.tsx" name="polls a transferred command until rejection even without an order and keeps its reason visible" time="0.019466208">
+        </testcase>
+        <testcase classname="tests/PaperTradePage.test.tsx" name="does not duplicate a completed cancel recovery result outside the order table" time="0.00564175">
+        </testcase>
+        <testcase classname="tests/PaperTradePage.test.tsx" name="does not read a different owner&apos;s journal" time="0.024480333">
+        </testcase>
+        <testcase classname="tests/PaperTradePage.test.tsx" name="continues polling after transfer until the linked command becomes terminal" time="0.028536584">
+        </testcase>
+        <testcase classname="tests/PaperTradePage.test.tsx" name="clears a previous pair&apos;s displayed market price before the next pair snapshot" time="0.022882084">
+        </testcase>
+        <testcase classname="tests/PaperTradePage.test.tsx" name="shows a latched risk stop beside the form without a risk-settings control" time="0.014555583">
+        </testcase>
+        <testcase classname="tests/PaperTradePage.test.tsx" name="links an unset loss limit to Trading account without embedding risk controls" time="0.016583083">
+        </testcase>
+        <testcase classname="tests/PaperTradePage.test.tsx" name="keeps the chart, order history and form in one desktop workspace" time="0.01662275">
+        </testcase>
+        <testcase classname="tests/PaperTradePage.test.tsx" name="requires every recovery page before permitting new requests" time="0.02666575">
+        </testcase>
+        <testcase classname="tests/PaperTradePage.test.tsx" name="a definitive input refusal permits correcting the draft while unknown outcomes retain their journal" time="0.033798875">
+        </testcase>
+        <testcase classname="tests/PaperTradePage.test.tsx" name="retains recovery identity for an unrecognized 422 response" time="0.029843417">
+        </testcase>
+        <testcase classname="tests/PaperTradePage.test.tsx" name="leaves terminal discovery results to the order table instead of duplicating them" time="0.005088792">
+        </testcase>
+        <testcase classname="tests/PaperTradePage.test.tsx" name="stops pending polling while hidden and after route unmount" time="0.019874792">
+        </testcase>
+        <testcase classname="tests/PaperTradePage.test.tsx" name="aborts pending owner reads when leaving the trade route" time="0.004395709">
+        </testcase>
+        <testcase classname="tests/PaperTradePage.test.tsx" name="clears the completed draft so a second click cannot silently create a new-key duplicate" time="0.033872417">
+        </testcase>
+        <testcase classname="tests/PaperTradePage.test.tsx" name="resolves only an explicit closed-episode refusal and requires a new draft" time="0.037239666">
+        </testcase>
+        <testcase classname="tests/PaperTradePage.test.tsx" name="retains UNKNOWN and the original journal for a generic conflict" time="0.031974667">
+        </testcase>
+        <testcase classname="tests/PaperTradePage.test.tsx" name="discards a draft on episode replacement while retaining UNKNOWN&apos;s original retry scope" time="0.056669334">
+        </testcase>
+        <testcase classname="tests/PaperTradePage.test.tsx" name="never claims a &apos;WAITING_ENTRY&apos; allocation is fully protected or closed" time="0.026258666">
+        </testcase>
+        <testcase classname="tests/PaperTradePage.test.tsx" name="never claims a &apos;ARMING&apos; allocation is fully protected or closed" time="0.022233334">
+        </testcase>
+        <testcase classname="tests/PaperTradePage.test.tsx" name="never claims a &apos;ARMED&apos; allocation is fully protected or closed" time="0.023761625">
+        </testcase>
+        <testcase classname="tests/PaperTradePage.test.tsx" name="never claims a &apos;EXITING&apos; allocation is fully protected or closed" time="0.024480875">
+        </testcase>
+        <testcase classname="tests/PaperTradePage.test.tsx" name="never claims a &apos;FAILED&apos; allocation is fully protected or closed" time="0.023610625">
+        </testcase>
+    </testsuite>
+</testsuites>

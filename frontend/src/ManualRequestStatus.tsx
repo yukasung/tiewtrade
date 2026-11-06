@@ -1,5 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
+import { protectionText } from "./protectionMessages";
 import { MarketTime, MarketValue } from "./components/MarketValue";
 import { OrderStatus } from "./components/OrderStatus";
 import { manualCode, manualOrderLocale, manualOrderText as t } from "./manualOrderMessages";
@@ -11,6 +12,8 @@ export function RequestSnapshot({ value }: { value: ManualRequest }) {
     <p className="break-all">{value.action === "CANCEL" ? t("cancel") : t("form")}: {value.order_id}</p>
     <p className="text-sm break-all">{t("episode")}: {value.episode_id}</p>
     {summary && <p>{summary.base}/{summary.quote} {t(summary.side)} {t(summary.kind)} <MarketValue amount={summary.base_quantity ?? summary.quote_budget ?? ""} unit={summary.base_quantity === null ? summary.quote : summary.base}/>{summary.limit_price !== null && <> · <MarketValue amount={summary.limit_price} unit={summary.quote}/> {t("GTC")}</>}</p>}
+    {summary?.protection && <p>{protectionText("title")}: {summary.protection.take_profit_price && <>{protectionText("tp")} <MarketValue amount={summary.protection.take_profit_price} unit={summary.quote}/></>} {summary.protection.stop_loss_price && <>{protectionText("sl")} <MarketValue amount={summary.protection.stop_loss_price} unit={summary.quote}/></>}</p>}
+    {summary?.protection_allocations?.map(selection => <p key={selection.protection_id}>{protectionText("release")}: <MarketValue amount={selection.quantity} unit={summary.base}/></p>)}
     <dl className="flex flex-wrap gap-4" role="status" aria-live="polite" aria-atomic="true">
       <div><dt>{t("intake")}</dt><dd><OrderStatus status={value.intake_state}/></dd></div>
       <div><dt>{t("command")}</dt><dd><OrderStatus status={value.command_state}/></dd></div>

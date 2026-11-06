@@ -235,6 +235,8 @@ async def test_actual_loops_alternate_after_success_skip_defer_and_restart_legac
     modes = []
     monkeypatch.setattr(module, "create_engine_for", lambda role: engine)
     monkeypatch.setattr(module, "run_manual_order_round", AsyncMock())
+    if driver == "production":
+        monkeypatch.setattr(module, "run_protection_round", AsyncMock())
     monkeypatch.setattr(event, "listens_for", lambda *args, **kwargs: lambda fn: fn)
     monkeypatch.setattr(runtime, "ALTERNATE_ADMISSION_PRIORITY", True)
 

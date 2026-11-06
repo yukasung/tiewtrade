@@ -97,6 +97,7 @@ class AuditAction(Enum):
     RESUMED = "RESUMED"
     RESUME_REJECTED = "RESUME_REJECTED"
     PLATFORM_STOPPED = "PLATFORM_STOPPED"
+    PROTECTION_EVENT = "PROTECTION_EVENT"
 
 
 #: ชนิดเหตุการณ์ที่เป็นการเทรด — ต้องระบุ PAPER หรือ LIVE เสมอ (RQ-19)
@@ -112,6 +113,7 @@ TRADING_ACTIONS: frozenset[AuditAction] = frozenset(
         AuditAction.PAPER_POSITION_CONFLICTED,
         AuditAction.PAPER_ORDER_SOURCE_INITIALIZED,
         AuditAction.PAPER_ORDER_DECISION,
+        AuditAction.PROTECTION_EVENT,
         AuditAction.PAPER_ORDER_REQUESTED,
         AuditAction.PAPER_ORDER_REQUEST_TRANSFERRED,
         AuditAction.PAPER_ORDER_REQUEST_REJECTED,
@@ -545,6 +547,55 @@ class PaperOrderDecisionDetails:
         }
 
 
+PROTECTION_KINDS = frozenset(
+    {
+        "REQUEST",
+        "CREATE",
+        "REPLACE",
+        "CANCEL",
+        "ARM",
+        "FILL",
+        "TRIGGER",
+        "EXIT",
+        "MANUAL_RELEASE",
+        "CONFLICT",
+        "RETRY",
+        "FAIL",
+        "REJECT",
+    }
+)
+
+
+@dataclass(frozen=True, slots=True)
+class ProtectionDetails:
+    episode_id: UUID
+    protection_id: UUID
+    event_id: UUID
+    revision: int
+    kind: str
+
+    def __post_init__(self) -> None:
+        if (
+            any(
+                not isinstance(v, UUID)
+                for v in (self.episode_id, self.protection_id, self.event_id)
+            )
+            or type(self.revision) is not int
+            or self.revision < 0
+            or self.kind not in PROTECTION_KINDS
+        ):
+            raise AuditEventError("invalid protection audit details")
+
+    def as_details(self) -> dict[str, object]:
+        return {
+            "episode_id": str(self.episode_id),
+            "protection_id": str(self.protection_id),
+            "event_id": str(self.event_id),
+            "revision": self.revision,
+            "kind": self.kind,
+        }
+
+
 PAPER_REQUEST_FAILURES = frozenset(
     {
         "CATALOG_PAIR_REMOVED",
@@ -692,6 +743,7 @@ DETAILS_TYPES: dict[AuditAction, type[object]] = {
     AuditAction.CATALOG_ACTIVATED: CatalogMutationDetails,
     AuditAction.PLATFORM_OWNER_BOOTSTRAPPED: PlatformOwnerBootstrapDetails,
     AuditAction.PAPER_ORDER_DECISION: PaperOrderDecisionDetails,
+    AuditAction.PROTECTION_EVENT: ProtectionDetails,
     AuditAction.PAPER_ORDER_SOURCE_INITIALIZED: PaperOrderSourceDetails,
     AuditAction.TRADING_USE_SELECTED: TradingUseDetails,
     AuditAction.PAPER_WALLET_CREATED: PaperWalletCreatedDetails,
@@ -948,6 +1000,22 @@ def _check_paper_order_source(event: AuditEvent) -> None:
         raise AuditEventError("invalid Paper order source audit event")
 
 
+def _check_protection(event: AuditEvent) -> None:
+    details = event.details
+    requested = isinstance(details, ProtectionDetails) and details.kind == "REQUEST"
+    if (
+        not isinstance(details, ProtectionDetails)
+        or event.mode is not AuditMode.PAPER
+        or event.subject_kind is not SubjectKind.PAPER_ORDER_ACTIVITY
+        or event.subject_id != str(details.episode_id)
+        or event.actor_kind is not (ActorKind.USER if requested else ActorKind.SYSTEM)
+        or event.actor_id != (event.owner_user_id if requested else None)
+        or event.outcome is not AuditOutcome.SUCCEEDED
+        or event.failure_code is not None
+    ):
+        raise AuditEventError("invalid protection audit scope")
+
+
 def _check_paper_order_request(event: AuditEvent) -> None:
     if (
         not isinstance(event.details, PaperOrderRequestDetails)
@@ -1050,6 +1118,7 @@ _ACTION_INVARIANTS: dict[AuditAction, Callable[[AuditEvent], None]] = {
     AuditAction.CATALOG_ACTIVATED: _check_catalog_event,
     AuditAction.PLATFORM_OWNER_BOOTSTRAPPED: _check_platform_owner_bootstrap,
     AuditAction.PAPER_ORDER_DECISION: _check_paper_order_source,
+    AuditAction.PROTECTION_EVENT: _check_protection,
     AuditAction.PAPER_ORDER_SOURCE_INITIALIZED: _check_paper_order_source,
     AuditAction.TRADING_USE_SELECTED: _check_own_account_action,
     AuditAction.USER_CREATED: _check_user_created,

@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="1.561" timestamp="2026-11-05T21:27:15.047756+07:00" hostname="Chainarongs-MacBook-Pro.local"><testcase classname="tests.infra.protections.test_lifecycle" name="test_entry_fixture_does_not_transfer_another_owners_pending_request" time="1.291"><failure message="assert 1 == 0&#10; +  where 1 = scalar_one()&#10; +    where scalar_one = &lt;sqlalchemy.engine.cursor.CursorResult object at 0x10bae4910&gt;.scalar_one">tests/infra/protections/test_lifecycle.py:850: in test_entry_fixture_does_not_transfer_another_owners_pending_request
+    assert (
+E   assert 1 == 0
+E    +  where 1 = scalar_one()
+E    +    where scalar_one = &lt;sqlalchemy.engine.cursor.CursorResult object at 0x10bae4910&gt;.scalar_one</failure></testcase></testsuite></testsuites>

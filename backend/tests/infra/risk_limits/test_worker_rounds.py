@@ -22,6 +22,9 @@ async def test_production_interleaves_both_phases_and_closes_engines(
     calls = []
     monkeypatch.setattr(runtime, "create_engine_for", Mock(side_effect=engines))
 
+    async def protection(**kwargs: Any) -> None:
+        calls.append(("protection", kwargs["limit"], None))
+
     async def manual(**kwargs: Any) -> None:
         calls.append(("manual", kwargs["limit"], kwargs["claim_limit"]))
 
@@ -32,11 +35,12 @@ async def test_production_interleaves_both_phases_and_closes_engines(
         calls.append(("matching", kwargs["limit"], kwargs["claim_limit"]))
         raise asyncio.CancelledError
 
+    monkeypatch.setattr(runtime, "run_protection_round", protection)
     monkeypatch.setattr(runtime, "run_manual_order_round", manual)
     monkeypatch.setattr(runtime, "run_paper_order_round", paper)
     with pytest.raises(asyncio.CancelledError):
         await runtime.serve()
-    assert calls == [("manual", 20, 1), ("matching", 20, 1)]
+    assert calls == [("protection", 20, None), ("manual", 20, 1), ("matching", 20, 1)]
     for engine in engines:
         engine.dispose.assert_awaited_once()
 

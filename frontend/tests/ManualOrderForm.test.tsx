@@ -6,6 +6,26 @@ import { LiveTradePage } from "../src/LiveTradePage";
 import { manualOrderText as t } from "../src/manualOrderMessages";
 vi.mock("../src/CandlestickChartPanel", () => ({ CandlestickChartPanel: () => <div data-testid="embedded-chart"/> }));
 afterEach(cleanup);
+it("retains bracket intent and blocks submission when protection becomes unavailable", () => {
+  const onSubmit = vi.fn();
+  const props = { base: "BTC", bases: ["BTC"], onBase: () => {}, scope: { expected_wallet_id: "w", expected_episode_id: "e" }, canSubmit: () => true, onSubmit };
+  const view = render(<ManualOrderForm {...props} protectionEnabled/>);
+  fireEvent.change(screen.getByLabelText(t("budget")), { target: { value: "100" } });
+  fireEvent.change(screen.getByLabelText(/Stop Loss|Stop loss/), { target: { value: "90" } });
+  view.rerender(<ManualOrderForm {...props} protectionEnabled={false}/>);
+  expect(screen.getByLabelText<HTMLInputElement>(/Stop Loss|Stop loss/).value).toBe("90");
+  expect(screen.getByRole("alert")).toBeTruthy();
+  expect(screen.getByRole<HTMLButtonElement>("button", { name: t("submit") }).disabled).toBe(true);
+  fireEvent.submit(screen.getByLabelText(t("budget")).closest("form")!);
+  expect(onSubmit).not.toHaveBeenCalled();
+  view.rerender(<ManualOrderForm {...props} protectionEnabled/>);
+  fireEvent.click(screen.getByRole("button", { name: t("submit") }));
+  expect(onSubmit.mock.calls[0]?.[0]).toMatchObject({ protection: { take_profit_price: null, stop_loss_price: "90" } });
+  view.rerender(<ManualOrderForm {...props} protectionEnabled={false}/>);
+  fireEvent.change(screen.getByLabelText(/Stop Loss|Stop loss/), { target: { value: "" } });
+  fireEvent.click(screen.getByRole("button", { name: t("submit") }));
+  expect(onSubmit.mock.calls[1]?.[0]).not.toHaveProperty("protection");
+});
 it("submits exact strings and only the fields/units for each supported variant", () => {
   const onSubmit = vi.fn();
   const onBase = vi.fn();
@@ -48,4 +68,19 @@ it("supports arrow-key navigation for order tabs", () => {
   expect(sell.getAttribute("aria-selected")).toBe("true");
   expect(document.activeElement).toBe(sell);
   expect(sell.getAttribute("aria-controls")).toBe("manual-order-fields");
+});
+it("submits bracket prices as strings and warns before permanently releasing selected protection", () => {
+  const onSubmit = vi.fn();
+  render(<ManualOrderForm base="BTC" bases={["BTC"]} onBase={() => {}} scope={{ expected_wallet_id: "w", expected_episode_id: "e" }} canSubmit={() => true} onSubmit={onSubmit} protectionEnabled protections={[{ protection_id: "g", wallet_id: "w", episode_id: "e", mode: "PAPER", base: "BTC", quote: "USDT", quantity: "1", protected_quantity: "1", state: "ARMED", revision: 3, take_profit_price: "110", stop_loss_price: "90", conflicted: false, failure_code: null, market_ready: true, entry_order_id: null, snapshot_at: "2026-11-04T00:00:00Z" }]}/>);
+  fireEvent.change(screen.getByLabelText(t("budget")), { target: { value: "100" } });
+  fireEvent.change(screen.getByLabelText(/Take Profit|Take profit/), { target: { value: "110.000000000000000001" } });
+  fireEvent.click(screen.getByRole("button", { name: t("submit") }));
+  expect(onSubmit.mock.calls[0]?.[0]).toMatchObject({ protection: { take_profit_price: "110.000000000000000001", stop_loss_price: null } });
+  fireEvent.click(screen.getByRole("tab", { name: t("SELL") }));
+  fireEvent.change(screen.getByLabelText(`${t("quantity")} (BTC)`), { target: { value: "0.4" } });
+  fireEvent.change(screen.getByLabelText(/จำนวนที่จะนำออก|Quantity to release/), { target: { value: "0.4" } });
+  expect(screen.getByRole("note").textContent).toMatch(/ต้องตั้งใหม่เอง|will not restore/);
+  fireEvent.click(screen.getByRole("button", { name: t("submit") }));
+  expect(onSubmit.mock.calls[1]?.[0]).toMatchObject({ protection_allocations: [{ protection_id: "g", expected_revision: 3, quantity: "0.4" }] });
+  expect(onSubmit.mock.calls[1]?.[0]).not.toHaveProperty("protection");
 });

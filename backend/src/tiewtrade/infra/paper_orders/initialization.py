@@ -31,7 +31,8 @@ from tiewtrade.infra.positions import initialize_position_source, read_position_
 async def enable_financial_writer(session: UserSession) -> None:
     """Transaction-local protocol marker; owner RLS and wallet locking still apply."""
     session = require_user_session(session)
-    await session.execute("SELECT set_config('tiewtrade.paper_writer_version','F15_V1',true)")
+    await session.execute("""SELECT set_config('tiewtrade.paper_writer_version','F15_V1',true),
+        set_config('tiewtrade.protection_writer_version','F17_V1',true)""")
 
 
 async def initialize_order_source(

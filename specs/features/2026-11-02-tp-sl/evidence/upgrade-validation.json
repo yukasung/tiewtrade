@@ -1,0 +1,17 @@
+{
+  "ordinary_states": {
+    "7c613758-d4eb-4886-bb0a-4b9777ff9867": "FILLED",
+    "9119c097-b578-4274-adb0-34f7cdc1f3a0": "ACCEPTED"
+  },
+  "quote_reservation": "45",
+  "wallet_balance": "9900",
+  "held": "0.999",
+  "backfilled_protections": 0,
+  "default_protocol_enabled": false,
+  "old_writer_blocked": true,
+  "schema_before": "0062",
+  "schema_after": "0064",
+  "legacy_source": "6545b4ba8182dc4b4010357f8d06470f65b58cb4",
+  "database": "tiewtrade_e2e_f17_upgrade",
+  "downgrade_rejected": true
+}

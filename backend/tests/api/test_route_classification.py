@@ -102,6 +102,7 @@ def test_the_reset_and_restart_exceptions_are_not_risk_reducing() -> None:
     assert not_reverifying, "ไม่มีเส้นทางที่ไม่ต้องยืนยันซ้ำเลย ซึ่งแปลว่าเทสต์อ่านผิด"
     assert risk_reducing == {
         ("POST", "/paper/orders/{order_id}/cancel"),
+        ("POST", "/paper/protections"),
         ("POST", "/paper/kill-switch/stop"),
         ("POST", "/live/kill-switch/stop"),
         ("POST", "/admin/kill-switch/stop"),

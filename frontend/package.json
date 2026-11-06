@@ -17,7 +17,8 @@
     "gen:api": "openapi-typescript ../backend/openapi.json -o src/api-types.ts",
     "check:api": "npm run gen:api && git diff --exit-code -- src/api-types.ts",
     "test:e2e:manual-orders": "playwright test --config=playwright.manual-orders.config.ts",
-    "test:e2e:risk-limits": "playwright test --config=playwright.risk-limits.config.ts"
+    "test:e2e:risk-limits": "playwright test --config=playwright.risk-limits.config.ts",
+    "test:e2e:protections": "playwright test --config=playwright.protections.config.ts"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.104.1",
