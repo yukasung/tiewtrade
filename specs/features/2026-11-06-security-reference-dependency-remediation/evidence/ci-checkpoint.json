@@ -1,0 +1,32 @@
+{
+  "status": "NC-SEC-REF-02 Approved; fresh final candidate CI pending",
+  "head": "8ccc9e72077f80a8ab3fdcbc1634407c8f559a19",
+  "base": "74ca1f4bc8118f119d9bdd96381c061b961650ee",
+  "synthetic_merge": "65d78b324958f6d0ae3d37feaa39d60f4f259394",
+  "security_run": 42172965768,
+  "secret_job": 127744829405,
+  "safe_finding": {
+    "kind": "secret",
+    "rule": "generic-api-key",
+    "identity": "d84148a55a1db82c511520b0a40131229292c3c7c1fadf8d00f66a6cbbefe8b0",
+    "originating_commit": "8ccc9e72077f80a8ab3fdcbc1634407c8f559a19",
+    "path": "specs/features/2026-11-06-security-reference-dependency-remediation/evidence/feature-candidate.json",
+    "start_line": 37,
+    "end_line": 37
+  },
+  "diagnosis": "public source-file SHA256 fingerprint; independent current/committed source hashes match",
+  "classification_proposed": "false_positive",
+  "exception_registry_modified": true,
+  "counts": {
+    "blocked": 1,
+    "excepted": 92,
+    "coverage": 233
+  },
+  "approval": "Owner selected approve exact exception and continue on 2026-11-06",
+  "new_configuration_digest": "25a17393e710bb8514a81079bbea74cc0ccd3311f1a9a837dc0cb755d3b388ef",
+  "policy_contracts": {
+    "tests_run": 35,
+    "skipped": 3,
+    "result": "Passed"
+  }
+}

@@ -736,6 +736,14 @@
       "reason": "Explicitly documented public development/CI sealing-key fixture in README, compose or CI. Owner must confirm it was not deployed as a real environment key; otherwise separate remediation is required.",
       "approval": "Owner replied approve to the exact 92-identity proposal and test-only confirmation on 2026-11-05; see specs/features/2026-11-05-security-ci/evidence/exception-approval.md",
       "evidence": "specs/features/2026-11-05-security-ci/evidence/proposed-secret-exceptions.json identity 7fcb0fab389604f02fdaf505450bd96efa5f39b41ee12cbb1ab99abff2e157cc"
+    },
+    {
+      "kind": "secret",
+      "identity": "d84148a55a1db82c511520b0a40131229292c3c7c1fadf8d00f66a6cbbefe8b0",
+      "resolution": "false_positive",
+      "reason": "Verified SHA256 fingerprint of public tools/security/secrets.py source, not a credential.",
+      "approval": "Owner selected approve exact exception and continue on 2026-11-06 for NC-SEC-REF-02, including requirements/plan/validation amendment.",
+      "evidence": "specs/features/2026-11-06-security-reference-dependency-remediation/evidence/checksum-exception-proposal.md"
     }
   ]
 }

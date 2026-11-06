@@ -1,6 +1,6 @@
 # Reference template dependency remediation — Requirements
 
-สถานะ: **Approved — requirements และ scope amendment NC-SEC-REF-01 อนุมัติ 2026-11-06**
+สถานะ: **Approved — requirements และ scope amendments NC-SEC-REF-01/02 อนุมัติ 2026-11-06**
 วันที่: 2026-11-06
 Branch: `feature/security-reference-dependency-remediation`
 ฐานเริ่มต้น: `74ca1f4bc8118f119d9bdd96381c061b961650ee`
@@ -46,8 +46,11 @@ Template เป็นแหล่งอ้างอิง UI ตาม tech stac
   วิธีสแกน template เพิ่มสำหรับงานนี้ เพราะ permanent application dependency gate
   ปัจจุบันตรวจเฉพาะ `backend/uv.lock` และ `frontend/package-lock.json`.
 
+อนุญาต secret false-positive exception เพิ่มหนึ่ง exact identity ตาม NC-SEC-REF-02
+ที่เจ้าของอนุมัติ; ไม่อนุญาต dependency exceptions หรือ broad scanner suppressions.
+
 ไม่รวม broad dependency upgrade, React/Vite/Node major migration, UI/source refactor,
-application dependencies, database/session/trading behavior, scanner policy/exception
+application dependencies, database/session/trading behavior, scanner policy/exception changes นอก exact identity ที่อนุมัติ
 หรือ GitHub settings changes, การขยาย permanent CI scope, deployment หรือ Live Trading.
 หากต้องแก้ source/helper เพื่อสร้างหลักฐาน ให้เสนอ path และเหตุผลใน plan เพื่ออนุมัติก่อน.
 
@@ -60,7 +63,7 @@ application dependencies, database/session/trading behavior, scanner policy/exce
 | RR-3 | สแกน template candidate ทั้ง inventory รวม direct/dev/transitive/optional และ nested occurrences ไม่ใช้ diff-only scan หรือสถานะ alert บน main แทน; baseline มี 373 non-root package entries ให้บันทึกจำนวนจริงของ candidate และอธิบายความเปลี่ยนแปลง | Security CI dependency coverage; testing.md |
 | RR-4 | Findings เป้าหมายทั้ง 8 ต้องไม่เหลือใน candidate scan; High/Critical หรือ unknown ที่ยังไม่จัดการเป็น blocker ต้องรายงานและขออนุมัติขอบเขตเมื่อเกินงานนี้ ห้าม suppress/dismiss/สร้าง exception เพื่อให้ผ่าน; บันทึก Medium/Low ตามจริง | Security CI RQ-6/7; security.md |
 | RR-5 | Template ต้อง build และเปิด dev/preview ได้ โดยตรวจเส้นทาง UI ตัวแทนและ asset loading ตามผลกระทบใน plan; เปรียบเทียบ baseline เมื่อจำเป็นเพื่อแยกปัญหาเดิม ห้ามแก้ source/UI นอกขอบเขตเพื่อให้ dependency update ผ่าน หาก baseline หรือ candidate ล้มจนพิสูจน์ compatibility ไม่ได้ ให้คง blocker | frontend.md; testing.md §7 |
-| RR-6 | คง reference layout/components/styles และ application source/lockfiles เดิม; ไม่เปลี่ยน runtime imports ให้พึ่ง `references/` ไม่ย้าย template dependencies เข้า application และไม่เปลี่ยน security gates/pins/exceptions ที่อนุมัติแล้ว | tech-stack.md; frontend.md §2.1; Security CI plan |
+| RR-6 | คง reference layout/components/styles และ application source/lockfiles เดิม; ไม่เปลี่ยน runtime imports ให้พึ่ง `references/` ไม่ย้าย template dependencies เข้า application และไม่เปลี่ยน security gates/pins; คง 92 approved exceptions เดิมและเพิ่มเฉพาะ secret false-positive identity d84148a55a1db82c511520b0a40131229292c3c7c1fadf8d00f66a6cbbefe8b0 ตาม NC-SEC-REF-02 ที่เจ้าของอนุมัติ | tech-stack.md; frontend.md §2.1; Security CI plan |
 | RR-7 | ไม่เปลี่ยน PostgreSQL sessions/persistence, migrations, transactions/locking/idempotency, เงิน/quantity, orders, balance/position, PnL, leverage/margin/liquidation หรือ Paper/Live isolation; validation ไม่ใช้ live credentials หรือส่ง Live orders | AGENTS.md; architecture.md; trading-safety.md |
 | RR-8 | ก่อน merge ต้องผ่าน review, Feature validation และ required CI บน final candidate; หลักฐานต้องระบุ SHA, lock fingerprints, inventory, scanner/tool/environment versions และ run URLs แยก local จาก CI; ตรวจ native alerts หลัง merge โดยไม่ใช้การรอ refresh แทน candidate proof และไม่อ้างว่า scanner ครอบคลุมช่องโหว่ทุกชนิด | testing.md §6–7; AGENTS.md Git |
 
@@ -79,6 +82,9 @@ application dependencies, database/session/trading behavior, scanner policy/exce
   [scope amendment](evidence/scope-amendment-proposal.md) ขยาย requirements/plan/validation
   ครอบคลุม brace-expansion และ zod รวม 5 packages/8 known High; ไม่มี relevant
   Needs Clarification ค้าง. ผล temporary candidate เดิมเก็บไว้ตามจริง ต้องตรวจ candidate ใหม่.
+- **NC-SEC-REF-02 — Closed (2026-11-06):** เจ้าของเลือกอนุมัติ exact exception
+  และทำต่อ ตาม [ข้อเสนอ](evidence/checksum-exception-proposal.md); อนุญาตเพิ่มเฉพาะ
+  public source checksum false-positive identity ข้างต้นและแก้ plan/validation ก่อน registry.
 - หากพบ target ไม่เข้ากับ toolchain เดิม, ต้องแก้ source/UI, เปลี่ยน manifest range,
   package อื่น หรือ policy ให้หยุดเสนอ scope/requirements ใหม่ก่อน implementation ส่วนนั้น.
 - Security CI PR #48 merge แล้ว; ขอบเขต application scan เดิมคงไว้.
@@ -102,3 +108,7 @@ application dependencies, database/session/trading behavior, scanner policy/exce
 2026-11-06 เจ้าของตอบ approve ให้ [scope amendment NC-SEC-REF-01](evidence/scope-amendment-proposal.md)
 เพิ่ม brace-expansion 5.0.11 และ zod 4.6.6 พร้อม caller/plugin compatibility probes
 ก่อนทำ implementation ต่อ. ไม่เปลี่ยน security thresholds, exceptions หรือ permanent CI scope.
+
+2026-11-06 เจ้าของอนุมัติ [NC-SEC-REF-02](evidence/checksum-exception-proposal.md)
+ให้เพิ่ม exact secret false-positive exception หนึ่งรายการจาก 92 เป็น 93; คง
+High/Critical/unknown blocking, dependency thresholds, scanner rules/pins และ workflow เดิม.

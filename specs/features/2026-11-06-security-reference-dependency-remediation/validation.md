@@ -1,6 +1,6 @@
 # Reference template dependency remediation — Validation
 
-สถานะ: **Approved — plan/validation และ scope amendment NC-SEC-REF-01 อนุมัติ 2026-11-06**
+สถานะ: **Approved — plan/validation และ scope amendments NC-SEC-REF-01/02 อนุมัติ 2026-11-06**
 วันที่: 2026-11-06
 Requirements: [Approved](requirements.md) · [Plan](plan.md)
 
@@ -8,7 +8,7 @@ Requirements: [Approved](requirements.md) · [Plan](plan.md)
 
 | รหัส | เกณฑ์ / Requirements | วิธีตรวจและหลักฐานที่ต้องมี | ระยะรัน | ผลปัจจุบัน |
 |---|---|---|---|---|
-| RV-01 | Scoped lock update — RR-1/6 | Semantic diff ทุก package path เปลี่ยนเฉพาะ Vite 8.2.4, source-map-js 1.2.2, js-yaml 4.3.2, brace-expansion 5.0.11, zod 4.6.6 และ release metadata ที่จำเป็น; ทุก occurrence เป็น target; manifest/root constraints, application lockfiles/source, reference UI/config, workflows/pins/exceptions คงเดิม | Feature | Passed local — ห้า target entries/verified metadata เท่านั้น; manifest/application source/locks/policy เดิม |
+| RV-01 | Scoped lock update — RR-1/6 | Semantic diff ทุก package path เปลี่ยนเฉพาะ Vite 8.2.4, source-map-js 1.2.2, js-yaml 4.3.2, brace-expansion 5.0.11, zod 4.6.6 และ release metadata ที่จำเป็น; ทุก occurrence เป็น target; manifest/root constraints, application lockfiles/source, reference UI/config, workflows/pins คงเดิม; exception registry เพิ่มได้เฉพาะ NC-SEC-REF-02 identity ที่อนุมัติ | Feature | Passed local — ห้า target entries/verified metadata เท่านั้น; manifest/application source/locks/policy เดิม |
 | RV-02 | Reproducible installation — RR-1/2 | Node 22 ตรง dependency engines; บันทึก npm/OS; `npm ci --include=dev --include=optional` ใน clean environment ผ่าน, `npm ls --all` ไม่มี invalid/missing; installed targets และ parent resolution ตรง; manifest/lock hashes ไม่เปลี่ยนจาก install/build | Feature | Passed local — clean npm ci + npm ls all; installed targets ตรง; engines 217/217; lock hash คงเดิม |
 | RV-03 | Full template inventory — RR-3 | Staged lock hash ตรงต้นฉบับก่อน/หลัง scan; ledger ครบทุก package path (baseline 373 occurrences / 372 unique pairs); OSV all-packages set ตรง expected รวม nested/dev/transitive/optional; candidate counts/diff อธิบายครบ แยก backend supplemental scan ออก; temporary missing-row control ต้องถูกปฏิเสธ | Feature | Passed local — template 373 occurrences/372 unique + 54 backend; coverage 426/426; negative missing-row control ผ่าน |
 | RV-04 | Vulnerability remediation — RR-4 | OSV v2.7.0 checksum pin/config เดิมและ severity evaluator เดิม; scan ไม่มี errors/incomplete inventory; 8 target advisories/aliases ไม่เหลือและ versions อยู่นอก affected ranges; unresolved High/Critical/unknown เป็น blocker; บันทึก Medium/Low; baseline feed detection/ช่องว่างระบุจริง ไม่มี suppress/dismiss/new exceptions | Feature | Passed local — five-package candidate High/Critical/unknown 0; known High 8 หาย; Medium 3 ตามจริง; รอบแรก Failed เก็บใน evidence |
@@ -16,7 +16,7 @@ Requirements: [Approved](requirements.md) · [Plan](plan.md)
 | RV-06 | Transitive caller compatibility — RR-5 | Temporary source-map round trip + valid indexed sections; js-yaml ผ่าน cosmiconfig resolution ตรวจ mapping/sequence/anchors/merge/omap/dump-load/invalid rejection และ temporary YAML config load; brace-expansion ผ่าน minimatch literal/escaped/nested cases และ zod ผ่าน eslint-plugin-react-hooks resolution รวม valid/invalid collection และ actual ESLint config/plugin/hook fixtures; ระบุ installed versions, fixtures/commands/digest/results; ไม่มี exploit/CPU exhaustion | Feature | Passed local — 10 caller/plugin probes; source-map initial assertion/baseline boundary comparison บันทึกใน evidence |
 | RV-07 | Dev/preview + UI — RR-5/6 | ทั้ง dev และ preview บน loopback: HTML/module/JS/CSS/local assets โหลดได้; browser เปิด `/`, `/form-elements`, `/basic-tables`, `/buttons`, `/signin` desktop/mobile ตาม plan, content/interaction ตัวแทนทำงาน ไม่มี page errors/failed local modules; screenshots และผลจริง; ถ้าล้มเทียบ baseline และคง blocker เมื่อยังพิสูจน์ไม่ได้ | Feature | Passed local — dev/preview desktop/mobile 20/20; local assets/interactions/page errors ผ่าน; blocked external Google Fonts แยกตามจริง |
 | RV-08 | Safety, architecture, identity — RR-6/7/8 | Diff ไม่มี app/session/DB/trading/financial changes หรือ runtime imports จาก references; ไม่มี Live credentials/orders/infrastructure ใหม่; บันทึก head/base/merge candidate, template/app lock fingerprints, policy/helper/tool/probe digests และ safe evidence; candidate เปลี่ยนตรวจใหม่เฉพาะที่กระทบ | Feature | Passed local — repository lock ตรง scanned/tested fingerprint; safety/app/policy/helper scope คงเดิม; final PR candidate ยังไม่มี |
-| RV-09 | Review + required CI — RR-8 | Ready for Code Review แล้ว owner สั่ง review; findings แก้ครบ/ตรวจผลกระทบ; lockfile/docs-only ไม่ต้องถาม refactor; RV-01..08 ผ่านบน final candidate, original required CI และ Security checks ผ่านล่าสุดพร้อม run URLs/SHAs; owner สั่ง merge แยก | Feature | Partial — code review APPROVED; owner สั่ง commit/push/open PR แล้ว; required CI รอ final SHA/PR |
+| RV-09 | Review + required CI — RR-8 | Ready for Code Review แล้ว owner สั่ง review; findings แก้ครบ/ตรวจผลกระทบ; lockfile/docs-only ไม่ต้องถาม refactor; RV-01..08 ผ่านบน final candidate, original required CI และ Security checks ผ่านล่าสุดพร้อม run URLs/SHAs; owner สั่ง merge แยก | Feature | Partial — failed first run 8ccc9e7 เก็บตามจริง; NC-SEC-REF-02 Approved แล้ว; รอ policy/fresh Security และ original CI บน candidate ใหม่ |
 | RV-10 | Post-merge closure — RR-8 | หลัง owner สั่ง merge ติดตาม required post-merge CI/Security บน merge SHAจนจบ; actual tree/lock fingerprints ตรง evidence หรือ rerun ส่วนที่เปลี่ยน; native alerts #15/#13/#9/#7/#6 ต้อง read back ว่า fixed/resolved จาก target versions โดยไม่ dismiss; หาก feed lag/new blocker ให้คง Partial และรายงานก่อน Completed | Release | Not Run — Pending Full Validation ที่ post-merge checkpoint; ยังไม่มี PR/merge |
 
 ## การเลือกตรวจตามผลกระทบ
@@ -85,3 +85,18 @@ Final head/base เปลี่ยนให้เทียบ merge tree แล�
 เจ้าของตอบ approve ให้ขยาย requirements/plan/validation ตาม [ข้อเสนอ](evidence/scope-amendment-proposal.md);
 NC-SEC-REF-01 Closed. สถานะใน execution รอบแรกเก็บตามจริงจนมีผลใหม่มาทดแทน
 พร้อม fingerprints; RV-04 ต้องผ่านบน 5-package candidate ก่อน install/build.
+
+## CI checkpoint — NC-SEC-REF-02
+
+[ข้อเสนอ exact checksum exception](evidence/checksum-exception-proposal.md) และ
+[safe failure record](evidence/ci-checkpoint.json). ยังไม่เปลี่ยน exception registry;
+RV-09 Failed บน head 8ccc9e7; push/PR original CI ติดตามต่อจนจบ.
+
+## Approved exception amendment — NC-SEC-REF-02
+
+Owner อนุมัติ exact identity และ requirements/plan/validation amendment แล้ว.
+RV-01/08: registry เปลี่ยนได้ 1 entry นี้เท่านั้น (92 → 93), scanner rules/pins/workflow
+และ dependency policy เดิม. RV-04 ต้องมี full-template evidence ผูก policy digest ใหม่;
+RV-09 ต้องผ่าน existing policy contracts และ fresh secrets/aggregate/required CI บน
+final head/base. Reuse install/build/caller/browser เมื่อ lock/source/harness ไม่เปลี่ยน.
+First failed run คงเป็น Failed ใน history; ไม่ถือว่าอนุมัติ exception แล้ว CI ผ่านเอง.

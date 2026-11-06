@@ -1,6 +1,6 @@
 # Reference template dependency remediation — Plan
 
-สถานะ: **Approved — plan/validation และ scope amendment NC-SEC-REF-01 อนุมัติ 2026-11-06**
+สถานะ: **Approved — plan/validation และ scope amendments NC-SEC-REF-01/02 อนุมัติ 2026-11-06**
 วันที่: 2026-11-06
 Requirements: [Approved](requirements.md)
 Branch: `feature/security-reference-dependency-remediation`
@@ -11,6 +11,7 @@ Branch: `feature/security-reference-dependency-remediation`
 js-yaml 4.1.1 → 4.3.2, brace-expansion 5.0.9 → 5.0.11 และ zod 4.5.4 → 4.6.6
 ใน `references/admin-template/package-lock.json` ตาม scope amendment ที่อนุมัติแล้ว.
 คง manifest ranges, template source/UI, application dependencies และ permanent CI scope.
+เพิ่ม secret false-positive exception เพียง exact identity ตาม NC-SEC-REF-02 ที่อนุมัติ.
 สร้าง candidate ใน temporary copy ก่อนนำ lockfile ที่ตรวจ semantic diff แล้วกลับ branch.
 ไม่มี migration, storage/session architecture ใหม่ หรือ trading behavior change.
 
@@ -89,7 +90,7 @@ resolver upgrade เพื่อให้ผ่านเอง. ใช้กฎ�
   และไม่มี High/Critical/unknown ที่ยังไม่ได้จัดการ. ตรวจ target package versions
   กับ affected ranges ด้วย ไม่พึ่ง alert state บน main หรือ scanner ID เพียงอย่างเดียว.
 - เก็บ severity/identity/coverage/fingerprints/tool-policy versions เป็น safe summary;
-  raw scanner reports อยู่ temporary storage ไม่ upload/commit. ไม่เพิ่ม exceptions.
+  raw scanner reports อยู่ temporary storage ไม่ upload/commit. ไม่เพิ่ม dependency exceptions.
 
 Scan นี้เป็น Feature evidence เพิ่มจาก required Security CI ซึ่งยังตรวจ application
 สอง lockfiles ตามเดิม; CI เขียวอย่างเดียวจึงยังไม่พิสูจน์ template remediation.
@@ -130,12 +131,14 @@ Scan นี้เป็น Feature evidence เพิ่มจาก required Se
 | Path | เปลี่ยนอะไร |
 |---|---|
 | `references/admin-template/package-lock.json` | ห้า target entries และ verified release metadata เท่านั้น |
+| `.github/security/exceptions.json` | เพิ่ม exact secret false-positive entry ตาม NC-SEC-REF-02 เท่านั้น |
 | feature `requirements.md`, `plan.md`, `validation.md` | approval/status/results ตามจริง |
 | feature `evidence/feature-candidate.md` และ safe JSON/screenshot evidence เมื่อจำเป็น | ledger, exact commands/probe digests, fingerprints, findings, compatibility/browser/CI results |
 | `specs/roadmap.md` | สถานะงานตาม checkpoint; ไม่ประกาศ Completed ก่อนครบเกณฑ์ |
 
 เอกสารปิด PR #48 ที่มีอยู่แล้วถูกยกมารวมไว้ใน worktree นี้จากงานก่อนตามกฎรวม
-หลักฐานก่อน commit; แยกจาก dependency diff ของงานนี้และไม่แก้ security policy เพิ่ม.
+หลักฐานก่อน commit; แยกจาก dependency diff ของงานนี้. Policy เปลี่ยนได้เฉพาะ
+exact checksum exception ที่อนุมัติใน NC-SEC-REF-02.
 ไม่มี migration, database/transaction/concurrency changes หรือ persistent business state ใหม่.
 
 ## 7. Checkpoints และความเสี่ยง
@@ -188,3 +191,17 @@ Owner สั่ง `review code`; [review APPROVED](evidence/code-review.md) ไ
 เจ้าของตอบ `เริ่มทำ` หลังเสนอ commit/push/open PR จึงทำ publication และติดตาม
 required CI ต่อจนจบ; local evidence ใช้ต่อเพราะ dependency/config/harness ไม่เปลี่ยน.
 RV-09 Partial จน required CI ผ่านบน final candidate; RV-10 รอ post-merge ตามเดิม.
+
+## 12. Approved exact exception amendment — NC-SEC-REF-02
+
+Owner อนุมัติ [ข้อเสนอ](evidence/checksum-exception-proposal.md) ก่อนแก้ registry:
+อนุญาตเพิ่ม `.github/security/exceptions.json` ใน scope เฉพาะ identity
+`d84148a55a1db82c511520b0a40131229292c3c7c1fadf8d00f66a6cbbefe8b0` เป็น
+secret/false_positive ของ public source SHA256 fingerprint. คง 92 entries เดิม
+และไม่เปลี่ยน scanner rules/pins/config/workflow หรือทำ broad ignore.
+
+ตรวจ existing security policy contracts, exact registry diff, checksum proof และ
+reevaluate full-template scan ภายใต้ config digest ใหม่. Reuse clean install/build/
+caller/browser evidence เพราะ lock/source/harness ไม่เปลี่ยน. บันทึก failed run เดิม;
+commit/push authorized fix และติดตาม fresh Security/original CI บน candidate ใหม่จนจบ.
+RV-10 ยังรอ owner merge command/post-merge checkpoint. No Git history rewrite/force push.

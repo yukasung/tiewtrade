@@ -240,7 +240,7 @@ OSV ไม่มี High/Critical/Unknown และมี Medium 4 records.
 Security CI integration ปิดแล้วตาม checkpoint ของ PR #48 ข้างบน; ผล remediation เดิมยัง valid.
 
 F-01 follow-up: [Reference template dependency remediation](features/2026-11-06-security-reference-dependency-remediation/requirements.md)
-**In Progress — code review APPROVED; publication/required CI pending (2026-11-06)** — requirements/plan/validation และ
+**In Progress — NC-SEC-REF-02 Approved; fresh CI pending / PR #54 (2026-11-06)** — requirements/plan/validation และ
 scope amendment NC-SEC-REF-01 Approved; เปลี่ยน template lockfile ห้า entries:
 Vite 8.2.4, source-map-js 1.2.2, js-yaml 4.3.2, brace-expansion 5.0.11, zod 4.6.6.
 Full OSV coverage template 373 occurrences/372 unique + backend 54; High 8 → 0,
@@ -248,9 +248,11 @@ Critical/unknown 0, Medium 3 คงตามจริง; clean install/npm ls/b
 และ browser dev/preview desktop/mobile 20/20 ผ่าน local. Application UI/dependencies,
 permanent CI scope/policy เดิม; ไม่เปลี่ยน source/trading behavior.
 [หลักฐาน](features/2026-11-06-security-reference-dependency-remediation/evidence/feature-candidate.md).
-Branch `feature/security-reference-dependency-remediation`; ยังไม่ commit/push/PR.
+Branch `feature/security-reference-dependency-remediation`; commit/push 8ccc9e7 และเปิด [PR #54](https://github.com/yukasung/tiewtrade/pull/54) แล้ว.
 [Code review APPROVED](features/2026-11-06-security-reference-dependency-remediation/evidence/code-review.md);
-เจ้าของสั่ง commit/push/open PR แล้ว; required CI ยัง Not Run, RV-10 Pending Full Validation
+First Security secrets/gate Failed เพราะ checksum false positive 1 identity; owner อนุมัติ
+[exact exception/scope amendment](features/2026-11-06-security-reference-dependency-remediation/evidence/checksum-exception-proposal.md);
+แล้ว; เพิ่มเฉพาะ exact identity และตรวจ candidate ใหม่ต่อ. Original CI ติดตามตามจริง; RV-10 Pending Full Validation
 ที่ post-merge checkpoint. ยังไม่ Completed/พร้อม merge.
 
 F-01 follow-up: [Self-hosted CI / ลดรอบซ้ำ](features/2026-10-23-self-hosted-ci/requirements.md)

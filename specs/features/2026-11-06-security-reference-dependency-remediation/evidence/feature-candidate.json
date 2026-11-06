@@ -1,8 +1,8 @@
 {
-  "status": "Code review APPROVED \u2014 owner authorized commit/push/open PR; required CI pending",
+  "status": "NC-SEC-REF-02 Approved and implemented; fresh CI pending",
   "base_sha": "74ca1f4bc8118f119d9bdd96381c061b961650ee",
   "branch": "feature/security-reference-dependency-remediation",
-  "amendment": "NC-SEC-REF-01 Approved 2026-11-06",
+  "amendment": "NC-SEC-REF-01/02 Approved 2026-11-06",
   "candidate_applied_to_repository": true,
   "environment": {
     "node": "v22.23.4",
@@ -418,8 +418,8 @@
           ]
         }
       ],
-      "seconds": 2.71,
-      "configuration_digest": "fe5e8d743e9e67e350c8969acd9292e24a9165e57a65bd5c90a48633d91419ad"
+      "seconds": 1.88,
+      "configuration_digest": "25a17393e710bb8514a81079bbea74cc0ccd3311f1a9a837dc0cb755d3b388ef"
     }
   },
   "coverage_negative_control": {
@@ -4744,5 +4744,94 @@
     "date": "2026-11-06",
     "evidence": "code-review.md",
     "new_actionable_findings": 0
+  },
+  "previous_template_scan_before_exception_amendment": {
+    "label": "candidate",
+    "amendment": "NC-SEC-REF-01 Approved",
+    "lock_sha256": "8a8ee180aaa1ea184cbbbd8f241b0c922c9d451874366591908ee6ef9613e9ca",
+    "expected_template_unique_packages": 372,
+    "expected_backend_unique_packages": 54,
+    "coverage_total": 426,
+    "severity_counts": {
+      "medium": 3
+    },
+    "findings": [
+      {
+        "severity": "medium",
+        "locator": [
+          "npm",
+          "@humanfs/node",
+          "0.16.6",
+          "GHSA-p498-v437-472g"
+        ]
+      },
+      {
+        "severity": "medium",
+        "locator": [
+          "npm",
+          "brace-expansion",
+          "5.0.11",
+          "GHSA-q2hr-2g5m-vwhr"
+        ]
+      },
+      {
+        "severity": "medium",
+        "locator": [
+          "npm",
+          "minimatch",
+          "10.2.6",
+          "GHSA-g3hv-75wg-m249"
+        ]
+      }
+    ],
+    "seconds": 2.71,
+    "configuration_digest": "fe5e8d743e9e67e350c8969acd9292e24a9165e57a65bd5c90a48633d91419ad"
+  },
+  "approved_exception_adjustment": {
+    "identity": "d84148a55a1db82c511520b0a40131229292c3c7c1fadf8d00f66a6cbbefe8b0",
+    "count_before": 92,
+    "count_after": 93,
+    "registry_sha256": "dbaca6a632b73965926b0f441bf073f6cd9d30c791a62697aebb6cdfee4abaa1",
+    "approval_evidence": "checksum-exception-proposal.md",
+    "policy_contracts": {
+      "tests_run": 35,
+      "skipped": 3,
+      "result": "Passed"
+    },
+    "targeted_review": "Approved \u2014 exact additive entry, existing 92 unchanged; checksum independently verified",
+    "precommit_probe_sha256": "0282af56218b4fae4dd2336b932a12cd43d4fa2c8a997d0737c74accbb2424c7"
+  },
+  "secret_precommit_probe": {
+    "result": "Passed",
+    "rows": [
+      {
+        "file": "specs/features/2026-11-06-security-reference-dependency-remediation/evidence/feature-candidate.json",
+        "working_lines": [
+          37,
+          37
+        ],
+        "origin_commit": "8ccc9e72077f80a8ab3fdcbc1634407c8f559a19",
+        "origin_lines": [
+          37,
+          37
+        ],
+        "identity": "d84148a55a1db82c511520b0a40131229292c3c7c1fadf8d00f66a6cbbefe8b0",
+        "approved": true
+      },
+      {
+        "file": "specs/roadmap.md",
+        "working_lines": [
+          289,
+          289
+        ],
+        "origin_commit": "5308fb9e92336c9cf9ce34584d7c53647e4d02e5",
+        "origin_lines": [
+          174,
+          174
+        ],
+        "identity": "78f4624431ea3a7dc2d33512fa70a9f487be1906b1324b7630b2fd5ff3d7655d",
+        "approved": true
+      }
+    ]
   }
 }

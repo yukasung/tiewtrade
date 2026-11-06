@@ -47,3 +47,12 @@ persistent state และไม่ส่ง Live orders.
 รวมหลักฐานที่มีอยู่ก่อน commit, push/open PR และติดตาม required CI ของ SHA ล่าสุดจนจบ.
 รายงาน SHA/run URLs ใน PR body/ข้อความปิด checkpoint; ไม่สร้างเอกสาร commit วน
 เพื่อบันทึก CI ของเอกสารตัวเอง. Merge ต้องรอคำสั่งเจ้าของแยก.
+
+## Targeted review หลัง approved CI finding — NC-SEC-REF-02
+
+Owner อนุมัติ exact checksum exception และ scope amendment ก่อน registry change.
+ตรวจ diff: เพิ่ม entry เดียวตาม approved identity, reason/evidence/approval ครบ schema,
+92 entries เดิมไม่เปลี่ยน; ไม่เปลี่ยน rules/pins/workflow/thresholds. Proof เทียบ current
+และ committed public source SHA256 ตรง. Existing policy contracts 35 tests (3 opt-in
+skipped) ผ่าน และ full template OSV scan ผ่านภายใต้ digest ใหม่. Targeted review:
+APPROVED สำหรับ approved follow-up; fresh required CI ยัง pending บน commit ใหม่.

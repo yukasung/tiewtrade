@@ -23,11 +23,12 @@ Semantic diff จำกัดห้า lock entries: version/resolved/integrity 
 Vite/js-yaml/zod funding metadata เปลี่ยนตาม release metadata ด้วย.
 คง root manifest/ranges, graph อื่นรวม nested LightningCSS เดิม; ไม่เพิ่ม packages.
 Source/UI/config ของ template, application source/lockfiles, sessions/DB/trading,
-workflows/pins/policy/exceptions ไม่เปลี่ยน. ไม่มี Live credentials/orders.
+workflows/pins/rules เดิม; exception registry เพิ่มเฉพาะ owner-approved NC-SEC-REF-02
+ตาม follow-up ด้านล่าง. ไม่มี Live credentials/orders.
 
 - Baseline template lock SHA256: `8a8c48ced334eaf5d6f06babca467c83b04cc242e37f4326aee7c20d61ea131b`
 - Candidate/repository template lock SHA256: `8a8ee180aaa1ea184cbbbd8f241b0c922c9d451874366591908ee6ef9613e9ca`
-- Policy/helper configuration digest: `fe5e8d743e9e67e350c8969acd9292e24a9165e57a65bd5c90a48633d91419ad`
+- Policy/helper configuration digest: `25a17393e710bb8514a81079bbea74cc0ccd3311f1a9a837dc0cb755d3b388ef`
 - Environment: macOS arm64; Node v22.23.4, npm 10.9.9, Python 3.12;
   external Playwright 1.63.0 ตรง frontend lock เดิม, Chromium headless ที่มีอยู่.
 - Node engines ใน lock 217 รายการผ่านทั้งหมด; frozen install แยกใน temporary directory
@@ -44,7 +45,7 @@ workflows/pins/policy/exceptions ไม่เปลี่ยน. ไม่มี
 | RV-05 build | Passed — `npm run build` รวม TypeScript + Vite 8.2.4/Tailwind/SVGR 10.93 วินาที, 1,058 modules; lock hash คงเดิม |
 | RV-06 callers | Passed — 10 bounded checks: source-map round trip/indexed interior, YAML structures/round trip/rejection + cosmiconfig actual loader, minimatch brace cases, zod constrained collections ผ่าน plugin resolution, actual ESLint config/plugin valid/invalid hook fixtures |
 | RV-07 browser | Passed — 20/20: 5 routes × dev/preview × desktop 1440×900/mobile 390×844; heading/content/interaction/local assets โหลดได้ ไม่มี page errors/failed local requests/HTTP errors/broken images/root horizontal overflow |
-| RV-08 scope/identity | Passed local — candidate lock ตรง scanned/installed/built/browser-tested bytes; manifest/application lock/policy/helper fingerprints เดิม; ไม่มี production/session/DB/order/financial code diff |
+| RV-08 scope/identity | Passed local — candidate lock ตรง scanned/installed/built/browser-tested bytes; manifest/application lock/rules/helper fingerprints เดิม; registry เปลี่ยนเฉพาะ NC-SEC-REF-02; ไม่มี production/session/DB/order/financial code diff |
 | RV-09 review/required CI | Partial — review APPROVED; owner สั่ง publication แล้ว; required CI รอ final commit/PR |
 | RV-10 post-merge | Not Run — Pending Full Validation จนถึงคำสั่ง merge และ post-merge checkpoint |
 
@@ -106,3 +107,20 @@ processes ของงานแล้ว. ไม่แตะ process/container/w
 required CI บน SHA ล่าสุดจนจบ; ผล CI ที่เกิดหลัง commit รายงานใน PR body พร้อม SHA/run URLs
 โดยไม่สร้างเอกสาร commit วนเพื่อบันทึก CI ของเอกสารตัวเอง. Merge รอคำสั่งเจ้าของแยก;
 RV-10 และ native alert readback คงรอ post-merge ตามระยะเดิม.
+
+## Approved CI follow-up — NC-SEC-REF-02
+
+First Security run [42172965768](https://github.com/yukasung/tiewtrade/actions/runs/42172965768)
+บน head 8ccc9e7 Failed: checksum false positive หนึ่ง identity ตาม
+[ข้อเสนอและคำอนุมัติ](checksum-exception-proposal.md). Owner อนุมัติขยาย scope ก่อนแก้
+requirements/plan/validation และเพิ่มเฉพาะ exact false_positive entry (92 → 93).
+ตรวจ source/committed source SHA256 ตรงและ registry diff คง 92 entries เดิมครบ.
+Existing policy contracts: 35 tests, 3 opt-in probes skipped, Passed.
+Full template scan ใหม่ผ่าน 426/426, High/Critical/unknown 0, Medium 3;
+install/build/caller/browser evidence ใช้ต่อเพราะ lock/source/harness ไม่เปลี่ยน.
+Configuration digest ใหม่: `25a17393e710bb8514a81079bbea74cc0ccd3311f1a9a837dc0cb755d3b388ef`.
+
+Policy exception registry เปลี่ยนตาม exact owner approval นี้เท่านั้น; ข้อความ
+policy/exceptions unchanged ด้านบนเป็น checkpoint ก่อน amendment. Scanner rules,
+pins/workflows และ dependency exceptions คงเดิม. Required CI ต้องผ่านบน final SHA ใหม่;
+ยังไม่ merge/Completed และไม่ลบ failed run ออกจาก history.
