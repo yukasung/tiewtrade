@@ -1,5 +1,16 @@
 # Security CI — Implementation evidence
 
+Latest remote candidate: see [compatibility decision result](compatibility-decision.md)
+and [safe manifests](remote-candidate-manifests.json). The local evidence below is
+historical; its old uncommitted/no-PR and dependency-blocker statements do not describe
+the current PR #48. Native activation/rejection proof and final acceptance remain open.
+Fork execution is Not Run: the owner has no second account/organization. The
+[replacement-validation amendment](fork-validation-amendment-proposal.md) was approved
+and applied to the three specification files on 2026-11-05. V-12 remains Partial
+until the replacement evidence passes; real fork behavior remains an accepted evidence gap.
+
+## Historical local checkpoint
+
 สถานะ: **Review findings แก้แล้ว; refactor/local checks ผ่าน; Feature validation Partial**
 
 วันที่บันทึก: 2026-11-05T13:32:38.809188+00:00

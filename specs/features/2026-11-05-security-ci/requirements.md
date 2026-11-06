@@ -42,6 +42,19 @@ container hardening/image scanning, การแก้ application findings, dep
 | RQ-10 | ห้ามใช้ exchange credentials จริงหรือส่งออเดอร์ Live ระหว่างตรวจ; คง tests เดิมด้าน auth, CSRF, RLS/user isolation, secret leakage และ Paper isolation โดยไม่เปลี่ยน session storage, persistence, transaction หรือ trading behavior | AGENTS.md; standards/security.md; standards/trading-safety.md |
 | RQ-11 | ก่อนเปิด/เปลี่ยน settings ให้บันทึกสถานะเดิมและกำหนดวิธีกู้คืนใน plan; ผลตรวจรับต้องแยก scan Passed, มี findings, Needs Triage, Not Run และข้อจำกัดจริง พร้อม candidate identity ตามหัวข้อ 6.1/ลิงก์ CI และที่มาของ severity ตามหัวข้อ 6.3 โดยไม่ถือว่า CI สีเขียวยืนยันว่าไม่มีช่องโหว่ทุกประเภท | standards/testing.md; ขอบเขตการประเมิน; NC-SEC-CI-01/03 |
 
+## วิธีตรวจ RQ-9 เมื่อไม่มีบัญชี fork
+
+สถานะ: **Approved — เจ้าของอนุมัติข้อเสนอและให้ปรับเอกสาร 2026-11-05**
+หลักฐานการตัดสินใจ: [ข้อเสนอที่อนุมัติ](evidence/fork-validation-amendment-proposal.md).
+
+RQ-9 ยังคงบังคับเต็มขอบเขต สำหรับ Security CI รอบนี้ เจ้าของยอมรับหลักฐาน
+static contract + GitHub settings readback + effective job permissions ของ PR จริง
+ภายใน repository + disposable scanner marker probes ตาม plan แทนการบังคับมี
+remote fork run ก่อน merge ต้องบันทึกว่า fork execution/approval และ cross-repository
+candidate/API/artifact behavior ยังไม่ได้ทดสอบจริง การยอมรับนี้ไม่ใช่ exception
+ให้ workflow เข้าถึง secrets หรือ write token และไม่ใช้ข้าม security/required CI อื่น
+ต้องตรวจ fork จริงก่อนรับ merge ของ fork PR แรกตาม plan; ผล same-repo ไม่เทียบเท่า fork run
+
 ## รายละเอียด RQ-6 — คำตัดสินจาก requirements review
 
 เจ้าของสั่ง “แก้ไข” ตามข้อเสนอ R1–R3 เมื่อ 2026-11-05;

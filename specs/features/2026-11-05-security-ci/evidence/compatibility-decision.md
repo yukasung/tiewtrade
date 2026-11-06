@@ -1,7 +1,7 @@
 # Security CI - Compatibility decision after three remote rounds
 
 Date: 2026-11-05
-Status: Option A approved by the owner on 2026-11-05; one extra remote attempt authorized
+Status: Owner-approved extra attempt passed; compatibility blocker resolved
 
 Current PR: https://github.com/yukasung/tiewtrade/pull/48 (draft)
 Current head: 7f35a6c30219ffee536e7ab0dcf93c56fcbe3d71
@@ -74,3 +74,23 @@ are accepted structurally and show Medium/zero findings respectively.
 
 One additional remote candidate is now authorized. If it still fails coverage,
 stop again; do not start another experiment without an owner decision.
+
+## Result of the authorized extra attempt
+
+Head: 10380f4ee9d7aa99850eba72abe01a2ddb25dddd.
+Base: a3a86520bc4d363aa747f5cb934cc09a8fbe71d3.
+Synthetic merge: 0717fa8d72d70db71897280b45cb7d57114118b2.
+Security run: https://github.com/yukasung/tiewtrade/actions/runs/42062182504
+
+All seven jobs succeeded, including the aggregate. All five safe manifests agree on
+head/base/merge/run/attempt/configuration and pass. Coverage: Python 836 files, JS/TS
+168 files, Actions 3 files, dependencies 464 inventory entries, secrets 235 commits.
+Counts: 0 High/Critical/unknown/Needs Triage, 92 exact approved secret exceptions,
+11 Medium Actions findings and 4 Medium dependency records. Medium findings remain
+reported under the approved policy. No raw SARIF or database was uploaded.
+
+See remote-candidate-manifests.json for safe manifest evidence. This closes the
+bounded compatibility investigation, not Feature validation or merge readiness.
+Ordinary PR CI 42062182443 and push CI 42062165730 completed successfully (6/6 each).
+Activation/rejection/marker evidence remains open. The owner-approved V-12 amendment
+retains actual fork execution as Not Run, an accepted evidence gap.

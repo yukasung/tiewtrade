@@ -214,15 +214,16 @@ domain ของเงินที่ปฏิเสธค่าที่เก�
 ## ชุดที่ 1 — ฐานราก
 
 F-01 follow-up: [Security CI](features/2026-11-05-security-ci/requirements.md)
-**Refactored — local validation ผ่าน; Feature validation Partial (2026-11-05)** — implementation
-ใน branch `feature/security-ci-hardening`; requirements/plan/validation Approved.
-เพิ่ม security workflow, pinned scanner config และ policy helpers/tests;
-local 28 tests รวม regression จาก review, Gitleaks/OSV probes และ static checks ผ่าน.
-local origin snapshot scan 246 commits พบ 92 findings; triage เสนอ 70 false positives
-และ 22 test/dev fixtures ได้ owner approval/ยืนยันไม่ใช้ key ทดสอบในระบบจริงแล้ว;
-registry/re-scan snapshot ผ่าน: 92 excepted, 0 blocked/triage.
-CodeQL จริง 3 ภาษา, latest-origin/final-candidate scan, remote PR/required CI และ settings activation ยังค้าง;
-V-19 Release หลัง merge Not Run — Pending Full Validation. ยังไม่ commit/push หรือเปลี่ยน settings.
+**Feature validation Partial — PR #48 draft (2026-11-05)** — branch
+`feature/security-ci-hardening`; requirements/plan/validation Approved รวม V-12 amendment
+ที่เจ้าของอนุมัติเมื่อไม่มีบัญชี fork. Security run 42062182504 บน head
+`10380f4ee9d7aa99850eba72abe01a2ddb25dddd` ผ่านครบ 7 jobs; CodeQL จริง 3 ภาษา
+และ paired insecure/fixed probes ผ่าน, dependency inventory 464 ไม่มี High/Critical/triage,
+secret exceptions 92 exact identities ตาม owner approval. PR CI 42062182443 และ push CI 42062165730 ผ่านครบ 6 jobs ต่อ run.
+V-12 alternative evidence ยัง Partial; fork จริง Not Run — accepted evidence gap;
+ต้องตรวจจริงก่อนรับ merge ของ fork PR แรก. Native settings/required Security gate activation
+และ negative/fixed remote rejection proof ยัง Not Run; settings ยังไม่เปลี่ยน.
+V-19 Release หลัง merge Not Run — Pending Full Validation. ยังไม่พร้อม merge/Completed.
 ดู [validation](features/2026-11-05-security-ci/validation.md) และ
 [หลักฐาน](features/2026-11-05-security-ci/evidence/feature-candidate.md).
 แก้ High/Medium และ refactor ที่อนุญาตแล้ว; validation ในเครื่องผ่าน.

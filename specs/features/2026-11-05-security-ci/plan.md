@@ -75,6 +75,34 @@ security updates ใน maintenance ของงานนี้ ไม่เป�
   Timeout เป็น failure ไม่ใช่ข้อยกเว้น; plan เริ่ม 15 นาทีสำหรับ secret/dependency,
   30 นาทีต่อ CodeQL language, 5 นาทีสำหรับ gate; ทบทวนเมื่อมีหลักฐานจริงว่าไม่พอ.
 
+### 3.1 วิธีตรวจ PR permissions ทดแทน fork run สำหรับรอบนี้
+
+สถานะ: **Approved — เจ้าของอนุมัติข้อเสนอและให้ปรับเอกสาร 2026-11-05**
+อ้างอิง [RQ-9 amendment](requirements.md) และ
+[ข้อเสนอที่อนุมัติ/ข้อจำกัด](evidence/fork-validation-amendment-proposal.md).
+
+1. ตรวจ workflow ทุก job และ reusable/action call ที่เกี่ยวข้อง: ใช้ pull_request,
+   ไม่มี privileged event, secrets reference/inherit, environment secrets, write permission,
+   persisted checkout credential หรือ self-hosted runner; actions ใช้ full SHA
+   และตรวจ repository workflow permissions จาก API อีกครั้ง
+2. ใช้ PR #48 ตรวจ effective GITHUB_TOKEN permissions ของทุก job จาก job setup logs;
+   เก็บเฉพาะชื่อ permission/ระดับและ job/run/SHA ไม่เก็บ token ทุก scope ต้อง read/none
+   ตาม job ไม่มี write หากพิสูจน์ไม่ได้ให้คง Partial
+3. ใน disposable validation PR ตาม V-16 ใช้ Python/JS entrypoint และ npm lifecycle script
+   ที่จะสร้าง marker เมื่อรัน ตรวจใน harness รอบ scanners ว่า marker ไม่เกิดทั้งก่อน/หลัง
+   ไม่ใช้ credential จริง ไม่อ้างว่า CodeQL ไม่ประมวลผล source หรือไม่มี candidate code รัน:
+   policy tests และ helpers ยังรันด้วย read token ตาม workflow ปกติ
+4. คง pins, ephemeral hosted runners, read-only PR token, ไม่มี repository secrets,
+   ไม่มี cache/raw report/database upload; ไม่เพิ่ม repository secret-sentinel
+   หรือทดสอบ token ด้วยคำขอเขียน การเพิ่ม harness/fixtures ต้องผ่าน targeted checks/review
+5. ใช้ GitHub platform contract ตามลิงก์ในข้อเสนอประกอบหลักฐาน พร้อมบันทึกว่า
+   fork execution/approval และ cross-repository API/ref/artifact behavior ยัง Not Run
+   same-repo run และ marker probes ไม่เทียบเท่า fork test
+6. ก่อนรับ merge ของ PR จาก fork ครั้งแรก ต้องตรวจ fork run จริงบน head/base นั้น
+   รวม approval policy, candidate API/ref resolution, artifacts, ทุก scanner และ gate
+   ถ้าไม่ได้รัน/ล้ม ให้คง PR นั้นไม่พร้อม merge ไม่ใช้ผล same-repo ปิดรายการนี้
+   เมื่อ events/permissions/secrets/runner หรือ platform policy เปลี่ยนต้องประเมินใหม่
+
 ## 4. Secrets และการปิด finding
 
 1. ครั้งแรกสแกน Git history ของ refs ที่ fetch ได้จาก origin ทั้งหมด พร้อมรายการ refs/SHAs;

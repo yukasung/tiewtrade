@@ -1,0 +1,70 @@
+{
+  "run": 42062182504,
+  "head": "10380f4ee9d7aa99850eba72abe01a2ddb25dddd",
+  "base": "a3a86520bc4d363aa747f5cb934cc09a8fbe71d3",
+  "source": "GitHub job setup logs: GITHUB_TOKEN Permissions",
+  "jobs": [
+    {
+      "job_id": 127366604164,
+      "permissions": [
+        "Contents: read",
+        "Metadata: read",
+        "PullRequests: read"
+      ]
+    },
+    {
+      "job_id": 127366604257,
+      "permissions": [
+        "Contents: read",
+        "Metadata: read",
+        "PullRequests: read"
+      ]
+    },
+    {
+      "job_id": 127366604926,
+      "permissions": [
+        "Contents: read",
+        "Metadata: read",
+        "PullRequests: read"
+      ]
+    },
+    {
+      "job_id": 127366604940,
+      "permissions": [
+        "Contents: read",
+        "Metadata: read",
+        "PullRequests: read"
+      ]
+    },
+    {
+      "job_id": 127366606800,
+      "permissions": [
+        "Contents: read",
+        "Metadata: read"
+      ]
+    },
+    {
+      "job_id": 127366675627,
+      "permissions": [
+        "Contents: read",
+        "Metadata: read",
+        "PullRequests: read"
+      ]
+    },
+    {
+      "job_id": 127367507958,
+      "permissions": [
+        "Contents: read",
+        "Metadata: read",
+        "PullRequests: read"
+      ]
+    }
+  ],
+  "contains_write_permission": false,
+  "scope": "same-repository pull_request only; does not attest actual fork execution",
+  "repository_settings_readback": {
+    "default_workflow_permissions": "read",
+    "can_approve_pull_request_reviews": false,
+    "fork_contributor_approval_policy": "first_time_contributors"
+  }
+}
