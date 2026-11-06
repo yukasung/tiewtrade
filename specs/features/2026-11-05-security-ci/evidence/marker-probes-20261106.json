@@ -1,0 +1,39 @@
+{
+  "pr": 49,
+  "head": "a40f491cfcc5ff39d9e99c0b8fefcedf505362f2",
+  "run": 42148532565,
+  "local_controls": "Each Python/JS/npm entrypoint creates its marker when deliberately executed in a temporary directory; clean guard passes, executed guard fails, marker removed before next control.",
+  "jobs": [
+    {
+      "job_id": 127665801047,
+      "before_and_after_marker_checks": 2,
+      "fixture_execution_failure": false
+    },
+    {
+      "job_id": 127665801182,
+      "before_and_after_marker_checks": 2,
+      "fixture_execution_failure": false
+    },
+    {
+      "job_id": 127665801203,
+      "before_and_after_marker_checks": 2,
+      "fixture_execution_failure": false
+    },
+    {
+      "job_id": 127665801292,
+      "before_and_after_marker_checks": 2,
+      "fixture_execution_failure": false
+    },
+    {
+      "job_id": 127665801385,
+      "before_and_after_marker_checks": 2,
+      "fixture_execution_failure": false
+    }
+  ],
+  "limitations": [
+    "Same-repository pull_request, not a real fork.",
+    "Nested disposable npm fixture; production application lifecycle scripts were not modified.",
+    "Only entrypoints/lifecycle are checked; candidate policy tests/helpers still execute as designed."
+  ],
+  "fixed_candidate": "pending"
+}

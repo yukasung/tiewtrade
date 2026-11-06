@@ -5,7 +5,8 @@
 Requirements: [Approved](requirements.md); implementation: [plan.md](plan.md)
 
 Local checks DV-01..07 ผ่านตาม [หลักฐาน](evidence/feature-candidate.md).
-ผลนี้เป็น uncommitted working-tree candidate; final PR candidate/review/CI ยังไม่ผ่านครบ.
+Local evidence เป็น snapshot ก่อน commit; final candidate/review/CI และ post-merge gates
+ผ่านแล้วตาม [post-merge checkpoint](evidence/post-merge.md).
 ก่อน merge ทุก Feature gate ต้องผ่านบน final candidate พร้อม review และ required CI;
 Release checkpoint ตรวจ post-merge ของ dependency change ไม่ใช่การประกาศ application Live ready.
 
@@ -18,9 +19,9 @@ Release checkpoint ตรวจ post-merge ของ dependency change ไม่
 | DV-05 | HTTP callers/security — DR-5/6 | venue test_failures/test_error_changes/test_wallets และ API-key/Paper-isolation safety tests ผ่าน; mocks ไม่แทน DV-04; ไม่มี credential ใน output | Feature | Passed local — 156 targeted tests |
 | DV-06 | Frontend build/toolchain — DR-5 | npm build ผ่าน; Vite dev module transform และ preview HTML/assets บน loopback ใช้ target patch ได้; selected Vitest tests ตาม plan ผ่าน; ไม่เรียก editor/exploit shell | Feature | Passed local — build, 10 Vitest tests, dev/preview/assets ผ่าน |
 | DV-07 | Trading/stateless scope — DR-6 | diff ไม่มี app/session/DB/migrations/order/balance/risk/financial changes และไม่มี Live orders; ไม่เพิ่ม Redis/in-memory business state; ถ้า diff ขยายให้หยุดประเมิน scope | Feature | Passed local — scope จำกัดสอง lockfiles และ feature docs |
-| DV-08 | Candidate integrity — DR-3/7 | บันทึก head/base หรือ merge SHA, lock hashes ก่อน/หลัง scan, tools/config digest; เปลี่ยน candidate/dependencies/harness แล้ว rerun เฉพาะหลักฐานที่กระทบ; ผล local ไม่แทน CI | Feature | Partial — lock/config fingerprints ตรง; final PR head/base/merge SHA และ CI pending |
-| DV-09 | Review/required CI — DR-7 | Ready for Code Review → review/fixes → refactor decision ตาม AGENTS; required CI เดิมผ่าน final candidate; DV-01..08 ผ่าน; owner สั่ง merge จึง merge | Feature | Partial — code review APPROVED; ไม่มี source refactor; final required CI pending |
-| DV-10 | Post-merge checkpoint — DR-7 | หลัง owner สั่ง merge ติดตาม CI บน merge SHA; ยืนยัน target lockfiles/fingerprints และ scanner evidence ยังตรง merge tree; บันทึก dependency-ready handoff ให้ Security CI โดยไม่อ้างว่า Security CI activation เสร็จ | Release | Not Run — Pending Full Validation |
+| DV-08 | Candidate integrity — DR-3/7 | บันทึก head/base หรือ merge SHA, lock hashes ก่อน/หลัง scan, tools/config digest; เปลี่ยน candidate/dependencies/harness แล้ว rerun เฉพาะหลักฐานที่กระทบ; ผล local ไม่แทน CI | Feature | Passed — PR #47 head/base/synthetic merge และ actual merge tree/fingerprints ตรง |
+| DV-09 | Review/required CI — DR-7 | Ready for Code Review → review/fixes → refactor decision ตาม AGENTS; required CI เดิมผ่าน final candidate; DV-01..08 ผ่าน; owner สั่ง merge จึง merge | Feature | Passed — review APPROVED; PR/push CI 6/6 success บน final head |
+| DV-10 | Post-merge checkpoint — DR-7 | หลัง owner สั่ง merge ติดตาม CI บน merge SHA; ยืนยัน target lockfiles/fingerprints และ scanner evidence ยังตรง merge tree; บันทึก dependency-ready handoff ให้ Security CI โดยไม่อ้างว่า Security CI activation เสร็จ | Release | Passed — merge a3a8652; post-merge CI 42050896249 ผ่าน 6/6; handoff บันทึกแล้ว |
 
 ## ขอบเขต tests และหลักฐาน
 

@@ -1,0 +1,966 @@
+{
+  "scope": "locally available origin refs; no network refresh; candidate tree is committed base, not uncommitted implementation",
+  "head": "c8d8ca78971fce3d98f624e0c35128195168d831",
+  "refs": [
+    "refs/remotes/origin/HEAD c8d8ca78971fce3d98f624e0c35128195168d831",
+    "refs/remotes/origin/docs/f-19-post-merge-evidence f70cbdcd80800adc0cae3f7f9c650345d6cde1e4",
+    "refs/remotes/origin/docs/f12-postmerge-checkpoint b79736cfc24da9e30a4397f18b7d435b008313d9",
+    "refs/remotes/origin/docs/f13-development-complete eed5a7037e7f6a56975c011d72c94daa8f7739f6",
+    "refs/remotes/origin/docs/f14-postmerge-checkpoint 259f63b31a36f3c6f1172d07ac0682c7f8d723f0",
+    "refs/remotes/origin/docs/f16-postmerge-checkpoint 190c6cca8f24e1a5e5903c23204c1721ac5d785c",
+    "refs/remotes/origin/docs/workflow-checkpoint-rules eb282ede493cb96b12253c9337bb2e4dd13917a6",
+    "refs/remotes/origin/feat/f16-manual-order-entry ab248fe190bc814cc8d7b0f84b4bef264d811a2b",
+    "refs/remotes/origin/feature/f-17-tp-sl 6998c22d5af552ab84f64932177c4be84ca249f7",
+    "refs/remotes/origin/feature/f-19-kill-switch de25852cd5b88edd5c0acf214c3a6dc2c172685b",
+    "refs/remotes/origin/feature/f14-position-margin-pnl cb5dac02ee642e46f5af7cb580538a827d814c28",
+    "refs/remotes/origin/feature/f37-supported-pairs-management 5699b20ebb048485f96d8e61308a0466c668216c",
+    "refs/remotes/origin/feature/f37-supported-symbol-management fe8e73ddbbf19ea4765d1b8c8a86989f2427bf06",
+    "refs/remotes/origin/fix/f09-flaky-timing-tests 56763a0ba3626be0e663dc4f3bc7e5fb7012f869",
+    "refs/remotes/origin/fix/f11-f12-runtime-recovery 962ccca8e924dd713196af7dda22a97576a8df1b",
+    "refs/remotes/origin/fix/f12-development-closure 570c5343b824e43260e1d0873a24e29ae4baad35",
+    "refs/remotes/origin/fix/f12-v17-exact-fixture 785470c159aa36fd3625118ce96b0905ed30ce67",
+    "refs/remotes/origin/fix/f13-review-findings f565bcec84d1640203982afa598f2b8c4be6290a",
+    "refs/remotes/origin/fix/f14-integration-replay 3be912c0837aef2661d3bdc63ff8bde45b6d7132",
+    "refs/remotes/origin/fix/f14-review-findings 1282477055e6a74b1955ccf33ea31cad82ac240d",
+    "refs/remotes/origin/fix/f15-review-findings 7bd14280ab86f71263744ce321cd302834336e02",
+    "refs/remotes/origin/main c8d8ca78971fce3d98f624e0c35128195168d831",
+    "refs/remotes/origin/validation/f-19-set5 6545b4ba8182dc4b4010357f8d06470f65b58cb4",
+    "refs/remotes/origin/validation/f11-capacity-checkpoint ee792de2f1ee08c471bc217e51eb9ab7f82d21eb",
+    "refs/remotes/origin/validation/f38-release-checkpoint f0a8d9d6b74d0ea813756f9332c94bd494b12f6e"
+  ],
+  "configuration": "6dc909f41f5837ec6d5c4fb17520b8084d963b4c259cc66105ac9aaa65459439",
+  "coverage_commits": 246,
+  "counts": {
+    "critical": 0,
+    "high": 92,
+    "low": 0,
+    "medium": 0,
+    "none": 0,
+    "unknown": 0,
+    "excepted": 0,
+    "blocked": 92,
+    "needs_triage": 0
+  },
+  "findings": [
+    {
+      "identity": "484de0fe5e427d22485e5e835c9065df674d85eb90fe1a97125fdffd1fe0e025",
+      "locator": [
+        "generic-api-key",
+        "758f5dd93bff022bb40142681211cde97e4734b5",
+        "specs/features/2026-10-07-single-trading-account/paper-trading-totp-validation.md",
+        "32",
+        "33"
+      ]
+    },
+    {
+      "identity": "938e0d1bcf2fcad9887bdaad5a00ec88f9aa7cb664b1ab9d222105bfd7ca83ee",
+      "locator": [
+        "generic-api-key",
+        "a3c141a3d1e2f9f5173cfc0f7ab49ba80a2a9183",
+        "specs/features/2026-10-25-wallet-risk-limits/evidence/m5-final-candidate.md",
+        "4806",
+        "4806"
+      ]
+    },
+    {
+      "identity": "0bc8cc27c36aacb49bc7b7f7beb3530b9f24dac215aee6885f2880c09d1bb608",
+      "locator": [
+        "generic-api-key",
+        "a3c141a3d1e2f9f5173cfc0f7ab49ba80a2a9183",
+        "specs/features/2026-10-25-wallet-risk-limits/evidence/m5-final-candidate.md",
+        "5048",
+        "5048"
+      ]
+    },
+    {
+      "identity": "3b946fcc2bc487dbf7599af31baba557b66416c3652b1b1e59cc52301a426d26",
+      "locator": [
+        "generic-api-key",
+        "aabdfb9dfa68d12bacac9ebacbdaebf4d2a262cb",
+        "specs/features/2026-10-15-supported-pairs-reduction/evidence/release-20261026-merge/capacity/s5-r1/environment.json",
+        "12",
+        "12"
+      ]
+    },
+    {
+      "identity": "7cacac14736bb6af161a325969afc905db568919a5f69fc7dfb300f271a2db00",
+      "locator": [
+        "generic-api-key",
+        "bfb6ab08ebc9f6cbc73e07615f534ad3d7be104c",
+        "specs/features/2026-10-15-supported-pairs-reduction/evidence/release-20261024/capacity/s5-r2/environment.json",
+        "12",
+        "12"
+      ]
+    },
+    {
+      "identity": "bddbfbbf37bc14a7dbbdb57cdc1bbadd54e9a297234afbeacd0d73df7b8daa48",
+      "locator": [
+        "generic-api-key",
+        "bfb6ab08ebc9f6cbc73e07615f534ad3d7be104c",
+        "specs/features/2026-10-15-supported-pairs-reduction/evidence/release-20261024/capacity/s5-r3/environment.json",
+        "12",
+        "12"
+      ]
+    },
+    {
+      "identity": "3b8311b84870bcd39c2e5ddfcee96acf60aa8f9ced116db9e663e82c1a4aaa95",
+      "locator": [
+        "generic-api-key",
+        "bfb6ab08ebc9f6cbc73e07615f534ad3d7be104c",
+        "specs/features/2026-10-15-supported-pairs-reduction/evidence/release-20261024/capacity/s5-r5/environment.json",
+        "12",
+        "12"
+      ]
+    },
+    {
+      "identity": "ccf352138e61c1ea77bf1a14e38b3a1413697f755b037357625fb524d03bb9b5",
+      "locator": [
+        "generic-api-key",
+        "0000aa9df00c6627d690c501d0cf183276d06ff5",
+        "specs/features/2026-10-18-paper-order-matching/evidence/m6-supervised-smoke-20261020/source-hashes.json",
+        "9",
+        "9"
+      ]
+    },
+    {
+      "identity": "5f52ae4b3b6e9841e6b4f11d03cfd4f251d3053380c309a22941bf379419b470",
+      "locator": [
+        "generic-api-key",
+        "0000aa9df00c6627d690c501d0cf183276d06ff5",
+        "specs/features/2026-10-18-paper-order-matching/evidence/m6-supervised-smoke-20261020/source-hashes.json",
+        "11",
+        "11"
+      ]
+    },
+    {
+      "identity": "427e02c8feef039e654efa23d3cb7b0f15a5d9a4a3e4916158ef95a909894e05",
+      "locator": [
+        "generic-api-key",
+        "0000aa9df00c6627d690c501d0cf183276d06ff5",
+        "specs/features/2026-10-18-paper-order-matching/evidence/m6-supervised-smoke-20261020/source-hashes.json",
+        "12",
+        "12"
+      ]
+    },
+    {
+      "identity": "85d668a1aee35b88abb6ba7355eeac644424caa8e16ffcb29d05d6a8f9da1ffb",
+      "locator": [
+        "generic-api-key",
+        "0000aa9df00c6627d690c501d0cf183276d06ff5",
+        "specs/features/2026-10-18-paper-order-matching/evidence/m6-supervised-smoke-20261020/source-hashes.json",
+        "24",
+        "24"
+      ]
+    },
+    {
+      "identity": "8e40ff94794906e1b281b14a7e5b272aecbb2c2f2ee5ee7ea7b7eea035eb31a8",
+      "locator": [
+        "generic-api-key",
+        "0000aa9df00c6627d690c501d0cf183276d06ff5",
+        "specs/features/2026-10-18-paper-order-matching/evidence/m6-supervised-smoke-20261020/source-hashes.json",
+        "63",
+        "63"
+      ]
+    },
+    {
+      "identity": "3e99aef9b2f05e68a2e752cd9f5f7607d92de4497817e7b12553a4b11a1151b9",
+      "locator": [
+        "generic-api-key",
+        "0000aa9df00c6627d690c501d0cf183276d06ff5",
+        "specs/features/2026-10-18-paper-order-matching/evidence/m6-supervised-smoke-20261020/source-hashes.json",
+        "84",
+        "84"
+      ]
+    },
+    {
+      "identity": "d27e44c4369dd957d693e7d8b21d02d3f7cdb9fa75bc751b21fbd8fdf6ff38c8",
+      "locator": [
+        "generic-api-key",
+        "0000aa9df00c6627d690c501d0cf183276d06ff5",
+        "specs/features/2026-10-18-paper-order-matching/evidence/m6-supervised-smoke-20261020/source-hashes.json",
+        "95",
+        "95"
+      ]
+    },
+    {
+      "identity": "41d01b719a0e1ef40790a797e662f3342dd82d21bb079be79917a6f78336bcce",
+      "locator": [
+        "generic-api-key",
+        "0000aa9df00c6627d690c501d0cf183276d06ff5",
+        "specs/features/2026-10-18-paper-order-matching/evidence/m6-supervised-smoke-20261020/source-hashes.json",
+        "155",
+        "155"
+      ]
+    },
+    {
+      "identity": "e665b28edee2af7474d252e1aa3625291f337bf08cc186160136f1eb0c08b989",
+      "locator": [
+        "generic-api-key",
+        "0000aa9df00c6627d690c501d0cf183276d06ff5",
+        "specs/features/2026-10-18-paper-order-matching/evidence/m6-supervised-smoke-20261020/source-hashes.json",
+        "157",
+        "157"
+      ]
+    },
+    {
+      "identity": "5fcc334d0822016ef298b4b1ab640ebdbecda8c88230b89b091f70841df4f44a",
+      "locator": [
+        "generic-api-key",
+        "0000aa9df00c6627d690c501d0cf183276d06ff5",
+        "specs/features/2026-10-18-paper-order-matching/evidence/m6-supervised-smoke-20261020/source-hashes.json",
+        "158",
+        "158"
+      ]
+    },
+    {
+      "identity": "73dadf4606591496b68fb22ce2da298af90d19d44367bafabdfd210ad995c661",
+      "locator": [
+        "generic-api-key",
+        "0000aa9df00c6627d690c501d0cf183276d06ff5",
+        "specs/features/2026-10-18-paper-order-matching/evidence/m6-supervised-smoke-20261020/source-hashes.json",
+        "167",
+        "167"
+      ]
+    },
+    {
+      "identity": "4508fae0ebf4b40ccca443b9f396e14bf117a8a3f2ce1762dea87ff9cb569321",
+      "locator": [
+        "generic-api-key",
+        "0000aa9df00c6627d690c501d0cf183276d06ff5",
+        "specs/features/2026-10-18-paper-order-matching/evidence/m6-supervised-recovery-20261020/source-hashes.json",
+        "9",
+        "9"
+      ]
+    },
+    {
+      "identity": "f511b4b86bf45b4994fe7f6260be53ef01be55dd238a4941a9e979b0e2539913",
+      "locator": [
+        "generic-api-key",
+        "0000aa9df00c6627d690c501d0cf183276d06ff5",
+        "specs/features/2026-10-18-paper-order-matching/evidence/m6-supervised-recovery-20261020/source-hashes.json",
+        "11",
+        "11"
+      ]
+    },
+    {
+      "identity": "1e4dd31c27ca62504acdb0e8581f924f602e33cb002a763c3a022c5baccb9ca9",
+      "locator": [
+        "generic-api-key",
+        "0000aa9df00c6627d690c501d0cf183276d06ff5",
+        "specs/features/2026-10-18-paper-order-matching/evidence/m6-supervised-recovery-20261020/source-hashes.json",
+        "12",
+        "12"
+      ]
+    },
+    {
+      "identity": "d3548b729f6a9e31d75d5af7be1f9794f08ce594ad332d61c7de08d35ec20add",
+      "locator": [
+        "generic-api-key",
+        "0000aa9df00c6627d690c501d0cf183276d06ff5",
+        "specs/features/2026-10-18-paper-order-matching/evidence/m6-supervised-recovery-20261020/source-hashes.json",
+        "24",
+        "24"
+      ]
+    },
+    {
+      "identity": "7df853102df08543787fe93f499120dbd007ee09a9d9b792e67a00f082ffc8ff",
+      "locator": [
+        "generic-api-key",
+        "0000aa9df00c6627d690c501d0cf183276d06ff5",
+        "specs/features/2026-10-18-paper-order-matching/evidence/m6-supervised-recovery-20261020/source-hashes.json",
+        "63",
+        "63"
+      ]
+    },
+    {
+      "identity": "c5c0569619808ecf46d3f30a3a29be7496469bcc9f3fb1de3a49b69965ec3580",
+      "locator": [
+        "generic-api-key",
+        "0000aa9df00c6627d690c501d0cf183276d06ff5",
+        "specs/features/2026-10-18-paper-order-matching/evidence/m6-supervised-recovery-20261020/source-hashes.json",
+        "84",
+        "84"
+      ]
+    },
+    {
+      "identity": "022d3da1766ac8ebe08e28753310a67408322356d6ca7ffd030951fafc74b6d2",
+      "locator": [
+        "generic-api-key",
+        "0000aa9df00c6627d690c501d0cf183276d06ff5",
+        "specs/features/2026-10-18-paper-order-matching/evidence/m6-supervised-recovery-20261020/source-hashes.json",
+        "95",
+        "95"
+      ]
+    },
+    {
+      "identity": "57406c9e2204f3fe0e4b48d28bd77c9b2918cf47ef75715ec96223a527b069e6",
+      "locator": [
+        "generic-api-key",
+        "0000aa9df00c6627d690c501d0cf183276d06ff5",
+        "specs/features/2026-10-18-paper-order-matching/evidence/m6-supervised-recovery-20261020/source-hashes.json",
+        "155",
+        "155"
+      ]
+    },
+    {
+      "identity": "34ba03e833a3d8afc3e224d1a4ed9003bfff85d7b2ddb409d91ada40b8f03a62",
+      "locator": [
+        "generic-api-key",
+        "0000aa9df00c6627d690c501d0cf183276d06ff5",
+        "specs/features/2026-10-18-paper-order-matching/evidence/m6-supervised-recovery-20261020/source-hashes.json",
+        "157",
+        "157"
+      ]
+    },
+    {
+      "identity": "579beb7dc7d40a9025449045551448a3d4704f77f8a0467543435d6d42744ec4",
+      "locator": [
+        "generic-api-key",
+        "0000aa9df00c6627d690c501d0cf183276d06ff5",
+        "specs/features/2026-10-18-paper-order-matching/evidence/m6-supervised-recovery-20261020/source-hashes.json",
+        "158",
+        "158"
+      ]
+    },
+    {
+      "identity": "3c7a4459ffb21aaa0e5d3475f204381d5bf737e5c608051d7ee6673e4c7d16c0",
+      "locator": [
+        "generic-api-key",
+        "0000aa9df00c6627d690c501d0cf183276d06ff5",
+        "specs/features/2026-10-18-paper-order-matching/evidence/m6-supervised-recovery-20261020/source-hashes.json",
+        "167",
+        "167"
+      ]
+    },
+    {
+      "identity": "c4556577c9865de1ce2047802d64363d60f9514822f18b3ea3da22b68bf8ef75",
+      "locator": [
+        "generic-api-key",
+        "2766b92d7755cc42c2e6b02fde0b85f6c42c75f1",
+        "specs/features/2026-10-10-backend-indicators/profiling/prepared-chart-smoke/run_smoke.py",
+        "27",
+        "27"
+      ]
+    },
+    {
+      "identity": "9fe54d1c5341eb60282420a429e3593f2cc36b60d673102762a4fad88fa809ce",
+      "locator": [
+        "tiewtrade-sealing-key",
+        "a08c36dce9ffaf9309e81e1f5a6f8758477c602f",
+        ".github/workflows/ci.yml",
+        "230",
+        "230"
+      ]
+    },
+    {
+      "identity": "e9e61fac856dccd3b7d698028df6665b288ef059cb0528e1b3ce63fb48501bc9",
+      "locator": [
+        "generic-api-key",
+        "d58317b10de7876f76215d06f37cedf0dc3a221d",
+        "specs/features/2026-10-10-backend-indicators/profiling/n4-validation/n4-deadline-121.json",
+        "20",
+        "20"
+      ]
+    },
+    {
+      "identity": "5a915f7fd8817b7dfc8b486d2c83fa71c49a9460cfe92cc59e4809c2d7620865",
+      "locator": [
+        "generic-api-key",
+        "d58317b10de7876f76215d06f37cedf0dc3a221d",
+        "specs/features/2026-10-10-backend-indicators/profiling/n4-validation/n4-deadline-120.json",
+        "20",
+        "20"
+      ]
+    },
+    {
+      "identity": "b9de7eac67b8cb457f97f08d7b26deb6e6cfb55d5e432296fb609fccad1f345c",
+      "locator": [
+        "generic-api-key",
+        "d58317b10de7876f76215d06f37cedf0dc3a221d",
+        "specs/features/2026-10-10-backend-indicators/profiling/n4-validation/n4-crash_before.json",
+        "97",
+        "97"
+      ]
+    },
+    {
+      "identity": "454bed8cfa3ce98dd688692bbc6ae1c2314f278774516398d88d848269ba4de7",
+      "locator": [
+        "generic-api-key",
+        "d58317b10de7876f76215d06f37cedf0dc3a221d",
+        "specs/features/2026-10-10-backend-indicators/profiling/n4-validation/n4-crash_before.json",
+        "128",
+        "128"
+      ]
+    },
+    {
+      "identity": "7aa0443965b21cbf55436b0b52068957d1d07e6c6e66234d54a53d9e983e8e77",
+      "locator": [
+        "generic-api-key",
+        "d58317b10de7876f76215d06f37cedf0dc3a221d",
+        "specs/features/2026-10-10-backend-indicators/profiling/n4-validation/n4-crash_before.json",
+        "159",
+        "159"
+      ]
+    },
+    {
+      "identity": "61c2bc0b2035b4330350f88335cf8e7a3724be58e166cb2e93466217f39b1c7b",
+      "locator": [
+        "generic-api-key",
+        "d58317b10de7876f76215d06f37cedf0dc3a221d",
+        "specs/features/2026-10-10-backend-indicators/profiling/n4-validation/n4-running.json",
+        "97",
+        "97"
+      ]
+    },
+    {
+      "identity": "842ab30d0e72c195318f44b02da17cbbf817f87ecf16cdcca4544b23ab210ed1",
+      "locator": [
+        "generic-api-key",
+        "d58317b10de7876f76215d06f37cedf0dc3a221d",
+        "specs/features/2026-10-10-backend-indicators/profiling/n4-validation/n4-running.json",
+        "128",
+        "128"
+      ]
+    },
+    {
+      "identity": "c573ad2e6a018cedfdf07a5e3d7eec71e63ca8e9b740e0ce8baec410faf2d172",
+      "locator": [
+        "generic-api-key",
+        "d58317b10de7876f76215d06f37cedf0dc3a221d",
+        "specs/features/2026-10-10-backend-indicators/profiling/n4-validation/n4-running.json",
+        "159",
+        "159"
+      ]
+    },
+    {
+      "identity": "4d89c96f976f7d114eb5225c68d8e272cd7826175693cf0601a6102c11ca357d",
+      "locator": [
+        "generic-api-key",
+        "d58317b10de7876f76215d06f37cedf0dc3a221d",
+        "specs/features/2026-10-10-backend-indicators/profiling/n4-validation/n4-live-windows.json",
+        "41",
+        "41"
+      ]
+    },
+    {
+      "identity": "93384810966865e2ffc687e7fa1944a88ac15bbef929ea028557f0a9a0fbd47b",
+      "locator": [
+        "tiewtrade-sealing-key",
+        "a08c36dce9ffaf9309e81e1f5a6f8758477c602f",
+        "compose.yaml",
+        "103",
+        "103"
+      ]
+    },
+    {
+      "identity": "1a5d77dbf4c0424355215a8bdae1323dfcdbca3c6cfe5988a24d97316b6e5772",
+      "locator": [
+        "generic-api-key",
+        "d4b29c27d7a13833d86dde1718c21263afba8a7e",
+        "specs/features/2026-10-12-candlestick-chart/evidence/chart-enable-snapshot.json",
+        "16",
+        "16"
+      ]
+    },
+    {
+      "identity": "fcc5c36f0beb58082e7a1de6406faec289a6b651480003ad9e37dd28dfe01471",
+      "locator": [
+        "generic-api-key",
+        "d4b29c27d7a13833d86dde1718c21263afba8a7e",
+        "specs/features/2026-10-12-candlestick-chart/evidence/chart-enable-snapshot.json",
+        "18",
+        "18"
+      ]
+    },
+    {
+      "identity": "c2e3159b10c0bcce4af937a0927ce8216f10793ec8a4f073a78cfab5760c5768",
+      "locator": [
+        "generic-api-key",
+        "d4b29c27d7a13833d86dde1718c21263afba8a7e",
+        "specs/features/2026-10-12-candlestick-chart/evidence/chart-enable-snapshot.json",
+        "19",
+        "19"
+      ]
+    },
+    {
+      "identity": "d6d280d4b3057f665de97622ea50ff812a3fb3ab530d79fcc4b64d0469c04411",
+      "locator": [
+        "generic-api-key",
+        "d4b29c27d7a13833d86dde1718c21263afba8a7e",
+        "specs/features/2026-10-12-candlestick-chart/evidence/chart-enable-snapshot.json",
+        "31",
+        "31"
+      ]
+    },
+    {
+      "identity": "bd15f79d31d06860b171ce7eb618548aff3d20ec0b52f2edae45969820bc3968",
+      "locator": [
+        "generic-api-key",
+        "d4b29c27d7a13833d86dde1718c21263afba8a7e",
+        "specs/features/2026-10-12-candlestick-chart/evidence/chart-enable-snapshot.json",
+        "34",
+        "34"
+      ]
+    },
+    {
+      "identity": "49dd3870f6484f28b12028bbe4f03eaaebb913efcdd695b680b9ea7475a5fb79",
+      "locator": [
+        "generic-api-key",
+        "d4b29c27d7a13833d86dde1718c21263afba8a7e",
+        "specs/features/2026-10-12-candlestick-chart/evidence/chart-enable-snapshot.json",
+        "51",
+        "51"
+      ]
+    },
+    {
+      "identity": "f9f3917e6d504f115ba620b8da74db512a0dc0d9691885209dda704177249906",
+      "locator": [
+        "generic-api-key",
+        "d4b29c27d7a13833d86dde1718c21263afba8a7e",
+        "specs/features/2026-10-12-candlestick-chart/evidence/chart-enable-snapshot.json",
+        "69",
+        "69"
+      ]
+    },
+    {
+      "identity": "f2c3dd2c5e87d16d3c8cdbd23cb6c19fb9ae46ae51899336d4dbc5fa622cf6dd",
+      "locator": [
+        "generic-api-key",
+        "d4b29c27d7a13833d86dde1718c21263afba8a7e",
+        "specs/features/2026-10-12-candlestick-chart/evidence/chart-enable-snapshot.json",
+        "82",
+        "82"
+      ]
+    },
+    {
+      "identity": "148e24d3303108373154c20720f8848ef4bbcfeba36c4049d44f7820e33468fb",
+      "locator": [
+        "generic-api-key",
+        "d4b29c27d7a13833d86dde1718c21263afba8a7e",
+        "specs/features/2026-10-12-candlestick-chart/evidence/chart-enable-snapshot.json",
+        "123",
+        "123"
+      ]
+    },
+    {
+      "identity": "28af775f4d38e78784f6646cc19273d381dd7e78d0f9d46acf766a760057b9c5",
+      "locator": [
+        "generic-api-key",
+        "d4b29c27d7a13833d86dde1718c21263afba8a7e",
+        "specs/features/2026-10-12-candlestick-chart/evidence/chart-enable-snapshot.json",
+        "125",
+        "125"
+      ]
+    },
+    {
+      "identity": "d0f8740a8bc281b1464e1d20e77cd6a1adad6249baafcf99260f127e1beac697",
+      "locator": [
+        "generic-api-key",
+        "d4b29c27d7a13833d86dde1718c21263afba8a7e",
+        "specs/features/2026-10-12-candlestick-chart/evidence/chart-enable-snapshot.json",
+        "126",
+        "126"
+      ]
+    },
+    {
+      "identity": "fa7dcf54333e30b772311eed77bdb01fcf07309d5f428802dfc3451c3916c57b",
+      "locator": [
+        "generic-api-key",
+        "d4b29c27d7a13833d86dde1718c21263afba8a7e",
+        "specs/features/2026-10-12-candlestick-chart/evidence/chart-enable-snapshot.json",
+        "134",
+        "134"
+      ]
+    },
+    {
+      "identity": "8540126ddfc22f2c6692dcfa7de158428057421802fda3b93be4194db5c4da56",
+      "locator": [
+        "generic-api-key",
+        "d4b29c27d7a13833d86dde1718c21263afba8a7e",
+        "specs/features/2026-10-12-candlestick-chart/evidence/chart-enable-snapshot.json",
+        "199",
+        "199"
+      ]
+    },
+    {
+      "identity": "e6fd9bd91c24b9e87ff5a94ec5bfd4b266c086fed0f4fb4df6f9ab9de4184e23",
+      "locator": [
+        "generic-api-key",
+        "d4b29c27d7a13833d86dde1718c21263afba8a7e",
+        "specs/features/2026-10-12-candlestick-chart/evidence/chart-enable-snapshot.json",
+        "200",
+        "200"
+      ]
+    },
+    {
+      "identity": "53af931ecd23f249af68276144e5495fd2ee08f0b5a547529f2d65a0897b0e53",
+      "locator": [
+        "generic-api-key",
+        "d4b29c27d7a13833d86dde1718c21263afba8a7e",
+        "specs/features/2026-10-12-candlestick-chart/evidence/chart-enable-snapshot.json",
+        "206",
+        "206"
+      ]
+    },
+    {
+      "identity": "d27c1ad89d80df65c26435c105aa37779057366f45d94faa55d66165fa97228e",
+      "locator": [
+        "generic-api-key",
+        "d4b29c27d7a13833d86dde1718c21263afba8a7e",
+        "specs/features/2026-10-12-candlestick-chart/evidence/chart-enable-snapshot.json",
+        "220",
+        "220"
+      ]
+    },
+    {
+      "identity": "1ec0b5d382c31eb372c7a981ba30e8138244b3b67150d6049c2a724bf92dbc58",
+      "locator": [
+        "generic-api-key",
+        "d4b29c27d7a13833d86dde1718c21263afba8a7e",
+        "specs/features/2026-10-12-candlestick-chart/evidence/chart-enable-snapshot.json",
+        "373",
+        "373"
+      ]
+    },
+    {
+      "identity": "c78d25df08d6a27f6a3e4eb15bec941482b5117c85d496291ff745067aaf3f4a",
+      "locator": [
+        "generic-api-key",
+        "d4b29c27d7a13833d86dde1718c21263afba8a7e",
+        "specs/features/2026-10-12-candlestick-chart/evidence/chart-enable-snapshot.json",
+        "380",
+        "380"
+      ]
+    },
+    {
+      "identity": "5e337aa41477ece356045d44ade056b639f89d9e6ae3adae9f2f3eacab3a2f4c",
+      "locator": [
+        "generic-api-key",
+        "d4b29c27d7a13833d86dde1718c21263afba8a7e",
+        "specs/features/2026-10-12-candlestick-chart/evidence/chart-enable-snapshot.json",
+        "474",
+        "474"
+      ]
+    },
+    {
+      "identity": "40f771b6ea5c597d7a4e7bf8720853932a363736f9dff6a362e5f89f7a8c9805",
+      "locator": [
+        "generic-api-key",
+        "d4b29c27d7a13833d86dde1718c21263afba8a7e",
+        "specs/features/2026-10-12-candlestick-chart/evidence/chart-enable-snapshot.json",
+        "475",
+        "475"
+      ]
+    },
+    {
+      "identity": "18d2005284f0668e0ee6b4599d9033b49c7d81829fac007b8e68c5778d14d65c",
+      "locator": [
+        "generic-api-key",
+        "d4b29c27d7a13833d86dde1718c21263afba8a7e",
+        "specs/features/2026-10-12-candlestick-chart/evidence/chart-enable-snapshot.json",
+        "544",
+        "544"
+      ]
+    },
+    {
+      "identity": "64c3e1a2c036e89478dfcb50c6a9ad356283c0bd4516247c1009f26dbb1c2436",
+      "locator": [
+        "generic-api-key",
+        "d4b29c27d7a13833d86dde1718c21263afba8a7e",
+        "specs/features/2026-10-12-candlestick-chart/evidence/chart-enable-snapshot.json",
+        "545",
+        "545"
+      ]
+    },
+    {
+      "identity": "abde7402f796c153c38f440eece31a8972bf5e302d61f2a69d88e9c275cf3b10",
+      "locator": [
+        "generic-api-key",
+        "d4b29c27d7a13833d86dde1718c21263afba8a7e",
+        "specs/features/2026-10-12-candlestick-chart/evidence/chart-enable-snapshot.json",
+        "562",
+        "562"
+      ]
+    },
+    {
+      "identity": "d7e60386e007f1c60c046f2507839ade89674799b660f7abf27610b325d103c8",
+      "locator": [
+        "generic-api-key",
+        "d4b29c27d7a13833d86dde1718c21263afba8a7e",
+        "specs/features/2026-10-12-candlestick-chart/evidence/chart-enable-snapshot.json",
+        "563",
+        "563"
+      ]
+    },
+    {
+      "identity": "afc7ae841910730356408c78a0e1314b771765de5fe721ece0e6abadac5a163a",
+      "locator": [
+        "generic-api-key",
+        "d4b29c27d7a13833d86dde1718c21263afba8a7e",
+        "specs/features/2026-10-12-candlestick-chart/evidence/chart-enable-snapshot.json",
+        "564",
+        "564"
+      ]
+    },
+    {
+      "identity": "e92aec28938b8274c71cb5b97e76a217d9704a7115e4e5ce1e73d6323761880a",
+      "locator": [
+        "generic-api-key",
+        "d4b29c27d7a13833d86dde1718c21263afba8a7e",
+        "specs/features/2026-10-12-candlestick-chart/evidence/chart-enable-snapshot.json",
+        "565",
+        "565"
+      ]
+    },
+    {
+      "identity": "c3efd69f20757b94eba13d2a5006e07784f19eb10e0f11e5b4882b550a66aac2",
+      "locator": [
+        "generic-api-key",
+        "d4b29c27d7a13833d86dde1718c21263afba8a7e",
+        "specs/features/2026-10-12-candlestick-chart/evidence/chart-enable-snapshot.json",
+        "566",
+        "566"
+      ]
+    },
+    {
+      "identity": "2cbced723108eaff199944a312460404e66c79594dde2fd083a182fd8e5c68ec",
+      "locator": [
+        "generic-api-key",
+        "d4b29c27d7a13833d86dde1718c21263afba8a7e",
+        "specs/features/2026-10-12-candlestick-chart/evidence/chart-enable-snapshot.json",
+        "567",
+        "567"
+      ]
+    },
+    {
+      "identity": "c52c8a0b046b9029214fd5be6f062a4611e6cf924a70b7ea16a03267293f7cf4",
+      "locator": [
+        "generic-api-key",
+        "d4b29c27d7a13833d86dde1718c21263afba8a7e",
+        "specs/features/2026-10-12-candlestick-chart/evidence/chart-enable-snapshot.json",
+        "569",
+        "569"
+      ]
+    },
+    {
+      "identity": "60e6d8f6edbccf7a6d1856a287d2479bfa5a1bcf51200a51c34304cc9d1d7ad6",
+      "locator": [
+        "generic-api-key",
+        "d4b29c27d7a13833d86dde1718c21263afba8a7e",
+        "specs/features/2026-10-12-candlestick-chart/evidence/chart-enable-snapshot.json",
+        "570",
+        "570"
+      ]
+    },
+    {
+      "identity": "d99e505f49db4b718dd5b8464ded041d3f282bb4d3c77f5448113db1df3db0de",
+      "locator": [
+        "generic-api-key",
+        "d4b29c27d7a13833d86dde1718c21263afba8a7e",
+        "specs/features/2026-10-12-candlestick-chart/evidence/chart-enable-snapshot.json",
+        "571",
+        "571"
+      ]
+    },
+    {
+      "identity": "b83a821d782de82f09b367d25e6560ac760c5ce93f1f1f0e55b513d6da85e5a6",
+      "locator": [
+        "generic-api-key",
+        "d4b29c27d7a13833d86dde1718c21263afba8a7e",
+        "specs/features/2026-10-12-candlestick-chart/evidence/chart-enable-snapshot.json",
+        "574",
+        "574"
+      ]
+    },
+    {
+      "identity": "c3ab029f26896ba9f6759c9dad58f9788b7fb560f1ae18df2ac99b498ca8ab5c",
+      "locator": [
+        "generic-api-key",
+        "d4b29c27d7a13833d86dde1718c21263afba8a7e",
+        "specs/features/2026-10-12-candlestick-chart/evidence/chart-enable-snapshot.json",
+        "587",
+        "587"
+      ]
+    },
+    {
+      "identity": "157974ba8de98c69a7af38e20d7dd6e030e0815aa7a94cd004d150bd16137cec",
+      "locator": [
+        "generic-api-key",
+        "d4b29c27d7a13833d86dde1718c21263afba8a7e",
+        "specs/features/2026-10-12-candlestick-chart/evidence/chart-enable-snapshot.json",
+        "603",
+        "603"
+      ]
+    },
+    {
+      "identity": "a17c6d7a247a8c2810ed72dd18d7ab3c83a5a302b050e9c17c01bfd445d61063",
+      "locator": [
+        "generic-api-key",
+        "d4b29c27d7a13833d86dde1718c21263afba8a7e",
+        "specs/features/2026-10-12-candlestick-chart/evidence/chart-enable-snapshot.json",
+        "605",
+        "605"
+      ]
+    },
+    {
+      "identity": "ae08c020ae35aa56c08d248e56831f2dd4c33db863167f9c606d124f78ccf93a",
+      "locator": [
+        "generic-api-key",
+        "d4b29c27d7a13833d86dde1718c21263afba8a7e",
+        "specs/features/2026-10-12-candlestick-chart/evidence/chart-enable-snapshot.json",
+        "606",
+        "606"
+      ]
+    },
+    {
+      "identity": "540458f9b539ae04f0334ca123c515f69f3055f2e05bca486a39e84784b5aeef",
+      "locator": [
+        "generic-api-key",
+        "d4b29c27d7a13833d86dde1718c21263afba8a7e",
+        "specs/features/2026-10-12-candlestick-chart/evidence/chart-enable-snapshot.json",
+        "607",
+        "607"
+      ]
+    },
+    {
+      "identity": "39d5bbdb655b0de17a0c0320c9004f39def0e66fc24b4fd09b3ea416dc2160bf",
+      "locator": [
+        "generic-api-key",
+        "d4b29c27d7a13833d86dde1718c21263afba8a7e",
+        "specs/features/2026-10-12-candlestick-chart/evidence/chart-enable-snapshot.json",
+        "608",
+        "608"
+      ]
+    },
+    {
+      "identity": "0afe24d5b29de1d40d0e06cb7b94d086720bbb000d79c04b4c57ece5d30db115",
+      "locator": [
+        "generic-api-key",
+        "d4b29c27d7a13833d86dde1718c21263afba8a7e",
+        "specs/features/2026-10-12-candlestick-chart/evidence/chart-enable-snapshot.json",
+        "611",
+        "611"
+      ]
+    },
+    {
+      "identity": "78f4624431ea3a7dc2d33512fa70a9f487be1906b1324b7630b2fd5ff3d7655d",
+      "locator": [
+        "generic-api-key",
+        "5308fb9e92336c9cf9ce34584d7c53647e4d02e5",
+        "specs/roadmap.md",
+        "174",
+        "174"
+      ]
+    },
+    {
+      "identity": "0b9c659fc75447e6b4b1d4828d1f9d1a13631bff14fd5e38fce6c6e9830c1829",
+      "locator": [
+        "tiewtrade-sealing-key",
+        "7efbbfbe3a5d14c2db43e10463961a342ca26416",
+        ".github/workflows/ci.yml",
+        "69",
+        "69"
+      ]
+    },
+    {
+      "identity": "e3606f316cc2dd7b5d386fc41d27dc60020b9ae44e1e00ec575b6500618e4002",
+      "locator": [
+        "tiewtrade-sealing-key",
+        "7efbbfbe3a5d14c2db43e10463961a342ca26416",
+        "README.md",
+        "77",
+        "77"
+      ]
+    },
+    {
+      "identity": "18d20bf914c95909116c20e9076a6efea3f6477aa6d14180cf7fc5609270863a",
+      "locator": [
+        "tiewtrade-sealing-key",
+        "7efbbfbe3a5d14c2db43e10463961a342ca26416",
+        ".github/workflows/ci.yml",
+        "199",
+        "199"
+      ]
+    },
+    {
+      "identity": "7ed5c83f0c9b9cd9d82e4e2250d0956bf59df593806670a926b87b96ad83095f",
+      "locator": [
+        "tiewtrade-sealing-key",
+        "7efbbfbe3a5d14c2db43e10463961a342ca26416",
+        "compose.yaml",
+        "61",
+        "61"
+      ]
+    },
+    {
+      "identity": "20c81e178053e75ef6d60e4fa647d2ab256d9d69929a1f3a0b7e492aba325dec",
+      "locator": [
+        "tiewtrade-sealing-key",
+        "979ae8aab99847cc58fa1516ddd8a32850e008b6",
+        ".github/workflows/ci.yml",
+        "67",
+        "67"
+      ]
+    },
+    {
+      "identity": "0cfd5cb2151023328615e63f40c2d8edcc41a23af7e9ad5f0cafbc02a3aa7b71",
+      "locator": [
+        "tiewtrade-sealing-key",
+        "979ae8aab99847cc58fa1516ddd8a32850e008b6",
+        "README.md",
+        "76",
+        "76"
+      ]
+    },
+    {
+      "identity": "e8b9a0b5b89f23a2db184d60821bb745a9d0b176fc0e0ed2a2ebfec0bb730254",
+      "locator": [
+        "tiewtrade-sealing-key",
+        "979ae8aab99847cc58fa1516ddd8a32850e008b6",
+        ".github/workflows/ci.yml",
+        "192",
+        "192"
+      ]
+    },
+    {
+      "identity": "7153981cf1d231cf59d750849cc73c2e455cdc8aed3e0f0306c852b3df74a32b",
+      "locator": [
+        "tiewtrade-sealing-key",
+        "979ae8aab99847cc58fa1516ddd8a32850e008b6",
+        "compose.yaml",
+        "58",
+        "58"
+      ]
+    },
+    {
+      "identity": "eb4c622652e2dd7538748e2ca2f7619f827416f41b906d6b636eed81b77d7509",
+      "locator": [
+        "generic-api-key",
+        "c68795b4369a05b82c8a0f72f4d099ca22c40f31",
+        "backend/tests/venues/binance_th/test_failures.py",
+        "42",
+        "42"
+      ]
+    },
+    {
+      "identity": "63c84a7a8017bbbf1b87c322f650bcc19c4a096c459b115e9c45ef7fe0d53f24",
+      "locator": [
+        "tiewtrade-sealing-key",
+        "7efbbfbe3a5d14c2db43e10463961a342ca26416",
+        "README.md",
+        "77",
+        "77"
+      ]
+    },
+    {
+      "identity": "7fcb0fab389604f02fdaf505450bd96efa5f39b41ee12cbb1ab99abff2e157cc",
+      "locator": [
+        "tiewtrade-sealing-key",
+        "a08c36dce9ffaf9309e81e1f5a6f8758477c602f",
+        "compose.yaml",
+        "103",
+        "103"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+title = "TiewTrade security CI — explicit rules, no project suppressions"
+
+[extend]
+useDefault = true
+
+[[rules]]
+id = "tiewtrade-sealing-key"
+description = "Versioned application sealing material"
+regex = '''(?i)TIEWTRADE_SEALING_KEY_[A-Z_]+[\s"':=]+[0-9]+:([A-Za-z0-9+/]{40,}={0,2})'''
+secretGroup = 1
+keywords = ["tiewtrade_sealing_key"]
+
+[[rules]]
+id = "tiewtrade-venue-credential"
+description = "Venue credentials assigned with explicit key/secret context"
+regex = '''(?i)(?:binance|venue)[_\- ]*(?:api[_\- ]*)?(?:key|secret)[\s"':=]+([A-Za-z0-9]{32,128})'''
+secretGroup = 1
+keywords = ["binance", "venue"]

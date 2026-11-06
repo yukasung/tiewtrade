@@ -1,0 +1,15 @@
+{
+  "first_current_candidate_run_created_at": "2026-11-06T02:08:27Z",
+  "last_fixed_ci_completed_at": "2026-11-06T03:12:41+00:00",
+  "remote_elapsed_minutes": 64.2,
+  "initial_estimate_minutes": [
+    35,
+    55
+  ],
+  "revised_estimate_minutes": [
+    60,
+    75
+  ],
+  "cause_of_revision": "Local CodeQL disk space/Docker unavailable; hosted retained-finding controls and final candidate CI added.",
+  "excludes_owner_billing_wait_after_checkpoint": true
+}

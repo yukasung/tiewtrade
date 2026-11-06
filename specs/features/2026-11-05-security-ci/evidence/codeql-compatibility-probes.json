@@ -1,0 +1,127 @@
+{
+  "tool": "CodeQL 2.27.4",
+  "platform": "Linux amd64, locally emulated; temporary synthetic source only",
+  "flags": [
+    "--sarif-group-rules-by-pack",
+    "--sublanguage-file-coverage",
+    "--no-sarif-include-diagnostics"
+  ],
+  "results": [
+    {
+      "fixture": "python",
+      "language": "python",
+      "files": 2,
+      "counts": {
+        "critical": 1,
+        "high": 0,
+        "low": 0,
+        "medium": 0,
+        "none": 0,
+        "unknown": 0,
+        "excepted": 0,
+        "blocked": 1,
+        "needs_triage": 0
+      },
+      "rule_ids": [
+        "py/code-injection"
+      ]
+    },
+    {
+      "fixture": "javascript",
+      "language": "javascript-typescript",
+      "files": 2,
+      "counts": {
+        "critical": 1,
+        "high": 0,
+        "low": 0,
+        "medium": 0,
+        "none": 0,
+        "unknown": 0,
+        "excepted": 0,
+        "blocked": 1,
+        "needs_triage": 0
+      },
+      "rule_ids": [
+        "js/code-injection"
+      ]
+    },
+    {
+      "fixture": "actions",
+      "language": "actions",
+      "files": 1,
+      "counts": {
+        "critical": 0,
+        "high": 0,
+        "low": 0,
+        "medium": 1,
+        "none": 0,
+        "unknown": 0,
+        "excepted": 0,
+        "blocked": 0,
+        "needs_triage": 0
+      },
+      "rule_ids": [
+        "actions/code-injection/medium"
+      ]
+    },
+    {
+      "fixture": "python-safe",
+      "language": "python",
+      "files": 2,
+      "counts": {
+        "critical": 0,
+        "high": 0,
+        "low": 0,
+        "medium": 0,
+        "none": 0,
+        "unknown": 0,
+        "excepted": 0,
+        "blocked": 0,
+        "needs_triage": 0
+      },
+      "rule_ids": []
+    },
+    {
+      "fixture": "javascript-safe",
+      "language": "javascript-typescript",
+      "files": 2,
+      "counts": {
+        "critical": 0,
+        "high": 0,
+        "low": 0,
+        "medium": 0,
+        "none": 0,
+        "unknown": 0,
+        "excepted": 0,
+        "blocked": 0,
+        "needs_triage": 0
+      },
+      "rule_ids": []
+    },
+    {
+      "fixture": "actions-fixed",
+      "language": "actions",
+      "files": 1,
+      "counts": {
+        "critical": 0,
+        "high": 0,
+        "low": 0,
+        "medium": 0,
+        "none": 0,
+        "unknown": 0,
+        "excepted": 0,
+        "blocked": 0,
+        "needs_triage": 0
+      },
+      "rule_ids": []
+    }
+  ],
+  "pending": [],
+  "no_raw_sarif_uploaded": true,
+  "notes": [
+    "Python/JS unsafe eval fixtures are Critical and blocked.",
+    "First eval-free reflected-input counterparts still produced High XSS and were rejected.",
+    "Final jsonify/res.json counterparts have zero findings; all three safe language counterparts pass structural coverage.",
+    "Initial safe-source extraction in plain Ubuntu failed because Python was absent; rerun in disposable python:3.12-slim succeeded. No application code changed or executed."
+  ]
+}

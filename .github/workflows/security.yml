@@ -1,0 +1,199 @@
+name: Security
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  schedule:
+    - cron: '17 3 * * *'
+  workflow_dispatch:
+    inputs:
+      scan_all_refs:
+        description: Scan all fetched origin history for initial onboarding
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: security-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  policy-tests:
+    name: Security / policy tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: '3.12'
+      - name: Policy and failure-path tests
+        run: python -m unittest discover -s tools/security/tests -v
+      - name: Install pinned workflow validator
+        run: python -m tools.security.cli install --tool actionlint --directory "$RUNNER_TEMP/security-tools"
+      - name: Validate security workflow
+        run: '"$RUNNER_TEMP/security-tools/actionlint" .github/workflows/security.yml'
+
+  secrets:
+    name: Security / secrets
+    permissions:
+      contents: read
+      pull-requests: read
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: '3.12'
+      - name: Install pinned secret scanner
+        run: python -m tools.security.cli install --tool gitleaks --directory "$RUNNER_TEMP/security-tools"
+      - name: Scan candidate history and tracked tree
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ALL_REFS: ${{ inputs.scan_all_refs || false }}
+        shell: bash
+        run: |
+          args=()
+          if [ "$ALL_REFS" = true ]; then
+            args+=(--all-refs)
+          fi
+          python -m tools.security.cli secrets --binary "$RUNNER_TEMP/security-tools/gitleaks" \
+            --directory "$RUNNER_TEMP/security-manifests" "${args[@]}"
+      - name: Retain only safe manifest
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: security-manifest-secrets-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/security-manifests/secrets.json
+          retention-days: 1
+          if-no-files-found: ignore
+
+  dependencies:
+    name: Security / dependencies
+    permissions:
+      contents: read
+      pull-requests: read
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 2
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: '3.12'
+      - name: Install pinned dependency scanner
+        run: python -m tools.security.cli install --tool osv --directory "$RUNNER_TEMP/security-tools"
+      - name: Scan complete candidate lockfiles
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python -m tools.security.cli dependencies --binary "$RUNNER_TEMP/security-tools/osv" \
+            --directory "$RUNNER_TEMP/security-manifests"
+      - name: Retain only safe manifest
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: security-manifest-dependencies-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/security-manifests/dependencies.json
+          retention-days: 1
+          if-no-files-found: ignore
+
+  codeql:
+    name: Security / CodeQL (${{ matrix.language }})
+    permissions:
+      contents: read
+      pull-requests: read
+    env:
+      # These overrides are supported by the pinned action's feature-flags.ts.
+      # Full candidate analysis must include unchanged vulnerable code.
+      CODEQL_ACTION_DIFF_INFORMED_QUERIES: 'false'
+      CODEQL_ACTION_OVERLAY_ANALYSIS: 'false'
+      CODEQL_ACTION_FILE_COVERAGE_ON_PRS: 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [python, javascript-typescript, actions]
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 2
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: '3.12'
+      - name: Verify candidate identity
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python -m tools.security.cli identity --directory "$RUNNER_TEMP/security"
+      - name: Download and verify pinned CodeQL bundle
+        run: python -m tools.security.cli install --tool codeql --directory "$RUNNER_TEMP/security-tools"
+      - name: Initialize full candidate analysis
+        uses: github/codeql-action/init@33d7b85da1a04171e211befe2c739303b9a4c066 # v4
+        with:
+          tools: ${{ runner.temp }}/security-tools/codeql.tar.gz
+          languages: ${{ matrix.language }}
+          build-mode: none
+          config-file: .github/security/codeql-config.yml
+          trap-caching: false
+          db-location: ${{ runner.temp }}/security-databases
+      - name: Analyze without publishing raw source reports
+        uses: github/codeql-action/analyze@33d7b85da1a04171e211befe2c739303b9a4c066 # v4
+        with:
+          output: ${{ runner.temp }}/security-sarif
+          upload: never
+          upload-database: false
+      - name: Evaluate complete SARIF against security policy
+        env:
+          GH_TOKEN: ${{ github.token }}
+          LANGUAGE: ${{ matrix.language }}
+        run: python -m tools.security.cli sarif --language "$LANGUAGE" --directory "$RUNNER_TEMP/security-sarif"
+      - name: Retain only safe manifest
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: security-manifest-codeql-${{ matrix.language }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/security-sarif/codeql-${{ matrix.language }}.json
+          retention-days: 1
+          if-no-files-found: ignore
+
+  gate:
+    name: Security / gate
+    permissions:
+      contents: read
+      pull-requests: read
+    if: always()
+    needs: [policy-tests, secrets, dependencies, codeql]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 2
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: '3.12'
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          pattern: security-manifest-*-${{ github.run_attempt }}
+          merge-multiple: true
+          path: ${{ runner.temp }}/security-manifests
+      - name: Require complete successful current-candidate results
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SECURITY_JOB_RESULTS: ${{ toJSON(needs) }}
+        run: python -m tools.security.cli gate --directory "$RUNNER_TEMP/security-manifests"

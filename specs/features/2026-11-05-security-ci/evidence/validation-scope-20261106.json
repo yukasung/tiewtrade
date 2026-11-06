@@ -1,0 +1,15 @@
+{
+  "feature_head": "34c146ab4987478ae545714dc8026a7c670d5b86",
+  "validation_head": "5054226a174b78eced8c5b3f76d9e2d2e983439a",
+  "changed_paths": [
+    ".github/workflows/security.yml",
+    "validation/security/entry.js",
+    "validation/security/entry.py",
+    "validation/security/package.json",
+    "validation/security/probe_guard.py",
+    "validation/security/retention_probe.py",
+    "validation/security/vulnerable.py"
+  ],
+  "policy_helpers_pins_exceptions_and_application_locks_identical": true,
+  "fixtures_merged": false
+}
