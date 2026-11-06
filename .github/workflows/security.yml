@@ -173,6 +173,9 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           LANGUAGE: ${{ matrix.language }}
         run: python -m tools.security.cli sarif --language "$LANGUAGE" --directory "$RUNNER_TEMP/security-sarif"
+      - name: Prove retained findings and safe repairs on disposable fixtures
+        if: matrix.language == 'python'
+        run: python -m validation.security.retention_probe
       - name: Check inert marker fixtures after scans
         if: always()
         run: python validation/security/probe_guard.py
