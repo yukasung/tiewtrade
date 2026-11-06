@@ -214,23 +214,20 @@ domain ของเงินที่ปฏิเสธค่าที่เก�
 ## ชุดที่ 1 — ฐานราก
 
 F-01 follow-up: [Security CI](features/2026-11-05-security-ci/requirements.md)
-**Feature validation passed — Owner authorized merge, final candidate CI pending (2026-11-06)** — branch
-`feature/security-ci-hardening`, [PR #48](https://github.com/yukasung/tiewtrade/pull/48);
-head 34c146a/base 98ff2f8. V-01..18 ครบจาก review/refactor, real scanners/required CI,
-activation, negative/fixed/retained-finding/marker proofs และ owner zero-budget readback.
-เจ้าของสั่ง merge PR #48 แล้ว; รวม closing evidence และตรวจ candidate/protections/required CI ของ SHA สุดท้ายก่อน merge.
-Actual fork Not Run ตามวิธีตรวจทดแทนที่อนุมัติ; ต้องตรวจก่อนรับ merge ของ fork PR แรก.
-Native template alerts รวม 5 High อยู่นอก app inventory และคงเปิดไว้สำหรับงานแยก.
-V-19 Release หลัง merge Not Run — Pending Full Validation; ยังไม่ Completed.
-หลักฐานปัจจุบันอยู่ [rollout](features/2026-11-05-security-ci/evidence/rollout-20261106.md)
-และ [billing verification](features/2026-11-05-security-ci/evidence/billing-budget-verification-20261106.md).
-ดู [validation](features/2026-11-05-security-ci/validation.md) และ
-[หลักฐาน](features/2026-11-05-security-ci/evidence/feature-candidate.md).
-แก้ High/Medium และ refactor ที่อนุญาตแล้ว; validation ในเครื่องผ่าน.
-
-
-Historical integration checkpoint: main a3a8652 / dependency PR #47 included; dependency blockers fixed.
-The former pending CodeQL/rejection/settings checks are closed by the current rollout checkpoint above.
+**Completed (2026-11-06)** — [PR #48](https://github.com/yukasung/tiewtrade/pull/48)
+squash merge เป็น `74ca1f4bc8118f119d9bdd96381c061b961650ee` ตามคำสั่งเจ้าของ.
+V-01..18 ผ่านบน final candidate 9286d5f/base 98ff2f8 รวม review/refactor, pinned real
+scanners, original required CI, native/required gate activation, exact approved exceptions,
+negative/fixed/retained-finding/marker proofs และ owner zero-budget readback.
+V-19 ผ่าน: [post-merge CI](https://github.com/yukasung/tiewtrade/actions/runs/42160689488) 6/6,
+[push Security](https://github.com/yukasung/tiewtrade/actions/runs/42160689507) 7/7 และ
+[main dispatch](https://github.com/yukasung/tiewtrade/actions/runs/42161218096) 7/7;
+actual/tested tree ตรงกัน, native settings/protections readback ผ่าน, main unlocked.
+Actual fork Not Run ตามวิธีตรวจทดแทนที่อนุมัติ ต้องตรวจก่อนรับ merge ของ fork PR แรก;
+reference template 5 High native alert records คงเปิดไว้ใน scope งานแยก.
+หลักฐาน [post-merge checkpoint](features/2026-11-05-security-ci/evidence/post-merge-20261106.md)
+และ [validation](features/2026-11-05-security-ci/validation.md). ไม่มีงานต่อในขอบเขต PR #48;
+Pending Full Validation ของ feature อื่นคงเดิม ไม่ใช้ผลนี้รับรอง app release/Live Trading.
 
 F-01 follow-up: [Security dependency remediation](features/2026-11-05-security-dependency-remediation/requirements.md)
 **Completed (2026-11-05)** — certifi 2026.7.22 → 2026.10.18 และ
@@ -240,7 +237,21 @@ requirements/plan/validation Approved; เปลี่ยนเฉพาะส�
 OSV ไม่มี High/Critical/Unknown และมี Medium 4 records.
 [PR #47](https://github.com/yukasung/tiewtrade/pull/47) merge ที่ a3a8652;
 [post-merge CI](https://github.com/yukasung/tiewtrade/actions/runs/42050896249) ผ่าน 6/6; DV-10 Passed.
-ขั้นถัดไปส่งต่อ Security CI integration ซึ่งยังต้องตรวจและเปิดใช้ gates ตามงานเดิม.
+Security CI integration ปิดแล้วตาม checkpoint ของ PR #48 ข้างบน; ผล remediation เดิมยัง valid.
+
+F-01 follow-up: [Reference template dependency remediation](features/2026-11-06-security-reference-dependency-remediation/requirements.md)
+**In Progress — code review APPROVED; publication/required CI pending (2026-11-06)** — requirements/plan/validation และ
+scope amendment NC-SEC-REF-01 Approved; เปลี่ยน template lockfile ห้า entries:
+Vite 8.2.4, source-map-js 1.2.2, js-yaml 4.3.2, brace-expansion 5.0.11, zod 4.6.6.
+Full OSV coverage template 373 occurrences/372 unique + backend 54; High 8 → 0,
+Critical/unknown 0, Medium 3 คงตามจริง; clean install/npm ls/build/caller probes 10
+และ browser dev/preview desktop/mobile 20/20 ผ่าน local. Application UI/dependencies,
+permanent CI scope/policy เดิม; ไม่เปลี่ยน source/trading behavior.
+[หลักฐาน](features/2026-11-06-security-reference-dependency-remediation/evidence/feature-candidate.md).
+Branch `feature/security-reference-dependency-remediation`; ยังไม่ commit/push/PR.
+[Code review APPROVED](features/2026-11-06-security-reference-dependency-remediation/evidence/code-review.md);
+เจ้าของสั่ง commit/push/open PR แล้ว; required CI ยัง Not Run, RV-10 Pending Full Validation
+ที่ post-merge checkpoint. ยังไม่ Completed/พร้อม merge.
 
 F-01 follow-up: [Self-hosted CI / ลดรอบซ้ำ](features/2026-10-23-self-hosted-ci/requirements.md)
 **Retired / ไม่เปิดใช้ self-hosted CI (2026-10-24)** — เจ้าของเปลี่ยน repository เป็น Public

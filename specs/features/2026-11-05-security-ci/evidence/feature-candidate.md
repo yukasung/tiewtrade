@@ -1,5 +1,11 @@
 # Security CI — Implementation evidence
 
+Final checkpoint (2026-11-06): PR #48 merged as 74ca1f4; V-19 passed on that merge
+SHA with post-merge CI/security and main dispatch. See post-merge-20261106.md/.json.
+All earlier pending statements below are historical, superseded for Security CI only.
+Project status is recorded in specs/roadmap.md.
+
+
 Latest owner evidence (2026-11-06): V-01 closed using the observed zero budgets and
 Usage blocked state plus bounded storage evidence. V-01..18 passed for unchanged
 head 34c146a/base 98ff2f8. See billing-budget-verification-20261106.md. Await owner

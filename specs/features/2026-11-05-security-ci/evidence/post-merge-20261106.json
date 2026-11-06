@@ -1,0 +1,595 @@
+{
+  "verified_at_utc": "2026-11-06T04:31:21.314681+00:00",
+  "pr": 48,
+  "merged": true,
+  "merge_sha": "74ca1f4bc8118f119d9bdd96381c061b961650ee",
+  "head_before_merge": "9286d5f322a3abe75dc45ea1fa58f5ebd940e23f",
+  "parent": "98ff2f840fe08dc46ab5eb9976f17bdf32b062b1",
+  "tested_tree": "a875faf871b63c8f8f45fe2fc0781efecd5e1877",
+  "actual_tree": "a875faf871b63c8f8f45fe2fc0781efecd5e1877",
+  "v19": "Passed",
+  "runs": [
+    {
+      "id": 42160689488,
+      "name": "CI",
+      "event": "push",
+      "head_sha": "74ca1f4bc8118f119d9bdd96381c061b961650ee",
+      "url": "https://github.com/yukasung/tiewtrade/actions/runs/42160689488",
+      "created_at": "2026-11-06T04:08:21Z",
+      "updated_at": "2026-11-06T04:28:17Z",
+      "run_attempt": 1,
+      "conclusion": "success",
+      "jobs": [
+        {
+          "id": 127705367252,
+          "name": "container \u2014 \u0e17\u0e31\u0e49\u0e07\u0e2a\u0e2d\u0e07\u0e1d\u0e31\u0e48\u0e07\u0e23\u0e31\u0e19\u0e43\u0e19 container \u0e44\u0e14\u0e49",
+          "conclusion": "success"
+        },
+        {
+          "id": 127705367499,
+          "name": "\u0e04\u0e48\u0e32\u0e01\u0e25\u0e32\u0e07 \u2014 \u0e40\u0e27\u0e2d\u0e23\u0e4c\u0e0a\u0e31\u0e19 PostgreSQL",
+          "conclusion": "success"
+        },
+        {
+          "id": 127705367527,
+          "name": "\u0e2a\u0e31\u0e0d\u0e0d\u0e32 API \u2014 \u0e0a\u0e19\u0e34\u0e14\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25\u0e2a\u0e2d\u0e07\u0e1d\u0e31\u0e48\u0e07\u0e15\u0e49\u0e2d\u0e07\u0e15\u0e23\u0e07...",
+          "conclusion": "success"
+        },
+        {
+          "id": 127705367638,
+          "name": "\u0e2b\u0e19\u0e49\u0e32\u0e1a\u0e49\u0e32\u0e19 \u2014 lint, types, tests",
+          "conclusion": "success"
+        },
+        {
+          "id": 127705457233,
+          "name": "e2e \u2014 \u0e40\u0e1a\u0e23\u0e32\u0e27\u0e4c\u0e40\u0e0b\u0e2d\u0e23\u0e4c\u0e08\u0e23\u0e34\u0e07\u0e40\u0e2b\u0e47\u0e19\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25\u0e08\u0e32\u0e01 API ...",
+          "conclusion": "success"
+        },
+        {
+          "id": 127705457261,
+          "name": "\u0e2b\u0e25\u0e31\u0e07\u0e1a\u0e49\u0e32\u0e19 \u2014 lint, types, imports, tests",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "id": 42160689507,
+      "name": "Security",
+      "event": "push",
+      "head_sha": "74ca1f4bc8118f119d9bdd96381c061b961650ee",
+      "url": "https://github.com/yukasung/tiewtrade/actions/runs/42160689507",
+      "created_at": "2026-11-06T04:08:21Z",
+      "updated_at": "2026-11-06T04:11:46Z",
+      "run_attempt": 1,
+      "conclusion": "success",
+      "jobs": [
+        {
+          "id": 127705368533,
+          "name": "Security / dependencies",
+          "conclusion": "success"
+        },
+        {
+          "id": 127705368624,
+          "name": "Security / CodeQL (python)",
+          "conclusion": "success"
+        },
+        {
+          "id": 127705368663,
+          "name": "Security / policy tests",
+          "conclusion": "success"
+        },
+        {
+          "id": 127705368671,
+          "name": "Security / CodeQL (javascript-typescript)",
+          "conclusion": "success"
+        },
+        {
+          "id": 127705368695,
+          "name": "Security / secrets",
+          "conclusion": "success"
+        },
+        {
+          "id": 127705368706,
+          "name": "Security / CodeQL (actions)",
+          "conclusion": "success"
+        },
+        {
+          "id": 127706399537,
+          "name": "Security / gate",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "id": 42161218096,
+      "name": "Security",
+      "event": "workflow_dispatch",
+      "head_sha": "74ca1f4bc8118f119d9bdd96381c061b961650ee",
+      "url": "https://github.com/yukasung/tiewtrade/actions/runs/42161218096",
+      "created_at": "2026-11-06T04:13:30Z",
+      "updated_at": "2026-11-06T04:17:44Z",
+      "run_attempt": 1,
+      "conclusion": "success",
+      "jobs": [
+        {
+          "id": 127707092567,
+          "name": "Security / policy tests",
+          "conclusion": "success"
+        },
+        {
+          "id": 127707092800,
+          "name": "Security / CodeQL (python)",
+          "conclusion": "success"
+        },
+        {
+          "id": 127707092845,
+          "name": "Security / secrets",
+          "conclusion": "success"
+        },
+        {
+          "id": 127707092925,
+          "name": "Security / CodeQL (actions)",
+          "conclusion": "success"
+        },
+        {
+          "id": 127707092931,
+          "name": "Security / CodeQL (javascript-typescript)",
+          "conclusion": "success"
+        },
+        {
+          "id": 127707092935,
+          "name": "Security / dependencies",
+          "conclusion": "success"
+        },
+        {
+          "id": 127708387385,
+          "name": "Security / gate",
+          "conclusion": "success"
+        }
+      ]
+    }
+  ],
+  "settings_readback": {
+    "checked_at_utc": "2026-11-06T04:12:32.906524+00:00",
+    "merge_sha": "74ca1f4bc8118f119d9bdd96381c061b961650ee",
+    "security_and_analysis": {
+      "secret_scanning": {
+        "status": "enabled"
+      },
+      "secret_scanning_push_protection": {
+        "status": "enabled"
+      },
+      "dependabot_security_updates": {
+        "status": "enabled"
+      },
+      "secret_scanning_non_provider_patterns": {
+        "status": "disabled"
+      },
+      "secret_scanning_validity_checks": {
+        "status": "disabled"
+      }
+    },
+    "vulnerability_alerts_enabled": true,
+    "dependabot_updates": {
+      "enabled": true,
+      "paused": false
+    },
+    "codeql_default_setup_state": "not-configured",
+    "workflow_permissions": {
+      "default_workflow_permissions": "read",
+      "can_approve_pull_request_reviews": false
+    },
+    "protection": {
+      "url": "https://api.github.com/repos/yukasung/tiewtrade/branches/main/protection",
+      "required_status_checks": {
+        "url": "https://api.github.com/repos/yukasung/tiewtrade/branches/main/protection/required_status_checks",
+        "strict": true,
+        "contexts": [
+          "\u0e2b\u0e25\u0e31\u0e07\u0e1a\u0e49\u0e32\u0e19 \u2014 lint, types, imports, tests",
+          "e2e \u2014 \u0e40\u0e1a\u0e23\u0e32\u0e27\u0e4c\u0e40\u0e0b\u0e2d\u0e23\u0e4c\u0e08\u0e23\u0e34\u0e07\u0e40\u0e2b\u0e47\u0e19\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25\u0e08\u0e32\u0e01 API ...",
+          "\u0e2b\u0e19\u0e49\u0e32\u0e1a\u0e49\u0e32\u0e19 \u2014 lint, types, tests",
+          "container \u2014 \u0e17\u0e31\u0e49\u0e07\u0e2a\u0e2d\u0e07\u0e1d\u0e31\u0e48\u0e07\u0e23\u0e31\u0e19\u0e43\u0e19 container \u0e44\u0e14\u0e49",
+          "\u0e04\u0e48\u0e32\u0e01\u0e25\u0e32\u0e07 \u2014 \u0e40\u0e27\u0e2d\u0e23\u0e4c\u0e0a\u0e31\u0e19 PostgreSQL",
+          "\u0e2a\u0e31\u0e0d\u0e0d\u0e32 API \u2014 \u0e0a\u0e19\u0e34\u0e14\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25\u0e2a\u0e2d\u0e07\u0e1d\u0e31\u0e48\u0e07\u0e15\u0e49\u0e2d\u0e07\u0e15\u0e23\u0e07...",
+          "Security / gate"
+        ],
+        "contexts_url": "https://api.github.com/repos/yukasung/tiewtrade/branches/main/protection/required_status_checks/contexts",
+        "checks": [
+          {
+            "context": "\u0e2b\u0e25\u0e31\u0e07\u0e1a\u0e49\u0e32\u0e19 \u2014 lint, types, imports, tests",
+            "app_id": 15368
+          },
+          {
+            "context": "e2e \u2014 \u0e40\u0e1a\u0e23\u0e32\u0e27\u0e4c\u0e40\u0e0b\u0e2d\u0e23\u0e4c\u0e08\u0e23\u0e34\u0e07\u0e40\u0e2b\u0e47\u0e19\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25\u0e08\u0e32\u0e01 API ...",
+            "app_id": 15368
+          },
+          {
+            "context": "\u0e2b\u0e19\u0e49\u0e32\u0e1a\u0e49\u0e32\u0e19 \u2014 lint, types, tests",
+            "app_id": 15368
+          },
+          {
+            "context": "container \u2014 \u0e17\u0e31\u0e49\u0e07\u0e2a\u0e2d\u0e07\u0e1d\u0e31\u0e48\u0e07\u0e23\u0e31\u0e19\u0e43\u0e19 container \u0e44\u0e14\u0e49",
+            "app_id": 15368
+          },
+          {
+            "context": "\u0e04\u0e48\u0e32\u0e01\u0e25\u0e32\u0e07 \u2014 \u0e40\u0e27\u0e2d\u0e23\u0e4c\u0e0a\u0e31\u0e19 PostgreSQL",
+            "app_id": 15368
+          },
+          {
+            "context": "\u0e2a\u0e31\u0e0d\u0e0d\u0e32 API \u2014 \u0e0a\u0e19\u0e34\u0e14\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25\u0e2a\u0e2d\u0e07\u0e1d\u0e31\u0e48\u0e07\u0e15\u0e49\u0e2d\u0e07\u0e15\u0e23\u0e07...",
+            "app_id": 15368
+          },
+          {
+            "context": "Security / gate",
+            "app_id": 15368
+          }
+        ]
+      },
+      "required_signatures": {
+        "url": "https://api.github.com/repos/yukasung/tiewtrade/branches/main/protection/required_signatures",
+        "enabled": false
+      },
+      "enforce_admins": {
+        "url": "https://api.github.com/repos/yukasung/tiewtrade/branches/main/protection/enforce_admins",
+        "enabled": true
+      },
+      "required_linear_history": {
+        "enabled": false
+      },
+      "allow_force_pushes": {
+        "enabled": false
+      },
+      "allow_deletions": {
+        "enabled": false
+      },
+      "block_creations": {
+        "enabled": false
+      },
+      "required_conversation_resolution": {
+        "enabled": false
+      },
+      "lock_branch": {
+        "enabled": false
+      },
+      "allow_fork_syncing": {
+        "enabled": false
+      }
+    },
+    "open_native_secret_alerts": 0,
+    "dependabot_scope_counts": [
+      {
+        "manifest": "references/admin-template/package-lock.json",
+        "severity": "medium",
+        "count": 8
+      },
+      {
+        "manifest": "references/admin-template/package-lock.json",
+        "severity": "low",
+        "count": 1
+      },
+      {
+        "manifest": "references/admin-template/package-lock.json",
+        "severity": "high",
+        "count": 5
+      },
+      {
+        "manifest": "frontend/package-lock.json",
+        "severity": "medium",
+        "count": 4
+      }
+    ]
+  },
+  "final_settings_unchanged": true,
+  "manifests": [
+    {
+      "event": "push",
+      "run": 42160689507,
+      "manifests": [
+        {
+          "candidate": {
+            "attempt": "1",
+            "base": "74ca1f4bc8118f119d9bdd96381c061b961650ee",
+            "commit": "74ca1f4bc8118f119d9bdd96381c061b961650ee",
+            "head": "74ca1f4bc8118f119d9bdd96381c061b961650ee",
+            "run": "42160689507"
+          },
+          "component": "codeql-javascript-typescript",
+          "configuration": "fe5e8d743e9e67e350c8969acd9292e24a9165e57a65bd5c90a48633d91419ad",
+          "counts": {
+            "blocked": 0,
+            "critical": 0,
+            "excepted": 0,
+            "high": 0,
+            "low": 0,
+            "medium": 0,
+            "needs_triage": 0,
+            "none": 0,
+            "unknown": 0
+          },
+          "coverage": 176,
+          "schema": 1,
+          "verdict": "pass"
+        },
+        {
+          "candidate": {
+            "attempt": "1",
+            "base": "74ca1f4bc8118f119d9bdd96381c061b961650ee",
+            "commit": "74ca1f4bc8118f119d9bdd96381c061b961650ee",
+            "head": "74ca1f4bc8118f119d9bdd96381c061b961650ee",
+            "run": "42160689507"
+          },
+          "component": "codeql-python",
+          "configuration": "fe5e8d743e9e67e350c8969acd9292e24a9165e57a65bd5c90a48633d91419ad",
+          "counts": {
+            "blocked": 0,
+            "critical": 0,
+            "excepted": 0,
+            "high": 0,
+            "low": 0,
+            "medium": 0,
+            "needs_triage": 0,
+            "none": 0,
+            "unknown": 0
+          },
+          "coverage": 855,
+          "schema": 1,
+          "verdict": "pass"
+        },
+        {
+          "candidate": {
+            "attempt": "1",
+            "base": "74ca1f4bc8118f119d9bdd96381c061b961650ee",
+            "commit": "74ca1f4bc8118f119d9bdd96381c061b961650ee",
+            "head": "74ca1f4bc8118f119d9bdd96381c061b961650ee",
+            "run": "42160689507"
+          },
+          "component": "secrets",
+          "configuration": "fe5e8d743e9e67e350c8969acd9292e24a9165e57a65bd5c90a48633d91419ad",
+          "counts": {
+            "blocked": 0,
+            "critical": 0,
+            "excepted": 92,
+            "high": 0,
+            "low": 0,
+            "medium": 0,
+            "needs_triage": 0,
+            "none": 0,
+            "unknown": 0
+          },
+          "coverage": 231,
+          "schema": 1,
+          "verdict": "pass"
+        },
+        {
+          "candidate": {
+            "attempt": "1",
+            "base": "74ca1f4bc8118f119d9bdd96381c061b961650ee",
+            "commit": "74ca1f4bc8118f119d9bdd96381c061b961650ee",
+            "head": "74ca1f4bc8118f119d9bdd96381c061b961650ee",
+            "run": "42160689507"
+          },
+          "component": "codeql-actions",
+          "configuration": "fe5e8d743e9e67e350c8969acd9292e24a9165e57a65bd5c90a48633d91419ad",
+          "counts": {
+            "blocked": 0,
+            "critical": 0,
+            "excepted": 0,
+            "high": 0,
+            "low": 0,
+            "medium": 11,
+            "needs_triage": 0,
+            "none": 0,
+            "unknown": 0
+          },
+          "coverage": 3,
+          "schema": 1,
+          "verdict": "pass"
+        },
+        {
+          "candidate": {
+            "attempt": "1",
+            "base": "74ca1f4bc8118f119d9bdd96381c061b961650ee",
+            "commit": "74ca1f4bc8118f119d9bdd96381c061b961650ee",
+            "head": "74ca1f4bc8118f119d9bdd96381c061b961650ee",
+            "run": "42160689507"
+          },
+          "component": "dependencies",
+          "configuration": "fe5e8d743e9e67e350c8969acd9292e24a9165e57a65bd5c90a48633d91419ad",
+          "counts": {
+            "blocked": 0,
+            "critical": 0,
+            "excepted": 0,
+            "high": 0,
+            "low": 0,
+            "medium": 4,
+            "needs_triage": 0,
+            "none": 0,
+            "unknown": 0
+          },
+          "coverage": 464,
+          "schema": 1,
+          "verdict": "pass"
+        }
+      ]
+    },
+    {
+      "event": "workflow_dispatch",
+      "run": 42161218096,
+      "manifests": [
+        {
+          "candidate": {
+            "attempt": "1",
+            "base": "74ca1f4bc8118f119d9bdd96381c061b961650ee",
+            "commit": "74ca1f4bc8118f119d9bdd96381c061b961650ee",
+            "head": "74ca1f4bc8118f119d9bdd96381c061b961650ee",
+            "run": "42161218096"
+          },
+          "component": "codeql-javascript-typescript",
+          "configuration": "fe5e8d743e9e67e350c8969acd9292e24a9165e57a65bd5c90a48633d91419ad",
+          "counts": {
+            "blocked": 0,
+            "critical": 0,
+            "excepted": 0,
+            "high": 0,
+            "low": 0,
+            "medium": 0,
+            "needs_triage": 0,
+            "none": 0,
+            "unknown": 0
+          },
+          "coverage": 176,
+          "schema": 1,
+          "verdict": "pass"
+        },
+        {
+          "candidate": {
+            "attempt": "1",
+            "base": "74ca1f4bc8118f119d9bdd96381c061b961650ee",
+            "commit": "74ca1f4bc8118f119d9bdd96381c061b961650ee",
+            "head": "74ca1f4bc8118f119d9bdd96381c061b961650ee",
+            "run": "42161218096"
+          },
+          "component": "codeql-python",
+          "configuration": "fe5e8d743e9e67e350c8969acd9292e24a9165e57a65bd5c90a48633d91419ad",
+          "counts": {
+            "blocked": 0,
+            "critical": 0,
+            "excepted": 0,
+            "high": 0,
+            "low": 0,
+            "medium": 0,
+            "needs_triage": 0,
+            "none": 0,
+            "unknown": 0
+          },
+          "coverage": 855,
+          "schema": 1,
+          "verdict": "pass"
+        },
+        {
+          "candidate": {
+            "attempt": "1",
+            "base": "74ca1f4bc8118f119d9bdd96381c061b961650ee",
+            "commit": "74ca1f4bc8118f119d9bdd96381c061b961650ee",
+            "head": "74ca1f4bc8118f119d9bdd96381c061b961650ee",
+            "run": "42161218096"
+          },
+          "component": "secrets",
+          "configuration": "fe5e8d743e9e67e350c8969acd9292e24a9165e57a65bd5c90a48633d91419ad",
+          "counts": {
+            "blocked": 0,
+            "critical": 0,
+            "excepted": 92,
+            "high": 0,
+            "low": 0,
+            "medium": 0,
+            "needs_triage": 0,
+            "none": 0,
+            "unknown": 0
+          },
+          "coverage": 231,
+          "schema": 1,
+          "verdict": "pass"
+        },
+        {
+          "candidate": {
+            "attempt": "1",
+            "base": "74ca1f4bc8118f119d9bdd96381c061b961650ee",
+            "commit": "74ca1f4bc8118f119d9bdd96381c061b961650ee",
+            "head": "74ca1f4bc8118f119d9bdd96381c061b961650ee",
+            "run": "42161218096"
+          },
+          "component": "codeql-actions",
+          "configuration": "fe5e8d743e9e67e350c8969acd9292e24a9165e57a65bd5c90a48633d91419ad",
+          "counts": {
+            "blocked": 0,
+            "critical": 0,
+            "excepted": 0,
+            "high": 0,
+            "low": 0,
+            "medium": 11,
+            "needs_triage": 0,
+            "none": 0,
+            "unknown": 0
+          },
+          "coverage": 3,
+          "schema": 1,
+          "verdict": "pass"
+        },
+        {
+          "candidate": {
+            "attempt": "1",
+            "base": "74ca1f4bc8118f119d9bdd96381c061b961650ee",
+            "commit": "74ca1f4bc8118f119d9bdd96381c061b961650ee",
+            "head": "74ca1f4bc8118f119d9bdd96381c061b961650ee",
+            "run": "42161218096"
+          },
+          "component": "dependencies",
+          "configuration": "fe5e8d743e9e67e350c8969acd9292e24a9165e57a65bd5c90a48633d91419ad",
+          "counts": {
+            "blocked": 0,
+            "critical": 0,
+            "excepted": 0,
+            "high": 0,
+            "low": 0,
+            "medium": 4,
+            "needs_triage": 0,
+            "none": 0,
+            "unknown": 0
+          },
+          "coverage": 464,
+          "schema": 1,
+          "verdict": "pass"
+        }
+      ]
+    }
+  ],
+  "premerge_verification": {
+    "head": "9286d5f322a3abe75dc45ea1fa58f5ebd940e23f",
+    "base": "98ff2f840fe08dc46ab5eb9976f17bdf32b062b1",
+    "tested_merge": "bc92869807636e7027bfd0e1bd6019c4896ff1c3",
+    "tested_tree": "a875faf871b63c8f8f45fe2fc0781efecd5e1877",
+    "required_ci_passed": true,
+    "required_contexts": [
+      {
+        "context": "\u0e2b\u0e25\u0e31\u0e07\u0e1a\u0e49\u0e32\u0e19 \u2014 lint, types, imports, tests",
+        "app_id": 15368
+      },
+      {
+        "context": "e2e \u2014 \u0e40\u0e1a\u0e23\u0e32\u0e27\u0e4c\u0e40\u0e0b\u0e2d\u0e23\u0e4c\u0e08\u0e23\u0e34\u0e07\u0e40\u0e2b\u0e47\u0e19\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25\u0e08\u0e32\u0e01 API ...",
+        "app_id": 15368
+      },
+      {
+        "context": "\u0e2b\u0e19\u0e49\u0e32\u0e1a\u0e49\u0e32\u0e19 \u2014 lint, types, tests",
+        "app_id": 15368
+      },
+      {
+        "context": "container \u2014 \u0e17\u0e31\u0e49\u0e07\u0e2a\u0e2d\u0e07\u0e1d\u0e31\u0e48\u0e07\u0e23\u0e31\u0e19\u0e43\u0e19 container \u0e44\u0e14\u0e49",
+        "app_id": 15368
+      },
+      {
+        "context": "\u0e04\u0e48\u0e32\u0e01\u0e25\u0e32\u0e07 \u2014 \u0e40\u0e27\u0e2d\u0e23\u0e4c\u0e0a\u0e31\u0e19 PostgreSQL",
+        "app_id": 15368
+      },
+      {
+        "context": "\u0e2a\u0e31\u0e0d\u0e0d\u0e32 API \u2014 \u0e0a\u0e19\u0e34\u0e14\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25\u0e2a\u0e2d\u0e07\u0e1d\u0e31\u0e48\u0e07\u0e15\u0e49\u0e2d\u0e07\u0e15\u0e23\u0e07...",
+        "app_id": 15368
+      },
+      {
+        "context": "Security / gate",
+        "app_id": 15368
+      }
+    ],
+    "native_settings_verified": true
+  },
+  "remote_ci_elapsed_minutes": 42.5,
+  "estimate_minutes": [
+    40,
+    60
+  ],
+  "actual_fork_execution": "Not Run - owner-approved alternative; test before accepting first fork PR",
+  "remaining_risks": [
+    "5 High native alert records in references/admin-template outside approved application inventory",
+    "4 Medium dependency records and 11 Medium Actions findings reported under approved policy"
+  ]
+}

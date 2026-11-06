@@ -1,0 +1,169 @@
+{
+  "checked_date": "2026-11-06",
+  "stage": "requirements research only; not candidate scan or compatibility proof",
+  "base_sha": "74ca1f4bc8118f119d9bdd96381c061b961650ee",
+  "manifest": "references/admin-template/package.json",
+  "lockfile": "references/admin-template/package-lock.json",
+  "lockfile_version": 3,
+  "baseline_non_root_package_entries": 373,
+  "baseline_sha256": {
+    "references/admin-template/package-lock.json": "8a8c48ced334eaf5d6f06babca467c83b04cc242e37f4326aee7c20d61ea131b",
+    "references/admin-template/package.json": "8cb247c0202a7ce5aa47022022cbb0410390ce14b1d7714fe9ddcd969a058d87"
+  },
+  "targets": [
+    {
+      "name": "vite",
+      "baseline_instances": [
+        {
+          "path": "node_modules/vite",
+          "version": "8.2.2"
+        }
+      ],
+      "parents": [
+        {
+          "path": "<root>",
+          "version": "2.4.0",
+          "relationship": "devDependencies",
+          "range": "^8.2.2"
+        }
+      ],
+      "target": {
+        "version": "8.2.4",
+        "url": "https://registry.npmjs.org/vite/8.2.4",
+        "engines": {
+          "node": "^20.19.0 || >=22.12.0"
+        },
+        "dependencies": {
+          "postcss": "^8.5.26",
+          "rolldown": "~1.2.4",
+          "picomatch": "^4.0.5",
+          "tinyglobby": "^0.2.17",
+          "lightningcss": "^1.33.0"
+        }
+      }
+    },
+    {
+      "name": "source-map-js",
+      "baseline_instances": [
+        {
+          "path": "node_modules/source-map-js",
+          "version": "1.2.1"
+        }
+      ],
+      "parents": [
+        {
+          "path": "node_modules/@tailwindcss/node",
+          "version": "4.3.3",
+          "relationship": "dependencies",
+          "range": "^1.2.1"
+        },
+        {
+          "path": "node_modules/postcss",
+          "version": "8.5.28",
+          "relationship": "dependencies",
+          "range": "^1.2.1"
+        }
+      ],
+      "target": {
+        "version": "1.2.2",
+        "url": "https://registry.npmjs.org/source-map-js/1.2.2",
+        "engines": {
+          "node": ">=0.10.0"
+        },
+        "dependencies": {}
+      }
+    },
+    {
+      "name": "js-yaml",
+      "baseline_instances": [
+        {
+          "path": "node_modules/js-yaml",
+          "version": "4.1.1"
+        }
+      ],
+      "parents": [
+        {
+          "path": "node_modules/cosmiconfig",
+          "version": "8.3.6",
+          "relationship": "dependencies",
+          "range": "^4.1.0"
+        }
+      ],
+      "target": {
+        "version": "4.3.2",
+        "url": "https://registry.npmjs.org/js-yaml/4.3.2",
+        "engines": null,
+        "dependencies": {
+          "argparse": "^2.0.1"
+        }
+      }
+    }
+  ],
+  "high_alert_records": [
+    {
+      "number": 15,
+      "id": "GHSA-587h-7wmj-h5pm",
+      "severity": "high",
+      "url": "https://github.com/advisories/GHSA-587h-7wmj-h5pm",
+      "ranges": [
+        {
+          "name": "vite",
+          "vulnerable_version_range": ">= 8.2.0, <= 8.2.3",
+          "first_patched_version": "8.2.4"
+        }
+      ]
+    },
+    {
+      "number": 13,
+      "id": "GHSA-68fv-2mgg-jv7q",
+      "severity": "high",
+      "url": "https://github.com/advisories/GHSA-68fv-2mgg-jv7q",
+      "ranges": [
+        {
+          "name": "source-map-js",
+          "vulnerable_version_range": ">= 1.0.0, < 1.2.2",
+          "first_patched_version": "1.2.2"
+        }
+      ]
+    },
+    {
+      "number": 9,
+      "id": "GHSA-2883-xcg3-v3hh",
+      "severity": "high",
+      "url": "https://github.com/advisories/GHSA-2883-xcg3-v3hh",
+      "ranges": [
+        {
+          "name": "js-yaml",
+          "vulnerable_version_range": ">= 4.0.0, < 4.3.2",
+          "first_patched_version": "4.3.2"
+        }
+      ]
+    },
+    {
+      "number": 7,
+      "id": "GHSA-5p4m-2wfm-xmqj",
+      "severity": "high",
+      "url": "https://github.com/advisories/GHSA-5p4m-2wfm-xmqj",
+      "ranges": [
+        {
+          "name": "js-yaml",
+          "vulnerable_version_range": ">= 4.0.0, < 4.3.1",
+          "first_patched_version": "4.3.1"
+        }
+      ]
+    },
+    {
+      "number": 6,
+      "id": "GHSA-52cp-r559-cp3m",
+      "severity": "high",
+      "url": "https://github.com/advisories/GHSA-52cp-r559-cp3m",
+      "ranges": [
+        {
+          "name": "js-yaml",
+          "vulnerable_version_range": ">= 4.0.0, < 4.3.0",
+          "first_patched_version": "4.3.0"
+        }
+      ]
+    }
+  ]
+}
