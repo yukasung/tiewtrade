@@ -1,5 +1,5 @@
-from flask import Flask, request
+from flask import Flask, request, jsonify
 app = Flask(__name__)
 @app.route("/validation-only")
 def probe():
-    return str(eval(request.args["input"]))
+    return jsonify(value=request.args["input"])
