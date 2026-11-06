@@ -1,0 +1,8 @@
+{
+  "name": "security-nonexecution-probe",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "preinstall": "node entry.js lifecycle"
+  }
+}
