@@ -1,0 +1,30 @@
+{
+  "pr": 49,
+  "head": "5054226a174b78eced8c5b3f76d9e2d2e983439a",
+  "run": 42152916345,
+  "jobs": [
+    {
+      "job_id": 127680169312,
+      "markers_absent_count": 2
+    },
+    {
+      "job_id": 127680169389,
+      "markers_absent_count": 2
+    },
+    {
+      "job_id": 127680169571,
+      "markers_absent_count": 2
+    },
+    {
+      "job_id": 127680169768,
+      "markers_absent_count": 2
+    },
+    {
+      "job_id": 127680169790,
+      "markers_absent_count": 2
+    }
+  ],
+  "all_before_after_guards_passed": true,
+  "local_positive_controls": "See marker-probes-20261106.json",
+  "actual_fork_execution": "Not Run - owner-approved alternative"
+}

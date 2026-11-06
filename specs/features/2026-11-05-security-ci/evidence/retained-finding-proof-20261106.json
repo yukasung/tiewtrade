@@ -1,0 +1,149 @@
+{
+  "run": 42152916345,
+  "job": 127680169790,
+  "head": "5054226a174b78eced8c5b3f76d9e2d2e983439a",
+  "base": "98ff2f840fe08dc46ab5eb9976f17bdf32b062b1",
+  "passed": true,
+  "fresh_extraction_per_codeql_phase": true,
+  "rows": [
+    {
+      "changed_paths": [],
+      "commit": "befcac87cb63af203bfde0a89f85fe9e516a106a",
+      "counts": {
+        "blocked": 3,
+        "critical": 2,
+        "excepted": 0,
+        "high": 1,
+        "low": 1,
+        "medium": 6,
+        "needs_triage": 0,
+        "none": 0,
+        "unknown": 0
+      },
+      "coverage": 464,
+      "input_sha256": {
+        "backend/uv.lock": "5cf0ea9b9a0cf9fe9115e9368c7acbd10a1ec11d818635fec1e08f725886dce3",
+        "frontend/package-lock.json": "ad65775150661158b8aa31171fc01f374dbfbd885bf6ef903b88791b60b882c6"
+      },
+      "phase": "baseline",
+      "scanner": "osv"
+    },
+    {
+      "changed_paths": [
+        "README.md"
+      ],
+      "commit": "6d5983aa7295bf8773e51b3b1bef6d8237699f63",
+      "counts": {
+        "blocked": 3,
+        "critical": 2,
+        "excepted": 0,
+        "high": 1,
+        "low": 1,
+        "medium": 6,
+        "needs_triage": 0,
+        "none": 0,
+        "unknown": 0
+      },
+      "coverage": 464,
+      "input_sha256": {
+        "backend/uv.lock": "5cf0ea9b9a0cf9fe9115e9368c7acbd10a1ec11d818635fec1e08f725886dce3",
+        "frontend/package-lock.json": "ad65775150661158b8aa31171fc01f374dbfbd885bf6ef903b88791b60b882c6"
+      },
+      "phase": "unrelated",
+      "scanner": "osv"
+    },
+    {
+      "changed_paths": [
+        "backend/uv.lock",
+        "frontend/package-lock.json"
+      ],
+      "commit": "d780a75739d2aeb786f98aebf958e50a314bd191",
+      "counts": {
+        "blocked": 0,
+        "critical": 0,
+        "excepted": 0,
+        "high": 0,
+        "low": 0,
+        "medium": 4,
+        "needs_triage": 0,
+        "none": 0,
+        "unknown": 0
+      },
+      "coverage": 464,
+      "input_sha256": {
+        "backend/uv.lock": "f427025bd867333a3cd8628ef7e7c76309866b9fdaee3f968c77c404b074402b",
+        "frontend/package-lock.json": "7d0fb4ab31f0eece2d6fe8ef9e60ca96757c220a9b674e1162fd3c6a9965727b"
+      },
+      "phase": "fixed",
+      "scanner": "osv"
+    },
+    {
+      "changed_paths": [],
+      "commit": "de0811eb6eccecc701ae3abd5e1c8566d76f4736",
+      "counts": {
+        "blocked": 1,
+        "critical": 1,
+        "excepted": 0,
+        "high": 0,
+        "low": 0,
+        "medium": 0,
+        "needs_triage": 0,
+        "none": 0,
+        "unknown": 0
+      },
+      "coverage": 1,
+      "input_sha256": {
+        "probe.py": "a3202d0ada707fa3670adc193a0e4595fa9ad4127f7072d6b0f25bec4f2fecd6"
+      },
+      "phase": "baseline",
+      "scanner": "codeql"
+    },
+    {
+      "changed_paths": [
+        "README.md"
+      ],
+      "commit": "b0b622678d03e2a84f12e76e8e255216d8984fc3",
+      "counts": {
+        "blocked": 1,
+        "critical": 1,
+        "excepted": 0,
+        "high": 0,
+        "low": 0,
+        "medium": 0,
+        "needs_triage": 0,
+        "none": 0,
+        "unknown": 0
+      },
+      "coverage": 1,
+      "input_sha256": {
+        "probe.py": "a3202d0ada707fa3670adc193a0e4595fa9ad4127f7072d6b0f25bec4f2fecd6"
+      },
+      "phase": "unrelated",
+      "scanner": "codeql"
+    },
+    {
+      "changed_paths": [
+        "probe.py"
+      ],
+      "commit": "05b9542cbd88fdeaad5db8ff9bf2feae69bd0864",
+      "counts": {
+        "blocked": 0,
+        "critical": 0,
+        "excepted": 0,
+        "high": 0,
+        "low": 0,
+        "medium": 0,
+        "needs_triage": 0,
+        "none": 0,
+        "unknown": 0
+      },
+      "coverage": 1,
+      "input_sha256": {
+        "probe.py": "92ed760d2c778724eacf232dd5bc9f70e09ff2ca623d22e6f31b483a6e71657d"
+      },
+      "phase": "fixed",
+      "scanner": "codeql"
+    }
+  ],
+  "markers_absent_count": 2
+}

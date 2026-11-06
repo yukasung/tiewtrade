@@ -1,0 +1,47 @@
+{
+  "pr": 49,
+  "head": "a40f491cfcc5ff39d9e99c0b8fefcedf505362f2",
+  "base": "98ff2f840fe08dc46ab5eb9976f17bdf32b062b1",
+  "isDraft": false,
+  "mergeStateStatus": "BLOCKED",
+  "required_original_checks_all_passed": true,
+  "required_security_gate_failed": true,
+  "security_gate_app": 15368,
+  "ci_runs": [
+    42148532422,
+    42148502627
+  ],
+  "security_run": 42148532565,
+  "required_checks": [
+    {
+      "context": "\u0e2b\u0e25\u0e31\u0e07\u0e1a\u0e49\u0e32\u0e19 \u2014 lint, types, imports, tests",
+      "app_id": 15368
+    },
+    {
+      "context": "e2e \u2014 \u0e40\u0e1a\u0e23\u0e32\u0e27\u0e4c\u0e40\u0e0b\u0e2d\u0e23\u0e4c\u0e08\u0e23\u0e34\u0e07\u0e40\u0e2b\u0e47\u0e19\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25\u0e08\u0e32\u0e01 API ...",
+      "app_id": 15368
+    },
+    {
+      "context": "\u0e2b\u0e19\u0e49\u0e32\u0e1a\u0e49\u0e32\u0e19 \u2014 lint, types, tests",
+      "app_id": 15368
+    },
+    {
+      "context": "container \u2014 \u0e17\u0e31\u0e49\u0e07\u0e2a\u0e2d\u0e07\u0e1d\u0e31\u0e48\u0e07\u0e23\u0e31\u0e19\u0e43\u0e19 container \u0e44\u0e14\u0e49",
+      "app_id": 15368
+    },
+    {
+      "context": "\u0e04\u0e48\u0e32\u0e01\u0e25\u0e32\u0e07 \u2014 \u0e40\u0e27\u0e2d\u0e23\u0e4c\u0e0a\u0e31\u0e19 PostgreSQL",
+      "app_id": 15368
+    },
+    {
+      "context": "\u0e2a\u0e31\u0e0d\u0e0d\u0e32 API \u2014 \u0e0a\u0e19\u0e34\u0e14\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25\u0e2a\u0e2d\u0e07\u0e1d\u0e31\u0e48\u0e07\u0e15\u0e49\u0e2d\u0e07\u0e15\u0e23\u0e07...",
+      "app_id": 15368
+    },
+    {
+      "context": "Security / gate",
+      "app_id": 15368
+    }
+  ],
+  "admin_enforcement": true,
+  "main_locked": false
+}

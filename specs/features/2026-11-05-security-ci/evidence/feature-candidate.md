@@ -1,5 +1,21 @@
 # Security CI — Implementation evidence
 
+Latest owner evidence (2026-11-06): V-01 closed using the observed zero budgets and
+Usage blocked state plus bounded storage evidence. V-01..18 passed for unchanged
+head 34c146a/base 98ff2f8. See billing-budget-verification-20261106.md. Await owner
+merge command; V-19 remains Not Run — Pending Full Validation. Older pending notes
+below describe historical checkpoints.
+
+
+Current checkpoint (2026-11-06): [rollout validation](rollout-20261106.md).
+Feature head 34c146a/base 98ff2f8 passed Security and both ordinary CI runs. Native
+settings and required Security gate are activated; real negative merge rejection is
+recorded. Latest fixed/retention validation PR #49 head 5054226 passed Security;
+ordinary final CI passed 6/6 each and PR #49 was closed without merging after CLEAN
+mergeability proof. Only V-01 account storage/budget evidence remains for Feature acceptance;
+V-19 remains after owner-authorized merge.
+
+
 Latest remote candidate: see [compatibility decision result](compatibility-decision.md)
 and [safe manifests](remote-candidate-manifests.json). The local evidence below is
 historical; its old uncommitted/no-PR and dependency-blocker statements do not describe

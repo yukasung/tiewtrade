@@ -1,0 +1,34 @@
+{
+  "pr": 49,
+  "head": "5054226a174b78eced8c5b3f76d9e2d2e983439a",
+  "base": "98ff2f840fe08dc46ab5eb9976f17bdf32b062b1",
+  "merge": "478bab971900c594a70a3b9737fa60724430ba8a",
+  "isDraft": false,
+  "mergeStateStatus": "CLEAN",
+  "all_seven_required_checks_passed": true,
+  "security_gate_app": 15368,
+  "runs": [
+    {
+      "id": 42152916345,
+      "head": "5054226a174b78eced8c5b3f76d9e2d2e983439a",
+      "conclusion": "success",
+      "url": "https://github.com/yukasung/tiewtrade/actions/runs/42152916345"
+    },
+    {
+      "id": 42152916380,
+      "head": "5054226a174b78eced8c5b3f76d9e2d2e983439a",
+      "conclusion": "success",
+      "url": "https://github.com/yukasung/tiewtrade/actions/runs/42152916380"
+    },
+    {
+      "id": 42152911897,
+      "head": "5054226a174b78eced8c5b3f76d9e2d2e983439a",
+      "conclusion": "success",
+      "url": "https://github.com/yukasung/tiewtrade/actions/runs/42152911897"
+    }
+  ],
+  "protection_unchanged_since_activation": true,
+  "main_locked": false,
+  "merged": false,
+  "actual_fork_execution": "Not Run - owner-approved evidence gap"
+}

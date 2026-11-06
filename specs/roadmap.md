@@ -214,23 +214,23 @@ domain ของเงินที่ปฏิเสธค่าที่เก�
 ## ชุดที่ 1 — ฐานราก
 
 F-01 follow-up: [Security CI](features/2026-11-05-security-ci/requirements.md)
-**Feature validation Partial — PR #48 draft (2026-11-05)** — branch
-`feature/security-ci-hardening`; requirements/plan/validation Approved รวม V-12 amendment
-ที่เจ้าของอนุมัติเมื่อไม่มีบัญชี fork. Security run 42062182504 บน head
-`10380f4ee9d7aa99850eba72abe01a2ddb25dddd` ผ่านครบ 7 jobs; CodeQL จริง 3 ภาษา
-และ paired insecure/fixed probes ผ่าน, dependency inventory 464 ไม่มี High/Critical/triage,
-secret exceptions 92 exact identities ตาม owner approval. PR CI 42062182443 และ push CI 42062165730 ผ่านครบ 6 jobs ต่อ run.
-V-12 alternative evidence ยัง Partial; fork จริง Not Run — accepted evidence gap;
-ต้องตรวจจริงก่อนรับ merge ของ fork PR แรก. Native settings/required Security gate activation
-และ negative/fixed remote rejection proof ยัง Not Run; settings ยังไม่เปลี่ยน.
-V-19 Release หลัง merge Not Run — Pending Full Validation. ยังไม่พร้อม merge/Completed.
+**Feature validation passed — Owner authorized merge, final candidate CI pending (2026-11-06)** — branch
+`feature/security-ci-hardening`, [PR #48](https://github.com/yukasung/tiewtrade/pull/48);
+head 34c146a/base 98ff2f8. V-01..18 ครบจาก review/refactor, real scanners/required CI,
+activation, negative/fixed/retained-finding/marker proofs และ owner zero-budget readback.
+เจ้าของสั่ง merge PR #48 แล้ว; รวม closing evidence และตรวจ candidate/protections/required CI ของ SHA สุดท้ายก่อน merge.
+Actual fork Not Run ตามวิธีตรวจทดแทนที่อนุมัติ; ต้องตรวจก่อนรับ merge ของ fork PR แรก.
+Native template alerts รวม 5 High อยู่นอก app inventory และคงเปิดไว้สำหรับงานแยก.
+V-19 Release หลัง merge Not Run — Pending Full Validation; ยังไม่ Completed.
+หลักฐานปัจจุบันอยู่ [rollout](features/2026-11-05-security-ci/evidence/rollout-20261106.md)
+และ [billing verification](features/2026-11-05-security-ci/evidence/billing-budget-verification-20261106.md).
 ดู [validation](features/2026-11-05-security-ci/validation.md) และ
 [หลักฐาน](features/2026-11-05-security-ci/evidence/feature-candidate.md).
 แก้ High/Medium และ refactor ที่อนุญาตแล้ว; validation ในเครื่องผ่าน.
 
 
-Integration checkpoint: main a3a8652 / dependency PR #47 is included; dependency blockers fixed.
-Owner authorized remote validation; CodeQL/rejection/settings gates remain pending.
+Historical integration checkpoint: main a3a8652 / dependency PR #47 included; dependency blockers fixed.
+The former pending CodeQL/rejection/settings checks are closed by the current rollout checkpoint above.
 
 F-01 follow-up: [Security dependency remediation](features/2026-11-05-security-dependency-remediation/requirements.md)
 **Completed (2026-11-05)** — certifi 2026.7.22 → 2026.10.18 และ
