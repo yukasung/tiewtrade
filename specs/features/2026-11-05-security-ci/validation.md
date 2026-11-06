@@ -12,7 +12,8 @@ Requirements: [Approved](requirements.md); implementation: [plan.md](plan.md)
 ไม่ใช่ Passed. **Feature validation V-01..18 ผ่านสำหรับ head 34c146a/base 98ff2f8 แล้ว**;
 ดู [หลักฐานปัจจุบัน](evidence/rollout-20261106.md) และ
 [billing verification](evidence/billing-budget-verification-20261106.md).
-รอเจ้าของสั่ง merge พร้อมตรวจด่าน candidate ปัจจุบันก่อน merge; V-19 ยัง Not Run — Pending Full Validation.
+เจ้าของสั่ง merge แล้ว; final candidate 9286d5f และ merge SHA 74ca1f4 ผ่าน required CI/security
+พร้อม main dispatch/readback ครบ V-19 Passed ตาม [post-merge evidence](evidence/post-merge-20261106.md).
 
 | รหัส | เกณฑ์ / Requirements | วิธีตรวจและผลที่ต้องได้ | ระยะ | ผล / หลักฐาน |
 |---|---|---|---|---|
@@ -33,8 +34,8 @@ Requirements: [Approved](requirements.md); implementation: [plan.md](plan.md)
 | V-15 | Native security settings — RQ-2/4/5 | API/UI readback secret scanning/push protection, dependency graph/alerts/security updates เปิด; CodeQL ใช้ advanced เท่านั้น; ตรวจ native alerts โดยไม่เปิดเผยค่าและไม่มี auto-merge/paid features | Feature | Passed — native-settings-20261106.json: secret scanning/push protection, vulnerability alerts + dependency graph, Dependabot security updates enabled; default setup not-configured; validity/non-provider checks disabled; alert-count snapshot ไม่มี secret/raw payload |
 | V-16 | Remote rejection proof — RQ-6/7/8 | บน disposable validation PR ที่เจ้าของอนุญาตให้ push ใช้ synthetic non-credential violation ให้ gate แดงและ mergeability ถูกบล็อกจริง; แก้กลับให้เขียว; ไม่ merge negative fixture เข้า main ไม่ใช้ secret จริง | Feature | Passed — PR #49 negative a40f491: original CI 6/6 ทั้ง push/PR + required Security gate failed, mergeStateStatus BLOCKED; final fixed 5054226: Security 7/7 + CI 6/6 ทั้ง push/PR, mergeStateStatus CLEAN; fixed-repair-proof-20261106.json; ปิด PR โดยไม่ merge |
 | V-17 | Trading/stateless regression boundary — RQ-10 | diff ยืนยันไม่มี app/DB/session/trading behavior change, scanner ไม่มี exchange calls; required CI เดิมผ่านบน final candidate รวม safety/auth/RLS/Paper isolation; หาก harness/config กระทบ tests เดิมให้ rerun เฉพาะที่กระทบ | Feature | Passed on 34c146a/base 98ff2f8 — no feature application/trading/DB/session change; required push 42148393043 และ PR 42148399157 CI ผ่าน 6/6 ต่อ run รวม F-17 + safety/auth/RLS/Paper regression |
-| V-18 | Review และ final candidate — RQ-8/11 | Ready for Code Review→owner review→แก้→owner refactor decision ตาม AGENTS; review ปิด, V-01..17 และ required CI/security ผ่านบน final head/base; รอเจ้าของสั่ง merge | Feature | Passed on head 34c146a/base 98ff2f8 — review/refactor ปิดตามหลักฐานเดิม, V-01..17 ครบ, Security/required CI ผ่านและอ่านกลับ SUCCESS; PR #49 ปิดโดยไม่ merge; รอ owner merge command และตรวจ final candidate อีกครั้งก่อน merge |
-| V-19 | Post-merge activation — RQ-8/11 | หลังเจ้าของสั่ง merge ติดตาม CI/security บน merge SHA, readback settings และ workflow_dispatch บน main ผ่านครบทุก component; เก็บ run URLs/SHAs ปิด evidence ก่อน Completed โดยไม่ประกาศ app release/Live ready | Release | Not Run — Pending Full Validation; checkpoint หลัง merge งาน security CI |
+| V-18 | Review และ final candidate — RQ-8/11 | Ready for Code Review→owner review→แก้→owner refactor decision ตาม AGENTS; review ปิด, V-01..17 และ required CI/security ผ่านบน final head/base; รอเจ้าของสั่ง merge | Feature | Passed — final candidate 9286d5f/base 98ff2f8 ผ่าน Security 42158483332 (7/7) และ PR/push CI 42158483256/42158478522 (6/6 ต่อ run); preflight/readback/tree match ผ่าน; owner-authorized squash merge เป็น 74ca1f4 โดย expected-head guard ไม่มี bypass |
+| V-19 | Post-merge activation — RQ-8/11 | หลังเจ้าของสั่ง merge ติดตาม CI/security บน merge SHA, readback settings และ workflow_dispatch บน main ผ่านครบทุก component; เก็บ run URLs/SHAs ปิด evidence ก่อน Completed โดยไม่ประกาศ app release/Live ready | Release | Passed — merge SHA 74ca1f4; CI 42160689488 ผ่าน 6/6, push Security 42160689507 และ main dispatch 42161218096 ผ่าน 7/7 ต่อ run; manifests/identity/config/tree/readback ครบ; evidence/post-merge-20261106.md และ .json |
 
 ## การเลือกตรวจตามผลกระทบ
 
@@ -164,3 +165,12 @@ entries remain historical. No numeric account remaining capacity or retroactive 
 guarantee is inferred. V-01..18 are passed for unchanged head 34c146a/base 98ff2f8;
 pre-merge current-candidate checks and owner merge command remain required.
 V-19 is still Not Run — Pending Full Validation, and this feature is not Completed.
+
+## Final post-merge checkpoint — 2026-11-06
+
+V-19 Passed on `74ca1f4bc8118f119d9bdd96381c061b961650ee`; see
+[evidence/post-merge-20261106.md](evidence/post-merge-20261106.md). This supersedes the
+earlier pending merge/Release entries for this feature only. Actual fork execution
+remains Not Run under the approved alternative; the real-fork precondition and
+reference-template alerts remain documented risks. No application Batch/Release
+validation is closed by these CI results. Current project status is in roadmap.md.

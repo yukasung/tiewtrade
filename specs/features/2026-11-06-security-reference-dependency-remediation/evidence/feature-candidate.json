@@ -1,0 +1,4837 @@
+{
+  "status": "NC-SEC-REF-02 Approved and implemented; fresh CI pending",
+  "base_sha": "74ca1f4bc8118f119d9bdd96381c061b961650ee",
+  "branch": "feature/security-reference-dependency-remediation",
+  "amendment": "NC-SEC-REF-01/02 Approved 2026-11-06",
+  "candidate_applied_to_repository": true,
+  "environment": {
+    "node": "v22.23.4",
+    "npm": "10.9.9",
+    "engine_checked": 217,
+    "engine_failures": [],
+    "installed_versions": {
+      "vite": "8.2.4",
+      "source-map-js": "1.2.2",
+      "js-yaml": "4.3.2",
+      "brace-expansion": "5.0.11",
+      "zod": "4.6.6"
+    }
+  },
+  "baseline_identity": {
+    "base_sha": "74ca1f4bc8118f119d9bdd96381c061b961650ee",
+    "branch": "feature/security-reference-dependency-remediation",
+    "os": "macOS-27.0.1-arm64-arm-64bit",
+    "baseline_sha256": {
+      "references/admin-template/package.json": "8cb247c0202a7ce5aa47022022cbb0410390ce14b1d7714fe9ddcd969a058d87",
+      "references/admin-template/package-lock.json": "8a8c48ced334eaf5d6f06babca467c83b04cc242e37f4326aee7c20d61ea131b",
+      "backend/uv.lock": "f427025bd867333a3cd8628ef7e7c76309866b9fdaee3f968c77c404b074402b",
+      "frontend/package-lock.json": "7d0fb4ab31f0eece2d6fe8ef9e60ca96757c220a9b674e1162fd3c6a9965727b",
+      ".github/security/tools.json": "bd5392c2c68ca61579a94b55dd413e237e767132eb32b82d3eed41297466ad97",
+      ".github/security/osv-scanner.toml": "6494d817dba4ce87c8723336b0e6d93d1c4aab446932504d368962a29750ce7c",
+      "tools/security/system.py": "6e07e2b32d957d5e762f2e2c047a6b5458b70c801456d1c5206c9b4f19b34614",
+      "tools/security/severity.py": "5be29e872204b74fd2ed3e0ce3566a47b5a9e07083b979bd81226de80b0a97a5",
+      "tools/security/__init__.py": "9384fcdbcb64846a817b85c30e9e2ec8959ad75e2ecd8b27d2b35a20398b7db3",
+      "tools/security/sarif.py": "4f59602ca229cbd2fff9dcc454ebe54f07e7ab6be2775b5771f7c68a93272282",
+      "tools/security/model.py": "41d1c078f60554b1c8ea91237c81517113529341c92486f66151090caae4942a",
+      "tools/security/cli.py": "1b86d83b7d35128a17f855455659a0f2d3b52248284590108da45367a39d677c",
+      "tools/security/secrets.py": "881e76dd50ecf27e3ab8a1c7e87cf845b81f980efd3f494d7536fb09a245b809",
+      "tools/security/scan.py": "c0428edecce81f95d40ae8625c0cf57c3886a32c748c349a6dff94147083e8fe",
+      "tools/security/dependencies.py": "d15e9f58b8188044f3d8a2ca6a590799c36401fcc20de418c65d140af7a04b65",
+      "tools/security/reporting.py": "d96b698845d9ebff903274ed6e0679397603d8be2b1f3ff097871572b1ecc991"
+    }
+  },
+  "initial_three_package_checkpoint": {
+    "status": "Failed RV-04; scope amendment subsequently approved",
+    "candidate_scan": {
+      "label": "candidate",
+      "lock_sha256": "4caea2be641e0d9ee957ed476861693d3ea455956d83b23638b483a57c9a041f",
+      "expected_template_unique_packages": 372,
+      "expected_backend_unique_packages": 54,
+      "coverage_total": 426,
+      "severity_counts": {
+        "medium": 3,
+        "high": 3
+      },
+      "findings": [
+        {
+          "severity": "medium",
+          "locator": [
+            "npm",
+            "@humanfs/node",
+            "0.16.6",
+            "GHSA-p498-v437-472g"
+          ]
+        },
+        {
+          "severity": "high",
+          "locator": [
+            "npm",
+            "brace-expansion",
+            "5.0.9",
+            "GHSA-6j4f-fj2g-mc7p"
+          ]
+        },
+        {
+          "severity": "medium",
+          "locator": [
+            "npm",
+            "brace-expansion",
+            "5.0.9",
+            "GHSA-q2hr-2g5m-vwhr"
+          ]
+        },
+        {
+          "severity": "high",
+          "locator": [
+            "npm",
+            "brace-expansion",
+            "5.0.9",
+            "GHSA-qhr7-859c-m2p7"
+          ]
+        },
+        {
+          "severity": "medium",
+          "locator": [
+            "npm",
+            "minimatch",
+            "10.2.6",
+            "GHSA-g3hv-75wg-m249"
+          ]
+        },
+        {
+          "severity": "high",
+          "locator": [
+            "npm",
+            "zod",
+            "4.5.4",
+            "GHSA-mrhx-c7xc-m3w5"
+          ]
+        }
+      ],
+      "seconds": 1.97,
+      "configuration_digest": "fe5e8d743e9e67e350c8969acd9292e24a9165e57a65bd5c90a48633d91419ad"
+    },
+    "temporary_candidate_update": {
+      "checked_at_utc": "2026-11-06T05:01:04.182152+00:00",
+      "changes": [
+        {
+          "path": "node_modules/js-yaml",
+          "before": "4.1.1",
+          "after": "4.3.2",
+          "fields": [
+            "resolved",
+            "funding",
+            "integrity",
+            "version"
+          ]
+        },
+        {
+          "path": "node_modules/source-map-js",
+          "before": "1.2.1",
+          "after": "1.2.2",
+          "fields": [
+            "resolved",
+            "integrity",
+            "version"
+          ]
+        },
+        {
+          "path": "node_modules/vite",
+          "before": "8.2.2",
+          "after": "8.2.4",
+          "fields": [
+            "resolved",
+            "integrity",
+            "funding",
+            "version"
+          ]
+        }
+      ],
+      "candidate_lock_sha256": "4caea2be641e0d9ee957ed476861693d3ea455956d83b23638b483a57c9a041f"
+    }
+  },
+  "candidate_update": {
+    "amendment": "NC-SEC-REF-01 Approved 2026-11-06",
+    "changes": [
+      {
+        "path": "node_modules/brace-expansion",
+        "before": "5.0.9",
+        "after": "5.0.11",
+        "fields": [
+          "integrity",
+          "resolved",
+          "version"
+        ]
+      },
+      {
+        "path": "node_modules/js-yaml",
+        "before": "4.1.1",
+        "after": "4.3.2",
+        "fields": [
+          "funding",
+          "integrity",
+          "resolved",
+          "version"
+        ]
+      },
+      {
+        "path": "node_modules/source-map-js",
+        "before": "1.2.1",
+        "after": "1.2.2",
+        "fields": [
+          "integrity",
+          "resolved",
+          "version"
+        ]
+      },
+      {
+        "path": "node_modules/vite",
+        "before": "8.2.2",
+        "after": "8.2.4",
+        "fields": [
+          "funding",
+          "integrity",
+          "resolved",
+          "version"
+        ]
+      },
+      {
+        "path": "node_modules/zod",
+        "before": "4.5.4",
+        "after": "4.6.6",
+        "fields": [
+          "funding",
+          "integrity",
+          "resolved",
+          "version"
+        ]
+      }
+    ],
+    "candidate_lock_sha256": "8a8ee180aaa1ea184cbbbd8f241b0c922c9d451874366591908ee6ef9613e9ca"
+  },
+  "scans": {
+    "baseline": {
+      "label": "baseline",
+      "lock_sha256": "8a8c48ced334eaf5d6f06babca467c83b04cc242e37f4326aee7c20d61ea131b",
+      "expected_template_unique_packages": 372,
+      "expected_backend_unique_packages": 54,
+      "coverage_total": 426,
+      "severity_counts": {
+        "medium": 8,
+        "high": 8,
+        "low": 1
+      },
+      "findings": [
+        {
+          "severity": "medium",
+          "locator": [
+            "npm",
+            "@humanfs/node",
+            "0.16.6",
+            "GHSA-p498-v437-472g"
+          ]
+        },
+        {
+          "severity": "high",
+          "locator": [
+            "npm",
+            "brace-expansion",
+            "5.0.9",
+            "GHSA-6j4f-fj2g-mc7p"
+          ]
+        },
+        {
+          "severity": "medium",
+          "locator": [
+            "npm",
+            "brace-expansion",
+            "5.0.9",
+            "GHSA-q2hr-2g5m-vwhr"
+          ]
+        },
+        {
+          "severity": "high",
+          "locator": [
+            "npm",
+            "brace-expansion",
+            "5.0.9",
+            "GHSA-qhr7-859c-m2p7"
+          ]
+        },
+        {
+          "severity": "high",
+          "locator": [
+            "npm",
+            "js-yaml",
+            "4.1.1",
+            "GHSA-2883-xcg3-v3hh"
+          ]
+        },
+        {
+          "severity": "high",
+          "locator": [
+            "npm",
+            "js-yaml",
+            "4.1.1",
+            "GHSA-52cp-r559-cp3m"
+          ]
+        },
+        {
+          "severity": "high",
+          "locator": [
+            "npm",
+            "js-yaml",
+            "4.1.1",
+            "GHSA-5p4m-2wfm-xmqj"
+          ]
+        },
+        {
+          "severity": "medium",
+          "locator": [
+            "npm",
+            "js-yaml",
+            "4.1.1",
+            "GHSA-h67p-54hq-rp68"
+          ]
+        },
+        {
+          "severity": "medium",
+          "locator": [
+            "npm",
+            "minimatch",
+            "10.2.6",
+            "GHSA-g3hv-75wg-m249"
+          ]
+        },
+        {
+          "severity": "high",
+          "locator": [
+            "npm",
+            "source-map-js",
+            "1.2.1",
+            "GHSA-68fv-2mgg-jv7q"
+          ]
+        },
+        {
+          "severity": "high",
+          "locator": [
+            "npm",
+            "vite",
+            "8.2.2",
+            "GHSA-587h-7wmj-h5pm"
+          ]
+        },
+        {
+          "severity": "medium",
+          "locator": [
+            "npm",
+            "vite",
+            "8.2.2",
+            "GHSA-698v-4r3x-3vcv"
+          ]
+        },
+        {
+          "severity": "low",
+          "locator": [
+            "npm",
+            "vite",
+            "8.2.2",
+            "GHSA-9jrq-w75r-8gcw"
+          ]
+        },
+        {
+          "severity": "medium",
+          "locator": [
+            "npm",
+            "vite",
+            "8.2.2",
+            "GHSA-r825-w8mm-5pxw"
+          ]
+        },
+        {
+          "severity": "medium",
+          "locator": [
+            "npm",
+            "vite",
+            "8.2.2",
+            "GHSA-rq7h-c2jc-7f22"
+          ]
+        },
+        {
+          "severity": "medium",
+          "locator": [
+            "npm",
+            "vite",
+            "8.2.2",
+            "GHSA-vfpm-58rq-9qcg"
+          ]
+        },
+        {
+          "severity": "high",
+          "locator": [
+            "npm",
+            "zod",
+            "4.5.4",
+            "GHSA-mrhx-c7xc-m3w5"
+          ]
+        }
+      ],
+      "seconds": 1.97,
+      "configuration_digest": "fe5e8d743e9e67e350c8969acd9292e24a9165e57a65bd5c90a48633d91419ad"
+    },
+    "candidate": {
+      "label": "candidate",
+      "amendment": "NC-SEC-REF-01 Approved",
+      "lock_sha256": "8a8ee180aaa1ea184cbbbd8f241b0c922c9d451874366591908ee6ef9613e9ca",
+      "expected_template_unique_packages": 372,
+      "expected_backend_unique_packages": 54,
+      "coverage_total": 426,
+      "severity_counts": {
+        "medium": 3
+      },
+      "findings": [
+        {
+          "severity": "medium",
+          "locator": [
+            "npm",
+            "@humanfs/node",
+            "0.16.6",
+            "GHSA-p498-v437-472g"
+          ]
+        },
+        {
+          "severity": "medium",
+          "locator": [
+            "npm",
+            "brace-expansion",
+            "5.0.11",
+            "GHSA-q2hr-2g5m-vwhr"
+          ]
+        },
+        {
+          "severity": "medium",
+          "locator": [
+            "npm",
+            "minimatch",
+            "10.2.6",
+            "GHSA-g3hv-75wg-m249"
+          ]
+        }
+      ],
+      "seconds": 1.88,
+      "configuration_digest": "25a17393e710bb8514a81079bbea74cc0ccd3311f1a9a837dc0cb755d3b388ef"
+    }
+  },
+  "coverage_negative_control": {
+    "result": "Passed",
+    "error": "INCOMPLETE_DEPENDENCY_INVENTORY"
+  },
+  "inventories": {
+    "baseline": [
+      {
+        "path": "node_modules/@alloc/quick-lru",
+        "name": "@alloc/quick-lru",
+        "version": "5.2.0"
+      },
+      {
+        "path": "node_modules/@babel/code-frame",
+        "name": "@babel/code-frame",
+        "version": "7.29.7"
+      },
+      {
+        "path": "node_modules/@babel/compat-data",
+        "name": "@babel/compat-data",
+        "version": "7.29.7"
+      },
+      {
+        "path": "node_modules/@babel/core",
+        "name": "@babel/core",
+        "version": "7.29.7"
+      },
+      {
+        "path": "node_modules/@babel/generator",
+        "name": "@babel/generator",
+        "version": "7.29.8"
+      },
+      {
+        "path": "node_modules/@babel/helper-compilation-targets",
+        "name": "@babel/helper-compilation-targets",
+        "version": "7.29.7"
+      },
+      {
+        "path": "node_modules/@babel/helper-globals",
+        "name": "@babel/helper-globals",
+        "version": "7.29.7"
+      },
+      {
+        "path": "node_modules/@babel/helper-module-imports",
+        "name": "@babel/helper-module-imports",
+        "version": "7.29.7"
+      },
+      {
+        "path": "node_modules/@babel/helper-module-transforms",
+        "name": "@babel/helper-module-transforms",
+        "version": "7.29.7"
+      },
+      {
+        "path": "node_modules/@babel/helper-plugin-utils",
+        "name": "@babel/helper-plugin-utils",
+        "version": "7.29.7"
+      },
+      {
+        "path": "node_modules/@babel/helper-string-parser",
+        "name": "@babel/helper-string-parser",
+        "version": "7.29.7"
+      },
+      {
+        "path": "node_modules/@babel/helper-validator-identifier",
+        "name": "@babel/helper-validator-identifier",
+        "version": "7.29.7"
+      },
+      {
+        "path": "node_modules/@babel/helper-validator-option",
+        "name": "@babel/helper-validator-option",
+        "version": "7.29.7"
+      },
+      {
+        "path": "node_modules/@babel/helpers",
+        "name": "@babel/helpers",
+        "version": "7.29.7"
+      },
+      {
+        "path": "node_modules/@babel/parser",
+        "name": "@babel/parser",
+        "version": "7.29.8"
+      },
+      {
+        "path": "node_modules/@babel/plugin-transform-react-jsx-self",
+        "name": "@babel/plugin-transform-react-jsx-self",
+        "version": "7.29.7"
+      },
+      {
+        "path": "node_modules/@babel/plugin-transform-react-jsx-source",
+        "name": "@babel/plugin-transform-react-jsx-source",
+        "version": "7.29.7"
+      },
+      {
+        "path": "node_modules/@babel/runtime",
+        "name": "@babel/runtime",
+        "version": "7.29.7"
+      },
+      {
+        "path": "node_modules/@babel/template",
+        "name": "@babel/template",
+        "version": "7.29.7"
+      },
+      {
+        "path": "node_modules/@babel/traverse",
+        "name": "@babel/traverse",
+        "version": "7.29.8"
+      },
+      {
+        "path": "node_modules/@babel/types",
+        "name": "@babel/types",
+        "version": "7.29.8"
+      },
+      {
+        "path": "node_modules/@cacheable/memory",
+        "name": "@cacheable/memory",
+        "version": "2.2.0"
+      },
+      {
+        "path": "node_modules/@cacheable/utils",
+        "name": "@cacheable/utils",
+        "version": "2.5.0"
+      },
+      {
+        "path": "node_modules/@eslint-community/eslint-utils",
+        "name": "@eslint-community/eslint-utils",
+        "version": "4.9.1"
+      },
+      {
+        "path": "node_modules/@eslint-community/eslint-utils/node_modules/eslint-visitor-keys",
+        "name": "eslint-visitor-keys",
+        "version": "3.4.3"
+      },
+      {
+        "path": "node_modules/@eslint-community/regexpp",
+        "name": "@eslint-community/regexpp",
+        "version": "4.12.2"
+      },
+      {
+        "path": "node_modules/@eslint/config-array",
+        "name": "@eslint/config-array",
+        "version": "0.23.5"
+      },
+      {
+        "path": "node_modules/@eslint/config-helpers",
+        "name": "@eslint/config-helpers",
+        "version": "0.7.0"
+      },
+      {
+        "path": "node_modules/@eslint/core",
+        "name": "@eslint/core",
+        "version": "1.2.1"
+      },
+      {
+        "path": "node_modules/@eslint/js",
+        "name": "@eslint/js",
+        "version": "10.0.1"
+      },
+      {
+        "path": "node_modules/@eslint/object-schema",
+        "name": "@eslint/object-schema",
+        "version": "3.0.5"
+      },
+      {
+        "path": "node_modules/@eslint/plugin-kit",
+        "name": "@eslint/plugin-kit",
+        "version": "0.7.3"
+      },
+      {
+        "path": "node_modules/@floating-ui/core",
+        "name": "@floating-ui/core",
+        "version": "1.8.0"
+      },
+      {
+        "path": "node_modules/@floating-ui/dom",
+        "name": "@floating-ui/dom",
+        "version": "1.8.0"
+      },
+      {
+        "path": "node_modules/@floating-ui/react",
+        "name": "@floating-ui/react",
+        "version": "0.27.20"
+      },
+      {
+        "path": "node_modules/@floating-ui/react-dom",
+        "name": "@floating-ui/react-dom",
+        "version": "2.1.9"
+      },
+      {
+        "path": "node_modules/@floating-ui/utils",
+        "name": "@floating-ui/utils",
+        "version": "0.2.12"
+      },
+      {
+        "path": "node_modules/@full-ui/headless-calendar",
+        "name": "@full-ui/headless-calendar",
+        "version": "7.1.0"
+      },
+      {
+        "path": "node_modules/@fullcalendar/react",
+        "name": "@fullcalendar/react",
+        "version": "7.1.0"
+      },
+      {
+        "path": "node_modules/@fullcalendar/react/node_modules/@fullcalendar/core",
+        "name": "@fullcalendar/core",
+        "version": "7.1.0"
+      },
+      {
+        "path": "node_modules/@humanfs/core",
+        "name": "@humanfs/core",
+        "version": "0.19.1"
+      },
+      {
+        "path": "node_modules/@humanfs/node",
+        "name": "@humanfs/node",
+        "version": "0.16.6"
+      },
+      {
+        "path": "node_modules/@humanfs/node/node_modules/@humanwhocodes/retry",
+        "name": "@humanwhocodes/retry",
+        "version": "0.3.1"
+      },
+      {
+        "path": "node_modules/@humanwhocodes/module-importer",
+        "name": "@humanwhocodes/module-importer",
+        "version": "1.0.1"
+      },
+      {
+        "path": "node_modules/@humanwhocodes/retry",
+        "name": "@humanwhocodes/retry",
+        "version": "0.4.2"
+      },
+      {
+        "path": "node_modules/@jridgewell/gen-mapping",
+        "name": "@jridgewell/gen-mapping",
+        "version": "0.3.13"
+      },
+      {
+        "path": "node_modules/@jridgewell/remapping",
+        "name": "@jridgewell/remapping",
+        "version": "2.3.5"
+      },
+      {
+        "path": "node_modules/@jridgewell/resolve-uri",
+        "name": "@jridgewell/resolve-uri",
+        "version": "3.1.2"
+      },
+      {
+        "path": "node_modules/@jridgewell/sourcemap-codec",
+        "name": "@jridgewell/sourcemap-codec",
+        "version": "1.6.0"
+      },
+      {
+        "path": "node_modules/@jridgewell/trace-mapping",
+        "name": "@jridgewell/trace-mapping",
+        "version": "0.3.31"
+      },
+      {
+        "path": "node_modules/@keyv/bigmap",
+        "name": "@keyv/bigmap",
+        "version": "1.3.1"
+      },
+      {
+        "path": "node_modules/@keyv/serialize",
+        "name": "@keyv/serialize",
+        "version": "1.1.1"
+      },
+      {
+        "path": "node_modules/@mapbox/jsonlint-lines-primitives",
+        "name": "@mapbox/jsonlint-lines-primitives",
+        "version": "2.0.3"
+      },
+      {
+        "path": "node_modules/@mapbox/point-geometry",
+        "name": "@mapbox/point-geometry",
+        "version": "1.1.0"
+      },
+      {
+        "path": "node_modules/@mapbox/tiny-sdf",
+        "name": "@mapbox/tiny-sdf",
+        "version": "2.2.0"
+      },
+      {
+        "path": "node_modules/@mapbox/unitbezier",
+        "name": "@mapbox/unitbezier",
+        "version": "0.0.1"
+      },
+      {
+        "path": "node_modules/@mapbox/vector-tile",
+        "name": "@mapbox/vector-tile",
+        "version": "3.0.0"
+      },
+      {
+        "path": "node_modules/@maplibre/geojson-vt",
+        "name": "@maplibre/geojson-vt",
+        "version": "6.1.1"
+      },
+      {
+        "path": "node_modules/@maplibre/maplibre-gl-style-spec",
+        "name": "@maplibre/maplibre-gl-style-spec",
+        "version": "26.4.2"
+      },
+      {
+        "path": "node_modules/@maplibre/maplibre-gl-style-spec/node_modules/@mapbox/unitbezier",
+        "name": "@mapbox/unitbezier",
+        "version": "1.0.0"
+      },
+      {
+        "path": "node_modules/@maplibre/mlt",
+        "name": "@maplibre/mlt",
+        "version": "1.2.1"
+      },
+      {
+        "path": "node_modules/@maplibre/vt-pbf",
+        "name": "@maplibre/vt-pbf",
+        "version": "4.3.2"
+      },
+      {
+        "path": "node_modules/@oxc-project/types",
+        "name": "@oxc-project/types",
+        "version": "0.148.0"
+      },
+      {
+        "path": "node_modules/@popperjs/core",
+        "name": "@popperjs/core",
+        "version": "2.11.8"
+      },
+      {
+        "path": "node_modules/@react-dnd/asap",
+        "name": "@react-dnd/asap",
+        "version": "5.0.2"
+      },
+      {
+        "path": "node_modules/@react-dnd/invariant",
+        "name": "@react-dnd/invariant",
+        "version": "4.0.2"
+      },
+      {
+        "path": "node_modules/@react-dnd/shallowequal",
+        "name": "@react-dnd/shallowequal",
+        "version": "4.0.2"
+      },
+      {
+        "path": "node_modules/@rolldown/binding-android-arm-eabi",
+        "name": "@rolldown/binding-android-arm-eabi",
+        "version": "1.2.7"
+      },
+      {
+        "path": "node_modules/@rolldown/binding-android-arm64",
+        "name": "@rolldown/binding-android-arm64",
+        "version": "1.2.7"
+      },
+      {
+        "path": "node_modules/@rolldown/binding-darwin-arm64",
+        "name": "@rolldown/binding-darwin-arm64",
+        "version": "1.2.7"
+      },
+      {
+        "path": "node_modules/@rolldown/binding-darwin-x64",
+        "name": "@rolldown/binding-darwin-x64",
+        "version": "1.2.7"
+      },
+      {
+        "path": "node_modules/@rolldown/binding-freebsd-x64",
+        "name": "@rolldown/binding-freebsd-x64",
+        "version": "1.2.7"
+      },
+      {
+        "path": "node_modules/@rolldown/binding-linux-arm-gnueabihf",
+        "name": "@rolldown/binding-linux-arm-gnueabihf",
+        "version": "1.2.7"
+      },
+      {
+        "path": "node_modules/@rolldown/binding-linux-arm64-gnu",
+        "name": "@rolldown/binding-linux-arm64-gnu",
+        "version": "1.2.7"
+      },
+      {
+        "path": "node_modules/@rolldown/binding-linux-arm64-musl",
+        "name": "@rolldown/binding-linux-arm64-musl",
+        "version": "1.2.7"
+      },
+      {
+        "path": "node_modules/@rolldown/binding-linux-ppc64-gnu",
+        "name": "@rolldown/binding-linux-ppc64-gnu",
+        "version": "1.2.7"
+      },
+      {
+        "path": "node_modules/@rolldown/binding-linux-s390x-gnu",
+        "name": "@rolldown/binding-linux-s390x-gnu",
+        "version": "1.2.7"
+      },
+      {
+        "path": "node_modules/@rolldown/binding-linux-x64-gnu",
+        "name": "@rolldown/binding-linux-x64-gnu",
+        "version": "1.2.7"
+      },
+      {
+        "path": "node_modules/@rolldown/binding-linux-x64-musl",
+        "name": "@rolldown/binding-linux-x64-musl",
+        "version": "1.2.7"
+      },
+      {
+        "path": "node_modules/@rolldown/binding-openharmony-arm64",
+        "name": "@rolldown/binding-openharmony-arm64",
+        "version": "1.2.7"
+      },
+      {
+        "path": "node_modules/@rolldown/binding-win32-arm64-msvc",
+        "name": "@rolldown/binding-win32-arm64-msvc",
+        "version": "1.2.7"
+      },
+      {
+        "path": "node_modules/@rolldown/binding-win32-x64-msvc",
+        "name": "@rolldown/binding-win32-x64-msvc",
+        "version": "1.2.7"
+      },
+      {
+        "path": "node_modules/@rolldown/pluginutils",
+        "name": "@rolldown/pluginutils",
+        "version": "1.0.0-rc.3"
+      },
+      {
+        "path": "node_modules/@rollup/pluginutils",
+        "name": "@rollup/pluginutils",
+        "version": "5.4.0"
+      },
+      {
+        "path": "node_modules/@svgr/babel-plugin-add-jsx-attribute",
+        "name": "@svgr/babel-plugin-add-jsx-attribute",
+        "version": "8.0.0"
+      },
+      {
+        "path": "node_modules/@svgr/babel-plugin-remove-jsx-attribute",
+        "name": "@svgr/babel-plugin-remove-jsx-attribute",
+        "version": "8.0.0"
+      },
+      {
+        "path": "node_modules/@svgr/babel-plugin-remove-jsx-empty-expression",
+        "name": "@svgr/babel-plugin-remove-jsx-empty-expression",
+        "version": "8.0.0"
+      },
+      {
+        "path": "node_modules/@svgr/babel-plugin-replace-jsx-attribute-value",
+        "name": "@svgr/babel-plugin-replace-jsx-attribute-value",
+        "version": "8.0.0"
+      },
+      {
+        "path": "node_modules/@svgr/babel-plugin-svg-dynamic-title",
+        "name": "@svgr/babel-plugin-svg-dynamic-title",
+        "version": "8.0.0"
+      },
+      {
+        "path": "node_modules/@svgr/babel-plugin-svg-em-dimensions",
+        "name": "@svgr/babel-plugin-svg-em-dimensions",
+        "version": "8.0.0"
+      },
+      {
+        "path": "node_modules/@svgr/babel-plugin-transform-react-native-svg",
+        "name": "@svgr/babel-plugin-transform-react-native-svg",
+        "version": "8.1.0"
+      },
+      {
+        "path": "node_modules/@svgr/babel-plugin-transform-svg-component",
+        "name": "@svgr/babel-plugin-transform-svg-component",
+        "version": "8.0.0"
+      },
+      {
+        "path": "node_modules/@svgr/babel-preset",
+        "name": "@svgr/babel-preset",
+        "version": "8.1.0"
+      },
+      {
+        "path": "node_modules/@svgr/core",
+        "name": "@svgr/core",
+        "version": "8.1.0"
+      },
+      {
+        "path": "node_modules/@svgr/hast-util-to-babel-ast",
+        "name": "@svgr/hast-util-to-babel-ast",
+        "version": "8.0.0"
+      },
+      {
+        "path": "node_modules/@svgr/plugin-jsx",
+        "name": "@svgr/plugin-jsx",
+        "version": "8.1.0"
+      },
+      {
+        "path": "node_modules/@tailwindcss/node",
+        "name": "@tailwindcss/node",
+        "version": "4.3.3"
+      },
+      {
+        "path": "node_modules/@tailwindcss/oxide",
+        "name": "@tailwindcss/oxide",
+        "version": "4.3.3"
+      },
+      {
+        "path": "node_modules/@tailwindcss/oxide-android-arm64",
+        "name": "@tailwindcss/oxide-android-arm64",
+        "version": "4.3.3"
+      },
+      {
+        "path": "node_modules/@tailwindcss/oxide-darwin-arm64",
+        "name": "@tailwindcss/oxide-darwin-arm64",
+        "version": "4.3.3"
+      },
+      {
+        "path": "node_modules/@tailwindcss/oxide-darwin-x64",
+        "name": "@tailwindcss/oxide-darwin-x64",
+        "version": "4.3.3"
+      },
+      {
+        "path": "node_modules/@tailwindcss/oxide-freebsd-x64",
+        "name": "@tailwindcss/oxide-freebsd-x64",
+        "version": "4.3.3"
+      },
+      {
+        "path": "node_modules/@tailwindcss/oxide-linux-arm-gnueabihf",
+        "name": "@tailwindcss/oxide-linux-arm-gnueabihf",
+        "version": "4.3.3"
+      },
+      {
+        "path": "node_modules/@tailwindcss/oxide-linux-arm64-gnu",
+        "name": "@tailwindcss/oxide-linux-arm64-gnu",
+        "version": "4.3.3"
+      },
+      {
+        "path": "node_modules/@tailwindcss/oxide-linux-arm64-musl",
+        "name": "@tailwindcss/oxide-linux-arm64-musl",
+        "version": "4.3.3"
+      },
+      {
+        "path": "node_modules/@tailwindcss/oxide-linux-x64-gnu",
+        "name": "@tailwindcss/oxide-linux-x64-gnu",
+        "version": "4.3.3"
+      },
+      {
+        "path": "node_modules/@tailwindcss/oxide-linux-x64-musl",
+        "name": "@tailwindcss/oxide-linux-x64-musl",
+        "version": "4.3.3"
+      },
+      {
+        "path": "node_modules/@tailwindcss/oxide-wasm32-wasi",
+        "name": "@tailwindcss/oxide-wasm32-wasi",
+        "version": "4.3.3"
+      },
+      {
+        "path": "node_modules/@tailwindcss/oxide-win32-arm64-msvc",
+        "name": "@tailwindcss/oxide-win32-arm64-msvc",
+        "version": "4.3.3"
+      },
+      {
+        "path": "node_modules/@tailwindcss/oxide-win32-x64-msvc",
+        "name": "@tailwindcss/oxide-win32-x64-msvc",
+        "version": "4.3.3"
+      },
+      {
+        "path": "node_modules/@tailwindcss/postcss",
+        "name": "@tailwindcss/postcss",
+        "version": "4.3.3"
+      },
+      {
+        "path": "node_modules/@tailwindcss/vite",
+        "name": "@tailwindcss/vite",
+        "version": "4.3.3"
+      },
+      {
+        "path": "node_modules/@types/babel__core",
+        "name": "@types/babel__core",
+        "version": "7.20.5"
+      },
+      {
+        "path": "node_modules/@types/babel__generator",
+        "name": "@types/babel__generator",
+        "version": "7.6.8"
+      },
+      {
+        "path": "node_modules/@types/babel__template",
+        "name": "@types/babel__template",
+        "version": "7.4.4"
+      },
+      {
+        "path": "node_modules/@types/babel__traverse",
+        "name": "@types/babel__traverse",
+        "version": "7.20.6"
+      },
+      {
+        "path": "node_modules/@types/esrecurse",
+        "name": "@types/esrecurse",
+        "version": "4.3.1"
+      },
+      {
+        "path": "node_modules/@types/estree",
+        "name": "@types/estree",
+        "version": "1.0.8"
+      },
+      {
+        "path": "node_modules/@types/geojson",
+        "name": "@types/geojson",
+        "version": "7946.0.16"
+      },
+      {
+        "path": "node_modules/@types/json-schema",
+        "name": "@types/json-schema",
+        "version": "7.0.15"
+      },
+      {
+        "path": "node_modules/@types/jsvectormap",
+        "name": "@types/jsvectormap",
+        "version": "1.7.0"
+      },
+      {
+        "path": "node_modules/@types/leaflet",
+        "name": "@types/leaflet",
+        "version": "1.9.21"
+      },
+      {
+        "path": "node_modules/@types/node",
+        "name": "@types/node",
+        "version": "26.4.1"
+      },
+      {
+        "path": "node_modules/@types/prismjs",
+        "name": "@types/prismjs",
+        "version": "1.26.5"
+      },
+      {
+        "path": "node_modules/@types/react",
+        "name": "@types/react",
+        "version": "19.0.12"
+      },
+      {
+        "path": "node_modules/@types/react-dom",
+        "name": "@types/react-dom",
+        "version": "19.0.4"
+      },
+      {
+        "path": "node_modules/@typescript-eslint/scope-manager",
+        "name": "@typescript-eslint/scope-manager",
+        "version": "8.69.0"
+      },
+      {
+        "path": "node_modules/@typescript-eslint/types",
+        "name": "@typescript-eslint/types",
+        "version": "8.69.0"
+      },
+      {
+        "path": "node_modules/@typescript-eslint/visitor-keys",
+        "name": "@typescript-eslint/visitor-keys",
+        "version": "8.69.0"
+      },
+      {
+        "path": "node_modules/@vis.gl/react-mapbox",
+        "name": "@vis.gl/react-mapbox",
+        "version": "8.1.3"
+      },
+      {
+        "path": "node_modules/@vis.gl/react-maplibre",
+        "name": "@vis.gl/react-maplibre",
+        "version": "8.1.3"
+      },
+      {
+        "path": "node_modules/@vis.gl/react-maplibre/node_modules/@maplibre/maplibre-gl-style-spec",
+        "name": "@maplibre/maplibre-gl-style-spec",
+        "version": "19.3.3"
+      },
+      {
+        "path": "node_modules/@vis.gl/react-maplibre/node_modules/json-stringify-pretty-compact",
+        "name": "json-stringify-pretty-compact",
+        "version": "3.0.0"
+      },
+      {
+        "path": "node_modules/@vitejs/plugin-react",
+        "name": "@vitejs/plugin-react",
+        "version": "5.2.0"
+      },
+      {
+        "path": "node_modules/acorn",
+        "name": "acorn",
+        "version": "8.18.0"
+      },
+      {
+        "path": "node_modules/acorn-jsx",
+        "name": "acorn-jsx",
+        "version": "5.3.2"
+      },
+      {
+        "path": "node_modules/ajv",
+        "name": "ajv",
+        "version": "6.15.0"
+      },
+      {
+        "path": "node_modules/apex-commons",
+        "name": "apex-commons",
+        "version": "0.5.0"
+      },
+      {
+        "path": "node_modules/apexcharts",
+        "name": "apexcharts",
+        "version": "7.1.0"
+      },
+      {
+        "path": "node_modules/argparse",
+        "name": "argparse",
+        "version": "2.0.1"
+      },
+      {
+        "path": "node_modules/arr-union",
+        "name": "arr-union",
+        "version": "3.1.0"
+      },
+      {
+        "path": "node_modules/assign-symbols",
+        "name": "assign-symbols",
+        "version": "1.0.0"
+      },
+      {
+        "path": "node_modules/attr-accept",
+        "name": "attr-accept",
+        "version": "4.0.0"
+      },
+      {
+        "path": "node_modules/balanced-match",
+        "name": "balanced-match",
+        "version": "4.0.4"
+      },
+      {
+        "path": "node_modules/baseline-browser-mapping",
+        "name": "baseline-browser-mapping",
+        "version": "2.11.21"
+      },
+      {
+        "path": "node_modules/brace-expansion",
+        "name": "brace-expansion",
+        "version": "5.0.9"
+      },
+      {
+        "path": "node_modules/browserslist",
+        "name": "browserslist",
+        "version": "4.28.9"
+      },
+      {
+        "path": "node_modules/bytewise",
+        "name": "bytewise",
+        "version": "1.1.0"
+      },
+      {
+        "path": "node_modules/bytewise-core",
+        "name": "bytewise-core",
+        "version": "1.2.3"
+      },
+      {
+        "path": "node_modules/cacheable",
+        "name": "cacheable",
+        "version": "2.5.0"
+      },
+      {
+        "path": "node_modules/callsites",
+        "name": "callsites",
+        "version": "3.1.0"
+      },
+      {
+        "path": "node_modules/camelcase",
+        "name": "camelcase",
+        "version": "6.3.0"
+      },
+      {
+        "path": "node_modules/caniuse-lite",
+        "name": "caniuse-lite",
+        "version": "1.0.30001810"
+      },
+      {
+        "path": "node_modules/clsx",
+        "name": "clsx",
+        "version": "2.1.1"
+      },
+      {
+        "path": "node_modules/convert-source-map",
+        "name": "convert-source-map",
+        "version": "2.0.0"
+      },
+      {
+        "path": "node_modules/cookie-es",
+        "name": "cookie-es",
+        "version": "3.1.1"
+      },
+      {
+        "path": "node_modules/cosmiconfig",
+        "name": "cosmiconfig",
+        "version": "8.3.6"
+      },
+      {
+        "path": "node_modules/cross-spawn",
+        "name": "cross-spawn",
+        "version": "7.0.6"
+      },
+      {
+        "path": "node_modules/csstype",
+        "name": "csstype",
+        "version": "3.1.3"
+      },
+      {
+        "path": "node_modules/debug",
+        "name": "debug",
+        "version": "4.4.3"
+      },
+      {
+        "path": "node_modules/deep-is",
+        "name": "deep-is",
+        "version": "0.1.4"
+      },
+      {
+        "path": "node_modules/detect-libc",
+        "name": "detect-libc",
+        "version": "2.0.3"
+      },
+      {
+        "path": "node_modules/dnd-core",
+        "name": "dnd-core",
+        "version": "16.0.1"
+      },
+      {
+        "path": "node_modules/dot-case",
+        "name": "dot-case",
+        "version": "3.0.4"
+      },
+      {
+        "path": "node_modules/earcut",
+        "name": "earcut",
+        "version": "3.2.3"
+      },
+      {
+        "path": "node_modules/electron-to-chromium",
+        "name": "electron-to-chromium",
+        "version": "1.5.422"
+      },
+      {
+        "path": "node_modules/enhanced-resolve",
+        "name": "enhanced-resolve",
+        "version": "5.24.5"
+      },
+      {
+        "path": "node_modules/entities",
+        "name": "entities",
+        "version": "4.5.0"
+      },
+      {
+        "path": "node_modules/error-ex",
+        "name": "error-ex",
+        "version": "1.3.2"
+      },
+      {
+        "path": "node_modules/escalade",
+        "name": "escalade",
+        "version": "3.2.0"
+      },
+      {
+        "path": "node_modules/escape-string-regexp",
+        "name": "escape-string-regexp",
+        "version": "4.0.0"
+      },
+      {
+        "path": "node_modules/eslint",
+        "name": "eslint",
+        "version": "10.10.0"
+      },
+      {
+        "path": "node_modules/eslint-plugin-react-hooks",
+        "name": "eslint-plugin-react-hooks",
+        "version": "7.1.1"
+      },
+      {
+        "path": "node_modules/eslint-plugin-react-refresh",
+        "name": "eslint-plugin-react-refresh",
+        "version": "0.5.6"
+      },
+      {
+        "path": "node_modules/eslint-scope",
+        "name": "eslint-scope",
+        "version": "9.1.2"
+      },
+      {
+        "path": "node_modules/eslint-visitor-keys",
+        "name": "eslint-visitor-keys",
+        "version": "5.0.1"
+      },
+      {
+        "path": "node_modules/espree",
+        "name": "espree",
+        "version": "11.2.0"
+      },
+      {
+        "path": "node_modules/esquery",
+        "name": "esquery",
+        "version": "1.7.0"
+      },
+      {
+        "path": "node_modules/esrecurse",
+        "name": "esrecurse",
+        "version": "4.3.0"
+      },
+      {
+        "path": "node_modules/estraverse",
+        "name": "estraverse",
+        "version": "5.3.0"
+      },
+      {
+        "path": "node_modules/estree-walker",
+        "name": "estree-walker",
+        "version": "2.0.2"
+      },
+      {
+        "path": "node_modules/esutils",
+        "name": "esutils",
+        "version": "2.0.3"
+      },
+      {
+        "path": "node_modules/extend-shallow",
+        "name": "extend-shallow",
+        "version": "2.0.1"
+      },
+      {
+        "path": "node_modules/fast-deep-equal",
+        "name": "fast-deep-equal",
+        "version": "3.1.3"
+      },
+      {
+        "path": "node_modules/fast-json-stable-stringify",
+        "name": "fast-json-stable-stringify",
+        "version": "2.1.0"
+      },
+      {
+        "path": "node_modules/fast-levenshtein",
+        "name": "fast-levenshtein",
+        "version": "2.0.6"
+      },
+      {
+        "path": "node_modules/file-entry-cache",
+        "name": "file-entry-cache",
+        "version": "11.1.5"
+      },
+      {
+        "path": "node_modules/file-selector",
+        "name": "file-selector",
+        "version": "5.0.1"
+      },
+      {
+        "path": "node_modules/find-up",
+        "name": "find-up",
+        "version": "5.0.0"
+      },
+      {
+        "path": "node_modules/flat-cache",
+        "name": "flat-cache",
+        "version": "6.1.23"
+      },
+      {
+        "path": "node_modules/flatpickr",
+        "name": "flatpickr",
+        "version": "4.6.13"
+      },
+      {
+        "path": "node_modules/flatted",
+        "name": "flatted",
+        "version": "3.4.4"
+      },
+      {
+        "path": "node_modules/fsevents",
+        "name": "fsevents",
+        "version": "2.3.3"
+      },
+      {
+        "path": "node_modules/gensync",
+        "name": "gensync",
+        "version": "1.0.0-beta.2"
+      },
+      {
+        "path": "node_modules/get-value",
+        "name": "get-value",
+        "version": "2.0.6"
+      },
+      {
+        "path": "node_modules/gl-matrix",
+        "name": "gl-matrix",
+        "version": "3.4.4"
+      },
+      {
+        "path": "node_modules/glob-parent",
+        "name": "glob-parent",
+        "version": "6.0.2"
+      },
+      {
+        "path": "node_modules/globals",
+        "name": "globals",
+        "version": "15.15.0"
+      },
+      {
+        "path": "node_modules/graceful-fs",
+        "name": "graceful-fs",
+        "version": "4.2.11"
+      },
+      {
+        "path": "node_modules/hashery",
+        "name": "hashery",
+        "version": "1.5.1"
+      },
+      {
+        "path": "node_modules/hermes-estree",
+        "name": "hermes-estree",
+        "version": "0.25.1"
+      },
+      {
+        "path": "node_modules/hermes-parser",
+        "name": "hermes-parser",
+        "version": "0.25.1"
+      },
+      {
+        "path": "node_modules/hoist-non-react-statics",
+        "name": "hoist-non-react-statics",
+        "version": "3.3.2"
+      },
+      {
+        "path": "node_modules/hookified",
+        "name": "hookified",
+        "version": "1.15.1"
+      },
+      {
+        "path": "node_modules/html-parse-stringify",
+        "name": "html-parse-stringify",
+        "version": "4.0.1"
+      },
+      {
+        "path": "node_modules/i18next",
+        "name": "i18next",
+        "version": "26.4.0"
+      },
+      {
+        "path": "node_modules/ignore",
+        "name": "ignore",
+        "version": "5.3.2"
+      },
+      {
+        "path": "node_modules/import-fresh",
+        "name": "import-fresh",
+        "version": "3.3.1"
+      },
+      {
+        "path": "node_modules/imurmurhash",
+        "name": "imurmurhash",
+        "version": "0.1.4"
+      },
+      {
+        "path": "node_modules/invariant",
+        "name": "invariant",
+        "version": "2.2.4"
+      },
+      {
+        "path": "node_modules/is-arrayish",
+        "name": "is-arrayish",
+        "version": "0.2.1"
+      },
+      {
+        "path": "node_modules/is-extendable",
+        "name": "is-extendable",
+        "version": "0.1.1"
+      },
+      {
+        "path": "node_modules/is-extglob",
+        "name": "is-extglob",
+        "version": "2.1.1"
+      },
+      {
+        "path": "node_modules/is-glob",
+        "name": "is-glob",
+        "version": "4.0.3"
+      },
+      {
+        "path": "node_modules/is-plain-object",
+        "name": "is-plain-object",
+        "version": "2.0.4"
+      },
+      {
+        "path": "node_modules/isexe",
+        "name": "isexe",
+        "version": "2.0.0"
+      },
+      {
+        "path": "node_modules/isobject",
+        "name": "isobject",
+        "version": "3.0.1"
+      },
+      {
+        "path": "node_modules/jiti",
+        "name": "jiti",
+        "version": "2.7.0"
+      },
+      {
+        "path": "node_modules/js-tokens",
+        "name": "js-tokens",
+        "version": "4.0.0"
+      },
+      {
+        "path": "node_modules/js-yaml",
+        "name": "js-yaml",
+        "version": "4.1.1"
+      },
+      {
+        "path": "node_modules/jsesc",
+        "name": "jsesc",
+        "version": "3.1.0"
+      },
+      {
+        "path": "node_modules/json-parse-even-better-errors",
+        "name": "json-parse-even-better-errors",
+        "version": "2.3.1"
+      },
+      {
+        "path": "node_modules/json-schema-traverse",
+        "name": "json-schema-traverse",
+        "version": "0.4.1"
+      },
+      {
+        "path": "node_modules/json-stable-stringify-without-jsonify",
+        "name": "json-stable-stringify-without-jsonify",
+        "version": "1.0.1"
+      },
+      {
+        "path": "node_modules/json-stringify-pretty-compact",
+        "name": "json-stringify-pretty-compact",
+        "version": "4.0.0"
+      },
+      {
+        "path": "node_modules/json5",
+        "name": "json5",
+        "version": "2.2.3"
+      },
+      {
+        "path": "node_modules/jsvectormap",
+        "name": "jsvectormap",
+        "version": "1.7.0"
+      },
+      {
+        "path": "node_modules/kdbush",
+        "name": "kdbush",
+        "version": "4.1.0"
+      },
+      {
+        "path": "node_modules/keyv",
+        "name": "keyv",
+        "version": "5.6.0"
+      },
+      {
+        "path": "node_modules/leaflet",
+        "name": "leaflet",
+        "version": "1.9.4"
+      },
+      {
+        "path": "node_modules/levn",
+        "name": "levn",
+        "version": "0.4.1"
+      },
+      {
+        "path": "node_modules/lightningcss",
+        "name": "lightningcss",
+        "version": "1.32.0"
+      },
+      {
+        "path": "node_modules/lightningcss-android-arm64",
+        "name": "lightningcss-android-arm64",
+        "version": "1.32.0"
+      },
+      {
+        "path": "node_modules/lightningcss-darwin-arm64",
+        "name": "lightningcss-darwin-arm64",
+        "version": "1.32.0"
+      },
+      {
+        "path": "node_modules/lightningcss-darwin-x64",
+        "name": "lightningcss-darwin-x64",
+        "version": "1.32.0"
+      },
+      {
+        "path": "node_modules/lightningcss-freebsd-x64",
+        "name": "lightningcss-freebsd-x64",
+        "version": "1.32.0"
+      },
+      {
+        "path": "node_modules/lightningcss-linux-arm-gnueabihf",
+        "name": "lightningcss-linux-arm-gnueabihf",
+        "version": "1.32.0"
+      },
+      {
+        "path": "node_modules/lightningcss-linux-arm64-gnu",
+        "name": "lightningcss-linux-arm64-gnu",
+        "version": "1.32.0"
+      },
+      {
+        "path": "node_modules/lightningcss-linux-arm64-musl",
+        "name": "lightningcss-linux-arm64-musl",
+        "version": "1.32.0"
+      },
+      {
+        "path": "node_modules/lightningcss-linux-x64-gnu",
+        "name": "lightningcss-linux-x64-gnu",
+        "version": "1.32.0"
+      },
+      {
+        "path": "node_modules/lightningcss-linux-x64-musl",
+        "name": "lightningcss-linux-x64-musl",
+        "version": "1.32.0"
+      },
+      {
+        "path": "node_modules/lightningcss-win32-arm64-msvc",
+        "name": "lightningcss-win32-arm64-msvc",
+        "version": "1.32.0"
+      },
+      {
+        "path": "node_modules/lightningcss-win32-x64-msvc",
+        "name": "lightningcss-win32-x64-msvc",
+        "version": "1.32.0"
+      },
+      {
+        "path": "node_modules/lines-and-columns",
+        "name": "lines-and-columns",
+        "version": "1.2.4"
+      },
+      {
+        "path": "node_modules/locate-path",
+        "name": "locate-path",
+        "version": "6.0.0"
+      },
+      {
+        "path": "node_modules/lodash",
+        "name": "lodash",
+        "version": "4.18.1"
+      },
+      {
+        "path": "node_modules/lodash-es",
+        "name": "lodash-es",
+        "version": "4.18.1"
+      },
+      {
+        "path": "node_modules/loose-envify",
+        "name": "loose-envify",
+        "version": "1.4.0"
+      },
+      {
+        "path": "node_modules/lower-case",
+        "name": "lower-case",
+        "version": "2.0.2"
+      },
+      {
+        "path": "node_modules/lru-cache",
+        "name": "lru-cache",
+        "version": "5.1.1"
+      },
+      {
+        "path": "node_modules/magic-string",
+        "name": "magic-string",
+        "version": "0.30.21"
+      },
+      {
+        "path": "node_modules/maplibre-gl",
+        "name": "maplibre-gl",
+        "version": "6.8.0"
+      },
+      {
+        "path": "node_modules/maplibre-gl/node_modules/@mapbox/unitbezier",
+        "name": "@mapbox/unitbezier",
+        "version": "1.0.0"
+      },
+      {
+        "path": "node_modules/minimatch",
+        "name": "minimatch",
+        "version": "10.2.6"
+      },
+      {
+        "path": "node_modules/minimist",
+        "name": "minimist",
+        "version": "1.2.8"
+      },
+      {
+        "path": "node_modules/ms",
+        "name": "ms",
+        "version": "2.1.3"
+      },
+      {
+        "path": "node_modules/murmurhash-js",
+        "name": "murmurhash-js",
+        "version": "1.0.0"
+      },
+      {
+        "path": "node_modules/nanoid",
+        "name": "nanoid",
+        "version": "3.3.18"
+      },
+      {
+        "path": "node_modules/natural-compare",
+        "name": "natural-compare",
+        "version": "1.4.0"
+      },
+      {
+        "path": "node_modules/no-case",
+        "name": "no-case",
+        "version": "3.0.4"
+      },
+      {
+        "path": "node_modules/node-releases",
+        "name": "node-releases",
+        "version": "2.0.54"
+      },
+      {
+        "path": "node_modules/object-assign",
+        "name": "object-assign",
+        "version": "4.1.1"
+      },
+      {
+        "path": "node_modules/optionator",
+        "name": "optionator",
+        "version": "0.9.4"
+      },
+      {
+        "path": "node_modules/p-limit",
+        "name": "p-limit",
+        "version": "3.1.0"
+      },
+      {
+        "path": "node_modules/p-locate",
+        "name": "p-locate",
+        "version": "5.0.0"
+      },
+      {
+        "path": "node_modules/parent-module",
+        "name": "parent-module",
+        "version": "1.0.1"
+      },
+      {
+        "path": "node_modules/parse-json",
+        "name": "parse-json",
+        "version": "5.2.0"
+      },
+      {
+        "path": "node_modules/path-exists",
+        "name": "path-exists",
+        "version": "4.0.0"
+      },
+      {
+        "path": "node_modules/path-key",
+        "name": "path-key",
+        "version": "3.1.1"
+      },
+      {
+        "path": "node_modules/path-type",
+        "name": "path-type",
+        "version": "4.0.0"
+      },
+      {
+        "path": "node_modules/pbf",
+        "name": "pbf",
+        "version": "5.1.2"
+      },
+      {
+        "path": "node_modules/picocolors",
+        "name": "picocolors",
+        "version": "1.1.1"
+      },
+      {
+        "path": "node_modules/picomatch",
+        "name": "picomatch",
+        "version": "4.0.7"
+      },
+      {
+        "path": "node_modules/postcss",
+        "name": "postcss",
+        "version": "8.5.28"
+      },
+      {
+        "path": "node_modules/potpack",
+        "name": "potpack",
+        "version": "2.1.0"
+      },
+      {
+        "path": "node_modules/prelude-ls",
+        "name": "prelude-ls",
+        "version": "1.2.1"
+      },
+      {
+        "path": "node_modules/prettier",
+        "name": "prettier",
+        "version": "3.9.6"
+      },
+      {
+        "path": "node_modules/prettier-plugin-tailwindcss",
+        "name": "prettier-plugin-tailwindcss",
+        "version": "0.8.1"
+      },
+      {
+        "path": "node_modules/prismjs",
+        "name": "prismjs",
+        "version": "1.30.0"
+      },
+      {
+        "path": "node_modules/prop-types",
+        "name": "prop-types",
+        "version": "15.8.1"
+      },
+      {
+        "path": "node_modules/protocol-buffers-schema",
+        "name": "protocol-buffers-schema",
+        "version": "3.6.1"
+      },
+      {
+        "path": "node_modules/punycode",
+        "name": "punycode",
+        "version": "2.3.1"
+      },
+      {
+        "path": "node_modules/qified",
+        "name": "qified",
+        "version": "0.10.1"
+      },
+      {
+        "path": "node_modules/qified/node_modules/hookified",
+        "name": "hookified",
+        "version": "2.2.0"
+      },
+      {
+        "path": "node_modules/quickselect",
+        "name": "quickselect",
+        "version": "3.0.0"
+      },
+      {
+        "path": "node_modules/react",
+        "name": "react",
+        "version": "19.2.7"
+      },
+      {
+        "path": "node_modules/react-apexcharts",
+        "name": "react-apexcharts",
+        "version": "2.1.1"
+      },
+      {
+        "path": "node_modules/react-dnd",
+        "name": "react-dnd",
+        "version": "16.0.1"
+      },
+      {
+        "path": "node_modules/react-dnd-html5-backend",
+        "name": "react-dnd-html5-backend",
+        "version": "16.0.1"
+      },
+      {
+        "path": "node_modules/react-dom",
+        "name": "react-dom",
+        "version": "19.2.7"
+      },
+      {
+        "path": "node_modules/react-dropzone",
+        "name": "react-dropzone",
+        "version": "20.1.1"
+      },
+      {
+        "path": "node_modules/react-fast-compare",
+        "name": "react-fast-compare",
+        "version": "3.2.2"
+      },
+      {
+        "path": "node_modules/react-helmet-async",
+        "name": "react-helmet-async",
+        "version": "3.0.0"
+      },
+      {
+        "path": "node_modules/react-i18next",
+        "name": "react-i18next",
+        "version": "17.0.12"
+      },
+      {
+        "path": "node_modules/react-is",
+        "name": "react-is",
+        "version": "16.13.1"
+      },
+      {
+        "path": "node_modules/react-map-gl",
+        "name": "react-map-gl",
+        "version": "8.1.3"
+      },
+      {
+        "path": "node_modules/react-refresh",
+        "name": "react-refresh",
+        "version": "0.18.0"
+      },
+      {
+        "path": "node_modules/react-router",
+        "name": "react-router",
+        "version": "8.3.1"
+      },
+      {
+        "path": "node_modules/redux",
+        "name": "redux",
+        "version": "4.2.1"
+      },
+      {
+        "path": "node_modules/resolve-from",
+        "name": "resolve-from",
+        "version": "4.0.0"
+      },
+      {
+        "path": "node_modules/resolve-protobuf-schema",
+        "name": "resolve-protobuf-schema",
+        "version": "2.1.0"
+      },
+      {
+        "path": "node_modules/rolldown",
+        "name": "rolldown",
+        "version": "1.2.7"
+      },
+      {
+        "path": "node_modules/rolldown/node_modules/@rolldown/pluginutils",
+        "name": "@rolldown/pluginutils",
+        "version": "1.0.1"
+      },
+      {
+        "path": "node_modules/rw",
+        "name": "rw",
+        "version": "1.3.3"
+      },
+      {
+        "path": "node_modules/scheduler",
+        "name": "scheduler",
+        "version": "0.27.0"
+      },
+      {
+        "path": "node_modules/semver",
+        "name": "semver",
+        "version": "6.3.1"
+      },
+      {
+        "path": "node_modules/set-value",
+        "name": "set-value",
+        "version": "2.0.1"
+      },
+      {
+        "path": "node_modules/shallowequal",
+        "name": "shallowequal",
+        "version": "1.1.0"
+      },
+      {
+        "path": "node_modules/shebang-command",
+        "name": "shebang-command",
+        "version": "2.0.0"
+      },
+      {
+        "path": "node_modules/shebang-regex",
+        "name": "shebang-regex",
+        "version": "3.0.0"
+      },
+      {
+        "path": "node_modules/simplebar-core",
+        "name": "simplebar-core",
+        "version": "1.3.2"
+      },
+      {
+        "path": "node_modules/simplebar-react",
+        "name": "simplebar-react",
+        "version": "3.3.2"
+      },
+      {
+        "path": "node_modules/snake-case",
+        "name": "snake-case",
+        "version": "3.0.4"
+      },
+      {
+        "path": "node_modules/sort-asc",
+        "name": "sort-asc",
+        "version": "0.2.0"
+      },
+      {
+        "path": "node_modules/sort-desc",
+        "name": "sort-desc",
+        "version": "0.2.0"
+      },
+      {
+        "path": "node_modules/sort-object",
+        "name": "sort-object",
+        "version": "3.0.3"
+      },
+      {
+        "path": "node_modules/source-map-js",
+        "name": "source-map-js",
+        "version": "1.2.1"
+      },
+      {
+        "path": "node_modules/split-string",
+        "name": "split-string",
+        "version": "3.1.0"
+      },
+      {
+        "path": "node_modules/split-string/node_modules/extend-shallow",
+        "name": "extend-shallow",
+        "version": "3.0.2"
+      },
+      {
+        "path": "node_modules/split-string/node_modules/is-extendable",
+        "name": "is-extendable",
+        "version": "1.0.1"
+      },
+      {
+        "path": "node_modules/svg-parser",
+        "name": "svg-parser",
+        "version": "2.0.4"
+      },
+      {
+        "path": "node_modules/swiper",
+        "name": "swiper",
+        "version": "12.1.4"
+      },
+      {
+        "path": "node_modules/tabbable",
+        "name": "tabbable",
+        "version": "6.2.0"
+      },
+      {
+        "path": "node_modules/tailwind-merge",
+        "name": "tailwind-merge",
+        "version": "3.6.0"
+      },
+      {
+        "path": "node_modules/tailwindcss",
+        "name": "tailwindcss",
+        "version": "4.3.3"
+      },
+      {
+        "path": "node_modules/tapable",
+        "name": "tapable",
+        "version": "2.3.3"
+      },
+      {
+        "path": "node_modules/temporal-polyfill",
+        "name": "temporal-polyfill",
+        "version": "1.0.4"
+      },
+      {
+        "path": "node_modules/temporal-spec",
+        "name": "temporal-spec",
+        "version": "1.0.1"
+      },
+      {
+        "path": "node_modules/temporal-utils",
+        "name": "temporal-utils",
+        "version": "1.0.2"
+      },
+      {
+        "path": "node_modules/tinyglobby",
+        "name": "tinyglobby",
+        "version": "0.2.17"
+      },
+      {
+        "path": "node_modules/tinyglobby/node_modules/fdir",
+        "name": "fdir",
+        "version": "6.5.0"
+      },
+      {
+        "path": "node_modules/tinyqueue",
+        "name": "tinyqueue",
+        "version": "3.0.0"
+      },
+      {
+        "path": "node_modules/ts-api-utils",
+        "name": "ts-api-utils",
+        "version": "2.5.0"
+      },
+      {
+        "path": "node_modules/tslib",
+        "name": "tslib",
+        "version": "2.8.1"
+      },
+      {
+        "path": "node_modules/type-check",
+        "name": "type-check",
+        "version": "0.4.0"
+      },
+      {
+        "path": "node_modules/typescript",
+        "name": "typescript",
+        "version": "5.8.3"
+      },
+      {
+        "path": "node_modules/typescript-eslint",
+        "name": "typescript-eslint",
+        "version": "8.69.0"
+      },
+      {
+        "path": "node_modules/typescript-eslint/node_modules/@typescript-eslint/eslint-plugin",
+        "name": "@typescript-eslint/eslint-plugin",
+        "version": "8.69.0"
+      },
+      {
+        "path": "node_modules/typescript-eslint/node_modules/@typescript-eslint/eslint-plugin/node_modules/@typescript-eslint/type-utils",
+        "name": "@typescript-eslint/type-utils",
+        "version": "8.69.0"
+      },
+      {
+        "path": "node_modules/typescript-eslint/node_modules/@typescript-eslint/parser",
+        "name": "@typescript-eslint/parser",
+        "version": "8.69.0"
+      },
+      {
+        "path": "node_modules/typescript-eslint/node_modules/@typescript-eslint/typescript-estree",
+        "name": "@typescript-eslint/typescript-estree",
+        "version": "8.69.0"
+      },
+      {
+        "path": "node_modules/typescript-eslint/node_modules/@typescript-eslint/typescript-estree/node_modules/@typescript-eslint/project-service",
+        "name": "@typescript-eslint/project-service",
+        "version": "8.69.0"
+      },
+      {
+        "path": "node_modules/typescript-eslint/node_modules/@typescript-eslint/typescript-estree/node_modules/@typescript-eslint/tsconfig-utils",
+        "name": "@typescript-eslint/tsconfig-utils",
+        "version": "8.69.0"
+      },
+      {
+        "path": "node_modules/typescript-eslint/node_modules/@typescript-eslint/utils",
+        "name": "@typescript-eslint/utils",
+        "version": "8.69.0"
+      },
+      {
+        "path": "node_modules/typescript-eslint/node_modules/ignore",
+        "name": "ignore",
+        "version": "7.0.8"
+      },
+      {
+        "path": "node_modules/typescript-eslint/node_modules/semver",
+        "name": "semver",
+        "version": "7.8.5"
+      },
+      {
+        "path": "node_modules/typewise",
+        "name": "typewise",
+        "version": "1.0.3"
+      },
+      {
+        "path": "node_modules/typewise-core",
+        "name": "typewise-core",
+        "version": "1.2.0"
+      },
+      {
+        "path": "node_modules/undici-types",
+        "name": "undici-types",
+        "version": "8.3.0"
+      },
+      {
+        "path": "node_modules/union-value",
+        "name": "union-value",
+        "version": "1.0.1"
+      },
+      {
+        "path": "node_modules/update-browserslist-db",
+        "name": "update-browserslist-db",
+        "version": "1.3.2"
+      },
+      {
+        "path": "node_modules/uri-js",
+        "name": "uri-js",
+        "version": "4.4.1"
+      },
+      {
+        "path": "node_modules/use-sync-external-store",
+        "name": "use-sync-external-store",
+        "version": "1.6.0"
+      },
+      {
+        "path": "node_modules/vite",
+        "name": "vite",
+        "version": "8.2.2"
+      },
+      {
+        "path": "node_modules/vite-plugin-svgr",
+        "name": "vite-plugin-svgr",
+        "version": "5.2.0"
+      },
+      {
+        "path": "node_modules/vite/node_modules/lightningcss",
+        "name": "lightningcss",
+        "version": "1.33.0"
+      },
+      {
+        "path": "node_modules/vite/node_modules/lightningcss-android-arm64",
+        "name": "lightningcss-android-arm64",
+        "version": "1.33.0"
+      },
+      {
+        "path": "node_modules/vite/node_modules/lightningcss-darwin-arm64",
+        "name": "lightningcss-darwin-arm64",
+        "version": "1.33.0"
+      },
+      {
+        "path": "node_modules/vite/node_modules/lightningcss-darwin-x64",
+        "name": "lightningcss-darwin-x64",
+        "version": "1.33.0"
+      },
+      {
+        "path": "node_modules/vite/node_modules/lightningcss-freebsd-x64",
+        "name": "lightningcss-freebsd-x64",
+        "version": "1.33.0"
+      },
+      {
+        "path": "node_modules/vite/node_modules/lightningcss-linux-arm-gnueabihf",
+        "name": "lightningcss-linux-arm-gnueabihf",
+        "version": "1.33.0"
+      },
+      {
+        "path": "node_modules/vite/node_modules/lightningcss-linux-arm64-gnu",
+        "name": "lightningcss-linux-arm64-gnu",
+        "version": "1.33.0"
+      },
+      {
+        "path": "node_modules/vite/node_modules/lightningcss-linux-arm64-musl",
+        "name": "lightningcss-linux-arm64-musl",
+        "version": "1.33.0"
+      },
+      {
+        "path": "node_modules/vite/node_modules/lightningcss-linux-x64-gnu",
+        "name": "lightningcss-linux-x64-gnu",
+        "version": "1.33.0"
+      },
+      {
+        "path": "node_modules/vite/node_modules/lightningcss-linux-x64-musl",
+        "name": "lightningcss-linux-x64-musl",
+        "version": "1.33.0"
+      },
+      {
+        "path": "node_modules/vite/node_modules/lightningcss-win32-arm64-msvc",
+        "name": "lightningcss-win32-arm64-msvc",
+        "version": "1.33.0"
+      },
+      {
+        "path": "node_modules/vite/node_modules/lightningcss-win32-x64-msvc",
+        "name": "lightningcss-win32-x64-msvc",
+        "version": "1.33.0"
+      },
+      {
+        "path": "node_modules/which",
+        "name": "which",
+        "version": "2.0.2"
+      },
+      {
+        "path": "node_modules/word-wrap",
+        "name": "word-wrap",
+        "version": "1.2.5"
+      },
+      {
+        "path": "node_modules/yallist",
+        "name": "yallist",
+        "version": "3.1.1"
+      },
+      {
+        "path": "node_modules/yocto-queue",
+        "name": "yocto-queue",
+        "version": "0.1.0"
+      },
+      {
+        "path": "node_modules/zod",
+        "name": "zod",
+        "version": "4.5.4"
+      },
+      {
+        "path": "node_modules/zod-validation-error",
+        "name": "zod-validation-error",
+        "version": "4.0.2"
+      }
+    ],
+    "candidate": [
+      {
+        "path": "node_modules/@alloc/quick-lru",
+        "name": "@alloc/quick-lru",
+        "version": "5.2.0"
+      },
+      {
+        "path": "node_modules/@babel/code-frame",
+        "name": "@babel/code-frame",
+        "version": "7.29.7"
+      },
+      {
+        "path": "node_modules/@babel/compat-data",
+        "name": "@babel/compat-data",
+        "version": "7.29.7"
+      },
+      {
+        "path": "node_modules/@babel/core",
+        "name": "@babel/core",
+        "version": "7.29.7"
+      },
+      {
+        "path": "node_modules/@babel/generator",
+        "name": "@babel/generator",
+        "version": "7.29.8"
+      },
+      {
+        "path": "node_modules/@babel/helper-compilation-targets",
+        "name": "@babel/helper-compilation-targets",
+        "version": "7.29.7"
+      },
+      {
+        "path": "node_modules/@babel/helper-globals",
+        "name": "@babel/helper-globals",
+        "version": "7.29.7"
+      },
+      {
+        "path": "node_modules/@babel/helper-module-imports",
+        "name": "@babel/helper-module-imports",
+        "version": "7.29.7"
+      },
+      {
+        "path": "node_modules/@babel/helper-module-transforms",
+        "name": "@babel/helper-module-transforms",
+        "version": "7.29.7"
+      },
+      {
+        "path": "node_modules/@babel/helper-plugin-utils",
+        "name": "@babel/helper-plugin-utils",
+        "version": "7.29.7"
+      },
+      {
+        "path": "node_modules/@babel/helper-string-parser",
+        "name": "@babel/helper-string-parser",
+        "version": "7.29.7"
+      },
+      {
+        "path": "node_modules/@babel/helper-validator-identifier",
+        "name": "@babel/helper-validator-identifier",
+        "version": "7.29.7"
+      },
+      {
+        "path": "node_modules/@babel/helper-validator-option",
+        "name": "@babel/helper-validator-option",
+        "version": "7.29.7"
+      },
+      {
+        "path": "node_modules/@babel/helpers",
+        "name": "@babel/helpers",
+        "version": "7.29.7"
+      },
+      {
+        "path": "node_modules/@babel/parser",
+        "name": "@babel/parser",
+        "version": "7.29.8"
+      },
+      {
+        "path": "node_modules/@babel/plugin-transform-react-jsx-self",
+        "name": "@babel/plugin-transform-react-jsx-self",
+        "version": "7.29.7"
+      },
+      {
+        "path": "node_modules/@babel/plugin-transform-react-jsx-source",
+        "name": "@babel/plugin-transform-react-jsx-source",
+        "version": "7.29.7"
+      },
+      {
+        "path": "node_modules/@babel/runtime",
+        "name": "@babel/runtime",
+        "version": "7.29.7"
+      },
+      {
+        "path": "node_modules/@babel/template",
+        "name": "@babel/template",
+        "version": "7.29.7"
+      },
+      {
+        "path": "node_modules/@babel/traverse",
+        "name": "@babel/traverse",
+        "version": "7.29.8"
+      },
+      {
+        "path": "node_modules/@babel/types",
+        "name": "@babel/types",
+        "version": "7.29.8"
+      },
+      {
+        "path": "node_modules/@cacheable/memory",
+        "name": "@cacheable/memory",
+        "version": "2.2.0"
+      },
+      {
+        "path": "node_modules/@cacheable/utils",
+        "name": "@cacheable/utils",
+        "version": "2.5.0"
+      },
+      {
+        "path": "node_modules/@eslint-community/eslint-utils",
+        "name": "@eslint-community/eslint-utils",
+        "version": "4.9.1"
+      },
+      {
+        "path": "node_modules/@eslint-community/eslint-utils/node_modules/eslint-visitor-keys",
+        "name": "eslint-visitor-keys",
+        "version": "3.4.3"
+      },
+      {
+        "path": "node_modules/@eslint-community/regexpp",
+        "name": "@eslint-community/regexpp",
+        "version": "4.12.2"
+      },
+      {
+        "path": "node_modules/@eslint/config-array",
+        "name": "@eslint/config-array",
+        "version": "0.23.5"
+      },
+      {
+        "path": "node_modules/@eslint/config-helpers",
+        "name": "@eslint/config-helpers",
+        "version": "0.7.0"
+      },
+      {
+        "path": "node_modules/@eslint/core",
+        "name": "@eslint/core",
+        "version": "1.2.1"
+      },
+      {
+        "path": "node_modules/@eslint/js",
+        "name": "@eslint/js",
+        "version": "10.0.1"
+      },
+      {
+        "path": "node_modules/@eslint/object-schema",
+        "name": "@eslint/object-schema",
+        "version": "3.0.5"
+      },
+      {
+        "path": "node_modules/@eslint/plugin-kit",
+        "name": "@eslint/plugin-kit",
+        "version": "0.7.3"
+      },
+      {
+        "path": "node_modules/@floating-ui/core",
+        "name": "@floating-ui/core",
+        "version": "1.8.0"
+      },
+      {
+        "path": "node_modules/@floating-ui/dom",
+        "name": "@floating-ui/dom",
+        "version": "1.8.0"
+      },
+      {
+        "path": "node_modules/@floating-ui/react",
+        "name": "@floating-ui/react",
+        "version": "0.27.20"
+      },
+      {
+        "path": "node_modules/@floating-ui/react-dom",
+        "name": "@floating-ui/react-dom",
+        "version": "2.1.9"
+      },
+      {
+        "path": "node_modules/@floating-ui/utils",
+        "name": "@floating-ui/utils",
+        "version": "0.2.12"
+      },
+      {
+        "path": "node_modules/@full-ui/headless-calendar",
+        "name": "@full-ui/headless-calendar",
+        "version": "7.1.0"
+      },
+      {
+        "path": "node_modules/@fullcalendar/react",
+        "name": "@fullcalendar/react",
+        "version": "7.1.0"
+      },
+      {
+        "path": "node_modules/@fullcalendar/react/node_modules/@fullcalendar/core",
+        "name": "@fullcalendar/core",
+        "version": "7.1.0"
+      },
+      {
+        "path": "node_modules/@humanfs/core",
+        "name": "@humanfs/core",
+        "version": "0.19.1"
+      },
+      {
+        "path": "node_modules/@humanfs/node",
+        "name": "@humanfs/node",
+        "version": "0.16.6"
+      },
+      {
+        "path": "node_modules/@humanfs/node/node_modules/@humanwhocodes/retry",
+        "name": "@humanwhocodes/retry",
+        "version": "0.3.1"
+      },
+      {
+        "path": "node_modules/@humanwhocodes/module-importer",
+        "name": "@humanwhocodes/module-importer",
+        "version": "1.0.1"
+      },
+      {
+        "path": "node_modules/@humanwhocodes/retry",
+        "name": "@humanwhocodes/retry",
+        "version": "0.4.2"
+      },
+      {
+        "path": "node_modules/@jridgewell/gen-mapping",
+        "name": "@jridgewell/gen-mapping",
+        "version": "0.3.13"
+      },
+      {
+        "path": "node_modules/@jridgewell/remapping",
+        "name": "@jridgewell/remapping",
+        "version": "2.3.5"
+      },
+      {
+        "path": "node_modules/@jridgewell/resolve-uri",
+        "name": "@jridgewell/resolve-uri",
+        "version": "3.1.2"
+      },
+      {
+        "path": "node_modules/@jridgewell/sourcemap-codec",
+        "name": "@jridgewell/sourcemap-codec",
+        "version": "1.6.0"
+      },
+      {
+        "path": "node_modules/@jridgewell/trace-mapping",
+        "name": "@jridgewell/trace-mapping",
+        "version": "0.3.31"
+      },
+      {
+        "path": "node_modules/@keyv/bigmap",
+        "name": "@keyv/bigmap",
+        "version": "1.3.1"
+      },
+      {
+        "path": "node_modules/@keyv/serialize",
+        "name": "@keyv/serialize",
+        "version": "1.1.1"
+      },
+      {
+        "path": "node_modules/@mapbox/jsonlint-lines-primitives",
+        "name": "@mapbox/jsonlint-lines-primitives",
+        "version": "2.0.3"
+      },
+      {
+        "path": "node_modules/@mapbox/point-geometry",
+        "name": "@mapbox/point-geometry",
+        "version": "1.1.0"
+      },
+      {
+        "path": "node_modules/@mapbox/tiny-sdf",
+        "name": "@mapbox/tiny-sdf",
+        "version": "2.2.0"
+      },
+      {
+        "path": "node_modules/@mapbox/unitbezier",
+        "name": "@mapbox/unitbezier",
+        "version": "0.0.1"
+      },
+      {
+        "path": "node_modules/@mapbox/vector-tile",
+        "name": "@mapbox/vector-tile",
+        "version": "3.0.0"
+      },
+      {
+        "path": "node_modules/@maplibre/geojson-vt",
+        "name": "@maplibre/geojson-vt",
+        "version": "6.1.1"
+      },
+      {
+        "path": "node_modules/@maplibre/maplibre-gl-style-spec",
+        "name": "@maplibre/maplibre-gl-style-spec",
+        "version": "26.4.2"
+      },
+      {
+        "path": "node_modules/@maplibre/maplibre-gl-style-spec/node_modules/@mapbox/unitbezier",
+        "name": "@mapbox/unitbezier",
+        "version": "1.0.0"
+      },
+      {
+        "path": "node_modules/@maplibre/mlt",
+        "name": "@maplibre/mlt",
+        "version": "1.2.1"
+      },
+      {
+        "path": "node_modules/@maplibre/vt-pbf",
+        "name": "@maplibre/vt-pbf",
+        "version": "4.3.2"
+      },
+      {
+        "path": "node_modules/@oxc-project/types",
+        "name": "@oxc-project/types",
+        "version": "0.148.0"
+      },
+      {
+        "path": "node_modules/@popperjs/core",
+        "name": "@popperjs/core",
+        "version": "2.11.8"
+      },
+      {
+        "path": "node_modules/@react-dnd/asap",
+        "name": "@react-dnd/asap",
+        "version": "5.0.2"
+      },
+      {
+        "path": "node_modules/@react-dnd/invariant",
+        "name": "@react-dnd/invariant",
+        "version": "4.0.2"
+      },
+      {
+        "path": "node_modules/@react-dnd/shallowequal",
+        "name": "@react-dnd/shallowequal",
+        "version": "4.0.2"
+      },
+      {
+        "path": "node_modules/@rolldown/binding-android-arm-eabi",
+        "name": "@rolldown/binding-android-arm-eabi",
+        "version": "1.2.7"
+      },
+      {
+        "path": "node_modules/@rolldown/binding-android-arm64",
+        "name": "@rolldown/binding-android-arm64",
+        "version": "1.2.7"
+      },
+      {
+        "path": "node_modules/@rolldown/binding-darwin-arm64",
+        "name": "@rolldown/binding-darwin-arm64",
+        "version": "1.2.7"
+      },
+      {
+        "path": "node_modules/@rolldown/binding-darwin-x64",
+        "name": "@rolldown/binding-darwin-x64",
+        "version": "1.2.7"
+      },
+      {
+        "path": "node_modules/@rolldown/binding-freebsd-x64",
+        "name": "@rolldown/binding-freebsd-x64",
+        "version": "1.2.7"
+      },
+      {
+        "path": "node_modules/@rolldown/binding-linux-arm-gnueabihf",
+        "name": "@rolldown/binding-linux-arm-gnueabihf",
+        "version": "1.2.7"
+      },
+      {
+        "path": "node_modules/@rolldown/binding-linux-arm64-gnu",
+        "name": "@rolldown/binding-linux-arm64-gnu",
+        "version": "1.2.7"
+      },
+      {
+        "path": "node_modules/@rolldown/binding-linux-arm64-musl",
+        "name": "@rolldown/binding-linux-arm64-musl",
+        "version": "1.2.7"
+      },
+      {
+        "path": "node_modules/@rolldown/binding-linux-ppc64-gnu",
+        "name": "@rolldown/binding-linux-ppc64-gnu",
+        "version": "1.2.7"
+      },
+      {
+        "path": "node_modules/@rolldown/binding-linux-s390x-gnu",
+        "name": "@rolldown/binding-linux-s390x-gnu",
+        "version": "1.2.7"
+      },
+      {
+        "path": "node_modules/@rolldown/binding-linux-x64-gnu",
+        "name": "@rolldown/binding-linux-x64-gnu",
+        "version": "1.2.7"
+      },
+      {
+        "path": "node_modules/@rolldown/binding-linux-x64-musl",
+        "name": "@rolldown/binding-linux-x64-musl",
+        "version": "1.2.7"
+      },
+      {
+        "path": "node_modules/@rolldown/binding-openharmony-arm64",
+        "name": "@rolldown/binding-openharmony-arm64",
+        "version": "1.2.7"
+      },
+      {
+        "path": "node_modules/@rolldown/binding-win32-arm64-msvc",
+        "name": "@rolldown/binding-win32-arm64-msvc",
+        "version": "1.2.7"
+      },
+      {
+        "path": "node_modules/@rolldown/binding-win32-x64-msvc",
+        "name": "@rolldown/binding-win32-x64-msvc",
+        "version": "1.2.7"
+      },
+      {
+        "path": "node_modules/@rolldown/pluginutils",
+        "name": "@rolldown/pluginutils",
+        "version": "1.0.0-rc.3"
+      },
+      {
+        "path": "node_modules/@rollup/pluginutils",
+        "name": "@rollup/pluginutils",
+        "version": "5.4.0"
+      },
+      {
+        "path": "node_modules/@svgr/babel-plugin-add-jsx-attribute",
+        "name": "@svgr/babel-plugin-add-jsx-attribute",
+        "version": "8.0.0"
+      },
+      {
+        "path": "node_modules/@svgr/babel-plugin-remove-jsx-attribute",
+        "name": "@svgr/babel-plugin-remove-jsx-attribute",
+        "version": "8.0.0"
+      },
+      {
+        "path": "node_modules/@svgr/babel-plugin-remove-jsx-empty-expression",
+        "name": "@svgr/babel-plugin-remove-jsx-empty-expression",
+        "version": "8.0.0"
+      },
+      {
+        "path": "node_modules/@svgr/babel-plugin-replace-jsx-attribute-value",
+        "name": "@svgr/babel-plugin-replace-jsx-attribute-value",
+        "version": "8.0.0"
+      },
+      {
+        "path": "node_modules/@svgr/babel-plugin-svg-dynamic-title",
+        "name": "@svgr/babel-plugin-svg-dynamic-title",
+        "version": "8.0.0"
+      },
+      {
+        "path": "node_modules/@svgr/babel-plugin-svg-em-dimensions",
+        "name": "@svgr/babel-plugin-svg-em-dimensions",
+        "version": "8.0.0"
+      },
+      {
+        "path": "node_modules/@svgr/babel-plugin-transform-react-native-svg",
+        "name": "@svgr/babel-plugin-transform-react-native-svg",
+        "version": "8.1.0"
+      },
+      {
+        "path": "node_modules/@svgr/babel-plugin-transform-svg-component",
+        "name": "@svgr/babel-plugin-transform-svg-component",
+        "version": "8.0.0"
+      },
+      {
+        "path": "node_modules/@svgr/babel-preset",
+        "name": "@svgr/babel-preset",
+        "version": "8.1.0"
+      },
+      {
+        "path": "node_modules/@svgr/core",
+        "name": "@svgr/core",
+        "version": "8.1.0"
+      },
+      {
+        "path": "node_modules/@svgr/hast-util-to-babel-ast",
+        "name": "@svgr/hast-util-to-babel-ast",
+        "version": "8.0.0"
+      },
+      {
+        "path": "node_modules/@svgr/plugin-jsx",
+        "name": "@svgr/plugin-jsx",
+        "version": "8.1.0"
+      },
+      {
+        "path": "node_modules/@tailwindcss/node",
+        "name": "@tailwindcss/node",
+        "version": "4.3.3"
+      },
+      {
+        "path": "node_modules/@tailwindcss/oxide",
+        "name": "@tailwindcss/oxide",
+        "version": "4.3.3"
+      },
+      {
+        "path": "node_modules/@tailwindcss/oxide-android-arm64",
+        "name": "@tailwindcss/oxide-android-arm64",
+        "version": "4.3.3"
+      },
+      {
+        "path": "node_modules/@tailwindcss/oxide-darwin-arm64",
+        "name": "@tailwindcss/oxide-darwin-arm64",
+        "version": "4.3.3"
+      },
+      {
+        "path": "node_modules/@tailwindcss/oxide-darwin-x64",
+        "name": "@tailwindcss/oxide-darwin-x64",
+        "version": "4.3.3"
+      },
+      {
+        "path": "node_modules/@tailwindcss/oxide-freebsd-x64",
+        "name": "@tailwindcss/oxide-freebsd-x64",
+        "version": "4.3.3"
+      },
+      {
+        "path": "node_modules/@tailwindcss/oxide-linux-arm-gnueabihf",
+        "name": "@tailwindcss/oxide-linux-arm-gnueabihf",
+        "version": "4.3.3"
+      },
+      {
+        "path": "node_modules/@tailwindcss/oxide-linux-arm64-gnu",
+        "name": "@tailwindcss/oxide-linux-arm64-gnu",
+        "version": "4.3.3"
+      },
+      {
+        "path": "node_modules/@tailwindcss/oxide-linux-arm64-musl",
+        "name": "@tailwindcss/oxide-linux-arm64-musl",
+        "version": "4.3.3"
+      },
+      {
+        "path": "node_modules/@tailwindcss/oxide-linux-x64-gnu",
+        "name": "@tailwindcss/oxide-linux-x64-gnu",
+        "version": "4.3.3"
+      },
+      {
+        "path": "node_modules/@tailwindcss/oxide-linux-x64-musl",
+        "name": "@tailwindcss/oxide-linux-x64-musl",
+        "version": "4.3.3"
+      },
+      {
+        "path": "node_modules/@tailwindcss/oxide-wasm32-wasi",
+        "name": "@tailwindcss/oxide-wasm32-wasi",
+        "version": "4.3.3"
+      },
+      {
+        "path": "node_modules/@tailwindcss/oxide-win32-arm64-msvc",
+        "name": "@tailwindcss/oxide-win32-arm64-msvc",
+        "version": "4.3.3"
+      },
+      {
+        "path": "node_modules/@tailwindcss/oxide-win32-x64-msvc",
+        "name": "@tailwindcss/oxide-win32-x64-msvc",
+        "version": "4.3.3"
+      },
+      {
+        "path": "node_modules/@tailwindcss/postcss",
+        "name": "@tailwindcss/postcss",
+        "version": "4.3.3"
+      },
+      {
+        "path": "node_modules/@tailwindcss/vite",
+        "name": "@tailwindcss/vite",
+        "version": "4.3.3"
+      },
+      {
+        "path": "node_modules/@types/babel__core",
+        "name": "@types/babel__core",
+        "version": "7.20.5"
+      },
+      {
+        "path": "node_modules/@types/babel__generator",
+        "name": "@types/babel__generator",
+        "version": "7.6.8"
+      },
+      {
+        "path": "node_modules/@types/babel__template",
+        "name": "@types/babel__template",
+        "version": "7.4.4"
+      },
+      {
+        "path": "node_modules/@types/babel__traverse",
+        "name": "@types/babel__traverse",
+        "version": "7.20.6"
+      },
+      {
+        "path": "node_modules/@types/esrecurse",
+        "name": "@types/esrecurse",
+        "version": "4.3.1"
+      },
+      {
+        "path": "node_modules/@types/estree",
+        "name": "@types/estree",
+        "version": "1.0.8"
+      },
+      {
+        "path": "node_modules/@types/geojson",
+        "name": "@types/geojson",
+        "version": "7946.0.16"
+      },
+      {
+        "path": "node_modules/@types/json-schema",
+        "name": "@types/json-schema",
+        "version": "7.0.15"
+      },
+      {
+        "path": "node_modules/@types/jsvectormap",
+        "name": "@types/jsvectormap",
+        "version": "1.7.0"
+      },
+      {
+        "path": "node_modules/@types/leaflet",
+        "name": "@types/leaflet",
+        "version": "1.9.21"
+      },
+      {
+        "path": "node_modules/@types/node",
+        "name": "@types/node",
+        "version": "26.4.1"
+      },
+      {
+        "path": "node_modules/@types/prismjs",
+        "name": "@types/prismjs",
+        "version": "1.26.5"
+      },
+      {
+        "path": "node_modules/@types/react",
+        "name": "@types/react",
+        "version": "19.0.12"
+      },
+      {
+        "path": "node_modules/@types/react-dom",
+        "name": "@types/react-dom",
+        "version": "19.0.4"
+      },
+      {
+        "path": "node_modules/@typescript-eslint/scope-manager",
+        "name": "@typescript-eslint/scope-manager",
+        "version": "8.69.0"
+      },
+      {
+        "path": "node_modules/@typescript-eslint/types",
+        "name": "@typescript-eslint/types",
+        "version": "8.69.0"
+      },
+      {
+        "path": "node_modules/@typescript-eslint/visitor-keys",
+        "name": "@typescript-eslint/visitor-keys",
+        "version": "8.69.0"
+      },
+      {
+        "path": "node_modules/@vis.gl/react-mapbox",
+        "name": "@vis.gl/react-mapbox",
+        "version": "8.1.3"
+      },
+      {
+        "path": "node_modules/@vis.gl/react-maplibre",
+        "name": "@vis.gl/react-maplibre",
+        "version": "8.1.3"
+      },
+      {
+        "path": "node_modules/@vis.gl/react-maplibre/node_modules/@maplibre/maplibre-gl-style-spec",
+        "name": "@maplibre/maplibre-gl-style-spec",
+        "version": "19.3.3"
+      },
+      {
+        "path": "node_modules/@vis.gl/react-maplibre/node_modules/json-stringify-pretty-compact",
+        "name": "json-stringify-pretty-compact",
+        "version": "3.0.0"
+      },
+      {
+        "path": "node_modules/@vitejs/plugin-react",
+        "name": "@vitejs/plugin-react",
+        "version": "5.2.0"
+      },
+      {
+        "path": "node_modules/acorn",
+        "name": "acorn",
+        "version": "8.18.0"
+      },
+      {
+        "path": "node_modules/acorn-jsx",
+        "name": "acorn-jsx",
+        "version": "5.3.2"
+      },
+      {
+        "path": "node_modules/ajv",
+        "name": "ajv",
+        "version": "6.15.0"
+      },
+      {
+        "path": "node_modules/apex-commons",
+        "name": "apex-commons",
+        "version": "0.5.0"
+      },
+      {
+        "path": "node_modules/apexcharts",
+        "name": "apexcharts",
+        "version": "7.1.0"
+      },
+      {
+        "path": "node_modules/argparse",
+        "name": "argparse",
+        "version": "2.0.1"
+      },
+      {
+        "path": "node_modules/arr-union",
+        "name": "arr-union",
+        "version": "3.1.0"
+      },
+      {
+        "path": "node_modules/assign-symbols",
+        "name": "assign-symbols",
+        "version": "1.0.0"
+      },
+      {
+        "path": "node_modules/attr-accept",
+        "name": "attr-accept",
+        "version": "4.0.0"
+      },
+      {
+        "path": "node_modules/balanced-match",
+        "name": "balanced-match",
+        "version": "4.0.4"
+      },
+      {
+        "path": "node_modules/baseline-browser-mapping",
+        "name": "baseline-browser-mapping",
+        "version": "2.11.21"
+      },
+      {
+        "path": "node_modules/brace-expansion",
+        "name": "brace-expansion",
+        "version": "5.0.11"
+      },
+      {
+        "path": "node_modules/browserslist",
+        "name": "browserslist",
+        "version": "4.28.9"
+      },
+      {
+        "path": "node_modules/bytewise",
+        "name": "bytewise",
+        "version": "1.1.0"
+      },
+      {
+        "path": "node_modules/bytewise-core",
+        "name": "bytewise-core",
+        "version": "1.2.3"
+      },
+      {
+        "path": "node_modules/cacheable",
+        "name": "cacheable",
+        "version": "2.5.0"
+      },
+      {
+        "path": "node_modules/callsites",
+        "name": "callsites",
+        "version": "3.1.0"
+      },
+      {
+        "path": "node_modules/camelcase",
+        "name": "camelcase",
+        "version": "6.3.0"
+      },
+      {
+        "path": "node_modules/caniuse-lite",
+        "name": "caniuse-lite",
+        "version": "1.0.30001810"
+      },
+      {
+        "path": "node_modules/clsx",
+        "name": "clsx",
+        "version": "2.1.1"
+      },
+      {
+        "path": "node_modules/convert-source-map",
+        "name": "convert-source-map",
+        "version": "2.0.0"
+      },
+      {
+        "path": "node_modules/cookie-es",
+        "name": "cookie-es",
+        "version": "3.1.1"
+      },
+      {
+        "path": "node_modules/cosmiconfig",
+        "name": "cosmiconfig",
+        "version": "8.3.6"
+      },
+      {
+        "path": "node_modules/cross-spawn",
+        "name": "cross-spawn",
+        "version": "7.0.6"
+      },
+      {
+        "path": "node_modules/csstype",
+        "name": "csstype",
+        "version": "3.1.3"
+      },
+      {
+        "path": "node_modules/debug",
+        "name": "debug",
+        "version": "4.4.3"
+      },
+      {
+        "path": "node_modules/deep-is",
+        "name": "deep-is",
+        "version": "0.1.4"
+      },
+      {
+        "path": "node_modules/detect-libc",
+        "name": "detect-libc",
+        "version": "2.0.3"
+      },
+      {
+        "path": "node_modules/dnd-core",
+        "name": "dnd-core",
+        "version": "16.0.1"
+      },
+      {
+        "path": "node_modules/dot-case",
+        "name": "dot-case",
+        "version": "3.0.4"
+      },
+      {
+        "path": "node_modules/earcut",
+        "name": "earcut",
+        "version": "3.2.3"
+      },
+      {
+        "path": "node_modules/electron-to-chromium",
+        "name": "electron-to-chromium",
+        "version": "1.5.422"
+      },
+      {
+        "path": "node_modules/enhanced-resolve",
+        "name": "enhanced-resolve",
+        "version": "5.24.5"
+      },
+      {
+        "path": "node_modules/entities",
+        "name": "entities",
+        "version": "4.5.0"
+      },
+      {
+        "path": "node_modules/error-ex",
+        "name": "error-ex",
+        "version": "1.3.2"
+      },
+      {
+        "path": "node_modules/escalade",
+        "name": "escalade",
+        "version": "3.2.0"
+      },
+      {
+        "path": "node_modules/escape-string-regexp",
+        "name": "escape-string-regexp",
+        "version": "4.0.0"
+      },
+      {
+        "path": "node_modules/eslint",
+        "name": "eslint",
+        "version": "10.10.0"
+      },
+      {
+        "path": "node_modules/eslint-plugin-react-hooks",
+        "name": "eslint-plugin-react-hooks",
+        "version": "7.1.1"
+      },
+      {
+        "path": "node_modules/eslint-plugin-react-refresh",
+        "name": "eslint-plugin-react-refresh",
+        "version": "0.5.6"
+      },
+      {
+        "path": "node_modules/eslint-scope",
+        "name": "eslint-scope",
+        "version": "9.1.2"
+      },
+      {
+        "path": "node_modules/eslint-visitor-keys",
+        "name": "eslint-visitor-keys",
+        "version": "5.0.1"
+      },
+      {
+        "path": "node_modules/espree",
+        "name": "espree",
+        "version": "11.2.0"
+      },
+      {
+        "path": "node_modules/esquery",
+        "name": "esquery",
+        "version": "1.7.0"
+      },
+      {
+        "path": "node_modules/esrecurse",
+        "name": "esrecurse",
+        "version": "4.3.0"
+      },
+      {
+        "path": "node_modules/estraverse",
+        "name": "estraverse",
+        "version": "5.3.0"
+      },
+      {
+        "path": "node_modules/estree-walker",
+        "name": "estree-walker",
+        "version": "2.0.2"
+      },
+      {
+        "path": "node_modules/esutils",
+        "name": "esutils",
+        "version": "2.0.3"
+      },
+      {
+        "path": "node_modules/extend-shallow",
+        "name": "extend-shallow",
+        "version": "2.0.1"
+      },
+      {
+        "path": "node_modules/fast-deep-equal",
+        "name": "fast-deep-equal",
+        "version": "3.1.3"
+      },
+      {
+        "path": "node_modules/fast-json-stable-stringify",
+        "name": "fast-json-stable-stringify",
+        "version": "2.1.0"
+      },
+      {
+        "path": "node_modules/fast-levenshtein",
+        "name": "fast-levenshtein",
+        "version": "2.0.6"
+      },
+      {
+        "path": "node_modules/file-entry-cache",
+        "name": "file-entry-cache",
+        "version": "11.1.5"
+      },
+      {
+        "path": "node_modules/file-selector",
+        "name": "file-selector",
+        "version": "5.0.1"
+      },
+      {
+        "path": "node_modules/find-up",
+        "name": "find-up",
+        "version": "5.0.0"
+      },
+      {
+        "path": "node_modules/flat-cache",
+        "name": "flat-cache",
+        "version": "6.1.23"
+      },
+      {
+        "path": "node_modules/flatpickr",
+        "name": "flatpickr",
+        "version": "4.6.13"
+      },
+      {
+        "path": "node_modules/flatted",
+        "name": "flatted",
+        "version": "3.4.4"
+      },
+      {
+        "path": "node_modules/fsevents",
+        "name": "fsevents",
+        "version": "2.3.3"
+      },
+      {
+        "path": "node_modules/gensync",
+        "name": "gensync",
+        "version": "1.0.0-beta.2"
+      },
+      {
+        "path": "node_modules/get-value",
+        "name": "get-value",
+        "version": "2.0.6"
+      },
+      {
+        "path": "node_modules/gl-matrix",
+        "name": "gl-matrix",
+        "version": "3.4.4"
+      },
+      {
+        "path": "node_modules/glob-parent",
+        "name": "glob-parent",
+        "version": "6.0.2"
+      },
+      {
+        "path": "node_modules/globals",
+        "name": "globals",
+        "version": "15.15.0"
+      },
+      {
+        "path": "node_modules/graceful-fs",
+        "name": "graceful-fs",
+        "version": "4.2.11"
+      },
+      {
+        "path": "node_modules/hashery",
+        "name": "hashery",
+        "version": "1.5.1"
+      },
+      {
+        "path": "node_modules/hermes-estree",
+        "name": "hermes-estree",
+        "version": "0.25.1"
+      },
+      {
+        "path": "node_modules/hermes-parser",
+        "name": "hermes-parser",
+        "version": "0.25.1"
+      },
+      {
+        "path": "node_modules/hoist-non-react-statics",
+        "name": "hoist-non-react-statics",
+        "version": "3.3.2"
+      },
+      {
+        "path": "node_modules/hookified",
+        "name": "hookified",
+        "version": "1.15.1"
+      },
+      {
+        "path": "node_modules/html-parse-stringify",
+        "name": "html-parse-stringify",
+        "version": "4.0.1"
+      },
+      {
+        "path": "node_modules/i18next",
+        "name": "i18next",
+        "version": "26.4.0"
+      },
+      {
+        "path": "node_modules/ignore",
+        "name": "ignore",
+        "version": "5.3.2"
+      },
+      {
+        "path": "node_modules/import-fresh",
+        "name": "import-fresh",
+        "version": "3.3.1"
+      },
+      {
+        "path": "node_modules/imurmurhash",
+        "name": "imurmurhash",
+        "version": "0.1.4"
+      },
+      {
+        "path": "node_modules/invariant",
+        "name": "invariant",
+        "version": "2.2.4"
+      },
+      {
+        "path": "node_modules/is-arrayish",
+        "name": "is-arrayish",
+        "version": "0.2.1"
+      },
+      {
+        "path": "node_modules/is-extendable",
+        "name": "is-extendable",
+        "version": "0.1.1"
+      },
+      {
+        "path": "node_modules/is-extglob",
+        "name": "is-extglob",
+        "version": "2.1.1"
+      },
+      {
+        "path": "node_modules/is-glob",
+        "name": "is-glob",
+        "version": "4.0.3"
+      },
+      {
+        "path": "node_modules/is-plain-object",
+        "name": "is-plain-object",
+        "version": "2.0.4"
+      },
+      {
+        "path": "node_modules/isexe",
+        "name": "isexe",
+        "version": "2.0.0"
+      },
+      {
+        "path": "node_modules/isobject",
+        "name": "isobject",
+        "version": "3.0.1"
+      },
+      {
+        "path": "node_modules/jiti",
+        "name": "jiti",
+        "version": "2.7.0"
+      },
+      {
+        "path": "node_modules/js-tokens",
+        "name": "js-tokens",
+        "version": "4.0.0"
+      },
+      {
+        "path": "node_modules/js-yaml",
+        "name": "js-yaml",
+        "version": "4.3.2"
+      },
+      {
+        "path": "node_modules/jsesc",
+        "name": "jsesc",
+        "version": "3.1.0"
+      },
+      {
+        "path": "node_modules/json-parse-even-better-errors",
+        "name": "json-parse-even-better-errors",
+        "version": "2.3.1"
+      },
+      {
+        "path": "node_modules/json-schema-traverse",
+        "name": "json-schema-traverse",
+        "version": "0.4.1"
+      },
+      {
+        "path": "node_modules/json-stable-stringify-without-jsonify",
+        "name": "json-stable-stringify-without-jsonify",
+        "version": "1.0.1"
+      },
+      {
+        "path": "node_modules/json-stringify-pretty-compact",
+        "name": "json-stringify-pretty-compact",
+        "version": "4.0.0"
+      },
+      {
+        "path": "node_modules/json5",
+        "name": "json5",
+        "version": "2.2.3"
+      },
+      {
+        "path": "node_modules/jsvectormap",
+        "name": "jsvectormap",
+        "version": "1.7.0"
+      },
+      {
+        "path": "node_modules/kdbush",
+        "name": "kdbush",
+        "version": "4.1.0"
+      },
+      {
+        "path": "node_modules/keyv",
+        "name": "keyv",
+        "version": "5.6.0"
+      },
+      {
+        "path": "node_modules/leaflet",
+        "name": "leaflet",
+        "version": "1.9.4"
+      },
+      {
+        "path": "node_modules/levn",
+        "name": "levn",
+        "version": "0.4.1"
+      },
+      {
+        "path": "node_modules/lightningcss",
+        "name": "lightningcss",
+        "version": "1.32.0"
+      },
+      {
+        "path": "node_modules/lightningcss-android-arm64",
+        "name": "lightningcss-android-arm64",
+        "version": "1.32.0"
+      },
+      {
+        "path": "node_modules/lightningcss-darwin-arm64",
+        "name": "lightningcss-darwin-arm64",
+        "version": "1.32.0"
+      },
+      {
+        "path": "node_modules/lightningcss-darwin-x64",
+        "name": "lightningcss-darwin-x64",
+        "version": "1.32.0"
+      },
+      {
+        "path": "node_modules/lightningcss-freebsd-x64",
+        "name": "lightningcss-freebsd-x64",
+        "version": "1.32.0"
+      },
+      {
+        "path": "node_modules/lightningcss-linux-arm-gnueabihf",
+        "name": "lightningcss-linux-arm-gnueabihf",
+        "version": "1.32.0"
+      },
+      {
+        "path": "node_modules/lightningcss-linux-arm64-gnu",
+        "name": "lightningcss-linux-arm64-gnu",
+        "version": "1.32.0"
+      },
+      {
+        "path": "node_modules/lightningcss-linux-arm64-musl",
+        "name": "lightningcss-linux-arm64-musl",
+        "version": "1.32.0"
+      },
+      {
+        "path": "node_modules/lightningcss-linux-x64-gnu",
+        "name": "lightningcss-linux-x64-gnu",
+        "version": "1.32.0"
+      },
+      {
+        "path": "node_modules/lightningcss-linux-x64-musl",
+        "name": "lightningcss-linux-x64-musl",
+        "version": "1.32.0"
+      },
+      {
+        "path": "node_modules/lightningcss-win32-arm64-msvc",
+        "name": "lightningcss-win32-arm64-msvc",
+        "version": "1.32.0"
+      },
+      {
+        "path": "node_modules/lightningcss-win32-x64-msvc",
+        "name": "lightningcss-win32-x64-msvc",
+        "version": "1.32.0"
+      },
+      {
+        "path": "node_modules/lines-and-columns",
+        "name": "lines-and-columns",
+        "version": "1.2.4"
+      },
+      {
+        "path": "node_modules/locate-path",
+        "name": "locate-path",
+        "version": "6.0.0"
+      },
+      {
+        "path": "node_modules/lodash",
+        "name": "lodash",
+        "version": "4.18.1"
+      },
+      {
+        "path": "node_modules/lodash-es",
+        "name": "lodash-es",
+        "version": "4.18.1"
+      },
+      {
+        "path": "node_modules/loose-envify",
+        "name": "loose-envify",
+        "version": "1.4.0"
+      },
+      {
+        "path": "node_modules/lower-case",
+        "name": "lower-case",
+        "version": "2.0.2"
+      },
+      {
+        "path": "node_modules/lru-cache",
+        "name": "lru-cache",
+        "version": "5.1.1"
+      },
+      {
+        "path": "node_modules/magic-string",
+        "name": "magic-string",
+        "version": "0.30.21"
+      },
+      {
+        "path": "node_modules/maplibre-gl",
+        "name": "maplibre-gl",
+        "version": "6.8.0"
+      },
+      {
+        "path": "node_modules/maplibre-gl/node_modules/@mapbox/unitbezier",
+        "name": "@mapbox/unitbezier",
+        "version": "1.0.0"
+      },
+      {
+        "path": "node_modules/minimatch",
+        "name": "minimatch",
+        "version": "10.2.6"
+      },
+      {
+        "path": "node_modules/minimist",
+        "name": "minimist",
+        "version": "1.2.8"
+      },
+      {
+        "path": "node_modules/ms",
+        "name": "ms",
+        "version": "2.1.3"
+      },
+      {
+        "path": "node_modules/murmurhash-js",
+        "name": "murmurhash-js",
+        "version": "1.0.0"
+      },
+      {
+        "path": "node_modules/nanoid",
+        "name": "nanoid",
+        "version": "3.3.18"
+      },
+      {
+        "path": "node_modules/natural-compare",
+        "name": "natural-compare",
+        "version": "1.4.0"
+      },
+      {
+        "path": "node_modules/no-case",
+        "name": "no-case",
+        "version": "3.0.4"
+      },
+      {
+        "path": "node_modules/node-releases",
+        "name": "node-releases",
+        "version": "2.0.54"
+      },
+      {
+        "path": "node_modules/object-assign",
+        "name": "object-assign",
+        "version": "4.1.1"
+      },
+      {
+        "path": "node_modules/optionator",
+        "name": "optionator",
+        "version": "0.9.4"
+      },
+      {
+        "path": "node_modules/p-limit",
+        "name": "p-limit",
+        "version": "3.1.0"
+      },
+      {
+        "path": "node_modules/p-locate",
+        "name": "p-locate",
+        "version": "5.0.0"
+      },
+      {
+        "path": "node_modules/parent-module",
+        "name": "parent-module",
+        "version": "1.0.1"
+      },
+      {
+        "path": "node_modules/parse-json",
+        "name": "parse-json",
+        "version": "5.2.0"
+      },
+      {
+        "path": "node_modules/path-exists",
+        "name": "path-exists",
+        "version": "4.0.0"
+      },
+      {
+        "path": "node_modules/path-key",
+        "name": "path-key",
+        "version": "3.1.1"
+      },
+      {
+        "path": "node_modules/path-type",
+        "name": "path-type",
+        "version": "4.0.0"
+      },
+      {
+        "path": "node_modules/pbf",
+        "name": "pbf",
+        "version": "5.1.2"
+      },
+      {
+        "path": "node_modules/picocolors",
+        "name": "picocolors",
+        "version": "1.1.1"
+      },
+      {
+        "path": "node_modules/picomatch",
+        "name": "picomatch",
+        "version": "4.0.7"
+      },
+      {
+        "path": "node_modules/postcss",
+        "name": "postcss",
+        "version": "8.5.28"
+      },
+      {
+        "path": "node_modules/potpack",
+        "name": "potpack",
+        "version": "2.1.0"
+      },
+      {
+        "path": "node_modules/prelude-ls",
+        "name": "prelude-ls",
+        "version": "1.2.1"
+      },
+      {
+        "path": "node_modules/prettier",
+        "name": "prettier",
+        "version": "3.9.6"
+      },
+      {
+        "path": "node_modules/prettier-plugin-tailwindcss",
+        "name": "prettier-plugin-tailwindcss",
+        "version": "0.8.1"
+      },
+      {
+        "path": "node_modules/prismjs",
+        "name": "prismjs",
+        "version": "1.30.0"
+      },
+      {
+        "path": "node_modules/prop-types",
+        "name": "prop-types",
+        "version": "15.8.1"
+      },
+      {
+        "path": "node_modules/protocol-buffers-schema",
+        "name": "protocol-buffers-schema",
+        "version": "3.6.1"
+      },
+      {
+        "path": "node_modules/punycode",
+        "name": "punycode",
+        "version": "2.3.1"
+      },
+      {
+        "path": "node_modules/qified",
+        "name": "qified",
+        "version": "0.10.1"
+      },
+      {
+        "path": "node_modules/qified/node_modules/hookified",
+        "name": "hookified",
+        "version": "2.2.0"
+      },
+      {
+        "path": "node_modules/quickselect",
+        "name": "quickselect",
+        "version": "3.0.0"
+      },
+      {
+        "path": "node_modules/react",
+        "name": "react",
+        "version": "19.2.7"
+      },
+      {
+        "path": "node_modules/react-apexcharts",
+        "name": "react-apexcharts",
+        "version": "2.1.1"
+      },
+      {
+        "path": "node_modules/react-dnd",
+        "name": "react-dnd",
+        "version": "16.0.1"
+      },
+      {
+        "path": "node_modules/react-dnd-html5-backend",
+        "name": "react-dnd-html5-backend",
+        "version": "16.0.1"
+      },
+      {
+        "path": "node_modules/react-dom",
+        "name": "react-dom",
+        "version": "19.2.7"
+      },
+      {
+        "path": "node_modules/react-dropzone",
+        "name": "react-dropzone",
+        "version": "20.1.1"
+      },
+      {
+        "path": "node_modules/react-fast-compare",
+        "name": "react-fast-compare",
+        "version": "3.2.2"
+      },
+      {
+        "path": "node_modules/react-helmet-async",
+        "name": "react-helmet-async",
+        "version": "3.0.0"
+      },
+      {
+        "path": "node_modules/react-i18next",
+        "name": "react-i18next",
+        "version": "17.0.12"
+      },
+      {
+        "path": "node_modules/react-is",
+        "name": "react-is",
+        "version": "16.13.1"
+      },
+      {
+        "path": "node_modules/react-map-gl",
+        "name": "react-map-gl",
+        "version": "8.1.3"
+      },
+      {
+        "path": "node_modules/react-refresh",
+        "name": "react-refresh",
+        "version": "0.18.0"
+      },
+      {
+        "path": "node_modules/react-router",
+        "name": "react-router",
+        "version": "8.3.1"
+      },
+      {
+        "path": "node_modules/redux",
+        "name": "redux",
+        "version": "4.2.1"
+      },
+      {
+        "path": "node_modules/resolve-from",
+        "name": "resolve-from",
+        "version": "4.0.0"
+      },
+      {
+        "path": "node_modules/resolve-protobuf-schema",
+        "name": "resolve-protobuf-schema",
+        "version": "2.1.0"
+      },
+      {
+        "path": "node_modules/rolldown",
+        "name": "rolldown",
+        "version": "1.2.7"
+      },
+      {
+        "path": "node_modules/rolldown/node_modules/@rolldown/pluginutils",
+        "name": "@rolldown/pluginutils",
+        "version": "1.0.1"
+      },
+      {
+        "path": "node_modules/rw",
+        "name": "rw",
+        "version": "1.3.3"
+      },
+      {
+        "path": "node_modules/scheduler",
+        "name": "scheduler",
+        "version": "0.27.0"
+      },
+      {
+        "path": "node_modules/semver",
+        "name": "semver",
+        "version": "6.3.1"
+      },
+      {
+        "path": "node_modules/set-value",
+        "name": "set-value",
+        "version": "2.0.1"
+      },
+      {
+        "path": "node_modules/shallowequal",
+        "name": "shallowequal",
+        "version": "1.1.0"
+      },
+      {
+        "path": "node_modules/shebang-command",
+        "name": "shebang-command",
+        "version": "2.0.0"
+      },
+      {
+        "path": "node_modules/shebang-regex",
+        "name": "shebang-regex",
+        "version": "3.0.0"
+      },
+      {
+        "path": "node_modules/simplebar-core",
+        "name": "simplebar-core",
+        "version": "1.3.2"
+      },
+      {
+        "path": "node_modules/simplebar-react",
+        "name": "simplebar-react",
+        "version": "3.3.2"
+      },
+      {
+        "path": "node_modules/snake-case",
+        "name": "snake-case",
+        "version": "3.0.4"
+      },
+      {
+        "path": "node_modules/sort-asc",
+        "name": "sort-asc",
+        "version": "0.2.0"
+      },
+      {
+        "path": "node_modules/sort-desc",
+        "name": "sort-desc",
+        "version": "0.2.0"
+      },
+      {
+        "path": "node_modules/sort-object",
+        "name": "sort-object",
+        "version": "3.0.3"
+      },
+      {
+        "path": "node_modules/source-map-js",
+        "name": "source-map-js",
+        "version": "1.2.2"
+      },
+      {
+        "path": "node_modules/split-string",
+        "name": "split-string",
+        "version": "3.1.0"
+      },
+      {
+        "path": "node_modules/split-string/node_modules/extend-shallow",
+        "name": "extend-shallow",
+        "version": "3.0.2"
+      },
+      {
+        "path": "node_modules/split-string/node_modules/is-extendable",
+        "name": "is-extendable",
+        "version": "1.0.1"
+      },
+      {
+        "path": "node_modules/svg-parser",
+        "name": "svg-parser",
+        "version": "2.0.4"
+      },
+      {
+        "path": "node_modules/swiper",
+        "name": "swiper",
+        "version": "12.1.4"
+      },
+      {
+        "path": "node_modules/tabbable",
+        "name": "tabbable",
+        "version": "6.2.0"
+      },
+      {
+        "path": "node_modules/tailwind-merge",
+        "name": "tailwind-merge",
+        "version": "3.6.0"
+      },
+      {
+        "path": "node_modules/tailwindcss",
+        "name": "tailwindcss",
+        "version": "4.3.3"
+      },
+      {
+        "path": "node_modules/tapable",
+        "name": "tapable",
+        "version": "2.3.3"
+      },
+      {
+        "path": "node_modules/temporal-polyfill",
+        "name": "temporal-polyfill",
+        "version": "1.0.4"
+      },
+      {
+        "path": "node_modules/temporal-spec",
+        "name": "temporal-spec",
+        "version": "1.0.1"
+      },
+      {
+        "path": "node_modules/temporal-utils",
+        "name": "temporal-utils",
+        "version": "1.0.2"
+      },
+      {
+        "path": "node_modules/tinyglobby",
+        "name": "tinyglobby",
+        "version": "0.2.17"
+      },
+      {
+        "path": "node_modules/tinyglobby/node_modules/fdir",
+        "name": "fdir",
+        "version": "6.5.0"
+      },
+      {
+        "path": "node_modules/tinyqueue",
+        "name": "tinyqueue",
+        "version": "3.0.0"
+      },
+      {
+        "path": "node_modules/ts-api-utils",
+        "name": "ts-api-utils",
+        "version": "2.5.0"
+      },
+      {
+        "path": "node_modules/tslib",
+        "name": "tslib",
+        "version": "2.8.1"
+      },
+      {
+        "path": "node_modules/type-check",
+        "name": "type-check",
+        "version": "0.4.0"
+      },
+      {
+        "path": "node_modules/typescript",
+        "name": "typescript",
+        "version": "5.8.3"
+      },
+      {
+        "path": "node_modules/typescript-eslint",
+        "name": "typescript-eslint",
+        "version": "8.69.0"
+      },
+      {
+        "path": "node_modules/typescript-eslint/node_modules/@typescript-eslint/eslint-plugin",
+        "name": "@typescript-eslint/eslint-plugin",
+        "version": "8.69.0"
+      },
+      {
+        "path": "node_modules/typescript-eslint/node_modules/@typescript-eslint/eslint-plugin/node_modules/@typescript-eslint/type-utils",
+        "name": "@typescript-eslint/type-utils",
+        "version": "8.69.0"
+      },
+      {
+        "path": "node_modules/typescript-eslint/node_modules/@typescript-eslint/parser",
+        "name": "@typescript-eslint/parser",
+        "version": "8.69.0"
+      },
+      {
+        "path": "node_modules/typescript-eslint/node_modules/@typescript-eslint/typescript-estree",
+        "name": "@typescript-eslint/typescript-estree",
+        "version": "8.69.0"
+      },
+      {
+        "path": "node_modules/typescript-eslint/node_modules/@typescript-eslint/typescript-estree/node_modules/@typescript-eslint/project-service",
+        "name": "@typescript-eslint/project-service",
+        "version": "8.69.0"
+      },
+      {
+        "path": "node_modules/typescript-eslint/node_modules/@typescript-eslint/typescript-estree/node_modules/@typescript-eslint/tsconfig-utils",
+        "name": "@typescript-eslint/tsconfig-utils",
+        "version": "8.69.0"
+      },
+      {
+        "path": "node_modules/typescript-eslint/node_modules/@typescript-eslint/utils",
+        "name": "@typescript-eslint/utils",
+        "version": "8.69.0"
+      },
+      {
+        "path": "node_modules/typescript-eslint/node_modules/ignore",
+        "name": "ignore",
+        "version": "7.0.8"
+      },
+      {
+        "path": "node_modules/typescript-eslint/node_modules/semver",
+        "name": "semver",
+        "version": "7.8.5"
+      },
+      {
+        "path": "node_modules/typewise",
+        "name": "typewise",
+        "version": "1.0.3"
+      },
+      {
+        "path": "node_modules/typewise-core",
+        "name": "typewise-core",
+        "version": "1.2.0"
+      },
+      {
+        "path": "node_modules/undici-types",
+        "name": "undici-types",
+        "version": "8.3.0"
+      },
+      {
+        "path": "node_modules/union-value",
+        "name": "union-value",
+        "version": "1.0.1"
+      },
+      {
+        "path": "node_modules/update-browserslist-db",
+        "name": "update-browserslist-db",
+        "version": "1.3.2"
+      },
+      {
+        "path": "node_modules/uri-js",
+        "name": "uri-js",
+        "version": "4.4.1"
+      },
+      {
+        "path": "node_modules/use-sync-external-store",
+        "name": "use-sync-external-store",
+        "version": "1.6.0"
+      },
+      {
+        "path": "node_modules/vite",
+        "name": "vite",
+        "version": "8.2.4"
+      },
+      {
+        "path": "node_modules/vite-plugin-svgr",
+        "name": "vite-plugin-svgr",
+        "version": "5.2.0"
+      },
+      {
+        "path": "node_modules/vite/node_modules/lightningcss",
+        "name": "lightningcss",
+        "version": "1.33.0"
+      },
+      {
+        "path": "node_modules/vite/node_modules/lightningcss-android-arm64",
+        "name": "lightningcss-android-arm64",
+        "version": "1.33.0"
+      },
+      {
+        "path": "node_modules/vite/node_modules/lightningcss-darwin-arm64",
+        "name": "lightningcss-darwin-arm64",
+        "version": "1.33.0"
+      },
+      {
+        "path": "node_modules/vite/node_modules/lightningcss-darwin-x64",
+        "name": "lightningcss-darwin-x64",
+        "version": "1.33.0"
+      },
+      {
+        "path": "node_modules/vite/node_modules/lightningcss-freebsd-x64",
+        "name": "lightningcss-freebsd-x64",
+        "version": "1.33.0"
+      },
+      {
+        "path": "node_modules/vite/node_modules/lightningcss-linux-arm-gnueabihf",
+        "name": "lightningcss-linux-arm-gnueabihf",
+        "version": "1.33.0"
+      },
+      {
+        "path": "node_modules/vite/node_modules/lightningcss-linux-arm64-gnu",
+        "name": "lightningcss-linux-arm64-gnu",
+        "version": "1.33.0"
+      },
+      {
+        "path": "node_modules/vite/node_modules/lightningcss-linux-arm64-musl",
+        "name": "lightningcss-linux-arm64-musl",
+        "version": "1.33.0"
+      },
+      {
+        "path": "node_modules/vite/node_modules/lightningcss-linux-x64-gnu",
+        "name": "lightningcss-linux-x64-gnu",
+        "version": "1.33.0"
+      },
+      {
+        "path": "node_modules/vite/node_modules/lightningcss-linux-x64-musl",
+        "name": "lightningcss-linux-x64-musl",
+        "version": "1.33.0"
+      },
+      {
+        "path": "node_modules/vite/node_modules/lightningcss-win32-arm64-msvc",
+        "name": "lightningcss-win32-arm64-msvc",
+        "version": "1.33.0"
+      },
+      {
+        "path": "node_modules/vite/node_modules/lightningcss-win32-x64-msvc",
+        "name": "lightningcss-win32-x64-msvc",
+        "version": "1.33.0"
+      },
+      {
+        "path": "node_modules/which",
+        "name": "which",
+        "version": "2.0.2"
+      },
+      {
+        "path": "node_modules/word-wrap",
+        "name": "word-wrap",
+        "version": "1.2.5"
+      },
+      {
+        "path": "node_modules/yallist",
+        "name": "yallist",
+        "version": "3.1.1"
+      },
+      {
+        "path": "node_modules/yocto-queue",
+        "name": "yocto-queue",
+        "version": "0.1.0"
+      },
+      {
+        "path": "node_modules/zod",
+        "name": "zod",
+        "version": "4.6.6"
+      },
+      {
+        "path": "node_modules/zod-validation-error",
+        "name": "zod-validation-error",
+        "version": "4.0.2"
+      }
+    ]
+  },
+  "installation": {
+    "command": "npm ci --include=dev --include=optional",
+    "exit_code": 0,
+    "seconds": 30.13,
+    "lock_sha256_after": "8a8ee180aaa1ea184cbbbd8f241b0c922c9d451874366591908ee6ef9613e9ca",
+    "credentials_environment": "minimal PATH/HOME/TMPDIR/LANG/SHELL; empty user/global npmrc; no token/password/secret variables"
+  },
+  "npm_ls_all": "Passed exit 0; no invalid/missing dependencies",
+  "build": {
+    "exit_code": 0,
+    "seconds": 10.93,
+    "lock_sha256_after": "8a8ee180aaa1ea184cbbbd8f241b0c922c9d451874366591908ee6ef9613e9ca"
+  },
+  "callers": {
+    "versions": {
+      "source-map-js": "1.2.2",
+      "js-yaml": "4.3.2",
+      "brace-expansion": "5.0.11",
+      "zod": "4.6.6"
+    },
+    "checks": [
+      "source-map generator/consumer round trip",
+      "source-map indexed sections",
+      "YAML mapping/sequence/anchor/merge/omap",
+      "YAML dump/load",
+      "invalid YAML rejection",
+      "cosmiconfig actual YAML loader",
+      "minimatch nested brace caller",
+      "minimatch literal/escaped brace caller",
+      "Zod constrained valid/invalid collection via plugin resolution",
+      "actual ESLint config/plugin: valid fixture accepted, invalid hook rejected"
+    ],
+    "passed": 10
+  },
+  "browser": {
+    "results": [
+      {
+        "mode": "dev",
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        },
+        "route": "/",
+        "errors": [],
+        "failures": [],
+        "badResponses": [],
+        "consoleErrors": [
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector"
+        ],
+        "metrics": {
+          "width": 1440,
+          "scrollWidth": 1440,
+          "bodyText": 2130,
+          "styles": 15,
+          "images": []
+        },
+        "passed": true
+      },
+      {
+        "mode": "dev",
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        },
+        "route": "/form-elements",
+        "errors": [],
+        "failures": [],
+        "badResponses": [],
+        "consoleErrors": [
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector"
+        ],
+        "metrics": {
+          "width": 1440,
+          "scrollWidth": 1440,
+          "bodyText": 2106,
+          "styles": 11,
+          "images": []
+        },
+        "passed": true
+      },
+      {
+        "mode": "dev",
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        },
+        "route": "/basic-tables",
+        "errors": [],
+        "failures": [],
+        "badResponses": [],
+        "consoleErrors": [
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector"
+        ],
+        "metrics": {
+          "width": 1440,
+          "scrollWidth": 1440,
+          "bodyText": 3396,
+          "styles": 11,
+          "images": []
+        },
+        "passed": true
+      },
+      {
+        "mode": "dev",
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        },
+        "route": "/buttons",
+        "errors": [],
+        "failures": [],
+        "badResponses": [],
+        "consoleErrors": [
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector"
+        ],
+        "metrics": {
+          "width": 1440,
+          "scrollWidth": 1440,
+          "bodyText": 1541,
+          "styles": 11,
+          "images": []
+        },
+        "screenshot": "dev-buttons-1440.png",
+        "passed": true
+      },
+      {
+        "mode": "dev",
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        },
+        "route": "/signin",
+        "errors": [],
+        "failures": [],
+        "badResponses": [],
+        "consoleErrors": [
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector"
+        ],
+        "metrics": {
+          "width": 1440,
+          "scrollWidth": 1440,
+          "bodyText": 261,
+          "styles": 11,
+          "images": []
+        },
+        "passed": true
+      },
+      {
+        "mode": "dev",
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "route": "/",
+        "errors": [],
+        "failures": [],
+        "badResponses": [],
+        "consoleErrors": [
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector"
+        ],
+        "metrics": {
+          "width": 390,
+          "scrollWidth": 390,
+          "bodyText": 919,
+          "styles": 15,
+          "images": []
+        },
+        "passed": true
+      },
+      {
+        "mode": "dev",
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "route": "/form-elements",
+        "errors": [],
+        "failures": [],
+        "badResponses": [],
+        "consoleErrors": [
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector"
+        ],
+        "metrics": {
+          "width": 390,
+          "scrollWidth": 390,
+          "bodyText": 895,
+          "styles": 11,
+          "images": []
+        },
+        "passed": true
+      },
+      {
+        "mode": "dev",
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "route": "/basic-tables",
+        "errors": [],
+        "failures": [],
+        "badResponses": [],
+        "consoleErrors": [
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector"
+        ],
+        "metrics": {
+          "width": 390,
+          "scrollWidth": 390,
+          "bodyText": 2177,
+          "styles": 11,
+          "images": []
+        },
+        "passed": true
+      },
+      {
+        "mode": "dev",
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "route": "/buttons",
+        "errors": [],
+        "failures": [],
+        "badResponses": [],
+        "consoleErrors": [
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector"
+        ],
+        "metrics": {
+          "width": 390,
+          "scrollWidth": 390,
+          "bodyText": 330,
+          "styles": 11,
+          "images": []
+        },
+        "passed": true
+      },
+      {
+        "mode": "dev",
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "route": "/signin",
+        "errors": [],
+        "failures": [],
+        "badResponses": [],
+        "consoleErrors": [
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector"
+        ],
+        "metrics": {
+          "width": 390,
+          "scrollWidth": 390,
+          "bodyText": 201,
+          "styles": 11,
+          "images": []
+        },
+        "passed": true
+      },
+      {
+        "mode": "preview",
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        },
+        "route": "/",
+        "errors": [],
+        "failures": [],
+        "badResponses": [],
+        "consoleErrors": [
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector"
+        ],
+        "metrics": {
+          "width": 1440,
+          "scrollWidth": 1440,
+          "bodyText": 2130,
+          "styles": 5,
+          "images": []
+        },
+        "screenshot": "preview-home-1440.png",
+        "passed": true
+      },
+      {
+        "mode": "preview",
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        },
+        "route": "/form-elements",
+        "errors": [],
+        "failures": [],
+        "badResponses": [],
+        "consoleErrors": [
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector"
+        ],
+        "metrics": {
+          "width": 1440,
+          "scrollWidth": 1440,
+          "bodyText": 2106,
+          "styles": 1,
+          "images": []
+        },
+        "passed": true
+      },
+      {
+        "mode": "preview",
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        },
+        "route": "/basic-tables",
+        "errors": [],
+        "failures": [],
+        "badResponses": [],
+        "consoleErrors": [
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector"
+        ],
+        "metrics": {
+          "width": 1440,
+          "scrollWidth": 1440,
+          "bodyText": 3396,
+          "styles": 1,
+          "images": []
+        },
+        "passed": true
+      },
+      {
+        "mode": "preview",
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        },
+        "route": "/buttons",
+        "errors": [],
+        "failures": [],
+        "badResponses": [],
+        "consoleErrors": [
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector"
+        ],
+        "metrics": {
+          "width": 1440,
+          "scrollWidth": 1440,
+          "bodyText": 1541,
+          "styles": 1,
+          "images": []
+        },
+        "passed": true
+      },
+      {
+        "mode": "preview",
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        },
+        "route": "/signin",
+        "errors": [],
+        "failures": [],
+        "badResponses": [],
+        "consoleErrors": [
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector"
+        ],
+        "metrics": {
+          "width": 1440,
+          "scrollWidth": 1440,
+          "bodyText": 261,
+          "styles": 1,
+          "images": []
+        },
+        "passed": true
+      },
+      {
+        "mode": "preview",
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "route": "/",
+        "errors": [],
+        "failures": [],
+        "badResponses": [],
+        "consoleErrors": [
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector"
+        ],
+        "metrics": {
+          "width": 390,
+          "scrollWidth": 390,
+          "bodyText": 919,
+          "styles": 5,
+          "images": []
+        },
+        "passed": true
+      },
+      {
+        "mode": "preview",
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "route": "/form-elements",
+        "errors": [],
+        "failures": [],
+        "badResponses": [],
+        "consoleErrors": [
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector"
+        ],
+        "metrics": {
+          "width": 390,
+          "scrollWidth": 390,
+          "bodyText": 895,
+          "styles": 1,
+          "images": []
+        },
+        "screenshot": "preview-form-elements-390.png",
+        "passed": true
+      },
+      {
+        "mode": "preview",
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "route": "/basic-tables",
+        "errors": [],
+        "failures": [],
+        "badResponses": [],
+        "consoleErrors": [
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector"
+        ],
+        "metrics": {
+          "width": 390,
+          "scrollWidth": 390,
+          "bodyText": 2177,
+          "styles": 1,
+          "images": []
+        },
+        "passed": true
+      },
+      {
+        "mode": "preview",
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "route": "/buttons",
+        "errors": [],
+        "failures": [],
+        "badResponses": [],
+        "consoleErrors": [
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector"
+        ],
+        "metrics": {
+          "width": 390,
+          "scrollWidth": 390,
+          "bodyText": 330,
+          "styles": 1,
+          "images": []
+        },
+        "passed": true
+      },
+      {
+        "mode": "preview",
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "route": "/signin",
+        "errors": [],
+        "failures": [],
+        "badResponses": [],
+        "consoleErrors": [
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector"
+        ],
+        "metrics": {
+          "width": 390,
+          "scrollWidth": 390,
+          "bodyText": 201,
+          "styles": 1,
+          "images": []
+        },
+        "screenshot": "preview-signin-390.png",
+        "passed": true
+      }
+    ],
+    "passed": 20,
+    "total": 20,
+    "denied_external_resources": [
+      "https://fonts.googleapis.com/css2"
+    ]
+  },
+  "source_map_baseline_comparison": [
+    {
+      "label": "baseline",
+      "queries": [
+        {
+          "column": 0,
+          "result": {
+            "source": null,
+            "line": null,
+            "column": null,
+            "name": null
+          }
+        },
+        {
+          "column": 1,
+          "result": {
+            "source": "fixture.ts",
+            "line": 7,
+            "column": 2,
+            "name": null
+          }
+        },
+        {
+          "column": 2,
+          "result": {
+            "source": "fixture.ts",
+            "line": 7,
+            "column": 2,
+            "name": null
+          }
+        }
+      ]
+    },
+    {
+      "label": "candidate",
+      "queries": [
+        {
+          "column": 0,
+          "result": {
+            "source": null,
+            "line": null,
+            "column": null,
+            "name": null
+          }
+        },
+        {
+          "column": 1,
+          "result": {
+            "source": "fixture.ts",
+            "line": 7,
+            "column": 2,
+            "name": null
+          }
+        },
+        {
+          "column": 2,
+          "result": {
+            "source": "fixture.ts",
+            "line": 7,
+            "column": 2,
+            "name": null
+          }
+        }
+      ]
+    }
+  ],
+  "source_map_probe_history": {
+    "initial": "Failed assertion expected line 7 at indexed boundary line 3,column 0",
+    "diagnosis": "Integrity-verified baseline source-map-js 1.2.1 and candidate 1.2.2 return identical null at column 0, line 7 at columns 1/2",
+    "final": "Bounded indexed interior query corrected; 10 caller probes passed; pre-existing boundary behavior remains unchanged"
+  },
+  "remaining_risks": [
+    "3 Medium records retained, no exceptions",
+    "Google Fonts external request blocked by browser harness; local CSS/JS/assets pass; screenshot font fallback only",
+    "Vite Windows exploit not reproduced; fixed-version/advisory/full scan proof",
+    "Pre-existing indexed source-map column-zero boundary behavior retained",
+    "Review/required CI/post-merge validation pending"
+  ],
+  "temporary_probe_sha256": {
+    "tiewtrade-reference-prepare-20261106.py": "2603b0b349204c176191d695b75791935b7850a65167087ebb277da7f7c86541",
+    "tiewtrade-reference-scan-20261106.py": "feaa3b137280284080aede2f72244dde57598a89ccc426fcfcddf6d2ef26d639",
+    "tiewtrade-reference-amend-20261106.py": "a53ad3a81392b10f8404c5b659b74cde9e3e21df825ed9086faee103a06556cb",
+    "tiewtrade-reference-rescan-20261106.py": "d746988e2b0f13ba03674489349d4e25f809cf8e84cec89822dafec92895c08d",
+    "tiewtrade-reference-install-20261106.py": "62af2a31230eeeccd5d80b196a3917309f4ed9a7ae45e4415eb46aaa4dc9fe65",
+    "tiewtrade-reference-build-20261106.py": "52cf136c63ff050e33dcd4043b10419ded554e561850e9670a0abfd0efcbe473",
+    "tiewtrade-reference-callers-20261106.cjs": "21e29ba85d2aa9ae1e4d992551062c09b52a889e13403e016bb010dc158f0166",
+    "tiewtrade-reference-map-baseline-20261106.py": "4da80e6d52436962c06830256843786e8c19761a0784aad1b80318e9e6690d5b",
+    "tiewtrade-reference-browser-20261106.cjs": "737440e7f912c7d89915a1b10e9df73eb5584864cdb017bc8e36858a23385f4c",
+    "tiewtrade-reference-serve-20261106.py": "397f72701592b4770dc82d002eefa82b71cadba001a6cb4429eb52a3a6f27ed0"
+  },
+  "review": {
+    "result": "APPROVED",
+    "date": "2026-11-06",
+    "evidence": "code-review.md",
+    "new_actionable_findings": 0
+  },
+  "previous_template_scan_before_exception_amendment": {
+    "label": "candidate",
+    "amendment": "NC-SEC-REF-01 Approved",
+    "lock_sha256": "8a8ee180aaa1ea184cbbbd8f241b0c922c9d451874366591908ee6ef9613e9ca",
+    "expected_template_unique_packages": 372,
+    "expected_backend_unique_packages": 54,
+    "coverage_total": 426,
+    "severity_counts": {
+      "medium": 3
+    },
+    "findings": [
+      {
+        "severity": "medium",
+        "locator": [
+          "npm",
+          "@humanfs/node",
+          "0.16.6",
+          "GHSA-p498-v437-472g"
+        ]
+      },
+      {
+        "severity": "medium",
+        "locator": [
+          "npm",
+          "brace-expansion",
+          "5.0.11",
+          "GHSA-q2hr-2g5m-vwhr"
+        ]
+      },
+      {
+        "severity": "medium",
+        "locator": [
+          "npm",
+          "minimatch",
+          "10.2.6",
+          "GHSA-g3hv-75wg-m249"
+        ]
+      }
+    ],
+    "seconds": 2.71,
+    "configuration_digest": "fe5e8d743e9e67e350c8969acd9292e24a9165e57a65bd5c90a48633d91419ad"
+  },
+  "approved_exception_adjustment": {
+    "identity": "d84148a55a1db82c511520b0a40131229292c3c7c1fadf8d00f66a6cbbefe8b0",
+    "count_before": 92,
+    "count_after": 93,
+    "registry_sha256": "dbaca6a632b73965926b0f441bf073f6cd9d30c791a62697aebb6cdfee4abaa1",
+    "approval_evidence": "checksum-exception-proposal.md",
+    "policy_contracts": {
+      "tests_run": 35,
+      "skipped": 3,
+      "result": "Passed"
+    },
+    "targeted_review": "Approved \u2014 exact additive entry, existing 92 unchanged; checksum independently verified",
+    "precommit_probe_sha256": "0282af56218b4fae4dd2336b932a12cd43d4fa2c8a997d0737c74accbb2424c7"
+  },
+  "secret_precommit_probe": {
+    "result": "Passed",
+    "rows": [
+      {
+        "file": "specs/features/2026-11-06-security-reference-dependency-remediation/evidence/feature-candidate.json",
+        "working_lines": [
+          37,
+          37
+        ],
+        "origin_commit": "8ccc9e72077f80a8ab3fdcbc1634407c8f559a19",
+        "origin_lines": [
+          37,
+          37
+        ],
+        "identity": "d84148a55a1db82c511520b0a40131229292c3c7c1fadf8d00f66a6cbbefe8b0",
+        "approved": true
+      },
+      {
+        "file": "specs/roadmap.md",
+        "working_lines": [
+          289,
+          289
+        ],
+        "origin_commit": "5308fb9e92336c9cf9ce34584d7c53647e4d02e5",
+        "origin_lines": [
+          174,
+          174
+        ],
+        "identity": "78f4624431ea3a7dc2d33512fa70a9f487be1906b1324b7630b2fd5ff3d7655d",
+        "approved": true
+      }
+    ]
+  }
+}
