@@ -1,9 +1,9 @@
+import { isRecord } from "./isRecord";
 import { sessionJournal } from "./attemptJournal";
 import type { ProtectionAction, ProtectionCreate, ProtectionReplace, ProtectionCancel } from "./protections";
 export type ProtectionAttempt = { version: 1; owner: string; mode: "PAPER"; key: string; action: ProtectionAction; target?: string; payload: ProtectionCreate | ProtectionReplace | ProtectionCancel };
-const record = (v: unknown): v is Record<string, unknown> => !!v && typeof v === "object" && !Array.isArray(v);
 function valid(v: unknown, owner: string): v is ProtectionAttempt {
-  if (!record(v) || v.version !== 1 || v.owner !== owner || v.mode !== "PAPER" || typeof v.key !== "string" || !/^[0-9a-f-]{36}$/i.test(v.key) || !record(v.payload)) return false;
+  if (!isRecord(v) || v.version !== 1 || v.owner !== owner || v.mode !== "PAPER" || typeof v.key !== "string" || !/^[0-9a-f-]{36}$/i.test(v.key) || !isRecord(v.payload)) return false;
   if (Object.keys(v).some(k => !["version", "owner", "mode", "key", "action", "target", "payload"].includes(k))) return false;
   const p = v.payload;
   if (typeof p.expected_wallet_id !== "string" || typeof p.expected_episode_id !== "string") return false;

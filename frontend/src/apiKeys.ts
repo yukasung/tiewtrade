@@ -1,5 +1,6 @@
 import type { components } from "./api-types";
-import { ApiRequestError, send } from "./auth";
+import { send } from "./auth";
+import { createSafeRequest } from "./apiRequest";
 
 export type KeyView = components["schemas"]["KeyView"];
 export type AddKeyRequest = components["schemas"]["AddKeyRequest"];
@@ -7,20 +8,12 @@ type AddedKey = components["schemas"]["AddedKey"];
 type RetryAccepted = components["schemas"]["RetryAccepted"];
 
 /** อย่าเก็บ error ดิบใน mutation cache แม้ server/proxy ตอบค่าที่ไม่คาดไว้ */
-async function safe<T>(request: Promise<T>): Promise<T> {
-  try {
-    return await request;
-  } catch (cause: unknown) {
-    const error = new ApiRequestError(
-      "API_KEY_REQUEST_FAILED",
-      cause instanceof ApiRequestError ? cause.status : 0,
-    );
-    if (cause instanceof ApiRequestError && cause.retryAt !== null) {
-      throw new ApiRequestError(error.message, cause.status, cause.retryAt);
-    }
-    throw error;
-  }
-}
+const safe = createSafeRequest({
+  allowedCodes: [],
+  fallbackCode: "API_KEY_REQUEST_FAILED",
+  preserveAbort: false,
+  preserveRetryAfter: true,
+});
 
 export function fetchApiKeys(signal?: AbortSignal): Promise<KeyView[]> {
   return safe(

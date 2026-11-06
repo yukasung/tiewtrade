@@ -1,4 +1,5 @@
-import { ApiRequestError, send } from "./auth";
+import { send } from "./auth";
+import { createSafeRequest } from "./apiRequest";
 import type { RiskEffects } from "./riskLimits";
 
 export type StopMode = "PAPER" | "LIVE";
@@ -15,14 +16,13 @@ export type StopSummary = { status: StopStatus; positions: Array<{ base: string;
 export type PlatformStopStatus = { stop_id: string | null; revision: number; summary_revision: number; reconciliation_revision: number; reason: string | null; progress: "STOPPING" | "STOPPED" | "PROBLEMS" | null; discovery_complete: boolean; owner_count: number; pending_count: number; failed_count: number; can_resume: boolean };
 
 const path = (mode: StopMode) => `/${mode === "PAPER" ? "paper" : "live"}/kill-switch`;
-async function safe<T>(work: Promise<T>): Promise<T> {
-  try { return await work; } catch (cause) {
-    if (cause instanceof DOMException && cause.name === "AbortError") throw cause;
-    const error = cause instanceof ApiRequestError ? cause : null;
-    const allowed = ["TRADING_STOP_UNAVAILABLE", "TRADING_STOP_NOT_FOUND", "TRADING_STOP_REQUEST_NOT_FOUND", "TRADING_STOP_IDEMPOTENCY_CONFLICT", "PLATFORM_NOT_AUTHORIZED", "PLATFORM_OWNER_REQUIRED"];
-    throw new ApiRequestError(error && allowed.includes(error.message) ? error.message : "TRADING_STOP_REQUEST_FAILED", error?.status ?? 0);
-  }
-}
+const safe = createSafeRequest({
+  allowedCodes: ["TRADING_STOP_UNAVAILABLE", "TRADING_STOP_NOT_FOUND", "TRADING_STOP_REQUEST_NOT_FOUND", "TRADING_STOP_IDEMPOTENCY_CONFLICT", "PLATFORM_NOT_AUTHORIZED", "PLATFORM_OWNER_REQUIRED"],
+  fallbackCode: "TRADING_STOP_REQUEST_FAILED",
+  preserveAbort: true,
+  preserveRetryAfter: false,
+});
+
 export const stopKey = (owner: string, mode: StopMode) => ["kill-switch", owner, mode] as const;
 export const fetchStopStatus = (mode: StopMode, signal?: AbortSignal) => safe(send<StopStatus>(path(mode), undefined, undefined, "GET", signal));
 export const postStop = (mode: StopMode, key: string) => safe(send<StopReceipt>(`${path(mode)}/stop`, undefined, undefined, "POST", undefined, { "Idempotency-Key": key }));

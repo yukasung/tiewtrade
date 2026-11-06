@@ -3,7 +3,6 @@ import type { components } from "./api-types";
 import { send } from "./auth";
 
 export type MarketCatalog = components["schemas"]["PublicCatalogResponse"];
-export type CatalogPair = components["schemas"]["CatalogPairView"];
 
 export const marketCatalogQueryKey = ["market-catalog"] as const;
 

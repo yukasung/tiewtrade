@@ -79,11 +79,6 @@ class ApiKeyStatus(Enum):
     #: ตรวจไม่ได้ชั่วคราว — ลองใหม่ได้ และ secret ยังอยู่
     UNVERIFIABLE = "UNVERIFIABLE"
 
-    @property
-    def is_final(self) -> bool:
-        """สถานะนี้จบแล้วหรือยัง — แถวที่ยังไม่จบคือแถวที่ worker ต้องมอง"""
-        return self in (ApiKeyStatus.ACTIVE, ApiKeyStatus.REJECTED)
-
 
 def public_tail(key_public: str) -> str:
     """4 หลักท้ายของ API key — **ส่วนเดียวที่แสดงได้**
