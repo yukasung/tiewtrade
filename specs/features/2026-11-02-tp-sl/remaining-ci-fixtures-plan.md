@@ -1,6 +1,6 @@
 # Remaining CI fixture configuration — proposed checkpoint
 
-สถานะ: **Proposed — Needs Owner Approval before the next fix/retry cycle**
+สถานะ: **Approved A — owner replied อนุมัติ,2026-11-07; exact two-file changes/checks and one full CI round authorized**
 วันที่: 2026-11-07
 Candidate: `12e62040d00f2797a7c192b50bd1d81c8edb3d68`, PR59
 
@@ -74,5 +74,6 @@ permit merge/F17 completion. There is no user-requirement/evidence basis to waiv
 all-role or financial correctness assertions or call these failures capacity/SLA
 failures. No reduced correctness criterion is proposed; defer publication instead.
 
-No code/config patch for this plan has been applied or tested yet. The security
-implementation/approved dataset already passed and need no further expansion.
+Owner approved Option A on2026-11-07. Apply the two specified changes, complete
+targeted/static/secret checks, then publish and track one required-CI round. The
+security implementation/approved dataset already passed and need no expansion.

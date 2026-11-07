@@ -13,6 +13,7 @@ from tiewtrade.infra.paper_wallet.records import PaperWalletSnapshot
 from tiewtrade.services.engine.paper_order import run_paper_order_round
 
 
+@pytest.mark.usefixtures("internal_database")
 @pytest.mark.parametrize(
     "scenario,fault,side",
     [

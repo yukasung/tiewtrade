@@ -842,3 +842,8 @@ and PR:4759passed/2failed/31deselected in main backend suite; isolated later ste
 Not Run. Other5jobs passed, including full E2E. Stop after third non-passing CI round
 pending owner decision on [remaining fixture/config plan](remaining-ci-fixtures-plan.md).
 [Evidence](evidence/recovery-20261106/extension-remote-ci-checkpoint.md).
+
+Owner approved remaining CI fixture Option A. Exact two-line config/fixture change
+implemented;51targeted cases passed in27.22s, workflow/static checks passed. Full
+secret scan and the one authorized latest-candidate CI round still pending. No
+assertion/production/criteria change. [Local checkpoint](evidence/recovery-20261106/remaining-ci-fixtures-local.md).

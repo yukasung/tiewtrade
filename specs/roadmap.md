@@ -1152,3 +1152,9 @@ No fourth full CI/fix cycle before owner decision under the3-round rule. Exact
 security dataset/matcher remain approved; remaining proposal is two fixture/config
 changes, not reduced acceptance. No merge/opening/F17 completion.
 [Result/next checkpoint](features/2026-11-02-tp-sl/evidence/recovery-20261106/extension-remote-ci-checkpoint.md).
+
+Owner approved remaining fixture/config Option A. Two specified lines fixed;
+51targeted financial/claim/role cases and workflow/static checks passed locally.
+Full secret scan and one combined publication/required-CI round pending; old
+failures and F17 opening/Release/dependency gates remain unchanged.
+[Local checkpoint](features/2026-11-02-tp-sl/evidence/recovery-20261106/remaining-ci-fixtures-local.md).
