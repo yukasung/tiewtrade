@@ -239,10 +239,12 @@ async def test_disconnect_cancels_reader_before_releasing_local_slot(
         await asyncio.gather(task, return_exceptions=True)
 
 
+@pytest.mark.parametrize("offset", [-10000, 0, 10000])
 @pytest.mark.parametrize("cause", ["disconnect", "cancel", "timeout"])
 async def test_cleanup_survives_repeated_cancel_and_slot_is_reusable(
-    monkeypatch: pytest.MonkeyPatch, cause: str
+    monkeypatch: pytest.MonkeyPatch, cause: str, offset: float
 ) -> None:
+    monkeypatch.setattr(routes, "monotonic", lambda: monotonic() + offset)
     entered, cleaning, finish = asyncio.Event(), asyncio.Event(), asyncio.Event()
     messages: asyncio.Queue[dict[str, Any]] = asyncio.Queue()
     budget = IndicatorBudget()

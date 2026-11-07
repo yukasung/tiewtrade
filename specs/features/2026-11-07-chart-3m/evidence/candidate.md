@@ -327,3 +327,16 @@ base-refresh-amendment.md is Proposed and owner decision requested. No branch me
 new CI trial, backup/migration or owner-service restart. Owner schema stays0065.
 Stop-checkpoint/proposal changes remain uncommitted to avoid a documentation-only CI
 loop before owner authorizes the next candidate.
+
+## Approved base refresh staged — 2026-11-08 Asia/Bangkok
+
+Owner explicitly approved A. Fetched origin/main1237bf6, recorded approval/checkpoint
+locally, and merged main with --no-commit/--no-ff before final checks. No conflicts;
+roadmap retains both API-clock and3m histories. Security policy/helper/workflow unchanged.
+Targeted diff check: backend/, frontend/ and chart browser fixture exactly equal the
+previous tested merge tree c5b9039 (CI42392101171 Success,4814main tests/all E2E).
+No runtime/test code changed by this refresh beyond incorporating approved main.
+Final diff versus main contains only3m scope; whitespace and conflict-marker checks
+passed. Reuse existing code-level tests for identical source; required final-SHA CI
+still mandatory. This receipt and prior results are combined before push; no doc-only
+CI round. One replacement approved, local activation only after all gates pass.

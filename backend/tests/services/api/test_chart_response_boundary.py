@@ -10,6 +10,7 @@ import pytest
 from fastapi import HTTPException, Request
 from pydantic import BaseModel
 
+from tiewtrade.core.market_data import Timeframe
 from tiewtrade.infra.realtime.admission import AdmissionOutcome
 from tiewtrade.services.api.authentication import Authenticated
 from tiewtrade.services.api.indicator_admission import IndicatorBudget
@@ -237,3 +238,142 @@ async def test_cancelled_reader_holds_slot_until_cleanup_finishes(repeated_cance
         release.set()
         task.cancel()
         await asyncio.gather(task, return_exceptions=True)
+
+
+@pytest.mark.parametrize("offset", [-10000, 10000])
+@pytest.mark.parametrize("live", [False, True])
+@pytest.mark.parametrize("stalled", [False, True])
+async def test_clock_origin_does_not_change_success_or_timeout(
+    monkeypatch: pytest.MonkeyPatch, offset: float, live: bool, stalled: bool
+) -> None:
+    from time import monotonic
+
+    from tiewtrade.services.api import chart_routes
+
+    req, budget, who = request(asyncio.Event())
+    req.app.state.chart_admission = Allowed()
+    monkeypatch.setenv("TIEWTRADE_CHART_ENABLED", "1")
+
+    def clock() -> float:
+        return monotonic() + offset
+
+    monkeypatch.setattr(chart_routes, "monotonic", clock)
+    entered, closed = asyncio.Event(), asyncio.Event()
+
+    async def work(*args: object) -> Payload:
+        entered.set()
+        try:
+            if stalled:
+                await asyncio.Event().wait()
+            await asyncio.sleep(0)
+            return Payload(text="ready")
+        finally:
+            closed.set()
+
+    monkeypatch.setattr(chart_routes, "_live", work)
+    operation = (
+        chart_routes.live(
+            chart_routes.ChartLiveQuery(base="BTC", quote="USDT", timeframe=Timeframe.H1), req, who
+        )
+        if live
+        else indicator_response(req, who, work, clock=clock, deadline_seconds=0.05)
+    )
+    # A watchdog fails if a positive origin offset accidentally extends the budget.
+    if stalled:
+        with pytest.raises(HTTPException) as caught:
+            await asyncio.wait_for(operation, 3 if live else 1)
+        assert caught.value.status_code == 504
+        assert caught.value.detail == (
+            "CHART_DEADLINE_EXCEEDED" if live else "INDICATOR_DEADLINE_EXCEEDED"
+        )
+    else:
+        response = await asyncio.wait_for(operation, 1)
+        assert response.status_code == 200
+        assert response.body == b'{"text":"ready"}'
+        assert response.headers["cache-control"] == "private, no-store"
+    assert entered.is_set() and closed.is_set()
+    assert not budget.busy
+
+
+@pytest.mark.parametrize("elapsed,status", [(1.999, 200), (2, 504), (2.001, 504)])
+async def test_live_serialization_keeps_exact_deadline(
+    monkeypatch: pytest.MonkeyPatch, elapsed: float, status: int
+) -> None:
+    from tiewtrade.services.api import chart_routes
+
+    req, _, who = request(asyncio.Event())
+    req.app.state.chart_admission = Allowed()
+    monkeypatch.setenv("TIEWTRADE_CHART_ENABLED", "1")
+    now = [100.0]
+    monkeypatch.setattr(chart_routes, "monotonic", lambda: now[0])
+
+    class Serialized:
+        def model_dump_json(self) -> str:
+            now[0] += elapsed
+            return "{}"
+
+    async def work(*args: object) -> Serialized:
+        return Serialized()
+
+    monkeypatch.setattr(chart_routes, "_live", work)
+    query = chart_routes.ChartLiveQuery(base="BTC", quote="USDT", timeframe=Timeframe.H1)
+    operation = chart_routes.live(query, req, who)
+    if status == 200:
+        assert (await operation).status_code == 200
+    else:
+        with pytest.raises(HTTPException) as caught:
+            await operation
+        assert caught.value.status_code == status
+        assert caught.value.detail == "CHART_DEADLINE_EXCEEDED"
+
+
+@pytest.mark.parametrize("exhausted", [False, True])
+async def test_shared_timeout_uses_remaining_budget_before_admission(exhausted: bool) -> None:
+    req, budget, who = request(asyncio.Event())
+    calls = 0
+    entered = asyncio.Event()
+
+    def clock() -> float:
+        nonlocal calls
+        calls += 1
+        # Only 30ms remain at context entry, or the budget is already exhausted.
+        if calls == 1:
+            return 100.0
+        return 101.0 if exhausted else 100.97
+
+    async def work(deadline: float) -> BaseModel:
+        assert deadline == 101.0
+        entered.set()
+        await asyncio.Event().wait()
+        raise AssertionError("unreachable")
+
+    with pytest.raises(HTTPException) as caught:
+        await asyncio.wait_for(
+            indicator_response(req, who, work, clock=clock, deadline_seconds=1), 0.5
+        )
+    assert caught.value.status_code == 504
+    if not exhausted:
+        assert entered.is_set()
+    assert not budget.busy
+
+
+async def test_admission_and_work_share_one_deadline() -> None:
+    req, budget, who = request(asyncio.Event())
+    now = [100.0]
+
+    class ConsumingAdmission:
+        async def outcome(self, subject: str) -> AdmissionOutcome:
+            now[0] += 20
+            return AdmissionOutcome.ACCEPTED
+
+    req.app.state.indicator_admission = ConsumingAdmission()
+
+    async def work(deadline: float) -> BaseModel:
+        assert deadline == 130
+        now[0] += 10
+        return Payload(text="too late")
+
+    with pytest.raises(HTTPException) as caught:
+        await indicator_response(req, who, work, clock=lambda: now[0])
+    assert caught.value.status_code == 504
+    assert not budget.busy

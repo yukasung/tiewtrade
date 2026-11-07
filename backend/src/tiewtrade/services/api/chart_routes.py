@@ -172,7 +172,8 @@ async def live(
     require_enabled()
     deadline = monotonic() + 2
     try:
-        async with asyncio.timeout_at(deadline):
+        # Pass a duration: the event-loop clock may have a different origin.
+        async with asyncio.timeout(max(0, deadline - monotonic())):
             admission = cast(RedisAdmission, request.app.state.chart_admission)
             outcome = await admission.outcome(str(who.user_id))
             if outcome is AdmissionOutcome.DENIED:

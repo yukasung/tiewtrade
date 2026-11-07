@@ -213,6 +213,16 @@ domain ของเงินที่ปฏิเสธค่าที่เก�
 
 ## ชุดที่ 1 — ฐานราก
 
+งานแก้ความถูกต้อง: [API deadline clock](features/2026-11-07-api-deadline-clock/requirements.md)
+**In Progress (2026-11-07)** — requirements/plan/validation Approved; code review APPROVED / authorized refactor validated.
+แก้ clock-domain mismatch ใน chart live/shared indicator HTTP deadline โดยคง budgets,
+auth และ cancellation semantics เดิม; branch `fix/api-deadline-clock`.
+Runtime แก้สอง HTTP boundaries; boundary/cleanup 41 และ API/DB/cleanup 69 ผ่าน (มี tests ซ้ำระหว่างชุด),
+recovery default uvloop 10.4s และ standard asyncio 8.8s ผ่าน; static checks ผ่าน.
+[Checkpoint](features/2026-11-07-api-deadline-clock/evidence/implementation-checkpoint.md).
+[Refactor checkpoint](features/2026-11-07-api-deadline-clock/evidence/refactor-checkpoint.md): boundary rerun 24 ผ่าน; runtime unchanged.
+เจ้าของอนุญาต commit/push/PR แล้ว; required CI Pending. ยังไม่ Completed และ merge ต้องรอคำสั่ง. งานลบ `/prices` ยังมี V-03 blocker จนตรวจ candidate รวม.
+
 F-01 follow-up: [Security dependency remediation](features/2026-11-05-security-dependency-remediation/requirements.md)
 **Code review APPROVED — local checks passed; final CI pending (2026-11-05)** — certifi 2026.7.22 → 2026.10.18 และ
 Vite 6.4.3 → 6.4.4; branch `feature/security-dependency-remediation`.
