@@ -21,3 +21,16 @@ round. Keep existing immutable exception approvals, coverage and15-minute securi
 budget; no new exception, skip/xfail, production rule, timeout or assertion change.
 No trading workload, merge/deploy/Live or F17 completion. Required CI must run all
 later isolated backend steps too; local targeted proof is not remote CI.
+
+## Full pre-publication check
+
+Pinned full history/tree on committed local4d997e9 Passed in132.892s,253reachable
+commits. History48209 and tree48158matches were fully evaluated; existing approvals
+and exact39artifact bindings resolve48311unique findings (48218artifact identities),
+0blocked/triage/unresolved. Public summary66892bytes. Security configuration digest
+is unchanged from the prior passing scan; no exception/rule/matcher/severity change.
+See remaining-ci-fixtures-full-proof.json and remaining-ci-fixtures-full-stages.log.
+
+Publish the combined candidate and track its one authorized required-CI round.
+Retain all historical failures; do not claim current-head remote success until all
+required jobs, including later isolated backend steps, complete successfully.

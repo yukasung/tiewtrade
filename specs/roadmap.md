@@ -1158,3 +1158,8 @@ Owner approved remaining fixture/config Option A. Two specified lines fixed;
 Full secret scan and one combined publication/required-CI round pending; old
 failures and F17 opening/Release/dependency gates remain unchanged.
 [Local checkpoint](features/2026-11-02-tp-sl/evidence/recovery-20261106/remaining-ci-fixtures-local.md).
+
+Remaining fixture/config pre-publication full secret scan Passed on4d997e9 in
+132.892s,0blocked/triage, no new security exception/configuration change. Sending
+the one authorized combined CI round; remote acceptance remains pending until its
+actual final-head result. No opening/merge/F17 completion claim.
