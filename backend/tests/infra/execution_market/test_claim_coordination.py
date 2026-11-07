@@ -112,6 +112,7 @@ async def test_invalid_mode_fails_before_sessions(
 
 
 @pytest.mark.parametrize("coordinated", [False, True])
+@pytest.mark.usefixtures("internal_database")
 async def test_controlled_stale_hint_collision_and_parallel_processing(
     monkeypatch: pytest.MonkeyPatch,
     engine_engine: AsyncEngine,
@@ -178,6 +179,7 @@ async def test_controlled_stale_hint_collision_and_parallel_processing(
     )
 
 
+@pytest.mark.usefixtures("internal_database")
 async def test_unclaimable_owner_does_not_block_next_candidate(
     monkeypatch: pytest.MonkeyPatch,
     engine_engine: AsyncEngine,
@@ -199,6 +201,7 @@ async def test_unclaimable_owner_does_not_block_next_candidate(
 
 @pytest.mark.parametrize("waiting", [False, True])
 @pytest.mark.parametrize("expire", [False, True])
+@pytest.mark.usefixtures("internal_database")
 async def test_cancellation_or_deadline_releases_gate_without_claim(
     monkeypatch: pytest.MonkeyPatch,
     engine_engine: AsyncEngine,
@@ -258,6 +261,7 @@ async def test_repeatable_read_rejected_before_scanning(scan_engine: AsyncEngine
 
 
 @pytest.mark.parametrize("cancel_backoff", [False, True])
+@pytest.mark.usefixtures("internal_database")
 async def test_busy_returns_connections_before_backoff_and_later_round_can_claim(
     monkeypatch: pytest.MonkeyPatch,
     engine_engine: AsyncEngine,
@@ -342,7 +346,9 @@ async def test_busy_scan_commit_loss_propagates_without_backoff_or_claim(
     monkeypatch.setattr(asyncio, "sleep", sleep)
     async with scan_session_bypassing_rls(scan_engine) as holder:
         assert await try_lock_order_selection(holder)
-        async with drop_commit_reply("127.0.0.1", 55432, armed, dropped) as port:
+        async with drop_commit_reply(
+            scan_engine.url.host or "localhost", scan_engine.url.port or 5432, armed, dropped
+        ) as port:
             proxy = create_async_engine(scan_engine.url.set(port=port), connect_args={"ssl": False})
             try:
                 with pytest.raises(InfraError):
@@ -355,6 +361,7 @@ async def test_busy_scan_commit_loss_propagates_without_backoff_or_claim(
 
 
 @pytest.mark.parametrize("lost_commit_role", ["owner", "scan"])
+@pytest.mark.usefixtures("internal_database")
 async def test_lost_claim_commit_reply_stops_and_existing_lease_recovers(
     monkeypatch: pytest.MonkeyPatch,
     engine_engine: AsyncEngine,
@@ -376,8 +383,10 @@ async def test_lost_claim_commit_reply_stops_and_existing_lease_recovers(
     monkeypatch.setattr(paper_order, "claim_order", claim)
     process = AsyncMock()
     monkeypatch.setattr(paper_order, "process_claimed_order", process)
-    async with drop_commit_reply("127.0.0.1", 55432, armed, dropped) as port:
-        target = engine_engine if lost_commit_role == "owner" else scan_engine
+    target = engine_engine if lost_commit_role == "owner" else scan_engine
+    async with drop_commit_reply(
+        target.url.host or "localhost", target.url.port or 5432, armed, dropped
+    ) as port:
         proxy = create_async_engine(target.url.set(port=port), connect_args={"ssl": False})
         try:
             with pytest.raises(InfraError):
@@ -450,6 +459,7 @@ async def _child(stage: str) -> None:
 
 
 @pytest.mark.parametrize("stage", ["gate", "process"])
+@pytest.mark.usefixtures("internal_database")
 async def test_independent_process_gate_and_crash_recovery(
     scan_engine: AsyncEngine,
     queued_owners: list[tuple[UUID, list[UUID]]],
@@ -510,6 +520,7 @@ async def test_independent_process_gate_and_crash_recovery(
 
 
 @pytest.mark.parametrize("lost_role", ["scan", "owner"])
+@pytest.mark.usefixtures("internal_database")
 async def test_connection_loss_does_not_fallback_or_claim_again(
     monkeypatch: pytest.MonkeyPatch,
     engine_engine: AsyncEngine,
@@ -550,6 +561,7 @@ async def test_connection_loss_does_not_fallback_or_claim_again(
         }
 
 
+@pytest.mark.usefixtures("internal_database")
 async def test_legacy_worker_cannot_duplicate_a_gated_claim(
     monkeypatch: pytest.MonkeyPatch,
     engine_engine: AsyncEngine,
@@ -670,6 +682,7 @@ async def test_deadline_includes_scan_pool_checkout(
         await bounded.dispose()
 
 
+@pytest.mark.usefixtures("internal_database")
 async def test_processing_cancellation_keeps_claim_for_fenced_recovery(
     monkeypatch: pytest.MonkeyPatch,
     engine_engine: AsyncEngine,

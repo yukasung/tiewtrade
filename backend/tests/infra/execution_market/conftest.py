@@ -1,9 +1,10 @@
 import asyncio
 import os
 import sys
-from collections.abc import AsyncIterator, Callable
+from collections.abc import AsyncIterator
 from contextlib import AbstractAsyncContextManager, asynccontextmanager
 from pathlib import Path
+from typing import Protocol
 from uuid import uuid4
 
 import pytest
@@ -18,7 +19,14 @@ from tests.infra.positions.conftest import production_wallet as production_walle
 from tiewtrade.infra.paper_wallet.records import PaperWalletSnapshot
 
 BACKEND_ROOT = Path(__file__).resolve().parents[3]
-InternalDatabaseFactory = Callable[[], AbstractAsyncContextManager[dict[str, str]]]
+INTERNAL_DATABASE_PREFIX = "tiewtrade_internal20_test_"
+CHECKPOINT_DATABASE_PREFIX = "tiewtrade_set4_iso_"
+
+
+class InternalDatabaseFactory(Protocol):
+    def __call__(
+        self, *, prefix: str = INTERNAL_DATABASE_PREFIX
+    ) -> AbstractAsyncContextManager[dict[str, str]]: ...
 
 
 async def _bootstrap_internal_database(admin_url: str) -> None:
@@ -42,10 +50,12 @@ async def _bootstrap_internal_database(admin_url: str) -> None:
 
 @asynccontextmanager
 async def _internal_scratch_database(
-    admin_url: str, *, template: str | None = None
+    admin_url: str, *, template: str | None = None, prefix: str = INTERNAL_DATABASE_PREFIX
 ) -> AsyncIterator[str]:
     # Identifiers are generated here, never taken from the ambient source DB name.
-    name = "tiewtrade_internal20_test_" + uuid4().hex
+    if prefix not in {INTERNAL_DATABASE_PREFIX, CHECKPOINT_DATABASE_PREFIX}:
+        raise ValueError("approved isolated test database prefix required")
+    name = prefix + uuid4().hex
     admin = create_async_engine(
         make_url(admin_url).set(database="postgres"),
         isolation_level="AUTOCOMMIT",
@@ -120,10 +130,10 @@ def internal_database_factory(
     _internal_database_template: dict[str, str],
 ) -> InternalDatabaseFactory:
     @asynccontextmanager
-    async def create() -> AsyncIterator[dict[str, str]]:
+    async def create(*, prefix: str = INTERNAL_DATABASE_PREFIX) -> AsyncIterator[dict[str, str]]:
         admin_url = _internal_database_template["TIEWTRADE_TEST_ADMIN_URL"]
         async with _internal_scratch_database(
-            admin_url, template=make_url(admin_url).database
+            admin_url, template=make_url(admin_url).database, prefix=prefix
         ) as name:
             urls = {
                 key: database_url(value, name) for key, value in _internal_database_template.items()

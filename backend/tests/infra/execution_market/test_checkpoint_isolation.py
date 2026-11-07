@@ -20,6 +20,10 @@ from sqlalchemy import event, make_url
 from sqlalchemy.ext.asyncio import AsyncEngine
 
 from tests.infra.execution_market import profile_checkpoint_isolation as iso
+from tests.infra.execution_market.conftest import (
+    CHECKPOINT_DATABASE_PREFIX,
+    InternalDatabaseFactory,
+)
 from tests.infra.execution_market.profile_checkpoint_fixture import prepare
 from tests.infra.execution_market.profile_workload import save
 from tiewtrade.infra.db import DatabaseRole, user_session
@@ -315,10 +319,16 @@ async def test_real_fixture_sizes_preserve_operations(
             )
 
 
-async def test_real_preflight_verifies_all_roles_and_function() -> None:
-    database = make_url(os.environ[DatabaseRole.MIGRATOR.url_variable]).database
-    assert database is not None
-    result = await iso.verify_databases(database)
+async def test_real_preflight_verifies_all_roles_and_function(
+    internal_database_factory: InternalDatabaseFactory, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    async with internal_database_factory(prefix=CHECKPOINT_DATABASE_PREFIX) as urls:
+        with monkeypatch.context() as patch:
+            for key, value in urls.items():
+                patch.setenv(key, value)
+            database = make_url(os.environ[DatabaseRole.MIGRATOR.url_variable]).database
+            assert database is not None
+            result = await iso.verify_databases(database)
     assert all(
         result[role.name] == {"database": database, "role": role.value} for role in DatabaseRole
     )

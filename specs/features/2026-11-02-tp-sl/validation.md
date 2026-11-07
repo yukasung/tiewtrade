@@ -824,3 +824,9 @@ Ruff/format/mypy56files passed. Local secret probe flags evidence UUID/checksum
 values; these are not approved exceptions and security acceptance remains blocked.
 Required CI must be reported on the published SHA; no merge/completion claim.
 [Publication checkpoint](evidence/recovery-20261106/publication-checkpoint.md).
+
+Published0961f78 /PR59: required CI42362300917 **Failed** (4756passed/5failed;
+later isolated backend steps Not Run); browser E2E and other5CIjobs passed. Security
+42362300837 **Cancelled at15min**, no secrets manifest; aggregate gate Failed.
+Additional test-config fixes have105passing targeted local cases, not remote CI.
+[Exact result and next approval checkpoint](evidence/recovery-20261106/publication-final-ci.md).

@@ -1120,3 +1120,10 @@ local Python static checks56files passed. Security remains blocked on evidence
 UUID/checksum findings pending approved handling; final CI/admission/opening and
 Release/dependency gates remain. No merge/deploy/Completed claim.
 [Publication checkpoint](features/2026-11-02-tp-sl/evidence/recovery-20261106/publication-checkpoint.md).
+
+Published0961f78 /PR59: required CI Failed (4756passed/5failed; remaining isolated
+backend steps Not Run); complete browser E2E and other5CIjobs passed. Security
+secrets job timed out at15min, workflow Cancelled/aggregate gate Failed. Local
+test-config fixes105passed; security handling proposal needs owner approval before
+the next combined candidate. No merge/opening/F17 completion.
+[Result and proposal](features/2026-11-02-tp-sl/evidence/recovery-20261106/publication-final-ci.md).
