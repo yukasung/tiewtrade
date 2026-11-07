@@ -203,3 +203,21 @@ Implementation/review/fixes/refactor and affected validation receipts are includ
 in this candidate. Required CI will be followed on its exact PR head SHA and reported
 with run links; do not create a documentation-only CI recording loop. Local activation
 remains gated by Feature checks; Release profiles remain Pending Full Validation.
+
+## First PR CI and schema preflight compatibility correction — 2026-11-07
+
+PR60 head15de827c6d8468fa80edc59d43999393a5808692:
+- CI https://github.com/yukasung/tiewtrade/actions/runs/42385358568 Failed in backend
+  pytest:1failed/4790passed/31deselected in1138.63s. Later backend isolation steps Not Run.
+- Failure: test_checkpoint_isolation::test_real_preflight_verifies_all_roles_and_function
+  rejected schema0066 because its harness pinned exact0065.
+- Frontend, API contracts, container and browser E2E passed. Security run
+  https://github.com/yukasung/tiewtrade/actions/runs/42385358426 passed, including gate.
+
+Correction only adapts profile_checkpoint_isolation's exact candidate schema check to
+0066; the immutable0065 paper_persist_checkpoint_v1 body/authority check is retained.
+No checkpoint function, financial behavior, threshold, SQL migration or infrastructure
+changes. New negative tests reject0065/0067/invalid, preserving fail-closed semantics.
+Fresh isolated actual-DB checkpoint isolation suite:24/24 passed. Scoped Ruff/format
+and mypy2files passed. Required CI must pass again on the correction's exact SHA.
+Owner runtime remains0065; backup/migration scripts prepared privately but not executed.

@@ -108,8 +108,8 @@ async def verify_databases(database: str) -> dict[str, Any]:
                 if role is DatabaseRole.MIGRATOR:
                     if (
                         await connection.execute(text("SELECT version_num FROM alembic_version"))
-                    ).scalar_one() != "0065":
-                        raise ValueError("schema0065 required")
+                    ).scalar_one() != "0066":
+                        raise ValueError("schema0066 required")
                     row = (
                         await connection.execute(
                             text("""SELECT p.prosrc,p.prosecdef,

@@ -1213,3 +1213,9 @@ See current [candidate receipt](features/2026-11-07-chart-3m/evidence/candidate.
 Review findings addressed; required CI/full regression remains before merge, Release
 V3-10A/B Pending Full Validation. Owner local0065 unchanged. Next requires owner Git
 instruction to commit/push/open PR and then track CI; no completion/merge claim.
+
+
+3m PR60 first CI15de827: backend Failed1/4790passed due to harness schema0065 pin;
+other CI jobs and Security passed. Updated only checkpoint-harness candidate pin to0066,
+kept exact original function verification;24targeted tests/static checks passed.
+Replacement CI required before local activation; owner runtime still0065. No merge.

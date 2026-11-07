@@ -179,3 +179,12 @@ whitespace checks passed. Existing correctness evidence remains valid where unch
 V3-09 remains Partial until required CI on final candidate; V3-10A/B remains Not Run /
 Pending Full Validation. No runtime activation or Git mutations. Next: owner Git command
 for commit/push/PR, then required CI; local activation follows successful Feature gates.
+
+## PR60 first CI result and correction — 2026-11-07
+
+V3-09: Failed on15de827 (CI42385358568),1test failed because the checkpoint-isolation
+harness still required schema0065;4790passed. Its exact candidate check now requires
+0066 while retaining the original0065 function body/authority proof. Fresh isolated
+checkpoint suite24passed and scoped Ruff/format/mypy passed; new negative tests reject
+other revisions. Replacement required CI pending on the correction SHA. All other
+first-candidate CI jobs and Security passed. Owner local activation remains gated.
