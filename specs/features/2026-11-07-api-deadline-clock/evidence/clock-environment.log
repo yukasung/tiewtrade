@@ -1,0 +1,6 @@
+{'python': '3.12.15', 'uvloop': '0.22.1', 'loop': 'asyncio.unix_events._UnixSelectorEventLoop', 'loop_minus_monotonic_seconds': -0.0}
+{'offset_seconds': -10000, 'remaining_duration_probe': 'passed'}
+{'offset_seconds': 10000, 'remaining_duration_probe': 'passed'}
+{'python': '3.12.15', 'uvloop': '0.22.1', 'loop': 'uvloop.Loop', 'loop_minus_monotonic_seconds': 2103.99}
+{'offset_seconds': -10000, 'remaining_duration_probe': 'passed'}
+{'offset_seconds': 10000, 'remaining_duration_probe': 'passed'}

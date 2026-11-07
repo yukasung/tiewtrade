@@ -1,0 +1,599 @@
+F.F..F.F                                                                 [100%]
+=================================== FAILURES ===================================
+___ test_clock_origin_does_not_change_success_or_timeout[False-False--10000] ___
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x10cccb890>
+offset = -10000, live = False, stalled = False
+
+    @pytest.mark.parametrize("offset", [-10000, 10000])
+    @pytest.mark.parametrize("live", [False, True])
+    @pytest.mark.parametrize("stalled", [False, True])
+    async def test_clock_origin_does_not_change_success_or_timeout(
+        monkeypatch: pytest.MonkeyPatch, offset: float, live: bool, stalled: bool
+    ) -> None:
+        from time import monotonic
+
+        from tiewtrade.services.api import chart_routes
+
+        req, budget, who = request(asyncio.Event())
+        req.app.state.chart_admission = Allowed()
+        monkeypatch.setenv("TIEWTRADE_CHART_ENABLED", "1")
+
+        def clock() -> float:
+            return monotonic() + offset
+
+        monkeypatch.setattr(chart_routes, "monotonic", clock)
+        entered, closed = asyncio.Event(), asyncio.Event()
+
+        async def work(*args: object) -> Payload:
+            entered.set()
+            try:
+                if stalled:
+                    await asyncio.Event().wait()
+                await asyncio.sleep(0)
+                return Payload(text="ready")
+            finally:
+                closed.set()
+
+        monkeypatch.setattr(chart_routes, "_live", work)
+        operation = (
+            chart_routes.live(
+                chart_routes.ChartLiveQuery(base="BTC", quote="USDT", timeframe=Timeframe.H1), req, who
+            )
+            if live
+            else indicator_response(req, who, work, clock=clock, deadline_seconds=0.05)
+        )
+        # A watchdog fails if a positive origin offset accidentally extends the budget.
+        if stalled:
+            with pytest.raises(HTTPException) as caught:
+                await asyncio.wait_for(operation, 3 if live else 1)
+            assert caught.value.status_code == 504
+            assert caught.value.detail == (
+                "CHART_DEADLINE_EXCEEDED" if live else "INDICATOR_DEADLINE_EXCEEDED"
+            )
+        else:
+>           response = await asyncio.wait_for(operation, 1)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/services/api/test_chart_response_boundary.py:290:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+../../../../../.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/asyncio/tasks.py:520: in wait_for
+    return await fut
+           ^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+request = <starlette.requests.Request object at 0x10dcbbcb0>
+who = Authenticated(user_id=UUID('db7169fa-875c-44b9-ba0f-6ec02b44f575'), token_hash='fixture-session', absolute_expires_at=datetime.datetime(2026, 11, 7, 16, 6, 0, 452256, tzinfo=datetime.timezone.utc), second_factor=None)
+work = <function test_clock_origin_does_not_change_success_or_timeout.<locals>.work at 0x10dcd5c60>
+clock = <function test_clock_origin_does_not_change_success_or_timeout.<locals>.clock at 0x10ccdd760>
+deadline_seconds = 0.05, disconnect_response = False
+
+    async def indicator_response(
+        request: Request,
+        who: Authenticated,
+        work: Callable[[float], Awaitable[BaseModel | ChunkedJSON]],
+        *,
+        clock: Callable[[], float] = monotonic,
+        deadline_seconds: float = INDICATOR_SETTINGS.deadline_seconds,
+        disconnect_response: bool = False,
+    ) -> Response:
+        deadline = clock() + deadline_seconds
+        budget = cast(IndicatorBudget, request.app.state.indicator_budget)
+        admission = cast(RedisAdmission, request.app.state.indicator_admission)
+        try:
+            async with asyncio.timeout_at(deadline):
+                async with budget.reserve(admission, who.user_id):
+                    result = await until_disconnect(
+                        request,
+                        _without_automatic_gc(work(deadline)),
+                    )
+                    body = (
+                        await _model_json_bytes(result, deadline, clock)
+                        if isinstance(result, (BaseModel, ChunkedJSON))
+                        else result.model_dump_json().encode()
+                    )
+                    if clock() >= deadline:
+                        raise TimeoutError()
+                    if len(body) > INDICATOR_SETTINGS.response_bytes:
+                        raise HTTPException(503, "INDICATOR_RESOURCE_LIMIT")
+                    return Response(
+                        body,
+                        media_type="application/json",
+                        headers={"Cache-Control": "private, no-store"},
+                    )
+        except ClientDisconnectedError:
+            if not disconnect_response:
+                raise
+            # Reader cleanup completed before responding to the already closed peer.
+            return Response(status_code=499, headers={"Cache-Control": "private, no-store"})
+        except DatasetChangedError:
+            raise HTTPException(409, "INDICATOR_DATASET_CHANGED") from None
+        except CursorRejectedError:
+            raise HTTPException(422, "INPUT_REJECTED") from None
+        except (MoneyError, PreparedNumericError):
+            raise HTTPException(422, "INDICATOR_NUMERIC_ERROR") from None
+        except (PreparedNotReadyError, CheckpointCodecError):
+            raise HTTPException(
+                503, "INDICATOR_DATA_NOT_READY", headers={"Retry-After": "10"}
+            ) from None
+        except MarketDataInputError as error:
+            raise HTTPException(422, error.code) from None
+        except TimeoutError:
+>           raise HTTPException(504, "INDICATOR_DEADLINE_EXCEEDED") from None
+E           fastapi.exceptions.HTTPException: 504: INDICATOR_DEADLINE_EXCEEDED
+
+src/tiewtrade/services/api/indicator_http.py:213: HTTPException
+___ test_clock_origin_does_not_change_success_or_timeout[False-True--10000] ____
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x10cccbc80>
+offset = -10000, live = True, stalled = False
+
+    @pytest.mark.parametrize("offset", [-10000, 10000])
+    @pytest.mark.parametrize("live", [False, True])
+    @pytest.mark.parametrize("stalled", [False, True])
+    async def test_clock_origin_does_not_change_success_or_timeout(
+        monkeypatch: pytest.MonkeyPatch, offset: float, live: bool, stalled: bool
+    ) -> None:
+        from time import monotonic
+
+        from tiewtrade.services.api import chart_routes
+
+        req, budget, who = request(asyncio.Event())
+        req.app.state.chart_admission = Allowed()
+        monkeypatch.setenv("TIEWTRADE_CHART_ENABLED", "1")
+
+        def clock() -> float:
+            return monotonic() + offset
+
+        monkeypatch.setattr(chart_routes, "monotonic", clock)
+        entered, closed = asyncio.Event(), asyncio.Event()
+
+        async def work(*args: object) -> Payload:
+            entered.set()
+            try:
+                if stalled:
+                    await asyncio.Event().wait()
+                await asyncio.sleep(0)
+                return Payload(text="ready")
+            finally:
+                closed.set()
+
+        monkeypatch.setattr(chart_routes, "_live", work)
+        operation = (
+            chart_routes.live(
+                chart_routes.ChartLiveQuery(base="BTC", quote="USDT", timeframe=Timeframe.H1), req, who
+            )
+            if live
+            else indicator_response(req, who, work, clock=clock, deadline_seconds=0.05)
+        )
+        # A watchdog fails if a positive origin offset accidentally extends the budget.
+        if stalled:
+            with pytest.raises(HTTPException) as caught:
+                await asyncio.wait_for(operation, 3 if live else 1)
+            assert caught.value.status_code == 504
+            assert caught.value.detail == (
+                "CHART_DEADLINE_EXCEEDED" if live else "INDICATOR_DEADLINE_EXCEEDED"
+            )
+        else:
+>           response = await asyncio.wait_for(operation, 1)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/services/api/test_chart_response_boundary.py:290:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+../../../../../.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/asyncio/tasks.py:520: in wait_for
+    return await fut
+           ^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+query = ChartLiveQuery(base='BTC', quote='USDT', timeframe=<Timeframe.H1: '1h'>)
+request = <starlette.requests.Request object at 0x10dcfa810>
+who = Authenticated(user_id=UUID('a75e2004-ddb7-4fa7-a351-972ee7d0195a'), token_hash='fixture-session', absolute_expires_at=datetime.datetime(2026, 11, 7, 16, 6, 0, 523620, tzinfo=datetime.timezone.utc), second_factor=None)
+
+    @router.get("/live", response_model=ChartLiveView)
+    async def live(
+        query: Annotated[ChartLiveQuery, Query()],
+        request: Request,
+        who: Annotated[Authenticated, Depends(current_user)],
+    ) -> Response:
+        require_enabled()
+        deadline = monotonic() + 2
+        try:
+            async with asyncio.timeout_at(deadline):
+                admission = cast(RedisAdmission, request.app.state.chart_admission)
+                outcome = await admission.outcome(str(who.user_id))
+                if outcome is AdmissionOutcome.DENIED:
+                    raise HTTPException(429, "CHART_RATE_LIMITED", headers={"Retry-After": "60"})
+                if outcome is AdmissionOutcome.UNAVAILABLE:
+                    raise HTTPException(503, "CHART_ADMISSION_UNAVAILABLE")
+                result = await until_disconnect(request, _live(query, request, who))
+                body = result.model_dump_json().encode()
+                if monotonic() >= deadline:
+                    raise TimeoutError()
+                return Response(
+                    body, media_type="application/json", headers={"Cache-Control": "private, no-store"}
+                )
+        except ClientDisconnectedError:
+            return Response(status_code=499, headers={"Cache-Control": "private, no-store"})
+        except (MoneyError, MarketDataInputError):
+            raise HTTPException(422, "INPUT_REJECTED") from None
+        except (TimeoutError, DatabaseTimeoutError):
+>           raise HTTPException(504, "CHART_DEADLINE_EXCEEDED") from None
+E           fastapi.exceptions.HTTPException: 504: CHART_DEADLINE_EXCEEDED
+
+src/tiewtrade/services/api/chart_routes.py:194: HTTPException
+____ test_clock_origin_does_not_change_success_or_timeout[True-False-10000] ____
+
+fut = <coroutine object indicator_response at 0x10cd4aa40>, timeout = 1
+
+    async def wait_for(fut, timeout):
+        """Wait for the single Future or coroutine to complete, with timeout.
+
+        Coroutine will be wrapped in Task.
+
+        Returns result of the Future or coroutine.  When a timeout occurs,
+        it cancels the task and raises TimeoutError.  To avoid the task
+        cancellation, wrap it in shield().
+
+        If the wait is cancelled, the task is also cancelled.
+
+        If the task suppresses the cancellation and returns a value instead,
+        that value is returned.
+
+        This function is a coroutine.
+        """
+        # The special case for timeout <= 0 is for the following case:
+        #
+        # async def test_waitfor():
+        #     func_started = False
+        #
+        #     async def func():
+        #         nonlocal func_started
+        #         func_started = True
+        #
+        #     try:
+        #         await asyncio.wait_for(func(), 0)
+        #     except asyncio.TimeoutError:
+        #         assert not func_started
+        #     else:
+        #         assert False
+        #
+        # asyncio.run(test_waitfor())
+
+
+        if timeout is not None and timeout <= 0:
+            fut = ensure_future(fut)
+
+            if fut.done():
+                return fut.result()
+
+            await _cancel_and_wait(fut)
+            try:
+                return fut.result()
+            except exceptions.CancelledError as exc:
+                raise TimeoutError from exc
+
+        async with timeouts.timeout(timeout):
+>           return await fut
+                   ^^^^^^^^^
+
+../../../../../.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/asyncio/tasks.py:520:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+src/tiewtrade/services/api/indicator_http.py:177: in indicator_response
+    result = await until_disconnect(
+src/tiewtrade/services/api/indicator_http.py:141: in until_disconnect
+    done, _ = await asyncio.wait((reader, watcher), return_when=asyncio.FIRST_COMPLETED)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../../../.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/asyncio/tasks.py:464: in wait
+    return await _wait(fs, timeout, return_when, loop)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+fs = {<Task cancelled name='Task-28' coro=<until_disconnect.<locals>.disconnected() done, defined at /Users/chainarongjayke...eaw/Projects/TiewTrade/Projects/TiewTrade-api-deadline-clock/backend/src/tiewtrade/services/api/indicator_http.py:68>>}
+timeout = None, return_when = 'FIRST_COMPLETED'
+loop = <_UnixSelectorEventLoop running=False closed=False debug=False>
+
+    async def _wait(fs, timeout, return_when, loop):
+        """Internal helper for wait().
+
+        The fs argument must be a collection of Futures.
+        """
+        assert fs, 'Set of Futures is empty.'
+        waiter = loop.create_future()
+        timeout_handle = None
+        if timeout is not None:
+            timeout_handle = loop.call_later(timeout, _release_waiter, waiter)
+        counter = len(fs)
+
+        def _on_completion(f):
+            nonlocal counter
+            counter -= 1
+            if (counter <= 0 or
+                return_when == FIRST_COMPLETED or
+                return_when == FIRST_EXCEPTION and (not f.cancelled() and
+                                                    f.exception() is not None)):
+                if timeout_handle is not None:
+                    timeout_handle.cancel()
+                if not waiter.done():
+                    waiter.set_result(None)
+
+        for f in fs:
+            f.add_done_callback(_on_completion)
+
+        try:
+>           await waiter
+E           asyncio.exceptions.CancelledError
+
+../../../../../.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/asyncio/tasks.py:550: CancelledError
+
+The above exception was the direct cause of the following exception:
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x10dcfbb60>
+offset = 10000, live = False, stalled = True
+
+    @pytest.mark.parametrize("offset", [-10000, 10000])
+    @pytest.mark.parametrize("live", [False, True])
+    @pytest.mark.parametrize("stalled", [False, True])
+    async def test_clock_origin_does_not_change_success_or_timeout(
+        monkeypatch: pytest.MonkeyPatch, offset: float, live: bool, stalled: bool
+    ) -> None:
+        from time import monotonic
+
+        from tiewtrade.services.api import chart_routes
+
+        req, budget, who = request(asyncio.Event())
+        req.app.state.chart_admission = Allowed()
+        monkeypatch.setenv("TIEWTRADE_CHART_ENABLED", "1")
+
+        def clock() -> float:
+            return monotonic() + offset
+
+        monkeypatch.setattr(chart_routes, "monotonic", clock)
+        entered, closed = asyncio.Event(), asyncio.Event()
+
+        async def work(*args: object) -> Payload:
+            entered.set()
+            try:
+                if stalled:
+                    await asyncio.Event().wait()
+                await asyncio.sleep(0)
+                return Payload(text="ready")
+            finally:
+                closed.set()
+
+        monkeypatch.setattr(chart_routes, "_live", work)
+        operation = (
+            chart_routes.live(
+                chart_routes.ChartLiveQuery(base="BTC", quote="USDT", timeframe=Timeframe.H1), req, who
+            )
+            if live
+            else indicator_response(req, who, work, clock=clock, deadline_seconds=0.05)
+        )
+        # A watchdog fails if a positive origin offset accidentally extends the budget.
+        if stalled:
+            with pytest.raises(HTTPException) as caught:
+>               await asyncio.wait_for(operation, 3 if live else 1)
+
+tests/services/api/test_chart_response_boundary.py:284:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+../../../../../.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/asyncio/tasks.py:519: in wait_for
+    async with timeouts.timeout(timeout):
+               ^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <Timeout [expired]>
+exc_type = <class 'asyncio.exceptions.CancelledError'>
+exc_val = CancelledError(), exc_tb = <traceback object at 0x10de4a600>
+
+    async def __aexit__(
+        self,
+        exc_type: Optional[Type[BaseException]],
+        exc_val: Optional[BaseException],
+        exc_tb: Optional[TracebackType],
+    ) -> Optional[bool]:
+        assert self._state in (_State.ENTERED, _State.EXPIRING)
+
+        if self._timeout_handler is not None:
+            self._timeout_handler.cancel()
+            self._timeout_handler = None
+
+        if self._state is _State.EXPIRING:
+            self._state = _State.EXPIRED
+
+            if self._task.uncancel() <= self._cancelling and exc_type is exceptions.CancelledError:
+                # Since there are no new cancel requests, we're
+                # handling this.
+>               raise TimeoutError from exc_val
+E               TimeoutError
+
+../../../../../.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/asyncio/timeouts.py:115: TimeoutError
+____ test_clock_origin_does_not_change_success_or_timeout[True-True-10000] _____
+
+fut = <coroutine object live at 0x10dcc5470>, timeout = 3
+
+    async def wait_for(fut, timeout):
+        """Wait for the single Future or coroutine to complete, with timeout.
+
+        Coroutine will be wrapped in Task.
+
+        Returns result of the Future or coroutine.  When a timeout occurs,
+        it cancels the task and raises TimeoutError.  To avoid the task
+        cancellation, wrap it in shield().
+
+        If the wait is cancelled, the task is also cancelled.
+
+        If the task suppresses the cancellation and returns a value instead,
+        that value is returned.
+
+        This function is a coroutine.
+        """
+        # The special case for timeout <= 0 is for the following case:
+        #
+        # async def test_waitfor():
+        #     func_started = False
+        #
+        #     async def func():
+        #         nonlocal func_started
+        #         func_started = True
+        #
+        #     try:
+        #         await asyncio.wait_for(func(), 0)
+        #     except asyncio.TimeoutError:
+        #         assert not func_started
+        #     else:
+        #         assert False
+        #
+        # asyncio.run(test_waitfor())
+
+
+        if timeout is not None and timeout <= 0:
+            fut = ensure_future(fut)
+
+            if fut.done():
+                return fut.result()
+
+            await _cancel_and_wait(fut)
+            try:
+                return fut.result()
+            except exceptions.CancelledError as exc:
+                raise TimeoutError from exc
+
+        async with timeouts.timeout(timeout):
+>           return await fut
+                   ^^^^^^^^^
+
+../../../../../.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/asyncio/tasks.py:520:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+src/tiewtrade/services/api/chart_routes.py:182: in live
+    result = await until_disconnect(request, _live(query, request, who))
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/tiewtrade/services/api/indicator_http.py:141: in until_disconnect
+    done, _ = await asyncio.wait((reader, watcher), return_when=asyncio.FIRST_COMPLETED)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../../../.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/asyncio/tasks.py:464: in wait
+    return await _wait(fs, timeout, return_when, loop)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+fs = {<Task cancelled name='Task-37' coro=<test_clock_origin_does_not_change_success_or_timeout.<locals>.work() done, defin...aw/Projects/TiewTrade/Projects/TiewTrade-api-deadline-clock/backend/src/tiewtrade/services/api/indicator_http.py:133>>}
+timeout = None, return_when = 'FIRST_COMPLETED'
+loop = <_UnixSelectorEventLoop running=False closed=False debug=False>
+
+    async def _wait(fs, timeout, return_when, loop):
+        """Internal helper for wait().
+
+        The fs argument must be a collection of Futures.
+        """
+        assert fs, 'Set of Futures is empty.'
+        waiter = loop.create_future()
+        timeout_handle = None
+        if timeout is not None:
+            timeout_handle = loop.call_later(timeout, _release_waiter, waiter)
+        counter = len(fs)
+
+        def _on_completion(f):
+            nonlocal counter
+            counter -= 1
+            if (counter <= 0 or
+                return_when == FIRST_COMPLETED or
+                return_when == FIRST_EXCEPTION and (not f.cancelled() and
+                                                    f.exception() is not None)):
+                if timeout_handle is not None:
+                    timeout_handle.cancel()
+                if not waiter.done():
+                    waiter.set_result(None)
+
+        for f in fs:
+            f.add_done_callback(_on_completion)
+
+        try:
+>           await waiter
+E           asyncio.exceptions.CancelledError
+
+../../../../../.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/asyncio/tasks.py:550: CancelledError
+
+The above exception was the direct cause of the following exception:
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x10dd74200>
+offset = 10000, live = True, stalled = True
+
+    @pytest.mark.parametrize("offset", [-10000, 10000])
+    @pytest.mark.parametrize("live", [False, True])
+    @pytest.mark.parametrize("stalled", [False, True])
+    async def test_clock_origin_does_not_change_success_or_timeout(
+        monkeypatch: pytest.MonkeyPatch, offset: float, live: bool, stalled: bool
+    ) -> None:
+        from time import monotonic
+
+        from tiewtrade.services.api import chart_routes
+
+        req, budget, who = request(asyncio.Event())
+        req.app.state.chart_admission = Allowed()
+        monkeypatch.setenv("TIEWTRADE_CHART_ENABLED", "1")
+
+        def clock() -> float:
+            return monotonic() + offset
+
+        monkeypatch.setattr(chart_routes, "monotonic", clock)
+        entered, closed = asyncio.Event(), asyncio.Event()
+
+        async def work(*args: object) -> Payload:
+            entered.set()
+            try:
+                if stalled:
+                    await asyncio.Event().wait()
+                await asyncio.sleep(0)
+                return Payload(text="ready")
+            finally:
+                closed.set()
+
+        monkeypatch.setattr(chart_routes, "_live", work)
+        operation = (
+            chart_routes.live(
+                chart_routes.ChartLiveQuery(base="BTC", quote="USDT", timeframe=Timeframe.H1), req, who
+            )
+            if live
+            else indicator_response(req, who, work, clock=clock, deadline_seconds=0.05)
+        )
+        # A watchdog fails if a positive origin offset accidentally extends the budget.
+        if stalled:
+            with pytest.raises(HTTPException) as caught:
+>               await asyncio.wait_for(operation, 3 if live else 1)
+
+tests/services/api/test_chart_response_boundary.py:284:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+../../../../../.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/asyncio/tasks.py:519: in wait_for
+    async with timeouts.timeout(timeout):
+               ^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <Timeout [expired]>
+exc_type = <class 'asyncio.exceptions.CancelledError'>
+exc_val = CancelledError(), exc_tb = <traceback object at 0x10deb0ec0>
+
+    async def __aexit__(
+        self,
+        exc_type: Optional[Type[BaseException]],
+        exc_val: Optional[BaseException],
+        exc_tb: Optional[TracebackType],
+    ) -> Optional[bool]:
+        assert self._state in (_State.ENTERED, _State.EXPIRING)
+
+        if self._timeout_handler is not None:
+            self._timeout_handler.cancel()
+            self._timeout_handler = None
+
+        if self._state is _State.EXPIRING:
+            self._state = _State.EXPIRED
+
+            if self._task.uncancel() <= self._cancelling and exc_type is exceptions.CancelledError:
+                # Since there are no new cancel requests, we're
+                # handling this.
+>               raise TimeoutError from exc_val
+E               TimeoutError
+
+../../../../../.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/asyncio/timeouts.py:115: TimeoutError
+=========================== short test summary info ============================
+FAILED tests/services/api/test_chart_response_boundary.py::test_clock_origin_does_not_change_success_or_timeout[False-False--10000]
+FAILED tests/services/api/test_chart_response_boundary.py::test_clock_origin_does_not_change_success_or_timeout[False-True--10000]
+FAILED tests/services/api/test_chart_response_boundary.py::test_clock_origin_does_not_change_success_or_timeout[True-False-10000]
+FAILED tests/services/api/test_chart_response_boundary.py::test_clock_origin_does_not_change_success_or_timeout[True-True-10000]
