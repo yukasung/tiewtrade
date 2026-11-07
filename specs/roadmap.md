@@ -1114,3 +1114,9 @@ Owner-authorized fixture refactor and affected validation done:207/207mixed test
 passed together, scoped static checks passed,0 fixture DBs left. Pending final
 candidate CI/admission/opening and Release/dependency gates unchanged; no F17
 completion or Git/deploy action. Details in the same evidence receipt.
+
+Owner subsequently authorized recovery commit/push and required CI. Main integrated;
+local Python static checks56files passed. Security remains blocked on evidence
+UUID/checksum findings pending approved handling; final CI/admission/opening and
+Release/dependency gates remain. No merge/deploy/Completed claim.
+[Publication checkpoint](features/2026-11-02-tp-sl/evidence/recovery-20261106/publication-checkpoint.md).

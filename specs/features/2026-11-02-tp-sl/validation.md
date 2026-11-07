@@ -818,3 +818,9 @@ Owner-authorized fixture refactor: affected mixed suite207/207passed together in
 37.17s; Ruff/format/mypy passed changed conftest,0 fixture databases left. No
 production/workload criterion change. Prior campaign proofs reused; remote CI and
 other acceptance gates remain pending. Details in the same fix receipt.
+
+Recovery candidate publication authorized after refactor. Main integrated; scoped
+Ruff/format/mypy56files passed. Local secret probe flags evidence UUID/checksum
+values; these are not approved exceptions and security acceptance remains blocked.
+Required CI must be reported on the published SHA; no merge/completion claim.
+[Publication checkpoint](evidence/recovery-20261106/publication-checkpoint.md).
