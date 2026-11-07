@@ -1,6 +1,6 @@
 # Exact tree occurrence extension — proposal
 
-สถานะ: **Proposed — Needs Owner Approval; active exceptions remain unchanged**
+สถานะ: **Approved A — owner replied approve,2026-11-07; exact100-identity update/checks/publication authorized, no merge/deploy/Live**
 วันที่: 2026-11-07
 อ้างอิง: [approved Option A](publication-evidence-policy-proposal.md)
 
@@ -66,3 +66,9 @@ Keep the old registry and the PR draft. Local scanning/mapping performance proof
 and scoped safety tests remain useful, but exception validation and required CI
 cannot be declared Passed. Do not publish another known-blocked candidate merely
 to rerun this failure.
+
+## Owner decision
+
+Owner approved Option A on2026-11-07. Apply only the8listed count/set-digest changes,
+record this approval, then perform the conditional checks/publication above.
+The earlier proposal/failed-scan records remain historical evidence.

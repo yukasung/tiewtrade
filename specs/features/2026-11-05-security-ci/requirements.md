@@ -12,6 +12,11 @@ timing and identity-preserving Git lookup optimization, with parity/negative tes
 shape or directory alone never authorizes an exception. Bounded public reports may
 group resolved approved artifact occurrences with explicit counts/bindings while
 retaining complete private evaluation and unchanged blocking for unresolved rows.
+
+**Approved data extension2026-11-07:** owner approved the exact100tree identities
+listed in [the extension](../2026-11-02-tp-sl/tree-occurrence-extension-proposal.md).
+Only8of39binding count/set digests change, total48218. No identity/matcher/coverage/
+severity/deadline change or generic exception is authorized.
 วันที่: 2026-11-05
 
 ## ทำไมต้องมี

@@ -150,12 +150,12 @@
       "path": "specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/nc12-section14-v2-w1/run/http-intake.jsonl",
       "git_blob": "e3c94965079f0808e3f28dab49065cff1ed7a52e",
       "rule": "generic-api-key",
-      "reported_matches": 3414,
+      "reported_matches": 3419,
       "resolution": "false_positive",
       "reason": "Fixed synthetic request/idempotency UUIDs or source/query SHA-256 fingerprints; all reported values matched producing JSON fields and immutable blobs.",
-      "approval": "Owner approved Option A and these 39 fixed bindings on 2026-11-07.",
-      "evidence": "specs/features/2026-11-02-tp-sl/publication-evidence-policy-proposal.md",
-      "occurrence_digest": "c01e9a343de22ac32931e4bf526eee1117cc084f851e7243d3a405ec60a71b50"
+      "approval": "Owner approved Option A and the exact additional 100 tree identities in 8 bindings on 2026-11-07.",
+      "evidence": "specs/features/2026-11-02-tp-sl/tree-occurrence-extension-proposal.md",
+      "occurrence_digest": "8f4fb6a10a80a2cc89c17819c9f9f222b858632c3ccd0893cd5954a196106573"
     },
     {
       "commit": "c8ba2d72b6f970b9076bb2c6bd397003675bd107",
@@ -198,12 +198,12 @@
       "path": "specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/nc12-section16-w1/run/http-intake.jsonl",
       "git_blob": "2b2aedd5563cf2bbcb0021ebf016a8e84f5f4aff",
       "rule": "generic-api-key",
-      "reported_matches": 3421,
+      "reported_matches": 3429,
       "resolution": "false_positive",
       "reason": "Fixed synthetic request/idempotency UUIDs or source/query SHA-256 fingerprints; all reported values matched producing JSON fields and immutable blobs.",
-      "approval": "Owner approved Option A and these 39 fixed bindings on 2026-11-07.",
-      "evidence": "specs/features/2026-11-02-tp-sl/publication-evidence-policy-proposal.md",
-      "occurrence_digest": "5bfa9c08e457c8806fd5a32b8d88bef45ed401601503a0f1e3e5ed5ec94fbbc8"
+      "approval": "Owner approved Option A and the exact additional 100 tree identities in 8 bindings on 2026-11-07.",
+      "evidence": "specs/features/2026-11-02-tp-sl/tree-occurrence-extension-proposal.md",
+      "occurrence_digest": "af205120c417cfa428d977eccca8c364a01a5c93e054a5ab53d792050b3ba955"
     },
     {
       "commit": "c8ba2d72b6f970b9076bb2c6bd397003675bd107",
@@ -222,12 +222,12 @@
       "path": "specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/nc12-section16-w2/run/http-intake.jsonl",
       "git_blob": "8c2e91bc48c7a498f18faa43237bf1440b412c34",
       "rule": "generic-api-key",
-      "reported_matches": 11407,
+      "reported_matches": 11431,
       "resolution": "false_positive",
       "reason": "Fixed synthetic request/idempotency UUIDs or source/query SHA-256 fingerprints; all reported values matched producing JSON fields and immutable blobs.",
-      "approval": "Owner approved Option A and these 39 fixed bindings on 2026-11-07.",
-      "evidence": "specs/features/2026-11-02-tp-sl/publication-evidence-policy-proposal.md",
-      "occurrence_digest": "65a3adc711b5cbf69dbf16fb7e37d1191f358556b835fa45e47b089cb3994ece"
+      "approval": "Owner approved Option A and the exact additional 100 tree identities in 8 bindings on 2026-11-07.",
+      "evidence": "specs/features/2026-11-02-tp-sl/tree-occurrence-extension-proposal.md",
+      "occurrence_digest": "5bc6329c9046a5b56ded369953db82544ba2d55d987c558bf545bfaa5fac664a"
     },
     {
       "commit": "c8ba2d72b6f970b9076bb2c6bd397003675bd107",
@@ -246,12 +246,12 @@
       "path": "specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/nc12-section18-w2/run/http-intake.jsonl",
       "git_blob": "ac2be9b52c54ab34a3665f1862a8e5a621c5273c",
       "rule": "generic-api-key",
-      "reported_matches": 11462,
+      "reported_matches": 11489,
       "resolution": "false_positive",
       "reason": "Fixed synthetic request/idempotency UUIDs or source/query SHA-256 fingerprints; all reported values matched producing JSON fields and immutable blobs.",
-      "approval": "Owner approved Option A and these 39 fixed bindings on 2026-11-07.",
-      "evidence": "specs/features/2026-11-02-tp-sl/publication-evidence-policy-proposal.md",
-      "occurrence_digest": "d4de7692e8c236451125b41f20c60d4453c497fa47fa5a60e11651e4a44a4bae"
+      "approval": "Owner approved Option A and the exact additional 100 tree identities in 8 bindings on 2026-11-07.",
+      "evidence": "specs/features/2026-11-02-tp-sl/tree-occurrence-extension-proposal.md",
+      "occurrence_digest": "fd1187e5858b94b0b88022d243335cf1031fc60914419a7c947d0288f952b76c"
     },
     {
       "commit": "c8ba2d72b6f970b9076bb2c6bd397003675bd107",
@@ -282,12 +282,12 @@
       "path": "specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/nc12-section20-w2/run/http-intake.jsonl",
       "git_blob": "acd16db311cf34685033fa6a745ad9e1157ce3dd",
       "rule": "generic-api-key",
-      "reported_matches": 11433,
+      "reported_matches": 11458,
       "resolution": "false_positive",
       "reason": "Fixed synthetic request/idempotency UUIDs or source/query SHA-256 fingerprints; all reported values matched producing JSON fields and immutable blobs.",
-      "approval": "Owner approved Option A and these 39 fixed bindings on 2026-11-07.",
-      "evidence": "specs/features/2026-11-02-tp-sl/publication-evidence-policy-proposal.md",
-      "occurrence_digest": "21230358347a2dd32f90bbbf7c4210d3191f623a8516b2b45847ad6fb8fe03cc"
+      "approval": "Owner approved Option A and the exact additional 100 tree identities in 8 bindings on 2026-11-07.",
+      "evidence": "specs/features/2026-11-02-tp-sl/tree-occurrence-extension-proposal.md",
+      "occurrence_digest": "b1b916d88fbb1036d870359352e4a9338b0e92dee21ee7c639fbb58142d3b027"
     },
     {
       "commit": "c8ba2d72b6f970b9076bb2c6bd397003675bd107",
@@ -318,12 +318,12 @@
       "path": "specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/nc12-section21-w3/run/http-intake.jsonl",
       "git_blob": "30acb4aec98968e7414a88f39aa88074e1e19811",
       "rule": "generic-api-key",
-      "reported_matches": 720,
+      "reported_matches": 721,
       "resolution": "false_positive",
       "reason": "Fixed synthetic request/idempotency UUIDs or source/query SHA-256 fingerprints; all reported values matched producing JSON fields and immutable blobs.",
-      "approval": "Owner approved Option A and these 39 fixed bindings on 2026-11-07.",
-      "evidence": "specs/features/2026-11-02-tp-sl/publication-evidence-policy-proposal.md",
-      "occurrence_digest": "144aedf889a62948deb6b953632e6a6c34c279403bb78530bfeab8ba2dbd463e"
+      "approval": "Owner approved Option A and the exact additional 100 tree identities in 8 bindings on 2026-11-07.",
+      "evidence": "specs/features/2026-11-02-tp-sl/tree-occurrence-extension-proposal.md",
+      "occurrence_digest": "050d960e1b41c353241a8c0c2f22780e47c5f34e2c2f0ad5322665ee863d1441"
     },
     {
       "commit": "c8ba2d72b6f970b9076bb2c6bd397003675bd107",
@@ -342,12 +342,12 @@
       "path": "specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/nc12-section22-w3/run/http-intake.jsonl",
       "git_blob": "ab7645d523b945698a4c5b862c99b8a42526e7cd",
       "rule": "generic-api-key",
-      "reported_matches": 2846,
+      "reported_matches": 2852,
       "resolution": "false_positive",
       "reason": "Fixed synthetic request/idempotency UUIDs or source/query SHA-256 fingerprints; all reported values matched producing JSON fields and immutable blobs.",
-      "approval": "Owner approved Option A and these 39 fixed bindings on 2026-11-07.",
-      "evidence": "specs/features/2026-11-02-tp-sl/publication-evidence-policy-proposal.md",
-      "occurrence_digest": "e9941b2dc71dee76a6c35fe1df2b3d4daa3a65a4c2ebb5ecf962ba5f64200532"
+      "approval": "Owner approved Option A and the exact additional 100 tree identities in 8 bindings on 2026-11-07.",
+      "evidence": "specs/features/2026-11-02-tp-sl/tree-occurrence-extension-proposal.md",
+      "occurrence_digest": "12a4fad9fe89ea356aba340961403bacde005d0465ca945f2242834e3244dc7a"
     },
     {
       "commit": "c8ba2d72b6f970b9076bb2c6bd397003675bd107",
@@ -426,12 +426,12 @@
       "path": "specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/nc12-w1/run/http-intake.jsonl",
       "git_blob": "dd8c397b6bae3571b21de04ffe313c447234b278",
       "rule": "generic-api-key",
-      "reported_matches": 2303,
+      "reported_matches": 2307,
       "resolution": "false_positive",
       "reason": "Fixed synthetic request/idempotency UUIDs or source/query SHA-256 fingerprints; all reported values matched producing JSON fields and immutable blobs.",
-      "approval": "Owner approved Option A and these 39 fixed bindings on 2026-11-07.",
-      "evidence": "specs/features/2026-11-02-tp-sl/publication-evidence-policy-proposal.md",
-      "occurrence_digest": "db05d9f2c907aa8d224d4347462c933228e68df79e37a7a5d1432d19e7f3e7b2"
+      "approval": "Owner approved Option A and the exact additional 100 tree identities in 8 bindings on 2026-11-07.",
+      "evidence": "specs/features/2026-11-02-tp-sl/tree-occurrence-extension-proposal.md",
+      "occurrence_digest": "e49d2bc8d45ae52aac9f4258e490a67e5eaa154c6526d2a4794f22a7068a37c9"
     },
     {
       "commit": "c8ba2d72b6f970b9076bb2c6bd397003675bd107",

@@ -26,6 +26,11 @@ different columns on the same8immutable blobs. Existing approval not expanded;
 new column-variation fail-closed regression passed. Pending owner decision on
 [exact data extension](../2026-11-02-tp-sl/tree-occurrence-extension-proposal.md),
 then full local identity validation/required CI. No new remote-CI success claim.
+
+Owner approved the exact100-identity extension2026-11-07. Verify only8entries change
+to the listed counts/set digests (48218total), then actual full history/tree registry
+resolution and zero blocked/triage findings. Scope remains Feature; current-head
+local/full required CI results Pending until executed, prior failures unchanged.
 วันที่: 2026-11-05
 Requirements: [Approved](requirements.md); implementation: [plan.md](plan.md)
 
