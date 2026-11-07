@@ -1,0 +1,19 @@
+{
+  "claim_coordination": "SERIALIZED_CLAIM_V2",
+  "transaction_seconds": [
+    0.05828233400097815,
+    0.030952916997193824
+  ],
+  "transaction_samples": [
+    {
+      "started": 16648.932031416,
+      "finished": 16648.99031375,
+      "seconds": 0.05828233400097815
+    },
+    {
+      "started": 16649.031728416,
+      "finished": 16649.062681333,
+      "seconds": 0.030952916997193824
+    }
+  ]
+}

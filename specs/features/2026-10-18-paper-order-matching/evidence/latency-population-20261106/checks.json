@@ -1,0 +1,65 @@
+{
+  "base_commit": "98ff2f840fe08dc46ab5eb9976f17bdf32b062b1",
+  "production_files_unchanged": 427,
+  "historical_input_files_unchanged": 22,
+  "python_files_sha256": {
+    "tests/infra/execution_market/profile_workload.py": "d0f0558307fc01098cd81e9b4b5a5df759bec403dc5df483c1ac09a130cdfcfb",
+    "tests/infra/execution_market/test_workload_latency.py": "598647dcf8bd87ba9f104d8ac72d7b4449e921a2e0ddbbc887b33bd0227a915a",
+    "tests/infra/risk_limits/profile_workload.py": "d4664aefd1ac4f917061902173b88923559bf9730f9cf5cb7c66df0a7a2b5c9a"
+  },
+  "pytest": {
+    "passed": 66,
+    "seconds": 5.08,
+    "report_source": "terminal output recorded during this checkpoint; no workload run"
+  },
+  "mypy": {
+    "new_harness_and_tests": "Passed: no issues in 2 source files",
+    "all_three_changed_files": "2 existing callback assignment errors in risk harness",
+    "pre_edit_shadow_check": "Same 2 errors reproduced with pre-edit F15 and risk files",
+    "initial_invocation": "88 errors with MYPYPATH omitted; corrected invocation resolves local import errors"
+  },
+  "final_checks": [
+    {
+      "command": [
+        ".venv/bin/ruff",
+        "check",
+        "tests/infra/execution_market/profile_workload.py",
+        "tests/infra/execution_market/test_workload_latency.py",
+        "tests/infra/risk_limits/profile_workload.py"
+      ],
+      "exit_code": 0,
+      "seconds": 0.07191775000046619,
+      "output": "All checks passed!\n"
+    },
+    {
+      "command": [
+        ".venv/bin/ruff",
+        "format",
+        "--check",
+        "tests/infra/execution_market/profile_workload.py",
+        "tests/infra/execution_market/test_workload_latency.py",
+        "tests/infra/risk_limits/profile_workload.py"
+      ],
+      "exit_code": 0,
+      "seconds": 0.015600041000652709,
+      "output": "3 files already formatted\n"
+    },
+    {
+      "command": [
+        "git",
+        "diff",
+        "--check",
+        "--",
+        "tests/infra/execution_market/profile_workload.py",
+        "tests/infra/execution_market/test_workload_latency.py",
+        "tests/infra/risk_limits/profile_workload.py",
+        "../specs/features/2026-10-18-paper-order-matching/plan.md",
+        "../specs/features/2026-10-18-paper-order-matching/validation.md",
+        "../specs/roadmap.md"
+      ],
+      "exit_code": 0,
+      "seconds": 0.060028875000170956,
+      "output": ""
+    }
+  ]
+}

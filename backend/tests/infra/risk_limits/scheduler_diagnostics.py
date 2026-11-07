@@ -2,6 +2,7 @@
 
 import json
 import logging
+from typing import TypedDict, Unpack
 from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncEngine
@@ -10,6 +11,13 @@ from tiewtrade.infra.db import scan_session_bypassing_rls
 from tiewtrade.infra.paper_orders.dispatch import due_orders
 
 _LOGGER = logging.getLogger(__name__)
+
+
+class SchedulerOptions(TypedDict, total=False):
+    prefer_same_pair: bool
+    admission_first: bool
+    source_resumption: bool
+
 
 _QUEUE_COLUMNS = """d.command_id,d.user_id,d.episode_id,d.state,d.next_attempt_at,
     d.lease_until,d.attempts,d.claim_revision,d.routing_action,d.routing_stage,
@@ -27,9 +35,13 @@ async def read_scheduler_diagnostics(
     prefer_same_pair: bool = False,
     admission_first: bool = False,
     source_resumption: bool = False,
+    command_ids: tuple[UUID, ...] = (),
 ) -> dict[str, object]:
     # ENGINE_SCAN cannot write or read credentials, order payloads or balances.
     # Keep diagnostics bounded; no protocol, queue or due timestamp is changed.
+    if len(command_ids) > 32:
+        raise ValueError("diagnostic command selection must be bounded")
+    selected = []
     async with scan_session_bypassing_rls(engine) as session:
         now = (await session.execute("SELECT clock_timestamp()")).scalar_one()
         actual = await due_orders(
@@ -49,6 +61,19 @@ async def read_scheduler_diagnostics(
             .mappings()
             .all()
         )
+        if command_ids:
+            selected = list(
+                (
+                    await session.execute(
+                        f"SELECT {_QUEUE_COLUMNS} FROM paper_order_dispatch d "
+                        "WHERE d.user_id=:owner AND d.command_id=ANY(CAST(:commands AS uuid[])) "
+                        "ORDER BY d.next_attempt_at,d.command_id LIMIT 32",
+                        {"owner": owner, "commands": list(command_ids)},
+                    )
+                )
+                .mappings()
+                .all()
+            )
         queue = (
             (
                 await session.execute(
@@ -85,7 +110,7 @@ async def read_scheduler_diagnostics(
             .mappings()
             .all()
         )
-    return {
+    snapshot: dict[str, object] = {
         "owner": owner,
         "observed_at_after_missing_hint": now,
         "options": {
@@ -108,9 +133,14 @@ async def read_scheduler_diagnostics(
         "queue_counts": [dict(row) for row in counts],
         "public_sources": [dict(row) for row in sources],
     }
+    if command_ids:
+        snapshot["selected_command_rows"] = [dict(row) for row in selected]
+    return snapshot
 
 
-async def emit_scheduler_diagnostics(engine: AsyncEngine, owner: UUID, **options: bool) -> None:
+async def emit_scheduler_diagnostics(
+    engine: AsyncEngine, owner: UUID, **options: Unpack[SchedulerOptions]
+) -> None:
     try:
         snapshot = await read_scheduler_diagnostics(engine, owner, **options)
         _LOGGER.warning(

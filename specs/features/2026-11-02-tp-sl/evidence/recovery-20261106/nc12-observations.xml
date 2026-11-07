@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="4" time="13.652" timestamp="2026-11-06T23:31:38.193094+07:00" hostname="Chainarongs-MacBook-Pro.local"><testcase classname="tests.infra.execution_market.test_internal_observations" name="test_streamed_poll_attempts_keep_cancellations_without_retaining_rows" time="0.016" /><testcase classname="tests.infra.execution_market.test_internal_observations" name="test_protection_sla_requires_every_owner_and_the_original_ready_time" time="0.002" /><testcase classname="tests.infra.execution_market.test_internal_observations" name="test_snapshot_missing_owner_fails_and_preserves_observation" time="0.369" /><testcase classname="tests.infra.execution_market.test_internal_observations" name="test_restore_extension_fixture_and_retry_with_real_roles" time="12.855"><failure message="tiewtrade.core.orders.OrderError: owner and episode identities required">tmp_path = PosixPath('/private/var/folders/fb/g4m1d38j4fl6x1pt39rn0wxr0000gn/T/pytest-of-chainarongjaykeaw/pytest-10/test_restore_extension_fixture0')
+
+    async def test_restore_extension_fixture_and_retry_with_real_roles(tmp_path: Path) -&gt; None:
+        """Scoped harness safety check on a fresh DB, not the W4 backup/restore campaign."""
+        engines = {
+            role: create_engine_for(role)
+            for role in (
+                DatabaseRole.API,
+                DatabaseRole.ENGINE,
+                DatabaseRole.ENGINE_SCAN,
+                DatabaseRole.MIGRATOR,
+                DatabaseRole.MARKET_DATA,
+            )
+        }
+        try:
+            async with activated_protocols(engines[DatabaseRole.MIGRATOR], protections=True):
+&gt;               fixture = await build_extension(engines, tmp_path)
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/infra/execution_market/test_internal_observations.py:106: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/infra/execution_market/profile_internal_restore.py:173: in build_extension
+    await verify_exit(engine, owners[3], UUID(closed["group"]))
+tests/infra/execution_market/profile_protections.py:126: in verify_exit
+    await replay_owner_domain(
+tests/infra/execution_market/profile_restore.py:260: in replay_owner_domain
+    scope=OrderScope(user_id, episode_id, TradingMode.PAPER),
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;string&gt;:6: in __init__
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = OrderScope(owner_id=UUID('f93686bd-f7ea-4372-b4e2-26af9a1066a2'), episode_id=UUID('0f634d4c-3110-4aa2-ad7e-4b37662e4fb4'), mode=&lt;TradingMode.PAPER: 'PAPER'&gt;)
+
+    def __post_init__(self) -&gt; None:
+        if type(self.owner_id) is not UUID or type(self.episode_id) is not UUID:
+&gt;           raise OrderError("owner and episode identities required")
+E           tiewtrade.core.orders.OrderError: owner and episode identities required
+
+src/tiewtrade/core/orders.py:101: OrderError</failure></testcase></testsuite></testsuites>

@@ -1,0 +1,38 @@
+{
+  "authorization": "Owner approved baseline publisher timing and one unchanged diagnostic",
+  "database": "tiewtrade_set4_iso_publisher_10e3a3e1",
+  "args": {
+    "parent_poll_limit": 4,
+    "phase": "SMOKE",
+    "owners": 100,
+    "baseline_orders": 20,
+    "cycles_per_owner": 6,
+    "rate": 10,
+    "workers": 20,
+    "r8_claim_budget": true,
+    "coordinate_claims": true,
+    "publisher_heartbeat_per_book": true,
+    "final_tail_drain": true,
+    "diagnostics": true,
+    "worker_only": false,
+    "baseline_manifest": null,
+    "fault_schedule": null,
+    "redis_container": null,
+    "output": "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/publisher-diagnostic-1"
+  },
+  "budget_seconds": 1200,
+  "started_wall": 1793975231.098975,
+  "free_bytes_before": 6998474752,
+  "host_load_before": [
+    16.109375,
+    18.37060546875,
+    18.74853515625
+  ],
+  "docker_running_before": [
+    "tiewtrade-ui-check-paper-order-worker-1\tRestarting (1) 11 seconds ago",
+    "tiewtrade-ui-check-risk-limit-worker-1\tRestarting (1) 12 seconds ago",
+    "tiewtrade-ui-check-paper-wallet-worker-1\tRestarting (1) 13 seconds ago",
+    "tiewtrade-postgres-1\tUp 7 minutes (healthy)"
+  ],
+  "acceptance_result": false
+}

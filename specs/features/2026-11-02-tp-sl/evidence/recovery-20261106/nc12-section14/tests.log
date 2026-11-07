@@ -1,0 +1,857 @@
+........................................................................ [ 34%]
+........................................................................ [ 68%]
+...FFFFFF..FF....................................................F       [100%]
+=================================== FAILURES ===================================
+___ test_coordinator_hold_and_setup_survive_real_transaction_failure[False] ____
+
+tmp_path = PosixPath('/private/var/folders/fb/g4m1d38j4fl6x1pt39rn0wxr0000gn/T/pytest-of-chainarongjaykeaw/pytest-0/test_coordinator_hold_and_setu0')
+scan_engine = <sqlalchemy.ext.asyncio.engine.AsyncEngine object at 0x10cf8e710>
+busy = False
+
+    @pytest.mark.parametrize("busy", [False, True])
+    async def test_coordinator_hold_and_setup_survive_real_transaction_failure(
+        tmp_path: Path, scan_engine: AsyncEngine, busy: bool
+    ) -> None:
+        primary = RuntimeError("controlled failure after coordinator acquisition")
+    
+        async def operation() -> None:
+            async with scan_session_bypassing_rls(scan_engine, cleanup_seconds=2) as session:
+                assert await vars(paper_order)["try_lock_order_selection"](session) is not busy
+                raise primary
+    
+>       async with scan_session_bypassing_rls(scan_engine) as holder:
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/infra/execution_market/test_profile_diagnostics.py:182: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+../../../../../.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/contextlib.py:210: in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+src/tiewtrade/infra/db/session.py:426: in scan_session_bypassing_rls
+    async with transaction as connection:
+               ^^^^^^^^^^^
+../../../../../.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/contextlib.py:210: in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+engine = <sqlalchemy.ext.asyncio.engine.AsyncEngine object at 0x10cf8e710>
+cleanup_seconds = None
+
+    @asynccontextmanager
+    async def _begin(
+        engine: AsyncEngine, *, cleanup_seconds: float | None = None
+    ) -> AsyncIterator[AsyncConnection]:
+        """เปิด transaction แล้วแปลงข้อผิดพลาดทุกชนิดตอนต่อและตอนปิดให้เป็นชนิดของเรา
+    
+        ครอบตั้งแต่ **ตอนขอ connection** ไม่ใช่แค่ตอน query เพราะข้อผิดพลาดตอนต่อ
+        (รหัสผ่านผิด ต่อไม่ติด) พา URL และรหัสผ่านติดมาใน traceback ของ driver
+        ซึ่งเป็นสิ่งที่ `security.md` หัวข้อ 4 ห้ามไว้
+    
+        จับ `OSError` ด้วย ไม่ใช่แค่ข้อผิดพลาดของ SQLAlchemy เพราะการต่อพอร์ตที่ปิดอยู่
+        โยน `ConnectionRefusedError` ขึ้นมาตรง ๆ ถ้าไม่จับ ผู้เรียกที่ดัก `InfraError`
+        จะรับมือกรณี "ฐานข้อมูลล่ม" ไม่ได้เลย ซึ่งเป็นกรณีที่ต้องรับมือได้ที่สุด
+    
+        ข้อผิดพลาดที่เกิด **ในตัวงานของผู้เรียก** ไม่ถูกแปลง — ของจาก query ถูกแปลง
+        ที่ `execute` ไปแล้ว และของอื่นเป็นเรื่องของผู้เรียก ไม่ใช่ของชั้นนี้
+        """
+        transaction = engine.begin()
+        try:
+            connection = await transaction.__aenter__()
+        except (SQLAlchemyError, OSError) as error:
+>           raise translate_database_error(error) from None
+E           tiewtrade.infra.db.errors.DatabaseUnavailableError: ติดต่อฐานข้อมูลไม่สำเร็จ
+
+src/tiewtrade/infra/db/session.py:209: DatabaseUnavailableError
+____ test_coordinator_hold_and_setup_survive_real_transaction_failure[True] ____
+
+tmp_path = PosixPath('/private/var/folders/fb/g4m1d38j4fl6x1pt39rn0wxr0000gn/T/pytest-of-chainarongjaykeaw/pytest-0/test_coordinator_hold_and_setu1')
+scan_engine = <sqlalchemy.ext.asyncio.engine.AsyncEngine object at 0x10d59f1d0>
+busy = True
+
+    @pytest.mark.parametrize("busy", [False, True])
+    async def test_coordinator_hold_and_setup_survive_real_transaction_failure(
+        tmp_path: Path, scan_engine: AsyncEngine, busy: bool
+    ) -> None:
+        primary = RuntimeError("controlled failure after coordinator acquisition")
+    
+        async def operation() -> None:
+            async with scan_session_bypassing_rls(scan_engine, cleanup_seconds=2) as session:
+                assert await vars(paper_order)["try_lock_order_selection"](session) is not busy
+                raise primary
+    
+>       async with scan_session_bypassing_rls(scan_engine) as holder:
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/infra/execution_market/test_profile_diagnostics.py:182: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+../../../../../.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/contextlib.py:210: in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+src/tiewtrade/infra/db/session.py:426: in scan_session_bypassing_rls
+    async with transaction as connection:
+               ^^^^^^^^^^^
+../../../../../.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/contextlib.py:210: in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+engine = <sqlalchemy.ext.asyncio.engine.AsyncEngine object at 0x10d59f1d0>
+cleanup_seconds = None
+
+    @asynccontextmanager
+    async def _begin(
+        engine: AsyncEngine, *, cleanup_seconds: float | None = None
+    ) -> AsyncIterator[AsyncConnection]:
+        """เปิด transaction แล้วแปลงข้อผิดพลาดทุกชนิดตอนต่อและตอนปิดให้เป็นชนิดของเรา
+    
+        ครอบตั้งแต่ **ตอนขอ connection** ไม่ใช่แค่ตอน query เพราะข้อผิดพลาดตอนต่อ
+        (รหัสผ่านผิด ต่อไม่ติด) พา URL และรหัสผ่านติดมาใน traceback ของ driver
+        ซึ่งเป็นสิ่งที่ `security.md` หัวข้อ 4 ห้ามไว้
+    
+        จับ `OSError` ด้วย ไม่ใช่แค่ข้อผิดพลาดของ SQLAlchemy เพราะการต่อพอร์ตที่ปิดอยู่
+        โยน `ConnectionRefusedError` ขึ้นมาตรง ๆ ถ้าไม่จับ ผู้เรียกที่ดัก `InfraError`
+        จะรับมือกรณี "ฐานข้อมูลล่ม" ไม่ได้เลย ซึ่งเป็นกรณีที่ต้องรับมือได้ที่สุด
+    
+        ข้อผิดพลาดที่เกิด **ในตัวงานของผู้เรียก** ไม่ถูกแปลง — ของจาก query ถูกแปลง
+        ที่ `execute` ไปแล้ว และของอื่นเป็นเรื่องของผู้เรียก ไม่ใช่ของชั้นนี้
+        """
+        transaction = engine.begin()
+        try:
+            connection = await transaction.__aenter__()
+        except (SQLAlchemyError, OSError) as error:
+>           raise translate_database_error(error) from None
+E           tiewtrade.infra.db.errors.DatabaseUnavailableError: ติดต่อฐานข้อมูลไม่สำเร็จ
+
+src/tiewtrade/infra/db/session.py:209: DatabaseUnavailableError
+___________ test_parent_trace_preserves_failure_and_returns_pool[W1] ___________
+
+tmp_path = PosixPath('/private/var/folders/fb/g4m1d38j4fl6x1pt39rn0wxr0000gn/T/pytest-of-chainarongjaykeaw/pytest-0/test_parent_trace_preserves_fa0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x10d23e5a0>
+phase = 'W1'
+
+    @pytest.mark.parametrize("phase", ["W1", "SMOKE"])
+    async def test_parent_trace_preserves_failure_and_returns_pool(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch, phase: str
+    ) -> None:
+        output = tmp_path / "run"
+        owner, order = uuid4(), uuid4()
+        before = (db._begin, vars(f15)["create_engine_for"], f15.wait_status, f15.resource_sampler)
+        private = "DO_NOT_SERIALIZE_DIAGNOSTIC_ERROR"
+    
+        async def wait_status(*args: Any, **kwargs: Any) -> None:
+            async with user_session(args[0], owner) as session:
+                assert (
+                    await session.execute("SELECT CAST(:value AS text)", {"value": private})
+                ).scalar_one() == private
+                raise RuntimeError(private)
+    
+        async def workload(args: argparse.Namespace) -> int:
+            output.mkdir()
+            f15.save(
+                output / "dispatch-trace-control.json",
+                {"started": monotonic(), "seconds": 180, "owners": [], "detail_limit": 0},
+            )
+            engine = vars(f15)["create_engine_for"](DatabaseRole.API)
+    
+            try:
+                await f15.wait_status(engine, owner, order, OrderStatus.FILLED)
+            finally:
+                await engine.dispose()
+            return 0
+    
+        monkeypatch.setattr(f15, "wait_status", wait_status)
+        monkeypatch.setattr(f15, "_run", workload)
+        with pytest.raises(RuntimeError, match=private):
+>           await f15.run(argparse.Namespace(diagnostics=True, phase=phase, output=output))
+
+tests/infra/execution_market/test_profile_diagnostics.py:237: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/infra/execution_market/profile_workload.py:1962: in run
+    return await observe_workload(args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/infra/execution_market/profile_diagnostics.py:263: in observe_workload
+    raise run_error
+tests/infra/execution_market/profile_diagnostics.py:256: in observe_workload
+    result = await f15._run(
+tests/infra/execution_market/test_profile_diagnostics.py:229: in workload
+    await f15.wait_status(engine, owner, order, OrderStatus.FILLED)
+tests/infra/execution_market/profile_diagnostics.py:88: in observed
+    return await original(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/infra/execution_market/test_profile_diagnostics.py:214: in wait_status
+    async with user_session(args[0], owner) as session:
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../../../.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/contextlib.py:210: in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+src/tiewtrade/infra/db/session.py:305: in user_session
+    async with transaction as connection:
+               ^^^^^^^^^^^
+../../../../../.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/contextlib.py:210: in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+tests/infra/risk_limits/profile_pool_timing.py:206: in transaction
+    async with original(engine, cleanup_seconds=cleanup_seconds) as connection:
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../../../.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/contextlib.py:210: in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+engine = <sqlalchemy.ext.asyncio.engine.AsyncEngine object at 0x10d55d710>
+cleanup_seconds = None
+
+    @asynccontextmanager
+    async def _begin(
+        engine: AsyncEngine, *, cleanup_seconds: float | None = None
+    ) -> AsyncIterator[AsyncConnection]:
+        """เปิด transaction แล้วแปลงข้อผิดพลาดทุกชนิดตอนต่อและตอนปิดให้เป็นชนิดของเรา
+    
+        ครอบตั้งแต่ **ตอนขอ connection** ไม่ใช่แค่ตอน query เพราะข้อผิดพลาดตอนต่อ
+        (รหัสผ่านผิด ต่อไม่ติด) พา URL และรหัสผ่านติดมาใน traceback ของ driver
+        ซึ่งเป็นสิ่งที่ `security.md` หัวข้อ 4 ห้ามไว้
+    
+        จับ `OSError` ด้วย ไม่ใช่แค่ข้อผิดพลาดของ SQLAlchemy เพราะการต่อพอร์ตที่ปิดอยู่
+        โยน `ConnectionRefusedError` ขึ้นมาตรง ๆ ถ้าไม่จับ ผู้เรียกที่ดัก `InfraError`
+        จะรับมือกรณี "ฐานข้อมูลล่ม" ไม่ได้เลย ซึ่งเป็นกรณีที่ต้องรับมือได้ที่สุด
+    
+        ข้อผิดพลาดที่เกิด **ในตัวงานของผู้เรียก** ไม่ถูกแปลง — ของจาก query ถูกแปลง
+        ที่ `execute` ไปแล้ว และของอื่นเป็นเรื่องของผู้เรียก ไม่ใช่ของชั้นนี้
+        """
+        transaction = engine.begin()
+        try:
+            connection = await transaction.__aenter__()
+        except (SQLAlchemyError, OSError) as error:
+>           raise translate_database_error(error) from None
+E           tiewtrade.infra.db.errors.DatabaseUnavailableError: ติดต่อฐานข้อมูลไม่สำเร็จ
+
+src/tiewtrade/infra/db/session.py:209: DatabaseUnavailableError
+_________ test_parent_trace_preserves_failure_and_returns_pool[SMOKE] __________
+
+tmp_path = PosixPath('/private/var/folders/fb/g4m1d38j4fl6x1pt39rn0wxr0000gn/T/pytest-of-chainarongjaykeaw/pytest-0/test_parent_trace_preserves_fa1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x10d23fe00>
+phase = 'SMOKE'
+
+    @pytest.mark.parametrize("phase", ["W1", "SMOKE"])
+    async def test_parent_trace_preserves_failure_and_returns_pool(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch, phase: str
+    ) -> None:
+        output = tmp_path / "run"
+        owner, order = uuid4(), uuid4()
+        before = (db._begin, vars(f15)["create_engine_for"], f15.wait_status, f15.resource_sampler)
+        private = "DO_NOT_SERIALIZE_DIAGNOSTIC_ERROR"
+    
+        async def wait_status(*args: Any, **kwargs: Any) -> None:
+            async with user_session(args[0], owner) as session:
+                assert (
+                    await session.execute("SELECT CAST(:value AS text)", {"value": private})
+                ).scalar_one() == private
+                raise RuntimeError(private)
+    
+        async def workload(args: argparse.Namespace) -> int:
+            output.mkdir()
+            f15.save(
+                output / "dispatch-trace-control.json",
+                {"started": monotonic(), "seconds": 180, "owners": [], "detail_limit": 0},
+            )
+            engine = vars(f15)["create_engine_for"](DatabaseRole.API)
+    
+            try:
+                await f15.wait_status(engine, owner, order, OrderStatus.FILLED)
+            finally:
+                await engine.dispose()
+            return 0
+    
+        monkeypatch.setattr(f15, "wait_status", wait_status)
+        monkeypatch.setattr(f15, "_run", workload)
+        with pytest.raises(RuntimeError, match=private):
+>           await f15.run(argparse.Namespace(diagnostics=True, phase=phase, output=output))
+
+tests/infra/execution_market/test_profile_diagnostics.py:237: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/infra/execution_market/profile_workload.py:1962: in run
+    return await observe_workload(args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/infra/execution_market/profile_diagnostics.py:263: in observe_workload
+    raise run_error
+tests/infra/execution_market/profile_diagnostics.py:256: in observe_workload
+    result = await f15._run(
+tests/infra/execution_market/test_profile_diagnostics.py:229: in workload
+    await f15.wait_status(engine, owner, order, OrderStatus.FILLED)
+tests/infra/execution_market/profile_diagnostics.py:88: in observed
+    return await original(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/infra/execution_market/test_profile_diagnostics.py:214: in wait_status
+    async with user_session(args[0], owner) as session:
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../../../.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/contextlib.py:210: in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+src/tiewtrade/infra/db/session.py:305: in user_session
+    async with transaction as connection:
+               ^^^^^^^^^^^
+../../../../../.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/contextlib.py:210: in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+tests/infra/risk_limits/profile_pool_timing.py:206: in transaction
+    async with original(engine, cleanup_seconds=cleanup_seconds) as connection:
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../../../.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/contextlib.py:210: in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+engine = <sqlalchemy.ext.asyncio.engine.AsyncEngine object at 0x10db5bc90>
+cleanup_seconds = None
+
+    @asynccontextmanager
+    async def _begin(
+        engine: AsyncEngine, *, cleanup_seconds: float | None = None
+    ) -> AsyncIterator[AsyncConnection]:
+        """เปิด transaction แล้วแปลงข้อผิดพลาดทุกชนิดตอนต่อและตอนปิดให้เป็นชนิดของเรา
+    
+        ครอบตั้งแต่ **ตอนขอ connection** ไม่ใช่แค่ตอน query เพราะข้อผิดพลาดตอนต่อ
+        (รหัสผ่านผิด ต่อไม่ติด) พา URL และรหัสผ่านติดมาใน traceback ของ driver
+        ซึ่งเป็นสิ่งที่ `security.md` หัวข้อ 4 ห้ามไว้
+    
+        จับ `OSError` ด้วย ไม่ใช่แค่ข้อผิดพลาดของ SQLAlchemy เพราะการต่อพอร์ตที่ปิดอยู่
+        โยน `ConnectionRefusedError` ขึ้นมาตรง ๆ ถ้าไม่จับ ผู้เรียกที่ดัก `InfraError`
+        จะรับมือกรณี "ฐานข้อมูลล่ม" ไม่ได้เลย ซึ่งเป็นกรณีที่ต้องรับมือได้ที่สุด
+    
+        ข้อผิดพลาดที่เกิด **ในตัวงานของผู้เรียก** ไม่ถูกแปลง — ของจาก query ถูกแปลง
+        ที่ `execute` ไปแล้ว และของอื่นเป็นเรื่องของผู้เรียก ไม่ใช่ของชั้นนี้
+        """
+        transaction = engine.begin()
+        try:
+            connection = await transaction.__aenter__()
+        except (SQLAlchemyError, OSError) as error:
+>           raise translate_database_error(error) from None
+E           tiewtrade.infra.db.errors.DatabaseUnavailableError: ติดต่อฐานข้อมูลไม่สำเร็จ
+
+src/tiewtrade/infra/db/session.py:209: DatabaseUnavailableError
+__ test_successful_smoke_observer_records_publisher_without_acceptance[False] __
+
+tmp_path = PosixPath('/private/var/folders/fb/g4m1d38j4fl6x1pt39rn0wxr0000gn/T/pytest-of-chainarongjaykeaw/pytest-0/test_successful_smoke_observer0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x10d23ea50>
+baseline = False
+
+    @pytest.mark.parametrize("baseline", [False, True])
+    async def test_successful_smoke_observer_records_publisher_without_acceptance(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch, baseline: bool
+    ) -> None:
+        output = tmp_path / "run"
+    
+        lease = SimpleNamespace(owner=uuid4(), generation=1, last_input_id=12)
+    
+        async def publish(engine: AsyncEngine, *args: Any, **kwargs: Any) -> None:
+            async with db.market_data_session(engine) as session:
+                await session.execute("SELECT clock_timestamp()")
+    
+        async def workload(args: argparse.Namespace, **kwargs: Any) -> int:
+            output.mkdir()
+            if not baseline:
+                f15.save(
+                    output / "dispatch-trace-control.json", {"started": monotonic(), "seconds": 180}
+                )
+            engine = vars(f15)["create_engine_for"](DatabaseRole.MARKET_DATA)
+            try:
+                await vars(f15)["publish_market"](engine, lease, trade_id=13)
+            finally:
+                await engine.dispose()
+            return 0
+    
+        monkeypatch.setattr(f15, "publish_market", publish)
+        monkeypatch.setattr(f15, "_run", workload)
+        assert (
+>           await f15.run(
+                argparse.Namespace(
+                    diagnostics=True,
+                    phase="SMOKE",
+                    output=output,
+                    coordinate_claims=baseline,
+                    parent_poll_limit=4 if baseline else None,
+                    r8_claim_budget=baseline,
+                    publisher_heartbeat_per_book=baseline,
+                    final_tail_drain=baseline,
+                )
+            )
+            == 0
+        )
+
+tests/infra/execution_market/test_profile_diagnostics.py:288: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/infra/execution_market/profile_workload.py:1962: in run
+    return await observe_workload(args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/infra/execution_market/profile_diagnostics.py:263: in observe_workload
+    raise run_error
+tests/infra/execution_market/profile_diagnostics.py:256: in observe_workload
+    result = await f15._run(
+tests/infra/execution_market/test_profile_diagnostics.py:280: in workload
+    await vars(f15)["publish_market"](engine, lease, trade_id=13)
+tests/infra/execution_market/profile_diagnostics.py:88: in observed
+    return await original(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/infra/execution_market/test_profile_diagnostics.py:269: in publish
+    async with db.market_data_session(engine) as session:
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../../../.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/contextlib.py:210: in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+src/tiewtrade/infra/db/session.py:150: in market_data_session
+    async with _begin(engine) as connection:
+               ^^^^^^^^^^^^^^
+../../../../../.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/contextlib.py:210: in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+tests/infra/risk_limits/profile_pool_timing.py:206: in transaction
+    async with original(engine, cleanup_seconds=cleanup_seconds) as connection:
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../../../.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/contextlib.py:210: in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+engine = <sqlalchemy.ext.asyncio.engine.AsyncEngine object at 0x10d7f2210>
+cleanup_seconds = None
+
+    @asynccontextmanager
+    async def _begin(
+        engine: AsyncEngine, *, cleanup_seconds: float | None = None
+    ) -> AsyncIterator[AsyncConnection]:
+        """เปิด transaction แล้วแปลงข้อผิดพลาดทุกชนิดตอนต่อและตอนปิดให้เป็นชนิดของเรา
+    
+        ครอบตั้งแต่ **ตอนขอ connection** ไม่ใช่แค่ตอน query เพราะข้อผิดพลาดตอนต่อ
+        (รหัสผ่านผิด ต่อไม่ติด) พา URL และรหัสผ่านติดมาใน traceback ของ driver
+        ซึ่งเป็นสิ่งที่ `security.md` หัวข้อ 4 ห้ามไว้
+    
+        จับ `OSError` ด้วย ไม่ใช่แค่ข้อผิดพลาดของ SQLAlchemy เพราะการต่อพอร์ตที่ปิดอยู่
+        โยน `ConnectionRefusedError` ขึ้นมาตรง ๆ ถ้าไม่จับ ผู้เรียกที่ดัก `InfraError`
+        จะรับมือกรณี "ฐานข้อมูลล่ม" ไม่ได้เลย ซึ่งเป็นกรณีที่ต้องรับมือได้ที่สุด
+    
+        ข้อผิดพลาดที่เกิด **ในตัวงานของผู้เรียก** ไม่ถูกแปลง — ของจาก query ถูกแปลง
+        ที่ `execute` ไปแล้ว และของอื่นเป็นเรื่องของผู้เรียก ไม่ใช่ของชั้นนี้
+        """
+        transaction = engine.begin()
+        try:
+            connection = await transaction.__aenter__()
+        except (SQLAlchemyError, OSError) as error:
+>           raise translate_database_error(error) from None
+E           tiewtrade.infra.db.errors.DatabaseUnavailableError: ติดต่อฐานข้อมูลไม่สำเร็จ
+
+src/tiewtrade/infra/db/session.py:209: DatabaseUnavailableError
+__ test_successful_smoke_observer_records_publisher_without_acceptance[True] ___
+
+tmp_path = PosixPath('/private/var/folders/fb/g4m1d38j4fl6x1pt39rn0wxr0000gn/T/pytest-of-chainarongjaykeaw/pytest-0/test_successful_smoke_observer1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x10d292ba0>
+baseline = True
+
+    @pytest.mark.parametrize("baseline", [False, True])
+    async def test_successful_smoke_observer_records_publisher_without_acceptance(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch, baseline: bool
+    ) -> None:
+        output = tmp_path / "run"
+    
+        lease = SimpleNamespace(owner=uuid4(), generation=1, last_input_id=12)
+    
+        async def publish(engine: AsyncEngine, *args: Any, **kwargs: Any) -> None:
+            async with db.market_data_session(engine) as session:
+                await session.execute("SELECT clock_timestamp()")
+    
+        async def workload(args: argparse.Namespace, **kwargs: Any) -> int:
+            output.mkdir()
+            if not baseline:
+                f15.save(
+                    output / "dispatch-trace-control.json", {"started": monotonic(), "seconds": 180}
+                )
+            engine = vars(f15)["create_engine_for"](DatabaseRole.MARKET_DATA)
+            try:
+                await vars(f15)["publish_market"](engine, lease, trade_id=13)
+            finally:
+                await engine.dispose()
+            return 0
+    
+        monkeypatch.setattr(f15, "publish_market", publish)
+        monkeypatch.setattr(f15, "_run", workload)
+        assert (
+>           await f15.run(
+                argparse.Namespace(
+                    diagnostics=True,
+                    phase="SMOKE",
+                    output=output,
+                    coordinate_claims=baseline,
+                    parent_poll_limit=4 if baseline else None,
+                    r8_claim_budget=baseline,
+                    publisher_heartbeat_per_book=baseline,
+                    final_tail_drain=baseline,
+                )
+            )
+            == 0
+        )
+
+tests/infra/execution_market/test_profile_diagnostics.py:288: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/infra/execution_market/profile_workload.py:1962: in run
+    return await observe_workload(args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/infra/execution_market/profile_diagnostics.py:263: in observe_workload
+    raise run_error
+tests/infra/execution_market/profile_diagnostics.py:256: in observe_workload
+    result = await f15._run(
+tests/infra/execution_market/test_profile_diagnostics.py:280: in workload
+    await vars(f15)["publish_market"](engine, lease, trade_id=13)
+tests/infra/execution_market/profile_diagnostics.py:88: in observed
+    return await original(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/infra/execution_market/test_profile_diagnostics.py:269: in publish
+    async with db.market_data_session(engine) as session:
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../../../.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/contextlib.py:210: in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+src/tiewtrade/infra/db/session.py:150: in market_data_session
+    async with _begin(engine) as connection:
+               ^^^^^^^^^^^^^^
+../../../../../.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/contextlib.py:210: in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+tests/infra/risk_limits/profile_pool_timing.py:206: in transaction
+    async with original(engine, cleanup_seconds=cleanup_seconds) as connection:
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../../../.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/contextlib.py:210: in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+engine = <sqlalchemy.ext.asyncio.engine.AsyncEngine object at 0x10dbeec90>
+cleanup_seconds = None
+
+    @asynccontextmanager
+    async def _begin(
+        engine: AsyncEngine, *, cleanup_seconds: float | None = None
+    ) -> AsyncIterator[AsyncConnection]:
+        """เปิด transaction แล้วแปลงข้อผิดพลาดทุกชนิดตอนต่อและตอนปิดให้เป็นชนิดของเรา
+    
+        ครอบตั้งแต่ **ตอนขอ connection** ไม่ใช่แค่ตอน query เพราะข้อผิดพลาดตอนต่อ
+        (รหัสผ่านผิด ต่อไม่ติด) พา URL และรหัสผ่านติดมาใน traceback ของ driver
+        ซึ่งเป็นสิ่งที่ `security.md` หัวข้อ 4 ห้ามไว้
+    
+        จับ `OSError` ด้วย ไม่ใช่แค่ข้อผิดพลาดของ SQLAlchemy เพราะการต่อพอร์ตที่ปิดอยู่
+        โยน `ConnectionRefusedError` ขึ้นมาตรง ๆ ถ้าไม่จับ ผู้เรียกที่ดัก `InfraError`
+        จะรับมือกรณี "ฐานข้อมูลล่ม" ไม่ได้เลย ซึ่งเป็นกรณีที่ต้องรับมือได้ที่สุด
+    
+        ข้อผิดพลาดที่เกิด **ในตัวงานของผู้เรียก** ไม่ถูกแปลง — ของจาก query ถูกแปลง
+        ที่ `execute` ไปแล้ว และของอื่นเป็นเรื่องของผู้เรียก ไม่ใช่ของชั้นนี้
+        """
+        transaction = engine.begin()
+        try:
+            connection = await transaction.__aenter__()
+        except (SQLAlchemyError, OSError) as error:
+>           raise translate_database_error(error) from None
+E           tiewtrade.infra.db.errors.DatabaseUnavailableError: ติดต่อฐานข้อมูลไม่สำเร็จ
+
+src/tiewtrade/infra/db/session.py:209: DatabaseUnavailableError
+_________ test_real_worker_cli_records_pools_and_exits_cleanly[False] __________
+
+tmp_path = PosixPath('/private/var/folders/fb/g4m1d38j4fl6x1pt39rn0wxr0000gn/T/pytest-of-chainarongjaykeaw/pytest-0/test_real_worker_cli_records_p0')
+r8 = False
+
+    @pytest.mark.parametrize("r8", [False, True])
+    async def test_real_worker_cli_records_pools_and_exits_cleanly(tmp_path: Path, r8: bool) -> None:
+        processes, stop, _ = await f15.start_worker_processes(
+            1, tmp_path, diagnostics=True, r8_claim_budget=r8
+        )
+        pools = tmp_path / "worker-0.pools.json"
+        try:
+            async with asyncio.timeout(5):
+                while not pools.exists() or len(json.loads(pools.read_text())["pools"]) != 2:
+                    assert processes[0].returncode is None
+                    await asyncio.sleep(0.01)
+        finally:
+            await f15.stop_worker_processes(processes, stop)
+>       assert processes[0].returncode == 0
+E       assert 1 == 0
+E        +  where 1 = <Process 2227>.returncode
+
+tests/infra/execution_market/test_profile_diagnostics.py:361: AssertionError
+----------------------------- Captured stderr call -----------------------------
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/backend/tests/infra/execution_market/profile_workload.py", line 2578, in <module>
+    raise SystemExit(asyncio.run(observe_worker(parsed)))
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/chainarongjaykeaw/.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/asyncio/runners.py", line 195, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/Users/chainarongjaykeaw/.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/chainarongjaykeaw/.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/asyncio/base_events.py", line 691, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/backend/tests/infra/execution_market/profile_diagnostics.py", line 294, in observe_worker
+    await traced_worker(
+  File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/backend/tests/infra/risk_limits/profile_dispatch_timing.py", line 244, in traced_worker
+    await f15.with_publisher(operation, observer)
+  File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/backend/tests/infra/execution_market/profile_workload.py", line 485, in with_publisher
+    return await task
+           ^^^^^^^^^^
+  File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/backend/tests/infra/execution_market/profile_workload.py", line 695, in run_worker_process
+    await run_paper_order_round(
+  File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/backend/tests/infra/risk_limits/profile_dispatch_timing.py", line 129, in observed
+    result = await original(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/backend/src/tiewtrade/services/engine/paper_order.py", line 141, in run_paper_order_round
+    async with scan_session_bypassing_rls(scan_engine) as scan:
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/chainarongjaykeaw/.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/contextlib.py", line 210, in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/backend/src/tiewtrade/infra/db/session.py", line 426, in scan_session_bypassing_rls
+    async with transaction as connection:
+               ^^^^^^^^^^^
+  File "/Users/chainarongjaykeaw/.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/contextlib.py", line 210, in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/backend/tests/infra/execution_market/profile_workload.py", line 655, in measured_begin
+    async with original_begin(engine, cleanup_seconds=cleanup_seconds) as connection:
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/chainarongjaykeaw/.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/contextlib.py", line 210, in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/backend/tests/infra/risk_limits/profile_dispatch_timing.py", line 179, in transaction
+    async with original_begin(engine, cleanup_seconds=cleanup_seconds) as connection:
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/chainarongjaykeaw/.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/contextlib.py", line 210, in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/backend/tests/infra/risk_limits/profile_pool_timing.py", line 181, in transaction
+    async with original(engine, cleanup_seconds=cleanup_seconds) as connection:
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/chainarongjaykeaw/.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/contextlib.py", line 210, in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/backend/src/tiewtrade/infra/db/session.py", line 209, in _begin
+    raise translate_database_error(error) from None
+tiewtrade.infra.db.errors.DatabaseUnavailableError: ติดต่อฐานข้อมูลไม่สำเร็จ
+__________ test_real_worker_cli_records_pools_and_exits_cleanly[True] __________
+
+tmp_path = PosixPath('/private/var/folders/fb/g4m1d38j4fl6x1pt39rn0wxr0000gn/T/pytest-of-chainarongjaykeaw/pytest-0/test_real_worker_cli_records_p1')
+r8 = True
+
+    @pytest.mark.parametrize("r8", [False, True])
+    async def test_real_worker_cli_records_pools_and_exits_cleanly(tmp_path: Path, r8: bool) -> None:
+        processes, stop, _ = await f15.start_worker_processes(
+            1, tmp_path, diagnostics=True, r8_claim_budget=r8
+        )
+        pools = tmp_path / "worker-0.pools.json"
+        try:
+            async with asyncio.timeout(5):
+                while not pools.exists() or len(json.loads(pools.read_text())["pools"]) != 2:
+                    assert processes[0].returncode is None
+                    await asyncio.sleep(0.01)
+        finally:
+            await f15.stop_worker_processes(processes, stop)
+>       assert processes[0].returncode == 0
+E       assert 1 == 0
+E        +  where 1 = <Process 2228>.returncode
+
+tests/infra/execution_market/test_profile_diagnostics.py:361: AssertionError
+----------------------------- Captured stderr call -----------------------------
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/backend/tests/infra/execution_market/profile_workload.py", line 2578, in <module>
+    raise SystemExit(asyncio.run(observe_worker(parsed)))
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/chainarongjaykeaw/.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/asyncio/runners.py", line 195, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/Users/chainarongjaykeaw/.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/chainarongjaykeaw/.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/asyncio/base_events.py", line 691, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/backend/tests/infra/execution_market/profile_diagnostics.py", line 294, in observe_worker
+    await traced_worker(
+  File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/backend/tests/infra/risk_limits/profile_dispatch_timing.py", line 244, in traced_worker
+    await f15.with_publisher(operation, observer)
+  File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/backend/tests/infra/execution_market/profile_workload.py", line 485, in with_publisher
+    return await task
+           ^^^^^^^^^^
+  File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/backend/tests/infra/execution_market/profile_workload.py", line 695, in run_worker_process
+    await run_paper_order_round(
+  File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/backend/tests/infra/risk_limits/profile_dispatch_timing.py", line 129, in observed
+    result = await original(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/backend/src/tiewtrade/services/engine/paper_order.py", line 141, in run_paper_order_round
+    async with scan_session_bypassing_rls(scan_engine) as scan:
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/chainarongjaykeaw/.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/contextlib.py", line 210, in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/backend/src/tiewtrade/infra/db/session.py", line 426, in scan_session_bypassing_rls
+    async with transaction as connection:
+               ^^^^^^^^^^^
+  File "/Users/chainarongjaykeaw/.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/contextlib.py", line 210, in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/backend/tests/infra/execution_market/profile_workload.py", line 655, in measured_begin
+    async with original_begin(engine, cleanup_seconds=cleanup_seconds) as connection:
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/chainarongjaykeaw/.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/contextlib.py", line 210, in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/backend/tests/infra/risk_limits/profile_dispatch_timing.py", line 179, in transaction
+    async with original_begin(engine, cleanup_seconds=cleanup_seconds) as connection:
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/chainarongjaykeaw/.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/contextlib.py", line 210, in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/backend/tests/infra/risk_limits/profile_pool_timing.py", line 181, in transaction
+    async with original(engine, cleanup_seconds=cleanup_seconds) as connection:
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/chainarongjaykeaw/.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/contextlib.py", line 210, in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/backend/src/tiewtrade/infra/db/session.py", line 209, in _begin
+    raise translate_database_error(error) from None
+tiewtrade.infra.db.errors.DatabaseUnavailableError: ติดต่อฐานข้อมูลไม่สำเร็จ
+_______ test_tail_resource_observation_reads_existing_pools_and_database _______
+
+engine_engine = <sqlalchemy.ext.asyncio.engine.AsyncEngine object at 0x10d988a10>
+migrator_engine = <sqlalchemy.ext.asyncio.engine.AsyncEngine object at 0x10d4d6990>
+
+    async def test_tail_resource_observation_reads_existing_pools_and_database(
+        engine_engine: AsyncEngine, migrator_engine: AsyncEngine
+    ) -> None:
+>       async with engine_engine.connect():
+                   ^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/infra/execution_market/test_final_tail_drain.py:449: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.venv/lib/python3.12/site-packages/sqlalchemy/ext/asyncio/base.py:121: in __aenter__
+    return await self.start(is_ctxmanager=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/sqlalchemy/ext/asyncio/engine.py:283: in start
+    await greenlet_spawn(self.sync_engine.connect)
+.venv/lib/python3.12/site-packages/sqlalchemy/util/concurrency.py:210: in greenlet_spawn
+    result = context.throw(*sys.exc_info())
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py:3260: in connect
+    return self._connection_cls(self)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py:149: in __init__
+    self._dbapi_connection = engine.raw_connection()
+                             ^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py:3284: in raw_connection
+    return self.pool.connect()
+           ^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/sqlalchemy/pool/base.py:445: in connect
+    return _ConnectionFairy._checkout(self)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/sqlalchemy/pool/base.py:1287: in _checkout
+    fairy = _ConnectionRecord.checkout(pool)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/sqlalchemy/pool/base.py:709: in checkout
+    rec = pool._do_get()
+          ^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/sqlalchemy/pool/impl.py:176: in _do_get
+    with util.safe_reraise():
+         ^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/sqlalchemy/util/langhelpers.py:166: in __exit__
+    raise exc_value.with_traceback(exc_tb)
+.venv/lib/python3.12/site-packages/sqlalchemy/pool/impl.py:174: in _do_get
+    return self._create_connection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/sqlalchemy/pool/base.py:386: in _create_connection
+    return _ConnectionRecord(self)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/sqlalchemy/pool/base.py:671: in __init__
+    self.__connect()
+.venv/lib/python3.12/site-packages/sqlalchemy/pool/base.py:895: in __connect
+    with util.safe_reraise():
+         ^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/sqlalchemy/util/langhelpers.py:166: in __exit__
+    raise exc_value.with_traceback(exc_tb)
+.venv/lib/python3.12/site-packages/sqlalchemy/pool/base.py:891: in __connect
+    self.dbapi_connection = connection = pool._invoke_creator(self)
+                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/sqlalchemy/engine/create.py:645: in connect
+    return dialect.connect(*cargs_tup, **cparams)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/sqlalchemy/engine/default.py:857: in connect
+    return self.loaded_dbapi.connect(*cargs, **cparams)  # type: ignore[no-any-return]  # NOQA: E501
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py:963: in connect
+    return await_(
+.venv/lib/python3.12/site-packages/sqlalchemy/util/concurrency.py:167: in await_
+    return current.parent.switch(awaitable)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/sqlalchemy/util/concurrency.py:205: in greenlet_spawn
+    value = await result
+            ^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/sqlalchemy/connectors/asyncio.py:378: in create
+    cls._handle_exception_no_connection(dbapi, error)
+.venv/lib/python3.12/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py:841: in _handle_exception_no_connection
+    super()._handle_exception_no_connection(dbapi, error)
+.venv/lib/python3.12/site-packages/sqlalchemy/connectors/asyncio.py:409: in _handle_exception_no_connection
+    raise error.with_traceback(exc_info[2])
+.venv/lib/python3.12/site-packages/sqlalchemy/connectors/asyncio.py:376: in create
+    connection = await connection_awaitable
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/asyncpg/connection.py:2443: in connect
+    return await connect_utils._connect(
+.venv/lib/python3.12/site-packages/asyncpg/connect_utils.py:1249: in _connect
+    raise last_error or exceptions.TargetServerAttributeNotMatched(
+.venv/lib/python3.12/site-packages/asyncpg/connect_utils.py:1218: in _connect
+    conn = await _connect_addr(
+.venv/lib/python3.12/site-packages/asyncpg/connect_utils.py:1054: in _connect_addr
+    return await __connect_addr(params, True, *args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/asyncpg/connect_utils.py:1099: in __connect_addr
+    tr, pr = await connector
+             ^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/asyncpg/connect_utils.py:969: in _create_ssl_connection
+    tr, pr = await loop.create_connection(
+../../../../../.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/asyncio/base_events.py:1132: in create_connection
+    raise exceptions[0]
+../../../../../.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/asyncio/base_events.py:1107: in create_connection
+    sock = await self._connect_sock(
+../../../../../.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/asyncio/base_events.py:1010: in _connect_sock
+    await self.sock_connect(sock, address)
+../../../../../.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/asyncio/selector_events.py:651: in sock_connect
+    return await fut
+           ^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <_UnixSelectorEventLoop running=False closed=False debug=False>
+fut = None, sock = <socket.socket [closed] fd=-1, family=2, type=1, proto=6>
+address = ('127.0.0.1', 55432)
+
+    def _sock_connect_cb(self, fut, sock, address):
+        if fut.done():
+            return
+    
+        try:
+            err = sock.getsockopt(socket.SOL_SOCKET, socket.SO_ERROR)
+            if err != 0:
+                # Jump to any except clause below.
+>               raise OSError(err, f'Connect call failed {address}')
+E               ConnectionRefusedError: [Errno 61] Connect call failed ('127.0.0.1', 55432)
+
+../../../../../.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/asyncio/selector_events.py:691: ConnectionRefusedError
+=========================== short test summary info ============================
+FAILED tests/infra/execution_market/test_profile_diagnostics.py::test_coordinator_hold_and_setup_survive_real_transaction_failure[False]
+FAILED tests/infra/execution_market/test_profile_diagnostics.py::test_coordinator_hold_and_setup_survive_real_transaction_failure[True]
+FAILED tests/infra/execution_market/test_profile_diagnostics.py::test_parent_trace_preserves_failure_and_returns_pool[W1]
+FAILED tests/infra/execution_market/test_profile_diagnostics.py::test_parent_trace_preserves_failure_and_returns_pool[SMOKE]
+FAILED tests/infra/execution_market/test_profile_diagnostics.py::test_successful_smoke_observer_records_publisher_without_acceptance[False]
+FAILED tests/infra/execution_market/test_profile_diagnostics.py::test_successful_smoke_observer_records_publisher_without_acceptance[True]
+FAILED tests/infra/execution_market/test_profile_diagnostics.py::test_real_worker_cli_records_pools_and_exits_cleanly[False]
+FAILED tests/infra/execution_market/test_profile_diagnostics.py::test_real_worker_cli_records_pools_and_exits_cleanly[True]
+FAILED tests/infra/execution_market/test_final_tail_drain.py::test_tail_resource_observation_reads_existing_pools_and_database
+9 failed, 201 passed in 7.21s

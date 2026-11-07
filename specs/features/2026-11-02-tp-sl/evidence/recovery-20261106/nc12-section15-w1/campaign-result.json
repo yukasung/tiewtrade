@@ -1,0 +1,10 @@
+{
+  "status": "INCOMPLETE",
+  "exit_code": 1,
+  "seconds": 274.2617905830002,
+  "error_type": "CancelledError",
+  "candidate_unchanged": true,
+  "free_bytes_after": 10827943936,
+  "budget_seconds": null,
+  "budget_scope": "preflight,fixture,measurement,verification,cleanup"
+}

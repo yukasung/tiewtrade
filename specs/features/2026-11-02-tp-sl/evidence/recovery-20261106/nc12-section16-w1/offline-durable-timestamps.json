@@ -1,0 +1,46 @@
+{
+  "read_only": true,
+  "groups": [
+    {
+      "kind": "buy",
+      "count": 720,
+      "bridge_attempts_min": 1,
+      "bridge_attempts_max": 1,
+      "bridge_mean": 0.09087925972222222,
+      "bridge_p95": 0.158894,
+      "result_timestamp_mean": 0.30420437638888886,
+      "result_timestamp_p95": 0.497758
+    },
+    {
+      "kind": "cancel",
+      "count": 720,
+      "bridge_attempts_min": 1,
+      "bridge_attempts_max": 1,
+      "bridge_mean": 0.05300408611111111,
+      "bridge_p95": 0.090116,
+      "result_timestamp_mean": 0.26499685694444447,
+      "result_timestamp_p95": 0.442448
+    },
+    {
+      "kind": "limit",
+      "count": 720,
+      "bridge_attempts_min": 1,
+      "bridge_attempts_max": 1,
+      "bridge_mean": 0.08007105694444444,
+      "bridge_p95": 0.124574,
+      "result_timestamp_mean": 0.2682828375,
+      "result_timestamp_p95": 0.46102
+    },
+    {
+      "kind": "sell",
+      "count": 720,
+      "bridge_attempts_min": 1,
+      "bridge_attempts_max": 1,
+      "bridge_mean": 0.08628890972222222,
+      "bridge_p95": 0.159264,
+      "result_timestamp_mean": 0.3322741888888889,
+      "result_timestamp_p95": 0.54945
+    }
+  ],
+  "caveat": "command result completed_at uses transaction now(), not an exact commit/end timestamp; no fill-completion timing attribution"
+}

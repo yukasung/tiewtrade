@@ -1,6 +1,6 @@
 # F-16 — สั่งออเดอร์เองผ่านหน้าจอ — Validation
 
-สถานะ: **Approved — เจ้าของตอบ “approve” ต่อ plan/validation ฉบับแก้ F16-R1/R2/R3 วันที่ 2026-10-25**
+สถานะ: **Approved — เจ้าของตอบ “approve” ต่อ plan/validation ฉบับแก้ F16-R1/R2/R3 วันที่ 2026-10-25**; **NC-SET4-12 Approved A - separate internal checkpoint**
 วันที่: 2026-10-25
 Requirements: **Approved 2026-10-25**
 
@@ -30,7 +30,7 @@ Requirements: **Approved 2026-10-25**
 | V-17 | Dependency ไม่พร้อมไม่เปิดคำสั่งโดยอ้อม | production composition ใช้ policy=None; GET readiness blocked และ POST NEW 503 ไม่มี executable inbox row; forged request/UI enabled flag/test env ใช้เปิดไม่ได้; queued execution recheck gate; cancel ของ order เดิมไม่ต้องผ่าน opening policy | M2/M3 | Passed — local M1–M4 evidence; test composition only |
 | V-18 | Production Paper order admission พร้อมจริง | หลัง F-18 ได้รับอนุมัติ/implement: เชื่อม risk policy จริงกับ account/price/catalog/order gates, safety/parity tests สำหรับ loss-limit/unknown/price outage/ลดความเสี่ยงตาม trading-safety; full browser→engine acceptance ด้วย production composition และเกณฑ์ที่ F-18 กำหนด | Integration checkpoint หลัง F-18 ก่อน activation/Completed | Pending Dependency — F-18; ห้ามแทนด้วย test policy |
 | V-19 | Final candidate ผ่าน review และด่านก่อน merge | แจ้ง Ready for Code Review; resolve Critical/High และ findings ใน scope, backend full regression/lint/format/mypy/import-linter, frontend lint/types/tests/build, API generation/check, Chromium E2E, config/docker/required CI บน candidate สุดท้าย | M4 ก่อน merge | Passed — final candidate ab248fe push/PR CI12/12 and merge1f16ddb post-merge CI40208544618 6/6; see post-merge checkpoint |
-| V-20 | Release acceptance รวมเส้นทาง F-16 ไม่ทำให้ order/resource guarantees เสื่อม | ตรวจรวมเส้นทางใหม่นี้ใน release profile ที่อนุมัติ โดยคงเกณฑ์/duration/threshold ของ F-15 V-19/W1–W4 และ dependency release validation ที่เกี่ยวข้อง; บันทึก affected frontend/API intake/queue/recovery/resource evidence บน final candidate ไม่ใช้ targeted smoke รับรองแทน | ชุดที่ 9 / release checkpoint ก่อน Completed | Pending Full Validation — ยังไม่รัน; ต้องมี approved integrated release profile ก่อนเริ่ม |
+| V-20 | Release acceptance รวมเส้นทาง F-16 ไม่ทำให้ order/resource guarantees เสื่อม | ตรวจรวมเส้นทางใหม่นี้ใน release profile ที่อนุมัติ โดยคงเกณฑ์/duration/threshold ของ F-15 V-19/W1–W4 และ dependency release validation ที่เกี่ยวข้อง; บันทึก affected frontend/API intake/queue/recovery/resource evidence บน final candidate ไม่ใช้ targeted smoke รับรองแทน | ชุดที่ 9 / release checkpoint ก่อน Completed | Pending Full Validation — [integrated Paper profile](../2026-11-02-tp-sl/integrated-paper-acceptance-plan.md) Approved A 2026-11-06; diagnostic gate failed before the sustained HTTP phase, which remains Not Run |
 
 V-18 เป็น dependency ด้าน correctness/safety ที่ยังไม่พร้อม ไม่ใช่งานโหลดที่เลื่อนแล้ว
 ถือว่าผ่านได้. M4 merge เพื่อพัฒนาต่อได้เฉพาะเมื่อ V-1–V-17/V-19 ผ่านครบ และคง
@@ -209,3 +209,18 @@ execution remain unavailable. Historical Partial/Failed attempts above are retai
 
 ผล implementation/targeted verification และรายการค้างบันทึกที่
 [F16-R4 checkpoint](evidence/f16-r4-trading-workspace.md).
+
+## Internal Paper profile - NC-SET4-12 Approved A
+
+Owner approved the [separate internal-pilot profile](../2026-11-02-tp-sl/internal-paper-acceptance-amendment.md).
+Its20-account results must be established by execution and apply only to that new
+checkpoint. Existing100-account criteria/results and Completed gates remain unchanged.
+
+
+NC12 internal20-account local campaign completed2026-11-07: W1/W2/overflow/short30min
+W3/integratedW4 Passed under the approved F17 amendments. See[scoped aggregate
+evidence](../2026-11-02-tp-sl/evidence/recovery-20261106/internal-pilot-local-checkpoint-20261107.md).
+Snapshots/rebuild cover20owners; authenticated HTTP uses actual risk policy; restore
+includes F16/F17 pending/retry/exit with RLS/grants and source unchanged. Original
+100-account/4h Release and existing production activation/dependency/final CI gates
+are not overwritten by this profile. Historical Failed/Partial/NotRun remain intact.

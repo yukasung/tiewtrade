@@ -14,6 +14,7 @@ from sqlalchemy import Result, text
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine, create_async_engine
 
 from tests.infra.execution_market.commit_proxy import drop_commit_reply
+from tests.infra.execution_market.order_history_assertions import assert_terminal_history
 from tests.infra.execution_market.test_dispatch import intent
 from tests.infra.execution_market.test_storage import prepared
 from tiewtrade.core.money import Money, Quantity
@@ -24,6 +25,7 @@ from tiewtrade.core.orders import (
     OrderIntent,
     OrderOrigin,
     OrderScope,
+    OrderStatus,
     OrderType,
     QuoteBudget,
     TimeInForce,
@@ -594,7 +596,10 @@ async def test_accept_restart_fill_and_cash_are_atomic(
                 parameters: Mapping[str, object] | None = None,
             ) -> Result[Any]:
                 result = await original_execute(session, statement, parameters)
-                if session.user_id == owner and "INSERT INTO paper_reservations" in statement:
+                if (
+                    session.user_id == owner
+                    and "SELECT public.paper_persist_checkpoint_v1" in statement
+                ):
                     armed.set()
                 return result
 
@@ -635,7 +640,10 @@ async def test_accept_restart_fill_and_cash_are_atomic(
             ) -> Result[Any]:
                 nonlocal committed_connection
                 result = await original_execute(session, statement, parameters)
-                if session.user_id == owner and "INSERT INTO paper_reservations" in statement:
+                if (
+                    session.user_id == owner
+                    and "SELECT public.paper_persist_checkpoint_v1" in statement
+                ):
                     committed_connection = session._connection
                 return result
 
@@ -677,7 +685,7 @@ async def test_accept_restart_fill_and_cash_are_atomic(
                 if (
                     session.user_id == owner
                     and name == "fill-before-init"
-                    and "INSERT INTO paper_reservations" in statement
+                    and "SELECT public.paper_persist_checkpoint_v1" in statement
                 ):
                     fill_written.set()
                     await release_fill.wait()
@@ -751,7 +759,24 @@ async def test_accept_restart_fill_and_cash_are_atomic(
                         else 1
                     )
                 matches = (
+                    # The full workflow observes the completed DB batch before commit.
+                    # Real per-statement rollback points are covered by the DB triggers
+                    # in test_checkpoint_batch, without weakening these money oracles.
                     (
+                        fault
+                        in {
+                            "checkpoint_event",
+                            "projection_revision",
+                            "projections",
+                            "reservation_revision",
+                            "reservations",
+                            "order_activity",
+                        }
+                        and "SELECT public.paper_persist_checkpoint_v1" in statement
+                        and parameters is not None
+                        and parameters.get("kind") == "INPUT_APPLIED"
+                    )
+                    or (
                         fault == "second_input"
                         and "INSERT INTO paper_execution_inputs" in statement
                         and input_writes >= 2
@@ -858,6 +883,10 @@ async def test_accept_restart_fill_and_cash_are_atomic(
         )
         async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
             result = await get_order_command(session, command.command_id)
+            history_order = await assert_terminal_history(session, value.order_id)
+            assert history_order.status is OrderStatus.FILLED
+            assert history_order.filled == Quantity.of(1, "BTC")
+            assert history_order.spent == Money.of(100, "USDT")
             projection = (
                 await session.execute(
                     """SELECT p.status,r.quote_reserved FROM paper_order_projections p
@@ -988,6 +1017,10 @@ async def test_accept_restart_fill_and_cash_are_atomic(
                 )
             ).one()
             corrected_wallet = await get_wallet(session)
+            latest = await assert_terminal_history(session, value.order_id)
+            assert latest.status is OrderStatus.CANCELED
+            assert latest.filled == Quantity.of("0.5", "BTC")
+            assert latest.spent == Money.of(50, "USDT")
             correction_cash = (
                 await session.execute(
                     """SELECT count(*) FROM paper_wallet_ledger
@@ -1033,6 +1066,10 @@ async def test_accept_restart_fill_and_cash_are_atomic(
                 )
             ).one()
             void_wallet = await get_wallet(session)
+            latest = await assert_terminal_history(session, value.order_id)
+            assert latest.status is OrderStatus.CANCELED
+            assert latest.filled == Quantity.of(0, "BTC")
+            assert latest.spent == Money.of(0, "USDT")
             correction_cash = (
                 await session.execute(
                     """SELECT count(*) FROM paper_wallet_ledger

@@ -1,0 +1,27 @@
+
+╔══╗─────────▶╔╗ ╔╗      ╔╗◀───┐
+╚╣╠╝◀─────┐  ╔╝╚╗║║────▶╔╝╚╗   │
+ ║║   ╔══╦══╦╩╗╔╝║║  ╔╦═╩╗╔╝╔═╦══╗
+ ║║╔══╣╔╗║╔╗║╔╣║ ║║ ╔╬╣╔╗║║ ║│║╔═╝
+╔╣╠╣║║║╚╝║╚╝║║║╚╗║╚═╝║║║║║╚╗║═╣║
+╚══╩╩╩╣╔═╩══╩╝╚═╝╚═══╩╩╝╚╩═╩╩═╩╝
+  └──▶║║                    ▲ 
+      ╚╝────────────────────┘
+
+
+---------
+Contracts
+---------
+
+Analyzed 298 files, 2143 dependencies.
+--------------------------------------
+
+core ไม่พึ่งอะไรเลยนอกจาก standard library KEPT
+strategies, venues, infra พึ่งกันเองไม่ได้ และพึ่ง service ไม่ได้ KEPT
+strategies, venues, infra ห้ามพึ่ง service KEPT
+service ห้าม import กันเอง KEPT
+ส่วนกลางของ venues ห้ามพึ่งไลบรารีเครือข่าย KEPT
+การแปลข้อมูลของตัวเชื่อม Binance TH ห้ามรู้จักเครือข่าย KEPT
+strategies must not reach realtime network clients KEPT
+
+Contracts: 7 kept, 0 broken.

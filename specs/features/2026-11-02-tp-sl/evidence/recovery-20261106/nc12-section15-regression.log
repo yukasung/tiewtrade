@@ -1,0 +1,298 @@
+...........F............................................................ [ 33%]
+................FFF..................................................... [ 66%]
+........................................................................ [ 99%]
+..                                                                       [100%]
+=================================== FAILURES ===================================
+_______ test_internal_worker_entry_samples_real_pools_and_joins_cleanup ________
+
+tmp_path = PosixPath('/private/var/folders/fb/g4m1d38j4fl6x1pt39rn0wxr0000gn/T/pytest-of-chainarongjaykeaw/pytest-5/test_internal_worker_entry_sam0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x10cebc980>
+
+    async def test_internal_worker_entry_samples_real_pools_and_joins_cleanup(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        import argparse
+    
+        from tests.infra.execution_market import profile_workload as workload
+        from tiewtrade.services.engine import paper_order
+    
+        stop = tmp_path / "stop"
+        metrics = tmp_path / "worker.json"
+        calls = []
+    
+        async def round_trip(**options: Any) -> None:
+            calls.append(options.get("worker", "protection"))
+            async with options["engine"].connect(), options["scan_engine"].connect():
+                pass
+            if len(calls) == 3:
+                stop.touch()
+    
+        monkeypatch.setattr(paper_order, "run_protection_round", round_trip)
+        monkeypatch.setattr(workload, "run_manual_order_round", round_trip)
+        monkeypatch.setattr(workload, "run_paper_order_round", round_trip)
+>       await workload.worker_entry(
+            argparse.Namespace(
+                acceptance_profile="PAPER_INTERNAL20_V1",
+                worker_name="pool-regression",
+                worker_stop=stop,
+                worker_metrics=metrics,
+                r8_claim_budget=True,
+                coordinate_claims=True,
+                diagnostics=False,
+            )
+        )
+
+tests/infra/execution_market/test_owned_pools.py:198: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/infra/execution_market/profile_workload.py:2627: in worker_entry
+    **internal_worker_options(args),
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/infra/execution_market/profile_workload.py:587: in internal_worker_options
+    internal.validate(args)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+args = Namespace(acceptance_profile='PAPER_INTERNAL20_V1', worker_name='pool-regression', worker_stop=PosixPath('/private/var...ytest-5/test_internal_worker_entry_sam0/worker.json'), r8_claim_budget=True, coordinate_claims=True, diagnostics=False)
+
+    def validate(args: argparse.Namespace) -> Phase | None:
+        if not selected(args):
+            return None
+        if getattr(args, "worker_only", False):
+            if (
+                getattr(args, "r8_claim_budget", False) is not True
+                or getattr(args, "coordinate_claims", False) is not True
+            ):
+                raise ValueError("internal Paper worker requires the approved R8/V2 runtime")
+            return None
+        phase_name = getattr(args, "phase", None)
+        phase = PHASES.get(phase_name) if isinstance(phase_name, str) else None
+        if phase is None:
+>           raise ValueError("unsupported internal Paper phase")
+E           ValueError: unsupported internal Paper phase
+
+tests/infra/execution_market/profile_internal.py:71: ValueError
+_ test_worker_cli_forwards_budget_before_starting_any_database_work[False-False] _
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x1110f2c30>
+tmp_path = PosixPath('/private/var/folders/fb/g4m1d38j4fl6x1pt39rn0wxr0000gn/T/pytest-of-chainarongjaykeaw/pytest-5/test_worker_cli_forwards_budge0')
+r8 = False, coordinate = False
+
+    @pytest.mark.parametrize("r8,coordinate", [(False, False), (True, False), (True, True)])
+    def test_worker_cli_forwards_budget_before_starting_any_database_work(
+        monkeypatch: pytest.MonkeyPatch, tmp_path: Path, r8: bool, coordinate: bool
+    ) -> None:
+        seen = []
+    
+        def capture(coroutine: CoroutineType[Any, Any, Any]) -> int:
+            assert coroutine.cr_frame is not None
+            seen.append(
+                (
+                    coroutine.cr_frame.f_locals["claim_limit"],
+                    coroutine.cr_frame.f_locals["coordinate_claims"],
+                )
+            )
+            coroutine.close()
+            return 0
+    
+        monkeypatch.setattr(asyncio, "run", capture)
+        monkeypatch.setattr(
+            sys,
+            "argv",
+            [
+                "profile_workload",
+                "--worker-only",
+                "--worker-name",
+                "test",
+                "--worker-stop",
+                str(tmp_path / "stop"),
+                "--worker-metrics",
+                str(tmp_path / "metrics.json"),
+                *(["--r8-claim-budget"] if r8 else []),
+                *(["--coordinate-claims"] if coordinate else []),
+            ],
+        )
+        with pytest.raises(SystemExit) as caught:
+>           runpy.run_path(str(Path(f15.__file__)), run_name="__main__")
+
+tests/infra/execution_market/test_standalone_runtime.py:56: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+<frozen runpy>:287: in run_path
+    ???
+<frozen runpy>:98: in _run_module_code
+    ???
+<frozen runpy>:88: in _run_code
+    ???
+tests/infra/execution_market/profile_workload.py:2673: in <module>
+    asyncio.run(worker_entry(parsed))
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+coroutine = <coroutine object worker_entry at 0x10cf409d0>
+
+    def capture(coroutine: CoroutineType[Any, Any, Any]) -> int:
+        assert coroutine.cr_frame is not None
+        seen.append(
+            (
+>               coroutine.cr_frame.f_locals["claim_limit"],
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                coroutine.cr_frame.f_locals["coordinate_claims"],
+            )
+        )
+E       KeyError: 'claim_limit'
+
+tests/infra/execution_market/test_standalone_runtime.py:31: KeyError
+_ test_worker_cli_forwards_budget_before_starting_any_database_work[True-False] _
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x1110a2cf0>
+tmp_path = PosixPath('/private/var/folders/fb/g4m1d38j4fl6x1pt39rn0wxr0000gn/T/pytest-of-chainarongjaykeaw/pytest-5/test_worker_cli_forwards_budge1')
+r8 = True, coordinate = False
+
+    @pytest.mark.parametrize("r8,coordinate", [(False, False), (True, False), (True, True)])
+    def test_worker_cli_forwards_budget_before_starting_any_database_work(
+        monkeypatch: pytest.MonkeyPatch, tmp_path: Path, r8: bool, coordinate: bool
+    ) -> None:
+        seen = []
+    
+        def capture(coroutine: CoroutineType[Any, Any, Any]) -> int:
+            assert coroutine.cr_frame is not None
+            seen.append(
+                (
+                    coroutine.cr_frame.f_locals["claim_limit"],
+                    coroutine.cr_frame.f_locals["coordinate_claims"],
+                )
+            )
+            coroutine.close()
+            return 0
+    
+        monkeypatch.setattr(asyncio, "run", capture)
+        monkeypatch.setattr(
+            sys,
+            "argv",
+            [
+                "profile_workload",
+                "--worker-only",
+                "--worker-name",
+                "test",
+                "--worker-stop",
+                str(tmp_path / "stop"),
+                "--worker-metrics",
+                str(tmp_path / "metrics.json"),
+                *(["--r8-claim-budget"] if r8 else []),
+                *(["--coordinate-claims"] if coordinate else []),
+            ],
+        )
+        with pytest.raises(SystemExit) as caught:
+>           runpy.run_path(str(Path(f15.__file__)), run_name="__main__")
+
+tests/infra/execution_market/test_standalone_runtime.py:56: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+<frozen runpy>:287: in run_path
+    ???
+<frozen runpy>:98: in _run_module_code
+    ???
+<frozen runpy>:88: in _run_code
+    ???
+tests/infra/execution_market/profile_workload.py:2673: in <module>
+    asyncio.run(worker_entry(parsed))
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+coroutine = <coroutine object worker_entry at 0x10cf40590>
+
+    def capture(coroutine: CoroutineType[Any, Any, Any]) -> int:
+        assert coroutine.cr_frame is not None
+        seen.append(
+            (
+>               coroutine.cr_frame.f_locals["claim_limit"],
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                coroutine.cr_frame.f_locals["coordinate_claims"],
+            )
+        )
+E       KeyError: 'claim_limit'
+
+tests/infra/execution_market/test_standalone_runtime.py:31: KeyError
+_ test_worker_cli_forwards_budget_before_starting_any_database_work[True-True] _
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x111086ab0>
+tmp_path = PosixPath('/private/var/folders/fb/g4m1d38j4fl6x1pt39rn0wxr0000gn/T/pytest-of-chainarongjaykeaw/pytest-5/test_worker_cli_forwards_budge2')
+r8 = True, coordinate = True
+
+    @pytest.mark.parametrize("r8,coordinate", [(False, False), (True, False), (True, True)])
+    def test_worker_cli_forwards_budget_before_starting_any_database_work(
+        monkeypatch: pytest.MonkeyPatch, tmp_path: Path, r8: bool, coordinate: bool
+    ) -> None:
+        seen = []
+    
+        def capture(coroutine: CoroutineType[Any, Any, Any]) -> int:
+            assert coroutine.cr_frame is not None
+            seen.append(
+                (
+                    coroutine.cr_frame.f_locals["claim_limit"],
+                    coroutine.cr_frame.f_locals["coordinate_claims"],
+                )
+            )
+            coroutine.close()
+            return 0
+    
+        monkeypatch.setattr(asyncio, "run", capture)
+        monkeypatch.setattr(
+            sys,
+            "argv",
+            [
+                "profile_workload",
+                "--worker-only",
+                "--worker-name",
+                "test",
+                "--worker-stop",
+                str(tmp_path / "stop"),
+                "--worker-metrics",
+                str(tmp_path / "metrics.json"),
+                *(["--r8-claim-budget"] if r8 else []),
+                *(["--coordinate-claims"] if coordinate else []),
+            ],
+        )
+        with pytest.raises(SystemExit) as caught:
+>           runpy.run_path(str(Path(f15.__file__)), run_name="__main__")
+
+tests/infra/execution_market/test_standalone_runtime.py:56: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+<frozen runpy>:287: in run_path
+    ???
+<frozen runpy>:98: in _run_module_code
+    ???
+<frozen runpy>:88: in _run_code
+    ???
+tests/infra/execution_market/profile_workload.py:2673: in <module>
+    asyncio.run(worker_entry(parsed))
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+coroutine = <coroutine object worker_entry at 0x10cf43bc0>
+
+    def capture(coroutine: CoroutineType[Any, Any, Any]) -> int:
+        assert coroutine.cr_frame is not None
+        seen.append(
+            (
+>               coroutine.cr_frame.f_locals["claim_limit"],
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                coroutine.cr_frame.f_locals["coordinate_claims"],
+            )
+        )
+E       KeyError: 'claim_limit'
+
+tests/infra/execution_market/test_standalone_runtime.py:31: KeyError
+=============================== warnings summary ===============================
+tests/infra/execution_market/test_standalone_runtime.py::test_worker_cli_forwards_budget_before_starting_any_database_work[True-True]
+  <frozen runpy>:259: RuntimeWarning: coroutine 'worker_entry' was never awaited
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/infra/execution_market/test_standalone_runtime.py::test_parent_manifest_and_all_worker_launch_paths_use_selected_runtime[SMOKE-True-False-False]
+  /Users/chainarongjaykeaw/.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/unittest/mock.py:2217: RuntimeWarning: coroutine 'worker_entry' was never awaited
+    def __init__(self, name, parent):
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/infra/execution_market/test_owned_pools.py::test_internal_worker_entry_samples_real_pools_and_joins_cleanup
+FAILED tests/infra/execution_market/test_standalone_runtime.py::test_worker_cli_forwards_budget_before_starting_any_database_work[False-False]
+FAILED tests/infra/execution_market/test_standalone_runtime.py::test_worker_cli_forwards_budget_before_starting_any_database_work[True-False]
+FAILED tests/infra/execution_market/test_standalone_runtime.py::test_worker_cli_forwards_budget_before_starting_any_database_work[True-True]
+4 failed, 214 passed, 2 warnings in 18.88s

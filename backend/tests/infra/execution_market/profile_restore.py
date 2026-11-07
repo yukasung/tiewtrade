@@ -8,6 +8,7 @@ import hashlib
 import json
 import os
 import platform
+from collections.abc import Awaitable, Callable
 from datetime import UTC, datetime
 from pathlib import Path
 from urllib.parse import unquote, urlparse
@@ -202,6 +203,75 @@ async def fixture_coverage(engine: AsyncEngine) -> dict[str, int]:
     return {key: int(value) for key, value in row.items()}
 
 
+async def replay_owner_domain(
+    engine: AsyncEngine, *, user_id: UUID, wallet_id: UUID, episode_id: UUID, active: bool
+) -> dict[str, int]:
+    """Shared exact financial/history oracle for restore and NC12 final replay."""
+    # asyncpg identifiers can be UUID subclasses; the domain requires canonical UUIDs.
+    user_id, wallet_id, episode_id = (
+        UUID(str(value)) for value in (user_id, wallet_id, episode_id)
+    )
+    evidence = checkpoints = replayed_positions = 0
+    async with user_session(engine, user_id, role=DatabaseRole.ENGINE) as session:
+        snapshot = await read_position_snapshot(session, episode_id)
+        if snapshot is None:
+            raise RuntimeError("F15_W4_MISSING_POSITION_SOURCE")
+        replayed_cash = Money.of(0, "USDT")
+        for position in snapshot.positions:
+            facts = await read_effective_executions(session, episode_id, position.pair)
+            by_sequence = {fact.source_sequence: fact for fact in facts}
+            rebuilt = rebuild_position(
+                position.pair,
+                tuple(
+                    by_sequence.get(sequence)
+                    for sequence in range(1, snapshot.activity.source_sequence + 1)
+                ),
+            )
+            if (
+                rebuilt.state.held_quantity != position.held_quantity
+                or rebuilt.state.total_cost != position.total_cost
+                or rebuilt.state.realized_pnl != position.realized_pnl
+            ):
+                raise RuntimeError("F15_W4_POSITION_REPLAY_MISMATCH")
+            replayed_cash = replayed_cash + rebuilt.effects.quote_cash_delta
+            replayed_positions += 1
+        cash = (
+            await session.execute(
+                """SELECT coalesce(sum(amount),0) FROM paper_wallet_ledger
+                WHERE episode_id=:episode AND kind IN ('TRADE_CASH','CORRECTION_CASH')""",
+                {"episode": episode_id},
+            )
+        ).scalar_one()
+        if replayed_cash != Money.of(cash, "USDT"):
+            raise RuntimeError("F15_W4_CASH_REPLAY_MISMATCH")
+        cursor = 0
+        while True:
+            batch = await read_execution_inputs(
+                session,
+                episode_id=episode_id,
+                pair=PositionPair("BTC", "USDT"),
+                after_input_id=cursor,
+                limit=4096,
+            )
+            if not batch:
+                break
+            evidence += len(batch)
+            cursor = batch[-1].record.market.input_id
+        if active:
+            await load_matching_state(
+                session,
+                wallet_id=wallet_id,
+                scope=OrderScope(user_id, episode_id, TradingMode.PAPER),
+                pair=PositionPair("BTC", "USDT"),
+            )
+            checkpoints += 1
+    return {
+        "evidence_records": evidence,
+        "checkpoints": checkpoints,
+        "replayed_positions": replayed_positions,
+    }
+
+
 async def replay_restored_domain(admin: AsyncEngine, engine: AsyncEngine) -> dict[str, object]:
     async with admin.connect() as connection:
         owners = (
@@ -221,61 +291,16 @@ async def replay_restored_domain(admin: AsyncEngine, engine: AsyncEngine) -> dic
     checkpoints = 0
     replayed_positions = 0
     for owner in owners:
-        user_id = UUID(str(owner["user_id"]))
-        episode_id = UUID(str(owner["episode_id"]))
-        async with user_session(engine, user_id, role=DatabaseRole.ENGINE) as session:
-            snapshot = await read_position_snapshot(session, episode_id)
-            if snapshot is None:
-                raise RuntimeError("F15_W4_MISSING_POSITION_SOURCE")
-            replayed_cash = Money.of(0, "USDT")
-            for position in snapshot.positions:
-                facts = await read_effective_executions(session, episode_id, position.pair)
-                by_sequence = {fact.source_sequence: fact for fact in facts}
-                rebuilt = rebuild_position(
-                    position.pair,
-                    tuple(
-                        by_sequence.get(sequence)
-                        for sequence in range(1, snapshot.activity.source_sequence + 1)
-                    ),
-                )
-                if (
-                    rebuilt.state.held_quantity != position.held_quantity
-                    or rebuilt.state.total_cost != position.total_cost
-                    or rebuilt.state.realized_pnl != position.realized_pnl
-                ):
-                    raise RuntimeError("F15_W4_POSITION_REPLAY_MISMATCH")
-                replayed_cash = replayed_cash + rebuilt.effects.quote_cash_delta
-                replayed_positions += 1
-            cash = (
-                await session.execute(
-                    """SELECT coalesce(sum(amount),0) FROM paper_wallet_ledger
-                    WHERE episode_id=:episode AND kind IN ('TRADE_CASH','CORRECTION_CASH')""",
-                    {"episode": episode_id},
-                )
-            ).scalar_one()
-            if replayed_cash != Money.of(cash, "USDT"):
-                raise RuntimeError("F15_W4_CASH_REPLAY_MISMATCH")
-            cursor = 0
-            while True:
-                batch = await read_execution_inputs(
-                    session,
-                    episode_id=episode_id,
-                    pair=PositionPair("BTC", "USDT"),
-                    after_input_id=cursor,
-                    limit=4096,
-                )
-                if not batch:
-                    break
-                evidence += len(batch)
-                cursor = batch[-1].record.market.input_id
-            if owner["active"]:
-                await load_matching_state(
-                    session,
-                    wallet_id=UUID(str(owner["wallet_id"])),
-                    scope=OrderScope(user_id, episode_id, TradingMode.PAPER),
-                    pair=PositionPair("BTC", "USDT"),
-                )
-                checkpoints += 1
+        result = await replay_owner_domain(
+            engine,
+            user_id=UUID(str(owner["user_id"])),
+            wallet_id=UUID(str(owner["wallet_id"])),
+            episode_id=UUID(str(owner["episode_id"])),
+            active=bool(owner["active"]),
+        )
+        evidence += result["evidence_records"]
+        checkpoints += result["checkpoints"]
+        replayed_positions += result["replayed_positions"]
     return {
         "owners": len(owners),
         "evidence_records": evidence,
@@ -323,7 +348,13 @@ async def recover_expired_claims(
     return {"expired_before": before, "expired_after": after, "rounds": rounds}
 
 
-async def run(args: argparse.Namespace, *, recovery_policy: AdmissionPolicy | None = None) -> int:
+async def run(
+    args: argparse.Namespace,
+    *,
+    recovery_policy: AdmissionPolicy | None = None,
+    recovery_hook: Callable[[AsyncEngine, AsyncEngine, AsyncEngine], Awaitable[dict[str, int]]]
+    | None = None,
+) -> int:
     output: Path = args.output
     output.mkdir(parents=True, exist_ok=False)
     source_url = os.environ[args.source_url_env]
@@ -394,8 +425,10 @@ async def run(args: argparse.Namespace, *, recovery_policy: AdmissionPolicy | No
         after_security = await security_shape(target)
         replay = await replay_restored_domain(target, target_engine)
         economic_before_recovery = await economic_digest(target)
-        claim_recovery = await recover_expired_claims(
-            target, target_engine, target_scan, policy=recovery_policy
+        claim_recovery = (
+            await recover_expired_claims(target, target_engine, target_scan, policy=recovery_policy)
+            if recovery_hook is None
+            else await recovery_hook(target, target_engine, target_scan)
         )
         economic_after_recovery = await economic_digest(target)
         passed = (

@@ -1,0 +1,8 @@
+usage: nc12_campaign.py [-h] {CONTROLLED20,SMOKE,W1,W2,W3,W2_OVERFLOW} output
+
+positional arguments:
+  {CONTROLLED20,SMOKE,W1,W2,W3,W2_OVERFLOW}
+  output
+
+options:
+  -h, --help            show this help message and exit

@@ -1,0 +1,37 @@
+{
+  "profile": "F15_W1_W2_W3_V2",
+  "worker_runtime": "F15_STANDALONE_R8_HEARTBEAT_TAIL_V1",
+  "worker_round_limit": 20,
+  "claim_coordination": "SERIALIZED_CLAIM_V2",
+  "worker_claim_limit": 1,
+  "worker_tick_seconds": 0.02,
+  "publisher_heartbeat_per_book": true,
+  "final_tail_drain": true,
+  "checkpoint_storage": "PG_BATCH_V1",
+  "parent_poll_limit": 4,
+  "phase": "SMOKE",
+  "run_id": "7ff7bfed-2812-496e-8546-d2143c4ea680",
+  "started_at": "2026-11-06 14:27:15.096228+00:00",
+  "platform": "macOS-27.0.1-arm64-arm-64bit",
+  "python": "3.12.15",
+  "owners": 100,
+  "baseline_orders_per_owner": 20,
+  "cycles_per_owner": 6,
+  "command_rate": 10,
+  "workers": 20,
+  "baseline_manifest": null,
+  "expected_commands": 3000,
+  "expected_cycles": 600,
+  "fault_schedule_digest": null,
+  "fault_schedule": [],
+  "expected_fixture_digest": "64a46eb5b07cb20f7605049d773ba34e3930bcf388f8835e6c8afde4fa0974b8",
+  "database": {
+    "alembic_revision": "0065",
+    "postgresql": {
+      "server_version": "16.15 (Debian 16.15-1.pgdg13+2)",
+      "max_connections": "100",
+      "shared_buffers": "128MB",
+      "work_mem": "4MB"
+    }
+  }
+}

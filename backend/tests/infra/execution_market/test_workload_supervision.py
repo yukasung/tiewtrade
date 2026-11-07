@@ -176,3 +176,45 @@ async def test_dead_worker_cannot_reuse_a_preexisting_runtime_pid(tmp_path: Path
     process.returncode = 1
     with pytest.raises(RuntimeError, match="EXITED_BEFORE_READY"):
         await wait_runtime_pid(process, metrics)
+
+
+@pytest.mark.parametrize("fails", [True, False])
+async def test_background_check_failure_joins_workload_but_success_keeps_it_running(
+    fails: bool,
+) -> None:
+    started, release, joined = asyncio.Event(), asyncio.Event(), asyncio.Event()
+    failure = RuntimeError("snapshot failed")
+
+    async def check() -> None:
+        await started.wait()
+        if fails:
+            raise failure
+
+    async def workload() -> int:
+        started.set()
+        try:
+            await release.wait()
+            return 42
+        finally:
+            joined.set()
+
+    async def publisher() -> None:
+        await asyncio.Event().wait()
+
+    producer = asyncio.create_task(publisher())
+    observation = asyncio.create_task(check())
+    task = asyncio.create_task(with_publisher(workload(), producer, checks=(observation,)))
+    try:
+        await asyncio.gather(observation, return_exceptions=True)
+        if fails:
+            with pytest.raises(RuntimeError) as caught:
+                await task
+            assert caught.value is failure and joined.is_set()
+        else:
+            assert not task.done()
+            release.set()
+            assert await task == 42
+        assert not producer.done()
+    finally:
+        producer.cancel()
+        await asyncio.gather(producer, return_exceptions=True)

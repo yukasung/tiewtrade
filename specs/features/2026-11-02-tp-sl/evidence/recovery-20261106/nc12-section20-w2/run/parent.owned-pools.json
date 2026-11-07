@@ -1,0 +1,303 @@
+{
+  "pid": 15116,
+  "pools": [
+    {
+      "role": "MARKET_DATA",
+      "pool_size": 5,
+      "max_overflow": 10,
+      "checked_out": 0,
+      "peak_checked_out": 2,
+      "pool_id": "15116:0:0",
+      "generation": 0,
+      "pid": 15116,
+      "final_disposal_checked_out": 0,
+      "final_disposed": true
+    },
+    {
+      "role": "MIGRATOR",
+      "pool_size": 5,
+      "max_overflow": 10,
+      "checked_out": 0,
+      "peak_checked_out": 1,
+      "pool_id": "15116:1:0",
+      "generation": 0,
+      "pid": 15116,
+      "final_disposal_checked_out": 0,
+      "final_disposed": true
+    },
+    {
+      "role": "API",
+      "pool_size": 5,
+      "max_overflow": 10,
+      "checked_out": 0,
+      "peak_checked_out": 15,
+      "pool_id": "15116:2:0",
+      "generation": 0,
+      "pid": 15116,
+      "final_disposal_checked_out": 0,
+      "final_disposed": true
+    },
+    {
+      "role": "ENGINE",
+      "pool_size": 5,
+      "max_overflow": 10,
+      "checked_out": 0,
+      "peak_checked_out": 15,
+      "pool_id": "15116:3:0",
+      "generation": 0,
+      "pid": 15116,
+      "final_disposal_checked_out": 0,
+      "final_disposed": true
+    },
+    {
+      "role": "ENGINE_SCAN",
+      "pool_size": 5,
+      "max_overflow": 10,
+      "checked_out": 0,
+      "peak_checked_out": 1,
+      "pool_id": "15116:4:0",
+      "generation": 0,
+      "pid": 15116,
+      "final_disposal_checked_out": 0,
+      "final_disposed": true
+    },
+    {
+      "role": "ADMIN_OBSERVER",
+      "pool_size": 5,
+      "max_overflow": 10,
+      "checked_out": 0,
+      "peak_checked_out": 1,
+      "pool_id": "15116:5:0",
+      "generation": 0,
+      "pid": 15116,
+      "final_disposal_checked_out": 0,
+      "final_disposed": true
+    },
+    {
+      "role": "AUTH",
+      "pool_size": 5,
+      "max_overflow": 10,
+      "checked_out": 0,
+      "peak_checked_out": 1,
+      "pool_id": "15116:6:0",
+      "generation": 0,
+      "pid": 15116,
+      "final_disposal_checked_out": 0,
+      "final_disposed": true
+    },
+    {
+      "role": "API",
+      "pool_size": 5,
+      "max_overflow": 10,
+      "checked_out": 0,
+      "peak_checked_out": 8,
+      "pool_id": "15116:7:0",
+      "generation": 0,
+      "pid": 15116,
+      "final_disposal_checked_out": 0,
+      "final_disposed": true
+    },
+    {
+      "role": "API",
+      "pool_size": 1,
+      "max_overflow": 0,
+      "checked_out": 0,
+      "peak_checked_out": 1,
+      "pool_id": "15116:8:0",
+      "generation": 0,
+      "pid": 15116,
+      "final_disposal_checked_out": 0,
+      "final_disposed": true
+    },
+    {
+      "role": "AUTH",
+      "pool_size": 5,
+      "max_overflow": 10,
+      "checked_out": 0,
+      "peak_checked_out": 1,
+      "pool_id": "15116:9:0",
+      "generation": 0,
+      "pid": 15116,
+      "final_disposal_checked_out": 0,
+      "final_disposed": true
+    },
+    {
+      "role": "API",
+      "pool_size": 3,
+      "max_overflow": 0,
+      "checked_out": 0,
+      "peak_checked_out": 1,
+      "pool_id": "15116:10:0",
+      "generation": 0,
+      "pid": 15116,
+      "final_disposal_checked_out": 0,
+      "final_disposed": true
+    },
+    {
+      "role": "API",
+      "pool_size": 1,
+      "max_overflow": 0,
+      "checked_out": 0,
+      "peak_checked_out": 0,
+      "pool_id": "15116:11:0",
+      "generation": 0,
+      "pid": 15116,
+      "final_disposal_checked_out": 0,
+      "final_disposed": true
+    },
+    {
+      "role": "API",
+      "pool_size": 1,
+      "max_overflow": 0,
+      "checked_out": 0,
+      "peak_checked_out": 0,
+      "pool_id": "15116:12:0",
+      "generation": 0,
+      "pid": 15116,
+      "final_disposal_checked_out": 0,
+      "final_disposed": true
+    }
+  ],
+  "configuration": [
+    [
+      "ADMIN_OBSERVER",
+      5,
+      10
+    ],
+    [
+      "API",
+      1,
+      0
+    ],
+    [
+      "API",
+      1,
+      0
+    ],
+    [
+      "API",
+      1,
+      0
+    ],
+    [
+      "API",
+      3,
+      0
+    ],
+    [
+      "API",
+      5,
+      10
+    ],
+    [
+      "API",
+      5,
+      10
+    ],
+    [
+      "AUTH",
+      5,
+      10
+    ],
+    [
+      "AUTH",
+      5,
+      10
+    ],
+    [
+      "ENGINE",
+      5,
+      10
+    ],
+    [
+      "ENGINE_SCAN",
+      5,
+      10
+    ],
+    [
+      "MARKET_DATA",
+      5,
+      10
+    ],
+    [
+      "MIGRATOR",
+      5,
+      10
+    ]
+  ],
+  "expected_configuration": [
+    [
+      "ADMIN_OBSERVER",
+      5,
+      10
+    ],
+    [
+      "API",
+      1,
+      0
+    ],
+    [
+      "API",
+      1,
+      0
+    ],
+    [
+      "API",
+      1,
+      0
+    ],
+    [
+      "API",
+      3,
+      0
+    ],
+    [
+      "API",
+      5,
+      10
+    ],
+    [
+      "API",
+      5,
+      10
+    ],
+    [
+      "AUTH",
+      5,
+      10
+    ],
+    [
+      "AUTH",
+      5,
+      10
+    ],
+    [
+      "ENGINE",
+      5,
+      10
+    ],
+    [
+      "ENGINE_SCAN",
+      5,
+      10
+    ],
+    [
+      "MARKET_DATA",
+      5,
+      10
+    ],
+    [
+      "MIGRATOR",
+      5,
+      10
+    ]
+  ],
+  "errors": {},
+  "outcome": "RETURNED",
+  "sample_count": 281,
+  "expected_shutdown_cancellations": 0,
+  "resource_errors": [],
+  "resource_errors_omitted": 0,
+  "finalized": true,
+  "passed": true
+}

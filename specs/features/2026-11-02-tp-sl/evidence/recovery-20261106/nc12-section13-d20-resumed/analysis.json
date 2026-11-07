@@ -1,0 +1,43 @@
+{
+  "status": "FAILED",
+  "seconds": 364.376126041,
+  "measured_seconds": 307.119218917,
+  "counters": {
+    "offered": 600,
+    "admitted": 600,
+    "completed": 600,
+    "rejected": 0,
+    "fills": 240,
+    "cancels": 120,
+    "replays": 120,
+    "cycles": 120
+  },
+  "financial_owners_passed": 20,
+  "global_invariants_passed": true,
+  "p95_ms": 531.8091249999952,
+  "p99_ms": 981.6389999999728,
+  "measured_book_inputs": 2976,
+  "required_book_inputs": 3000,
+  "resource_assertions_passed": true,
+  "connections_start": 57,
+  "connections_end": 59,
+  "connections_peak": 59,
+  "failed_predicates": [
+    "p95 > 250ms",
+    "measured book inputs < 3000"
+  ],
+  "old_preflight_load": [
+    2.85205078125,
+    3.06787109375,
+    4.33984375
+  ],
+  "new_preflight_load": [
+    24.83984375,
+    39.869140625,
+    27.96240234375
+  ],
+  "logical_cpu": 8,
+  "environment_note": "host booted between runs; concurrent unrelated Node/Next workload observed at preflight; not a controlled old/new performance comparison",
+  "causation": "shared host contention is supported as a confounder, not proven sole cause",
+  "next": "stop before W1; propose bounded environment readiness preflight and one authorized replacement"
+}

@@ -1,0 +1,42 @@
+{
+  "reanalysis_only": true,
+  "acceptance_result": false,
+  "original_status": "Incomplete / cycle Failed",
+  "window": {
+    "started": 3208.512538166,
+    "ended": 3340.517660166,
+    "end_basis": "Recorded failing-cycle deadline; incomplete diagnostic, not a completed measurement window",
+    "attribution": "transaction_start; full duration retained"
+  },
+  "workers": 20,
+  "samples": 2328,
+  "p95_seconds": 0.47050979200002985,
+  "p99_seconds": 0.8416337089997796,
+  "max_seconds": 1.939630207999926,
+  "p95_target_seconds": 0.25,
+  "p99_target_seconds": 1.0,
+  "source_sha256": {
+    "specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/publisher-diagnostic-1/dispatch-trace-control.json": "1a35d05463c69dc1b0d098731f851cd2ccbc34aa669aad10fe98e8d247226eb3",
+    "specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/publisher-diagnostic-1/cycle-timeouts.json": "97be9b1bfc801ee5729e949d41e63514177cd6f5a61c8188012f375ac98e9702",
+    "specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/publisher-diagnostic-1/worker-0.json": "fc2553c97ebf0b68bd4c9583d766aae27e8ccf8a50afcc922aea6c2f3056fa72",
+    "specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/publisher-diagnostic-1/worker-1.json": "e650477dff40f142b25c925dd07eea7b90c84e6ec9d7359e384d8434f80e436b",
+    "specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/publisher-diagnostic-1/worker-10.json": "beb7fd30aa777e387314df28e34b919af8cbf4cbf633e07bcb0e6209f7876d9c",
+    "specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/publisher-diagnostic-1/worker-11.json": "bfec6b871e13c77c3b306b051184b77a524e76e8d9df8510b7962c1d5334a14c",
+    "specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/publisher-diagnostic-1/worker-12.json": "5a64628088aba3b246776506154116d53c85d266bc73af27ec689625e85e3dcf",
+    "specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/publisher-diagnostic-1/worker-13.json": "481244f637fa5d4b77f57d6c78beea4d4a81e9751d5cd1d088757f9245df3898",
+    "specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/publisher-diagnostic-1/worker-14.json": "dab14c31bc5e3be08f39dd6152e92e5849b0574b3bf1b4d4129466346cb69557",
+    "specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/publisher-diagnostic-1/worker-15.json": "70bac46dbd715f047cf614513acbb654ac44b875db80de16e56c0b6480736dde",
+    "specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/publisher-diagnostic-1/worker-16.json": "0133711237f77caebb15e3837fb205879cbd2894f79e49905391a2ee86816a61",
+    "specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/publisher-diagnostic-1/worker-17.json": "ce6094c808bf375e92afa4aaf59f8926ecfd46a50e4dd5503a2daa50d8a7efde",
+    "specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/publisher-diagnostic-1/worker-18.json": "b9803e6b65f200fc92f76091e95c210ec3eb648cea1fd070cbba0780fa2e7d7e",
+    "specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/publisher-diagnostic-1/worker-19.json": "28211e93c08e5e3081eb7dbe0d2708bf0c3859776f179c5f5d546301a50469cb",
+    "specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/publisher-diagnostic-1/worker-2.json": "0a39fcccdb30f0c47572543cea1c7eecde490230eab6d562626db3224d842753",
+    "specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/publisher-diagnostic-1/worker-3.json": "e85329f56219aa03d2c60b7119a3faf06d5e66714f59a7df79c2545265cb512e",
+    "specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/publisher-diagnostic-1/worker-4.json": "e59ffc5d6335ad4fc5dedd803c56c641cceb9b8e0f08d3d85e1187e82cd66056",
+    "specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/publisher-diagnostic-1/worker-5.json": "910fb2700680f32d6f3539a5ac4ead41b5e1ec1a7f116c6a79b92261866ab72c",
+    "specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/publisher-diagnostic-1/worker-6.json": "f06210cebc1cd7451bc206c50e3f3187bf2efae78162f4987100e5dc777df0de",
+    "specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/publisher-diagnostic-1/worker-7.json": "252458448bbf1d1d096a941eb10c1918464726e5d07a85a00b3d13896d4f50d3",
+    "specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/publisher-diagnostic-1/worker-8.json": "d73db18bc8cfc9a58c5b2afe4c360363bb54c8ed2635703c540f613b33428e18",
+    "specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/publisher-diagnostic-1/worker-9.json": "767247fd99a7d30ef4fc5b95f7b8c3dd3f3e340df425ed42c735aff96c9cb7c8"
+  }
+}

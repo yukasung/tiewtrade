@@ -1,0 +1,13 @@
+{
+  "date": "2026-11-07 Asia/Bangkok",
+  "tests": 126,
+  "seconds": 3.08,
+  "ruff": "PASSED",
+  "format": "PASSED",
+  "mypy": "PASSED (2 files)",
+  "changed_files": [
+    "backend/tests/infra/execution_market/profile_workload.py",
+    "backend/tests/infra/execution_market/test_final_tail_drain.py"
+  ],
+  "production_changes": 0
+}

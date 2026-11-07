@@ -308,6 +308,24 @@ async def submit_cancel(
     )
 
 
+async def try_lock_order_selection(session: ScanSession) -> bool:
+    """Coordinate opt-in selectors only; owner claims remain the safety authority."""
+    if not isinstance(session, ScanSession):
+        raise TypeError("scanner session required")
+    if (await session.execute("SHOW transaction_isolation")).scalar_one() != "read committed":
+        raise OrderConflictError("order selection requires read committed isolation")
+    await session.execute("SET LOCAL statement_timeout='5s'")
+    await session.execute("SET LOCAL lock_timeout='5s'")
+    return bool(
+        (
+            await session.execute(
+                "SELECT pg_try_advisory_xact_lock(hashtextextended(:key,0))",
+                {"key": "paper-order-selection:v1"},
+            )
+        ).scalar_one()
+    )
+
+
 async def due_orders(
     session: ScanSession,
     *,

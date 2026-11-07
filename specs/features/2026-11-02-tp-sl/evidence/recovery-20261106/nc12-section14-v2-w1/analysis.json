@@ -1,0 +1,41 @@
+{
+  "status": "FAILED",
+  "only_failed_predicate": "connections_end <= connections_start + 2",
+  "total_seconds": 2085.926609709,
+  "measured_seconds": 1801.7454644170002,
+  "counters": {
+    "offered": 3600,
+    "admitted": 3600,
+    "completed": 3600,
+    "rejected": 0,
+    "fills": 1440,
+    "cancels": 720,
+    "replays": 720,
+    "cycles": 720
+  },
+  "financial_owners_passed": 20,
+  "global_invariants_passed": true,
+  "engine_p95_ms": 133.5802080002395,
+  "engine_p99_ms": 191.9855420001113,
+  "book_inputs": 18017,
+  "book_required": 18000,
+  "positions_passed": true,
+  "snapshot_p95_ms": 32.97670900064986,
+  "snapshot_p99_ms": 33.66050000022369,
+  "rebuilds": 20,
+  "rebuild_max_seconds": 7.051562791999459,
+  "connections_start": 57,
+  "connections_end": 60,
+  "connections_peak": 61,
+  "allowed_end": 59,
+  "connection_sample_distribution": {
+    "57": 1,
+    "60": 295,
+    "59": 8,
+    "61": 54
+  },
+  "poll_attempts": 20041,
+  "poll_finished": 20041,
+  "pool_attribution": "tail role API9; parent engine checkedout0/checkedin5/overflow0; individual API pool records not captured, so attribution remains unproven",
+  "next": "stop before W2; owner decision on bounded pool-ownership evidence/resource criterion review"
+}

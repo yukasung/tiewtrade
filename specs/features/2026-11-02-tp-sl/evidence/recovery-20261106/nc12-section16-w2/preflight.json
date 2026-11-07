@@ -1,0 +1,152 @@
+{
+  "status": "PASSED",
+  "window_seconds": 120,
+  "minimum_free_bytes": 2147483648,
+  "readiness_rule": "MACOS_CPU_MEMORY_V2",
+  "minimum_mean_cpu_idle_percent": 20,
+  "allowed_memory_pressure_levels": [
+    1,
+    2
+  ],
+  "load_informational_only": true,
+  "samples": [
+    {
+      "at": "2026-11-07T05:41:29.014214+00:00",
+      "monotonic": 10214.756176875,
+      "logical_cpu": 8,
+      "free_bytes": 6420189184,
+      "load": [
+        4.7705078125,
+        12.453125,
+        15.42236328125
+      ],
+      "cpu_idle_percent": 64.8,
+      "memory_pressure_level": 1,
+      "scheduled_offset_seconds": 0
+    },
+    {
+      "at": "2026-11-07T05:41:49.017101+00:00",
+      "monotonic": 10234.758799666,
+      "logical_cpu": 8,
+      "free_bytes": 6160977920,
+      "load": [
+        5.251953125,
+        12.05322265625,
+        15.20849609375
+      ],
+      "cpu_idle_percent": 73.56,
+      "memory_pressure_level": 1,
+      "scheduled_offset_seconds": 20
+    },
+    {
+      "at": "2026-11-07T05:42:09.017386+00:00",
+      "monotonic": 10254.758779416,
+      "logical_cpu": 8,
+      "free_bytes": 6009298944,
+      "load": [
+        4.50927734375,
+        11.44873046875,
+        14.91845703125
+      ],
+      "cpu_idle_percent": 71.34,
+      "memory_pressure_level": 1,
+      "scheduled_offset_seconds": 40
+    },
+    {
+      "at": "2026-11-07T05:42:29.017709+00:00",
+      "monotonic": 10274.758772833,
+      "logical_cpu": 8,
+      "free_bytes": 5824069632,
+      "load": [
+        4.939453125,
+        11.09521484375,
+        14.7099609375
+      ],
+      "cpu_idle_percent": 70.26,
+      "memory_pressure_level": 1,
+      "scheduled_offset_seconds": 60
+    },
+    {
+      "at": "2026-11-07T05:42:49.018020+00:00",
+      "monotonic": 10294.758745416,
+      "logical_cpu": 8,
+      "free_bytes": 5693685760,
+      "load": [
+        4.318359375,
+        10.5537109375,
+        14.43115234375
+      ],
+      "cpu_idle_percent": 74.22,
+      "memory_pressure_level": 1,
+      "scheduled_offset_seconds": 80
+    },
+    {
+      "at": "2026-11-07T05:43:09.018461+00:00",
+      "monotonic": 10314.758877875,
+      "logical_cpu": 8,
+      "free_bytes": 7781089280,
+      "load": [
+        5.50048828125,
+        10.40673828125,
+        14.287109375
+      ],
+      "cpu_idle_percent": 73.5,
+      "memory_pressure_level": 1,
+      "scheduled_offset_seconds": 100
+    },
+    {
+      "at": "2026-11-07T05:43:29.018733+00:00",
+      "monotonic": 10334.758824916,
+      "logical_cpu": 8,
+      "free_bytes": 7773814784,
+      "load": [
+        4.3759765625,
+        9.82958984375,
+        13.9892578125
+      ],
+      "cpu_idle_percent": 71.33,
+      "memory_pressure_level": 1,
+      "scheduled_offset_seconds": 120
+    }
+  ],
+  "services": {
+    "before": {
+      "containers": [
+        {
+          "name": "/tiewtrade-postgres-1",
+          "state": "running",
+          "health": "healthy",
+          "restart_count": 0
+        },
+        {
+          "name": "/tiewtrade-f18-release-redis",
+          "state": "running",
+          "health": null,
+          "restart_count": 0
+        }
+      ],
+      "postgres_ready": true,
+      "redis_ping": "PONG"
+    },
+    "after": {
+      "containers": [
+        {
+          "name": "/tiewtrade-postgres-1",
+          "state": "running",
+          "health": "healthy",
+          "restart_count": 0
+        },
+        {
+          "name": "/tiewtrade-f18-release-redis",
+          "state": "running",
+          "health": null,
+          "restart_count": 0
+        }
+      ],
+      "postgres_ready": true,
+      "redis_ping": "PONG"
+    }
+  },
+  "observing_offset_seconds": 120,
+  "mean_cpu_idle_percent": 71.28714285714285
+}

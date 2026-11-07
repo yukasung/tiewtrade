@@ -1,0 +1,1 @@
+{"pools": [{"role": "ENGINE", "pool_size": 5, "max_overflow": 10, "checked_out": 0, "peak_checked_out": 1}, {"role": "ENGINE_SCAN", "pool_size": 5, "max_overflow": 10, "checked_out": 0, "peak_checked_out": 1}], "finalized": true}

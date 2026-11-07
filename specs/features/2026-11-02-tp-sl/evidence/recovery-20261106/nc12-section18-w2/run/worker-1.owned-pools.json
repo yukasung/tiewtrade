@@ -1,0 +1,60 @@
+{
+  "pid": 12822,
+  "pools": [
+    {
+      "role": "ENGINE",
+      "pool_size": 5,
+      "max_overflow": 10,
+      "checked_out": 0,
+      "peak_checked_out": 1,
+      "pool_id": "12822:0:0",
+      "generation": 0,
+      "pid": 12822,
+      "final_disposal_checked_out": 0,
+      "final_disposed": true
+    },
+    {
+      "role": "ENGINE_SCAN",
+      "pool_size": 5,
+      "max_overflow": 10,
+      "checked_out": 0,
+      "peak_checked_out": 1,
+      "pool_id": "12822:1:0",
+      "generation": 0,
+      "pid": 12822,
+      "final_disposal_checked_out": 0,
+      "final_disposed": true
+    }
+  ],
+  "configuration": [
+    [
+      "ENGINE",
+      5,
+      10
+    ],
+    [
+      "ENGINE_SCAN",
+      5,
+      10
+    ]
+  ],
+  "expected_configuration": [
+    [
+      "ENGINE",
+      5,
+      10
+    ],
+    [
+      "ENGINE_SCAN",
+      5,
+      10
+    ]
+  ],
+  "errors": {},
+  "outcome": "RETURNED",
+  "sample_count": 258,
+  "expected_shutdown_cancellations": 0,
+  "resource_errors": [],
+  "finalized": true,
+  "passed": true
+}

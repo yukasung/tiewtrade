@@ -1,0 +1,20 @@
+{
+  "expected_commands": 12000,
+  "actual_commands": 12000,
+  "counts_passed": true,
+  "financial_passed": true,
+  "invariants_passed": true,
+  "positions_passed": true,
+  "resources_passed": true,
+  "pool_contract_passed": true,
+  "processing_passed": true,
+  "original_processing_target_passed": false,
+  "worker_exits_passed": true,
+  "book_inputs_passed": true,
+  "duration_floor_passed": true,
+  "duration_ceiling_passed": false,
+  "measured_seconds": 963.5710194589992,
+  "allowed_seconds": 660,
+  "effective_completed_commands_per_second": 12.453674672301215,
+  "interpretation": "effective closed-loop cohort throughput; not a capacity ceiling or an open-loop arrival-rate certification"
+}

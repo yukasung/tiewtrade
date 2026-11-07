@@ -1,0 +1,310 @@
+F
+=================================== FAILURES ===================================
+______________ test_real_authenticated_cycle_and_owner_isolation _______________
+
+api_engine = <sqlalchemy.ext.asyncio.engine.AsyncEngine object at 0x10e04b490>
+engine_engine = <sqlalchemy.ext.asyncio.engine.AsyncEngine object at 0x10e305810>
+scan_engine = <sqlalchemy.ext.asyncio.engine.AsyncEngine object at 0x10e3061d0>
+migrator_engine = <sqlalchemy.ext.asyncio.engine.AsyncEngine object at 0x10e306990>
+tmp_path = PosixPath('/private/var/folders/fb/g4m1d38j4fl6x1pt39rn0wxr0000gn/T/pytest-of-chainarongjaykeaw/pytest-8/test_real_authenticated_cycle_0')
+
+    async def test_real_authenticated_cycle_and_owner_isolation(
+        api_engine: AsyncEngine, engine_engine: AsyncEngine, scan_engine: AsyncEngine,
+        migrator_engine: AsyncEngine, tmp_path: Path,
+    ) -> None:
+        import asyncio
+        from tests.infra.execution_market.profile_http import internal_intake
+        from tiewtrade.infra.db import DatabaseRole, create_engine_for
+        from tiewtrade.infra.risk_limits.policy import TransactionalRiskPolicy
+    
+        owners = await f15.seed_owners(api_engine, engine_engine, scan_engine, 2)
+        source = create_engine_for(DatabaseRole.MARKET_DATA)
+        stop = asyncio.Event()
+        worker_stop = tmp_path / "stop"
+        publisher = worker = None
+        try:
+            async with internal_intake(owners, engine=engine_engine, api=api_engine,
+                                       migrator=migrator_engine, gate=None, output=tmp_path) as intake:
+                publisher = asyncio.create_task(f15.market_publisher(source, stop, {"target_hz": 10}, heartbeat_per_book=True))
+                worker = asyncio.create_task(f15.run_worker_process(
+                    "internal-http-safety", worker_stop, tmp_path / "worker.json",
+                    claim_limit=1, coordinate_claims=True, policy=TransactionalRiskPolicy(),
+                    manual_intake=True, protection_rounds=True,
+                ))
+                await asyncio.sleep(.3)
+                counters = f15.Counters()
+                async with asyncio.timeout(60):
+>                   await f15.with_publisher(
+                        f15.cycle(engine_engine, owners[0], uuid4(), 0, counters, [], sender=intake), publisher
+                    )
+
+tests/infra/execution_market/test_internal_http.py:175: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/infra/execution_market/profile_workload.py:446: in with_publisher
+    done, _ = await asyncio.wait((task, publisher), return_when=asyncio.FIRST_COMPLETED)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../../../.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/asyncio/tasks.py:464: in wait
+    return await _wait(fs, timeout, return_when, loop)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+fs = {<Task pending name='Task-48' coro=<market_publisher() running at /Users/chainarongjaykeaw/Projects/TiewTrade/Projects...jects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/backend/tests/infra/execution_market/profile_workload.py:1576>>}
+timeout = None, return_when = 'FIRST_COMPLETED'
+loop = <_UnixSelectorEventLoop running=False closed=False debug=False>
+
+    async def _wait(fs, timeout, return_when, loop):
+        """Internal helper for wait().
+    
+        The fs argument must be a collection of Futures.
+        """
+        assert fs, 'Set of Futures is empty.'
+        waiter = loop.create_future()
+        timeout_handle = None
+        if timeout is not None:
+            timeout_handle = loop.call_later(timeout, _release_waiter, waiter)
+        counter = len(fs)
+    
+        def _on_completion(f):
+            nonlocal counter
+            counter -= 1
+            if (counter <= 0 or
+                return_when == FIRST_COMPLETED or
+                return_when == FIRST_EXCEPTION and (not f.cancelled() and
+                                                    f.exception() is not None)):
+                if timeout_handle is not None:
+                    timeout_handle.cancel()
+                if not waiter.done():
+                    waiter.set_result(None)
+    
+        for f in fs:
+            f.add_done_callback(_on_completion)
+    
+        try:
+>           await waiter
+E           asyncio.exceptions.CancelledError
+
+../../../../../.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/asyncio/tasks.py:550: CancelledError
+
+The above exception was the direct cause of the following exception:
+
+api_engine = <sqlalchemy.ext.asyncio.engine.AsyncEngine object at 0x10e04b490>
+engine_engine = <sqlalchemy.ext.asyncio.engine.AsyncEngine object at 0x10e305810>
+scan_engine = <sqlalchemy.ext.asyncio.engine.AsyncEngine object at 0x10e3061d0>
+migrator_engine = <sqlalchemy.ext.asyncio.engine.AsyncEngine object at 0x10e306990>
+tmp_path = PosixPath('/private/var/folders/fb/g4m1d38j4fl6x1pt39rn0wxr0000gn/T/pytest-of-chainarongjaykeaw/pytest-8/test_real_authenticated_cycle_0')
+
+    async def test_real_authenticated_cycle_and_owner_isolation(
+        api_engine: AsyncEngine, engine_engine: AsyncEngine, scan_engine: AsyncEngine,
+        migrator_engine: AsyncEngine, tmp_path: Path,
+    ) -> None:
+        import asyncio
+        from tests.infra.execution_market.profile_http import internal_intake
+        from tiewtrade.infra.db import DatabaseRole, create_engine_for
+        from tiewtrade.infra.risk_limits.policy import TransactionalRiskPolicy
+    
+        owners = await f15.seed_owners(api_engine, engine_engine, scan_engine, 2)
+        source = create_engine_for(DatabaseRole.MARKET_DATA)
+        stop = asyncio.Event()
+        worker_stop = tmp_path / "stop"
+        publisher = worker = None
+        try:
+            async with internal_intake(owners, engine=engine_engine, api=api_engine,
+                                       migrator=migrator_engine, gate=None, output=tmp_path) as intake:
+                publisher = asyncio.create_task(f15.market_publisher(source, stop, {"target_hz": 10}, heartbeat_per_book=True))
+                worker = asyncio.create_task(f15.run_worker_process(
+                    "internal-http-safety", worker_stop, tmp_path / "worker.json",
+                    claim_limit=1, coordinate_claims=True, policy=TransactionalRiskPolicy(),
+                    manual_intake=True, protection_rounds=True,
+                ))
+                await asyncio.sleep(.3)
+                counters = f15.Counters()
+>               async with asyncio.timeout(60):
+                           ^^^^^^^^^^^^^^^^^^^
+
+tests/infra/execution_market/test_internal_http.py:174: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <Timeout [expired]>
+exc_type = <class 'asyncio.exceptions.CancelledError'>
+exc_val = CancelledError(), exc_tb = <traceback object at 0x10bca14c0>
+
+    async def __aexit__(
+        self,
+        exc_type: Optional[Type[BaseException]],
+        exc_val: Optional[BaseException],
+        exc_tb: Optional[TracebackType],
+    ) -> Optional[bool]:
+        assert self._state in (_State.ENTERED, _State.EXPIRING)
+    
+        if self._timeout_handler is not None:
+            self._timeout_handler.cancel()
+            self._timeout_handler = None
+    
+        if self._state is _State.EXPIRING:
+            self._state = _State.EXPIRED
+    
+            if self._task.uncancel() <= self._cancelling and exc_type is exceptions.CancelledError:
+                # Since there are no new cancel requests, we're
+                # handling this.
+>               raise TimeoutError from exc_val
+E               TimeoutError
+
+../../../../../.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/asyncio/timeouts.py:115: TimeoutError
+
+During handling of the above exception, another exception occurred:
+
+api_engine = <sqlalchemy.ext.asyncio.engine.AsyncEngine object at 0x10e04b490>
+engine_engine = <sqlalchemy.ext.asyncio.engine.AsyncEngine object at 0x10e305810>
+scan_engine = <sqlalchemy.ext.asyncio.engine.AsyncEngine object at 0x10e3061d0>
+migrator_engine = <sqlalchemy.ext.asyncio.engine.AsyncEngine object at 0x10e306990>
+tmp_path = PosixPath('/private/var/folders/fb/g4m1d38j4fl6x1pt39rn0wxr0000gn/T/pytest-of-chainarongjaykeaw/pytest-8/test_real_authenticated_cycle_0')
+
+    async def test_real_authenticated_cycle_and_owner_isolation(
+        api_engine: AsyncEngine, engine_engine: AsyncEngine, scan_engine: AsyncEngine,
+        migrator_engine: AsyncEngine, tmp_path: Path,
+    ) -> None:
+        import asyncio
+        from tests.infra.execution_market.profile_http import internal_intake
+        from tiewtrade.infra.db import DatabaseRole, create_engine_for
+        from tiewtrade.infra.risk_limits.policy import TransactionalRiskPolicy
+    
+        owners = await f15.seed_owners(api_engine, engine_engine, scan_engine, 2)
+        source = create_engine_for(DatabaseRole.MARKET_DATA)
+        stop = asyncio.Event()
+        worker_stop = tmp_path / "stop"
+        publisher = worker = None
+        try:
+            async with internal_intake(owners, engine=engine_engine, api=api_engine,
+                                       migrator=migrator_engine, gate=None, output=tmp_path) as intake:
+                publisher = asyncio.create_task(f15.market_publisher(source, stop, {"target_hz": 10}, heartbeat_per_book=True))
+                worker = asyncio.create_task(f15.run_worker_process(
+                    "internal-http-safety", worker_stop, tmp_path / "worker.json",
+                    claim_limit=1, coordinate_claims=True, policy=TransactionalRiskPolicy(),
+                    manual_intake=True, protection_rounds=True,
+                ))
+                await asyncio.sleep(.3)
+                counters = f15.Counters()
+                async with asyncio.timeout(60):
+                    await f15.with_publisher(
+                        f15.cycle(engine_engine, owners[0], uuid4(), 0, counters, [], sender=intake), publisher
+                    )
+                assert counters.completed == 5 and counters.replays == 1
+                assert all(row["passed"] for row in await f15.verify(
+                    engine_engine, [owners[0]], baseline_orders=0, cycles_per_owner=1))
+                record = json.loads((tmp_path / "http-intake.jsonl").read_text().splitlines()[0])
+                foreign = await intake.clients[owners[1].user_id].get(
+                    f"/paper/order-requests/{record['request_id']}")
+                assert foreign.status_code == 404
+                client = intake.clients[owners[0].user_id]
+                client.headers.pop("X-CSRF-Token")
+                rejected = await client.post("/paper/orders", json=order_body(
+                    owners[0], f15.market_buy(owners[0], uuid4(), 1)),
+                    headers={"Idempotency-Key": str(uuid4())})
+                assert rejected.status_code == 403
+        finally:
+            worker_stop.touch()
+            if worker is not None:
+>               await asyncio.wait_for(worker, 10)
+
+tests/infra/execution_market/test_internal_http.py:194: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+../../../../../.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/asyncio/tasks.py:520: in wait_for
+    return await fut
+           ^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'internal-http-safety'
+stop_path = PosixPath('/private/var/folders/fb/g4m1d38j4fl6x1pt39rn0wxr0000gn/T/pytest-of-chainarongjaykeaw/pytest-8/test_real_authenticated_cycle_0/stop')
+metrics_path = PosixPath('/private/var/folders/fb/g4m1d38j4fl6x1pt39rn0wxr0000gn/T/pytest-of-chainarongjaykeaw/pytest-8/test_real_authenticated_cycle_0/worker.json')
+policy = <tiewtrade.infra.risk_limits.policy.TransactionalRiskPolicy object at 0x10e665a90>
+manual_intake = True, round_limit = 20, claim_limit = 1
+prefer_same_pair = False, alternate_admission = False, source_resumption = False
+coordinate_claims = True, protection_rounds = True
+
+    async def run_worker_process(
+        name: str,
+        stop_path: Path,
+        metrics_path: Path,
+        *,
+        policy: AdmissionPolicy | None = None,
+        manual_intake: bool = False,
+        round_limit: int = 20,
+        claim_limit: int | None = None,
+        prefer_same_pair: bool = False,
+        alternate_admission: bool = False,
+        source_resumption: bool = False,
+        coordinate_claims: bool = False,
+        protection_rounds: bool = False,
+    ) -> None:
+        modes = matching_round_modes(
+            prefer_same_pair=prefer_same_pair, alternate_admission=alternate_admission
+        )
+        if type(round_limit) is not int or not 1 <= round_limit <= 20:
+            raise ValueError("bounded worker round required")
+        if claim_limit is not None and (
+            type(claim_limit) is not int or not 1 <= claim_limit <= round_limit
+        ):
+            raise ValueError("bounded worker claim budget required")
+        validate_claim_coordination(
+            coordinate_claims,
+            r8=(
+                round_limit == 20
+                and claim_limit == 1
+                and not prefer_same_pair
+                and not alternate_admission
+                and not source_resumption
+            ),
+        )
+        publish_runtime_pid(metrics_path)
+        engine = create_engine_for(DatabaseRole.ENGINE)
+        scan = create_engine_for(DatabaseRole.ENGINE_SCAN)
+        original_begin = db_session._begin
+        samples_path = metrics_path.with_suffix(".latencies")
+        samples = samples_path.open("w", encoding="utf-8")
+    
+        @event.listens_for(engine.sync_engine, "before_cursor_execute")
+        def mark_processing(
+            connection: Any,
+            cursor: Any,
+            statement: str,
+            parameters: Any,
+            context: Any,
+            executemany: bool,
+        ) -> None:
+            if "SELECT c.*,r.state AS result_state FROM paper_order_commands c" in statement:
+                connection.info["f15_processing"] = True
+    
+        @asynccontextmanager
+        async def measured_begin(
+            engine: AsyncEngine, *, cleanup_seconds: float | None = None
+        ) -> AsyncIterator[AsyncConnection]:
+            started = monotonic()
+            processing = False
+            try:
+                async with original_begin(engine, cleanup_seconds=cleanup_seconds) as connection:
+                    info = connection.info
+                    try:
+                        yield connection
+                    finally:
+                        processing = bool(info.pop("f15_processing", False))
+            finally:
+                if processing:
+                    finished = monotonic()
+                    samples.write(
+                        json.dumps(
+                            {"started": started, "finished": finished, "seconds": finished - started}
+                        )
+                        + "\n"
+                    )
+    
+        db_session._begin = measured_begin
+        protection_observer = nullcontext()
+        if protection_rounds:
+>           from tests.infra.execution_market.profile_protections import observe_processing
+E           ModuleNotFoundError: No module named 'tests.infra.execution_market.profile_protections'
+
+tests/infra/execution_market/profile_workload.py:639: ModuleNotFoundError
+=========================== short test summary info ============================
+FAILED tests/infra/execution_market/test_internal_http.py::test_real_authenticated_cycle_and_owner_isolation
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+1 failed in 61.87s (0:01:01)

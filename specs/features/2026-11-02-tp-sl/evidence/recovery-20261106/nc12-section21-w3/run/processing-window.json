@@ -1,0 +1,33 @@
+{
+  "attribution": "transaction_start",
+  "started": 17451.183726916,
+  "ended": null,
+  "status": "INCOMPLETE",
+  "failure_observed": 17891.893296958,
+  "fault_observations": [
+    {
+      "kind": "WORKER_RESTART",
+      "started_at": "2026-11-07T07:45:05.752284+00:00",
+      "started": 17631.193215166,
+      "status": "RECOVERED",
+      "scheduled_offset_seconds": 180.0,
+      "scheduled_duration_seconds": 30.0,
+      "active_cycles_at_fault": 1,
+      "ended_at": "2026-11-07T07:45:38.158343+00:00",
+      "restored": 17663.598337875,
+      "actual_duration_seconds": 32.405122874999506
+    },
+    {
+      "kind": "CONNECTION_CHURN",
+      "started_at": "2026-11-07T07:48:05.757746+00:00",
+      "started": 17811.193276416,
+      "status": "RECOVERED",
+      "scheduled_offset_seconds": 360.0,
+      "scheduled_duration_seconds": 30.0,
+      "active_cycles_at_fault": 2,
+      "ended_at": "2026-11-07T07:48:35.884971+00:00",
+      "restored": 17841.319627125,
+      "actual_duration_seconds": 30.126350874998025
+    }
+  ]
+}

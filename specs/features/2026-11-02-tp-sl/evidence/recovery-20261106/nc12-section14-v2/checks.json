@@ -1,0 +1,37 @@
+{
+  "tests_passed": 108,
+  "seconds": 0.81,
+  "ruff": "PASSED2files",
+  "format": "PASSED2files",
+  "mypy": "PASSED2files",
+  "native_sensor_once": {
+    "cpu_idle_percent": 41.68,
+    "memory_pressure_level": 2
+  },
+  "sensor_scope": "single read-only check, not a preflight window or D20 acceptance",
+  "criteria": {
+    "load": "record only",
+    "mean_cpu_idle_min_percent": 20,
+    "memory_levels_admitted": [
+      1,
+      2
+    ],
+    "memory_critical_level": 4,
+    "sample_count": 7,
+    "sample_start_offsets_seconds": [
+      0,
+      20,
+      40,
+      60,
+      80,
+      100,
+      120
+    ],
+    "minimum_free_bytes": 2147483648
+  },
+  "production_drift": [],
+  "candidate": {
+    "profile_internal.py": "d701d341f4e8552aac2602b7417cea6c1263ab9bf62bf879b13d4885d3d2a548",
+    "test_environment_preflight.py": "6b1244fb0a8424cc9ca29351b6be2c9604493988f8f5bd3bd771571d0da4976b"
+  }
+}

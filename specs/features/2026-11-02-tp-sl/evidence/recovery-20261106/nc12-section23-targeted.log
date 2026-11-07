@@ -1,0 +1,36 @@
+........................................................................ [ 57%]
+........................................F............                    [100%]
+=================================== FAILURES ===================================
+_ test_empty_database_startup_asgi_and_parent_shutdown_have_complete_inventory _
+
+tmp_path = PosixPath('/private/var/folders/fb/g4m1d38j4fl6x1pt39rn0wxr0000gn/T/pytest-of-chainarongjaykeaw/pytest-16/test_empty_database_startup_as0')
+
+    async def test_empty_database_startup_asgi_and_parent_shutdown_have_complete_inventory(
+        tmp_path: Path,
+    ) -> None:
+        path = tmp_path / "parent.json"
+        with OwnedPools(path, PARENT_CONFIGURATION) as tracker:
+            # The exact previously missed production campaign startup function.
+>           await internal.require_empty_database()
+
+tests/infra/execution_market/test_owned_pools.py:308: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    async def require_empty_database() -> None:
+        observer = readonly_admin()
+        try:
+            async with observer.connect() as connection:
+                occupied: bool = (
+                    await connection.execute(
+                        text("""SELECT EXISTS(SELECT 1 FROM users)
+                    OR EXISTS(SELECT 1 FROM paper_wallets)""")
+                    )
+                ).scalar_one()
+            if occupied:
+>               raise ValueError("internal Paper campaign requires a newly created empty database")
+E               ValueError: internal Paper campaign requires a newly created empty database
+
+tests/infra/execution_market/profile_internal.py:265: ValueError
+=========================== short test summary info ============================
+FAILED tests/infra/execution_market/test_owned_pools.py::test_empty_database_startup_asgi_and_parent_shutdown_have_complete_inventory
+1 failed, 124 passed in 25.01s

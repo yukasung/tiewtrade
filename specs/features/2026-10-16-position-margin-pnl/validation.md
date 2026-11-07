@@ -1,6 +1,6 @@
 # Position, Margin และ PnL — Validation
 
-สถานะ: **Approved** — เจ้าของอนุมัติวันที่ 2026-10-16
+สถานะ: **Approved** — เจ้าของอนุมัติวันที่ 2026-10-16; **NC-SET4-12 Approved A - separate internal checkpoint**
 วันที่: 2026-10-16
 
 ## “เสร็จ” หมายถึง
@@ -23,7 +23,7 @@
 | V-14 | RQ-10/RQ-17 | position changes/corrections/conflicts มี typed audit exact owner/episode/pair/result หนึ่งครั้ง ไม่มี secret/raw payload และแก้ย้อนหลังไม่ได้ | พัฒนา + candidate | **Passed — historical candidate 2026-10-18**; typed immutable audit gates ตาม Required CI checkpoint |
 | V-15 | RQ-7/RQ-8/RQ-10 | migration `0031→0032→0031→0032` บนฐานว่างผ่าน; downgrade เมื่อมี F-14 data ปฏิเสธโดย data เดิมอยู่ครบ | candidate | **Passed 2026-10-16** บน PostgreSQL แยกพอร์ต 55439 |
 | V-16 | RQ-1 to RQ-19 | relevant backend regression, lint, format, types, import contracts, migration/security/secret gates และ required CI ผ่านบน source สุดท้าย | candidate ก่อน merge | **Passed - final combined candidate 2026-10-25**; PR #34 commit `3be912c` push/PR CI each passed 6/6 jobs, backend 3270 passed; merge `80d5d04` post-merge CI 40176371957 passed 6/6 jobs, backend 3270 passed. See post-merge closeout below; local Failed/Partial results remain preserved. |
-| V-17 | nonfunctional | deterministic rebuild และ snapshot workload ตามงบที่อนุมัติ ไม่ล็อก owner อื่นและไม่มี unbounded memory/query growth | release checkpoint | **Pending Full Validation** |
+| V-17 | nonfunctional | deterministic rebuild และ snapshot workload ตามงบที่อนุมัติ ไม่ล็อก owner อื่นและไม่มี unbounded memory/query growth | release checkpoint | **Pending Full Validation** — integrated size/budgets Approved A 2026-11-06 in [Paper profile](../2026-11-02-tp-sl/integrated-paper-acceptance-plan.md); execution has not reached this phase |
 
 F-14 จะเป็น **Development Complete** ได้เมื่อ V-1–V-16 ผ่านและ review ไม่มี Critical/High
 โดย V-17 คง Pending Full Validation ตาม testing standard; reset success/open-order races
@@ -583,3 +583,18 @@ heads are published on remote, and post-merge CI is green. Remote history and
 unrelated worktrees are preserved. The owner authorized publishing this evidence-only
 closeout on `docs/f14-postmerge-checkpoint`; document publication does not alter
 the V-17 release-validation gate.
+
+## Internal Paper profile - NC-SET4-12 Approved A
+
+Owner approved the [separate internal-pilot profile](../2026-11-02-tp-sl/internal-paper-acceptance-amendment.md).
+Its20-account results must be established by execution and apply only to that new
+checkpoint. Existing100-account criteria/results and Completed gates remain unchanged.
+
+
+NC12 internal20-account local campaign completed2026-11-07: W1/W2/overflow/short30min
+W3/integratedW4 Passed under the approved F17 amendments. See[scoped aggregate
+evidence](../2026-11-02-tp-sl/evidence/recovery-20261106/internal-pilot-local-checkpoint-20261107.md).
+Snapshots/rebuild cover20owners; authenticated HTTP uses actual risk policy; restore
+includes F16/F17 pending/retry/exit with RLS/grants and source unchanged. Original
+100-account/4h Release and existing production activation/dependency/final CI gates
+are not overwritten by this profile. Historical Failed/Partial/NotRun remain intact.

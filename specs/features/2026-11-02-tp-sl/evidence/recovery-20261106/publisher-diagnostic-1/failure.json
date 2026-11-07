@@ -1,0 +1,26 @@
+{
+  "failed_at": "2026-11-06 14:36:34.912226+00:00",
+  "error_type": "TimeoutError",
+  "error": "",
+  "publisher": {
+    "target_hz": 10,
+    "stage": "publish_market",
+    "published": 2170,
+    "last_input_id": 2170,
+    "book_owner": "88203493-b18b-4f5b-b484-4980ab131c16",
+    "book_generation": 1,
+    "last_progress_at": "2026-11-06T14:36:34.853057+00:00",
+    "max_publish_seconds": 2.7733888749999096
+  },
+  "worker_failures": [],
+  "counters": {
+    "offered": 1017,
+    "admitted": 1015,
+    "completed": 917,
+    "rejected": 0,
+    "fills": 357,
+    "cancels": 181,
+    "replays": 189,
+    "cycles": 145
+  }
+}

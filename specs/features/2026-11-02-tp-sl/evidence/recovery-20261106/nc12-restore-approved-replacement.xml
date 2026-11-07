@@ -1,0 +1,219 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="76.942" timestamp="2026-11-06T23:41:09.810258+07:00" hostname="Chainarongs-MacBook-Pro.local"><testcase classname="tests.infra.execution_market.test_internal_observations" name="test_restore_extension_fixture_and_retry_with_real_roles" time="76.339"><failure message="TimeoutError">engines = {&lt;DatabaseRole.API: 'tiewtrade_api'&gt;: &lt;sqlalchemy.ext.asyncio.engine.AsyncEngine object at 0x10ad13410&gt;, &lt;DatabaseRole... &lt;DatabaseRole.MIGRATOR: 'tiewtrade_migrator'&gt;: &lt;sqlalchemy.ext.asyncio.engine.AsyncEngine object at 0x10bc6aa10&gt;, ...}
+fixture = {'owners': [{'owner': 'fe1c40e3-a857-460d-90fe-48934fb61961', 'wallet': '60395824-5e69-4839-a738-cf2db8151865', 'episo...b7eb91d4ea0', 'episode': '2bbe4ce9-29dc-45a3-8ca4-2f09f288600c', 'group': '7224c62e-913b-586b-a129-34b0a4c7add3'}, ...}
+output = PosixPath('/private/var/folders/fb/g4m1d38j4fl6x1pt39rn0wxr0000gn/T/pytest-of-chainarongjaykeaw/pytest-13/test_restore_extension_fixture0')
+observer = &lt;sqlalchemy.ext.asyncio.engine.AsyncEngine object at 0x10b8d5150&gt;
+
+    async def recover(
+        engines: dict[DatabaseRole, AsyncEngine],
+        fixture: dict[str, Any],
+        output: Path,
+        *,
+        observer: AsyncEngine,
+    ) -&gt; None:
+        api, engine = engines[DatabaseRole.API], engines[DatabaseRole.ENGINE]
+        pending = fixture["pending"]
+        value = intent_from_payload(pending["intent"])
+        async with user_session(api, UUID(pending["owner"])) as session:
+            for _ in range(2):
+                receipt = await admit_new_request(
+                    session,
+                    wallet_id=UUID(pending["wallet"]),
+                    intent=value,
+                    protection={"tp": "110", "sl": "90"},
+                )
+                assert str(receipt.request_id) == pending["receipt"]
+        retry = fixture["retry"]
+        async with user_session(api, UUID(retry["owner"])) as session:
+            request = await admit_request(
+                session,
+                wallet_id=UUID(retry["wallet"]),
+                episode_id=UUID(retry["episode"]),
+                action="REPLACE",
+                key=UUID(retry["key"]),
+                protection_id=UUID(retry["group"]),
+                payload=retry["payload"],
+            )
+            assert str(request) == retry["request"]
+        # Owner checks on the restored roles, before starting real workers.
+        for record in fixture["owners"]:
+            async with user_session(api, UUID(record["owner"])) as session:
+                assert await load(session, UUID(record["group"])) is not None
+            async with user_session(api, UUID(pending["owner"])) as session:
+                assert await load(session, UUID(record["group"])) is None
+        before = await restore.economic_digest(observer)
+        stop, worker_stop = asyncio.Event(), output / "recovery.stop"
+        publisher = asyncio.create_task(
+            f15.market_publisher(
+                engines[DatabaseRole.MARKET_DATA], stop, {"target_hz": 10}, heartbeat_per_book=True
+            )
+        )
+        serving = asyncio.create_task(
+            f15.run_worker_process(
+                "internal-restore",
+                worker_stop,
+                output / "recovery-worker.json",
+                policy=TransactionalRiskPolicy(),
+                manual_intake=True,
+                protection_rounds=True,
+                claim_limit=1,
+                coordinate_claims=True,
+            )
+        )
+        try:
+            async with asyncio.timeout(60):
+                while True:
+&gt;                   async with user_session(
+                        engine, UUID(pending["owner"]), role=DatabaseRole.ENGINE
+                    ) as session:
+
+tests/infra/execution_market/profile_internal_restore.py:350: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+../../../../../.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/contextlib.py:210: in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+src/tiewtrade/infra/db/session.py:305: in user_session
+    async with transaction as connection:
+               ^^^^^^^^^^^
+../../../../../.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/contextlib.py:210: in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+tests/infra/execution_market/profile_workload.py:641: in measured_begin
+    async with original_begin(engine, cleanup_seconds=cleanup_seconds) as connection:
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../../../.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/contextlib.py:210: in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+src/tiewtrade/infra/db/session.py:207: in _begin
+    connection = await transaction.__aenter__()
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../../../.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/contextlib.py:210: in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/sqlalchemy/ext/asyncio/engine.py:1088: in begin
+    async with conn:
+               ^^^^
+.venv/lib/python3.12/site-packages/sqlalchemy/ext/asyncio/base.py:121: in __aenter__
+    return await self.start(is_ctxmanager=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/sqlalchemy/ext/asyncio/engine.py:283: in start
+    await greenlet_spawn(self.sync_engine.connect)
+.venv/lib/python3.12/site-packages/sqlalchemy/util/concurrency.py:212: in greenlet_spawn
+    result = context.switch(value)
+             ^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py:3260: in connect
+    return self._connection_cls(self)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py:149: in __init__
+    self._dbapi_connection = engine.raw_connection()
+                             ^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py:3284: in raw_connection
+    return self.pool.connect()
+           ^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/sqlalchemy/pool/base.py:445: in connect
+    return _ConnectionFairy._checkout(self)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/sqlalchemy/pool/base.py:1386: in _checkout
+    with util.safe_reraise():
+         ^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/sqlalchemy/util/langhelpers.py:166: in __exit__
+    raise exc_value.with_traceback(exc_tb)
+.venv/lib/python3.12/site-packages/sqlalchemy/pool/base.py:1324: in _checkout
+    result = pool._dialect._do_ping_w_event(
+.venv/lib/python3.12/site-packages/sqlalchemy/engine/default.py:956: in _do_ping_w_event
+    return self.do_ping(dbapi_connection)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py:1204: in do_ping
+    dbapi_connection.ping()
+.venv/lib/python3.12/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py:862: in ping
+    _ = await_(self._async_ping())
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/sqlalchemy/util/concurrency.py:167: in await_
+    return current.parent.switch(awaitable)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/sqlalchemy/util/concurrency.py:205: in greenlet_spawn
+    value = await result
+            ^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py:875: in _async_ping
+    await tr.rollback()
+.venv/lib/python3.12/site-packages/asyncpg/transaction.py:227: in rollback
+    await self.__rollback()
+.venv/lib/python3.12/site-packages/asyncpg/transaction.py:206: in __rollback
+    await self._connection.execute(query)
+.venv/lib/python3.12/site-packages/asyncpg/connection.py:354: in execute
+    result = await self._protocol.query(query, timeout)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+&gt;   ???
+E   asyncio.exceptions.CancelledError
+
+asyncpg/protocol/protocol.pyx:369: CancelledError
+
+The above exception was the direct cause of the following exception:
+
+tmp_path = PosixPath('/private/var/folders/fb/g4m1d38j4fl6x1pt39rn0wxr0000gn/T/pytest-of-chainarongjaykeaw/pytest-13/test_restore_extension_fixture0')
+
+    async def test_restore_extension_fixture_and_retry_with_real_roles(tmp_path: Path) -&gt; None:
+        """Scoped harness safety check on a fresh DB, not the W4 backup/restore campaign."""
+        engines = {
+            role: create_engine_for(role)
+            for role in (
+                DatabaseRole.API,
+                DatabaseRole.ENGINE,
+                DatabaseRole.ENGINE_SCAN,
+                DatabaseRole.MIGRATOR,
+                DatabaseRole.MARKET_DATA,
+            )
+        }
+        observer = readonly_admin()
+        try:
+            async with observer.connect() as connection:
+                assert (
+                    await connection.execute(text("SHOW transaction_read_only"))
+                ).scalar_one() == "on"
+            with pytest.raises(DBAPIError, match="read-only"):
+                async with observer.begin() as connection:
+                    await connection.execute(
+                        text(
+                            "UPDATE risk_protocol_control "
+                            "SET admission_enabled=admission_enabled WHERE false"
+                        )
+                    )
+            async with activated_protocols(engines[DatabaseRole.MIGRATOR], protections=True):
+                fixture = await build_extension(engines, tmp_path)
+                assert all((await extension_coverage(observer)).values())
+&gt;               await recover(engines, fixture, tmp_path, observer=observer)
+
+tests/infra/execution_market/test_internal_observations.py:124: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/infra/execution_market/profile_internal_restore.py:348: in recover
+    async with asyncio.timeout(60):
+               ^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;Timeout [expired]&gt;
+exc_type = &lt;class 'asyncio.exceptions.CancelledError'&gt;
+exc_val = CancelledError(), exc_tb = &lt;traceback object at 0x10bcf4cc0&gt;
+
+    async def __aexit__(
+        self,
+        exc_type: Optional[Type[BaseException]],
+        exc_val: Optional[BaseException],
+        exc_tb: Optional[TracebackType],
+    ) -&gt; Optional[bool]:
+        assert self._state in (_State.ENTERED, _State.EXPIRING)
+    
+        if self._timeout_handler is not None:
+            self._timeout_handler.cancel()
+            self._timeout_handler = None
+    
+        if self._state is _State.EXPIRING:
+            self._state = _State.EXPIRED
+    
+            if self._task.uncancel() &lt;= self._cancelling and exc_type is exceptions.CancelledError:
+                # Since there are no new cancel requests, we're
+                # handling this.
+&gt;               raise TimeoutError from exc_val
+E               TimeoutError
+
+../../../../../.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/asyncio/timeouts.py:115: TimeoutError</failure></testcase></testsuite></testsuites>

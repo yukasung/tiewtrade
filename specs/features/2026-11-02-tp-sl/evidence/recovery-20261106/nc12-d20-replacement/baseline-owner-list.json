@@ -1,0 +1,30 @@
+{
+  "source": "run/parent-poll-attempts.jsonl baseline records, retained before measurement",
+  "owners": [
+    "17667955-963f-4925-b484-ded2e4db0cba",
+    "3c7e4c5f-8c90-4613-b712-b557854b8407",
+    "41ea863e-901f-4e70-ac35-caed0ecfa074",
+    "52ebd488-c07d-49fb-9241-6706edcd0197",
+    "53b4a2d6-8274-46dc-8b73-feaa1a683131",
+    "54030979-8244-4640-8ed9-fa0a327b42f0",
+    "5593b598-540b-4940-b6ce-b82fae2d9b98",
+    "56cdc787-2423-4a13-a9e2-331d6082ef68",
+    "57018c2d-14f4-4b68-8329-8ed13bae62cb",
+    "5acae59e-a4fe-4335-be08-f7a88fbc1d5c",
+    "77e9c518-54c8-448f-9ccd-b3f78e086395",
+    "827f259e-5e80-4fbd-a59f-4957faa433ac",
+    "841572e9-399f-4dbf-a626-8e5d26b56525",
+    "86a71c78-ef8f-451b-aa2f-b081b8934420",
+    "a2c8f594-18e0-4977-9306-b99d77c1f485",
+    "ac0d5158-b2cd-4ab2-9f3b-d67a3479d064",
+    "b8172306-8284-46d3-9c02-ca95295eabaf",
+    "c293013c-46ec-4f3e-9971-40e1644d0307",
+    "eb091926-908d-42b9-9f24-5cf941220a6f",
+    "f4bfb07a-468d-45b9-a6b2-60b6ef91e1f7"
+  ],
+  "count": 20,
+  "first_record": 14681.114921875,
+  "last_record": 14713.681912208,
+  "measured_start": 14714.183173375,
+  "all_baseline_records_precede_measurement": true
+}

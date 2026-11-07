@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="15.524" timestamp="2026-11-06T23:35:31.449735+07:00" hostname="Chainarongs-MacBook-Pro.local"><testcase classname="tests.infra.execution_market.test_internal_observations" name="test_restore_extension_fixture_and_retry_with_real_roles" time="15.175"><failure message="AssertionError: assert False&#10; +  where False = all(dict_values([0, 0, 0, 0, 0, 0]))&#10; +    where dict_values([0, 0, 0, 0, 0, 0]) = &lt;built-in method values of dict object at 0x10a1b4040&gt;()&#10; +      where &lt;built-in method values of dict object at 0x10a1b4040&gt; = {'pending_intake': 0, 'transferred': 0, 'armed': 0, 'exiting': 0, ...}.values">tmp_path = PosixPath('/private/var/folders/fb/g4m1d38j4fl6x1pt39rn0wxr0000gn/T/pytest-of-chainarongjaykeaw/pytest-12/test_restore_extension_fixture0')
+
+    async def test_restore_extension_fixture_and_retry_with_real_roles(tmp_path: Path) -&gt; None:
+        """Scoped harness safety check on a fresh DB, not the W4 backup/restore campaign."""
+        engines = {
+            role: create_engine_for(role)
+            for role in (
+                DatabaseRole.API,
+                DatabaseRole.ENGINE,
+                DatabaseRole.ENGINE_SCAN,
+                DatabaseRole.MIGRATOR,
+                DatabaseRole.MARKET_DATA,
+            )
+        }
+        try:
+            async with activated_protocols(engines[DatabaseRole.MIGRATOR], protections=True):
+                fixture = await build_extension(engines, tmp_path)
+&gt;               assert all((await extension_coverage(engines[DatabaseRole.MIGRATOR])).values())
+E               AssertionError: assert False
+E                +  where False = all(dict_values([0, 0, 0, 0, 0, 0]))
+E                +    where dict_values([0, 0, 0, 0, 0, 0]) = &lt;built-in method values of dict object at 0x10a1b4040&gt;()
+E                +      where &lt;built-in method values of dict object at 0x10a1b4040&gt; = {'pending_intake': 0, 'transferred': 0, 'armed': 0, 'exiting': 0, ...}.values
+
+tests/infra/execution_market/test_internal_observations.py:107: AssertionError</failure></testcase></testsuite></testsuites>

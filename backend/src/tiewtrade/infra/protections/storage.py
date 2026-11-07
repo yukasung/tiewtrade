@@ -148,7 +148,9 @@ async def create(
     *,
     entry_request_id: UUID | None = None,
 ) -> StoredProtection:
-    if value.scope != OrderScope(session.user_id, value.scope.episode_id, TradingMode.PAPER):
+    if value.scope != OrderScope(
+        UUID(str(session.user_id)), value.scope.episode_id, TradingMode.PAPER
+    ):
         raise OrderConflictError("Paper protection scope required")
     await lock_scope(session, wallet_id, value.scope.episode_id)
     await session.execute(

@@ -1,0 +1,28 @@
+{
+  "failed_at": "2026-11-06 17:49:34.504626+00:00",
+  "error_type": "SourceUnavailableError",
+  "error": "book readiness cannot be proved",
+  "publisher": {
+    "target_hz": 10,
+    "stage": "publish_market",
+    "published": 2118,
+    "last_input_id": 2118,
+    "book_owner": "e8848e06-91f8-4b2d-84f0-d5f60c95577e",
+    "book_generation": 1,
+    "last_progress_at": "2026-11-06T17:49:34.423309+00:00",
+    "max_publish_seconds": 1.0082654590005404,
+    "failure_type": "SourceUnavailableError",
+    "failed_at": "2026-11-06T17:49:34.453215+00:00"
+  },
+  "worker_failures": [],
+  "counters": {
+    "offered": 401,
+    "admitted": 401,
+    "completed": 395,
+    "rejected": 0,
+    "fills": 158,
+    "cancels": 79,
+    "replays": 79,
+    "cycles": 77
+  }
+}

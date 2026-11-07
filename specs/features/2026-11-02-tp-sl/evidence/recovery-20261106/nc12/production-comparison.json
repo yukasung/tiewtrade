@@ -1,0 +1,8 @@
+{
+  "baseline_files": 427,
+  "changed": [
+    "backend/src/tiewtrade/infra/protections/worker.py",
+    "backend/src/tiewtrade/infra/protections/storage.py"
+  ],
+  "authorization": "NC12 section9 owner-approved two UUID boundaries; remaining425 files match baseline"
+}

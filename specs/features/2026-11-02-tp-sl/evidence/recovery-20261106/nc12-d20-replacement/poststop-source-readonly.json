@@ -1,0 +1,56 @@
+{
+  "db_now": "2026-11-06T17:51:48.15406+00:00",
+  "book": {
+    "owner": "e8848e06-91f8-4b2d-84f0-d5f60c95577e",
+    "generation": 1,
+    "last_input_id": 2118,
+    "received_at": "2026-11-06T17:49:34.384576+00:00",
+    "verified_at": "2026-11-06T17:49:34.384576+00:00",
+    "lease_until": "2026-11-06T17:49:39.379158+00:00",
+    "ready": true,
+    "failure_code": null
+  },
+  "last_inputs": [
+    {
+      "input_id": 2118,
+      "received_at": "2026-11-06T17:49:34.384576+00:00",
+      "kind": "BOOK"
+    },
+    {
+      "input_id": 2117,
+      "received_at": "2026-11-06T17:49:34.349698+00:00",
+      "kind": "BOOK"
+    },
+    {
+      "input_id": 2116,
+      "received_at": "2026-11-06T17:49:34.27228+00:00",
+      "kind": "BOOK"
+    },
+    {
+      "input_id": 2115,
+      "received_at": "2026-11-06T17:49:34.152369+00:00",
+      "kind": "BOOK"
+    },
+    {
+      "input_id": 2114,
+      "received_at": "2026-11-06T17:49:34.049337+00:00",
+      "kind": "BOOK"
+    },
+    {
+      "input_id": 2113,
+      "received_at": "2026-11-06T17:49:33.980828+00:00",
+      "kind": "BOOK"
+    },
+    {
+      "input_id": 2112,
+      "received_at": "2026-11-06T17:49:33.924166+00:00",
+      "kind": "BOOK"
+    },
+    {
+      "input_id": 2111,
+      "received_at": "2026-11-06T17:49:33.889235+00:00",
+      "kind": "BOOK"
+    }
+  ],
+  "cleanup_connections": 0
+}

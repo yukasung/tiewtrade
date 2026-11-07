@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="2" skipped="0" tests="36" time="2.199" timestamp="2026-11-07T15:10:39.300434+07:00" hostname="Chainarongs-MacBook-Pro.local"><testcase classname="tests.infra.execution_market.test_owned_pools" name="test_lazy_real_pool_growth_is_returned_within_existing_capacity" time="0.162" /><testcase classname="tests.infra.execution_market.test_owned_pools" name="test_loan_at_final_disposal_fails_below_configured_capacity" time="0.025" /><testcase classname="tests.infra.execution_market.test_owned_pools" name="test_invalid_inventory_capacity_or_connection_failure_is_retained[capacity]" time="0.003" /><testcase classname="tests.infra.execution_market.test_owned_pools" name="test_invalid_inventory_capacity_or_connection_failure_is_retained[inventory]" time="0.002" /><testcase classname="tests.infra.execution_market.test_owned_pools" name="test_invalid_inventory_capacity_or_connection_failure_is_retained[resource_error]" time="0.003" /><testcase classname="tests.infra.execution_market.test_owned_pools" name="test_pool_timeout_cannot_disappear_after_all_loans_are_returned" time="0.041" /><testcase classname="tests.infra.execution_market.test_owned_pools" name="test_planned_generation_change_retains_original_pool_and_configuration" time="0.051" /><testcase classname="tests.infra.execution_market.test_owned_pools" name="test_actual_asgi_lifespan_records_all_lazy_engines_and_returns_them" time="0.185" /><testcase classname="tests.infra.execution_market.test_owned_pools" name="test_observer_restores_hooks_and_preserves_primary_exception[failure0]" time="0.003" /><testcase classname="tests.infra.execution_market.test_owned_pools" name="test_observer_restores_hooks_and_preserves_primary_exception[failure1]" time="0.002" /><testcase classname="tests.infra.execution_market.test_owned_pools" name="test_missing_or_nonfinal_worker_report_cannot_be_waived" time="0.001" /><testcase classname="tests.infra.execution_market.test_owned_pools" name="test_internal_worker_entry_samples_real_pools_and_joins_cleanup[PAPER_INTERNAL20_V1]" time="0.090" /><testcase classname="tests.infra.execution_market.test_owned_pools" name="test_internal_worker_entry_samples_real_pools_and_joins_cleanup[PAPER_INTERNAL20_V2]" time="0.084" /><testcase classname="tests.infra.execution_market.test_owned_pools" name="test_internal_worker_entry_samples_real_pools_and_joins_cleanup[PAPER_INTERNAL20_V3]" time="0.083" /><testcase classname="tests.infra.execution_market.test_owned_pools" name="test_complete_reports_and_restart_are_required[None]" time="0.053" /><testcase classname="tests.infra.execution_market.test_owned_pools" name="test_complete_reports_and_restart_are_required[borrow]" time="0.016" /><testcase classname="tests.infra.execution_market.test_owned_pools" name="test_complete_reports_and_restart_are_required[inventory]" time="0.022" /><testcase classname="tests.infra.execution_market.test_owned_pools" name="test_complete_reports_and_restart_are_required[sample_file]" time="0.015" /><testcase classname="tests.infra.execution_market.test_owned_pools" name="test_complete_reports_and_restart_are_required[configuration]" time="0.016" /><testcase classname="tests.infra.execution_market.test_owned_pools" name="test_complete_reports_and_restart_are_required[timeout]" time="0.019" /><testcase classname="tests.infra.execution_market.test_owned_pools" name="test_complete_reports_and_restart_are_required[observer_error]" time="0.015" /><testcase classname="tests.infra.execution_market.test_owned_pools" name="test_complete_reports_and_restart_are_required[both]" time="0.042" /><testcase classname="tests.infra.execution_market.test_owned_pools" name="test_stream_write_failure_preserves_primary_and_removes_hooks" time="0.008" /><testcase classname="tests.infra.execution_market.test_owned_pools" name="test_empty_database_startup_asgi_and_parent_shutdown_have_complete_inventory" time="0.054"><failure message="ValueError: internal Paper campaign requires a newly created empty database">tmp_path = PosixPath('/private/var/folders/fb/g4m1d38j4fl6x1pt39rn0wxr0000gn/T/pytest-of-chainarongjaykeaw/pytest-14/test_empty_database_startup_as0')
+
+    async def test_empty_database_startup_asgi_and_parent_shutdown_have_complete_inventory(
+        tmp_path: Path,
+    ) -&gt; None:
+        path = tmp_path / "parent.json"
+        with OwnedPools(path, PARENT_CONFIGURATION) as tracker:
+            # The exact previously missed production campaign startup function.
+&gt;           await internal.require_empty_database()
+
+tests/infra/execution_market/test_owned_pools.py:308: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    async def require_empty_database() -&gt; None:
+        observer = readonly_admin()
+        try:
+            async with observer.connect() as connection:
+                occupied: bool = (
+                    await connection.execute(
+                        text("""SELECT EXISTS(SELECT 1 FROM users)
+                    OR EXISTS(SELECT 1 FROM paper_wallets)""")
+                    )
+                ).scalar_one()
+            if occupied:
+&gt;               raise ValueError("internal Paper campaign requires a newly created empty database")
+E               ValueError: internal Paper campaign requires a newly created empty database
+
+tests/infra/execution_market/profile_internal.py:265: ValueError</failure></testcase><testcase classname="tests.infra.execution_market.test_owned_pools" name="test_unknown_admin_identity_or_read_write_engine_fails_closed[identity]" time="0.004" /><testcase classname="tests.infra.execution_market.test_owned_pools" name="test_unknown_admin_identity_or_read_write_engine_fails_closed[options]" time="0.002" /><testcase classname="tests.infra.execution_market.test_owned_pools" name="test_admin_observer_borrow_cannot_be_waived" time="0.037" /><testcase classname="tests.infra.execution_market.test_owned_pools" name="test_real_query_cancellation_records_origin_and_preserves_deadline_or_cancel[True]" time="0.155" /><testcase classname="tests.infra.execution_market.test_owned_pools" name="test_real_query_cancellation_records_origin_and_preserves_deadline_or_cancel[False]" time="0.148" /><testcase classname="tests.infra.execution_market.test_owned_pools" name="test_provenance_is_bounded_and_missing_task_stays_unknown" time="0.015" /><testcase classname="tests.infra.execution_market.test_owned_pools" name="test_provenance_failure_does_not_mask_primary_error" time="0.004" /><testcase classname="tests.infra.execution_market.test_owned_pools" name="test_retired_native_negative_counts_do_not_replace_real_loan_accounting" time="0.116" /><testcase classname="tests.infra.execution_market.test_owned_pools" name="test_retired_missing_native_view_waits_for_return_but_never_waives_it[True]" time="0.051"><failure message="sqlalchemy.exc.ResourceClosedError: This Connection is closed">tmp_path = PosixPath('/private/var/folders/fb/g4m1d38j4fl6x1pt39rn0wxr0000gn/T/pytest-of-chainarongjaykeaw/pytest-14/test_retired_missing_native_vi0')
+returned = True
+
+    @pytest.mark.parametrize("returned", [True, False])
+    async def test_retired_missing_native_view_waits_for_return_but_never_waives_it(
+        tmp_path: Path, returned: bool
+    ) -&gt; None:
+        import gc
+    
+        path = tmp_path / "pools.json"
+        loan = None
+        try:
+            with OwnedPools(path, [("ENGINE", 5, 10)]) as tracker:
+                engine = create_engine_for(DatabaseRole.ENGINE)
+                loan = await engine.connect()
+                with tracker.intermediate_disposal():
+                    await engine.dispose()
+                known, _, entry = tracker.bindings[0]
+                # Simulate a collected weakref view; retain the actual DB loan so its
+                # genuine checkin event can arrive later. GC must not waive that loan.
+                tracker.bindings[0] = (known, lambda: None, entry)
+                gc.collect()
+                tracker.sample("retired_pending_without_native_view")
+                assert entry["checked_out"] == 1 and not tracker.errors
+                assert not document(path)["passed"]
+                if returned:
+                    await loan.close()
+                await engine.dispose()
+            report = document(path)
+            assert report["passed"] is returned
+            assert report["pools"][0]["final_disposal_checked_out"] == (0 if returned else 1)
+        finally:
+            if loan is not None:
+&gt;               await loan.invalidate()
+
+tests/infra/execution_market/test_owned_pools.py:554: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.venv/lib/python3.12/site-packages/sqlalchemy/ext/asyncio/engine.py:359: in invalidate
+    return await greenlet_spawn(
+.venv/lib/python3.12/site-packages/sqlalchemy/util/concurrency.py:199: in greenlet_spawn
+    result = context.switch(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;sqlalchemy.engine.base.Connection object at 0x10ed6f020&gt;
+exception = None
+
+    def invalidate(self, exception: Optional[BaseException] = None) -&gt; None:
+        """Invalidate the underlying DBAPI connection associated with
+        this :class:`_engine.Connection`.
+    
+        An attempt will be made to close the underlying DBAPI connection
+        immediately; however if this operation fails, the error is logged
+        but not raised.  The connection is then discarded whether or not
+        close() succeeded.
+    
+        Upon the next use (where "use" typically means using the
+        :meth:`_engine.Connection.execute` method or similar),
+        this :class:`_engine.Connection` will attempt to
+        procure a new DBAPI connection using the services of the
+        :class:`_pool.Pool` as a source of connectivity (e.g.
+        a "reconnection").
+    
+        If a transaction was in progress (e.g. the
+        :meth:`_engine.Connection.begin` method has been called) when
+        :meth:`_engine.Connection.invalidate` method is called, at the DBAPI
+        level all state associated with this transaction is lost, as
+        the DBAPI connection is closed.  The :class:`_engine.Connection`
+        will not allow a reconnection to proceed until the
+        :class:`.Transaction` object is ended, by calling the
+        :meth:`.Transaction.rollback` method; until that point, any attempt at
+        continuing to use the :class:`_engine.Connection` will raise an
+        :class:`~sqlalchemy.exc.InvalidRequestError`.
+        This is to prevent applications from accidentally
+        continuing an ongoing transactional operations despite the
+        fact that the transaction has been lost due to an
+        invalidation.
+    
+        The :meth:`_engine.Connection.invalidate` method,
+        just like auto-invalidation,
+        will at the connection pool level invoke the
+        :meth:`_events.PoolEvents.invalidate` event.
+    
+        :param exception: an optional ``Exception`` instance that's the
+         reason for the invalidation.  is passed along to event handlers
+         and logging functions.
+    
+        .. seealso::
+    
+            :ref:`pool_connection_invalidation`
+    
+        """
+    
+        if self.invalidated:
+            return
+    
+        if self.closed:
+&gt;           raise exc.ResourceClosedError("This Connection is closed")
+E           sqlalchemy.exc.ResourceClosedError: This Connection is closed
+
+.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py:759: ResourceClosedError</failure></testcase><testcase classname="tests.infra.execution_market.test_owned_pools" name="test_retired_missing_native_view_waits_for_return_but_never_waives_it[False]" time="0.061" /><testcase classname="tests.infra.execution_market.test_owned_pools" name="test_unretired_missing_pool_still_fails" time="0.002" /><testcase classname="tests.infra.execution_market.test_owned_pools" name="test_retired_pool_capacity_mutation_still_fails" time="0.026" /></testsuite></testsuites>

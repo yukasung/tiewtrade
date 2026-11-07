@@ -16,16 +16,34 @@ import os
 import platform
 import sys
 from collections.abc import AsyncIterator, Awaitable, Callable, Mapping
-from contextlib import AbstractAsyncContextManager, asynccontextmanager, suppress
+from contextlib import (
+    AbstractAsyncContextManager,
+    AbstractContextManager,
+    AsyncExitStack,
+    asynccontextmanager,
+    nullcontext,
+    suppress,
+)
 from dataclasses import asdict, dataclass, replace
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from time import monotonic
-from typing import Any
+from typing import TYPE_CHECKING, Any, Protocol, TypedDict
 from uuid import NAMESPACE_URL, UUID, uuid4, uuid5
 
 from sqlalchemy import event
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine
+from sqlalchemy.pool import QueuePool
+
+from tests.infra.execution_market import profile_internal as internal
+from tests.infra.execution_market.profile_parent_poll import (
+    ParentPollGate,
+    poll_options,
+    validate_options,
+)
+
+if TYPE_CHECKING:
+    from tests.infra.execution_market.profile_runtime_observation import RuntimeObservation
 
 from tiewtrade.core.money import Money, Quantity
 from tiewtrade.core.order_book import BookLevel, BookState
@@ -47,6 +65,7 @@ from tiewtrade.core.realtime_prices import ObservationKind, QuoteObservation
 from tiewtrade.infra.db import DatabaseRole, create_engine_for, user_session
 from tiewtrade.infra.db import session as db_session
 from tiewtrade.infra.db.session import market_data_session
+from tiewtrade.infra.market_data.catalog import SOURCE
 from tiewtrade.infra.market_data.order_book_storage import (
     BookLease,
     ExecutionMetadata,
@@ -82,6 +101,7 @@ MAX_WORKER_RSS_BYTES = 1024**3
 W3_DURATION_SECONDS = 4 * 60 * 60
 # Observation only: do not saturate the load-generator loop with owner-scoped reads.
 RESULT_POLL_SECONDS = 0.25
+MAX_INPUT_LAG = 20
 WORKER_RUNTIME_PIDS: dict[int, int] = {}
 EXPECTED_CYCLE_LOSS = Money.of("1.197901", "USDT")
 SOURCE_DOCUMENT = json.dumps(
@@ -112,6 +132,28 @@ class AllowPaperPolicy:
 class OwnerState:
     user_id: UUID
     wallet: PaperWalletSnapshot
+
+
+class CommandSender(Protocol):
+    def order_id(self, owner: OwnerState, key: UUID) -> UUID: ...
+
+    async def submit(self, owner: OwnerState, intent: OrderIntent) -> OrderCommand: ...
+
+    async def cancel(self, owner: OwnerState, order_id: UUID, key: UUID) -> OrderCommand: ...
+
+
+class CycleOptions(TypedDict, total=False):
+    poll_gate: ParentPollGate
+    sender: CommandSender
+
+
+def cycle_options(gate: ParentPollGate | None, sender: CommandSender | None) -> CycleOptions:
+    result: CycleOptions = {}
+    if gate is not None:
+        result["poll_gate"] = gate
+    if sender is not None:
+        result["sender"] = sender
+    return result
 
 
 @dataclass(slots=True)
@@ -195,6 +237,32 @@ def percentile(values: list[float], fraction: float) -> float:
     return ordered[min(len(ordered) - 1, max(0, int(len(ordered) * fraction + 0.999999) - 1))]
 
 
+def measured_transaction_seconds(
+    paths: list[Path],
+    *,
+    started: float,
+    ended: float,
+    excluded: list[tuple[float, float]] | None = None,
+) -> list[float]:
+    """Attribute a transaction by start time; keep its full duration after the cut.
+
+    All workers are local child processes sharing the controller's monotonic clock.
+    Setup, final drain and W2 overflow are separate from the declared load window.
+    Missing timestamped evidence must fail rather than reuse pooled legacy metrics.
+    """
+    values = []
+    for path in paths:
+        if path.name.startswith("risk-"):
+            continue  # Separate monitor SLA is measured by committed cursor evidence.
+        records = json.loads(path.read_text())["transaction_samples"]
+        for row in records:
+            if started <= row["started"] < ended and not any(
+                a <= row["started"] < b for a, b in excluded or []
+            ):
+                values.append(float(row["seconds"]))
+    return values
+
+
 def constraints(kind: OrderType) -> OrderConstraints:
     return OrderConstraints(
         PAIR,
@@ -211,7 +279,11 @@ def constraints(kind: OrderType) -> OrderConstraints:
 
 
 async def bounded_map(
-    values: list[Any], operation: Callable[[Any], Awaitable[Any]], *, limit: int = 20
+    values: list[Any],
+    operation: Callable[[Any], Awaitable[Any]],
+    *,
+    limit: int = 20,
+    join_on_error: bool = False,
 ) -> list[Any]:
     semaphore = asyncio.Semaphore(limit)
 
@@ -219,7 +291,16 @@ async def bounded_map(
         async with semaphore:
             return await operation(value)
 
-    return list(await asyncio.gather(*(bounded(value) for value in values)))
+    if not join_on_error:
+        return list(await asyncio.gather(*(bounded(value) for value in values)))
+    tasks = [asyncio.create_task(bounded(value)) for value in values]
+    try:
+        return list(await asyncio.gather(*tasks))
+    finally:
+        for task in tasks:
+            if not task.done():
+                task.cancel()
+        await asyncio.gather(*tasks, return_exceptions=True)
 
 
 async def acquire_sources(engine: AsyncEngine) -> tuple[BookLease, FeedLease]:
@@ -250,6 +331,9 @@ async def publish_market(
     trade_id: int,
     update_price: bool = True,
     ask_quantity: Quantity | None = None,
+    heartbeat_per_book: bool = False,
+    price_amount: Money | None = None,
+    publication: dict[str, Any] | None = None,
 ) -> tuple[BookLease, FeedLease]:
     async with market_data_session(engine) as session:
         book_lease = await renew_book_writer(session, book_lease)
@@ -281,15 +365,16 @@ async def publish_market(
             SOURCE_DOCUMENT,
         )
         book_lease = await publish_input(session, book_lease, book, metadata)
-        if update_price:
+        if heartbeat_per_book or update_price:
             price_lease = await renew_writer(session, price_lease)
+        if update_price:
             snapshot = await read_snapshot(session)
             row = next(value for value in snapshot.rows if value.base == "BTC")
             observation = QuoteObservation(
                 row.source,
                 "BTC",
                 "USDT",
-                Money.of(100, "USDT"),
+                Money.of(100, "USDT") if price_amount is None else price_amount,
                 trade_id,
                 now,
                 now,
@@ -310,15 +395,28 @@ async def publish_market(
             )
             if not changed and trade_id == 1:
                 raise RuntimeError("F15_WORKLOAD_PRICE_NOT_PUBLISHED")
+    if publication is not None:
+        publication.setdefault("first_input_ready", now.isoformat())
     return book_lease, price_lease
+
+
+class PricePublishOptions(TypedDict, total=False):
+    price_amount: Money
+    publication: dict[str, Any]
 
 
 async def market_publisher(
     engine: AsyncEngine,
     stop: asyncio.Event,
     stats: dict[str, Any],
+    *,
+    heartbeat_per_book: bool = False,
+    price_amount: Money | None = None,
 ) -> None:
     stats["stage"] = "acquire_sources"
+    price_options: PricePublishOptions = (
+        {} if price_amount is None else {"price_amount": price_amount, "publication": stats}
+    )
     try:
         book, price = await acquire_sources(engine)
         next_due = monotonic()
@@ -336,9 +434,13 @@ async def market_publisher(
                 rebase=tick == 1,
                 trade_id=tick,
                 update_price=tick == 1 or tick % max(1, int(stats["target_hz"])) == 0,
+                heartbeat_per_book=heartbeat_per_book,
+                **price_options,
             )
             stats["published"] = tick
             stats["last_input_id"] = book.last_input_id
+            stats["book_owner"] = str(book.owner)
+            stats["book_generation"] = book.generation
             stats["last_progress_at"] = datetime.now(UTC).isoformat()
             stats["max_publish_seconds"] = max(
                 stats.get("max_publish_seconds", 0.0), monotonic() - before
@@ -350,15 +452,37 @@ async def market_publisher(
         raise
 
 
-async def with_publisher[T](operation: Awaitable[T], publisher: asyncio.Task[None]) -> T:
-    """Fail on the source error immediately and join abandoned workload tasks."""
+async def wait_publisher_ready(publisher: asyncio.Task[None], stats: dict[str, Any]) -> None:
+    async with asyncio.timeout(5):
+        while stats.get("published", 0) < 2:
+            if publisher.done():
+                await publisher
+                raise RuntimeError("F15_WORKLOAD_PUBLISHER_STOPPED_UNEXPECTEDLY")
+            await asyncio.sleep(0.01)
+
+
+async def with_publisher[T](
+    operation: Awaitable[T],
+    publisher: asyncio.Task[None],
+    *,
+    checks: tuple[asyncio.Task[None], ...] = (),
+) -> T:
+    """Fail on source/check errors immediately and join abandoned workload tasks."""
     task = asyncio.ensure_future(operation)
+    pending_checks = set(checks)
     try:
-        done, _ = await asyncio.wait((task, publisher), return_when=asyncio.FIRST_COMPLETED)
-        if publisher in done:
-            await publisher
-            raise RuntimeError("F15_WORKLOAD_PUBLISHER_STOPPED_UNEXPECTEDLY")
-        return await task
+        while True:
+            done, _ = await asyncio.wait(
+                (task, publisher, *pending_checks), return_when=asyncio.FIRST_COMPLETED
+            )
+            for check in pending_checks.intersection(done):
+                await check
+                pending_checks.remove(check)
+            if publisher in done:
+                await publisher
+                raise RuntimeError("F15_WORKLOAD_PUBLISHER_STOPPED_UNEXPECTEDLY")
+            if task in done:
+                return await task
     finally:
         if not task.done():
             task.cancel()
@@ -414,6 +538,14 @@ def publish_runtime_pid(metrics_path: Path) -> None:
     pending_pid.replace(pid_file)
 
 
+def publish_trace_control(output: Path, started: float, *, seconds: int = 180) -> None:
+    """Publish complete observer metadata using the existing atomic PID pattern."""
+    control = output / "dispatch-trace-control.json"
+    pending = control.with_suffix(".json.tmp")
+    save(pending, {"started": started, "seconds": seconds, "owners": [], "detail_limit": 0})
+    pending.replace(control)
+
+
 async def wait_runtime_pid(
     process: asyncio.subprocess.Process, metrics_path: Path, *, timeout_seconds: float = 10
 ) -> int:
@@ -432,6 +564,34 @@ async def wait_runtime_pid(
             return pid
 
 
+class CoordinationOptions(TypedDict, total=False):
+    coordinate_claims: bool
+
+
+def coordination_options(enabled: bool) -> CoordinationOptions:
+    return {"coordinate_claims": True} if enabled else {}
+
+
+def validate_claim_coordination(enabled: bool, *, r8: bool) -> None:
+    if type(enabled) is not bool or (enabled and r8 is not True):
+        raise ValueError("claim coordination requires explicit legacy R8 limit20/claim_limit1")
+
+
+class WorkerOptions(TypedDict, total=False):
+    policy: AdmissionPolicy
+    manual_intake: bool
+    protection_rounds: bool
+
+
+def internal_worker_options(args: argparse.Namespace) -> WorkerOptions:
+    internal.validate(args)
+    if not internal.selected(args):
+        return {}
+    from tiewtrade.infra.risk_limits.policy import TransactionalRiskPolicy
+
+    return {"policy": TransactionalRiskPolicy(), "manual_intake": True, "protection_rounds": True}
+
+
 async def run_worker_process(
     name: str,
     stop_path: Path,
@@ -444,6 +604,9 @@ async def run_worker_process(
     prefer_same_pair: bool = False,
     alternate_admission: bool = False,
     source_resumption: bool = False,
+    coordinate_claims: bool = False,
+    protection_rounds: bool = False,
+    engine_factory: Callable[[DatabaseRole], AsyncEngine] | None = None,
 ) -> None:
     modes = matching_round_modes(
         prefer_same_pair=prefer_same_pair, alternate_admission=alternate_admission
@@ -454,9 +617,20 @@ async def run_worker_process(
         type(claim_limit) is not int or not 1 <= claim_limit <= round_limit
     ):
         raise ValueError("bounded worker claim budget required")
+    validate_claim_coordination(
+        coordinate_claims,
+        r8=(
+            round_limit == 20
+            and claim_limit == 1
+            and not prefer_same_pair
+            and not alternate_admission
+            and not source_resumption
+        ),
+    )
     publish_runtime_pid(metrics_path)
-    engine = create_engine_for(DatabaseRole.ENGINE)
-    scan = create_engine_for(DatabaseRole.ENGINE_SCAN)
+    factory = create_engine_for if engine_factory is None else engine_factory
+    engine = factory(DatabaseRole.ENGINE)
+    scan = factory(DatabaseRole.ENGINE_SCAN)
     original_begin = db_session._begin
     samples_path = metrics_path.with_suffix(".latencies")
     samples = samples_path.open("w", encoding="utf-8")
@@ -497,9 +671,19 @@ async def run_worker_process(
                 )
 
     db_session._begin = measured_begin
+    protection_observer: AbstractContextManager[None] = nullcontext()
+    if protection_rounds:
+        from tests.infra.execution_market.profile_protections import observe_processing
+
+        protection_observer = observe_processing(metrics_path.with_suffix(".protection.jsonl"))
     try:
+        protection_observer.__enter__()
         policy = AllowPaperPolicy() if policy is None else policy
         while not stop_path.exists():
+            if protection_rounds:
+                from tiewtrade.services.engine.paper_order import run_protection_round
+
+                await run_protection_round(engine=engine, scan_engine=scan, limit=round_limit)
             if manual_intake:
                 await run_manual_order_round(
                     engine=engine,
@@ -520,10 +704,16 @@ async def run_worker_process(
                 prefer_same_pair=prefer,
                 admission_first=admission_first,
                 source_resumption=source_resumption,
+                **coordination_options(coordinate_claims),
             )
+            if manual_intake and protection_rounds:
+                from tests.infra.execution_market.profile_owned_pools import sample_current
+
+                sample_current()
             # Match services/engine/paper_order_main.py, including rounds with stale candidates.
             await asyncio.sleep(0.02)
     finally:
+        protection_observer.__exit__(None, None, None)
         db_session._begin = original_begin
         samples.close()
         # Materialize only after measurement stops; sample storage stays bounded during W3.
@@ -531,6 +721,7 @@ async def run_worker_process(
         save(
             metrics_path,
             {
+                "claim_coordination": "SERIALIZED_CLAIM_V2" if coordinate_claims else None,
                 "transaction_seconds": [value["seconds"] for value in records],
                 "transaction_samples": records,
             },
@@ -549,8 +740,24 @@ def paper_worker_environment() -> dict[str, str]:
 
 
 async def start_worker_processes(
-    count: int, output: Path, *, group: str = "worker"
+    count: int,
+    output: Path,
+    *,
+    group: str = "worker",
+    diagnostics: bool = False,
+    r8_claim_budget: bool = False,
+    coordinate_claims: bool = False,
+    acceptance_profile: str | None = None,
 ) -> tuple[list[asyncio.subprocess.Process], Path, list[Path]]:
+    internal.validate(
+        argparse.Namespace(
+            acceptance_profile=acceptance_profile,
+            worker_only=True,
+            r8_claim_budget=r8_claim_budget,
+            coordinate_claims=coordinate_claims,
+        )
+    )
+    validate_claim_coordination(coordinate_claims, r8=r8_claim_budget)
     stop_path = output / f"{group}.stop"
     metrics_paths = [output / f"{group}-{number}.json" for number in range(count)]
     processes = [
@@ -565,6 +772,10 @@ async def start_worker_processes(
             str(stop_path),
             "--worker-metrics",
             str(metrics_paths[number]),
+            *(["--diagnostics"] if diagnostics else []),
+            *(["--r8-claim-budget"] if r8_claim_budget else []),
+            *(["--coordinate-claims"] if coordinate_claims else []),
+            *(["--acceptance-profile", acceptance_profile] if acceptance_profile else []),
             env=paper_worker_environment(),
         )
         for number in range(count)
@@ -632,10 +843,14 @@ async def publish_overflow(engine: AsyncEngine, *, inputs: int = 4097) -> int:
 
 
 async def wait_for_input_recovery(
-    engine: AsyncEngine, owners: list[OwnerState], expected_input_id: int
+    engine: AsyncEngine,
+    owners: list[OwnerState],
+    expected_input_id: int,
+    *,
+    poll_gate: ParentPollGate | None = None,
 ) -> None:
     async def recovered(owner: OwnerState) -> bool:
-        async with user_session(engine, owner.user_id, role=DatabaseRole.ENGINE) as session:
+        async with poll_session(engine, owner.user_id, "input_recovery", poll_gate) as session:
             row = (
                 await session.execute(
                     """SELECT a.availability,coalesce(max(k.input_id),0) AS input_id
@@ -649,9 +864,167 @@ async def wait_for_input_recovery(
 
     async with asyncio.timeout(60):
         while True:
-            if all(await bounded_map(owners, recovered)):
+            if all(await bounded_map(owners, recovered, join_on_error=poll_gate is not None)):
                 return
             await asyncio.sleep(0.05)
+
+
+def parent_pool_state(engine: AsyncEngine) -> dict[str, int]:
+    # Same actual QueuePool properties as the existing PoolEvidence inventory.
+    pool = engine.pool
+    if not isinstance(pool, QueuePool):
+        raise ValueError("bounded parent queue pool required")
+    return {
+        "pool_size": pool.size(),
+        "max_overflow": pool._max_overflow,
+        "checked_out": pool.checkedout(),
+        "checked_in": pool.checkedin(),
+        "overflow": pool.overflow(),
+    }
+
+
+async def tail_resource_observation(engine: AsyncEngine, observer: AsyncEngine) -> dict[str, Any]:
+    # Existing migrator pool only. Cross-role activity state may be unavailable.
+    async with observer.connect() as connection:
+        rows = (
+            (
+                await connection.exec_driver_sql("""SELECT usename AS role,state,
+            count(*) AS connections FROM pg_stat_activity
+            WHERE datname=current_database() GROUP BY usename,state ORDER BY usename,state""")
+            )
+            .mappings()
+            .all()
+        )
+    return {
+        "parent_pool": parent_pool_state(engine),
+        "unknown_nulls": True,
+        "connections": sum(int(row["connections"]) for row in rows),
+        "by_role_and_state": [dict(row) for row in rows],
+    }
+
+
+async def drain_final_tail(
+    engine: AsyncEngine,
+    source: AsyncEngine,
+    owners: list[OwnerState],
+    publisher: asyncio.Task[None],
+    stop: asyncio.Event,
+    stats: dict[str, Any],
+    evidence: Path,
+    *,
+    poll_gate: ParentPollGate | None = None,
+    observation_engine: AsyncEngine | None = None,
+) -> float:
+    """Drain both watermarks within one budget, without fabricating fresh source data."""
+    started = monotonic()
+    watermark = int(stats["last_input_id"])
+    record: dict[str, Any] = {"budget_seconds": 60, "initial_watermark": watermark, "stages": []}
+
+    async def stage(name: str) -> None:
+        row: dict[str, Any] = {"stage": name, "elapsed_seconds": monotonic() - started}
+        if observation_engine is not None:
+            row["resources"] = await tail_resource_observation(engine, observation_engine)
+        record["stages"].append(row)
+
+    try:
+        async with asyncio.timeout_at(started + 60):
+            await stage("live_recovery")
+            await with_publisher(
+                wait_for_input_recovery(engine, owners, watermark, **poll_options(poll_gate)),
+                publisher,
+            )
+            await stage("stop_publisher")
+            stop.set()
+            await publisher
+            head = int(stats["last_input_id"])
+            async with market_data_session(source) as session:
+                row = (
+                    await session.execute(
+                        """SELECT owner,generation,last_input_id FROM market_execution_state
+                    WHERE source=:source AND base=:base AND quote=:quote""",
+                        {"source": SOURCE, "base": PAIR.base, "quote": PAIR.quote},
+                    )
+                ).one_or_none()
+            if (
+                row is None
+                or row.last_input_id != head
+                or head < watermark
+                or str(row.owner) != stats["book_owner"]
+                or row.generation != stats["book_generation"]
+            ):
+                raise RuntimeError("F15_FINAL_TAIL_SOURCE_MISMATCH")
+            target = max(watermark, head - MAX_INPUT_LAG)
+            record.update(
+                final_head=head,
+                minimum_cursor=target,
+                book_owner=stats["book_owner"],
+                book_generation=stats["book_generation"],
+            )
+            await stage("final_tail")
+            await wait_for_input_recovery(engine, owners, target, **poll_options(poll_gate))
+
+            async def cursor(owner: OwnerState) -> dict[str, Any]:
+                async with poll_session(
+                    engine, owner.user_id, "final_cursor", poll_gate
+                ) as session:
+                    row = (
+                        await session.execute(
+                            """SELECT a.availability,coalesce(max(k.input_id),0) AS input_id
+                        FROM paper_order_activity a LEFT JOIN paper_execution_input_keys k
+                          ON k.episode_id=a.episode_id WHERE a.episode_id=:episode
+                        GROUP BY a.availability""",
+                            {"episode": owner.wallet.episode_id},
+                        )
+                    ).one()
+                return {
+                    "owner": str(owner.user_id),
+                    "cursor": int(row.input_id),
+                    "availability": row.availability,
+                    "lag": head - int(row.input_id),
+                }
+
+            semaphore = asyncio.Semaphore(20)
+
+            async def bounded_cursor(owner: OwnerState) -> dict[str, Any]:
+                async with semaphore:
+                    return await cursor(owner)
+
+            # Own and join every reader before disposing engines, including on
+            # a sibling read failure or the single outer drain deadline.
+            tasks: list[asyncio.Task[dict[str, Any]]] = []
+            try:
+                async with asyncio.TaskGroup() as group:
+                    tasks = [group.create_task(bounded_cursor(owner)) for owner in owners]
+            except ExceptionGroup as errors:
+                record["snapshot_error_types"] = [
+                    type(error).__name__ for error in errors.exceptions
+                ]
+                raise errors.exceptions[0] from None
+            record["owners"] = [task.result() for task in tasks]
+            if len({row["owner"] for row in record["owners"]}) != len(owners) or any(
+                row["availability"] != "READY"
+                or row["cursor"] < target
+                or not 0 <= row["lag"] <= MAX_INPUT_LAG
+                for row in record["owners"]
+            ):
+                raise RuntimeError("F15_FINAL_TAIL_NOT_RECOVERED")
+            await stage("complete")
+        elapsed = monotonic() - started
+    except BaseException as error:
+        record.update(error_type=type(error).__name__, elapsed_seconds=monotonic() - started)
+        if observation_engine is not None:
+            # No new DB work/grace period after the deadline; readers are already joined.
+            with suppress(Exception):
+                record["cleanup_parent_pool"] = parent_pool_state(engine)
+        # Evidence must not replace the original publisher/worker/deadline failure.
+        with suppress(OSError):
+            save(evidence, record)
+        raise
+    record.update(elapsed_seconds=elapsed, recovered=True)
+    if observation_engine is not None:
+        record["cleanup_parent_pool"] = parent_pool_state(engine)
+    save(evidence, record)
+    return elapsed
 
 
 def load_fault_schedule(path: Path) -> tuple[list[FaultEvent], int, str]:
@@ -766,6 +1139,14 @@ async def run_fault_schedule(
                 on_transition(observation)
 
 
+def worker_process_failures(processes: list[asyncio.subprocess.Process]) -> list[str]:
+    return [
+        f"worker-{number}-exited:{process.returncode}"
+        for number, process in enumerate(processes)
+        if process.returncode not in (None, 0)
+    ]
+
+
 async def stop_worker_processes(
     processes: list[asyncio.subprocess.Process], stop_path: Path
 ) -> None:
@@ -797,6 +1178,10 @@ def mac_process_sample(output: str, pids: list[int]) -> list[dict[str, int | flo
     return rows
 
 
+class ResourceOptions(TypedDict, total=False):
+    observe_host: bool
+
+
 async def resource_sampler(
     migrator: AsyncEngine,
     source: AsyncEngine,
@@ -805,6 +1190,8 @@ async def resource_sampler(
     stop: asyncio.Event,
     samples: list[dict[str, object]],
     evidence_path: Path | None = None,
+    *,
+    observe_host: bool = False,
 ) -> None:
     while not stop.is_set():
         async with process_lock:
@@ -890,8 +1277,13 @@ async def resource_sampler(
                 "connections": database["connections"],
                 "lock_waits": database["lock_waits"],
                 "buffer_rows": buffer_rows,
+                **({"host_load": internal.host_load()} if observe_host else {}),
             }
         )
+        if observe_host:
+            from tests.infra.execution_market.profile_owned_pools import sample_current
+
+            sample_current()
         with suppress(TimeoutError):
             await asyncio.wait_for(stop.wait(), timeout=5)
         if evidence_path is not None:
@@ -1114,16 +1506,31 @@ async def verify_global_invariants(
     return values
 
 
+@asynccontextmanager
+async def poll_session(
+    engine: AsyncEngine,
+    owner: UUID,
+    kind: str,
+    poll_gate: ParentPollGate | None,
+) -> AsyncIterator[db_session.UserSession]:
+    async with (
+        poll_gate.permit(owner, kind) if poll_gate is not None else nullcontext(),
+        user_session(engine, owner, role=DatabaseRole.ENGINE) as session,
+    ):
+        yield session
+
+
 async def wait_command(
     engine: AsyncEngine,
     owner: UUID,
     command: OrderCommand,
     *,
     timeout: float = 60,
+    poll_gate: ParentPollGate | None = None,
 ) -> OrderCommand:
     async with asyncio.timeout(timeout):
         while True:
-            async with user_session(engine, owner, role=DatabaseRole.ENGINE) as session:
+            async with poll_session(engine, owner, "wait_command", poll_gate) as session:
                 current = await get_order_command(session, command.command_id)
             if current is not None and current.state != "PENDING":
                 return current
@@ -1137,10 +1544,11 @@ async def wait_status(
     expected: OrderStatus,
     *,
     timeout: float = 60,
+    poll_gate: ParentPollGate | None = None,
 ) -> None:
     async with asyncio.timeout(timeout):
         while True:
-            async with user_session(engine, owner, role=DatabaseRole.ENGINE) as session:
+            async with poll_session(engine, owner, "wait_status", poll_gate) as session:
                 status = (
                     await session.execute(
                         "SELECT status FROM paper_order_projections WHERE order_id=:order",
@@ -1159,17 +1567,27 @@ async def submit_new(
     expected: OrderStatus,
     counters: Counters,
     latencies: list[float],
+    *,
+    poll_gate: ParentPollGate | None = None,
+    sender: CommandSender | None = None,
 ) -> OrderCommand:
     started = monotonic()
     counters.offered += 1
-    async with user_session(engine, owner.user_id, role=DatabaseRole.ENGINE) as session:
-        command = await submit_order(session, wallet_id=owner.wallet.wallet_id, intent=intent)
+    with poll_gate.scope("submit_new", owner.user_id) if poll_gate else nullcontext():
+        if sender is None:
+            async with user_session(engine, owner.user_id, role=DatabaseRole.ENGINE) as session:
+                command = await submit_order(
+                    session, wallet_id=owner.wallet.wallet_id, intent=intent
+                )
+        else:
+            command = await sender.submit(owner, intent)
     counters.admitted += 1
-    result = await wait_command(engine, owner.user_id, command)
+    result = await wait_command(engine, owner.user_id, command, **poll_options(poll_gate))
     if result.failure_code is not None:
         counters.rejected += 1
         raise RuntimeError(f"F15_WORKLOAD_ORDER_REJECTED:{result.failure_code}")
-    await wait_status(engine, owner.user_id, intent.order_id, expected)
+    order_id = intent.order_id if sender is None else sender.order_id(owner, intent.idempotency_key)
+    await wait_status(engine, owner.user_id, order_id, expected, **poll_options(poll_gate))
     counters.completed += 1
     latencies.append(monotonic() - started)
     return result
@@ -1236,6 +1654,8 @@ async def seed_baseline(
     owners: list[OwnerState],
     run_id: UUID,
     count: int,
+    *,
+    poll_gate: ParentPollGate | None = None,
 ) -> None:
     ignored = Counters()
     latencies: list[float] = []
@@ -1249,11 +1669,13 @@ async def seed_baseline(
                 OrderStatus.ACCEPTED,
                 ignored,
                 latencies,
+                **poll_options(poll_gate),
             )
 
         await bounded_map(
             owners,
             submit_baseline,
+            **({"join_on_error": True} if poll_gate is not None else {}),
         )
         progress("baseline", index + 1, "/", count)
 
@@ -1265,18 +1687,45 @@ async def cycle(
     number: int,
     counters: Counters,
     latencies: list[float],
+    *,
+    poll_gate: ParentPollGate | None = None,
+    sender: CommandSender | None = None,
 ) -> None:
     buy = market_buy(owner, run_id, number)
-    await submit_new(engine, owner, buy, OrderStatus.FILLED, counters, latencies)
+    await submit_new(
+        engine,
+        owner,
+        buy,
+        OrderStatus.FILLED,
+        counters,
+        latencies,
+        **cycle_options(poll_gate, sender),
+    )
     counters.fills += 1
 
     resting = limit_sell(owner, run_id, number)
-    await submit_new(engine, owner, resting, OrderStatus.ACCEPTED, counters, latencies)
+    await submit_new(
+        engine,
+        owner,
+        resting,
+        OrderStatus.ACCEPTED,
+        counters,
+        latencies,
+        **cycle_options(poll_gate, sender),
+    )
+    if sender is not None:
+        resting = replace(resting, order_id=sender.order_id(owner, resting.idempotency_key))
 
     started = monotonic()
     counters.offered += 1
-    async with user_session(engine, owner.user_id, role=DatabaseRole.ENGINE) as session:
-        replay = await submit_order(session, wallet_id=owner.wallet.wallet_id, intent=resting)
+    with poll_gate.scope("submit_replay", owner.user_id) if poll_gate else nullcontext():
+        if sender is None:
+            async with user_session(engine, owner.user_id, role=DatabaseRole.ENGINE) as session:
+                replay = await submit_order(
+                    session, wallet_id=owner.wallet.wallet_id, intent=resting
+                )
+        else:
+            replay = await sender.submit(owner, resting)
     if replay.failure_code is not None or replay.state != "SUCCEEDED":
         counters.rejected += 1
         raise RuntimeError("F15_WORKLOAD_REPLAY_FAILED")
@@ -1287,26 +1736,41 @@ async def cycle(
 
     started = monotonic()
     counters.offered += 1
-    async with user_session(engine, owner.user_id, role=DatabaseRole.ENGINE) as session:
-        cancel = await submit_cancel(
-            session,
-            wallet_id=owner.wallet.wallet_id,
-            episode_id=owner.wallet.episode_id,
-            order_id=resting.order_id,
-            idempotency_key=identity(run_id, owner.user_id, number, "cancel-key"),
-        )
+    with poll_gate.scope("submit_cancel", owner.user_id) if poll_gate else nullcontext():
+        cancel_key = identity(run_id, owner.user_id, number, "cancel-key")
+        if sender is None:
+            async with user_session(engine, owner.user_id, role=DatabaseRole.ENGINE) as session:
+                cancel = await submit_cancel(
+                    session,
+                    wallet_id=owner.wallet.wallet_id,
+                    episode_id=owner.wallet.episode_id,
+                    order_id=resting.order_id,
+                    idempotency_key=cancel_key,
+                )
+        else:
+            cancel = await sender.cancel(owner, resting.order_id, cancel_key)
     counters.admitted += 1
-    result = await wait_command(engine, owner.user_id, cancel)
+    result = await wait_command(engine, owner.user_id, cancel, **poll_options(poll_gate))
     if result.failure_code is not None:
         counters.rejected += 1
         raise RuntimeError(f"F15_WORKLOAD_CANCEL_REJECTED:{result.failure_code}")
-    await wait_status(engine, owner.user_id, resting.order_id, OrderStatus.CANCELED)
+    await wait_status(
+        engine, owner.user_id, resting.order_id, OrderStatus.CANCELED, **poll_options(poll_gate)
+    )
     counters.completed += 1
     counters.cancels += 1
     latencies.append(monotonic() - started)
 
     sell = market_sell(owner, run_id, number)
-    await submit_new(engine, owner, sell, OrderStatus.FILLED, counters, latencies)
+    await submit_new(
+        engine,
+        owner,
+        sell,
+        OrderStatus.FILLED,
+        counters,
+        latencies,
+        **cycle_options(poll_gate, sender),
+    )
     counters.fills += 1
     counters.cycles += 1
 
@@ -1321,7 +1785,9 @@ async def run_scheduled_cycles(
     latencies: list[float],
     gate: FaultGate | None = None,
     *,
+    poll_gate: ParentPollGate | None = None,
     cycle_scope: Callable[[OwnerState, int], AbstractAsyncContextManager[None]] | None = None,
+    sender: CommandSender | None = None,
 ) -> float:
     started = monotonic()
     command_interval = 1 / rate
@@ -1336,7 +1802,15 @@ async def run_scheduled_cycles(
                 async with (
                     asyncio.timeout(60) if cycle_scope is None else cycle_scope(owner, number)
                 ):
-                    await cycle(engine, owner, run_id, number, counters, latencies)
+                    await cycle(
+                        engine,
+                        owner,
+                        run_id,
+                        number,
+                        counters,
+                        latencies,
+                        **cycle_options(poll_gate, sender),
+                    )
             else:
                 while True:
                     await gate.enter()
@@ -1349,7 +1823,15 @@ async def run_scheduled_cycles(
                     async with (
                         asyncio.timeout(60) if cycle_scope is None else cycle_scope(owner, number)
                     ):
-                        await cycle(engine, owner, run_id, number, counters, latencies)
+                        await cycle(
+                            engine,
+                            owner,
+                            run_id,
+                            number,
+                            counters,
+                            latencies,
+                            **cycle_options(poll_gate, sender),
+                        )
                 finally:
                     await gate.leave()
 
@@ -1474,6 +1956,91 @@ async def read_baseline(
 
 
 async def run(args: argparse.Namespace) -> int:
+    validate_options(args)
+    validate_claim_coordination(
+        getattr(args, "coordinate_claims", False), r8=getattr(args, "r8_claim_budget", False)
+    )
+    cap = 1200 if internal.selected(args) and args.phase == "SMOKE" else None
+    observation: AbstractContextManager[None] = nullcontext()
+    if internal.selected(args):
+        from tests.infra.execution_market.profile_publisher_readiness import (
+            observe_publisher_readiness,
+        )
+
+        observation = observe_publisher_readiness(args.output / "publisher-readiness.json")
+    pools = None
+    async with AsyncExitStack() as stack:
+        stack.enter_context(observation)
+        if internal.selected(args):
+            from tests.infra.execution_market.profile_owned_pools import (
+                PARENT_CONFIGURATION,
+                observe_owned,
+                validate_reports,
+            )
+
+            pools = await stack.enter_async_context(
+                observe_owned(args.output / "parent.owned-pools.json", PARENT_CONFIGURATION)
+            )
+        async with asyncio.timeout(cap):
+            if getattr(args, "diagnostics", False):
+                from tests.infra.execution_market.profile_diagnostics import observe_workload
+
+                code = await observe_workload(args)
+            else:
+                code = await _run(args)
+    if pools is not None and (args.output / "result.json").exists():
+        result = json.loads((args.output / "result.json").read_text())
+        report = validate_reports(
+            pools.path, [Path(p) for p in result.get("owned_worker_pool_paths", [])], args.workers
+        )
+        save(args.output / "pool-contract.json", report)
+        base_passed = result["base_assertions_passed"]
+        result["pool_contract"] = report
+        result["resource_assertions_passed"] = bool(
+            result["resource_base_assertions_passed"] and report["passed"]
+        )
+        result["status"] = (
+            "FAILED"
+            if not base_passed or report["violations"]
+            else "INCOMPLETE"
+            if report["incomplete"]
+            else "PASSED"
+        )
+        save(args.output / "result.json", result)
+        progress("owned pool contract", result["status"], json.dumps(report))
+        return 0 if result["status"] == "PASSED" else 1
+    return code
+
+
+async def _run(
+    args: argparse.Namespace, *, parent_runtime: RuntimeObservation | None = None
+) -> int:
+    validate_options(args)
+    internal_phase = internal.validate(args)
+    if internal_phase is not None:
+        internal.guard_database(dict(os.environ))
+    w3_duration = W3_DURATION_SECONDS if internal_phase is None else internal_phase.seconds
+    internal_options = (
+        {"acceptance_profile": args.acceptance_profile} if internal_phase is not None else {}
+    )
+    host_options: ResourceOptions = {"observe_host": True} if internal_phase is not None else {}
+    coordinate_claims = getattr(args, "coordinate_claims", False)
+    validate_claim_coordination(coordinate_claims, r8=getattr(args, "r8_claim_budget", False))
+    poll_gate = (
+        ParentPollGate(
+            stream_path=args.output / "parent-poll-attempts.jsonl" if internal_phase else None
+        )
+        if getattr(args, "parent_poll_limit", None) is not None
+        else None
+    )
+    heartbeat_per_book = getattr(args, "publisher_heartbeat_per_book", False)
+    final_tail = getattr(args, "final_tail_drain", False)
+    if heartbeat_per_book and not getattr(args, "r8_claim_budget", False):
+        raise ValueError("publisher heartbeat requires the explicit R8 runtime")
+    if final_tail and (
+        not heartbeat_per_book or (args.phase != "SMOKE" and internal_phase is None)
+    ):
+        raise ValueError("final tail drain requires the explicit heartbeat SMOKE parent")
     output: Path = args.output
     output.mkdir(parents=True, exist_ok=False)
     run_id = uuid4()
@@ -1485,6 +2052,7 @@ async def run(args: argparse.Namespace) -> int:
     stop = asyncio.Event()
     publisher_stats: dict[str, Any] = {"target_hz": 2}
     worker_failures: list[str] = []
+    failure: dict[str, object] | None = None
     worker_processes: list[asyncio.subprocess.Process] = []
     worker_stop: Path | None = None
     worker_metrics: list[Path] = []
@@ -1500,9 +2068,21 @@ async def run(args: argparse.Namespace) -> int:
     fault_observations: list[dict[str, object]] = []
     fault_events: list[FaultEvent] = []
     fault_schedule_digest: str | None = None
+    processing_window: dict[str, object] | None = None
+    intake_stack = AsyncExitStack()
+    position_checks = None
+    position_task: asyncio.Task[None] | None = None
+    position_result = None
+    sender: CommandSender | None = None
     drain_seconds = 0.0
     started_at = datetime.now(UTC)
     try:
+        if internal_phase is not None:
+            await internal.require_empty_database()
+        if poll_gate is not None:
+            poll_gate.verify_pool(engine)
+        if parent_runtime is not None:
+            parent_runtime.mark("baseline_start")
         if args.phase in {"W3", "W3_SMOKE"}:
             if args.fault_schedule is None or not args.redis_container:
                 raise ValueError("W3 requires --fault-schedule and --redis-container")
@@ -1511,8 +2091,31 @@ async def run(args: argparse.Namespace) -> int:
             )
             if args.cycles_per_owner != fixture_cycles:
                 raise ValueError("W3 cycles-per-owner must equal the predeclared fault fixture")
+            if internal_phase is not None:
+                internal.validate_fault_schedule(
+                    args.fault_schedule, profile_name=args.acceptance_profile
+                )
         manifest = {
+            "acceptance_profile": internal.manifest(args),
             "profile": PROFILE_VERSION,
+            "worker_runtime": (
+                "F15_STANDALONE_R8_HEARTBEAT_TAIL_V1"
+                if final_tail
+                else "F15_STANDALONE_R8_HEARTBEAT_V1"
+                if heartbeat_per_book
+                else "F15_STANDALONE_R8_OPTIN_V1"
+                if getattr(args, "r8_claim_budget", False)
+                else "F15_STANDALONE_DEFAULT_V1"
+            ),
+            "worker_round_limit": 20,
+            "claim_coordination": "SERIALIZED_CLAIM_V2" if coordinate_claims else None,
+            "worker_claim_limit": 1 if getattr(args, "r8_claim_budget", False) else None,
+            "worker_tick_seconds": 0.02,
+            "publisher_heartbeat_per_book": heartbeat_per_book,
+            "publisher_readiness_observer": "recent64" if internal_phase is not None else None,
+            "final_tail_drain": final_tail,
+            "checkpoint_storage": "PG_BATCH_V1",
+            "parent_poll_limit": None if poll_gate is None else 4,
             "phase": args.phase,
             "run_id": run_id,
             "started_at": started_at,
@@ -1551,19 +2154,38 @@ async def run(args: argparse.Namespace) -> int:
             )
             if not all(row["passed"] for row in initial):
                 raise AssertionError("prepared baseline economics are not pristine")
-        publisher = asyncio.create_task(market_publisher(source, stop, publisher_stats))
-        async with asyncio.timeout(5):
-            while publisher_stats.get("published", 0) < 2:
-                if publisher.done():
-                    await publisher
-                    raise RuntimeError("F15_WORKLOAD_PUBLISHER_STOPPED_UNEXPECTEDLY")
-                await asyncio.sleep(0.01)
+        if internal_phase is not None:
+            from tests.infra.execution_market.profile_http import internal_intake
+
+            intake = await intake_stack.enter_async_context(
+                internal_intake(
+                    owners, engine=engine, api=api, migrator=migrator, gate=poll_gate, output=output
+                )
+            )
+            if args.phase != "SMOKE":
+                sender = intake
+        publisher = asyncio.create_task(
+            market_publisher(source, stop, publisher_stats, heartbeat_per_book=heartbeat_per_book)
+        )
+        await wait_publisher_ready(publisher, publisher_stats)
         worker_processes, worker_stop, worker_metrics = await start_worker_processes(
-            args.workers, output
+            args.workers,
+            output,
+            diagnostics=getattr(args, "diagnostics", False),
+            r8_claim_budget=getattr(args, "r8_claim_budget", False),
+            coordinate_claims=coordinate_claims,
+            **internal_options,
         )
         if args.baseline_manifest is None:
             await with_publisher(
-                seed_baseline(engine, owners, run_id, args.baseline_orders), publisher
+                seed_baseline(
+                    engine,
+                    owners,
+                    run_id,
+                    args.baseline_orders,
+                    **poll_options(poll_gate),
+                ),
+                publisher,
             )
         if args.phase == "BASELINE":
             stop.set()
@@ -1601,7 +2223,13 @@ async def run(args: argparse.Namespace) -> int:
             fault_started = monotonic()
             recovered_input_id = await publish_overflow(source)
             worker_processes, worker_stop, recovery_metrics = await start_worker_processes(
-                args.workers, output, group="recovery-worker"
+                args.workers,
+                output,
+                group="recovery-worker",
+                diagnostics=getattr(args, "diagnostics", False),
+                r8_claim_budget=getattr(args, "r8_claim_budget", False),
+                coordinate_claims=coordinate_claims,
+                **internal_options,
             )
             worker_metrics.extend(recovery_metrics)
             resource_task = asyncio.create_task(
@@ -1612,6 +2240,7 @@ async def run(args: argparse.Namespace) -> int:
                     process_lock,
                     resource_stop,
                     resource_samples,
+                    **host_options,
                 )
             )
             await wait_for_input_recovery(engine, owners, recovered_input_id)
@@ -1640,6 +2269,7 @@ async def run(args: argparse.Namespace) -> int:
                     process_lock,
                     resource_stop,
                     resource_samples,
+                    **host_options,
                 )
             )
             gate = FaultGate() if args.phase in {"W3", "W3_SMOKE"} else None
@@ -1654,14 +2284,22 @@ async def run(args: argparse.Namespace) -> int:
                         args.workers,
                         output,
                         group=f"restart-{len(fault_observations)}",
+                        diagnostics=getattr(args, "diagnostics", False),
+                        r8_claim_budget=getattr(args, "r8_claim_budget", False),
+                        coordinate_claims=coordinate_claims,
+                        **internal_options,
                     )
                     worker_processes[:] = processes
                     worker_metrics.extend(metrics)
 
             async def churn_connections() -> None:
-                await asyncio.gather(
-                    engine.dispose(), scan.dispose(), api.dispose(), source.dispose()
-                )
+                from tests.infra.execution_market.profile_owned_pools import CURRENT
+
+                tracker = CURRENT.get()
+                with tracker.intermediate_disposal() if tracker is not None else nullcontext():
+                    await asyncio.gather(
+                        engine.dispose(), scan.dispose(), api.dispose(), source.dispose()
+                    )
 
             if gate is not None:
                 fault_task = asyncio.create_task(
@@ -1675,6 +2313,29 @@ async def run(args: argparse.Namespace) -> int:
                     )
                 )
             measured_started = monotonic()
+            if internal_phase is not None and args.phase in {"W1", "W2", "W3"}:
+                from tests.infra.execution_market.profile_positions import PositionChecks
+
+                position_checks = PositionChecks(engine, owners, output)
+                if args.phase == "W3":
+                    position_task = asyncio.create_task(
+                        position_checks.observe_endurance(measured_started, internal_phase.seconds)
+                    )
+            processing_window = {
+                "attribution": "transaction_start",
+                "started": measured_started,
+                "ended": None,
+                "status": "RUNNING",
+            }
+            save(output / "processing-window.json", processing_window)
+            if poll_gate is not None:
+                poll_gate.phase = "measurement"
+            if parent_runtime is not None:
+                parent_runtime.mark("measurement_start")
+            if getattr(args, "diagnostics", False):
+                publish_trace_control(
+                    output, measured_started, **({} if poll_gate is None else {"seconds": 900})
+                )
             elapsed = await with_publisher(
                 run_scheduled_cycles(
                     engine,
@@ -1685,33 +2346,71 @@ async def run(args: argparse.Namespace) -> int:
                     counters,
                     latencies,
                     gate,
+                    **cycle_options(poll_gate, sender),
                 ),
                 publisher,
+                checks=() if position_task is None else (position_task,),
             )
+            if poll_gate is not None:
+                poll_gate.phase = "drain"
+            if parent_runtime is not None:
+                parent_runtime.mark("cycles_complete")
             if fault_task is not None:
-                await with_publisher(fault_task, publisher)
-            if args.phase == "W3":
-                # Keep feed, workers and resource sampling alive for the full acceptance window.
                 await with_publisher(
-                    asyncio.sleep(max(0, measured_started + W3_DURATION_SECONDS - monotonic())),
+                    fault_task, publisher, checks=() if position_task is None else (position_task,)
+                )
+            if args.phase == "W3" or internal_phase is not None:
+                # Keep feed, workers and resource sampling alive for the full acceptance window.
+                duration = w3_duration
+                await with_publisher(
+                    asyncio.sleep(max(0, measured_started + duration - monotonic())),
                     publisher,
+                    checks=() if position_task is None else (position_task,),
                 )
                 elapsed = monotonic() - measured_started
+            if position_task is not None:
+                await position_task
+            measured_ended = monotonic()
+            processing_window.update(
+                ended=measured_ended,
+                status="MEASURED",
+                excluded_fault_intervals=[
+                    [row["started"], row["restored"]] for row in fault_observations
+                ],
+            )
+            save(output / "processing-window.json", processing_window)
             # Drain the measured watermark with dependencies still available. Stopping
             # the feed first makes its final book stale before all owners can recover.
             recovery_input_id = int(publisher_stats.get("last_input_id", 0))
             measured_inputs = int(publisher_stats.get("published", 0)) - measured_input_start
-            drain_started = monotonic()
-            await with_publisher(
-                wait_for_input_recovery(engine, owners, recovery_input_id), publisher
-            )
-            drain_seconds = monotonic() - drain_started
-            stop.set()
-            await publisher
+            if final_tail:
+                drain_seconds = await drain_final_tail(
+                    engine,
+                    source,
+                    owners,
+                    publisher,
+                    stop,
+                    publisher_stats,
+                    output / "final-tail-drain.json",
+                    poll_gate=poll_gate if internal_phase is not None else None,
+                    observation_engine=migrator if internal_phase is not None else None,
+                )
+            else:
+                drain_started = monotonic()
+                await with_publisher(
+                    wait_for_input_recovery(engine, owners, recovery_input_id), publisher
+                )
+                drain_seconds = monotonic() - drain_started
+                stop.set()
+                await publisher
             publisher = None
         resource_stop.set()
         await resource_task
         await stop_worker_processes(worker_processes, worker_stop)
+        if position_checks is not None:
+            position_result = await position_checks.final(
+                expected_periodic=w3_duration // 60 if args.phase == "W3" else 0
+            )
         observations = await verify(
             engine,
             owners,
@@ -1728,27 +2427,41 @@ async def run(args: argparse.Namespace) -> int:
         expected_cycles = args.owners * args.cycles_per_owner
         target_seconds = expected_commands / args.rate
         required_book_inputs = int((elapsed if args.phase == "W3_SMOKE" else target_seconds) * 10)
-        engine_latencies = [
-            float(value)
-            for path in worker_metrics
-            for value in json.loads(path.read_text(encoding="utf-8"))["transaction_seconds"]
-        ]
-        p95 = percentile(engine_latencies, 0.95)
-        p99 = percentile(engine_latencies, 0.99)
+        # Overflow is a separate negative fault case, not a non-fault latency window.
+        engine_latencies = (
+            []
+            if args.phase == "W2_OVERFLOW"
+            else measured_transaction_seconds(
+                worker_metrics,
+                started=measured_started,
+                ended=measured_ended,
+                excluded=[
+                    (float(str(row["started"])), float(str(row["restored"])))
+                    for row in fault_observations
+                ],
+            )
+        )
+        p95 = None if args.phase == "W2_OVERFLOW" else percentile(engine_latencies, 0.95)
+        p99 = None if args.phase == "W2_OVERFLOW" else percentile(engine_latencies, 0.99)
+        processing = internal.processing_acceptance(args, p95, p99)
         resources = summarize_resources(resource_samples)
-        rss_endurance = endurance_rss(resource_samples) if args.phase == "W3" else None
+        rss_endurance = (
+            endurance_rss(resource_samples, duration_seconds=w3_duration)
+            if args.phase == "W3"
+            else None
+        )
         resource_passed = (
             integer(resources["peak_process_rss_bytes"]) <= MAX_WORKER_RSS_BYTES
             and integer(resources["lock_waits_end"]) == 0
-            and integer(invariants["input_lag"]) <= 20
-            and integer(resources["connections_end"]) <= integer(resources["connections_start"]) + 2
+            and integer(invariants["input_lag"]) <= MAX_INPUT_LAG
+            and (
+                internal_phase is not None
+                or integer(resources["connections_end"])
+                <= integer(resources["connections_start"]) + 2
+            )
             and (rss_endurance is None or rss_endurance["passed"] is True)
         )
-        worker_failures.extend(
-            f"worker-{number}-exited:{process.returncode}"
-            for number, process in enumerate(worker_processes)
-            if process.returncode not in (None, 0)
-        )
+        worker_failures = worker_process_failures(worker_processes)
         passed = (
             counters.offered == expected_commands
             and counters.admitted == expected_commands
@@ -1758,35 +2471,56 @@ async def run(args: argparse.Namespace) -> int:
             and counters.fills == expected_cycles * 2
             and counters.cancels == expected_cycles
             and counters.replays == expected_cycles
-            and (args.phase != "W3" or elapsed >= W3_DURATION_SECONDS)
+            and (args.phase != "W3" or elapsed >= w3_duration)
             and elapsed
             <= target_seconds + sum(event.duration_seconds for event in fault_events) + 60
             and (args.phase == "W2_OVERFLOW" or measured_inputs >= required_book_inputs)
-            and p95 <= 0.250
-            and p99 <= 1.0
+            and processing["passed"]
             and not worker_failures
             and all(value["passed"] for value in observations)
             and invariants["passed"]
             and resource_passed
             and drain_seconds <= 60
+            and (position_result is None or position_result["passed"])
+            and (internal_phase is None or elapsed >= internal_phase.seconds)
             and (
                 fault_result is None
                 or (fault_result["no_economic_change"] is True and elapsed <= 60)
             )
         )
         result = {
+            "acceptance_profile": internal.manifest(args),
             "phase": args.phase,
-            "status": "PASSED" if passed else "FAILED",
+            "status": "PENDING_POOL_VALIDATION"
+            if internal_phase is not None and passed
+            else "PASSED"
+            if passed
+            else "FAILED",
+            **(
+                {
+                    "processing_acceptance": processing,
+                    "performance_warning": processing["performance_warning"],
+                    "base_assertions_passed": passed,
+                    "resource_base_assertions_passed": resource_passed,
+                    "owned_worker_pool_paths": [
+                        str(p.with_suffix(".owned-pools.json")) for p in worker_metrics
+                    ],
+                }
+                if internal_phase is not None
+                else {}
+            ),
             "smoke_only": args.phase in {"SMOKE", "W3_SMOKE"},
             "elapsed_seconds": elapsed,
             "target_seconds": target_seconds,
             "drain_seconds": drain_seconds,
             "counters": asdict(counters),
             "engine_transaction_seconds": {
+                "applicable": args.phase != "W2_OVERFLOW",
                 "p95": p95,
                 "p99": p99,
-                "max": max(engine_latencies),
+                "max": max(engine_latencies) if engine_latencies else None,
                 "samples": len(engine_latencies),
+                "window": processing_window,
             },
             "end_to_end_command_seconds": {
                 "p95": None if not latencies else percentile(latencies, 0.95),
@@ -1797,35 +2531,50 @@ async def run(args: argparse.Namespace) -> int:
             "measured_book_inputs": measured_inputs,
             "required_book_inputs": required_book_inputs,
             "resources": resources,
-            "resource_assertions_passed": resource_passed,
+            "resource_assertions_passed": None if internal_phase is not None else resource_passed,
             "global_invariants": invariants,
             "fault": fault_result,
             "fault_observations": fault_observations,
             "endurance_rss": rss_endurance,
             "worker_failures": worker_failures,
             "owners": observations,
+            "positions": position_result,
         }
         save(output / "resources.json", resource_samples)
         save(output / "result.json", result)
         progress(json.dumps({key: value for key, value in result.items() if key != "owners"}))
         return 0 if passed else 1
-    except Exception as error:
+    except BaseException as error:
+        if processing_window is not None:
+            processing_window.update(
+                status="INCOMPLETE",
+                failure_observed=monotonic(),
+                fault_observations=fault_observations,
+            )
+            save(output / "processing-window.json", processing_window)
         save(output / "resources.json", resource_samples)
-        save(
-            output / "failure.json",
-            {
-                "failed_at": datetime.now(UTC),
-                "error_type": type(error).__name__,
-                "error": str(error),
-                "publisher": publisher_stats,
-                "worker_failures": worker_failures,
-                "counters": asdict(counters),
-            },
-        )
+        failure = {
+            "failed_at": datetime.now(UTC),
+            "error_type": type(error).__name__,
+            "error": str(error),
+            "publisher": publisher_stats,
+            "worker_failures": worker_process_failures(worker_processes),
+            "counters": asdict(counters),
+        }
+        save(output / "failure.json", failure)
         raise
     finally:
+        primary_error = sys.exception()
+        if internal_phase is not None:
+            from tests.infra.execution_market.profile_owned_pools import CURRENT
+
+            if (tracker := CURRENT.get()) is not None:
+                tracker.begin_quiescence()
         stop.set()
         resource_stop.set()
+        if position_task is not None and not position_task.done():
+            position_task.cancel()
+            await asyncio.gather(position_task, return_exceptions=True)
         if resource_task is not None and not resource_task.done():
             resource_task.cancel()
             await asyncio.gather(resource_task, return_exceptions=True)
@@ -1842,12 +2591,71 @@ async def run(args: argparse.Namespace) -> int:
             and any(process.returncode is None for process in worker_processes)
         ):
             await stop_worker_processes(worker_processes, worker_stop)
-        for connection in (source, migrator, api, engine, scan):
-            await connection.dispose()
+        try:
+            await intake_stack.aclose()
+        finally:
+            for connection in (source, migrator, api, engine, scan):
+                await connection.dispose()
+        if failure is not None:
+            try:
+                failure["worker_failures"] = worker_process_failures(worker_processes)
+                save(output / "failure.json", failure)
+            except BaseException as cleanup_error:
+                if primary_error is None:
+                    raise
+                primary_error.add_note(
+                    f"worker failure evidence cleanup failed: {type(cleanup_error).__name__}"
+                )
+        if poll_gate is not None:
+            try:
+                poll_gate.save(output / "parent-poll-gate.json")
+            except BaseException as cleanup_error:
+                if primary_error is None:
+                    raise
+                primary_error.add_note(
+                    f"poll gate evidence cleanup failed: {type(cleanup_error).__name__}"
+                )
+        if parent_runtime is not None:
+            parent_runtime.mark("resources_closed")
+
+
+async def worker_entry(args: argparse.Namespace) -> None:
+    async with AsyncExitStack() as stack:
+        if internal.selected(args):
+            from tests.infra.execution_market.profile_owned_pools import (
+                WORKER_CONFIGURATION,
+                observe_owned,
+            )
+
+            await stack.enter_async_context(
+                observe_owned(
+                    args.worker_metrics.with_suffix(".owned-pools.json"), WORKER_CONFIGURATION
+                )
+            )
+        if args.diagnostics:
+            from tests.infra.execution_market.profile_diagnostics import observe_worker
+
+            await observe_worker(args)
+        else:
+            await run_worker_process(
+                args.worker_name,
+                args.worker_stop,
+                args.worker_metrics,
+                claim_limit=1 if args.r8_claim_budget else None,
+                **coordination_options(args.coordinate_claims),
+                **internal_worker_options(args),
+            )
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
+    parser.add_argument("--acceptance-profile", choices=tuple(internal.PROFILES))
+    parser.add_argument("--parent-poll-limit", type=int)
+    parser.add_argument("--diagnostics", action="store_true")
+    parser.add_argument("--r8-claim-budget", action="store_true")
+    parser.add_argument("--coordinate-claims", action="store_true")
+    parser.add_argument("--publisher-heartbeat-per-book", action="store_true")
+    parser.add_argument("--final-tail-drain", action="store_true")
     parser.add_argument("--worker-only", action="store_true")
     parser.add_argument("--worker-name")
     parser.add_argument("--worker-stop", type=Path)
@@ -1865,12 +2673,39 @@ if __name__ == "__main__":
     parser.add_argument("--fault-schedule", type=Path)
     parser.add_argument("--redis-container")
     parsed = parser.parse_args()
+    try:
+        validate_options(parsed)
+        validate_claim_coordination(parsed.coordinate_claims, r8=parsed.r8_claim_budget)
+    except ValueError as error:
+        parser.error(str(error))
+    if parsed.final_tail_drain and (
+        parsed.worker_only
+        or not parsed.publisher_heartbeat_per_book
+        or (parsed.phase != "SMOKE" and not internal.selected(parsed))
+    ):
+        parser.error("final tail drain requires the explicit heartbeat SMOKE parent")
+    if parsed.publisher_heartbeat_per_book and (parsed.worker_only or not parsed.r8_claim_budget):
+        parser.error("publisher heartbeat requires the explicit standalone R8 parent")
     if parsed.worker_only:
         if not parsed.worker_name or parsed.worker_stop is None or parsed.worker_metrics is None:
             parser.error("worker-only mode requires name, stop and metrics paths")
+        if internal.selected(parsed):
+            asyncio.run(worker_entry(parsed))
+            raise SystemExit(0)
+        if parsed.diagnostics:
+            from tests.infra.execution_market.profile_diagnostics import observe_worker
+
+            raise SystemExit(asyncio.run(observe_worker(parsed)))
         raise SystemExit(
             asyncio.run(
-                run_worker_process(parsed.worker_name, parsed.worker_stop, parsed.worker_metrics)
+                run_worker_process(
+                    parsed.worker_name,
+                    parsed.worker_stop,
+                    parsed.worker_metrics,
+                    claim_limit=1 if parsed.r8_claim_budget else None,
+                    **coordination_options(parsed.coordinate_claims),
+                    **internal_worker_options(parsed),
+                )
             )
         )
     if (
@@ -1883,6 +2718,8 @@ if __name__ == "__main__":
         parser.error("output, phase, owners, cycles-per-owner and rate are required")
     if min(parsed.owners, parsed.baseline_orders, parsed.rate, parsed.workers) <= 0:
         parser.error("owners, baseline-orders, rate and workers must be positive")
+    if parsed.diagnostics and parsed.phase not in {"W1", "SMOKE"}:
+        parser.error("diagnostics requires W1 or SMOKE; the run is not acceptance evidence")
     if parsed.cycles_per_owner < 0 or (
         parsed.phase not in {"BASELINE", "W2_OVERFLOW"} and parsed.cycles_per_owner == 0
     ):

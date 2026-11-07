@@ -1,0 +1,4 @@
+2026-11-07 Asia/Bangkok
+Before controlled20: Ruff check and format passed; mypy 12 files passed.
+After poll-gate correction: Ruff check and format passed; mypy 2 files passed.
+Affected tests after correction: 33 passed, 1 deliberately deselected (the already-passed restore safety fixture), 2.28s.

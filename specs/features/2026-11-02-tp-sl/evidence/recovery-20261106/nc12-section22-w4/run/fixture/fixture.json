@@ -1,0 +1,89 @@
+{
+  "profile": "F15_W4_FIXTURE_V1",
+  "run_id": "7763e24b-f2fa-450b-9c5d-d61cfc63a26f",
+  "owners": [
+    {
+      "user_id": "97e67871-074f-440c-a069-6240e11e0e4e",
+      "wallet": {
+        "wallet_id": "1895e254-e864-4016-81d5-ded2f505e6b2",
+        "episode_id": "4ee42e01-bf25-4041-8387-4ae419a90458",
+        "sequence": 1,
+        "initial_capital": {
+          "amount": "1E+4",
+          "unit": "USDT"
+        },
+        "balance": {
+          "amount": "10000",
+          "unit": "USDT"
+        },
+        "started_at": "2026-11-07 08:51:28.516915+00:00",
+        "snapshot_at": "2026-11-07 08:51:28.576918+00:00",
+        "revision": 2,
+        "reset_available": true,
+        "reset_reason": null
+      }
+    },
+    {
+      "user_id": "6e3f51cf-8858-4fd5-9aa0-3748587a6049",
+      "wallet": {
+        "wallet_id": "940b1914-9816-463a-8854-f33f04764c7f",
+        "episode_id": "fde7f5ff-43d7-4bdb-b222-52ae00dabd1d",
+        "sequence": 1,
+        "initial_capital": {
+          "amount": "1E+4",
+          "unit": "USDT"
+        },
+        "balance": {
+          "amount": "10000",
+          "unit": "USDT"
+        },
+        "started_at": "2026-11-07 08:51:28.445794+00:00",
+        "snapshot_at": "2026-11-07 08:51:28.576658+00:00",
+        "revision": 2,
+        "reset_available": true,
+        "reset_reason": null
+      }
+    },
+    {
+      "user_id": "1695ebc6-cad7-45ff-b199-89df6acadee3",
+      "wallet": {
+        "wallet_id": "eae47efc-a872-44ab-8481-4ae69cdec938",
+        "episode_id": "ce560fd4-d6eb-4b84-9678-4419e4d6c3cf",
+        "sequence": 1,
+        "initial_capital": {
+          "amount": "1E+4",
+          "unit": "USDT"
+        },
+        "balance": {
+          "amount": "10000",
+          "unit": "USDT"
+        },
+        "started_at": "2026-11-07 08:51:28.542518+00:00",
+        "snapshot_at": "2026-11-07 08:51:28.576941+00:00",
+        "revision": 2,
+        "reset_available": true,
+        "reset_reason": null
+      }
+    }
+  ],
+  "counters": {
+    "offered": 7,
+    "admitted": 7,
+    "completed": 7,
+    "rejected": 0,
+    "fills": 3,
+    "cancels": 1,
+    "replays": 1,
+    "cycles": 1
+  },
+  "publisher": {
+    "target_hz": 10,
+    "stage": "publish_market",
+    "published": 43,
+    "last_input_id": 43,
+    "book_owner": "ac92c04e-1d5d-4339-9613-efe67d1dadf1",
+    "book_generation": 1,
+    "last_progress_at": "2026-11-07T08:51:32.385413+00:00",
+    "max_publish_seconds": 0.06145920799826854
+  }
+}

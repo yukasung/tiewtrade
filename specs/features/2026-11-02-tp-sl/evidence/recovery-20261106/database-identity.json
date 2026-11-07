@@ -1,0 +1,35 @@
+{
+  "MIGRATOR": {
+    "database": "tiewtrade_set4_iso_publisher_10e3a3e1",
+    "role": "tiewtrade_migrator"
+  },
+  "function_body_sha256": "ddd294cab8ab15f60b6acb64c9422f002c2f34f6a2fe086c78f8c9eae06b032f",
+  "API": {
+    "database": "tiewtrade_set4_iso_publisher_10e3a3e1",
+    "role": "tiewtrade_api"
+  },
+  "ENGINE": {
+    "database": "tiewtrade_set4_iso_publisher_10e3a3e1",
+    "role": "tiewtrade_engine"
+  },
+  "ENGINE_SCAN": {
+    "database": "tiewtrade_set4_iso_publisher_10e3a3e1",
+    "role": "tiewtrade_engine_scan"
+  },
+  "MARKET_DATA": {
+    "database": "tiewtrade_set4_iso_publisher_10e3a3e1",
+    "role": "tiewtrade_market_data"
+  },
+  "INDICATOR_BUILDER": {
+    "database": "tiewtrade_set4_iso_publisher_10e3a3e1",
+    "role": "tiewtrade_indicator_builder"
+  },
+  "AUTH": {
+    "database": "tiewtrade_set4_iso_publisher_10e3a3e1",
+    "role": "tiewtrade_auth"
+  },
+  "PLATFORM_BOOTSTRAP": {
+    "database": "tiewtrade_set4_iso_publisher_10e3a3e1",
+    "role": "tiewtrade_platform_bootstrap"
+  }
+}

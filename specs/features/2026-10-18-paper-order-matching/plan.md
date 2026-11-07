@@ -307,6 +307,38 @@ F15 standalone harness and bounded round-function defaults remain20; all claim,
 FIFO/fairness/lease, financial/freshness/eligibility, backoff and W1–W4 thresholds
 remain unchanged. See F18 manifest/evidence for this explicitly different runtime.
 
+### Set-4 W1 diagnostic — Owner-approved2026-11-06
+
+After the unchanged W1 failed at the60s positive-cycle bound, the owner selected A:
+add test-harness-only diagnostics before a new W1 attempt. Reuse
+`tests/infra/risk_limits/profile_pool_timing.py::TransactionTrace/operation_scope/sample_database`,
+`profile_resources.py::worker_pool_evidence` and
+`profile_dispatch_timing.py::traced_worker`; no new production instrumentation.
+Add an opt-in `--diagnostics` flag to the F15 parent/worker launcher. Trace the first
+180s of the measured interval, including parent generator phases and worker scan/
+claim/process. Reuse the sampler's existing migrator engine for read-only PostgreSQL
+activity samples. Preserve pool configuration, SQL/business operations, quantities,
+rates,60s cycle bound,30-minute W1 interval, all financial oracles and assertions.
+The instrumented run is diagnostic evidence, never acceptance. Use a fresh database,
+retain the failed run, verify cancellation/redaction/patch cleanup and child flag
+propagation before running. No W2/W3 until this failure has been understood.
+
+### Failure-only W1 cycle timeline — Owner-approved2026-11-06
+
+After3 failed checks, the owner selected A: add per-step timing and owner/order
+identity only for a cycle whose60s budget expires, plus a queue snapshot after
+workers stop. Keep profile/pool/scheduler and the180s transaction trace unchanged.
+Use existing `run_scheduled_cycles(..., cycle_scope=...)` with the identical
+`asyncio.timeout(60)` budget and existing `operation_scope` wrappers. Keep only
+bounded transient phase entries for each active owner cycle; completed cycles are
+discarded. Do not mislabel sibling cancellation or child errors as budget expiry.
+Reuse `tests/infra/risk_limits/scheduler_diagnostics.py` and ENGINE_SCAN for a
+bounded selected-command snapshot after cleanup; no new grant/role or financial SQL.
+Test original deadline/error propagation, task isolation, bounds/redaction, cleanup
+and read-only snapshot selection before one fresh diagnostic W1 attempt. Preserve
+all failed evidence; this remains non-acceptance and does not authorize new retries
+or business/scheduling changes.
+
 
 ### F18 R8 scheduling follow-up — Approved2026-10-27
 
@@ -316,3 +348,161 @@ including a claimed item that later fails/defers. Skip claimNone candidates with
 unchanged CAS/owner/FIFO rules; defaults/standalone remain20/no claim budget.
 This supersedes only R7's one-candidate limit, keeping its short phase alternation
 and all safety/resource/validation limits. Incorporated before implementation.
+
+### Standalone R8 opt-in runtime — Approved 2026-11-06
+
+Owner selected option A in the [standalone worker budget amendment](standalone-worker-budget-amendment.md),
+including its explicit acceptance mapping. This supersedes the standalone20/no-budget
+restriction only when the new opt-in flag is set. Default behavior stays unchanged.
+Reuse `profile_workload.py::run_worker_process(claim_limit=1)` and shared
+`services/engine/{manual_order,paper_order}.py` R8 semantics: scan20, at most1non-None
+claim per phase counted before commit; None skips do not consume this budget.
+Forward the flag through initial/recovery/restart workers; manifest records the
+separate runtime ID and actual scan/claim limits. No production changes, pool/process
+increase, command retries, new infrastructure or trading-rule changes.
+Targeted existing R8/real-DB safety plus CLI/default/restart/credential tests and
+relevant static checks precede one fresh full W1. Keep prior Failed results.
+If W1 fails, diagnose/report before another run. Original W1–W4 financial, load,
+duration and SLA criteria remain unchanged; W2/W3 continue only after W1 passes.
+
+### Publisher renewal and latency follow-up — Approved A 2026-11-06
+
+After the authorized R8 W1 failed, the owner asked to continue preparing the next
+plan. The [heartbeat/diagnostic amendment](publisher-heartbeat-diagnostic-amendment.md)
+defines optional test-only heartbeat renewal and one bounded100-owner diagnostic,
+with reuse paths, safety tests and an explicit stop before any performance fix or
+full W1. Owner selected A before implementation (NC-SET4-03 closed): implement
+only the explicit default-off heartbeat and observer changes, run scoped safety
+checks and exactly one diagnostic, then stop/report. All existing acceptance
+criteria and failures stay unchanged; no production/performance fix is authorized.
+
+Replacement checkpoint2026-11-06: first diagnostic was Incomplete due to observer
+control publication race. Atomic metadata repair passed affected checks; latest
+owner A supersedes B and explicitly authorizes one fresh replacement under
+NC-SET4-04 and the amendment's unchanged envelope. Stop/report afterward; no
+production/performance change, full W1 or Git publication is authorized.
+
+### Checkpoint latency and final-tail follow-up — Approved A 2026-11-06
+
+Owner asked to continue preparing the plan after replacement diagnostic2.
+[Checkpoint batch/tail amendment](checkpoint-batch-tail-drain-amendment.md) defines
+A: narrowly scoped invoker-rights DB persistence batch and additive migration,
+plus opt-in final-tail drain; B: harness tail only. Existing owner/episode/claim/
+freshness checks and Python decisions/audit stay in place. Targets, reuse paths,
+semantic/trigger/RLS/migration safety gates and one later diagnostic are specified.
+NC-SET4-05 closed: owner approved A before implementation, including its safety
+gates and exactly one later diagnostic; stop/report afterward. No full W1 or Git
+publication is authorized.
+No source code or new workload changed while preparing the proposal.
+
+
+### NC-SET4-06 — Approved A paired latency isolation
+
+Owner requested preparation of the next plan after NC-SET4-05 stopped. Offline
+comparison of the existing180s traces is complete; no source/DB/workload changes.
+[Paired isolation plan](checkpoint-latency-isolation-plan.md) proposes a test-only
+Direct–Batch–Batch–Direct campaign on identical cloned4/22-header fixtures,
+three blocks each (24arms/360checkpoint operations), preserving financial snapshots
+and existing authority. Approximately5–10minutes,15-minute cap, then stop/report.
+Owner approved A before harness edits and campaign execution. This approval is
+limited to the paired experiment, then stop/report; W1 acceptance is unchanged.
+
+
+### NC-SET4-07 — Approved A concurrency/polling isolation
+
+Owner requested the next concrete plan after NC-SET4-06. The
+[approved experiment](checkpoint-concurrency-polling-plan.md) freezes0065batch,
+compares1/4independent writers with0/100readers at the existing0.25s interval,
+in8measured arms plus one4-owner reference (576checkpoints). Post-window final
+history/state comparisons avoid verification load during concurrent writes.
+Bounded client traces and read-only local test-DB resource observations support
+attribution.2–5minutes expected/15-minute cap, then stop. Owner approved A:
+harness, targeted tests and one campaign. No production fix or W1 authorized.
+
+
+### NC-SET4-08 — Approved A paired polling/runtime observation
+
+Owner requested the next plan after NC07. [Proposed plan](checkpoint-runtime-drift-plan.md)
+fixes measured writers at1, uses adjacent ABBA/BAAB polling pairs (192 measured +
+96 reference =288 checkpoints), and adds opt-in phase/loop/CPU timestamps plus
+independent read-only resource observers. Existing CLI/defaults and production stay
+unchanged. Targeted gates before one2–5min/cap15min campaign, then stop/report.
+Owner approved A before harness implementation; targeted checks in progress.
+
+
+### NC-SET4-09 — Approved A parent polling budget
+
+Owner requested parent submit/read inspection after NC08. The
+[approved plan](parent-poll-budget-plan.md) adds only an opt-in4-reader gate before
+owner-session acquisition, preserving deadlines/checks and shared pool defaults.
+Targeted safety tests precede one existing100-owner/20-baseline/6-cycle SMOKE
+profile with explicit gate and complete measurement trace.10–15min expected,
+20min total cap, then stop/report. Owner approved A before harness implementation.
+Execution: harness complete;115 targeted tests and scoped static checks passed.
+One diagnostic **Incomplete / cycle bound Failed**:813.431s total, baseline2000
+orders,289/600 cycles,1732 offered/1731 admitted/1632 completed commands of3000
+planned. Gate peak4 and cleanup verified; financial/final-tail checks Not Reached.
+See plan execution checkpoint and Batch ledger. Stop/report reached; further
+worker/queue trace inspection and next planning await owner direction.
+
+### NC-SET4-10 — Approved A worker selection/claim coordination
+
+Owner requested a concrete next plan after NC09 follow-up. The
+[approved amendment](worker-claim-coordination-plan.md) specifies a default-off
+PostgreSQL coordinator held only through scan and owner claim commit, released
+before parallel processing, with existing claim fences unchanged. It includes
+bounded cleanup and targeted real-DB/multi-process safety checks, then stop/report.
+Owner approved A before implementation. Three shared source files and two focused
+test files implemented;94 targeted cases passed (85 combined +9 setup-blocked cases
+rerun), scoped static checks passed and all7 dependency contracts kept. Cleanup
+verified. No activation/timed experiment or acceptance mapping. Stop/report reached;
+next NC10-scoped code review awaits owner command. See amendment execution checkpoint.
+## Consolidated Paper campaign — Approved A 2026-11-06
+
+Owner approved the [integrated Paper acceptance plan](../2026-11-02-tp-sl/integrated-paper-acceptance-plan.md)
+after requesting continuous completion work. NC-SET4-01 profile definition is now
+closed; actual acceptance remains pending. This authorizes the NC10 harness runtime
+option and the explicit diagnostic, followed conditionally by integrated W1–W4
+under that plan. Existing safety/SLA criteria and Release dependencies remain.
+No production activation or Git publication is included.
+
+The first diagnostic reuses NC09's100-owner/20-baseline/6-cycle composition with
+the reviewed coordinator. Harness-only flag/default/restart metadata and read-only
+selection/gate-call timing passed133 targeted tests and scoped static checks.
+Later HTTP intake/F-14 snapshots/rebuild/extended restore must be implemented and
+validated before their acceptance phases; this diagnostic does not certify them.
+
+## Processing latency population correction — Approved A 2026-11-06
+
+After the criteria review, the owner selected A: keep the approved workload and
+250ms/1s processing and60s progress criteria; fix only the latency summary and
+targeted tests before any further timed campaign. No production/runtime tuning,
+load run, commit or push is included in this checkpoint.
+
+Reuse `measured_transaction_seconds` from
+`backend/tests/infra/risk_limits/profile_workload.py` by moving the implementation
+to the existing shared F15 harness, `backend/tests/infra/execution_market/profile_workload.py`;
+retain the existing risk-harness import contract and selection behavior. Attribute
+transactions by start in the half-open measured interval, after baseline preparation
+and before final drain. Retain full durations across the end/fault boundary; exclude
+only starts inside recorded fault-start/restoration intervals. No arbitrary extra
+warm-up/recovery grace, clipping, latency-based filtering or fallback to pooled metrics.
+Preserve raw samples and record the selected interval/fault boundaries in evidence.
+Failure remains Incomplete and does not become a completed acceptance result.
+BASELINE and the separate W2_OVERFLOW negative phase have no non-fault positive-load
+latency result; report that explicitly, never use setup latency to certify them.
+W2 positive-load performance remains mandatory and unchanged.
+
+Validate with timestamp fixtures for setup, drain, exact boundaries, cross-boundary
+slow transactions, scheduled faults, missing/empty evidence and restarted workers;
+exercise parent result wiring without a database or worker processes. Reuse the
+existing risk-population regression and standalone supervision/runtime tests, then
+run scoped Ruff/format/mypy. Stop/report after these checks; a new workload or
+performance fix requires a separately agreed scope.
+
+Execution checkpoint: implemented the shared start-time selector and explicit
+measurement evidence;66 targeted tests passed. Scoped Ruff/format and F15/new-test
+mypy passed. The risk harness has2 callback assignment type errors reproduced on
+the pre-edit snapshot, so its full type check remains blocked; no unrelated callback
+changes made. Retained-data reanalysis still hasp95=470.510ms (Partial only).
+See [checks and limits](evidence/latency-population-20261106/README.md). No load run.
