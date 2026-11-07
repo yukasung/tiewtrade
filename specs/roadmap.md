@@ -1244,3 +1244,17 @@ Stop-checkpoint documents remain uncommitted to avoid a documentation-only CI lo
 production or threshold changes. Full chart browser8/8passed46.7s and scoped static
 checks passed. One approved replacement required CI next; pass then local activation,
 otherwise stop/report. Prior CI failures preserved; owner local still0065 at this point.
+
+
+3m observer89259c1: browser E2E now Passed. Security Failed at candidate identity before
+scans after main advanced viaPR61; base/merge-parent mismatch. Backend still running;
+follow started jobs to completion. One approved CI round consumed, local unchanged.
+[Base-refresh replacement proposal](features/2026-11-07-chart-3m/ci-base-refresh-amendment.md)
+requires owner decision; no security policy changes or automatic retries.
+
+
+3m observer checkpoint2026-11-08: CI42392101171 on89259c1/test-mergec5b9039 Passed
+(backend4814 + all isolation/migration gates; all browser suites includingnative3m;
+frontend/contracts/container). Security42392101117 Failed before scans at base identity
+mismatch after main advanced to1237bf6. All jobs finished. Base-refresh proposal awaits
+owner; no extra trial/local migration/PR merge. Local stays0065. Stop receipt uncommitted.

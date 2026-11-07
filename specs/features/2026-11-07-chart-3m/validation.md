@@ -224,3 +224,22 @@ no-order assertions retained.8/8chart browser tests passed46.7s; ESLint/TypeScri
 V3-09 pending the one approved required-CI round on new SHA; earlier failures remain
 attached to their candidates. If CI passes, proceed to approved local backup/restore/
 migration/verification; if it fails, stop/report. Release profiles remain Pending.
+
+## Approved observer campaign / advanced-main identity blocker
+
+On89259c1, observer browser job128461721567 Passed all stages; frontend/API contract/
+container Passed. Security42392101117 Failed before scans with INVALID_POLICY_DATA;
+main advanced to1237bf6 while PRAPI still reports basef15596d and checkout mergec5b9039
+has1237bf6/89259c1parents. Security policy unchanged. Backend still running at this
+checkpoint. The one approved observer CI round is consumed; no automatic replacement
+or local activation. [Base-refresh proposal](ci-base-refresh-amendment.md) awaits owner.
+
+## Observer campaign final result — 2026-11-08 Asia/Bangkok
+
+On89259c1 (test mergec5b9039), CI42392101171 Passed:4814main backend tests and all
+isolation/migration gates, browser19/2/7/6/6 across suites, frontend/contracts/container.
+Security42392101117 Failed before scans at candidate identity while main is1237bf6
+and PRAPI base remainsf15596d. V3-08 Passed with approved observer; V3-09 still Failed
+because Security gate lacks complete current-candidate scans. No policy weakening,
+branch refresh, extra CI or local activation. All started jobs completed. Await owner
+on ci-base-refresh-amendment.md; Release profiles remain Not Run/Pending Full Validation.

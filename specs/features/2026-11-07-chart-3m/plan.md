@@ -128,3 +128,10 @@ cursor test ใช้ query เดิมซ้ำผ่านตัวแปร�
 เจ้าของอนุมัติ [browser observer A](browser-response-observer-amendment.md) หลังสาม CI candidates ยังไม่ผ่าน
 reuse page.addInitScript pattern และ API types เดิม; ตรวจ8browser tests แล้ว required CIหนึ่งรอบ
 ผ่านแล้วทำ local activationตามส่วนเดิม ไม่เปลี่ยนruntime/เงิน/เกณฑ์หรือtimeout
+
+## Approved base refresh — 2026-11-08
+
+เจ้าของอนุมัติ [base refresh A](ci-base-refresh-amendment.md): รวมmainล่าสุดเข้าbranch
+รักษาAPI clock fixและหลักฐานทั้งสองงาน ตรวจdiff/ancestryและส่วนที่กระทบ
+แล้วrequired CIหนึ่งreplacement round. ผ่านแล้วlocal activationตามแผนเดิม
+ไม่แก้security policy ไม่force push และไม่merge PR60เข้าmain

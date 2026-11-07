@@ -1,6 +1,6 @@
 # 3m implementation checkpoint — 2026-11-07
 
-Result: **Approved observer A implemented; targeted browser8 passed; one replacement required CI pending. Prior failures retained.**
+Result: **Observer A validated; CI workflow passed; Security identity gate failed after main advanced. Base-refresh proposal awaits owner decision. Prior failures retained.**
 Branch feature/f-12-3m; uncommitted changes on base f15596d. No commit/push/merge.
 Implementation follows approved plan/validation until the source-maintenance conflict.
 The owner runtime database and API/frontend processes were not changed by this task.
@@ -304,3 +304,26 @@ The one approved replacement CI has not started at this receipt; if it fails, st
 rather than retry. Local schema0065 and owner processes remain unchanged.
 
 Observer test source SHA256: `1985afb920e07381786d52c22cb920c1e4ad90f285ee5d3acdaa4c97b78e044f`
+
+## Observer campaign completed — 2026-11-08 Asia/Bangkok
+
+Head89259c131304f9ed31db1e77affa95d1f694d034, checkout mergec5b9039ad14e1f048139ca75f4c80c478c03bdb2:
+CI42392101171 concluded Success. Backend4814passed/31deselected in1169.04s, then
+50/1/1/27/16passed across separate isolation/migration selections. Browser suites
+19/2/7/6/6passed; native3m observer included in the19-test base suite. Frontend,
+API contract and container also Passed. Do not sum overlapping/separate selections as
+unique coverage. All started jobs followed to completion; no replacement started.
+
+Security42392101117 concluded Failure before secrets/dependency/CodeQL scans.
+Identity evidence: PRAPI basef15596d; main1237bf6 (mergedPR61, API deadline clock);
+checkout c5b9039 parents1237bf6 and89259c1. This base/merge-parent disagreement conflicts
+with system.py::candidate's identity checks and is consistent with the redacted
+INVALID_POLICY_DATA. No policy/config/helper files changed; no security pass inferred.
+
+CI https://github.com/yukasung/tiewtrade/actions/runs/42392101171
+Security https://github.com/yukasung/tiewtrade/actions/runs/42392101117
+PR60 remains Open/unmerged on89259c1. The approved one observer campaign is complete;
+base-refresh-amendment.md is Proposed and owner decision requested. No branch merge,
+new CI trial, backup/migration or owner-service restart. Owner schema stays0065.
+Stop-checkpoint/proposal changes remain uncommitted to avoid a documentation-only CI
+loop before owner authorizes the next candidate.
