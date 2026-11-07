@@ -221,3 +221,23 @@ changes. New negative tests reject0065/0067/invalid, preserving fail-closed sema
 Fresh isolated actual-DB checkpoint isolation suite:24/24 passed. Scoped Ruff/format
 and mypy2files passed. Required CI must pass again on the correction's exact SHA.
 Owner runtime remains0065; backup/migration scripts prepared privately but not executed.
+
+## Second PR CI browser synchronization correction — 2026-11-07
+
+Head f4464c0cec1000ace5da737108632e3368d4135b, CI42387319834:
+Browser base suite failed1/18passed with Network.getResponseBody unavailable during
+navigation in the native3m test's async waitForResponse predicate. Backend was still
+running when the correction was prepared; no backend pass/failure inferred. Security
+42387319865 passed including gate; frontend/API contract/container passed.
+
+Browser test now uses synchronous response predicates. It reads each captured response
+body in the test before switching series/reloading; if not ready, it observes subsequent
+normal UI live polls within the existing test timeout. No API probes, retries, catch/
+skip/timeout relaxation or production code changes. READY, series identity, exact OHLC,
+180s duration, stale-value rejection and no-order assertions remain.
+
+Native3m targeted browser1passed13.8s, then the entire chart browser file8passed53.9s
+including preceding disconnect/restart cases. Scoped frontend ESLint/TypeScript and
+whitespace checks passed. New required CI must pass on the correction SHA before local
+activation. Original failure remains retained at its run link:
+https://github.com/yukasung/tiewtrade/actions/runs/42387319834

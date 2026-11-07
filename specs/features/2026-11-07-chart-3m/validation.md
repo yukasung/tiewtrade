@@ -188,3 +188,11 @@ harness still required schema0065;4790passed. Its exact candidate check now requ
 checkpoint suite24passed and scoped Ruff/format/mypy passed; new negative tests reject
 other revisions. Replacement required CI pending on the correction SHA. All other
 first-candidate CI jobs and Security passed. Owner local activation remains gated.
+
+## Second CI browser correction — 2026-11-07
+
+V3-09 Failed onf4464c0 due to1browser test (18passed) reading response bodies inside
+an async response predicate during navigation. Synchronous capture + serialized body
+reading preserves all assertions and original timeout. Local complete chart browser
+file8/8passed53.9s; scoped ESLint/TypeScript passed. Replacement CI pending on new SHA;
+backend from the previous candidate was still running at this checkpoint. Local remains0065.

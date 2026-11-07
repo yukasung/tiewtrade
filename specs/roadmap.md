@@ -1219,3 +1219,9 @@ instruction to commit/push/open PR and then track CI; no completion/merge claim.
 other CI jobs and Security passed. Updated only checkpoint-harness candidate pin to0066,
 kept exact original function verification;24targeted tests/static checks passed.
 Replacement CI required before local activation; owner runtime still0065. No merge.
+
+
+3m PR60 f4464c0 browser CI Failed1/18passed from async response-body predicate race.
+Test-only serialized response reading correction passed full chart browser8/8 plus
+ESLint/TypeScript. Other completed gates passed; latest-candidate CI still required.
+Owner local remains0065; no migration/merge occurred.

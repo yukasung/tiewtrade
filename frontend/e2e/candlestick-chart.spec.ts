@@ -291,13 +291,20 @@ test("native 3m history and live feed work for BTC and ETH without order request
       // These promises observe browser fetches caused by selection, not separate API probes.
       const history = page.waitForResponse(response => response.status() === 200
         && matches(response.url(), "/api/market-data/candles/pages"));
-      const live = page.waitForResponse(async response => response.status() === 200
-        && matches(response.url(), "/api/market-data/chart/live")
-        && (await response.json() as { status: string }).status === "READY");
+      const nextLiveResponse = () => page.waitForResponse(response => response.status() === 200
+        && matches(response.url(), "/api/market-data/chart/live"));
+      const live = nextLiveResponse();
       if (base === "BTC") await chart.getByRole("combobox", { name: "Timeframe" }).selectOption("3m");
       else await chart.getByRole("combobox", { name: "คู่เทรด" }).selectOption(base);
-      for (const response of await Promise.all([history, live])) {
-        const body = await response.json() as CandlePage | ChartLive;
+      // Read bodies in the test before switching series/reloading. An async
+      // response predicate can still be reading another body after its waiter resolves.
+      const historyBody = await (await history).json() as CandlePage;
+      let liveBody = await (await live).json() as ChartLive;
+      // Observe normal UI polls within the existing test timeout; send no extra probes.
+      while (liveBody.status !== "READY") {
+        liveBody = await (await nextLiveResponse()).json() as ChartLive;
+      }
+      for (const body of [historyBody, liveBody]) {
         expect(body.base).toBe(base);
         expect(body.timeframe).toBe("3m");
         expect(body.rows.length).toBeGreaterThan(0);
