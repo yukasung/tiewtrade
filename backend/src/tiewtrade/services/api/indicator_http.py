@@ -172,7 +172,8 @@ async def indicator_response(
     budget = cast(IndicatorBudget, request.app.state.indicator_budget)
     admission = cast(RedisAdmission, request.app.state.indicator_admission)
     try:
-        async with asyncio.timeout_at(deadline):
+        # Pass a duration: the event-loop clock may have a different origin.
+        async with asyncio.timeout(max(0, deadline - clock())):
             async with budget.reserve(admission, who.user_id):
                 result = await until_disconnect(
                     request,
