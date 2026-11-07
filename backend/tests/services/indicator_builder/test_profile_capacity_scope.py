@@ -24,9 +24,9 @@ from tests.services.indicator_builder.profile_capacity_steady import (
 def test_f38_capacity_scope_metadata_is_explicit() -> None:
     assert capacity_scope_metadata() == {
         "supported_runtime_pairs": 2,
-        "runtime_readiness_series": 16,
+        "runtime_readiness_series": 18,
         "profile_pairs": 1,
-        "profile_series": 8,
+        "profile_series": 9,
     }
 
 
@@ -100,19 +100,19 @@ def test_long_running_phase_decisions_use_only_btc_workload() -> None:
     rows = [
         {"base": base, "timeframe": timeframe, "valid": base == "BTC"}
         for base in ("BTC", "ETH")
-        for timeframe in ("1m", "5m", "15m", "1h", "4h", "1d", "1w", "1M")
+        for timeframe in ("1m", "3m", "5m", "15m", "1h", "4h", "1d", "1w", "1M")
     ]
 
     selected = workload_readiness(rows)
 
-    assert len(selected) == 8
+    assert len(selected) == 9
     assert all(row["base"] == "BTC" and row["valid"] for row in selected)
 
 
 def test_long_running_baseline_requires_all_runtime_jobs_to_be_quiescent() -> None:
-    rows = [{"valid": True}] * 16
+    rows = [{"valid": True}] * 18
     metadata = {
-        "jobs": [{"status": "READY"}] * 16,
+        "jobs": [{"status": "READY"}] * 18,
         "slot": [{"state": "IDLE"}],
     }
 

@@ -43,24 +43,30 @@ class ControlledCandleFeed:
                     yield FeedConnected(generation)
                 count += 1
                 now = datetime.now(UTC)
-                opened = align_floor(now, Timeframe.H1)
-                candle = Candle(
-                    "BTC",
-                    "USDT",
-                    Timeframe.H1,
-                    opened,
-                    opened + Timeframe.H1.span,
-                    Money.of("100.000000000000000001", "USDT"),
-                    Money.of(101, "USDT"),
-                    Money.of(99, "USDT"),
-                    Money.of("100.5", "USDT"),
-                    Quantity.of(count, "BTC"),
-                    CandleFinality.OPEN,
-                    now,
-                )
-                yield FeedCandle(
-                    generation, CandleObservation(candle, now, now, count, 1, count, False)
-                )
+                for base, tf, prices in (
+                    ("BTC", Timeframe.H1, ("100.000000000000000001", "101", "99", "100.5")),
+                    ("BTC", Timeframe.M3, ("200.000000000000000001", "201", "199", "200.5")),
+                    ("ETH", Timeframe.M3, ("300.000000000000000001", "301", "299", "300.5")),
+                ):
+                    opened = align_floor(now, tf)
+                    open_price, high, low, close = prices
+                    candle = Candle(
+                        base,
+                        "USDT",
+                        tf,
+                        opened,
+                        opened + tf.span,
+                        Money.of(open_price, "USDT"),
+                        Money.of(high, "USDT"),
+                        Money.of(low, "USDT"),
+                        Money.of(close, "USDT"),
+                        Quantity.of(count, base),
+                        CandleFinality.OPEN,
+                        now,
+                    )
+                    yield FeedCandle(
+                        generation, CandleObservation(candle, now, now, count, 1, count, False)
+                    )
             await asyncio.sleep(0.2)
 
 

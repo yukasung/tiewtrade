@@ -8,6 +8,11 @@ from pathlib import Path
 from typing import Any, TypeGuard
 from xml.etree import ElementTree
 
+from tests.services.indicator_builder.profile_capacity import (
+    READINESS_SERIES,
+    SERIES,
+    capacity_scope_metadata,
+)
 from tests.services.indicator_builder.profile_capacity_s5 import (
     EXPECTED_DATABASE_REVISION,
     RUNTIME_ROLES,
@@ -15,20 +20,9 @@ from tests.services.indicator_builder.profile_capacity_s5 import (
     s5_environment_valid,
 )
 
-WORKLOAD_SERIES = {
-    ("BTC", timeframe) for timeframe in ("1m", "5m", "15m", "1h", "4h", "1d", "1w", "1M")
-}
-RUNTIME_SERIES = {
-    (base, timeframe)
-    for base in ("BTC", "ETH")
-    for timeframe in ("1m", "5m", "15m", "1h", "4h", "1d", "1w", "1M")
-}
-SCOPE = {
-    "supported_runtime_pairs": 2,
-    "runtime_readiness_series": 16,
-    "profile_pairs": 1,
-    "profile_series": 8,
-}
+WORKLOAD_SERIES = {(base, tf.value) for base, tf in SERIES}
+RUNTIME_SERIES = {(base, tf.value) for base, tf in READINESS_SERIES}
+SCOPE = capacity_scope_metadata()
 RSS_LIMIT = 128 * 1024**2
 
 
@@ -221,13 +215,13 @@ def s5_raw_checks(directory: Path, c1_directory: Path) -> dict[str, bool]:
             "indicator_checkpoints": 0,
         }
         and environment.get("source_fixture")
-        == "fresh 16-series source; empty derived/jobs before runtime start"
+        == "fresh 18-series source; empty derived/jobs before runtime start"
         and environment.get("redis_dbsize_before_runtime") == 0
         and environment.get("redis_url_mode") == "plain-unauthenticated"
         and environment.get("database_revision") == EXPECTED_DATABASE_REVISION
-        and environment.get("source_runtime_series") == 16,
+        and environment.get("source_runtime_series") == 18,
         "R2-S5_runtime_shape": environment.get("historical_series") == "BTC/1m"
-        and environment.get("append_only_runtime_series") == 15
+        and environment.get("append_only_runtime_series") == len(RUNTIME_SERIES) - 1
         and scope_ok(environment),
         "R2-S5_runtime_instances": isinstance(containers, dict)
         and set(containers) == set(RUNTIME_ROLES)
@@ -399,7 +393,7 @@ def raw_phase_ok(directory: Path, phase: str) -> dict[str, bool]:
         f"{phase}_no_failure": result.get("failure") is None,
         f"{phase}_series": result_series_ok(result, samples=360, probes=60),
         f"{phase}_observations": len(observations) == 360 and observation_scope,
-        f"{phase}_probes": len(probes) == 480
+        f"{phase}_probes": len(probes) == 60 * len(WORKLOAD_SERIES)
         and set(probe_counts) == WORKLOAD_SERIES
         and all(probe_counts[key] == 60 for key in WORKLOAD_SERIES),
         f"{phase}_oracle": oracle_ok,

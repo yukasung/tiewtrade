@@ -26,7 +26,7 @@ def test_phase_scope(
     duration = expected[2]
     assert duration // 10 == (30 if smoke else 360)
     assert duration // 60 == (5 if smoke else 60)
-    assert len(set(SERIES)) == 8
+    assert len(set(SERIES)) == 9
     assert {base for base, _ in SERIES} == {"BTC"}
 
 

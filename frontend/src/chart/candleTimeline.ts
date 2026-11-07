@@ -5,7 +5,7 @@ export function candleTimeline(page: CandlePage | undefined): string[] {
   if (!page) return [];
   const slots: string[] = [];
   const end = Date.parse(page.requested.end);
-  const fixed = { "1m": 60, "5m": 300, "15m": 900, "1h": 3600, "4h": 14400, "1d": 86400, "1w": 604800 };
+  const fixed = { "1m": 60, "3m": 180, "5m": 300, "15m": 900, "1h": 3600, "4h": 14400, "1d": 86400, "1w": 604800 };
   let time = Date.parse(page.requested.start);
   while (time < end && slots.length < 1000) {
     slots.push(new Date(time).toISOString());

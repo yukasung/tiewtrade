@@ -268,6 +268,11 @@ TiewTrade ไม่ใช่ UID หรือ API key ของ Binance TH
 
 ## 9. สิ่งที่ยังไม่ตัดสิน
 
+- **NC-3M-01 — Resolved, Approved A (2026-11-07):** เจ้าของอนุมัติ maintenance เดิม
+  พร้อม derived rebuild โดยรักษา source/business facts ตาม
+  [คำตัดสิน](features/2026-11-07-chart-3m/source-maintenance-amendment.md).
+  ต้องผ่าน migration safety tests และ review ก่อนเปิดใช้3m
+
 รายการนี้ต้องปิดก่อนจะ implement ส่วนที่เกี่ยวข้อง — ห้าม agent เดาแทน
 
 | รหัส | เรื่อง | บล็อกอะไร |

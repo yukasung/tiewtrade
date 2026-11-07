@@ -221,3 +221,33 @@ def test_cumulative_order_ignores_event_time_and_detects_equal_progress_conflict
     assert compare(new, new) is Progress.DUPLICATE
     conflict = replace(new, candle=replace(new.candle, close=Money.of(101, "USDT")))
     assert compare(new, conflict) is Progress.CONFLICT
+
+
+@pytest.mark.parametrize("base", ["BTC", "ETH"])
+def test_native_three_minute_stream_preserves_exact_amounts(base: str) -> None:
+    payload = sample()
+    data = cast(dict[str, object], payload["data"])
+    row = cast(dict[str, object], data["k"])
+    opened = datetime(2026, 11, 7, 12, 3, tzinfo=UTC)
+    payload["stream"] = f"{base.lower()}usdt@kline_3m"
+    data.update(s=f"{base}USDT", E=int((opened + timedelta(seconds=1)).timestamp() * 1000))
+    row.update(
+        s=f"{base}USDT",
+        i="3m",
+        t=int(opened.timestamp() * 1000),
+        T=int((opened + timedelta(minutes=3)).timestamp() * 1000) - 1,
+        o="100.000000000000000001",
+        h="101",
+        l="99",
+        c="100.000000000000000002",
+        v="0.000000000000000001",
+        x=False,
+    )
+    result = candle_from_stream(
+        payload=payload, series=SERIES, received_at=opened + timedelta(seconds=1)
+    )
+    assert result.candle.timeframe is Timeframe.M3
+    assert result.candle.end_at - result.candle.open_at == timedelta(seconds=180)
+    assert result.candle.close == Money.of("100.000000000000000002", "USDT")
+    assert result.candle.volume == Quantity.of("0.000000000000000001", base)
+    assert result.candle.finality is CandleFinality.OPEN

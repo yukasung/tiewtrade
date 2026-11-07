@@ -224,3 +224,15 @@ def test_extended_retention_clamps_leap_day_by_calendar_year() -> None:
     expected = datetime(2023, 2, 28, 12, 30, tzinfo=UTC)
     assert market_data.retention_cutoff(now, market_data.Timeframe.W1) == expected
     assert market_data.retention_cutoff(now, market_data.Timeframe.MN1) == expected
+
+
+def test_native_three_minute_slots_cross_midnight_without_rounding_values() -> None:
+    tf = market_data.Timeframe.M3
+    start = datetime(2026, 11, 7, 23, 57, tzinfo=UTC)
+    assert tf.span == timedelta(seconds=180)
+    assert market_data.align_floor(start + timedelta(seconds=179), tf) == start
+    assert market_data.next_open(start, tf) == datetime(2026, 11, 8, tzinfo=UTC)
+    assert (
+        market_data.slot_count(market_data.CandleWindow(start, start + timedelta(minutes=9)), tf)
+        == 3
+    )

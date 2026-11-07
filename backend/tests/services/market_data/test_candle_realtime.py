@@ -121,7 +121,7 @@ async def test_bootstrap_only_queues_each_series_before_completing_preview(
 
     await state._bootstrap(1)
 
-    assert len(SERIES) == 16
+    assert len(SERIES) == 18
     assert {series.timeframe for series in SERIES} == set(Timeframe)
     assert calls == list(SERIES)
     assert sessions == len(SERIES) + 1

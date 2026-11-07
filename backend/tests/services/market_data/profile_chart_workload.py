@@ -27,7 +27,7 @@ NETWORK = "tiewtrade-f11-capacity-net"
 PG = "tiewtrade-f11-capacity-postgres"
 REDIS = "tiewtrade-f11-capacity-redis"
 PREFIX = "tiewtrade-f12-v17-"
-FAULT_TIMEFRAMES = tuple(Timeframe)[:5]
+FAULT_TIMEFRAMES = (Timeframe.M1, Timeframe.M5, Timeframe.M15, Timeframe.H1, Timeframe.H4)
 
 
 def require_isolated_database() -> None:
@@ -286,7 +286,7 @@ async def wait_for_preview() -> None:
                         )
                     )
                 ).scalar_one()
-            if ready == 8:
+            if ready == len(Timeframe):
                 return
             await asyncio.sleep(0.1)
     finally:
@@ -388,7 +388,7 @@ def evaluate(mode: str, output: Path, lifecycle_cycles: int) -> dict[str, Any]:
         and max(row["rss_delta_upper_bytes"] for row in market) <= 128 * 1024 * 1024,
         "preview_rows_bounded": database_after["preview_rows"] <= 60,
         "process_queue_bounded": bool(market)
-        and max(row["rows_in_memory"] for row in market) <= 16,
+        and max(row["rows_in_memory"] for row in market) <= 2 * len(Timeframe),
         "source_faults_five_series": len(fault_series) == 5,
         "source_recovered": all(
             fault_outcomes.get(series) == "COMPLETE" for series in fault_series
