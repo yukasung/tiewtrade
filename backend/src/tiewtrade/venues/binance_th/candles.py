@@ -33,6 +33,7 @@ class BinanceThCandles:
     def max_request_slots(self, timeframe: Timeframe) -> int:
         limits = {
             Timeframe.M1: 1000,
+            Timeframe.M3: 1000,
             Timeframe.M5: 1000,
             Timeframe.M15: 672,
             Timeframe.H1: 168,

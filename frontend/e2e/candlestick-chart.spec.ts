@@ -7,6 +7,7 @@ import { setTimeout, clearTimeout } from "node:timers";
 import { expect, test, type Page } from "@playwright/test";
 import { backendPython, e2eEnvironment } from "./helpers/environment";
 import { PASSWORD } from "./helpers/totp";
+import type { CandlePage, ChartLive } from "../src/chart/api";
 
 function fixture(action: string): void {
   execFileSync(backendPython,
@@ -267,5 +268,55 @@ test("browser network loss and a restarted fenced candle worker recover from PG"
     worker = producer("tests/e2e_candle_runner.py");
     await expectLiveStatus(page, ["READY"]);
     await expect(chart.locator(".chart-status")).toHaveCount(0);
+  } finally { await worker.stop(); }
+});
+
+test("native 3m history and live feed work for BTC and ETH without order requests", async ({ page }) => {
+  fixture("seed-3m");
+  const mutations: string[] = [];
+  page.on("request", request => {
+    if (request.method() !== "GET" && /\/api\/(paper\/orders|live\/orders|trading-account)/.test(request.url())) mutations.push(request.url());
+  });
+  const worker = producer("tests/e2e_candle_runner.py");
+  try {
+    await registerAccount(page);
+    const chart = page.getByTestId("candlestick-chart");
+    for (const base of ["BTC", "ETH"]) {
+      const open = base === "BTC" ? "200.000000000000000001" : "300.000000000000000001";
+      const matches = (url: string, path: string) => {
+        const parsed = new URL(url);
+        return parsed.pathname === path && parsed.searchParams.get("base") === base
+          && parsed.searchParams.get("timeframe") === "3m";
+      };
+      // These promises observe browser fetches caused by selection, not separate API probes.
+      const history = page.waitForResponse(response => response.status() === 200
+        && matches(response.url(), "/api/market-data/candles/pages"));
+      const nextLiveResponse = () => page.waitForResponse(response => response.status() === 200
+        && matches(response.url(), "/api/market-data/chart/live"));
+      const live = nextLiveResponse();
+      if (base === "BTC") await chart.getByRole("combobox", { name: "Timeframe" }).selectOption("3m");
+      else await chart.getByRole("combobox", { name: "คู่เทรด" }).selectOption(base);
+      // Read bodies in the test before switching series/reloading. An async
+      // response predicate can still be reading another body after its waiter resolves.
+      const historyBody = await (await history).json() as CandlePage;
+      let liveBody = await (await live).json() as ChartLive;
+      // Observe normal UI polls within the existing test timeout; send no extra probes.
+      while (liveBody.status !== "READY") {
+        liveBody = await (await nextLiveResponse()).json() as ChartLive;
+      }
+      for (const body of [historyBody, liveBody]) {
+        expect(body.base).toBe(base);
+        expect(body.timeframe).toBe("3m");
+        expect(body.rows.length).toBeGreaterThan(0);
+        expect(body.rows.every(row => row.open === open
+          && Date.parse(row.end_at) - Date.parse(row.open_at) === 180_000)).toBe(true);
+      }
+      await expect(chart.getByText(`${open} USDT`, { exact: true })).toBeVisible();
+      await expect(chart.getByText("100.000000000000000001 USDT", { exact: true })).toHaveCount(0);
+      if (base === "ETH") await expect(chart.getByText("200.000000000000000001 USDT", { exact: true })).toHaveCount(0);
+    }
+    await page.reload();
+    await expect(chart).toBeVisible();
+    expect(mutations).toEqual([]);
   } finally { await worker.stop(); }
 });

@@ -12,3 +12,8 @@ it("bounds empty history rendering and preserves weekly slots", () => {
   expect(candleTimeline({ ...page, timeframe: "1m", requested: { start: "2020-01-01T00:00:00Z", end: "2026-01-01T00:00:00Z" } })).toHaveLength(1000);
   expect(candleTimeline({ ...page, timeframe: "1w", requested: { start: "2026-10-05T00:00:00Z", end: "2026-10-19T00:00:00Z" } })).toHaveLength(2);
 });
+it("keeps native three-minute UTC slots across midnight and excludes the end", () => {
+  expect(candleTimeline({ ...page, timeframe: "3m", requested: {
+    start: "2026-11-07T23:57:00Z", end: "2026-11-08T00:06:00Z",
+  } })).toEqual(["2026-11-07T23:57:00.000Z", "2026-11-08T00:00:00.000Z", "2026-11-08T00:03:00.000Z"]);
+});

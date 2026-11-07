@@ -22,3 +22,9 @@ def test_daily_boundary_includes_intersecting_candle() -> None:
     assert chart_display_start(datetime(2026, 10, 14, 12, tzinfo=UTC), Timeframe.D1) == datetime(
         2026, 7, 14, tzinfo=UTC
     )
+
+
+def test_three_minute_boundary_keeps_intersecting_calendar_month_slot() -> None:
+    assert chart_display_start(
+        datetime(2026, 11, 7, 12, 5, 59, tzinfo=UTC), Timeframe.M3
+    ) == datetime(2026, 8, 7, 12, 3, tzinfo=UTC)

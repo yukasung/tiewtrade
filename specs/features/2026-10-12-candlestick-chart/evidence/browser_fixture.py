@@ -11,7 +11,13 @@ from uuid import uuid4
 from sqlalchemy import text
 
 from tiewtrade.core.candle_preview import CandleObservation
-from tiewtrade.core.market_data import Candle, CandleFinality, CandleWindow, Timeframe, align_floor
+from tiewtrade.core.market_data import (
+    Candle,
+    CandleFinality,
+    CandleWindow,
+    Timeframe,
+    align_floor,
+)
 from tiewtrade.core.money import Money, Quantity
 from tiewtrade.infra.db import DatabaseRole, create_engine_for
 from tiewtrade.infra.db.session import market_data_session, presented_session
@@ -27,37 +33,56 @@ from tiewtrade.venues.fake import FakeCandleFeed
 from tiewtrade.venues.price_streams import FeedConnected
 
 
-def candle(opened: datetime, now: datetime) -> Candle:
+def candle(opened: datetime, now: datetime, timeframe: Timeframe = Timeframe.H1) -> Candle:
     return Candle(
         "BTC",
         "USDT",
-        Timeframe.H1,
+        timeframe,
         opened,
-        opened + Timeframe.H1.span,
+        opened + timeframe.span,
         Money.of("100.000000000000000001", "USDT"),
         Money.of(101, "USDT"),
         Money.of(99, "USDT"),
         Money.of("100.5", "USDT"),
         Quantity.of(1, "BTC"),
-        CandleFinality.UNCONFIRMED if opened + Timeframe.H1.span <= now else CandleFinality.OPEN,
+        CandleFinality.UNCONFIRMED if opened + timeframe.span <= now else CandleFinality.OPEN,
         now,
     )
 
 
 class RepairSource(FakeVenue):
     async def fetch_candles(
-        self, symbol: Symbol, timeframe: Timeframe, start: datetime, end: datetime, limit: int
+        self,
+        symbol: Symbol,
+        timeframe: Timeframe,
+        start: datetime,
+        end: datetime,
+        limit: int,
     ) -> CandlePage:
-        if symbol.base not in ("BTC", "ETH") or timeframe is not Timeframe.H1:
+        if symbol.base not in ("BTC", "ETH") or timeframe not in (
+            Timeframe.H1,
+            Timeframe.M3,
+        ):
             raise VenueUnavailableError()
         now = datetime.now(UTC)
         window = CandleWindow(start, end)
+        if timeframe is Timeframe.M3:
+            prices = {
+                "BTC": ("200.000000000000000001", "201", "199", "200.75"),
+                "ETH": ("300.000000000000000001", "301", "299", "300.75"),
+            }[symbol.base]
+        else:
+            prices = ("100.000000000000000001", "101", "99", "100.75")
+        open_price, high, low, close = prices
         rows = tuple(
             replace(
-                candle(start + index * timeframe.span, now),
+                candle(start + index * timeframe.span, now, timeframe),
                 base=symbol.base,
                 volume=Quantity.of(1, symbol.base),
-                close=Money.of("100.75", "USDT"),
+                open=Money.of(open_price, "USDT"),
+                high=Money.of(high, "USDT"),
+                low=Money.of(low, "USDT"),
+                close=Money.of(close, "USDT"),
             )
             for index in range(min(limit, int((end - start) / timeframe.span)))
         )
@@ -80,7 +105,7 @@ async def main() -> None:
         async with migrator.begin() as c:
             if (await c.execute(text("SELECT current_database()"))).scalar_one() != expected:
                 raise RuntimeError("E2E_DATABASE_REJECTED")
-            if action == "seed":
+            if action in {"seed", "seed-3m"}:
                 await c.execute(text("SELECT begin_indicator_source_write()"))
                 await c.execute(text("DELETE FROM market_candles"))
                 await c.execute(text("DELETE FROM market_candle_demand"))
@@ -119,7 +144,7 @@ async def main() -> None:
                   WHERE base='BTC' AND timeframe='1h' AND open_at=(
                     SELECT max(open_at) FROM market_candles WHERE base='BTC' AND timeframe='1h')""")
                 )
-        if action == "seed":
+        if action in {"seed", "seed-3m"}:
             auth = create_engine_for(DatabaseRole.AUTH)
             try:
                 async with presented_session(auth, role=DatabaseRole.AUTH) as s:
@@ -127,20 +152,44 @@ async def main() -> None:
             finally:
                 await auth.dispose()
             now = datetime.now(UTC)
-            upper = align_floor(now, Timeframe.H1)
-            window = CandleWindow(upper - 1000 * Timeframe.H1.span, upper)
+            timeframes = (Timeframe.H1, Timeframe.M3) if action == "seed-3m" else (Timeframe.H1,)
             async with market_data_session(market) as s:
                 for base in ("BTC", "ETH"):
-                    await coalesce_demand(s, base, "USDT", Timeframe.H1, window)
+                    for tf in timeframes:
+                        upper = align_floor(now, tf)
+                        window = CandleWindow(upper - 1000 * tf.span, upper)
+                        await coalesce_demand(s, base, "USDT", tf, window)
                 await _seed_initial_demand(s)
-                await s.execute("""UPDATE market_candle_demand
+                await s.execute(
+                    """UPDATE market_candle_demand
                     SET next_attempt_at=clock_timestamp()+interval '1 hour'
-                    WHERE NOT(base IN ('BTC','ETH') AND timeframe='1h')""")
-            # The scheduler may split a demand into recent and deep-history
-            # windows. Generate the exact window it requests instead of
-            # coupling this browser fixture to the scheduler's batching order.
-            result = await run_round(market, RepairSource(), "f12-browser", now)
-            if result.stored != 2000:
+                    WHERE NOT(base IN ('BTC','ETH') AND (timeframe='1h'
+                      OR (:three_minute AND timeframe='3m')))""",
+                    {"three_minute": action == "seed-3m"},
+                )
+            # Recent-first scheduling spends a page on the newest 100 slots per
+            # series before deep history. Drain a bounded number of regular
+            # rounds; never change the production four-fetch round budget.
+            expected_series = {
+                (base, tf.value): 1000 for base in ("BTC", "ETH") for tf in timeframes
+            }
+            for _ in range(4):
+                await run_round(market, RepairSource(), "f12-browser", now)
+                async with migrator.connect() as c:
+                    counts = {
+                        (base, tf): count
+                        for base, tf, count in (
+                            await c.execute(
+                                text(
+                                    "SELECT base,timeframe,count(*) FROM market_candles "
+                                    "GROUP BY base,timeframe"
+                                )
+                            )
+                        ).all()
+                    }
+                if counts == expected_series:
+                    break
+            else:
                 raise RuntimeError("F12_FIXTURE_REJECTED")
         elif action == "repair":
             result = await run_round(market, RepairSource(), "f12-repair", datetime.now(UTC))
@@ -150,7 +199,10 @@ async def main() -> None:
             now = datetime.now(UTC)
             opened = align_floor(now, Timeframe.H1)
             previous = CandleObservation(
-                replace(candle(opened - Timeframe.H1.span, now), close=Money.of("100.75", "USDT")),
+                replace(
+                    candle(opened - Timeframe.H1.span, now),
+                    close=Money.of("100.75", "USDT"),
+                ),
                 now,
                 now,
                 2,

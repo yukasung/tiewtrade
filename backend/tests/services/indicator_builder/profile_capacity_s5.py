@@ -55,7 +55,7 @@ from tiewtrade.core.market_data import (
 from tiewtrade.infra.db.engine import DatabaseRole, create_engine_for
 from tiewtrade.infra.db.session import market_data_session
 
-EXPECTED_DATABASE_REVISION = "0042"
+EXPECTED_DATABASE_REVISION = "0066"
 S5_SERIES = {(base, timeframe.value) for base, timeframe in SERIES}
 CHURN_SERIES = ("BTC", Timeframe.M1)
 S5_DEADLINE_SECONDS = 600
@@ -104,7 +104,7 @@ def s5_environment_valid(environment: dict[str, Any], c1_environment: dict[str, 
         and environment.get("redis_url_mode") == "plain-unauthenticated"
         and environment.get("database_revision") == EXPECTED_DATABASE_REVISION
         and environment.get("source_fixture")
-        == "fresh 16-series source; empty derived/jobs before runtime start"
+        == "fresh 18-series source; empty derived/jobs before runtime start"
         and environment.get("source_runtime_series") == len(READINESS_SERIES)
         and derived
         == {
@@ -484,7 +484,7 @@ async def run(
             "api_cpuset": os.environ.get("TIEWTRADE_CAPACITY_API_CPUSET"),
             "builder_cpuset": os.environ.get("TIEWTRADE_CAPACITY_BUILDER_CPUSET"),
             "runtime_containers_created": created,
-            "source_fixture": "fresh 16-series source; empty derived/jobs before runtime start",
+            "source_fixture": "fresh 18-series source; empty derived/jobs before runtime start",
             "source_runtime_series": source_runtime_series,
             "derived_counts_before_runtime": derived_counts,
             "historical_series": f"{CHURN_SERIES[0]}/{CHURN_SERIES[1].value}",

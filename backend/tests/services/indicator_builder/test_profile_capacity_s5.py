@@ -22,7 +22,7 @@ def environment() -> tuple[dict[str, object], dict[str, object]]:
             "redis_endpoint": "127.0.0.1:56420/0",
             "redis_dbsize_before_runtime": 0,
             "redis_url_mode": "plain-unauthenticated",
-            "database_revision": "0042",
+            "database_revision": "0066",
             "api_cpuset": "6-7",
             "builder_cpuset": "4-5",
             "runtime_containers_created": {
@@ -30,19 +30,19 @@ def environment() -> tuple[dict[str, object], dict[str, object]]:
                 "builder": "builder-container-id",
                 "builder-s5-peer": "peer-container-id",
             },
-            "source_fixture": "fresh 16-series source; empty derived/jobs before runtime start",
-            "source_runtime_series": 16,
+            "source_fixture": "fresh 18-series source; empty derived/jobs before runtime start",
+            "source_runtime_series": 18,
             "derived_counts_before_runtime": {
                 "indicator_build_jobs": 0,
                 "indicator_generations": 0,
                 "indicator_checkpoints": 0,
             },
             "historical_series": "BTC/1m",
-            "append_only_runtime_series": 15,
+            "append_only_runtime_series": 17,
             "supported_runtime_pairs": 2,
-            "runtime_readiness_series": 16,
+            "runtime_readiness_series": 18,
             "profile_pairs": 1,
-            "profile_series": 8,
+            "profile_series": 9,
         },
         {"image": image},
     )
@@ -118,7 +118,7 @@ def test_s5_passes_complete_eight_series_episode() -> None:
 
     assert result["R2-S5"] == "PASSED"
     assert result["failures"] == []
-    assert len(result["series"]) == 8
+    assert len(result["series"]) == 9
 
 
 def test_s5_environment_records_complete_fresh_runtime_provenance() -> None:
