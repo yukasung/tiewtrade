@@ -1,6 +1,6 @@
 # 3m implementation checkpoint — 2026-11-07
 
-Result: **Review findings addressed; authorized refactor and affected validation passed; required CI/Release pending**.
+Result: **Approved observer A implemented; targeted browser8 passed; one replacement required CI pending. Prior failures retained.**
 Branch feature/f-12-3m; uncommitted changes on base f15596d. No commit/push/merge.
 Implementation follows approved plan/validation until the source-maintenance conflict.
 The owner runtime database and API/frontend processes were not changed by this task.
@@ -241,3 +241,66 @@ including preceding disconnect/restart cases. Scoped frontend ESLint/TypeScript 
 whitespace checks passed. New required CI must pass on the correction SHA before local
 activation. Original failure remains retained at its run link:
 https://github.com/yukasung/tiewtrade/actions/runs/42387319834
+
+## Third candidate stop checkpoint — 2026-11-07
+
+PR60 head a9faaf728f824e5252534cea61e1818a5a0d63ee:
+CI https://github.com/yukasung/tiewtrade/actions/runs/42388030151 has browser failure
+1/18passed at live response.json(), CDP body unavailable; serialized reading alone did
+not resolve the CI condition. Security42388030055 passed. Backend still running at
+this record; follow it to completion without starting another trial.
+No new observer implementation or fourth CI run is authorized yet. Proposed A/B is in
+../browser-response-observer-amendment.md; owner decision requested under AGENTS three-
+round stop rule. Local remains0065; private migration script has not been executed.
+
+Additional retained prior-candidate backend result: f4464c0/CI42387319834 finished
+1failed/4793passed/31deselected in949.79s. The schema-preflight failure is resolved;
+failure was test_attempt deadline/cancellation[False] waiting2s for scanner-start while
+ATTEMPT_SECONDS is patched0.3. Causality to3m is unproven; no source/test changes or
+reruns for this failure are authorized by the browser-only proposal. Latest backend
+still pending at this record.
+
+## Latest candidate CI completion / owner-decision checkpoint — 2026-11-07
+
+Exact PR60 head a9faaf728f824e5252534cea61e1818a5a0d63ee; all started jobs followed
+to completion. CI42388030151 overall Failed solely at browser base suite1failed/
+18passed (native3m live response body/CDP retrieval). No fourth trial started.
+Backend job128449569479 Passed:4794passed/31deselected in1165.14s, then isolated
+protection50passed, writer-fence guard1passed, optional-limit guard1passed,
+fresh global state27passed, isolated protection rollback16passed. These are separate
+selections; do not sum as unique coverage. The prior0.3s deadline test passed on this
+latest candidate without changing it; keep its earlier failure attached to f4464c0.
+Frontend/API contract/container passed. Security42388030055 passed including gate.
+
+Latest run https://github.com/yukasung/tiewtrade/actions/runs/42388030151
+Security https://github.com/yukasung/tiewtrade/actions/runs/42388030055
+PR https://github.com/yukasung/tiewtrade/pull/60 remains Open/unmerged on this SHA.
+
+A/B browser-observer proposal awaits owner decision per AGENTS three-round stop.
+No observer code, fourth CI, local backup/migration/service restart or merge performed.
+Owner schema remains0065. Stop-checkpoint documents/proposal remain local, uncommitted;
+do not trigger another documentation-only CI cycle before the owner decision.
+
+## Approved browser observer A implementation — 2026-11-07
+
+Owner explicitly approved A: test-only observer,8targeted browser tests and one required
+CI round, then local activation if gates pass. Approval recorded before implementation.
+Native fetch observer installed before app navigation; forwards original input/init and
+original Response, observes only same-origin3m candle-page/live requests for BTC/ETH.
+Clones body inside the browser instead of using CDP response-body retrieval. No mocks,
+extra probes, retries, timeout increases or production/migration changes.
+
+Only allowlisted public fixture fields retained. Bound16completed responses,1000rows
+per response and16aborts; overflow/HTTP/non-abort parse/fetch errors fail the test.
+Completed captures and aborted/error outcomes are distinct. Original real-UI exact value,
+READY/series180s/stale-result/no-order assertions remain. Summary attachment contains
+only series/path/status/counts and outcomes, no headers/cookies/tokens/account data.
+
+Scoped ESLint/TypeScript/whitespace checks passed before timed browser run. Complete
+chart file8/8passed46.7s on isolated actual API/PostgreSQL, including preceding worker/
+network restart cases (observer-browser.log). Existing backend4794+isolation and static
+proof remains valid for unchanged production code, but final-SHA required CI is mandatory.
+The one approved replacement CI has not started at this receipt; if it fails, stop/report
+rather than retry. Local schema0065 and owner processes remain unchanged.
+
+Observer test source SHA256: `1985afb920e07381786d52c22cb920c1e4ad90f285ee5d3acdaa4c97b78e044f`

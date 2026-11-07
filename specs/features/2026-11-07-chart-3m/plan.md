@@ -122,3 +122,9 @@ browser response waits เดิมยืนยัน requests ได้อย�
 fixture ราคาเปลี่ยนจาก nested ternary เป็น explicit series data พร้อม named OHLC values
 cursor test ใช้ query เดิมซ้ำผ่านตัวแปรและ map index โดยคง expected18-series/fairness
 ไม่มี runtime/migration/business behavior change; ไม่เพิ่ม infrastructure หรือ abstraction
+
+## Approved browser observer amendment
+
+เจ้าของอนุมัติ [browser observer A](browser-response-observer-amendment.md) หลังสาม CI candidates ยังไม่ผ่าน
+reuse page.addInitScript pattern และ API types เดิม; ตรวจ8browser tests แล้ว required CIหนึ่งรอบ
+ผ่านแล้วทำ local activationตามส่วนเดิม ไม่เปลี่ยนruntime/เงิน/เกณฑ์หรือtimeout

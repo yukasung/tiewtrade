@@ -1225,3 +1225,22 @@ Replacement CI required before local activation; owner runtime still0065. No mer
 Test-only serialized response reading correction passed full chart browser8/8 plus
 ESLint/TypeScript. Other completed gates passed; latest-candidate CI still required.
 Owner local remains0065; no migration/merge occurred.
+
+
+3m PR60 a9faaf7: browser CI Failed1/18passed again (CDP response body retrieval),
+local8/8passed. Third CI candidate remains not accepted. Stop before another trial per
+AGENTS; [observer proposal](features/2026-11-07-chart-3m/browser-response-observer-amendment.md)
+awaits owner decision. Follow already-running backend to completion; local remains0065.
+
+
+3m PR60 a9faaf7 CI completion: backend4794main tests + all isolation/migration gates,
+frontend/API contract/container and Security Passed. Browser remains Failed1/18passed
+at live-body/CDP retrieval. All started jobs finished; no fourth trial. Await owner
+A/B decision on browser observer proposal per AGENTS. Local remains0065; no merge.
+Stop-checkpoint documents remain uncommitted to avoid a documentation-only CI loop.
+
+
+3m observer A explicitly approved: test-only native fetch observer implemented without
+production or threshold changes. Full chart browser8/8passed46.7s and scoped static
+checks passed. One approved replacement required CI next; pass then local activation,
+otherwise stop/report. Prior CI failures preserved; owner local still0065 at this point.

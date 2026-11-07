@@ -196,3 +196,31 @@ an async response predicate during navigation. Synchronous capture + serialized 
 reading preserves all assertions and original timeout. Local complete chart browser
 file8/8passed53.9s; scoped ESLint/TypeScript passed. Replacement CI pending on new SHA;
 backend from the previous candidate was still running at this checkpoint. Local remains0065.
+
+## Third CI checkpoint — 2026-11-07
+
+V3-09 remains Failed on a9faaf7: chart browser1failed/18passed with live response.json
+CDP body unavailable despite local8/8pass. Security and other completed CI gates passed;
+backend still running at this checkpoint. Stop before a fourth trial per AGENTS;
+[proposed next step](browser-response-observer-amendment.md) awaits owner decision.
+Owner app/database0065 remains unchanged; no local migration started.
+
+## Latest CI completion — 2026-11-07
+
+On a9faaf728f824e5252534cea61e1818a5a0d63ee, backend and every subsequent isolation/
+migration gate Passed (4794 main;50/1/1/27/16 separate selections), as did frontend,
+API contract, container and Security. Browser base suite remains Failed1/18passed at
+native3m live response body retrieval; V3-09 therefore remains Failed. The prior
+candidate's deadline/cancellation test passed unchanged on the latest candidate.
+All started jobs completed. No fourth trial or local activation; owner A/B decision
+pending under AGENTS. Release V3-10A/B remains Not Run/Pending Full Validation.
+
+## Approved browser observer replacement — 2026-11-07
+
+Owner approved A before code. Observer reads real cloned browser fetch bodies with
+bounded public fields and explicit aborted/error handling; forwards native responses.
+No mocks/probes/timeout or runtime changes. Existing UI/READY/series/exact amount/stale/
+no-order assertions retained.8/8chart browser tests passed46.7s; ESLint/TypeScript passed.
+V3-09 pending the one approved required-CI round on new SHA; earlier failures remain
+attached to their candidates. If CI passes, proceed to approved local backup/restore/
+migration/verification; if it fails, stop/report. Release profiles remain Pending.

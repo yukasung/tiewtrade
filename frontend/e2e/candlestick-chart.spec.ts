@@ -271,8 +271,68 @@ test("browser network loss and a restarted fenced candle worker recover from PG"
   } finally { await worker.stop(); }
 });
 
+type ChartObservation = {
+  path: string;
+  requestedBase: string;
+  base: string;
+  timeframe: string;
+  status: string | undefined;
+  rows: Pick<CandlePage["rows"][number], "open" | "high" | "low" | "close" | "open_at" | "end_at">[];
+};
+type ChartObserverWindow = typeof window & {
+  chart3mObserver: { completed: ChartObservation[]; aborted: number; failure: string | null };
+};
+
 test("native 3m history and live feed work for BTC and ETH without order requests", async ({ page }) => {
   fixture("seed-3m");
+  // Observe native browser fetches rather than retrieving bodies from CDP after
+  // the app has consumed/aborted them. Never issue a probe or replace a response.
+  await page.addInitScript(() => {
+    const state: ChartObserverWindow["chart3mObserver"] = {
+      completed: [], aborted: 0, failure: null,
+    };
+    (window as ChartObserverWindow).chart3mObserver = state;
+    const nativeFetch = window.fetch.bind(window);
+    window.fetch = async (input, init) => {
+      const url = new URL(input instanceof Request ? input.url : String(input), window.location.href);
+      const base = url.searchParams.get("base");
+      const observed = url.origin === window.location.origin && url.searchParams.get("timeframe") === "3m"
+        && (base === "BTC" || base === "ETH")
+        && ["/api/market-data/candles/pages", "/api/market-data/chart/live"].includes(url.pathname);
+      if (!observed) return nativeFetch(input, init);
+      const failed = (error: unknown) => {
+        const signal = init?.signal ?? (input instanceof Request ? input.signal : undefined);
+        if (signal?.aborted || (error instanceof DOMException && error.name === "AbortError")) {
+          state.aborted += 1;
+          if (state.aborted > 16) state.failure = "abort-overflow";
+        } else state.failure = "fetch-or-body-error";
+      };
+      let response: Response;
+      try { response = await nativeFetch(input, init); }
+      catch (error) { failed(error); throw error; }
+      if (!response.ok) state.failure = "http-error";
+      try {
+        void response.clone().json().then((body: CandlePage | ChartLive) => {
+          if (body.base !== base || body.timeframe !== "3m" || !Array.isArray(body.rows)
+            || body.rows.length > 1000 || body.rows.some(row => !row ||
+              ![row.open, row.high, row.low, row.close, row.open_at, row.end_at]
+                .every(value => typeof value === "string"))) {
+            state.failure = "invalid-shape";
+            return;
+          }
+          if (state.completed.length >= 16) { state.failure = "response-overflow"; return; }
+          // Allowlist public fixture fields only; never retain request headers,
+          // cookies, tokens, login data or a complete API response.
+          state.completed.push({ path: url.pathname, requestedBase: base,
+            base: body.base, timeframe: body.timeframe,
+            status: "status" in body && typeof body.status === "string" ? body.status : undefined,
+            rows: body.rows.map(({ open, high, low, close, open_at, end_at }) =>
+              ({ open, high, low, close, open_at, end_at })) });
+        }).catch(failed);
+      } catch (error) { failed(error); }
+      return response;
+    };
+  });
   const mutations: string[] = [];
   page.on("request", request => {
     if (request.method() !== "GET" && /\/api\/(paper\/orders|live\/orders|trading-account)/.test(request.url())) mutations.push(request.url());
@@ -283,28 +343,22 @@ test("native 3m history and live feed work for BTC and ETH without order request
     const chart = page.getByTestId("candlestick-chart");
     for (const base of ["BTC", "ETH"]) {
       const open = base === "BTC" ? "200.000000000000000001" : "300.000000000000000001";
-      const matches = (url: string, path: string) => {
-        const parsed = new URL(url);
-        return parsed.pathname === path && parsed.searchParams.get("base") === base
-          && parsed.searchParams.get("timeframe") === "3m";
-      };
-      // These promises observe browser fetches caused by selection, not separate API probes.
-      const history = page.waitForResponse(response => response.status() === 200
-        && matches(response.url(), "/api/market-data/candles/pages"));
-      const nextLiveResponse = () => page.waitForResponse(response => response.status() === 200
-        && matches(response.url(), "/api/market-data/chart/live"));
-      const live = nextLiveResponse();
       if (base === "BTC") await chart.getByRole("combobox", { name: "Timeframe" }).selectOption("3m");
       else await chart.getByRole("combobox", { name: "คู่เทรด" }).selectOption(base);
-      // Read bodies in the test before switching series/reloading. An async
-      // response predicate can still be reading another body after its waiter resolves.
-      const historyBody = await (await history).json() as CandlePage;
-      let liveBody = await (await live).json() as ChartLive;
-      // Observe normal UI polls within the existing test timeout; send no extra probes.
-      while (liveBody.status !== "READY") {
-        liveBody = await (await nextLiveResponse()).json() as ChartLive;
-      }
-      for (const body of [historyBody, liveBody]) {
+      // The existing test timeout bounds normal UI polling. A failed observer
+      // fails the test; an aborted stale request cannot count as READY evidence.
+      const captured = await page.waitForFunction(selectedBase => {
+        const state = (window as ChartObserverWindow).chart3mObserver;
+        if (state.failure) throw new Error(`CHART_OBSERVER_${state.failure}`);
+        const history = state.completed.find(row => row.requestedBase === selectedBase
+          && row.path === "/api/market-data/candles/pages");
+        const live = state.completed.find(row => row.requestedBase === selectedBase
+          && row.path === "/api/market-data/chart/live" && row.status === "READY");
+        return history && live ? [history, live] : false;
+      }, base);
+      const bodies = await captured.jsonValue() as ChartObservation[];
+      await captured.dispose();
+      for (const body of bodies) {
         expect(body.base).toBe(base);
         expect(body.timeframe).toBe("3m");
         expect(body.rows.length).toBeGreaterThan(0);
@@ -315,6 +369,16 @@ test("native 3m history and live feed work for BTC and ETH without order request
       await expect(chart.getByText("100.000000000000000001 USDT", { exact: true })).toHaveCount(0);
       if (base === "ETH") await expect(chart.getByText("200.000000000000000001 USDT", { exact: true })).toHaveCount(0);
     }
+    const observationSummary = await page.evaluate(() => {
+      const state = (window as ChartObserverWindow).chart3mObserver;
+      return { aborted: state.aborted, failure: state.failure,
+        completed: state.completed.map(({ path, base, timeframe, status, rows }) =>
+          ({ path, base, timeframe, status, rowCount: rows.length })) };
+    });
+    expect(observationSummary.failure).toBeNull();
+    await test.info().attach("native-3m-browser-fetch", {
+      body: JSON.stringify(observationSummary), contentType: "application/json",
+    });
     await page.reload();
     await expect(chart).toBeVisible();
     expect(mutations).toEqual([]);
