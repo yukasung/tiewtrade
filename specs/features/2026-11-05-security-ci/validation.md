@@ -19,6 +19,13 @@ Gitleaks probes passed; original/optimized147-occurrence identity/locator parity
 passed in history and tree modes. Seven files Ruff/format and six files strict mypy
 passed. Full local/remote candidate checks still pending. See
 [implementation receipt](../2026-11-02-tp-sl/evidence/recovery-20261106/evidence-policy-implementation.md).
+
+Option A full local result: scanner/mapping stages169.73s, but registry validation
+**Failed — EVIDENCE_BINDING_MISMATCH**. Tree reports100additional identities with
+different columns on the same8immutable blobs. Existing approval not expanded;
+new column-variation fail-closed regression passed. Pending owner decision on
+[exact data extension](../2026-11-02-tp-sl/tree-occurrence-extension-proposal.md),
+then full local identity validation/required CI. No new remote-CI success claim.
 วันที่: 2026-11-05
 Requirements: [Approved](requirements.md); implementation: [plan.md](plan.md)
 

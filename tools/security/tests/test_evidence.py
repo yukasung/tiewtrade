@@ -220,6 +220,13 @@ class EvidenceTests(EvidenceFixture):
         with self.assertRaises(PolicyError):
             approved_evidence(self.root, [replacement, *self.findings[1:]], self.registry)
 
+    def test_tree_column_variation_does_not_silently_expand_approved_occurrences(self) -> None:
+        tree = secrets.evaluate([{**self.rows[0], "EndColumn": 9}], self.root, tree=True)
+        self.assertNotEqual(tree[0].identity, self.findings[0].identity)
+        self.assertEqual(tree[0].locator, self.findings[0].locator)
+        with self.assertRaises(PolicyError):
+            approved_evidence(self.root, self.findings + tree, self.registry)
+
     def test_configuration_digest_covers_registry_and_public_output_stays_bounded(self) -> None:
         policy = self.root / ".github/security"
         policy.mkdir(parents=True)

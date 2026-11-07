@@ -1133,3 +1133,9 @@ checks passed; full current-candidate scan and required CI remain pending. No
 15-minute/security/trading-criteria relaxation. Prior Failed/Cancelled results and
 F17/opening/Release/dependency status unchanged.
 [Option A receipt](features/2026-11-02-tp-sl/evidence/recovery-20261106/evidence-policy-implementation.md).
+
+Option A local full scan/mapping completed169.73s; strict registry validation Failed
+because tree adds100column-distinct identities in8fixed blobs. No active exception
+expansion, push or new remote-CI run. Owner decision required on the
+[exact100-identity extension](features/2026-11-02-tp-sl/tree-occurrence-extension-proposal.md).
+Historical results and F17 pending acceptance/dependency gates remain unchanged.

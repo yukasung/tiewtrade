@@ -45,3 +45,20 @@ Full pinned local history/tree scan, actual-registry resolution and bounded publ
 summary checks must complete before pushing the combined candidate. Their receipt
 will be added before publication; required CI on the final head remains pending.
 Historical Failed/Incomplete runs remain unchanged.
+
+## Full local result and new approval boundary
+
+Pinned full history/tree scanner/mapping stages completed in169.73s, then strict
+registry resolution failed EVIDENCE_BINDING_MISMATCH. See
+`approved-A-full-local-result.json` and `approved-A-full-stages.log`. History48209
+and tree48158matches were evaluated; the reports include existing ordinary findings.
+Per-file reconciliation reveals100new tree identities in8approved blobs due to
+different reported columns. Values match existing synthetic UUID/digest fields.
+The active approved occurrence count/digests have not been expanded. An additional
+regression proves this column variation remains blocked; its targeted check and
+strict mypy passed. No remote CI on this implementation was started and no push.
+
+Option A's stop-on-further-gap condition applies. The exact additional dataset and
+conditional validation/publication plan are in
+[the next proposal](../../tree-occurrence-extension-proposal.md); owner approval
+is required before updating those8entries. Do not relabel this local result Passed.
