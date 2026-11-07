@@ -1,0 +1,23 @@
+{
+  "status": "INCOMPLETE_BEFORE_WORKLOAD",
+  "seconds": 0.43696845899989967,
+  "reason": "HOST_LOAD_EXCEEDS_CPU",
+  "first_load": [
+    19.28955078125,
+    18.369140625,
+    17.0244140625
+  ],
+  "logical_cpu": 8,
+  "free_bytes": 17105956864,
+  "services_before": "PostgreSQL healthy and accepting; Redis PONG; no restart loop",
+  "samples_recorded": 1,
+  "fixture_started": false,
+  "workload_started": false,
+  "cleanup": {
+    "connections": 0,
+    "advisory_locks": 0
+  },
+  "runtime_candidate_unchanged": true,
+  "next": "Owner-triggered new preflight after host activity subsides; no automatic rerun, no new plan/threshold change proposed",
+  "poststop_note": "Spotlight mds_stores, VM and system tasks used substantial CPU; snapshot is after stop and does not prove the sole cause of load at preflight"
+}

@@ -29,6 +29,10 @@ from sqlalchemy import Engine, RowMapping, event, text
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine
 
 from tests.infra.execution_market import profile_workload as f15
+from tests.infra.execution_market.profile_parent_poll import ParentPollGate
+from tests.infra.execution_market.profile_workload import (
+    measured_transaction_seconds as measured_transaction_seconds,
+)
 from tests.infra.risk_limits.profile_dispatch_timing import traced_worker
 from tests.infra.risk_limits.profile_memory import diagnostic_window, sample_memory
 from tests.infra.risk_limits.profile_observations import (
@@ -1069,7 +1073,12 @@ class Fixture(SourcePublisher):
         expected: OrderStatus,
         counters: f15.Counters,
         latencies: list[float],
+        *,
+        poll_gate: ParentPollGate | None = None,
+        sender: f15.CommandSender | None = None,
     ) -> OrderCommand:
+        if poll_gate is not None or sender is not None:
+            raise ValueError("integrated risk fixture does not accept the standalone poll gate")
         start = monotonic()
         counters.offered += 1
         partial = (
@@ -1143,7 +1152,12 @@ class Fixture(SourcePublisher):
         number: int,
         counters: f15.Counters,
         latencies: list[float],
+        *,
+        poll_gate: ParentPollGate | None = None,
+        sender: f15.CommandSender | None = None,
     ) -> None:
+        if poll_gate is not None or sender is not None:
+            raise ValueError("integrated risk fixture does not accept the standalone poll gate")
         if owner.user_id != self.selected:
             await self.partial_ready.wait()
         buy = f15.market_buy(owner, run_id, number)
@@ -1748,32 +1762,6 @@ def sla_summary(
         )
         result["passed"] = bool(result["passed"]) and tail_passed
     return result
-
-
-def measured_transaction_seconds(
-    paths: list[Path],
-    *,
-    started: float,
-    ended: float,
-    excluded: list[tuple[float, float]] | None = None,
-) -> list[float]:
-    """Attribute a transaction by start time; keep its full duration after the cut.
-
-    All workers are local child processes sharing the controller's monotonic clock.
-    Setup, final drain and W2 overflow are separate from the declared load window.
-    Missing timestamped evidence must fail rather than reuse pooled legacy metrics.
-    """
-    values = []
-    for path in paths:
-        if path.name.startswith("risk-"):
-            continue  # Separate monitor SLA is measured by committed cursor evidence.
-        records = json.loads(path.read_text())["transaction_samples"]
-        for row in records:
-            if started <= row["started"] < ended and not any(
-                a <= row["started"] < b for a, b in excluded or []
-            ):
-                values.append(float(row["seconds"]))
-    return values
 
 
 def guard_release_database() -> None:

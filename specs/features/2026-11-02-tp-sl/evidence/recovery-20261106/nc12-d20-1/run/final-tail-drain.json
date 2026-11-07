@@ -1,0 +1,150 @@
+{
+  "budget_seconds": 60,
+  "initial_watermark": 3094,
+  "stages": [
+    {
+      "stage": "live_recovery",
+      "elapsed_seconds": 1.8292001186637208e-05
+    },
+    {
+      "stage": "stop_publisher",
+      "elapsed_seconds": 0.9129145000006247
+    },
+    {
+      "stage": "final_tail",
+      "elapsed_seconds": 0.9284532500005298
+    },
+    {
+      "stage": "complete",
+      "elapsed_seconds": 1.3820699589996366
+    }
+  ],
+  "final_head": 3103,
+  "minimum_cursor": 3094,
+  "book_owner": "4e7b795c-d906-40f7-acc6-8fa6eb54d084",
+  "book_generation": 1,
+  "owners": [
+    {
+      "owner": "766b6621-a1f0-4605-8827-ae8ea89b7373",
+      "cursor": 3103,
+      "availability": "READY",
+      "lag": 0
+    },
+    {
+      "owner": "eb9476d2-3916-426b-98f0-007fe86f3903",
+      "cursor": 3103,
+      "availability": "READY",
+      "lag": 0
+    },
+    {
+      "owner": "6e1e1566-0a45-4723-b6ac-76958998e0cb",
+      "cursor": 3101,
+      "availability": "READY",
+      "lag": 2
+    },
+    {
+      "owner": "f8b5b9cb-0eb3-4a21-89c9-daa25ae0056f",
+      "cursor": 3103,
+      "availability": "READY",
+      "lag": 0
+    },
+    {
+      "owner": "f9424643-2017-427f-b3f1-fddb90e8fe00",
+      "cursor": 3101,
+      "availability": "READY",
+      "lag": 2
+    },
+    {
+      "owner": "723b18ee-4be2-4efd-b325-90b1e1677bc1",
+      "cursor": 3101,
+      "availability": "READY",
+      "lag": 2
+    },
+    {
+      "owner": "ecc63bc1-d701-4ccf-9aa3-351b04f6710e",
+      "cursor": 3103,
+      "availability": "READY",
+      "lag": 0
+    },
+    {
+      "owner": "458fe8ba-4886-49c0-9a08-a146901ede12",
+      "cursor": 3101,
+      "availability": "READY",
+      "lag": 2
+    },
+    {
+      "owner": "91b2d854-691c-4bb5-9106-907aa124a1ff",
+      "cursor": 3103,
+      "availability": "READY",
+      "lag": 0
+    },
+    {
+      "owner": "8a707bae-4653-4df0-a75d-3325081b5f55",
+      "cursor": 3101,
+      "availability": "READY",
+      "lag": 2
+    },
+    {
+      "owner": "172a6398-bef8-465b-9896-5660991c0de4",
+      "cursor": 3103,
+      "availability": "READY",
+      "lag": 0
+    },
+    {
+      "owner": "b56b4b16-5365-4368-b807-812d4f008557",
+      "cursor": 3103,
+      "availability": "READY",
+      "lag": 0
+    },
+    {
+      "owner": "eb6d18c7-d339-47a6-8bdf-e6924d4aca03",
+      "cursor": 3101,
+      "availability": "READY",
+      "lag": 2
+    },
+    {
+      "owner": "f1df7993-40b4-4a18-b897-60c1c800c642",
+      "cursor": 3101,
+      "availability": "READY",
+      "lag": 2
+    },
+    {
+      "owner": "d3ba9aa4-ad5c-4faf-8dfa-5febc77b2f7c",
+      "cursor": 3103,
+      "availability": "READY",
+      "lag": 0
+    },
+    {
+      "owner": "70294f57-a296-4a9d-9026-2a036c25dd72",
+      "cursor": 3103,
+      "availability": "READY",
+      "lag": 0
+    },
+    {
+      "owner": "5ecdef0a-97b7-4e24-95da-9b422e304139",
+      "cursor": 3101,
+      "availability": "READY",
+      "lag": 2
+    },
+    {
+      "owner": "9640d4ca-208b-4a18-b190-6931763c6845",
+      "cursor": 3100,
+      "availability": "READY",
+      "lag": 3
+    },
+    {
+      "owner": "ec07f1d5-a19d-4e70-8e69-bed9114cb1e1",
+      "cursor": 3102,
+      "availability": "READY",
+      "lag": 1
+    },
+    {
+      "owner": "c3d77922-2a04-4d7f-9293-c78562d99e8d",
+      "cursor": 3103,
+      "availability": "READY",
+      "lag": 0
+    }
+  ],
+  "elapsed_seconds": 1.382102458999725,
+  "recovered": true
+}

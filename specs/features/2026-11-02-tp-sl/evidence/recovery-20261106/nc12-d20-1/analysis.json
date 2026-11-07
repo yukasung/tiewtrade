@@ -1,0 +1,154 @@
+{
+  "status": "FAILED",
+  "failure": "connection count at final resource sample exceeds initial+2",
+  "completed_commands": 600,
+  "expected_commands": 600,
+  "counts": {
+    "offered": 600,
+    "admitted": 600,
+    "completed": 600,
+    "rejected": 0,
+    "fills": 240,
+    "cancels": 120,
+    "replays": 120,
+    "cycles": 120
+  },
+  "owners_checked": 20,
+  "all_owner_financial_oracles_passed": true,
+  "global_invariants": {
+    "orders": 760,
+    "fills": 240,
+    "cancels": 120,
+    "pending_dispatch": 400,
+    "unlinked_fills": 0,
+    "invalid_reservations": 0,
+    "invalid_positions": 0,
+    "wrong_mode": 0,
+    "input_lag": 2,
+    "duplicate_fill_effects": 0,
+    "expected_orders": 760,
+    "expected_fills": 240,
+    "expected_cancels": 120,
+    "expected_pending_dispatch": 400,
+    "passed": true
+  },
+  "processing_p95_ms": 170.9318749999511,
+  "processing_p99_ms": 313.00958400061063,
+  "measured_seconds": 302.5898740829998,
+  "total_seconds": 341.0739002500013,
+  "resource_components": {
+    "rss": true,
+    "lock_waits_end": true,
+    "input_lag": true,
+    "connection_growth": false
+  },
+  "resource_summary": {
+    "samples": 61,
+    "peak_process_rss_bytes": 69976064,
+    "peak_rss_by_pid": {
+      "20153": 44531712,
+      "20197": 68419584,
+      "20198": 40992768,
+      "20199": 36782080,
+      "20200": 62963712,
+      "20201": 56918016,
+      "20202": 59621376,
+      "20203": 62521344,
+      "20204": 67698688,
+      "20205": 69976064,
+      "20206": 62980096,
+      "20207": 41451520,
+      "20208": 49364992,
+      "20209": 69664768,
+      "20210": 61505536,
+      "20211": 68599808,
+      "20212": 63455232,
+      "20213": 62144512,
+      "20214": 63324160,
+      "20215": 43991040,
+      "20216": 69369856
+    },
+    "peak_connections": 68,
+    "connections_start": 57,
+    "connections_end": 68,
+    "peak_lock_waits": 0,
+    "lock_waits_end": 0,
+    "peak_buffer_rows": 3098,
+    "buffer_rows_start": 69,
+    "buffer_rows_end": 3098,
+    "database_bytes_start": 35134487,
+    "database_bytes_end": 228514839,
+    "database_growth_bytes": 193380352
+  },
+  "connection_changes": [
+    {
+      "seconds_from_first_sample": 0.0,
+      "connections": 57
+    },
+    {
+      "seconds_from_first_sample": 5.040687,
+      "connections": 58
+    },
+    {
+      "seconds_from_first_sample": 10.098189,
+      "connections": 59
+    },
+    {
+      "seconds_from_first_sample": 15.124763,
+      "connections": 58
+    },
+    {
+      "seconds_from_first_sample": 70.59302,
+      "connections": 59
+    },
+    {
+      "seconds_from_first_sample": 75.6389,
+      "connections": 58
+    },
+    {
+      "seconds_from_first_sample": 131.16505,
+      "connections": 59
+    },
+    {
+      "seconds_from_first_sample": 136.188907,
+      "connections": 58
+    },
+    {
+      "seconds_from_first_sample": 191.665225,
+      "connections": 59
+    },
+    {
+      "seconds_from_first_sample": 196.868391,
+      "connections": 58
+    },
+    {
+      "seconds_from_first_sample": 252.414804,
+      "connections": 59
+    },
+    {
+      "seconds_from_first_sample": 257.450732,
+      "connections": 58
+    },
+    {
+      "seconds_from_first_sample": 302.973751,
+      "connections": 68
+    }
+  ],
+  "first_60_samples_connection_min_max": [
+    57,
+    59
+  ],
+  "tail_seconds": 1.382102458999725,
+  "last_sample_seconds_after_measured_end_approx": 0.601116,
+  "wall_monotonic_conversion_note": "Derived after the run from the same Python3.12 host clock pair, assuming no intervening wall clock step; raw timestamps retained.",
+  "clock_pair": {
+    "monotonic": 14152.23569025,
+    "wall": "2026-11-06T17:36:46.749850+00:00"
+  },
+  "cleanup": {
+    "connections": 0,
+    "advisory_locks": 0
+  },
+  "diagnosis": "Final tail owner reads use concurrency20 and bypass the command/status poll gate by the original NC09 design. Timing is consistent with temporary parent pool expansion; per-pool attribution was not recorded, so no definitive no-leak claim.",
+  "next_phase": "W1 NOT RUN; stop on Failed gate"
+}

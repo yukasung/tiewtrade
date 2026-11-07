@@ -11,6 +11,7 @@
 from __future__ import annotations
 
 import asyncio
+import math
 from collections.abc import AsyncIterator, Mapping
 from contextlib import asynccontextmanager, suppress
 from dataclasses import dataclass
@@ -283,7 +284,11 @@ def _consume_cleanup_result(task: asyncio.Task[Any]) -> None:
 
 @asynccontextmanager
 async def user_session(
-    engine: AsyncEngine, user_id: UUID, *, role: DatabaseRole = DatabaseRole.API
+    engine: AsyncEngine,
+    user_id: UUID,
+    *,
+    role: DatabaseRole = DatabaseRole.API,
+    cleanup_seconds: float | None = None,
 ) -> AsyncIterator[UserSession]:
     """เปิด transaction ที่ผูกกับผู้ใช้คนหนึ่ง
 
@@ -291,8 +296,13 @@ async def user_session(
     """
     if role not in ROLES_UNDER_RLS:
         raise DatabaseRoleError(f"บทบาท {role.role_name} ไม่ใช่บทบาทที่ทำงานใต้ RLS")
-
-    async with _begin(engine) as connection:
+    _validate_cleanup_seconds(cleanup_seconds)
+    transaction = (
+        _begin(engine)
+        if cleanup_seconds is None
+        else _begin(engine, cleanup_seconds=cleanup_seconds)
+    )
+    async with transaction as connection:
         await _assert_role(connection, role)
         try:
             await connection.execute(
@@ -399,15 +409,30 @@ async def presented_session(
 
 
 @asynccontextmanager
-async def scan_session_bypassing_rls(engine: AsyncEngine) -> AsyncIterator[ScanSession]:
+async def scan_session_bypassing_rls(
+    engine: AsyncEngine, *, cleanup_seconds: float | None = None
+) -> AsyncIterator[ScanSession]:
     """เปิด session ของงานกวาดรายการข้ามผู้ใช้
 
     ชื่อฟังก์ชันบอกตรง ๆ ว่าข้าม RLS เพื่อให้เห็นตอนรีวิวว่าโค้ดตรงไหนใช้ทางนี้
     (Q-3 เงื่อนไข ค)
     """
-    async with _begin(engine) as connection:
+    _validate_cleanup_seconds(cleanup_seconds)
+    transaction = (
+        _begin(engine)
+        if cleanup_seconds is None
+        else _begin(engine, cleanup_seconds=cleanup_seconds)
+    )
+    async with transaction as connection:
         await _assert_role(connection, DatabaseRole.ENGINE_SCAN)
         yield ScanSession(connection)
+
+
+def _validate_cleanup_seconds(seconds: float | None) -> None:
+    if seconds is not None and (
+        type(seconds) not in (int, float) or not math.isfinite(seconds) or seconds <= 0
+    ):
+        raise ValueError("positive finite cleanup bound required")
 
 
 def require_user_session(candidate: object) -> UserSession:

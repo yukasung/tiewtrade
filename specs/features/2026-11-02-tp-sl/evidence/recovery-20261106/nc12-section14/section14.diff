@@ -1,0 +1,810 @@
+--- before/profile_internal.py
++++ after/profile_internal.py
+@@ -3,11 +3,18 @@
+ from __future__ import annotations
+ 
+ import argparse
++import asyncio
++import json
++import math
+ import os
+-from collections.abc import AsyncIterator
++import shutil
++from collections.abc import AsyncIterator, Awaitable, Callable
+ from contextlib import asynccontextmanager
+ from dataclasses import asdict, dataclass
++from datetime import UTC, datetime
+ from pathlib import Path
++from time import monotonic
++from typing import Any
+ from urllib.parse import urlparse
+ 
+ from sqlalchemy import text
+@@ -202,3 +209,92 @@
+             raise ValueError("internal Paper campaign requires a newly created empty database")
+     finally:
+         await observer.dispose()
++
++
++class EnvironmentNotReadyError(RuntimeError):
++    """The fixed environment admission check could not establish readiness."""
++
++
++def host_load() -> tuple[float, float, float]:
++    values = os.getloadavg()
++    if (
++        not isinstance(values, tuple)
++        or len(values) != 3
++        or any(
++            type(value) not in (int, float) or not math.isfinite(value) or value < 0
++            for value in values
++        )
++    ):
++        raise EnvironmentNotReadyError("HOST_LOAD_INVALID")
++    return values
++
++
++def host_observation(root: Path) -> dict[str, Any]:
++    cpu = os.cpu_count()
++    free = shutil.disk_usage(root).free
++    if type(cpu) is not int or cpu <= 0:
++        raise EnvironmentNotReadyError("HOST_CPU_INVALID")
++    if type(free) is not int or free < 0:
++        raise EnvironmentNotReadyError("HOST_DISK_INVALID")
++    return {
++        "at": datetime.now(UTC).isoformat(),
++        "monotonic": monotonic(),
++        "logical_cpu": cpu,
++        "free_bytes": free,
++        "load": host_load(),
++    }
++
++
++async def environment_preflight(
++    path: Path,
++    root: Path,
++    check_services: Callable[[], Awaitable[dict[str, Any]]],
++) -> None:
++    """One fixed observation window; never wait until a favorable reading appears."""
++    document: dict[str, Any] = {
++        "status": "RUNNING",
++        "window_seconds": 120,
++        "minimum_free_bytes": 2 * 1024**3,
++        "samples": [],
++        "services": {},
++    }
++    primary: BaseException | None = None
++    try:
++        document["services"]["before"] = await check_services()
++        started = monotonic()
++        for offset in range(0, 121, 20):
++            await asyncio.sleep(max(0, started + offset - monotonic()))
++            sample = {**host_observation(root), "scheduled_offset_seconds": offset}
++            document["samples"].append(sample)
++            path.write_text(json.dumps(document, indent=2) + "\n", encoding="utf-8")
++            if sample["load"][0] > sample["logical_cpu"]:
++                raise EnvironmentNotReadyError("HOST_LOAD_EXCEEDS_CPU")
++            if sample["free_bytes"] < document["minimum_free_bytes"]:
++                raise EnvironmentNotReadyError("HOST_DISK_HEADROOM_LOW")
++        document["services"]["after"] = await check_services()
++        document["status"] = "PASSED"
++    except BaseException as error:
++        primary = error
++        document["status"] = "INCOMPLETE"
++        document["error_type"] = type(error).__name__
++        if isinstance(error, EnvironmentNotReadyError):
++            document["reason"] = str(error)
++        raise
++    finally:
++        try:
++            path.write_text(json.dumps(document, indent=2) + "\n", encoding="utf-8")
++        except OSError as error:
++            if primary is None:
++                raise
++            primary.add_note(f"preflight evidence write failed: {type(error).__name__}")
++
++
++async def run_preflighted(
++    path: Path,
++    root: Path,
++    check_services: Callable[[], Awaitable[dict[str, Any]]],
++    workload: Callable[[], Awaitable[int]],
++) -> int:
++    """The campaign entrypoint must establish readiness before invoking any fixture."""
++    await environment_preflight(path, root, check_services)
++    return await workload()
+--- before/profile_workload.py
++++ after/profile_workload.py
+@@ -1172,6 +1172,10 @@
+     return rows
+ 
+ 
++class ResourceOptions(TypedDict, total=False):
++    observe_host: bool
++
++
+ async def resource_sampler(
+     migrator: AsyncEngine,
+     source: AsyncEngine,
+@@ -1180,6 +1184,8 @@
+     stop: asyncio.Event,
+     samples: list[dict[str, object]],
+     evidence_path: Path | None = None,
++    *,
++    observe_host: bool = False,
+ ) -> None:
+     while not stop.is_set():
+         async with process_lock:
+@@ -1265,6 +1271,7 @@
+                 "connections": database["connections"],
+                 "lock_waits": database["lock_waits"],
+                 "buffer_rows": buffer_rows,
++                **({"host_load": internal.host_load()} if observe_host else {}),
+             }
+         )
+         with suppress(TimeoutError):
+@@ -1968,6 +1975,7 @@
+     if internal_phase is not None:
+         internal.guard_database(dict(os.environ))
+     internal_options = {"acceptance_profile": internal.NAME} if internal_phase is not None else {}
++    host_options: ResourceOptions = {"observe_host": True} if internal_phase is not None else {}
+     coordinate_claims = getattr(args, "coordinate_claims", False)
+     validate_claim_coordination(coordinate_claims, r8=getattr(args, "r8_claim_budget", False))
+     poll_gate = (
+@@ -2182,6 +2190,7 @@
+                     process_lock,
+                     resource_stop,
+                     resource_samples,
++                    **host_options,
+                 )
+             )
+             await wait_for_input_recovery(engine, owners, recovered_input_id)
+@@ -2210,6 +2219,7 @@
+                     process_lock,
+                     resource_stop,
+                     resource_samples,
++                    **host_options,
+                 )
+             )
+             gate = FaultGate() if args.phase in {"W3", "W3_SMOKE"} else None
+--- before/profile_diagnostics.py
++++ after/profile_diagnostics.py
+@@ -161,17 +161,27 @@
+         stop: asyncio.Event,
+         samples: list[dict[str, object]],
+         evidence_path: Path | None = None,
++        *,
++        observe_host: bool = False,
+     ) -> None:
+         async def database() -> None:
+             with suppress(TimeoutError):
+                 async with asyncio.timeout(180):
+                     await sample_database(migrator, output / "database.jsonl", stop)
+ 
++        host_options: f15.ResourceOptions = {"observe_host": True} if observe_host else {}
+         async with asyncio.TaskGroup() as tasks:
+             tasks.create_task(database())
+             tasks.create_task(
+                 original_sampler(
+-                    migrator, source, processes, process_lock, stop, samples, evidence_path
++                    migrator,
++                    source,
++                    processes,
++                    process_lock,
++                    stop,
++                    samples,
++                    evidence_path,
++                    **host_options,
+                 )
+             )
+ 
+--- before/test_environment_preflight.py
++++ after/test_environment_preflight.py
+@@ -0,0 +1,192 @@
++"""NC12 admission is bounded, fail closed and separate from workload acceptance."""
++
++import asyncio
++import json
++import os
++import shutil
++from contextlib import asynccontextmanager
++from pathlib import Path
++from types import SimpleNamespace
++from typing import Any, cast
++from unittest.mock import AsyncMock, Mock
++
++import pytest
++
++from tests.infra.execution_market import profile_internal as internal
++from tests.infra.execution_market import profile_workload as workload
++
++
++@pytest.fixture
++def host(monkeypatch: pytest.MonkeyPatch) -> SimpleNamespace:
++    state = SimpleNamespace(now=100.0, sleeps=[])
++
++    async def sleep(seconds: float) -> None:
++        state.sleeps.append(seconds)
++        state.now += seconds
++
++    monkeypatch.setattr(internal, "monotonic", lambda: state.now)
++    monkeypatch.setattr(asyncio, "sleep", sleep)
++    monkeypatch.setattr(os, "cpu_count", lambda: 8)
++    monkeypatch.setattr(os, "getloadavg", lambda: (8.0, 99.0, 99.0))
++    monkeypatch.setattr(shutil, "disk_usage", lambda path: SimpleNamespace(free=2 * 1024**3))
++    return state
++
++
++async def test_fixed_window_accepts_exact_boundaries_and_runs_fixture_once(
++    tmp_path: Path, host: SimpleNamespace
++) -> None:
++    services = AsyncMock(return_value={"ready": True})
++    fixture = AsyncMock(return_value=7)
++    assert (
++        await internal.run_preflighted(tmp_path / "preflight.json", tmp_path, services, fixture)
++        == 7
++    )
++    document = json.loads((tmp_path / "preflight.json").read_text())
++    assert document["status"] == "PASSED"
++    assert [s["scheduled_offset_seconds"] for s in document["samples"]] == list(range(0, 121, 20))
++    assert [s["monotonic"] for s in document["samples"]] == list(range(100, 221, 20))
++    assert host.sleeps == [0, 20, 20, 20, 20, 20, 20]
++    assert services.await_count == 2 and fixture.await_count == 1
++    assert not (tmp_path / "run").exists()  # The gate does not pre-create workload output.
++
++
++@pytest.mark.parametrize("failure", ["load", "disk", "before", "after", "observation"])
++async def test_failure_never_invokes_workload_or_retries(
++    tmp_path: Path, host: SimpleNamespace, monkeypatch: pytest.MonkeyPatch, failure: str
++) -> None:
++    error = OSError("PRIVATE_NOT_RECORDED")
++    services = AsyncMock(return_value={"ready": True})
++    if failure == "load":
++        monkeypatch.setattr(os, "getloadavg", lambda: (8.01, 0.0, 0.0))
++    elif failure == "disk":
++        monkeypatch.setattr(
++            shutil, "disk_usage", lambda path: SimpleNamespace(free=2 * 1024**3 - 1)
++        )
++    elif failure == "before":
++        services.side_effect = error
++    elif failure == "after":
++        services.side_effect = [{"ready": True}, error]
++    else:
++        monkeypatch.setattr(os, "getloadavg", Mock(side_effect=error))
++    fixture = AsyncMock()
++    with pytest.raises((OSError, internal.EnvironmentNotReadyError)):
++        await internal.run_preflighted(tmp_path / "preflight.json", tmp_path, services, fixture)
++    document = json.loads((tmp_path / "preflight.json").read_text())
++    assert document["status"] == "INCOMPLETE"
++    assert "PRIVATE" not in (tmp_path / "preflight.json").read_text()
++    assert fixture.await_count == 0
++    assert len(document["samples"]) == (
++        7 if failure == "after" else 1 if failure in {"load", "disk"} else 0
++    )
++    assert services.await_count == (2 if failure == "after" else 1)
++
++
++@pytest.mark.parametrize(
++    "load",
++    [
++        None,
++        (),
++        (1.0,),
++        (1.0, 2.0, float("nan")),
++        (float("inf"), 0, 0),
++        (-1, 0, 0),
++        (True, 0, 0),
++        ("1", 0, 0),
++    ],
++)
++def test_invalid_load_is_rejected(monkeypatch: pytest.MonkeyPatch, load: Any) -> None:
++    monkeypatch.setattr(os, "getloadavg", lambda: load)
++    with pytest.raises(internal.EnvironmentNotReadyError):
++        internal.host_load()
++
++
++@pytest.mark.parametrize("cpu", [None, 0, -1, True, 8.0])
++def test_invalid_cpu_is_rejected(
++    tmp_path: Path, host: SimpleNamespace, monkeypatch: pytest.MonkeyPatch, cpu: Any
++) -> None:
++    monkeypatch.setattr(os, "cpu_count", lambda: cpu)
++    with pytest.raises(internal.EnvironmentNotReadyError):
++        internal.host_observation(tmp_path)
++
++
++@pytest.mark.parametrize("free", [None, -1, True, 2147483648.0])
++def test_invalid_disk_is_rejected(
++    tmp_path: Path, host: SimpleNamespace, monkeypatch: pytest.MonkeyPatch, free: Any
++) -> None:
++    monkeypatch.setattr(shutil, "disk_usage", lambda path: SimpleNamespace(free=free))
++    with pytest.raises(internal.EnvironmentNotReadyError):
++        internal.host_observation(tmp_path)
++
++
++async def test_cancellation_records_incomplete_and_preserves_exception(
++    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
++) -> None:
++    error = asyncio.CancelledError()
++    services = AsyncMock(side_effect=error)
++    fixture = AsyncMock()
++    with pytest.raises(asyncio.CancelledError) as caught:
++        await internal.run_preflighted(tmp_path / "preflight.json", tmp_path, services, fixture)
++    assert caught.value is error and fixture.await_count == 0
++    assert json.loads((tmp_path / "preflight.json").read_text())["error_type"] == "CancelledError"
++
++
++async def test_cancellation_during_window_retains_partial_evidence(
++    tmp_path: Path, host: SimpleNamespace, monkeypatch: pytest.MonkeyPatch
++) -> None:
++    error = asyncio.CancelledError()
++    services = AsyncMock(return_value={"ready": True})
++    fixture = AsyncMock()
++
++    async def cancel_sleep(seconds: float) -> None:
++        if seconds:
++            raise error
++
++    monkeypatch.setattr(asyncio, "sleep", cancel_sleep)
++    with pytest.raises(asyncio.CancelledError) as caught:
++        await internal.run_preflighted(tmp_path / "preflight.json", tmp_path, services, fixture)
++    document = json.loads((tmp_path / "preflight.json").read_text())
++    assert caught.value is error and fixture.await_count == 0
++    assert document["status"] == "INCOMPLETE" and len(document["samples"]) == 1
++    assert services.await_count == 1
++
++
++@pytest.mark.parametrize("observe", [True, False])
++async def test_resource_sampling_records_high_load_without_applying_admission_gate(
++    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, observe: bool
++) -> None:
++    stop = asyncio.Event()
++    samples: list[dict[str, object]] = []
++    database = {"bytes": 1, "connections": 1, "lock_waits": 0}
++    result = Mock()
++    result.mappings.return_value.one.return_value = database
++
++    @asynccontextmanager
++    async def connect() -> Any:
++        yield SimpleNamespace(exec_driver_sql=AsyncMock(return_value=result))
++
++    @asynccontextmanager
++    async def market_session(engine: object) -> Any:
++        async def execute(statement: str) -> Any:
++            stop.set()
++            return SimpleNamespace(scalar_one=lambda: 1)
++
++        yield SimpleNamespace(execute=execute)
++
++    def load() -> tuple[float, float, float]:
++        assert observe, "default resource caller must not sample host load"
++        return (99.0, 98.0, 97.0)
++
++    monkeypatch.setattr(workload, "market_data_session", market_session)
++    monkeypatch.setattr(internal, "host_load", load)
++    await workload.resource_sampler(
++        cast(Any, SimpleNamespace(connect=connect)),
++        cast(Any, object()),
++        [],
++        asyncio.Lock(),
++        stop,
++        samples,
++        observe_host=observe,
++    )
++    assert len(samples) == 1
++    assert samples[0].get("host_load") == ((99.0, 98.0, 97.0) if observe else None)
++    assert samples[0]["connections"] == 1
+--- before/nc12_campaign.py
++++ after/nc12_campaign.py
+@@ -1,61 +1,361 @@
+ """Record one approved NC12 phase using the existing profile runners."""
+-import argparse, asyncio, base64, hashlib, json, os, pathlib, platform, shutil, subprocess, sys, time
++
++import argparse
++import asyncio
++import base64
++import hashlib
++import json
++import os
++import pathlib
++import platform
++import shutil
++import subprocess
++import sys
++import time
+ from datetime import datetime
+ from zoneinfo import ZoneInfo
+-ROOT=pathlib.Path('/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery')
+-BACKEND=ROOT/'backend'
+-sys.path[:0]=[str(BACKEND/'src'),str(BACKEND)]
+-from tests.infra.execution_market import profile_internal as internal, profile_workload as workload, profile_protections as protection
++
++from tests.infra.execution_market import (
++    profile_internal as internal,
++)
++from tests.infra.execution_market import (
++    profile_protections as protection,
++)
++from tests.infra.execution_market import (
++    profile_workload as workload,
++)
+ from tiewtrade.infra.crypto import KEY_BYTES, KeyPurpose
+ from tiewtrade.infra.db import DatabaseRole, create_engine_for
+ 
++ROOT = pathlib.Path(
++    "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery"
++)
++BACKEND = ROOT / "backend"
++
++
+ def capture(*command):
+- return subprocess.check_output(command,text=True,timeout=30).strip()
++    return subprocess.check_output(command, text=True, timeout=30).strip()
++
++
+ def hashes():
+- paths=[p for part in ('backend/src','backend/tests','backend/migrations','frontend/src') for p in (ROOT/part).rglob('*') if p.is_file() and '__pycache__' not in p.parts]
+- paths += [ROOT/p for p in ('backend/uv.lock','backend/pyproject.toml','compose.yaml','config/postgres.env','frontend/package-lock.json') if (ROOT/p).exists()]
+- return {str(p.relative_to(ROOT)):hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(paths)}
++    paths = [
++        p
++        for part in (
++            "backend/src",
++            "backend/tests",
++            "backend/migrations",
++            "frontend/src",
++        )
++        for p in (ROOT / part).rglob("*")
++        if p.is_file() and "__pycache__" not in p.parts
++    ]
++    paths += [
++        ROOT / p
++        for p in (
++            "backend/uv.lock",
++            "backend/pyproject.toml",
++            "compose.yaml",
++            "config/postgres.env",
++            "frontend/package-lock.json",
++        )
++        if (ROOT / p).exists()
++    ]
++    return {
++        str(p.relative_to(ROOT)): hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(paths)
++    }
++
++
++async def check_services():
++    containers = json.loads(
++        await asyncio.to_thread(
++            capture,
++            "docker",
++            "inspect",
++            "tiewtrade-postgres-1",
++            "tiewtrade-f18-release-redis",
++        )
++    )
++    states = [
++        {
++            "name": c["Name"],
++            "state": c["State"]["Status"],
++            "health": c["State"].get("Health", {}).get("Status"),
++            "restart_count": c["RestartCount"],
++        }
++        for c in containers
++    ]
++    if (
++        len(states) != 2
++        or any(c["state"] != "running" for c in states)
++        or states[0]["health"] != "healthy"
++    ):
++        raise internal.EnvironmentNotReadyError("CAMPAIGN_SERVICES_NOT_HEALTHY")
++    statuses = await asyncio.to_thread(capture, "docker", "ps", "--format", "{{.Status}}")
++    if any("Restarting" in line for line in statuses.splitlines()):
++        raise internal.EnvironmentNotReadyError("CONTAINER_RESTART_LOOP")
++    postgres = await asyncio.to_thread(
++        capture,
++        "docker",
++        "exec",
++        "tiewtrade-postgres-1",
++        "pg_isready",
++        "-U",
++        "postgres",
++    )
++    redis = await asyncio.to_thread(
++        capture, "docker", "exec", "tiewtrade-f18-release-redis", "redis-cli", "PING"
++    )
++    if not postgres or redis != "PONG":
++        raise internal.EnvironmentNotReadyError("REDIS_NOT_READY")
++    return {"containers": states, "postgres_ready": bool(postgres), "redis_ping": redis}
++
+ 
+ async def main():
+- parser=argparse.ArgumentParser();parser.add_argument('phase',choices=('CONTROLLED20','SMOKE','W1','W2','W3'));parser.add_argument('output',type=pathlib.Path);args=parser.parse_args()
+- root=args.output;root.mkdir(parents=True,exist_ok=False)
+- for purpose,value in ((KeyPurpose.TOTP_SECRET,b'T'),(KeyPurpose.VENUE_API_SECRET,b'V'),(KeyPurpose.INDICATOR_CURSOR,b'I')):
+-  os.environ[purpose.environment_variable]='1:'+base64.b64encode(value*KEY_BYTES).decode('ascii')
+- database=internal.guard_database(dict(os.environ));candidate=hashes()
+- workload.save(root/'candidate-sha256.json',candidate)
+- free=shutil.disk_usage(ROOT).free
+- containers=json.loads(capture('docker','inspect','tiewtrade-postgres-1','tiewtrade-f18-release-redis'))
+- state=[{'name':c['Name'],'state':c['State']['Status'],'health':c['State'].get('Health',{}).get('Status'),'restart_count':c['RestartCount'],'nano_cpus':c['HostConfig']['NanoCpus'],'memory_limit':c['HostConfig']['Memory']} for c in containers]
+- db_settings=json.loads(capture('docker','exec','tiewtrade-postgres-1','psql','-U','postgres','-d',database,'-At','-c',"SELECT json_object_agg(name,setting) FROM pg_settings WHERE name IN ('server_version','max_connections','shared_buffers','work_mem','maintenance_work_mem','synchronous_commit','fsync','full_page_writes','wal_level','max_wal_size','checkpoint_timeout')"))
+- pools={}
+- for role in (DatabaseRole.API,DatabaseRole.AUTH,DatabaseRole.ENGINE,DatabaseRole.ENGINE_SCAN,DatabaseRole.MARKET_DATA):
+-  engine=create_engine_for(role);pool=engine.pool
+-  pools[role.name]={'size':pool.size(),'max_overflow':pool._max_overflow,'timeout_seconds':pool.timeout()}
+-  await engine.dispose()
+- options=argparse.Namespace(acceptance_profile=internal.NAME,parent_poll_limit=4,phase=args.phase,owners=20,baseline_orders=20,cycles_per_owner=0,rate=2,workers=20,r8_claim_budget=True,coordinate_claims=True,publisher_heartbeat_per_book=True,final_tail_drain=True,diagnostics=False,worker_only=False,baseline_manifest=None,fault_schedule=None,redis_container=None,output=root/'run')
+- if args.phase!='CONTROLLED20':
+-  phase=internal.PHASES[args.phase];options.cycles_per_owner=phase.cycles_per_owner;options.rate=phase.rate
+-  if args.phase=='W3':
+-   options.fault_schedule=BACKEND/'tests/infra/execution_market/w3_fault_schedule.json';options.redis_container='tiewtrade-f18-release-redis'
+-  internal.validate(options)
+- schema=capture('docker','exec','tiewtrade-postgres-1','pg_dump','-U','postgres','--schema-only',database)
+- workload.save(root/'manifest.json',{'phase':args.phase,'profile':internal.NAME,'started_at':datetime.now(ZoneInfo('Asia/Bangkok')).isoformat(),'git_head':capture('git','-C',str(ROOT),'rev-parse','HEAD'),'database':database,'schema_sha256':hashlib.sha256(schema.encode()).hexdigest(),'python':sys.version,'platform':platform.platform(),'host_cpu':int(capture('sysctl','-n','hw.logicalcpu')),'host_ram_bytes':int(capture('sysctl','-n','hw.memsize')),'docker_vm':json.loads(capture('docker','info','--format','{"cpu":{{.NCPU}},"memory_bytes":{{.MemTotal}}}')),'containers':state,'all_containers':capture('docker','ps','-a','--format','{{.Names}} {{.Status}}').splitlines(),'free_bytes':free,'load':os.getloadavg(),'processes':capture('ps','-axo','pid,pcpu,rss,comm').splitlines(),'db_settings':db_settings,'pool_defaults':pools,'api_pool_overrides':{'paper_mutation':[1,0,0.5],'price':[3,0,0.5],'indicator':[1,0,0.25],'chart':[1,0,0.5]},'api_instances':0 if args.phase=='CONTROLLED20' else 1,'workers':20,'bridge_rounds_per_worker':True,'protection_rounds_per_worker':True,'claim_limit':1,'round_limit':20,'coordination':'SERIALIZED_CLAIM_V2','busy_backoff_seconds':0.250,'args':vars(options),'dataset':'fresh database; fixture/oracle pinned by source hashes; owner IDs emitted by runner','authorization':'NC12 sections5,9,11,12,13 approved; preserve all criteria'})
+- status='INCOMPLETE';code=1;start=time.monotonic();error=None
+- try:
+-  if free<2*1024**3:raise RuntimeError('insufficient campaign disk headroom')
+-  if any(c['state']!='running' for c in state) or state[0]['health']!='healthy':raise RuntimeError('campaign services not healthy')
+-  if any('Restarting' in line for line in capture('docker','ps','--format','{{.Status}}').splitlines()):raise RuntimeError('restarting shared service')
+-  await internal.require_empty_database()
+-  code=await (protection.run(root/'run') if args.phase=='CONTROLLED20' else workload.run(options))
+-  status='PASSED' if code==0 else 'FAILED'
+- except BaseException as failure:
+-  error=type(failure).__name__;raise
+- finally:
+-  unchanged=candidate==hashes()
+-  workload.save(root/'campaign-result.json',{'status':status,'exit_code':code,'seconds':time.monotonic()-start,'error_type':error,'candidate_unchanged':unchanged,'free_bytes_after':shutil.disk_usage(ROOT).free})
+-  query=f"SELECT json_build_object('connections',(SELECT count(*) FROM pg_stat_activity WHERE datname='{database}'),'advisory_locks',(SELECT count(*) FROM pg_locks l JOIN pg_database d ON d.oid=l.database WHERE d.datname='{database}' AND l.locktype='advisory'))"
+-  cleanup=json.loads(capture('docker','exec','tiewtrade-postgres-1','psql','-U','postgres','-d','postgres','-At','-c',query))
+-  workload.save(root/'cleanup.json',cleanup)
+-  if not unchanged:raise RuntimeError('candidate changed during campaign')
+- return code
+-if __name__=='__main__':raise SystemExit(asyncio.run(main()))
++    parser = argparse.ArgumentParser()
++    parser.add_argument("phase", choices=("CONTROLLED20", "SMOKE", "W1", "W2", "W3", "W2_OVERFLOW"))
++    parser.add_argument("output", type=pathlib.Path)
++    args = parser.parse_args()
++    root = args.output
++    root.mkdir(parents=True, exist_ok=False)
++    for purpose, value in (
++        (KeyPurpose.TOTP_SECRET, b"T"),
++        (KeyPurpose.VENUE_API_SECRET, b"V"),
++        (KeyPurpose.INDICATOR_CURSOR, b"I"),
++    ):
++        os.environ[purpose.environment_variable] = "1:" + base64.b64encode(
++            value * KEY_BYTES
++        ).decode("ascii")
++    database = internal.guard_database(dict(os.environ))
++    candidate = hashes()
++    runner = pathlib.Path(__file__).resolve()
++    runner_digest = hashlib.sha256(runner.read_bytes()).hexdigest()
++    (root / "campaign-runner.py").write_bytes(runner.read_bytes())
++    workload.save(root / "candidate-sha256.json", candidate)
++    status = "INCOMPLETE"
++    code = 1
++    start = time.monotonic()
++    error = None
++
++    async def phase_run():
++        free = shutil.disk_usage(ROOT).free
++        containers = json.loads(
++            capture("docker", "inspect", "tiewtrade-postgres-1", "tiewtrade-f18-release-redis")
++        )
++        state = [
++            {
++                "name": c["Name"],
++                "state": c["State"]["Status"],
++                "health": c["State"].get("Health", {}).get("Status"),
++                "restart_count": c["RestartCount"],
++                "nano_cpus": c["HostConfig"]["NanoCpus"],
++                "memory_limit": c["HostConfig"]["Memory"],
++            }
++            for c in containers
++        ]
++        db_settings = json.loads(
++            capture(
++                "docker",
++                "exec",
++                "tiewtrade-postgres-1",
++                "psql",
++                "-U",
++                "postgres",
++                "-d",
++                database,
++                "-At",
++                "-c",
++                """SELECT json_object_agg(name,setting) FROM pg_settings WHERE name IN
++                ('server_version','max_connections','shared_buffers','work_mem',
++                'maintenance_work_mem','synchronous_commit','fsync','full_page_writes',
++                'wal_level','max_wal_size','checkpoint_timeout')""",
++            )
++        )
++        pools = {}
++        for role in (
++            DatabaseRole.API,
++            DatabaseRole.AUTH,
++            DatabaseRole.ENGINE,
++            DatabaseRole.ENGINE_SCAN,
++            DatabaseRole.MARKET_DATA,
++        ):
++            engine = create_engine_for(role)
++            pool = engine.pool
++            pools[role.name] = {
++                "size": pool.size(),
++                "max_overflow": pool._max_overflow,
++                "timeout_seconds": pool.timeout(),
++            }
++            await engine.dispose()
++        options = argparse.Namespace(
++            acceptance_profile=internal.NAME,
++            parent_poll_limit=4,
++            phase=args.phase,
++            owners=20,
++            baseline_orders=20,
++            cycles_per_owner=0,
++            rate=2,
++            workers=20,
++            r8_claim_budget=True,
++            coordinate_claims=True,
++            publisher_heartbeat_per_book=True,
++            final_tail_drain=True,
++            diagnostics=False,
++            worker_only=False,
++            baseline_manifest=None,
++            fault_schedule=None,
++            redis_container=None,
++            output=root / "run",
++        )
++        if args.phase != "CONTROLLED20":
++            phase = internal.PHASES[args.phase]
++            options.cycles_per_owner = phase.cycles_per_owner
++            options.rate = phase.rate
++            if args.phase == "W3":
++                options.fault_schedule = (
++                    BACKEND / "tests/infra/execution_market/w3_fault_schedule.json"
++                )
++                options.redis_container = "tiewtrade-f18-release-redis"
++            internal.validate(options)
++        schema = capture(
++            "docker",
++            "exec",
++            "tiewtrade-postgres-1",
++            "pg_dump",
++            "-U",
++            "postgres",
++            "--schema-only",
++            database,
++        )
++        workload.save(
++            root / "manifest.json",
++            {
++                "phase": args.phase,
++                "profile": internal.NAME,
++                "started_at": datetime.now(ZoneInfo("Asia/Bangkok")).isoformat(),
++                "git_head": capture("git", "-C", str(ROOT), "rev-parse", "HEAD"),
++                "database": database,
++                "schema_sha256": hashlib.sha256(schema.encode()).hexdigest(),
++                "python": sys.version,
++                "platform": platform.platform(),
++                "host_cpu": int(capture("sysctl", "-n", "hw.logicalcpu")),
++                "host_ram_bytes": int(capture("sysctl", "-n", "hw.memsize")),
++                "docker_vm": json.loads(
++                    capture(
++                        "docker",
++                        "info",
++                        "--format",
++                        '{"cpu":{{.NCPU}},"memory_bytes":{{.MemTotal}}}',
++                    )
++                ),
++                "containers": state,
++                "all_containers": capture(
++                    "docker", "ps", "-a", "--format", "{{.Names}} {{.Status}}"
++                ).splitlines(),
++                "free_bytes": free,
++                "load": os.getloadavg(),
++                "processes": capture("ps", "-axo", "pid,pcpu,rss,comm").splitlines(),
++                "db_settings": db_settings,
++                "pool_defaults": pools,
++                "api_pool_overrides": {
++                    "paper_mutation": [1, 0, 0.5],
++                    "price": [3, 0, 0.5],
++                    "indicator": [1, 0, 0.25],
++                    "chart": [1, 0, 0.5],
++                },
++                "api_instances": 0 if args.phase == "CONTROLLED20" else 1,
++                "workers": 20,
++                "bridge_rounds_per_worker": True,
++                "protection_rounds_per_worker": True,
++                "claim_limit": 1,
++                "round_limit": 20,
++                "coordination": "SERIALIZED_CLAIM_V2",
++                "busy_backoff_seconds": 0.250,
++                "args": vars(options),
++                "dataset": (
++                    "fresh database; fixture/oracle pinned by source hashes; "
++                    "owner IDs emitted by runner"
++                ),
++                "runner_sha256": runner_digest,
++                "authorization": "NC12 sections5,9,11,12,13,14 approved; preserve all criteria",
++            },
++        )
++        await internal.require_empty_database()
++        return await (
++            protection.run(root / "run") if args.phase == "CONTROLLED20" else workload.run(options)
++        )
++
++    try:
++        async with asyncio.timeout(1200 if args.phase == "SMOKE" else None):
++            code = await internal.run_preflighted(
++                root / "preflight.json", ROOT, check_services, phase_run
++            )
++        status = "PASSED" if code == 0 else "FAILED"
++    except BaseException as failure:
++        error = type(failure).__name__
++        raise
++    finally:
++        unchanged = (
++            candidate == hashes()
++            and runner_digest == hashlib.sha256(runner.read_bytes()).hexdigest()
++        )
++        query = f"""SELECT json_build_object('connections',
++        (SELECT count(*) FROM pg_stat_activity WHERE datname='{database}'),
++        'advisory_locks',(SELECT count(*) FROM pg_locks l
++        JOIN pg_database d ON d.oid=l.database WHERE d.datname='{database}'
++        AND l.locktype='advisory'))"""
++        try:
++            cleanup = json.loads(
++                await asyncio.to_thread(
++                    capture,
++                    "docker",
++                    "exec",
++                    "tiewtrade-postgres-1",
++                    "psql",
++                    "-U",
++                    "postgres",
++                    "-d",
++                    "postgres",
++                    "-At",
++                    "-c",
++                    query,
++                )
++            )
++            if cleanup["connections"] or cleanup["advisory_locks"]:
++                status = "INCOMPLETE"
++                code = 1
++                error = error or "CampaignCleanupIncomplete"
++        except Exception as failure:
++            cleanup = {"error_type": type(failure).__name__}
++            status = "INCOMPLETE"
++            code = 1
++            error = error or type(failure).__name__
++        workload.save(root / "cleanup.json", cleanup)
++        elapsed = time.monotonic() - start
++        if args.phase == "SMOKE" and elapsed > 1200:
++            status = "INCOMPLETE"
++            code = 1
++            error = error or "TimeoutError"
++        if not unchanged:
++            status = "INCOMPLETE"
++            code = 1
++            error = error or "CandidateChanged"
++        workload.save(
++            root / "campaign-result.json",
++            {
++                "status": status,
++                "exit_code": code,
++                "seconds": elapsed,
++                "error_type": error,
++                "candidate_unchanged": unchanged,
++                "free_bytes_after": shutil.disk_usage(ROOT).free,
++                "budget_seconds": 1200 if args.phase == "SMOKE" else None,
++                "budget_scope": "preflight,fixture,measurement,verification,cleanup",
++            },
++        )
++        if not unchanged:
++            raise RuntimeError("candidate changed during campaign")
++    return code
++
++
++if __name__ == "__main__":
++    raise SystemExit(asyncio.run(main()))

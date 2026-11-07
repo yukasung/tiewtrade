@@ -1,0 +1,12 @@
+{
+  "status": "INCOMPLETE",
+  "exit_code": 1,
+  "seconds": 566.0394006249999,
+  "database": "tiewtrade_set4_iso_publisher_10e3a3e1",
+  "error": {
+    "type": "TimeoutError"
+  },
+  "candidate_unchanged": true,
+  "free_bytes_after": 4989669376,
+  "acceptance_result": false
+}

@@ -1,0 +1,1138 @@
+[
+  {
+    "owner": "73bbb747-bfda-4471-8326-4528ae1f32bd",
+    "cycle": 23,
+    "observed_seconds_since_first_call": 60.08510233299967,
+    "steps": [
+      "buy",
+      "limit",
+      "limit",
+      "cancel",
+      "sell"
+    ],
+    "records": [
+      {
+        "owner": "73bbb747-bfda-4471-8326-4528ae1f32bd",
+        "key": "75c94fe6-d028-5eb9-85ad-b50353a5d794",
+        "started": 17545.030369,
+        "http_status": 202,
+        "acknowledged": 17545.643712291,
+        "request_id": "9330f3ad-426b-4ad6-9a3c-dd804e1f3296",
+        "command_id": "d17bab0c-e0a2-4512-bfff-0ee86d0d9490",
+        "order_id": "e45e4a99-cfa4-43b3-9beb-94c01f5e08e2",
+        "outcome": "RETURNED",
+        "finished": 17546.44524025,
+        "cycle": 23,
+        "step": "buy"
+      },
+      {
+        "owner": "73bbb747-bfda-4471-8326-4528ae1f32bd",
+        "key": "e4bd4d38-eaea-5b47-b858-9effd096a837",
+        "started": 17558.991121541,
+        "http_status": 202,
+        "acknowledged": 17559.261792208,
+        "request_id": "872ff4da-4486-4525-bc99-102ef55336d7",
+        "command_id": "6d37f41a-edce-4fab-b877-ea730e4cf67a",
+        "order_id": "f142add4-030e-4c56-8a38-d86c0ca25945",
+        "outcome": "RETURNED",
+        "finished": 17560.415679333,
+        "cycle": 23,
+        "step": "limit"
+      },
+      {
+        "owner": "73bbb747-bfda-4471-8326-4528ae1f32bd",
+        "key": "e4bd4d38-eaea-5b47-b858-9effd096a837",
+        "started": 17575.220083916,
+        "http_status": 200,
+        "acknowledged": 17575.459498666,
+        "request_id": "872ff4da-4486-4525-bc99-102ef55336d7",
+        "command_id": "6d37f41a-edce-4fab-b877-ea730e4cf67a",
+        "order_id": "f142add4-030e-4c56-8a38-d86c0ca25945",
+        "outcome": "RETURNED",
+        "finished": 17575.556362333,
+        "cycle": 23,
+        "step": "limit"
+      },
+      {
+        "owner": "73bbb747-bfda-4471-8326-4528ae1f32bd",
+        "key": "9409348a-28dc-5d9f-aba6-3398e4cbb422",
+        "started": 17575.556741458,
+        "http_status": 202,
+        "acknowledged": 17576.28249525,
+        "request_id": "02ff6242-8dc2-4002-8677-649be17fa234",
+        "command_id": "a6947019-ed79-47b2-b42f-39ba10172e8c",
+        "order_id": "f142add4-030e-4c56-8a38-d86c0ca25945",
+        "outcome": "RETURNED",
+        "finished": 17577.300452583,
+        "cycle": 23,
+        "step": "cancel"
+      },
+      {
+        "owner": "73bbb747-bfda-4471-8326-4528ae1f32bd",
+        "key": "5633da53-dc53-54fc-b30b-6a0b72681cd8",
+        "started": 17584.0305465,
+        "http_status": 202,
+        "acknowledged": 17584.271572666,
+        "request_id": "4156449f-91d6-4950-b38d-dcfbc5945517",
+        "command_id": "e9978763-5d5f-42b5-ae0b-b7fe03921ad7",
+        "order_id": "016fa111-d8b8-402d-8897-6b0d1ba626dd",
+        "outcome": "RETURNED",
+        "finished": 17585.011283875,
+        "cycle": 23,
+        "step": "sell"
+      }
+    ]
+  },
+  {
+    "owner": "1042bc51-72f8-44a6-9d14-c166c545e276",
+    "cycle": 23,
+    "observed_seconds_since_first_call": 57.58520491699892,
+    "steps": [
+      "buy",
+      "limit",
+      "limit",
+      "cancel",
+      "sell"
+    ],
+    "records": [
+      {
+        "owner": "1042bc51-72f8-44a6-9d14-c166c545e276",
+        "key": "51cc4538-54e1-5b77-b255-f0ea2c1777eb",
+        "started": 17547.530266416,
+        "http_status": 202,
+        "acknowledged": 17548.679256541,
+        "request_id": "27a89c26-0508-44f4-97c0-3c2347407b04",
+        "command_id": "181c9b29-c8fd-461a-84a0-21513c42ba82",
+        "order_id": "2f979d73-3c50-407d-9d2c-97389c5b6ec3",
+        "outcome": "RETURNED",
+        "finished": 17550.301491416,
+        "cycle": 23,
+        "step": "buy"
+      },
+      {
+        "owner": "1042bc51-72f8-44a6-9d14-c166c545e276",
+        "key": "c382e79d-5c9c-5de0-a895-121f2efa8c59",
+        "started": 17561.282298083,
+        "http_status": 202,
+        "acknowledged": 17562.026261125,
+        "request_id": "8dbd6e1e-6417-4547-97b9-57ccf3b7c343",
+        "command_id": "46531f67-643f-43c6-a126-6c6bcbe87caa",
+        "order_id": "71486821-2686-4509-84a3-e7b9ec858449",
+        "outcome": "RETURNED",
+        "finished": 17563.594841708,
+        "cycle": 23,
+        "step": "limit"
+      },
+      {
+        "owner": "1042bc51-72f8-44a6-9d14-c166c545e276",
+        "key": "c382e79d-5c9c-5de0-a895-121f2efa8c59",
+        "started": 17579.250121458,
+        "http_status": 200,
+        "acknowledged": 17579.637877166,
+        "request_id": "8dbd6e1e-6417-4547-97b9-57ccf3b7c343",
+        "command_id": "46531f67-643f-43c6-a126-6c6bcbe87caa",
+        "order_id": "71486821-2686-4509-84a3-e7b9ec858449",
+        "outcome": "RETURNED",
+        "finished": 17579.86075675,
+        "cycle": 23,
+        "step": "limit"
+      },
+      {
+        "owner": "1042bc51-72f8-44a6-9d14-c166c545e276",
+        "key": "54e074a8-d4a9-5227-970a-d872c8352b96",
+        "started": 17579.861029,
+        "http_status": 202,
+        "acknowledged": 17580.398008833,
+        "request_id": "ffa02b1f-f1a5-41fa-b95b-8b7796f7f534",
+        "command_id": "e38e6651-7f62-4f44-a4df-90aa14982763",
+        "order_id": "71486821-2686-4509-84a3-e7b9ec858449",
+        "outcome": "RETURNED",
+        "finished": 17581.733223708,
+        "cycle": 23,
+        "step": "cancel"
+      },
+      {
+        "owner": "1042bc51-72f8-44a6-9d14-c166c545e276",
+        "key": "7d161828-c2fa-573b-803b-ed86cee6c3fb",
+        "started": 17589.038914416,
+        "http_status": 202,
+        "acknowledged": 17589.607494833,
+        "request_id": "b73a9a66-543b-4f95-a189-8191f90d1733",
+        "command_id": "c8bd4a9a-a581-41eb-b3db-5f2a0f0c8c12",
+        "order_id": "5cffefc8-1126-4418-9093-3f65c59b84db",
+        "outcome": "RETURNED",
+        "finished": 17590.634090916,
+        "cycle": 23,
+        "step": "sell"
+      }
+    ]
+  },
+  {
+    "owner": "d0eb5d0e-d74a-4b44-8570-0f2b9c6b9c42",
+    "cycle": 23,
+    "observed_seconds_since_first_call": 52.5854492920007,
+    "steps": [
+      "buy",
+      "limit",
+      "limit",
+      "cancel",
+      "sell"
+    ],
+    "records": [
+      {
+        "owner": "d0eb5d0e-d74a-4b44-8570-0f2b9c6b9c42",
+        "key": "96ce179b-0c31-5337-b411-e3066aa659f1",
+        "started": 17552.530022041,
+        "http_status": 202,
+        "acknowledged": 17552.766587708,
+        "request_id": "4af44abe-a862-428f-a3ff-25fd0ba75518",
+        "command_id": "ef505cb5-66ce-4d08-a23e-0b9efafd8510",
+        "order_id": "7c78ee73-dc0c-4913-8d77-20db92ad8443",
+        "outcome": "RETURNED",
+        "finished": 17553.455987708,
+        "cycle": 23,
+        "step": "buy"
+      },
+      {
+        "owner": "d0eb5d0e-d74a-4b44-8570-0f2b9c6b9c42",
+        "key": "97be5a62-1358-504e-8c09-fdb8fef9bdf1",
+        "started": 17567.194912625,
+        "http_status": 202,
+        "acknowledged": 17567.477484,
+        "request_id": "cb4dbedb-126a-4c3a-bf0f-12726ce6c501",
+        "command_id": "bd98eaa3-1066-4d6b-8f66-a8330ddc641d",
+        "order_id": "1780899e-bf10-4653-a608-f5799d464f12",
+        "outcome": "RETURNED",
+        "finished": 17567.905531666,
+        "cycle": 23,
+        "step": "limit"
+      },
+      {
+        "owner": "d0eb5d0e-d74a-4b44-8570-0f2b9c6b9c42",
+        "key": "97be5a62-1358-504e-8c09-fdb8fef9bdf1",
+        "started": 17577.180906541,
+        "http_status": 200,
+        "acknowledged": 17577.396437791,
+        "request_id": "cb4dbedb-126a-4c3a-bf0f-12726ce6c501",
+        "command_id": "bd98eaa3-1066-4d6b-8f66-a8330ddc641d",
+        "order_id": "1780899e-bf10-4653-a608-f5799d464f12",
+        "outcome": "RETURNED",
+        "finished": 17577.617049666,
+        "cycle": 23,
+        "step": "limit"
+      },
+      {
+        "owner": "d0eb5d0e-d74a-4b44-8570-0f2b9c6b9c42",
+        "key": "5e1c42c6-2a3e-5c1d-af05-382137ce491e",
+        "started": 17577.61930225,
+        "http_status": 202,
+        "acknowledged": 17578.625095416,
+        "request_id": "7f50c550-caec-4ece-8f7c-75612210a657",
+        "command_id": "cfc9c754-4bb5-4159-b5a6-c21c7084d4d8",
+        "order_id": "1780899e-bf10-4653-a608-f5799d464f12",
+        "outcome": "RETURNED",
+        "finished": 17580.224018708,
+        "cycle": 23,
+        "step": "cancel"
+      },
+      {
+        "owner": "d0eb5d0e-d74a-4b44-8570-0f2b9c6b9c42",
+        "key": "3ecfce13-a0c9-587b-822a-246e245290a5",
+        "started": 17586.349320166,
+        "http_status": 202,
+        "acknowledged": 17587.008319958,
+        "request_id": "b15b84ac-85fe-4569-80c2-17121d729e38",
+        "command_id": "9ba586b5-af15-4aa3-976c-8d8d97c4457d",
+        "order_id": "1c7dfd2d-74bd-4dff-bd7b-d38a71da7250",
+        "outcome": "RETURNED",
+        "finished": 17588.521334625,
+        "cycle": 23,
+        "step": "sell"
+      }
+    ]
+  },
+  {
+    "owner": "b8ba0695-69c2-4755-897f-9583b0b1a64e",
+    "cycle": 23,
+    "observed_seconds_since_first_call": 49.942573207998066,
+    "steps": [
+      "buy",
+      "limit",
+      "limit",
+      "cancel",
+      "sell"
+    ],
+    "records": [
+      {
+        "owner": "b8ba0695-69c2-4755-897f-9583b0b1a64e",
+        "key": "eeeb0c94-8204-514b-a411-6e2702861853",
+        "started": 17555.172898125,
+        "http_status": 202,
+        "acknowledged": 17557.973726666,
+        "request_id": "3211ae32-e5f9-4156-9a99-c5f1109da81f",
+        "command_id": "0f9c0786-a8f9-4a56-ab7c-98d060d9a894",
+        "order_id": "4c9ba757-0949-4eda-9913-bc33b57f5427",
+        "outcome": "RETURNED",
+        "finished": 17559.275412208,
+        "cycle": 23,
+        "step": "buy"
+      },
+      {
+        "owner": "b8ba0695-69c2-4755-897f-9583b0b1a64e",
+        "key": "6a2aff1a-7dfc-52df-b558-76cb38da22d9",
+        "started": 17571.40677525,
+        "http_status": 202,
+        "acknowledged": 17572.731100583,
+        "request_id": "6d4495c3-cb01-429f-a532-b3904278bb4f",
+        "command_id": "a8579d05-cb55-47d5-93cd-a3478f6a1308",
+        "order_id": "591b6548-59cc-48d1-b241-1b88e3c309d3",
+        "outcome": "RETURNED",
+        "finished": 17573.731989875,
+        "cycle": 23,
+        "step": "limit"
+      },
+      {
+        "owner": "b8ba0695-69c2-4755-897f-9583b0b1a64e",
+        "key": "6a2aff1a-7dfc-52df-b558-76cb38da22d9",
+        "started": 17581.357689333,
+        "http_status": 200,
+        "acknowledged": 17581.830163083,
+        "request_id": "6d4495c3-cb01-429f-a532-b3904278bb4f",
+        "command_id": "a8579d05-cb55-47d5-93cd-a3478f6a1308",
+        "order_id": "591b6548-59cc-48d1-b241-1b88e3c309d3",
+        "outcome": "RETURNED",
+        "finished": 17581.890477625,
+        "cycle": 23,
+        "step": "limit"
+      },
+      {
+        "owner": "b8ba0695-69c2-4755-897f-9583b0b1a64e",
+        "key": "748babd6-b230-5403-9c1f-7325eca4bb3d",
+        "started": 17581.890593166,
+        "http_status": 202,
+        "acknowledged": 17582.743799666,
+        "request_id": "cab6465f-c320-46f1-9c06-34bf9c01cae4",
+        "command_id": "7ac387d3-f5ba-4f28-a26f-4104ae78194f",
+        "order_id": "591b6548-59cc-48d1-b241-1b88e3c309d3",
+        "outcome": "RETURNED",
+        "finished": 17583.375477875,
+        "cycle": 23,
+        "step": "cancel"
+      },
+      {
+        "owner": "b8ba0695-69c2-4755-897f-9583b0b1a64e",
+        "key": "710021b6-ff11-59e0-b90f-ea5cdfb77ca5",
+        "started": 17590.14897525,
+        "http_status": 202,
+        "acknowledged": 17590.392689666,
+        "request_id": "0f65ee16-d9d5-4a02-9800-1bbe2942e131",
+        "command_id": "721ac524-8444-4b20-856b-2e5139bcd537",
+        "order_id": "18bf2bcc-24d8-4bf0-b413-636873a67b0f",
+        "outcome": "RETURNED",
+        "finished": 17590.820443666,
+        "cycle": 23,
+        "step": "sell"
+      }
+    ]
+  },
+  {
+    "owner": "5074ee20-5c95-4758-8994-e7d7a99f7810",
+    "cycle": 23,
+    "observed_seconds_since_first_call": 47.58500354200078,
+    "steps": [
+      "buy",
+      "limit",
+      "limit",
+      "cancel",
+      "sell"
+    ],
+    "records": [
+      {
+        "owner": "5074ee20-5c95-4758-8994-e7d7a99f7810",
+        "key": "1b747b25-0374-5c7d-83f8-1ca8a2bbffc7",
+        "started": 17557.530467791,
+        "http_status": 202,
+        "acknowledged": 17559.080165666,
+        "request_id": "33c860a3-250f-4703-a5de-aef45e3f58ac",
+        "command_id": "09b18221-1ee1-48b4-8097-1a5980c48111",
+        "order_id": "c6ad9d89-792b-497a-808f-dffd896bf1a0",
+        "outcome": "RETURNED",
+        "finished": 17559.801818125,
+        "cycle": 23,
+        "step": "buy"
+      },
+      {
+        "owner": "5074ee20-5c95-4758-8994-e7d7a99f7810",
+        "key": "aa4fe711-d376-5414-8905-39ad31341005",
+        "started": 17577.114014,
+        "http_status": 202,
+        "acknowledged": 17577.548264208,
+        "request_id": "838fe6db-9bc4-470b-967c-d36b5980d801",
+        "command_id": "de622eed-400f-42ff-852a-bb17d3a8c90a",
+        "order_id": "7b8b7a3b-08b9-4276-83df-c185cefbae57",
+        "outcome": "RETURNED",
+        "finished": 17579.820530375,
+        "cycle": 23,
+        "step": "limit"
+      },
+      {
+        "owner": "5074ee20-5c95-4758-8994-e7d7a99f7810",
+        "key": "aa4fe711-d376-5414-8905-39ad31341005",
+        "started": 17585.570365666,
+        "http_status": 200,
+        "acknowledged": 17585.8373715,
+        "request_id": "838fe6db-9bc4-470b-967c-d36b5980d801",
+        "command_id": "de622eed-400f-42ff-852a-bb17d3a8c90a",
+        "order_id": "7b8b7a3b-08b9-4276-83df-c185cefbae57",
+        "outcome": "RETURNED",
+        "finished": 17585.884422,
+        "cycle": 23,
+        "step": "limit"
+      },
+      {
+        "owner": "5074ee20-5c95-4758-8994-e7d7a99f7810",
+        "key": "5939d6d4-c94c-54e8-b2e0-bbb583796e5d",
+        "started": 17585.884620625,
+        "http_status": 202,
+        "acknowledged": 17586.350930333,
+        "request_id": "9e0b602b-539c-4b18-8079-af959e7a7ec2",
+        "command_id": "4d3c7d7f-dac2-43c6-b18a-d35df9768a16",
+        "order_id": "7b8b7a3b-08b9-4276-83df-c185cefbae57",
+        "outcome": "RETURNED",
+        "finished": 17588.2406295,
+        "cycle": 23,
+        "step": "cancel"
+      },
+      {
+        "owner": "5074ee20-5c95-4758-8994-e7d7a99f7810",
+        "key": "8c786359-2df4-5f42-80fd-9bc8e7e8318f",
+        "started": 17593.363469333,
+        "http_status": 202,
+        "acknowledged": 17595.254893291,
+        "request_id": "68463266-00bd-4e8f-a152-aab023a801f3",
+        "command_id": "cf3666ca-6f0d-4543-a6c5-1603dbfb83e6",
+        "order_id": "fc6d9906-5399-493c-be02-c181b2fa7327",
+        "outcome": "RETURNED",
+        "finished": 17596.971048333,
+        "cycle": 23,
+        "step": "sell"
+      }
+    ]
+  },
+  {
+    "owner": "eea7a7f4-71fe-4da4-9d66-40bb5f9de4ce",
+    "cycle": 23,
+    "observed_seconds_since_first_call": 45.08508116699886,
+    "steps": [
+      "buy",
+      "limit",
+      "limit",
+      "cancel"
+    ],
+    "records": [
+      {
+        "owner": "eea7a7f4-71fe-4da4-9d66-40bb5f9de4ce",
+        "key": "7bb30597-4c10-59d6-bf34-00b090aeb9ad",
+        "started": 17560.030390166,
+        "http_status": 202,
+        "acknowledged": 17560.53280925,
+        "request_id": "926b8a67-ed11-4abe-a650-653b9a9c6ce1",
+        "command_id": "74c000df-d1f7-4348-a2d2-73c171e78883",
+        "order_id": "70a5aa2a-a384-4e70-bbfc-092c4d4faf49",
+        "outcome": "RETURNED",
+        "finished": 17560.8903995,
+        "cycle": 23,
+        "step": "buy"
+      },
+      {
+        "owner": "eea7a7f4-71fe-4da4-9d66-40bb5f9de4ce",
+        "key": "a7bea660-23d1-5c42-bc13-07acb069e444",
+        "started": 17586.883452375,
+        "http_status": 202,
+        "acknowledged": 17587.880332416,
+        "request_id": "960008ab-36d1-45ca-8606-e959782102f2",
+        "command_id": "cdeadec7-3b5d-4fcd-b71d-5a8bd8f21b8d",
+        "order_id": "5296ca9f-02a4-4fe6-baac-0c2b3f4d1048",
+        "outcome": "RETURNED",
+        "finished": 17589.655113833,
+        "cycle": 23,
+        "step": "limit"
+      },
+      {
+        "owner": "eea7a7f4-71fe-4da4-9d66-40bb5f9de4ce",
+        "key": "a7bea660-23d1-5c42-bc13-07acb069e444",
+        "started": 17597.064829583,
+        "http_status": 200,
+        "acknowledged": 17597.172390041,
+        "request_id": "960008ab-36d1-45ca-8606-e959782102f2",
+        "command_id": "cdeadec7-3b5d-4fcd-b71d-5a8bd8f21b8d",
+        "order_id": "5296ca9f-02a4-4fe6-baac-0c2b3f4d1048",
+        "outcome": "RETURNED",
+        "finished": 17597.221932,
+        "cycle": 23,
+        "step": "limit"
+      },
+      {
+        "owner": "eea7a7f4-71fe-4da4-9d66-40bb5f9de4ce",
+        "key": "b04f199c-1073-5528-a42e-0c4e4fccbe0b",
+        "started": 17597.222106083,
+        "http_status": 202,
+        "acknowledged": 17597.653034125,
+        "request_id": "88eb4ee2-ab9c-422a-b3ab-1b12a0a59ad3",
+        "command_id": "f7960ffa-eb86-4ac7-a91b-fac713a93d50",
+        "order_id": "5296ca9f-02a4-4fe6-baac-0c2b3f4d1048",
+        "outcome": "RETURNED",
+        "finished": 17598.451117666,
+        "cycle": 23,
+        "step": "cancel"
+      }
+    ]
+  },
+  {
+    "owner": "cdcaeefe-4c11-410c-be1a-a69c35ee7154",
+    "cycle": 23,
+    "observed_seconds_since_first_call": 42.57586358299886,
+    "steps": [
+      "buy",
+      "limit",
+      "limit",
+      "cancel",
+      "sell"
+    ],
+    "records": [
+      {
+        "owner": "cdcaeefe-4c11-410c-be1a-a69c35ee7154",
+        "key": "cca7e6a7-e97b-5329-950c-3d55999d7e68",
+        "started": 17562.53960775,
+        "http_status": 202,
+        "acknowledged": 17563.646629625,
+        "request_id": "85a3f413-5857-4f39-bec7-3992ff1fddbc",
+        "command_id": "90930481-add8-4303-b11e-26e52e2b8d26",
+        "order_id": "ecb818c3-90e6-4e67-85d4-ea13fdbfab99",
+        "outcome": "RETURNED",
+        "finished": 17564.776491083,
+        "cycle": 23,
+        "step": "buy"
+      },
+      {
+        "owner": "cdcaeefe-4c11-410c-be1a-a69c35ee7154",
+        "key": "448f4996-9744-5624-9b7f-c3af16766639",
+        "started": 17580.423134458,
+        "http_status": 202,
+        "acknowledged": 17582.771741041,
+        "request_id": "cd109e1d-3ec1-4624-9093-2db18c0ea1ad",
+        "command_id": "39fd5ead-bb8d-4732-84b3-fd29d528382a",
+        "order_id": "8ce0540f-fe15-40ee-bd4d-1c56e4be2e38",
+        "outcome": "RETURNED",
+        "finished": 17583.717543875,
+        "cycle": 23,
+        "step": "limit"
+      },
+      {
+        "owner": "cdcaeefe-4c11-410c-be1a-a69c35ee7154",
+        "key": "448f4996-9744-5624-9b7f-c3af16766639",
+        "started": 17590.374833083,
+        "http_status": 200,
+        "acknowledged": 17590.429717291,
+        "request_id": "cd109e1d-3ec1-4624-9093-2db18c0ea1ad",
+        "command_id": "39fd5ead-bb8d-4732-84b3-fd29d528382a",
+        "order_id": "8ce0540f-fe15-40ee-bd4d-1c56e4be2e38",
+        "outcome": "RETURNED",
+        "finished": 17590.438076791,
+        "cycle": 23,
+        "step": "limit"
+      },
+      {
+        "owner": "cdcaeefe-4c11-410c-be1a-a69c35ee7154",
+        "key": "3031a343-203f-58d0-ae7a-f7c74570c473",
+        "started": 17590.438254958,
+        "http_status": 202,
+        "acknowledged": 17590.6344765,
+        "request_id": "aec1bea7-ee3b-4b47-a36f-3a34178fed6b",
+        "command_id": "d0f606da-1a58-4934-8074-495b036b1f57",
+        "order_id": "8ce0540f-fe15-40ee-bd4d-1c56e4be2e38",
+        "outcome": "RETURNED",
+        "finished": 17591.589786916,
+        "cycle": 23,
+        "step": "cancel"
+      },
+      {
+        "owner": "cdcaeefe-4c11-410c-be1a-a69c35ee7154",
+        "key": "2e9072cf-25ee-568b-8245-fe73272575c6",
+        "started": 17598.728043416,
+        "http_status": 202,
+        "acknowledged": 17599.429566833,
+        "request_id": "7aeccfa6-e56f-4b25-ba14-c1b374c8bea3",
+        "command_id": "a9160e5e-a643-4cb9-9b5b-6b3ddcb6742b",
+        "order_id": "657673ae-8912-4556-b1e4-7e625900f448",
+        "outcome": "RETURNED",
+        "finished": 17601.047518208,
+        "cycle": 23,
+        "step": "sell"
+      }
+    ]
+  },
+  {
+    "owner": "3d012878-afc3-4f45-b3b5-207673658966",
+    "cycle": 23,
+    "observed_seconds_since_first_call": 40.07771587499883,
+    "steps": [
+      "buy",
+      "limit",
+      "limit",
+      "cancel",
+      "sell"
+    ],
+    "records": [
+      {
+        "owner": "3d012878-afc3-4f45-b3b5-207673658966",
+        "key": "0ed4b356-4435-5719-be30-6afccd8fde6a",
+        "started": 17565.037755458,
+        "http_status": 202,
+        "acknowledged": 17565.702971541,
+        "request_id": "10c5d100-361c-4a38-8dc5-d2e640cee4f1",
+        "command_id": "d35ea24f-c736-4d09-8570-3fb3ef7be2bf",
+        "order_id": "f43f5d32-2ffc-46bb-bce8-ad8e76d3e8e4",
+        "outcome": "RETURNED",
+        "finished": 17567.489220291,
+        "cycle": 23,
+        "step": "buy"
+      },
+      {
+        "owner": "3d012878-afc3-4f45-b3b5-207673658966",
+        "key": "3cefa9cc-eb5b-56f3-af51-52c1ac2ca31d",
+        "started": 17585.262774541,
+        "http_status": 202,
+        "acknowledged": 17585.848306291,
+        "request_id": "9cd9be47-af41-49de-9696-d83400db1963",
+        "command_id": "e5d7d62e-f0c2-4d36-9f1d-267f81e71d6b",
+        "order_id": "afc08c1d-1e7a-421a-9fef-0211ead754b9",
+        "outcome": "RETURNED",
+        "finished": 17588.261423375,
+        "cycle": 23,
+        "step": "limit"
+      },
+      {
+        "owner": "3d012878-afc3-4f45-b3b5-207673658966",
+        "key": "3cefa9cc-eb5b-56f3-af51-52c1ac2ca31d",
+        "started": 17593.480326166,
+        "http_status": 200,
+        "acknowledged": 17593.857481458,
+        "request_id": "9cd9be47-af41-49de-9696-d83400db1963",
+        "command_id": "e5d7d62e-f0c2-4d36-9f1d-267f81e71d6b",
+        "order_id": "afc08c1d-1e7a-421a-9fef-0211ead754b9",
+        "outcome": "RETURNED",
+        "finished": 17593.963933625,
+        "cycle": 23,
+        "step": "limit"
+      },
+      {
+        "owner": "3d012878-afc3-4f45-b3b5-207673658966",
+        "key": "0bc5e808-2c9e-5abb-9369-4e342c9a6a63",
+        "started": 17593.96406975,
+        "http_status": 202,
+        "acknowledged": 17595.167040291,
+        "request_id": "a69a7772-5556-4e70-92ca-f2479b8d91f6",
+        "command_id": "adbb5b6d-fe90-4588-82be-32872c654176",
+        "order_id": "afc08c1d-1e7a-421a-9fef-0211ead754b9",
+        "outcome": "RETURNED",
+        "finished": 17596.847829833,
+        "cycle": 23,
+        "step": "cancel"
+      },
+      {
+        "owner": "3d012878-afc3-4f45-b3b5-207673658966",
+        "key": "738fcfd2-de3d-530d-b3ce-2835a7e52d79",
+        "started": 17603.855106333,
+        "http_status": 202,
+        "acknowledged": 17604.98431575,
+        "request_id": "36d4fa68-c9c9-439f-b028-ca03c403c173",
+        "outcome": "CancelledError",
+        "finished": 17605.03533625,
+        "cycle": 23,
+        "step": "sell"
+      }
+    ]
+  },
+  {
+    "owner": "8daf4879-1aa7-4f72-9969-68a2b91f8a10",
+    "cycle": 23,
+    "observed_seconds_since_first_call": 37.58587204200012,
+    "steps": [
+      "buy",
+      "limit",
+      "limit",
+      "cancel"
+    ],
+    "records": [
+      {
+        "owner": "8daf4879-1aa7-4f72-9969-68a2b91f8a10",
+        "key": "fdc546e3-2650-5843-9f1e-ff8f62c894bb",
+        "started": 17567.529599291,
+        "http_status": 202,
+        "acknowledged": 17568.053506375,
+        "request_id": "626ec66f-a87b-4d08-ae15-cdb7ecb2f7aa",
+        "command_id": "bea48c21-3067-410c-8f94-92f7d7f75409",
+        "order_id": "615a1511-5760-4cbc-867e-d127fb52969c",
+        "outcome": "RETURNED",
+        "finished": 17570.666245125,
+        "cycle": 23,
+        "step": "buy"
+      },
+      {
+        "owner": "8daf4879-1aa7-4f72-9969-68a2b91f8a10",
+        "key": "3aa577f7-f4be-5f25-ad5b-3d9744a491b8",
+        "started": 17587.000522416,
+        "http_status": 202,
+        "acknowledged": 17588.431488875,
+        "request_id": "53894b84-753e-43f9-ad11-c1124835b63d",
+        "command_id": "b7c64773-0c9e-4248-9c7d-85b6b7d7242f",
+        "order_id": "de8350eb-b624-4e5f-b7d3-3d010eaa1f0e",
+        "outcome": "RETURNED",
+        "finished": 17589.279863416,
+        "cycle": 23,
+        "step": "limit"
+      },
+      {
+        "owner": "8daf4879-1aa7-4f72-9969-68a2b91f8a10",
+        "key": "3aa577f7-f4be-5f25-ad5b-3d9744a491b8",
+        "started": 17596.281834,
+        "http_status": 200,
+        "acknowledged": 17596.674288666,
+        "request_id": "53894b84-753e-43f9-ad11-c1124835b63d",
+        "command_id": "b7c64773-0c9e-4248-9c7d-85b6b7d7242f",
+        "order_id": "de8350eb-b624-4e5f-b7d3-3d010eaa1f0e",
+        "outcome": "RETURNED",
+        "finished": 17596.886917708,
+        "cycle": 23,
+        "step": "limit"
+      },
+      {
+        "owner": "8daf4879-1aa7-4f72-9969-68a2b91f8a10",
+        "key": "af14ddeb-d276-5e97-8cb7-17f8b3cc2d72",
+        "started": 17596.887092666,
+        "http_status": 202,
+        "acknowledged": 17597.287249708,
+        "request_id": "2627c75d-8951-4527-a1b2-961ee76d9615",
+        "command_id": "9c7651a0-7481-41cf-9c3f-c8d0d07db0f5",
+        "order_id": "de8350eb-b624-4e5f-b7d3-3d010eaa1f0e",
+        "outcome": "RETURNED",
+        "finished": 17598.10820275,
+        "cycle": 23,
+        "step": "cancel"
+      }
+    ]
+  },
+  {
+    "owner": "aed14c25-60fe-46c0-8430-3eacb4c1b6cf",
+    "cycle": 23,
+    "observed_seconds_since_first_call": 35.03810341699864,
+    "steps": [
+      "buy",
+      "limit",
+      "limit",
+      "cancel"
+    ],
+    "records": [
+      {
+        "owner": "aed14c25-60fe-46c0-8430-3eacb4c1b6cf",
+        "key": "09d08323-c574-5c43-8847-08311f4e96ac",
+        "started": 17570.077367916,
+        "http_status": 202,
+        "acknowledged": 17571.744346083,
+        "request_id": "2d8c1ccf-5f0a-4205-9316-5e18d43a8972",
+        "command_id": "356021a7-0051-4c54-ac8d-7fb739ed2f16",
+        "order_id": "4c110e94-fed6-4744-b30b-19921a403216",
+        "outcome": "RETURNED",
+        "finished": 17573.357497583,
+        "cycle": 23,
+        "step": "buy"
+      },
+      {
+        "owner": "aed14c25-60fe-46c0-8430-3eacb4c1b6cf",
+        "key": "776de430-1561-57ca-a274-1de7b629448e",
+        "started": 17588.923494291,
+        "http_status": 202,
+        "acknowledged": 17589.645835166,
+        "request_id": "a7992f9e-b831-40ab-8d47-7b60dab11278",
+        "command_id": "4392b789-eeec-4659-acf6-a830572a9489",
+        "order_id": "2fe821cb-d9db-4cff-8624-5fc8dcf2b56e",
+        "outcome": "RETURNED",
+        "finished": 17590.706900583,
+        "cycle": 23,
+        "step": "limit"
+      },
+      {
+        "owner": "aed14c25-60fe-46c0-8430-3eacb4c1b6cf",
+        "key": "776de430-1561-57ca-a274-1de7b629448e",
+        "started": 17598.071867916,
+        "http_status": 200,
+        "acknowledged": 17598.172426458,
+        "request_id": "a7992f9e-b831-40ab-8d47-7b60dab11278",
+        "command_id": "4392b789-eeec-4659-acf6-a830572a9489",
+        "order_id": "2fe821cb-d9db-4cff-8624-5fc8dcf2b56e",
+        "outcome": "RETURNED",
+        "finished": 17598.19112775,
+        "cycle": 23,
+        "step": "limit"
+      },
+      {
+        "owner": "aed14c25-60fe-46c0-8430-3eacb4c1b6cf",
+        "key": "5b8b090a-8204-5356-8a12-a7b0aceb5d74",
+        "started": 17598.191274041,
+        "http_status": 202,
+        "acknowledged": 17598.611963166,
+        "request_id": "9daf97ba-6292-4dfd-9c12-8eaf9ef1aa18",
+        "command_id": "6f758b6d-f2e7-49e8-92d0-8a41eaef4809",
+        "order_id": "2fe821cb-d9db-4cff-8624-5fc8dcf2b56e",
+        "outcome": "RETURNED",
+        "finished": 17599.689484,
+        "cycle": 23,
+        "step": "cancel"
+      }
+    ]
+  },
+  {
+    "owner": "cd1c177d-2ca1-4162-8714-c9fff20c36c1",
+    "cycle": 23,
+    "observed_seconds_since_first_call": 32.58506437499818,
+    "steps": [
+      "buy",
+      "limit",
+      "limit",
+      "cancel"
+    ],
+    "records": [
+      {
+        "owner": "cd1c177d-2ca1-4162-8714-c9fff20c36c1",
+        "key": "46757c03-adc1-5af3-8286-2a820bc9a6d6",
+        "started": 17572.530406958,
+        "http_status": 202,
+        "acknowledged": 17573.139323625,
+        "request_id": "f29a5d1a-7527-4888-98dd-f81b07e00487",
+        "command_id": "4ecbd7c3-ed2c-4c2a-b6f5-fb5dc4850d9b",
+        "order_id": "08d1706d-6f93-418c-a5e7-5097d6f221ea",
+        "outcome": "RETURNED",
+        "finished": 17576.912247458,
+        "cycle": 23,
+        "step": "buy"
+      },
+      {
+        "owner": "cd1c177d-2ca1-4162-8714-c9fff20c36c1",
+        "key": "95221c25-d430-557a-98da-102a6ee18a2b",
+        "started": 17590.851411208,
+        "http_status": 202,
+        "acknowledged": 17591.199075916,
+        "request_id": "c96b81b3-ced7-48aa-b287-3214824e4873",
+        "command_id": "679a6add-c56c-4496-8b4b-ce6405714ea5",
+        "order_id": "58369d47-af7f-4f2d-a222-79a253a524a2",
+        "outcome": "RETURNED",
+        "finished": 17592.4133625,
+        "cycle": 23,
+        "step": "limit"
+      },
+      {
+        "owner": "cd1c177d-2ca1-4162-8714-c9fff20c36c1",
+        "key": "95221c25-d430-557a-98da-102a6ee18a2b",
+        "started": 17601.684094708,
+        "http_status": 200,
+        "acknowledged": 17601.824691583,
+        "request_id": "c96b81b3-ced7-48aa-b287-3214824e4873",
+        "command_id": "679a6add-c56c-4496-8b4b-ce6405714ea5",
+        "order_id": "58369d47-af7f-4f2d-a222-79a253a524a2",
+        "outcome": "RETURNED",
+        "finished": 17601.887966916,
+        "cycle": 23,
+        "step": "limit"
+      },
+      {
+        "owner": "cd1c177d-2ca1-4162-8714-c9fff20c36c1",
+        "key": "85abfdfa-9986-592f-8f7c-3a6c858e7765",
+        "started": 17601.888281083,
+        "http_status": 202,
+        "acknowledged": 17602.296450125,
+        "request_id": "0db90ac4-31c4-47c2-9534-b6b16d99b407",
+        "command_id": "05bd5c25-7286-4bd4-8a25-7f41b1ad6561",
+        "order_id": "58369d47-af7f-4f2d-a222-79a253a524a2",
+        "outcome": "RETURNED",
+        "finished": 17603.45152425,
+        "cycle": 23,
+        "step": "cancel"
+      }
+    ]
+  },
+  {
+    "owner": "0e98468e-449b-4f5c-a1b1-1a7a94256b10",
+    "cycle": 23,
+    "observed_seconds_since_first_call": 30.060354707999068,
+    "steps": [
+      "buy",
+      "limit"
+    ],
+    "records": [
+      {
+        "owner": "0e98468e-449b-4f5c-a1b1-1a7a94256b10",
+        "key": "46842aa6-aa91-5edb-ac33-30f1b3cd5d05",
+        "started": 17575.055116625,
+        "http_status": 202,
+        "acknowledged": 17576.314428875,
+        "request_id": "ecd7766d-0374-4291-b6e3-4a9e57f15deb",
+        "command_id": "41be4e89-114d-4d14-bb9c-293bd3e9d7ab",
+        "order_id": "8acedfcf-947c-4fd2-92e3-99ccde2653fb",
+        "outcome": "RETURNED",
+        "finished": 17577.882549958,
+        "cycle": 23,
+        "step": "buy"
+      },
+      {
+        "owner": "0e98468e-449b-4f5c-a1b1-1a7a94256b10",
+        "key": "0252feba-a57c-5cde-b642-8a60be4ed1d4",
+        "started": 17591.781449625,
+        "http_status": 202,
+        "acknowledged": 17596.017014875,
+        "request_id": "c4b3040f-689a-4f9e-8d30-abf8e174cbdb",
+        "command_id": "b21fc3cd-9f14-41f8-9084-700577016973",
+        "order_id": "68e82703-a017-4659-850b-41bbb25b4d30",
+        "outcome": "RETURNED",
+        "finished": 17596.912096125,
+        "cycle": 23,
+        "step": "limit"
+      }
+    ]
+  },
+  {
+    "owner": "710e2f3d-afb8-4018-ac9a-e35cbb20ee72",
+    "cycle": 24,
+    "observed_seconds_since_first_call": 27.585744500000146,
+    "steps": [
+      "buy",
+      "limit"
+    ],
+    "records": [
+      {
+        "owner": "710e2f3d-afb8-4018-ac9a-e35cbb20ee72",
+        "key": "3e20452f-9bac-5f84-a0af-b842c4939e63",
+        "started": 17577.529726833,
+        "http_status": 202,
+        "acknowledged": 17578.283494,
+        "request_id": "0b94559c-c8c3-4a3a-bc95-7703a21b541d",
+        "command_id": "954686e4-0a98-4237-ac60-51f0f174f634",
+        "order_id": "f2b29de3-0e62-49cb-bd91-80f3ee4382b1",
+        "outcome": "RETURNED",
+        "finished": 17580.58523775,
+        "cycle": 24,
+        "step": "buy"
+      },
+      {
+        "owner": "710e2f3d-afb8-4018-ac9a-e35cbb20ee72",
+        "key": "6d907e64-848f-5f0e-a3b0-322956e98109",
+        "started": 17596.168207291,
+        "http_status": 202,
+        "acknowledged": 17597.032082,
+        "request_id": "ff14033a-4888-414c-9e1b-879b25fd10cd",
+        "command_id": "58362d6a-9ca9-4e09-97df-5a471bd5cdec",
+        "order_id": "c16d9572-a416-4b55-b8ac-1521114fc3a5",
+        "outcome": "RETURNED",
+        "finished": 17597.817469708,
+        "cycle": 24,
+        "step": "limit"
+      }
+    ]
+  },
+  {
+    "owner": "4deecfc9-81ee-4e8d-9ed0-221dd37089dc",
+    "cycle": 24,
+    "observed_seconds_since_first_call": 25.084782999998424,
+    "steps": [
+      "buy",
+      "limit"
+    ],
+    "records": [
+      {
+        "owner": "4deecfc9-81ee-4e8d-9ed0-221dd37089dc",
+        "key": "6c9874f8-d7ed-54dd-bd9d-8d1d5fa29caa",
+        "started": 17580.030688333,
+        "http_status": 202,
+        "acknowledged": 17582.755975583,
+        "request_id": "313c1523-9973-43a6-adb3-18c98a3d1d49",
+        "command_id": "14ed59d6-adcc-466c-9c21-0e8e1cf24923",
+        "order_id": "635498cf-158d-421d-af55-28f7b2fdf6a8",
+        "outcome": "RETURNED",
+        "finished": 17584.033481333,
+        "cycle": 24,
+        "step": "buy"
+      },
+      {
+        "owner": "4deecfc9-81ee-4e8d-9ed0-221dd37089dc",
+        "key": "37f0e8f6-c800-5e9e-864c-9925539dd7c6",
+        "started": 17599.461213833,
+        "http_status": 202,
+        "acknowledged": 17600.641677125,
+        "request_id": "f059fa58-6f1c-44d6-918a-f059d4dc4994",
+        "command_id": "a94cfad0-1942-4d10-88b2-ac059bd0f788",
+        "order_id": "9d864574-f0fa-4665-9873-5714ebd1bc76",
+        "outcome": "RETURNED",
+        "finished": 17601.984419416,
+        "cycle": 24,
+        "step": "limit"
+      }
+    ]
+  },
+  {
+    "owner": "7c2b2d39-8d5d-4813-bf1d-7425f65963d0",
+    "cycle": 24,
+    "observed_seconds_since_first_call": 22.58580924999842,
+    "steps": [
+      "buy",
+      "limit"
+    ],
+    "records": [
+      {
+        "owner": "7c2b2d39-8d5d-4813-bf1d-7425f65963d0",
+        "key": "18a7e4a4-f6a5-575f-aca4-27db2ba29063",
+        "started": 17582.529662083,
+        "http_status": 202,
+        "acknowledged": 17583.454051958,
+        "request_id": "13fdbb3d-af79-41bb-a1c5-7f7b52a7928d",
+        "command_id": "83b605e5-9cc6-4378-9ad5-e35c0374ce65",
+        "order_id": "f6bbf75b-1566-424d-9de4-8b7f96a4c757",
+        "outcome": "RETURNED",
+        "finished": 17585.051314291,
+        "cycle": 24,
+        "step": "buy"
+      },
+      {
+        "owner": "7c2b2d39-8d5d-4813-bf1d-7425f65963d0",
+        "key": "2111695e-db59-52b9-a02e-174a544340e7",
+        "started": 17601.485509125,
+        "http_status": 202,
+        "acknowledged": 17602.354322458,
+        "request_id": "05415c6c-fcbf-4bc8-81fc-8d30521c68bf",
+        "command_id": "4ca2b19c-2156-4e74-b6b2-e61c04d44d48",
+        "order_id": "8c287614-c234-40d4-b20d-2abd2cfeca29",
+        "outcome": "RETURNED",
+        "finished": 17603.509634958,
+        "cycle": 24,
+        "step": "limit"
+      }
+    ]
+  },
+  {
+    "owner": "7a80630e-ee31-41c1-b097-8bd5a8c43314",
+    "cycle": 24,
+    "observed_seconds_since_first_call": 18.35985150000124,
+    "steps": [
+      "buy"
+    ],
+    "records": [
+      {
+        "owner": "7a80630e-ee31-41c1-b097-8bd5a8c43314",
+        "key": "65d48124-a448-57c3-9a03-0e5a864ec6a7",
+        "started": 17586.755619833,
+        "http_status": 202,
+        "acknowledged": 17588.132558166,
+        "request_id": "eb42c549-0c3c-4ba3-a220-5bc4f782ef60",
+        "command_id": "c64a099c-53ff-47ce-861e-87b5bd4c50bd",
+        "order_id": "b68b3977-0217-4ea3-938b-6f7342ab5686",
+        "outcome": "RETURNED",
+        "finished": 17589.801118666,
+        "cycle": 24,
+        "step": "buy"
+      }
+    ]
+  },
+  {
+    "owner": "a33d332f-12d7-479e-b445-646dc6b8f18c",
+    "cycle": 24,
+    "observed_seconds_since_first_call": 17.584050082998147,
+    "steps": [
+      "buy"
+    ],
+    "records": [
+      {
+        "owner": "a33d332f-12d7-479e-b445-646dc6b8f18c",
+        "key": "054a088e-edf6-55dc-ae14-07e7fd2f5703",
+        "started": 17587.53142125,
+        "http_status": 202,
+        "acknowledged": 17590.191468625,
+        "request_id": "59e8b016-6ab9-4f4b-aae2-f4ecfe92edde",
+        "command_id": "35b02b5d-c8d3-4f75-a6e4-cbe5e7156b45",
+        "order_id": "b1809b29-832c-4deb-91d1-55e65dbb375a",
+        "outcome": "RETURNED",
+        "finished": 17591.768608916,
+        "cycle": 24,
+        "step": "buy"
+      }
+    ]
+  },
+  {
+    "owner": "4c7aa46a-4d24-48a9-aec7-f46a87770f3d",
+    "cycle": 24,
+    "observed_seconds_since_first_call": 15.085621833000914,
+    "steps": [
+      "buy"
+    ],
+    "records": [
+      {
+        "owner": "4c7aa46a-4d24-48a9-aec7-f46a87770f3d",
+        "key": "436b10c0-e56f-5a9c-8a26-90050a8bda4e",
+        "started": 17590.0298495,
+        "http_status": 202,
+        "acknowledged": 17590.539902958,
+        "request_id": "0ebdc897-52e1-459e-a516-950bc7fa110e",
+        "command_id": "2514a410-3888-4131-b35a-f531dc0d391f",
+        "order_id": "a0dd9bbd-6cad-4ae8-9f2f-525aa829f791",
+        "outcome": "RETURNED",
+        "finished": 17591.770691666,
+        "cycle": 24,
+        "step": "buy"
+      }
+    ]
+  },
+  {
+    "owner": "5317b347-8865-4e2e-bba8-8581c05fa13f",
+    "cycle": 24,
+    "observed_seconds_since_first_call": 12.584849250000843,
+    "steps": [
+      "buy"
+    ],
+    "records": [
+      {
+        "owner": "5317b347-8865-4e2e-bba8-8581c05fa13f",
+        "key": "96ecbbaf-6629-52ba-92df-4582b7ed55b0",
+        "started": 17592.530622083,
+        "http_status": 202,
+        "acknowledged": 17595.135285625,
+        "request_id": "204ac86f-180c-42ae-b2d3-fce625fce9c5",
+        "command_id": "84f5c8d8-9106-4f5d-b595-9cec3528948c",
+        "order_id": "515e7ec3-d5df-43c9-b98a-5f827cb0571e",
+        "outcome": "RETURNED",
+        "finished": 17596.999181291,
+        "cycle": 24,
+        "step": "buy"
+      }
+    ]
+  },
+  {
+    "owner": "81e5b558-de26-45b9-b02c-71c4e34639aa",
+    "cycle": 24,
+    "observed_seconds_since_first_call": 1.7417407920002006,
+    "steps": [
+      "buy"
+    ],
+    "records": [
+      {
+        "owner": "81e5b558-de26-45b9-b02c-71c4e34639aa",
+        "key": "4f445234-a930-5af9-b059-93efb027a3f3",
+        "started": 17603.373730541,
+        "http_status": 202,
+        "acknowledged": 17604.934962833,
+        "request_id": "77156c43-7fa6-44d8-b63e-de3ce8609a7f",
+        "outcome": "CancelledError",
+        "finished": 17605.035122625,
+        "cycle": 24,
+        "step": "buy"
+      }
+    ]
+  }
+]

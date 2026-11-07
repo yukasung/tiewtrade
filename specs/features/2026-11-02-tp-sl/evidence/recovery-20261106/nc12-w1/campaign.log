@@ -1,0 +1,86 @@
+baseline 1 / 20
+baseline 2 / 20
+baseline 3 / 20
+baseline 4 / 20
+baseline 5 / 20
+baseline 6 / 20
+baseline 7 / 20
+baseline 8 / 20
+baseline 9 / 20
+baseline 10 / 20
+baseline 11 / 20
+baseline 12 / 20
+baseline 13 / 20
+baseline 14 / 20
+baseline 15 / 20
+baseline 16 / 20
+baseline 17 / 20
+baseline 18 / 20
+baseline 19 / 20
+baseline 20 / 20
+workload W1 started
+paper order command failed command_id=212ac2d5-f771-438a-b0ec-f90f7f87a67b
+Traceback (most recent call last):
+  File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/backend/src/tiewtrade/services/engine/paper_order.py", line 176, in run_paper_order_round
+    await process_claimed_order(session, claim, policy=policy)
+  File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/backend/src/tiewtrade/infra/paper_orders/worker.py", line 197, in process_claimed_order
+    await _process_new(
+  File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/backend/src/tiewtrade/infra/paper_orders/worker.py", line 426, in _process_new
+    target = await load_order_state(session, intent.order_id)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/backend/src/tiewtrade/infra/paper_orders/matching_storage.py", line 224, in load_order_state
+    await session.execute(
+  File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/backend/src/tiewtrade/infra/db/session.py", line 80, in execute
+    return await _execute(self._connection, statement, parameters)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/backend/src/tiewtrade/infra/db/session.py", line 66, in _execute
+    raise translate_database_error(error) from None
+tiewtrade.infra.db.errors.DatabaseTimeoutError: ฐานข้อมูลปฏิเสธคำสั่ง (SQLSTATE 57014)
+Traceback (most recent call last):
+  File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/backend/tests/infra/execution_market/profile_workload.py", line 1788, in owner_cycles
+    await cycle(
+  File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/backend/tests/infra/execution_market/profile_workload.py", line 1748, in cycle
+    await submit_new(
+  File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/backend/tests/infra/execution_market/profile_workload.py", line 1573, in submit_new
+    await wait_status(engine, owner.user_id, order_id, expected, **poll_options(poll_gate))
+  File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/backend/tests/infra/execution_market/profile_workload.py", line 1543, in wait_status
+    await asyncio.sleep(RESULT_POLL_SECONDS)
+  File "/Users/chainarongjaykeaw/.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/asyncio/tasks.py", line 665, in sleep
+    return await future
+           ^^^^^^^^^^^^
+asyncio.exceptions.CancelledError
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/backend/../../f17-recovery-records-20261106/nc12_campaign.py", line 61, in <module>
+    if __name__=='__main__':raise SystemExit(asyncio.run(main()))
+                                             ^^^^^^^^^^^^^^^^^^^
+  File "/Users/chainarongjaykeaw/.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/asyncio/runners.py", line 195, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/Users/chainarongjaykeaw/.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/chainarongjaykeaw/.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/asyncio/base_events.py", line 691, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/backend/../../f17-recovery-records-20261106/nc12_campaign.py", line 49, in main
+    code=await (protection.run(root/'run') if args.phase=='CONTROLLED20' else workload.run(options))
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/backend/tests/infra/execution_market/profile_workload.py", line 1960, in run
+    return await _run(args)
+           ^^^^^^^^^^^^^^^^
+  File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/backend/tests/infra/execution_market/profile_workload.py", line 2275, in _run
+    elapsed = await with_publisher(
+              ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/backend/tests/infra/execution_market/profile_workload.py", line 485, in with_publisher
+    return await task
+           ^^^^^^^^^^
+  File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/backend/tests/infra/execution_market/profile_workload.py", line 1823, in run_scheduled_cycles
+    await asyncio.gather(*tasks)
+  File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/backend/tests/infra/execution_market/profile_workload.py", line 1786, in owner_cycles
+    asyncio.timeout(60) if cycle_scope is None else cycle_scope(owner, number)
+  File "/Users/chainarongjaykeaw/.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/asyncio/timeouts.py", line 115, in __aexit__
+    raise TimeoutError from exc_val
+TimeoutError

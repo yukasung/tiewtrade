@@ -1,0 +1,26 @@
+{
+  "unique_passing_tests": 211,
+  "initial": {
+    "passed": 201,
+    "blocked_by_stopped_database": 9,
+    "seconds": 7.21
+  },
+  "rechecks": {
+    "passed": 76,
+    "seconds": 2.11
+  },
+  "static_checks": {
+    "ruff": "5files PASSED",
+    "format": "5files PASSED",
+    "mypy": "4repo files PASSED",
+    "runner_help": "PASSED"
+  },
+  "production_drift": [],
+  "candidate": {
+    "profile_internal.py": "7c4364aa6d5c3df6808140b3d39b8c09f1b3cb756188d317f75b92a4604c9dbc",
+    "profile_workload.py": "9c8c79978c2d6c61668be381d2bb596e516aa6c7f7e2ffcc149173b46777c4b9",
+    "profile_diagnostics.py": "d8df577c1119060181fdec72cdf1ffff6be067081e86ca9a6b1b33cf40e5efa5",
+    "test_environment_preflight.py": "268f8c384d22d7999ee511b21a7ce0046979421418286577602d57ba483b9b7f",
+    "nc12_campaign.py": "0d5764555554dc1ffcc8e52d584d3dd8522b948a9ac52174afa25ec58a623126"
+  }
+}

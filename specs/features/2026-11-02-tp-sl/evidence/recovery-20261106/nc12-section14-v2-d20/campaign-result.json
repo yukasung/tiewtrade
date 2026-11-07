@@ -1,0 +1,10 @@
+{
+  "status": "PASSED",
+  "exit_code": 0,
+  "seconds": 453.9040136660001,
+  "error_type": null,
+  "candidate_unchanged": true,
+  "free_bytes_after": 15404875776,
+  "budget_seconds": 1200,
+  "budget_scope": "preflight,fixture,measurement,verification,cleanup"
+}

@@ -1,0 +1,12 @@
+{
+  "production_unchanged_from_W4": true,
+  "affected_file_sha256": {
+    "backend/tests/infra/execution_market/conftest.py": "0fee0ed9ea0d20ddc9d3f520f7d0f041ed74755c688992eed10c00140dd5dcb0",
+    "backend/tests/infra/execution_market/test_internal_database.py": "630dc7e42ec1904d99d0043c26a0c63442df5fc033ffaad99d38512021e36659",
+    "backend/tests/infra/execution_market/test_owned_pools.py": "9f2aadae29e84d797c5e2b50ba4e82bcce19110f55d1404a2ad6dc62b41634ec",
+    "backend/tests/infra/execution_market/test_internal_http.py": "24212e0d8fbd7155ddad729df59d4fa3c2d9b93cc8027648ae4c27b2dbfee0f7",
+    "backend/tests/infra/execution_market/test_internal_observations.py": "6b3dc8a8a4456ecabd628ead9c68f57d0960230b0f384872c5d97f8ae4dcf2b9",
+    "backend/tests/infra/execution_market/test_restore_routing.py": "67f6161ba6e991ed62be3d39b3e3fc83c0591298f55d6cd3e49d8261928adc38",
+    "backend/tests/infra/execution_market/test_workload_latency.py": "296c721471f97d9c96acd9af941e71e05a0fd55570235c289619ed6495cef4c0"
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "acceptance_profile": {
+    "name": "PAPER_INTERNAL20_V2",
+    "owners": 20,
+    "baseline_orders_per_owner": 20,
+    "workers": 20,
+    "phase": "W2",
+    "rate": 10,
+    "cycles_per_owner": 120,
+    "seconds": 1200,
+    "expected_commands": 12000,
+    "scope": "internal pilot only; not the 100-account profile or F17 Completed",
+    "intake": "authenticated HTTP"
+  },
+  "profile": "F15_W1_W2_W3_V2",
+  "worker_runtime": "F15_STANDALONE_R8_HEARTBEAT_TAIL_V1",
+  "worker_round_limit": 20,
+  "claim_coordination": "SERIALIZED_CLAIM_V2",
+  "worker_claim_limit": 1,
+  "worker_tick_seconds": 0.02,
+  "publisher_heartbeat_per_book": true,
+  "publisher_readiness_observer": "recent64",
+  "final_tail_drain": true,
+  "checkpoint_storage": "PG_BATCH_V1",
+  "parent_poll_limit": 4,
+  "phase": "W2",
+  "run_id": "5e7f18fa-c1ed-4bdb-9f11-8d70c0e258b6",
+  "started_at": "2026-11-07 07:03:22.740926+00:00",
+  "platform": "macOS-27.0.1-arm64-arm-64bit",
+  "python": "3.12.15",
+  "owners": 20,
+  "baseline_orders_per_owner": 20,
+  "cycles_per_owner": 120,
+  "command_rate": 10,
+  "workers": 20,
+  "baseline_manifest": null,
+  "expected_commands": 12000,
+  "expected_cycles": 2400,
+  "fault_schedule_digest": null,
+  "fault_schedule": [],
+  "expected_fixture_digest": "0a72036369bdc507ef9b0158c0b5be4ddbacd7803b534f2ede73212ac82fe076",
+  "database": {
+    "alembic_revision": "0065",
+    "postgresql": {
+      "server_version": "16.15 (Debian 16.15-1.pgdg13+2)",
+      "max_connections": "100",
+      "shared_buffers": "128MB",
+      "work_mem": "4MB"
+    }
+  }
+}

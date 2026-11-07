@@ -41,7 +41,7 @@ from tiewtrade.infra.paper_orders.codec import (
     state_payload,
 )
 from tiewtrade.infra.paper_orders.initialization import enable_financial_writer
-from tiewtrade.infra.paper_orders.storage import increment_wallet_revision, lock_active_episode
+from tiewtrade.infra.paper_orders.storage import lock_active_episode
 
 
 @dataclass(frozen=True, slots=True)
@@ -222,13 +222,16 @@ async def load_order_state(session: UserSession, order_id: UUID) -> OrderState:
     session = require_user_session(session)
     terminal = (
         await session.execute(
-            """SELECT terminal.value FROM paper_orders o
-            JOIN paper_order_events e ON e.episode_id=o.episode_id
-              AND e.base=o.base AND e.quote=o.quote
-            CROSS JOIN LATERAL jsonb_array_elements(e.payload->'terminal_orders') terminal(value)
-            WHERE o.id=:order AND e.payload ? 'matching'
-              AND terminal.value->'intent'->>'order_id'=CAST(:order AS text)
-            ORDER BY ((e.payload->>'decision_sequence')::bigint) DESC LIMIT 1""",
+            """SELECT matched.value FROM paper_orders o
+            CROSS JOIN LATERAL (
+                SELECT terminal.value FROM paper_order_events e
+                CROSS JOIN LATERAL
+                    jsonb_array_elements(e.payload->'terminal_orders') terminal(value)
+                WHERE e.episode_id=o.episode_id AND e.base=o.base AND e.quote=o.quote
+                  AND e.payload ? 'matching'
+                  AND terminal.value->'intent'->>'order_id'=CAST(o.id AS text)
+                ORDER BY ((e.payload->>'decision_sequence')::bigint) DESC LIMIT 1
+            ) matched WHERE o.id=:order""",
             {"order": order_id},
         )
     ).scalar_one_or_none()
@@ -423,34 +426,6 @@ async def persist_checkpoint(
     revision = int(current.revision) + 1
     event_id = decision_id or uuid4()
     document, _ = _matching_document(state, sequence)
-    event_sequence = (
-        await session.execute(
-            """SELECT coalesce(max(sequence),0)+1 FROM paper_order_events
-            WHERE order_id=:order""",
-            {"order": anchor_order_id},
-        )
-    ).scalar_one()
-    await session.execute(
-        """INSERT INTO paper_order_events
-        (id,order_id,user_id,episode_id,base,quote,sequence,event_kind,
-         input_recorded_at,input_evidence_id,payload,occurred_at)
-        VALUES(:id,:order,:user,:episode,:base,:quote,:sequence,:kind,
-         :recorded,:evidence,CAST(:payload AS jsonb),:occurred)""",
-        {
-            "id": event_id,
-            "order": anchor_order_id,
-            "user": session.user_id,
-            "episode": state.scope.episode_id,
-            "base": state.pair.base,
-            "quote": state.pair.quote,
-            "sequence": event_sequence,
-            "kind": event_kind,
-            "recorded": input_recorded_at,
-            "evidence": input_evidence_id,
-            "payload": document,
-            "occurred": occurred_at,
-        },
-    )
     rows = json.dumps(
         [
             {
@@ -469,67 +444,27 @@ async def persist_checkpoint(
         ],
         separators=(",", ":"),
     )
-    # Upsert this pair once and advance the other pairs' global revision in the
-    # same statement. The two disjoint sets preserve episode-wide completeness
-    # without rewriting every active row twice per no-op input checkpoint.
     await session.execute(
-        """WITH projected AS (INSERT INTO paper_order_projections
-        (order_id,user_id,episode_id,base,quote,status,filled_quantity,spent,resting,
-         queue_ahead,revision,last_event_id)
-        SELECT r.order_id,:user,:episode,:base,:quote,r.status,r.filled,r.spent,r.resting,
-          r.queue_ahead,:revision,
-          (SELECT e.id FROM paper_order_events e WHERE e.order_id=r.order_id
-           ORDER BY e.sequence DESC LIMIT 1)
-        FROM jsonb_to_recordset(CAST(:rows AS jsonb)) AS r(
-          order_id uuid,status text,filled numeric,spent numeric,resting boolean,
-          queue_ahead numeric,reserved_quote numeric,reserved_base numeric)
-        ON CONFLICT(order_id) DO UPDATE SET status=EXCLUDED.status,
-          filled_quantity=EXCLUDED.filled_quantity,spent=EXCLUDED.spent,
-          resting=EXCLUDED.resting,queue_ahead=EXCLUDED.queue_ahead,
-          revision=EXCLUDED.revision,last_event_id=EXCLUDED.last_event_id
-          RETURNING order_id)
-        UPDATE paper_order_projections SET revision=:revision WHERE episode_id=:episode
-        AND (base,quote)<>(:base,:quote)
-        AND status NOT IN ('FILLED','CANCELED','EXPIRED','REJECTED')""",
+        """SELECT public.paper_persist_checkpoint_v1(
+          :wallet,:episode,:base,:quote,:id,:order,:kind,:recorded,:evidence,
+          CAST(:payload AS jsonb),CAST(:rows AS jsonb),:occurred,:sequence,:revision)""",
         {
-            "rows": rows,
-            "user": session.user_id,
+            "wallet": wallet_id,
             "episode": state.scope.episode_id,
             "base": state.pair.base,
             "quote": state.pair.quote,
-            "revision": revision,
-        },
-    )
-    await session.execute(
-        """WITH reserved AS (INSERT INTO paper_reservations
-        (order_id,user_id,episode_id,base,quote,quote_reserved,base_reserved,revision)
-        SELECT r.order_id,:user,:episode,:base,:quote,r.reserved_quote,r.reserved_base,:revision
-        FROM jsonb_to_recordset(CAST(:rows AS jsonb)) AS r(
-          order_id uuid,status text,filled numeric,spent numeric,resting boolean,
-          queue_ahead numeric,reserved_quote numeric,reserved_base numeric)
-        ON CONFLICT(order_id) DO UPDATE SET quote_reserved=EXCLUDED.quote_reserved,
-          base_reserved=EXCLUDED.base_reserved,revision=EXCLUDED.revision
-          RETURNING order_id)
-        UPDATE paper_reservations SET revision=:revision WHERE episode_id=:episode
-        AND (base,quote)<>(:base,:quote)
-        AND order_id IN (SELECT order_id FROM paper_order_projections
-          WHERE episode_id=:episode
-          AND status NOT IN ('FILLED','CANCELED','EXPIRED','REJECTED'))""",
-        {
+            "id": event_id,
+            "order": anchor_order_id,
+            "kind": event_kind,
+            "recorded": input_recorded_at,
+            "evidence": input_evidence_id,
+            "payload": document,
             "rows": rows,
-            "user": session.user_id,
-            "episode": state.scope.episode_id,
-            "base": state.pair.base,
-            "quote": state.pair.quote,
+            "occurred": occurred_at,
+            "sequence": sequence,
             "revision": revision,
         },
     )
-    await session.execute(
-        """UPDATE paper_order_activity SET source_sequence=:sequence,revision=:revision,
-        observed_at=clock_timestamp() WHERE episode_id=:episode""",
-        {"episode": state.scope.episode_id, "sequence": sequence, "revision": revision},
-    )
-    await increment_wallet_revision(session, wallet_id)
     await record_event(
         session,
         AuditEvent(

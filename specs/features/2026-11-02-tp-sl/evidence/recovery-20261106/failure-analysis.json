@@ -1,0 +1,297 @@
+{
+  "worker_all_setup_and_partial": {
+    "samples": 14064,
+    "p95": 0.3446704579996549,
+    "p99": 0.7380449580000459,
+    "max": 3.783256749999964,
+    "total": 1704.8196834029573
+  },
+  "worker_measured_before_timeout": {
+    "samples": 2326,
+    "p95": 0.47050979200002985,
+    "p99": 0.8416337089997796,
+    "max": 1.939630207999926,
+    "total": 442.61125359298603
+  },
+  "measurement_seconds_before_timeout": 132.00512200000003,
+  "cycle_seconds": 60.00230633399997,
+  "cycle_phase_seconds": {
+    "submit_order": 0.142148,
+    "submit_cancel": 0.025291,
+    "wait_command": 37.001056,
+    "wait_status": 22.757371
+  },
+  "cycle_parent_gate_wait": {
+    "samples": 134,
+    "p95": 0.5932573750001211,
+    "p99": 0.7399605830000837,
+    "max": 1.0501792079999177,
+    "total": 25.76876211900253
+  },
+  "cycle_parent_transactions": {
+    "samples": 139,
+    "p95": 0.04717891700011023,
+    "p99": 0.07427199999983713,
+    "max": 0.07665950000000521,
+    "total": 2.376914506002322
+  },
+  "cycle_parent_pool_wait": {
+    "samples": 139,
+    "p95": 0.01316987500013056,
+    "p99": 0.016108374999930675,
+    "max": 0.025003915999604942,
+    "total": 0.6744507100006558
+  },
+  "cycle_parent_query_seconds": 1.2355312619997676,
+  "parent_gate_closed": true,
+  "stream_count": 41,
+  "streams_closed_untruncated": true,
+  "closed_streams": [
+    {
+      "file": "worker-6.transactions.jsonl",
+      "event": "CLOSED",
+      "truncated": false,
+      "counters": null
+    },
+    {
+      "file": "worker-10.transactions.jsonl",
+      "event": "CLOSED",
+      "truncated": false,
+      "counters": null
+    },
+    {
+      "file": "worker-13.transactions.jsonl",
+      "event": "CLOSED",
+      "truncated": false,
+      "counters": null
+    },
+    {
+      "file": "worker-8.transactions.jsonl",
+      "event": "CLOSED",
+      "truncated": false,
+      "counters": null
+    },
+    {
+      "file": "worker-5.transactions.jsonl",
+      "event": "CLOSED",
+      "truncated": false,
+      "counters": null
+    },
+    {
+      "file": "worker-3.transactions.jsonl",
+      "event": "CLOSED",
+      "truncated": false,
+      "counters": null
+    },
+    {
+      "file": "worker-18.transactions.jsonl",
+      "event": "CLOSED",
+      "truncated": false,
+      "counters": null
+    },
+    {
+      "file": "worker-15.transactions.jsonl",
+      "event": "CLOSED",
+      "truncated": false,
+      "counters": null
+    },
+    {
+      "file": "worker-16.transactions.jsonl",
+      "event": "CLOSED",
+      "truncated": false,
+      "counters": null
+    },
+    {
+      "file": "parent.transactions.jsonl",
+      "event": "CLOSED",
+      "truncated": false,
+      "counters": null
+    },
+    {
+      "file": "worker-0.transactions.jsonl",
+      "event": "CLOSED",
+      "truncated": false,
+      "counters": null
+    },
+    {
+      "file": "worker-17.transactions.jsonl",
+      "event": "CLOSED",
+      "truncated": false,
+      "counters": null
+    },
+    {
+      "file": "worker-19.dispatch.jsonl",
+      "event": "CLOSED",
+      "truncated": false,
+      "counters": null
+    },
+    {
+      "file": "worker-1.dispatch.jsonl",
+      "event": "CLOSED",
+      "truncated": false,
+      "counters": null
+    },
+    {
+      "file": "worker-9.dispatch.jsonl",
+      "event": "CLOSED",
+      "truncated": false,
+      "counters": null
+    },
+    {
+      "file": "worker-11.dispatch.jsonl",
+      "event": "CLOSED",
+      "truncated": false,
+      "counters": null
+    },
+    {
+      "file": "worker-1.transactions.jsonl",
+      "event": "CLOSED",
+      "truncated": false,
+      "counters": null
+    },
+    {
+      "file": "worker-6.dispatch.jsonl",
+      "event": "CLOSED",
+      "truncated": false,
+      "counters": null
+    },
+    {
+      "file": "worker-16.dispatch.jsonl",
+      "event": "CLOSED",
+      "truncated": false,
+      "counters": null
+    },
+    {
+      "file": "worker-17.dispatch.jsonl",
+      "event": "CLOSED",
+      "truncated": false,
+      "counters": null
+    },
+    {
+      "file": "worker-2.transactions.jsonl",
+      "event": "CLOSED",
+      "truncated": false,
+      "counters": null
+    },
+    {
+      "file": "worker-7.dispatch.jsonl",
+      "event": "CLOSED",
+      "truncated": false,
+      "counters": null
+    },
+    {
+      "file": "worker-8.dispatch.jsonl",
+      "event": "CLOSED",
+      "truncated": false,
+      "counters": null
+    },
+    {
+      "file": "worker-10.dispatch.jsonl",
+      "event": "CLOSED",
+      "truncated": false,
+      "counters": null
+    },
+    {
+      "file": "worker-19.transactions.jsonl",
+      "event": "CLOSED",
+      "truncated": false,
+      "counters": null
+    },
+    {
+      "file": "worker-18.dispatch.jsonl",
+      "event": "CLOSED",
+      "truncated": false,
+      "counters": null
+    },
+    {
+      "file": "worker-14.transactions.jsonl",
+      "event": "CLOSED",
+      "truncated": false,
+      "counters": null
+    },
+    {
+      "file": "worker-0.dispatch.jsonl",
+      "event": "CLOSED",
+      "truncated": false,
+      "counters": null
+    },
+    {
+      "file": "worker-12.dispatch.jsonl",
+      "event": "CLOSED",
+      "truncated": false,
+      "counters": null
+    },
+    {
+      "file": "worker-2.dispatch.jsonl",
+      "event": "CLOSED",
+      "truncated": false,
+      "counters": null
+    },
+    {
+      "file": "worker-12.transactions.jsonl",
+      "event": "CLOSED",
+      "truncated": false,
+      "counters": null
+    },
+    {
+      "file": "worker-15.dispatch.jsonl",
+      "event": "CLOSED",
+      "truncated": false,
+      "counters": null
+    },
+    {
+      "file": "worker-5.dispatch.jsonl",
+      "event": "CLOSED",
+      "truncated": false,
+      "counters": null
+    },
+    {
+      "file": "worker-9.transactions.jsonl",
+      "event": "CLOSED",
+      "truncated": false,
+      "counters": null
+    },
+    {
+      "file": "worker-4.transactions.jsonl",
+      "event": "CLOSED",
+      "truncated": false,
+      "counters": null
+    },
+    {
+      "file": "worker-7.transactions.jsonl",
+      "event": "CLOSED",
+      "truncated": false,
+      "counters": null
+    },
+    {
+      "file": "worker-4.dispatch.jsonl",
+      "event": "CLOSED",
+      "truncated": false,
+      "counters": null
+    },
+    {
+      "file": "worker-14.dispatch.jsonl",
+      "event": "CLOSED",
+      "truncated": false,
+      "counters": null
+    },
+    {
+      "file": "worker-3.dispatch.jsonl",
+      "event": "CLOSED",
+      "truncated": false,
+      "counters": null
+    },
+    {
+      "file": "worker-11.transactions.jsonl",
+      "event": "CLOSED",
+      "truncated": false,
+      "counters": null
+    },
+    {
+      "file": "worker-13.dispatch.jsonl",
+      "event": "CLOSED",
+      "truncated": false,
+      "counters": null
+    }
+  ]
+}

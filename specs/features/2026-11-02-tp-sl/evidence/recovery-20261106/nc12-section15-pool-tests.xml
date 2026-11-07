@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="2" skipped="0" tests="11" time="1.385" timestamp="2026-11-07T11:29:35.911502+07:00" hostname="Chainarongs-MacBook-Pro.local"><testcase classname="tests.infra.execution_market.test_owned_pools" name="test_lazy_real_pool_growth_is_returned_within_existing_capacity" time="0.157" /><testcase classname="tests.infra.execution_market.test_owned_pools" name="test_loan_at_final_disposal_fails_below_configured_capacity" time="0.024" /><testcase classname="tests.infra.execution_market.test_owned_pools" name="test_invalid_inventory_capacity_or_connection_failure_is_retained[capacity]" time="0.003" /><testcase classname="tests.infra.execution_market.test_owned_pools" name="test_invalid_inventory_capacity_or_connection_failure_is_retained[inventory]" time="0.002" /><testcase classname="tests.infra.execution_market.test_owned_pools" name="test_invalid_inventory_capacity_or_connection_failure_is_retained[resource_error]" time="0.002"><failure message="AttributeError: handle_error">self = &lt;sqlalchemy.event.base.ConnectionEventsDispatch object at 0x10ab69fd0&gt;
+name = 'handle_error'
+
+    def __getattr__(self, name: str) -&gt; _InstanceLevelDispatch[_ET]:
+        # Assign EmptyListeners as attributes on demand
+        # to reduce startup time for new dispatch objects.
+        try:
+&gt;           ls = self._empty_listeners[name]
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           KeyError: 'handle_error'
+
+.venv/lib/python3.12/site-packages/sqlalchemy/event/base.py:164: KeyError
+
+During handling of the above exception, another exception occurred:
+
+tmp_path = PosixPath('/private/var/folders/fb/g4m1d38j4fl6x1pt39rn0wxr0000gn/T/pytest-of-chainarongjaykeaw/pytest-3/test_invalid_inventory_capacit2')
+failure = 'resource_error'
+
+    @pytest.mark.parametrize("failure", ["capacity", "inventory", "resource_error"])
+    async def test_invalid_inventory_capacity_or_connection_failure_is_retained(
+        tmp_path: Path, failure: str
+    ) -&gt; None:
+        path = tmp_path / "pools.json"
+        with OwnedPools(
+            path, WORKER_CONFIGURATION if failure == "inventory" else [("ENGINE", 5, 10)]
+        ) as tracker:
+            engine = create_engine_for(DatabaseRole.ENGINE)
+            if failure == "capacity":
+                original = cast(QueuePool, engine.pool)._max_overflow
+                cast(QueuePool, engine.pool)._max_overflow = 20
+                tracker.sample()
+                cast(QueuePool, engine.pool)._max_overflow = original
+            elif failure == "resource_error":
+&gt;               engine.sync_engine.dispatch.handle_error(
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                    Mock(is_disconnect=True, original_exception=OSError("PRIVATE"))
+                )
+
+tests/infra/execution_market/test_owned_pools.py:84: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;sqlalchemy.event.base.ConnectionEventsDispatch object at 0x10ab69fd0&gt;
+name = 'handle_error'
+
+    def __getattr__(self, name: str) -&gt; _InstanceLevelDispatch[_ET]:
+        # Assign EmptyListeners as attributes on demand
+        # to reduce startup time for new dispatch objects.
+        try:
+            ls = self._empty_listeners[name]
+        except KeyError:
+&gt;           raise AttributeError(name)
+E           AttributeError: handle_error
+
+.venv/lib/python3.12/site-packages/sqlalchemy/event/base.py:166: AttributeError</failure></testcase><testcase classname="tests.infra.execution_market.test_owned_pools" name="test_pool_timeout_cannot_disappear_after_all_loans_are_returned" time="0.043" /><testcase classname="tests.infra.execution_market.test_owned_pools" name="test_planned_generation_change_retains_original_pool_and_configuration" time="0.051" /><testcase classname="tests.infra.execution_market.test_owned_pools" name="test_actual_asgi_lifespan_records_all_lazy_engines_and_returns_them" time="0.184"><failure message="assert False">tmp_path = PosixPath('/private/var/folders/fb/g4m1d38j4fl6x1pt39rn0wxr0000gn/T/pytest-of-chainarongjaykeaw/pytest-3/test_actual_asgi_lifespan_reco0')
+
+    async def test_actual_asgi_lifespan_records_all_lazy_engines_and_returns_them(
+        tmp_path: Path,
+    ) -&gt; None:
+        path = tmp_path / "pools.json"
+        expected = [
+            ("API", 5, 10),
+            ("API", 1, 0),
+            ("AUTH", 5, 10),
+            ("API", 3, 0),
+            ("API", 1, 0),
+            ("API", 1, 0),
+        ]
+        with OwnedPools(path, expected):
+            async with lifespan(app), app.state.api_engine.connect(), app.state.api_engine.connect():
+                pass
+&gt;       assert document(path)["passed"]
+E       assert False
+
+tests/infra/execution_market/test_owned_pools.py:142: AssertionError</failure></testcase><testcase classname="tests.infra.execution_market.test_owned_pools" name="test_observer_restores_hooks_and_preserves_primary_exception[failure0]" time="0.003" /><testcase classname="tests.infra.execution_market.test_owned_pools" name="test_observer_restores_hooks_and_preserves_primary_exception[failure1]" time="0.003" /><testcase classname="tests.infra.execution_market.test_owned_pools" name="test_missing_or_nonfinal_worker_report_cannot_be_waived" time="0.001" /></testsuite></testsuites>

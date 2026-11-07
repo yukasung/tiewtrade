@@ -1,0 +1,32 @@
+{
+  "source": {
+    "pending_receipt": [
+      {
+        "state": "REJECTED",
+        "failure_code": "ORDER_SAFETY_UNAVAILABLE"
+      }
+    ],
+    "retry_result": [
+      {
+        "state": "REJECTED",
+        "failure_code": "ORDER_SAFETY_UNAVAILABLE"
+      }
+    ],
+    "retry_attempt": [
+      {
+        "attempt": 4
+      }
+    ],
+    "pending_groups": 0
+  },
+  "restored": {
+    "pending_receipt": [],
+    "retry_result": [],
+    "retry_attempt": [
+      {
+        "attempt": 2
+      }
+    ],
+    "pending_groups": 0
+  }
+}

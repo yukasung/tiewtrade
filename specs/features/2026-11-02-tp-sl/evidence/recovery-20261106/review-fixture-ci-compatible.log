@@ -1,0 +1,128 @@
+........................................................................ [ 34%]
+................F....................................................... [ 69%]
+...............................................................          [100%]
+=================================== FAILURES ===================================
+____________ test_v3_parent_uses_short_hold_rss_and_snapshot_count _____________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x10f305580>
+tmp_path = PosixPath('/private/var/folders/fb/g4m1d38j4fl6x1pt39rn0wxr0000gn/T/pytest-of-chainarongjaykeaw/pytest-21/test_v3_parent_uses_short_hold0')
+
+    async def test_v3_parent_uses_short_hold_rss_and_snapshot_count(
+        monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        from collections.abc import AsyncIterator
+        from contextlib import asynccontextmanager
+    
+        from tests.infra.execution_market import profile_http, profile_positions
+        from tests.infra.execution_market import profile_internal as internal
+        from tests.infra.execution_market.profile_parent_poll import ParentPollGate
+    
+        args = mock_parent(monkeypatch, tmp_path, phase="W3", case="normal")
+        args.acceptance_profile = internal.NAME_V3
+        args.owners = args.workers = 20
+        args.rate = 2
+        args.cycles_per_owner = 30
+        args.parent_poll_limit = 4
+        args.r8_claim_budget = args.coordinate_claims = True
+        args.publisher_heartbeat_per_book = args.final_tail_drain = True
+        args.fault_schedule = internal.fault_schedule_for(internal.NAME_V3)
+        monkeypatch.setattr(ParentPollGate, "verify_pool", lambda *a: None)
+        monkeypatch.setattr(internal, "require_empty_database", AsyncMock())
+        # mock_parent replaced the loader; use the pinned actual fixture data explicitly.
+        import hashlib
+    
+        data = json.loads(args.fault_schedule.read_text())
+        monkeypatch.setattr(
+            f15,
+            "load_fault_schedule",
+            lambda path: (
+                [
+                    f15.FaultEvent(e["offset_seconds"], e["duration_seconds"], e["kind"])
+                    for e in data["events"]
+                ],
+                30,
+                hashlib.sha256(path.read_bytes()).hexdigest(),
+            ),
+        )
+        marks: dict[str, Any] = {}
+        stats: dict[str, Any] = {}
+    
+        @asynccontextmanager
+        async def intake(*a: Any, **kw: Any) -> AsyncIterator[object]:
+            yield object()
+    
+        monkeypatch.setattr(profile_http, "internal_intake", intake)
+    
+        async def publisher(
+            source: Any, stop: asyncio.Event, values: dict[str, Any], **kw: Any
+        ) -> None:
+            nonlocal stats
+            stats = values
+            stats["published"] = 2
+            await stop.wait()
+    
+        monkeypatch.setattr(f15, "market_publisher", publisher)
+        original_cycles = f15.run_scheduled_cycles
+    
+        async def cycles(*a: Any, **kw: Any) -> float:
+            elapsed = await original_cycles(*a, **kw)
+            counter = a[5]  # counters follows rate in the existing scheduler signature.
+            counter.offered = counter.admitted = counter.completed = 3000
+            counter.cycles = counter.cancels = counter.replays = 600
+            counter.fills = 1200
+            stats["published"] = 15002
+            return elapsed
+    
+        monkeypatch.setattr(f15, "run_scheduled_cycles", cycles)
+    
+        class Checks:
+            def __init__(self, *a: Any) -> None:
+                pass
+    
+            async def observe_endurance(self, started: float, seconds: int) -> None:
+                marks["observed_duration"] = seconds
+    
+            async def final(self, *, expected_periodic: int) -> dict[str, Any]:
+                marks["periodic_count"] = expected_periodic
+                return {"passed": True}
+    
+        monkeypatch.setattr(profile_positions, "PositionChecks", Checks)
+    
+        def rss(samples: Any, *, duration_seconds: int) -> dict[str, bool]:
+            marks["rss_duration"] = duration_seconds
+            return {"passed": True}
+    
+        monkeypatch.setattr(f15, "endurance_rss", rss)
+    
+        async def drain(*a: Any, **kw: Any) -> float:
+            a[4].set()
+            await a[3]
+            return 0
+    
+        monkeypatch.setattr(f15, "drain_final_tail", drain)
+>       assert await f15._run(args) == 0
+               ^^^^^^^^^^^^^^^^^^^^
+
+tests/infra/execution_market/test_workload_latency.py:387: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/infra/execution_market/profile_workload.py:2021: in _run
+    internal.guard_database(dict(os.environ))
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+environment = {'CODEX_APPLY_PATCH_PRESERVE_LINE_ENDINGS': '1', 'CODEX_CI': '1', 'CODEX_INTERNAL_ORIGINATOR_OVERRIDE': 'codex_vscode', 'CODEX_PERMISSION_PROFILE': ':danger-full-access', ...}
+
+    def guard_database(environment: dict[str, str]) -> str:
+        """Never let the opt-in profile mutate a normal development/production DB."""
+        targets = set()
+        for role in ("API", "AUTH", "ENGINE", "ENGINE_SCAN", "MIGRATOR", "MARKET_DATA"):
+            parsed = urlparse(environment.get(f"TIEWTRADE_DATABASE_URL_{role}", ""))
+            if parsed.hostname not in {"localhost", "127.0.0.1", "::1"} or not parsed.path.startswith(
+                "/tiewtrade_internal20_"
+            ):
+>               raise ValueError("internal Paper profile requires a local isolated internal20 database")
+E               ValueError: internal Paper profile requires a local isolated internal20 database
+
+tests/infra/execution_market/profile_internal.py:152: ValueError
+=========================== short test summary info ============================
+FAILED tests/infra/execution_market/test_workload_latency.py::test_v3_parent_uses_short_hold_rss_and_snapshot_count
+1 failed, 206 passed in 41.43s

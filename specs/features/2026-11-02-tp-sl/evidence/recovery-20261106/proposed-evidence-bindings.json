@@ -1,0 +1,437 @@
+{
+  "status": "PROPOSED_NOT_AN_ACTIVE_EXCEPTION_REGISTRY",
+  "head": "0961f7893226ba1e1641e5138e46f78dbe50f6cf",
+  "total_reported_matches": 48118,
+  "entry_count": 39,
+  "entries": [
+    {
+      "path": "specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/candidate-sha256.json",
+      "commit": "c8ba2d72b6f970b9076bb2c6bd397003675bd107",
+      "git_blob": "1f68e08a1b27160bda525ee1e9ac9050133c706f",
+      "rule": "generic-api-key",
+      "reported_matches": 21,
+      "value_shapes": {
+        "SHA256": 21
+      },
+      "approval": "PENDING"
+    },
+    {
+      "path": "specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/nc12-controlled20-1/candidate-sha256.json",
+      "commit": "c8ba2d72b6f970b9076bb2c6bd397003675bd107",
+      "git_blob": "e4acfc5a577e2436b8e62fef71993c5457c98220",
+      "rule": "generic-api-key",
+      "reported_matches": 33,
+      "value_shapes": {
+        "SHA256": 33
+      },
+      "approval": "PENDING"
+    },
+    {
+      "path": "specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/nc12-controlled20-replacement/candidate-sha256.json",
+      "commit": "c8ba2d72b6f970b9076bb2c6bd397003675bd107",
+      "git_blob": "7df5514e0ee6a22f25f124cd21d3a2f15dd2b871",
+      "rule": "generic-api-key",
+      "reported_matches": 33,
+      "value_shapes": {
+        "SHA256": 33
+      },
+      "approval": "PENDING"
+    },
+    {
+      "path": "specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/nc12-d20-1/candidate-sha256.json",
+      "commit": "c8ba2d72b6f970b9076bb2c6bd397003675bd107",
+      "git_blob": "7df5514e0ee6a22f25f124cd21d3a2f15dd2b871",
+      "rule": "generic-api-key",
+      "reported_matches": 33,
+      "value_shapes": {
+        "SHA256": 33
+      },
+      "approval": "PENDING"
+    },
+    {
+      "path": "specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/nc12-d20-readiness/candidate-sha256.json",
+      "commit": "c8ba2d72b6f970b9076bb2c6bd397003675bd107",
+      "git_blob": "33bbf579a4b4a3e1855288854fcd0634dfc000bc",
+      "rule": "generic-api-key",
+      "reported_matches": 33,
+      "value_shapes": {
+        "SHA256": 33
+      },
+      "approval": "PENDING"
+    },
+    {
+      "path": "specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/nc12-d20-replacement/candidate-sha256.json",
+      "commit": "c8ba2d72b6f970b9076bb2c6bd397003675bd107",
+      "git_blob": "84d1062c120e1059215ed51adcdbad023780ac05",
+      "rule": "generic-api-key",
+      "reported_matches": 33,
+      "value_shapes": {
+        "SHA256": 33
+      },
+      "approval": "PENDING"
+    },
+    {
+      "path": "specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/nc12-section13-d20-resumed/candidate-sha256.json",
+      "commit": "c8ba2d72b6f970b9076bb2c6bd397003675bd107",
+      "git_blob": "08a8a13477860254a2cd5d4c9cd40d99b4423f35",
+      "rule": "generic-api-key",
+      "reported_matches": 33,
+      "value_shapes": {
+        "SHA256": 33
+      },
+      "approval": "PENDING"
+    },
+    {
+      "path": "specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/nc12-section13-d20/candidate-sha256.json",
+      "commit": "c8ba2d72b6f970b9076bb2c6bd397003675bd107",
+      "git_blob": "08a8a13477860254a2cd5d4c9cd40d99b4423f35",
+      "rule": "generic-api-key",
+      "reported_matches": 33,
+      "value_shapes": {
+        "SHA256": 33
+      },
+      "approval": "PENDING"
+    },
+    {
+      "path": "specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/nc12-section13/actual-query-plan.json",
+      "commit": "c8ba2d72b6f970b9076bb2c6bd397003675bd107",
+      "git_blob": "d75f9d12ac6de00167cf5ed961ba9b9b20ef4eb7",
+      "rule": "generic-api-key",
+      "reported_matches": 1,
+      "value_shapes": {
+        "UUID": 1
+      },
+      "approval": "PENDING"
+    },
+    {
+      "path": "specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/nc12-section14-d20/candidate-sha256.json",
+      "commit": "c8ba2d72b6f970b9076bb2c6bd397003675bd107",
+      "git_blob": "c922ecfaf242400d5330bb56acf04c3a79f2b1ec",
+      "rule": "generic-api-key",
+      "reported_matches": 33,
+      "value_shapes": {
+        "SHA256": 33
+      },
+      "approval": "PENDING"
+    },
+    {
+      "path": "specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/nc12-section14-v2-d20/candidate-sha256.json",
+      "commit": "c8ba2d72b6f970b9076bb2c6bd397003675bd107",
+      "git_blob": "569f9ca8b109896a86b10e4231c2662b81428dce",
+      "rule": "generic-api-key",
+      "reported_matches": 33,
+      "value_shapes": {
+        "SHA256": 33
+      },
+      "approval": "PENDING"
+    },
+    {
+      "path": "specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/nc12-section14-v2-w1/candidate-sha256.json",
+      "commit": "c8ba2d72b6f970b9076bb2c6bd397003675bd107",
+      "git_blob": "569f9ca8b109896a86b10e4231c2662b81428dce",
+      "rule": "generic-api-key",
+      "reported_matches": 33,
+      "value_shapes": {
+        "SHA256": 33
+      },
+      "approval": "PENDING"
+    },
+    {
+      "path": "specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/nc12-section14-v2-w1/run/http-intake.jsonl",
+      "commit": "c8ba2d72b6f970b9076bb2c6bd397003675bd107",
+      "git_blob": "e3c94965079f0808e3f28dab49065cff1ed7a52e",
+      "rule": "generic-api-key",
+      "reported_matches": 3414,
+      "value_shapes": {
+        "UUID": 3414
+      },
+      "approval": "PENDING"
+    },
+    {
+      "path": "specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/nc12-section15-w1/candidate-sha256.json",
+      "commit": "c8ba2d72b6f970b9076bb2c6bd397003675bd107",
+      "git_blob": "67dd773f55a7ac2d36420954694d38356dbf7077",
+      "rule": "generic-api-key",
+      "reported_matches": 33,
+      "value_shapes": {
+        "SHA256": 33
+      },
+      "approval": "PENDING"
+    },
+    {
+      "path": "specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/nc12-section15-w1/run/http-intake.jsonl",
+      "commit": "c8ba2d72b6f970b9076bb2c6bd397003675bd107",
+      "git_blob": "d5639c74a53794f3ea92f84d0917eff56fb4e5f0",
+      "rule": "generic-api-key",
+      "reported_matches": 231,
+      "value_shapes": {
+        "UUID": 231
+      },
+      "approval": "PENDING"
+    },
+    {
+      "path": "specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/nc12-section16-w1/candidate-sha256.json",
+      "commit": "c8ba2d72b6f970b9076bb2c6bd397003675bd107",
+      "git_blob": "436fafafc57069ba871d3b1104f357ec57f8dfc9",
+      "rule": "generic-api-key",
+      "reported_matches": 33,
+      "value_shapes": {
+        "SHA256": 33
+      },
+      "approval": "PENDING"
+    },
+    {
+      "path": "specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/nc12-section16-w1/run/http-intake.jsonl",
+      "commit": "c8ba2d72b6f970b9076bb2c6bd397003675bd107",
+      "git_blob": "2b2aedd5563cf2bbcb0021ebf016a8e84f5f4aff",
+      "rule": "generic-api-key",
+      "reported_matches": 3421,
+      "value_shapes": {
+        "UUID": 3421
+      },
+      "approval": "PENDING"
+    },
+    {
+      "path": "specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/nc12-section16-w2/candidate-sha256.json",
+      "commit": "c8ba2d72b6f970b9076bb2c6bd397003675bd107",
+      "git_blob": "436fafafc57069ba871d3b1104f357ec57f8dfc9",
+      "rule": "generic-api-key",
+      "reported_matches": 33,
+      "value_shapes": {
+        "SHA256": 33
+      },
+      "approval": "PENDING"
+    },
+    {
+      "path": "specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/nc12-section16-w2/run/http-intake.jsonl",
+      "commit": "c8ba2d72b6f970b9076bb2c6bd397003675bd107",
+      "git_blob": "8c2e91bc48c7a498f18faa43237bf1440b412c34",
+      "rule": "generic-api-key",
+      "reported_matches": 11407,
+      "value_shapes": {
+        "UUID": 11407
+      },
+      "approval": "PENDING"
+    },
+    {
+      "path": "specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/nc12-section18-w2/candidate-sha256.json",
+      "commit": "c8ba2d72b6f970b9076bb2c6bd397003675bd107",
+      "git_blob": "ebf3de0804454c0beb8e63a838206c725667eed7",
+      "rule": "generic-api-key",
+      "reported_matches": 33,
+      "value_shapes": {
+        "SHA256": 33
+      },
+      "approval": "PENDING"
+    },
+    {
+      "path": "specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/nc12-section18-w2/run/http-intake.jsonl",
+      "commit": "c8ba2d72b6f970b9076bb2c6bd397003675bd107",
+      "git_blob": "ac2be9b52c54ab34a3665f1862a8e5a621c5273c",
+      "rule": "generic-api-key",
+      "reported_matches": 11462,
+      "value_shapes": {
+        "UUID": 11462
+      },
+      "approval": "PENDING"
+    },
+    {
+      "path": "specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/nc12-section20-overflow/candidate-sha256.json",
+      "commit": "c8ba2d72b6f970b9076bb2c6bd397003675bd107",
+      "git_blob": "4ce505f7b3d6f691467328c3e6d0aa3892d9bce9",
+      "rule": "generic-api-key",
+      "reported_matches": 33,
+      "value_shapes": {
+        "SHA256": 33
+      },
+      "approval": "PENDING"
+    },
+    {
+      "path": "specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/nc12-section20-w2/candidate-sha256.json",
+      "commit": "c8ba2d72b6f970b9076bb2c6bd397003675bd107",
+      "git_blob": "4ce505f7b3d6f691467328c3e6d0aa3892d9bce9",
+      "rule": "generic-api-key",
+      "reported_matches": 33,
+      "value_shapes": {
+        "SHA256": 33
+      },
+      "approval": "PENDING"
+    },
+    {
+      "path": "specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/nc12-section20-w2/run/http-intake.jsonl",
+      "commit": "c8ba2d72b6f970b9076bb2c6bd397003675bd107",
+      "git_blob": "acd16db311cf34685033fa6a745ad9e1157ce3dd",
+      "rule": "generic-api-key",
+      "reported_matches": 11433,
+      "value_shapes": {
+        "UUID": 11433
+      },
+      "approval": "PENDING"
+    },
+    {
+      "path": "specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/nc12-section20-w3/candidate-sha256.json",
+      "commit": "c8ba2d72b6f970b9076bb2c6bd397003675bd107",
+      "git_blob": "4ce505f7b3d6f691467328c3e6d0aa3892d9bce9",
+      "rule": "generic-api-key",
+      "reported_matches": 33,
+      "value_shapes": {
+        "SHA256": 33
+      },
+      "approval": "PENDING"
+    },
+    {
+      "path": "specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/nc12-section21-w3/candidate-sha256.json",
+      "commit": "c8ba2d72b6f970b9076bb2c6bd397003675bd107",
+      "git_blob": "83cd2f6f016bbd056dae49726626f75faea43fb4",
+      "rule": "generic-api-key",
+      "reported_matches": 33,
+      "value_shapes": {
+        "SHA256": 33
+      },
+      "approval": "PENDING"
+    },
+    {
+      "path": "specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/nc12-section21-w3/run/http-intake.jsonl",
+      "commit": "c8ba2d72b6f970b9076bb2c6bd397003675bd107",
+      "git_blob": "30acb4aec98968e7414a88f39aa88074e1e19811",
+      "rule": "generic-api-key",
+      "reported_matches": 720,
+      "value_shapes": {
+        "UUID": 720
+      },
+      "approval": "PENDING"
+    },
+    {
+      "path": "specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/nc12-section22-w3/candidate-sha256.json",
+      "commit": "c8ba2d72b6f970b9076bb2c6bd397003675bd107",
+      "git_blob": "992313cd6620d6eefeaf32f25ae2909fca9652a6",
+      "rule": "generic-api-key",
+      "reported_matches": 33,
+      "value_shapes": {
+        "SHA256": 33
+      },
+      "approval": "PENDING"
+    },
+    {
+      "path": "specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/nc12-section22-w3/run/http-intake.jsonl",
+      "commit": "c8ba2d72b6f970b9076bb2c6bd397003675bd107",
+      "git_blob": "ab7645d523b945698a4c5b862c99b8a42526e7cd",
+      "rule": "generic-api-key",
+      "reported_matches": 2846,
+      "value_shapes": {
+        "UUID": 2846
+      },
+      "approval": "PENDING"
+    },
+    {
+      "path": "specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/nc12-section22-w4/candidate-sha256.json",
+      "commit": "c8ba2d72b6f970b9076bb2c6bd397003675bd107",
+      "git_blob": "992313cd6620d6eefeaf32f25ae2909fca9652a6",
+      "rule": "generic-api-key",
+      "reported_matches": 33,
+      "value_shapes": {
+        "SHA256": 33
+      },
+      "approval": "PENDING"
+    },
+    {
+      "path": "specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/nc12-section22-w4/run/fixture/internal-fixture.json",
+      "commit": "c8ba2d72b6f970b9076bb2c6bd397003675bd107",
+      "git_blob": "0ffbc219259b5f55c54857827a8a47ef48c47165",
+      "rule": "generic-api-key",
+      "reported_matches": 2,
+      "value_shapes": {
+        "UUID": 2
+      },
+      "approval": "PENDING"
+    },
+    {
+      "path": "specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/nc12-section23-w4/candidate-sha256.json",
+      "commit": "c8ba2d72b6f970b9076bb2c6bd397003675bd107",
+      "git_blob": "02b2498760eb3c1cb3d70b54092f990bbf8a5182",
+      "rule": "generic-api-key",
+      "reported_matches": 33,
+      "value_shapes": {
+        "SHA256": 33
+      },
+      "approval": "PENDING"
+    },
+    {
+      "path": "specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/nc12-section23-w4/run/fixture/internal-fixture.json",
+      "commit": "c8ba2d72b6f970b9076bb2c6bd397003675bd107",
+      "git_blob": "fa5d2c9af28267a7f8bde35b5c3902185e5b935d",
+      "rule": "generic-api-key",
+      "reported_matches": 2,
+      "value_shapes": {
+        "UUID": 2
+      },
+      "approval": "PENDING"
+    },
+    {
+      "path": "specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/nc12-w1/candidate-sha256.json",
+      "commit": "c8ba2d72b6f970b9076bb2c6bd397003675bd107",
+      "git_blob": "33bbf579a4b4a3e1855288854fcd0634dfc000bc",
+      "rule": "generic-api-key",
+      "reported_matches": 33,
+      "value_shapes": {
+        "SHA256": 33
+      },
+      "approval": "PENDING"
+    },
+    {
+      "path": "specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/nc12-w1/last-owner-cycles.json",
+      "commit": "c8ba2d72b6f970b9076bb2c6bd397003675bd107",
+      "git_blob": "7c7e2aec788b95b34811e5220e60c58a93d1f61a",
+      "rule": "generic-api-key",
+      "reported_matches": 61,
+      "value_shapes": {
+        "UUID": 61
+      },
+      "approval": "PENDING"
+    },
+    {
+      "path": "specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/nc12-w1/run/http-intake.jsonl",
+      "commit": "c8ba2d72b6f970b9076bb2c6bd397003675bd107",
+      "git_blob": "dd8c397b6bae3571b21de04ffe313c447234b278",
+      "rule": "generic-api-key",
+      "reported_matches": 2303,
+      "value_shapes": {
+        "UUID": 2303
+      },
+      "approval": "PENDING"
+    },
+    {
+      "path": "specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/nc12/candidate-after-poll-fix.json",
+      "commit": "c8ba2d72b6f970b9076bb2c6bd397003675bd107",
+      "git_blob": "e22f1ee4a6bc799f154beaff64a89a9d2aa1a534",
+      "rule": "generic-api-key",
+      "reported_matches": 21,
+      "value_shapes": {
+        "SHA256": 21
+      },
+      "approval": "PENDING"
+    },
+    {
+      "path": "specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/nc12/candidate-files.json",
+      "commit": "c8ba2d72b6f970b9076bb2c6bd397003675bd107",
+      "git_blob": "57bf07feba8685d4491c9abe70d06fac51bc6079",
+      "rule": "generic-api-key",
+      "reported_matches": 45,
+      "value_shapes": {
+        "SHA256": 45
+      },
+      "approval": "PENDING"
+    },
+    {
+      "path": "specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/nc12/internal-fixture.json",
+      "commit": "c8ba2d72b6f970b9076bb2c6bd397003675bd107",
+      "git_blob": "92dde28d2753fd7f4e0de40cd02a93383ffe689c",
+      "rule": "generic-api-key",
+      "reported_matches": 2,
+      "value_shapes": {
+        "UUID": 2
+      },
+      "approval": "PENDING"
+    }
+  ]
+}

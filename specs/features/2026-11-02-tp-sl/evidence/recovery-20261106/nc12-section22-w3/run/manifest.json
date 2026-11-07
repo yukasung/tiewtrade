@@ -1,0 +1,87 @@
+{
+  "acceptance_profile": {
+    "name": "PAPER_INTERNAL20_V3",
+    "owners": 20,
+    "baseline_orders_per_owner": 20,
+    "workers": 20,
+    "phase": "W3",
+    "rate": 2,
+    "cycles_per_owner": 30,
+    "seconds": 1800,
+    "expected_commands": 3000,
+    "scope": "short internal stability; four-hour Release validation pending",
+    "intake": "authenticated HTTP"
+  },
+  "profile": "F15_W1_W2_W3_V2",
+  "worker_runtime": "F15_STANDALONE_R8_HEARTBEAT_TAIL_V1",
+  "worker_round_limit": 20,
+  "claim_coordination": "SERIALIZED_CLAIM_V2",
+  "worker_claim_limit": 1,
+  "worker_tick_seconds": 0.02,
+  "publisher_heartbeat_per_book": true,
+  "publisher_readiness_observer": "recent64",
+  "final_tail_drain": true,
+  "checkpoint_storage": "PG_BATCH_V1",
+  "parent_poll_limit": 4,
+  "phase": "W3",
+  "run_id": "bd38395d-c2d5-43c3-a898-a92025dff179",
+  "started_at": "2026-11-07 08:14:40.767443+00:00",
+  "platform": "macOS-27.0.1-arm64-arm-64bit",
+  "python": "3.12.15",
+  "owners": 20,
+  "baseline_orders_per_owner": 20,
+  "cycles_per_owner": 30,
+  "command_rate": 2,
+  "workers": 20,
+  "baseline_manifest": null,
+  "expected_commands": 3000,
+  "expected_cycles": 600,
+  "fault_schedule_digest": "d8567dfa00e68182fe899a15086ffda6a08d2364ca81ffc01e0df1f6ef64bdca",
+  "fault_schedule": [
+    {
+      "offset_seconds": 180.0,
+      "duration_seconds": 30.0,
+      "kind": "WORKER_RESTART"
+    },
+    {
+      "offset_seconds": 360.0,
+      "duration_seconds": 30.0,
+      "kind": "CONNECTION_CHURN"
+    },
+    {
+      "offset_seconds": 540.0,
+      "duration_seconds": 60.0,
+      "kind": "REDIS_OUTAGE"
+    },
+    {
+      "offset_seconds": 720.0,
+      "duration_seconds": 30.0,
+      "kind": "WORKER_RESTART"
+    },
+    {
+      "offset_seconds": 900.0,
+      "duration_seconds": 30.0,
+      "kind": "CONNECTION_CHURN"
+    },
+    {
+      "offset_seconds": 1080.0,
+      "duration_seconds": 60.0,
+      "kind": "REDIS_OUTAGE"
+    },
+    {
+      "offset_seconds": 1260.0,
+      "duration_seconds": 30.0,
+      "kind": "WORKER_RESTART"
+    }
+  ],
+  "expected_fixture_digest": "da81ae1a9c3f63e6dbee473b8fb9b7b0800027cc766ef298d459be419bc6dcf0",
+  "database": {
+    "alembic_revision": "0065",
+    "postgresql": {
+      "server_version": "16.15 (Debian 16.15-1.pgdg13+2)",
+      "max_connections": "100",
+      "shared_buffers": "128MB",
+      "work_mem": "4MB"
+    }
+  }
+}

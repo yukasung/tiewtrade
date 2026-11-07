@@ -63,7 +63,7 @@ class Recorder:
         values["count"] += 1
         values["seconds"] += ended - started
         values["max_seconds"] = max(values["max_seconds"], ended - started)
-        for key in ("hints", "claimed", "skipped", "processed", "deferred"):
+        for key in ("hints", "claimed", "skipped", "processed", "deferred", "acquired", "busy"):
             if key in fields:
                 values[key] = values.get(key, 0) + fields[key]
         if measured and self.detail_limit and fields.get("owner") in self.owners:
@@ -85,6 +85,10 @@ class Recorder:
     def flush(self, *, final: bool = False) -> None:
         self.activate()
         if self.start is None:
+            if final:
+                # A baseline failure must retain evidence even if the measured
+                # phase never publishes its control file.
+                self.write({"event": "SETUP_SUMMARY", "calls": self.setup, "observed_at": time()})
             return
         current = min(self.seconds, int(max(0, monotonic() - self.start)))
         for bucket in sorted(self.buckets):
@@ -123,6 +127,10 @@ class Recorder:
             fields = {"started_wall": wall, **identity}
             try:
                 result = await original(*args, **kwargs)
+                if phase == "order_gate":
+                    fields.update(acquired=int(result is True), busy=int(result is False))
+                    if result is True and transaction is not None:
+                        transaction["coordinator_acquired"] = monotonic()
                 if phase.endswith("scan"):
                     fields["hints"] = len(result)
                 elif phase.endswith("claim"):
@@ -176,6 +184,11 @@ async def traced_worker(operation: Awaitable[None], metrics: Path) -> None:
         finally:
             _CURRENT.reset(token)
             phase = context.pop("phase")
+            acquired = context.pop("coordinator_acquired", None)
+            if acquired is not None:
+                # Includes scan transaction cleanup/COMMIT acknowledgement; not
+                # an exact server release timestamp or an independent wait to add.
+                recorder.record("order_gate_hold.transaction", acquired, outcome=outcome)
             recorder.record(phase + ".transaction", started, outcome=outcome, **context)
 
     async def classify_new(*args: Any, **kwargs: Any) -> Any:
@@ -207,6 +220,8 @@ async def traced_worker(operation: Awaitable[None], metrics: Path) -> None:
         (manual_order, "claim_request", "manual_claim"),
         (manual_order, "process_request", "manual_process"),
         (paper_order, "due_orders", "order_scan"),
+        (paper_order, "try_lock_order_selection", "order_gate"),
+        (paper_order, "_select_coordinated_claim", "order_selection"),
         (paper_order, "claim_order", "order_claim"),
         (paper_order, "process_claimed_order", "order_process"),
         (paper_order, "reconcile_removal_effects", "maintenance_removal"),

@@ -1,0 +1,15 @@
+{
+  "tests": 44,
+  "seconds": 40.75,
+  "protection_tests": 6,
+  "protection_seconds": 11.48,
+  "static_checks": "Ruff/format/mypy5files PASSED",
+  "candidate": {
+    "backend/src/tiewtrade/infra/paper_orders/matching_storage.py": "dd1f7d63bdf46b028d1335c390076ad59afe60d469ffb8f1d3dc95adf5915266",
+    "backend/tests/infra/execution_market/test_worker.py": "d3639a77039b2141f163298297fa27340aa43971ade93a08472fa6be1a18a507",
+    "backend/tests/infra/execution_market/test_review_regressions.py": "e0f0ecf75397f6df1b349e6b96f2def064bf1fa20c02cac28a88b707dcceddfb",
+    "backend/tests/infra/execution_market/order_history_assertions.py": "4cc2628c75aeeb1be276567ae4f371f84f3da489b5f1a188628a189cd80384ea",
+    "backend/tests/infra/execution_market/test_terminal_history.py": "0b5f8e7e5159bcfd368a6487f6d2e55494935ec9ad9d2f8832b64e12d1725d89"
+  },
+  "production_scope": "only terminal-history SELECT; same RLS, payload validation and legacy fallback; no persistent in-process state"
+}

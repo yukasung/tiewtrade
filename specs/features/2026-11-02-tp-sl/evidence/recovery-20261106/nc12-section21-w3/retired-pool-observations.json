@@ -1,0 +1,173 @@
+{
+  "negative_native_counts": [
+    {
+      "monotonic": 17811.231826666,
+      "reason": "registered",
+      "pool": {
+        "pool_id": "17713:3:0",
+        "role": "ENGINE",
+        "pool_size": 5,
+        "max_overflow": 10,
+        "checked_in": 1,
+        "checked_out": -1,
+        "overflow": -5,
+        "active_borrows": 3
+      }
+    },
+    {
+      "monotonic": 17811.301079958,
+      "reason": "registered",
+      "pool": {
+        "pool_id": "17713:3:0",
+        "role": "ENGINE",
+        "pool_size": 5,
+        "max_overflow": 10,
+        "checked_in": 4,
+        "checked_out": -4,
+        "overflow": -5,
+        "active_borrows": 1
+      }
+    },
+    {
+      "monotonic": 17820.440577333,
+      "reason": "periodic",
+      "pool": {
+        "pool_id": "17713:3:0",
+        "role": "ENGINE",
+        "pool_size": 5,
+        "max_overflow": 10,
+        "checked_in": 4,
+        "checked_out": -4,
+        "overflow": -5,
+        "active_borrows": 0
+      }
+    },
+    {
+      "monotonic": 17825.476767333,
+      "reason": "periodic",
+      "pool": {
+        "pool_id": "17713:3:0",
+        "role": "ENGINE",
+        "pool_size": 5,
+        "max_overflow": 10,
+        "checked_in": 4,
+        "checked_out": -4,
+        "overflow": -5,
+        "active_borrows": 0
+      }
+    },
+    {
+      "monotonic": 17830.512896541,
+      "reason": "periodic",
+      "pool": {
+        "pool_id": "17713:3:0",
+        "role": "ENGINE",
+        "pool_size": 5,
+        "max_overflow": 10,
+        "checked_in": 4,
+        "checked_out": -4,
+        "overflow": -5,
+        "active_borrows": 0
+      }
+    },
+    {
+      "monotonic": 17835.548223708,
+      "reason": "periodic",
+      "pool": {
+        "pool_id": "17713:3:0",
+        "role": "ENGINE",
+        "pool_size": 5,
+        "max_overflow": 10,
+        "checked_in": 4,
+        "checked_out": -4,
+        "overflow": -5,
+        "active_borrows": 0
+      }
+    },
+    {
+      "monotonic": 17840.582099083,
+      "reason": "periodic",
+      "pool": {
+        "pool_id": "17713:3:0",
+        "role": "ENGINE",
+        "pool_size": 5,
+        "max_overflow": 10,
+        "checked_in": 4,
+        "checked_out": -4,
+        "overflow": -5,
+        "active_borrows": 0
+      }
+    },
+    {
+      "monotonic": 17845.648229291,
+      "reason": "periodic",
+      "pool": {
+        "pool_id": "17713:3:0",
+        "role": "ENGINE",
+        "pool_size": 5,
+        "max_overflow": 10,
+        "checked_in": 4,
+        "checked_out": -4,
+        "overflow": -5,
+        "active_borrows": 1
+      }
+    },
+    {
+      "monotonic": 17850.684413125,
+      "reason": "periodic",
+      "pool": {
+        "pool_id": "17713:3:0",
+        "role": "ENGINE",
+        "pool_size": 5,
+        "max_overflow": 10,
+        "checked_in": 4,
+        "checked_out": -4,
+        "overflow": -5,
+        "active_borrows": 0
+      }
+    }
+  ],
+  "collected_with_pending_events": [
+    {
+      "monotonic": 17860.755450458,
+      "reason": "periodic",
+      "pool": {
+        "pool_id": "17713:0:0",
+        "collected": true,
+        "active_borrows": 1
+      }
+    },
+    {
+      "monotonic": 17875.8823445,
+      "reason": "periodic",
+      "pool": {
+        "pool_id": "17713:0:0",
+        "collected": true,
+        "active_borrows": 1
+      }
+    },
+    {
+      "monotonic": 17885.966173791,
+      "reason": "periodic",
+      "pool": {
+        "pool_id": "17713:0:0",
+        "collected": true,
+        "active_borrows": 1
+      }
+    },
+    {
+      "monotonic": 17891.90307725,
+      "reason": "owned_work_stopping",
+      "pool": {
+        "pool_id": "17713:0:0",
+        "collected": true,
+        "active_borrows": 1
+      }
+    }
+  ],
+  "final_errors": {
+    "PoolCapacityViolation": 9,
+    "PoolDisappearedBeforeReturn": 4
+  },
+  "final_nonzero_borrows": []
+}

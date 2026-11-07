@@ -1,0 +1,3294 @@
+{
+  "publisher_transactions": 2172,
+  "closed": {
+    "event": "CLOSED",
+    "transactions": 27993,
+    "setup": 31746,
+    "acceptance_result": false,
+    "truncated": false
+  },
+  "outcomes": {
+    "COMMIT": 2171,
+    "CancelledError": 1
+  },
+  "metrics": {
+    "seconds": {
+      "count": 2172,
+      "total": 168.36133564900183,
+      "mean": 0.0775144270943839,
+      "p95": 0.23631787499971324,
+      "max": 2.7711667079997824
+    },
+    "pool_wait_seconds": {
+      "count": 2172,
+      "total": 23.0076882509984,
+      "mean": 0.010592858310772743,
+      "p95": 0.03605833400024494,
+      "max": 0.380117958000028
+    },
+    "body_seconds": {
+      "count": 2171,
+      "total": 129.17863100500017,
+      "mean": 0.05950190281206825,
+      "p95": 0.18282841600012034,
+      "max": 2.6116112499998962
+    },
+    "finalization_seconds": {
+      "count": 2171,
+      "total": 15.944159819006018,
+      "mean": 0.007344154684019354,
+      "p95": 0.02364920899981371,
+      "max": 0.4057433339999079
+    }
+  },
+  "query_detail_truncated": false,
+  "slowest_transactions": [
+    {
+      "started_at": 1793975536.565996,
+      "pool": "tiewtrade_market_data",
+      "checked_out": 0,
+      "pool_size": 5,
+      "max_overflow": 10,
+      "query_detail_truncated": false,
+      "measurement_active_at_start": false,
+      "started_monotonic": 3082.238501583,
+      "checkout_at": 1793975536.597507,
+      "checkout_monotonic": 3082.270012791,
+      "pool_wait_seconds": 0.03151154199986195,
+      "backend_pid": 1680,
+      "transaction_acquired_at": 1793975536.598737,
+      "transaction_acquired_monotonic": 3082.271244083,
+      "body_finished_monotonic": 3084.882855333,
+      "checkin_at": 1793975539.336918,
+      "checkin_monotonic": 3085.009373041,
+      "phase": "publish_market",
+      "publisher_tick": "594",
+      "book_owner": "88203493-b18b-4f5b-b484-4980ab131c16",
+      "book_generation": "1",
+      "book_last_input_id": "593",
+      "finished_at": 1793975539.337213,
+      "seconds": 2.7711667079997824,
+      "finished_monotonic": 3085.009668291,
+      "body_seconds": 2.6116112499998962,
+      "finalization_seconds": 0.12681295799984582,
+      "held_seconds": 2.739360249999663,
+      "outcome": "COMMIT",
+      "queries": [
+        {
+          "hash": "ff49deb19fa5bc5a513d2d860ff7d49c27fe285f01246001404d7060ecaa0ff9",
+          "started_monotonic": 3082.271846375,
+          "seconds": 0.07746329099973082,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/db/session.py",
+              "line": 45
+            }
+          ]
+        },
+        {
+          "hash": "4784b4da0a02cfd4c2a612e2aee0c258b210310cd72437a193b787b0d5dc3af9",
+          "started_monotonic": 3082.350042416,
+          "seconds": 0.023134708999805298,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/order_book_storage.py",
+              "line": 170
+            }
+          ]
+        },
+        {
+          "hash": "e14880a60e1b44eaa40102ec695b8f2212a61085fe157433d9a63194a354d57e",
+          "started_monotonic": 3082.374061458,
+          "seconds": 0.09726416700004847,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/order_book_storage.py",
+              "line": 196
+            }
+          ]
+        },
+        {
+          "hash": "4784b4da0a02cfd4c2a612e2aee0c258b210310cd72437a193b787b0d5dc3af9",
+          "started_monotonic": 3082.472530916,
+          "seconds": 0.15941195899995364,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/order_book_storage.py",
+              "line": 170
+            }
+          ]
+        },
+        {
+          "hash": "2461f8bb8070d8f1e4e669943dfb1cc042ed3e05c56721efdd125ae68b55f78c",
+          "started_monotonic": 3082.63268975,
+          "seconds": 0.015493207999952574,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 56
+            },
+            {
+              "file": "backend/tests/infra/execution_market/profile_workload.py",
+              "line": 281
+            }
+          ]
+        },
+        {
+          "hash": "4784b4da0a02cfd4c2a612e2aee0c258b210310cd72437a193b787b0d5dc3af9",
+          "started_monotonic": 3082.64926575,
+          "seconds": 0.013120625000283326,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/order_book_storage.py",
+              "line": 170
+            }
+          ]
+        },
+        {
+          "hash": "e259ab0c3e76460bfbd71a509360cfdb9482de64562794507542e1592bc4264a",
+          "started_monotonic": 3082.663700041,
+          "seconds": 0.012228791999859823,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/order_book_storage.py",
+              "line": 271
+            }
+          ]
+        },
+        {
+          "hash": "b6bc63f875df15e4101b4ec4982c700d627446b0debed241fa1acdb2cb3f207c",
+          "started_monotonic": 3082.676050833,
+          "seconds": 0.029927750000297237,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/order_book_storage.py",
+              "line": 283
+            }
+          ]
+        },
+        {
+          "hash": "4784b4da0a02cfd4c2a612e2aee0c258b210310cd72437a193b787b0d5dc3af9",
+          "started_monotonic": 3082.706112791,
+          "seconds": 0.07713145899970186,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/order_book_storage.py",
+              "line": 170
+            }
+          ]
+        },
+        {
+          "hash": "a0537e6176388f8555e498c2f0d572bb6c2251dd5abffb8b14a437cae11285a8",
+          "started_monotonic": 3082.783689291,
+          "seconds": 0.0098841670001093,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 62
+            },
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 98
+            },
+            {
+              "file": "backend/tests/infra/execution_market/profile_workload.py",
+              "line": 251
+            }
+          ]
+        },
+        {
+          "hash": "283295e20d5dd15c322a4afdaa20814cc5ef0f28491d2b6b323f54ce2aab79a0",
+          "started_monotonic": 3082.7938295,
+          "seconds": 0.10552812500009168,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 100
+            }
+          ]
+        },
+        {
+          "hash": "5df6264c3e4fd4413c737a1426923624e8777a3f843956d355d0036103c6de98",
+          "started_monotonic": 3082.900117041,
+          "seconds": 0.06497666699988258,
+          "source": []
+        },
+        {
+          "hash": "a0537e6176388f8555e498c2f0d572bb6c2251dd5abffb8b14a437cae11285a8",
+          "started_monotonic": 3082.965621125,
+          "seconds": 0.011408541000037076,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 62
+            },
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 98
+            },
+            {
+              "file": "backend/tests/infra/execution_market/profile_workload.py",
+              "line": 251
+            }
+          ]
+        },
+        {
+          "hash": "283295e20d5dd15c322a4afdaa20814cc5ef0f28491d2b6b323f54ce2aab79a0",
+          "started_monotonic": 3082.97967825,
+          "seconds": 0.33650141600037387,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 100
+            }
+          ]
+        },
+        {
+          "hash": "9a420d6c244538da30bf58196481425d72107820fbfc8060ff1c983767174121",
+          "started_monotonic": 3083.317017583,
+          "seconds": 0.09152495799980898,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 226
+            }
+          ]
+        },
+        {
+          "hash": "2461f8bb8070d8f1e4e669943dfb1cc042ed3e05c56721efdd125ae68b55f78c",
+          "started_monotonic": 3083.409162958,
+          "seconds": 0.039493708000009065,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 56
+            },
+            {
+              "file": "backend/tests/infra/execution_market/profile_workload.py",
+              "line": 281
+            }
+          ]
+        },
+        {
+          "hash": "a0537e6176388f8555e498c2f0d572bb6c2251dd5abffb8b14a437cae11285a8",
+          "started_monotonic": 3083.450849833,
+          "seconds": 0.9988194580000709,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 62
+            },
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 98
+            },
+            {
+              "file": "backend/tests/infra/execution_market/profile_workload.py",
+              "line": 251
+            }
+          ]
+        },
+        {
+          "hash": "283295e20d5dd15c322a4afdaa20814cc5ef0f28491d2b6b323f54ce2aab79a0",
+          "started_monotonic": 3084.451721708,
+          "seconds": 0.11586499999975786,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 100
+            }
+          ]
+        },
+        {
+          "hash": "a456b9cf1aafe9378a017981367a3147a3874b82d4be679899391016ecbdeb17",
+          "started_monotonic": 3084.570346208,
+          "seconds": 0.08791883300000336,
+          "source": []
+        },
+        {
+          "hash": "d3b779f87a23e4e5c1c08b4bb9ebfe5ef59715bab45ab14e6d2d0ac64a3c48c7",
+          "started_monotonic": 3084.659344666,
+          "seconds": 0.16162933400028123,
+          "source": []
+        },
+        {
+          "hash": "a0537e6176388f8555e498c2f0d572bb6c2251dd5abffb8b14a437cae11285a8",
+          "started_monotonic": 3084.821687541,
+          "seconds": 0.044586292000076355,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 62
+            },
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 98
+            },
+            {
+              "file": "backend/tests/infra/execution_market/profile_workload.py",
+              "line": 251
+            }
+          ]
+        },
+        {
+          "hash": "283295e20d5dd15c322a4afdaa20814cc5ef0f28491d2b6b323f54ce2aab79a0",
+          "started_monotonic": 3084.866824958,
+          "seconds": 0.01571629199997915,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 100
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "started_at": 1793975567.795234,
+      "pool": "tiewtrade_market_data",
+      "checked_out": 0,
+      "pool_size": 5,
+      "max_overflow": 10,
+      "query_detail_truncated": false,
+      "measurement_active_at_start": false,
+      "started_monotonic": 3113.467157833,
+      "checkout_at": 1793975567.948166,
+      "checkout_monotonic": 3113.620099166,
+      "pool_wait_seconds": 0.15294170800007123,
+      "backend_pid": 1680,
+      "transaction_acquired_at": 1793975567.948392,
+      "transaction_acquired_monotonic": 3113.620314458,
+      "body_finished_monotonic": 3114.847113166,
+      "checkin_at": 1793975569.58076,
+      "checkin_monotonic": 3115.252651791,
+      "phase": "publish_market",
+      "publisher_tick": "660",
+      "book_owner": "88203493-b18b-4f5b-b484-4980ab131c16",
+      "book_generation": "1",
+      "book_last_input_id": "659",
+      "finished_at": 1793975569.580965,
+      "seconds": 1.785698666999906,
+      "finished_monotonic": 3115.2528565,
+      "body_seconds": 1.226798707999933,
+      "finalization_seconds": 0.4057433339999079,
+      "held_seconds": 1.632552625000244,
+      "outcome": "COMMIT",
+      "queries": [
+        {
+          "hash": "ff49deb19fa5bc5a513d2d860ff7d49c27fe285f01246001404d7060ecaa0ff9",
+          "started_monotonic": 3113.620471625,
+          "seconds": 0.046274499999981344,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/db/session.py",
+              "line": 45
+            }
+          ]
+        },
+        {
+          "hash": "4784b4da0a02cfd4c2a612e2aee0c258b210310cd72437a193b787b0d5dc3af9",
+          "started_monotonic": 3113.668149125,
+          "seconds": 0.28641383300009693,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/order_book_storage.py",
+              "line": 170
+            }
+          ]
+        },
+        {
+          "hash": "e14880a60e1b44eaa40102ec695b8f2212a61085fe157433d9a63194a354d57e",
+          "started_monotonic": 3113.955209833,
+          "seconds": 0.04408141700014312,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/order_book_storage.py",
+              "line": 196
+            }
+          ]
+        },
+        {
+          "hash": "4784b4da0a02cfd4c2a612e2aee0c258b210310cd72437a193b787b0d5dc3af9",
+          "started_monotonic": 3113.999549166,
+          "seconds": 0.02067624999972395,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/order_book_storage.py",
+              "line": 170
+            }
+          ]
+        },
+        {
+          "hash": "2461f8bb8070d8f1e4e669943dfb1cc042ed3e05c56721efdd125ae68b55f78c",
+          "started_monotonic": 3114.020567791,
+          "seconds": 0.022637167000084446,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 56
+            },
+            {
+              "file": "backend/tests/infra/execution_market/profile_workload.py",
+              "line": 281
+            }
+          ]
+        },
+        {
+          "hash": "4784b4da0a02cfd4c2a612e2aee0c258b210310cd72437a193b787b0d5dc3af9",
+          "started_monotonic": 3114.049673666,
+          "seconds": 0.052136124999833555,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/order_book_storage.py",
+              "line": 170
+            }
+          ]
+        },
+        {
+          "hash": "e259ab0c3e76460bfbd71a509360cfdb9482de64562794507542e1592bc4264a",
+          "started_monotonic": 3114.102769958,
+          "seconds": 0.041733708000265324,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/order_book_storage.py",
+              "line": 271
+            }
+          ]
+        },
+        {
+          "hash": "b6bc63f875df15e4101b4ec4982c700d627446b0debed241fa1acdb2cb3f207c",
+          "started_monotonic": 3114.144904458,
+          "seconds": 0.1272777499998483,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/order_book_storage.py",
+              "line": 283
+            }
+          ]
+        },
+        {
+          "hash": "4784b4da0a02cfd4c2a612e2aee0c258b210310cd72437a193b787b0d5dc3af9",
+          "started_monotonic": 3114.2732185,
+          "seconds": 0.1382853330001126,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/order_book_storage.py",
+              "line": 170
+            }
+          ]
+        },
+        {
+          "hash": "a0537e6176388f8555e498c2f0d572bb6c2251dd5abffb8b14a437cae11285a8",
+          "started_monotonic": 3114.412712833,
+          "seconds": 0.07296874999974534,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 62
+            },
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 98
+            },
+            {
+              "file": "backend/tests/infra/execution_market/profile_workload.py",
+              "line": 251
+            }
+          ]
+        },
+        {
+          "hash": "283295e20d5dd15c322a4afdaa20814cc5ef0f28491d2b6b323f54ce2aab79a0",
+          "started_monotonic": 3114.486341125,
+          "seconds": 0.10578970799997478,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 100
+            }
+          ]
+        },
+        {
+          "hash": "5df6264c3e4fd4413c737a1426923624e8777a3f843956d355d0036103c6de98",
+          "started_monotonic": 3114.592566708,
+          "seconds": 0.0657696670000405,
+          "source": []
+        },
+        {
+          "hash": "a0537e6176388f8555e498c2f0d572bb6c2251dd5abffb8b14a437cae11285a8",
+          "started_monotonic": 3114.658691125,
+          "seconds": 0.013212541000029887,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 62
+            },
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 98
+            },
+            {
+              "file": "backend/tests/infra/execution_market/profile_workload.py",
+              "line": 251
+            }
+          ]
+        },
+        {
+          "hash": "283295e20d5dd15c322a4afdaa20814cc5ef0f28491d2b6b323f54ce2aab79a0",
+          "started_monotonic": 3114.672271416,
+          "seconds": 0.003124208999906841,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 100
+            }
+          ]
+        },
+        {
+          "hash": "9a420d6c244538da30bf58196481425d72107820fbfc8060ff1c983767174121",
+          "started_monotonic": 3114.67578375,
+          "seconds": 0.0745364160002282,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 226
+            }
+          ]
+        },
+        {
+          "hash": "2461f8bb8070d8f1e4e669943dfb1cc042ed3e05c56721efdd125ae68b55f78c",
+          "started_monotonic": 3114.751496,
+          "seconds": 0.0013867080001546128,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 56
+            },
+            {
+              "file": "backend/tests/infra/execution_market/profile_workload.py",
+              "line": 281
+            }
+          ]
+        },
+        {
+          "hash": "a0537e6176388f8555e498c2f0d572bb6c2251dd5abffb8b14a437cae11285a8",
+          "started_monotonic": 3114.753175791,
+          "seconds": 0.0006979589998081792,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 62
+            },
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 98
+            },
+            {
+              "file": "backend/tests/infra/execution_market/profile_workload.py",
+              "line": 251
+            }
+          ]
+        },
+        {
+          "hash": "283295e20d5dd15c322a4afdaa20814cc5ef0f28491d2b6b323f54ce2aab79a0",
+          "started_monotonic": 3114.7540515,
+          "seconds": 0.006090500000027532,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 100
+            }
+          ]
+        },
+        {
+          "hash": "a456b9cf1aafe9378a017981367a3147a3874b82d4be679899391016ecbdeb17",
+          "started_monotonic": 3114.760927416,
+          "seconds": 0.0034627919999365986,
+          "source": []
+        },
+        {
+          "hash": "d3b779f87a23e4e5c1c08b4bb9ebfe5ef59715bab45ab14e6d2d0ac64a3c48c7",
+          "started_monotonic": 3114.765159583,
+          "seconds": 0.016312292000293382,
+          "source": []
+        },
+        {
+          "hash": "a0537e6176388f8555e498c2f0d572bb6c2251dd5abffb8b14a437cae11285a8",
+          "started_monotonic": 3114.781934708,
+          "seconds": 0.02229295799997999,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 62
+            },
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 98
+            },
+            {
+              "file": "backend/tests/infra/execution_market/profile_workload.py",
+              "line": 251
+            }
+          ]
+        },
+        {
+          "hash": "283295e20d5dd15c322a4afdaa20814cc5ef0f28491d2b6b323f54ce2aab79a0",
+          "started_monotonic": 3114.805796208,
+          "seconds": 0.04104229199992915,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 100
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "started_at": 1793975532.790049,
+      "pool": "tiewtrade_market_data",
+      "checked_out": 0,
+      "pool_size": 5,
+      "max_overflow": 10,
+      "query_detail_truncated": false,
+      "measurement_active_at_start": false,
+      "started_monotonic": 3078.462624583,
+      "checkout_at": 1793975532.886722,
+      "checkout_monotonic": 3078.559297583,
+      "pool_wait_seconds": 0.09667341700014731,
+      "backend_pid": 1680,
+      "transaction_acquired_at": 1793975532.886785,
+      "transaction_acquired_monotonic": 3078.559359708,
+      "body_finished_monotonic": 3079.929065458,
+      "checkin_at": 1793975534.3131058,
+      "checkin_monotonic": 3079.985654791,
+      "phase": "publish_market",
+      "publisher_tick": "590",
+      "book_owner": "88203493-b18b-4f5b-b484-4980ab131c16",
+      "book_generation": "1",
+      "book_last_input_id": "589",
+      "finished_at": 1793975534.313822,
+      "seconds": 1.5237454170001001,
+      "finished_monotonic": 3079.98637,
+      "body_seconds": 1.3697057499998664,
+      "finalization_seconds": 0.057304542000110814,
+      "held_seconds": 1.4263572079998994,
+      "outcome": "COMMIT",
+      "queries": [
+        {
+          "hash": "ff49deb19fa5bc5a513d2d860ff7d49c27fe285f01246001404d7060ecaa0ff9",
+          "started_monotonic": 3078.559461625,
+          "seconds": 0.01036858299994492,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/db/session.py",
+              "line": 45
+            }
+          ]
+        },
+        {
+          "hash": "4784b4da0a02cfd4c2a612e2aee0c258b210310cd72437a193b787b0d5dc3af9",
+          "started_monotonic": 3078.570448375,
+          "seconds": 0.010725499999807653,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/order_book_storage.py",
+              "line": 170
+            }
+          ]
+        },
+        {
+          "hash": "e14880a60e1b44eaa40102ec695b8f2212a61085fe157433d9a63194a354d57e",
+          "started_monotonic": 3078.581767583,
+          "seconds": 0.05871679200026847,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/order_book_storage.py",
+              "line": 196
+            }
+          ]
+        },
+        {
+          "hash": "4784b4da0a02cfd4c2a612e2aee0c258b210310cd72437a193b787b0d5dc3af9",
+          "started_monotonic": 3078.641241166,
+          "seconds": 0.030432292000114103,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/order_book_storage.py",
+              "line": 170
+            }
+          ]
+        },
+        {
+          "hash": "2461f8bb8070d8f1e4e669943dfb1cc042ed3e05c56721efdd125ae68b55f78c",
+          "started_monotonic": 3078.676513166,
+          "seconds": 0.06063387499989403,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 56
+            },
+            {
+              "file": "backend/tests/infra/execution_market/profile_workload.py",
+              "line": 281
+            }
+          ]
+        },
+        {
+          "hash": "4784b4da0a02cfd4c2a612e2aee0c258b210310cd72437a193b787b0d5dc3af9",
+          "started_monotonic": 3078.737905958,
+          "seconds": 0.08146229200019661,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/order_book_storage.py",
+              "line": 170
+            }
+          ]
+        },
+        {
+          "hash": "e259ab0c3e76460bfbd71a509360cfdb9482de64562794507542e1592bc4264a",
+          "started_monotonic": 3078.821671625,
+          "seconds": 0.06255025000018577,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/order_book_storage.py",
+              "line": 271
+            }
+          ]
+        },
+        {
+          "hash": "b6bc63f875df15e4101b4ec4982c700d627446b0debed241fa1acdb2cb3f207c",
+          "started_monotonic": 3078.887045083,
+          "seconds": 0.12329691700006151,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/order_book_storage.py",
+              "line": 283
+            }
+          ]
+        },
+        {
+          "hash": "4784b4da0a02cfd4c2a612e2aee0c258b210310cd72437a193b787b0d5dc3af9",
+          "started_monotonic": 3079.010639916,
+          "seconds": 0.0081159999999727,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/order_book_storage.py",
+              "line": 170
+            }
+          ]
+        },
+        {
+          "hash": "a0537e6176388f8555e498c2f0d572bb6c2251dd5abffb8b14a437cae11285a8",
+          "started_monotonic": 3079.022261875,
+          "seconds": 0.021466624999902706,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 62
+            },
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 98
+            },
+            {
+              "file": "backend/tests/infra/execution_market/profile_workload.py",
+              "line": 251
+            }
+          ]
+        },
+        {
+          "hash": "283295e20d5dd15c322a4afdaa20814cc5ef0f28491d2b6b323f54ce2aab79a0",
+          "started_monotonic": 3079.043917125,
+          "seconds": 0.09669529099983265,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 100
+            }
+          ]
+        },
+        {
+          "hash": "5df6264c3e4fd4413c737a1426923624e8777a3f843956d355d0036103c6de98",
+          "started_monotonic": 3079.140928166,
+          "seconds": 0.3027944590003244,
+          "source": []
+        },
+        {
+          "hash": "a0537e6176388f8555e498c2f0d572bb6c2251dd5abffb8b14a437cae11285a8",
+          "started_monotonic": 3079.444338,
+          "seconds": 0.20710154100015643,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 62
+            },
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 98
+            },
+            {
+              "file": "backend/tests/infra/execution_market/profile_workload.py",
+              "line": 251
+            }
+          ]
+        },
+        {
+          "hash": "283295e20d5dd15c322a4afdaa20814cc5ef0f28491d2b6b323f54ce2aab79a0",
+          "started_monotonic": 3079.6519675,
+          "seconds": 0.027209374999983993,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 100
+            }
+          ]
+        },
+        {
+          "hash": "9a420d6c244538da30bf58196481425d72107820fbfc8060ff1c983767174121",
+          "started_monotonic": 3079.680285416,
+          "seconds": 0.05398199999990538,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 226
+            }
+          ]
+        },
+        {
+          "hash": "2461f8bb8070d8f1e4e669943dfb1cc042ed3e05c56721efdd125ae68b55f78c",
+          "started_monotonic": 3079.735890875,
+          "seconds": 0.015660290999676363,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 56
+            },
+            {
+              "file": "backend/tests/infra/execution_market/profile_workload.py",
+              "line": 281
+            }
+          ]
+        },
+        {
+          "hash": "a0537e6176388f8555e498c2f0d572bb6c2251dd5abffb8b14a437cae11285a8",
+          "started_monotonic": 3079.752445708,
+          "seconds": 0.03870950000009543,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 62
+            },
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 98
+            },
+            {
+              "file": "backend/tests/infra/execution_market/profile_workload.py",
+              "line": 251
+            }
+          ]
+        },
+        {
+          "hash": "283295e20d5dd15c322a4afdaa20814cc5ef0f28491d2b6b323f54ce2aab79a0",
+          "started_monotonic": 3079.793558041,
+          "seconds": 0.034818792000351095,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 100
+            }
+          ]
+        },
+        {
+          "hash": "a456b9cf1aafe9378a017981367a3147a3874b82d4be679899391016ecbdeb17",
+          "started_monotonic": 3079.829154,
+          "seconds": 0.051844083000105456,
+          "source": []
+        },
+        {
+          "hash": "d3b779f87a23e4e5c1c08b4bb9ebfe5ef59715bab45ab14e6d2d0ac64a3c48c7",
+          "started_monotonic": 3079.881846166,
+          "seconds": 0.020009292000395362,
+          "source": []
+        },
+        {
+          "hash": "a0537e6176388f8555e498c2f0d572bb6c2251dd5abffb8b14a437cae11285a8",
+          "started_monotonic": 3079.902098875,
+          "seconds": 0.014956125000026077,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 62
+            },
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 98
+            },
+            {
+              "file": "backend/tests/infra/execution_market/profile_workload.py",
+              "line": 251
+            }
+          ]
+        },
+        {
+          "hash": "283295e20d5dd15c322a4afdaa20814cc5ef0f28491d2b6b323f54ce2aab79a0",
+          "started_monotonic": 3079.917325541,
+          "seconds": 0.011599666999700275,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 100
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "started_at": 1793975549.2164721,
+      "pool": "tiewtrade_market_data",
+      "checked_out": 0,
+      "pool_size": 5,
+      "max_overflow": 10,
+      "query_detail_truncated": false,
+      "measurement_active_at_start": false,
+      "started_monotonic": 3094.888741375,
+      "checkout_at": 1793975549.304877,
+      "checkout_monotonic": 3094.977147791,
+      "pool_wait_seconds": 0.0884068750001461,
+      "backend_pid": 1680,
+      "transaction_acquired_at": 1793975549.3054311,
+      "transaction_acquired_monotonic": 3094.9777005,
+      "body_finished_monotonic": 3096.218956083,
+      "checkin_at": 1793975550.7149131,
+      "checkin_monotonic": 3096.387157208,
+      "phase": "publish_market",
+      "publisher_tick": "614",
+      "book_owner": "88203493-b18b-4f5b-b484-4980ab131c16",
+      "book_generation": "1",
+      "book_last_input_id": "613",
+      "finished_at": 1793975550.71508,
+      "seconds": 1.4985820000001695,
+      "finished_monotonic": 3096.387323375,
+      "body_seconds": 1.241255583000111,
+      "finalization_seconds": 0.16836729199985712,
+      "held_seconds": 1.4100094170003103,
+      "outcome": "COMMIT",
+      "queries": [
+        {
+          "hash": "ff49deb19fa5bc5a513d2d860ff7d49c27fe285f01246001404d7060ecaa0ff9",
+          "started_monotonic": 3094.977906166,
+          "seconds": 0.09604237499979718,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/db/session.py",
+              "line": 45
+            }
+          ]
+        },
+        {
+          "hash": "4784b4da0a02cfd4c2a612e2aee0c258b210310cd72437a193b787b0d5dc3af9",
+          "started_monotonic": 3095.074358083,
+          "seconds": 0.2325710000000072,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/order_book_storage.py",
+              "line": 170
+            }
+          ]
+        },
+        {
+          "hash": "e14880a60e1b44eaa40102ec695b8f2212a61085fe157433d9a63194a354d57e",
+          "started_monotonic": 3095.307763833,
+          "seconds": 0.06363966699973389,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/order_book_storage.py",
+              "line": 196
+            }
+          ]
+        },
+        {
+          "hash": "4784b4da0a02cfd4c2a612e2aee0c258b210310cd72437a193b787b0d5dc3af9",
+          "started_monotonic": 3095.372256083,
+          "seconds": 0.024284541999804787,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/order_book_storage.py",
+              "line": 170
+            }
+          ]
+        },
+        {
+          "hash": "2461f8bb8070d8f1e4e669943dfb1cc042ed3e05c56721efdd125ae68b55f78c",
+          "started_monotonic": 3095.396982125,
+          "seconds": 0.012751583000408573,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 56
+            },
+            {
+              "file": "backend/tests/infra/execution_market/profile_workload.py",
+              "line": 281
+            }
+          ]
+        },
+        {
+          "hash": "4784b4da0a02cfd4c2a612e2aee0c258b210310cd72437a193b787b0d5dc3af9",
+          "started_monotonic": 3095.410703208,
+          "seconds": 0.21402891699972315,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/order_book_storage.py",
+              "line": 170
+            }
+          ]
+        },
+        {
+          "hash": "e259ab0c3e76460bfbd71a509360cfdb9482de64562794507542e1592bc4264a",
+          "started_monotonic": 3095.625842416,
+          "seconds": 0.06389983400003985,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/order_book_storage.py",
+              "line": 271
+            }
+          ]
+        },
+        {
+          "hash": "b6bc63f875df15e4101b4ec4982c700d627446b0debed241fa1acdb2cb3f207c",
+          "started_monotonic": 3095.690717666,
+          "seconds": 0.01857674999973824,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/order_book_storage.py",
+              "line": 283
+            }
+          ]
+        },
+        {
+          "hash": "4784b4da0a02cfd4c2a612e2aee0c258b210310cd72437a193b787b0d5dc3af9",
+          "started_monotonic": 3095.709809416,
+          "seconds": 0.02056979200006026,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/order_book_storage.py",
+              "line": 170
+            }
+          ]
+        },
+        {
+          "hash": "a0537e6176388f8555e498c2f0d572bb6c2251dd5abffb8b14a437cae11285a8",
+          "started_monotonic": 3095.730599625,
+          "seconds": 0.08738283299999239,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 62
+            },
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 98
+            },
+            {
+              "file": "backend/tests/infra/execution_market/profile_workload.py",
+              "line": 251
+            }
+          ]
+        },
+        {
+          "hash": "283295e20d5dd15c322a4afdaa20814cc5ef0f28491d2b6b323f54ce2aab79a0",
+          "started_monotonic": 3095.81838675,
+          "seconds": 0.14006754100000762,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 100
+            }
+          ]
+        },
+        {
+          "hash": "5df6264c3e4fd4413c737a1426923624e8777a3f843956d355d0036103c6de98",
+          "started_monotonic": 3095.958716958,
+          "seconds": 0.024191833000259066,
+          "source": []
+        },
+        {
+          "hash": "a0537e6176388f8555e498c2f0d572bb6c2251dd5abffb8b14a437cae11285a8",
+          "started_monotonic": 3095.983230791,
+          "seconds": 0.02161154199984594,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 62
+            },
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 98
+            },
+            {
+              "file": "backend/tests/infra/execution_market/profile_workload.py",
+              "line": 251
+            }
+          ]
+        },
+        {
+          "hash": "283295e20d5dd15c322a4afdaa20814cc5ef0f28491d2b6b323f54ce2aab79a0",
+          "started_monotonic": 3096.005450125,
+          "seconds": 0.07940237499997238,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 100
+            }
+          ]
+        },
+        {
+          "hash": "9a420d6c244538da30bf58196481425d72107820fbfc8060ff1c983767174121",
+          "started_monotonic": 3096.085000916,
+          "seconds": 0.007922624999991967,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 226
+            }
+          ]
+        },
+        {
+          "hash": "2461f8bb8070d8f1e4e669943dfb1cc042ed3e05c56721efdd125ae68b55f78c",
+          "started_monotonic": 3096.093680625,
+          "seconds": 0.010643707999861363,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 56
+            },
+            {
+              "file": "backend/tests/infra/execution_market/profile_workload.py",
+              "line": 281
+            }
+          ]
+        },
+        {
+          "hash": "a0537e6176388f8555e498c2f0d572bb6c2251dd5abffb8b14a437cae11285a8",
+          "started_monotonic": 3096.104598416,
+          "seconds": 0.009553625000080501,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 62
+            },
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 98
+            },
+            {
+              "file": "backend/tests/infra/execution_market/profile_workload.py",
+              "line": 251
+            }
+          ]
+        },
+        {
+          "hash": "283295e20d5dd15c322a4afdaa20814cc5ef0f28491d2b6b323f54ce2aab79a0",
+          "started_monotonic": 3096.114338333,
+          "seconds": 0.0029692500002056477,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 100
+            }
+          ]
+        },
+        {
+          "hash": "a456b9cf1aafe9378a017981367a3147a3874b82d4be679899391016ecbdeb17",
+          "started_monotonic": 3096.117667833,
+          "seconds": 0.004455708000023151,
+          "source": []
+        },
+        {
+          "hash": "d3b779f87a23e4e5c1c08b4bb9ebfe5ef59715bab45ab14e6d2d0ac64a3c48c7",
+          "started_monotonic": 3096.122886541,
+          "seconds": 0.003502875000322092,
+          "source": []
+        },
+        {
+          "hash": "a0537e6176388f8555e498c2f0d572bb6c2251dd5abffb8b14a437cae11285a8",
+          "started_monotonic": 3096.126691958,
+          "seconds": 0.007738667000012356,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 62
+            },
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 98
+            },
+            {
+              "file": "backend/tests/infra/execution_market/profile_workload.py",
+              "line": 251
+            }
+          ]
+        },
+        {
+          "hash": "283295e20d5dd15c322a4afdaa20814cc5ef0f28491d2b6b323f54ce2aab79a0",
+          "started_monotonic": 3096.134738208,
+          "seconds": 0.08403508300034446,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 100
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "started_at": 1793975547.3697789,
+      "pool": "tiewtrade_market_data",
+      "checked_out": 0,
+      "pool_size": 5,
+      "max_overflow": 10,
+      "query_detail_truncated": false,
+      "measurement_active_at_start": false,
+      "started_monotonic": 3093.042083291,
+      "checkout_at": 1793975547.439449,
+      "checkout_monotonic": 3093.111753666,
+      "pool_wait_seconds": 0.06967066700008218,
+      "backend_pid": 1680,
+      "transaction_acquired_at": 1793975547.439502,
+      "transaction_acquired_monotonic": 3093.111806041,
+      "body_finished_monotonic": 3094.124721791,
+      "checkin_at": 1793975548.4864588,
+      "checkin_monotonic": 3094.158743583,
+      "phase": "publish_market",
+      "publisher_tick": "612",
+      "book_owner": "88203493-b18b-4f5b-b484-4980ab131c16",
+      "book_generation": "1",
+      "book_last_input_id": "611",
+      "finished_at": 1793975548.4866922,
+      "seconds": 1.1168928340002822,
+      "finished_monotonic": 3094.158976125,
+      "body_seconds": 1.0129157500000474,
+      "finalization_seconds": 0.03425433400025213,
+      "held_seconds": 1.0469899170002464,
+      "outcome": "COMMIT",
+      "queries": [
+        {
+          "hash": "ff49deb19fa5bc5a513d2d860ff7d49c27fe285f01246001404d7060ecaa0ff9",
+          "started_monotonic": 3093.111849458,
+          "seconds": 0.06363916700001937,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/db/session.py",
+              "line": 45
+            }
+          ]
+        },
+        {
+          "hash": "4784b4da0a02cfd4c2a612e2aee0c258b210310cd72437a193b787b0d5dc3af9",
+          "started_monotonic": 3093.177078208,
+          "seconds": 0.06933708300039143,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/order_book_storage.py",
+              "line": 170
+            }
+          ]
+        },
+        {
+          "hash": "e14880a60e1b44eaa40102ec695b8f2212a61085fe157433d9a63194a354d57e",
+          "started_monotonic": 3093.246791166,
+          "seconds": 0.10939783399999214,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/order_book_storage.py",
+              "line": 196
+            }
+          ]
+        },
+        {
+          "hash": "4784b4da0a02cfd4c2a612e2aee0c258b210310cd72437a193b787b0d5dc3af9",
+          "started_monotonic": 3093.356729166,
+          "seconds": 0.01524479199997586,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/order_book_storage.py",
+              "line": 170
+            }
+          ]
+        },
+        {
+          "hash": "2461f8bb8070d8f1e4e669943dfb1cc042ed3e05c56721efdd125ae68b55f78c",
+          "started_monotonic": 3093.37221125,
+          "seconds": 0.0028444999998100684,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 56
+            },
+            {
+              "file": "backend/tests/infra/execution_market/profile_workload.py",
+              "line": 281
+            }
+          ]
+        },
+        {
+          "hash": "4784b4da0a02cfd4c2a612e2aee0c258b210310cd72437a193b787b0d5dc3af9",
+          "started_monotonic": 3093.37632775,
+          "seconds": 0.052108707999650505,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/order_book_storage.py",
+              "line": 170
+            }
+          ]
+        },
+        {
+          "hash": "e259ab0c3e76460bfbd71a509360cfdb9482de64562794507542e1592bc4264a",
+          "started_monotonic": 3093.430884958,
+          "seconds": 0.20685712499971487,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/order_book_storage.py",
+              "line": 271
+            }
+          ]
+        },
+        {
+          "hash": "b6bc63f875df15e4101b4ec4982c700d627446b0debed241fa1acdb2cb3f207c",
+          "started_monotonic": 3093.638226958,
+          "seconds": 0.014980542000103014,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/order_book_storage.py",
+              "line": 283
+            }
+          ]
+        },
+        {
+          "hash": "4784b4da0a02cfd4c2a612e2aee0c258b210310cd72437a193b787b0d5dc3af9",
+          "started_monotonic": 3093.653672416,
+          "seconds": 0.003374916999746347,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/order_book_storage.py",
+              "line": 170
+            }
+          ]
+        },
+        {
+          "hash": "a0537e6176388f8555e498c2f0d572bb6c2251dd5abffb8b14a437cae11285a8",
+          "started_monotonic": 3093.657301,
+          "seconds": 0.011760416000015539,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 62
+            },
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 98
+            },
+            {
+              "file": "backend/tests/infra/execution_market/profile_workload.py",
+              "line": 251
+            }
+          ]
+        },
+        {
+          "hash": "283295e20d5dd15c322a4afdaa20814cc5ef0f28491d2b6b323f54ce2aab79a0",
+          "started_monotonic": 3093.669424208,
+          "seconds": 0.005398624999997992,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 100
+            }
+          ]
+        },
+        {
+          "hash": "5df6264c3e4fd4413c737a1426923624e8777a3f843956d355d0036103c6de98",
+          "started_monotonic": 3093.675258916,
+          "seconds": 0.009876374999748805,
+          "source": []
+        },
+        {
+          "hash": "a0537e6176388f8555e498c2f0d572bb6c2251dd5abffb8b14a437cae11285a8",
+          "started_monotonic": 3093.685855791,
+          "seconds": 0.032371374999911495,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 62
+            },
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 98
+            },
+            {
+              "file": "backend/tests/infra/execution_market/profile_workload.py",
+              "line": 251
+            }
+          ]
+        },
+        {
+          "hash": "283295e20d5dd15c322a4afdaa20814cc5ef0f28491d2b6b323f54ce2aab79a0",
+          "started_monotonic": 3093.718641458,
+          "seconds": 0.18452949999982593,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 100
+            }
+          ]
+        },
+        {
+          "hash": "9a420d6c244538da30bf58196481425d72107820fbfc8060ff1c983767174121",
+          "started_monotonic": 3093.903864666,
+          "seconds": 0.020673416999670735,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 226
+            }
+          ]
+        },
+        {
+          "hash": "2461f8bb8070d8f1e4e669943dfb1cc042ed3e05c56721efdd125ae68b55f78c",
+          "started_monotonic": 3093.925545833,
+          "seconds": 0.026473875000192493,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 56
+            },
+            {
+              "file": "backend/tests/infra/execution_market/profile_workload.py",
+              "line": 281
+            }
+          ]
+        },
+        {
+          "hash": "a0537e6176388f8555e498c2f0d572bb6c2251dd5abffb8b14a437cae11285a8",
+          "started_monotonic": 3093.95263975,
+          "seconds": 0.06723295800020423,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 62
+            },
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 98
+            },
+            {
+              "file": "backend/tests/infra/execution_market/profile_workload.py",
+              "line": 251
+            }
+          ]
+        },
+        {
+          "hash": "283295e20d5dd15c322a4afdaa20814cc5ef0f28491d2b6b323f54ce2aab79a0",
+          "started_monotonic": 3094.020096958,
+          "seconds": 0.025598207999792066,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 100
+            }
+          ]
+        },
+        {
+          "hash": "a456b9cf1aafe9378a017981367a3147a3874b82d4be679899391016ecbdeb17",
+          "started_monotonic": 3094.045985708,
+          "seconds": 0.06487854199986032,
+          "source": []
+        },
+        {
+          "hash": "d3b779f87a23e4e5c1c08b4bb9ebfe5ef59715bab45ab14e6d2d0ac64a3c48c7",
+          "started_monotonic": 3094.111573458,
+          "seconds": 0.0032300420002684405,
+          "source": []
+        },
+        {
+          "hash": "a0537e6176388f8555e498c2f0d572bb6c2251dd5abffb8b14a437cae11285a8",
+          "started_monotonic": 3094.115059125,
+          "seconds": 0.0019822500003101595,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 62
+            },
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 98
+            },
+            {
+              "file": "backend/tests/infra/execution_market/profile_workload.py",
+              "line": 251
+            }
+          ]
+        },
+        {
+          "hash": "283295e20d5dd15c322a4afdaa20814cc5ef0f28491d2b6b323f54ce2aab79a0",
+          "started_monotonic": 3094.117517875,
+          "seconds": 0.0069628750002266315,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 100
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "started_at": 1793975534.314653,
+      "pool": "tiewtrade_market_data",
+      "checked_out": 0,
+      "pool_size": 5,
+      "max_overflow": 10,
+      "query_detail_truncated": false,
+      "measurement_active_at_start": false,
+      "started_monotonic": 3079.987200375,
+      "checkout_at": 1793975534.4154408,
+      "checkout_monotonic": 3080.087987708,
+      "pool_wait_seconds": 0.10078758300005575,
+      "backend_pid": 1680,
+      "transaction_acquired_at": 1793975534.415623,
+      "transaction_acquired_monotonic": 3080.088169166,
+      "body_finished_monotonic": 3080.875260416,
+      "checkin_at": 1793975535.402127,
+      "checkin_monotonic": 3081.074654916,
+      "phase": "publish_market",
+      "publisher_tick": "591",
+      "book_owner": "88203493-b18b-4f5b-b484-4980ab131c16",
+      "book_generation": "1",
+      "book_last_input_id": "590",
+      "finished_at": 1793975535.402356,
+      "seconds": 1.087683707999986,
+      "finished_monotonic": 3081.074884083,
+      "body_seconds": 0.7870912499997758,
+      "finalization_seconds": 0.1996236670001963,
+      "held_seconds": 0.9866672079997443,
+      "outcome": "COMMIT",
+      "queries": [
+        {
+          "hash": "ff49deb19fa5bc5a513d2d860ff7d49c27fe285f01246001404d7060ecaa0ff9",
+          "started_monotonic": 3080.088334916,
+          "seconds": 0.28718625000010434,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/db/session.py",
+              "line": 45
+            }
+          ]
+        },
+        {
+          "hash": "4784b4da0a02cfd4c2a612e2aee0c258b210310cd72437a193b787b0d5dc3af9",
+          "started_monotonic": 3080.376936791,
+          "seconds": 0.030614499999956024,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/order_book_storage.py",
+              "line": 170
+            }
+          ]
+        },
+        {
+          "hash": "e14880a60e1b44eaa40102ec695b8f2212a61085fe157433d9a63194a354d57e",
+          "started_monotonic": 3080.407908583,
+          "seconds": 0.0321403329999157,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/order_book_storage.py",
+              "line": 196
+            }
+          ]
+        },
+        {
+          "hash": "4784b4da0a02cfd4c2a612e2aee0c258b210310cd72437a193b787b0d5dc3af9",
+          "started_monotonic": 3080.440841291,
+          "seconds": 0.03035395899996729,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/order_book_storage.py",
+              "line": 170
+            }
+          ]
+        },
+        {
+          "hash": "2461f8bb8070d8f1e4e669943dfb1cc042ed3e05c56721efdd125ae68b55f78c",
+          "started_monotonic": 3080.471923666,
+          "seconds": 0.051217875000020285,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 56
+            },
+            {
+              "file": "backend/tests/infra/execution_market/profile_workload.py",
+              "line": 281
+            }
+          ]
+        },
+        {
+          "hash": "4784b4da0a02cfd4c2a612e2aee0c258b210310cd72437a193b787b0d5dc3af9",
+          "started_monotonic": 3080.528629666,
+          "seconds": 0.0809172919998673,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/order_book_storage.py",
+              "line": 170
+            }
+          ]
+        },
+        {
+          "hash": "e259ab0c3e76460bfbd71a509360cfdb9482de64562794507542e1592bc4264a",
+          "started_monotonic": 3080.611231,
+          "seconds": 0.04104229099993972,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/order_book_storage.py",
+              "line": 271
+            }
+          ]
+        },
+        {
+          "hash": "b6bc63f875df15e4101b4ec4982c700d627446b0debed241fa1acdb2cb3f207c",
+          "started_monotonic": 3080.654126208,
+          "seconds": 0.015391583000109677,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/order_book_storage.py",
+              "line": 283
+            }
+          ]
+        },
+        {
+          "hash": "4784b4da0a02cfd4c2a612e2aee0c258b210310cd72437a193b787b0d5dc3af9",
+          "started_monotonic": 3080.669849166,
+          "seconds": 0.055745167000168294,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/order_book_storage.py",
+              "line": 170
+            }
+          ]
+        },
+        {
+          "hash": "a0537e6176388f8555e498c2f0d572bb6c2251dd5abffb8b14a437cae11285a8",
+          "started_monotonic": 3080.725907291,
+          "seconds": 0.07721999999967011,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 62
+            },
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 98
+            },
+            {
+              "file": "backend/tests/infra/execution_market/profile_workload.py",
+              "line": 251
+            }
+          ]
+        },
+        {
+          "hash": "283295e20d5dd15c322a4afdaa20814cc5ef0f28491d2b6b323f54ce2aab79a0",
+          "started_monotonic": 3080.803531666,
+          "seconds": 0.03996520900000178,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 100
+            }
+          ]
+        },
+        {
+          "hash": "5df6264c3e4fd4413c737a1426923624e8777a3f843956d355d0036103c6de98",
+          "started_monotonic": 3080.843883416,
+          "seconds": 0.005684541999926296,
+          "source": []
+        },
+        {
+          "hash": "a0537e6176388f8555e498c2f0d572bb6c2251dd5abffb8b14a437cae11285a8",
+          "started_monotonic": 3080.849889291,
+          "seconds": 0.0027558339997995063,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 62
+            },
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 98
+            },
+            {
+              "file": "backend/tests/infra/execution_market/profile_workload.py",
+              "line": 251
+            }
+          ]
+        },
+        {
+          "hash": "283295e20d5dd15c322a4afdaa20814cc5ef0f28491d2b6b323f54ce2aab79a0",
+          "started_monotonic": 3080.853081,
+          "seconds": 0.022037332999843784,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 100
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "started_at": 1793975535.403542,
+      "pool": "tiewtrade_market_data",
+      "checked_out": 0,
+      "pool_size": 5,
+      "max_overflow": 10,
+      "query_detail_truncated": false,
+      "measurement_active_at_start": false,
+      "started_monotonic": 3081.076068583,
+      "checkout_at": 1793975535.503956,
+      "checkout_monotonic": 3081.176483333,
+      "pool_wait_seconds": 0.10041720799972609,
+      "backend_pid": 1680,
+      "transaction_acquired_at": 1793975535.504169,
+      "transaction_acquired_monotonic": 3081.176695875,
+      "body_finished_monotonic": 3082.041215125,
+      "checkin_at": 1793975536.392287,
+      "checkin_monotonic": 3082.064796875,
+      "phase": "publish_market",
+      "publisher_tick": "592",
+      "book_owner": "88203493-b18b-4f5b-b484-4980ab131c16",
+      "book_generation": "1",
+      "book_last_input_id": "591",
+      "finished_at": 1793975536.3929338,
+      "seconds": 0.9893757079998977,
+      "finished_monotonic": 3082.065444291,
+      "body_seconds": 0.8645192499998302,
+      "finalization_seconds": 0.024229166000168334,
+      "held_seconds": 0.8883135420001054,
+      "outcome": "COMMIT",
+      "queries": [
+        {
+          "hash": "ff49deb19fa5bc5a513d2d860ff7d49c27fe285f01246001404d7060ecaa0ff9",
+          "started_monotonic": 3081.176832041,
+          "seconds": 0.084311458999764,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/db/session.py",
+              "line": 45
+            }
+          ]
+        },
+        {
+          "hash": "4784b4da0a02cfd4c2a612e2aee0c258b210310cd72437a193b787b0d5dc3af9",
+          "started_monotonic": 3081.261593208,
+          "seconds": 0.019560125000225526,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/order_book_storage.py",
+              "line": 170
+            }
+          ]
+        },
+        {
+          "hash": "e14880a60e1b44eaa40102ec695b8f2212a61085fe157433d9a63194a354d57e",
+          "started_monotonic": 3081.28160425,
+          "seconds": 0.02286216600032276,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/order_book_storage.py",
+              "line": 196
+            }
+          ]
+        },
+        {
+          "hash": "4784b4da0a02cfd4c2a612e2aee0c258b210310cd72437a193b787b0d5dc3af9",
+          "started_monotonic": 3081.305028458,
+          "seconds": 0.053634375000001455,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/order_book_storage.py",
+              "line": 170
+            }
+          ]
+        },
+        {
+          "hash": "2461f8bb8070d8f1e4e669943dfb1cc042ed3e05c56721efdd125ae68b55f78c",
+          "started_monotonic": 3081.359330375,
+          "seconds": 0.011371957999926963,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 56
+            },
+            {
+              "file": "backend/tests/infra/execution_market/profile_workload.py",
+              "line": 281
+            }
+          ]
+        },
+        {
+          "hash": "4784b4da0a02cfd4c2a612e2aee0c258b210310cd72437a193b787b0d5dc3af9",
+          "started_monotonic": 3081.371942291,
+          "seconds": 0.052182041999913054,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/order_book_storage.py",
+              "line": 170
+            }
+          ]
+        },
+        {
+          "hash": "e259ab0c3e76460bfbd71a509360cfdb9482de64562794507542e1592bc4264a",
+          "started_monotonic": 3081.42472675,
+          "seconds": 0.006426750000173342,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/order_book_storage.py",
+              "line": 271
+            }
+          ]
+        },
+        {
+          "hash": "b6bc63f875df15e4101b4ec4982c700d627446b0debed241fa1acdb2cb3f207c",
+          "started_monotonic": 3081.434544708,
+          "seconds": 0.013511791999917477,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/order_book_storage.py",
+              "line": 283
+            }
+          ]
+        },
+        {
+          "hash": "4784b4da0a02cfd4c2a612e2aee0c258b210310cd72437a193b787b0d5dc3af9",
+          "started_monotonic": 3081.448276,
+          "seconds": 0.005411290999745688,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/order_book_storage.py",
+              "line": 170
+            }
+          ]
+        },
+        {
+          "hash": "a0537e6176388f8555e498c2f0d572bb6c2251dd5abffb8b14a437cae11285a8",
+          "started_monotonic": 3081.454548416,
+          "seconds": 0.01602275000004738,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 62
+            },
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 98
+            },
+            {
+              "file": "backend/tests/infra/execution_market/profile_workload.py",
+              "line": 251
+            }
+          ]
+        },
+        {
+          "hash": "283295e20d5dd15c322a4afdaa20814cc5ef0f28491d2b6b323f54ce2aab79a0",
+          "started_monotonic": 3081.470866666,
+          "seconds": 0.01835804200027269,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 100
+            }
+          ]
+        },
+        {
+          "hash": "5df6264c3e4fd4413c737a1426923624e8777a3f843956d355d0036103c6de98",
+          "started_monotonic": 3081.490003,
+          "seconds": 0.10049945800028581,
+          "source": []
+        },
+        {
+          "hash": "a0537e6176388f8555e498c2f0d572bb6c2251dd5abffb8b14a437cae11285a8",
+          "started_monotonic": 3081.590877166,
+          "seconds": 0.02100712499986912,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 62
+            },
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 98
+            },
+            {
+              "file": "backend/tests/infra/execution_market/profile_workload.py",
+              "line": 251
+            }
+          ]
+        },
+        {
+          "hash": "283295e20d5dd15c322a4afdaa20814cc5ef0f28491d2b6b323f54ce2aab79a0",
+          "started_monotonic": 3081.61203175,
+          "seconds": 0.023032375000184402,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 100
+            }
+          ]
+        },
+        {
+          "hash": "9a420d6c244538da30bf58196481425d72107820fbfc8060ff1c983767174121",
+          "started_monotonic": 3081.635407,
+          "seconds": 0.04167691599968748,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 226
+            }
+          ]
+        },
+        {
+          "hash": "2461f8bb8070d8f1e4e669943dfb1cc042ed3e05c56721efdd125ae68b55f78c",
+          "started_monotonic": 3081.677897958,
+          "seconds": 0.025256583000100363,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 56
+            },
+            {
+              "file": "backend/tests/infra/execution_market/profile_workload.py",
+              "line": 281
+            }
+          ]
+        },
+        {
+          "hash": "a0537e6176388f8555e498c2f0d572bb6c2251dd5abffb8b14a437cae11285a8",
+          "started_monotonic": 3081.704036333,
+          "seconds": 0.24494787499997983,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 62
+            },
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 98
+            },
+            {
+              "file": "backend/tests/infra/execution_market/profile_workload.py",
+              "line": 251
+            }
+          ]
+        },
+        {
+          "hash": "283295e20d5dd15c322a4afdaa20814cc5ef0f28491d2b6b323f54ce2aab79a0",
+          "started_monotonic": 3081.9493705,
+          "seconds": 0.013848915999915334,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 100
+            }
+          ]
+        },
+        {
+          "hash": "a456b9cf1aafe9378a017981367a3147a3874b82d4be679899391016ecbdeb17",
+          "started_monotonic": 3081.963480625,
+          "seconds": 0.004291165999802615,
+          "source": []
+        },
+        {
+          "hash": "d3b779f87a23e4e5c1c08b4bb9ebfe5ef59715bab45ab14e6d2d0ac64a3c48c7",
+          "started_monotonic": 3081.969437625,
+          "seconds": 0.007031166000160738,
+          "source": []
+        },
+        {
+          "hash": "a0537e6176388f8555e498c2f0d572bb6c2251dd5abffb8b14a437cae11285a8",
+          "started_monotonic": 3081.9766175,
+          "seconds": 0.05466879100004007,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 62
+            },
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 98
+            },
+            {
+              "file": "backend/tests/infra/execution_market/profile_workload.py",
+              "line": 251
+            }
+          ]
+        },
+        {
+          "hash": "283295e20d5dd15c322a4afdaa20814cc5ef0f28491d2b6b323f54ce2aab79a0",
+          "started_monotonic": 3082.031606291,
+          "seconds": 0.009360958999877766,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 100
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "started_at": 1793975542.975923,
+      "pool": "tiewtrade_market_data",
+      "checked_out": 0,
+      "pool_size": 5,
+      "max_overflow": 10,
+      "query_detail_truncated": false,
+      "measurement_active_at_start": false,
+      "started_monotonic": 3088.648308875,
+      "checkout_at": 1793975542.997622,
+      "checkout_monotonic": 3088.670009,
+      "pool_wait_seconds": 0.0217003749999094,
+      "backend_pid": 1680,
+      "transaction_acquired_at": 1793975542.99777,
+      "transaction_acquired_monotonic": 3088.670156291,
+      "body_finished_monotonic": 3089.431184416,
+      "checkin_at": 1793975543.926632,
+      "checkin_monotonic": 3089.599002125,
+      "phase": "publish_market",
+      "publisher_tick": "604",
+      "book_owner": "88203493-b18b-4f5b-b484-4980ab131c16",
+      "book_generation": "1",
+      "book_last_input_id": "603",
+      "finished_at": 1793975543.927535,
+      "seconds": 0.9515955409997332,
+      "finished_monotonic": 3089.599904416,
+      "body_seconds": 0.7610281250003936,
+      "finalization_seconds": 0.16871999999966647,
+      "held_seconds": 0.9289931250000336,
+      "outcome": "COMMIT",
+      "queries": [
+        {
+          "hash": "ff49deb19fa5bc5a513d2d860ff7d49c27fe285f01246001404d7060ecaa0ff9",
+          "started_monotonic": 3088.670420958,
+          "seconds": 0.07646900000008827,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/db/session.py",
+              "line": 45
+            }
+          ]
+        },
+        {
+          "hash": "4784b4da0a02cfd4c2a612e2aee0c258b210310cd72437a193b787b0d5dc3af9",
+          "started_monotonic": 3088.747157333,
+          "seconds": 0.002825874999871303,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/order_book_storage.py",
+              "line": 170
+            }
+          ]
+        },
+        {
+          "hash": "e14880a60e1b44eaa40102ec695b8f2212a61085fe157433d9a63194a354d57e",
+          "started_monotonic": 3088.750395791,
+          "seconds": 0.09035962500001915,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/order_book_storage.py",
+              "line": 196
+            }
+          ]
+        },
+        {
+          "hash": "4784b4da0a02cfd4c2a612e2aee0c258b210310cd72437a193b787b0d5dc3af9",
+          "started_monotonic": 3088.840993833,
+          "seconds": 0.008650207999835402,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/order_book_storage.py",
+              "line": 170
+            }
+          ]
+        },
+        {
+          "hash": "2461f8bb8070d8f1e4e669943dfb1cc042ed3e05c56721efdd125ae68b55f78c",
+          "started_monotonic": 3088.850228291,
+          "seconds": 0.028189916999963316,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 56
+            },
+            {
+              "file": "backend/tests/infra/execution_market/profile_workload.py",
+              "line": 281
+            }
+          ]
+        },
+        {
+          "hash": "4784b4da0a02cfd4c2a612e2aee0c258b210310cd72437a193b787b0d5dc3af9",
+          "started_monotonic": 3088.878995375,
+          "seconds": 0.018745374999980413,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/order_book_storage.py",
+              "line": 170
+            }
+          ]
+        },
+        {
+          "hash": "e259ab0c3e76460bfbd71a509360cfdb9482de64562794507542e1592bc4264a",
+          "started_monotonic": 3088.898169875,
+          "seconds": 0.023233416000039142,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/order_book_storage.py",
+              "line": 271
+            }
+          ]
+        },
+        {
+          "hash": "b6bc63f875df15e4101b4ec4982c700d627446b0debed241fa1acdb2cb3f207c",
+          "started_monotonic": 3088.921561541,
+          "seconds": 0.020700500000202737,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/order_book_storage.py",
+              "line": 283
+            }
+          ]
+        },
+        {
+          "hash": "4784b4da0a02cfd4c2a612e2aee0c258b210310cd72437a193b787b0d5dc3af9",
+          "started_monotonic": 3088.94255675,
+          "seconds": 0.09888874999978725,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/order_book_storage.py",
+              "line": 170
+            }
+          ]
+        },
+        {
+          "hash": "a0537e6176388f8555e498c2f0d572bb6c2251dd5abffb8b14a437cae11285a8",
+          "started_monotonic": 3089.041773125,
+          "seconds": 0.05420520799998485,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 62
+            },
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 98
+            },
+            {
+              "file": "backend/tests/infra/execution_market/profile_workload.py",
+              "line": 251
+            }
+          ]
+        },
+        {
+          "hash": "283295e20d5dd15c322a4afdaa20814cc5ef0f28491d2b6b323f54ce2aab79a0",
+          "started_monotonic": 3089.096673291,
+          "seconds": 0.08901037499981612,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 100
+            }
+          ]
+        },
+        {
+          "hash": "5df6264c3e4fd4413c737a1426923624e8777a3f843956d355d0036103c6de98",
+          "started_monotonic": 3089.186539958,
+          "seconds": 0.05701683300003424,
+          "source": []
+        },
+        {
+          "hash": "a0537e6176388f8555e498c2f0d572bb6c2251dd5abffb8b14a437cae11285a8",
+          "started_monotonic": 3089.243879541,
+          "seconds": 0.031796624999969936,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 62
+            },
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 98
+            },
+            {
+              "file": "backend/tests/infra/execution_market/profile_workload.py",
+              "line": 251
+            }
+          ]
+        },
+        {
+          "hash": "283295e20d5dd15c322a4afdaa20814cc5ef0f28491d2b6b323f54ce2aab79a0",
+          "started_monotonic": 3089.275836,
+          "seconds": 0.023169083000084356,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 100
+            }
+          ]
+        },
+        {
+          "hash": "9a420d6c244538da30bf58196481425d72107820fbfc8060ff1c983767174121",
+          "started_monotonic": 3089.300232375,
+          "seconds": 0.011163415999817516,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 226
+            }
+          ]
+        },
+        {
+          "hash": "2461f8bb8070d8f1e4e669943dfb1cc042ed3e05c56721efdd125ae68b55f78c",
+          "started_monotonic": 3089.314574375,
+          "seconds": 0.015040040999792836,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 56
+            },
+            {
+              "file": "backend/tests/infra/execution_market/profile_workload.py",
+              "line": 281
+            }
+          ]
+        },
+        {
+          "hash": "a0537e6176388f8555e498c2f0d572bb6c2251dd5abffb8b14a437cae11285a8",
+          "started_monotonic": 3089.330328625,
+          "seconds": 0.007472165999843128,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 62
+            },
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 98
+            },
+            {
+              "file": "backend/tests/infra/execution_market/profile_workload.py",
+              "line": 251
+            }
+          ]
+        },
+        {
+          "hash": "283295e20d5dd15c322a4afdaa20814cc5ef0f28491d2b6b323f54ce2aab79a0",
+          "started_monotonic": 3089.338221166,
+          "seconds": 0.023775499999828753,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 100
+            }
+          ]
+        },
+        {
+          "hash": "a456b9cf1aafe9378a017981367a3147a3874b82d4be679899391016ecbdeb17",
+          "started_monotonic": 3089.362244375,
+          "seconds": 0.027522625000074186,
+          "source": []
+        },
+        {
+          "hash": "d3b779f87a23e4e5c1c08b4bb9ebfe5ef59715bab45ab14e6d2d0ac64a3c48c7",
+          "started_monotonic": 3089.391369791,
+          "seconds": 0.005900333999761642,
+          "source": []
+        },
+        {
+          "hash": "a0537e6176388f8555e498c2f0d572bb6c2251dd5abffb8b14a437cae11285a8",
+          "started_monotonic": 3089.397968375,
+          "seconds": 0.002199833000304352,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 62
+            },
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 98
+            },
+            {
+              "file": "backend/tests/infra/execution_market/profile_workload.py",
+              "line": 251
+            }
+          ]
+        },
+        {
+          "hash": "283295e20d5dd15c322a4afdaa20814cc5ef0f28491d2b6b323f54ce2aab79a0",
+          "started_monotonic": 3089.400496875,
+          "seconds": 0.029571375000159605,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 100
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "started_at": 1793975545.592423,
+      "pool": "tiewtrade_market_data",
+      "checked_out": 0,
+      "pool_size": 5,
+      "max_overflow": 10,
+      "query_detail_truncated": false,
+      "measurement_active_at_start": false,
+      "started_monotonic": 3091.264760458,
+      "checkout_at": 1793975545.6430159,
+      "checkout_monotonic": 3091.315354416,
+      "pool_wait_seconds": 0.05059449999998833,
+      "backend_pid": 1680,
+      "transaction_acquired_at": 1793975545.643187,
+      "transaction_acquired_monotonic": 3091.31552475,
+      "body_finished_monotonic": 3092.120674166,
+      "checkin_at": 1793975546.5180569,
+      "checkin_monotonic": 3092.19037875,
+      "phase": "publish_market",
+      "publisher_tick": "610",
+      "book_owner": "88203493-b18b-4f5b-b484-4980ab131c16",
+      "book_generation": "1",
+      "book_last_input_id": "609",
+      "finished_at": 1793975546.518219,
+      "seconds": 0.9257801249996191,
+      "finished_monotonic": 3092.190540583,
+      "body_seconds": 0.8051494159999493,
+      "finalization_seconds": 0.06986641699995744,
+      "held_seconds": 0.8750243340000452,
+      "outcome": "COMMIT",
+      "queries": [
+        {
+          "hash": "ff49deb19fa5bc5a513d2d860ff7d49c27fe285f01246001404d7060ecaa0ff9",
+          "started_monotonic": 3091.315664041,
+          "seconds": 0.05909558399980597,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/db/session.py",
+              "line": 45
+            }
+          ]
+        },
+        {
+          "hash": "4784b4da0a02cfd4c2a612e2aee0c258b210310cd72437a193b787b0d5dc3af9",
+          "started_monotonic": 3091.375327833,
+          "seconds": 0.005857999999989261,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/order_book_storage.py",
+              "line": 170
+            }
+          ]
+        },
+        {
+          "hash": "e14880a60e1b44eaa40102ec695b8f2212a61085fe157433d9a63194a354d57e",
+          "started_monotonic": 3091.381633833,
+          "seconds": 0.013771833000191691,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/order_book_storage.py",
+              "line": 196
+            }
+          ]
+        },
+        {
+          "hash": "4784b4da0a02cfd4c2a612e2aee0c258b210310cd72437a193b787b0d5dc3af9",
+          "started_monotonic": 3091.395610625,
+          "seconds": 0.006423375000395026,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/order_book_storage.py",
+              "line": 170
+            }
+          ]
+        },
+        {
+          "hash": "2461f8bb8070d8f1e4e669943dfb1cc042ed3e05c56721efdd125ae68b55f78c",
+          "started_monotonic": 3091.402411083,
+          "seconds": 0.00738204199979009,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 56
+            },
+            {
+              "file": "backend/tests/infra/execution_market/profile_workload.py",
+              "line": 281
+            }
+          ]
+        },
+        {
+          "hash": "4784b4da0a02cfd4c2a612e2aee0c258b210310cd72437a193b787b0d5dc3af9",
+          "started_monotonic": 3091.412069875,
+          "seconds": 0.00490975000002436,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/order_book_storage.py",
+              "line": 170
+            }
+          ]
+        },
+        {
+          "hash": "e259ab0c3e76460bfbd71a509360cfdb9482de64562794507542e1592bc4264a",
+          "started_monotonic": 3091.417928541,
+          "seconds": 0.008306624999931955,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/order_book_storage.py",
+              "line": 271
+            }
+          ]
+        },
+        {
+          "hash": "b6bc63f875df15e4101b4ec4982c700d627446b0debed241fa1acdb2cb3f207c",
+          "started_monotonic": 3091.426477416,
+          "seconds": 0.015047874999709165,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/order_book_storage.py",
+              "line": 283
+            }
+          ]
+        },
+        {
+          "hash": "4784b4da0a02cfd4c2a612e2aee0c258b210310cd72437a193b787b0d5dc3af9",
+          "started_monotonic": 3091.441842083,
+          "seconds": 0.014665999999579071,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/order_book_storage.py",
+              "line": 170
+            }
+          ]
+        },
+        {
+          "hash": "a0537e6176388f8555e498c2f0d572bb6c2251dd5abffb8b14a437cae11285a8",
+          "started_monotonic": 3091.456857,
+          "seconds": 0.07570145799991224,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 62
+            },
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 98
+            },
+            {
+              "file": "backend/tests/infra/execution_market/profile_workload.py",
+              "line": 251
+            }
+          ]
+        },
+        {
+          "hash": "283295e20d5dd15c322a4afdaa20814cc5ef0f28491d2b6b323f54ce2aab79a0",
+          "started_monotonic": 3091.532954458,
+          "seconds": 0.010348667000016576,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 100
+            }
+          ]
+        },
+        {
+          "hash": "5df6264c3e4fd4413c737a1426923624e8777a3f843956d355d0036103c6de98",
+          "started_monotonic": 3091.544006458,
+          "seconds": 0.03901370800031145,
+          "source": []
+        },
+        {
+          "hash": "a0537e6176388f8555e498c2f0d572bb6c2251dd5abffb8b14a437cae11285a8",
+          "started_monotonic": 3091.583222833,
+          "seconds": 0.0809255829999529,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 62
+            },
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 98
+            },
+            {
+              "file": "backend/tests/infra/execution_market/profile_workload.py",
+              "line": 251
+            }
+          ]
+        },
+        {
+          "hash": "283295e20d5dd15c322a4afdaa20814cc5ef0f28491d2b6b323f54ce2aab79a0",
+          "started_monotonic": 3091.664417,
+          "seconds": 0.019050500000048487,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 100
+            }
+          ]
+        },
+        {
+          "hash": "9a420d6c244538da30bf58196481425d72107820fbfc8060ff1c983767174121",
+          "started_monotonic": 3091.684145541,
+          "seconds": 0.0251492090001193,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 226
+            }
+          ]
+        },
+        {
+          "hash": "2461f8bb8070d8f1e4e669943dfb1cc042ed3e05c56721efdd125ae68b55f78c",
+          "started_monotonic": 3091.709828541,
+          "seconds": 0.008251166999798443,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 56
+            },
+            {
+              "file": "backend/tests/infra/execution_market/profile_workload.py",
+              "line": 281
+            }
+          ]
+        },
+        {
+          "hash": "a0537e6176388f8555e498c2f0d572bb6c2251dd5abffb8b14a437cae11285a8",
+          "started_monotonic": 3091.71849975,
+          "seconds": 0.017400916000042344,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 62
+            },
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 98
+            },
+            {
+              "file": "backend/tests/infra/execution_market/profile_workload.py",
+              "line": 251
+            }
+          ]
+        },
+        {
+          "hash": "283295e20d5dd15c322a4afdaa20814cc5ef0f28491d2b6b323f54ce2aab79a0",
+          "started_monotonic": 3091.73622675,
+          "seconds": 0.017435125000247353,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 100
+            }
+          ]
+        },
+        {
+          "hash": "a456b9cf1aafe9378a017981367a3147a3874b82d4be679899391016ecbdeb17",
+          "started_monotonic": 3091.754047541,
+          "seconds": 0.13415654199980054,
+          "source": []
+        },
+        {
+          "hash": "d3b779f87a23e4e5c1c08b4bb9ebfe5ef59715bab45ab14e6d2d0ac64a3c48c7",
+          "started_monotonic": 3091.889350583,
+          "seconds": 0.06629479200000787,
+          "source": []
+        },
+        {
+          "hash": "a0537e6176388f8555e498c2f0d572bb6c2251dd5abffb8b14a437cae11285a8",
+          "started_monotonic": 3091.956613958,
+          "seconds": 0.038819375000002765,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 62
+            },
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 98
+            },
+            {
+              "file": "backend/tests/infra/execution_market/profile_workload.py",
+              "line": 251
+            }
+          ]
+        },
+        {
+          "hash": "283295e20d5dd15c322a4afdaa20814cc5ef0f28491d2b6b323f54ce2aab79a0",
+          "started_monotonic": 3091.995605708,
+          "seconds": 0.12493966700003512,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 100
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "started_at": 1793975546.5201862,
+      "pool": "tiewtrade_market_data",
+      "checked_out": 0,
+      "pool_size": 5,
+      "max_overflow": 10,
+      "query_detail_truncated": false,
+      "measurement_active_at_start": false,
+      "started_monotonic": 3092.192506375,
+      "checkout_at": 1793975546.880137,
+      "checkout_monotonic": 3092.552452625,
+      "pool_wait_seconds": 0.3599467909998566,
+      "backend_pid": 1680,
+      "transaction_acquired_at": 1793975546.880509,
+      "transaction_acquired_monotonic": 3092.552823083,
+      "body_finished_monotonic": 3093.002073541,
+      "checkin_at": 1793975547.367837,
+      "checkin_monotonic": 3093.040143458,
+      "phase": "publish_market",
+      "publisher_tick": "611",
+      "book_owner": "88203493-b18b-4f5b-b484-4980ab131c16",
+      "book_generation": "1",
+      "book_last_input_id": "610",
+      "finished_at": 1793975547.367996,
+      "seconds": 0.8477953749998051,
+      "finished_monotonic": 3093.04030175,
+      "body_seconds": 0.449250457999824,
+      "finalization_seconds": 0.038228208999953495,
+      "held_seconds": 0.48769083299976046,
+      "outcome": "COMMIT",
+      "queries": [
+        {
+          "hash": "ff49deb19fa5bc5a513d2d860ff7d49c27fe285f01246001404d7060ecaa0ff9",
+          "started_monotonic": 3092.553083833,
+          "seconds": 0.07063008299974172,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/db/session.py",
+              "line": 45
+            }
+          ]
+        },
+        {
+          "hash": "4784b4da0a02cfd4c2a612e2aee0c258b210310cd72437a193b787b0d5dc3af9",
+          "started_monotonic": 3092.623930458,
+          "seconds": 0.013406708000275103,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/order_book_storage.py",
+              "line": 170
+            }
+          ]
+        },
+        {
+          "hash": "e14880a60e1b44eaa40102ec695b8f2212a61085fe157433d9a63194a354d57e",
+          "started_monotonic": 3092.637875458,
+          "seconds": 0.02167616699989594,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/order_book_storage.py",
+              "line": 196
+            }
+          ]
+        },
+        {
+          "hash": "4784b4da0a02cfd4c2a612e2aee0c258b210310cd72437a193b787b0d5dc3af9",
+          "started_monotonic": 3092.660053375,
+          "seconds": 0.03122849999999744,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/order_book_storage.py",
+              "line": 170
+            }
+          ]
+        },
+        {
+          "hash": "2461f8bb8070d8f1e4e669943dfb1cc042ed3e05c56721efdd125ae68b55f78c",
+          "started_monotonic": 3092.691515708,
+          "seconds": 0.018283082999914768,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 56
+            },
+            {
+              "file": "backend/tests/infra/execution_market/profile_workload.py",
+              "line": 281
+            }
+          ]
+        },
+        {
+          "hash": "4784b4da0a02cfd4c2a612e2aee0c258b210310cd72437a193b787b0d5dc3af9",
+          "started_monotonic": 3092.714334708,
+          "seconds": 0.020324375000200234,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/order_book_storage.py",
+              "line": 170
+            }
+          ]
+        },
+        {
+          "hash": "e259ab0c3e76460bfbd71a509360cfdb9482de64562794507542e1592bc4264a",
+          "started_monotonic": 3092.735280083,
+          "seconds": 0.03062987500015879,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/order_book_storage.py",
+              "line": 271
+            }
+          ]
+        },
+        {
+          "hash": "b6bc63f875df15e4101b4ec4982c700d627446b0debed241fa1acdb2cb3f207c",
+          "started_monotonic": 3092.766216166,
+          "seconds": 0.004408750000038708,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/order_book_storage.py",
+              "line": 283
+            }
+          ]
+        },
+        {
+          "hash": "4784b4da0a02cfd4c2a612e2aee0c258b210310cd72437a193b787b0d5dc3af9",
+          "started_monotonic": 3092.770784125,
+          "seconds": 0.020508375000190426,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/order_book_storage.py",
+              "line": 170
+            }
+          ]
+        },
+        {
+          "hash": "a0537e6176388f8555e498c2f0d572bb6c2251dd5abffb8b14a437cae11285a8",
+          "started_monotonic": 3092.792057958,
+          "seconds": 0.010351542000080372,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 62
+            },
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 98
+            },
+            {
+              "file": "backend/tests/infra/execution_market/profile_workload.py",
+              "line": 251
+            }
+          ]
+        },
+        {
+          "hash": "283295e20d5dd15c322a4afdaa20814cc5ef0f28491d2b6b323f54ce2aab79a0",
+          "started_monotonic": 3092.804622583,
+          "seconds": 0.04792195800018817,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 100
+            }
+          ]
+        },
+        {
+          "hash": "5df6264c3e4fd4413c737a1426923624e8777a3f843956d355d0036103c6de98",
+          "started_monotonic": 3092.854395041,
+          "seconds": 0.05063425000025745,
+          "source": []
+        },
+        {
+          "hash": "a0537e6176388f8555e498c2f0d572bb6c2251dd5abffb8b14a437cae11285a8",
+          "started_monotonic": 3092.905648958,
+          "seconds": 0.012809958000161714,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 62
+            },
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 98
+            },
+            {
+              "file": "backend/tests/infra/execution_market/profile_workload.py",
+              "line": 251
+            }
+          ]
+        },
+        {
+          "hash": "283295e20d5dd15c322a4afdaa20814cc5ef0f28491d2b6b323f54ce2aab79a0",
+          "started_monotonic": 3092.918855208,
+          "seconds": 0.08296387500013225,
+          "source": [
+            {
+              "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+              "line": 100
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "queries": [
+    {
+      "hash": "4784b4da0a02cfd4c2a612e2aee0c258b210310cd72437a193b787b0d5dc3af9",
+      "source": [
+        {
+          "file": "backend/src/tiewtrade/infra/market_data/order_book_storage.py",
+          "line": 170
+        }
+      ],
+      "count": 8680,
+      "total": 28.08882427800927,
+      "mean": 0.0032360396633651233,
+      "p95": 0.01007362500013187,
+      "max": 0.28641383300009693
+    },
+    {
+      "hash": "a0537e6176388f8555e498c2f0d572bb6c2251dd5abffb8b14a437cae11285a8",
+      "source": [
+        {
+          "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+          "line": 62
+        },
+        {
+          "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+          "line": 98
+        },
+        {
+          "file": "backend/tests/infra/execution_market/profile_workload.py",
+          "line": 251
+        }
+      ],
+      "count": 5460,
+      "total": 17.632284652998806,
+      "mean": 0.003229356163552895,
+      "p95": 0.009604832999684731,
+      "max": 0.9988194580000709
+    },
+    {
+      "hash": "283295e20d5dd15c322a4afdaa20814cc5ef0f28491d2b6b323f54ce2aab79a0",
+      "source": [
+        {
+          "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+          "line": 100
+        }
+      ],
+      "count": 5458,
+      "total": 16.635562423004103,
+      "mean": 0.003047922759802877,
+      "p95": 0.009522833000119135,
+      "max": 0.33650141600037387
+    },
+    {
+      "hash": "ff49deb19fa5bc5a513d2d860ff7d49c27fe285f01246001404d7060ecaa0ff9",
+      "source": [
+        {
+          "file": "backend/src/tiewtrade/infra/db/session.py",
+          "line": 45
+        }
+      ],
+      "count": 2171,
+      "total": 13.614094493995253,
+      "mean": 0.006270886455087634,
+      "p95": 0.021470707999924343,
+      "max": 0.28718625000010434
+    },
+    {
+      "hash": "e259ab0c3e76460bfbd71a509360cfdb9482de64562794507542e1592bc4264a",
+      "source": [
+        {
+          "file": "backend/src/tiewtrade/infra/market_data/order_book_storage.py",
+          "line": 271
+        }
+      ],
+      "count": 2170,
+      "total": 8.546571552014484,
+      "mean": 0.0039385122359513755,
+      "p95": 0.013256458999876486,
+      "max": 0.20685712499971487
+    },
+    {
+      "hash": "e14880a60e1b44eaa40102ec695b8f2212a61085fe157433d9a63194a354d57e",
+      "source": [
+        {
+          "file": "backend/src/tiewtrade/infra/market_data/order_book_storage.py",
+          "line": 196
+        }
+      ],
+      "count": 2170,
+      "total": 7.568389884999306,
+      "mean": 0.0034877372741932283,
+      "p95": 0.010713624999880267,
+      "max": 0.1489657500001158
+    },
+    {
+      "hash": "2461f8bb8070d8f1e4e669943dfb1cc042ed3e05c56721efdd125ae68b55f78c",
+      "source": [
+        {
+          "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+          "line": 56
+        },
+        {
+          "file": "backend/tests/infra/execution_market/profile_workload.py",
+          "line": 281
+        }
+      ],
+      "count": 2728,
+      "total": 7.549099441011549,
+      "mean": 0.002767265190986638,
+      "p95": 0.010473457999978564,
+      "max": 0.09503387500035387
+    },
+    {
+      "hash": "5df6264c3e4fd4413c737a1426923624e8777a3f843956d355d0036103c6de98",
+      "source": [],
+      "count": 2170,
+      "total": 7.00914623198787,
+      "mean": 0.003230021305063535,
+      "p95": 0.008941084000070987,
+      "max": 0.3027944590003244
+    },
+    {
+      "hash": "b6bc63f875df15e4101b4ec4982c700d627446b0debed241fa1acdb2cb3f207c",
+      "source": [
+        {
+          "file": "backend/src/tiewtrade/infra/market_data/order_book_storage.py",
+          "line": 283
+        }
+      ],
+      "count": 2170,
+      "total": 6.833640367993212,
+      "mean": 0.0031491430267249826,
+      "p95": 0.009809374999804277,
+      "max": 0.1370267080001213
+    },
+    {
+      "hash": "9a420d6c244538da30bf58196481425d72107820fbfc8060ff1c983767174121",
+      "source": [
+        {
+          "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+          "line": 226
+        }
+      ],
+      "count": 558,
+      "total": 2.2510469949916114,
+      "mean": 0.004034134399626544,
+      "p95": 0.013978082999983599,
+      "max": 0.2354159169999548
+    },
+    {
+      "hash": "d3b779f87a23e4e5c1c08b4bb9ebfe5ef59715bab45ab14e6d2d0ac64a3c48c7",
+      "source": [],
+      "count": 558,
+      "total": 1.9771170010058086,
+      "mean": 0.0035432204319100513,
+      "p95": 0.011730582999916805,
+      "max": 0.16162933400028123
+    },
+    {
+      "hash": "a456b9cf1aafe9378a017981367a3147a3874b82d4be679899391016ecbdeb17",
+      "source": [],
+      "count": 559,
+      "total": 1.8845582879998801,
+      "mean": 0.0033713028407869054,
+      "p95": 0.012419749999935448,
+      "max": 0.13415654199980054
+    },
+    {
+      "hash": "ed51c2f8c36259c9da6ea63d3839a66d32936ccaa3d137af5444d5de8b695d09",
+      "source": [
+        {
+          "file": "backend/src/tiewtrade/infra/market_data/order_book_storage.py",
+          "line": 148
+        }
+      ],
+      "count": 1,
+      "total": 0.009200832999795239,
+      "mean": 0.009200832999795239,
+      "p95": 0.009200832999795239,
+      "max": 0.009200832999795239
+    },
+    {
+      "hash": "03ab38bae2fd3ddf5f955c424cb7a826b2b766dff4b9e544202ed4ed2dfb8de6",
+      "source": [
+        {
+          "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+          "line": 86
+        }
+      ],
+      "count": 2,
+      "total": 0.002541541000482539,
+      "mean": 0.0012707705002412695,
+      "p95": 0.0006499580003946903,
+      "max": 0.0018915830000878486
+    },
+    {
+      "hash": "d8c2146329dfdcbc657cf00ed28875615468eca27b8730ffb55018b4b9a4d1ea",
+      "source": [
+        {
+          "file": "backend/tests/infra/execution_market/profile_workload.py",
+          "line": 253
+        }
+      ],
+      "count": 1,
+      "total": 0.001678334000189352,
+      "mean": 0.001678334000189352,
+      "p95": 0.001678334000189352,
+      "max": 0.001678334000189352
+    },
+    {
+      "hash": "33de822bc6966063a46856f48dd8ed80d5454dea0737e4b45ac895d6ee46e550",
+      "source": [
+        {
+          "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+          "line": 165
+        }
+      ],
+      "count": 1,
+      "total": 0.0015735420001874445,
+      "mean": 0.0015735420001874445,
+      "p95": 0.0015735420001874445,
+      "max": 0.0015735420001874445
+    },
+    {
+      "hash": "0c5a0d6c7f3d5392b27dea2f602897e5809dc6e264d709e87075259600edfa3d",
+      "source": [
+        {
+          "file": "backend/tests/infra/execution_market/profile_workload.py",
+          "line": 258
+        }
+      ],
+      "count": 1,
+      "total": 0.0015701249999438005,
+      "mean": 0.0015701249999438005,
+      "p95": 0.0015701249999438005,
+      "max": 0.0015701249999438005
+    },
+    {
+      "hash": "6a22f99ea1e354c138ed25adc51798c400ee2674ce173a28fd6b17cb8b03a58d",
+      "source": [
+        {
+          "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+          "line": 119
+        }
+      ],
+      "count": 1,
+      "total": 0.0014435000002777088,
+      "mean": 0.0014435000002777088,
+      "p95": 0.0014435000002777088,
+      "max": 0.0014435000002777088
+    },
+    {
+      "hash": "2503c5ccd590232bf91e676a5f2b7baca91d5717546edf116d75ebb351e1cc24",
+      "source": [],
+      "count": 1,
+      "total": 0.0013984160000291013,
+      "mean": 0.0013984160000291013,
+      "p95": 0.0013984160000291013,
+      "max": 0.0013984160000291013
+    },
+    {
+      "hash": "a5b41250cf285caed57d7a89f368a45f613c68fe82ccadc760e5972750eb3093",
+      "source": [
+        {
+          "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+          "line": 70
+        }
+      ],
+      "count": 1,
+      "total": 0.001137167000251793,
+      "mean": 0.001137167000251793,
+      "p95": 0.001137167000251793,
+      "max": 0.001137167000251793
+    },
+    {
+      "hash": "8e51348bd14592f3c69c7ce1ed0a5e99c39a7854c3508d857f860a9bed4f59fd",
+      "source": [
+        {
+          "file": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+          "line": 65
+        }
+      ],
+      "count": 1,
+      "total": 0.0010235409999950207,
+      "mean": 0.0010235409999950207,
+      "p95": 0.0010235409999950207,
+      "max": 0.0010235409999950207
+    }
+  ],
+  "between_publications": {
+    "count": 2170,
+    "total": 388.32902935099855,
+    "mean": 0.17895346974700393,
+    "p95": 0.48402583300003243,
+    "max": 0.6109622499998295
+  },
+  "last_publications": [
+    {
+      "started_at": 1793975794.506132,
+      "pool": "tiewtrade_market_data",
+      "checked_out": 0,
+      "pool_size": 5,
+      "max_overflow": 10,
+      "query_detail_truncated": false,
+      "measurement_active_at_start": true,
+      "started_monotonic": 3340.162442708,
+      "checkout_at": 1793975794.515869,
+      "checkout_monotonic": 3340.172179291,
+      "pool_wait_seconds": 0.009737166999912006,
+      "backend_pid": 1680,
+      "transaction_acquired_at": 1793975794.516066,
+      "transaction_acquired_monotonic": 3340.172376375,
+      "body_finished_monotonic": 3340.206855833,
+      "checkin_at": 1793975794.555383,
+      "checkin_monotonic": 3340.211689708,
+      "phase": "publish_market",
+      "publisher_tick": "2167",
+      "book_owner": "88203493-b18b-4f5b-b484-4980ab131c16",
+      "book_generation": "1",
+      "book_last_input_id": "2166",
+      "finished_at": 1793975794.556385,
+      "seconds": 0.05024870799979908,
+      "finished_monotonic": 3340.212691416,
+      "body_seconds": 0.03447945800007801,
+      "finalization_seconds": 0.0058355829996799,
+      "held_seconds": 0.039510417000201414,
+      "outcome": "COMMIT"
+    },
+    {
+      "started_at": 1793975794.6062138,
+      "pool": "tiewtrade_market_data",
+      "checked_out": 0,
+      "pool_size": 5,
+      "max_overflow": 10,
+      "query_detail_truncated": false,
+      "measurement_active_at_start": true,
+      "started_monotonic": 3340.262514333,
+      "checkout_at": 1793975794.6140668,
+      "checkout_monotonic": 3340.270367708,
+      "pool_wait_seconds": 0.007853541999793379,
+      "backend_pid": 3179,
+      "transaction_acquired_at": 1793975794.61411,
+      "transaction_acquired_monotonic": 3340.270410583,
+      "body_finished_monotonic": 3340.309254,
+      "checkin_at": 1793975794.657302,
+      "checkin_monotonic": 3340.313598791,
+      "phase": "publish_market",
+      "publisher_tick": "2168",
+      "book_owner": "88203493-b18b-4f5b-b484-4980ab131c16",
+      "book_generation": "1",
+      "book_last_input_id": "2167",
+      "finished_at": 1793975794.657423,
+      "seconds": 0.051204832999701466,
+      "finished_monotonic": 3340.313719166,
+      "body_seconds": 0.03884341699995275,
+      "finalization_seconds": 0.0044651660000454285,
+      "held_seconds": 0.043231083000137005,
+      "outcome": "COMMIT"
+    },
+    {
+      "started_at": 1793975794.7061582,
+      "pool": "tiewtrade_market_data",
+      "checked_out": 0,
+      "pool_size": 5,
+      "max_overflow": 10,
+      "query_detail_truncated": false,
+      "measurement_active_at_start": true,
+      "started_monotonic": 3340.362449125,
+      "checkout_at": 1793975794.7102861,
+      "checkout_monotonic": 3340.366577333,
+      "pool_wait_seconds": 0.004128375000163942,
+      "backend_pid": 1680,
+      "transaction_acquired_at": 1793975794.710319,
+      "transaction_acquired_monotonic": 3340.3666105,
+      "body_finished_monotonic": 3340.402859083,
+      "checkin_at": 1793975794.748312,
+      "checkin_monotonic": 3340.404599416,
+      "phase": "publish_market",
+      "publisher_tick": "2169",
+      "book_owner": "88203493-b18b-4f5b-b484-4980ab131c16",
+      "book_generation": "1",
+      "book_last_input_id": "2168",
+      "finished_at": 1793975794.748716,
+      "seconds": 0.04255475000036313,
+      "finished_monotonic": 3340.405003875,
+      "body_seconds": 0.03624858299963307,
+      "finalization_seconds": 0.002144792000308371,
+      "held_seconds": 0.03802208300021448,
+      "outcome": "COMMIT"
+    },
+    {
+      "started_at": 1793975794.806946,
+      "pool": "tiewtrade_market_data",
+      "checked_out": 0,
+      "pool_size": 5,
+      "max_overflow": 10,
+      "query_detail_truncated": false,
+      "measurement_active_at_start": true,
+      "started_monotonic": 3340.463226875,
+      "checkout_at": 1793975794.8099892,
+      "checkout_monotonic": 3340.466271333,
+      "pool_wait_seconds": 0.003044915999907971,
+      "backend_pid": 3179,
+      "transaction_acquired_at": 1793975794.810078,
+      "transaction_acquired_monotonic": 3340.466360291,
+      "body_finished_monotonic": 3340.506585041,
+      "checkin_at": 1793975794.852393,
+      "checkin_monotonic": 3340.508670625,
+      "phase": "publish_market",
+      "publisher_tick": "2170",
+      "book_owner": "88203493-b18b-4f5b-b484-4980ab131c16",
+      "book_generation": "1",
+      "book_last_input_id": "2169",
+      "finished_at": 1793975794.852743,
+      "seconds": 0.04579399999965972,
+      "finished_monotonic": 3340.509020875,
+      "body_seconds": 0.040224750000106724,
+      "finalization_seconds": 0.002435833999697934,
+      "held_seconds": 0.042399292000027344,
+      "outcome": "COMMIT"
+    },
+    {
+      "started_at": 1793975794.9132931,
+      "pool": "tiewtrade_market_data",
+      "checked_out": 0,
+      "pool_size": 5,
+      "max_overflow": 10,
+      "query_detail_truncated": false,
+      "measurement_active_at_start": true,
+      "started_monotonic": 3340.569563666,
+      "checkin_at": 1793975794.929064,
+      "checkin_monotonic": 3340.585333833,
+      "phase": "publish_market",
+      "publisher_tick": "2171",
+      "book_owner": "88203493-b18b-4f5b-b484-4980ab131c16",
+      "book_generation": "1",
+      "book_last_input_id": "2170",
+      "finished_at": 1793975794.929157,
+      "seconds": 0.015862667000419606,
+      "finished_monotonic": 3340.585426333,
+      "outcome": "CancelledError",
+      "pool_wait_seconds": 0.015864375000091968
+    }
+  ]
+}

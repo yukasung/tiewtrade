@@ -1,0 +1,22 @@
+{
+  "scope": "local full candidate diagnostic, not required GitHub CI",
+  "commit": "6d021c4dcd9ceb1f55e03ab2bf47c1e2328438e1",
+  "configuration": "9b15a0dfe128642e58520f0cf26a931ca6f77cd32b04f9af63c5f53aa877d457",
+  "counts": {
+    "critical": 0,
+    "high": 0,
+    "low": 0,
+    "medium": 0,
+    "none": 0,
+    "unknown": 0,
+    "excepted": 48311,
+    "blocked": 0,
+    "needs_triage": 0
+  },
+  "coverage": 250,
+  "elapsed_seconds": 146.64032883400068,
+  "artifact_entries": 39,
+  "resolved_artifact_occurrences": 48218,
+  "public_summary_bytes": 66892,
+  "unresolved_locators": []
+}

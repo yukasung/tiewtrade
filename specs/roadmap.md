@@ -213,59 +213,14 @@ domain ของเงินที่ปฏิเสธค่าที่เก�
 
 ## ชุดที่ 1 — ฐานราก
 
-งานบำรุงรักษาข้าม feature: [Code cleanup และ shared frontend helpers](features/2026-11-06-code-cleanup/requirements.md)
-**In Progress — Review/Refactor and Local Validation Passed (2026-11-06)** — spec อนุมัติครบ;
-implementation ใน worktree `TiewTrade-code-cleanup`, branch `feature/code-cleanup` จาก main `eeb304e`
-หลัง F-17 PR #46 merge. ลบเจ็ด declarations และรวม API error/journal helpers แล้ว;
-baseline303/affected frontend409/backend73 tests และ targeted static checks ผ่าน.
-[evidence](features/2026-11-06-code-cleanup/evidence/implementation-checkpoint.md) บันทึก format failure ที่แก้แล้ว;
-V-01..V-12 ผ่าน local/review; หลัง authorized refactor full frontend662/39files,
-full static/type/unused/build และ import-linter ผ่าน; build มี non-blocking chunk-size warning.
-V-13/V-14 Not Run. ขั้นถัดไปรอคำสั่ง commit/push/เปิด PR แล้วติดตาม required CI;
-ยังไม่มี commit/push/PR/merge cleanup และยังไม่พร้อม merge จนผ่าน required CI และได้รับคำสั่ง.
-ไม่เปลี่ยน Batch/Release/dependency gates ของ feature เดิม.
-
-F-01 follow-up: [Security CI](features/2026-11-05-security-ci/requirements.md)
-**Completed (2026-11-06)** — [PR #48](https://github.com/yukasung/tiewtrade/pull/48)
-squash merge เป็น `74ca1f4bc8118f119d9bdd96381c061b961650ee` ตามคำสั่งเจ้าของ.
-V-01..18 ผ่านบน final candidate 9286d5f/base 98ff2f8 รวม review/refactor, pinned real
-scanners, original required CI, native/required gate activation, exact approved exceptions,
-negative/fixed/retained-finding/marker proofs และ owner zero-budget readback.
-V-19 ผ่าน: [post-merge CI](https://github.com/yukasung/tiewtrade/actions/runs/42160689488) 6/6,
-[push Security](https://github.com/yukasung/tiewtrade/actions/runs/42160689507) 7/7 และ
-[main dispatch](https://github.com/yukasung/tiewtrade/actions/runs/42161218096) 7/7;
-actual/tested tree ตรงกัน, native settings/protections readback ผ่าน, main unlocked.
-Actual fork Not Run ตามวิธีตรวจทดแทนที่อนุมัติ ต้องตรวจก่อนรับ merge ของ fork PR แรก;
-reference template 5 High native alert records คงเปิดไว้ใน scope งานแยก.
-หลักฐาน [post-merge checkpoint](features/2026-11-05-security-ci/evidence/post-merge-20261106.md)
-และ [validation](features/2026-11-05-security-ci/validation.md). ไม่มีงานต่อในขอบเขต PR #48;
-Pending Full Validation ของ feature อื่นคงเดิม ไม่ใช้ผลนี้รับรอง app release/Live Trading.
-
 F-01 follow-up: [Security dependency remediation](features/2026-11-05-security-dependency-remediation/requirements.md)
-**Completed (2026-11-05)** — certifi 2026.7.22 → 2026.10.18 และ
+**Code review APPROVED — local checks passed; final CI pending (2026-11-05)** — certifi 2026.7.22 → 2026.10.18 และ
 Vite 6.4.3 → 6.4.4; branch `feature/security-dependency-remediation`.
 requirements/plan/validation Approved; เปลี่ยนเฉพาะสอง lock entries แล้ว.
 156 backend + 10 frontend tests, TLS/dev/preview/build และ OSV ผ่าน local;
-OSV ไม่มี High/Critical/Unknown และมี Medium 4 records.
-[PR #47](https://github.com/yukasung/tiewtrade/pull/47) merge ที่ a3a8652;
-[post-merge CI](https://github.com/yukasung/tiewtrade/actions/runs/42050896249) ผ่าน 6/6; DV-10 Passed.
-Security CI integration ปิดแล้วตาม checkpoint ของ PR #48 ข้างบน; ผล remediation เดิมยัง valid.
-
-F-01 follow-up: [Reference template dependency remediation](features/2026-11-06-security-reference-dependency-remediation/requirements.md)
-**In Progress — NC-SEC-REF-02 Approved; fresh CI pending / PR #54 (2026-11-06)** — requirements/plan/validation และ
-scope amendment NC-SEC-REF-01 Approved; เปลี่ยน template lockfile ห้า entries:
-Vite 8.2.4, source-map-js 1.2.2, js-yaml 4.3.2, brace-expansion 5.0.11, zod 4.6.6.
-Full OSV coverage template 373 occurrences/372 unique + backend 54; High 8 → 0,
-Critical/unknown 0, Medium 3 คงตามจริง; clean install/npm ls/build/caller probes 10
-และ browser dev/preview desktop/mobile 20/20 ผ่าน local. Application UI/dependencies,
-permanent CI scope/policy เดิม; ไม่เปลี่ยน source/trading behavior.
-[หลักฐาน](features/2026-11-06-security-reference-dependency-remediation/evidence/feature-candidate.md).
-Branch `feature/security-reference-dependency-remediation`; commit/push 8ccc9e7 และเปิด [PR #54](https://github.com/yukasung/tiewtrade/pull/54) แล้ว.
-[Code review APPROVED](features/2026-11-06-security-reference-dependency-remediation/evidence/code-review.md);
-First Security secrets/gate Failed เพราะ checksum false positive 1 identity; owner อนุมัติ
-[exact exception/scope amendment](features/2026-11-06-security-reference-dependency-remediation/evidence/checksum-exception-proposal.md);
-แล้ว; เพิ่มเฉพาะ exact identity และตรวจ candidate ใหม่ต่อ. Original CI ติดตามตามจริง; RV-10 Pending Full Validation
-ที่ post-merge checkpoint. ยังไม่ Completed/พร้อม merge.
+OSV ไม่มี High/Critical/Unknown และมี Medium 4 records. DV-10 Pending Full Validation.
+เจ้าของอนุญาต commit/push/PR แล้ว; ขั้นถัดไปติดตาม required CI บน final candidate.
+ยังไม่ merge/Completed และ DV-10 ยังคง Pending Full Validation.
 
 F-01 follow-up: [Self-hosted CI / ลดรอบซ้ำ](features/2026-10-23-self-hosted-ci/requirements.md)
 **Retired / ไม่เปิดใช้ self-hosted CI (2026-10-24)** — เจ้าของเปลี่ยน repository เป็น Public
@@ -356,9 +311,9 @@ candidate gates ที่ไม่เลื่อนและ required CI ยั
 |---|---|---|---|
 | F-13 | กระเป๋า Paper และเงินตั้งต้น | **Development Complete** | requirements/plan/validation อนุมัติ 2026-10-15; create/read และ reset fail-closed merge ใน [PR #14](https://github.com/yukasung/tiewtrade/pull/14) (`2243675`) พร้อม required CI. F-15 ปิด authoritative reset success, controlled reset/admission/fill/GET races, source conflict/error, cancellation/timeout, lost acknowledgement, TCP disconnect และ process-kill ก่อน/หลัง RESET commit; [validation F-13](features/2026-10-15-paper-wallet/validation.md) V-1–V-15 ผ่านครบจาก final F-15 candidate, CI run #124 attempt 2 และ post-merge run #125. รอตรวจรับระบบตามสถานะ Development Complete จึงยังไม่ใช่ Completed |
 | F-14 | การคิด position, margin, PnL | **Development Complete** | Requirements/plan/validation approved 2026-10-16; M1-M3 and F-15 position/order/reset integration validated. Closed-episode writer replay merged in [PR #32](https://github.com/yukasung/tiewtrade/pull/32) (`eb8c7d8`); financial caller replay merged in [PR #34](https://github.com/yukasung/tiewtrade/pull/34) (`80d5d04`). Final push/PR CI and [post-merge CI](https://github.com/yukasung/tiewtrade/actions/runs/40176371957) passed 6/6 jobs; backend 3270 passed with no retry. Local Failed/Partial evidence remains in [validation](features/2026-10-16-position-margin-pnl/validation.md#post-merge-closeout---2026-10-25). V-17 release workload remains **Pending Full Validation**; not Completed. |
-| F-15 | จำลองการจับคู่ออเดอร์ Paper | **Development Complete** | requirements/NC-F15-01..10 และ plan/validation อนุมัติแล้ว; [M1](features/2026-10-18-paper-order-matching/evidence/m1-core.md)–[M5](features/2026-10-18-paper-order-matching/evidence/m5-candidate.md) ปิด implementation และ Critical/High findings. Candidate ล่าสุดเพิ่ม migration 0038, batch persistence, publisher supervision และ atomic per-owner claim; affected safety 125 tests, follow-up 12 tests, nominal smoke 500 commands/100 owners และ recovery smoke ผ่านโดยไม่มี duplicate fill หรือ balance/position inconsistency. V-1..V-18 และ required CI run #124 attempt 2 ผ่าน; post-merge CI run #125 ผ่านครบ 6 jobs. W1–W3 และ W4 บน final schema คง `Pending Full Validation` ตามคำสั่งเลื่อนไป release checkpoint จึงยังไม่ใช่ Completed. Production order admission/public order route ยังไม่เปิด และ actual unsupported filters ยังคง reject; 2026-10-25 deep-review remediation ใน branch `fix/f15-review-findings` แก้ rebase cursor, execution constraints และ expiry history โดย local full backend candidate ผ่าน 3267 tests และ runtime candidate CI ผ่านครบ 6 jobs ทั้ง push/PR (PR backend 3270 tests); sync main และติดตาม latest-head CI ใน [PR #33](https://github.com/yukasung/tiewtrade/pull/33) ตาม [M5 checkpoint](features/2026-10-18-paper-order-matching/evidence/m5-candidate.md#deep-review-remediation--2026-10-25) |
+| F-15 | จำลองการจับคู่ออเดอร์ Paper | **Development Complete** | requirements/NC-F15-01..10 และ plan/validation อนุมัติแล้ว; [M1](features/2026-10-18-paper-order-matching/evidence/m1-core.md)–[M5](features/2026-10-18-paper-order-matching/evidence/m5-candidate.md) ปิด implementation และ Critical/High findings. Candidate ล่าสุดเพิ่ม migration 0038, batch persistence, publisher supervision และ atomic per-owner claim; affected safety 125 tests, follow-up 12 tests, nominal smoke 500 commands/100 owners และ recovery smoke ผ่านโดยไม่มี duplicate fill หรือ balance/position inconsistency. V-1..V-18 และ required CI run #124 attempt 2 ผ่าน; post-merge CI run #125 ผ่านครบ 6 jobs. W1–W3 และ W4 บน final schema คง `Pending Full Validation` ตามคำสั่งเลื่อนไป release checkpoint จึงยังไม่ใช่ Completed. Production order admission/public order route ยังไม่เปิด และ actual unsupported filters ยังคง reject; 2026-10-25 deep-review remediation ใน branch `fix/f15-review-findings` แก้ rebase cursor, execution constraints และ expiry history โดย local full backend candidate ผ่าน 3267 tests และ runtime candidate CI ผ่านครบ 6 jobs ทั้ง push/PR (PR backend 3270 tests); sync main และติดตาม latest-head CI ใน [PR #33](https://github.com/yukasung/tiewtrade/pull/33) ตาม [M5 checkpoint](features/2026-10-18-paper-order-matching/evidence/m5-candidate.md#deep-review-remediation--2026-10-25) ; 2026-11-06 Set4 candidate98ff2f8: existing-profileW1Failed60scycle at pool checkout after100x20baseline; W4Passed0064; W2/W3NotRun pending diagnosis; V19Failed/Partial/PendingFullValidation ; Set4 follow-up: diag3 captured failed cycle; NC-SET4-02 Approved A, standalone R8 opt-in implemented/tested with defaults preserved; targeted safety/config/static passed; one full W1 baseline2000/2021cycles thenFailed publisher WriterLeaseLost (1378.654s total), observed p95 0.571253s >0.250s; W2/W3NotRun/W4Passed0064; NC-SET4-03 heartbeat/metadata safety89+8/static passed; first diagnostic Incomplete preserved; NC-SET4-04 latest A replacement completed3000commands/600cycles/all100financial oracles, Failed p95 469.526ms >250ms and input_lag22 >20; no observer/lease errors, cleanup complete; NC-SET4-05 checkpoint SQL batch/final-tail proposal prepared, awaiting A/B approval before implementation; no production change/full W1 retry |
 | F-16 | สั่งออเดอร์เองผ่านหน้าจอ | **Development Complete — Pending Integration/Full Validation** | requirements/plan/validation Approved 2026-10-25; M1–M4 implementation/review และ local safety/validation ผ่านตาม [M4 evidence](features/2026-10-25-manual-order-entry/evidence/m4-candidate-review.md). เจ้าของสั่ง merge [PR #36](https://github.com/yukasung/tiewtrade/pull/36) เข้า main เป็น `1f16ddb`; final candidate `ab248fe` ผ่าน push/PR CI12/12 และ [post-merge CI](https://github.com/yukasung/tiewtrade/actions/runs/40208544618) ผ่าน6/6. V-19 ผ่าน; V-18 รอ F-18 risk integration และ V-20 Pending Full Validation ที่ release checkpoint/ชุดที่9 จึงยังไม่ Completed. Production NEW admission ยัง fail-closed และ Live execution ไม่เปิด; เก็บ failed attempts และความเสี่ยงย้อนหลังใน M4 |
-| F-17 | TP/SL แบบผูกกับออเดอร์เข้า และแบบตั้งทีหลัง | In Progress | (R-09) [requirements](features/2026-11-02-tp-sl/requirements.md) และ NC-F17-01..05 Approved 2026-11-04; [plan](features/2026-11-02-tp-sl/plan.md)/[validation](features/2026-11-02-tp-sl/validation.md) Approved 2026-11-04; NC-F17-06 Approved 2026-11-04; NC-F17-07 Approved แบบ A; domain/DB/API/worker/UI ผ่าน deep review และแก้ runtime findings R1–R4 พร้อม regression tests; migration0064 เพิ่ม durable replacement retry; local backend90 และ targeted financial/race/correction/UI ผ่านตาม [evidence](features/2026-11-02-tp-sl/evidence/feature-candidate.md); R5 Feature validation เพิ่มหลักฐานครบ V-01–16 local targeted; final candidate/review gate/required CI ค้าง; เจ้าของอนุมัติ refactor แล้ว: backend74/frontend27/browser2 ผ่านหลัง refactor; Feature validation ต่อแล้ว: V-05/08/09/11/16 ผ่าน local targeted พร้อมหลักฐานเงินจริง/serve SLA/upgrade; เจ้าของเลือก A 2026-11-05: แก้ late-fill fixture ตาม due/single-owner claim; V-06/10 ผ่าน local targeted พร้อม protection regression39 tests; wrong-scope DB/HTTP passed; migration rollback amendment Approved 2026-11-05: empty roundtrip และ refusal16กรณี passed พร้อม financial/history/RLS preservation; full backend mypy642 files passed; UI/API/lifecycle matrices local passed: core59/API8/DB3/component27/browser6; Thai/English keyboard แบบ A approved และ passed; V-01–16 local passed, final review High CI composition finding fixed: default excludes F-17, dedicated npm/CI step6 tests passed58.2s; PR#46 first candidate6998c22: backend CI24failed/4263passed; test integration repairs targeted74+7passed แต่385bce8 CIยัง20failed/4267passed; แก้ seed helperให้owner-local พร้อม expanded111/SLA2/rollback16passed; 888cdff CIยัง20failed/4268passed; เจ้าของเลือก A หลัง3รอบให้เพิ่ม read-only CI diagnostic (fresh31passed); diagnostic2407df2 CI20failed/4270passedทั้งpush/PR พบforeign-owner candidate20/20ในทุกsnapshot; เจ้าของเลือก A ให้แยก F-17 integration ใช้ฐานว่างในCI คงtests/assertions/runtimeเดิม; collection4290ครบและisolated48passed; V-17 required CI บนcandidateใหม่pending; Batch/Release ยัง Not Run — Pending Full Validation |
+| F-17 | TP/SL แบบผูกกับออเดอร์เข้า และแบบตั้งทีหลัง | **Development Complete — Merged / Pending Batch & Release Validation** | (R-09) [requirements](features/2026-11-02-tp-sl/requirements.md) และ NC-F17-01..05 Approved 2026-11-04; [plan](features/2026-11-02-tp-sl/plan.md)/[validation](features/2026-11-02-tp-sl/validation.md) Approved 2026-11-04; NC-F17-06 Approved 2026-11-04; NC-F17-07 Approved แบบ A; domain/DB/API/worker/UI ผ่าน deep review และแก้ runtime findings R1–R4 พร้อม regression tests; migration0064 เพิ่ม durable replacement retry; local backend90 และ targeted financial/race/correction/UI ผ่านตาม [evidence](features/2026-11-02-tp-sl/evidence/feature-candidate.md); R5 Feature validation เพิ่มหลักฐานครบ V-01–16 local targeted; final candidate/review gate/required CI ค้าง; เจ้าของอนุมัติ refactor แล้ว: backend74/frontend27/browser2 ผ่านหลัง refactor; Feature validation ต่อแล้ว: V-05/08/09/11/16 ผ่าน local targeted พร้อมหลักฐานเงินจริง/serve SLA/upgrade; เจ้าของเลือก A 2026-11-05: แก้ late-fill fixture ตาม due/single-owner claim; V-06/10 ผ่าน local targeted พร้อม protection regression39 tests; wrong-scope DB/HTTP passed; migration rollback amendment Approved 2026-11-05: empty roundtrip และ refusal16กรณี passed พร้อม financial/history/RLS preservation; full backend mypy642 files passed; UI/API/lifecycle matrices local passed: core59/API8/DB3/component27/browser6; Thai/English keyboard แบบ A approved และ passed; V-01–16 local passed, final review High CI composition finding fixed: default excludes F-17, dedicated npm/CI step6 tests passed58.2s; PR#46 first candidate6998c22: backend CI24failed/4263passed; test integration repairs targeted74+7passed แต่385bce8 CIยัง20failed/4267passed; แก้ seed helperให้owner-local พร้อม expanded111/SLA2/rollback16passed; 888cdff CIยัง20failed/4268passed; เจ้าของเลือก A หลัง3รอบให้เพิ่ม read-only CI diagnostic (fresh31passed); diagnostic2407df2 CI20failed/4270passedทั้งpush/PR พบforeign-owner candidate20/20ในทุกsnapshot; เจ้าของเลือก A ให้แยก F-17 integration ใช้ฐานว่างในCI คงtests/assertions/runtimeเดิม; collection4290ครบและisolated48passed; V-17 required CI บนcandidateใหม่pending; Batch/Release ยัง Not Run — Pending Full Validation ; 2026-11-06 checkpoint: merged98ff2f8/post-mergeCI42063166018 all6jobs passed, V17Passed; Set4F15W1Failed/W4Passed0064/W2-W3NotRun; integrated-profile NC-SET4-01 pending; see F17 Batch evidence ; Set4 latest: standalone R8 opt-in Approved/tested, one W1 reached2021cycles thenFailed publisher WriterLeaseLost; observed p95 571ms >250ms; W2/W3NotRun/W4Passed0064; V18Partial/Failed; NC-SET4-01 integrated profile open, NC-SET4-02 closed; no production change or rerun ; NC12 internal20 local W1/W2/overflow/shortW3/integratedW4 now Passed under amendments through§23; [aggregate receipt](features/2026-11-02-tp-sl/evidence/recovery-20261106/internal-pilot-local-checkpoint-20261107.md); latest recovery candidate review/requiredCI and opening/Release gates remain pending. |
 
 ## ชุดที่ 5 — ความเสี่ยงและความปลอดภัย
 
@@ -472,7 +427,7 @@ Development Complete เป็น Completed เมื่อเกณฑ์ขอ
 | F-15 workload/endurance/restore | V-19 / W1..W4 | **Pending Full Validation — เกณฑ์อนุมัติ 2026-10-18**; W4 restore ผ่าน 2026-10-20; W1–W3 ยังไม่ผ่านครบ เก็บ failed attempts และ recovery smoke แยกตาม M5 checkpoint. [Validation](features/2026-10-18-paper-order-matching/validation.md) แยก BTC-only capacity ตาม F-38 ออกจาก ETH runtime correctness/readiness; smoke ไม่แทนชุดเต็ม |
 | F-12 history window | RQ-37..42 / V-H1..8 | **Passed 2026-10-22** — [acceptance progress](features/2026-10-12-candlestick-chart/evidence/2026-10-14-acceptance-progress.md): backfill ครบและ stored history 40/40 contiguous/unique; API traversal ทุกคู่ × 8 TF ถึง `display_start`, page overlap ตรงกัน. [หลักฐาน 2026-10-22](features/2026-10-12-candlestick-chart/evidence/2026-10-22-live-preview-recovery.md): 16/16 live series สดและกู้ lease หลัง host sleep สำเร็จ; browser session จริงผ่าน pan→pagination 1,000 rows, controlled Retry-After→manual retry ไป API จริง และ reset กลับล่าสุดโดยไม่ยิง request เพิ่ม |
 | F-12 workload/resource | V-17 ชุดเต็มทั้ง LEGACY/PREPARED และส่วนสรุป V-18 ที่พึ่ง V-17 | **Passed 2026-10-23** — [deterministic full rerun](features/2026-10-12-candlestick-chart/evidence/2026-10-23-v17-full-rerun.md) ผ่าน LEGACY/PREPARED 600s หลัง warmup 60s, 20 clients, 100 lifecycle cycles, fault/recovery 5/5 series และทุก threshold เดิม; [รอบแรกที่ Failed / Partial](features/2026-10-12-candlestick-chart/evidence/2026-10-23-v17-full-workload.md) ยังคงเก็บไว้. ส่วน V-18 ที่พึ่ง V-17 ปิดแล้ว; [PR #24](https://github.com/yukasung/tiewtrade/pull/24) merge เข้า main เป็น `27a7718` แล้ว โดย CI ของ candidate ผ่าน 6/6; [post-merge CI 39934274551](https://github.com/yukasung/tiewtrade/actions/runs/39934274551) ผ่านครบ 6/6 แล้ว และไม่ปิด C3/C5, C4/C6 หรือ release gates อื่น |
-| F-16 manual order entry | V-18 / V-20 | **Development Complete — Pending Integration/Full Validation**; merge PR#36 เป็น1f16ddb และ post-merge CI40208544618ผ่าน6/6. V-19ผ่าน; V-18รอ F-18 ก่อน production activation และ V-20 **Pending Full Validation** ที่release checkpoint/ชุดที่9 โดยคงเกณฑ์ F-15 W1–W4 และรอ approved integrated release profile — [validation](features/2026-10-25-manual-order-entry/validation.md) |
+| F-16 manual order entry | V-18 / V-20 | **Development Complete — Pending Integration/Full Validation**; merge PR#36 เป็น1f16ddb และ post-merge CI40208544618ผ่าน6/6. V-19ผ่าน; V-18รอ F-18 ก่อน production activation และ V-20 **Pending Full Validation** ที่release checkpoint/ชุดที่9 โดยคงเกณฑ์ F-15 W1–W4 และมี integrated profile Approved A 2026-11-06 แล้ว; execution ยังไม่ถึง sustained HTTP phase — [validation](features/2026-10-25-manual-order-entry/validation.md) |
 | F-18 wallet risk limits | V-21 / V-22 / V-23 | V-21 **Paper Validation Passed (R34/current candidate)**: W1–W4, 100 owners ×20 orders, fault/endurance, restore, financial/idempotency oracles, affected regression/static checks and final review passed; current-head required CI run `41173114518` passed all 6 jobs. Historical Failed/Partial evidence is preserved in [M5](features/2026-10-25-wallet-risk-limits/evidence/m5-final-candidate.md). Owner create-wallet/save-limit and browser manual order-submit observations passed. V-22/V-23 **Pending Dependency**: bot/Live authority and notification features. Production/Live activation remains closed; F-18 is not Completed until those gates are satisfied. |
 | F-38 runtime/workload/restore | V-12/V-13/V-15 | **Passed — F-38 Completed 2026-10-27** — current C1 readiness 16, BTC workload 8, combined steady/dirty phase ละ 3,600s, S1–S5/C4/C6 ผ่าน; reuse approved pre-0030 restore ตาม provenance. Final candidate `aabdfb9` ผ่าน required push/PR CI 12/12 jobs และ PR #38 merge เป็น `bf7b847`; [current crosswalk](features/2026-10-15-supported-pairs-reduction/evidence/release-20261026-merge/README.md) |
 | F-13 reset/recovery closure | V-6..V-10/V-13 | **Passed 2026-10-21** — reconcile กับ F-15 V-14/V-15 และ final candidate แล้ว: real-source reset, controlled races, source conflict/error, cancellation/timeout, lost acknowledgement, TCP disconnect และ process-kill ก่อน/หลัง RESET commit ผ่านโดยไม่มีข้อมูลหรือทุนซ้ำ; required CI run #124 attempt 2 และ post-merge run #125 ผ่านครบ ตาม [validation](features/2026-10-15-paper-wallet/validation.md) |
@@ -539,3 +494,672 @@ not yet isolated. V21 remains Failed/Pending Full Validation; W2/W3 not run.
 F-18 W1r21: approved R10/source-clock experiment still failed60s cycle after
 425commands/66cycles. Unresolved command retried3times; typed defer reason needs
 evidence. Defaults remain off; W2/W3 not run; Failed/Pending Full Validation.
+
+
+Set-4 NC-SET4-05 owner-approved A implemented0065/PG_BATCH_V1 and default-off
+standalone final-tail gate. Real-DB equivalence (6snapshots,11→6client calls),
+migration/authority/rollback/recovery, TP/SL/risk and targeted static checks passed;
+initial test-fixture/hook failures retained with passing affected followups.
+Exactly one fresh100-owner/6-cycle diagnostic is running (non-acceptance).
+W1Failed/Partial and W2/W3NotRun remain; W4Passed0064 applies only to the old writer,
+new0065 writer W4 is Pending Revalidation. V18/V19PendingFullValidation and missing
+integrated NC-SET4-01 profile remain. Stop/report after this run, no Git publication.
+Evidence: [Set-4 Batch ledger](features/2026-11-02-tp-sl/evidence/batch-20261106/README.md).
+
+
+Set-4 follow-up NC-SET4-06: offline analysis/next plan completed at owner's request;
+no runtime edits or new tests/workload. Proposed small paired writer campaign is
+Awaiting Approval/Not Run; it will not establish100-owner or W1 acceptance.
+See [isolation plan](features/2026-10-18-paper-order-matching/checkpoint-latency-isolation-plan.md).
+Current failure and pending validation statuses remain unchanged.
+
+
+Set-4 NC-SET4-07: Approved A; harness/targeted validation in progress, campaign
+Not Run.8measured arms plus one reference,576checkpoint operations,
+fixed0065batch with1/4writers ×0/100readers; production remains unchanged.
+[Plan](features/2026-10-18-paper-order-matching/checkpoint-concurrency-polling-plan.md).
+All previous failures/inconclusive results and acceptance gaps are retained.
+
+
+Set-4 NC-SET4-08: next [plan](features/2026-10-18-paper-order-matching/checkpoint-runtime-drift-plan.md)
+approved A; harness/targeted validation in progress, campaign Not Run. One-writer adjacent
+polling pairs and bounded runtime observations,288 proposed checkpoints. Only
+documentation/read-only prior-evidence analysis changed; no new workload or code.
+NC07 remains Inconclusive; W1 and integrated acceptance gaps unchanged.
+
+
+Set-4 NC-SET4-09: [approved plan](features/2026-10-18-paper-order-matching/parent-poll-budget-plan.md)
+implemented in harness;115 targeted tests and static checks passed. Single diagnostic
+**Incomplete / cycle bound Failed**:813.431s total,2000 baseline orders complete,
+289/600 cycles and1632/3000 commands complete before60s cycle timeout. Poll gate
+peak4/active0; resource cleanup verified. Full financial/final-tail/input-lag checks
+Not Reached; partial worker p95=1003.8ms. Waiting moved to gate; no demonstrated
+end-to-end fix. Original acceptance gaps unchanged, **Pending Full Validation**.
+Stop/report reached. Recommended existing worker/queue trace inspection and next
+planning await owner direction; no additional run, production change or Git action.
+
+NC09 follow-up inspection completed on owner direction: four command-result stages
+sum32.554s before handling,2.585s handling and3.367s subsequent observation delay.
+Measured claim calls86.68% skipped. Last status read ended59.186s; next read waited
+for a permit until60.002s. Retained final order is FILLED; last owner processing
+transaction ended59.723s, suggesting a boundary observation miss (exact projection
+commit time unavailable). Keep the Incomplete/Failed result and criteria unchanged.
+Next recommended bounded worker claim-efficiency plan awaits owner direction;
+no rerun or source change. See Batch ledger's NC09 follow-up for limitations.
+
+Set-4 NC-SET4-10: [worker claim coordination plan](features/2026-10-18-paper-order-matching/worker-claim-coordination-plan.md)
+approved A and implemented — **Targeted Safety Passed / Performance Not Run**.
+Default-off PG coordinator for selection/claim only; processing remains parallel.
+94 targeted cases passed (85 combined +9 setup-blocked regressions rerun), static
+checks passed and7 import contracts kept. Cleanup verified. Owner fences/criteria
+unchanged. No production activation, timed campaign or W1. Next NC10-scoped code
+review awaits owner command; overall **Pending Full Validation** remains.
+
+Set-4 consolidated closure checkpoint: NC10 review completed; one Medium test
+coverage gap fixed (lost coordinator COMMIT reply after committed owner claim),
+both commit-loss cases passed with scoped Ruff/format/mypy. F-17 integration48/48
+passed on fresh0065. F-15 W4 now **Passed on0065** after actual backup/restore,
+financial/history replay, RLS/grants and lease recovery checks; its fixture does
+not cover F-17 history. No production changes in this follow-up. Current changes
+still lack final published-candidate CI. F-17 stays **Development Complete —
+Merged / Pending Batch & Release Validation**: W1 Failed/Partial, W2/W3 Not Run,
+NC-SET4-01 still open, V19/V20 require planned bot/notification/Live dependencies.
+Next: owner decision on the concrete [integrated Paper proposal](features/2026-11-02-tp-sl/integrated-paper-acceptance-plan.md)
+before its new profile/harness is implemented. Raw results in the F-17 Batch ledger.
+
+
+Set-4 latest integrated Paper checkpoint: owner approved the
+[consolidated profile](features/2026-11-02-tp-sl/integrated-paper-acceptance-plan.md);
+NC-SET4-01 is Closed / Approved A, superseding the earlier missing-profile blocker.
+Harness tests133 and affected observation tests45 passed with scoped static checks.
+Two coordinated diagnostics are retained as Failed/Incomplete: first failed setup;
+second completed2000 baseline orders but only188/600 cycles,1091/3000 commands,
+then60.001s timeout. Partial processing p95=441.6ms and18/20 worker exits; full
+financial/final-tail acceptance was not reached. All pools/processes/connections
+cleaned up. W1 Failed/Partial, W2/W3 Not Run, standalone W4 Passed0065; sustained
+HTTP/F-14 workload/integrated restore phases have not run. F-17 V18 Partial/Failed,
+V19/V20 Pending Dependency, final published-candidate CI Pending. No Completed claim.
+Next: owner decision on the concrete [NC-SET4-11 protocol amendment](features/2026-10-18-paper-order-matching/worker-claim-contention-amendment.md)
+needed to change blocking acquisition; no third run or source change made.
+
+
+Set-4 NC-SET4-11 latest: owner Approved A, V2 nonblocking/250ms implementation and
+135 targeted safety tests passed; scoped Ruff/format/mypy and7 import contracts
+passed. One diagnostic **Incomplete / setup Failed** after165.058s at book
+`WriterLeaseLost`:394/2000 baseline orders,0 measured commands/cycles. One worker
+claim SQL deadline and one shutdown SIGTERM; cleanup verified. No gate-acquisition
+timeout stack observed, but no workload/performance success established. Source837
+hashes stable and all previous failures retained. **Stop/report checkpoint reached**;
+no repeat, W1 or Git publication. F-17 remains Development Complete — Merged /
+Pending Batch & Release Validation. V18 Partial/Failed, V19/V20 Pending Dependency;
+V2 affected final-candidate checks/CI remain. Next recommended step: scoped baseline
+publisher/DB timing plan before another owner-approved campaign; exact slow stage
+is not recoverable from current setup-only aggregate evidence.
+
+### Recovered candidate and publisher diagnostic checkpoint — 2026-11-06
+
+Temporary Set-4 worktree/raw artifacts were lost. Source was reconstructed into the
+permanent sibling `TiewTrade-paper-set4-recovery`; old narrative is historical, not
+replacement raw evidence. Fresh recovery303+2 tests passed, all28 recovered Python
+files type-checked; follow-up78 affected cases and scoped static checks passed,
+7 import contracts kept. The retained original0065 DB function matches recovery.
+
+The owner-approved publisher timing follow-up and exactly one diagnostic are complete:
+566.039s, baseline2000/2000, measured917/3000 commands and145/600 cycles before
+60.002s cycle timeout. Partial measured worker p95=470.510ms>250ms. Publisher lease
+loss did not reproduce; no worker exited abnormally. Full financial/final-tail/resource
+acceptance Not Reached. All pools/streams/processes and DB connections/locks closed;
+839 candidate hashes stable. No repeat/W1/publication. See [new raw evidence](features/2026-11-02-tp-sl/evidence/recovery-20261106/README.md).
+
+V18 remains Partial/Failed; V19/V20 Pending Dependency; final candidate CI Pending.
+Integrated profile NC-SET4-01 remains Approved A. Next recommended step: a concrete
+runtime-fix plan for queue/processing/polling progress using these traces, before any
+new timed run. Preserve60s and250ms criteria; this checkpoint does not close F-17.
+
+### Latency measurement correction — Approved A,2026-11-06
+
+Owner selected a measurement-only correction after criteria review. Shared start-time
+selection now excludes setup/fault-start/drain cohorts while retaining complete slow
+durations.66 targeted cases and scoped Ruff/format passed; F15/new-test mypy passed.
+Risk-harness mypy has2 pre-existing callback type errors reproduced on the pre-edit
+snapshot; this checkpoint does not claim all harness types pass. Reanalysis of old
+raw data retainsp95=470.510ms>250ms. No production change, new workload or Git action.
+See [evidence and next step](features/2026-10-18-paper-order-matching/evidence/latency-population-20261106/README.md).
+F-17 status and Failed/Partial/Release dependencies above remain unchanged. Next:
+bounded performance-fix planning and the existing callback typing before relevant
+candidate checks; new runtime work/timed testing awaits an agreed scope.
+
+### Internal Paper pilot - NC-SET4-12 Approved A,2026-11-06
+
+Owner approved the [internal-pilot requirements/plan/validation amendment](features/2026-11-02-tp-sl/internal-paper-acceptance-amendment.md):
+10 invited testers,20 active-account acceptance, unchanged per-account workload,
+latency, financial and duration criteria. Scoped harness/checks and conditional
+campaign are authorized. Current results and the next gate are recorded below.
+Existing100-account Failed/Partial/Not Run results and F17 V-18/V-19/V-20 remain;
+F17 is not Completed. Next: implement/verify the approved harness, then proceed
+only through passing campaign gates. Git/deploy gates remain.
+
+NC12 checkpoint: UUID fix/affected tests and restore safety passed. The approved
+controlled20 replacement passed132.922s:20/20 owners≤1s (max444.013ms),400baseline
+orders and exact financial/retry checks passed. D20 completed600commands and passed
+financial/p95/p99 gates, but **Failed** because final connections68 exceeded57+2.
+The last sample coincides with the existing20-reader final-tail stage; earlier
+samples57–59 and post-stop cleanup0 do not establish definitive pool attribution.
+W1/W2/W3/W4 were Not Run at that checkpoint. The subsequently approved
+[amendment§11](features/2026-11-02-tp-sl/internal-paper-acceptance-amendment.md)
+added the harness-only final-tail poll limit; its result and next decision follow. Previous Failed/
+Incomplete results remain; the pilot is Pending Validation and F17 is not Completed.
+
+Section11 final-tail gate was Approved A;126 affected tests and scoped static checks
+passed. Its one D20 replacement stopped **Incomplete** (395/600 commands) on publisher
+book readiness before final-tail, leaving the resource fix unproven in that run.
+Exact failed guard timestamps were not captured; no freshness/clock fix is justified
+yet. Cleanup0 connections/locks. The owner subsequently approved section12.
+
+Section12 checks passed154 targeted cases plus12 observer rechecks and scoped
+static checks. Its single D20 run **Passed**:600/600commands,20/20 financial oracles,
+p95=192.754ms/p99=325.518ms, connections57→58 (peak59), final-tail0.947s,
+cleanup0/0, candidate unchanged. Readiness failure did not recur; prior cause
+remains unproven. W1 subsequently **Incomplete** at1227.598s measured:
+2384/3600completed; owner cycle exceeded60s waiting for final sell FILLED.
+Partial p95/p99=487.319/1184.654ms and connections57→63 (peak64) remain concerns.
+Full financial/global oracle, final-tail and snapshot/rebuild were not reached.
+Read-only evidence identifies a costly terminal-history lookup; amendment§13
+proposes reusing its existing index with bounded lookup, subject to owner approval.
+Production unchanged; cleanup0/0. Section13 subsequently Approved A; query fix and50 targeted tests/static checks passed.
+Next: the authorized fresh D20, then W1 only on passing gates.
+W2/overflow/W3/fullW4 remain Not Run; no automatic retry.
+The internal pilot remains Pending Validation; F17 remains not Completed.
+
+
+NC12§13 query fix passed50 real-DB safety cases and scoped static checks. Its resumed
+D20 **Failed** despite600/600commands and20/20 financial/resource oracles passing:
+p95=531.809ms and2976/3000measured book inputs. No W1 replacement started.
+The preflight recorded host load24.84 on8logicalCPUs with another project's
+Node/Next workload; environment interference is a confounder, not a proven sole
+cause. Existing pass/fail evidence remains tied to each candidate. Next: owner
+decision on [amendment§14](features/2026-11-02-tp-sl/internal-paper-acceptance-amendment.md),
+a fixed environment-readiness window before one D20. F17 is not Completed.
+
+
+NC12§14 revised plan was approved and implemented with211 unique passing targeted
+cases and scoped static checks. Its single preflight stopped **Incomplete** before
+workload:load1=19.29>8logicalCPUs; disk/services passed. No fixture, workers or measured
+commands started; cleanup0/0 and candidate unchanged. D20 on§14 and W1 replacement
+onward remain Not Run. Implementation checkpoint complete; internal pilot/F17 remain
+open. Next: owner-triggered preflight when host activity subsides, preserving all
+criteria; no new code/threshold amendment or automatic retry is proposed.
+
+
+NC12§14 readiness revision2, requested2026-11-07, replaces the load ceiling with
+7-sample mean CPU idle≥20% and non-Critical memory pressure; Warning is retained
+in evidence and load remains informational.108 targeted checks and scoped static
+checks passed; native sensor read worked. New preflight/D20 remain Not Run.
+Next: owner-triggered preflight/D20 using revision2. Original safety/performance
+criteria and all recorded Failed/Incomplete results remain; F17 is not Completed.
+
+
+NC12§14 revision2 D20 **Passed** on2026-11-07:7-sample preflight mean idle49.481%,
+600/600commands,20/20financial oracles/global/resource checks; p95=116.400ms,
+p99=164.199ms, book3000/3000, connections57→58 (peak59),cleanup0/0, candidate
+unchanged. Evidence: `nc12-section14-v2-d20/`. Next: approved fresh-DB W1 with
+preflight and30min authenticated HTTP workload, then conditional remaining phases.
+F17/internal-pilot acceptance remain open until all required gates pass.
+
+
+NC12§14 revision2 W1 **Failed solely the connection-growth predicate**:3600/3600
+commands, all20 financial/global checks, engine p95/p99=133.580/191.986ms,
+book18017/18000,20 snapshots p95/p99=32.977/33.661ms and20rebuilds max7.052s
+passed. Connections57→60 against59allowed (peak61); increase occurs at first use,
+but per-pool API ownership/return evidence is missing. Cleanup0/0; candidate
+unchanged. Preserve Failed. Evidence: `nc12-section14-v2-w1/`.
+Next: owner decision on amendment§15's direct pool-resource contract and one W1;
+no W2/overflow/W3/fullW4 or automatic retry started. F17 remains not Completed.
+
+
+NC12 §15 implementation checkpoint — 2026-11-07: owner approved A. Added NC12-only
+owned-pool inventory/periodic samples/pre-disposal return checks, reusing PoolEvidence.
+Production and other profile predicates unchanged. Affected regression:214 passed,
+4 initial failures corrected; scoped rechecks35/35 passed. Ruff/format and scoped
+mypy passed. Existing production50 safety checks remain applicable. One approved
+fresh-DB W1 is next; no new timed result yet. Historical §14-v2 W1 remains Failed.
+
+
+NC12 §15 W1 — Incomplete (2026-11-07),274.262s total. Preflight passed(meanCPUidle66.817%).
+Stopped early because new pool instrumentation omitted the existing read-only admin
+engine used by require_empty_database; DatabaseRole conversion recorded ValueError.
+No30min/performance acceptance. All20 workers stopped cleanly; registered loans
+returned, final DB cleanup0connections/0advisory locks; candidate/runner unchanged.
+Evidence:`nc12-section15-w1/analysis.md`. Historical Failed results retained.
+W2/overflow/W3/W4 not started. Next: owner approval of amendment§16 before correction
+and one replacement W1; no automatic retry.
+
+
+NC12 §16 criteria revision — Proposed,2026-11-07, at owner's request after repeated
+unsuccessful attempts. Proposal separates environment/harness Incomplete from proven
+system Failed; uses complete owned pool capacity/return evidence including the existing
+admin observer. It preserves financial/safety/latency/workload thresholds, prior
+Failed/Incomplete results and conditional phase gates. Actual startup/shutdown coverage
+must pass targeted real-DB tests before another long campaign. Specific revised criteria
+and one replacement W1 await approval in internal-paper-acceptance-amendment.md§16.
+Documentation only this turn; no source change or new campaign.
+
+
+NC12 §16 revised pilot latency proposal (owner requested less strict criteria):
+engine p95≤500ms/p99≤2s for invited20-account Paper pilot only; retain250ms/1s as
+reported target with explicit warning when missed. Keep financial/order/position
+correctness, TP/SL start≤1s, snapshot/recovery/feed/workload/durations and full Release
+requirements unchanged. Specific thresholds await approval; no runtime change or
+new campaign. Admin-observer instrumentation defect still requires correction.
+
+
+NC12 §16 implementation/checks complete,2026-11-07. Owner approved500ms/2s
+engine processing for20-account Paper pilot only; original250ms/1s target remains
+reported with performance_warning. Default profiles, protection start, snapshots,
+workload duration and production unchanged. Complete parent inventory13(including
+read-only ADMIN_OBSERVER5+10), workers2 each. Unknown identity/read-write admin
+options/missing evidence fail closed; real resource failures remain distinct from
+Incomplete observer evidence, including simultaneous failures.
+
+Targeted182 passed8.46s; classification8 passed1.00s(5 overlapping,3 additional).
+Ruff/format passed5repo files; mypy passed5files. Private campaign runner scoped Ruff
+passed ignoring only its pre-existing BLE001 catch used to retain cleanup evidence;
+format passed. Production source hashes unchanged from§15 candidate. No new financial
+code or persistent/session state. Existing50 production safety cases remain applicable.
+
+Next: one approved fresh-DB W1, same3600commands/30min withpreflight (~35–40min total).
+Passing continues W2/overflow/W3/W4; failure/incomplete stops without retry. Earlier
+results retained. This checkpoint is not F17 Completed.
+
+
+NC12 §16 W1 — Passed,2026-11-07. Total2080.281s; measured1800.965s.
+3600/3600commands,720cycles,1440fills,720cancels,720replays,0rejects; all20financial
+oracles/global invariants passed. Engine p95=144.262ms/p99=211.241ms: both original
+250ms/1s targets and approved pilot500ms/2s ceilings passed; no performance warning.
+Measured inputs18010/18000. Snapshots20/20 passed p95=36.377ms/
+p99=36.468ms; all20rebuilds passed,max6.359s.
+Owned inventory complete(parent13,workers20×2); all21process reports passed, no
+pool violations/incomplete evidence, all loans returned before disposal. Raw aggregate
+connections57→61,peak61 retained; no initial+2 proxy used. Final cleanup0connections/
+0advisory locks. Candidate/runner unchanged. Evidence:nc12-section16-w1/.
+
+Next: approved fresh-DB W2, then overflow/W3/W4 conditional on passing. Historical
+Failed/Incomplete runs retained. This is W1 internal-pilot acceptance only; F17 stays open.
+
+
+NC12 §16 W2 — Failed throughput duration,2026-11-07. Total1136.363s;
+measurement963.571s exceeds600s target+60s allowance=660s. This is the sole failed
+acceptance predicate. Completed12000/12000commands,2400cycles,4800fills,2400cancels,
+2400replays,0rejects; all20financial/global/snapshot/rebuild checks passed.
+Engine p95=363.782ms/p99=492.133ms passes approved pilot500ms/2s; original250ms
+p95 target missed and performance_warning=true retained. This does not waive the
+separate throughput/duration criterion. Measured inputs9635/6000, workers no failures,
+resource/pool checks all passed; all registered loans returned before disposal.
+Parent13pools/workers20×2 inventory complete, observer errors none. Snapshots20/20
+p95=18.214ms/p99=18.502ms; rebuild max1.068s. Input lag4 remained within the existing
+bound. Final cleanup0connections/0advisory locks; candidate/runner unchanged.
+
+The cohort's effective completed throughput is12.454commands/s over963.571s. This
+closed-loop observation does not establish an absolute capacity or prove which
+query/queue/worker stage is the bottleneck. No causal root-cause claim is made.
+Evidence:campaign-result.json, run/result.json, gate-assessment.json, raw samples/logs.
+
+Stop checkpoint: W1 Passed is retained; W2 Failed retained. No W2_OVERFLOW/W3/fullW4
+started, no automatic rerun, source fix or further threshold relaxation. F17 remains
+Pending Full Validation. Next requires owner decision on the next scope: retain the
+20commands/s burst requirement and investigate/fix throughput, or explicitly approve
+a distinct lower-load internal profile while retaining the20commands/s requirement
+for the original release gate. Any concrete profile requires declared rate/counts/
+duration before execution; do not choose numbers from this failed run to relabel it.
+
+
+
+
+NC12 W2 existing-evidence analysis complete,2026-11-07. Owner-approved read-only
+scope only: W2 owner cycle interval7.971s versus5s planned; dominant observed gaps
+follow HTTP intake, while poll-permit p95≤2.5ms and bridge attempts=1 for all9600
+unique requests. Worker scan/coordination/claim/process division remains unmeasured;
+no causal SQL/backoff conclusion. W2 remains Failed; no new campaign/source fix.
+Evidence:nc12-section16-w2/throughput-analysis.md and offline timing/timestamp JSON.
+Next: approve proposed§17 bounded worker-phase diagnostic, or choose another scope.
+
+
+
+
+NC12 §18 lower-burst proposal,2026-11-07: owner requested criteria revision instead
+of another diagnostic. Defer unapproved§17. Propose explicit internal V2 W2 target
+10commands/s, retaining20owners/400baseline/120cycles-per-owner/12000commands, hence
+1200s target/1260s completion bound and≥12000book inputs. Financial/safety and all
+other gates unchanged; reuse valid W1 evidence. Specific profile values/campaign
+still await approval. No source change or new run. W2 V1 remains Failed; full F17
+remains open separately from internal pilot acceptance.
+
+
+NC12 §18 Approved/implemented,2026-11-07. Explicit PAPER_INTERNAL20_V2 changes
+W2 only to10commands/s/1200s with120cycles-per-owner/12000commands unchanged.
+Completion allowance1260s; required book inputs12000 at10Hz. V1/defaults, money,
+worker/pool/coordinator/retry and other phase definitions unchanged. Actual V2 name
+is forwarded to worker subprocesses and recorded in manifests/timing revision.
+Tests233 passed8.77s;5 profile rechecks passed0.31s after test typing correction.
+Scoped Ruff/format passed5repo files and private runner; mypy passed5files. Private
+runner retains its pre-existing broad cleanup exception with BLE001 excluded only
+for that file. Production source hashes unchanged; prior safety evidence remains
+valid. W1§16 passing evidence reused only for unchanged assertions. All earlier
+Failed/Incomplete runs retained. No§17 diagnostic added or executed.
+
+Next: one approved fresh-DB V2 W2 withpreflight (~25–30min including20min measured),
+then overflow/W3/W4 conditional on passing each gate. No repeated W1/D20. A failed/
+incomplete gate stops without retry. Internal pilot and F17 remain open pending gates.
+
+
+NC12 §18 V2 W2 — Failed resource contract,2026-11-07. Total1445.897s;
+measured1241.602s passes1200s+60s allowance=1260s. All12000commands completed,
+2400cycles,4800fills,2400cancels,2400replays,0rejections. All20financial/global/
+position checks passed; snapshot p95=16.945ms/p99=17.360ms,20rebuilds,max3.415s.
+Engine p95=363.444ms/p99=541.362ms passes500ms/2s pilot ceilings; performance_warning
+retained because original250ms target missed. Inputs12395/12000,input lag9 within
+existing bound, no worker failures. The relaxed throughput/duration gate passed.
+
+The only failed gate is the owned-pool contract: parent recorded4 active-work
+ConnectionResourceError entries, all original_exception=CancelledError,sqlstate empty,
+quiescing=false. Inventory complete(parent13,workers20×2); all borrowed connections
+returned before final disposal; all20worker reports passed. Final cleanup0connections/
+0advisory locks and candidate/runner unchanged. No proven connection leak is reported.
+
+The evidence does NOT identify which pool/task/query was cancelled or at what time.
+Do not silently treat these as normal shutdown cancellations or assume a trading
+transaction failed. Parent completed normally; this alone does not establish the
+origin/safety of those4cancellations. Existing API price-read code has bounded read
+deadlines, so deliberate read cancellation is one candidate, not a proven cause.
+
+Stop checkpoint: preserve Failed and all prior results. No overflow/W3/fullW4,
+replacement W2, further threshold change, production edit or Git/deploy action.
+Existing§16 W1 remains Passed. Internal pilot and F17 remain open.
+
+Recommended next scope: add test-only cancellation provenance(timestamp,pool role/
+identity,task or named operation,quiescence/deadline context; never SQL,binds,secrets),
+and targeted real-DB regressions distinguishing a known read-only deadline from
+worker/financial cancellation, disconnect and leaked borrow. Reuse OwnedPools and
+existing API lifecycle/readers. Establish a specific rule only after the origin is
+known; no new timed campaign is proposed or authorized at this checkpoint. Current
+source/harness is unchanged after the failed gate. A next implementation/campaign
+requires a concrete approved scope under§18's stop rule.
+
+
+NC12 §19 completed,2026-11-07. Test-only OwnedPools resource-error provenance
+now includes UTC/monotonic timestamps, pid, engine/current-pool identity/generation,
+role/capacity/configured-readonly, task id/cancellation count and bounded project
+coroutine file/function/line locations. It never captures task names, SQL/binds,
+URLs, payloads, locals or exception text. Unknown task/deadline stays unknown. Pool
+identity is labelled current-engine-pool or original-registration fallback; after
+churn this is not proof of the invalidated connection's original pool. Details are
+bounded to16 with omitted count; all errors remain counted. No extra SQL queries.
+
+Real-DB short regressions distinguish an explicit read-only query deadline from an
+explicitly cancelled ENGINE query, preserve TimeoutError/CancelledError, show loans
+returned and hooks restored, and prove neither secret binds nor task names appear.
+Existing disconnect simulation, leaked-borrow, lifecycle/generation/classification
+cases still pass. No financial state/session storage or production change.
+Final affected suite82passed14.38s; scoped Ruff/format/mypy passed2files. Existing
+production safety evidence remains valid; production hashes unchanged from§18.
+Evidence: nc12-section19-final-targeted.xml/.log and nc12-section19-final-mypy.log.
+
+Limitation: these controlled regressions do not identify the4historical W2 query
+cancellations; the old artifact lacks source identity/time. Active cancellations
+still fail under current acceptance; no warning waiver or retrospective Passed.
+No workload/campaign was run. §18 V2 W2 remains Failed, W1 remains Passed; overflow/
+W3/fullW4 and F17 acceptance remain pending. §19 stop/report checkpoint reached.
+
+
+NC12 §20 approved2026-11-07. Reuse§19 final82targeted tests and scoped checks;
+no further harness/production change. One fresh-DB PAPER_INTERNAL20_V2 W2 withbounded
+cancellation provenance is starting; preflight and all existing gates remain binding.
+Pin source/config/runner/schema; no retrospective status changes. Passing permits
+existing overflow→W3→W4; failure/incomplete stops/report without retry. W1 reused.
+
+
+NC12 §20 V2 W2 — Passed,2026-11-07. Total1398.032s; measured1205.681s≤1260s.
+Completed12000/12000commands,2400cycles,4800fills,2400cancels,2400replays,0rejects;
+all20financial/global/position checks passed. Engine p95=364.028ms/p99=516.442ms
+passes pilot500ms/2s; performance_warning remains for original250ms p95 target.
+Inputs12056/12000. Snapshots20/20 p95=50.690ms/p99=50.920ms; rebuildmax1.974s.
+Owned inventory complete(parent13,workers20×2); all21process reports passed, no
+resource errors/cancellations, all loans returned before disposal. Final cleanup
+0connections/0advisory locks, candidate/runner unchanged. Evidence:nc12-section20-w2/.
+No historical Failed/Incomplete status changed; the4old cancellations remain
+unattributed because none recurred here. One passing run is not a causal fix claim.
+
+Next: approved fresh-DB overflow case, then W3/W4 conditional on each gate passing.
+W1§16 evidence reused. F17/internal pilot remain open until remaining gates pass.
+
+
+NC12 §20 V2 overflow — Passed,2026-11-07. Total175.184s includingpreflight;
+4097inputs overflow case recovered in20.155s≤60s, before/after economic snapshots
+identical for all20owners (no fill/ledger/position change); baseline financial/global
+checks passed. Parent plus initial/recovery workers' owned pool reports complete,
+all loans returned, no resource errors; final cleanup0connections/0advisory locks,
+candidate/runner unchanged. Evidence:nc12-section20-overflow/.
+Next: approved W3 with unchanged4h/282cycles-per-owner/7fault schedule and periodic
+position checks, then W4 only on passing. W1/W2 accepted in their existing scope;
+F17/internal acceptance not yet closed. No further criteria or source change.
+
+
+NC12 §20 W3 — Incomplete/owner time objection,2026-11-07. Owner said4hours was
+too long and interrupted the turn. Stopped only the owned W3 campaign via SIGINT
+at53.842s during preflight(3samples), before run/fixture/workers/measurement existed.
+No W3 financial/performance/endurance acceptance claimed. Cleanup0connections/
+0advisory locks; candidate/runner unchanged. Preserve raw Incomplete/CancelledError.
+W1§16,W2§20 and overflow§20 passing evidence retained. No W3 retry/W4 started.
+Next: specific shorter internal checkpoint proposal§21 requires approval before code
+or execution; original4h Release requirement remains Pending Full Validation.
+
+
+NC12 §21 Approved/implemented,2026-11-07. Explicit PAPER_INTERNAL20_V3 changes
+W3 only to1800s/30cycles-per-owner/3000commands;7pinned fault kinds/durations retained
+at180..1260s offsets. Selected duration drives hold/minimum, RSS window and30periodic
+snapshot rounds(620total includingfinal20), with15000inputs and1830s completion
+ceiling. V1/V2/default4h/282cycles/original schedule and240periodic rounds unchanged.
+Short stability is labelled separately;4h Release remains Pending Full Validation.
+
+Targeted220passed10.73s;6affected final rechecks passed1.50s; scoped Ruff/format and
+mypy passed5repo files(private runner scoped Ruff excludes pre-existing BLE001 only).
+Actual parent/reporting regression verifies1800s hold/minimum,30snapshot rounds,
+short RSS and unchanged financial/counter/latency/resource predicates. Production
+source hashes unchanged. Applicable W1/W2/overflow/production safety evidence reused;
+no ceremonial reruns. See nc12-section21-*.xml/logs for evidence.
+
+Next: approved one fresh-DB V3 short W3 with existing preflight, estimated35–45min
+including30min measured/final replay/cleanup; passing permits W4. A failed/incomplete
+gate stops without retry. Prior owner-stopped W3 remains Incomplete; no4h acceptance.
+
+
+NC12 §21 V3 short W3 — Incomplete after observer resource alarms,2026-11-07.
+Stopped the owned campaign after connection churn exposed invalid retired-pool
+observations, saving the remaining planned runtime. Total596.076s includes preflight/
+fixture/cleanup;30min measurement was not completed.755HTTP records and160snapshot
+records retained; no full financial/oracle/fault/endurance acceptance is claimed.
+Only initial restart and connection-churn faults had begun; remaining faults/W4 not run.
+
+Parent observer recorded9PoolCapacityViolation and4PoolDisappearedBeforeReturn.
+Raw snapshots show disposed ENGINE pool native checkedout=-1/-4 while independent
+checkout/checkin event counts changed3→1→0. Installed SQLAlchemy QueuePool.dispose
+sets _overflow=-size, and checkedout computes size-checkedin+overflow; late returns
+can therefore make the retired pool's native counter negative. This is not an
+actual negative/over-capacity connection count. Retired MARKET_DATA pool weakref
+was collected while event count1 was still pending; its event count later reached0
+before final shutdown. All registered loans returned in final parent proof; cleanup
+0connections/0advisory locks and candidate/runner unchanged. Retain raw Incomplete/
+CancelledError and original resource flags, not retrospective Passed.
+
+The existing real-DB generation test disposed only after its borrow was returned;
+it missed held loans across churn. This evidence identifies an observer accounting
+defect, not a justification to waive lost-borrow/capacity safety or claim30min passed.
+Evidence:retired-pool-observations.json, parent pool streams/summary, campaign log.
+
+Next: proposed§22 fixes only retired-generation measurement semantics, adds real-DB
+held-loan/GC regressions, then one replacement V3 W3 if approved and checks pass.
+No source fix/new run after the failed gate. W1§16/W2§20/overflow§20 remain Passed;
+4h Release remains Pending Full Validation and F17 remains open.
+
+
+NC12 §22 implemented/checked,2026-11-07. Retired generations retain raw native
+counters as informational after declared intermediate dispose; live pools still
+require native bounds/configuration and every generation's event-tracked active/
+peak borrow bounds remain binding. Retired weakref loss with pending returns is
+recorded as pending, never waived at quiescence. Final zero-return/inventory/error
+criteria unchanged; unexpected live pool loss and capacity mutation still fail.
+
+Real-DB regression holds2loans across dispose, observes nativecheckedout=-1 while
+one event-tracked loan remains, then returns both and proves oldpool GC without
+observer retention. Simulated missing-native-view cases keep real DB loans and
+checkin callbacks; returned passes, deliberately unreturned fails. Live pool loss/
+retired configuration mutation and prior API/worker/disconnect/cancellation tests
+pass. Initial2failures were reused nonempty DB and double-cleanup of a closed loan;
+fixed test cleanup and used a fresh isolated test DB, preserving initial logs.
+Final88targeted cases passed14.17s; scoped Ruff/format/mypy passed2files. Production
+source unchanged and prior applicable financial/safety proofs retained.
+
+Next: one approved fresh-DB PAPER_INTERNAL20_V3 short W3, same30min/3000commands/
+7faults and§19provenance (~35–45min total), then W4 only on passing. Reuse W1/W2/
+overflow. Earlier incomplete W3 and all Failed results retained;4h Release remains
+Pending Full Validation. No criteria/production/Git/deploy change or automatic retry.
+
+
+NC12 §22 V3 short W3 — Passed,2026-11-07. Total2089.437s; measured1800.001s.
+3000/3000commands,600cycles,1200fills,600cancels,600replays,0rejects; all20financial/
+global checks passed. Engine p95=132.721ms/p99=201.237ms passed original targets too.
+All7faults RECOVERED:3worker restarts,2connection churns,2Redis outages. Snapshots
+620/620 p95=48.893ms/p99=109.821ms;20rebuilds,max7.145s. Inputs18000/15000.
+RSS window1800s growth−5.019% passed; this is short-window evidence, not4h endurance.
+All81process pool reports complete, retired/live generations returned, no observer
+resource errors; cleanup0connections/0advisory locks, candidate/runner unchanged.
+Evidence:nc12-section22-w3/. Earlier Failed/Incomplete runs preserved.
+
+Next: approved integrated W4 backup/restore/recovery on fresh source/target DBs.
+W1§16,W2§20 and overflow§20 evidence retained; no repeat. Four-hour Release remains
+Pending Full Validation and full F17 dependencies/review/CI gates remain open.
+
+
+NC12 §22 W4 — Incomplete overall / integrated recovery Failed,2026-11-07.
+Total206.839s; preflight passed. Real pg_dump/restore canonical data/RLS/grants checks
+passed; domain replay21episodes,59evidence records,20checkpoints,18positions; one
+expired legacy claim recovered without economic effects. Backup1816699bytes.
+F16/F17 integrated recovery then timed out at60s, leaving its result Failed. Outer
+campaign records Incomplete/TimeoutError; preserve both scopes and all raw evidence.
+Source and target cleanup0connections/0advisory locks; candidate/runner unchanged.
+
+Root cause identified from code and read-only DB evidence: recover() passes target
+engines to publisher/parent readers, but f15.run_worker_process() constructs its own
+ENGINE/ENGINE_SCAN using ambient source-role URLs. Thus parent waited for target
+while worker serviced source. On source, the staged pending receipt and retry became
+REJECTED/ORDER_SAFETY_UNAVAILABLE and retry attempt advanced to4; on target both
+results remained absent and retry attempt2. These are isolated synthetic fixture
+DBs, not user/live data. Never treat target non-progress as a need for larger timeout.
+Evidence:source-versus-restored-worker-effects.json/restored-state-snapshot.json,
+traceback atprofile_internal_restore.py recover andprofile_workload.py worker setup.
+
+No final integrated pending/exit/retry/idempotency acceptance claimed. No source fix
+or new run after this failed gate. W1§16/W2§20/overflow§20/shortW3§22 remain Passed;
+4h Release and fullF17 dependencies/required CI remain pending. Next proposed§23
+routes only W4 worker engines explicitly to target with unchanged factory defaults,
+checks source unchanged, targeted real-DB/default-path regressions and one W4 rerun.
+No repeated long workload is proposed.
+
+
+NC12 §23 implemented/checked,2026-11-07. Optional synchronous test-worker engine
+factory defaults to the original role factory lookup. Restored recovery constructs
+independent worker-owned target ENGINE/ENGINE_SCAN using scoped role URLs during
+synchronous construction only; source env restored before any await. Pool/credential/
+scheduling/financial defaults unchanged. Verify compares full source canonical data
+(including extensions) before/after target recovery and requires source_unchanged.
+
+Targeted125unique cases covered:124passed in shared suite; the empty-source test
+was run after a seeding test and failed its isolation prerequisite, then passed on
+a separate fresh DB. Six routing/digest cases rechecked after test import correction
+passed1.66s; empty prerequisite passed1.65s. Real two-DB SELECT current_database
+proof for both roles plus normal stop/error/cancel cleanup and constructor/config
+restoration passed. Scoped Ruff/format/mypy passed3files. Preserve initial logs.
+No production change; prior long workload/safety evidence remains applicable to
+unchanged default worker path. Required CI/full-regression not replaced by these
+partitioned local checks; database-empty cases require isolated fixture execution.
+
+Next: one approved fresh-source/fresh-target W4 with same preflight/fixtures/
+backup/restore/60s recovery criterion and strengthened source-unchanged proof,
+estimated5–10min. Do not repeat W1/W2/overflow/shortW3. Failed/incomplete stops;
+pass closes this local integrated validation checkpoint only, with existing
+review/CI/4h Release/bot/notification/Live obligations still separately pending.
+
+
+NC12 §23 W4 — Passed,2026-11-07. Total148.403s including120s preflight.
+Real backup/restore canonical data and RLS/grants match. Domain replay21episodes,
+61evidence records,20checkpoints,18positions; one expired legacy claim recovered
+with no economic effects. Backup1817181bytes. F16/F17 integrated recovery Passed:
+restored-owner RLS,pending receipt identity,exact retry and0duplicate exit/fill.
+Source canonical data unchanged=True. Source/target cleanup0connections/0advisory
+locks, candidate/runner unchanged. Evidence:nc12-section23-w4/.
+
+W1§16,W2§20,overflow§20,shortW3§22 and W4§23 local campaign gates now all Passed in
+their declared internal profiles. This is not the100-account/4h Release profile or
+F17 Completed. Current recovery candidate still requires final review/required CI
+and production-admission/opening-gate audit/authorization; original bot/notification/
+Live dependencies remain. No Git/deploy/activation performed. See aggregate receipt.
+
+Aggregate:[internal local campaign receipt](features/2026-11-02-tp-sl/evidence/recovery-20261106/internal-pilot-local-checkpoint-20261107.md).
+
+Recovery review test-isolation finding locally resolved2026-11-07; final remote CI
+and other gates above remain pending. No F17 status change.
+[Fix/check evidence](features/2026-11-02-tp-sl/evidence/recovery-20261106/review-fixture-fix.md).
+
+Owner-authorized fixture refactor and affected validation done:207/207mixed tests
+passed together, scoped static checks passed,0 fixture DBs left. Pending final
+candidate CI/admission/opening and Release/dependency gates unchanged; no F17
+completion or Git/deploy action. Details in the same evidence receipt.
+
+Owner subsequently authorized recovery commit/push and required CI. Main integrated;
+local Python static checks56files passed. Security remains blocked on evidence
+UUID/checksum findings pending approved handling; final CI/admission/opening and
+Release/dependency gates remain. No merge/deploy/Completed claim.
+[Publication checkpoint](features/2026-11-02-tp-sl/evidence/recovery-20261106/publication-checkpoint.md).
+
+Published0961f78 /PR59: required CI Failed (4756passed/5failed; remaining isolated
+backend steps Not Run); complete browser E2E and other5CIjobs passed. Security
+secrets job timed out at15min, workflow Cancelled/aggregate gate Failed. Local
+test-config fixes105passed; security handling proposal needs owner approval before
+the next combined candidate. No merge/opening/F17 completion.
+[Result and proposal](features/2026-11-02-tp-sl/evidence/recovery-20261106/publication-final-ci.md).
+
+Owner approved evidence-policy Option A. Scoped implementation/negative/parity
+checks passed; full current-candidate scan and required CI remain pending. No
+15-minute/security/trading-criteria relaxation. Prior Failed/Cancelled results and
+F17/opening/Release/dependency status unchanged.
+[Option A receipt](features/2026-11-02-tp-sl/evidence/recovery-20261106/evidence-policy-implementation.md).
+
+Option A local full scan/mapping completed169.73s; strict registry validation Failed
+because tree adds100column-distinct identities in8fixed blobs. No active exception
+expansion, push or new remote-CI run. Owner decision required on the
+[exact100-identity extension](features/2026-11-02-tp-sl/tree-occurrence-extension-proposal.md).
+Historical results and F17 pending acceptance/dependency gates remain unchanged.
+
+Owner approved the exact100tree extension. Local full history/tree and registry
+validation Passed on6d021c4 in146.640s with0blocked/triage; exact48218artifact
+identities resolved. Publishing combined candidate for final required CI; local
+proof is not remote CI. No merge/deploy/internal opening or F17 completion.
+[Current checkpoint](features/2026-11-02-tp-sl/evidence/recovery-20261106/tree-extension-local-checkpoint.md).
+
+12e6204 remote Security Passed7/7. Application CI Failed2cases (4759passed,
+31deselected; later isolated steps Not Run), other5jobs/E2E passed on push and PR.
+No fourth full CI/fix cycle before owner decision under the3-round rule. Exact
+security dataset/matcher remain approved; remaining proposal is two fixture/config
+changes, not reduced acceptance. No merge/opening/F17 completion.
+[Result/next checkpoint](features/2026-11-02-tp-sl/evidence/recovery-20261106/extension-remote-ci-checkpoint.md).
+
+Owner approved remaining fixture/config Option A. Two specified lines fixed;
+51targeted financial/claim/role cases and workflow/static checks passed locally.
+Full secret scan and one combined publication/required-CI round pending; old
+failures and F17 opening/Release/dependency gates remain unchanged.
+[Local checkpoint](features/2026-11-02-tp-sl/evidence/recovery-20261106/remaining-ci-fixtures-local.md).
+
+Remaining fixture/config pre-publication full secret scan Passed on4d997e9 in
+132.892s,0blocked/triage, no new security exception/configuration change. Sending
+the one authorized combined CI round; remote acceptance remains pending until its
+actual final-head result. No opening/merge/F17 completion claim.

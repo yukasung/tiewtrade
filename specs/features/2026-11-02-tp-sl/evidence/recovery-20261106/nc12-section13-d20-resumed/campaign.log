@@ -1,0 +1,22 @@
+baseline 1 / 20
+baseline 2 / 20
+baseline 3 / 20
+baseline 4 / 20
+baseline 5 / 20
+baseline 6 / 20
+baseline 7 / 20
+baseline 8 / 20
+baseline 9 / 20
+baseline 10 / 20
+baseline 11 / 20
+baseline 12 / 20
+baseline 13 / 20
+baseline 14 / 20
+baseline 15 / 20
+baseline 16 / 20
+baseline 17 / 20
+baseline 18 / 20
+baseline 19 / 20
+baseline 20 / 20
+workload SMOKE started
+{"acceptance_profile": {"name": "PAPER_INTERNAL20_V1", "owners": 20, "baseline_orders_per_owner": 20, "workers": 20, "phase": "SMOKE", "rate": 2, "cycles_per_owner": 6, "seconds": 300, "expected_commands": 600, "scope": "internal pilot only; not the 100-account profile or F17 Completed", "intake": "diagnostic internal commands"}, "phase": "SMOKE", "status": "FAILED", "smoke_only": true, "elapsed_seconds": 307.119218917, "target_seconds": 300.0, "drain_seconds": 3.8794140420000076, "counters": {"offered": 600, "admitted": 600, "completed": 600, "rejected": 0, "fills": 240, "cancels": 120, "replays": 120, "cycles": 120}, "engine_transaction_seconds": {"applicable": true, "p95": 0.5318091249999952, "p99": 0.9816389999999728, "max": 3.9463736249999783, "samples": 5604, "window": {"attribution": "transaction_start", "started": 530.813489041, "ended": 837.932708625, "status": "MEASURED", "excluded_fault_intervals": []}}, "end_to_end_command_seconds": {"p95": 6.252266792, "p99": 9.189806125000018, "max": 15.906875916000104}, "publisher": {"target_hz": 10, "stage": "publish_market", "published": 3081, "last_input_id": 3081, "book_owner": "7cf553bb-e1f2-4dee-8b61-6198190407d0", "book_generation": 1, "last_progress_at": "2026-11-06T19:06:42.222335+00:00", "max_publish_seconds": 1.9441144590000476}, "measured_book_inputs": 2976, "required_book_inputs": 3000, "resources": {"samples": 61, "peak_process_rss_bytes": 71434240, "peak_rss_by_pid": {"2601": 42041344, "2640": 60407808, "2641": 50446336, "2642": 58015744, "2643": 70860800, "2644": 70336512, "2645": 70991872, "2646": 71286784, "2647": 69812224, "2648": 70369280, "2649": 56131584, "2650": 70565888, "2651": 64110592, "2652": 70696960, "2653": 71434240, "2654": 62390272, "2655": 70811648, "2656": 71057408, "2657": 57442304, "2658": 58261504, "2659": 65503232}, "peak_connections": 59, "connections_start": 57, "connections_end": 59, "peak_lock_waits": 0, "lock_waits_end": 0, "peak_buffer_rows": 3058, "buffer_rows_start": 79, "buffer_rows_end": 3058, "database_bytes_start": 36027415, "database_bytes_end": 130440215, "database_growth_bytes": 94412800}, "resource_assertions_passed": true, "global_invariants": {"orders": 760, "fills": 240, "cancels": 120, "pending_dispatch": 400, "unlinked_fills": 0, "invalid_reservations": 0, "invalid_positions": 0, "wrong_mode": 0, "input_lag": 9, "duplicate_fill_effects": 0, "expected_orders": 760, "expected_fills": 240, "expected_cancels": 120, "expected_pending_dispatch": 400, "passed": true}, "fault": null, "fault_observations": [], "endurance_rss": null, "worker_failures": [], "positions": null}

@@ -594,7 +594,9 @@ async def process_request(session: UserSession, request_id: UUID) -> None:
                 raise OrderConflictError("protection quantity unavailable")
             value = Protection(
                 UUID(str(row.protection_id)),
-                OrderScope(session.user_id, UUID(str(row.episode_id)), TradingMode.PAPER),
+                OrderScope(
+                    UUID(str(session.user_id)), UUID(str(row.episode_id)), TradingMode.PAPER
+                ),
                 OrderOrigin.MANUAL,
                 level,
                 quantity,

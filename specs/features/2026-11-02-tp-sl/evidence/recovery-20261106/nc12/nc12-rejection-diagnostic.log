@@ -1,0 +1,73 @@
+F
+=================================== FAILURES ===================================
+___________ test_restore_extension_fixture_and_retry_with_real_roles ___________
+
+tmp_path = PosixPath('/private/var/folders/fb/g4m1d38j4fl6x1pt39rn0wxr0000gn/T/pytest-of-chainarongjaykeaw/pytest-15/test_restore_extension_fixture0')
+
+    async def test_restore_extension_fixture_and_retry_with_real_roles(tmp_path: Path) -> None:
+        """Scoped harness safety check on a fresh DB, not the W4 backup/restore campaign."""
+        engines = {
+            role: create_engine_for(role)
+            for role in (
+                DatabaseRole.API,
+                DatabaseRole.ENGINE,
+                DatabaseRole.ENGINE_SCAN,
+                DatabaseRole.MIGRATOR,
+                DatabaseRole.MARKET_DATA,
+            )
+        }
+        observer = readonly_admin()
+        try:
+            async with observer.connect() as connection:
+                assert (
+                    await connection.execute(text("SHOW transaction_read_only"))
+                ).scalar_one() == "on"
+            with pytest.raises(DBAPIError, match="read-only"):
+                async with observer.begin() as connection:
+                    await connection.execute(
+                        text(
+                            "UPDATE risk_protocol_control "
+                            "SET admission_enabled=admission_enabled WHERE false"
+                        )
+                    )
+            async with activated_protocols(engines[DatabaseRole.MIGRATOR], protections=True):
+                fixture = await build_extension(engines, tmp_path)
+                assert all((await extension_coverage(observer)).values())
+>               await recover(engines, fixture, tmp_path, observer=observer)
+
+tests/infra/execution_market/test_internal_observations.py:124: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/infra/execution_market/profile_internal_restore.py:430: in recover
+    await check_terminal_rejection(session, UUID(pending["receipt"]), output)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+session = UserSession(_connection=<sqlalchemy.ext.asyncio.engine.AsyncConnection object at 0x10a05edf0>, user_id=UUID('b9968fd7-cc10-4a2f-92c3-ccabeb384ff8'))
+request = UUID('fb93bf5b-a6c1-4f03-9c7e-69c937651e90')
+output = PosixPath('/private/var/folders/fb/g4m1d38j4fl6x1pt39rn0wxr0000gn/T/pytest-of-chainarongjaykeaw/pytest-15/test_restore_extension_fixture0')
+
+    async def check_terminal_rejection(session: UserSession, request: UUID, output: Path) -> None:
+        row = (
+            (
+                await session.execute(
+                    """SELECT r.state AS intake_state,r.command_id,
+            c.state AS command_state,coalesce(r.failure_code,c.failure_code) AS failure_code
+            FROM paper_order_request_results r LEFT JOIN paper_order_command_results c
+            ON c.command_id=r.command_id WHERE r.request_id=:id""",
+                    {"id": request},
+                )
+            )
+            .mappings()
+            .one_or_none()
+        )
+        if row is not None and (
+            row["intake_state"] == "REJECTED" or row["command_state"] == "REJECTED"
+        ):
+            f15.save(output / "terminal-rejection.json", dict(row))
+>           raise RuntimeError("INTERNAL_RESTORE_TERMINAL_REJECTION")
+E           RuntimeError: INTERNAL_RESTORE_TERMINAL_REJECTION
+
+tests/infra/execution_market/profile_internal_restore.py:356: RuntimeError
+=========================== short test summary info ============================
+FAILED tests/infra/execution_market/test_internal_observations.py::test_restore_extension_fixture_and_retry_with_real_roles
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+1 failed in 16.64s

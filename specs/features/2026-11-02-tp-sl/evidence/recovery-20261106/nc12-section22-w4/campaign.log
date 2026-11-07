@@ -1,0 +1,40 @@
+Traceback (most recent call last):
+  File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/backend/tests/infra/execution_market/profile_internal_restore.py", line 477, in recover
+    await asyncio.sleep(0.05)
+  File "/Users/chainarongjaykeaw/.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/asyncio/tasks.py", line 665, in sleep
+    return await future
+           ^^^^^^^^^^^^
+asyncio.exceptions.CancelledError
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/backend/../../f17-recovery-records-20261106/nc12_restore_campaign.py", line 245, in <module>
+    raise SystemExit(asyncio.run(main()))
+                     ^^^^^^^^^^^^^^^^^^^
+  File "/Users/chainarongjaykeaw/.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/asyncio/runners.py", line 195, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/Users/chainarongjaykeaw/.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/chainarongjaykeaw/.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/asyncio/base_events.py", line 691, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/backend/../../f17-recovery-records-20261106/nc12_restore_campaign.py", line 183, in main
+    code = await internal.run_preflighted(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/backend/tests/infra/execution_market/profile_internal.py", line 414, in run_preflighted
+    return await workload()
+           ^^^^^^^^^^^^^^^^
+  File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/backend/../../f17-recovery-records-20261106/nc12_restore_campaign.py", line 180, in phase
+    return await restore.verify(verify)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/backend/tests/infra/execution_market/profile_internal_restore.py", line 605, in verify
+    await recover(engines, fixture, args.output, observer=observer)
+  File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/backend/tests/infra/execution_market/profile_internal_restore.py", line 436, in recover
+    async with asyncio.timeout(60):
+               ^^^^^^^^^^^^^^^^^^^
+  File "/Users/chainarongjaykeaw/.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/asyncio/timeouts.py", line 115, in __aexit__
+    raise TimeoutError from exc_val
+TimeoutError

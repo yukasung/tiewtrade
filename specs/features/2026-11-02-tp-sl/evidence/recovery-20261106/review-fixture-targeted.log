@@ -1,0 +1,152 @@
+........................................................................ [ 34%]
+........................F...............F....................F.......... [ 69%]
+...............................................................          [100%]
+=================================== FAILURES ===================================
+_____ test_actual_asgi_lifespan_records_all_lazy_engines_and_returns_them ______
+
+tmp_path = PosixPath('/private/var/folders/fb/g4m1d38j4fl6x1pt39rn0wxr0000gn/T/pytest-of-chainarongjaykeaw/pytest-19/test_actual_asgi_lifespan_reco0')
+
+    async def test_actual_asgi_lifespan_records_all_lazy_engines_and_returns_them(
+        tmp_path: Path,
+    ) -> None:
+        path = tmp_path / "pools.json"
+        expected = [
+            ("API", 5, 10),
+            ("API", 1, 0),
+            ("AUTH", 5, 10),
+            ("API", 3, 0),
+            ("API", 1, 0),
+            ("API", 1, 0),
+        ]
+        with OwnedPools(path, expected) as tracker:
+>           async with lifespan(app):
+                       ^^^^^^^^^^^^^
+
+tests/infra/execution_market/test_owned_pools.py:142: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+../../../../../.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/contextlib.py:210: in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+src/tiewtrade/services/api/app.py:115: in lifespan
+    redis = Redis.from_url(price_redis_url())
+                           ^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def price_redis_url() -> str:
+        value = os.environ.get("TIEWTRADE_REDIS_URL_API", "")
+        if not value:
+>           raise ValueError("TIEWTRADE_REDIS_URL_API is required")
+E           ValueError: TIEWTRADE_REDIS_URL_API is required
+
+src/tiewtrade/services/api/settings.py:64: ValueError
+_ test_empty_database_startup_asgi_and_parent_shutdown_have_complete_inventory _
+
+tmp_path = PosixPath('/private/var/folders/fb/g4m1d38j4fl6x1pt39rn0wxr0000gn/T/pytest-of-chainarongjaykeaw/pytest-19/test_empty_database_startup_as0')
+
+    @pytest.mark.usefixtures("internal_database")
+    async def test_empty_database_startup_asgi_and_parent_shutdown_have_complete_inventory(
+        tmp_path: Path,
+    ) -> None:
+        path = tmp_path / "parent.json"
+        with OwnedPools(path, PARENT_CONFIGURATION) as tracker:
+            # The exact previously missed production campaign startup function.
+            await internal.require_empty_database()
+            engines = [
+                create_engine_for(role)
+                for role in [
+                    DatabaseRole.MARKET_DATA,
+                    DatabaseRole.MIGRATOR,
+                    DatabaseRole.API,
+                    DatabaseRole.ENGINE,
+                    DatabaseRole.ENGINE_SCAN,
+                    DatabaseRole.AUTH,
+                ]
+            ]
+            try:
+>               async with lifespan(app):
+                           ^^^^^^^^^^^^^
+
+tests/infra/execution_market/test_owned_pools.py:323: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+../../../../../.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/contextlib.py:210: in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+src/tiewtrade/services/api/app.py:115: in lifespan
+    redis = Redis.from_url(price_redis_url())
+                           ^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def price_redis_url() -> str:
+        value = os.environ.get("TIEWTRADE_REDIS_URL_API", "")
+        if not value:
+>           raise ValueError("TIEWTRADE_REDIS_URL_API is required")
+E           ValueError: TIEWTRADE_REDIS_URL_API is required
+
+src/tiewtrade/services/api/settings.py:64: ValueError
+______________ test_real_authenticated_cycle_and_owner_isolation _______________
+
+api_engine = <sqlalchemy.ext.asyncio.engine.AsyncEngine object at 0x10d13b050>
+engine_engine = <sqlalchemy.ext.asyncio.engine.AsyncEngine object at 0x10d139d90>
+scan_engine = <sqlalchemy.ext.asyncio.engine.AsyncEngine object at 0x10d1239d0>
+migrator_engine = <sqlalchemy.ext.asyncio.engine.AsyncEngine object at 0x10d122e90>
+tmp_path = PosixPath('/private/var/folders/fb/g4m1d38j4fl6x1pt39rn0wxr0000gn/T/pytest-of-chainarongjaykeaw/pytest-19/test_real_authenticated_cycle_0')
+
+    @pytest.mark.usefixtures("internal_database")
+    async def test_real_authenticated_cycle_and_owner_isolation(
+        api_engine: AsyncEngine,
+        engine_engine: AsyncEngine,
+        scan_engine: AsyncEngine,
+        migrator_engine: AsyncEngine,
+        tmp_path: Path,
+    ) -> None:
+        import asyncio
+    
+        from tests.infra.execution_market.profile_http import internal_intake
+        from tiewtrade.infra.db import DatabaseRole, create_engine_for
+        from tiewtrade.infra.risk_limits.policy import TransactionalRiskPolicy
+    
+        owners = await f15.seed_owners(api_engine, engine_engine, scan_engine, 2)
+        source = create_engine_for(DatabaseRole.MARKET_DATA)
+        stop = asyncio.Event()
+        worker_stop = tmp_path / "stop"
+        publisher = worker = None
+        try:
+>           async with internal_intake(
+                owners,
+                engine=engine_engine,
+                api=api_engine,
+                migrator=migrator_engine,
+                gate=None,
+                output=tmp_path,
+            ) as intake:
+
+tests/infra/execution_market/test_internal_http.py:169: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+../../../../../.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/contextlib.py:210: in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+tests/infra/execution_market/profile_http.py:159: in internal_intake
+    await stack.enter_async_context(lifespan(app))
+../../../../../.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/contextlib.py:659: in enter_async_context
+    result = await _enter(cm)
+             ^^^^^^^^^^^^^^^^
+../../../../../.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/contextlib.py:210: in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+src/tiewtrade/services/api/app.py:115: in lifespan
+    redis = Redis.from_url(price_redis_url())
+                           ^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def price_redis_url() -> str:
+        value = os.environ.get("TIEWTRADE_REDIS_URL_API", "")
+        if not value:
+>           raise ValueError("TIEWTRADE_REDIS_URL_API is required")
+E           ValueError: TIEWTRADE_REDIS_URL_API is required
+
+src/tiewtrade/services/api/settings.py:64: ValueError
+=========================== short test summary info ============================
+FAILED tests/infra/execution_market/test_owned_pools.py::test_actual_asgi_lifespan_records_all_lazy_engines_and_returns_them
+FAILED tests/infra/execution_market/test_owned_pools.py::test_empty_database_startup_asgi_and_parent_shutdown_have_complete_inventory
+FAILED tests/infra/execution_market/test_internal_http.py::test_real_authenticated_cycle_and_owner_isolation
+3 failed, 204 passed in 42.39s

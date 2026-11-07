@@ -479,3 +479,105 @@ async def test_entry_correction_snapshot_remains_repairable_after_reload(
             assert snapshot["wallet"]["base_balances"][0]["available"] == "0"
     finally:
         await market.dispose()
+
+
+async def test_bracket_admission_with_driver_owner_preserves_identity_and_exact_fill(
+    api_engine: AsyncEngine,
+    engine_engine: AsyncEngine,
+    scan_engine: AsyncEngine,
+    owner: UUID,
+    wallet: PaperWalletSnapshot,
+) -> None:
+    async with user_session(api_engine, owner) as session:
+        raw_owner: UUID = (
+            await session.execute("SELECT user_id FROM paper_wallet_state")
+        ).scalar_one()
+    assert isinstance(raw_owner, UUID) and type(raw_owner) is not UUID
+    market, _, _, _, group_id = await buy(
+        api_engine, engine_engine, scan_engine, owner, wallet, worker_owner=raw_owner
+    )
+    try:
+        async with user_session(engine_engine, raw_owner, role=DatabaseRole.ENGINE) as session:
+            current = await load(session, group_id)
+            assert current is not None and current.value.state is ProtectionState.ARMED
+            assert type(current.value.scope.owner_id) is UUID
+            assert current.value.scope.owner_id == raw_owner == owner
+            assert current.value.scope.episode_id == wallet.episode_id
+            assert current.value.quantity == Quantity.of("0.999", "BTC")
+            cash = await get_wallet(session)
+            assert cash is not None and cash.balance == Money.of("9900", "USDT")
+            assert (
+                await session.execute("SELECT count(*) FROM paper_execution_links")
+            ).scalar_one() == 1
+            before = current.value
+            await worker.process_group(session, group_id)
+            after = await load(session, group_id)
+            assert after is not None and after.value == before
+        async with user_session(api_engine, uuid4()) as session:
+            assert await load(session, group_id) is None
+    finally:
+        await market.dispose()
+
+
+async def test_standalone_create_with_driver_owner_is_applied_once(
+    api_engine: AsyncEngine,
+    engine_engine: AsyncEngine,
+    scan_engine: AsyncEngine,
+    owner: UUID,
+    wallet: PaperWalletSnapshot,
+) -> None:
+    market, _, _, _, prior_id = await buy(api_engine, engine_engine, scan_engine, owner, wallet)
+    try:
+        async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+            raw_owner: UUID = (
+                await session.execute("SELECT user_id FROM paper_wallet_state")
+            ).scalar_one()
+            prior = await load(session, prior_id)
+            assert prior is not None
+        assert isinstance(raw_owner, UUID) and type(raw_owner) is not UUID
+        async with user_session(api_engine, owner) as session:
+            cancel = await admit_request(
+                session,
+                wallet_id=wallet.wallet_id,
+                episode_id=wallet.episode_id,
+                action="CANCEL",
+                key=uuid4(),
+                protection_id=prior_id,
+                payload={"expected_revision": prior.value.revision},
+            )
+        async with user_session(engine_engine, raw_owner, role=DatabaseRole.ENGINE) as session:
+            await worker.process_request(session, cancel)
+        async with user_session(api_engine, owner) as session:
+            created = await admit_request(
+                session,
+                wallet_id=wallet.wallet_id,
+                episode_id=wallet.episode_id,
+                action="CREATE",
+                key=uuid4(),
+                protection_id=None,
+                payload={"base": "BTC", "quantity": "0.4", "tp": "110", "sl": "90"},
+            )
+        async with user_session(engine_engine, raw_owner, role=DatabaseRole.ENGINE) as session:
+            await worker.process_request(session, created)
+            result = (
+                await session.execute(
+                    "SELECT state,protection_id FROM paper_protection_results WHERE request_id=:id",
+                    {"id": created},
+                )
+            ).one()
+            assert result.state == "APPLIED"
+            current = await load(session, result.protection_id)
+            assert current is not None and current.value.scope.owner_id == owner
+            assert type(current.value.scope.owner_id) is UUID
+            assert current.value.quantity == Quantity.of("0.4", "BTC")
+            await worker.process_request(session, created)
+            replay = await load(session, result.protection_id)
+            assert replay is not None and replay.value == current.value
+            assert await allocated(session, wallet.episode_id, PAIR) == Quantity.of("0.4", "BTC")
+            cash = await get_wallet(session)
+            assert cash is not None and cash.balance == Money.of("9900", "USDT")
+            assert (
+                await session.execute("SELECT count(*) FROM paper_execution_links")
+            ).scalar_one() == 1
+    finally:
+        await market.dispose()

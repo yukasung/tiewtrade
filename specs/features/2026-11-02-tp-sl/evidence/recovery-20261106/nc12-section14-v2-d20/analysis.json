@@ -1,0 +1,31 @@
+{
+  "status": "PASSED",
+  "total_seconds": 453.9040136660001,
+  "preflight_mean_cpu_idle_percent": 49.48142857142857,
+  "preflight_memory_levels": [
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2
+  ],
+  "counters": {
+    "offered": 600,
+    "admitted": 600,
+    "completed": 600,
+    "rejected": 0,
+    "fills": 240,
+    "cancels": 120,
+    "replays": 120,
+    "cycles": 120
+  },
+  "financial_owners_passed": 20,
+  "p95_ms": 116.39962499975809,
+  "p99_ms": 164.19908299985764,
+  "measured_book_inputs": 3000,
+  "resource_assertions_passed": true,
+  "runtime_host_load_samples": 60,
+  "next": "Approved W1 on new DB, then existing conditional continuation"
+}

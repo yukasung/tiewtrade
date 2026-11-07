@@ -1,0 +1,71 @@
+baseline 1 / 20
+baseline 2 / 20
+baseline 3 / 20
+baseline 4 / 20
+baseline 5 / 20
+baseline 6 / 20
+baseline 7 / 20
+baseline 8 / 20
+baseline 9 / 20
+baseline 10 / 20
+baseline 11 / 20
+baseline 12 / 20
+baseline 13 / 20
+baseline 14 / 20
+baseline 15 / 20
+baseline 16 / 20
+baseline 17 / 20
+baseline 18 / 20
+baseline 19 / 20
+baseline 20 / 20
+workload SMOKE started
+Exception terminating connection <AdaptedConnection <asyncpg.connection.Connection object at 0x10e9b99a0>>
+Traceback (most recent call last):
+  File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/backend/.venv/lib/python3.12/site-packages/sqlalchemy/pool/base.py", line 370, in _close_connection
+    self._dialect.do_terminate(connection)
+  File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/backend/.venv/lib/python3.12/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 1171, in do_terminate
+    dbapi_connection.terminate()
+  File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/backend/.venv/lib/python3.12/site-packages/sqlalchemy/connectors/asyncio.py", line 440, in terminate
+    await_(asyncio.shield(self._terminate_graceful_close()))
+  File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/backend/.venv/lib/python3.12/site-packages/sqlalchemy/util/concurrency.py", line 167, in await_
+    return current.parent.switch(awaitable)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/backend/.venv/lib/python3.12/site-packages/sqlalchemy/util/concurrency.py", line 205, in greenlet_spawn
+    value = await result
+            ^^^^^^^^^^^^
+asyncio.exceptions.CancelledError
+Traceback (most recent call last):
+  File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/backend/../../f17-recovery-records-20261106/nc12_campaign.py", line 61, in <module>
+    if __name__=='__main__':raise SystemExit(asyncio.run(main()))
+                                             ^^^^^^^^^^^^^^^^^^^
+  File "/Users/chainarongjaykeaw/.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/asyncio/runners.py", line 195, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/Users/chainarongjaykeaw/.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/chainarongjaykeaw/.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/asyncio/base_events.py", line 691, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/backend/../../f17-recovery-records-20261106/nc12_campaign.py", line 49, in main
+    code=await (protection.run(root/'run') if args.phase=='CONTROLLED20' else workload.run(options))
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/backend/tests/infra/execution_market/profile_workload.py", line 1952, in run
+    return await _run(args)
+           ^^^^^^^^^^^^^^^^
+  File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/backend/tests/infra/execution_market/profile_workload.py", line 2266, in _run
+    elapsed = await with_publisher(
+              ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/backend/tests/infra/execution_market/profile_workload.py", line 482, in with_publisher
+    await publisher
+  File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/backend/tests/infra/execution_market/profile_workload.py", line 430, in market_publisher
+    book, price = await publish_market(
+                  ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/backend/tests/infra/execution_market/profile_workload.py", line 367, in publish_market
+    book_lease = await publish_input(session, book_lease, book, metadata)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/backend/src/tiewtrade/infra/market_data/order_book_storage.py", line 265, in publish_input
+    market.require_ready(row["db_now"])
+  File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/backend/src/tiewtrade/core/order_book.py", line 84, in require_ready
+    raise SourceUnavailableError("book readiness cannot be proved")
+tiewtrade.core.orders.SourceUnavailableError: book readiness cannot be proved

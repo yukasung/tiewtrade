@@ -1,0 +1,21 @@
+Traceback (most recent call last):
+  File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/backend/../../f17-recovery-records-20261106/nc12_campaign.py", line 361, in <module>
+    raise SystemExit(asyncio.run(main()))
+                     ^^^^^^^^^^^^^^^^^^^
+  File "/Users/chainarongjaykeaw/.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/asyncio/runners.py", line 195, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/Users/chainarongjaykeaw/.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/chainarongjaykeaw/.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/asyncio/base_events.py", line 691, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/backend/../../f17-recovery-records-20261106/nc12_campaign.py", line 289, in main
+    code = await internal.run_preflighted(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/backend/tests/infra/execution_market/profile_internal.py", line 299, in run_preflighted
+    await environment_preflight(path, root, check_services)
+  File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/backend/tests/infra/execution_market/profile_internal.py", line 271, in environment_preflight
+    raise EnvironmentNotReadyError("HOST_LOAD_EXCEEDS_CPU")
+tests.infra.execution_market.profile_internal.EnvironmentNotReadyError: HOST_LOAD_EXCEEDS_CPU

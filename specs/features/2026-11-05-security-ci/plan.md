@@ -1,6 +1,25 @@
 # Security CI — Plan
 
 สถานะ: **Approved — เจ้าของสั่ง “แก้ไข” implementation blocker ตามแผนนี้ 2026-11-05**
+
+**Approved amendment2026-11-07 (F17 Option A):** implement the approved immutable
+evidence contract in [the amendment](../2026-11-02-tp-sl/publication-evidence-policy-proposal.md).
+Reuse `secrets.occurrence` identity construction, model validators, existing exact
+approvals/counting and `system.configuration` policy-file hashing. Batch bounded
+blame ranges/cache immutable Git reads within one scan, preserving location and
+rename/reintroduction semantics. Load the strict39-entry registry, deduplicate
+history/tree identities before exact count checks, and resolve only full matching
+bindings. Keep private raw reports private. Public summaries may group only those
+resolved artifact findings; all other reporting/bounds/blocking remain unchanged.
+Add stage duration/count observations, parity/failure/real-scanner regressions,
+then publish one combined candidate and track required CI. Budget remains15min.
+
+**Approved data extension2026-11-07:** apply the exact8entry updates from
+[the100-identity extension](../2026-11-02-tp-sl/tree-occurrence-extension-proposal.md),
+then validate the actual registry in a full pinned history/tree run. Preserve all
+matching/identity code and the other31entries. Publish only after exact counts/set
+digests and zero blocked/triage findings pass; track latest required CI. Further
+identities or policy gaps require another owner decision, not automatic expansion.
 วันที่: 2026-11-05
 Requirements: [Approved 2026-11-05](requirements.md)
 Branch: `feature/security-ci-hardening`; ฐาน `c8d8ca78971fce3d98f624e0c35128195168d831`

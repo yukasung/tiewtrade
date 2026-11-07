@@ -1,0 +1,10 @@
+{
+  "status": "INCOMPLETE",
+  "exit_code": 1,
+  "seconds": 0.43696845899989967,
+  "error_type": "EnvironmentNotReadyError",
+  "candidate_unchanged": true,
+  "free_bytes_after": 17105752064,
+  "budget_seconds": 1200,
+  "budget_scope": "preflight,fixture,measurement,verification,cleanup"
+}

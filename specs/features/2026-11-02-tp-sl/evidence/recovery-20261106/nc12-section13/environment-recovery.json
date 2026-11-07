@@ -1,0 +1,12 @@
+{
+  "prior_authorization": "owner allowed unused Docker build cache cleanup; no images/containers/databases/volumes",
+  "preflight_status": "INCOMPLETE before any baseline/workload,0.408s;1.16GB free",
+  "owner_followup": "\u0e17\u0e33\u0e15\u0e48\u0e2d,2026-11-07",
+  "recovery": "normal Docker start; start only tiewtrade-postgres-1 and tiewtrade-f18-release-redis",
+  "cache_command": "docker builder prune --all --force",
+  "free_bytes_after": 13157068800,
+  "running": [
+    "tiewtrade-f18-release-redis Up About a minute",
+    "tiewtrade-postgres-1 Up About a minute (healthy)"
+  ]
+}

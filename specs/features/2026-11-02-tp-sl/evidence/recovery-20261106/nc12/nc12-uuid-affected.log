@@ -1,0 +1,9 @@
+................................................                         [100%]
+=============================== warnings summary ===============================
+tests/infra/protections/test_validation.py::test_feed_gap_requires_fresh_generation_and_real_worker_starts_within_one_second[111]
+tests/infra/protections/test_validation.py::test_feed_gap_requires_fresh_generation_and_real_worker_starts_within_one_second[100]
+  tests/infra/protections/test_validation.py:968: PytestWarning: record_property is incompatible with junit_family 'xunit2' (use 'legacy' or 'xunit1')
+    @pytest.mark.parametrize("recovered_price", ["111", "100"])
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+48 passed, 18 deselected, 2 warnings in 60.24s (0:01:00)

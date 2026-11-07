@@ -1,0 +1,53 @@
+{
+  "status": "PROPOSED_NOT_DELETED",
+  "images": [
+    {
+      "id": "sha256:dee6077c6d73d58fe1738ddb5623ea0ef1a0e3ab92d8b513beaab4d669cddff8",
+      "tags": [
+        "tiewtrade-f18-candidate-frontend:latest"
+      ],
+      "created": "2026-10-27T03:52:05.592906424Z",
+      "bytes_including_shared": 934020100,
+      "container_references": 0
+    },
+    {
+      "id": "sha256:3c558cc8be723296d26509fe0034fd6a69a2ddb1e613fe6200bb1d4191dc05f3",
+      "tags": [
+        "tiewtrade-f16-gates-frontend:latest"
+      ],
+      "created": "2026-10-25T08:53:40.680440256Z",
+      "bytes_including_shared": 933865460,
+      "container_references": 0
+    },
+    {
+      "id": "sha256:e775b7e15a141e975e3f167673dd85841abeabf99f6ff0903a136ab5c620da88",
+      "tags": [
+        "tiewtrade-f37-review-fix-frontend:latest"
+      ],
+      "created": "2026-10-25T03:40:11.757049388Z",
+      "bytes_including_shared": 696437787,
+      "container_references": 0
+    },
+    {
+      "id": "sha256:96f163017ffb8980c5cc1d415b49cb958b88ecbef33b9c07a9f5e13ec9486037",
+      "tags": [
+        "tiewtrade-f18-manual-frontend:latest"
+      ],
+      "created": "2026-10-30T17:29:32.571373921Z",
+      "bytes_including_shared": 934482934,
+      "container_references": 0
+    },
+    {
+      "id": "sha256:aaee8eeee8d36d2cf2d9abdeffb326dc5714e75a608044f6e3951130197cbbbd",
+      "tags": [
+        "tiewtrade-f18-release-profile:20261027"
+      ],
+      "created": "2026-10-27T06:11:07.465122423Z",
+      "bytes_including_shared": 625131877,
+      "container_references": 0
+    }
+  ],
+  "estimated_unique_bytes": 1969600000,
+  "estimate_source": "docker system df -v; actual host reclamation must be measured",
+  "method": "Recheck all running/stopped container references; remove only pinned image IDs without force; reclaim only unused build cache if needed; no container/database/volume removal"
+}

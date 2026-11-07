@@ -1,0 +1,192 @@
+{
+  "setup": {
+    "order_gate.call": {
+      "count": 30973.0,
+      "seconds": 268.21949978597877,
+      "max_seconds": 1.2228161250000085,
+      "acquired": 11774.0,
+      "busy": 19199.0
+    },
+    "order_gate.transaction": {
+      "count": 19199.0,
+      "seconds": 574.6030303229777,
+      "max_seconds": 1.9224251249997906
+    },
+    "order_selection.call": {
+      "count": 30961.0,
+      "seconds": 5796.845324114016,
+      "max_seconds": 2.365655957999934
+    },
+    "maintenance_removal.call": {
+      "count": 30958.0,
+      "seconds": 143.03383589997338,
+      "max_seconds": 1.1618502500000432
+    },
+    "maintenance_proofs.call": {
+      "count": 30958.0,
+      "seconds": 79.56573733300866,
+      "max_seconds": 0.4794004160003169
+    },
+    "maintenance_proofs.transaction": {
+      "count": 30958.0,
+      "seconds": 745.6675337009888,
+      "max_seconds": 2.0136194579999938
+    },
+    "order_round.call": {
+      "count": 30958.0,
+      "seconds": 7809.093647838026,
+      "max_seconds": 5.305870249999771,
+      "skipped": 10.0,
+      "processed": 11730.0,
+      "deferred": 0.0
+    },
+    "order_scan.call": {
+      "count": 11774.0,
+      "seconds": 49.17951303997643,
+      "max_seconds": 0.4455097499999283,
+      "hints": 234629.0
+    },
+    "order_claim.call": {
+      "count": 11743.0,
+      "seconds": 40.38016927700346,
+      "max_seconds": 0.34032887500006836,
+      "claimed": 11733.0,
+      "skipped": 10.0
+    },
+    "order_claim.transaction": {
+      "count": 11743.0,
+      "seconds": 192.83217394097392,
+      "max_seconds": 2.0220155419997354
+    },
+    "order_gate_hold.transaction": {
+      "count": 11773.0,
+      "seconds": 265.6973056719744,
+      "max_seconds": 2.240559333999954
+    },
+    "order_scan.transaction": {
+      "count": 11773.0,
+      "seconds": 399.6764116960094,
+      "max_seconds": 2.365267083999697
+    },
+    "order_process.call/PENDING": {
+      "count": 2000.0,
+      "seconds": 292.27773436300004,
+      "max_seconds": 1.9225677919998816
+    },
+    "order_process.transaction/PENDING": {
+      "count": 2000.0,
+      "seconds": 317.559990008001,
+      "max_seconds": 2.0278942500003723
+    },
+    "order_process.call/ACTIVE": {
+      "count": 9731.0,
+      "seconds": 826.1054218609961,
+      "max_seconds": 3.6281199580002976
+    },
+    "order_process.transaction/ACTIVE": {
+      "count": 9730.0,
+      "seconds": 942.8332242440433,
+      "max_seconds": 3.783230832999834
+    }
+  },
+  "measurement": {
+    "order_gate.call": {
+      "count": 8110.0,
+      "seconds": 90.13144956099586,
+      "max_seconds": 0.28497775000005277,
+      "acquired": 2330.0,
+      "busy": 5780.0
+    },
+    "order_gate.transaction": {
+      "count": 5779.0,
+      "seconds": 202.27498684100738,
+      "max_seconds": 0.47454770900003496
+    },
+    "order_selection.call": {
+      "count": 8109.0,
+      "seconds": 1779.9251300950068,
+      "max_seconds": 0.8462349589999576
+    },
+    "maintenance_removal.call": {
+      "count": 8125.0,
+      "seconds": 46.663403458974244,
+      "max_seconds": 0.20428437500004293
+    },
+    "maintenance_proofs.call": {
+      "count": 8125.0,
+      "seconds": 28.893409498000892,
+      "max_seconds": 0.19103054099969086
+    },
+    "maintenance_proofs.transaction": {
+      "count": 8125.0,
+      "seconds": 247.8420881859838,
+      "max_seconds": 0.513288250000187
+    },
+    "order_round.call": {
+      "count": 8109.0,
+      "seconds": 2473.220522566031,
+      "max_seconds": 2.7255367919997298,
+      "skipped": 11.0,
+      "processed": 2330.0,
+      "deferred": 0.0
+    },
+    "order_scan.call": {
+      "count": 2330.0,
+      "seconds": 19.81977276898715,
+      "max_seconds": 0.18976491700004772,
+      "hints": 46600.0
+    },
+    "order_claim.call": {
+      "count": 2342.0,
+      "seconds": 12.403315706988906,
+      "max_seconds": 0.12767304199996943,
+      "claimed": 2331.0,
+      "skipped": 11.0
+    },
+    "order_claim.transaction": {
+      "count": 2342.0,
+      "seconds": 58.05680201800669,
+      "max_seconds": 0.5383728340002563
+    },
+    "order_gate_hold.transaction": {
+      "count": 2330.0,
+      "seconds": 84.81055987901891,
+      "max_seconds": 0.6748166669999591
+    },
+    "order_scan.transaction": {
+      "count": 2330.0,
+      "seconds": 124.26736571299398,
+      "max_seconds": 0.8460280419999435
+    },
+    "order_process.call/ACTIVE": {
+      "count": 1566.0,
+      "seconds": 244.2979158459957,
+      "max_seconds": 1.8072359160000815
+    },
+    "order_process.transaction/ACTIVE": {
+      "count": 1566.0,
+      "seconds": 272.41286872499995,
+      "max_seconds": 1.939590916999805
+    },
+    "order_process.call/PENDING": {
+      "count": 582.0,
+      "seconds": 134.04191561800235,
+      "max_seconds": 1.7195787499999824
+    },
+    "order_process.transaction/PENDING": {
+      "count": 582.0,
+      "seconds": 143.6774841170036,
+      "max_seconds": 1.7587499159999425
+    },
+    "order_process.call/CANCEL": {
+      "count": 183.0,
+      "seconds": 23.53136258600034,
+      "max_seconds": 0.7423718750001171
+    },
+    "order_process.transaction/CANCEL": {
+      "count": 183.0,
+      "seconds": 27.975941591002538,
+      "max_seconds": 0.9141935420002483
+    }
+  }
+}

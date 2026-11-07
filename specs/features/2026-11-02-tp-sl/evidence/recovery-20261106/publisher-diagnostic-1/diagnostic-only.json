@@ -1,0 +1,7 @@
+{
+  "acceptance_result": false,
+  "trace_seconds": 900,
+  "baseline_publisher_timing": true,
+  "error_type": "TimeoutError",
+  "timeout_cycles": 1
+}

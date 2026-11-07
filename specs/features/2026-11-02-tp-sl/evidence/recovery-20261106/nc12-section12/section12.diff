@@ -1,0 +1,425 @@
+--- before/profile_workload.py
++++ after/profile_workload.py
+@@ -1944,12 +1944,20 @@
+         getattr(args, "coordinate_claims", False), r8=getattr(args, "r8_claim_budget", False)
+     )
+     cap = 1200 if internal.selected(args) and args.phase == "SMOKE" else None
+-    async with asyncio.timeout(cap):
+-        if getattr(args, "diagnostics", False):
+-            from tests.infra.execution_market.profile_diagnostics import observe_workload
+-
+-            return await observe_workload(args)
+-        return await _run(args)
++    observation: AbstractContextManager[None] = nullcontext()
++    if internal.selected(args):
++        from tests.infra.execution_market.profile_publisher_readiness import (
++            observe_publisher_readiness,
++        )
++
++        observation = observe_publisher_readiness(args.output / "publisher-readiness.json")
++    with observation:
++        async with asyncio.timeout(cap):
++            if getattr(args, "diagnostics", False):
++                from tests.infra.execution_market.profile_diagnostics import observe_workload
++
++                return await observe_workload(args)
++            return await _run(args)
+ 
+ 
+ async def _run(
+@@ -2046,6 +2054,7 @@
+             "worker_claim_limit": 1 if getattr(args, "r8_claim_budget", False) else None,
+             "worker_tick_seconds": 0.02,
+             "publisher_heartbeat_per_book": heartbeat_per_book,
++            "publisher_readiness_observer": "recent64" if internal_phase is not None else None,
+             "final_tail_drain": final_tail,
+             "checkpoint_storage": "PG_BATCH_V1",
+             "parent_poll_limit": None if poll_gate is None else 4,
+--- before/profile_internal_restore.py
++++ after/profile_internal_restore.py
+@@ -631,4 +631,8 @@
+     args = parser.parse_args()
+     if args.action == "verify" and (args.fixture is None or args.target_database is None):
+         parser.error("verify requires fixture and target-database")
+-    raise SystemExit(asyncio.run(build(args) if args.action == "build" else verify(args)))
++    from tests.infra.execution_market.profile_publisher_readiness import observe_publisher_readiness
++
++    with observe_publisher_readiness(args.output / "publisher-readiness.json"):
++        result = asyncio.run(build(args) if args.action == "build" else verify(args))
++    raise SystemExit(result)
+--- before/profile_publisher_readiness.py
++++ after/profile_publisher_readiness.py
+@@ -0,0 +1,127 @@
++"""NC12 bounded parent-publisher observations; no altered guard or clock."""
++
++from __future__ import annotations
++
++import asyncio
++import json
++from collections import deque
++from collections.abc import Iterator
++from contextlib import contextmanager
++from contextvars import ContextVar
++from datetime import datetime
++from functools import wraps
++from pathlib import Path
++from time import monotonic
++from typing import Any
++from unittest.mock import patch
++from uuid import UUID
++
++from tiewtrade.core.order_book import BookState
++
++WINDOW = 64
++
++
++@contextmanager
++def observe_publisher_readiness(path: Path) -> Iterator[None]:
++    # Lazy import avoids the workload/observer import cycle.
++    from tests.infra.execution_market import profile_workload as workload
++
++    original_publish, original_guard = workload.publish_market, BookState.require_ready
++    publication: ContextVar[tuple[asyncio.Task[Any] | None, dict[str, Any]] | None] = ContextVar(
++        "parent_publication", default=None
++    )
++    recent: deque[dict[str, Any]] = deque(maxlen=WINDOW)
++    total = 0
++    primary: BaseException | None = None
++
++    def flush(reason: str) -> None:
++        path.write_text(
++            json.dumps(
++                {
++                    "scope": "parent publish_market readiness guards only",
++                    "window_policy": (
++                        "most recent 64 guard checks; not complete publication history"
++                    ),
++                    "window_limit": WINDOW,
++                    "total_checks": total,
++                    "discarded_earlier_checks": total - len(recent),
++                    "flush_reason": reason,
++                    "checks": list(recent),
++                },
++                indent=2,
++            )
++            + "\n",
++            encoding="utf-8",
++        )
++
++    @wraps(original_publish)
++    async def publish(*args: Any, **kwargs: Any) -> Any:
++        lease = args[1] if len(args) > 1 else kwargs.get("book_lease")
++        owner = getattr(lease, "owner", None)
++        tick = kwargs.get("trade_id")
++        identity = {
++            "owner": str(owner) if isinstance(owner, UUID) else None,
++            "tick": tick if type(tick) is int else None,
++        }
++        token = publication.set((asyncio.current_task(), identity))
++        try:
++            return await original_publish(*args, **kwargs)
++        finally:
++            publication.reset(token)
++
++    @wraps(original_guard)
++    def guard(book: BookState, now: datetime) -> None:
++        nonlocal total
++        scope = publication.get()
++        if scope is None or scope[0] is not asyncio.current_task():
++            return original_guard(book, now)
++        checked_at = monotonic()
++        failure: BaseException | None = None
++        try:
++            return original_guard(book, now)
++        except BaseException as error:
++            failure = error
++            raise
++        finally:
++            # These immutable arguments are the actual inputs to the unchanged guard.
++            row = {
++                **scope[1],
++                "input_id": book.input_id,
++                "generation": book.generation,
++                "ready": book.ready,
++                "rebase": book.rebase,
++                "received_at": book.received_at.isoformat(),
++                "verified_at": book.verified_at.isoformat(),
++                "source_at": None if book.source_at is None else book.source_at.isoformat(),
++                "guard_now": now.isoformat() if isinstance(now, datetime) else None,
++                "monotonic": checked_at,
++                "outcome": "RETURNED" if failure is None else type(failure).__name__,
++            }
++            recent.append(row)
++            total += 1
++            if failure is not None:
++                try:
++                    flush("guard_failure")
++                except OSError as observation_error:
++                    failure.add_note(
++                        f"readiness evidence write failed: {type(observation_error).__name__}"
++                    )
++
++    try:
++        with (
++            patch.object(workload, "publish_market", publish),
++            patch.object(BookState, "require_ready", guard),
++        ):
++            yield
++    except BaseException as error:
++        primary = error
++        raise
++    finally:
++        try:
++            flush("completed" if primary is None else type(primary).__name__)
++        except OSError as observation_error:
++            if primary is None:
++                raise
++            primary.add_note(
++                f"readiness evidence finalization failed: {type(observation_error).__name__}"
++            )
+--- before/test_publisher_readiness.py
++++ after/test_publisher_readiness.py
+@@ -0,0 +1,243 @@
++"""A parent diagnostic must observe the exact guard without repairing its inputs."""
++
++import asyncio
++import json
++from dataclasses import replace
++from datetime import UTC, datetime, timedelta
++from pathlib import Path
++from types import SimpleNamespace
++from typing import Any, cast
++from uuid import uuid4
++
++import pytest
++
++from tests.infra.execution_market import profile_workload as f15
++from tests.infra.execution_market.profile_publisher_readiness import (
++    WINDOW,
++    observe_publisher_readiness,
++)
++from tests.infra.execution_market.test_internal_profile import options
++from tests.infra.risk_limits.test_book_clock import ready_book
++from tiewtrade.core.order_book import BookState
++from tiewtrade.core.orders import SourceUnavailableError
++
++
++@pytest.mark.parametrize(
++    "case",
++    [
++        "ready",
++        "received_future",
++        "verified_future",
++        "stale",
++        "not_ready",
++        "source_future",
++        "source_stale",
++    ],
++)
++async def test_guard_receives_exact_values_once_and_preserves_result_or_exception(
++    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, case: str
++) -> None:
++    now = datetime(2026, 11, 7, tzinfo=UTC)
++    changes: dict[str, dict[str, Any]] = {
++        "received_future": {"received_at": now + timedelta(microseconds=1)},
++        "verified_future": {"verified_at": now + timedelta(microseconds=1)},
++        "stale": {"verified_at": now - timedelta(seconds=31)},
++        "not_ready": {"ready": False},
++        "source_future": {"source_at": now + timedelta(microseconds=1)},
++        "source_stale": {"source_at": now - timedelta(seconds=31)},
++    }
++    book = replace(ready_book(now), **changes.get(case, {}))
++    unchanged = book
++    original = BookState.require_ready
++    calls, errors = [], []
++    result = object()
++    owner = uuid4()
++
++    def counted(value: BookState, at: datetime) -> None:
++        calls.append((value, at))
++        try:
++            return original(value, at)
++        except SourceUnavailableError as error:
++            errors.append(error)
++            raise
++
++    async def publish(*args: Any, **kwargs: Any) -> Any:
++        book.require_ready(now)
++        return result
++
++    monkeypatch.setattr(BookState, "require_ready", counted)
++    monkeypatch.setattr(f15, "publish_market", publish)
++    path = tmp_path / "readiness.json"
++    with observe_publisher_readiness(path):
++        if case == "ready":
++            assert (
++                await cast(Any, f15.publish_market)(
++                    None, SimpleNamespace(owner=owner), None, trade_id=2119
++                )
++                is result
++            )
++        else:
++            with pytest.raises(SourceUnavailableError) as caught:
++                await cast(Any, f15.publish_market)(
++                    None, SimpleNamespace(owner=owner), None, trade_id=2119
++                )
++            assert caught.value is errors[0]
++            assert json.loads(path.read_text())["flush_reason"] == "guard_failure"
++    assert calls == [(unchanged, now)] and book is unchanged
++    assert f15.publish_market is publish and BookState.require_ready is counted
++    document = json.loads(path.read_text())
++    assert document["total_checks"] == 1 and document["discarded_earlier_checks"] == 0
++    row = document["checks"][0]
++    assert row["owner"] == str(owner) and row["tick"] == 2119
++    assert row["guard_now"] == now.isoformat()
++    assert row["received_at"] == book.received_at.isoformat()
++    assert row["verified_at"] == book.verified_at.isoformat()
++    assert row["source_at"] == (None if book.source_at is None else book.source_at.isoformat())
++    assert row["outcome"] == ("RETURNED" if case == "ready" else "SourceUnavailableError")
++    assert row["monotonic"] > 0
++
++
++async def test_recent_window_excludes_unrelated_and_inherited_child_guards(
++    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
++) -> None:
++    now = datetime(2026, 11, 7, tzinfo=UTC)
++    book = ready_book(now)
++    owner = uuid4()
++    calls = 0
++    original = BookState.require_ready
++
++    def counted(value: BookState, at: datetime) -> None:
++        nonlocal calls
++        calls += 1
++        return original(value, at)
++
++    async def publish(*args: Any, **kwargs: Any) -> Any:
++        current = replace(book, input_id=kwargs["trade_id"])
++
++        async def child() -> None:
++            current.require_ready(now)
++
++        await asyncio.create_task(child())
++        current.require_ready(now)
++        return current
++
++    monkeypatch.setattr(BookState, "require_ready", counted)
++    monkeypatch.setattr(f15, "publish_market", publish)
++    path = tmp_path / "recent.json"
++    with observe_publisher_readiness(path):
++        book.require_ready(now)  # Outside a publisher operation: delegated, not recorded.
++        for tick in range(1, WINDOW + 6):
++            await cast(Any, f15.publish_market)(
++                None,
++                SimpleNamespace(owner=owner),
++                None,
++                trade_id=tick,
++                secret="PRIVATE_NOT_RECORDED",
++            )
++    document = json.loads(path.read_text())
++    assert calls == 1 + 2 * (WINDOW + 5)
++    assert document["total_checks"] == WINDOW + 5 and document["discarded_earlier_checks"] == 5
++    assert len(document["checks"]) == WINDOW
++    assert [r["input_id"] for r in document["checks"]] == list(range(6, WINDOW + 6))
++    assert "not complete publication history" in document["window_policy"]
++    assert "PRIVATE" not in path.read_text()
++    assert all(
++        set(row)
++        == {
++            "owner",
++            "tick",
++            "input_id",
++            "generation",
++            "ready",
++            "rebase",
++            "received_at",
++            "verified_at",
++            "source_at",
++            "guard_now",
++            "monotonic",
++            "outcome",
++        }
++        for row in document["checks"]
++    )
++
++
++async def test_cancellation_restores_publisher_guard_and_flushes_recent_checks(
++    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
++) -> None:
++    started = asyncio.Event()
++    now = datetime(2026, 11, 7, tzinfo=UTC)
++    original = BookState.require_ready
++
++    async def publish(*args: Any, **kwargs: Any) -> Any:
++        ready_book(now).require_ready(now)
++        started.set()
++        await asyncio.Event().wait()
++
++    monkeypatch.setattr(f15, "publish_market", publish)
++    path = tmp_path / "cancel.json"
++
++    async def parent() -> None:
++        with observe_publisher_readiness(path):
++            await cast(Any, f15.publish_market)(
++                None, SimpleNamespace(owner=uuid4()), None, trade_id=1
++            )
++
++    task = asyncio.create_task(parent())
++    await started.wait()
++    task.cancel()
++    with pytest.raises(asyncio.CancelledError):
++        await task
++    assert BookState.require_ready is original and f15.publish_market is publish
++    document = json.loads(path.read_text())
++    assert document["flush_reason"] == "CancelledError" and document["total_checks"] == 1
++
++
++async def test_evidence_io_failure_cannot_replace_original_guard_error(
++    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
++) -> None:
++    failure = SourceUnavailableError("PRIVATE_FAILURE")
++    calls = 0
++    now = datetime(2026, 11, 7, tzinfo=UTC)
++
++    def guard(book: BookState, at: datetime) -> None:
++        nonlocal calls
++        calls += 1
++        raise failure
++
++    async def publish(*args: Any, **kwargs: Any) -> Any:
++        ready_book(now).require_ready(now)
++
++    def no_write(*args: Any, **kwargs: Any) -> int:
++        raise OSError("PRIVATE_IO")
++
++    monkeypatch.setattr(BookState, "require_ready", guard)
++    monkeypatch.setattr(f15, "publish_market", publish)
++    monkeypatch.setattr(Path, "write_text", no_write)
++    with (
++        pytest.raises(SourceUnavailableError) as caught,
++        observe_publisher_readiness(tmp_path / "fail.json"),
++    ):
++        await cast(Any, f15.publish_market)(None, SimpleNamespace(owner=uuid4()), None, trade_id=1)
++    assert caught.value is failure and calls == 1
++    assert BookState.require_ready is guard and f15.publish_market is publish
++    assert all("PRIVATE" not in note for note in failure.__notes__)
++
++
++@pytest.mark.parametrize("internal", [True, False])
++async def test_workload_activation_is_only_for_explicit_internal_profile(
++    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, internal: bool
++) -> None:
++    args = options()
++    args.output = tmp_path
++    if not internal:
++        args.acceptance_profile, args.parent_poll_limit = None, None
++    original = BookState.require_ready
++
++    async def run(unused: object) -> int:
++        assert (BookState.require_ready is not original) == internal
++        return 7
++
++    monkeypatch.setattr(f15, "_run", run)
++    assert await f15.run(args) == 7
++    assert BookState.require_ready is original
++    assert (tmp_path / "publisher-readiness.json").exists() == internal

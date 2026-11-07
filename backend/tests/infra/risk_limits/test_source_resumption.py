@@ -646,8 +646,9 @@ async def test_reset_waits_for_pending_order_then_invalidates_probe_identity(
         assert (await s.execute("SELECT count(*) FROM paper_orders")).scalar_one() == 0
 
 
+@pytest.mark.parametrize("selected", [False, True])
 async def test_scheduler_diagnostics_are_read_only_under_the_scanner_role(
-    waiting: Waiting, scan_engine: AsyncEngine, engine_engine: AsyncEngine
+    waiting: Waiting, scan_engine: AsyncEngine, engine_engine: AsyncEngine, selected: bool
 ) -> None:
     from tests.infra.risk_limits.scheduler_diagnostics import read_scheduler_diagnostics
 
@@ -661,9 +662,20 @@ async def test_scheduler_diagnostics_are_read_only_under_the_scanner_role(
             .scalars()
             .all()
         )
-    snapshot = await read_scheduler_diagnostics(scan_engine, waiting.owner, source_resumption=True)
+    snapshot = await read_scheduler_diagnostics(
+        scan_engine,
+        waiting.owner,
+        source_resumption=True,
+        command_ids=(waiting.command, uuid4()) if selected else (),
+    )
     assert snapshot["owner"] == waiting.owner
     assert snapshot["owner_rows"] and snapshot["public_sources"]
+    if selected:
+        rows = snapshot["selected_command_rows"]
+        assert isinstance(rows, list) and len(rows) == 1
+        assert rows[0]["command_id"] == waiting.command
+    else:
+        assert "selected_command_rows" not in snapshot
     async with user_session(engine_engine, waiting.owner, role=DatabaseRole.ENGINE) as session:
         after = (
             (

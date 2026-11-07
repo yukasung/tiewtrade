@@ -37,6 +37,7 @@ class ExecutionTests(unittest.TestCase):
         for error, expected in [
             (PolicyError("PRIVATE_SENTINEL"), "INVALID_POLICY_DATA"),
             (PolicyError("MISSING_FILE_COVERAGE"), "MISSING_FILE_COVERAGE"),
+            (PolicyError("EVIDENCE_BINDING_MISMATCH"), "EVIDENCE_BINDING_MISMATCH"),
         ]:
             out, err = io.StringIO(), io.StringIO()
             with (

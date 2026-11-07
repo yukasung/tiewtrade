@@ -1,0 +1,31 @@
+{
+  "status": "INCOMPLETE",
+  "total_seconds": 1269.1979978339987,
+  "measured_seconds": 1227.5983706669995,
+  "counters": {
+    "offered": 2404,
+    "admitted": 2402,
+    "completed": 2384,
+    "rejected": 0,
+    "fills": 951,
+    "cancels": 475,
+    "replays": 479,
+    "cycles": 468
+  },
+  "primary_failure": "60-second owner cycle deadline while waiting for final MARKET SELL to become FILLED",
+  "inferred_timeout_owner": "73bbb747-bfda-4471-8326-4528ae1f32bd",
+  "inferred_cycle_zero_based": 23,
+  "owner_attribution": "inferred from deterministic workload keys and first HTTP call 60.085s before failure; no direct cycle observer was enabled",
+  "separate_database_timeout_command": "212ac2d5-f771-438a-b0ec-f90f7f87a67b",
+  "database_timeout_location": "matching_storage.py:224 load_order_state terminal-history SELECT",
+  "readiness": "no parent readiness rejection; 11776 calls, last64 retained",
+  "financial_oracle": "Not Run (incomplete campaign); post-stop terminal order states are not a full oracle",
+  "snapshot_rebuild": "Not Run",
+  "final_tail": "Not Reached",
+  "remaining_risks": [
+    "partial p95/p99 exceed unchanged bounds",
+    "connections rose from57 to63,peak64 before final-tail; no in-run leak attribution yet",
+    "one slow SELECT identified, not proof that it accounts for all W1 delay"
+  ],
+  "next": "owner decision on section13; no W2/overflow/W3/W4 or retry started"
+}

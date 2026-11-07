@@ -1,0 +1,65 @@
+{
+  "approved": "Owner A, 2026-11-07",
+  "started_at": "2026-11-07T00:21:30.245554+07:00",
+  "free_bytes_before": 5332992000,
+  "images": [
+    {
+      "id": "sha256:dee6077c6d73d58fe1738ddb5623ea0ef1a0e3ab92d8b513beaab4d669cddff8",
+      "tags": [
+        "tiewtrade-f18-candidate-frontend:latest"
+      ],
+      "container_references": [],
+      "status": "REMOVED",
+      "exit_code": 0,
+      "output": "Untagged: tiewtrade-f18-candidate-frontend:latest\nDeleted: sha256:dee6077c6d73d58fe1738ddb5623ea0ef1a0e3ab92d8b513beaab4d669cddff8\n",
+      "error": ""
+    },
+    {
+      "id": "sha256:3c558cc8be723296d26509fe0034fd6a69a2ddb1e613fe6200bb1d4191dc05f3",
+      "tags": [
+        "tiewtrade-f16-gates-frontend:latest"
+      ],
+      "container_references": [],
+      "status": "REMOVED",
+      "exit_code": 0,
+      "output": "Untagged: tiewtrade-f16-gates-frontend:latest\nDeleted: sha256:3c558cc8be723296d26509fe0034fd6a69a2ddb1e613fe6200bb1d4191dc05f3\n",
+      "error": ""
+    },
+    {
+      "id": "sha256:e775b7e15a141e975e3f167673dd85841abeabf99f6ff0903a136ab5c620da88",
+      "tags": [
+        "tiewtrade-f37-review-fix-frontend:latest"
+      ],
+      "container_references": [],
+      "status": "REMOVED",
+      "exit_code": 0,
+      "output": "Untagged: tiewtrade-f37-review-fix-frontend:latest\nDeleted: sha256:e775b7e15a141e975e3f167673dd85841abeabf99f6ff0903a136ab5c620da88\n",
+      "error": ""
+    },
+    {
+      "id": "sha256:96f163017ffb8980c5cc1d415b49cb958b88ecbef33b9c07a9f5e13ec9486037",
+      "tags": [
+        "tiewtrade-f18-manual-frontend:latest"
+      ],
+      "container_references": [],
+      "status": "REMOVED",
+      "exit_code": 0,
+      "output": "Untagged: tiewtrade-f18-manual-frontend:latest\nDeleted: sha256:96f163017ffb8980c5cc1d415b49cb958b88ecbef33b9c07a9f5e13ec9486037\n",
+      "error": ""
+    },
+    {
+      "id": "sha256:aaee8eeee8d36d2cf2d9abdeffb326dc5714e75a608044f6e3951130197cbbbd",
+      "tags": [
+        "tiewtrade-f18-release-profile:20261027"
+      ],
+      "container_references": [],
+      "status": "REMOVED",
+      "exit_code": 0,
+      "output": "Untagged: tiewtrade-f18-release-profile:20261027\nDeleted: sha256:aaee8eeee8d36d2cf2d9abdeffb326dc5714e75a608044f6e3951130197cbbbd\n",
+      "error": ""
+    }
+  ],
+  "cache_pruned": false,
+  "free_bytes_after": 6338060288,
+  "cache_note": "Not pruned: approved image removal and current host headroom suffice; section10 permits cache cleanup if needed."
+}

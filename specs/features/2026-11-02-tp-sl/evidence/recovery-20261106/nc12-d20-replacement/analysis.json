@@ -1,0 +1,52 @@
+{
+  "status": "INCOMPLETE",
+  "total_seconds": 247.8169947919996,
+  "measured_seconds_to_failure": 205.78447316599886,
+  "failure_type": "SourceUnavailableError",
+  "failure_location": "profile_workload.publish_market -> order_book_storage.publish_input -> BookState.require_ready",
+  "counters_observed_not_full_oracle": {
+    "offered": 401,
+    "admitted": 401,
+    "completed": 395,
+    "rejected": 0,
+    "fills": 158,
+    "cancels": 79,
+    "replays": 79,
+    "cycles": 77
+  },
+  "planned_commands": 600,
+  "publisher": {
+    "target_hz": 10,
+    "stage": "publish_market",
+    "published": 2118,
+    "last_input_id": 2118,
+    "book_owner": "e8848e06-91f8-4b2d-84f0-d5f60c95577e",
+    "book_generation": 1,
+    "last_progress_at": "2026-11-06T17:49:34.423309+00:00",
+    "max_publish_seconds": 1.0082654590005404,
+    "failure_type": "SourceUnavailableError",
+    "failed_at": "2026-11-06T17:49:34.453215+00:00"
+  },
+  "last_success_to_failure_host_seconds": 0.029906,
+  "max_book_age_seconds": 30,
+  "readiness_cause": "Unknown; guard covers ready flag, future received/verified/source time, and stale verified/source time. Failed guard clock/fields were not captured and its transaction rolled back.",
+  "tail_reached": false,
+  "connections_min_max": [
+    57,
+    59
+  ],
+  "poll": {
+    "limit": 4,
+    "peak": 4,
+    "active": 0,
+    "truncated": false,
+    "attempt_count": 3803,
+    "finished_count": 3803
+  },
+  "cleanup": {
+    "connections": 0,
+    "advisory_locks": 0
+  },
+  "candidate_unchanged": true,
+  "next_phase": "W1 NOT RUN; no automatic retry"
+}

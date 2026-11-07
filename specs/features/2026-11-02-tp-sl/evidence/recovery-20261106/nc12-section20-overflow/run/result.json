@@ -1,0 +1,919 @@
+{
+  "acceptance_profile": {
+    "name": "PAPER_INTERNAL20_V2",
+    "owners": 20,
+    "baseline_orders_per_owner": 20,
+    "workers": 20,
+    "phase": "W2_OVERFLOW",
+    "rate": 20,
+    "cycles_per_owner": 0,
+    "seconds": 0,
+    "expected_commands": 0,
+    "scope": "internal pilot only; not the 100-account profile or F17 Completed",
+    "intake": "authenticated HTTP"
+  },
+  "phase": "W2_OVERFLOW",
+  "status": "PASSED",
+  "processing_acceptance": {
+    "revision": "NC12_SECTION18_PILOT",
+    "applicable": false,
+    "p95_limit_seconds": 0.5,
+    "p99_limit_seconds": 2.0,
+    "target_p95_seconds": 0.25,
+    "target_p99_seconds": 1.0,
+    "passed": true,
+    "target_passed": true,
+    "performance_warning": false
+  },
+  "performance_warning": false,
+  "base_assertions_passed": true,
+  "resource_base_assertions_passed": true,
+  "owned_worker_pool_paths": [
+    "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/nc12-section20-overflow/run/worker-0.owned-pools.json",
+    "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/nc12-section20-overflow/run/worker-1.owned-pools.json",
+    "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/nc12-section20-overflow/run/worker-2.owned-pools.json",
+    "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/nc12-section20-overflow/run/worker-3.owned-pools.json",
+    "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/nc12-section20-overflow/run/worker-4.owned-pools.json",
+    "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/nc12-section20-overflow/run/worker-5.owned-pools.json",
+    "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/nc12-section20-overflow/run/worker-6.owned-pools.json",
+    "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/nc12-section20-overflow/run/worker-7.owned-pools.json",
+    "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/nc12-section20-overflow/run/worker-8.owned-pools.json",
+    "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/nc12-section20-overflow/run/worker-9.owned-pools.json",
+    "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/nc12-section20-overflow/run/worker-10.owned-pools.json",
+    "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/nc12-section20-overflow/run/worker-11.owned-pools.json",
+    "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/nc12-section20-overflow/run/worker-12.owned-pools.json",
+    "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/nc12-section20-overflow/run/worker-13.owned-pools.json",
+    "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/nc12-section20-overflow/run/worker-14.owned-pools.json",
+    "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/nc12-section20-overflow/run/worker-15.owned-pools.json",
+    "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/nc12-section20-overflow/run/worker-16.owned-pools.json",
+    "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/nc12-section20-overflow/run/worker-17.owned-pools.json",
+    "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/nc12-section20-overflow/run/worker-18.owned-pools.json",
+    "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/nc12-section20-overflow/run/worker-19.owned-pools.json",
+    "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/nc12-section20-overflow/run/recovery-worker-0.owned-pools.json",
+    "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/nc12-section20-overflow/run/recovery-worker-1.owned-pools.json",
+    "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/nc12-section20-overflow/run/recovery-worker-2.owned-pools.json",
+    "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/nc12-section20-overflow/run/recovery-worker-3.owned-pools.json",
+    "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/nc12-section20-overflow/run/recovery-worker-4.owned-pools.json",
+    "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/nc12-section20-overflow/run/recovery-worker-5.owned-pools.json",
+    "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/nc12-section20-overflow/run/recovery-worker-6.owned-pools.json",
+    "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/nc12-section20-overflow/run/recovery-worker-7.owned-pools.json",
+    "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/nc12-section20-overflow/run/recovery-worker-8.owned-pools.json",
+    "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/nc12-section20-overflow/run/recovery-worker-9.owned-pools.json",
+    "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/nc12-section20-overflow/run/recovery-worker-10.owned-pools.json",
+    "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/nc12-section20-overflow/run/recovery-worker-11.owned-pools.json",
+    "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/nc12-section20-overflow/run/recovery-worker-12.owned-pools.json",
+    "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/nc12-section20-overflow/run/recovery-worker-13.owned-pools.json",
+    "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/nc12-section20-overflow/run/recovery-worker-14.owned-pools.json",
+    "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/nc12-section20-overflow/run/recovery-worker-15.owned-pools.json",
+    "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/nc12-section20-overflow/run/recovery-worker-16.owned-pools.json",
+    "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/nc12-section20-overflow/run/recovery-worker-17.owned-pools.json",
+    "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/nc12-section20-overflow/run/recovery-worker-18.owned-pools.json",
+    "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/specs/features/2026-11-02-tp-sl/evidence/recovery-20261106/nc12-section20-overflow/run/recovery-worker-19.owned-pools.json"
+  ],
+  "smoke_only": false,
+  "elapsed_seconds": 20.155135834000248,
+  "target_seconds": 0.0,
+  "drain_seconds": 0.0,
+  "counters": {
+    "offered": 0,
+    "admitted": 0,
+    "completed": 0,
+    "rejected": 0,
+    "fills": 0,
+    "cancels": 0,
+    "replays": 0,
+    "cycles": 0
+  },
+  "engine_transaction_seconds": {
+    "applicable": false,
+    "p95": null,
+    "p99": null,
+    "max": null,
+    "samples": 0,
+    "window": null
+  },
+  "end_to_end_command_seconds": {
+    "p95": null,
+    "p99": null,
+    "max": null
+  },
+  "publisher": {
+    "target_hz": 2,
+    "stage": "publish_market",
+    "published": 55,
+    "last_input_id": 55,
+    "book_owner": "f4c34cc8-bbe7-4746-9c2e-ac626b8eac64",
+    "book_generation": 1,
+    "last_progress_at": "2026-11-07T07:28:22.542749+00:00",
+    "max_publish_seconds": 0.22997562499949709
+  },
+  "measured_book_inputs": 4097,
+  "required_book_inputs": 0,
+  "resources": {
+    "samples": 1,
+    "peak_process_rss_bytes": 73695232,
+    "peak_rss_by_pid": {
+      "16609": 49348608,
+      "16835": 72531968,
+      "16836": 73236480,
+      "16837": 72646656,
+      "16838": 65781760,
+      "16839": 72728576,
+      "16840": 72663040,
+      "16841": 66535424,
+      "16842": 73334784,
+      "16843": 66109440,
+      "16844": 73695232,
+      "16845": 69124096,
+      "16846": 62554112,
+      "16847": 66256896,
+      "16848": 63160320,
+      "16849": 62423040,
+      "16850": 66682880,
+      "16851": 61014016,
+      "16852": 64307200,
+      "16853": 66535424,
+      "16854": 59113472
+    },
+    "peak_connections": 46,
+    "connections_start": 46,
+    "connections_end": 46,
+    "peak_lock_waits": 0,
+    "lock_waits_end": 0,
+    "peak_buffer_rows": 4096,
+    "buffer_rows_start": 4096,
+    "buffer_rows_end": 4096,
+    "database_bytes_start": 42384407,
+    "database_bytes_end": 42384407,
+    "database_growth_bytes": 0
+  },
+  "resource_assertions_passed": true,
+  "global_invariants": {
+    "orders": 400,
+    "fills": 0,
+    "cancels": 0,
+    "pending_dispatch": 400,
+    "unlinked_fills": 0,
+    "invalid_reservations": 0,
+    "invalid_positions": 0,
+    "wrong_mode": 0,
+    "input_lag": 0,
+    "duplicate_fill_effects": 0,
+    "expected_orders": 400,
+    "expected_fills": 0,
+    "expected_cancels": 0,
+    "expected_pending_dispatch": 400,
+    "passed": true
+  },
+  "fault": {
+    "kind": "BOOK_BUFFER_OVERFLOW",
+    "published_inputs": 4097,
+    "recovered_input_id": 4152,
+    "drain_seconds": 20.155135834000248,
+    "before": [
+      {
+        "fills": 0,
+        "ledger_rows": 1,
+        "position_events": 0,
+        "balance": "10000"
+      },
+      {
+        "fills": 0,
+        "ledger_rows": 1,
+        "position_events": 0,
+        "balance": "10000"
+      },
+      {
+        "fills": 0,
+        "ledger_rows": 1,
+        "position_events": 0,
+        "balance": "10000"
+      },
+      {
+        "fills": 0,
+        "ledger_rows": 1,
+        "position_events": 0,
+        "balance": "10000"
+      },
+      {
+        "fills": 0,
+        "ledger_rows": 1,
+        "position_events": 0,
+        "balance": "10000"
+      },
+      {
+        "fills": 0,
+        "ledger_rows": 1,
+        "position_events": 0,
+        "balance": "10000"
+      },
+      {
+        "fills": 0,
+        "ledger_rows": 1,
+        "position_events": 0,
+        "balance": "10000"
+      },
+      {
+        "fills": 0,
+        "ledger_rows": 1,
+        "position_events": 0,
+        "balance": "10000"
+      },
+      {
+        "fills": 0,
+        "ledger_rows": 1,
+        "position_events": 0,
+        "balance": "10000"
+      },
+      {
+        "fills": 0,
+        "ledger_rows": 1,
+        "position_events": 0,
+        "balance": "10000"
+      },
+      {
+        "fills": 0,
+        "ledger_rows": 1,
+        "position_events": 0,
+        "balance": "10000"
+      },
+      {
+        "fills": 0,
+        "ledger_rows": 1,
+        "position_events": 0,
+        "balance": "10000"
+      },
+      {
+        "fills": 0,
+        "ledger_rows": 1,
+        "position_events": 0,
+        "balance": "10000"
+      },
+      {
+        "fills": 0,
+        "ledger_rows": 1,
+        "position_events": 0,
+        "balance": "10000"
+      },
+      {
+        "fills": 0,
+        "ledger_rows": 1,
+        "position_events": 0,
+        "balance": "10000"
+      },
+      {
+        "fills": 0,
+        "ledger_rows": 1,
+        "position_events": 0,
+        "balance": "10000"
+      },
+      {
+        "fills": 0,
+        "ledger_rows": 1,
+        "position_events": 0,
+        "balance": "10000"
+      },
+      {
+        "fills": 0,
+        "ledger_rows": 1,
+        "position_events": 0,
+        "balance": "10000"
+      },
+      {
+        "fills": 0,
+        "ledger_rows": 1,
+        "position_events": 0,
+        "balance": "10000"
+      },
+      {
+        "fills": 0,
+        "ledger_rows": 1,
+        "position_events": 0,
+        "balance": "10000"
+      }
+    ],
+    "after": [
+      {
+        "fills": 0,
+        "ledger_rows": 1,
+        "position_events": 0,
+        "balance": "10000"
+      },
+      {
+        "fills": 0,
+        "ledger_rows": 1,
+        "position_events": 0,
+        "balance": "10000"
+      },
+      {
+        "fills": 0,
+        "ledger_rows": 1,
+        "position_events": 0,
+        "balance": "10000"
+      },
+      {
+        "fills": 0,
+        "ledger_rows": 1,
+        "position_events": 0,
+        "balance": "10000"
+      },
+      {
+        "fills": 0,
+        "ledger_rows": 1,
+        "position_events": 0,
+        "balance": "10000"
+      },
+      {
+        "fills": 0,
+        "ledger_rows": 1,
+        "position_events": 0,
+        "balance": "10000"
+      },
+      {
+        "fills": 0,
+        "ledger_rows": 1,
+        "position_events": 0,
+        "balance": "10000"
+      },
+      {
+        "fills": 0,
+        "ledger_rows": 1,
+        "position_events": 0,
+        "balance": "10000"
+      },
+      {
+        "fills": 0,
+        "ledger_rows": 1,
+        "position_events": 0,
+        "balance": "10000"
+      },
+      {
+        "fills": 0,
+        "ledger_rows": 1,
+        "position_events": 0,
+        "balance": "10000"
+      },
+      {
+        "fills": 0,
+        "ledger_rows": 1,
+        "position_events": 0,
+        "balance": "10000"
+      },
+      {
+        "fills": 0,
+        "ledger_rows": 1,
+        "position_events": 0,
+        "balance": "10000"
+      },
+      {
+        "fills": 0,
+        "ledger_rows": 1,
+        "position_events": 0,
+        "balance": "10000"
+      },
+      {
+        "fills": 0,
+        "ledger_rows": 1,
+        "position_events": 0,
+        "balance": "10000"
+      },
+      {
+        "fills": 0,
+        "ledger_rows": 1,
+        "position_events": 0,
+        "balance": "10000"
+      },
+      {
+        "fills": 0,
+        "ledger_rows": 1,
+        "position_events": 0,
+        "balance": "10000"
+      },
+      {
+        "fills": 0,
+        "ledger_rows": 1,
+        "position_events": 0,
+        "balance": "10000"
+      },
+      {
+        "fills": 0,
+        "ledger_rows": 1,
+        "position_events": 0,
+        "balance": "10000"
+      },
+      {
+        "fills": 0,
+        "ledger_rows": 1,
+        "position_events": 0,
+        "balance": "10000"
+      },
+      {
+        "fills": 0,
+        "ledger_rows": 1,
+        "position_events": 0,
+        "balance": "10000"
+      }
+    ],
+    "no_economic_change": true
+  },
+  "fault_observations": [],
+  "endurance_rss": null,
+  "worker_failures": [],
+  "owners": [
+    {
+      "user_id": "878124eb-9ce8-4302-8c6d-6222385059f3",
+      "episode_id": "a6e325c8-4a7d-4520-a1f9-7fe84cfd7167",
+      "balance": "10000",
+      "expected_balance": "10000.000000",
+      "accepted": 20,
+      "filled": 0,
+      "canceled": 0,
+      "quote_reserved": "20.000000000000000000",
+      "base_reserved": "0",
+      "held": "0",
+      "cost": "0",
+      "passed": true
+    },
+    {
+      "user_id": "a0c6194e-14ed-46a4-8585-b1b991b6dce9",
+      "episode_id": "2abd0fbd-6175-469c-be37-dc584172fec8",
+      "balance": "10000",
+      "expected_balance": "10000.000000",
+      "accepted": 20,
+      "filled": 0,
+      "canceled": 0,
+      "quote_reserved": "20.000000000000000000",
+      "base_reserved": "0",
+      "held": "0",
+      "cost": "0",
+      "passed": true
+    },
+    {
+      "user_id": "4ad0f1b6-c650-4aab-bbfd-edefe9f39a01",
+      "episode_id": "f7a7ef23-8fd5-4127-abde-e469af6db952",
+      "balance": "10000",
+      "expected_balance": "10000.000000",
+      "accepted": 20,
+      "filled": 0,
+      "canceled": 0,
+      "quote_reserved": "20.000000000000000000",
+      "base_reserved": "0",
+      "held": "0",
+      "cost": "0",
+      "passed": true
+    },
+    {
+      "user_id": "3e1385f5-c4a4-4c14-9430-edbd7aa6adb1",
+      "episode_id": "d6fbfe2a-435d-4a1d-a49c-8ad169e1ddd9",
+      "balance": "10000",
+      "expected_balance": "10000.000000",
+      "accepted": 20,
+      "filled": 0,
+      "canceled": 0,
+      "quote_reserved": "20.000000000000000000",
+      "base_reserved": "0",
+      "held": "0",
+      "cost": "0",
+      "passed": true
+    },
+    {
+      "user_id": "28191fb5-7c82-4693-b992-8ccde32c01de",
+      "episode_id": "87bc7653-463d-4f8b-a832-e817a877418e",
+      "balance": "10000",
+      "expected_balance": "10000.000000",
+      "accepted": 20,
+      "filled": 0,
+      "canceled": 0,
+      "quote_reserved": "20.000000000000000000",
+      "base_reserved": "0",
+      "held": "0",
+      "cost": "0",
+      "passed": true
+    },
+    {
+      "user_id": "69113f83-a9ab-4b72-ba5a-35fe46f1ed21",
+      "episode_id": "1bb987cf-a984-48ef-9c07-ef9146bfe980",
+      "balance": "10000",
+      "expected_balance": "10000.000000",
+      "accepted": 20,
+      "filled": 0,
+      "canceled": 0,
+      "quote_reserved": "20.000000000000000000",
+      "base_reserved": "0",
+      "held": "0",
+      "cost": "0",
+      "passed": true
+    },
+    {
+      "user_id": "7bb4cf8f-5cf7-45ce-ad0c-b4fbf57b6bfd",
+      "episode_id": "d5311648-7aa8-4123-8bfb-f7a8b4054c53",
+      "balance": "10000",
+      "expected_balance": "10000.000000",
+      "accepted": 20,
+      "filled": 0,
+      "canceled": 0,
+      "quote_reserved": "20.000000000000000000",
+      "base_reserved": "0",
+      "held": "0",
+      "cost": "0",
+      "passed": true
+    },
+    {
+      "user_id": "0ff55e75-d414-4979-a9eb-e6d4460084be",
+      "episode_id": "2080ebe3-9c0e-4b3c-a9bc-0a7ad41f9e9d",
+      "balance": "10000",
+      "expected_balance": "10000.000000",
+      "accepted": 20,
+      "filled": 0,
+      "canceled": 0,
+      "quote_reserved": "20.000000000000000000",
+      "base_reserved": "0",
+      "held": "0",
+      "cost": "0",
+      "passed": true
+    },
+    {
+      "user_id": "db56fa0d-a606-41d8-bb20-73d447cc0011",
+      "episode_id": "ad43d257-db9f-4891-9d22-3751c675821e",
+      "balance": "10000",
+      "expected_balance": "10000.000000",
+      "accepted": 20,
+      "filled": 0,
+      "canceled": 0,
+      "quote_reserved": "20.000000000000000000",
+      "base_reserved": "0",
+      "held": "0",
+      "cost": "0",
+      "passed": true
+    },
+    {
+      "user_id": "4fbfec26-7d50-4e5a-8b7f-80795a182b0e",
+      "episode_id": "0ae2e71a-5aa3-4573-8c9b-641f923c40b5",
+      "balance": "10000",
+      "expected_balance": "10000.000000",
+      "accepted": 20,
+      "filled": 0,
+      "canceled": 0,
+      "quote_reserved": "20.000000000000000000",
+      "base_reserved": "0",
+      "held": "0",
+      "cost": "0",
+      "passed": true
+    },
+    {
+      "user_id": "c5edc1c4-9ce6-4e5a-8ab5-8916b2b8f28f",
+      "episode_id": "524349e5-90ba-455a-8e65-944c8c2162c6",
+      "balance": "10000",
+      "expected_balance": "10000.000000",
+      "accepted": 20,
+      "filled": 0,
+      "canceled": 0,
+      "quote_reserved": "20.000000000000000000",
+      "base_reserved": "0",
+      "held": "0",
+      "cost": "0",
+      "passed": true
+    },
+    {
+      "user_id": "6b12912a-739f-4155-b839-13cc37aca5dc",
+      "episode_id": "38343ead-a35c-4b9f-9f01-791a571b5733",
+      "balance": "10000",
+      "expected_balance": "10000.000000",
+      "accepted": 20,
+      "filled": 0,
+      "canceled": 0,
+      "quote_reserved": "20.000000000000000000",
+      "base_reserved": "0",
+      "held": "0",
+      "cost": "0",
+      "passed": true
+    },
+    {
+      "user_id": "d72f6b52-2afe-4df7-ae10-466a97b14090",
+      "episode_id": "d444a85e-e129-4746-8267-4addb34a86d7",
+      "balance": "10000",
+      "expected_balance": "10000.000000",
+      "accepted": 20,
+      "filled": 0,
+      "canceled": 0,
+      "quote_reserved": "20.000000000000000000",
+      "base_reserved": "0",
+      "held": "0",
+      "cost": "0",
+      "passed": true
+    },
+    {
+      "user_id": "a9e532a7-aea3-4af6-9a49-2606e61f2173",
+      "episode_id": "554ae8b5-50aa-4aea-9f10-8cb7b0af168f",
+      "balance": "10000",
+      "expected_balance": "10000.000000",
+      "accepted": 20,
+      "filled": 0,
+      "canceled": 0,
+      "quote_reserved": "20.000000000000000000",
+      "base_reserved": "0",
+      "held": "0",
+      "cost": "0",
+      "passed": true
+    },
+    {
+      "user_id": "ab76d5f7-f197-4948-931d-74cd25b7877c",
+      "episode_id": "cdc93aff-f3d9-4239-b66b-89c4a0745159",
+      "balance": "10000",
+      "expected_balance": "10000.000000",
+      "accepted": 20,
+      "filled": 0,
+      "canceled": 0,
+      "quote_reserved": "20.000000000000000000",
+      "base_reserved": "0",
+      "held": "0",
+      "cost": "0",
+      "passed": true
+    },
+    {
+      "user_id": "1197081f-ba52-48e5-adc6-38eac2d80336",
+      "episode_id": "6823ef62-274c-4eb5-aee4-d374819ddd16",
+      "balance": "10000",
+      "expected_balance": "10000.000000",
+      "accepted": 20,
+      "filled": 0,
+      "canceled": 0,
+      "quote_reserved": "20.000000000000000000",
+      "base_reserved": "0",
+      "held": "0",
+      "cost": "0",
+      "passed": true
+    },
+    {
+      "user_id": "ff6550b4-fa62-4b5e-a752-58b78795dad3",
+      "episode_id": "484d4797-5384-4ad5-9924-dfe6cd2e7681",
+      "balance": "10000",
+      "expected_balance": "10000.000000",
+      "accepted": 20,
+      "filled": 0,
+      "canceled": 0,
+      "quote_reserved": "20.000000000000000000",
+      "base_reserved": "0",
+      "held": "0",
+      "cost": "0",
+      "passed": true
+    },
+    {
+      "user_id": "9ca1b7e2-e1b7-44ce-8a6c-199813366920",
+      "episode_id": "760a3a6e-960a-4663-b4ae-1aaf1850e7e9",
+      "balance": "10000",
+      "expected_balance": "10000.000000",
+      "accepted": 20,
+      "filled": 0,
+      "canceled": 0,
+      "quote_reserved": "20.000000000000000000",
+      "base_reserved": "0",
+      "held": "0",
+      "cost": "0",
+      "passed": true
+    },
+    {
+      "user_id": "a99fd799-62d7-45b1-80c0-a60e0ea0ff22",
+      "episode_id": "4727d410-35b6-4648-89d7-d36cd9904d2b",
+      "balance": "10000",
+      "expected_balance": "10000.000000",
+      "accepted": 20,
+      "filled": 0,
+      "canceled": 0,
+      "quote_reserved": "20.000000000000000000",
+      "base_reserved": "0",
+      "held": "0",
+      "cost": "0",
+      "passed": true
+    },
+    {
+      "user_id": "f9b4cafb-3305-4ba1-a4d1-132442c452c8",
+      "episode_id": "dcf7a6d7-cdd7-4de2-b887-f7270a978530",
+      "balance": "10000",
+      "expected_balance": "10000.000000",
+      "accepted": 20,
+      "filled": 0,
+      "canceled": 0,
+      "quote_reserved": "20.000000000000000000",
+      "base_reserved": "0",
+      "held": "0",
+      "cost": "0",
+      "passed": true
+    }
+  ],
+  "positions": null,
+  "pool_contract": {
+    "passed": true,
+    "errors": [],
+    "violations": [],
+    "incomplete": [],
+    "processes": [
+      {
+        "file": "parent.owned-pools.json",
+        "pid": 16609,
+        "passed": true
+      },
+      {
+        "file": "worker-0.owned-pools.json",
+        "pid": 16725,
+        "passed": true
+      },
+      {
+        "file": "worker-1.owned-pools.json",
+        "pid": 16726,
+        "passed": true
+      },
+      {
+        "file": "worker-2.owned-pools.json",
+        "pid": 16727,
+        "passed": true
+      },
+      {
+        "file": "worker-3.owned-pools.json",
+        "pid": 16730,
+        "passed": true
+      },
+      {
+        "file": "worker-4.owned-pools.json",
+        "pid": 16732,
+        "passed": true
+      },
+      {
+        "file": "worker-5.owned-pools.json",
+        "pid": 16733,
+        "passed": true
+      },
+      {
+        "file": "worker-6.owned-pools.json",
+        "pid": 16734,
+        "passed": true
+      },
+      {
+        "file": "worker-7.owned-pools.json",
+        "pid": 16735,
+        "passed": true
+      },
+      {
+        "file": "worker-8.owned-pools.json",
+        "pid": 16737,
+        "passed": true
+      },
+      {
+        "file": "worker-9.owned-pools.json",
+        "pid": 16739,
+        "passed": true
+      },
+      {
+        "file": "worker-10.owned-pools.json",
+        "pid": 16742,
+        "passed": true
+      },
+      {
+        "file": "worker-11.owned-pools.json",
+        "pid": 16743,
+        "passed": true
+      },
+      {
+        "file": "worker-12.owned-pools.json",
+        "pid": 16744,
+        "passed": true
+      },
+      {
+        "file": "worker-13.owned-pools.json",
+        "pid": 16745,
+        "passed": true
+      },
+      {
+        "file": "worker-14.owned-pools.json",
+        "pid": 16746,
+        "passed": true
+      },
+      {
+        "file": "worker-15.owned-pools.json",
+        "pid": 16748,
+        "passed": true
+      },
+      {
+        "file": "worker-16.owned-pools.json",
+        "pid": 16750,
+        "passed": true
+      },
+      {
+        "file": "worker-17.owned-pools.json",
+        "pid": 16751,
+        "passed": true
+      },
+      {
+        "file": "worker-18.owned-pools.json",
+        "pid": 16752,
+        "passed": true
+      },
+      {
+        "file": "worker-19.owned-pools.json",
+        "pid": 16753,
+        "passed": true
+      },
+      {
+        "file": "recovery-worker-0.owned-pools.json",
+        "pid": 16835,
+        "passed": true
+      },
+      {
+        "file": "recovery-worker-1.owned-pools.json",
+        "pid": 16836,
+        "passed": true
+      },
+      {
+        "file": "recovery-worker-2.owned-pools.json",
+        "pid": 16837,
+        "passed": true
+      },
+      {
+        "file": "recovery-worker-3.owned-pools.json",
+        "pid": 16838,
+        "passed": true
+      },
+      {
+        "file": "recovery-worker-4.owned-pools.json",
+        "pid": 16839,
+        "passed": true
+      },
+      {
+        "file": "recovery-worker-5.owned-pools.json",
+        "pid": 16840,
+        "passed": true
+      },
+      {
+        "file": "recovery-worker-6.owned-pools.json",
+        "pid": 16841,
+        "passed": true
+      },
+      {
+        "file": "recovery-worker-7.owned-pools.json",
+        "pid": 16842,
+        "passed": true
+      },
+      {
+        "file": "recovery-worker-8.owned-pools.json",
+        "pid": 16843,
+        "passed": true
+      },
+      {
+        "file": "recovery-worker-9.owned-pools.json",
+        "pid": 16844,
+        "passed": true
+      },
+      {
+        "file": "recovery-worker-10.owned-pools.json",
+        "pid": 16845,
+        "passed": true
+      },
+      {
+        "file": "recovery-worker-11.owned-pools.json",
+        "pid": 16846,
+        "passed": true
+      },
+      {
+        "file": "recovery-worker-12.owned-pools.json",
+        "pid": 16847,
+        "passed": true
+      },
+      {
+        "file": "recovery-worker-13.owned-pools.json",
+        "pid": 16848,
+        "passed": true
+      },
+      {
+        "file": "recovery-worker-14.owned-pools.json",
+        "pid": 16849,
+        "passed": true
+      },
+      {
+        "file": "recovery-worker-15.owned-pools.json",
+        "pid": 16850,
+        "passed": true
+      },
+      {
+        "file": "recovery-worker-16.owned-pools.json",
+        "pid": 16851,
+        "passed": true
+      },
+      {
+        "file": "recovery-worker-17.owned-pools.json",
+        "pid": 16852,
+        "passed": true
+      },
+      {
+        "file": "recovery-worker-18.owned-pools.json",
+        "pid": 16853,
+        "passed": true
+      },
+      {
+        "file": "recovery-worker-19.owned-pools.json",
+        "pid": 16854,
+        "passed": true
+      }
+    ],
+    "worker_process_count": 40
+  }
+}

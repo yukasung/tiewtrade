@@ -1,0 +1,17 @@
+protection|abfac025-df04-45cc-87d5-5a6f92d037ca|CLOSED|6|0|0.999
+protection|8c97e27b-4c49-4785-91b8-ad2ca2aa3ef2|CLOSED|6|0|0.999
+protection|a813312c-aeab-4684-8cc7-b7c2725289b7|ARMED|4|0.5|0
+manual_request_result|abfac025-df04-45cc-87d5-5a6f92d037ca|TRANSFERRED||5d5c3c0f-35e2-46fb-9b7e-2f2312e182b3
+manual_request_result|8c97e27b-4c49-4785-91b8-ad2ca2aa3ef2|TRANSFERRED||062b4361-1682-4324-8c5d-35126489db60
+manual_request_result|a813312c-aeab-4684-8cc7-b7c2725289b7|TRANSFERRED||c4a46929-1a44-4672-a426-4ab88712f48b
+manual_request_result|0946b202-686e-47d5-ae17-f81566decef5|TRANSFERRED||ea051a9f-d343-4fe9-9d82-2dc9326f03f4
+order|abfac025-df04-45cc-87d5-5a6f92d037ca|CANCEL|SUCCEEDED||FILLED
+order|abfac025-df04-45cc-87d5-5a6f92d037ca|NEW|SUCCEEDED||FILLED
+order|8c97e27b-4c49-4785-91b8-ad2ca2aa3ef2|CANCEL|SUCCEEDED||FILLED
+order|8c97e27b-4c49-4785-91b8-ad2ca2aa3ef2|NEW|SUCCEEDED||FILLED
+order|a813312c-aeab-4684-8cc7-b7c2725289b7|NEW|SUCCEEDED||FILLED
+order|8c97e27b-4c49-4785-91b8-ad2ca2aa3ef2|NEW|SUCCEEDED||FILLED
+order|abfac025-df04-45cc-87d5-5a6f92d037ca|NEW|SUCCEEDED||FILLED
+order|0946b202-686e-47d5-ae17-f81566decef5|NEW|REJECTED|ORDER_INPUT_INVALID|
+protection_result|a813312c-aeab-4684-8cc7-b7c2725289b7|APPLIED||2|2026-11-06 16:41:26.710971+00|{"sl": "80", "tp": "120", "quantity": "0.5", "expected_revision": 3}
+connections|0

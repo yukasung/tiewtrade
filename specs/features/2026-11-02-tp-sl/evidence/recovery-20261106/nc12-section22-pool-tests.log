@@ -1,0 +1,139 @@
+.......................F........F...                                     [100%]
+=================================== FAILURES ===================================
+_ test_empty_database_startup_asgi_and_parent_shutdown_have_complete_inventory _
+
+tmp_path = PosixPath('/private/var/folders/fb/g4m1d38j4fl6x1pt39rn0wxr0000gn/T/pytest-of-chainarongjaykeaw/pytest-14/test_empty_database_startup_as0')
+
+    async def test_empty_database_startup_asgi_and_parent_shutdown_have_complete_inventory(
+        tmp_path: Path,
+    ) -> None:
+        path = tmp_path / "parent.json"
+        with OwnedPools(path, PARENT_CONFIGURATION) as tracker:
+            # The exact previously missed production campaign startup function.
+>           await internal.require_empty_database()
+
+tests/infra/execution_market/test_owned_pools.py:308: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    async def require_empty_database() -> None:
+        observer = readonly_admin()
+        try:
+            async with observer.connect() as connection:
+                occupied: bool = (
+                    await connection.execute(
+                        text("""SELECT EXISTS(SELECT 1 FROM users)
+                    OR EXISTS(SELECT 1 FROM paper_wallets)""")
+                    )
+                ).scalar_one()
+            if occupied:
+>               raise ValueError("internal Paper campaign requires a newly created empty database")
+E               ValueError: internal Paper campaign requires a newly created empty database
+
+tests/infra/execution_market/profile_internal.py:265: ValueError
+_ test_retired_missing_native_view_waits_for_return_but_never_waives_it[True] __
+
+tmp_path = PosixPath('/private/var/folders/fb/g4m1d38j4fl6x1pt39rn0wxr0000gn/T/pytest-of-chainarongjaykeaw/pytest-14/test_retired_missing_native_vi0')
+returned = True
+
+    @pytest.mark.parametrize("returned", [True, False])
+    async def test_retired_missing_native_view_waits_for_return_but_never_waives_it(
+        tmp_path: Path, returned: bool
+    ) -> None:
+        import gc
+    
+        path = tmp_path / "pools.json"
+        loan = None
+        try:
+            with OwnedPools(path, [("ENGINE", 5, 10)]) as tracker:
+                engine = create_engine_for(DatabaseRole.ENGINE)
+                loan = await engine.connect()
+                with tracker.intermediate_disposal():
+                    await engine.dispose()
+                known, _, entry = tracker.bindings[0]
+                # Simulate a collected weakref view; retain the actual DB loan so its
+                # genuine checkin event can arrive later. GC must not waive that loan.
+                tracker.bindings[0] = (known, lambda: None, entry)
+                gc.collect()
+                tracker.sample("retired_pending_without_native_view")
+                assert entry["checked_out"] == 1 and not tracker.errors
+                assert not document(path)["passed"]
+                if returned:
+                    await loan.close()
+                await engine.dispose()
+            report = document(path)
+            assert report["passed"] is returned
+            assert report["pools"][0]["final_disposal_checked_out"] == (0 if returned else 1)
+        finally:
+            if loan is not None:
+>               await loan.invalidate()
+
+tests/infra/execution_market/test_owned_pools.py:554: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.venv/lib/python3.12/site-packages/sqlalchemy/ext/asyncio/engine.py:359: in invalidate
+    return await greenlet_spawn(
+.venv/lib/python3.12/site-packages/sqlalchemy/util/concurrency.py:199: in greenlet_spawn
+    result = context.switch(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sqlalchemy.engine.base.Connection object at 0x10ed6f020>
+exception = None
+
+    def invalidate(self, exception: Optional[BaseException] = None) -> None:
+        """Invalidate the underlying DBAPI connection associated with
+        this :class:`_engine.Connection`.
+    
+        An attempt will be made to close the underlying DBAPI connection
+        immediately; however if this operation fails, the error is logged
+        but not raised.  The connection is then discarded whether or not
+        close() succeeded.
+    
+        Upon the next use (where "use" typically means using the
+        :meth:`_engine.Connection.execute` method or similar),
+        this :class:`_engine.Connection` will attempt to
+        procure a new DBAPI connection using the services of the
+        :class:`_pool.Pool` as a source of connectivity (e.g.
+        a "reconnection").
+    
+        If a transaction was in progress (e.g. the
+        :meth:`_engine.Connection.begin` method has been called) when
+        :meth:`_engine.Connection.invalidate` method is called, at the DBAPI
+        level all state associated with this transaction is lost, as
+        the DBAPI connection is closed.  The :class:`_engine.Connection`
+        will not allow a reconnection to proceed until the
+        :class:`.Transaction` object is ended, by calling the
+        :meth:`.Transaction.rollback` method; until that point, any attempt at
+        continuing to use the :class:`_engine.Connection` will raise an
+        :class:`~sqlalchemy.exc.InvalidRequestError`.
+        This is to prevent applications from accidentally
+        continuing an ongoing transactional operations despite the
+        fact that the transaction has been lost due to an
+        invalidation.
+    
+        The :meth:`_engine.Connection.invalidate` method,
+        just like auto-invalidation,
+        will at the connection pool level invoke the
+        :meth:`_events.PoolEvents.invalidate` event.
+    
+        :param exception: an optional ``Exception`` instance that's the
+         reason for the invalidation.  is passed along to event handlers
+         and logging functions.
+    
+        .. seealso::
+    
+            :ref:`pool_connection_invalidation`
+    
+        """
+    
+        if self.invalidated:
+            return
+    
+        if self.closed:
+>           raise exc.ResourceClosedError("This Connection is closed")
+E           sqlalchemy.exc.ResourceClosedError: This Connection is closed
+
+.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py:759: ResourceClosedError
+=========================== short test summary info ============================
+FAILED tests/infra/execution_market/test_owned_pools.py::test_empty_database_startup_asgi_and_parent_shutdown_have_complete_inventory
+FAILED tests/infra/execution_market/test_owned_pools.py::test_retired_missing_native_view_waits_for_return_but_never_waives_it[True]
+2 failed, 34 passed in 2.31s

@@ -1,0 +1,242 @@
+F
+=================================== FAILURES ===================================
+______________ test_real_authenticated_cycle_and_owner_isolation _______________
+
+api_engine = <sqlalchemy.ext.asyncio.engine.AsyncEngine object at 0x10e399110>
+engine_engine = <sqlalchemy.ext.asyncio.engine.AsyncEngine object at 0x10e671b10>
+scan_engine = <sqlalchemy.ext.asyncio.engine.AsyncEngine object at 0x10e6724d0>
+migrator_engine = <sqlalchemy.ext.asyncio.engine.AsyncEngine object at 0x10e672c50>
+tmp_path = PosixPath('/private/var/folders/fb/g4m1d38j4fl6x1pt39rn0wxr0000gn/T/pytest-of-chainarongjaykeaw/pytest-7/test_real_authenticated_cycle_0')
+
+    async def test_real_authenticated_cycle_and_owner_isolation(
+        api_engine: AsyncEngine, engine_engine: AsyncEngine, scan_engine: AsyncEngine,
+        migrator_engine: AsyncEngine, tmp_path: Path,
+    ) -> None:
+        import asyncio
+        from tests.infra.execution_market.profile_http import internal_intake
+        from tiewtrade.infra.db import DatabaseRole, create_engine_for
+        from tiewtrade.infra.risk_limits.policy import TransactionalRiskPolicy
+    
+        owners = await f15.seed_owners(api_engine, engine_engine, scan_engine, 2)
+        source = create_engine_for(DatabaseRole.MARKET_DATA)
+        stop = asyncio.Event()
+        worker_stop = tmp_path / "stop"
+        publisher = worker = None
+        try:
+            async with internal_intake(owners, engine=engine_engine, api=api_engine,
+                                       migrator=migrator_engine, gate=None, output=tmp_path) as intake:
+                publisher = asyncio.create_task(f15.market_publisher(source, stop, {}, heartbeat_per_book=True))
+                worker = asyncio.create_task(f15.run_worker_process(
+                    "internal-http-safety", worker_stop, tmp_path / "worker.json",
+                    claim_limit=1, coordinate_claims=True, policy=TransactionalRiskPolicy(),
+                    manual_intake=True, protection_rounds=True,
+                ))
+                await asyncio.sleep(.3)
+                counters = f15.Counters()
+                async with asyncio.timeout(60):
+>                   await f15.cycle(engine_engine, owners[0], uuid4(), 0, counters, [], sender=intake)
+
+tests/infra/execution_market/test_internal_http.py:175: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/infra/execution_market/profile_workload.py:1578: in cycle
+    await submit_new(
+tests/infra/execution_market/profile_workload.py:1473: in submit_new
+    await wait_status(engine, owner.user_id, order_id, expected, **poll_options(poll_gate))
+tests/infra/execution_market/profile_workload.py:1443: in wait_status
+    await asyncio.sleep(RESULT_POLL_SECONDS)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+delay = 0.25, result = None
+
+    async def sleep(delay, result=None):
+        """Coroutine that completes after a given time (in seconds)."""
+        if delay <= 0:
+            await __sleep0()
+            return result
+    
+        loop = events.get_running_loop()
+        future = loop.create_future()
+        h = loop.call_later(delay,
+                            futures._set_result_unless_cancelled,
+                            future, result)
+        try:
+>           return await future
+                   ^^^^^^^^^^^^
+E           asyncio.exceptions.CancelledError
+
+../../../../../.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/asyncio/tasks.py:665: CancelledError
+
+The above exception was the direct cause of the following exception:
+
+api_engine = <sqlalchemy.ext.asyncio.engine.AsyncEngine object at 0x10e399110>
+engine_engine = <sqlalchemy.ext.asyncio.engine.AsyncEngine object at 0x10e671b10>
+scan_engine = <sqlalchemy.ext.asyncio.engine.AsyncEngine object at 0x10e6724d0>
+migrator_engine = <sqlalchemy.ext.asyncio.engine.AsyncEngine object at 0x10e672c50>
+tmp_path = PosixPath('/private/var/folders/fb/g4m1d38j4fl6x1pt39rn0wxr0000gn/T/pytest-of-chainarongjaykeaw/pytest-7/test_real_authenticated_cycle_0')
+
+    async def test_real_authenticated_cycle_and_owner_isolation(
+        api_engine: AsyncEngine, engine_engine: AsyncEngine, scan_engine: AsyncEngine,
+        migrator_engine: AsyncEngine, tmp_path: Path,
+    ) -> None:
+        import asyncio
+        from tests.infra.execution_market.profile_http import internal_intake
+        from tiewtrade.infra.db import DatabaseRole, create_engine_for
+        from tiewtrade.infra.risk_limits.policy import TransactionalRiskPolicy
+    
+        owners = await f15.seed_owners(api_engine, engine_engine, scan_engine, 2)
+        source = create_engine_for(DatabaseRole.MARKET_DATA)
+        stop = asyncio.Event()
+        worker_stop = tmp_path / "stop"
+        publisher = worker = None
+        try:
+            async with internal_intake(owners, engine=engine_engine, api=api_engine,
+                                       migrator=migrator_engine, gate=None, output=tmp_path) as intake:
+                publisher = asyncio.create_task(f15.market_publisher(source, stop, {}, heartbeat_per_book=True))
+                worker = asyncio.create_task(f15.run_worker_process(
+                    "internal-http-safety", worker_stop, tmp_path / "worker.json",
+                    claim_limit=1, coordinate_claims=True, policy=TransactionalRiskPolicy(),
+                    manual_intake=True, protection_rounds=True,
+                ))
+                await asyncio.sleep(.3)
+                counters = f15.Counters()
+>               async with asyncio.timeout(60):
+                           ^^^^^^^^^^^^^^^^^^^
+
+tests/infra/execution_market/test_internal_http.py:174: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <Timeout [expired]>
+exc_type = <class 'asyncio.exceptions.CancelledError'>
+exc_val = CancelledError(), exc_tb = <traceback object at 0x10eafbf00>
+
+    async def __aexit__(
+        self,
+        exc_type: Optional[Type[BaseException]],
+        exc_val: Optional[BaseException],
+        exc_tb: Optional[TracebackType],
+    ) -> Optional[bool]:
+        assert self._state in (_State.ENTERED, _State.EXPIRING)
+    
+        if self._timeout_handler is not None:
+            self._timeout_handler.cancel()
+            self._timeout_handler = None
+    
+        if self._state is _State.EXPIRING:
+            self._state = _State.EXPIRED
+    
+            if self._task.uncancel() <= self._cancelling and exc_type is exceptions.CancelledError:
+                # Since there are no new cancel requests, we're
+                # handling this.
+>               raise TimeoutError from exc_val
+E               TimeoutError
+
+../../../../../.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/asyncio/timeouts.py:115: TimeoutError
+
+During handling of the above exception, another exception occurred:
+
+api_engine = <sqlalchemy.ext.asyncio.engine.AsyncEngine object at 0x10e399110>
+engine_engine = <sqlalchemy.ext.asyncio.engine.AsyncEngine object at 0x10e671b10>
+scan_engine = <sqlalchemy.ext.asyncio.engine.AsyncEngine object at 0x10e6724d0>
+migrator_engine = <sqlalchemy.ext.asyncio.engine.AsyncEngine object at 0x10e672c50>
+tmp_path = PosixPath('/private/var/folders/fb/g4m1d38j4fl6x1pt39rn0wxr0000gn/T/pytest-of-chainarongjaykeaw/pytest-7/test_real_authenticated_cycle_0')
+
+    async def test_real_authenticated_cycle_and_owner_isolation(
+        api_engine: AsyncEngine, engine_engine: AsyncEngine, scan_engine: AsyncEngine,
+        migrator_engine: AsyncEngine, tmp_path: Path,
+    ) -> None:
+        import asyncio
+        from tests.infra.execution_market.profile_http import internal_intake
+        from tiewtrade.infra.db import DatabaseRole, create_engine_for
+        from tiewtrade.infra.risk_limits.policy import TransactionalRiskPolicy
+    
+        owners = await f15.seed_owners(api_engine, engine_engine, scan_engine, 2)
+        source = create_engine_for(DatabaseRole.MARKET_DATA)
+        stop = asyncio.Event()
+        worker_stop = tmp_path / "stop"
+        publisher = worker = None
+        try:
+            async with internal_intake(owners, engine=engine_engine, api=api_engine,
+                                       migrator=migrator_engine, gate=None, output=tmp_path) as intake:
+                publisher = asyncio.create_task(f15.market_publisher(source, stop, {}, heartbeat_per_book=True))
+                worker = asyncio.create_task(f15.run_worker_process(
+                    "internal-http-safety", worker_stop, tmp_path / "worker.json",
+                    claim_limit=1, coordinate_claims=True, policy=TransactionalRiskPolicy(),
+                    manual_intake=True, protection_rounds=True,
+                ))
+                await asyncio.sleep(.3)
+                counters = f15.Counters()
+                async with asyncio.timeout(60):
+                    await f15.cycle(engine_engine, owners[0], uuid4(), 0, counters, [], sender=intake)
+                assert counters.completed == 5 and counters.replays == 1
+                assert all(row["passed"] for row in await f15.verify(
+                    engine_engine, [owners[0]], baseline_orders=0, cycles_per_owner=1))
+                record = json.loads((tmp_path / "http-intake.jsonl").read_text().splitlines()[0])
+                foreign = await intake.clients[owners[1].user_id].get(
+                    f"/paper/order-requests/{record['request_id']}")
+                assert foreign.status_code == 404
+                client = intake.clients[owners[0].user_id]
+                client.headers.pop("X-CSRF-Token")
+                rejected = await client.post("/paper/orders", json=order_body(
+                    owners[0], f15.market_buy(owners[0], uuid4(), 1)),
+                    headers={"Idempotency-Key": str(uuid4())})
+                assert rejected.status_code == 403
+        finally:
+            worker_stop.touch()
+            if worker is not None:
+                await asyncio.wait_for(worker, 10)
+            stop.set()
+            if publisher is not None:
+>               await publisher
+
+tests/infra/execution_market/test_internal_http.py:195: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+engine = <sqlalchemy.ext.asyncio.engine.AsyncEngine object at 0x10e80d190>
+stop = <asyncio.locks.Event object at 0x10e7ae0f0 [set]>
+stats = {'stage': 'publish_market', 'published': 1, 'last_input_id': 1, 'book_owner': 'fdbda74a-e37e-47e1-a170-448e4adc3e8b', ...}
+heartbeat_per_book = True
+
+    async def market_publisher(
+        engine: AsyncEngine,
+        stop: asyncio.Event,
+        stats: dict[str, Any],
+        *,
+        heartbeat_per_book: bool = False,
+    ) -> None:
+        stats["stage"] = "acquire_sources"
+        try:
+            book, price = await acquire_sources(engine)
+            next_due = monotonic()
+            tick = 0
+            while not stop.is_set():
+                stats["stage"] = "waiting_for_tick"
+                await asyncio.sleep(max(0, next_due - monotonic()))
+                tick += 1
+                before = monotonic()
+                stats["stage"] = "publish_market"
+                book, price = await publish_market(
+                    engine,
+                    book,
+                    price,
+                    rebase=tick == 1,
+                    trade_id=tick,
+                    update_price=tick == 1 or tick % max(1, int(stats["target_hz"])) == 0,
+                    heartbeat_per_book=heartbeat_per_book,
+                )
+                stats["published"] = tick
+                stats["last_input_id"] = book.last_input_id
+                stats["book_owner"] = str(book.owner)
+                stats["book_generation"] = book.generation
+                stats["last_progress_at"] = datetime.now(UTC).isoformat()
+                stats["max_publish_seconds"] = max(
+                    stats.get("max_publish_seconds", 0.0), monotonic() - before
+                )
+>               next_due += 1 / float(stats["target_hz"])
+                                      ^^^^^^^^^^^^^^^^^^
+E               KeyError: 'target_hz'
+
+tests/infra/execution_market/profile_workload.py:432: KeyError
+=========================== short test summary info ============================
+FAILED tests/infra/execution_market/test_internal_http.py::test_real_authenticated_cycle_and_owner_isolation
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+1 failed in 62.74s (0:01:02)

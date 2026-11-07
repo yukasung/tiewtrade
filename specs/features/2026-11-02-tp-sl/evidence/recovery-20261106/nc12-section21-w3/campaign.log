@@ -1,0 +1,67 @@
+baseline 1 / 20
+baseline 2 / 20
+baseline 3 / 20
+baseline 4 / 20
+baseline 5 / 20
+baseline 6 / 20
+baseline 7 / 20
+baseline 8 / 20
+baseline 9 / 20
+baseline 10 / 20
+baseline 11 / 20
+baseline 12 / 20
+baseline 13 / 20
+baseline 14 / 20
+baseline 15 / 20
+baseline 16 / 20
+baseline 17 / 20
+baseline 18 / 20
+baseline 19 / 20
+baseline 20 / 20
+workload W3 started
+fault WORKER_RESTART started
+fault CONNECTION_CHURN started
+Traceback (most recent call last):
+  File "/Users/chainarongjaykeaw/.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/chainarongjaykeaw/.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/asyncio/base_events.py", line 691, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/backend/../../f17-recovery-records-20261106/nc12_campaign.py", line 304, in main
+    code = await internal.run_preflighted(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/backend/tests/infra/execution_market/profile_internal.py", line 414, in run_preflighted
+    return await workload()
+           ^^^^^^^^^^^^^^^^
+  File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/backend/../../f17-recovery-records-20261106/nc12_campaign.py", line 296, in phase_run
+    return await (
+           ^^^^^^^
+  File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/backend/tests/infra/execution_market/profile_workload.py", line 1988, in run
+    code = await _run(args)
+           ^^^^^^^^^^^^^^^^
+  File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/backend/tests/infra/execution_market/profile_workload.py", line 2337, in _run
+    elapsed = await with_publisher(
+              ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/backend/tests/infra/execution_market/profile_workload.py", line 475, in with_publisher
+    done, _ = await asyncio.wait(
+              ^^^^^^^^^^^^^^^^^^^
+  File "/Users/chainarongjaykeaw/.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/asyncio/tasks.py", line 464, in wait
+    return await _wait(fs, timeout, return_when, loop)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/chainarongjaykeaw/.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/asyncio/tasks.py", line 550, in _wait
+    await waiter
+asyncio.exceptions.CancelledError
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-paper-set4-recovery/backend/../../f17-recovery-records-20261106/nc12_campaign.py", line 383, in <module>
+    raise SystemExit(asyncio.run(main()))
+                     ^^^^^^^^^^^^^^^^^^^
+  File "/Users/chainarongjaykeaw/.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/asyncio/runners.py", line 195, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/Users/chainarongjaykeaw/.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/asyncio/runners.py", line 123, in run
+    raise KeyboardInterrupt()
+KeyboardInterrupt

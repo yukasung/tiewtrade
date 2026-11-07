@@ -1,0 +1,56 @@
+{
+  "scope": "post-stop read-only evidence; partial timing is not W1 acceptance",
+  "measured_until_failure_seconds": 1227.5983706669995,
+  "samples": 23663,
+  "p95_ms": 487.3186660006468,
+  "p99_ms": 1184.653749998688,
+  "max_seconds": 5.6722733749993495,
+  "bins": [
+    {
+      "from_seconds": 0,
+      "to_seconds": 300.0000000000018,
+      "samples": 7575,
+      "p95_ms": 309.28762500116136,
+      "p99_ms": 610.5247499981488,
+      "max_seconds": 1.911516500000289
+    },
+    {
+      "from_seconds": 300,
+      "to_seconds": 600.0000000000018,
+      "samples": 7337,
+      "p95_ms": 332.4507090001134,
+      "p99_ms": 602.0204999986163,
+      "max_seconds": 1.8758627910028736
+    },
+    {
+      "from_seconds": 600,
+      "to_seconds": 900.0000000000018,
+      "samples": 4684,
+      "p95_ms": 635.2002919993538,
+      "p99_ms": 1402.7697919991624,
+      "max_seconds": 5.108683500002371
+    },
+    {
+      "from_seconds": 900,
+      "to_seconds": 1200.0000000000018,
+      "samples": 3974,
+      "p95_ms": 867.9522919992451,
+      "p99_ms": 2295.005541000137,
+      "max_seconds": 5.6722733749993495
+    },
+    {
+      "from_seconds": 1200,
+      "to_seconds": 1227.5983706669995,
+      "samples": 93,
+      "p95_ms": 3657.3597919996246,
+      "p99_ms": 4795.93020899847,
+      "max_seconds": 4.79593020899847
+    }
+  ],
+  "resource_samples": 237,
+  "connections_start": 57,
+  "connections_last_incomplete": 63,
+  "connections_peak": 64,
+  "lock_waits_peak": 0,
+  "database_growth_bytes": 397770752
+}

@@ -1,0 +1,48 @@
+...F
+=================================== FAILURES ===================================
+___________ test_restore_extension_fixture_and_retry_with_real_roles ___________
+
+tmp_path = PosixPath('/private/var/folders/fb/g4m1d38j4fl6x1pt39rn0wxr0000gn/T/pytest-of-chainarongjaykeaw/pytest-10/test_restore_extension_fixture0')
+
+    async def test_restore_extension_fixture_and_retry_with_real_roles(tmp_path: Path) -> None:
+        """Scoped harness safety check on a fresh DB, not the W4 backup/restore campaign."""
+        engines = {
+            role: create_engine_for(role)
+            for role in (
+                DatabaseRole.API,
+                DatabaseRole.ENGINE,
+                DatabaseRole.ENGINE_SCAN,
+                DatabaseRole.MIGRATOR,
+                DatabaseRole.MARKET_DATA,
+            )
+        }
+        try:
+            async with activated_protocols(engines[DatabaseRole.MIGRATOR], protections=True):
+>               fixture = await build_extension(engines, tmp_path)
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/infra/execution_market/test_internal_observations.py:106: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/infra/execution_market/profile_internal_restore.py:173: in build_extension
+    await verify_exit(engine, owners[3], UUID(closed["group"]))
+tests/infra/execution_market/profile_protections.py:126: in verify_exit
+    await replay_owner_domain(
+tests/infra/execution_market/profile_restore.py:260: in replay_owner_domain
+    scope=OrderScope(user_id, episode_id, TradingMode.PAPER),
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<string>:6: in __init__
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = OrderScope(owner_id=UUID('f93686bd-f7ea-4372-b4e2-26af9a1066a2'), episode_id=UUID('0f634d4c-3110-4aa2-ad7e-4b37662e4fb4'), mode=<TradingMode.PAPER: 'PAPER'>)
+
+    def __post_init__(self) -> None:
+        if type(self.owner_id) is not UUID or type(self.episode_id) is not UUID:
+>           raise OrderError("owner and episode identities required")
+E           tiewtrade.core.orders.OrderError: owner and episode identities required
+
+src/tiewtrade/core/orders.py:101: OrderError
+=========================== short test summary info ============================
+FAILED tests/infra/execution_market/test_internal_observations.py::test_restore_extension_fixture_and_retry_with_real_roles
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+1 failed, 3 passed in 13.76s

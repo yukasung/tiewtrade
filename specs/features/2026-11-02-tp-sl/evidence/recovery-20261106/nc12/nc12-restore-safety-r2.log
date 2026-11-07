@@ -1,0 +1,98 @@
+F
+=================================== FAILURES ===================================
+___________ test_restore_extension_fixture_and_retry_with_real_roles ___________
+
+tmp_path = PosixPath('/private/var/folders/fb/g4m1d38j4fl6x1pt39rn0wxr0000gn/T/pytest-of-chainarongjaykeaw/pytest-11/test_restore_extension_fixture0')
+
+    async def test_restore_extension_fixture_and_retry_with_real_roles(tmp_path: Path) -> None:
+        """Scoped harness safety check on a fresh DB, not the W4 backup/restore campaign."""
+        engines = {
+            role: create_engine_for(role)
+            for role in (
+                DatabaseRole.API,
+                DatabaseRole.ENGINE,
+                DatabaseRole.ENGINE_SCAN,
+                DatabaseRole.MIGRATOR,
+                DatabaseRole.MARKET_DATA,
+            )
+        }
+        try:
+            async with activated_protocols(engines[DatabaseRole.MIGRATOR], protections=True):
+>               fixture = await build_extension(engines, tmp_path)
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/infra/execution_market/test_internal_observations.py:106: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/infra/execution_market/profile_internal_restore.py:162: in build_extension
+    await execute(
+tests/infra/protections/test_lifecycle.py:87: in execute
+    await process_claimed_order(
+src/tiewtrade/infra/paper_orders/worker.py:197: in process_claimed_order
+    await _process_new(
+src/tiewtrade/infra/paper_orders/worker.py:440: in _process_new
+    decisions = await _next_or_recovery_inputs(session, state)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/tiewtrade/infra/paper_orders/worker.py:529: in _next_or_recovery_inputs
+    values = await read_inputs(session, state.pair, after=after, limit=20)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+session = UserSession(_connection=<sqlalchemy.ext.asyncio.engine.AsyncConnection object at 0x10d7284b0>, user_id=UUID('dfd22158-0038-46a0-92d2-ba49bd8dc6b8'))
+pair = PositionPair(base='BTC', quote='USDT'), after = 6, limit = 20
+
+    async def read_inputs(
+        session: UserSession | MarketDataSession,
+        pair: PositionPair,
+        *,
+        after: int,
+        limit: int = 20,
+    ) -> tuple[StoredExecutionInput, ...]:
+        session = (
+            require_user_session(session)
+            if isinstance(session, UserSession)
+            else require_market_data_session(session)
+        )
+        if (
+            type(after) is not int
+            or after < 0
+            or type(limit) is not int
+            or not 1 <= limit <= BUFFER_SIZE
+        ):
+            raise ValueError("bounded input cursor required")
+        # State and slots come from one statement/snapshot, including an empty buffer.
+        rows = (
+            (
+                await session.execute(
+                    """SELECT s.ready,s.failure_code,s.lease_until,s.verified_at,
+          s.last_input_id,s.generation AS current_generation,clock_timestamp() AS db_now,
+          b.input_id,b.generation,b.received_at,b.payload::text AS payload,
+          b.capability::text AS capability,b.digest
+          FROM market_execution_state s LEFT JOIN LATERAL
+            (SELECT * FROM market_execution_buffer b
+             WHERE (b.source,b.base,b.quote)=(s.source,s.base,s.quote)
+             AND input_id>:after ORDER BY input_id LIMIT :limit) b ON true
+          WHERE s.source=:source AND s.base=:base AND s.quote=:quote ORDER BY b.input_id""",
+                    {**_params(pair), "after": after, "limit": limit},
+                )
+            )
+            .mappings()
+            .all()
+        )
+        if (
+            not rows
+            or not rows[0]["ready"]
+            or rows[0]["lease_until"] <= rows[0]["db_now"]
+            or (
+                rows[0]["verified_at"] is None
+                or rows[0]["verified_at"] > rows[0]["db_now"]
+                or rows[0]["db_now"] - rows[0]["verified_at"] > MAX_BOOK_AGE
+            )
+        ):
+>           raise SourceUnavailableError("execution source unavailable")
+E           tiewtrade.core.orders.SourceUnavailableError: execution source unavailable
+
+src/tiewtrade/infra/market_data/order_book_storage.py:359: SourceUnavailableError
+=========================== short test summary info ============================
+FAILED tests/infra/execution_market/test_internal_observations.py::test_restore_extension_fixture_and_retry_with_real_roles
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+1 failed in 13.56s

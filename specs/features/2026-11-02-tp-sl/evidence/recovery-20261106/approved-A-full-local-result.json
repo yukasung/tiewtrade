@@ -1,0 +1,12 @@
+{
+  "candidate": "a6775c6",
+  "scope": "local pinned full history/tree, not remote CI",
+  "stage_seconds": 169.72909054199772,
+  "history_matches": 48209,
+  "tree_matches": 48158,
+  "registry_result": "EVIDENCE_BINDING_MISMATCH",
+  "active_bindings_not_expanded": true,
+  "remote_CI_not_started": true,
+  "new_tree_identities": 100,
+  "unmapped_source_values": 0
+}

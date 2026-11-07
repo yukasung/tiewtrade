@@ -32,7 +32,17 @@ def operation_scope(**identity: str) -> Iterator[None]:
 
 
 class TransactionTrace:
-    def __init__(self, path: Path, *, buffered: bool = False, control: Path | None = None) -> None:
+    def __init__(
+        self,
+        path: Path,
+        *,
+        buffered: bool = False,
+        control: Path | None = None,
+        monotonic_fields: bool = False,
+        early_phases: frozenset[str] = frozenset(),
+    ) -> None:
+        self.early_phases = early_phases
+        self.monotonic_fields = monotonic_fields or bool(early_phases)
         self.path = path
         self.control = control or path.parent / "dispatch-trace-control.json"
         self.buffered = buffered
@@ -79,6 +89,8 @@ class TransactionTrace:
             row = _TRANSACTION.get()
             if row is not None:
                 row["checkout_at"] = time()
+                if self.monotonic_fields:
+                    row["checkout_monotonic"] = monotonic()
                 row["pool_wait_seconds"] = monotonic() - row.pop("waiting_since")
                 row["backend_pid"] = connection.driver_connection.get_server_pid()
 
@@ -86,6 +98,8 @@ class TransactionTrace:
             row = _TRANSACTION.get()
             if row is not None:
                 row["checkin_at"] = time()
+                if self.monotonic_fields:
+                    row["checkin_monotonic"] = monotonic()
 
         def before(
             connection: Any,
@@ -110,8 +124,16 @@ class TransactionTrace:
             row = _TRANSACTION.get()
             if row is None or "query_started" not in row:
                 return
-            duration = monotonic() - row.pop("query_started")
+            started = row.pop("query_started")
+            duration = monotonic() - started
             fingerprint = row.pop("query_hash")
+            if "query_details" in row:
+                if len(row["query_details"]) < 64:
+                    row["query_details"].append(
+                        {"hash": fingerprint, "started_monotonic": started, "seconds": duration}
+                    )
+                else:
+                    row["query_detail_truncated"] = True
             queries = row["queries"]
             if fingerprint not in queries and len(queries) >= 63:
                 fingerprint = "OTHER"
@@ -152,7 +174,9 @@ class TransactionTrace:
             cleanup_seconds: float | None = None,
         ) -> AsyncIterator[Any]:
             self.attach(engine)
-            if not self.active():
+            active = self.active()
+            detailed = (_CURRENT.get() or {}).get("phase") in self.early_phases
+            if not active and not detailed:
                 self.setup += 1
                 async with original(engine, cleanup_seconds=cleanup_seconds) as connection:
                     yield connection
@@ -167,34 +191,70 @@ class TransactionTrace:
                 "pool_size": engine.pool.size(),
                 "max_overflow": engine.pool._max_overflow,
             }
+            if detailed:
+                row.update(
+                    query_details=[],
+                    query_detail_truncated=False,
+                    measurement_active_at_start=active,
+                )
+            if self.monotonic_fields or detailed:
+                row["started_monotonic"] = started
             token = _TRANSACTION.set(row)
             outcome = "COMMIT"
+            failure: BaseException | None = None
             try:
                 async with original(engine, cleanup_seconds=cleanup_seconds) as connection:
                     row["transaction_acquired_at"] = time()
-                    yield connection
+                    if detailed:
+                        row["transaction_acquired_monotonic"] = monotonic()
+                    try:
+                        yield connection
+                    finally:
+                        if detailed:
+                            row["body_finished_monotonic"] = monotonic()
             except BaseException as error:
+                failure = error
                 outcome = type(error).__name__
                 raise
             finally:
                 row.update(_CURRENT.get() or {})
                 row["finished_at"] = time()
-                row["seconds"] = monotonic() - started
+                ended = monotonic()
+                row["seconds"] = ended - started
+                if self.monotonic_fields or detailed:
+                    row["finished_monotonic"] = ended
+                if detailed and "body_finished_monotonic" in row:
+                    row["body_seconds"] = (
+                        row["body_finished_monotonic"] - row["transaction_acquired_monotonic"]
+                    )
+                    # Includes commit/rollback and connection cleanup, not server commit alone.
+                    row["finalization_seconds"] = ended - row["body_finished_monotonic"]
                 if "checkout_at" in row:
                     row["held_seconds"] = (
                         row.get("checkin_at", row["finished_at"]) - row["checkout_at"]
+                    )
+                if self.monotonic_fields and "checkout_monotonic" in row:
+                    row["held_seconds"] = (
+                        row.get("checkin_monotonic", ended) - row["checkout_monotonic"]
                     )
                 row["outcome"] = outcome
                 if "waiting_since" in row:
                     row["pool_wait_seconds"] = monotonic() - row.pop("waiting_since")
                 if "query_started" in row:
-                    row["interrupted_query_seconds"] = monotonic() - row.pop("query_started")
+                    query_started = row.pop("query_started")
+                    row["interrupted_query_seconds"] = monotonic() - query_started
+                    if detailed:
+                        row["interrupted_query_started_monotonic"] = query_started
                 _TRANSACTION.reset(token)
                 self.rows += 1
                 if self.rows <= 100000:
                     self.write(row)
                 else:
                     raise RuntimeError("F19_POOL_TRACE_TRUNCATED")
+                if row.get("query_detail_truncated"):
+                    if failure is None:
+                        raise RuntimeError("PUBLISHER_QUERY_TRACE_TRUNCATED")
+                    failure.add_note("publisher query trace truncated")
 
         db._begin = transaction
         try:

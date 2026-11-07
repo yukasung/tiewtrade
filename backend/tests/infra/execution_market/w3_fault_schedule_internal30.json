@@ -1,0 +1,42 @@
+{
+  "profile": "NC12_V3_INTERNAL30_FAULTS_V1",
+  "duration_seconds": 1800,
+  "cycles_per_owner": 30,
+  "events": [
+    {
+      "offset_seconds": 180,
+      "duration_seconds": 30,
+      "kind": "WORKER_RESTART"
+    },
+    {
+      "offset_seconds": 360,
+      "duration_seconds": 30,
+      "kind": "CONNECTION_CHURN"
+    },
+    {
+      "offset_seconds": 540,
+      "duration_seconds": 60,
+      "kind": "REDIS_OUTAGE"
+    },
+    {
+      "offset_seconds": 720,
+      "duration_seconds": 30,
+      "kind": "WORKER_RESTART"
+    },
+    {
+      "offset_seconds": 900,
+      "duration_seconds": 30,
+      "kind": "CONNECTION_CHURN"
+    },
+    {
+      "offset_seconds": 1080,
+      "duration_seconds": 60,
+      "kind": "REDIS_OUTAGE"
+    },
+    {
+      "offset_seconds": 1260,
+      "duration_seconds": 30,
+      "kind": "WORKER_RESTART"
+    }
+  ]
+}

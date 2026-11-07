@@ -1,0 +1,16 @@
+{
+  "targeted_tests": 154,
+  "seconds": 4.09,
+  "post_adjustment_observer_tests": 12,
+  "observer_seconds": 0.69,
+  "ruff": "PASSED",
+  "format": "PASSED",
+  "mypy": "PASSED:4 files",
+  "source_scope": "harness only; production unchanged by section12",
+  "candidate": {
+    "backend/tests/infra/execution_market/profile_workload.py": "649e30b9e91cde954d20c4f4439979c010c3d7015e7bb433d076fdffb85b781e",
+    "backend/tests/infra/execution_market/profile_internal_restore.py": "ba24e4abd13b57a77dc95569d51b8895db503c3cdaae862c7abcdeeaafe83f7a",
+    "backend/tests/infra/execution_market/profile_publisher_readiness.py": "b73b7d8988797678952956c221634a3ec87ec7df1ce97890d95a31e9d3ca160e",
+    "backend/tests/infra/execution_market/test_publisher_readiness.py": "e0856e4d95f6afd6e2e7bc51b097ec0c4e8c781e9611fc981415b3c7e3ed2541"
+  }
+}

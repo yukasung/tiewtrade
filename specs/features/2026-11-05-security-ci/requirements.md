@@ -1,6 +1,22 @@
 # Security CI — Requirements
 
 สถานะ: **Approved — เจ้าของอนุมัติ requirements ทั้งฉบับ 2026-11-05**
+
+**Approved amendment2026-11-07 (F17 Option A):** RQ-2/3/6/7 and §6.2 also allow an
+explicit owner-approved immutable evidence registry binding commit/path/blob/rule
+and exact deduplicated occurrence count, with reason/approval/evidence. The fixed
+39-entry dataset is defined in [the approved amendment](../2026-11-02-tp-sl/publication-evidence-policy-proposal.md).
+Keep full history/tree scanning, existing occurrence approvals, severity rules and
+15-minute budget. Changed bindings/new findings remain blocked. Add safe stage
+timing and identity-preserving Git lookup optimization, with parity/negative tests;
+shape or directory alone never authorizes an exception. Bounded public reports may
+group resolved approved artifact occurrences with explicit counts/bindings while
+retaining complete private evaluation and unchanged blocking for unresolved rows.
+
+**Approved data extension2026-11-07:** owner approved the exact100tree identities
+listed in [the extension](../2026-11-02-tp-sl/tree-occurrence-extension-proposal.md).
+Only8of39binding count/set digests change, total48218. No identity/matcher/coverage/
+severity/deadline change or generic exception is authorized.
 วันที่: 2026-11-05
 
 ## ทำไมต้องมี

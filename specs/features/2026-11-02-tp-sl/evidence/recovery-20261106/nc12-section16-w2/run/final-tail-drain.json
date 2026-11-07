@@ -1,0 +1,329 @@
+{
+  "budget_seconds": 60,
+  "initial_watermark": 9689,
+  "stages": [
+    {
+      "stage": "live_recovery",
+      "elapsed_seconds": 1.4040999303688295e-05,
+      "resources": {
+        "parent_pool": {
+          "pool_size": 5,
+          "max_overflow": 10,
+          "checked_out": 0,
+          "checked_in": 5,
+          "overflow": 0
+        },
+        "unknown_nulls": true,
+        "connections": 63,
+        "by_role_and_state": [
+          {
+            "role": "tiewtrade_api",
+            "state": null,
+            "connections": 12
+          },
+          {
+            "role": "tiewtrade_auth",
+            "state": null,
+            "connections": 2
+          },
+          {
+            "role": "tiewtrade_engine",
+            "state": null,
+            "connections": 25
+          },
+          {
+            "role": "tiewtrade_engine_scan",
+            "state": null,
+            "connections": 21
+          },
+          {
+            "role": "tiewtrade_market_data",
+            "state": null,
+            "connections": 2
+          },
+          {
+            "role": "tiewtrade_migrator",
+            "state": "active",
+            "connections": 1
+          }
+        ]
+      }
+    },
+    {
+      "stage": "stop_publisher",
+      "elapsed_seconds": 0.46636458299872174,
+      "resources": {
+        "parent_pool": {
+          "pool_size": 5,
+          "max_overflow": 10,
+          "checked_out": 0,
+          "checked_in": 5,
+          "overflow": 0
+        },
+        "unknown_nulls": true,
+        "connections": 63,
+        "by_role_and_state": [
+          {
+            "role": "tiewtrade_api",
+            "state": null,
+            "connections": 12
+          },
+          {
+            "role": "tiewtrade_auth",
+            "state": null,
+            "connections": 2
+          },
+          {
+            "role": "tiewtrade_engine",
+            "state": null,
+            "connections": 25
+          },
+          {
+            "role": "tiewtrade_engine_scan",
+            "state": null,
+            "connections": 21
+          },
+          {
+            "role": "tiewtrade_market_data",
+            "state": null,
+            "connections": 2
+          },
+          {
+            "role": "tiewtrade_migrator",
+            "state": "active",
+            "connections": 1
+          }
+        ]
+      }
+    },
+    {
+      "stage": "final_tail",
+      "elapsed_seconds": 0.5183751659988047,
+      "resources": {
+        "parent_pool": {
+          "pool_size": 5,
+          "max_overflow": 10,
+          "checked_out": 0,
+          "checked_in": 5,
+          "overflow": 0
+        },
+        "unknown_nulls": true,
+        "connections": 63,
+        "by_role_and_state": [
+          {
+            "role": "tiewtrade_api",
+            "state": null,
+            "connections": 12
+          },
+          {
+            "role": "tiewtrade_auth",
+            "state": null,
+            "connections": 2
+          },
+          {
+            "role": "tiewtrade_engine",
+            "state": null,
+            "connections": 25
+          },
+          {
+            "role": "tiewtrade_engine_scan",
+            "state": null,
+            "connections": 21
+          },
+          {
+            "role": "tiewtrade_market_data",
+            "state": null,
+            "connections": 2
+          },
+          {
+            "role": "tiewtrade_migrator",
+            "state": "active",
+            "connections": 1
+          }
+        ]
+      }
+    },
+    {
+      "stage": "complete",
+      "elapsed_seconds": 0.6317004159991484,
+      "resources": {
+        "parent_pool": {
+          "pool_size": 5,
+          "max_overflow": 10,
+          "checked_out": 0,
+          "checked_in": 5,
+          "overflow": 0
+        },
+        "unknown_nulls": true,
+        "connections": 63,
+        "by_role_and_state": [
+          {
+            "role": "tiewtrade_api",
+            "state": null,
+            "connections": 12
+          },
+          {
+            "role": "tiewtrade_auth",
+            "state": null,
+            "connections": 2
+          },
+          {
+            "role": "tiewtrade_engine",
+            "state": null,
+            "connections": 25
+          },
+          {
+            "role": "tiewtrade_engine_scan",
+            "state": null,
+            "connections": 21
+          },
+          {
+            "role": "tiewtrade_market_data",
+            "state": null,
+            "connections": 2
+          },
+          {
+            "role": "tiewtrade_migrator",
+            "state": "active",
+            "connections": 1
+          }
+        ]
+      }
+    }
+  ],
+  "final_head": 9695,
+  "minimum_cursor": 9689,
+  "book_owner": "82a0e299-fb1b-4554-8add-9b28d3a891b9",
+  "book_generation": 1,
+  "owners": [
+    {
+      "owner": "3a7af852-358b-43a9-82fb-343340ff0bb9",
+      "cursor": 9692,
+      "availability": "READY",
+      "lag": 3
+    },
+    {
+      "owner": "2435db12-755b-419a-b961-87187ceba2fd",
+      "cursor": 9691,
+      "availability": "READY",
+      "lag": 4
+    },
+    {
+      "owner": "736fd805-4653-4180-b58a-48b95be6878d",
+      "cursor": 9694,
+      "availability": "READY",
+      "lag": 1
+    },
+    {
+      "owner": "947d1315-ed33-4a9d-9877-5755633386f3",
+      "cursor": 9693,
+      "availability": "READY",
+      "lag": 2
+    },
+    {
+      "owner": "09ebf267-27c5-417d-9d49-11cd37a540bf",
+      "cursor": 9692,
+      "availability": "READY",
+      "lag": 3
+    },
+    {
+      "owner": "969ec918-e591-4aae-9590-3f03fa54e9d8",
+      "cursor": 9694,
+      "availability": "READY",
+      "lag": 1
+    },
+    {
+      "owner": "d093bea0-09b4-4e3d-b1cb-df54a0471fe7",
+      "cursor": 9694,
+      "availability": "READY",
+      "lag": 1
+    },
+    {
+      "owner": "3e8b937d-79ba-40aa-a09d-95d83da41a50",
+      "cursor": 9693,
+      "availability": "READY",
+      "lag": 2
+    },
+    {
+      "owner": "b8335db6-8e81-41eb-8f33-bfa3d3201424",
+      "cursor": 9691,
+      "availability": "READY",
+      "lag": 4
+    },
+    {
+      "owner": "5092d55c-4409-486f-89e9-981173a7642c",
+      "cursor": 9695,
+      "availability": "READY",
+      "lag": 0
+    },
+    {
+      "owner": "056c70ed-c4da-4666-9d73-ddf2c7e7f75b",
+      "cursor": 9691,
+      "availability": "READY",
+      "lag": 4
+    },
+    {
+      "owner": "b66b6719-a230-4e89-a4f4-0ca8113d3f68",
+      "cursor": 9692,
+      "availability": "READY",
+      "lag": 3
+    },
+    {
+      "owner": "cb5a6a3c-1470-4097-8d76-c891bb2709e4",
+      "cursor": 9692,
+      "availability": "READY",
+      "lag": 3
+    },
+    {
+      "owner": "94dbead9-f43e-4668-be32-123c093c315c",
+      "cursor": 9695,
+      "availability": "READY",
+      "lag": 0
+    },
+    {
+      "owner": "8c46df79-9130-4394-adfb-aeddd658490c",
+      "cursor": 9694,
+      "availability": "READY",
+      "lag": 1
+    },
+    {
+      "owner": "cb42bcfa-8cba-45f8-9b04-fa8f4c8008c7",
+      "cursor": 9691,
+      "availability": "READY",
+      "lag": 4
+    },
+    {
+      "owner": "fb093d40-cb37-4ad5-a926-24fa1e186f0c",
+      "cursor": 9691,
+      "availability": "READY",
+      "lag": 4
+    },
+    {
+      "owner": "3a616d54-777c-4032-8e42-5df117e6bcf8",
+      "cursor": 9693,
+      "availability": "READY",
+      "lag": 2
+    },
+    {
+      "owner": "5b5f4cf8-da90-44d7-ad6a-939a95688adc",
+      "cursor": 9693,
+      "availability": "READY",
+      "lag": 2
+    },
+    {
+      "owner": "71f99137-7434-4c66-b079-39e022532f2e",
+      "cursor": 9690,
+      "availability": "READY",
+      "lag": 5
+    }
+  ],
+  "elapsed_seconds": 0.6360147499999584,
+  "recovered": true,
+  "cleanup_parent_pool": {
+    "pool_size": 5,
+    "max_overflow": 10,
+    "checked_out": 0,
+    "checked_in": 5,
+    "overflow": 0
+  }
+}

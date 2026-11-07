@@ -1,0 +1,200 @@
+--- before/backend/src/tiewtrade/infra/paper_orders/matching_storage.py
++++ after/backend/src/tiewtrade/infra/paper_orders/matching_storage.py
+@@ -222,13 +222,16 @@
+     session = require_user_session(session)
+     terminal = (
+         await session.execute(
+-            """SELECT terminal.value FROM paper_orders o
+-            JOIN paper_order_events e ON e.episode_id=o.episode_id
+-              AND e.base=o.base AND e.quote=o.quote
+-            CROSS JOIN LATERAL jsonb_array_elements(e.payload->'terminal_orders') terminal(value)
+-            WHERE o.id=:order AND e.payload ? 'matching'
+-              AND terminal.value->'intent'->>'order_id'=CAST(:order AS text)
+-            ORDER BY ((e.payload->>'decision_sequence')::bigint) DESC LIMIT 1""",
++            """SELECT matched.value FROM paper_orders o
++            CROSS JOIN LATERAL (
++                SELECT terminal.value FROM paper_order_events e
++                CROSS JOIN LATERAL
++                    jsonb_array_elements(e.payload->'terminal_orders') terminal(value)
++                WHERE e.episode_id=o.episode_id AND e.base=o.base AND e.quote=o.quote
++                  AND e.payload ? 'matching'
++                  AND terminal.value->'intent'->>'order_id'=CAST(o.id AS text)
++                ORDER BY ((e.payload->>'decision_sequence')::bigint) DESC LIMIT 1
++            ) matched WHERE o.id=:order""",
+             {"order": order_id},
+         )
+     ).scalar_one_or_none()
+--- before/backend/tests/infra/execution_market/test_worker.py
++++ after/backend/tests/infra/execution_market/test_worker.py
+@@ -14,6 +14,7 @@
+ from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine, create_async_engine
+ 
+ from tests.infra.execution_market.commit_proxy import drop_commit_reply
++from tests.infra.execution_market.order_history_assertions import assert_terminal_history
+ from tests.infra.execution_market.test_dispatch import intent
+ from tests.infra.execution_market.test_storage import prepared
+ from tiewtrade.core.money import Money, Quantity
+@@ -24,6 +25,7 @@
+     OrderIntent,
+     OrderOrigin,
+     OrderScope,
++    OrderStatus,
+     OrderType,
+     QuoteBudget,
+     TimeInForce,
+@@ -881,6 +883,10 @@
+         )
+         async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+             result = await get_order_command(session, command.command_id)
++            history_order = await assert_terminal_history(session, value.order_id)
++            assert history_order.status is OrderStatus.FILLED
++            assert history_order.filled == Quantity.of(1, "BTC")
++            assert history_order.spent == Money.of(100, "USDT")
+             projection = (
+                 await session.execute(
+                     """SELECT p.status,r.quote_reserved FROM paper_order_projections p
+@@ -1011,6 +1017,10 @@
+                 )
+             ).one()
+             corrected_wallet = await get_wallet(session)
++            latest = await assert_terminal_history(session, value.order_id)
++            assert latest.status is OrderStatus.CANCELED
++            assert latest.filled == Quantity.of("0.5", "BTC")
++            assert latest.spent == Money.of(50, "USDT")
+             correction_cash = (
+                 await session.execute(
+                     """SELECT count(*) FROM paper_wallet_ledger
+@@ -1056,6 +1066,10 @@
+                 )
+             ).one()
+             void_wallet = await get_wallet(session)
++            latest = await assert_terminal_history(session, value.order_id)
++            assert latest.status is OrderStatus.CANCELED
++            assert latest.filled == Quantity.of(0, "BTC")
++            assert latest.spent == Money.of(0, "USDT")
+             correction_cash = (
+                 await session.execute(
+                     """SELECT count(*) FROM paper_wallet_ledger
+--- before/backend/tests/infra/execution_market/test_review_regressions.py
++++ after/backend/tests/infra/execution_market/test_review_regressions.py
+@@ -7,6 +7,7 @@
+ import pytest
+ from sqlalchemy.ext.asyncio import AsyncEngine
+ 
++from tests.infra.execution_market.order_history_assertions import assert_terminal_history
+ from tests.infra.execution_market.test_dispatch import intent
+ from tests.infra.execution_market.test_worker import AllowPolicy, ready_public_sources
+ from tiewtrade.core.money import Money, Quantity
+@@ -33,7 +34,7 @@
+     submit_cancel,
+     submit_order,
+ )
+-from tiewtrade.infra.paper_orders.matching_storage import load_matching_state, load_order_state
++from tiewtrade.infra.paper_orders.matching_storage import load_matching_state
+ from tiewtrade.infra.paper_orders.worker import process_claimed_order
+ from tiewtrade.infra.paper_wallet import get_wallet
+ from tiewtrade.infra.paper_wallet.records import PaperWalletSnapshot
+@@ -249,7 +250,7 @@
+                     WHERE order_id=:order""",
+                     {"order": value.order_id},
+                 )
+-                recovered = await load_order_state(session, value.order_id)
++                recovered = await assert_terminal_history(session, value.order_id)
+                 assert recovered.status is OrderStatus.EXPIRED
+                 assert recovered.filled == Quantity.of(1, "BTC")
+                 assert recovered.spent == Money.of(100, "USDT")
+--- before/backend/tests/infra/execution_market/order_history_assertions.py
++++ after/backend/tests/infra/execution_market/order_history_assertions.py
+@@ -0,0 +1,29 @@
++"""Pin the pre-NC12§13 terminal lookup as an independent equivalence oracle."""
++
++from uuid import UUID
++
++from tiewtrade.core.orders import OrderState
++from tiewtrade.infra.db.session import UserSession
++from tiewtrade.infra.paper_orders.codec import order_from_payload
++from tiewtrade.infra.paper_orders.matching_storage import load_order_state
++
++
++async def assert_terminal_history(session: UserSession, order_id: UUID) -> OrderState:
++    # Keep this reference query unchanged: it proves the optimized lookup's payload,
++    # including precision, provenance and the latest correction, matches its predecessor.
++    original = (
++        await session.execute(
++            """SELECT terminal.value FROM paper_orders o
++            JOIN paper_order_events e ON e.episode_id=o.episode_id
++              AND e.base=o.base AND e.quote=o.quote
++            CROSS JOIN LATERAL jsonb_array_elements(e.payload->'terminal_orders') terminal(value)
++            WHERE o.id=:order AND e.payload ? 'matching'
++              AND terminal.value->'intent'->>'order_id'=CAST(:order AS text)
++            ORDER BY ((e.payload->>'decision_sequence')::bigint) DESC LIMIT 1""",
++            {"order": order_id},
++        )
++    ).scalar_one()
++    assert original is not None
++    current = await load_order_state(session, order_id)
++    assert current == order_from_payload(original)
++    return current
+--- before/backend/tests/infra/execution_market/test_terminal_history.py
++++ after/backend/tests/infra/execution_market/test_terminal_history.py
+@@ -0,0 +1,60 @@
++"""Terminal-history optimization retains fallback behavior and owner RLS."""
++
++from uuid import UUID, uuid4
++
++import pytest
++from sqlalchemy.ext.asyncio import AsyncEngine
++
++from tests.infra.execution_market.order_history_assertions import assert_terminal_history
++from tests.infra.execution_market.test_dispatch import intent
++from tests.infra.execution_market.test_review_regressions import cancel, process
++from tests.infra.execution_market.test_worker import ready_public_sources
++from tiewtrade.core.money import Money, Quantity
++from tiewtrade.core.orders import OrderConflictError, OrderStatus
++from tiewtrade.infra.db import DatabaseRole, user_session
++from tiewtrade.infra.paper_orders.dispatch import submit_order
++from tiewtrade.infra.paper_orders.matching_storage import load_matching_state, load_order_state
++from tiewtrade.infra.paper_wallet.records import PaperWalletSnapshot
++from tiewtrade.infra.users import create_user
++
++
++@pytest.mark.parametrize("terminal", [False, True])
++async def test_order_history_fallback_missing_and_wrong_owner_are_unchanged(
++    api_engine: AsyncEngine,
++    engine_engine: AsyncEngine,
++    owner: UUID,
++    wallet: PaperWalletSnapshot,
++    terminal: bool,
++) -> None:
++    market, _, _, _ = await ready_public_sources()
++    other = uuid4()
++    await create_user(api_engine, other)
++    value = intent(owner, wallet.episode_id)
++    try:
++        async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
++            command = await submit_order(session, wallet_id=wallet.wallet_id, intent=value)
++        await process(engine_engine, owner, command.command_id)
++        if terminal:
++            await cancel(engine_engine, owner, wallet, value.order_id)
++        async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
++            if terminal:
++                current = await assert_terminal_history(session, value.order_id)
++                assert current.status is OrderStatus.CANCELED
++                assert current.filled == Quantity.of(0, "BTC")
++                assert current.spent == Money.of(0, "USDT")
++            else:
++                # No terminal snapshot exists; retain the pre-terminal/legacy projection path.
++                current = await load_order_state(session, value.order_id)
++                checkpoint = await load_matching_state(
++                    session, wallet_id=wallet.wallet_id, scope=value.scope, pair=value.pair
++                )
++                assert current == checkpoint.state.orders[0]
++                assert current.status is OrderStatus.ACCEPTED
++                assert current.reservation.quote == Money.of(100, "USDT")
++            with pytest.raises(OrderConflictError, match="order projection is unavailable"):
++                await load_order_state(session, uuid4())
++        async with user_session(engine_engine, other, role=DatabaseRole.ENGINE) as session:
++            with pytest.raises(OrderConflictError, match="order projection is unavailable"):
++                await load_order_state(session, value.order_id)
++    finally:
++        await market.dispose()

@@ -1,0 +1,55 @@
+{
+  "profile": "PAPER_INTERNAL20_V2",
+  "overall": "FAILED",
+  "base_assertions_passed": true,
+  "commands": {
+    "offered": 12000,
+    "admitted": 12000,
+    "completed": 12000,
+    "rejected": 0,
+    "fills": 4800,
+    "cancels": 2400,
+    "replays": 2400,
+    "cycles": 2400
+  },
+  "measurement_seconds": 1241.6018772919997,
+  "completion_limit_seconds": 1260,
+  "completion_duration_passed": true,
+  "latency_passed": true,
+  "performance_warning": true,
+  "owner_financial_passed": true,
+  "positions_passed": true,
+  "all_registered_pools_returned": true,
+  "pool_errors": {
+    "ConnectionResourceError": 4
+  },
+  "resource_errors": [
+    {
+      "error_type": "CancelledError",
+      "sqlstate": "",
+      "quiescing": false
+    },
+    {
+      "error_type": "CancelledError",
+      "sqlstate": "",
+      "quiescing": false
+    },
+    {
+      "error_type": "CancelledError",
+      "sqlstate": "",
+      "quiescing": false
+    },
+    {
+      "error_type": "CancelledError",
+      "sqlstate": "",
+      "quiescing": false
+    }
+  ],
+  "worker_reports": 20,
+  "worker_pool_reports_passed": true,
+  "cleanup": {
+    "connections": 0,
+    "advisory_locks": 0
+  },
+  "caveat": "observer errors do not contain timestamp, pool identity or task/operation; cancellation origin cannot be determined from these artifacts"
+}

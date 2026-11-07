@@ -140,6 +140,8 @@ async def buy(
     scan: AsyncEngine,
     owner: UUID,
     wallet: PaperWalletSnapshot,
+    *,
+    worker_owner: UUID | None = None,
 ) -> tuple[AsyncEngine, BookLease, BookState, ExecutionMetadata, UUID]:
     await select_use(api, owner)
     market, lease, book, metadata = await ready_public_sources()
@@ -147,7 +149,8 @@ async def buy(
     command = await transfer(
         api, engine, scan, owner, wallet, value, bracket={"tp": "110", "sl": "90"}
     )
-    await execute(engine, owner, command)
+    processing_owner = owner if worker_owner is None else worker_owner
+    await execute(engine, processing_owner, command)
     await asyncio.sleep(0.23)
     async with market_data_session(market) as session:
         now = (await session.execute("SELECT clock_timestamp()")).scalar_one()
@@ -156,7 +159,7 @@ async def buy(
         )
         lease = await publish_input(session, lease, book, metadata)
     await asyncio.sleep(0.035)
-    await execute(engine, owner, command)
+    await execute(engine, processing_owner, command)
     async with user_session(engine, owner, role=DatabaseRole.ENGINE) as session:
         rows = await groups(session, wallet.episode_id, PAIR)
         assert len(rows) == 1 and rows[0].value.quantity == Quantity.of("0.999", "BTC")

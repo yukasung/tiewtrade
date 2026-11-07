@@ -1,0 +1,16 @@
+[
+  "tests/infra/execution_market/test_checkpoint_batch.py",
+  "tests/infra/execution_market/test_checkpoint_isolation.py",
+  "tests/infra/execution_market/test_checkpoint_polling.py",
+  "tests/infra/execution_market/test_claim_coordination.py",
+  "tests/infra/execution_market/test_claim_coordination_financial.py",
+  "tests/infra/execution_market/test_final_tail_drain.py",
+  "tests/infra/execution_market/test_parent_poll.py",
+  "tests/infra/execution_market/test_profile_diagnostics.py",
+  "tests/infra/execution_market/test_publisher_heartbeat.py",
+  "tests/infra/execution_market/test_runtime_observation.py",
+  "tests/infra/execution_market/test_standalone_runtime.py",
+  "tests/infra/execution_market/test_worker.py",
+  "tests/infra/risk_limits/test_worker_rounds.py",
+  "tests/infra/risk_limits/test_pool_timing.py"
+]

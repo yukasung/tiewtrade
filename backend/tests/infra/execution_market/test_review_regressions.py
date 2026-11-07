@@ -7,6 +7,7 @@ from uuid import UUID, uuid4
 import pytest
 from sqlalchemy.ext.asyncio import AsyncEngine
 
+from tests.infra.execution_market.order_history_assertions import assert_terminal_history
 from tests.infra.execution_market.test_dispatch import intent
 from tests.infra.execution_market.test_worker import AllowPolicy, ready_public_sources
 from tiewtrade.core.money import Money, Quantity
@@ -33,7 +34,7 @@ from tiewtrade.infra.paper_orders.dispatch import (
     submit_cancel,
     submit_order,
 )
-from tiewtrade.infra.paper_orders.matching_storage import load_matching_state, load_order_state
+from tiewtrade.infra.paper_orders.matching_storage import load_matching_state
 from tiewtrade.infra.paper_orders.worker import process_claimed_order
 from tiewtrade.infra.paper_wallet import get_wallet
 from tiewtrade.infra.paper_wallet.records import PaperWalletSnapshot
@@ -249,7 +250,7 @@ async def test_market_expiry_has_immutable_reason_and_terminal_state(
                     WHERE order_id=:order""",
                     {"order": value.order_id},
                 )
-                recovered = await load_order_state(session, value.order_id)
+                recovered = await assert_terminal_history(session, value.order_id)
                 assert recovered.status is OrderStatus.EXPIRED
                 assert recovered.filled == Quantity.of(1, "BTC")
                 assert recovered.spent == Money.of(100, "USDT")

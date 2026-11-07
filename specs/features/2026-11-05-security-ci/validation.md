@@ -1,6 +1,47 @@
 # Security CI — Validation
 
 สถานะ: **Approved — เจ้าของสั่ง “แก้ไข” implementation blocker ตามแผนและเกณฑ์นี้ 2026-11-05**
+
+**Approved amendment2026-11-07 (F17 Option A), Feature:** verify unchanged occurrence
+identities/locators and fail-closed behavior after batched Git reads; real scanner
+history/tree and rename/reintroduction coverage remains mandatory. V-05 additionally
+requires strict immutable evidence schema/config-digest coverage, exact deduplicated
+counts, missing/invalid approvals rejected, changed blob/path/commit/rule/new matches
+not excepted, and a real new credential in approved or unapproved files blocked.
+Group only resolved artifact findings in bounded public output, with explicit counts
+and no raw secret text; unresolved output bounds still fail closed. Use safe local
+timing/count evidence before a full required-CI run; keep15min timeout. New amendment
+validation is Pending until current-candidate tests and remote CI pass; historical
+Passed evidence below is not certification of this change.
+
+Option A scoped local checks:46policy tests (42passed/4opt-in skipped), plus3pinned
+Gitleaks probes passed; original/optimized147-occurrence identity/locator parity
+passed in history and tree modes. Seven files Ruff/format and six files strict mypy
+passed. Full local/remote candidate checks still pending. See
+[implementation receipt](../2026-11-02-tp-sl/evidence/recovery-20261106/evidence-policy-implementation.md).
+
+Option A full local result: scanner/mapping stages169.73s, but registry validation
+**Failed — EVIDENCE_BINDING_MISMATCH**. Tree reports100additional identities with
+different columns on the same8immutable blobs. Existing approval not expanded;
+new column-variation fail-closed regression passed. Pending owner decision on
+[exact data extension](../2026-11-02-tp-sl/tree-occurrence-extension-proposal.md),
+then full local identity validation/required CI. No new remote-CI success claim.
+
+Owner approved the exact100-identity extension2026-11-07. Verify only8entries change
+to the listed counts/set digests (48218total), then actual full history/tree registry
+resolution and zero blocked/triage findings. Scope remains Feature; current-head
+local/full required CI results Pending until executed, prior failures unchanged.
+
+Exact100extension local validation Passed on6d021c4:11affected registry tests passed;
+complete pinned history/tree146.640s, exact48218artifact identities,48311excepted
+including existing approvals,0blocked/triage. Public summary66892bytes. Final
+published-head required CI still Pending; no remote success inferred from local.
+[Local checkpoint](../2026-11-02-tp-sl/evidence/recovery-20261106/tree-extension-local-checkpoint.md).
+
+Exact extension remote Security **Passed7/7** on12e6204, run42367203731. Secret scan/
+mapping stages126.104s,15min unchanged; all policy/dependency/CodeQL/aggregate checks
+passed. Separate application CI still Failed2fixture/config cases; no merge claim.
+[Remote checkpoint](../2026-11-02-tp-sl/evidence/recovery-20261106/extension-remote-ci-checkpoint.md).
 วันที่: 2026-11-05
 Requirements: [Approved](requirements.md); implementation: [plan.md](plan.md)
 

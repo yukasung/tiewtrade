@@ -1,0 +1,83 @@
+..................................F..................................... [ 92%]
+......                                                                   [100%]
+=================================== FAILURES ===================================
+__ test_successful_smoke_observer_records_publisher_without_acceptance[True] ___
+
+tmp_path = PosixPath('/private/var/folders/fb/g4m1d38j4fl6x1pt39rn0wxr0000gn/T/pytest-of-chainarongjaykeaw/pytest-1/test_successful_smoke_observer1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x10aad33b0>
+baseline = True
+
+    @pytest.mark.parametrize("baseline", [False, True])
+    async def test_successful_smoke_observer_records_publisher_without_acceptance(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch, baseline: bool
+    ) -> None:
+        output = tmp_path / "run"
+    
+        lease = SimpleNamespace(owner=uuid4(), generation=1, last_input_id=12)
+    
+        async def publish(engine: AsyncEngine, *args: Any, **kwargs: Any) -> None:
+            async with db.market_data_session(engine) as session:
+                await session.execute("SELECT clock_timestamp()")
+    
+        async def workload(args: argparse.Namespace, **kwargs: Any) -> int:
+            output.mkdir()
+            if not baseline:
+                f15.save(
+                    output / "dispatch-trace-control.json", {"started": monotonic(), "seconds": 180}
+                )
+            engine = vars(f15)["create_engine_for"](DatabaseRole.MARKET_DATA)
+            try:
+                await vars(f15)["publish_market"](engine, lease, trade_id=13)
+            finally:
+                await engine.dispose()
+            return 0
+    
+        monkeypatch.setattr(f15, "publish_market", publish)
+        monkeypatch.setattr(f15, "_run", workload)
+        assert (
+>           await f15.run(
+                argparse.Namespace(
+                    diagnostics=True,
+                    phase="SMOKE",
+                    output=output,
+                    coordinate_claims=baseline,
+                    parent_poll_limit=4 if baseline else None,
+                )
+            )
+            == 0
+        )
+
+tests/infra/execution_market/test_profile_diagnostics.py:288: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/infra/execution_market/profile_workload.py:1719: in run
+    validate_options(args)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+args = Namespace(diagnostics=True, phase='SMOKE', output=PosixPath('/private/var/folders/fb/g4m1d38j4fl6x1pt39rn0wxr0000gn/T/pytest-of-chainarongjaykeaw/pytest-1/test_successful_smoke_observer1/run'), coordinate_claims=True, parent_poll_limit=4)
+
+    def validate_options(args: argparse.Namespace) -> None:
+        value = getattr(args, "parent_poll_limit", None)
+        if value is not None and (
+            type(value) is not int
+            or value != 4
+            or getattr(args, "phase", None) != "SMOKE"
+            or getattr(args, "worker_only", False)
+            or not all(
+                getattr(args, key, False)
+                for key in (
+                    "r8_claim_budget",
+                    "publisher_heartbeat_per_book",
+                    "diagnostics",
+                    "final_tail_drain",
+                )
+            )
+        ):
+>           raise ValueError(
+                "parent poll limit4 requires the explicit diagnostic R8 heartbeat tail SMOKE parent"
+            )
+E           ValueError: parent poll limit4 requires the explicit diagnostic R8 heartbeat tail SMOKE parent
+
+tests/infra/execution_market/profile_parent_poll.py:35: ValueError
+=========================== short test summary info ============================
+FAILED tests/infra/execution_market/test_profile_diagnostics.py::test_successful_smoke_observer_records_publisher_without_acceptance[True]
+1 failed, 77 passed in 2.92s

@@ -1,0 +1,190 @@
+{
+  "cycles": [
+    {
+      "owner": "492a2eb8-8ab3-4b10-a7ad-942ec2fc1661",
+      "run_id": "7ff7bfed-2812-496e-8546-d2143c4ea680",
+      "cycle": 1,
+      "started_at": 1793975734.848844,
+      "phases": [
+        {
+          "phase": "cycle",
+          "owner": "492a2eb8-8ab3-4b10-a7ad-942ec2fc1661",
+          "started_at": 1793975734.848862,
+          "started_monotonic": 3280.517674875,
+          "finished_at": 1793975794.86363,
+          "seconds": 60.00223091599992,
+          "outcome": "CancelledError"
+        },
+        {
+          "phase": "submit_new",
+          "owner": "492a2eb8-8ab3-4b10-a7ad-942ec2fc1661",
+          "order_id": "a966d164-a3c0-5bd2-9a81-8e27b4ffd6a3",
+          "started_at": 1793975734.848932,
+          "started_monotonic": 3280.517745166,
+          "finished_at": 1793975754.313705,
+          "seconds": 19.46441112499997,
+          "outcome": "returned"
+        },
+        {
+          "phase": "submit_order",
+          "order_id": "a966d164-a3c0-5bd2-9a81-8e27b4ffd6a3",
+          "owner": "492a2eb8-8ab3-4b10-a7ad-942ec2fc1661",
+          "started_at": 1793975734.855372,
+          "started_monotonic": 3280.52418425,
+          "finished_at": 1793975734.89329,
+          "seconds": 0.037919124999916676,
+          "outcome": "returned"
+        },
+        {
+          "phase": "wait_command",
+          "owner": "492a2eb8-8ab3-4b10-a7ad-942ec2fc1661",
+          "command_id": "4f76ac58-8eeb-499a-906e-ee7a2c8af844",
+          "started_at": 1793975734.897884,
+          "started_monotonic": 3280.566695541,
+          "finished_at": 1793975742.038174,
+          "seconds": 7.140158208999765,
+          "outcome": "returned"
+        },
+        {
+          "phase": "wait_status",
+          "owner": "492a2eb8-8ab3-4b10-a7ad-942ec2fc1661",
+          "order_id": "a966d164-a3c0-5bd2-9a81-8e27b4ffd6a3",
+          "expected_status": "FILLED",
+          "started_at": 1793975742.0381892,
+          "started_monotonic": 3287.706863625,
+          "finished_at": 1793975754.313667,
+          "seconds": 12.275254457999836,
+          "outcome": "returned"
+        },
+        {
+          "phase": "submit_new",
+          "owner": "492a2eb8-8ab3-4b10-a7ad-942ec2fc1661",
+          "order_id": "84f79a6e-a43d-5d90-9213-37eff96ac4ec",
+          "started_at": 1793975754.313911,
+          "started_monotonic": 3299.982354625,
+          "finished_at": 1793975764.245057,
+          "seconds": 9.92683445800003,
+          "outcome": "returned"
+        },
+        {
+          "phase": "submit_order",
+          "order_id": "84f79a6e-a43d-5d90-9213-37eff96ac4ec",
+          "owner": "492a2eb8-8ab3-4b10-a7ad-942ec2fc1661",
+          "started_at": 1793975754.322486,
+          "started_monotonic": 3299.990936125,
+          "finished_at": 1793975754.3825028,
+          "seconds": 0.06001733299990519,
+          "outcome": "returned"
+        },
+        {
+          "phase": "wait_command",
+          "owner": "492a2eb8-8ab3-4b10-a7ad-942ec2fc1661",
+          "command_id": "0b5427a7-b6be-46a9-a58d-48e0078ff8cc",
+          "started_at": 1793975754.388523,
+          "started_monotonic": 3300.056970791,
+          "finished_at": 1793975764.201708,
+          "seconds": 9.80889287500031,
+          "outcome": "returned"
+        },
+        {
+          "phase": "wait_status",
+          "owner": "492a2eb8-8ab3-4b10-a7ad-942ec2fc1661",
+          "order_id": "84f79a6e-a43d-5d90-9213-37eff96ac4ec",
+          "expected_status": "ACCEPTED",
+          "started_at": 1793975764.201791,
+          "started_monotonic": 3309.865930291,
+          "finished_at": 1793975764.245035,
+          "seconds": 0.043237166999915644,
+          "outcome": "returned"
+        },
+        {
+          "phase": "submit_order",
+          "order_id": "84f79a6e-a43d-5d90-9213-37eff96ac4ec",
+          "owner": "492a2eb8-8ab3-4b10-a7ad-942ec2fc1661",
+          "started_at": 1793975764.248571,
+          "started_monotonic": 3309.912700083,
+          "finished_at": 1793975764.2601259,
+          "seconds": 0.01154950000000099,
+          "outcome": "returned"
+        },
+        {
+          "phase": "submit_cancel",
+          "order_id": "84f79a6e-a43d-5d90-9213-37eff96ac4ec",
+          "owner": "492a2eb8-8ab3-4b10-a7ad-942ec2fc1661",
+          "started_at": 1793975764.285436,
+          "started_monotonic": 3309.949543041,
+          "finished_at": 1793975764.3107378,
+          "seconds": 0.025291124999966996,
+          "outcome": "returned"
+        },
+        {
+          "phase": "wait_command",
+          "owner": "492a2eb8-8ab3-4b10-a7ad-942ec2fc1661",
+          "command_id": "95a895b2-2369-456e-ad6a-3427d575478f",
+          "started_at": 1793975764.314052,
+          "started_monotonic": 3309.9781455,
+          "finished_at": 1793975772.5579,
+          "seconds": 8.240233457999693,
+          "outcome": "returned"
+        },
+        {
+          "phase": "wait_status",
+          "owner": "492a2eb8-8ab3-4b10-a7ad-942ec2fc1661",
+          "order_id": "84f79a6e-a43d-5d90-9213-37eff96ac4ec",
+          "expected_status": "CANCELED",
+          "started_at": 1793975772.557913,
+          "started_monotonic": 3318.21839175,
+          "finished_at": 1793975772.6109529,
+          "seconds": 0.0530222499996853,
+          "outcome": "returned"
+        },
+        {
+          "phase": "submit_new",
+          "owner": "492a2eb8-8ab3-4b10-a7ad-942ec2fc1661",
+          "order_id": "b911ca90-cb6e-5c1e-90fb-10a1e8f81fa3",
+          "started_at": 1793975772.611041,
+          "started_monotonic": 3318.27149875,
+          "finished_at": 1793975794.863616,
+          "seconds": 22.24839395800018,
+          "outcome": "CancelledError"
+        },
+        {
+          "phase": "submit_order",
+          "order_id": "b911ca90-cb6e-5c1e-90fb-10a1e8f81fa3",
+          "owner": "492a2eb8-8ab3-4b10-a7ad-942ec2fc1661",
+          "started_at": 1793975772.618001,
+          "started_monotonic": 3318.278459125,
+          "finished_at": 1793975772.650673,
+          "seconds": 0.03266208299965001,
+          "outcome": "returned"
+        },
+        {
+          "phase": "wait_command",
+          "owner": "492a2eb8-8ab3-4b10-a7ad-942ec2fc1661",
+          "command_id": "e4471b77-02f7-4135-9d64-de3377188c9b",
+          "started_at": 1793975772.6616452,
+          "started_monotonic": 3318.322088125,
+          "finished_at": 1793975784.476258,
+          "seconds": 11.81177125000022,
+          "outcome": "returned"
+        },
+        {
+          "phase": "wait_status",
+          "owner": "492a2eb8-8ab3-4b10-a7ad-942ec2fc1661",
+          "order_id": "b911ca90-cb6e-5c1e-90fb-10a1e8f81fa3",
+          "expected_status": "FILLED",
+          "started_at": 1793975784.476289,
+          "started_monotonic": 3330.133883416,
+          "finished_at": 1793975794.8634639,
+          "seconds": 10.385856709000109,
+          "outcome": "CancelledError"
+        }
+      ],
+      "truncated": false,
+      "budget_seconds": 60,
+      "deadline_monotonic": 3340.517660166,
+      "timed_out_at": 1793975794.8636842,
+      "elapsed_seconds": 60.00230633399997
+    }
+  ]
+}

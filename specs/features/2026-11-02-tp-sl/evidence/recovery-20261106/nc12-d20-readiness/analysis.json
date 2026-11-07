@@ -1,0 +1,19 @@
+{
+  "status": "PASSED",
+  "counters": {
+    "offered": 600,
+    "admitted": 600,
+    "completed": 600,
+    "rejected": 0,
+    "fills": 240,
+    "cancels": 120,
+    "replays": 120,
+    "cycles": 120
+  },
+  "p95_ms": 192.75424999977986,
+  "p99_ms": 325.5180420001125,
+  "resource_assertions_passed": true,
+  "financial_owners_passed": 20,
+  "readiness_failure": "not reproduced; no conclusion about previous cause",
+  "next": "W1 conditional continuation authorized"
+}

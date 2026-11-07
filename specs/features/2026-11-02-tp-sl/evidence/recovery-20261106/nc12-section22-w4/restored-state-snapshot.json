@@ -1,0 +1,53 @@
+{
+  "pending": {
+    "groups": []
+  },
+  "exiting": {
+    "groups": [
+      {
+        "id": "ad474a37-fc9c-5509-b66e-a1c63e5d0ab8",
+        "state": "EXITING",
+        "failure_code": null,
+        "next_attempt_at": "2026-11-07 08:51:47.046452+00:00"
+      }
+    ]
+  },
+  "retry": {
+    "groups": [
+      {
+        "id": "4723f2a4-e46d-52a7-a71d-91d51cb66c3e",
+        "state": "ARMED",
+        "failure_code": null,
+        "next_attempt_at": "2026-11-07 08:51:36.952856+00:00"
+      }
+    ]
+  },
+  "closed": {
+    "groups": [
+      {
+        "id": "f9ad1553-a354-5596-89c6-72a8dc068fe5",
+        "state": "CLOSED",
+        "failure_code": null,
+        "next_attempt_at": "2026-11-07 08:51:46.856846+00:00"
+      }
+    ]
+  },
+  "retry_result": [],
+  "pending_receipt": [],
+  "dispatch_states": [
+    {
+      "state": "TERMINAL",
+      "count": 22
+    },
+    {
+      "state": "PENDING",
+      "count": 4
+    }
+  ],
+  "request_progress": [
+    {
+      "attempt": 2,
+      "next_attempt_at": "2026-11-07 08:51:48.200120+00:00"
+    }
+  ]
+}
