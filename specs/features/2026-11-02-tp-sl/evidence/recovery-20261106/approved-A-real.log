@@ -1,0 +1,59 @@
+{"counts": {"matches": 568}, "outcome": "RETURNED", "seconds": 0.5027421250015323, "security_stage": "history_scan"}
+{"counts": {"cached_git_reads": 1, "findings": 568}, "outcome": "RETURNED", "seconds": 0.025983332998293918, "security_stage": "history_mapping"}
+{"counts": {}, "outcome": "RETURNED", "seconds": 0.042698000001109904, "security_stage": "tree_export"}
+{"counts": {"matches": 568}, "outcome": "RETURNED", "seconds": 0.4505992500016873, "security_stage": "tree_scan"}
+{"counts": {"cached_git_reads": 2, "findings": 568, "mapped_lines": 600}, "outcome": "RETURNED", "seconds": 0.11445908300083829, "security_stage": "tree_mapping"}
+{"counts": {"matches": 570}, "outcome": "RETURNED", "seconds": 0.5484351250015607, "security_stage": "history_scan"}
+{"counts": {"cached_git_reads": 3, "findings": 570}, "outcome": "RETURNED", "seconds": 0.0693494160004775, "security_stage": "history_mapping"}
+{"counts": {}, "outcome": "RETURNED", "seconds": 0.042621124997822335, "security_stage": "tree_export"}
+{"counts": {"matches": 570}, "outcome": "RETURNED", "seconds": 0.39446645800126134, "security_stage": "tree_scan"}
+{"counts": {"cached_git_reads": 5, "findings": 570, "mapped_lines": 602}, "outcome": "RETURNED", "seconds": 0.18948720900152694, "security_stage": "tree_mapping"}
+{"counts": {"matches": 1}, "outcome": "RETURNED", "seconds": 0.44425362499896437, "security_stage": "history_scan"}
+{"counts": {"cached_git_reads": 1, "findings": 1}, "outcome": "RETURNED", "seconds": 0.022358916998200584, "security_stage": "history_mapping"}
+{"counts": {}, "outcome": "RETURNED", "seconds": 0.06159924999883515, "security_stage": "tree_export"}
+{"counts": {"matches": 1}, "outcome": "RETURNED", "seconds": 0.39767508300064947, "security_stage": "tree_scan"}
+{"counts": {"cached_git_reads": 2, "findings": 1, "mapped_lines": 1}, "outcome": "RETURNED", "seconds": 0.044965583001612686, "security_stage": "tree_mapping"}
+{"counts": {"matches": 2}, "outcome": "RETURNED", "seconds": 0.453951125000458, "security_stage": "history_scan"}
+{"counts": {"cached_git_reads": 2, "findings": 2}, "outcome": "RETURNED", "seconds": 0.07974554199972772, "security_stage": "history_mapping"}
+{"counts": {}, "outcome": "RETURNED", "seconds": 0.08812583399776486, "security_stage": "tree_export"}
+{"counts": {"matches": 1}, "outcome": "RETURNED", "seconds": 0.33918583400009084, "security_stage": "tree_scan"}
+{"counts": {"cached_git_reads": 3, "findings": 1, "mapped_lines": 1}, "outcome": "RETURNED", "seconds": 0.042425750001712004, "security_stage": "tree_mapping"}
+{"counts": {"matches": 2}, "outcome": "RETURNED", "seconds": 0.3872742079984164, "security_stage": "history_scan"}
+{"counts": {"cached_git_reads": 2, "findings": 2}, "outcome": "RETURNED", "seconds": 0.04098345799866365, "security_stage": "history_mapping"}
+{"counts": {}, "outcome": "RETURNED", "seconds": 0.04042962500170688, "security_stage": "tree_export"}
+{"counts": {"matches": 1}, "outcome": "RETURNED", "seconds": 0.3987511250015814, "security_stage": "tree_scan"}
+{"counts": {"cached_git_reads": 3, "findings": 1, "mapped_lines": 1}, "outcome": "RETURNED", "seconds": 0.0803577500009851, "security_stage": "tree_mapping"}
+{"counts": {"matches": 3}, "outcome": "RETURNED", "seconds": 0.6630775420017017, "security_stage": "history_scan"}
+{"counts": {"cached_git_reads": 3, "findings": 3}, "outcome": "RETURNED", "seconds": 0.08362799999667914, "security_stage": "history_mapping"}
+{"counts": {}, "outcome": "RETURNED", "seconds": 0.041348582999489736, "security_stage": "tree_export"}
+{"counts": {"matches": 1}, "outcome": "RETURNED", "seconds": 0.6702960000002349, "security_stage": "tree_scan"}
+{"counts": {"cached_git_reads": 4, "findings": 1, "mapped_lines": 1}, "outcome": "RETURNED", "seconds": 0.10853683399909642, "security_stage": "tree_mapping"}
+{"counts": {"matches": 3}, "outcome": "RETURNED", "seconds": 0.4403999170026509, "security_stage": "history_scan"}
+{"counts": {"cached_git_reads": 3, "findings": 3}, "outcome": "RETURNED", "seconds": 0.08312841699807905, "security_stage": "history_mapping"}
+{"counts": {}, "outcome": "RETURNED", "seconds": 0.04311487499944633, "security_stage": "tree_export"}
+{"counts": {"matches": 0}, "outcome": "RETURNED", "seconds": 0.3489922500011744, "security_stage": "tree_scan"}
+{"counts": {"cached_git_reads": 3, "findings": 0, "mapped_lines": 0}, "outcome": "RETURNED", "seconds": 8.75000114319846e-06, "security_stage": "tree_mapping"}
+{"counts": {"matches": 0}, "outcome": "RETURNED", "seconds": 0.39397929099868634, "security_stage": "history_scan"}
+{"counts": {"cached_git_reads": 0, "findings": 0}, "outcome": "RETURNED", "seconds": 3.6669989640358835e-06, "security_stage": "history_mapping"}
+{"counts": {}, "outcome": "RETURNED", "seconds": 0.040038374998403015, "security_stage": "tree_export"}
+{"counts": {"matches": 0}, "outcome": "RETURNED", "seconds": 0.49336220899931504, "security_stage": "tree_scan"}
+{"counts": {"cached_git_reads": 0, "findings": 0, "mapped_lines": 0}, "outcome": "RETURNED", "seconds": 2.2416999854613096e-05, "security_stage": "tree_mapping"}
+{"counts": {"matches": 2}, "outcome": "RETURNED", "seconds": 0.39911720899908687, "security_stage": "history_scan"}
+{"counts": {"cached_git_reads": 2, "findings": 2}, "outcome": "RETURNED", "seconds": 0.04235391600013827, "security_stage": "history_mapping"}
+{"counts": {}, "outcome": "RETURNED", "seconds": 0.04173020800226368, "security_stage": "tree_export"}
+{"counts": {"matches": 2}, "outcome": "RETURNED", "seconds": 0.3896661660000973, "security_stage": "tree_scan"}
+{"counts": {"cached_git_reads": 4, "findings": 2, "mapped_lines": 2}, "outcome": "RETURNED", "seconds": 0.08203512500040233, "security_stage": "tree_mapping"}
+{"counts": {"matches": 2}, "outcome": "RETURNED", "seconds": 0.3443832080010907, "security_stage": "history_scan"}
+{"counts": {"cached_git_reads": 2, "findings": 2}, "outcome": "RETURNED", "seconds": 0.042243959000188624, "security_stage": "history_mapping"}
+{"counts": {}, "outcome": "RETURNED", "seconds": 0.04079633299988927, "security_stage": "tree_export"}
+{"counts": {"matches": 1}, "outcome": "RETURNED", "seconds": 0.34349883399772807, "security_stage": "tree_scan"}
+{"counts": {"cached_git_reads": 3, "findings": 1, "mapped_lines": 1}, "outcome": "RETURNED", "seconds": 0.04191029199864715, "security_stage": "tree_mapping"}
+{"counts": {"matches": 3}, "outcome": "RETURNED", "seconds": 0.35027079100109404, "security_stage": "history_scan"}
+{"counts": {"cached_git_reads": 3, "findings": 3}, "outcome": "RETURNED", "seconds": 0.0630907919985475, "security_stage": "history_mapping"}
+{"counts": {}, "outcome": "RETURNED", "seconds": 0.03959170799862477, "security_stage": "tree_export"}
+{"counts": {"matches": 2}, "outcome": "RETURNED", "seconds": 0.3534801249988959, "security_stage": "tree_scan"}
+{"counts": {"cached_git_reads": 5, "findings": 2, "mapped_lines": 2}, "outcome": "RETURNED", "seconds": 0.0814820419982425, "security_stage": "tree_mapping"}
+----------------------------------------------------------------------
+Ran 3 tests in 13.344s
+
+OK

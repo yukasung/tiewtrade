@@ -1,6 +1,6 @@
 # F17 evidence false-positive handling — proposal
 
-สถานะ: **Proposed — Needs Owner Approval; no policy implementation authorized**
+สถานะ: **Approved A — owner replied approve,2026-11-07; implementation/checks authorized, no merge/deploy/Live**
 วันที่: 2026-11-07
 Candidate: PR59, `0961f7893226ba1e1641e5138e46f78dbe50f6cf`
 
@@ -29,7 +29,8 @@ folder/rule suppression, generic UUID/hex exemption or severity relaxation is al
 Add an explicit owner-approved **immutable evidence manifest** for this fixed dataset
 only. The local probe groups into39 immutable entries; the complete proposed list
 is [proposed-evidence-bindings.json](evidence/recovery-20261106/proposed-evidence-bindings.json),
-with all approvals explicitly PENDING. Each approved entry must bind the exact
+retaining its original PENDING labels as the reviewed proposal snapshot. Active
+owner approvals are in `.github/security/evidence-exceptions.json`. Each approved entry binds the exact
 commit, repository path, Git blob, scanner rule, observed count, explanation and
 approval. Independently verify matches against the producing harness before use.
 The UUID/checksum shape inventory is supporting evidence, never a general allow rule.
@@ -50,6 +51,10 @@ Proposed contract: a versioned registry with entries containing `commit`, `path`
 `git_blob`, `rule`, `reported_matches`, `resolution=false_positive`, `reason`,
 `approval` and `evidence`. Reject unknown/duplicate entries and malformed or
 unapproved data. Bind this registry into the existing security configuration digest.
+Implementation must also bind `occurrence_digest`, a digest of the sorted exact
+expected occurrence identities from the approved original report. This enforces
+the already-approved new-finding rejection even if a different occurrence replaces
+another with the same total count; it does not extend the approved dataset.
 Deduplicate history/tree occurrences using existing occurrence identities before
 checking the exact approved per-entry count; report resolved counts explicitly.
 Neither path matching alone nor value shape alone can authorize resolution.
@@ -74,6 +79,6 @@ Keep current policy and the PR draft without adding exceptions. Code and workloa
 proofs remain available, but required Security cannot be called Passed and this
 candidate cannot merge or close F17. Reconsider evidence publication separately.
 
-No option is selected or implemented by writing this proposal. The draft is kept
-local for owner review; no additional CI-triggering documentation commit is needed
-merely to record this proposal or the current run result.
+Owner selected/approved Option A on2026-11-07. Record the security-spec amendments
+and perform this bounded implementation/checkpoint as approved. Historical failures
+remain unchanged; no additional documentation-only CI loop is required.

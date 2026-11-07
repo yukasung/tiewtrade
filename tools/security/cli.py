@@ -9,6 +9,7 @@ import sys
 from pathlib import Path
 
 from tools.security import sarif
+from tools.security.evidence import approved_evidence
 from tools.security.model import (
     PolicyError,
     aggregate,
@@ -86,16 +87,29 @@ def main() -> int:
             )
             raise
         component = "codeql-" + args.language
+    exceptions = approved_exceptions(root / ".github/security/exceptions.json")
+    artifact_keys: frozenset[tuple[str, str]] = frozenset()
+    artifact_bindings: list[dict[str, object]] = []
+    if args.command == "secrets":
+        artifact_keys, artifact_bindings = approved_evidence(
+            root, findings, root / ".github/security/evidence-exceptions.json"
+        )
+        exceptions |= artifact_keys
     if candidate(root) != identity or configuration(root) != config:
         raise PolicyError("CANDIDATE_CHANGED_DURING_SCAN")
-    exceptions = approved_exceptions(root / ".github/security/exceptions.json")
     counts = policy_counts(findings, exceptions)
     record = manifest(component, identity, config, counts, coverage)
     directory.mkdir(parents=True, exist_ok=True, mode=0o700)
     (directory / (component + ".json")).write_text(json.dumps(record, sort_keys=True) + "\n")
     tools = obj(obj(read_json(root / ".github/security/tools.json")).get("tools"))
     versions = {name: string(obj(value).get("version")) for name, value in tools.items()}
-    public_summary = summary(record, findings, exceptions, versions)
+    public_summary = summary(
+        record,
+        [f for f in findings if (f.kind, f.identity) not in artifact_keys],
+        exceptions,
+        versions,
+        artifact_bindings=artifact_bindings,
+    )
     sys.stdout.write(public_summary)
     summary_path = os.environ.get("GITHUB_STEP_SUMMARY")
     if summary_path:
@@ -129,11 +143,19 @@ def entrypoint() -> int:
             "INVALID_SOURCE_URI",
             "INVALID_SOURCE_PATH",
             "INVALID_SOURCE_LINE",
+            "INVALID_EVIDENCE_REGISTRY",
+            "INVALID_EVIDENCE_FIELDS",
+            "INVALID_EVIDENCE_PATH",
+            "INVALID_EVIDENCE_RESOLUTION",
+            "UNAPPROVED_EVIDENCE",
+            "DUPLICATE_EVIDENCE_BINDING",
+            "EVIDENCE_BINDING_MISMATCH",
+            "UNMAPPED_TREE_OCCURRENCE",
         }
         code = str(error) if str(error) in public_codes else "INVALID_POLICY_DATA"
         sys.stderr.write("Security gate failed: " + code + "\n")
         return 2
-    except Exception:
+    except Exception:  # noqa: BLE001 - redact arbitrary failures at the public entrypoint
         # Even unexpected parser/HTTP/subprocess exceptions may embed secret input.
         # Never print exception text, arguments or traceback to public CI logs.
         sys.stderr.write("Security gate failed: incomplete scan or invalid policy data.\n")

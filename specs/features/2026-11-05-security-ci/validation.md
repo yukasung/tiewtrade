@@ -1,6 +1,24 @@
 # Security CI — Validation
 
 สถานะ: **Approved — เจ้าของสั่ง “แก้ไข” implementation blocker ตามแผนและเกณฑ์นี้ 2026-11-05**
+
+**Approved amendment2026-11-07 (F17 Option A), Feature:** verify unchanged occurrence
+identities/locators and fail-closed behavior after batched Git reads; real scanner
+history/tree and rename/reintroduction coverage remains mandatory. V-05 additionally
+requires strict immutable evidence schema/config-digest coverage, exact deduplicated
+counts, missing/invalid approvals rejected, changed blob/path/commit/rule/new matches
+not excepted, and a real new credential in approved or unapproved files blocked.
+Group only resolved artifact findings in bounded public output, with explicit counts
+and no raw secret text; unresolved output bounds still fail closed. Use safe local
+timing/count evidence before a full required-CI run; keep15min timeout. New amendment
+validation is Pending until current-candidate tests and remote CI pass; historical
+Passed evidence below is not certification of this change.
+
+Option A scoped local checks:46policy tests (42passed/4opt-in skipped), plus3pinned
+Gitleaks probes passed; original/optimized147-occurrence identity/locator parity
+passed in history and tree modes. Seven files Ruff/format and six files strict mypy
+passed. Full local/remote candidate checks still pending. See
+[implementation receipt](../2026-11-02-tp-sl/evidence/recovery-20261106/evidence-policy-implementation.md).
 วันที่: 2026-11-05
 Requirements: [Approved](requirements.md); implementation: [plan.md](plan.md)
 

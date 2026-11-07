@@ -1,0 +1,26 @@
+{
+  "history": {
+    "seconds": 3.427989458999946,
+    "git_calls": {
+      "rev-parse": 147
+    },
+    "git_seconds": {
+      "rev-parse": 3.389365879986144
+    },
+    "findings": 147
+  },
+  "tree": {
+    "seconds": 13.052774207997572,
+    "git_calls": {
+      "log": 147,
+      "blame": 147,
+      "rev-parse": 147
+    },
+    "git_seconds": {
+      "log": 4.063631582997914,
+      "blame": 4.920297328011657,
+      "rev-parse": 3.9982954919687472
+    },
+    "findings": 147
+  }
+}

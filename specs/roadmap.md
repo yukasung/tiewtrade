@@ -1127,3 +1127,9 @@ secrets job timed out at15min, workflow Cancelled/aggregate gate Failed. Local
 test-config fixes105passed; security handling proposal needs owner approval before
 the next combined candidate. No merge/opening/F17 completion.
 [Result and proposal](features/2026-11-02-tp-sl/evidence/recovery-20261106/publication-final-ci.md).
+
+Owner approved evidence-policy Option A. Scoped implementation/negative/parity
+checks passed; full current-candidate scan and required CI remain pending. No
+15-minute/security/trading-criteria relaxation. Prior Failed/Cancelled results and
+F17/opening/Release/dependency status unchanged.
+[Option A receipt](features/2026-11-02-tp-sl/evidence/recovery-20261106/evidence-policy-implementation.md).
