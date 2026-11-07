@@ -1,0 +1,236 @@
+[
+  {
+    "number": 21,
+    "manifest": "references/admin-template/package-lock.json",
+    "package": {
+      "ecosystem": "npm",
+      "name": "minimatch"
+    },
+    "severity": "medium",
+    "advisory": "GHSA-g3hv-75wg-m249",
+    "vulnerable_range": ">= 7.0.0, < 11.0.1",
+    "fixed_version": "11.0.1",
+    "scope": "development"
+  },
+  {
+    "number": 19,
+    "manifest": "references/admin-template/package-lock.json",
+    "package": {
+      "ecosystem": "npm",
+      "name": "vite"
+    },
+    "severity": "low",
+    "advisory": "GHSA-9jrq-w75r-8gcw",
+    "vulnerable_range": ">= 8.2.0, <= 8.2.3",
+    "fixed_version": "8.2.4",
+    "scope": "development"
+  },
+  {
+    "number": 18,
+    "manifest": "references/admin-template/package-lock.json",
+    "package": {
+      "ecosystem": "npm",
+      "name": "vite"
+    },
+    "severity": "medium",
+    "advisory": "GHSA-rq7h-c2jc-7f22",
+    "vulnerable_range": ">= 8.2.0, <= 8.2.3",
+    "fixed_version": "8.2.4",
+    "scope": "development"
+  },
+  {
+    "number": 17,
+    "manifest": "references/admin-template/package-lock.json",
+    "package": {
+      "ecosystem": "npm",
+      "name": "vite"
+    },
+    "severity": "medium",
+    "advisory": "GHSA-vfpm-58rq-9qcg",
+    "vulnerable_range": ">= 8.2.0, <= 8.2.3",
+    "fixed_version": "8.2.4",
+    "scope": "development"
+  },
+  {
+    "number": 16,
+    "manifest": "references/admin-template/package-lock.json",
+    "package": {
+      "ecosystem": "npm",
+      "name": "vite"
+    },
+    "severity": "medium",
+    "advisory": "GHSA-r825-w8mm-5pxw",
+    "vulnerable_range": ">= 8.2.0, <= 8.2.3",
+    "fixed_version": "8.2.4",
+    "scope": "development"
+  },
+  {
+    "number": 15,
+    "manifest": "references/admin-template/package-lock.json",
+    "package": {
+      "ecosystem": "npm",
+      "name": "vite"
+    },
+    "severity": "high",
+    "advisory": "GHSA-587h-7wmj-h5pm",
+    "vulnerable_range": ">= 8.2.0, <= 8.2.3",
+    "fixed_version": "8.2.4",
+    "scope": "development"
+  },
+  {
+    "number": 14,
+    "manifest": "references/admin-template/package-lock.json",
+    "package": {
+      "ecosystem": "npm",
+      "name": "vite"
+    },
+    "severity": "medium",
+    "advisory": "GHSA-698v-4r3x-3vcv",
+    "vulnerable_range": ">= 8.2.0, <= 8.2.3",
+    "fixed_version": "8.2.4",
+    "scope": "development"
+  },
+  {
+    "number": 13,
+    "manifest": "references/admin-template/package-lock.json",
+    "package": {
+      "ecosystem": "npm",
+      "name": "source-map-js"
+    },
+    "severity": "high",
+    "advisory": "GHSA-68fv-2mgg-jv7q",
+    "vulnerable_range": ">= 1.0.0, < 1.2.2",
+    "fixed_version": "1.2.2",
+    "scope": "development"
+  },
+  {
+    "number": 12,
+    "manifest": "references/admin-template/package-lock.json",
+    "package": {
+      "ecosystem": "npm",
+      "name": "brace-expansion"
+    },
+    "severity": "medium",
+    "advisory": "GHSA-q2hr-2g5m-vwhr",
+    "vulnerable_range": ">= 4.0.0, < 5.0.12",
+    "fixed_version": "5.0.12",
+    "scope": "development"
+  },
+  {
+    "number": 9,
+    "manifest": "references/admin-template/package-lock.json",
+    "package": {
+      "ecosystem": "npm",
+      "name": "js-yaml"
+    },
+    "severity": "high",
+    "advisory": "GHSA-2883-xcg3-v3hh",
+    "vulnerable_range": ">= 4.0.0, < 4.3.2",
+    "fixed_version": "4.3.2",
+    "scope": "development"
+  },
+  {
+    "number": 8,
+    "manifest": "references/admin-template/package-lock.json",
+    "package": {
+      "ecosystem": "npm",
+      "name": "@humanfs/node"
+    },
+    "severity": "medium",
+    "advisory": "GHSA-p498-v437-472g",
+    "vulnerable_range": "< 0.16.8",
+    "fixed_version": "0.16.8",
+    "scope": "development"
+  },
+  {
+    "number": 7,
+    "manifest": "references/admin-template/package-lock.json",
+    "package": {
+      "ecosystem": "npm",
+      "name": "js-yaml"
+    },
+    "severity": "high",
+    "advisory": "GHSA-5p4m-2wfm-xmqj",
+    "vulnerable_range": ">= 4.0.0, < 4.3.1",
+    "fixed_version": "4.3.1",
+    "scope": "development"
+  },
+  {
+    "number": 6,
+    "manifest": "references/admin-template/package-lock.json",
+    "package": {
+      "ecosystem": "npm",
+      "name": "js-yaml"
+    },
+    "severity": "high",
+    "advisory": "GHSA-52cp-r559-cp3m",
+    "vulnerable_range": ">= 4.0.0, < 4.3.0",
+    "fixed_version": "4.3.0",
+    "scope": "development"
+  },
+  {
+    "number": 5,
+    "manifest": "references/admin-template/package-lock.json",
+    "package": {
+      "ecosystem": "npm",
+      "name": "js-yaml"
+    },
+    "severity": "medium",
+    "advisory": "GHSA-h67p-54hq-rp68",
+    "vulnerable_range": ">= 4.0.0, <= 4.1.1",
+    "fixed_version": "4.2.0",
+    "scope": "development"
+  },
+  {
+    "number": 4,
+    "manifest": "frontend/package-lock.json",
+    "package": {
+      "ecosystem": "npm",
+      "name": "minimatch"
+    },
+    "severity": "medium",
+    "advisory": "GHSA-g3hv-75wg-m249",
+    "vulnerable_range": ">= 7.0.0, < 11.0.1",
+    "fixed_version": "11.0.1",
+    "scope": "development"
+  },
+  {
+    "number": 3,
+    "manifest": "frontend/package-lock.json",
+    "package": {
+      "ecosystem": "npm",
+      "name": "vite"
+    },
+    "severity": "medium",
+    "advisory": "GHSA-8g5g-mxqh-grgj",
+    "vulnerable_range": "= 6.4.4",
+    "fixed_version": "6.4.5",
+    "scope": "development"
+  },
+  {
+    "number": 2,
+    "manifest": "frontend/package-lock.json",
+    "package": {
+      "ecosystem": "npm",
+      "name": "@vitest/mocker"
+    },
+    "severity": "medium",
+    "advisory": "GHSA-qxg6-89mg-rqv8",
+    "vulnerable_range": ">= 2.1.0-beta.7, < 4.1.12",
+    "fixed_version": "4.1.12",
+    "scope": "development"
+  },
+  {
+    "number": 1,
+    "manifest": "frontend/package-lock.json",
+    "package": {
+      "ecosystem": "npm",
+      "name": "@vitest/mocker"
+    },
+    "severity": "medium",
+    "advisory": "GHSA-xp26-3454-mjgp",
+    "vulnerable_range": ">= 4.1.11, < 4.1.12",
+    "fixed_version": "4.1.12",
+    "scope": "development"
+  }
+]

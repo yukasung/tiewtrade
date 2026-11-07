@@ -1,7 +1,7 @@
 # Dependency remediation — Feature candidate evidence
 
 วันที่: 2026-11-05
-สถานะ: **Code review APPROVED; local Feature checks passed; final candidate/CI pending**
+สถานะ: **Completed — review, Feature validation และ post-merge checkpoint ผ่าน**
 Branch: `feature/security-dependency-remediation`
 Base: `c8d8ca78971fce3d98f624e0c35128195168d831`
 Implementation เป็น uncommitted working-tree changes; ไม่มี PR/merge SHA/CI run ของงานนี้.
@@ -81,3 +81,9 @@ DV-08/09 ยัง Partial/Not Run; DV-10 Not Run — Pending Full Validation.
 final candidate SHA และ CI URLs รายงานใน PR/checkpoint โดยไม่สร้าง evidence-commit loop.
 หลัง merge เมื่อมีคำสั่ง จึงส่ง target lockfiles ให้ Security CI integration และ rerun
 security checks บน candidate ใหม่; local remediation นี้ไม่ได้ปิด CI activation checkpoint.
+
+## Final checkpoint
+
+ข้อมูลก่อน commit ด้านบนเป็น historical snapshot. PR #47 merge แล้วที่ a3a8652;
+required CI ก่อน/หลัง merge ผ่านครบ. ดู [post-merge.md](post-merge.md) สำหรับผลสุดท้าย
+และขอบเขต handoff ที่ยังไม่ใช่การปิดงาน Security CI.

@@ -1,0 +1,75 @@
+{
+  "run": 42148399153,
+  "head": "34c146ab4987478ae545714dc8026a7c670d5b86",
+  "base": "98ff2f840fe08dc46ab5eb9976f17bdf32b062b1",
+  "jobs": [
+    {
+      "job_id": 127665349326,
+      "name": "Security / policy tests",
+      "permissions": [
+        "Contents: read",
+        "Metadata: read"
+      ]
+    },
+    {
+      "job_id": 127665349463,
+      "name": "Security / dependencies",
+      "permissions": [
+        "Contents: read",
+        "Metadata: read",
+        "PullRequests: read"
+      ]
+    },
+    {
+      "job_id": 127665349466,
+      "name": "Security / CodeQL (javascript-typescript)",
+      "permissions": [
+        "Contents: read",
+        "Metadata: read",
+        "PullRequests: read"
+      ]
+    },
+    {
+      "job_id": 127665349591,
+      "name": "Security / CodeQL (python)",
+      "permissions": [
+        "Contents: read",
+        "Metadata: read",
+        "PullRequests: read"
+      ]
+    },
+    {
+      "job_id": 127665349617,
+      "name": "Security / secrets",
+      "permissions": [
+        "Contents: read",
+        "Metadata: read",
+        "PullRequests: read"
+      ]
+    },
+    {
+      "job_id": 127665349910,
+      "name": "Security / CodeQL (actions)",
+      "permissions": [
+        "Contents: read",
+        "Metadata: read",
+        "PullRequests: read"
+      ]
+    },
+    {
+      "job_id": 127666270692,
+      "name": "Security / gate",
+      "permissions": [
+        "Contents: read",
+        "Metadata: read",
+        "PullRequests: read"
+      ]
+    }
+  ],
+  "repository_settings": {
+    "default_workflow_permissions": "read",
+    "can_approve_pull_request_reviews": false,
+    "approval_policy": "first_time_contributors"
+  },
+  "scope": "same-repository PR only; actual fork Not Run under owner-approved evidence amendment"
+}

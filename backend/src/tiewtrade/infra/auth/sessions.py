@@ -63,16 +63,6 @@ WHERE token_hash <> :keep
 
 
 @dataclass(frozen=True, slots=True)
-class IssuedSession:
-    """โทเคนที่ออกใหม่ — **ค่านี้ส่งให้เบราว์เซอร์ครั้งเดียว ไม่มีที่ไหนเก็บไว้**"""
-
-    token: str
-    token_hash: str
-    idle_expires_at: datetime
-    absolute_expires_at: datetime
-
-
-@dataclass(frozen=True, slots=True)
 class SessionOwner:
     """เจ้าของ session ที่ยังใช้ได้"""
 

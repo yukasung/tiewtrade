@@ -171,7 +171,7 @@ it("sends SET and DECREASE directly with canonical exact amounts and no TOTP", a
 
 it("saves a Paper increase directly without opening TOTP", async () => {
   vi.spyOn(globalThis.crypto, "randomUUID").mockReturnValue(key);
-  const { fetcher } = mount((url, init) => {
+  const { fetcher } = mount((_url, init) => {
     if (init?.method !== "POST") return;
     expect(riskJournal.read(riskScope("owner", "PAPER"))).toEqual(attempt);
     return answer(receipt, 202);
@@ -189,7 +189,7 @@ it("saves a Paper increase directly without opening TOTP", async () => {
 });
 
 it("keeps the fresh TOTP modal for a Live increase", async () => {
-  const { fetcher } = mount((url, init) => init?.method === "POST"
+  const { fetcher } = mount((_url, init) => init?.method === "POST"
     ? answer({ ...receipt, mode: "LIVE", expected_wallet_id: null, expected_episode_id: null }, 202)
     : undefined, "LIVE");
   await screen.findAllByText(t("RISK_SOURCE_UNAVAILABLE"));

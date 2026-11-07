@@ -56,23 +56,6 @@ def _setting_from_row(scope: RiskScope, row: Any) -> RiskSetting:
     )
 
 
-async def read_monitor_owner(session: UserSession) -> tuple[RiskSetting, bool] | None:
-    """Read the same owner/wallet/setting/initialization cut under the caller's lock."""
-    checked = require_user_session(session)
-    row = (
-        await checked.execute(
-            """SELECT w.wallet_id,w.active_episode_id,s.revision,s.amount,s.latched,
-              o.source_revision
-            FROM paper_wallet_state w
-            LEFT JOIN risk_limit_settings s ON s.user_id=w.user_id AND s.mode='PAPER'
-            LEFT JOIN risk_owner_state o ON o.user_id=w.user_id AND o.mode='PAPER'
-            WHERE w.user_id=:owner""",
-            {"owner": checked.user_id},
-        )
-    ).one_or_none()
-    return decode_monitor_owner(checked.user_id, None if row is None else row._mapping)
-
-
 def decode_monitor_owner(owner_id: UUID, row: Any) -> tuple[RiskSetting, bool] | None:
     if row is None:
         return None

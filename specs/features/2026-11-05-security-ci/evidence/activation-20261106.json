@@ -1,0 +1,389 @@
+{
+  "candidate": {
+    "head": "34c146ab4987478ae545714dc8026a7c670d5b86",
+    "base": "98ff2f840fe08dc46ab5eb9976f17bdf32b062b1",
+    "merge": "ef8c282fe69baa04fa5033fe869f4cc61e041541",
+    "gate_app": 15368
+  },
+  "before": {
+    "url": "https://api.github.com/repos/yukasung/tiewtrade/branches/main/protection",
+    "required_status_checks": {
+      "url": "https://api.github.com/repos/yukasung/tiewtrade/branches/main/protection/required_status_checks",
+      "strict": true,
+      "contexts": [
+        "\u0e2b\u0e25\u0e31\u0e07\u0e1a\u0e49\u0e32\u0e19 \u2014 lint, types, imports, tests",
+        "e2e \u2014 \u0e40\u0e1a\u0e23\u0e32\u0e27\u0e4c\u0e40\u0e0b\u0e2d\u0e23\u0e4c\u0e08\u0e23\u0e34\u0e07\u0e40\u0e2b\u0e47\u0e19\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25\u0e08\u0e32\u0e01 API ...",
+        "\u0e2b\u0e19\u0e49\u0e32\u0e1a\u0e49\u0e32\u0e19 \u2014 lint, types, tests",
+        "container \u2014 \u0e17\u0e31\u0e49\u0e07\u0e2a\u0e2d\u0e07\u0e1d\u0e31\u0e48\u0e07\u0e23\u0e31\u0e19\u0e43\u0e19 container \u0e44\u0e14\u0e49",
+        "\u0e04\u0e48\u0e32\u0e01\u0e25\u0e32\u0e07 \u2014 \u0e40\u0e27\u0e2d\u0e23\u0e4c\u0e0a\u0e31\u0e19 PostgreSQL",
+        "\u0e2a\u0e31\u0e0d\u0e0d\u0e32 API \u2014 \u0e0a\u0e19\u0e34\u0e14\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25\u0e2a\u0e2d\u0e07\u0e1d\u0e31\u0e48\u0e07\u0e15\u0e49\u0e2d\u0e07\u0e15\u0e23\u0e07..."
+      ],
+      "contexts_url": "https://api.github.com/repos/yukasung/tiewtrade/branches/main/protection/required_status_checks/contexts",
+      "checks": [
+        {
+          "context": "\u0e2b\u0e25\u0e31\u0e07\u0e1a\u0e49\u0e32\u0e19 \u2014 lint, types, imports, tests",
+          "app_id": 15368
+        },
+        {
+          "context": "e2e \u2014 \u0e40\u0e1a\u0e23\u0e32\u0e27\u0e4c\u0e40\u0e0b\u0e2d\u0e23\u0e4c\u0e08\u0e23\u0e34\u0e07\u0e40\u0e2b\u0e47\u0e19\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25\u0e08\u0e32\u0e01 API ...",
+          "app_id": 15368
+        },
+        {
+          "context": "\u0e2b\u0e19\u0e49\u0e32\u0e1a\u0e49\u0e32\u0e19 \u2014 lint, types, tests",
+          "app_id": 15368
+        },
+        {
+          "context": "container \u2014 \u0e17\u0e31\u0e49\u0e07\u0e2a\u0e2d\u0e07\u0e1d\u0e31\u0e48\u0e07\u0e23\u0e31\u0e19\u0e43\u0e19 container \u0e44\u0e14\u0e49",
+          "app_id": 15368
+        },
+        {
+          "context": "\u0e04\u0e48\u0e32\u0e01\u0e25\u0e32\u0e07 \u2014 \u0e40\u0e27\u0e2d\u0e23\u0e4c\u0e0a\u0e31\u0e19 PostgreSQL",
+          "app_id": 15368
+        },
+        {
+          "context": "\u0e2a\u0e31\u0e0d\u0e0d\u0e32 API \u2014 \u0e0a\u0e19\u0e34\u0e14\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25\u0e2a\u0e2d\u0e07\u0e1d\u0e31\u0e48\u0e07\u0e15\u0e49\u0e2d\u0e07\u0e15\u0e23\u0e07...",
+          "app_id": 15368
+        }
+      ]
+    },
+    "required_signatures": {
+      "url": "https://api.github.com/repos/yukasung/tiewtrade/branches/main/protection/required_signatures",
+      "enabled": false
+    },
+    "enforce_admins": {
+      "url": "https://api.github.com/repos/yukasung/tiewtrade/branches/main/protection/enforce_admins",
+      "enabled": true
+    },
+    "required_linear_history": {
+      "enabled": false
+    },
+    "allow_force_pushes": {
+      "enabled": false
+    },
+    "allow_deletions": {
+      "enabled": false
+    },
+    "block_creations": {
+      "enabled": false
+    },
+    "required_conversation_resolution": {
+      "enabled": false
+    },
+    "lock_branch": {
+      "enabled": false
+    },
+    "allow_fork_syncing": {
+      "enabled": false
+    }
+  },
+  "events": [
+    {
+      "stage": "locked",
+      "protection": {
+        "url": "https://api.github.com/repos/yukasung/tiewtrade/branches/main/protection",
+        "required_status_checks": {
+          "url": "https://api.github.com/repos/yukasung/tiewtrade/branches/main/protection/required_status_checks",
+          "strict": true,
+          "contexts": [
+            "\u0e2b\u0e25\u0e31\u0e07\u0e1a\u0e49\u0e32\u0e19 \u2014 lint, types, imports, tests",
+            "e2e \u2014 \u0e40\u0e1a\u0e23\u0e32\u0e27\u0e4c\u0e40\u0e0b\u0e2d\u0e23\u0e4c\u0e08\u0e23\u0e34\u0e07\u0e40\u0e2b\u0e47\u0e19\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25\u0e08\u0e32\u0e01 API ...",
+            "\u0e2b\u0e19\u0e49\u0e32\u0e1a\u0e49\u0e32\u0e19 \u2014 lint, types, tests",
+            "container \u2014 \u0e17\u0e31\u0e49\u0e07\u0e2a\u0e2d\u0e07\u0e1d\u0e31\u0e48\u0e07\u0e23\u0e31\u0e19\u0e43\u0e19 container \u0e44\u0e14\u0e49",
+            "\u0e04\u0e48\u0e32\u0e01\u0e25\u0e32\u0e07 \u2014 \u0e40\u0e27\u0e2d\u0e23\u0e4c\u0e0a\u0e31\u0e19 PostgreSQL",
+            "\u0e2a\u0e31\u0e0d\u0e0d\u0e32 API \u2014 \u0e0a\u0e19\u0e34\u0e14\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25\u0e2a\u0e2d\u0e07\u0e1d\u0e31\u0e48\u0e07\u0e15\u0e49\u0e2d\u0e07\u0e15\u0e23\u0e07..."
+          ],
+          "contexts_url": "https://api.github.com/repos/yukasung/tiewtrade/branches/main/protection/required_status_checks/contexts",
+          "checks": [
+            {
+              "context": "\u0e2b\u0e25\u0e31\u0e07\u0e1a\u0e49\u0e32\u0e19 \u2014 lint, types, imports, tests",
+              "app_id": 15368
+            },
+            {
+              "context": "e2e \u2014 \u0e40\u0e1a\u0e23\u0e32\u0e27\u0e4c\u0e40\u0e0b\u0e2d\u0e23\u0e4c\u0e08\u0e23\u0e34\u0e07\u0e40\u0e2b\u0e47\u0e19\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25\u0e08\u0e32\u0e01 API ...",
+              "app_id": 15368
+            },
+            {
+              "context": "\u0e2b\u0e19\u0e49\u0e32\u0e1a\u0e49\u0e32\u0e19 \u2014 lint, types, tests",
+              "app_id": 15368
+            },
+            {
+              "context": "container \u2014 \u0e17\u0e31\u0e49\u0e07\u0e2a\u0e2d\u0e07\u0e1d\u0e31\u0e48\u0e07\u0e23\u0e31\u0e19\u0e43\u0e19 container \u0e44\u0e14\u0e49",
+              "app_id": 15368
+            },
+            {
+              "context": "\u0e04\u0e48\u0e32\u0e01\u0e25\u0e32\u0e07 \u2014 \u0e40\u0e27\u0e2d\u0e23\u0e4c\u0e0a\u0e31\u0e19 PostgreSQL",
+              "app_id": 15368
+            },
+            {
+              "context": "\u0e2a\u0e31\u0e0d\u0e0d\u0e32 API \u2014 \u0e0a\u0e19\u0e34\u0e14\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25\u0e2a\u0e2d\u0e07\u0e1d\u0e31\u0e48\u0e07\u0e15\u0e49\u0e2d\u0e07\u0e15\u0e23\u0e07...",
+              "app_id": 15368
+            }
+          ]
+        },
+        "required_signatures": {
+          "url": "https://api.github.com/repos/yukasung/tiewtrade/branches/main/protection/required_signatures",
+          "enabled": false
+        },
+        "enforce_admins": {
+          "url": "https://api.github.com/repos/yukasung/tiewtrade/branches/main/protection/enforce_admins",
+          "enabled": true
+        },
+        "required_linear_history": {
+          "enabled": false
+        },
+        "allow_force_pushes": {
+          "enabled": false
+        },
+        "allow_deletions": {
+          "enabled": false
+        },
+        "block_creations": {
+          "enabled": false
+        },
+        "required_conversation_resolution": {
+          "enabled": false
+        },
+        "lock_branch": {
+          "enabled": true
+        },
+        "allow_fork_syncing": {
+          "enabled": false
+        }
+      }
+    },
+    {
+      "stage": "configured_locked",
+      "protection": {
+        "url": "https://api.github.com/repos/yukasung/tiewtrade/branches/main/protection",
+        "required_status_checks": {
+          "url": "https://api.github.com/repos/yukasung/tiewtrade/branches/main/protection/required_status_checks",
+          "strict": true,
+          "contexts": [
+            "\u0e2b\u0e25\u0e31\u0e07\u0e1a\u0e49\u0e32\u0e19 \u2014 lint, types, imports, tests",
+            "e2e \u2014 \u0e40\u0e1a\u0e23\u0e32\u0e27\u0e4c\u0e40\u0e0b\u0e2d\u0e23\u0e4c\u0e08\u0e23\u0e34\u0e07\u0e40\u0e2b\u0e47\u0e19\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25\u0e08\u0e32\u0e01 API ...",
+            "\u0e2b\u0e19\u0e49\u0e32\u0e1a\u0e49\u0e32\u0e19 \u2014 lint, types, tests",
+            "container \u2014 \u0e17\u0e31\u0e49\u0e07\u0e2a\u0e2d\u0e07\u0e1d\u0e31\u0e48\u0e07\u0e23\u0e31\u0e19\u0e43\u0e19 container \u0e44\u0e14\u0e49",
+            "\u0e04\u0e48\u0e32\u0e01\u0e25\u0e32\u0e07 \u2014 \u0e40\u0e27\u0e2d\u0e23\u0e4c\u0e0a\u0e31\u0e19 PostgreSQL",
+            "\u0e2a\u0e31\u0e0d\u0e0d\u0e32 API \u2014 \u0e0a\u0e19\u0e34\u0e14\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25\u0e2a\u0e2d\u0e07\u0e1d\u0e31\u0e48\u0e07\u0e15\u0e49\u0e2d\u0e07\u0e15\u0e23\u0e07...",
+            "Security / gate"
+          ],
+          "contexts_url": "https://api.github.com/repos/yukasung/tiewtrade/branches/main/protection/required_status_checks/contexts",
+          "checks": [
+            {
+              "context": "\u0e2b\u0e25\u0e31\u0e07\u0e1a\u0e49\u0e32\u0e19 \u2014 lint, types, imports, tests",
+              "app_id": 15368
+            },
+            {
+              "context": "e2e \u2014 \u0e40\u0e1a\u0e23\u0e32\u0e27\u0e4c\u0e40\u0e0b\u0e2d\u0e23\u0e4c\u0e08\u0e23\u0e34\u0e07\u0e40\u0e2b\u0e47\u0e19\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25\u0e08\u0e32\u0e01 API ...",
+              "app_id": 15368
+            },
+            {
+              "context": "\u0e2b\u0e19\u0e49\u0e32\u0e1a\u0e49\u0e32\u0e19 \u2014 lint, types, tests",
+              "app_id": 15368
+            },
+            {
+              "context": "container \u2014 \u0e17\u0e31\u0e49\u0e07\u0e2a\u0e2d\u0e07\u0e1d\u0e31\u0e48\u0e07\u0e23\u0e31\u0e19\u0e43\u0e19 container \u0e44\u0e14\u0e49",
+              "app_id": 15368
+            },
+            {
+              "context": "\u0e04\u0e48\u0e32\u0e01\u0e25\u0e32\u0e07 \u2014 \u0e40\u0e27\u0e2d\u0e23\u0e4c\u0e0a\u0e31\u0e19 PostgreSQL",
+              "app_id": 15368
+            },
+            {
+              "context": "\u0e2a\u0e31\u0e0d\u0e0d\u0e32 API \u2014 \u0e0a\u0e19\u0e34\u0e14\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25\u0e2a\u0e2d\u0e07\u0e1d\u0e31\u0e48\u0e07\u0e15\u0e49\u0e2d\u0e07\u0e15\u0e23\u0e07...",
+              "app_id": 15368
+            },
+            {
+              "context": "Security / gate",
+              "app_id": 15368
+            }
+          ]
+        },
+        "required_signatures": {
+          "url": "https://api.github.com/repos/yukasung/tiewtrade/branches/main/protection/required_signatures",
+          "enabled": false
+        },
+        "enforce_admins": {
+          "url": "https://api.github.com/repos/yukasung/tiewtrade/branches/main/protection/enforce_admins",
+          "enabled": true
+        },
+        "required_linear_history": {
+          "enabled": false
+        },
+        "allow_force_pushes": {
+          "enabled": false
+        },
+        "allow_deletions": {
+          "enabled": false
+        },
+        "block_creations": {
+          "enabled": false
+        },
+        "required_conversation_resolution": {
+          "enabled": false
+        },
+        "lock_branch": {
+          "enabled": true
+        },
+        "allow_fork_syncing": {
+          "enabled": false
+        }
+      }
+    },
+    {
+      "stage": "unlocked",
+      "protection": {
+        "url": "https://api.github.com/repos/yukasung/tiewtrade/branches/main/protection",
+        "required_status_checks": {
+          "url": "https://api.github.com/repos/yukasung/tiewtrade/branches/main/protection/required_status_checks",
+          "strict": true,
+          "contexts": [
+            "\u0e2b\u0e25\u0e31\u0e07\u0e1a\u0e49\u0e32\u0e19 \u2014 lint, types, imports, tests",
+            "e2e \u2014 \u0e40\u0e1a\u0e23\u0e32\u0e27\u0e4c\u0e40\u0e0b\u0e2d\u0e23\u0e4c\u0e08\u0e23\u0e34\u0e07\u0e40\u0e2b\u0e47\u0e19\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25\u0e08\u0e32\u0e01 API ...",
+            "\u0e2b\u0e19\u0e49\u0e32\u0e1a\u0e49\u0e32\u0e19 \u2014 lint, types, tests",
+            "container \u2014 \u0e17\u0e31\u0e49\u0e07\u0e2a\u0e2d\u0e07\u0e1d\u0e31\u0e48\u0e07\u0e23\u0e31\u0e19\u0e43\u0e19 container \u0e44\u0e14\u0e49",
+            "\u0e04\u0e48\u0e32\u0e01\u0e25\u0e32\u0e07 \u2014 \u0e40\u0e27\u0e2d\u0e23\u0e4c\u0e0a\u0e31\u0e19 PostgreSQL",
+            "\u0e2a\u0e31\u0e0d\u0e0d\u0e32 API \u2014 \u0e0a\u0e19\u0e34\u0e14\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25\u0e2a\u0e2d\u0e07\u0e1d\u0e31\u0e48\u0e07\u0e15\u0e49\u0e2d\u0e07\u0e15\u0e23\u0e07...",
+            "Security / gate"
+          ],
+          "contexts_url": "https://api.github.com/repos/yukasung/tiewtrade/branches/main/protection/required_status_checks/contexts",
+          "checks": [
+            {
+              "context": "\u0e2b\u0e25\u0e31\u0e07\u0e1a\u0e49\u0e32\u0e19 \u2014 lint, types, imports, tests",
+              "app_id": 15368
+            },
+            {
+              "context": "e2e \u2014 \u0e40\u0e1a\u0e23\u0e32\u0e27\u0e4c\u0e40\u0e0b\u0e2d\u0e23\u0e4c\u0e08\u0e23\u0e34\u0e07\u0e40\u0e2b\u0e47\u0e19\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25\u0e08\u0e32\u0e01 API ...",
+              "app_id": 15368
+            },
+            {
+              "context": "\u0e2b\u0e19\u0e49\u0e32\u0e1a\u0e49\u0e32\u0e19 \u2014 lint, types, tests",
+              "app_id": 15368
+            },
+            {
+              "context": "container \u2014 \u0e17\u0e31\u0e49\u0e07\u0e2a\u0e2d\u0e07\u0e1d\u0e31\u0e48\u0e07\u0e23\u0e31\u0e19\u0e43\u0e19 container \u0e44\u0e14\u0e49",
+              "app_id": 15368
+            },
+            {
+              "context": "\u0e04\u0e48\u0e32\u0e01\u0e25\u0e32\u0e07 \u2014 \u0e40\u0e27\u0e2d\u0e23\u0e4c\u0e0a\u0e31\u0e19 PostgreSQL",
+              "app_id": 15368
+            },
+            {
+              "context": "\u0e2a\u0e31\u0e0d\u0e0d\u0e32 API \u2014 \u0e0a\u0e19\u0e34\u0e14\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25\u0e2a\u0e2d\u0e07\u0e1d\u0e31\u0e48\u0e07\u0e15\u0e49\u0e2d\u0e07\u0e15\u0e23\u0e07...",
+              "app_id": 15368
+            },
+            {
+              "context": "Security / gate",
+              "app_id": 15368
+            }
+          ]
+        },
+        "required_signatures": {
+          "url": "https://api.github.com/repos/yukasung/tiewtrade/branches/main/protection/required_signatures",
+          "enabled": false
+        },
+        "enforce_admins": {
+          "url": "https://api.github.com/repos/yukasung/tiewtrade/branches/main/protection/enforce_admins",
+          "enabled": true
+        },
+        "required_linear_history": {
+          "enabled": false
+        },
+        "allow_force_pushes": {
+          "enabled": false
+        },
+        "allow_deletions": {
+          "enabled": false
+        },
+        "block_creations": {
+          "enabled": false
+        },
+        "required_conversation_resolution": {
+          "enabled": false
+        },
+        "lock_branch": {
+          "enabled": false
+        },
+        "allow_fork_syncing": {
+          "enabled": false
+        }
+      }
+    }
+  ],
+  "after": {
+    "url": "https://api.github.com/repos/yukasung/tiewtrade/branches/main/protection",
+    "required_status_checks": {
+      "url": "https://api.github.com/repos/yukasung/tiewtrade/branches/main/protection/required_status_checks",
+      "strict": true,
+      "contexts": [
+        "\u0e2b\u0e25\u0e31\u0e07\u0e1a\u0e49\u0e32\u0e19 \u2014 lint, types, imports, tests",
+        "e2e \u2014 \u0e40\u0e1a\u0e23\u0e32\u0e27\u0e4c\u0e40\u0e0b\u0e2d\u0e23\u0e4c\u0e08\u0e23\u0e34\u0e07\u0e40\u0e2b\u0e47\u0e19\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25\u0e08\u0e32\u0e01 API ...",
+        "\u0e2b\u0e19\u0e49\u0e32\u0e1a\u0e49\u0e32\u0e19 \u2014 lint, types, tests",
+        "container \u2014 \u0e17\u0e31\u0e49\u0e07\u0e2a\u0e2d\u0e07\u0e1d\u0e31\u0e48\u0e07\u0e23\u0e31\u0e19\u0e43\u0e19 container \u0e44\u0e14\u0e49",
+        "\u0e04\u0e48\u0e32\u0e01\u0e25\u0e32\u0e07 \u2014 \u0e40\u0e27\u0e2d\u0e23\u0e4c\u0e0a\u0e31\u0e19 PostgreSQL",
+        "\u0e2a\u0e31\u0e0d\u0e0d\u0e32 API \u2014 \u0e0a\u0e19\u0e34\u0e14\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25\u0e2a\u0e2d\u0e07\u0e1d\u0e31\u0e48\u0e07\u0e15\u0e49\u0e2d\u0e07\u0e15\u0e23\u0e07...",
+        "Security / gate"
+      ],
+      "contexts_url": "https://api.github.com/repos/yukasung/tiewtrade/branches/main/protection/required_status_checks/contexts",
+      "checks": [
+        {
+          "context": "\u0e2b\u0e25\u0e31\u0e07\u0e1a\u0e49\u0e32\u0e19 \u2014 lint, types, imports, tests",
+          "app_id": 15368
+        },
+        {
+          "context": "e2e \u2014 \u0e40\u0e1a\u0e23\u0e32\u0e27\u0e4c\u0e40\u0e0b\u0e2d\u0e23\u0e4c\u0e08\u0e23\u0e34\u0e07\u0e40\u0e2b\u0e47\u0e19\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25\u0e08\u0e32\u0e01 API ...",
+          "app_id": 15368
+        },
+        {
+          "context": "\u0e2b\u0e19\u0e49\u0e32\u0e1a\u0e49\u0e32\u0e19 \u2014 lint, types, tests",
+          "app_id": 15368
+        },
+        {
+          "context": "container \u2014 \u0e17\u0e31\u0e49\u0e07\u0e2a\u0e2d\u0e07\u0e1d\u0e31\u0e48\u0e07\u0e23\u0e31\u0e19\u0e43\u0e19 container \u0e44\u0e14\u0e49",
+          "app_id": 15368
+        },
+        {
+          "context": "\u0e04\u0e48\u0e32\u0e01\u0e25\u0e32\u0e07 \u2014 \u0e40\u0e27\u0e2d\u0e23\u0e4c\u0e0a\u0e31\u0e19 PostgreSQL",
+          "app_id": 15368
+        },
+        {
+          "context": "\u0e2a\u0e31\u0e0d\u0e0d\u0e32 API \u2014 \u0e0a\u0e19\u0e34\u0e14\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25\u0e2a\u0e2d\u0e07\u0e1d\u0e31\u0e48\u0e07\u0e15\u0e49\u0e2d\u0e07\u0e15\u0e23\u0e07...",
+          "app_id": 15368
+        },
+        {
+          "context": "Security / gate",
+          "app_id": 15368
+        }
+      ]
+    },
+    "required_signatures": {
+      "url": "https://api.github.com/repos/yukasung/tiewtrade/branches/main/protection/required_signatures",
+      "enabled": false
+    },
+    "enforce_admins": {
+      "url": "https://api.github.com/repos/yukasung/tiewtrade/branches/main/protection/enforce_admins",
+      "enabled": true
+    },
+    "required_linear_history": {
+      "enabled": false
+    },
+    "allow_force_pushes": {
+      "enabled": false
+    },
+    "allow_deletions": {
+      "enabled": false
+    },
+    "block_creations": {
+      "enabled": false
+    },
+    "required_conversation_resolution": {
+      "enabled": false
+    },
+    "lock_branch": {
+      "enabled": false
+    },
+    "allow_fork_syncing": {
+      "enabled": false
+    }
+  }
+}

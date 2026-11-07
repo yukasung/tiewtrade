@@ -1,0 +1,16 @@
+{
+  "merge_sha": "a3a86520bc4d363aa747f5cb934cc09a8fbe71d3",
+  "files_verified": {
+    "backend/uv.lock": "f427025bd867333a3cd8628ef7e7c76309866b9fdaee3f968c77c404b074402b",
+    "backend/pyproject.toml": "3245f32853fe2dbd4f24ac973197c1547c84119cde3f3276501f5afd46fe513c",
+    "frontend/package-lock.json": "7d0fb4ab31f0eece2d6fe8ef9e60ca96757c220a9b674e1162fd3c6a9965727b",
+    "frontend/package.json": "9be63b912331c1d902b8926d8aa925b8dcc58b2797b2fc2e79797bdfa125a490"
+  },
+  "premerge_osv_evidence_still_valid": true,
+  "postmerge_ci": "passed",
+  "run_id": 42050896249,
+  "run_url": "https://github.com/yukasung/tiewtrade/actions/runs/42050896249",
+  "required_jobs_passed": 6,
+  "premerge_tree": "5b5f74d7020610f88b2778da8dc88db349fd9bac",
+  "merge_tree": "5b5f74d7020610f88b2778da8dc88db349fd9bac"
+}

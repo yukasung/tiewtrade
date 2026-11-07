@@ -1,0 +1,28 @@
+{
+  "security_and_analysis": {
+    "secret_scanning": {
+      "status": "enabled"
+    },
+    "secret_scanning_push_protection": {
+      "status": "enabled"
+    },
+    "dependabot_security_updates": {
+      "status": "enabled"
+    },
+    "secret_scanning_non_provider_patterns": {
+      "status": "disabled"
+    },
+    "secret_scanning_validity_checks": {
+      "status": "disabled"
+    }
+  },
+  "vulnerability_alerts": {
+    "enabled": true
+  },
+  "automated_security_fixes": {
+    "enabled": true,
+    "paused": false
+  },
+  "default_setup": "not-configured",
+  "protection_unchanged": true
+}

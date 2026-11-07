@@ -1,0 +1,179 @@
+"""Security-specific integration contracts and redacted public reporting."""
+
+from __future__ import annotations
+
+import copy
+import hashlib
+import io
+import json
+import tempfile
+import unittest
+import urllib.error
+from email.message import Message
+from pathlib import Path
+from unittest.mock import patch
+
+from tools.security import sarif
+from tools.security.model import Candidate, PolicyError, array, digest, manifest, obj, policy_counts
+from tools.security.reporting import summary
+from tools.security.system import download_verified, install
+from tools.security.tests.test_adapters import sarif_report
+
+ROOT = Path(__file__).resolve().parents[3]
+
+
+class ContractTests(unittest.TestCase):
+    def test_sarif_index_references_and_incremental_rejection(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            (root / "sample.py").write_text("# safe fixture\n")
+            report = sarif_report()
+            run = obj(array(report["runs"])[0])
+            tool = obj(run["tool"])
+            driver = obj(tool["driver"])
+            rules = driver.pop("rules")
+            tool["extensions"] = [{"name": "queries", "rules": rules}]
+            result = obj(array(run["results"])[0])
+            result.pop("ruleId")
+            result["rule"] = {"index": 0, "toolComponent": {"index": 0}}
+            metric = obj(array(obj(run["properties"])["metricResults"])[0])
+            metric.pop("ruleId")
+            metric["rule"] = {"index": 1, "toolComponent": {"index": 0}}
+            findings, files = sarif.evaluate(report, root, "python")
+            self.assertEqual(files, 1)
+            self.assertEqual(findings[0].severity, "high")
+            invalid = copy.deepcopy(report)
+            obj(obj(array(invalid["runs"])[0])["properties"])["incrementalMode"] = "diff-informed"
+            with self.assertRaises(PolicyError):
+                sarif.evaluate(invalid, root, "python")
+            result["ruleId"] = "py/different-rule"
+            with self.assertRaises(PolicyError):
+                sarif.evaluate(report, root, "python")
+
+    def test_action_cli_notification_references_without_telemetry(self) -> None:
+        for language, prefix, baseline in [
+            ("python", "py", "python"),
+            ("javascript-typescript", "js", "javascript"),
+            ("actions", "actions", "actions"),
+        ]:
+            with tempfile.TemporaryDirectory() as temp:
+                root = Path(temp)
+                (root / "sample.py").write_text("# synthetic source\n")
+                report = sarif_report(language)
+                run = obj(array(report["runs"])[0])
+                tool = obj(run["tool"])
+                driver = obj(tool["driver"])
+                driver["notifications"] = [{"id": "cli/expected-extracted-files/" + baseline}]
+                tool["extensions"] = [
+                    {
+                        "name": "queries",
+                        "notifications": [
+                            {"id": prefix + "/diagnostics/successfully-extracted-files"}
+                        ],
+                    }
+                ]
+                invocation = obj(array(run["invocations"])[0])
+                notes = array(invocation["toolExecutionNotifications"])
+                notes.pop(0)
+                obj(notes[0])["descriptor"] = {"index": 0, "toolComponent": {"index": 0}}
+                obj(notes[1])["descriptor"] = {"index": 0}
+                if language == "actions":
+                    run["properties"] = {}
+                _, coverage = sarif.evaluate(report, root, language)
+                self.assertEqual(coverage, 1)
+                obj(notes[0])["descriptor"] = {
+                    "id": "conflicting",
+                    "index": 0,
+                    "toolComponent": {"index": 0},
+                }
+                with self.assertRaises(PolicyError):
+                    sarif.evaluate(report, root, language)
+
+    def test_public_summary_excludes_sarif_messages_and_snippets(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            (root / "sample.py").write_text("# safe fixture\n")
+            findings, coverage = sarif.evaluate(sarif_report(), root, "python")
+            record = manifest(
+                "codeql-python",
+                Candidate("a" * 40, "a" * 40, "a" * 40, "1", "1"),
+                digest("config"),
+                policy_counts(findings, frozenset()),
+                coverage,
+            )
+            public = summary(record, findings, frozenset())
+            self.assertNotIn("PRIVATE_SENTINEL", public)
+            self.assertNotIn("snippet", public)
+            self.assertIn("sample.py", public)
+            self.assertIn(findings[0].identity, public)
+            self.assertNotIn("PRIVATE_SENTINEL", json.dumps(record))
+
+    def test_checksum_mismatch_never_installs_download(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            target = Path(temp)
+            with (
+                patch("urllib.request.urlopen", return_value=io.BytesIO(b"tampered binary")),
+                self.assertRaisesRegex(PolicyError, "TOOL_CHECKSUM_MISMATCH"),
+            ):
+                install(ROOT, "gitleaks", target)
+            self.assertFalse((target / "gitleaks").exists())
+
+    def test_transient_download_retries_and_still_verifies_checksum(self) -> None:
+        payload = b"synthetic binary fixture"
+        expected = hashlib.sha256(payload).hexdigest()
+        with tempfile.TemporaryDirectory() as temp:
+            target = Path(temp) / "download"
+            transient = urllib.error.HTTPError(
+                "https://github.com/fixture", 503, "private", Message(), None
+            )
+            with (
+                patch(
+                    "urllib.request.urlopen", side_effect=[transient, io.BytesIO(payload)]
+                ) as request,
+                patch("time.sleep"),
+            ):
+                download_verified("https://github.com/fixture", target, expected)
+            self.assertEqual(request.call_count, 2)
+            self.assertEqual(target.read_bytes(), payload)
+            with (
+                patch("urllib.request.urlopen", return_value=io.BytesIO(b"tampered")) as request,
+                self.assertRaisesRegex(PolicyError, "TOOL_CHECKSUM_MISMATCH"),
+            ):
+                download_verified("https://github.com/fixture", target, expected)
+            self.assertEqual(request.call_count, 1)
+
+    def test_permanent_download_error_is_not_retried(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            error = urllib.error.HTTPError(
+                "https://github.com/fixture", 404, "private", Message(), None
+            )
+            with (
+                patch("urllib.request.urlopen", side_effect=error) as request,
+                self.assertRaisesRegex(PolicyError, "TOOL_HTTP_ERROR"),
+            ):
+                download_verified("https://github.com/fixture", Path(temp) / "download", "0" * 64)
+            self.assertEqual(request.call_count, 1)
+
+    def test_workflow_pins_match_registry_and_security_contract(self) -> None:
+        import re
+
+        workflow = (ROOT / ".github/workflows/security.yml").read_text()
+        pins = obj(obj(json.loads((ROOT / ".github/security/tools.json").read_text()))["actions"])
+        for action, commit in re.findall(r"uses: ([^@\s]+)@([^\s]+)", workflow):
+            key = "github/codeql-action" if action.startswith("github/codeql-action/") else action
+            self.assertRegex(commit, r"^[a-f0-9]{40}$")
+            self.assertEqual(commit, obj(pins[key])["sha"])
+        for forbidden in (
+            "pull_request_target:",
+            "workflow_run:",
+            "${{ secrets.",
+            "write",
+            "continue-on-error",
+            "paths:",
+        ):
+            self.assertNotIn(forbidden, workflow)
+        self.assertIn("if: always()", workflow)
+        self.assertIn("upload: never", workflow)
+        self.assertIn("CODEQL_ACTION_DIFF_INFORMED_QUERIES: 'false'", workflow)
+        self.assertIn("CODEQL_ACTION_FILE_COVERAGE_ON_PRS: 'true'", workflow)
+        self.assertEqual(workflow.count("persist-credentials: false"), 5)

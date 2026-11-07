@@ -1,0 +1,14 @@
+{
+  "secret-scanning": {
+    "available": true,
+    "count": 0,
+    "states": {},
+    "open_locators": []
+  },
+  "dependabot": {
+    "available": true,
+    "count": 0,
+    "states": {},
+    "open_severities": {}
+  }
+}

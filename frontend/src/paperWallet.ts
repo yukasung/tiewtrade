@@ -1,12 +1,13 @@
 import type { components } from "./api-types";
-import { ApiRequestError, send } from "./auth";
+import { send } from "./auth";
+import { createSafeRequest } from "./apiRequest";
 
 export type PaperCommandView = components["schemas"]["PaperCommandView"];
 export type PaperWalletEnvelope = components["schemas"]["PaperWalletEnvelope"];
 export type PaperWalletMutation = components["schemas"]["PaperWalletMutation"];
 export type PaperWalletReset = components["schemas"]["PaperWalletReset"];
 
-const documentedCodes = new Set([
+const documentedCodes = [
   "ACTIVITY_UNKNOWN",
   "EPISODE_CONFLICT",
   "IDEMPOTENCY_CONFLICT",
@@ -16,22 +17,14 @@ const documentedCodes = new Set([
   "PAPER_WALLET_DEPENDENCY_UNAVAILABLE",
   "RESET_UNSAFE",
   "WALLET_EXISTS",
-]);
+];
 
-async function safe<T>(request: Promise<T>): Promise<T> {
-  try {
-    return await request;
-  } catch (cause: unknown) {
-    const apiError = cause instanceof ApiRequestError ? cause : null;
-    throw new ApiRequestError(
-      apiError !== null && documentedCodes.has(apiError.message)
-        ? apiError.message
-        : "PAPER_WALLET_REQUEST_FAILED",
-      apiError?.status ?? 0,
-      apiError?.retryAt ?? null,
-    );
-  }
-}
+const safe = createSafeRequest({
+  allowedCodes: documentedCodes,
+  fallbackCode: "PAPER_WALLET_REQUEST_FAILED",
+  preserveAbort: false,
+  preserveRetryAfter: true,
+});
 
 export function fetchPaperWallet(signal?: AbortSignal): Promise<PaperWalletEnvelope> {
   return safe(send<PaperWalletEnvelope>("/paper-wallet", undefined, undefined, "GET", signal));

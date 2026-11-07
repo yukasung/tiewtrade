@@ -1,0 +1,127 @@
+[
+  {
+    "candidate": {
+      "attempt": "1",
+      "base": "98ff2f840fe08dc46ab5eb9976f17bdf32b062b1",
+      "commit": "d7bffd3c3b3fffbe0b66f6a8af34823551ad4373",
+      "head": "a40f491cfcc5ff39d9e99c0b8fefcedf505362f2",
+      "run": "42148532565"
+    },
+    "component": "codeql-javascript-typescript",
+    "configuration": "b3dae7862cbef2f31d18270d5add9612ffe8e90b86ecd359c611e30d4c9abf3d",
+    "counts": {
+      "blocked": 0,
+      "critical": 0,
+      "excepted": 0,
+      "high": 0,
+      "low": 0,
+      "medium": 0,
+      "needs_triage": 0,
+      "none": 0,
+      "unknown": 0
+    },
+    "coverage": 178,
+    "schema": 1,
+    "verdict": "pass"
+  },
+  {
+    "candidate": {
+      "attempt": "1",
+      "base": "98ff2f840fe08dc46ab5eb9976f17bdf32b062b1",
+      "commit": "d7bffd3c3b3fffbe0b66f6a8af34823551ad4373",
+      "head": "a40f491cfcc5ff39d9e99c0b8fefcedf505362f2",
+      "run": "42148532565"
+    },
+    "component": "codeql-python",
+    "configuration": "b3dae7862cbef2f31d18270d5add9612ffe8e90b86ecd359c611e30d4c9abf3d",
+    "counts": {
+      "blocked": 1,
+      "critical": 1,
+      "excepted": 0,
+      "high": 0,
+      "low": 0,
+      "medium": 0,
+      "needs_triage": 0,
+      "none": 0,
+      "unknown": 0
+    },
+    "coverage": 858,
+    "schema": 1,
+    "verdict": "blocked"
+  },
+  {
+    "candidate": {
+      "attempt": "1",
+      "base": "98ff2f840fe08dc46ab5eb9976f17bdf32b062b1",
+      "commit": "d7bffd3c3b3fffbe0b66f6a8af34823551ad4373",
+      "head": "a40f491cfcc5ff39d9e99c0b8fefcedf505362f2",
+      "run": "42148532565"
+    },
+    "component": "secrets",
+    "configuration": "b3dae7862cbef2f31d18270d5add9612ffe8e90b86ecd359c611e30d4c9abf3d",
+    "counts": {
+      "blocked": 0,
+      "critical": 0,
+      "excepted": 92,
+      "high": 0,
+      "low": 0,
+      "medium": 0,
+      "needs_triage": 0,
+      "none": 0,
+      "unknown": 0
+    },
+    "coverage": 239,
+    "schema": 1,
+    "verdict": "pass"
+  },
+  {
+    "candidate": {
+      "attempt": "1",
+      "base": "98ff2f840fe08dc46ab5eb9976f17bdf32b062b1",
+      "commit": "d7bffd3c3b3fffbe0b66f6a8af34823551ad4373",
+      "head": "a40f491cfcc5ff39d9e99c0b8fefcedf505362f2",
+      "run": "42148532565"
+    },
+    "component": "codeql-actions",
+    "configuration": "b3dae7862cbef2f31d18270d5add9612ffe8e90b86ecd359c611e30d4c9abf3d",
+    "counts": {
+      "blocked": 0,
+      "critical": 0,
+      "excepted": 0,
+      "high": 0,
+      "low": 0,
+      "medium": 11,
+      "needs_triage": 0,
+      "none": 0,
+      "unknown": 0
+    },
+    "coverage": 3,
+    "schema": 1,
+    "verdict": "pass"
+  },
+  {
+    "candidate": {
+      "attempt": "1",
+      "base": "98ff2f840fe08dc46ab5eb9976f17bdf32b062b1",
+      "commit": "d7bffd3c3b3fffbe0b66f6a8af34823551ad4373",
+      "head": "a40f491cfcc5ff39d9e99c0b8fefcedf505362f2",
+      "run": "42148532565"
+    },
+    "component": "dependencies",
+    "configuration": "b3dae7862cbef2f31d18270d5add9612ffe8e90b86ecd359c611e30d4c9abf3d",
+    "counts": {
+      "blocked": 0,
+      "critical": 0,
+      "excepted": 0,
+      "high": 0,
+      "low": 0,
+      "medium": 4,
+      "needs_triage": 0,
+      "none": 0,
+      "unknown": 0
+    },
+    "coverage": 464,
+    "schema": 1,
+    "verdict": "pass"
+  }
+]
