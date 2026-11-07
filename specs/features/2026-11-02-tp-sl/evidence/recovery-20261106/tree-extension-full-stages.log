@@ -1,0 +1,5 @@
+{"counts": {"matches": 48209}, "outcome": "RETURNED", "seconds": 72.19403337499898, "security_stage": "history_scan"}
+{"counts": {"cached_git_reads": 65, "findings": 48209}, "outcome": "RETURNED", "seconds": 1.8669759589975001, "security_stage": "history_mapping"}
+{"counts": {}, "outcome": "RETURNED", "seconds": 5.639827292001428, "security_stage": "tree_export"}
+{"counts": {"matches": 48158}, "outcome": "RETURNED", "seconds": 47.185508332997415, "security_stage": "tree_scan"}
+{"counts": {"cached_git_reads": 125, "findings": 48158, "mapped_lines": 71692}, "outcome": "RETURNED", "seconds": 12.794745874998625, "security_stage": "tree_mapping"}

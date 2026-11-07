@@ -830,3 +830,9 @@ later isolated backend steps Not Run); browser E2E and other5CIjobs passed. Secu
 42362300837 **Cancelled at15min**, no secrets manifest; aggregate gate Failed.
 Additional test-config fixes have105passing targeted local cases, not remote CI.
 [Exact result and next approval checkpoint](evidence/recovery-20261106/publication-final-ci.md).
+
+Owner approved the exact100tree-occurrence extension. Local full secret scan and
+strict registry validation Passed on6d021c4 in146.640s:0blocked/triage, exact48218
+artifact identities. CI-fixture local fixes105passed remain prepared. Current-head
+remote required CI still Pending; all F17 opening/Release/dependency gates retain
+their actual status. [Checkpoint](evidence/recovery-20261106/tree-extension-local-checkpoint.md).

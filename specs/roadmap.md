@@ -1139,3 +1139,9 @@ because tree adds100column-distinct identities in8fixed blobs. No active excepti
 expansion, push or new remote-CI run. Owner decision required on the
 [exact100-identity extension](features/2026-11-02-tp-sl/tree-occurrence-extension-proposal.md).
 Historical results and F17 pending acceptance/dependency gates remain unchanged.
+
+Owner approved the exact100tree extension. Local full history/tree and registry
+validation Passed on6d021c4 in146.640s with0blocked/triage; exact48218artifact
+identities resolved. Publishing combined candidate for final required CI; local
+proof is not remote CI. No merge/deploy/internal opening or F17 completion.
+[Current checkpoint](features/2026-11-02-tp-sl/evidence/recovery-20261106/tree-extension-local-checkpoint.md).

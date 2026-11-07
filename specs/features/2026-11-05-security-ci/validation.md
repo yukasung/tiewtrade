@@ -31,6 +31,12 @@ Owner approved the exact100-identity extension2026-11-07. Verify only8entries ch
 to the listed counts/set digests (48218total), then actual full history/tree registry
 resolution and zero blocked/triage findings. Scope remains Feature; current-head
 local/full required CI results Pending until executed, prior failures unchanged.
+
+Exact100extension local validation Passed on6d021c4:11affected registry tests passed;
+complete pinned history/tree146.640s, exact48218artifact identities,48311excepted
+including existing approvals,0blocked/triage. Public summary66892bytes. Final
+published-head required CI still Pending; no remote success inferred from local.
+[Local checkpoint](../2026-11-02-tp-sl/evidence/recovery-20261106/tree-extension-local-checkpoint.md).
 วันที่: 2026-11-05
 Requirements: [Approved](requirements.md); implementation: [plan.md](plan.md)
 
