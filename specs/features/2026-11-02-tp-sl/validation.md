@@ -836,3 +836,9 @@ strict registry validation Passed on6d021c4 in146.640s:0blocked/triage, exact482
 artifact identities. CI-fixture local fixes105passed remain prepared. Current-head
 remote required CI still Pending; all F17 opening/Release/dependency gates retain
 their actual status. [Checkpoint](evidence/recovery-20261106/tree-extension-local-checkpoint.md).
+
+Published12e6204: Security Passed7/7, run42367203731. Application CI Failed on push
+and PR:4759passed/2failed/31deselected in main backend suite; isolated later steps
+Not Run. Other5jobs passed, including full E2E. Stop after third non-passing CI round
+pending owner decision on [remaining fixture/config plan](remaining-ci-fixtures-plan.md).
+[Evidence](evidence/recovery-20261106/extension-remote-ci-checkpoint.md).

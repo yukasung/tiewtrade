@@ -1145,3 +1145,10 @@ validation Passed on6d021c4 in146.640s with0blocked/triage; exact48218artifact
 identities resolved. Publishing combined candidate for final required CI; local
 proof is not remote CI. No merge/deploy/internal opening or F17 completion.
 [Current checkpoint](features/2026-11-02-tp-sl/evidence/recovery-20261106/tree-extension-local-checkpoint.md).
+
+12e6204 remote Security Passed7/7. Application CI Failed2cases (4759passed,
+31deselected; later isolated steps Not Run), other5jobs/E2E passed on push and PR.
+No fourth full CI/fix cycle before owner decision under the3-round rule. Exact
+security dataset/matcher remain approved; remaining proposal is two fixture/config
+changes, not reduced acceptance. No merge/opening/F17 completion.
+[Result/next checkpoint](features/2026-11-02-tp-sl/evidence/recovery-20261106/extension-remote-ci-checkpoint.md).

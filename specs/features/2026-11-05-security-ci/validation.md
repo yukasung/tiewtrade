@@ -37,6 +37,11 @@ complete pinned history/tree146.640s, exact48218artifact identities,48311excepte
 including existing approvals,0blocked/triage. Public summary66892bytes. Final
 published-head required CI still Pending; no remote success inferred from local.
 [Local checkpoint](../2026-11-02-tp-sl/evidence/recovery-20261106/tree-extension-local-checkpoint.md).
+
+Exact extension remote Security **Passed7/7** on12e6204, run42367203731. Secret scan/
+mapping stages126.104s,15min unchanged; all policy/dependency/CodeQL/aggregate checks
+passed. Separate application CI still Failed2fixture/config cases; no merge claim.
+[Remote checkpoint](../2026-11-02-tp-sl/evidence/recovery-20261106/extension-remote-ci-checkpoint.md).
 วันที่: 2026-11-05
 Requirements: [Approved](requirements.md); implementation: [plan.md](plan.md)
 
