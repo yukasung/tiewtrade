@@ -336,7 +336,8 @@ def parse_cpu_idle(output: str) -> float:
 
 
 async def mac_readiness() -> dict[str, Any]:
-    if sys.platform != "darwin":
+    host_platform = sys.platform
+    if host_platform != "darwin":
         raise EnvironmentNotReadyError("HOST_SENSOR_PLATFORM_UNSUPPORTED")
     idle = parse_cpu_idle(await read_host_command("top", "-l", "2", "-s", "1", "-n", "0"))
     raw = (await read_host_command("sysctl", "-n", "kern.memorystatus_vm_pressure_level")).strip()
