@@ -14,6 +14,8 @@ authority flag; no durable stop request found. All four activation gates now off
 positions/history retained. Diagnosis/proposal are not a successful replacement run.
 อ้างอิง: requirements.md Approved 2026-11-04; plan.md Approved 2026-11-04
 
+NC-F17-SEC-01: **Approved A 2026-11-08** — [six exact public-checksum exceptions](security-checksum-publication-proposal.md), existing policy tests, normal commit/push and one replacement required CI round. No scanner or trading-rule change; CI results remain pending until observed.
+
 ## เกณฑ์ตรวจรับ
 
 ทุก Feature criterion ต้องผ่านบน candidate สุดท้ายก่อน merge; ไม่มีผล runtime ในรอบเอกสารนี้

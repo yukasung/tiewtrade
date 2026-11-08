@@ -9,6 +9,8 @@ NC-F17-MANUAL-01: requirements MR-01–11 **Approved A 2026-11-08**;
 ตามคำสั่ง approve ของเจ้าของ; ผล implementation/checks ดู checkpoint amendment.
 อ้างอิง: requirements.md Approved 2026-11-04, ADR-004, testing §6–7
 
+NC-F17-SEC-01: **Approved A 2026-11-08** — [six exact public-checksum exceptions](security-checksum-publication-proposal.md), existing policy tests, normal commit/push and one replacement required CI round. No scanner or trading-rule change; CI results remain pending until observed.
+
 ## แนวทาง
 
 เพิ่ม protection domain ที่รับสถานะ/ราคา/เวลาเป็น input และคืน transition/intent

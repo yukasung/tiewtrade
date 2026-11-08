@@ -9,6 +9,8 @@ MR-02–06 supersede whole-group rejection solely for off-step net allocation wh
 valid aligned-down portion exists. Minimum/filter/safety checks still apply;
 implementation plan/validation require their own approval before code.
 
+NC-F17-SEC-01: **Approved A 2026-11-08** — [six exact public-checksum exceptions](security-checksum-publication-proposal.md), existing policy tests, normal commit/push and one replacement required CI round. No scanner or trading-rule change; CI results remain pending until observed.
+
 ## ทำไมต้องมี
 
 ผู้ใช้ต้องเลือก TP/SL พร้อมออเดอร์เข้า หรือเพิ่มให้ position ที่เปิดอยู่ได้ ตาม mission C-7
