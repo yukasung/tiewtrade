@@ -1,0 +1,24 @@
+[WebServer] INFO:     Started server process [4067]
+
+[WebServer] INFO:     Waiting for application startup.
+
+[WebServer] INFO:     Application startup complete.
+
+[WebServer] INFO:     Uvicorn running on http://127.0.0.1:18012 (Press CTRL+C to quit)
+
+[WebServer] (node:4076) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+
+Running 5 tests using 1 worker
+
+(node:4078) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[1/5] e2e/candlestick-chart.spec.ts:143:1 › module pages preserve navigation history, deep links and cancel inactive chart work
+[2/5] e2e/candlestick-chart.spec.ts:185:1 › removed prices bookmarks return to the chart without starting a price subscription
+[3/5] e2e/candlestick-chart.spec.ts:246:1 › live snapshots recover after disconnect without indicator reads
+[4/5] e2e/candlestick-chart.spec.ts:285:1 › password login, series switching and actual latest-price worker
+[5/5] e2e/candlestick-chart.spec.ts:356:1 › native 3m history and live feed work for BTC and ETH without order requests
+  5 passed (28.8s)

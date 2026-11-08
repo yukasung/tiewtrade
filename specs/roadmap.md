@@ -236,6 +236,7 @@ Frontend targeted 65, backend price API 9 และ static/build/price-service e
 
 
 Prices removal publication update (2026-11-08): owner authorized commit/push/PR; required CI Pending. Merge requires a separate command.
+Main chart 3m base refresh: [affected validation passed](features/2026-11-07-remove-prices-page/evidence/base-refresh-checkpoint-20261108.md), 29 unit tests / five chart browser flows; required CI pending refreshed SHA.
 
 F-01 follow-up: [Security dependency remediation](features/2026-11-05-security-dependency-remediation/requirements.md)
 **Code review APPROVED — local checks passed; final CI pending (2026-11-05)** — certifi 2026.7.22 → 2026.10.18 และ

@@ -81,3 +81,5 @@ Chart E2E ใช้ config เดิม 18174/18012; ทั้งสองชุ
 [Post-review refactor checkpoint](evidence/refactor-checkpoint-20261108.md).
 
 Publication checkpoint: owner authorized commit/push/PR on 2026-11-08; V-09 Pending. Historical Not Run notes above refer to earlier checkpoints.
+
+[Base refresh checkpoint 2026-11-08](evidence/base-refresh-checkpoint-20261108.md): main chart 3m integrated; 29 unit tests and five browser flows passed (28.8s). V-09 awaits refreshed candidate CI.
