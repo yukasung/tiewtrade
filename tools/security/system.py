@@ -6,6 +6,7 @@ import hashlib
 import json
 import os
 import platform
+import re
 import subprocess
 import tarfile
 import tempfile
@@ -14,7 +15,7 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
-from tools.security.model import Candidate, PolicyError, digest, obj, read_json, sha, string
+from tools.security.model import Candidate, PolicyError, array, digest, obj, read_json, sha, string
 
 
 def quiet(args: list[str], cwd: Path, allowed: tuple[int, ...] = (0,), timeout: int = 600) -> bytes:
@@ -89,13 +90,60 @@ def candidate(root: Path) -> Candidate:
     )
 
 
+def _release_asset_request(url: str) -> urllib.request.Request:
+    """Resolve only the exact public release asset named by an existing pin."""
+    match = re.fullmatch(
+        r"https://github\.com/([\w.-]+)/([\w.-]+)/releases/download/([\w.-]+)/([\w.-]+)",
+        url,
+        flags=re.ASCII,
+    )
+    if match is None or any(part in {".", ".."} for part in match.groups()):
+        raise PolicyError("INVALID_TOOL_PIN")
+    owner, repository, tag, filename = match.groups()
+    api = f"https://api.github.com/repos/{owner}/{repository}/releases"
+    headers = {"User-Agent": "TiewTrade-security", "X-GitHub-Api-Version": "2022-11-28"}
+    request = urllib.request.Request(
+        f"{api}/tags/{tag}", headers={**headers, "Accept": "application/vnd.github+json"}
+    )
+    with urllib.request.urlopen(request, timeout=30) as response:
+        raw = response.read(2 * 1024 * 1024 + 1)
+    if len(raw) > 2 * 1024 * 1024:
+        raise PolicyError("INVALID_TOOL_RELEASE")
+    try:
+        release = obj(json.loads(raw))
+    except (ValueError, UnicodeError):
+        raise PolicyError("INVALID_TOOL_RELEASE") from None
+    assets = [obj(asset) for asset in array(release.get("assets"))]
+    matches = [
+        asset
+        for asset in assets
+        if asset.get("name") == filename and asset.get("browser_download_url") == url
+    ]
+    if len(matches) != 1 or matches[0].get("state") != "uploaded":
+        raise PolicyError("INVALID_TOOL_RELEASE")
+    identity = matches[0].get("id")
+    if type(identity) is not int or identity <= 0:
+        raise PolicyError("INVALID_TOOL_RELEASE")
+    # Construct the endpoint: never follow an arbitrary URL from release metadata.
+    return urllib.request.Request(
+        f"{api}/assets/{identity}", headers={**headers, "Accept": "application/octet-stream"}
+    )
+
+
 def download_verified(url: str, archive: Path, expected: str) -> None:
     """Retry only transient reads; every attempt starts fresh and checks the pin."""
+    fallback = False
     for attempt in range(3):
         checksum = hashlib.sha256()
         total = 0
         try:
-            with urllib.request.urlopen(url, timeout=60) as response, archive.open("wb") as stream:
+            request = _release_asset_request(url) if fallback else url
+            with (
+                urllib.request.urlopen(request, timeout=60) as response,
+                archive.open("wb") as stream,
+            ):
+                if fallback and response.headers.get_content_type() != "application/octet-stream":
+                    raise PolicyError("INVALID_TOOL_RELEASE")
                 while chunk := response.read(1024 * 1024):
                     total += len(chunk)
                     if total > 4 * 1024 * 1024 * 1024:
@@ -111,6 +159,7 @@ def download_verified(url: str, archive: Path, expected: str) -> None:
             if checksum.hexdigest() != expected:
                 raise PolicyError("TOOL_CHECKSUM_MISMATCH")
             return
+        fallback = True
         if attempt < 2:
             time.sleep(attempt + 1)
     raise PolicyError("TOOL_NETWORK_FAILURE")
