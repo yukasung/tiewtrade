@@ -53,7 +53,12 @@ class PoolEvidence:
         self.save(finalized=False)
 
     def save(self, *, finalized: bool) -> None:
-        self.path.write_text(json.dumps({"pools": self.entries, "finalized": finalized}))
+        pending = self.path.with_suffix(self.path.suffix + ".tmp")
+        try:
+            pending.write_text(json.dumps({"pools": self.entries, "finalized": finalized}))
+            pending.replace(self.path)
+        finally:
+            pending.unlink(missing_ok=True)
 
     def finish(self) -> None:
         self.save(finalized=True)

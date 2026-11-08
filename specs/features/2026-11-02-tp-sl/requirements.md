@@ -11,6 +11,8 @@ implementation plan/validation require their own approval before code.
 
 NC-F17-SEC-01: **Approved A 2026-11-08** — [six exact public-checksum exceptions](security-checksum-publication-proposal.md), existing policy tests, normal commit/push and one replacement required CI round. No scanner or trading-rule change; CI results remain pending until observed.
 
+**Post-merge pool-evidence amendment Approved A 2026-11-08:** [atomic diagnostic publication](postmerge-pool-evidence-atomic-proposal.md), preserving schema/resource/financial criteria. New follow-up branch, fault/real-DB tests and one PR/CI round approved; no automatic merge. Local12 tests/static checks Passed ([checkpoint](evidence/manual-acceptance-fix/postmerge-pool-atomic/checkpoint.md)); required CI remains Pending.
+
 ## ทำไมต้องมี
 
 ผู้ใช้ต้องเลือก TP/SL พร้อมออเดอร์เข้า หรือเพิ่มให้ position ที่เปิดอยู่ได้ ตาม mission C-7

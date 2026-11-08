@@ -2,6 +2,7 @@
 
 import json
 from pathlib import Path
+from typing import Any
 
 import pytest
 from sqlalchemy import text
@@ -14,6 +15,68 @@ from tests.infra.risk_limits.profile_resources import (
     returned_pools,
 )
 from tiewtrade.infra.db import DatabaseRole, create_engine_for
+
+
+@pytest.mark.parametrize("existing", [False, True])
+@pytest.mark.parametrize("failure", [None, "write", "replace"])
+def test_pool_publication_is_complete_and_preserves_previous_evidence_on_failure(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, existing: bool, failure: str | None
+) -> None:
+    tracker = PoolEvidence(tmp_path / "worker-0.pools.json")
+    pending = tracker.path.with_suffix(".json.tmp")
+    previous = {"pools": [], "finalized": False}
+    if existing:
+        tracker.path.write_text(json.dumps(previous))
+    tracker.entries = [
+        {
+            "role": "ENGINE",
+            "pool_size": 1,
+            "max_overflow": 1,
+            "checked_out": 0,
+            "peak_checked_out": 1,
+        }
+    ]
+    expected = {"pools": tracker.entries, "finalized": True}
+    original_write, original_replace = Path.write_text, Path.replace
+    stages: list[str] = []
+
+    def assert_previous_visible() -> None:
+        if existing:
+            assert json.loads(tracker.path.read_text()) == previous
+        else:
+            assert not tracker.path.exists()
+
+    def interrupted_write(path: Path, data: str, **kwargs: Any) -> int:
+        assert path == pending
+        original_write(path, "", **kwargs)
+        stages.append("incomplete")
+        assert_previous_visible()
+        if failure == "write":
+            raise OSError("controlled pool write failure")
+        result = original_write(path, data, **kwargs)
+        assert_previous_visible()
+        return result
+
+    def interrupted_replace(path: Path, target: Path) -> Path:
+        assert path == pending and target == tracker.path
+        assert json.loads(path.read_text()) == expected
+        stages.append("complete")
+        assert_previous_visible()
+        if failure == "replace":
+            raise OSError("controlled pool replace failure")
+        return original_replace(path, target)
+
+    monkeypatch.setattr(Path, "write_text", interrupted_write)
+    monkeypatch.setattr(Path, "replace", interrupted_replace)
+    if failure:
+        with pytest.raises(OSError, match=f"controlled pool {failure} failure"):
+            tracker.save(finalized=True)
+        assert_previous_visible()
+    else:
+        tracker.save(finalized=True)
+        assert tracker.path.read_text() == json.dumps(expected)
+    assert stages == (["incomplete"] if failure == "write" else ["incomplete", "complete"])
+    assert not pending.exists()
 
 
 async def test_actual_pool_capacity_and_return_evidence(
