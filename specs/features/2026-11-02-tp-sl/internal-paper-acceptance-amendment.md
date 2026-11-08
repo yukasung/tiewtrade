@@ -880,6 +880,8 @@ W2/overflow/W3/fullW4 were not started after the failed gate.
 
 ## 15. Owned pool resource contract — Approved A,2026-11-07
 
+Publication-only follow-up **Approved A 2026-11-08**: [atomic pool diagnostic writes](postmerge-pool-evidence-atomic-proposal.md); pool/schema/return/leak criteria and prior results unchanged. Local12 targeted/fault/real-DB cases and static checks Passed; required CI remains Pending.
+
 **A — proposed harness/resource-validation amendment for NC12 only:** replace the
 aggregate initial+2 proxy with direct bounded-pool/return-of-connection evidence.
 The safety requirement remains no leaked connections/claims/locks. Keep existing

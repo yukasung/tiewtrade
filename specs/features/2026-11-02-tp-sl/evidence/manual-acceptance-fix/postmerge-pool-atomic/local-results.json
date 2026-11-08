@@ -1,0 +1,13 @@
+{
+  "base": "58e2299e1d179607f5a2e5e4671e48beb7a01009",
+  "tests_passed": 12,
+  "test_seconds": 11.62,
+  "fault_cases": 6,
+  "real_database": true,
+  "ruff": "passed",
+  "format": "passed",
+  "mypy": "passed",
+  "production_changed": false,
+  "resource_criteria_changed": false,
+  "required_ci": "pending"
+}
