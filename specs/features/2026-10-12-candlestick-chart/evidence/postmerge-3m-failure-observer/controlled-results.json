@@ -1,0 +1,12 @@
+{
+  "controlled_cases": 4,
+  "original_failures_preserved": 3,
+  "timeout_original_failure_preserved": true,
+  "passing_case_has_no_attachment": true,
+  "persisted_file_artifacts": 3,
+  "allowlisted_snapshots": 2,
+  "unavailable_marker": 1,
+  "diagnostic_caps_verified": true,
+  "private_sentinel_omitted": true,
+  "source_hook_used_via_typescript_ast": true
+}

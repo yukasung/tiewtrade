@@ -11,6 +11,8 @@ plan/validation ของงานลบหน้าได้รับอนุ�
 ด้วย BTCUSDT และ ETHUSDT เท่านั้น รวม 16 live candle series; BTCUSDT ยังเป็นค่าเริ่มต้น
 และกฎ history/finality/exact OHLCV/live update เดิมไม่เปลี่ยน
 
+**Failure-only3m evidence amendment Approved A 2026-11-08:** [bounded native-fetch failure evidence](postmerge-3m-failure-observer-proposal.md), preserving30s and all original assertions/fixtures. Separate follow-up branch, controlled private failure proof, affected real-DB case and one PR/CI round authorized. Controlled four-case privacy/persistence proof, one real-DB3m case and scoped static checks verified ([checkpoint](evidence/postmerge-3m-failure-observer/checkpoint.md)); required CI Pending and intermittent root cause remains unresolved.
+
 ## Amendment — ช่วงประวัติที่เลื่อนดูได้ (Approved 2026-10-14)
 
 เจ้าของอนุมัติให้ `1m`–`1d` ดูย้อนหลังสามเดือนปฏิทิน และ `1w`/`1M`

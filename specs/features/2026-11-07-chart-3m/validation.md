@@ -21,6 +21,8 @@ NC-3M-01 A อนุมัติและ implement แล้ว; ผล Failed 
 | V3-10A | Chart workload/resource — RQ05/06 | F-12 V-17: BTC9TF, LEGACY/PREPAREDแยก, warmup60s+วัด600sต่อmode; profile/threshold/evidenceตามรายละเอียดด้านล่าง | Release | Not Run — Pending Full Validation |
 | V3-10B | Prepared capacity/readiness — RQ05 | F-11 R2-C1..C6/R2-7 ตามF-38 RC-03..09: readiness BTC+ETH18series, workload BTC9series; C2+C5-steady3600s แล้ว C3+C5-dirty3600sเมื่อphaseก่อนผ่าน; fairness/resource/aggregateตามรายละเอียดด้านล่าง | Release | Not Run — Pending Full Validation |
 
+**Post-merge failure-evidence follow-up Approved A 2026-11-08:** [observer amendment](../2026-10-12-candlestick-chart/postmerge-3m-failure-observer-proposal.md), preserving original3m criteria and observer verdicts. Controlled private proof/affected real-DB case/static checks verified; remote CI Pending, root cause remains OPEN.
+
 ## V3-10A — Profile กราฟและเกณฑ์ตัดสินที่ผูกกับต้นทาง
 
 ต้นทาง: [F-12 validation V-17](../2026-10-12-candlestick-chart/validation.md#v-17-workload--acceptance--passed-หลัง-deterministic-rerun-2026-10-23)

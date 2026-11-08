@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { randomUUID } from "node:crypto";
 import { setTimeout, clearTimeout } from "node:timers";
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Page, type TestInfo } from "@playwright/test";
 import { backendPython, e2eEnvironment } from "./helpers/environment";
 import { PASSWORD } from "./helpers/totp";
 import type { CandlePage, ChartLive } from "../src/chart/api";
@@ -350,16 +350,77 @@ type ChartObservation = {
   rows: Pick<CandlePage["rows"][number], "open" | "high" | "low" | "close" | "open_at" | "end_at">[];
 };
 type ChartObserverWindow = typeof window & {
-  chart3mObserver: { completed: ChartObservation[]; aborted: number; failure: string | null };
+  chart3mObserver: {
+    completed: ChartObservation[]; aborted: number; failure: string | null;
+    requests: ChartRequestObservation[]; truncated: boolean;
+  };
 };
+type ChartRequestObservation = {
+  path: string; base: string; startedMs: number; headersMs: number | null;
+  finishedMs: number | null; http: number | null; status: string | null;
+  rowCount: number | null; outcome: "pending" | "complete" | "aborted" | "failed";
+};
+const native3mTitle = "native 3m history and live feed work for BTC and ETH without order requests";
 
-test("native 3m history and live feed work for BTC and ETH without order requests", async ({ page }) => {
+async function attachNative3mFailure({ page }: { page: Page }, info: TestInfo) {
+  if (info.title !== native3mTitle || info.status === "passed" || info.status === "skipped") return;
+  let evidence: unknown = { unavailable: true };
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    evidence = await Promise.race([
+      page.evaluate(() => {
+        const state = (window as Partial<ChartObserverWindow>).chart3mObserver;
+        if (!state) return { unavailable: true };
+        const paths = ["/api/market-data/candles/pages", "/api/market-data/chart/live"];
+        const statuses = ["READY", "RECOVERING", "STALE", "NO_DATA", "UNAVAILABLE"];
+        const failures = ["abort-overflow", "fetch-or-body-error", "http-error", "invalid-shape", "response-overflow"];
+        const number = (value: number | null | undefined) =>
+          typeof value === "number" && Number.isFinite(value) && value >= 0 ? value : null;
+        const base = (value: string) => ["BTC", "ETH"].includes(value) ? value : "unknown";
+        const path = (value: string) => paths.includes(value) ? value : "unknown";
+        const status = (value: string | null | undefined) => value && statuses.includes(value) ? value : null;
+        const selection = (label: string) => document.querySelector<HTMLSelectElement>(
+          `[data-testid="candlestick-chart"] select[aria-label="${label}"]`,
+        )?.value ?? "unknown";
+        const timeframe = selection("Timeframe");
+        return {
+          selectedBase: base(selection("คู่เทรด")),
+          selectedTimeframe: ["1m", "3m", "5m", "15m", "1h", "4h", "1d", "1w", "1M"].includes(timeframe) ? timeframe : "unknown",
+          aborted: number(state.aborted), truncated: state.truncated === true,
+          failure: state.failure === null ? null : failures.includes(state.failure) ? state.failure : "unknown",
+          completed: state.completed.slice(0, 16).map(row => ({
+            path: path(row.path), base: base(row.base), timeframe: row.timeframe === "3m" ? "3m" : "unknown",
+            status: status(row.status), rowCount: number(row.rows.length),
+          })),
+          requests: state.requests.slice(0, 32).map(row => ({
+            path: path(row.path), base: base(row.base), timeframe: "3m",
+            startedMs: number(row.startedMs), headersMs: number(row.headersMs), finishedMs: number(row.finishedMs),
+            http: number(row.http), status: status(row.status), rowCount: number(row.rowCount),
+            outcome: ["pending", "complete", "aborted", "failed"].includes(row.outcome) ? row.outcome : "unknown",
+          })),
+        };
+      }),
+      new Promise(resolve => { timer = setTimeout(() => resolve({ unavailable: true }), 2000); }),
+    ]);
+  } catch { /* Failure evidence must never replace the original test failure. */ }
+  finally { if (timer) clearTimeout(timer); }
+  try {
+    // The existing CI uploads test-results even without an HTML/JSON reporter.
+    const output = info.outputPath("native-3m-failure-observer.json");
+    writeFileSync(output, JSON.stringify(evidence));
+    await info.attach("native-3m-failure-observer", { path: output, contentType: "application/json" });
+  } catch { console.warn("Native3m failure evidence unavailable"); }
+}
+
+test.afterEach(attachNative3mFailure);
+
+test(native3mTitle, async ({ page }) => {
   fixture("seed-3m");
   // Observe native browser fetches rather than retrieving bodies from CDP after
   // the app has consumed/aborted them. Never issue a probe or replace a response.
   await page.addInitScript(() => {
     const state: ChartObserverWindow["chart3mObserver"] = {
-      completed: [], aborted: 0, failure: null,
+      completed: [], aborted: 0, failure: null, requests: [], truncated: false,
     };
     (window as ChartObserverWindow).chart3mObserver = state;
     const nativeFetch = window.fetch.bind(window);
@@ -370,9 +431,21 @@ test("native 3m history and live feed work for BTC and ETH without order request
         && (base === "BTC" || base === "ETH")
         && ["/api/market-data/candles/pages", "/api/market-data/chart/live"].includes(url.pathname);
       if (!observed) return nativeFetch(input, init);
+      // Separate bounded diagnostics; never alter existing observer verdicts.
+      const observation: ChartRequestObservation | undefined = state.requests.length < 32 ? {
+        path: url.pathname, base, startedMs: window.performance.now(), headersMs: null,
+        finishedMs: null, http: null, status: null, rowCount: null, outcome: "pending",
+      } : undefined;
+      if (observation) state.requests.push(observation);
+      else state.truncated = true;
       const failed = (error: unknown) => {
         const signal = init?.signal ?? (input instanceof Request ? input.signal : undefined);
-        if (signal?.aborted || (error instanceof DOMException && error.name === "AbortError")) {
+        const aborted = signal?.aborted || (error instanceof DOMException && error.name === "AbortError");
+        if (observation) {
+          observation.finishedMs = window.performance.now();
+          observation.outcome = aborted ? "aborted" : "failed";
+        }
+        if (aborted) {
           state.aborted += 1;
           if (state.aborted > 16) state.failure = "abort-overflow";
         } else state.failure = "fetch-or-body-error";
@@ -380,15 +453,24 @@ test("native 3m history and live feed work for BTC and ETH without order request
       let response: Response;
       try { response = await nativeFetch(input, init); }
       catch (error) { failed(error); throw error; }
+      if (observation) { observation.headersMs = window.performance.now(); observation.http = response.status; }
       if (!response.ok) state.failure = "http-error";
       try {
         void response.clone().json().then((body: CandlePage | ChartLive) => {
+          if (observation) {
+            observation.finishedMs = window.performance.now();
+            observation.outcome = "complete";
+          }
           if (body.base !== base || body.timeframe !== "3m" || !Array.isArray(body.rows)
             || body.rows.length > 1000 || body.rows.some(row => !row ||
               ![row.open, row.high, row.low, row.close, row.open_at, row.end_at]
                 .every(value => typeof value === "string"))) {
             state.failure = "invalid-shape";
             return;
+          }
+          if (observation) {
+            observation.status = "status" in body && typeof body.status === "string" ? body.status : null;
+            observation.rowCount = body.rows.length;
           }
           if (state.completed.length >= 16) { state.failure = "response-overflow"; return; }
           // Allowlist public fixture fields only; never retain request headers,
