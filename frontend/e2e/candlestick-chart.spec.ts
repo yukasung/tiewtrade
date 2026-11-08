@@ -30,8 +30,12 @@ async function expectLiveStatus(page: Page, expected: string[]) {
     const response = await page.request.get(
       "/api/market-data/chart/live?base=BTC&quote=USDT&timeframe=1h",
     );
+    const body = await response.json() as { status?: string; detail?: string; reason?: string };
+    if (process.env.CHART_E2E_DIAGNOSTICS === "1") {
+      process.stdout.write(JSON.stringify({ probe: "live-status", http: response.status(),
+        status: body.status, detail: body.detail, reason: body.reason }) + "\n");
+    }
     if (response.status() !== 200) return false;
-    const body = await response.json() as { status?: string };
     return body.status !== undefined && expected.includes(body.status);
   }).toBe(true);
 }
@@ -141,7 +145,7 @@ test("module pages preserve navigation history, deep links and cancel inactive c
   await expect(page.getByTestId("candlestick-chart").getByText("100.000000000000000001 USDT", { exact: true })).toBeVisible({ timeout: 60_000 });
   let chartCalls = 0;
   page.on("request", request => { if (request.url().includes("/market-data/chart/")) chartCalls += 1; });
-  for (const [name, testId] of [["API key", "api-key-panel"], ["บัญชีเทรด", "trading-account-panel"], ["TOTP / 2FA", "totp-panel"], ["ราคาสด", "realtime-prices"]] as const) {
+  for (const [name, testId] of [["API key", "api-key-panel"], ["บัญชีเทรด", "trading-account-panel"], ["TOTP / 2FA", "totp-panel"]] as const) {
     await page.getByRole("link", { name, exact: true }).click();
     await expect(page.getByTestId(testId)).toBeVisible();
     await expect(page.getByTestId("candlestick-chart")).toHaveCount(0);
@@ -151,11 +155,11 @@ test("module pages preserve navigation history, deep links and cancel inactive c
   await page.waitForTimeout(4000);
   expect(chartCalls).toBe(stopped);
   await page.goBack();
-  await expect(page.getByTestId("totp-panel")).toBeVisible();
+  await expect(page.getByTestId("trading-account-panel")).toBeVisible();
   await page.goForward();
-  await expect(page.getByTestId("realtime-prices")).toBeVisible();
+  await expect(page.getByTestId("totp-panel")).toBeVisible();
   await page.reload();
-  await expect(page.getByTestId("realtime-prices")).toBeVisible();
+  await expect(page.getByTestId("totp-panel")).toBeVisible();
   await page.goto("/api-keys");
   await expect(page.getByTestId("api-key-panel")).toBeVisible();
   await page.setViewportSize({ width: 1440, height: 1000 });
@@ -175,6 +179,67 @@ test("module pages preserve navigation history, deep links and cancel inactive c
   await page.getByRole("link", { name: "กราฟแท่งเทียน", exact: true }).click();
   await expect(trigger).toHaveAttribute("aria-expanded", "false");
   await expect(page.getByTestId("candlestick-chart")).toBeVisible();
+});
+
+test("removed prices bookmarks return to the chart without starting a price subscription", async ({ page }, testInfo) => {
+  const priceRequests: string[] = [];
+  page.on("request", request => { if (request.url().includes("/market-data/prices")) priceRequests.push(request.url()); });
+  page.on("websocket", socket => { if (socket.url().includes("/market-data/prices")) priceRequests.push(socket.url()); });
+  const email = await registerAccount(page);
+  await page.goto("/prices?from=bookmark");
+  await expect(page).toHaveURL(/\/chart\?from=bookmark$/);
+  await expect(page.getByTestId("candlestick-chart")).toBeVisible();
+  await page.reload();
+  await expect(page).toHaveURL(/\/chart\?from=bookmark$/);
+  await expect(page.getByTestId("candlestick-chart")).toBeVisible();
+
+  for (const language of ["th", "en"]) {
+    await page.evaluate(async value => {
+      const accountPath = "/src/accountMessages.ts";
+      const chartPath = "/src/chartMessages.ts";
+      const account = await import(/* @vite-ignore */ accountPath) as { accountI18n: { changeLanguage: (language: string) => Promise<unknown> } };
+      const chart = await import(/* @vite-ignore */ chartPath) as { chartI18n: { changeLanguage: (language: string) => Promise<unknown> } };
+      await account.accountI18n.changeLanguage(value);
+      await chart.chartI18n.changeLanguage(value);
+    }, language);
+    // Re-render through navigation, as the existing translation instances are read at render time.
+    const accountLink = page.locator('#account-navigation a[href="/account"]');
+    for (const width of [1440, 375]) {
+      await page.setViewportSize({ width, height: 1000 });
+      const trigger = page.locator('button[aria-controls="account-navigation"]');
+      if (width === 375) await trigger.click();
+      await expect(page.locator('#account-navigation a[href="/prices"]')).toHaveCount(0);
+      await expect(page.getByRole("link", { name: /ราคาสด|Live prices/ })).toHaveCount(0);
+      await accountLink.click();
+      await expect(page.getByTestId("log-out")).toBeVisible();
+      if (width === 375) await trigger.click();
+      const chartLink = page.locator('#account-navigation a[href="/chart"]');
+      await chartLink.focus();
+      await expect(chartLink).toBeFocused();
+      await page.keyboard.press("Enter");
+      if (width === 375) await expect(trigger).toHaveAttribute("aria-expanded", "false");
+      const chart = page.getByTestId("candlestick-chart");
+      await expect(chart).toBeVisible();
+      // F-12 explicitly keeps the chart locale Thai; account navigation supports both languages.
+      await expect(chart).toHaveAttribute("aria-label", "กราฟแท่งเทียน");
+      await expect(chart).not.toContainText(/เมนูราคาสด|live prices page/);
+      await page.screenshot({ path: testInfo.outputPath(`removed-prices-${language}-${String(width)}.png`), fullPage: true });
+    }
+  }
+
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.locator('#account-navigation a[href="/account"]').click();
+  await page.getByTestId("log-out").click();
+  await expect(page.getByTestId("signed-out")).toBeVisible();
+  await page.goto("/prices");
+  await expect(page.getByTestId("signed-out")).toBeVisible();
+  await expect(page).toHaveURL(/\/prices$/);
+  await page.getByLabel("อีเมล").fill(email);
+  await page.getByLabel("รหัสผ่าน", { exact: true }).fill(PASSWORD);
+  await page.getByTestId("submit").click();
+  await expect(page).toHaveURL(/\/chart$/);
+  await expect(page.getByTestId("candlestick-chart")).toBeVisible();
+  expect(priceRequests).toEqual([]);
 });
 
 test("live snapshots recover after disconnect without indicator reads", async ({ page }) => {
@@ -220,10 +285,15 @@ test("password login, series switching and actual latest-price worker", async ({
   const quotes = producer("tests/e2e_realtime_runner.py");
   try {
     const email = await registerAccount(page);
-    await page.getByRole("link", { name: "ราคาสด", exact: true }).click();
-    await expect(page.getByTestId("price-BTC")).toContainText("83348.47 USDT", { timeout: 15_000 });
+    await expect.poll(async () => {
+      const response = await page.request.get("/api/market-data/prices");
+      expect(response.status()).toBe(200);
+      const view = await response.json() as { rows: { base: string; amount: string | null; readiness: string }[] };
+      const btc = view.rows.find(row => row.base === "BTC");
+      return { amount: btc?.amount, readiness: btc?.readiness };
+    }, { timeout: 15_000 }).toEqual({ amount: "83348.47", readiness: "READY" });
     await page.getByRole("link", { name: "บัญชี", exact: true }).click();
-  await page.getByRole("button", { name: "ออกจากระบบ", exact: true }).click();
+    await page.getByRole("button", { name: "ออกจากระบบ", exact: true }).click();
     await expect(page.getByTestId("signed-out")).toBeVisible();
     await page.goto("/chart");
     await page.getByLabel("อีเมล").fill(email);

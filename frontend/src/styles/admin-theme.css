@@ -139,7 +139,6 @@
 .icon-security { mask-image: url("../assets/admin-icons/lock.svg"); }
 .icon-api-keys { mask-image: url("../assets/admin-icons/key.svg"); }
 .icon-trading-account { mask-image: url("../assets/admin-icons/user-money.svg"); }
-.icon-prices { mask-image: url("../assets/admin-icons/dollar-line.svg"); }
 .sidebar-monogram { display: none; }
 @media (min-width: 80rem) {
   .sidebar-collapsed .account-sidebar { width: 5.625rem; }

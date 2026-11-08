@@ -1,0 +1,44 @@
+[WebServer] INFO:     Started server process [50167]
+
+[WebServer] INFO:     Waiting for application startup.
+
+[WebServer] INFO:     Application startup complete.
+
+[WebServer] INFO:     Uvicorn running on http://127.0.0.1:18012 (Press CTRL+C to quit)
+
+[WebServer] (node:50188) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+
+Running 1 test using 1 worker
+
+(node:50190) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[1/1] e2e/candlestick-chart.spec.ts:180:1 › live snapshots recover after disconnect without indicator reads
+  1) e2e/candlestick-chart.spec.ts:180:1 › live snapshots recover after disconnect without indicator reads
+
+    Error: expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+    Call Log:
+    - Timeout 5000ms exceeded while waiting on the predicate
+
+      34 |     const body = await response.json() as { status?: string };
+      35 |     return body.status !== undefined && expected.includes(body.status);
+    > 36 |   }).toBe(true);
+         |      ^
+      37 | }
+      38 |
+      39 | function producer(script: string) {
+        at expectLiveStatus (/private/tmp/tiewtrade-prices-baseline/frontend/e2e/candlestick-chart.spec.ts:36:6)
+        at /private/tmp/tiewtrade-prices-baseline/frontend/e2e/candlestick-chart.spec.ts:191:9
+
+    Error Context: test-results/candlestick-chart-live-sna-326bd-ect-without-indicator-reads/error-context.md
+
+
+  1 failed
+    e2e/candlestick-chart.spec.ts:180:1 › live snapshots recover after disconnect without indicator reads

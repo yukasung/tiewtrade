@@ -2,11 +2,68 @@ import { spawn } from "node:child_process";
 import { mkdtempSync, writeFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { setTimeout, clearTimeout } from "node:timers";
+import type { Page } from "@playwright/test";
+import type { components } from "../src/api-types";
 import { backendPython, e2eEnvironment } from "./helpers/environment";
 import { expect, test } from "./helpers/test";
 import { PASSWORD } from "./helpers/totp";
 
-test("actual quote producer → PostgreSQL → Redis → API → browser recovery", async ({ page, context }) => {
+type PricesView = components["schemas"]["PricesView"];
+type ProbeWindow = Window & {
+  priceTestProbe?: { socket: WebSocket; latest?: PricesView; closeCode?: number };
+};
+
+// Test-only consumer: the retired page is no longer needed to exercise the API/WS contract.
+async function openStream(page: Page): Promise<void> {
+  await page.evaluate(() => new Promise<void>((resolve, reject) => {
+    const host = window as ProbeWindow;
+    host.priceTestProbe?.socket.close();
+    const url = new URL("/api/market-data/prices/stream", window.location.href);
+    url.protocol = url.protocol === "https:" ? "wss:" : "ws:";
+    const probe: NonNullable<ProbeWindow["priceTestProbe"]> = { socket: new WebSocket(url) };
+    host.priceTestProbe = probe;
+    const timeout = window.setTimeout(() => {
+      probe.socket.close();
+      reject(new Error("PRICE_TEST_SNAPSHOT_TIMEOUT"));
+    }, 5000);
+    probe.socket.onmessage = event => {
+      try {
+        probe.latest = JSON.parse(String(event.data)) as PricesView;
+        window.clearTimeout(timeout);
+        resolve();
+      } catch {
+        window.clearTimeout(timeout);
+        probe.socket.close();
+        reject(new Error("PRICE_TEST_INVALID_SNAPSHOT"));
+      }
+    };
+    probe.socket.onclose = event => {
+      probe.closeCode = event.code;
+      window.clearTimeout(timeout);
+      reject(new Error("PRICE_TEST_STREAM_CLOSED"));
+    };
+  }));
+}
+
+async function latestStream(page: Page): Promise<PricesView | undefined> {
+  return page.evaluate(() => (window as ProbeWindow).priceTestProbe?.latest);
+}
+async function snapshot(page: Page): Promise<PricesView> {
+  const response = await page.request.get("/api/market-data/prices");
+  expect(response.status()).toBe(200);
+  expect(response.headers()["cache-control"]).toBe("no-store");
+  return await response.json() as PricesView;
+}
+
+const btc = (view: PricesView | undefined) => view?.rows.find(row => row.base === "BTC");
+
+async function latestStreamStatus(page: Page) {
+  const row = btc(await latestStream(page));
+  return { readiness: row?.readiness, alert_due: row?.alert_due };
+}
+
+test("actual quote producer → PostgreSQL → Redis → authenticated API/WS recovery", async ({ page, context }) => {
   test.setTimeout(90000);
   const directory = mkdtempSync(join(tmpdir(), "tiewtrade-prices-"));
   const control = join(directory, "control");
@@ -15,32 +72,49 @@ test("actual quote producer → PostgreSQL → Redis → API → browser recover
   const producer = spawn(backendPython, ["-B", "tests/e2e_realtime_runner.py", "--control-file", control], {
     cwd: "../backend", env: e2eEnvironment(), stdio: "ignore",
   });
+  const exited = new Promise<void>(resolve => {
+    producer.once("exit", () => resolve());
+    producer.once("error", () => resolve());
+  });
   try {
     await page.goto("/prices");
+    await expect(page.getByTestId("signed-out")).toBeVisible();
+    const unauthenticated = await page.request.get("/api/market-data/prices");
+    expect(unauthenticated.status()).toBe(401);
     await page.getByTestId("switch-mode").click();
     await page.getByLabel("อีเมล").fill(`e2e-prices-${String(Date.now())}@example.com`);
     await page.getByLabel("รหัสผ่าน", { exact: true }).fill(PASSWORD);
     await page.getByTestId("submit").click();
     await expect(page.getByTestId("signed-in")).toBeVisible();
-    const panel = page.getByTestId("realtime-prices");
-    const btc = page.getByTestId("price-BTC");
-    await expect(btc).toContainText("83348.47 USDT", { timeout: 15000 });
-    await expect(btc).toContainText("พร้อม ณ เวลาที่ตรวจ");
-    await expect(panel.getByRole("status")).toHaveText("เชื่อมต่อการส่งข้อมูลแล้ว");
-    const catalogResponse = await page.request.get("/api/market-catalog");
-    const catalog = await catalogResponse.json() as { active_pairs: [string, string][] };
-    await expect(panel.getByRole("listitem")).toHaveCount(catalog.active_pairs.length);
-    await expect(panel).toContainText("เวลาที่ตรวจโดย server");
-    await expect(btc).toContainText("เวลาซื้อขาย");
+    await expect(page).toHaveURL(/\/chart$/);
+    await expect(page.getByTestId("realtime-prices")).toHaveCount(0);
+    await expect(page.locator('a[href="/prices"]')).toHaveCount(0);
 
-    // Real authenticated browser → Vite WS proxy → bounded Uvicorn decoder.
+    await expect.poll(async () => btc(await snapshot(page))?.readiness, { timeout: 15000 }).toBe("READY");
+    const catalogResponse = await page.request.get("/api/market-catalog");
+    expect(catalogResponse.status()).toBe(200);
+    const catalog = await catalogResponse.json() as { active_pairs: [string, string][] };
+    const view = await snapshot(page);
+    expect(view.schema_version).toBe(1);
+    expect(view.delivery_status).toBe("CONNECTED");
+    expect(view.rows.map(row => [row.base, row.quote]).sort()).toEqual([...catalog.active_pairs].sort());
+    expect(view.server_time).toMatch(/(?:Z|\+00:00)$/);
+    expect(btc(view)).toMatchObject({ amount: "83348.47", quote: "USDT", readiness: "READY", alert_due: false });
+    expect(btc(view)?.trade_at).toMatch(/(?:Z|\+00:00)$/);
+    expect(btc(view)?.received_at).toMatch(/(?:Z|\+00:00)$/);
+
+    await openStream(page);
+    await expect.poll(async () => btc(await latestStream(page))?.readiness).toBe("READY");
+    expect(btc(await latestStream(page))?.amount).toBe("83348.47");
+
+    // Real browser → Vite WS proxy → bounded Uvicorn decoder.
     const oversizedClose = await page.evaluate(() => new Promise<number>((resolve, reject) => {
       const url = new URL("/api/market-data/prices/stream", window.location.href);
       url.protocol = url.protocol === "https:" ? "wss:" : "ws:";
       const socket = new WebSocket(url);
       const timeout = window.setTimeout(() => {
         socket.close();
-        reject(new Error("oversized message did not close"));
+        reject(new Error("PRICE_TEST_FRAME_CLOSE_TIMEOUT"));
       }, 3000);
       socket.onopen = () => socket.send("x".repeat(257));
       socket.onclose = event => { window.clearTimeout(timeout); resolve(event.code); };
@@ -48,58 +122,39 @@ test("actual quote producer → PostgreSQL → Redis → API → browser recover
     expect(oversizedClose).toBe(1008);
 
     mode("silent");
-    await expect(btc).toContainText("ราคาเก่า ณ เวลาที่ตรวจ", { timeout: 15000 });
-    await expect(btc).toContainText("83348.47 USDT");
+    await expect.poll(async () => btc(await latestStream(page))?.readiness, { timeout: 15000 }).toBe("STALE");
+    expect(btc(await latestStream(page))?.amount).toBe("83348.47");
+    expect(btc(await snapshot(page))?.readiness).toBe("STALE");
     mode("outage-alert");
-    await expect(btc).toContainText("กำลังกู้คืน ณ เวลาที่ตรวจ");
-    // The test producer seeds a DB-clock outage onset 61s ago; no browser clock countdown.
-    await expect(btc).toContainText("ราคาตลาดไม่พร้อมต่อเนื่องครบ 60 วินาที ณ เวลาที่ตรวจ");
-    await page.setViewportSize({ width: 360, height: 1000 });
-    await panel.screenshot({ path: "../specs/reviews/2026-10-07-f10-realtime-prices/market-warning-th-360.png" });
+    // The fixture seeds a DB-clock outage onset 61s ago; no browser clock countdown.
+    await expect.poll(() => latestStreamStatus(page)).toEqual({ readiness: "RECOVERING", alert_due: true });
+    expect(btc(await snapshot(page))?.alert_due).toBe(true);
     mode("healthy");
-    await expect(btc).toContainText("พร้อม ณ เวลาที่ตรวจ", { timeout: 15000 });
-    await expect(btc).not.toContainText("ราคาตลาดไม่พร้อมต่อเนื่องครบ 60 วินาที ณ เวลาที่ตรวจ");
+    await expect.poll(() => latestStreamStatus(page), { timeout: 15000 }).toEqual({ readiness: "READY", alert_due: false });
 
     await context.setOffline(true);
-    await expect(panel.getByRole("status")).toHaveText("การเชื่อมต่อขาด ข้อมูลอาจไม่เป็นปัจจุบัน");
-    await expect(btc).toContainText("83348.47 USDT");
-    // APIRequestContext remains online: only browser delivery was interrupted.
-    await panel.screenshot({ path: "../specs/reviews/2026-10-07-f10-realtime-prices/delivery-warning-th-360.png" });
-    const serverSnapshot = await page.request.get("/api/market-data/prices");
-    expect(serverSnapshot.status()).toBe(200);
-    const serverView = await serverSnapshot.json() as { rows: { readiness: string; alert_due: boolean }[] };
+    await page.evaluate(() => (window as ProbeWindow).priceTestProbe?.socket.close());
+    await expect.poll(() => page.evaluate(() => (window as ProbeWindow).priceTestProbe?.closeCode)).toBeDefined();
+    // APIRequestContext remains online while browser delivery is interrupted.
+    const serverView = await snapshot(page);
     expect(serverView.rows.every(row => row.readiness === "READY" && !row.alert_due)).toBe(true);
     await context.setOffline(false);
-    await expect(panel.getByRole("status")).toHaveText("เชื่อมต่อการส่งข้อมูลแล้ว", { timeout: 15000 });
-    await expect(btc).toContainText("พร้อม ณ เวลาที่ตรวจ");
+    await openStream(page);
+    await expect.poll(async () => btc(await latestStream(page))?.readiness, { timeout: 15000 }).toBe("READY");
 
-    for (const width of [360, 1440]) {
-      await page.setViewportSize({ width, height: 1000 });
-      expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
-      await panel.screenshot({ path: `../specs/reviews/2026-10-07-f10-realtime-prices/ready-th-${String(width)}.png` });
-    }
-    await page.evaluate(async () => {
-      const modulePath = "/src/realtimePriceMessages.ts";
-      const messages = await import(/* @vite-ignore */ modulePath) as { realtimePriceI18n: { changeLanguage: (value: string) => Promise<unknown> } };
-      await messages.realtimePriceI18n.changeLanguage("en");
-    });
-    await expect(btc).toContainText("Ready at last check");
-    for (const width of [360, 1440]) {
-      await page.setViewportSize({ width, height: 1000 });
-      expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
-      await panel.screenshot({ path: `../specs/reviews/2026-10-07-f10-realtime-prices/ready-en-${String(width)}.png` });
-    }
-    // Revoke through an independent HTTP request while the page/socket remains mounted.
     const csrf = (await context.cookies()).find(cookie => cookie.name === "tiewtrade_csrf");
     expect(csrf).toBeDefined();
     const revoked = await page.request.post("/api/auth/logout-all", { headers: { "X-CSRF-Token": csrf?.value ?? "" } });
     expect(revoked.status()).toBe(200);
-    await expect(panel).not.toBeVisible({ timeout: 10000 });
+    await expect.poll(() => page.evaluate(() => (window as ProbeWindow).priceTestProbe?.closeCode), { timeout: 10000 }).toBe(4401);
+    expect((await page.request.get("/api/market-data/prices")).status()).toBe(401);
   } finally {
+    await context.setOffline(false);
+    await page.evaluate(() => (window as ProbeWindow).priceTestProbe?.socket.close()).catch(() => undefined);
     producer.kill("SIGTERM");
-    if (producer.exitCode === null && producer.signalCode === null) {
-      await new Promise<void>((resolve) => producer.once("exit", () => resolve()));
-    }
+    const timer = setTimeout(() => producer.kill("SIGKILL"), 3000);
+    await exited;
+    clearTimeout(timer);
     rmSync(directory, { recursive: true, force: true });
   }
 });

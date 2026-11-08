@@ -1,5 +1,7 @@
 # F-10 — รับราคาเรียลไทม์และต่อกลับเมื่อหลุด — Plan
 
+**Prices-page removal — Approved 2026-11-07:** ใช้ [แผนลบ `/prices`](../2026-11-07-remove-prices-page/plan.md) แทนงานสร้าง/ดูแล frontend panel, hook, decoder และข้อความของ panel ด้านล่างเท่านั้น คง backend ingestion, snapshot/schema, HTTP/WS, session checks และ consumers ตามเดิม การปรับ E2E ใช้ test-only browser consumer ไม่เพิ่ม price client ใน runtime ผลตรวจ candidate ใหม่ติดตามใน validation ของงานลบหน้า
+
 สถานะ: **Approved** — เจ้าของตอบ approve วันที่2026-10-07 หลังอนุมัติ NC-26/NC-27 และปรับแผนตามคำตัดสิน
 วันที่: 2026-10-07
 Branch: feature/f-10-realtime-prices

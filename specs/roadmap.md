@@ -223,6 +223,20 @@ recovery default uvloop 10.4s และ standard asyncio 8.8s ผ่าน; stat
 [Refactor checkpoint](features/2026-11-07-api-deadline-clock/evidence/refactor-checkpoint.md): boundary rerun 24 ผ่าน; runtime unchanged.
 เจ้าของอนุญาต commit/push/PR แล้ว; required CI Pending. ยังไม่ Completed และ merge ต้องรอคำสั่ง. งานลบ `/prices` ยังมี V-03 blocker จนตรวจ candidate รวม.
 
+งานปรับ UI: [ลบหน้า “ราคาสด” `/prices`](features/2026-11-07-remove-prices-page/requirements.md)
+**In Progress (2026-11-07)** — requirements/plan/validation Approved; NC-PRICES-01 Closed.
+Implementation/review findings แก้ครบ บน branch `feature/remove-prices-page`.
+**2026-11-08:** รวม main 1237bf6 (deadline fix); default-loop chart E2E 4 flows ผ่าน 22.6s,
+ปิด Medium V-03 recovery blocker; Low stale route list ปิดแล้ว.
+Frontend targeted 65, backend price API 9 และ static/build/price-service evidence เดิมยัง valid.
+[Combined checkpoint](features/2026-11-07-remove-prices-page/evidence/combined-checkpoint-20261108.md).
+2026-11-08 refactor test helper ผ่าน price-service E2E 19.3s, ESLint/TypeScript; review/local gates ผ่าน.
+[Refactor checkpoint](features/2026-11-07-remove-prices-page/evidence/refactor-checkpoint-20261108.md).
+รอคำสั่ง Git และ required CI; ยังไม่ Completed/พร้อม merge; ยังไม่ commit/push งานนี้.
+
+
+Prices removal publication update (2026-11-08): owner authorized commit/push/PR; required CI Pending. Merge requires a separate command.
+
 F-01 follow-up: [Security dependency remediation](features/2026-11-05-security-dependency-remediation/requirements.md)
 **Code review APPROVED — local checks passed; final CI pending (2026-11-05)** — certifi 2026.7.22 → 2026.10.18 และ
 Vite 6.4.3 → 6.4.4; branch `feature/security-dependency-remediation`.

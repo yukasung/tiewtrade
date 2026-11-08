@@ -5,6 +5,7 @@ import { AuthPanel } from "../src/AuthPanel";
 import { useQueryClient } from "@tanstack/react-query";
 import { navigateAccountPage } from "../src/accountNavigation";
 import type { MouseEvent } from "react";
+import { accountI18n } from "../src/accountMessages";
 
 const observed = vi.hoisted(() => ({ mounts: [] as string[], exits: [] as string[], clients: [] as unknown[] }));
 let platformRole: string | null = null;
@@ -21,7 +22,6 @@ vi.mock("../src/CandlestickChartPanel", () => ({ CandlestickChartPanel: () => <P
 vi.mock("../src/TotpPanel", () => ({ TotpPanel: () => <Panel name="security" /> }));
 vi.mock("../src/ApiKeyPanel", () => ({ ApiKeyPanel: () => <Panel name="api-keys" /> }));
 vi.mock("../src/TradingAccountPanel", () => ({ TradingAccountPanel: () => <Panel name="trading-account" /> }));
-vi.mock("../src/RealtimePricePanel", () => ({ RealtimePricePanel: () => <Panel name="prices" /> }));
 vi.mock("../src/PaperTradePage", () => ({ PaperTradePage: () => <Panel name="paper/trade"/> }));
 vi.mock("../src/LiveTradePage", () => ({ LiveTradePage: () => <Panel name="live/trade"/> }));
 vi.mock("../src/SupportedSymbolPanel", () => ({ SupportedSymbolPanel: () => <Panel name="supported-symbols" /> }));
@@ -34,7 +34,7 @@ beforeEach(() => {
     url.endsWith("auth/me") ? { user_id: "nav-owner", totp_enabled: false, platform_role: platformRole } : { csrf_token: "t" },
   )))));
 });
-afterEach(() => { cleanup(); vi.unstubAllGlobals(); vi.unstubAllEnvs(); });
+afterEach(async () => { cleanup(); vi.unstubAllGlobals(); vi.unstubAllEnvs(); await accountI18n.changeLanguage("th"); });
 async function navigate(page: string) {
   await act(async () => {
     window.history.replaceState(null, "", `/${page}`);
@@ -48,14 +48,14 @@ it("defaults to chart and mounts only the selected module without replacing the 
   await waitFor(() => expect(window.location.pathname).toBe("/chart"));
   expect(observed.mounts.every(name => name === "chart")).toBe(true);
   const client = observed.clients.at(-1);
-  for (const page of ["security", "api-keys", "trading-account", "prices", "paper/trade", "live/trade", "chart"]) {
+  for (const page of ["security", "api-keys", "trading-account", "paper/trade", "live/trade", "chart"]) {
     await navigate(page);
     expect(screen.getAllByTestId(/^module-/)).toHaveLength(1);
     expect(screen.getByTestId(`module-${page}`)).toBeTruthy();
     expect(observed.clients.at(-1)).toBe(client);
     expect(screen.getByRole("link", { current: "page" }).getAttribute("href")).toBe(`/${page}`);
   }
-  expect(observed.exits).toContain("prices");
+  expect(observed.exits).toContain("live/trade");
   await navigate("account");
   expect(screen.queryByTestId(/^module-/)).toBeNull();
   expect(screen.getByTestId("log-out")).toBeTruthy();
@@ -65,14 +65,45 @@ it("preserves a direct link through authentication and handles a changed or unkn
   window.history.replaceState(null, "", "/security");
   render(<AuthPanel />);
   await screen.findByTestId("module-security");
-  await navigate("prices");
-  expect(screen.getByTestId("module-prices")).toBeTruthy();
+  await navigate("api-keys");
+  expect(screen.getByTestId("module-api-keys")).toBeTruthy();
   await navigate("unknown");
   expect(window.location.pathname).toBe("/chart");
   expect(screen.getByTestId("module-chart")).toBeTruthy();
 });
+it.each(["th", "en"])("redirects retired prices links and removes the menu in %s", async language => {
+  await accountI18n.changeLanguage(language);
+  const sockets = vi.fn();
+  vi.stubGlobal("WebSocket", sockets);
+  window.history.replaceState(null, "", "/prices?from=bookmark");
+  render(<AuthPanel />);
+  await screen.findByTestId("module-chart");
+  await waitFor(() => expect(window.location.pathname).toBe("/chart"));
+  expect(window.location.search).toBe("?from=bookmark");
+  expect(screen.queryByRole("link", { name: /ราคาสด|Live prices/ })).toBeNull();
+  expect(document.querySelector('a[href="/prices"]')).toBeNull();
+  const client = observed.clients.at(-1);
+  await navigate("api-keys");
+  await navigate("prices");
+  expect(window.location.pathname).toBe("/chart");
+  expect(observed.clients.at(-1)).toBe(client);
+  expect(observed.mounts).not.toContain("prices");
+  expect(vi.mocked(fetch).mock.calls.some(([url]) => typeof url === "string" && url.includes("/market-data/prices"))).toBe(false);
+  expect(sockets).not.toHaveBeenCalled();
+});
+it("keeps a retired prices bookmark behind authentication", async () => {
+  window.history.replaceState(null, "", "/prices");
+  vi.stubGlobal("fetch", vi.fn((url: string) => Promise.resolve(new Response(JSON.stringify(
+    url.endsWith("auth/me") ? { detail: "AUTH_REQUIRED" } : { csrf_token: "t" },
+  ), { status: url.endsWith("auth/me") ? 401 : 200 }))));
+  render(<AuthPanel />);
+  await screen.findByTestId("signed-out");
+  expect(window.location.pathname).toBe("/prices");
+  expect(observed.mounts).toEqual([]);
+});
 it("keeps the disabled chart default without mounting modules or starting their requests", async () => {
   vi.stubEnv("VITE_CHART_ENABLED", "0");
+  window.history.replaceState(null, "", "/prices");
   render(<AuthPanel />);
   await screen.findByText("กราฟยังไม่เปิดใช้งาน");
   expect(screen.queryByTestId(/^module-/)).toBeNull();

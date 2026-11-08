@@ -1,5 +1,7 @@
 # F-12 — กราฟแท่งเทียนบนหน้าเว็บ — Plan
 
+**Prices-page removal — Approved 2026-11-07:** ใช้ [แผนลบ `/prices`](../2026-11-07-remove-prices-page/plan.md) แทนส่วนแสดง/นำทางไป panel F-10 แยกจากกราฟ ยกเลิกการใช้ RealtimePricePanel/useRealtimePrices ใน frontend reuse list ด้านล่าง คง AccountSession, candle chart/stream, history, auth และ shared backend price services; E2E latest-price worker ตรวจ authenticated price API แทน DOM panel
+
 ## Amendment — ช่วงประวัติที่เลื่อนดูได้
 
 สถานะ: **Approved** — requirements RQ-37..42 อนุมัติแล้ว 2026-10-14;

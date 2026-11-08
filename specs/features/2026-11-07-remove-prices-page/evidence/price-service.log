@@ -1,0 +1,30 @@
+[WebServer] INFO:     Started server process [48233]
+[WebServer] INFO:     Waiting for application startup.
+
+[WebServer] INFO:     Application startup complete.
+
+[WebServer] INFO:     Uvicorn running on http://127.0.0.1:18013 (Press CTRL+C to quit)
+
+[WebServer] (node:48253) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+
+Running 1 test using 1 worker
+
+(node:48257) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[1/1] e2e/realtime-prices.spec.ts:61:1 › actual quote producer → PostgreSQL → Redis → authenticated API/WS recovery
+[WebServer] INFO:     127.0.0.1:62771 - "WebSocket /market-data/prices/stream" [accepted]
+[WebServer] INFO:     connection open
+
+[WebServer] INFO:     127.0.0.1:62776 - "WebSocket /market-data/prices/stream" [accepted]
+
+[WebServer] INFO:     connection open
+
+[WebServer] INFO:     127.0.0.1:62863 - "WebSocket /market-data/prices/stream" [accepted]
+
+[WebServer] INFO:     connection open
+
+  1 passed (21.2s)

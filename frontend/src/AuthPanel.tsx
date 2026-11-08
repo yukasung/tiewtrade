@@ -14,7 +14,6 @@ import {
 } from "./auth";
 import { TotpPanel } from "./TotpPanel";
 import { AccountSession } from "./AccountSession";
-import { RealtimePricePanel } from "./RealtimePricePanel";
 import { CandlestickChartPanel } from "./CandlestickChartPanel";
 import { TradingAccountPanel } from "./TradingAccountPanel";
 import { AccountLayout } from "./layout/AccountLayout";
@@ -222,7 +221,6 @@ export function AuthPanel(): JSX.Element {
             />}
             {page === "api-keys" && <ApiKeyPanel identity={identity} />}
             {page === "trading-account" && <TradingAccountPanel identity={identity} />}
-            {page === "prices" && <RealtimePricePanel />}
             {page === "paper/trade" && <PaperTradePage owner={identity.user_id}/>}
             {page === "live/trade" && <LiveTradePage owner={identity.user_id}/>}
             {page === "supported-symbols" && <SupportedSymbolPanel />}

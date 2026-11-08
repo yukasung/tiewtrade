@@ -5,6 +5,7 @@ import { useChartData } from "../src/chart/useChartData";
 import type { ChartRenderer } from "../src/chart/renderer";
 import { candleHistory, chartLive } from "./chartFixture";
 import { ApiRequestError } from "../src/auth";
+import { chartI18n } from "../src/chartMessages";
 
 const scale = vi.hoisted(() => ({ getVisibleLogicalRange: vi.fn<() => { from: number; to: number } | null>(() => null), getVisibleRange: vi.fn(() => null),
   setVisibleLogicalRange: vi.fn(), setVisibleRange: vi.fn(), subscribeVisibleLogicalRangeChange: vi.fn(),
@@ -28,6 +29,21 @@ function state() {
       older_before: null, newer_after: null }, navigate: vi.fn(), reset: vi.fn(), retry: vi.fn() },
   } as unknown as ReturnType<typeof useChartData>;
 }
+it.each([
+  ["th", "กราฟ Spot · Asia/Bangkok"],
+  ["en", "Spot chart · Asia/Bangkok"],
+])("describes the chart without linking to retired prices in %s", async (language, disclaimer) => {
+  await chartI18n.changeLanguage(language);
+  try {
+    vi.mocked(useChartData).mockReturnValue(state());
+    const { container } = render(<CandlestickChartPanel userId="one"/>);
+    expect(screen.getByRole("region", { name: "กราฟแท่งเทียน" })).toBeTruthy();
+    expect(chartI18n.t("disclaimer", { lng: language })).toBe(disclaimer);
+    expect(container.textContent).not.toMatch(/เมนูราคาสด|live prices page/);
+  } finally {
+    await chartI18n.changeLanguage("th");
+  }
+});
 it("renders exact candle data without indicator points or controls", () => {
   vi.mocked(useChartData).mockReturnValue(state()); render(<CandlestickChartPanel userId="one"/>);
   expect(draw.mock.calls.at(-1)?.[0][0]?.close).toBe("100.5");

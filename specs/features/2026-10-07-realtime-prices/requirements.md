@@ -1,5 +1,12 @@
 # F-10 — รับราคาเรียลไทม์และต่อกลับเมื่อหลุด — Requirements
 
+**Prices-page removal — Approved 2026-11-07:** เจ้าของอนุมัติ
+[requirements การลบหน้า `/prices`](../2026-11-07-remove-prices-page/requirements.md)
+แทนข้อกำหนดการแสดงราคา/สถานะ/คำเตือนและ reconnect ของ panel ราคาสดด้านล่าง
+เฉพาะ UI/client ที่ถูกถอด; ไม่ย้าย panel ไปหน้าอื่น คงบริการราคา HTTP/WS,
+backend freshness/ordering/recovery, alert_due, session security และ consumer ทั้งหมด
+plan/validation ของงานลบหน้าได้รับอนุมัติแล้ว; ผล implementation ติดตามใน validation ของงานนั้น
+
 สถานะ: **Approved** — เจ้าของอนุมัติขอบเขต A/NC-25, snapshot semantics NC-26 และ alert semantics NC-27 วันที่ 2026-10-07
 วันที่: 2026-10-07
 Branch: feature/f-10-realtime-prices

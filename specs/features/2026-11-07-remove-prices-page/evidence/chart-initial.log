@@ -1,0 +1,51 @@
+[WebServer] INFO:     Started server process [48382]
+[WebServer] INFO:     Waiting for application startup.
+
+[WebServer] INFO:     Application startup complete.
+
+[WebServer] INFO:     Uvicorn running on http://127.0.0.1:18012 (Press CTRL+C to quit)
+
+[WebServer] (node:48400) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+
+Running 4 tests using 1 worker
+
+(node:48403) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[1/4] e2e/candlestick-chart.spec.ts:138:1 › module pages preserve navigation history, deep links and cancel inactive chart work
+[2/4] e2e/candlestick-chart.spec.ts:180:1 › removed prices bookmarks return to the chart without starting a price subscription
+[3/4] e2e/candlestick-chart.spec.ts:241:1 › live snapshots recover after disconnect without indicator reads
+  1) e2e/candlestick-chart.spec.ts:241:1 › live snapshots recover after disconnect without indicator reads
+
+    Error: expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+    Call Log:
+    - Timeout 5000ms exceeded while waiting on the predicate
+
+      34 |     const body = await response.json() as { status?: string };
+      35 |     return body.status !== undefined && expected.includes(body.status);
+    > 36 |   }).toBe(true);
+         |      ^
+      37 | }
+      38 |
+      39 | function producer(script: string) {
+        at expectLiveStatus (/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-remove-prices/frontend/e2e/candlestick-chart.spec.ts:36:6)
+        at /Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-remove-prices/frontend/e2e/candlestick-chart.spec.ts:252:9
+
+    Error Context: test-results/candlestick-chart-live-sna-326bd-ect-without-indicator-reads/error-context.md
+
+
+(node:48520) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[4/4] e2e/candlestick-chart.spec.ts:280:1 › password login, series switching and actual latest-price worker
+  1 failed
+    e2e/candlestick-chart.spec.ts:241:1 › live snapshots recover after disconnect without indicator reads
+  3 passed (29.3s)

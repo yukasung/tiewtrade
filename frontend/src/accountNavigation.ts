@@ -1,6 +1,6 @@
 import { useEffect, useState, type MouseEvent } from "react";
 
-export const accountPages = ["chart", "paper/trade", "live/trade", "account", "security", "api-keys", "trading-account", "prices", "supported-symbols", "system-safety"] as const;
+export const accountPages = ["chart", "paper/trade", "live/trade", "account", "security", "api-keys", "trading-account", "supported-symbols", "system-safety"] as const;
 export type AccountPage = (typeof accountPages)[number];
 function currentPage(isPlatformAdmin: boolean): AccountPage {
   const found = accountPages.find(page => window.location.pathname === `/${page}`);
