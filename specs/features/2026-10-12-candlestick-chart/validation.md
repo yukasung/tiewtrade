@@ -1,5 +1,7 @@
 # F-12 — กราฟแท่งเทียนบนหน้าเว็บ — Validation
 
+**Prices-page removal — Approved 2026-11-07:** ใช้ [validation ของงานลบหน้า](../2026-11-07-remove-prices-page/validation.md) V-01..V-05 ระดับ Feature แทนการตรวจ DOM/เมนูราคาสดและ flow login→chart+ราคาสดด้านล่าง เปลี่ยน flow latest-price worker เป็น authenticated GET และใช้หน้าที่ยังอยู่ตรวจ history/back/forward/reload คงการตรวจ candle chart freshness/recovery, auth และข้อห้ามใช้ snapshot READY เป็นสิทธิ์ส่งออเดอร์ เก็บผลเก่าตามจริงและคงระยะ/เกณฑ์ Batch/Release ที่ไม่กระทบ
+
 **Pair-scope amendment — Approved 2026-10-15:** ใช้ F-38 เป็นเกณฑ์ปัจจุบัน:
 กราฟรองรับ BTCUSDT และ ETHUSDT × 8 timeframe รวม 16 series และ workload ชุดยาววัด
 BTCUSDT 8 series. ผล deep history 40/40 เดิมด้านล่างเป็นหลักฐาน historical เท่านั้น.

@@ -5,7 +5,7 @@ import type { Page } from "@playwright/test";
 const control = "http://127.0.0.1:18018/__e2e/risk";
 const evidence = "../specs/features/2026-10-25-wallet-risk-limits/evidence/ui";
 const killSwitchEvidence = "../specs/features/2026-10-31-kill-switch/evidence/ui";
-const accountRoutes = ["chart", "paper/trade", "live/trade", "account", "security", "api-keys", "trading-account", "prices", "supported-symbols", "system-safety"] as const;
+const accountRoutes = ["chart", "paper/trade", "live/trade", "account", "security", "api-keys", "trading-account", "supported-symbols", "system-safety"] as const;
 async function capture(page: Page, name: string) {
   await page.evaluate(() => window.scrollTo(0, 0));
   mkdirSync(evidence, { recursive: true });

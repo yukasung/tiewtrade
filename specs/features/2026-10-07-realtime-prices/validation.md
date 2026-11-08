@@ -1,5 +1,7 @@
 # F-10 — รับราคาเรียลไทม์และต่อกลับเมื่อหลุด — Validation
 
+**Prices-page removal — Approved 2026-11-07:** ใช้ [เกณฑ์ทดแทนของงานลบหน้า](../2026-11-07-remove-prices-page/validation.md) ระดับ Feature สำหรับ candidate ใหม่ ยกเลิกเฉพาะ DOM/client-panel portions ของ V-2/3/6/8/19/21..26 และ UI rendering/delivery warnings ที่ผูกกับ panel; ส่วน backend ordering/schema/alert/authentication/limits/recovery ในเกณฑ์เดียวกันยังบังคับ V-26 ตรวจ real fake-producer → PostgreSQL/Redis → authenticated GET/native browser WS ตาม V-05 ของงานลบหน้าแทน panel ผลและภาพเก่าด้านล่างเป็น historical evidence ไม่ใช่ผล candidate ใหม่ เกณฑ์ส่วนที่ไม่กระทบคงระยะและหลักฐานเดิม
+
 **Pair-scope amendment — Approved 2026-10-15:** ใช้ F-38 เป็นเกณฑ์ปัจจุบัน:
 price snapshot/subscription ต้องมี BTCUSDT และ ETHUSDT รวม 2 คู่ ส่วนผลตรวจรายการเดิม
 ด้านล่างเป็นหลักฐาน historical และไม่ใช้รับรอง candidate หลัง F-38.

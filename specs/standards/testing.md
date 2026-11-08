@@ -357,8 +357,10 @@ gates ก่อน merge; จุดอนุมัติเมื่อเปล
 - เมื่อ review และ checks ที่จำเป็นต่อ checkpoint ผ่าน หลักฐานใช้ได้กับโค้ดล่าสุด
   และไม่มี correctness/safety findings หรือ blockers ของ checkpoint ค้าง ให้ส่ง checkpoint
   ทันทีพร้อมผลตรวจและงานค้าง ไม่เพิ่มรอบตรวจหรือไล่ปิดทุกเกณฑ์ release ก่อนส่ง
-- ใน checkpoint หลังรีวิวและแก้ findings ครบ ให้ถามเจ้าของว่า
-  **ให้ `refactor the code` ต่อหรือไม่** แล้วรอคำตอบก่อนเริ่ม refactor ขั้นถัดไป
+- ใน checkpoint หลังรีวิวและแก้ findings ครบ ให้ใช้เงื่อนไขจาก `AGENTS.md`:
+  ถ้างานแก้ source code ให้ถาม **ให้ `refactor the code` ต่อหรือไม่**
+  แล้วรอคำตอบก่อนเริ่ม refactor; งานที่ไม่แก้ source code ให้ทำ validation ที่เกี่ยวข้อง
+  ต่อทันทีโดยไม่ถามเรื่อง refactor
   คำสั่ง `review code` ไม่ถือเป็นการอนุญาตขั้น refactor นี้; หากเจ้าของให้ทำต่อ
   ยังคงใช้ขอบเขต spec/plan ที่อนุมัติและเงื่อนไขหยุดถามเดิม
 - หลัง refactor ที่เจ้าของอนุญาตเสร็จ ให้เริ่มทดสอบระบบตาม `validation.md` ของ feature

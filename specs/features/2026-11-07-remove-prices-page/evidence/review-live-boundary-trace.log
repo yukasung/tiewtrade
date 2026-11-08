@@ -1,0 +1,100 @@
+[WebServer] INFO:     Started server process [50233]
+[WebServer] INFO:     Waiting for application startup.
+
+[WebServer] INFO:     Application startup complete.
+
+[WebServer] INFO:     Uvicorn running on http://127.0.0.1:18012 (Press CTRL+C to quit)
+
+[WebServer] (node:50234) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+
+Running 1 test using 1 worker
+
+(node:50236) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[1/1] e2e/candlestick-chart.spec.ts:245:1 › live snapshots recover after disconnect without indicator reads
+[WebServer] PRICE_REVIEW_TRACE admission start
+
+[WebServer] PRICE_REVIEW_TRACE admission error=CancelledError elapsed=0.002
+
+e2e/candlestick-chart.spec.ts:245:1 › live snapshots recover after disconnect without indicator reads
+{"path":"/api/market-data/chart/live","http":504,"detail":"CHART_DEADLINE_EXCEEDED"}
+
+{"path":"/api/market-data/candles/pages","http":200,"status":"PENDING","rows":999}
+
+[WebServer] PRICE_REVIEW_TRACE admission start
+
+[WebServer] PRICE_REVIEW_TRACE admission error=CancelledError elapsed=0.000
+
+{"probe":"live-status","http":504,"detail":"CHART_DEADLINE_EXCEEDED"}
+
+[WebServer] PRICE_REVIEW_TRACE admission start
+
+[WebServer] PRICE_REVIEW_TRACE admission error=CancelledError elapsed=0.000
+
+{"probe":"live-status","http":504,"detail":"CHART_DEADLINE_EXCEEDED"}
+
+[WebServer] PRICE_REVIEW_TRACE admission start
+
+[WebServer] PRICE_REVIEW_TRACE admission error=CancelledError elapsed=0.000
+
+{"probe":"live-status","http":504,"detail":"CHART_DEADLINE_EXCEEDED"}
+
+[WebServer] PRICE_REVIEW_TRACE admission start
+
+[WebServer] PRICE_REVIEW_TRACE admission error=CancelledError elapsed=0.000
+
+{"probe":"live-status","http":504,"detail":"CHART_DEADLINE_EXCEEDED"}
+
+[WebServer] PRICE_REVIEW_TRACE admission start
+
+[WebServer] PRICE_REVIEW_TRACE admission error=CancelledError elapsed=0.000
+
+{"probe":"live-status","http":504,"detail":"CHART_DEADLINE_EXCEEDED"}
+
+[WebServer] PRICE_REVIEW_TRACE admission start
+
+[WebServer] PRICE_REVIEW_TRACE admission error=CancelledError elapsed=0.000
+
+{"probe":"live-status","http":504,"detail":"CHART_DEADLINE_EXCEEDED"}
+
+[WebServer] PRICE_REVIEW_TRACE admission start
+
+[WebServer] PRICE_REVIEW_TRACE admission error=CancelledError elapsed=0.000
+
+{"probe":"live-status","http":504,"detail":"CHART_DEADLINE_EXCEEDED"}
+
+[WebServer] PRICE_REVIEW_TRACE admission start
+
+[WebServer] PRICE_REVIEW_TRACE admission error=CancelledError elapsed=0.000
+
+{"probe":"live-status","http":504,"detail":"CHART_DEADLINE_EXCEEDED"}
+
+  1) e2e/candlestick-chart.spec.ts:245:1 › live snapshots recover after disconnect without indicator reads
+
+    Error: expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+    Call Log:
+    - Timeout 5000ms exceeded while waiting on the predicate
+
+      38 |     if (response.status() !== 200) return false;
+      39 |     return body.status !== undefined && expected.includes(body.status);
+    > 40 |   }).toBe(true);
+         |      ^
+      41 | }
+      42 |
+      43 | function producer(script: string) {
+        at expectLiveStatus (/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-remove-prices/frontend/e2e/candlestick-chart.spec.ts:40:6)
+        at /Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-remove-prices/frontend/e2e/candlestick-chart.spec.ts:256:9
+
+    Error Context: ../../../../../../../tmp/prices-trace-results/candlestick-chart-live-sna-326bd-ect-without-indicator-reads/error-context.md
+
+
+  1 failed
+    e2e/candlestick-chart.spec.ts:245:1 › live snapshots recover after disconnect without indicator reads

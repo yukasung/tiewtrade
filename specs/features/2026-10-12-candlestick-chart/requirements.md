@@ -1,5 +1,12 @@
 # F-12 — กราฟแท่งเทียนบนหน้าเว็บ — Requirements
 
+**Prices-page removal — Approved 2026-11-07:** เจ้าของอนุมัติ
+[requirements การลบหน้า `/prices`](../2026-11-07-remove-prices-page/requirements.md)
+ยกเลิกการแสดงราคาล่าสุดใน panel แยกตาม RQ-14 และรายการแสดงราคาล่าสุดจาก F-10
+ในขอบเขตด้านล่าง รวมข้อความที่ชี้ไปเมนูดังกล่าว; ไม่ย้าย panel เข้า chart
+คง OHLC/candle stream, เวลา/สถานะกราฟ, auth และบริการราคาฝั่ง backend เดิม
+plan/validation ของงานลบหน้าได้รับอนุมัติแล้ว; ผล implementation ติดตามใน validation ของงานนั้น
+
 **Pair-scope amendment — Approved 2026-10-15:** F-38 แทนรายการ 5 คู่ใน baseline
 ด้วย BTCUSDT และ ETHUSDT เท่านั้น รวม 16 live candle series; BTCUSDT ยังเป็นค่าเริ่มต้น
 และกฎ history/finality/exact OHLCV/live update เดิมไม่เปลี่ยน
