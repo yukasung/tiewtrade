@@ -26,6 +26,7 @@ const safe = createSafeRequest({
 export const stopKey = (owner: string, mode: StopMode) => ["kill-switch", owner, mode] as const;
 export const fetchStopStatus = (mode: StopMode, signal?: AbortSignal) => safe(send<StopStatus>(path(mode), undefined, undefined, "GET", signal));
 export const postStop = (mode: StopMode, key: string) => safe(send<StopReceipt>(`${path(mode)}/stop`, undefined, undefined, "POST", undefined, { "Idempotency-Key": key }));
+export const fetchStopRequestByKey = (mode: StopMode, key: string) => safe(send<StopReceipt>(`${path(mode)}/requests/by-key/${encodeURIComponent(key)}?action=STOP`, undefined, undefined, "GET"));
 export const fetchStopRequestById = (mode: StopMode, requestId: string, signal?: AbortSignal) => safe(send<StopReceipt>(`${path(mode)}/requests/${encodeURIComponent(requestId)}`, undefined, undefined, "GET", signal));
 export const fetchStopSummary = (mode: StopMode, stop: string, signal?: AbortSignal) => safe(send<StopSummary>(`${path(mode)}/stops/${encodeURIComponent(stop)}/resume-summary`, undefined, undefined, "GET", signal));
 export const fetchStopEffects = (mode: StopMode, stop: string, cursor: string | null, signal?: AbortSignal) => safe(send<RiskEffects>(`${path(mode)}/stops/${encodeURIComponent(stop)}/effects?limit=20${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ""}`, undefined, undefined, "GET", signal));

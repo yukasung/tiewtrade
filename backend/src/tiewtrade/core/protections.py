@@ -9,7 +9,13 @@ from datetime import datetime, timedelta
 from enum import Enum
 from uuid import UUID
 
-from tiewtrade.core.money import Money, Quantity, RoundingDirection, money_for_quantity
+from tiewtrade.core.money import (
+    Money,
+    Quantity,
+    RoundingDirection,
+    align_quantity,
+    money_for_quantity,
+)
 from tiewtrade.core.orders import (
     BaseSize,
     OrderConflictError,
@@ -460,14 +466,20 @@ def decide_setup_result(
     )
 
 
-def validate_setup(
+def executable_protection_quantity(
     value: Protection,
     constraints: OrderConstraints,
     evidence: TriggerEvidence,
     *,
     filter_reference_price: Money | None = None,
-) -> None:
-    """Use the F-15 admission filter calculation; this does not reserve or submit."""
+    quantity: Quantity | None = None,
+) -> Quantity:
+    """Validate the executable portion without releasing or rounding up allocation."""
+    requested = value.quantity if quantity is None else quantity
+    _quantity(requested, value.prices.pair.base)
+    if requested > value.quantity:
+        raise ProtectionError("exit quantity exceeds remaining allocation")
+    executable = align_quantity(requested, constraints.quantity_step)
     if evidence.pair != value.prices.pair:
         raise ProtectionError("setup price belongs to another pair")
     reference = filter_reference_price if constraints.average_price_minutes else evidence.price
@@ -483,16 +495,31 @@ def validate_setup(
         value.origin,
         ExecutionSide.SELL,
         OrderType.MARKET,
-        BaseSize(value.quantity),
+        BaseSize(requested),
     )
     constraints.check(
         intent,
-        value.quantity,
+        executable,
         money_for_quantity(
             reference,
-            value.quantity,
+            executable,
             asset=value.prices.pair.base,
             rounding=RoundingDirection.AWAY_FROM_ZERO,
         ),
         filter_reference_price=reference,
+    )
+
+    return executable
+
+
+def validate_setup(
+    value: Protection,
+    constraints: OrderConstraints,
+    evidence: TriggerEvidence,
+    *,
+    filter_reference_price: Money | None = None,
+) -> None:
+    """Validate setup using the same sizing used for durable exits."""
+    executable_protection_quantity(
+        value, constraints, evidence, filter_reference_price=filter_reference_price
     )

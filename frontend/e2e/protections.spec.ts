@@ -3,7 +3,7 @@ import { expect, test } from "./helpers/test";
 import type { Page } from "@playwright/test";
 import { PASSWORD } from "./helpers/totp";
 const api = "http://127.0.0.1:18017/__e2e/manual";
-const evidence = "../specs/features/2026-11-02-tp-sl/evidence/ui";
+const evidence = "../specs/features/2026-11-02-tp-sl/evidence/manual-acceptance-fix/ui";
 async function setLanguage(page: Page, locale: "th" | "en") {
   await page.evaluate(async language => {
     const path = "/src/manualOrderMessages.ts";
@@ -35,6 +35,7 @@ async function reloadPaperPair(page: Page) {
   // The wallet scope must render before filling: its first arrival remounts the form.
   await expect(page.locator('[aria-labelledby="manual-form-heading"] dl > div').first()
     .locator("dd .market-value")).toBeVisible();
+
 }
 async function register(page: Page, email = `manual-${Date.now()}@example.com`) {
   await page.goto("/paper/trade");
@@ -71,7 +72,7 @@ async function drive(page: Page, owner: string, request: string, fill = false) {
   return await response.json() as { commands: number; order_state: string | null; command_state: string; failure: string | null };
 }
 async function protectionDraft(page: Page, quantity: string, tp: string, sl: string) {
-  await page.locator('[aria-labelledby="protections-title"]').getByRole("button", { name: "ตั้ง TP/SL ให้เหรียญที่ถือ", exact: true }).click();
+  await page.locator('[aria-labelledby="trading-activity-heading"]').getByRole("button", { name: "ตั้ง TP/SL ให้เหรียญที่ถือ", exact: true }).click();
   const modal = page.getByRole("dialog");
   await modal.getByLabel("จำนวนเหรียญ (BTC)", { exact: true }).fill(quantity);
   await modal.getByLabel("ราคา Take Profit", { exact: true }).fill(tp);
@@ -93,7 +94,7 @@ test("bracket fill, reload, replace and cancel use durable production requests",
     expect(response.ok(), await response.text()).toBe(true);
   };
   await tick(); await page.reload();
-  const panel = page.locator('[aria-labelledby="protections-title"]');
+  const panel = page.locator('[aria-labelledby="trading-activity-heading"]');
   await expect(panel.getByText("กำลังเฝ้าราคา", { exact: true })).toBeVisible();
   await expect(panel.getByText("0.999 BTC", { exact: true })).toHaveCount(2);
   await capture(page, "paper-th-desktop-armed.png");
@@ -110,8 +111,10 @@ test("bracket fill, reload, replace and cancel use durable production requests",
   const cancel = page.waitForResponse(r => r.url().includes("/protections/") && r.url().endsWith("/cancel"));
   await panel.getByRole("button", { name: "ยกเลิกการป้องกัน", exact: true }).click();
   expect((await cancel).status()).toBe(202); await tick();
+  await page.getByRole("tab", { name: "ประวัติออเดอร์", exact: true }).click();
   await expect(panel.getByText("ยกเลิกการป้องกันแล้ว", { exact: true })).toBeVisible();
   await page.reload();
+  await page.getByRole("tab", { name: "ประวัติออเดอร์", exact: true }).click();
   await expect(panel.getByText("ยกเลิกการป้องกันแล้ว", { exact: true })).toBeVisible();
 });
 
@@ -121,7 +124,7 @@ test("lost protection receipt and reload recover the same server request", async
   const entry = await send(page, "100", false);
   expect(await drive(page, owner, entry.request_id, true)).toMatchObject({ order_state: "FILLED" });
   await waitResolved(page); await fresh(page);
-  const panel = page.locator('[aria-labelledby="protections-title"]');
+  const panel = page.locator('[aria-labelledby="trading-activity-heading"]');
   const modal = await protectionDraft(page, "0.2", "", "90");
   let committed: { request_id: string; idempotency_key: string } | undefined;
   let posts = 0;
@@ -157,7 +160,7 @@ test("protection controls support Thai and English keyboard focus; Live sends no
   expect(await drive(page, owner, entry.request_id, true)).toMatchObject({ order_state: "FILLED" });
   expect((await page.request.post("http://127.0.0.1:18017/__e2e/protections/drive", { data: { user_id: owner } })).ok()).toBe(true);
   await page.reload();
-  const panel = page.locator('[aria-labelledby="protections-title"]');
+  const panel = page.locator('[aria-labelledby="trading-activity-heading"]');
   await expect(panel.getByText("กำลังเฝ้าราคา", { exact: true })).toBeVisible();
   const mutations: string[] = [];
   page.on("request", request => {
@@ -194,7 +197,7 @@ test("protection controls support Thai and English keyboard focus; Live sends no
   await page.goto("/live/trade");
   await setLanguage(page, "en");
   await expect(page.getByText("Live trading is unavailable. No order will be sent. Manage any existing Live orders directly at your exchange.", { exact: true })).toBeVisible();
-  await expect(page.locator('[aria-labelledby="protections-title"]')).toHaveCount(0);
+  await expect(page.locator('[aria-labelledby="trading-activity-heading"]')).toHaveCount(0);
   expect(mutations).toEqual([]);
   await capture(page, "live-unavailable-mobile.png");
 });
@@ -216,7 +219,7 @@ test("partial bracket entry triggers one exit, cancels entry remainder and close
   const tick = await page.request.post(`${endpoint}/drive`, { data: { user_id: owner } });
   expect(tick.ok(), await tick.text()).toBe(true);
   await page.reload();
-  const panel = page.locator('[aria-labelledby="protections-title"]');
+  const panel = page.locator('[aria-labelledby="trading-activity-heading"]');
   await expect(panel.getByText("กำลังเฝ้าราคา", { exact: true })).toBeVisible();
   await expect(panel.getByText("9.99 BTC", { exact: true })).toHaveCount(2);
   await capture(page, "paper-partial-entry-protected.png");
@@ -233,11 +236,16 @@ test("partial bracket entry triggers one exit, cancels entry remainder and close
   // MARKET uses both levels; the trigger price is not a guaranteed execution price.
   expect(financial).toMatchObject({ balance: "8205.78401", held: "9.99", reserved: "0", exits: 1, fills: 4, triggers: 1 });
   expect(financial.audits).toBeGreaterThan(0);
+  await page.getByRole("tab", { name: "ประวัติออเดอร์", exact: true }).click();
   await expect(panel.getByText("ปิดครบแล้ว", { exact: true })).toBeVisible();
-  await expect(panel.getByText("0 BTC", { exact: true })).toHaveCount(2);
+  await panel.getByRole("button", { name: "รายละเอียด", exact: true }).click();
+  await expect(page.getByRole("dialog").getByText("0 BTC", { exact: true })).toHaveCount(3);
+  await page.keyboard.press("Escape");
   const entryStatus = await page.request.get(`/api/paper/order-requests/${entry.request_id}`);
   expect(await entryStatus.json()).toMatchObject({ order_state: "CANCELED" });
-  await page.reload(); await expect(panel.getByText("ปิดครบแล้ว", { exact: true })).toBeVisible();
+  await page.reload();
+  await page.getByRole("tab", { name: "ประวัติออเดอร์", exact: true }).click();
+  await expect(panel.getByText("ปิดครบแล้ว", { exact: true })).toBeVisible();
   await capture(page, "paper-partial-entry-closed.png");
   const replay = await page.request.post(`${endpoint}/settle`, { data: { user_id: owner } });
   expect(replay.ok(), await replay.text()).toBe(true);
@@ -251,8 +259,9 @@ test("selected sale reduces two protections once and canceled sale stays unprote
   const entry = await send(page, "100", false);
   expect(await drive(page, owner, entry.request_id, true)).toMatchObject({ order_state: "FILLED" });
   await waitResolved(page); await fresh(page);
-  const panel = page.locator('[aria-labelledby="protections-title"]');
+  const panel = page.locator('[aria-labelledby="trading-activity-heading"]');
   for (const [quantity, tp, sl] of [["0.4", "110", "90"], ["0.3", "120", "80"]] as const) {
+    await fresh(page);
     const modal = await protectionDraft(page, quantity, tp, sl);
     const receipt = page.waitForResponse(r => r.url().endsWith("/api/paper/protections") && r.request().method() === "POST");
     await modal.getByRole("button", { name: "บันทึก", exact: true }).click();
@@ -304,7 +313,7 @@ test("failed standalone request warns without selling assets and survives reload
   const response = await receipt; expect(response.status()).toBe(202);
   const request = await response.json() as { request_id: string };
   expect((await page.request.post(`${endpoint}/drive`, { data: { user_id: owner } })).ok()).toBe(true);
-  const panel = page.locator('[aria-labelledby="protections-title"]');
+  const panel = page.locator('[aria-labelledby="trading-activity-heading"]');
   await expect(panel.getByRole("alert")).toHaveText("ดำเนินการไม่ได้ ตรวจข้อมูลล่าสุดแล้วลองใหม่");
   const status = await (await page.request.get(`/api/paper/protection-requests/${request.request_id}`)).json() as { state: string };
   expect(status.state).toBe("REJECTED");
@@ -316,4 +325,25 @@ test("failed standalone request warns without selling assets and survives reload
   const orders = await (await page.request.get(`/api/paper/orders?episode_id=${trade.wallet.episode_id}`)).json() as { orders: Array<{ side: string }> };
   expect(orders.orders.every(order => order.side === "BUY")).toBe(true);
   await capture(page, "paper-failed-protection-reload.png");
+});
+
+
+test("net-fee protection displays executable coverage and step residual from the real API", async ({ page }) => {
+  expect((await page.request.post("http://127.0.0.1:18017/__e2e/protections/enable")).status()).toBe(204);
+  const owner = await register(page);
+  await page.getByLabel("ราคา Take Profit", { exact: true }).fill("110");
+  await page.getByLabel("ราคา Stop Loss", { exact: true }).fill("90");
+  const entry = await send(page, "100", false);
+  expect(await drive(page, owner, entry.request_id, true)).toMatchObject({ order_state: "FILLED" });
+  expect((await page.request.post("http://127.0.0.1:18017/__e2e/protections/coarse-step", { data: { user_id: owner } })).status()).toBe(204);
+  expect((await page.request.post("http://127.0.0.1:18017/__e2e/protections/drive", { data: { user_id: owner } })).ok()).toBe(true);
+  await reloadPaperPair(page);
+  const panel = page.locator('[aria-labelledby="trading-activity-heading"]');
+  await expect(panel.getByText("กำลังเฝ้าราคา", { exact: true })).toBeVisible();
+  await expect(panel.getByText("0.999 BTC", { exact: true })).toHaveCount(1);
+  await expect(panel.getByText("0.99 BTC", { exact: true })).toBeVisible();
+  await expect(panel.getByText("0.009 BTC", { exact: true })).toBeVisible();
+  await expect(panel.getByText("ไม่ขายเศษอัตโนมัติ", { exact: true })).toBeVisible();
+  mkdirSync(evidence, { recursive: true });
+  await panel.screenshot({ path: `${evidence}/paper-net-fee-residual.png` });
 });

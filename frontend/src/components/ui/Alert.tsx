@@ -118,7 +118,7 @@ export const Alert: React.FC<AlertProps> = ({
   return (
     <div
       role={variant === "error" || variant === "warning" ? "alert" : "status"}
-      className={`rounded-xl border p-4 ${variantClasses[variant].container}`}
+      className={`ui-alert rounded-xl border p-4 ${variantClasses[variant].container}`}
     >
       <div className="flex items-start gap-3">
         <div aria-hidden="true" className={`-mt-0.5 ${variantClasses[variant].icon}`}>

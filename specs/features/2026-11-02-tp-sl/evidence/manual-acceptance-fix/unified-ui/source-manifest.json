@@ -1,0 +1,12 @@
+{
+  "frontend/src/PaperTradePage.tsx": "a84dcf109c041d512cb1e1f62bc2f27257d98275669d90f8ca96106ebc96686d",
+  "frontend/src/PaperOrderList.tsx": "205ceac52ce306c695893bc06cd37ac8d97d170946d9e4e09dbc3f03f1865f42",
+  "frontend/src/ProtectionPanel.tsx": "0a497e97a13eb7692c738ed9072d0758dce403834c90df50625861dd16234af3",
+  "frontend/src/protections.ts": "8f7ebd90523c6f1bd2364a770238f5a687006d4d1fc4015612222fb527d6b1a5",
+  "frontend/src/protectionMessages.ts": "369a0f072776aa4e986b14dd401fce260c5b3e06f4d14b925c0195a3885b5137",
+  "frontend/src/CandlestickChartPanel.css": "ecfa401864a71e6a80c5ef1793e0782bd37e6e4e0d76148e52901a2920fac2e3",
+  "frontend/tests/PaperTradePage.test.tsx": "5f06cfd708237319b4ce1d712fa0a76f83abd0d78601d80783e68a5197c86899",
+  "frontend/tests/ProtectionPanel.test.tsx": "9adca579381de513d32221766b2ef5f02f31c75661903ae62278d128f0674d0c",
+  "frontend/tests/PaperOrderList.test.tsx": "be272afc1b4e4ed7c4b2f39020b5e8eb03cc3dd44def3eed0bad4371e394e489",
+  "frontend/e2e/protections.spec.ts": "b94f3609e3ff90b849e27d0484649cb07364306767fb42be92909a64842006fa"
+}

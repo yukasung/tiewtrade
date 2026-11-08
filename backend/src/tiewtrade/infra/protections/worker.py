@@ -36,9 +36,9 @@ from tiewtrade.core.protections import (
     cancel_protection,
     decide_setup_result,
     evaluate_trigger,
+    executable_protection_quantity,
     prepare_manual_sale,
     replace_protection,
-    validate_setup,
 )
 from tiewtrade.core.realtime_prices import Readiness, readiness
 from tiewtrade.infra.db.session import UserSession
@@ -103,14 +103,19 @@ async def market_evidence(session: UserSession, pair: PositionPair) -> TriggerEv
 
 
 async def _validate_market_setup(
-    session: UserSession, value: Protection, evidence: TriggerEvidence
-) -> None:
+    session: UserSession,
+    value: Protection,
+    evidence: TriggerEvidence,
+    *,
+    quantity: Quantity | None = None,
+) -> Quantity:
     source = await read_latest_book(session, value.prices.pair)
-    validate_setup(
+    return executable_protection_quantity(
         value,
         source.metadata.market,
         evidence,
         filter_reference_price=source.metadata.average_price,
+        quantity=quantity,
     )
 
 
@@ -408,14 +413,41 @@ async def process_group(session: UserSession, group_id: UUID) -> None:
                 failure_code="ORDER_CONFLICT",
             )
         elif group.extra_exit.amount > 0:
+            try:
+                evidence = await market_evidence(session, value.prices.pair)
+                executable = await _validate_market_setup(
+                    session, value, evidence, quantity=group.extra_exit
+                )
+            except (SourceUnavailableError, SafetyUnavailableError):
+                return
+            except (OrderError, MoneyError):
+                # Carry late-fill dust while the entry can still fill. Never mix
+                # it with the residual of a previously terminal exit.
+                entry = (
+                    await session.execute(
+                        "SELECT status FROM paper_order_projections WHERE order_id=:order",
+                        {"order": value.entry_order_id},
+                    )
+                ).scalar_one_or_none()
+                if entry not in ("FILLED", "CANCELED", "EXPIRED", "REJECTED"):
+                    return
+                await save(
+                    session,
+                    group,
+                    replace(value, state=ProtectionState.FAILED, revision=value.revision + 1),
+                    kind="EXIT",
+                    failure_code="PROTECTION_RESIDUAL",
+                    extra_exit=Quantity.of(0, value.prices.pair.base),
+                )
+                return
             updated = await save(
                 session,
                 group,
                 replace(value, revision=value.revision + 1),
                 kind="EXIT",
-                extra_exit=Quantity.of(0, value.prices.pair.base),
+                extra_exit=group.extra_exit - executable,
             )
-            await queue_exit(session, updated, group.extra_exit)
+            await queue_exit(session, updated, executable)
         else:
             await save(
                 session,
@@ -473,44 +505,47 @@ async def process_group(session: UserSession, group_id: UUID) -> None:
         now = (await session.execute("SELECT clock_timestamp()")).scalar_one()
         if value.setup_due_at is not None and now < value.setup_due_at:
             return
-        try:
-            await _validate_market_setup(session, value, evidence)
-        except (SourceUnavailableError, SafetyUnavailableError):
-            decision = decide_setup_result(
-                origin=value.origin,
-                attempt=value.setup_attempt,
-                outcome=SetupOutcome.TRANSIENT_FAILURE,
-                observed_at=now,
-            )
-            retry = decision.action is SetupAction.RETRY
-            await save(
-                session,
-                group,
-                replace(
-                    value,
-                    revision=value.revision + 1,
-                    state=ProtectionState.ARMING if retry else ProtectionState.FAILED,
-                    setup_attempt=decision.next_attempt or value.setup_attempt,
-                    setup_due_at=decision.due_at,
-                ),
-                kind="RETRY" if retry else "FAIL",
-                failure_code="PROTECTION_SETUP_UNAVAILABLE",
-            )
+    try:
+        executable = await _validate_market_setup(session, value, evidence)
+    except (SourceUnavailableError, SafetyUnavailableError):
+        if value.state is not ProtectionState.ARMING:
             return
-        except (OrderError, MoneyError):
-            await save(
-                session,
-                group,
-                replace(
-                    value,
-                    revision=value.revision + 1,
-                    state=ProtectionState.FAILED,
-                    setup_due_at=None,
-                ),
-                kind="FAIL",
-                failure_code="PROTECTION_SETUP_REJECTED",
-            )
-            return
+        decision = decide_setup_result(
+            origin=value.origin,
+            attempt=value.setup_attempt,
+            outcome=SetupOutcome.TRANSIENT_FAILURE,
+            observed_at=now,
+        )
+        retry = decision.action is SetupAction.RETRY
+        await save(
+            session,
+            group,
+            replace(
+                value,
+                revision=value.revision + 1,
+                state=ProtectionState.ARMING if retry else ProtectionState.FAILED,
+                setup_attempt=decision.next_attempt or value.setup_attempt,
+                setup_due_at=decision.due_at,
+            ),
+            kind="RETRY" if retry else "FAIL",
+            failure_code="PROTECTION_SETUP_UNAVAILABLE",
+        )
+        return
+    except (OrderError, MoneyError):
+        await save(
+            session,
+            group,
+            replace(
+                value,
+                revision=value.revision + 1,
+                state=ProtectionState.FAILED,
+                setup_due_at=None,
+            ),
+            kind="FAIL",
+            failure_code="PROTECTION_SETUP_REJECTED",
+        )
+        return
+    if value.state is ProtectionState.ARMING:
         group = await save(
             session,
             group,
@@ -536,7 +571,7 @@ async def process_group(session: UserSession, group_id: UUID) -> None:
     changed = evaluate_trigger(value, evidence, market_ready=True, authoritative_ready=True)
     if changed is not value:
         group = await save(session, group, changed, kind="TRIGGER")
-        await queue_exit(session, group, changed.quantity)
+        await queue_exit(session, group, executable)
         if changed.entry_order_id is not None:
             await submit_cancel(
                 session,

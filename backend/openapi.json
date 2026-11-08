@@ -3639,6 +3639,10 @@
             "title": "Episode Id",
             "type": "string"
           },
+          "executable_quantity": {
+            "title": "Executable Quantity",
+            "type": "string"
+          },
           "exit_command_state": {
             "anyOf": [
               {
@@ -3747,6 +3751,17 @@
             "title": "State",
             "type": "string"
           },
+          "step_residual_quantity": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Step Residual Quantity"
+          },
           "stop_loss_price": {
             "anyOf": [
               {
@@ -3782,6 +3797,8 @@
           "base",
           "quantity",
           "protected_quantity",
+          "executable_quantity",
+          "step_residual_quantity",
           "state",
           "revision",
           "take_profit_price",

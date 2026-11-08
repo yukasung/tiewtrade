@@ -2,12 +2,11 @@ import { keepPreviousData, useInfiniteQuery, useQuery } from "@tanstack/react-qu
 import { useCallback, useEffect, useState } from "react";
 import { navigateAccountPage } from "./accountNavigation";
 import { CandlestickChartPanel } from "./CandlestickChartPanel";
-import { ProtectionPanel } from "./ProtectionPanel";
+import { PaperTradingActivity } from "./PaperTradingActivity";
 import { useProtections } from "./useProtections";
 import { protectionText as pt } from "./protectionMessages";
 import { ManualOrderForm } from "./ManualOrderForm";
 import { ManualRequestStatus } from "./ManualRequestStatus";
-import { PaperOrderList } from "./PaperOrderList";
 import { MarketTime, MarketValue } from "./components/MarketValue";
 import { Button } from "./components/ui/Button";
 import { TradingWorkspace } from "./TradingWorkspace";
@@ -29,6 +28,7 @@ function useVisible() {
 export function PaperTradePage({ owner }: { owner: string }) { return <PaperTradeForOwner key={owner} owner={owner}/>; }
 function PaperTradeForOwner({ owner }: { owner: string }) {
   const visible = useVisible();
+  const [activityView, setActivityView] = useState<"OPEN" | "HISTORY">("OPEN");
   const { base, changeBase, market, setMarketSnapshot } = useTradingPair();
   const [completedDraft, setCompletedDraft] = useState("");
   const [recentResult, setRecentResult] = useState<ManualRequest | null>(null);
@@ -82,6 +82,8 @@ function PaperTradeForOwner({ owner }: { owner: string }) {
   const baseBalance = wallet?.base_balances.find(balance => balance.asset === base);
   const protections = useProtections(owner, wallet?.episode_id ?? null, visible);
   const scope = wallet ? { expected_wallet_id: wallet.wallet_id, expected_episode_id: wallet.episode_id } : null;
+  useEffect(() => { setActivityView("OPEN"); }, [wallet?.episode_id, wallet?.wallet_id]);
+
   // Remount only the local form when its scope or resolved attempt changes.
   // The recovery journal keeps the original payload independently of this key.
   const draftKey = `${scope?.expected_wallet_id}:${scope?.expected_episode_id}:${base}:${completedDraft}:${recovery.refusedAttemptKey}`;
@@ -137,7 +139,9 @@ function PaperTradeForOwner({ owner }: { owner: string }) {
     marketPrice={market?.price}
     chart={<CandlestickChartPanel userId={owner} base={base} onBaseChange={changeBase} embedded
       toolbarTargetId="paper-chart-toolbar" onMarketSnapshot={setMarketSnapshot}/>} form={form}
-    orders={wallet ? <div className="trade-workspace-orders"><PaperOrderList key={wallet.episode_id} owner={owner} episode={wallet.episode_id} visible={visible} disabled={blocked || snapshot.isError || snapshot.isPending} onCancel={row => recovery.send({ version: 1, owner, mode: "PAPER", key: globalThis.crypto.randomUUID(), action: "CANCEL", orderId: row.order_id, payload: { expected_wallet_id: row.wallet_id, expected_episode_id: row.episode_id } })}/>
-      {scope && <ProtectionPanel key={`${scope.expected_episode_id}:${base}`} owner={owner} base={base} scope={scope} rows={protections.rows} visible={visible} disabled={blocked} enabled={data?.protection_enabled ?? false} ready={protections.ready} error={protections.query.isError} available={baseBalance?.available ?? null}/>}
+    orders={wallet && scope ? <div className="trade-workspace-orders trading-activity">
+      <PaperTradingActivity owner={owner} base={base} scope={scope} rows={protections.rows} visible={visible} view={activityView} onViewChange={setActivityView}
+        disabled={blocked} enabled={data?.protection_enabled ?? false} ready={protections.ready} error={protections.query.isError} available={baseBalance?.available ?? null}
+        ordersDisabled={blocked || snapshot.isError || snapshot.isPending} onCancelOrder={row => recovery.send({ version: 1, owner, mode: "PAPER", key: globalThis.crypto.randomUUID(), action: "CANCEL", orderId: row.order_id, payload: { expected_wallet_id: row.wallet_id, expected_episode_id: row.episode_id } })}/>
     </div> : undefined}/>;
 }

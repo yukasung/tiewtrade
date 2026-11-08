@@ -3,6 +3,12 @@
 สถานะ: **Approved — เจ้าของอนุมัติ requirements ทั้งฉบับ 2026-11-04 หลังอนุมัติ NC-F17-01..05**; **NC-SET4-12 Approved A 2026-11-06; §16/18 Approved 2026-11-07 - separate internal checkpoint**
 วันที่: 2026-11-02
 
+Amendment NC-F17-MANUAL-01 MR-01–11: **Approved A 2026-11-08** —
+[net-fee executable quantity / truthful residual / local stop readiness](manual-acceptance-fix-proposal.md).
+MR-02–06 supersede whole-group rejection solely for off-step net allocation when a
+valid aligned-down portion exists. Minimum/filter/safety checks still apply;
+implementation plan/validation require their own approval before code.
+
 ## ทำไมต้องมี
 
 ผู้ใช้ต้องเลือก TP/SL พร้อมออเดอร์เข้า หรือเพิ่มให้ position ที่เปิดอยู่ได้ ตาม mission C-7

@@ -28,7 +28,7 @@ Requirements: **Approved 2026-10-25**
 | V-15 | UI ตรง admin template และใช้ได้จริง | visual/manual inspection ตาม checklist ด้านล่าง + keyboard/focus tests; Thai/English/light/dark/mobile/desktop; ไม่มี local money math/native style ที่แทน shared pattern | M3 | Passed — local M1–M4 evidence; test composition only |
 | V-16 | เส้นทาง browser→API→DB→engine→UI ต่อครบ | Chromium isolated Paper harness ใช้ real PostgreSQL/production API/inbox/bridge/F-15 และ recorded source พร้อม explicit test policy: MARKET BUY/SELL, LIMIT partial→cancel, receipt loss→reload→lookup/discovery→same-key retry, command rejected หลัง transfer โดยไม่มี order row, partial cancel/target already FILLED, episode reset race, route reload/back/forward, logout/login owner เดิมและสลับ owner, journal storage failure และ Live unavailable; assert DB identities/effects ไม่ใช่ screenshot อย่างเดียว | M3 | Passed — local M1–M4 evidence; test composition only |
 | V-17 | Dependency ไม่พร้อมไม่เปิดคำสั่งโดยอ้อม | production composition ใช้ policy=None; GET readiness blocked และ POST NEW 503 ไม่มี executable inbox row; forged request/UI enabled flag/test env ใช้เปิดไม่ได้; queued execution recheck gate; cancel ของ order เดิมไม่ต้องผ่าน opening policy | M2/M3 | Passed — local M1–M4 evidence; test composition only |
-| V-18 | Production Paper order admission พร้อมจริง | หลัง F-18 ได้รับอนุมัติ/implement: เชื่อม risk policy จริงกับ account/price/catalog/order gates, safety/parity tests สำหรับ loss-limit/unknown/price outage/ลดความเสี่ยงตาม trading-safety; full browser→engine acceptance ด้วย production composition และเกณฑ์ที่ F-18 กำหนด | Integration checkpoint หลัง F-18 ก่อน activation/Completed | Pending Dependency — F-18; ห้ามแทนด้วย test policy |
+| V-18 | Production Paper order admission พร้อมจริง | หลัง F-18 ได้รับอนุมัติ/implement: เชื่อม risk policy จริงกับ account/price/catalog/order gates, safety/parity tests สำหรับ loss-limit/unknown/price outage/ลดความเสี่ยงตาม trading-safety; full browser→engine acceptance ด้วย production composition และเกณฑ์ที่ F-18 กำหนด | Integration checkpoint หลัง F-18 ก่อน activation/Completed | Integration Passed on f15596d — actual production policy and browser→engine risk composition; target-environment activation/readiness Pending. See step2 audit below; F16 test-policy suite is not used as the proof |
 | V-19 | Final candidate ผ่าน review และด่านก่อน merge | แจ้ง Ready for Code Review; resolve Critical/High และ findings ใน scope, backend full regression/lint/format/mypy/import-linter, frontend lint/types/tests/build, API generation/check, Chromium E2E, config/docker/required CI บน candidate สุดท้าย | M4 ก่อน merge | Passed — final candidate ab248fe push/PR CI12/12 and merge1f16ddb post-merge CI40208544618 6/6; see post-merge checkpoint |
 | V-20 | Release acceptance รวมเส้นทาง F-16 ไม่ทำให้ order/resource guarantees เสื่อม | ตรวจรวมเส้นทางใหม่นี้ใน release profile ที่อนุมัติ โดยคงเกณฑ์/duration/threshold ของ F-15 V-19/W1–W4 และ dependency release validation ที่เกี่ยวข้อง; บันทึก affected frontend/API intake/queue/recovery/resource evidence บน final candidate ไม่ใช้ targeted smoke รับรองแทน | ชุดที่ 9 / release checkpoint ก่อน Completed | Pending Full Validation — [integrated Paper profile](../2026-11-02-tp-sl/integrated-paper-acceptance-plan.md) Approved A 2026-11-06; diagnostic gate failed before the sustained HTTP phase, which remains Not Run |
 
@@ -224,3 +224,20 @@ Snapshots/rebuild cover20owners; authenticated HTTP uses actual risk policy; res
 includes F16/F17 pending/retry/exit with RLS/grants and source unchanged. Original
 100-account/4h Release and existing production activation/dependency/final CI gates
 are not overwritten by this profile. Historical Failed/Partial/NotRun remain intact.
+
+
+## V-18 production-composition evidence audit — 2026-11-07
+
+Owner authorized F17 internal pilot step2. On merge
+`f15596df0b1ced53107964a8ed9bb657fda9d336`, API, bridge and matching use actual
+TransactionalRiskPolicy. Post-merge CI passed actual-policy API/DB safety tests and
+all6 F18/F19 production-composition browser cases (59.1s), including loss breach,
+queued refusal, bounded reduction, price/cache outage and retry/recovery. This closes
+the old implementation dependency on an absent F18 policy; the F16 AllowPolicy E2E
+suite is not substituted for this evidence.
+
+[Exact scope, paths and CI links](../2026-11-02-tp-sl/evidence/recovery-20261106/internal-pilot-local-checkpoint-20261107.md#step2--paper-admissionrisk-integration-audit--2026-11-07).
+V-18 integration Passed / target-environment activation Pending. No deployment
+configuration/flags/readiness or invited access has been accepted or changed; no
+production/Live activation or F16 Completed claim. Historical Pending/Failed records
+above remain history; workload/Release obligations retain their declared scope.

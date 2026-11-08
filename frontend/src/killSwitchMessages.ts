@@ -1,6 +1,8 @@
 import { createInstance } from "i18next";
 export const killSwitchI18n = createInstance();
 const en = {
+  checkingPrevious: "Checking previous stop request…",
+  storageUnavailable: "Browser storage is unavailable. Stop can still be requested; after reload, verify the server stop status before acting again.",
   paperStop: "Stop Paper bot", liveStop: "Stop Live bot", details: "View details", close: "Close", loading: "Checking stop status…",
   STOPPING: "Stopping", STOPPED: "Stopped", PROBLEMS: "Problems", pending: "pending", failed: "failed", reconciledAt: "Reconciled at",
   retry: "Retry the same stop request", requestFailed: "The stop outcome is unknown. Retry uses the same request key.",
@@ -10,6 +12,8 @@ const en = {
   adminTitle: "System safety", reason: "Reason shown to users", platformStop: "Stop the platform", platformResume: "Resume the platform", ownerOnly: "Only a Platform Owner can resume.",
 };
 const th: typeof en = {
+  checkingPrevious: "กำลังตรวจคำขอหยุดเดิม…",
+  storageUnavailable: "เบราว์เซอร์บันทึกคำขอไม่ได้ แต่ยังส่งคำขอหยุดได้ หลังโหลดหน้าใหม่ให้ตรวจสถานะจากระบบก่อนทำรายการต่อ",
   paperStop: "หยุดบอท Paper", liveStop: "หยุดบอท Live", details: "ดูรายละเอียด", close: "ปิด", loading: "กำลังตรวจสถานะหยุด…",
   STOPPING: "กำลังหยุด", STOPPED: "หยุดแล้ว", PROBLEMS: "หยุดแล้วแต่มีปัญหา", pending: "ค้าง", failed: "ล้มเหลว", reconciledAt: "กระทบยอดเมื่อ",
   retry: "ส่งคำขอหยุดเดิมซ้ำ", requestFailed: "ยังไม่ทราบผลการหยุด การลองอีกครั้งจะใช้ request key เดิม",

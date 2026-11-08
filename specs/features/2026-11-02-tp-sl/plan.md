@@ -2,6 +2,11 @@
 
 สถานะ: **Approved — เจ้าของอนุมัติ 2026-11-04; NC-F17-06 Approved 2026-11-04**; **NC-SET4-12 Approved A 2026-11-06; §16/18 Approved 2026-11-07 - separate internal checkpoint**
 วันที่: 2026-11-04
+
+NC-F17-MANUAL-01: requirements MR-01–11 **Approved A 2026-11-08**;
+[implementation amendment](manual-acceptance-fix-plan.md) และ
+[validation amendment](manual-acceptance-fix-validation.md) **Approved 2026-11-08**
+ตามคำสั่ง approve ของเจ้าของ; ผล implementation/checks ดู checkpoint amendment.
 อ้างอิง: requirements.md Approved 2026-11-04, ADR-004, testing §6–7
 
 ## แนวทาง
@@ -294,3 +299,17 @@ no ceremonial reruns. See nc12-section21-*.xml/logs for evidence.
 Next: approved one fresh-DB V3 short W3 with existing preflight, estimated35–45min
 including30min measured/final replay/cleanup; passing permits W4. A failed/incomplete
 gate stops without retry. Prior owner-stopped W3 remains Incomplete; no4h acceptance.
+
+
+## Approved unified activity UI — 2026-11-08
+
+Owner approved [layout amendment/validation](unified-trading-activity-ui-plan.md),
+superseding only the separate TP-SL panel navigation. Existing financial logic,
+release gates and publication approvals remain unchanged.
+
+
+## Approved single-row activity UI — 2026-11-08
+
+Owner approved [single-row amendment/validation](single-row-activity-ui-amendment.md),
+superseding the two-level navigation layout only. One mixed table, distinct record
+semantics and current-episode all-symbol scope; no financial/API rule changes.

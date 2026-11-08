@@ -1,0 +1,76 @@
+[
+  {
+    "dark": false,
+    "samples": [
+      {
+        "background": "rgb(255, 250, 235)",
+        "color": "rgb(29, 41, 57)",
+        "text": "rgb(102, 112, 133)",
+        "padding": "16px",
+        "role": "alert"
+      },
+      {
+        "background": "rgb(254, 243, 242)",
+        "color": "rgb(29, 41, 57)",
+        "text": "rgb(102, 112, 133)",
+        "padding": "16px",
+        "role": "alert"
+      },
+      {
+        "background": "rgb(236, 253, 243)",
+        "color": "rgb(29, 41, 57)",
+        "text": "rgb(102, 112, 133)",
+        "padding": "16px",
+        "role": "status"
+      },
+      {
+        "background": "rgb(240, 249, 255)",
+        "color": "rgb(29, 41, 57)",
+        "text": "rgb(102, 112, 133)",
+        "padding": "16px",
+        "role": "status"
+      }
+    ],
+    "legacy": {
+      "background": "rgb(254, 243, 242)",
+      "color": "rgb(217, 45, 32)"
+    }
+  },
+  {
+    "dark": true,
+    "samples": [
+      {
+        "background": "oklab(0.746884 0.079603 0.150341 / 0.15)",
+        "color": "oklab(0.999994 0.0000455678 0.0000200868 / 0.9)",
+        "text": "rgb(152, 162, 179)",
+        "padding": "16px",
+        "role": "alert"
+      },
+      {
+        "background": "oklab(0.637065 0.18485 0.100544 / 0.15)",
+        "color": "oklab(0.999994 0.0000455678 0.0000200868 / 0.9)",
+        "text": "rgb(152, 162, 179)",
+        "padding": "16px",
+        "role": "alert"
+      },
+      {
+        "background": "oklab(0.685921 -0.150844 0.0708152 / 0.15)",
+        "color": "oklab(0.999994 0.0000455678 0.0000200868 / 0.9)",
+        "text": "rgb(152, 162, 179)",
+        "padding": "16px",
+        "role": "status"
+      },
+      {
+        "background": "oklab(0.686051 -0.0792513 -0.128704 / 0.15)",
+        "color": "oklab(0.999994 0.0000455678 0.0000200868 / 0.9)",
+        "text": "rgb(152, 162, 179)",
+        "padding": "16px",
+        "role": "status"
+      }
+    ],
+    "legacy": {
+      "background": "rgb(254, 243, 242)",
+      "color": "rgb(217, 45, 32)"
+    }
+  }
+]

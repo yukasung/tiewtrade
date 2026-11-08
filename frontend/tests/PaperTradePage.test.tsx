@@ -39,7 +39,7 @@ async function draft() {
   await waitFor(() => expect(screen.getByRole<HTMLButtonElement>("button", { name: t("submit") }).disabled).toBe(false));
 }
 it("keeps conflicted protections editable after reloading an unavailable balance", async () => {
-  const protection = { protection_id: "g", wallet_id: "w", episode_id: "e", mode: "PAPER", base: "BTC", quote: "USDT", quantity: "0.999", protected_quantity: "0", state: "ARMED", revision: 4, take_profit_price: "110", stop_loss_price: "90", conflicted: true, failure_code: "ORDER_CONFLICT", market_ready: true, entry_order_id: "entry", snapshot_at: stamp };
+  const protection = { protection_id: "g", wallet_id: "w", episode_id: "e", mode: "PAPER", base: "BTC", quote: "USDT", quantity: "0.999", protected_quantity: "0", executable_quantity: "0", step_residual_quantity: null, state: "ARMED", revision: 4, take_profit_price: "110", stop_loss_price: "90", conflicted: true, failure_code: "ORDER_CONFLICT", market_ready: true, entry_order_id: "entry", snapshot_at: stamp };
   const { fetcher } = mount((url, init) => {
     if (url.includes("/paper/trade")) return Promise.resolve(answer({ mode: "PAPER", protection_enabled: true,
       wallet: { ...wallet, source_availability: "UNKNOWN", base_balances: [{ asset: "BTC", held: "0.5", reserved: "0", protection_allocated: "0.999", available: null }] },
@@ -286,7 +286,7 @@ it.each([
   { state: "EXITING", quantity: "0.499", market_ready: true, editable: false },
   { state: "FAILED", quantity: "0.499", market_ready: true, editable: true },
 ])("never claims a $state allocation is fully protected or closed", async ({ state, quantity, market_ready, editable }) => {
-  const protection = { protection_id: "g", wallet_id: "w", episode_id: "e", mode: "PAPER", base: "BTC", quote: "USDT", quantity, protected_quantity: "0", state, revision: 4, take_profit_price: "110", stop_loss_price: "90", conflicted: false, failure_code: state === "FAILED" ? "ORDER_INSUFFICIENT_LIQUIDITY" : null, market_ready, entry_order_id: "entry", snapshot_at: stamp,
+  const protection = { protection_id: "g", wallet_id: "w", episode_id: "e", mode: "PAPER", base: "BTC", quote: "USDT", quantity, protected_quantity: "0", executable_quantity: "0", step_residual_quantity: null, state, revision: 4, take_profit_price: "110", stop_loss_price: "90", conflicted: false, failure_code: state === "FAILED" ? "ORDER_INSUFFICIENT_LIQUIDITY" : null, market_ready, entry_order_id: "entry", snapshot_at: stamp,
     exit_order_id: ["EXITING", "FAILED"].includes(state) ? "exit-order" : null,
     exit_order_state: state === "FAILED" ? "EXPIRED" : null,
     exit_command_state: state === "EXITING" ? "PENDING" : null,
@@ -298,9 +298,9 @@ it.each([
   });
   await waitFor(() => expect(screen.getByLabelText<HTMLSelectElement>(t("pair")).disabled).toBe(false));
   fireEvent.change(screen.getByLabelText(t("pair")), { target: { value: "BTC" } });
-  const panel = screen.getByRole("heading", { name: pt("title") }).closest("section")!;
+  const panel = screen.getByRole("heading", { name: t("orders") }).closest("section")!;
   await within(panel).findByText(pt(state as "ARMED"));
-  const covered = within(panel).getByText(pt("covered")).parentElement!;
+  const covered = within(panel).getAllByRole("row")[1]!.querySelectorAll("td")[4]!;
   expect(within(covered).getByText("0 BTC").textContent).toBe("0 BTC");
   expect(within(panel).queryByText(pt("CLOSED"))).toBeNull();
   await waitFor(() => expect(within(panel).getByRole<HTMLButtonElement>("button", { name: pt("edit") }).disabled).toBe(!editable));
@@ -312,4 +312,71 @@ it.each([
     expect(within(panel).getByText(t("EXPIRED"))).toBeTruthy();
   }
   if (state === "EXITING") expect(within(panel).getByText(t("PENDING"))).toBeTruthy();
+});
+
+
+it("displays the protected executable portion and uncovered step residual without money arithmetic", async () => {
+  const protection = { protection_id: "g", wallet_id: "w", episode_id: "e", mode: "PAPER", base: "BTC", quote: "USDT", quantity: "0.00131868", protected_quantity: "0.00131", executable_quantity: "0.00131", step_residual_quantity: "0.00000868", state: "ARMED", revision: 4, take_profit_price: "76500", stop_loss_price: "75000", conflicted: false, failure_code: null, market_ready: true, entry_order_id: "entry", snapshot_at: stamp };
+  mount(url => {
+    if (url.includes("/paper/protections?")) return Promise.resolve(answer({ protections: [protection], next_cursor: null }));
+  });
+  await waitFor(() => expect(screen.getByLabelText<HTMLSelectElement>(t("pair")).disabled).toBe(false));
+  fireEvent.change(screen.getByLabelText(t("pair")), { target: { value: "BTC" } });
+  expect(await screen.findByText(pt("noAutoSale"))).toBeTruthy();
+  expect(screen.getByText("0.00000868 BTC")).toBeTruthy();
+  expect(screen.getAllByText("0.00131 BTC")).toHaveLength(1);
+});
+
+const activityProtection = { protection_id: "activity-group", wallet_id: "w", episode_id: "e", mode: "PAPER", base: "BTC", quote: "USDT", quantity: "0.00131868", protected_quantity: "0", executable_quantity: "0.00131", step_residual_quantity: "0.00000868", state: "FAILED", revision: 4, take_profit_price: "76500", stop_loss_price: "75000", conflicted: false, failure_code: "PROTECTION_SETUP_REJECTED", market_ready: true, entry_order_id: null, snapshot_at: stamp };
+function activityData(url: string) {
+  if (url.includes("/paper/protections?")) return Promise.resolve(answer({ protections: [activityProtection, { ...activityProtection, protection_id: "canceled", state: "CANCELED", quantity: "0", protected_quantity: "0", step_residual_quantity: "0", failure_code: null }], next_cursor: null }));
+  if (url.includes("/paper/protection-requests?")) return Promise.resolve(answer({ requests: [], next_cursor: null }));
+}
+it("shows normal orders and conditions in one table with one toolbar and read-only history", async () => {
+  const { fetcher } = mount(activityData);
+  await draft();
+  const activity = screen.getByRole("tab", { name: t("openOrders") }).closest<HTMLElement>(".trade-workspace-orders")!;
+  expect(within(activity).getAllByRole("tablist")).toHaveLength(1);
+  expect(within(activity).getAllByRole("table")).toHaveLength(1);
+  expect(await screen.findByText(pt("attention"))).toBeTruthy();
+  expect(screen.getByText(pt("FAILED"))).toBeTruthy();
+  expect(screen.getByText(pt("conditionRecord"))).toBeTruthy();
+  const open = screen.getByRole("tab", { name: t("openOrders") });
+  const history = screen.getByRole("tab", { name: t("orderHistory") });
+  open.focus(); fireEvent.keyDown(open, { key: "ArrowRight" });
+  expect(document.activeElement).toBe(history);
+  expect(history.getAttribute("aria-selected")).toBe("true");
+  expect(screen.getByText(pt("attention"))).toBeTruthy();
+  expect(screen.getByText(pt("CANCELED"))).toBeTruthy();
+  expect(screen.queryByRole("button", { name: pt("edit") })).toBeNull();
+  expect(screen.getByRole<HTMLButtonElement>("button", { name: pt("create") }).disabled).toBe(true);
+  fireEvent.keyDown(history, { key: "Home" });
+  expect(document.activeElement).toBe(open);
+  expect(screen.getByText(pt("FAILED"))).toBeTruthy();
+  expect(screen.queryByText(pt("CANCELED"))).toBeNull();
+  expect(fetcher.mock.calls.filter(([, init]) => init?.method === "POST")).toHaveLength(0);
+});
+it("does not lose an unknown protection attempt or generate a new key when switching activity tabs", async () => {
+  const { protectionJournal } = await import("../src/protectionJournal");
+  const attempt = { version: 1 as const, owner: "owner", mode: "PAPER" as const, key, action: "CANCEL" as const, target: "g", payload: { expected_wallet_id: "w", expected_episode_id: "e", expected_revision: 4 } };
+  protectionJournal.write(attempt);
+  const { fetcher } = mount((url, init) => {
+    if (url.includes("/paper/protection-requests/by-key/")) return Promise.resolve(answer({ detail: "PROTECTION_NOT_FOUND" }, 404));
+    if (url.includes("/paper/protections/g/cancel") && init?.method === "POST") return Promise.reject(new Error("lost receipt"));
+    return activityData(url);
+  });
+  await draft();
+  expect(await screen.findByText(pt("unknown"))).toBeTruthy();
+  for (const name of [t("orderHistory"), t("openOrders"), t("orderHistory"), t("openOrders")]) {
+    fireEvent.click(screen.getByRole("tab", { name }));
+    expect(protectionJournal.read("owner")).toEqual(attempt);
+  }
+  expect(fetcher.mock.calls.filter(([, init]) => init?.method === "POST")).toHaveLength(0);
+  await waitFor(() => expect(screen.getByRole<HTMLButtonElement>("button", { name: pt("retry") }).disabled).toBe(false));
+  fireEvent.click(screen.getByRole("button", { name: pt("retry") }));
+  await waitFor(() => expect(fetcher.mock.calls.filter(([, init]) => init?.method === "POST")).toHaveLength(1));
+  const posted = fetcher.mock.calls.find(([, init]) => init?.method === "POST")![1]!;
+  expect(new Headers(posted.headers).get("Idempotency-Key")).toBe(key);
+  expect(JSON.parse(posted.body as string)).toEqual(attempt.payload);
+  expect(protectionJournal.read("owner")).toEqual(attempt);
 });

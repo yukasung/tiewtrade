@@ -142,9 +142,14 @@ async def buy(
     wallet: PaperWalletSnapshot,
     *,
     worker_owner: UUID | None = None,
+    market_step: str | None = None,
 ) -> tuple[AsyncEngine, BookLease, BookState, ExecutionMetadata, UUID]:
     await select_use(api, owner)
     market, lease, book, metadata = await ready_public_sources()
+    if market_step is not None:
+        metadata = replace(
+            metadata, market=replace(metadata.market, quantity_step=Quantity.of(market_step, "BTC"))
+        )
     value = intent(owner, wallet.episode_id)
     command = await transfer(
         api, engine, scan, owner, wallet, value, bracket={"tp": "110", "sl": "90"}
@@ -362,7 +367,10 @@ async def test_same_key_concurrent_intake_and_replay_apply_once(
         await market.dispose()
 
 
-@pytest.mark.parametrize("liquid", ["10", "0.1"])
+@pytest.mark.parametrize(
+    "liquid,step,initial_step",
+    [("10", None, False), ("0.1", None, False), ("10", "0.01", True), ("10", "0.01", False)],
+)
 async def test_price_trigger_exit_replay_and_exact_financial_effects(
     api_engine: AsyncEngine,
     engine_engine: AsyncEngine,
@@ -370,6 +378,8 @@ async def test_price_trigger_exit_replay_and_exact_financial_effects(
     owner: UUID,
     wallet: PaperWalletSnapshot,
     liquid: str,
+    step: str | None,
+    initial_step: bool,
 ) -> None:
     from tiewtrade.core.realtime_prices import ObservationKind, QuoteObservation
     from tiewtrade.infra.market_data.realtime_storage import read_snapshot, write_price
@@ -377,9 +387,22 @@ async def test_price_trigger_exit_replay_and_exact_financial_effects(
     from tiewtrade.infra.risk_limits.policy import TransactionalRiskPolicy
 
     market, lease, book, metadata, group_id = await buy(
-        api_engine, engine_engine, scan_engine, owner, wallet
+        api_engine,
+        engine_engine,
+        scan_engine,
+        owner,
+        wallet,
+        market_step=step if initial_step else None,
     )
     try:
+        if step is not None:
+            metadata = replace(
+                metadata, market=replace(metadata.market, quantity_step=Quantity.of(step, "BTC"))
+            )
+            async with market_data_session(market) as market_session:
+                now = (await market_session.execute("SELECT clock_timestamp()")).scalar_one()
+                book = replace(book, input_id=book.input_id + 1, received_at=now, verified_at=now)
+                lease = await publish_input(market_session, lease, book, metadata)
         if liquid == "10":
             from tests.infra.risk_limits.test_stops import breach
             from tiewtrade.infra.risk_limits.stops import consume_stop
@@ -432,6 +455,35 @@ async def test_price_trigger_exit_replay_and_exact_financial_effects(
             ).all()
             assert len(exits) == 1
             command = exits[0].command_id
+        if step is not None:
+            # Metadata can change after queueing: the pending intent must retain
+            # its exact original quantity and identity until reconciled.
+            async with market_data_session(market) as market_session:
+                now = (await market_session.execute("SELECT clock_timestamp()")).scalar_one()
+                book = replace(book, input_id=book.input_id + 1, received_at=now, verified_at=now)
+                changed_metadata = replace(
+                    metadata,
+                    market=replace(metadata.market, quantity_step=Quantity.of("0.1", "BTC")),
+                )
+                lease = await publish_input(market_session, lease, book, changed_metadata)
+            async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+                await process_group(session, group_id)
+                queued = (
+                    (
+                        await session.execute(
+                            "SELECT quantity FROM paper_protection_exits WHERE protection_id=:id",
+                            {"id": group_id},
+                        )
+                    )
+                    .scalars()
+                    .all()
+                )
+                assert len(queued) == 1
+                assert Quantity.of(queued[0], "BTC") == Quantity.of("0.99", "BTC")
+            async with market_data_session(market) as market_session:
+                now = (await market_session.execute("SELECT clock_timestamp()")).scalar_one()
+                book = replace(book, input_id=book.input_id + 1, received_at=now, verified_at=now)
+                lease = await publish_input(market_session, lease, book, metadata)
         await execute(engine_engine, owner, command, policy=TransactionalRiskPolicy())
         await asyncio.sleep(0.23)
         async with market_data_session(market) as market_session:
@@ -453,15 +505,24 @@ async def test_price_trigger_exit_replay_and_exact_financial_effects(
             after = await load(session, group_id)
             assert after is not None
             assert after.value.state is (
-                ProtectionState.CLOSED if liquid == "10" else ProtectionState.FAILED
+                ProtectionState.CLOSED
+                if liquid == "10" and step is None
+                else ProtectionState.FAILED
             )
-            assert after.value.quantity == Quantity.of("0" if liquid == "10" else "0.899", "BTC")
+            assert after.value.quantity == Quantity.of(
+                "0.009" if step is not None else "0" if liquid == "10" else "0.899", "BTC"
+            )
             result = await get_wallet(session)
             assert result is not None
             # Buy 1 gross for100, fee0.001 BTC ->0.999 BTC. Sell0.999 at99:
             # quote98.901 less fee0.098901 ->98.802099. No additional PnL credit.
             assert result.balance == Money.of(
-                "9998.802099" if liquid == "10" else "9909.8901", "USDT"
+                "9997.91199"
+                if step is not None
+                else "9998.802099"
+                if liquid == "10"
+                else "9909.8901",
+                "USDT",
             )
             assert await free_quantity(session, wallet.episode_id, PAIR) == Quantity.of(0, "BTC")
             await process_group(session, group_id)
@@ -491,8 +552,11 @@ async def test_price_trigger_exit_replay_and_exact_financial_effects(
         public = next(p for p in response.protections if p.protection_id == group_id)
         assert public.exit_order_id is not None
         assert public.exit_order_state in ("FILLED", "EXPIRED")
-        assert public.exit_quantity == "0.999"
-        assert public.exit_filled_quantity == ("0.999" if liquid == "10" else "0.1")
+        assert public.exit_quantity == ("0.99" if step is not None else "0.999")
+        assert public.exit_filled_quantity == (
+            "0.99" if step is not None else "0.999" if liquid == "10" else "0.1"
+        )
+        assert public.step_residual_quantity == ("0.009" if step is not None else "0")
         # Correct a terminal exit through the real financial writer, then reload
         # and replay it. A CLOSED group must expose returned assets as conflicted
         # residual rather than silently retaining the old full-exit accounting.

@@ -2825,6 +2825,8 @@ export interface components {
              * Format: uuid
              */
             episode_id: string;
+            /** Executable Quantity */
+            executable_quantity: string;
             /** Exit Command State */
             exit_command_state?: string | null;
             /** Exit Filled Quantity */
@@ -2866,6 +2868,8 @@ export interface components {
             snapshot_at: string;
             /** State */
             state: string;
+            /** Step Residual Quantity */
+            step_residual_quantity: string | null;
             /** Stop Loss Price */
             stop_loss_price: string | null;
             /** Take Profit Price */

@@ -21,3 +21,11 @@ export const fetchProtectionKey = (key: string, action: ProtectionAction, signal
 export const postProtection = (action: ProtectionAction, target: string | undefined, payload: ProtectionCreate | ProtectionReplace | ProtectionCancel, key: string) => safe(send<ProtectionRequest>(action === "CREATE" ? "/paper/protections" : `/paper/protections/${encodeURIComponent(target ?? "")}/${action.toLowerCase()}`, payload, undefined, "POST", undefined, { "Idempotency-Key": key }));
 
 export const fetchProtectionRequest = (id: string, signal?: AbortSignal) => safe(send<ProtectionRequest>(`/paper/protection-requests/${encodeURIComponent(id)}`, undefined, undefined, "GET", signal));
+
+/** Presentation classification only; never changes lifecycle or executable quantities. */
+export const protectionInHistory = (row: Protection) => ["CLOSED", "CANCELED"].includes(row.state) && !row.conflicted;
+export const protectionHasResidual = (row: Protection) => row.step_residual_quantity !== null && !/^0(?:\.0+)?$/.test(row.step_residual_quantity);
+export const protectionNeedsAttention = (row: Protection) => !protectionInHistory(row) && (
+  row.conflicted || !!row.failure_code || !row.market_ready || row.step_residual_quantity === null || protectionHasResidual(row) ||
+  !["WAITING_ENTRY", "ARMING", "ARMED", "EXITING"].includes(row.state)
+);

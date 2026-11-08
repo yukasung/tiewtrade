@@ -1,0 +1,79 @@
+{
+  "scope": "real PaperTradePage/navigation/recovery components; synthetic intercepted reads, chart module excluded; not owner financial E2E",
+  "checks": [
+    {
+      "locale": "th",
+      "width": 1440,
+      "dark": false,
+      "routing": true,
+      "attention": true,
+      "detailsFocus": true,
+      "noDocumentOverflow": true
+    },
+    {
+      "locale": "th",
+      "width": 1440,
+      "dark": true,
+      "routing": true,
+      "attention": true,
+      "detailsFocus": true,
+      "noDocumentOverflow": true
+    },
+    {
+      "locale": "th",
+      "width": 375,
+      "dark": false,
+      "routing": true,
+      "attention": true,
+      "detailsFocus": true,
+      "noDocumentOverflow": true
+    },
+    {
+      "locale": "th",
+      "width": 375,
+      "dark": true,
+      "routing": true,
+      "attention": true,
+      "detailsFocus": true,
+      "noDocumentOverflow": true
+    },
+    {
+      "locale": "en",
+      "width": 1440,
+      "dark": false,
+      "routing": true,
+      "attention": true,
+      "detailsFocus": true,
+      "noDocumentOverflow": true
+    },
+    {
+      "locale": "en",
+      "width": 1440,
+      "dark": true,
+      "routing": true,
+      "attention": true,
+      "detailsFocus": true,
+      "noDocumentOverflow": true
+    },
+    {
+      "locale": "en",
+      "width": 375,
+      "dark": false,
+      "routing": true,
+      "attention": true,
+      "detailsFocus": true,
+      "noDocumentOverflow": true
+    },
+    {
+      "locale": "en",
+      "width": 375,
+      "dark": true,
+      "routing": true,
+      "attention": true,
+      "detailsFocus": true,
+      "noDocumentOverflow": true
+    }
+  ],
+  "mutations": 0,
+  "pageErrors": []
+}

@@ -740,7 +740,9 @@ async def test_competing_allocations_serialize_without_overlap(
         await market.dispose()
 
 
-@pytest.mark.parametrize("first", ["fill", "cancel"])
+@pytest.mark.parametrize(
+    "first,step", [("fill", None), ("cancel", None), ("fill", "0.01"), ("cancel", "0.01")]
+)
 async def test_late_entry_fill_and_cancel_race_keep_only_proven_extra_exit(
     api_engine: AsyncEngine,
     engine_engine: AsyncEngine,
@@ -748,6 +750,7 @@ async def test_late_entry_fill_and_cancel_race_keep_only_proven_extra_exit(
     owner: UUID,
     wallet: PaperWalletSnapshot,
     first: str,
+    step: str | None,
 ) -> None:
     async def due_hint(command: UUID) -> DueOrder:
         async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
@@ -769,6 +772,10 @@ async def test_late_entry_fill_and_cancel_race_keep_only_proven_extra_exit(
 
     await select_use(api_engine, owner)
     market, lease, book, metadata = await ready_public_sources()
+    if step is not None:
+        metadata = replace(
+            metadata, market=replace(metadata.market, quantity_step=Quantity.of(step, "BTC"))
+        )
     try:
         value = replace(
             intent(owner, wallet.episode_id),
@@ -921,14 +928,20 @@ async def test_late_entry_fill_and_cancel_race_keep_only_proven_extra_exit(
         async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
             current = await load(session, group_id)
             cash = await get_wallet(session)
-            assert current is not None and current.value.state is ProtectionState.CLOSED
-            assert current.value.quantity == Quantity.of(0, "BTC")
+            assert current is not None and current.value.state is (
+                ProtectionState.CLOSED if step is None else ProtectionState.FAILED
+            )
+            remaining = "0" if step is None else "0.018" if first == "fill" else "0.009"
+            assert current.value.quantity == Quantity.of(remaining, "BTC")
             assert (await held_and_reserved(session, wallet.episode_id, PAIR))[0] == Quantity.of(
-                0, "BTC"
+                remaining, "BTC"
             )
-            assert cash is not None and cash.balance == Money.of(
-                "10017.604198" if first == "fill" else "10008.802099", "USDT"
+            expected_cash = (
+                ("10015.82398" if first == "fill" else "10007.91199")
+                if step is not None
+                else ("10017.604198" if first == "fill" else "10008.802099")
             )
+            assert cash is not None and cash.balance == Money.of(expected_cash, "USDT")
     finally:
         await market.dispose()
 

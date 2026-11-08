@@ -456,8 +456,8 @@ def test_manual_sale_preserves_smallest_stored_quantum(
     ) == q(0)
 
 
-@pytest.mark.parametrize("quantity", ["0.000999", "0.999999"])
-def test_setup_rejects_unexecutable_net_quantity_without_rounding(quantity: str) -> None:
+@pytest.mark.parametrize("quantity", ["0.000999", "0.000001"])
+def test_setup_rejects_net_quantity_whose_aligned_portion_is_too_small(quantity: str) -> None:
     from tiewtrade.core.orders import OrderConstraintError, OrderConstraints
     from tiewtrade.core.protections import validate_setup
 
@@ -538,3 +538,53 @@ def test_standalone_creation_refuses_already_crossed_or_equal_levels(
     )
     with pytest.raises(ProtectionError):
         prices.validate_creation(Money.of("100", "USDT"))
+
+
+@pytest.mark.parametrize("mode", [TradingMode.PAPER, TradingMode.LIVE])
+@pytest.mark.parametrize(
+    "amount,expected,residual",
+    [
+        ("0.00131868", "0.00131", "0.00000868"),
+        ("0.00131", "0.00131", "0"),
+        ("0.001319999999999999", "0.00131", "0.000009999999999999"),
+    ],
+)
+def test_net_fee_protection_preserves_allocation_and_exposes_step_residual(
+    mode: TradingMode, amount: str, expected: str, residual: str
+) -> None:
+    from tiewtrade.core.orders import OrderConstraints
+    from tiewtrade.core.protections import executable_protection_quantity, validate_setup
+
+    constraints = OrderConstraints(
+        PAIR,
+        "fixture",
+        Quantity.of("0.00001", "BTC"),
+        Quantity.of("0.00001", "BTC"),
+        Money.of("5", "USDT"),
+        Money.of("0.01", "USDT"),
+    )
+    before = replace(protection(mode), quantity=Quantity.of(amount, "BTC"))
+    actual = executable_protection_quantity(before, constraints, evidence("75000"))
+    assert actual == Quantity.of(expected, "BTC")
+    assert before.quantity - actual == Quantity.of(residual, "BTC")
+    assert not before.quantity < actual
+    assert actual.is_multiple_of(constraints.quantity_step)
+    validate_setup(before, constraints, evidence("75000"))
+    assert before.quantity == Quantity.of(amount, "BTC")
+
+
+def test_aligned_protection_still_enforces_minimum_notional() -> None:
+    from tiewtrade.core.orders import OrderConstraintError, OrderConstraints
+    from tiewtrade.core.protections import executable_protection_quantity
+
+    constraints = OrderConstraints(
+        PAIR,
+        "fixture",
+        Quantity.of("0.00001", "BTC"),
+        Quantity.of("0.00001", "BTC"),
+        Money.of("5", "USDT"),
+        Money.of("0.01", "USDT"),
+    )
+    before = replace(protection(), quantity=Quantity.of("0.000019", "BTC"))
+    with pytest.raises(OrderConstraintError):
+        executable_protection_quantity(before, constraints, evidence("100"))

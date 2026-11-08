@@ -8,7 +8,7 @@ export function readJournal<T>(storageKey: string): T | null {
     const value = window.localStorage.getItem(storageKey);
     return value ? JSON.parse(value) as T : null;
   } catch {
-    window.localStorage.removeItem(storageKey);
+    clearJournal(storageKey);
     return null;
   }
 }
@@ -17,8 +17,13 @@ export function writeJournal<T>(storageKey: string, value: T): void {
   window.localStorage.setItem(storageKey, JSON.stringify(value));
 }
 
-export function clearJournal(storageKey: string): void {
-  window.localStorage.removeItem(storageKey);
+export function clearJournal(storageKey: string): boolean {
+  try {
+    window.localStorage.removeItem(storageKey);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export function updateJournalFromReceipt<T extends object>(

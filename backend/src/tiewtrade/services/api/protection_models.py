@@ -43,6 +43,8 @@ class ProtectionView(BaseModel):
     quote: Literal["USDT"] = "USDT"
     quantity: str
     protected_quantity: str
+    executable_quantity: str
+    step_residual_quantity: str | None
     state: str
     revision: int
     take_profit_price: str | None
