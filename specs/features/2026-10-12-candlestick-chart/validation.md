@@ -16,6 +16,8 @@ RQ-38 และ pair/workload scope ของ F-38; ไม่เพิ่ม bac
 ผลหลัง merge รอบเดิม: [2026-10-14 checkpoint](evidence/2026-10-14-post-merge.md).
 ผลแก้ viewport ตาม P-H3: [anchor regression evidence](evidence/2026-10-14-viewport.md).
 
+**Failure-only3m evidence amendment Approved A 2026-11-08:** [bounded native-fetch failure evidence](postmerge-3m-failure-observer-proposal.md), preserving30s and all original assertions/fixtures. Separate follow-up branch, controlled private failure proof, affected real-DB case and one PR/CI round authorized. Controlled four-case privacy/persistence proof, one real-DB3m case and scoped static checks verified ([checkpoint](evidence/postmerge-3m-failure-observer/checkpoint.md)); required CI Pending and intermittent root cause remains unresolved.
+
 ## Candle-only chart reads — Approved 2026-10-14
 
 เพิ่ม [continuity validation](candle-continuity-amendment.md): delayed REST, cold reload,

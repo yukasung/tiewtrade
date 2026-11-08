@@ -11,6 +11,8 @@ Branch: `feature/f-12-3m`; base `f15596d`
 เจ้าของสั่ง refactor แล้ว; ลดความซ้ำใน fixture/browser tests โดยคง runtime behavior
 ตรวจผลกระทบต่อเนื่องตาม validation; required CI และ local activation ยังไม่ผ่านด่านครบ
 
+**Post-merge failure-evidence follow-up Approved A 2026-11-08:** [observer amendment](../2026-10-12-candlestick-chart/postmerge-3m-failure-observer-proposal.md), preserving original3m criteria and observer verdicts. Controlled private proof/affected real-DB case/static checks verified; remote CI Pending, root cause remains OPEN.
+
 ## แนวทางและของเดิมที่จะใช้ซ้ำ
 
 เพิ่มสมาชิกใน shared Timeframe และขยายเส้นทางเดิมตั้งแต่ข้อมูลต้นทางถึงกราฟ

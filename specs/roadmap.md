@@ -1435,3 +1435,14 @@ and fixture; exit display formatting unchanged.
 All gates off; no owner mutations or Git publication. Next owner Git instruction
 for final candidate/required CI; merge and Release dependencies remain gated.
 F17 is not Completed.
+
+## Native3m post-merge failure evidence — 2026-11-08
+
+PR64 merged29e3946: atomic pool follow-up verified on main (backend4926 and
+Security Passed); post-merge CI42492026828 still Failed at native3m30s timeout,
+19other main-browser cases Passed and subsequent suites Skipped. Previous timeout
+on58e2299 and successful targeted/E2E rerun retained; no intermittent root-cause
+fix claimed. [Failure-only diagnostic amendment](features/2026-10-12-candlestick-chart/postmerge-3m-failure-observer-proposal.md)
+Approved A: controlled four-case privacy/persistence proof verified, real-DB case
+Passed11.2s and scoped lint/types Passed. New diagnostic PR/required CI Pending.
+No F17 Completed/release claim, no production change or criterion relaxation.

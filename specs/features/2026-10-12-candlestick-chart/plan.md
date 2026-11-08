@@ -2,6 +2,8 @@
 
 **Prices-page removal — Approved 2026-11-07:** ใช้ [แผนลบ `/prices`](../2026-11-07-remove-prices-page/plan.md) แทนส่วนแสดง/นำทางไป panel F-10 แยกจากกราฟ ยกเลิกการใช้ RealtimePricePanel/useRealtimePrices ใน frontend reuse list ด้านล่าง คง AccountSession, candle chart/stream, history, auth และ shared backend price services; E2E latest-price worker ตรวจ authenticated price API แทน DOM panel
 
+**Failure-only3m evidence amendment Approved A 2026-11-08:** [bounded native-fetch failure evidence](postmerge-3m-failure-observer-proposal.md), preserving30s and all original assertions/fixtures. Separate follow-up branch, controlled private failure proof, affected real-DB case and one PR/CI round authorized. Controlled four-case privacy/persistence proof, one real-DB3m case and scoped static checks verified ([checkpoint](evidence/postmerge-3m-failure-observer/checkpoint.md)); required CI Pending and intermittent root cause remains unresolved.
+
 ## Amendment — ช่วงประวัติที่เลื่อนดูได้
 
 สถานะ: **Approved** — requirements RQ-37..42 อนุมัติแล้ว 2026-10-14;
