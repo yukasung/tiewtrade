@@ -131,7 +131,7 @@ test("F-12 V-17 controlled authenticated browser workload", async ({ browser }) 
           // Keep five switches in every 30-second round, evenly distributed so
           // independent clients do not become an artificial synchronized herd.
           await page.waitForTimeout(index * historySwitchSpacingMs);
-          const timeframe = (["1m", "5m", "15m", "1h", "4h", "1d", "1w", "1M"] as const)[historyRound % 8]!;
+          const timeframe = (["1m", "3m", "5m", "15m", "1h", "4h", "1d", "1w", "1M"] as const)[historyRound % 9]!;
           await page.getByRole("combobox", { name: "Timeframe", exact: true }).selectOption(timeframe);
         }));
       }

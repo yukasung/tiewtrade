@@ -268,7 +268,7 @@ async def test_first_release_expand_v1_paging_drain_and_proof(
         ).model_dump(mode="json")
         for p in reference.points
     ]
-    assert len(expected) == 8
+    assert len(expected) == 9
     assert all(
         point["seed_open_at"] is not None
         and all(

@@ -118,6 +118,34 @@ async def test_actual_database_identity_rejected_and_connection_closed(
     assert disposed == [True]
 
 
+@pytest.mark.parametrize("revision", ["0065", "0067", "invalid"])
+async def test_preflight_rejects_schema_other_than_current_candidate(
+    monkeypatch: pytest.MonkeyPatch, revision: str
+) -> None:
+    disposed = []
+
+    class Engine:
+        def __init__(self, role: DatabaseRole) -> None:
+            self.role = role
+
+        @asynccontextmanager
+        async def connect(self) -> AsyncIterator[Engine]:
+            yield self
+
+        async def execute(self, statement: Any) -> Any:
+            if "alembic_version" in str(statement):
+                return SimpleNamespace(scalar_one=lambda: revision)
+            return SimpleNamespace(one=lambda: ("tiewtrade_set4_iso_test", self.role.value))
+
+        async def dispose(self) -> None:
+            disposed.append(self.role)
+
+    monkeypatch.setattr(iso, "create_engine_for", Engine)
+    with pytest.raises(ValueError, match="schema0066 required"):
+        await iso.verify_databases("tiewtrade_set4_iso_test")
+    assert DatabaseRole.MIGRATOR in disposed
+
+
 def test_writer_import_path_and_digest_are_verified(tmp_path: Path) -> None:
     assert matching_storage.__file__ is not None
     actual = Path(matching_storage.__file__).resolve()
