@@ -1,0 +1,9 @@
+{
+  "source": "backend/tests/infra/paper_wallet/test_recovery.py",
+  "sha256": "199cf061e50c0791ae0c9858b0f6a6fba6ff599f7894f4d2ab4094e9c498daed",
+  "normal_cases_passed": 2,
+  "slow_setup_case_passed": 1,
+  "slow_setup_ms": 100,
+  "injection_window_ms": 50,
+  "setup_watchdog_seconds": 5
+}

@@ -12,6 +12,8 @@ reconcile integration gates กับ F-15 final development candidate วัน
 สำหรับ source/reset/API/UI integration และ races/faults; ผล Partial/Not Run เดิมคงไว้จนมี
 หลักฐานใหม่จริง และหลักฐาน M4 อัปเดตเฉพาะเกณฑ์ที่ทดสอบแล้ว
 
+Publication dependency test amendment **Approved 2026-11-08**: [deterministic timeout injection](../2026-11-02-tp-sl/publication-wallet-timeout-proposal.md), preserves V-6/V-9 and all financial rules; targeted cancel/timeout and slow-setup proof Passed ([evidence](../2026-11-02-tp-sl/evidence/manual-acceptance-fix/publication-wallet-timeout/checkpoint.md)); final required CI remains pending.
+
 ## “เสร็จ” หมายถึง
 
 ผลเริ่มต้นทุกข้อคือ **Not Run** เพราะยังไม่มี implementation
