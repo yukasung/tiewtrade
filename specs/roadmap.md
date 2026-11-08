@@ -1187,3 +1187,98 @@ Remaining fixture/config pre-publication full secret scan Passed on4d997e9 in
 132.892s,0blocked/triage, no new security exception/configuration change. Sending
 the one authorized combined CI round; remote acceptance remains pending until its
 actual final-head result. No opening/merge/F17 completion claim.
+
+### F-12 extension — timeframe 3m — 2026-11-07
+
+สถานะงาน: **Planning — requirements Approved; plan/validation Proposed**.
+เจ้าของสั่งเพิ่ม3mและอนุมัติ [requirements](features/2026-11-07-chart-3m/requirements.md)
+วันที่2026-11-07. [Plan](features/2026-11-07-chart-3m/plan.md) และ
+[validation](features/2026-11-07-chart-3m/validation.md) จัดทำแล้ว รออนุมัติก่อนเขียนโค้ด.
+ขอบเขตเพิ่มnative3mให้BTC/ETHตามcatalogเดิม ทั้งhistory/live และshared timeframe
+contracts/SQL/readiness/scheduler. ยังไม่มีsource/migration/runtime changeหรือผลtests.
+ไม่เปลี่ยนสถานะF17หรือรับรองว่าF12Completed; workloadรวมที่กระทบคงPending Full Validation.
+
+Review follow-up: Medium workloadtraceabilityแก้ในproposalแล้ว โดยแยกRelease
+V3-10A(F12 chart) / V3-10B(F11 preparedตามF38 combinedphases) และระบุruntime18
+แยกจากBTCworkload9series. ยังไม่มีsource/migration/tests/campaign; High missing
+implementationคงOpenจนplan/validationได้รับอนุมัติและimplementจริง ไม่ถือว่าปิดfinding
+จากการแก้เอกสาร. ขั้นถัดไปรออนุมัติplan/validationฉบับแก้ไขก่อนเขียนโค้ด
+
+
+3m implementation checkpoint2026-11-07: requirements/plan/validation Approved;
+core/nativeadapter/UI/contracts and draft0066 implemented, targeted proof Partial.
+Source proof/READY-state preservation conflicts with mandatory maintenance;
+[NC-3M-01 Approved A — replacement safety checks pending](features/2026-11-07-chart-3m/source-maintenance-amendment.md)
+authorizes existing maintenance/rebuild; replacement safety checks pending. Independent checks and retained
+failures are in [candidate evidence](features/2026-11-07-chart-3m/evidence/candidate.md).
+Owner runtime stays0065/no3m. No review-ready/completion/commit/push/merge claim;
+next complete approved A implementation and targeted validation before Ready for Code Review.
+
+
+3m checkpoint2026-11-07 after NC-3M-01 A: **Ready for Code Review**.
+Migration maintenance/rebuild contract implemented; isolated DB14, fresh regressions310,
+native/preview/candleAPI113, chartAPI39 and browser1+3 passed; frontend50/scoped static
+checks passed. Retained failures and scope in [candidate receipt](features/2026-11-07-chart-3m/evidence/candidate.md).
+Owner runtime0065 unchanged. Review/refactor/required CI and local activation pending;
+Release V3-10A/B Pending Full Validation. No F17 completion or merge claim.
+Next await owner `review code`; do not start review automatically.
+
+
+3m review correction2026-11-07: owner review completed; M1 browser series identity
+and M2 populated-cursor migration/fairness gaps addressed. Targeted cursor2 + browser1/3
+passed; affected static checks passed. Existing production checks remain valid.
+Next await owner `refactor the code` per AGENTS; required CI, Release workloads and local
+activation remain pending. No commit/push/merge or F17 completion change.
+
+
+3m refactor checkpoint2026-11-07: authorized scoped refactor completed without runtime
+behavior changes. Cursor2 and browser1+3 affected checks plus scoped static checks passed.
+See current [candidate receipt](features/2026-11-07-chart-3m/evidence/candidate.md).
+Review findings addressed; required CI/full regression remains before merge, Release
+V3-10A/B Pending Full Validation. Owner local0065 unchanged. Next requires owner Git
+instruction to commit/push/open PR and then track CI; no completion/merge claim.
+
+
+3m PR60 first CI15de827: backend Failed1/4790passed due to harness schema0065 pin;
+other CI jobs and Security passed. Updated only checkpoint-harness candidate pin to0066,
+kept exact original function verification;24targeted tests/static checks passed.
+Replacement CI required before local activation; owner runtime still0065. No merge.
+
+
+3m PR60 f4464c0 browser CI Failed1/18passed from async response-body predicate race.
+Test-only serialized response reading correction passed full chart browser8/8 plus
+ESLint/TypeScript. Other completed gates passed; latest-candidate CI still required.
+Owner local remains0065; no migration/merge occurred.
+
+
+3m PR60 a9faaf7: browser CI Failed1/18passed again (CDP response body retrieval),
+local8/8passed. Third CI candidate remains not accepted. Stop before another trial per
+AGENTS; [observer proposal](features/2026-11-07-chart-3m/browser-response-observer-amendment.md)
+awaits owner decision. Follow already-running backend to completion; local remains0065.
+
+
+3m PR60 a9faaf7 CI completion: backend4794main tests + all isolation/migration gates,
+frontend/API contract/container and Security Passed. Browser remains Failed1/18passed
+at live-body/CDP retrieval. All started jobs finished; no fourth trial. Await owner
+A/B decision on browser observer proposal per AGENTS. Local remains0065; no merge.
+Stop-checkpoint documents remain uncommitted to avoid a documentation-only CI loop.
+
+
+3m observer A explicitly approved: test-only native fetch observer implemented without
+production or threshold changes. Full chart browser8/8passed46.7s and scoped static
+checks passed. One approved replacement required CI next; pass then local activation,
+otherwise stop/report. Prior CI failures preserved; owner local still0065 at this point.
+
+
+3m observer89259c1: browser E2E now Passed. Security Failed at candidate identity before
+scans after main advanced viaPR61; base/merge-parent mismatch. Backend still running;
+follow started jobs to completion. One approved CI round consumed, local unchanged.
+[Base-refresh replacement proposal](features/2026-11-07-chart-3m/ci-base-refresh-amendment.md)
+requires owner decision; no security policy changes or automatic retries.
+
+
+3m observer checkpoint2026-11-08: CI42392101171 on89259c1/test-mergec5b9039 Passed
+(backend4814 + all isolation/migration gates; all browser suites includingnative3m;
+frontend/contracts/container). Security42392101117 Failed before scans at base identity
+mismatch after main advanced to1237bf6. All jobs finished. Base-refresh proposal awaits
+owner; no extra trial/local migration/PR merge. Local stays0065. Stop receipt uncommitted.

@@ -270,3 +270,12 @@ it("keeps the user's fractional viewport when live data redraws", () => {
   expect(scale.setVisibleLogicalRange).toHaveBeenLastCalledWith(range);
   expect(scale.setVisibleRange).not.toHaveBeenCalled();
 });
+it("offers native 3m between 1m and 5m and switches the existing controller", () => {
+  vi.mocked(useChartData).mockReturnValue(state());
+  render(<CandlestickChartPanel userId="one"/>);
+  const select = screen.getByRole<HTMLSelectElement>("combobox", { name: "Timeframe" });
+  expect(select.value).toBe("1h");
+  expect([...select.options].map(option => option.value)).toEqual(["1m", "3m", "5m", "15m", "1h", "4h", "1d", "1w", "1M"]);
+  fireEvent.change(select, { target: { value: "3m" } });
+  expect(vi.mocked(useChartData).mock.calls.at(-1)?.[1].timeframe).toBe("3m");
+});

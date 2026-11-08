@@ -152,7 +152,7 @@ def capacity_prerequisites(phase: str, *, under_load: bool, combined: bool) -> t
 
 
 def readiness_baseline_is_quiescent(rows: list[dict[str, Any]], metadata: dict[str, Any]) -> bool:
-    """Require the 16-series refresh to finish before a measured BTC phase."""
+    """Require the 18-series refresh to finish before a measured BTC phase."""
     return (
         all(row["valid"] for row in rows)
         and len(metadata["jobs"]) == len(READINESS_SERIES)
@@ -694,7 +694,7 @@ async def run(
                 "series": summaries,
                 "smoke": smoke,
                 "scheduled_seconds": duration,
-                "readiness_scope": "BTCUSDT 8 timeframes" if smoke else "runtime catalog",
+                "readiness_scope": "BTCUSDT 9 timeframes" if smoke else "runtime catalog",
                 "diagnostic": diagnostic_seconds is not None,
                 "full_validation_credit": False if smoke or diagnostic_seconds else passed,
                 "note": (

@@ -14,7 +14,7 @@ import { activeBases, useMarketCatalog } from "./marketCatalog";
 import { TradeHistoryPlaceholder, TradingOrderPlaceholder } from "./TradingWorkspacePlaceholders";
 import "./CandlestickChartPanel.css";
 
-const timeframes: Timeframe[] = ["1m", "5m", "15m", "1h", "4h", "1d", "1w", "1M"];
+const timeframes: Timeframe[] = ["1m", "3m", "5m", "15m", "1h", "4h", "1d", "1w", "1M"];
 const noIndicators = new Set<string>();
 const chartLocale = "th";
 const t = chartI18n.getFixedT(chartLocale);

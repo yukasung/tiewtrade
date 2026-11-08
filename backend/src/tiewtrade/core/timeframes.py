@@ -9,6 +9,7 @@ from tiewtrade.core.moments import require_aware
 
 class Timeframe(StrEnum):
     M1 = "1m"
+    M3 = "3m"
     M5 = "5m"
     M15 = "15m"
     H1 = "1h"
@@ -21,6 +22,7 @@ class Timeframe(StrEnum):
     def fixed_span(self) -> timedelta | None:
         seconds = {
             "1m": 60,
+            "3m": 180,
             "5m": 300,
             "15m": 900,
             "1h": 3600,

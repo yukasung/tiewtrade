@@ -7,7 +7,7 @@ import pytest
 from tests.services.indicator_builder.profile_capacity_gates import evaluate
 from tests.services.indicator_builder.profile_capacity_s5 import S5_SERIES, evaluate_s5
 
-TIMEFRAMES = ("1m", "5m", "15m", "1h", "4h", "1d", "1w", "1M")
+TIMEFRAMES = ("1m", "3m", "5m", "15m", "1h", "4h", "1d", "1w", "1M")
 
 
 def write(path: Path, value: object) -> None:
@@ -17,9 +17,9 @@ def write(path: Path, value: object) -> None:
 def scope() -> dict[str, int]:
     return {
         "supported_runtime_pairs": 2,
-        "runtime_readiness_series": 16,
+        "runtime_readiness_series": 18,
         "profile_pairs": 1,
-        "profile_series": 8,
+        "profile_series": 9,
     }
 
 
@@ -236,7 +236,7 @@ def s5_fixture(directory: Path) -> None:
             "redis_endpoint": "127.0.0.1:56420/0",
             "redis_dbsize_before_runtime": 0,
             "redis_url_mode": "plain-unauthenticated",
-            "database_revision": "0042",
+            "database_revision": "0066",
             "api_cpuset": "6-7",
             "builder_cpuset": "4-5",
             "runtime_containers_created": {
@@ -244,15 +244,15 @@ def s5_fixture(directory: Path) -> None:
                 "builder": "builder-container-id",
                 "builder-s5-peer": "peer-container-id",
             },
-            "source_fixture": "fresh 16-series source; empty derived/jobs before runtime start",
-            "source_runtime_series": 16,
+            "source_fixture": "fresh 18-series source; empty derived/jobs before runtime start",
+            "source_runtime_series": 18,
             "derived_counts_before_runtime": {
                 "indicator_build_jobs": 0,
                 "indicator_generations": 0,
                 "indicator_checkpoints": 0,
             },
             "historical_series": "BTC/1m",
-            "append_only_runtime_series": 15,
+            "append_only_runtime_series": 17,
         }
         | scope(),
     )
