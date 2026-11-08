@@ -1,0 +1,36 @@
+{
+  "base_sha": "e6b32bbd0a5203db2609dacb0de86986dce691d6",
+  "files": {
+    "backend/openapi.json": "3ebe0a81b998f3680e3f63cda6fa8e919b8d1edfb548cd756632fec943434a84",
+    "backend/src/tiewtrade/core/protections.py": "c2e73088ad92edfb97057f2ffa2c07f4dd7f5b29a503db5b4cfa7cdb32b40d44",
+    "backend/src/tiewtrade/infra/protections/worker.py": "ba299129f0a5ef254477753ecddc1d9e9ce7f3850ed5f375e7cd17584e744ddf",
+    "backend/src/tiewtrade/services/api/protection_models.py": "be1d61b41473c12d9fd953a933727631324caed18eae07c186443e27f12fbf5d",
+    "backend/src/tiewtrade/services/api/protection_routes.py": "a4eb3e149b4225865c3ef8e7cd9b9b6be7e972108294c2a37bf0cff6a2abe431",
+    "backend/tests/core/test_protections.py": "b5ad8c86b5b64f5b8a4f51b156de253c893783c60039995d3b3c801fa744b455",
+    "backend/tests/e2e_protection_app.py": "a6e10f65e7596dce72e8462d800775e8e77eeff46893d38539268d194440052e",
+    "backend/tests/infra/protections/test_lifecycle.py": "1f9536dca760b70ddba31ea4be747b7c5ce5849f110ea7fbaf29fe5bad805788",
+    "backend/tests/infra/protections/test_validation.py": "9cd8818296b0a58f14f045682382b3550ce5b7814935204e96d876ee75cf9253",
+    "frontend/e2e/protections.spec.ts": "5dfc6e7d20572d2269c74726c1b0ae83a4af3d7e151abcba5e6ed19fec5a38f4",
+    "frontend/src/KillSwitchControls.tsx": "97626a7073d384c59dcf341d523629dabefe9429c0015ee8e5834a1d14a2de55",
+    "frontend/src/ProtectionPanel.tsx": "274fbca91dff60dfd4362a6d1b4eb6a89283d88321209ccf53e61725addf6b4f",
+    "frontend/src/api-types.ts": "d037d13171b65a4ddcf42c1f2f184d624868c6984ff37642ae18310913a154f8",
+    "frontend/src/killSwitch.ts": "57e1bf6cc835177e1c036a5a11134e319c51c3dd3bd115bd98d8c92c58c3d591",
+    "frontend/src/killSwitchJournal.ts": "104986f119a4d0f803f2c040eab8f35021d397d9ffccf4403918833e0eac0bbf",
+    "frontend/src/killSwitchMessages.ts": "0e9329d8213d5c985bb3147fc3aab2bb878a8dcb9b3487f46650101839aff7dc",
+    "frontend/src/protectionMessages.ts": "822562d1f83f23c6a63d7bbf7f2af11a7f08c734129d0b249587268b5b47d7b0",
+    "frontend/tests/KillSwitchControls.test.tsx": "e90e4a3a125888e41090d28d6f0508f4f5404f4545cbbc937ba053ac3dbcf64a",
+    "frontend/tests/ManualOrderForm.test.tsx": "45d381c8b94c7c021a6ade60ef914ec38aeeeb8cda165a226247058e719542d8",
+    "frontend/tests/PaperTradePage.test.tsx": "079e5def80ab89fbfdaa28b1eab4fa72179dcc79c68b7934bdaca912880ed86a"
+  },
+  "operator_launcher_sha256": "2ae6a0c7c47de26b245d7cccd2a2acf0e8f4d9886a7fd1d754a17cfdd38fb4dd",
+  "operator_worker_launcher_sha256": "86892520cddbc2ce3728bf145b5e82693ae0b5dda7a2017c05927e909ae1e510",
+  "owner_activation_flags": {
+    "admission": false,
+    "financial": false,
+    "protection": false,
+    "publication": false
+  },
+  "review_fix": "Known STOP identities cannot be reused as new intent after resume; persisted hints reconciled by existing server receipt/status GETs.",
+  "status": "owner-authorized refactor locally validated; current candidate serves local; manual replacement pending account-type clarification; all Paper gates off",
+  "test_databases_removed": 3
+}

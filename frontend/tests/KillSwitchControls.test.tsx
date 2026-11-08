@@ -1,10 +1,10 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
 import { KillSwitchBanner, KillSwitchControls } from "../src/KillSwitchControls";
 import { killSwitchText as t } from "../src/killSwitchMessages";
 import { riskText } from "../src/riskLimitMessages";
-import type { StopStatus } from "../src/killSwitch";
+import { postResume, type StopReceipt, type StopStatus } from "../src/killSwitch";
 
 const status = (mode: "PAPER" | "LIVE", stop: string | null = null): StopStatus => ({
   active_causes: stop ? ["USER"] : [],
@@ -16,7 +16,17 @@ const status = (mode: "PAPER" | "LIVE", stop: string | null = null): StopStatus 
   capability: mode === "PAPER" ? "AVAILABLE" : "LIVE_EXECUTION_UNAVAILABLE",
 });
 
-afterEach(() => { cleanup(); vi.unstubAllGlobals(); window.localStorage.clear(); });
+const appliedUserStop: StopReceipt = { request_id: "r1", stop_id: "s1", mode: "PAPER", action: "STOP", cause: "USER", generation: 1, revision: 1, state: "APPLIED", failure_code: null, recorded_at: "2026-11-08T00:00:00Z" };
+
+function makeControlClient() {
+  return new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 }, mutations: { retry: false } } });
+}
+
+function renderControls(client: QueryClient, owner = "owner") {
+  return render(<QueryClientProvider client={client}><KillSwitchControls owner={owner}/></QueryClientProvider>);
+}
+
+afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.unstubAllGlobals(); window.localStorage.clear(); });
 
 it("keeps durable loss and system banners visible after the risk latch resets", async () => {
   vi.stubGlobal("fetch", vi.fn((url: string) => {
@@ -44,7 +54,7 @@ it("shows separate Paper and Live stop controls and preserves the unknown reques
   vi.stubGlobal("fetch", fetcher);
   vi.stubGlobal("crypto", { randomUUID: vi.fn(() => "11111111-1111-4111-8111-111111111111") });
   const client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
-  render(<QueryClientProvider client={client}><KillSwitchControls owner="owner"/></QueryClientProvider>);
+  renderControls(client);
   expect(await screen.findByRole("button", { name: t("paperStop") })).toBeTruthy();
   expect(screen.getByRole("button", { name: t("liveStop") })).toBeTruthy();
   fireEvent.click(screen.getByRole("button", { name: t("paperStop") }));
@@ -85,7 +95,7 @@ it("renders the complete PROBLEMS snapshot and keeps resume unavailable", async 
     return Promise.resolve(new Response(JSON.stringify(url.includes("/live/") ? status("LIVE") : problemStatus)));
   }));
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  render(<QueryClientProvider client={client}><KillSwitchControls owner="owner"/></QueryClientProvider>);
+  renderControls(client);
 
   fireEvent.click(await screen.findByRole("button", { name: t("details") }));
   expect(await screen.findByText("BTC/USDT: 0.11")).toBeTruthy();
@@ -141,7 +151,7 @@ it("refetches a stale resume snapshot and disables another submit", async () => 
   vi.stubGlobal("fetch", fetcher);
   vi.stubGlobal("crypto", { randomUUID: vi.fn(() => "33333333-3333-4333-8333-333333333333") });
   const client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
-  render(<QueryClientProvider client={client}><KillSwitchControls owner="owner"/></QueryClientProvider>);
+  renderControls(client);
 
   fireEvent.click(await screen.findByRole("button", { name: t("details") }));
   const resume = await screen.findByRole("button", { name: t("resume") });
@@ -163,4 +173,241 @@ it("refetches a stale resume snapshot and disables another submit", async () => 
     expected_summary_revision: 1,
     expected_reconciliation_revision: 1,
   });
+});
+
+
+it.each(["getItem", "setItem", "removeItem", "property"] as const)("keeps STOP usable when storage %s fails", async method => {
+  const blocked = () => { throw new DOMException("blocked", "SecurityError"); };
+  if (method === "property") vi.spyOn(window, "localStorage", "get").mockImplementation(blocked);
+  else vi.spyOn(Storage.prototype, method).mockImplementation(blocked);
+  const keys: string[] = [];
+  let failures = 1;
+  vi.stubGlobal("fetch", vi.fn((url: string, init?: RequestInit) => {
+    if (init?.method === "POST") {
+      keys.push(new Headers(init.headers).get("Idempotency-Key")!);
+      if (failures-- > 0) return Promise.resolve(new Response(JSON.stringify({ detail: "TRADING_STOP_UNAVAILABLE" }), { status: 503 }));
+      return Promise.resolve(new Response(JSON.stringify({ request_id: "r", stop_id: "s", mode: "PAPER", action: "STOP", cause: "USER", generation: 1, revision: 1, state: "REQUEST_PENDING", failure_code: null, recorded_at: "2026-11-08T00:00:00Z" })));
+    }
+    return Promise.resolve(new Response(JSON.stringify(status(url.includes("/live/") ? "LIVE" : "PAPER"))));
+  }));
+  const client = makeControlClient();
+  renderControls(client);
+  fireEvent.click(screen.getByRole("button", { name: t("paperStop") }));
+  await screen.findByText(t("requestFailed"));
+  fireEvent.click(screen.getByRole("button", { name: `${t("paperStop")} — ${t("retry")}` }));
+  await waitFor(() => expect(keys).toHaveLength(2));
+  expect(keys[1]).toBe(keys[0]);
+  await waitFor(() => expect(screen.queryByText(t("requestFailed"))).toBeNull());
+  expect(within(screen.getByRole("button", { name: t("paperStop") }).closest<HTMLElement>(".kill-switch-control")!).getByText(t("storageUnavailable"))).toBeTruthy();
+  client.clear();
+});
+
+
+it("recovers server stop status after remount without automatically resending when storage is blocked", async () => {
+  vi.spyOn(Storage.prototype, "getItem").mockImplementation(() => { throw new DOMException("blocked", "SecurityError"); });
+  let posts = 0;
+  const fetcher = vi.fn((url: string, init?: RequestInit) => {
+    if (init?.method === "POST") { posts++; return Promise.resolve(new Response("{}", { status: 503 })); }
+    return Promise.resolve(new Response(JSON.stringify(status(url.includes("/live/") ? "LIVE" : "PAPER", posts ? "durable-stop" : null))));
+  });
+  vi.stubGlobal("fetch", fetcher);
+  const client = makeControlClient();
+  const first = renderControls(client);
+  fireEvent.click(screen.getByRole("button", { name: t("paperStop") }));
+  await screen.findByText(t("requestFailed"));
+  first.unmount();
+  client.clear();
+  renderControls(client);
+  expect((await screen.findAllByText(t("STOPPED"))).length).toBeGreaterThan(0);
+  expect(posts).toBe(1);
+  client.clear();
+});
+
+
+it.each([false, true])("creates fresh STOP identities after resume despite failed cleanup (remount=%s)", async remount => {
+  vi.spyOn(Storage.prototype, "removeItem").mockImplementation(() => { throw new DOMException("blocked", "SecurityError"); });
+  const receipts = new Map<string, StopReceipt>();
+  const keys: string[] = [];
+  let generation = 0;
+  let stopped = false;
+  const receipt = (action: "STOP" | "RESUME"): StopReceipt => ({ request_id: `request-${generation}`, stop_id: `stop-${generation}`, mode: "PAPER", action, cause: "USER", generation, revision: generation, state: "APPLIED", failure_code: null, recorded_at: "2026-11-08T00:00:00Z" });
+  vi.stubGlobal("fetch", vi.fn((url: string, init?: RequestInit) => {
+    if (init?.method === "POST" && url.endsWith("/stop")) {
+      const key = new Headers(init.headers).get("Idempotency-Key")!;
+      keys.push(key);
+      if (!receipts.has(key)) { generation++; stopped = true; receipts.set(key, receipt("STOP")); }
+      return Promise.resolve(new Response(JSON.stringify(receipts.get(key))));
+    }
+    if (init?.method === "POST" && url.endsWith("/resume")) {
+      stopped = false;
+      return Promise.resolve(new Response(JSON.stringify(receipt("RESUME"))));
+    }
+    if (url.includes("/requests/by-key/")) {
+      const key = decodeURIComponent(new URL(url, "http://localhost").pathname.split("/").at(-1)!);
+      return Promise.resolve(new Response(JSON.stringify(receipts.get(key))));
+    }
+    return Promise.resolve(new Response(JSON.stringify(url.includes("/live/") ? status("LIVE") : status("PAPER", stopped ? `stop-${generation}` : null))));
+  }));
+  const client = makeControlClient();
+  const mount = () => renderControls(client);
+  let view = mount();
+  fireEvent.click(screen.getByRole("button", { name: t("paperStop") }));
+  await waitFor(() => expect(generation).toBe(1));
+  await screen.findByText(t("storageUnavailable"));
+  // Leave the first key in storage even when subsequent writes also fail.
+  vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => { throw new DOMException("full", "QuotaExceededError"); });
+  for (const expected of [2, 3]) {
+    await postResume("PAPER", { status: status("PAPER", `stop-${generation}`), positions: [], snapshot_revision: 0, reconciled_at: null }, window.crypto.randomUUID());
+    expect(stopped).toBe(false);
+    await client.invalidateQueries({ queryKey: ["kill-switch", "owner", "PAPER"] });
+    if (remount) { view.unmount(); client.clear(); view = mount(); }
+    await waitFor(() => expect(screen.getByRole<HTMLButtonElement>("button", { name: t("paperStop") }).disabled).toBe(false));
+    fireEvent.click(screen.getByRole("button", { name: t("paperStop") }));
+    await waitFor(() => expect(generation).toBe(expected));
+    expect(stopped).toBe(true);
+  }
+  expect(new Set(keys).size).toBe(3);
+  expect(screen.queryByText(t("requestFailed"))).toBeNull();
+  client.clear();
+});
+
+it.each(["REQUEST_PENDING", "APPLIED", "missing"] as const)("resolves persisted STOP outcome %s with read-only recovery and no automatic new intent", async outcome => {
+  const keys: string[] = [];
+  let lookups = 0;
+  const receipt: StopReceipt = { request_id: "r", stop_id: "s", mode: "PAPER", action: "STOP", cause: "USER", generation: 1, revision: 1, state: outcome === "APPLIED" ? "APPLIED" : "REQUEST_PENDING", failure_code: null, recorded_at: "2026-11-08T00:00:00Z" };
+  vi.stubGlobal("fetch", vi.fn((url: string, init?: RequestInit) => {
+    if (init?.method === "POST") {
+      keys.push(new Headers(init.headers).get("Idempotency-Key")!);
+      return Promise.resolve(keys.length === 1 ? new Response("{}", { status: 503 }) : new Response(JSON.stringify(receipt)));
+    }
+    if (url.includes("/requests/by-key/")) {
+      lookups++;
+      return Promise.resolve(outcome === "missing" ? new Response(JSON.stringify({ detail: "TRADING_STOP_REQUEST_NOT_FOUND" }), { status: 404 }) : new Response(JSON.stringify(receipt)));
+    }
+    const current = status(url.includes("/live/") ? "LIVE" : "PAPER", keys.length && outcome !== "missing" ? "s" : null);
+    return Promise.resolve(new Response(JSON.stringify(current)));
+  }));
+  const client = makeControlClient();
+  const mount = () => renderControls(client);
+  const first = mount();
+  fireEvent.click(screen.getByRole("button", { name: t("paperStop") }));
+  await screen.findByText(t("requestFailed"));
+  first.unmount(); client.clear(); mount();
+  expect(keys).toHaveLength(1);
+  await waitFor(() => expect(lookups).toBe(1));
+  if (outcome === "missing") {
+    const retry = screen.getByRole<HTMLButtonElement>("button", { name: `${t("paperStop")} — ${t("retry")}` });
+    await waitFor(() => expect(retry.disabled).toBe(false));
+    fireEvent.click(retry);
+    await waitFor(() => expect(keys).toHaveLength(2));
+  } else {
+    await waitFor(() => expect(screen.getByRole<HTMLButtonElement>("button", { name: t("paperStop") }).disabled).toBe(false));
+    expect(keys).toHaveLength(1);
+  }
+  expect(new Set(keys).size).toBe(1);
+  await waitFor(() => expect(screen.queryByText(t("requestFailed"))).toBeNull());
+  client.clear();
+});
+
+it("preserves the recovery key when receipt lookup fails instead of issuing a new STOP", async () => {
+  const key = window.crypto.randomUUID();
+  window.localStorage.setItem("tiewtrade.kill-switch.stop.v1:owner:PAPER", key);
+  let lookupFails = true;
+  const posted: string[] = [];
+  vi.stubGlobal("fetch", vi.fn((url: string, init?: RequestInit) => {
+    if (init?.method === "POST") {
+      posted.push(new Headers(init.headers).get("Idempotency-Key")!);
+      return Promise.resolve(new Response(JSON.stringify({ request_id: "r", stop_id: "s", state: "REQUEST_PENDING" })));
+    }
+    if (url.includes("/requests/by-key/")) return Promise.resolve(new Response(JSON.stringify({ detail: lookupFails ? "TRADING_STOP_UNAVAILABLE" : "TRADING_STOP_REQUEST_NOT_FOUND" }), { status: lookupFails ? 503 : 404 }));
+    return Promise.resolve(new Response(JSON.stringify(status(url.includes("/live/") ? "LIVE" : "PAPER"))));
+  }));
+  const client = makeControlClient();
+  renderControls(client);
+  await screen.findByText(t("requestFailed"));
+  expect(posted).toHaveLength(0);
+  expect(window.localStorage.getItem("tiewtrade.kill-switch.stop.v1:owner:PAPER")).toBe(key);
+  await waitFor(() => expect(screen.getByRole<HTMLButtonElement>("button", { name: `${t("paperStop")} — ${t("retry")}` }).disabled).toBe(false));
+  lookupFails = false;
+  fireEvent.click(screen.getByRole("button", { name: `${t("paperStop")} — ${t("retry")}` }));
+  await waitFor(() => expect(posted).toEqual([key]));
+  client.clear();
+});
+
+
+it("does not continue the previous owner's recovery into a STOP after owner switch", async () => {
+  const key = window.crypto.randomUUID();
+  window.localStorage.setItem("tiewtrade.kill-switch.stop.v1:owner:PAPER", key);
+  let resolveLookup!: (response: Response) => void;
+  let started = false;
+  let posts = 0;
+  vi.stubGlobal("fetch", vi.fn((url: string, init?: RequestInit) => {
+    if (init?.method === "POST") { posts++; return Promise.resolve(new Response("{}")); }
+    if (url.includes("/requests/by-key/")) { started = true; return new Promise<Response>(resolve => { resolveLookup = resolve; }); }
+    return Promise.resolve(new Response(JSON.stringify(status(url.includes("/live/") ? "LIVE" : "PAPER"))));
+  }));
+  const client = makeControlClient();
+  const view = renderControls(client);
+  await waitFor(() => expect(started).toBe(true));
+  view.rerender(<QueryClientProvider client={client}><KillSwitchControls owner="other"/></QueryClientProvider>);
+  await act(async () => {
+    resolveLookup(new Response(JSON.stringify({ request_id: "r", stop_id: "s", mode: "PAPER", action: "STOP", state: "APPLIED" })));
+    await new Promise(resolve => window.setTimeout(resolve, 0));
+  });
+  expect(posts).toBe(0);
+  expect(window.localStorage.getItem("tiewtrade.kill-switch.stop.v1:owner:PAPER")).toBe(key);
+  expect(window.localStorage.getItem("tiewtrade.kill-switch.stop.v1:other:PAPER")).toBeNull();
+  client.clear();
+});
+
+it.each([false, true])("a normal STOP click creates a fresh MANUAL cutoff after stale APPLIED recovery (storage blocked=%s)", async blockedStorage => {
+  const oldKey = "11111111-1111-4111-8111-111111111111";
+  window.localStorage.setItem("tiewtrade.kill-switch.stop.v1:owner:PAPER", oldKey);
+  if (blockedStorage) {
+    vi.spyOn(Storage.prototype, "removeItem").mockImplementation(() => { throw new DOMException("blocked", "SecurityError"); });
+    vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => { throw new DOMException("full", "QuotaExceededError"); });
+  }
+  const old = appliedUserStop;
+  let lookups = 0;
+  // Simulates a MANUAL intent admitted after the old cutoff; only a new STOP covers it.
+  let pendingAfterOldCutoff = true;
+  const posted: string[] = [];
+  vi.stubGlobal("fetch", vi.fn((url: string, init?: RequestInit) => {
+    if (init?.method === "POST") {
+      const key = new Headers(init.headers).get("Idempotency-Key")!;
+      posted.push(key);
+      if (key !== oldKey) pendingAfterOldCutoff = false;
+      return Promise.resolve(new Response(JSON.stringify({ ...old, request_id: "r2", stop_id: "s2", generation: 2, revision: 2 })));
+    }
+    if (url.includes("/requests/by-key/")) { lookups++; return Promise.resolve(new Response(JSON.stringify(old))); }
+    return Promise.resolve(new Response(JSON.stringify(url.includes("/live/") ? status("LIVE") : { ...status("PAPER", "s1"), resume_ready: false })));
+  }));
+  const client = makeControlClient(); renderControls(client);
+  await waitFor(() => expect(screen.getByRole<HTMLButtonElement>("button", { name: t("paperStop") }).disabled).toBe(false));
+  expect(lookups).toBe(1); expect(posted).toHaveLength(0); expect(pendingAfterOldCutoff).toBe(true);
+  fireEvent.click(screen.getByRole("button", { name: t("paperStop") }));
+  await waitFor(() => expect(posted).toHaveLength(1));
+  expect(posted[0]).not.toBe(oldKey); expect(pendingAfterOldCutoff).toBe(false);
+  await waitFor(() => expect(screen.queryByText(t("requestFailed"))).toBeNull());
+  client.clear();
+});
+it("a recovered old receipt cannot retire a newer unknown STOP identity", async () => {
+  const oldKey = "11111111-1111-4111-8111-111111111111";
+  window.localStorage.setItem("tiewtrade.kill-switch.stop.v1:owner:PAPER", oldKey);
+  const old = appliedUserStop;
+  const posted: string[] = [];
+  vi.stubGlobal("fetch", vi.fn((url: string, init?: RequestInit) => {
+    if (init?.method === "POST") { posted.push(new Headers(init.headers).get("Idempotency-Key")!); return Promise.resolve(new Response("{}", { status: 503 })); }
+    if (url.includes("/requests/by-key/")) return Promise.resolve(new Response(JSON.stringify(old)));
+    return Promise.resolve(new Response(JSON.stringify(url.includes("/live/") ? status("LIVE") : { ...status("PAPER", "s1"), resume_ready: false })));
+  }));
+  const client = makeControlClient(); renderControls(client);
+  fireEvent.click(await screen.findByRole("button", { name: t("paperStop") }));
+  await screen.findByText(t("requestFailed"));
+  expect(posted).toHaveLength(1); expect(posted[0]).not.toBe(oldKey);
+  await act(async () => { client.setQueryData(["kill-switch", "owner", "recovery", "PAPER", oldKey], { ...old, recorded_at: "2026-11-08T00:01:00Z" }); await Promise.resolve(); });
+  expect(window.localStorage.getItem("tiewtrade.kill-switch.stop.v1:owner:PAPER")).toBe(posted[0]);
+  fireEvent.click(screen.getByRole("button", { name: `${t("paperStop")} — ${t("retry")}` }));
+  await waitFor(() => expect(posted).toHaveLength(2)); expect(posted[1]).toBe(posted[0]);
+  client.clear();
 });

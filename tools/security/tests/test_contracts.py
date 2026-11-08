@@ -12,6 +12,7 @@ import urllib.error
 from email.message import Message
 from pathlib import Path
 from unittest.mock import patch
+from urllib.response import addinfourl
 
 from tools.security import sarif
 from tools.security.model import Candidate, PolicyError, array, digest, manifest, obj, policy_counts
@@ -20,6 +21,27 @@ from tools.security.system import download_verified, install
 from tools.security.tests.test_adapters import sarif_report
 
 ROOT = Path(__file__).resolve().parents[3]
+RELEASE_URL = "https://github.com/fixture/tool/releases/download/v1/tool.tar.gz"
+
+
+def release_metadata(url: str = RELEASE_URL) -> dict[str, object]:
+    return {
+        "assets": [
+            {
+                "id": 7,
+                "name": url.rsplit("/", 1)[1],
+                "browser_download_url": url,
+                "state": "uploaded",
+                "url": "https://untrusted.invalid/must-not-be-followed",
+            }
+        ]
+    }
+
+
+def binary_response(payload: bytes, content_type: str = "application/octet-stream") -> addinfourl:
+    headers = Message()
+    headers["Content-Type"] = content_type
+    return addinfourl(io.BytesIO(payload), headers, "https://api.github.com/fixture", 200)
 
 
 class ContractTests(unittest.TestCase):
@@ -127,14 +149,33 @@ class ContractTests(unittest.TestCase):
                 "https://github.com/fixture", 503, "private", Message(), None
             )
             with (
+                patch.dict("os.environ", {"GH_TOKEN": "PRIVATE_SENTINEL"}),
                 patch(
-                    "urllib.request.urlopen", side_effect=[transient, io.BytesIO(payload)]
+                    "urllib.request.urlopen",
+                    side_effect=[
+                        transient,
+                        io.BytesIO(json.dumps(release_metadata()).encode()),
+                        binary_response(payload),
+                    ],
                 ) as request,
                 patch("time.sleep"),
             ):
-                download_verified("https://github.com/fixture", target, expected)
-            self.assertEqual(request.call_count, 2)
+                download_verified(RELEASE_URL, target, expected)
+            self.assertEqual(request.call_count, 3)
             self.assertEqual(target.read_bytes(), payload)
+            metadata_request = request.call_args_list[1].args[0]
+            binary_request = request.call_args_list[2].args[0]
+            self.assertEqual(
+                metadata_request.full_url,
+                "https://api.github.com/repos/fixture/tool/releases/tags/v1",
+            )
+            self.assertEqual(
+                binary_request.full_url,
+                "https://api.github.com/repos/fixture/tool/releases/assets/7",
+            )
+            self.assertEqual(binary_request.get_header("Accept"), "application/octet-stream")
+            for call in (metadata_request, binary_request):
+                self.assertIsNone(call.get_header("Authorization"))
             with (
                 patch("urllib.request.urlopen", return_value=io.BytesIO(b"tampered")) as request,
                 self.assertRaisesRegex(PolicyError, "TOOL_CHECKSUM_MISMATCH"),
@@ -142,17 +183,156 @@ class ContractTests(unittest.TestCase):
                 download_verified("https://github.com/fixture", target, expected)
             self.assertEqual(request.call_count, 1)
 
-    def test_permanent_download_error_is_not_retried(self) -> None:
-        with tempfile.TemporaryDirectory() as temp:
-            error = urllib.error.HTTPError(
-                "https://github.com/fixture", 404, "private", Message(), None
-            )
+    def test_release_fallback_covers_transient_errors_only(self) -> None:
+        failures = [
+            urllib.error.HTTPError(RELEASE_URL, code, "private", Message(), None)
+            for code in (408, 429, 500, 502, 503, 504)
+        ] + [urllib.error.URLError("private"), TimeoutError(), ConnectionError()]
+        for failure in failures:
             with (
-                patch("urllib.request.urlopen", side_effect=error) as request,
-                self.assertRaisesRegex(PolicyError, "TOOL_HTTP_ERROR"),
+                self.subTest(failure=type(failure).__name__),
+                tempfile.TemporaryDirectory() as temp,
             ):
-                download_verified("https://github.com/fixture", Path(temp) / "download", "0" * 64)
-            self.assertEqual(request.call_count, 1)
+                with (
+                    patch(
+                        "urllib.request.urlopen",
+                        side_effect=[
+                            failure,
+                            io.BytesIO(json.dumps(release_metadata()).encode()),
+                            binary_response(b"fixture"),
+                        ],
+                    ),
+                    patch("time.sleep"),
+                ):
+                    target = Path(temp) / "archive"
+                    download_verified(RELEASE_URL, target, hashlib.sha256(b"fixture").hexdigest())
+                self.assertEqual(target.read_bytes(), b"fixture")
+
+    def test_direct_success_does_not_query_release_metadata(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            target = Path(temp) / "archive"
+            with patch("urllib.request.urlopen", return_value=io.BytesIO(b"fixture")) as request:
+                download_verified(RELEASE_URL, target, hashlib.sha256(b"fixture").hexdigest())
+            request.assert_called_once_with(RELEASE_URL, timeout=60)
+            self.assertEqual(target.read_bytes(), b"fixture")
+
+    def test_fallback_shares_three_attempt_budget(self) -> None:
+        for metadata_fails in (False, True):
+            with self.subTest(metadata_fails=metadata_fails), tempfile.TemporaryDirectory() as temp:
+                failure = urllib.error.URLError("private")
+                replies: list[object] = [failure]
+                for _ in range(2):
+                    if not metadata_fails:
+                        replies.append(io.BytesIO(json.dumps(release_metadata()).encode()))
+                    replies.append(failure)
+                with (
+                    patch("urllib.request.urlopen", side_effect=replies) as request,
+                    patch("time.sleep") as sleep,
+                    self.assertRaisesRegex(PolicyError, "TOOL_NETWORK_FAILURE"),
+                ):
+                    download_verified(RELEASE_URL, Path(temp) / "archive", "0" * 64)
+                self.assertEqual(request.call_count, 3 if metadata_fails else 5)
+                self.assertEqual(sleep.call_count, 2)
+
+    def test_fallback_rejects_unbound_or_malformed_release_metadata(self) -> None:
+        invalid: list[object] = [None, [], {}, {"assets": {}}, {"assets": []}]
+        for field, value in (
+            ("name", "different.tar.gz"),
+            ("browser_download_url", RELEASE_URL.replace("fixture", "other")),
+            ("state", "new"),
+            ("id", True),
+            ("id", 0),
+            ("id", -1),
+            ("id", "7"),
+        ):
+            metadata = release_metadata()
+            obj(array(metadata["assets"])[0])[field] = value
+            invalid.append(metadata)
+        duplicate = release_metadata()
+        array(duplicate["assets"]).append(copy.deepcopy(array(duplicate["assets"])[0]))
+        invalid.append(duplicate)
+        payloads = [json.dumps(item).encode() for item in invalid]
+        payloads += [b"not json", b"\xff", b" " * (2 * 1024 * 1024 + 1)]
+        for index, payload in enumerate(payloads):
+            with self.subTest(index=index), tempfile.TemporaryDirectory() as temp:
+                with (
+                    patch(
+                        "urllib.request.urlopen",
+                        side_effect=[TimeoutError(), io.BytesIO(payload)],
+                    ) as request,
+                    patch("time.sleep"),
+                    self.assertRaises(PolicyError),
+                ):
+                    download_verified(RELEASE_URL, Path(temp) / "archive", "0" * 64)
+                self.assertEqual(request.call_count, 2)
+
+    def test_fallback_rejects_non_release_paths_and_credentials(self) -> None:
+        for url in (
+            "http://github.com/fixture/tool/releases/download/v1/tool.tar.gz",
+            RELEASE_URL + "?token=private",
+            RELEASE_URL + "#fragment",
+            RELEASE_URL.replace("github.com", "github.com.untrusted.invalid"),
+            RELEASE_URL.replace("github.com", "private@github.com"),
+            RELEASE_URL.replace("github.com", "github.com:443"),
+            RELEASE_URL.replace("/v1/", "/../"),
+            RELEASE_URL.replace("/fixture/", "/%2e%2e/"),
+        ):
+            with self.subTest(url=url), tempfile.TemporaryDirectory() as temp:
+                with (
+                    patch("urllib.request.urlopen", side_effect=TimeoutError()) as request,
+                    patch("time.sleep"),
+                    self.assertRaisesRegex(PolicyError, "INVALID_TOOL_PIN"),
+                ):
+                    download_verified(url, Path(temp) / "archive", "0" * 64)
+                self.assertEqual(request.call_count, 1)
+
+    def test_fallback_never_installs_json_or_wrong_checksum(self) -> None:
+        pin = json.loads((ROOT / ".github/security/tools.json").read_text())["tools"]["gitleaks"]
+        url = pin["platforms"]["Linux-x86_64"]["url"]
+        for content_type in ("application/json", "application/octet-stream"):
+            with self.subTest(content_type=content_type), tempfile.TemporaryDirectory() as temp:
+                target = Path(temp)
+                with (
+                    patch("platform.system", return_value="Linux"),
+                    patch("platform.machine", return_value="x86_64"),
+                    patch(
+                        "urllib.request.urlopen",
+                        side_effect=[
+                            TimeoutError(),
+                            io.BytesIO(json.dumps(release_metadata(url)).encode()),
+                            binary_response(b"tampered", content_type),
+                        ],
+                    ) as request,
+                    patch("time.sleep"),
+                    self.assertRaisesRegex(
+                        PolicyError,
+                        "INVALID_TOOL_RELEASE"
+                        if content_type == "application/json"
+                        else "TOOL_CHECKSUM_MISMATCH",
+                    ),
+                ):
+                    install(ROOT, "gitleaks", target)
+                self.assertEqual(request.call_count, 3)
+                self.assertEqual(list(target.iterdir()), [])
+
+    def test_permanent_download_error_is_not_retried(self) -> None:
+        for code in (401, 403, 404):
+            for stage in ("direct", "metadata", "binary"):
+                with self.subTest(code=code, stage=stage), tempfile.TemporaryDirectory() as temp:
+                    error = urllib.error.HTTPError(RELEASE_URL, code, "private", Message(), None)
+                    replies: list[object] = []
+                    if stage != "direct":
+                        replies.append(TimeoutError())
+                    if stage == "binary":
+                        replies.append(io.BytesIO(json.dumps(release_metadata()).encode()))
+                    replies.append(error)
+                    with (
+                        patch("urllib.request.urlopen", side_effect=replies) as request,
+                        patch("time.sleep"),
+                        self.assertRaisesRegex(PolicyError, "TOOL_HTTP_ERROR"),
+                    ):
+                        download_verified(RELEASE_URL, Path(temp) / "download", "0" * 64)
+                    self.assertEqual(request.call_count, len(replies))
 
     def test_workflow_pins_match_registry_and_security_contract(self) -> None:
         import re

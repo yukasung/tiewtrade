@@ -11,6 +11,7 @@ from tests import e2e_manual_order_app as manual
 from tests.infra.execution_market.test_worker import ready_public_sources
 from tests.infra.protections.test_lifecycle import execute
 from tests.infra.protections.test_validation import publish_price
+from tiewtrade.core.money import Quantity
 from tiewtrade.core.positions import PositionPair
 from tiewtrade.infra.db import DatabaseRole, create_engine_for, user_session
 from tiewtrade.infra.db.session import market_data_session
@@ -158,6 +159,32 @@ async def settle(body: manual.Owner) -> dict[str, object]:
             }
     finally:
         await engine.dispose()
+        await market.dispose()
+
+
+@app.post("/__e2e/protections/coarse-step", status_code=204)
+async def coarse_step(body: manual.Owner) -> None:
+    """Publish a recorded coarse-step market fixture; never mount in production."""
+    manual.guard()
+    market, lease, book, metadata = await ready_public_sources()
+    try:
+        metadata = replace(
+            metadata, market=replace(metadata.market, quantity_step=Quantity.of("0.01", "BTC"))
+        )
+        async with market_data_session(market) as session:
+            now = (await session.execute("SELECT clock_timestamp()")).scalar_one()
+            await publish_input(
+                session,
+                lease,
+                replace(
+                    book,
+                    input_id=book.input_id + 1,
+                    received_at=now,
+                    verified_at=now,
+                ),
+                metadata,
+            )
+    finally:
         await market.dispose()
 
 

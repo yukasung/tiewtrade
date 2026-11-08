@@ -1,0 +1,41 @@
+{
+  "candidate": "2475cc7d03726161d1310318590dd28bb60273ef",
+  "local_diagnostic_only": true,
+  "github_home_http": 200,
+  "github_api_http": 200,
+  "pinned_linux_download_routes": {
+    "gitleaks": 504,
+    "osv": 504,
+    "codeql": 504,
+    "actionlint": 504
+  },
+  "release_metadata": {
+    "all_four_releases_found": true,
+    "each_asset_unique_and_uploaded": true,
+    "all_browser_download_urls_match_pins": true
+  },
+  "explicit_user_agent_no_cache_probe": {
+    "gitleaks": 504,
+    "actionlint": 504
+  },
+  "official_asset_api_downloads": [
+    {
+      "tool": "gitleaks",
+      "http": 200,
+      "bytes": 8230402,
+      "checksum_matches_existing_pin": true
+    },
+    {
+      "tool": "actionlint",
+      "http": 200,
+      "bytes": 2080472,
+      "checksum_matches_existing_pin": true
+    }
+  ],
+  "remaining_unknown": [
+    "Exact HTTP/network failure cause on hosted runner is hidden by current sanitized logs.",
+    "OSV/CodeQL binary downloads via official API not yet verified."
+  ],
+  "security_rerun_started": false,
+  "production_code_changed": false
+}

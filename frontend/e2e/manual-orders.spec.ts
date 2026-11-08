@@ -106,7 +106,7 @@ test("real Paper MARKET BUY/SELL and LIMIT partial→cancel reconcile exact serv
   await capture(page, "paper-th-light-desktop.png");
   await expect(page.getByRole("button", { name: "รายละเอียดออเดอร์" })).toHaveCount(0);
   await page.setViewportSize({ width: 375, height: 844 });
-  const table = page.locator("#manual-orders-table").getByRole("table");
+  const table = page.locator("#trading-activity-table").getByRole("table");
   await expect.poll(() => table.evaluate(node => node.scrollWidth > node.parentElement!.clientWidth)).toBe(true);
   await capture(page, "paper-th-light-mobile.png");
 });

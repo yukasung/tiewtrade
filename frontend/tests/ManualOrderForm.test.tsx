@@ -71,7 +71,7 @@ it("supports arrow-key navigation for order tabs", () => {
 });
 it("submits bracket prices as strings and warns before permanently releasing selected protection", () => {
   const onSubmit = vi.fn();
-  render(<ManualOrderForm base="BTC" bases={["BTC"]} onBase={() => {}} scope={{ expected_wallet_id: "w", expected_episode_id: "e" }} canSubmit={() => true} onSubmit={onSubmit} protectionEnabled protections={[{ protection_id: "g", wallet_id: "w", episode_id: "e", mode: "PAPER", base: "BTC", quote: "USDT", quantity: "1", protected_quantity: "1", state: "ARMED", revision: 3, take_profit_price: "110", stop_loss_price: "90", conflicted: false, failure_code: null, market_ready: true, entry_order_id: null, snapshot_at: "2026-11-04T00:00:00Z" }]}/>);
+  render(<ManualOrderForm base="BTC" bases={["BTC"]} onBase={() => {}} scope={{ expected_wallet_id: "w", expected_episode_id: "e" }} canSubmit={() => true} onSubmit={onSubmit} protectionEnabled protections={[{ protection_id: "g", wallet_id: "w", episode_id: "e", mode: "PAPER", base: "BTC", quote: "USDT", quantity: "1", protected_quantity: "1", executable_quantity: "1", step_residual_quantity: "0", state: "ARMED", revision: 3, take_profit_price: "110", stop_loss_price: "90", conflicted: false, failure_code: null, market_ready: true, entry_order_id: null, snapshot_at: "2026-11-04T00:00:00Z" }]}/>);
   fireEvent.change(screen.getByLabelText(t("budget")), { target: { value: "100" } });
   fireEvent.change(screen.getByLabelText(/Take Profit|Take profit/), { target: { value: "110.000000000000000001" } });
   fireEvent.click(screen.getByRole("button", { name: t("submit") }));

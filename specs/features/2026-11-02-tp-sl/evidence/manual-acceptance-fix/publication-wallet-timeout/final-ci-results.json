@@ -1,0 +1,18 @@
+{
+  "head": "2475cc7d03726161d1310318590dd28bb60273ef",
+  "ci": {
+    "run_id": 42465422721,
+    "conclusion": "success",
+    "backend_passed": 4920,
+    "browser_passed": 42
+  },
+  "security": {
+    "run_id": 42465422723,
+    "attempt": 2,
+    "conclusion": "failure",
+    "reason": "TOOL_NETWORK_FAILURE while installing pinned tools",
+    "complete_scan": false
+  },
+  "merged": false,
+  "feature_completed": false
+}

@@ -32,9 +32,9 @@ export function Tabs<T extends string>({ label, items, active, onChange, disable
         type="button" role="tab" aria-selected={selected} aria-controls={controls}
         tabIndex={selected ? 0 : -1} disabled={disabled || !onChange}
         onKeyDown={event => move(event, index)} onClick={() => onChange?.(item.id)}
-        className={`account-tab inline-flex items-center border-b-2 px-2.5 py-2 text-sm font-medium transition-colors duration-200 ease-in-out ${
+        className={`account-tab bg-transparent inline-flex items-center border-b-2 px-2.5 py-2 text-sm font-medium transition-colors duration-200 ease-in-out ${
           selected ? "border-brand-500 text-brand-500 dark:border-brand-400 dark:text-brand-400" :
-            "border-transparent bg-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+            "border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
         }`}>{item.label}</button>;
     })}
   </nav>;

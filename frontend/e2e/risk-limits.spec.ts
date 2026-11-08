@@ -225,11 +225,13 @@ test("F-19 Paper and Live stops stay separate and UNKNOWN retries the same reque
   await expect(liveButton).toBeVisible();
 
   let committedKey: string | undefined;
+  let committedReceipt: { request_id: string; generation: number } | undefined;
   await page.route("**/api/paper/kill-switch/stop", async route => {
     if (route.request().method() !== "POST") return route.continue();
     committedKey = route.request().headers()["idempotency-key"];
     const response = await route.fetch();
     expect(response.status()).toBe(202);
+    committedReceipt = await response.json() as { request_id: string; generation: number };
     await route.abort("connectionreset");
   }, { times: 1 });
   await paperButton.click();
@@ -242,22 +244,60 @@ test("F-19 Paper and Live stops stay separate and UNKNOWN retries the same reque
     `tiewtrade.kill-switch.stop.v1:${owner}:PAPER`,
   )).toBe(committedKey);
 
-  await page.reload();
+  // Before reload, the lost response is still UNKNOWN: retry must keep its key.
   const retry = page.waitForRequest(request =>
     request.url().endsWith("/api/paper/kill-switch/stop") && request.method() === "POST",
   );
   const replay = page.waitForResponse(response =>
     response.url().endsWith("/api/paper/kill-switch/stop") && response.request().method() === "POST",
   );
-  await page.getByRole("button", { name: "หยุดบอท Paper", exact: true }).click();
+  await page.getByRole("button", { name: "หยุดบอท Paper — ส่งคำขอหยุดเดิมซ้ำ", exact: true }).click();
   expect((await retry).headers()["idempotency-key"]).toBe(committedKey);
   const replayed = await replay;
   expect(replayed.status()).toBe(200);
   const firstStop = await replayed.json() as { request_id: string; generation: number };
+  expect(firstStop).toMatchObject({ request_id: committedReceipt!.request_id, generation: committedReceipt!.generation });
   await expect.poll(() => page.evaluate(
     key => window.localStorage.getItem(key),
     `tiewtrade.kill-switch.stop.v1:${owner}:PAPER`,
   )).toBeNull();
+
+  // A persisted lost ACK has a different recovery path: GET resolves it without POST.
+  let lostKey: string | undefined;
+  let lostReceipt: { request_id: string; generation: number } | undefined;
+  let paperPosts = 0;
+  page.on("request", request => {
+    if (request.url().endsWith("/api/paper/kill-switch/stop") && request.method() === "POST") paperPosts++;
+  });
+  await page.route("**/api/paper/kill-switch/stop", async route => {
+    if (route.request().method() !== "POST") return route.continue();
+    lostKey = route.request().headers()["idempotency-key"];
+    const response = await route.fetch();
+    expect(response.status()).toBe(202);
+    lostReceipt = await response.json() as { request_id: string; generation: number };
+    await route.abort("connectionreset");
+  }, { times: 1 });
+  await paperButton.click();
+  await expect(page.getByRole("alert").filter({ hasText: "ยังไม่ทราบผลการหยุด" })).toBeVisible();
+  expect(lostKey).toBeTruthy();
+  expect(lostKey).not.toBe(committedKey);
+  expect(lostReceipt!.request_id).not.toBe(firstStop.request_id);
+  expect(lostReceipt!.generation).toBe(firstStop.generation + 1);
+  browserErrors.length = 0;
+  const recoveredResponse = page.waitForResponse(response =>
+    new URL(response.url()).pathname === `/api/paper/kill-switch/requests/by-key/${lostKey}`
+      && response.request().method() === "GET",
+  );
+  await page.reload();
+  const recovered = await recoveredResponse;
+  expect(recovered.status()).toBe(200);
+  expect(await recovered.json()).toMatchObject({ request_id: lostReceipt!.request_id, generation: lostReceipt!.generation, mode: "PAPER", action: "STOP" });
+  await expect.poll(() => page.evaluate(
+    key => window.localStorage.getItem(key),
+    `tiewtrade.kill-switch.stop.v1:${owner}:PAPER`,
+  )).toBeNull();
+  await expect(paperButton).toBeEnabled();
+  expect(paperPosts).toBe(1);
 
   await page.getByLabel("คู่เทรด").selectOption("BTC");
   await expect.poll(async () => {
@@ -276,8 +316,9 @@ test("F-19 Paper and Live stops stay separate and UNKNOWN retries the same reque
   const repeated = await repeatedStop;
   expect(repeated.status()).toBe(202);
   const secondStop = await repeated.json() as { request_id: string; generation: number };
-  expect(secondStop.request_id).not.toBe(firstStop.request_id);
-  expect(secondStop.generation).toBe(firstStop.generation + 1);
+  expect(repeated.request().headers()["idempotency-key"]).not.toBe(lostKey);
+  expect(secondStop.request_id).not.toBe(lostReceipt!.request_id);
+  expect(secondStop.generation).toBe(lostReceipt!.generation + 1);
   await expect.poll(async () => {
     const status = await (await page.request.get("/api/paper/kill-switch")).json() as {
       stop_id: string | null;

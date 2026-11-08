@@ -5,12 +5,17 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request
 
-from tiewtrade.core.money import Money, MoneyError, Quantity
+from tiewtrade.core.money import Money, MoneyError, Quantity, align_quantity
 from tiewtrade.core.orders import OrderError
 from tiewtrade.core.positions import PositionPair
-from tiewtrade.core.protections import ProtectionPrices, ProtectionState
+from tiewtrade.core.protections import (
+    ProtectionPrices,
+    ProtectionState,
+    executable_protection_quantity,
+)
 from tiewtrade.infra.auth.throttle import Bucket
 from tiewtrade.infra.db import DatabaseRole, InfraError, repeatable_user_session, user_session
+from tiewtrade.infra.market_data.order_book_storage import read_latest_book
 from tiewtrade.infra.protections.storage import admit_request, load, stored
 from tiewtrade.infra.protections.worker import market_evidence
 from tiewtrade.services.api.db_resources import engine_for, paper_mutation_engine
@@ -186,11 +191,25 @@ async def page(
                 group = stored(row)
                 value = group.value
                 ready = False
+                executable = Quantity.of(0, value.prices.pair.base)
+                residual = None
                 try:
-                    await market_evidence(session, value.prices.pair)
+                    evidence = await market_evidence(session, value.prices.pair)
+                    source = await read_latest_book(session, value.prices.pair)
+                    residual = value.quantity - align_quantity(
+                        value.quantity, source.metadata.market.quantity_step
+                    )
                     ready = True
-                except OrderError:
+                    executable = executable_protection_quantity(
+                        value,
+                        source.metadata.market,
+                        evidence,
+                        filter_reference_price=source.metadata.average_price,
+                    )
+                except (OrderError, MoneyError):
                     pass
+                if value.conflicted:
+                    executable = Quantity.of(0, value.prices.pair.base)
                 output.append(
                     ProtectionView(
                         protection_id=value.protection_id,
@@ -198,7 +217,11 @@ async def page(
                         episode_id=value.scope.episode_id,
                         base=value.prices.pair.base,
                         quantity=value.quantity.as_parts()["quantity"],
-                        protected_quantity=value.quantity.as_parts()["quantity"]
+                        executable_quantity=executable.as_parts()["quantity"],
+                        step_residual_quantity=None
+                        if residual is None
+                        else residual.as_parts()["quantity"],
+                        protected_quantity=executable.as_parts()["quantity"]
                         if not value.conflicted and ready and value.state is ProtectionState.ARMED
                         else "0",
                         state=value.state.value,

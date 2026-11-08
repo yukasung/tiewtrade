@@ -1,0 +1,12 @@
+{
+  "scope": "observed desktop dark tab underline checked in isolated fixture",
+  "active": {
+    "aria_selected": true,
+    "border": "rgb(91, 118, 255)"
+  },
+  "inactive": {
+    "aria_selected": false,
+    "border": "rgba(0, 0, 0, 0)"
+  },
+  "result": "distinct selection styles; no shared tab change needed"
+}

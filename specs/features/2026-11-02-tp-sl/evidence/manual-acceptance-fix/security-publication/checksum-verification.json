@@ -1,0 +1,92 @@
+{
+  "security_run": 42461082621,
+  "head": "f5b3449172b4ba1b216bf41ce9e099e9445cb31a",
+  "blocked": 6,
+  "proof": "All six scanner matches are SHA256 digests of public generated contract/type files; no credential values are included here.",
+  "findings": [
+    {
+      "identity": "bc1eba88e493a034519d6b569d733f1ed05b305301ebb5039687bcd029ab1c1f",
+      "kind": "secret",
+      "rule": "generic-api-key",
+      "commit": "f5b3449172b4ba1b216bf41ce9e099e9445cb31a",
+      "path": "specs/features/2026-11-02-tp-sl/evidence/manual-acceptance-fix/source-manifest-before-stop-review-fix.json",
+      "line": 4,
+      "git_blob": "7584f1db895489884e8bb4311d2a9114e2bdfd1e",
+      "source_path": "backend/openapi.json",
+      "matches_committed_source_sha256": true,
+      "matches_worktree_source_sha256": true,
+      "resolution_proposed": "false_positive",
+      "approval": "Owner explicitly approved Option A for six exact exceptions on 2026-11-08"
+    },
+    {
+      "identity": "8c4e96ed39e751e0a05b20353ea0a320b07f9d6c3d8b8bf1015b8a060c9a94f8",
+      "kind": "secret",
+      "rule": "generic-api-key",
+      "commit": "f5b3449172b4ba1b216bf41ce9e099e9445cb31a",
+      "path": "specs/features/2026-11-02-tp-sl/evidence/manual-acceptance-fix/source-manifest-before-stop-review-fix.json",
+      "line": 16,
+      "git_blob": "7584f1db895489884e8bb4311d2a9114e2bdfd1e",
+      "source_path": "frontend/src/api-types.ts",
+      "matches_committed_source_sha256": true,
+      "matches_worktree_source_sha256": true,
+      "resolution_proposed": "false_positive",
+      "approval": "Owner explicitly approved Option A for six exact exceptions on 2026-11-08"
+    },
+    {
+      "identity": "815875d1e218373ef0cf086527ce97547309754de72559823301fee96eb8d937",
+      "kind": "secret",
+      "rule": "generic-api-key",
+      "commit": "f5b3449172b4ba1b216bf41ce9e099e9445cb31a",
+      "path": "specs/features/2026-11-02-tp-sl/evidence/manual-acceptance-fix/source-manifest-before-refactor.json",
+      "line": 4,
+      "git_blob": "f37f68e2b50445fdfe1580df65928d777495f99a",
+      "source_path": "backend/openapi.json",
+      "matches_committed_source_sha256": true,
+      "matches_worktree_source_sha256": true,
+      "resolution_proposed": "false_positive",
+      "approval": "Owner explicitly approved Option A for six exact exceptions on 2026-11-08"
+    },
+    {
+      "identity": "7111e596674b75d9f69172e5878e56602fa2937a4c1173c23630ec9bd306a64e",
+      "kind": "secret",
+      "rule": "generic-api-key",
+      "commit": "f5b3449172b4ba1b216bf41ce9e099e9445cb31a",
+      "path": "specs/features/2026-11-02-tp-sl/evidence/manual-acceptance-fix/source-manifest-before-refactor.json",
+      "line": 16,
+      "git_blob": "f37f68e2b50445fdfe1580df65928d777495f99a",
+      "source_path": "frontend/src/api-types.ts",
+      "matches_committed_source_sha256": true,
+      "matches_worktree_source_sha256": true,
+      "resolution_proposed": "false_positive",
+      "approval": "Owner explicitly approved Option A for six exact exceptions on 2026-11-08"
+    },
+    {
+      "identity": "03463d4ced017c979f4c4ba8f88a54a256ab15bea3ba6f8e9250aef0cde4d215",
+      "kind": "secret",
+      "rule": "generic-api-key",
+      "commit": "f5b3449172b4ba1b216bf41ce9e099e9445cb31a",
+      "path": "specs/features/2026-11-02-tp-sl/evidence/manual-acceptance-fix/source-manifest.json",
+      "line": 4,
+      "git_blob": "97311c525cb20bd537770038e2f8da4c2c2271c8",
+      "source_path": "backend/openapi.json",
+      "matches_committed_source_sha256": true,
+      "matches_worktree_source_sha256": true,
+      "resolution_proposed": "false_positive",
+      "approval": "Owner explicitly approved Option A for six exact exceptions on 2026-11-08"
+    },
+    {
+      "identity": "0ecbcfe7eb1ffb89253e25c2473e4afba2bee3258e13fe1fd59a240465c2b60f",
+      "kind": "secret",
+      "rule": "generic-api-key",
+      "commit": "f5b3449172b4ba1b216bf41ce9e099e9445cb31a",
+      "path": "specs/features/2026-11-02-tp-sl/evidence/manual-acceptance-fix/source-manifest.json",
+      "line": 16,
+      "git_blob": "97311c525cb20bd537770038e2f8da4c2c2271c8",
+      "source_path": "frontend/src/api-types.ts",
+      "matches_committed_source_sha256": true,
+      "matches_worktree_source_sha256": true,
+      "resolution_proposed": "false_positive",
+      "approval": "Owner explicitly approved Option A for six exact exceptions on 2026-11-08"
+    }
+  ]
+}

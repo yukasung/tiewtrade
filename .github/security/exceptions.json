@@ -744,6 +744,54 @@
       "reason": "Verified SHA256 fingerprint of public tools/security/secrets.py source, not a credential.",
       "approval": "Owner selected approve exact exception and continue on 2026-11-06 for NC-SEC-REF-02, including requirements/plan/validation amendment.",
       "evidence": "specs/features/2026-11-06-security-reference-dependency-remediation/evidence/checksum-exception-proposal.md"
+    },
+    {
+      "kind": "secret",
+      "identity": "bc1eba88e493a034519d6b569d733f1ed05b305301ebb5039687bcd029ab1c1f",
+      "resolution": "false_positive",
+      "reason": "Verified SHA256 fingerprint of public generated contract/type source, not a credential.",
+      "approval": "Owner explicitly approved Option A for the six exact NC-F17-SEC-01 identities on 2026-11-08; see specs/features/2026-11-02-tp-sl/security-checksum-publication-proposal.md",
+      "evidence": "specs/features/2026-11-02-tp-sl/evidence/manual-acceptance-fix/security-publication/checksum-verification.json identity bc1eba88e493a034519d6b569d733f1ed05b305301ebb5039687bcd029ab1c1f"
+    },
+    {
+      "kind": "secret",
+      "identity": "8c4e96ed39e751e0a05b20353ea0a320b07f9d6c3d8b8bf1015b8a060c9a94f8",
+      "resolution": "false_positive",
+      "reason": "Verified SHA256 fingerprint of public generated contract/type source, not a credential.",
+      "approval": "Owner explicitly approved Option A for the six exact NC-F17-SEC-01 identities on 2026-11-08; see specs/features/2026-11-02-tp-sl/security-checksum-publication-proposal.md",
+      "evidence": "specs/features/2026-11-02-tp-sl/evidence/manual-acceptance-fix/security-publication/checksum-verification.json identity 8c4e96ed39e751e0a05b20353ea0a320b07f9d6c3d8b8bf1015b8a060c9a94f8"
+    },
+    {
+      "kind": "secret",
+      "identity": "815875d1e218373ef0cf086527ce97547309754de72559823301fee96eb8d937",
+      "resolution": "false_positive",
+      "reason": "Verified SHA256 fingerprint of public generated contract/type source, not a credential.",
+      "approval": "Owner explicitly approved Option A for the six exact NC-F17-SEC-01 identities on 2026-11-08; see specs/features/2026-11-02-tp-sl/security-checksum-publication-proposal.md",
+      "evidence": "specs/features/2026-11-02-tp-sl/evidence/manual-acceptance-fix/security-publication/checksum-verification.json identity 815875d1e218373ef0cf086527ce97547309754de72559823301fee96eb8d937"
+    },
+    {
+      "kind": "secret",
+      "identity": "7111e596674b75d9f69172e5878e56602fa2937a4c1173c23630ec9bd306a64e",
+      "resolution": "false_positive",
+      "reason": "Verified SHA256 fingerprint of public generated contract/type source, not a credential.",
+      "approval": "Owner explicitly approved Option A for the six exact NC-F17-SEC-01 identities on 2026-11-08; see specs/features/2026-11-02-tp-sl/security-checksum-publication-proposal.md",
+      "evidence": "specs/features/2026-11-02-tp-sl/evidence/manual-acceptance-fix/security-publication/checksum-verification.json identity 7111e596674b75d9f69172e5878e56602fa2937a4c1173c23630ec9bd306a64e"
+    },
+    {
+      "kind": "secret",
+      "identity": "03463d4ced017c979f4c4ba8f88a54a256ab15bea3ba6f8e9250aef0cde4d215",
+      "resolution": "false_positive",
+      "reason": "Verified SHA256 fingerprint of public generated contract/type source, not a credential.",
+      "approval": "Owner explicitly approved Option A for the six exact NC-F17-SEC-01 identities on 2026-11-08; see specs/features/2026-11-02-tp-sl/security-checksum-publication-proposal.md",
+      "evidence": "specs/features/2026-11-02-tp-sl/evidence/manual-acceptance-fix/security-publication/checksum-verification.json identity 03463d4ced017c979f4c4ba8f88a54a256ab15bea3ba6f8e9250aef0cde4d215"
+    },
+    {
+      "kind": "secret",
+      "identity": "0ecbcfe7eb1ffb89253e25c2473e4afba2bee3258e13fe1fd59a240465c2b60f",
+      "resolution": "false_positive",
+      "reason": "Verified SHA256 fingerprint of public generated contract/type source, not a credential.",
+      "approval": "Owner explicitly approved Option A for the six exact NC-F17-SEC-01 identities on 2026-11-08; see specs/features/2026-11-02-tp-sl/security-checksum-publication-proposal.md",
+      "evidence": "specs/features/2026-11-02-tp-sl/evidence/manual-acceptance-fix/security-publication/checksum-verification.json identity 0ecbcfe7eb1ffb89253e25c2473e4afba2bee3258e13fe1fd59a240465c2b60f"
     }
   ]
 }

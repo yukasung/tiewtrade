@@ -338,7 +338,7 @@ candidate gates ที่ไม่เลื่อนและ required CI ยั
 | F-14 | การคิด position, margin, PnL | **Development Complete** | Requirements/plan/validation approved 2026-10-16; M1-M3 and F-15 position/order/reset integration validated. Closed-episode writer replay merged in [PR #32](https://github.com/yukasung/tiewtrade/pull/32) (`eb8c7d8`); financial caller replay merged in [PR #34](https://github.com/yukasung/tiewtrade/pull/34) (`80d5d04`). Final push/PR CI and [post-merge CI](https://github.com/yukasung/tiewtrade/actions/runs/40176371957) passed 6/6 jobs; backend 3270 passed with no retry. Local Failed/Partial evidence remains in [validation](features/2026-10-16-position-margin-pnl/validation.md#post-merge-closeout---2026-10-25). V-17 release workload remains **Pending Full Validation**; not Completed. |
 | F-15 | จำลองการจับคู่ออเดอร์ Paper | **Development Complete** | requirements/NC-F15-01..10 และ plan/validation อนุมัติแล้ว; [M1](features/2026-10-18-paper-order-matching/evidence/m1-core.md)–[M5](features/2026-10-18-paper-order-matching/evidence/m5-candidate.md) ปิด implementation และ Critical/High findings. Candidate ล่าสุดเพิ่ม migration 0038, batch persistence, publisher supervision และ atomic per-owner claim; affected safety 125 tests, follow-up 12 tests, nominal smoke 500 commands/100 owners และ recovery smoke ผ่านโดยไม่มี duplicate fill หรือ balance/position inconsistency. V-1..V-18 และ required CI run #124 attempt 2 ผ่าน; post-merge CI run #125 ผ่านครบ 6 jobs. W1–W3 และ W4 บน final schema คง `Pending Full Validation` ตามคำสั่งเลื่อนไป release checkpoint จึงยังไม่ใช่ Completed. Production order admission/public order route ยังไม่เปิด และ actual unsupported filters ยังคง reject; 2026-10-25 deep-review remediation ใน branch `fix/f15-review-findings` แก้ rebase cursor, execution constraints และ expiry history โดย local full backend candidate ผ่าน 3267 tests และ runtime candidate CI ผ่านครบ 6 jobs ทั้ง push/PR (PR backend 3270 tests); sync main และติดตาม latest-head CI ใน [PR #33](https://github.com/yukasung/tiewtrade/pull/33) ตาม [M5 checkpoint](features/2026-10-18-paper-order-matching/evidence/m5-candidate.md#deep-review-remediation--2026-10-25) ; 2026-11-06 Set4 candidate98ff2f8: existing-profileW1Failed60scycle at pool checkout after100x20baseline; W4Passed0064; W2/W3NotRun pending diagnosis; V19Failed/Partial/PendingFullValidation ; Set4 follow-up: diag3 captured failed cycle; NC-SET4-02 Approved A, standalone R8 opt-in implemented/tested with defaults preserved; targeted safety/config/static passed; one full W1 baseline2000/2021cycles thenFailed publisher WriterLeaseLost (1378.654s total), observed p95 0.571253s >0.250s; W2/W3NotRun/W4Passed0064; NC-SET4-03 heartbeat/metadata safety89+8/static passed; first diagnostic Incomplete preserved; NC-SET4-04 latest A replacement completed3000commands/600cycles/all100financial oracles, Failed p95 469.526ms >250ms and input_lag22 >20; no observer/lease errors, cleanup complete; NC-SET4-05 checkpoint SQL batch/final-tail proposal prepared, awaiting A/B approval before implementation; no production change/full W1 retry |
 | F-16 | สั่งออเดอร์เองผ่านหน้าจอ | **Development Complete — Pending Integration/Full Validation** | requirements/plan/validation Approved 2026-10-25; M1–M4 implementation/review และ local safety/validation ผ่านตาม [M4 evidence](features/2026-10-25-manual-order-entry/evidence/m4-candidate-review.md). เจ้าของสั่ง merge [PR #36](https://github.com/yukasung/tiewtrade/pull/36) เข้า main เป็น `1f16ddb`; final candidate `ab248fe` ผ่าน push/PR CI12/12 และ [post-merge CI](https://github.com/yukasung/tiewtrade/actions/runs/40208544618) ผ่าน6/6. V-19 ผ่าน; V-18 รอ F-18 risk integration และ V-20 Pending Full Validation ที่ release checkpoint/ชุดที่9 จึงยังไม่ Completed. Production NEW admission ยัง fail-closed และ Live execution ไม่เปิด; เก็บ failed attempts และความเสี่ยงย้อนหลังใน M4 |
-| F-17 | TP/SL แบบผูกกับออเดอร์เข้า และแบบตั้งทีหลัง | **Development Complete — Merged / Pending Batch & Release Validation** | (R-09) [requirements](features/2026-11-02-tp-sl/requirements.md) และ NC-F17-01..05 Approved 2026-11-04; [plan](features/2026-11-02-tp-sl/plan.md)/[validation](features/2026-11-02-tp-sl/validation.md) Approved 2026-11-04; NC-F17-06 Approved 2026-11-04; NC-F17-07 Approved แบบ A; domain/DB/API/worker/UI ผ่าน deep review และแก้ runtime findings R1–R4 พร้อม regression tests; migration0064 เพิ่ม durable replacement retry; local backend90 และ targeted financial/race/correction/UI ผ่านตาม [evidence](features/2026-11-02-tp-sl/evidence/feature-candidate.md); R5 Feature validation เพิ่มหลักฐานครบ V-01–16 local targeted; final candidate/review gate/required CI ค้าง; เจ้าของอนุมัติ refactor แล้ว: backend74/frontend27/browser2 ผ่านหลัง refactor; Feature validation ต่อแล้ว: V-05/08/09/11/16 ผ่าน local targeted พร้อมหลักฐานเงินจริง/serve SLA/upgrade; เจ้าของเลือก A 2026-11-05: แก้ late-fill fixture ตาม due/single-owner claim; V-06/10 ผ่าน local targeted พร้อม protection regression39 tests; wrong-scope DB/HTTP passed; migration rollback amendment Approved 2026-11-05: empty roundtrip และ refusal16กรณี passed พร้อม financial/history/RLS preservation; full backend mypy642 files passed; UI/API/lifecycle matrices local passed: core59/API8/DB3/component27/browser6; Thai/English keyboard แบบ A approved และ passed; V-01–16 local passed, final review High CI composition finding fixed: default excludes F-17, dedicated npm/CI step6 tests passed58.2s; PR#46 first candidate6998c22: backend CI24failed/4263passed; test integration repairs targeted74+7passed แต่385bce8 CIยัง20failed/4267passed; แก้ seed helperให้owner-local พร้อม expanded111/SLA2/rollback16passed; 888cdff CIยัง20failed/4268passed; เจ้าของเลือก A หลัง3รอบให้เพิ่ม read-only CI diagnostic (fresh31passed); diagnostic2407df2 CI20failed/4270passedทั้งpush/PR พบforeign-owner candidate20/20ในทุกsnapshot; เจ้าของเลือก A ให้แยก F-17 integration ใช้ฐานว่างในCI คงtests/assertions/runtimeเดิม; collection4290ครบและisolated48passed; V-17 required CI บนcandidateใหม่pending; Batch/Release ยัง Not Run — Pending Full Validation ; 2026-11-06 checkpoint: merged98ff2f8/post-mergeCI42063166018 all6jobs passed, V17Passed; Set4F15W1Failed/W4Passed0064/W2-W3NotRun; integrated-profile NC-SET4-01 pending; see F17 Batch evidence ; Set4 latest: standalone R8 opt-in Approved/tested, one W1 reached2021cycles thenFailed publisher WriterLeaseLost; observed p95 571ms >250ms; W2/W3NotRun/W4Passed0064; V18Partial/Failed; NC-SET4-01 integrated profile open, NC-SET4-02 closed; no production change or rerun ; NC12 internal20 local W1/W2/overflow/shortW3/integratedW4 now Passed under amendments through§23; [aggregate receipt](features/2026-11-02-tp-sl/evidence/recovery-20261106/internal-pilot-local-checkpoint-20261107.md); latest recovery candidate review/requiredCI and opening/Release gates remain pending. |
+| F-17 | TP/SL แบบผูกกับออเดอร์เข้า และแบบตั้งทีหลัง | **Review Findings Refactored — Final CI & Release Pending** | (R-09) [requirements](features/2026-11-02-tp-sl/requirements.md) และ NC-F17-01..05 Approved 2026-11-04; [plan](features/2026-11-02-tp-sl/plan.md)/[validation](features/2026-11-02-tp-sl/validation.md) Approved 2026-11-04; NC-F17-06 Approved 2026-11-04; NC-F17-07 Approved แบบ A; domain/DB/API/worker/UI ผ่าน deep review และแก้ runtime findings R1–R4 พร้อม regression tests; migration0064 เพิ่ม durable replacement retry; local backend90 และ targeted financial/race/correction/UI ผ่านตาม [evidence](features/2026-11-02-tp-sl/evidence/feature-candidate.md); R5 Feature validation เพิ่มหลักฐานครบ V-01–16 local targeted; final candidate/review gate/required CI ค้าง; เจ้าของอนุมัติ refactor แล้ว: backend74/frontend27/browser2 ผ่านหลัง refactor; Feature validation ต่อแล้ว: V-05/08/09/11/16 ผ่าน local targeted พร้อมหลักฐานเงินจริง/serve SLA/upgrade; เจ้าของเลือก A 2026-11-05: แก้ late-fill fixture ตาม due/single-owner claim; V-06/10 ผ่าน local targeted พร้อม protection regression39 tests; wrong-scope DB/HTTP passed; migration rollback amendment Approved 2026-11-05: empty roundtrip และ refusal16กรณี passed พร้อม financial/history/RLS preservation; full backend mypy642 files passed; UI/API/lifecycle matrices local passed: core59/API8/DB3/component27/browser6; Thai/English keyboard แบบ A approved และ passed; V-01–16 local passed, final review High CI composition finding fixed: default excludes F-17, dedicated npm/CI step6 tests passed58.2s; PR#46 first candidate6998c22: backend CI24failed/4263passed; test integration repairs targeted74+7passed แต่385bce8 CIยัง20failed/4267passed; แก้ seed helperให้owner-local พร้อม expanded111/SLA2/rollback16passed; 888cdff CIยัง20failed/4268passed; เจ้าของเลือก A หลัง3รอบให้เพิ่ม read-only CI diagnostic (fresh31passed); diagnostic2407df2 CI20failed/4270passedทั้งpush/PR พบforeign-owner candidate20/20ในทุกsnapshot; เจ้าของเลือก A ให้แยก F-17 integration ใช้ฐานว่างในCI คงtests/assertions/runtimeเดิม; collection4290ครบและisolated48passed; V-17 required CI บนcandidateใหม่pending; Batch/Release ยัง Not Run — Pending Full Validation ; 2026-11-06 checkpoint: merged98ff2f8/post-mergeCI42063166018 all6jobs passed, V17Passed; Set4F15W1Failed/W4Passed0064/W2-W3NotRun; integrated-profile NC-SET4-01 pending; see F17 Batch evidence ; Set4 latest: standalone R8 opt-in Approved/tested, one W1 reached2021cycles thenFailed publisher WriterLeaseLost; observed p95 571ms >250ms; W2/W3NotRun/W4Passed0064; V18Partial/Failed; NC-SET4-01 integrated profile open, NC-SET4-02 closed; no production change or rerun ; NC12 internal20 local W1/W2/overflow/shortW3/integratedW4 now Passed under amendments through§23; [aggregate receipt](features/2026-11-02-tp-sl/evidence/recovery-20261106/internal-pilot-local-checkpoint-20261107.md); latest recovery candidate review/requiredCI and opening/Release gates remain pending. |
 
 ## ชุดที่ 5 — ความเสี่ยงและความปลอดภัย
 
@@ -1283,3 +1283,155 @@ requires owner decision; no security policy changes or automatic retries.
 frontend/contracts/container). Security42392101117 Failed before scans at base identity
 mismatch after main advanced to1237bf6. All jobs finished. Base-refresh proposal awaits
 owner; no extra trial/local migration/PR merge. Local stays0065. Stop receipt uncommitted.
+
+
+### F-17 current blocker checkpoint — 2026-11-08
+
+**Current: Manual Paper acceptance Failed / remediation pending implementation.**
+This supersedes the older next-step instruction to prepare invited access; it does
+not alter passing CI/workload results on their original candidates and profiles.
+Two manual BUYs partially filled and ended EXPIRED; both protections FAILED with
+PROTECTION_SETUP_REJECTED. Stored net0.00131868BTC/step0.00001BTC reproduces
+QUANTITY_NOT_ON_STEP. Local stop authority was not configured; no durable stop
+request was found. Further source review reproduced browser storage errors that
+prevent STOP dispatch and hide the failure. No duplicate economic effect is claimed.
+
+[NC-F17-MANUAL-01 requirements](features/2026-11-02-tp-sl/manual-acceptance-fix-proposal.md)
+MR-01–11 Approved A. The revised
+[plan](features/2026-11-02-tp-sl/manual-acceptance-fix-plan.md) and
+[validation](features/2026-11-02-tp-sl/manual-acceptance-fix-validation.md) remain
+Proposed, including storage-failure recovery and actual stop readiness before
+admission. Quantity/stop source fixes have not been implemented or tested.
+Owner positions and financial history remain intact; publication/financial/
+admission/protection gates are off after manual acceptance. No automatic sale,
+wallet reset, re-arm of FAILED groups or Live order occurred.
+
+Next: owner approval of the revised plan/validation, then implementation/targeted
+safety checks and the existing review/refactor/CI gates. Do not reopen manual Paper
+or schedule invited access from the old checkpoint. Full F17 is not Completed;
+100-account/4h, bot/notification/Live obligations remain Pending Full Validation /
+Dependency. No long workload rerun is required merely to update this status.
+
+
+### F-17 remediation implementation checkpoint — 2026-11-08
+
+Owner approved revised plan/validation. Net-fee aligned sizing, exact residual
+reporting, durable exit sizing, browser-storage-safe STOP and scoped local launcher
+preparation are implemented in an isolated worktree based on current main e6b32bb.
+[Evidence](features/2026-11-02-tp-sl/evidence/manual-acceptance-fix/implementation-checkpoint.md).
+Local scoped tests/static checks pass as recorded; original manual failure remains
+Failed and original owner positions/history are intact. The prepared launcher has
+not been started; owner Paper admission/financial/publication/protection remain off.
+Next: owner review of this fix, then findings/refactor/affected validation according
+to AGENTS.md. Required CI awaits owner-authorized publication; manual replacement
+awaits the approved post-review checkpoint. No commit/push/deployment/Live order.
+F17 is not Completed; original Release/dependency obligations remain pending.
+
+### F-17 STOP review fix — 2026-11-08
+
+Owner reviewed the remediation and authorized fixing the High stale STOP-key
+finding. Fixed locally: fresh identity after resume despite failed journal cleanup,
+server receipt/status recovery after remount, and no old-owner continuation into a
+STOP after account switch.16targeted STOP tests and affected frontend lint/types
+passed; [evidence](features/2026-11-02-tp-sl/evidence/manual-acceptance-fix/stop-review-fix.md).
+Next gate is owner authorization for refactor, followed by affected validation.
+No commit/push/deployment or manual replacement; Paper activation remains closed
+and full F17 Release/dependency obligations remain pending.
+
+### F-17 refactor / manual-profile checkpoint — 2026-11-08
+
+Owner-authorized refactor complete;16STOP tests and affected frontend lint/types
+passed. Candidate now serves owner local with compatible workers; source recovered
+and risk reached READY, preserving selected financial/protection facts. Before
+owner manual actions, found MF-13 expects resume on an actual MANUAL account, but
+F19 source/spec allow only BOT resume. All four Paper gates are off again; no
+agent orders, owner-account type change or reset. Original manual Failed remains.
+[Evidence](features/2026-11-02-tp-sl/evidence/manual-acceptance-fix/refactor-checkpoint.md).
+Next is the owner decision on [MF-13 A/B mapping](features/2026-11-02-tp-sl/manual-profile-clarification.md),
+not a new refactor approval. MF-13 replacement remains Not Run / Pending Clarification;
+Git publication/required CI and full Release dependencies remain pending.
+
+
+### F-17 MF-13 decision — 2026-11-08
+
+Owner approved [MANUAL-compatible option A](features/2026-11-02-tp-sl/manual-profile-clarification.md).
+Clarification resolved; owner STOP/completion and expected unavailable resume are
+pending in one replacement round. Retained isolated BOT proof is scoped separately.
+Original manual Failed, required CI and Release dependencies remain unchanged.
+All four Paper gates off; no agent trading action. Next: owner Paper STOP in local UI.
+
+
+### F-17 owner manual observations / cleanup — 2026-11-08
+
+Approved-A MANUAL STOP/completion, expected disabled resume, owner REPLACE→ARMED
+with0.00131BTC coverage/0.00000868BTC residual, and CANCEL→CANCELED observed.
+No exit/new order during the round; guarded cleanup completed, all four gates off.
+MF-13 remains Partial for observed warning contrast. Required CI/publication and
+Release dependencies pending; F17 is not Completed.
+[Evidence](features/2026-11-02-tp-sl/evidence/manual-acceptance-fix/owner-stop-observation.md).
+Next: address warning contrast and affected validation; Git publication still
+requires owner instruction.
+
+
+### F-17 warning readability correction — 2026-11-08
+
+Restored shared template Alert variant/dark colors by excluding it from the legacy
+role-alert error skin.33affected component tests, types/lint and isolated browser
+light/dark styles passed; no owner-state/business change or repeated manual round.
+[Evidence](features/2026-11-02-tp-sl/evidence/manual-acceptance-fix/alert-readability-checkpoint.md).
+Next: owner-requested final-candidate review, then authorized Git/required CI;
+Release dependencies remain pending. No Completed or merge-ready claim.
+
+
+### F-17 compact protection table — 2026-11-08
+
+Owner-approved Binance-style presentation implemented with current/issues and
+history tabs, compact rows and read-only details; no venue-native OCO claim.
+43component tests, scoped lint/types and10isolated browser scenario groups passed.
+[Checkpoint](features/2026-11-02-tp-sl/evidence/manual-acceptance-fix/table-ui/checkpoint.md).
+Local app stopped/Docker unavailable; no runtime gate opening or account action.
+Next: owner-commanded UI review, local startup, authorized Git/required CI; existing
+Release dependencies remain pending. F17 is not Completed.
+
+
+### F-17 unified trading activity — 2026-11-08
+
+Approved single OPEN/HISTORY navigation with Normal/TP-SL subtabs implemented.
+Separate card removed; warnings and unknown-request recovery remain visible,
+with original identity preserved across navigation.52distinct scoped tests and
+8isolated browser scenarios passed; final lint/types passed. Local serves new UI,
+all four trading gates off. [Evidence](features/2026-11-02-tp-sl/evidence/manual-acceptance-fix/unified-ui/checkpoint.md).
+Next: owner-commanded final UI review; required CI/publication and Release pending.
+No commit/push/merge or F17 Completed claim.
+
+
+### F-17 single-row activity correction — 2026-11-08
+
+Owner-approved one toolbar/one mixed table replaces category subtabs. Real orders
+and app-monitored conditions remain distinct; cross-symbol protection actions use
+their original row.56distinct targeted tests and8isolated browser scenarios passed;
+final lint/types passed. [Evidence](features/2026-11-02-tp-sl/evidence/manual-acceptance-fix/single-row-ui/checkpoint.md).
+Local source served, all four gates off, no agent economic mutation. Next owner-
+commanded UI review; required CI/publication and F17 Release dependencies pending.
+No Completed or merge-ready claim.
+
+
+### F-17 review corrections — 2026-11-08
+
+Owner-requested High stale STOP receipt and Medium queued-exit display findings
+fixed locally.64affected tests, lint/types and6isolated browser cases passed.
+[Evidence](features/2026-11-02-tp-sl/evidence/manual-acceptance-fix/review-corrections/checkpoint.md).
+No agent financial mutation/gate opening or Git publication. Next owner instruction
+for refactor under AGENTS.md; required CI and Release dependencies remain pending.
+F17 is not Completed.
+
+
+### F-17 review-correction refactor — 2026-11-08
+
+Owner-authorized refactor and affected validation complete:64tests,6isolated
+browser cases and scoped lint/types passed. Reused STOP recovery error policy
+and fixture; exit display formatting unchanged.
+[Evidence](features/2026-11-02-tp-sl/evidence/manual-acceptance-fix/review-corrections/refactor-checkpoint.md).
+All gates off; no owner mutations or Git publication. Next owner Git instruction
+for final candidate/required CI; merge and Release dependencies remain gated.
+F17 is not Completed.

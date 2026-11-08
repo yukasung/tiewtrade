@@ -45,6 +45,8 @@ passed. Separate application CI still Failed2fixture/config cases; no merge clai
 วันที่: 2026-11-05
 Requirements: [Approved](requirements.md); implementation: [plan.md](plan.md)
 
+**NC-F17-SEC-NET-01 Approved A 2026-11-08:** [official same-asset API fallback](../2026-11-02-tp-sl/security-release-asset-fallback-proposal.md), keeping exact pins/checksums, total3 attempts, fail-closed verdicts and existing workflow budgets. Targeted checks, four pinned Linux downloads, normal commit/push and one required CI round authorized; local53-test suite/static checks and four real pinned archives Passed ([checkpoint](../2026-11-02-tp-sl/evidence/manual-acceptance-fix/security-network-diagnostic/implementation-checkpoint.md)); final required CI/Security remain Pending.
+
 ## เสร็จหมายถึง
 
 ด่าน Feature V-01..18 ผ่านบน candidate สุดท้ายก่อน merge และ Release checkpoint V-19

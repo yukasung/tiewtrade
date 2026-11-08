@@ -294,7 +294,8 @@ body:has(.app-theme) {
 .auth-brand-caption {
   font-size: var(--app-caption-size);
 }
-.app-theme [role="alert"] {
+/* Shared template alerts own their variant and dark-mode colors. */
+.app-theme [role="alert"]:not(.ui-alert) {
   background: var(--color-error-50);
   color: var(--color-error-600);
   padding: var(--account-space-md);

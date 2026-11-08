@@ -240,6 +240,7 @@ async def test_reset_interruption_rolls_back_and_same_command_recovers(
     reached = asyncio.Event()
     release = asyncio.Event()
     paused = False
+    interruption_timeout: asyncio.Timeout | None = None
 
     async def pause_after_capital_write(
         session: UserSession,
@@ -254,6 +255,9 @@ async def test_reset_interruption_rolls_back_and_same_command_recovers(
             and "INSERT INTO paper_wallet_ledger" in statement
         ):
             paused = True
+            if interruption_timeout is not None:
+                # Inject only after the real write, independent of claim/DB latency.
+                interruption_timeout.reschedule(asyncio.get_running_loop().time() + 0.05)
             reached.set()
             await release.wait()
         return result
@@ -272,13 +276,16 @@ async def test_reset_interruption_rolls_back_and_same_command_recovers(
         with pytest.raises(asyncio.CancelledError):
             await task
     else:
-        with pytest.raises(TimeoutError):
-            async with asyncio.timeout(0.05):
-                await worker.run_paper_wallet_round(
-                    engine=engine_engine,
-                    scan_engine=scan_engine,
-                    worker="reset-timeout",
-                )
+        # A setup watchdog failure must not satisfy the expected injected timeout.
+        async with asyncio.timeout(5):
+            with pytest.raises(TimeoutError):
+                async with asyncio.timeout(None) as interruption_timeout:
+                    await worker.run_paper_wallet_round(
+                        engine=engine_engine,
+                        scan_engine=scan_engine,
+                        worker="reset-timeout",
+                    )
+            assert interruption_timeout is not None and interruption_timeout.expired()
         assert reached.is_set()
 
     async with user_session(api_engine, owner) as session:

@@ -183,7 +183,6 @@
 }
 .trading-table-scroll td { padding: 1rem; color: var(--account-muted-color); font-size: 0.875rem; }
 .trading-history-empty { height: 6rem; text-align: center; }
-.paper-order-panel { min-width: 0; height: 100%; }
 .paper-order-toolbar {
   position: sticky;
   z-index: 2;

@@ -12,6 +12,8 @@ reset writer และ coherent reset readiness/API/UI โดยคง command r
 และ financial lock เดียวกัน ผล reset success ยังไม่ Passed จนผ่าน F-15 V-13/V-14/V-15
 และเกณฑ์ F-13 ที่อ้างกลับครบ; ก่อน integration พร้อม runtime ยังคง ACTIVITY_UNKNOWN
 
+Publication dependency test amendment **Approved 2026-11-08**: [deterministic timeout injection](../2026-11-02-tp-sl/publication-wallet-timeout-proposal.md), preserves V-6/V-9 and all financial rules; targeted cancel/timeout and slow-setup proof Passed ([evidence](../2026-11-02-tp-sl/evidence/manual-acceptance-fix/publication-wallet-timeout/checkpoint.md)); final required CI remains pending.
+
 ## 1. แนวทางและขอบเขต
 
 ใช้ `core` ตรวจทุนและคำนวณยอดด้วย `Money` เท่านั้น, PostgreSQL เป็นแหล่งจริงของ

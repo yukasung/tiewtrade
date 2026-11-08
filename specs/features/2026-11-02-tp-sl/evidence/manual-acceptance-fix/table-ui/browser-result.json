@@ -1,0 +1,76 @@
+{
+  "scope": "isolated real component with synthetic read-only API discovery; no owner session or financial E2E claim",
+  "checks": [
+    {
+      "locale": "th",
+      "width": 1440,
+      "dark": false,
+      "noDocumentOverflow": true,
+      "tableScroll": true
+    },
+    {
+      "locale": "th",
+      "width": 1440,
+      "dark": true,
+      "noDocumentOverflow": true,
+      "tableScroll": true
+    },
+    {
+      "locale": "th",
+      "width": 375,
+      "dark": false,
+      "noDocumentOverflow": true,
+      "tableScroll": true
+    },
+    {
+      "locale": "th",
+      "width": 375,
+      "dark": true,
+      "noDocumentOverflow": true,
+      "tableScroll": true
+    },
+    {
+      "locale": "th",
+      "history": true,
+      "keyboardFocus": true,
+      "liveDetails": true,
+      "removedRowCloses": true
+    },
+    {
+      "locale": "en",
+      "width": 1440,
+      "dark": false,
+      "noDocumentOverflow": true,
+      "tableScroll": true
+    },
+    {
+      "locale": "en",
+      "width": 1440,
+      "dark": true,
+      "noDocumentOverflow": true,
+      "tableScroll": true
+    },
+    {
+      "locale": "en",
+      "width": 375,
+      "dark": false,
+      "noDocumentOverflow": true,
+      "tableScroll": true
+    },
+    {
+      "locale": "en",
+      "width": 375,
+      "dark": true,
+      "noDocumentOverflow": true,
+      "tableScroll": true
+    },
+    {
+      "locale": "en",
+      "history": true,
+      "keyboardFocus": true,
+      "liveDetails": true,
+      "removedRowCloses": true
+    }
+  ],
+  "mutations": 0
+}

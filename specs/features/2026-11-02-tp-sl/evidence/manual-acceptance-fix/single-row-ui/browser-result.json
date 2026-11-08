@@ -1,0 +1,111 @@
+{
+  "scope": "real PaperTradePage/query/recovery and mixed table; synthetic GET reads and chart module stub; not owner financial E2E",
+  "checks": [
+    {
+      "locale": "th",
+      "width": 1440,
+      "dark": false,
+      "singleToolbar": true,
+      "singleTable": true,
+      "desktopAligned": true,
+      "crossSymbolEdit": true,
+      "createChartSymbol": true,
+      "history": true,
+      "modalFocus": true,
+      "noDocumentOverflow": true
+    },
+    {
+      "locale": "th",
+      "width": 1440,
+      "dark": true,
+      "singleToolbar": true,
+      "singleTable": true,
+      "desktopAligned": true,
+      "crossSymbolEdit": true,
+      "createChartSymbol": true,
+      "history": true,
+      "modalFocus": true,
+      "noDocumentOverflow": true
+    },
+    {
+      "locale": "th",
+      "width": 375,
+      "dark": false,
+      "singleToolbar": true,
+      "singleTable": true,
+      "desktopAligned": false,
+      "crossSymbolEdit": true,
+      "createChartSymbol": true,
+      "history": true,
+      "modalFocus": true,
+      "noDocumentOverflow": true
+    },
+    {
+      "locale": "th",
+      "width": 375,
+      "dark": true,
+      "singleToolbar": true,
+      "singleTable": true,
+      "desktopAligned": false,
+      "crossSymbolEdit": true,
+      "createChartSymbol": true,
+      "history": true,
+      "modalFocus": true,
+      "noDocumentOverflow": true
+    },
+    {
+      "locale": "en",
+      "width": 1440,
+      "dark": false,
+      "singleToolbar": true,
+      "singleTable": true,
+      "desktopAligned": true,
+      "crossSymbolEdit": true,
+      "createChartSymbol": true,
+      "history": true,
+      "modalFocus": true,
+      "noDocumentOverflow": true
+    },
+    {
+      "locale": "en",
+      "width": 1440,
+      "dark": true,
+      "singleToolbar": true,
+      "singleTable": true,
+      "desktopAligned": true,
+      "crossSymbolEdit": true,
+      "createChartSymbol": true,
+      "history": true,
+      "modalFocus": true,
+      "noDocumentOverflow": true
+    },
+    {
+      "locale": "en",
+      "width": 375,
+      "dark": false,
+      "singleToolbar": true,
+      "singleTable": true,
+      "desktopAligned": false,
+      "crossSymbolEdit": true,
+      "createChartSymbol": true,
+      "history": true,
+      "modalFocus": true,
+      "noDocumentOverflow": true
+    },
+    {
+      "locale": "en",
+      "width": 375,
+      "dark": true,
+      "singleToolbar": true,
+      "singleTable": true,
+      "desktopAligned": false,
+      "crossSymbolEdit": true,
+      "createChartSymbol": true,
+      "history": true,
+      "modalFocus": true,
+      "noDocumentOverflow": true
+    }
+  ],
+  "mutations": 0,
+  "pageErrors": []
+}

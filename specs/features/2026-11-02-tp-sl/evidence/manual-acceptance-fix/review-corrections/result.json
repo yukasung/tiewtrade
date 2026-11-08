@@ -1,0 +1,57 @@
+{
+  "scope": "actual components; synthetic intercepted API only; no owner account or financial execution",
+  "results": [
+    {
+      "case": "normal STOP after stale APPLIED/active USER",
+      "locale": "th",
+      "blockedStorage": false,
+      "readOnlyRecovery": true,
+      "firstClickPosts": 1,
+      "freshKey": true,
+      "pageErrors": []
+    },
+    {
+      "case": "normal STOP after stale APPLIED/active USER",
+      "locale": "th",
+      "blockedStorage": true,
+      "readOnlyRecovery": true,
+      "firstClickPosts": 1,
+      "freshKey": true,
+      "pageErrors": []
+    },
+    {
+      "case": "normal STOP after stale APPLIED/active USER",
+      "locale": "en",
+      "blockedStorage": false,
+      "readOnlyRecovery": true,
+      "firstClickPosts": 1,
+      "freshKey": true,
+      "pageErrors": []
+    },
+    {
+      "case": "normal STOP after stale APPLIED/active USER",
+      "locale": "en",
+      "blockedStorage": true,
+      "readOnlyRecovery": true,
+      "firstClickPosts": 1,
+      "freshKey": true,
+      "pageErrors": []
+    },
+    {
+      "case": "immutable queued exit vs refreshed metadata/partial fill",
+      "locale": "th",
+      "width": 375,
+      "unchangedExit": "0.99",
+      "filled": "0.8",
+      "mutations": 0
+    },
+    {
+      "case": "immutable queued exit vs refreshed metadata/partial fill",
+      "locale": "en",
+      "width": 375,
+      "unchangedExit": "0.99",
+      "filled": "0.8",
+      "mutations": 0
+    }
+  ]
+}

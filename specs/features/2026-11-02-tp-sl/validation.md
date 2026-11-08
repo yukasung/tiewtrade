@@ -2,7 +2,19 @@
 
 สถานะ: **Approved — เจ้าของอนุมัติ 2026-11-04; NC-F17-06 Approved 2026-11-04**; **NC-SET4-12 Approved A 2026-11-06; §16/18 Approved 2026-11-07 - separate internal checkpoint**
 วันที่: 2026-11-04
+
+NC-F17-MANUAL-01: [validation amendment MF-01–14](manual-acceptance-fix-validation.md)
+**Approved 2026-11-08**; local implementation/check results are recorded in
+[evidence](evidence/manual-acceptance-fix/implementation-checkpoint.md). Owner manual
+replacement/review/remote CI remain pending; requirement approval is not a test pass.
+Local manual round 2026-11-08: **Failed** — two partial BUY orders ended EXPIRED,
+two protections FAILED/PROTECTION_SETUP_REJECTED; pure existing constraint check on
+stored net quantities returned QUANTITY_NOT_ON_STEP. Local stop launcher lacked
+authority flag; no durable stop request found. All four activation gates now off;
+positions/history retained. Diagnosis/proposal are not a successful replacement run.
 อ้างอิง: requirements.md Approved 2026-11-04; plan.md Approved 2026-11-04
+
+NC-F17-SEC-01: **Approved A 2026-11-08** — [six exact public-checksum exceptions](security-checksum-publication-proposal.md), existing policy tests, normal commit/push and one replacement required CI round. No scanner or trading-rule change; CI results remain pending until observed.
 
 ## เกณฑ์ตรวจรับ
 
@@ -27,7 +39,7 @@ Not Run ไม่ใช่ Passed และห้ามส่ง Live order ใ�
 | V-14 | UI truth/accessibility — RQ-11/12 | component tests + browser Paper/Live, ไทย/อังกฤษ, keyboard/focus, mobile/desktop; ARMING/partial/unprotected/feed unavailable/unknown/residual ไม่แสดง protected/closed เกินจริง; admin template state/computed style เมื่อจำเป็น | Feature | Passed local targeted — component27 และ browser6 ผ่าน; ARMING/feed unavailable/EXITING/residual/unknown/failure ไม่แสดง protected/closed เกินจริง; ไทย/อังกฤษ keyboard trap/Escape/return focus, desktop/mobile/light/dark และ Live no mutation; reused shared controls/template |
 | V-15 | Paper complete flow — NC-01 | targeted browser→API→DB→worker→UI: bracket partial fill→trigger→exit, ตั้งทีหลัง→replace→ขายส่วนที่เลือก, cancel, failure/reload recovery; มี assertions เงิน/audit; Live ไม่มี mutation route ไป Paper/venue | Feature | Passed local targeted — browser6 ครอบ bracket partial→trigger→entry cancel→exact exit/cash/audit/replay, standalone replace/cancel, selected two-group SELL→cancel แบบ A, lost receipt/reload และ failure ไม่มี auto-sell; ดู evidence |
 | V-16 | migration/deployment — plan DB | upgrade จาก current head + existing ordinary orders, constraints/grants/immutable history, no protection backfill; protocol disabled ก่อน compatible writer พร้อม, unsafe downgrade ไม่ลบ history | Feature | Passed local targeted — owner-approved empty-only rollback amendment 2026-11-05; F-03 migration7 tests รวม empty down/up สองรอบผ่าน, populated upgrade/default-off/no-backfill/old-writer และ rollback refusal16กรณีผ่าน พร้อมเงิน/position/history/RLS unchanged; ดู evidence |
-| V-17 | affected regressions/static/CI | core matching/positions, real DB F-13–F-19 ที่กระทบ, risk/stop/catalog, API/UI; ruff/format/mypy/import-linter/frontend checks/build/generated types ที่เกี่ยวข้อง; required CI บน final SHA และ review | Feature | Passed on merged52a00fe/98ff2f8 — all4335backend tests and other5jobs. Current uncommitted Set-4 remediation has targeted local evidence; final candidate regression/required CI remain Pending and are not certified by the old run. |
+| V-17 | affected regressions/static/CI | core matching/positions, real DB F-13–F-19 ที่กระทบ, risk/stop/catalog, API/UI; ruff/format/mypy/import-linter/frontend checks/build/generated types ที่เกี่ยวข้อง; required CI บน final SHA และ review | Feature | Passed on recovery merge f15596d — review/fixes/refactor and current-SHA CI6/6 + Security7/7 passed; backend4761 main +95 isolated cases. Retained workload reuse and remaining admission/Release limits are recorded in the merged-candidate reconciliation below; historical runs are preserved. |
 | V-18 | integrated Paper acceptance | full regression/cross-feature E2E ท้ายชุดที่ 4; ใช้ profiles/thresholds ที่อนุมัติของ F-14/F-15/F-16 และหลักฐานที่ยัง valid; protection coverage เพิ่มผ่าน Feature cases ไม่แทน baseline volume/SLA | Batch | Partial / Failed — standaloneF15W1 failed at60s cycle bound; W2/W3NotRun. W4 revalidated Passed on0065, with F-15-only coverage. Integrated profile NC-SET4-01 Approved A; execution pending under the consolidated plan. |
 | V-19 | bot/notifications integration | หลัง F-20/F-21 และช่องทางแจ้งเตือนพร้อม: bot protection failure→close intent→stop, manual failure ไม่ auto-close, ส่งทุกช่องทางที่เปิดจริง; fake/paper execution | Release | Not Run — Pending Dependency / Full Validation; ชุดที่ 9 |
 | V-20 | Live readiness และระบบรวม | F-22–F-24 integration/reconciliation, venue per-pair support/protection mapping, isolation, recovery และ safety gaps ของ Live ต้องปิดตาม spec งาน Live; automated tests ใช้ fixtures/FakeVenue เท่านั้น | Release | Not Run — Pending Dependency / Full Validation; ก่อน Live/ชุดที่ 9 |
@@ -852,3 +864,92 @@ Remaining-fixture full pre-publication scan Passed on4d997e9 in132.892s with
 0blocked/triage/unresolved, unchanged security configuration and no new exception.
 Combined latest-head required CI now next; later isolated backend gates still
 require actual success. Historical failed12e6204 CI is not relabelled.
+
+
+## Merged recovery checkpoint — 2026-11-07
+
+PR59 merged as `f15596df0b1ced53107964a8ed9bb657fda9d336` after owner instruction.
+V-17 current-candidate CI blocker is closed: post-merge CI6/6 and Security7/7Passed;
+backend4761main +95isolated cases passed. Candidate-to-merge tree diff is empty.
+The [merged-candidate reconciliation](evidence/recovery-20261106/internal-pilot-local-checkpoint-20261107.md#merged-candidate-evidence-reconciliation--2026-11-07)
+binds run URLs and retained local campaign evidence to its exact reuse boundary:
+994W4-manifest entries checked,968same/26changed, plus later frontend helpers.
+No historical failure was rewritten and no workload rerun occurred.
+
+Internal D20/W1/amendedW2/overflow/shortW3/W4 remain Passed in their declared scope;
+original100-account/4h obligations and V-19/V-20 dependencies remain Pending Full
+Validation/Dependency. IP-V3 production-admission audit and IP-V9 internal opening
+are not accepted by CI alone. F17 is not Completed. Step1 documentation reconciliation
+is complete; step2 admission audit requires the owner's next instruction.
+
+
+## Internal pilot step2 — 2026-11-07
+
+Production Paper admission/risk source-and-CI audit Passed on f15596d: actual
+TransactionalRiskPolicy at API/bridge/matching and6/6 risk-composition browser tests
+on post-merge CI, alongside financial/retry/isolation regressions. See the
+[step2 audit](evidence/recovery-20261106/internal-pilot-local-checkpoint-20261107.md#step2--paper-admissionrisk-integration-audit--2026-11-07).
+This closes the IP-V3 code/CI integration audit, not target-environment activation
+or IP-V9 opening. F16 V-18 is integration Passed / activation Pending. No source,
+protocol flag, environment or requirement changed; no test/load rerun. Next step3
+access preparation awaits owner instruction; Release/dependency gates remain pending.
+
+
+## Compact protection table UI — 2026-11-08
+
+Owner approved [UI plan/validation](protection-table-ui-plan.md). Implementation
+checkpoint: [table evidence](evidence/manual-acceptance-fix/table-ui/checkpoint.md).
+43component tests, typecheck/scoped lint and isolated light/dark bilingual browser
+proof passed. Real-DB browser cases not rerun (Docker unavailable); owner local
+startup and final UI review/required CI pending. No trading/Release pass invented.
+
+
+## Unified order / TP-SL activity UI — 2026-11-08
+
+Owner-approved [plan and Feature criteria](unified-trading-activity-ui-plan.md).
+[Evidence](evidence/manual-acceptance-fix/unified-ui/checkpoint.md):52distinct
+component/session/journal tests passed across affected checks;8isolated browser
+scenarios passed, zero mutation requests/page errors; lint/types passed. No new
+financial real-DB/owner acceptance claimed. Final UI review/required CI pending,
+Batch/Release/dependencies unchanged. Local health200, all four gates off.
+
+
+## Single-row activity UI — 2026-11-08
+
+Owner-approved [plan/Feature validation](single-row-activity-ui-amendment.md).
+[Checkpoint](evidence/manual-acceptance-fix/single-row-ui/checkpoint.md):56distinct
+targeted component/session/journal cases,8isolated bilingual/theme/viewport browser
+scenarios, final typecheck/scoped lint passed. One desktop toolbar row and one
+mixed table verified; cross-symbol edit/create identity covered. No new economic
+real-DB/owner acceptance claimed; required review/CI/Release gates remain pending.
+
+
+## Review corrections after single-row UI — 2026-11-08
+
+Review found High stale STOP receipt consuming a fresh click and Medium queued
+exit quantity not displayed. Owner instructed fixes;
+[checkpoint](evidence/manual-acceptance-fix/review-corrections/checkpoint.md) records
+64affected passing tests, final lint/types and6synthetic browser cases. Prior
+source manifests/results retained on their original candidates. Final source
+awaits owner-authorized refactor and eventual required CI; Batch/Release/dependency
+requirements remain pending, no Completed claim.
+
+
+## Post-review refactor validation — 2026-11-08
+
+Owner-authorized refactor complete; [checkpoint](evidence/manual-acceptance-fix/review-corrections/refactor-checkpoint.md).
+64affected tests and6synthetic browser cases passed after refactor; lint/types
+passed. Financial/server contracts unchanged; prior valid evidence retained in
+scope. Required CI on final published SHA and Release/dependency gates pending.
+No owner account campaign, trading activation or Git publication performed.
+
+
+## Publication authorization — 2026-11-08
+
+Owner answered “เริ่มทำ” to the explicit next commit/push/required-CI step.
+Publish the reviewed/fixed/refactored F17 candidate on fix/f17-manual-acceptance
+with related source, tests and existing evidence; no dependency links/private
+operator state. Base e6b32bb equals origin/main at prepublication check. Required
+CI results will be reported with exact SHA/run links after publication per AGENTS;
+local proof is not substituted. Merge remains separately owner-authorized.
+Release/dependency gates and historical failures remain unchanged.

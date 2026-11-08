@@ -1,0 +1,9 @@
+<!doctype html><html><body style="margin:0"><div id="root"></div><script type="module">
+import React from 'react'; import {createRoot} from 'react-dom/client';
+import {QueryClient,QueryClientProvider} from '@tanstack/react-query';
+import {PaperTradePage} from '/src/PaperTradePage.tsx';
+import {manualOrderI18n} from '/src/manualOrderMessages.ts';
+import '/src/styles/admin-theme.css'; import '/src/CandlestickChartPanel.css';
+function Preview(){const [,update]=React.useState(0);window.preview={language:async value=>{await manualOrderI18n.changeLanguage(value);update(v=>v+1)}};return React.createElement('main',{className:'app-theme'},React.createElement(PaperTradePage,{owner:'fixture-owner'}));}
+createRoot(document.getElementById('root')).render(React.createElement(QueryClientProvider,{client:new QueryClient({defaultOptions:{queries:{retry:false}}})},React.createElement(Preview)));
+</script></body></html>
