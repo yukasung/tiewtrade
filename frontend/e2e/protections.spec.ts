@@ -318,7 +318,7 @@ test("failed standalone request warns without selling assets and survives reload
   const status = await (await page.request.get(`/api/paper/protection-requests/${request.request_id}`)).json() as { state: string };
   expect(status.state).toBe("REJECTED");
   await page.reload();
-  await expect(panel.getByText("ยังไม่มี TP/SL", { exact: true })).toBeVisible();
+  await expect(panel.getByText("ไม่มีออเดอร์เปิดอยู่หรือ TP/SL ที่กำลังทำงานหรือมีปัญหา", { exact: true })).toBeVisible();
   const trade = await (await page.request.get("/api/paper/trade?base=BTC")).json() as { wallet: { episode_id: string; balance: string; base_balances: Array<{ asset: string; held: string; reserved: string; protection_allocated: string; available: string }> } };
   expect(trade.wallet.balance).toBe("9900");
   expect(trade.wallet.base_balances.find(row => row.asset === "BTC")).toMatchObject({ held: "0.999", reserved: "0", protection_allocated: "0", available: "0.999" });
