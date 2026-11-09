@@ -1,0 +1,10 @@
+{
+  "production_base": "de3bdcb6b9d9187ee9a06b5f7dcb43387f5d8e98",
+  "status": "two owner-authorized publication findings fixed;65targeted tests/static checks passed; uncommitted; refactor approval pending",
+  "files": {
+    "backend/tests/infra/execution_market/remaining_paper_campaign.py": "61a02bf643c7025f7c445793f6a61d98ea7ccc5babfc9c8abccce02d731fb7d7",
+    "backend/tests/infra/execution_market/remaining_paper_restore.py": "81000b7e12e8b02d459a676fbed7fec4dd750d6c7aaa044f77dac5a28a0f66d8",
+    "backend/tests/infra/execution_market/remaining_paper_cleanup_diagnostic.py": "99f12c88e00eb041de299d949d156913b29b5bfda1396d7e823db7fd9d8c7258",
+    "backend/tests/infra/execution_market/test_remaining_paper_publication_regressions.py": "20b10fd1cd49aad18f9b23371dfba5c302a3921c5f3422351dd7f0114476ea9b"
+  }
+}

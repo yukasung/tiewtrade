@@ -1,0 +1,114 @@
+{
+  "passed": true,
+  "errors": [],
+  "violations": [],
+  "incomplete": [],
+  "processes": [
+    {
+      "file": "parent.owned-pools.json",
+      "pid": 3985,
+      "passed": true
+    },
+    {
+      "file": "worker-0.owned-pools.json",
+      "pid": 4092,
+      "passed": true
+    },
+    {
+      "file": "worker-1.owned-pools.json",
+      "pid": 4093,
+      "passed": true
+    },
+    {
+      "file": "worker-2.owned-pools.json",
+      "pid": 4094,
+      "passed": true
+    },
+    {
+      "file": "worker-3.owned-pools.json",
+      "pid": 4095,
+      "passed": true
+    },
+    {
+      "file": "worker-4.owned-pools.json",
+      "pid": 4096,
+      "passed": true
+    },
+    {
+      "file": "worker-5.owned-pools.json",
+      "pid": 4097,
+      "passed": true
+    },
+    {
+      "file": "worker-6.owned-pools.json",
+      "pid": 4098,
+      "passed": true
+    },
+    {
+      "file": "worker-7.owned-pools.json",
+      "pid": 4099,
+      "passed": true
+    },
+    {
+      "file": "worker-8.owned-pools.json",
+      "pid": 4100,
+      "passed": true
+    },
+    {
+      "file": "worker-9.owned-pools.json",
+      "pid": 4101,
+      "passed": true
+    },
+    {
+      "file": "worker-10.owned-pools.json",
+      "pid": 4102,
+      "passed": true
+    },
+    {
+      "file": "worker-11.owned-pools.json",
+      "pid": 4103,
+      "passed": true
+    },
+    {
+      "file": "worker-12.owned-pools.json",
+      "pid": 4104,
+      "passed": true
+    },
+    {
+      "file": "worker-13.owned-pools.json",
+      "pid": 4105,
+      "passed": true
+    },
+    {
+      "file": "worker-14.owned-pools.json",
+      "pid": 4106,
+      "passed": true
+    },
+    {
+      "file": "worker-15.owned-pools.json",
+      "pid": 4107,
+      "passed": true
+    },
+    {
+      "file": "worker-16.owned-pools.json",
+      "pid": 4108,
+      "passed": true
+    },
+    {
+      "file": "worker-17.owned-pools.json",
+      "pid": 4109,
+      "passed": true
+    },
+    {
+      "file": "worker-18.owned-pools.json",
+      "pid": 4110,
+      "passed": true
+    },
+    {
+      "file": "worker-19.owned-pools.json",
+      "pid": 4111,
+      "passed": true
+    }
+  ],
+  "worker_process_count": 20
+}

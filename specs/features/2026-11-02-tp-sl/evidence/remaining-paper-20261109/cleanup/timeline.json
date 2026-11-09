@@ -1,0 +1,370 @@
+[
+  {
+    "stage": "before_target_connections",
+    "at": "2026-11-09T14:38:37.571792+00:00",
+    "monotonic": 2245.04318725,
+    "backends": []
+  },
+  {
+    "stage": "initial_empty_guard_closed",
+    "at": "2026-11-09T14:38:37.601229+00:00",
+    "monotonic": 2245.072620375,
+    "backends": []
+  },
+  {
+    "stage": "manifest_defaults_closed",
+    "at": "2026-11-09T14:38:37.603635+00:00",
+    "monotonic": 2245.075027541,
+    "backends": []
+  },
+  {
+    "stage": "parent_before_shutdown",
+    "at": "2026-11-09T14:38:38.026628+00:00",
+    "monotonic": 2245.498023875,
+    "backends": [
+      {
+        "pid": 5130,
+        "role": "tiewtrade_migrator",
+        "state": "idle",
+        "backend_type": "client backend",
+        "application_name": "",
+        "wait_event_type": "Client",
+        "wait_event": "ClientRead",
+        "transaction_open": false
+      },
+      {
+        "pid": 5131,
+        "role": "tiewtrade_market_data",
+        "state": "idle",
+        "backend_type": "client backend",
+        "application_name": "",
+        "wait_event_type": "Client",
+        "wait_event": "ClientRead",
+        "transaction_open": false
+      },
+      {
+        "pid": 5132,
+        "role": "tiewtrade_api",
+        "state": "idle",
+        "backend_type": "client backend",
+        "application_name": "",
+        "wait_event_type": "Client",
+        "wait_event": "ClientRead",
+        "transaction_open": false
+      },
+      {
+        "pid": 5133,
+        "role": "tiewtrade_api",
+        "state": "idle",
+        "backend_type": "client backend",
+        "application_name": "",
+        "wait_event_type": "Client",
+        "wait_event": "ClientRead",
+        "transaction_open": false
+      },
+      {
+        "pid": 5134,
+        "role": "tiewtrade_engine",
+        "state": "idle",
+        "backend_type": "client backend",
+        "application_name": "",
+        "wait_event_type": "Client",
+        "wait_event": "ClientRead",
+        "transaction_open": false
+      },
+      {
+        "pid": 5135,
+        "role": "tiewtrade_engine_scan",
+        "state": "idle",
+        "backend_type": "client backend",
+        "application_name": "",
+        "wait_event_type": "Client",
+        "wait_event": "ClientRead",
+        "transaction_open": false
+      },
+      {
+        "pid": 5136,
+        "role": "tiewtrade_api",
+        "state": "idle",
+        "backend_type": "client backend",
+        "application_name": "",
+        "wait_event_type": "Client",
+        "wait_event": "ClientRead",
+        "transaction_open": false
+      },
+      {
+        "pid": 5137,
+        "role": "tiewtrade_api",
+        "state": "idle",
+        "backend_type": "client backend",
+        "application_name": "",
+        "wait_event_type": "Client",
+        "wait_event": "ClientRead",
+        "transaction_open": false
+      },
+      {
+        "pid": 5138,
+        "role": "tiewtrade_auth",
+        "state": "idle",
+        "backend_type": "client backend",
+        "application_name": "",
+        "wait_event_type": "Client",
+        "wait_event": "ClientRead",
+        "transaction_open": false
+      },
+      {
+        "pid": 5139,
+        "role": "tiewtrade_api",
+        "state": "idle",
+        "backend_type": "client backend",
+        "application_name": "",
+        "wait_event_type": "Client",
+        "wait_event": "ClientRead",
+        "transaction_open": false
+      },
+      {
+        "pid": 5140,
+        "role": "tiewtrade_api",
+        "state": "idle",
+        "backend_type": "client backend",
+        "application_name": "",
+        "wait_event_type": "Client",
+        "wait_event": "ClientRead",
+        "transaction_open": false
+      }
+    ]
+  },
+  {
+    "stage": "intake_closed",
+    "at": "2026-11-09T14:38:38.068501+00:00",
+    "monotonic": 2245.53989725,
+    "backends": [
+      {
+        "pid": 5130,
+        "role": "tiewtrade_migrator",
+        "state": "idle",
+        "backend_type": "client backend",
+        "application_name": "",
+        "wait_event_type": "Client",
+        "wait_event": "ClientRead",
+        "transaction_open": false
+      },
+      {
+        "pid": 5131,
+        "role": "tiewtrade_market_data",
+        "state": "idle",
+        "backend_type": "client backend",
+        "application_name": "",
+        "wait_event_type": "Client",
+        "wait_event": "ClientRead",
+        "transaction_open": false
+      },
+      {
+        "pid": 5133,
+        "role": "tiewtrade_api",
+        "state": "idle",
+        "backend_type": "client backend",
+        "application_name": "",
+        "wait_event_type": "Client",
+        "wait_event": "ClientRead",
+        "transaction_open": false
+      },
+      {
+        "pid": 5134,
+        "role": "tiewtrade_engine",
+        "state": "idle",
+        "backend_type": "client backend",
+        "application_name": "",
+        "wait_event_type": "Client",
+        "wait_event": "ClientRead",
+        "transaction_open": false
+      },
+      {
+        "pid": 5135,
+        "role": "tiewtrade_engine_scan",
+        "state": "idle",
+        "backend_type": "client backend",
+        "application_name": "",
+        "wait_event_type": "Client",
+        "wait_event": "ClientRead",
+        "transaction_open": false
+      }
+    ]
+  },
+  {
+    "stage": "disposed_MARKET_DATA",
+    "at": "2026-11-09T14:38:38.073134+00:00",
+    "monotonic": 2245.544529208,
+    "backends": [
+      {
+        "pid": 5130,
+        "role": "tiewtrade_migrator",
+        "state": "idle",
+        "backend_type": "client backend",
+        "application_name": "",
+        "wait_event_type": "Client",
+        "wait_event": "ClientRead",
+        "transaction_open": false
+      },
+      {
+        "pid": 5133,
+        "role": "tiewtrade_api",
+        "state": "idle",
+        "backend_type": "client backend",
+        "application_name": "",
+        "wait_event_type": "Client",
+        "wait_event": "ClientRead",
+        "transaction_open": false
+      },
+      {
+        "pid": 5134,
+        "role": "tiewtrade_engine",
+        "state": "idle",
+        "backend_type": "client backend",
+        "application_name": "",
+        "wait_event_type": "Client",
+        "wait_event": "ClientRead",
+        "transaction_open": false
+      },
+      {
+        "pid": 5135,
+        "role": "tiewtrade_engine_scan",
+        "state": "idle",
+        "backend_type": "client backend",
+        "application_name": "",
+        "wait_event_type": "Client",
+        "wait_event": "ClientRead",
+        "transaction_open": false
+      }
+    ]
+  },
+  {
+    "stage": "disposed_MIGRATOR",
+    "at": "2026-11-09T14:38:38.077399+00:00",
+    "monotonic": 2245.548794333,
+    "backends": [
+      {
+        "pid": 5133,
+        "role": "tiewtrade_api",
+        "state": "idle",
+        "backend_type": "client backend",
+        "application_name": "",
+        "wait_event_type": "Client",
+        "wait_event": "ClientRead",
+        "transaction_open": false
+      },
+      {
+        "pid": 5134,
+        "role": "tiewtrade_engine",
+        "state": "idle",
+        "backend_type": "client backend",
+        "application_name": "",
+        "wait_event_type": "Client",
+        "wait_event": "ClientRead",
+        "transaction_open": false
+      },
+      {
+        "pid": 5135,
+        "role": "tiewtrade_engine_scan",
+        "state": "idle",
+        "backend_type": "client backend",
+        "application_name": "",
+        "wait_event_type": "Client",
+        "wait_event": "ClientRead",
+        "transaction_open": false
+      }
+    ]
+  },
+  {
+    "stage": "disposed_API",
+    "at": "2026-11-09T14:38:38.081456+00:00",
+    "monotonic": 2245.552851291,
+    "backends": [
+      {
+        "pid": 5134,
+        "role": "tiewtrade_engine",
+        "state": "idle",
+        "backend_type": "client backend",
+        "application_name": "",
+        "wait_event_type": "Client",
+        "wait_event": "ClientRead",
+        "transaction_open": false
+      },
+      {
+        "pid": 5135,
+        "role": "tiewtrade_engine_scan",
+        "state": "idle",
+        "backend_type": "client backend",
+        "application_name": "",
+        "wait_event_type": "Client",
+        "wait_event": "ClientRead",
+        "transaction_open": false
+      }
+    ]
+  },
+  {
+    "stage": "disposed_ENGINE",
+    "at": "2026-11-09T14:38:38.085337+00:00",
+    "monotonic": 2245.556731666,
+    "backends": [
+      {
+        "pid": 5135,
+        "role": "tiewtrade_engine_scan",
+        "state": "idle",
+        "backend_type": "client backend",
+        "application_name": "",
+        "wait_event_type": "Client",
+        "wait_event": "ClientRead",
+        "transaction_open": false
+      }
+    ]
+  },
+  {
+    "stage": "disposed_ENGINE_SCAN",
+    "at": "2026-11-09T14:38:38.089302+00:00",
+    "monotonic": 2245.560694458,
+    "backends": []
+  },
+  {
+    "stage": "pool_observer_closed",
+    "at": "2026-11-09T14:38:38.092243+00:00",
+    "monotonic": 2245.563636666,
+    "backends": []
+  },
+  {
+    "stage": "one_shot_cleanup",
+    "at": "2026-11-09T14:38:38.093378+00:00",
+    "monotonic": 2245.564771458,
+    "backends": []
+  },
+  {
+    "stage": "post_cleanup_0.05",
+    "at": "2026-11-09T14:38:38.147080+00:00",
+    "monotonic": 2245.618481041,
+    "backends": []
+  },
+  {
+    "stage": "post_cleanup_0.25",
+    "at": "2026-11-09T14:38:38.347268+00:00",
+    "monotonic": 2245.81867425,
+    "backends": []
+  },
+  {
+    "stage": "post_cleanup_1.0",
+    "at": "2026-11-09T14:38:39.096618+00:00",
+    "monotonic": 2246.568029041,
+    "backends": []
+  },
+  {
+    "stage": "post_cleanup_5.0",
+    "at": "2026-11-09T14:38:43.099135+00:00",
+    "monotonic": 2250.570630166,
+    "backends": []
+  },
+  {
+    "stage": "post_cleanup_15.0",
+    "at": "2026-11-09T14:38:53.098355+00:00",
+    "monotonic": 2260.569913666,
+    "backends": []
+  }
+]

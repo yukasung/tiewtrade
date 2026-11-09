@@ -1,0 +1,13 @@
+{
+  "head": "de3bdcb6b9d9187ee9a06b5f7dcb43387f5d8e98",
+  "source_status": [
+    "?? backend/tests/infra/execution_market/remaining_paper_campaign.py",
+    "?? backend/tests/infra/execution_market/remaining_paper_cleanup_diagnostic.py",
+    "?? backend/tests/infra/execution_market/remaining_paper_restore.py",
+    "?? backend/tests/infra/execution_market/test_remaining_paper_campaign.py",
+    "?? backend/tests/infra/execution_market/test_remaining_paper_cleanup_diagnostic.py",
+    "?? backend/tests/infra/execution_market/test_remaining_paper_cleanup_identity.py"
+  ],
+  "diff_sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+  "inventory_sha256": "a4cbe191ee90c06ee47de165d608b8e75e9d66f4f46def8eb92e64293e63432b"
+}

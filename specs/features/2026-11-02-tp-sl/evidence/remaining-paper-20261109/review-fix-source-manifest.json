@@ -1,0 +1,13 @@
+{
+  "production_base": "de3bdcb6b9d9187ee9a06b5f7dcb43387f5d8e98",
+  "status": "owner-authorized review finding fixes; targeted validation passed; refactor not yet authorized",
+  "files": {
+    "backend/tests/infra/execution_market/remaining_paper_campaign.py": "597e7a124939fbfdf7279e7fd9d8eb461b7ccfb8307f70e4037377f2243f4e44",
+    "backend/tests/infra/execution_market/remaining_paper_restore.py": "fc2155f6ed82e416a7bdf1dc4bc39b8637f9a2ad8adafa8c09e30dbeecdef15c",
+    "backend/tests/infra/execution_market/remaining_paper_cleanup_diagnostic.py": "cba677fbc7a4c3dd3423969e224c3eb1c1090465473e08baf268698d0592cd92",
+    "backend/tests/infra/execution_market/test_remaining_paper_review_regressions.py": "3a294c8875e70fd6621941c14728002111450c66dee0a50895b42006361008ca",
+    "backend/tests/infra/execution_market/test_remaining_paper_cleanup_identity.py": "82b878ae3feb0f5f676f27c6c33985269d8181b184a58687cddd0b94660cc82d",
+    "backend/tests/infra/execution_market/test_remaining_paper_cleanup_diagnostic.py": "20e5e672f8692b2383cac6adf5701fa2996d3375be2b0e5574d7127da97ed6d4",
+    "backend/tests/infra/execution_market/test_remaining_paper_campaign.py": "8d8dd17a8b2b2e12957772615c912ae5a4ac3989ae775c175981162ce1c343c7"
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "date": "2026-11-09",
+  "base_head": "de3bdcb6b9d9187ee9a06b5f7dcb43387f5d8e98",
+  "candidate_scope": "unchanged production/schema/dependency sources; uncommitted harness adaptation recorded in per-phase inventory/binding",
+  "owner_window": "owner confirmed paused unrelated build/test/workload before controlled20",
+  "environment": "fresh Python3.12.15 venv from uv.lock; existing PostgreSQL and dedicated fixture Redis started; no owner app/worker started",
+  "checks": {
+    "initial_preflight_profile_and_wiring": "125passed (121existing+4new), includes controlled preflight cancellation/no-workload-on-failure",
+    "final_wiring_and_candidate_binding": "5passed; overlaps original4, adds1binding case",
+    "real_db_initial": "50passed/2failed missing TIEWTRADE_REDIS_URL_API; source removed",
+    "real_db_affected_recheck": "2passed after explicit local fixture Redis config; source removed",
+    "static": "Ruff, format, MYPYPATH=src mypy passed final3harness/testfiles"
+  },
+  "limitations": [
+    "No campaign result implied by preparation",
+    "Original missing-worktree step1-2 artifacts not recovered",
+    "No Git publication or changes to owner accounts/trading gates"
+  ],
+  "remaining": "one CONTROLLED20; only if passed one SMOKE/D20 then one W4; stop on any failure"
+}

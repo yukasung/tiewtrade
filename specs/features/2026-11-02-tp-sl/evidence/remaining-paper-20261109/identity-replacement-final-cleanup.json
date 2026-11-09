@@ -1,0 +1,19 @@
+{
+  "databases": [
+    "tiewtrade_internal20_a_w4_250ed64563",
+    "tiewtrade_internal20_restored_fc8e50a2a38a",
+    "tiewtrade_internal20_a_d20_identity_f80261ea3a"
+  ],
+  "remaining": [],
+  "forced_termination": false,
+  "restored_fixture_removal": [
+    {
+      "database": "tiewtrade_internal20_restored_fc8e50a2a38a",
+      "before_drop": {
+        "connections": 0,
+        "locks": 0
+      },
+      "removed": true
+    }
+  ]
+}

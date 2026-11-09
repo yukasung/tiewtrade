@@ -1,0 +1,10 @@
+{
+  "observation": "after all campaign/launcher processes exited; separate from original cleanup",
+  "database": "tiewtrade_internal20_a_smoke_f31667ff90",
+  "connections": 0,
+  "advisory_locks": 0,
+  "removed": true,
+  "forced_termination": false,
+  "original_campaign_status": "INCOMPLETE",
+  "root_cause": "not established; no identity/state of original transient connection was captured"
+}
