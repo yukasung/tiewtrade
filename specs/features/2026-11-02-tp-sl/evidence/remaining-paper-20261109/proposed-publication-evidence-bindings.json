@@ -1,0 +1,78 @@
+{
+  "schema": 1,
+  "status": "PROPOSED \u2014 inactive; exact owner approval required",
+  "entries": [
+    {
+      "commit": "1291c93dc5436548ae747fbe9e9898f42ddc7ae8",
+      "path": "specs/features/2026-11-02-tp-sl/evidence/remaining-paper-20261109/cleanup/candidate-sha256.json",
+      "git_blob": "10c3371ef2d7e0a8934a015e21cd608acb4908f8",
+      "rule": "generic-api-key",
+      "reported_matches": 34,
+      "occurrence_digest": "2ffb30e1f125520b790d0a01af544d8de7441beb44f9052edc185d517a78fa19",
+      "resolution": "false_positive",
+      "reason": "Source SHA-256 fingerprints independently matched producing source bytes.",
+      "approval": "PENDING",
+      "evidence": "specs/features/2026-11-02-tp-sl/publication-checksum-exceptions-proposal.md"
+    },
+    {
+      "commit": "1291c93dc5436548ae747fbe9e9898f42ddc7ae8",
+      "path": "specs/features/2026-11-02-tp-sl/evidence/remaining-paper-20261109/controlled20/candidate-sha256.json",
+      "git_blob": "af163b1a7116219cdc42658925e560f30ece4f38",
+      "rule": "generic-api-key",
+      "reported_matches": 34,
+      "occurrence_digest": "92a13e488040a0270f02a76d9779afd5de4896a66ec0970526dc257ec2b17270",
+      "resolution": "false_positive",
+      "reason": "Source SHA-256 fingerprints independently matched producing source bytes.",
+      "approval": "PENDING",
+      "evidence": "specs/features/2026-11-02-tp-sl/publication-checksum-exceptions-proposal.md"
+    },
+    {
+      "commit": "1291c93dc5436548ae747fbe9e9898f42ddc7ae8",
+      "path": "specs/features/2026-11-02-tp-sl/evidence/remaining-paper-20261109/d20_identity/candidate-sha256.json",
+      "git_blob": "414977dc53e14122c78f7dbdfd7abc283b982466",
+      "rule": "generic-api-key",
+      "reported_matches": 34,
+      "occurrence_digest": "03ea3bfba2356c01e50fe85befa3ac7a3143efd11a883b9d105dc41bb079bca3",
+      "resolution": "false_positive",
+      "reason": "Source SHA-256 fingerprints independently matched producing source bytes.",
+      "approval": "PENDING",
+      "evidence": "specs/features/2026-11-02-tp-sl/publication-checksum-exceptions-proposal.md"
+    },
+    {
+      "commit": "1291c93dc5436548ae747fbe9e9898f42ddc7ae8",
+      "path": "specs/features/2026-11-02-tp-sl/evidence/remaining-paper-20261109/smoke/candidate-sha256.json",
+      "git_blob": "af163b1a7116219cdc42658925e560f30ece4f38",
+      "rule": "generic-api-key",
+      "reported_matches": 34,
+      "occurrence_digest": "e83e72fa590aae02096a155532837222bdb6e12a778aa69ff282a7526e692120",
+      "resolution": "false_positive",
+      "reason": "Source SHA-256 fingerprints independently matched producing source bytes.",
+      "approval": "PENDING",
+      "evidence": "specs/features/2026-11-02-tp-sl/publication-checksum-exceptions-proposal.md"
+    },
+    {
+      "commit": "1291c93dc5436548ae747fbe9e9898f42ddc7ae8",
+      "path": "specs/features/2026-11-02-tp-sl/evidence/remaining-paper-20261109/w4/candidate-sha256.json",
+      "git_blob": "414977dc53e14122c78f7dbdfd7abc283b982466",
+      "rule": "generic-api-key",
+      "reported_matches": 34,
+      "occurrence_digest": "55768e7905183ad2a72070b6a5cd46e2135a3306c2744120e43a02c4a083b250",
+      "resolution": "false_positive",
+      "reason": "Source SHA-256 fingerprints independently matched producing source bytes.",
+      "approval": "PENDING",
+      "evidence": "specs/features/2026-11-02-tp-sl/publication-checksum-exceptions-proposal.md"
+    },
+    {
+      "commit": "1291c93dc5436548ae747fbe9e9898f42ddc7ae8",
+      "path": "specs/features/2026-11-02-tp-sl/evidence/remaining-paper-20261109/w4/run/fixture/internal-fixture.json",
+      "git_blob": "e2e06d04b2ab1b20e9c8f5f38cd7049f48db5b5e",
+      "rule": "generic-api-key",
+      "reported_matches": 2,
+      "occurrence_digest": "2b061b37da46bf23a36bb4397537537b60180fa18102300920dbae37ed5df709",
+      "resolution": "false_positive",
+      "reason": "Synthetic UUID request identities from isolated W4 pending.intent.key and retry.key, not venue/API credentials.",
+      "approval": "PENDING",
+      "evidence": "specs/features/2026-11-02-tp-sl/publication-checksum-exceptions-proposal.md"
+    }
+  ]
+}
