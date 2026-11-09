@@ -1478,3 +1478,7 @@ Owner requested step3: [proposed plan](features/2026-11-02-tp-sl/remaining-paper
 ## F-17 publication refactor finished — 2026-11-09
 
 [Owner-authorized refactor and affected validation complete](features/2026-11-02-tp-sl/evidence/remaining-paper-20261109/publication-refactor-checkpoint.md): shared observer fixture/double, named diagnostic metadata;65tests/scoped static checks Passed. No behavior/production/criteria change or repeated workload. All related work remains consolidated for one PR, no publication/CI yet. Next requires owner instruction for commit/push/PR/required CI; merge separate. F17 Full Validation/manual/opening/Release/dependencies pending, not Completed.
+
+## F-17 PR66 CI integration repair — 2026-11-09
+
+PR66 head5216d3b: CI backend6mock-isolation failures/4886passed, downstream isolated stepsSkipped; browser42/Security7/7Passed. [Targeted State isolation fix](features/2026-11-02-tp-sl/evidence/remaining-paper-20261109/ci-state-isolation-fix.md) local65mixed-order cases/static checks Passed. Updating same PR, final-head required CI still pending; no production/trading/threshold/security exception change or repeated workload. Historical failure retained; no merge/Completed claim.

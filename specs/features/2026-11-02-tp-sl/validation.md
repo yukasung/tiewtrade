@@ -987,3 +987,7 @@ Owner requested fixes to two additional harness findings before consolidating on
 ## Publication follow-up refactor complete — 2026-11-09
 
 Owner requested refactor after two follow-up fixes. [Checkpoint](evidence/remaining-paper-20261109/publication-refactor-checkpoint.md): observer doubles/setup deduplicated, diagnostic error metadata named, all behavior/criteria unchanged;65affected tests including PostgreSQL cases and scoped Ruff/format/mypy Passed. Prior proof retained without D20/W4 rerun. Refactor-wait wording above is historical. Work consolidated for one PR; next owner Git publication instruction and required CI, no automatic review/refactor/campaign. Remaining Full Validation/dependencies unchanged.
+
+## PR66 initial CI integration failure — 2026-11-09
+
+First PR head5216d3b CI42648028344 backend6failed/4886passed; later isolated stages Skipped, browser42 and Security7/7Passed. [Root cause/scoped test fix](evidence/remaining-paper-20261109/ci-state-isolation-fix.md): mocked State replacement previously retained real engines from earlier deleted fixtures. Replace app.state temporarily with actual fresh State and preserve/restore original. Mixed real-DB→mock ordering65Passed/static checks Passed locally. Same PR final-candidate required CI pending; first remote failure retained. No runtime/criteria/evidence-blob/security-registry/workload changes.

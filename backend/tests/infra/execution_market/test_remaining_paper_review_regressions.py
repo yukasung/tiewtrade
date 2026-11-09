@@ -10,6 +10,7 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock
 
 import pytest
+from starlette.datastructures import State
 
 from tests.infra.execution_market import profile_internal as internal
 from tests.infra.execution_market import profile_workload as workload
@@ -158,12 +159,16 @@ async def test_observer_or_disposal_failure_cannot_skip_remaining_engines(
     monkeypatch.setattr(diagnostic, "create_engine_for", create)
     monkeypatch.setattr(internal, "require_empty_database", AsyncMock())
     monkeypatch.setattr(workload, "resource_sampler", AsyncMock())
-    monkeypatch.setattr(app.state, "_state", {})
+    previous_state = app.state
+    previous_entries = dict(previous_state._state)
+    monkeypatch.setattr(app, "state", State())
+    assert app.state is not previous_state
     expected = primary if outcome in ("primary", "cancel") else secondary
     with pytest.raises(type(expected)) as caught:
         await diagnostic.parent_lifecycle(tmp_path, snapshot)
     assert caught.value is expected
     assert len(engines) == 5 and all(engine.attempted for engine in engines.values())
+    assert previous_state._state == previous_entries
     if outcome in ("primary", "cancel"):
         assert primary.__notes__ == ["secondary lifecycle cleanup: OSError"]
 
