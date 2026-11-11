@@ -259,6 +259,18 @@ VM/cache/runtime ถูกลบและถอน Lima แล้ว แต่ d
 Helper/test ทดลองเก็บนอก repo ไม่รวมใน PR; ดู [checkpoint](features/2026-10-23-self-hosted-ci/evidence/closure-checkpoint.md).
 ไม่เปลี่ยนสถานะ F-01/F-12 หรือรับรอง release/Live gates เพิ่มจากผล CI นี้.
 
+F-01 follow-up: [ลดเวลารอ CI บน GitHub-hosted](features/2026-10-26-ci-feedback-time/plan.md)
+**In Progress — Review/R1/refactor/local validation ผ่าน เริ่ม GitHub pilot (2026-11-11)**.
+Requirements/plan/validation Approved; branch `feat/ci-feedback-time` จาก `52a00fe`.
+ตัด feature-push ซ้ำ PR, cancel PR เก่า, docs-only/full selector และ required verdicts;
+runtime PR กับ post-merge main คงชุดตรวจเดิมครบ. Review พบ R1: README และเอกสาร
+contract อีกสามไฟล์ต้องเลือก full; แก้และ regression ผ่าน. Local policy tests 28 ข้อรวม
+verdict 294 combinations, Ruff และ strict mypy ผ่าน; ใช้ actionlint ผลเดิมที่ workflow ไม่เปลี่ยน.
+Execution blocks เดิมทั้งห้าไม่เปลี่ยน. Refactor แยก Git base resolution แล้วตรวจซ้ำ 28 tests ผ่าน;
+เจ้าของสั่ง commit/push/PR แล้ว; รวมบน main `de3bdcb`, คง Security gate และกำลังทำ GitHub pilot/required CI; main/manual evidence ยัง Pending;
+ไม่ใช่ Development Complete/Completed และการทำ pilot ไม่ใช่คำสั่ง merge.
+รายละเอียดผลและรายการค้างอยู่ใน [checkpoint](features/2026-10-26-ci-feedback-time/evidence/checkpoint.md).
+
 | รหัส | งาน | สถานะ | หมายเหตุ |
 |---|---|---|---|
 | F-01 | วางโครง repo, เครื่องมือ, CI | **Completed** | เสร็จ 2026-09-27 — PR #1 merge เข้า main, CI เขียวครบ 5 job, เกณฑ์ใน `validation.md` ครบ 16 ข้อ |

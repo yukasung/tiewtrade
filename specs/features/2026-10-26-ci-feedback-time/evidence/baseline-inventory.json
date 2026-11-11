@@ -1,0 +1,101 @@
+{
+  "baseline_sha": "52a00feda66c6248b10fe72cf12a076047f0e3ed",
+  "workflow_baseline_sha256": "d943cd9a331622ad1096fabae08232444c449b00c40d71264d2a23ed18c68b0c",
+  "workers": {
+    "backend": {
+      "original_execution_block_preserved": true,
+      "sha256": "b91c251bd769e8e5349c17434e2126c5188b9183c275692e6d1dffa465a38e03"
+    },
+    "api-contract": {
+      "original_execution_block_preserved": true,
+      "sha256": "0d21df38afad85075c6461eb093635d91d3568989177a509fcf9eb7dc3435afc"
+    },
+    "frontend": {
+      "original_execution_block_preserved": true,
+      "sha256": "2e51d1b038e19abd508adce106ed3177a49e6feac717c6305af9565d92f35bdb"
+    },
+    "e2e": {
+      "original_execution_block_preserved": true,
+      "sha256": "aba5b0f1950c909997428f7b8ee77d44673734673a60d7102ef3fa34f1eab755"
+    },
+    "docker": {
+      "original_execution_block_preserved": true,
+      "sha256": "9f78b3e57f2396ae068edea97560ed41975849cc1f8905137b96d3c1eaca571b"
+    }
+  },
+  "required_names": {
+    "config": "ค่ากลาง — เวอร์ชัน PostgreSQL",
+    "backend": "หลังบ้าน — lint, types, imports, tests",
+    "api-contract": "สัญญา API — ชนิดข้อมูลสองฝั่งต้องตรงกัน",
+    "frontend": "หน้าบ้าน — lint, types, tests",
+    "e2e": "e2e — เบราว์เซอร์จริงเห็นข้อมูลจาก API จริง",
+    "docker": "container — ทั้งสองฝั่งรันใน container ได้"
+  },
+  "venue_contract_unchanged": true,
+  "original_tracked_pending_files_preserved": [
+    "AGENTS.md",
+    "specs/features/2026-10-07-realtime-prices/requirements.md",
+    "specs/features/2026-10-12-candlestick-chart/requirements.md",
+    "specs/mission.md",
+    "specs/roadmap.md",
+    "specs/standards/testing.md"
+  ],
+  "integration_baseline_sha": "de3bdcb6b9d9187ee9a06b5f7dcb43387f5d8e98",
+  "integration_workers": {
+    "backend": {
+      "original_execution_block_preserved": true,
+      "sha256": "5f36671430943bb2e8fb4d34dc7c18cdd0948ff834e14fcf21130eb0de87e605"
+    },
+    "api-contract": {
+      "original_execution_block_preserved": true,
+      "sha256": "0d21df38afad85075c6461eb093635d91d3568989177a509fcf9eb7dc3435afc"
+    },
+    "frontend": {
+      "original_execution_block_preserved": true,
+      "sha256": "2e51d1b038e19abd508adce106ed3177a49e6feac717c6305af9565d92f35bdb"
+    },
+    "e2e": {
+      "original_execution_block_preserved": true,
+      "sha256": "aba5b0f1950c909997428f7b8ee77d44673734673a60d7102ef3fa34f1eab755"
+    },
+    "docker": {
+      "original_execution_block_preserved": true,
+      "sha256": "9f78b3e57f2396ae068edea97560ed41975849cc1f8905137b96d3c1eaca571b"
+    }
+  },
+  "security_workflow_unchanged": true,
+  "remote_protection_before_pilot": {
+    "strict": true,
+    "checks": [
+      {
+        "context": "หลังบ้าน — lint, types, imports, tests",
+        "app_id": 15368
+      },
+      {
+        "context": "e2e — เบราว์เซอร์จริงเห็นข้อมูลจาก API ...",
+        "app_id": 15368
+      },
+      {
+        "context": "หน้าบ้าน — lint, types, tests",
+        "app_id": 15368
+      },
+      {
+        "context": "container — ทั้งสองฝั่งรันใน container ได้",
+        "app_id": 15368
+      },
+      {
+        "context": "ค่ากลาง — เวอร์ชัน PostgreSQL",
+        "app_id": 15368
+      },
+      {
+        "context": "สัญญา API — ชนิดข้อมูลสองฝั่งต้องตรง...",
+        "app_id": 15368
+      },
+      {
+        "context": "Security / gate",
+        "app_id": 15368
+      }
+    ],
+    "enforce_admins": true
+  }
+}
