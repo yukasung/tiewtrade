@@ -1,7 +1,7 @@
 # CI feedback time — Implementation checkpoint
 
 วันที่: 2026-11-11
-สถานะ: Review/R1/refactor/local validation ผ่าน — เจ้าของสั่ง Git/pilot แล้ว; กำลังตรวจ GitHub candidate และยังไม่ Completed
+สถานะ: DNS amendment review/refactor passed; preparing new GitHub candidate; local 40 tests/static checks Passed; PR #67 ยังเป็น d5e733e ซึ่ง E2E Failed และยังไม่พร้อม merge
 
 ## Scope และ baseline
 
@@ -173,3 +173,104 @@ docs/full pilot/required CI และ post-merge/manual ยังคง Partial/
   Pilot ไม่ merge และไม่แก้ application/security policy; ปิด draft PR เมื่อเก็บผลครบ.
 - Manual full/default-branch และ post-merge main ยัง Pending จนมีคำสั่งและเงื่อนไขพร้อม;
   การเปิด/ติดตาม PR ไม่ถือเป็นคำสั่ง merge.
+
+## Remote checkpoint — PR #67 / runner DNS blocker — 2026-11-11
+
+- เจ้าของสั่ง commit/push/เปิด PR แล้ว; feature commit เดียว
+  `d5e733ecdd6934179ed4c1944bf9bcd69c5bddc4`, PR
+  [#67](https://github.com/yukasung/tiewtrade/pull/67), merge candidate
+  `9ea0a06efed0a06b58207538a2a0256ce097d486` บน main `de3bdcb`.
+- Required checks ผ่าน **6/7**: config/backend/frontend/API/container และ Security.
+  [Security 43048918175](https://github.com/yukasung/tiewtrade/actions/runs/43048918175) Passed.
+- [Main CI attempt 1](https://github.com/yukasung/tiewtrade/actions/runs/43048918284/attempts/1)
+  และ [attempt 2](https://github.com/yukasung/tiewtrade/actions/runs/43048918284/attempts/2)
+  **Failed** จาก E2E Playwright dependencies installation: Azure Ubuntu mirror DNS
+  resolution failure, exit 100 ก่อนเริ่ม browser/application tests. ตรวจ log ทั้งสองรอบแล้ว.
+  Attempt 2 เป็น targeted E2E retry หลัง attempt 1 จบ; ชุดที่ผ่านแล้วใช้ผลเดิมต่อ.
+  Required E2E verdict เป็น failure ตามจริงทั้งสองรอบ ไม่มี false green.
+- Full pilot เลือกทุก worker ถูกต้อง; config บน GitHub รัน 28 policy tests ผ่าน.
+  API แสดงเฉพาะ pull_request events ของ CI/Security บน head นี้ ไม่มี feature-push CI ซ้ำ.
+- [Docs-only run 43049130357](https://github.com/yukasung/tiewtrade/actions/runs/43049130357)
+  บน `0975c3f8efa46d58ae2e6cd9827c95583953c410` **Passed**: six stable checks success,
+  five application workers skipped; log ยืนยัน docs-only และ 28 policy tests Passed.
+  เวลา run_started_at ถึง updated_at 78s เป็นผลรอบนี้ ไม่ใช่คำรับรองเวลาที่ลดได้ทุก PR.
+- [Superseded run 43049060969](https://github.com/yukasung/tiewtrade/actions/runs/43049060969)
+  บน `6201df0e26cde759c43be4f35ef3168508b54d71` in_progress ก่อน synchronize และ
+  cancelled หลัง update; พิสูจน์ cancellation จริง. Pilot
+  [PR #68](https://github.com/yukasung/tiewtrade/pull/68) ปิดโดยไม่ merge;
+  branch คงไว้ตามข้อห้ามลบ branch ที่ยังไม่ merged.
+- Structured metadata/results อยู่ใน [github-pilot.json](github-pilot.json).
+  บันทึก CI results ใน PR description ด้วย; รอบ evidence นี้ยังไม่ commit/push
+  เพื่อไม่สร้าง CI วนจากเอกสารรายงานผล.
+- [Runner DNS amendment](../runner-dns-amendment.md) เป็น Proposed เพื่อ owner review;
+  ยังไม่แก้ workflow/bootstrap นอกแผนที่อนุมัติ และไม่ rerun รอบสามด้วยวิธีเดิมโดยไม่มีข้อมูลใหม่.
+  ขั้นถัดไปคือขออนุมัติ amendment หรือรอ environment ฟื้นก่อน targeted E2E retry.
+  Required E2E ยัง Failed; post-merge/main/manual ยัง Pending และยังไม่พร้อม merge/Completed.
+
+## Approved DNS amendment — implementation checkpoint — 2026-11-11
+
+เจ้าของตอบ `approve` ให้ runner-dns-amendment.md แล้ว; บันทึก Approved และเพิ่ม
+scope/validation ใน plan.md + validation.md ก่อนแก้ source code.
+
+- เพิ่ม `.github/scripts/prepare_e2e_apt.py` และ step เฉพาะ e2e-run ก่อน Playwright install.
+  แก้เฉพาะ active Azure Ubuntu base URI ใน known APT files เป็น HTTPS Ubuntu archive;
+  รักษา bytes อื่น, security pocket, signing-key fields, permissions และ ownership เดิม.
+- ตรวจ known config ทั้งหมดก่อนเริ่มเขียน; unsupported Azure URI, missing layout,
+  symlink/parent escape และ read/write failure ทำให้ operational failure.
+  stdout รายงานเฉพาะ updated_files count และ stderr ไม่พิมพ์ raw config/error contents.
+- เพิ่ม `.github/tests/test_e2e_apt.py`: 11 fixture/CLI tests; เพิ่ม workflow-order test อีก 1
+  ใน test_ci_selection.py. Existing 28 policy/verdict tests คงไว้ รวมเป็น **40 tests**.
+- Development test รอบแรกพบ matcher ของ unknown host กว้างเกินไป จนปฏิเสธ third-party
+  hostname ที่เพียงมี Azure hostname เป็น prefix; เพิ่ม exact-host boundary แล้ว fixture ผ่าน.
+  Ruff รอบแรกพบ long fixture literals; แบ่ง literals โดยไม่เปลี่ยน bytes แล้วผ่าน.
+- `python3 -m unittest discover -s .github/tests -v`: **Passed 40 tests, 4.467s**.
+- Actionlint v1.7.12 (ShellCheck unavailable), Ruff lint/format และ strict mypy: **Passed**
+  สำหรับ workflow และ CI helpers/tests ทั้งหกไฟล์.
+- Implementation inventory: ถอดเฉพาะ approved bootstrap step ออกจาก workflow แล้ว
+  byte-identical กับ d5e733e; selectors/verdict helper ไม่เปลี่ยน และ original pending
+  tracked files ทั้งหกยังตรงกับ snapshot เดิม. ไม่รัน application full regression ในเครื่อง.
+- นี่เป็น implementation verification ไม่ใช่ focused Code Review ของ helper เพิ่มใหม่.
+  งาน CI ตามขอบเขตแผน amended เขียนครบแล้ว; ส่ง Ready for Code Review พร้อมผลนี้
+  และหยุดรอคำสั่ง `review code` ตาม AGENTS.md ก่อน review/ขั้นถัดไป.
+- ขณะนี้ยังไม่ commit/push amendment source code; PR #67 ยังอยู่บน d5e733e และ required
+  E2E เป็น Failed จาก runner DNS ทั้ง attempts 1/2. Local fixture proof ไม่แทน Linux/browser.
+  หลัง review/checkpoints ที่กำหนดจึงอัปเดต PR candidate ตามคำสั่ง Git ที่ได้รับแล้ว
+  และติดตาม required CI 7/7/E2E จริงบน SHA ใหม่; docs-only/cancellation ใช้ผลเดิมที่ยัง valid.
+- ไม่มี application, session/persistent business data, database transaction หรือ trading
+  logic เปลี่ยน; sudo ใช้เฉพาะ config บน disposable E2E runner ตาม amendment ที่อนุมัติ.
+
+## DNS amendment focused Code Review — 2026-11-11
+
+Owner requested `review code`. No actionable findings in the approved amendment scope.
+Reviewed known-file writes, URI boundaries, symlink/root containment, preflight validation,
+error propagation, sanitized output, and preservation of signing keys and repository fields.
+Removing the sole new E2E bootstrap step leaves the workflow byte-identical to d5e733e;
+selector/verdict helpers and required checks are unchanged. No application session,
+persistent storage, transaction or trading behavior changes.
+
+No source changes resulted from review. Reused the valid 40-test/actionlint/Ruff/strict-mypy
+evidence; no redundant application regression or CI run. Fixture tests do not establish
+actual Linux runner/network/browser success: V-21 remains Pending and prior E2E failures
+remain recorded. No commit/push/merge performed during this review.
+
+Next checkpoint: await owner's `refactor the code` decision under AGENTS.md before
+continuing candidate preparation and the previously authorized PR update/required CI.
+Not ready for merge or Completed. This review supersedes the review-pending status above.
+
+## Authorized DNS helper refactor and final local validation — 2026-11-11
+
+Owner requested `refactor the code`. Extracted `_prepare_config` as a pure byte transformation;
+`prepare_apt` retains filesystem validation, collecting all changes before writes. Behavior,
+URI matching, exception propagation and output remain unchanged. Focused diff inspection
+confirmed the original loop was moved without changing its rules. No new test-only abstraction
+or application changes were introduced.
+
+- Post-refactor: 40 existing fixture/policy tests Passed (4.164s); Ruff lint/format, strict
+  mypy and actionlint Passed. No full local application regression repeated.
+- Workflow remains byte-identical to d5e733e after removing the approved three-line step;
+  original pending tracked files in the owner's worktree remain unchanged.
+- Review/refactor stop gates satisfied. Combine all available source/spec/evidence in one
+  commit and update PR #67 under the prior owner Git authorization, then monitor required
+  CI on the new SHA. Full runtime CI estimate 20–30 minutes was communicated before push.
+- V-21 remains Pending until the new actual Linux/browser run passes. Failed attempts 1/2
+  and valid docs-only/cancellation proof are retained; merge still requires owner instruction.

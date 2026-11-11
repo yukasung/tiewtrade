@@ -341,6 +341,15 @@ class WorkflowPolicyTests(unittest.TestCase):
         self.assertIn("python3 .github/scripts/ci_selection.py", config)
         self.assertNotIn("services:", config)
 
+    def test_apt_preparation_is_only_in_e2e_before_the_original_playwright_command(self) -> None:
+        command = "sudo python3 .github/scripts/prepare_e2e_apt.py"
+        e2e = self.jobs["e2e-run"]
+        self.assertEqual(self.workflow.count(command), 1)
+        self.assertLess(
+            e2e.index(command), e2e.index("npx playwright install --with-deps chromium")
+        )
+        self.assertIn("working-directory: frontend", e2e)
+
     def test_required_checks_cannot_succeed_from_an_implicitly_skipped_dependency(self) -> None:
         names = {
             "config": "ค่ากลาง — เวอร์ชัน PostgreSQL",

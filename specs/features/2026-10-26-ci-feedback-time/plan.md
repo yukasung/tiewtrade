@@ -115,6 +115,14 @@ Docs whitelist ต้องไม่มี wildcard `.md` ทั้ง repo; ห
 
 ## E2E และ environment
 
+**Amendment Approved 2026-11-11:** ใช้ [runner DNS recovery amendment](runner-dns-amendment.md)
+เพิ่ม known-config Ubuntu mirror preparation เฉพาะ e2e-run ก่อน Playwright install.
+นี่เป็นข้อยกเว้นจากการคง execution block ทุกตัวอักษรเฉพาะ bootstrap ใหม่นี้;
+คำสั่ง test/browser, services, env, assertions และ workers อื่นคง baseline เดิม.
+ใช้ `.github/scripts/prepare_e2e_apt.py` กับ fixture tests ใน
+`.github/tests/test_e2e_apt.py`; คง layout ที่รองรับตาม amendment และ fail closed
+เมื่อ layout/permissions ไม่พร้อม. ไม่มี infrastructure ถาวรหรือ application state เปลี่ยน.
+
 รอบแรกคง E2E แบบเรียงชุดใน worker เดียวและ services เดิม. ยังไม่แยก E2E ขนาน
 เพราะ fixtures ปัจจุบันมี shared mutable state และยังไม่มีหลักฐาน isolation ระหว่างชุด.
 นี่เป็น fallback ตาม RQ-08; ไม่เพิ่ม workers หรือคัดลอกระบบ bootstrap เพื่อเร่งโดยพลการ.

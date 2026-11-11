@@ -342,6 +342,9 @@ jobs:
       - run: npm ci
         working-directory: frontend
 
+      - name: Prepare Ubuntu mirror for E2E dependencies
+        run: sudo python3 .github/scripts/prepare_e2e_apt.py
+
       - run: npx playwright install --with-deps chromium
         working-directory: frontend
 

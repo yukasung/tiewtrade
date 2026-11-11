@@ -97,5 +97,13 @@
       }
     ],
     "enforce_admins": true
+  },
+  "runner_dns_amendment": {
+    "approved": "2026-11-11",
+    "baseline_head": "d5e733ecdd6934179ed4c1944bf9bcd69c5bddc4",
+    "only_workflow_change": "Prepare Ubuntu mirror for E2E dependencies before original Playwright command",
+    "workflow_identical_after_removing_bootstrap_step": true,
+    "selectors_and_verdict_unchanged": true,
+    "workflow_sha256": "4244bda35d1c80350f39a404d2655f74990731da4b6d0e9185d5c6d56bbda07b"
   }
 }

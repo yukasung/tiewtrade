@@ -1,0 +1,128 @@
+{
+  "head_sha": "d5e733ecdd6934179ed4c1944bf9bcd69c5bddc4",
+  "merge_candidate_sha": "9ea0a06efed0a06b58207538a2a0256ce097d486",
+  "main_pr": 67,
+  "pilot_pr": 68,
+  "runs": [
+    {
+      "id": 43048918284,
+      "name": "CI",
+      "event": "pull_request",
+      "head_sha": "d5e733ecdd6934179ed4c1944bf9bcd69c5bddc4",
+      "run_attempt": 1,
+      "status": "completed",
+      "conclusion": "failure",
+      "run_started_at": "2026-11-11T15:29:49Z",
+      "updated_at": "2026-11-11T15:46:38Z",
+      "html_url": "https://github.com/yukasung/tiewtrade/actions/runs/43048918284"
+    },
+    {
+      "id": 43048918284,
+      "name": "CI",
+      "event": "pull_request",
+      "head_sha": "d5e733ecdd6934179ed4c1944bf9bcd69c5bddc4",
+      "run_attempt": 2,
+      "status": "completed",
+      "conclusion": "failure",
+      "run_started_at": "2026-11-11T15:47:05Z",
+      "updated_at": "2026-11-11T15:58:54Z",
+      "html_url": "https://github.com/yukasung/tiewtrade/actions/runs/43048918284"
+    },
+    {
+      "id": 43048918175,
+      "name": "Security",
+      "event": "pull_request",
+      "head_sha": "d5e733ecdd6934179ed4c1944bf9bcd69c5bddc4",
+      "run_attempt": 1,
+      "status": "completed",
+      "conclusion": "success",
+      "run_started_at": "2026-11-11T15:29:49Z",
+      "updated_at": "2026-11-11T15:32:29Z",
+      "html_url": "https://github.com/yukasung/tiewtrade/actions/runs/43048918175"
+    },
+    {
+      "id": 43049060969,
+      "name": "CI",
+      "event": "pull_request",
+      "head_sha": "6201df0e26cde759c43be4f35ef3168508b54d71",
+      "run_attempt": 1,
+      "status": "completed",
+      "conclusion": "cancelled",
+      "run_started_at": "2026-11-11T15:30:38Z",
+      "updated_at": "2026-11-11T15:31:30Z",
+      "html_url": "https://github.com/yukasung/tiewtrade/actions/runs/43049060969"
+    },
+    {
+      "id": 43049130357,
+      "name": "CI",
+      "event": "pull_request",
+      "head_sha": "0975c3f8efa46d58ae2e6cd9827c95583953c410",
+      "run_attempt": 1,
+      "status": "completed",
+      "conclusion": "success",
+      "run_started_at": "2026-11-11T15:31:02Z",
+      "updated_at": "2026-11-11T15:32:20Z",
+      "html_url": "https://github.com/yukasung/tiewtrade/actions/runs/43049130357"
+    }
+  ],
+  "required_checks": [
+    {
+      "name": "Security / gate",
+      "conclusion": "SUCCESS",
+      "status": "COMPLETED",
+      "url": "https://github.com/yukasung/tiewtrade/actions/runs/43048918175/job/130621693262"
+    },
+    {
+      "name": "container — ทั้งสองฝั่งรันใน container ได้",
+      "conclusion": "SUCCESS",
+      "status": "COMPLETED",
+      "url": "https://github.com/yukasung/tiewtrade/actions/runs/43048918284/job/130630633604"
+    },
+    {
+      "name": "e2e — เบราว์เซอร์จริงเห็นข้อมูลจาก API ...",
+      "conclusion": "FAILURE",
+      "status": "COMPLETED",
+      "url": "https://github.com/yukasung/tiewtrade/actions/runs/43048918284/job/130637205093"
+    },
+    {
+      "name": "ค่ากลาง — เวอร์ชัน PostgreSQL",
+      "conclusion": "SUCCESS",
+      "status": "COMPLETED",
+      "url": "https://github.com/yukasung/tiewtrade/actions/runs/43048918284/job/130630716731"
+    },
+    {
+      "name": "สัญญา API — ชนิดข้อมูลสองฝั่งต้องตรง...",
+      "conclusion": "SUCCESS",
+      "status": "COMPLETED",
+      "url": "https://github.com/yukasung/tiewtrade/actions/runs/43048918284/job/130630690040"
+    },
+    {
+      "name": "หน้าบ้าน — lint, types, tests",
+      "conclusion": "SUCCESS",
+      "status": "COMPLETED",
+      "url": "https://github.com/yukasung/tiewtrade/actions/runs/43048918284/job/130630634177"
+    },
+    {
+      "name": "หลังบ้าน — lint, types, imports, tests",
+      "conclusion": "SUCCESS",
+      "status": "COMPLETED",
+      "url": "https://github.com/yukasung/tiewtrade/actions/runs/43048918284/job/130630691490"
+    }
+  ],
+  "strict_protection": true,
+  "checks_passed": 6,
+  "checks_total": 7,
+  "failure_cause": "E2E bootstrap: repeated Temporary failure resolving azure.archive.ubuntu.com; Playwright dependencies installation exit 100 before tests.",
+  "head_events": [
+    {
+      "name": "Security",
+      "event": "pull_request",
+      "id": 43048918175
+    },
+    {
+      "name": "CI",
+      "event": "pull_request",
+      "id": 43048918284
+    }
+  ]
+}
