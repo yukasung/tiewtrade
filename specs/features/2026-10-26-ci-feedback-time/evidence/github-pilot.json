@@ -124,5 +124,28 @@
       "event": "pull_request",
       "id": 43048918284
     }
-  ]
+  ],
+  "runner_dns_amendment_candidate": {
+    "head_sha": "754edcce82636046e992b65e0abadfcac616de19",
+    "merge_sha": "9c41779924b770794e0b9f6de47762cad041a388",
+    "ci_run_id": 43057440639,
+    "ci_url": "https://github.com/yukasung/tiewtrade/actions/runs/43057440639",
+    "security_run_id": 43057440674,
+    "security_conclusion": "success",
+    "policy_tests": 40,
+    "selection": "full",
+    "e2e_job_id": 130650830410,
+    "e2e_conclusion": "failure",
+    "apt_preparation": "success; updated_files=1",
+    "failure": "archive.ubuntu.com DNS resolution failure during Playwright system dependency installation; APT exit 100 before browser/application tests",
+    "required_e2e_verdict": "failure",
+    "backend": "success",
+    "unchanged_retry_started": false,
+    "merged": false,
+    "ci_conclusion": "failure",
+    "required_checks_passed": 6,
+    "required_checks_total": 7,
+    "completed_at": "2026-11-11T16:45:12Z",
+    "strict_protection_rechecked": true
+  }
 }

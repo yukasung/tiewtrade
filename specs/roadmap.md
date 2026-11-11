@@ -260,7 +260,7 @@ Helper/test ทดลองเก็บนอก repo ไม่รวมใน P
 ไม่เปลี่ยนสถานะ F-01/F-12 หรือรับรอง release/Live gates เพิ่มจากผล CI นี้.
 
 F-01 follow-up: [ลดเวลารอ CI บน GitHub-hosted](features/2026-10-26-ci-feedback-time/plan.md)
-**In Progress — PR #67: required checks 6/7 ผ่าน; E2E Failed จาก runner DNS (2026-11-11)**.
+**In Progress — PR #67 754edcc: required checks 6/7 ผ่าน; E2E Failed จาก runner DNS (2026-11-11)**.
 Requirements/plan/validation Approved; branch `feat/ci-feedback-time` จาก `52a00fe`.
 ตัด feature-push ซ้ำ PR, cancel PR เก่า, docs-only/full selector และ required verdicts;
 runtime PR กับ post-merge main คงชุดตรวจเดิมครบ. Review พบ R1: README และเอกสาร
@@ -269,8 +269,8 @@ verdict 294 combinations, Ruff และ strict mypy ผ่าน; ใช้ act
 Execution blocks เดิมทั้งห้าไม่เปลี่ยน. Refactor แยก Git base resolution แล้วตรวจซ้ำ 28 tests ผ่าน;
 Commit `d5e733e`/PR #67 รวมบน main `de3bdcb`; docs-only/cancellation pilot ผ่านและปิด PR #68 โดยไม่ merge.
 Security และ required checks อีกห้ารายการผ่าน; E2E attempts 1/2 ล้มระหว่างติดตั้ง dependencies จาก Azure mirror DNS.
-Runner DNS amendment Approved และ implementation/local 40 tests/static checks ผ่าน; focused review/refactor passed; awaiting new CI candidate.
-PR ยัง d5e733e/E2E Failed; main/manual evidence ยัง Pending;
+Runner DNS amendment Approved และ implementation/local 40 tests/static checks ผ่าน; focused review/refactor passed; candidate 754edcc has 6/7 required checks passed, E2E setup failed on archive.ubuntu.com DNS; bounded DNS/network diagnostics amendment Approved and implemented locally (58 tests/static checks Passed); focused Code Review passed with no actionable findings (2026-11-12); authorized refactor and post-refactor checks passed; awaiting new candidate/runner evidence.
+PR ยัง 754edcc/E2E Failed; main/manual evidence ยัง Pending;
 ไม่ใช่ Development Complete/Completed และการทำ pilot ไม่ใช่คำสั่ง merge.
 รายละเอียดผลและรายการค้างอยู่ใน [checkpoint](features/2026-10-26-ci-feedback-time/evidence/checkpoint.md).
 

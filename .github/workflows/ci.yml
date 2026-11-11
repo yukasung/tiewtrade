@@ -345,6 +345,10 @@ jobs:
       - name: Prepare Ubuntu mirror for E2E dependencies
         run: sudo python3 .github/scripts/prepare_e2e_apt.py
 
+      - name: Diagnose E2E DNS and HTTPS access
+        timeout-minutes: 2
+        run: python3 .github/scripts/diagnose_e2e_network.py
+
       - run: npx playwright install --with-deps chromium
         working-directory: frontend
 

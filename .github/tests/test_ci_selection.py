@@ -350,6 +350,17 @@ class WorkflowPolicyTests(unittest.TestCase):
         )
         self.assertIn("working-directory: frontend", e2e)
 
+    def test_network_diagnostics_precede_playwright_and_have_a_two_minute_limit(self) -> None:
+        command = "python3 .github/scripts/diagnose_e2e_network.py"
+        e2e = self.jobs["e2e-run"]
+        self.assertEqual(self.workflow.count(command), 1)
+        self.assertIn("timeout-minutes: 2\n        run: " + command, e2e)
+        self.assertLess(e2e.index("prepare_e2e_apt.py"), e2e.index(command))
+        self.assertLess(
+            e2e.index(command), e2e.index("npx playwright install --with-deps chromium")
+        )
+        self.assertNotIn("continue-on-error", e2e)
+
     def test_required_checks_cannot_succeed_from_an_implicitly_skipped_dependency(self) -> None:
         names = {
             "config": "ค่ากลาง — เวอร์ชัน PostgreSQL",

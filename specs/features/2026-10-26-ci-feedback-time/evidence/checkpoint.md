@@ -1,7 +1,7 @@
 # CI feedback time — Implementation checkpoint
 
 วันที่: 2026-11-11
-สถานะ: DNS amendment review/refactor passed; preparing new GitHub candidate; local 40 tests/static checks Passed; PR #67 ยังเป็น d5e733e ซึ่ง E2E Failed และยังไม่พร้อม merge
+สถานะ: Bounded network diagnostics review/refactor passed; preparing new GitHub candidate; local 58 tests/static checks Passed; PR #67 remains 754edcc (6/7 required checks Passed, E2E Failed); real diagnostic evidence Pending
 
 ## Scope และ baseline
 
@@ -274,3 +274,116 @@ or application changes were introduced.
   CI on the new SHA. Full runtime CI estimate 20–30 minutes was communicated before push.
 - V-21 remains Pending until the new actual Linux/browser run passes. Failed attempts 1/2
   and valid docs-only/cancellation proof are retained; merge still requires owner instruction.
+
+## Refactored amendment GitHub candidate — 2026-11-11
+
+Committed/pushed 754edcce82636046e992b65e0abadfcac616de19 under prior Git authorization;
+PR #67 synthetic merge candidate 9c41779924b770794e0b9f6de47762cad041a388.
+CI run: https://github.com/yukasung/tiewtrade/actions/runs/43057440639.
+Security: https://github.com/yukasung/tiewtrade/actions/runs/43057440674 — Passed.
+
+Config log proves full selection and all 40 policy/fixture tests Passed on Linux.
+APT preparation succeeded at 16:22:51 UTC with updated_files=1. Playwright installation
+then failed at 16:36:38 UTC: archive.ubuntu.com DNS resolution failure, APT exit 100.
+E2E job 130650830410 did not reach browser/application tests; required E2E verdict
+130659764506 correctly Failed. Switching the mirror did not recover the environment.
+This establishes failure across both the original Azure mirror and Ubuntu archive,
+not the root cause of DNS failure or general network unavailability.
+
+Backend is still being monitored to completion; no unchanged retry started. Preserve
+the failed gate. After three unsuccessful E2E setup attempts across the original and
+amended methods, stop further experiments and present options under AGENTS.md.
+Remote result updates are uncommitted to avoid another documentation-only CI cycle.
+
+### Final candidate checkpoint
+
+CI run 43057440639 finished at 16:45:12 UTC. Backend and every isolated/migration/fresh-state
+step Passed; all four other non-E2E CI gates and the Security gate Passed. Compared all seven
+strict required contexts against the latest PR status rollup: **6/7 Passed**, E2E Failed.
+Head remains 754edcc; base remains de3bdcb; no conflicts and no merge performed.
+
+Refactor is complete. V-21 remains Failed, V-12 Partial and post-merge/main/manual Pending.
+Next options before another experiment: (1) wait for evidence of environment/DNS recovery
+then retry only E2E on this SHA; (2) approve a bounded DNS/network diagnostic amendment
+to identify why both Ubuntu endpoints fail on the runner. Recommend option 2 before
+another long installation attempt. Changing resolver/network policy or adopting a prebuilt
+Playwright image is outside the currently approved bootstrap amendment. Await owner choice
+under AGENTS.md's stop-after-three-rounds rule; no automatic fourth attempt.
+
+## Approved bounded network diagnostics — implementation checkpoint — 2026-11-11
+
+Owner explicitly requested implementation of the proposed diagnostic plan. Added the
+approved network-diagnostics-amendment.md and plan/validation extension before source edits.
+No unresolved clarification blocks this diagnostic scope.
+
+- Added `.github/scripts/diagnose_e2e_network.py`: user/sudo DNS probes for four fixed
+  domains, HTTPS probes for Ubuntu archive and Microsoft packages, sanitized nameserver/
+  proxy-presence/runner-image metadata. No resolver, proxy or repository configuration writes.
+- JSON stdout omits raw command output, errors, proxy values, headers and response bodies.
+  Privileged metadata must match the safe schema. curlrc disabled, TLS verification retained,
+  HTTPS-only redirects and zero retries. Root subprocesses have nested coreutils timeouts.
+- Parent monotonic budget 100s; step timeout 2 minutes. Missing tools/invalid evidence/budget
+  exhaustion fail closed. DNS and HTTPS results are separate; DNS failure alone cannot
+  override successful HTTPS via proxy. Sudo Ubuntu archive HTTPS must succeed to continue.
+- All 12 probes are collected despite individual network failures; no privileged/live-network
+  diagnostic was executed on the developer machine. Tests use injected command responses,
+  temporary fixtures and one short real Python child timeout (no network/sudo/APT invocation).
+- Added 17 diagnostic behavior tests and one workflow wiring test to the prior 40 tests.
+  **58 tests Passed in 3.949s**, Ruff lint/format, strict mypy on eight files and actionlint
+  Passed (ShellCheck unavailable). Initial static formatting/import/type issues fixed;
+  no failing behavior tests. No application full regression repeated.
+- Removing the four-line diagnostic step restores workflow bytes exactly to HEAD 754edcc.
+  Selector/verdict/mirror helper, Security/venue workflows and original six tracked pending
+  files in the owner's worktree are unchanged. New inventory records the approved exception.
+- Implementation complete for amended scope. This is development verification, not focused
+  Code Review: send **Ready for Code Review** and wait for `review code` under AGENTS.md.
+  Reviewer should focus on privileged metadata/log redaction, subprocess/global time limits,
+  and fail-closed gate without treating DNS/proxy observations as actual browser success.
+- No commit/push/new CI in this checkpoint. PR #67 remains 754edcc; prior failures remain.
+  V-24 (real runner report, E2E, latest required 7/7) and post-merge/main/manual are Pending.
+  After review/refactor checkpoints, combine source/spec/evidence in one PR update under
+  prior Git authorization and monitor CI to completion (estimate 20–30 minutes).
+  Further recovery methods require a new evidence-based amendment; merge needs owner command.
+
+## Bounded diagnostics focused Code Review — 2026-11-12
+
+Owner issued `review code`. Reviewed the new helper, workflow wiring, fixture tests and
+approved diagnostic amendment. **No actionable findings** in the reviewed scope.
+
+- Examined user/sudo command construction, noninteractive privilege use, DNS/HTTPS
+  separation, privileged metadata schema, sanitization and fail-closed installation gate.
+- Checked per-command limits, nested timeout placement, global budget and workflow step cap;
+  original Playwright/test commands and required verdict wiring remain intact.
+- Reused valid 58-test/Ruff/strict-mypy/actionlint evidence because source was unchanged.
+  Added a one-off independent CLI subprocess check using executable fixtures in a temporary
+  directory (fake sudo/timeout/getent/curl/apt-config, with real Python metadata re-exec).
+  Both success and sudo-only archive DNS failure scenarios Passed: correct JSON/exit status,
+  user/sudo proxy-presence differences retained, sensitive fixture values absent from logs.
+  This exercised process boundaries but did not use actual privilege escalation or network
+  probes; it does not replace Linux runner evidence or validate actual DNS recovery.
+- No application/session/shared-storage/transaction/trading logic changes in this scope.
+  No source changes resulted from review; only validation/checkpoint status updated.
+- Next: await owner's `refactor the code` decision under AGENTS.md. After that checkpoint,
+  prepare one authorized PR update and monitor required CI on the new SHA. PR #67 remains
+  754edcc with E2E Failed; real diagnostic evidence and post-merge/main/manual stay Pending.
+  No commit/push/CI rerun/merge performed during this review.
+
+## Authorized diagnostic refactor — 2026-11-12
+
+Owner requested `refactor the code`. Extracted `_context_metadata` from `diagnose` to
+separate context-specific collection/schema validation from probe orchestration and gating.
+No probe targets, permissions, budgets, sanitization or gate policy changed.
+
+- Post-refactor 58 tests Passed (4.019s), Ruff lint/format, strict mypy on eight files and
+  actionlint Passed (ShellCheck unavailable). No full local application regression repeated.
+- Independent CLI subprocess fixtures compared the pre/post-refactor scripts: identical
+  JSON, stderr and exit status for success, sudo-only archive DNS failure and sudo APT
+  metadata failure. All three scenarios Passed with no sensitive fixture values in output.
+  Fake command executables were used; no real sudo/network/APT operations occurred locally.
+- Workflow preservation and original pending-file inventory verified. Review/refactor gates
+  satisfied; combine source/spec/evidence in one commit/push under the existing owner Git
+  authorization. Follow latest PR candidate's required CI to completion; full-run estimate
+  20–30 minutes communicated before push. Two-minute limit applies to diagnostic step only.
+- Real runner diagnostic evidence and required 7/7 remain Pending. Preserve all earlier
+  E2E setup failures. Any new resolver/proxy/image recovery requires a separate approved
+  amendment based on the actual report; merge still requires owner instruction.

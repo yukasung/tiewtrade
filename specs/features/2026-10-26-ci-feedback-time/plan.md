@@ -187,3 +187,12 @@ baseline ที่บันทึก SHA ไว้; ตรวจสถานะ�
 
 - [GitHub workflow syntax](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax)
 - [Required status checks troubleshooting](https://github.com/github/docs/blob/main/content/pull-requests/how-tos/merge-and-close-pull-requests/troubleshooting-required-status-checks.md)
+
+## Bounded network diagnostic amendment — Approved 2026-11-11
+
+Owner explicitly requested implementation of the proposed diagnostic plan.
+[Approved amendment](network-diagnostics-amendment.md) extends E2E bootstrap only:
+add bounded user/sudo DNS/HTTPS/proxy diagnostics before original Playwright installation.
+This is the sole additional exception to execution-block preservation on baseline 754edcc.
+Reuse the existing standard-library test harness and required worker/verdict wiring.
+No unresolved clarification blocks this diagnostic scope. Review/refactor/Git/merge gates remain.

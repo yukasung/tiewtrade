@@ -42,7 +42,7 @@ Local Passed ไม่แทน formal review, GitHub pilot หรือ require
 | V-18 | Missing/unsupported layout หรือ read/write failure ไม่ให้ success เท็จ; log ไม่เปิดเผย config/secrets | negative fixtures/CLI boundary; filesystem error injection เฉพาะจุดที่ root permissions ทำซ้ำไม่ได้แน่นอน | Feature | Passed — missing/unsupported layout, symlink/escape, read/write failures and sanitized CLI errors |
 | V-19 | Bootstrap อยู่เฉพาะ e2e-run ก่อน Playwright; คงคำสั่ง runtime/test และ required verdicts | focused diff/inventory เทียบ d5e733e; workflow wiring test/actionlint | Feature | Passed — focused Code Review found no actionable findings; bootstrap-only workflow diff and ordering verified |
 | V-20 | Helpers/tests ผ่าน static checks และ policy regression เดิม | unittest, Ruff lint/format, strict mypy ตามผลกระทบ | Feature | Passed — post-refactor 40 tests (4.164s), actionlint, Ruff lint/format, strict mypy on six files |
-| V-21 | Candidate ใหม่ผ่าน required checks 7/7 และ E2E ครบชุดจริง | PR #67 latest SHA/run logs รวม Linux mirror preparation และ browser/test results | Feature | Pending new GitHub candidate — PR #67 d5e733e remains E2E Failed |
+| V-21 | Candidate ใหม่ผ่าน required checks 7/7 และ E2E ครบชุดจริง | PR #67 latest SHA/run logs รวม Linux mirror preparation และ browser/test results | Feature | Failed — 754edcc E2E setup: helper updated_files=1, then archive.ubuntu.com DNS failure / APT exit 100 before browser tests (run 43057440639) |
 
 ## ขอบเขตตรวจระหว่างพัฒนา
 
@@ -88,3 +88,16 @@ plan, AGENTS.md และ testing §6–7 พร้อม Markdown references/wh
 ไม่รัน application tests หรือ CI เพื่อยืนยันการแก้เอกสาร และไม่เปลี่ยนผล V-01–V-16
 เป็น Passed จากการตรวจเอกสาร. เจ้าของอนุมัติ plan/validation แล้วในวันที่
 2026-11-11; บันทึกผล implementation/pilot แยกตามหลักฐานจริงใน checkpoint.
+
+## Bounded network diagnostics — Approved 2026-11-11
+
+See [approved amendment](network-diagnostics-amendment.md).
+
+| ID | Acceptance | Phase | Result |
+|---|---|---|---|
+| V-22 | Bounded DNS/HTTPS/proxy diagnostics, user/sudo comparison, sanitized metadata, timeout/missing-tool/invalid-output failures | Feature | Passed — post-refactor 58 tests (4.019s), including 17 diagnostic tests; three CLI before/after scenarios identical |
+| V-23 | E2E-only wiring before unchanged Playwright command, two-minute cap, baseline inventory, policy tests and relevant static checks | Feature | Passed — focused review found no actionable findings; wiring/inventory/static checks and two CLI subprocess fixture scenarios Passed |
+| V-24 | Real runner report and SHA/run URL; actual E2E and 7/7 required checks before merge | Feature | Pending new candidate; PR #67 remains 754edcc with E2E Failed |
+
+Diagnostic success is not E2E success. V-21 retains the prior candidate failure;
+post-merge/main/manual gates remain Pending. No resolver/proxy/image changes authorized.

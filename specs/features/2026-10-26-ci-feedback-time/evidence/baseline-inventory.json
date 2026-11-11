@@ -105,5 +105,19 @@
     "workflow_identical_after_removing_bootstrap_step": true,
     "selectors_and_verdict_unchanged": true,
     "workflow_sha256": "4244bda35d1c80350f39a404d2655f74990731da4b6d0e9185d5c6d56bbda07b"
+  },
+  "network_diagnostics_amendment": {
+    "approved": "2026-11-11",
+    "baseline_head": "754edcce82636046e992b65e0abadfcac616de19",
+    "workflow_identical_after_removing_diagnostic_step": true,
+    "step_timeout_minutes": 2,
+    "helper_budget_seconds": 100,
+    "selectors_verdict_mirror_security_venue_contract_unchanged": true,
+    "workflow_sha256": "ba839447331dab93b2e54c96c377a6c767226b002d39b3865a116b8657fd4652",
+    "original_tracked_pending_files_preserved": true,
+    "local_tests": 58,
+    "focused_review": "Passed — no actionable findings; 2026-11-12",
+    "real_runner_evidence": "Pending",
+    "refactor": "Passed — context metadata extraction; 58 tests and three CLI differential scenarios; 2026-11-12"
   }
 }
