@@ -1,0 +1,64 @@
+{
+  "candidate": "a4217a10d1660fb79354c9c255f7f3a154f88f2b",
+  "target": "tests/services/indicator_builder/test_scheduler.py::test_catalog_and_control_gate[PREPARING]",
+  "observer_interval_seconds": 0.01,
+  "samples": 118,
+  "coalesce_samples": 2,
+  "elapsed_seconds": 1.3851329999997688,
+  "pytest_exit_code": 0,
+  "observer_errors": [],
+  "post_test_activity": [],
+  "version": "PostgreSQL 16.15 (Debian 16.15-1.pgdg13+2) on aarch64-unknown-linux-gnu, compiled by gcc (Debian 14.2.0-19) 14.2.0, 64-bit",
+  "production_or_test_changes": false,
+  "timeout_or_assertion_changes": false,
+  "cleanup": {
+    "remaining_connections_before_drop": 0,
+    "database_dropped": true,
+    "own_container_removed": true
+  },
+  "blocked_activity_samples": [
+    {
+      "elapsed_seconds": 1.2224642909995964,
+      "activity": [
+        {
+          "pid": 85,
+          "usename": "tiewtrade_migrator",
+          "state": "idle",
+          "wait_event_type": "Client",
+          "wait_event": "ClientRead",
+          "blockers": [],
+          "transaction_age_seconds": null,
+          "coalescing": false
+        },
+        {
+          "pid": 86,
+          "usename": "tiewtrade_indicator_builder",
+          "state": "idle in transaction",
+          "wait_event_type": "Client",
+          "wait_event": "ClientRead",
+          "blockers": [],
+          "transaction_age_seconds": 0.012377,
+          "coalescing": true
+        },
+        {
+          "pid": 87,
+          "usename": "tiewtrade_indicator_builder",
+          "state": "active",
+          "wait_event_type": "Lock",
+          "wait_event": "transactionid",
+          "blockers": [
+            86
+          ],
+          "transaction_age_seconds": 0.012217,
+          "coalescing": true
+        }
+      ]
+    }
+  ],
+  "interpretation": {
+    "local_test": "Passed",
+    "ci_failure_reproduced": false,
+    "observed": "One coalescer waited on the other coalescer transaction; blocker was idle in transaction at the activity snapshot.",
+    "limitation": "Activity and lock views are sampled separately. Lock snapshot followed release and cannot identify the exact locked row. This passing local sample cannot establish the blocker or >200ms duration in the failed CI run."
+  }
+}
