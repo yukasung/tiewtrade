@@ -101,7 +101,6 @@ jobs:
       TIEWTRADE_DATABASE_URL_PLATFORM_BOOTSTRAP: postgresql+asyncpg://tiewtrade_platform_bootstrap:dev_platform_bootstrap@127.0.0.1:5432/tiewtrade
       # ใช้เฉพาะ restore tests กับ PostgreSQL service แบบ disposable ของ job นี้
       TIEWTRADE_TEST_ADMIN_URL: postgresql+asyncpg://postgres:postgres@127.0.0.1:5432/tiewtrade
-      TIEWTRADE_TEST_SCHEDULER_LOCK_REPORT: ${{ runner.temp }}/scheduler-lock.json
       # เทสต์ของ F-05 ต้องสมัครได้ และไคลเอนต์ของเทสต์ใช้ http
       # ค่าเริ่มต้นของทั้งสองค่าคือ "ปิดการสมัคร" และ "ตั้งธง Secure"
       TIEWTRADE_REDIS_URL_API: redis://127.0.0.1:6379/0
@@ -171,6 +170,8 @@ jobs:
         run: uv run alembic upgrade head
 
       - name: pytest
+        env:
+          TIEWTRADE_TEST_SCHEDULER_LOCK_REPORT: ${{ runner.temp }}/scheduler-lock.json
         run: uv run pytest --ignore=tests/infra/protections
 
       # F-17 tests run the global protection/order workers. Retained fixtures from

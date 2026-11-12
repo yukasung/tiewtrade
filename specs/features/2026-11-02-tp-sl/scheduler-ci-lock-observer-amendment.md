@@ -65,3 +65,40 @@ cleanup. Existing local sync/failure/diagnostic receipts are combined with this
 related publication, not a separate documentation PR. Required CI on the new
 candidate remains pending; a4217a1 failure and the unconfirmed CI root cause are
 retained. No claim that local Passed resolves the prior CI failure.
+
+## Candidate3426b28 — workflow validation failure / proposed correction
+
+[CI43156400968](https://github.com/yukasung/tiewtrade/actions/runs/43156400968)
+Failed before any CI job/test started. `runner.temp` was incorrectly placed in
+job-level `env`; that context is permitted in step-level `env`, not job-level
+`env`. Local actionlint1.7.12 confirmed the precise error at ci.yml104:49.
+Earlier58CI policy tests did not validate context availability. No scheduler
+test/lock observation or isolated database validation ran on GitHub for this
+candidate. Prior a4217a1 scheduler failure remains unresolved.
+
+**Proposed, not applied:** move the single report env variable from backend job
+env to the existing main pytest step's env. Artifact path remains unchanged.
+Exact reviewable patch: `/tmp/tiewtrade-actionlint-1.7.12/workflow-context-fix.patch`.
+The corrected temporary workflow passes actionlint1.7.12 (shellcheck integration
+disabled because unavailable; not a shell check claim). The repo workflow is
+still unchanged on3426b28. Existing15observer/static and19real-DB/mode proof
+remain valid because this correction changes only CI env expression placement.
+
+Next proposed authorization: apply only that env placement correction, run
+actionlint/diff check, combine this related evidence, commit/push samePR66 and
+follow one new required CI/Security candidate (approximately20–30min). No
+production/test/timeout/assertion changes, automatic rerun or merge. Must obtain
+owner approval before proceeding: this amendment explicitly requires
+“If this candidate fails, inspect its evidence and stop/report before further
+changes or another CI attempt.” GitHub Security for3426b28 is monitored to
+completion independently of this stopped CI attempt.
+
+### Correction approved A — 2026-11-12
+
+Owner explicitly approved moving the report variable to step env, related
+commit/push and one new required-CI candidate. Applied only that reviewed env
+placement correction to the repo workflow; actionlint1.7.12 and diff check
+Passed. Earlier “Proposed, not applied” text describes the preapproval checkpoint.
+Original observer tests/SQL/timeouts/assertions/production unchanged; valid local
+proof retained. New candidate CI pending, no merge authorized. Stop/report after
+this candidate on failure; no automatic additional attempt.
