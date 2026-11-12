@@ -1,0 +1,6 @@
+{
+  "backend/tests/infra/execution_market/remaining_paper_campaign.py": "597e7a124939fbfdf7279e7fd9d8eb461b7ccfb8307f70e4037377f2243f4e44",
+  "backend/tests/infra/execution_market/remaining_paper_restore.py": "fc2155f6ed82e416a7bdf1dc4bc39b8637f9a2ad8adafa8c09e30dbeecdef15c",
+  "backend/tests/infra/execution_market/remaining_paper_cleanup_diagnostic.py": "cba677fbc7a4c3dd3423969e224c3eb1c1090465473e08baf268698d0592cd92",
+  "backend/tests/infra/execution_market/test_remaining_paper_review_regressions.py": "3a294c8875e70fd6621941c14728002111450c66dee0a50895b42006361008ca"
+}

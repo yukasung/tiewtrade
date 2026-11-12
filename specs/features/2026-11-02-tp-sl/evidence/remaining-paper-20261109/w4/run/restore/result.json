@@ -1,0 +1,407 @@
+{
+  "phase": "W4",
+  "status": "PASSED",
+  "started_at": "2026-11-09 14:53:29.914560+00:00",
+  "completed_at": "2026-11-09 14:53:32.719864+00:00",
+  "platform": "macOS-27.0.1-arm64-arm-64bit",
+  "target_database": "tiewtrade_internal20_restored_fc8e50a2a38a",
+  "fixture_coverage": {
+    "capital": 21,
+    "fills": 20,
+    "partial_orders": 1,
+    "cancels": 1,
+    "corrections": 1,
+    "resets": 1,
+    "evidence": 59,
+    "expired_claims": 1
+  },
+  "source": {
+    "audit_events": {
+      "rows": 219,
+      "sha256": "62e20b25463aad0516ab0520fdc85a80d48d2a96223981165c0a131c711eca7f"
+    },
+    "market_execution_state": {
+      "rows": 1,
+      "sha256": "76cd96e1c9c9c7ee56a33861e746619beea509882bd97ac41ea3f77f65ff1d5a"
+    },
+    "market_execution_buffer": {
+      "rows": 80,
+      "sha256": "2111f88066df91585906bb902c7bd11d6449beb1f4702c5a117aa3bcc3523647"
+    },
+    "market_execution_demand": {
+      "rows": 1,
+      "sha256": "8ccf0ccb1c9fb23b7661f2b7efc2935ee5f7fd5dda31201bcd20a72efec4f343"
+    },
+    "paper_wallet_commands": {
+      "rows": 21,
+      "sha256": "bc6c38537d97803efd13886c4706ea567efa2d79bfdd2bc417b0d9a4a13f7ab1"
+    },
+    "paper_wallet_admission_results": {
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "paper_wallet_command_dispatch": {
+      "rows": 21,
+      "sha256": "418c4a2f9ad8cfd93dadfb004caaad2e150ce393f872f288d8bc9701f40dfa4f"
+    },
+    "paper_wallet_command_results": {
+      "rows": 21,
+      "sha256": "ca547b32f179a316d0e70efedd722cf00c56853b102cc7fe241e913b9dff23eb"
+    },
+    "paper_wallets": {
+      "rows": 20,
+      "sha256": "76c48a4afa5c91c24c167461176fc3f06dc03581863ba7f4fd10c1fda9d7bf09"
+    },
+    "paper_wallet_episodes": {
+      "rows": 21,
+      "sha256": "2cb36b904217c336aff6d18edcddabf0e4162305c6197f2df936867b0ad02fc1"
+    },
+    "paper_wallet_episode_closures": {
+      "rows": 1,
+      "sha256": "ec9bf2ff1d93b4e4b0dac6f347bb5cb54149897b789d5ccc073699f829cd2b56"
+    },
+    "paper_wallet_state": {
+      "rows": 20,
+      "sha256": "23087ac624892e84fbc40e7a07fc428d603a271074062b7faa4b1fab01571201"
+    },
+    "paper_wallet_ledger": {
+      "rows": 42,
+      "sha256": "9af686bb01bd5e87bd02f0cb035abad78ec49e036f26a64129996bd4a5f8f21c"
+    },
+    "paper_execution_profiles": {
+      "rows": 21,
+      "sha256": "04ca15f7e560788e433ebb9808c91584a9c5c666b2ab58d6331133b17fabb5d1"
+    },
+    "paper_market_dependencies": {
+      "rows": 19,
+      "sha256": "91c1f76bc233e325d729f7862ecf8701da2e15b19395f673f74623408550d382"
+    },
+    "paper_order_activity": {
+      "rows": 21,
+      "sha256": "e403443bc666c85f215afcbfb806de2628d2d0ae76b381f51c7cf65cef852ba4"
+    },
+    "paper_order_initializations": {
+      "rows": 21,
+      "sha256": "75e3e4aef1967f47907b249dfff510af1fa78e32f69a687f3697c6f097d6f649"
+    },
+    "paper_order_commands": {
+      "rows": 26,
+      "sha256": "7087f85010e0467721aa61a157558105b9e505ea207af54f47f3a0ac7a2e14e7"
+    },
+    "paper_order_command_results": {
+      "rows": 23,
+      "sha256": "9ba8d49e832fe2149c386171e4d6ad33bfbd3cb082c74b7c7f711a201a887de6"
+    },
+    "paper_order_dispatch": {
+      "rows": 26,
+      "sha256": "843a415ad88fac5090248f142ebdee87f367f41e97f16ef0ae19f9f70f74a068"
+    },
+    "paper_orders": {
+      "rows": 22,
+      "sha256": "2e5d92df314790f82722b7de9f768a88b776d1be4a8ec244f63651fca6d565a8"
+    },
+    "paper_execution_inputs": {
+      "rows": 59,
+      "sha256": "9cd2bf7f4ba5c7ab1568c1fefd319e27f75019947f31cd1b8302db328c09fab3"
+    },
+    "paper_execution_input_keys": {
+      "rows": 59,
+      "sha256": "9f9143a7677d1a3709dcdf1d8474193430397b39d5161564d48a11437513d270"
+    },
+    "paper_order_events": {
+      "rows": 70,
+      "sha256": "58402edd6ad086aaa98f94de350a3d3c0f6b473f200f33a80f41b6a36927749b"
+    },
+    "paper_order_projections": {
+      "rows": 22,
+      "sha256": "628d9c12376b56825350d0f4112b12c904c6b2c3df8a2d46372f97f9e505226a"
+    },
+    "paper_reservations": {
+      "rows": 22,
+      "sha256": "29aab524a4f26dbbc4fc80a8e94a1727e14b46921e3742c756a9a3d3cc3e8436"
+    },
+    "paper_execution_links": {
+      "rows": 21,
+      "sha256": "6d3d8b29961d0d56564a9b8460c6e7c2849dde8644ac1ced2553a27b2746421b"
+    },
+    "paper_position_activity": {
+      "rows": 21,
+      "sha256": "957c1ab0982e8f14ed5f11d3c4a3d2da777f380fc5e8548e77d64b29534970f2"
+    },
+    "paper_position_events": {
+      "rows": 21,
+      "sha256": "3dbde6b124f5856330843667c78be01bb3755d16a01489cdfec2da3f1089d325"
+    },
+    "paper_position_projections": {
+      "rows": 18,
+      "sha256": "d80101b134d7ffaa7b64b42565683796baac6873c163a4f619eccc2a7f33ef10"
+    },
+    "paper_position_external_fees": {
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "paper_position_conflicts": {
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "paper_order_requests": {
+      "rows": 17,
+      "sha256": "9aef48d40714da4d772c59c0f41b6535fb0786e0f110ce7e6825019e4a086407"
+    },
+    "paper_order_request_results": {
+      "rows": 16,
+      "sha256": "a1bf78d3d71b83914ec79c9e37810ec4f5d8d1b76dec44ec102633d4cac2c695"
+    },
+    "paper_order_request_dispatch": {
+      "rows": 17,
+      "sha256": "8e63329182a3a578ddbe7337c48d70746e4e9a30f61d15b6a6699ea047643552"
+    },
+    "paper_protection_protocol": {
+      "rows": 1,
+      "sha256": "bc6119533979daaf64285009a7984ce736b4110883b5dabbbb2e43208dbcb41d"
+    },
+    "paper_protection_requests": {
+      "rows": 1,
+      "sha256": "7ffb622d8d5fdbe328407e5ef3c555031a740bb75283f811b4c9129689339de9"
+    },
+    "paper_protection_results": {
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "paper_protections": {
+      "rows": 16,
+      "sha256": "bf8905671d5e24b36e29a288553a756702c91048b615d97252f6a00c6ae7244b"
+    },
+    "paper_protection_events": {
+      "rows": 52,
+      "sha256": "61ffdf478ca5f18c68b2a0eebcaa7c0deccb7e6f282fb5351ffe34cfd3ec1b82"
+    },
+    "paper_protection_exits": {
+      "rows": 2,
+      "sha256": "2f0773a68431432ea16b9b9c59b3d77d73e48b47b9741f13341f57127014dfe0"
+    },
+    "paper_protection_exit_progress": {
+      "rows": 2,
+      "sha256": "ab65710862350fd3da0420feff7fbed87af12bf5fd84f11d2442b9f9d6d5f089"
+    },
+    "paper_protection_request_progress": {
+      "rows": 1,
+      "sha256": "613a76721175268ff183d5d2fb0050986828c39e2537cfcdb79cccf236f3f72d"
+    },
+    "user_trading_preferences": {
+      "rows": 17,
+      "sha256": "d69fdbd90132a81feece14930501a03ed0c637f5d2bd8242ff4677713c303008"
+    },
+    "risk_protocol_control": {
+      "rows": 1,
+      "sha256": "2b717dd797f5c7ef964f191a14b2b0583d171aa00aee7068f98a63663ffc2f9b"
+    },
+    "risk_owner_state": {
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "restored": {
+    "audit_events": {
+      "rows": 219,
+      "sha256": "62e20b25463aad0516ab0520fdc85a80d48d2a96223981165c0a131c711eca7f"
+    },
+    "market_execution_state": {
+      "rows": 1,
+      "sha256": "76cd96e1c9c9c7ee56a33861e746619beea509882bd97ac41ea3f77f65ff1d5a"
+    },
+    "market_execution_buffer": {
+      "rows": 80,
+      "sha256": "2111f88066df91585906bb902c7bd11d6449beb1f4702c5a117aa3bcc3523647"
+    },
+    "market_execution_demand": {
+      "rows": 1,
+      "sha256": "8ccf0ccb1c9fb23b7661f2b7efc2935ee5f7fd5dda31201bcd20a72efec4f343"
+    },
+    "paper_wallet_commands": {
+      "rows": 21,
+      "sha256": "bc6c38537d97803efd13886c4706ea567efa2d79bfdd2bc417b0d9a4a13f7ab1"
+    },
+    "paper_wallet_admission_results": {
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "paper_wallet_command_dispatch": {
+      "rows": 21,
+      "sha256": "418c4a2f9ad8cfd93dadfb004caaad2e150ce393f872f288d8bc9701f40dfa4f"
+    },
+    "paper_wallet_command_results": {
+      "rows": 21,
+      "sha256": "ca547b32f179a316d0e70efedd722cf00c56853b102cc7fe241e913b9dff23eb"
+    },
+    "paper_wallets": {
+      "rows": 20,
+      "sha256": "76c48a4afa5c91c24c167461176fc3f06dc03581863ba7f4fd10c1fda9d7bf09"
+    },
+    "paper_wallet_episodes": {
+      "rows": 21,
+      "sha256": "2cb36b904217c336aff6d18edcddabf0e4162305c6197f2df936867b0ad02fc1"
+    },
+    "paper_wallet_episode_closures": {
+      "rows": 1,
+      "sha256": "ec9bf2ff1d93b4e4b0dac6f347bb5cb54149897b789d5ccc073699f829cd2b56"
+    },
+    "paper_wallet_state": {
+      "rows": 20,
+      "sha256": "23087ac624892e84fbc40e7a07fc428d603a271074062b7faa4b1fab01571201"
+    },
+    "paper_wallet_ledger": {
+      "rows": 42,
+      "sha256": "9af686bb01bd5e87bd02f0cb035abad78ec49e036f26a64129996bd4a5f8f21c"
+    },
+    "paper_execution_profiles": {
+      "rows": 21,
+      "sha256": "04ca15f7e560788e433ebb9808c91584a9c5c666b2ab58d6331133b17fabb5d1"
+    },
+    "paper_market_dependencies": {
+      "rows": 19,
+      "sha256": "91c1f76bc233e325d729f7862ecf8701da2e15b19395f673f74623408550d382"
+    },
+    "paper_order_activity": {
+      "rows": 21,
+      "sha256": "e403443bc666c85f215afcbfb806de2628d2d0ae76b381f51c7cf65cef852ba4"
+    },
+    "paper_order_initializations": {
+      "rows": 21,
+      "sha256": "75e3e4aef1967f47907b249dfff510af1fa78e32f69a687f3697c6f097d6f649"
+    },
+    "paper_order_commands": {
+      "rows": 26,
+      "sha256": "7087f85010e0467721aa61a157558105b9e505ea207af54f47f3a0ac7a2e14e7"
+    },
+    "paper_order_command_results": {
+      "rows": 23,
+      "sha256": "9ba8d49e832fe2149c386171e4d6ad33bfbd3cb082c74b7c7f711a201a887de6"
+    },
+    "paper_order_dispatch": {
+      "rows": 26,
+      "sha256": "843a415ad88fac5090248f142ebdee87f367f41e97f16ef0ae19f9f70f74a068"
+    },
+    "paper_orders": {
+      "rows": 22,
+      "sha256": "2e5d92df314790f82722b7de9f768a88b776d1be4a8ec244f63651fca6d565a8"
+    },
+    "paper_execution_inputs": {
+      "rows": 59,
+      "sha256": "9cd2bf7f4ba5c7ab1568c1fefd319e27f75019947f31cd1b8302db328c09fab3"
+    },
+    "paper_execution_input_keys": {
+      "rows": 59,
+      "sha256": "9f9143a7677d1a3709dcdf1d8474193430397b39d5161564d48a11437513d270"
+    },
+    "paper_order_events": {
+      "rows": 70,
+      "sha256": "58402edd6ad086aaa98f94de350a3d3c0f6b473f200f33a80f41b6a36927749b"
+    },
+    "paper_order_projections": {
+      "rows": 22,
+      "sha256": "628d9c12376b56825350d0f4112b12c904c6b2c3df8a2d46372f97f9e505226a"
+    },
+    "paper_reservations": {
+      "rows": 22,
+      "sha256": "29aab524a4f26dbbc4fc80a8e94a1727e14b46921e3742c756a9a3d3cc3e8436"
+    },
+    "paper_execution_links": {
+      "rows": 21,
+      "sha256": "6d3d8b29961d0d56564a9b8460c6e7c2849dde8644ac1ced2553a27b2746421b"
+    },
+    "paper_position_activity": {
+      "rows": 21,
+      "sha256": "957c1ab0982e8f14ed5f11d3c4a3d2da777f380fc5e8548e77d64b29534970f2"
+    },
+    "paper_position_events": {
+      "rows": 21,
+      "sha256": "3dbde6b124f5856330843667c78be01bb3755d16a01489cdfec2da3f1089d325"
+    },
+    "paper_position_projections": {
+      "rows": 18,
+      "sha256": "d80101b134d7ffaa7b64b42565683796baac6873c163a4f619eccc2a7f33ef10"
+    },
+    "paper_position_external_fees": {
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "paper_position_conflicts": {
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "paper_order_requests": {
+      "rows": 17,
+      "sha256": "9aef48d40714da4d772c59c0f41b6535fb0786e0f110ce7e6825019e4a086407"
+    },
+    "paper_order_request_results": {
+      "rows": 16,
+      "sha256": "a1bf78d3d71b83914ec79c9e37810ec4f5d8d1b76dec44ec102633d4cac2c695"
+    },
+    "paper_order_request_dispatch": {
+      "rows": 17,
+      "sha256": "8e63329182a3a578ddbe7337c48d70746e4e9a30f61d15b6a6699ea047643552"
+    },
+    "paper_protection_protocol": {
+      "rows": 1,
+      "sha256": "bc6119533979daaf64285009a7984ce736b4110883b5dabbbb2e43208dbcb41d"
+    },
+    "paper_protection_requests": {
+      "rows": 1,
+      "sha256": "7ffb622d8d5fdbe328407e5ef3c555031a740bb75283f811b4c9129689339de9"
+    },
+    "paper_protection_results": {
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "paper_protections": {
+      "rows": 16,
+      "sha256": "bf8905671d5e24b36e29a288553a756702c91048b615d97252f6a00c6ae7244b"
+    },
+    "paper_protection_events": {
+      "rows": 52,
+      "sha256": "61ffdf478ca5f18c68b2a0eebcaa7c0deccb7e6f282fb5351ffe34cfd3ec1b82"
+    },
+    "paper_protection_exits": {
+      "rows": 2,
+      "sha256": "2f0773a68431432ea16b9b9c59b3d77d73e48b47b9741f13341f57127014dfe0"
+    },
+    "paper_protection_exit_progress": {
+      "rows": 2,
+      "sha256": "ab65710862350fd3da0420feff7fbed87af12bf5fd84f11d2442b9f9d6d5f089"
+    },
+    "paper_protection_request_progress": {
+      "rows": 1,
+      "sha256": "613a76721175268ff183d5d2fb0050986828c39e2537cfcdb79cccf236f3f72d"
+    },
+    "user_trading_preferences": {
+      "rows": 17,
+      "sha256": "d69fdbd90132a81feece14930501a03ed0c637f5d2bd8242ff4677713c303008"
+    },
+    "risk_protocol_control": {
+      "rows": 1,
+      "sha256": "2b717dd797f5c7ef964f191a14b2b0583d171aa00aee7068f98a63663ffc2f9b"
+    },
+    "risk_owner_state": {
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "rls_and_grants_match": true,
+  "canonical_data_match": true,
+  "domain_replay": {
+    "owners": 21,
+    "evidence_records": 59,
+    "checkpoints": 20,
+    "replayed_positions": 18
+  },
+  "claim_recovery": {
+    "expired_before": 1,
+    "expired_after": 0,
+    "rounds": 1
+  },
+  "claim_recovery_economic_effects_unchanged": true,
+  "backup_bytes": 1828938,
+  "internal_recovery": "PASSED",
+  "source_unchanged": true
+}

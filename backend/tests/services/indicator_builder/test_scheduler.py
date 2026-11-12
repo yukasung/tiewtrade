@@ -13,6 +13,9 @@ from tests.infra.indicators.test_claims import builder_engine as builder_engine
 from tests.infra.indicators.test_claims import prepared as prepared
 from tests.infra.indicators.test_claims import slot
 from tests.infra.indicators.test_source import active as active
+from tests.services.indicator_builder.scheduler_lock_diagnostic import (
+    scheduler_lock_observer as scheduler_lock_observer,
+)
 from tests.services.indicator_builder.test_attempt import metadata, seed
 from tiewtrade.core.market_catalog import PAIRS
 from tiewtrade.core.market_data import Timeframe, align_ceil, align_floor, retention_cutoff
@@ -80,7 +83,11 @@ async def terminal(builder: AsyncEngine, admin: AsyncEngine, outcome: AttemptOut
 
 @pytest.mark.parametrize("mode", ["LEGACY", "PAUSED", "PREPARING", "PREPARED"])
 async def test_catalog_and_control_gate(
-    prepared: None, builder_engine: AsyncEngine, migrator_engine: AsyncEngine, mode: str
+    prepared: None,
+    builder_engine: AsyncEngine,
+    migrator_engine: AsyncEngine,
+    mode: str,
+    scheduler_lock_observer: None,
 ) -> None:
     async with migrator_engine.begin() as c:
         await c.execute(text("UPDATE indicator_rollout_control SET mode=:mode"), {"mode": mode})

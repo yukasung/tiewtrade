@@ -1,0 +1,10 @@
+{
+  "status": "INCOMPLETE",
+  "exit_code": 1,
+  "seconds": 451.81421012500005,
+  "error_type": "CampaignCleanupIncomplete",
+  "candidate_unchanged": true,
+  "free_bytes_after": 64107597824,
+  "budget_seconds": 1200,
+  "budget_scope": "preflight,fixture,measurement,verification,cleanup"
+}

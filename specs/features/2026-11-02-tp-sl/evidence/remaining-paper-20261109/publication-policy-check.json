@@ -1,0 +1,23 @@
+{
+  "date": "2026-11-09",
+  "owner_decision": "Approved six exact immutable evidence false-positive bindings; no merge permission",
+  "implementation_commit": "1291c93dc5436548ae747fbe9e9898f42ddc7ae8",
+  "registry_old_bindings": 39,
+  "registry_new_bindings": 6,
+  "new_distinct_occurrences": 172,
+  "checks": {
+    "command": "python -m unittest tools.security.tests.test_evidence tools.security.tests.test_policy -q",
+    "tests_run": 21,
+    "passed": 20,
+    "skipped": 1,
+    "skip_scope": "optional real scanner probe; full actual candidate scan performed separately",
+    "result": "OK"
+  },
+  "scan_state": "full scan of final commit to follow; not a remote CI result",
+  "unchanged": [
+    "scanner rules",
+    "tool pins/checksums",
+    "thresholds",
+    "production trading code"
+  ]
+}

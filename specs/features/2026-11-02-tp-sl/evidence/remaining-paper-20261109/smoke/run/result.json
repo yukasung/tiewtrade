@@ -1,0 +1,555 @@
+{
+  "acceptance_profile": {
+    "name": "PAPER_INTERNAL20_V1",
+    "owners": 20,
+    "baseline_orders_per_owner": 20,
+    "workers": 20,
+    "phase": "SMOKE",
+    "rate": 2,
+    "cycles_per_owner": 6,
+    "seconds": 300,
+    "expected_commands": 600,
+    "scope": "internal pilot only; not the 100-account profile or F17 Completed",
+    "intake": "diagnostic internal commands"
+  },
+  "phase": "SMOKE",
+  "status": "PASSED",
+  "processing_acceptance": {
+    "revision": "NC12_SECTION16_PILOT",
+    "applicable": true,
+    "p95_limit_seconds": 0.5,
+    "p99_limit_seconds": 2.0,
+    "target_p95_seconds": 0.25,
+    "target_p99_seconds": 1.0,
+    "passed": true,
+    "target_passed": true,
+    "performance_warning": false
+  },
+  "performance_warning": false,
+  "base_assertions_passed": true,
+  "resource_base_assertions_passed": true,
+  "owned_worker_pool_paths": [
+    "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-f17-validation-plan-20261109/specs/features/2026-11-02-tp-sl/evidence/remaining-paper-20261109/smoke/run/worker-0.owned-pools.json",
+    "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-f17-validation-plan-20261109/specs/features/2026-11-02-tp-sl/evidence/remaining-paper-20261109/smoke/run/worker-1.owned-pools.json",
+    "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-f17-validation-plan-20261109/specs/features/2026-11-02-tp-sl/evidence/remaining-paper-20261109/smoke/run/worker-2.owned-pools.json",
+    "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-f17-validation-plan-20261109/specs/features/2026-11-02-tp-sl/evidence/remaining-paper-20261109/smoke/run/worker-3.owned-pools.json",
+    "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-f17-validation-plan-20261109/specs/features/2026-11-02-tp-sl/evidence/remaining-paper-20261109/smoke/run/worker-4.owned-pools.json",
+    "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-f17-validation-plan-20261109/specs/features/2026-11-02-tp-sl/evidence/remaining-paper-20261109/smoke/run/worker-5.owned-pools.json",
+    "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-f17-validation-plan-20261109/specs/features/2026-11-02-tp-sl/evidence/remaining-paper-20261109/smoke/run/worker-6.owned-pools.json",
+    "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-f17-validation-plan-20261109/specs/features/2026-11-02-tp-sl/evidence/remaining-paper-20261109/smoke/run/worker-7.owned-pools.json",
+    "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-f17-validation-plan-20261109/specs/features/2026-11-02-tp-sl/evidence/remaining-paper-20261109/smoke/run/worker-8.owned-pools.json",
+    "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-f17-validation-plan-20261109/specs/features/2026-11-02-tp-sl/evidence/remaining-paper-20261109/smoke/run/worker-9.owned-pools.json",
+    "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-f17-validation-plan-20261109/specs/features/2026-11-02-tp-sl/evidence/remaining-paper-20261109/smoke/run/worker-10.owned-pools.json",
+    "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-f17-validation-plan-20261109/specs/features/2026-11-02-tp-sl/evidence/remaining-paper-20261109/smoke/run/worker-11.owned-pools.json",
+    "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-f17-validation-plan-20261109/specs/features/2026-11-02-tp-sl/evidence/remaining-paper-20261109/smoke/run/worker-12.owned-pools.json",
+    "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-f17-validation-plan-20261109/specs/features/2026-11-02-tp-sl/evidence/remaining-paper-20261109/smoke/run/worker-13.owned-pools.json",
+    "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-f17-validation-plan-20261109/specs/features/2026-11-02-tp-sl/evidence/remaining-paper-20261109/smoke/run/worker-14.owned-pools.json",
+    "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-f17-validation-plan-20261109/specs/features/2026-11-02-tp-sl/evidence/remaining-paper-20261109/smoke/run/worker-15.owned-pools.json",
+    "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-f17-validation-plan-20261109/specs/features/2026-11-02-tp-sl/evidence/remaining-paper-20261109/smoke/run/worker-16.owned-pools.json",
+    "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-f17-validation-plan-20261109/specs/features/2026-11-02-tp-sl/evidence/remaining-paper-20261109/smoke/run/worker-17.owned-pools.json",
+    "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-f17-validation-plan-20261109/specs/features/2026-11-02-tp-sl/evidence/remaining-paper-20261109/smoke/run/worker-18.owned-pools.json",
+    "/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-f17-validation-plan-20261109/specs/features/2026-11-02-tp-sl/evidence/remaining-paper-20261109/smoke/run/worker-19.owned-pools.json"
+  ],
+  "smoke_only": true,
+  "elapsed_seconds": 300.0005954160001,
+  "target_seconds": 300.0,
+  "drain_seconds": 0.7068353340000613,
+  "counters": {
+    "offered": 600,
+    "admitted": 600,
+    "completed": 600,
+    "rejected": 0,
+    "fills": 240,
+    "cancels": 120,
+    "replays": 120,
+    "cycles": 120
+  },
+  "engine_transaction_seconds": {
+    "applicable": true,
+    "p95": 0.09659812500012777,
+    "p99": 0.13021891700009292,
+    "max": 0.29695120900009897,
+    "samples": 15855,
+    "window": {
+      "attribution": "transaction_start",
+      "started": 1373.51013875,
+      "ended": 1673.510735208,
+      "status": "MEASURED",
+      "excluded_fault_intervals": []
+    }
+  },
+  "end_to_end_command_seconds": {
+    "p95": 1.0438878750001095,
+    "p99": 1.0786424999998871,
+    "max": 1.2209574579999298
+  },
+  "publisher": {
+    "target_hz": 10,
+    "stage": "publish_market",
+    "published": 3056,
+    "last_input_id": 3056,
+    "book_owner": "f7c5f3fb-6cf4-4f27-9c14-e9aa73483594",
+    "book_generation": 1,
+    "last_progress_at": "2026-11-09T14:29:06.600704+00:00",
+    "max_publish_seconds": 0.583804291999968
+  },
+  "measured_book_inputs": 3000,
+  "required_book_inputs": 3000,
+  "resources": {
+    "samples": 60,
+    "peak_process_rss_bytes": 89489408,
+    "peak_rss_by_pid": {
+      "2974": 89489408,
+      "3091": 65241088,
+      "3092": 72941568,
+      "3093": 73187328,
+      "3094": 73531392,
+      "3095": 72974336,
+      "3096": 73465856,
+      "3097": 67272704,
+      "3098": 55656448,
+      "3099": 63356928,
+      "3100": 73564160,
+      "3101": 73465856,
+      "3102": 73646080,
+      "3103": 73154560,
+      "3104": 75530240,
+      "3105": 75448320,
+      "3106": 73777152,
+      "3107": 73809920,
+      "3108": 73547776,
+      "3109": 73547776,
+      "3110": 71647232
+    },
+    "peak_connections": 59,
+    "connections_start": 57,
+    "connections_end": 59,
+    "peak_lock_waits": 0,
+    "lock_waits_end": 0,
+    "peak_buffer_rows": 3016,
+    "buffer_rows_start": 50,
+    "buffer_rows_end": 3016,
+    "database_bytes_start": 36330519,
+    "database_bytes_end": 264864271,
+    "database_growth_bytes": 228533752
+  },
+  "resource_assertions_passed": true,
+  "global_invariants": {
+    "orders": 760,
+    "fills": 240,
+    "cancels": 120,
+    "pending_dispatch": 400,
+    "unlinked_fills": 0,
+    "invalid_reservations": 0,
+    "invalid_positions": 0,
+    "wrong_mode": 0,
+    "input_lag": 3,
+    "duplicate_fill_effects": 0,
+    "expected_orders": 760,
+    "expected_fills": 240,
+    "expected_cancels": 120,
+    "expected_pending_dispatch": 400,
+    "passed": true
+  },
+  "fault": null,
+  "fault_observations": [],
+  "endurance_rss": null,
+  "worker_failures": [],
+  "owners": [
+    {
+      "user_id": "2af482c7-ec7a-42d3-b353-bf9d00b247d3",
+      "episode_id": "8614d551-3e25-4969-9406-05c2d6d47bd6",
+      "balance": "9992.812594",
+      "expected_balance": "9992.812594",
+      "accepted": 20,
+      "filled": 12,
+      "canceled": 6,
+      "quote_reserved": "20.000000000000000000",
+      "base_reserved": "0",
+      "held": "0",
+      "cost": "0",
+      "passed": true
+    },
+    {
+      "user_id": "c88ffc24-ee22-4338-b538-7e1dd9d1b7b9",
+      "episode_id": "648fc3f2-8e96-465e-bf2d-640c14ae1daa",
+      "balance": "9992.812594",
+      "expected_balance": "9992.812594",
+      "accepted": 20,
+      "filled": 12,
+      "canceled": 6,
+      "quote_reserved": "20.000000000000000000",
+      "base_reserved": "0",
+      "held": "0",
+      "cost": "0",
+      "passed": true
+    },
+    {
+      "user_id": "6f237e99-5959-4201-a3af-02b740ca965f",
+      "episode_id": "1afa3ae0-1b9a-4650-8fcb-d62c709ea978",
+      "balance": "9992.812594",
+      "expected_balance": "9992.812594",
+      "accepted": 20,
+      "filled": 12,
+      "canceled": 6,
+      "quote_reserved": "20.000000000000000000",
+      "base_reserved": "0",
+      "held": "0",
+      "cost": "0",
+      "passed": true
+    },
+    {
+      "user_id": "7ec92b2a-07b3-44cd-9a24-631aa453c28f",
+      "episode_id": "7a946671-d962-44f7-ae4d-fb17fd9747ab",
+      "balance": "9992.812594",
+      "expected_balance": "9992.812594",
+      "accepted": 20,
+      "filled": 12,
+      "canceled": 6,
+      "quote_reserved": "20.000000000000000000",
+      "base_reserved": "0",
+      "held": "0",
+      "cost": "0",
+      "passed": true
+    },
+    {
+      "user_id": "be0df93e-2311-477f-805d-aa9e53602845",
+      "episode_id": "fe936994-69ff-4f05-8cf5-49372d17c0fd",
+      "balance": "9992.812594",
+      "expected_balance": "9992.812594",
+      "accepted": 20,
+      "filled": 12,
+      "canceled": 6,
+      "quote_reserved": "20.000000000000000000",
+      "base_reserved": "0",
+      "held": "0",
+      "cost": "0",
+      "passed": true
+    },
+    {
+      "user_id": "17dedca1-c82c-462d-8ead-2b8b63863e29",
+      "episode_id": "ddcbd864-9a33-41ae-9e27-e9f78ea95590",
+      "balance": "9992.812594",
+      "expected_balance": "9992.812594",
+      "accepted": 20,
+      "filled": 12,
+      "canceled": 6,
+      "quote_reserved": "20.000000000000000000",
+      "base_reserved": "0",
+      "held": "0",
+      "cost": "0",
+      "passed": true
+    },
+    {
+      "user_id": "1b1f60f0-570b-426b-bf18-f6927eb64c50",
+      "episode_id": "8e3168f0-87eb-45d4-92b7-92b4b8b4951b",
+      "balance": "9992.812594",
+      "expected_balance": "9992.812594",
+      "accepted": 20,
+      "filled": 12,
+      "canceled": 6,
+      "quote_reserved": "20.000000000000000000",
+      "base_reserved": "0",
+      "held": "0",
+      "cost": "0",
+      "passed": true
+    },
+    {
+      "user_id": "58bdfd6a-16df-4976-a8f6-e28c6d14af33",
+      "episode_id": "561c30f2-49c5-4200-8d18-1db431fe1d6e",
+      "balance": "9992.812594",
+      "expected_balance": "9992.812594",
+      "accepted": 20,
+      "filled": 12,
+      "canceled": 6,
+      "quote_reserved": "20.000000000000000000",
+      "base_reserved": "0",
+      "held": "0",
+      "cost": "0",
+      "passed": true
+    },
+    {
+      "user_id": "fd2d8e5f-fb92-401f-b260-2907b7ea5374",
+      "episode_id": "3a5a96ea-8493-486d-ae1d-0c44e53afc6b",
+      "balance": "9992.812594",
+      "expected_balance": "9992.812594",
+      "accepted": 20,
+      "filled": 12,
+      "canceled": 6,
+      "quote_reserved": "20.000000000000000000",
+      "base_reserved": "0",
+      "held": "0",
+      "cost": "0",
+      "passed": true
+    },
+    {
+      "user_id": "51e460f6-ed66-45af-a363-a9fcb5b34f8b",
+      "episode_id": "a4b5f579-5794-4960-8f45-f69535822ac0",
+      "balance": "9992.812594",
+      "expected_balance": "9992.812594",
+      "accepted": 20,
+      "filled": 12,
+      "canceled": 6,
+      "quote_reserved": "20.000000000000000000",
+      "base_reserved": "0",
+      "held": "0",
+      "cost": "0",
+      "passed": true
+    },
+    {
+      "user_id": "32a4caf7-0b6a-4afb-b48f-83828a6b13af",
+      "episode_id": "beb15b80-1ba4-4873-8230-5bcf0b93cc8f",
+      "balance": "9992.812594",
+      "expected_balance": "9992.812594",
+      "accepted": 20,
+      "filled": 12,
+      "canceled": 6,
+      "quote_reserved": "20.000000000000000000",
+      "base_reserved": "0",
+      "held": "0",
+      "cost": "0",
+      "passed": true
+    },
+    {
+      "user_id": "02f51237-ea63-43a6-bc06-5d0e25471acd",
+      "episode_id": "a79c8caf-4f21-49a2-a8d1-581072627c8d",
+      "balance": "9992.812594",
+      "expected_balance": "9992.812594",
+      "accepted": 20,
+      "filled": 12,
+      "canceled": 6,
+      "quote_reserved": "20.000000000000000000",
+      "base_reserved": "0",
+      "held": "0",
+      "cost": "0",
+      "passed": true
+    },
+    {
+      "user_id": "b8f36d81-a1cd-45a4-99a2-72b259f08211",
+      "episode_id": "337128a8-c96b-467e-901c-fd9504e95e00",
+      "balance": "9992.812594",
+      "expected_balance": "9992.812594",
+      "accepted": 20,
+      "filled": 12,
+      "canceled": 6,
+      "quote_reserved": "20.000000000000000000",
+      "base_reserved": "0",
+      "held": "0",
+      "cost": "0",
+      "passed": true
+    },
+    {
+      "user_id": "28e05e77-549d-441e-b620-7d5fc2a8aa9e",
+      "episode_id": "e44a3385-697e-4e7f-9699-6d7c93fd2647",
+      "balance": "9992.812594",
+      "expected_balance": "9992.812594",
+      "accepted": 20,
+      "filled": 12,
+      "canceled": 6,
+      "quote_reserved": "20.000000000000000000",
+      "base_reserved": "0",
+      "held": "0",
+      "cost": "0",
+      "passed": true
+    },
+    {
+      "user_id": "586c6399-15a9-4e2a-a882-246b0150e7ab",
+      "episode_id": "a4a8e8ae-e131-4eb8-acbf-7b21df13d199",
+      "balance": "9992.812594",
+      "expected_balance": "9992.812594",
+      "accepted": 20,
+      "filled": 12,
+      "canceled": 6,
+      "quote_reserved": "20.000000000000000000",
+      "base_reserved": "0",
+      "held": "0",
+      "cost": "0",
+      "passed": true
+    },
+    {
+      "user_id": "7d1397ec-b24e-4da3-99ac-80874db40f95",
+      "episode_id": "757c896a-f5b4-438e-a79a-7faddb310718",
+      "balance": "9992.812594",
+      "expected_balance": "9992.812594",
+      "accepted": 20,
+      "filled": 12,
+      "canceled": 6,
+      "quote_reserved": "20.000000000000000000",
+      "base_reserved": "0",
+      "held": "0",
+      "cost": "0",
+      "passed": true
+    },
+    {
+      "user_id": "21ccef66-04bd-4bd7-b66a-63b8a50c416d",
+      "episode_id": "3aa84596-e546-4e5f-b407-72b3196bf81b",
+      "balance": "9992.812594",
+      "expected_balance": "9992.812594",
+      "accepted": 20,
+      "filled": 12,
+      "canceled": 6,
+      "quote_reserved": "20.000000000000000000",
+      "base_reserved": "0",
+      "held": "0",
+      "cost": "0",
+      "passed": true
+    },
+    {
+      "user_id": "eb1c5164-24cb-451e-bbfd-a90141ca466d",
+      "episode_id": "63a1df57-034d-4094-8ac7-1b0960c6edd3",
+      "balance": "9992.812594",
+      "expected_balance": "9992.812594",
+      "accepted": 20,
+      "filled": 12,
+      "canceled": 6,
+      "quote_reserved": "20.000000000000000000",
+      "base_reserved": "0",
+      "held": "0",
+      "cost": "0",
+      "passed": true
+    },
+    {
+      "user_id": "ae103725-3d30-4121-a81e-8dd3ceeb9541",
+      "episode_id": "d3eac6ca-2f14-47a2-be64-4bcb257da55c",
+      "balance": "9992.812594",
+      "expected_balance": "9992.812594",
+      "accepted": 20,
+      "filled": 12,
+      "canceled": 6,
+      "quote_reserved": "20.000000000000000000",
+      "base_reserved": "0",
+      "held": "0",
+      "cost": "0",
+      "passed": true
+    },
+    {
+      "user_id": "4ec07600-d362-4279-b9a9-459eae74fc3c",
+      "episode_id": "ffb043ed-2fde-442b-9497-2e301a084e1e",
+      "balance": "9992.812594",
+      "expected_balance": "9992.812594",
+      "accepted": 20,
+      "filled": 12,
+      "canceled": 6,
+      "quote_reserved": "20.000000000000000000",
+      "base_reserved": "0",
+      "held": "0",
+      "cost": "0",
+      "passed": true
+    }
+  ],
+  "positions": null,
+  "pool_contract": {
+    "passed": true,
+    "errors": [],
+    "violations": [],
+    "incomplete": [],
+    "processes": [
+      {
+        "file": "parent.owned-pools.json",
+        "pid": 2974,
+        "passed": true
+      },
+      {
+        "file": "worker-0.owned-pools.json",
+        "pid": 3091,
+        "passed": true
+      },
+      {
+        "file": "worker-1.owned-pools.json",
+        "pid": 3092,
+        "passed": true
+      },
+      {
+        "file": "worker-2.owned-pools.json",
+        "pid": 3093,
+        "passed": true
+      },
+      {
+        "file": "worker-3.owned-pools.json",
+        "pid": 3094,
+        "passed": true
+      },
+      {
+        "file": "worker-4.owned-pools.json",
+        "pid": 3095,
+        "passed": true
+      },
+      {
+        "file": "worker-5.owned-pools.json",
+        "pid": 3096,
+        "passed": true
+      },
+      {
+        "file": "worker-6.owned-pools.json",
+        "pid": 3097,
+        "passed": true
+      },
+      {
+        "file": "worker-7.owned-pools.json",
+        "pid": 3098,
+        "passed": true
+      },
+      {
+        "file": "worker-8.owned-pools.json",
+        "pid": 3099,
+        "passed": true
+      },
+      {
+        "file": "worker-9.owned-pools.json",
+        "pid": 3100,
+        "passed": true
+      },
+      {
+        "file": "worker-10.owned-pools.json",
+        "pid": 3101,
+        "passed": true
+      },
+      {
+        "file": "worker-11.owned-pools.json",
+        "pid": 3102,
+        "passed": true
+      },
+      {
+        "file": "worker-12.owned-pools.json",
+        "pid": 3103,
+        "passed": true
+      },
+      {
+        "file": "worker-13.owned-pools.json",
+        "pid": 3104,
+        "passed": true
+      },
+      {
+        "file": "worker-14.owned-pools.json",
+        "pid": 3105,
+        "passed": true
+      },
+      {
+        "file": "worker-15.owned-pools.json",
+        "pid": 3106,
+        "passed": true
+      },
+      {
+        "file": "worker-16.owned-pools.json",
+        "pid": 3107,
+        "passed": true
+      },
+      {
+        "file": "worker-17.owned-pools.json",
+        "pid": 3108,
+        "passed": true
+      },
+      {
+        "file": "worker-18.owned-pools.json",
+        "pid": 3109,
+        "passed": true
+      },
+      {
+        "file": "worker-19.owned-pools.json",
+        "pid": 3110,
+        "passed": true
+      }
+    ],
+    "worker_process_count": 20
+  }
+}

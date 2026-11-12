@@ -1,0 +1,8 @@
+{
+  "transport": "production ASGI HTTP",
+  "api_instances": 1,
+  "clients": 0,
+  "policy": "TransactionalRiskPolicy",
+  "risk_setting": "UNSET per original Paper fixture",
+  "dependency_overrides": false
+}

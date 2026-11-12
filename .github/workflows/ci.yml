@@ -170,6 +170,8 @@ jobs:
         run: uv run alembic upgrade head
 
       - name: pytest
+        env:
+          TIEWTRADE_TEST_SCHEDULER_LOCK_REPORT: ${{ runner.temp }}/scheduler-lock.json
         run: uv run pytest --ignore=tests/infra/protections
 
       # F-17 tests run the global protection/order workers. Retained fixtures from
@@ -198,6 +200,15 @@ jobs:
         run: |
           bash scripts/reset_ci_test_database.sh "${{ job.services.postgres.id }}"
           uv run pytest -m isolated_migration tests/infra/protections/test_migration_guards.py
+
+      - name: Preserve bounded scheduler lock evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: scheduler-lock-evidence
+          path: ${{ runner.temp }}/scheduler-lock.json
+          if-no-files-found: warn
+          retention-days: 7
 
   api-contract-run:
     name: api-contract execution
