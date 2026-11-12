@@ -1,5 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState, type RefObject } from "react";
+import { createPortal, flushSync } from "react-dom";
+import { Dropdown } from "./components/ui/Dropdown";
 import { Alert } from "./components/ui/Alert";
 import { Button } from "./components/ui/Button";
 import { fetchStopRequestByKey, fetchStopStatus, postStop, stopKey, type StopMode, type StopReceipt } from "./killSwitch";
@@ -25,9 +27,14 @@ function recoveryErrorKind(error: unknown): "missing" | "invalid-key" | "unknown
   return error.status === 422 ? "invalid-key" : "unknown";
 }
 
-function StopControl({ owner, mode }: { owner: string; mode: StopMode }) {
+function StopControl({ owner, mode, settingsTarget, settingsTrigger, closeSettings }: {
+  owner: string;
+  mode: StopMode;
+  settingsTarget: HTMLDivElement | null;
+  settingsTrigger: RefObject<HTMLButtonElement>;
+  closeSettings: () => void;
+}) {
   const client = useQueryClient();
-  const detailsTrigger = useRef<HTMLButtonElement>(null);
   const [details, setDetails] = useState(false);
   const closeDetails = useCallback(() => setDetails(false), []);
   const journal = `tiewtrade.kill-switch.stop.v1:${owner}:${mode}`;
@@ -106,22 +113,66 @@ function StopControl({ owner, mode }: { owner: string; mode: StopMode }) {
     }
   }, onSuccess: () => { if (mounted.current) return client.invalidateQueries({ queryKey: stopKey(owner, mode) }); } });
   const label = mode === "PAPER" ? t("paperStop") : t("liveStop");
-  const actionText = restoring ? t("checkingPrevious") : unknown ? t("retry") : label;
-  const actionLabel = unknown ? `${label} — ${t("retry")}` : label;
-  return <div className="kill-switch-control">
-    <Button size="sm" variant={mode === "LIVE" ? "outline" : "primary"} disabled={mutation.isPending || restoring} onClick={() => mutation.mutate()} aria-label={actionLabel}>{actionText}</Button>
-    <span role="status" className="kill-switch-state">{status.data?.progress ? t(status.data.progress) : status.isLoading ? t("loading") : "—"}{status.data?.pending_count ? ` (${status.data.pending_count} ${t("pending")})` : ""}</span>
-    {(status.data?.stop_id || details) && <Button ref={detailsTrigger} size="sm" variant="outline" onClick={() => setDetails(true)}>{t("details")}</Button>}
-    {(unknown || storageUnavailable) && <div role="alert" className="kill-switch-unknown">
-      {unknown && <p>{t("requestFailed")}</p>}
-      {storageUnavailable && <p>{t("storageUnavailable")}</p>}
-    </div>}
-    <StopSummaryModal owner={owner} mode={mode} stopId={status.data?.stop_id ?? null} open={details} onClose={closeDetails} returnFocusRef={detailsTrigger} />
-  </div>;
+  const actionText = restoring ? t("checkingPrevious") : label;
+  const actionLabel = `${label} — ${t("retry")}`;
+  return <>
+    {settingsTarget && createPortal(<section className="kill-switch-settings-group" aria-label={mode}>
+      <strong>{mode}</strong>
+      <div className="kill-switch-control" role="group" aria-label={t("modeStatus", { mode })}>
+        <span role="status" className="kill-switch-state">{status.data?.progress ? t(status.data.progress) : status.isLoading ? t("loading") : "—"}{status.data?.pending_count ? ` (${status.data.pending_count} ${t("pending")})` : ""}</span>
+        {(unknown || storageUnavailable) && <div role="alert" className="kill-switch-unknown">
+          {unknown && <p>{t("requestFailed")}</p>}
+          {storageUnavailable && <p>{t("storageUnavailable")}</p>}
+        </div>}
+      </div>
+      <Button size="sm" variant={mode === "LIVE" ? "outline" : "primary"} disabled={mutation.isPending || restoring || unknown}
+        onClick={() => { closeSettings(); settingsTrigger.current?.focus(); mutation.mutate(); }} aria-label={label}>{actionText}</Button>
+      {(status.data?.stop_id || details) && <Button size="sm" variant="outline" onClick={() => {
+        flushSync(closeSettings);
+        setDetails(true);
+      }}>{t("details")}</Button>}
+      {unknown && <Button size="sm" variant="outline" disabled={mutation.isPending || restoring} aria-label={actionLabel}
+        onClick={() => { closeSettings(); settingsTrigger.current?.focus(); mutation.mutate(); }}>{t("retry")}</Button>}
+      {!status.data?.stop_id && !details && !unknown && <p>{t("noStopDetails")}</p>}
+    </section>, settingsTarget)}
+    <StopSummaryModal owner={owner} mode={mode} stopId={status.data?.stop_id ?? null} open={details} onClose={closeDetails} returnFocusRef={settingsTrigger} />
+  </>;
 }
 
-export function KillSwitchControls({ owner }: { owner: string }) {
-  return <div className="kill-switch-controls" aria-label="Kill switch"><StopControl key={`${owner}:PAPER`} owner={owner} mode="PAPER"/><StopControl key={`${owner}:LIVE`} owner={owner} mode="LIVE"/></div>;
+export function KillSwitchControls({ owner, navigationScope }: { owner: string; navigationScope?: string }) {
+  const [open, setOpen] = useState(false);
+  const [target, setTarget] = useState<HTMLDivElement | null>(null);
+  const trigger = useRef<HTMLButtonElement>(null);
+  const id = useId();
+  const close = useCallback(() => setOpen(false), []);
+  useLayoutEffect(close, [owner, navigationScope, close]);
+  useEffect(() => {
+    const media = window.matchMedia("(min-width: 1280px)");
+    const resize = () => {
+      const restore = target?.contains(document.activeElement);
+      flushSync(close);
+      if (restore) trigger.current?.focus();
+    };
+    window.addEventListener("popstate", close);
+    media.addEventListener("change", resize);
+    return () => {
+      window.removeEventListener("popstate", close);
+      media.removeEventListener("change", resize);
+    };
+  }, [close, target]);
+  return <div className="kill-switch-controls" aria-label="Kill switch">
+      <StopControl key={`${owner}:PAPER`} owner={owner} mode="PAPER" settingsTarget={target} settingsTrigger={trigger} closeSettings={close}/>
+    <StopControl key={`${owner}:LIVE`} owner={owner} mode="LIVE" settingsTarget={target} settingsTrigger={trigger} closeSettings={close}/>
+    <div className="kill-switch-settings">
+      <Button ref={trigger} variant="outline" className="account-icon-button" aria-label={t("settings")} title={t("settings")}
+        aria-expanded={open} aria-controls={id} onClick={() => setOpen(value => !value)}>
+        <span className="navigation-icon icon-settings" aria-hidden="true" />
+      </Button>
+      <Dropdown open={open} keepMounted onClose={close} trigger={trigger} id={id} className="kill-switch-settings-panel">
+        <div ref={setTarget} role="group" aria-label={t("settings")} />
+      </Dropdown>
+    </div>
+  </div>;
 }
 
 export function KillSwitchBanner({ owner }: { owner: string }) {

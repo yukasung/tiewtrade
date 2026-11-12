@@ -148,7 +148,7 @@ test("Paper use without key/TOTP → key setup → deletion retains preference",
   await menu.click();
   await page
     .getByRole("button", { name: "ปิดเมนูบัญชี", exact: true })
-    .click({ position: { x: 350, y: 400 } });
+    .click();
   await expect(menu).toBeFocused();
   await page.goto("/api-keys");
   await keys.getByRole("button", { name: "ลบ key", exact: true }).click();

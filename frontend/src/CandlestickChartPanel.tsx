@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { ChartToolbarTarget } from "./TradingWorkspace";
 import { ApiRequestError } from "./auth";
 import { MarketTime, MarketValue } from "./components/MarketValue";
 import { Button } from "./components/ui/Button";
@@ -30,14 +31,14 @@ const belongsToSeries = (value: Series | undefined, series: Series) => Boolean(v
 export type ChartMarketSnapshot = { base: string; price: string; observedAt: string };
 
 export function CandlestickChartPanel({ userId, base: controlledBase, onBaseChange, embedded = false,
-  onMarketSnapshot, toolbarTargetId }: {
+  onMarketSnapshot }: {
   userId: string;
   base?: string;
   onBaseChange?: (base: string) => void;
   embedded?: boolean;
   onMarketSnapshot?: (snapshot: ChartMarketSnapshot | null) => void;
-  toolbarTargetId?: string;
 }) {
+  const toolbarTarget = useContext(ChartToolbarTarget);
   const [localBase, setLocalBase] = useState("BTC");
   const base = controlledBase ?? localBase;
   const setBase = onBaseChange ?? setLocalBase;
@@ -46,7 +47,6 @@ export function CandlestickChartPanel({ userId, base: controlledBase, onBaseChan
   const [timeframe, setTimeframe] = useState<Timeframe>("1h");
   const [selected, setSelected] = useState<number | null>(null);
   const [renderLimit, setRenderLimit] = useState<string | null>(null);
-  const [toolbarTarget, setToolbarTarget] = useState<HTMLElement | null>(null);
   const host = useRef<HTMLDivElement>(null), renderer = useRef<ChartRenderer>();
   const historyViewportInitialized = useRef(false);
   const drawing = useRef(false);
@@ -86,11 +86,6 @@ export function CandlestickChartPanel({ userId, base: controlledBase, onBaseChan
   const summaryPrice = summaryCandle?.close;
   const summaryObservedAt = summaryCandle?.observed_at;
   const error = state.error;
-
-  useEffect(() => {
-    if (!toolbarTargetId) { setToolbarTarget(null); return; }
-    setToolbarTarget(document.getElementById(toolbarTargetId));
-  }, [toolbarTargetId]);
 
   useEffect(() => {
     if (supportedBases.length && !supportedBases.includes(base)) {
@@ -191,7 +186,7 @@ export function CandlestickChartPanel({ userId, base: controlledBase, onBaseChan
   return <section className={`candlestick-panel ${embedded ? "candlestick-embedded" : "trading-workspace"}`} aria-label={t("heading")}
     data-testid="candlestick-chart">
     {toolbarTarget && createPortal(controls, toolbarTarget)}
-    {!toolbarTargetId && <header className="trading-market-bar">
+    {!toolbarTarget && <header className="trading-market-bar">
       {!embedded && <div className="trading-market-identity">
         <strong>{base}/USDT</strong><span>{t("market")}</span>
       </div>}

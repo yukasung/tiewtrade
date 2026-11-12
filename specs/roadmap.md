@@ -274,6 +274,45 @@ PR ยัง 754edcc/E2E Failed; main/manual evidence ยัง Pending;
 ไม่ใช่ Development Complete/Completed และการทำ pilot ไม่ใช่คำสั่ง merge.
 รายละเอียดผลและรายการค้างอยู่ใน [checkpoint](features/2026-10-26-ci-feedback-time/evidence/checkpoint.md).
 
+## งาน UI ส่วนกลาง — Responsive Top Navigation
+
+สถานะ: **In Progress — Implementation/Local Validation; รอ Code Review และ required CI** (2026-11-12).
+เจ้าของอนุมัติ [requirements](features/2026-11-12-responsive-top-navigation/requirements.md),
+[plan](features/2026-11-12-responsive-top-navigation/plan.md) และ
+[validation](features/2026-11-12-responsive-top-navigation/validation.md) แล้ว
+บนbranch `feature/responsive-top-navigation` จากmain `afb2adb`.
+เปลี่ยนsidebarเป็นtop navigationทุกหน้าหลังlogin พร้อมcompact fullscreen panel,
+คงKillSwitchControlsหนึ่งinstance/owner scopeและfocus/scrollระหว่างmenu/resize/dialog;
+เพิ่มThemeProvider preference-storage fallback โดยไม่แก้financial/API/session logic.
+ผลและรายการค้างอยู่ใน [checkpoint](features/2026-11-12-responsive-top-navigation/evidence/checkpoint.md).
+ยังไม่commit/push/PR; owner review/visual acceptance/required CIค้างตามจริง
+และสถานะFull ValidationของF17ไม่เปลี่ยน
+หลังlocal preview เจ้าของเลือกย้ายรายละเอียด/ลองซ้ำเข้าSettings คงSTOP/สถานะด้านบน;
+[Settings amendment](features/2026-11-12-responsive-top-navigation/settings-menu-amendment.md)
+Requirements/Plan/Validation Approved และ implementation/local checksผ่านตาม
+[Settings checkpoint](features/2026-11-12-responsive-top-navigation/evidence/settings-checkpoint.md);
+Ready for Code Review — รอคำสั่งreview code/owner visual acceptance/required CI
+คำขอล่าสุดย้าย STOP ทั้งสองเข้า Settings และวาง Settings ขวาสุด:
+[Plan/Validation amendment](features/2026-11-12-responsive-top-navigation/settings-stop-actions-amendment.md)
+Approved/implemented/local Passed ตาม [checkpointล่าสุด](features/2026-11-12-responsive-top-navigation/evidence/stop-actions-checkpoint.md); รอreview code/owner acceptance/requiredCI
+เจ้าของขอย้ายstatus/warningsเข้าSettingsเพิ่มเติม:
+[Plan/Validation](features/2026-11-12-responsive-top-navigation/settings-status-amendment.md)
+Approved/implemented/local Passed ตาม [status checkpoint](features/2026-11-12-responsive-top-navigation/evidence/settings-status-checkpoint.md); Ready for Code Review และรอreview code/owner acceptance/requiredCI
+คำขอใหม่Paper/Spot/Futures(disabled),ลบbrand badgeและลดheader:
+[Plan/Validation](features/2026-11-12-responsive-top-navigation/compact-market-navigation-amendment.md)
+Approved/implemented/local Passed ตาม [compact market checkpoint](features/2026-11-12-responsive-top-navigation/evidence/compact-market-checkpoint.md); Ready for Code Review และรอreview code/owner acceptance/requiredCI
+คำขอใหม่borderless icons/dense spacing/ถอดworkspaceBadge/ขยายchart:
+[Plan/Validation](features/2026-11-12-responsive-top-navigation/dense-trading-workspace-amendment.md)
+Owner preview พบcontrolsหายและขอแก้chart/orders height เจ้าของอนุมัติ [correction plan](features/2026-11-12-responsive-top-navigation/chart-toolbar-height-correction.md) แล้ว เจ้าของสั่งให้controlsต่อจากBTC/USDTและimplement/local checksผ่านตาม [inline toolbar checkpoint](features/2026-11-12-responsive-top-navigation/evidence/inline-toolbar-checkpoint.md) รอreview code/owner recheck/requiredCI
+
+เจ้าของอนุมัติ [Paper/Live market menus](features/2026-11-12-responsive-top-navigation/paper-live-market-menu-amendment.md) วันที่2026-11-13
+Implement/local checksผ่านตาม [market menu checkpoint](features/2026-11-12-responsive-top-navigation/evidence/paper-live-market-menu-checkpoint.md)
+Ready for Code Review รอreview code/owner acceptance/requiredCI
+
+เจ้าของอนุมัติ [Right panel alignment/24px icons](features/2026-11-12-responsive-top-navigation/right-panel-top-alignment-amendment.md) วันที่2026-11-13
+Implement/local checksผ่าน รวมลดdesktop icon gapsตามคำสั่งเจ้าของ ใน [right panel checkpoint](features/2026-11-12-responsive-top-navigation/evidence/right-panel-top-alignment-checkpoint.md)
+Ready for Code Review รอreview code/owner acceptance/requiredCI
+
 | รหัส | งาน | สถานะ | หมายเหตุ |
 |---|---|---|---|
 | F-01 | วางโครง repo, เครื่องมือ, CI | **Completed** | เสร็จ 2026-09-27 — PR #1 merge เข้า main, CI เขียวครบ 5 job, เกณฑ์ใน `validation.md` ครบ 16 ข้อ |

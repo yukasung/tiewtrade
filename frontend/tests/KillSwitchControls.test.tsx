@@ -1,3 +1,4 @@
+import { openStopSettings } from "./stopSettings";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
@@ -55,12 +56,17 @@ it("shows separate Paper and Live stop controls and preserves the unknown reques
   vi.stubGlobal("crypto", { randomUUID: vi.fn(() => "11111111-1111-4111-8111-111111111111") });
   const client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
   renderControls(client);
+  openStopSettings();
   expect(await screen.findByRole("button", { name: t("paperStop") })).toBeTruthy();
+  openStopSettings();
   expect(screen.getByRole("button", { name: t("liveStop") })).toBeTruthy();
+  openStopSettings();
   fireEvent.click(screen.getByRole("button", { name: t("paperStop") }));
+  openStopSettings();
   expect((await screen.findByRole("alert")).textContent).toContain(t("requestFailed"));
   const saved = window.localStorage.getItem("tiewtrade.kill-switch.stop.v1:owner:PAPER");
   expect(saved).toBe("11111111-1111-4111-8111-111111111111");
+  openStopSettings();
   fireEvent.click(screen.getByRole("button", { name: `${t("paperStop")} — ${t("retry")}` }));
   await waitFor(() => expect(window.localStorage.getItem("tiewtrade.kill-switch.stop.v1:owner:PAPER")).toBeNull());
   const posts = fetcher.mock.calls.filter(([, init]) => init?.method === "POST");
@@ -97,6 +103,7 @@ it("renders the complete PROBLEMS snapshot and keeps resume unavailable", async 
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   renderControls(client);
 
+  openStopSettings();
   fireEvent.click(await screen.findByRole("button", { name: t("details") }));
   expect(await screen.findByText("BTC/USDT: 0.11")).toBeTruthy();
   expect(await screen.findByText("failed-target")).toBeTruthy();
@@ -153,6 +160,7 @@ it("refetches a stale resume snapshot and disables another submit", async () => 
   const client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
   renderControls(client);
 
+  openStopSettings();
   fireEvent.click(await screen.findByRole("button", { name: t("details") }));
   const resume = await screen.findByRole("button", { name: t("resume") });
   await screen.findByText(riskText("empty"));
@@ -192,13 +200,16 @@ it.each(["getItem", "setItem", "removeItem", "property"] as const)("keeps STOP u
   }));
   const client = makeControlClient();
   renderControls(client);
+  openStopSettings();
   fireEvent.click(screen.getByRole("button", { name: t("paperStop") }));
   await screen.findByText(t("requestFailed"));
+  openStopSettings();
   fireEvent.click(screen.getByRole("button", { name: `${t("paperStop")} — ${t("retry")}` }));
   await waitFor(() => expect(keys).toHaveLength(2));
   expect(keys[1]).toBe(keys[0]);
   await waitFor(() => expect(screen.queryByText(t("requestFailed"))).toBeNull());
-  expect(within(screen.getByRole("button", { name: t("paperStop") }).closest<HTMLElement>(".kill-switch-control")!).getByText(t("storageUnavailable"))).toBeTruthy();
+  openStopSettings();
+  expect(within(screen.getByRole("group", { name: t("modeStatus", { mode: "PAPER" }) })).getByText(t("storageUnavailable"))).toBeTruthy();
   client.clear();
 });
 
@@ -213,11 +224,13 @@ it("recovers server stop status after remount without automatically resending wh
   vi.stubGlobal("fetch", fetcher);
   const client = makeControlClient();
   const first = renderControls(client);
+  openStopSettings();
   fireEvent.click(screen.getByRole("button", { name: t("paperStop") }));
   await screen.findByText(t("requestFailed"));
   first.unmount();
   client.clear();
   renderControls(client);
+  openStopSettings();
   expect((await screen.findAllByText(t("STOPPED"))).length).toBeGreaterThan(0);
   expect(posts).toBe(1);
   client.clear();
@@ -251,6 +264,7 @@ it.each([false, true])("creates fresh STOP identities after resume despite faile
   const client = makeControlClient();
   const mount = () => renderControls(client);
   let view = mount();
+  openStopSettings();
   fireEvent.click(screen.getByRole("button", { name: t("paperStop") }));
   await waitFor(() => expect(generation).toBe(1));
   await screen.findByText(t("storageUnavailable"));
@@ -261,7 +275,9 @@ it.each([false, true])("creates fresh STOP identities after resume despite faile
     expect(stopped).toBe(false);
     await client.invalidateQueries({ queryKey: ["kill-switch", "owner", "PAPER"] });
     if (remount) { view.unmount(); client.clear(); view = mount(); }
+    openStopSettings();
     await waitFor(() => expect(screen.getByRole<HTMLButtonElement>("button", { name: t("paperStop") }).disabled).toBe(false));
+    openStopSettings();
     fireEvent.click(screen.getByRole("button", { name: t("paperStop") }));
     await waitFor(() => expect(generation).toBe(expected));
     expect(stopped).toBe(true);
@@ -290,17 +306,20 @@ it.each(["REQUEST_PENDING", "APPLIED", "missing"] as const)("resolves persisted 
   const client = makeControlClient();
   const mount = () => renderControls(client);
   const first = mount();
+  openStopSettings();
   fireEvent.click(screen.getByRole("button", { name: t("paperStop") }));
   await screen.findByText(t("requestFailed"));
   first.unmount(); client.clear(); mount();
   expect(keys).toHaveLength(1);
   await waitFor(() => expect(lookups).toBe(1));
   if (outcome === "missing") {
+    openStopSettings();
     const retry = screen.getByRole<HTMLButtonElement>("button", { name: `${t("paperStop")} — ${t("retry")}` });
     await waitFor(() => expect(retry.disabled).toBe(false));
     fireEvent.click(retry);
     await waitFor(() => expect(keys).toHaveLength(2));
   } else {
+    openStopSettings();
     await waitFor(() => expect(screen.getByRole<HTMLButtonElement>("button", { name: t("paperStop") }).disabled).toBe(false));
     expect(keys).toHaveLength(1);
   }
@@ -327,8 +346,10 @@ it("preserves the recovery key when receipt lookup fails instead of issuing a ne
   await screen.findByText(t("requestFailed"));
   expect(posted).toHaveLength(0);
   expect(window.localStorage.getItem("tiewtrade.kill-switch.stop.v1:owner:PAPER")).toBe(key);
+  openStopSettings();
   await waitFor(() => expect(screen.getByRole<HTMLButtonElement>("button", { name: `${t("paperStop")} — ${t("retry")}` }).disabled).toBe(false));
   lookupFails = false;
+  openStopSettings();
   fireEvent.click(screen.getByRole("button", { name: `${t("paperStop")} — ${t("retry")}` }));
   await waitFor(() => expect(posted).toEqual([key]));
   client.clear();
@@ -383,8 +404,10 @@ it.each([false, true])("a normal STOP click creates a fresh MANUAL cutoff after 
     return Promise.resolve(new Response(JSON.stringify(url.includes("/live/") ? status("LIVE") : { ...status("PAPER", "s1"), resume_ready: false })));
   }));
   const client = makeControlClient(); renderControls(client);
+  openStopSettings();
   await waitFor(() => expect(screen.getByRole<HTMLButtonElement>("button", { name: t("paperStop") }).disabled).toBe(false));
   expect(lookups).toBe(1); expect(posted).toHaveLength(0); expect(pendingAfterOldCutoff).toBe(true);
+  openStopSettings();
   fireEvent.click(screen.getByRole("button", { name: t("paperStop") }));
   await waitFor(() => expect(posted).toHaveLength(1));
   expect(posted[0]).not.toBe(oldKey); expect(pendingAfterOldCutoff).toBe(false);
@@ -402,11 +425,15 @@ it("a recovered old receipt cannot retire a newer unknown STOP identity", async 
     return Promise.resolve(new Response(JSON.stringify(url.includes("/live/") ? status("LIVE") : { ...status("PAPER", "s1"), resume_ready: false })));
   }));
   const client = makeControlClient(); renderControls(client);
-  fireEvent.click(await screen.findByRole("button", { name: t("paperStop") }));
+  openStopSettings();
+  await waitFor(() => expect(screen.getByRole<HTMLButtonElement>("button", { name: t("paperStop") }).disabled).toBe(false));
+  openStopSettings();
+  fireEvent.click(screen.getByRole("button", { name: t("paperStop") }));
   await screen.findByText(t("requestFailed"));
   expect(posted).toHaveLength(1); expect(posted[0]).not.toBe(oldKey);
   await act(async () => { client.setQueryData(["kill-switch", "owner", "recovery", "PAPER", oldKey], { ...old, recorded_at: "2026-11-08T00:01:00Z" }); await Promise.resolve(); });
   expect(window.localStorage.getItem("tiewtrade.kill-switch.stop.v1:owner:PAPER")).toBe(posted[0]);
+  openStopSettings();
   fireEvent.click(screen.getByRole("button", { name: `${t("paperStop")} — ${t("retry")}` }));
   await waitFor(() => expect(posted).toHaveLength(2)); expect(posted[1]).toBe(posted[0]);
   client.clear();

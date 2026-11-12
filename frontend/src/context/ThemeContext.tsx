@@ -8,12 +8,16 @@ const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
 
 /** Adapted from references/admin-template/src/context/ThemeContext.tsx. */
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setTheme] = useState<Theme>(() => window.localStorage.getItem(storageKey) === "dark" ? "dark" : "light");
+  const [theme, setTheme] = useState<Theme>(() => {
+    try { return window.localStorage.getItem(storageKey) === "dark" ? "dark" : "light"; }
+    catch { return "light"; }
+  });
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", theme === "dark");
     document.documentElement.dataset.colorScheme = theme;
-    window.localStorage.setItem(storageKey, theme);
+    // Preference persistence is optional; the shell and safety controls must render.
+    try { window.localStorage.setItem(storageKey, theme); } catch { /* Keep this mount's theme. */ }
     window.dispatchEvent(new CustomEvent("tiewtrade-theme-change", { detail: theme }));
   }, [theme]);
 

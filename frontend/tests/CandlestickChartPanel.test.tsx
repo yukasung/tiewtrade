@@ -1,3 +1,5 @@
+import { useState } from "react";
+import { TradingWorkspace, ChartToolbarTarget } from "../src/TradingWorkspace";
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
 import { CandlestickChartPanel } from "../src/CandlestickChartPanel";
@@ -138,14 +140,50 @@ it("uses a parent-controlled pair when embedded and omits duplicate workspace pl
   expect(vi.mocked(useChartData).mock.calls.at(-1)?.[1].base).toBe("ETH");
   expect(onMarketSnapshot).toHaveBeenLastCalledWith({ base: "ETH", price: "100.5", observedAt: "2026-10-12T00:30:00Z" });
 });
-it("places embedded timeframe and reset controls beside the workspace pair selector", async () => {
+it("keeps embedded timeframe and reset controls with the chart through parent rerenders", () => {
   vi.mocked(useChartData).mockReturnValue(state());
-  render(<><div id="paper-chart-toolbar" data-testid="workspace-chart-toolbar"/>
-    <CandlestickChartPanel userId="one" base="BTC" embedded toolbarTargetId="paper-chart-toolbar"/></>);
-  const toolbar = await screen.findByTestId("workspace-chart-toolbar");
-  expect(within(toolbar).getByRole("combobox", { name: "Timeframe" })).toBeTruthy();
-  expect(within(toolbar).getByRole("button", { name: /รีเซ็ต/ }).className).toContain("chart-reset-button");
+  const panel = render(<div className="before"><CandlestickChartPanel userId="one" base="BTC" embedded/></div>);
+  const chart = screen.getByTestId("candlestick-chart");
+  const timeframe = within(chart).getByRole<HTMLSelectElement>("combobox", { name: "Timeframe" });
+  const reset = within(chart).getByRole("button", { name: /รีเซ็ต/ });
+  expect(reset.className).toContain("chart-reset-button");
+  expect(chart.querySelector(".trading-market-bar")?.contains(timeframe)).toBe(true);
+  fireEvent.change(timeframe, { target: { value: "3m" } });
+  expect(vi.mocked(useChartData).mock.calls.at(-1)?.[1].timeframe).toBe("3m");
+  panel.rerender(<div className="after"><CandlestickChartPanel userId="one" base="BTC" embedded/></div>);
+  expect(within(chart).getByRole("combobox", { name: "Timeframe" })).toBe(timeframe);
+  expect(timeframe.value).toBe("3m");
+  expect(within(chart).getByRole("button", { name: /รีเซ็ต/ })).toBe(reset);
+});
+it("places timeframe and reset beside the workspace pair selector", () => {
+  vi.mocked(useChartData).mockReturnValue(state());
+  render(<TradingWorkspace mode="PAPER" bases={["BTC"]} base="BTC" onBase={vi.fn()}
+    chart={<CandlestickChartPanel userId="one" base="BTC" embedded/>} form={<input/>}/>);
+  const timeframe = screen.getByRole<HTMLSelectElement>("combobox", { name: "Timeframe" });
+  const bar = timeframe.closest(".trade-workspace-bar");
+  expect(bar?.querySelector("#paper-workspace-pair")).toBeTruthy();
+  expect(within(bar as HTMLElement).getByRole("button", { name: /รีเซ็ต/ })).toBeTruthy();
   expect(screen.getByTestId("candlestick-chart").querySelector(".trading-market-bar")).toBeNull();
+});
+it("retargets controls after the toolbar node is replaced without resetting timeframe", () => {
+  vi.mocked(useChartData).mockReturnValue(state());
+  function Workspace({ revision }: { revision: number }) {
+    const [target, setTarget] = useState<HTMLDivElement | null>(null);
+    return <ChartToolbarTarget.Provider value={target}>
+      <div key={revision} ref={setTarget} data-testid="toolbar-target"/>
+      <CandlestickChartPanel userId="one" base="BTC" embedded/>
+    </ChartToolbarTarget.Provider>;
+  }
+  const view = render(<Workspace revision={1}/>);
+  const oldTarget = screen.getByTestId("toolbar-target");
+  fireEvent.change(within(oldTarget).getByRole("combobox", { name: "Timeframe" }), { target: { value: "3m" } });
+  const canvas = screen.getByTestId("chart-canvas");
+  view.rerender(<Workspace revision={2}/>);
+  const newTarget = screen.getByTestId("toolbar-target");
+  expect(oldTarget.isConnected).toBe(false);
+  expect(within(newTarget).getByRole<HTMLSelectElement>("combobox", { name: "Timeframe" }).value).toBe("3m");
+  expect(within(newTarget).getByRole("button", { name: /รีเซ็ต/ })).toBeTruthy();
+  expect(screen.getByTestId("chart-canvas")).toBe(canvas);
 });
 it("blocks manual retry during cooldown", () => {
   const current = state(); current.error = new Error("unavailable"); current.cooldownActive = true;

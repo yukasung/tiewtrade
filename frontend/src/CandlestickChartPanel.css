@@ -5,13 +5,13 @@
 .trading-workspace {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(17.5rem, 21rem);
-  grid-template-rows: auto minmax(0, 4fr) minmax(0, 5fr);
+  grid-template-rows: auto minmax(22rem, 16fr) minmax(10rem, 9fr);
   grid-template-areas:
     "market order"
     "chart order"
     "history order";
-  height: calc(100dvh - 4.8125rem);
-  min-height: 0;
+  height: calc(100dvh - var(--navigation-header-height, 64px));
+  min-height: 37rem;
   overflow: hidden;
   background: var(--account-surface);
   border-block: var(--account-border-width) solid var(--account-line);
@@ -22,7 +22,7 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--account-space-md);
-  padding: var(--account-space-sm) var(--account-space-md);
+  padding: var(--account-space-sm);
   border-bottom: var(--account-border-width) solid var(--account-line);
 }
 .trading-market-identity { display: flex; align-items: baseline; gap: 0.5rem; flex: 0 0 auto; }
@@ -32,12 +32,14 @@
   grid-area: chart;
   min-width: 0;
   min-height: 0;
-  padding: var(--account-space-md);
+  padding: 0;
+  display: flex;
+  flex-direction: column;
 }
 .trading-order-panel {
   grid-area: order;
   min-width: 0;
-  padding: var(--account-space-lg);
+  padding: var(--account-space-sm);
   border-inline-start: var(--account-border-width) solid var(--account-line);
   background: var(--account-bg);
 }
@@ -73,40 +75,52 @@
 .trade-workspace {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 22.5rem;
-  grid-template-rows: auto minmax(22rem, 3fr) minmax(12rem, 2fr);
+  grid-template-rows: auto minmax(22rem, 16fr) minmax(10rem, 9fr);
   grid-template-areas:
-    "bar bar"
+    "bar form"
     "chart form"
     "orders form";
-  height: calc(100dvh - 6.8125rem);
-  min-height: 40rem;
+  height: calc(100dvh - var(--navigation-header-height, 64px) - var(--account-space-sm));
+  min-height: 37rem;
   min-width: 0;
   overflow: hidden;
   border: var(--account-border-width) solid var(--account-line);
   border-radius: var(--account-radius);
-  background: var(--account-surface);
+  gap: calc(var(--account-space-sm) / 2);
+  background: var(--account-bg);
 }
 .trade-workspace-bar {
   grid-area: bar;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--account-space-md);
-  padding: var(--account-space-md);
+  gap: var(--account-space-sm);
+  padding: var(--account-space-sm);
   border-bottom: var(--account-border-width) solid var(--account-line);
 }
+/* Clip the workspace border without creating an extra scroll container for its controls bar. */
+.account-workspace .trade-workspace { overflow: clip; }
+.account-workspace .trade-workspace-bar {
+  position: sticky;
+  top: var(--navigation-header-height, 56px);
+  z-index: calc(var(--account-z-header) - 1);
+  background: var(--account-surface);
+}
+.trade-chart-toolbar { display: flex; min-width: 0; align-items: center; }
+.trade-chart-toolbar .chart-controls { flex-wrap: nowrap; width: auto; }
+.trade-chart-toolbar .chart-controls > div { flex: 0 0 5.5rem; }
+.trade-chart-toolbar .chart-controls .account-button { flex: none; }
+.trade-pair-controls { display: flex; min-width: 0; flex-wrap: wrap; align-items: center; gap: var(--account-space-sm); }
 .trade-market-summary {
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-end;
-  gap: var(--account-space-lg);
+  gap: var(--account-space-sm);
   margin: 0;
 }
 .trade-market-summary div { min-width: 7rem; }
 .trade-market-summary dt { color: var(--account-muted-color); font-size: 0.75rem; }
 .trade-market-summary dd { margin: 0.25rem 0 0; color: var(--account-ink); font-size: 0.875rem; font-weight: 600; }
-.trade-chart-toolbar { display: flex; align-items: center; min-height: 2.75rem; }
-.trade-chart-toolbar:empty { display: none; }
 .trade-workspace-chart {
   grid-area: chart;
   min-width: 0;
@@ -118,18 +132,18 @@
   min-width: 0;
   min-height: 0;
   overflow-y: auto;
-  padding: var(--account-space-lg);
+  padding: var(--account-space-sm);
   border-inline-start: var(--account-border-width) solid var(--account-line);
   background: var(--account-bg);
 }
 .trade-workspace-details,
 .trade-workspace-orders {
-  padding: var(--account-space-md);
+  padding: var(--account-space-sm);
   border-top: var(--account-border-width) solid var(--account-line);
 }
 .trade-workspace-form .trade-workspace-details {
-  margin-top: var(--account-space-lg);
-  padding: var(--account-space-lg) 0 0;
+  margin-top: var(--account-space-sm);
+  padding: var(--account-space-sm) 0 0;
 }
 .trade-workspace-orders {
   grid-area: orders;
@@ -141,13 +155,13 @@
 .trade-workspace-without-orders {
   grid-template-rows: auto minmax(0, 1fr);
   grid-template-areas:
-    "bar bar"
+    "bar form"
     "chart form";
 }
-.candlestick-embedded { height: 100%; }
-.candlestick-embedded .trading-market-bar { justify-content: flex-end; }
-.candlestick-embedded .trading-chart-area { height: 100%; }
-.candlestick-embedded .chart-frame { height: 100%; }
+.candlestick-embedded { display: flex; flex-direction: column; height: 100%; }
+.candlestick-embedded .trading-market-bar { flex-shrink: 0; }
+.candlestick-embedded .trading-chart-area { flex: 1; padding: 0; }
+.candlestick-embedded .chart-frame { height: auto; flex: 1; min-height: 0; border: 0; }
 .trading-order-fields { display: grid; grid-template-columns: 1fr; }
 .trading-order-fields .relative { margin-bottom: var(--account-space-md); }
 .trading-order-fields .account-input { margin-bottom: var(--account-space-md); }
@@ -162,7 +176,7 @@
   min-width: 0;
   min-height: 0;
   overflow: auto;
-  padding: 0 var(--account-space-lg) var(--account-space-md);
+  padding: 0 var(--account-space-sm) var(--account-space-sm);
   border-top: var(--account-border-width) solid var(--account-line);
 }
 .trading-history-heading {
@@ -225,7 +239,9 @@
   position: relative;
   isolation: isolate;
   min-width: 0;
-  height: 100%;
+  height: auto;
+  flex: 1;
+  min-height: 0;
   background: var(--chart-background);
   border: 1px solid var(--chart-border);
   color: var(--chart-text);
@@ -278,18 +294,19 @@
   }
   .trade-workspace-bar { align-items: flex-start; flex-direction: column; }
   .trade-market-summary { justify-content: flex-start; }
-  .trade-workspace-chart { min-height: 32rem; }
+  .trade-workspace-chart { height: auto; }
   .trade-workspace-form { overflow: visible; border-inline-start: 0; border-top: var(--account-border-width) solid var(--account-line); }
-  .candlestick-embedded .trading-chart-area { height: auto; }
+  .candlestick-embedded { height: auto; }
+  .candlestick-embedded .trading-chart-area { flex: none; height: clamp(420px, 65vh, 680px); min-height: 420px; }
   .trading-workspace {
     grid-template-columns: minmax(0, 1fr);
     grid-template-rows: none;
     grid-template-areas: "market" "chart" "order" "history";
     height: auto;
-    min-height: calc(100dvh - 4.8125rem);
+    min-height: calc(100dvh - var(--navigation-header-height, 56px));
     overflow: visible;
   }
-  .trading-chart-area .chart-frame { height: auto; }
+  .trading-workspace .trading-chart-area .chart-frame { min-height: 420px; }
   .trading-chart-area .chart-canvas { height: clamp(420px, 65vh, 680px); }
   .trading-market-bar { align-items: flex-start; flex-direction: column; }
   .trading-order-panel {
@@ -298,18 +315,25 @@
   }
 }
 @media (max-width: 40rem) {
+  .trade-pair-controls { flex-wrap: nowrap; width: 100%; }
+  .trade-pair-controls > .min-w-40 { min-width: 0; flex: 1; }
+  .trade-chart-toolbar .chart-controls > div { flex-basis: 4.75rem; }
   .trade-workspace-bar,
   .trade-workspace-form,
   .trade-workspace-details,
-  .trade-workspace-orders { padding: var(--account-space-md); }
+  .trade-workspace-orders { padding: var(--account-space-sm); }
   .trade-market-summary { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; gap: var(--account-space-md); }
   .trading-market-bar,
   .trading-chart-area,
   .trading-order-panel,
-  .trading-history-panel { padding: var(--account-space-md); }
+  .trading-history-panel { padding: var(--account-space-sm); }
+  .trading-chart-area { padding: 0; }
   .chart-controls { width: 100%; }
   .chart-controls > div { flex: 1 1 7rem; }
   .chart-controls .account-button { flex: 1 1 100%; }
   .trading-history-heading .account-tabs { width: 100%; }
   .paper-order-toolbar { align-items: flex-start; flex-direction: column; padding-block: var(--account-space-sm); }
 }
+
+.trade-workspace-chart, .trade-workspace-orders { background: var(--account-surface); }
+.candlestick-embedded .chart-canvas { height: 100%; }

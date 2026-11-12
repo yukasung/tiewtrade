@@ -22,5 +22,5 @@ export function LiveTradePage({ owner }: { owner: string }) {
     pairDisabled={catalog.isPending || catalog.isError}
     marketPrice={market?.price}
     chart={<CandlestickChartPanel userId={owner} base={base} onBaseChange={changeBase} embedded
-      toolbarTargetId="live-chart-toolbar" onMarketSnapshot={setMarketSnapshot}/>} form={form}/>;
+      onMarketSnapshot={setMarketSnapshot}/>} form={form}/>;
 }

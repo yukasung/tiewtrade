@@ -40,11 +40,6 @@
   --account-brand: var(--color-brand-500);
   --account-focus-color: var(--color-brand-500);
   --account-radius: 0.5rem;
-  --account-sidebar-width: 18.125rem;
-  --account-mobile-sidebar-top: 5rem;
-  --account-overlay: rgba(16, 24, 40, 0.5);
-  --account-z-backdrop: 10;
-  --account-z-sidebar: 20;
   --account-z-header: 30;
   --account-font: system-ui, "Noto Sans Thai", Tahoma, sans-serif;
 }
