@@ -1550,7 +1550,7 @@ Owner-authorized local lock diagnosis complete: exact failed test once on fresh 
 
 ## Paper Spot Bot Panel — 2026-11-13
 
-สถานะ: **Code review R1–R3 fixed — refactored, targeted validation passed; required CI pending**.
+สถานะ: **Code review R1–R3 fixed — refactored; PR69 CI Failed, corrections pending**.
 [requirements](features/2026-11-13-paper-spot-bot-panel/requirements.md),
 [plan](features/2026-11-13-paper-spot-bot-panel/plan.md) และ
 [validation](features/2026-11-13-paper-spot-bot-panel/validation.md) Approved รวม RQ-13/V11–V12.
@@ -1564,3 +1564,5 @@ F-17 validation/dependencies ไม่เปลี่ยน; F-20/F-21 ยัง
 [แก้ findings R1–R3](features/2026-11-13-paper-spot-bot-panel/evidence/review-fixes.md) แล้ว: 73 unit tests และ browser recovery/risk/long-modal ผ่าน.
 [Refactor checkpoint](features/2026-11-13-paper-spot-bot-panel/evidence/refactor-checkpoint.md): 80 unit tests, 3 real-DB browser tests และ lint/typecheck ผ่าน.
 ขั้นถัดไป: รอคำสั่ง commit/push เพื่อดำเนิน publication และ required CI; ยังไม่ merge.
+
+Paper Spot publication update: [PR69](https://github.com/yukasung/tiewtrade/pull/69), candidate `f239ef4`, stacked on unmerged navigation. Backend/API contract/Docker/Security Passed; frontend setup and 3 browser cases Failed. V10 Failed; [correction proposal](features/2026-11-13-paper-spot-bot-panel/publication-ci-corrections-proposal.md) not implemented. Owner authorized corrections. Dependency14c62e6 integrated; targeted67 unit/3 browser tests and lint/types Passed. New CI candidate pending; wallet overflow Linux confirmation remains pending. No merge.

@@ -80,3 +80,10 @@ Refresh-label amendment: targeted balance/draft tests3ผ่าน (อีก34f
 
 
 Refactor checkpoint 2026-11-13: [หลักฐาน](evidence/refactor-checkpoint.md) — 80 unit tests, 3 real-DB browser tests, lint/typecheck/diff check Passed. คำสั่ง refactor ได้รับและดำเนินการแล้ว; V10 ยัง Pending required CI. ใช้หลักฐาน unaffected เดิมต่อ.
+
+
+## Publication candidate f239ef4 — PR69
+
+[CI](https://github.com/yukasung/tiewtrade/actions/runs/43459512564) Failed: backend/API contract/Docker Passed; frontend 686 tests Passed but Node suite failed on browserSetup window access; E2E 33 Passed/3 Failed (wallet horizontal overflow, shorter-panel scroll expectation, account-menu locator). [Security](https://github.com/yukasung/tiewtrade/actions/runs/43459506546) Passed on same SHA. V10 Failed, no rerun/merge. PR69 is stacked on unmerged navigation4a9b46a; final checks after retargeting still required. See [proposed corrections](publication-ci-corrections-proposal.md).
+
+Publication corrections: local67 unit tests +3 browser cases, lint/typecheck Passed. Dependency14c62e6 integrated; previous CI Failed remains. Wallet overflow cause not proven locally; strict-width check plus failure bounds await new CI. See approved correction proposal.

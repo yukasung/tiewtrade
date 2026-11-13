@@ -450,7 +450,13 @@ test("dense workspace fills the real chart and preserves it across breakpoints",
   await paperSubmit.scrollIntoViewIfNeeded();
   await expect(paperSubmit).toBeVisible();
   await paperForm.evaluate(element => element.scrollTo(0, element.scrollHeight));
-  expect(await paperForm.evaluate(element => element.scrollTop)).toBeGreaterThan(0);
+  const formScroll = await paperForm.evaluate(element => ({
+    top: element.scrollTop, height: element.clientHeight, contentHeight: element.scrollHeight,
+  }));
+  if (formScroll.contentHeight > formScroll.height) expect(formScroll.top).toBeGreaterThan(0);
+  else expect(formScroll.top).toBe(0);
+  await expect(paperSubmit).toBeInViewport();
+  await expect(paperSubmit).toBeDisabled();
   await expect(amount).toHaveValue("123.45");
   await (await navigationLink(page, "/chart")).click();
   await expect(page.locator(".trading-workspace canvas").first()).toBeVisible();
