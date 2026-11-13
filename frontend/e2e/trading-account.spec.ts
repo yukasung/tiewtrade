@@ -136,7 +136,7 @@ test("Paper use without key/TOTP → key setup → deletion retains preference",
   await panel.screenshot({
     path: testInfo.outputPath("trading-account-mobile.png"),
   });
-  const menu = page.getByRole("button", { name: "เปิดเมนูบัญชี" });
+  const menu = page.locator('button[aria-controls="compact-navigation"]');
   await menu.click();
   await expect(menu).toHaveAttribute("aria-expanded", "true");
   await expect(

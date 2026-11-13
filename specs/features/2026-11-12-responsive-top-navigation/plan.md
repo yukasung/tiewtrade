@@ -229,3 +229,9 @@ Header icon stylesใช้24pxทั้งglyphของธีม/บัญช�
 
 Desktop icon spacing ตามคำสั่งล่าสุดใช้column-gap0ในheaderและgap0ในdesktop actions
 Brandใช้margin-inline-end16pxเพื่อคงระยะก่อนเมนูหลัก Targets44pxเรียงติดกันและglyph24pxมีระยะกึ่งกลาง44pxเท่ากัน
+
+
+## PR69 dependency corrections — Approved
+เจ้าของสั่งเริ่มแก้ 4 จุดตาม publication-ci-corrections-proposal ของ Paper Spot: guard browserSetup เฉพาะ DOM environment; ใช้ compact-navigation aria-controls locator ที่คงเดิมเมื่อชื่อปุ่มเปลี่ยน; ตรวจ element bounds ก่อนแก้ wallet overflow. คง Node isolation, keyboard/focus และ viewport assertions; ไม่เปลี่ยน trading logic.
+
+Wallet diagnosis: local bounds fit360px, so no speculative CSS change. Reuse navigationLink breakpoint readiness pattern in captureUi; attach only element tag/class/bounds on overflow, retain strict viewport check.
