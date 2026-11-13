@@ -173,3 +173,8 @@ NAV-V33 เคยเป็น Partial ระหว่างรออนุมั
 
 เจ้าของสั่งย้าย timeframe/reset ต่อจาก BTC/USDT ใช้ผลเก่าตาม candidate เดิมและตรวจ NAV-V35/V36/V37 ใหม่ตามผลกระทบ
 ผลล่าสุดอยู่ใน [inline toolbar checkpoint](evidence/inline-toolbar-checkpoint.md) Owner recheck และ requiredCI ยังรอ
+
+
+## PR69 dependency corrections — 2026-11-13
+
+Node environment/browser setup guard and stable compact-navigation locator: 32 targeted unit tests Passed in dependency worktree. Combined candidate: 67 targeted tests, lint/typecheck Passed; wallet, dense-workspace and trading-account browser cases 3 Passed (27.9s). Wallet overflow did not reproduce locally: captureUi now waits for expected breakpoint using existing navigation pattern and attaches element bounds if strict width assertion still fails. No CSS change or relaxed viewport criterion; Linux CI confirmation remains pending. Same-threshold original CI failure remains recorded in bot-panel proposal.

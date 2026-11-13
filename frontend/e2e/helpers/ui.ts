@@ -14,6 +14,19 @@ export async function captureUi(
       if (width === 1440) await expect(brand).toBeVisible();
       else await expect(brand).toBeHidden();
     }
+    if (await page.locator(".account-header").count()) {
+      await expect(page.locator(width < 1280
+        ? 'button[aria-controls="compact-navigation"]'
+        : 'button[aria-controls="account-dropdown"]')).toBeVisible();
+    }
+    if (await page.evaluate(() => document.documentElement.scrollWidth) > width) {
+      await info.attach("overflow-bounds", { contentType: "application/json", body: JSON.stringify(
+        await page.evaluate(() => [...document.querySelectorAll("body *")].map(element => {
+          const rect = element.getBoundingClientRect();
+          return { tag: element.tagName, class: element.className, x: rect.x, right: rect.right, width: rect.width };
+        }).filter(element => element.right > window.innerWidth)),
+      ) });
+    }
     expect(
       await page.evaluate(() => document.documentElement.scrollWidth),
     ).toBeLessThanOrEqual(width);
