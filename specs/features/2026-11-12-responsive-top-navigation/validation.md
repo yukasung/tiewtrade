@@ -178,3 +178,10 @@ NAV-V33 เคยเป็น Partial ระหว่างรออนุมั
 ## PR69 dependency corrections — 2026-11-13
 
 Node environment/browser setup guard and stable compact-navigation locator: 32 targeted unit tests Passed in dependency worktree. Combined candidate: 67 targeted tests, lint/typecheck Passed; wallet, dense-workspace and trading-account browser cases 3 Passed (27.9s). Wallet overflow did not reproduce locally: captureUi now waits for expected breakpoint using existing navigation pattern and attaches element bounds if strict width assertion still fails. No CSS change or relaxed viewport criterion; Linux CI confirmation remains pending. Same-threshold original CI failure remains recorded in bot-panel proposal.
+
+
+## PR70 standalone publication — 2026-11-14
+
+Candidate14c62e6: Security/frontend/API contract/Docker Passed. Browser main/manual/protection suites Passed but F19 STOP had2failures: Live STOP still expected visible outside Settings; system-safety link clicked without opening navigation. Backend was still running when correction was prepared; never claim it Passed. CI: https://github.com/yukasung/tiewtrade/actions/runs/43474267713 ; Security: https://github.com/yukasung/tiewtrade/actions/runs/43474267233 .
+
+Backported only existing Settings/menu steps from PR69 (already CI-verified there), retaining all money, separation, idempotency and90s assertions. Two standalone real-DB STOP tests Passed24.2s; targeted ESLint/typecheck Passed. No production code change, so no additional refactor gate. Test-generated screenshots restored to retain prior committed evidence; private new log frontend/test-results/navigation-publication/stop-corrections.log. Next candidate CI pending. Review/owner acceptance remain pending; no merge authorized.

@@ -224,7 +224,7 @@ test("F-19 Paper and Live stops stay separate and UNKNOWN retries the same reque
   const liveButton = page.getByRole("button", { name: "หยุดบอท Live", exact: true });
   await expect(paperButton).toBeHidden();
   await expect(page.getByRole("button", { name: "ตั้งค่าการหยุด", exact: true })).toBeVisible();
-  await expect(liveButton).toBeVisible();
+  await expect(liveButton).toBeHidden();
 
   let committedKey: string | undefined;
   let committedReceipt: { request_id: string; generation: number } | undefined;
@@ -237,6 +237,7 @@ test("F-19 Paper and Live stops stay separate and UNKNOWN retries the same reque
     await route.abort("connectionreset");
   }, { times: 1 });
   await page.getByRole("button", { name: "ตั้งค่าการหยุด", exact: true }).click();
+  await expect(liveButton).toBeVisible();
   await paperButton.click();
   await page.getByRole("button", { name: "ตั้งค่าการหยุด", exact: true }).click();
   await expect(page.getByRole("alert").filter({ hasText: "ยังไม่ทราบผลการหยุด" })).toBeVisible();
@@ -302,8 +303,10 @@ test("F-19 Paper and Live stops stay separate and UNKNOWN retries the same reque
     key => window.localStorage.getItem(key),
     `tiewtrade.kill-switch.stop.v1:${owner}:PAPER`,
   )).toBeNull();
+  await page.getByRole("button", { name: "ตั้งค่าการหยุด", exact: true }).click();
   await expect(page.locator('.kill-switch-settings-group[aria-label="PAPER"] > button[aria-label]').first()).toBeEnabled();
   expect(paperPosts).toBe(1);
+  await page.keyboard.press("Escape");
 
   await page.getByLabel("คู่เทรด").selectOption("BTC");
   await expect.poll(async () => {
@@ -392,7 +395,7 @@ test("F-19 Platform Owner stop publishes the reason and only resumes after compl
     data: { user_id: owner },
   })).status()).toBe(204);
   await page.reload();
-  await page.getByRole("link", { name: "ความปลอดภัยระบบ", exact: true }).click();
+  await (await navigationLink(page, "/system-safety")).click();
   await expect(page).toHaveURL(/\/system-safety$/);
 
   const reason = "<b>planned incident</b>";
@@ -415,7 +418,10 @@ test("F-19 Platform Owner stop publishes the reason and only resumes after compl
     await page.goto(`/${route}`);
     await expect(page.getByRole("button", { name: "ตั้งค่าการหยุด", exact: true })).toBeVisible();
     await expect(page.getByRole("group", { name: "สถานะหยุด PAPER", exact: true })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "หยุดบอท Live", exact: true })).toBeHidden();
+    await page.getByRole("button", { name: "ตั้งค่าการหยุด", exact: true }).click();
     await expect(page.getByRole("button", { name: "หยุดบอท Live", exact: true })).toBeVisible();
+    await page.keyboard.press("Escape");
     await expect(page.getByRole("alert").filter({ hasText: reason })).toBeVisible();
   }
   await page.setViewportSize({ width: 375, height: 844 });
@@ -423,7 +429,10 @@ test("F-19 Platform Owner stop publishes the reason and only resumes after compl
     await page.goto(`/${route}`);
     await expect(page.getByRole("button", { name: "ตั้งค่าการหยุด", exact: true })).toBeVisible();
     await expect(page.getByRole("group", { name: "สถานะหยุด PAPER", exact: true })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "หยุดบอท Live", exact: true })).toBeHidden();
+    await page.getByRole("button", { name: "ตั้งค่าการหยุด", exact: true }).click();
     await expect(page.getByRole("button", { name: "หยุดบอท Live", exact: true })).toBeVisible();
+    await page.keyboard.press("Escape");
     await expect(page.getByRole("alert").filter({ hasText: reason })).toBeVisible();
   }
   await page.setViewportSize({ width: 1440, height: 1000 });
@@ -441,7 +450,7 @@ test("F-19 Platform Owner stop publishes the reason and only resumes after compl
     data: { user_id: admin },
   })).status()).toBe(204);
   await adminPage.reload();
-  await adminPage.getByRole("link", { name: "ความปลอดภัยระบบ", exact: true }).click();
+  await (await navigationLink(adminPage, "/system-safety")).click();
   await expect(adminPage.getByRole("button", { name: "เปิดแพลตฟอร์มกลับ", exact: true })).toBeDisabled();
   await expect(adminPage.getByText("เฉพาะ Platform Owner เท่านั้นที่เปิดกลับได้", { exact: true })).toBeVisible();
   await expect(adminPage.getByRole("alert").filter({ hasText: reason })).toBeVisible();
