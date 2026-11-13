@@ -1,13 +1,14 @@
 import { keepPreviousData, useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useState } from "react";
-import { navigateAccountPage } from "./accountNavigation";
 import { CandlestickChartPanel } from "./CandlestickChartPanel";
 import { PaperTradingActivity } from "./PaperTradingActivity";
 import { useProtections } from "./useProtections";
-import { protectionText as pt } from "./protectionMessages";
+import { PaperBotPanel } from "./PaperBotPanel";
+import { paperBotText as bt } from "./paperBotMessages";
+import { Modal } from "./components/ui/Modal";
 import { ManualOrderForm } from "./ManualOrderForm";
 import { ManualRequestStatus } from "./ManualRequestStatus";
-import { MarketTime, MarketValue } from "./components/MarketValue";
+import { MarketTime } from "./components/MarketValue";
 import { Button } from "./components/ui/Button";
 import { TradingWorkspace } from "./TradingWorkspace";
 import { activeBases, fetchMarketCatalog } from "./marketCatalog";
@@ -28,6 +29,8 @@ function useVisible() {
 export function PaperTradePage({ owner }: { owner: string }) { return <PaperTradeForOwner key={owner} owner={owner}/>; }
 function PaperTradeForOwner({ owner }: { owner: string }) {
   const visible = useVisible();
+  const [sellScope, setSellScope] = useState<string | null>(null);
+  const closeSell = useCallback(() => setSellScope(null), []);
   const [activityView, setActivityView] = useState<"OPEN" | "HISTORY">("OPEN");
   const { base, changeBase, market, setMarketSnapshot } = useTradingPair();
   const [completedDraft, setCompletedDraft] = useState("");
@@ -84,11 +87,16 @@ function PaperTradeForOwner({ owner }: { owner: string }) {
   const scope = wallet ? { expected_wallet_id: wallet.wallet_id, expected_episode_id: wallet.episode_id } : null;
   useEffect(() => { setActivityView("OPEN"); }, [wallet?.episode_id, wallet?.wallet_id]);
 
-  // Remount only the local form when its scope or resolved attempt changes.
-  // The recovery journal keeps the original payload independently of this key.
+  // Bot budget follows account/pair scope; SELL also resets after a resolved attempt.
+  // Neither draft key owns the durable recovery journal.
+  const panelScope = `${owner}:${scope?.expected_wallet_id}:${scope?.expected_episode_id}:${base}`;
+  useEffect(() => { setSellScope(null); }, [panelScope]);
   const draftKey = `${scope?.expected_wallet_id}:${scope?.expected_episode_id}:${base}:${completedDraft}:${recovery.refusedAttemptKey}`;
   const blocked = !recovered || recovery.storageError || !!recovery.attempt || recovery.busy;
-  const fresh = data?.mode === "PAPER" && !snapshot.isError && !snapshot.isPending && !snapshot.isFetching && !catalog.isError && catalog.isSuccess && data.base === (base || null);
+  const snapshotReady = data?.mode === "PAPER" && !snapshot.isError && !snapshot.isPending && !catalog.isError && catalog.isSuccess && data.base === (base || null);
+  const fresh = snapshotReady && !snapshot.isFetching;
+  const availableQuote = snapshotReady && !snapshot.isPlaceholderData && wallet?.source_availability === "READY"
+    ? wallet.available_quote : null;
   const canSubmit = (side: "BUY" | "SELL") => !!fresh && !blocked && !!wallet && (data?.admission_ready === true ||
     (side === "SELL" && wallet.source_availability === "READY" && data.admission_reasons.every(reason => ["MANUAL_USE_REQUIRED", "CATALOG_PAIR_REMOVED", "RISK_LIMIT_UNSET", "RISK_LOSS_LIMIT_REACHED", "RISK_SOURCE_UNAVAILABLE", "RISK_PRICE_UNAVAILABLE"].includes(reason))));
   const bases = [...new Set([...activeBases(catalog.data), ...(wallet?.base_balances.map(b => b.asset) ?? [])])];
@@ -111,16 +119,8 @@ function PaperTradeForOwner({ owner }: { owner: string }) {
         </div>
       </div>}
     </div> : null;
-  const form = <section aria-labelledby="manual-form-heading" className="space-y-5">
-    <div><h2 id="manual-form-heading" className="text-lg font-semibold">{t("form")}</h2><p className="text-sm text-gray-500 dark:text-gray-400">{t("pendingNotice")}</p></div>
-    <dl className="grid grid-cols-2 gap-3 rounded-xl border border-gray-200 p-3 text-sm dark:border-gray-800">
-      <div><dt className="text-gray-500 dark:text-gray-400">{t("available")}</dt><dd className="font-semibold">{wallet?.available_quote == null ? t("unavailable") : <MarketValue amount={wallet.available_quote} unit="USDT" grouped/>}</dd></div>
-      <div><dt className="text-gray-500 dark:text-gray-400">{t("riskSummary")}</dt><dd className="font-semibold">{risk.data?.amount == null ? t("unavailable") : <MarketValue amount={risk.data.amount} unit="USDT" grouped/>}</dd>
-        {risk.isSuccess && risk.data.amount === null && <a href="/trading-account" onClick={navigateAccountPage} className="mt-1 inline-flex text-sm font-medium text-brand-500 hover:text-brand-600">{t("manageRisk")}</a>}
-      </div>
-    </dl>
+  const details = <div className="mt-4 space-y-4">
     {(snapshot.isError || catalog.isError || risk.isError) && <p role="alert">{t("loadError")}</p>}
-    {data && !data.admission_ready && <div role="status" className="rounded-xl border border-warning-200 bg-warning-50 p-3 text-sm dark:border-warning-900/40 dark:bg-warning-900/10"><p>{t("blocked")}</p><ul className="mt-2 space-y-1">{data.admission_reasons.map(reason => <li key={reason}>• {manualCode(reason)}</li>)}</ul></div>}
     {risk.data && (risk.data.latched || risk.data.stop_id) && <div role="alert" className="rounded-xl border border-error-200 bg-error-50 p-3 text-sm dark:border-error-900/40 dark:bg-error-900/10">
       <p className="font-medium">{t("riskStopStatus")}</p>
       <p>{riskCode(risk.data.stop_progress ?? risk.data.reason)}</p>
@@ -128,18 +128,38 @@ function PaperTradeForOwner({ owner }: { owner: string }) {
     {recoveryNotice}
     {recentResult && (recentResult.intake_failure_code || recentResult.command_failure_code) && <p role="alert">{t("failure")}: {manualCode(recentResult.intake_failure_code ?? recentResult.command_failure_code)}</p>}
     {data && wallet === null && <p>{t("noWallet")}</p>}
-    {baseBalance && <p className="text-sm">{pt("unprotected")}: {baseBalance.available === null ? pt("conflict") : <MarketValue amount={baseBalance.available} unit={base}/>}</p>}
-    <ManualOrderForm protectionEnabled={data?.protection_enabled ?? false} protectionsReady={protections.ready} protections={protections.rows.filter(p => p.base === base)} key={draftKey} bases={bases} base={base} onBase={changeBase} showPairSelector={false} scope={scope} canSubmit={canSubmit} disabled={blocked} onSubmit={payload => recovery.send({ version: 1, mode: "PAPER", owner, action: "NEW", key: globalThis.crypto.randomUUID(), payload })}/>
+
     <div hidden aria-hidden="true">
       {Object.entries(tracked).map(([id, episode]) => <ManualRequestStatus key={id} owner={owner} request={id} episode={episode} visible={visible} onTerminal={completeTracked} showSnapshot={false}/>)}
     </div>
-  </section>;
+  </div>;
   return <TradingWorkspace mode="PAPER" bases={bases} base={base} onBase={changeBase}
     pairDisabled={blocked || catalog.isPending || catalog.isError}
     marketPrice={market?.price}
     chart={<CandlestickChartPanel userId={owner} base={base} onBaseChange={changeBase} embedded
-      onMarketSnapshot={setMarketSnapshot}/>} form={form}
+      onMarketSnapshot={setMarketSnapshot}/>}
+    form={<PaperBotPanel key={panelScope} available={availableQuote}
+      loading={snapshot.isPending || snapshot.isFetching}/>}
+    details={details}
     orders={wallet && scope ? <div className="trade-workspace-orders trading-activity">
+      <div className="flex justify-end p-2"><Button size="sm" type="button" variant="outline" disabled={!base}
+        onClick={() => setSellScope(panelScope)}>{bt("reduce")}</Button></div>
+      <Modal scrollable isOpen={sellScope === panelScope} onClose={closeSell} titleId="paper-sell-title" closeLabel={t("close")}>
+        <div className="space-y-4 p-6"><h2 id="paper-sell-title" className="text-lg font-semibold">{bt("reduce")} — {base}/USDT</h2>
+          <p className="text-sm">{t("pendingNotice")}</p>
+          {data && !data.admission_ready && <div role="status" className="rounded-xl border border-warning-200 bg-warning-50 p-3 text-sm dark:border-warning-900/40 dark:bg-warning-900/10">
+            <p>{t("blocked")}</p>
+            <ul className="mt-2 list-disc space-y-1 ps-4">
+              {data.admission_reasons.map(reason => <li key={reason}>{manualCode(reason)}</li>)}
+            </ul>
+          </div>}
+          <ManualOrderForm fixedSide="SELL" submitLabel={bt("sell")} protectionEnabled={data?.protection_enabled ?? false}
+            protectionsReady={protections.ready} protections={protections.rows.filter(p => p.base === base)} key={draftKey}
+            bases={bases} base={base} onBase={changeBase} showPairSelector={false} scope={scope} canSubmit={canSubmit} disabled={blocked}
+            onSubmit={payload => { recovery.send({ version: 1, mode: "PAPER", owner, action: "NEW", key: globalThis.crypto.randomUUID(), payload }); closeSell(); }}/>
+          <Button type="button" variant="outline" onClick={closeSell}>{t("close")}</Button>
+        </div>
+      </Modal>
       <PaperTradingActivity owner={owner} base={base} scope={scope} rows={protections.rows} visible={visible} view={activityView} onViewChange={setActivityView}
         disabled={blocked} enabled={data?.protection_enabled ?? false} ready={protections.ready} error={protections.query.isError} available={baseBalance?.available ?? null}
         ordersDisabled={blocked || snapshot.isError || snapshot.isPending} onCancelOrder={row => recovery.send({ version: 1, owner, mode: "PAPER", key: globalThis.crypto.randomUUID(), action: "CANCEL", orderId: row.order_id, payload: { expected_wallet_id: row.wallet_id, expected_episode_id: row.episode_id } })}/>

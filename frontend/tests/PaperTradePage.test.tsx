@@ -3,6 +3,7 @@ import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testi
 import { StrictMode } from "react";
 import { afterEach, expect, it, vi } from "vitest";
 import { PaperTradePage } from "../src/PaperTradePage";
+import { paperBotText as bt } from "../src/paperBotMessages";
 import { writeAttempt } from "../src/manualOrderJournal";
 import { manualOrderText as t } from "../src/manualOrderMessages";
 import { protectionText as pt } from "../src/protectionMessages";
@@ -18,6 +19,7 @@ let queryClient: QueryClient;
 function mount(custom?: (url: string, init?: RequestInit) => Promise<Response> | undefined) {
   const fetcher = vi.fn((url: string, init?: RequestInit) => {
     const override = custom?.(url, init); if (override) return override;
+    if (url.includes("/paper/protections?") || url.includes("/paper/protection-requests?")) return Promise.resolve(answer({ protections: [], requests: [], next_cursor: null }));
     if (url.includes("/risk-limit")) return Promise.resolve(answer({ detail: "unavailable" }, 503));
     if (url.includes("/market-catalog")) return Promise.resolve(answer({ active_pairs: [["BTC", "USDT"]] }));
     if (url.includes("/paper/trade")) return Promise.resolve(answer({ mode: "PAPER", wallet, account_use: "MANUAL", base: url.includes("base=BTC") ? "BTC" : null, quote: "USDT", catalog_revision: 1, snapshot_at: stamp, admission_ready: url.includes("base=BTC"), admission_reasons: url.includes("base=BTC") ? [] : ["ORDER_PAIR_REQUIRED"] }));
@@ -35,8 +37,9 @@ afterEach(() => { cleanup(); queryClient?.clear(); vi.restoreAllMocks(); vi.unst
 async function draft() {
   await waitFor(() => expect(screen.getByLabelText<HTMLSelectElement>(t("pair")).disabled).toBe(false));
   fireEvent.change(screen.getByLabelText(t("pair")), { target: { value: "BTC" } });
-  fireEvent.change(screen.getByLabelText(t("budget")), { target: { value: "100" } });
-  await waitFor(() => expect(screen.getByRole<HTMLButtonElement>("button", { name: t("submit") }).disabled).toBe(false));
+  fireEvent.click(screen.getByRole("button", { name: bt("reduce") }));
+  fireEvent.change(screen.getByLabelText(`${t("quantity")} (BTC)`), { target: { value: "100" } });
+  await waitFor(() => expect(screen.getByRole<HTMLButtonElement>("button", { name: bt("sell") }).disabled).toBe(false));
 }
 it("keeps conflicted protections editable after reloading an unavailable balance", async () => {
   const protection = { protection_id: "g", wallet_id: "w", episode_id: "e", mode: "PAPER", base: "BTC", quote: "USDT", quantity: "0.999", protected_quantity: "0", executable_quantity: "0", step_residual_quantity: null, state: "ARMED", revision: 4, take_profit_price: "110", stop_loss_price: "90", conflicted: true, failure_code: "ORDER_CONFLICT", market_ready: true, entry_order_id: "entry", snapshot_at: stamp };
@@ -54,7 +57,7 @@ it("keeps conflicted protections editable after reloading an unavailable balance
   fireEvent.change(screen.getByLabelText(t("pair")), { target: { value: "BTC" } });
   const edit = await screen.findByRole<HTMLButtonElement>("button", { name: pt("edit") });
   await waitFor(() => expect(edit.disabled).toBe(false));
-  expect(screen.getByRole<HTMLButtonElement>("button", { name: t("submit") }).disabled).toBe(true);
+  expect(screen.getByRole<HTMLButtonElement>("button", { name: bt("start") }).disabled).toBe(true);
   expect(screen.getAllByText(pt("conflict")).length).toBeGreaterThan(0);
   fireEvent.click(edit);
   fireEvent.change(screen.getByLabelText(`${pt("quantity")} (BTC)`), { target: { value: "0.5" } });
@@ -74,8 +77,8 @@ it("journals before POST, blocks duplicate clicks, and recovers reload with same
     }
   });
   await draft();
-  fireEvent.click(screen.getByRole("button", { name: t("submit") }));
-  fireEvent.click(screen.getByRole("button", { name: t("submit") }));
+  const submit = screen.getByRole("button", { name: bt("sell") });
+  fireEvent.click(submit); fireEvent.click(submit);
   await screen.findByText(t("unknown"));
   expect(first.fetcher.mock.calls.filter(([, init]) => init?.method === "POST")).toHaveLength(1);
   expect(document.body.textContent).not.toContain("RAW SECRET");
@@ -88,20 +91,28 @@ it("journals before POST, blocks duplicate clicks, and recovers reload with same
   await waitFor(() => expect(second.fetcher.mock.calls.filter(([, init]) => init?.method === "POST")).toHaveLength(1));
   const sent = second.fetcher.mock.calls.find(([, init]) => init?.method === "POST")![1]!;
   expect((sent.headers as Record<string,string>)["Idempotency-Key"]).toBe(key);
-  expect(JSON.parse(sent.body as string)).toMatchObject({ expected_episode_id: "e", quote_budget: "100" });
+  expect(JSON.parse(sent.body as string)).toMatchObject({ expected_episode_id: "e", base_quantity: "100", side: "SELL" });
 });
 it("does not POST when storage write fails and blocks new requests when discovery fails", async () => {
   const { fetcher } = mount(); await draft();
   vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => { throw new Error("denied"); });
-  fireEvent.click(screen.getByRole("button", { name: t("submit") }));
+  fireEvent.click(screen.getByRole("button", { name: bt("sell") }));
   await screen.findByText(t("storage"));
   expect(fetcher.mock.calls.some(([, init]) => init?.method === "POST")).toBe(false);
 });
-it("shows discovery failure instead of an empty successful recovery", async () => {
-  mount(url => url.includes("order-requests?") ? Promise.resolve(answer({ detail: "private" }, 503)) : undefined);
+it("blocks SELL transmission after discovery fails", async () => {
+  let fail = false;
+  const { fetcher } = mount(url => fail && url.includes("order-requests?") ? Promise.resolve(answer({ detail: "private" }, 503)) : undefined);
+  await draft();
+  fail = true;
+  await act(async () => { await queryClient.invalidateQueries({ queryKey: ["manual-orders", "owner", "PAPER", "all-episodes", "unresolved"] }); });
   await screen.findByText(t("recoveryError"));
-  expect(screen.getByRole<HTMLButtonElement>("button", { name: t("submit") }).disabled).toBe(true);
+  expect(screen.getByRole<HTMLButtonElement>("button", { name: bt("sell") }).disabled).toBe(true);
+  fireEvent.submit(screen.getByLabelText(`${t("quantity")} (BTC)`).closest("form")!);
+  expect(fetcher.mock.calls.some(([, init]) => init?.method === "POST")).toBe(false);
+  expect(window.sessionStorage.getItem("tiewtrade.manual-order.v1:owner")).toBeNull();
 });
+
 it("polls a transferred command until rejection even without an order and keeps its reason visible", async () => {
   writeAttempt({ version: 1, owner: "owner", mode: "PAPER", key, action: "NEW", payload: { expected_wallet_id: "w", expected_episode_id: "e", base: "BTC", quote: "USDT", side: "BUY", kind: "MARKET", quote_budget: "100" } });
   mount(url => url.includes("order-requests/") ? Promise.resolve(answer({ ...receipt, command_state: "REJECTED", command_failure_code: "ORDER_INSUFFICIENT_FUNDS" })) : undefined);
@@ -127,7 +138,7 @@ it("continues polling after transfer until the linked command becomes terminal",
   await screen.findByText(`${t("failure")}: ${t("ORDER_INSUFFICIENT_FUNDS")}`, {}, { timeout: 3500 });
   expect(reads).toBeGreaterThanOrEqual(2);
   expect(screen.queryByText(t("TRANSFERRED"))).toBeNull();
-  await waitFor(() => expect(screen.queryByRole("heading", { name: t("recovery") })).toBeNull());
+  expect(screen.queryByText(t("unknown"))).toBeNull();
 });
 it("clears a previous pair's displayed market price before the next pair snapshot", async () => {
   mount(url => {
@@ -158,10 +169,12 @@ it("shows a latched risk stop beside the form without a risk-settings control", 
   expect(screen.getByText("กำลังหยุดออเดอร์เพิ่มความเสี่ยง")).toBeTruthy();
   expect(screen.queryByText("รายละเอียด / ตั้งค่าความเสี่ยง")).toBeNull();
 });
-it("links an unset loss limit to Trading account without embedding risk controls", async () => {
+it("omits loss-limit summary and recovery heading from the bot panel", async () => {
   mount(url => url.includes("/risk-limit") ? Promise.resolve(answer({ amount: null, latched: false, stop_id: null, reason: "RISK_LIMIT_UNSET" })) : undefined);
-  const link = await screen.findByRole<HTMLAnchorElement>("link", { name: t("manageRisk") });
-  expect(new URL(link.href).pathname).toBe("/trading-account");
+  await screen.findByRole("heading", { name: bt("title") });
+  expect(screen.queryByRole("link", { name: t("manageRisk") })).toBeNull();
+  expect(screen.queryByText(t("riskSummary"))).toBeNull();
+  expect(screen.queryByRole("heading", { name: t("recovery") })).toBeNull();
   expect(screen.queryByRole("button", { name: "ตั้งเพดาน" })).toBeNull();
 });
 it("keeps the chart, order history and form in one desktop workspace", async () => {
@@ -180,14 +193,14 @@ it("requires every recovery page before permitting new requests", async () => {
 });
 it("a definitive input refusal permits correcting the draft while unknown outcomes retain their journal", async () => {
   const { fetcher } = mount((url, init) => url.endsWith("/paper/orders") && init?.method === "POST" ? Promise.resolve(answer({ detail: "MANUAL_ORDER_INPUT_REJECTED" }, 422)) : undefined);
-  await draft(); fireEvent.click(screen.getByRole("button", { name: t("submit") }));
+  await draft(); fireEvent.click(screen.getByRole("button", { name: bt("sell") }));
   await screen.findByText(t("safeFailure"));
   expect(window.sessionStorage.getItem("tiewtrade.manual-order.v1:owner")).toBeNull();
   expect(fetcher.mock.calls.filter(([, init]) => init?.method === "POST")).toHaveLength(1);
 });
 it("retains recovery identity for an unrecognized 422 response", async () => {
   mount((url, init) => url.endsWith("/paper/orders") && init?.method === "POST" ? Promise.resolve(answer({ detail: "untrusted-proxy-rejection" }, 422)) : undefined);
-  await draft(); fireEvent.click(screen.getByRole("button", { name: t("submit") }));
+  await draft(); fireEvent.click(screen.getByRole("button", { name: bt("sell") }));
   await screen.findByText(t("unknown"));
   expect(window.sessionStorage.getItem("tiewtrade.manual-order.v1:owner")).not.toBeNull();
   expect(document.body.textContent).not.toContain("untrusted-proxy-rejection");
@@ -230,29 +243,31 @@ it("aborts pending owner reads when leaving the trade route", async () => {
 it("clears the completed draft so a second click cannot silently create a new-key duplicate", async () => {
   vi.spyOn(globalThis.crypto, "randomUUID").mockReturnValue(key);
   const { fetcher } = mount((url, init) => url.endsWith("/paper/orders") && init?.method === "POST" ? Promise.resolve(answer({ ...receipt, command_state: "SUCCEEDED", order_state: "ACCEPTED" }, 202)) : undefined);
-  await draft(); fireEvent.click(screen.getByRole("button", { name: t("submit") }));
+  await draft(); fireEvent.click(screen.getByRole("button", { name: bt("sell") }));
   await waitFor(() => expect(window.sessionStorage.getItem("tiewtrade.manual-order.v1:owner")).toBeNull());
-  expect(screen.getByLabelText<HTMLInputElement>(t("budget")).value).toBe("");
-  expect(screen.getByRole<HTMLButtonElement>("button", { name: t("submit") }).disabled).toBe(true);
-  fireEvent.click(screen.getByRole("button", { name: t("submit") }));
+  fireEvent.click(screen.getByRole("button", { name: bt("reduce") }));
+  expect(screen.getByLabelText<HTMLInputElement>(`${t("quantity")} (BTC)`).value).toBe("");
+  expect(screen.getByRole<HTMLButtonElement>("button", { name: bt("sell") }).disabled).toBe(true);
+  fireEvent.click(screen.getByRole("button", { name: bt("sell") }));
   expect(fetcher.mock.calls.filter(([, init]) => init?.method === "POST")).toHaveLength(1);
 });
 
 it("resolves only an explicit closed-episode refusal and requires a new draft", async () => {
   mount((url, init) => url.endsWith("/paper/orders") && init?.method === "POST" ? Promise.resolve(answer({ detail: "MANUAL_ORDER_EPISODE_CLOSED" }, 409)) : undefined);
-  await draft(); fireEvent.click(screen.getByRole("button", { name: t("submit") }));
+  await draft(); fireEvent.click(screen.getByRole("button", { name: bt("sell") }));
   await screen.findByText(t("episodeClosed"));
   expect(window.sessionStorage.getItem("tiewtrade.manual-order.v1:owner")).toBeNull();
-  expect(screen.getByLabelText<HTMLInputElement>(t("budget")).value).toBe("");
-  expect(screen.getByRole<HTMLButtonElement>("button", { name: t("submit") }).disabled).toBe(true);
+  fireEvent.click(screen.getByRole("button", { name: bt("reduce") }));
+  expect(screen.getByLabelText<HTMLInputElement>(`${t("quantity")} (BTC)`).value).toBe("");
+  expect(screen.getByRole<HTMLButtonElement>("button", { name: bt("sell") }).disabled).toBe(true);
   await waitFor(() => expect(screen.getByLabelText<HTMLSelectElement>(t("pair")).disabled).toBe(false));
 });
 it("retains UNKNOWN and the original journal for a generic conflict", async () => {
   mount((url, init) => url.endsWith("/paper/orders") && init?.method === "POST" ? Promise.resolve(answer({ detail: "ORDER_CONFLICT" }, 409)) : undefined);
-  await draft(); fireEvent.click(screen.getByRole("button", { name: t("submit") }));
+  await draft(); fireEvent.click(screen.getByRole("button", { name: bt("sell") }));
   await screen.findByText(t("unknown"));
   expect(window.sessionStorage.getItem("tiewtrade.manual-order.v1:owner")).not.toBeNull();
-  expect(screen.getByRole<HTMLButtonElement>("button", { name: t("submit") }).disabled).toBe(true);
+  expect(screen.queryByRole("button", { name: bt("sell") })).toBeNull();
 });
 it("discards a draft on episode replacement while retaining UNKNOWN's original retry scope", async () => {
   let episode = "e";
@@ -263,10 +278,12 @@ it("discards a draft on episode replacement while retaining UNKNOWN's original r
   await draft();
   episode = "new-episode";
   await act(async () => { await queryClient.invalidateQueries({ queryKey: ["manual-orders", "owner", "PAPER", "trade"] }); });
-  await waitFor(() => expect(screen.getByLabelText<HTMLInputElement>(t("budget")).value).toBe(""));
+  await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+  fireEvent.click(screen.getByRole("button", { name: bt("reduce") }));
+  expect(screen.getByLabelText<HTMLInputElement>(`${t("quantity")} (BTC)`).value).toBe("");
   expect(fetcher.mock.calls.some(([, init]) => init?.method === "POST")).toBe(false);
-  fireEvent.change(screen.getByLabelText(t("budget")), { target: { value: "100" } });
-  fireEvent.click(screen.getByRole("button", { name: t("submit") }));
+  fireEvent.change(screen.getByLabelText(`${t("quantity")} (BTC)`), { target: { value: "100" } });
+  fireEvent.click(screen.getByRole("button", { name: bt("sell") }));
   await screen.findByText(t("unknown"));
   episode = "third-episode";
   await act(async () => { await queryClient.invalidateQueries({ queryKey: ["manual-orders", "owner", "PAPER", "trade"] }); });
@@ -335,7 +352,8 @@ function activityData(url: string) {
 it("shows normal orders and conditions in one table with one toolbar and read-only history", async () => {
   const { fetcher } = mount(activityData);
   await draft();
-  const activity = screen.getByRole("tab", { name: t("openOrders") }).closest<HTMLElement>(".trade-workspace-orders")!;
+  fireEvent.keyDown(document, { key: "Escape" });
+  const activity = screen.getByRole("region", { name: t("orders") });
   expect(within(activity).getAllByRole("tablist")).toHaveLength(1);
   expect(within(activity).getAllByRole("table")).toHaveLength(1);
   expect(await screen.findByText(pt("attention"))).toBeTruthy();
@@ -379,4 +397,107 @@ it("does not lose an unknown protection attempt or generate a new key when switc
   expect(new Headers(posted.headers).get("Idempotency-Key")).toBe(key);
   expect(JSON.parse(posted.body as string)).toEqual(attempt.payload);
   expect(protectionJournal.read("owner")).toEqual(attempt);
+});
+
+it("keeps the bot draft across refresh but clears it on wallet/episode change and sends no command", async () => {
+  let episode = "e"; let fail = false;
+  const { fetcher } = mount(url => url.includes("/paper/trade") ? Promise.resolve(answer(fail ? { detail: "unavailable" } : {
+    mode: "PAPER", wallet: { ...wallet, episode_id: episode }, base: url.includes("base=BTC") ? "BTC" : null,
+    admission_ready: true, admission_reasons: [], snapshot_at: stamp,
+  }, fail ? 503 : 200)) : undefined);
+  await waitFor(() => expect(screen.getByLabelText<HTMLSelectElement>(t("pair")).disabled).toBe(false));
+  fireEvent.change(screen.getByLabelText(t("pair")), { target: { value: "BTC" } });
+  await waitFor(() => expect(screen.getByText("10,000.000000000000000001 USDT")).toBeTruthy());
+  fireEvent.change(screen.getByLabelText(bt("budget")), { target: { value: "100.123" } });
+  fail = true;
+  await act(async () => { await queryClient.invalidateQueries({ queryKey: ["manual-orders", "owner", "PAPER", "trade"] }); });
+  await waitFor(() => expect(screen.queryByText("10,000.000000000000000001 USDT")).toBeNull());
+  expect(screen.getByLabelText<HTMLInputElement>(bt("budget")).value).toBe("100.123");
+  fail = false;
+  await act(async () => { await queryClient.invalidateQueries({ queryKey: ["manual-orders", "owner", "PAPER", "trade"] }); });
+  expect(screen.getByLabelText<HTMLInputElement>(bt("budget")).value).toBe("100.123");
+  episode = "new";
+  await act(async () => { await queryClient.invalidateQueries({ queryKey: ["manual-orders", "owner", "PAPER", "trade"] }); });
+  await waitFor(() => expect(screen.getByLabelText<HTMLInputElement>(bt("budget")).value).toBe(""));
+  fireEvent.keyDown(screen.getByLabelText(bt("budget")), { key: "Enter" });
+  fireEvent.click(screen.getByRole("button", { name: bt("start") }));
+  expect(fetcher.mock.calls.some(([, init]) => init?.method === "POST")).toBe(false);
+});
+it("clears bot draft and closes the SELL dialog on pair change without reopening on return", async () => {
+  mount(url => url.includes("market-catalog") ? Promise.resolve(answer({ active_pairs: [["BTC", "USDT"], ["ETH", "USDT"]] })) : undefined);
+  await draft();
+  const pair = screen.getByLabelText(t("pair"));
+  fireEvent.change(screen.getByLabelText(bt("budget")), { target: { value: "123" } });
+  fireEvent.change(pair, { target: { value: "ETH" } });
+  expect(screen.queryByRole("dialog")).toBeNull(); expect(screen.getByLabelText<HTMLInputElement>(bt("budget")).value).toBe("");
+  fireEvent.change(pair, { target: { value: "BTC" } }); expect(screen.queryByRole("dialog")).toBeNull();
+});
+it("does not display a delayed prior owner's balance or retain their bot draft", async () => {
+  let nextOwner = false;
+  let resolveOld: ((value: Response) => void) | undefined;
+  let delayOld = false;
+  const view = mount(url => {
+    if (!url.includes("/paper/trade")) return undefined;
+    if (delayOld && !nextOwner) return new Promise<Response>(resolve => { resolveOld = resolve; });
+    return Promise.resolve(answer({ mode: "PAPER", wallet: { ...wallet, wallet_id: nextOwner ? "other-wallet" : "w", available_quote: nextOwner ? "42" : "999" },
+      base: url.includes("base=BTC") ? "BTC" : null, admission_ready: true, admission_reasons: [], snapshot_at: stamp }));
+  });
+  await waitFor(() => expect(screen.getByLabelText<HTMLSelectElement>(t("pair")).disabled).toBe(false));
+  fireEvent.change(screen.getByLabelText(t("pair")), { target: { value: "BTC" } });
+  await screen.findByText("999 USDT");
+  fireEvent.change(screen.getByLabelText(bt("budget")), { target: { value: "123" } });
+  delayOld = true;
+  act(() => { void queryClient.invalidateQueries({ queryKey: ["manual-orders", "owner", "PAPER", "trade"] }); });
+  await waitFor(() => expect(resolveOld).toBeTruthy());
+  nextOwner = true;
+  view.rerender(<QueryClientProvider client={queryClient}><PaperTradePage owner="other"/></QueryClientProvider>);
+  await waitFor(() => expect(screen.getByLabelText<HTMLSelectElement>(t("pair")).disabled).toBe(false));
+  fireEvent.change(screen.getByLabelText(t("pair")), { target: { value: "BTC" } });
+  await screen.findByText("42 USDT");
+  await act(async () => { resolveOld!(answer({ mode: "PAPER", wallet: { ...wallet, available_quote: "999" }, base: "BTC", admission_ready: true, admission_reasons: [] })); await Promise.resolve(); });
+  expect(screen.queryByText("999 USDT")).toBeNull();
+  expect(screen.getByLabelText<HTMLInputElement>(bt("budget")).value).toBe("");
+});
+
+it("shows admission warnings only inside the SELL dialog and retains its safety gate", async () => {
+  const { fetcher } = mount(url => url.includes("/paper/trade") ? Promise.resolve(answer({
+    mode: "PAPER", wallet, base: url.includes("base=BTC") ? "BTC" : null,
+    admission_ready: false, admission_reasons: ["ORDER_SAFETY_UNAVAILABLE"], snapshot_at: stamp,
+  })) : undefined);
+  await waitFor(() => expect(screen.getByLabelText<HTMLSelectElement>(t("pair")).disabled).toBe(false));
+  fireEvent.change(screen.getByLabelText(t("pair")), { target: { value: "BTC" } });
+  expect(screen.queryByText(t("blocked"))).toBeNull();
+  fireEvent.click(screen.getByRole("button", { name: bt("reduce") }));
+  expect(within(screen.getByRole("dialog")).getByText(t("blocked"))).toBeTruthy();
+  fireEvent.change(screen.getByLabelText(`${t("quantity")} (BTC)`), { target: { value: "1" } });
+  expect(screen.getByRole<HTMLButtonElement>("button", { name: bt("sell") }).disabled).toBe(true);
+  fireEvent.submit(screen.getByLabelText(`${t("quantity")} (BTC)`).closest("form")!);
+  expect(fetcher.mock.calls.some(([, init]) => init?.method === "POST")).toBe(false);
+  fireEvent.keyDown(document, { key: "Escape" });
+  expect(screen.queryByText(t("blocked"))).toBeNull();
+});
+
+it("keeps the balance node during refresh without relaxing SELL admission", async () => {
+  let delay = false;
+  let resolveRefresh: ((response: Response) => void) | undefined;
+  const { fetcher } = mount(url => delay && url.includes("/paper/trade?base=BTC")
+    ? new Promise<Response>(resolve => { resolveRefresh = resolve; }) : undefined);
+  await draft();
+  fireEvent.keyDown(document, { key: "Escape" });
+  const amount = screen.getByText("10,000.000000000000000001 USDT");
+  delay = true;
+  act(() => { void queryClient.invalidateQueries({ queryKey: ["manual-orders", "owner", "PAPER", "trade", "BTC"] }); });
+  await screen.findByText(bt("updating"));
+  expect(screen.getByText("10,000.000000000000000001 USDT")).toBe(amount);
+  fireEvent.click(screen.getByRole("button", { name: bt("reduce") }));
+  fireEvent.change(screen.getByLabelText(`${t("quantity")} (BTC)`), { target: { value: "1" } });
+  expect(screen.getByRole<HTMLButtonElement>("button", { name: bt("sell") }).disabled).toBe(true);
+  fireEvent.submit(screen.getByLabelText(`${t("quantity")} (BTC)`).closest("form")!);
+  expect(fetcher.mock.calls.some(([, init]) => init?.method === "POST")).toBe(false);
+  await act(async () => {
+    resolveRefresh!(answer({ mode: "PAPER", wallet: { ...wallet, available_quote: "9000" }, base: "BTC", admission_ready: true, admission_reasons: [], snapshot_at: stamp }));
+    await Promise.resolve();
+  });
+  await screen.findByText("9,000 USDT");
+  expect(screen.queryByText(bt("updating"))).toBeNull();
 });

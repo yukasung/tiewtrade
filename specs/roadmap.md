@@ -1546,3 +1546,21 @@ Owner-authorized local lock diagnosis complete: exact failed test once on fresh 
 [Owner-authorized CI observer](features/2026-11-02-tp-sl/scheduler-ci-lock-observer-amendment.md) implemented: PREPARING-only read-only bounded lock snapshots/private artifact, original assertions and builder timeouts unchanged. Local19cases/real-DB control modes Passed, final15observer regressions/static checksPassed, CI policy58Passed/security policy20Passed1optionalSkipped. Related local receipts combined in same PR66; new candidate required CI pending. Prior failure/root-cause uncertainty retained; stop/report after one candidate, no merge or F17 Completed claim.
 
 3426b28 CI failed before tests from invalid runner context at job env. Owner approved A env-placement correction to existing pytest step; actionlint1.7.12/diff checkPassed, original test/production unchanged. Same PR66 one new candidate CI pending; earlier scheduler failure and all F17 Full Validation/dependency gates retained. No merge authorized.
+
+
+## Paper Spot Bot Panel — 2026-11-13
+
+สถานะ: **Code review R1–R3 fixed — refactored, targeted validation passed; required CI pending**.
+[requirements](features/2026-11-13-paper-spot-bot-panel/requirements.md),
+[plan](features/2026-11-13-paper-spot-bot-panel/plan.md) และ
+[validation](features/2026-11-13-paper-spot-bot-panel/validation.md) Approved รวม RQ-13/V11–V12.
+แผง Grid Close System + งบร่าง + Start disabled แทนฟอร์ม BUY; มี SELL-only modal
+ใต้กราฟเพื่อรักษาช่องทางลดสถานะตาม amendment และคง recovery/TP-SL/STOP เดิม.
+[หลักฐาน](features/2026-11-13-paper-spot-bot-panel/evidence/implementation-checkpoint.md):
+targeted unit/static ผ่าน, financial E2E 20 กรณีผ่าน, UI 16 combinations และ chart regression ผ่าน.
+Branch `feature/paper-spot-bot-panel` ฐาน navigation `4a9b46a`; ยังไม่ commit/push/merge
+; owner preview สลับมายัง worktree นี้ตามคำสั่งแล้ว. V10/owner visual acceptance และ dependency workflow ยัง pending.
+F-17 validation/dependencies ไม่เปลี่ยน; F-20/F-21 ยังไม่เสร็จจากงาน UI นี้.
+[แก้ findings R1–R3](features/2026-11-13-paper-spot-bot-panel/evidence/review-fixes.md) แล้ว: 73 unit tests และ browser recovery/risk/long-modal ผ่าน.
+[Refactor checkpoint](features/2026-11-13-paper-spot-bot-panel/evidence/refactor-checkpoint.md): 80 unit tests, 3 real-DB browser tests และ lint/typecheck ผ่าน.
+ขั้นถัดไป: รอคำสั่ง commit/push เพื่อดำเนิน publication และ required CI; ยังไม่ merge.

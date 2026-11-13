@@ -12,13 +12,14 @@ import type { ExpectedEpisode, NewManualOrder } from "./manualOrders";
 
 /** Layout adapted from references/admin-template/src/components/form/form-elements/DefaultInputs.tsx. */
 export function ManualOrderForm({ bases, base, onBase, scope, canSubmit, disabled = false, mode = "PAPER",
-  showPairSelector = true, protections = [], protectionsReady = true, protectionEnabled = false, onSubmit }: {
+  showPairSelector = true, fixedSide, submitLabel, protections = [], protectionsReady = true, protectionEnabled = false, onSubmit }: {
   bases: string[]; base: string; onBase: (base: string) => void; scope: ExpectedEpisode | null;
   mode?: "PAPER" | "LIVE"; canSubmit: (side: "BUY" | "SELL") => boolean; disabled?: boolean;
   protections?: Protection[]; protectionsReady?: boolean; protectionEnabled?: boolean;
-  showPairSelector?: boolean; onSubmit: (value: NewManualOrder) => void;
+  showPairSelector?: boolean; fixedSide?: "SELL"; submitLabel?: string; onSubmit: (value: NewManualOrder) => void;
 }) {
-  const [side, setSide] = useState<"BUY" | "SELL">("BUY");
+  const [selectedSide, setSelectedSide] = useState<"BUY" | "SELL">("BUY");
+  const side = fixedSide ?? selectedSide;
   const [kind, setKind] = useState<"MARKET" | "LIMIT">("MARKET");
   const [amount, setAmount] = useState("");
   const [price, setPrice] = useState("");
@@ -44,9 +45,9 @@ export function ManualOrderForm({ bases, base, onBase, scope, canSubmit, disable
         {bases.map(asset => <option key={asset} value={asset}>{asset}/USDT</option>)}
       </Select></div>}
     <div className="grid grid-cols-1 gap-4">
-      <div><Label>{t("side")}</Label><Tabs id="manual-side" controls="manual-order-fields" label={t("side")}
+      {!fixedSide && <div><Label>{t("side")}</Label><Tabs id="manual-side" controls="manual-order-fields" label={t("side")}
         items={[{ id: "BUY", label: t("BUY") }, { id: "SELL", label: t("SELL") }]} active={side} disabled={disabled}
-        onChange={value => { setSide(value); setAmount(""); setTp(""); setSl(""); setSelected({}); }}/></div>
+        onChange={value => { setSelectedSide(value); setAmount(""); setTp(""); setSl(""); setSelected({}); }}/></div>}
       <div><Label>{t("kind")}</Label><Tabs id="manual-kind" controls="manual-order-fields" label={t("kind")}
         items={[{ id: "MARKET", label: t("MARKET") }, { id: "LIMIT", label: t("LIMIT") }]} active={kind} disabled={disabled}
         onChange={value => { setKind(value); setAmount(""); setPrice(""); }}/></div>
@@ -66,6 +67,6 @@ export function ManualOrderForm({ bases, base, onBase, scope, canSubmit, disable
     </div>)}
     {side === "SELL" && Object.values(selected).some(v => v.quantity !== "") && <p role="note" className="text-sm text-warning-600 dark:text-warning-400">{pt("warning")}</p>}
     <p id="manual-safety-note" className="text-sm text-gray-500 dark:text-gray-400">{t("sellCheck")}</p>
-    <Button className="w-full" type="submit" disabled={disabled || protectionUnavailable || (side === "SELL" && !protectionsReady) || !scope || !base || !amount || (kind === "LIMIT" && !price) || !canSubmit(side)} aria-describedby="manual-safety-note">{t(mode === "LIVE" ? "unavailable" : "submit")}</Button>
+    <Button className="w-full" type="submit" disabled={disabled || protectionUnavailable || (side === "SELL" && !protectionsReady) || !scope || !base || !amount || (kind === "LIMIT" && !price) || !canSubmit(side)} aria-describedby="manual-safety-note">{submitLabel ?? t(mode === "LIVE" ? "unavailable" : "submit")}</Button>
   </form>;
 }

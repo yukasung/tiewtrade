@@ -1,11 +1,12 @@
+import { postFixtureOrder, requestFixtureOrder, openSell } from "./helpers/paperOrders";
 import { navigationLink } from "./helpers/ui";
 import { mkdirSync } from "node:fs";
 import { expect, test } from "./helpers/test";
 import { PASSWORD } from "./helpers/totp";
 import type { Page } from "@playwright/test";
 const control = "http://127.0.0.1:18018/__e2e/risk";
-const evidence = "../specs/features/2026-10-25-wallet-risk-limits/evidence/ui";
-const killSwitchEvidence = "../specs/features/2026-10-31-kill-switch/evidence/ui";
+const evidence = "test-results/paper-bot-panel/risk";
+const killSwitchEvidence = "test-results/paper-bot-panel/kill-switch";
 const accountRoutes = ["chart", "paper/trade", "live/trade", "account", "security", "api-keys", "trading-account", "supported-symbols", "system-safety"] as const;
 async function capture(page: Page, name: string) {
   await page.evaluate(() => window.scrollTo(0, 0));
@@ -30,7 +31,7 @@ async function register(page: Page) {
   const identity = await (await page.request.get("/api/auth/me")).json() as { user_id: string };
   expect((await page.request.post(`${control}/prepare`, { data: identity })).status()).toBe(204);
   await page.reload();
-  await expect(page.getByRole("link", { name: "ตั้งค่าในหน้าบัญชีเทรด", exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Paper Spot", exact: true })).toBeVisible();
   expect((await snapshot(page)).amount).toBeNull();
   return identity.user_id;
 }
@@ -53,7 +54,7 @@ async function setLimit(page: Page, amount = "10") {
   await openPaperTrade(page);
 }
 async function submitManual(page: Page) {
-  let button = page.getByRole("button", { name: "ส่งออเดอร์ Paper", exact: true });
+  let button = page.getByRole("button", { name: "ส่งคำขอขาย Paper", exact: true });
   let identity: string | null = null;
   for (let attempt = 0; attempt < 5; attempt += 1) {
     await expect(button).toBeEnabled();
@@ -76,8 +77,7 @@ async function send(page: Page, amount: string) {
       admission_ready: boolean;
     }
   ).admission_ready).toBe(true);
-  await page.getByLabel("งบซื้อ (USDT)").fill(amount);
-  return submitManual(page);
+  return postFixtureOrder(page, { base: "BTC", quote: "USDT", side: "BUY", kind: "MARKET", quote_budget: amount });
 }
 async function order(page: Page, id: string) {
   return await (await page.request.get(`/api/paper/orders/${id}`)).json() as { status: string; filled_quantity: string; reserved_quote: string; spent_quote: string };
@@ -90,14 +90,10 @@ test("production risk composition: unset→set→BUY→breach→cancel→bounded
   const buy = await send(page, "110");
   await expect.poll(async () => (await order(page, buy.order_id)).status).toBe("FILLED");
   await expect.poll(async () => page.evaluate(id => window.sessionStorage.getItem("tiewtrade.manual-order.v1:" + id), owner)).toBeNull();
-  await page.getByRole("tab", { name: "LIMIT", exact: true }).click();
-  await page.getByLabel("จำนวนเหรียญ Base (BTC)").fill("1");
-  await page.getByLabel("ราคา Limit (USDT)").fill("90");
-  const limit = await submitManual(page);
+  const limit = await postFixtureOrder(page, { base: "BTC", quote: "USDT", side: "BUY", kind: "LIMIT", base_quantity: "1", limit_price: "90", time_in_force: "GTC" });
   await expect.poll(async () => (await order(page, limit.order_id)).status).toBe("ACCEPTED");
   await expect.poll(async () => page.evaluate(id => window.sessionStorage.getItem("tiewtrade.manual-order.v1:" + id), owner)).toBeNull();
   expect((await page.request.post(`${control}/hold-transfer`, { data: { user_id: owner } })).status()).toBe(204);
-  await page.getByRole("tab", { name: "MARKET", exact: true }).click();
   const queued = await send(page, "11");
   await expect.poll(async () => (await (await page.request.get(`${control}/transfer-held`)).json() as { held: boolean }).held).toBe(true);
   expect((await page.request.post(`${control}/price`, { data: { amount: "80" } })).status()).toBe(204);
@@ -113,12 +109,11 @@ test("production risk composition: unset→set→BUY→breach→cancel→bounded
   await expect.poll(async () => { const risk = await snapshot(page); return risk.target_set_complete && risk.pending_count === 0; }).toBe(true);
   await expect(page.getByRole("alert").filter({ hasText: "สถานะหยุดความเสี่ยง" })).toBeVisible();
   await capture(page, "breached-th-light-desktop");
-  await page.getByRole("tab", { name: "MARKET", exact: true }).click();
-  await page.getByRole("tab", { name: "SELL", exact: true }).click();
+  await openSell(page);
   await page.getByLabel("จำนวนเหรียญ Base (BTC)").fill("0.1");
-  await expect(page.getByRole("button", { name: "ส่งออเดอร์ Paper", exact: true })).toBeEnabled();
+  await expect(page.getByRole("button", { name: "ส่งคำขอขาย Paper", exact: true })).toBeEnabled();
   const selling = page.waitForResponse(r => r.url().endsWith("/api/paper/orders") && r.request().method() === "POST");
-  await page.getByRole("button", { name: "ส่งออเดอร์ Paper", exact: true }).click();
+  await page.getByRole("button", { name: "ส่งคำขอขาย Paper", exact: true }).click();
   const sell = await (await selling).json() as { order_id: string };
   await expect.poll(async () => (await order(page, sell.order_id)).status).toBe("FILLED");
   await openTradingAccount(page);
@@ -138,16 +133,11 @@ test("production risk composition: unset→set→BUY→breach→cancel→bounded
   expect((await snapshot(page)).current_allowance).not.toBe("0");
   await openPaperTrade(page);
   await page.getByLabel("คู่เทรด").selectOption("BTC");
-  await page.getByRole("tab", { name: "BUY", exact: true }).click();
-  await page.getByLabel("งบซื้อ (USDT)").fill("11");
+
   const trade = await (await page.request.get("/api/paper/trade?base=BTC")).json() as {
     wallet: { balance: string; base_balances: { asset: string; held: string }[] };
   };
-  const blocked = page.waitForResponse(response =>
-    response.url().endsWith("/api/paper/orders") && response.request().method() === "POST",
-  );
-  await page.getByRole("button", { name: "ส่งออเดอร์ Paper", exact: true }).click();
-  const rejected = await blocked;
+  const rejected = await requestFixtureOrder(page, { base: "BTC", quote: "USDT", side: "BUY", kind: "MARKET", quote_budget: "11" });
   expect(rejected.status()).toBe(503);
   expect(await rejected.json()).toEqual({ detail: "ORDER_SAFETY_UNAVAILABLE" });
   // RESET clears the loss baseline only; it must not create a trade or bypass the shared stop.
@@ -224,7 +214,7 @@ test("F-19 Paper and Live stops stay separate and UNKNOWN retries the same reque
   const liveButton = page.getByRole("button", { name: "หยุดบอท Live", exact: true });
   await expect(paperButton).toBeHidden();
   await expect(page.getByRole("button", { name: "ตั้งค่าการหยุด", exact: true })).toBeVisible();
-  await expect(liveButton).toBeVisible();
+  await expect(liveButton).toBeHidden();
 
   let committedKey: string | undefined;
   let committedReceipt: { request_id: string; generation: number } | undefined;
@@ -237,6 +227,7 @@ test("F-19 Paper and Live stops stay separate and UNKNOWN retries the same reque
     await route.abort("connectionreset");
   }, { times: 1 });
   await page.getByRole("button", { name: "ตั้งค่าการหยุด", exact: true }).click();
+  await expect(liveButton).toBeVisible();
   await paperButton.click();
   await page.getByRole("button", { name: "ตั้งค่าการหยุด", exact: true }).click();
   await expect(page.getByRole("alert").filter({ hasText: "ยังไม่ทราบผลการหยุด" })).toBeVisible();
@@ -302,8 +293,10 @@ test("F-19 Paper and Live stops stay separate and UNKNOWN retries the same reque
     key => window.localStorage.getItem(key),
     `tiewtrade.kill-switch.stop.v1:${owner}:PAPER`,
   )).toBeNull();
+  await page.getByRole("button", { name: "ตั้งค่าการหยุด", exact: true }).click();
   await expect(page.locator('.kill-switch-settings-group[aria-label="PAPER"] > button[aria-label]').first()).toBeEnabled();
   expect(paperPosts).toBe(1);
+  await page.keyboard.press("Escape");
 
   await page.getByLabel("คู่เทรด").selectOption("BTC");
   await expect.poll(async () => {
@@ -392,7 +385,7 @@ test("F-19 Platform Owner stop publishes the reason and only resumes after compl
     data: { user_id: owner },
   })).status()).toBe(204);
   await page.reload();
-  await page.getByRole("link", { name: "ความปลอดภัยระบบ", exact: true }).click();
+  await (await navigationLink(page, "/system-safety")).click();
   await expect(page).toHaveURL(/\/system-safety$/);
 
   const reason = "<b>planned incident</b>";
@@ -415,7 +408,10 @@ test("F-19 Platform Owner stop publishes the reason and only resumes after compl
     await page.goto(`/${route}`);
     await expect(page.getByRole("button", { name: "ตั้งค่าการหยุด", exact: true })).toBeVisible();
     await expect(page.getByRole("group", { name: "สถานะหยุด PAPER", exact: true })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "หยุดบอท Live", exact: true })).toBeHidden();
+    await page.getByRole("button", { name: "ตั้งค่าการหยุด", exact: true }).click();
     await expect(page.getByRole("button", { name: "หยุดบอท Live", exact: true })).toBeVisible();
+    await page.keyboard.press("Escape");
     await expect(page.getByRole("alert").filter({ hasText: reason })).toBeVisible();
   }
   await page.setViewportSize({ width: 375, height: 844 });
@@ -423,7 +419,10 @@ test("F-19 Platform Owner stop publishes the reason and only resumes after compl
     await page.goto(`/${route}`);
     await expect(page.getByRole("button", { name: "ตั้งค่าการหยุด", exact: true })).toBeVisible();
     await expect(page.getByRole("group", { name: "สถานะหยุด PAPER", exact: true })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "หยุดบอท Live", exact: true })).toBeHidden();
+    await page.getByRole("button", { name: "ตั้งค่าการหยุด", exact: true }).click();
     await expect(page.getByRole("button", { name: "หยุดบอท Live", exact: true })).toBeVisible();
+    await page.keyboard.press("Escape");
     await expect(page.getByRole("alert").filter({ hasText: reason })).toBeVisible();
   }
   await page.setViewportSize({ width: 1440, height: 1000 });
@@ -441,7 +440,7 @@ test("F-19 Platform Owner stop publishes the reason and only resumes after compl
     data: { user_id: admin },
   })).status()).toBe(204);
   await adminPage.reload();
-  await adminPage.getByRole("link", { name: "ความปลอดภัยระบบ", exact: true }).click();
+  await (await navigationLink(adminPage, "/system-safety")).click();
   await expect(adminPage.getByRole("button", { name: "เปิดแพลตฟอร์มกลับ", exact: true })).toBeDisabled();
   await expect(adminPage.getByText("เฉพาะ Platform Owner เท่านั้นที่เปิดกลับได้", { exact: true })).toBeVisible();
   await expect(adminPage.getByRole("alert").filter({ hasText: reason })).toBeVisible();
@@ -500,15 +499,19 @@ test("price outage blocks opening; risk-only cache failure preserves bounded red
   await expect.poll(async () => page.evaluate(id => window.sessionStorage.getItem("tiewtrade.manual-order.v1:" + id), owner)).toBeNull();
   expect((await page.request.post(`${control}/price`, { data: { amount: "110", connected: false } })).status()).toBe(204);
   await expect.poll(async () => (await snapshot(page)).reason).toBe("RISK_PRICE_UNAVAILABLE");
-  await expect(page.getByRole("button", { name: "ส่งออเดอร์ Paper", exact: true })).toBeDisabled();
+  const priceRejected = await requestFixtureOrder(page, { base: "BTC", quote: "USDT", side: "BUY", kind: "MARKET", quote_budget: "11" });
+  expect(priceRejected.status()).toBe(503);
+  expect(await priceRejected.json()).toEqual({ detail: "RISK_PRICE_UNAVAILABLE" });
   expect((await snapshot(page)).loss).toBeNull();
   await capture(page, "price-pause-th-light-desktop");
   expect((await page.request.post(`${control}/price`, { data: { amount: "110", connected: true } })).status()).toBe(204);
   await expect.poll(async () => (await snapshot(page)).reason).toBe("READY");
   expect((await page.request.post(`${control}/cache-gap`, { data: { user_id: owner } })).status()).toBe(204);
   await expect.poll(async () => (await snapshot(page)).reason).toBe("RISK_SOURCE_UNAVAILABLE");
-  await expect(page.getByRole("button", { name: "ส่งออเดอร์ Paper", exact: true })).toBeDisabled();
-  await page.getByRole("tab", { name: "SELL", exact: true }).click();
+  const cacheRejected = await requestFixtureOrder(page, { base: "BTC", quote: "USDT", side: "BUY", kind: "MARKET", quote_budget: "11" });
+  expect(cacheRejected.status()).toBe(503);
+  expect(await cacheRejected.json()).toEqual({ detail: "RISK_SOURCE_UNAVAILABLE" });
+  await openSell(page);
   await page.getByLabel("จำนวนเหรียญ Base (BTC)").fill("0.1");
   const sell = await submitManual(page);
   await expect.poll(async () => (await order(page, sell.order_id)).status).toBe("FILLED");

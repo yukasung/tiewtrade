@@ -376,7 +376,7 @@ test("dense workspace fills the real chart and preserves it across breakpoints",
   const canvas = chart.getByTestId("chart-canvas");
   await expect(canvas.locator("canvas").first()).toBeVisible();
   await canvas.evaluate(element => element.setAttribute("data-dense-stable", "yes"));
-  const amount = page.locator("#manual-amount");
+  const amount = page.locator("#paper-bot-budget");
   await amount.evaluate(element => element.setAttribute("data-dense-draft", "yes"));
   await expect(amount).toBeEnabled();
   await amount.fill("123.45");
@@ -446,9 +446,10 @@ test("dense workspace fills the real chart and preserves it across breakpoints",
   }
   await page.setViewportSize({ width: 1024, height: 480 });
   const paperForm = page.locator(".trade-workspace-form");
-  const paperSubmit = paperForm.locator('button[type="submit"]');
+  const paperSubmit = paperForm.getByRole("button", { name: "เริ่มบอท", exact: true });
   await paperSubmit.scrollIntoViewIfNeeded();
   await expect(paperSubmit).toBeVisible();
+  await paperForm.evaluate(element => element.scrollTo(0, element.scrollHeight));
   expect(await paperForm.evaluate(element => element.scrollTop)).toBeGreaterThan(0);
   await expect(amount).toHaveValue("123.45");
   await (await navigationLink(page, "/chart")).click();
