@@ -185,3 +185,11 @@ Node environment/browser setup guard and stable compact-navigation locator: 32 t
 Candidate14c62e6: Security/frontend/API contract/Docker Passed. Browser main/manual/protection suites Passed but F19 STOP had2failures: Live STOP still expected visible outside Settings; system-safety link clicked without opening navigation. Backend was still running when correction was prepared; never claim it Passed. CI: https://github.com/yukasung/tiewtrade/actions/runs/43474267713 ; Security: https://github.com/yukasung/tiewtrade/actions/runs/43474267233 .
 
 Backported only existing Settings/menu steps from PR69 (already CI-verified there), retaining all money, separation, idempotency and90s assertions. Two standalone real-DB STOP tests Passed24.2s; targeted ESLint/typecheck Passed. No production code change, so no additional refactor gate. Test-generated screenshots restored to retain prior committed evidence; private new log frontend/test-results/navigation-publication/stop-corrections.log. Next candidate CI pending. Review/owner acceptance remain pending; no merge authorized.
+
+
+## PR70 final candidate bfa9cd5 — 2026-11-14
+
+[CI](https://github.com/yukasung/tiewtrade/actions/runs/43476527292) Failed: frontend/API contract/Docker/browser57 Passed; backend4906 Passed/1Failed at test_profile_resources.py:139 (cleanup still reports connections after disposal). Remaining isolated backend stages skipped. [Security](https://github.com/yukasung/tiewtrade/actions/runs/43476527269) Passed. This backend test is unchanged from main; root cause not established. Initial14c62e6 CI cancelled on replacement, with original two STOP failures retained. No auto-rerun/merge. See [diagnostic proposal](publication-cleanup-diagnostic-proposal.md). Owner review/acceptance remain pending.
+
+
+[Cleanup diagnostic checkpoint](evidence/cleanup-diagnostic-checkpoint.md): exact1 and neighboring10 tests Passed locally; Ruff/format/targeted mypy Passed. Original CI failure remains unresolved. Diagnostic only, uncommitted; no CI rerun or merge.
