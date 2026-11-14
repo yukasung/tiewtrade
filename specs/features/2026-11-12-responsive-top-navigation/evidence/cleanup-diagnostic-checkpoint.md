@@ -20,3 +20,8 @@ Only test_profile_resources.py: capture the held connection PID via read-only SE
 ## Conclusion and next step
 
 The failure did not reproduce in exact or neighboring tests. Cannot distinguish connection leak, shared-suite interference or timing from current evidence. PR70 CI remains Failed; no rerun, commit/push, merge or retarget was done. Next proposal: publish this diagnostic and run one candidate in the same full CI context, retaining5s and all leak checks; requires owner approval because this diagnostic plan stops at local report.
+
+
+## Approved publication outcome
+
+Owner authorized one diagnostic CI candidate. Committed/pushed as fec9260; CI43527203085 and Security43527203035 Passed. Backend5006 stages total Passed. Prior uncommitted/no-rerun statements describe the local checkpoint only. No failure-only output emitted; this does not establish the original root cause. Stop/report checkpoint reached, no additional investigation or acceptance change performed. Next: owner-requested navigation code review and visual acceptance before merge.

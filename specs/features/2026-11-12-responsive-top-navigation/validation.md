@@ -193,3 +193,26 @@ Backported only existing Settings/menu steps from PR69 (already CI-verified ther
 
 
 [Cleanup diagnostic checkpoint](evidence/cleanup-diagnostic-checkpoint.md): exact1 and neighboring10 tests Passed locally; Ruff/format/targeted mypy Passed. Original CI failure remains unresolved. Diagnostic only, uncommitted; no CI rerun or merge.
+
+
+## Diagnostic publication result — 2026-11-14
+
+Candidate fec9260: [CI Passed](https://github.com/yukasung/tiewtrade/actions/runs/43527203085), [Security Passed](https://github.com/yukasung/tiewtrade/actions/runs/43527203035). Backend5006 across stages Passed, including cleanup; frontend/browser/API contract/Docker gates Passed. Original cleanup failure did not recur; no failure-only evidence emitted, root cause not established. Historical failure retained. Required candidate CI now Passed; review/owner acceptance remain pending. No merge/retarget or further rerun.
+
+
+## Owner-authorized refactor — 2026-11-14
+
+After code review of PR70 fec9260, owner instructed refactor. Shared Dropdown now
+uses one local closeIfOutside check for pointer/click and focusin, with descriptive
+handler names. Event ordering, pointer deferral, Escape/focus restoration, listener
+cleanup and keepMounted behavior are unchanged; no API/session/trading changes.
+
+Targeted validation: TopNavigation, CompactMarketNavigation, AccountLayout,
+AccountNavigation and KillSwitchControls — 5 files / 68 tests Passed. Frontend
+ESLint and TypeScript checks Passed; git diff --check Passed. Existing browser
+geometry, theme, responsive and financial evidence remains applicable because
+markup, styles and behavior are unchanged; no new browser/workload run performed.
+
+This source diff is uncommitted. Required CI on fec9260 is historical evidence,
+not final-candidate CI for this refactor. Next: owner-authorized commit/push and
+required CI on the new candidate; owner visual acceptance and merge remain pending.
