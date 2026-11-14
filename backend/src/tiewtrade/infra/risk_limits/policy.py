@@ -162,7 +162,7 @@ async def _matching_scope(session: UserSession, intent: OrderIntent) -> RiskScop
 async def _scope(session: UserSession, intent: OrderIntent) -> RiskScope:
     if intent.scope.owner_id != session.user_id or intent.scope.mode is not TradingMode.PAPER:
         raise OrderConflictError("Paper risk owner/mode mismatch")
-    wallet = await get_wallet(session)
+    wallet = await get_wallet(session, include_reset_readiness=False)
     if wallet is None or wallet.episode_id != intent.scope.episode_id:
         raise OrderConflictError("active Paper risk scope is unavailable")
     return RiskScope(

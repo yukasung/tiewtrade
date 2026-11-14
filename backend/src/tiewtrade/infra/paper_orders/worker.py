@@ -302,7 +302,7 @@ async def _process_new(
                     record=record,
                 )
             reference = await _reference_price(session, intent)
-            wallet = await get_wallet(session)
+            wallet = await get_wallet(session, include_reset_readiness=False)
             positions = await read_position_snapshot(session, intent.scope.episode_id)
             if wallet is None or positions is None:
                 raise OrderWorkerIntegrityError("financial source is unavailable")
@@ -345,7 +345,9 @@ async def _process_new(
             if manual_request is not None or (
                 isinstance(policy, TransactionalRiskPolicy) and intent.origin is OrderOrigin.MANUAL
             ):
-                effective_policy = await manual_policy_for(session, intent, delegate=policy)
+                effective_policy = await manual_policy_for(
+                    session, intent, delegate=policy, validated_snapshot=positions
+                )
             elif isinstance(policy, TransactionalRiskPolicy):
                 reserved = Quantity.of(0, intent.pair.base)
                 for existing in state.orders:

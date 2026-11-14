@@ -112,6 +112,9 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     app.state.price_engine = create_engine_for(
         DatabaseRole.API, pool_size=3, max_overflow=0, pool_timeout=0.5
     )
+    # Share the pool, but keep only the public reader read-only. The original
+    # engine also refreshes authenticated WebSocket sessions.
+    public_price_reader = app.state.price_engine.execution_options(postgresql_readonly=True)
     redis = Redis.from_url(price_redis_url())
     app.state.indicator_keys = KeySource.from_environment(KeyPurpose.INDICATOR_CURSOR)
     validate_keys(app.state.indicator_keys, (app.state.totp_keys, app.state.venue_keys))
@@ -145,8 +148,8 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     )
 
     async def public_read() -> PriceSnapshot:
-        async with asyncio.timeout(PRICE_SETTINGS.query_timeout):
-            async with presented_session(app.state.price_engine) as session:
+        async with asyncio.timeout(PRICE_SETTINGS.query_timeout) as _deadline:
+            async with presented_session(public_price_reader) as session:
                 await session.execute("SET LOCAL statement_timeout = '500ms'")
                 await session.execute("SET LOCAL lock_timeout = '500ms'")
                 return await read_public_snapshot(session)

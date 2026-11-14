@@ -229,7 +229,7 @@ async def _stage_fill_cash(
     # STANDARD_V1 fees are paid in the received asset, exactly as the matcher emits.
     if fact.fee != standard_execution_fee(fact.side, fact.gross_quantity, fact.quote_amount):
         raise OrderConflictError("fill fee asset disagrees with the pinned profile")
-    wallet = await get_wallet(session)
+    wallet = await get_wallet(session, include_reset_readiness=False)
     if wallet is None:
         raise OrderConflictError("wallet unavailable")
     result = await apply_position_event(
@@ -379,7 +379,7 @@ async def _stage_correction_cash(
         return result
     if result.status is not PositionWriteStatus.APPLIED or result.effects is None:
         return result
-    wallet = await get_wallet(session)
+    wallet = await get_wallet(session, include_reset_readiness=False)
     if wallet is None or (wallet.balance + result.effects.quote_cash_delta).amount < 0:
         raise OrderConflictError("invalid correction quote cash effect")
     await session.execute(

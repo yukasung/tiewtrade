@@ -5,6 +5,7 @@ from tiewtrade.core.money import Quantity
 from tiewtrade.core.orders import AdmissionPolicy, OrderIntent, SourceUnavailableError
 from tiewtrade.core.trading_account import AccountUse
 from tiewtrade.infra.db.session import UserSession, require_user_session
+from tiewtrade.infra.positions.records import PositionSnapshot
 from tiewtrade.infra.positions.views import held_and_reserved
 from tiewtrade.infra.risk_limits.policy import TransactionalRiskPolicy
 
@@ -16,6 +17,7 @@ async def manual_policy_for(
     delegate: AdmissionPolicy | None,
     held: Quantity | None = None,
     reserved: Quantity | None = None,
+    validated_snapshot: PositionSnapshot | None = None,
 ) -> ManualAccountPolicy:
     session = require_user_session(session)
     use = (
@@ -27,7 +29,9 @@ async def manual_policy_for(
     if held is None or reserved is None:
         if intent.scope.episode_id is None:
             raise SourceUnavailableError("Paper episode is required")
-        held, reserved = await held_and_reserved(session, intent.scope.episode_id, intent.pair)
+        held, reserved = await held_and_reserved(
+            session, intent.scope.episode_id, intent.pair, validated_snapshot=validated_snapshot
+        )
     if isinstance(delegate, TransactionalRiskPolicy):
         delegate = await delegate.resolve(session, intent, held=held, reserved=reserved)
     return ManualAccountPolicy(None if use is None else AccountUse(use), held, reserved, delegate)

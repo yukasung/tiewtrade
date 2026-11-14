@@ -1,9 +1,11 @@
 """Identity evidence must never waive a nonempty or malformed cleanup snapshot."""
 
+import asyncio
 import copy
 import json
 import os
 from typing import Any
+from unittest.mock import AsyncMock
 
 import pytest
 from sqlalchemy.engine import make_url
@@ -137,3 +139,62 @@ async def test_real_snapshot_counts_exact_target_backend_and_still_blocks() -> N
     finally:
         await peer.dispose()
         await observer.dispose()
+
+
+def autovacuum() -> dict[str, Any]:
+    value = empty()
+    value.update(
+        connections=1,
+        backends=[
+            {
+                "pid": 123,
+                "role": None,
+                "state": "active",
+                "backend_type": "autovacuum worker",
+                "transaction_open": True,
+            }
+        ],
+    )
+    return value
+
+
+@pytest.mark.parametrize("scenario", ["transient", "persistent", "client", "lock", "malformed"])
+async def test_cleanup_waits_only_for_bounded_known_maintenance(
+    monkeypatch: pytest.MonkeyPatch,
+    scenario: str,
+) -> None:
+    value = autovacuum()
+    if scenario == "client":
+        value["backends"][0].update(role="tiewtrade_engine", backend_type="client backend")
+    elif scenario == "lock":
+        value["advisory_locks"] = 1
+    elif scenario == "malformed":
+        value["backends"][0]["backend_type"] = "unknown"
+    count = 0
+
+    def capture(*args: Any) -> str:
+        nonlocal count
+        count += 1
+        return json.dumps(empty() if scenario == "transient" and count == 2 else value)
+
+    sleep = AsyncMock()
+    monkeypatch.setattr(campaign, "capture", capture)
+    monkeypatch.setattr(asyncio, "sleep", sleep)
+    observations: list[Any] = []
+    result = await campaign.capture_cleanup("tiewtrade_internal20_cleanup_test", observations)
+    assert count == (2 if scenario == "transient" else 11 if scenario == "persistent" else 1)
+    assert sleep.await_count == count - 1 and len(observations) == count
+    if scenario == "malformed":
+        with pytest.raises(ValueError):
+            campaign.cleanup_passed(result)
+    else:
+        assert campaign.cleanup_passed(result) is (scenario == "transient")
+
+
+async def test_cleanup_wait_cancellation_propagates(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(campaign, "capture", lambda *args: json.dumps(autovacuum()))
+    monkeypatch.setattr(asyncio, "sleep", AsyncMock(side_effect=asyncio.CancelledError))
+    observations: list[Any] = []
+    with pytest.raises(asyncio.CancelledError):
+        await campaign.capture_cleanup("tiewtrade_internal20_cleanup_test", observations)
+    assert len(observations) == 1

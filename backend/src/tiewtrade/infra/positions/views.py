@@ -6,8 +6,9 @@ from uuid import UUID
 
 from tiewtrade.core.money import Quantity
 from tiewtrade.core.orders import SourceUnavailableError
-from tiewtrade.core.positions import PositionPair
+from tiewtrade.core.positions import PositionAvailability, PositionPair
 from tiewtrade.infra.db.session import UserSession, require_user_session
+from tiewtrade.infra.positions.records import PositionSnapshot
 
 
 def position_metadata_ready(row: Mapping[str, Any] | None) -> bool:
@@ -40,18 +41,48 @@ async def held_and_reserved(
     session: UserSession,
     episode_id: UUID,
     pair: PositionPair,
+    *,
+    validated_snapshot: PositionSnapshot | None = None,
 ) -> tuple[Quantity, Quantity]:
-    if await ready_position_metadata(session, episode_id) is None:
+    session = require_user_session(session)
+    # The worker has decoded the complete snapshot under its owner financial lock.
+    # Recheck its source version with the current quantities; never reuse quantities.
+    activity = None if validated_snapshot is None else validated_snapshot.activity
+    if activity is not None and (
+        activity.user_id != session.user_id
+        or activity.episode_id != episode_id
+        or activity.mode != "PAPER"
+        or activity.availability is not PositionAvailability.READY
+        or activity.source_proof is None
+    ):
         raise SourceUnavailableError("authoritative holdings are unavailable")
+    if activity is None and await ready_position_metadata(session, episode_id) is None:
+        raise SourceUnavailableError("authoritative holdings are unavailable")
+    metadata_columns = ""
+    metadata_source = ""
+    if activity is not None:
+        metadata_columns = ", a.availability, a.revision, a.source_sequence, a.source_proof"
+        metadata_source = " FROM paper_position_activity a WHERE a.episode_id=:episode"
     row = (
         await session.execute(
-            """SELECT (SELECT held_quantity FROM paper_position_projections
+            f"""SELECT (SELECT held_quantity FROM paper_position_projections
             WHERE episode_id=:episode AND base=:base AND quote=:quote) AS held,
           (SELECT coalesce(sum(base_reserved),0) FROM paper_reservations
-            WHERE episode_id=:episode AND base=:base AND quote=:quote) AS reserved""",
+            WHERE episode_id=:episode AND base=:base AND quote=:quote) AS reserved
+          {metadata_columns}{metadata_source}""",
             {"episode": episode_id, "base": pair.base, "quote": pair.quote},
         )
-    ).one()
+    ).one_or_none()
+    if row is None or (
+        activity is not None
+        and (
+            row.availability != "READY"
+            or row.revision != activity.revision
+            or row.source_sequence != activity.source_sequence
+            or row.source_proof != activity.source_proof
+        )
+    ):
+        raise SourceUnavailableError("authoritative holdings are unavailable")
     return Quantity.of(0 if row.held is None else row.held, pair.base), Quantity.of(
         row.reserved, pair.base
     )

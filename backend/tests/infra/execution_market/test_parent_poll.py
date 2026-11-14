@@ -10,6 +10,7 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any, cast
+from unittest.mock import AsyncMock
 from uuid import UUID, uuid4
 
 import pytest
@@ -80,7 +81,7 @@ def sessions(monkeypatch: pytest.MonkeyPatch) -> dict[str, Any]:
         state["entered"] += 1
         state["peak"] = max(state["peak"], state["active"])
         try:
-            yield object()
+            yield state.get("session", object())
         finally:
             state["active"] -= 1
             state["exited"] += 1
@@ -453,3 +454,65 @@ async def test_outer_cycle_deadline_cancels_waiting_gate(
     finally:
         for _ in range(4):
             gate.semaphore.release()
+
+
+@pytest.mark.parametrize("interval", [0.25, 1.0])
+@pytest.mark.parametrize("kind", ["command", "status"])
+async def test_explicit_poll_cadence_sleeps_only_after_releasing_resources(
+    sessions: dict[str, Any],
+    monkeypatch: pytest.MonkeyPatch,
+    interval: float,
+    kind: str,
+) -> None:
+    gate = ParentPollGate(poll_seconds=interval)
+    command = OrderCommand(uuid4(), "PENDING")
+    sleeps = []
+
+    async def sleep(seconds: float) -> None:
+        assert sessions["active"] == gate.active == 0
+        sleeps.append(seconds)
+
+    monkeypatch.setattr(asyncio, "sleep", sleep)
+    if kind == "command":
+        monkeypatch.setattr(
+            f15,
+            "get_order_command",
+            AsyncMock(side_effect=[command, OrderCommand(command.command_id, "SUCCEEDED")]),
+        )
+        await f15.wait_command(cast(AsyncEngine, None), uuid4(), command, poll_gate=gate)
+    else:
+        execute = AsyncMock(
+            side_effect=[
+                SimpleNamespace(scalar_one_or_none=lambda: "ACCEPTED"),
+                SimpleNamespace(scalar_one_or_none=lambda: "FILLED"),
+            ]
+        )
+        sessions["session"] = SimpleNamespace(execute=execute)
+        await f15.wait_status(
+            cast(AsyncEngine, None), uuid4(), uuid4(), OrderStatus.FILLED, poll_gate=gate
+        )
+    assert sleeps == [interval] and gate.active == sessions["active"] == 0
+
+
+@pytest.mark.parametrize("interval", [True, 0, -1, 0.5, 2, float("nan"), "1"])
+def test_invalid_poll_interval_is_rejected(interval: Any) -> None:
+    with pytest.raises(ValueError, match="polling interval"):
+        ParentPollGate(poll_seconds=interval)
+    args = options()
+    args.observation_poll_seconds = interval
+    with pytest.raises(ValueError, match="polling interval"):
+        validate_options(args)
+
+
+def test_representative_polling_is_explicit_and_release_only() -> None:
+    from tests.infra.execution_market.test_release_profile import options as release_options
+
+    assert ParentPollGate().poll_seconds == 0.25
+    args = release_options("SMOKE")
+    args.observation_poll_seconds = 1.0
+    validate_options(args)
+    assert args.owners == 100
+    args = options()
+    args.observation_poll_seconds = 1.0
+    with pytest.raises(ValueError, match="original100"):
+        validate_options(args)

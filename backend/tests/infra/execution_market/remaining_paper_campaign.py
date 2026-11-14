@@ -152,8 +152,11 @@ def cleanup_passed(value: Any) -> bool:
             raise ValueError("invalid backend identity fields")
         if type(row["pid"]) is not int or row["pid"] <= 0:
             raise ValueError("invalid backend pid")
-        if any(
-            not isinstance(row[k], str) or not row[k] for k in ("role", "state", "backend_type")
+        required = ("state", "backend_type")
+        if any(not isinstance(row[k], str) or not row[k] for k in required):
+            raise ValueError("missing backend identity")
+        if (not isinstance(row["role"], str) or not row["role"]) and (
+            row["role"] is not None or row["backend_type"] != "autovacuum worker"
         ):
             raise ValueError("missing backend identity")
         if type(row["transaction_open"]) is not bool:
@@ -161,6 +164,43 @@ def cleanup_passed(value: Any) -> bool:
     if len({row["pid"] for row in rows}) != len(rows):
         raise ValueError("duplicate backend identity")
     return counts_passed
+
+
+async def capture_cleanup(database: str, observations: list[Any]) -> Any:
+    """Require exact zero; briefly observe only explicitly identified DB maintenance."""
+    for attempt in range(11):
+        current = json.loads(
+            await asyncio.to_thread(
+                capture,
+                "docker",
+                "exec",
+                "tiewtrade-postgres-1",
+                "psql",
+                "-U",
+                "postgres",
+                "-d",
+                "postgres",
+                "-At",
+                "-c",
+                cleanup_query(database),
+            )
+        )
+        observations.append(retained_cleanup(current))
+        try:
+            passed = cleanup_passed(current)
+        except ValueError:
+            return current  # Caller retains malformed evidence and rejects it.
+        if passed:
+            return current
+        maintenance = (
+            current["advisory_locks"] == 0
+            and bool(current["backends"])
+            and all(row["backend_type"] == "autovacuum worker" for row in current["backends"])
+        )
+        if not maintenance or attempt == 10:
+            return current
+        await asyncio.sleep(1)
+    raise AssertionError("bounded cleanup observation did not return")
 
 
 def retained_cleanup(value: Any) -> dict[str, Any]:
@@ -222,6 +262,22 @@ async def check_services() -> dict[str, Any]:
     return {"containers": states, "postgres_ready": bool(postgres), "redis_ping": redis}
 
 
+def profile_authorization(profile: str) -> str:
+    """Bind approval to the selected contract without duplicating numeric policy."""
+    if profile not in internal.PROFILES:
+        raise ValueError("unknown acceptance profile")
+    if profile in {internal.RELEASE_TIMING_NAME, internal.NAME_BURST5}:
+        document = "paper-timing-acceptance-amendment-20261114.md"
+    elif profile == internal.RELEASE_NAME:
+        document = "integrated-paper-acceptance-plan.md"
+    else:
+        document = "internal-paper-acceptance-amendment.md"
+    return (
+        f"{profile}: specs/features/2026-11-02-tp-sl/{document}; "
+        "effective criteria recorded in structured manifest and result fields"
+    )
+
+
 async def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("phase", choices=("CONTROLLED20", "SMOKE", "W1", "W2", "W3", "W2_OVERFLOW"))
@@ -229,7 +285,20 @@ async def main() -> int:
     parser.add_argument(
         "--acceptance-profile", choices=tuple(internal.PROFILES), default=internal.NAME
     )
+    parser.add_argument("--failure-timeline", action="store_true")
+    parser.add_argument("--observation-poll-seconds", type=float, choices=(0.25, 1.0), default=0.25)
     args = parser.parse_args()
+    if getattr(args, "failure_timeline", False) and (
+        args.phase != "SMOKE" or args.acceptance_profile != internal.RELEASE_NAME
+    ):
+        parser.error("failure timeline requires original100 SMOKE")
+    if args.phase == "CONTROLLED20":
+        if args.acceptance_profile in internal.RELEASE_PROFILES:
+            parser.error("CONTROLLED20 is not the original 100-account release profile")
+        if args.acceptance_profile == internal.NAME_BURST5:
+            parser.error("burst5 profile supports W2 only")
+    elif args.phase not in internal.PROFILES[args.acceptance_profile]:
+        parser.error("phase is not supported by the selected acceptance profile")
     root = args.output
     root.mkdir(parents=True, exist_ok=False)
     for purpose, value in (
@@ -311,7 +380,11 @@ async def main() -> int:
             acceptance_profile=args.acceptance_profile,
             parent_poll_limit=4,
             phase=args.phase,
-            owners=20,
+            owners=(
+                20
+                if args.phase == "CONTROLLED20"
+                else internal.PROFILES[args.acceptance_profile][args.phase].owners
+            ),
             baseline_orders=20,
             cycles_per_owner=0,
             rate=2,
@@ -321,6 +394,8 @@ async def main() -> int:
             publisher_heartbeat_per_book=True,
             final_tail_drain=True,
             diagnostics=False,
+            failure_timeline=getattr(args, "failure_timeline", False),
+            observation_poll_seconds=getattr(args, "observation_poll_seconds", 0.25),
             worker_only=False,
             baseline_manifest=None,
             fault_schedule=None,
@@ -395,10 +470,7 @@ async def main() -> int:
                     "owner IDs emitted by runner"
                 ),
                 "runner_sha256": runner_digest,
-                "authorization": (
-                    "NC12 sections5,9,11,12,13,14,15,16,18,19,20,21,22 approved; "
-                    "explicit V2 burst10/s; pilot processing500ms/2s; owned pool contract"
-                ),
+                "authorization": profile_authorization(args.acceptance_profile),
             },
         )
         await internal.require_empty_database()
@@ -421,7 +493,7 @@ async def main() -> int:
             status = "INCOMPLETE"
     except BaseException as failure:
         error = type(failure).__name__
-        if isinstance(failure, AssertionError):
+        if isinstance(failure, (AssertionError, workload.CycleBudgetExceededError)):
             status = "FAILED"
         raise
     finally:
@@ -430,26 +502,19 @@ async def main() -> int:
             candidate == hashes()
             and runner_digest == hashlib.sha256(runner.read_bytes()).hexdigest()
         )
-        query = cleanup_query(database)
+        cleanup_query(database)  # Validate fixture identity before any cleanup read.
         cleanup: Any = None
         cleanup_complete = False
         try:
-            cleanup = json.loads(
-                await asyncio.to_thread(
-                    capture,
-                    "docker",
-                    "exec",
-                    "tiewtrade-postgres-1",
-                    "psql",
-                    "-U",
-                    "postgres",
-                    "-d",
-                    "postgres",
-                    "-At",
-                    "-c",
-                    query,
-                )
-            )
+            observations: list[Any] = []
+            try:
+                cleanup = await capture_cleanup(database, observations)
+            finally:
+                if len(observations) > 1:
+                    workload.save(
+                        root / "cleanup-observations.json",
+                        {"maximum_wait_seconds": 10, "observations": observations},
+                    )
             cleanup_complete = cleanup_passed(cleanup)
             if not cleanup_complete:
                 error = error or "CampaignCleanupIncomplete"
@@ -478,6 +543,7 @@ async def main() -> int:
                 "free_bytes_after": shutil.disk_usage(ROOT).free,
                 "budget_seconds": 1200 if args.phase == "SMOKE" else None,
                 "budget_scope": "preflight,fixture,measurement,verification,cleanup",
+                **({"diagnostic_only": True} if getattr(args, "failure_timeline", False) else {}),
             },
         )
         if not unchanged and sys.exception() is None:

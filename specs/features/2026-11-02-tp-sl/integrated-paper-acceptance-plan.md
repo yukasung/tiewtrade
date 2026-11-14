@@ -198,3 +198,12 @@ The [20-account internal-pilot amendment](internal-paper-acceptance-amendment.md
 was approved A on2026-11-06. It authorizes a separate internal opening gate and
 scoped harness/checks/conditional campaign. It does not certify this100-account
 campaign, erase Failed/Incomplete results, or close F17 V-18/V-19/V-20.
+
+## Approved owner timing amendment — 2026-11-14
+
+Owner's explicit >2-round timing-criteria authority is exercised by
+[paper-timing-acceptance-amendment-20261114.md](paper-timing-acceptance-amendment-20261114.md).
+TIMING_V2 alternative uses enginep95500ms/p991s and ordinarycycle90s; all100-owner
+counts/rates/durations/faults, economic/auth/RLS/source/snapshot/TP-SL/STOP/recovery/
+resource gates and original-grade reporting retained. Prior failures not rewritten.
+Conditional progression continues under continuous completion instruction.

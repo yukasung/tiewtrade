@@ -29,6 +29,29 @@ def options(phase: str = "SMOKE") -> argparse.Namespace:
     )
 
 
+def test_local_burst5_is_explicit_and_preserves_existing_workloads() -> None:
+    args = options("W2")
+    args.acceptance_profile = profile.NAME_BURST5
+    args.rate, args.cycles_per_owner = 5, 60
+    phase = profile.validate(args)
+    assert phase is not None and phase.commands == 6000 and phase.seconds == 1200
+    assert profile.positive_cycle_budget(args) == profile.completion_allowance(args) == 60
+    assert profile.processing_acceptance(args, 0.5, 2.0)["passed"]
+    assert not profile.processing_acceptance(args, 0.500001, 1.0)["passed"]
+    assert not profile.processing_acceptance(args, 0.4, 2.000001)["passed"]
+    assert profile.PROFILES[profile.NAME_V2]["W2"] == profile.Phase(10, 120, 1200)
+    assert profile.PROFILES[profile.RELEASE_NAME]["W2"] == profile.Phase(100, 120, 600, 100)
+    args.rate = 10
+    with pytest.raises(ValueError):
+        profile.validate(args)
+    args.rate, args.cycles_per_owner = 5, 120
+    with pytest.raises(ValueError):
+        profile.validate(args)
+    args.phase = "W1"
+    with pytest.raises(ValueError):
+        profile.validate(args)
+
+
 @pytest.mark.parametrize(
     "phase,commands,seconds",
     [

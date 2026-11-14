@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import math
 import os
 from collections import Counter
 from collections.abc import AsyncIterator
@@ -38,7 +39,7 @@ CURRENT: ContextVar[OwnedPools | None] = ContextVar("nc12_owned_pools", default=
 
 
 def task_provenance() -> dict[str, Any]:
-    """Code locations only: task names, frame locals and exception text are untrusted."""
+    """Locations and the known public reader's typed timer; no other local values."""
     try:
         task = asyncio.current_task()
     except RuntimeError:
@@ -47,11 +48,27 @@ def task_provenance() -> dict[str, Any]:
         return {"task_id": None, "cancellation_requests": None, "await_chain": []}
     backend = Path(__file__).resolve().parents[3]
     locations: list[dict[str, Any]] = []
+    deadline: dict[str, Any] = {}
     current: Any = task.get_coro()
     for _ in range(48):
         code = getattr(current, "cr_code", None) or getattr(current, "gi_code", None)
         if code is not None:
             source = Path(code.co_filename).resolve()
+            if (
+                source == backend / "src/tiewtrade/services/api/app.py"
+                and code.co_name == "public_read"
+            ):
+                frame = getattr(current, "cr_frame", None)
+                # Read exactly this trusted timer, never enumerate or serialize locals.
+                timer = None if frame is None else frame.f_locals.get("_deadline")
+                if type(timer) is asyncio.Timeout:
+                    when = timer.when()
+                    if type(when) is float and math.isfinite(when):
+                        deadline = {
+                            "deadline_context": "public_price_read",
+                            "deadline_expired": timer.expired(),
+                            "deadline_at": when,
+                        }
             if source.is_relative_to(backend) and len(locations) < 8:
                 locations.append(
                     {
@@ -67,7 +84,31 @@ def task_provenance() -> dict[str, Any]:
         "task_id": id(task),
         "cancellation_requests": task.cancelling(),
         "await_chain": locations,
+        **deadline,
     }
+
+
+def expected_public_read_deadline(detail: dict[str, Any]) -> bool:
+    """Only an expired read-only public-price deadline is an expected cancellation."""
+    when = detail.get("deadline_at")
+    at = detail.get("monotonic")
+    return (
+        detail.get("error_type") == "CancelledError"
+        and detail.get("sqlstate") == ""
+        and detail.get("role") == "API"
+        and detail.get("pool_size") == 3
+        and detail.get("max_overflow") == 0
+        and detail.get("configured_readonly") is True
+        and detail.get("deadline_context") == "public_price_read"
+        and detail.get("deadline_expired") is True
+        and type(detail.get("cancellation_requests")) is int
+        and detail["cancellation_requests"] == 1
+        and type(when) is float
+        and math.isfinite(when)
+        and type(at) is float
+        and math.isfinite(at)
+        and when <= at
+    )
 
 
 class OwnedPools(PoolEvidence):
@@ -83,6 +124,8 @@ class OwnedPools(PoolEvidence):
         self.quiescing = False
         self.shutdown_cancellations = 0
         self.resource_errors: list[dict[str, Any]] = []
+        self.read_deadline_cancellations = 0
+        self.read_deadlines: list[dict[str, Any]] = []
         self.stream: Any = None
         self.sample_count = 0
         self.stack = ExitStack()
@@ -119,6 +162,11 @@ class OwnedPools(PoolEvidence):
                         "sample_count": self.sample_count,
                         "expected_shutdown_cancellations": self.shutdown_cancellations,
                         "resource_errors": self.resource_errors,
+                        "expected_read_deadline_cancellations": self.read_deadline_cancellations,
+                        "expected_read_deadlines": self.read_deadlines,
+                        "expected_read_deadlines_omitted": max(
+                            0, self.read_deadline_cancellations - len(self.read_deadlines)
+                        ),
                         "resource_errors_omitted": max(
                             0, self.errors["ConnectionResourceError"] - len(self.resource_errors)
                         ),
@@ -181,52 +229,55 @@ class OwnedPools(PoolEvidence):
                         ):
                             self.shutdown_cancellations += 1
                         else:
-                            self.errors["ConnectionResourceError"] += 1
-                            if len(self.resource_errors) < 16:
-                                current_row = next(
-                                    (
-                                        r
-                                        for e, pool_ref, r in self.bindings
-                                        if e is engine and pool_ref() is engine.pool
-                                    ),
-                                    None,
+                            current_row = next(
+                                (
+                                    r
+                                    for e, pool_ref, r in self.bindings
+                                    if e is engine and pool_ref() is engine.pool
+                                ),
+                                None,
+                            )
+                            identity_basis = (
+                                "engine_current_pool"
+                                if current_row is not None
+                                else "original_registration_fallback"
+                            )
+                            current_row = current_row or row
+                            execution_engine = context.engine
+                            detail = {
+                                "at": datetime.now(UTC).isoformat(),
+                                "monotonic": monotonic(),
+                                "pid": os.getpid(),
+                                "engine_id": id(engine),
+                                "pool_id": current_row["pool_id"],
+                                "pool_identity_basis": identity_basis,
+                                "generation": current_row["generation"],
+                                "role": current_row["role"],
+                                "pool_size": current_row["pool_size"],
+                                "max_overflow": current_row["max_overflow"],
+                                "configured_readonly": execution_engine is not None
+                                and execution_engine.get_execution_options().get(
+                                    "postgresql_readonly", False
                                 )
-                                identity_basis = (
-                                    "engine_current_pool"
-                                    if current_row is not None
-                                    else "original_registration_fallback"
-                                )
-                                current_row = current_row or row
-                                detail = {
-                                    "at": datetime.now(UTC).isoformat(),
-                                    "monotonic": monotonic(),
-                                    "pid": os.getpid(),
-                                    "engine_id": id(engine),
-                                    "pool_id": current_row["pool_id"],
-                                    "pool_identity_basis": identity_basis,
-                                    "generation": current_row["generation"],
-                                    "role": current_row["role"],
-                                    "pool_size": current_row["pool_size"],
-                                    "max_overflow": current_row["max_overflow"],
-                                    "configured_readonly": engine.get_execution_options().get(
-                                        "postgresql_readonly", False
-                                    )
-                                    is True,
-                                    "deadline_context": "not_observed",
-                                    "error_type": type(context.original_exception).__name__,
-                                    "sqlstate": state,
-                                    "quiescing": self.quiescing,
-                                }
-                                try:
-                                    detail.update(task_provenance())
-                                except Exception as provenance_error:
-                                    self.errors[
-                                        "Provenance:" + type(provenance_error).__name__
-                                    ] += 1
-                                    detail["provenance_error_type"] = type(
-                                        provenance_error
-                                    ).__name__
-                                self.resource_errors.append(detail)
+                                is True,
+                                "deadline_context": "not_observed",
+                                "error_type": type(context.original_exception).__name__,
+                                "sqlstate": state,
+                                "quiescing": self.quiescing,
+                            }
+                            try:
+                                detail.update(task_provenance())
+                            except Exception as provenance_error:
+                                self.errors["Provenance:" + type(provenance_error).__name__] += 1
+                                detail["provenance_error_type"] = type(provenance_error).__name__
+                            if expected_public_read_deadline(detail):
+                                self.read_deadline_cancellations += 1
+                                if len(self.read_deadlines) < 16:
+                                    self.read_deadlines.append(detail)
+                            else:
+                                self.errors["ConnectionResourceError"] += 1
+                                if len(self.resource_errors) < 16:
+                                    self.resource_errors.append(detail)
                             self.save(finalized=False)
 
                 event.listen(engine.sync_engine, "handle_error", failed)

@@ -1576,3 +1576,47 @@ frontend lint/types Passed. PR69 retarget/publication and final required CI are
 in progress; no merge authorization, owner acceptance unchanged. Prior CI evidence
 remains tied to its candidate; unresolved historical indicator lock timeout is
 not claimed fixed by this frontend integration.
+
+## Paper original100 verification — 2026-11-14
+
+[Checkpoint](features/2026-11-02-tp-sl/evidence/paper-completion-20261114/checkpoint.md):
+controlled20/D20Passed on isolatedfixtures; original100 three uninstrumented
+acceptance attempts unsuccessful. LatestFailedcycle60s at2880/3000completed,
+541cycles; final financialoracleNotRun. Cleanup0connections/0locks/DBremoved.
+Scopedaccounting-readcandidate safety191unique cases/staticPassed, but no final
+review/CI/publication or original100 acceptance. W1/W2/overflow/W3/W4NotRun in
+this campaign; older scopedresults retained. Three-failure stop applies before
+newtimedexecution; options/evidence in checkpoint. F17V18Partial/Failed—Pending
+FullValidation; V19bot/notifications and V20Live dependencies stillopen.
+
+Paper failure-timeline checkpoint2026-11-14: one bounded diagnostic reproduced
+60scycle expiry with complete phases/query aggregates/poll waits/20worker tails
+and post-stop queue;108affected tests/staticPassed. Shows accumulated receipt/
+fill waiting, not a single60squery; worker-vs-observer contribution not yet isolated.
+[Receipt](features/2026-11-02-tp-sl/evidence/paper-completion-20261114/failure-timeline-checkpoint.md).
+FullfinancialoracleNotRun, original100acceptanceFailed, W1–W4NotRun thiscampaign;
+F17V18Partial/Failed—PendingFullValidation and other dependencies retained.
+
+
+### 2026-11-15 — F17 Paper internal20 local checkpoint
+
+[Current evidence](features/2026-11-02-tp-sl/evidence/paper-completion-20261114/final-checkpoint.md):
+controlled20/SMOKE/W1/localburst5/overflow/shortW3/W4 Passed under explicit scopes;
+newburst6000commands/5s^-1 enginep95/p99221.671/329.159ms, all20financial oracles,
+W3 620snapshots/7fault observations and actualrestoreRLS/receipt/exit checksPassed.
+Owned fixturecleanup complete. Original100W1/20W2benchmark failures retained;
+100/4h Release, finalsource review/requiredCI/opening and V19/V20 dependencies remain
+pending. This is uncommitted validation/fix source, no Git/deploy/owner/Live action.
+F17 status remains Full Validation Pending, notCompleted. Next: consolidated review
+and existing publication gates; no further local rerun without a named impact.
+
+2026-11-15 F17 consolidated review: [R5 harness findings corrected](features/2026-11-02-tp-sl/evidence/paper-completion-20261114/review-r5.md),
+139targeted tests/no skips and six-fileRuff/format/mypy Passed. Production hashes
+unchanged; no timed rerun/publication. Next owner refactor instruction and final
+candidate publication/requiredCI gates. Local internal20 scope unchanged; original
+Failed/full100/4h and bot/notification/Live dependencies pending, notCompleted.
+
+2026-11-15 F17 [owner-authorized R5 refactor checkpoint](features/2026-11-02-tp-sl/evidence/paper-completion-20261114/refactor-r5.md):
+139targeted tests/no skips, scopedRuff/format/mypy Passed; production unchanged.
+Next owner commit/push/PR instruction, requiredCI, then separately authorized merge.
+Existing local internal20/Failed100/4h/dependency statuses retained; F17 notCompleted.

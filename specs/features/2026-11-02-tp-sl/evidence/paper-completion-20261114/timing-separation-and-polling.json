@@ -1,0 +1,127 @@
+{
+  "commit_diagnostic": {
+    "campaign": {
+      "status": "FAILED",
+      "workload_status": "FAILED",
+      "cleanup_complete": true,
+      "exit_code": 1,
+      "seconds": 818.3227700409916,
+      "error_type": "CycleBudgetExceededError",
+      "candidate_unchanged": true,
+      "free_bytes_after": 23218114560,
+      "budget_seconds": 1200,
+      "budget_scope": "preflight,fixture,measurement,verification,cleanup",
+      "diagnostic_only": true
+    },
+    "confirmed_worker_rows": 17071,
+    "matched": 2873,
+    "missing": 930,
+    "receipt_matches": 1920,
+    "receipt_observation_gap_median": 0.16641187500499655,
+    "receipt_observation_gap_p95": 0.40392704200348817,
+    "receipt_worker_confirmation_from_wait_start_p95": 10.527693041993189,
+    "limitation": "930fill observations missing because claim-level observer does not capture other pair orders advanced in the transaction; not fill timing acceptance"
+  },
+  "polling_acceptance": {
+    "raw_campaign": {
+      "status": "INCOMPLETE",
+      "workload_status": "PASSED",
+      "cleanup_complete": false,
+      "exit_code": 1,
+      "seconds": 861.0849523750076,
+      "error_type": "ValueError",
+      "candidate_unchanged": true,
+      "free_bytes_after": 22984744960,
+      "budget_seconds": 1200,
+      "budget_scope": "preflight,fixture,measurement,verification,cleanup"
+    },
+    "result_status": "PASSED",
+    "counters": {
+      "offered": 3000,
+      "admitted": 3000,
+      "completed": 3000,
+      "rejected": 0,
+      "fills": 1200,
+      "cancels": 600,
+      "replays": 600,
+      "cycles": 600
+    },
+    "elapsed_seconds": 323.88058291700145,
+    "engine_transaction_seconds": {
+      "applicable": true,
+      "p95": 0.17082708299858496,
+      "p99": 0.23624420900887344,
+      "max": 0.5405231670010835,
+      "samples": 10913,
+      "window": {
+        "attribution": "transaction_start",
+        "started": 110156.802582583,
+        "ended": 110480.683165791,
+        "status": "MEASURED",
+        "excluded_fault_intervals": []
+      }
+    },
+    "processing_acceptance": {
+      "revision": "F15_DEFAULT",
+      "applicable": true,
+      "p95_limit_seconds": 0.25,
+      "p99_limit_seconds": 1.0,
+      "target_p95_seconds": 0.25,
+      "target_p99_seconds": 1.0,
+      "passed": true,
+      "target_passed": true,
+      "performance_warning": false
+    },
+    "global_invariants": {
+      "orders": 3800,
+      "fills": 1200,
+      "cancels": 600,
+      "pending_dispatch": 2000,
+      "unlinked_fills": 0,
+      "invalid_reservations": 0,
+      "invalid_positions": 0,
+      "wrong_mode": 0,
+      "input_lag": 6,
+      "duplicate_fill_effects": 0,
+      "expected_orders": 3800,
+      "expected_fills": 1200,
+      "expected_cancels": 600,
+      "expected_pending_dispatch": 2000,
+      "passed": true
+    },
+    "resource_assertions_passed": true,
+    "pool_passed": true,
+    "cleanup_followup": {
+      "original_receipt_retained": true,
+      "reason": "original sample observed transient PostgreSQL autovacuum worker, not application connection",
+      "cleanup": {
+        "observed_at": "2026-11-14 14:24:02.8163+00",
+        "connections": 0,
+        "backends": [],
+        "advisory_locks": 0
+      },
+      "strict_passed": true,
+      "conservative_seconds_from_preflight": 1001.868760332989,
+      "within_total1200": true
+    },
+    "normal_database_removal": {
+      "database": "tiewtrade_internal20_completion_poll_smoke_1794665236",
+      "removed": true,
+      "connections": 0,
+      "normal_drop": true
+    }
+  },
+  "criteria_changed": false,
+  "explicit_poll_seconds": 1.0,
+  "tests": {
+    "timing_separation": 147,
+    "representative_polling": 103,
+    "maintenance_cleanup": 45
+  },
+  "raw_sha256": {
+    "poll_smoke/run/result.json": "77024b82b1514c91de7aae869644cf6cd80ab9e937bd1176380b36ecbcc89eb7",
+    "poll_smoke/cleanup-followup.json": "0059d47832106e75546bb099902d8ba79e538e852e2445a47f36dec236fadef6",
+    "poll_smoke/database-cleanup-followup.json": "9355fca776413b41c34237280f7e80051a3bdd23daabd4c96b19fdd973a591c0",
+    "commit_smoke/run/completion-correlation.json": "2878ee35e5619be7a31aeae15fd1013c75d584165a9b6d7946a279c8f09617b0"
+  }
+}

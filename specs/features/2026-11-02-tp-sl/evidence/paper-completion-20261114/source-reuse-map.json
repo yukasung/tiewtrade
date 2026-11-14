@@ -1,0 +1,74 @@
+{
+  "current_controlled20": {
+    "modified_paths_since_evidence": [
+      "backend/src/tiewtrade/services/api/app.py",
+      "backend/tests/infra/execution_market/profile_http.py",
+      "backend/tests/infra/execution_market/profile_internal.py",
+      "backend/tests/infra/execution_market/profile_owned_pools.py",
+      "backend/tests/infra/execution_market/profile_parent_poll.py",
+      "backend/tests/infra/execution_market/profile_workload.py",
+      "backend/tests/infra/execution_market/test_internal_http.py",
+      "backend/tests/infra/execution_market/test_internal_profile.py",
+      "backend/tests/infra/execution_market/test_revised_timing_profile.py"
+    ],
+    "added_test_paths": [
+      "backend/tests/infra/execution_market/test_public_price_deadline.py"
+    ],
+    "all_other_backend_production_paths_unchanged": true,
+    "inventory_entries": 1016
+  },
+  "pilot_smoke": {
+    "modified_paths_since_evidence": [
+      "backend/src/tiewtrade/services/api/app.py",
+      "backend/tests/infra/execution_market/profile_internal.py",
+      "backend/tests/infra/execution_market/profile_owned_pools.py",
+      "backend/tests/infra/execution_market/profile_workload.py",
+      "backend/tests/infra/execution_market/test_internal_profile.py",
+      "backend/tests/infra/execution_market/test_revised_timing_profile.py"
+    ],
+    "added_test_paths": [
+      "backend/tests/infra/execution_market/test_public_price_deadline.py"
+    ],
+    "all_other_backend_production_paths_unchanged": true,
+    "inventory_entries": 1016
+  },
+  "pilot_w1": {
+    "modified_paths_since_evidence": [
+      "backend/src/tiewtrade/services/api/app.py",
+      "backend/tests/infra/execution_market/profile_internal.py",
+      "backend/tests/infra/execution_market/profile_owned_pools.py",
+      "backend/tests/infra/execution_market/profile_workload.py",
+      "backend/tests/infra/execution_market/test_internal_profile.py",
+      "backend/tests/infra/execution_market/test_revised_timing_profile.py"
+    ],
+    "added_test_paths": [
+      "backend/tests/infra/execution_market/test_public_price_deadline.py"
+    ],
+    "all_other_backend_production_paths_unchanged": true,
+    "inventory_entries": 1016
+  },
+  "burst5_w2": {
+    "modified_paths_since_evidence": [],
+    "added_test_paths": [],
+    "all_other_backend_production_paths_unchanged": true,
+    "inventory_entries": 1017
+  },
+  "pilot_w2_overflow": {
+    "modified_paths_since_evidence": [],
+    "added_test_paths": [],
+    "all_other_backend_production_paths_unchanged": true,
+    "inventory_entries": 1017
+  },
+  "pilot_w3": {
+    "modified_paths_since_evidence": [],
+    "added_test_paths": [],
+    "all_other_backend_production_paths_unchanged": true,
+    "inventory_entries": 1017
+  },
+  "w4": {
+    "modified_paths_since_evidence": [],
+    "added_test_paths": [],
+    "all_other_backend_production_paths_unchanged": true,
+    "inventory_entries": 1017
+  }
+}
