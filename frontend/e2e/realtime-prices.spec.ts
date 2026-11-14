@@ -133,12 +133,13 @@ test("actual quote producer → PostgreSQL → Redis → authenticated API/WS re
     await expect.poll(() => latestStreamStatus(page), { timeout: 15000 }).toEqual({ readiness: "READY", alert_due: false });
 
     await context.setOffline(true);
-    await page.evaluate(() => (window as ProbeWindow).priceTestProbe?.socket.close());
-    await expect.poll(() => page.evaluate(() => (window as ProbeWindow).priceTestProbe?.closeCode)).toBeDefined();
     // APIRequestContext remains online while browser delivery is interrupted.
     const serverView = await snapshot(page);
     expect(serverView.rows.every(row => row.readiness === "READY" && !row.alert_due)).toBe(true);
     await context.setOffline(false);
+    // Graceful close needs an online transport; observe teardown before replacing the probe.
+    await page.evaluate(() => (window as ProbeWindow).priceTestProbe?.socket.close());
+    await expect.poll(() => page.evaluate(() => (window as ProbeWindow).priceTestProbe?.closeCode)).toBeDefined();
     await openStream(page);
     await expect.poll(async () => btc(await latestStream(page))?.readiness, { timeout: 15000 }).toBe("READY");
 
