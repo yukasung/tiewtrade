@@ -136,7 +136,7 @@ test("Paper use without key/TOTP → key setup → deletion retains preference",
   await panel.screenshot({
     path: testInfo.outputPath("trading-account-mobile.png"),
   });
-  const menu = page.getByRole("button", { name: "เปิดเมนูบัญชี" });
+  const menu = page.locator('button[aria-controls="compact-navigation"]');
   await menu.click();
   await expect(menu).toHaveAttribute("aria-expanded", "true");
   await expect(
@@ -148,7 +148,7 @@ test("Paper use without key/TOTP → key setup → deletion retains preference",
   await menu.click();
   await page
     .getByRole("button", { name: "ปิดเมนูบัญชี", exact: true })
-    .click({ position: { x: 350, y: 400 } });
+    .click();
   await expect(menu).toBeFocused();
   await page.goto("/api-keys");
   await keys.getByRole("button", { name: "ลบ key", exact: true }).click();

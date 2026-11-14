@@ -1,3 +1,4 @@
+import { navigationLink } from "./helpers/ui";
 import { mkdirSync } from "node:fs";
 import { setTimeout as delay } from "node:timers/promises";
 import { expect, test } from "./helpers/test";
@@ -145,7 +146,7 @@ test("receipt loss→reload→discovery preserves identity and Live never mutate
   await waitResolved(page);
   await expect(page.getByText("เหตุปฏิเสธ: ยอดใช้ได้ไม่เพียงพอ")).toBeVisible();
   const missing = await page.request.get(`/api/paper/orders/${committed!.order_id}`); expect(missing.status()).toBe(404);
-  await page.getByRole("link", { name: "เทรด Live", exact: true }).click();
+  await (await navigationLink(page, "/live/trade")).click();
   await expect(page).toHaveURL(/\/live\/trade$/);
   await expect(page.getByText(/Live ยังไม่พร้อมใช้งาน/)).toBeVisible();
   await expect(page.getByRole("button", { name: "ไม่พร้อมใช้งาน", exact: true })).toBeDisabled();
@@ -163,7 +164,7 @@ test("logout clears the local journal; login rediscovers the owner's pending req
   const email = `manual-session-${Date.now()}@example.com`;
   const owner = await register(page, email);
   const recorded = await send(page, "100");
-  await page.getByRole("link", { name: "บัญชี", exact: true }).click();
+  await (await navigationLink(page, "/account")).click();
   await page.getByTestId("log-out").click();
   await expect(page.getByTestId("signed-out")).toBeVisible();
   await expect.poll(() => page.evaluate(() => Object.keys(window.sessionStorage).filter(k => k.startsWith("tiewtrade.manual-order.v1:")).length)).toBe(0);
@@ -171,7 +172,7 @@ test("logout clears the local journal; login rediscovers the owner's pending req
   expect(other).not.toBe(owner);
   expect((await page.request.get(`/api/paper/order-requests/${recorded.request_id}`)).status()).toBe(404);
   await expect(page.getByText(recorded.order_id, { exact: false })).toBeHidden();
-  await page.getByRole("link", { name: "บัญชี", exact: true }).click();
+  await (await navigationLink(page, "/account")).click();
   await page.getByTestId("log-out").click();
   await expect(page.getByTestId("signed-out")).toBeVisible();
   await page.getByLabel("อีเมล").fill(email);
@@ -181,7 +182,7 @@ test("logout clears the local journal; login rediscovers the owner's pending req
   const rediscovered = page.waitForResponse(response =>
     response.url().includes("/api/paper/order-requests?") && response.request().method() === "GET",
   );
-  await page.getByRole("link", { name: "เทรด Paper", exact: true }).click();
+  await (await navigationLink(page, "/paper/trade")).click();
   const recovered = await (await rediscovered).json() as {
     requests: Array<{ request_id: string }>;
   };

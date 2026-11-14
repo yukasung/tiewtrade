@@ -1,6 +1,7 @@
 import { createInstance } from "i18next";
 export const killSwitchI18n = createInstance();
 const en = {
+  modeStatus: "{{mode}} stop status", settings: "Stop settings", noStopDetails: "No stop request to manage",
   checkingPrevious: "Checking previous stop request…",
   storageUnavailable: "Browser storage is unavailable. Stop can still be requested; after reload, verify the server stop status before acting again.",
   paperStop: "Stop Paper bot", liveStop: "Stop Live bot", details: "View details", close: "Close", loading: "Checking stop status…",
@@ -12,6 +13,7 @@ const en = {
   adminTitle: "System safety", reason: "Reason shown to users", platformStop: "Stop the platform", platformResume: "Resume the platform", ownerOnly: "Only a Platform Owner can resume.",
 };
 const th: typeof en = {
+  modeStatus: "สถานะหยุด {{mode}}", settings: "ตั้งค่าการหยุด", noStopDetails: "ยังไม่มีคำขอหยุดให้จัดการ",
   checkingPrevious: "กำลังตรวจคำขอหยุดเดิม…",
   storageUnavailable: "เบราว์เซอร์บันทึกคำขอไม่ได้ แต่ยังส่งคำขอหยุดได้ หลังโหลดหน้าใหม่ให้ตรวจสถานะจากระบบก่อนทำรายการต่อ",
   paperStop: "หยุดบอท Paper", liveStop: "หยุดบอท Live", details: "ดูรายละเอียด", close: "ปิด", loading: "กำลังตรวจสถานะหยุด…",

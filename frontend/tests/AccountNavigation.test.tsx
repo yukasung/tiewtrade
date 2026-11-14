@@ -26,6 +26,7 @@ vi.mock("../src/PaperTradePage", () => ({ PaperTradePage: () => <Panel name="pap
 vi.mock("../src/LiveTradePage", () => ({ LiveTradePage: () => <Panel name="live/trade"/> }));
 vi.mock("../src/SupportedSymbolPanel", () => ({ SupportedSymbolPanel: () => <Panel name="supported-symbols" /> }));
 beforeEach(() => {
+  vi.stubGlobal("innerWidth", 1440);
   observed.mounts = []; observed.exits = []; observed.clients = [];
   platformRole = null;
   window.history.replaceState(null, "", "/");
@@ -53,6 +54,10 @@ it("defaults to chart and mounts only the selected module without replacing the 
     expect(screen.getAllByTestId(/^module-/)).toHaveLength(1);
     expect(screen.getByTestId(`module-${page}`)).toBeTruthy();
     expect(observed.clients.at(-1)).toBe(client);
+    if (["security", "api-keys", "trading-account"].includes(page)) fireEvent.click(screen.getByRole("button", { name: "เมนูบัญชี" }));
+    if (page === "paper/trade" || page === "live/trade") {
+      fireEvent.click(screen.getByRole("button", { name: page === "paper/trade" ? "Paper" : "Live" }));
+    }
     expect(screen.getByRole("link", { current: "page" }).getAttribute("href")).toBe(`/${page}`);
   }
   expect(observed.exits).toContain("live/trade");
@@ -122,6 +127,7 @@ it("shows catalog management only to a platform role and rejects a trader deep l
   window.history.replaceState(null, "", "/supported-symbols");
   render(<AuthPanel />);
   expect(await screen.findByTestId("module-supported-symbols")).toBeTruthy();
+  fireEvent.click(screen.getByRole("button", { name: "เมนูบัญชี" }));
   expect(screen.getByRole("link", { name: "คู่เทรดที่รองรับ", current: "page" })).toBeTruthy();
 });
 
@@ -131,6 +137,7 @@ it("navigates a plain internal click without reloading and preserves modified cl
   // Chart DOM can appear before the navigation effect installs its popstate listener.
   await waitFor(() => expect(window.location.pathname).toBe("/chart"));
   const client = observed.clients.at(-1);
+  fireEvent.click(screen.getByRole("button", { name: "เมนูบัญชี" }));
   const link = screen.getByRole<HTMLAnchorElement>("link", { name: "API key" });
   fireEvent.click(link);
   expect(window.location.pathname).toBe("/api-keys");
@@ -142,4 +149,18 @@ it("navigates a plain internal click without reloading and preserves modified cl
     navigateAccountPage({ button: 0, currentTarget: link, [modifier]: true, preventDefault } as unknown as MouseEvent<HTMLAnchorElement>);
     expect(preventDefault).not.toHaveBeenCalled();
   }
+});
+it.each(["download", "new-tab", "external", "already-prevented", "middle-click"])("preserves native or prevented navigation (%s)", kind => {
+  const link = document.createElement("a");
+  link.href = kind === "external" ? "https://example.com/account" : "/account";
+  if (kind === "download") link.setAttribute("download", "fixture");
+  if (kind === "new-tab") link.target = "_blank";
+  const preventDefault = vi.fn();
+  const before = window.location.href;
+  navigateAccountPage({
+    button: kind === "middle-click" ? 1 : 0, currentTarget: link,
+    defaultPrevented: kind === "already-prevented", preventDefault,
+  } as unknown as MouseEvent<HTMLAnchorElement>);
+  expect(preventDefault).not.toHaveBeenCalled();
+  expect(window.location.href).toBe(before);
 });

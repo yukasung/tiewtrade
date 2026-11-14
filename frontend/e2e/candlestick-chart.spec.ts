@@ -1,3 +1,4 @@
+import { navigationLink } from "./helpers/ui";
 import { execFileSync, spawn } from "node:child_process";
 import { mkdtempSync, writeFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -147,10 +148,13 @@ test("module pages preserve navigation history, deep links and cancel inactive c
   let chartCalls = 0;
   page.on("request", request => { if (request.url().includes("/market-data/chart/")) chartCalls += 1; });
   for (const [name, testId] of [["API key", "api-key-panel"], ["บัญชีเทรด", "trading-account-panel"], ["TOTP / 2FA", "totp-panel"]] as const) {
-    await page.getByRole("link", { name, exact: true }).click();
+    const path = testId === "api-key-panel" ? "/api-keys" : testId === "trading-account-panel" ? "/trading-account" : "/security";
+    await (await navigationLink(page, path)).click();
     await expect(page.getByTestId(testId)).toBeVisible();
     await expect(page.getByTestId("candlestick-chart")).toHaveCount(0);
-    await expect(page.locator('#account-navigation [aria-current="page"]')).toHaveText(name);
+    await expect(await navigationLink(page, path)).toHaveText(name);
+    await expect(await navigationLink(page, path)).toHaveAttribute("aria-current", "page");
+    await page.keyboard.press("Escape");
   }
   const stopped = chartCalls;
   await page.waitForTimeout(4000);
@@ -164,16 +168,15 @@ test("module pages preserve navigation history, deep links and cancel inactive c
   await page.goto("/api-keys");
   await expect(page.getByTestId("api-key-panel")).toBeVisible();
   await page.setViewportSize({ width: 1440, height: 1000 });
-  const desktopToggle = page.getByRole("button", { name: "เปิดเมนูบัญชี" });
-  const sidebar = page.locator("#account-navigation");
-  await expect(sidebar.locator('[aria-current="page"]')).toHaveCSS("background-color", "rgb(236, 243, 255)");
-  await expect(sidebar.locator('[aria-current="page"]')).toHaveCSS("color", "rgb(70, 95, 255)");
+  const desktopToggle = page.locator('button[aria-controls="account-dropdown"]');
   await desktopToggle.click();
+  const active = page.locator('#account-dropdown [aria-current="page"]');
+  await expect(active).toHaveCSS("background-color", "rgb(236, 243, 255)");
+  await expect(active).toHaveCSS("color", "rgb(70, 95, 255)");
+  await page.keyboard.press("Escape");
   await expect(desktopToggle).toHaveAttribute("aria-expanded", "false");
-  await expect.poll(() => sidebar.evaluate(el => el.getBoundingClientRect().width)).toBe(90);
+  await expect(page.locator(".account-sidebar")).toHaveCount(0);
   await expect(page.getByTestId("api-key-panel")).toBeVisible();
-  await desktopToggle.click();
-  await expect.poll(() => sidebar.evaluate(el => el.getBoundingClientRect().width)).toBe(290);
   await page.setViewportSize({ width: 375, height: 812 });
   const trigger = page.getByRole("button", { name: "เปิดเมนูบัญชี" });
   await trigger.click();
@@ -204,17 +207,16 @@ test("removed prices bookmarks return to the chart without starting a price subs
       await chart.chartI18n.changeLanguage(value);
     }, language);
     // Re-render through navigation, as the existing translation instances are read at render time.
-    const accountLink = page.locator('#account-navigation a[href="/account"]');
     for (const width of [1440, 375]) {
       await page.setViewportSize({ width, height: 1000 });
-      const trigger = page.locator('button[aria-controls="account-navigation"]');
+      const trigger = page.locator('button[aria-controls="compact-navigation"]');
       if (width === 375) await trigger.click();
-      await expect(page.locator('#account-navigation a[href="/prices"]')).toHaveCount(0);
+      await expect(page.locator('.account-header a[href="/prices"]')).toHaveCount(0);
       await expect(page.getByRole("link", { name: /ราคาสด|Live prices/ })).toHaveCount(0);
-      await accountLink.click();
+      await (await navigationLink(page, "/account")).click();
       await expect(page.getByTestId("log-out")).toBeVisible();
       if (width === 375) await trigger.click();
-      const chartLink = page.locator('#account-navigation a[href="/chart"]');
+      const chartLink = await navigationLink(page, "/chart");
       await chartLink.focus();
       await expect(chartLink).toBeFocused();
       await page.keyboard.press("Enter");
@@ -229,7 +231,7 @@ test("removed prices bookmarks return to the chart without starting a price subs
   }
 
   await page.setViewportSize({ width: 1440, height: 1000 });
-  await page.locator('#account-navigation a[href="/account"]').click();
+  await (await navigationLink(page, "/account")).click();
   await page.getByTestId("log-out").click();
   await expect(page.getByTestId("signed-out")).toBeVisible();
   await page.goto("/prices");
@@ -274,7 +276,7 @@ test("removed manual controls stay absent and logout stops chart requests", asyn
   }
   let calls = 0;
   page.on("request", request => { if (request.url().includes("/market-data/chart/")) calls += 1; });
-  await page.getByRole("link", { name: "บัญชี", exact: true }).click();
+  await (await navigationLink(page, "/account")).click();
   await page.getByRole("button", { name: "ออกจากระบบ", exact: true }).click();
   await expect(page.getByTestId("signed-out")).toBeVisible();
   const stopped = calls;
@@ -293,7 +295,7 @@ test("password login, series switching and actual latest-price worker", async ({
       const btc = view.rows.find(row => row.base === "BTC");
       return { amount: btc?.amount, readiness: btc?.readiness };
     }, { timeout: 15_000 }).toEqual({ amount: "83348.47", readiness: "READY" });
-    await page.getByRole("link", { name: "บัญชี", exact: true }).click();
+    await (await navigationLink(page, "/account")).click();
     await page.getByRole("button", { name: "ออกจากระบบ", exact: true }).click();
     await expect(page.getByTestId("signed-out")).toBeVisible();
     await page.goto("/chart");

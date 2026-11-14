@@ -129,14 +129,29 @@ async def test_cleanup_excludes_only_predeclared_observers_and_detects_a_leak(
     engine = create_engine_for(DatabaseRole.API, pool_size=1, max_overflow=0)
     held = await engine.connect()
     try:
+        held_pid: int = (await held.execute(text("SELECT pg_backend_pid()"))).scalar_one()
+        evidence = {"observer_pids": observers, "held_pid": held_pid}
         result = await cleanup_connections(observer_pids=observers)
-        assert result["passed"] is False and len(result["remaining"]) == 1
+        assert result["passed"] is False and len(result["remaining"]) == 1, {
+            **evidence,
+            "phase": "held",
+            "result": result,
+        }
         await held.close()
         # Returning to the pool still leaves a physical client until disposal.
         result = await cleanup_connections(observer_pids=observers)
-        assert result["passed"] is False
+        assert result["passed"] is False, {
+            **evidence,
+            "phase": "returned_to_pool",
+            "result": result,
+        }
         await engine.dispose()
-        assert (await cleanup_connections(observer_pids=observers))["passed"] is True
+        result = await cleanup_connections(observer_pids=observers)
+        assert result["passed"] is True, {
+            **evidence,
+            "phase": "disposed",
+            "result": result,
+        }
     finally:
         await held.close()
         await engine.dispose()

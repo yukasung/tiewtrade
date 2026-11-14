@@ -14,6 +14,19 @@ export async function captureUi(
       if (width === 1440) await expect(brand).toBeVisible();
       else await expect(brand).toBeHidden();
     }
+    if (await page.locator(".account-header").count()) {
+      await expect(page.locator(width < 1280
+        ? 'button[aria-controls="compact-navigation"]'
+        : 'button[aria-controls="account-dropdown"]')).toBeVisible();
+    }
+    if (await page.evaluate(() => document.documentElement.scrollWidth) > width) {
+      await info.attach("overflow-bounds", { contentType: "application/json", body: JSON.stringify(
+        await page.evaluate(() => [...document.querySelectorAll("body *")].map(element => {
+          const rect = element.getBoundingClientRect();
+          return { tag: element.tagName, class: element.className, x: rect.x, right: rect.right, width: rect.width };
+        }).filter(element => element.right > window.innerWidth)),
+      ) });
+    }
     expect(
       await page.evaluate(() => document.documentElement.scrollWidth),
     ).toBeLessThanOrEqual(width);
@@ -23,4 +36,23 @@ export async function captureUi(
     });
   }
   await page.setViewportSize({ width: 1440, height: 900 });
+}
+
+/** Reveal a shell link through the responsive navigation, preserving real clicks. */
+export async function navigationLink(page: Page, path: string) {
+  const width = page.viewportSize()?.width ?? await page.evaluate(() => window.innerWidth);
+  const trigger = page.locator(width < 1280
+    ? 'button[aria-controls="compact-navigation"]'
+    : 'button[aria-controls="account-dropdown"]');
+  // ResizeObserver/media-query updates can settle after setViewportSize resolves.
+  // Wait for the expected breakpoint rather than inspecting the previous layout.
+  await expect(trigger).toBeVisible();
+  if (width < 1280 && await trigger.getAttribute("aria-expanded") !== "true") await trigger.click();
+  const link = page.locator(`.account-header nav a[href="${path}"]`);
+  if (!await link.isVisible()) {
+    if (path === "/paper/trade" || path === "/live/trade") {
+      await page.locator(`.account-market-trigger[data-market-page="${path.slice(1)}"]`).click();
+    } else await trigger.click();
+  }
+  return link;
 }

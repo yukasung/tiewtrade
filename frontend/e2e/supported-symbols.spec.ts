@@ -1,3 +1,4 @@
+import { navigationLink } from "./helpers/ui";
 import { mkdirSync } from "node:fs";
 import { expect, test } from "@playwright/test";
 import { PASSWORD, codeFor, secretOf, stepAt } from "./helpers/totp";
@@ -39,7 +40,8 @@ test("owner manages the catalog through the real browser, API, and database", as
 
   await page.goto("/supported-symbols");
   await expect(page.getByRole("heading", { name: "คู่เทรดที่รองรับ" })).toBeVisible();
-  await expect(page.getByRole("link", { name: "คู่เทรดที่รองรับ" })).toBeVisible();
+  await expect(await navigationLink(page, "/supported-symbols")).toBeVisible();
+  await page.keyboard.press("Escape");
 
   const add = page.getByRole("button", { name: "เพิ่มคู่เทรด" });
   await add.click();

@@ -1,10 +1,11 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
-import { afterEach, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { AccountLayout } from "../src/layout/AccountLayout";
 import { Button } from "../src/components/ui/Button";
 import { Input } from "../src/components/ui/Input";
 import { Label } from "../src/components/ui/Label";
 import { Select } from "../src/components/ui/Select";
+beforeEach(() => { vi.stubGlobal("innerWidth", 1440); });
 afterEach(() => {
   cleanup();
   vi.unstubAllGlobals();
@@ -25,18 +26,18 @@ it("uses the full-width workspace and removes the duplicate breadcrumb on trade 
   expect(container.querySelector(".account-content-trade")).toBeTruthy();
   expect(container.querySelector(".page-breadcrumb")).toBeNull();
 });
-it("toggles the desktop icon rail without hiding the current module", () => {
-  vi.stubGlobal("innerWidth", 1440);
+it("replaces the sidebar with desktop primary links and an account disclosure", () => {
   const { container } = render(<AccountLayout><p>current module</p></AccountLayout>);
-  const trigger = screen.getByRole("button", { name: "เปิดเมนูบัญชี" });
-  expect(trigger.getAttribute("aria-expanded")).toBe("true");
+  expect(container.querySelector(".account-sidebar")).toBeNull();
+  expect(screen.getByRole("button", { name: "Paper" })).toBeTruthy();
+  const trigger = screen.getByRole("button", { name: "เมนูบัญชี" });
+  expect(screen.queryByRole("link", { name: "API key" })).toBeNull();
   fireEvent.click(trigger);
+  expect(screen.getByRole("link", { name: "API key" })).toBeTruthy();
+  fireEvent.keyDown(document, { key: "Escape" });
   expect(trigger.getAttribute("aria-expanded")).toBe("false");
-  expect(container.querySelector(".sidebar-collapsed")).toBeTruthy();
+  expect(document.activeElement).toBe(trigger);
   expect(screen.getByText("current module")).toBeTruthy();
-  expect(screen.queryByRole("button", { name: "ปิดเมนูบัญชี" })).toBeNull();
-  fireEvent.click(trigger);
-  expect(container.querySelector(".sidebar-collapsed")).toBeNull();
 });
 it("toggles and persists the Admin Template light and dark theme", () => {
   render(<AccountLayout><p>content</p></AccountLayout>);
@@ -47,7 +48,7 @@ it("toggles and persists the Admin Template light and dark theme", () => {
   expect(window.localStorage.getItem("theme")).toBe("dark");
   expect(screen.getByRole("button", { name: "เปลี่ยนเป็นโหมดสว่าง" })).toBeTruthy();
 });
-it("removes the mobile backdrop when resizing into desktop layout", () => {
+it("closes the compact panel when resizing into desktop layout", () => {
   vi.stubGlobal("innerWidth", 375);
   render(<AccountLayout><p>current module</p></AccountLayout>);
   const trigger = screen.getByRole("button", { name: "เปิดเมนูบัญชี" });
@@ -56,7 +57,7 @@ it("removes the mobile backdrop when resizing into desktop layout", () => {
   vi.stubGlobal("innerWidth", 1440);
   fireEvent(window, new Event("resize"));
   expect(screen.queryByRole("button", { name: "ปิดเมนูบัญชี" })).toBeNull();
-  expect(trigger.getAttribute("aria-expanded")).toBe("true");
+  expect(trigger.getAttribute("aria-expanded")).toBe("false");
 });
 it("keeps one main landmark when embedded in the page main", () => {
   render(
@@ -69,7 +70,8 @@ it("keeps one main landmark when embedded in the page main", () => {
   expect(screen.getAllByRole("main")).toHaveLength(1);
   expect(screen.getByRole("main").textContent).toContain("account content");
 });
-it("closes navigation with Escape and backdrop and restores trigger focus", () => {
+it("closes compact navigation with Escape and close and restores trigger focus", () => {
+  vi.stubGlobal("innerWidth", 375);
   render(
     <AccountLayout>
       <p>content</p>

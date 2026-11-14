@@ -1,3 +1,4 @@
+import { navigationLink } from "./helpers/ui";
 import { mkdirSync } from "node:fs";
 import { expect, test } from "./helpers/test";
 import { PASSWORD } from "./helpers/totp";
@@ -39,7 +40,7 @@ async function openTradingAccount(page: Page) {
   await expect(page.getByLabel("เพดานขาดทุน (USDT)")).toBeVisible();
 }
 async function openPaperTrade(page: Page) {
-  await page.getByRole("link", { name: "เทรด Paper", exact: true }).click();
+  await (await navigationLink(page, "/paper/trade")).click();
   await expect(page).toHaveURL(/\/paper\/trade$/);
   await expect(page.getByLabel("คู่เทรด")).toBeEnabled();
 }
@@ -167,7 +168,7 @@ test("production risk composition: unset→set→BUY→breach→cancel→bounded
   await capture(page, "reset-en-dark-tablet");
   await page.evaluate(() => document.documentElement.classList.remove("dark"));
   await page.setViewportSize({ width: 1440, height: 1000 }); await capture(page, "reset-en-light-desktop");
-  await page.getByRole("link", { name: "เทรด Live", exact: true }).click();
+  await (await navigationLink(page, "/live/trade")).click();
   await expect(page.getByText(/Live ยังไม่พร้อมใช้งาน/)).toBeVisible();
   await expect(page.getByRole("button", { name: "ไม่พร้อมใช้งาน", exact: true })).toBeDisabled();
 });
@@ -221,8 +222,9 @@ test("F-19 Paper and Live stops stay separate and UNKNOWN retries the same reque
   unexpectedHttpErrors.length = 0;
   const paperButton = page.getByRole("button", { name: "หยุดบอท Paper", exact: true });
   const liveButton = page.getByRole("button", { name: "หยุดบอท Live", exact: true });
-  await expect(paperButton).toBeVisible();
-  await expect(liveButton).toBeVisible();
+  await expect(paperButton).toBeHidden();
+  await expect(page.getByRole("button", { name: "ตั้งค่าการหยุด", exact: true })).toBeVisible();
+  await expect(liveButton).toBeHidden();
 
   let committedKey: string | undefined;
   let committedReceipt: { request_id: string; generation: number } | undefined;
@@ -234,7 +236,10 @@ test("F-19 Paper and Live stops stay separate and UNKNOWN retries the same reque
     committedReceipt = await response.json() as { request_id: string; generation: number };
     await route.abort("connectionreset");
   }, { times: 1 });
+  await page.getByRole("button", { name: "ตั้งค่าการหยุด", exact: true }).click();
+  await expect(liveButton).toBeVisible();
   await paperButton.click();
+  await page.getByRole("button", { name: "ตั้งค่าการหยุด", exact: true }).click();
   await expect(page.getByRole("alert").filter({ hasText: "ยังไม่ทราบผลการหยุด" })).toBeVisible();
   expect(requestFailures.some(error => error.includes("ERR_CONNECTION_RESET"))).toBe(true);
   browserErrors.length = 0;
@@ -277,7 +282,9 @@ test("F-19 Paper and Live stops stay separate and UNKNOWN retries the same reque
     lostReceipt = await response.json() as { request_id: string; generation: number };
     await route.abort("connectionreset");
   }, { times: 1 });
+  await page.getByRole("button", { name: "ตั้งค่าการหยุด", exact: true }).click();
   await paperButton.click();
+  await page.getByRole("button", { name: "ตั้งค่าการหยุด", exact: true }).click();
   await expect(page.getByRole("alert").filter({ hasText: "ยังไม่ทราบผลการหยุด" })).toBeVisible();
   expect(lostKey).toBeTruthy();
   expect(lostKey).not.toBe(committedKey);
@@ -296,8 +303,10 @@ test("F-19 Paper and Live stops stay separate and UNKNOWN retries the same reque
     key => window.localStorage.getItem(key),
     `tiewtrade.kill-switch.stop.v1:${owner}:PAPER`,
   )).toBeNull();
-  await expect(paperButton).toBeEnabled();
+  await page.getByRole("button", { name: "ตั้งค่าการหยุด", exact: true }).click();
+  await expect(page.locator('.kill-switch-settings-group[aria-label="PAPER"] > button[aria-label]').first()).toBeEnabled();
   expect(paperPosts).toBe(1);
+  await page.keyboard.press("Escape");
 
   await page.getByLabel("คู่เทรด").selectOption("BTC");
   await expect.poll(async () => {
@@ -312,6 +321,7 @@ test("F-19 Paper and Live stops stay separate and UNKNOWN retries the same reque
     response.url().endsWith("/api/paper/kill-switch/stop")
       && response.request().method() === "POST",
   );
+  await page.getByRole("button", { name: "ตั้งค่าการหยุด", exact: true }).click();
   await page.getByRole("button", { name: "หยุดบอท Paper", exact: true }).click();
   const repeated = await repeatedStop;
   expect(repeated.status()).toBe(202);
@@ -331,9 +341,10 @@ test("F-19 Paper and Live stops stay separate and UNKNOWN retries the same reque
     stop_id: string | null;
   };
   expect(liveBefore.stop_id).toBeNull();
-  const paperControl = page.getByRole("button", { name: "หยุดบอท Paper", exact: true }).locator("..");
+  const paperControl = page.getByRole("group", { name: "สถานะหยุด PAPER", exact: true });
+  await page.getByRole("button", { name: "ตั้งค่าการหยุด", exact: true }).click();
   await expect(paperControl.getByText("หยุดแล้ว", { exact: true })).toBeVisible();
-  await paperControl.getByRole("button", { name: "ดูรายละเอียด", exact: true }).click();
+  await page.getByRole("region", { name: "PAPER", exact: true }).getByRole("button", { name: "ดูรายละเอียด", exact: true }).click();
   await expect(page.getByRole("dialog").getByText("สรุปการหยุด", { exact: false })).toBeVisible();
   await expect(page.getByRole("dialog").getByText(/BTC\/USDT:/)).toBeVisible();
   await page.getByRole("dialog").getByRole("button", { name: "ปิด", exact: true }).click();
@@ -341,10 +352,11 @@ test("F-19 Paper and Live stops stay separate and UNKNOWN retries the same reque
   const liveStop = page.waitForResponse(response =>
     response.url().endsWith("/api/live/kill-switch/stop") && response.request().method() === "POST",
   );
+  await page.getByRole("button", { name: "ตั้งค่าการหยุด", exact: true }).click();
   await page.getByRole("button", { name: "หยุดบอท Live", exact: true }).click();
   expect((await liveStop).status()).toBe(202);
-  const liveControl = page.getByRole("button", { name: "หยุดบอท Live", exact: true }).locator("..");
-  const liveDetails = liveControl.getByRole("button", { name: "ดูรายละเอียด", exact: true });
+  await page.getByRole("button", { name: "ตั้งค่าการหยุด", exact: true }).click();
+  const liveDetails = page.getByRole("region", { name: "LIVE", exact: true }).getByRole("button", { name: "ดูรายละเอียด", exact: true });
   await liveDetails.click();
   await expect(page.getByRole("dialog").getByText(/Live execution ยังไม่พร้อม/)).toBeVisible();
   const liveAfter = await (await page.request.get("/api/live/kill-switch")).json() as {
@@ -358,7 +370,7 @@ test("F-19 Paper and Live stops stay separate and UNKNOWN retries the same reque
   await captureKillSwitch(page, "paper-live-separated-th-light-desktop");
   await page.keyboard.press("Escape");
   await expect(page.getByRole("dialog")).toHaveCount(0);
-  await expect(liveDetails).toBeFocused();
+  await expect(page.getByRole("button", { name: "ตั้งค่าการหยุด", exact: true })).toBeFocused();
 
   await page.evaluate(async () => {
     const source = "/src/killSwitchMessages.ts";
@@ -369,6 +381,7 @@ test("F-19 Paper and Live stops stay separate and UNKNOWN retries the same reque
     document.documentElement.classList.add("dark");
   });
   await page.setViewportSize({ width: 375, height: 844 });
+  await page.getByRole("button", { name: "Stop settings", exact: true }).click();
   await expect(page.getByRole("button", { name: "Stop Paper bot", exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Stop Live bot", exact: true })).toBeVisible();
   await captureKillSwitch(page, "paper-live-separated-en-dark-mobile");
@@ -382,7 +395,7 @@ test("F-19 Platform Owner stop publishes the reason and only resumes after compl
     data: { user_id: owner },
   })).status()).toBe(204);
   await page.reload();
-  await page.getByRole("link", { name: "ความปลอดภัยระบบ", exact: true }).click();
+  await (await navigationLink(page, "/system-safety")).click();
   await expect(page).toHaveURL(/\/system-safety$/);
 
   const reason = "<b>planned incident</b>";
@@ -403,15 +416,23 @@ test("F-19 Platform Owner stop publishes the reason and only resumes after compl
   await expect(page.locator("b", { hasText: "planned incident" })).toHaveCount(0);
   for (const route of accountRoutes) {
     await page.goto(`/${route}`);
-    await expect(page.getByRole("button", { name: "หยุดบอท Paper", exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: "ตั้งค่าการหยุด", exact: true })).toBeVisible();
+    await expect(page.getByRole("group", { name: "สถานะหยุด PAPER", exact: true })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "หยุดบอท Live", exact: true })).toBeHidden();
+    await page.getByRole("button", { name: "ตั้งค่าการหยุด", exact: true }).click();
     await expect(page.getByRole("button", { name: "หยุดบอท Live", exact: true })).toBeVisible();
+    await page.keyboard.press("Escape");
     await expect(page.getByRole("alert").filter({ hasText: reason })).toBeVisible();
   }
   await page.setViewportSize({ width: 375, height: 844 });
   for (const route of accountRoutes) {
     await page.goto(`/${route}`);
-    await expect(page.getByRole("button", { name: "หยุดบอท Paper", exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: "ตั้งค่าการหยุด", exact: true })).toBeVisible();
+    await expect(page.getByRole("group", { name: "สถานะหยุด PAPER", exact: true })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "หยุดบอท Live", exact: true })).toBeHidden();
+    await page.getByRole("button", { name: "ตั้งค่าการหยุด", exact: true }).click();
     await expect(page.getByRole("button", { name: "หยุดบอท Live", exact: true })).toBeVisible();
+    await page.keyboard.press("Escape");
     await expect(page.getByRole("alert").filter({ hasText: reason })).toBeVisible();
   }
   await page.setViewportSize({ width: 1440, height: 1000 });
@@ -429,7 +450,7 @@ test("F-19 Platform Owner stop publishes the reason and only resumes after compl
     data: { user_id: admin },
   })).status()).toBe(204);
   await adminPage.reload();
-  await adminPage.getByRole("link", { name: "ความปลอดภัยระบบ", exact: true }).click();
+  await (await navigationLink(adminPage, "/system-safety")).click();
   await expect(adminPage.getByRole("button", { name: "เปิดแพลตฟอร์มกลับ", exact: true })).toBeDisabled();
   await expect(adminPage.getByText("เฉพาะ Platform Owner เท่านั้นที่เปิดกลับได้", { exact: true })).toBeVisible();
   await expect(adminPage.getByRole("alert").filter({ hasText: reason })).toBeVisible();
