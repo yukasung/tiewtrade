@@ -1,0 +1,791 @@
+{
+  "diagnostic_only": true,
+  "acceptance_result": false,
+  "campaign": {
+    "status": "FAILED",
+    "workload_status": "FAILED",
+    "cleanup_complete": true,
+    "exit_code": 1,
+    "seconds": 671.2672394999972,
+    "error_type": "CycleBudgetExceededError",
+    "candidate_unchanged": true,
+    "free_bytes_after": 23261110272,
+    "budget_seconds": 1200,
+    "budget_scope": "preflight,fixture,measurement,verification,cleanup",
+    "diagnostic_only": true
+  },
+  "preflight_status": "PASSED",
+  "failure": {
+    "failed_at": "2026-11-14 12:44:59.995638+00:00",
+    "error_type": "CycleBudgetExceededError",
+    "error": "Paper cycle exceeded its 60-second budget",
+    "publisher": {
+      "target_hz": 10,
+      "stage": "publish_market",
+      "published": 2237,
+      "last_input_id": 2237,
+      "book_owner": "a74a58c3-7a26-4e88-920b-3658f35d224b",
+      "book_generation": 1,
+      "last_progress_at": "2026-11-14T12:44:59.960786+00:00",
+      "max_publish_seconds": 1.0274131670012139
+    },
+    "worker_failures": [],
+    "counters": {
+      "offered": 1161,
+      "admitted": 1161,
+      "completed": 1061,
+      "rejected": 0,
+      "fills": 414,
+      "cancels": 205,
+      "replays": 221,
+      "cycles": 175
+    }
+  },
+  "expired_cycle": {
+    "owner": "848abc44-8b3b-47b4-8a38-e02f9d6bd704",
+    "run_id": "194571ae-d85a-495e-915c-586737555b22",
+    "cycle": 1,
+    "started_at": 1794660239.9616241,
+    "started_monotonic": 104628.170211291,
+    "phases": [
+      {
+        "phase": "cycle",
+        "owner": "848abc44-8b3b-47b4-8a38-e02f9d6bd704",
+        "started_at": 1794660239.961644,
+        "started_monotonic": 104628.17023375,
+        "finished_at": 1794660299.963735,
+        "seconds": 60.000746290999814,
+        "outcome": "CancelledError"
+      },
+      {
+        "phase": "submit_new",
+        "owner": "848abc44-8b3b-47b4-8a38-e02f9d6bd704",
+        "order_id": "c737fac3-77dd-5a37-b501-0b11f7e15125",
+        "started_at": 1794660239.961727,
+        "started_monotonic": 104628.170316583,
+        "finished_at": 1794660260.08217,
+        "seconds": 20.11999254200782,
+        "outcome": "returned"
+      },
+      {
+        "phase": "submit_order",
+        "order_id": "c737fac3-77dd-5a37-b501-0b11f7e15125",
+        "owner": "848abc44-8b3b-47b4-8a38-e02f9d6bd704",
+        "started_at": 1794660239.9728892,
+        "started_monotonic": 104628.181477125,
+        "finished_at": 1794660240.006523,
+        "seconds": 0.03363495798839722,
+        "outcome": "returned"
+      },
+      {
+        "phase": "wait_command",
+        "owner": "848abc44-8b3b-47b4-8a38-e02f9d6bd704",
+        "command_id": "5ee050fc-3d5b-47cf-99ea-086fb2f81073",
+        "started_at": 1794660240.012214,
+        "started_monotonic": 104628.220802625,
+        "finished_at": 1794660249.5326662,
+        "seconds": 9.5202392499923,
+        "outcome": "returned"
+      },
+      {
+        "phase": "wait_status",
+        "owner": "848abc44-8b3b-47b4-8a38-e02f9d6bd704",
+        "order_id": "c737fac3-77dd-5a37-b501-0b11f7e15125",
+        "expected_status": "FILLED",
+        "started_at": 1794660249.53268,
+        "started_monotonic": 104637.741054541,
+        "finished_at": 1794660260.082143,
+        "seconds": 10.549227250012336,
+        "outcome": "returned"
+      },
+      {
+        "phase": "submit_new",
+        "owner": "848abc44-8b3b-47b4-8a38-e02f9d6bd704",
+        "order_id": "ca957a1c-8e2b-5853-9eec-98ead0e936fb",
+        "started_at": 1794660260.082305,
+        "started_monotonic": 104648.290443625,
+        "finished_at": 1794660269.952,
+        "seconds": 9.869474208011525,
+        "outcome": "returned"
+      },
+      {
+        "phase": "submit_order",
+        "order_id": "ca957a1c-8e2b-5853-9eec-98ead0e936fb",
+        "owner": "848abc44-8b3b-47b4-8a38-e02f9d6bd704",
+        "started_at": 1794660260.091525,
+        "started_monotonic": 104648.299660916,
+        "finished_at": 1794660260.1303658,
+        "seconds": 0.0388436249922961,
+        "outcome": "returned"
+      },
+      {
+        "phase": "wait_command",
+        "owner": "848abc44-8b3b-47b4-8a38-e02f9d6bd704",
+        "command_id": "89c82b8d-359b-4bfb-98aa-f29fd4d8be35",
+        "started_at": 1794660260.134039,
+        "started_monotonic": 104648.342175291,
+        "finished_at": 1794660269.8497028,
+        "seconds": 9.71544816698588,
+        "outcome": "returned"
+      },
+      {
+        "phase": "wait_status",
+        "owner": "848abc44-8b3b-47b4-8a38-e02f9d6bd704",
+        "order_id": "ca957a1c-8e2b-5853-9eec-98ead0e936fb",
+        "expected_status": "ACCEPTED",
+        "started_at": 1794660269.8497438,
+        "started_monotonic": 104658.057662541,
+        "finished_at": 1794660269.951991,
+        "seconds": 0.10224608400312718,
+        "outcome": "returned"
+      },
+      {
+        "phase": "submit_order",
+        "order_id": "ca957a1c-8e2b-5853-9eec-98ead0e936fb",
+        "owner": "848abc44-8b3b-47b4-8a38-e02f9d6bd704",
+        "started_at": 1794660269.961142,
+        "started_monotonic": 104658.16905775,
+        "finished_at": 1794660269.976015,
+        "seconds": 0.01487433300644625,
+        "outcome": "returned"
+      },
+      {
+        "phase": "submit_cancel",
+        "order_id": "ca957a1c-8e2b-5853-9eec-98ead0e936fb",
+        "owner": "848abc44-8b3b-47b4-8a38-e02f9d6bd704",
+        "started_at": 1794660269.9909298,
+        "started_monotonic": 104658.198845375,
+        "finished_at": 1794660270.050901,
+        "seconds": 0.05997104100242723,
+        "outcome": "returned"
+      },
+      {
+        "phase": "wait_command",
+        "owner": "848abc44-8b3b-47b4-8a38-e02f9d6bd704",
+        "command_id": "5cbdc122-4170-4b83-bb4d-3448148817ef",
+        "started_at": 1794660270.0593548,
+        "started_monotonic": 104658.267268666,
+        "finished_at": 1794660279.643466,
+        "seconds": 9.583897875010734,
+        "outcome": "returned"
+      },
+      {
+        "phase": "wait_status",
+        "owner": "848abc44-8b3b-47b4-8a38-e02f9d6bd704",
+        "order_id": "ca957a1c-8e2b-5853-9eec-98ead0e936fb",
+        "expected_status": "CANCELED",
+        "started_at": 1794660279.643512,
+        "started_monotonic": 104667.85121125,
+        "finished_at": 1794660279.874516,
+        "seconds": 0.23099979099060874,
+        "outcome": "returned"
+      },
+      {
+        "phase": "submit_new",
+        "owner": "848abc44-8b3b-47b4-8a38-e02f9d6bd704",
+        "order_id": "5d058ed4-b995-5db6-9cce-9a577ba89a6a",
+        "started_at": 1794660279.874623,
+        "started_monotonic": 104668.082315875,
+        "finished_at": 1794660299.963725,
+        "seconds": 20.088653415994486,
+        "outcome": "CancelledError"
+      },
+      {
+        "phase": "submit_order",
+        "order_id": "5d058ed4-b995-5db6-9cce-9a577ba89a6a",
+        "owner": "848abc44-8b3b-47b4-8a38-e02f9d6bd704",
+        "started_at": 1794660279.889374,
+        "started_monotonic": 104668.097067416,
+        "finished_at": 1794660279.9082181,
+        "seconds": 0.018844708989490755,
+        "outcome": "returned"
+      },
+      {
+        "phase": "wait_command",
+        "owner": "848abc44-8b3b-47b4-8a38-e02f9d6bd704",
+        "command_id": "cec661f0-8433-449e-97e1-b1053bb4da43",
+        "started_at": 1794660279.91044,
+        "started_monotonic": 104668.118132958,
+        "finished_at": 1794660289.19423,
+        "seconds": 9.283583291995456,
+        "outcome": "returned"
+      },
+      {
+        "phase": "wait_status",
+        "owner": "848abc44-8b3b-47b4-8a38-e02f9d6bd704",
+        "order_id": "5d058ed4-b995-5db6-9cce-9a577ba89a6a",
+        "expected_status": "FILLED",
+        "started_at": 1794660289.194248,
+        "started_monotonic": 104677.40173375,
+        "finished_at": 1794660299.963694,
+        "seconds": 10.769205250006053,
+        "outcome": "CancelledError"
+      }
+    ],
+    "truncated": false,
+    "budget_seconds": 60,
+    "deadline_monotonic": 104688.170216791,
+    "queries": {
+      "907cb887b43eecc7371c6054cb87ae035927e3fd59a2b52944131cfbaad841ec": {
+        "count": 1,
+        "seconds": 0.0016870419931365177,
+        "max": 0.0016870419931365177
+      },
+      "3b861a6b8763b4945c5793016415085f144b4af53ed734d811b3c64e2e2161fb": {
+        "count": 13,
+        "seconds": 0.02476474898867309,
+        "max": 0.0038670409994665533
+      },
+      "07b39bdb41747bb0afa096c3c3bdecc88c473b812e6c9de4938750332a207b42": {
+        "count": 5,
+        "seconds": 0.01328566602023784,
+        "max": 0.005878416995983571
+      },
+      "7dcfd7a1b7c0c262b4691b74239bced712950b86b806cbafaf3cb1df0b284295": {
+        "count": 8,
+        "seconds": 0.02137770998524502,
+        "max": 0.005508916001417674
+      },
+      "aef1e0797cdf91bf0206b3f84e341ca13e1d80a6da2c5cd1406ce90a5e5e88a8": {
+        "count": 1,
+        "seconds": 0.003555999996024184,
+        "max": 0.003555999996024184
+      },
+      "037c155d0bb33ba2251e4579df7d5f0e3f410c8bea6738027a92fe305349e56d": {
+        "count": 1,
+        "seconds": 0.00323445801041089,
+        "max": 0.00323445801041089
+      },
+      "04812556b275ed292584f2396dfe1ecb50b24121451ebf700dd56786641614ea": {
+        "count": 1,
+        "seconds": 0.002380707999691367,
+        "max": 0.002380707999691367
+      },
+      "cf0ebfe38f1bcb9d0313abd7ac2166e3958b67ef8ecf59076149f32c931e086d": {
+        "count": 4,
+        "seconds": 0.007854833995224908,
+        "max": 0.003402916991035454
+      },
+      "8639537c00d73dc09966c81cc52708cee13004143f0c5744f5e674d7a2396eaf": {
+        "count": 4,
+        "seconds": 0.007197166996775195,
+        "max": 0.002941083992482163
+      },
+      "2458cf9f897b462bb6f5cd7662d09c169565524ec933dd6264aa62e1aac52bf3": {
+        "count": 4,
+        "seconds": 0.02348591601185035,
+        "max": 0.01852862500527408
+      },
+      "bdd0c37427ec7441b9877c9998b3828f46618bd7da7bed9f03fae693f942242a": {
+        "count": 4,
+        "seconds": 0.008570416975999251,
+        "max": 0.004237040993757546
+      },
+      "939429db4cbbdedcc44a2e1ea8758bea9501d030466e8b1d9e6c1ba6c9097f0e": {
+        "count": 4,
+        "seconds": 0.028724041010718793,
+        "max": 0.01985616600723006
+      },
+      "893a4e144a92a418359e29aa59c21f281887f0eca4a089a9f83011c659b2d0e7": {
+        "count": 4,
+        "seconds": 0.01290683301340323,
+        "max": 0.007206958005554043
+      },
+      "39a694dbde08105164d02621d60f6ea6a1a4265c499a2ba422b39171039affe6": {
+        "count": 99,
+        "seconds": 0.18960537292878143,
+        "max": 0.016718750004656613
+      },
+      "0114bf5fc9791f97014e73074e1b05721ef3b738f5e401f491907712130ed620": {
+        "count": 50,
+        "seconds": 0.10132300303666852,
+        "max": 0.007503458997234702
+      }
+    },
+    "query_count": 203,
+    "recent_queries": [
+      {
+        "fingerprint": "0114bf5fc9791f97014e73074e1b05721ef3b738f5e401f491907712130ed620",
+        "started": 104680.190885166,
+        "seconds": 0.003610500003560446,
+        "outcome": "RETURNED"
+      },
+      {
+        "fingerprint": "0114bf5fc9791f97014e73074e1b05721ef3b738f5e401f491907712130ed620",
+        "started": 104680.705177541,
+        "seconds": 0.0030047500040382147,
+        "outcome": "RETURNED"
+      },
+      {
+        "fingerprint": "0114bf5fc9791f97014e73074e1b05721ef3b738f5e401f491907712130ed620",
+        "started": 104681.147006458,
+        "seconds": 0.00367333299072925,
+        "outcome": "RETURNED"
+      },
+      {
+        "fingerprint": "0114bf5fc9791f97014e73074e1b05721ef3b738f5e401f491907712130ed620",
+        "started": 104681.74650825,
+        "seconds": 0.002273499994771555,
+        "outcome": "RETURNED"
+      },
+      {
+        "fingerprint": "0114bf5fc9791f97014e73074e1b05721ef3b738f5e401f491907712130ed620",
+        "started": 104682.141737125,
+        "seconds": 0.0010862500057555735,
+        "outcome": "RETURNED"
+      },
+      {
+        "fingerprint": "0114bf5fc9791f97014e73074e1b05721ef3b738f5e401f491907712130ed620",
+        "started": 104682.669287708,
+        "seconds": 0.0016955419996520504,
+        "outcome": "RETURNED"
+      },
+      {
+        "fingerprint": "0114bf5fc9791f97014e73074e1b05721ef3b738f5e401f491907712130ed620",
+        "started": 104683.340259916,
+        "seconds": 0.007503458997234702,
+        "outcome": "RETURNED"
+      },
+      {
+        "fingerprint": "0114bf5fc9791f97014e73074e1b05721ef3b738f5e401f491907712130ed620",
+        "started": 104684.402235375,
+        "seconds": 0.0014292909909272566,
+        "outcome": "RETURNED"
+      },
+      {
+        "fingerprint": "0114bf5fc9791f97014e73074e1b05721ef3b738f5e401f491907712130ed620",
+        "started": 104684.804742583,
+        "seconds": 0.0016312920051859692,
+        "outcome": "RETURNED"
+      },
+      {
+        "fingerprint": "0114bf5fc9791f97014e73074e1b05721ef3b738f5e401f491907712130ed620",
+        "started": 104685.206528083,
+        "seconds": 0.0012005419994238764,
+        "outcome": "RETURNED"
+      },
+      {
+        "fingerprint": "0114bf5fc9791f97014e73074e1b05721ef3b738f5e401f491907712130ed620",
+        "started": 104685.495157541,
+        "seconds": 0.0010335000115446746,
+        "outcome": "RETURNED"
+      },
+      {
+        "fingerprint": "0114bf5fc9791f97014e73074e1b05721ef3b738f5e401f491907712130ed620",
+        "started": 104685.800526625,
+        "seconds": 0.0019943750085076317,
+        "outcome": "RETURNED"
+      },
+      {
+        "fingerprint": "0114bf5fc9791f97014e73074e1b05721ef3b738f5e401f491907712130ed620",
+        "started": 104686.312226,
+        "seconds": 0.002316833008080721,
+        "outcome": "RETURNED"
+      },
+      {
+        "fingerprint": "0114bf5fc9791f97014e73074e1b05721ef3b738f5e401f491907712130ed620",
+        "started": 104686.843404958,
+        "seconds": 0.005155125007149763,
+        "outcome": "RETURNED"
+      },
+      {
+        "fingerprint": "0114bf5fc9791f97014e73074e1b05721ef3b738f5e401f491907712130ed620",
+        "started": 104687.418757708,
+        "seconds": 0.0015522920002695173,
+        "outcome": "RETURNED"
+      },
+      {
+        "fingerprint": "0114bf5fc9791f97014e73074e1b05721ef3b738f5e401f491907712130ed620",
+        "started": 104687.85520475,
+        "seconds": 0.004220208007609472,
+        "outcome": "RETURNED"
+      }
+    ],
+    "timed_out_at": 1794660299.9637718,
+    "elapsed_seconds": 60.00080558400077
+  },
+  "cycle_polling": {
+    "attempts": 149,
+    "gate_wait_seconds_sum": 22.127218706984422,
+    "held_seconds_sum": 2.2460915811243467,
+    "max_gate_wait_seconds": 0.7839085000014165
+  },
+  "cycle_query_seconds_sum": 0.4499539169628406,
+  "post_stop_queue": {
+    "after_workers_stopped": true,
+    "observed_at": "2026-11-14 12:45:01.588094+00:00",
+    "selected_command_rows": [
+      {
+        "command_id": "5ee050fc-3d5b-47cf-99ea-086fb2f81073",
+        "user_id": "848abc44-8b3b-47b4-8a38-e02f9d6bd704",
+        "episode_id": "331878d4-ea9c-4a32-bd01-7406bc5b19c0",
+        "state": "TERMINAL",
+        "next_attempt_at": "2026-11-14 12:44:19.906475+00:00",
+        "lease_until": null,
+        "attempts": 0,
+        "claim_revision": 1,
+        "routing_action": "NEW",
+        "routing_stage": "TERMINAL",
+        "routing_base": "BTC",
+        "routing_quote": "USDT",
+        "preferred_for_due": null,
+        "source_wait_since": null,
+        "source_wait_revision": null,
+        "source_resume_used": false,
+        "source_resume_claim": false,
+        "due_now": true,
+        "live_claim": false,
+        "has_protection": false
+      },
+      {
+        "command_id": "5cbdc122-4170-4b83-bb4d-3448148817ef",
+        "user_id": "848abc44-8b3b-47b4-8a38-e02f9d6bd704",
+        "episode_id": "331878d4-ea9c-4a32-bd01-7406bc5b19c0",
+        "state": "TERMINAL",
+        "next_attempt_at": "2026-11-14 12:44:39.494133+00:00",
+        "lease_until": null,
+        "attempts": 0,
+        "claim_revision": 1,
+        "routing_action": "CANCEL",
+        "routing_stage": "TERMINAL",
+        "routing_base": "BTC",
+        "routing_quote": "USDT",
+        "preferred_for_due": null,
+        "source_wait_since": null,
+        "source_wait_revision": null,
+        "source_resume_used": false,
+        "source_resume_claim": false,
+        "due_now": true,
+        "live_claim": false,
+        "has_protection": false
+      },
+      {
+        "command_id": "89c82b8d-359b-4bfb-98aa-f29fd4d8be35",
+        "user_id": "848abc44-8b3b-47b4-8a38-e02f9d6bd704",
+        "episode_id": "331878d4-ea9c-4a32-bd01-7406bc5b19c0",
+        "state": "TERMINAL",
+        "next_attempt_at": "2026-11-14 12:44:48.649317+00:00",
+        "lease_until": null,
+        "attempts": 0,
+        "claim_revision": 2,
+        "routing_action": "NEW",
+        "routing_stage": "TERMINAL",
+        "routing_base": "BTC",
+        "routing_quote": "USDT",
+        "preferred_for_due": null,
+        "source_wait_since": null,
+        "source_wait_revision": null,
+        "source_resume_used": false,
+        "source_resume_claim": false,
+        "due_now": true,
+        "live_claim": false,
+        "has_protection": false
+      },
+      {
+        "command_id": "cec661f0-8433-449e-97e1-b1053bb4da43",
+        "user_id": "848abc44-8b3b-47b4-8a38-e02f9d6bd704",
+        "episode_id": "331878d4-ea9c-4a32-bd01-7406bc5b19c0",
+        "state": "TERMINAL",
+        "next_attempt_at": "2026-11-14 12:45:00.020508+00:00",
+        "lease_until": null,
+        "attempts": 0,
+        "claim_revision": 1,
+        "routing_action": "NEW",
+        "routing_stage": "TERMINAL",
+        "routing_base": "BTC",
+        "routing_quote": "USDT",
+        "preferred_for_due": null,
+        "source_wait_since": null,
+        "source_wait_revision": null,
+        "source_resume_used": false,
+        "source_resume_claim": false,
+        "due_now": true,
+        "live_claim": false,
+        "has_protection": false
+      }
+    ],
+    "queue_counts": [
+      {
+        "state": "PENDING",
+        "commands": 2126,
+        "owners": 100
+      },
+      {
+        "state": "TERMINAL",
+        "commands": 814,
+        "owners": 100
+      }
+    ],
+    "public_sources": [
+      {
+        "source": "primary_spot",
+        "base": "BTC",
+        "quote": "USDT",
+        "book_ready": true,
+        "book_generation": 1,
+        "book_lease_until": "2026-11-14 12:45:04.927013+00:00",
+        "book_verified_at": "2026-11-14 12:44:59.928989+00:00",
+        "price_received_at": "2026-11-14 12:44:59.403517+00:00",
+        "price_trade_at": "2026-11-14 12:44:59.403517+00:00",
+        "effective_readiness": "READY",
+        "reconciled_generation": 2,
+        "connected": true,
+        "feed_generation": 2,
+        "feed_lease_until": "2026-11-14 12:45:04.938421+00:00"
+      }
+    ]
+  },
+  "worker_progress": {
+    "after_workers_stopped": true,
+    "observed_monotonic": 104689.883798708,
+    "workers": [
+      {
+        "worker": "worker-0",
+        "tail_limit_bytes": 65536,
+        "tail_rows": 718,
+        "truncated": true,
+        "last_transaction": {
+          "started": 104688.725564,
+          "finished": 104689.53373375,
+          "seconds": 0.80816975000198
+        }
+      },
+      {
+        "worker": "worker-1",
+        "tail_limit_bytes": 65536,
+        "tail_rows": 718,
+        "truncated": true,
+        "last_transaction": {
+          "started": 104685.8065845,
+          "finished": 104686.220618291,
+          "seconds": 0.41403379100665916
+        }
+      },
+      {
+        "worker": "worker-10",
+        "tail_limit_bytes": 65536,
+        "tail_rows": 718,
+        "truncated": true,
+        "last_transaction": {
+          "started": 104687.530692625,
+          "finished": 104687.729625958,
+          "seconds": 0.19893333299842197
+        }
+      },
+      {
+        "worker": "worker-11",
+        "tail_limit_bytes": 65536,
+        "tail_rows": 697,
+        "truncated": false,
+        "last_transaction": {
+          "started": 104686.818892291,
+          "finished": 104687.210330458,
+          "seconds": 0.3914381669892464
+        }
+      },
+      {
+        "worker": "worker-12",
+        "tail_limit_bytes": 65536,
+        "tail_rows": 718,
+        "truncated": true,
+        "last_transaction": {
+          "started": 104685.645186416,
+          "finished": 104685.878438,
+          "seconds": 0.23325158399529755
+        }
+      },
+      {
+        "worker": "worker-13",
+        "tail_limit_bytes": 65536,
+        "tail_rows": 693,
+        "truncated": false,
+        "last_transaction": {
+          "started": 104686.549971,
+          "finished": 104686.647608875,
+          "seconds": 0.09763787500560284
+        }
+      },
+      {
+        "worker": "worker-14",
+        "tail_limit_bytes": 65536,
+        "tail_rows": 718,
+        "truncated": false,
+        "last_transaction": {
+          "started": 104687.258469666,
+          "finished": 104687.530857291,
+          "seconds": 0.27238762499473523
+        }
+      },
+      {
+        "worker": "worker-15",
+        "tail_limit_bytes": 65536,
+        "tail_rows": 717,
+        "truncated": true,
+        "last_transaction": {
+          "started": 104685.857152416,
+          "finished": 104686.223840333,
+          "seconds": 0.366687916990486
+        }
+      },
+      {
+        "worker": "worker-16",
+        "tail_limit_bytes": 65536,
+        "tail_rows": 717,
+        "truncated": true,
+        "last_transaction": {
+          "started": 104688.329657291,
+          "finished": 104689.496778333,
+          "seconds": 1.167121042002691
+        }
+      },
+      {
+        "worker": "worker-17",
+        "tail_limit_bytes": 65536,
+        "tail_rows": 704,
+        "truncated": false,
+        "last_transaction": {
+          "started": 104685.675675166,
+          "finished": 104685.893922458,
+          "seconds": 0.2182472919957945
+        }
+      },
+      {
+        "worker": "worker-18",
+        "tail_limit_bytes": 65536,
+        "tail_rows": 718,
+        "truncated": true,
+        "last_transaction": {
+          "started": 104688.139461083,
+          "finished": 104688.175863375,
+          "seconds": 0.03640229199663736
+        }
+      },
+      {
+        "worker": "worker-19",
+        "tail_limit_bytes": 65536,
+        "tail_rows": 717,
+        "truncated": true,
+        "last_transaction": {
+          "started": 104687.92996125,
+          "finished": 104688.071079041,
+          "seconds": 0.14111779099039268
+        }
+      },
+      {
+        "worker": "worker-2",
+        "tail_limit_bytes": 65536,
+        "tail_rows": 700,
+        "truncated": false,
+        "last_transaction": {
+          "started": 104680.699607916,
+          "finished": 104681.038738791,
+          "seconds": 0.3391308749996824
+        }
+      },
+      {
+        "worker": "worker-3",
+        "tail_limit_bytes": 65536,
+        "tail_rows": 718,
+        "truncated": true,
+        "last_transaction": {
+          "started": 104687.648343833,
+          "finished": 104687.738165458,
+          "seconds": 0.0898216249916004
+        }
+      },
+      {
+        "worker": "worker-4",
+        "tail_limit_bytes": 65536,
+        "tail_rows": 684,
+        "truncated": false,
+        "last_transaction": {
+          "started": 104685.61309025,
+          "finished": 104685.864518083,
+          "seconds": 0.2514278330054367
+        }
+      },
+      {
+        "worker": "worker-5",
+        "tail_limit_bytes": 65536,
+        "tail_rows": 717,
+        "truncated": true,
+        "last_transaction": {
+          "started": 104687.312016083,
+          "finished": 104687.49292225,
+          "seconds": 0.18090616700646933
+        }
+      },
+      {
+        "worker": "worker-6",
+        "tail_limit_bytes": 65536,
+        "tail_rows": 685,
+        "truncated": false,
+        "last_transaction": {
+          "started": 104686.987510291,
+          "finished": 104687.522097208,
+          "seconds": 0.5345869169977959
+        }
+      },
+      {
+        "worker": "worker-7",
+        "tail_limit_bytes": 65536,
+        "tail_rows": 718,
+        "truncated": true,
+        "last_transaction": {
+          "started": 104688.189472666,
+          "finished": 104688.819554958,
+          "seconds": 0.6300822920020437
+        }
+      },
+      {
+        "worker": "worker-8",
+        "tail_limit_bytes": 65536,
+        "tail_rows": 692,
+        "truncated": false,
+        "last_transaction": {
+          "started": 104687.840537875,
+          "finished": 104688.077006166,
+          "seconds": 0.23646829099743627
+        }
+      },
+      {
+        "worker": "worker-9",
+        "tail_limit_bytes": 65536,
+        "tail_rows": 717,
+        "truncated": true,
+        "last_transaction": {
+          "started": 104688.210181166,
+          "finished": 104688.862077416,
+          "seconds": 0.6518962499976624
+        }
+      }
+    ]
+  },
+  "cleanup": {
+    "observed_at": "2026-11-14 12:45:01.941515+00",
+    "connections": 0,
+    "backends": [],
+    "advisory_locks": 0
+  },
+  "database_cleanup": {
+    "database": "tiewtrade_internal20_completion_timeline_smoke_1794659625",
+    "connections": 0,
+    "removed": true
+  },
+  "raw_receipt_sha256": {
+    "timeline_smoke/campaign-result.json": "b1d1e005259c10d7c9eac867ac09385841e5a3ad7534f2c74cd71c335e2957f5",
+    "timeline_smoke/candidate-sha256.json": "082e90994b7b2390f76817d2a0012ad599ad211aa0cd8f547de75e1107ed54f6",
+    "timeline_smoke/run/cycle-timeouts.json": "be5d955235987e38f86443ac840b5d06abad75bbd16746ea8a59a3d1fa672ecf",
+    "timeline_smoke/run/timeout-queue-snapshot.json": "e51a9ee6b2c7ca1d15b776c2a774949c553878cfdaf72d439d62f4fbbad2b028",
+    "timeline_smoke/run/timeout-worker-progress.json": "22cd555eb54b6f778b39e1e0910d8b88bdd0d4b987ff1ccd1c68316b9b522eff",
+    "timeline_smoke/run/diagnostic-only.json": "2303da709853e8c08c494e7b6eb5e2dd961e927ad10602674032680144ba7981"
+  },
+  "post_observation_metadata_only_correction": "baseline_publisher_timing receipt flag now false for failure-only mode; historical raw receipt retained unchanged;16finalfocused tests passed",
+  "dedicated_redis_cleanup": {
+    "ownership_label_verified": "f17-paper-completion-20261114",
+    "normal_stop": true,
+    "removed": true,
+    "owner_postgresql_and_redis_running": true,
+    "completion_databases_remaining": 0
+  }
+}

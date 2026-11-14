@@ -1,0 +1,35 @@
+{
+  "status": "PASSED",
+  "criteria_revision": "20261114_R2",
+  "reused_execution_not_new_run": true,
+  "original_r1_failed_retained": true,
+  "original_r1_elapsed_limit": 360,
+  "revised_r2_elapsed_limit": 390,
+  "observed_elapsed": 369.3548974169971,
+  "independent_checks": {
+    "exact_counts": true,
+    "all100owners": true,
+    "global_invariants": true,
+    "processing": true,
+    "resources": true,
+    "pool": true,
+    "no_worker_failure": true,
+    "cycle90": true,
+    "minimum_duration": true,
+    "revised_final_workflow_bound": true,
+    "book_inputs": true,
+    "recovery60": true,
+    "cleanup": true,
+    "candidate_was_unchanged": true
+  },
+  "source_changes_since_execution": [
+    "backend/tests/infra/execution_market/profile_internal.py",
+    "backend/tests/infra/execution_market/profile_workload.py",
+    "backend/tests/infra/execution_market/test_revised_timing_profile.py"
+  ],
+  "no_production_schema_dependency_change": true,
+  "original_processing_target_passed": false,
+  "original_cycle_target_passed": false,
+  "scope": "SMOKE entry gate only; W1-W4 still require actual completion",
+  "source_result_sha256": "adfb5299d11f80421b1767282b54018291ff6ebafee389038d2527e857d093aa"
+}

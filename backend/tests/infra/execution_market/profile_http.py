@@ -16,7 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncEngine
 
 from tests.infra.execution_market import profile_workload as f15
 from tests.infra.execution_market.profile_internal import activated_protocols, guard_database
-from tests.infra.execution_market.profile_parent_poll import ParentPollGate
+from tests.infra.execution_market.profile_parent_poll import ParentPollGate, poll_interval
 from tiewtrade.core.orders import BaseSize, OrderIntent, QuoteBudget
 from tiewtrade.infra.auth import deadlines_for_new_session, issue, new_token
 from tiewtrade.infra.db import DatabaseRole, create_engine_for, user_session
@@ -98,7 +98,7 @@ class HttpIntake:
                 while value["command_id"] is None:
                     if value["intake_state"] == "REJECTED":
                         raise RuntimeError("INTERNAL_HTTP_TRANSFER_REJECTED")
-                    await asyncio.sleep(f15.RESULT_POLL_SECONDS)
+                    await asyncio.sleep(poll_interval(self.gate, f15.RESULT_POLL_SECONDS))
                     async with (
                         self.gate.permit(owner.user_id, "http_request_result")
                         if self.gate is not None
@@ -197,6 +197,7 @@ async def internal_intake(
                     "transport": "production ASGI HTTP",
                     "api_instances": 1,
                     "clients": len(clients),
+                    "result_poll_seconds": poll_interval(gate, f15.RESULT_POLL_SECONDS),
                     "policy": "TransactionalRiskPolicy",
                     "risk_setting": "UNSET per original Paper fixture",
                     "dependency_overrides": False,

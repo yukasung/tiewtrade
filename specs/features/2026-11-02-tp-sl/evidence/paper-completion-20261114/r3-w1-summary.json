@@ -1,0 +1,67 @@
+{
+  "status": "FAILED",
+  "profile": "PAPER_RELEASE100_TIMING_V2",
+  "criteria_revision": "20261114_R2",
+  "campaign": {
+    "status": "FAILED",
+    "workload_status": "FAILED",
+    "cleanup_complete": true,
+    "exit_code": 1,
+    "seconds": 1999.6012780419987,
+    "error_type": "CycleBudgetExceededError",
+    "candidate_unchanged": true,
+    "free_bytes_after": 22202601472,
+    "budget_seconds": null,
+    "budget_scope": "preflight,fixture,measurement,verification,cleanup"
+  },
+  "failure": {
+    "failed_at": "2026-11-14 16:20:38.224456+00:00",
+    "error_type": "CycleBudgetExceededError",
+    "error": "Paper cycle exceeded its 90-second budget",
+    "publisher": {
+      "target_hz": 10,
+      "stage": "publish_market",
+      "published": 15460,
+      "last_input_id": 15460,
+      "book_owner": "1f5460c8-3458-416e-b863-f169b4577163",
+      "book_generation": 1,
+      "last_progress_at": "2026-11-14T16:20:37.801586+00:00",
+      "max_publish_seconds": 1.5850415829918347
+    },
+    "worker_failures": [],
+    "counters": {
+      "offered": 12441,
+      "admitted": 12439,
+      "completed": 12341,
+      "rejected": 0,
+      "fills": 4932,
+      "cancels": 2455,
+      "replays": 2477,
+      "cycles": 2431
+    }
+  },
+  "cycles": {
+    "budget_seconds": 90,
+    "original_budget_seconds": 60,
+    "completed": 2431,
+    "interrupted": 100,
+    "max_seconds": 90.00109166599577,
+    "over_original": 885,
+    "original_passed": false,
+    "accepted_passed": false
+  },
+  "cleanup": {
+    "observed_at": "2026-11-14 16:20:41.130255+00",
+    "connections": 0,
+    "backends": [],
+    "advisory_locks": 0
+  },
+  "database_cleanup": {
+    "database": "tiewtrade_internal20_completion_r3_w1_1794671236",
+    "connections": 0,
+    "removed": true
+  },
+  "financial_final_oracle": "NOT RUN",
+  "later_phases": "NOT RUN",
+  "http_result_poll_seconds": 1.0
+}

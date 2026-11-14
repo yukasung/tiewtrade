@@ -1,5 +1,6 @@
 """HTTP transport preserves the five-command oracle and fails without automatic POST retries."""
 
+import asyncio
 import json
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -15,6 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncEngine
 
 from tests.infra.execution_market import profile_workload as f15
 from tests.infra.execution_market.profile_http import HttpIntake, order_body
+from tests.infra.execution_market.profile_parent_poll import ParentPollGate
 from tiewtrade.core.orders import OrderStatus
 from tiewtrade.infra.paper_orders.dispatch import OrderCommand
 from tiewtrade.infra.paper_wallet.records import PaperWalletSnapshot
@@ -38,25 +40,40 @@ def test_wire_amounts_validate_against_production_schema(factory: Any) -> None:
     assert all(isinstance(value, str) for value in body.values())
 
 
-@pytest.mark.parametrize("failure", [None, "reject", "unknown", "identity"])
+@pytest.mark.parametrize("failure", [None, "reject", "unknown", "identity", "pending"])
+@pytest.mark.parametrize("poll_seconds", [None, 0.25, 1.0])
 async def test_http_request_records_no_secrets_and_does_not_retry_post(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, failure: str | None
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, failure: str | None, poll_seconds: float | None
 ) -> None:
     current = owner()
     command_id, order_id, request_id = uuid4(), uuid4(), uuid4()
     sent = []
+    sleeps = []
+    gate = None if poll_seconds is None else ParentPollGate(poll_seconds=poll_seconds)
+
+    async def sleep(seconds: float) -> None:
+        assert gate is None or gate.active == 0
+        sleeps.append(seconds)
+
+    monkeypatch.setattr(asyncio, "sleep", sleep)
 
     async def handle(request: Request) -> Response:
         sent.append(request.method)
+        if request.method == "GET":
+            assert gate is None or gate.active == 1
         if failure == "unknown":
             raise TimeoutError("private-payload-must-not-be-recorded")
         return Response(
-            503 if failure == "reject" else 202,
+            503 if failure == "reject" else 200 if request.method == "GET" else 202,
             json={
                 "request_id": str(request_id),
                 "order_id": str(order_id),
-                "command_id": str(command_id),
-                "intake_state": "TRANSFERRED",
+                "command_id": None
+                if failure == "pending" and request.method == "POST"
+                else str(command_id),
+                "intake_state": "PENDING"
+                if failure == "pending" and request.method == "POST"
+                else "TRANSFERRED",
             },
         )
 
@@ -80,11 +97,11 @@ async def test_http_request_records_no_secrets_and_does_not_retry_post(
     ) as client:
         client.headers["X-CSRF-Token"] = "private-token"
         transport = HttpIntake(
-            cast(AsyncEngine, object()), {current.user_id: client}, None, tmp_path
+            cast(AsyncEngine, object()), {current.user_id: client}, gate, tmp_path
         )
         intent = f15.market_buy(current, uuid4(), 0)
         try:
-            if failure is None:
+            if failure in (None, "pending"):
                 result = await transport.submit(current, intent)
                 assert result.command_id == command_id
                 assert transport.order_id(current, intent.idempotency_key) == order_id
@@ -93,12 +110,17 @@ async def test_http_request_records_no_secrets_and_does_not_retry_post(
                     await transport.submit(current, intent)
         finally:
             transport.stream.close()
-    assert sent == ["POST"]
+    assert sent == (["POST", "GET"] if failure == "pending" else ["POST"])
+    assert sleeps == (
+        [f15.RESULT_POLL_SECONDS if poll_seconds is None else poll_seconds]
+        if failure == "pending"
+        else []
+    )
     evidence = (tmp_path / "http-intake.jsonl").read_text()
     assert "private" not in evidence
     assert json.loads(evidence)["outcome"] == (
         "RETURNED"
-        if failure is None
+        if failure in (None, "pending")
         else "TimeoutError"
         if failure == "unknown"
         else "RuntimeError"
@@ -147,12 +169,14 @@ async def test_cycle_uses_server_order_identity_for_replay_and_cancel(
 
 
 @pytest.mark.usefixtures("internal_database")
+@pytest.mark.parametrize("poll_seconds", [None, 1.0])
 async def test_real_authenticated_cycle_and_owner_isolation(
     api_engine: AsyncEngine,
     engine_engine: AsyncEngine,
     scan_engine: AsyncEngine,
     migrator_engine: AsyncEngine,
     tmp_path: Path,
+    poll_seconds: float | None,
 ) -> None:
     import asyncio
 
@@ -171,7 +195,7 @@ async def test_real_authenticated_cycle_and_owner_isolation(
             engine=engine_engine,
             api=api_engine,
             migrator=migrator_engine,
-            gate=None,
+            gate=None if poll_seconds is None else ParentPollGate(poll_seconds=poll_seconds),
             output=tmp_path,
         ) as intake:
             publisher = asyncio.create_task(

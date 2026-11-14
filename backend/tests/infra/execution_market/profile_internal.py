@@ -28,6 +28,10 @@ from tiewtrade.infra.db import DatabaseRole
 NAME = "PAPER_INTERNAL20_V1"
 NAME_V2 = "PAPER_INTERNAL20_V2"
 NAME_V3 = "PAPER_INTERNAL20_V3"
+NAME_BURST5 = "PAPER_INTERNAL20_BURST5_V1"
+RELEASE_NAME = "PAPER_RELEASE100_V1"
+RELEASE_TIMING_NAME = "PAPER_RELEASE100_TIMING_V2"
+RELEASE_PROFILES = frozenset({RELEASE_NAME, RELEASE_TIMING_NAME})
 
 
 @dataclass(frozen=True, slots=True)
@@ -35,10 +39,11 @@ class Phase:
     rate: int
     cycles_per_owner: int
     seconds: int
+    owners: int = 20
 
     @property
     def commands(self) -> int:
-        return 20 * self.cycles_per_owner * 5
+        return self.owners * self.cycles_per_owner * 5
 
 
 PHASES = {
@@ -56,6 +61,18 @@ PROFILES = {
 }
 
 PROFILES[NAME_V3] = {**PROFILES[NAME_V2], "W3": Phase(2, 30, 1800)}
+PROFILES[NAME_BURST5] = {"W2": Phase(5, 60, 1200)}
+
+# Approved integrated-paper-acceptance-plan.md: original release counts/SLA.
+PROFILES[RELEASE_NAME] = {
+    "SMOKE": Phase(10, 6, 300, 100),
+    "W1": Phase(10, 36, 1800, 100),
+    "W2": Phase(100, 120, 600, 100),
+    "W3": Phase(10, 282, 14400, 100),
+    "W2_OVERFLOW": Phase(100, 0, 0, 100),
+}
+
+PROFILES[RELEASE_TIMING_NAME] = dict(PROFILES[RELEASE_NAME])
 
 
 def selected(args: argparse.Namespace) -> bool:
@@ -65,12 +82,29 @@ def selected(args: argparse.Namespace) -> bool:
     return profile is not None
 
 
+def pilot_selected(args: argparse.Namespace) -> bool:
+    """The release selector must retain the original, stricter resource/SLA rules."""
+    return selected(args) and args.acceptance_profile not in RELEASE_PROFILES
+
+
+def positive_cycle_budget(args: argparse.Namespace) -> int:
+    selected(args)  # Reject unknown names before selecting any alternative.
+    return 90 if getattr(args, "acceptance_profile", None) == RELEASE_TIMING_NAME else 60
+
+
+def completion_allowance(args: argparse.Namespace) -> int:
+    """The final permitted ordinary workflow must fit after the nominal window."""
+    selected(args)
+    return 90 if getattr(args, "acceptance_profile", None) == RELEASE_TIMING_NAME else 60
+
+
 def processing_acceptance(
     args: argparse.Namespace, p95: float | None, p99: float | None
 ) -> dict[str, Any]:
     """Engine timing only; preserve snapshot/protection/recovery and default thresholds."""
-    pilot = selected(args)
-    p95_limit, p99_limit = (0.5, 2.0) if pilot else (0.25, 1.0)
+    pilot = pilot_selected(args)
+    revised = getattr(args, "acceptance_profile", None) == RELEASE_TIMING_NAME
+    p95_limit, p99_limit = (0.5, 2.0) if pilot else (0.5, 1.0) if revised else (0.25, 1.0)
     applicable = args.phase != "W2_OVERFLOW"
     passed = not applicable or (
         p95 is not None and p99 is not None and 0 <= p95 <= p95_limit and 0 <= p99 <= p99_limit
@@ -79,7 +113,11 @@ def processing_acceptance(
         p95 is not None and p99 is not None and 0 <= p95 <= 0.25 and 0 <= p99 <= 1.0
     )
     return {
-        "revision": "NC12_SECTION21_PILOT"
+        "revision": "OWNER_PAPER_TIMING_20261114"
+        if revised
+        else "NC12_LOCAL_BURST5_20261115"
+        if getattr(args, "acceptance_profile", None) == NAME_BURST5
+        else "NC12_SECTION21_PILOT"
         if getattr(args, "acceptance_profile", None) == NAME_V3
         else "NC12_SECTION18_PILOT"
         if getattr(args, "acceptance_profile", None) == NAME_V2
@@ -93,7 +131,7 @@ def processing_acceptance(
         "target_p99_seconds": 1.0,
         "passed": passed,
         "target_passed": target_passed,
-        "performance_warning": pilot and passed and not target_passed,
+        "performance_warning": (pilot or revised) and passed and not target_passed,
     }
 
 
@@ -114,7 +152,7 @@ def validate(args: argparse.Namespace) -> Phase | None:
     if phase is None:
         raise ValueError("unsupported internal Paper phase")
     expected = {
-        "owners": 20,
+        "owners": phase.owners,
         "baseline_orders": 20,
         "workers": 20,
         "rate": phase.rate,
@@ -162,13 +200,19 @@ def manifest(args: argparse.Namespace) -> dict[str, object] | None:
         return None
     return {
         "name": args.acceptance_profile,
-        "owners": 20,
         "baseline_orders_per_owner": 20,
         "workers": 20,
         "phase": args.phase,
         **asdict(phase),
         "expected_commands": phase.commands,
-        "scope": "short internal stability; four-hour Release validation pending"
+        "positive_cycle_budget_seconds": positive_cycle_budget(args),
+        "completion_allowance_seconds": completion_allowance(args),
+        "timing_criteria_revision": "20261114_R2"
+        if args.acceptance_profile == RELEASE_TIMING_NAME
+        else "original",
+        "scope": "original 100-account integrated Paper; V19/V20 dependencies remain separate"
+        if args.acceptance_profile in RELEASE_PROFILES
+        else "short internal stability; four-hour Release validation pending"
         if args.acceptance_profile == NAME_V3 and args.phase == "W3"
         else "internal pilot only; not the 100-account profile or F17 Completed",
         "intake": "diagnostic internal commands" if args.phase == "SMOKE" else "authenticated HTTP",

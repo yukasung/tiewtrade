@@ -409,8 +409,9 @@ async def test_scan_role_only_sees_due_identifiers(scan_engine: AsyncEngine) -> 
     )
 
 
+@pytest.mark.parametrize("include_reset_readiness", [True, False])
 async def test_wallet_read_fails_closed_when_active_episode_has_no_ledger(
-    monkeypatch: pytest.MonkeyPatch,
+    monkeypatch: pytest.MonkeyPatch, include_reset_readiness: bool
 ) -> None:
     from tiewtrade.infra.paper_wallet import storage
 
@@ -435,4 +436,6 @@ async def test_wallet_read_fails_closed_when_active_episode_has_no_ledger(
     monkeypatch.setattr(storage, "require_user_session", lambda candidate: candidate)
 
     with pytest.raises(PaperWalletIntegrityError):
-        await storage.get_wallet(cast(UserSession, session))
+        await storage.get_wallet(
+            cast(UserSession, session), include_reset_readiness=include_reset_readiness
+        )

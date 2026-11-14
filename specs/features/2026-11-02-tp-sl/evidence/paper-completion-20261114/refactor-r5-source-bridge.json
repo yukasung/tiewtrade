@@ -1,0 +1,15 @@
+{
+  "reference": "review-r5-source-bridge.json",
+  "refactored_paths": [
+    "backend/tests/infra/execution_market/profile_commit_observation.py",
+    "backend/tests/infra/execution_market/remaining_paper_campaign.py",
+    "backend/tests/infra/execution_market/test_failure_timeline.py"
+  ],
+  "current_sha256": {
+    "backend/tests/infra/execution_market/profile_commit_observation.py": "eb16b2ce0b83d8d38005a97f3a177d1cc48bc3076f299e94c7c7f4ca41f6339b",
+    "backend/tests/infra/execution_market/remaining_paper_campaign.py": "2e3c0d5bbc1af38d91aeec4ade8c0271a3e15615dbba04a34400ad85cd123d96",
+    "backend/tests/infra/execution_market/test_failure_timeline.py": "391725ea9e1dec21fc4fcff3ee3fdded481dda516f448963bdbe794446b3d988"
+  },
+  "all_backend_production_paths_unchanged_since_r4": true,
+  "workload_reuse": "Pure control-flow readability and import organization; no policy, thresholds, outputs or financial code changed."
+}

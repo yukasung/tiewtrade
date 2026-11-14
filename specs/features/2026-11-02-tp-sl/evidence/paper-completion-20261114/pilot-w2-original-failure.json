@@ -1,0 +1,109 @@
+{
+  "status": "FAILED",
+  "phase": "W2",
+  "elapsed_seconds": 1645.3045132919942,
+  "target_seconds": 1200.0,
+  "elapsed_limit_seconds": 1260.0,
+  "counters": {
+    "offered": 12000,
+    "admitted": 12000,
+    "completed": 12000,
+    "rejected": 0,
+    "fills": 4800,
+    "cancels": 2400,
+    "replays": 2400,
+    "cycles": 2400
+  },
+  "processing_acceptance": {
+    "revision": "NC12_SECTION18_PILOT",
+    "applicable": true,
+    "p95_limit_seconds": 0.5,
+    "p99_limit_seconds": 2.0,
+    "target_p95_seconds": 0.25,
+    "target_p99_seconds": 1.0,
+    "passed": false,
+    "target_passed": false,
+    "performance_warning": false
+  },
+  "engine_transaction_seconds": {
+    "applicable": true,
+    "p95": 0.5083482920017559,
+    "p99": 0.7562616250070278,
+    "max": 2.808363125004689,
+    "samples": 26234,
+    "window": {
+      "attribution": "transaction_start",
+      "started": 120594.167114083,
+      "ended": 122239.471627541,
+      "status": "MEASURED",
+      "excluded_fault_intervals": []
+    }
+  },
+  "global_invariants": {
+    "orders": 7600,
+    "fills": 4800,
+    "cancels": 2400,
+    "pending_dispatch": 400,
+    "unlinked_fills": 0,
+    "invalid_reservations": 0,
+    "invalid_positions": 0,
+    "wrong_mode": 0,
+    "input_lag": 7,
+    "duplicate_fill_effects": 0,
+    "expected_orders": 7600,
+    "expected_fills": 4800,
+    "expected_cancels": 2400,
+    "expected_pending_dispatch": 400,
+    "passed": true
+  },
+  "resource_base_assertions_passed": true,
+  "resource_assertions_passed": false,
+  "worker_failures": [],
+  "measured_book_inputs": 16453,
+  "required_book_inputs": 12000,
+  "financial_owners": 20,
+  "all_financial_owners_passed": true,
+  "snapshot": {
+    "snapshot_samples": 20,
+    "expected_samples": 20,
+    "p95": 0.021765291996416636,
+    "p99": 0.02229579200502485,
+    "passed": true
+  },
+  "rebuilds": 20,
+  "all_rebuilds_returned": true,
+  "pool": {
+    "passed": false,
+    "errors": [
+      "ConnectionResourceError:parent.owned-pools.json"
+    ],
+    "violations": [
+      "ConnectionResourceError:parent.owned-pools.json"
+    ],
+    "incomplete": [],
+    "worker_process_count": 20
+  },
+  "campaign": {
+    "status": "FAILED",
+    "workload_status": "FAILED",
+    "cleanup_complete": true,
+    "exit_code": 1,
+    "seconds": 1824.0319488749956,
+    "error_type": null,
+    "candidate_unchanged": true,
+    "free_bytes_after": 22092234752,
+    "budget_seconds": null,
+    "budget_scope": "preflight,fixture,measurement,verification,cleanup"
+  },
+  "cleanup": {
+    "observed_at": "2026-11-14 17:37:55.225098+00",
+    "connections": 0,
+    "backends": [],
+    "advisory_locks": 0
+  },
+  "database_cleanup": {
+    "database": "tiewtrade_internal20_completion_pilot_w2_1794676046",
+    "connections": 0,
+    "removed": true
+  }
+}

@@ -38,6 +38,7 @@ from sqlalchemy.pool import QueuePool
 from tests.infra.execution_market import profile_internal as internal
 from tests.infra.execution_market.profile_parent_poll import (
     ParentPollGate,
+    poll_interval,
     poll_options,
     validate_options,
 )
@@ -154,6 +155,15 @@ def cycle_options(gate: ParentPollGate | None, sender: CommandSender | None) -> 
     if sender is not None:
         result["sender"] = sender
     return result
+
+
+class CycleScheduleOptions(TypedDict, total=False):
+    cycle_budget_seconds: int
+    cycle_report: Path
+
+
+class CycleBudgetExceededError(TimeoutError):
+    """The declared positive-cycle deadline expired, rather than an inner timeout."""
 
 
 @dataclass(slots=True)
@@ -739,12 +749,17 @@ def paper_worker_environment() -> dict[str, str]:
     }
 
 
+class WorkerObservationOptions(TypedDict, total=False):
+    failure_timeline: bool
+
+
 async def start_worker_processes(
     count: int,
     output: Path,
     *,
     group: str = "worker",
     diagnostics: bool = False,
+    failure_timeline: bool = False,
     r8_claim_budget: bool = False,
     coordinate_claims: bool = False,
     acceptance_profile: str | None = None,
@@ -773,6 +788,7 @@ async def start_worker_processes(
             "--worker-metrics",
             str(metrics_paths[number]),
             *(["--diagnostics"] if diagnostics else []),
+            *(["--failure-timeline"] if failure_timeline else []),
             *(["--r8-claim-budget"] if r8_claim_budget else []),
             *(["--coordinate-claims"] if coordinate_claims else []),
             *(["--acceptance-profile", acceptance_profile] if acceptance_profile else []),
@@ -1534,7 +1550,7 @@ async def wait_command(
                 current = await get_order_command(session, command.command_id)
             if current is not None and current.state != "PENDING":
                 return current
-            await asyncio.sleep(RESULT_POLL_SECONDS)
+            await asyncio.sleep(poll_interval(poll_gate, RESULT_POLL_SECONDS))
 
 
 async def wait_status(
@@ -1557,7 +1573,7 @@ async def wait_status(
                 ).scalar_one_or_none()
             if status == expected.value:
                 return
-            await asyncio.sleep(RESULT_POLL_SECONDS)
+            await asyncio.sleep(poll_interval(poll_gate, RESULT_POLL_SECONDS))
 
 
 async def submit_new(
@@ -1788,10 +1804,48 @@ async def run_scheduled_cycles(
     poll_gate: ParentPollGate | None = None,
     cycle_scope: Callable[[OwnerState, int], AbstractAsyncContextManager[None]] | None = None,
     sender: CommandSender | None = None,
+    cycle_budget_seconds: int = 60,
+    cycle_report: Path | None = None,
 ) -> float:
+    if type(cycle_budget_seconds) is not int or cycle_budget_seconds not in (60, 90):
+        raise ValueError("unsupported positive cycle budget")
+    summary: dict[str, Any] = {
+        "budget_seconds": cycle_budget_seconds,
+        "original_budget_seconds": 60,
+        "completed": 0,
+        "interrupted": 0,
+        "max_seconds": 0.0,
+        "over_original": 0,
+    }
     started = monotonic()
     command_interval = 1 / rate
     owner_interval = len(owners) * 5 * command_interval
+
+    @asynccontextmanager
+    async def bounded_scope(owner: OwnerState, number: int) -> AsyncIterator[None]:
+        if cycle_scope is not None:
+            async with cycle_scope(owner, number):
+                yield
+            return
+        budget = asyncio.timeout(cycle_budget_seconds)
+        cycle_started = monotonic()
+        completed = False
+        try:
+            async with budget:
+                yield
+            completed = True
+        except TimeoutError as error:
+            if budget.expired():
+                raise CycleBudgetExceededError(
+                    f"Paper cycle exceeded its {cycle_budget_seconds}-second budget"
+                ) from error
+            raise
+        finally:
+            if cycle_report is not None:
+                duration = monotonic() - cycle_started
+                summary["completed" if completed else "interrupted"] += 1
+                summary["max_seconds"] = max(summary["max_seconds"], duration)
+                summary["over_original"] += int(duration > 60)
 
     async def owner_cycles(index: int, owner: OwnerState) -> None:
         first_due = started + index * 5 * command_interval
@@ -1799,9 +1853,7 @@ async def run_scheduled_cycles(
             due = first_due + number * owner_interval + (0 if gate is None else gate.pause_seconds)
             await asyncio.sleep(max(0, due - monotonic()))
             if gate is None:
-                async with (
-                    asyncio.timeout(60) if cycle_scope is None else cycle_scope(owner, number)
-                ):
+                async with bounded_scope(owner, number):
                     await cycle(
                         engine,
                         owner,
@@ -1820,9 +1872,7 @@ async def run_scheduled_cycles(
                         break
                     await gate.leave()
                 try:
-                    async with (
-                        asyncio.timeout(60) if cycle_scope is None else cycle_scope(owner, number)
-                    ):
+                    async with bounded_scope(owner, number):
                         await cycle(
                             engine,
                             owner,
@@ -1836,13 +1886,35 @@ async def run_scheduled_cycles(
                     await gate.leave()
 
     tasks = [asyncio.create_task(owner_cycles(index, owner)) for index, owner in enumerate(owners)]
+    primary: BaseException | None = None
     try:
         await asyncio.gather(*tasks)
+    except BaseException as error:
+        primary = error
+        raise
     finally:
         for task in tasks:
             if not task.done():
                 task.cancel()
         await asyncio.gather(*tasks, return_exceptions=True)
+        if cycle_report is not None:
+            summary["original_passed"] = (
+                summary["interrupted"] == summary["over_original"] == 0
+                and summary["completed"] == len(owners) * cycles_per_owner
+            )
+            summary["accepted_passed"] = (
+                summary["interrupted"] == 0
+                and summary["completed"] == len(owners) * cycles_per_owner
+                and summary["max_seconds"] <= cycle_budget_seconds
+            )
+            try:
+                save(cycle_report, summary)
+            except OSError as error:
+                if primary is None:
+                    raise
+                primary.add_note(f"cycle summary write failed: {type(error).__name__}")
+            if primary is None and not summary["accepted_passed"]:
+                raise CycleBudgetExceededError("positive cycle timing evidence failed")
     return monotonic() - started
 
 
@@ -1956,6 +2028,17 @@ async def read_baseline(
 
 
 async def run(args: argparse.Namespace) -> int:
+    if getattr(args, "acceptance_profile", None) == internal.RELEASE_TIMING_NAME and getattr(
+        args, "diagnostics", False
+    ):
+        raise ValueError("the revised timing profile does not support full diagnostics")
+    if getattr(args, "failure_timeline", False) and (
+        getattr(args, "diagnostics", False)
+        or getattr(args, "worker_only", False)
+        or args.phase != "SMOKE"
+        or getattr(args, "acceptance_profile", None) != internal.RELEASE_NAME
+    ):
+        raise ValueError("failure timeline requires original100 SMOKE without full diagnostics")
     validate_options(args)
     validate_claim_coordination(
         getattr(args, "coordinate_claims", False), r8=getattr(args, "r8_claim_budget", False)
@@ -1982,10 +2065,13 @@ async def run(args: argparse.Namespace) -> int:
                 observe_owned(args.output / "parent.owned-pools.json", PARENT_CONFIGURATION)
             )
         async with asyncio.timeout(cap):
-            if getattr(args, "diagnostics", False):
+            failure_only = getattr(args, "failure_timeline", False)
+            if getattr(args, "diagnostics", False) or failure_only:
                 from tests.infra.execution_market.profile_diagnostics import observe_workload
 
-                code = await observe_workload(args)
+                code = await observe_workload(
+                    args, **({"failure_only": True} if failure_only else {})
+                )
             else:
                 code = await _run(args)
     if pools is not None and (args.output / "result.json").exists():
@@ -2024,11 +2110,23 @@ async def _run(
         {"acceptance_profile": args.acceptance_profile} if internal_phase is not None else {}
     )
     host_options: ResourceOptions = {"observe_host": True} if internal_phase is not None else {}
+    schedule_options: CycleScheduleOptions = (
+        {
+            "cycle_budget_seconds": internal.positive_cycle_budget(args),
+            "cycle_report": args.output / "cycle-budgets.json",
+        }
+        if getattr(args, "acceptance_profile", None) == internal.RELEASE_TIMING_NAME
+        else {}
+    )
+    observation_options: WorkerObservationOptions = (
+        {"failure_timeline": True} if getattr(args, "failure_timeline", False) else {}
+    )
     coordinate_claims = getattr(args, "coordinate_claims", False)
     validate_claim_coordination(coordinate_claims, r8=getattr(args, "r8_claim_budget", False))
     poll_gate = (
         ParentPollGate(
-            stream_path=args.output / "parent-poll-attempts.jsonl" if internal_phase else None
+            stream_path=args.output / "parent-poll-attempts.jsonl" if internal_phase else None,
+            poll_seconds=getattr(args, "observation_poll_seconds", RESULT_POLL_SECONDS),
         )
         if getattr(args, "parent_poll_limit", None) is not None
         else None
@@ -2172,6 +2270,7 @@ async def _run(
             args.workers,
             output,
             diagnostics=getattr(args, "diagnostics", False),
+            **observation_options,
             r8_claim_budget=getattr(args, "r8_claim_budget", False),
             coordinate_claims=coordinate_claims,
             **internal_options,
@@ -2227,6 +2326,7 @@ async def _run(
                 output,
                 group="recovery-worker",
                 diagnostics=getattr(args, "diagnostics", False),
+                **observation_options,
                 r8_claim_budget=getattr(args, "r8_claim_budget", False),
                 coordinate_claims=coordinate_claims,
                 **internal_options,
@@ -2285,6 +2385,7 @@ async def _run(
                         output,
                         group=f"restart-{len(fault_observations)}",
                         diagnostics=getattr(args, "diagnostics", False),
+                        **observation_options,
                         r8_claim_budget=getattr(args, "r8_claim_budget", False),
                         coordinate_claims=coordinate_claims,
                         **internal_options,
@@ -2332,7 +2433,8 @@ async def _run(
                 poll_gate.phase = "measurement"
             if parent_runtime is not None:
                 parent_runtime.mark("measurement_start")
-            if getattr(args, "diagnostics", False):
+            failure_only = getattr(args, "failure_timeline", False)
+            if getattr(args, "diagnostics", False) or failure_only:
                 publish_trace_control(
                     output, measured_started, **({} if poll_gate is None else {"seconds": 900})
                 )
@@ -2347,6 +2449,7 @@ async def _run(
                     latencies,
                     gate,
                     **cycle_options(poll_gate, sender),
+                    **schedule_options,
                 ),
                 publisher,
                 checks=() if position_task is None else (position_task,),
@@ -2455,7 +2558,7 @@ async def _run(
             and integer(resources["lock_waits_end"]) == 0
             and integer(invariants["input_lag"]) <= MAX_INPUT_LAG
             and (
-                internal_phase is not None
+                internal.pilot_selected(args)
                 or integer(resources["connections_end"])
                 <= integer(resources["connections_start"]) + 2
             )
@@ -2473,7 +2576,9 @@ async def _run(
             and counters.replays == expected_cycles
             and (args.phase != "W3" or elapsed >= w3_duration)
             and elapsed
-            <= target_seconds + sum(event.duration_seconds for event in fault_events) + 60
+            <= target_seconds
+            + sum(event.duration_seconds for event in fault_events)
+            + internal.completion_allowance(args)
             and (args.phase == "W2_OVERFLOW" or measured_inputs >= required_book_inputs)
             and processing["passed"]
             and not worker_failures
@@ -2512,6 +2617,12 @@ async def _run(
             "smoke_only": args.phase in {"SMOKE", "W3_SMOKE"},
             "elapsed_seconds": elapsed,
             "target_seconds": target_seconds,
+            "elapsed_limit_seconds": target_seconds
+            + sum(event.duration_seconds for event in fault_events)
+            + internal.completion_allowance(args),
+            "original_elapsed_limit_seconds": target_seconds
+            + sum(event.duration_seconds for event in fault_events)
+            + 60,
             "drain_seconds": drain_seconds,
             "counters": asdict(counters),
             "engine_transaction_seconds": {
@@ -2547,7 +2658,7 @@ async def _run(
     except BaseException as error:
         if processing_window is not None:
             processing_window.update(
-                status="INCOMPLETE",
+                status="FAILED" if isinstance(error, CycleBudgetExceededError) else "INCOMPLETE",
                 failure_observed=monotonic(),
                 fault_observations=fault_observations,
             )
@@ -2632,6 +2743,10 @@ async def worker_entry(args: argparse.Namespace) -> None:
                     args.worker_metrics.with_suffix(".owned-pools.json"), WORKER_CONFIGURATION
                 )
             )
+        if getattr(args, "failure_timeline", False):
+            from tests.infra.execution_market.profile_commit_observation import observe_commits
+
+            stack.enter_context(observe_commits(args.worker_metrics.with_suffix(".commits.json")))
         if args.diagnostics:
             from tests.infra.execution_market.profile_diagnostics import observe_worker
 
@@ -2652,6 +2767,8 @@ if __name__ == "__main__":
     parser.add_argument("--acceptance-profile", choices=tuple(internal.PROFILES))
     parser.add_argument("--parent-poll-limit", type=int)
     parser.add_argument("--diagnostics", action="store_true")
+    parser.add_argument("--failure-timeline", action="store_true")
+    parser.add_argument("--observation-poll-seconds", type=float, choices=(0.25, 1.0), default=0.25)
     parser.add_argument("--r8-claim-budget", action="store_true")
     parser.add_argument("--coordinate-claims", action="store_true")
     parser.add_argument("--publisher-heartbeat-per-book", action="store_true")

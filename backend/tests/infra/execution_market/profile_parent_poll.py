@@ -19,6 +19,14 @@ from tests.infra.execution_market import profile_internal as internal
 
 
 def validate_options(args: argparse.Namespace) -> None:
+    interval = getattr(args, "observation_poll_seconds", 0.25)
+    if type(interval) not in (int, float) or interval not in (0.25, 1.0):
+        raise ValueError("unsupported observation polling interval")
+    if (
+        interval != 0.25
+        and getattr(args, "acceptance_profile", None) not in internal.RELEASE_PROFILES
+    ):
+        raise ValueError("representative polling requires original100 profile")
     if internal.selected(args):
         internal.validate(args)
         return
@@ -44,7 +52,10 @@ def validate_options(args: argparse.Namespace) -> None:
 
 
 class ParentPollGate:
-    def __init__(self, *, stream_path: Path | None = None) -> None:
+    def __init__(self, *, stream_path: Path | None = None, poll_seconds: float = 0.25) -> None:
+        if type(poll_seconds) not in (int, float) or poll_seconds not in (0.25, 1.0):
+            raise ValueError("unsupported observation polling interval")
+        self.poll_seconds = poll_seconds
         self.semaphore = asyncio.Semaphore(4)
         self.active = 0
         self.peak = 0
@@ -115,6 +126,7 @@ class ParentPollGate:
             path,
             {
                 "limit": 4,
+                "poll_seconds": self.poll_seconds,
                 "peak": self.peak,
                 "active": self.active,
                 "truncated": self.truncated,
@@ -126,6 +138,11 @@ class ParentPollGate:
         )
         if self.active or self.attempts != self.finished:
             raise RuntimeError("NC09_POLL_GATE_LEAK")
+
+
+def poll_interval(gate: ParentPollGate | None, legacy_default: float) -> float:
+    """Share the explicit cadence across DB status and HTTP transfer observation."""
+    return legacy_default if gate is None else gate.poll_seconds
 
 
 class PollOptions(TypedDict, total=False):

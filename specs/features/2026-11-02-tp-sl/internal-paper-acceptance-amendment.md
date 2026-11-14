@@ -1414,3 +1414,18 @@ URL routing and centralize existing bootstrap in `_internal_scratch_database` fo
 template and clones. No behavior/guard/criterion change. Post-refactor scoped
 validation:207tests passed together; Ruff/format/mypy passed the affected fixture.
 See the same evidence receipt for exact scope and remaining gates.
+
+
+## 24. Local burst5 and read-only public-reader cancellation — 2026-11-15
+
+Approved under latest owner instruction to complete continuously and adjust
+engineering criteria after >2unsuccessful rounds; [decision before implementation](paper-timing-acceptance-amendment-20261114.md).
+Explicit opt-in PAPER_INTERNAL20_BURST5_V1:W2only,20owners/400baseline/6000commands,
+5s^-1/1200s; same per-command amounts,500ms/2s,60s workflow/tail and zero financial/
+source/STOP/pool-return errors. Old V2 12000/10s^-1 benchmark unchanged/Failed.
+Public price read uses a read-only facade of the same pool; WS auth remains writable.
+Only actual expired known-scope read-only cancellation may be expected; unknown,
+external, writable, financial,08disconnect and leaked-borrow cases still fail.
+[Actual local results](evidence/paper-completion-20261114/final-checkpoint.md) Passed;
+final candidate review/CI/opening and original100/4h/V19/V20 remain pending. Not
+F17Completed or an application-enforced capacity/rate limit.

@@ -222,3 +222,12 @@ no ceremonial reruns. See nc12-section21-*.xml/logs for evidence.
 Next: approved one fresh-DB V3 short W3 with existing preflight, estimated35–45min
 including30min measured/final replay/cleanup; passing permits W4. A failed/incomplete
 gate stops without retry. Prior owner-stopped W3 remains Incomplete; no4h acceptance.
+
+## Approved integrated Paper timing alternative — 2026-11-14
+
+Owner explicitly authorized timing-criteria adjustment after >2 unsuccessful rounds.
+[Timing amendment](paper-timing-acceptance-amendment-20261114.md) defines optional
+100-owner TIMING_V2 (enginep95500ms/p991s, ordinary5commandcycle90s), retains original
+250ms/60s grades and all financial/TP-SL/STOP/freshness/recovery/resource gates.
+Counts/rates/durations unchanged. This alternative only amends integrated Paper
+performance acceptance; it does not authorize Live or mark dependencies Completed.

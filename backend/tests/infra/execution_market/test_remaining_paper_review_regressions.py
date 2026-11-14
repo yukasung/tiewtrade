@@ -235,3 +235,60 @@ async def test_diagnostic_source_change_is_incomplete_with_nonzero_exit(
     assert result["status"] == ("INCOMPLETE" if changed else "OBSERVATION_COMPLETE")
     assert result["source_unchanged"] is not changed
     assert result["error_type"] == ("CandidateChanged" if changed else None)
+
+
+@pytest.mark.parametrize("cycle_expired", [False, True])
+async def test_positive_cycle_failure_survives_cleanup_error(
+    campaign_output: Path, monkeypatch: pytest.MonkeyPatch, cycle_expired: bool
+) -> None:
+    failure = (
+        campaign.workload.CycleBudgetExceededError("cycle budget")
+        if cycle_expired
+        else TimeoutError("unknown transport")
+    )
+    monkeypatch.setattr(internal, "run_preflighted", AsyncMock(side_effect=failure))
+    monkeypatch.setattr(campaign, "capture", lambda *args: json.dumps(nonempty()))
+    with pytest.raises(TimeoutError):
+        await campaign.main()
+    result = json.loads((campaign_output / "campaign-result.json").read_text())
+    assert result["status"] == ("FAILED" if cycle_expired else "INCOMPLETE")
+    assert result["workload_status"] == result["status"]
+
+
+@pytest.mark.parametrize("phase", ["CONTROLLED20", "SMOKE", "W1", "W3", "W2_OVERFLOW"])
+async def test_burst5_unsupported_phase_stops_before_preflight_or_output(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, phase: str
+) -> None:
+    output = tmp_path / "result"
+    monkeypatch.setattr(
+        argparse.ArgumentParser,
+        "parse_args",
+        lambda _: SimpleNamespace(
+            phase=phase, output=output, acceptance_profile=internal.NAME_BURST5
+        ),
+    )
+    preflight = AsyncMock()
+    monkeypatch.setattr(internal, "run_preflighted", preflight)
+    with pytest.raises(SystemExit) as caught:
+        await campaign.main()
+    assert caught.value.code == 2
+    assert not output.exists()
+    preflight.assert_not_awaited()
+
+
+@pytest.mark.parametrize("profile", tuple(internal.PROFILES))
+def test_manifest_authorization_matches_selected_profile(profile: str) -> None:
+    value = campaign.profile_authorization(profile)
+    assert profile in value
+    if profile in {internal.RELEASE_TIMING_NAME, internal.NAME_BURST5}:
+        assert "paper-timing-acceptance-amendment-20261114.md" in value
+    elif profile == internal.RELEASE_NAME:
+        assert "integrated-paper-acceptance-plan.md" in value
+    else:
+        assert "internal-paper-acceptance-amendment.md" in value
+    assert "250ms" not in value and "burst10" not in value
+
+
+def test_manifest_authorization_rejects_unknown_profile() -> None:
+    with pytest.raises(ValueError, match="unknown acceptance profile"):
+        campaign.profile_authorization("UNKNOWN")

@@ -1,0 +1,23 @@
+{
+  "reference": "burst5_w2/candidate-sha256.json",
+  "reference_inventory_sha256": "53abaecc36ed4d49d7e322e725ef72e9686077301119578bfaf1441b517e9037",
+  "reference_entries": 1017,
+  "changed_paths": [
+    "backend/tests/infra/execution_market/profile_commit_observation.py",
+    "backend/tests/infra/execution_market/profile_diagnostics.py",
+    "backend/tests/infra/execution_market/remaining_paper_campaign.py",
+    "backend/tests/infra/execution_market/test_commit_observation.py",
+    "backend/tests/infra/execution_market/test_failure_timeline.py",
+    "backend/tests/infra/execution_market/test_remaining_paper_review_regressions.py"
+  ],
+  "all_backend_production_paths_unchanged": true,
+  "current_changed_path_sha256": {
+    "backend/tests/infra/execution_market/profile_commit_observation.py": "ecae00929aeed7612d4f15532a5d96b2b748574fd1547fc1bfd91f048868ff5c",
+    "backend/tests/infra/execution_market/profile_diagnostics.py": "e6c405b0904741832247b6d2350d030345bab07677408bddc6caa6c7228e99ca",
+    "backend/tests/infra/execution_market/remaining_paper_campaign.py": "4e3b92bf11d852f0e77c633c355d243c9de04eecaba4c830f78264f2e9ef1473",
+    "backend/tests/infra/execution_market/test_commit_observation.py": "7135177859f086d85214d7db6b25aa61c70efba9fc0b0dd08fd16380bc926b52",
+    "backend/tests/infra/execution_market/test_failure_timeline.py": "69b7f052d8fab3bdb22879cb3e1c9ef7ecbc68d6ce73986535395fc8209e5e6d",
+    "backend/tests/infra/execution_market/test_remaining_paper_review_regressions.py": "745ec027556e21c57cc18bda10da2769bb12ca5298b2b99403f00391647165e0"
+  },
+  "reused_workload_results": "Original artifacts and grades retained. Changes cover diagnostic error preservation, profile authorization metadata and unsupported CLI rejection only."
+}

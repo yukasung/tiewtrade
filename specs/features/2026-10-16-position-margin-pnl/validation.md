@@ -598,3 +598,13 @@ Snapshots/rebuild cover20owners; authenticated HTTP uses actual risk policy; res
 includes F16/F17 pending/retry/exit with RLS/grants and source unchanged. Original
 100-account/4h Release and existing production activation/dependency/final CI gates
 are not overwritten by this profile. Historical Failed/Partial/NotRun remain intact.
+
+
+## Related current Paper internal20 evidence — 2026-11-15
+
+[F17consolidated checkpoint](../2026-11-02-tp-sl/evidence/paper-completion-20261114/final-checkpoint.md):
+current financial code hashes retained;20-owner W1/R4burst5/shortW3 final financial,
+snapshot/rebuild and actualW4canonical/RLS/receipt recovery Passed. W3snapshots620,
+p95/p9964.002/193.422ms,7scheduled fault windows completed. Original100-account,
+10s^-1benchmark and4h Release obligations not marked Passed. New uncommitted source
+still needs review/required CI/opening gates; statuses remain PendingFullValidation.

@@ -279,21 +279,31 @@ async def get_command(session: UserSession, command_id: UUID) -> PaperCommand | 
     )
 
 
-async def get_wallet(session: UserSession) -> PaperWalletSnapshot | None:
+async def get_wallet(
+    session: UserSession, *, include_reset_readiness: bool = True
+) -> PaperWalletSnapshot | None:
+    """Read current accounting; reset eligibility is included by default."""
     session = require_user_session(session)
+    # Fixed SQL fragments only. All values remain bound parameters.
+    readiness_columns = "rr.*," if include_reset_readiness else ""
+    readiness_join = (
+        "LEFT JOIN LATERAL paper_wallet_reset_readiness(s.active_episode_id) rr ON true"
+        if include_reset_readiness
+        else ""
+    )
     row = (
         await session.execute(
-            """SELECT w.id wallet_id,s.active_episode_id,e.id episode_id,e.sequence,
+            f"""SELECT w.id wallet_id,s.active_episode_id,e.id episode_id,e.sequence,
                       e.initial_capital,e.currency,e.started_at,s.revision,
                       EXISTS(SELECT 1 FROM paper_wallet_episode_closures c
                              WHERE c.episode_id=s.active_episode_id) episode_closed,
-                      rr.*,
+                      {readiness_columns}
                       clock_timestamp() snapshot_at
                FROM paper_wallets w LEFT JOIN paper_wallet_state s
                  ON s.wallet_id=w.id AND s.user_id=w.user_id
                LEFT JOIN paper_wallet_episodes e
                  ON e.id=s.active_episode_id AND e.wallet_id=w.id AND e.user_id=w.user_id
-               LEFT JOIN LATERAL paper_wallet_reset_readiness(s.active_episode_id) rr ON true
+               {readiness_join}
                WHERE w.user_id=:owner""",
             {"owner": session.user_id},
         )
@@ -326,41 +336,43 @@ async def get_wallet(session: UserSession) -> PaperWalletSnapshot | None:
     ledger_capital = money_from_columns(capital_entries[0].amount, capital_entries[0].currency)
     if ledger_capital != stored_capital:
         raise PaperWalletIntegrityError("Paper wallet episode capital does not match its ledger")
-    position_complete = (
-        row.position_availability == "READY"
-        and row.position_proof is not None
-        and row.position_proof == row.initialized_position_proof
-        and int(row.position_record_count) == int(row.position_sequence)
-        and int(row.position_max_sequence) == int(row.position_sequence)
-        and int(row.position_pair_count) == int(row.position_projection_count)
-        and int(row.position_revision_mismatch) == 0
-    )
-    order_complete = (
-        row.order_availability == "READY"
-        and row.order_proof is not None
-        and row.order_proof == row.initialized_order_proof
-        and int(row.order_count) == int(row.order_projection_count)
-        and int(row.order_count) == int(row.reservation_count)
-        and int(row.order_projection_mismatch) == 0
-        and int(row.reservation_revision_mismatch) == 0
-    )
-    reset_reason = (
-        ACTIVITY_UNKNOWN
-        if not position_complete or not order_complete
-        else (
-            RESET_UNSAFE
-            if any(
-                int(value) != 0
-                for value in (
-                    row.open_position_count,
-                    row.active_order_count,
-                    row.active_reservation_count,
-                    row.pending_order_command_count,
-                )
-            )
-            else None
+    reset_reason: str | None = ACTIVITY_UNKNOWN
+    if include_reset_readiness:
+        position_complete = (
+            row.position_availability == "READY"
+            and row.position_proof is not None
+            and row.position_proof == row.initialized_position_proof
+            and int(row.position_record_count) == int(row.position_sequence)
+            and int(row.position_max_sequence) == int(row.position_sequence)
+            and int(row.position_pair_count) == int(row.position_projection_count)
+            and int(row.position_revision_mismatch) == 0
         )
-    )
+        order_complete = (
+            row.order_availability == "READY"
+            and row.order_proof is not None
+            and row.order_proof == row.initialized_order_proof
+            and int(row.order_count) == int(row.order_projection_count)
+            and int(row.order_count) == int(row.reservation_count)
+            and int(row.order_projection_mismatch) == 0
+            and int(row.reservation_revision_mismatch) == 0
+        )
+        reset_reason = (
+            ACTIVITY_UNKNOWN
+            if not position_complete or not order_complete
+            else (
+                RESET_UNSAFE
+                if any(
+                    int(value) != 0
+                    for value in (
+                        row.open_position_count,
+                        row.active_order_count,
+                        row.active_reservation_count,
+                        row.pending_order_command_count,
+                    )
+                )
+                else None
+            )
+        )
     return PaperWalletSnapshot(
         wallet_id=row.wallet_id,
         episode_id=row.episode_id,

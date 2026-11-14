@@ -1,0 +1,483 @@
+{
+  "scope": "Paper internal20 local checkpoint; not100-account/4h release or F17Completed",
+  "base_head": "98152fa1c0b78f0e3383d8e6c4ac568b2b710a68",
+  "final_code_inventory_entries": 1017,
+  "phases": {
+    "pilot_smoke": {
+      "status": "PASSED",
+      "elapsed_seconds": 301.7998502499977,
+      "counters": {
+        "offered": 600,
+        "admitted": 600,
+        "completed": 600,
+        "rejected": 0,
+        "fills": 240,
+        "cancels": 120,
+        "replays": 120,
+        "cycles": 120
+      },
+      "engine_transaction_seconds": {
+        "applicable": true,
+        "p95": 0.2525254170031985,
+        "p99": 0.4126153749966761,
+        "max": 1.0286513329920126,
+        "samples": 7748,
+        "window": {
+          "attribution": "transaction_start",
+          "started": 118063.636976416,
+          "ended": 118365.436827,
+          "status": "MEASURED",
+          "excluded_fault_intervals": []
+        }
+      },
+      "measured_book_inputs": 3017,
+      "required_book_inputs": 3000,
+      "global_invariants": {
+        "orders": 760,
+        "fills": 240,
+        "cancels": 120,
+        "pending_dispatch": 400,
+        "unlinked_fills": 0,
+        "invalid_reservations": 0,
+        "invalid_positions": 0,
+        "wrong_mode": 0,
+        "input_lag": 7,
+        "duplicate_fill_effects": 0,
+        "expected_orders": 760,
+        "expected_fills": 240,
+        "expected_cancels": 120,
+        "expected_pending_dispatch": 400,
+        "passed": true
+      },
+      "endurance_rss": null,
+      "campaign_seconds": 469.76553737500217,
+      "financial_owners": 20,
+      "all_financial_owners_passed": true,
+      "positions": null,
+      "pool_passed": true,
+      "pool_errors": {},
+      "expected_read_deadline_cancellations": 0,
+      "cleanup": {
+        "observed_at": "2026-11-14 16:33:01.475867+00",
+        "connections": 0,
+        "backends": [],
+        "advisory_locks": 0
+      },
+      "database_removed": true,
+      "faults": [],
+      "result_sha256": "17fe378f2d1fc9929157b9150f3e66b4c2ca79eec31381476688603083eac6e1"
+    },
+    "pilot_w1": {
+      "status": "PASSED",
+      "elapsed_seconds": 1802.9246671250003,
+      "counters": {
+        "offered": 3600,
+        "admitted": 3600,
+        "completed": 3600,
+        "rejected": 0,
+        "fills": 1440,
+        "cancels": 720,
+        "replays": 720,
+        "cycles": 720
+      },
+      "engine_transaction_seconds": {
+        "applicable": true,
+        "p95": 0.28516054099600296,
+        "p99": 0.45093070798611734,
+        "max": 2.1757303750055144,
+        "samples": 40541,
+        "window": {
+          "attribution": "transaction_start",
+          "started": 118547.586150625,
+          "ended": 120350.510818375,
+          "status": "MEASURED",
+          "excluded_fault_intervals": []
+        }
+      },
+      "measured_book_inputs": 18028,
+      "required_book_inputs": 18000,
+      "global_invariants": {
+        "orders": 2560,
+        "fills": 1440,
+        "cancels": 720,
+        "pending_dispatch": 400,
+        "unlinked_fills": 0,
+        "invalid_reservations": 0,
+        "invalid_positions": 0,
+        "wrong_mode": 0,
+        "input_lag": 4,
+        "duplicate_fill_effects": 0,
+        "expected_orders": 2560,
+        "expected_fills": 1440,
+        "expected_cancels": 720,
+        "expected_pending_dispatch": 400,
+        "passed": true
+      },
+      "endurance_rss": null,
+      "campaign_seconds": 2058.64103074999,
+      "financial_owners": 20,
+      "all_financial_owners_passed": true,
+      "positions": {
+        "snapshot_samples": 20,
+        "expected_samples": 20,
+        "p95": 0.022191916999872774,
+        "p99": 0.022966542004724033,
+        "passed": true,
+        "rebuilds": 20,
+        "max_rebuild_seconds": 4.1728975839941995
+      },
+      "pool_passed": true,
+      "pool_errors": {},
+      "expected_read_deadline_cancellations": 0,
+      "cleanup": {
+        "observed_at": "2026-11-14 17:07:25.538197+00",
+        "connections": 0,
+        "backends": [],
+        "advisory_locks": 0
+      },
+      "database_removed": true,
+      "faults": [],
+      "result_sha256": "e8a3ae088d7d9681ff15b69cfefcf911a8fa30ab0eb3363e3ac4c582a0982bef"
+    },
+    "burst5_w2": {
+      "status": "PASSED",
+      "elapsed_seconds": 1205.7261341669946,
+      "counters": {
+        "offered": 6000,
+        "admitted": 6000,
+        "completed": 6000,
+        "rejected": 0,
+        "fills": 2400,
+        "cancels": 1200,
+        "replays": 1200,
+        "cycles": 1200
+      },
+      "engine_transaction_seconds": {
+        "applicable": true,
+        "p95": 0.22167066599649843,
+        "p99": 0.3291592080058763,
+        "max": 1.3173364999965997,
+        "samples": 34319,
+        "window": {
+          "attribution": "transaction_start",
+          "started": 124366.838087708,
+          "ended": 125572.564222083,
+          "status": "MEASURED",
+          "excluded_fault_intervals": []
+        }
+      },
+      "measured_book_inputs": 12057,
+      "required_book_inputs": 12000,
+      "global_invariants": {
+        "orders": 4000,
+        "fills": 2400,
+        "cancels": 1200,
+        "pending_dispatch": 400,
+        "unlinked_fills": 0,
+        "invalid_reservations": 0,
+        "invalid_positions": 0,
+        "wrong_mode": 0,
+        "input_lag": 5,
+        "duplicate_fill_effects": 0,
+        "expected_orders": 4000,
+        "expected_fills": 2400,
+        "expected_cancels": 1200,
+        "expected_pending_dispatch": 400,
+        "passed": true
+      },
+      "endurance_rss": null,
+      "campaign_seconds": 1443.7464111669979,
+      "financial_owners": 20,
+      "all_financial_owners_passed": true,
+      "positions": {
+        "snapshot_samples": 20,
+        "expected_samples": 20,
+        "p95": 0.02277558299829252,
+        "p99": 0.022825624997494742,
+        "passed": true,
+        "rebuilds": 20,
+        "max_rebuild_seconds": 3.7244263329921523
+      },
+      "pool_passed": true,
+      "pool_errors": {},
+      "expected_read_deadline_cancellations": 0,
+      "cleanup": {
+        "observed_at": "2026-11-14 18:34:20.180886+00",
+        "connections": 0,
+        "backends": [],
+        "advisory_locks": 0
+      },
+      "database_removed": true,
+      "faults": [],
+      "result_sha256": "10ae5704b4c80b3fc7d53bec0ab97db2a2003cce11838e44e3fe5c72df37e378"
+    },
+    "pilot_w2_overflow": {
+      "status": "PASSED",
+      "elapsed_seconds": 22.467966249998426,
+      "counters": {
+        "offered": 0,
+        "admitted": 0,
+        "completed": 0,
+        "rejected": 0,
+        "fills": 0,
+        "cancels": 0,
+        "replays": 0,
+        "cycles": 0
+      },
+      "engine_transaction_seconds": {
+        "applicable": false,
+        "p95": null,
+        "p99": null,
+        "max": null,
+        "samples": 0,
+        "window": null
+      },
+      "measured_book_inputs": 4097,
+      "required_book_inputs": 0,
+      "global_invariants": {
+        "orders": 400,
+        "fills": 0,
+        "cancels": 0,
+        "pending_dispatch": 400,
+        "unlinked_fills": 0,
+        "invalid_reservations": 0,
+        "invalid_positions": 0,
+        "wrong_mode": 0,
+        "input_lag": 0,
+        "duplicate_fill_effects": 0,
+        "expected_orders": 400,
+        "expected_fills": 0,
+        "expected_cancels": 0,
+        "expected_pending_dispatch": 400,
+        "passed": true
+      },
+      "endurance_rss": null,
+      "campaign_seconds": 179.97005466699193,
+      "financial_owners": 20,
+      "all_financial_owners_passed": true,
+      "positions": null,
+      "pool_passed": true,
+      "pool_errors": {},
+      "expected_read_deadline_cancellations": 0,
+      "cleanup": {
+        "observed_at": "2026-11-14 18:37:25.099978+00",
+        "connections": 0,
+        "backends": [],
+        "advisory_locks": 0
+      },
+      "database_removed": true,
+      "faults": [],
+      "result_sha256": "197f444cd9beb9003379bc7e8862372c286b1fbf53a64dac925238296c810bb4"
+    },
+    "pilot_w3": {
+      "status": "PASSED",
+      "elapsed_seconds": 1800.0023796250025,
+      "counters": {
+        "offered": 3000,
+        "admitted": 3000,
+        "completed": 3000,
+        "rejected": 0,
+        "fills": 1200,
+        "cancels": 600,
+        "replays": 600,
+        "cycles": 600
+      },
+      "engine_transaction_seconds": {
+        "applicable": true,
+        "p95": 0.1762560829956783,
+        "p99": 0.26280054201197345,
+        "max": 0.758101750005153,
+        "samples": 50296,
+        "window": {
+          "attribution": "transaction_start",
+          "started": 125993.2822205,
+          "ended": 127793.284605458,
+          "status": "MEASURED",
+          "excluded_fault_intervals": [
+            [
+              126173.294669666,
+              126206.337157583
+            ],
+            [
+              126353.296614625,
+              126383.413778333
+            ],
+            [
+              126533.294791208,
+              126593.543825291
+            ],
+            [
+              126713.296123833,
+              126746.288869333
+            ],
+            [
+              126893.295581333,
+              126923.31562075
+            ],
+            [
+              127073.295401541,
+              127133.581537625
+            ],
+            [
+              127253.294655041,
+              127286.208490875
+            ]
+          ]
+        }
+      },
+      "measured_book_inputs": 18000,
+      "required_book_inputs": 15000,
+      "global_invariants": {
+        "orders": 2200,
+        "fills": 1200,
+        "cancels": 600,
+        "pending_dispatch": 400,
+        "unlinked_fills": 0,
+        "invalid_reservations": 0,
+        "invalid_positions": 0,
+        "wrong_mode": 0,
+        "input_lag": 4,
+        "duplicate_fill_effects": 0,
+        "expected_orders": 2200,
+        "expected_fills": 1200,
+        "expected_cancels": 600,
+        "expected_pending_dispatch": 400,
+        "passed": true
+      },
+      "endurance_rss": {
+        "duration_seconds": 1800,
+        "warmup_seconds": 112.5,
+        "window_seconds": 450.0,
+        "observed_seconds": 1799.863201,
+        "first_stable_window_average_bytes": 811428461.3033708,
+        "last_window_average_bytes": 791837615.4606742,
+        "growth_fraction": -0.024143651322297146,
+        "passed": true
+      },
+      "campaign_seconds": 2089.323495125005,
+      "financial_owners": 20,
+      "all_financial_owners_passed": true,
+      "positions": {
+        "snapshot_samples": 620,
+        "expected_samples": 620,
+        "p95": 0.06400183399091475,
+        "p99": 0.19342212499759626,
+        "passed": true,
+        "rebuilds": 20,
+        "max_rebuild_seconds": 7.0548403749999125
+      },
+      "pool_passed": true,
+      "pool_errors": {},
+      "expected_read_deadline_cancellations": 0,
+      "cleanup": {
+        "observed_at": "2026-11-14 19:12:19.243423+00",
+        "connections": 0,
+        "backends": [],
+        "advisory_locks": 0
+      },
+      "database_removed": true,
+      "faults": [
+        {
+          "kind": "WORKER_RESTART",
+          "status": "RECOVERED",
+          "actual_duration_seconds": 33.04248795901367
+        },
+        {
+          "kind": "CONNECTION_CHURN",
+          "status": "RECOVERED",
+          "actual_duration_seconds": 30.117163791001076
+        },
+        {
+          "kind": "REDIS_OUTAGE",
+          "status": "RECOVERED",
+          "actual_duration_seconds": 60.24903412500862
+        },
+        {
+          "kind": "WORKER_RESTART",
+          "status": "RECOVERED",
+          "actual_duration_seconds": 32.99274562500068
+        },
+        {
+          "kind": "CONNECTION_CHURN",
+          "status": "RECOVERED",
+          "actual_duration_seconds": 30.020039499999257
+        },
+        {
+          "kind": "REDIS_OUTAGE",
+          "status": "RECOVERED",
+          "actual_duration_seconds": 60.28613616699295
+        },
+        {
+          "kind": "WORKER_RESTART",
+          "status": "RECOVERED",
+          "actual_duration_seconds": 32.91383591700287
+        }
+      ],
+      "result_sha256": "f147950c6751826833683f3204129b6f3815d6498f00097ba65ede0471f09785"
+    }
+  },
+  "original_failures_retained": [
+    "r3_w1",
+    "pilot_w2"
+  ],
+  "publication": "NOT RUN; local uncommitted candidate",
+  "controlled20": {
+    "status": "PASSED",
+    "observed": 20,
+    "expected": 20,
+    "max_trigger_seconds": 0.544278,
+    "financial": "PASSED"
+  },
+  "restore": {
+    "phase": "W4",
+    "status": "PASSED",
+    "started_at": "2026-11-14 19:14:41.140901+00:00",
+    "completed_at": "2026-11-14 19:14:44.262816+00:00",
+    "platform": "macOS-27.0.1-arm64-arm-64bit",
+    "fixture_coverage": {
+      "capital": 21,
+      "fills": 20,
+      "partial_orders": 1,
+      "cancels": 1,
+      "corrections": 1,
+      "resets": 1,
+      "evidence": 57,
+      "expired_claims": 1
+    },
+    "rls_and_grants_match": true,
+    "canonical_data_match": true,
+    "domain_replay": {
+      "owners": 21,
+      "evidence_records": 57,
+      "checkpoints": 20,
+      "replayed_positions": 18
+    },
+    "claim_recovery": {
+      "expired_before": 1,
+      "expired_after": 0,
+      "rounds": 1
+    },
+    "claim_recovery_economic_effects_unchanged": true,
+    "backup_bytes": 1827815,
+    "internal_recovery": "PASSED",
+    "source_unchanged": true,
+    "campaign_seconds": 142.7572549579927,
+    "recovery": {
+      "status": "PASSED",
+      "restored_owner_rls": true,
+      "pending_receipt_identity": true,
+      "exact_retry": true,
+      "duplicate_exit_fill": 0
+    },
+    "strict_cleanup_zero": true,
+    "source_and_target_removed": true
+  },
+  "cleanup": {
+    "dedicated_redis": "tiewtrade-f17-completion-redis-20261114",
+    "ownership_label_verified": true,
+    "stopped_normally": true,
+    "removed": true,
+    "owner_services_untouched": true,
+    "unproven_restored_prefix_databases_retained": 2
+  }
+}

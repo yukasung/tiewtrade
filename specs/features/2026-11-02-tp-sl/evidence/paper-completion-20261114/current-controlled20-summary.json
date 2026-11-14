@@ -1,0 +1,36 @@
+{
+  "status": "PASSED",
+  "timing": {
+    "expected": 20,
+    "observed": 20,
+    "max_seconds": 0.544278,
+    "passed": true
+  },
+  "financial": "PASSED",
+  "worker_failures": [],
+  "baseline_orders": 400,
+  "campaign": {
+    "status": "PASSED",
+    "workload_status": "PASSED",
+    "cleanup_complete": true,
+    "exit_code": 0,
+    "seconds": 292.8954919579992,
+    "error_type": null,
+    "candidate_unchanged": true,
+    "free_bytes_after": 22914883584,
+    "budget_seconds": null,
+    "budget_scope": "preflight,fixture,measurement,verification,cleanup"
+  },
+  "cleanup": {
+    "observed_at": "2026-11-14 15:15:37.691909+00",
+    "connections": 0,
+    "backends": [],
+    "advisory_locks": 0
+  },
+  "normal_database_removal": {
+    "database": "tiewtrade_internal20_completion_current_controlled20_1794669039",
+    "connections": 0,
+    "removed": true
+  },
+  "source_result_sha256": "f231f21ebdae91d74c178d78dfe193e9d30f6b4dd2956890130b6971c31f19c5"
+}

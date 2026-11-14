@@ -1,0 +1,90 @@
+{
+  "status": "FAILED",
+  "acceptance_attempt": 3,
+  "failure": {
+    "failed_at": "2026-11-14 10:32:28.919107+00:00",
+    "error_type": "CycleBudgetExceededError",
+    "error": "Paper cycle exceeded its 60-second budget",
+    "publisher": {
+      "target_hz": 10,
+      "stage": "publish_market",
+      "published": 3780,
+      "last_input_id": 3780,
+      "book_owner": "c918fa0a-975a-4271-aa3e-1b22ce7eef89",
+      "book_generation": 1,
+      "last_progress_at": "2026-11-14T10:32:28.659908+00:00",
+      "max_publish_seconds": 2.121436832996551
+    },
+    "worker_failures": [],
+    "counters": {
+      "offered": 2939,
+      "admitted": 2937,
+      "completed": 2880,
+      "rejected": 0,
+      "fills": 1141,
+      "cancels": 567,
+      "replays": 586,
+      "cycles": 541
+    }
+  },
+  "campaign": {
+    "status": "FAILED",
+    "workload_status": "FAILED",
+    "cleanup_complete": true,
+    "exit_code": 1,
+    "seconds": 748.2523862909875,
+    "error_type": "CycleBudgetExceededError",
+    "candidate_unchanged": true,
+    "free_bytes_after": 22084857856,
+    "budget_seconds": 1200,
+    "budget_scope": "preflight,fixture,measurement,verification,cleanup"
+  },
+  "preflight_status": "PASSED",
+  "partial_processing": {
+    "accepted_performance_result": false,
+    "samples": 8769,
+    "p95_seconds": 0.26259808299073484,
+    "p99_seconds": 0.4740158340136986,
+    "max_seconds": 3.8728407500020694,
+    "failure_observed_after_seconds": 330.6189183339884
+  },
+  "financial_final_oracle": "NOT_RUN",
+  "resources": {
+    "samples": 66,
+    "peak_rss_bytes": 988758016,
+    "connections_first": 57,
+    "connections_last": 58,
+    "connections_peak": 60,
+    "lock_waits_peak": 0,
+    "host_load_1m_peak": 24.5673828125
+  },
+  "cleanup": {
+    "observed_at": "2026-11-14 10:32:31.694704+00",
+    "connections": 0,
+    "backends": [],
+    "advisory_locks": 0
+  },
+  "database_cleanup": {
+    "database": "tiewtrade_internal20_completion_final_smoke_1794651598",
+    "connections": 0,
+    "removed": true
+  },
+  "evidence_sha256": {
+    "final_smoke/campaign-result.json": "7844985ec286cff237192070955111fdf97561d43d4444c039b1fbae49b18cd6",
+    "final_smoke/candidate-sha256.json": "885406e961969e7324983e292f9d71e8a809dd85a55e9c5323d3bf0825fd516d",
+    "final_smoke/cleanup.json": "2761e89fdc960c592a31b4ddeafc79263dee8c9dd386be7b8ae0627516351f36",
+    "final_smoke/run/failure.json": "e712f684a77de666aa3e3e381e4a2b49328291aa0bbc1ed3af060be98c07a419",
+    "final_smoke/run/processing-window.json": "82694f76a17ab6c365503864db44b524667e2aed401fe7e6465a71e14293b427",
+    "final_smoke/run/resources.json": "137a0ad8fc23772c93e1e78557f1b808e4953fa6ab7a0476907f4e591f3420dc",
+    "final_smoke-launcher-cleanup.json": "c601514fbaf74baf36eff14380ad68c0eb4be60313408cb1f9b02bc809a45599"
+  },
+  "dedicated_redis_cleanup": {
+    "ownership_label_verified": "f17-paper-completion-20261114",
+    "normal_stop": true,
+    "removed": true,
+    "owner_services_preserved": [
+      "tiewtrade-postgres-1",
+      "tiewtrade-f18-release-redis"
+    ]
+  }
+}

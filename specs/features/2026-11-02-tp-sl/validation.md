@@ -1001,3 +1001,62 @@ Owner then authorized targeted diagnosis: exact PREPARING test once on fresh Pos
 Owner authorized [CI lock observer amendment](scheduler-ci-lock-observer-amendment.md): opt-in PREPARING-only read-only observer, bounded time/samples/rows, type-only errors and private JSON artifact; assertions/builder timeouts unchanged. Local19cases including all four real-DB control modes Passed; final deadline adjustment15observer cases/static checksPassed; CI policy58Passed, security policy/evidence20Passed/1optionalSkipped. Existing local receipts combined for same PR66 publication. New required CI pending, prior a4217a1Failed retained; CI root cause and F17 Full Validation remain unresolved. Stop/report after this candidate, no automatic retry/merge.
 
 Observer candidate3426b28 CI43156400968Failed before tests: invalid runner context in job env. No GitHub lock evidence produced. Owner approved A correction: move variable to pytest step env only; actionlint1.7.12/diff checkPassed, existing observer/local DB proof retained. Same PR updated for one new candidate; its required CI pending. Original scheduler root cause remains unconfirmed, Full Validation unchanged; no merge authorized.
+
+## Continuous Paper verification — 2026-11-14
+
+[Current checkpoint](evidence/paper-completion-20261114/checkpoint.md): new isolated worktree on98152fa;179preparation tests Passed;controlled20 and D20 Passed with exact financial/pool/cleanup proof. Original100 HTTP/position harness composition added under existing consolidated approval,260affected tests including real-DB100sessions/snapshots/replay and scoped static checks Passed. Original100 diagnostic in progress; no full-load/Paper/F17 completion claimed. Historical failures and V19/V20/manual/opening dependencies unchanged.
+
+Original100 diagnostic completed3000commands with financial/resource/cleanup Passed but aggregate **Failed**:engine p95=285.665ms exceeds250ms; p99=386.307ms Passed. W1 not started. One existing bounded SQL/pool/runtime diagnostic-only observation is in progress; no acceptance rerun or production fix claimed. See current checkpoint.
+
+2026-11-14 final checkpoint: original100 acceptance attempts1/2/3 unsuccessful
+(p95Failed;rawIncomplete/cycleFailed;cycleFailed). Finalattempt2939offered,
+2880completed,541cycles; full financial/snapshot oracleNotRun, cleanup0/0/DBremoved.
+191unique final safety casesPassed; scopedstaticPassed. Candidate remains
+unpublished/unreviewed/unaccepted. W1/W2/overflow/W3/W4NotRun in this campaign;
+V18Partial/Failed—PendingFullValidation, V19/V20dependencies unchanged. Timed work
+stopped at three-failure bound; [receipt/options](evidence/paper-completion-20261114/checkpoint.md).
+
+Failure-only timeline checkpoint2026-11-14 complete:108unique affected tests and
+scopedstaticPassed; one diagnostic reproduced60scycle expiry at1061completed.
+Captured full expired cycle/phases,203parentqueries,149pollattempts,20worker tails
+and bounded post-stop queue. No single60squery/permitstall; cumulative observation/
+worker latency not yet separated. Full final financialoracleNotRun; V18Partial/
+Failed unchanged. [Receipt/next scope](evidence/paper-completion-20261114/failure-timeline-checkpoint.md).
+No further timedrun, W1, productionchange or publication in this amendment.
+
+## Owner-approved timing acceptance alternative — 2026-11-14
+
+[Approved amendment](paper-timing-acceptance-amendment-20261114.md): after >2 old
+unsuccessful rounds and original100SMOKE passed, HTTPW1 still failed60scycle with
+2963completed. TIMING_V2 ordinarycycle90s/enginep95500ms,p99unchanged1s now authorized;
+old grades retained, every financial/freshness/TP-SL/STOP/recovery/resource gate,
+100-owner counts/rates/durations/faults unchanged. Revised-profile tests and all
+required phase executions Pending; no new pass implied by approval.
+
+
+## Current local Paper internal20 checkpoint — 2026-11-15
+
+[Final evidence](evidence/paper-completion-20261114/final-checkpoint.md): retained
+controlled20Passed(max544.278ms), freshSMOKE600/W13600/R4burst56000/overflow4097/
+shortW33000andactualW4 Passed. R4burst enginep95/p99221.671/329.159ms; W3
+176.256/262.801ms,620snapshotsPassed,7fault observationsRECOVERED, all20 final
+financial/rebuild oraclesPassed and strict pool/source/restore cleanup0/0. Raw
+original100W1 and20W2 benchmark Failed remain; not silently regraded. R4changes
+only local load and narrowly proven read-only price deadline observation; all
+monetary/quantity/source/protection/STOP/leak rules remain. New timed parents had
+zero resource errors andzeroexpected deadline cancellations; negative/real-PG proof
+and168/86overlapping targeted groups/scopedstaticPassed. Source-reuse map explicit.
+V18 remains Partial/PendingFullValidation for100/4h and final candidateCI/opening;
+V19/V20dependencies unchanged. No owner/Live/Git action; F17notCompleted. Next is
+consolidated source/evidence review/publication gates, no blind workload rerun.
+
+2026-11-15 consolidated review: [R5 bounded harness corrections](evidence/paper-completion-20261114/review-r5.md)
+verified139targeted tests/no skips and scopedRuff/format/mypy. All backend production
+hashes unchanged from R4; accepted local workload evidence reused with explicit source
+bridge. Refactor instruction/requiredCI/publication and existing Release dependencies
+pending; original failures retained, F17 notCompleted.
+
+2026-11-15 owner-authorized [R5 refactor and affected validation](evidence/paper-completion-20261114/refactor-r5.md)
+Passed:139tests/no skips, scopedRuff/format/mypy and whitespace. Three harness/test
+paths only; production inventory unchanged and prior workload proof reused.
+Next consolidated publication/requiredCI on owner Git instruction. No Completed claim.

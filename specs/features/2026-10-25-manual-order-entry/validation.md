@@ -241,3 +241,23 @@ V-18 integration Passed / target-environment activation Pending. No deployment
 configuration/flags/readiness or invited access has been accepted or changed; no
 production/Live activation or F16 Completed claim. Historical Pending/Failed records
 above remain history; workload/Release obligations retain their declared scope.
+
+## Owner-approved integrated Paper timing alternative — 2026-11-14
+
+F17 [timing amendment](../2026-11-02-tp-sl/paper-timing-acceptance-amendment-20261114.md)
+authorizes optional100-owner TIMING_V2 after >2 unsuccessful rounds: ordinary
+positivecycle90s andenginep95500ms/p991s. Originalprofile grades stay retained;
+standalone defaults unchanged. Counts/rates/durations/faults and every economic/
+auth/RLS/freshness/recovery/snapshot/TP-SL/STOP/resource gate unchanged. Integrated
+results remain Pending until actual oracles/phase checkpoints pass; no Live or
+Completed implication.223affected harness/profile tests and scopedstaticPassed.
+
+
+## Related current Paper internal20 evidence — 2026-11-15
+
+[F17consolidated checkpoint](../2026-11-02-tp-sl/evidence/paper-completion-20261114/final-checkpoint.md):
+current financial code hashes retained;20-owner W1/R4burst5/shortW3 final financial,
+snapshot/rebuild and actualW4canonical/RLS/receipt recovery Passed. W3snapshots620,
+p95/p9964.002/193.422ms,7scheduled fault windows completed. Original100-account,
+10s^-1benchmark and4h Release obligations not marked Passed. New uncommitted source
+still needs review/required CI/opening gates; statuses remain PendingFullValidation.
