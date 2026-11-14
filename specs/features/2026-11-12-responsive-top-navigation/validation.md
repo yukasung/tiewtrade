@@ -178,3 +178,41 @@ NAV-V33 เคยเป็น Partial ระหว่างรออนุมั
 ## PR69 dependency corrections — 2026-11-13
 
 Node environment/browser setup guard and stable compact-navigation locator: 32 targeted unit tests Passed in dependency worktree. Combined candidate: 67 targeted tests, lint/typecheck Passed; wallet, dense-workspace and trading-account browser cases 3 Passed (27.9s). Wallet overflow did not reproduce locally: captureUi now waits for expected breakpoint using existing navigation pattern and attaches element bounds if strict width assertion still fails. No CSS change or relaxed viewport criterion; Linux CI confirmation remains pending. Same-threshold original CI failure remains recorded in bot-panel proposal.
+
+
+## PR70 standalone publication — 2026-11-14
+
+Candidate14c62e6: Security/frontend/API contract/Docker Passed. Browser main/manual/protection suites Passed but F19 STOP had2failures: Live STOP still expected visible outside Settings; system-safety link clicked without opening navigation. Backend was still running when correction was prepared; never claim it Passed. CI: https://github.com/yukasung/tiewtrade/actions/runs/43474267713 ; Security: https://github.com/yukasung/tiewtrade/actions/runs/43474267233 .
+
+Backported only existing Settings/menu steps from PR69 (already CI-verified there), retaining all money, separation, idempotency and90s assertions. Two standalone real-DB STOP tests Passed24.2s; targeted ESLint/typecheck Passed. No production code change, so no additional refactor gate. Test-generated screenshots restored to retain prior committed evidence; private new log frontend/test-results/navigation-publication/stop-corrections.log. Next candidate CI pending. Review/owner acceptance remain pending; no merge authorized.
+
+
+## PR70 final candidate bfa9cd5 — 2026-11-14
+
+[CI](https://github.com/yukasung/tiewtrade/actions/runs/43476527292) Failed: frontend/API contract/Docker/browser57 Passed; backend4906 Passed/1Failed at test_profile_resources.py:139 (cleanup still reports connections after disposal). Remaining isolated backend stages skipped. [Security](https://github.com/yukasung/tiewtrade/actions/runs/43476527269) Passed. This backend test is unchanged from main; root cause not established. Initial14c62e6 CI cancelled on replacement, with original two STOP failures retained. No auto-rerun/merge. See [diagnostic proposal](publication-cleanup-diagnostic-proposal.md). Owner review/acceptance remain pending.
+
+
+[Cleanup diagnostic checkpoint](evidence/cleanup-diagnostic-checkpoint.md): exact1 and neighboring10 tests Passed locally; Ruff/format/targeted mypy Passed. Original CI failure remains unresolved. Diagnostic only, uncommitted; no CI rerun or merge.
+
+
+## Diagnostic publication result — 2026-11-14
+
+Candidate fec9260: [CI Passed](https://github.com/yukasung/tiewtrade/actions/runs/43527203085), [Security Passed](https://github.com/yukasung/tiewtrade/actions/runs/43527203035). Backend5006 across stages Passed, including cleanup; frontend/browser/API contract/Docker gates Passed. Original cleanup failure did not recur; no failure-only evidence emitted, root cause not established. Historical failure retained. Required candidate CI now Passed; review/owner acceptance remain pending. No merge/retarget or further rerun.
+
+
+## Owner-authorized refactor — 2026-11-14
+
+After code review of PR70 fec9260, owner instructed refactor. Shared Dropdown now
+uses one local closeIfOutside check for pointer/click and focusin, with descriptive
+handler names. Event ordering, pointer deferral, Escape/focus restoration, listener
+cleanup and keepMounted behavior are unchanged; no API/session/trading changes.
+
+Targeted validation: TopNavigation, CompactMarketNavigation, AccountLayout,
+AccountNavigation and KillSwitchControls — 5 files / 68 tests Passed. Frontend
+ESLint and TypeScript checks Passed; git diff --check Passed. Existing browser
+geometry, theme, responsive and financial evidence remains applicable because
+markup, styles and behavior are unchanged; no new browser/workload run performed.
+
+This source diff is uncommitted. Required CI on fec9260 is historical evidence,
+not final-candidate CI for this refactor. Next: owner-authorized commit/push and
+required CI on the new candidate; owner visual acceptance and merge remain pending.

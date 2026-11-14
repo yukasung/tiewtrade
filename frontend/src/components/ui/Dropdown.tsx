@@ -19,32 +19,37 @@ export function Dropdown({ open, onClose, trigger, id, children, className = "",
     // Flowing submenus can move a sibling target if dismissed before its click.
     const pointerStarted = () => { pointerActive.current = true; };
     const pointerCanceled = () => { pointerActive.current = false; };
-    const outside = (event: Event) => {
-      pointerActive.current = false;
-      if (event.target instanceof Node && !surface.current?.contains(event.target) && !trigger.current?.contains(event.target)) onClose();
+    const closeIfOutside = (target: EventTarget | null) => {
+      if (target instanceof Node && !surface.current?.contains(target) && !trigger.current?.contains(target)) {
+        onClose();
+      }
     };
-    const keyboard = (event: KeyboardEvent) => {
+    const handleOutside = (event: Event) => {
+      pointerActive.current = false;
+      closeIfOutside(event.target);
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
       pointerActive.current = false;
       if (event.key === "Escape") { event.preventDefault(); onClose(); trigger.current?.focus(); }
     };
-    const blur = (event: FocusEvent) => {
+    const handleFocusIn = (event: FocusEvent) => {
       if (outsideEvent === "click" && pointerActive.current) return;
-      if (event.target instanceof Node && !surface.current?.contains(event.target) && !trigger.current?.contains(event.target)) onClose();
+      closeIfOutside(event.target);
     };
-    document.addEventListener(outsideEvent, outside);
+    document.addEventListener(outsideEvent, handleOutside);
     if (outsideEvent === "click") {
       document.addEventListener("pointerdown", pointerStarted, true);
       document.addEventListener("pointercancel", pointerCanceled, true);
     }
-    document.addEventListener("keydown", keyboard);
-    document.addEventListener("focusin", blur);
+    document.addEventListener("keydown", handleKeyDown);
+    document.addEventListener("focusin", handleFocusIn);
     return () => {
-      document.removeEventListener(outsideEvent, outside);
+      document.removeEventListener(outsideEvent, handleOutside);
       document.removeEventListener("pointerdown", pointerStarted, true);
       document.removeEventListener("pointercancel", pointerCanceled, true);
       pointerActive.current = false;
-      document.removeEventListener("keydown", keyboard);
-      document.removeEventListener("focusin", blur);
+      document.removeEventListener("keydown", handleKeyDown);
+      document.removeEventListener("focusin", handleFocusIn);
     };
   }, [open, onClose, trigger, outsideEvent]);
   if (!open && !keepMounted) return null;

@@ -235,3 +235,5 @@ Brandใช้margin-inline-end16pxเพื่อคงระยะก่อน
 เจ้าของสั่งเริ่มแก้ 4 จุดตาม publication-ci-corrections-proposal ของ Paper Spot: guard browserSetup เฉพาะ DOM environment; ใช้ compact-navigation aria-controls locator ที่คงเดิมเมื่อชื่อปุ่มเปลี่ยน; ตรวจ element bounds ก่อนแก้ wallet overflow. คง Node isolation, keyboard/focus และ viewport assertions; ไม่เปลี่ยน trading logic.
 
 Wallet diagnosis: local bounds fit360px, so no speculative CSS change. Reuse navigationLink breakpoint readiness pattern in captureUi; attach only element tag/class/bounds on overflow, retain strict viewport check.
+
+PR70 publication correction: backport only F19 STOP Settings/menu test steps already verified on PR69. Keep Paper/Live separation, unknown-request identity, money assertions and90s timeout. No production changes. Target both affected tests on an isolated DB before publishing correction.

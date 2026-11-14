@@ -87,3 +87,29 @@ Refactor checkpoint 2026-11-13: [หลักฐาน](evidence/refactor-checkp
 [CI](https://github.com/yukasung/tiewtrade/actions/runs/43459512564) Failed: backend/API contract/Docker Passed; frontend 686 tests Passed but Node suite failed on browserSetup window access; E2E 33 Passed/3 Failed (wallet horizontal overflow, shorter-panel scroll expectation, account-menu locator). [Security](https://github.com/yukasung/tiewtrade/actions/runs/43459506546) Passed on same SHA. V10 Failed, no rerun/merge. PR69 is stacked on unmerged navigation4a9b46a; final checks after retargeting still required. See [proposed corrections](publication-ci-corrections-proposal.md).
 
 Publication corrections: local67 unit tests +3 browser cases, lint/typecheck Passed. Dependency14c62e6 integrated; previous CI Failed remains. Wallet overflow cause not proven locally; strict-width check plus failure bounds await new CI. See approved correction proposal.
+
+
+## Corrected publication checkpoint — 2026-11-14
+
+Candidate `63e8c2b`, dependency `14c62e6`: [CI Passed](https://github.com/yukasung/tiewtrade/actions/runs/43467926864), [Security Passed](https://github.com/yukasung/tiewtrade/actions/runs/43467915031). Frontend709/42files, browser59 and backend5006 across stages Passed; API contract/Docker Passed. Local targeted67 unit/3browser and lint/types Passed. Previous f239ef4 failures remain historical. Wallet360px check passed on Linux; exact original root cause remains unproven, no speculative CSS change. Only harness/tests/docs changed in correction; no new refactor gate. V10 candidate checks Passed, but final main-base dependency/retarget checks and owner acceptance remain pending; not merge-ready or Completed. No additional commit merely to record CI.
+
+
+## Main-base integration — 2026-11-14
+
+Owner instructed proceeding with PR69 base integration/checks after PR70 and PR71
+merged. Integrated main60dd945 without conflicts; preserved the pre-existing
+63e8c2b CI evidence edits. STOP test changes already agree across both branches.
+No new bot production logic or acceptance changes. Remaining diff versus main
+contains only the bot panel feature and its existing tests/specs.
+
+Targeted combined validation:8 files/107 tests Passed (PaperBotPanel,
+PaperTradePage, ManualOrderForm, useManualAttempt, PaperTradingActivity,
+KillSwitchControls, TopNavigation, CompactMarketNavigation). Frontend lint and
+TypeScript Passed; working/staged diff checks Passed. Existing browser proofs
+remain historical; final required CI after retarget to main is pending. No
+additional local financial workload or owner/Live commands. Publish one combined
+candidate, monitor required CI, stop/report failures; no automatic merge.
+
+Prior main67b02ff indicator5m lock timeout remains unresolved despite passing
+subsequent candidates; integration introduces no backend fix. F17/F20/F21 and
+owner visual acceptance retain their existing status.
