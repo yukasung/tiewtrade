@@ -1,4 +1,4 @@
-import { navigationLink } from "./helpers/ui";
+import { navigationLink, waitForNavigationBreakpoint } from "./helpers/ui";
 import { mkdirSync } from "node:fs";
 import { expect, test } from "@playwright/test";
 import { PASSWORD, codeFor, secretOf, stepAt } from "./helpers/totp";
@@ -75,6 +75,7 @@ test("owner manages the catalog through the real browser, API, and database", as
 
   for (const width of [375, 768, 1440]) {
     await page.setViewportSize({ width, height: 950 });
+    await waitForNavigationBreakpoint(page);
     const layout = await page.evaluate(() => ({
       scrollWidth: document.documentElement.scrollWidth,
       overflow: Array.from(document.querySelectorAll<HTMLElement>("body *"))

@@ -1,5 +1,16 @@
 import { expect, type Page, type TestInfo } from "@playwright/test";
 
+/** Wait for React navigation to match the viewport before interacting or measuring. */
+export async function waitForNavigationBreakpoint(page: Page) {
+  const width = page.viewportSize()?.width ?? await page.evaluate(() => window.innerWidth);
+  const trigger = page.locator(width < 1280
+    ? 'button[aria-controls="compact-navigation"]'
+    : 'button[aria-controls="account-dropdown"]');
+  // setViewportSize can resolve before the matchMedia listener updates React.
+  await expect(trigger).toBeVisible();
+  return trigger;
+}
+
 /** Capture the real UI at both supported sizes, without altering application state. */
 export async function captureUi(
   page: Page,
@@ -15,9 +26,7 @@ export async function captureUi(
       else await expect(brand).toBeHidden();
     }
     if (await page.locator(".account-header").count()) {
-      await expect(page.locator(width < 1280
-        ? 'button[aria-controls="compact-navigation"]'
-        : 'button[aria-controls="account-dropdown"]')).toBeVisible();
+      await waitForNavigationBreakpoint(page);
     }
     if (await page.evaluate(() => document.documentElement.scrollWidth) > width) {
       await info.attach("overflow-bounds", { contentType: "application/json", body: JSON.stringify(
@@ -41,12 +50,7 @@ export async function captureUi(
 /** Reveal a shell link through the responsive navigation, preserving real clicks. */
 export async function navigationLink(page: Page, path: string) {
   const width = page.viewportSize()?.width ?? await page.evaluate(() => window.innerWidth);
-  const trigger = page.locator(width < 1280
-    ? 'button[aria-controls="compact-navigation"]'
-    : 'button[aria-controls="account-dropdown"]');
-  // ResizeObserver/media-query updates can settle after setViewportSize resolves.
-  // Wait for the expected breakpoint rather than inspecting the previous layout.
-  await expect(trigger).toBeVisible();
+  const trigger = await waitForNavigationBreakpoint(page);
   if (width < 1280 && await trigger.getAttribute("aria-expanded") !== "true") await trigger.click();
   const link = page.locator(`.account-header nav a[href="${path}"]`);
   if (!await link.isVisible()) {
