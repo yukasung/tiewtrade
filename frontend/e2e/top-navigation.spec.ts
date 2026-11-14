@@ -499,12 +499,45 @@ test("dense workspace fills the real chart and preserves it across breakpoints",
   await expect(page.locator('.trade-workspace-form button[type="submit"]')).toBeDisabled();
   for (const width of [1024, 1440, 2553]) {
     await page.setViewportSize({ width, height: width === 2553 ? 1240 : 900 });
-    const bar = (await page.locator(".trade-workspace-bar").boundingBox())!;
-    const form = (await page.locator(".trade-workspace-form").boundingBox())!;
-    const workspace = (await page.locator(".trade-workspace").boundingBox())!;
-    expect(Math.abs(bar.y - form.y)).toBeLessThanOrEqual(1);
-    expect(Math.abs(form.x - (bar.x + bar.width) - 4)).toBeLessThanOrEqual(1);
-    expect(Math.abs(form.y + form.height - (workspace.y + workspace.height - 1))).toBeLessThanOrEqual(1);
+    // Read one layout snapshot; separate browser calls can straddle resize updates.
+    const { bar, form, workspace } = await page.evaluate(() => {
+      const box = (selector: string) => {
+        const rect = document.querySelector(selector)!.getBoundingClientRect();
+        return { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
+      };
+      return { bar: box(".trade-workspace-bar"), form: box(".trade-workspace-form"),
+        workspace: box(".trade-workspace") };
+    });
+    try {
+      expect(Math.abs(bar.y - form.y)).toBeLessThanOrEqual(1);
+      expect(Math.abs(form.x - (bar.x + bar.width) - 4)).toBeLessThanOrEqual(1);
+      expect(Math.abs(form.y + form.height - (workspace.y + workspace.height - 1))).toBeLessThanOrEqual(1);
+    } catch (error) {
+      // Observe only after failure so evidence collection cannot delay successful assertions.
+      const snapshot = await page.evaluate(() => ({
+        timestamp: new Date().toISOString(),
+        performanceTime: window.performance.now(),
+        viewport: { width: window.innerWidth, height: window.innerHeight, devicePixelRatio: window.devicePixelRatio },
+        nodes: [".trade-workspace", ".trade-workspace-bar", ".trade-workspace-form", ".account-header"]
+          .map(selector => {
+            const element = document.querySelector<HTMLElement>(selector);
+            if (!element) return { selector, missing: true };
+            const rect = element.getBoundingClientRect();
+            const style = window.getComputedStyle(element);
+            return { selector, rect: { x: rect.x, y: rect.y, width: rect.width, height: rect.height },
+              clientHeight: element.clientHeight, scrollHeight: element.scrollHeight,
+              style: { display: style.display, gridTemplateRows: style.gridTemplateRows,
+                height: style.height, minHeight: style.minHeight, rowGap: style.rowGap,
+                paddingTop: style.paddingTop, paddingBottom: style.paddingBottom,
+                borderTopWidth: style.borderTopWidth, borderBottomWidth: style.borderBottomWidth,
+                overflowY: style.overflowY } };
+          }),
+      })).catch(() => ({ unavailable: true }));
+      await info.attach("live-form-geometry-failure", { contentType: "application/json",
+        body: JSON.stringify({ requestedWidth: width, original: { bar, form, workspace }, snapshot }),
+      }).catch(() => { /* Preserve the original assertion if attachment storage fails. */ });
+      throw error;
+    }
   }
   await page.setViewportSize({ width: 375, height: 900 });
   await expect(page.locator(".account-current-mode")).toHaveText("Live");

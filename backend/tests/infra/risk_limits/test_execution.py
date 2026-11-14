@@ -540,7 +540,7 @@ async def test_corrupt_derived_position_cache_fails_closed_without_blocking_sell
     from tiewtrade.core.risk_limits import RiskReason
     from tiewtrade.infra.risk_limits.monitor import replay_monitor
     from tiewtrade.infra.risk_limits.storage import read_setting
-    from tiewtrade.infra.risk_limits.views import current_evaluation
+    from tiewtrade.infra.risk_limits.views import current_evaluation, read_evidence
 
     async with runtime(
         api_engine, engine_engine, migrator_engine, owner, wallet, limit="1000"
@@ -555,6 +555,12 @@ async def test_corrupt_derived_position_cache_fails_closed_without_blocking_sell
         async with user_session(api_engine, owner) as session:
             value = await current_evaluation(session, await read_setting(session, scope))
             assert value.reason is RiskReason.SOURCE_UNAVAILABLE and value.loss is None
+            evidence = await read_evidence(session, await read_setting(session, scope))
+            assert evidence.evaluation.reason is RiskReason.SOURCE_UNAVAILABLE
+            assert any(
+                price.price_at(evidence.evaluation.evaluated_at) is not None
+                for price in evidence.prices
+            )
         await sources.price("90")
         sell = replace(
             intent(owner, wallet.episode_id),
