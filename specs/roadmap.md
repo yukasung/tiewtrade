@@ -1546,3 +1546,33 @@ Owner-authorized local lock diagnosis complete: exact failed test once on fresh 
 [Owner-authorized CI observer](features/2026-11-02-tp-sl/scheduler-ci-lock-observer-amendment.md) implemented: PREPARING-only read-only bounded lock snapshots/private artifact, original assertions and builder timeouts unchanged. Local19cases/real-DB control modes Passed, final15observer regressions/static checksPassed, CI policy58Passed/security policy20Passed1optionalSkipped. Related local receipts combined in same PR66; new candidate required CI pending. Prior failure/root-cause uncertainty retained; stop/report after one candidate, no merge or F17 Completed claim.
 
 3426b28 CI failed before tests from invalid runner context at job env. Owner approved A env-placement correction to existing pytest step; actionlint1.7.12/diff checkPassed, original test/production unchanged. Same PR66 one new candidate CI pending; earlier scheduler failure and all F17 Full Validation/dependency gates retained. No merge authorized.
+
+
+## Paper Spot Bot Panel — 2026-11-13
+
+สถานะ: **Code review R1–R3 fixed — refactored; PR69 prior candidate CI/Security Passed; main60dd945 integrated, final candidate CI pending**.
+[requirements](features/2026-11-13-paper-spot-bot-panel/requirements.md),
+[plan](features/2026-11-13-paper-spot-bot-panel/plan.md) และ
+[validation](features/2026-11-13-paper-spot-bot-panel/validation.md) Approved รวม RQ-13/V11–V12.
+แผง Grid Close System + งบร่าง + Start disabled แทนฟอร์ม BUY; มี SELL-only modal
+ใต้กราฟเพื่อรักษาช่องทางลดสถานะตาม amendment และคง recovery/TP-SL/STOP เดิม.
+[หลักฐาน](features/2026-11-13-paper-spot-bot-panel/evidence/implementation-checkpoint.md):
+targeted unit/static ผ่าน, financial E2E 20 กรณีผ่าน, UI 16 combinations และ chart regression ผ่าน.
+Branch `feature/paper-spot-bot-panel` ฐาน navigation `4a9b46a`; ยังไม่ commit/push/merge
+; owner preview สลับมายัง worktree นี้ตามคำสั่งแล้ว. V10/owner visual acceptance และ dependency workflow ยัง pending.
+F-17 validation/dependencies ไม่เปลี่ยน; F-20/F-21 ยังไม่เสร็จจากงาน UI นี้.
+[แก้ findings R1–R3](features/2026-11-13-paper-spot-bot-panel/evidence/review-fixes.md) แล้ว: 73 unit tests และ browser recovery/risk/long-modal ผ่าน.
+[Refactor checkpoint](features/2026-11-13-paper-spot-bot-panel/evidence/refactor-checkpoint.md): 80 unit tests, 3 real-DB browser tests และ lint/typecheck ผ่าน.
+ขั้นถัดไป: รอคำสั่ง commit/push เพื่อดำเนิน publication และ required CI; ยังไม่ merge.
+
+Paper Spot publication update: [PR69](https://github.com/yukasung/tiewtrade/pull/69), candidate `f239ef4`, stacked on unmerged navigation. Backend/API contract/Docker/Security Passed; frontend setup and 3 browser cases Failed. V10 Failed; [correction proposal](features/2026-11-13-paper-spot-bot-panel/publication-ci-corrections-proposal.md) not implemented. Owner authorized corrections. Dependency14c62e6 integrated; targeted67 unit/3 browser tests and lint/types Passed. New CI candidate pending; wallet overflow Linux confirmation remains pending. No merge.
+
+Paper Spot corrected publication `63e8c2b`: CI/Security Passed (frontend709, browser59, backend5006). Navigation14c62e6 still unmerged; next is navigation publication/review and approved merge workflow, followed by PR69 retarget/final main checks. No merge performed; owner acceptance and F17/F20/F21 statuses unchanged.
+
+
+Paper Spot main-base integration2026-11-14: owner instructed continuing after
+PR70/71 merge. main60dd945 integrated without conflicts; targeted107 tests and
+frontend lint/types Passed. PR69 retarget/publication and final required CI are
+in progress; no merge authorization, owner acceptance unchanged. Prior CI evidence
+remains tied to its candidate; unresolved historical indicator lock timeout is
+not claimed fixed by this frontend integration.

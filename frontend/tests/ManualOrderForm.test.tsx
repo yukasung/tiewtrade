@@ -84,3 +84,20 @@ it("submits bracket prices as strings and warns before permanently releasing sel
   expect(onSubmit.mock.calls[1]?.[0]).toMatchObject({ protection_allocations: [{ protection_id: "g", expected_revision: 3, quantity: "0.4" }] });
   expect(onSubmit.mock.calls[1]?.[0]).not.toHaveProperty("protection");
 });
+it("fixed SELL cannot emit a BUY and retains exact MARKET/LIMIT payloads and safety gates", () => {
+  const onSubmit = vi.fn();
+  const props = { base: "BTC", bases: ["BTC"], onBase: () => {}, scope: { expected_wallet_id: "w", expected_episode_id: "e" }, canSubmit: (side: "BUY" | "SELL") => side === "SELL", onSubmit };
+  const view = render(<ManualOrderForm {...props} fixedSide="SELL"/>);
+  expect(screen.queryByRole("tab", { name: "BUY" })).toBeNull();
+  fireEvent.change(screen.getByLabelText(`${t("quantity")} (BTC)`), { target: { value: "0.100000000000000001" } });
+  fireEvent.submit(screen.getByLabelText(`${t("quantity")} (BTC)`).closest("form")!);
+  expect(onSubmit.mock.calls[0]?.[0]).toEqual({ ...props.scope, base: "BTC", quote: "USDT", side: "SELL", kind: "MARKET", base_quantity: "0.100000000000000001" });
+  fireEvent.click(screen.getByRole("tab", { name: "LIMIT" }));
+  fireEvent.change(screen.getByLabelText(`${t("quantity")} (BTC)`), { target: { value: "0.2" } });
+  fireEvent.change(screen.getByLabelText(t("price")), { target: { value: "123.000000000000000001" } });
+  fireEvent.submit(screen.getByLabelText(t("price")).closest("form")!);
+  expect(onSubmit.mock.calls[1]?.[0]).toMatchObject({ side: "SELL", kind: "LIMIT", base_quantity: "0.2", limit_price: "123.000000000000000001", time_in_force: "GTC" });
+  view.rerender(<ManualOrderForm {...props} fixedSide="SELL" protectionsReady={false}/>);
+  fireEvent.submit(screen.getByLabelText(t("price")).closest("form")!);
+  expect(onSubmit).toHaveBeenCalledTimes(2);
+});

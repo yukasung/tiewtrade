@@ -7,6 +7,7 @@ export function Modal({
   titleId,
   closeLabel,
   returnFocusRef,
+  scrollable = false,
   children,
 }: {
   isOpen: boolean;
@@ -14,6 +15,7 @@ export function Modal({
   titleId: string;
   closeLabel: string;
   returnFocusRef?: RefObject<HTMLElement | null>;
+  scrollable?: boolean;
   children: ReactNode;
 }) {
   const dialog = useRef<HTMLDivElement>(null);
@@ -70,7 +72,7 @@ export function Modal({
         aria-modal="true"
         aria-labelledby={titleId}
         tabIndex={-1}
-        className="relative w-full max-w-126.75 rounded-3xl bg-white p-6 shadow-theme-xl lg:p-10 dark:bg-gray-900"
+        className={`relative w-full max-w-126.75 rounded-3xl bg-white p-6 shadow-theme-xl lg:p-10 dark:bg-gray-900 ${scrollable ? "max-h-[calc(100dvh-2rem)] overflow-y-auto" : ""}`}
       >
         {children}
       </div>

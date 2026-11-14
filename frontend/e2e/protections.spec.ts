@@ -1,9 +1,10 @@
+import { postFixtureBuy, openSell, submitSell } from "./helpers/paperOrders";
 import { mkdirSync } from "node:fs";
 import { expect, test } from "./helpers/test";
 import type { Page } from "@playwright/test";
 import { PASSWORD } from "./helpers/totp";
 const api = "http://127.0.0.1:18017/__e2e/manual";
-const evidence = "../specs/features/2026-11-02-tp-sl/evidence/manual-acceptance-fix/ui";
+const evidence = "test-results/paper-bot-panel/protections";
 async function setLanguage(page: Page, locale: "th" | "en") {
   await page.evaluate(async language => {
     const path = "/src/manualOrderMessages.ts";
@@ -33,8 +34,7 @@ async function reloadPaperPair(page: Page) {
     wallet_id: expect.any(String), episode_id: expect.any(String),
   } });
   // The wallet scope must render before filling: its first arrival remounts the form.
-  await expect(page.locator('[aria-labelledby="manual-form-heading"] dl > div').first()
-    .locator("dd .market-value")).toBeVisible();
+  await expect(page.locator('[aria-labelledby="paper-bot-title"] dd .market-value')).toBeVisible();
 
 }
 async function register(page: Page, email = `manual-${Date.now()}@example.com`) {
@@ -53,18 +53,9 @@ async function fresh(page: Page) {
   expect((await page.request.post(`${api}/source`)).status()).toBe(204);
   await reloadPaperPair(page);
 }
-async function submitPaperOrder(page: Page) {
-  const submit = page.getByRole("button", { name: "ส่งออเดอร์ Paper", exact: true });
-  await expect(submit).toBeEnabled();
-  await submit.click();
-}
-async function send(page: Page, amount: string, refresh = true) {
+async function send(page: Page, amount: string, refresh = true, options: { limit?: string; tp?: string; sl?: string } = {}) {
   if (refresh) await fresh(page);
-  await page.getByLabel(/งบซื้อ|จำนวนเหรียญ Base/).fill(amount);
-  const response = page.waitForResponse(r => r.url().endsWith("/api/paper/orders") && r.request().method() === "POST");
-  await submitPaperOrder(page);
-  const result = await response; expect(result.status()).toBe(202);
-  return await result.json() as { request_id: string; order_id: string; idempotency_key: string };
+  return postFixtureBuy(page, amount, options);
 }
 async function drive(page: Page, owner: string, request: string, fill = false) {
   const response = await page.request.post(`${api}/drive`, { data: { user_id: owner, request_id: request, fill } });
@@ -85,9 +76,7 @@ async function waitResolved(page: Page) {
 test("bracket fill, reload, replace and cancel use durable production requests", async ({ page }) => {
   expect((await page.request.post("http://127.0.0.1:18017/__e2e/protections/enable")).status()).toBe(204);
   const owner = await register(page);
-  await page.getByLabel("ราคา Take Profit", { exact: true }).fill("110");
-  await page.getByLabel("ราคา Stop Loss", { exact: true }).fill("90");
-  const entry = await send(page, "100", false);
+  const entry = await send(page, "100", false, { tp: "110", sl: "90" });
   expect(await drive(page, owner, entry.request_id, true)).toMatchObject({ order_state: "FILLED" });
   const tick = async () => {
     const response = await page.request.post("http://127.0.0.1:18017/__e2e/protections/drive", { data: { user_id: owner } });
@@ -154,9 +143,7 @@ test("lost protection receipt and reload recover the same server request", async
 test("protection controls support Thai and English keyboard focus; Live sends no mutation", async ({ page }) => {
   expect((await page.request.post("http://127.0.0.1:18017/__e2e/protections/enable")).status()).toBe(204);
   const owner = await register(page);
-  await page.getByLabel("ราคา Take Profit", { exact: true }).fill("110");
-  await page.getByLabel("ราคา Stop Loss", { exact: true }).fill("90");
-  const entry = await send(page, "100", false);
+  const entry = await send(page, "100", false, { tp: "110", sl: "90" });
   expect(await drive(page, owner, entry.request_id, true)).toMatchObject({ order_state: "FILLED" });
   expect((await page.request.post("http://127.0.0.1:18017/__e2e/protections/drive", { data: { user_id: owner } })).ok()).toBe(true);
   await page.reload();
@@ -209,11 +196,7 @@ test("partial bracket entry triggers one exit, cancels entry remainder and close
   const prior = await send(page, "1000", false);
   expect(await drive(page, owner, prior.request_id, true)).toMatchObject({ order_state: "FILLED" });
   await waitResolved(page); await fresh(page);
-  await page.getByRole("tab", { name: "LIMIT", exact: true }).click();
-  await page.getByLabel("ราคา Limit (USDT)", { exact: true }).fill("100");
-  await page.getByLabel("ราคา Take Profit", { exact: true }).fill("110");
-  await page.getByLabel("ราคา Stop Loss", { exact: true }).fill("90");
-  const entry = await send(page, "11", false);
+  const entry = await send(page, "11", false, { limit: "100", tp: "110", sl: "90" });
   expect(await drive(page, owner, entry.request_id, true)).toMatchObject({ order_state: "PARTIALLY_FILLED" });
   const endpoint = "http://127.0.0.1:18017/__e2e/protections";
   const tick = await page.request.post(`${endpoint}/drive`, { data: { user_id: owner } });
@@ -274,14 +257,16 @@ test("selected sale reduces two protections once and canceled sale stays unprote
   const before = await (await page.request.get(`/api/paper/protections?episode_id=${snapshot.wallet.episode_id}`)).json() as { protections: Array<{ protection_id: string; quantity: string }> };
   expect(before.protections).toHaveLength(2);
   await fresh(page);
-  await page.getByRole("tab", { name: "SELL", exact: true }).click();
+  await openSell(page);
   await page.getByRole("tab", { name: "LIMIT", exact: true }).click();
   await page.getByLabel("ราคา Limit (USDT)", { exact: true }).fill("110");
   for (const group of before.protections) {
     await page.locator(`[id="release-${group.protection_id}"]`).fill(group.quantity === "0.4" ? "0.1" : "0.101");
   }
   await expect(page.getByText("เหรียญส่วนที่เลือกขายจะออกจาก TP/SL เดิม เมื่อยกเลิกขาย ส่วนที่ขายไม่ออกจะไม่มี TP/SL ต้องตั้งใหม่เอง", { exact: true })).toBeVisible();
-  const sale = await send(page, "0.5", false);
+  await page.getByLabel("จำนวนเหรียญ Base (BTC)").fill("0.5");
+  const saleResponse = await submitSell(page); expect(saleResponse.status()).toBe(202);
+  const sale = await saleResponse.json() as { request_id: string; order_id: string };
   expect(await drive(page, owner, sale.request_id)).toMatchObject({ order_state: "ACCEPTED" });
   await waitResolved(page);
   const orderRow = page.getByRole("row").filter({ hasText: "รับออเดอร์แล้ว" });
@@ -331,9 +316,7 @@ test("failed standalone request warns without selling assets and survives reload
 test("net-fee protection displays executable coverage and step residual from the real API", async ({ page }) => {
   expect((await page.request.post("http://127.0.0.1:18017/__e2e/protections/enable")).status()).toBe(204);
   const owner = await register(page);
-  await page.getByLabel("ราคา Take Profit", { exact: true }).fill("110");
-  await page.getByLabel("ราคา Stop Loss", { exact: true }).fill("90");
-  const entry = await send(page, "100", false);
+  const entry = await send(page, "100", false, { tp: "110", sl: "90" });
   expect(await drive(page, owner, entry.request_id, true)).toMatchObject({ order_state: "FILLED" });
   expect((await page.request.post("http://127.0.0.1:18017/__e2e/protections/coarse-step", { data: { user_id: owner } })).status()).toBe(204);
   expect((await page.request.post("http://127.0.0.1:18017/__e2e/protections/drive", { data: { user_id: owner } })).ok()).toBe(true);
