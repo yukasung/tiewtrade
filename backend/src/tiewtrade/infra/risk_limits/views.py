@@ -97,6 +97,7 @@ async def read_evidence(
     unknown = RiskEvidence(unavailable, None, (), enabled)
     if setting.scope.mode is TradingMode.LIVE or not row["publication_enabled"]:
         return unknown
+    prices: tuple[RiskPrice, ...] = ()
     try:
         frame = (
             None
@@ -194,7 +195,8 @@ async def read_evidence(
             pause_since is not None and now - pause_since >= timedelta(minutes=5),
         )
     except (RiskUnavailableError, MoneyError, PositionError, ValueError, KeyError, TypeError):
-        return unknown
+        # A corrupt financial cache must not discard independently validated prices.
+        return RiskEvidence(unavailable, None, prices, enabled)
 
 
 async def current_evaluation(session: UserSession, setting: RiskSetting) -> RiskEvaluation:
