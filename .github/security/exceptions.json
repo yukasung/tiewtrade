@@ -792,6 +792,14 @@
       "reason": "Verified SHA256 fingerprint of public generated contract/type source, not a credential.",
       "approval": "Owner explicitly approved Option A for the six exact NC-F17-SEC-01 identities on 2026-11-08; see specs/features/2026-11-02-tp-sl/security-checksum-publication-proposal.md",
       "evidence": "specs/features/2026-11-02-tp-sl/evidence/manual-acceptance-fix/security-publication/checksum-verification.json identity 0ecbcfe7eb1ffb89253e25c2473e4afba2bee3258e13fe1fd59a240465c2b60f"
+    },
+    {
+      "kind": "secret",
+      "identity": "c42e41222935f5834421eb5dac76023447c6a18ccb698c928a824a7281734252",
+      "resolution": "false_positive",
+      "reason": "The matched value names an ephemeral connection.info metadata slot in the opt-in test observer; it is not a credential and is never used for authentication.",
+      "approval": "Owner approved A: one exact false-positive exception and continuation through merge on 2026-11-15; see specs/features/2026-11-02-tp-sl/publication-observer-metadata-exception-proposal.md",
+      "evidence": "specs/features/2026-11-02-tp-sl/publication-observer-metadata-exception-proposal.md; generic-api-key, commit 9f7c376bfd504b93bb297566a5a46e85938f7f74, backend/tests/infra/execution_market/profile_commit_observation.py:18"
     }
   ]
 }
