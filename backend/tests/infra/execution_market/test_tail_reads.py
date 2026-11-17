@@ -238,6 +238,14 @@ async def test_preflight_failure_never_seeds_and_reused_output_is_rejected(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    capture = tail.campaign.capture
+
+    def capture_without_schema(*command: str) -> str:
+        if "pg_dump" in command:
+            return "-- schema capture is irrelevant to preflight rejection"
+        return capture(*command)
+
+    monkeypatch.setattr(tail.campaign, "capture", capture_without_schema)
     seed = AsyncMock()
     monkeypatch.setattr(workload, "seed_owners", seed)
     monkeypatch.setattr(

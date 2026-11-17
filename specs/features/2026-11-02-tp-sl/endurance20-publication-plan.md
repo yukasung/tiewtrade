@@ -36,3 +36,20 @@ invocation referenced a nonexistent test filename; a subsequent invocation omitt
 environment and produced configuration errors. Both invalid invocations retained as
 local diagnostics, not acceptance failures; final run used the existing isolated runner.
 No financial/runtime behavior changes or workload repeats. Candidate2 may publish.
+
+## Candidate2 CI test-fixture correction — 2026-11-17
+
+6b2b883 Security/E2E/frontend/contracts/container Passed. Backend full regression:
+5641Passed/7Failed. Six legacy fake argparse namespaces omit observer_w3_prefix and
+raise before the intended failure/cleanup assertion. One preflight-failure unit case
+attempts local-named Docker schema capture before reaching its mocked preflight.
+Delegated correction: default flagFalse in that shared fake namespace; stub only schema
+capture in that preflight-failure case while delegating other capture calls. Keep real-DB
+fixture, seed-not-called/result/duplicate-output assertions and all safety checks. No
+production or workload behavior change. Run both modules with actual isolated DB,
+Ruff/format/mypy, publish candidate3 and monitor once; third same-gate failure must stop
+for review per AGENTS.md. Historical candidate failures retained.
+
+Candidate3 local validation: both affected modules Passed on a fresh owned PostgreSQL
+DB, cleanup removed with0connections; Ruff/format/mypyPassed for2testfiles. No source
+runtime changes; existing W3/W4 and candidate2 production proofs remain applicable.
