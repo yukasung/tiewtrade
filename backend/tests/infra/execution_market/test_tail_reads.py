@@ -17,6 +17,7 @@ from sqlalchemy.ext.asyncio import AsyncEngine
 from tests.infra.execution_market import profile_internal as internal
 from tests.infra.execution_market import profile_tail_reads as tail
 from tests.infra.execution_market import profile_workload as workload
+from tests.infra.execution_market import remaining_paper_campaign as campaign
 from tests.infra.execution_market.profile_parent_poll import ParentPollGate
 from tests.infra.execution_market.test_evidence import source_record
 from tests.infra.execution_market.test_publisher_clock_recovery import financial_state
@@ -238,14 +239,14 @@ async def test_preflight_failure_never_seeds_and_reused_output_is_rejected(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    capture = tail.campaign.capture
+    capture = campaign.capture
 
     def capture_without_schema(*command: str) -> str:
         if "pg_dump" in command:
             return "-- schema capture is irrelevant to preflight rejection"
         return capture(*command)
 
-    monkeypatch.setattr(tail.campaign, "capture", capture_without_schema)
+    monkeypatch.setattr(campaign, "capture", capture_without_schema)
     seed = AsyncMock()
     monkeypatch.setattr(workload, "seed_owners", seed)
     monkeypatch.setattr(

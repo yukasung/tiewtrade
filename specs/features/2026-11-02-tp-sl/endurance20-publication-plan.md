@@ -53,3 +53,27 @@ for review per AGENTS.md. Historical candidate failures retained.
 Candidate3 local validation: both affected modules Passed on a fresh owned PostgreSQL
 DB, cleanup removed with0connections; Ruff/format/mypyPassed for2testfiles. No source
 runtime changes; existing W3/W4 and candidate2 production proofs remain applicable.
+
+## Candidate3 stop and proposed next scope — 2026-11-17
+
+f6f1dcd backend failed full mypy before tests: test_tail_reads.py refers to unexported
+profile_tail_reads.campaign (lines241/248), causing no-any-return at246 as well.
+Scoped follow-imports=silent again omitted the imported-module export rule; it was
+insufficient and should not have been used as replacement for configured full mypy.
+Three candidate failures reached: STOP under AGENTS.md การทำงานให้เร็ว before another
+candidate. PR76 remains unmerged; no acceptance/security criterion relaxation.
+
+Recommended optionA: import remaining_paper_campaign directly in test_tail_reads and
+patch that same module's capture; no assertion/runtime change. Run55affected tests on
+isolated migrated DB plus Ruff/format and full configured727-file mypy before push.
+Then one replacement required CI candidate, merge/postmerge only if all gates pass.
+AlternativeB: retain current PR/blocker and defer publication. No production change,
+workload rerun or four-hour rerun needed. Owner decision pending; no patch yet.
+
+Owner approved optionA: direct import correction, targeted tests, full configured mypy,
+then one new CI candidate through merge/postmerge when all gates pass. Record before
+editing; no assertion, production or acceptance change.
+
+OptionA checks Passed before push:55targeted tests on owned migrated DB with cleanup,
+Ruff/format and full backend-configured mypy727files. Diff is direct import and same
+module patch target only. Original assertions and production inventory unchanged.
