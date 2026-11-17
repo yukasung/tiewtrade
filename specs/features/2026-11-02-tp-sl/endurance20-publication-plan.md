@@ -18,3 +18,21 @@ four-hour rerun. Required CI provides final combined regression proof. Monitor c
 through merge and postmerge, analyze failures within delegated scope; retain explicit
 safety/three-failure stop rules and owner-review requirement for security exceptions.
 No activation/Live, new release waiver or completed F17 claim. No new feature scope.
+
+## Candidate1 CI correction — 2026-11-17
+
+4bcbad3 backend stopped at full mypy before tests: existing profile_diagnostics dynamic
+kwargs became ambiguous after _run gained callbacks; READY02 test imported internal
+aliases not explicitly exported. Delegated fix: explicit conditional _run call preserving
+absence of parent_runtime when disabled, direct os/profile_workload imports in test.
+No runtime algorithm, assertion or acceptance change. Check affected diagnostic/readiness
+tests and full configured mypy to cover import/re-export rules omitted by scoped silent
+checks, then publish replacement. Security/frontend/contracts/container already Passed;
+final candidate still must get fresh required CI. No workload rerun is indicated.
+
+Correction validation: full configured mypy727files Passed;52diagnostic/readiness tests
+Passed on owned migrated PostgreSQL with cleanup, Ruff/format Passed. A first local
+invocation referenced a nonexistent test filename; a subsequent invocation omitted DB
+environment and produced configuration errors. Both invalid invocations retained as
+local diagnostics, not acceptance failures; final run used the existing isolated runner.
+No financial/runtime behavior changes or workload repeats. Candidate2 may publish.

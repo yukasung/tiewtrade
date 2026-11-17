@@ -1,12 +1,14 @@
 """W4 refreshes only restored market state before legacy recovery."""
 
 import asyncio
+import os
 from unittest.mock import AsyncMock, Mock
 
 import pytest
 from sqlalchemy.engine import make_url
 
 from tests.infra.execution_market import profile_internal_restore as subject
+from tests.infra.execution_market import profile_workload
 from tiewtrade.infra.db import DatabaseRole
 
 
@@ -41,8 +43,8 @@ async def test_restored_publisher_target_lifecycle_and_primary(
             raise error
         return {"expired_before": 1, "expired_after": 0, "rounds": 1}
 
-    monkeypatch.setattr(subject.f15, "market_publisher", publish)
-    monkeypatch.setattr(subject.f15, "wait_publisher_ready", ready)
+    monkeypatch.setattr(profile_workload, "market_publisher", publish)
+    monkeypatch.setattr(profile_workload, "wait_publisher_ready", ready)
     original = AsyncMock(side_effect=recover)
     monkeypatch.setattr(subject, "_recover_legacy_claims", original)
     target = Mock(
@@ -55,7 +57,7 @@ async def test_restored_publisher_target_lifecycle_and_primary(
     else:
         assert (await subject.recover_legacy_claims(Mock(), target, Mock()))["expired_after"] == 0
     assert make_url(factory.call_args.args[0]).database == target.url.database
-    assert subject.os.environ[DatabaseRole.MARKET_DATA.url_variable] == source
+    assert os.environ[DatabaseRole.MARKET_DATA.url_variable] == source
     assert stopped.is_set()
     original.assert_awaited_once()
     market.dispose.assert_awaited_once()
