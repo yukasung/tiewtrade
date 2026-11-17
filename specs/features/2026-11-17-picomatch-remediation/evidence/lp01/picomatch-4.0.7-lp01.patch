@@ -1,0 +1,54 @@
+--- a/lib/parse.js
++++ b/lib/parse.js
+@@ -284,6 +284,40 @@
+   return depth;
+ };
+ 
++// Local LP-01 prototype: reuse the risky-pattern literal fallback.
++// Scan once without regex backtracking; escapes, quotes and brackets are literals.
++const hasUnescapedStar = branch => {
++  let escaped = false;
++  let quote = false;
++  let bracket = 0;
++
++  for (const ch of branch) {
++    if (escaped) {
++      escaped = false;
++      continue;
++    }
++    if (ch === '\\') {
++      escaped = true;
++      continue;
++    }
++    if (ch === '"') {
++      quote = !quote;
++      continue;
++    }
++    if (quote) continue;
++    if (ch === '[') {
++      bracket++;
++      continue;
++    }
++    if (ch === ']' && bracket > 0) {
++      bracket--;
++      continue;
++    }
++    if (bracket === 0 && ch === '*') return true;
++  }
++  return false;
++};
++
+ const analyzeRepeatedExtglob = (body, options) => {
+   if (options.maxExtglobRecursion === false) {
+     return { risky: false };
+@@ -341,6 +375,10 @@
+     return combinable
+       ? { risky: true, safeOutput: buildCharClassStar([...new Set(safeChars)]) }
+       : { risky: true };
++  }
++
++  if (branches.length === 1 && hasUnescapedStar(branches[0])) {
++    return { risky: true };
+   }
+ 
+   return { risky: false };

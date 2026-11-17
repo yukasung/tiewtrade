@@ -1,0 +1,18 @@
+{
+  "status": "PROTOTYPE_TEST_FAILED_REVIEW_PENDING",
+  "version": "4.0.7",
+  "registry_integrity": "sha512-qcJu88Q2IWqJsDD529JKMdwGm/dvInW4HvQnRwiH9JtihJvzGOscDtHE3x1pBKeUOTysQ8kVmLnJ2kJu7yhcGA==",
+  "archive_sha256": "697b463be3cdbd9ffc8f4194fd5019a69ddf95875fb703d78b2b115cc9e740a8",
+  "original_parser_sha256": "4e1e05447668aa1e94366c5516a2bcd8f5fff800cc92b1d0cd7d77703b8618c4",
+  "patched_parser_sha256": "dcf82d764d1f53067df38e843918f022ba8fe9b1536c7aa1c051c7ca76d7065f",
+  "patch_sha256": "fe95388813af6cd8454482119241d68791cd1127077c17089c5ba28828587c7b",
+  "license_sha256": "d0cd141b0c322fded5dfad1d4645bb2fedfc05b7321fe1009469638190d59ef9",
+  "changed_package_files": [
+    "lib/parse.js"
+  ],
+  "package_version_unchanged": true,
+  "passed_cases": 19,
+  "failed_cases": [
+    4
+  ]
+}

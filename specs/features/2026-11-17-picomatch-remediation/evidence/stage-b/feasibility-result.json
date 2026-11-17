@@ -1,0 +1,69 @@
+{
+  "status": "BLOCKED",
+  "stage": "resolver",
+  "head": "d3c9eae91f8fd0c0de091862106a77873d72b6b5",
+  "started_monotonic": 53536.285814416,
+  "runtime": {
+    "node": "v22.23.4",
+    "npm": "10.9.9"
+  },
+  "app_baseline_sha256": {
+    "frontend/package.json": "fb82d1610bf75e7e2bf19bb67003dfd270f3c6a9c41b8e4defd30c5091eed043",
+    "frontend/package-lock.json": "7d0fb4ab31f0eece2d6fe8ef9e60ca96757c220a9b674e1162fd3c6a9965727b",
+    "frontend/vite.config.ts": "ac0acf344ffecebd5f028f2a2095102b6e6888ae9fda86741364c2eed24cf41f",
+    "frontend/vitest.config.ts": "965d55577c54a7d4371ce0c802822bd2a76a6de866c6789aad54e63d1bf78b43"
+  },
+  "artifact": {
+    "sha256": "9be37a4009537bea9b41adfa375adc7881cd4080e6fbe528a54772c3cd92615d",
+    "sha512": "YFvdvPpNzwYkf3VnVAmModugV3asKtOO16V+3IUxZoYoXgDUQYMxR/lbPvOkP+glvyRiOKsvSBrZmkS064MX+w==",
+    "source_sha256": "2e76e1f01b355131969a1fe4efeea3262b48a2e337f9b81b737ea52f1b5beb9d",
+    "patch_sha256": "3deda489c56725edce657078a5be9bcf9c1741f3a35b62ca3a97a59a8d621a01",
+    "identical_two_builds": true,
+    "files": 10,
+    "negative_checks_passed": [
+      "parser-tamper",
+      "wrong-version",
+      "extra-entry",
+      "absolute-path",
+      "parent-path",
+      "symlink"
+    ],
+    "manifest_license_unchanged": true,
+    "version": "4.0.7",
+    "file_contents_bound": true
+  },
+  "resolver_command": [
+    "npm",
+    "install",
+    "--package-lock-only",
+    "--ignore-scripts",
+    "--no-audit",
+    "--no-fund"
+  ],
+  "resolver_exit_code": 254,
+  "copied_frontend_files": 192,
+  "reason": "native npm override resolver rejected candidate; stopped after one attempt",
+  "seconds": 1.113266874999681,
+  "app_baseline_unchanged": true,
+  "resolver_log_raw_sha256": "362779b41262deb8f911c066917754f418620bdc062c6538fa503abdc7e67e2a",
+  "candidate_manifest_delta": {
+    "overrides": {
+      "picomatch": "file:./vendor/picomatch-4.0.7-lp03.tgz"
+    }
+  },
+  "resolver_rejection": "ENOENT: relative tarball path resolved under frontend/node_modules/fdir/vendor/",
+  "npm_support_conclusion": "Proposed relative override failed; general local-tarball support not established",
+  "frozen_install": "NOT_RUN",
+  "installed_caller_tests": "NOT_RUN",
+  "toolchain_checks": "NOT_RUN",
+  "scanner": "NOT_RUN; existing source/advisory blocker retained",
+  "stage_b_attempts": 1,
+  "generator_sha256": "5c7bcb64855f0417a4f5181548637ce030a1a0573728692648b1a14dd8d6bb8e",
+  "cleanup": {
+    "owned_scratch_removed": true,
+    "resolver_process_finished": true,
+    "servers_or_probes_started": false,
+    "app_installed_dependencies_modified": false,
+    "unrelated_services_touched": false
+  }
+}

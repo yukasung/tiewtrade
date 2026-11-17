@@ -1,0 +1,13 @@
+{
+  "status": "CORRECTED_PROTOTYPE_MATRIX_INCOMPLETE",
+  "version": "4.0.7",
+  "registry_integrity": "sha512-qcJu88Q2IWqJsDD529JKMdwGm/dvInW4HvQnRwiH9JtihJvzGOscDtHE3x1pBKeUOTysQ8kVmLnJ2kJu7yhcGA==",
+  "archive_sha256": "697b463be3cdbd9ffc8f4194fd5019a69ddf95875fb703d78b2b115cc9e740a8",
+  "original_parser_sha256": "4e1e05447668aa1e94366c5516a2bcd8f5fff800cc92b1d0cd7d77703b8618c4",
+  "patched_parser_sha256": "8d393c5144d892972241594f3c21d2b3a5a25166c67378219644409c7d55c87f",
+  "patch_sha256": "a12729d6b34f7dca80b5ba9a771525383596f7c96f29767416791f3d746f006f",
+  "license_sha256": "d0cd141b0c322fded5dfad1d4645bb2fedfc05b7321fe1009469638190d59ef9",
+  "raw_matrix_status": "FAILED",
+  "effective_matcher_cases": 0,
+  "runner_tests": 5
+}

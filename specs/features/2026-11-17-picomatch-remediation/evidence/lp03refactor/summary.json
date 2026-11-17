@@ -1,0 +1,20 @@
+{
+  "status": "PASSED_SCOPED_REFACTOR",
+  "date": "2026-11-18",
+  "unchanged_sha256": {
+    "bounded_probe.py": "60cee0ac89d6c01cd1e9980c7b48921c6d1ae0c05b42aba0a0ec9569b10d4959",
+    "probe-child.js": "a0443a94de19aeca5c510055e5b1927b17ff2969b223c413ef569777c63a369d",
+    "probe-matrix.json": "71c6e0ec4c2ef3eb85c4c0dd5f335b3a462ae74c5883c99b6aad0972c6378b9d",
+    "picomatch-4.0.7-lp03.patch": "3deda489c56725edce657078a5be9bcf9c1741f3a35b62ca3a97a59a8d621a01",
+    "LICENSE": "d0cd141b0c322fded5dfad1d4645bb2fedfc05b7321fe1009469638190d59ef9"
+  },
+  "matching_evidence_reused": "../lp03/probe-results.json",
+  "matching_cases_reused": 9,
+  "new_hostile_probes": 0,
+  "runner_test_methods": 6,
+  "ruff": "PASSED",
+  "format": "PASSED",
+  "mypy": "PASSED_2_FILES",
+  "app_or_policy_changed": false,
+  "source_test_sha256": "17e1812b7835d0bc5d2150405622844c54c170fba6640cd129510d6645f9e6d1"
+}

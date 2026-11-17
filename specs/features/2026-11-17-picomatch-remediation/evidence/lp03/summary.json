@@ -1,0 +1,15 @@
+{
+  "status": "PASSED_SCOPED_CORRECTIONS",
+  "matrix_cases": 9,
+  "seconds": 0.6373873339980491,
+  "runner_test_methods": 6,
+  "ruff": "PASSED",
+  "format": "PASSED",
+  "mypy": "PASSED_2_FILES",
+  "js_syntax": "PASSED",
+  "all_children_joined": true,
+  "independent_pids_absent": true,
+  "scratch_removed": true,
+  "app_or_security_registry_changed": false,
+  "next": "Owner refactor decision; no install or exception"
+}

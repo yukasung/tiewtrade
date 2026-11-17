@@ -1,0 +1,92 @@
+[
+  {
+    "id": 1,
+    "category": "ordinary-group-adversary",
+    "pattern": "+((*a|b))",
+    "subject": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa!",
+    "options": {},
+    "expected_patched": false,
+    "expected_original": null,
+    "compare_original": false
+  },
+  {
+    "id": 2,
+    "category": "ordinary-group-literal",
+    "pattern": "+((*a|b))",
+    "subject": "+((*a|b))",
+    "options": {},
+    "expected_patched": true,
+    "expected_original": true,
+    "compare_original": true
+  },
+  {
+    "id": 3,
+    "category": "ordinary-group-benign",
+    "pattern": "+((a|b))",
+    "subject": "abba",
+    "options": {},
+    "expected_patched": true,
+    "expected_original": true,
+    "compare_original": true
+  },
+  {
+    "id": 4,
+    "category": "nested-extglob-alternative",
+    "pattern": "+(@(a|b)*a)",
+    "subject": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa!",
+    "options": {},
+    "expected_patched": false,
+    "expected_original": null,
+    "compare_original": false
+  },
+  {
+    "id": 5,
+    "category": "top-level-alternative",
+    "pattern": "+(a|b)",
+    "subject": "abba",
+    "options": {},
+    "expected_patched": true,
+    "expected_original": true,
+    "compare_original": true
+  },
+  {
+    "id": 6,
+    "category": "quoted-pipe",
+    "pattern": "+(\"a|b\"*a)",
+    "subject": "a|baaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa!",
+    "options": {},
+    "expected_patched": false,
+    "expected_original": null,
+    "compare_original": false
+  },
+  {
+    "id": 7,
+    "category": "bracket-pipe",
+    "pattern": "+([|]*a)",
+    "subject": "|aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa!",
+    "options": {},
+    "expected_patched": false,
+    "expected_original": null,
+    "compare_original": false
+  },
+  {
+    "id": 8,
+    "category": "original-risk",
+    "pattern": "+(*a)",
+    "subject": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa!",
+    "options": {},
+    "expected_patched": false,
+    "expected_original": null,
+    "compare_original": false
+  },
+  {
+    "id": 9,
+    "category": "multi-branch-short-control",
+    "pattern": "+(*a|b)",
+    "subject": "aaa",
+    "options": {},
+    "expected_patched": true,
+    "expected_original": true,
+    "compare_original": true
+  }
+]

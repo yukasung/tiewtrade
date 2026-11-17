@@ -2187,3 +2187,23 @@ Both owned DBs/Redis independently confirmed absent. W4-only readiness harness a
 Incomplete. AWAKE01 four-hour proof unaffected. Next publication inventory/affected-proof
 mapping and final candidate required CI; F17 remains Pending Full Validation.
 Evidence: [W4 READY02 result](features/2026-11-02-tp-sl/evidence/endurance20-20261115/w4-ready02-result.md). No Git/CI in this execution scope.
+
+### Picomatch security investigation — 2026-11-17
+
+[Requirements/plan/validation](features/2026-11-17-picomatch-remediation/requirements.md)
+approved; [investigation](features/2026-11-17-picomatch-remediation/evidence/reachability.md)
+completed. Five verified locked source artifacts;5bounded probes:2benign correct,
+3timeouts/childrenjoined. No supported published patched release (latest4.0.7), no
+application/lock/policy edits. Security remediation Blocked, notCompleted. Static
+reachability partial; broad Vite dev-server binding prevents treating dev label as a
+runtime safety proof. Official fix preferred; vendor/local patch needs separate concrete
+approval and does not silently bypass OSV. F17 remains Pending Full Validation with
+original V18/V19/V20 dependencies. No workload rerun or Live activation.
+
+### Picomatch Stage B checkpoint — 2026-11-18
+
+Approved isolated packaging experiment stopped after one relative npm override failed:
+artifact integrity/determinism and6negative checksPassed, npm resolves tar path beneath
+fdir andreturnsENOENT. No supported install/caller acceptance proven, no policy exception
+or application install. Scratch removed; F17 remainsPending Full Validation. Evidence:
+features/2026-11-17-picomatch-remediation/evidence/stage-b/checkpoint.md.

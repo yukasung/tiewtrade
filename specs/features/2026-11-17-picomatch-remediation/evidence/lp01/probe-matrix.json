@@ -1,0 +1,208 @@
+[
+  {
+    "id": 1,
+    "category": "adversarial-star",
+    "pattern": "+(*)",
+    "subject": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/",
+    "options": {},
+    "expected_patched": false,
+    "expected_original": null,
+    "compare_original": false
+  },
+  {
+    "id": 2,
+    "category": "adversarial-star-a28",
+    "pattern": "+(*a)",
+    "subject": "aaaaaaaaaaaaaaaaaaaaaaaaaaaa!",
+    "options": {},
+    "expected_patched": false,
+    "expected_original": null,
+    "compare_original": false
+  },
+  {
+    "id": 3,
+    "category": "adversarial-star-a36",
+    "pattern": "+(*a)",
+    "subject": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa!",
+    "options": {},
+    "expected_patched": false,
+    "expected_original": null,
+    "compare_original": false
+  },
+  {
+    "id": 4,
+    "category": "risky-literal",
+    "pattern": "+(*a)",
+    "subject": "+(*a)",
+    "options": {},
+    "expected_patched": true,
+    "expected_original": false,
+    "compare_original": true
+  },
+  {
+    "id": 5,
+    "category": "intentional-semantic-change",
+    "pattern": "+(*a)",
+    "subject": "aaaa",
+    "options": {},
+    "expected_patched": false,
+    "expected_original": true,
+    "compare_original": true
+  },
+  {
+    "id": 6,
+    "category": "js-positive",
+    "pattern": "*.js",
+    "subject": "index.js",
+    "options": {},
+    "expected_patched": true,
+    "expected_original": true,
+    "compare_original": true
+  },
+  {
+    "id": 7,
+    "category": "js-negative",
+    "pattern": "*.js",
+    "subject": "index.ts",
+    "options": {},
+    "expected_patched": false,
+    "expected_original": false,
+    "compare_original": true
+  },
+  {
+    "id": 8,
+    "category": "test-discovery",
+    "pattern": "tests/**/*.test.ts",
+    "subject": "tests/unit/a.test.ts",
+    "options": {},
+    "expected_patched": true,
+    "expected_original": true,
+    "compare_original": true
+  },
+  {
+    "id": 9,
+    "category": "negation",
+    "pattern": "!**/*.test.ts",
+    "subject": "src/index.ts",
+    "options": {},
+    "expected_patched": true,
+    "expected_original": true,
+    "compare_original": true
+  },
+  {
+    "id": 10,
+    "category": "dependency-exclusion",
+    "pattern": "**/node_modules/**",
+    "subject": "frontend/node_modules/p/a.js",
+    "options": {},
+    "expected_patched": true,
+    "expected_original": true,
+    "compare_original": true
+  },
+  {
+    "id": 11,
+    "category": "dotfile",
+    "pattern": "**/.env",
+    "subject": ".env",
+    "options": {
+      "dot": true
+    },
+    "expected_patched": true,
+    "expected_original": true,
+    "compare_original": true
+  },
+  {
+    "id": 12,
+    "category": "slash",
+    "pattern": "**/*.ts",
+    "subject": "src/sub/a.ts",
+    "options": {},
+    "expected_patched": true,
+    "expected_original": true,
+    "compare_original": true
+  },
+  {
+    "id": 13,
+    "category": "escaped-star",
+    "pattern": "+(\\*)",
+    "subject": "**",
+    "options": {},
+    "expected_patched": true,
+    "expected_original": true,
+    "compare_original": true
+  },
+  {
+    "id": 14,
+    "category": "bracket-star",
+    "pattern": "+([*])",
+    "subject": "**",
+    "options": {},
+    "expected_patched": true,
+    "expected_original": true,
+    "compare_original": true
+  },
+  {
+    "id": 15,
+    "category": "quoted-star",
+    "pattern": "+(\"*\")",
+    "subject": "**",
+    "options": {},
+    "expected_patched": true,
+    "expected_original": true,
+    "compare_original": true
+  },
+  {
+    "id": 16,
+    "category": "capture-literal-plus",
+    "pattern": "+(a)",
+    "subject": "aaa",
+    "options": {
+      "capture": true
+    },
+    "expected_patched": true,
+    "expected_original": true,
+    "compare_original": true
+  },
+  {
+    "id": 17,
+    "category": "literal-star",
+    "pattern": "*(a)",
+    "subject": "aaa",
+    "options": {},
+    "expected_patched": true,
+    "expected_original": true,
+    "compare_original": true
+  },
+  {
+    "id": 18,
+    "category": "existing-nested-safe",
+    "pattern": "+(*(a)|*(b))",
+    "subject": "abba",
+    "options": {},
+    "expected_patched": true,
+    "expected_original": true,
+    "compare_original": true
+  },
+  {
+    "id": 19,
+    "category": "nested-wildcard",
+    "pattern": "+(@(*a))",
+    "subject": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa!",
+    "options": {},
+    "expected_patched": false,
+    "expected_original": null,
+    "compare_original": false
+  },
+  {
+    "id": 20,
+    "category": "explicit-opt-out",
+    "pattern": "+(*a)",
+    "subject": "aaaa",
+    "options": {
+      "maxExtglobRecursion": false
+    },
+    "expected_patched": true,
+    "expected_original": true,
+    "compare_original": true
+  }
+]

@@ -1,0 +1,227 @@
+{
+  "status": "FAILED",
+  "budget_seconds": 60,
+  "cases": [
+    {
+      "outcome": "ERROR",
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "<anonymous_script>:1\n/var/folders/fb/g4m1d38j4fl6x1pt39rn0wxr0000gn/T/tiewtrade-lp02-1yugh4k0/original/package\n^\n\nSyntaxError: Unexpected token '/', \"/var/folde\"... is not valid JSON\n    at JSON.parse (<anonymous>)\n    at Object.<anonymous> (/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-picomatch-remediation/specs/features/2026-11-17-picomatch-remediation/evidence/lp02/probe-child.js:2:14)\n    at Module._compile (node:internal/modules/cjs/loader:1781:14)\n    at Module._extensions..js (node:internal/modules/cjs/loader:1913:10)\n    at Module.load (node:internal/modules/cjs/loader:1505:32)\n    at Module._load (node:internal/modules/cjs/loader:1309:12)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:254:19)\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\n    at node:internal/main/run_main_module:36:49\n\nNode.js v22.23.4\n",
+      "pid": 37639,
+      "joined": true,
+      "id": 1,
+      "category": "adversarial-star",
+      "passed": false
+    },
+    {
+      "outcome": "ERROR",
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "<anonymous_script>:1\n/var/folders/fb/g4m1d38j4fl6x1pt39rn0wxr0000gn/T/tiewtrade-lp02-1yugh4k0/original/package\n^\n\nSyntaxError: Unexpected token '/', \"/var/folde\"... is not valid JSON\n    at JSON.parse (<anonymous>)\n    at Object.<anonymous> (/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-picomatch-remediation/specs/features/2026-11-17-picomatch-remediation/evidence/lp02/probe-child.js:2:14)\n    at Module._compile (node:internal/modules/cjs/loader:1781:14)\n    at Module._extensions..js (node:internal/modules/cjs/loader:1913:10)\n    at Module.load (node:internal/modules/cjs/loader:1505:32)\n    at Module._load (node:internal/modules/cjs/loader:1309:12)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:254:19)\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\n    at node:internal/main/run_main_module:36:49\n\nNode.js v22.23.4\n",
+      "pid": 37640,
+      "joined": true,
+      "id": 2,
+      "category": "adversarial-star-a28",
+      "passed": false
+    },
+    {
+      "outcome": "ERROR",
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "<anonymous_script>:1\n/var/folders/fb/g4m1d38j4fl6x1pt39rn0wxr0000gn/T/tiewtrade-lp02-1yugh4k0/original/package\n^\n\nSyntaxError: Unexpected token '/', \"/var/folde\"... is not valid JSON\n    at JSON.parse (<anonymous>)\n    at Object.<anonymous> (/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-picomatch-remediation/specs/features/2026-11-17-picomatch-remediation/evidence/lp02/probe-child.js:2:14)\n    at Module._compile (node:internal/modules/cjs/loader:1781:14)\n    at Module._extensions..js (node:internal/modules/cjs/loader:1913:10)\n    at Module.load (node:internal/modules/cjs/loader:1505:32)\n    at Module._load (node:internal/modules/cjs/loader:1309:12)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:254:19)\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\n    at node:internal/main/run_main_module:36:49\n\nNode.js v22.23.4\n",
+      "pid": 37641,
+      "joined": true,
+      "id": 3,
+      "category": "adversarial-star-a36",
+      "passed": false
+    },
+    {
+      "outcome": "ERROR",
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "<anonymous_script>:1\n/var/folders/fb/g4m1d38j4fl6x1pt39rn0wxr0000gn/T/tiewtrade-lp02-1yugh4k0/original/package\n^\n\nSyntaxError: Unexpected token '/', \"/var/folde\"... is not valid JSON\n    at JSON.parse (<anonymous>)\n    at Object.<anonymous> (/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-picomatch-remediation/specs/features/2026-11-17-picomatch-remediation/evidence/lp02/probe-child.js:2:14)\n    at Module._compile (node:internal/modules/cjs/loader:1781:14)\n    at Module._extensions..js (node:internal/modules/cjs/loader:1913:10)\n    at Module.load (node:internal/modules/cjs/loader:1505:32)\n    at Module._load (node:internal/modules/cjs/loader:1309:12)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:254:19)\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\n    at node:internal/main/run_main_module:36:49\n\nNode.js v22.23.4\n",
+      "pid": 37642,
+      "joined": true,
+      "id": 4,
+      "category": "risky-literal",
+      "passed": false
+    },
+    {
+      "outcome": "ERROR",
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "<anonymous_script>:1\n/var/folders/fb/g4m1d38j4fl6x1pt39rn0wxr0000gn/T/tiewtrade-lp02-1yugh4k0/original/package\n^\n\nSyntaxError: Unexpected token '/', \"/var/folde\"... is not valid JSON\n    at JSON.parse (<anonymous>)\n    at Object.<anonymous> (/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-picomatch-remediation/specs/features/2026-11-17-picomatch-remediation/evidence/lp02/probe-child.js:2:14)\n    at Module._compile (node:internal/modules/cjs/loader:1781:14)\n    at Module._extensions..js (node:internal/modules/cjs/loader:1913:10)\n    at Module.load (node:internal/modules/cjs/loader:1505:32)\n    at Module._load (node:internal/modules/cjs/loader:1309:12)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:254:19)\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\n    at node:internal/main/run_main_module:36:49\n\nNode.js v22.23.4\n",
+      "pid": 37643,
+      "joined": true,
+      "id": 5,
+      "category": "intentional-semantic-change",
+      "passed": false
+    },
+    {
+      "outcome": "ERROR",
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "<anonymous_script>:1\n/var/folders/fb/g4m1d38j4fl6x1pt39rn0wxr0000gn/T/tiewtrade-lp02-1yugh4k0/original/package\n^\n\nSyntaxError: Unexpected token '/', \"/var/folde\"... is not valid JSON\n    at JSON.parse (<anonymous>)\n    at Object.<anonymous> (/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-picomatch-remediation/specs/features/2026-11-17-picomatch-remediation/evidence/lp02/probe-child.js:2:14)\n    at Module._compile (node:internal/modules/cjs/loader:1781:14)\n    at Module._extensions..js (node:internal/modules/cjs/loader:1913:10)\n    at Module.load (node:internal/modules/cjs/loader:1505:32)\n    at Module._load (node:internal/modules/cjs/loader:1309:12)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:254:19)\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\n    at node:internal/main/run_main_module:36:49\n\nNode.js v22.23.4\n",
+      "pid": 37644,
+      "joined": true,
+      "id": 6,
+      "category": "js-positive",
+      "passed": false
+    },
+    {
+      "outcome": "ERROR",
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "<anonymous_script>:1\n/var/folders/fb/g4m1d38j4fl6x1pt39rn0wxr0000gn/T/tiewtrade-lp02-1yugh4k0/original/package\n^\n\nSyntaxError: Unexpected token '/', \"/var/folde\"... is not valid JSON\n    at JSON.parse (<anonymous>)\n    at Object.<anonymous> (/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-picomatch-remediation/specs/features/2026-11-17-picomatch-remediation/evidence/lp02/probe-child.js:2:14)\n    at Module._compile (node:internal/modules/cjs/loader:1781:14)\n    at Module._extensions..js (node:internal/modules/cjs/loader:1913:10)\n    at Module.load (node:internal/modules/cjs/loader:1505:32)\n    at Module._load (node:internal/modules/cjs/loader:1309:12)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:254:19)\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\n    at node:internal/main/run_main_module:36:49\n\nNode.js v22.23.4\n",
+      "pid": 37645,
+      "joined": true,
+      "id": 7,
+      "category": "test-discovery",
+      "passed": false
+    },
+    {
+      "outcome": "ERROR",
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "<anonymous_script>:1\n/var/folders/fb/g4m1d38j4fl6x1pt39rn0wxr0000gn/T/tiewtrade-lp02-1yugh4k0/original/package\n^\n\nSyntaxError: Unexpected token '/', \"/var/folde\"... is not valid JSON\n    at JSON.parse (<anonymous>)\n    at Object.<anonymous> (/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-picomatch-remediation/specs/features/2026-11-17-picomatch-remediation/evidence/lp02/probe-child.js:2:14)\n    at Module._compile (node:internal/modules/cjs/loader:1781:14)\n    at Module._extensions..js (node:internal/modules/cjs/loader:1913:10)\n    at Module.load (node:internal/modules/cjs/loader:1505:32)\n    at Module._load (node:internal/modules/cjs/loader:1309:12)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:254:19)\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\n    at node:internal/main/run_main_module:36:49\n\nNode.js v22.23.4\n",
+      "pid": 37646,
+      "joined": true,
+      "id": 8,
+      "category": "dependency-exclusion",
+      "passed": false
+    },
+    {
+      "outcome": "ERROR",
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "<anonymous_script>:1\n/var/folders/fb/g4m1d38j4fl6x1pt39rn0wxr0000gn/T/tiewtrade-lp02-1yugh4k0/original/package\n^\n\nSyntaxError: Unexpected token '/', \"/var/folde\"... is not valid JSON\n    at JSON.parse (<anonymous>)\n    at Object.<anonymous> (/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-picomatch-remediation/specs/features/2026-11-17-picomatch-remediation/evidence/lp02/probe-child.js:2:14)\n    at Module._compile (node:internal/modules/cjs/loader:1781:14)\n    at Module._extensions..js (node:internal/modules/cjs/loader:1913:10)\n    at Module.load (node:internal/modules/cjs/loader:1505:32)\n    at Module._load (node:internal/modules/cjs/loader:1309:12)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:254:19)\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\n    at node:internal/main/run_main_module:36:49\n\nNode.js v22.23.4\n",
+      "pid": 37648,
+      "joined": true,
+      "id": 9,
+      "category": "escaped-star",
+      "passed": false
+    },
+    {
+      "outcome": "ERROR",
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "<anonymous_script>:1\n/var/folders/fb/g4m1d38j4fl6x1pt39rn0wxr0000gn/T/tiewtrade-lp02-1yugh4k0/original/package\n^\n\nSyntaxError: Unexpected token '/', \"/var/folde\"... is not valid JSON\n    at JSON.parse (<anonymous>)\n    at Object.<anonymous> (/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-picomatch-remediation/specs/features/2026-11-17-picomatch-remediation/evidence/lp02/probe-child.js:2:14)\n    at Module._compile (node:internal/modules/cjs/loader:1781:14)\n    at Module._extensions..js (node:internal/modules/cjs/loader:1913:10)\n    at Module.load (node:internal/modules/cjs/loader:1505:32)\n    at Module._load (node:internal/modules/cjs/loader:1309:12)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:254:19)\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\n    at node:internal/main/run_main_module:36:49\n\nNode.js v22.23.4\n",
+      "pid": 37649,
+      "joined": true,
+      "id": 10,
+      "category": "bracket-star",
+      "passed": false
+    },
+    {
+      "outcome": "ERROR",
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "<anonymous_script>:1\n/var/folders/fb/g4m1d38j4fl6x1pt39rn0wxr0000gn/T/tiewtrade-lp02-1yugh4k0/original/package\n^\n\nSyntaxError: Unexpected token '/', \"/var/folde\"... is not valid JSON\n    at JSON.parse (<anonymous>)\n    at Object.<anonymous> (/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-picomatch-remediation/specs/features/2026-11-17-picomatch-remediation/evidence/lp02/probe-child.js:2:14)\n    at Module._compile (node:internal/modules/cjs/loader:1781:14)\n    at Module._extensions..js (node:internal/modules/cjs/loader:1913:10)\n    at Module.load (node:internal/modules/cjs/loader:1505:32)\n    at Module._load (node:internal/modules/cjs/loader:1309:12)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:254:19)\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\n    at node:internal/main/run_main_module:36:49\n\nNode.js v22.23.4\n",
+      "pid": 37650,
+      "joined": true,
+      "id": 11,
+      "category": "quoted-star",
+      "passed": false
+    },
+    {
+      "outcome": "ERROR",
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "<anonymous_script>:1\n/var/folders/fb/g4m1d38j4fl6x1pt39rn0wxr0000gn/T/tiewtrade-lp02-1yugh4k0/original/package\n^\n\nSyntaxError: Unexpected token '/', \"/var/folde\"... is not valid JSON\n    at JSON.parse (<anonymous>)\n    at Object.<anonymous> (/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-picomatch-remediation/specs/features/2026-11-17-picomatch-remediation/evidence/lp02/probe-child.js:2:14)\n    at Module._compile (node:internal/modules/cjs/loader:1781:14)\n    at Module._extensions..js (node:internal/modules/cjs/loader:1913:10)\n    at Module.load (node:internal/modules/cjs/loader:1505:32)\n    at Module._load (node:internal/modules/cjs/loader:1309:12)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:254:19)\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\n    at node:internal/main/run_main_module:36:49\n\nNode.js v22.23.4\n",
+      "pid": 37651,
+      "joined": true,
+      "id": 12,
+      "category": "capture-literal-plus",
+      "passed": false
+    },
+    {
+      "outcome": "ERROR",
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "<anonymous_script>:1\n/var/folders/fb/g4m1d38j4fl6x1pt39rn0wxr0000gn/T/tiewtrade-lp02-1yugh4k0/original/package\n^\n\nSyntaxError: Unexpected token '/', \"/var/folde\"... is not valid JSON\n    at JSON.parse (<anonymous>)\n    at Object.<anonymous> (/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-picomatch-remediation/specs/features/2026-11-17-picomatch-remediation/evidence/lp02/probe-child.js:2:14)\n    at Module._compile (node:internal/modules/cjs/loader:1781:14)\n    at Module._extensions..js (node:internal/modules/cjs/loader:1913:10)\n    at Module.load (node:internal/modules/cjs/loader:1505:32)\n    at Module._load (node:internal/modules/cjs/loader:1309:12)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:254:19)\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\n    at node:internal/main/run_main_module:36:49\n\nNode.js v22.23.4\n",
+      "pid": 37652,
+      "joined": true,
+      "id": 13,
+      "category": "literal-star",
+      "passed": false
+    },
+    {
+      "outcome": "ERROR",
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "<anonymous_script>:1\n/var/folders/fb/g4m1d38j4fl6x1pt39rn0wxr0000gn/T/tiewtrade-lp02-1yugh4k0/original/package\n^\n\nSyntaxError: Unexpected token '/', \"/var/folde\"... is not valid JSON\n    at JSON.parse (<anonymous>)\n    at Object.<anonymous> (/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-picomatch-remediation/specs/features/2026-11-17-picomatch-remediation/evidence/lp02/probe-child.js:2:14)\n    at Module._compile (node:internal/modules/cjs/loader:1781:14)\n    at Module._extensions..js (node:internal/modules/cjs/loader:1913:10)\n    at Module.load (node:internal/modules/cjs/loader:1505:32)\n    at Module._load (node:internal/modules/cjs/loader:1309:12)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:254:19)\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\n    at node:internal/main/run_main_module:36:49\n\nNode.js v22.23.4\n",
+      "pid": 37653,
+      "joined": true,
+      "id": 14,
+      "category": "existing-nested-safe",
+      "passed": false
+    },
+    {
+      "outcome": "ERROR",
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "<anonymous_script>:1\n/var/folders/fb/g4m1d38j4fl6x1pt39rn0wxr0000gn/T/tiewtrade-lp02-1yugh4k0/original/package\n^\n\nSyntaxError: Unexpected token '/', \"/var/folde\"... is not valid JSON\n    at JSON.parse (<anonymous>)\n    at Object.<anonymous> (/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-picomatch-remediation/specs/features/2026-11-17-picomatch-remediation/evidence/lp02/probe-child.js:2:14)\n    at Module._compile (node:internal/modules/cjs/loader:1781:14)\n    at Module._extensions..js (node:internal/modules/cjs/loader:1913:10)\n    at Module.load (node:internal/modules/cjs/loader:1505:32)\n    at Module._load (node:internal/modules/cjs/loader:1309:12)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:254:19)\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\n    at node:internal/main/run_main_module:36:49\n\nNode.js v22.23.4\n",
+      "pid": 37654,
+      "joined": true,
+      "id": 15,
+      "category": "nested-wildcard",
+      "passed": false
+    },
+    {
+      "outcome": "ERROR",
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "<anonymous_script>:1\n/var/folders/fb/g4m1d38j4fl6x1pt39rn0wxr0000gn/T/tiewtrade-lp02-1yugh4k0/original/package\n^\n\nSyntaxError: Unexpected token '/', \"/var/folde\"... is not valid JSON\n    at JSON.parse (<anonymous>)\n    at Object.<anonymous> (/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-picomatch-remediation/specs/features/2026-11-17-picomatch-remediation/evidence/lp02/probe-child.js:2:14)\n    at Module._compile (node:internal/modules/cjs/loader:1781:14)\n    at Module._extensions..js (node:internal/modules/cjs/loader:1913:10)\n    at Module.load (node:internal/modules/cjs/loader:1505:32)\n    at Module._load (node:internal/modules/cjs/loader:1309:12)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:254:19)\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\n    at node:internal/main/run_main_module:36:49\n\nNode.js v22.23.4\n",
+      "pid": 37655,
+      "joined": true,
+      "id": 16,
+      "category": "explicit-opt-out",
+      "passed": false
+    },
+    {
+      "outcome": "ERROR",
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "<anonymous_script>:1\n/var/folders/fb/g4m1d38j4fl6x1pt39rn0wxr0000gn/T/tiewtrade-lp02-1yugh4k0/original/package\n^\n\nSyntaxError: Unexpected token '/', \"/var/folde\"... is not valid JSON\n    at JSON.parse (<anonymous>)\n    at Object.<anonymous> (/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-picomatch-remediation/specs/features/2026-11-17-picomatch-remediation/evidence/lp02/probe-child.js:2:14)\n    at Module._compile (node:internal/modules/cjs/loader:1781:14)\n    at Module._extensions..js (node:internal/modules/cjs/loader:1913:10)\n    at Module.load (node:internal/modules/cjs/loader:1505:32)\n    at Module._load (node:internal/modules/cjs/loader:1309:12)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:254:19)\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\n    at node:internal/main/run_main_module:36:49\n\nNode.js v22.23.4\n",
+      "pid": 37656,
+      "joined": true,
+      "id": 17,
+      "category": "quote-in-class",
+      "passed": false
+    },
+    {
+      "outcome": "ERROR",
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "<anonymous_script>:1\n/var/folders/fb/g4m1d38j4fl6x1pt39rn0wxr0000gn/T/tiewtrade-lp02-1yugh4k0/original/package\n^\n\nSyntaxError: Unexpected token '/', \"/var/folde\"... is not valid JSON\n    at JSON.parse (<anonymous>)\n    at Object.<anonymous> (/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-picomatch-remediation/specs/features/2026-11-17-picomatch-remediation/evidence/lp02/probe-child.js:2:14)\n    at Module._compile (node:internal/modules/cjs/loader:1781:14)\n    at Module._extensions..js (node:internal/modules/cjs/loader:1913:10)\n    at Module.load (node:internal/modules/cjs/loader:1505:32)\n    at Module._load (node:internal/modules/cjs/loader:1309:12)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:254:19)\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\n    at node:internal/main/run_main_module:36:49\n\nNode.js v22.23.4\n",
+      "pid": 37658,
+      "joined": true,
+      "id": 18,
+      "category": "literal-inner-bracket",
+      "passed": false
+    },
+    {
+      "outcome": "ERROR",
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "<anonymous_script>:1\n/var/folders/fb/g4m1d38j4fl6x1pt39rn0wxr0000gn/T/tiewtrade-lp02-1yugh4k0/original/package\n^\n\nSyntaxError: Unexpected token '/', \"/var/folde\"... is not valid JSON\n    at JSON.parse (<anonymous>)\n    at Object.<anonymous> (/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-picomatch-remediation/specs/features/2026-11-17-picomatch-remediation/evidence/lp02/probe-child.js:2:14)\n    at Module._compile (node:internal/modules/cjs/loader:1781:14)\n    at Module._extensions..js (node:internal/modules/cjs/loader:1913:10)\n    at Module.load (node:internal/modules/cjs/loader:1505:32)\n    at Module._load (node:internal/modules/cjs/loader:1309:12)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:254:19)\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\n    at node:internal/main/run_main_module:36:49\n\nNode.js v22.23.4\n",
+      "pid": 37659,
+      "joined": true,
+      "id": 19,
+      "category": "posix-class-star",
+      "passed": false
+    },
+    {
+      "outcome": "ERROR",
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "<anonymous_script>:1\n/var/folders/fb/g4m1d38j4fl6x1pt39rn0wxr0000gn/T/tiewtrade-lp02-1yugh4k0/original/package\n^\n\nSyntaxError: Unexpected token '/', \"/var/folde\"... is not valid JSON\n    at JSON.parse (<anonymous>)\n    at Object.<anonymous> (/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-picomatch-remediation/specs/features/2026-11-17-picomatch-remediation/evidence/lp02/probe-child.js:2:14)\n    at Module._compile (node:internal/modules/cjs/loader:1781:14)\n    at Module._extensions..js (node:internal/modules/cjs/loader:1913:10)\n    at Module.load (node:internal/modules/cjs/loader:1505:32)\n    at Module._load (node:internal/modules/cjs/loader:1309:12)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:254:19)\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\n    at node:internal/main/run_main_module:36:49\n\nNode.js v22.23.4\n",
+      "pid": 37660,
+      "joined": true,
+      "id": 20,
+      "category": "nobracket-star",
+      "passed": false
+    }
+  ],
+  "seconds": 1.436562833005155
+}

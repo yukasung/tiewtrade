@@ -1,0 +1,42 @@
+--- lp03/test_bounded_probe.py
++++ lp03refactor/test_bounded_probe.py
+@@ -69,7 +69,7 @@
+                 probe.run_matrix([{}], lambda _: [], path, budget=0)
+             self.assertEqual(json.loads(path.read_text())["error_type"], "TimeoutError")
+ 
+-    def exercise_cancellation(self, before_readiness: bool) -> None:
++    def _exercise_owned_group_cleanup(self, before_readiness: bool) -> None:
+         with tempfile.TemporaryDirectory() as directory:
+             root = Path(directory)
+             witness = root / "witness"
+@@ -123,13 +123,11 @@
+                     raise
+             finally:
+                 # Before communicate/reap the owned parent PID cannot be reused.
+-                if process.returncode is None:
+-                    with suppress(ProcessLookupError):
++                with suppress(ProcessLookupError):
++                    if process.returncode is None or (
++                        child_pid is not None and os.getpgid(child_pid) == process.pid
++                    ):
+                         os.killpg(process.pid, signal.SIGKILL)
+-                elif child_pid is not None:
+-                    with suppress(ProcessLookupError):
+-                        if os.getpgid(child_pid) == process.pid:
+-                            os.killpg(process.pid, signal.SIGKILL)
+                 process.communicate(timeout=1)
+             if before_readiness:
+                 self.assertIsNotNone(readiness_error)
+@@ -139,10 +137,10 @@
+                     os.kill(int(witness.read_text()), 0)
+ 
+     def test_sigterm_joins_and_preserves_error(self) -> None:
+-        self.exercise_cancellation(False)
++        self._exercise_owned_group_cleanup(False)
+ 
+     def test_cleanup_before_pid_readiness(self) -> None:
+-        self.exercise_cancellation(True)
++        self._exercise_owned_group_cleanup(True)
+ 
+ 
+ if __name__ == "__main__":

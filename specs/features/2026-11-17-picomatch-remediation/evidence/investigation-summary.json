@@ -1,0 +1,246 @@
+{
+  "head": "d3c9eae91f8fd0c0de091862106a77873d72b6b5",
+  "packages": [
+    {
+      "name": "picomatch",
+      "version": "4.0.7",
+      "dev": true,
+      "integrity": "sha512-qcJu88Q2IWqJsDD529JKMdwGm/dvInW4HvQnRwiH9JtihJvzGOscDtHE3x1pBKeUOTysQ8kVmLnJ2kJu7yhcGA==",
+      "source": "https://registry.npmjs.org/picomatch/-/picomatch-4.0.7.tgz",
+      "source_files_sha256": {
+        "index.js": "02ae26406508e28f9ba0865be16cf77f0b33de6c4d4d49c212c4176df1d5625a",
+        "posix.js": "5695ff5dfcd5a338a40630bd506056f2950bcb08fe1cc068519cbbfe60add480",
+        "lib/constants.js": "c28f952d2758261fe5428a121add485cc25b03e0193633f649de903dc0e5e222",
+        "lib/parse.js": "4e1e05447668aa1e94366c5516a2bcd8f5fff800cc92b1d0cd7d77703b8618c4",
+        "lib/picomatch.js": "fdd249d7ffff853f3bb1c77eafc8baa1a437bea85a94c35877b83c6a40d9ca94",
+        "lib/utils.js": "f04604f70cd1a3f6ace80b84766468674ff38b4bb83818d2ef1d81fc6355f935",
+        "lib/scan.js": "6457a1764e5c2e543cc3a0c00ce12ebb3764097628868198370b64d4e642aaae"
+      }
+    },
+    {
+      "name": "tinyglobby",
+      "version": "0.2.17",
+      "dev": true,
+      "integrity": "sha512-wXR/dYpcqKmfWpEdZjiKJOwCNFndD0DMnrW/cYjVGttEkBfVgcLFHoNrlj47mjOVic9yyNu65alsgF4NQyTa2g==",
+      "source": "https://registry.npmjs.org/tinyglobby/-/tinyglobby-0.2.17.tgz",
+      "source_files_sha256": {
+        "dist/index.cjs": "ee408bbc9665cba5800a6b2a0c89dd3df9820baa30d4ff3ba2f2435f16ce9f94",
+        "dist/index.mjs": "fc1bed0d5da56d4638002af7deaf6d179e183a85de648c180839ca36b21b3b50"
+      }
+    },
+    {
+      "name": "vite",
+      "version": "6.4.4",
+      "dev": true,
+      "integrity": "sha512-xGjU/SyjeNyb0E4KxXBvYz/1C+3JXuujvf2hXNOtnlcE+58o5ajd9N2/n2VhkiJvpCP2qQasnUpx5PXNeI+p1Q==",
+      "source": "https://registry.npmjs.org/vite/-/vite-6.4.4.tgz",
+      "source_files_sha256": {
+        "index.cjs": "c5bdea7acf43bd186d2a19b61add34f0af6b241cae9e44fede30fdf5b62df225",
+        "misc/true.js": "1ca1ff5b531880de960715f4622cb4bfe61620ad0ab56764a00f3afe2bf2981a",
+        "misc/false.js": "3f405f8c82812b5fd5a6ca325a1b9039479bf9de3ee1ef51d76ea80fba7d486c",
+        "bin/vite.js": "8498a58e0d311572c409038515df0e5d707bdc6ab5927153f487e36ef1c9052c",
+        "dist/node/constants.js": "58c1d17e5f8118fe278a620a1ca11bc2554d3c7fb899ac9d13ffeb5a15279e17",
+        "dist/node/module-runner.js": "82300b4a5e6b52632ca2fc9226b3fb3ac11f95b788f7c5b7f89166e91f712823",
+        "dist/node/index.js": "56670eb334999629af2b374fa5108f74b1961a59b7b023c03960d9068ef9e7cd",
+        "dist/node/cli.js": "f07d8cf37a9493cd726551f64a8c00db8b42d98d7277d89da353fed4645e7de8",
+        "dist/client/client.mjs": "0002f3fbd756eb15b131a549bea3869481a52139c22019dd2a23409f115a83fc",
+        "dist/client/env.mjs": "5bdaca544f5cef6f738fbd103a0f60ceaedacd1051edd3514d912e01448443f2",
+        "dist/node-cjs/publicUtils.cjs": "0fbd2324ac278105ca9ad0dab270cb08b6d35e4ceb196d8ff24bdc70ecfd40bd",
+        "dist/node/chunks/dep-D2Nv_XqQ.js": "d9b37fa189949cf75ff044f796ae9986f36ba1eb482acd2e006a309d24a5f962",
+        "dist/node/chunks/dep-3RmXg9uo.js": "4702c10a382ad3509e53a06b680ea8210775d7f9da1236f8f59b03c5617b2ae7",
+        "dist/node/chunks/dep-3O3b9SCF.js": "5549a587e82930bd10b0da4e30a6c1642d530cce754e13859dbb6d0e7d22cd2c",
+        "dist/node/chunks/dep-nQZNP8DK.js": "9769971a81d5a5762bebda54d36ca95c88e380a3ad300f9d21f131f2ec6c5fd4",
+        "dist/node/chunks/dep-CvfTChi5.js": "c3684e056dda4f4ccc503a963adcbd3ea86f3aafcbbfa25020814ede2707a156"
+      }
+    },
+    {
+      "name": "vitest",
+      "version": "4.1.11",
+      "dev": true,
+      "integrity": "sha512-fhACrNXUidIbGSBr5FlbuBkO7VWC1ZyLl0DO4CU2DrQoAPxX84Ysxs+HeGQpii5lZWV1Q4gBZTTu49mF+A6Edw==",
+      "source": "https://registry.npmjs.org/vitest/-/vitest-4.1.11.tgz",
+      "source_files_sha256": {
+        "suppress-warnings.cjs": "a5012da3d2027007781baecda154d343d8c7ad2327b79bec65b1b60a41f42dd1",
+        "index.cjs": "15a78ebcf7fc24ea0a829448d770ca486b7506fcf8fd696a2cbf8e17d25dc02b",
+        "vitest.mjs": "39db22f579acf5639bbb17a261408debbde03f4692c0c439e77e7f13aeba74d6",
+        "dist/runtime.js": "edd48ea1693429f9c3c113c4c0d0c6b4c4063ffb04a4dac1ce64eeb27710ae2f",
+        "dist/spy.js": "8e001c70a48df9451723b150c37e9360a18978c29c5090fbe970b5029ebc1dd6",
+        "dist/coverage.js": "1863ac5bcd1c6f09920c556c3f6e378d06fa30b371b88a0ea2f782df5e4f6349",
+        "dist/worker.js": "2c6f0ef645441490f9d62675eb672bd500d90de521ca4bbc92bc062104a47ae6",
+        "dist/index.js": "3986618dbcbbdc0a3e200e2a507a434ef6f13dd8cc20c234168edb7b16e98d29",
+        "dist/suite.js": "ed11f82b3c4c5ff8b2d71f9cfab30d0488ebaa595524b2b36f73d21e1a9657af",
+        "dist/config.js": "0ab30953d20f3f2c9662d4ea4d174dc0506483e0afaf02fd84713bbc391972cd",
+        "dist/node.js": "34be25dbabf478136f6ea1b1f7b9a075ab833a14df3da9fc69d39b671dc19551",
+        "dist/module-evaluator.js": "a0b36fb2211d2587d8df68d5855d48141be27e99bdb973378a83f927e03b004e",
+        "dist/snapshot.js": "562449d1a4e5d38bc915c7d51557fca876caf224268f3956849b57b7262437bf",
+        "dist/path.js": "0ae93ca73f863259989ba3603bca12b21ba21981f2bfce65bdffe8044e3a89ae",
+        "dist/cli.js": "35346c38bc8e52886ebd7d013d5de64ef5adde9ccec0435c8fac3cc9b6368f3c",
+        "dist/browser.js": "0726f784addc7a8c14c3345d0400ca303aac39ee638ffb61f1abe0b53e6dd596",
+        "dist/reporters.js": "3e4253a061cb08bf2275410cafe53477cb49f1873443d521cfc0f7f2746772c5",
+        "dist/nodejs-worker-loader.js": "de4ca25441e2998db33553e48bd3e180772e920b1f008e1f4dfa0bdf05797b10",
+        "dist/environments.js": "8156dfcdb5b172c63d4edaecdb047412d39fdb4e85b2673ef173d08467500362",
+        "dist/runners.js": "31b2f870877d973a350d82e7e2087bf210f5ca38aad5c00e8a6b33d2e3adea77",
+        "dist/config.cjs": "71ce36bdfccd06e19c93b75171bf010481e291a49cea53073b172d5817c580d0",
+        "browser/context.js": "31e0d4b9d4462cdd24c49704879f906c4df0398b1012e37779253ea87e0d3e40",
+        "dist/chunks/init.k9zZ9sLh.js": "1590c223a08e12f898d2db14b21a044abdcc917a9456d720f1f4677c59daa5bf",
+        "dist/chunks/startVitestModuleRunner.DB-7oCpn.js": "244154a86165da6273cebbf4f2f77ba286e219c5f337022cfe88282f23bcc95f",
+        "dist/chunks/traces.DT5aQ62U.js": "59550f228d460d26a7f5e58cef731746e494e7508ae3e0d48b5ad0821c4ea010",
+        "dist/chunks/console.3WNpx0tS.js": "3e19d2c9e51e1d7a95d92bd603a28ac30f2d974f5ff370cec08d975801ea746f",
+        "dist/chunks/_commonjsHelpers.D26ty3Ew.js": "0f94da1dc442bde150286e12305b2930f30ba483f35e3293ea8244b1bc7cf7ed",
+        "dist/chunks/index.Chj8NDwU.js": "c9a26835aba20f5bca34ab581f9866e00f9ddd12d4df61c67e24b8840af9f0bf",
+        "dist/chunks/vm.CXMd5FHa.js": "21009c981e4df3079a0c7375e1e807a2670569e7b5a9fc64d4bc1084b9f1dc66",
+        "dist/chunks/index.DC7d2Pf8.js": "ca8e968b3dcbef742036f0d857700ef0a019127911f8770097066b8e5371036b",
+        "dist/chunks/test.DNmyFkvJ.js": "f07fc8036b066834143b14748bd70c436a6a2f15f648455af8d3a003a4eafc94",
+        "dist/chunks/index.DdgEv5B1.js": "ca2e9d3ffa586960ea2c403db8aa35757a85ae05291df340aad032a9f4d2d407",
+        "dist/chunks/utils.BX5Fg8C4.js": "f7b093e5d0814fbf4a58675cd3448a7dea4359926cbc0d02f7621de3b5a1f498",
+        "dist/chunks/setup-common.DYx3LtFI.js": "c0de971a9f98ede426c5bef5bd498ecb944eba92ef09484778056b8751c75350",
+        "dist/chunks/init-threads.6kl1khcL.js": "c8f8dc76daf6db91fb7fc502dbcc67aa9662d423bf320cab208f97d49dafbbe6",
+        "dist/chunks/benchmark.CX_oY03V.js": "59ba553727ee6330556a8edef46306eda832e5499cf6cf1348ff3e1524cac77e",
+        "dist/chunks/acorn.B2iPLyUM.js": "d8af6fca1f24e258ae45833ad4db4d33dd49c8b330f80de48116c09872e2b159",
+        "dist/chunks/coverage.CTzCuANN.js": "ba99c6accd29ea165736009002ae739b448733098eda3847d85f3b3697923b4e",
+        "dist/chunks/index.BCY_7LL2.js": "7f2b6e2ffb2e3e74511b33041f3a3f3fdf665f3312448c4c5c75d506a76e88c3",
+        "dist/chunks/defaults.9aQKnqFk.js": "e500ba917d0d320a037b4ad92ae691462b50a939e21b1f98d0073c45d55466ab",
+        "dist/chunks/index.CMESou6r.js": "0fce08e3b513ddd42fb6c2cd165b5e27072e94af47d96a02af5e34b9a58fbc05",
+        "dist/chunks/node.COQbm6gK.js": "765968247c3f1f669a3b1f74fe1045670186e3001acc4d39edc961a698a84af9",
+        "dist/chunks/native.DPzPHdi5.js": "9468190425b0db7c43ddd4aaf03140f7f38b507c39ef0b70f5c389b52f5d0cb6",
+        "dist/chunks/index.og1WyBLx.js": "8d0c3ee21d6540b8cf5c2415e46cfcf09b01b4d8b92081900d43f14da9f78464",
+        "dist/chunks/env.D4Lgay0q.js": "1f364f1b3e6396cc8fb84a5309922d08ea230cd00a7da4cc6434ffce1b80e30f",
+        "dist/chunks/constants.CPYnjOGj.js": "3565003408971a6af9e78d211dea047fe5b5bd82bdb0aad373f75b45c434449f",
+        "dist/chunks/globals.Dj1TGiMC.js": "93f775783be62f716a88b7dee2846afae5fc086f7e82d09f0c4d03738889a230",
+        "dist/chunks/cli-api.CnMVyzaz.js": "a236001d048380e2c67d05423fc9ea3f26b07ee019ba8d6e622082f29d49102e",
+        "dist/chunks/cac.uFydS1Z4.js": "27cc9365d180bee3da005fe6c4d485868caf9d8f54280759eea28842836af549",
+        "dist/chunks/modules.BJuCwlRJ.js": "102cca31e463f95e93e78a1972ac7eb3afc2ffef09a32c9c7da2b6dc63700bcb",
+        "dist/chunks/init-forks.H5ZuobOQ.js": "63acb3b402c59fa17a271f20c9436e487cdcbab48114a431b30a03df93509cd0",
+        "dist/chunks/nativeModuleRunner.BIakptoF.js": "6232a4cb2f8e244b31c154145c3a3d4851e3bda63befa382bd0fd731904f4cdb",
+        "dist/chunks/inspector.CvyFGlXm.js": "a696d80f441273d263d802206f202988f77558210f376ac0a33860e7fee4071f",
+        "dist/chunks/rpc.MzXet3jl.js": "5be591fb05181d5b57f3bb506193e7558b2d3d4ed0402535c680e1c7653fadd0",
+        "dist/chunks/index.DXx9Dtk7.js": "984c62280948e3916bfd83d47786b912081f61fbac6d79d5be189cb656a570ac",
+        "dist/chunks/utils.BS4fH3nR.js": "b7f5096ab0b7c75dacc5133966d71c79702fad3c258c4b5adb4a4801cf3ac0a4",
+        "dist/chunks/index.UpGiHP7g.js": "cdafaf8e508042dddba72f8c7bbae84e2836ddb6b06c7026520c35d91af4e798",
+        "dist/chunks/coverage.DM_a_rWm.js": "e509f3cc1bd81ae6426265253fa926cbde02be5cebfe35b1df422017bffdca31",
+        "dist/chunks/nativeModuleMocker.BkNfQMkH.js": "83beb53736f34fca262c439407049654d7c440fef1a8f76ce3b8619f0e648739",
+        "dist/chunks/evaluatedModules.Dg1zASAC.js": "08eb18ac661433d9b821c117911be6d5be0821297311a5d92652aaf4581a5a61",
+        "dist/chunks/base.B6Opl8PE.js": "bcdf4fd8921155a4d6c2e293aa608e082d274a2583ab97aa6104696d6f00081a",
+        "dist/chunks/creator.DgVhQm5q.js": "d0f6aa44d11782870756d421c2546d8656596840f802b5c56a03f9ffe21eda91",
+        "dist/workers/vmThreads.js": "4d4aa6aaa8bf2b60f41d060438c313ee6ec1e3088e496cfa50e141727e60e789",
+        "dist/workers/runVmTests.js": "241127cc157406e3ef3ff62c4b3243ec803ace76994d556c850ab9701fcd3b5d",
+        "dist/workers/threads.js": "e128672de5c1545775ffe168a5612112789cde2c87af66feed956dd0f8b18cd1",
+        "dist/workers/vmForks.js": "fff55056eb761a881c627dda13491ac08055c91c58a246543abfa91368fa4d92",
+        "dist/workers/forks.js": "b461149b7a4488ff72f90af16d900ad9c8c410e1b8ddb2c443d49f6cd1aa7206"
+      }
+    },
+    {
+      "name": "fdir",
+      "version": "6.5.0",
+      "dev": true,
+      "integrity": "sha512-tIbYtZbucOs0BRGqPJkshJUYdL+SDH7dVM8gjy+ERp3WAUjLEFJE+02kanyHtwjWOnwrKYBiwAmM0p4kLJAnXg==",
+      "source": "https://registry.npmjs.org/fdir/-/fdir-6.5.0.tgz",
+      "source_files_sha256": {
+        "dist/index.cjs": "ec92c1fdd78905a7b6d1ea3391aeca2cf19d10e6bbd04db0de158fbfc8b6cff4",
+        "dist/index.mjs": "4a0266bf60373bc08bcac35a813587ead767864b3a80b5dca10bff999e05e32d"
+      }
+    }
+  ],
+  "baseline_sha256": {
+    "frontend/package.json": "fb82d1610bf75e7e2bf19bb67003dfd270f3c6a9c41b8e4defd30c5091eed043",
+    "frontend/package-lock.json": "7d0fb4ab31f0eece2d6fe8ef9e60ca96757c220a9b674e1162fd3c6a9965727b",
+    "frontend/vite.config.ts": "ac0acf344ffecebd5f028f2a2095102b6e6888ae9fda86741364c2eed24cf41f",
+    "frontend/vitest.config.ts": "965d55577c54a7d4371ce0c802822bd2a76a6de866c6789aad54e63d1bf78b43"
+  },
+  "direct_edges": [
+    {
+      "path": "node_modules/fdir",
+      "version": "6.5.0",
+      "kind": "peerDependencies",
+      "range": "^3 || ^4"
+    },
+    {
+      "path": "node_modules/tinyglobby",
+      "version": "0.2.17",
+      "kind": "dependencies",
+      "range": "^4.0.4"
+    },
+    {
+      "path": "node_modules/vite",
+      "version": "6.4.4",
+      "kind": "dependencies",
+      "range": "^4.0.2"
+    },
+    {
+      "path": "node_modules/vitest",
+      "version": "4.1.11",
+      "kind": "dependencies",
+      "range": "^4.0.3"
+    }
+  ],
+  "status": "Blocked \u2014 no official published patched release",
+  "probe_result": {
+    "node": "v22.23.4",
+    "version": "4.0.7",
+    "cases": [
+      {
+        "category": "benign-positive",
+        "pattern": "*.js",
+        "input_length": 8,
+        "outcome": "RETURNED",
+        "exit_code": 0,
+        "wall_seconds": 0.08008075,
+        "child_joined": true,
+        "matched": true,
+        "elapsed_ms": 0.2839999999999989,
+        "expected": true,
+        "expectation_passed": true
+      },
+      {
+        "category": "benign-negative",
+        "pattern": "*.js",
+        "input_length": 8,
+        "outcome": "RETURNED",
+        "exit_code": 0,
+        "wall_seconds": 0.067586209,
+        "child_joined": true,
+        "matched": false,
+        "elapsed_ms": 0.3192499999999967,
+        "expected": false,
+        "expectation_passed": true
+      },
+      {
+        "category": "repeated-single-star",
+        "pattern": "+(*)",
+        "input_length": 33,
+        "outcome": "TIMEOUT",
+        "exit_code": -9,
+        "wall_seconds": 2.00433525,
+        "child_joined": true
+      },
+      {
+        "category": "repeated-single-star-a-28",
+        "pattern": "+(*a)",
+        "input_length": 29,
+        "outcome": "TIMEOUT",
+        "exit_code": -9,
+        "wall_seconds": 2.004349083,
+        "child_joined": true
+      },
+      {
+        "category": "repeated-single-star-a-36",
+        "pattern": "+(*a)",
+        "input_length": 37,
+        "outcome": "TIMEOUT",
+        "exit_code": -9,
+        "wall_seconds": 2.0044185840000006,
+        "child_joined": true
+      }
+    ],
+    "seconds": 6.184855208,
+    "budget_seconds": 60,
+    "maximum_processes": 1,
+    "network": "none",
+    "memory_heap_mib": 256
+  },
+  "latest_published": "4.0.7",
+  "patched_version": null,
+  "application_exploitability": "Not established; static mapping incomplete for transitive plugins",
+  "browser_bundle_inclusion": "Not dynamically validated; no direct source import found",
+  "application_or_dependency_edits": false
+}

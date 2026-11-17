@@ -1,0 +1,11 @@
+{
+  "all_20_probe_children_joined": true,
+  "owned_scratch_directories_removed": [
+    "tiewtrade-lp01-7tw1gh3e",
+    "tiewtrade-lp01-tqaov4vz"
+  ],
+  "application_services_touched": false,
+  "installed_dependencies_modified": false,
+  "security_registry_modified": false,
+  "preparation_note": "Initial system Python3.9 extraction lacked filter support; reran preparation using existing Python3.12, before any probes. Both owned preparation directories cleaned."
+}

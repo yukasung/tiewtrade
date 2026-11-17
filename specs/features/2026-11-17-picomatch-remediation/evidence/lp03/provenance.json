@@ -1,0 +1,12 @@
+{
+  "status": "TARGETED_PROTOTYPE_PASSED",
+  "version": "4.0.7",
+  "registry_integrity": "sha512-qcJu88Q2IWqJsDD529JKMdwGm/dvInW4HvQnRwiH9JtihJvzGOscDtHE3x1pBKeUOTysQ8kVmLnJ2kJu7yhcGA==",
+  "archive_sha256": "697b463be3cdbd9ffc8f4194fd5019a69ddf95875fb703d78b2b115cc9e740a8",
+  "original_parser_sha256": "4e1e05447668aa1e94366c5516a2bcd8f5fff800cc92b1d0cd7d77703b8618c4",
+  "patched_parser_sha256": "2e76e1f01b355131969a1fe4efeea3262b48a2e337f9b81b737ea52f1b5beb9d",
+  "patch_sha256": "3deda489c56725edce657078a5be9bcf9c1741f3a35b62ca3a97a59a8d621a01",
+  "license_sha256": "d0cd141b0c322fded5dfad1d4645bb2fedfc05b7321fe1009469638190d59ef9",
+  "matching_cases": 9,
+  "runner_test_methods": 6
+}

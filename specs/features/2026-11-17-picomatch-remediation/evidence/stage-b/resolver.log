@@ -1,0 +1,20 @@
+npm warn tarball tarball data for picomatch@file:vendor/picomatch-4.0.7-lp03.tgz (null) seems to be corrupted. Trying again.
+npm warn tarball tarball data for picomatch@file:vendor/picomatch-4.0.7-lp03.tgz (null) seems to be corrupted. Trying again.
+npm warn ERESOLVE overriding peer dependency
+npm warn While resolving: fdir@6.5.0
+npm warn Found: peerOptional overridden picomatch@"file:./vendor/picomatch-4.0.7-lp03.tgz" (was "^3 || ^4") from the root project
+npm warn
+npm warn Could not resolve dependency:
+npm warn peerOptional overridden picomatch@"file:./vendor/picomatch-4.0.7-lp03.tgz" (was "^3 || ^4") from the root project
+npm warn tarball tarball data for picomatch@file:vendor/picomatch-4.0.7-lp03.tgz (null) seems to be corrupted. Trying again.
+npm warn tarball tarball data for picomatch@file:vendor/picomatch-4.0.7-lp03.tgz (null) seems to be corrupted. Trying again.
+npm warn tarball tarball data for picomatch@file:vendor/picomatch-4.0.7-lp03.tgz (null) seems to be corrupted. Trying again.
+npm warn tarball tarball data for picomatch@file:vendor/picomatch-4.0.7-lp03.tgz (null) seems to be corrupted. Trying again.
+npm error code ENOENT
+npm error syscall open
+npm error path /private<audit-owned-scratch>/frontend/node_modules/fdir/vendor/picomatch-4.0.7-lp03.tgz
+npm error errno -2
+npm error enoent ENOENT: no such file or directory, open '/private<audit-owned-scratch>/frontend/node_modules/fdir/vendor/picomatch-4.0.7-lp03.tgz'
+npm error enoent This is related to npm not being able to find a file.
+npm error enoent
+npm error A complete log of this run can be found in: <audit-owned-scratch>/npm-cache/_logs/2026-11-17T17_30_27_654Z-debug-0.log

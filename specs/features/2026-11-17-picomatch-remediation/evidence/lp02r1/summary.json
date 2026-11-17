@@ -1,0 +1,21 @@
+{
+  "status": "PASSED_SCOPED_PROTOTYPE",
+  "date": "2026-11-18",
+  "matrix_cases": 20,
+  "seconds": 1.5975773339960142,
+  "runner_test_methods": 5,
+  "ruff": "PASSED",
+  "format": "PASSED",
+  "mypy": "PASSED_2_FILES",
+  "javascript_syntax": "PASSED",
+  "patch_same_as_lp02": true,
+  "matrix_same_as_lp02": true,
+  "only_changed_package_file": [
+    "lib/parse.js"
+  ],
+  "app_or_policy_changed": false,
+  "global_library_security_proof": false,
+  "upstream_scanner_verdict": "Blocked retained; not rerun",
+  "stage_b": "Not authorized",
+  "next": "Owner code review; stop"
+}
