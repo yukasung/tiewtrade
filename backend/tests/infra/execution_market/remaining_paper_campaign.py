@@ -25,6 +25,7 @@ from tests.infra.execution_market import (
 from tests.infra.execution_market import (
     profile_protections as protection,
 )
+from tests.infra.execution_market import profile_publisher_recovery as clock_recovery
 from tests.infra.execution_market import (
     profile_workload as workload,
 )
@@ -286,8 +287,27 @@ async def main() -> int:
         "--acceptance-profile", choices=tuple(internal.PROFILES), default=internal.NAME
     )
     parser.add_argument("--failure-timeline", action="store_true")
+    parser.add_argument("--publisher-clock-recovery", action="store_true")
+    parser.add_argument("--publisher-lease-observer", action="store_true")
+    parser.add_argument("--publisher-fence-observer", action="store_true")
+    parser.add_argument("--publisher-fence-fail-fast", action="store_true")
+    parser.add_argument("--publisher-fence-timing", action="store_true")
+    parser.add_argument("--observer-scheduled-samples", action="store_true")
+    parser.add_argument("--observer-w3-prefix", action="store_true")
     parser.add_argument("--observation-poll-seconds", type=float, choices=(0.25, 1.0), default=0.25)
     args = parser.parse_args()
+    from tests.infra.execution_market.profile_publisher_lease_load import (
+        validate_options as validate_lease_options,
+    )
+
+    try:
+        validate_lease_options(args)
+    except ValueError as option_error:
+        parser.error(str(option_error))
+    try:
+        clock_recovery.validate_options(args)
+    except ValueError as option_error:
+        parser.error(str(option_error))
     if getattr(args, "failure_timeline", False) and (
         args.phase != "SMOKE" or args.acceptance_profile != internal.RELEASE_NAME
     ):
@@ -395,6 +415,13 @@ async def main() -> int:
             final_tail_drain=True,
             diagnostics=False,
             failure_timeline=getattr(args, "failure_timeline", False),
+            publisher_clock_recovery=getattr(args, "publisher_clock_recovery", False),
+            publisher_lease_observer=getattr(args, "publisher_lease_observer", False),
+            publisher_fence_observer=getattr(args, "publisher_fence_observer", False),
+            publisher_fence_fail_fast=getattr(args, "publisher_fence_fail_fast", False),
+            publisher_fence_timing=getattr(args, "publisher_fence_timing", False),
+            observer_scheduled_samples=getattr(args, "observer_scheduled_samples", False),
+            observer_w3_prefix=getattr(args, "observer_w3_prefix", False),
             observation_poll_seconds=getattr(args, "observation_poll_seconds", 0.25),
             worker_only=False,
             baseline_manifest=None,
@@ -423,6 +450,7 @@ async def main() -> int:
         workload.save(
             root / "manifest.json",
             {
+                **clock_recovery.configuration(args),
                 "phase": args.phase,
                 "profile": args.acceptance_profile,
                 "started_at": datetime.now(ZoneInfo("Asia/Bangkok")).isoformat(),
@@ -479,7 +507,9 @@ async def main() -> int:
         )
 
     try:
-        async with asyncio.timeout(1200 if args.phase == "SMOKE" else None):
+        async with asyncio.timeout(
+            3600 if args.observer_w3_prefix else 1200 if args.phase == "SMOKE" else None
+        ):
             code = await internal.run_preflighted(
                 root / "preflight.json", ROOT, check_services, phase_run
             )
@@ -523,27 +553,54 @@ async def main() -> int:
             error = error or type(failure).__name__
         workload.save(root / "cleanup.json", cleanup)
         elapsed = time.monotonic() - start
-        if args.phase == "SMOKE" and elapsed > 1200:
+        if (args.phase == "SMOKE" and elapsed > 1200) or (
+            args.observer_w3_prefix and elapsed > 3600
+        ):
             error = error or "TimeoutError"
         if not unchanged:
             error = error or "CandidateChanged"
         if error is not None:
             status = "FAILED" if workload_status == "FAILED" else "INCOMPLETE"
             code = 1
+        prefix_diagnostic: dict[str, object] = {}
+        if args.observer_w3_prefix:
+            observed = root / "run" / "result.json"
+            prefix_diagnostic = {
+                "diagnostic_status": "COMPLETE"
+                if error is None
+                and unchanged
+                and cleanup_complete
+                and observed.exists()
+                and json.loads(observed.read_text()).get("diagnostic_status") == "COMPLETE"
+                else "INCOMPLETE",
+                "acceptance_scope": "W3 prefix only; four-hour W3 remains Incomplete",
+            }
         workload.save(
             root / "campaign-result.json",
             {
                 "status": status,
                 "workload_status": workload_status,
+                **prefix_diagnostic,
                 "cleanup_complete": cleanup_complete,
                 "exit_code": code,
                 "seconds": elapsed,
                 "error_type": error,
                 "candidate_unchanged": unchanged,
                 "free_bytes_after": shutil.disk_usage(ROOT).free,
-                "budget_seconds": 1200 if args.phase == "SMOKE" else None,
+                "budget_seconds": 3600
+                if args.observer_w3_prefix
+                else 1200
+                if args.phase == "SMOKE"
+                else None,
                 "budget_scope": "preflight,fixture,measurement,verification,cleanup",
-                **({"diagnostic_only": True} if getattr(args, "failure_timeline", False) else {}),
+                **(
+                    {"diagnostic_only": True}
+                    if (
+                        getattr(args, "failure_timeline", False)
+                        or getattr(args, "publisher_lease_observer", False)
+                    )
+                    else {}
+                ),
             },
         )
         if not unchanged and sys.exception() is None:

@@ -36,6 +36,8 @@ from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine
 from sqlalchemy.pool import QueuePool
 
 from tests.infra.execution_market import profile_internal as internal
+from tests.infra.execution_market import profile_observer_prefix as prefix
+from tests.infra.execution_market import profile_publisher_recovery as clock_recovery
 from tests.infra.execution_market.profile_parent_poll import (
     ParentPollGate,
     poll_interval,
@@ -58,6 +60,7 @@ from tiewtrade.core.orders import (
     OrderStatus,
     OrderType,
     QuoteBudget,
+    SourceUnavailableError,
     TimeInForce,
     TradingMode,
 )
@@ -307,10 +310,7 @@ async def bounded_map(
     try:
         return list(await asyncio.gather(*tasks))
     finally:
-        for task in tasks:
-            if not task.done():
-                task.cancel()
-        await asyncio.gather(*tasks, return_exceptions=True)
+        await join_owned_tasks(tasks, sys.exception())
 
 
 async def acquire_sources(engine: AsyncEngine) -> tuple[BookLease, FeedLease]:
@@ -345,69 +345,147 @@ async def publish_market(
     price_amount: Money | None = None,
     publication: dict[str, Any] | None = None,
 ) -> tuple[BookLease, FeedLease]:
-    async with market_data_session(engine) as session:
-        book_lease = await renew_book_writer(session, book_lease)
-        now = (await session.execute("SELECT clock_timestamp()")).scalar_one()
-        book = BookState(
-            PAIR,
-            book_lease.last_input_id + 1,
-            book_lease.generation,
-            now,
-            now,
-            (
-                BookLevel(Money.of(99, "USDT"), Quantity.of(1_000_000, "BTC")),
-                BookLevel(Money.of(1, "USDT"), Quantity.of(1_000_000, "BTC")),
-            ),
-            (
-                BookLevel(
-                    Money.of(100, "USDT"),
-                    Quantity.of(1_000_000, "BTC") if ask_quantity is None else ask_quantity,
-                ),
-                BookLevel(Money.of(120, "USDT"), Quantity.of(1_000_000, "BTC")),
-            ),
-            True,
-            rebase,
-        )
-        metadata = ExecutionMetadata(
-            constraints(OrderType.MARKET),
-            constraints(OrderType.LIMIT),
-            now,
-            SOURCE_DOCUMENT,
-        )
-        book_lease = await publish_input(session, book_lease, book, metadata)
-        if heartbeat_per_book or update_price:
-            price_lease = await renew_writer(session, price_lease)
-        if update_price:
-            snapshot = await read_snapshot(session)
-            row = next(value for value in snapshot.rows if value.base == "BTC")
-            observation = QuoteObservation(
-                row.source,
-                "BTC",
-                "USDT",
-                Money.of(100, "USDT") if price_amount is None else price_amount,
-                trade_id,
-                now,
-                now,
-                ObservationKind.STREAM,
-            )
-            changed = await write_price(
-                session,
-                price_lease,
-                replace(
-                    row,
-                    observation=observation,
-                    reconciled_generation=price_lease.generation,
-                    effective_readiness="READY",
-                    reason=None,
-                    unavailable_since=None,
-                    order_ambiguous_at=None,
-                ),
-            )
-            if not changed and trade_id == 1:
-                raise RuntimeError("F15_WORKLOAD_PRICE_NOT_PUBLISHED")
+    recovery = clock_recovery.current()
+    if recovery is not None and recovery.publisher_task is not asyncio.current_task():
+        recovery = None
+
+    async def transaction(
+        attempt: clock_recovery.Attempt | None = None,
+        budget: asyncio.Timeout | None = None,
+        *,
+        retry: bool = False,
+    ) -> tuple[BookLease, FeedLease, datetime]:
+        next_book, next_price = book_lease, price_lease
+        rejected: SourceUnavailableError | None = None
+        async with market_data_session(engine) as session:
+            try:
+                next_book = await renew_book_writer(session, next_book)
+                if recovery is not None and retry:
+                    recovery.require_retry_identity(next_book)
+                now = (await session.execute("SELECT clock_timestamp()")).scalar_one()
+                book = BookState(
+                    PAIR,
+                    next_book.last_input_id + 1,
+                    next_book.generation,
+                    now,
+                    now,
+                    (
+                        BookLevel(Money.of(99, "USDT"), Quantity.of(1_000_000, "BTC")),
+                        BookLevel(Money.of(1, "USDT"), Quantity.of(1_000_000, "BTC")),
+                    ),
+                    (
+                        BookLevel(
+                            Money.of(100, "USDT"),
+                            Quantity.of(1_000_000, "BTC") if ask_quantity is None else ask_quantity,
+                        ),
+                        BookLevel(Money.of(120, "USDT"), Quantity.of(1_000_000, "BTC")),
+                    ),
+                    True,
+                    rebase,
+                )
+                metadata = ExecutionMetadata(
+                    constraints(OrderType.MARKET),
+                    constraints(OrderType.LIMIT),
+                    now,
+                    SOURCE_DOCUMENT,
+                )
+                with (
+                    clock_recovery.capture(attempt, book, next_book, now)
+                    if attempt is not None
+                    else nullcontext()
+                ):
+                    next_book = await publish_input(session, next_book, book, metadata)
+                if heartbeat_per_book or update_price:
+                    next_price = await renew_writer(session, next_price)
+                if update_price:
+                    snapshot = await read_snapshot(session)
+                    row = next(value for value in snapshot.rows if value.base == "BTC")
+                    observation = QuoteObservation(
+                        row.source,
+                        "BTC",
+                        "USDT",
+                        Money.of(100, "USDT") if price_amount is None else price_amount,
+                        trade_id,
+                        now,
+                        now,
+                        ObservationKind.STREAM,
+                    )
+                    changed = await write_price(
+                        session,
+                        next_price,
+                        replace(
+                            row,
+                            observation=observation,
+                            reconciled_generation=next_price.generation,
+                            effective_readiness="READY",
+                            reason=None,
+                            unavailable_since=None,
+                            order_ambiguous_at=None,
+                        ),
+                    )
+                    if not changed and trade_id == 1:
+                        raise RuntimeError("F15_WORKLOAD_PRICE_NOT_PUBLISHED")
+            except SourceUnavailableError as error:
+                if (
+                    recovery is not None
+                    and attempt is not None
+                    and budget is not None
+                    and recovery.claim(attempt, error)
+                ):
+                    budget.reschedule(recovery.deadline)
+                    active = session._connection.get_transaction()
+                    if active is None:
+                        error.add_note("publisher rollback not confirmed: no active transaction")
+                        raise
+                    try:
+                        await active.rollback()
+                    except asyncio.CancelledError:
+                        raise
+                    except Exception as rollback_error:
+                        error.add_note(
+                            f"publisher rollback not confirmed: {type(rollback_error).__name__}"
+                        )
+                        raise error from rollback_error
+                    recovery.rolled_back(attempt)
+                    rejected = error
+                else:
+                    raise
+        # Normal exit exposes close errors that the error path may suppress.
+        if rejected is not None:
+            raise rejected
+        if attempt is not None:
+            attempt.committed_at = monotonic()
+        return next_book, next_price, now
+
+    if recovery is None:
+        following_book, following_price, now = await transaction()
+    else:
+        first = recovery.new_attempt(tick=trade_id)
+        try:
+            async with asyncio.timeout(None) as budget:
+                try:
+                    following_book, following_price, now = await transaction(first, budget)
+                except SourceUnavailableError as error:
+                    if not recovery.retry_ready(first, error):
+                        raise
+                    recovery.retrying()
+                    second = recovery.new_attempt(tick=trade_id)
+                    following_book, following_price, now = await transaction(
+                        second, budget, retry=True
+                    )
+                    # The recovery bound ends only at a confirmed commit/session exit.
+                    if second.committed_at is None or second.committed_at > (
+                        recovery.deadline or 0
+                    ):
+                        raise TimeoutError("publisher clock recovery budget exceeded") from error
+                    budget.reschedule(None)
+                    recovery.committed(second)
+        except BaseException as error:
+            recovery.abort(error)
+            raise
     if publication is not None:
         publication.setdefault("first_input_ready", now.isoformat())
-    return book_lease, price_lease
+    return following_book, following_price
 
 
 class PricePublishOptions(TypedDict, total=False):
@@ -471,32 +549,136 @@ async def wait_publisher_ready(publisher: asyncio.Task[None], stats: dict[str, A
             await asyncio.sleep(0.01)
 
 
+def check_observer(failure: asyncio.Future[None] | None) -> None:
+    if failure is not None and failure.done():
+        raise RuntimeError("F17_FENCE_OBSERVER_EVIDENCE_INCOMPLETE")
+
+
 async def with_publisher[T](
     operation: Awaitable[T],
-    publisher: asyncio.Task[None],
+    publisher: asyncio.Task[None] | None,
     *,
+    failure: asyncio.Future[None] | None = None,
     checks: tuple[asyncio.Task[None], ...] = (),
+    cutoff: asyncio.Task[None] | None = None,
 ) -> T:
     """Fail on source/check errors immediately and join abandoned workload tasks."""
+    if publisher is None and failure is None and cutoff is None:
+        return await operation
     task = asyncio.ensure_future(operation)
+    stopped_before_start = (
+        failure is not None and failure.done() and not isinstance(operation, asyncio.Future)
+    )
+    if stopped_before_start:
+        task.cancel()
     pending_checks = set(checks)
     try:
         while True:
             done, _ = await asyncio.wait(
-                (task, publisher, *pending_checks), return_when=asyncio.FIRST_COMPLETED
+                (
+                    task,
+                    *(() if publisher is None else (publisher,)),
+                    *pending_checks,
+                    *(() if cutoff is None else (cutoff,)),
+                    *(() if failure is None else (failure,)),
+                ),
+                return_when=asyncio.FIRST_COMPLETED,
             )
+            if failure is not None or cutoff is not None:
+                # Preserve already available real failures before the diagnostic stop signal.
+                for completed in (task, publisher):
+                    if (
+                        not (completed is task and stopped_before_start)
+                        and completed is not None
+                        and completed.done()
+                        and (completed.cancelled() or completed.exception() is not None)
+                    ):
+                        await completed
             for check in pending_checks.intersection(done):
                 await check
                 pending_checks.remove(check)
-            if publisher in done:
+            if publisher is not None and publisher in done:
                 await publisher
                 raise RuntimeError("F15_WORKLOAD_PUBLISHER_STOPPED_UNEXPECTEDLY")
+            check_observer(failure)
+            if cutoff is not None and cutoff in done:
+                await cutoff  # Timer failure/cancellation is never a planned cutoff.
+                if not task.done():
+                    task.cancel()
+                await asyncio.gather(task, return_exceptions=True)
+                if not task.cancelled() and task.exception() is not None:
+                    await task  # Preserve errors raised while cancelling in-flight work.
+                check_observer(failure)
+                for checked in (publisher, *pending_checks):
+                    if checked is not None and checked.done():
+                        await checked
+                        if checked is publisher:
+                            raise RuntimeError("F15_WORKLOAD_PUBLISHER_STOPPED_UNEXPECTEDLY")
+                raise prefix.PrefixCutoffError("F17_PLANNED_PREFIX_CUTOFF")
             if task in done:
                 return await task
     finally:
         if not task.done():
             task.cancel()
-        await asyncio.gather(task, return_exceptions=True)
+        joined = asyncio.gather(task, return_exceptions=True)
+        if failure is None:
+            await joined
+        else:
+            cancellation: asyncio.CancelledError | None = None
+            while not joined.done():
+                try:
+                    await asyncio.shield(joined)
+                except asyncio.CancelledError as error:
+                    cancellation = cancellation or error
+            if cancellation is not None and sys.exception() is None:
+                raise cancellation
+
+
+async def finish_observed_cleanup(
+    operation: Awaitable[None], primary: BaseException | None
+) -> None:
+    """Join owned finalizers through repeated caller cancellation; retain the original failure."""
+    task = asyncio.ensure_future(operation)
+    cancelled: asyncio.CancelledError | None = None
+    while not task.done():
+        try:
+            await asyncio.shield(task)
+        except asyncio.CancelledError as error:
+            cancelled = cancelled or error
+        except BaseException:
+            break  # Retrieve the exact exception below, after task ownership ends.
+    try:
+        task.result()
+    except BaseException as error:
+        if primary is None:
+            raise
+        primary.add_note(f"owned cleanup failed: {type(error).__name__}")
+    if cancelled is not None:
+        if primary is None:
+            raise cancelled
+        primary.add_note("caller cancelled during owned cleanup")
+
+
+async def join_owned_tasks(tasks: list[asyncio.Task[Any]], primary: BaseException | None) -> None:
+    """Cancel once, then join through repeated parent cancellation before disposing pools."""
+    for task in tasks:
+        if not task.done() and not task.cancelling():
+            task.cancel()
+
+    async def join() -> None:
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+        original = primary
+        for result in results:
+            if not isinstance(result, BaseException) or isinstance(result, asyncio.CancelledError):
+                continue
+            if original is None:
+                original = result
+            elif result is not original:
+                original.add_note(f"owned child cleanup failed: {type(result).__name__}")
+        if primary is None and original is not None:
+            raise original
+
+    await finish_observed_cleanup(join(), primary)
 
 
 async def seed_owners(
@@ -751,6 +933,7 @@ def paper_worker_environment() -> dict[str, str]:
 
 class WorkerObservationOptions(TypedDict, total=False):
     failure_timeline: bool
+    observed_startup: bool
 
 
 async def start_worker_processes(
@@ -763,7 +946,20 @@ async def start_worker_processes(
     r8_claim_budget: bool = False,
     coordinate_claims: bool = False,
     acceptance_profile: str | None = None,
+    rebuild_fixture: bool = False,
+    observed_startup: bool = False,
 ) -> tuple[list[asyncio.subprocess.Process], Path, list[Path]]:
+    if type(rebuild_fixture) is not bool or (
+        rebuild_fixture
+        and (
+            acceptance_profile is not None
+            or diagnostics
+            or failure_timeline
+            or not r8_claim_budget
+            or not coordinate_claims
+        )
+    ):
+        raise ValueError("fixture worker requires isolated standalone R8 coordination")
     internal.validate(
         argparse.Namespace(
             acceptance_profile=acceptance_profile,
@@ -775,32 +971,67 @@ async def start_worker_processes(
     validate_claim_coordination(coordinate_claims, r8=r8_claim_budget)
     stop_path = output / f"{group}.stop"
     metrics_paths = [output / f"{group}-{number}.json" for number in range(count)]
-    processes = [
-        await asyncio.create_subprocess_exec(
-            sys.executable,
-            "-m",
-            "tests.infra.execution_market.profile_workload",
-            "--worker-only",
-            "--worker-name",
-            f"f15-workload-{group}-{number}",
-            "--worker-stop",
-            str(stop_path),
-            "--worker-metrics",
-            str(metrics_paths[number]),
-            *(["--diagnostics"] if diagnostics else []),
-            *(["--failure-timeline"] if failure_timeline else []),
-            *(["--r8-claim-budget"] if r8_claim_budget else []),
-            *(["--coordinate-claims"] if coordinate_claims else []),
-            *(["--acceptance-profile", acceptance_profile] if acceptance_profile else []),
-            env=paper_worker_environment(),
-        )
-        for number in range(count)
-    ]
+    processes: list[asyncio.subprocess.Process] = []
     try:
+        for number in range(count):
+            spawn_operation = asyncio.create_subprocess_exec(
+                sys.executable,
+                "-m",
+                (
+                    "tests.infra.execution_market.profile_rebuild20"
+                    if rebuild_fixture
+                    else "tests.infra.execution_market.profile_workload"
+                ),
+                "--worker-only",
+                "--worker-name",
+                f"f15-workload-{group}-{number}",
+                "--worker-stop",
+                str(stop_path),
+                "--worker-metrics",
+                str(metrics_paths[number]),
+                *(["--diagnostics"] if diagnostics else []),
+                *(["--failure-timeline"] if failure_timeline else []),
+                *(["--r8-claim-budget"] if r8_claim_budget else []),
+                *(["--coordinate-claims"] if coordinate_claims else []),
+                *(["--acceptance-profile", acceptance_profile] if acceptance_profile else []),
+                env=paper_worker_environment(),
+            )
+            if not observed_startup:
+                processes.append(await spawn_operation)
+                continue
+            spawn = asyncio.create_task(spawn_operation)
+            cancelled: asyncio.CancelledError | None = None
+            while not spawn.done():
+                try:
+                    await asyncio.shield(spawn)
+                except asyncio.CancelledError as error:
+                    cancelled = cancelled or error
+            processes.append(spawn.result())
+            if cancelled is not None:
+                raise cancelled
         for process, metrics in zip(processes, metrics_paths, strict=True):
             WORKER_RUNTIME_PIDS[process.pid] = await wait_runtime_pid(process, metrics)
-    except BaseException:
-        await stop_worker_processes(processes, stop_path)
+    except BaseException as primary:
+        if rebuild_fixture:
+            from tests.infra.execution_market.profile_rebuild20 import stop_fixture_workers
+
+            try:
+                await stop_fixture_workers(processes, stop_path)
+            except BaseException as error:
+                primary.add_note(f"worker startup cleanup failed: {type(error).__name__}")
+                for note in getattr(error, "__notes__", []):
+                    primary.add_note(note)
+        else:
+            try:
+                cleanup = stop_worker_processes(processes, stop_path)
+                if observed_startup:
+                    await finish_observed_cleanup(cleanup, primary)
+                else:
+                    await cleanup
+            except BaseException as error:
+                if not observed_startup:
+                    raise
+                primary.add_note(f"worker startup cleanup failed: {type(error).__name__}")
         raise
     return processes, stop_path, metrics_paths
 
@@ -858,6 +1089,16 @@ async def publish_overflow(engine: AsyncEngine, *, inputs: int = 4097) -> int:
     return int(book.last_input_id)
 
 
+TAIL_CURSOR_SQL = """SELECT a.availability,
+    coalesce((SELECT max(k.input_id) FROM paper_execution_input_keys k
+              WHERE k.episode_id=a.episode_id),0) AS input_id
+    FROM paper_order_activity a WHERE a.episode_id=:episode"""
+
+
+async def read_input_cursor(session: db_session.UserSession, episode: UUID) -> Any:
+    return (await session.execute(TAIL_CURSOR_SQL, {"episode": episode})).one()
+
+
 async def wait_for_input_recovery(
     engine: AsyncEngine,
     owners: list[OwnerState],
@@ -867,15 +1108,7 @@ async def wait_for_input_recovery(
 ) -> None:
     async def recovered(owner: OwnerState) -> bool:
         async with poll_session(engine, owner.user_id, "input_recovery", poll_gate) as session:
-            row = (
-                await session.execute(
-                    """SELECT a.availability,coalesce(max(k.input_id),0) AS input_id
-                    FROM paper_order_activity a
-                    LEFT JOIN paper_execution_input_keys k ON k.episode_id=a.episode_id
-                    WHERE a.episode_id=:episode GROUP BY a.availability""",
-                    {"episode": owner.wallet.episode_id},
-                )
-            ).one()
+            row = await read_input_cursor(session, owner.wallet.episode_id)
         return bool(row.availability == "READY" and row.input_id >= expected_input_id)
 
     async with asyncio.timeout(60):
@@ -983,15 +1216,7 @@ async def drain_final_tail(
                 async with poll_session(
                     engine, owner.user_id, "final_cursor", poll_gate
                 ) as session:
-                    row = (
-                        await session.execute(
-                            """SELECT a.availability,coalesce(max(k.input_id),0) AS input_id
-                        FROM paper_order_activity a LEFT JOIN paper_execution_input_keys k
-                          ON k.episode_id=a.episode_id WHERE a.episode_id=:episode
-                        GROUP BY a.availability""",
-                            {"episode": owner.wallet.episode_id},
-                        )
-                    ).one()
+                    row = await read_input_cursor(session, owner.wallet.episode_id)
                 return {
                     "owner": str(owner.user_id),
                     "cursor": int(row.input_id),
@@ -1092,10 +1317,13 @@ async def run_fault_schedule(
     observations: list[dict[str, object]],
     on_transition: Callable[[dict[str, object]], None] | None = None,
     recover: Callable[[dict[str, object]], Awaitable[None]] | None = None,
+    prefix_started: float | None = None,
 ) -> None:
-    started = monotonic()
+    started = monotonic() if prefix_started is None else prefix_started
     for fault in events:
         await asyncio.sleep(max(0, started + fault.offset_seconds - monotonic()))
+        if prefix_started is not None and monotonic() >= prefix_started + prefix.SECONDS:
+            return
         await gate.pause()
         active_at_fault = gate.active
         fault_started = monotonic()
@@ -1893,10 +2121,7 @@ async def run_scheduled_cycles(
         primary = error
         raise
     finally:
-        for task in tasks:
-            if not task.done():
-                task.cancel()
-        await asyncio.gather(*tasks, return_exceptions=True)
+        await join_owned_tasks(tasks, sys.exception())
         if cycle_report is not None:
             summary["original_passed"] = (
                 summary["interrupted"] == summary["over_original"] == 0
@@ -2028,6 +2253,15 @@ async def read_baseline(
 
 
 async def run(args: argparse.Namespace) -> int:
+    from tests.infra.execution_market.profile_publisher_lease_load import (
+        LoadLeaseObserver,
+    )
+    from tests.infra.execution_market.profile_publisher_lease_load import (
+        validate_options as validate_lease_options,
+    )
+
+    validate_lease_options(args)
+    clock_recovery.validate_options(args)
     if getattr(args, "acceptance_profile", None) == internal.RELEASE_TIMING_NAME and getattr(
         args, "diagnostics", False
     ):
@@ -2043,26 +2277,62 @@ async def run(args: argparse.Namespace) -> int:
     validate_claim_coordination(
         getattr(args, "coordinate_claims", False), r8=getattr(args, "r8_claim_budget", False)
     )
-    cap = 1200 if internal.selected(args) and args.phase == "SMOKE" else None
+    cap = (
+        prefix.BUDGET_SECONDS
+        if getattr(args, "observer_w3_prefix", False)
+        else 1200
+        if internal.selected(args) and args.phase == "SMOKE"
+        else None
+    )
+    readiness_status = {"write_failed": False}
     observation: AbstractContextManager[None] = nullcontext()
     if internal.selected(args):
         from tests.infra.execution_market.profile_publisher_readiness import (
             observe_publisher_readiness,
         )
 
-        observation = observe_publisher_readiness(args.output / "publisher-readiness.json")
+        observation = observe_publisher_readiness(
+            args.output / "publisher-readiness.json", evidence_status=readiness_status
+        )
     pools = None
+    lease_observer = None
     async with AsyncExitStack() as stack:
+        if getattr(args, "publisher_clock_recovery", False):
+            stack.enter_context(
+                clock_recovery.ClockRecovery(
+                    args.output / "publisher-clock-recovery.json"
+                ).observe()
+            )
+        if getattr(args, "publisher_lease_observer", False):
+            lease_observer = LoadLeaseObserver(
+                args.output,
+                readiness_status,
+                fence_observer=getattr(args, "publisher_fence_observer", False),
+                fence_fail_fast=getattr(args, "publisher_fence_fail_fast", False),
+                fence_timing=getattr(args, "publisher_fence_timing", False),
+                scheduled_samples=getattr(args, "observer_scheduled_samples", False),
+                w3_prefix=getattr(args, "observer_w3_prefix", False),
+            )
+            stack.enter_context(lease_observer.observe())
         stack.enter_context(observation)
         if internal.selected(args):
             from tests.infra.execution_market.profile_owned_pools import (
-                PARENT_CONFIGURATION,
                 observe_owned,
+                parent_configuration,
                 validate_reports,
             )
 
             pools = await stack.enter_async_context(
-                observe_owned(args.output / "parent.owned-pools.json", PARENT_CONFIGURATION)
+                observe_owned(
+                    args.output / "parent.owned-pools.json",
+                    parent_configuration(
+                        publisher_lease_observer=getattr(args, "publisher_lease_observer", False),
+                        publisher_fence_observer=getattr(args, "publisher_fence_observer", False),
+                        observer_scheduled_samples=getattr(
+                            args, "observer_scheduled_samples", False
+                        ),
+                    ),
+                )
             )
         async with asyncio.timeout(cap):
             failure_only = getattr(args, "failure_timeline", False)
@@ -2073,13 +2343,37 @@ async def run(args: argparse.Namespace) -> int:
                     args, **({"failure_only": True} if failure_only else {})
                 )
             else:
-                code = await _run(args)
+                if lease_observer is not None and lease_observer.failure is not None:
+                    if lease_observer.scheduled_enabled:
+                        code = await _run(
+                            args,
+                            observer_failure=lease_observer.failure,
+                            measurement_started=lease_observer.measurement_started,
+                        )
+                    else:
+                        code = await _run(args, observer_failure=lease_observer.failure)
+                else:
+                    code = await _run(args)
     if pools is not None and (args.output / "result.json").exists():
         result = json.loads((args.output / "result.json").read_text())
         report = validate_reports(
-            pools.path, [Path(p) for p in result.get("owned_worker_pool_paths", [])], args.workers
+            pools.path,
+            [Path(p) for p in result.get("owned_worker_pool_paths", [])],
+            args.workers,
+            publisher_lease_observer=getattr(args, "publisher_lease_observer", False),
+            publisher_fence_observer=getattr(args, "publisher_fence_observer", False),
+            observer_scheduled_samples=getattr(args, "observer_scheduled_samples", False),
         )
         save(args.output / "pool-contract.json", report)
+        if getattr(args, "observer_w3_prefix", False):
+            result["pool_contract"] = report
+            lease = json.loads((args.output / "publisher-lease.json").read_text())
+            errors = prefix.completion_errors(result, lease)
+            result["diagnostic_errors"] = errors
+            result["diagnostic_status"] = "INCOMPLETE" if errors else "COMPLETE"
+            result["status"] = "INCOMPLETE"
+            save(args.output / "result.json", result)
+            return 2
         base_passed = result["base_assertions_passed"]
         result["pool_contract"] = report
         result["resource_assertions_passed"] = bool(
@@ -2099,12 +2393,26 @@ async def run(args: argparse.Namespace) -> int:
 
 
 async def _run(
-    args: argparse.Namespace, *, parent_runtime: RuntimeObservation | None = None
+    args: argparse.Namespace,
+    *,
+    measurement_started: Callable[[float], None] | None = None,
+    parent_runtime: RuntimeObservation | None = None,
+    observer_failure: asyncio.Future[None] | None = None,
 ) -> int:
+    clock_recovery.validate_options(args)
+    if getattr(args, "publisher_clock_recovery", False) and clock_recovery.current() is None:
+        raise ValueError("publisher clock recovery context missing")
     validate_options(args)
     internal_phase = internal.validate(args)
     if internal_phase is not None:
         internal.guard_database(dict(os.environ))
+    prefix_enabled = getattr(args, "observer_w3_prefix", False)
+    if prefix_enabled:
+        from tests.infra.execution_market.profile_publisher_lease_load import (
+            validate_options as validate_prefix_options,
+        )
+
+        validate_prefix_options(args)
     w3_duration = W3_DURATION_SECONDS if internal_phase is None else internal_phase.seconds
     internal_options = (
         {"acceptance_profile": args.acceptance_profile} if internal_phase is not None else {}
@@ -2121,6 +2429,8 @@ async def _run(
     observation_options: WorkerObservationOptions = (
         {"failure_timeline": True} if getattr(args, "failure_timeline", False) else {}
     )
+    if observer_failure is not None:
+        observation_options["observed_startup"] = True
     coordinate_claims = getattr(args, "coordinate_claims", False)
     validate_claim_coordination(coordinate_claims, r8=getattr(args, "r8_claim_budget", False))
     poll_gate = (
@@ -2167,6 +2477,7 @@ async def _run(
     fault_events: list[FaultEvent] = []
     fault_schedule_digest: str | None = None
     processing_window: dict[str, object] | None = None
+    prefix_timer: asyncio.Task[None] | None = None
     intake_stack = AsyncExitStack()
     position_checks = None
     position_task: asyncio.Task[None] | None = None
@@ -2194,6 +2505,7 @@ async def _run(
                     args.fault_schedule, profile_name=args.acceptance_profile
                 )
         manifest = {
+            **clock_recovery.configuration(args),
             "acceptance_profile": internal.manifest(args),
             "profile": PROFILE_VERSION,
             "worker_runtime": (
@@ -2265,16 +2577,29 @@ async def _run(
         publisher = asyncio.create_task(
             market_publisher(source, stop, publisher_stats, heartbeat_per_book=heartbeat_per_book)
         )
-        await wait_publisher_ready(publisher, publisher_stats)
-        worker_processes, worker_stop, worker_metrics = await start_worker_processes(
-            args.workers,
-            output,
-            diagnostics=getattr(args, "diagnostics", False),
-            **observation_options,
-            r8_claim_budget=getattr(args, "r8_claim_budget", False),
-            coordinate_claims=coordinate_claims,
-            **internal_options,
-        )
+        if (recovery := clock_recovery.current()) is not None:
+            recovery.publisher_task = publisher
+        if observer_failure is None:
+            await wait_publisher_ready(publisher, publisher_stats)
+        else:
+            await with_publisher(
+                wait_publisher_ready(publisher, publisher_stats),
+                publisher,
+                failure=observer_failure,
+            )
+        async with asyncio.timeout(60 if observer_failure is not None else None):
+            worker_processes, worker_stop, worker_metrics = await start_worker_processes(
+                args.workers,
+                output,
+                diagnostics=getattr(args, "diagnostics", False),
+                **observation_options,
+                r8_claim_budget=getattr(args, "r8_claim_budget", False),
+                coordinate_claims=coordinate_claims,
+                **internal_options,
+            )
+        if observer_failure is not None:
+            # Startup has returned ownership; reuse real-error priority before the next phase.
+            await with_publisher(asyncio.sleep(0), publisher, failure=observer_failure)
         if args.baseline_manifest is None:
             await with_publisher(
                 seed_baseline(
@@ -2285,6 +2610,7 @@ async def _run(
                     **poll_options(poll_gate),
                 ),
                 publisher,
+                failure=observer_failure,
             )
         if args.phase == "BASELINE":
             stop.set()
@@ -2402,6 +2728,7 @@ async def _run(
                         engine.dispose(), scan.dispose(), api.dispose(), source.dispose()
                     )
 
+            prefix_started = monotonic() if prefix_enabled else None
             if gate is not None:
                 fault_task = asyncio.create_task(
                     run_fault_schedule(
@@ -2411,9 +2738,14 @@ async def _run(
                         restart_workers=restart_workers,
                         churn_connections=churn_connections,
                         observations=fault_observations,
+                        prefix_started=prefix_started,
                     )
                 )
-            measured_started = monotonic()
+            measured_started = monotonic() if prefix_started is None else prefix_started
+            if prefix_enabled:
+                prefix_timer = asyncio.create_task(prefix.cutoff(measured_started))
+            if measurement_started is not None:
+                measurement_started(measured_started)
             if internal_phase is not None and args.phase in {"W1", "W2", "W3"}:
                 from tests.infra.execution_market.profile_positions import PositionChecks
 
@@ -2429,6 +2761,8 @@ async def _run(
                 "status": "RUNNING",
             }
             save(output / "processing-window.json", processing_window)
+            if (recovery := clock_recovery.current()) is not None:
+                recovery.window_start = measured_started
             if poll_gate is not None:
                 poll_gate.phase = "measurement"
             if parent_runtime is not None:
@@ -2452,7 +2786,21 @@ async def _run(
                     **schedule_options,
                 ),
                 publisher,
-                checks=() if position_task is None else (position_task,),
+                failure=observer_failure,
+                cutoff=prefix_timer,
+                checks=(
+                    tuple(
+                        task
+                        for task in (
+                            (position_task, fault_task, resource_task)
+                            if prefix_enabled
+                            else (position_task, fault_task)
+                        )
+                        if task is not None
+                    )
+                    if observer_failure is not None
+                    else (() if position_task is None else (position_task,))
+                ),
             )
             if poll_gate is not None:
                 poll_gate.phase = "drain"
@@ -2460,7 +2808,23 @@ async def _run(
                 parent_runtime.mark("cycles_complete")
             if fault_task is not None:
                 await with_publisher(
-                    fault_task, publisher, checks=() if position_task is None else (position_task,)
+                    fault_task,
+                    publisher,
+                    failure=observer_failure,
+                    cutoff=prefix_timer,
+                    checks=(
+                        tuple(
+                            task
+                            for task in (
+                                (position_task, fault_task, resource_task)
+                                if prefix_enabled
+                                else (position_task, fault_task)
+                            )
+                            if task is not None
+                        )
+                        if observer_failure is not None
+                        else (() if position_task is None else (position_task,))
+                    ),
                 )
             if args.phase == "W3" or internal_phase is not None:
                 # Keep feed, workers and resource sampling alive for the full acceptance window.
@@ -2468,12 +2832,28 @@ async def _run(
                 await with_publisher(
                     asyncio.sleep(max(0, measured_started + duration - monotonic())),
                     publisher,
-                    checks=() if position_task is None else (position_task,),
+                    failure=observer_failure,
+                    cutoff=prefix_timer,
+                    checks=(
+                        tuple(
+                            task
+                            for task in (
+                                (position_task, fault_task, resource_task)
+                                if prefix_enabled
+                                else (position_task, fault_task)
+                            )
+                            if task is not None
+                        )
+                        if observer_failure is not None
+                        else (() if position_task is None else (position_task,))
+                    ),
                 )
                 elapsed = monotonic() - measured_started
             if position_task is not None:
                 await position_task
             measured_ended = monotonic()
+            if (recovery := clock_recovery.current()) is not None:
+                recovery.window_end = measured_ended
             processing_window.update(
                 ended=measured_ended,
                 status="MEASURED",
@@ -2487,21 +2867,27 @@ async def _run(
             recovery_input_id = int(publisher_stats.get("last_input_id", 0))
             measured_inputs = int(publisher_stats.get("published", 0)) - measured_input_start
             if final_tail:
-                drain_seconds = await drain_final_tail(
-                    engine,
-                    source,
-                    owners,
-                    publisher,
-                    stop,
-                    publisher_stats,
-                    output / "final-tail-drain.json",
-                    poll_gate=poll_gate if internal_phase is not None else None,
-                    observation_engine=migrator if internal_phase is not None else None,
+                drain_seconds = await with_publisher(
+                    drain_final_tail(
+                        engine,
+                        source,
+                        owners,
+                        publisher,
+                        stop,
+                        publisher_stats,
+                        output / "final-tail-drain.json",
+                        poll_gate=poll_gate if internal_phase is not None else None,
+                        observation_engine=migrator if internal_phase is not None else None,
+                    ),
+                    None,
+                    failure=observer_failure,
                 )
             else:
                 drain_started = monotonic()
                 await with_publisher(
-                    wait_for_input_recovery(engine, owners, recovery_input_id), publisher
+                    wait_for_input_recovery(engine, owners, recovery_input_id),
+                    publisher,
+                    failure=observer_failure,
                 )
                 drain_seconds = monotonic() - drain_started
                 stop.set()
@@ -2510,6 +2896,7 @@ async def _run(
         resource_stop.set()
         await resource_task
         await stop_worker_processes(worker_processes, worker_stop)
+        check_observer(observer_failure)
         if position_checks is not None:
             position_result = await position_checks.final(
                 expected_periodic=w3_duration // 60 if args.phase == "W3" else 0
@@ -2651,19 +3038,79 @@ async def _run(
             "owners": observations,
             "positions": position_result,
         }
+        if (recovery := clock_recovery.current()) is not None:
+            if passed:
+                recovery.validate_success()
+            result["publisher_clock_recovery"] = recovery.report()
         save(output / "resources.json", resource_samples)
         save(output / "result.json", result)
         progress(json.dumps({key: value for key, value in result.items() if key != "owners"}))
         return 0 if passed else 1
+    except prefix.PrefixCutoffError:
+        if not prefix_enabled or prefix_timer is None or not prefix_timer.done():
+            raise
+        ended = monotonic()
+        if processing_window is None:
+            raise ValueError("prefix window missing") from None
+        processing_window.update(
+            ended=ended, status="INCOMPLETE", stop_reason="PLANNED_PREFIX_CUTOFF"
+        )
+        if (recovery := clock_recovery.current()) is not None:
+            recovery.window_end = ended
+        save(output / "processing-window.json", processing_window)
+        save(output / "resources.json", resource_samples)
+        save(
+            output / "result.json",
+            {
+                "status": "INCOMPLETE",
+                "diagnostic_only": True,
+                "diagnostic_status": "INCOMPLETE",
+                "stop_reason": "PLANNED_PREFIX_CUTOFF",
+                "acceptance_profile": args.acceptance_profile,
+                "phase": args.phase,
+                "elapsed_seconds": ended - measured_started,
+                "target_seconds": w3_duration,
+                "diagnostic_target_seconds": prefix.SECONDS,
+                "planned_commands": 28200,
+                "counters": asdict(counters),
+                "inflight_interpretation": "partial; cancellation does not prove rollback",
+                "publisher": publisher_stats,
+                "fault_observations": fault_observations,
+                "worker_failures": worker_process_failures(worker_processes),
+                "owned_worker_pool_paths": [
+                    str(path.with_suffix(".owned-pools.json")) for path in worker_metrics
+                ],
+                "final_tail": "NOT_RUN",
+                "global_invariants": None,
+                "positions": None,
+                "full_replay": "NOT_RUN",
+                "resource_assertions_passed": None,
+            },
+        )
+        return 2  # This result can never be four-hour workload acceptance.
     except BaseException as error:
+        primary_failure = error
+
+        def failure_save(path: Path, value: Any) -> None:
+            try:
+                save(path, value)
+            except BaseException as evidence_error:
+                if observer_failure is None:
+                    raise
+                primary_failure.add_note(
+                    f"failure evidence write failed: {type(evidence_error).__name__}"
+                )
+
+        if (recovery := clock_recovery.current()) is not None:
+            recovery.window_end = monotonic()
         if processing_window is not None:
             processing_window.update(
                 status="FAILED" if isinstance(error, CycleBudgetExceededError) else "INCOMPLETE",
                 failure_observed=monotonic(),
                 fault_observations=fault_observations,
             )
-            save(output / "processing-window.json", processing_window)
-        save(output / "resources.json", resource_samples)
+            failure_save(output / "processing-window.json", processing_window)
+        failure_save(output / "resources.json", resource_samples)
         failure = {
             "failed_at": datetime.now(UTC),
             "error_type": type(error).__name__,
@@ -2672,41 +3119,105 @@ async def _run(
             "worker_failures": worker_process_failures(worker_processes),
             "counters": asdict(counters),
         }
-        save(output / "failure.json", failure)
+        failure_save(output / "failure.json", failure)
         raise
     finally:
         primary_error = sys.exception()
+        if isinstance(primary_error, prefix.PrefixCutoffError):
+            primary_error = None  # A real cleanup failure must supersede planned stop.
         if internal_phase is not None:
             from tests.infra.execution_market.profile_owned_pools import CURRENT
 
             if (tracker := CURRENT.get()) is not None:
                 tracker.begin_quiescence()
-        stop.set()
-        resource_stop.set()
-        if position_task is not None and not position_task.done():
-            position_task.cancel()
-            await asyncio.gather(position_task, return_exceptions=True)
-        if resource_task is not None and not resource_task.done():
-            resource_task.cancel()
-            await asyncio.gather(resource_task, return_exceptions=True)
-        if fault_task is not None and not fault_task.done():
-            fault_task.cancel()
-            await asyncio.gather(fault_task, return_exceptions=True)
-        if publisher is not None:
-            publisher.cancel()
-        if publisher is not None:
-            await asyncio.gather(publisher, return_exceptions=True)
-        if (
-            worker_processes
-            and worker_stop is not None
-            and any(process.returncode is None for process in worker_processes)
-        ):
-            await stop_worker_processes(worker_processes, worker_stop)
-        try:
-            await intake_stack.aclose()
-        finally:
-            for connection in (source, migrator, api, engine, scan):
-                await connection.dispose()
+
+        async def close_owned_resources() -> None:
+            if prefix_enabled:
+                stop.set()
+                resource_stop.set()
+                resources: list[tuple[str, Callable[[], Awaitable[None]]]] = []
+                if (
+                    worker_processes
+                    and worker_stop is not None
+                    and any(process.returncode is None for process in worker_processes)
+                ):
+                    stop_path = worker_stop
+                    resources.append(
+                        ("workers", lambda: stop_worker_processes(worker_processes, stop_path))
+                    )
+                resources.extend(
+                    [
+                        ("intake", intake_stack.aclose),
+                        ("source_pool", source.dispose),
+                        ("migrator_pool", migrator.dispose),
+                        ("api_pool", api.dispose),
+                        ("engine_pool", engine.dispose),
+                        ("scan_pool", scan.dispose),
+                    ]
+                )
+                await prefix.close_owned(
+                    [
+                        ("cutoff", prefix_timer),
+                        ("positions", position_task),
+                        ("resources", resource_task),
+                        ("faults", fault_task),
+                        ("publisher", publisher),
+                    ],
+                    resources,
+                    output=output,
+                    save=save,
+                    primary=primary_error,
+                )
+                return
+            if prefix_timer is not None:
+                if not prefix_timer.done():
+                    prefix_timer.cancel()
+                await asyncio.gather(prefix_timer, return_exceptions=True)
+            stop.set()
+            resource_stop.set()
+            if position_task is not None and (
+                observer_failure is not None or not position_task.done()
+            ):
+                position_task.cancel()
+                await asyncio.gather(position_task, return_exceptions=True)
+            if resource_task is not None and (
+                observer_failure is not None or not resource_task.done()
+            ):
+                resource_task.cancel()
+                await asyncio.gather(resource_task, return_exceptions=True)
+            if fault_task is not None and (observer_failure is not None or not fault_task.done()):
+                fault_task.cancel()
+                await asyncio.gather(fault_task, return_exceptions=True)
+            if publisher is not None:
+                publisher.cancel()
+            if publisher is not None:
+                await asyncio.gather(publisher, return_exceptions=True)
+            if (
+                worker_processes
+                and worker_stop is not None
+                and any(process.returncode is None for process in worker_processes)
+            ):
+                cleanup = stop_worker_processes(worker_processes, worker_stop)
+                if observer_failure is None:
+                    await cleanup
+                else:
+                    await finish_observed_cleanup(cleanup, primary_error)
+            try:
+                if observer_failure is None:
+                    await intake_stack.aclose()
+                else:
+                    await finish_observed_cleanup(intake_stack.aclose(), primary_error)
+            finally:
+                for connection in (source, migrator, api, engine, scan):
+                    if observer_failure is None:
+                        await connection.dispose()
+                    else:
+                        await finish_observed_cleanup(connection.dispose(), primary_error)
+
+        if observer_failure is None:
+            await close_owned_resources()
+        else:
+            await finish_observed_cleanup(close_owned_resources(), primary_error)
         if failure is not None:
             try:
                 failure["worker_failures"] = worker_process_failures(worker_processes)
@@ -2726,6 +3237,10 @@ async def _run(
                 primary_error.add_note(
                     f"poll gate evidence cleanup failed: {type(cleanup_error).__name__}"
                 )
+        if prefix_enabled and (output / "result.json").exists():
+            partial = json.loads((output / "result.json").read_text())
+            partial["worker_failures"] = worker_process_failures(worker_processes)
+            save(output / "result.json", partial)
         if parent_runtime is not None:
             parent_runtime.mark("resources_closed")
 
@@ -2768,6 +3283,13 @@ if __name__ == "__main__":
     parser.add_argument("--parent-poll-limit", type=int)
     parser.add_argument("--diagnostics", action="store_true")
     parser.add_argument("--failure-timeline", action="store_true")
+    parser.add_argument("--publisher-clock-recovery", action="store_true")
+    parser.add_argument("--publisher-lease-observer", action="store_true")
+    parser.add_argument("--publisher-fence-observer", action="store_true")
+    parser.add_argument("--publisher-fence-fail-fast", action="store_true")
+    parser.add_argument("--publisher-fence-timing", action="store_true")
+    parser.add_argument("--observer-scheduled-samples", action="store_true")
+    parser.add_argument("--observer-w3-prefix", action="store_true")
     parser.add_argument("--observation-poll-seconds", type=float, choices=(0.25, 1.0), default=0.25)
     parser.add_argument("--r8-claim-budget", action="store_true")
     parser.add_argument("--coordinate-claims", action="store_true")
@@ -2790,6 +3312,21 @@ if __name__ == "__main__":
     parser.add_argument("--fault-schedule", type=Path)
     parser.add_argument("--redis-container")
     parsed = parser.parse_args()
+    if parsed.publisher_lease_observer:
+        # Observer hooks must address this module's actual CLI globals, not a second import.
+        sys.modules["tests.infra.execution_market.profile_workload"] = sys.modules[__name__]
+    from tests.infra.execution_market.profile_publisher_lease_load import (
+        validate_options as validate_lease_options,
+    )
+
+    try:
+        validate_lease_options(parsed)
+    except ValueError as error:
+        parser.error(str(error))
+    try:
+        clock_recovery.validate_options(parsed)
+    except ValueError as error:
+        parser.error(str(error))
     try:
         validate_options(parsed)
         validate_claim_coordination(parsed.coordinate_claims, r8=parsed.r8_claim_budget)

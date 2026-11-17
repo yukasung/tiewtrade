@@ -1,0 +1,156 @@
+{
+  "status": "INCOMPLETE",
+  "diagnostic_status": "INCOMPLETE",
+  "diagnostic_errors": [
+    "PoolEvidenceIncomplete"
+  ],
+  "total_seconds": 2558.486967417004,
+  "measurement_seconds": 2400.0023125839944,
+  "counters": {
+    "offered": 4734,
+    "admitted": 4733,
+    "completed": 4733,
+    "rejected": 0,
+    "fills": 1893,
+    "cancels": 946,
+    "replays": 947,
+    "cycles": 946
+  },
+  "restart_seconds": 32.989054167002905,
+  "scheduled": {
+    "before_restart": {
+      "count": 30,
+      "outcomes": [
+        "RETURNED"
+      ],
+      "lifecycle_median_ms": 29.244582998217084,
+      "lifecycle_max_ms": 182.03145799634513,
+      "max_lateness_ms": 2.343792002648115
+    },
+    "during_restart": {
+      "count": 1,
+      "outcomes": [
+        "RETURNED"
+      ],
+      "lifecycle_median_ms": 19.645708001917228,
+      "lifecycle_max_ms": 19.645708001917228,
+      "max_lateness_ms": 0.31633400067221373
+    },
+    "after_recovery": {
+      "count": 9,
+      "outcomes": [
+        "RETURNED"
+      ],
+      "lifecycle_median_ms": 23.2777079945663,
+      "lifecycle_max_ms": 51.40524999296758,
+      "max_lateness_ms": 3.0354589980561286
+    }
+  },
+  "scheduled_total": {
+    "count": 40,
+    "outcomes": [
+      "RETURNED"
+    ],
+    "lifecycle_median_ms": 27.351479009666946,
+    "lifecycle_max_ms": 182.03145799634513,
+    "max_lateness_ms": 3.0354589980561286
+  },
+  "natural": {
+    "total_samples": 0,
+    "retained_limit": 64,
+    "observations": [],
+    "errors": {},
+    "failed_observation": null,
+    "no_query_text": true,
+    "task_joined": true,
+    "timing": {
+      "status": "NO_TRIGGER",
+      "counts": {},
+      "recent": [],
+      "failed": null,
+      "retained_limit": 64,
+      "loop_lag": {
+        "count": 48001,
+        "maximum_seconds": 0.23786420798569452,
+        "total_seconds": 24.570169998085476
+      },
+      "lag_task_joined": true,
+      "lag_task_completed": true,
+      "interpretation": "driver and scheduling included; not server-only"
+    }
+  },
+  "publication_counts": {
+    "RETURNED": 24053,
+    "CancelledError": 1
+  },
+  "clock": {
+    "revision": "NC_F17_CLOCK_01",
+    "max_events": 1,
+    "max_retries": 1,
+    "budget_seconds": 1.0,
+    "window_start": 68761.163314791,
+    "window_end": 71161.165627375,
+    "event": null,
+    "terminal_rejection": null,
+    "recovered_count": 0,
+    "clock_recovery_warning": false
+  },
+  "pool_blocker": {
+    "role": "ENGINE",
+    "checked_out_at_dispose": 1,
+    "checked_out_at_final_receipt": 0,
+    "resource_errors": [],
+    "worker_processes_passed": 40
+  },
+  "cleanup": {
+    "status": "PASSED",
+    "database_absent": true,
+    "connections": 0,
+    "locks": 0,
+    "redis_absent": true,
+    "worker_pid_receipts": 40,
+    "active_worker_pids": []
+  },
+  "source_unchanged": true,
+  "full_w3_acceptance": "INCOMPLETE",
+  "financial_final_tail": "NOT_RUN",
+  "scheduled_phase_ms": {
+    "checkout_and_setup": {
+      "count": 40,
+      "median": 0.08343750232597813,
+      "max": 29.229666004539467
+    },
+    "statement_timeout": {
+      "count": 40,
+      "median": 3.4013124968623742,
+      "max": 9.658791997935623
+    },
+    "lock_timeout": {
+      "count": 40,
+      "median": 1.179645500087645,
+      "max": 7.348624989390373
+    },
+    "db_clock": {
+      "count": 40,
+      "median": 1.459082996007055,
+      "max": 4.208334008581005
+    },
+    "activity": {
+      "count": 40,
+      "median": 2.8823749962612055,
+      "max": 89.0944589918945
+    },
+    "locks": {
+      "count": 40,
+      "median": 3.1098539984668605,
+      "max": 6.907792005222291
+    },
+    "session_exit": {
+      "count": 40,
+      "median": 1.6239164979197085,
+      "max": 21.073417010484263
+    }
+  },
+  "scheduled_cold_lifecycle_ms": 182.03145799634513,
+  "scheduled_reused_lifecycle_max_ms": 68.8365420064656
+}

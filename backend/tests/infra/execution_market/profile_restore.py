@@ -244,19 +244,19 @@ async def replay_owner_domain(
         ).scalar_one()
         if replayed_cash != Money.of(cash, "USDT"):
             raise RuntimeError("F15_W4_CASH_REPLAY_MISMATCH")
-        cursor = 0
+        last_evidence = None
         while True:
             batch = await read_execution_inputs(
                 session,
                 episode_id=episode_id,
                 pair=PositionPair("BTC", "USDT"),
-                after_input_id=cursor,
+                after=last_evidence,
                 limit=4096,
             )
             if not batch:
                 break
             evidence += len(batch)
-            cursor = batch[-1].record.market.input_id
+            last_evidence = batch[-1]
         if active:
             await load_matching_state(
                 session,

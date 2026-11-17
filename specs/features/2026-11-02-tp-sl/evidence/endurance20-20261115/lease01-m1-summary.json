@@ -1,0 +1,48 @@
+{
+  "revision": "NC-F17-LEASE-01-M1",
+  "status": "TARGETED_CHECKS_PASSED",
+  "source_changes": {
+    "backend/tests/infra/execution_market/profile_publisher_lease.py": {
+      "diagnostic_candidate": "a367e0782542c13ee55f1716f27b11d208377a51a2a46bda8bbb6591fd4607be",
+      "fixed_candidate": "5ecea8a0abc24036dcc4a5d2a095170bfb7f8886e09b17ed7bb09cc5b7c723ac"
+    },
+    "backend/tests/infra/execution_market/profile_publisher_readiness.py": {
+      "diagnostic_candidate": "e600a57159c3820a0e3acf3342128136a625465dba9226a0277ee6eb459d7fd2",
+      "fixed_candidate": "62707e1e1c90d9c28830c1fe3d41130d99dbd2c94a1c2c75d090a016ba58f1c0"
+    },
+    "backend/tests/infra/execution_market/test_publisher_lease.py": {
+      "diagnostic_candidate": "d2639871c6eab72d469d4437907ef41556abd028a600b659057f8e6866718709",
+      "fixed_candidate": "55033cecc3fd5530e956a36126a265d777d33ccbad5838951c95a3ddb1922257"
+    }
+  },
+  "other_pinned_sources_unchanged": true,
+  "final_tests": {
+    "passed": 27,
+    "seconds": 23.8,
+    "attempt": "1794753351451523000",
+    "scope": "10 readiness fault cases +5 real-PG original lease cases +12 readiness regressions"
+  },
+  "intermediate_tests": [
+    {
+      "attempt": "1794753237072191000",
+      "passed": 33,
+      "failed": 4,
+      "reason": "test injection hit setup rather than selected attempt; corrected"
+    },
+    {
+      "attempt": "1794753306422400000",
+      "passed": 22,
+      "failed": 0
+    }
+  ],
+  "static": {
+    "ruff": "PASSED",
+    "format": "PASSED",
+    "mypy": "PASSED",
+    "files": 3
+  },
+  "diagnostic_rerun": false,
+  "four_hour_rerun": false,
+  "git_actions": false,
+  "remaining": "Owner refactor instruction; prior F17 acceptance unchanged"
+}

@@ -1,0 +1,32 @@
+{
+  "revision": "NC-F17-FENCE-01-REVIEW-REFACTOR",
+  "status": "PASSED_AFFECTED_VALIDATION",
+  "source_bridge": {
+    "backend/tests/infra/execution_market/profile_publisher_fence.py": {
+      "before": "0cf7a5937ed1ff949609bdc622d8695a9a1aa2419d8026fb7eddd8fe9144b0e3",
+      "after": "05549ae696fd477ab8664774399aecb97416f6b5bc9bb8a780cd39a8778e37eb"
+    },
+    "backend/tests/infra/execution_market/test_publisher_fence.py": {
+      "before": "1888d9eab384b9c415181f50d64cd3e96f1c91868c41309304140b0ac56a2059",
+      "after": "d0165d6a862cfcf59165fbe4674fc0fb890c4af800bbac063fa668bac0d6e74f"
+    }
+  },
+  "other_original_pinned_sources_unchanged": true,
+  "tests": {
+    "passed": 20,
+    "seconds": 7.97,
+    "log": "validation-artifacts/f17-clock-recovery-tests-20261115/attempt-1794759588425238000.log",
+    "unchanged_load_regressions_retained": 22
+  },
+  "static": {
+    "ruff": "PASSED",
+    "format": "PASSED",
+    "mypy": "PASSED",
+    "files": 2,
+    "whitespace": "PASSED"
+  },
+  "campaign_rerun": false,
+  "git_actions": false,
+  "old_grades_retained": true,
+  "f17": "PENDING_FULL_VALIDATION"
+}

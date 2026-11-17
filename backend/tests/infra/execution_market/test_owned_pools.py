@@ -591,3 +591,188 @@ async def test_retired_pool_capacity_mutation_still_fails(tmp_path: Path) -> Non
             await engine.dispose()
     report = document(path)
     assert not report["passed"] and report["errors"]["PoolCapacityViolation"] > 0
+
+
+def configured_pool_engine(role: str, size: int, overflow: int) -> AsyncEngine:
+    """Use the existing readonly admin or runtime-role factory for these pool fixtures."""
+    if role == "ADMIN_OBSERVER":
+        return internal.readonly_admin()
+    return create_engine_for(DatabaseRole[role], pool_size=size, max_overflow=overflow)
+
+
+@pytest.mark.parametrize(
+    "enabled,inventory,corruption,expected_passed",
+    [
+        (False, "base", None, True),
+        (True, "witness", None, True),
+        (False, "witness", None, False),
+        (True, "base", None, False),
+        (True, "extra", None, False),
+        (True, "wrong-size", None, False),
+        (True, "wrong-overflow", None, False),
+        (True, "missing-original", None, False),
+        (True, "witness", "borrow", False),
+        (True, "witness", "disposal", False),
+        (True, "witness", "worker-extra", False),
+        (False, "witness", "self-declared", False),
+    ],
+)
+@pytest.mark.usefixtures("internal_database")
+async def test_lease_observer_aggregate_inventory_is_explicit_and_exact(
+    tmp_path: Path,
+    enabled: bool,
+    inventory: str,
+    corruption: str | None,
+    expected_passed: bool,
+) -> None:
+    from tests.infra.execution_market.profile_owned_pools import parent_configuration
+
+    parent, worker = tmp_path / "parent.json", tmp_path / "worker.json"
+    parent_inventory = parent_configuration(publisher_lease_observer=inventory != "base")
+    if inventory == "extra":
+        parent_inventory += [("MARKET_DATA", 1, 0)]
+    elif inventory == "wrong-size":
+        parent_inventory[-1] = ("MARKET_DATA", 2, 0)
+    elif inventory == "wrong-overflow":
+        parent_inventory[-1] = ("MARKET_DATA", 1, 1)
+    elif inventory == "missing-original":
+        parent_inventory = parent_inventory[1:]
+    worker_inventory = WORKER_CONFIGURATION + (
+        [("MARKET_DATA", 1, 0)] if corruption == "worker-extra" else []
+    )
+    for path, configuration in [(parent, parent_inventory), (worker, worker_inventory)]:
+        with OwnedPools(path, configuration):
+            engines = [
+                configured_pool_engine(role, size, overflow)
+                for role, size, overflow in configuration
+            ]
+            for engine in engines:
+                await engine.dispose()
+    report = document(parent)
+    if corruption == "borrow":
+        report["pools"][-1]["checked_out"] = 1
+    elif corruption == "disposal":
+        report["pools"][-1]["final_disposed"] = False
+    elif corruption == "self-declared":
+        report["expected_configuration"] = parent_inventory
+    parent.write_text(json.dumps(report))
+    result = validate_reports(parent, [worker], 1, publisher_lease_observer=enabled)
+    assert result["passed"] is expected_passed
+    if not expected_passed:
+        assert result["incomplete"] or result["violations"]
+    assert parent_configuration() == PARENT_CONFIGURATION
+
+
+@pytest.mark.parametrize("enabled,fence_enabled", [(False, False), (True, False), (True, True)])
+@pytest.mark.usefixtures("internal_database")
+async def test_workload_passes_same_inventory_option_to_tracker_and_aggregator(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    enabled: bool,
+    fence_enabled: bool,
+) -> None:
+    import argparse
+    from contextlib import nullcontext
+
+    from tests.infra.execution_market import profile_workload as workload
+    from tests.infra.execution_market.profile_owned_pools import parent_configuration
+    from tests.infra.execution_market.profile_publisher_lease_load import LoadLeaseObserver
+
+    monkeypatch.setattr(LoadLeaseObserver, "observe", lambda self: nullcontext())
+    args = argparse.Namespace(
+        acceptance_profile=internal.NAME,
+        phase="SMOKE",
+        output=tmp_path,
+        publisher_lease_observer=enabled,
+        publisher_fence_observer=fence_enabled,
+        owners=20,
+        baseline_orders=20,
+        workers=20,
+        rate=2,
+        cycles_per_owner=6,
+        parent_poll_limit=4,
+        r8_claim_budget=True,
+        coordinate_claims=True,
+        publisher_heartbeat_per_book=True,
+        final_tail_drain=True,
+    )
+
+    async def fixture_run(_args: argparse.Namespace) -> int:
+        engines = [
+            configured_pool_engine(role, size, overflow)
+            for role, size, overflow in parent_configuration(
+                publisher_lease_observer=enabled, publisher_fence_observer=fence_enabled
+            )
+        ]
+        for engine in engines:
+            await engine.dispose()
+        paths = []
+        for number in range(args.workers):
+            path = tmp_path / f"worker-{number}.json"
+            with OwnedPools(path, WORKER_CONFIGURATION):
+                for role, size, overflow in WORKER_CONFIGURATION:
+                    engine = configured_pool_engine(role, size, overflow)
+                    await engine.dispose()
+            paths.append(str(path))
+        workload.save(
+            tmp_path / "result.json",
+            {
+                "status": "PASSED",
+                "base_assertions_passed": True,
+                "resource_base_assertions_passed": True,
+                "owned_worker_pool_paths": paths,
+            },
+        )
+        return 0
+
+    monkeypatch.setattr(workload, "_run", fixture_run)
+    assert await workload.run(args) == 0
+    report = document(tmp_path / "result.json")
+    assert report["status"] == "PASSED" and report["pool_contract"]["passed"]
+
+
+@pytest.mark.parametrize(
+    "enabled,corruption", [(False, None), (True, None), (True, "borrow"), (True, "missing")]
+)
+@pytest.mark.usefixtures("internal_database")
+async def test_rebuild_fixture_pool_inventory_is_explicit(
+    tmp_path: Path, enabled: bool, corruption: str | None
+) -> None:
+    from tests.infra.execution_market.profile_owned_pools import parent_configuration
+
+    parent, worker = tmp_path / "parent.json", tmp_path / "worker.json"
+    for path, configuration in [
+        (parent, parent_configuration(rebuild_fixture=True)),
+        (worker, WORKER_CONFIGURATION),
+    ]:
+        with OwnedPools(path, configuration):
+            for role, size, overflow in configuration:
+                await configured_pool_engine(role, size, overflow).dispose()
+    if corruption == "borrow":
+        row = document(parent)
+        row["pools"][0]["checked_out"] = 1
+        parent.write_text(json.dumps(row))
+    if corruption == "missing":
+        worker.unlink()
+    result = validate_reports(parent, [worker], 1, rebuild_fixture=enabled)
+    assert result["passed"] is (enabled and corruption is None)
+    assert parent_configuration() == PARENT_CONFIGURATION
+
+
+@pytest.mark.parametrize(
+    "options",
+    [
+        {"rebuild_fixture": "yes"},
+        {"rebuild_fixture": True, "publisher_lease_observer": True},
+        {
+            "rebuild_fixture": True,
+            "publisher_lease_observer": True,
+            "publisher_fence_observer": True,
+        },
+    ],
+)
+def test_rebuild_inventory_rejects_ambiguous_profiles(options: dict[str, Any]) -> None:
+    from tests.infra.execution_market.profile_owned_pools import parent_configuration
+
+    with pytest.raises(ValueError):
+        parent_configuration(**options)

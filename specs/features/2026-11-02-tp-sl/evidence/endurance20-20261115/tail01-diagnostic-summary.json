@@ -1,0 +1,323 @@
+{
+  "status": "DIAGNOSTIC_COMPLETE",
+  "profile": "NC-F17-TAIL-01",
+  "elapsed_seconds": 1208.716449917003,
+  "seed_seconds": 1079.4062175000145,
+  "measurement_seconds": 5.56866758398246,
+  "owners": 20,
+  "head": 144513,
+  "verified_keys": 2890260,
+  "decoded_samples": 60,
+  "observations": 43,
+  "phase": {
+    "serial": {
+      "observations": 20,
+      "wall_seconds": 3.825242041988531,
+      "timings": {
+        "total_seconds": {
+          "minimum": 0.15295470802811906,
+          "mean": 0.19124166455003433,
+          "maximum": 0.2962601250037551
+        },
+        "connection_acquisition_seconds": {
+          "minimum": 0.0005618750001303852,
+          "mean": 0.0009922563025611454,
+          "maximum": 0.004127291002077982
+        },
+        "transaction_role_setup_seconds": {
+          "minimum": 0.0006882919988129288,
+          "mean": 0.0015521936016739345,
+          "maximum": 0.010020167013863102
+        },
+        "query_and_result_seconds": {
+          "minimum": 0.1478595829976257,
+          "mean": 0.1856490332458634,
+          "maximum": 0.28499595800531097
+        },
+        "session_exit_seconds": {
+          "minimum": 0.0008798329799901694,
+          "mean": 0.0014797834504861385,
+          "maximum": 0.008944834000431001
+        },
+        "gate_wait_seconds": {
+          "minimum": 1.8330174498260021e-06,
+          "mean": 2.618704456835985e-06,
+          "maximum": 8.083006832748652e-06
+        }
+      }
+    },
+    "concurrent": {
+      "observations": 20,
+      "wall_seconds": 1.3332270419923589,
+      "timings": {
+        "total_seconds": {
+          "minimum": 0.20606545801274478,
+          "mean": 0.8471126813979936,
+          "maximum": 1.3313578749948647
+        },
+        "connection_acquisition_seconds": {
+          "minimum": 0.0010754159884527326,
+          "mean": 0.007469910397776403,
+          "maximum": 0.04105737499776296
+        },
+        "transaction_role_setup_seconds": {
+          "minimum": 0.0012177500175312161,
+          "mean": 0.0038555895545869133,
+          "maximum": 0.015623167011654004
+        },
+        "query_and_result_seconds": {
+          "minimum": 0.1349880839989055,
+          "mean": 0.24747251050139313,
+          "maximum": 0.35088691700366326
+        },
+        "session_exit_seconds": {
+          "minimum": 0.0011099170078523457,
+          "mean": 0.0017482020513853059,
+          "maximum": 0.003147082985378802
+        },
+        "gate_wait_seconds": {
+          "minimum": 1.00000761449337e-06,
+          "mean": 0.5833635061469977,
+          "maximum": 1.1768656249914784
+        }
+      }
+    },
+    "explain": {
+      "observations": 3,
+      "wall_seconds": 0.4096923749893904,
+      "timings": {
+        "total_seconds": {
+          "minimum": 0.13150979098281823,
+          "mean": 0.13655365233231956,
+          "maximum": 0.13977929099928588
+        },
+        "connection_acquisition_seconds": {
+          "minimum": 0.0008874999766703695,
+          "mean": 0.0009307499858550727,
+          "maximum": 0.0009769579919520766
+        },
+        "transaction_role_setup_seconds": {
+          "minimum": 0.0010260829876642674,
+          "mean": 0.001071833336027339,
+          "maximum": 0.0011316250020172447
+        },
+        "query_and_result_seconds": {
+          "minimum": 0.12816533297882415,
+          "mean": 0.13325591665731432,
+          "maximum": 0.1364382920146454
+        },
+        "session_exit_seconds": {
+          "minimum": 0.0004760000156238675,
+          "mean": 0.0005573056696448475,
+          "maximum": 0.0006240829825401306
+        },
+        "gate_wait_seconds": {
+          "minimum": 1.91599247045815e-06,
+          "mean": 2.1249967782447734e-06,
+          "maximum": 2.249988028779626e-06
+        }
+      }
+    }
+  },
+  "plan_summary": [
+    {
+      "execution_ms": 133.513,
+      "planning_ms": 0.098,
+      "nodes": [
+        {
+          "Node Type": "Aggregate",
+          "Actual Rows": 1,
+          "Actual Loops": 1,
+          "Temp Read Blocks": 461,
+          "Temp Written Blocks": 463
+        },
+        {
+          "Node Type": "Sort",
+          "Actual Rows": 144513,
+          "Actual Loops": 1,
+          "Sort Method": "external merge",
+          "Sort Space Used": 3688,
+          "Sort Space Type": "Disk",
+          "Temp Read Blocks": 461,
+          "Temp Written Blocks": 463
+        },
+        {
+          "Node Type": "Nested Loop",
+          "Actual Rows": 144513,
+          "Actual Loops": 1,
+          "Temp Read Blocks": 0,
+          "Temp Written Blocks": 0
+        },
+        {
+          "Node Type": "Seq Scan",
+          "Relation Name": "paper_order_activity",
+          "Actual Rows": 1,
+          "Actual Loops": 1,
+          "Temp Read Blocks": 0,
+          "Temp Written Blocks": 0
+        },
+        {
+          "Node Type": "Bitmap Heap Scan",
+          "Relation Name": "paper_execution_input_keys",
+          "Actual Rows": 144513,
+          "Actual Loops": 1,
+          "Temp Read Blocks": 0,
+          "Temp Written Blocks": 0
+        },
+        {
+          "Node Type": "Bitmap Index Scan",
+          "Index Name": "paper_execution_input_keys_pkey",
+          "Actual Rows": 144513,
+          "Actual Loops": 1,
+          "Temp Read Blocks": 0,
+          "Temp Written Blocks": 0
+        }
+      ]
+    },
+    {
+      "execution_ms": 134.911,
+      "planning_ms": 0.105,
+      "nodes": [
+        {
+          "Node Type": "Aggregate",
+          "Actual Rows": 1,
+          "Actual Loops": 1,
+          "Temp Read Blocks": 461,
+          "Temp Written Blocks": 463
+        },
+        {
+          "Node Type": "Sort",
+          "Actual Rows": 144513,
+          "Actual Loops": 1,
+          "Sort Method": "external merge",
+          "Sort Space Used": 3688,
+          "Sort Space Type": "Disk",
+          "Temp Read Blocks": 461,
+          "Temp Written Blocks": 463
+        },
+        {
+          "Node Type": "Nested Loop",
+          "Actual Rows": 144513,
+          "Actual Loops": 1,
+          "Temp Read Blocks": 0,
+          "Temp Written Blocks": 0
+        },
+        {
+          "Node Type": "Seq Scan",
+          "Relation Name": "paper_order_activity",
+          "Actual Rows": 1,
+          "Actual Loops": 1,
+          "Temp Read Blocks": 0,
+          "Temp Written Blocks": 0
+        },
+        {
+          "Node Type": "Bitmap Heap Scan",
+          "Relation Name": "paper_execution_input_keys",
+          "Actual Rows": 144513,
+          "Actual Loops": 1,
+          "Temp Read Blocks": 0,
+          "Temp Written Blocks": 0
+        },
+        {
+          "Node Type": "Bitmap Index Scan",
+          "Index Name": "paper_execution_input_keys_pkey",
+          "Actual Rows": 144513,
+          "Actual Loops": 1,
+          "Temp Read Blocks": 0,
+          "Temp Written Blocks": 0
+        }
+      ]
+    },
+    {
+      "execution_ms": 126.798,
+      "planning_ms": 0.119,
+      "nodes": [
+        {
+          "Node Type": "Aggregate",
+          "Actual Rows": 1,
+          "Actual Loops": 1,
+          "Temp Read Blocks": 461,
+          "Temp Written Blocks": 463
+        },
+        {
+          "Node Type": "Sort",
+          "Actual Rows": 144513,
+          "Actual Loops": 1,
+          "Sort Method": "external merge",
+          "Sort Space Used": 3688,
+          "Sort Space Type": "Disk",
+          "Temp Read Blocks": 461,
+          "Temp Written Blocks": 463
+        },
+        {
+          "Node Type": "Nested Loop",
+          "Actual Rows": 144513,
+          "Actual Loops": 1,
+          "Temp Read Blocks": 0,
+          "Temp Written Blocks": 0
+        },
+        {
+          "Node Type": "Seq Scan",
+          "Relation Name": "paper_order_activity",
+          "Actual Rows": 1,
+          "Actual Loops": 1,
+          "Temp Read Blocks": 0,
+          "Temp Written Blocks": 0
+        },
+        {
+          "Node Type": "Bitmap Heap Scan",
+          "Relation Name": "paper_execution_input_keys",
+          "Actual Rows": 144513,
+          "Actual Loops": 1,
+          "Temp Read Blocks": 0,
+          "Temp Written Blocks": 0
+        },
+        {
+          "Node Type": "Bitmap Index Scan",
+          "Index Name": "paper_execution_input_keys_pkey",
+          "Actual Rows": 144513,
+          "Actual Loops": 1,
+          "Temp Read Blocks": 0,
+          "Temp Written Blocks": 0
+        }
+      ]
+    }
+  ],
+  "financial_state_unchanged": true,
+  "candidate_unchanged": true,
+  "gate": {
+    "limit": 4,
+    "peak": 4,
+    "active": 0,
+    "attempt_count": 43,
+    "finished_count": 43
+  },
+  "cleanup": {
+    "database_exists": false,
+    "connections": 0,
+    "locks": 0,
+    "owner_services": [
+      {
+        "name": "/tiewtrade-postgres-1",
+        "state": "running",
+        "restart_count": 0,
+        "health": "healthy"
+      },
+      {
+        "name": "/tiewtrade-f18-release-redis",
+        "state": "running",
+        "restart_count": 0,
+        "health": null
+      }
+    ]
+  },
+  "sql_sha256": "f8455d61c079a88e8a7c45c5cfbaf153acd7115a4cd36bc622e899008476193b",
+  "schema_sha256": "a51c691b2c7ca1132b5ec101c4e71ca9acf0eed01415938e7fa4236e2dbbdcb3",
+  "limits": [
+    "quiescent fixture; no production worker or publisher contention",
+    "fixture rows were inserted owner-by-owner, not interleaved over four hours",
+    "fixture tables explicitly ANALYZEd",
+    "original W3 final-tail 59s delay not reproduced; historical query plan unavailable",
+    "diagnostic only; no change to either Incomplete result or financial/full W3 acceptance"
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "revision": "NC-F17-OBS-05",
+  "date": "2026-11-17",
+  "status": "Implementation targeted checks passed; awaiting owner review",
+  "tests_passed": 400,
+  "prior_unit_result": "30 passed / 1 test-fixture failure; corrected affected test passed",
+  "static": "Ruff/mypy seven files passed",
+  "cleanup": {
+    "database": "tiewtrade_internal20_endurance_rbtest_1794849258809596000",
+    "database_connections_locks": "0|0|0",
+    "passed": true
+  },
+  "raw_root": "validation-artifacts/f17-obs05-tests-20261117",
+  "campaign": "Not Run",
+  "w3_acceptance": "Incomplete unchanged",
+  "production_changes_in_obs05": false
+}

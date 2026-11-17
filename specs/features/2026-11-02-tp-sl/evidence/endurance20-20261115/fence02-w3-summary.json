@@ -1,0 +1,175 @@
+{
+  "revision": "NC-F17-FENCE-02",
+  "status": "INCOMPLETE",
+  "diagnostic_only": true,
+  "failed_at_utc": "2026-11-15 20:57:08.397929+00:00",
+  "total_seconds": 15353.547434875014,
+  "measured_seconds": 14400.000636624987,
+  "target_measured_seconds": 14400,
+  "counters": {
+    "offered": 28200,
+    "admitted": 28200,
+    "completed": 28200,
+    "rejected": 0,
+    "fills": 11280,
+    "cancels": 5640,
+    "replays": 5640,
+    "cycles": 5640
+  },
+  "expected_commands": 28200,
+  "worker_failures": [],
+  "terminal_failure": {
+    "type": "TimeoutError",
+    "stage": "position_checks.final/replay_owner_domain/read_execution_inputs",
+    "owner_index_one_based": 14,
+    "budget_seconds": 60,
+    "observed_elapsed_seconds": 61.086243249999825,
+    "completed_owner_replays": 13,
+    "remaining_owner_replays_not_run": 6,
+    "failed_owner_queries": 29,
+    "failed_owner_rows_returned": 94777,
+    "cause_of_delay": "Not established; client span includes server/driver/scheduling"
+  },
+  "publisher": {
+    "target_hz": 10,
+    "stage": "publish_market",
+    "published": 144249,
+    "last_input_id": 144249,
+    "book_owner": "c4d868b0-ec04-42ee-8451-1cbbccd190fa",
+    "book_generation": 1,
+    "last_progress_at": "2026-11-15T20:44:24.155401+00:00",
+    "max_publish_seconds": 2.928979624994099
+  },
+  "lease_observer": {
+    "counts": {
+      "RETURNED": 144249
+    },
+    "total": 144249,
+    "guard_calls": 144249,
+    "readiness_total": 144249,
+    "fence_observation": {
+      "total_samples": 0,
+      "retained_limit": 64,
+      "observations": [],
+      "errors": {
+        "TimeoutError": 1
+      },
+      "no_query_text": true,
+      "task_joined": true
+    },
+    "publisher_error_type": null,
+    "independent_failure_witness": null,
+    "interpretation": "No publisher lease loss observed; blocker evidence incomplete because sampler timed out once"
+  },
+  "clock_recovery": {
+    "recovered_count": 0,
+    "event": null,
+    "warning": false
+  },
+  "snapshots": {
+    "count": 4820,
+    "expected_count": 4820,
+    "outcomes": [
+      "RETURNED"
+    ],
+    "p95_seconds": 0.036741708987392485,
+    "p99_seconds": 0.07138237499748357,
+    "full_position_acceptance": "Not completed; replay14 timed out"
+  },
+  "final_tail": {
+    "budget_seconds": 60,
+    "completed_seconds": 24.06077045801794,
+    "final_head": 144249,
+    "owner_count": 20,
+    "all_owner_lags_zero": true
+  },
+  "engine_metrics_posthoc_only": {
+    "worker_reports": 80,
+    "samples": 346803,
+    "p95_seconds": 0.2465557919931598,
+    "p99_seconds": 0.4491970830131322,
+    "attribution": "Original transaction-start window, original seven declared fault intervals only; no slow sample trimming",
+    "not_a_campaign_pass": true
+  },
+  "fault_windows": {
+    "closed_intervals": 7,
+    "full_recovery_acceptance": "Not finalized; workload result absent"
+  },
+  "pool_reports": {
+    "count": 81,
+    "passed": 80,
+    "parent_passed": false,
+    "parent_errors": {
+      "ConnectionResourceError": 1
+    },
+    "parent_outcome": "TimeoutError",
+    "all_final_checkout_zero": true,
+    "aggregate_acceptance": "Not Run after replay timeout; no leak inferred from parent cancellation"
+  },
+  "final_owner_financial_oracles": "Not Run",
+  "final_global_invariants": "Not Run",
+  "final_resource_acceptance": "Not Run",
+  "final_workload_result_present": false,
+  "cleanup": {
+    "coordinator": {
+      "database": {
+        "database": "tiewtrade_internal20_endurance_fw3_1794760879472972000",
+        "connections": 0,
+        "removed": true,
+        "advisory_locks": 0
+      },
+      "redis": {
+        "name": "tiewtrade-f17-fence02-w3-redis-20261115",
+        "removed": true,
+        "label": "f17-fence02-w3-20261115"
+      }
+    },
+    "independent_database_exists": false,
+    "independent_connections": 0,
+    "independent_advisory_locks": 0,
+    "independent_redis_exists": false,
+    "owner_postgres": "running healthy restart0",
+    "owner_redis": "running restart0"
+  },
+  "provenance": {
+    "head": "b0d5580364268be7619f5369dc8488d440f12160",
+    "source_status": [
+      "M backend/tests/infra/execution_market/profile_owned_pools.py",
+      " M backend/tests/infra/execution_market/profile_publisher_readiness.py",
+      " M backend/tests/infra/execution_market/profile_workload.py",
+      " M backend/tests/infra/execution_market/remaining_paper_campaign.py",
+      " M backend/tests/infra/execution_market/test_owned_pools.py",
+      "?? backend/tests/infra/execution_market/fixtures/tail_cursor_baseline.json",
+      "?? backend/tests/infra/execution_market/profile_publisher_fence.py",
+      "?? backend/tests/infra/execution_market/profile_publisher_lease.py",
+      "?? backend/tests/infra/execution_market/profile_publisher_lease_load.py",
+      "?? backend/tests/infra/execution_market/profile_publisher_recovery.py",
+      "?? backend/tests/infra/execution_market/profile_tail_reads.py",
+      "?? backend/tests/infra/execution_market/test_publisher_clock_recovery.py",
+      "?? backend/tests/infra/execution_market/test_publisher_fence.py",
+      "?? backend/tests/infra/execution_market/test_publisher_lease.py",
+      "?? backend/tests/infra/execution_market/test_publisher_lease_load.py",
+      "?? backend/tests/infra/execution_market/test_tail_query_equivalence.py",
+      "?? backend/tests/infra/execution_market/test_tail_reads.py"
+    ],
+    "diff_sha256": "17a327f8cfbddd31dc0f75efc7e8d32f821e3e07bfa9afbeaf825d979153a389",
+    "inventory_sha256": "f3906c58a10b541ea47b4b81ce078d3a75f921184098f928cd2b80917d976955",
+    "runner_binding": {
+      "source_sha256": "b33cdbf429f36b7976efa85752b3981b0dd536bc680174d3bfbee34db40820af",
+      "runner_sha256": "a326d3c1b657a4d6fe75b69d4bd930660a2a418ac0ee3326ecca2fa182a66793",
+      "changes": [
+        "root binding",
+        "dedicated Redis",
+        "reuse exactly one external verified preflight"
+      ],
+      "diagnostic_only": true
+    },
+    "source_unchanged": true
+  },
+  "targeted_safety": {
+    "passed": 192,
+    "scoped_ruff_format_mypy": "Passed before campaign",
+    "required_ci": "Not Run; not authorized"
+  },
+  "remaining": "Historical Incomplete retained; F17 not Completed. No automatic replacement, source fix, four-hour rerun or Git action."
+}

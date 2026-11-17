@@ -1,0 +1,54 @@
+{
+  "revision": "NC_F17_W3_OBS_01_REVIEW_FIX",
+  "status": "FINDINGS_FIXED_TARGETED_CHECKS_PASSED",
+  "head": "b0d5580364268be7619f5369dc8488d440f12160",
+  "uncommitted": true,
+  "source_sha256": {
+    "backend/tests/infra/execution_market/profile_workload.py": "341e0a72601057b4fc6176c378c3b8e3a0f234d57b02742336e6a7768c986d0f",
+    "backend/tests/infra/execution_market/profile_publisher_lease_load.py": "1d5cb83532bb6ecaf1748835840fab9148b4ccca4a610a2ee4944cdd934c9464",
+    "backend/tests/infra/execution_market/test_publisher_fence_fail_fast.py": "d0c08bf12a9079a886c42eee94316eb3b6e7b26d9e3c836dc97d874f40bef5ee"
+  },
+  "findings": {
+    "M1": "startup publisher exception/cancellation precedes observer; with_publisher reused",
+    "M2": "independent receipt and lease flush attempts retain primary/first evidence error"
+  },
+  "regression": {
+    "status": "PASSED",
+    "exit_code": 0,
+    "passed": 134,
+    "cleanup": {
+      "database": "tiewtrade_internal20_endurance_rbtest_1794839029071774000",
+      "connections": 0,
+      "removed": true
+    },
+    "elapsed_seconds": 22.300326832999417
+  },
+  "local_unit_tests": {
+    "status": "PASSED",
+    "cases": 100,
+    "real_pg_case_excluded": true,
+    "files": [
+      "test_publisher_fence_fail_fast.py",
+      "test_workload_supervision.py",
+      "test_workload_latency.py"
+    ],
+    "overlap": "47 fail-fast unit cases are also in the 134-case DB-backed run; 187 distinct cases total"
+  },
+  "static_checks": {
+    "ruff": "PASSED",
+    "format": "PASSED",
+    "mypy": "PASSED",
+    "git_diff_check": "PASSED"
+  },
+  "independent_cleanup": {
+    "status": "PASSED",
+    "database": "tiewtrade_internal20_endurance_rbtest_1794839029071774000",
+    "database_exists": false,
+    "connections": 0,
+    "locks": 0
+  },
+  "historical_evidence": "w3-obs01-summary.json retained unchanged; reuse unaffected default/profile/fixture/tail/pool results only",
+  "refactor": "PENDING_OWNER_COMMAND",
+  "four_hour_campaign": "NOT_RUN",
+  "no_git_ci_merge": true
+}

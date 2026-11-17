@@ -231,3 +231,49 @@ Owner explicitly authorized timing-criteria adjustment after >2 unsuccessful rou
 250ms/60s grades and all financial/TP-SL/STOP/freshness/recovery/resource gates.
 Counts/rates/durations unchanged. This alternative only amends integrated Paper
 performance acceptance; it does not authorize Live or mark dependencies Completed.
+
+2026-11-15 Approved A: [NC-F17-CLOCK-01](publisher-clock-recovery-plan.md) permits
+harness-only opt-in recovery of one specifically evidenced rejected fixture clock
+publication, with confirmed rollback, one retry/1s bound and unchanged production
+future/stale/sequence/financial rules. New declared runtime only; original Incomplete
+retained. Authority covers implementation/targeted safety tests then code-review
+checkpoint, not replacement endurance, opening, Live or Git publication.
+
+
+NC-F17-REBUILD20-02: **Proposed — pending owner approval**.
+[Offline rebuild amendment](rebuild20-parallel-plan.md) retains the previously approved
+financial/history/rebuild criteria; proposes parallel fixture runtime, safe history
+handoff ordering and complete runner/helper evidence binding. No implementation or
+new campaign authorized by this documentation entry; historical grades unchanged.
+
+
+NC-F17-REBUILD20-02 subsequently **Approved — owner approve 2026-11-16**; its one
+campaign ended Incomplete during fixture preparation (poll trace-retention cap), not a
+full-rebuild result. See [checkpoint](evidence/endurance20-20261115/rebuild20-02-checkpoint.md).
+Requirements/criteria and previous results unchanged; no replacement run authorized.
+
+
+NC-F17-REBUILD20-04 **Proposed — pending owner decision**:
+[Campaign budget amendment](rebuild20-budget-amendment.md) changes only the proposed
+offline experiment totalbudget3600→4200s;cleanupreserve120s andallfinancial/safety/
+60s-ownercriteria unchanged. No new campaign authorized by this entry;previous grades
+andF17dependencies retained.
+
+
+NC-F17-REBUILD20-04 subsequently **Approved A — owner approve2026-11-16**.
+[OnecampaignPassed](evidence/endurance20-20261115/rebuild20-04-checkpoint.md),including
+all20fullrebuilds/postdigest/pools/cleanup;offlineproofonly. Financial/60sownercriteria
+unchanged. Previousgradesretained;F17notCompleted andW3/Release/dependenciespending.
+
+
+NC-F17-W3-OBS-01 **Proposed — owner decision pending**:
+[Observed W3 fail-fast plan](observed-w3-fail-fast-plan.md). Proposed change concerns
+opt-in diagnostic supervision/earlyIncomplete handling only;fixed4h/20owner/fault/
+financial/risk/processing/rebuild/resourcecriteria unchanged. No newrun authorized by
+this documentation entry;historicalgrades/dependencies retained.
+
+
+NC-F17-W3-OBS-01 subsequently **Approved A — owner approve 2026-11-16**.
+[Implementation checkpoint](evidence/endurance20-20261115/w3-obs01-checkpoint.md):
+opt-in harness supervision only; fixed profile/safety criteria retained. Targeted checks
+Passed; owner review/refactor and one approved observed W3 remain pending. No 4h/Git/CI.

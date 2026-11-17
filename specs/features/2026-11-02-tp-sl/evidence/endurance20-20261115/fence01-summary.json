@@ -1,0 +1,243 @@
+{
+  "revision": "NC-F17-FENCE-01",
+  "status": "PASSED",
+  "diagnostic_only": true,
+  "total_seconds": 472.652304999996,
+  "measured_seconds": 302.80094645902864,
+  "target_seconds": 300.0,
+  "counters": {
+    "offered": 600,
+    "admitted": 600,
+    "completed": 600,
+    "rejected": 0,
+    "fills": 240,
+    "cancels": 120,
+    "replays": 120,
+    "cycles": 120
+  },
+  "base_assertions_passed": true,
+  "resource_assertions_passed": true,
+  "owner_financial_oracles": {
+    "count": 20,
+    "passed": 20
+  },
+  "global_invariants": {
+    "orders": 760,
+    "fills": 240,
+    "cancels": 120,
+    "pending_dispatch": 400,
+    "unlinked_fills": 0,
+    "invalid_reservations": 0,
+    "invalid_positions": 0,
+    "wrong_mode": 0,
+    "input_lag": 9,
+    "duplicate_fill_effects": 0,
+    "expected_orders": 760,
+    "expected_fills": 240,
+    "expected_cancels": 120,
+    "expected_pending_dispatch": 400,
+    "passed": true
+  },
+  "pool_contract": {
+    "passed": true,
+    "errors": [],
+    "violations": [],
+    "incomplete": [],
+    "processes": [
+      {
+        "file": "parent.owned-pools.json",
+        "pid": 26232,
+        "passed": true
+      },
+      {
+        "file": "worker-0.owned-pools.json",
+        "pid": 26270,
+        "passed": true
+      },
+      {
+        "file": "worker-1.owned-pools.json",
+        "pid": 26271,
+        "passed": true
+      },
+      {
+        "file": "worker-2.owned-pools.json",
+        "pid": 26272,
+        "passed": true
+      },
+      {
+        "file": "worker-3.owned-pools.json",
+        "pid": 26273,
+        "passed": true
+      },
+      {
+        "file": "worker-4.owned-pools.json",
+        "pid": 26274,
+        "passed": true
+      },
+      {
+        "file": "worker-5.owned-pools.json",
+        "pid": 26275,
+        "passed": true
+      },
+      {
+        "file": "worker-6.owned-pools.json",
+        "pid": 26276,
+        "passed": true
+      },
+      {
+        "file": "worker-7.owned-pools.json",
+        "pid": 26277,
+        "passed": true
+      },
+      {
+        "file": "worker-8.owned-pools.json",
+        "pid": 26278,
+        "passed": true
+      },
+      {
+        "file": "worker-9.owned-pools.json",
+        "pid": 26279,
+        "passed": true
+      },
+      {
+        "file": "worker-10.owned-pools.json",
+        "pid": 26280,
+        "passed": true
+      },
+      {
+        "file": "worker-11.owned-pools.json",
+        "pid": 26281,
+        "passed": true
+      },
+      {
+        "file": "worker-12.owned-pools.json",
+        "pid": 26282,
+        "passed": true
+      },
+      {
+        "file": "worker-13.owned-pools.json",
+        "pid": 26283,
+        "passed": true
+      },
+      {
+        "file": "worker-14.owned-pools.json",
+        "pid": 26284,
+        "passed": true
+      },
+      {
+        "file": "worker-15.owned-pools.json",
+        "pid": 26285,
+        "passed": true
+      },
+      {
+        "file": "worker-16.owned-pools.json",
+        "pid": 26286,
+        "passed": true
+      },
+      {
+        "file": "worker-17.owned-pools.json",
+        "pid": 26287,
+        "passed": true
+      },
+      {
+        "file": "worker-18.owned-pools.json",
+        "pid": 26288,
+        "passed": true
+      },
+      {
+        "file": "worker-19.owned-pools.json",
+        "pid": 26289,
+        "passed": true
+      }
+    ],
+    "worker_process_count": 20
+  },
+  "measured_book_inputs": 3028,
+  "required_book_inputs": 3000,
+  "engine_transaction_seconds": {
+    "applicable": true,
+    "p95": 0.18391333299223334,
+    "p99": 0.3697641670005396,
+    "max": 2.360701166995568,
+    "samples": 10260,
+    "window": {
+      "attribution": "transaction_start",
+      "started": 201642.464355541,
+      "ended": 201945.265302541,
+      "status": "MEASURED",
+      "excluded_fault_intervals": []
+    }
+  },
+  "end_to_end_command_seconds": {
+    "p95": 2.3425851249776315,
+    "p99": 4.913313958008075,
+    "max": 11.279815332993167
+  },
+  "drain_seconds": 2.0581804999965243,
+  "publisher": {
+    "counts": {
+      "RETURNED": 3115
+    },
+    "total": 3115,
+    "max_seconds": 1.4567179160076194,
+    "failed": null,
+    "fence_observation": {
+      "total_samples": 0,
+      "retained_limit": 64,
+      "observations": [],
+      "errors": {},
+      "no_query_text": true,
+      "task_joined": true
+    }
+  },
+  "preflight": {
+    "status": "PASSED",
+    "samples": 7,
+    "mean_cpu_idle_percent": 69.72142857142858
+  },
+  "cleanup": {
+    "database_exists": false,
+    "connections": 0,
+    "advisory_locks": 0,
+    "redis_absent": true,
+    "owner_services": [
+      {
+        "name": "/tiewtrade-postgres-1",
+        "state": "running",
+        "health": "healthy",
+        "restart_count": 0
+      },
+      {
+        "name": "/tiewtrade-f18-release-redis",
+        "state": "running",
+        "health": null,
+        "restart_count": 0
+      }
+    ]
+  },
+  "source_unchanged": true,
+  "tests": {
+    "distinct_cases_passed": 111,
+    "scoped_static_files": 9,
+    "ruff": "PASSED",
+    "format": "PASSED",
+    "mypy": "PASSED"
+  },
+  "acceptance_limits": {
+    "historical_failure": "Not reproduced; original lease/fence failure cause remains unproven",
+    "four_hour": "INCOMPLETE_RETAINED",
+    "position_snapshot_rebuild": "NOT_RUN_IN_SMOKE",
+    "f17": "PENDING_FULL_VALIDATION"
+  },
+  "source_hashes": {
+    "backend/tests/infra/execution_market/profile_publisher_fence.py": "3046dc8f98a640ed22b3846547b35f5aae1ad7c428c3abef4d2fe598f577a09c",
+    "backend/tests/infra/execution_market/test_publisher_fence.py": "e4df1fe1665210f722dc15ceb8bea1ca9fbb6a869302e85b7e23d908642a2cfa",
+    "backend/tests/infra/execution_market/profile_publisher_lease.py": "3dd6de422b0b7b3738bd57cc6194abf4dd35579d79b04854abbef5d1f5ac1917",
+    "backend/tests/infra/execution_market/profile_publisher_lease_load.py": "5ac0f98535fe2a246961ade7ae74cbdda175ec4142494ff3fc2b185ad0a6336a",
+    "backend/tests/infra/execution_market/profile_owned_pools.py": "836280d003154ed0a4993b2bcd85c0dad34e3bbfa53cf701adc1b13cee71e9d9",
+    "backend/tests/infra/execution_market/profile_workload.py": "a89220289a86534c7723d589b46bb355fe10a0671ee110a8ce4e4eedc1c71e2f",
+    "backend/tests/infra/execution_market/remaining_paper_campaign.py": "b33cdbf429f36b7976efa85752b3981b0dd536bc680174d3bfbee34db40820af",
+    "backend/tests/infra/execution_market/test_owned_pools.py": "96f804710ca9cabd98e13c15f4f9b3d91fa44e30ab6b1c2d7359696507e8addf",
+    "backend/tests/infra/execution_market/test_publisher_lease_load.py": "6143ed4cb5d620b26327bb625059b8a3cc8822ff04ec2da9c956a55dd366e790"
+  }
+}

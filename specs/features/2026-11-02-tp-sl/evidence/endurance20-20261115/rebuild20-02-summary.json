@@ -1,0 +1,280 @@
+{
+  "status": "INCOMPLETE",
+  "scope": "offline fullrebuild20; not D20/W3/Release",
+  "elapsed_seconds": 1149.1523830840015,
+  "error_type": "RuntimeError",
+  "error_locations": [
+    {
+      "file": "profile_rebuild20.py",
+      "function": "owner_flow",
+      "line": 406
+    },
+    {
+      "file": "profile_workload.py",
+      "function": "cycle",
+      "line": 1881
+    },
+    {
+      "file": "profile_workload.py",
+      "function": "submit_new",
+      "line": 1701
+    },
+    {
+      "file": "profile_workload.py",
+      "function": "wait_command",
+      "line": 1649
+    },
+    {
+      "file": "contextlib.py",
+      "function": "__aenter__",
+      "line": 210
+    },
+    {
+      "file": "profile_workload.py",
+      "function": "poll_session",
+      "line": 1633
+    },
+    {
+      "file": "contextlib.py",
+      "function": "__aenter__",
+      "line": 210
+    },
+    {
+      "file": "profile_parent_poll.py",
+      "function": "permit",
+      "line": 84
+    }
+  ],
+  "source_unchanged": true,
+  "cleanup": {
+    "database": "tiewtrade_internal20_endurance_rebuild02_1794812022503778000",
+    "connections": 0,
+    "removed": true
+  },
+  "independent_source_witness": {
+    "last_input_id": 10170,
+    "owner": "a385eb3a-34f0-45c9-87db-e083905a9962",
+    "generation": 1,
+    "lease_until": "2026-11-16 07:12:52.659031+00:00"
+  },
+  "stopped_stage": "economic_fixture",
+  "counters": {
+    "offered": 17550,
+    "admitted": 17550,
+    "completed": 17530,
+    "rejected": 0,
+    "fills": 7006,
+    "cancels": 3506,
+    "replays": 3509,
+    "cycles": 3495
+  },
+  "journal_records": 10170,
+  "all_20_workers_exited_zero": true,
+  "pool_contract": {
+    "passed": false,
+    "errors": [
+      "ConnectionResourceError:owned-pools.json",
+      "PoolFinalEvidenceIncomplete:owned-pools.json"
+    ],
+    "violations": [
+      "ConnectionResourceError:owned-pools.json"
+    ],
+    "incomplete": [
+      "PoolFinalEvidenceIncomplete:owned-pools.json"
+    ],
+    "processes": [
+      {
+        "file": "owned-pools.json",
+        "pid": 17610,
+        "passed": false
+      },
+      {
+        "file": "prep-0-0.owned-pools.json",
+        "pid": 17859,
+        "passed": true
+      },
+      {
+        "file": "prep-1-0.owned-pools.json",
+        "pid": 17861,
+        "passed": true
+      },
+      {
+        "file": "prep-2-0.owned-pools.json",
+        "pid": 17862,
+        "passed": true
+      },
+      {
+        "file": "prep-3-0.owned-pools.json",
+        "pid": 17865,
+        "passed": true
+      },
+      {
+        "file": "prep-4-0.owned-pools.json",
+        "pid": 17866,
+        "passed": true
+      },
+      {
+        "file": "prep-5-0.owned-pools.json",
+        "pid": 17869,
+        "passed": true
+      },
+      {
+        "file": "prep-6-0.owned-pools.json",
+        "pid": 17871,
+        "passed": true
+      },
+      {
+        "file": "prep-7-0.owned-pools.json",
+        "pid": 17872,
+        "passed": true
+      },
+      {
+        "file": "prep-8-0.owned-pools.json",
+        "pid": 17873,
+        "passed": true
+      },
+      {
+        "file": "prep-9-0.owned-pools.json",
+        "pid": 17874,
+        "passed": true
+      },
+      {
+        "file": "prep-10-0.owned-pools.json",
+        "pid": 17875,
+        "passed": true
+      },
+      {
+        "file": "prep-11-0.owned-pools.json",
+        "pid": 17877,
+        "passed": true
+      },
+      {
+        "file": "prep-12-0.owned-pools.json",
+        "pid": 17879,
+        "passed": true
+      },
+      {
+        "file": "prep-13-0.owned-pools.json",
+        "pid": 17880,
+        "passed": true
+      },
+      {
+        "file": "prep-14-0.owned-pools.json",
+        "pid": 17881,
+        "passed": true
+      },
+      {
+        "file": "prep-15-0.owned-pools.json",
+        "pid": 17882,
+        "passed": true
+      },
+      {
+        "file": "prep-16-0.owned-pools.json",
+        "pid": 17883,
+        "passed": true
+      },
+      {
+        "file": "prep-17-0.owned-pools.json",
+        "pid": 17884,
+        "passed": true
+      },
+      {
+        "file": "prep-18-0.owned-pools.json",
+        "pid": 17885,
+        "passed": true
+      },
+      {
+        "file": "prep-19-0.owned-pools.json",
+        "pid": 17886,
+        "passed": true
+      }
+    ],
+    "worker_process_count": 20
+  },
+  "resources": {
+    "samples": 201,
+    "peak_process_rss_bytes": 91078656,
+    "peak_rss_by_pid": {
+      "17610": 91078656,
+      "17859": 66863104,
+      "17861": 72171520,
+      "17862": 72187904,
+      "17865": 72138752,
+      "17866": 76677120,
+      "17869": 73121792,
+      "17871": 73138176,
+      "17872": 72777728,
+      "17873": 75612160,
+      "17874": 78970880,
+      "17875": 68304896,
+      "17877": 72515584,
+      "17879": 72744960,
+      "17880": 69287936,
+      "17881": 76546048,
+      "17882": 72941568,
+      "17883": 72302592,
+      "17884": 72335360,
+      "17885": 70729728,
+      "17886": 72581120
+    },
+    "peak_connections": 64,
+    "connections_start": 16,
+    "connections_end": 54,
+    "peak_lock_waits": 1,
+    "lock_waits_end": 0,
+    "peak_buffer_rows": 4096,
+    "buffer_rows_start": 0,
+    "buffer_rows_end": 4096,
+    "database_bytes_start": 24181783,
+    "database_bytes_end": 587480087,
+    "database_growth_bytes": 563298304
+  },
+  "independent_cleanup": {
+    "database": {
+      "database_exists": false,
+      "connections": 0,
+      "advisory_locks": 0
+    },
+    "remaining_worker_pids": [],
+    "services": [
+      {
+        "name": "tiewtrade-postgres-1",
+        "status": "running",
+        "health": "healthy",
+        "restart_count": 0
+      },
+      {
+        "name": "tiewtrade-f18-release-redis",
+        "status": "running",
+        "health": null,
+        "restart_count": 0
+      }
+    ]
+  },
+  "candidate": {
+    "head": "b0d5580364268be7619f5369dc8488d440f12160",
+    "diff_sha256": "3822b5cc3de678488a346285ede2ee069b7fb15604663d0a76bf21581b06fa67",
+    "inventory_sha256": "1574446590ebb4c20d2582b1d0d1f3e3853c09732a946d4bcb83ddb75557ed11"
+  },
+  "runner_sha256": "63a71e6f4a876730840e8fbbef9252efab8a2369645716268e52fdf009726b1f",
+  "helper_sha256": "2ef0c0b97f346c2a671ec8e927e1808b654f95948e4e80da6f23c7b8888a3b78",
+  "schema_sha256": "9a541e3327fde36359c980a4b0c08ac07c0a400dd70f7cc6b6b1d90fc868098d",
+  "journal_sha256": "c3617418a8c43e2fa9a755e5318b0bef4cffa3c82eceafd74926078f7e2d51dd",
+  "preflight_status": "PASSED",
+  "not_run": [
+    "public extension to96000",
+    "private padding20x96000",
+    "final financial/global oracles",
+    "20-owner snapshots/full rebuild"
+  ],
+  "parent_pool": {
+    "passed": false,
+    "outcome": "RuntimeError",
+    "errors": {
+      "ConnectionResourceError": 1
+    },
+    "finalized": true,
+    "all_final_checked_out_zero": true,
+    "all_final_disposed": true
+  }
+}

@@ -1,0 +1,403 @@
+{
+  "status": "INCOMPLETE",
+  "profile": "PAPER_INTERNAL20_V1 W3; TAIL-02 query + NC_F17_CLOCK_01 opt-in",
+  "measurement_seconds_until_failure": 14371.93435425,
+  "required_measurement_seconds": 14400,
+  "remaining_seconds_at_failure": 28.06564575000084,
+  "campaign_seconds": 14549.504158875003,
+  "preflight_status": "PASSED",
+  "preflight_samples": 7,
+  "counters": {
+    "offered": 28155,
+    "admitted": 28151,
+    "completed": 28143,
+    "rejected": 0,
+    "fills": 11257,
+    "cancels": 5628,
+    "replays": 5629,
+    "cycles": 5625
+  },
+  "fault_observations": [
+    {
+      "kind": "WORKER_RESTART",
+      "started_at": "2026-11-15T10:00:31.915951+00:00",
+      "started": 181217.210141541,
+      "status": "RECOVERED",
+      "scheduled_offset_seconds": 1800.0,
+      "scheduled_duration_seconds": 30.0,
+      "active_cycles_at_fault": 1,
+      "ended_at": "2026-11-15T10:01:04.821265+00:00",
+      "restored": 181250.114491583,
+      "actual_duration_seconds": 32.90435008399072
+    },
+    {
+      "kind": "CONNECTION_CHURN",
+      "started_at": "2026-11-15T10:30:32.006745+00:00",
+      "started": 183017.209054583,
+      "status": "RECOVERED",
+      "scheduled_offset_seconds": 3600.0,
+      "scheduled_duration_seconds": 30.0,
+      "active_cycles_at_fault": 2,
+      "ended_at": "2026-11-15T10:31:02.186878+00:00",
+      "restored": 183047.387324708,
+      "actual_duration_seconds": 30.178270166972652
+    },
+    {
+      "kind": "REDIS_OUTAGE",
+      "started_at": "2026-11-15T11:00:32.092000+00:00",
+      "started": 184817.2088485,
+      "status": "RECOVERED",
+      "scheduled_offset_seconds": 5400.0,
+      "scheduled_duration_seconds": 60.0,
+      "active_cycles_at_fault": 2,
+      "ended_at": "2026-11-15T11:01:32.362238+00:00",
+      "restored": 184877.477293458,
+      "actual_duration_seconds": 60.26844504097244
+    },
+    {
+      "kind": "WORKER_RESTART",
+      "started_at": "2026-11-15T11:30:32.193927+00:00",
+      "started": 186617.209161958,
+      "status": "RECOVERED",
+      "scheduled_offset_seconds": 7200.0,
+      "scheduled_duration_seconds": 30.0,
+      "active_cycles_at_fault": 2,
+      "ended_at": "2026-11-15T11:31:05.297752+00:00",
+      "restored": 186650.312052,
+      "actual_duration_seconds": 33.102890083013335
+    },
+    {
+      "kind": "CONNECTION_CHURN",
+      "started_at": "2026-11-15T12:00:32.296232+00:00",
+      "started": 188417.213238541,
+      "status": "RECOVERED",
+      "scheduled_offset_seconds": 9000.0,
+      "scheduled_duration_seconds": 30.0,
+      "active_cycles_at_fault": 3,
+      "ended_at": "2026-11-15T12:01:02.332284+00:00",
+      "restored": 188447.248421583,
+      "actual_duration_seconds": 30.035183125000913
+    },
+    {
+      "kind": "REDIS_OUTAGE",
+      "started_at": "2026-11-15T12:30:32.393344+00:00",
+      "started": 190217.208836958,
+      "status": "RECOVERED",
+      "scheduled_offset_seconds": 10800.0,
+      "scheduled_duration_seconds": 60.0,
+      "active_cycles_at_fault": 3,
+      "ended_at": "2026-11-15T12:31:32.653146+00:00",
+      "restored": 190277.466850458,
+      "actual_duration_seconds": 60.25801358302124
+    },
+    {
+      "kind": "WORKER_RESTART",
+      "started_at": "2026-11-15T13:00:32.473878+00:00",
+      "started": 192017.209359208,
+      "status": "RECOVERED",
+      "scheduled_offset_seconds": 12600.0,
+      "scheduled_duration_seconds": 30.0,
+      "active_cycles_at_fault": 3,
+      "ended_at": "2026-11-15T13:01:05.898965+00:00",
+      "restored": 192050.633463,
+      "actual_duration_seconds": 33.42410383300739
+    }
+  ],
+  "publisher": {
+    "target_hz": 10,
+    "stage": "publish_market",
+    "published": 143387,
+    "last_input_id": 143387,
+    "book_owner": "75bb2e1a-31bb-48d8-bb45-d209dd4f94df",
+    "book_generation": 1,
+    "last_progress_at": "2026-11-15T13:30:03.966538+00:00",
+    "max_publish_seconds": 4.750326749985106,
+    "failure_type": "WriterLeaseLost",
+    "failed_at": "2026-11-15T13:30:04.284694+00:00"
+  },
+  "clock_recovery": {
+    "revision": "NC_F17_CLOCK_01",
+    "max_events": 1,
+    "max_retries": 1,
+    "budget_seconds": 1.0,
+    "window_start": 179417.196784458,
+    "window_end": 193789.131113333,
+    "event": {
+      "status": "COMMITTED",
+      "attempts": [
+        {
+          "tick": 6663,
+          "started": 180075.928861541,
+          "observed_at": "2026-11-15T09:41:30.577702+00:00",
+          "guard_age_microseconds": -791,
+          "guard_checked_at": 180075.938029958,
+          "pair": [
+            "BTC",
+            "USDT"
+          ],
+          "input_id": 6663,
+          "generation": 1,
+          "owner": "75bb2e1a-31bb-48d8-bb45-d209dd4f94df",
+          "received_at": "2026-11-15T09:41:30.577702+00:00",
+          "verified_at": "2026-11-15T09:41:30.577702+00:00",
+          "guard_now": "2026-11-15T09:41:30.576911+00:00",
+          "error_type": "SourceUnavailableError",
+          "rollback_confirmed": true,
+          "committed_at": null
+        },
+        {
+          "tick": 6663,
+          "started": 180075.941778125,
+          "observed_at": "2026-11-15T09:41:30.586910+00:00",
+          "guard_age_microseconds": 596,
+          "guard_checked_at": 180075.948695083,
+          "pair": [
+            "BTC",
+            "USDT"
+          ],
+          "input_id": 6663,
+          "generation": 1,
+          "owner": "75bb2e1a-31bb-48d8-bb45-d209dd4f94df",
+          "received_at": "2026-11-15T09:41:30.586910+00:00",
+          "verified_at": "2026-11-15T09:41:30.586910+00:00",
+          "guard_now": "2026-11-15T09:41:30.587506+00:00",
+          "error_type": null,
+          "rollback_confirmed": false,
+          "committed_at": 180076.063831666
+        }
+      ],
+      "retry_count": 1,
+      "rollback_confirmed_at": 180075.94108225,
+      "prior_session_exited_at": 180075.941595708,
+      "committed_at": 180076.063831666
+    },
+    "terminal_rejection": null,
+    "recovered_count": 1,
+    "clock_recovery_warning": true
+  },
+  "clock_recovery_commit_seconds": 0.12580170799628831,
+  "failure": {
+    "error_type": "WriterLeaseLost",
+    "stage": "market publisher renew_book_writer UPDATE returned no live lease",
+    "location": "backend/src/tiewtrade/infra/market_data/order_book_storage.py:207",
+    "explanation": "Initial locked owner/generation/live-lease check returned, but the following UPDATE lease_until>clock_timestamp() returned no row. No reacquisition or lease extension was attempted. Per-statement DB/commit waits and lease_until were not recorded, so the exact scheduling/DB/clock cause is unproven."
+  },
+  "diagnostic_partial_metrics_not_acceptance": {
+    "engine_samples": 398831,
+    "engine_p95_seconds": 0.20360341601190157,
+    "engine_p99_seconds": 0.3766108329873532,
+    "position_observations": 4800,
+    "position_outcomes": {
+      "RETURNED": 4800
+    },
+    "position_owners": 20,
+    "snapshot_p95_seconds": 0.036912582989316434,
+    "snapshot_p99_seconds": 0.09344466699985787
+  },
+  "last_resource_samples": [
+    {
+      "at": "2026-11-15 13:29:48.006058+00:00",
+      "total_rss_bytes": 652296192,
+      "database_bytes": 6968228887,
+      "connections": 58,
+      "lock_waits": 0,
+      "buffer_rows": 4096,
+      "host_load": [
+        22.90673828125,
+        19.3310546875,
+        22.34619140625
+      ]
+    },
+    {
+      "at": "2026-11-15 13:29:53.159627+00:00",
+      "total_rss_bytes": 694730752,
+      "database_bytes": 6968753175,
+      "connections": 58,
+      "lock_waits": 0,
+      "buffer_rows": 4096,
+      "host_load": [
+        22.2734375,
+        19.2587890625,
+        22.302734375
+      ]
+    },
+    {
+      "at": "2026-11-15 13:29:58.496081+00:00",
+      "total_rss_bytes": 592707584,
+      "database_bytes": 6969080855,
+      "connections": 59,
+      "lock_waits": 0,
+      "buffer_rows": 4096,
+      "host_load": [
+        22.33154296875,
+        19.32080078125,
+        22.306640625
+      ]
+    },
+    {
+      "at": "2026-11-15 13:30:04.091767+00:00",
+      "total_rss_bytes": 529661952,
+      "database_bytes": 6969179159,
+      "connections": 59,
+      "lock_waits": 0,
+      "buffer_rows": 4096,
+      "host_load": [
+        28.39111328125,
+        20.75048828125,
+        22.78076171875
+      ]
+    }
+  ],
+  "last_readiness_checks": [
+    {
+      "owner": "75bb2e1a-31bb-48d8-bb45-d209dd4f94df",
+      "tick": 143383,
+      "input_id": 143383,
+      "generation": 1,
+      "ready": true,
+      "rebase": false,
+      "received_at": "2026-11-15T13:29:54.090211+00:00",
+      "verified_at": "2026-11-15T13:29:54.090211+00:00",
+      "source_at": null,
+      "guard_now": "2026-11-15T13:29:54.091896+00:00",
+      "monotonic": 193778.758013333,
+      "outcome": "RETURNED"
+    },
+    {
+      "owner": "75bb2e1a-31bb-48d8-bb45-d209dd4f94df",
+      "tick": 143384,
+      "input_id": 143384,
+      "generation": 1,
+      "ready": true,
+      "rebase": false,
+      "received_at": "2026-11-15T13:29:54.823094+00:00",
+      "verified_at": "2026-11-15T13:29:54.823094+00:00",
+      "source_at": null,
+      "guard_now": "2026-11-15T13:29:54.824272+00:00",
+      "monotonic": 193779.490348791,
+      "outcome": "RETURNED"
+    },
+    {
+      "owner": "75bb2e1a-31bb-48d8-bb45-d209dd4f94df",
+      "tick": 143385,
+      "input_id": 143385,
+      "generation": 1,
+      "ready": true,
+      "rebase": false,
+      "received_at": "2026-11-15T13:29:56.218010+00:00",
+      "verified_at": "2026-11-15T13:29:56.218010+00:00",
+      "source_at": null,
+      "guard_now": "2026-11-15T13:29:56.221624+00:00",
+      "monotonic": 193780.890822625,
+      "outcome": "RETURNED"
+    },
+    {
+      "owner": "75bb2e1a-31bb-48d8-bb45-d209dd4f94df",
+      "tick": 143386,
+      "input_id": 143386,
+      "generation": 1,
+      "ready": true,
+      "rebase": false,
+      "received_at": "2026-11-15T13:29:57.006059+00:00",
+      "verified_at": "2026-11-15T13:29:57.006059+00:00",
+      "source_at": null,
+      "guard_now": "2026-11-15T13:29:57.011320+00:00",
+      "monotonic": 193781.680011041,
+      "outcome": "RETURNED"
+    },
+    {
+      "owner": "75bb2e1a-31bb-48d8-bb45-d209dd4f94df",
+      "tick": 143387,
+      "input_id": 143387,
+      "generation": 1,
+      "ready": true,
+      "rebase": false,
+      "received_at": "2026-11-15T13:29:59.256179+00:00",
+      "verified_at": "2026-11-15T13:29:59.256179+00:00",
+      "source_at": null,
+      "guard_now": "2026-11-15T13:29:59.277600+00:00",
+      "monotonic": 193783.952839,
+      "outcome": "RETURNED"
+    }
+  ],
+  "not_run": [
+    "complete four-hour duration",
+    "final-tail drain on accumulated W3 data",
+    "final per-owner financial oracle",
+    "global financial/input-lag invariants",
+    "final snapshot/rebuild acceptance",
+    "final owned-pool acceptance",
+    "overall workload acceptance"
+  ],
+  "candidate_unchanged": true,
+  "campaign_cleanup_receipt": {
+    "observed_at": "2026-11-15 13:30:20.707934+00",
+    "connections": 1,
+    "backends": [
+      {
+        "pid": 497128,
+        "role": null,
+        "state": "active",
+        "backend_type": "autovacuum worker",
+        "transaction_open": true
+      }
+    ],
+    "advisory_locks": 0
+  },
+  "campaign_cleanup_complete": false,
+  "launcher_cleanup": {
+    "database": "tiewtrade_internal20_endurance_t02_1794734865863596000",
+    "connections": 0,
+    "removed": true
+  },
+  "maintenance_wait": {
+    "observations": [
+      [
+        {
+          "pid": 497128,
+          "backend_type": "autovacuum worker"
+        }
+      ],
+      [
+        {
+          "pid": 497128,
+          "backend_type": "autovacuum worker"
+        }
+      ],
+      [
+        {
+          "pid": 497128,
+          "backend_type": "autovacuum worker"
+        }
+      ],
+      [
+        {
+          "pid": 497128,
+          "backend_type": "autovacuum worker"
+        }
+      ],
+      []
+    ],
+    "maximum_wait_seconds": 10
+  },
+  "independent_final_cleanup": {
+    "database_exists": false,
+    "connections": 0,
+    "locks": 0,
+    "fixture_redis_absent": true,
+    "owner_services": [
+      {
+        "name": "/tiewtrade-postgres-1",
+        "state": "running",
+        "restart_count": 0,
+        "health": "healthy"
+      },
+      {
+        "name": "/tiewtrade-f18-release-redis",
+        "state": "running",
+        "restart_count": 0,
+        "health": null
+      }
+    ]
+  }
+}

@@ -1,0 +1,79 @@
+{
+  "revision": "NC-F17-REPLAY-02",
+  "status": "AWAITING_SCOPED_CODE_REVIEW",
+  "safety": {
+    "status": "PASSED",
+    "exit_code": 0,
+    "passed": 52,
+    "cleanup": {
+      "database": "tiewtrade_internal20_endurance_dec_1794796192428026000",
+      "connections": 0,
+      "removed": true
+    },
+    "elapsed_seconds": 15.456737291999161
+  },
+  "benchmark": {
+    "status": "DIAGNOSTIC_COMPLETE",
+    "diagnostic_only": true,
+    "rows": 1000,
+    "arm_order": [
+      "control",
+      "candidate",
+      "candidate",
+      "control"
+    ],
+    "budget_seconds": 60,
+    "arms": [
+      {
+        "label": "control",
+        "seconds": 0.38768345800053794,
+        "decoded": 1000,
+        "equal": true
+      },
+      {
+        "label": "candidate",
+        "seconds": 0.23466770899904077,
+        "decoded": 1000,
+        "equal": true
+      },
+      {
+        "label": "candidate",
+        "seconds": 0.21655420800016145,
+        "decoded": 1000,
+        "equal": true
+      },
+      {
+        "label": "control",
+        "seconds": 0.3433722499994474,
+        "decoded": 1000,
+        "equal": true
+      }
+    ],
+    "source_unchanged": true,
+    "elapsed_seconds": 1.2717424590009614
+  },
+  "control": {
+    "source_path": "backend/src/tiewtrade/infra/paper_orders/storage.py",
+    "sha256": "a8814c00faaf537f34a78e1a5e5bfd269e2337ab20801f58059c98a91ebe1531",
+    "captured_before_edit": true
+  },
+  "source_hashes": {
+    "backend/src/tiewtrade/infra/paper_orders/storage.py": "d17be29867ed77036300304ec61d6000991ce0871095a54ecc7c16ad8c56a912",
+    "backend/tests/infra/execution_market/test_evidence_decoder.py": "0d7a562ad3585849a5b097ec88241757346be03c87cff4f015162ff56a1d2ba3"
+  },
+  "independent_cleanup": {
+    "database_exists": false,
+    "connections": 0,
+    "advisory_locks": 0
+  },
+  "static": [
+    "Ruff",
+    "format",
+    "mypy",
+    "git diff --check"
+  ],
+  "historical_grades_unchanged": true,
+  "full_reader_rebuild_acceptance": "Not Run",
+  "f17_completed": false,
+  "git_actions": false
+}

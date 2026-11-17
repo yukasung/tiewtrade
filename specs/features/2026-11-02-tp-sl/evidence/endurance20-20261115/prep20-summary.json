@@ -1,0 +1,127 @@
+{
+  "status": "PASSED_PREPARATION_CHECK",
+  "scope": "preparation capacity20 only; not fullrebuild,D20,W3 or Release",
+  "elapsed_seconds": 182.3738368330014,
+  "preparation_seconds": 54.25414237500081,
+  "counters": {
+    "offered": 600,
+    "admitted": 600,
+    "completed": 600,
+    "rejected": 0,
+    "fills": 240,
+    "cancels": 120,
+    "replays": 120,
+    "cycles": 120
+  },
+  "public_inputs": 522,
+  "journal_sha256": "0822f90a4436a915f26a5b5bf4705c6ec80ba658536832374c147206fa1477ca",
+  "global": {
+    "orders": 760,
+    "fills": 240,
+    "cancels": 120,
+    "pending_dispatch": 400,
+    "unlinked_fills": 0,
+    "invalid_reservations": 0,
+    "invalid_positions": 0,
+    "wrong_mode": 0,
+    "input_lag": 3,
+    "duplicate_fill_effects": 0,
+    "expected_orders": 760,
+    "expected_fills": 240,
+    "expected_cancels": 120,
+    "expected_pending_dispatch": 400,
+    "passed": true
+  },
+  "resources": {
+    "samples": 11,
+    "peak_process_rss_bytes": 80805888,
+    "peak_rss_by_pid": {
+      "14426": 72450048,
+      "14539": 68042752,
+      "14540": 69910528,
+      "14542": 68452352,
+      "14544": 68354048,
+      "14548": 65667072,
+      "14550": 66699264,
+      "14551": 72843264,
+      "14555": 68272128,
+      "14556": 80003072,
+      "14561": 80805888,
+      "14564": 77856768,
+      "14565": 67993600,
+      "14568": 71991296,
+      "14569": 42221568,
+      "14570": 69992448,
+      "14571": 71548928,
+      "14572": 70565888,
+      "14573": 70352896,
+      "14575": 68911104,
+      "14576": 65404928
+    },
+    "peak_connections": 64,
+    "connections_start": 16,
+    "connections_end": 57,
+    "peak_lock_waits": 0,
+    "lock_waits_end": 0,
+    "peak_buffer_rows": 497,
+    "buffer_rows_start": 0,
+    "buffer_rows_end": 497,
+    "database_bytes_start": 24198167,
+    "database_bytes_end": 59628567,
+    "database_growth_bytes": 35430400
+  },
+  "source_unchanged": true,
+  "cleanup": {
+    "database": "tiewtrade_internal20_endurance_prep_1794808453317415000",
+    "connections": 0,
+    "removed": true
+  },
+  "candidate": {
+    "head": "b0d5580364268be7619f5369dc8488d440f12160",
+    "diff_sha256": "69b828e0c914c07237d409d67975cfbf2f2ed3d21c74c4f5b0c59257f7abc074",
+    "inventory_sha256": "3824c25d570f39259afecabe1097d27868987a35884fb5582e4e9d017e148087"
+  },
+  "runner_sha256": "4dbbad43f1545f7f814bb048b17e710ac070e99ffc49e3e6cfc4c7acf2baa8ff",
+  "schema_sha256": "c7e4167f4e4c84c6784b68c1d6562a489443eeff158a8ae37c71175222577161",
+  "financial": {
+    "owners_checked": 20,
+    "all_passed": true
+  },
+  "pool_contract": {
+    "passed": true,
+    "worker_process_count": 20,
+    "reports": 21,
+    "errors": []
+  },
+  "independent_cleanup": {
+    "database": {
+      "database_exists": false,
+      "connections": 0,
+      "advisory_locks": 0
+    },
+    "remaining_worker_pids": [],
+    "services": [
+      {
+        "name": "tiewtrade-postgres-1",
+        "status": "running",
+        "health": "healthy",
+        "restart_count": 0
+      },
+      {
+        "name": "tiewtrade-f18-release-redis",
+        "status": "running",
+        "health": null,
+        "restart_count": 0
+      }
+    ]
+  },
+  "tests": {
+    "passed": 82,
+    "prior_attempt": {
+      "passed": 72,
+      "failed": 1,
+      "reason": "RISK_SOURCE_UNAVAILABLE; preserved; real admission guard unchanged"
+    },
+    "scoped_ruff_format_mypy": "Passed"
+  }
+}

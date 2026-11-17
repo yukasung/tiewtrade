@@ -92,6 +92,7 @@ class ParentPollGate:
         self.attempts += 1
         if self.stream_path is None:
             self.rows.append(row)
+        primary: BaseException | None = None
         try:
             await self.semaphore.acquire()
             row.update(acquired=True, acquired_at=monotonic())
@@ -103,6 +104,7 @@ class ParentPollGate:
                 yield
             row["outcome"] = "RETURNED"
         except BaseException as error:
+            primary = error
             row["outcome"] = type(error).__name__
             raise
         finally:
@@ -112,12 +114,17 @@ class ParentPollGate:
                 self.semaphore.release()
             else:
                 row["gate_wait_seconds"] = row["finished"] - row["started"]
-            if self.stream_path is not None:
-                # Preserve every completed/cancelled attempt without retaining a
-                # four-hour polling trace in process memory. No awaited write.
-                with self.stream_path.open("a", encoding="utf-8") as stream:
-                    stream.write(json.dumps(row) + "\n")
-            self.finished += 1
+            try:
+                if self.stream_path is not None:
+                    # Preserve every attempt without retaining the trace in memory.
+                    with self.stream_path.open("a", encoding="utf-8") as stream:
+                        stream.write(json.dumps(row) + "\n")
+            except BaseException as error:
+                if primary is None:
+                    raise
+                primary.add_note(f"poll gate trace write failed: {type(error).__name__}")
+            else:
+                self.finished += 1
 
     def save(self, path: Path) -> None:
         from tests.infra.execution_market.profile_workload import save

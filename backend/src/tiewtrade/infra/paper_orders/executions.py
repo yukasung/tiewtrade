@@ -16,7 +16,7 @@ from tiewtrade.infra.paper_orders.storage import (
     increment_wallet_revision,
     lock_active_episode,
     lock_episode,
-    read_execution_inputs,
+    read_execution_input,
 )
 from tiewtrade.infra.paper_wallet import get_wallet
 from tiewtrade.infra.positions import (
@@ -119,14 +119,14 @@ async def _stage_fill_cash(
         raise OrderConflictError("fill execution time mismatch")
     if source["live_position_proof"] != source["position_proof"]:
         raise OrderConflictError("position baseline proof changed")
-    evidence = await read_execution_inputs(
+    evidence = await read_execution_input(
         session,
         episode_id=episode_id,
         pair=fact.pair,
-        after_input_id=source["input_id"] - 1,
-        limit=1,
+        evidence_id=source["input_evidence_id"],
+        recorded_at=source["input_recorded_at"],
     )
-    if not evidence or (evidence[0].evidence_id, evidence[0].recorded_at, evidence[0].digest) != (
+    if evidence is None or (evidence.evidence_id, evidence.recorded_at, evidence.digest) != (
         source["input_evidence_id"],
         source["input_recorded_at"],
         source["evidence_digest"],

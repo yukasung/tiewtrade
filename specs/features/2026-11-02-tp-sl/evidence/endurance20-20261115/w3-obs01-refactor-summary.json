@@ -1,0 +1,37 @@
+{
+  "revision": "NC_F17_W3_OBS_01_REFACTOR",
+  "status": "PASSED",
+  "changes": [
+    "Extract evidence finalization into finalize_evidence; original order/errors/status unchanged",
+    "Simplify M1/M2 regression error selection and reuse retained JSON assertion"
+  ],
+  "source_sha256": {
+    "backend/tests/infra/execution_market/profile_publisher_lease_load.py": "1791c98e826cb950f2a16cb8d35146507bb1ec6f16a651251f9b9bb51ccdf53b",
+    "backend/tests/infra/execution_market/test_publisher_fence_fail_fast.py": "55c73b8b22f468d4f84a15cd80e77dbfa5877a6462b8fc76ebdcd1293e0e6e2b"
+  },
+  "regression": {
+    "status": "PASSED",
+    "exit_code": 0,
+    "passed": 134,
+    "cleanup": {
+      "database": "tiewtrade_internal20_endurance_rbtest_1794839219585159000",
+      "connections": 0,
+      "removed": true
+    },
+    "elapsed_seconds": 22.677418166997086
+  },
+  "checks": {
+    "ruff": "PASSED",
+    "format": "PASSED",
+    "mypy": "PASSED",
+    "git_diff_check": "PASSED"
+  },
+  "independent_cleanup": {
+    "database_exists": false,
+    "connections": 0,
+    "locks": 0
+  },
+  "unchanged_evidence": "reuse 53 supervision/parent unit cases and unaffected original434 with original fingerprints",
+  "campaign": "PREPARING_NOT_RUN",
+  "no_git_ci_merge": true
+}

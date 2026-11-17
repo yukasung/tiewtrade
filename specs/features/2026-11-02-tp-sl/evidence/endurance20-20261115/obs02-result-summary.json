@@ -1,0 +1,160 @@
+{
+  "status": "DIAGNOSTIC_COMPLETE",
+  "result": {
+    "status": "DIAGNOSTIC_COMPLETE",
+    "fixture_only": true,
+    "exit_code": 0,
+    "captures": 30,
+    "capture_status": "CAPTURES_COMPLETE",
+    "source_unchanged": true,
+    "before_cleanup": {
+      "observed_at": "2026-11-16 15:33:11.014362+00",
+      "connections": 0,
+      "backends": [],
+      "advisory_locks": 0
+    },
+    "cleanup": {
+      "database": "tiewtrade_internal20_endurance_obs02_1794843054553549000",
+      "connections": 0,
+      "removed": true
+    },
+    "independent_cleanup": {
+      "database_exists": false,
+      "connections": 0,
+      "locks": 0
+    },
+    "elapsed_seconds": 136.316575249999
+  },
+  "groups": {
+    "cold": {
+      "captures": 10,
+      "min_ms": 35.536791998310946,
+      "median_ms": 76.76541700129746,
+      "max_ms": 80.64908300002571,
+      "phases": {
+        "checkout_and_setup": {
+          "median_ms": 53.830437504075235,
+          "max_ms": 56.38049999834038
+        },
+        "statement_timeout": {
+          "median_ms": 1.4351460013131145,
+          "max_ms": 1.909541999339126
+        },
+        "lock_timeout": {
+          "median_ms": 0.9115419998124707,
+          "max_ms": 1.336332999926526
+        },
+        "db_clock": {
+          "median_ms": 1.215500000398606,
+          "max_ms": 1.5459580026799813
+        },
+        "activity": {
+          "median_ms": 15.684249501646264,
+          "max_ms": 17.218957997101825
+        },
+        "locks": {
+          "median_ms": 1.8712710043473635,
+          "max_ms": 2.310167001269292
+        },
+        "session_exit": {
+          "median_ms": 0.6703330000163987,
+          "max_ms": 0.74562500230968
+        }
+      }
+    },
+    "reused": {
+      "captures": 10,
+      "min_ms": 4.3448750002426095,
+      "median_ms": 11.67775000067195,
+      "max_ms": 56.14675000106217,
+      "phases": {
+        "checkout_and_setup": {
+          "median_ms": 0.35920849768444896,
+          "max_ms": 37.238291995890904
+        },
+        "statement_timeout": {
+          "median_ms": 3.354062500875443,
+          "max_ms": 5.304082995280623
+        },
+        "lock_timeout": {
+          "median_ms": 0.8717294986126944,
+          "max_ms": 1.406124996719882
+        },
+        "db_clock": {
+          "median_ms": 1.1736660017049871,
+          "max_ms": 2.226625001640059
+        },
+        "activity": {
+          "median_ms": 1.7189994978252798,
+          "max_ms": 13.564875000156462
+        },
+        "locks": {
+          "median_ms": 1.8933954961539712,
+          "max_ms": 3.46279200311983
+        },
+        "session_exit": {
+          "median_ms": 1.2071250021108426,
+          "max_ms": 2.010249998420477
+        }
+      }
+    },
+    "known_blocker": {
+      "captures": 10,
+      "min_ms": 5.016709001210984,
+      "median_ms": 13.354687500395812,
+      "max_ms": 38.152749999426305,
+      "phases": {
+        "checkout_and_setup": {
+          "median_ms": 0.3854374954244122,
+          "max_ms": 25.661500003479887
+        },
+        "statement_timeout": {
+          "median_ms": 2.914062497438863,
+          "max_ms": 3.6162079995847307
+        },
+        "lock_timeout": {
+          "median_ms": 0.9549794958729763,
+          "max_ms": 2.281458000652492
+        },
+        "db_clock": {
+          "median_ms": 1.2733955009025522,
+          "max_ms": 1.7287500013480894
+        },
+        "activity": {
+          "median_ms": 1.9161669988534413,
+          "max_ms": 8.735040995816234
+        },
+        "locks": {
+          "median_ms": 2.061541501461761,
+          "max_ms": 5.086791999929119
+        },
+        "session_exit": {
+          "median_ms": 1.3132079984643497,
+          "max_ms": 2.0574170048348606
+        }
+      }
+    }
+  },
+  "loop_lag": {
+    "count": 170,
+    "maximum_seconds": 0.02713199999561766,
+    "total_seconds": 0.31451520747941686
+  },
+  "preflight_samples": 7,
+  "refactor_checks": {
+    "affected_negative_tests": 12,
+    "ruff": "PASSED",
+    "format": "PASSED",
+    "mypy": "PASSED",
+    "real_db_evidence_reused": "obs02-m1-fix-summary.json; runtime source unchanged"
+  },
+  "limitations": [
+    "fixture only; no20worker load",
+    "no timeout reproduced; W3 cause unresolved",
+    "does not replace4h or financial acceptance"
+  ],
+  "files": {
+    "backend/tests/infra/execution_market/profile_observer_diagnostic.py": "396c63280a2830c1bea56aaef8dda12ca234732ccb7b30e72673bab8dfd3895c",
+    "backend/tests/infra/execution_market/test_observer_diagnostic.py": "8ef95a5f7084411625394efc76bdafacd276e0a22cc35d576d02aa1f1db58f27"
+  }
+}

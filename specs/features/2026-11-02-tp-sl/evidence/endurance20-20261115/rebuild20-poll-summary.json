@@ -1,0 +1,25 @@
+{
+  "scope": "NC-F17-REBUILD20-POLL-01 targeted safety only",
+  "status": "PASSED",
+  "tests_passed": 83,
+  "elapsed_seconds": 31.216832000001887,
+  "independent_cleanup": {
+    "database_exists": false,
+    "connections": 0,
+    "advisory_locks": 0
+  },
+  "static": {
+    "ruff": "Passed",
+    "format": "Passed",
+    "mypy": "Passed",
+    "whitespace": "Passed"
+  },
+  "source_sha256": {
+    "backend/tests/infra/execution_market/profile_rebuild20.py": "183a88c4fd2bef433f44974456f34cde0771c2418f083495379c9d8d6417abaa",
+    "backend/tests/infra/execution_market/profile_parent_poll.py": "c16d9c94de1d3581322c735390cd3798c0bf4285d7be6157f48a1c3e1980553c",
+    "backend/tests/infra/execution_market/test_rebuild20.py": "9416e555edb30b6bdae93135a1d1d8b6a8be47d3f67a0fbd598d4b4cf574e6c6",
+    "backend/tests/infra/execution_market/test_rebuild20_poll_evidence.py": "6271f1b1abccf2ff19aed07f9cfad60375292e347da1594c3742654ac6786cf0"
+  },
+  "replacement_campaign": "Not Run",
+  "four_hour": "Not Run"
+}

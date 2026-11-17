@@ -1,0 +1,17 @@
+{
+  "base": "b0d5580364268be7619f5369dc8488d440f12160",
+  "prior_receipt": "clock-recovery-review-fixes-source-bridge.json",
+  "refactored_paths": [
+    "backend/tests/infra/execution_market/profile_publisher_recovery.py",
+    "backend/tests/infra/execution_market/test_publisher_clock_recovery.py"
+  ],
+  "current_sha256": {
+    "backend/tests/infra/execution_market/profile_publisher_readiness.py": "e600a57159c3820a0e3acf3342128136a625465dba9226a0277ee6eb459d7fd2",
+    "backend/tests/infra/execution_market/profile_workload.py": "292f7654cd35e201c35736af97f56d6f6d3ac9895ddcb357888ea546532ece02",
+    "backend/tests/infra/execution_market/remaining_paper_campaign.py": "39b72b6a541dfd5ad94d90ec9838eee82da98583f478f1bffb493267213dbed2",
+    "backend/tests/infra/execution_market/profile_publisher_recovery.py": "de83a277292619a9842a0dd53e211206c24813835ab151224c805689424c3d5c",
+    "backend/tests/infra/execution_market/test_publisher_clock_recovery.py": "46b6d67fefd7f6a3997e351314eb6b141f886d0652a3c7446cddb167a331b9e0"
+  },
+  "production_frontend_and_migrations_unchanged": true,
+  "historical_four_hour_grade": "INCOMPLETE retained; no replacement workload executed"
+}

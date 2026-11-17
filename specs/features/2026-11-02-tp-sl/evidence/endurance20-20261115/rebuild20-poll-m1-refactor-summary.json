@@ -1,0 +1,12 @@
+{
+  "scope": "POLL-01 M1 owner-authorized refactor",
+  "status": "PASSED",
+  "focused_cases": 28,
+  "static": "Five-file Ruff/format/mypy/whitespace Passed",
+  "retained_proof": "Prior113 targeted realPG/process/replay checks; no runtime behavior changed",
+  "changed_files": {
+    "backend/tests/infra/execution_market/profile_replay_reads.py": "913600b3a3b0ff157a9ac44c8ef3103cb6be2aa5a191b098820de316569a3c77",
+    "backend/tests/infra/execution_market/test_rebuild20_poll_evidence.py": "7fe5ee33543207ba1ca2305527a14b146671651f5c88a6a1368551f9ec5dd76c"
+  },
+  "campaign": "Not Run"
+}

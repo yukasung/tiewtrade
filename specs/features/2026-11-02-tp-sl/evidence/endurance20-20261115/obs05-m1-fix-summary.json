@@ -1,0 +1,15 @@
+{
+  "status": "PASSED",
+  "exit_code": 0,
+  "passed": 170,
+  "cleanup": {
+    "database": "tiewtrade_internal20_endurance_rbtest_1794849964134389000",
+    "connections": 0,
+    "removed": true
+  },
+  "elapsed_seconds": 15.885580166999716,
+  "static": "Ruff/format/mypy: 3 files passed",
+  "independent_cleanup": "PASSED: database absent, zero connections/locks",
+  "campaign": "NOT_RUN",
+  "prior_attempt": "Initial mypy failed on exception-variable name reuse; corrected and rechecked. Initial non-DB tests: 40 passed."
+}

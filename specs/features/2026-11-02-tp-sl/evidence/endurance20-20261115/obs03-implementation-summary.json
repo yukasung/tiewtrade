@@ -1,0 +1,83 @@
+{
+  "status": "IMPLEMENTATION_TARGETED_CHECKS_PASSED",
+  "campaign": "NOT_RUN",
+  "effective_distinct_passed": 212,
+  "latest_affected_passed": 79,
+  "unaffected_retained_passed": 133,
+  "runs": [
+    {
+      "path": "validation-artifacts/f17-obs03-tests-20261116",
+      "result": {
+        "status": "PASSED",
+        "exit_code": 0,
+        "passed": 200,
+        "cleanup": {
+          "database": "tiewtrade_internal20_endurance_rbtest_1794843593376049000",
+          "connections": 0,
+          "removed": true
+        },
+        "elapsed_seconds": 35.88173145800101
+      },
+      "independent_cleanup": {
+        "database_exists": false,
+        "connections": 0,
+        "locks": 0
+      }
+    },
+    {
+      "path": "validation-artifacts/f17-obs03-final-tests-20261116",
+      "result": {
+        "status": "FAILED",
+        "exit_code": 1,
+        "passed": 211,
+        "cleanup": {
+          "database": "tiewtrade_internal20_endurance_rbtest_1794843706285655000",
+          "connections": 0,
+          "removed": true
+        },
+        "elapsed_seconds": 36.10128475000238
+      },
+      "independent_cleanup": {
+        "database_exists": false,
+        "connections": 0,
+        "locks": 0
+      }
+    },
+    {
+      "path": "validation-artifacts/f17-obs03-fixture-fix-tests-20261116",
+      "result": {
+        "status": "PASSED",
+        "exit_code": 0,
+        "passed": 79,
+        "cleanup": {
+          "database": "tiewtrade_internal20_endurance_rbtest_1794843825421071000",
+          "connections": 0,
+          "removed": true
+        },
+        "elapsed_seconds": 11.342207916997722
+      },
+      "independent_cleanup": {
+        "database_exists": false,
+        "connections": 0,
+        "locks": 0
+      }
+    }
+  ],
+  "files": {
+    "backend/tests/infra/execution_market/profile_observer_timing.py": "cd7ba8369964eb1ea8d7c2fabd2144c4944488282728820a2cf2c0f02de53ad5",
+    "backend/tests/infra/execution_market/profile_observer_diagnostic.py": "9a31df1d663f9175b0101eec7179eba0963bcec11ff5fad58f5e30bb524e83b7",
+    "backend/tests/infra/execution_market/profile_publisher_fence.py": "3be88bc2c881bb53dc0e16ecf49ca54c0cf8c644085cb4097cbd51d28b30f57d",
+    "backend/tests/infra/execution_market/profile_publisher_lease_load.py": "d9610569f41bdfb0da55edd7f4885fb5d62994c6579b2fd18260c07ff921cfad",
+    "backend/tests/infra/execution_market/profile_workload.py": "68f63ce778daf6b1dd346f7fcc0576745dd3fcd2a8f4b68f7753e25ea8fef7ea",
+    "backend/tests/infra/execution_market/remaining_paper_campaign.py": "6911c52c7784e88bccd08fcae15f52b05078e8b97b389f53fe8bca4346a82b78",
+    "backend/tests/infra/execution_market/test_observer_short_load.py": "f8dbee1c75edebe03a11496adb87c79a14a47f0adce5977e4a59e82f85d6737a",
+    "backend/tests/infra/execution_market/test_publisher_fence_fail_fast.py": "cd38554441e1fe92796e1bd88244a74ed707964f5f7be4c222394ec0320db0a3"
+  },
+  "static": {
+    "ruff": "PASSED",
+    "format": "PASSED",
+    "mypy": "PASSED",
+    "whitespace": "PASSED"
+  },
+  "prior_failure_retained": "2 invalid legacy-SMOKE test injections; corrected test fixture only"
+}

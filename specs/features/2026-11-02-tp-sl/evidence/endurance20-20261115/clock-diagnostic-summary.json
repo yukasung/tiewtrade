@@ -1,0 +1,23 @@
+{
+  "status": "COMPLETE",
+  "error_type": null,
+  "started_at_utc": "2026-11-15T01:38:02.875963+00:00",
+  "seconds": 300.0464660419966,
+  "batches": 300,
+  "sample_count": 3000000,
+  "negative_count": 0,
+  "same_backend": true,
+  "read_only": true,
+  "connection_closed": true,
+  "intrabatch_adjacent_pairs": 2999700,
+  "interbatch_reversals": 0,
+  "minimum_interbatch_gap_seconds": 0.852089,
+  "sample_spans_sum_seconds": 0.754434,
+  "max_unsampled_interbatch_gap_seconds": 1.010958,
+  "limitation": "Dense clock reads occurred in short one-secondly batches; no reversal during samples does not establish continuous clock monotonicity or disprove the earlier captured failure.",
+  "clocksource": "arch_sys_counter",
+  "postgresql": "16.15",
+  "docker_desktop": "4.96.2",
+  "guest_kernel": "7.0.14-linuxkit",
+  "probe_backend_absent_after_close": true
+}

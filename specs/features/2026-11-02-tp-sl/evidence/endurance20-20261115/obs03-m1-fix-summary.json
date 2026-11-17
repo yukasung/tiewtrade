@@ -1,0 +1,32 @@
+{
+  "status": "M1_FIXED_CHECKS_PASSED",
+  "tests": {
+    "status": "PASSED",
+    "exit_code": 0,
+    "passed": 170,
+    "cleanup": {
+      "database": "tiewtrade_internal20_endurance_rbtest_1794844113138175000",
+      "connections": 0,
+      "removed": true
+    },
+    "elapsed_seconds": 23.54853987500246
+  },
+  "new_cases": 5,
+  "independent_cleanup": {
+    "database_exists": false,
+    "connections": 0,
+    "locks": 0
+  },
+  "static": {
+    "ruff": "PASSED",
+    "format": "PASSED",
+    "mypy": "PASSED",
+    "whitespace": "PASSED"
+  },
+  "files": {
+    "backend/tests/infra/execution_market/profile_publisher_fence.py": "885a70dc20fed6f0348b649d1531047c468c09c95fa6c69e8db0038ff697bc8a",
+    "backend/tests/infra/execution_market/profile_publisher_lease_load.py": "8bd9b4fb54c97698454c784c19d68212f789a43e0f10a214c3658508106eb4df",
+    "backend/tests/infra/execution_market/test_observer_short_load.py": "be59aacd1ee5d766aa90c68029459d9eedbc0692f4622e3b624289d0978c0b70"
+  },
+  "campaign": "NOT_RUN"
+}

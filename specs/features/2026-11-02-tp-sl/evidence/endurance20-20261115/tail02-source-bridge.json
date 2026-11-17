@@ -1,0 +1,16 @@
+{
+  "base": "b0d5580364268be7619f5369dc8488d440f12160",
+  "current_sha256": {
+    "backend/tests/infra/execution_market/profile_workload.py": "381aa84c84f7a00b87044a1a5845ed581b348505f83d2da28094904e8f6a32d4",
+    "backend/tests/infra/execution_market/profile_tail_reads.py": "efdc700d0585c48218806b9f1d256cc6597250f979c4670ff6b2ec81e46b0a3c",
+    "backend/tests/infra/execution_market/test_tail_reads.py": "546c34e1b3ae0bcdfd05f6a4be853d689df48afdb0769afef8ff6a324ce51c3c",
+    "backend/tests/infra/execution_market/test_tail_query_equivalence.py": "88028985fd2c18237f9c8b17b22661b78f9a9f1c7aa41e36c862f5982f44f554"
+  },
+  "prior_receipts": [
+    "clock-recovery-refactor-source-bridge.json",
+    "tail01-source-bridge.json"
+  ],
+  "production_schema_frontend_unchanged": true,
+  "old_four_hour_results": "Incomplete retained; no replacement executed",
+  "campaign_inventory_unchanged": true
+}

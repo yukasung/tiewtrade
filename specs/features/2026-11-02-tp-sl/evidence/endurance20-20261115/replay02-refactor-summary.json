@@ -1,0 +1,24 @@
+{
+  "status": "PASSED",
+  "before_hashes": {
+    "backend/src/tiewtrade/infra/paper_orders/storage.py": "d17be29867ed77036300304ec61d6000991ce0871095a54ecc7c16ad8c56a912",
+    "backend/tests/infra/execution_market/test_evidence_decoder.py": "0d7a562ad3585849a5b097ec88241757346be03c87cff4f015162ff56a1d2ba3"
+  },
+  "after_hashes": {
+    "backend/src/tiewtrade/infra/paper_orders/storage.py": "d17be29867ed77036300304ec61d6000991ce0871095a54ecc7c16ad8c56a912",
+    "backend/tests/infra/execution_market/test_evidence_decoder.py": "7e8824c1d9bee451ef919a4044742ceafb7e21f46d19cde1449b5542441caff2"
+  },
+  "production_byte_identical": true,
+  "all_test_assertions_and_matrix_unchanged": true,
+  "only_record_for_helper_ast_changed": true,
+  "affected_decoder_tests_passed": 30,
+  "unchanged_evidence_and_observer_tests_retained": 22,
+  "static": [
+    "Ruff",
+    "format",
+    "mypy",
+    "git diff --check"
+  ],
+  "campaign_rerun": false,
+  "git_actions": false
+}

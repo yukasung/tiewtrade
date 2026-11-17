@@ -1,0 +1,33 @@
+{
+  "date": "2026-11-16",
+  "scope": "documentation-only review of four internal20 W3 attempts and60s rebuild criterion",
+  "review_complete": true,
+  "four_long_attempts_incomplete": 4,
+  "criterion_origin": "owner-approved integrated Paper profile2026-11-06; retained internal20 amendment",
+  "criterion_current_scope": [
+    "owner position fold/parity",
+    "cash ledger comparison",
+    "all execution-input integrity reads",
+    "matching checkpoint load",
+    "session/query/driver/decoding/exit within one60s owner bound"
+  ],
+  "benchmark_or_product_rto_basis_found_in_reviewed_docs": false,
+  "criterion_changed": false,
+  "source_changed": false,
+  "tests_or_workload_run": false,
+  "options": {
+    "A": "Keep60s; prepare representative20owner fullrebuild gate before4h,estimated30\u201345min campaign after harness ready,proposed60min overallcap",
+    "B": "Clarify online recovery vs offline audit SLA; ownerapprove requirements/criteria before change",
+    "C": "Immediate4h rerun,notrecommended"
+  },
+  "recommendation": "A",
+  "options_approved": false,
+  "historical_grades_unchanged": true,
+  "f17_completed": false,
+  "remaining_risks": [
+    "historical lease stall cause unproven",
+    "sampler failure attribution incomplete",
+    "full20owner rebuild/financial/global/resource acceptance pending",
+    "100accountRelease and otherF17 dependencies remain"
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "previous_receipt": "tail02-review-fixes-source-bridge.json",
+  "current_sha256": {
+    "backend/tests/infra/execution_market/profile_tail_reads.py": "7f2b2b3a41279cacc6bd2d0213ceab8ae926f1131c90d9ca4b6244aa5e04b536",
+    "backend/tests/infra/execution_market/test_tail_reads.py": "549af924472cd4713c5aef6ae58461eba8cff858e120a345ae2845b38b582195",
+    "backend/tests/infra/execution_market/test_tail_query_equivalence.py": "4a284617ccc16bea204e8c30287ca60b5bafd41dc003de39c9795d17f9499401",
+    "backend/tests/infra/execution_market/fixtures/tail_cursor_baseline.json": "ea336de31483b8642f5d8e5841e736c505e0aba1cf7d2fbadef3ea6191aac31d"
+  },
+  "runtime_workload_source_and_baseline_fixture_unchanged": true,
+  "measured_old_new_sql_unchanged": true,
+  "production_schema_frontend_unchanged": true,
+  "timed_campaign_rerun": false
+}

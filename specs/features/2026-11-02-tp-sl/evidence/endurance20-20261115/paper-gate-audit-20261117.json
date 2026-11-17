@@ -1,0 +1,23 @@
+{
+  "audit_at": "2026-11-17T14:37:14.409565+00:00",
+  "head": "b0d5580364268be7619f5369dc8488d440f12160",
+  "branch": "validation/f17-paper-endurance20-20261115",
+  "awake01_inventory_entries": 1046,
+  "changed_or_missing_since_awake01": [],
+  "production_diff_since_head": [
+    "backend/src/tiewtrade/infra/paper_orders/executions.py",
+    "backend/src/tiewtrade/infra/paper_orders/storage.py"
+  ],
+  "fresh_four_hour_run_required": false,
+  "remaining_current_candidate_checks": [
+    "W4 restored-database replay and recovery with current reader/fill authentication",
+    "consolidated publication safety/test/source mapping and required CI on committed final SHA",
+    "owner opening/admission gate audit before activation"
+  ],
+  "release_dependencies": [
+    "original100-account profile; prior failures retained",
+    "V19 bot/notifications",
+    "V20 Live readiness"
+  ],
+  "no_new_workload_or_git": true
+}

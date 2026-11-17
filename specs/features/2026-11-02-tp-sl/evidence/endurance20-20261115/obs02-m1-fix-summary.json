@@ -1,0 +1,29 @@
+{
+  "status": "M1_FIXED_TARGETED_CHECKS_PASSED",
+  "result": {
+    "status": "PASSED",
+    "exit_code": 0,
+    "passed": 47,
+    "cleanup": {
+      "database": "tiewtrade_internal20_endurance_rbtest_1794842825454735000",
+      "connections": 0,
+      "removed": true
+    },
+    "elapsed_seconds": 21.789790750000975
+  },
+  "independent_cleanup": {
+    "database_exists": false,
+    "connections": 0,
+    "locks": 0
+  },
+  "new_negative_tests": 12,
+  "files": {
+    "backend/tests/infra/execution_market/profile_observer_diagnostic.py": "396c63280a2830c1bea56aaef8dda12ca234732ccb7b30e72673bab8dfd3895c",
+    "backend/tests/infra/execution_market/test_observer_diagnostic.py": "c73d6b415516f2298c2c3828cf24e848754491f200abd0aca000c00ecb33992b"
+  },
+  "ruff": "PASSED",
+  "format": "PASSED",
+  "mypy": "PASSED",
+  "whitespace": "PASSED",
+  "campaign": "NOT_RUN"
+}
