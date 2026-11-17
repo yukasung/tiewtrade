@@ -1620,3 +1620,570 @@ Failed/full100/4h and bot/notification/Live dependencies pending, notCompleted.
 139targeted tests/no skips, scopedRuff/format/mypy Passed; production unchanged.
 Next owner commit/push/PR instruction, requiredCI, then separately authorized merge.
 Existing local internal20/Failed100/4h/dependency statuses retained; F17 notCompleted.
+
+2026-11-15 F17 standalone20-account four-hour attempt (owner-selected before opening):
+[Incomplete after40min11s](features/2026-11-02-tp-sl/evidence/endurance20-20261115/checkpoint.md),
+4753/28200commands completed before publisher's strict future-book check rejected
+230us reversed ordering between successive PostgreSQL timestamp reads. Underlying
+clock mechanism unconfirmed; finalfinancialoracle/rebuild/full4h not completed.
+Cleanup0connections/0locks, owned DB/Redis removed, source unchanged. Stop/report;
+next bounded read-only clock investigation before choosing correction/replacement.
+Original Passed/Failed grades and100-account/Release/opening/dependencies retained.
+
+2026-11-15 F17 [read-only clock diagnosis complete](features/2026-11-02-tp-sl/evidence/endurance20-20261115/clock-diagnosis.md):
+original230us PostgreSQL read reversal confirmed, exact underlying clock mechanism
+unproven.300s sparse-burst probe/3million reads did not reproduce; only0.754434s dense
+coverage, no stability/fix claim. Connection closed, source/clock/gates unchanged.
+Next separately reviewable clock-runtime or fixture-recovery plan before replacement;
+standalone4h20 remainsIncomplete, other grades/dependencies unchanged, notCompleted.
+
+2026-11-15 F17 NC-F17-CLOCK-01 [approved harness implementation checkpoint](features/2026-11-02-tp-sl/evidence/endurance20-20261115/clock-recovery-implementation.md):
+opt-in/parent-task-bound/confirmed-rollback recovery, oneevent/onetry/1s; production
+unchanged. Targeted real-PG/negative/regression and scopedstatic checks Passed with
+incremental evidence retained. Await owner-directed review, then required refactor/
+execution gates before4h replacement. No publication; originalIncomplete and other
+Release/opening/dependency statuses unchanged, F17 notCompleted.
+
+2026-11-15 NC-F17-CLOCK-01 [review corrections R1–R3](features/2026-11-02-tp-sl/evidence/endurance20-20261115/clock-recovery-review-fixes.md):
+clean session exit before retry, locked pre-publication source identity check and
+foreign-task isolation corrected. Incremental62recovery cases and affected regression
+checks Passed (101/56test runs overlap); scopedRuff/format/mypy Passed. Initial4test
+failures retained with fixes documented. Await separate owner refactor instruction;
+no4h replacement/Git action. OriginalIncomplete/Release dependencies retained,
+F17 notCompleted.
+
+2026-11-15 owner-authorized NC-F17-CLOCK-01 [refactor and affected validation](features/2026-11-02-tp-sl/evidence/endurance20-20261115/clock-recovery-refactor.md)
+Passed:62recovery cases/no skips, scopedRuff/format/mypy and whitespace. Consolidated
+repeated test buffer query and removed unreachable commit-evidence fallback only;
+prior affected regressions retained with source bridge. StepD four-hour replacement
+requires explicit execution authorization; noGit action. OriginalIncomplete/Release
+dependencies unchanged, F17 notCompleted.
+
+2026-11-15 owner-authorized NC_F17_CLOCK_01 [standalone20 four-hour replacement](features/2026-11-02-tp-sl/evidence/endurance20-20261115/clock01-four-hour-checkpoint.md):
+**Incomplete** after14400.002106s measured/28200commands completed,0rejected; all7fault
+observations RECOVERED and no clock recovery used. Final-tail exceeded its60s shared
+budget: initial watermark44.965s, final watermark59.154s,20final cursor reads cancelled.
+Finalfinancial/global/snapshot-rebuild/pool acceptance NotRun; diagnostic enginep95/99
+193.550/361.495ms and4800returned periodic snapshots are not overall acceptance.
+OwnedDB/Redis removed; independent canonical-name check0connections/0locks and owner
+services unchanged. Stop/report, no automatic retry/source/criterion/Git change.
+OriginalIncomplete/100-accountRelease and dependencies retained; F17 notCompleted.
+
+2026-11-15 [NC-F17-TAIL-01 diagnostic complete](features/2026-11-02-tp-sl/evidence/endurance20-20261115/tail01-diagnostic-checkpoint.md):1208.716s,20owners/2890260valid keys,
+43successful observations/3plans. Serial3.825s, gate4concurrent1.333s; original59s
+delay not reproduced. Proven full-history external sort per read; proposed TAIL-02
+scalar aggregate remains unapproved/unimplemented.17new cases plus64existing
+regressions covered incrementally, scopedstatic checks Passed. OwnedDB removed,
+0connections/0locks, owner services unchanged. Stop/report, no4h/Git/source query
+change; priorIncomplete and financial/Release dependencies retained, notCompleted.
+
+2026-11-15 [NC-F17-TAIL-02 implementation/comparison](features/2026-11-02-tp-sl/evidence/endurance20-20261115/tail02-comparison-checkpoint.md): local123tests Passed plus
+1overlapping strengthened mixed-history check; scopedRuff/format/mypy Passed. One
+1217.443s campaign with20owners/2890260keys and86returned observations; exact results
+matched, financial snapshot unchanged. Concurrent old/new0.814/0.439s; new plans3/3
+removed disk Sort/tempIO while retaining full visible history scan. Original4h
+delay not reproduced/acceptance unproven. Cleanup0/0, source unchanged during run.
+Stop for review; publication blocker: historical baseline lookup requires full Git
+history but backend CI checks out shallow. Package verified immutable control during
+review/fix gate before publication. No4h/Git/CI action; F17 notCompleted.
+
+2026-11-15 [TAIL-02 review fixes R1/R2](features/2026-11-02-tp-sl/evidence/endurance20-20261115/tail02-review-fixes.md): packaged verified historical control
+without Git-history dependency; actual SQL/awaited caller bindings enforced.141targeted
+tests/no skips and scopedRuff/format/mypy Passed. Current workload source and measured
+old/new SQL unchanged; retained comparison bridged, no timed rerun/CI/Git. Await owner
+refactor instruction. Both4hIncomplete and Release/dependencies retained; notCompleted.
+
+2026-11-15 owner-authorized [TAIL-02 R1/R2 refactor/affected validation](features/2026-11-02-tp-sl/evidence/endurance20-20261115/tail02-refactor.md) Passed:
+48affected cases/no skips and scopedRuff/format/mypy; unchanged93regressions retained
+from prior141run. Workload source, baseline fixture and measured old/new SQL unchanged
+with source bridge. NoCI/Git/timed rerun; await publication instruction. Both4hIncomplete
+and finalfinancial/rebuild/Release dependencies retained; F17 notCompleted.
+
+2026-11-15 owner-authorized [TAIL-02-refactor four-hour confirmation](features/2026-11-02-tp-sl/evidence/endurance20-20261115/tail02-four-hour-checkpoint.md):
+**Incomplete**,14371.934s measured (28.066s short),28143/28200commands completed.
+WriterLeaseLost at book lease renewal UPDATE after initial locked live-lease check;
+exact DB/commit/clock cause unproven.7fault observations RECOVERED. Clock recovery
+exercised once for791us future input, committed in125.802ms within approved bound.
+Finaltail/financial/global/rebuild/pool acceptance NotRun. Initial campaign cleanup
+false due1autovacuum backend; launcher waited for natural exit, normal cleanup and
+independent0connections/0locks/DB+Redis absent verified. Owner services unchanged.
+Stop/report, no retry/lease relaxation/Git/CI; all earlier grades retained, notCompleted.
+
+2026-11-15 owner-approved [NC-F17-LEASE-01 diagnostic checkpoint](features/2026-11-02-tp-sl/evidence/endurance20-20261115/lease01-checkpoint.md):
+DIAGNOSTIC_COMPLETE, one7-sample preflight and fiveisolated cases in164.961s/600s.
+L0/L1 heartbeat+price committed once; L2 original renewal UPDATE rowcount0 after
+5.251s controlled wait, WriterLeaseLost/rollback/independent lock release confirmed.
+37distinct targeted cases Passed, scoped Ruff/format/mypy and whitespace Passed.
+Source unchanged; fiveDBs removed normally, independently0connections/0locks; owner
+services unchanged. Historical4h root cause unproven; no retry/lease relaxation/Git.
+Stop/report; next owner-directed review of new observer/tests. All prior4hIncomplete,
+finalfinancial/rebuild/Release dependencies retained; F17 notCompleted.
+
+2026-11-15 owner-directed [LEASE-01 review M1 fix](features/2026-11-02-tp-sl/evidence/endurance20-20261115/lease01-m1-fix.md):
+readiness write failures/missing/corrupt/mismatched evidence now prevent completion,
+original lease error preserved/no retry.27affected real-PG/fault/readiness cases
+Passed, scoped3-file Ruff/format/mypy/whitespace Passed. Prior diagnostic evidence
+kept on its original candidate; only3harness/test sources changed. No diagnostic/4h/
+Git/CI rerun. Await owner refactor instruction; F17 notCompleted, oldIncomplete and
+finalfinancial/rebuild/Release dependencies unchanged.
+
+2026-11-15 owner-authorized [LEASE-01 M1 refactor/affected validation](features/2026-11-02-tp-sl/evidence/endurance20-20261115/lease01-m1-refactor.md)
+Passed: local readiness validator extracted, ordered identity comparisons and flat
+fault writer; behavior/error policy unchanged.27affected cases/scoped2-file Ruff/
+format/mypy/whitespace Passed. Source bridge retained, no diagnostic/4h/Git/CI rerun.
+Scoped refactor complete; stop/report. Historicalcause and W3Incomplete/finalfinancial/
+rebuild/Release dependencies remain; F17 notCompleted.
+
+2026-11-15 owner-approved [NC-F17-LEASE-02](features/2026-11-02-tp-sl/publisher-lease-load-diagnostic-plan.md):
+opt-in actual publisher recorder implemented;57distinct targeted lease/load/readiness
+cases Passed across incremental checks, including real-PG/owned witness-pool proof.
+Scoped5-file Ruff/format/mypy Passed. One20-account SMOKE diagnostic authorized next,
+5min measured/max20min from preflight including cleanup, no retry/4h/Git/CI. Allprior
+grades/F17 notCompleted retained; execution result pending.
+
+2026-11-15 [LEASE-02 one short-load diagnostic](features/2026-11-02-tp-sl/evidence/endurance20-20261115/lease02-checkpoint.md):
+**Incomplete**,469.132s total/301.051s measured,600/600commands completed,20owner
+financial/global/base checks Passed,3011measured inputs.3087publisher publications
+RETURNED/no lease loss, slowest377.768ms; historical4h cause not reproduced/proven.
+Parent+20worker trackers individuallyPassed but aggregate validator still hardcodes
+old parent inventory and rejects declared diagnostic witness pool. Test coverage gap
+recorded; no leak/criterion waiver or regrade. Source stable; independentDB/Redis
+absent,0connections/0locks, owner services unchanged. Stop/report under approved plan;
+no source correction/repeat/4h/Git/CI. Next owner-directed review/correction scope.
+F17 notCompleted; allpriorIncomplete/finalfinancial/rebuild/Release dependencies retained.
+
+2026-11-15 owner-started [LEASE-02 review/aggregate pool fix](features/2026-11-02-tp-sl/evidence/endurance20-20261115/lease02-pool-fix.md):
+explicit opt-in parent inventory now shared by tracker/aggregate validator; original
+pools/default/capacity/return rules unchanged, report-supplied inventory not trusted.
+68affected tests Passed including14new negative/default/caller cases; scoped3-file
+Ruff/format/mypy/whitespace Passed. Original campaign Incomplete retained on its
+candidate, no workload/4h/Git/CI rerun. Await owner refactor instruction. Historical
+lease cause/finalfinancial/rebuild/Release dependencies unchanged; F17 notCompleted.
+
+2026-11-15 owner-authorized [LEASE-02 pool refactor/affected validation](features/2026-11-02-tp-sl/evidence/endurance20-20261115/lease02-pool-refactor.md)
+Passed: only new correction tests refactored, runtime unchanged by source bridge.
+14affected cases/one-file Ruff/format/mypy/whitespace Passed;54unchanged regressions
+retained. No new campaign/4h/Git/CI or regrade. OriginalIncomplete and F17 pending
+financial/rebuild/Release dependencies unchanged. Scoped work complete; replacement
+short diagnostic requires separate authorization under one-campaign stop gate.
+
+2026-11-15 [LEASE-02 replacement diagnostic](features/2026-11-02-tp-sl/evidence/endurance20-20261115/lease02-r2-checkpoint.md):
+**Incomplete**,243.661s total/67.510s measured,88/600commands complete.556publisher
+successes then actual tick557 WriterLeaseLost during price renewal. Fence SQL call
+observed9.848s before feed-row check; lock-holder/server-vs-scheduling cause unproven.
+Independent NOWAIT witness proves committed556/buffer1..556, previous lease restored,
+failed557absent. Finalfinancial/rebuild/aggregatepool acceptance NotRun. Source stable;
+DB/Redis absent and0connections/0locks independently verified, owner services unchanged.
+One replacement consumed; stop/report, no retry/sourcefix/4h/Git/CI. Next proposed
+F18 fence/lock-order review and bounded blocker evidence; F17 notCompleted and all
+priorIncomplete/Release/dependencies retained.
+
+2026-11-15 owner requested continuous follow-up: [NC-F17-FENCE-01](features/2026-11-02-tp-sl/publisher-fence-observation-plan.md)
+records bounded readonly blockers/wait events after slow publisher SQL, no lock/lease/
+financial policy change.111distinct affected pool/lease/fence cases Passed incrementally,
+scoped9-file Ruff/format/mypy/whitespace Passed. Onefresh internal20 SMOKE with both
+observers next,5min measured/max20min from preflight; no auto-repeat/4h/Git. Previous
+Incomplete/Release/dependencies/F17 notCompleted retained.
+
+2026-11-15 [FENCE-01 continuous follow-up](features/2026-11-02-tp-sl/evidence/endurance20-20261115/fence01-checkpoint.md):
+Passed diagnostic,472.652s total/302.801s measured,600/600commands,20owner/global/
+resource/finaltail and aggregate21process pool checks Passed.3115publisher successes,
+0lease loss; no individual retained SQL>=1s so0blocker samples (0errors,monitorjoined).
+Real-PG holder/waiter/READ ONLY/normal publication proof and111distinct targeted cases,
+scoped9-file static/whitespace Passed. Source stable, independentDB/Redis absent,
+0connections/0locks, owner services unchanged. Historicalstall not reproduced/fixed;
+priorIncomplete/4h/financialrebuild/Release/dependencies retained,F17 notCompleted.
+Scoped observer review is next; no extra campaign/productionfix/4h/Git/CI performed.
+
+2026-11-15 owner-directed [FENCE-01 M1/M2 review fixes](features/2026-11-02-tp-sl/evidence/endurance20-20261115/fence01-review-fixes.md):
+cancel-safe joined cleanup and explicit statement/snapshot overlap attribution.
+42affected real-PG/cancellation/race/load cases Passed; scoped2-file Ruff/format/mypy/
+whitespace Passed. Source bridge shows only fence module/tests changed. Old diagnostic
+Passed/originalIncomplete kept on their candidates; no campaign/4h/Git/CI rerun.
+Await owner refactor instruction; F17 notCompleted and financial/rebuild/Release gates
+unchanged, historical lease root cause still unproven.
+
+2026-11-15 owner-authorized [FENCE-01 M1/M2 refactor/affected validation](features/2026-11-02-tp-sl/evidence/endurance20-20261115/fence01-review-refactor.md)
+Passed: explicit association branches/first-cancellation naming, literal race-test
+expectations, same behavior/queries/cleanup.20affected fence cases/static2-file and
+whitespace Passed;22unchanged load regressions retained. Source bridge verified,
+no campaign/4h/Git/CI or regrade. Scoped work complete; long-run observation needs
+separate scope/authorization. F17/pendingfinancial/rebuild/Release status unchanged.
+
+2026-11-15 owner explicitly requested all steps including4h run: [FENCE-02 observed W3](features/2026-11-02-tp-sl/publisher-fence-endurance-plan.md)
+approved. Narrow combined W3 observers/approved CLOCK-01 validation, actual task-scoped
+guard counting and no postrollback clock probe implemented.192distinct affected cases
+Passed (191combined44.09s +1foreign-count4.95s); scoped4-file Ruff/format/mypy Passed.
+One120s preflight then fresh20account/28200command/14400s W3 with original7faults,
+clock recovery1event/1retry/1s, original criteria and explicit observer pools. Max5h
+outer budget incl cleanup, no automatic replacement/Git. Execution pending; allprior
+Incomplete/F17 financial/rebuild/Release dependencies retained.
+
+2026-11-16 [FENCE-02 one observed four-hour W3](features/2026-11-02-tp-sl/evidence/endurance20-20261115/fence02-w3-checkpoint.md):
+**Incomplete**,14400.000637s measured/28200commands completed,15353.547435s total.
+Final-tail24.061s/20owner lag0;4820snapshots returned,13replays returned;owner14
+exceeded unchanged60s rebuild budget during read_execution_inputs,remaining6NotRun.
+Finalfinancial/global/resource/aggregatepool acceptance NotRun. Parentpool retains
+ConnectionResourceError from rebuild cancellation,allfinalcheckouts0. Publisher
+144249returned/0leaseerror,clockrecovery0. Fence samplerTimeoutError1/0successful
+blockersnapshots,joined; secondaryevidenceerror preserved,rootcauseunproven.
+192targeted cases/scopedstatic Passed before run; source unchanged,independentDB/
+Redisabsent,0connections/locks,ownerservicesunchanged. Historicalgrades retained,
+F17 notCompleted/Release dependencies unchanged. Approved one-run checkpoint ended;
+next scoped short replay/sampler investigation recommended,not automatic4h/Git/CI.
+
+2026-11-16 [REPLAY-01 short reader diagnostic](features/2026-11-02-tp-sl/evidence/endurance20-20261115/replay01-checkpoint.md)
+complete: one preflight/freshDB/96000-record enumeration,36.707s reader/202.625s total;
+SQLdriver8.659s,decode27.638s,25pages. Firstpage externalmerge sort beforeLimit observed.
+Syntheticfixture only,not historicalrootcause/fullrebuildfinancialacceptance.4targeted
+cases/scopedRuff/format/mypy Passed,sourceunchanged,ownedDBnormalremoved/independent
+0connections/locks. No production/samplerfix/4h/Git/CI. FENCE-02Incomplete and F17
+pendingfinancial/global/rebuild/resource/Release dependencies retained. Nextscoped
+harnessreview/evidence-backed optimization and failureenvelope; no automaticrerun.
+
+2026-11-16 [REPLAY-01 scoped review M1/M2 fixes](features/2026-11-02-tp-sl/evidence/endurance20-20261115/replay01-review-fixes.md):
+source/evidencefailures cannot skip ownership-checked cleanup; partialIO retains
+originalreadTimeout/cancel.14targeted cases/scoped2-file Ruff/format/mypy Passed;
+actualcorrectedrunnerfinally faultbindingproved,oldrunnerimmutable. Correctedprivate
+runner unexecuted; no diagnostic/4h/productionfix/Git/CI orhistoricalregrade.
+Ownerrefactor instruction next; F17notCompleted and remainingacceptance unchanged.
+
+2026-11-16 [REPLAY-01 M1/M2 owner-authorized refactor](features/2026-11-02-tp-sl/evidence/endurance20-20261115/replay01-review-refactor.md)
+Passed: cached error type,strictboolean normalization,cleanupresult naming and
+consolidated imports,same behavior.10affected lifecycle cases/scopedstatic and actual
+correctedrunnerfinally binding Passed;4unchanged realPG/RLS proofs retained. Original
+runner/results unchanged,no campaign/4h/Git/CI. Scopedcheckpoint complete; nextscope
+reader/decoder optimization needs owner start. F17Incomplete/pending gates retained.
+
+2026-11-16 [REPLAY-02 duplicate market decoding removal](features/2026-11-02-tp-sl/evidence/endurance20-20261115/replay02-checkpoint.md):
+scoped implementation/targetedvalidation complete;awaiting ownercode review. Missing
+source_market reuses decodedimmutablemarket;explicit source retainssecondvalidation;
+all digest/provenance/metadata/profile checks unchanged,SQL/RLS/financialrulesunchanged.
+52targetedcases/scopedstatic Passed;ownedDBabsent/independent0connections/locks.
+Onefixed1000row×4arm comparison returned equaloutputs:old0.388/0.343s,new0.235/0.217s;
+microbenchmarkonly,not fullreader/rebuild/W3acceptance. PreparationIncomplete0decodes
+retained. HistoricalIncomplete/F17pendinggatesunchanged;no4h/Git/CI. Nextownerreview.
+
+2026-11-16 [REPLAY-02 review/refactor](features/2026-11-02-tp-sl/evidence/endurance20-20261115/replay02-refactor.md)
+Passed:ownerreview foundnofindings;production remainsbyte-identical. RefactoredTRADE
+fixture temporary construction only,allassertions/matrix unchanged.30affected tests/
+scopedstaticPassed;22unaffected safety cases/originalmicrobenchmark retained.
+No campaign/4h/Git/CI orhistoricalregrade;scopedcheckpointcomplete. F17notCompleted,
+fullfinancial/rebuild20/resource/Release pending. Nextboundedrepresentative20owner
+rebuildvalidation needs ownerstart and explicit plan;no automatic4h.
+
+2026-11-16 [Four-attempt plan/criteria review](features/2026-11-02-tp-sl/endurance-four-attempts-review.md)
+completed as documentation-only. Four internal20 W3 attempts remainIncomplete for
+clock/finaltail/lease/rebuild respectively;not four repeats of one provenrootcause.
+60s/owner traces to approved2026-11-06 integratedprofile and internalamendment;
+currently times fullposition/cash/evidence/checkpoint replay,not CPUfold alone.
+No benchmark/productRTO justification found in reviewed requirement/profile sources;
+no conclusion that boundiswrong and no relaxation. ProposedA keep60s and prepare
+representative20owner fullrebuild gate beforeanother4h;B clarifySLA before criterion
+amendment;C immediate4h not recommended. Alloptions pending ownerchoice;no source/
+test/workload/Git/CI orgradechange. F17notCompleted and dependencies unchanged.
+
+2026-11-16 [REBUILD20-01 approvedA campaign](features/2026-11-02-tp-sl/evidence/endurance20-20261115/rebuild20-checkpoint.md)
+Incomplete:agent voluntarilystopped sloweconomic-fixture preparation after443.436s,
+not actual60s rebuild/3600s expiry. OnepreflightPassed,400baseline;progresssample180/
+11280fills/4economicowners;finalfinancial/global/96000history/fullrebuildNotRun.
+24targetedcases/scopedstaticPassed beforehand;small2ownerfixtureproofonly. Source
+unchanged,mutatorsjoined,normalcleanup/independentDBabsent/0connections/locks.
+InterruptedpoolreportFailed retained(allborrowsreturned),4priorW3Incompleteunchanged.
+F17notCompleted. Nextproposedfix is existing20worker/10Hz fixtureprep plus bounded
+20owner6cycle capacitycheck before anotherfullhistoryattempt;not implemented/authorized
+bythisreceipt. Oneapprovedcampaigncheckpointended,no automaticreplacement/Git/CI.
+
+
+2026-11-16 NC-F17-PREP20-01 checkpoint
+
+[Scoped preparation check Passed](features/2026-11-02-tp-sl/evidence/endurance20-20261115/prep20-checkpoint.md):
+600/600 commands, 400 baseline orders, 20 financial oracles and 21 pool reports passed.
+182.374s total including preflight/cleanup; preparation 54.254s. Source unchanged;
+normal owned cleanup independently confirmed, no workers/connections/locks remain.
+82 affected safety tests and scoped Ruff/format/mypy passed; earlier failed safety
+receipt retained. This uses fixture-only policy and 10Hz book+price publication, not
+integrated W3 admission or one-Hz price cadence. Not D20/full-history/full-rebuild/W3
+acceptance; no linear duration extrapolation. Prior Incomplete grades and F17 status
+unchanged. One approved campaign ended; next owner code review, no automatic full-history/
+four-hour run or Git/CI.
+
+
+2026-11-16 [NC-F17-REBUILD20-02](features/2026-11-02-tp-sl/rebuild20-parallel-plan.md) Proposed, Not Run:
+owner instructed preparing the next scope after review-fix refactor. Plan uses existing
+20-worker/10Hz fixture runtime, 20×282 cycles, 96,000 source inputs per owner, original
+60s full-replay/snapshot/financial/resource criteria and 3,600s campaign budget. Proposes
+public history extension immediately after mutator join before slow financial reads;
+all oracles retained and expired lease still stops without retry/reacquire. Pinned
+external helper dependency and 21 pool reports mandatory. Await owner approval before
+runner/source changes or timed campaign. No tests/workload/Git/CI in this documentation
+step; all previous grades and F17 pending status unchanged.
+
+
+2026-11-16 [REBUILD20-02 campaign](features/2026-11-02-tp-sl/evidence/endurance20-20261115/rebuild20-02-checkpoint.md)
+Incomplete after1149.152s at economic fixture: terminal traceback maps to the existing
+100000-row in-memory ParentPollGate trace guard; full-rebuild60s not measured.
+17530/28200commands completed by partial counters,7006fills,10170journalrecords;
+finalfinancial/global/96000history/snapshots/rebuildNotRun. 93targetedrealDB/process tests,
+3runnerorchestration checks/scopedstatic Passed beforehand. Source/helper binding stable;
+20workers exited0,poolsPassed;parent/aggregatepool Failed/Incomplete from unwind
+ConnectionResourceError retained despite allfinalborrows0/disposed. Independent ownedDB
+absent/0connections/locks/nochildPIDs,existingservicesunchanged. Next proposal use existing
+streamed poll evidence +finalsummary,retain guard/defaults andtest IO/cancel/100k+ attempts;
+no sourcefix/rerun authorized by this endedonecampaign scope. Priorgrades/F17pendingunchanged.
+
+
+2026-11-16 [REBUILD20-POLL-01 harness fix](features/2026-11-02-tp-sl/evidence/endurance20-20261115/rebuild20-poll-checkpoint.md)
+scopedimplementation/safety Passed;awaiting ownercode review. Existing streaming poll
+path selected only for parallelfixture,default100000 guard/cadence0.25/concurrency4/
+allfinancial/timeouts unchanged. Summary after mutatorjoin and partialreceipt onerror;
+streamIO retains primaryerror/cancellation while incompletefinishedcount stillrejects.
+83targetedtestsPassed including100001attempts and realPG/actual20process/fullsmallreplay;
+four-fileRuff/format/mypy/whitespacePassed;testDBindependentlyabsent/0connections/locks.
+No replacementcampaign/fullrebuild/4h/Git/CI;REBUILD20-02Incomplete/poolFailed preserved.
+Next ownerreview;F17notCompleted andremainingvalidationdependenciesunchanged.
+
+
+2026-11-16 [POLL-01 review M1 fixes](features/2026-11-02-tp-sl/evidence/endurance20-20261115/rebuild20-poll-m1-fixes.md)
+Passed scoped checks:explicit operation/cleanup/summary/progress error state prevents
+unrelated caller except from swallowing evidenceIO;legacy omitted partialreceipt arg
+retained.113targetedtests including realPG/actual20workers/replay lifecycle Passed;
+28focusedfinal cases/five-file Ruff/format/mypy/whitespacePassed;ownedtestDBindependently
+absent/0connections/locks. Await ownerrefactor decision. No campaign/fullrebuild/4h/Git/CI;
+prior Incomplete/poolFailed/F17notCompleted unchanged.
+
+
+2026-11-16 POLL-01 M1 refactor and impacted validation Passed: test matrix fault flags/
+helper docstring only, runtime behavior unchanged.28focused cases/scopedstatic Passed;
+prior113 realDB/process/replay proofs retained. See
+[checkpoint](features/2026-11-02-tp-sl/evidence/endurance20-20261115/rebuild20-poll-m1-fixes.md).
+No replacementcampaign/4h/Git/CI. Next replacement fullrebuild needs explicit approval;
+F17notCompleted and priorIncomplete/poolFailed unchanged.
+
+
+2026-11-16 [REBUILD20-03 single replacement](features/2026-11-02-tp-sl/evidence/endurance20-20261115/rebuild20-03-checkpoint.md)
+Incomplete at overall3480s workdeadline(3600total minus120cleanupreserve);total3480.913s.
+All28200commands and20financial/globaloracles Passed;96000public+20x96000private/
+lag0/paddingeconomicdigestPassed;poll170913rows/countscomplete. Final20snapshots
+p95/p99=23.723/24.215ms andall20fullreplaysPassed(34.222–47.742s,96000records/owner).
+Mandatorypost-replayeconomicdigestcancelled byoverallworkbudget,so wholecampaignnotPassed;
+parent/aggregatepoolFailed/Incomplete(CancelledErrorADMIN_OBSERVER)retained. All20workers
+exit0/poolsPassed,allparentfinalborrows0/disposed,independentownedDBabsent/0connections/
+locks/nochildPIDs,existingservicesunchanged. Source/runner/helperbindingstable.
+Next reviewcampaignbudget/phaseaccounting from45m37preparation +12m18serialreplay +closing
+checks,retain60sowner/allcorrectness. No newrun/sourcefix/4h/Git/CI authorized;F17pending.
+
+
+2026-11-16 [REBUILD20-04 budget review](features/2026-11-02-tp-sl/rebuild20-budget-amendment.md) Proposed, Not Run.
+Measured2736.841s preparation +737.618s serialreplay left5.541s for otherverification
+within the old3480s workbudget. Propose A total4200s/reserve120s/work4080s from observed
+preparation +20x60s replay envelope +120s verification +120s cleanup,rounded70min.
+All60sowner/money/digest/pool/source/resourcecriteria unchanged;no digestbottleneck claim.
+B retains60min butrequires a separate proven preparation/checkpoint optimization plan.
+Await ownerdecision before runner/campaign. No source/tests/workload/Git/CI in this
+planning step;REBUILD20-03Incomplete andsuccessful20owner subresults preserved;F17pending.
+
+
+2026-11-16 [REBUILD20-04 Approved A campaign](features/2026-11-02-tp-sl/evidence/endurance20-20261115/rebuild20-04-checkpoint.md)
+Passed scopedofflinefullrebuild20:total3531.425s(58m51.425s),budget4200/reserve120 unchanged.
+All28200commands/20financial/globaloraclesPassed,96000public+20x96000private/lag0/
+paddingdigest/poll177002recordscomplete.20snapshots p95/p99=8.568/8.580ms;all20fullreplays
+Passed≤60s(seeperownerreceipts). Mandatorypostrebuildeconomicdigestcompleted;explicitfinal
+verificationreceipttrue. All21poolreports/resourcechecksPassed;normalownedcleanup and
+independentDBabsent/0connections/locks/nochildPIDs verified;existingservicesunchanged.
+Source/runner/helperbindingstable,production/harnessruntimeunchanged. PriorIncomplete/
+poolFailed gradesretained. Offlinegapclosedonthiscandidate;F17PendingFullValidation/
+notCompleted (4hW3/Release/dependencies remain). Nextobserver/failure-cleanup readiness
+beforeexplicitnew4hproposal;no automatic4h/Git/CI/merge in this stop/reportscope.
+
+
+2026-11-16 [FENCE-03 observer readiness](features/2026-11-02-tp-sl/evidence/endurance20-20261115/fence03-checkpoint.md):
+scopedsource/safetyPassed;awaiting ownercode review. Firstfailedsamplerenvelope retains
+capturephase/time/completedviews/frozenstatementassociation underoriginalbounds,SQL,
+stop/cancel/finalizationpolicy.80targetedtests inclrealPGtimeout/blocker/readonly/
+connectionreturn/combinedclockrollback/commit Passed;Ruff/format/mypy/whitespacePassed;
+independenttestDBabsent/0connections/locks. No4h/campaign/Git/CI. Historicalstallcause
+unproven;samplererror stillstopsmonitor,not anearlyworkloadabort. Futurelongrunplanmust
+state that limitation. OfflineREBUILD20-04Passed/oldW3Incomplete/F17pendingunchanged.
+
+
+2026-11-16 [FENCE-03 refactor/validation](features/2026-11-02-tp-sl/evidence/endurance20-20261115/fence03-refactor.md)
+Passed:explicitpublication selection andexistingQueryResulttesthelper reused;no runtime
+behavior/SQL/timeout/cancel/retention/assertion change.80targetedrealPG/observer/clock/
+cleanupcasesPassed;three-file Ruff/format/mypy/whitespacePassed;ownedtestDBindependently
+absent/0connections/locks. No campaign/4h/Git/CI. NextW3plan mustexplicitlyaddresslost
+observerevidence/continuationpolicy beforeexecution. Historicalcause/oldIncomplete/
+F17pendingunchanged;offlineREBUILD20-04proofkeptwithitsoriginalcandidate/scope.
+
+
+2026-11-16 [W3-OBS-01 plan](features/2026-11-02-tp-sl/observed-w3-fail-fast-plan.md) Proposed, Not Run.
+Recommend opt-in fail-fast for missing fenceobserver evidence using existing supervision,
+keeping actor/guard isolation/primary errors/ownedcleanup andallprofile/safetycriteria.
+Plan includes Featuretests→ownerreview/refactor→one14400s internal20W3/7faultcampaign
+(expected4h20–40min,cap5h/reserve120s) only after approval/gates. Defaultbehavior unchanged.
+Await ownerA/Bdecision before source. No code/tests/workload/Git/CI in this planningstep;
+offlinePassed/oldW3Incomplete/F17pending preserved.
+
+
+2026-11-16 [W3-OBS-01 Approved A implementation](features/2026-11-02-tp-sl/evidence/endurance20-20261115/w3-obs01-checkpoint.md):
+434 targeted tests Passed (including real-PG rollback/lock-release/connection proof,
+actual publication/ambiguous commit/CLOCK01 and default/tail/pool regressions).
+Five-file Ruff/format/mypy and whitespace Passed; independent test DBs absent,
+0 connections/locks. First safety attempt 431 Passed/1 test-proof binding Failed retained;
+fixed xid8 binding and final targeted run Passed. No criteria/production/financial/lease/
+guard/retry changes. Feature review/refactor gates pending; Batch 14400s W3 Not Run.
+Offline REBUILD20-04 Passed/old W3 Incomplete/F17 pending retained. No Git/CI/merge.
+Next: owner `review code`, then refactor/affected validation before the one approved W3.
+
+
+2026-11-16 [W3-OBS-01 review findings fixed](features/2026-11-02-tp-sl/evidence/endurance20-20261115/w3-obs01-review-fix.md):
+M1 startup preserves publisher error/cancellation before diagnostic; M2 finalizers attempt
+both receipts even if the first write fails. Eight new regression cases; local unit100 and
+impacted real-PG/observer regression134 Passed (187 distinct cases including overlap).
+Three-file Ruff/format/mypy/whitespace Passed; independent owned test DB absent,
+0 connections/locks. Reuse unaffected prior434 evidence with its original candidate;
+Failed/Incomplete history retained. Refactor pending owner command; 14400s W3 Not Run.
+No production/financial/safety criteria change, Git/CI/merge. F17 remains pending.
+
+
+2026-11-16 [W3-OBS-01 refactor](features/2026-11-02-tp-sl/evidence/endurance20-20261115/w3-obs01-refactor.md) Passed:
+finalization method extraction and M1/M2 test simplification only; behavior unchanged.
+134 impacted tests including real PG Passed; two-file Ruff/format/mypy/whitespace Passed;
+independent owned test DB absent/0 connections/locks. Reuse unaffected prior evidence.
+One approved observed W3 pending pinned runner/preflight; no 4h/Git/CI/merge yet.
+Historical grades and F17 pending retained.
+
+
+2026-11-16 W3-OBS-01 execution started after refactor/affected checks Passed:
+one120s preflight Passed7/7, then owned fixture DB/Redis and observed14400s W3.
+Measurement RUNNING; no final result/acceptance/Completed claim. Coordinator retains
+18000s total/120s cleanup reserve, original7faults/oracles and stop-on-failure/no-rerun.
+Raw ownership/pins/progress: validation-artifacts/f17-w3-obs01-20261116/.
+Next: observe existing run result, independent cleanup and report; no new run/Git/CI.
+
+
+2026-11-16 [W3-OBS-01 one observed run](features/2026-11-02-tp-sl/evidence/endurance20-20261115/w3-obs01-result.md) **Incomplete**:
+preflight Passed7/7; total2147.1634s, measured1972.8285s, completed3863/28200,
+first WORKER_RESTART Recovered/remaining6faults NotRun. Observer TimeoutError during
+activity capture (no activity/lock rows, overlapped/unconfirmed association) triggered
+safe-stop with failure/lease receipts retained; no root cause/lease fix claim.
+19765returned publications/1shutdowncancel; clock recovery0. Parent pool reportfalse/
+ConnectionResourceError2 retained, no cancellation waiver. Final tail/rebuild/financial/
+global/processing/resource acceptance NotRun. Independent cleanupPassed: DB/Redis absent,
+0connections/locks/no40recorded worker PIDs remaining; owner services healthy/running.
+Source/config/runner bindings unchanged. Stop/report; no replacement/timeout relaxation/
+source edit/Git/CI/merge. F17 pending and old grades retained. Next: scoped short observer
+investigation proposal before a further experiment; do not start another4h automatically.
+
+2026-11-16 F17 OBS-02: [short observer diagnostic](features/2026-11-02-tp-sl/evidence/endurance20-20261115/obs02-result.md)
+ครบ30fixture captures/136.3166s,no timeout,cleanupPassed; W3 causeยังไม่ทราบ
+คง OBS01 Incomplete และ Pending Full Validation ไม่ถือว่า F17 Completed
+หยุดตามหนึ่งcampaign; ขั้นถัดไปเสนอ scoped short-load observer diagnosticก่อน4h
+
+2026-11-16 F17 OBS-03: [short-load result](features/2026-11-02-tp-sl/evidence/endurance20-20261115/obs03-result.md) workload Passed (600commands, 7m41s); timing NO_TRIGGER, cause not proven. Cleanup/source binding Passed. W3Incomplete/Pending Full Validation unchanged; F-17 not Completed. One campaign consumed; stop/report.
+
+2026-11-16 F17 OBS04 [diagnostic result](features/2026-11-02-tp-sl/evidence/endurance20-20261115/obs04-result.md):
+600commands/10capturesPassed,total7m38s,cleanupPassed. ไม่เกิดtimeoutซ้ำใน5นาที;
+W3Incomplete/Pending Full Validationเดิม F17ยังไม่Completed. Stop/reportตามแผน.
+
+### F-17 OBS-05 checkpoint — 2026-11-17
+
+[Evidence](features/2026-11-02-tp-sl/evidence/endurance20-20261115/obs05-result.md):
+40min prefix completed observation, 40 captures/worker restart recorded; diagnostic
+Incomplete because parent ENGINE had 1 outstanding borrow at disposal. Final cleanup
+Passed. W3 remains Incomplete, F-17 Pending Full Validation; not Completed. One campaign
+consumed; next proposed short cutoff pool-lifecycle investigation, awaiting owner direction.
+
+### F-17 CUT-01 four-hour checkpoint — 2026-11-17
+
+[Result](features/2026-11-02-tp-sl/evidence/endurance20-20261115/cut01-four-hour-result.md):
+14400s/28200commands/7faultsRecovered; Incomplete at first-owner replay60s timeout.
+Return-at-dispose0/cleanupPassed; finalfinancial/replayacceptance incomplete.
+W3 Incomplete / F17 Pending Full Validation retained. Next: short replay-read diagnosis,
+not automatic four-hour rerun. No publication in this scope.
+
+### F-17 REPLAY-03 criterion review — 2026-11-17
+
+[Diagnostic](features/2026-11-02-tp-sl/evidence/endurance20-20261115/replay03-r2-result.md):
+144364-record synthetic reader55.35s; query-plan inefficiency identified,not historical
+root-cause proof. No60s criterion change. Next proposed bounded-key query equivalence
+and short comparison;no4h rerun. F17Pending/W3Incomplete preserved.
+
+### F-17 REPLAY-04 safety gate — 2026-11-17
+
+[Pagination evidence](features/2026-11-02-tp-sl/evidence/endurance20-20261115/replay04-safety-result.md):
+real-PG controlPassed/two tied-cursor casesFailed. Existing reader can skip evidence;
+query performance rewrite blocked pending complete cursor amendment. W3Incomplete/F17
+Pending Full Validation remain; no production change or four-hour rerun.
+
+### F-17 REPLAY-05 preparation — 2026-11-17
+
+[Ready checkpoint](features/2026-11-02-tp-sl/evidence/endurance20-20261115/replay05-ready.md):
+complete evidence cursor and query corrected,review/refactor/targeted validation done.
+Pinned short comparison ready,not run. F17 remains Pending Full Validation and historical
+W3Incomplete retained; no4h/CI/Git in this preparation scope.
+
+### F-17 REPLAY-05 short comparison — 2026-11-17
+
+[Evidence](features/2026-11-02-tp-sl/evidence/endurance20-20261115/replay05-comparison-result.md):
+144364-record diagnosticComplete,old55.20s/new43.66s,equal evidence,cleanupPassed.
+Original60s retained. Complete20ownerfinancial replay and4h acceptance not established;
+F17PendingFullValidation/W3Incomplete remain. Next recommendation: representative full
+financial replay before another long campaign; no automatic rerun.
+
+### F-17 REBUILD20-05 — 2026-11-17
+
+[Evidence](features/2026-11-02-tp-sl/evidence/endurance20-20261115/rebuild20-05-result.md):
+representative offlinefullreplay20Passed,144364records/owner,20replays44.047–46.732s under
+original60s.28200commands,financial/global/postdigest/21pools/resource/cleanupPassed;
+63m04.202s total within70min. F17 remains PendingFullValidation,notCompleted;historical
+W3Incomplete retained. Next separate original4hW3readiness/run;no4h/Gitexecutedthisscope.
+
+- 2026-11-17 F17 W3 REPLAY05 replacement: **Incomplete** after1042.037s measured,
+  2079/28200commands. macOS Idle Sleep569s overlapped publisherleaseexpiry;
+  finalreplay/oraclesNotRun. Cleanup independentlyPassed. REBUILD20-05 scopedPassed
+  remains valid,not W3 acceptance. Next process-scoped sleep prevention for a separately
+  started four-hour replacement;F17 **Pending Full Validation**,notCompleted.
+  [Evidence](features/2026-11-02-tp-sl/evidence/endurance20-20261115/w3-replay05-result.md).
+
+- 2026-11-17 F17 AWAKE01: **Passed — observed original4hW3/internal20**,28200commands,
+  7faultsRecovered,all20financialoracles/replaysPassed(51.858–56.567s),finaltail27.916s,
+  transactionp95/p99=109/194ms,81poolsPassed. Total4h21m07s;independentcleanupPassed,
+  nohostSleep in capturedinterval,temporarysleepassertionsreleased. Preserve earlier
+  Incomplete and observerdiagnosticmetadata. F17 **Pending Full Validation**,notCompleted
+  or100accountRelease. Next audit/consolidate remaining Paper/publication gates;noGit
+  ornewworkload in this checkpoint.
+  [Evidence](features/2026-11-02-tp-sl/evidence/endurance20-20261115/w3-awake01-result.md).
+
+- 2026-11-17 F17 Paper evidence audit complete: AWAKE01 candidate1046/1046unchanged,
+  observed4hW3 andrepresentative replay20Passed retained. **No4h rerun needed** absent
+  a new affectedchange. Remaining currentcandidate work: targetedW4 restoredDB
+  replay/recovery (reader/fill-auth changed afteroldW4),publicationproofmapping/finalSHA
+  requiredCI,thenopeningadmissionaudit. Original100account/V19bot-notification/V20Live
+  remainpending;F17notCompleted. Auditonly,no newcampaign/source/Git/activation.
+  [Current gate audit](features/2026-11-02-tp-sl/evidence/endurance20-20261115/paper-gate-audit-20261117.md).
+
+
+### W4-CURRENT01 checkpoint — 2026-11-17
+
+Current-candidate W4 **Incomplete** after157.256s: preflightPassed, actual backup/restore
+completed, expired-claim recovery stopped withSourceUnavailableError before aggregate
+result/integrated recovery. Copied market lease expired just before failure was recorded;
+no verify publication occurred. Preserve historicalW4Passed and currentAWAKE01W3Passed.
+Both owned DBs/Redis cleaned, independent absence confirmed,1046-file candidate unchanged.
+No automatic rerun or Git. Next: targeted restored-readiness harness amendment and real-DB
+proof, then replacementW4; no four-hour rerun without affected evidence.
+F-17 remains Pending Full Validation. Evidence:
+[W4 result](features/2026-11-02-tp-sl/evidence/endurance20-20261115/w4-current01-result.md).
+
+
+### W4-READY02 — current restore Passed, 2026-11-17
+
+Replacement W4 Passed154.124s including120s preflight/cleanup. Actual dump/restore,
+canonical/RLS match, replay21episodes/58evidence, expired claim1→0 with economic digest
+unchanged, integrated recovery/exact retry/0duplicate exit-fill and source unchanged.
+Both owned DBs/Redis independently confirmed absent. W4-only readiness harness amendment;
+4 focused tests + isolated real-DB regression/Ruff/format/mypy Passed. CURRENT01 retains
+Incomplete. AWAKE01 four-hour proof unaffected. Next publication inventory/affected-proof
+mapping and final candidate required CI; F17 remains Pending Full Validation.
+Evidence: [W4 READY02 result](features/2026-11-02-tp-sl/evidence/endurance20-20261115/w4-ready02-result.md). No Git/CI in this execution scope.

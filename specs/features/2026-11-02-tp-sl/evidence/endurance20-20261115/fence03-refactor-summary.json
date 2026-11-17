@@ -1,0 +1,19 @@
+{
+  "scope": "Owner-authorized FENCE-03 refactor",
+  "status": "PASSED_TARGETED_VALIDATION",
+  "tests_passed": 80,
+  "elapsed_seconds": 21.928852458993788,
+  "static": "Three-file Ruff/format/mypy/whitespace Passed",
+  "source_sha256": {
+    "backend/tests/infra/execution_market/profile_publisher_fence.py": "4fc4cc07ffaf94c79996c5cad951cd125a05c7df0d9f02311a13ea3f02ab24c1",
+    "backend/tests/infra/execution_market/test_publisher_fence.py": "2d8e7c802e130b18da14b45be8ed1731b23812de086afe58fc74759734b73974",
+    "backend/tests/infra/execution_market/test_publisher_fence_failure.py": "5a9ae99c350e9c04997e1f605c6c818ad9e146807e7bd67ec3d6a4183bec4b48"
+  },
+  "independent_cleanup": {
+    "database_exists": false,
+    "connections": 0,
+    "advisory_locks": 0
+  },
+  "four_hour": "Not Run",
+  "campaign": "Not Run"
+}

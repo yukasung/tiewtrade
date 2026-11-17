@@ -1,0 +1,7 @@
+{
+  "source_revision": "b0d5580364268be7619f5369dc8488d440f12160",
+  "source_path": "backend/tests/infra/execution_market/profile_workload.py",
+  "normalization": "single-space-whitespace",
+  "sql_sha256": "f8455d61c079a88e8a7c45c5cfbaf153acd7115a4cd36bc622e899008476193b",
+  "sql": "SELECT a.availability,coalesce(max(k.input_id),0) AS input_id FROM paper_order_activity a LEFT JOIN paper_execution_input_keys k ON k.episode_id=a.episode_id WHERE a.episode_id=:episode GROUP BY a.availability"
+}

@@ -1,0 +1,84 @@
+{
+  "revision": "NC-F17-OBS-03",
+  "diagnostic_only": true,
+  "campaign_status": "PASSED",
+  "timing_status": "NO_TRIGGER",
+  "total_seconds": 460.9861564590028,
+  "measured_seconds": 300.5186876250009,
+  "counters": {
+    "offered": 600,
+    "admitted": 600,
+    "completed": 600,
+    "rejected": 0,
+    "fills": 240,
+    "cancels": 120,
+    "replays": 120,
+    "cycles": 120
+  },
+  "book_inputs": 3006,
+  "transaction_latency": {
+    "applicable": true,
+    "p95": 0.11301862500113202,
+    "p99": 0.1735868749965448,
+    "max": 0.5136597080054344,
+    "samples": 14124,
+    "window": {
+      "attribution": "transaction_start",
+      "started": 62899.661373416,
+      "ended": 63200.180061416,
+      "status": "MEASURED",
+      "excluded_fault_intervals": []
+    }
+  },
+  "global_invariants": {
+    "orders": 760,
+    "fills": 240,
+    "cancels": 120,
+    "pending_dispatch": 400,
+    "unlinked_fills": 0,
+    "invalid_reservations": 0,
+    "invalid_positions": 0,
+    "wrong_mode": 0,
+    "input_lag": 5,
+    "duplicate_fill_effects": 0,
+    "expected_orders": 760,
+    "expected_fills": 240,
+    "expected_cancels": 120,
+    "expected_pending_dispatch": 400,
+    "passed": true
+  },
+  "resource_passed": true,
+  "pool_contract_passed": true,
+  "publication_counts": {
+    "RETURNED": 3072
+  },
+  "timing": {
+    "status": "NO_TRIGGER",
+    "counts": {},
+    "recent": [],
+    "failed": null,
+    "retained_limit": 64,
+    "loop_lag": {
+      "count": 6429,
+      "maximum_seconds": 0.14031974999670638,
+      "total_seconds": 5.635108011054399
+    },
+    "lag_task_joined": true,
+    "lag_task_completed": true,
+    "interpretation": "driver and scheduling included; not server-only"
+  },
+  "source_unchanged": true,
+  "independent_cleanup": {
+    "database": "tiewtrade_internal20_endurance_obs03_1794844381471800000",
+    "database_audit_exit": 0,
+    "database_exists_connections_locks": "0|0|0",
+    "redis": "tiewtrade-f17-obs03-redis-20261116",
+    "redis_absent": true,
+    "worker_pid_receipts": 20,
+    "alive_worker_pids": [],
+    "passed": true
+  },
+  "raw_root": "validation-artifacts/f17-obs03-smoke-20261116",
+  "w3_status": "Incomplete (unchanged)",
+  "f17_completed": false
+}

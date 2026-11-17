@@ -396,9 +396,10 @@ async def observe_workload(args: argparse.Namespace, *, failure_only: bool = Fal
                 stack.enter_context(worker_pool_evidence(output / "parent.json"))
             timeouts = stack.enter_context(parent_observations(output, failure_only=failure_only))
             try:
-                result = await f15._run(
-                    args, **({"parent_runtime": runtime} if limited and not failure_only else {})
-                )
+                if limited and not failure_only:
+                    result = await f15._run(args, parent_runtime=runtime)
+                else:
+                    result = await f15._run(args)
             except BaseException as error:
                 # Preserve workload failure even if an observer's cleanup also fails.
                 run_error = error

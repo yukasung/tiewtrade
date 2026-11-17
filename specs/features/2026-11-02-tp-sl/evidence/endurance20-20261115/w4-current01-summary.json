@@ -1,0 +1,34 @@
+{
+  "phase": "W4",
+  "revision": "W4-CURRENT01",
+  "status": "INCOMPLETE",
+  "elapsed_seconds": 157.25632470800338,
+  "preflight_status": "PASSED",
+  "preflight_samples": 7,
+  "candidate_files": 1046,
+  "source_unchanged": true,
+  "error_type": "SourceUnavailableError",
+  "failed_at": "2026-11-17 14:46:52.722949+00:00",
+  "restored_source_state": {
+    "ready": "t",
+    "failure_code": "\\N",
+    "lease_until": "2026-11-17 14:46:52.696873+00",
+    "verified_at": "2026-11-17 14:46:47.697814+00",
+    "last_input_id": "89",
+    "generation": "18"
+  },
+  "backup_bytes": 1831704,
+  "source_cleanup_passed": true,
+  "target_cleanup_passed": true,
+  "independent_cleanup": {
+    "remaining_databases": 0,
+    "connections": 0,
+    "redis_absent": true,
+    "owned_sleep_assertion_released": true
+  },
+  "integrated_recovery": "NOT_RUN",
+  "aggregate_replay_security_canonical_checks": "NOT_RECORDED_BEFORE_EXCEPTION",
+  "production_changes": false,
+  "rerun": false,
+  "raw_root": "validation-artifacts/f17-w4-current01-20261117"
+}

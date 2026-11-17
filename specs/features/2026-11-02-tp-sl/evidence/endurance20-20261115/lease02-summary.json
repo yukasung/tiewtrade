@@ -1,0 +1,717 @@
+{
+  "revision": "NC-F17-LEASE-02",
+  "status": "INCOMPLETE",
+  "diagnostic_only": true,
+  "total_seconds": 469.1323275830073,
+  "measured_seconds": 301.0511500419816,
+  "target_seconds": 300.0,
+  "counters": {
+    "offered": 600,
+    "admitted": 600,
+    "completed": 600,
+    "rejected": 0,
+    "fills": 240,
+    "cancels": 120,
+    "replays": 120,
+    "cycles": 120
+  },
+  "measured_book_inputs": 3011,
+  "required_book_inputs": 3000,
+  "base_assertions_passed": true,
+  "resource_base_assertions_passed": true,
+  "pool_contract": {
+    "passed": false,
+    "errors": [
+      "PoolInventoryMismatch:parent.owned-pools.json"
+    ],
+    "violations": [],
+    "incomplete": [
+      "PoolInventoryMismatch:parent.owned-pools.json"
+    ],
+    "processes": [
+      {
+        "file": "parent.owned-pools.json",
+        "pid": 23946,
+        "passed": true
+      },
+      {
+        "file": "worker-0.owned-pools.json",
+        "pid": 23991,
+        "passed": true
+      },
+      {
+        "file": "worker-1.owned-pools.json",
+        "pid": 23992,
+        "passed": true
+      },
+      {
+        "file": "worker-2.owned-pools.json",
+        "pid": 23993,
+        "passed": true
+      },
+      {
+        "file": "worker-3.owned-pools.json",
+        "pid": 23994,
+        "passed": true
+      },
+      {
+        "file": "worker-4.owned-pools.json",
+        "pid": 23995,
+        "passed": true
+      },
+      {
+        "file": "worker-5.owned-pools.json",
+        "pid": 23996,
+        "passed": true
+      },
+      {
+        "file": "worker-6.owned-pools.json",
+        "pid": 23997,
+        "passed": true
+      },
+      {
+        "file": "worker-7.owned-pools.json",
+        "pid": 23998,
+        "passed": true
+      },
+      {
+        "file": "worker-8.owned-pools.json",
+        "pid": 23999,
+        "passed": true
+      },
+      {
+        "file": "worker-9.owned-pools.json",
+        "pid": 24000,
+        "passed": true
+      },
+      {
+        "file": "worker-10.owned-pools.json",
+        "pid": 24001,
+        "passed": true
+      },
+      {
+        "file": "worker-11.owned-pools.json",
+        "pid": 24002,
+        "passed": true
+      },
+      {
+        "file": "worker-12.owned-pools.json",
+        "pid": 24003,
+        "passed": true
+      },
+      {
+        "file": "worker-13.owned-pools.json",
+        "pid": 24004,
+        "passed": true
+      },
+      {
+        "file": "worker-14.owned-pools.json",
+        "pid": 24005,
+        "passed": true
+      },
+      {
+        "file": "worker-15.owned-pools.json",
+        "pid": 24006,
+        "passed": true
+      },
+      {
+        "file": "worker-16.owned-pools.json",
+        "pid": 24007,
+        "passed": true
+      },
+      {
+        "file": "worker-17.owned-pools.json",
+        "pid": 24008,
+        "passed": true
+      },
+      {
+        "file": "worker-18.owned-pools.json",
+        "pid": 24009,
+        "passed": true
+      },
+      {
+        "file": "worker-19.owned-pools.json",
+        "pid": 24010,
+        "passed": true
+      }
+    ],
+    "worker_process_count": 20
+  },
+  "engine_transaction_seconds": {
+    "applicable": true,
+    "p95": 0.17129004097660072,
+    "p99": 0.23870654200436547,
+    "max": 0.5922934999980498,
+    "samples": 9942,
+    "window": {
+      "attribution": "transaction_start",
+      "started": 199383.028257583,
+      "ended": 199684.079407875,
+      "status": "MEASURED",
+      "excluded_fault_intervals": []
+    }
+  },
+  "end_to_end_command_seconds": {
+    "p95": 1.6617920420248993,
+    "p99": 1.9299535829923116,
+    "max": 2.4182739579991903
+  },
+  "global_invariants": {
+    "orders": 760,
+    "fills": 240,
+    "cancels": 120,
+    "pending_dispatch": 400,
+    "unlinked_fills": 0,
+    "invalid_reservations": 0,
+    "invalid_positions": 0,
+    "wrong_mode": 0,
+    "input_lag": 6,
+    "duplicate_fill_effects": 0,
+    "expected_orders": 760,
+    "expected_fills": 240,
+    "expected_cancels": 120,
+    "expected_pending_dispatch": 400,
+    "passed": true
+  },
+  "drain_seconds": 1.4168572909838986,
+  "observer": {
+    "total": 3087,
+    "counts": {
+      "RETURNED": 3087
+    },
+    "failed": null,
+    "publisher_error_type": null,
+    "recent_count": 64,
+    "slowest_count": 16
+  },
+  "source_unchanged": true,
+  "preflight": {
+    "status": "PASSED",
+    "samples": 7,
+    "mean_cpu_idle_percent": 65.78714285714285
+  },
+  "cleanup": {
+    "database": "tiewtrade_internal20_endurance_l02_1794754836107427000",
+    "database_exists": false,
+    "connections": 0,
+    "advisory_locks": 0,
+    "redis": "tiewtrade-f17-lease02-redis-20261115",
+    "redis_absent": true,
+    "owner_services": [
+      {
+        "name": "/tiewtrade-postgres-1",
+        "state": "running",
+        "health": "healthy",
+        "restart_count": 0
+      },
+      {
+        "name": "/tiewtrade-f18-release-redis",
+        "state": "running",
+        "health": null,
+        "restart_count": 0
+      }
+    ]
+  },
+  "tests": {
+    "distinct_targeted_passed": 57,
+    "scoped_ruff_format_mypy": "PASSED",
+    "final_scope_files": 5,
+    "gap": "aggregate pool validator expected inventory not exercised with added witness pool"
+  },
+  "remaining": "Historical lease stall not reproduced in five minutes; four-hour Incomplete/F17 Pending retained",
+  "slowest": [
+    {
+      "tick": 2124,
+      "update_price": false,
+      "heartbeat_per_book": true,
+      "seconds": 0.3777676669997163,
+      "injections": 0,
+      "precommit_book_lease_margin_seconds": 4.773621,
+      "stages": [
+        {
+          "stage": "book_renew",
+          "seconds": 0.015915374999167398,
+          "outcome": "RETURNED"
+        },
+        {
+          "stage": "book_publish",
+          "seconds": 0.022837917000288144,
+          "outcome": "RETURNED"
+        },
+        {
+          "stage": "price_renew",
+          "seconds": 0.18823091700323857,
+          "outcome": "RETURNED"
+        }
+      ],
+      "commit_start_to_session_exit_seconds": 0.109527791995788,
+      "sql_seconds": 0.2500119599280879
+    },
+    {
+      "tick": 25,
+      "update_price": false,
+      "heartbeat_per_book": true,
+      "seconds": 0.327873540984001,
+      "injections": 0,
+      "precommit_book_lease_margin_seconds": 4.787478,
+      "stages": [
+        {
+          "stage": "book_renew",
+          "seconds": 0.25549304200103506,
+          "outcome": "RETURNED"
+        },
+        {
+          "stage": "book_publish",
+          "seconds": 0.027241667005000636,
+          "outcome": "RETURNED"
+        },
+        {
+          "stage": "price_renew",
+          "seconds": 0.013164167001377791,
+          "outcome": "RETURNED"
+        }
+      ],
+      "commit_start_to_session_exit_seconds": 0.004127124993829057,
+      "sql_seconds": 0.3051284149987623
+    },
+    {
+      "tick": 2425,
+      "update_price": false,
+      "heartbeat_per_book": true,
+      "seconds": 0.31620316600310616,
+      "injections": 0,
+      "precommit_book_lease_margin_seconds": 4.694468,
+      "stages": [
+        {
+          "stage": "book_renew",
+          "seconds": 0.007233209005789831,
+          "outcome": "RETURNED"
+        },
+        {
+          "stage": "book_publish",
+          "seconds": 0.014828709012363106,
+          "outcome": "RETURNED"
+        },
+        {
+          "stage": "price_renew",
+          "seconds": 0.28009754201048054,
+          "outcome": "RETURNED"
+        }
+      ],
+      "commit_start_to_session_exit_seconds": 0.0017469160084147006,
+      "sql_seconds": 0.30450070602819324
+    },
+    {
+      "tick": 2133,
+      "update_price": false,
+      "heartbeat_per_book": true,
+      "seconds": 0.28637541699572466,
+      "injections": 0,
+      "precommit_book_lease_margin_seconds": 4.741358,
+      "stages": [
+        {
+          "stage": "book_renew",
+          "seconds": 0.008613042009528726,
+          "outcome": "RETURNED"
+        },
+        {
+          "stage": "book_publish",
+          "seconds": 0.009741416986798868,
+          "outcome": "RETURNED"
+        },
+        {
+          "stage": "price_renew",
+          "seconds": 0.2396062079933472,
+          "outcome": "RETURNED"
+        }
+      ],
+      "commit_start_to_session_exit_seconds": 0.013678333023563027,
+      "sql_seconds": 0.2646553739323281
+    },
+    {
+      "tick": 2777,
+      "update_price": false,
+      "heartbeat_per_book": true,
+      "seconds": 0.2741729590052273,
+      "injections": 0,
+      "precommit_book_lease_margin_seconds": 4.876838,
+      "stages": [
+        {
+          "stage": "book_renew",
+          "seconds": 0.0226413749915082,
+          "outcome": "RETURNED"
+        },
+        {
+          "stage": "book_publish",
+          "seconds": 0.052518125012284145,
+          "outcome": "RETURNED"
+        },
+        {
+          "stage": "price_renew",
+          "seconds": 0.048507166997296736,
+          "outcome": "RETURNED"
+        }
+      ],
+      "commit_start_to_session_exit_seconds": 0.014758541976334527,
+      "sql_seconds": 0.12987237705965526
+    },
+    {
+      "tick": 56,
+      "update_price": true,
+      "heartbeat_per_book": true,
+      "seconds": 0.2697433339781128,
+      "injections": 0,
+      "precommit_book_lease_margin_seconds": 4.741323,
+      "stages": [
+        {
+          "stage": "book_renew",
+          "seconds": 0.0023402079823426902,
+          "outcome": "RETURNED"
+        },
+        {
+          "stage": "book_publish",
+          "seconds": 0.06899520798469894,
+          "outcome": "RETURNED"
+        },
+        {
+          "stage": "price_renew",
+          "seconds": 0.1655864579952322,
+          "outcome": "RETURNED"
+        },
+        {
+          "stage": "price_read",
+          "seconds": 0.005006000021239743,
+          "outcome": "RETURNED"
+        },
+        {
+          "stage": "price_write",
+          "seconds": 0.015704916993854567,
+          "outcome": "RETURNED"
+        }
+      ],
+      "commit_start_to_session_exit_seconds": 0.005402625014539808,
+      "sql_seconds": 0.25782470911508426
+    },
+    {
+      "tick": 827,
+      "update_price": false,
+      "heartbeat_per_book": true,
+      "seconds": 0.2640117089904379,
+      "injections": 0,
+      "precommit_book_lease_margin_seconds": 4.756521,
+      "stages": [
+        {
+          "stage": "book_renew",
+          "seconds": 0.004183709010249004,
+          "outcome": "RETURNED"
+        },
+        {
+          "stage": "book_publish",
+          "seconds": 0.012450999987777323,
+          "outcome": "RETURNED"
+        },
+        {
+          "stage": "price_renew",
+          "seconds": 0.22588895799708553,
+          "outcome": "RETURNED"
+        }
+      ],
+      "commit_start_to_session_exit_seconds": 0.008723167004063725,
+      "sql_seconds": 0.2454333310306538
+    },
+    {
+      "tick": 28,
+      "update_price": true,
+      "heartbeat_per_book": true,
+      "seconds": 0.26273687501088716,
+      "injections": 0,
+      "precommit_book_lease_margin_seconds": 4.776265,
+      "stages": [
+        {
+          "stage": "book_renew",
+          "seconds": 0.007124333002138883,
+          "outcome": "RETURNED"
+        },
+        {
+          "stage": "book_publish",
+          "seconds": 0.005673875013599172,
+          "outcome": "RETURNED"
+        },
+        {
+          "stage": "price_renew",
+          "seconds": 0.0795807089889422,
+          "outcome": "RETURNED"
+        },
+        {
+          "stage": "price_read",
+          "seconds": 0.08879383400199004,
+          "outcome": "RETURNED"
+        },
+        {
+          "stage": "price_write",
+          "seconds": 0.04247749998467043,
+          "outcome": "RETURNED"
+        }
+      ],
+      "commit_start_to_session_exit_seconds": 0.010253249987727031,
+      "sql_seconds": 0.23366479197284207
+    },
+    {
+      "tick": 1320,
+      "update_price": true,
+      "heartbeat_per_book": true,
+      "seconds": 0.2418050830019638,
+      "injections": 0,
+      "precommit_book_lease_margin_seconds": 4.773595,
+      "stages": [
+        {
+          "stage": "book_renew",
+          "seconds": 0.007732375001069158,
+          "outcome": "RETURNED"
+        },
+        {
+          "stage": "book_publish",
+          "seconds": 0.003996957995695993,
+          "outcome": "RETURNED"
+        },
+        {
+          "stage": "price_renew",
+          "seconds": 0.21026570899994113,
+          "outcome": "RETURNED"
+        },
+        {
+          "stage": "price_read",
+          "seconds": 0.0023749170068185776,
+          "outcome": "RETURNED"
+        },
+        {
+          "stage": "price_write",
+          "seconds": 0.005291417008265853,
+          "outcome": "RETURNED"
+        }
+      ],
+      "commit_start_to_session_exit_seconds": 0.0009269999864045531,
+      "sql_seconds": 0.22694170897011645
+    },
+    {
+      "tick": 2130,
+      "update_price": true,
+      "heartbeat_per_book": true,
+      "seconds": 0.23832579198642634,
+      "injections": 0,
+      "precommit_book_lease_margin_seconds": 4.784121,
+      "stages": [
+        {
+          "stage": "book_renew",
+          "seconds": 0.009255749988369644,
+          "outcome": "RETURNED"
+        },
+        {
+          "stage": "book_publish",
+          "seconds": 0.10445883401553147,
+          "outcome": "RETURNED"
+        },
+        {
+          "stage": "price_renew",
+          "seconds": 0.041909415973350406,
+          "outcome": "RETURNED"
+        },
+        {
+          "stage": "price_read",
+          "seconds": 0.026751124998554587,
+          "outcome": "RETURNED"
+        },
+        {
+          "stage": "price_write",
+          "seconds": 0.03271591701195575,
+          "outcome": "RETURNED"
+        }
+      ],
+      "commit_start_to_session_exit_seconds": 0.01094079200993292,
+      "sql_seconds": 0.1626198361045681
+    },
+    {
+      "tick": 1582,
+      "update_price": false,
+      "heartbeat_per_book": true,
+      "seconds": 0.21610808299737982,
+      "injections": 0,
+      "precommit_book_lease_margin_seconds": 4.796478,
+      "stages": [
+        {
+          "stage": "book_renew",
+          "seconds": 0.00328362500295043,
+          "outcome": "RETURNED"
+        },
+        {
+          "stage": "book_publish",
+          "seconds": 0.006234875007066876,
+          "outcome": "RETURNED"
+        },
+        {
+          "stage": "price_renew",
+          "seconds": 0.19352783300564624,
+          "outcome": "RETURNED"
+        }
+      ],
+      "commit_start_to_session_exit_seconds": 0.0044487919949460775,
+      "sql_seconds": 0.20523899898398668
+    },
+    {
+      "tick": 7,
+      "update_price": false,
+      "heartbeat_per_book": true,
+      "seconds": 0.20387745898915455,
+      "injections": 0,
+      "precommit_book_lease_margin_seconds": 4.925633,
+      "stages": [
+        {
+          "stage": "book_renew",
+          "seconds": 0.022221374994842336,
+          "outcome": "RETURNED"
+        },
+        {
+          "stage": "book_publish",
+          "seconds": 0.032719042006647214,
+          "outcome": "RETURNED"
+        },
+        {
+          "stage": "price_renew",
+          "seconds": 0.026320792007027194,
+          "outcome": "RETURNED"
+        }
+      ],
+      "commit_start_to_session_exit_seconds": 0.008859291992848739,
+      "sql_seconds": 0.10285833099624142
+    },
+    {
+      "tick": 4,
+      "update_price": true,
+      "heartbeat_per_book": true,
+      "seconds": 0.2037319170194678,
+      "injections": 0,
+      "precommit_book_lease_margin_seconds": 4.813998,
+      "stages": [
+        {
+          "stage": "book_renew",
+          "seconds": 0.006255999993300065,
+          "outcome": "RETURNED"
+        },
+        {
+          "stage": "book_publish",
+          "seconds": 0.012554457993246615,
+          "outcome": "RETURNED"
+        },
+        {
+          "stage": "price_renew",
+          "seconds": 0.009856083983322605,
+          "outcome": "RETURNED"
+        },
+        {
+          "stage": "price_read",
+          "seconds": 0.14795716700609773,
+          "outcome": "RETURNED"
+        },
+        {
+          "stage": "price_write",
+          "seconds": 0.009465792012633756,
+          "outcome": "RETURNED"
+        }
+      ],
+      "commit_start_to_session_exit_seconds": 0.003345915989484638,
+      "sql_seconds": 0.18274537700926885
+    },
+    {
+      "tick": 525,
+      "update_price": false,
+      "heartbeat_per_book": true,
+      "seconds": 0.2004769170016516,
+      "injections": 0,
+      "precommit_book_lease_margin_seconds": 4.817388,
+      "stages": [
+        {
+          "stage": "book_renew",
+          "seconds": 0.004095665994100273,
+          "outcome": "RETURNED"
+        },
+        {
+          "stage": "book_publish",
+          "seconds": 0.006308125011855736,
+          "outcome": "RETURNED"
+        },
+        {
+          "stage": "price_renew",
+          "seconds": 0.17123116701259278,
+          "outcome": "RETURNED"
+        }
+      ],
+      "commit_start_to_session_exit_seconds": 0.010554707987466827,
+      "sql_seconds": 0.18318041702150367
+    },
+    {
+      "tick": 49,
+      "update_price": false,
+      "heartbeat_per_book": true,
+      "seconds": 0.1995971249998547,
+      "injections": 0,
+      "precommit_book_lease_margin_seconds": 4.973977,
+      "stages": [
+        {
+          "stage": "book_renew",
+          "seconds": 0.0035713329853024334,
+          "outcome": "RETURNED"
+        },
+        {
+          "stage": "book_publish",
+          "seconds": 0.006580165994819254,
+          "outcome": "RETURNED"
+        },
+        {
+          "stage": "price_renew",
+          "seconds": 0.014639832981629297,
+          "outcome": "RETURNED"
+        }
+      ],
+      "commit_start_to_session_exit_seconds": 0.16052562501863576,
+      "sql_seconds": 0.029080873006023467
+    },
+    {
+      "tick": 2851,
+      "update_price": false,
+      "heartbeat_per_book": true,
+      "seconds": 0.19861683298950084,
+      "injections": 0,
+      "precommit_book_lease_margin_seconds": 4.809953,
+      "stages": [
+        {
+          "stage": "book_renew",
+          "seconds": 0.003111625002929941,
+          "outcome": "RETURNED"
+        },
+        {
+          "stage": "book_publish",
+          "seconds": 0.005627250007819384,
+          "outcome": "RETURNED"
+        },
+        {
+          "stage": "price_renew",
+          "seconds": 0.18164687498938292,
+          "outcome": "RETURNED"
+        }
+      ],
+      "commit_start_to_session_exit_seconds": 0.001142708002589643,
+      "sql_seconds": 0.19078545994125307
+    }
+  ],
+  "source_hashes": {
+    "backend/tests/infra/execution_market/profile_publisher_lease.py": "9e069412f9d0f14d5e4a05accf19c65c2c545ae5627bb80b8f1afb79dff9ab42",
+    "backend/tests/infra/execution_market/profile_publisher_lease_load.py": "7d3a66898c3badeac2679e1bea6c2bcca0f87485a9beb56f8b3e4da2ec8978a7",
+    "backend/tests/infra/execution_market/test_publisher_lease_load.py": "136b97e0f31d5333cb478162f3ac73f7d2e0c63d5f8174b8bd434cafb7a08548",
+    "backend/tests/infra/execution_market/profile_workload.py": "14defaae098c5f7d364a0680db072ab1d43b131412d148dbeb37459cd5e7fa3d",
+    "backend/tests/infra/execution_market/remaining_paper_campaign.py": "6ebd8f0f1ef008adc52a326c9dddecbd8a877ee829d548b0145ce71dcc10ba8b"
+  },
+  "owner_financial_oracles": {
+    "count": 20,
+    "passed": 20
+  }
+}

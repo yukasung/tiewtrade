@@ -1,0 +1,286 @@
+{
+  "revision": "NC-F17-LEASE-01",
+  "status": "DIAGNOSTIC_COMPLETE",
+  "elapsed_seconds": 164.96111829101574,
+  "source_unchanged": true,
+  "cases": [
+    {
+      "case": "L0-H",
+      "status": "DIAGNOSTIC_COMPLETE",
+      "outcome": "COMMITTED_ONCE",
+      "injections": 0,
+      "stages": [
+        {
+          "stage": "book_renew",
+          "seconds": 0.0014570830098818988,
+          "outcome": "RETURNED"
+        },
+        {
+          "stage": "book_publish",
+          "seconds": 0.0015994169807527214,
+          "outcome": "RETURNED"
+        },
+        {
+          "stage": "price_renew",
+          "seconds": 0.0014537920069415122,
+          "outcome": "RETURNED"
+        }
+      ],
+      "initial_lease_margin_seconds": 4.964105,
+      "precommit_book_lease_margin_seconds": 4.995732,
+      "renewal_update_rowcounts": [
+        1
+      ],
+      "financial_tables_empty": true,
+      "independent_lock_witness": true,
+      "session_exit_confirmed": true,
+      "checkout_wait_seconds": 0.0008330829732585698,
+      "role_setup_seconds": 0.0006452920206356794,
+      "session_total_seconds": 0.007221999985631555,
+      "commit_start_to_session_exit_seconds": 0.0005084580043330789,
+      "sql_total_seconds": 0.004460542986635119,
+      "independent_witness_book_lease_margin_seconds": 4.992808
+    },
+    {
+      "case": "L0-P",
+      "status": "DIAGNOSTIC_COMPLETE",
+      "outcome": "COMMITTED_ONCE",
+      "injections": 0,
+      "stages": [
+        {
+          "stage": "book_renew",
+          "seconds": 0.0013636249932460487,
+          "outcome": "RETURNED"
+        },
+        {
+          "stage": "book_publish",
+          "seconds": 0.0016102500085253268,
+          "outcome": "RETURNED"
+        },
+        {
+          "stage": "price_renew",
+          "seconds": 0.0014147920010145754,
+          "outcome": "RETURNED"
+        },
+        {
+          "stage": "price_read",
+          "seconds": 0.0005994579987600446,
+          "outcome": "RETURNED"
+        },
+        {
+          "stage": "price_write",
+          "seconds": 0.001908167003421113,
+          "outcome": "RETURNED"
+        }
+      ],
+      "initial_lease_margin_seconds": 4.968325,
+      "precommit_book_lease_margin_seconds": 4.993188,
+      "renewal_update_rowcounts": [
+        1
+      ],
+      "financial_tables_empty": true,
+      "independent_lock_witness": true,
+      "session_exit_confirmed": true,
+      "checkout_wait_seconds": 0.0008069579780567437,
+      "role_setup_seconds": 0.0006858750130049884,
+      "session_total_seconds": 0.00972783297766,
+      "commit_start_to_session_exit_seconds": 0.0005196249985601753,
+      "sql_total_seconds": 0.006306958937784657,
+      "independent_witness_book_lease_margin_seconds": 4.990341
+    },
+    {
+      "case": "L1-H",
+      "status": "DIAGNOSTIC_COMPLETE",
+      "outcome": "COMMITTED_ONCE",
+      "injections": 1,
+      "stages": [
+        {
+          "stage": "book_renew",
+          "seconds": 0.0014983330038376153,
+          "outcome": "RETURNED"
+        },
+        {
+          "stage": "book_publish",
+          "seconds": 4.5027560840244405,
+          "outcome": "RETURNED"
+        },
+        {
+          "stage": "controlled_delay",
+          "seconds": 4.501162624976132,
+          "outcome": "RETURNED"
+        },
+        {
+          "stage": "price_renew",
+          "seconds": 0.004530708014499396,
+          "outcome": "RETURNED"
+        }
+      ],
+      "initial_lease_margin_seconds": 4.962527,
+      "precommit_book_lease_margin_seconds": 0.491362,
+      "renewal_update_rowcounts": [
+        1
+      ],
+      "financial_tables_empty": true,
+      "independent_lock_witness": true,
+      "session_exit_confirmed": true,
+      "checkout_wait_seconds": 0.0008316670136991888,
+      "role_setup_seconds": 0.0006528329977300018,
+      "session_total_seconds": 4.512524666992249,
+      "commit_start_to_session_exit_seconds": 0.0012993749987799674,
+      "sql_total_seconds": 0.0070320849772542715,
+      "independent_witness_book_lease_margin_seconds": 0.486513
+    },
+    {
+      "case": "L1-P",
+      "status": "DIAGNOSTIC_COMPLETE",
+      "outcome": "COMMITTED_ONCE",
+      "injections": 1,
+      "stages": [
+        {
+          "stage": "book_renew",
+          "seconds": 0.0013513329904526472,
+          "outcome": "RETURNED"
+        },
+        {
+          "stage": "book_publish",
+          "seconds": 4.502157208014978,
+          "outcome": "RETURNED"
+        },
+        {
+          "stage": "controlled_delay",
+          "seconds": 4.500205874996027,
+          "outcome": "RETURNED"
+        },
+        {
+          "stage": "price_renew",
+          "seconds": 0.002566249982919544,
+          "outcome": "RETURNED"
+        },
+        {
+          "stage": "price_read",
+          "seconds": 0.000677625008393079,
+          "outcome": "RETURNED"
+        },
+        {
+          "stage": "price_write",
+          "seconds": 0.002360833022976294,
+          "outcome": "RETURNED"
+        }
+      ],
+      "initial_lease_margin_seconds": 4.964482,
+      "precommit_book_lease_margin_seconds": 0.490857,
+      "renewal_update_rowcounts": [
+        1
+      ],
+      "financial_tables_empty": true,
+      "independent_lock_witness": true,
+      "session_exit_confirmed": true,
+      "checkout_wait_seconds": 0.0009096669964492321,
+      "role_setup_seconds": 0.000597208010731265,
+      "session_total_seconds": 4.512232374981977,
+      "commit_start_to_session_exit_seconds": 0.0006629159906879067,
+      "sql_total_seconds": 0.007723207003436983,
+      "independent_witness_book_lease_margin_seconds": 0.486588
+    },
+    {
+      "case": "L2-U",
+      "status": "DIAGNOSTIC_COMPLETE",
+      "outcome": "LEASE_REJECTED_ROLLBACK_CONFIRMED",
+      "injections": 1,
+      "stages": [
+        {
+          "stage": "book_renew",
+          "seconds": 5.2537328339822125,
+          "outcome": "WriterLeaseLost"
+        },
+        {
+          "stage": "controlled_delay",
+          "seconds": 5.251144790992839,
+          "outcome": "RETURNED"
+        }
+      ],
+      "initial_lease_margin_seconds": 4.963072,
+      "precommit_book_lease_margin_seconds": null,
+      "renewal_update_rowcounts": [
+        0
+      ],
+      "financial_tables_empty": true,
+      "independent_lock_witness": true,
+      "session_exit_confirmed": false,
+      "checkout_wait_seconds": 0.0006488749932032079,
+      "role_setup_seconds": 0.000538624997716397,
+      "session_total_seconds": null,
+      "commit_start_to_session_exit_seconds": null,
+      "sql_total_seconds": 0.002591501019196585,
+      "independent_witness_book_lease_margin_seconds": -0.295573
+    }
+  ],
+  "cleanup_verified": [
+    {
+      "database": "tiewtrade_internal20_endurance_l01_0_1794751682887633000",
+      "database_exists": false,
+      "connections": 0,
+      "advisory_locks": 0
+    },
+    {
+      "database": "tiewtrade_internal20_endurance_l01_1_1794751688712106000",
+      "database_exists": false,
+      "connections": 0,
+      "advisory_locks": 0
+    },
+    {
+      "database": "tiewtrade_internal20_endurance_l01_2_1794751693800791000",
+      "database_exists": false,
+      "connections": 0,
+      "advisory_locks": 0
+    },
+    {
+      "database": "tiewtrade_internal20_endurance_l01_3_1794751703702822000",
+      "database_exists": false,
+      "connections": 0,
+      "advisory_locks": 0
+    },
+    {
+      "database": "tiewtrade_internal20_endurance_l01_4_1794751713938502000",
+      "database_exists": false,
+      "connections": 0,
+      "advisory_locks": 0
+    }
+  ],
+  "owner_services": [
+    {
+      "name": "/tiewtrade-postgres-1",
+      "state": "running",
+      "restart_count": 0,
+      "health": "healthy"
+    },
+    {
+      "name": "/tiewtrade-f18-release-redis",
+      "state": "running",
+      "restart_count": 0,
+      "health": null
+    }
+  ],
+  "startup_receipt": {
+    "error_type": "NameError",
+    "before_preflight": true,
+    "fixtures_created": false,
+    "retained_separately": true
+  },
+  "tests": {
+    "distinct_targeted_cases_passed": 37,
+    "test_invocations_passed": 40,
+    "scoped_ruff_format_mypy": "PASSED",
+    "whitespace": "PASSED"
+  },
+  "acceptance": {
+    "four_hour": "INCOMPLETE_RETAINED",
+    "historical_root_cause": "NOT_PROVEN",
+    "f17": "PENDING_FULL_VALIDATION",
+    "additional_campaigns": 0
+  },
+  "new_source_hashes": {
+    "backend/tests/infra/execution_market/profile_publisher_lease.py": "a367e0782542c13ee55f1716f27b11d208377a51a2a46bda8bbb6591fd4607be",
+    "backend/tests/infra/execution_market/test_publisher_lease.py": "d2639871c6eab72d469d4437907ef41556abd028a600b659057f8e6866718709"
+  }
+}

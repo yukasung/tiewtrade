@@ -1,0 +1,29 @@
+{
+  "status": "PASSED",
+  "scope": "REPLAY-01 M1/M2 behavior-preserving refactor",
+  "affected_tests_passed": 10,
+  "unchanged_real_pg_tests_retained": 4,
+  "static_checks": [
+    "Ruff",
+    "format",
+    "mypy",
+    "git diff --check"
+  ],
+  "binding": {
+    "original_runner_unchanged": true,
+    "corrected_runner_executed": false,
+    "corrected_terminal_finally_exercised_with_source_failure": true,
+    "cleanup_then_save": [
+      "cleanup",
+      "save"
+    ],
+    "corrected_partial_finally_retained_original_timeout": true,
+    "source_hashes": {
+      "profile_replay_reads.py": "95b96211ecae05b84df40473a3e172de774faa5d91847834b1a926fdfc95dc03",
+      "test_replay_reads.py": "9fb9714ddfa50648e354526ed51f8e964358c8123a3dbafc0a0ee1a2697db2b0"
+    }
+  },
+  "campaign_rerun": false,
+  "git_actions": false,
+  "f17_completed": false
+}

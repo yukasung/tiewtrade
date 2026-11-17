@@ -1,0 +1,22 @@
+{
+  "scope": "REBUILD20-POLL-01 review M1 fixes",
+  "status": "PASSED_TARGETED_CHECKS",
+  "tests_passed": 113,
+  "elapsed_seconds": 32.743919791002554,
+  "final_focused_cases_passed": 28,
+  "independent_cleanup": {
+    "database_exists": false,
+    "connections": 0,
+    "advisory_locks": 0
+  },
+  "static": "Five-file Ruff/format/mypy and whitespace Passed",
+  "source_sha256": {
+    "backend/tests/infra/execution_market/profile_parent_poll.py": "1ec13ed5ad78f6ae506ef331b86adcbb6082a3df66bceb2d07f2c8de9434a04a",
+    "backend/tests/infra/execution_market/profile_rebuild20.py": "7a0886dc4641c078141967855c323bcfebdba405f771ad45230e924aa5fa73dc",
+    "backend/tests/infra/execution_market/profile_replay_reads.py": "d8c5dda8ca1ae29a2546c1c3bc6aaac0dcb6e91cfe630ef0b8359ae50394fe45",
+    "backend/tests/infra/execution_market/test_rebuild20.py": "207ed921a619a4ceb13c5b528705788e34a638356493607ecc6314925e86035d",
+    "backend/tests/infra/execution_market/test_rebuild20_poll_evidence.py": "0a2c94b3ee455f574a3c408d98b4d8576fa43c6b68ab928c94313511d3aa3240"
+  },
+  "campaign": "Not Run",
+  "four_hour": "Not Run"
+}

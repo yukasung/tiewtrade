@@ -1,0 +1,633 @@
+{
+  "status": "PASSED_SCOPED_REBUILD",
+  "scope": "offline fullrebuild20; not D20/W3/Release",
+  "elapsed_seconds": 3531.4253802910025,
+  "stages": [
+    {
+      "stage": "preflight",
+      "started_elapsed_seconds": 0.8579642080003396
+    },
+    {
+      "stage": "migration",
+      "started_elapsed_seconds": 123.3587324580003
+    },
+    {
+      "stage": "economic_fixture",
+      "started_elapsed_seconds": 129.74120637500164
+    },
+    {
+      "stage": "public_history",
+      "started_elapsed_seconds": 2001.5194999580053
+    },
+    {
+      "stage": "financial_before_history",
+      "started_elapsed_seconds": 2167.542525833007
+    },
+    {
+      "stage": "private_history",
+      "started_elapsed_seconds": 2170.2010365410024
+    },
+    {
+      "stage": "full_rebuild",
+      "started_elapsed_seconds": 2815.2794325830037
+    },
+    {
+      "stage": "resource_verification",
+      "started_elapsed_seconds": 3530.6571098750064
+    },
+    {
+      "stage": "cleanup",
+      "started_elapsed_seconds": 3531.0571936660053
+    }
+  ],
+  "counters": {
+    "offered": 28200,
+    "admitted": 28200,
+    "completed": 28200,
+    "rejected": 0,
+    "fills": 11280,
+    "cancels": 5640,
+    "replays": 5640,
+    "cycles": 5640
+  },
+  "poll_evidence": {
+    "attempts": 177002,
+    "finished": 177002,
+    "active": 0,
+    "truncated": false,
+    "stream_rows": 177002
+  },
+  "economic_preparation_seconds": 1871.7782760830014,
+  "preparation_and_public_history_seconds": 2037.5571290419975,
+  "economic_history_unchanged": true,
+  "private_history_counts": [
+    {
+      "user_id": "1765d122-61c2-4815-b03f-d1d958d5d569",
+      "records": 96000
+    },
+    {
+      "user_id": "34317a78-85ae-41d6-b73f-13891dfc148e",
+      "records": 96000
+    },
+    {
+      "user_id": "3cfcbb1c-86a6-483f-83e1-7a6a57f32727",
+      "records": 96000
+    },
+    {
+      "user_id": "4915239c-90f7-49fa-b2af-d8c3f33ab70f",
+      "records": 96000
+    },
+    {
+      "user_id": "4cfb2b81-936e-4f31-ac4d-2fb73827ffa5",
+      "records": 96000
+    },
+    {
+      "user_id": "67e8a11f-3344-47f2-b2ec-cefc8c2f2a15",
+      "records": 96000
+    },
+    {
+      "user_id": "78f5a0e0-5611-42cf-af65-5aa213588752",
+      "records": 96000
+    },
+    {
+      "user_id": "8a326ebf-c070-4a17-8b95-81da4a8eba3a",
+      "records": 96000
+    },
+    {
+      "user_id": "9f4140d4-a352-4629-a1f6-c69032b8cba0",
+      "records": 96000
+    },
+    {
+      "user_id": "abc76fcd-af83-4102-8699-634caf452bf1",
+      "records": 96000
+    },
+    {
+      "user_id": "b1a9d666-8b0b-4a70-bc30-193d90d2d5b4",
+      "records": 96000
+    },
+    {
+      "user_id": "c34db96e-1ae4-4b93-acf0-de8129b721d3",
+      "records": 96000
+    },
+    {
+      "user_id": "cdd6d7b1-8317-4a99-88a9-664f534440a6",
+      "records": 96000
+    },
+    {
+      "user_id": "d6ca7d63-ccb1-416b-b45e-a62518202bdb",
+      "records": 96000
+    },
+    {
+      "user_id": "e813789f-e755-42fb-8032-e119c0e546e1",
+      "records": 96000
+    },
+    {
+      "user_id": "ebfb0147-1469-4ca5-b155-f17fc0349a22",
+      "records": 96000
+    },
+    {
+      "user_id": "f0c09b36-20d3-4cd8-bbef-65f517b9f7af",
+      "records": 96000
+    },
+    {
+      "user_id": "f63a90ac-83ec-4c01-949a-22f52d4a3e05",
+      "records": 96000
+    },
+    {
+      "user_id": "fbf8ac42-9f4d-4b14-a613-9e18acb91492",
+      "records": 96000
+    },
+    {
+      "user_id": "fd5582a7-f16d-4d2d-9545-0bb478288653",
+      "records": 96000
+    }
+  ],
+  "global": {
+    "orders": 17320,
+    "fills": 11280,
+    "cancels": 5640,
+    "pending_dispatch": 400,
+    "unlinked_fills": 0,
+    "invalid_reservations": 0,
+    "invalid_positions": 0,
+    "wrong_mode": 0,
+    "input_lag": 0,
+    "duplicate_fill_effects": 0,
+    "expected_orders": 17320,
+    "expected_fills": 11280,
+    "expected_cancels": 5640,
+    "expected_pending_dispatch": 400,
+    "passed": true
+  },
+  "positions": {
+    "snapshot_samples": 20,
+    "expected_samples": 20,
+    "p95": 0.008567709002818447,
+    "p99": 0.008580166002502665,
+    "replays": [
+      {
+        "owner": "b1a9d666-8b0b-4a70-bc30-193d90d2d5b4",
+        "episode": "4ea5b719-9c2d-45f9-80b0-e0a43b02ffbd",
+        "evidence_records": 96000,
+        "checkpoints": 1,
+        "replayed_positions": 1,
+        "outcome": "RETURNED",
+        "seconds": 35.26597633300116,
+        "queries": 38,
+        "rows_returned": 96595,
+        "rowcount_unknown": 0,
+        "peak_process_rss_bytes": 245121024
+      },
+      {
+        "owner": "34317a78-85ae-41d6-b73f-13891dfc148e",
+        "episode": "25463895-99eb-4639-b5aa-03e4c1cf447d",
+        "evidence_records": 96000,
+        "checkpoints": 1,
+        "replayed_positions": 1,
+        "outcome": "RETURNED",
+        "seconds": 34.541200332998415,
+        "queries": 38,
+        "rows_returned": 96595,
+        "rowcount_unknown": 0,
+        "peak_process_rss_bytes": 245121024
+      },
+      {
+        "owner": "78f5a0e0-5611-42cf-af65-5aa213588752",
+        "episode": "441a16bf-b812-4b96-aa0c-9d8da0492bfd",
+        "evidence_records": 96000,
+        "checkpoints": 1,
+        "replayed_positions": 1,
+        "outcome": "RETURNED",
+        "seconds": 35.83493433300464,
+        "queries": 38,
+        "rows_returned": 96595,
+        "rowcount_unknown": 0,
+        "peak_process_rss_bytes": 245121024
+      },
+      {
+        "owner": "fbf8ac42-9f4d-4b14-a613-9e18acb91492",
+        "episode": "56d997d7-a3f8-4d44-9a43-0b0c9364bd5a",
+        "evidence_records": 96000,
+        "checkpoints": 1,
+        "replayed_positions": 1,
+        "outcome": "RETURNED",
+        "seconds": 34.81266820799647,
+        "queries": 38,
+        "rows_returned": 96595,
+        "rowcount_unknown": 0,
+        "peak_process_rss_bytes": 245121024
+      },
+      {
+        "owner": "4cfb2b81-936e-4f31-ac4d-2fb73827ffa5",
+        "episode": "61a1f609-501f-4530-bb38-0f71a9c7a1fd",
+        "evidence_records": 96000,
+        "checkpoints": 1,
+        "replayed_positions": 1,
+        "outcome": "RETURNED",
+        "seconds": 35.71460012500029,
+        "queries": 38,
+        "rows_returned": 96595,
+        "rowcount_unknown": 0,
+        "peak_process_rss_bytes": 245121024
+      },
+      {
+        "owner": "e813789f-e755-42fb-8032-e119c0e546e1",
+        "episode": "c2c0fe29-efb0-440b-85b8-e1ced72f3fc1",
+        "evidence_records": 96000,
+        "checkpoints": 1,
+        "replayed_positions": 1,
+        "outcome": "RETURNED",
+        "seconds": 42.02425824999955,
+        "queries": 38,
+        "rows_returned": 96595,
+        "rowcount_unknown": 0,
+        "peak_process_rss_bytes": 245121024
+      },
+      {
+        "owner": "f63a90ac-83ec-4c01-949a-22f52d4a3e05",
+        "episode": "2c727315-ffd8-4c04-89d2-bcbcba28baa8",
+        "evidence_records": 96000,
+        "checkpoints": 1,
+        "replayed_positions": 1,
+        "outcome": "RETURNED",
+        "seconds": 35.13432512500003,
+        "queries": 38,
+        "rows_returned": 96595,
+        "rowcount_unknown": 0,
+        "peak_process_rss_bytes": 245121024
+      },
+      {
+        "owner": "1765d122-61c2-4815-b03f-d1d958d5d569",
+        "episode": "3e4635ee-f96b-48ce-9d7d-5de0bf2babf0",
+        "evidence_records": 96000,
+        "checkpoints": 1,
+        "replayed_positions": 1,
+        "outcome": "RETURNED",
+        "seconds": 34.95854304199747,
+        "queries": 38,
+        "rows_returned": 96595,
+        "rowcount_unknown": 0,
+        "peak_process_rss_bytes": 245121024
+      },
+      {
+        "owner": "f0c09b36-20d3-4cd8-bbef-65f517b9f7af",
+        "episode": "8ada8805-2a69-44fd-8cd8-c86d5895a147",
+        "evidence_records": 96000,
+        "checkpoints": 1,
+        "replayed_positions": 1,
+        "outcome": "RETURNED",
+        "seconds": 35.17717495900433,
+        "queries": 38,
+        "rows_returned": 96595,
+        "rowcount_unknown": 0,
+        "peak_process_rss_bytes": 245121024
+      },
+      {
+        "owner": "67e8a11f-3344-47f2-b2ec-cefc8c2f2a15",
+        "episode": "63e0f3a8-a6f5-41ba-88ad-7510a4834660",
+        "evidence_records": 96000,
+        "checkpoints": 1,
+        "replayed_positions": 1,
+        "outcome": "RETURNED",
+        "seconds": 34.14794116700068,
+        "queries": 38,
+        "rows_returned": 96595,
+        "rowcount_unknown": 0,
+        "peak_process_rss_bytes": 245121024
+      },
+      {
+        "owner": "3cfcbb1c-86a6-483f-83e1-7a6a57f32727",
+        "episode": "757c6799-5075-4454-b29b-ab6a5257ca02",
+        "evidence_records": 96000,
+        "checkpoints": 1,
+        "replayed_positions": 1,
+        "outcome": "RETURNED",
+        "seconds": 37.149919875002524,
+        "queries": 38,
+        "rows_returned": 96595,
+        "rowcount_unknown": 0,
+        "peak_process_rss_bytes": 245121024
+      },
+      {
+        "owner": "abc76fcd-af83-4102-8699-634caf452bf1",
+        "episode": "0f014eae-1d8d-4079-a754-760f4f1f8ea3",
+        "evidence_records": 96000,
+        "checkpoints": 1,
+        "replayed_positions": 1,
+        "outcome": "RETURNED",
+        "seconds": 34.35081383299985,
+        "queries": 38,
+        "rows_returned": 96595,
+        "rowcount_unknown": 0,
+        "peak_process_rss_bytes": 245121024
+      },
+      {
+        "owner": "cdd6d7b1-8317-4a99-88a9-664f534440a6",
+        "episode": "b576447a-8d69-4b6f-a91b-cb8a4d141442",
+        "evidence_records": 96000,
+        "checkpoints": 1,
+        "replayed_positions": 1,
+        "outcome": "RETURNED",
+        "seconds": 34.084862750001776,
+        "queries": 38,
+        "rows_returned": 96595,
+        "rowcount_unknown": 0,
+        "peak_process_rss_bytes": 245121024
+      },
+      {
+        "owner": "d6ca7d63-ccb1-416b-b45e-a62518202bdb",
+        "episode": "e697e599-3d66-4da0-93e4-86423a7c3107",
+        "evidence_records": 96000,
+        "checkpoints": 1,
+        "replayed_positions": 1,
+        "outcome": "RETURNED",
+        "seconds": 34.387022708004224,
+        "queries": 38,
+        "rows_returned": 96595,
+        "rowcount_unknown": 0,
+        "peak_process_rss_bytes": 245121024
+      },
+      {
+        "owner": "8a326ebf-c070-4a17-8b95-81da4a8eba3a",
+        "episode": "dbe1f63a-b5f3-44e0-8306-3fd27a22ef51",
+        "evidence_records": 96000,
+        "checkpoints": 1,
+        "replayed_positions": 1,
+        "outcome": "RETURNED",
+        "seconds": 34.81517966699903,
+        "queries": 38,
+        "rows_returned": 96595,
+        "rowcount_unknown": 0,
+        "peak_process_rss_bytes": 245121024
+      },
+      {
+        "owner": "c34db96e-1ae4-4b93-acf0-de8129b721d3",
+        "episode": "f4460658-ac89-46cc-ae4f-5183c4a23154",
+        "evidence_records": 96000,
+        "checkpoints": 1,
+        "replayed_positions": 1,
+        "outcome": "RETURNED",
+        "seconds": 35.39448591599648,
+        "queries": 38,
+        "rows_returned": 96595,
+        "rowcount_unknown": 0,
+        "peak_process_rss_bytes": 245121024
+      },
+      {
+        "owner": "fd5582a7-f16d-4d2d-9545-0bb478288653",
+        "episode": "eedb0832-d6ec-4a38-aaeb-e18cc09f8f25",
+        "evidence_records": 96000,
+        "checkpoints": 1,
+        "replayed_positions": 1,
+        "outcome": "RETURNED",
+        "seconds": 35.362259875000746,
+        "queries": 38,
+        "rows_returned": 96595,
+        "rowcount_unknown": 0,
+        "peak_process_rss_bytes": 245121024
+      },
+      {
+        "owner": "ebfb0147-1469-4ca5-b155-f17fc0349a22",
+        "episode": "6028d9c6-52b4-4e3f-83c1-a172d9dc959e",
+        "evidence_records": 96000,
+        "checkpoints": 1,
+        "replayed_positions": 1,
+        "outcome": "RETURNED",
+        "seconds": 37.49311529100669,
+        "queries": 38,
+        "rows_returned": 96595,
+        "rowcount_unknown": 0,
+        "peak_process_rss_bytes": 245121024
+      },
+      {
+        "owner": "4915239c-90f7-49fa-b2af-d8c3f33ab70f",
+        "episode": "1450277c-0d41-4edc-8a56-92dea6c19856",
+        "evidence_records": 96000,
+        "checkpoints": 1,
+        "replayed_positions": 1,
+        "outcome": "RETURNED",
+        "seconds": 35.66823829100031,
+        "queries": 38,
+        "rows_returned": 96595,
+        "rowcount_unknown": 0,
+        "peak_process_rss_bytes": 245121024
+      },
+      {
+        "owner": "9f4140d4-a352-4629-a1f6-c69032b8cba0",
+        "episode": "9403d7e1-a961-46cb-956c-7d47f2399de1",
+        "evidence_records": 96000,
+        "checkpoints": 1,
+        "replayed_positions": 1,
+        "outcome": "RETURNED",
+        "seconds": 35.72529937500076,
+        "queries": 38,
+        "rows_returned": 96595,
+        "rowcount_unknown": 0,
+        "peak_process_rss_bytes": 245121024
+      }
+    ],
+    "passed": true
+  },
+  "final_verification_including_post_rebuild_digest_passed": true,
+  "resources": {
+    "samples": 657,
+    "peak_process_rss_bytes": 171720704,
+    "peak_rss_by_pid": {
+      "23076": 171720704,
+      "23152": 74694656,
+      "23153": 76759040,
+      "23154": 74743808,
+      "23157": 74006528,
+      "23158": 73596928,
+      "23159": 74448896,
+      "23160": 74924032,
+      "23161": 74186752,
+      "23163": 73940992,
+      "23165": 74039296,
+      "23171": 74383360,
+      "23172": 75071488,
+      "23173": 74563584,
+      "23174": 73859072,
+      "23175": 74694656,
+      "23176": 74039296,
+      "23178": 74317824,
+      "23179": 76349440,
+      "23180": 76529664,
+      "23181": 74776576
+    },
+    "peak_connections": 58,
+    "connections_start": 16,
+    "connections_end": 15,
+    "peak_lock_waits": 1,
+    "lock_waits_end": 0,
+    "peak_buffer_rows": 4096,
+    "buffer_rows_start": 0,
+    "buffer_rows_end": 4096,
+    "database_bytes_start": 24165399,
+    "database_bytes_end": 3916700695,
+    "database_growth_bytes": 3892535296
+  },
+  "pool_contract": {
+    "passed": true,
+    "errors": [],
+    "violations": [],
+    "incomplete": [],
+    "processes": [
+      {
+        "file": "owned-pools.json",
+        "pid": 23076,
+        "passed": true
+      },
+      {
+        "file": "prep-0-0.owned-pools.json",
+        "pid": 23152,
+        "passed": true
+      },
+      {
+        "file": "prep-1-0.owned-pools.json",
+        "pid": 23153,
+        "passed": true
+      },
+      {
+        "file": "prep-2-0.owned-pools.json",
+        "pid": 23154,
+        "passed": true
+      },
+      {
+        "file": "prep-3-0.owned-pools.json",
+        "pid": 23157,
+        "passed": true
+      },
+      {
+        "file": "prep-4-0.owned-pools.json",
+        "pid": 23158,
+        "passed": true
+      },
+      {
+        "file": "prep-5-0.owned-pools.json",
+        "pid": 23159,
+        "passed": true
+      },
+      {
+        "file": "prep-6-0.owned-pools.json",
+        "pid": 23160,
+        "passed": true
+      },
+      {
+        "file": "prep-7-0.owned-pools.json",
+        "pid": 23161,
+        "passed": true
+      },
+      {
+        "file": "prep-8-0.owned-pools.json",
+        "pid": 23163,
+        "passed": true
+      },
+      {
+        "file": "prep-9-0.owned-pools.json",
+        "pid": 23165,
+        "passed": true
+      },
+      {
+        "file": "prep-10-0.owned-pools.json",
+        "pid": 23171,
+        "passed": true
+      },
+      {
+        "file": "prep-11-0.owned-pools.json",
+        "pid": 23172,
+        "passed": true
+      },
+      {
+        "file": "prep-12-0.owned-pools.json",
+        "pid": 23173,
+        "passed": true
+      },
+      {
+        "file": "prep-13-0.owned-pools.json",
+        "pid": 23174,
+        "passed": true
+      },
+      {
+        "file": "prep-14-0.owned-pools.json",
+        "pid": 23175,
+        "passed": true
+      },
+      {
+        "file": "prep-15-0.owned-pools.json",
+        "pid": 23176,
+        "passed": true
+      },
+      {
+        "file": "prep-16-0.owned-pools.json",
+        "pid": 23178,
+        "passed": true
+      },
+      {
+        "file": "prep-17-0.owned-pools.json",
+        "pid": 23179,
+        "passed": true
+      },
+      {
+        "file": "prep-18-0.owned-pools.json",
+        "pid": 23180,
+        "passed": true
+      },
+      {
+        "file": "prep-19-0.owned-pools.json",
+        "pid": 23181,
+        "passed": true
+      }
+    ],
+    "worker_process_count": 20
+  },
+  "source_unchanged": true,
+  "cleanup": {
+    "database": "tiewtrade_internal20_endurance_rebuild04_1794819158853815000",
+    "connections": 0,
+    "removed": true
+  },
+  "financial_owners": 20,
+  "all_financial_passed": true,
+  "all_financial_before_history_passed": true,
+  "min_replay_seconds": 34.084862750001776,
+  "max_replay_seconds": 42.02425824999955,
+  "sum_replay_seconds": 712.0428194560154,
+  "position_peak_rss_bytes": 245121024,
+  "independent_cleanup": {
+    "database": {
+      "database_exists": false,
+      "connections": 0,
+      "advisory_locks": 0
+    },
+    "remaining_worker_pids": [],
+    "services": [
+      {
+        "name": "tiewtrade-postgres-1",
+        "status": "running",
+        "health": "healthy",
+        "restart_count": 0
+      },
+      {
+        "name": "tiewtrade-f18-release-redis",
+        "status": "running",
+        "health": null,
+        "restart_count": 0
+      }
+    ]
+  },
+  "candidate": {
+    "head": "b0d5580364268be7619f5369dc8488d440f12160",
+    "diff_sha256": "7262d1cb180144312944ef37083a446bebfef86a4a2a5444b6897df4c507038e",
+    "inventory_sha256": "f87e5abdce67f9e7bc046101befc27911fb968d95ee8333f742d7ba7e5e9afac"
+  },
+  "runner_sha256": "cf3ac014bd9eda07d78589e7cdd8d6553a3e36fc565904f63bcaf0bae76a7609",
+  "helper_sha256": "2ef0c0b97f346c2a671ec8e927e1808b654f95948e4e80da6f23c7b8888a3b78",
+  "schema_sha256": "638e36ecf24ca9126d313a7ffacef098daf9dcadc162010e28ba5a4fe3d462e6",
+  "journal_sha256": "1b6dbc4a9cdbdc9c1bace031bb6e41ae389db6757c534d45afbceae3a0425d17",
+  "budget_seconds": 4200,
+  "work_deadline_seconds": 4080,
+  "cleanup_reserve_seconds": 120,
+  "four_hour": "Not Run",
+  "F17": "Not Completed"
+}

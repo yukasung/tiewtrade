@@ -1,0 +1,49 @@
+{
+  "revision": "NC-F17-FENCE-01-REVIEW-FIX",
+  "status": "AFFECTED_CHECKS_PASSED",
+  "findings_fixed": [
+    "M1 cancellation during close",
+    "M2 statement/snapshot transition"
+  ],
+  "source_bridge": {
+    "backend/tests/infra/execution_market/profile_publisher_fence.py": {
+      "diagnostic": "3046dc8f98a640ed22b3846547b35f5aae1ad7c428c3abef4d2fe598f577a09c",
+      "fixed": "0cf7a5937ed1ff949609bdc622d8695a9a1aa2419d8026fb7eddd8fe9144b0e3"
+    },
+    "backend/tests/infra/execution_market/test_publisher_fence.py": {
+      "diagnostic": "e4df1fe1665210f722dc15ceb8bea1ca9fbb6a869302e85b7e23d908642a2cfa",
+      "fixed": "1888d9eab384b9c415181f50d64cd3e96f1c91868c41309304140b0ac56a2059"
+    }
+  },
+  "other_pinned_sources_unchanged": true,
+  "tests": {
+    "passed": 42,
+    "seconds": 9.83,
+    "log": "validation-artifacts/f17-clock-recovery-tests-20261115/attempt-1794759325232262000.log",
+    "intermediate_failures": [
+      {
+        "attempt": "1794759219582598000",
+        "passed": 38,
+        "failed": 3,
+        "reason": "test attempted to monkeypatch readonly AsyncEngine instance method"
+      },
+      {
+        "attempt": "1794759276724559000",
+        "passed": 4,
+        "failed": 5,
+        "reason": "test fixture argument missing after replacing fake trace with typed recorder"
+      }
+    ]
+  },
+  "static": {
+    "ruff": "PASSED",
+    "format": "PASSED",
+    "mypy": "PASSED",
+    "files": 2,
+    "whitespace": "PASSED"
+  },
+  "new_campaign": false,
+  "git_actions": false,
+  "old_diagnostic_grade": "PASSED_RETAINED_ON_ORIGINAL_CANDIDATE",
+  "remaining": "Owner refactor instruction; four-hour and F17 release/dependencies unchanged"
+}

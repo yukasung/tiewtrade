@@ -1,0 +1,353 @@
+{
+  "status": "INCOMPLETE",
+  "runtime_revision": "NC_F17_CLOCK_01",
+  "base": "b0d5580364268be7619f5369dc8488d440f12160",
+  "measurement_seconds": 14400.002106458007,
+  "campaign_seconds": 14617.360182334,
+  "preflight_status": "PASSED",
+  "preflight_samples": 7,
+  "counters": {
+    "offered": 28200,
+    "admitted": 28200,
+    "completed": 28200,
+    "rejected": 0,
+    "fills": 11280,
+    "cancels": 5640,
+    "replays": 5640,
+    "cycles": 5640
+  },
+  "fault_observations": [
+    {
+      "kind": "WORKER_RESTART",
+      "started_at": "2026-11-15T03:39:52.879266+00:00",
+      "started": 158379.247848041,
+      "status": "RECOVERED",
+      "scheduled_offset_seconds": 1800.0,
+      "scheduled_duration_seconds": 30.0,
+      "active_cycles_at_fault": 1,
+      "ended_at": "2026-11-15T03:40:25.992946+00:00",
+      "restored": 158412.360651416,
+      "actual_duration_seconds": 33.11280341699603
+    },
+    {
+      "kind": "CONNECTION_CHURN",
+      "started_at": "2026-11-15T04:09:52.964281+00:00",
+      "started": 160179.247563541,
+      "status": "RECOVERED",
+      "scheduled_offset_seconds": 3600.0,
+      "scheduled_duration_seconds": 30.0,
+      "active_cycles_at_fault": 2,
+      "ended_at": "2026-11-15T04:10:23.266531+00:00",
+      "restored": 160209.548916958,
+      "actual_duration_seconds": 30.301353459013626
+    },
+    {
+      "kind": "REDIS_OUTAGE",
+      "started_at": "2026-11-15T04:39:53.066746+00:00",
+      "started": 161979.247737416,
+      "status": "RECOVERED",
+      "scheduled_offset_seconds": 5400.0,
+      "scheduled_duration_seconds": 60.0,
+      "active_cycles_at_fault": 2,
+      "ended_at": "2026-11-15T04:40:53.326142+00:00",
+      "restored": 162039.505334291,
+      "actual_duration_seconds": 60.25759691698477
+    },
+    {
+      "kind": "WORKER_RESTART",
+      "started_at": "2026-11-15T05:09:53.153581+00:00",
+      "started": 163779.247883,
+      "status": "RECOVERED",
+      "scheduled_offset_seconds": 7200.0,
+      "scheduled_duration_seconds": 30.0,
+      "active_cycles_at_fault": 2,
+      "ended_at": "2026-11-15T05:10:26.804941+00:00",
+      "restored": 163812.875607708,
+      "actual_duration_seconds": 33.627724833000684
+    },
+    {
+      "kind": "CONNECTION_CHURN",
+      "started_at": "2026-11-15T05:39:53.258008+00:00",
+      "started": 165579.248111875,
+      "status": "RECOVERED",
+      "scheduled_offset_seconds": 9000.0,
+      "scheduled_duration_seconds": 30.0,
+      "active_cycles_at_fault": 3,
+      "ended_at": "2026-11-15T05:40:23.296680+00:00",
+      "restored": 165609.285905041,
+      "actual_duration_seconds": 30.03779320800095
+    },
+    {
+      "kind": "REDIS_OUTAGE",
+      "started_at": "2026-11-15T06:09:53.342266+00:00",
+      "started": 167379.247520875,
+      "status": "RECOVERED",
+      "scheduled_offset_seconds": 10800.0,
+      "scheduled_duration_seconds": 60.0,
+      "active_cycles_at_fault": 3,
+      "ended_at": "2026-11-15T06:10:53.595152+00:00",
+      "restored": 167439.4986185,
+      "actual_duration_seconds": 60.25109766598325
+    },
+    {
+      "kind": "WORKER_RESTART",
+      "started_at": "2026-11-15T06:39:53.467822+00:00",
+      "started": 169179.247822916,
+      "status": "RECOVERED",
+      "scheduled_offset_seconds": 12600.0,
+      "scheduled_duration_seconds": 30.0,
+      "active_cycles_at_fault": 2,
+      "ended_at": "2026-11-15T06:40:27.058377+00:00",
+      "restored": 169212.837384833,
+      "actual_duration_seconds": 33.589561959001
+    }
+  ],
+  "publisher": {
+    "target_hz": 10,
+    "stage": "publish_market",
+    "published": 144513,
+    "last_input_id": 144513,
+    "book_owner": "096c3475-1aff-4433-b70a-d5405ef4d543",
+    "book_generation": 1,
+    "last_progress_at": "2026-11-15T07:10:38.566797+00:00",
+    "max_publish_seconds": 1.34818791699945
+  },
+  "clock_recovery": {
+    "revision": "NC_F17_CLOCK_01",
+    "max_events": 1,
+    "max_retries": 1,
+    "budget_seconds": 1.0,
+    "window_start": 156579.239855875,
+    "window_end": 171039.289099375,
+    "event": null,
+    "terminal_rejection": null,
+    "recovered_count": 0,
+    "clock_recovery_warning": false
+  },
+  "failure": {
+    "error_type": "TimeoutError",
+    "stage": "final-tail final cursor read TaskGroup",
+    "drain": {
+      "budget_seconds": 60,
+      "initial_watermark": 144063,
+      "stages": [
+        {
+          "stage": "live_recovery",
+          "elapsed_seconds": 2.008400042541325e-05,
+          "resources": {
+            "parent_pool": {
+              "pool_size": 5,
+              "max_overflow": 10,
+              "checked_out": 0,
+              "checked_in": 5,
+              "overflow": 0
+            },
+            "unknown_nulls": true,
+            "connections": 56,
+            "by_role_and_state": [
+              {
+                "role": "tiewtrade_api",
+                "state": null,
+                "connections": 6
+              },
+              {
+                "role": "tiewtrade_auth",
+                "state": null,
+                "connections": 2
+              },
+              {
+                "role": "tiewtrade_engine",
+                "state": null,
+                "connections": 25
+              },
+              {
+                "role": "tiewtrade_engine_scan",
+                "state": null,
+                "connections": 20
+              },
+              {
+                "role": "tiewtrade_market_data",
+                "state": null,
+                "connections": 2
+              },
+              {
+                "role": "tiewtrade_migrator",
+                "state": "active",
+                "connections": 1
+              }
+            ]
+          }
+        },
+        {
+          "stage": "stop_publisher",
+          "elapsed_seconds": 44.9653769590077,
+          "resources": {
+            "parent_pool": {
+              "pool_size": 5,
+              "max_overflow": 10,
+              "checked_out": 0,
+              "checked_in": 5,
+              "overflow": 0
+            },
+            "unknown_nulls": true,
+            "connections": 56,
+            "by_role_and_state": [
+              {
+                "role": "tiewtrade_api",
+                "state": null,
+                "connections": 6
+              },
+              {
+                "role": "tiewtrade_auth",
+                "state": null,
+                "connections": 2
+              },
+              {
+                "role": "tiewtrade_engine",
+                "state": null,
+                "connections": 25
+              },
+              {
+                "role": "tiewtrade_engine_scan",
+                "state": null,
+                "connections": 20
+              },
+              {
+                "role": "tiewtrade_market_data",
+                "state": null,
+                "connections": 2
+              },
+              {
+                "role": "tiewtrade_migrator",
+                "state": "active",
+                "connections": 1
+              }
+            ]
+          }
+        },
+        {
+          "stage": "final_tail",
+          "elapsed_seconds": 45.01073462498607,
+          "resources": {
+            "parent_pool": {
+              "pool_size": 5,
+              "max_overflow": 10,
+              "checked_out": 0,
+              "checked_in": 5,
+              "overflow": 0
+            },
+            "unknown_nulls": true,
+            "connections": 56,
+            "by_role_and_state": [
+              {
+                "role": "tiewtrade_api",
+                "state": null,
+                "connections": 6
+              },
+              {
+                "role": "tiewtrade_auth",
+                "state": null,
+                "connections": 2
+              },
+              {
+                "role": "tiewtrade_engine",
+                "state": null,
+                "connections": 25
+              },
+              {
+                "role": "tiewtrade_engine_scan",
+                "state": null,
+                "connections": 20
+              },
+              {
+                "role": "tiewtrade_market_data",
+                "state": null,
+                "connections": 2
+              },
+              {
+                "role": "tiewtrade_migrator",
+                "state": "active",
+                "connections": 1
+              }
+            ]
+          }
+        }
+      ],
+      "final_head": 144513,
+      "minimum_cursor": 144493,
+      "book_owner": "096c3475-1aff-4433-b70a-d5405ef4d543",
+      "book_generation": 1,
+      "error_type": "TimeoutError",
+      "elapsed_seconds": 60.04539370900602,
+      "cleanup_parent_pool": {
+        "pool_size": 5,
+        "max_overflow": 10,
+        "checked_out": 0,
+        "checked_in": 5,
+        "overflow": 0
+      }
+    },
+    "poll_timing": {
+      "input_recovery": {
+        "count": 60,
+        "outcomes": {
+          "RETURNED": 60
+        },
+        "first_start_seconds": 0.08695516700390726,
+        "last_finished_seconds": 59.15355354198255,
+        "maximum_attempt_seconds": 24.54550149998977,
+        "maximum_gate_wait_seconds": 20.098416041990276
+      },
+      "final_cursor": {
+        "count": 20,
+        "outcomes": {
+          "CancelledError": 20
+        },
+        "first_start_seconds": 59.1543839169899,
+        "last_finished_seconds": 60.04599295798107,
+        "maximum_attempt_seconds": 0.8913773749954998,
+        "maximum_gate_wait_seconds": 0.8620167090266477
+      }
+    }
+  },
+  "diagnostic_metrics_not_final_acceptance": {
+    "engine_samples": 406752,
+    "engine_p95_seconds": 0.19355033300234936,
+    "engine_p99_seconds": 0.36149541701888666,
+    "position_observations": 4800,
+    "position_outcomes": {
+      "RETURNED": 4800
+    },
+    "position_owners": 20,
+    "snapshot_p95_seconds": 0.029954792000353336,
+    "snapshot_p99_seconds": 0.05550387501716614
+  },
+  "not_run": [
+    "final per-owner financial oracle",
+    "global invariants/input-lag acceptance",
+    "final snapshot/rebuild acceptance",
+    "final owned-pool acceptance",
+    "overall workload acceptance"
+  ],
+  "candidate_unchanged": true,
+  "cleanup_verification": {
+    "database_exists": false,
+    "connections": 0,
+    "locks": 0,
+    "fixture_redis_absent": true,
+    "owner_services": [
+      {
+        "name": "/tiewtrade-postgres-1",
+        "state": "running",
+        "restart_count": 0,
+        "health": "healthy"
+      },
+      {
+        "name": "/tiewtrade-f18-release-redis",
+        "state": "running",
+        "restart_count": 0,
+        "health": null
+      }
+    ]
+  }
+}

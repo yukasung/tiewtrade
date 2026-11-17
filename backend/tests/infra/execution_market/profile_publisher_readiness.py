@@ -16,13 +16,16 @@ from typing import Any
 from unittest.mock import patch
 from uuid import UUID
 
+from tests.infra.execution_market.profile_publisher_recovery import observe_guard
 from tiewtrade.core.order_book import BookState
 
 WINDOW = 64
 
 
 @contextmanager
-def observe_publisher_readiness(path: Path) -> Iterator[None]:
+def observe_publisher_readiness(
+    path: Path, *, evidence_status: dict[str, bool] | None = None
+) -> Iterator[None]:
     # Lazy import avoids the workload/observer import cycle.
     from tests.infra.execution_market import profile_workload as workload
 
@@ -33,6 +36,7 @@ def observe_publisher_readiness(path: Path) -> Iterator[None]:
     recent: deque[dict[str, Any]] = deque(maxlen=WINDOW)
     total = 0
     primary: BaseException | None = None
+    evidence = {"write_failed": False} if evidence_status is None else evidence_status
 
     def flush(reason: str) -> None:
         path.write_text(
@@ -99,13 +103,18 @@ def observe_publisher_readiness(path: Path) -> Iterator[None]:
             }
             recent.append(row)
             total += 1
+            evidence_ok = True
             if failure is not None:
                 try:
                     flush("guard_failure")
                 except OSError as observation_error:
+                    evidence_ok = False
+                    evidence["write_failed"] = True
                     failure.add_note(
                         f"readiness evidence write failed: {type(observation_error).__name__}"
                     )
+
+            observe_guard(book, now, failure, checked_at=checked_at, evidence_ok=evidence_ok)
 
     try:
         with (
@@ -120,6 +129,7 @@ def observe_publisher_readiness(path: Path) -> Iterator[None]:
         try:
             flush("completed" if primary is None else type(primary).__name__)
         except OSError as observation_error:
+            evidence["write_failed"] = True
             if primary is None:
                 raise
             primary.add_note(

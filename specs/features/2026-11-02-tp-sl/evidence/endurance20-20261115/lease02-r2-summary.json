@@ -1,0 +1,98 @@
+{
+  "revision": "NC-F17-LEASE-02-REPLACEMENT",
+  "status": "INCOMPLETE",
+  "diagnostic_only": true,
+  "total_seconds": 243.66095266700722,
+  "measurement_until_failure_seconds": 67.50986920800642,
+  "target_measurement_seconds": 300,
+  "counters": {
+    "offered": 100,
+    "admitted": 100,
+    "completed": 88,
+    "rejected": 0,
+    "fills": 35,
+    "cancels": 17,
+    "replays": 18,
+    "cycles": 15
+  },
+  "worker_failures": [
+    "worker-3-exited:1"
+  ],
+  "publisher_counts": {
+    "RETURNED": 556,
+    "WriterLeaseLost": 1
+  },
+  "failed_tick": 557,
+  "failed_update_price": false,
+  "failed_heartbeat": true,
+  "failed_publication_seconds": 10.074001000000862,
+  "failed_stages": [
+    {
+      "stage": "book_renew",
+      "started": 200629.225724958,
+      "outcome": "RETURNED",
+      "finished": 200629.270529666,
+      "seconds": 0.04480470801354386
+    },
+    {
+      "stage": "book_publish",
+      "started": 200629.292697791,
+      "outcome": "RETURNED",
+      "finished": 200629.369722541,
+      "seconds": 0.07702475000405684
+    },
+    {
+      "stage": "price_renew",
+      "started": 200629.3697285,
+      "outcome": "WriterLeaseLost",
+      "finished": 200639.255243958,
+      "seconds": 9.88551545800874
+    }
+  ],
+  "price_renew_fence_statement_seconds": 9.848372250009561,
+  "price_renew_following_locked_read_seconds": 0.036084999999729916,
+  "failure_boundary": "realtime_storage._locked after risk_publication_fence then feed row locked-read; before price renewal UPDATE",
+  "rollback_witness": {
+    "last_input_id": 556,
+    "buffer_count": 556,
+    "failed_input_absent": true,
+    "book_owner_generation_unchanged": true,
+    "prior_committed_book_lease_restored": true,
+    "db_now": "2026-11-15 15:24:14.814562+00:00",
+    "lease_until": "2026-11-15 15:24:09.739003+00:00"
+  },
+  "readiness": {
+    "file_present": true,
+    "total_checks": 557
+  },
+  "cleanup": {
+    "database_exists": false,
+    "connections": 0,
+    "advisory_locks": 0,
+    "redis_absent": true,
+    "owner_services": [
+      {
+        "name": "/tiewtrade-postgres-1",
+        "state": "running",
+        "health": "healthy",
+        "restart_count": 0
+      },
+      {
+        "name": "/tiewtrade-f18-release-redis",
+        "state": "running",
+        "health": null,
+        "restart_count": 0
+      }
+    ]
+  },
+  "source_unchanged": true,
+  "final_financial_oracle": "NOT_RUN",
+  "pool_aggregate": "NOT_RUN_AFTER_PUBLISHER_FAILURE",
+  "historical_four_hour_cause": "Not established as identical; this run localizes a price-fence statement stall",
+  "database_log_window": "docker logs returned no lines; no server-side blocker timeline available",
+  "source_hashes": {
+    "backend/tests/infra/execution_market/profile_workload.py": "f5ff1ca4ea31661504e72cd77da8d2b19235df350c336f6f1b01bfb5db3eaf73",
+    "backend/tests/infra/execution_market/profile_owned_pools.py": "af3e82a70718e56cdcf5e5dee17ce9b940867a851d9ecfc40590a132b199156c",
+    "backend/tests/infra/execution_market/profile_publisher_lease_load.py": "7d3a66898c3badeac2679e1bea6c2bcca0f87485a9beb56f8b3e4da2ec8978a7"
+  }
+}

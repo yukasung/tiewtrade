@@ -48,6 +48,7 @@ def campaign_output(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
             phase="SMOKE",
             output=output,
             acceptance_profile=campaign.internal.NAME,
+            observer_w3_prefix=False,
         ),
     )
     monkeypatch.setattr(internal, "guard_database", lambda _: "tiewtrade_internal20_test")

@@ -1,0 +1,21 @@
+{
+  "revision": "NC-F17-OBS-04",
+  "status": "Implementation checks passed; awaiting owner review",
+  "tests": {
+    "initial_passed": 297,
+    "expanded_passed": 57,
+    "expanded_failed": 1,
+    "corrected_case_passed": 1,
+    "distinct_final_evidence": 302,
+    "unchanged_reused": 244
+  },
+  "static": "Ruff/format/mypy 7 files passed; corrected test Ruff/mypy passed",
+  "cleanup": "Both isolated test databases absent; connections=0,locks=0 independently verified",
+  "campaign": "Not Run",
+  "production_changes": "None in OBS-04",
+  "prior_w3": "Incomplete unchanged",
+  "raw": [
+    "validation-artifacts/f17-obs04-tests-20261116",
+    "validation-artifacts/f17-obs04-final-tests-20261116"
+  ]
+}

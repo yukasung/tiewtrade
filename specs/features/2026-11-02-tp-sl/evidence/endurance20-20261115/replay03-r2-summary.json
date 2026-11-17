@@ -1,0 +1,29 @@
+{
+  "status": "DIAGNOSTIC_COMPLETE",
+  "total_seconds": 245.79600766599992,
+  "records": 144364,
+  "pages_including_terminal_empty": 37,
+  "reader_seconds": 55.34635883400006,
+  "sql_driver_seconds": 20.31246699899998,
+  "decode_seconds": 34.37248195391999,
+  "remaining_of_60s": 4.653641165999943,
+  "other_owner_invisible": true,
+  "financial_state_unchanged": true,
+  "source_unchanged": true,
+  "cleanup": {
+    "status": "PASSED",
+    "database_absent": true,
+    "connections": 0,
+    "locks": 0,
+    "redis_created": false
+  },
+  "first_page_plan": {
+    "joined_rows": 144364,
+    "returned_rows": 4096,
+    "sort": "external merge",
+    "sort_disk_kib": 208128,
+    "execution_ms": 1491.772
+  },
+  "late_page_execution_ms": 25.491,
+  "limits": "Synthetic reader-only, one owner history plus empty second owner; not full W3 or full financial replay; plan sampled after enumeration."
+}

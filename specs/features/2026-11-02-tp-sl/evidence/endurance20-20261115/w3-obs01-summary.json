@@ -1,0 +1,65 @@
+{
+  "revision": "NC_F17_W3_OBS_01",
+  "status": "IMPLEMENTATION_TARGETED_CHECKS_PASSED",
+  "head": "b0d5580364268be7619f5369dc8488d440f12160",
+  "uncommitted": true,
+  "source_sha256": {
+    "backend/tests/infra/execution_market/profile_workload.py": "cdc633b4b7dff46386930e97d5b2f9a8e692bc3d8db7138355eaf3327c1baa4b",
+    "backend/tests/infra/execution_market/profile_publisher_lease_load.py": "40926a17fd12915f8bea06d6f552ab474bcaaf9a74ee8066865ed449d2fa6224",
+    "backend/tests/infra/execution_market/remaining_paper_campaign.py": "2bd235eba147b39ebca332345c3252f51832cc006a9826c9a9f3b1eaffd474f7",
+    "backend/tests/infra/execution_market/test_publisher_fence_fail_fast.py": "775a73534bcb1b41c5c34c99fd43a8a8b858f16b87f9e854c50de4bb78a1f0c4",
+    "backend/tests/infra/execution_market/test_publisher_lease_load.py": "9cb3cfba78108b1eb803ca45370d3baad426321f1294ba1995620997bbad4dab"
+  },
+  "tests": {
+    "status": "PASSED",
+    "exit_code": 0,
+    "passed": 434,
+    "cleanup": {
+      "database": "tiewtrade_internal20_endurance_rbtest_1794838492770851000",
+      "connections": 0,
+      "removed": true
+    },
+    "elapsed_seconds": 55.33449275000021
+  },
+  "new_fail_fast_cases": 40,
+  "checks": {
+    "ruff": "PASSED",
+    "format": "PASSED",
+    "mypy": "PASSED",
+    "git_diff_check": "PASSED"
+  },
+  "independent_cleanup": {
+    "status": "PASSED",
+    "checks": [
+      {
+        "database": "tiewtrade_internal20_endurance_rbtest_1794838323623756000",
+        "database_exists": false,
+        "connections": 0,
+        "locks": 0
+      },
+      {
+        "database": "tiewtrade_internal20_endurance_rbtest_1794838492770851000",
+        "database_exists": false,
+        "connections": 0,
+        "locks": 0
+      }
+    ]
+  },
+  "prior_safety_attempt": {
+    "status": "FAILED",
+    "exit_code": 1,
+    "passed": 431,
+    "cleanup": {
+      "database": "tiewtrade_internal20_endurance_rbtest_1794838323623756000",
+      "connections": 0,
+      "removed": true
+    },
+    "elapsed_seconds": 59.98399741699541
+  },
+  "scope": "harness only; production and all financial/lease/guard rules unchanged in this task",
+  "review": "NOT_RUN",
+  "refactor": "NOT_RUN",
+  "four_hour_campaign": "NOT_RUN",
+  "next": "Owner review code, then authorized refactor and affected validation before one approved W3",
+  "no_git_ci_merge": true
+}

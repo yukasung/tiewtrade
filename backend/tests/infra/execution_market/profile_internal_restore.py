@@ -555,6 +555,40 @@ async def recover(
 async def recover_legacy_claims(
     admin: AsyncEngine, engine: AsyncEngine, scan: AsyncEngine
 ) -> dict[str, int]:
+    """Refresh restored market inputs while recovering expired claims."""
+    database = engine.url.database
+    if database is None or re.fullmatch(r"tiewtrade_internal20_[a-z0-9_]+", database) is None:
+        raise ValueError("isolated restore target required")
+    market = create_async_engine(
+        restore.database_url(os.environ[DatabaseRole.MARKET_DATA.url_variable], database),
+        hide_parameters=True,
+    )
+    stop = asyncio.Event()
+    stats: dict[str, Any] = {"target_hz": 10}
+    publisher = asyncio.create_task(
+        f15.market_publisher(market, stop, stats, heartbeat_per_book=True)
+    )
+    primary: BaseException | None = None
+    try:
+        await f15.wait_publisher_ready(publisher, stats)
+        result = await _recover_legacy_claims(admin, engine, scan)
+        if publisher.done():
+            await publisher
+        return result
+    except BaseException as error:
+        primary = error
+        raise
+    finally:
+        stop.set()
+        try:
+            await f15.join_owned_tasks([publisher], primary)
+        finally:
+            await market.dispose()
+
+
+async def _recover_legacy_claims(
+    admin: AsyncEngine, engine: AsyncEngine, scan: AsyncEngine
+) -> dict[str, int]:
     """Recover exactly the expired legacy claims, leaving staged F16/F17 work intact."""
     from tiewtrade.infra.paper_orders.dispatch import DueOrder, claim_order
     from tiewtrade.infra.paper_orders.worker import process_claimed_order

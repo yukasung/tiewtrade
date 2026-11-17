@@ -3,6 +3,7 @@
 import hashlib
 import json
 from dataclasses import dataclass, replace
+from datetime import datetime
 from typing import Any
 from uuid import UUID
 
@@ -144,7 +145,9 @@ def _decode_checked(row: Any) -> SavedExecutionInput:
     if hashlib.sha256(canonical(payload).encode()).hexdigest() != row["digest"]:
         raise OrderConflictError("Paper evidence digest mismatch")
     market = input_from_payload(payload["market"])
-    source_market = input_from_payload(payload.get("source_market", payload["market"]))
+    source_market = (
+        input_from_payload(payload["source_market"]) if "source_market" in payload else market
+    )
     metadata = metadata_from_payload(payload["metadata"])
     source = StoredExecutionInput(source_market, metadata, row["source_digest"])
     if _source_digest(source) != source.digest:
@@ -155,7 +158,9 @@ def _decode_checked(row: Any) -> SavedExecutionInput:
         and market == replace(source_market, rebase=True)
     ):
         raise OrderConflictError("Paper decision evidence changed source content")
-    record = StoredExecutionInput(market, metadata, row["source_digest"])
+    record = (
+        source if market is source_market else StoredExecutionInput(market, metadata, source.digest)
+    )
     if (market.input_id, market.generation, market.pair) != (
         row["input_id"],
         row["generation"],
@@ -403,8 +408,13 @@ async def read_execution_inputs(
     episode_id: UUID,
     pair: PositionPair,
     after_input_id: int = 0,
+    after: SavedExecutionInput | None = None,
     limit: int = 100,
 ) -> tuple[SavedExecutionInput, ...]:
+    """Read a bounded page; use ``after`` to continue across tied input IDs.
+
+    ``after_input_id`` remains a strict input range filter, not a page token.
+    """
     session = require_user_session(session)
     if (
         type(limit) is not int
@@ -413,18 +423,42 @@ async def read_execution_inputs(
         or after_input_id < 0
     ):
         raise ValueError("bounded evidence cursor required")
+    generation: int | None = None
+    decision_kind: str | None = None
+    if after is not None:
+        if (
+            not isinstance(after, SavedExecutionInput)
+            or after_input_id != 0
+            or after.episode_id != episode_id
+            or after.record.market.pair != pair
+        ):
+            raise ValueError("evidence cursor scope mismatch")
+        market = after.record.market
+        after_input_id = market.input_id
+        generation = market.generation
+        decision_kind = "REBASE" if isinstance(market, BookState) and market.rebase else "INPUT"
+    # The FK binds each key to one evidence row with the same owner/episode/pair;
+    # both tables enforce the same owner RLS. Limit narrow keys before loading JSON.
     rows = (
         (
             await session.execute(
-                """SELECT e.* FROM paper_execution_input_keys k
+                """WITH page AS MATERIALIZED (
+        SELECT evidence_id,recorded_at,input_id,generation,decision_kind
+        FROM paper_execution_input_keys
+        WHERE episode_id=:episode AND base=:base AND quote=:quote
+          AND (input_id,generation,decision_kind)>(:after,:generation,:decision_kind)
+        ORDER BY input_id,generation,decision_kind LIMIT :limit
+      )
+      SELECT e.* FROM page k
       JOIN paper_execution_inputs e ON (e.id,e.recorded_at)=(k.evidence_id,k.recorded_at)
-      WHERE k.episode_id=:episode AND k.base=:base AND k.quote=:quote AND k.input_id>:after
-      ORDER BY k.input_id LIMIT :limit""",
+      ORDER BY k.input_id,k.generation,k.decision_kind""",
                 {
                     "episode": episode_id,
                     "base": pair.base,
                     "quote": pair.quote,
                     "after": after_input_id,
+                    "generation": generation,
+                    "decision_kind": decision_kind,
                     "limit": limit,
                 },
             )
@@ -433,3 +467,38 @@ async def read_execution_inputs(
         .all()
     )
     return tuple(_decode(row) for row in rows)
+
+
+async def read_execution_input(
+    session: UserSession,
+    *,
+    episode_id: UUID,
+    pair: PositionPair,
+    evidence_id: UUID,
+    recorded_at: datetime,
+) -> SavedExecutionInput | None:
+    """Authenticate an exact immutable evidence identity under the caller's RLS."""
+    session = require_user_session(session)
+    row = (
+        (
+            await session.execute(
+                """SELECT e.* FROM paper_execution_input_keys k
+                JOIN paper_execution_inputs e
+                  ON (e.id,e.recorded_at)=(k.evidence_id,k.recorded_at)
+                 AND (e.episode_id,e.base,e.quote,e.generation,e.input_id,e.decision_kind)=
+                     (k.episode_id,k.base,k.quote,k.generation,k.input_id,k.decision_kind)
+                WHERE k.evidence_id=:id AND k.recorded_at=:recorded_at
+                  AND k.episode_id=:episode AND k.base=:base AND k.quote=:quote""",
+                {
+                    "id": evidence_id,
+                    "recorded_at": recorded_at,
+                    "episode": episode_id,
+                    "base": pair.base,
+                    "quote": pair.quote,
+                },
+            )
+        )
+        .mappings()
+        .one_or_none()
+    )
+    return None if row is None else _decode(row)

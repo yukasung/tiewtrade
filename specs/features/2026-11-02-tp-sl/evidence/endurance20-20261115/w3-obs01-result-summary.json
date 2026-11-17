@@ -1,0 +1,135 @@
+{
+  "revision": "NC_F17_W3_OBS_01",
+  "status": "INCOMPLETE",
+  "total_seconds": 2147.1633902500034,
+  "measured_seconds_before_failure": 1972.828471957997,
+  "required_measured_seconds": 14400,
+  "required_commands": 28200,
+  "counters": {
+    "offered": 3867,
+    "admitted": 3864,
+    "completed": 3863,
+    "rejected": 0,
+    "fills": 1546,
+    "cancels": 772,
+    "replays": 772,
+    "cycles": 772
+  },
+  "faults": [
+    {
+      "kind": "WORKER_RESTART",
+      "started_at": "2026-11-16T15:02:29.807181+00:00",
+      "started": 59711.639323041,
+      "status": "RECOVERED",
+      "scheduled_offset_seconds": 1800.0,
+      "scheduled_duration_seconds": 30.0,
+      "active_cycles_at_fault": 1,
+      "ended_at": "2026-11-16T15:03:03.001187+00:00",
+      "restored": 59744.833333625,
+      "actual_duration_seconds": 33.194010708997666
+    }
+  ],
+  "snapshot_rows": 660,
+  "root_error_type": "RuntimeError",
+  "root_error_code": "F17_FENCE_OBSERVER_EVIDENCE_INCOMPLETE",
+  "observer_reason": "SAMPLER_EVIDENCE_LOST",
+  "observer_errors": {
+    "TimeoutError": 1
+  },
+  "observer_failed_envelope": {
+    "publisher_pid": 161806,
+    "stage": "price_renew",
+    "statement_started": 59882.061284416,
+    "publication_tick": 19764,
+    "capture_started": 59883.0918155,
+    "capture_phase": "activity",
+    "phase_started": 59883.678468083,
+    "last_completed_phase": "db_clock",
+    "activity_interval": [
+      59883.67846925,
+      null
+    ],
+    "locks_interval": null,
+    "activity_row_count": null,
+    "locks_row_count": null,
+    "db_now": "2026-11-16 15:05:21.844061+00:00",
+    "activity": [],
+    "locks": [],
+    "views_atomic": false,
+    "observed_at": 59884.37177375,
+    "statement_finished_at_start": null,
+    "statement_finished_at_end": 59883.630193583,
+    "statement_association": "OVERLAPPED_OR_UNCONFIRMED",
+    "error_type": "TimeoutError",
+    "failed_at": "2026-11-16T15:05:22.539745+00:00"
+  },
+  "observer_task_joined": true,
+  "publication_counts": {
+    "RETURNED": 19765,
+    "CancelledError": 1
+  },
+  "source_witness_book": {
+    "owner": "da02ef46-481a-4c4e-9377-8d2030681c73",
+    "generation": 1,
+    "last_input_id": 19765,
+    "lease_until": "2026-11-16 15:05:27.155387+00:00"
+  },
+  "source_witness_buffer_count": 4096,
+  "clock_recovered_count": 0,
+  "parent_pool_report": {
+    "passed": false,
+    "errors": {
+      "ConnectionResourceError": 2
+    },
+    "finalized": true,
+    "resource_errors": [
+      {
+        "role": "ADMIN_OBSERVER",
+        "error_type": "CancelledError",
+        "quiescing": false,
+        "deadline_context": "not_observed"
+      },
+      {
+        "role": "API",
+        "error_type": "CancelledError",
+        "quiescing": false,
+        "deadline_context": "not_observed"
+      }
+    ]
+  },
+  "source_unchanged": true,
+  "independent_cleanup": {
+    "database": "tiewtrade_internal20_endurance_obs01_1794839381427272000",
+    "database_exists": false,
+    "connections": 0,
+    "locks": 0,
+    "owned_redis_absent": true,
+    "worker_pid_receipts": 40,
+    "remaining_worker_pids": [],
+    "owner_services": [
+      {
+        "name": "/tiewtrade-postgres-1",
+        "status": "running",
+        "health": "healthy",
+        "restart_count": 0
+      },
+      {
+        "name": "/tiewtrade-f18-release-redis",
+        "status": "running",
+        "health": null,
+        "restart_count": 0
+      }
+    ],
+    "status": "PASSED"
+  },
+  "remaining_not_run": [
+    "remaining six scheduled faults",
+    "complete14400s/28200command workload",
+    "final tail",
+    "final snapshot/rebuild acceptance",
+    "final financial/global/position/processing/resource/aggregate acceptance"
+  ],
+  "no_rerun": true,
+  "no_git_ci_merge": true,
+  "next": "Stop/report per approved plan; short observer investigation proposal before any replacement campaign or implementation change"
+}

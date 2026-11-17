@@ -1,0 +1,35 @@
+{
+  "revision": "NC-F17-LEASE-02-POOL-REFACTOR",
+  "status": "PASSED_AFFECTED_VALIDATION",
+  "source_bridge": {
+    "backend/tests/infra/execution_market/profile_owned_pools.py": {
+      "before": "af3e82a70718e56cdcf5e5dee17ce9b940867a851d9ecfc40590a132b199156c",
+      "after": "af3e82a70718e56cdcf5e5dee17ce9b940867a851d9ecfc40590a132b199156c"
+    },
+    "backend/tests/infra/execution_market/profile_workload.py": {
+      "before": "f5ff1ca4ea31661504e72cd77da8d2b19235df350c336f6f1b01bfb5db3eaf73",
+      "after": "f5ff1ca4ea31661504e72cd77da8d2b19235df350c336f6f1b01bfb5db3eaf73"
+    },
+    "backend/tests/infra/execution_market/test_owned_pools.py": {
+      "before": "be9d11522b9842e230ffd009bb21d9a2b463f90c667575c9f895d20e2110a252",
+      "after": "f56ceabb73835a502510c2e975a99c3ac57772631107012d6faf46e3b091046e"
+    }
+  },
+  "runtime_unchanged": true,
+  "tests": {
+    "passed": 14,
+    "seconds": 8.51,
+    "log": "validation-artifacts/f17-clock-recovery-tests-20261115/attempt-1794755898140792000.log",
+    "unchanged_regressions_retained": 54
+  },
+  "static": {
+    "ruff": "PASSED",
+    "format": "PASSED",
+    "mypy": "PASSED",
+    "files": 1,
+    "whitespace": "PASSED"
+  },
+  "old_campaign_status": "INCOMPLETE_RETAINED",
+  "new_campaign": false,
+  "git_actions": false
+}

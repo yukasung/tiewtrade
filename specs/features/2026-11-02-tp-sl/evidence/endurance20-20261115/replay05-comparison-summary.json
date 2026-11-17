@@ -1,0 +1,364 @@
+{
+  "status": "DIAGNOSTIC_COMPLETE",
+  "elapsed_seconds": 285.27370104200054,
+  "seed_seconds": 56.7105258749998,
+  "enumeration_equivalent": true,
+  "other_owner_invisible": true,
+  "financial_state_unchanged": true,
+  "source_unchanged": true,
+  "cleanup": {
+    "database": "tiewtrade_internal20_endurance_replay_1794884579817316000",
+    "connections": 0,
+    "removed": true
+  },
+  "variants": [
+    {
+      "label": "baseline",
+      "outcome": "RETURNED",
+      "enumerated_rows": 144364,
+      "enumeration_seconds": 55.199639542000114,
+      "digest": "1a6f3f5b2ff0f02a0939a08ac0d1187a0f0608d7ce016f26afb60b7328459ec9",
+      "pages": 37,
+      "sql_driver_seconds": 20.391658463997373,
+      "decode_seconds": 33.83531964413487,
+      "plans": [
+        {
+          "after": 0,
+          "execution_ms": 857.611,
+          "nodes": [
+            {
+              "Node Type": "Limit",
+              "Actual Rows": 4096,
+              "Actual Loops": 1,
+              "Temp Read Blocks": 40545,
+              "Temp Written Blocks": 65551
+            },
+            {
+              "Node Type": "Sort",
+              "Actual Rows": 4096,
+              "Actual Loops": 1,
+              "Sort Method": "external merge",
+              "Sort Space Used": 208128,
+              "Sort Space Type": "Disk",
+              "Temp Read Blocks": 40545,
+              "Temp Written Blocks": 65551
+            },
+            {
+              "Node Type": "Hash Join",
+              "Actual Rows": 144364,
+              "Actual Loops": 1,
+              "Temp Read Blocks": 13451,
+              "Temp Written Blocks": 13451
+            },
+            {
+              "Node Type": "Append",
+              "Actual Rows": 144364,
+              "Actual Loops": 1,
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0
+            },
+            {
+              "Node Type": "Seq Scan",
+              "Actual Rows": 0,
+              "Actual Loops": 1,
+              "Relation Name": "paper_execution_inputs_20261116",
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0
+            },
+            {
+              "Node Type": "Seq Scan",
+              "Actual Rows": 144364,
+              "Actual Loops": 1,
+              "Relation Name": "paper_execution_inputs_20261117",
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0
+            },
+            {
+              "Node Type": "Seq Scan",
+              "Actual Rows": 0,
+              "Actual Loops": 1,
+              "Relation Name": "paper_execution_inputs_20261118",
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0
+            },
+            {
+              "Node Type": "Hash",
+              "Actual Rows": 144364,
+              "Actual Loops": 1,
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 460
+            },
+            {
+              "Node Type": "Seq Scan",
+              "Actual Rows": 144364,
+              "Actual Loops": 1,
+              "Relation Name": "paper_execution_input_keys",
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0
+            }
+          ]
+        },
+        {
+          "after": 143360,
+          "execution_ms": 12.53,
+          "nodes": [
+            {
+              "Node Type": "Limit",
+              "Actual Rows": 1004,
+              "Actual Loops": 1,
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0
+            },
+            {
+              "Node Type": "Sort",
+              "Actual Rows": 1004,
+              "Actual Loops": 1,
+              "Sort Method": "quicksort",
+              "Sort Space Used": 2040,
+              "Sort Space Type": "Memory",
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0
+            },
+            {
+              "Node Type": "Nested Loop",
+              "Actual Rows": 1004,
+              "Actual Loops": 1,
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0
+            },
+            {
+              "Node Type": "Seq Scan",
+              "Actual Rows": 1004,
+              "Actual Loops": 1,
+              "Relation Name": "paper_execution_input_keys",
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0
+            },
+            {
+              "Node Type": "Append",
+              "Actual Rows": 1,
+              "Actual Loops": 1004,
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0
+            },
+            {
+              "Node Type": "Seq Scan",
+              "Actual Rows": 0,
+              "Actual Loops": 0,
+              "Relation Name": "paper_execution_inputs_20261116",
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0
+            },
+            {
+              "Node Type": "Index Scan",
+              "Actual Rows": 1,
+              "Actual Loops": 1004,
+              "Relation Name": "paper_execution_inputs_20261117",
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0
+            },
+            {
+              "Node Type": "Seq Scan",
+              "Actual Rows": 0,
+              "Actual Loops": 0,
+              "Relation Name": "paper_execution_inputs_20261118",
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "candidate",
+      "outcome": "RETURNED",
+      "enumerated_rows": 144364,
+      "enumeration_seconds": 43.662336125000365,
+      "digest": "1a6f3f5b2ff0f02a0939a08ac0d1187a0f0608d7ce016f26afb60b7328459ec9",
+      "pages": 37,
+      "sql_driver_seconds": 7.170432583998263,
+      "decode_seconds": 35.57790759387444,
+      "plans": [
+        {
+          "after": 0,
+          "execution_ms": 121.059,
+          "nodes": [
+            {
+              "Node Type": "Sort",
+              "Actual Rows": 4096,
+              "Actual Loops": 1,
+              "Sort Method": "external merge",
+              "Sort Space Used": 5936,
+              "Sort Space Type": "Disk",
+              "Temp Read Blocks": 742,
+              "Temp Written Blocks": 743
+            },
+            {
+              "Node Type": "Limit",
+              "Actual Rows": 4096,
+              "Actual Loops": 1,
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0
+            },
+            {
+              "Node Type": "Sort",
+              "Actual Rows": 4096,
+              "Actual Loops": 1,
+              "Sort Method": "top-N heapsort",
+              "Sort Space Used": 673,
+              "Sort Space Type": "Memory",
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0
+            },
+            {
+              "Node Type": "Seq Scan",
+              "Actual Rows": 144364,
+              "Actual Loops": 1,
+              "Relation Name": "paper_execution_input_keys",
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0
+            },
+            {
+              "Node Type": "Nested Loop",
+              "Actual Rows": 4096,
+              "Actual Loops": 1,
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0
+            },
+            {
+              "Node Type": "CTE Scan",
+              "Actual Rows": 4096,
+              "Actual Loops": 1,
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0
+            },
+            {
+              "Node Type": "Append",
+              "Actual Rows": 1,
+              "Actual Loops": 4096,
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0
+            },
+            {
+              "Node Type": "Seq Scan",
+              "Actual Rows": 0,
+              "Actual Loops": 0,
+              "Relation Name": "paper_execution_inputs_20261116",
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0
+            },
+            {
+              "Node Type": "Index Scan",
+              "Actual Rows": 1,
+              "Actual Loops": 4096,
+              "Relation Name": "paper_execution_inputs_20261117",
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0
+            },
+            {
+              "Node Type": "Seq Scan",
+              "Actual Rows": 0,
+              "Actual Loops": 0,
+              "Relation Name": "paper_execution_inputs_20261118",
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0
+            }
+          ]
+        },
+        {
+          "after": 143360,
+          "execution_ms": 16.664,
+          "nodes": [
+            {
+              "Node Type": "Sort",
+              "Actual Rows": 1004,
+              "Actual Loops": 1,
+              "Sort Method": "quicksort",
+              "Sort Space Used": 1499,
+              "Sort Space Type": "Memory",
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0
+            },
+            {
+              "Node Type": "Limit",
+              "Actual Rows": 1004,
+              "Actual Loops": 1,
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0
+            },
+            {
+              "Node Type": "Sort",
+              "Actual Rows": 1004,
+              "Actual Loops": 1,
+              "Sort Method": "quicksort",
+              "Sort Space Used": 95,
+              "Sort Space Type": "Memory",
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0
+            },
+            {
+              "Node Type": "Seq Scan",
+              "Actual Rows": 1004,
+              "Actual Loops": 1,
+              "Relation Name": "paper_execution_input_keys",
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0
+            },
+            {
+              "Node Type": "Nested Loop",
+              "Actual Rows": 1004,
+              "Actual Loops": 1,
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0
+            },
+            {
+              "Node Type": "CTE Scan",
+              "Actual Rows": 1004,
+              "Actual Loops": 1,
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0
+            },
+            {
+              "Node Type": "Append",
+              "Actual Rows": 1,
+              "Actual Loops": 1004,
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0
+            },
+            {
+              "Node Type": "Seq Scan",
+              "Actual Rows": 0,
+              "Actual Loops": 0,
+              "Relation Name": "paper_execution_inputs_20261116",
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0
+            },
+            {
+              "Node Type": "Index Scan",
+              "Actual Rows": 1,
+              "Actual Loops": 1004,
+              "Relation Name": "paper_execution_inputs_20261117",
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0
+            },
+            {
+              "Node Type": "Seq Scan",
+              "Actual Rows": 0,
+              "Actual Loops": 0,
+              "Relation Name": "paper_execution_inputs_20261118",
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "observed_elapsed_reduction_percent": 20.901048471922145,
+  "independent_cleanup": {
+    "database_absent": true,
+    "connections": 0,
+    "locks": 0,
+    "redis_created": false
+  }
+}

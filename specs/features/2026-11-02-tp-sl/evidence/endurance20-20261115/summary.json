@@ -1,0 +1,73 @@
+{
+  "candidate": "b0d5580364268be7619f5369dc8488d440f12160",
+  "profile": "PAPER_INTERNAL20_V1",
+  "phase": "W3",
+  "result": "INCOMPLETE",
+  "planned_measurement_seconds": 14400,
+  "actual_measurement_seconds": 2411.1318894169817,
+  "campaign_seconds": 2582.465396374988,
+  "expected_commands": 28200,
+  "counters_at_interruption": {
+    "offered": 4755,
+    "admitted": 4754,
+    "completed": 4753,
+    "rejected": 0,
+    "fills": 1901,
+    "cancels": 950,
+    "replays": 951,
+    "cycles": 950
+  },
+  "trigger": {
+    "error_type": "SourceUnavailableError",
+    "guard": "BookState.require_ready",
+    "message": "book readiness cannot be proved",
+    "tick": 24197,
+    "ready": true,
+    "rebase": false,
+    "received_at": "2026-11-14T23:43:51.554265+00:00",
+    "verified_at": "2026-11-14T23:43:51.554265+00:00",
+    "source_at": null,
+    "guard_now": "2026-11-14T23:43:51.554035+00:00",
+    "future_offset_microseconds": 230,
+    "clock_origin": "Both book timestamp and guard_now originate from successive PostgreSQL clock_timestamp() reads in the same publication path. The OS/VM/clock-adjustment mechanism is not established."
+  },
+  "readiness_evidence": {
+    "window_limit": 64,
+    "total_checks": 24197,
+    "discarded_earlier_checks": 24133,
+    "flush_reason": "SourceUnavailableError"
+  },
+  "fault_observations": [
+    {
+      "kind": "WORKER_RESTART",
+      "started_at": "2026-11-14T23:33:40.455082+00:00",
+      "started": 143607.259692416,
+      "status": "RECOVERED",
+      "scheduled_offset_seconds": 1800.0,
+      "scheduled_duration_seconds": 30.0,
+      "active_cycles_at_fault": 2,
+      "ended_at": "2026-11-14T23:34:13.692331+00:00",
+      "restored": 143640.484884125,
+      "actual_duration_seconds": 33.22519175001071
+    }
+  ],
+  "snapshot_rows": 820,
+  "snapshot_returned": 820,
+  "final_financial_oracle": "NOT_RUN",
+  "final_rebuild": "NOT_RUN",
+  "full_latency_endurance_resource_acceptance": "NOT_EVALUATED_INCOMPLETE",
+  "cleanup": {
+    "campaign": {
+      "observed_at": "2026-11-14 23:43:55.089258+00",
+      "connections": 0,
+      "backends": [],
+      "advisory_locks": 0
+    },
+    "database_removed": true,
+    "dedicated_redis_removed": true,
+    "owner_services_untouched": true
+  },
+  "source_inventory_entries": 1017,
+  "changed_source_paths": [],
+  "no_retry_or_criteria_change": true
+}

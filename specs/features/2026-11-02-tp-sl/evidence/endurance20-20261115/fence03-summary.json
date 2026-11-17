@@ -1,0 +1,19 @@
+{
+  "scope": "NC-F17-FENCE-03 bounded sampler failure evidence",
+  "status": "PASSED_TARGETED_CHECKS",
+  "tests_passed": 80,
+  "elapsed_seconds": 20.010375959005614,
+  "independent_cleanup": {
+    "database_exists": false,
+    "connections": 0,
+    "advisory_locks": 0
+  },
+  "static": "Two-file Ruff/format/mypy and whitespace Passed",
+  "source_sha256": {
+    "backend/tests/infra/execution_market/profile_publisher_fence.py": "3c8fb6e04a94e740bde5235ecc4de89f31afa3ae7547d5945e5aae5c9ca03555",
+    "backend/tests/infra/execution_market/test_publisher_fence_failure.py": "7f754d152edfaea8bb0a0d9bea3d2833dea45c170689dd099caf9f162ca8ea60"
+  },
+  "four_hour": "Not Run",
+  "campaign": "Not Run",
+  "readiness": "Awaiting owner code review/refactor; historical stall cause not proved fixed"
+}

@@ -1,0 +1,544 @@
+{
+  "status": "DIAGNOSTIC_COMPLETE",
+  "profile": "NC-F17-TAIL-02",
+  "elapsed_seconds": 1217.4430569999968,
+  "seed_seconds": 1085.8732386660122,
+  "measurement_seconds": 7.678820583008928,
+  "owners": 20,
+  "head": 144513,
+  "verified_keys": 2890260,
+  "decoded_samples": 60,
+  "observations": 86,
+  "phases": {
+    "old_serial": {
+      "observations": 20,
+      "wall_seconds": 3.794991458009463,
+      "timings": {
+        "total": {
+          "min_seconds": 0.1565209580003284,
+          "mean_seconds": 0.18973114374966826,
+          "max_seconds": 0.29360887498478405
+        },
+        "connection": {
+          "min_seconds": 0.0006025000184308738,
+          "mean_seconds": 0.0008402354520512745,
+          "max_seconds": 0.0011553330114111304
+        },
+        "role_setup": {
+          "min_seconds": 0.0008308750111609697,
+          "mean_seconds": 0.0010651271004462615,
+          "max_seconds": 0.001459040999179706
+        },
+        "query": {
+          "min_seconds": 0.15175666598952375,
+          "mean_seconds": 0.18571457075013315,
+          "max_seconds": 0.289834041002905
+        },
+        "exit": {
+          "min_seconds": 0.0009273750183638185,
+          "mean_seconds": 0.0010437292483402416,
+          "max_seconds": 0.001589749997947365
+        },
+        "gate_wait": {
+          "min_seconds": 1.7919810488820076e-06,
+          "mean_seconds": 2.585550828371197e-06,
+          "max_seconds": 1.170899486169219e-05
+        }
+      }
+    },
+    "new_serial": {
+      "observations": 20,
+      "wall_seconds": 2.0194135830097366,
+      "timings": {
+        "total": {
+          "min_seconds": 0.0807630000053905,
+          "mean_seconds": 0.10095418535347563,
+          "max_seconds": 0.13913850000244565
+        },
+        "connection": {
+          "min_seconds": 0.0005597500130534172,
+          "mean_seconds": 0.0007319186479435302,
+          "max_seconds": 0.0009079159935936332
+        },
+        "role_setup": {
+          "min_seconds": 0.0006964169733691961,
+          "mean_seconds": 0.0008884645489160903,
+          "max_seconds": 0.001102917012758553
+        },
+        "query": {
+          "min_seconds": 0.0784067079948727,
+          "mean_seconds": 0.09820196460350417,
+          "max_seconds": 0.1367800830048509
+        },
+        "exit": {
+          "min_seconds": 0.0004203749995213002,
+          "mean_seconds": 0.0005332812972483226,
+          "max_seconds": 0.001019583985907957
+        },
+        "gate_wait": {
+          "min_seconds": 1.7499842215329409e-06,
+          "mean_seconds": 1.9749466446228324e-06,
+          "max_seconds": 2.2500171326100826e-06
+        }
+      }
+    },
+    "old_concurrent": {
+      "observations": 20,
+      "wall_seconds": 0.8142527499876451,
+      "timings": {
+        "total": {
+          "min_seconds": 0.14779537499998696,
+          "mean_seconds": 0.5169740729499608,
+          "max_seconds": 0.8122113749850541
+        },
+        "connection": {
+          "min_seconds": 0.0007485420210286975,
+          "mean_seconds": 0.008355896003195085,
+          "max_seconds": 0.046548666985472664
+        },
+        "role_setup": {
+          "min_seconds": 0.0010360000014770776,
+          "mean_seconds": 0.010723801994754468,
+          "max_seconds": 0.06059500001720153
+        },
+        "query": {
+          "min_seconds": 0.10440229199593887,
+          "mean_seconds": 0.12954512300057103,
+          "max_seconds": 0.1931862499914132
+        },
+        "exit": {
+          "min_seconds": 0.0010198329982813448,
+          "mean_seconds": 0.0016868019520188682,
+          "max_seconds": 0.0023837909975554794
+        },
+        "gate_wait": {
+          "min_seconds": 1.166015863418579e-06,
+          "mean_seconds": 0.36337817080056994,
+          "max_seconds": 0.6950493750046007
+        }
+      }
+    },
+    "new_concurrent": {
+      "observations": 20,
+      "wall_seconds": 0.439357666997239,
+      "timings": {
+        "total": {
+          "min_seconds": 0.09351216600043699,
+          "mean_seconds": 0.2646553104437771,
+          "max_seconds": 0.43911745899822563
+        },
+        "connection": {
+          "min_seconds": 0.000883542001247406,
+          "mean_seconds": 0.0013134854496456682,
+          "max_seconds": 0.0018244579841848463
+        },
+        "role_setup": {
+          "min_seconds": 0.0013321249862201512,
+          "mean_seconds": 0.0017034229502314701,
+          "max_seconds": 0.002582458022516221
+        },
+        "query": {
+          "min_seconds": 0.07582729199202731,
+          "mean_seconds": 0.08136158530105604,
+          "max_seconds": 0.09337616601260379
+        },
+        "exit": {
+          "min_seconds": 0.0004225000157020986,
+          "mean_seconds": 0.0008423313003731892,
+          "max_seconds": 0.0012194589944556355
+        },
+        "gate_wait": {
+          "min_seconds": 7.910130079835653e-07,
+          "mean_seconds": 0.1783811728018918,
+          "max_seconds": 0.35562691700761206
+        }
+      }
+    },
+    "old_explain": {
+      "observations": 3,
+      "wall_seconds": 0.39300487498985603,
+      "timings": {
+        "total": {
+          "min_seconds": 0.12761379100265913,
+          "mean_seconds": 0.1309916943331094,
+          "max_seconds": 0.13343233399791643
+        },
+        "connection": {
+          "min_seconds": 0.0006365829904098064,
+          "mean_seconds": 0.0006804856626937786,
+          "max_seconds": 0.0007275830139406025
+        },
+        "role_setup": {
+          "min_seconds": 0.0007925420068204403,
+          "mean_seconds": 0.00081366699305363,
+          "max_seconds": 0.0008320419874507934
+        },
+        "query": {
+          "min_seconds": 0.12485662498511374,
+          "mean_seconds": 0.12837052765341164,
+          "max_seconds": 0.13084274998982437
+        },
+        "exit": {
+          "min_seconds": 0.00045458300155587494,
+          "mean_seconds": 0.0005252640112303197,
+          "max_seconds": 0.000625459011644125
+        },
+        "gate_wait": {
+          "min_seconds": 2.082990249618888e-06,
+          "mean_seconds": 2.3193327554812035e-06,
+          "max_seconds": 2.4579931050539017e-06
+        }
+      }
+    },
+    "new_explain": {
+      "observations": 3,
+      "wall_seconds": 0.2170431670092512,
+      "timings": {
+        "total": {
+          "min_seconds": 0.06987258300068788,
+          "mean_seconds": 0.07233887500478886,
+          "max_seconds": 0.07428850000724196
+        },
+        "connection": {
+          "min_seconds": 0.0007914580055512488,
+          "mean_seconds": 0.0008880966634023935,
+          "max_seconds": 0.0010604159906506538
+        },
+        "role_setup": {
+          "min_seconds": 0.0009400419949088246,
+          "mean_seconds": 0.000952944663974146,
+          "max_seconds": 0.0009760420070961118
+        },
+        "query": {
+          "min_seconds": 0.06692754200776108,
+          "mean_seconds": 0.06931379166780971,
+          "max_seconds": 0.0711472500115633
+        },
+        "exit": {
+          "min_seconds": 0.000508541997987777,
+          "mean_seconds": 0.0005218193303638449,
+          "max_seconds": 0.0005401250091381371
+        },
+        "gate_wait": {
+          "min_seconds": 1.9170111045241356e-06,
+          "mean_seconds": 1.9860065852602324e-06,
+          "max_seconds": 2.040993422269821e-06
+        }
+      }
+    }
+  },
+  "plan_summary": [
+    {
+      "arm": "old_explain",
+      "execution_ms": 129.355,
+      "nodes": [
+        {
+          "Node Type": "Aggregate",
+          "Actual Rows": 1,
+          "Actual Loops": 1,
+          "Temp Read Blocks": 461,
+          "Temp Written Blocks": 463
+        },
+        {
+          "Node Type": "Sort",
+          "Actual Rows": 144513,
+          "Actual Loops": 1,
+          "Sort Method": "external merge",
+          "Sort Space Used": 3688,
+          "Sort Space Type": "Disk",
+          "Temp Read Blocks": 461,
+          "Temp Written Blocks": 463
+        },
+        {
+          "Node Type": "Nested Loop",
+          "Actual Rows": 144513,
+          "Actual Loops": 1,
+          "Temp Read Blocks": 0,
+          "Temp Written Blocks": 0
+        },
+        {
+          "Node Type": "Seq Scan",
+          "Relation Name": "paper_order_activity",
+          "Actual Rows": 1,
+          "Actual Loops": 1,
+          "Temp Read Blocks": 0,
+          "Temp Written Blocks": 0
+        },
+        {
+          "Node Type": "Bitmap Heap Scan",
+          "Relation Name": "paper_execution_input_keys",
+          "Actual Rows": 144513,
+          "Actual Loops": 1,
+          "Temp Read Blocks": 0,
+          "Temp Written Blocks": 0
+        },
+        {
+          "Node Type": "Bitmap Index Scan",
+          "Index Name": "paper_execution_input_keys_pkey",
+          "Actual Rows": 144513,
+          "Actual Loops": 1,
+          "Temp Read Blocks": 0,
+          "Temp Written Blocks": 0
+        }
+      ]
+    },
+    {
+      "arm": "old_explain",
+      "execution_ms": 128.263,
+      "nodes": [
+        {
+          "Node Type": "Aggregate",
+          "Actual Rows": 1,
+          "Actual Loops": 1,
+          "Temp Read Blocks": 461,
+          "Temp Written Blocks": 463
+        },
+        {
+          "Node Type": "Sort",
+          "Actual Rows": 144513,
+          "Actual Loops": 1,
+          "Sort Method": "external merge",
+          "Sort Space Used": 3688,
+          "Sort Space Type": "Disk",
+          "Temp Read Blocks": 461,
+          "Temp Written Blocks": 463
+        },
+        {
+          "Node Type": "Nested Loop",
+          "Actual Rows": 144513,
+          "Actual Loops": 1,
+          "Temp Read Blocks": 0,
+          "Temp Written Blocks": 0
+        },
+        {
+          "Node Type": "Seq Scan",
+          "Relation Name": "paper_order_activity",
+          "Actual Rows": 1,
+          "Actual Loops": 1,
+          "Temp Read Blocks": 0,
+          "Temp Written Blocks": 0
+        },
+        {
+          "Node Type": "Bitmap Heap Scan",
+          "Relation Name": "paper_execution_input_keys",
+          "Actual Rows": 144513,
+          "Actual Loops": 1,
+          "Temp Read Blocks": 0,
+          "Temp Written Blocks": 0
+        },
+        {
+          "Node Type": "Bitmap Index Scan",
+          "Index Name": "paper_execution_input_keys_pkey",
+          "Actual Rows": 144513,
+          "Actual Loops": 1,
+          "Temp Read Blocks": 0,
+          "Temp Written Blocks": 0
+        }
+      ]
+    },
+    {
+      "arm": "old_explain",
+      "execution_ms": 123.663,
+      "nodes": [
+        {
+          "Node Type": "Aggregate",
+          "Actual Rows": 1,
+          "Actual Loops": 1,
+          "Temp Read Blocks": 461,
+          "Temp Written Blocks": 463
+        },
+        {
+          "Node Type": "Sort",
+          "Actual Rows": 144513,
+          "Actual Loops": 1,
+          "Sort Method": "external merge",
+          "Sort Space Used": 3688,
+          "Sort Space Type": "Disk",
+          "Temp Read Blocks": 461,
+          "Temp Written Blocks": 463
+        },
+        {
+          "Node Type": "Nested Loop",
+          "Actual Rows": 144513,
+          "Actual Loops": 1,
+          "Temp Read Blocks": 0,
+          "Temp Written Blocks": 0
+        },
+        {
+          "Node Type": "Seq Scan",
+          "Relation Name": "paper_order_activity",
+          "Actual Rows": 1,
+          "Actual Loops": 1,
+          "Temp Read Blocks": 0,
+          "Temp Written Blocks": 0
+        },
+        {
+          "Node Type": "Bitmap Heap Scan",
+          "Relation Name": "paper_execution_input_keys",
+          "Actual Rows": 144513,
+          "Actual Loops": 1,
+          "Temp Read Blocks": 0,
+          "Temp Written Blocks": 0
+        },
+        {
+          "Node Type": "Bitmap Index Scan",
+          "Index Name": "paper_execution_input_keys_pkey",
+          "Actual Rows": 144513,
+          "Actual Loops": 1,
+          "Temp Read Blocks": 0,
+          "Temp Written Blocks": 0
+        }
+      ]
+    },
+    {
+      "arm": "new_explain",
+      "execution_ms": 65.701,
+      "nodes": [
+        {
+          "Node Type": "Seq Scan",
+          "Relation Name": "paper_order_activity",
+          "Actual Rows": 1,
+          "Actual Loops": 1,
+          "Temp Read Blocks": 0,
+          "Temp Written Blocks": 0
+        },
+        {
+          "Node Type": "Aggregate",
+          "Actual Rows": 1,
+          "Actual Loops": 1,
+          "Temp Read Blocks": 0,
+          "Temp Written Blocks": 0
+        },
+        {
+          "Node Type": "Bitmap Heap Scan",
+          "Relation Name": "paper_execution_input_keys",
+          "Actual Rows": 144513,
+          "Actual Loops": 1,
+          "Temp Read Blocks": 0,
+          "Temp Written Blocks": 0
+        },
+        {
+          "Node Type": "Bitmap Index Scan",
+          "Index Name": "paper_execution_input_keys_pkey",
+          "Actual Rows": 144513,
+          "Actual Loops": 1,
+          "Temp Read Blocks": 0,
+          "Temp Written Blocks": 0
+        }
+      ]
+    },
+    {
+      "arm": "new_explain",
+      "execution_ms": 69.762,
+      "nodes": [
+        {
+          "Node Type": "Seq Scan",
+          "Relation Name": "paper_order_activity",
+          "Actual Rows": 1,
+          "Actual Loops": 1,
+          "Temp Read Blocks": 0,
+          "Temp Written Blocks": 0
+        },
+        {
+          "Node Type": "Aggregate",
+          "Actual Rows": 1,
+          "Actual Loops": 1,
+          "Temp Read Blocks": 0,
+          "Temp Written Blocks": 0
+        },
+        {
+          "Node Type": "Bitmap Heap Scan",
+          "Relation Name": "paper_execution_input_keys",
+          "Actual Rows": 144513,
+          "Actual Loops": 1,
+          "Temp Read Blocks": 0,
+          "Temp Written Blocks": 0
+        },
+        {
+          "Node Type": "Bitmap Index Scan",
+          "Index Name": "paper_execution_input_keys_pkey",
+          "Actual Rows": 144513,
+          "Actual Loops": 1,
+          "Temp Read Blocks": 0,
+          "Temp Written Blocks": 0
+        }
+      ]
+    },
+    {
+      "arm": "new_explain",
+      "execution_ms": 68.723,
+      "nodes": [
+        {
+          "Node Type": "Seq Scan",
+          "Relation Name": "paper_order_activity",
+          "Actual Rows": 1,
+          "Actual Loops": 1,
+          "Temp Read Blocks": 0,
+          "Temp Written Blocks": 0
+        },
+        {
+          "Node Type": "Aggregate",
+          "Actual Rows": 1,
+          "Actual Loops": 1,
+          "Temp Read Blocks": 0,
+          "Temp Written Blocks": 0
+        },
+        {
+          "Node Type": "Bitmap Heap Scan",
+          "Relation Name": "paper_execution_input_keys",
+          "Actual Rows": 144513,
+          "Actual Loops": 1,
+          "Temp Read Blocks": 0,
+          "Temp Written Blocks": 0
+        },
+        {
+          "Node Type": "Bitmap Index Scan",
+          "Index Name": "paper_execution_input_keys_pkey",
+          "Actual Rows": 144513,
+          "Actual Loops": 1,
+          "Temp Read Blocks": 0,
+          "Temp Written Blocks": 0
+        }
+      ]
+    }
+  ],
+  "same_fixture_results_equal": true,
+  "new_plans_no_sort_or_temp_io": true,
+  "financial_state_unchanged": true,
+  "candidate_unchanged": true,
+  "gate": {
+    "limit": 4,
+    "peak": 4,
+    "active": 0,
+    "attempt_count": 86,
+    "finished_count": 86
+  },
+  "cleanup": {
+    "database_exists": false,
+    "connections": 0,
+    "locks": 0,
+    "owner_services": [
+      {
+        "name": "/tiewtrade-postgres-1",
+        "state": "running",
+        "restart_count": 0,
+        "health": "healthy"
+      },
+      {
+        "name": "/tiewtrade-f18-release-redis",
+        "state": "running",
+        "restart_count": 0,
+        "health": null
+      }
+    ]
+  },
+  "new_sql_sha256": "bf7f69d108a903dd7a8a9659a599c4d6ca8b0c8e55de253fa91a28e58d9f9df9",
+  "old_sql_sha256": "f8455d61c079a88e8a7c45c5cfbaf153acd7115a4cd36bc622e899008476193b",
+  "schema_sha256": "de4acf5d3009049f7e237e36e2b558aa6592eadf999c9a60b1bdda54b6d53426",
+  "limits": [
+    "fixed old-before-new order and cache effects retained; not randomized causal timing estimate",
+    "quiescent, explicitly analyzed, owner-by-owner fixture; no active workload contention",
+    "new SQL still scans144513visible key rows; no constant-time/index-only claim",
+    "historical59s delay and W3 final-tail acceptance remain unproven; original Incomplete preserved"
+  ]
+}

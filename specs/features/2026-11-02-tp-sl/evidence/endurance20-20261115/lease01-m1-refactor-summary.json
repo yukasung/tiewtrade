@@ -1,0 +1,33 @@
+{
+  "revision": "NC-F17-LEASE-01-M1-refactor",
+  "status": "PASSED_AFFECTED_VALIDATION",
+  "source_bridge": {
+    "backend/tests/infra/execution_market/profile_publisher_lease.py": {
+      "before_refactor": "5ecea8a0abc24036dcc4a5d2a095170bfb7f8886e09b17ed7bb09cc5b7c723ac",
+      "after_refactor": "e0edadf03c969eb8b14d2d67aef2b47c219d7e36afeb08df21dd038857115df9"
+    },
+    "backend/tests/infra/execution_market/test_publisher_lease.py": {
+      "before_refactor": "55033cecc3fd5530e956a36126a265d777d33ccbad5838951c95a3ddb1922257",
+      "after_refactor": "10417c881e181a7f8d9076686af22bad52d61bd2c1ed190628be0bd18d201ecd"
+    },
+    "backend/tests/infra/execution_market/profile_publisher_readiness.py": {
+      "before_refactor": "62707e1e1c90d9c28830c1fe3d41130d99dbd2c94a1c2c75d090a016ba58f1c0",
+      "after_refactor": "62707e1e1c90d9c28830c1fe3d41130d99dbd2c94a1c2c75d090a016ba58f1c0"
+    }
+  },
+  "other_original_diagnostic_sources_unchanged": true,
+  "targeted_tests": {
+    "passed": 27,
+    "seconds": 24.36,
+    "log": "validation-artifacts/f17-clock-recovery-tests-20261115/attempt-1794753797748911000.log"
+  },
+  "static": {
+    "ruff": "PASSED",
+    "format": "PASSED",
+    "mypy": "PASSED",
+    "files": 2
+  },
+  "no_diagnostic_or_four_hour_rerun": true,
+  "git_actions": false,
+  "f17": "PENDING_FULL_VALIDATION"
+}

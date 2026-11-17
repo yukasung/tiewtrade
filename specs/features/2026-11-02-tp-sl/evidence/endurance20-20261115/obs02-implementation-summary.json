@@ -1,0 +1,53 @@
+{
+  "status": "IMPLEMENTATION_CHECKS_PASSED",
+  "campaign": "NOT_RUN",
+  "distinct_passed": 83,
+  "runs": [
+    {
+      "status": "PASSED",
+      "exit_code": 0,
+      "passed": 65,
+      "cleanup": {
+        "database": "tiewtrade_internal20_endurance_rbtest_1794842391850639000",
+        "connections": 0,
+        "removed": true
+      },
+      "elapsed_seconds": 26.438289833000454,
+      "path": "validation-artifacts/f17-obs02-safety-tests-20261116",
+      "independent_cleanup": {
+        "database_exists": false,
+        "connections": 0,
+        "locks": 0
+      }
+    },
+    {
+      "status": "PASSED",
+      "exit_code": 0,
+      "passed": 35,
+      "cleanup": {
+        "database": "tiewtrade_internal20_endurance_rbtest_1794842449928837000",
+        "connections": 0,
+        "removed": true
+      },
+      "elapsed_seconds": 19.064313917006075,
+      "path": "validation-artifacts/f17-obs02-extra-tests-20261116",
+      "independent_cleanup": {
+        "database_exists": false,
+        "connections": 0,
+        "locks": 0
+      }
+    }
+  ],
+  "files": {
+    "backend/tests/infra/execution_market/profile_observer_diagnostic.py": "23843740dd5799c51ebdb3faee11e479d737d6ec7490bf2ff0db3611291a58ae",
+    "backend/tests/infra/execution_market/test_observer_diagnostic.py": "e80c268b19a90e5940af1d030b413f61c037b4a2a55c3ab4e52f7c619352f3dc"
+  },
+  "static": {
+    "ruff": "PASSED",
+    "format": "PASSED",
+    "mypy": "PASSED",
+    "whitespace": "PASSED"
+  },
+  "next": "owner review code; refactor gate before one diagnostic campaign",
+  "production_changed_in_obs02": false
+}

@@ -27,6 +27,9 @@ from tests.infra.risk_limits.profile_resources import PoolEvidence
 from tiewtrade.infra.db import DatabaseRole
 
 WORKER_CONFIGURATION = [("ENGINE", 5, 10), ("ENGINE_SCAN", 5, 10)]
+REBUILD_PARENT_CONFIGURATION = [
+    (role, 5, 10) for role in ("API", "ENGINE", "ENGINE_SCAN", "MARKET_DATA", "ADMIN_OBSERVER")
+]
 PARENT_CONFIGURATION = sorted(
     WORKER_CONFIGURATION
     + [("API", 5, 10)] * 2
@@ -495,7 +498,46 @@ def sample_current() -> None:
         tracker.sample(force=False)
 
 
-def validate_reports(parent: Path, workers: list[Path], expected_workers: int) -> dict[str, Any]:
+def parent_configuration(
+    *,
+    publisher_lease_observer: bool = False,
+    publisher_fence_observer: bool = False,
+    observer_scheduled_samples: bool = False,
+    rebuild_fixture: bool = False,
+) -> list[tuple[str, int, int]]:
+    """Select fixed inventories from trusted flags; never infer them from report contents."""
+    if type(publisher_lease_observer) is not bool:
+        raise ValueError("publisher lease observer option must be boolean")
+    if type(publisher_fence_observer) is not bool or (
+        publisher_fence_observer and not publisher_lease_observer
+    ):
+        raise ValueError("fence observer requires explicit lease observer")
+    if type(observer_scheduled_samples) is not bool or (
+        observer_scheduled_samples and not publisher_fence_observer
+    ):
+        raise ValueError("scheduled inventory requires fence observer")
+    if type(rebuild_fixture) is not bool or (rebuild_fixture and publisher_lease_observer):
+        raise ValueError("rebuild fixture inventory requires an exclusive explicit profile")
+    if rebuild_fixture:
+        return list(REBUILD_PARENT_CONFIGURATION)
+    return (
+        PARENT_CONFIGURATION
+        + ([("MARKET_DATA", 1, 0)] if publisher_lease_observer else [])
+        + ([("ADMIN_OBSERVER", 5, 10)] if publisher_fence_observer else [])
+        + ([("ADMIN_OBSERVER", 5, 10), ("MARKET_DATA", 1, 0)] if observer_scheduled_samples else [])
+    )
+
+
+def validate_reports(
+    parent: Path,
+    workers: list[Path],
+    expected_workers: int,
+    *,
+    publisher_lease_observer: bool = False,
+    publisher_fence_observer: bool = False,
+    observer_scheduled_samples: bool = False,
+    rebuild_fixture: bool = False,
+) -> dict[str, Any]:
     incomplete: list[str] = []
     violations: list[str] = []
     reports = []
@@ -514,7 +556,15 @@ def validate_reports(parent: Path, workers: list[Path], expected_workers: int) -
         "PoolDisappearedBeforeReturn",
     }
     for path, expected in [
-        (parent, PARENT_CONFIGURATION),
+        (
+            parent,
+            parent_configuration(
+                publisher_lease_observer=publisher_lease_observer,
+                publisher_fence_observer=publisher_fence_observer,
+                observer_scheduled_samples=observer_scheduled_samples,
+                rebuild_fixture=rebuild_fixture,
+            ),
+        ),
         *[(p, WORKER_CONFIGURATION) for p in workers],
     ]:
         try:

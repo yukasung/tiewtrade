@@ -1,0 +1,38 @@
+{
+  "revision": "NC-F17-LEASE-02-POOL-FIX",
+  "status": "TARGETED_CHECKS_PASSED",
+  "source_bridge": {
+    "backend/tests/infra/execution_market/profile_owned_pools.py": {
+      "diagnostic": "0278a18924368783b3bb3f16a826a1071851856433b57c40f165fe3cfef97071",
+      "fixed": "af3e82a70718e56cdcf5e5dee17ce9b940867a851d9ecfc40590a132b199156c"
+    },
+    "backend/tests/infra/execution_market/profile_workload.py": {
+      "diagnostic": "14defaae098c5f7d364a0680db072ab1d43b131412d148dbeb37459cd5e7fa3d",
+      "fixed": "f5ff1ca4ea31661504e72cd77da8d2b19235df350c336f6f1b01bfb5db3eaf73"
+    },
+    "backend/tests/infra/execution_market/test_owned_pools.py": {
+      "diagnostic": "9f2aadae29e84d797c5e2b50ba4e82bcce19110f55d1404a2ad6dc62b41634ec",
+      "fixed": "be9d11522b9842e230ffd009bb21d9a2b463f90c667575c9f895d20e2110a252"
+    }
+  },
+  "other_diagnostic_sources_unchanged": true,
+  "tests": {
+    "passed": 68,
+    "seconds": 12.72,
+    "log": "validation-artifacts/f17-clock-recovery-tests-20261115/attempt-1794755638828506000.log",
+    "new_cases": 14,
+    "scope": "aggregate pool/default/opt-in caller wiring, existing pool regression and lease-load observer"
+  },
+  "static": {
+    "ruff": "PASSED",
+    "format": "PASSED",
+    "mypy": "PASSED",
+    "files": 3,
+    "whitespace": "PASSED"
+  },
+  "original_campaign_grade": "INCOMPLETE_RETAINED",
+  "original_campaign_result_sha256": "23fee1b8556592fa7fd087688a71995a589599847674bbaaaa326520ae4cb5db",
+  "campaign_rerun": false,
+  "git_actions": false,
+  "remaining": "Owner refactor instruction; historical lease root cause/four-hour/Release pending"
+}

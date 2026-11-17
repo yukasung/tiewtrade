@@ -1,0 +1,64 @@
+{
+  "revision": "NC-F17-REBUILD20-01",
+  "status": "INCOMPLETE",
+  "reason": "voluntary early stop during sloweconomicfixture preparation;not a rebuildSLA failure",
+  "elapsed_seconds": 443.435525208999,
+  "source_unchanged": true,
+  "stop": {
+    "reason": "fixture preparation throughput substantially below planning estimate; stop before spending remaining whole-run budget",
+    "stage": "economic_fixture_before_rebuild",
+    "known_observations": [
+      {
+        "orders": 586,
+        "fills": 124,
+        "economic_owners": 4
+      },
+      {
+        "at_utc": "2026-11-16T05:09:50.027233+00:00",
+        "orders": 672,
+        "fills": 180,
+        "economic_owners": 4
+      }
+    ],
+    "required_fills": 11280,
+    "rebuild_started": false,
+    "overall_budget_actually_expired": false,
+    "signal": "SIGINT",
+    "owned_pid": 12807,
+    "interpretation": "voluntary early stop; not a proven rebuild SLA failure or another4h attempt"
+  },
+  "independent_source_witness": {
+    "last_input_id": 310,
+    "owner": "df42cc5a-4769-4a7a-8786-17f5ed414332",
+    "generation": 1,
+    "lease_until": "2026-11-16 05:11:14.864295+00:00"
+  },
+  "journal_records": 310,
+  "full_rebuild_started": false,
+  "financial_global_final": "Not Run",
+  "pool_report": {
+    "passed": false,
+    "outcome": "CancelledError",
+    "errors": {},
+    "all_final_disposal_checked_out_zero": true,
+    "all_disposed": true
+  },
+  "safety": {
+    "passed": 24,
+    "static": "scopedRuff/format/mypyPassed",
+    "small_real_pg_fixture": "2owners/1cycle/head50financial/global/fullreplayPassed"
+  },
+  "cleanup": {
+    "database": "tiewtrade_internal20_endurance_rebuild_1794805428321326000",
+    "connections": 0,
+    "removed": true
+  },
+  "independent_cleanup": {
+    "database_exists": false,
+    "connections": 0,
+    "advisory_locks": 0
+  },
+  "four_hour_attempt_count_unchanged": 4,
+  "f17_completed": false,
+  "automatic_replacement_authorized": false
+}

@@ -13,6 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncEngine
 
 from tests.infra.execution_market.test_storage import prepared
 from tiewtrade.core.money import Money, Quantity
+from tiewtrade.core.order_book import BookState
 from tiewtrade.core.orders import OrderConflictError
 from tiewtrade.core.positions import ExecutionFact, ExecutionSide, FeeEffect
 from tiewtrade.infra.db import DatabaseRole, create_engine_for, user_session
@@ -38,6 +39,7 @@ async def prepare_fill(
     side: ExecutionSide = ExecutionSide.BUY,
     quantity: str = "1",
     quote: str = "100",
+    rebase_evidence: bool = False,
 ) -> tuple[UUID, UUID, ExecutionFact]:
     async with user_session(engine, owner, role=DatabaseRole.ENGINE) as session:
         await initialize_order_source(
@@ -50,7 +52,10 @@ async def prepare_fill(
     try:
         lease, book, metadata = await prepared(public)
         async with market_data_session(public) as session:
-            await publish_input(session, lease, book, metadata)
+            lease = await publish_input(session, lease, book, metadata)
+            if rebase_evidence:
+                book = replace(book, input_id=book.input_id + 1, rebase=False)
+                await publish_input(session, lease, book, metadata)
     finally:
         await public.dispose()
     fact = ExecutionFact(
@@ -73,6 +78,16 @@ async def prepare_fill(
             evidence_id=uuid4(),
             record=record,
         )
+        if rebase_evidence:
+            assert isinstance(record.market, BookState)
+            evidence = await append_execution_input(
+                session,
+                wallet_id=wallet.wallet_id,
+                episode_id=wallet.episode_id,
+                evidence_id=uuid4(),
+                record=record,
+                decision_market=replace(record.market, rebase=True),
+            )
         params = {
             "user": owner,
             "wallet": wallet.wallet_id,
@@ -138,12 +153,16 @@ async def write_fill(
         return result.status
 
 
+@pytest.mark.parametrize("rebase_evidence", [False, True])
 async def test_concurrent_retry_applies_exact_cash_and_position_once(
     engine_engine: AsyncEngine,
     owner: UUID,
     wallet: PaperWalletSnapshot,
+    rebase_evidence: bool,
 ) -> None:
-    event, position, fact = await prepare_fill(engine_engine, owner, wallet)
+    event, position, fact = await prepare_fill(
+        engine_engine, owner, wallet, rebase_evidence=rebase_evidence
+    )
     results = await asyncio.gather(
         write_fill(engine_engine, owner, wallet, event, position, fact),
         write_fill(engine_engine, owner, wallet, event, position, fact),

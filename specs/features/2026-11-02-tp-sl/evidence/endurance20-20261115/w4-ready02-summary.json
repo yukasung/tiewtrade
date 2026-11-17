@@ -1,0 +1,46 @@
+{
+  "status": "PASSED",
+  "phase": "W4",
+  "fixture_coverage": {
+    "capital": 21,
+    "fills": 20,
+    "partial_orders": 1,
+    "cancels": 1,
+    "corrections": 1,
+    "resets": 1,
+    "evidence": 58,
+    "expired_claims": 1
+  },
+  "rls_and_grants_match": true,
+  "canonical_data_match": true,
+  "domain_replay": {
+    "owners": 21,
+    "evidence_records": 58,
+    "checkpoints": 20,
+    "replayed_positions": 18
+  },
+  "claim_recovery": {
+    "expired_before": 1,
+    "expired_after": 0,
+    "rounds": 1
+  },
+  "claim_recovery_economic_effects_unchanged": true,
+  "backup_bytes": 1830675,
+  "internal_recovery": "PASSED",
+  "source_unchanged": true,
+  "revision": "W4-READY02",
+  "elapsed_seconds": 154.12438741599908,
+  "candidate_unchanged": true,
+  "independent_cleanup": {
+    "remaining_databases": 0,
+    "connections": 0,
+    "redis_absent": true
+  },
+  "integrated_recovery": {
+    "status": "PASSED",
+    "restored_owner_rls": true,
+    "pending_receipt_identity": true,
+    "exact_retry": true,
+    "duplicate_exit_fill": 0
+  }
+}

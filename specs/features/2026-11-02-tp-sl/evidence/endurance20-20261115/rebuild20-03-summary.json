@@ -1,0 +1,680 @@
+{
+  "status": "INCOMPLETE",
+  "scope": "offline fullrebuild20; not D20/W3/Release",
+  "elapsed_seconds": 3480.913276499996,
+  "error_type": "TimeoutError",
+  "error_locations": [
+    {
+      "file": "tiewtrade-f17-rebuild20-03-run.py",
+      "function": "<module>",
+      "line": 139
+    },
+    {
+      "file": "runners.py",
+      "function": "run",
+      "line": 195
+    },
+    {
+      "file": "runners.py",
+      "function": "run",
+      "line": 118
+    },
+    {
+      "file": "base_events.py",
+      "function": "run_until_complete",
+      "line": 691
+    },
+    {
+      "file": "tiewtrade-f17-rebuild20-03-run.py",
+      "function": "bounded",
+      "line": 138
+    },
+    {
+      "file": "tasks.py",
+      "function": "wait_for",
+      "line": 519
+    },
+    {
+      "file": "timeouts.py",
+      "function": "__aexit__",
+      "line": 115
+    }
+  ],
+  "stages": [
+    {
+      "stage": "preflight",
+      "started_elapsed_seconds": 0.6799682919954648
+    },
+    {
+      "stage": "migration",
+      "started_elapsed_seconds": 122.98232712499885
+    },
+    {
+      "stage": "economic_fixture",
+      "started_elapsed_seconds": 127.40660783299973
+    },
+    {
+      "stage": "public_history",
+      "started_elapsed_seconds": 1901.2898510829982
+    },
+    {
+      "stage": "financial_before_history",
+      "started_elapsed_seconds": 2082.969006041996
+    },
+    {
+      "stage": "private_history",
+      "started_elapsed_seconds": 2085.5813498749994
+    },
+    {
+      "stage": "full_rebuild",
+      "started_elapsed_seconds": 2736.8410822919977
+    },
+    {
+      "stage": "cleanup",
+      "started_elapsed_seconds": 3480.5248812499995
+    }
+  ],
+  "counters": {
+    "offered": 28200,
+    "admitted": 28200,
+    "completed": 28200,
+    "rejected": 0,
+    "fills": 11280,
+    "cancels": 5640,
+    "replays": 5640,
+    "cycles": 5640
+  },
+  "poll_evidence": {
+    "attempts": 170913,
+    "finished": 170913,
+    "active": 0,
+    "truncated": false,
+    "stream_rows": 170913
+  },
+  "economic_preparation_seconds": 1773.8832194159986,
+  "preparation_and_public_history_seconds": 1955.364523958,
+  "economic_history_unchanged": true,
+  "private_history_counts": [
+    {
+      "user_id": "062296e2-e46f-46b7-aadf-fa3db5f09312",
+      "records": 96000
+    },
+    {
+      "user_id": "07488c6f-69a2-4700-8fae-8c34b3b831a7",
+      "records": 96000
+    },
+    {
+      "user_id": "174a56ad-eae9-4acf-b89d-2daa990a9834",
+      "records": 96000
+    },
+    {
+      "user_id": "2de82bc5-05fc-450b-b8e1-961d10875fae",
+      "records": 96000
+    },
+    {
+      "user_id": "53095339-94e3-49a8-b646-e816627a6894",
+      "records": 96000
+    },
+    {
+      "user_id": "5b161b82-ffcf-4476-a6d9-c309d09999e4",
+      "records": 96000
+    },
+    {
+      "user_id": "6ce444e1-e28f-488e-bf6f-b30b28141ea1",
+      "records": 96000
+    },
+    {
+      "user_id": "742fe41f-df55-4ff9-8468-e2496724d6bf",
+      "records": 96000
+    },
+    {
+      "user_id": "765ba79b-134f-4c10-be61-6bbb2cd42531",
+      "records": 96000
+    },
+    {
+      "user_id": "9a7e9409-d832-4a4a-9421-ec16f4d2a658",
+      "records": 96000
+    },
+    {
+      "user_id": "a0afbd3f-2b07-4c32-940c-61359473831d",
+      "records": 96000
+    },
+    {
+      "user_id": "a773b5b6-6126-4939-af87-c91b51d24845",
+      "records": 96000
+    },
+    {
+      "user_id": "b7fee7af-02c4-45fb-9248-3e563b6d2976",
+      "records": 96000
+    },
+    {
+      "user_id": "c4352dd1-23bb-4ed7-ad02-6a03aaa23ff0",
+      "records": 96000
+    },
+    {
+      "user_id": "c43ccc76-b7c7-4e8b-9dd2-52966a14700b",
+      "records": 96000
+    },
+    {
+      "user_id": "d68c4cac-2134-4363-b4a1-bde4648db79b",
+      "records": 96000
+    },
+    {
+      "user_id": "dd1d1011-ff02-40db-9cba-9ca132e7e4dc",
+      "records": 96000
+    },
+    {
+      "user_id": "e0dfebb6-4bf4-4170-86f2-ed3a1190bc6b",
+      "records": 96000
+    },
+    {
+      "user_id": "e3a5edc5-2678-4a56-92cd-66638c8843a4",
+      "records": 96000
+    },
+    {
+      "user_id": "f68020c3-fc92-463b-a3f6-19234b7b1640",
+      "records": 96000
+    }
+  ],
+  "global": {
+    "orders": 17320,
+    "fills": 11280,
+    "cancels": 5640,
+    "pending_dispatch": 400,
+    "unlinked_fills": 0,
+    "invalid_reservations": 0,
+    "invalid_positions": 0,
+    "wrong_mode": 0,
+    "input_lag": 0,
+    "duplicate_fill_effects": 0,
+    "expected_orders": 17320,
+    "expected_fills": 11280,
+    "expected_cancels": 5640,
+    "expected_pending_dispatch": 400,
+    "passed": true
+  },
+  "source_unchanged": true,
+  "cleanup": {
+    "database": "tiewtrade_internal20_endurance_rebuild03_1794814976420771000",
+    "connections": 0,
+    "removed": true
+  },
+  "financial_owners": 20,
+  "all_financial_passed": true,
+  "financial_before_history_owners": 20,
+  "all_financial_before_history_passed": true,
+  "positions": {
+    "snapshot_samples": 20,
+    "expected_samples": 20,
+    "p95": 0.02372333299717866,
+    "p99": 0.024214667006162927,
+    "replays": [
+      {
+        "owner": "2de82bc5-05fc-450b-b8e1-961d10875fae",
+        "episode": "1f9224d0-5e7f-43c0-9903-d5e5a0c748a1",
+        "evidence_records": 96000,
+        "checkpoints": 1,
+        "replayed_positions": 1,
+        "outcome": "RETURNED",
+        "seconds": 47.74164633300097,
+        "queries": 38,
+        "rows_returned": 96595,
+        "rowcount_unknown": 0,
+        "peak_process_rss_bytes": 251969536
+      },
+      {
+        "owner": "174a56ad-eae9-4acf-b89d-2daa990a9834",
+        "episode": "ca303d55-b65e-48dc-9661-879aa4f5407a",
+        "evidence_records": 96000,
+        "checkpoints": 1,
+        "replayed_positions": 1,
+        "outcome": "RETURNED",
+        "seconds": 42.65727879200131,
+        "queries": 38,
+        "rows_returned": 96595,
+        "rowcount_unknown": 0,
+        "peak_process_rss_bytes": 251969536
+      },
+      {
+        "owner": "dd1d1011-ff02-40db-9cba-9ca132e7e4dc",
+        "episode": "90260c50-aaa0-4e4a-9f6b-bff117756b37",
+        "evidence_records": 96000,
+        "checkpoints": 1,
+        "replayed_positions": 1,
+        "outcome": "RETURNED",
+        "seconds": 39.256286374999036,
+        "queries": 38,
+        "rows_returned": 96595,
+        "rowcount_unknown": 0,
+        "peak_process_rss_bytes": 251969536
+      },
+      {
+        "owner": "f68020c3-fc92-463b-a3f6-19234b7b1640",
+        "episode": "a8292d98-21ec-48bc-83ca-bf5214056ee0",
+        "evidence_records": 96000,
+        "checkpoints": 1,
+        "replayed_positions": 1,
+        "outcome": "RETURNED",
+        "seconds": 37.608236583997495,
+        "queries": 38,
+        "rows_returned": 96595,
+        "rowcount_unknown": 0,
+        "peak_process_rss_bytes": 251969536
+      },
+      {
+        "owner": "6ce444e1-e28f-488e-bf6f-b30b28141ea1",
+        "episode": "5a6518f4-7eb6-498d-9c76-02c3f9bf308e",
+        "evidence_records": 96000,
+        "checkpoints": 1,
+        "replayed_positions": 1,
+        "outcome": "RETURNED",
+        "seconds": 35.03878587499639,
+        "queries": 38,
+        "rows_returned": 96595,
+        "rowcount_unknown": 0,
+        "peak_process_rss_bytes": 251969536
+      },
+      {
+        "owner": "765ba79b-134f-4c10-be61-6bbb2cd42531",
+        "episode": "aa016a79-6a9d-4173-bd39-8aaa9450cffb",
+        "evidence_records": 96000,
+        "checkpoints": 1,
+        "replayed_positions": 1,
+        "outcome": "RETURNED",
+        "seconds": 34.38306349999766,
+        "queries": 38,
+        "rows_returned": 96595,
+        "rowcount_unknown": 0,
+        "peak_process_rss_bytes": 251969536
+      },
+      {
+        "owner": "5b161b82-ffcf-4476-a6d9-c309d09999e4",
+        "episode": "0b2231e7-3b80-48fe-9ce7-317b9560f15e",
+        "evidence_records": 96000,
+        "checkpoints": 1,
+        "replayed_positions": 1,
+        "outcome": "RETURNED",
+        "seconds": 34.57661791600549,
+        "queries": 38,
+        "rows_returned": 96595,
+        "rowcount_unknown": 0,
+        "peak_process_rss_bytes": 251969536
+      },
+      {
+        "owner": "9a7e9409-d832-4a4a-9421-ec16f4d2a658",
+        "episode": "2ef0c084-d37f-40c2-a78f-014211cbe05f",
+        "evidence_records": 96000,
+        "checkpoints": 1,
+        "replayed_positions": 1,
+        "outcome": "RETURNED",
+        "seconds": 34.222205083002336,
+        "queries": 38,
+        "rows_returned": 96595,
+        "rowcount_unknown": 0,
+        "peak_process_rss_bytes": 251969536
+      },
+      {
+        "owner": "e0dfebb6-4bf4-4170-86f2-ed3a1190bc6b",
+        "episode": "8e1adff3-97d5-4f05-816f-77b3dd2a684f",
+        "evidence_records": 96000,
+        "checkpoints": 1,
+        "replayed_positions": 1,
+        "outcome": "RETURNED",
+        "seconds": 34.57823433399608,
+        "queries": 38,
+        "rows_returned": 96595,
+        "rowcount_unknown": 0,
+        "peak_process_rss_bytes": 251969536
+      },
+      {
+        "owner": "a773b5b6-6126-4939-af87-c91b51d24845",
+        "episode": "f1c0ff53-8d3b-4a03-880d-92ee24760f90",
+        "evidence_records": 96000,
+        "checkpoints": 1,
+        "replayed_positions": 1,
+        "outcome": "RETURNED",
+        "seconds": 35.895949874997314,
+        "queries": 38,
+        "rows_returned": 96595,
+        "rowcount_unknown": 0,
+        "peak_process_rss_bytes": 251969536
+      },
+      {
+        "owner": "d68c4cac-2134-4363-b4a1-bde4648db79b",
+        "episode": "6b22b9e7-cd39-4147-bec7-01d74a363d20",
+        "evidence_records": 96000,
+        "checkpoints": 1,
+        "replayed_positions": 1,
+        "outcome": "RETURNED",
+        "seconds": 35.134105124998314,
+        "queries": 38,
+        "rows_returned": 96595,
+        "rowcount_unknown": 0,
+        "peak_process_rss_bytes": 251969536
+      },
+      {
+        "owner": "c43ccc76-b7c7-4e8b-9dd2-52966a14700b",
+        "episode": "01ce7bca-2ce9-4c01-811a-3c948d297a2f",
+        "evidence_records": 96000,
+        "checkpoints": 1,
+        "replayed_positions": 1,
+        "outcome": "RETURNED",
+        "seconds": 34.28938924999966,
+        "queries": 38,
+        "rows_returned": 96595,
+        "rowcount_unknown": 0,
+        "peak_process_rss_bytes": 251969536
+      },
+      {
+        "owner": "53095339-94e3-49a8-b646-e816627a6894",
+        "episode": "163cd5ec-0700-4a45-9fe4-a8f660717aa9",
+        "evidence_records": 96000,
+        "checkpoints": 1,
+        "replayed_positions": 1,
+        "outcome": "RETURNED",
+        "seconds": 40.07559362500615,
+        "queries": 38,
+        "rows_returned": 96595,
+        "rowcount_unknown": 0,
+        "peak_process_rss_bytes": 251969536
+      },
+      {
+        "owner": "07488c6f-69a2-4700-8fae-8c34b3b831a7",
+        "episode": "82f74246-6210-4e33-8a73-3900a26bba3f",
+        "evidence_records": 96000,
+        "checkpoints": 1,
+        "replayed_positions": 1,
+        "outcome": "RETURNED",
+        "seconds": 36.99904875000357,
+        "queries": 38,
+        "rows_returned": 96595,
+        "rowcount_unknown": 0,
+        "peak_process_rss_bytes": 251969536
+      },
+      {
+        "owner": "c4352dd1-23bb-4ed7-ad02-6a03aaa23ff0",
+        "episode": "21016160-79d5-4fb4-ab4b-df3a41085ade",
+        "evidence_records": 96000,
+        "checkpoints": 1,
+        "replayed_positions": 1,
+        "outcome": "RETURNED",
+        "seconds": 37.92971691599814,
+        "queries": 38,
+        "rows_returned": 96595,
+        "rowcount_unknown": 0,
+        "peak_process_rss_bytes": 251969536
+      },
+      {
+        "owner": "a0afbd3f-2b07-4c32-940c-61359473831d",
+        "episode": "92930850-9ffe-4155-a586-37e17237e22a",
+        "evidence_records": 96000,
+        "checkpoints": 1,
+        "replayed_positions": 1,
+        "outcome": "RETURNED",
+        "seconds": 35.945275375001074,
+        "queries": 38,
+        "rows_returned": 96595,
+        "rowcount_unknown": 0,
+        "peak_process_rss_bytes": 251969536
+      },
+      {
+        "owner": "b7fee7af-02c4-45fb-9248-3e563b6d2976",
+        "episode": "f936c0f6-edfc-4d1f-b03c-60777a3bf910",
+        "evidence_records": 96000,
+        "checkpoints": 1,
+        "replayed_positions": 1,
+        "outcome": "RETURNED",
+        "seconds": 35.19374070800404,
+        "queries": 38,
+        "rows_returned": 96595,
+        "rowcount_unknown": 0,
+        "peak_process_rss_bytes": 251969536
+      },
+      {
+        "owner": "e3a5edc5-2678-4a56-92cd-66638c8843a4",
+        "episode": "26a405c1-fffe-476c-8c90-5df07ec60ac4",
+        "evidence_records": 96000,
+        "checkpoints": 1,
+        "replayed_positions": 1,
+        "outcome": "RETURNED",
+        "seconds": 35.359777582998504,
+        "queries": 38,
+        "rows_returned": 96595,
+        "rowcount_unknown": 0,
+        "peak_process_rss_bytes": 251969536
+      },
+      {
+        "owner": "062296e2-e46f-46b7-aadf-fa3db5f09312",
+        "episode": "16f5109d-aa69-43f8-a59d-1aa39e7ddc61",
+        "evidence_records": 96000,
+        "checkpoints": 1,
+        "replayed_positions": 1,
+        "outcome": "RETURNED",
+        "seconds": 35.36940920900088,
+        "queries": 38,
+        "rows_returned": 96595,
+        "rowcount_unknown": 0,
+        "peak_process_rss_bytes": 251969536
+      },
+      {
+        "owner": "742fe41f-df55-4ff9-8468-e2496724d6bf",
+        "episode": "a1798447-88df-49fa-886f-ea1bc170764d",
+        "evidence_records": 96000,
+        "checkpoints": 1,
+        "replayed_positions": 1,
+        "outcome": "RETURNED",
+        "seconds": 35.36325599999691,
+        "queries": 38,
+        "rows_returned": 96595,
+        "rowcount_unknown": 0,
+        "peak_process_rss_bytes": 251969536
+      }
+    ],
+    "passed": true
+  },
+  "replay_total_seconds": 737.6176172080013,
+  "max_replay_seconds": 47.74164633300097,
+  "post_rebuild_economic_digest": "Incomplete \u2014 cancelled by overall work deadline",
+  "overall_budget_seconds": 3600,
+  "cleanup_reserve_seconds": 120,
+  "work_deadline_seconds": 3480,
+  "resources": {
+    "samples": 647,
+    "peak_process_rss_bytes": 170409984,
+    "peak_rss_by_pid": {
+      "20192": 170409984,
+      "20265": 73711616,
+      "20266": 73547776,
+      "20267": 73760768,
+      "20269": 73564160,
+      "20270": 73334784,
+      "20274": 74350592,
+      "20280": 73760768,
+      "20283": 79331328,
+      "20284": 81494016,
+      "20285": 81215488,
+      "20286": 76398592,
+      "20288": 76562432,
+      "20289": 73433088,
+      "20291": 70483968,
+      "20292": 72892416,
+      "20293": 73695232,
+      "20294": 73367552,
+      "20295": 73285632,
+      "20297": 73482240,
+      "20298": 74842112
+    },
+    "peak_connections": 64,
+    "connections_start": 16,
+    "connections_end": 14,
+    "peak_lock_waits": 1,
+    "lock_waits_end": 0,
+    "peak_buffer_rows": 4096,
+    "buffer_rows_start": 0,
+    "buffer_rows_end": 4096,
+    "database_bytes_start": 24165399,
+    "database_bytes_end": 3916266519,
+    "database_growth_bytes": 3892101120
+  },
+  "pool_contract": {
+    "passed": false,
+    "errors": [
+      "ConnectionResourceError:owned-pools.json",
+      "PoolFinalEvidenceIncomplete:owned-pools.json"
+    ],
+    "violations": [
+      "ConnectionResourceError:owned-pools.json"
+    ],
+    "incomplete": [
+      "PoolFinalEvidenceIncomplete:owned-pools.json"
+    ],
+    "processes": [
+      {
+        "file": "owned-pools.json",
+        "pid": 20192,
+        "passed": false
+      },
+      {
+        "file": "prep-0-0.owned-pools.json",
+        "pid": 20265,
+        "passed": true
+      },
+      {
+        "file": "prep-1-0.owned-pools.json",
+        "pid": 20266,
+        "passed": true
+      },
+      {
+        "file": "prep-2-0.owned-pools.json",
+        "pid": 20267,
+        "passed": true
+      },
+      {
+        "file": "prep-3-0.owned-pools.json",
+        "pid": 20269,
+        "passed": true
+      },
+      {
+        "file": "prep-4-0.owned-pools.json",
+        "pid": 20270,
+        "passed": true
+      },
+      {
+        "file": "prep-5-0.owned-pools.json",
+        "pid": 20274,
+        "passed": true
+      },
+      {
+        "file": "prep-6-0.owned-pools.json",
+        "pid": 20280,
+        "passed": true
+      },
+      {
+        "file": "prep-7-0.owned-pools.json",
+        "pid": 20283,
+        "passed": true
+      },
+      {
+        "file": "prep-8-0.owned-pools.json",
+        "pid": 20284,
+        "passed": true
+      },
+      {
+        "file": "prep-9-0.owned-pools.json",
+        "pid": 20285,
+        "passed": true
+      },
+      {
+        "file": "prep-10-0.owned-pools.json",
+        "pid": 20286,
+        "passed": true
+      },
+      {
+        "file": "prep-11-0.owned-pools.json",
+        "pid": 20288,
+        "passed": true
+      },
+      {
+        "file": "prep-12-0.owned-pools.json",
+        "pid": 20289,
+        "passed": true
+      },
+      {
+        "file": "prep-13-0.owned-pools.json",
+        "pid": 20291,
+        "passed": true
+      },
+      {
+        "file": "prep-14-0.owned-pools.json",
+        "pid": 20292,
+        "passed": true
+      },
+      {
+        "file": "prep-15-0.owned-pools.json",
+        "pid": 20293,
+        "passed": true
+      },
+      {
+        "file": "prep-16-0.owned-pools.json",
+        "pid": 20294,
+        "passed": true
+      },
+      {
+        "file": "prep-17-0.owned-pools.json",
+        "pid": 20295,
+        "passed": true
+      },
+      {
+        "file": "prep-18-0.owned-pools.json",
+        "pid": 20297,
+        "passed": true
+      },
+      {
+        "file": "prep-19-0.owned-pools.json",
+        "pid": 20298,
+        "passed": true
+      }
+    ],
+    "worker_process_count": 20
+  },
+  "independent_cleanup": {
+    "database": {
+      "database_exists": false,
+      "connections": 0,
+      "advisory_locks": 0
+    },
+    "remaining_worker_pids": [],
+    "services": [
+      {
+        "name": "tiewtrade-postgres-1",
+        "status": "running",
+        "health": "healthy",
+        "restart_count": 0
+      },
+      {
+        "name": "tiewtrade-f18-release-redis",
+        "status": "running",
+        "health": null,
+        "restart_count": 0
+      }
+    ]
+  },
+  "candidate": {
+    "head": "b0d5580364268be7619f5369dc8488d440f12160",
+    "diff_sha256": "7262d1cb180144312944ef37083a446bebfef86a4a2a5444b6897df4c507038e",
+    "inventory_sha256": "f87e5abdce67f9e7bc046101befc27911fb968d95ee8333f742d7ba7e5e9afac"
+  },
+  "runner_sha256": "da8b11a2026bac26db7673576b439710f7d826119e7d194742ba05cf7296852f",
+  "helper_sha256": "2ef0c0b97f346c2a671ec8e927e1808b654f95948e4e80da6f23c7b8888a3b78",
+  "journal_sha256": "3f331a207d98dd22454107b2c036ed19f4f091f119bfd44733ec2efc2138f2a6",
+  "schema_sha256": "34d13e3af9c36d2794dd3d55675c0332318d6fcac0e8082b36752b2c9ad27665",
+  "parent_pool": {
+    "passed": false,
+    "outcome": "CancelledError",
+    "errors": {
+      "ConnectionResourceError": 1
+    },
+    "all_final_checked_out_zero": true,
+    "all_final_disposed": true
+  }
+}

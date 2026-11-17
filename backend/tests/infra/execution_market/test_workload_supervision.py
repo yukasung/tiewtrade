@@ -218,3 +218,179 @@ async def test_background_check_failure_joins_workload_but_success_keeps_it_runn
     finally:
         producer.cancel()
         await asyncio.gather(producer, return_exceptions=True)
+
+
+@pytest.mark.parametrize("scheduled", [False, True])
+async def test_group_cancel_waits_for_child_cleanup_without_second_cancel(
+    monkeypatch: pytest.MonkeyPatch, scheduled: bool
+) -> None:
+    from typing import Any
+    from uuid import uuid4
+
+    from tests.infra.execution_market import profile_workload as workload
+
+    entered = [asyncio.Event(), asyncio.Event()]
+    cleaning, release, closed = asyncio.Event(), asyncio.Event(), asyncio.Event()
+    repeated: list[int] = []
+
+    async def operation(index: int) -> None:
+        entered[index].set()
+        try:
+            await asyncio.Event().wait()
+        finally:
+            if index == 1:
+                cleaning.set()
+                try:
+                    await release.wait()
+                    closed.set()
+                except asyncio.CancelledError:
+                    repeated.append(index)
+                    raise
+
+    async def cycle(engine: Any, owner: Any, *args: Any, **kwargs: Any) -> None:
+        await operation(owner)
+
+    monkeypatch.setattr(workload, "cycle", cycle)
+    owners: list[Any] = [0, 1]
+    operation_group = (
+        workload.run_scheduled_cycles(
+            Mock(),
+            owners,
+            uuid4(),
+            1,
+            100000,
+            workload.Counters(),
+            [],
+        )
+        if scheduled
+        else workload.bounded_map([0, 1], operation, join_on_error=True)
+    )
+    group = asyncio.create_task(operation_group)
+    try:
+        await asyncio.wait_for(asyncio.gather(*(e.wait() for e in entered)), 1)
+        group.cancel()
+        await asyncio.wait_for(cleaning.wait(), 1)
+        # Let sibling completion and the parent's finally block run before release.
+        for _ in range(10):
+            await asyncio.sleep(0)
+        assert not repeated
+        assert not group.done()
+    finally:
+        release.set()
+        await asyncio.gather(group, return_exceptions=True)
+    assert closed.is_set() and group.cancelled()
+
+
+@pytest.mark.parametrize("scheduled", [False, True])
+async def test_real_group_cutoff_returns_connection_before_dispose(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, scheduled: bool
+) -> None:
+    import json
+    from typing import Any, cast
+    from uuid import uuid4
+
+    from sqlalchemy import text
+    from sqlalchemy.ext.asyncio import AsyncConnection
+    from sqlalchemy.pool import QueuePool
+
+    from tests.infra.execution_market import profile_workload as workload
+    from tests.infra.execution_market.profile_owned_pools import OwnedPools
+    from tiewtrade.infra.db import DatabaseRole, create_engine_for, user_session
+
+    ready = [asyncio.Event(), asyncio.Event()]
+    closing, release = asyncio.Event(), asyncio.Event()
+    original_close = AsyncConnection.close
+    report = tmp_path / "pools.json"
+    with OwnedPools(report, [("ENGINE", 5, 10)]):
+        engine = create_engine_for(DatabaseRole.ENGINE)
+        pids: list[int] = []
+
+        async def delayed_close(connection: AsyncConnection) -> None:
+            if connection.engine is engine and not release.is_set():
+                closing.set()
+                await release.wait()
+            await original_close(connection)
+
+        monkeypatch.setattr(AsyncConnection, "close", delayed_close)
+
+        async def operation(index: int) -> None:
+            if index == 0:
+                ready[0].set()
+                await asyncio.Event().wait()
+            else:
+                async with user_session(engine, uuid4(), role=DatabaseRole.ENGINE) as session:
+                    pids.append((await session.execute("SELECT pg_backend_pid()")).scalar_one())
+                    await session.execute("SELECT pg_advisory_xact_lock(78123597)")
+                    ready[1].set()
+                    await asyncio.Event().wait()
+
+        async def cycle(engine: Any, owner: Any, *args: Any, **kwargs: Any) -> None:
+            await operation(owner)
+
+        monkeypatch.setattr(workload, "cycle", cycle)
+        owners: list[Any] = [0, 1]
+        operation_group = (
+            workload.run_scheduled_cycles(
+                engine,
+                owners,
+                uuid4(),
+                1,
+                100000,
+                workload.Counters(),
+                [],
+            )
+            if scheduled
+            else workload.bounded_map([0, 1], operation, join_on_error=True)
+        )
+        group = asyncio.create_task(operation_group)
+        try:
+            async with asyncio.timeout(5):
+                await asyncio.gather(*(e.wait() for e in ready))
+                group.cancel()
+                await closing.wait()
+                for _ in range(10):
+                    await asyncio.sleep(0)
+                assert not group.done()
+                group.cancel()  # An external second cancel must not abandon the owned join.
+                await asyncio.sleep(0)
+                assert not group.done()
+                release.set()
+                with pytest.raises(asyncio.CancelledError):
+                    await group
+            assert cast(QueuePool, engine.pool).checkedout() == 0
+            async with engine.connect() as connection:
+                assert (
+                    await connection.execute(
+                        text(
+                            "SELECT count(*) FROM pg_locks WHERE pid=:pid AND locktype='advisory'"
+                        ),
+                        {"pid": pids[0]},
+                    )
+                ).scalar_one() == 0
+        finally:
+            release.set()
+            if not group.done():
+                group.cancel()
+            await asyncio.gather(group, return_exceptions=True)
+            await engine.dispose()
+    evidence = json.loads(report.read_text())
+    assert evidence["passed"]
+    assert evidence["pools"][0]["final_disposal_checked_out"] == 0
+
+
+async def test_join_owned_children_retains_primary_and_cleanup_errors() -> None:
+    from tests.infra.execution_market.profile_workload import join_owned_tasks
+
+    primary = ValueError("primary")
+    secondary = RuntimeError("private detail")
+
+    async def fail() -> None:
+        raise secondary
+
+    child = asyncio.create_task(fail())
+    await asyncio.gather(child, return_exceptions=True)
+    await join_owned_tasks([child], primary)
+    assert primary.__notes__ == ["owned child cleanup failed: RuntimeError"]
+    with pytest.raises(RuntimeError) as caught:
+        await join_owned_tasks([child], None)
+    assert caught.value is secondary

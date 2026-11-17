@@ -1,0 +1,28 @@
+{
+  "revision": "NC_F17_W3_OBS_01",
+  "status": "RUNNING_NOT_ACCEPTED",
+  "preflight": "PASSED",
+  "preflight_samples": 7,
+  "processing_window": {
+    "attribution": "transaction_start",
+    "started": 57911.624741125,
+    "ended": null,
+    "status": "RUNNING"
+  },
+  "measured_seconds_observed": 508.2932444580001,
+  "measured_seconds_required": 14400,
+  "overall_budget_seconds": 18000,
+  "cleanup_reserve_seconds": 120,
+  "owned_resources": {
+    "purpose": "NC-F17-W3-OBS-01",
+    "database": "tiewtrade_internal20_endurance_obs01_1794839381427272000",
+    "redis": "tiewtrade-f17-w3-obs01-redis-20261116",
+    "label": "f17-w3-obs01-20261116"
+  },
+  "exec_session_id": 80186,
+  "coordinator": "/tmp/tiewtrade-f17-w3-obs01-run.py",
+  "coordinator_sha256": "78fc810e107ca3fea7aae23859475a0a17f90bcc9311709dc0c407315fc3ff12",
+  "final_result": "validation-artifacts/f17-w3-obs01-20261116/result.json",
+  "no_completed_claim": true,
+  "elapsed_clock": "Python3.12 time.monotonic, same runtime as workload; previous monitor-only Python3.9 clock value invalid"
+}

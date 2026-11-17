@@ -1,0 +1,176 @@
+{
+  "status": "INCOMPLETE",
+  "total_seconds": 14671.304174834004,
+  "measured_seconds": 14400.000671957998,
+  "counters": {
+    "offered": 28200,
+    "admitted": 28200,
+    "completed": 28200,
+    "rejected": 0,
+    "fills": 11280,
+    "cancels": 5640,
+    "replays": 5640,
+    "cycles": 5640
+  },
+  "faults": [
+    {
+      "kind": "WORKER_RESTART",
+      "started_at": "2026-11-16T19:26:19.129012+00:00",
+      "started": 75540.662281958,
+      "status": "RECOVERED",
+      "scheduled_offset_seconds": 1800.0,
+      "scheduled_duration_seconds": 30.0,
+      "active_cycles_at_fault": 0,
+      "ended_at": "2026-11-16T19:26:51.957186+00:00",
+      "restored": 75573.489917,
+      "actual_duration_seconds": 32.82763516700652
+    },
+    {
+      "kind": "CONNECTION_CHURN",
+      "started_at": "2026-11-16T19:56:19.201595+00:00",
+      "started": 77340.662098458,
+      "status": "RECOVERED",
+      "scheduled_offset_seconds": 3600.0,
+      "scheduled_duration_seconds": 30.0,
+      "active_cycles_at_fault": 1,
+      "ended_at": "2026-11-16T19:56:49.427424+00:00",
+      "restored": 77370.88723425,
+      "actual_duration_seconds": 30.225135833010427
+    },
+    {
+      "kind": "REDIS_OUTAGE",
+      "started_at": "2026-11-16T20:26:19.297094+00:00",
+      "started": 79140.662035041,
+      "status": "RECOVERED",
+      "scheduled_offset_seconds": 5400.0,
+      "scheduled_duration_seconds": 60.0,
+      "active_cycles_at_fault": 1,
+      "ended_at": "2026-11-16T20:27:19.732136+00:00",
+      "restored": 79201.095286875,
+      "actual_duration_seconds": 60.43325200000254
+    },
+    {
+      "kind": "WORKER_RESTART",
+      "started_at": "2026-11-16T20:56:19.416887+00:00",
+      "started": 80940.662225041,
+      "status": "RECOVERED",
+      "scheduled_offset_seconds": 7200.0,
+      "scheduled_duration_seconds": 30.0,
+      "active_cycles_at_fault": 1,
+      "ended_at": "2026-11-16T20:56:52.691475+00:00",
+      "restored": 80973.935826875,
+      "actual_duration_seconds": 33.273601916996995
+    },
+    {
+      "kind": "CONNECTION_CHURN",
+      "started_at": "2026-11-16T21:26:19.541109+00:00",
+      "started": 82740.6621675,
+      "status": "RECOVERED",
+      "scheduled_offset_seconds": 9000.0,
+      "scheduled_duration_seconds": 30.0,
+      "active_cycles_at_fault": 2,
+      "ended_at": "2026-11-16T21:26:49.560742+00:00",
+      "restored": 82770.680906291,
+      "actual_duration_seconds": 30.01873883299413
+    },
+    {
+      "kind": "REDIS_OUTAGE",
+      "started_at": "2026-11-16T21:56:19.637879+00:00",
+      "started": 84540.662192166,
+      "status": "RECOVERED",
+      "scheduled_offset_seconds": 10800.0,
+      "scheduled_duration_seconds": 60.0,
+      "active_cycles_at_fault": 2,
+      "ended_at": "2026-11-16T21:57:19.893863+00:00",
+      "restored": 84600.892706375,
+      "actual_duration_seconds": 60.230514374998165
+    },
+    {
+      "kind": "WORKER_RESTART",
+      "started_at": "2026-11-16T22:26:19.744529+00:00",
+      "started": 86340.662189791,
+      "status": "RECOVERED",
+      "scheduled_offset_seconds": 12600.0,
+      "scheduled_duration_seconds": 30.0,
+      "active_cycles_at_fault": 2,
+      "ended_at": "2026-11-16T22:26:53.085428+00:00",
+      "restored": 86374.002104875,
+      "actual_duration_seconds": 33.339915125005064
+    }
+  ],
+  "tail": {
+    "seconds": 49.6407525419927,
+    "budget_seconds": 60,
+    "recovered": true,
+    "owners": 20,
+    "all_cursor_lags_zero": true
+  },
+  "snapshots": {
+    "count": 4820,
+    "expected_count": 4820,
+    "all_returned": true,
+    "p95_seconds": 0.01773812499595806,
+    "p99_seconds": 0.03665720799472183,
+    "max_seconds": 0.1590338329988299
+  },
+  "replay": [
+    {
+      "owner": "93929948-697f-40a8-91e5-6deb86f009dc",
+      "episode": "9df510c5-0111-4196-a751-e6c9ae80a912",
+      "outcome": "TimeoutError",
+      "seconds": 60.52279662499495,
+      "queries": 33,
+      "rows_returned": 111161,
+      "rowcount_unknown": 0,
+      "peak_process_rss_bytes": 221904896
+    }
+  ],
+  "replay_remaining_owners": "NOT_RUN (19)",
+  "final_financial_global_oracle": "NOT_RUN",
+  "processing_resource_acceptance": "NOT_RUN (no final aggregate result)",
+  "pool": {
+    "worker_receipts": 80,
+    "worker_passed": 80,
+    "parent_passed": false,
+    "all_borrows_zero_before_final_dispose": true,
+    "parent_errors": {
+      "ConnectionResourceError": 1
+    },
+    "failure_location": "profile_positions.final -> replay_owner_domain -> read_execution_inputs; 60-second replay deadline"
+  },
+  "publisher_counts": {
+    "RETURNED": 144364
+  },
+  "natural_observer": {
+    "total_samples": 0,
+    "retained_limit": 64,
+    "observations": [],
+    "errors": {},
+    "failed_observation": null,
+    "no_query_text": true,
+    "task_joined": true
+  },
+  "clock": {
+    "revision": "NC_F17_CLOCK_01",
+    "max_events": 1,
+    "max_retries": 1,
+    "budget_seconds": 1.0,
+    "window_start": 73740.6558495,
+    "window_end": 88251.933722416,
+    "event": null,
+    "terminal_rejection": null,
+    "recovered_count": 0,
+    "clock_recovery_warning": false
+  },
+  "cleanup": {
+    "status": "PASSED",
+    "database_absent": true,
+    "connections": 0,
+    "locks": 0,
+    "redis_absent": true,
+    "worker_pid_receipts": 80,
+    "active_worker_pids": []
+  },
+  "source_unchanged": true,
+  "preflight": "PASSED"
+}
