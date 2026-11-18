@@ -4,12 +4,15 @@ import asyncio
 import os
 import re
 import sys
+from contextlib import suppress
 from dataclasses import replace
 from datetime import UTC, datetime
+from pathlib import Path
 from uuid import uuid4
 
+from seed_observer import SeedObserver, read_counts
 from sqlalchemy import text
-
+from sqlalchemy.ext.asyncio import AsyncEngine
 from tiewtrade.core.candle_preview import CandleObservation
 from tiewtrade.core.market_data import (
     Candle,
@@ -94,6 +97,34 @@ class LostNotifications:
         return False  # GET must read committed PG previews despite missing invalidations.
 
 
+async def seed_rounds(
+    market: AsyncEngine,
+    migrator: AsyncEngine,
+    now: datetime,
+    timeframes: tuple[Timeframe, ...],
+    observer: SeedObserver | None,
+) -> None:
+    # Recent-first scheduling spends a page on the newest 100 slots per
+    # series before deep history. Drain a bounded number of regular
+    # rounds; never change the production four-fetch round budget.
+    expected_series = {(base, tf.value): 1000 for base in ("BTC", "ETH") for tf in timeframes}
+    if observer:
+        await observer.baseline(migrator)
+    for _ in range(4):
+        if observer:
+            observer.begin_round()
+        summary = await run_round(market, RepairSource(), "f12-browser", now)
+        if observer:
+            observer.result(summary)
+        counts = await read_counts(migrator)
+        if observer:
+            observer.finish_round(counts)
+        if counts == expected_series:
+            break
+    else:
+        raise RuntimeError("F12_FIXTURE_REJECTED")
+
+
 async def main() -> None:
     expected = os.environ.get("TIEWTRADE_E2E_DATABASE_NAME", "")
     if not re.fullmatch(r"tiewtrade_e2e(?:_[a-zA-Z0-9]+)*", expected):
@@ -101,10 +132,14 @@ async def main() -> None:
     migrator = create_engine_for(DatabaseRole.MIGRATOR)
     market = create_engine_for(DatabaseRole.MARKET_DATA)
     action = sys.argv[1]
+    observer = SeedObserver(Path(sys.argv[2])) if action == "seed" and len(sys.argv) == 3 else None
+    sampler = None
     try:
         async with migrator.begin() as c:
             if (await c.execute(text("SELECT current_database()"))).scalar_one() != expected:
                 raise RuntimeError("E2E_DATABASE_REJECTED")
+            if observer:
+                sampler = asyncio.create_task(observer.sample(migrator))
             if action in {"seed", "seed-3m"}:
                 await c.execute(text("SELECT begin_indicator_source_write()"))
                 await c.execute(text("DELETE FROM market_candles"))
@@ -167,30 +202,7 @@ async def main() -> None:
                       OR (:three_minute AND timeframe='3m')))""",
                     {"three_minute": action == "seed-3m"},
                 )
-            # Recent-first scheduling spends a page on the newest 100 slots per
-            # series before deep history. Drain a bounded number of regular
-            # rounds; never change the production four-fetch round budget.
-            expected_series = {
-                (base, tf.value): 1000 for base in ("BTC", "ETH") for tf in timeframes
-            }
-            for _ in range(4):
-                await run_round(market, RepairSource(), "f12-browser", now)
-                async with migrator.connect() as c:
-                    counts = {
-                        (base, tf): count
-                        for base, tf, count in (
-                            await c.execute(
-                                text(
-                                    "SELECT base,timeframe,count(*) FROM market_candles "
-                                    "GROUP BY base,timeframe"
-                                )
-                            )
-                        ).all()
-                    }
-                if counts == expected_series:
-                    break
-            else:
-                raise RuntimeError("F12_FIXTURE_REJECTED")
+            await seed_rounds(market, migrator, now, timeframes, observer)
         elif action == "repair":
             result = await run_round(market, RepairSource(), "f12-repair", datetime.now(UTC))
             if result.stored == 0:
@@ -247,7 +259,15 @@ async def main() -> None:
                 else:
                     supervisor.observe(event)  # type: ignore[arg-type]
             await supervisor._flush()
+    except BaseException as error:
+        if observer:
+            observer.publish(error)
+        raise
     finally:
+        if sampler:
+            sampler.cancel()
+            with suppress(asyncio.CancelledError):
+                await sampler
         await market.dispose()
         await migrator.dispose()
 

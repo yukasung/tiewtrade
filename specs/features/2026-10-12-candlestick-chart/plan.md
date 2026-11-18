@@ -684,3 +684,11 @@ V-17 ต้องวัดทั้งสอง mode และไม่ลด sc
 เจ้าของอนุมัติแผน/validation วันที่ 2026-10-12 ครอบ bundle/proof extension,
 internal coalescer, preview schema, bounds และ rollout ที่ระบุไว้.
 การอนุมัติไม่ใช่ผลผ่าน validation และไม่อนุญาตเปลี่ยนแผนที่อนุมัติเอง.
+
+### F-12 ended-preview seed diagnostic — Approved 2026-11-18
+
+The postmerge case stopped in seed before its browser assertions. Record failure-only
+evidence for this case through the existing Playwright test-results upload. Reuse
+run_round and its summary and the existing count query. Capture baseline counts,
+up to four rounds, and sampled PostgreSQL lock waits on a separate read-only transaction
+every 100 ms (32 retained rows). Preserve earlier failures and timeout/assertions.
