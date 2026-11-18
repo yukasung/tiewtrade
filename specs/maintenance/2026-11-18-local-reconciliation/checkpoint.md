@@ -40,7 +40,9 @@ bot/notification, Live-adapter/recovery and owner-acceptance obligations are unc
 
 ## Review and validation
 
-Changes are documentation and sanitized JSON evidence only. Review checks current-main
+The initial candidate changed documentation and sanitized JSON evidence only. The
+first PR scan then exposed the newly withdrawn advisory; owner approved the narrowly
+scoped scanner correction below before source changes. Review checks current-main
 preservation, owner-approved workflow scope, historical versus current statuses, local
 links, JSON syntax, whitespace and absence of common credential formats. Required CI
 and Security still apply to the final PR candidate and postmerge SHA. No workload,
@@ -56,3 +58,15 @@ failed runs in their evidence. New local links resolve; JSON parses; whitespace 
 common-credential-pattern checks passed. No source refactor applies to this doc change.
 Final candidate required CI/postmerge results will be reported with SHA/run links; no
 recursive evidence-only PR is needed to report this documentation PR's own CI.
+
+## New external-state blocker and approved correction
+
+First candidate `f78b456` Security dependencies Failed after the upstream advisory was
+withdrawn. This failure is retained, not relabeled as a successful scan. Owner explicitly
+approved exact-artifact live withdrawal verification in the existing Picomatch feature
+[amendment](../../features/2026-11-17-picomatch-remediation/withdrawn-advisory-coverage-amendment.md).
+Scanner correction is limited to coverage evidence; no application/session/trading,
+lock/artifact/exception bytes or general severity gate changed. It reuses the existing
+inventory, finding mapping and configuration digest, with no persistent process state.
+Final local results and development failures are retained in the feature validation.
+The actual pinned scan covered 464 identities with four Medium and zero blocked/unknown.

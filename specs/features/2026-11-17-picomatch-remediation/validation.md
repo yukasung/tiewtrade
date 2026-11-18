@@ -22,3 +22,28 @@ The chart failure did not recur in that run; its historical cause remains unprov
 The exact approved artifact-bound exception and its retirement/reassessment conditions
 remain unchanged. This closes publication monitoring through the follow-up candidate,
 not F-17 Full Validation or general regex safety for other callers/options.
+
+
+## Exact withdrawn-advisory verification — owner approved 2026-11-18
+
+PR #79 first candidate `f78b456` failed Security dependencies with
+`TRUSTED_SOURCE_ADVISORY_COVERAGE_UNPROVEN`. GitHub and OSV had withdrawn the exact
+advisory at 2026-11-18T15:38:56Z; the old guard still required an active High forever.
+Owner approved the [concrete amendment](withdrawn-advisory-coverage-amendment.md) before code.
+
+Feature checks: 26 targeted tests Passed; all 79 security tests completed successfully
+(75 Passed, 4 existing opt-in Skipped). New nine test methods exercise exact identity,
+fresh requests, missing/malformed/future/unwithdrawn evidence, package/range mismatch,
+query inconsistency, HTTP/timeout/oversize/duplicate JSON and unchanged blocking of other
+High/Critical/Unknown findings. Original active-advisory and offline fail-closed paths
+remain tested. Five-file Ruff/format and strict mypy with explicit package bases Passed.
+[Actual pinned OSV scan](evidence/remaining-integrated/withdrawn-advisory-scan.json):
+464 identities, 4 Medium, 0 blocked/unknown, no exception used; online withdrawal
+evidence verified during the scan. Both lock hashes and exact LP04 bytes unchanged.
+
+Development history retained: one new test initially expected Unknown in the blocked
+counter instead of needs_triage; assertion corrected to require policy refusal through
+the existing counters. A test-edit SyntaxError and mypy module-mapping/type annotation
+issues were corrected before the final checks. No policy threshold/assertion was weakened.
+Review found no remaining correctness/security findings; no source refactor beyond the
+scoped helper reuse is needed. Final required CI and postmerge remain mandatory.

@@ -81,3 +81,16 @@ the archive hash in their identities. Original lockfile findings retain their id
 
 The current local result and proposed owner decision are recorded in
 `specs/features/2026-11-17-picomatch-remediation/evidence/remaining-integrated/sbom-checkpoint.md`.
+
+
+### Exact LP04 advisory withdrawal — owner approved 2026-11-18
+
+The expected active High/Critical remains the original path. When it is absent, only
+the already approved npm/picomatch/4.0.7 LP04 archive can use fresh official OSV evidence:
+exact advisory id, past withdrawal timestamp and affected package/range, then a current
+package/version query consistent with every scanner-reported advisory. Each bounded
+HTTPS response must come from its exact endpoint, be valid unique-key JSON and fit 2 MiB;
+network errors, malformed/partial data or mismatches fail closed. No in-memory evidence
+cache, fake finding, new exception or change to other High/Critical/Unknown gates.
+The original exact exception stays unchanged and is unused while its advisory is absent.
+See [approved amendment](../../specs/features/2026-11-17-picomatch-remediation/withdrawn-advisory-coverage-amendment.md).
