@@ -10,9 +10,11 @@ import { backendPython, e2eEnvironment } from "./helpers/environment";
 import { PASSWORD } from "./helpers/totp";
 import type { CandlePage, ChartLive } from "../src/chart/api";
 
-function fixture(action: string): void {
+const endedPreviewTitle = "ended preview waits for actual REST commit before the revised history response";
+
+function fixture(action: string, reportPath?: string): void {
   execFileSync(backendPython,
-    ["-X", "utf8", "../specs/features/2026-10-12-candlestick-chart/evidence/browser_fixture.py", action],
+    ["-X", "utf8", "../specs/features/2026-10-12-candlestick-chart/evidence/browser_fixture.py", action, ...(reportPath ? [reportPath] : [])],
     { cwd: "../backend", env: e2eEnvironment(), stdio: "pipe" });
 }
 
@@ -66,8 +68,8 @@ function producer(script: string) {
   return { mode, stop };
 }
 
-test.beforeEach(({ page }) => {
-  fixture("seed");
+test.beforeEach(({ page }, info) => {
+  fixture("seed", info.title === endedPreviewTitle ? info.outputPath("seed-failure.json") : undefined);
   if (process.env.CHART_E2E_DIAGNOSTICS === "1") {
     page.on("pageerror", error => process.stdout.write(`browser_error: ${error.name}: ${error.message}\n`));
     page.on("response", response => {
@@ -312,7 +314,7 @@ test("password login, series switching and actual latest-price worker", async ({
   } finally { await quotes.stop(); }
 });
 
-test("ended preview waits for actual REST commit before the revised history response", async ({ page }) => {
+test(endedPreviewTitle, async ({ page }) => {
   fixture("needs-refresh");
   await registerAccount(page);
   const chart = page.getByTestId("candlestick-chart");

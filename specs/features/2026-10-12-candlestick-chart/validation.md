@@ -578,3 +578,17 @@ native batches, invalid response bounds/order, legacy in-flight requests, sparse
 page repair, durable progress, fencing, rollback and existing retry budgets.
 Results: [calendar batch evidence](evidence/2026-10-14-calendar-batch.md).
 Full regression and workload acceptance retain their existing pending status.
+
+### Feature — ended-preview seed evidence (approved 2026-11-18)
+Verify immediate success, four mismatched rounds including missing and extra series,
+early errors, sampler and report failures. Run the single case once against an isolated
+database, then one PR candidate in the existing CI sequence. Preserve the prior
+CI failure and isolated pass. A passing run records non-recurrence only.
+
+Local evidence, 2026-11-18: the isolated browser case passed once (10.4s, zero retries)
+using PostgreSQL 16.16 and Redis 7. A separate advisory-lock control observed both
+actual session PIDs using the fixture role. Both owned containers were removed.
+Three diagnostic tests passed, including the four-round rejection and evidence IO failure.
+Ruff, formatting, ESLint, frontend typecheck and strict typing of the new observer/tests
+passed. Strict typing of the existing browser fixture reports the same FeedDisconnected
+union error at the unchanged rollover observe call as on the baseline. PR CI pending.
