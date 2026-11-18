@@ -126,6 +126,7 @@ def entrypoint() -> int:
         public_codes = {
             "TOOL_HTTP_ERROR",
             "TOOL_NETWORK_FAILURE",
+            "TRUSTED_SOURCE_ADVISORY_COVERAGE_UNPROVEN",
             "TOOL_CHECKSUM_MISMATCH",
             "INVALID_ARRAY",
             "INVALID_OBJECT",

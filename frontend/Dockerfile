@@ -6,6 +6,7 @@ ENV CI=1
 
 # ติดตั้ง dependency ก่อนคัดลอกโค้ด เพื่อให้ชั้น cache ใช้ซ้ำได้
 COPY package.json package-lock.json ./
+COPY vendor/picomatch-4.0.7-lp04.tgz ./vendor/
 RUN npm ci
 
 COPY . .

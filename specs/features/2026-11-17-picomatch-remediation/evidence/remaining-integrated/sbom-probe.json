@@ -1,0 +1,54 @@
+{
+  "status": "PASSED",
+  "binary_sha256": "d4926ef8da134332543be276dff157e4c170f99ad91fc48e89448a8816bdf70b",
+  "sbom_sha256": "00818a84cdeb55d9fa73c555f91405246203bacc832806cb412a9e6f051eb202",
+  "artifact_sha256": "9cc97cff17fcae65f9b7e9b249670d38decc451c0210f34678de608a5e8ff39d",
+  "locks": {
+    "backend/uv.lock": "f427025bd867333a3cd8628ef7e7c76309866b9fdaee3f968c77c404b074402b",
+    "frontend/package-lock.json": "d10d7577554b3f5b524e26bc0bbfa829dbe467e24669a1a46ed39f1d072b9c35"
+  },
+  "exit": 1,
+  "lock_coverage": 464,
+  "lock_findings": [
+    [
+      "npm",
+      "@vitest/mocker",
+      "4.1.11",
+      "GHSA-qxg6-89mg-rqv8"
+    ],
+    [
+      "npm",
+      "@vitest/mocker",
+      "4.1.11",
+      "GHSA-xp26-3454-mjgp"
+    ],
+    [
+      "npm",
+      "minimatch",
+      "10.2.6",
+      "GHSA-g3hv-75wg-m249"
+    ],
+    [
+      "npm",
+      "vite",
+      "6.4.4",
+      "GHSA-8g5g-mxqh-grgj"
+    ]
+  ],
+  "sbom_sources": 1,
+  "source_type": "sbom",
+  "packages": [
+    {
+      "identity": {
+        "name": "picomatch",
+        "version": "4.0.7",
+        "ecosystem": "npm",
+        "purl": "pkg:npm/picomatch@4.0.7"
+      },
+      "advisories": [
+        "GHSA-fc5q-39xc-vjpf"
+      ]
+    }
+  ],
+  "seconds": 31.44
+}

@@ -15,6 +15,7 @@ from pathlib import Path
 from tools.security import dependencies, secrets
 from tools.security.model import Finding, PolicyError, array, obj, read_json, string
 from tools.security.system import git
+from tools.security.trusted_sources import declared_sources
 
 
 @contextmanager
@@ -42,14 +43,25 @@ def observed_stage(name: str) -> Iterator[dict[str, int]]:
 
 
 def execute(args: list[str], cwd: Path, output: Path, allowed: tuple[int, ...]) -> int:
-    with output.open("wb") as stream, output.with_suffix(".stderr").open("wb") as errors:
+    with (
+        output.open("wb") as stream,
+        output.with_suffix(".stderr").open("wb") as errors,
+    ):
         environment = {
             key: value
             for key, value in os.environ.items()
-            if not any(marker in key.upper() for marker in ("TOKEN", "SECRET", "PASSWORD"))
+            if not any(
+                marker in key.upper() for marker in ("TOKEN", "SECRET", "PASSWORD")
+            )
         }
         completed = subprocess.run(
-            args, cwd=cwd, env=environment, stdout=stream, stderr=errors, timeout=780, check=False
+            args,
+            cwd=cwd,
+            env=environment,
+            stdout=stream,
+            stderr=errors,
+            timeout=780,
+            check=False,
         )
     if completed.returncode not in allowed:
         raise PolicyError("SCANNER_EXECUTION_FAILED")
@@ -131,7 +143,9 @@ def scan_secrets(
             reported = Path(string(row.get("File")))
             if reported.is_absolute():
                 try:
-                    row["File"] = reported.resolve().relative_to(tree.resolve()).as_posix()
+                    row["File"] = (
+                        reported.resolve().relative_to(tree.resolve()).as_posix()
+                    )
                 except ValueError:
                     raise PolicyError("INVALID_SECRET_PATH") from None
         with observed_stage("tree_mapping") as counts:
@@ -148,8 +162,11 @@ def scan_secrets(
     return findings, commits
 
 
-def scan_dependencies(root: Path, policy: Path, binary: Path) -> tuple[list[Finding], int]:
+def scan_dependencies(
+    root: Path, policy: Path, binary: Path
+) -> tuple[list[Finding], int]:
     expected = dependencies.inventory(root)
+    sources = declared_sources(root)
     with tempfile.TemporaryDirectory(prefix="security-osv-") as directory:
         temp = Path(directory)
         report = temp / "osv.json"
@@ -165,11 +182,37 @@ def scan_dependencies(root: Path, policy: Path, binary: Path) -> tuple[list[Find
             "--config=" + str(policy / ".github/security/osv-scanner.toml"),
         ]
         args += ["--lockfile=" + str(root / name) for name in expected]
+        sbom = None
+        if sources:
+            entry = next(iter(sources.values()))
+            path = temp / "lp04.cdx.json"
+            component = {
+                "type": "library",
+                "name": entry["name"],
+                "version": entry["version"],
+                "purl": f"pkg:npm/{entry['name']}@{entry['version']}",
+                "hashes": [{"alg": "SHA-256", "content": entry["artifact_sha256"]}],
+            }
+            content = json.dumps(
+                {
+                    "bomFormat": "CycloneDX",
+                    "specVersion": "1.5",
+                    "version": 1,
+                    "components": [component],
+                }
+            ).encode()
+            path.write_bytes(content)
+            args.append("--lockfile=" + str(path))
+            sbom = (path, entry)
         status = execute(args, temp, report, (0, 1))
+        if sbom and (
+            sbom[0].read_bytes() != content or declared_sources(root) != sources
+        ):
+            raise PolicyError("TRUSTED_SOURCE_ADVISORY_COVERAGE_UNPROVEN")
         raw = read_json(report)
         if obj(raw).get("errors"):
             raise PolicyError("OSV_REPORTED_ERRORS")
-        findings, coverage = dependencies.evaluate(raw, root, expected)
+        findings, coverage = dependencies.evaluate(raw, root, expected, sbom)
         if (status == 1) != bool(findings):
             raise PolicyError("INCONSISTENT_OSV_EXIT")
         return findings, coverage

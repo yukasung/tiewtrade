@@ -800,6 +800,14 @@
       "reason": "The matched value names an ephemeral connection.info metadata slot in the opt-in test observer; it is not a credential and is never used for authentication.",
       "approval": "Owner approved A: one exact false-positive exception and continuation through merge on 2026-11-15; see specs/features/2026-11-02-tp-sl/publication-observer-metadata-exception-proposal.md",
       "evidence": "specs/features/2026-11-02-tp-sl/publication-observer-metadata-exception-proposal.md; generic-api-key, commit 9f7c376bfd504b93bb297566a5a46e85938f7f74, backend/tests/infra/execution_market/profile_commit_observation.py:18"
+    },
+    {
+      "kind": "dependency",
+      "identity": "38acb68d907b38d466567f41efbfcc1089288398a7da6750af82fc5f76bcf902",
+      "resolution": "owner_exception",
+      "reason": "Exact LP04 archive for npm/picomatch 4.0.7 and GHSA-fc5q-39xc-vjpf. Default guard validated for current build callers. Reassess on caller or option changes and replace when an official compatible fix is verified.",
+      "approval": "Requires exact owner approval of NC-PM-IDENTITY-01 LP04 registry diff before merge; decision recorded in remaining-security-plan.md.",
+      "evidence": "specs/features/2026-11-17-picomatch-remediation/evidence/remaining-integrated/sbom-integrated.json; LP04 matrix, caller results and residual risk in specs/features/2026-11-17-picomatch-remediation/evidence/remaining-integrated/sbom-checkpoint.md"
     }
   ]
 }

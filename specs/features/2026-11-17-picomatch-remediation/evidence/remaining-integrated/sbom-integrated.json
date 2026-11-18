@@ -1,0 +1,72 @@
+{
+  "lock_coverage": 464,
+  "counts": {
+    "critical": 0,
+    "high": 1,
+    "low": 0,
+    "medium": 4,
+    "none": 0,
+    "unknown": 0,
+    "excepted": 0,
+    "blocked": 1,
+    "needs_triage": 0
+  },
+  "findings": [
+    {
+      "kind": "dependency",
+      "identity": "432274f4456b7be8f5b778d035096ad64bb3ea48015534f3971907755c50afa3",
+      "severity": "medium",
+      "locator": [
+        "npm",
+        "@vitest/mocker",
+        "4.1.11",
+        "GHSA-qxg6-89mg-rqv8"
+      ]
+    },
+    {
+      "kind": "dependency",
+      "identity": "9ffaab5aa011b137401b5721351e2ac56d565c59fd897dd5c1243fd3da690cb4",
+      "severity": "medium",
+      "locator": [
+        "npm",
+        "@vitest/mocker",
+        "4.1.11",
+        "GHSA-xp26-3454-mjgp"
+      ]
+    },
+    {
+      "kind": "dependency",
+      "identity": "6335f6a543f571d2fcea1891f374d802059146456f9414963eaf816e9af9a27a",
+      "severity": "medium",
+      "locator": [
+        "npm",
+        "minimatch",
+        "10.2.6",
+        "GHSA-g3hv-75wg-m249"
+      ]
+    },
+    {
+      "kind": "dependency",
+      "identity": "d6b7516b3b7ce6e0bea2480a7ca27335ac4960b8977968d56e0ab2485f06a1e1",
+      "severity": "medium",
+      "locator": [
+        "npm",
+        "vite",
+        "6.4.4",
+        "GHSA-8g5g-mxqh-grgj"
+      ]
+    },
+    {
+      "kind": "dependency",
+      "identity": "38acb68d907b38d466567f41efbfcc1089288398a7da6750af82fc5f76bcf902",
+      "severity": "high",
+      "locator": [
+        "npm",
+        "picomatch",
+        "4.0.7",
+        "GHSA-fc5q-39xc-vjpf",
+        "9cc97cff17fcae65f9b7e9b249670d38decc451c0210f34678de608a5e8ff39d"
+      ]
+    }
+  ]
+}
