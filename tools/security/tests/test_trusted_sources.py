@@ -120,7 +120,9 @@ class TrustedSourceTests(unittest.TestCase):
                                 "severity": [
                                     {
                                         "type": "CVSS_V3",
-                                        "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+                                        "score": (
+                                            "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+                                        ),
                                     }
                                 ],
                             }
@@ -142,7 +144,15 @@ class TrustedSourceTests(unittest.TestCase):
                     report.write_text(json.dumps(raw))
                     return 1
 
-                with patch("tools.security.scan.execute", side_effect=scanner):
+                with (
+                    patch("tools.security.scan.execute", side_effect=scanner),
+                    patch(
+                        "tools.security.scan.verify_withdrawal",
+                        side_effect=PolicyError(
+                            "TRUSTED_SOURCE_ADVISORY_COVERAGE_UNPROVEN"
+                        ),
+                    ),
+                ):
                     if fault != "none":
                         with self.assertRaises(PolicyError):
                             scan_dependencies(self.root, self.root, Path("scanner"))
@@ -166,7 +176,9 @@ class TrustedSourceTests(unittest.TestCase):
                                         "severity": [
                                             {
                                                 "type": "CVSS_V3",
-                                                "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+                                                "score": (
+                                                    "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+                                                ),
                                             }
                                         ],
                                     }
@@ -379,7 +391,7 @@ class TrustedSourceTests(unittest.TestCase):
                 "severity": [
                     {
                         "type": "CVSS_V3",
-                        "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+                        "score": ("CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"),
                     }
                 ],
             }

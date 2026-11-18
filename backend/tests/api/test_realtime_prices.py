@@ -118,20 +118,39 @@ def test_first_authorization_check_has_500ms_deadline(
     from tiewtrade.services.api import price_routes
     from tiewtrade.services.api.authentication import presented_owner as original
 
+    window_type = price_routes.AuthorizationWindow
+    windows: list[tuple[price_routes.AuthorizationWindow, float]] = []
+    cancelled: list[float] = []
+
+    def observe_window(*, first_started: float) -> price_routes.AuthorizationWindow:
+        # Admission precedes this coordinator budget. Keep each clock domain local.
+        wall_started = time.monotonic()
+        window = window_type(first_started=first_started)
+        windows.append((window, wall_started))
+        return window
+
     async def slow(session: PresentedSession) -> SessionOwner | None:
-        await asyncio.sleep(0.6)
+        try:
+            await asyncio.sleep(0.6)
+        except asyncio.CancelledError:
+            cancelled.append(asyncio.get_running_loop().time())
+            raise
         return await original(session)
 
     register(client)
     monkeypatch.setattr(price_routes, "presented_owner", slow)
-    started = time.monotonic()
+    monkeypatch.setattr(price_routes, "AuthorizationWindow", observe_window)
     with client.websocket_connect(
         "/market-data/prices/stream", headers={"origin": "http://localhost:5173"}
     ) as socket:
         with pytest.raises(WebSocketDisconnect) as error:
             socket.receive_json()
         assert error.value.code == 1011
-    assert time.monotonic() - started < 0.6
+    assert len(windows) == len(cancelled) == 1
+    window, wall_started = windows[0]
+    assert window.deadline - window.first_started == 0.5
+    assert 0 <= cancelled[0] - window.first_started < 0.6
+    assert time.monotonic() - wall_started < 0.6
 
 
 def test_session_idle_expiry_closes_existing_socket_with_4401(client: TestClient) -> None:

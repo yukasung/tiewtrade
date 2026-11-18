@@ -1,0 +1,120 @@
+{
+  "head_sha": "178793c1950f8feb2e7fb074361836e34c5bd27a",
+  "run_id": 43065459114,
+  "job_id": 130679420367,
+  "run_url": "https://github.com/yukasung/tiewtrade/actions/runs/43065459114",
+  "e2e_conclusion": "success",
+  "e2e_test_counts": [
+    20,
+    2,
+    7,
+    7,
+    6
+  ],
+  "report": {
+    "contexts": {
+      "sudo": {
+        "dns": {
+          "archive.ubuntu.com": {
+            "status": "success"
+          },
+          "azure.archive.ubuntu.com": {
+            "status": "success"
+          },
+          "packages.microsoft.com": {
+            "status": "success"
+          },
+          "security.ubuntu.com": {
+            "status": "timeout"
+          }
+        },
+        "https": {
+          "https://archive.ubuntu.com/ubuntu/": {
+            "http_status": 200,
+            "status": "success"
+          },
+          "https://packages.microsoft.com/": {
+            "http_status": 200,
+            "status": "success"
+          }
+        },
+        "metadata": {
+          "apt_proxy": true,
+          "apt_proxy_status": "success",
+          "nameservers": [
+            "127.0.0.53"
+          ],
+          "proxy_env": {
+            "ALL_PROXY": false,
+            "HTTPS_PROXY": false,
+            "HTTP_PROXY": false,
+            "NO_PROXY": false,
+            "all_proxy": false,
+            "http_proxy": false,
+            "https_proxy": false,
+            "no_proxy": false
+          },
+          "resolver_status": "success"
+        }
+      },
+      "user": {
+        "dns": {
+          "archive.ubuntu.com": {
+            "status": "timeout"
+          },
+          "azure.archive.ubuntu.com": {
+            "status": "success"
+          },
+          "packages.microsoft.com": {
+            "status": "success"
+          },
+          "security.ubuntu.com": {
+            "status": "timeout"
+          }
+        },
+        "https": {
+          "https://archive.ubuntu.com/ubuntu/": {
+            "http_status": 200,
+            "status": "success"
+          },
+          "https://packages.microsoft.com/": {
+            "http_status": 200,
+            "status": "success"
+          }
+        },
+        "metadata": {
+          "apt_proxy": true,
+          "apt_proxy_status": "success",
+          "nameservers": [
+            "127.0.0.53"
+          ],
+          "proxy_env": {
+            "ALL_PROXY": false,
+            "HTTPS_PROXY": false,
+            "HTTP_PROXY": false,
+            "NO_PROXY": false,
+            "all_proxy": false,
+            "http_proxy": false,
+            "https_proxy": false,
+            "no_proxy": false
+          },
+          "resolver_status": "success"
+        }
+      }
+    },
+    "continue_installation": true,
+    "diagnostic_complete": true,
+    "runner_image": {
+      "ImageOS": "ubuntu24",
+      "ImageVersion": "20261101.360.1"
+    }
+  },
+  "interpretation": "Some timed DNS probes did not finish within 5 seconds; both HTTPS endpoints returned 200 in both contexts. APT proxy directives were present, but values were intentionally not collected. This run does not establish the cause of earlier DNS failures.",
+  "merge_sha": "5ead50aa3b47821c280ab5d146aab66c99b796ec",
+  "diagnostic_elapsed_seconds": 19,
+  "required_checks_passed": 7,
+  "required_checks_total": 7,
+  "ci_conclusion": "success",
+  "security_run_id": 43065459097,
+  "security_conclusion": "success"
+}

@@ -77,3 +77,12 @@ editing; no assertion, production or acceptance change.
 OptionA checks Passed before push:55targeted tests on owned migrated DB with cleanup,
 Ruff/format and full backend-configured mypy727files. Diff is direct import and same
 module patch target only. Original assertions and production inventory unchanged.
+
+## Merge and postmerge new security blocker
+
+PR76 merged d3c9eae after all required checks Passed on2e51d01. Postmerge dependencies
+reportsHigh1 in picomatch4.0.7; advisory updated between scans, npm latest4.0.7 with no
+patched version listed. Lockfiles unchanged. See evidence/endurance20-20261115/
+publication-postmerge-blocker.md. Do not reclassify oldPassed, override gate, rerun
+scanner to seek different result or publish another candidate under current scope.
+Monitor existing main CI; then report unresolved blocker and proposed next scope.

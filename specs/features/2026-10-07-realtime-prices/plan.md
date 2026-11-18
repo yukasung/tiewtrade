@@ -678,3 +678,36 @@ NC-29 ปิดด้านคำตัดสิน; ต้องตรวจด
 import/use exception and positive/negative fixtures pass. Backend1851/frontend158/
 Playwright10 and static/Docker/lock checks pass; final results recorded in validation.md.
 The previous draft gate failure is resolved. Final deep review and externalCI remain.
+
+
+## Authorization deadline measurement correction — 2026-11-19
+
+Recorded before test edit under the owner-delegated engineering authority of
+2026-11-14 and the current instruction to complete reconciliation/publication.
+PR #79 CI attempt2 (`a77b4a8`) measured 0.606827373s against the existing0.6s
+assertion. Runtime `price_routes.py` is unchanged from main. The test starts its
+clock before websocket_connect, so it includes middleware/PG/Redis admission before
+AuthorizationWindow exists, as well as client context teardown. NC-28 specifies
+the coordinator's500ms authorization budget, start-anchored at AuthorizationWindow.
+
+Chosen correction: reuse that actual window object as an observer-only timing boundary
+and retain the original0.6s wall-clock upper bound through socket close/teardown from
+that boundary. Add a direct cancellation timestamp on the server loop and require
+the real slow query to be cancelled, not normally completed. Keep the actual500ms
+deadline assertion, original1011 close/no data assertion, actual integration DB and
+unchanged slow-query0.6s. Do not compare loop.time() with time.monotonic() across
+clock domains: record each boundary in its corresponding clock. No route, session,
+permission, timeout, Redis, process state or trading behavior changes.
+
+Alternatives rejected: widening0.6s/500ms/1s, dropping cancellation/close assertions,
+mocking the integration DB, or repeatedly rerunning the same unchanged measurement.
+The earlier F-17 processing-start1.037872s failure is independent and remains
+unresolved history; its<=1s criterion and implementation are untouched.
+
+Validation before merge: existing five AuthorizationWindow/watchdog unit cases using
+their original synthetic fixtures; focused lint/format/strict typing; real existing
+first-authorization integration and strict F-17 SLA on final required CI. Local
+PostgreSQL16/Docker daemon is unavailable, so local real-DB cases remain Not Run,
+never replaced by synthetic acceptance. Preserve both failed CI attempts. After this
+evidence-backed test-only correction, one final candidate may run; if backend still
+fails this is the third backend failure and the repository stop/report rule applies.

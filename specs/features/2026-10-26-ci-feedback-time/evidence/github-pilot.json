@@ -147,5 +147,454 @@
     "required_checks_total": 7,
     "completed_at": "2026-11-11T16:45:12Z",
     "strict_protection_rechecked": true
+  },
+  "network_diagnostic_candidate": {
+    "head_sha": "178793c1950f8feb2e7fb074361836e34c5bd27a",
+    "base_sha": "de3bdcb6b9d9187ee9a06b5f7dcb43387f5d8e98",
+    "mergeable": "MERGEABLE",
+    "strict": true,
+    "enforce_admins": true,
+    "required_checks": {
+      "หลังบ้าน — lint, types, imports, tests": "SUCCESS",
+      "e2e — เบราว์เซอร์จริงเห็นข้อมูลจาก API ...": "SUCCESS",
+      "หน้าบ้าน — lint, types, tests": "SUCCESS",
+      "container — ทั้งสองฝั่งรันใน container ได้": "SUCCESS",
+      "ค่ากลาง — เวอร์ชัน PostgreSQL": "SUCCESS",
+      "สัญญา API — ชนิดข้อมูลสองฝั่งต้องตรง...": "SUCCESS",
+      "Security / gate": "SUCCESS"
+    },
+    "run_id": 43065459114,
+    "run_started_at": "2026-11-11T17:09:57Z",
+    "updated_at": "2026-11-11T17:33:01Z",
+    "run_url": "https://github.com/yukasung/tiewtrade/actions/runs/43065459114",
+    "head_events": [
+      {
+        "name": "Security",
+        "event": "pull_request",
+        "conclusion": "success"
+      },
+      {
+        "name": "CI",
+        "event": "pull_request",
+        "conclusion": "success"
+      }
+    ],
+    "merge_sha": "5ead50aa3b47821c280ab5d146aab66c99b796ec",
+    "ci_conclusion": "success",
+    "security_run_id": 43065459097,
+    "security_url": "https://github.com/yukasung/tiewtrade/actions/runs/43065459097",
+    "security_conclusion": "success",
+    "diagnostic_report": "network-diagnostic-report.json",
+    "diagnostic_elapsed_seconds": 19,
+    "e2e_tests_passed": 42,
+    "policy_tests_passed": 58,
+    "elapsed_run_started_to_updated_seconds": 1384,
+    "prior_failures_retained": true,
+    "merged": false,
+    "post_merge_main": "Pending",
+    "manual_full": "Pending"
+  },
+  "post_merge_checkpoint": {
+    "required_checks": [
+      {
+        "name": "หลังบ้าน — lint, types, imports, tests",
+        "matches": [
+          {
+            "conclusion": "success",
+            "sha": "f7c94f5379aea19ef52bf347dbf9fb63d355435a",
+            "url": "https://github.com/yukasung/tiewtrade/actions/runs/43069977429/job/130707676411"
+          }
+        ]
+      },
+      {
+        "name": "e2e — เบราว์เซอร์จริงเห็นข้อมูลจาก API ...",
+        "matches": [
+          {
+            "conclusion": "success",
+            "sha": "f7c94f5379aea19ef52bf347dbf9fb63d355435a",
+            "url": "https://github.com/yukasung/tiewtrade/actions/runs/43069977429/job/130699477176"
+          }
+        ]
+      },
+      {
+        "name": "หน้าบ้าน — lint, types, tests",
+        "matches": [
+          {
+            "conclusion": "success",
+            "sha": "f7c94f5379aea19ef52bf347dbf9fb63d355435a",
+            "url": "https://github.com/yukasung/tiewtrade/actions/runs/43069977429/job/130695888843"
+          }
+        ]
+      },
+      {
+        "name": "container — ทั้งสองฝั่งรันใน container ได้",
+        "matches": [
+          {
+            "conclusion": "success",
+            "sha": "f7c94f5379aea19ef52bf347dbf9fb63d355435a",
+            "url": "https://github.com/yukasung/tiewtrade/actions/runs/43069977429/job/130696103311"
+          }
+        ]
+      },
+      {
+        "name": "ค่ากลาง — เวอร์ชัน PostgreSQL",
+        "matches": [
+          {
+            "conclusion": "success",
+            "sha": "f7c94f5379aea19ef52bf347dbf9fb63d355435a",
+            "url": "https://github.com/yukasung/tiewtrade/actions/runs/43069977429/job/130694908621"
+          }
+        ]
+      },
+      {
+        "name": "สัญญา API — ชนิดข้อมูลสองฝั่งต้องตรง...",
+        "matches": [
+          {
+            "conclusion": "success",
+            "sha": "f7c94f5379aea19ef52bf347dbf9fb63d355435a",
+            "url": "https://github.com/yukasung/tiewtrade/actions/runs/43069977429/job/130695607709"
+          }
+        ]
+      },
+      {
+        "name": "Security / gate",
+        "matches": [
+          {
+            "conclusion": "success",
+            "sha": "f7c94f5379aea19ef52bf347dbf9fb63d355435a",
+            "url": "https://github.com/yukasung/tiewtrade/actions/runs/43069977009/job/130698103159"
+          }
+        ]
+      }
+    ],
+    "merged": true,
+    "merge_sha": "f7c94f5379aea19ef52bf347dbf9fb63d355435a",
+    "ci_run_id": 43069977429,
+    "security_run_id": 43069977009,
+    "ci_conclusion": "success",
+    "security_conclusion": "success",
+    "event": "push",
+    "selection": "full",
+    "policy_tests_passed": 58,
+    "e2e_tests_passed": 42,
+    "diagnostic_report": {
+      "contexts": {
+        "sudo": {
+          "dns": {
+            "archive.ubuntu.com": {
+              "status": "success"
+            },
+            "azure.archive.ubuntu.com": {
+              "status": "success"
+            },
+            "packages.microsoft.com": {
+              "status": "success"
+            },
+            "security.ubuntu.com": {
+              "status": "success"
+            }
+          },
+          "https": {
+            "https://archive.ubuntu.com/ubuntu/": {
+              "http_status": 200,
+              "status": "success"
+            },
+            "https://packages.microsoft.com/": {
+              "http_status": 200,
+              "status": "success"
+            }
+          },
+          "metadata": {
+            "apt_proxy": true,
+            "apt_proxy_status": "success",
+            "nameservers": [
+              "127.0.0.53"
+            ],
+            "proxy_env": {
+              "ALL_PROXY": false,
+              "HTTPS_PROXY": false,
+              "HTTP_PROXY": false,
+              "NO_PROXY": false,
+              "all_proxy": false,
+              "http_proxy": false,
+              "https_proxy": false,
+              "no_proxy": false
+            },
+            "resolver_status": "success"
+          }
+        },
+        "user": {
+          "dns": {
+            "archive.ubuntu.com": {
+              "status": "success"
+            },
+            "azure.archive.ubuntu.com": {
+              "status": "success"
+            },
+            "packages.microsoft.com": {
+              "status": "success"
+            },
+            "security.ubuntu.com": {
+              "status": "success"
+            }
+          },
+          "https": {
+            "https://archive.ubuntu.com/ubuntu/": {
+              "http_status": 200,
+              "status": "success"
+            },
+            "https://packages.microsoft.com/": {
+              "http_status": 200,
+              "status": "success"
+            }
+          },
+          "metadata": {
+            "apt_proxy": true,
+            "apt_proxy_status": "success",
+            "nameservers": [
+              "127.0.0.53"
+            ],
+            "proxy_env": {
+              "ALL_PROXY": false,
+              "HTTPS_PROXY": false,
+              "HTTP_PROXY": false,
+              "NO_PROXY": false,
+              "all_proxy": false,
+              "http_proxy": false,
+              "https_proxy": false,
+              "no_proxy": false
+            },
+            "resolver_status": "success"
+          }
+        }
+      },
+      "continue_installation": true,
+      "diagnostic_complete": true,
+      "runner_image": {
+        "ImageOS": "ubuntu24",
+        "ImageVersion": "20261101.360.1"
+      }
+    },
+    "manual_full": "Pending — owner dispatch instruction required"
+  },
+  "manual_full_checkpoint": {
+    "id": 43146837886,
+    "event": "workflow_dispatch",
+    "head_sha": "f7c94f5379aea19ef52bf347dbf9fb63d355435a",
+    "status": "completed",
+    "conclusion": "success",
+    "html_url": "https://github.com/yukasung/tiewtrade/actions/runs/43146837886",
+    "run_started_at": "2026-11-12T03:14:21Z",
+    "updated_at": "2026-11-12T03:33:32Z",
+    "jobs": [
+      {
+        "id": 130946527606,
+        "name": "ค่ากลาง — เวอร์ชัน PostgreSQL",
+        "conclusion": "success"
+      },
+      {
+        "id": 130946660459,
+        "name": "e2e execution",
+        "conclusion": "success"
+      },
+      {
+        "id": 130946660460,
+        "name": "frontend execution",
+        "conclusion": "success"
+      },
+      {
+        "id": 130946660493,
+        "name": "docker execution",
+        "conclusion": "success"
+      },
+      {
+        "id": 130946660547,
+        "name": "api-contract execution",
+        "conclusion": "success"
+      },
+      {
+        "id": 130946660566,
+        "name": "backend execution",
+        "conclusion": "success"
+      },
+      {
+        "id": 130947006460,
+        "name": "สัญญา API — ชนิดข้อมูลสองฝั่งต้องตรง...",
+        "conclusion": "success"
+      },
+      {
+        "id": 130947210848,
+        "name": "หน้าบ้าน — lint, types, tests",
+        "conclusion": "success"
+      },
+      {
+        "id": 130947392832,
+        "name": "container — ทั้งสองฝั่งรันใน container ได้",
+        "conclusion": "success"
+      },
+      {
+        "id": 130949569655,
+        "name": "e2e — เบราว์เซอร์จริงเห็นข้อมูลจาก API ...",
+        "conclusion": "success"
+      },
+      {
+        "id": 130953380563,
+        "name": "หลังบ้าน — lint, types, imports, tests",
+        "conclusion": "success"
+      }
+    ],
+    "required_checks": [
+      {
+        "name": "หลังบ้าน — lint, types, imports, tests",
+        "head_sha": "f7c94f5379aea19ef52bf347dbf9fb63d355435a",
+        "conclusion": "success",
+        "html_url": "https://github.com/yukasung/tiewtrade/actions/runs/43146837886/job/130953380563"
+      },
+      {
+        "name": "e2e — เบราว์เซอร์จริงเห็นข้อมูลจาก API ...",
+        "head_sha": "f7c94f5379aea19ef52bf347dbf9fb63d355435a",
+        "conclusion": "success",
+        "html_url": "https://github.com/yukasung/tiewtrade/actions/runs/43146837886/job/130949569655"
+      },
+      {
+        "name": "หน้าบ้าน — lint, types, tests",
+        "head_sha": "f7c94f5379aea19ef52bf347dbf9fb63d355435a",
+        "conclusion": "success",
+        "html_url": "https://github.com/yukasung/tiewtrade/actions/runs/43146837886/job/130947210848"
+      },
+      {
+        "name": "container — ทั้งสองฝั่งรันใน container ได้",
+        "head_sha": "f7c94f5379aea19ef52bf347dbf9fb63d355435a",
+        "conclusion": "success",
+        "html_url": "https://github.com/yukasung/tiewtrade/actions/runs/43146837886/job/130947392832"
+      },
+      {
+        "name": "ค่ากลาง — เวอร์ชัน PostgreSQL",
+        "head_sha": "f7c94f5379aea19ef52bf347dbf9fb63d355435a",
+        "conclusion": "success",
+        "html_url": "https://github.com/yukasung/tiewtrade/actions/runs/43146837886/job/130946527606"
+      },
+      {
+        "name": "สัญญา API — ชนิดข้อมูลสองฝั่งต้องตรง...",
+        "head_sha": "f7c94f5379aea19ef52bf347dbf9fb63d355435a",
+        "conclusion": "success",
+        "html_url": "https://github.com/yukasung/tiewtrade/actions/runs/43146837886/job/130947006460"
+      },
+      {
+        "name": "Security / gate",
+        "head_sha": "f7c94f5379aea19ef52bf347dbf9fb63d355435a",
+        "conclusion": "success",
+        "html_url": "https://github.com/yukasung/tiewtrade/actions/runs/43148011623/job/130951704447"
+      }
+    ],
+    "policy_tests_passed": 58,
+    "selection": "full",
+    "selection_reason": "Manual full: require all checks.",
+    "e2e_test_counts": [
+      20,
+      2,
+      7,
+      7,
+      6
+    ],
+    "diagnostic_report": {
+      "contexts": {
+        "sudo": {
+          "dns": {
+            "archive.ubuntu.com": {
+              "status": "success"
+            },
+            "azure.archive.ubuntu.com": {
+              "status": "success"
+            },
+            "packages.microsoft.com": {
+              "status": "success"
+            },
+            "security.ubuntu.com": {
+              "status": "success"
+            }
+          },
+          "https": {
+            "https://archive.ubuntu.com/ubuntu/": {
+              "http_status": 200,
+              "status": "success"
+            },
+            "https://packages.microsoft.com/": {
+              "http_status": 200,
+              "status": "success"
+            }
+          },
+          "metadata": {
+            "apt_proxy": true,
+            "apt_proxy_status": "success",
+            "nameservers": [
+              "127.0.0.53"
+            ],
+            "proxy_env": {
+              "ALL_PROXY": false,
+              "HTTPS_PROXY": false,
+              "HTTP_PROXY": false,
+              "NO_PROXY": false,
+              "all_proxy": false,
+              "http_proxy": false,
+              "https_proxy": false,
+              "no_proxy": false
+            },
+            "resolver_status": "success"
+          }
+        },
+        "user": {
+          "dns": {
+            "archive.ubuntu.com": {
+              "status": "success"
+            },
+            "azure.archive.ubuntu.com": {
+              "status": "success"
+            },
+            "packages.microsoft.com": {
+              "status": "success"
+            },
+            "security.ubuntu.com": {
+              "status": "success"
+            }
+          },
+          "https": {
+            "https://archive.ubuntu.com/ubuntu/": {
+              "http_status": 200,
+              "status": "success"
+            },
+            "https://packages.microsoft.com/": {
+              "http_status": 200,
+              "status": "success"
+            }
+          },
+          "metadata": {
+            "apt_proxy": true,
+            "apt_proxy_status": "success",
+            "nameservers": [
+              "127.0.0.53"
+            ],
+            "proxy_env": {
+              "ALL_PROXY": false,
+              "HTTPS_PROXY": false,
+              "HTTP_PROXY": false,
+              "NO_PROXY": false,
+              "all_proxy": false,
+              "http_proxy": false,
+              "https_proxy": false,
+              "no_proxy": false
+            },
+            "resolver_status": "success"
+          }
+        }
+      },
+      "continue_installation": true,
+      "diagnostic_complete": true,
+      "runner_image": {
+        "ImageOS": "ubuntu24",
+        "ImageVersion": "20261101.360.1"
+      }
+    },
+    "security_evidence": "Unchanged same-SHA Security run 43069977009; not redispatched."
   }
 }

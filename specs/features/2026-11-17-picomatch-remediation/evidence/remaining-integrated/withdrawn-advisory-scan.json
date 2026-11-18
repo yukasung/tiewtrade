@@ -1,0 +1,22 @@
+{
+  "coverage": 464,
+  "counts": {
+    "critical": 0,
+    "high": 0,
+    "low": 0,
+    "medium": 4,
+    "none": 0,
+    "unknown": 0,
+    "excepted": 0,
+    "blocked": 0,
+    "needs_triage": 0
+  },
+  "elapsed_seconds": 14.194,
+  "artifact_sha256": "9cc97cff17fcae65f9b7e9b249670d38decc451c0210f34678de608a5e8ff39d",
+  "locks": {
+    "backend/uv.lock": "f427025bd867333a3cd8628ef7e7c76309866b9fdaee3f968c77c404b074402b",
+    "frontend/package-lock.json": "d10d7577554b3f5b524e26bc0bbfa829dbe467e24669a1a46ed39f1d072b9c35"
+  },
+  "withdrawn_advisory": "GHSA-fc5q-39xc-vjpf",
+  "withdrawal_verified_online_this_scan": true
+}

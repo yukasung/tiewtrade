@@ -1757,3 +1757,16 @@ Both owned DBs/Redis independently confirmed absent. W4-only readiness harness a
 Incomplete. AWAKE01 four-hour proof unaffected. Next publication inventory/affected-proof
 mapping and final candidate required CI; F17 remains Pending Full Validation.
 Evidence: [W4 READY02 result](evidence/endurance20-20261115/w4-ready02-result.md). No Git/CI in this execution scope.
+
+
+## Historical publication outcomes reconciled — 2026-11-18
+
+PR #66 merged `afb2adb`: CI 43193597428 and Security 43193597263 Passed.
+[Scheduler record](scheduler-ci-lock-observer-amendment.md) preserves the earlier failure,
+isolated diagnostic and authorized same-SHA E2E rerun; intermittent cause remains unknown.
+PR #76 merged `d3c9eae`: CI 44122272269 Passed; Security 44122272392 Failed on picomatch.
+[Original blocker](evidence/endurance20-20261115/publication-postmerge-blocker.md) is retained.
+Subsequent PR #77 LP04 remediation/approved exact exception and PR #78 diagnostics merged;
+main `c243d13` CI 44336322663 and Security 44336322562 Passed. These publication outcomes
+do not close original capacity, owner acceptance, bot/notification or Live dependencies.
+F-17 remains **Pending Full Validation**. No campaign rerun or gate waiver in this reconciliation.

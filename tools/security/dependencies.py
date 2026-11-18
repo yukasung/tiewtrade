@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import re
-from pathlib import Path
-
 import tomllib
+from collections.abc import Callable
+from pathlib import Path
 
 from tools.security.model import (
     Finding,
@@ -21,6 +21,7 @@ from tools.security.severity import valid_vector
 from tools.security.trusted_sources import declared_sources
 
 Package = tuple[str, str, str]
+WithdrawalCheck = Callable[[dict[str, object], dict[str, str]], None]
 
 
 def package_key(ecosystem: str, name: str, version: str) -> Package:
@@ -133,7 +134,11 @@ def package_findings(
     return findings
 
 
-def trusted_findings(row: dict[str, object], entry: dict[str, str]) -> list[Finding]:
+def trusted_findings(
+    row: dict[str, object],
+    entry: dict[str, str],
+    withdrawal_check: WithdrawalCheck | None = None,
+) -> list[Finding]:
     package = obj(row.get("package"))
     key = ("npm", entry["name"], entry["version"])
     if (
@@ -146,7 +151,9 @@ def trusted_findings(row: dict[str, object], entry: dict[str, str]) -> list[Find
         f.locator[3] == "GHSA-fc5q-39xc-vjpf" and f.severity in {"high", "critical"}
         for f in findings
     ):
-        raise PolicyError("TRUSTED_SOURCE_ADVISORY_COVERAGE_UNPROVEN")
+        if withdrawal_check is None:
+            raise PolicyError("TRUSTED_SOURCE_ADVISORY_COVERAGE_UNPROVEN")
+        withdrawal_check(row, entry)
     return findings
 
 
@@ -155,6 +162,7 @@ def evaluate(
     root: Path,
     expected: dict[str, set[Package]],
     sbom: tuple[Path, dict[str, str]] | None = None,
+    withdrawal_check: WithdrawalCheck | None = None,
 ) -> tuple[list[Finding], int]:
     data = obj(report)
     seen: dict[str, set[Package]] = {name: set() for name in expected}
@@ -177,7 +185,9 @@ def evaluate(
             if sbom_seen or source.get("type") != "sbom" or len(packages) != 1:
                 raise PolicyError("TRUSTED_SOURCE_ADVISORY_COVERAGE_UNPROVEN")
             sbom_seen = True
-            findings.extend(trusted_findings(obj(packages[0]), sbom[1]))
+            findings.extend(
+                trusted_findings(obj(packages[0]), sbom[1], withdrawal_check)
+            )
             continue
         try:
             relative = path.resolve().relative_to(root.resolve()).as_posix()

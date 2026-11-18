@@ -16,6 +16,7 @@ from tools.security import dependencies, secrets
 from tools.security.model import Finding, PolicyError, array, obj, read_json, string
 from tools.security.system import git
 from tools.security.trusted_sources import declared_sources
+from tools.security.withdrawal import verify_withdrawal
 
 
 @contextmanager
@@ -212,7 +213,9 @@ def scan_dependencies(
         raw = read_json(report)
         if obj(raw).get("errors"):
             raise PolicyError("OSV_REPORTED_ERRORS")
-        findings, coverage = dependencies.evaluate(raw, root, expected, sbom)
+        findings, coverage = dependencies.evaluate(
+            raw, root, expected, sbom, withdrawal_check=verify_withdrawal
+        )
         if (status == 1) != bool(findings):
             raise PolicyError("INCONSISTENT_OSV_EXIT")
         return findings, coverage
