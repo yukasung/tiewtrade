@@ -63,3 +63,21 @@ Remote validation and activation remain pending.
 No helper changes GitHub settings, rotates credentials, sends orders or installs
 application dependencies. Native settings and required-check activation follow the
 approved plan only after review and the owner's Git instructions.
+
+## Declared LP04 local source candidate — 2026-11-18
+
+`trusted-sources.json` is a narrowly scoped, owner-approved source-byte declaration, not
+an advisory exception. The verifier binds the original registry tar, patched tar and
+exact parser diff; rejects unsafe/missing/tampered/unknown sources; preserves npm name/
+version and both-lockfile inventory. Registry-only scans keep their existing behavior.
+The declaration and source artifacts are included in the policy configuration digest.
+
+For the verified LP04 archive, the dependencies scanner includes one private CycloneDX
+SBOM alongside both real lockfiles. The SBOM carries the original npm purl and the
+verified archive SHA-256. Its result must cover exactly the component and report
+GHSA-fc5q-39xc-vjpf at High or Critical. Missing coverage blocks the scan, including
+when the advisory changes and requires reassessment. Findings from this source bind
+the archive hash in their identities. Original lockfile findings retain their identities.
+
+The current local result and proposed owner decision are recorded in
+`specs/features/2026-11-17-picomatch-remediation/evidence/remaining-integrated/sbom-checkpoint.md`.

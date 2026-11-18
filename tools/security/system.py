@@ -15,7 +15,17 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
-from tools.security.model import Candidate, PolicyError, array, digest, obj, read_json, sha, string
+from tools.security.model import (
+    Candidate,
+    PolicyError,
+    array,
+    digest,
+    obj,
+    read_json,
+    sha,
+    string,
+)
+from tools.security.trusted_sources import configuration_paths
 
 
 def quiet(args: list[str], cwd: Path, allowed: tuple[int, ...] = (0,), timeout: int = 600) -> bytes:
@@ -43,6 +53,7 @@ def configuration(root: Path) -> str:
     # Includes helper sources: different evaluators cannot combine their attestations.
     paths += sorted((root / "tools/security").glob("*.py"))
     paths.append(root / ".github/workflows/security.yml")
+    paths += configuration_paths(root)
     return digest(
         {p.relative_to(root).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest() for p in paths}
     )

@@ -1,0 +1,27 @@
+{
+  "schema": 1,
+  "sources": [
+    {
+      "ecosystem": "npm",
+      "name": "picomatch",
+      "version": "4.0.7",
+      "lockfile": "frontend/package-lock.json",
+      "location": "node_modules/picomatch",
+      "resolved": "file:vendor/picomatch-4.0.7-lp04.tgz",
+      "artifact": "frontend/vendor/picomatch-4.0.7-lp04.tgz",
+      "artifact_sha256": "9cc97cff17fcae65f9b7e9b249670d38decc451c0210f34678de608a5e8ff39d",
+      "integrity": "sha512-UIyDffrqtKpAZTfNeI2iKOYas2QGadEZS/I0d4za32CBfIhV22Y6gOhEXX4rb21iqka7huvrgbKRs/AoRr6ZJQ==",
+      "parser_sha256": "b4d1caf92c2aaea62b221cf32138e845f7fa4bfff6c3db3b26e09069b4d1c806",
+      "manifest_sha256": "479b70b87aa7b44344d62c8a459ae7e53dd2bca6c61f1396bd55e63e9de73fc6",
+      "license_sha256": "d0cd141b0c322fded5dfad1d4645bb2fedfc05b7321fe1009469638190d59ef9",
+      "upstream_artifact": "frontend/vendor/picomatch-4.0.7-upstream.tgz",
+      "upstream_sha256": "697b463be3cdbd9ffc8f4194fd5019a69ddf95875fb703d78b2b115cc9e740a8",
+      "upstream_integrity": "sha512-qcJu88Q2IWqJsDD529JKMdwGm/dvInW4HvQnRwiH9JtihJvzGOscDtHE3x1pBKeUOTysQ8kVmLnJ2kJu7yhcGA==",
+      "upstream_url": "https://registry.npmjs.org/picomatch/-/picomatch-4.0.7.tgz",
+      "patch": "frontend/vendor/picomatch-4.0.7-lp04.patch",
+      "patch_sha256": "2dc7c86f9f3071093fa48fd2ff308569a76d2f27737b06d858ce1eb8c1fbeced",
+      "approval": "Owner approved exact LP04 source-policy scope in remaining-security-plan.md on 2026-11-18",
+      "evidence": "specs/features/2026-11-17-picomatch-remediation/remaining-security-plan.md"
+    }
+  ]
+}

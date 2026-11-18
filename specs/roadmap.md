@@ -2187,3 +2187,7 @@ Both owned DBs/Redis independently confirmed absent. W4-only readiness harness a
 Incomplete. AWAKE01 four-hour proof unaffected. Next publication inventory/affected-proof
 mapping and final candidate required CI; F17 remains Pending Full Validation.
 Evidence: [W4 READY02 result](features/2026-11-02-tp-sl/evidence/endurance20-20261115/w4-ready02-result.md). No Git/CI in this execution scope.
+
+### Picomatch dependency remediation — 2026-11-18
+
+LP04 source validation and artifact-bound advisory exception passed local policy. Required CI and postmerge validation pending at publication. F-17 remains Pending Full Validation. [Evidence](features/2026-11-17-picomatch-remediation/validation.md)

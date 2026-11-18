@@ -45,6 +45,10 @@
     "tailwindcss": "4.3.3",
     "typescript": "^5.7.2",
     "vite": "^6.0.3",
-    "vitest": "^4.1.11"
+    "vitest": "^4.1.11",
+    "picomatch": "file:./vendor/picomatch-4.0.7-lp04.tgz"
+  },
+  "overrides": {
+    "picomatch": "$picomatch"
   }
 }
