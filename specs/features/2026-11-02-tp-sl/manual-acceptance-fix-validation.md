@@ -120,3 +120,20 @@ Owner requested refactor; [evidence](evidence/manual-acceptance-fix/review-corre
 64targeted tests,6affected browser cases and scoped lint/types passed. No behavior/
 financial rule change or owner mutation. Refactor-wait statements above retained
 as history. Next requires owner Git instruction for publication/required CI.
+
+## Latest MF-13 read-only visual preparation — 2026-11-12
+
+Owner instructed startup after the remaining-gates audit. Reused existing private
+launcher with ROOT pointed to47d8042 (runtime source identical to mergedafb2adb),
+existing local database/schema0066 and Redis; started API/frontend/public-price
+ingestion only. No financial/protection worker, migration, order/STOP/protection
+mutation, gate/access change or account reset. All four gates read back false
+before/after; existing protections CANCELED2. Authenticated native Chrome shows
+Paper Trade, current chart, combined order-table headers and truthful empty state;
+order submit remains disabled. Frontend and proxy health200, no server traceback.
+URL: http://127.0.0.1:5173/paper/trade. Private startup receipt retained in existing
+operator state; no cookies/credentials published. Owner visual confirmation is
+still Pending; do not mark MF-13 Passed from agent page-load evidence. Prior
+functional owner proof remains scoped; no repeat financial action requested.
+MF-12 final CI/merge is covered by PR66/post-merge checkpoint in validation.md;
+Full Validation, admission/opening and dependency gates remain unchanged.

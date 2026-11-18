@@ -260,19 +260,14 @@ Helper/test ทดลองเก็บนอก repo ไม่รวมใน P
 ไม่เปลี่ยนสถานะ F-01/F-12 หรือรับรอง release/Live gates เพิ่มจากผล CI นี้.
 
 F-01 follow-up: [ลดเวลารอ CI บน GitHub-hosted](features/2026-10-26-ci-feedback-time/plan.md)
-**In Progress — PR #67 754edcc: required checks 6/7 ผ่าน; E2E Failed จาก runner DNS (2026-11-11)**.
-Requirements/plan/validation Approved; branch `feat/ci-feedback-time` จาก `52a00fe`.
-ตัด feature-push ซ้ำ PR, cancel PR เก่า, docs-only/full selector และ required verdicts;
-runtime PR กับ post-merge main คงชุดตรวจเดิมครบ. Review พบ R1: README และเอกสาร
-contract อีกสามไฟล์ต้องเลือก full; แก้และ regression ผ่าน. Local policy tests 28 ข้อรวม
-verdict 294 combinations, Ruff และ strict mypy ผ่าน; ใช้ actionlint ผลเดิมที่ workflow ไม่เปลี่ยน.
-Execution blocks เดิมทั้งห้าไม่เปลี่ยน. Refactor แยก Git base resolution แล้วตรวจซ้ำ 28 tests ผ่าน;
-Commit `d5e733e`/PR #67 รวมบน main `de3bdcb`; docs-only/cancellation pilot ผ่านและปิด PR #68 โดยไม่ merge.
-Security และ required checks อีกห้ารายการผ่าน; E2E attempts 1/2 ล้มระหว่างติดตั้ง dependencies จาก Azure mirror DNS.
-Runner DNS amendment Approved และ implementation/local 40 tests/static checks ผ่าน; focused review/refactor passed; candidate 754edcc has 6/7 required checks passed, E2E setup failed on archive.ubuntu.com DNS; bounded DNS/network diagnostics amendment Approved and implemented locally (58 tests/static checks Passed); focused Code Review passed with no actionable findings (2026-11-12); authorized refactor and post-refactor checks passed; awaiting new candidate/runner evidence.
-PR ยัง 754edcc/E2E Failed; main/manual evidence ยัง Pending;
-ไม่ใช่ Development Complete/Completed และการทำ pilot ไม่ใช่คำสั่ง merge.
-รายละเอียดผลและรายการค้างอยู่ใน [checkpoint](features/2026-10-26-ci-feedback-time/evidence/checkpoint.md).
+**Completed — PR #67 merged `f7c94f5`; main/manual-full validation Passed (2026-11-12)**.
+Requirements/plan/validation Approved; review/refactor and all 24 Feature criteria Passed.
+Main CI 43069977429, Security 43069977009 and owner-authorized manual-full 43146837886
+Passed on the merge SHA. Full checks, 58 policy tests and 42 browser cases retained.
+Earlier DNS/setup failures remain in the existing evidence; later success does not
+establish their historical cause or a general performance improvement.
+[Checkpoint](features/2026-10-26-ci-feedback-time/evidence/checkpoint.md).
+Application Feature/Batch/Release and Live activation obligations are unchanged.
 
 ## งาน UI ส่วนกลาง — Responsive Top Navigation
 
@@ -2190,4 +2185,15 @@ Evidence: [W4 READY02 result](features/2026-11-02-tp-sl/evidence/endurance20-202
 
 ### Picomatch dependency remediation — 2026-11-18
 
-LP04 source validation and artifact-bound advisory exception passed local policy. Required CI and postmerge validation pending at publication. F-17 remains Pending Full Validation. [Evidence](features/2026-11-17-picomatch-remediation/validation.md)
+LP04 source validation and exact owner-approved artifact-bound exception passed local policy; PR #77 merged. After the historical chart seed failure, diagnostic PR #78 merged at `c243d13` and main CI 44336322663/Security 44336322562 Passed. Earlier failed results remain recorded; no permanent root-cause-fix claim. F-17 remains Pending Full Validation. [Evidence](features/2026-11-17-picomatch-remediation/validation.md)
+
+
+### Local evidence reconciliation — 2026-11-18
+
+Owner-approved continuous review and stateless-session rules reconciled with main.
+CI feedback-time PR #67 main/manual-full closure is now recorded in its validation.
+PR #66 scheduler and PR #76 endurance publication outcomes are retained as historical
+evidence. Picomatch PR #77 and chart diagnostic PR #78 are merged; main `c243d13`
+passed CI 44336322663 and Security 44336322562. Prior Failed/Incomplete runs remain
+historical results; no root-cause or F-17 Completed claim. F-17 **Pending Full Validation**.
+[Reconciliation record](maintenance/2026-11-18-local-reconciliation/checkpoint.md).

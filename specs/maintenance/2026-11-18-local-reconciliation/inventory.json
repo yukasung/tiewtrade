@@ -1,0 +1,1081 @@
+{
+  "baseline": "c243d130976359603b82cc52e67a79282234b8c1",
+  "private_artifact_files": 9610,
+  "private_artifacts": "Retained outside Git with the original worktree patches; raw traces and dumps are not published.",
+  "files": [
+    {
+      "source_worktree": "TiewTrade",
+      "path": "AGENTS.md",
+      "sha256": "2f53481d679752f56e9d8a3ce1fe295c09d0439977384965bbefef223a8f8657",
+      "disposition": "KEEP_GOVERNANCE_UPDATE_SELECTIVE_RECONCILIATION_REQUIRED"
+    },
+    {
+      "source_worktree": "TiewTrade",
+      "path": "specs/features/2026-10-07-realtime-prices/requirements.md",
+      "sha256": "10b2c43d284936320cd06ff6e92011b387d45909df8e14395ef16b7d0ab052a6",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade",
+      "path": "specs/features/2026-10-12-candlestick-chart/requirements.md",
+      "sha256": "6322b9156a4dd49bc17f59065895b85c4486acd9200599d9fb50f71043d89233",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade",
+      "path": "specs/mission.md",
+      "sha256": "18533864db91590524c9914d2c9b3473de23b3c97871d142d8e9a178e93e8eb3",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade",
+      "path": "specs/roadmap.md",
+      "sha256": "790f63d3b9c845d01013273b10f6876d3ea58ef417977c64f1e1fb22539a8f40",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade",
+      "path": "specs/standards/testing.md",
+      "sha256": "f642571024f8fadece76ccf4a8ce3e00ad61962da02f3ea0dd7e552b53a9b345",
+      "disposition": "KEEP_GOVERNANCE_UPDATE_SELECTIVE_RECONCILIATION_REQUIRED"
+    },
+    {
+      "source_worktree": "TiewTrade",
+      "path": "specs/features/2026-10-26-ci-feedback-time/plan.md",
+      "sha256": "c8c43fbbeab8ea856f8759e79c7e3469083111c8869206bb06d652d108aabd6c",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade",
+      "path": "specs/features/2026-10-26-ci-feedback-time/requirements.md",
+      "sha256": "940db571307d56dc846b08f4b61f583bfdf17a71652d0235c5871f36a94b0eff",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade",
+      "path": "specs/features/2026-10-26-ci-feedback-time/validation.md",
+      "sha256": "690f315f79d7c5ef320c9fc59ed927faba0eac5e443f21e5c354a75ea62316d4",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade",
+      "path": "specs/features/2026-11-06-code-cleanup/evidence/implementation-checkpoint.md",
+      "sha256": "d16d77495392b6a95fc4168e737d3dbc040886ece58d09886fe777c2c18a0e69",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade",
+      "path": "specs/features/2026-11-06-code-cleanup/plan.md",
+      "sha256": "a780295bad45d393f5342077b6d101509a58cb249e7e325c006e747b9fab01c9",
+      "disposition": "ALREADY_IN_MAIN_NO_PORT_NEEDED"
+    },
+    {
+      "source_worktree": "TiewTrade",
+      "path": "specs/features/2026-11-06-code-cleanup/requirements.md",
+      "sha256": "199c92c235d2750310faf1aa2e1a71c244ce73ab53f4d161ab8a90666efc0cf5",
+      "disposition": "ALREADY_IN_MAIN_NO_PORT_NEEDED"
+    },
+    {
+      "source_worktree": "TiewTrade",
+      "path": "specs/features/2026-11-06-code-cleanup/validation.md",
+      "sha256": "3bfda722051a5f93b4e43a520f462106ac018b98e7634960f632a3ad2fa5f31a",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade",
+      "path": "specs/features/2026-11-07-remove-prices-page/plan.md",
+      "sha256": "b4a34e6d1a68d0f2850f975ba0948626ab10292f4ea5e7ada713ab3c5cf29bfc",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade",
+      "path": "specs/features/2026-11-07-remove-prices-page/requirements.md",
+      "sha256": "64234f642070efb39fff20a34076ce67fd052f1d07924e13573fa9f656172f03",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade",
+      "path": "specs/features/2026-11-07-remove-prices-page/validation.md",
+      "sha256": "3bb0358c9ca36eba56f147e6dc5e022cba7562fd7d8b2cf97eca3003dbbae78f",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-ci-feedback-time",
+      "path": "specs/features/2026-10-26-ci-feedback-time/evidence/baseline-inventory.json",
+      "sha256": "5150f31ddb47b6a747bf7dbbf3686080fba74aabd83a5f28ad1dde56aff81786",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-ci-feedback-time",
+      "path": "specs/features/2026-10-26-ci-feedback-time/evidence/checkpoint.md",
+      "sha256": "3efa6c9a84ef38d0c2c180b3b9050236d235f9681b536d7136046d31dff8b4c8",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-ci-feedback-time",
+      "path": "specs/features/2026-10-26-ci-feedback-time/evidence/github-pilot.json",
+      "sha256": "e10fe1498d9f328f6d8b22030b0fc22d02e37ebf30e9afeaf7c5b00cf6199ae1",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-ci-feedback-time",
+      "path": "specs/features/2026-10-26-ci-feedback-time/validation.md",
+      "sha256": "c53634bc97e7ad53ac14856a4d21645ce93541bfd8e2692e4da5c52973b9e4c9",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-ci-feedback-time",
+      "path": "specs/roadmap.md",
+      "sha256": "b3037855e8f71664eb30c3ff0f4986d71eadcbb95421ff9c095c0a2dd2a92379",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-ci-feedback-time",
+      "path": "specs/features/2026-10-26-ci-feedback-time/evidence/network-diagnostic-report.json",
+      "sha256": "39dab831cd6e34dd7aabcc310315a44f0d17bd43259a37cf53615f1253b140b5",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-f17-paper-endurance20",
+      "path": "specs/features/2026-11-02-tp-sl/endurance20-publication-plan.md",
+      "sha256": "411454cacdbc86c42e04c085d08c90a5101f12b010a2a1a3383c53e2a4211ca7",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-f17-paper-endurance20",
+      "path": "specs/features/2026-11-02-tp-sl/validation.md",
+      "sha256": "37854f80f93688216be0a00d21fb1080e3cb5a628ce3aed15b5c22e23da600de",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-f17-paper-endurance20",
+      "path": "specs/roadmap.md",
+      "sha256": "2cebe9023f907076e437874c8865b238c2ca1844c10b952a19b6dea47b4bb3e1",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-f17-paper-endurance20",
+      "path": "specs/features/2026-11-02-tp-sl/evidence/endurance20-20261115/publication-postmerge-blocker.md",
+      "sha256": "1490c667be8dae1063771e8a4a1df0a1014227924133c2f8b9a3315f62819787",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-f17-paper-endurance20",
+      "path": "specs/features/2026-11-02-tp-sl/f17-completion-gap-plan.md",
+      "sha256": "624458b9a3d23082deeb882a9a820f5dad86fa3d5efeb0dc9bffa468a8761e29",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-f17-validation-plan-20261109",
+      "path": "specs/features/2026-11-02-tp-sl/manual-acceptance-fix-validation.md",
+      "sha256": "75220fce132b802b5321d92587634d8e629fee2b2d4e78059d4588062f7a35a4",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-f17-validation-plan-20261109",
+      "path": "specs/features/2026-11-02-tp-sl/scheduler-ci-lock-observer-amendment.md",
+      "sha256": "7b42e1cb6cfd6bfc85726dde09476b4ad4b916a2b69b672ced508869dc1ae31e",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-f17-validation-plan-20261109",
+      "path": "specs/features/2026-11-02-tp-sl/validation.md",
+      "sha256": "152f66ed650e29b8ffd9a90d9a68864b50877b4be26c6c20f40db9d9a7b3e955",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-f17-validation-plan-20261109",
+      "path": "specs/roadmap.md",
+      "sha256": "918e5a2c10f0f68b6c6d4fb742474dec7583208fe8fd238106df3975813f5d52",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-f17-validation-plan-20261109",
+      "path": "specs/features/2026-11-02-tp-sl/evidence/remaining-paper-20261109/scheduler-ci-lock-47d8042.json",
+      "sha256": "e3c379041c5527345edbff2e7637aec2cf2e9e2bd8a70256d4e34eebf0d3d94c",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-f17-validation-plan-20261109",
+      "path": "specs/features/2026-11-02-tp-sl/evidence/remaining-paper-20261109/ws-isolated-trace-47d8042-20261112.json",
+      "sha256": "369f74eae01481e46010f647c3a31e6df777224cbcd8257b4c0d505d12092247",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-live-form-observer",
+      "path": "frontend/.geometry-diagnostic.config.ts",
+      "sha256": "e85b44464199f41bc70a091c4f090914278bcdd26c9111d502b24822b8757d20",
+      "disposition": "ARCHIVED_TEMPORARY_DIAGNOSTIC_CONFIG_NO_PORT"
+    },
+    {
+      "source_worktree": "TiewTrade-live-geometry-diagnostic",
+      "path": "frontend/.geometry-diagnostic.config.ts",
+      "sha256": "e85b44464199f41bc70a091c4f090914278bcdd26c9111d502b24822b8757d20",
+      "disposition": "ARCHIVED_TEMPORARY_DIAGNOSTIC_CONFIG_NO_PORT"
+    },
+    {
+      "source_worktree": "TiewTrade-paper-spot-bot-panel",
+      "path": "specs/features/2026-11-13-paper-spot-bot-panel/postmerge-live-form-geometry-diagnostic.md",
+      "sha256": "5f1b38243b93f13269838a197f56f4aaa6a4e0600d0e986ec5aba3c0ecc7cefb",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": ".github/security/exceptions.json",
+      "sha256": "36fca30412f30a323e3218c8f9455d13600bed35a210d756d90bf921515b96d2",
+      "disposition": "ALREADY_IN_MAIN_NO_PORT_NEEDED"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "AGENTS.md",
+      "sha256": "60154f2b2524f8ffa6b3e5144ba5aac5324324adad6f4f6efebefdffece6a953",
+      "disposition": "KEEP_GOVERNANCE_UPDATE_SELECTIVE_RECONCILIATION_REQUIRED"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "frontend/Dockerfile",
+      "sha256": "0de61b935bbdab667ffb7c6a3f4d2c1343d4591e5fd81cda7594d3bf76bf3f40",
+      "disposition": "ALREADY_IN_MAIN_NO_PORT_NEEDED"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "frontend/package-lock.json",
+      "sha256": "d10d7577554b3f5b524e26bc0bbfa829dbe467e24669a1a46ed39f1d072b9c35",
+      "disposition": "ALREADY_IN_MAIN_NO_PORT_NEEDED"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "frontend/package.json",
+      "sha256": "a6afe1f0ba34f834b0827e845dd4e8fc6d2af32bc720da6924cd0be59cc08ca0",
+      "disposition": "ALREADY_IN_MAIN_NO_PORT_NEEDED"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/stage-b-plan.md",
+      "sha256": "186c7866dfbb0116875699127fe9ed59433702e070c631986c206a285ace572d",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/stage-b-validation.md",
+      "sha256": "4a8324a39208fb4adf099f80f385ca2fcf59cc921a0faee85c85189dddb6c5d4",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/validation.md",
+      "sha256": "18f8958207b8948246a99bf02d1725fc8019638b5ed72843434c1e35f7e50b50",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/mission.md",
+      "sha256": "05037b4949ea6ff341903bd79e2b40299b85d6653a56df5fc53cf0c2eb250c5b",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/roadmap.md",
+      "sha256": "bee02c42455d8aef661fbe8cecce3a2a4c0f26eab98bfb4564b0532dc1f7a7d9",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/standards/testing.md",
+      "sha256": "d0d086debbe27b46e20e9acb3007d30cfdd96bb5b4f19ec320489c3be27cef1b",
+      "disposition": "KEEP_GOVERNANCE_UPDATE_SELECTIVE_RECONCILIATION_REQUIRED"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "tools/security/README.md",
+      "sha256": "c793e2d2272749e39dbbaadde961e89ef42532e69b4f08b73a745da846ef96d9",
+      "disposition": "ALREADY_IN_MAIN_NO_PORT_NEEDED"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "tools/security/cli.py",
+      "sha256": "3028c246992f1f252734edcafe59f40e133bd5acb0868037d814e7cc844e3636",
+      "disposition": "ALREADY_IN_MAIN_NO_PORT_NEEDED"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "tools/security/dependencies.py",
+      "sha256": "0cc389b38961f057d0d6f3e21e9a0e3aa9af6a78c829557dcce4742c4d2b0332",
+      "disposition": "ALREADY_IN_MAIN_NO_PORT_NEEDED"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "tools/security/scan.py",
+      "sha256": "bcb3a5d87b155e3749f83f66aad4e9d43effc20f7c97775a199c504d825c3e4b",
+      "disposition": "ALREADY_IN_MAIN_NO_PORT_NEEDED"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "tools/security/system.py",
+      "sha256": "b8bcbf9a646c9733dbcf1c2c76cac9036cf7a36dfc4ce69b9edfe765bf9c2c24",
+      "disposition": "ALREADY_IN_MAIN_NO_PORT_NEEDED"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "frontend/vendor/README.md",
+      "sha256": "dc8ac61151849bd2b584311e500feb15c95ef2f697360aeecc9a1642ed00062d",
+      "disposition": "ALREADY_IN_MAIN_NO_PORT_NEEDED"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "frontend/vendor/picomatch-4.0.7-lp04.patch",
+      "sha256": "2dc7c86f9f3071093fa48fd2ff308569a76d2f27737b06d858ce1eb8c1fbeced",
+      "disposition": "ALREADY_IN_MAIN_NO_PORT_NEEDED"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "frontend/vendor/picomatch-4.0.7-lp04.tgz",
+      "sha256": "9cc97cff17fcae65f9b7e9b249670d38decc451c0210f34678de608a5e8ff39d",
+      "disposition": "ALREADY_IN_MAIN_NO_PORT_NEEDED"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "frontend/vendor/picomatch-4.0.7-upstream.tgz",
+      "sha256": "697b463be3cdbd9ffc8f4194fd5019a69ddf95875fb703d78b2b115cc9e740a8",
+      "disposition": "ALREADY_IN_MAIN_NO_PORT_NEEDED"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/contract-fixture-amendment.md",
+      "sha256": "bf4b6c50e529b0cec53a7fa27e63e870da667b601cf41bfd5ffec5571c1cdde3",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/evidence/installed-runner-review-fixes/result.json",
+      "sha256": "51836b7d698401c4113a00cc719ed6404e6fd02ce05cad52d2cba13646de0d7e",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/evidence/installed-runner-review-refactor/result.json",
+      "sha256": "97edde8162d1b6d4c4a9a29a58dd5c1e1df259a06b9a47cd9307439eeb6d99d2",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/evidence/installed-verification/checkpoint.md",
+      "sha256": "a2b389029db142562a6ce8fa3f159d7a9e3f3db49f3ca411446b6fc0d557efec",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/evidence/installed-verification/ignore-scripts-resolution.json",
+      "sha256": "2c6505013ad3c881c19fccdeb7b3abd32fde13dee5dc9d27edbe7b3828d9b466",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/evidence/installed-verification/normal-resolution.json",
+      "sha256": "2c6505013ad3c881c19fccdeb7b3abd32fde13dee5dc9d27edbe7b3828d9b466",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/evidence/installed-verification/result.json",
+      "sha256": "2472ab86891761264b0c1efccbef113684adbe41f63e4e0def0bbab63bee111c",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/evidence/installed-verification/semantic-lock-delta.json",
+      "sha256": "6bd427a165e51dbf92795c2aa828b3d2d4d31ac1eb2b6cf42347c096da7714e4",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/evidence/installed-verification/targeted-checks.json",
+      "sha256": "79d24612c7f092a1f322e8d0108008543a0bff73f620986ef2278abbaea27c1b",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/evidence/lp04/candidate.json",
+      "sha256": "038051aaa9e8a3e5c29a8b730e7c5e4ee28d59971e1f53a444c2733ae4b4c947",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/evidence/lp04/checkpoint-checks.json",
+      "sha256": "4806e467ab2b252648bfffab6c9b8b00d3a19be3cbf1c6200327c098611004cc",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/evidence/lp04/checkpoint.md",
+      "sha256": "405677807fc81d332eb51129bd76d05ca2da89ea161a22a9fd47e4d0b681e41c",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/evidence/lp04/frozen-matrix.json",
+      "sha256": "0e00028847979c6ee15eaa8b27dbf4d26eb6eda46adee61713b72ddcd0cd58ea",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/evidence/lp04/matrix-results.json",
+      "sha256": "33143e1a44bd25ed2ff6e110f5eb7bae02c76acd5acedc351bdfa91d25a48a36",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/evidence/lp04/picomatch-4.0.7-lp04.patch",
+      "sha256": "2dc7c86f9f3071093fa48fd2ff308569a76d2f27737b06d858ce1eb8c1fbeced",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/evidence/lp04/provenance.json",
+      "sha256": "2292d5e4c94cec116383b0211fe10ed4c7c4f203cb1f18b5eb76a84d8cd4b1e8",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/evidence/lp04/result.json",
+      "sha256": "24e8bf06a4738e5054b7b3ac569f25b33ed047b64789f8f29b0579a6d2d0bdbe",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/evidence/remaining-integrated/advisory-cross-check.json",
+      "sha256": "8da905e3333eef56a48eed63e2915d7c50b2a872e576b4f57acc9f0fe0489e09",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/evidence/remaining-integrated/approved-sbom-result.json",
+      "sha256": "e512351f2141efc5148e9d658933fb0986daa7f3ba0742ac3a7fc445b241f125",
+      "disposition": "ALREADY_IN_MAIN_NO_PORT_NEEDED"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/evidence/remaining-integrated/caller-results.json",
+      "sha256": "5bcb3e2c515f02c91e1dad722d1bbab5bf0668e959fa4b213e31032bfe6ec315",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/evidence/remaining-integrated/checkpoint-checks.json",
+      "sha256": "2a405ca258537bb1e650a0e1af220c11656f35fdc93b6c50aafc79325f3e01d1",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/evidence/remaining-integrated/checkpoint.md",
+      "sha256": "877ddb6e44f7ed8da4bd849c16d39fa164b903d96d26ad7b0779a2297c4085f1",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/evidence/remaining-integrated/dependency-scan.json",
+      "sha256": "a5924726306241406b0dfe4c759a677aa6547c537221b0b8bd4c4700339d0f61",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/evidence/remaining-integrated/frozen-callers.json",
+      "sha256": "8596cdcdb89c41b7fb502bfc3a224f46f00555da33ead91541112152478afd9b",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/evidence/remaining-integrated/frozen-ignore-scripts-resolution.json",
+      "sha256": "bd11b71886cb24c079b975783e2dce5083c97bb16e3c83a4943f656a0e9bc5f5",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/evidence/remaining-integrated/frozen-normal-resolution.json",
+      "sha256": "bd11b71886cb24c079b975783e2dce5083c97bb16e3c83a4943f656a0e9bc5f5",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/evidence/remaining-integrated/module-graph.json",
+      "sha256": "760f44865f511762608a1223952bbb5ab61c220c690554ae235574ce35e2cdd8",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/evidence/remaining-integrated/official.json",
+      "sha256": "92645d21d9c847a0375c64925363ebc98f43f49d584d7a7998f23108eea8aaf3",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/evidence/remaining-integrated/project-plugin-patterns.json",
+      "sha256": "1b05a50e44bbff7203c93155654543bf3a1d7ff010ee7a9a924370c025d11c3c",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/evidence/remaining-integrated/proposed-exception.diff",
+      "sha256": "16323b0de4bdf54dfc0aa65825a5cb28b4798c7f719307084c7d50d33f443381",
+      "disposition": "ALREADY_IN_MAIN_NO_PORT_NEEDED"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/evidence/remaining-integrated/relocated-resolution.json",
+      "sha256": "bd11b71886cb24c079b975783e2dce5083c97bb16e3c83a4943f656a0e9bc5f5",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/evidence/remaining-integrated/result.json",
+      "sha256": "aec8f3a56018ddde4e532fac2a0ea71068430258192b9d39db473571022b4924",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/evidence/remaining-integrated/sbom-checkpoint.md",
+      "sha256": "45cca5070f043c6161da3e076267b69e5daf351845a22969cee6c78e1b83510b",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/evidence/remaining-integrated/sbom-integrated.json",
+      "sha256": "488b6571886407d4bdc52de83749c7c99779d202d1a884a574a4c8293c2b7e03",
+      "disposition": "ALREADY_IN_MAIN_NO_PORT_NEEDED"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/evidence/remaining-integrated/sbom-probe.json",
+      "sha256": "3896f101e4f4b3531bfbb4bfa9fbe4dde27200c96349c05832acecfbd5e47138",
+      "disposition": "ALREADY_IN_MAIN_NO_PORT_NEEDED"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/evidence/remaining-integrated/scanner-local-source-behavior.json",
+      "sha256": "7e3e29166f3af674d742d103adb2f60697a38ec77dc13f2c8aac4a389c592519",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/evidence/remaining-integrated/security-assessment.json",
+      "sha256": "982df7905531f5814c24f1b0e6d1fd5f71930e067995afc382b4b783decc2127",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/evidence/remaining-integrated/semantic-lock-delta.json",
+      "sha256": "5bf101256359df36234d715d3a9f8f242ef11598a6678cbbbefe3bbac8efd5e4",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/evidence/remaining-integrated/source-integration.json",
+      "sha256": "f422e4dbcb640e8297cfe9fb5ba86c3ee69929a091d160e39ab57d127382fc33",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/evidence/security-coverage-c1/caller-sources.json",
+      "sha256": "08e43d9249037eb9c2c727c86b755aa022799d84365fddf32a01b341259f1e7f",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/evidence/security-coverage-c1/candidate.json",
+      "sha256": "6cfad86e8efda720c0be9d39ef3827c33d3a915d64b7758ad6793ffa5827d370",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/evidence/security-coverage-c1/checkpoint.md",
+      "sha256": "4b0940d5a843aad7a10669657197989506061ad957d4830c63e9aec94ff689ee",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/evidence/security-coverage-c1/frozen-matrix.json",
+      "sha256": "11722d1ffa8859f4f9c184efcc0fa8c945e14aa8a8543fc806c6a7e342cb53ca",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/evidence/security-coverage-c1/matrix-results.json",
+      "sha256": "3fdff55535702fb01853069db7a68be2181ce21d4eb7b4bdee1628ebf77af7f1",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/evidence/security-coverage-c1/official-metadata.json",
+      "sha256": "605e6df92c1d37ba35020f5321422f6d314d4eb68d178dd695e6c283a9600f91",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/evidence/security-coverage-c1/provenance-map.md",
+      "sha256": "869af58130a3fbedecf750b613103ea0c005012b55d0538f9a3052c93e8ebb68",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/evidence/security-coverage-c1/result.json",
+      "sha256": "b9613deb55dcb5e6fbd18dba051b746d623ac4cd47e485dbcb2dda3340f3c3fb",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/evidence/security-coverage-c1/targeted-checks.json",
+      "sha256": "919742f53b16e292d6f9697f6ccc9259cd4c473bbe2cfa885d62b4b0e0a4e0e5",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/evidence/security-coverage-source-preparation/caller-sources.json",
+      "sha256": "08e43d9249037eb9c2c727c86b755aa022799d84365fddf32a01b341259f1e7f",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/evidence/security-coverage-source-preparation/contexts.json",
+      "sha256": "520504533deb7cedbae1d85cbeceb8d4bb147248b4dba1ed42ee71f11d937eab",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/evidence/stage-b-absolute/result.json",
+      "sha256": "2971941c865f7c9818c70b5b630a2163632134f1f377d06a98f5d2bd114dc0bf",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/evidence/stage-b-contract-continuation/browser-module-graph.json",
+      "sha256": "a998c5ee0f78e6b3c902135a030f9a5f380db8c6e349983dfe3f46913caeb3c1",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/evidence/stage-b-contract-continuation/checkpoint.md",
+      "sha256": "f4a55d41386f37dedb824b8e004d473fe087c6ded9062c526ba966680aca093e",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/evidence/stage-b-contract-continuation/final-integrity-cleanup.json",
+      "sha256": "dd6c50a56f4e21260cc88f1dfb87afd56030e8c45bf3ca6abf20c409f04bfd15",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/evidence/stage-b-contract-continuation/input-verification.json",
+      "sha256": "d401b358015551ddaabc29c6a1fde66c0a61d1a7bcf595a315eb456043660b3d",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/evidence/stage-b-contract-continuation/pre-test-preparation-error.json",
+      "sha256": "93e5ca99bdd34ae93032bbb31e205a4535f061a0e8a90204b73a44e24556c7bd",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/evidence/stage-b-contract-continuation/result.json",
+      "sha256": "c3f77749d80e51731ef80a0a72558753fd413f51a03d8e22a4124d78af94f95c",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/evidence/stage-b-contract-continuation/smoke-results.json",
+      "sha256": "9f32f21e13c6af815de315ce47b7970cbb48d9dc06dc1d327e5ac4af9cf5db1a",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/evidence/stage-b-contract-continuation/source-policy.json",
+      "sha256": "b404b9b2c9dfbe105e352c15e082c6c21a4350d3888ab0a798c6dbabe2ebd7da",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/evidence/stage-b-contract-continuation/toolchain-results.json",
+      "sha256": "c9e54df336f73efa3123439b5dd306af993201215dae4e06b589972d03781921",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/evidence/stage-b-harness/README.md",
+      "sha256": "624aaa6f793e49c4d9061b05556bad245cb7c1c3f607f42706eef443bf78ff56",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/evidence/stage-b-harness/manifest.json",
+      "sha256": "be7cba52f405f05abc4a6b6112059f70c63ef344a5142826014e957ab379887e",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/evidence/stage-b-harness/picomatch-absolute-probe.py.txt",
+      "sha256": "ac36a764625b12fc923849ebe719bf47b58910d0e71c004b4b3a516644c809b0",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/evidence/stage-b-harness/picomatch-caller-probes.py.txt",
+      "sha256": "bcd97e5c5cc27b003c4038054d65151e53bde678571b23c7af2c4b97320e4c4c",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/evidence/stage-b-harness/picomatch-contract-checks.py.txt",
+      "sha256": "6c6babfdd11b521ee846f0a9448f7cb07028eb51abcb027a9e04d76449b0985a",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/evidence/stage-b-harness/picomatch-contract-setup.py.txt",
+      "sha256": "126809322c078efba55efc5132a394ec23202af44ed4c56e46136b46254fa5cb",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/evidence/stage-b-harness/picomatch-final-smoke.py.txt",
+      "sha256": "a52fa5739dbf431e4572374994004158d931a646a5525d5e73ce81764188abd7",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/evidence/stage-b-harness/picomatch-installed-checks.py.txt",
+      "sha256": "5d7cd563c6110d36174f1a6c3bc25404633d9e55ed4d73ae573d92328d5c2561",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/evidence/stage-b-harness/picomatch-installed-setup.py.txt",
+      "sha256": "396044d67403649b763bae77378a6d8f4713f7456e3bfe526ea1e552fe5f6a41",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/evidence/stage-b-harness/picomatch-root-finalize.py.txt",
+      "sha256": "cd31394ba78c85f43039ce8b6f5923d160a28dde396e3707f4660a4588d3dca5",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/evidence/stage-b-harness/picomatch-root-reference-installs.py.txt",
+      "sha256": "0c3c3f676bf09beda03adba646660acaa5b930112e77faa966e27e7cb27639e3",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/evidence/stage-b-harness/picomatch-root-reference-setup.py.txt",
+      "sha256": "4bf04693f9efc3e6723a47cfdf0d8b13256d0b55df073c089f62b0e15725784a",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/evidence/stage-b-harness/picomatch-toolchain-replacement-finalize.py.txt",
+      "sha256": "ae32921a0d05ba1b0338967e9c2b7f493cefdcd215f88718ce618df5b31d487e",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/evidence/stage-b-harness/picomatch-toolchain-replacement-setup.py.txt",
+      "sha256": "ead5a707d59b751917e49976cce6732fd812014224e35e35fab15db97363ec95",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/evidence/stage-b-harness/picomatch-toolchain-replacement.py.txt",
+      "sha256": "0ade049e87cafc811b0d76a9b1060167a048517a81904d9c01e1766917877ff0",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/evidence/stage-b-harness/picomatch-toolchain.py.txt",
+      "sha256": "6924905a39ea3d8763046b68bf52c0b1d3c5d781e92b48da95af4951a29ff13c",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/evidence/stage-b-installed/checkpoint.md",
+      "sha256": "62aa4179161a5817b8fd79a844017eaef18c75456986b95f9595fe0427a043fd",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/evidence/stage-b-installed/installed-result.json",
+      "sha256": "d750d184a34591f9d7607e8e4266d5b5fa75e7a7bcf7340918ba3424317f18d4",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/evidence/stage-b-installed/result.json",
+      "sha256": "849cfc841cefd8438fc181a3d7c59cef03527a91c25c8151a5c17c5dc50fd7fd",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/evidence/stage-b-review-corrections/result.json",
+      "sha256": "093dd6024269900f6cdc5485bffe211fa3c83ef9a2b5fcbd9ddc9753f50618cc",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/evidence/stage-b-review-refactor/result.json",
+      "sha256": "ba6ae209686719167b1de94434d4e61dd92f9326e5cf736c69f208e375eabf12",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/evidence/stage-b-root-reference/caller-matrix.json",
+      "sha256": "37b5bb62f4d09f018213d994e5aa4e8300c9dd46b8536f65bebbae2d5173343d",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/evidence/stage-b-root-reference/caller-results.json",
+      "sha256": "a78a6d21f16eda6eaf3ca8daba9d8d010d988cb4af8276b97fad3d0586566d3b",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/evidence/stage-b-root-reference/caller-script.mjs",
+      "sha256": "34503bdbcdf134d27b62acc06294025d818dca2b9b350c4a9741105c531b5de2",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/evidence/stage-b-root-reference/checkpoint.md",
+      "sha256": "c634a1adf0f7f9583ed095e09523c29f25f1d11a1e3fd9fb36be81945947f6bc",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/evidence/stage-b-root-reference/installed-result.json",
+      "sha256": "686361719b5ebe6c292bd7e72ae39d9d9b309a821497f7ecd61402c2b6c36e9f",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/evidence/stage-b-root-reference/result.json",
+      "sha256": "689728890650e65ffd79098f5f240fcfbd65153a9f13ea15d356030c241839bf",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/evidence/stage-b-root-reference/semantic-lock-delta.json",
+      "sha256": "0fb87a2a43751698ccecc50cd4b375cfd64f209a6b1193b36245ceb69bfdd636",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/evidence/stage-b-root-reference/source-policy-result.json",
+      "sha256": "7ec4d0218d98abcf7740bb2e7aa04df8e3ae3b06abe3d49e75b59fa0cdacf3f7",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/evidence/stage-b-root-reference/summary.json",
+      "sha256": "061e41aa1d6d5f536c3b03cd23ff10c762f9440b7ce2c061ec75464fc9e4a082",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/evidence/stage-b-root-reference/toolchain-results.json",
+      "sha256": "65e5c88047202e2e0f74853e6cb2f44145a1cee9d3b55ab16097c22ea42fc16a",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/evidence/stage-b-toolchain-replacement/checkpoint.md",
+      "sha256": "391941cb66358f5cb793e83f971696c4590271e78dd0f271554fb8c107e96784",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/evidence/stage-b-toolchain-replacement/result.json",
+      "sha256": "7cd489894c519a2878a2fb2eb1fe8bab15247cc03fdf5de2d224a431bd90260d",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/evidence/stage-b-toolchain-replacement/source-verification.json",
+      "sha256": "9b28991e2830cab9da380f6792970491605cfad1403b5c0cecb517c29535ec31",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/evidence/stage-b-toolchain-replacement/summary.json",
+      "sha256": "4d7f5491fed9b72fd719180c1af4f33be9be61adddd3e6ece4ad2f9dce8897e8",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/evidence/stage-b-toolchain-replacement/toolchain-results.json",
+      "sha256": "a3578942578c72911a620be01ea2dd68c013703f6cf1a2c46274be6456e23620",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/harness/asset_smoke.py",
+      "sha256": "b46f8c67db0e0d70a92c7611f9490da35cac6447cce29eebd0c1ed1877e399ff",
+      "disposition": "KEEP_HISTORICAL_PROTOTYPE_HARNESS_DO_NOT_EXECUTE_OR_PORT_AUTOMATICALLY"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/harness/fixture_artifact.py",
+      "sha256": "30be7411b7c5ec69b6abe69e2b22b9e2526cbfc605b5e293f457966fbcb4b344",
+      "disposition": "KEEP_HISTORICAL_PROTOTYPE_HARNESS_DO_NOT_EXECUTE_OR_PORT_AUTOMATICALLY"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/harness/installed_resolution.mjs",
+      "sha256": "1f88dee5d279e99ef58f7aa54b8cbec1344e63f5d2db9dd77ebf2eff0d91e244",
+      "disposition": "KEEP_HISTORICAL_PROTOTYPE_HARNESS_DO_NOT_EXECUTE_OR_PORT_AUTOMATICALLY"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/harness/installed_verification.py",
+      "sha256": "3c8fcc14c559bcc6c01a619af2f8428b691d9c07f2d14f2b147b3fc2df5c0ed8",
+      "disposition": "KEEP_HISTORICAL_PROTOTYPE_HARNESS_DO_NOT_EXECUTE_OR_PORT_AUTOMATICALLY"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/harness/integrated_compatibility.py",
+      "sha256": "fae7577cc52c9c31c104021f75e3efa136af6c73cd635b9220bef604ce4a1db6",
+      "disposition": "KEEP_HISTORICAL_PROTOTYPE_HARNESS_DO_NOT_EXECUTE_OR_PORT_AUTOMATICALLY"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/harness/lp04-matrix.json",
+      "sha256": "0e00028847979c6ee15eaa8b27dbf4d26eb6eda46adee61713b72ddcd0cd58ea",
+      "disposition": "KEEP_HISTORICAL_PROTOTYPE_HARNESS_DO_NOT_EXECUTE_OR_PORT_AUTOMATICALLY"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/harness/lp04_campaign.py",
+      "sha256": "858c1f03a8fc731c924cbddcac6ddd7497e9732e358231928130a403ca09f903",
+      "disposition": "KEEP_HISTORICAL_PROTOTYPE_HARNESS_DO_NOT_EXECUTE_OR_PORT_AUTOMATICALLY"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/harness/lp04_candidate.py",
+      "sha256": "fc47df70f00a789d11b7e46b64262053bdc0583f9dbfc0899fc7b93eb0030fb0",
+      "disposition": "KEEP_HISTORICAL_PROTOTYPE_HARNESS_DO_NOT_EXECUTE_OR_PORT_AUTOMATICALLY"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/harness/lp04_public_callers.py",
+      "sha256": "a2afddfd7fb1ab1338b41ecece81ede1378666c544cdebff59f7b00520725ca4",
+      "disposition": "KEEP_HISTORICAL_PROTOTYPE_HARNESS_DO_NOT_EXECUTE_OR_PORT_AUTOMATICALLY"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/harness/real_dependency_scan.py",
+      "sha256": "a1fa74ea85e673cac1bd9b58d7cd478cfe5b63ce61a948837970bf662af3b24f",
+      "disposition": "KEEP_HISTORICAL_PROTOTYPE_HARNESS_DO_NOT_EXECUTE_OR_PORT_AUTOMATICALLY"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/harness/security-coverage-matrix.json",
+      "sha256": "11722d1ffa8859f4f9c184efcc0fa8c945e14aa8a8543fc806c6a7e342cb53ca",
+      "disposition": "KEEP_HISTORICAL_PROTOTYPE_HARNESS_DO_NOT_EXECUTE_OR_PORT_AUTOMATICALLY"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/harness/security_coverage.py",
+      "sha256": "bd76cfd57f5e3680c5b040b2a8edab92a310e20ab371695eb03ede026c833e54",
+      "disposition": "KEEP_HISTORICAL_PROTOTYPE_HARNESS_DO_NOT_EXECUTE_OR_PORT_AUTOMATICALLY"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/harness/test_installed_verification.py",
+      "sha256": "d13ed217faee45a8e0e3ddc17df2b9bb481af235dd3ba089d5b0b991be755a06",
+      "disposition": "KEEP_HISTORICAL_PROTOTYPE_HARNESS_DO_NOT_EXECUTE_OR_PORT_AUTOMATICALLY"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/harness/test_integrated_controls.py",
+      "sha256": "7317c3a492a1d00654549df4fbb281226bee9462afaf5190bbcdb0fb38d695e5",
+      "disposition": "KEEP_HISTORICAL_PROTOTYPE_HARNESS_DO_NOT_EXECUTE_OR_PORT_AUTOMATICALLY"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/harness/test_lp04_candidate.py",
+      "sha256": "11c95462afff1cacb3739eb279466b20f4b54f69a25bdabfb4b671ae8c0ff0e1",
+      "disposition": "KEEP_HISTORICAL_PROTOTYPE_HARNESS_DO_NOT_EXECUTE_OR_PORT_AUTOMATICALLY"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/harness/test_security_coverage.py",
+      "sha256": "0ec7acf73d50899039a017d545dc3b91d06ac7aff8d632fbb719e2fb3ef8cc73",
+      "disposition": "KEEP_HISTORICAL_PROTOTYPE_HARNESS_DO_NOT_EXECUTE_OR_PORT_AUTOMATICALLY"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/harness/test_verify_candidate.py",
+      "sha256": "dd62d90ef6d2bd4ff2daa399bdd6d7aff07b272c0ce4e6291522376a4cdbe084",
+      "disposition": "KEEP_HISTORICAL_PROTOTYPE_HARNESS_DO_NOT_EXECUTE_OR_PORT_AUTOMATICALLY"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/harness/verify_candidate.py",
+      "sha256": "d4d35a2007452ac79d1a7aad2036d5ebe0b282a510e5c63d5011e9d86d08337e",
+      "disposition": "KEEP_HISTORICAL_PROTOTYPE_HARNESS_DO_NOT_EXECUTE_OR_PORT_AUTOMATICALLY"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/installed-verification-plan.md",
+      "sha256": "7c16b126ff3dc0cddc67db05e3a8e56b179d292779bb220d8b7b99eab722b097",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/multi-alternative-parser-plan.md",
+      "sha256": "7d8a7a141b1f16a16e76a0c62e561fe2b88e19ba671d6cac0a26ac2a790bee9a",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/portable-root-reference-amendment.md",
+      "sha256": "93a432529c96cf305cca36993344e39ce8de1e8da65ef10d75c534d422f5b841",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/remaining-security-plan.md",
+      "sha256": "6a0eb558be867cda4831db2cf5d2e4f0b25fb2a5e0953091bb08901262cbdcb5",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/security-closure-plan.md",
+      "sha256": "44069ce77d0fadecd9fbff23d43f81ec9f1f0f6ecd41b8969d557424f736d7e1",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/toolchain-fixture-cleanup-amendment.md",
+      "sha256": "11e63f60bbb553ffb05802be57e4ee48b253cf02bde9845a12ed3524b2dc4b06",
+      "disposition": "KEEP_UNPUBLISHED_SPEC_OR_EVIDENCE_RECONCILE_WITH_LATEST_MAIN"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "tools/security/tests/test_trusted_sources.py",
+      "sha256": "d31bdf723488646e89812ccafc633df5ab5bca1a2535d7bb3c2381657df92777",
+      "disposition": "ALREADY_IN_MAIN_NO_PORT_NEEDED"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "tools/security/trusted-sources.json",
+      "sha256": "803a849b7b9a2f93a69187d40a8f4d9591c99febc549682b8869e63b8ad81aa1",
+      "disposition": "ALREADY_IN_MAIN_NO_PORT_NEEDED"
+    },
+    {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "tools/security/trusted_sources.py",
+      "sha256": "12ee16440085be43599be377a99815484d5e6040ba9821c379c2182065569cf0",
+      "disposition": "ALREADY_IN_MAIN_NO_PORT_NEEDED"
+    }
+  ]
+}

@@ -10,3 +10,15 @@
 - Feature and Release: required PR checks and postmerge checks pending at publication.
 - F-17 remains Pending Full Validation. Earlier prototype failures and partial trials remain
   recorded in the local investigation worktree. Publication includes scoped summaries.
+
+
+## Publication results reconciled — 2026-11-18
+
+PR #77 merged at `06107d0`. Its postmerge Security passed, while CI failed at F-12
+chart fixture seeding. Preserve that historical Failed result; diagnostics PR #78 then
+merged at `c243d13`, where [CI](https://github.com/yukasung/tiewtrade/actions/runs/44336322663)
+and [Security](https://github.com/yukasung/tiewtrade/actions/runs/44336322562) Passed.
+The chart failure did not recur in that run; its historical cause remains unproven.
+The exact approved artifact-bound exception and its retirement/reassessment conditions
+remain unchanged. This closes publication monitoring through the follow-up candidate,
+not F-17 Full Validation or general regex safety for other callers/options.

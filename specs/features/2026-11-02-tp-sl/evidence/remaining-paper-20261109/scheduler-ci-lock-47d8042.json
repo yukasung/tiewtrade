@@ -1,0 +1,166 @@
+{
+  "samples": [
+    {
+      "elapsed_seconds": 0.010884797000016988,
+      "interval_seconds": 0.010884797000016988,
+      "activity": {
+        "rows": [
+          {
+            "pid": 9566,
+            "role": "tiewtrade_migrator",
+            "state": "idle",
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "blockers": [],
+            "transaction_age_seconds": null,
+            "query_age_seconds": 0.030009,
+            "coalescing": false
+          }
+        ],
+        "truncated": false
+      },
+      "locks": {
+        "rows": [],
+        "truncated": false
+      },
+      "views_sampled_separately": true
+    },
+    {
+      "elapsed_seconds": 0.04573698499996226,
+      "interval_seconds": 0.03485218799994527,
+      "activity": {
+        "rows": [
+          {
+            "pid": 9566,
+            "role": "tiewtrade_migrator",
+            "state": "idle",
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "blockers": [],
+            "transaction_age_seconds": null,
+            "query_age_seconds": 0.032008,
+            "coalescing": false
+          },
+          {
+            "pid": 9568,
+            "role": "tiewtrade_indicator_builder",
+            "state": "active",
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "blockers": [],
+            "transaction_age_seconds": 0.000705,
+            "query_age_seconds": 0.000384,
+            "coalescing": false
+          },
+          {
+            "pid": 9569,
+            "role": "tiewtrade_indicator_builder",
+            "state": null,
+            "wait_event_type": null,
+            "wait_event": null,
+            "blockers": [],
+            "transaction_age_seconds": null,
+            "query_age_seconds": null,
+            "coalescing": false
+          }
+        ],
+        "truncated": false
+      },
+      "locks": {
+        "rows": [],
+        "truncated": false
+      },
+      "views_sampled_separately": true
+    },
+    {
+      "elapsed_seconds": 0.05862252700001136,
+      "interval_seconds": 0.0128855420000491,
+      "activity": {
+        "rows": [
+          {
+            "pid": 9566,
+            "role": "tiewtrade_migrator",
+            "state": "idle",
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "blockers": [],
+            "transaction_age_seconds": null,
+            "query_age_seconds": 0.044898,
+            "coalescing": false
+          },
+          {
+            "pid": 9568,
+            "role": "tiewtrade_indicator_builder",
+            "state": "active",
+            "wait_event_type": null,
+            "wait_event": null,
+            "blockers": [],
+            "transaction_age_seconds": 0.01088,
+            "query_age_seconds": 0.008401,
+            "coalescing": true
+          },
+          {
+            "pid": 9569,
+            "role": "tiewtrade_indicator_builder",
+            "state": "active",
+            "wait_event_type": "Lock",
+            "wait_event": "transactionid",
+            "blockers": [
+              9568
+            ],
+            "transaction_age_seconds": 0.010679,
+            "query_age_seconds": 0.008208,
+            "coalescing": true
+          }
+        ],
+        "truncated": false
+      },
+      "locks": {
+        "rows": [
+          {
+            "pid": 9568,
+            "locktype": "transactionid",
+            "mode": "ExclusiveLock",
+            "granted": true,
+            "relation": null,
+            "transaction_id": "25754",
+            "virtualxid": null,
+            "classid": null,
+            "objid": null,
+            "objsubid": null
+          },
+          {
+            "pid": 9569,
+            "locktype": "transactionid",
+            "mode": "ExclusiveLock",
+            "granted": true,
+            "relation": null,
+            "transaction_id": "25753",
+            "virtualxid": null,
+            "classid": null,
+            "objid": null,
+            "objsubid": null
+          },
+          {
+            "pid": 9569,
+            "locktype": "transactionid",
+            "mode": "ShareLock",
+            "granted": false,
+            "relation": null,
+            "transaction_id": "25754",
+            "virtualxid": null,
+            "classid": null,
+            "objid": null,
+            "objsubid": null
+          }
+        ],
+        "truncated": false
+      },
+      "views_sampled_separately": true
+    }
+  ],
+  "errors": [],
+  "observation_limit_reached": false,
+  "test_error": null,
+  "status": "Captured"
+}

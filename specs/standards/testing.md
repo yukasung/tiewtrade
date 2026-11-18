@@ -9,31 +9,17 @@
 ด่านก่อน merge ต้องผ่านครบ ไม่อนุญาตข้าม lint/type/architecture/CI หรือเทสต์ความถูกต้อง
 ความปลอดภัย การคำนวณเงิน และ regression ที่เกี่ยวข้อง
 
-**การแบ่งด่านที่เจ้าของอนุมัติ 2026-10-11:** อนุญาต merge เพื่อพัฒนาต่อได้เมื่อ
-implementation/review และด่านที่ไม่เลื่อนผ่านครบ โดยเฉพาะ F-11 ให้เลื่อนเฉพาะ
-การตรวจรับโหลด/ความเสถียรระยะยาวและผลรวมที่ต้องพึ่งรอบนั้นไปชุดที่ 9
-ตาม [ทะเบียนตรวจรับ](../roadmap.md#ทะเบียนงานค้างสำหรับชุดที่-9)
-ด่านอื่นที่ยังล้มต้องแก้ก่อน merge ห้าม skip/xfail หรือลดเกณฑ์ CI เพื่อให้ผ่าน
-ผล Failed/Partial ของการตรวจรับที่เลื่อนต้องเก็บไว้ ไม่แปลงเป็น Passed
-**การปรับ workflow ที่เจ้าของอนุมัติ 2026-10-12:** ย้ายการตรวจ performance/workload/
-stress/endurance/resource ชุดเต็มไป release checkpoint ตามหัวข้อ 7 รวม F-12 V-17
-โดยระบุรายการใน validation/roadmap เป็น `Pending Full Validation`
-ไม่ใช่สิทธิ์เลื่อนเทสต์ความถูกต้องหรือความปลอดภัย และไม่เปลี่ยนผล Failed/Partial เดิม
-
-การ merge นี้ไม่รับรองพร้อมใช้งานจริง ไม่อนุญาต production activation หรือ Completed
-จนผ่าน validation ครบ และยังต้องให้เจ้าของสั่ง commit/push/merge ตามขั้นตอนเดิม
-ข้อกำหนดนี้แทนข้อความเก่าที่ผูกการตรวจรับระยะยาวทั้งหมดกับ merge เท่านั้น
+อนุญาต merge เพื่อพัฒนาต่อได้เมื่อ implementation/review, required CI และด่านระดับ
+`Feature` ผ่านครบ ด่านระดับ `Batch` หรือ `Release` ที่ยังไม่ถึงกำหนดต้องติดตามเป็น
+`Pending Full Validation` ใน validation/roadmap และคงผล Failed/Partial เดิมไว้
+การ merge ไม่รับรองว่า Completed หรือพร้อมเปิด production/Live Trading
 
 | ด่าน | ตรวจอะไร |
 |---|---|
 | รูปแบบและ lint | โค้ดสะอาดตามมาตรฐาน |
 | ตรวจชนิดข้อมูล | เข้มที่สุดกับโค้ดที่คำนวณเงิน |
 | ขอบเขตสถาปัตยกรรม | import-linter ตามกฎใน `architecture.md` |
-| เทสต์ | ด่านบังคับก่อน merge ผ่านทั้งหมด; ชุดยาวที่เลื่อนติดตามใน checkpoint ท้ายชุด; ระบบรวมคงชุดที่ 9 ตามหัวข้อ 7 |
-
-**Amendment — Approved 2026-10-26:** การเลือก full regression ก่อน merge ใช้เกณฑ์
-ตามหัวข้อ 7 ไม่บังคับทุก feature โดยอัตโนมัติ; required CI checks และเทสต์ correctness/
-trading safety ที่เกี่ยวข้องยังต้องผ่าน การอนุมัตินี้ไม่เปลี่ยน CI configuration
+| เทสต์ | targeted correctness/safety/regression ระดับ Feature ผ่าน; ชุด Batch/Release ติดตามตามหัวข้อ 7 |
 
 ## 2. โค้ดที่คำนวณเงิน
 
@@ -97,7 +83,21 @@ trading safety ที่เกี่ยวข้องยังต้องผ�
 
 ## 6. ทุก feature ต้องมี validation.md
 
-บอกไว้ล่วงหน้าว่า "เสร็จ" หมายถึงอะไร และตรวจอย่างไร — เขียนก่อนลงมือทำ ไม่ใช่เขียนตามหลัง
+บอกไว้ล่วงหน้าว่า "เสร็จ" หมายถึงอะไรและตรวจอย่างไร — เขียนก่อนลงมือทำ ไม่ใช่เขียนตามหลัง
+ทุกเกณฑ์ต้องระบุระยะรันหนึ่งค่า:
+
+- `Feature` — ต้องผ่านก่อน merge ของ feature เพราะพิสูจน์ correctness, trading safety,
+  security หรือ contract ที่ feature เปิดใช้งาน
+- `Batch` — ตรวจบน candidate รวมที่นิ่งท้ายชุด roadmap เช่น full regression,
+  cross-feature E2E, performance, workload, stress, endurance หรือ resource ที่รวมรันได้
+- `Release` — ตรวจรับระบบรวมหรือเกณฑ์ที่ต้องพึ่งระบบครบก่อน production/Live Trading
+
+หากเกณฑ์หนึ่งมีทั้ง safety/correctness และ benchmark ให้แยกเป็นคนละแถวและคนละระยะ
+ห้ามใช้การจัดเป็น `Batch` หรือ `Release` เพื่อเลื่อนความปลอดภัยที่ feature ต้องพิสูจน์ก่อน merge
+
+สำหรับ validation ที่อนุมัติก่อน 2026-11-01 ให้ใช้ development/candidate เป็น `Feature`,
+ท้ายชุดเป็น `Batch` และระบบรวม/ก่อน production เป็น `Release` ตาม checkpoint เดิม
+ไม่ต้องแก้เอกสารย้อนหลังทั้งชุด; เพิ่มป้ายเมื่อแก้ validation นั้นครั้งถัดไปโดยไม่เปลี่ยนเกณฑ์หรือผลเดิม
 
 ## 7. เลือกการตรวจตามผลกระทบและลดงานซ้ำ
 
@@ -105,6 +105,16 @@ trading safety ที่เกี่ยวข้องยังต้องผ�
 ด้วยการตรวจเท่าที่จำเป็นตามผลกระทบ ไม่มีเพดานเวลาทดสอบตายตัว
 เวลาใช้หาคอขวด ไม่ใช้ตัดสินว่าผ่านหรือเป็นเหตุข้าม safety checks
 ด่านก่อน merge และเกณฑ์ตรวจรับที่อนุมัติแล้วยังคงใช้ตามระยะรันด้านล่าง
+
+**กฎปัจจุบัน — Approved 2026-11-01:** ใช้สามระยะตรวจด้านล่างเป็นแหล่งอ้างอิงเดียว
+ประวัติ amendment ก่อนหน้านี้ดูจาก Git history ไม่ใช้เป็นกฎซ้อนกับหัวข้อนี้
+
+| ระยะ | ตรวจอะไร |
+|---|---|
+| ระหว่างพัฒนา | targeted Tests และ static checks ชุดเล็กที่สุดที่ครอบคลุม diff, callers, dependencies, contracts, database, concurrency และ trading safety ที่ได้รับผลกระทบ |
+| ก่อน merge (`Feature`) | targeted correctness/safety/regression, static checks ที่เกี่ยวข้อง, review และ required CI บน candidate สุดท้าย |
+| ท้ายชุด/ก่อน release (`Batch`/`Release`) | full regression, cross-feature integration/E2E และ performance/workload/stress/endurance/resource ตาม `validation.md` บน candidate รวมที่นิ่ง |
+
 
 ### เลือกหลักฐานให้เพียงพอ
 
@@ -335,44 +345,18 @@ gates ก่อน merge; จุดอนุมัติเมื่อเปล
 - อัปเดตผล validation ตามหลักฐานจริง ไม่เปลี่ยน Partial/Failed/Not Run เป็น Passed
   จนเงื่อนไขของด่านนั้นครบ; diagnostic run สั้นไม่ทดแทน load/soak/acceptance ที่กำหนด
 
-### ปิด checkpoint หลังโค้ดเสร็จ — Approved 2026-10-26; ปรับจุดหยุดโดยเจ้าของ 2026-10-28
+### Checkpoint และ review — workflow ต่อเนื่อง เจ้าของอนุมัติ 2026-11-18
 
-- เมื่อ implementation ครบทุกขอบเขตของทั้ง feature ใน plan เช่น F-18 ให้แจ้ง
-  **Ready for Code Review** ทันทีตาม AGENTS.md พร้อมส่วนที่เปลี่ยน ผล Tests,
-  validation ที่ยังค้าง และความเสี่ยงที่ reviewer ควรเน้น แล้วหยุดรอเจ้าของใช้คำสั่ง
-  `review code` ก่อนเริ่มรีวิว ไม่รอปิด release validation ทุกข้อก่อนแจ้ง
-- ไม่ใช้ข้อความ Ready for Code Review เมื่อจบงานย่อย, milestone, การแก้ finding
-  เช่น R15 หรือการตรวจเฉพาะส่วน ให้รายงานความคืบหน้าตามปกติ
-- ขั้น review → แก้ findings → ตรวจครั้งสุดท้ายด้านล่างเริ่มได้เมื่อเจ้าของสั่งรีวิวแล้ว
-  และต้องอยู่ในขอบเขตคำสั่งนั้นกับแผนที่อนุมัติ
-- ใช้รายการปิดงานเดียวใน checkpoint/หลักฐานเดิม ผูกกับ plan/validation:
-  findings ที่ต้องแก้, checks ที่จำเป็นต่อ checkpoint, หลักฐานที่ยังขาด และ blockers
-  ไม่สร้างแผน รายงาน หรือรายการตรวจใหม่เพียงเพราะเข้าสู่ขั้นรีวิวหรือกลับมาทำงานต่อ
-- รีวิว diff และ dependencies ที่กระทบ ใช้หลักฐานเดิมที่ยัง valid; หลังแก้ findings
-  ตรวจเฉพาะ findings ที่แก้, diff ใหม่ และ regression ที่ได้รับผลกระทบ
-  ไม่เริ่มรอบรีวิวหรือ validation ทั้งหมดใหม่ เว้นแต่ผลกระทบใหม่หรือเกณฑ์บังคับทำให้จำเป็น
-- เพิ่ม Tests, diagnostics, refactor หรือขยายรอบตรวจได้เฉพาะเมื่อระบุความเสี่ยงหรือช่องว่าง
-  ของเกณฑ์เดิมที่ยังไม่มีหลักฐานรองรับ พร้อมบันทึกสั้นในรายการปิดงานเดิม
-  ไม่เพิ่มเพื่อความมั่นใจอย่างเดียว; ข้อเสนอปรับปรุงนอกขอบเขตรายงานแยกโดยไม่บล็อกงาน
-- เมื่อ review และ checks ที่จำเป็นต่อ checkpoint ผ่าน หลักฐานใช้ได้กับโค้ดล่าสุด
-  และไม่มี correctness/safety findings หรือ blockers ของ checkpoint ค้าง ให้ส่ง checkpoint
-  ทันทีพร้อมผลตรวจและงานค้าง ไม่เพิ่มรอบตรวจหรือไล่ปิดทุกเกณฑ์ release ก่อนส่ง
-- ใน checkpoint หลังรีวิวและแก้ findings ครบ ให้ใช้เงื่อนไขจาก `AGENTS.md`:
-  ถ้างานแก้ source code ให้ถาม **ให้ `refactor the code` ต่อหรือไม่**
-  แล้วรอคำตอบก่อนเริ่ม refactor; งานที่ไม่แก้ source code ให้ทำ validation ที่เกี่ยวข้อง
-  ต่อทันทีโดยไม่ถามเรื่อง refactor
-  คำสั่ง `review code` ไม่ถือเป็นการอนุญาตขั้น refactor นี้; หากเจ้าของให้ทำต่อ
-  ยังคงใช้ขอบเขต spec/plan ที่อนุมัติและเงื่อนไขหยุดถามเดิม
-- หลัง refactor ที่เจ้าของอนุญาตเสร็จ ให้เริ่มทดสอบระบบตาม `validation.md` ของ feature
-  ต่อทันที ไม่ต้องรอคำสั่งทดสอบหรือขออนุมัติซ้ำ ประเมินผลกระทบของ refactor
-  เพื่อเลือกการตรวจซ้ำ ใช้หลักฐานเดิมที่ยัง valid และตรวจเกณฑ์ที่ถึงกำหนดให้ครบ
-  บันทึกผล Passed/Failed/Partial พร้อมหลักฐานและงานค้างใน checkpoint เดิม
-  การเลื่อนเกณฑ์ การตรวจชุดยาว และเงื่อนไขหยุดถามยังใช้กฎเดิม
-- งานตรวจระดับ release ที่อนุญาตให้เลื่อนคง Pending Full Validation และติดตามใน
-  validation/roadmap โดยรักษาผล Failed/Partial เดิม ไม่บล็อกงานพัฒนาถัดไปที่ไม่ขึ้นต่อ
-  ผลนั้น; correctness/trading safety ที่จำเป็นยังเลื่อนไม่ได้
-- การส่ง checkpoint ไม่ใช่การอนุมัติ merge หรือรับรอง Completed/release:
-  ด่านก่อน merge, required CI, คำสั่ง Git และเกณฑ์ตรวจรับเดิมยังใช้ตามระยะที่กำหนด
+- ใช้ `AGENTS.md` หัวข้อ “รีวิว แก้ไข และ refactor ต่อเนื่อง” เป็นแหล่งอ้างอิงขั้นตอน:
+  แจ้ง Ready for Code Review เมื่อครบทั้ง feature แล้วทำ review → แก้ findings → refactor
+  ที่จำเป็น → ตรวจผลกระทบต่อได้โดยไม่รอคำสั่งขั้นย่อย; review-only/คำสั่งหยุดยังมีผล
+- รีวิว diff และ dependencies ที่กระทบ เน้น correctness/security/trading safety หลังแก้
+  ตรวจ finding, diff ใหม่ และ regression ที่ได้รับผลกระทบ ไม่เริ่มตรวจทั้งชุดซ้ำโดยไม่มีเหตุ
+- รวมผลใน checkpoint เดิมครั้งเดียวเมื่อครบหรือพบ blocker; ไม่สร้างรอบอนุมัติ review/
+  refactor เพิ่ม ใช้หลักฐานที่ยัง valid และคง Failed/Partial/Not Run ตามจริง
+- ก่อน merge ต้องผ่านด่าน Feature, required CI และ owner acceptance ที่กำหนด;
+  ก่อน Completed/release ต้องผ่าน Batch/Release ที่เกี่ยวข้อง จุดหยุดเรื่องขอบเขตใหม่
+  จำนวนรอบ/เวลาทดลอง กฎไม่ผ่าน 3 รอบ และการเปลี่ยนเกณฑ์ความปลอดภัยยังคงเดิม
 
 ### รีวิว
 

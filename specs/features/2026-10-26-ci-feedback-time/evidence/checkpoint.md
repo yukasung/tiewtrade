@@ -1,7 +1,7 @@
 # CI feedback time — Implementation checkpoint
 
 วันที่: 2026-11-11
-สถานะ: Bounded network diagnostics review/refactor passed; preparing new GitHub candidate; local 58 tests/static checks Passed; PR #67 remains 754edcc (6/7 required checks Passed, E2E Failed); real diagnostic evidence Pending
+สถานะ: Completed — CI feedback-time scope; PR #67 merged f7c94f5; pre/post-merge and manual-full validation Passed (2026-11-12)
 
 ## Scope และ baseline
 
@@ -387,3 +387,67 @@ No probe targets, permissions, budgets, sanitization or gate policy changed.
 - Real runner diagnostic evidence and required 7/7 remain Pending. Preserve all earlier
   E2E setup failures. Any new resolver/proxy/image recovery requires a separate approved
   amendment based on the actual report; merge still requires owner instruction.
+
+## Final diagnostic candidate checkpoint — 2026-11-12 (Asia/Bangkok)
+
+- Head: `178793c1950f8feb2e7fb074361836e34c5bd27a`; merge candidate:
+  `5ead50aa3b47821c280ab5d146aab66c99b796ec`; base main remains de3bdcb.
+- [CI 43065459114](https://github.com/yukasung/tiewtrade/actions/runs/43065459114):
+  Passed. Full selection, 58 policy tests, all five workers and six stable CI gates Passed.
+- [Security 43065459097](https://github.com/yukasung/tiewtrade/actions/runs/43065459097):
+  Passed. All seven strict required contexts compared with latest PR rollup: **7/7 Passed**.
+  Strict/admin protection unchanged; only pull_request CI/Security events on head.
+- E2E job 130679420367: browser/dependency installation and all five E2E suites Passed:
+  20 + 2 + 7 + 7 + 6 = **42 tests**. Backend Passed main, isolated protection, migration,
+  fresh-state and rollback guard suites. No tests weakened to reach success.
+- Diagnostics ran 17:11:43–17:12:02 UTC (19s). Both HTTPS endpoints returned HTTP 200
+  in both contexts. User archive DNS and both security DNS probes timed out; others succeeded.
+  Both contexts reported nameserver 127.0.0.53 and APT proxy directives present; proxy env
+  indicators were false. Proxy values were intentionally not collected.
+- Evidence does not establish why earlier attempts failed, whether APT directives enabled
+  an active proxy, or why individual DNS probes timed out. Do not attribute recovery to
+  refactoring or claim DNS permanently fixed. This run completed installation and tests;
+  no resolver/proxy/image change or extra diagnostic rerun is warranted by its passing result.
+- Safe report: [network-diagnostic-report.json](network-diagnostic-report.json). Candidate/
+  protection results: [github-pilot.json](github-pilot.json). Prior three failed setup attempts
+  retained; docs-only/cancellation proof reused because its behavior is unaffected.
+- Run-start to final update elapsed 23m04s; this is one observation, not a general speedup.
+  Result-only evidence/roadmap edits remain uncommitted to avoid another reporting CI cycle;
+  current results also reported in PR #67 and the owner checkpoint.
+- Pre-merge Feature gates satisfied for this candidate. Next: await owner merge instruction,
+  then recheck current SHA/protection and follow post-merge main CI. Manual-full remains
+  Pending until instructed and available on default branch. Not Completed before remaining
+  validation passes. No merge or branch deletion performed.
+
+## Post-merge checkpoint — 2026-11-12
+
+Owner instructed `merge`; PR #67 merged as `f7c94f5379aea19ef52bf347dbf9fb63d355435a`.
+Merge tree matches validated synthetic candidate `5ead50aa3b47821c280ab5d146aab66c99b796ec`.
+- [Main CI](https://github.com/yukasung/tiewtrade/actions/runs/43069977429): Passed.
+  Config explicitly selected full for main push; 58 policy tests and all original workers passed.
+- [Security](https://github.com/yukasung/tiewtrade/actions/runs/43069977009): Passed.
+  All seven required protection contexts independently verified successful on the merge SHA.
+- E2E dependency/browser installation and all five suites passed: 42 tests (20+2+7+7+6).
+  All eight DNS probes and four HTTPS probes passed in user/sudo contexts; HTTPS returned 200.
+  This run does not establish the cause of the earlier DNS failures; previous evidence is retained.
+- V-13 main proof Passed; manual-full remains Pending. V-16 remains Partial until that checkpoint.
+  Next: owner instruction to dispatch manual full per plan; no additional run started.
+- Result-only local evidence and PR description updated without another commit/push.
+  Branch/worktree retained with pending evidence. Feature is not yet Completed.
+
+## Manual-full closure — 2026-11-12
+
+Owner explicitly instructed `รัน manual full`. Dispatched `ci.yml`, ref `main`, mode `full`
+once; [run 43146837886](https://github.com/yukasung/tiewtrade/actions/runs/43146837886)
+passed on `f7c94f5379aea19ef52bf347dbf9fb63d355435a`.
+- Config log: `CI selection: full. Manual full: require all checks.` Policy tests: 58 Passed.
+- All 11 workflow jobs passed: config, five full runtime workers and five stable verdicts.
+  Backend includes protection integration, both migration guards, fresh global state and rollback guards.
+- E2E: 42 Passed (20+2+7+7+6); DNS/HTTPS probes succeeded in both user/sudo contexts.
+  Prior DNS failures and unknown historical root cause remain recorded.
+- All seven required contexts passed on this SHA; unchanged Security evidence reused from
+  run 43069977009, not dispatched again. Observed run elapsed 19m11s; no general speedup claim.
+- V-13 and V-16 now Passed. All 24 Feature criteria Passed; CI feedback-time scope Completed.
+  This does not close application features' Batch/Release or Live activation obligations.
+- Updated local validation/roadmap/evidence and PR description, without result-only commit/push.
+  Pending evidence remains in this worktree; no branch deletion. No further work in this scope.

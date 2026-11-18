@@ -1,0 +1,37 @@
+{
+  "candidate": "47d804289855a010246567ff463085f2dab488a2",
+  "target": "e2e/realtime-prices.spec.ts",
+  "attempts": 1,
+  "retries": 0,
+  "source_unchanged": true,
+  "runtime": "macOS arm64; Python3.12.15; Node22.23.4; Playwright1.63.0/Chromium1243",
+  "status": "Passed",
+  "exit_code": 0,
+  "test_process_seconds": 26.005032875000325,
+  "stats": {
+    "startTime": "2026-11-12T08:48:20.984Z",
+    "duration": 24731.975,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "remaining_database_sessions": [],
+  "database_dropped": true,
+  "own_containers_removed": true,
+  "total_seconds": 32.0956330830013,
+  "trace_policy": "Raw Playwright trace/log/report remain private outside repository; may contain test credentials and session cookies.",
+  "observed_timeline": {
+    "offline_end_ms": 23232.666,
+    "socket_close_evaluation_end_ms": 23253.178,
+    "first_defined_close_code_evaluation_end_ms": 23274.912,
+    "offline_close_code": 1005,
+    "revoked_close_code": 4401,
+    "interpretation": "First defined close code observed about42.246ms after offline call completed; a sampling upper bound, not exact event delivery latency or a new acceptance threshold."
+  },
+  "limitations": [
+    "Single isolated passing macOS run; failed GitHub runner is Linux and ran preceding E2E cases.",
+    "No reproduction or established root cause for the earlier five-second undefined closeCode failure.",
+    "No source/test/timeout/assertion change, extra attempt or CI rerun. Existing required CI remains Failed."
+  ]
+}
