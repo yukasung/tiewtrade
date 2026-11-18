@@ -64,3 +64,14 @@ orchestration; default offline adapter behavior remains fail-closed. Existing mo
 parsers/counts and source identity verification are reused. No further refactor is
 justified. Local acceptance is recorded in validation.md and withdrawn-advisory-scan.json;
 required final-candidate CI and postmerge checks are still pending.
+
+
+CI diagnostic amendment before further publication: `aaabb15` dependencies failed
+with the generic public INVALID_POLICY_DATA code, while the exact merge candidate
+identity/configuration check and full real local scan pass. Existing redaction hides
+the failing invariant and no raw scanner data is retained by design. Add only known
+constant advisory/inventory/candidate error codes to the public allowlist, retaining
+redaction for arbitrary exception text and all acceptance conditions. This is a scoped
+diagnostic under delegated engineering authority, not a policy bypass or blind retry.
+The next candidate preserves both failed attempts and must stop/report if the remaining
+error cannot be resolved within the existing three-failure bound.
