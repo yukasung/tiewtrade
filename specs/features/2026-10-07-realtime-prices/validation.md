@@ -579,3 +579,26 @@ configuration, frontend, API contract, container builds, backend, browser E2E.
 Owner authorized PR, merge, main CI verification and branch cleanup. The Done
 roadmap change is included in the closing PR; branch deletion follows successful
 main CI and confirmed remote merge.
+
+
+## Authorization timer measurement correction — 2026-11-19
+
+See the pre-edit engineering record in plan.md. PR79 `a77b4a8` attempt1 had
+5648 main tests Passed, then one F-17 processing-start failure at1.037872s against
+unchanged<=1s (53 protection cases Passed). One same-SHA backend-only rerun attempt2
+had5647 main tests Passed/1Failed: first-authorization wall timer0.606827373s against
+unchanged<0.6s. Protection suite and later DB guards were Not Run in that attempt.
+Neither failure is relabeled Passed or diagnosed as a permanent runtime defect/fix.
+
+The first-authorization test now observes the actual500ms AuthorizationWindow start
+without including pre-coordinator handshake/admission. It retains original1011 close
+and<0.6s completion through close/teardown from that boundary, plus verifies actual
+cancellation within the same0.6s and the exact0.5s server budget. Clock domains are
+kept separate. No timeout/window/permission/production code change or1s SLA relaxation.
+
+Local: five existing AuthorizationWindow/watchdog unit cases Passed using their
+original synthetic fixtures (autouse integration fixtures excluded for this unit-only
+command); focused Ruff/format and configured strict mypy with actual source path Passed.
+New real-DB integration case Not Run locally because PostgreSQL16/Docker is unavailable.
+This is not replaced by a fake-DB acceptance claim; final required CI must execute it
+and the original real-worker1s protection cases before merge.
