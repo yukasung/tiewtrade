@@ -47,7 +47,8 @@ unmerged. Original branches are backed up in a verified external Git bundle befo
 - Preserve existing Failed/Incomplete and F17 Pending Full Validation. Three unsuccessful
   correction rounds or owner time-stop triggers the original stop rule.
 
-Local documentation checks take minutes. Hosted required CI/Security expected5–10minutes
-per candidate and postmerge round, depending on full-history scanning/queue; no changes to
-CI rules or deadlines to achieve that estimate. No extra requirement/plan approval for a new
+Local documentation checks take minutes. The unchanged selector treats new JSON receipts as unknown inputs and runs full CI; main
+push always runs full postmerge CI. Expect roughly20–30minutes per round (40–60minutes
+total), plus queue/full-history scan variance. No changes to CI rules, receipt formats or
+deadlines to avoid those existing checks. No extra requirement/plan approval for a new
 product feature is inferred from this administrative merge command.
