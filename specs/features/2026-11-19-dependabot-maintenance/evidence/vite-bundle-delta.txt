@@ -1,0 +1,74 @@
+--- package/dist/node/chunks/dep-3O3b9SCF.js
++++ dep-Cohbwjf9.js
+@@ -12971,7 +12971,8 @@
+       key !== 'constructor' &&
+       key !== 'splice'
+     ) {
+-      console.warn(\`Module "${path2}" has been externalized for browser compatibility. Cannot access "${path2}.\${key}" in client code. See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.\`)
++      const path = ${JSON.stringify(path2)}
++      console.warn(\`Module "\${path}" has been externalized for browser compatibility. Cannot access "\${path}.\${key}" in client code. See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.\`)
+     }
+   }
+ }))`
+@@ -12989,7 +12990,7 @@
+           } else {
+             const [, peerDep, parentDep] = path2.split(":");
+             return {
+-              contents: `throw new Error(\`Could not resolve "${peerDep}" imported by "${parentDep}". Is it installed?\`)`
++              contents: `const peerDep = ${JSON.stringify(peerDep)};const parentDep = ${JSON.stringify(parentDep)};throw new Error(\`Could not resolve "\${peerDep}" imported by "\${parentDep}".${isProduction ? "" : " Is it installed?"}\`)`
+             };
+           }
+         }
+@@ -15880,12 +15881,15 @@
+           if (isProduction) {
+             return `export default {}`;
+           } else {
+-            id = id.slice(browserExternalId.length + 1);
+-            return `  export default new Proxy({}, {
+-    get(_, key) {
+-      throw new Error(\`Module "${id}" has been externalized for browser compatibility. Cannot access "${id}.\${key}" in client code.  See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.\`)
+-    }
+-  })`;
++            const modulePath = JSON.stringify(
++              id.slice(browserExternalId.length + 1)
++            );
++            return `export default new Proxy({}, {
++  get(_, key) {
++    const path = ${modulePath}
++    throw new Error(\`Module "\${path}" has been externalized for browser compatibility. Cannot access "\${path}.\${key}" in client code.  See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.\`)
++  }
++})`;
+           }
+         }
+         if (id.startsWith(optionalPeerDepId)) {
+@@ -15893,7 +15897,9 @@
+             return `export default {}`;
+           } else {
+             const [, peerDep, parentDep] = id.split(":");
+-            return `throw new Error(\`Could not resolve "${peerDep}" imported by "${parentDep}". Is it installed?\`)`;
++            const peerDepString = JSON.stringify(peerDep);
++            const parentDepString = JSON.stringify(parentDep);
++            return `const peerDep = ${peerDepString};const parentDep = ${parentDepString};throw new Error(\`Could not resolve "\${peerDep}" imported by "\${parentDep}".${isProduction ? "" : " Is it installed?"}\`)`;
+           }
+         }
+       }
+@@ -37435,7 +37441,7 @@
+ const svgRE = /\.svg\b/;
+ function isServerAccessDeniedForTransform(config, id) {
+   if (rawRE.test(id) || urlRE.test(id) || inlineRE$2.test(id) || svgRE.test(id)) {
+-    return checkLoadingAccess(config, id) !== "allowed";
++    return checkLoadingAccess(config, cleanUrl(id)) !== "allowed" || checkLoadingAccess(config, id) !== "allowed";
+   }
+   return false;
+ }
+@@ -44259,8 +44265,8 @@
+     return cached;
+   };
+ }
+-const importPostcssImport = createCachedImport(() => import('./dep-D2Nv_XqQ.js').then(function (n) { return n.i; }));
+-const importPostcssModules = createCachedImport(() => import('./dep-nQZNP8DK.js').then(function (n) { return n.i; }));
++const importPostcssImport = createCachedImport(() => import('./dep-DCuWsmoA.js').then(function (n) { return n.i; }));
++const importPostcssModules = createCachedImport(() => import('./dep-DF56LxY9.js').then(function (n) { return n.i; }));
+ const importPostcss = createCachedImport(() => import('postcss'));
+ const preprocessorWorkerControllerCache = /* @__PURE__ */ new WeakMap();
+ let alwaysFakeWorkerWorkerControllerCache;

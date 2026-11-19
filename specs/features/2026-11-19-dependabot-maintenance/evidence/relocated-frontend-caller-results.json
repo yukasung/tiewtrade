@@ -1,0 +1,277 @@
+{
+  "status": "PASSED",
+  "graph": {
+    "status": "PASSED",
+    "rows": [
+      {
+        "name": "fdir",
+        "location": "node_modules/fdir",
+        "realpath": "node_modules/fdir",
+        "version": "6.5.0",
+        "edges": [
+          {
+            "dependency": "picomatch",
+            "entry": "node_modules/picomatch/index.js",
+            "package": "node_modules/picomatch",
+            "version": "4.0.7"
+          }
+        ],
+        "imports": [
+          {
+            "file": "node_modules/fdir/dist/index.cjs",
+            "line": 462,
+            "text": "\tpm = require(\"picomatch\");"
+          },
+          {
+            "file": "node_modules/fdir/dist/index.mjs",
+            "line": 444,
+            "text": "\tpm = __require(\"picomatch\");"
+          }
+        ],
+        "parser_sha256": null
+      },
+      {
+        "name": "picomatch",
+        "location": "node_modules/picomatch",
+        "realpath": "node_modules/picomatch",
+        "version": "4.0.7",
+        "edges": [],
+        "imports": [],
+        "parser_sha256": "b4d1caf92c2aaea62b221cf32138e845f7fa4bfff6c3db3b26e09069b4d1c806"
+      },
+      {
+        "name": "tinyglobby",
+        "location": "node_modules/tinyglobby",
+        "realpath": "node_modules/tinyglobby",
+        "version": "0.2.17",
+        "edges": [
+          {
+            "dependency": "fdir",
+            "entry": "node_modules/fdir/dist/index.cjs",
+            "package": "node_modules/fdir",
+            "version": "6.5.0"
+          },
+          {
+            "dependency": "picomatch",
+            "entry": "node_modules/picomatch/index.js",
+            "package": "node_modules/picomatch",
+            "version": "4.0.7"
+          }
+        ],
+        "imports": [
+          {
+            "file": "node_modules/tinyglobby/dist/index.cjs",
+            "line": 27,
+            "text": "let fdir = require(\"fdir\");"
+          },
+          {
+            "file": "node_modules/tinyglobby/dist/index.cjs",
+            "line": 28,
+            "text": "let picomatch = require(\"picomatch\");"
+          },
+          {
+            "file": "node_modules/tinyglobby/dist/index.mjs",
+            "line": 4,
+            "text": "import { fdir } from \"fdir\";"
+          },
+          {
+            "file": "node_modules/tinyglobby/dist/index.mjs",
+            "line": 5,
+            "text": "import picomatch from \"picomatch\";"
+          }
+        ],
+        "parser_sha256": null
+      },
+      {
+        "name": "vite",
+        "location": "node_modules/vite",
+        "realpath": "node_modules/vite",
+        "version": "6.4.6",
+        "edges": [
+          {
+            "dependency": "fdir",
+            "entry": "node_modules/fdir/dist/index.cjs",
+            "package": "node_modules/fdir",
+            "version": "6.5.0"
+          },
+          {
+            "dependency": "picomatch",
+            "entry": "node_modules/picomatch/index.js",
+            "package": "node_modules/picomatch",
+            "version": "4.0.7"
+          },
+          {
+            "dependency": "tinyglobby",
+            "entry": "node_modules/tinyglobby/dist/index.cjs",
+            "package": "node_modules/tinyglobby",
+            "version": "0.2.17"
+          }
+        ],
+        "imports": [
+          {
+            "file": "node_modules/vite/dist/node/chunks/dep-Cohbwjf9.js",
+            "line": 10,
+            "text": "import picomatch$2 from 'picomatch';"
+          },
+          {
+            "file": "node_modules/vite/dist/node/chunks/dep-Cohbwjf9.js",
+            "line": 15,
+            "text": "import { fdir } from 'fdir';"
+          },
+          {
+            "file": "node_modules/vite/dist/node/chunks/dep-Cohbwjf9.js",
+            "line": 38,
+            "text": "import { glob, escapePath, isDynamicPattern, globSync } from 'tinyglobby';"
+          },
+          {
+            "file": "node_modules/vite/dist/node-cjs/publicUtils.cjs",
+            "line": 12,
+            "text": "var pm = require('picomatch');"
+          }
+        ],
+        "parser_sha256": null
+      },
+      {
+        "name": "vitest",
+        "location": "node_modules/vitest",
+        "realpath": "node_modules/vitest",
+        "version": "4.1.12",
+        "edges": [
+          {
+            "dependency": "picomatch",
+            "entry": "node_modules/picomatch/index.js",
+            "package": "node_modules/picomatch",
+            "version": "4.0.7"
+          },
+          {
+            "dependency": "tinyglobby",
+            "entry": "node_modules/tinyglobby/dist/index.cjs",
+            "package": "node_modules/tinyglobby",
+            "version": "0.2.17"
+          },
+          {
+            "dependency": "vite",
+            "entry": "node_modules/vite/dist/node/index.js",
+            "package": "node_modules/vite",
+            "version": "6.4.6"
+          }
+        ],
+        "imports": [
+          {
+            "file": "node_modules/vitest/dist/chunks/cli-api.B0Pz1_R7.js",
+            "line": 40,
+            "text": "import pm from 'picomatch';"
+          },
+          {
+            "file": "node_modules/vitest/dist/chunks/cli-api.B0Pz1_R7.js",
+            "line": 41,
+            "text": "import { glob, isDynamicPattern } from 'tinyglobby';"
+          },
+          {
+            "file": "node_modules/vitest/dist/chunks/coverage.DM_a_rWm.js",
+            "line": 7,
+            "text": "import pm from 'picomatch';"
+          },
+          {
+            "file": "node_modules/vitest/dist/chunks/coverage.DM_a_rWm.js",
+            "line": 8,
+            "text": "import { glob } from 'tinyglobby';"
+          }
+        ],
+        "parser_sha256": null
+      }
+    ],
+    "limits": "Resolution and static import proof; no runtime public call or bundle execution. Earlier public caller evidence retained."
+  },
+  "cases": [
+    {
+      "caller": "vite",
+      "kind": "benign",
+      "exit_code": 0,
+      "passed": true,
+      "seconds": 0.6978
+    },
+    {
+      "caller": "vite",
+      "kind": "single",
+      "exit_code": 0,
+      "passed": true,
+      "seconds": 0.1994
+    },
+    {
+      "caller": "vite",
+      "kind": "multi",
+      "exit_code": 0,
+      "passed": true,
+      "seconds": 0.1725
+    },
+    {
+      "caller": "tinyglobby",
+      "kind": "benign",
+      "exit_code": 0,
+      "passed": true,
+      "seconds": 0.0839
+    },
+    {
+      "caller": "tinyglobby",
+      "kind": "single",
+      "exit_code": 0,
+      "passed": true,
+      "seconds": 0.0874
+    },
+    {
+      "caller": "tinyglobby",
+      "kind": "multi",
+      "exit_code": 0,
+      "passed": true,
+      "seconds": 0.0873
+    },
+    {
+      "caller": "fdir",
+      "kind": "benign",
+      "exit_code": 0,
+      "passed": true,
+      "seconds": 0.0775
+    },
+    {
+      "caller": "fdir",
+      "kind": "single",
+      "exit_code": 0,
+      "passed": true,
+      "seconds": 0.0829
+    },
+    {
+      "caller": "fdir",
+      "kind": "multi",
+      "exit_code": 0,
+      "passed": true,
+      "seconds": 0.0819
+    },
+    {
+      "caller": "vitest",
+      "kind": "benign",
+      "exit_code": 0,
+      "passed": true,
+      "seconds": 0.4456
+    },
+    {
+      "caller": "vitest",
+      "kind": "single",
+      "exit_code": 1,
+      "passed": true,
+      "seconds": 0.2678
+    },
+    {
+      "caller": "vitest",
+      "kind": "multi",
+      "exit_code": 1,
+      "passed": true,
+      "seconds": 0.2665
+    }
+  ],
+  "limits": {
+    "child_seconds": 2,
+    "stage_seconds": 30,
+    "heap_MiB": 256
+  }
+}

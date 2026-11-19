@@ -1,0 +1,30 @@
+[
+  {
+    "workspace": "frontend-ignore",
+    "mode": "ignore-scripts",
+    "seconds": 6.15,
+    "lock_unchanged": true,
+    "exit_code": 0
+  },
+  {
+    "workspace": "relocated/frontend",
+    "mode": "normal",
+    "seconds": 6.83,
+    "lock_unchanged": true,
+    "exit_code": 0
+  },
+  {
+    "workspace": "relocated/reference",
+    "mode": "normal",
+    "seconds": 6.69,
+    "lock_unchanged": true,
+    "exit_code": 0
+  },
+  {
+    "workspace": "reference-baseline",
+    "mode": "normal",
+    "seconds": 6.72,
+    "lock_unchanged": true,
+    "exit_code": 0
+  }
+]

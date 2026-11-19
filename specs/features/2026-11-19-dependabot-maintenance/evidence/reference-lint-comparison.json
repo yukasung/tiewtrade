@@ -1,0 +1,8 @@
+{
+  "candidate_exit": 1,
+  "baseline_exit": 1,
+  "errors": 42,
+  "warnings": 4,
+  "normalized_diagnostics_equal": true,
+  "initial_exact_text_comparison": "FAILED: absolute-path length changed formatter padding only"
+}

@@ -1,0 +1,10 @@
+{
+  "brace_cases": 4,
+  "humanfs": [
+    "write",
+    "text",
+    "delete",
+    "isFile"
+  ],
+  "passed": true
+}

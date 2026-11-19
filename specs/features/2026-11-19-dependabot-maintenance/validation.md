@@ -20,16 +20,16 @@ counts/hash และลิงก์หลักฐานที่ตรวจ�
 
 | รหัส | Requirements | การตรวจและเกณฑ์ผ่าน | สถานะ |
 |---|---|---|---|
-| DV-01 | DM-01/02/03 | บันทึก baseline/main/สี่ PR heads; final semantic lock delta ครบ every occurrence/edge/source/integrity/flags. Exact targets และ humanfs closure ถูกต้อง, manifest ranges unchanged, unrelated funding/version drift ไม่มี. WASM entries เพิ่มเฉพาะที่ graph/frozen proof จำเป็นภายใน approved list | Not Run |
-| DV-02 | DM-03/04 | Node 22/exact npm receipts; app normal/ignore-scripts/relocated frozen installs ใช้ exact locks โดยไม่ rewrite. Reference normal/relocated frozen installs และ optional-platform graph ถูกต้อง. ทุก installed picomatch occurrence ใช้ LP04 bytes/hash/identity/license จริง; manifests/override/vendor/policy unchanged | Not Run |
-| DV-03 | DM-04/05 | Existing trusted-source negative tests และ isolated tamper/resolution cases ปฏิเสธ invalid sources. Actual Vite 6.4.6/Vitest 4.1.12/tinyglobby/fdir caller inventory/options และ finite matching/build/discovery/filter cases ผ่าน; no unknown/unsafe opt-out. Archived helper source SHA/provenance และ inputs บันทึกไว้ให้ทำซ้ำได้ | Not Run |
-| DV-04 | DM-06/08/09 | App `npm run lint`, `typecheck`, `test`, `check:api`, `build` ผ่านจาก clean actual candidate. Contract ใช้ backend/openapi.json จริง ไม่มี source/generated drift. Dev/preview routes/assets ผ่านพร้อม cleanup; ไม่มี app/UI/test criterion/timeout change เพื่อกลบ incompatibility | Not Run |
-| DV-05 | DM-06/08/09 | Relevant existing Playwright account/trading UI และ supported-symbols/manual-orders/protections/risk-limits flows ผ่านบน isolated fixtures. Required CI selection ไม่ลด. ตรวจ failure logs โดยเฉพาะ historical PR56 โดยไม่สรุปว่า Vite เป็นสาเหตุล่วงหน้า; auth 500ms/protection 1s ไม่เปลี่ยน | Not Run |
-| DV-06 | DM-03/06 | Reference frozen build/typecheck, dev/preview assets และ installed brace/humanfs actual caller behavior ผ่าน; lint baseline/candidate เปรียบเทียบเก็บทั้งคู่ ไม่มี introduced failure. ไม่แก้ reference source/style/React/Vite major เพื่อให้ผ่าน | Not Run |
-| DV-07 | DM-04/07 | App backend+frontend actual full lock inventory scan ผ่าน pinned binary/checksum/config เดิมพร้อม LP04 trusted SBOM และ fresh withdrawal evidence; inventory report equality ผ่าน รวม dev/transitive/optional/nested. ไม่มี unresolved High/Critical/Unknown หรือ exception ใหม่; Medium/Low รายงานตามจริง | Not Run |
-| DV-08 | DM-07 | Reference exact-lock sidecar mapping/hashes ตรวจครบ, policy เดิม, ไม่มี fake registry source/app-manifest; expected unique identities และ occurrence ledger ครบและ backend/reference counts แยกกัน. Missing-identity negative report ถูก reject. ไม่มี unresolved High/Critical/Unknown; findings อื่นรายงานตามจริง | Not Run |
-| DV-09 | DM-08/09/12 | Review diff/callers/dependencies และ stateless rules; business/money/order/risk/session/schema/contracts invariants unchanged. ไม่มี Live/owner data/new infra, เก็บ review findings และ affected rechecks ครบ, ไม่มี relevant Needs Clarification หรือ blocker | Not Run |
-| DV-10 | DM-10 | Ready for Code Review แจ้งแล้ว; findings resolved และ Feature local ผ่าน. Final combined PR required CI/Security ทุกด่านผ่านบน latest candidate SHA; ตรวจ expected head/base และ external/owner acceptance ที่ repo/branch protection บังคับครบ ไม่ใช้ automated review แทน required reviewer | Not Run |
+| DV-01 | DM-01/02/03 | บันทึก baseline/main/สี่ PR heads; final semantic lock delta ครบ every occurrence/edge/source/integrity/flags. Exact targets และ humanfs closure ถูกต้อง, manifest ranges unchanged, unrelated funding/version drift ไม่มี. WASM entries เพิ่มเฉพาะที่ graph/frozen proof จำเป็นภายใน approved list | Passed — local evidence |
+| DV-02 | DM-03/04 | Node 22/exact npm receipts; app normal/ignore-scripts/relocated frozen installs ใช้ exact locks โดยไม่ rewrite. Reference normal/relocated frozen installs และ optional-platform graph ถูกต้อง. ทุก installed picomatch occurrence ใช้ LP04 bytes/hash/identity/license จริง; manifests/override/vendor/policy unchanged | Passed — local evidence |
+| DV-03 | DM-04/05 | Existing trusted-source negative tests และ isolated tamper/resolution cases ปฏิเสธ invalid sources. Actual Vite 6.4.6/Vitest 4.1.12/tinyglobby/fdir caller inventory/options และ finite matching/build/discovery/filter cases ผ่าน; no unknown/unsafe opt-out. Archived helper source SHA/provenance และ inputs บันทึกไว้ให้ทำซ้ำได้ | Passed — local evidence |
+| DV-04 | DM-06/08/09 | App `npm run lint`, `typecheck`, `test`, `check:api`, `build` ผ่านจาก clean actual candidate. Contract ใช้ backend/openapi.json จริง ไม่มี source/generated drift. Dev/preview routes/assets ผ่านพร้อม cleanup; ไม่มี app/UI/test criterion/timeout change เพื่อกลบ incompatibility | Passed — local evidence |
+| DV-05 | DM-06/08/09 | Relevant existing Playwright account/trading UI และ supported-symbols/manual-orders/protections/risk-limits flows ผ่านบน isolated fixtures. Required CI selection ไม่ลด. ตรวจ failure logs โดยเฉพาะ historical PR56 โดยไม่สรุปว่า Vite เป็นสาเหตุล่วงหน้า; auth 500ms/protection 1s ไม่เปลี่ยน | Pending required CI |
+| DV-06 | DM-03/06 | Reference frozen build/typecheck, dev/preview assets และ installed brace/humanfs actual caller behavior ผ่าน; lint baseline/candidate เปรียบเทียบเก็บทั้งคู่ ไม่มี introduced failure. ไม่แก้ reference source/style/React/Vite major เพื่อให้ผ่าน | Passed — baseline lint unchanged (42 errors/4 warnings) |
+| DV-07 | DM-04/07 | App backend+frontend actual full lock inventory scan ผ่าน pinned binary/checksum/config เดิมพร้อม LP04 trusted SBOM และ fresh withdrawal evidence; inventory report equality ผ่าน รวม dev/transitive/optional/nested. ไม่มี unresolved High/Critical/Unknown หรือ exception ใหม่; Medium/Low รายงานตามจริง | Passed — local evidence |
+| DV-08 | DM-07 | Reference exact-lock sidecar mapping/hashes ตรวจครบ, policy เดิม, ไม่มี fake registry source/app-manifest; expected unique identities และ occurrence ledger ครบและ backend/reference counts แยกกัน. Missing-identity negative report ถูก reject. ไม่มี unresolved High/Critical/Unknown; findings อื่นรายงานตามจริง | Passed — local evidence |
+| DV-09 | DM-08/09/12 | Review diff/callers/dependencies และ stateless rules; business/money/order/risk/session/schema/contracts invariants unchanged. ไม่มี Live/owner data/new infra, เก็บ review findings และ affected rechecks ครบ, ไม่มี relevant Needs Clarification หรือ blocker | Passed — local evidence |
+| DV-10 | DM-10 | Ready for Code Review แจ้งแล้ว; findings resolved และ Feature local ผ่าน. Final combined PR required CI/Security ทุกด่านผ่านบน latest candidate SHA; ตรวจ expected head/base และ external/owner acceptance ที่ repo/branch protection บังคับครบ ไม่ใช้ automated review แทน required reviewer | Pending required CI |
 
 ### Reuse และการเลือกรัน
 
@@ -82,3 +82,17 @@ review, checks และ publication ต่อเนื่องภายใต�
 2026-11-19 เจ้าของตอบ “approve” หลังแก้ finding เกณฑ์ปิดงานแล้ว.
 อนุมัติ plan และ validation ฉบับนี้ให้เริ่ม implementation/review/validation/publication
 ตามขอบเขตและจุดหยุดเดิม; ข้อความรออนุมัติในเนื้อหาด้านบนเป็นประวัติขั้นเสนอ.
+
+## Local checkpoint — 2026-11-19
+
+[Local results](evidence/local-results.json), [semantic delta](evidence/semantic-delta.json),
+[security](evidence/security-results.json), [caller proof](evidence/caller-results.json)
+and adjacent install/asset/provenance receipts record executed checks. App709 tests/42files,
+source/withdrawal26 tests Passed. Reference baseline and candidate lint42errors/4warnings
+identical after path/format normalization; no new lint finding, template build Passed.
+Initial wrong-runtime/contract-scratch/formatter/Accept-header failures remain recorded
+in local-results and execution notes, not rewritten as Passed. E2E/required CI pending.
+Vite main bundle delta verified against integrity-checked6.4.4 archive: changed virtual-ID
+escaping/fs access checks/chunk import names; embedded matcher/watcher implementations
+unchanged. Public new-version caller behavior separately proved; no broad ReDoS claim.
+Latest execution entries supersede preimplementation Not Run statements above.

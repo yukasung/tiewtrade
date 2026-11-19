@@ -1,0 +1,12 @@
+{
+  "backend/uv.lock": {
+    "staged": "backend/uv.lock",
+    "sha256": "f427025bd867333a3cd8628ef7e7c76309866b9fdaee3f968c77c404b074402b",
+    "staged_sha256": "f427025bd867333a3cd8628ef7e7c76309866b9fdaee3f968c77c404b074402b"
+  },
+  "references/admin-template/package-lock.json": {
+    "staged": "frontend/package-lock.json",
+    "sha256": "2665fc93b099e9079973c6fa1bdf4e5617a407678fffd4a7f84c71949b8de9f0",
+    "staged_sha256": "2665fc93b099e9079973c6fa1bdf4e5617a407678fffd4a7f84c71949b8de9f0"
+  }
+}

@@ -1,0 +1,102 @@
+{
+  "candidate_source_sha": "a848b9636fb283a2a9d68b3c5cae86817b22a6d9",
+  "runtime": {
+    "node": "v22.23.4",
+    "npm": "10.9.9",
+    "python": "3.12.15"
+  },
+  "normal_installs": [
+    {
+      "name": "frontend",
+      "exit_code": 0,
+      "seconds": 4.89
+    },
+    {
+      "name": "reference",
+      "exit_code": 0,
+      "seconds": 4.23
+    }
+  ],
+  "behavior_checks": [
+    [
+      {
+        "workspace": "frontend",
+        "command": "npm run lint",
+        "exit_code": 0,
+        "seconds": 10.93
+      },
+      {
+        "workspace": "frontend",
+        "command": "npm run typecheck",
+        "exit_code": 0,
+        "seconds": 4.64
+      },
+      {
+        "workspace": "frontend",
+        "command": "npm run test",
+        "exit_code": 0,
+        "seconds": 20.93
+      },
+      {
+        "workspace": "frontend",
+        "command": "npm run check:api",
+        "exit_code": 129,
+        "seconds": 0.99
+      },
+      {
+        "workspace": "frontend",
+        "command": "npm run build",
+        "exit_code": 0,
+        "seconds": 1.95
+      }
+    ],
+    [
+      {
+        "workspace": "reference",
+        "command": "npm run lint",
+        "exit_code": 1,
+        "seconds": 14.43
+      },
+      {
+        "workspace": "reference",
+        "command": "npm run build",
+        "exit_code": 0,
+        "seconds": 19.77
+      }
+    ]
+  ],
+  "contract_recheck": {
+    "exit_code": 0,
+    "generated_bytes_equal_candidate": true,
+    "initial_failure": "129: isolated scratch had no Git repository; corrected owned scratch only"
+  },
+  "security_source_tests": {
+    "count": 26,
+    "passed": true,
+    "initial_failure": "system python3.9 lacks tomllib; rerun with required Python3.12 Passed"
+  },
+  "installed_negative_checks": [
+    {
+      "path": "node_modules/picomatch/lib/parse.js",
+      "tamper": "REJECTED"
+    },
+    {
+      "path": "vendor/picomatch-4.0.7-lp04.tgz",
+      "tamper": "REJECTED"
+    }
+  ],
+  "frontend_test_files": 42,
+  "frontend_tests_passed": 709,
+  "e2e": "Pending required CI; local Docker/PostgreSQL unavailable",
+  "failed_measurements_retained": [
+    "reference lint1:42errors4warnings unchanged from baseline",
+    "reference lint strict text comparison: path-dependent padding; normalized diagnostics equal",
+    "first asset smoke: generic Accept invoked SPA fallback; explicit JavaScript Accept retains404 assertion and Passed"
+  ],
+  "review": {
+    "runtime_delta": "two lockfiles only",
+    "manifests_vendor_policy_workflows_unchanged": true,
+    "findings": "No remaining code findings after closure criterion/request-contract corrections; required CI/E2E pending",
+    "stateless_trading": "No runtime/session/database/money/order/risk/retry/WebSocket source change"
+  }
+}
