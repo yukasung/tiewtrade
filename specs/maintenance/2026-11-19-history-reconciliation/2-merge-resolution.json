@@ -1,0 +1,14 @@
+{
+  "branch": "security/picomatch-remediation-20261117",
+  "source_head": "267a6776a2f1e6b389d2e25c5715b5fe8ccb84d5",
+  "purpose_and_resolution": "Original LP01\u2013LP03 investigation and blocked packaging evidence remains historical. Current approved LP04/withdrawal source, requirements, plan and validation prevail; no earlier parser/archive or stale Blocked status is promoted.",
+  "conflicts_resolved_to_current_approved_main": [
+    "specs/features/2026-11-17-picomatch-remediation/plan.md",
+    "specs/features/2026-11-17-picomatch-remediation/validation.md",
+    "specs/roadmap.md"
+  ],
+  "source_path_occurrences": 70,
+  "inventory": "source-inventory.json",
+  "original_bytes": "git show 267a6776a2f1e6b389d2e25c5715b5fe8ccb84d5:<path>",
+  "scope": "Historical reconciliation; no claim retired branch tree is applied as current implementation"
+}
