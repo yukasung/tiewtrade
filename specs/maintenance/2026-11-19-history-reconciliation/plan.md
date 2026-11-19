@@ -24,7 +24,7 @@ no branch content is silently called applied when its disposition is retired or 
 | feature/f37-supported-pairs-management | Retire Oct21 plan/proposal in favor of approved Oct24 supported-symbol-management; retain current mission/roadmap; preserve original history and path hashes |
 | security/picomatch-remediation-20261117 | Retain original investigation/prototype history; current PR77/79/80 LP04 bytes, policy and validation prevail. Do not promote blocked/earlier patches, old status or archived campaign source to active files |
 | validation/ci-docs-only | Integrate pilot source as explicitly historical text in this record; PR68 was intentionally closed without merge and its temporary fixture is not an active requirement |
-| validation/security-ci-rejection | Current security implementation already integrated via PR50/squash74ca1f4 and later fixes. Preserve current implementations/specs. Retain disposable PR49 fixture/history by immutable commit references; no lifecycle or marker script promoted to main filesystem |
+| validation/security-ci-rejection | Current security implementation already integrated via recorded squash74ca1f4 and later fixes. Preserve current implementations/specs. Retain disposable PR49 fixture/history by immutable commit references; no lifecycle or marker script promoted to main filesystem |
 
 Existing archive proofs: specs/maintenance/2026-11-18-local-reconciliation/checkpoint.md and
 inventory.json. Existing fixed rejection proof: security-ci validation V16, PR49 closed
