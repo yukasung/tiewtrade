@@ -1,0 +1,18 @@
+{
+  "head": "8d20070ef2762539329cc3841034b87f3feaeb1d",
+  "commits": 360,
+  "counts": {
+    "critical": 0,
+    "high": 0,
+    "low": 0,
+    "medium": 0,
+    "none": 0,
+    "unknown": 0,
+    "excepted": 48491,
+    "blocked": 0,
+    "needs_triage": 0
+  },
+  "unapproved": [],
+  "seconds": 259.85,
+  "artifact_bindings": 45
+}

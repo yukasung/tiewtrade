@@ -39,3 +39,13 @@ decision required by security requirements. No PR/push/main merge or ref deletio
 Owner “approve” resolves the single checksum finding decision. Failed initial scan remains
 recorded above; no other exception approved. HR03 now permits only this exact policy-data
 addition; all remaining protected runtime/spec/lock/source/CI bytes remain baseline exact.
+
+## Approved exception implementation and recheck
+
+Owner approval recorded before policy edit. Registry delta is exactly one secret identity,
+resolution=false_positive; previous entries unchanged. Existing policy tests9 Passed and
+negative checks keep unrelated High secret/dependency findings blocked. Final diff review
+found no remaining finding. Full pinned history/tree rescan on8d20070:360commits,
+48491excepted,0High/Unknown/blocked,45unchanged artifact bindings;259.85seconds including
+local diagnostic summarization. [Safe scan receipt](approved-history-scan.json).
+Required CI/Security on final candidate and postmerge remain mandatory and pending.
