@@ -68,3 +68,13 @@ Implementation review closed; source/CLI/default callers and actual DB/worker li
 covered. Production APIs/readiness/money/session/schema/locks/CI assertions unchanged.
 Only test composition/coverage changes plus the approved historical exception remain.
 One new required CI round is next; stop/report if it fails before another hosted attempt.
+
+
+## Ubuntu preflight continuation — owner approved 2026-11-19
+
+Prior b288645 CI44475468423 failed network preflight before chart/E2E execution;
+Security44475468399 passed all7. Follow the approved
+[bounded retry amendment](../../features/2026-10-26-ci-feedback-time/bounded-ubuntu-preflight-retry-proposal.md).
+Helper local policy/static/Linux tests and review passed; one new required hosted round
+is authorized on the final candidate. Stop/report on failure; no automatic extra round.
+Main merge and original ref cleanup remain Pending until required pre/postmerge checks.

@@ -5,8 +5,10 @@ from __future__ import annotations
 import io
 import json
 import os
+import shutil
 import subprocess
 import sys
+import tempfile
 import time
 import unittest
 from pathlib import Path
@@ -139,6 +141,140 @@ class ProbeTests(unittest.TestCase):
                 self.assertEqual(network.run_command(["test"]), network.CommandResult(status))
 
 
+class BoundedRetryTests(unittest.TestCase):
+    def test_only_sudo_canonical_archive_timeout_is_retried_and_recorded(self) -> None:
+        cases: list[list[dict[str, object]]] = [
+            [{"status": "timeout"}, {"status": "success", "http_status": 200}],
+            [
+                {"status": "timeout"},
+                {"status": "timeout"},
+                {"status": "success", "http_status": 200},
+            ],
+            [{"status": "timeout"}] * 3,
+            [{"status": "timeout"}, {"status": "certificate_failure"}],
+        ]
+        for outcomes in cases:
+            with (
+                self.subTest(outcomes=outcomes),
+                patch.object(network, "probe", side_effect=outcomes) as probe,
+                patch.object(time, "sleep") as sleep,
+            ):
+                result = network.https_probe(network.HTTPS_URLS[0], "sudo", float("inf"))
+                self.assertEqual(result["attempts"], outcomes)
+                self.assertEqual(result["attempt_count"], len(outcomes))
+                self.assertEqual(result["status"], outcomes[-1]["status"])
+                self.assertEqual(probe.call_count, len(outcomes))
+                self.assertEqual(sleep.call_count, len(outcomes) - 1)
+                for call in sleep.call_args_list:
+                    self.assertEqual(call.args, (0.2,))
+                for call in probe.call_args_list:
+                    self.assertEqual(
+                        call.args, ("https", network.HTTPS_URLS[0], "sudo", float("inf"))
+                    )
+
+    def test_other_contexts_endpoints_and_non_timeout_failures_never_retry(self) -> None:
+        for target, context, status in (
+            (network.HTTPS_URLS[0], "user", "timeout"),
+            (network.HTTPS_URLS[1], "sudo", "timeout"),
+            *(
+                (network.HTTPS_URLS[0], "sudo", status)
+                for status in (
+                    "success",
+                    "certificate_failure",
+                    "tls_failure",
+                    "http_failure",
+                    "invalid_response",
+                    "connection_failure",
+                    "dns_failure",
+                    "proxy_dns_failure",
+                    "redirect_failure",
+                    "tool_unavailable",
+                    "operational_error",
+                    "budget_exhausted",
+                )
+            ),
+        ):
+            with (
+                self.subTest(target=target, context=context, status=status),
+                patch.object(network, "probe", return_value={"status": status}) as probe,
+                patch.object(time, "sleep") as sleep,
+            ):
+                result = network.https_probe(target, context, float("inf"))
+                self.assertEqual(result["status"], status)
+                probe.assert_called_once()
+                sleep.assert_not_called()
+
+    def test_insufficient_budget_preserves_failure_without_sleep_or_spawn(self) -> None:
+        with (
+            patch.object(network, "probe", return_value={"status": "timeout"}) as probe,
+            patch.object(time, "monotonic", return_value=92.0),
+            patch.object(time, "sleep") as sleep,
+        ):
+            result = network.https_probe(network.HTTPS_URLS[0], "sudo", 100.0)
+        self.assertEqual(
+            result,
+            {"status": "budget_exhausted", "attempts": [{"status": "timeout"}], "attempt_count": 1},
+        )
+        probe.assert_called_once()
+        sleep.assert_not_called()
+
+    def test_budget_is_rechecked_after_sleep_before_starting_privileged_child(self) -> None:
+        with (
+            patch.object(time, "monotonic", side_effect=[0.0, 0.0, 101.0]),
+            patch.object(time, "sleep"),
+            patch.object(
+                network,
+                "run_command",
+                return_value=network.CommandResult("command_failed", "private-error", 28),
+            ) as command,
+        ):
+            result = network.https_probe(network.HTTPS_URLS[0], "sudo", 100.0)
+        self.assertEqual(result["status"], "budget_exhausted")
+        self.assertEqual(
+            result["attempts"], [{"status": "timeout"}, {"status": "budget_exhausted"}]
+        )
+        command.assert_called_once()
+        self.assertNotIn("private-error", json.dumps(result))
+
+    def test_short_budget_never_truncates_privileged_inner_timeout(self) -> None:
+        with (
+            patch.object(time, "monotonic", return_value=93.0),
+            patch.object(network, "run_command") as command,
+        ):
+            self.assertEqual(
+                network.probe("https", network.HTTPS_URLS[0], "sudo", 100.0),
+                {"status": "budget_exhausted"},
+            )
+            metadata, complete = network._context_metadata("sudo", 100.0)
+        self.assertFalse(complete)
+        self.assertEqual(metadata, {"status": "unavailable_or_invalid"})
+        command.assert_not_called()
+
+    @unittest.skipUnless(
+        sys.platform == "linux" and shutil.which("timeout"), "GNU timeout required"
+    )
+    def test_inner_timeout_kills_descendant_before_outer_timeout(self) -> None:
+        # Exercise the actual Linux timeout process group used inside sudo. The child
+        # must never survive to write its marker after the bounded command returns.
+        with tempfile.TemporaryDirectory() as directory:
+            marker = Path(directory) / "orphan-marker"
+            child = "import pathlib,time,sys; time.sleep(1.5); pathlib.Path(sys.argv[1]).touch()"
+            parent = (
+                "import subprocess,sys,time; "
+                "subprocess.Popen([sys.executable,'-c',sys.argv[1],sys.argv[2]]); "
+                "time.sleep(10)"
+            )
+            result = network.run_command(
+                network.bounded_command(
+                    [sys.executable, "-c", parent, child, str(marker)], "user", 1
+                ),
+                2.0,
+            )
+            self.assertIn(result.code, (137, -9))
+            time.sleep(0.7)
+            self.assertFalse(marker.exists())
+
+
 class MetadataTests(unittest.TestCase):
     def test_metadata_logs_only_ip_nameservers_and_proxy_presence(self) -> None:
         with (
@@ -230,6 +366,33 @@ class DiagnosticGateTests(unittest.TestCase):
             patch.object(network, "probe", side_effect=fake_probe),
         ):
             return network.diagnose()
+
+    def test_gate_requires_current_sudo_success_and_retains_timeout_attempt(self) -> None:
+        statuses = iter(("timeout", "success"))
+
+        def fake_probe(kind: str, target: str, context: str, deadline: float) -> dict[str, object]:
+            if kind == "https" and target == network.HTTPS_URLS[0] and context == "sudo":
+                return {"status": next(statuses)}
+            return {"status": "success"}
+
+        with (
+            patch.object(network, "_context_metadata", return_value=(safe_metadata(), True)),
+            patch.object(network, "probe", side_effect=fake_probe),
+            patch.object(time, "sleep"),
+        ):
+            report, allowed = network.diagnose()
+        self.assertTrue(allowed)
+        contexts = report["contexts"]
+        assert isinstance(contexts, dict)
+        archive = contexts["sudo"]["https"][network.HTTPS_URLS[0]]
+        self.assertEqual(
+            archive,
+            {
+                "status": "success",
+                "attempts": [{"status": "timeout"}, {"status": "success"}],
+                "attempt_count": 2,
+            },
+        )
 
     def test_dns_failure_does_not_block_successful_https_via_proxy(self) -> None:
         report, allowed = self.diagnose(dns_status="dns_failure")

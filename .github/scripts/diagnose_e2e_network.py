@@ -32,6 +32,8 @@ PROXY_NAMES = (
 )
 SCRIPT = Path(__file__).resolve()
 BUDGET_SECONDS = 100.0
+RETRY_DELAY_SECONDS = 0.2
+PROBE_TIMEOUT_SECONDS = 8.0
 
 
 @dataclass(frozen=True)
@@ -132,7 +134,8 @@ def bounded_command(command: list[str], context: str, seconds: int) -> list[str]
 
 def probe(kind: str, target: str, context: str, deadline: float) -> dict[str, object]:
     remaining = deadline - time.monotonic()
-    if remaining <= 0:
+    # Reserve the full outer timeout so the privileged inner timeout can finish.
+    if remaining < PROBE_TIMEOUT_SECONDS:
         return {"status": "budget_exhausted"}
     if kind == "dns":
         command = ["getent", "ahosts", target]
@@ -165,7 +168,7 @@ def probe(kind: str, target: str, context: str, deadline: float) -> dict[str, ob
             target,
         ]
         seconds = 7
-    result = run_command(bounded_command(command, context, seconds), min(8.0, remaining))
+    result = run_command(bounded_command(command, context, seconds), PROBE_TIMEOUT_SECONDS)
     if result.status not in ("success", "command_failed"):
         return {"status": result.status}
     if result.code in (124, 137, -9):
@@ -204,6 +207,23 @@ def probe(kind: str, target: str, context: str, deadline: float) -> dict[str, ob
     return {"status": "success", "http_status": int(code)}
 
 
+def https_probe(target: str, context: str, deadline: float) -> dict[str, object]:
+    """Retry only the approved sudo Ubuntu timeout, retaining each safe outcome."""
+    outcome = probe("https", target, context, deadline)
+    if target != HTTPS_URLS[0] or context != "sudo":
+        return outcome
+    attempts = [outcome]
+    while outcome["status"] == "timeout" and len(attempts) < 3:
+        # Do not sleep or spawn unless the delay and complete privileged probe fit.
+        if deadline - time.monotonic() < RETRY_DELAY_SECONDS + PROBE_TIMEOUT_SECONDS:
+            outcome = {"status": "budget_exhausted"}
+            break
+        time.sleep(RETRY_DELAY_SECONDS)
+        outcome = probe("https", target, context, deadline)
+        attempts.append(outcome)
+    return {**outcome, "attempts": attempts, "attempt_count": len(attempts)}
+
+
 def _context_metadata(context: str, deadline: float) -> tuple[dict[str, object], bool]:
     """Collect and validate one context without mixing it with probe/gate orchestration."""
     if context == "user":
@@ -217,9 +237,9 @@ def _context_metadata(context: str, deadline: float) -> tuple[dict[str, object],
                     context,
                     7,
                 ),
-                min(8.0, remaining),
+                PROBE_TIMEOUT_SECONDS,
             )
-            if remaining > 0
+            if remaining >= PROBE_TIMEOUT_SECONDS
             else CommandResult("budget_exhausted")
         )
         try:
@@ -246,7 +266,7 @@ def diagnose() -> tuple[dict[str, object], bool]:
         safe_metadata, metadata_complete = _context_metadata(context, deadline)
         complete = complete and metadata_complete
         dns = {host: probe("dns", host, context, deadline) for host in HOSTS}
-        https = {url: probe("https", url, context, deadline) for url in HTTPS_URLS}
+        https = {url: https_probe(url, context, deadline) for url in HTTPS_URLS}
         contexts[context] = {"metadata": safe_metadata, "dns": dns, "https": https}
         for outcome in (*dns.values(), *https.values()):
             if outcome["status"] in (
