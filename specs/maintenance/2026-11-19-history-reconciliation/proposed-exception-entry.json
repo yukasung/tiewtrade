@@ -1,0 +1,8 @@
+{
+  "kind": "secret",
+  "identity": "808d86552adc67bb2e828b9a68de1091f794e8a542767597ae1c9eacf6ea7c94",
+  "resolution": "false_positive",
+  "reason": "Public SHA256 checksum of dist/chunks/cli-api.CnMVyzaz.js from integrity-verified vitest4.1.11 npm archive in historical source_files_sha256 JSON; not a credential. Exact immutable historical occurrence only.",
+  "approval": "Owner replied approve to the exact single-identity history-reconciliation checksum proposal on 2026-11-19; see specs/features/2026-11-05-security-ci/history-reconciliation-checksum-exception.md",
+  "evidence": "specs/features/2026-11-05-security-ci/history-reconciliation-checksum-exception.md; specs/maintenance/2026-11-19-history-reconciliation/checksum-false-positive-proof.json"
+}

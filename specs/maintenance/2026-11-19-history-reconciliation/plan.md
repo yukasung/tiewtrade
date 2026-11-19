@@ -52,3 +52,13 @@ push always runs full postmerge CI. Expect roughly20–30minutes per round (40�
 total), plus queue/full-history scan variance. No changes to CI rules, receipt formats or
 deadlines to avoid those existing checks. No extra requirement/plan approval for a new
 product feature is inferred from this administrative merge command.
+
+## Owner-approved exact data amendment — 2026-11-19, before policy edit
+
+Pinned full-history/tree scan found one High identity not in existing approvals. Official
+npm/SRI/file-hash verification proves it is a public Vitest4.1.11 source checksum. Owner
+approved the exact proposal in security-ci/history-reconciliation-checksum-exception.md
+with “approve”. Amend only `.github/security/exceptions.json` by one immutable secret
+identity/resolution=false_positive; preserve every prior entry, scanner/coverage/rule,
+artifact registry and severity/time budget. This is the sole approved policy-data delta
+to the original baseline-preservation rule. Reuse original proof and existing model/tests.

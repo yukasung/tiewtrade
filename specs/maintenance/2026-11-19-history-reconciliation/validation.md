@@ -6,9 +6,9 @@
 |---|---|---|---|
 | HR-01 | Feature | Four immutable source heads and every source path hash/disposition audited; backup bundle verified | Passed — local review |
 | HR-02 | Feature | Normal merges preserve all four heads in ancestry; actual record clearly distinguishes current implementation, retired proposal/prototype and historical experiments | Passed — local review |
-| HR-03 | Feature | Final delta only maintenance documentation/JSON; baseline runtime/specs/policy/locks/artifacts unchanged; no campaign or fixture execution | Passed — local review |
+| HR-03 | Feature | Final delta only reconciliation documentation/JSON plus owner-approved exact checksum exception; baseline runtime/active specs/locks/artifacts/scanner logic unchanged; no campaign or fixture execution | Passed — local review |
 | HR-04 | Feature | Diff/callers review and JSON/link/whitespace checks pass, no blocker | Passed — local review |
-| HR-05 | Feature | Final candidate required CI/Security pass with unchanged severity/coverage/approvals | Pending |
+| HR-05 | Feature | Final candidate required CI/Security pass with unchanged severity/coverage and exactly one newly owner-approved identity | Pending rescan/required CI — owner approved exact identity |
 | HR-06 | Feature | Expected-head merge and postmerge CI/Security pass; clean synchronized main and original/integration refs cleaned only under Git rules | Pending |
 
 No new Batch/Release criteria or workload; preserve F17 Pending Full Validation. After approval
@@ -25,3 +25,17 @@ is activated. Original contents remain accessible by immutable commit:path in an
 Fixed quote-only trailing whitespace during docs check and corrected missing-path verifier
 to compare existence and bytes rather than rev-parse error text; no runtime/test criterion change.
 Required CI/Security and postmerge closure remain Pending.
+
+## Historical secret-scan blocker
+
+Full scan1bb8ffe:359commits, one High/blocked,48490excepted,0unknown;155.02seconds.
+Targeted new-history diagnostic identifies exactly one unapproved occurrence in original
+267a677 investigation-summary.json line110. Official npm/SRI/file-hash proof establishes
+a public Vitest4.1.11 source checksum false positive. Policy remains unchanged; owner
+decision required by security requirements. No PR/push/main merge or ref deletion.
+
+## Approval checkpoint — 2026-11-19
+
+Owner “approve” resolves the single checksum finding decision. Failed initial scan remains
+recorded above; no other exception approved. HR03 now permits only this exact policy-data
+addition; all remaining protected runtime/spec/lock/source/CI bytes remain baseline exact.
