@@ -1,0 +1,64 @@
+{
+  "owner_approval": "Bounded chart continuation approved before correction; one new hosted CI round only, stop on failure",
+  "production_source_schema_locks_ci": "unchanged from4578c20",
+  "scope": "Opt-in ordinary REST ingestion for native3m test producer only; default producer unchanged",
+  "causal_real_db_btc_eth": [
+    {
+      "base": "BTC",
+      "stream_updates_without_rest": 3,
+      "before_recovered": false,
+      "after_ordinary_run_round_recovered": true,
+      "fetch_attempts": 2,
+      "stored": 1000,
+      "unique_rows": 1000,
+      "rest_end_qualified": true
+    },
+    {
+      "base": "ETH",
+      "stream_updates_without_rest": 3,
+      "before_recovered": false,
+      "after_ordinary_run_round_recovered": true,
+      "fetch_attempts": 2,
+      "stored": 1000,
+      "unique_rows": 1000,
+      "rest_end_qualified": true
+    }
+  ],
+  "real_db_process_composition": {
+    "default_stream_only": "Passed; no REST rows/manufactured recovery",
+    "opt_in_repair": "Passed; BTC/ETH recovered from actual PG/ordinary ingestion, exact prior-slot end qualification, unique native rows",
+    "stop_cleanup": "Passed; tasks joined and feed lease released",
+    "outside_owned_e2e_database": "two process-composition tests intentionally skip; required browser still exercises opt-in worker"
+  },
+  "reconnect_regression": {
+    "passed": 4,
+    "timeframes": [
+      "3m",
+      "1h",
+      "1w",
+      "1M"
+    ]
+  },
+  "original_browser_case": {
+    "passed": 1,
+    "latest_result": "1 passed (10.6s)",
+    "timeout_ms_unchanged": 30000,
+    "READY_native_prices_no_order_assertions": "unchanged"
+  },
+  "static": {
+    "ruff_check": "Passed (three files)",
+    "ruff_format": "Passed (three files)",
+    "strict_mypy": "Passed (three files; no checker suppressions)",
+    "frontend_scoped_eslint": "Passed",
+    "frontend_typecheck": "Passed"
+  },
+  "source_sha256": {
+    "backend/tests/e2e_candle_runner.py": "2a84bdcdd1a207d31819b3f57caec94cc43faca10b994889373eb3917db61f38",
+    "backend/tests/infra/market_data/test_native_3m_e2e_composition.py": "f9ef59d4d7ecccd069fe3cc3dbdf33bb4f54a6b5e577947b4b268653fc4a7f61",
+    "backend/tests/infra/market_data/test_chart_preview.py": "09d5fd6b97acb8ce3b335cd942e7d3a601ae047dce8338d5be56d275b29c6d2f",
+    "frontend/e2e/candlestick-chart.spec.ts": "b8bb0a1453d7930bf932ce761df6c057d3baeaaa72b1e6a8082f358aa5922c39"
+  },
+  "review": "No remaining finding; checked CLI flag/default callers, ordinary source/claims/finality, owned DB guard, worker failures/cancellation and stateless/runtime preservation",
+  "historical_failures": "Original CI attempts1/2 network and3 chart timeout retained; local fixture/type measurement corrections recorded in amendment; no old root-cause claim",
+  "required_ci": "Pending on corrected final candidate; no additional retry authorized if that round fails"
+}

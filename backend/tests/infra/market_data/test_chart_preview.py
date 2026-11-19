@@ -345,7 +345,7 @@ async def test_competing_owners_have_exactly_one_winner(
     assert sum(result is not None for result in results) == 1
 
 
-@pytest.mark.parametrize("timeframe", [Timeframe.H1, Timeframe.W1, Timeframe.MN1])
+@pytest.mark.parametrize("timeframe", [Timeframe.M3, Timeframe.H1, Timeframe.W1, Timeframe.MN1])
 async def test_reconnect_bootstrap_recovers_same_timeframe_without_duplicates_or_closed_rows(
     timeframe: Timeframe,
     market_data_engine: AsyncEngine,

@@ -49,3 +49,22 @@ found no remaining finding. Full pinned history/tree rescan on8d20070:360commits
 48491excepted,0High/Unknown/blocked,45unchanged artifact bindings;259.85seconds including
 local diagnostic summarization. [Safe scan receipt](approved-history-scan.json).
 Required CI/Security on final candidate and postmerge remain mandatory and pending.
+
+## Approved bounded chart correction scope
+
+Owner approved chart3m-next-step-proposal.md after three failed hosted attempts. It adds
+only current E2E producer/test composition and regression coverage to the original history
+reconciliation delta; production readiness/budgets/source remain unchanged. HR03/04 earlier
+Passed statements describe the history-only checkpoint. Current affected local checks and
+one new required CI round must pass before HR05/06 can close. No old historical fixture
+is activated; the existing active chart FakeVenue source is reused.
+
+## Corrected chart local checkpoint
+
+[Results](chart3m-local-results.json): exact missing-prior causal real-DB proof BTC/ETH,
+2process-composition cases/default opt-in/cancellation,4reconnect timeframes, original
+native browser case under30s, scoped Ruff/format/strict mypy/frontend lint/types Passed.
+Implementation review closed; source/CLI/default callers and actual DB/worker lifecycle
+covered. Production APIs/readiness/money/session/schema/locks/CI assertions unchanged.
+Only test composition/coverage changes plus the approved historical exception remain.
+One new required CI round is next; stop/report if it fails before another hosted attempt.

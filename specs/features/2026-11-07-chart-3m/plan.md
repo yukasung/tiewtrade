@@ -137,3 +137,16 @@ reuse page.addInitScript pattern และ API types เดิม; ตรวจ8
 รักษาAPI clock fixและหลักฐานทั้งสองงาน ตรวจdiff/ancestryและส่วนที่กระทบ
 แล้วrequired CIหนึ่งreplacement round. ผ่านแล้วlocal activationตามแผนเดิม
 ไม่แก้security policy ไม่force push และไม่merge PR60เข้าmain
+
+## Owner-approved bounded E2E composition follow-up — 2026-11-19
+
+The pre-edit decision and owner approval are recorded in
+[the reconciliation amendment](../../maintenance/2026-11-19-history-reconciliation/chart3m-next-step-proposal.md).
+Existing production3m semantics remain unchanged. Reuse current fixture FakeVenue and
+ordinary ingestion only in the opt-in native3m browser producer. Real PostgreSQL proof
+shows stream-only missing-prior recovery cannot converge; actual REST ingestion repairs
+both BTC/ETH with exact native prices and end-qualified previous slots. Local original
+browser case Passed14.9s within unchanged30s; default/opt-in composition and four-timeframe
+reconnect checks Passed. Historical timeout causes are not retroactively declared solved.
+One new required CI round authorized; stop on failure before another hosted run. Existing
+merge/postmerge gates and F17 Pending Full Validation remain unchanged.

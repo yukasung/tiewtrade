@@ -1,0 +1,22 @@
+[
+  {
+    "base": "BTC",
+    "stream_updates_without_rest": 3,
+    "before_recovered": false,
+    "after_ordinary_run_round_recovered": true,
+    "fetch_attempts": 2,
+    "stored": 1000,
+    "unique_rows": 1000,
+    "rest_end_qualified": true
+  },
+  {
+    "base": "ETH",
+    "stream_updates_without_rest": 3,
+    "before_recovered": false,
+    "after_ordinary_run_round_recovered": true,
+    "fetch_attempts": 2,
+    "stored": 1000,
+    "unique_rows": 1000,
+    "rest_end_qualified": true
+  }
+]

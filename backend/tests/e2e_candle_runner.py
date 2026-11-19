@@ -3,20 +3,27 @@
 import argparse
 import asyncio
 import os
+import sys
 from collections.abc import AsyncGenerator
 from datetime import UTC, datetime
+from importlib import import_module
 from pathlib import Path
+from typing import cast
 from urllib.parse import urlparse
 
 from redis.asyncio import Redis
+from sqlalchemy.ext.asyncio import AsyncEngine
 
 from tiewtrade.core.candle_preview import CandleObservation
 from tiewtrade.core.market_data import Candle, CandleFinality, CandleSeries, Timeframe, align_floor
 from tiewtrade.core.money import Money, Quantity
 from tiewtrade.infra.db import DatabaseRole, create_engine_for
+from tiewtrade.infra.db.session import market_data_session
 from tiewtrade.infra.realtime.notifications import RedisNotifications
 from tiewtrade.services.market_data.candle_realtime import CandleSupervisor
+from tiewtrade.services.market_data.ingestion import _seed_initial_demand, run_round
 from tiewtrade.venues.candle_streams import CandleFeedEvent, FeedCandle
+from tiewtrade.venues.candles import CandleSource
 from tiewtrade.venues.price_streams import FeedConnected, FeedDisconnected
 
 
@@ -70,7 +77,36 @@ class ControlledCandleFeed:
             await asyncio.sleep(0.2)
 
 
-async def run(control: Path) -> None:
+def browser_repair_source() -> CandleSource:
+    # Reuse the same FakeVenue/prices as seed-3m, never a live exchange adapter.
+    fixture = Path(__file__).resolve().parents[2] / (
+        "specs/features/2026-10-12-candlestick-chart/evidence"
+    )
+    sys.path.insert(0, str(fixture))
+    try:
+        fixture_module = import_module("browser_fixture")
+    finally:
+        sys.path.pop(0)
+    return cast(CandleSource, fixture_module.RepairSource())
+
+
+async def repair_native_3m(engine: AsyncEngine, control: Path) -> None:
+    source = browser_repair_source()
+    while control.read_text().strip() != "stop":
+        async with market_data_session(engine) as session:
+            await _seed_initial_demand(session)
+            # This opt-in composition owns a disposable E2E database. Other
+            # timeframes must not consume this synthetic native-3m worker budget.
+            await session.execute(
+                """UPDATE market_candle_demand
+                SET next_attempt_at=greatest(next_attempt_at,clock_timestamp()+interval '1 hour')
+                WHERE timeframe<>'3m'"""
+            )
+        await run_round(engine, source, "f12-native-3m-rest", datetime.now(UTC))
+        await asyncio.sleep(0.2)
+
+
+async def run(control: Path, *, repair_three_minute: bool = False) -> None:
     name = os.environ["TIEWTRADE_E2E_DATABASE_NAME"]
     target = urlparse(os.environ["TIEWTRADE_DATABASE_URL_MARKET_DATA"])
     if (
@@ -85,16 +121,20 @@ async def run(control: Path) -> None:
     redis = Redis.from_url(os.environ["TIEWTRADE_REDIS_URL_MARKET_DATA"])
     notifications = RedisNotifications(redis, channel="market.candles.changed")
     supervisor = CandleSupervisor(engine, ControlledCandleFeed(control), notifications)
-    task = asyncio.create_task(supervisor.run())
+    tasks = [asyncio.create_task(supervisor.run())]
+    if repair_three_minute:
+        tasks.append(asyncio.create_task(repair_native_3m(engine, control)))
     try:
         while control.read_text().strip() != "stop":
-            if task.done():
-                await task
-                raise RuntimeError("E2E_CANDLE_WORKER_STOPPED")
+            for task in tasks:
+                if task.done():
+                    await task
+                    raise RuntimeError("E2E_CANDLE_WORKER_STOPPED")
             await asyncio.sleep(0.1)
     finally:
-        task.cancel()
-        await asyncio.gather(task, return_exceptions=True)
+        for task in tasks:
+            task.cancel()
+        await asyncio.gather(*tasks, return_exceptions=True)
         await notifications.close()
         await redis.aclose()
         await engine.dispose()
@@ -103,4 +143,6 @@ async def run(control: Path) -> None:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--control-file", type=Path, required=True)
-    asyncio.run(run(parser.parse_args().control_file))
+    parser.add_argument("--repair-native-3m", action="store_true")
+    args = parser.parse_args()
+    asyncio.run(run(args.control_file, repair_three_minute=args.repair_native_3m))
