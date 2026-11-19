@@ -5,14 +5,14 @@ from __future__ import annotations
 import io
 import json
 import os
-import shutil
+import signal
 import subprocess
 import sys
 import tempfile
 import time
 import unittest
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 SCRIPTS = Path(__file__).resolve().parents[1] / "scripts"
 sys.path.insert(0, str(SCRIPTS))
@@ -32,7 +32,7 @@ def safe_metadata() -> dict[str, object]:
 
 class ProbeTests(unittest.TestCase):
     def probe(self, kind: str, result: network.CommandResult) -> dict[str, object]:
-        with patch.object(network, "run_command", return_value=result):
+        with patch.object(network, "supervised_command", return_value=result):
             return network.probe(kind, network.HOSTS[1], "user", float("inf"))
 
     def test_dns_success_requires_actual_addresses_and_rejects_raw_output(self) -> None:
@@ -103,25 +103,39 @@ class ProbeTests(unittest.TestCase):
                 )
 
     def test_commands_bound_sudo_and_preserve_tls(self) -> None:
-        with patch.object(
-            network,
-            "run_command",
-            return_value=network.CommandResult(
-                "success",
-                "200",
-                0,
-            ),
-        ) as command:
+        result = network.CommandResult(
+            "success", json.dumps({"status": "success", "output": "200", "code": 0}), 0
+        )
+        with patch.object(network, "run_command", return_value=result) as command:
             network.probe("https", network.HTTPS_URLS[0], "sudo", float("inf"))
         argv = command.call_args.args[0]
-        self.assertEqual(argv[:6], ["sudo", "-n", "--", "timeout", "--signal=KILL", "7s"])
-        self.assertEqual(argv[6:8], ["curl", "--disable"])
-        self.assertIn("--max-time", argv)
-        self.assertIn("--proto-redir", argv)
-        self.assertEqual(argv[argv.index("--retry") + 1], "0")
-        self.assertNotIn("--insecure", argv)
-        self.assertNotIn("--verbose", argv)
-        self.assertLessEqual(command.call_args.args[1], 8.0)
+        self.assertEqual(
+            argv,
+            [
+                "sudo",
+                "-n",
+                "--",
+                sys.executable,
+                str(network.SCRIPT),
+                "--supervise",
+                "https",
+                network.HTTPS_URLS[0],
+            ],
+        )
+        curl, seconds = network.fixed_command("https", network.HTTPS_URLS[0])
+        self.assertEqual(curl[:2], ["curl", "--disable"])
+        self.assertEqual(seconds, 7)
+        self.assertEqual(curl[curl.index("--max-time") + 1], "6")
+        self.assertEqual(curl[curl.index("--connect-timeout") + 1], "3")
+        self.assertIn("--proto-redir", curl)
+        self.assertEqual(curl[curl.index("--retry") + 1], "0")
+        self.assertNotIn("--insecure", curl)
+        self.assertNotIn("--verbose", curl)
+        self.assertEqual(command.call_args.args[1], 8.0)
+        self.assertEqual(
+            network.bounded_command("dns", network.HOSTS[0], "user")[:3],
+            [sys.executable, str(network.SCRIPT), "--supervise"],
+        )
 
     def test_budget_exhaustion_does_not_start_commands(self) -> None:
         with patch.object(network, "run_command") as command:
@@ -224,7 +238,7 @@ class BoundedRetryTests(unittest.TestCase):
             patch.object(time, "sleep"),
             patch.object(
                 network,
-                "run_command",
+                "supervised_command",
                 return_value=network.CommandResult("command_failed", "private-error", 28),
             ) as command,
         ):
@@ -250,29 +264,194 @@ class BoundedRetryTests(unittest.TestCase):
         self.assertEqual(metadata, {"status": "unavailable_or_invalid"})
         command.assert_not_called()
 
-    @unittest.skipUnless(
-        sys.platform == "linux" and shutil.which("timeout"), "GNU timeout required"
-    )
+    @unittest.skipUnless(sys.platform == "linux", "Linux process groups required")
     def test_inner_timeout_kills_descendant_before_outer_timeout(self) -> None:
-        # Exercise the actual Linux timeout process group used inside sudo. The child
+        # Exercise the same supervisor used inside sudo. The child
         # must never survive to write its marker after the bounded command returns.
         with tempfile.TemporaryDirectory() as directory:
             marker = Path(directory) / "orphan-marker"
-            child = "import pathlib,time,sys; time.sleep(1.5); pathlib.Path(sys.argv[1]).touch()"
+            started = Path(directory) / "descendant-started"
+            child = (
+                "import pathlib,time,sys,signal; signal.signal(signal.SIGTERM, signal.SIG_IGN); "
+                "pathlib.Path(sys.argv[2]).touch(); time.sleep(1.5); "
+                "pathlib.Path(sys.argv[1]).touch()"
+            )
             parent = (
                 "import subprocess,sys,time; "
-                "subprocess.Popen([sys.executable,'-c',sys.argv[1],sys.argv[2]]); "
+                "subprocess.Popen([sys.executable,'-c',sys.argv[1],sys.argv[2],sys.argv[3]]); "
                 "time.sleep(10)"
             )
-            result = network.run_command(
-                network.bounded_command(
-                    [sys.executable, "-c", parent, child, str(marker)], "user", 1
-                ),
-                2.0,
+            result = network.run_group(
+                [sys.executable, "-c", parent, child, str(marker), str(started)], 1.0
             )
-            self.assertIn(result.code, (124, 137, -9))
+            self.assertEqual(result, network.CommandResult("timeout"))
+            self.assertTrue(started.exists())
             time.sleep(0.7)
             self.assertFalse(marker.exists())
+
+
+class SupervisorTests(unittest.TestCase):
+    def test_normal_nonzero_missing_tool_and_private_output(self) -> None:
+        for code in (0, 2):
+            result = network.run_group(
+                [sys.executable, "-c", f"import sys; print('private'); sys.exit({code})"], 1.0
+            )
+            self.assertEqual(
+                result,
+                network.CommandResult(
+                    "success" if code == 0 else "command_failed", "private\n", code
+                ),
+            )
+        self.assertEqual(
+            network.run_group(["/nonexistent-tiewtrade-diagnostic-tool"], 1.0),
+            network.CommandResult("tool_unavailable"),
+        )
+
+    def test_actual_internal_cli_starts_fixed_command_in_its_own_session(self) -> None:
+        # Offline executable fixture exercises the real CLI/envelope/parse boundary.
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            record = root / "child-state.json"
+            getent = root / "getent"
+            getent.write_text(
+                f"#!{sys.executable}\n"
+                "import json,os,pathlib\n"
+                "pathlib.Path(os.environ['TIEWTRADE_DIAGNOSTIC_TEST_RECORD']).write_text("
+                "json.dumps({'pid':os.getpid(),'sid':os.getsid(0),'uid':os.geteuid()}))\n"
+                "print('192.0.2.1 STREAM archive.ubuntu.com')\n"
+            )
+            getent.chmod(0o700)
+            with patch.dict(
+                os.environ,
+                {
+                    "PATH": directory + os.pathsep + os.environ.get("PATH", ""),
+                    "TIEWTRADE_DIAGNOSTIC_TEST_RECORD": str(record),
+                },
+            ):
+                result = network.probe("dns", network.HOSTS[1], "user", float("inf"))
+            self.assertEqual(result, {"status": "success"})
+            state = json.loads(record.read_text())
+            self.assertEqual(state["pid"], state["sid"])
+            self.assertEqual(state["uid"], os.geteuid())
+
+    def test_kills_owned_group_then_reaps_and_closes_pipe(self) -> None:
+        process = MagicMock()
+        process.pid = 12345
+        process.communicate.side_effect = subprocess.TimeoutExpired("private", 1)
+        with (
+            patch.object(subprocess, "Popen", return_value=process) as popen,
+            patch.object(os, "killpg") as kill,
+        ):
+            self.assertEqual(network.run_group(["fixed"], 1.0), network.CommandResult("timeout"))
+        self.assertTrue(popen.call_args.kwargs["start_new_session"])
+        kill.assert_called_once_with(12345, signal.SIGKILL)
+        process.wait.assert_called_once_with(timeout=0.5)
+        process.stdout.close.assert_called_once()
+
+    def test_cleanup_or_launch_failure_is_operational_not_retryable_timeout(self) -> None:
+        with patch.object(subprocess, "Popen", side_effect=PermissionError("private")):
+            self.assertEqual(
+                network.run_group(["fixed"], 1.0), network.CommandResult("operational_error")
+            )
+        for failure in ("kill", "wait"):
+            process = MagicMock()
+            process.communicate.side_effect = subprocess.TimeoutExpired("private", 1)
+            process.pid = 12345
+            if failure == "wait":
+                process.wait.side_effect = subprocess.TimeoutExpired("private", 0.5)
+            with (
+                patch.object(subprocess, "Popen", return_value=process),
+                patch.object(
+                    os,
+                    "killpg",
+                    side_effect=PermissionError("private") if failure == "kill" else None,
+                ),
+            ):
+                self.assertEqual(
+                    network.run_group(["fixed"], 1.0), network.CommandResult("operational_error")
+                )
+            process.wait.assert_called_once_with(timeout=0.5)
+
+    def test_internal_protocol_rejects_supervisor_privilege_and_schema_failures(self) -> None:
+        for outer in (
+            network.CommandResult("timeout"),
+            network.CommandResult("tool_unavailable"),
+            network.CommandResult("command_failed", "private", 1),
+            *(
+                network.CommandResult("success", value, 0)
+                for value in (
+                    "private",
+                    "null",
+                    "[]",
+                    '{"status":"success"}',
+                    '{"status":"success","output":"200","code":1}',
+                    '{"status":"success","output":"200","code":true}',
+                    '{"status":"timeout","output":"private","code":null}',
+                    '{"status":"unknown","output":"private","code":1}',
+                )
+            ),
+        ):
+            with (
+                self.subTest(outer=outer),
+                patch.object(network, "run_command", return_value=outer),
+            ):
+                self.assertEqual(
+                    network.supervised_command("https", network.HTTPS_URLS[0], "sudo"),
+                    network.CommandResult("operational_error"),
+                )
+        for inner in (
+            network.CommandResult("timeout"),
+            network.CommandResult("tool_unavailable"),
+            network.CommandResult("operational_error"),
+            network.CommandResult("success", "200", 0),
+            network.CommandResult("command_failed", "private", 28),
+        ):
+            envelope = json.dumps(
+                {"status": inner.status, "output": inner.output, "code": inner.code}
+            )
+            with patch.object(
+                network, "run_command", return_value=network.CommandResult("success", envelope, 0)
+            ):
+                self.assertEqual(
+                    network.supervised_command("https", network.HTTPS_URLS[0], "sudo"), inner
+                )
+
+    def test_internal_cli_allows_only_existing_operations_targets_and_fixed_limits(self) -> None:
+        for operation, target in (
+            ("dns", "private.invalid"),
+            ("https", "http://archive.ubuntu.com"),
+            ("metadata", "private"),
+            ("arbitrary", "-"),
+        ):
+            stdout, stderr = io.StringIO(), io.StringIO()
+            with (
+                patch.object(network, "run_group") as group,
+                patch("sys.stdout", stdout),
+                patch("sys.stderr", stderr),
+            ):
+                self.assertEqual(network.main(["--supervise", operation, target]), 1)
+            group.assert_not_called()
+            self.assertEqual(stdout.getvalue(), "")
+            self.assertNotIn("private", stderr.getvalue())
+        for operation, target, seconds in (
+            ("dns", network.HOSTS[0], 5),
+            ("https", network.HTTPS_URLS[0], 7),
+            ("metadata", "-", 7),
+        ):
+            stdout = io.StringIO()
+            with (
+                patch.object(
+                    network, "run_group", return_value=network.CommandResult("timeout")
+                ) as group,
+                patch("sys.stdout", stdout),
+            ):
+                self.assertEqual(network.main(["--supervise", operation, target]), 0)
+            self.assertEqual(
+                group.call_args.args, (network.fixed_command(operation, target)[0], seconds)
+            )
+            self.assertEqual(
+                json.loads(stdout.getvalue()), {"status": "timeout", "output": "", "code": None}
+            )
 
 
 class MetadataTests(unittest.TestCase):
@@ -356,7 +535,7 @@ class DiagnosticGateTests(unittest.TestCase):
             patch.object(network, "metadata", side_effect=safe_metadata),
             patch.object(
                 network,
-                "run_command",
+                "supervised_command",
                 return_value=network.CommandResult(
                     "success",
                     json.dumps(safe_metadata()) if metadata_output is None else metadata_output,
@@ -435,7 +614,7 @@ class DiagnosticGateTests(unittest.TestCase):
             patch.object(network, "metadata", side_effect=safe_metadata),
             patch.object(
                 network,
-                "run_command",
+                "supervised_command",
                 return_value=network.CommandResult(
                     "success",
                     json.dumps(safe_metadata()),
@@ -452,9 +631,16 @@ class DiagnosticGateTests(unittest.TestCase):
             {call.args[2] for call in probe.call_args_list},
             {"user", "sudo"},
         )
-        argv = command.call_args.args[0]
+        self.assertEqual(command.call_args.args, ("metadata", "-", "sudo"))
+        argv = network.bounded_command("metadata", "-", "sudo")
         self.assertEqual(argv[:3], ["sudo", "-n", "--"])
-        self.assertEqual(argv[-3:], [sys.executable, str(network.SCRIPT), "--metadata-only"])
+        self.assertEqual(
+            argv[3:], [sys.executable, str(network.SCRIPT), "--supervise", "metadata", "-"]
+        )
+        self.assertEqual(
+            network.fixed_command("metadata", "-"),
+            ([sys.executable, str(network.SCRIPT), "--metadata-only"], 7),
+        )
 
     def test_cli_exit_and_logs_preserve_gate_without_exception_or_secret_dump(self) -> None:
         for allowed in (True, False):

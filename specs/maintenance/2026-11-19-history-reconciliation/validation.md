@@ -78,3 +78,12 @@ Security44475468399 passed all7. Follow the approved
 Helper local policy/static/Linux tests and review passed; one new required hosted round
 is authorized on the final candidate. Stop/report on failure; no automatic extra round.
 Main merge and original ref cleanup remain Pending until required pre/postmerge checks.
+
+
+## Process-group continuation — owner approved before code 2026-11-19
+
+D2aefa1 CI44479026954 failed actual descendant-lifetime assertion before E2E.
+[Approved correction](../../features/2026-10-26-ci-feedback-time/privileged-process-group-timeout-proposal.md)
+replaces host timeout with same-context Python process-group supervision. Offline Linux30
+network cases and local policy71/static checks Passed; reviewed, no open findings. Exactly
+one new hosted round is authorized; main merge/postmerge/original ref cleanup Pending.
