@@ -1,0 +1,53 @@
+{
+  "application": {
+    "identities": 464,
+    "counts": {
+      "critical": 0,
+      "high": 0,
+      "low": 0,
+      "medium": 1,
+      "none": 0,
+      "unknown": 0,
+      "excepted": 0,
+      "blocked": 0,
+      "needs_triage": 0
+    },
+    "findings": [
+      {
+        "severity": "medium",
+        "locator": [
+          "npm",
+          "minimatch",
+          "10.2.6",
+          "GHSA-g3hv-75wg-m249"
+        ]
+      }
+    ]
+  },
+  "reference": {
+    "identities": 431,
+    "counts": {
+      "critical": 0,
+      "high": 0,
+      "low": 0,
+      "medium": 1,
+      "none": 0,
+      "unknown": 0,
+      "excepted": 0,
+      "blocked": 0,
+      "needs_triage": 0
+    },
+    "findings": [
+      {
+        "severity": "medium",
+        "locator": [
+          "npm",
+          "minimatch",
+          "10.2.6",
+          "GHSA-g3hv-75wg-m249"
+        ]
+      }
+    ],
+    "missing_identity_negative": "REJECTED"
+  }
+}

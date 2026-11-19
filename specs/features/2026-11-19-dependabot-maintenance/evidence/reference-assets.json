@@ -1,0 +1,36 @@
+[
+  {
+    "mode": "dev",
+    "passed": true,
+    "assets": [
+      {
+        "path": "/src/main.tsx",
+        "status": 200,
+        "content_type": "text/javascript",
+        "bytes": 3533
+      }
+    ],
+    "route_status": 200,
+    "missing_asset_status": 404
+  },
+  {
+    "mode": "preview",
+    "passed": true,
+    "assets": [
+      {
+        "path": "/assets/index-Bzn4bSYo.js",
+        "status": 200,
+        "content_type": "text/javascript",
+        "bytes": 5202086
+      },
+      {
+        "path": "/assets/index-bv9YIJKi.css",
+        "status": 200,
+        "content_type": "text/css",
+        "bytes": 350791
+      }
+    ],
+    "route_status": 200,
+    "missing_asset_status": 404
+  }
+]

@@ -1,0 +1,637 @@
+{
+  "baseline": "abd3fe15bc96488897c3fe5e4d813d575dfb4f4c",
+  "prs": [
+    {
+      "number": 50,
+      "url": "https://github.com/yukasung/tiewtrade/pull/50",
+      "head": "42488d35b0dfd36dca2289772859a78169841a74",
+      "mergeable_state": "behind",
+      "files": [
+        "references/admin-template/package-lock.json"
+      ],
+      "checks": [
+        {
+          "name": "หลังบ้าน — lint, types, imports, tests",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "e2e — เบราว์เซอร์จริงเห็นข้อมูลจาก API ...",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "หน้าบ้าน — lint, types, tests",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "container — ทั้งสองฝั่งรันใน container ได้",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "สัญญา API — ชนิดข้อมูลสองฝั่งต้องตรง...",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Security / gate",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "api-contract execution",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "e2e execution",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "backend execution",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "frontend execution",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "docker execution",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Security / CodeQL (actions)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Security / CodeQL (python)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Security / secrets",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Security / dependencies",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Security / CodeQL (javascript-typescript)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Security / policy tests",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "ค่ากลาง — เวอร์ชัน PostgreSQL",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ],
+      "semantic_delta": [
+        {
+          "package_path": "node_modules/@tailwindcss/oxide-wasm32-wasi/node_modules/@emnapi/core",
+          "before": null,
+          "pr": "1.11.1",
+          "main": null,
+          "exact_target_entry_in_main": false
+        },
+        {
+          "package_path": "node_modules/@tailwindcss/oxide-wasm32-wasi/node_modules/@emnapi/runtime",
+          "before": null,
+          "pr": "1.11.1",
+          "main": null,
+          "exact_target_entry_in_main": false
+        },
+        {
+          "package_path": "node_modules/@tailwindcss/oxide-wasm32-wasi/node_modules/@emnapi/wasi-threads",
+          "before": null,
+          "pr": "1.2.2",
+          "main": null,
+          "exact_target_entry_in_main": false
+        },
+        {
+          "package_path": "node_modules/@tailwindcss/oxide-wasm32-wasi/node_modules/@napi-rs/wasm-runtime",
+          "before": null,
+          "pr": "1.1.4",
+          "main": null,
+          "exact_target_entry_in_main": false
+        },
+        {
+          "package_path": "node_modules/@tailwindcss/oxide-wasm32-wasi/node_modules/@tybys/wasm-util",
+          "before": null,
+          "pr": "0.10.2",
+          "main": null,
+          "exact_target_entry_in_main": false
+        },
+        {
+          "package_path": "node_modules/@tailwindcss/oxide-wasm32-wasi/node_modules/tslib",
+          "before": null,
+          "pr": "2.8.1",
+          "main": null,
+          "exact_target_entry_in_main": false
+        },
+        {
+          "package_path": "node_modules/brace-expansion",
+          "before": "5.0.11",
+          "pr": "5.0.13",
+          "main": "5.0.11",
+          "exact_target_entry_in_main": false
+        },
+        {
+          "package_path": "node_modules/vite",
+          "before": "8.2.4",
+          "pr": "8.2.4",
+          "main": "8.2.4",
+          "exact_target_entry_in_main": false
+        },
+        {
+          "package_path": "node_modules/zod",
+          "before": "4.6.6",
+          "pr": "4.6.6",
+          "main": "4.6.6",
+          "exact_target_entry_in_main": false
+        }
+      ]
+    },
+    {
+      "number": 55,
+      "url": "https://github.com/yukasung/tiewtrade/pull/55",
+      "head": "4a8cf05ac1e5c9e5962b6ed62b059188b049f9d7",
+      "mergeable_state": "behind",
+      "files": [
+        "frontend/package-lock.json",
+        "frontend/package.json"
+      ],
+      "checks": [
+        {
+          "name": "หลังบ้าน — lint, types, imports, tests",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "e2e — เบราว์เซอร์จริงเห็นข้อมูลจาก API ...",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "หน้าบ้าน — lint, types, tests",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "container — ทั้งสองฝั่งรันใน container ได้",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "สัญญา API — ชนิดข้อมูลสองฝั่งต้องตรง...",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Security / gate",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "api-contract execution",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "frontend execution",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "e2e execution",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "backend execution",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "docker execution",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Security / CodeQL (python)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Security / CodeQL (actions)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Security / secrets",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "ค่ากลาง — เวอร์ชัน PostgreSQL",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Security / dependencies",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Security / policy tests",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Security / CodeQL (javascript-typescript)",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ],
+      "semantic_delta": [
+        {
+          "package_path": "",
+          "before": null,
+          "pr": null,
+          "main": null,
+          "exact_target_entry_in_main": false
+        },
+        {
+          "package_path": "node_modules/@vitest/expect",
+          "before": "4.1.11",
+          "pr": "4.1.12",
+          "main": "4.1.11",
+          "exact_target_entry_in_main": false
+        },
+        {
+          "package_path": "node_modules/@vitest/mocker",
+          "before": "4.1.11",
+          "pr": "4.1.12",
+          "main": "4.1.11",
+          "exact_target_entry_in_main": false
+        },
+        {
+          "package_path": "node_modules/@vitest/pretty-format",
+          "before": "4.1.11",
+          "pr": "4.1.12",
+          "main": "4.1.11",
+          "exact_target_entry_in_main": false
+        },
+        {
+          "package_path": "node_modules/@vitest/runner",
+          "before": "4.1.11",
+          "pr": "4.1.12",
+          "main": "4.1.11",
+          "exact_target_entry_in_main": false
+        },
+        {
+          "package_path": "node_modules/@vitest/snapshot",
+          "before": "4.1.11",
+          "pr": "4.1.12",
+          "main": "4.1.11",
+          "exact_target_entry_in_main": false
+        },
+        {
+          "package_path": "node_modules/@vitest/spy",
+          "before": "4.1.11",
+          "pr": "4.1.12",
+          "main": "4.1.11",
+          "exact_target_entry_in_main": false
+        },
+        {
+          "package_path": "node_modules/@vitest/utils",
+          "before": "4.1.11",
+          "pr": "4.1.12",
+          "main": "4.1.11",
+          "exact_target_entry_in_main": false
+        },
+        {
+          "package_path": "node_modules/vitest",
+          "before": "4.1.11",
+          "pr": "4.1.12",
+          "main": "4.1.11",
+          "exact_target_entry_in_main": false
+        }
+      ]
+    },
+    {
+      "number": 56,
+      "url": "https://github.com/yukasung/tiewtrade/pull/56",
+      "head": "3efc7b0e6b974744446a3c4afec156dce7b2bc4d",
+      "mergeable_state": "behind",
+      "files": [
+        "frontend/package-lock.json",
+        "frontend/package.json"
+      ],
+      "checks": [
+        {
+          "name": "หลังบ้าน — lint, types, imports, tests",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "e2e — เบราว์เซอร์จริงเห็นข้อมูลจาก API ...",
+          "status": "completed",
+          "conclusion": "failure"
+        },
+        {
+          "name": "container — ทั้งสองฝั่งรันใน container ได้",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "หน้าบ้าน — lint, types, tests",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Security / gate",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "สัญญา API — ชนิดข้อมูลสองฝั่งต้องตรง...",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "frontend execution",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "docker execution",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "e2e execution",
+          "status": "completed",
+          "conclusion": "failure"
+        },
+        {
+          "name": "backend execution",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "api-contract execution",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Security / CodeQL (python)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Security / CodeQL (actions)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Security / dependencies",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Security / policy tests",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Security / secrets",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Security / CodeQL (javascript-typescript)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "ค่ากลาง — เวอร์ชัน PostgreSQL",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ],
+      "semantic_delta": [
+        {
+          "package_path": "",
+          "before": null,
+          "pr": null,
+          "main": null,
+          "exact_target_entry_in_main": false
+        },
+        {
+          "package_path": "node_modules/vite",
+          "before": "6.4.4",
+          "pr": "6.4.6",
+          "main": "6.4.4",
+          "exact_target_entry_in_main": false
+        }
+      ]
+    },
+    {
+      "number": 57,
+      "url": "https://github.com/yukasung/tiewtrade/pull/57",
+      "head": "4ec8911c548633129cc79232743c437d82d18a1d",
+      "mergeable_state": "behind",
+      "files": [
+        "references/admin-template/package-lock.json"
+      ],
+      "checks": [
+        {
+          "name": "หลังบ้าน — lint, types, imports, tests",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "e2e — เบราว์เซอร์จริงเห็นข้อมูลจาก API ...",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "container — ทั้งสองฝั่งรันใน container ได้",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Security / gate",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "หน้าบ้าน — lint, types, tests",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "สัญญา API — ชนิดข้อมูลสองฝั่งต้องตรง...",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "api-contract execution",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "docker execution",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "e2e execution",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "backend execution",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "frontend execution",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Security / CodeQL (javascript-typescript)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Security / policy tests",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Security / CodeQL (python)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Security / CodeQL (actions)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Security / secrets",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Security / dependencies",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "ค่ากลาง — เวอร์ชัน PostgreSQL",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ],
+      "semantic_delta": [
+        {
+          "package_path": "node_modules/@humanfs/core",
+          "before": "0.19.1",
+          "pr": "0.19.2",
+          "main": "0.19.1",
+          "exact_target_entry_in_main": false
+        },
+        {
+          "package_path": "node_modules/@humanfs/node",
+          "before": "0.16.6",
+          "pr": "0.16.8",
+          "main": "0.16.6",
+          "exact_target_entry_in_main": false
+        },
+        {
+          "package_path": "node_modules/@humanfs/types",
+          "before": null,
+          "pr": "0.15.0",
+          "main": null,
+          "exact_target_entry_in_main": false
+        },
+        {
+          "package_path": "node_modules/@tailwindcss/oxide-wasm32-wasi/node_modules/@emnapi/core",
+          "before": null,
+          "pr": "1.11.1",
+          "main": null,
+          "exact_target_entry_in_main": false
+        },
+        {
+          "package_path": "node_modules/@tailwindcss/oxide-wasm32-wasi/node_modules/@emnapi/runtime",
+          "before": null,
+          "pr": "1.11.1",
+          "main": null,
+          "exact_target_entry_in_main": false
+        },
+        {
+          "package_path": "node_modules/@tailwindcss/oxide-wasm32-wasi/node_modules/@emnapi/wasi-threads",
+          "before": null,
+          "pr": "1.2.2",
+          "main": null,
+          "exact_target_entry_in_main": false
+        },
+        {
+          "package_path": "node_modules/@tailwindcss/oxide-wasm32-wasi/node_modules/@napi-rs/wasm-runtime",
+          "before": null,
+          "pr": "1.1.4",
+          "main": null,
+          "exact_target_entry_in_main": false
+        },
+        {
+          "package_path": "node_modules/@tailwindcss/oxide-wasm32-wasi/node_modules/@tybys/wasm-util",
+          "before": null,
+          "pr": "0.10.2",
+          "main": null,
+          "exact_target_entry_in_main": false
+        },
+        {
+          "package_path": "node_modules/@tailwindcss/oxide-wasm32-wasi/node_modules/tslib",
+          "before": null,
+          "pr": "2.8.1",
+          "main": null,
+          "exact_target_entry_in_main": false
+        },
+        {
+          "package_path": "node_modules/vite",
+          "before": "8.2.4",
+          "pr": "8.2.4",
+          "main": "8.2.4",
+          "exact_target_entry_in_main": false
+        },
+        {
+          "package_path": "node_modules/zod",
+          "before": "4.6.6",
+          "pr": "4.6.6",
+          "main": "4.6.6",
+          "exact_target_entry_in_main": false
+        }
+      ]
+    }
+  ],
+  "review_limit": "Checks belong to existing PR heads behind main, not to a new combined candidate. PR56 prior E2E failed at trading-account.spec.ts:90:48; no cause attributed to Vite."
+}

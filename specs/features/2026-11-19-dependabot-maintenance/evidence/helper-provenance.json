@@ -1,0 +1,31 @@
+[
+  {
+    "source": {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/harness/verify_candidate.py",
+      "sha256": "d4d35a2007452ac79d1a7aad2036d5ebe0b282a510e5c63d5011e9d86d08337e",
+      "disposition": "KEEP_HISTORICAL_PROTOTYPE_HARNESS_DO_NOT_EXECUTE_OR_PORT_AUTOMATICALLY"
+    },
+    "recovered": "verify_candidate.py"
+  },
+  {
+    "source": {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/harness/installed_resolution.mjs",
+      "sha256": "1f88dee5d279e99ef58f7aa54b8cbec1344e63f5d2db9dd77ebf2eff0d91e244",
+      "disposition": "KEEP_HISTORICAL_PROTOTYPE_HARNESS_DO_NOT_EXECUTE_OR_PORT_AUTOMATICALLY"
+    },
+    "recovered": "installed_resolution.mjs",
+    "adaptation": "Reject source symlinks; O_NOFOLLOW open then fstat/read same descriptor and close in finally",
+    "adapted_sha256": "0c38bd7c6e39973ef62fd404df9d16990cf827ff054d65a28289b191cea282a3"
+  },
+  {
+    "source": {
+      "source_worktree": "TiewTrade-picomatch-remediation",
+      "path": "specs/features/2026-11-17-picomatch-remediation/harness/lp04_public_callers.py",
+      "sha256": "a2afddfd7fb1ab1338b41ecece81ede1378666c544cdebff59f7b00520725ca4",
+      "disposition": "KEEP_HISTORICAL_PROTOTYPE_HARNESS_DO_NOT_EXECUTE_OR_PORT_AUTOMATICALLY"
+    },
+    "recovered": "caller_script.mjs (SCRIPT literal only; wrapper replaced to avoid campaign imports)"
+  }
+]

@@ -1,0 +1,14 @@
+{
+  "historical_failure": {
+    "head": "daa1655a31ad6ecda1c31f3056af8fe2dd159974",
+    "run": 44455180767,
+    "rule": "js/file-system-race",
+    "severity": "high",
+    "location": "harness/installed_resolution.mjs:50"
+  },
+  "fix": "Reject source symlinks; O_NOFOLLOW open then fstat/read same descriptor and close in finally",
+  "local_caller_recheck": "12 cases Passed",
+  "symlink_negative": "REJECTED",
+  "required_codeql": "Pending next SHA",
+  "helper_sha256": "0c38bd7c6e39973ef62fd404df9d16990cf827ff054d65a28289b191cea282a3"
+}

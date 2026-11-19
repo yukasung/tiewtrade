@@ -2197,3 +2197,16 @@ evidence. Picomatch PR #77 and chart diagnostic PR #78 are merged; main `c243d13
 passed CI 44336322663 and Security 44336322562. Prior Failed/Incomplete runs remain
 historical results; no root-cause or F-17 Completed claim. F-17 **Pending Full Validation**.
 [Reconciliation record](maintenance/2026-11-18-local-reconciliation/checkpoint.md).
+
+
+### Dependabot maintenance — 2026-11-19
+
+**In Progress — Requirements/Plan/Validation Approved; implementation starting.**
+Owner requested a new scope for open PR #50/#55/#56/#57 after remote-branch cleanup.
+[Requirements](features/2026-11-19-dependabot-maintenance/requirements.md) approved 2026-11-19 cover exact
+application Vite/Vitest and reference brace-expansion/humanfs targets, bounded necessary
+closure and unchanged LP04/security/trading gates. Registry metadata verified read-only;
+no dependency implementation or candidate validation yet.
+[Plan](features/2026-11-19-dependabot-maintenance/plan.md) and
+[validation](features/2026-11-19-dependabot-maintenance/validation.md) approved 2026-11-19 after closure-criterion review fix.
+Next: implement, review, validate and publish under the approved plan and feature-spec workflow.
