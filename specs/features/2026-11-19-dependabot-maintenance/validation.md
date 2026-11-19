@@ -96,3 +96,10 @@ Vite main bundle delta verified against integrity-checked6.4.4 archive: changed 
 escaping/fs access checks/chunk import names; embedded matcher/watcher implementations
 unchanged. Public new-version caller behavior separately proved; no broad ReDoS claim.
 Latest execution entries supersede preimplementation Not Run statements above.
+
+## Required Security finding — 2026-11-19
+
+Initial head daa1655, Security run44455180767: CodeQL JS High file-system race in recovered
+resolution helper. Corrected under recorded engineering amendment; caller12 recheck Passed,
+source-symlink negative Rejected. No exception/policy change. [Fix evidence](evidence/security-finding-fix.json).
+Required CI/Security on the corrected candidate remains mandatory; prior Failed retained.

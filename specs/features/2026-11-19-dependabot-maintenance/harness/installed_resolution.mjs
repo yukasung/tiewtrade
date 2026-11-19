@@ -1,6 +1,6 @@
 // Resolve without executing package modules or hostile patterns.
 import {createRequire} from 'node:module';
-import {readFileSync, realpathSync, readdirSync, statSync} from 'node:fs';
+import {readFileSync, realpathSync, readdirSync, openSync, fstatSync, closeSync, constants} from 'node:fs';
 import {join, dirname, relative} from 'node:path';
 import {createHash} from 'node:crypto';
 const app = realpathSync(process.argv[2]);
@@ -42,12 +42,20 @@ for (const [location, info] of Object.entries(lock.packages)) {
   // Retain relevant import lines; declarations alone are not runtime execution proof.
   const imports=[];
   function scan(dir) {
-    for(const file of readdirSync(dir)) {
+    for(const entry of readdirSync(dir,{withFileTypes:true})) {
+      const file=entry.name;
       if(file==='node_modules'||file==='package-lock.json') continue;
-      const path=join(dir,file); const stat=statSync(path);
-      if(stat.isDirectory()) scan(path);
-      else if(/\.(cjs|mjs|js)$/.test(file)) {
-        const lines=readFileSync(path,'utf8').split('\n');
+      const path=join(dir,file);
+      if(entry.isSymbolicLink()) throw new Error('linked caller source');
+      if(entry.isDirectory()) { inside(realpathSync(path)); scan(path); }
+      else if(entry.isFile() && /\.(cjs|mjs|js)$/.test(file)) {
+        const fd=openSync(path,constants.O_RDONLY|constants.O_NOFOLLOW);
+        let content;
+        try {
+          if(!fstatSync(fd).isFile()) throw new Error('non-file caller source');
+          content=readFileSync(fd,'utf8');
+        } finally { closeSync(fd); }
+        const lines=content.split('\n');
         lines.forEach((line,i)=>{if(/(?:require\s*\(|from\s+|import\s*\()\s*['"](?:picomatch|tinyglobby|fdir)['"]/.test(line)) imports.push({file:inside(path),line:i+1,text:line.slice(0,500)});});
       }
     }

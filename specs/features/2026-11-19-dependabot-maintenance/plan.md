@@ -184,3 +184,16 @@ classify this as a request-contract error, not a product fix: send Accept:
 application/javascript for the missing script and retain404 assertion; route HTML still
 must return200. Delegated engineering correction only; preserve the failed probes.
 No Vite config/source, timeout or acceptance threshold change.
+
+## Security finding correction — 2026-11-19, before patch
+
+Required Security run44455180767 on head daa1655 reported High `js/file-system-race`
+in recovered `harness/installed_resolution.mjs:50`. The archived prototype checked a path
+with statSync then reopened it to read source; a replacement could invalidate that check.
+Under delegated engineering authority2026-11-14, replace path-stat/read with directory
+entries, reject symlinks, and open source files with O_NOFOLLOW, fstat and read the same
+file descriptor, always closing it. Preserve exact installed parser/manifest/license and
+caller assertions. Reuse original helper provenance plus explicit adaptation; do not add
+an exception or skip CodeQL. Targeted proof: rerun resolution/caller checks on unchanged
+installed candidate plus symlink negative; required Security on next SHA remains mandatory.
+Historical High/failed run retained; no app dependency/source/security-policy change.

@@ -189,84 +189,84 @@
       "kind": "benign",
       "exit_code": 0,
       "passed": true,
-      "seconds": 0.2067
+      "seconds": 0.1892
     },
     {
       "caller": "vite",
       "kind": "single",
       "exit_code": 0,
       "passed": true,
-      "seconds": 0.1878
+      "seconds": 0.1553
     },
     {
       "caller": "vite",
       "kind": "multi",
       "exit_code": 0,
       "passed": true,
-      "seconds": 0.1702
+      "seconds": 0.1545
     },
     {
       "caller": "tinyglobby",
       "kind": "benign",
       "exit_code": 0,
       "passed": true,
-      "seconds": 0.1042
+      "seconds": 0.0782
     },
     {
       "caller": "tinyglobby",
       "kind": "single",
       "exit_code": 0,
       "passed": true,
-      "seconds": 0.1089
+      "seconds": 0.0851
     },
     {
       "caller": "tinyglobby",
       "kind": "multi",
       "exit_code": 0,
       "passed": true,
-      "seconds": 0.111
+      "seconds": 0.0846
     },
     {
       "caller": "fdir",
       "kind": "benign",
       "exit_code": 0,
       "passed": true,
-      "seconds": 0.0824
+      "seconds": 0.0818
     },
     {
       "caller": "fdir",
       "kind": "single",
       "exit_code": 0,
       "passed": true,
-      "seconds": 0.1053
+      "seconds": 0.0773
     },
     {
       "caller": "fdir",
       "kind": "multi",
       "exit_code": 0,
       "passed": true,
-      "seconds": 0.0925
+      "seconds": 0.0729
     },
     {
       "caller": "vitest",
       "kind": "benign",
       "exit_code": 0,
       "passed": true,
-      "seconds": 0.4902
+      "seconds": 0.4234
     },
     {
       "caller": "vitest",
       "kind": "single",
       "exit_code": 1,
       "passed": true,
-      "seconds": 0.3093
+      "seconds": 0.2452
     },
     {
       "caller": "vitest",
       "kind": "multi",
       "exit_code": 1,
       "passed": true,
-      "seconds": 0.2652
+      "seconds": 0.2393
     }
   ],
   "limits": {
