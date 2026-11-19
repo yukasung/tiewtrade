@@ -85,3 +85,43 @@ untouched; chart fix and exact approved checksum exception remain in the reviewe
   failures and chart CI failure remain Failed; local tests do not replace required CI.
   Next: publish once and follow one approved required CI/Security round; stop/report if
   it fails. If passed, existing expected-head merge/postmerge/cleanup remains authorized.
+
+
+## Hosted failure and test-portability correction — before code edit
+
+93e504b CI44477604098 stopped in the policy suite before worker/E2E selection. The
+Linux descendant-lifetime test returned124, which the existing production probe parser
+already classifies as timeout, but its new return-code assertion accepted only137/-9.
+Local cached Linux image returned137/-9, so it missed that runner portability difference.
+This is a test oracle error, not evidence to change production timeouts or gate semantics.
+Under AGENTS2026-11-14 engineering authority, include124 in that assertion, retaining
+actual descendant delayed-marker absence and every original gate/time/READY assertion.
+No runtime correction is justified by this failure. Preserve the hosted Failed result.
+Do targeted local verification and review; do not push or launch another hosted attempt
+without owner decision because the approved single hosted round has failed.
+
+
+### Corrected local checkpoint / next owner decision
+
+One assertion now accepts124/137/-9, matching the existing production timeout parser.
+The actual descendant marker check and all other assertions remain intact. Ruff/format/
+strict mypy passed; Linux network24 Passed with zero skips; local policy65 OK with one
+platform skip. Review of the one-line test delta found no further issue; runtime unchanged.
+A mistakenly broad container invocation of the entire policy suite could not execute17
+Git-dependent tests because that application image lacks Git; retain that harness failure,
+use the proper local policy environment and scoped Linux network suite results above.
+No installation/skip/assertion change was made to hide that environment limitation.
+
+Additional hosted budget was Proposed at the previous checkpoint: publish this one-line portability fix
+with its failure receipt, run exactly one new required CI/Security round, stop/report on
+failure; on success continue already authorized expected-head merge, postmerge checks and
+exact merged ref cleanup. No extra campaign/Live run. Expected hosted20–30minutes before
+merge and20–30minutes postmerge. Await owner decision before commit/push/new hosted run.
+
+
+### Additional bounded publication — Approved 2026-11-19
+
+Owner replied “approve” to publish the prepared one-line test portability correction
+and run exactly one new required CI/Security round. Prior failures remain Failed.
+No further hosted retry is authorized if this round fails; existing expected-head merge,
+postmerge checks and merged/pushed/green cleanup remain authorized on success.

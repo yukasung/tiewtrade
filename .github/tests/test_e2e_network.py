@@ -270,7 +270,7 @@ class BoundedRetryTests(unittest.TestCase):
                 ),
                 2.0,
             )
-            self.assertIn(result.code, (137, -9))
+            self.assertIn(result.code, (124, 137, -9))
             time.sleep(0.7)
             self.assertFalse(marker.exists())
 
