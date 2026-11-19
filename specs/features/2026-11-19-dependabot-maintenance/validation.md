@@ -6,6 +6,9 @@
 
 ## สถานะหลักฐานปัจจุบัน
 
+Current checkpoint: publication closed on PR #80; see the dated closure below.
+The following preimplementation record is historical.
+
 ขั้นนี้เป็น spec เท่านั้น: published metadata และ old PR diff/checks ตรวจแบบ read-only
 ใน [registry metadata](evidence/registry-metadata.json) และ [PR baseline](evidence/pr-baseline.json).
 ไม่มี candidate install/resolution/behavior/security acceptance ถูกดำเนินการสำหรับงานนี้.
@@ -24,12 +27,12 @@ counts/hash และลิงก์หลักฐานที่ตรวจ�
 | DV-02 | DM-03/04 | Node 22/exact npm receipts; app normal/ignore-scripts/relocated frozen installs ใช้ exact locks โดยไม่ rewrite. Reference normal/relocated frozen installs และ optional-platform graph ถูกต้อง. ทุก installed picomatch occurrence ใช้ LP04 bytes/hash/identity/license จริง; manifests/override/vendor/policy unchanged | Passed — local evidence |
 | DV-03 | DM-04/05 | Existing trusted-source negative tests และ isolated tamper/resolution cases ปฏิเสธ invalid sources. Actual Vite 6.4.6/Vitest 4.1.12/tinyglobby/fdir caller inventory/options และ finite matching/build/discovery/filter cases ผ่าน; no unknown/unsafe opt-out. Archived helper source SHA/provenance และ inputs บันทึกไว้ให้ทำซ้ำได้ | Passed — local evidence |
 | DV-04 | DM-06/08/09 | App `npm run lint`, `typecheck`, `test`, `check:api`, `build` ผ่านจาก clean actual candidate. Contract ใช้ backend/openapi.json จริง ไม่มี source/generated drift. Dev/preview routes/assets ผ่านพร้อม cleanup; ไม่มี app/UI/test criterion/timeout change เพื่อกลบ incompatibility | Passed — local evidence |
-| DV-05 | DM-06/08/09 | Relevant existing Playwright account/trading UI และ supported-symbols/manual-orders/protections/risk-limits flows ผ่านบน isolated fixtures. Required CI selection ไม่ลด. ตรวจ failure logs โดยเฉพาะ historical PR56 โดยไม่สรุปว่า Vite เป็นสาเหตุล่วงหน้า; auth 500ms/protection 1s ไม่เปลี่ยน | Pending required CI |
+| DV-05 | DM-06/08/09 | Relevant existing Playwright account/trading UI และ supported-symbols/manual-orders/protections/risk-limits flows ผ่านบน isolated fixtures. Required CI selection ไม่ลด. ตรวจ failure logs โดยเฉพาะ historical PR56 โดยไม่สรุปว่า Vite เป็นสาเหตุล่วงหน้า; auth 500ms/protection 1s ไม่เปลี่ยน | Passed — PR80 final candidate CI/Security |
 | DV-06 | DM-03/06 | Reference frozen build/typecheck, dev/preview assets และ installed brace/humanfs actual caller behavior ผ่าน; lint baseline/candidate เปรียบเทียบเก็บทั้งคู่ ไม่มี introduced failure. ไม่แก้ reference source/style/React/Vite major เพื่อให้ผ่าน | Passed — baseline lint unchanged (42 errors/4 warnings) |
 | DV-07 | DM-04/07 | App backend+frontend actual full lock inventory scan ผ่าน pinned binary/checksum/config เดิมพร้อม LP04 trusted SBOM และ fresh withdrawal evidence; inventory report equality ผ่าน รวม dev/transitive/optional/nested. ไม่มี unresolved High/Critical/Unknown หรือ exception ใหม่; Medium/Low รายงานตามจริง | Passed — local evidence |
 | DV-08 | DM-07 | Reference exact-lock sidecar mapping/hashes ตรวจครบ, policy เดิม, ไม่มี fake registry source/app-manifest; expected unique identities และ occurrence ledger ครบและ backend/reference counts แยกกัน. Missing-identity negative report ถูก reject. ไม่มี unresolved High/Critical/Unknown; findings อื่นรายงานตามจริง | Passed — local evidence |
 | DV-09 | DM-08/09/12 | Review diff/callers/dependencies และ stateless rules; business/money/order/risk/session/schema/contracts invariants unchanged. ไม่มี Live/owner data/new infra, เก็บ review findings และ affected rechecks ครบ, ไม่มี relevant Needs Clarification หรือ blocker | Passed — local evidence |
-| DV-10 | DM-10 | Ready for Code Review แจ้งแล้ว; findings resolved และ Feature local ผ่าน. Final combined PR required CI/Security ทุกด่านผ่านบน latest candidate SHA; ตรวจ expected head/base และ external/owner acceptance ที่ repo/branch protection บังคับครบ ไม่ใช้ automated review แทน required reviewer | Pending required CI |
+| DV-10 | DM-10 | Ready for Code Review แจ้งแล้ว; findings resolved และ Feature local ผ่าน. Final combined PR required CI/Security ทุกด่านผ่านบน latest candidate SHA; ตรวจ expected head/base และ external/owner acceptance ที่ repo/branch protection บังคับครบ ไม่ใช้ automated review แทน required reviewer | Passed — PR80 final candidate CI/Security |
 
 ### Reuse และการเลือกรัน
 
@@ -47,8 +50,8 @@ No broad source refactor, backend benchmark หรือ capacity trial planned.
 
 | รหัส | Requirements | เกณฑ์ | สถานะ |
 |---|---|---|---|
-| DV-11 | DM-10 | Merge SHA กับ postmerge CI/Security URLs/outcomes ครบและ Passed; หากล้มคง Failed/Incomplete และไม่ปิด checkpoint | Not Run |
-| DV-12 | DM-11 | ยืนยัน intended updates ครบ/PR status ตามจริง, backup และ head reachable main/pushed/CI green ก่อนลบ refs; local `git branch -d`, no force. ถ้าไม่ครบให้คง branch พร้อมสาเหตุ. รายงาน local/remote/PR inventory สุดท้าย | Not Run |
+| DV-11 | DM-10 | Merge SHA กับ postmerge CI/Security URLs/outcomes ครบและ Passed; หากล้มคง Failed/Incomplete และไม่ปิด checkpoint | Passed — see publication closure below |
+| DV-12 | DM-11 | ยืนยัน intended updates ครบ/PR status ตามจริง, backup และ head reachable main/pushed/CI green ก่อนลบ refs; local `git branch -d`, no force. ถ้าไม่ครบให้คง branch พร้อมสาเหตุ. รายงาน local/remote/PR inventory สุดท้าย | Passed — see publication closure below |
 
 ขั้นนี้อยู่หลัง merge ตามลำดับ Git; ไม่ใช้ postmerge มาแทน DV-01–10 ก่อน merge.
 
@@ -72,9 +75,9 @@ scanner inventory/findings, review/fixes และ PR/CI links. Raw traces/dumps
 ที่ครบเงื่อนไข หรือบันทึกเหตุผลที่ต้องเก็บแต่ละ branch ตามกฎ DV-12 ให้ชัดเจน.
 ข้อยกเว้นการเก็บ branch ใช้เฉพาะ DV-12 ไม่ยกเว้นด่าน DV-01–11 และต้องไม่มี claimed
 update ที่ยังไม่ได้ทำ. ต้องรายงาน blocker/failure ตามจริงและขั้นถัดไป; F-17 ไม่ Completed
-ตามงานนี้. ตอนนี้ทุก candidate check ยัง Not Run.
+ตามงานนี้. ข้อความ candidate checks Not Run เป็นบันทึกขั้นเสนอ; ผลปัจจุบันใช้ตารางและ dated checkpoints ด้านล่าง.
 
-ขั้นถัดไปปัจจุบัน: รอเจ้าของอนุมัติ plan + validation; หลังอนุมัติจึงทำ implementation,
+ขั้นถัดไป ณ ขั้นเสนอเดิม (historical): รอเจ้าของอนุมัติ plan + validation; หลังอนุมัติจึงทำ implementation,
 review, checks และ publication ต่อเนื่องภายใต้ AGENTS โดยไม่ขอคำสั่งย่อยซ้ำ.
 
 ## บันทึกอนุมัติ
@@ -103,3 +106,29 @@ Initial head daa1655, Security run44455180767: CodeQL JS High file-system race i
 resolution helper. Corrected under recorded engineering amendment; caller12 recheck Passed,
 source-symlink negative Rejected. No exception/policy change. [Fix evidence](evidence/security-finding-fix.json).
 Required CI/Security on the corrected candidate remains mandatory; prior Failed retained.
+
+
+## Publication closure verified — 2026-11-19
+
+[PR #80](https://github.com/yukasung/tiewtrade/pull/80) final head
+`24d8166a824ff2f281a1710a823348475dc6b4be` passed all 18 reported jobs:
+[CI 44455589531](https://github.com/yukasung/tiewtrade/actions/runs/44455589531),
+[Security 44455589508](https://github.com/yukasung/tiewtrade/actions/runs/44455589508).
+This closes DV-05/10, including the previously pending isolated required E2E checks;
+local results and the earlier CodeQL High/PR56 E2E failure remain historical results.
+No required reviewer is configured on main; automated checks are not substituted for
+owner trading/visual acceptance in other features.
+
+DV-11 Passed: merge `fea157947ce7e9686275291fd435b08ff4546d3b` passed
+[postmerge CI 44457883406](https://github.com/yukasung/tiewtrade/actions/runs/44457883406)
+and [Security 44457883418](https://github.com/yukasung/tiewtrade/actions/runs/44457883418).
+DV-12 Passed: PR50/55/56/57 are MERGED and their exact original heads are ancestors
+of main. The pre-audit read-only inventory contained only local main and remote main; no open
+PR or leftover dependency/integration ref. Existing backup/provenance records remain
+in place; this reconciliation performs no further ref deletion.
+
+The approved maintenance checkpoint DV-01–12 is closed. Reference inherited lint
+42 errors/4 warnings and recorded Medium findings are retained with their original
+scope; no security exception, assertion or severity change. F-17 remains Pending Full
+Validation. Next work is the separate F-17 opening audit in its existing evidence;
+no dependency implementation remains in this scope.

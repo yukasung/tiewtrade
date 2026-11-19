@@ -86,3 +86,19 @@ patched version listed. Lockfiles unchanged. See evidence/endurance20-20261115/
 publication-postmerge-blocker.md. Do not reclassify oldPassed, override gate, rerun
 scanner to seek different result or publish another candidate under current scope.
 Monitor existing main CI; then report unresolved blocker and proposed next scope.
+
+
+## Status reconciliation and opening audit — authorized 2026-11-19
+
+Owner instructed “เริ่มทำ” after the proposed documentation closure and F-17 Paper
+opening/admission audit. This continuation reconciles already observed PR80/81 results
+and audits existing Paper gates; it does not change requirements, runtime, access or
+activation. Reuse publication-checkpoint.md, AWAKE01/REBUILD20-05/READY02 receipts,
+manual-acceptance-fix-validation.md and current main required CI. Compare published
+PR76 production/migration/UI and relevant harness paths to current main; inspect current
+signup, risk/protection protocol and STOP authority contracts without reading owner
+credentials or mutating any deployed database. Record scope/candidate limits and missing
+acceptance in the existing feature evidence. Review Markdown links/status consistency
+and whitespace only for this documentation change; no new workload or application test
+round. Publish the combined documentation checkpoint under standing AGENTS Git authority,
+with unchanged required CI and no recursive commit solely to record its own CI.
