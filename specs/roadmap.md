@@ -2201,12 +2201,38 @@ historical results; no root-cause or F-17 Completed claim. F-17 **Pending Full V
 
 ### Dependabot maintenance — 2026-11-19
 
-**In Progress — Requirements/Plan/Validation Approved; implementation starting.**
-Owner requested a new scope for open PR #50/#55/#56/#57 after remote-branch cleanup.
-[Requirements](features/2026-11-19-dependabot-maintenance/requirements.md) approved 2026-11-19 cover exact
-application Vite/Vitest and reference brace-expansion/humanfs targets, bounded necessary
-closure and unchanged LP04/security/trading gates. Registry metadata verified read-only;
-no dependency implementation or candidate validation yet.
-[Plan](features/2026-11-19-dependabot-maintenance/plan.md) and
-[validation](features/2026-11-19-dependabot-maintenance/validation.md) approved 2026-11-19 after closure-criterion review fix.
-Next: implement, review, validate and publish under the approved plan and feature-spec workflow.
+**Completed — approved maintenance scope merged in PR #80; pre/postmerge CI/Security Passed.**
+[PR #80](https://github.com/yukasung/tiewtrade/pull/80) merged exact Vite/Vitest and
+reference brace-expansion/humanfs targets as `fea1579`. Local checks/review and final
+candidate CI/Security Passed; postmerge [CI 44457883406](https://github.com/yukasung/tiewtrade/actions/runs/44457883406)
+and [Security 44457883418](https://github.com/yukasung/tiewtrade/actions/runs/44457883418)
+Passed. Original PR50/55/56/57 are MERGED; original heads remain in main ancestry and
+refs are cleaned. [Validation DV-01–12](features/2026-11-19-dependabot-maintenance/validation.md)
+records closure and retained failures/inherited findings. No dependency work remains in scope.
+
+### Historical branch reconciliation — 2026-11-19
+
+**Completed — administrative merge scope, including approved chart/preflight harness fixes.**
+[PR #81](https://github.com/yukasung/tiewtrade/pull/81) merged as `81334aa`; all final
+premerge and postmerge checks Passed, including [CI 44484162505](https://github.com/yukasung/tiewtrade/actions/runs/44484162505)
+and [Security 44484162445](https://github.com/yukasung/tiewtrade/actions/runs/44484162445).
+Four historical source heads remain in main ancestry; at the PR81 closure checkpoint,
+local/remote inventory contained only main and no open PR. Approved exact checksum exception, earlier failures and
+historical/retired dispositions remain in the [validation record](maintenance/2026-11-19-history-reconciliation/validation.md).
+No further implementation remains in this scope.
+
+### F-17 Paper publication/opening audit — 2026-11-19
+
+[Current audit](features/2026-11-02-tp-sl/evidence/endurance20-20261115/paper-gate-audit-20261119.md)
+complete: PR76 production/migrations/UI and relevant endurance/protection harness are
+unchanged on main81334aa. AWAKE01 observed4h/internal20, REBUILD20-05 and READY02 W4
+Passed proofs retained; publication/current-W4 gaps closed. No new4h workload justified.
+F-17 remains **Pending Full Validation**, not Completed; original100-account integrated/
+Release and bot/notification/Live dependencies remain pending, with earlier failures retained.
+
+**Next:** prepare read-only current-candidate visual acceptance and obtain outstanding
+MF-13 owner confirmation. Opening also requires an identified target/internal audience,
+explicit owner authority and effective signup/STOP/compatible-worker/source/DB-protocol
+proof before changing flags. Repository audit did not inspect or activate a deployment;
+internal20 is not an enforced user cap. Read-only preparation may continue under existing
+approved startup scope; owner visual confirmation/opening authority cannot be inferred.

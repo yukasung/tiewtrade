@@ -1,15 +1,15 @@
 # Historical branch reconciliation — validation
 
-สถานะ: Execution authorized by owner merge instruction; checks pending.
+สถานะ: **Publication checkpoint closed — PR81 merged; final pre/postmerge checks Passed, verified 2026-11-19.**
 
 | ID | Phase | Acceptance | Status |
 |---|---|---|---|
 | HR-01 | Feature | Four immutable source heads and every source path hash/disposition audited; backup bundle verified | Passed — local review |
 | HR-02 | Feature | Normal merges preserve all four heads in ancestry; actual record clearly distinguishes current implementation, retired proposal/prototype and historical experiments | Passed — local review |
-| HR-03 | Feature | Final delta only reconciliation documentation/JSON plus owner-approved exact checksum exception; baseline runtime/active specs/locks/artifacts/scanner logic unchanged; no campaign or fixture execution | Passed — local review |
+| HR-03 | Feature | Final delta includes reconciliation records, exact approved checksum exception and owner-approved chart/preflight test-harness corrections; production/runtime/locks/scanner logic unchanged; no new workload campaign | Passed — local review |
 | HR-04 | Feature | Diff/callers review and JSON/link/whitespace checks pass, no blocker | Passed — local review |
-| HR-05 | Feature | Final candidate required CI/Security pass with unchanged severity/coverage and exactly one newly owner-approved identity | Pending rescan/required CI — owner approved exact identity |
-| HR-06 | Feature | Expected-head merge and postmerge CI/Security pass; clean synchronized main and original/integration refs cleaned only under Git rules | Pending |
+| HR-05 | Feature | Final candidate required CI/Security pass with unchanged severity/coverage and exactly one newly owner-approved identity | Passed — final candidate CI/Security; exact exception retained |
+| HR-06 | Feature | Expected-head merge and postmerge CI/Security pass; clean synchronized main and original/integration refs cleaned only under Git rules | Passed — postmerge and final ref inventory verified |
 
 No new Batch/Release criteria or workload; preserve F17 Pending Full Validation. After approval
 and checks follow the standing Git authorization without repeated publication permission.
@@ -87,3 +87,28 @@ D2aefa1 CI44479026954 failed actual descendant-lifetime assertion before E2E.
 replaces host timeout with same-context Python process-group supervision. Offline Linux30
 network cases and local policy71/static checks Passed; reviewed, no open findings. Exactly
 one new hosted round is authorized; main merge/postmerge/original ref cleanup Pending.
+
+
+## Publication and ref closure verified — 2026-11-19
+
+[PR #81](https://github.com/yukasung/tiewtrade/pull/81) final head
+`477da21eb2c1e9ad359beeb59a60b2d4645bb5da` passed all 18 reported jobs:
+[CI 44480852970](https://github.com/yukasung/tiewtrade/actions/runs/44480852970),
+[Security 44480852972](https://github.com/yukasung/tiewtrade/actions/runs/44480852972).
+Expected-head normal merge produced `81334aa7e50828382822a2bc0339fe3565ee6991`;
+[postmerge CI 44484162505](https://github.com/yukasung/tiewtrade/actions/runs/44484162505)
+and [Security 44484162445](https://github.com/yukasung/tiewtrade/actions/runs/44484162445)
+Passed. HR-05/06 are closed; earlier Failed/Incomplete results above remain history.
+
+The PR publication record reports verified backup bundles, unchanged source heads,
+atomic remote ref cleanup, local `git branch -d`, and owned diagnostic-container cleanup.
+Read-only verification here independently confirms all four recorded source heads in
+merge-results.json are ancestors of main, all original/integration refs absent, only
+local/remote main present, zero open PRs and a clean synchronized starting main. No
+new deletion or reactivation of historical fixtures occurred in this reconciliation.
+HR-03 now states the final owner-approved harness scope; its earlier history-only
+Passed statement applies to the original local checkpoint, not the later approved scope.
+
+No further implementation or validation remains for this administrative scope. Continue
+with the separate F-17 Paper opening audit; F-17 remains Pending Full Validation and
+its owner acceptance/Release/dependency gates are not waived by this merge.

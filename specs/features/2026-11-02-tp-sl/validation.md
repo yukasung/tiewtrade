@@ -1770,3 +1770,23 @@ Subsequent PR #77 LP04 remediation/approved exact exception and PR #78 diagnosti
 main `c243d13` CI 44336322663 and Security 44336322562 Passed. These publication outcomes
 do not close original capacity, owner acceptance, bot/notification or Live dependencies.
 F-17 remains **Pending Full Validation**. No campaign rerun or gate waiver in this reconciliation.
+
+
+## Current publication/opening audit — 2026-11-19
+
+[Audit and source bridge](evidence/endurance20-20261115/paper-gate-audit-20261119.md)
+close the earlier publication/current-W4 gaps: PR76 source and relevant endurance/protection
+harness are unchanged on main81334aa; READY02 W4 and AWAKE01 internal20 observed4h W3
+proofs retained. Current main CI44484162505 and Security44484162445 Passed following
+PR80 dependency and PR81 history/test-harness publication. Prior Failed/Partial/Incomplete
+results and their candidate limits remain intact. No W3/W4 rerun is justified by this diff.
+
+MF-13 owner visual confirmation remains Pending in its latest Nov12 record; functional
+owner STOP/REPLACE/CANCEL proof is retained, not repeated or regraded. Effective target
+signup, STOP authority, compatible writers/source readiness and DB protocol values were
+not inspected on a deployment and remain required before opening. Internal20 is not an
+enforced user cap. No activation/owner data/money/Live mutation or new workload performed.
+V-18 original100-account/remaining integrated Release and V-19/V-20 dependencies retain
+Pending Full Validation; F-17 is not Completed. Next bounded checkpoint: prepare read-only
+current-candidate preview and obtain outstanding owner visual confirmation, then verify
+and seek explicit opening authority for an identified internal target before flag changes.
