@@ -7,6 +7,7 @@ import ipaddress
 import json
 import os
 import re
+import signal
 import subprocess
 import sys
 import time
@@ -32,6 +33,9 @@ PROXY_NAMES = (
 )
 SCRIPT = Path(__file__).resolve()
 BUDGET_SECONDS = 100.0
+RETRY_DELAY_SECONDS = 0.2
+PROBE_TIMEOUT_SECONDS = 8.0
+CLEANUP_SECONDS = 0.5
 
 
 @dataclass(frozen=True)
@@ -125,19 +129,58 @@ def validate_metadata(value: object) -> bool:
     )
 
 
-def bounded_command(command: list[str], context: str, seconds: int) -> list[str]:
-    bounded = ["timeout", "--signal=KILL", f"{seconds}s", *command]
-    return ["sudo", "-n", "--", *bounded] if context == "sudo" else bounded
+def run_group(command: list[str], seconds: float) -> CommandResult:
+    """Own and kill the command's session in the same privilege context as its children."""
+    deadline = time.monotonic() + seconds
+    try:
+        process = subprocess.Popen(
+            command,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            start_new_session=True,
+        )
+    except FileNotFoundError:
+        return CommandResult("tool_unavailable")
+    except OSError:
+        return CommandResult("operational_error")
+    result = CommandResult("operational_error")
+    cleanup_ok = True
+    try:
+        output, _ = process.communicate(timeout=max(0.0, deadline - time.monotonic()))
+        result = CommandResult(
+            "success" if process.returncode == 0 else "command_failed", output, process.returncode
+        )
+    except subprocess.TimeoutExpired:
+        result = CommandResult("timeout")
+    except OSError:
+        pass
+    finally:
+        # Also clear descendants that closed their pipes before their parent exited.
+        try:
+            os.killpg(process.pid, signal.SIGKILL)
+        except ProcessLookupError:
+            pass
+        except OSError:
+            cleanup_ok = False
+        try:
+            process.wait(timeout=CLEANUP_SECONDS)
+        except (OSError, subprocess.TimeoutExpired):
+            cleanup_ok = False
+        if process.stdout is not None:
+            process.stdout.close()
+    return result if cleanup_ok else CommandResult("operational_error")
 
 
-def probe(kind: str, target: str, context: str, deadline: float) -> dict[str, object]:
-    remaining = deadline - time.monotonic()
-    if remaining <= 0:
-        return {"status": "budget_exhausted"}
+def fixed_command(kind: str, target: str) -> tuple[list[str], int]:
+    if (kind == "dns" and target not in HOSTS) or (kind == "https" and target not in HTTPS_URLS):
+        raise ValueError("Unsupported diagnostic target")
     if kind == "dns":
         command = ["getent", "ahosts", target]
         seconds = 5
-    else:
+    elif kind == "https":
         command = [
             "curl",
             "--disable",
@@ -165,7 +208,55 @@ def probe(kind: str, target: str, context: str, deadline: float) -> dict[str, ob
             target,
         ]
         seconds = 7
-    result = run_command(bounded_command(command, context, seconds), min(8.0, remaining))
+    elif kind == "metadata" and target == "-":
+        command = [sys.executable, str(SCRIPT), "--metadata-only"]
+        seconds = 7
+    else:
+        raise ValueError("Unsupported diagnostic operation")
+    return command, seconds
+
+
+def bounded_command(kind: str, target: str, context: str) -> list[str]:
+    fixed_command(kind, target)  # Validate before crossing the privilege boundary.
+    if context not in ("user", "sudo"):
+        raise ValueError("Unsupported diagnostic context")
+    bounded = [sys.executable, str(SCRIPT), "--supervise", kind, target]
+    return ["sudo", "-n", "--", *bounded] if context == "sudo" else bounded
+
+
+def supervised_command(kind: str, target: str, context: str) -> CommandResult:
+    outer = run_command(bounded_command(kind, target, context), PROBE_TIMEOUT_SECONDS)
+    # Failure of sudo/the supervisor is not a genuine retryable network timeout.
+    if outer.status != "success":
+        return CommandResult("operational_error")
+    try:
+        value = json.loads(outer.output)
+    except ValueError:
+        return CommandResult("operational_error")
+    if not isinstance(value, dict) or set(value) != {"status", "output", "code"}:
+        return CommandResult("operational_error")
+    status, output, code = value["status"], value["output"], value["code"]
+    if not isinstance(output, str):
+        return CommandResult("operational_error")
+    if status in ("timeout", "tool_unavailable", "operational_error"):
+        return (
+            CommandResult(status)
+            if output == "" and code is None
+            else CommandResult("operational_error")
+        )
+    if type(code) is not int or (status, code == 0) not in (
+        ("success", True),
+        ("command_failed", False),
+    ):
+        return CommandResult("operational_error")
+    return CommandResult(status, output, code)
+
+
+def probe(kind: str, target: str, context: str, deadline: float) -> dict[str, object]:
+    # Reserve the complete supervisor/cleanup boundary, including in sudo.
+    if deadline - time.monotonic() < PROBE_TIMEOUT_SECONDS:
+        return {"status": "budget_exhausted"}
+    result = supervised_command(kind, target, context)
     if result.status not in ("success", "command_failed"):
         return {"status": result.status}
     if result.code in (124, 137, -9):
@@ -204,6 +295,23 @@ def probe(kind: str, target: str, context: str, deadline: float) -> dict[str, ob
     return {"status": "success", "http_status": int(code)}
 
 
+def https_probe(target: str, context: str, deadline: float) -> dict[str, object]:
+    """Retry only the approved sudo Ubuntu timeout, retaining each safe outcome."""
+    outcome = probe("https", target, context, deadline)
+    if target != HTTPS_URLS[0] or context != "sudo":
+        return outcome
+    attempts = [outcome]
+    while outcome["status"] == "timeout" and len(attempts) < 3:
+        # Do not sleep or spawn unless the delay and complete privileged probe fit.
+        if deadline - time.monotonic() < RETRY_DELAY_SECONDS + PROBE_TIMEOUT_SECONDS:
+            outcome = {"status": "budget_exhausted"}
+            break
+        time.sleep(RETRY_DELAY_SECONDS)
+        outcome = probe("https", target, context, deadline)
+        attempts.append(outcome)
+    return {**outcome, "attempts": attempts, "attempt_count": len(attempts)}
+
+
 def _context_metadata(context: str, deadline: float) -> tuple[dict[str, object], bool]:
     """Collect and validate one context without mixing it with probe/gate orchestration."""
     if context == "user":
@@ -211,15 +319,8 @@ def _context_metadata(context: str, deadline: float) -> tuple[dict[str, object],
     else:
         remaining = deadline - time.monotonic()
         result = (
-            run_command(
-                bounded_command(
-                    [sys.executable, str(SCRIPT), "--metadata-only"],
-                    context,
-                    7,
-                ),
-                min(8.0, remaining),
-            )
-            if remaining > 0
+            supervised_command("metadata", "-", context)
+            if remaining >= PROBE_TIMEOUT_SECONDS
             else CommandResult("budget_exhausted")
         )
         try:
@@ -246,7 +347,7 @@ def diagnose() -> tuple[dict[str, object], bool]:
         safe_metadata, metadata_complete = _context_metadata(context, deadline)
         complete = complete and metadata_complete
         dns = {host: probe("dns", host, context, deadline) for host in HOSTS}
-        https = {url: probe("https", url, context, deadline) for url in HTTPS_URLS}
+        https = {url: https_probe(url, context, deadline) for url in HTTPS_URLS}
         contexts[context] = {"metadata": safe_metadata, "dns": dns, "https": https}
         for outcome in (*dns.values(), *https.values()):
             if outcome["status"] in (
@@ -275,9 +376,19 @@ def diagnose() -> tuple[dict[str, object], bool]:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--metadata-only", action="store_true")
+    modes = parser.add_mutually_exclusive_group()
+    modes.add_argument("--metadata-only", action="store_true")
+    modes.add_argument("--supervise", nargs=2, metavar=("OPERATION", "TARGET"))
     args = parser.parse_args(argv)
     try:
+        if args.supervise:
+            command, seconds = fixed_command(*args.supervise)
+            result = run_group(command, seconds)
+            sys.stdout.write(
+                json.dumps({"status": result.status, "output": result.output, "code": result.code})
+                + "\n"
+            )
+            return 0
         if args.metadata_only:
             sys.stdout.write(json.dumps(metadata(), sort_keys=True) + "\n")
             return 0

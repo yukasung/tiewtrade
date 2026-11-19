@@ -1,0 +1,813 @@
+{
+  "baseline": "fea157947ce7e9686275291fd435b08ff4546d3b",
+  "sources": [
+    {
+      "branch": "feature/f37-supported-pairs-management",
+      "head": "5699b20ebb048485f96d8e61308a0466c668216c",
+      "merge_base": "d54b0b8be620cef9a2ba44dfe000bc8ec3f3269b",
+      "source_paths": [
+        {
+          "path": "specs/features/2026-10-21-supported-pairs-management/plan.md",
+          "source_blob": "25bac40cfd4d016b287b23eaf659017ee057a041",
+          "sha256": "f9a1ebec894a9078543eb2ea9e2c60679c59890db8bad0fe8742dc73409494e8",
+          "disposition": "historical source retained in merged Git ancestry; not promoted to current filesystem"
+        },
+        {
+          "path": "specs/features/2026-10-21-supported-pairs-management/requirements.md",
+          "source_blob": "497f8a841c52fb44989c2457c15ca916fcf0daf7",
+          "sha256": "6953c980ac8f0195db854164d9035fdb750c6a7271792538bfc83ae83a84fab3",
+          "disposition": "historical source retained in merged Git ancestry; not promoted to current filesystem"
+        },
+        {
+          "path": "specs/features/2026-10-21-supported-pairs-management/validation.md",
+          "source_blob": "edb33655a631f161fc8fb3bd7df754a51ecdec9c",
+          "sha256": "1ac6d4bfd7d4c759f52e8244c756c0422215d3c01b468d639cbff691f9377789",
+          "disposition": "historical source retained in merged Git ancestry; not promoted to current filesystem"
+        },
+        {
+          "path": "specs/mission.md",
+          "source_blob": "c2dfaf5081cb95fcabcc74873fa084a1c273191f",
+          "sha256": "96a60f808c3e58130e07919be55e651d682f7f7b656d693a5ce3059bdcdb4dc0",
+          "disposition": "retain current approved main version; old version historical"
+        },
+        {
+          "path": "specs/roadmap.md",
+          "source_blob": "4d4d91602c75111e90a052719be53ca14cfce1b5",
+          "sha256": "cd712c90c6e991d2799eade3522f1502a443aea211e858b5a19f706dd10547e0",
+          "disposition": "retain current approved main version; old version historical"
+        }
+      ]
+    },
+    {
+      "branch": "security/picomatch-remediation-20261117",
+      "head": "267a6776a2f1e6b389d2e25c5715b5fe8ccb84d5",
+      "merge_base": "d3c9eae91f8fd0c0de091862106a77873d72b6b5",
+      "source_paths": [
+        {
+          "path": "specs/features/2026-11-17-picomatch-remediation/evidence/cleanup.json",
+          "source_blob": "5d35b0bad2aea424526fae4bf12e259123546142",
+          "sha256": "d4a59dffda58c804c080e18fbe5592eac8c098434081dea6873853d71ac09e1b",
+          "disposition": "historical source retained in merged Git ancestry; not promoted to current filesystem"
+        },
+        {
+          "path": "specs/features/2026-11-17-picomatch-remediation/evidence/investigation-summary.json",
+          "source_blob": "e5fab701efadf0104eb9e787b46669edc505cac8",
+          "sha256": "46eb74cd1193293cff5fa10c479b76bf001e01045a6565ab9c6df181f68e6723",
+          "disposition": "historical source retained in merged Git ancestry; not promoted to current filesystem"
+        },
+        {
+          "path": "specs/features/2026-11-17-picomatch-remediation/evidence/lp01/LICENSE",
+          "source_blob": "3608dca25e30b572b6ad6935c8c7918bf70e3d2f",
+          "sha256": "d0cd141b0c322fded5dfad1d4645bb2fedfc05b7321fe1009469638190d59ef9",
+          "disposition": "historical source retained in merged Git ancestry; not promoted to current filesystem"
+        },
+        {
+          "path": "specs/features/2026-11-17-picomatch-remediation/evidence/lp01/checkpoint.md",
+          "source_blob": "c5ea2e46eb38f95193c50a5208834721c231d926",
+          "sha256": "1075a35621f818c59e0d8de9639c92d854bf0907a86126e057be004be6c3665a",
+          "disposition": "historical source retained in merged Git ancestry; not promoted to current filesystem"
+        },
+        {
+          "path": "specs/features/2026-11-17-picomatch-remediation/evidence/lp01/cleanup.json",
+          "source_blob": "45d27eaf86c0c672da4ed532561b8bda06eebbba",
+          "sha256": "d15b2b184cfe714711bf59aa7a0fb33a11b67e06aeb11f0166136b6dd1fc74b8",
+          "disposition": "historical source retained in merged Git ancestry; not promoted to current filesystem"
+        },
+        {
+          "path": "specs/features/2026-11-17-picomatch-remediation/evidence/lp01/picomatch-4.0.7-lp01.patch",
+          "source_blob": "badec222a25d40149ea5e629e3e25427dbae3522",
+          "sha256": "fe95388813af6cd8454482119241d68791cd1127077c17089c5ba28828587c7b",
+          "disposition": "historical source retained in merged Git ancestry; not promoted to current filesystem"
+        },
+        {
+          "path": "specs/features/2026-11-17-picomatch-remediation/evidence/lp01/probe-child.js",
+          "source_blob": "0a5582f678f601183e7fc137cecb05e526357cdb",
+          "sha256": "6022d45d12ef03534df887da7cd500688bb8941ac19cb1abbf3ef3bdc5e15615",
+          "disposition": "historical source retained in merged Git ancestry; not promoted to current filesystem"
+        },
+        {
+          "path": "specs/features/2026-11-17-picomatch-remediation/evidence/lp01/probe-matrix.json",
+          "source_blob": "c65db8462cc0c71c13306dabc037dd2f82adabcb",
+          "sha256": "edc72ecc10fc96321fada05f7c5504c33804fccb3c61f83f9c6ec4ea76ad34a7",
+          "disposition": "historical source retained in merged Git ancestry; not promoted to current filesystem"
+        },
+        {
+          "path": "specs/features/2026-11-17-picomatch-remediation/evidence/lp01/probe-results.json",
+          "source_blob": "d7ffe1c4baf296e068b406f3d219e1af0c225949",
+          "sha256": "cc4d130af0f267e3f5eb82827c08a07993b75e7908b961e1e511546e162b60cb",
+          "disposition": "historical source retained in merged Git ancestry; not promoted to current filesystem"
+        },
+        {
+          "path": "specs/features/2026-11-17-picomatch-remediation/evidence/lp01/probe-runner.py",
+          "source_blob": "bd1816426de43f5ca38457ae61be56027548a9f3",
+          "sha256": "89ad4e1f129c0d3e3db6a4a3928136acf8850ca970fb5c16e86ae50718c770e7",
+          "disposition": "historical source retained in merged Git ancestry; not promoted to current filesystem"
+        },
+        {
+          "path": "specs/features/2026-11-17-picomatch-remediation/evidence/lp01/provenance.json",
+          "source_blob": "b796d6184e4c7c2b8cd66fdc671f917a275ae3f2",
+          "sha256": "301f4f8a96ca05b76f5f66f8e9711390bcf2293446aa19ca4ba323c452625da1",
+          "disposition": "historical source retained in merged Git ancestry; not promoted to current filesystem"
+        },
+        {
+          "path": "specs/features/2026-11-17-picomatch-remediation/evidence/lp02/LICENSE",
+          "source_blob": "3608dca25e30b572b6ad6935c8c7918bf70e3d2f",
+          "sha256": "d0cd141b0c322fded5dfad1d4645bb2fedfc05b7321fe1009469638190d59ef9",
+          "disposition": "historical source retained in merged Git ancestry; not promoted to current filesystem"
+        },
+        {
+          "path": "specs/features/2026-11-17-picomatch-remediation/evidence/lp02/bounded_probe.py",
+          "source_blob": "8b1c82e72b00513ec68e37ebdaa19b5b6a8006b4",
+          "sha256": "c11665519f352112eaaa87864786d5beb68b8ff4471a2ef6400dec34d41660c4",
+          "disposition": "historical source retained in merged Git ancestry; not promoted to current filesystem"
+        },
+        {
+          "path": "specs/features/2026-11-17-picomatch-remediation/evidence/lp02/checkpoint.md",
+          "source_blob": "8dae4ee9c273f6f183ee9ba207e135cf0b3d1fc4",
+          "sha256": "1d8fe7299f8f4ee1b6c7553a1a6885d875f76c0e3da1b95489dd068babe9e24d",
+          "disposition": "historical source retained in merged Git ancestry; not promoted to current filesystem"
+        },
+        {
+          "path": "specs/features/2026-11-17-picomatch-remediation/evidence/lp02/cleanup.json",
+          "source_blob": "ccaa8b4149e5106f0f27c349971e0717057f3bab",
+          "sha256": "a072930b68fd87900e09eba9aa3f1635a771e25ae51b9f4f38340b40ed8f1b65",
+          "disposition": "historical source retained in merged Git ancestry; not promoted to current filesystem"
+        },
+        {
+          "path": "specs/features/2026-11-17-picomatch-remediation/evidence/lp02/execution-binding.json",
+          "source_blob": "8b75325381e7c601674889b3a7f832bad88c4c5b",
+          "sha256": "8d5b78e626663448179a87c84cef4fa7a26a14691d257cea9a37ac328fdbfd88",
+          "disposition": "historical source retained in merged Git ancestry; not promoted to current filesystem"
+        },
+        {
+          "path": "specs/features/2026-11-17-picomatch-remediation/evidence/lp02/final-binding.json",
+          "source_blob": "612e2604ef3f05bc56d8303afbfed48118193433",
+          "sha256": "ece40d87f1f7b1419bade33a00fa0c164819ca482787bca19aaeba590ac09b84",
+          "disposition": "historical source retained in merged Git ancestry; not promoted to current filesystem"
+        },
+        {
+          "path": "specs/features/2026-11-17-picomatch-remediation/evidence/lp02/picomatch-4.0.7-lp02.patch",
+          "source_blob": "0343ebae6e15ae40b27ac05b9dc75c5fd1d0d6cb",
+          "sha256": "a12729d6b34f7dca80b5ba9a771525383596f7c96f29767416791f3d746f006f",
+          "disposition": "historical source retained in merged Git ancestry; not promoted to current filesystem"
+        },
+        {
+          "path": "specs/features/2026-11-17-picomatch-remediation/evidence/lp02/probe-child.js",
+          "source_blob": "fd0d8a2dfaa35a27b6095807bebcc51ea86b58d6",
+          "sha256": "a0443a94de19aeca5c510055e5b1927b17ff2969b223c413ef569777c63a369d",
+          "disposition": "historical source retained in merged Git ancestry; not promoted to current filesystem"
+        },
+        {
+          "path": "specs/features/2026-11-17-picomatch-remediation/evidence/lp02/probe-matrix.json",
+          "source_blob": "4a796cea2394d46cdcd4bf1dde16e675102c892b",
+          "sha256": "38c7f640f571bb5683b13a7c3927ddbdc5dc67fb44577f910c0bc7f1ae9821ca",
+          "disposition": "historical source retained in merged Git ancestry; not promoted to current filesystem"
+        },
+        {
+          "path": "specs/features/2026-11-17-picomatch-remediation/evidence/lp02/probe-results.json",
+          "source_blob": "b60544750b179802afb2c5adb2d5c3a1a86388c3",
+          "sha256": "68335f758e95b766621f8442a35a057fff0a40e68bf15543eded82718dfb4a14",
+          "disposition": "historical source retained in merged Git ancestry; not promoted to current filesystem"
+        },
+        {
+          "path": "specs/features/2026-11-17-picomatch-remediation/evidence/lp02/provenance.json",
+          "source_blob": "ec199e5b1c9aae4d3e8ebc268780d64d0ec65eb9",
+          "sha256": "9eedffb60c86c50107110b7dd32c297b785711c195b808b1f4d90767abd7ac12",
+          "disposition": "historical source retained in merged Git ancestry; not promoted to current filesystem"
+        },
+        {
+          "path": "specs/features/2026-11-17-picomatch-remediation/evidence/lp02/runner-tests-final.log",
+          "source_blob": "1890b66ceaa4b325753e9513b82fc1456ad66657",
+          "sha256": "be26cec11b9fcc2c9e7d77b8f8ad510663a346e706b1ace512b5ab6e136022e5",
+          "disposition": "historical source retained in merged Git ancestry; not promoted to current filesystem"
+        },
+        {
+          "path": "specs/features/2026-11-17-picomatch-remediation/evidence/lp02/runner-tests.log",
+          "source_blob": "be848400e36d9bdb8b63df40589fcab9d3a7ff2f",
+          "sha256": "34deb2302070186a28c2f5d0d3d020434162390a990cc29ad18acfc8904f268c",
+          "disposition": "historical source retained in merged Git ancestry; not promoted to current filesystem"
+        },
+        {
+          "path": "specs/features/2026-11-17-picomatch-remediation/evidence/lp02/test_bounded_probe.py",
+          "source_blob": "1f7a730cec1894dafa94f8b6ffceb8f72aa33031",
+          "sha256": "257a6b875ab594cd7c1cbde1ba67dda37a2bf7cb0a312f98af3c12347872e04d",
+          "disposition": "historical source retained in merged Git ancestry; not promoted to current filesystem"
+        },
+        {
+          "path": "specs/features/2026-11-17-picomatch-remediation/evidence/lp02r1/LICENSE",
+          "source_blob": "3608dca25e30b572b6ad6935c8c7918bf70e3d2f",
+          "sha256": "d0cd141b0c322fded5dfad1d4645bb2fedfc05b7321fe1009469638190d59ef9",
+          "disposition": "historical source retained in merged Git ancestry; not promoted to current filesystem"
+        },
+        {
+          "path": "specs/features/2026-11-17-picomatch-remediation/evidence/lp02r1/bounded_probe.py",
+          "source_blob": "8fb346a0f5b42813598e7b6a466e0e94a19abd35",
+          "sha256": "8c507e2cba1397fadf345fb14c9a0c9026c1e7ba2a6c202f729cb41d0b23c0c6",
+          "disposition": "historical source retained in merged Git ancestry; not promoted to current filesystem"
+        },
+        {
+          "path": "specs/features/2026-11-17-picomatch-remediation/evidence/lp02r1/checkpoint.md",
+          "source_blob": "0078faec77b239ec4c19fa3bd88a9c7090ba2a0b",
+          "sha256": "52270ba2f2926986b96683dab129dd182bc61eb00bb784e91768a342db779483",
+          "disposition": "historical source retained in merged Git ancestry; not promoted to current filesystem"
+        },
+        {
+          "path": "specs/features/2026-11-17-picomatch-remediation/evidence/lp02r1/cleanup.json",
+          "source_blob": "8725bdaea03cdab1f1b217365075e1e62c7bd0de",
+          "sha256": "51e8714f1b6b784465543c641940a9c2e11f7961a7f7a5635a02f3dc0db9d7d8",
+          "disposition": "historical source retained in merged Git ancestry; not promoted to current filesystem"
+        },
+        {
+          "path": "specs/features/2026-11-17-picomatch-remediation/evidence/lp02r1/execution-binding.json",
+          "source_blob": "6ac7cfb0cfbe0194f3610f0027eecdd89dd07625",
+          "sha256": "0e6ba496ca353e510df9438b4000cdd297356017d3a1a468bd6986639040bc05",
+          "disposition": "historical source retained in merged Git ancestry; not promoted to current filesystem"
+        },
+        {
+          "path": "specs/features/2026-11-17-picomatch-remediation/evidence/lp02r1/picomatch-4.0.7-lp02.patch",
+          "source_blob": "0343ebae6e15ae40b27ac05b9dc75c5fd1d0d6cb",
+          "sha256": "a12729d6b34f7dca80b5ba9a771525383596f7c96f29767416791f3d746f006f",
+          "disposition": "historical source retained in merged Git ancestry; not promoted to current filesystem"
+        },
+        {
+          "path": "specs/features/2026-11-17-picomatch-remediation/evidence/lp02r1/probe-child.js",
+          "source_blob": "fd0d8a2dfaa35a27b6095807bebcc51ea86b58d6",
+          "sha256": "a0443a94de19aeca5c510055e5b1927b17ff2969b223c413ef569777c63a369d",
+          "disposition": "historical source retained in merged Git ancestry; not promoted to current filesystem"
+        },
+        {
+          "path": "specs/features/2026-11-17-picomatch-remediation/evidence/lp02r1/probe-matrix.json",
+          "source_blob": "4a796cea2394d46cdcd4bf1dde16e675102c892b",
+          "sha256": "38c7f640f571bb5683b13a7c3927ddbdc5dc67fb44577f910c0bc7f1ae9821ca",
+          "disposition": "historical source retained in merged Git ancestry; not promoted to current filesystem"
+        },
+        {
+          "path": "specs/features/2026-11-17-picomatch-remediation/evidence/lp02r1/probe-results.json",
+          "source_blob": "00513696afb61c1468bd8087e3b89ebcae23cb0c",
+          "sha256": "60d8c8e87daa6453b04829ccba21a7b5a55bd126aafa14403098fc7ac0342b1e",
+          "disposition": "historical source retained in merged Git ancestry; not promoted to current filesystem"
+        },
+        {
+          "path": "specs/features/2026-11-17-picomatch-remediation/evidence/lp02r1/runner-tests.log",
+          "source_blob": "cd9163627588f2d10d0012aa17b5df24087e7196",
+          "sha256": "dbf765775f6f779970a4468dce9a7d5cad6d8470ec25eea522233db15c3bef8b",
+          "disposition": "historical source retained in merged Git ancestry; not promoted to current filesystem"
+        },
+        {
+          "path": "specs/features/2026-11-17-picomatch-remediation/evidence/lp02r1/summary.json",
+          "source_blob": "c862feb57455302411bdbfeb5a5955fbe8cfd41f",
+          "sha256": "14d8460d51effd900f3b30606231a675cb7fe083376ae4aed516191ed99193ac",
+          "disposition": "historical source retained in merged Git ancestry; not promoted to current filesystem"
+        },
+        {
+          "path": "specs/features/2026-11-17-picomatch-remediation/evidence/lp02r1/test_bounded_probe.py",
+          "source_blob": "c7b1994427f47b585775d5788d0739b964c00e48",
+          "sha256": "35086c515b2f3c198ad789f3dcae1d08fe6120d3198494f3fce7803117378636",
+          "disposition": "historical source retained in merged Git ancestry; not promoted to current filesystem"
+        },
+        {
+          "path": "specs/features/2026-11-17-picomatch-remediation/evidence/lp03/LICENSE",
+          "source_blob": "3608dca25e30b572b6ad6935c8c7918bf70e3d2f",
+          "sha256": "d0cd141b0c322fded5dfad1d4645bb2fedfc05b7321fe1009469638190d59ef9",
+          "disposition": "historical source retained in merged Git ancestry; not promoted to current filesystem"
+        },
+        {
+          "path": "specs/features/2026-11-17-picomatch-remediation/evidence/lp03/bounded_probe.py",
+          "source_blob": "9b53c3621935261cdbe515e9a6b351342654282c",
+          "sha256": "60cee0ac89d6c01cd1e9980c7b48921c6d1ae0c05b42aba0a0ec9569b10d4959",
+          "disposition": "historical source retained in merged Git ancestry; not promoted to current filesystem"
+        },
+        {
+          "path": "specs/features/2026-11-17-picomatch-remediation/evidence/lp03/checkpoint.md",
+          "source_blob": "7d8963af1116d6e17a918160700b165391ccc888",
+          "sha256": "29d8efd1e9f9e6a923f16906629a8289999db7e0880cc376126d1d3028321ada",
+          "disposition": "historical source retained in merged Git ancestry; not promoted to current filesystem"
+        },
+        {
+          "path": "specs/features/2026-11-17-picomatch-remediation/evidence/lp03/execution-binding.json",
+          "source_blob": "e4144f3863cc4b03e4bbd064586c102226190720",
+          "sha256": "e6fef3d4d5f9010b09df21cc13f6f09877213208ee223f3a3b7ec052fbcf92f4",
+          "disposition": "historical source retained in merged Git ancestry; not promoted to current filesystem"
+        },
+        {
+          "path": "specs/features/2026-11-17-picomatch-remediation/evidence/lp03/picomatch-4.0.7-lp03.patch",
+          "source_blob": "f6a7b42c62c93c6e6027eeb6c30efb94617d159a",
+          "sha256": "3deda489c56725edce657078a5be9bcf9c1741f3a35b62ca3a97a59a8d621a01",
+          "disposition": "historical source retained in merged Git ancestry; not promoted to current filesystem"
+        },
+        {
+          "path": "specs/features/2026-11-17-picomatch-remediation/evidence/lp03/probe-child.js",
+          "source_blob": "fd0d8a2dfaa35a27b6095807bebcc51ea86b58d6",
+          "sha256": "a0443a94de19aeca5c510055e5b1927b17ff2969b223c413ef569777c63a369d",
+          "disposition": "historical source retained in merged Git ancestry; not promoted to current filesystem"
+        },
+        {
+          "path": "specs/features/2026-11-17-picomatch-remediation/evidence/lp03/probe-matrix.json",
+          "source_blob": "3f70d0dcc50487bf99bd084843b97df87a6905a9",
+          "sha256": "71c6e0ec4c2ef3eb85c4c0dd5f335b3a462ae74c5883c99b6aad0972c6378b9d",
+          "disposition": "historical source retained in merged Git ancestry; not promoted to current filesystem"
+        },
+        {
+          "path": "specs/features/2026-11-17-picomatch-remediation/evidence/lp03/probe-results.json",
+          "source_blob": "2f73be55ae68ea1eb308c0225fb02ee2d1cb87a5",
+          "sha256": "ad07191d44da07b5f67edd6e83c8f9141d13bd01d4ca8f7530cdfbea8f40874b",
+          "disposition": "historical source retained in merged Git ancestry; not promoted to current filesystem"
+        },
+        {
+          "path": "specs/features/2026-11-17-picomatch-remediation/evidence/lp03/provenance.json",
+          "source_blob": "5e74d5e3d4ab4662cef71075b9fe31b7bbce1624",
+          "sha256": "ea49fcb54d9c3f3ea6fd6afc920c12f85c2f9e7596e43612fdfe7e039db70af0",
+          "disposition": "historical source retained in merged Git ancestry; not promoted to current filesystem"
+        },
+        {
+          "path": "specs/features/2026-11-17-picomatch-remediation/evidence/lp03/runner-tests.log",
+          "source_blob": "6fe1e272b537a7bd95fc77a59627b94f3d6af6a4",
+          "sha256": "c09df554b3bfe7eaa8742ffe06985b31e164022c326478ebaedf18284a96fd6d",
+          "disposition": "historical source retained in merged Git ancestry; not promoted to current filesystem"
+        },
+        {
+          "path": "specs/features/2026-11-17-picomatch-remediation/evidence/lp03/summary.json",
+          "source_blob": "2df9dcc22f40ffe80c1e2c4af653e3adb8524733",
+          "sha256": "9a3da5ca13edc53713f36564b95f2a804cbe90b19af29eb6b533237946dd0f23",
+          "disposition": "historical source retained in merged Git ancestry; not promoted to current filesystem"
+        },
+        {
+          "path": "specs/features/2026-11-17-picomatch-remediation/evidence/lp03/test_bounded_probe.py",
+          "source_blob": "e90f88dacbda1b1f94e12897fd2a41871a745569",
+          "sha256": "f95ad4e7c181eb3abbe0008459d917a7c47eb2c8bdc2021e3652eeb5877753a3",
+          "disposition": "historical source retained in merged Git ancestry; not promoted to current filesystem"
+        },
+        {
+          "path": "specs/features/2026-11-17-picomatch-remediation/evidence/lp03refactor/LICENSE",
+          "source_blob": "3608dca25e30b572b6ad6935c8c7918bf70e3d2f",
+          "sha256": "d0cd141b0c322fded5dfad1d4645bb2fedfc05b7321fe1009469638190d59ef9",
+          "disposition": "historical source retained in merged Git ancestry; not promoted to current filesystem"
+        },
+        {
+          "path": "specs/features/2026-11-17-picomatch-remediation/evidence/lp03refactor/bounded_probe.py",
+          "source_blob": "9b53c3621935261cdbe515e9a6b351342654282c",
+          "sha256": "60cee0ac89d6c01cd1e9980c7b48921c6d1ae0c05b42aba0a0ec9569b10d4959",
+          "disposition": "historical source retained in merged Git ancestry; not promoted to current filesystem"
+        },
+        {
+          "path": "specs/features/2026-11-17-picomatch-remediation/evidence/lp03refactor/checkpoint.md",
+          "source_blob": "7b5a5280541f654f56bc6c0e0821ed976bebf580",
+          "sha256": "17024da8e2857aa4496123f5e1f695fdfc6afa25f26b5640d008c32441b3851c",
+          "disposition": "historical source retained in merged Git ancestry; not promoted to current filesystem"
+        },
+        {
+          "path": "specs/features/2026-11-17-picomatch-remediation/evidence/lp03refactor/picomatch-4.0.7-lp03.patch",
+          "source_blob": "f6a7b42c62c93c6e6027eeb6c30efb94617d159a",
+          "sha256": "3deda489c56725edce657078a5be9bcf9c1741f3a35b62ca3a97a59a8d621a01",
+          "disposition": "historical source retained in merged Git ancestry; not promoted to current filesystem"
+        },
+        {
+          "path": "specs/features/2026-11-17-picomatch-remediation/evidence/lp03refactor/probe-child.js",
+          "source_blob": "fd0d8a2dfaa35a27b6095807bebcc51ea86b58d6",
+          "sha256": "a0443a94de19aeca5c510055e5b1927b17ff2969b223c413ef569777c63a369d",
+          "disposition": "historical source retained in merged Git ancestry; not promoted to current filesystem"
+        },
+        {
+          "path": "specs/features/2026-11-17-picomatch-remediation/evidence/lp03refactor/probe-matrix.json",
+          "source_blob": "3f70d0dcc50487bf99bd084843b97df87a6905a9",
+          "sha256": "71c6e0ec4c2ef3eb85c4c0dd5f335b3a462ae74c5883c99b6aad0972c6378b9d",
+          "disposition": "historical source retained in merged Git ancestry; not promoted to current filesystem"
+        },
+        {
+          "path": "specs/features/2026-11-17-picomatch-remediation/evidence/lp03refactor/refactor-only.diff",
+          "source_blob": "843f9ce2d83ba24794746e634d782a87847bc563",
+          "sha256": "9627340469e3afec4a642e731bd4f535a768929c747cf0278ef5f29593bc8da1",
+          "disposition": "historical source retained in merged Git ancestry; not promoted to current filesystem"
+        },
+        {
+          "path": "specs/features/2026-11-17-picomatch-remediation/evidence/lp03refactor/runner-tests.log",
+          "source_blob": "28443665036b4d4399bd5ae0060a3baf6ce24bb5",
+          "sha256": "035d53b791309fed2ef1250562c966a1984e784d7063af14e59556d9983020b1",
+          "disposition": "historical source retained in merged Git ancestry; not promoted to current filesystem"
+        },
+        {
+          "path": "specs/features/2026-11-17-picomatch-remediation/evidence/lp03refactor/summary.json",
+          "source_blob": "f5335abe8892db2d26b875edc8f129e602f06326",
+          "sha256": "667caa4f962fdb1d37cef73be265ffffeed3bbbb478e4bf5e2c633513fcb593c",
+          "disposition": "historical source retained in merged Git ancestry; not promoted to current filesystem"
+        },
+        {
+          "path": "specs/features/2026-11-17-picomatch-remediation/evidence/lp03refactor/test_bounded_probe.py",
+          "source_blob": "f92dbd56c772ed69eb5af2f4fb3e50c54d046035",
+          "sha256": "17e1812b7835d0bc5d2150405622844c54c170fba6640cd129510d6645f9e6d1",
+          "disposition": "historical source retained in merged Git ancestry; not promoted to current filesystem"
+        },
+        {
+          "path": "specs/features/2026-11-17-picomatch-remediation/evidence/reachability.md",
+          "source_blob": "be0a3b3582d53c3603100cb04f87aef9a9cec2bd",
+          "sha256": "4414b2f8ef33b85cd34bfe293f3cb9cb5e11c6b15a0f231257acff0a57df5566",
+          "disposition": "historical source retained in merged Git ancestry; not promoted to current filesystem"
+        },
+        {
+          "path": "specs/features/2026-11-17-picomatch-remediation/evidence/stage-b/checkpoint.md",
+          "source_blob": "73599dad1efc2dfe19508d0d3a8225125e9c7fb3",
+          "sha256": "faca6e192c34c228950b24dce795271e87a95bbe559ba1ec6d9a3275340e2508",
+          "disposition": "historical source retained in merged Git ancestry; not promoted to current filesystem"
+        },
+        {
+          "path": "specs/features/2026-11-17-picomatch-remediation/evidence/stage-b/feasibility-result.json",
+          "source_blob": "7c3cf70dcf90448c9b6c702b10201a8677721e13",
+          "sha256": "f5163db538a96159e51dbb4ef19c5f8612929027b46932e46cda6366507127cd",
+          "disposition": "historical source retained in merged Git ancestry; not promoted to current filesystem"
+        },
+        {
+          "path": "specs/features/2026-11-17-picomatch-remediation/evidence/stage-b/resolver.log",
+          "source_blob": "8387054c5019f457c48a07624dd4c3830f3f2e52",
+          "sha256": "cdefab8d29a1d7b3992bb6847c7c2fd60807e468460687babdfce1ea527ecee6",
+          "disposition": "historical source retained in merged Git ancestry; not promoted to current filesystem"
+        },
+        {
+          "path": "specs/features/2026-11-17-picomatch-remediation/local-patch-proposal.md",
+          "source_blob": "57646791c0176fcc18129efe34ad5bf2aa53fb10",
+          "sha256": "42101cdb3acfe47440cebcb0853475f079d66a8e56e5d8376c3eb501276cface",
+          "disposition": "historical source retained in merged Git ancestry; not promoted to current filesystem"
+        },
+        {
+          "path": "specs/features/2026-11-17-picomatch-remediation/plan.md",
+          "source_blob": "81a635a9076aa2175b81e55a67632c7ac8ff83ff",
+          "sha256": "a6012960376a9c7e633935a18f110c07ad81f28db3dc273a1d67164eb15e797d",
+          "disposition": "retain current approved main version; old version historical"
+        },
+        {
+          "path": "specs/features/2026-11-17-picomatch-remediation/requirements.md",
+          "source_blob": "3984070cdac270c7dd0965dc615d384d76969dd7",
+          "sha256": "bc452dfb38ecb99f8854708e2e3f97f7d3a003c8d393b5e5b55519c47f2943af",
+          "disposition": "identical to current main"
+        },
+        {
+          "path": "specs/features/2026-11-17-picomatch-remediation/stage-b-plan.md",
+          "source_blob": "f9d162b70dd7136e835433cbd006edb655bb6fc0",
+          "sha256": "948f6dc5b9a4324d165a4e8834e2f0dc6884a4e0324eca6b1f1fd13b6c50040e",
+          "disposition": "historical source retained in merged Git ancestry; not promoted to current filesystem"
+        },
+        {
+          "path": "specs/features/2026-11-17-picomatch-remediation/stage-b-validation.md",
+          "source_blob": "17b0bad7512e4a23fb17c9b340d66e88a5984b1e",
+          "sha256": "3be3167a57d89078432fed44c242437c2d57c9df3efbe9dc510c62ecf63f8b28",
+          "disposition": "historical source retained in merged Git ancestry; not promoted to current filesystem"
+        },
+        {
+          "path": "specs/features/2026-11-17-picomatch-remediation/validation.md",
+          "source_blob": "cb92504796e35d0299ab8db6fe918a7d3290378c",
+          "sha256": "04a80a4686325d2301a46422c59a1990addc17af05c158e06c010747686e57eb",
+          "disposition": "retain current approved main version; old version historical"
+        },
+        {
+          "path": "specs/roadmap.md",
+          "source_blob": "cdfb0d017e766cbf6b1bb9a26bc3e881067e87f3",
+          "sha256": "46765b511b3bb192cbe86906f25074951c9da885d326e0174f50da41edf6d450",
+          "disposition": "retain current approved main version; old version historical"
+        }
+      ]
+    },
+    {
+      "branch": "validation/ci-docs-only",
+      "head": "0975c3f8efa46d58ae2e6cd9827c95583953c410",
+      "merge_base": "d5e733ecdd6934179ed4c1944bf9bcd69c5bddc4",
+      "source_paths": [
+        {
+          "path": "specs/features/2026-10-26-ci-feedback-time/evidence/docs-only-pilot.md",
+          "source_blob": "96cb0b7a2ee8e8e4f307729b164d208249516044",
+          "sha256": "8cf296e3619713072bc37b45a5ba80c981f75fe59e44f09094d6e83669bab8bf",
+          "disposition": "historical source retained in merged Git ancestry; not promoted to current filesystem"
+        }
+      ]
+    },
+    {
+      "branch": "validation/security-ci-rejection",
+      "head": "5054226a174b78eced8c5b3f76d9e2d2e983439a",
+      "merge_base": "98ff2f840fe08dc46ab5eb9976f17bdf32b062b1",
+      "source_paths": [
+        {
+          "path": ".github/security/codeql-config.yml",
+          "source_blob": "8eb9fcd90eab73c30da5de732259ba64b4b92850",
+          "sha256": "c6ed38a4063c04274c7dbb9d580ff009a0d65d9415ca794850fecd7d6ff011f0",
+          "disposition": "identical to current main"
+        },
+        {
+          "path": ".github/security/exceptions.json",
+          "source_blob": "604f6ad419b14fff251a6202b9464cdbda41f264",
+          "sha256": "f9cc0cfdbf69bf7300daa6211e3db6f9f0d0ee47eed9ea1d441285ba503bcb02",
+          "disposition": "retain current approved main version; old version historical"
+        },
+        {
+          "path": ".github/security/gitleaks.toml",
+          "source_blob": "4c390c19f5e2beac1e224a01a142bcadd11936e3",
+          "sha256": "c281f3f6b37061711647f2b3cc23f1b2ebe81620e83edbab6d7d0b5fb0c13d79",
+          "disposition": "identical to current main"
+        },
+        {
+          "path": ".github/security/osv-scanner.toml",
+          "source_blob": "00723c1459601930c9911ee6ed4d835de0ca74f6",
+          "sha256": "6494d817dba4ce87c8723336b0e6d93d1c4aab446932504d368962a29750ce7c",
+          "disposition": "identical to current main"
+        },
+        {
+          "path": ".github/security/tools.json",
+          "source_blob": "1c48376803f7320d7f17106bec9f0a61353e98be",
+          "sha256": "bd5392c2c68ca61579a94b55dd413e237e767132eb32b82d3eed41297466ad97",
+          "disposition": "identical to current main"
+        },
+        {
+          "path": ".github/workflows/security.yml",
+          "source_blob": "7ddb652a08f7075bb74f6a34ab5a8a3d2fa1f131",
+          "sha256": "75800a802d97415fac5d92388f3c405e4a43a4420836e8f73d5b4fb1eaf0d7fa",
+          "disposition": "retain current approved main version; old version historical"
+        },
+        {
+          "path": "specs/features/2026-11-05-security-ci/evidence/approved-secret-scan.json",
+          "source_blob": "7d577486640dae8ef6faef3caecd89a614e657d4",
+          "sha256": "0ab94b20bede70db5430fc9a2d1e80dfa441a78254e5c32716856074f01df4ff",
+          "disposition": "identical to current main"
+        },
+        {
+          "path": "specs/features/2026-11-05-security-ci/evidence/codeql-compatibility-probes.json",
+          "source_blob": "4b58a95fb0d5140c2cf059d814ded2fc4d974e52",
+          "sha256": "9c9f7abfa58a25faa33a6020c7b1b9407ce02647645a24d32f7180de8a9240fd",
+          "disposition": "identical to current main"
+        },
+        {
+          "path": "specs/features/2026-11-05-security-ci/evidence/compatibility-decision.md",
+          "source_blob": "13241193423897768f3eb8ed5165df1a3ae2977a",
+          "sha256": "f164ca5706d5a3fe4822843b836920fb7a99f99f605aec2c2f1568074d9ae967",
+          "disposition": "identical to current main"
+        },
+        {
+          "path": "specs/features/2026-11-05-security-ci/evidence/dependency-remediation-proposal.md",
+          "source_blob": "12d3f028b085e2b7d190a60b29517295e8a54c3b",
+          "sha256": "7978f16d205cd25d56e8c6dd8067423ba54c00055079e3c38d07bb1dcc797097",
+          "disposition": "identical to current main"
+        },
+        {
+          "path": "specs/features/2026-11-05-security-ci/evidence/exception-approval.md",
+          "source_blob": "205a5f654166a98fb6ca733393b3b035c21aa9d0",
+          "sha256": "62d81dd836128b1c0f96afa31de7f9045212da30c7b12d3b7f0c89a13422d41a",
+          "disposition": "identical to current main"
+        },
+        {
+          "path": "specs/features/2026-11-05-security-ci/evidence/feature-candidate.md",
+          "source_blob": "ac1164561a4bdbe11ff5496f208498dae134f6c5",
+          "sha256": "e97ee3f0c0eb4f25d82261f0a8ad70dcb2c17eb2cae91539ea0ebe3cfd233fe9",
+          "disposition": "retain current approved main version; old version historical"
+        },
+        {
+          "path": "specs/features/2026-11-05-security-ci/evidence/fork-validation-amendment-proposal.md",
+          "source_blob": "130861fbfbf3b473771d39ddec0a1885a3dbd0cf",
+          "sha256": "4a0b4bacec8730853fbe3ecc160b441b543ee5641c142ad7d9e5935203d3df1f",
+          "disposition": "identical to current main"
+        },
+        {
+          "path": "specs/features/2026-11-05-security-ci/evidence/local-origin-scan.json",
+          "source_blob": "0751c00859f0b7bc64eb64ef35c36394095fe02b",
+          "sha256": "961783d41b49a7ac579300e2e4fd96077ecd6a54c8ce4155e8e8963070f825b9",
+          "disposition": "identical to current main"
+        },
+        {
+          "path": "specs/features/2026-11-05-security-ci/evidence/main-integration.md",
+          "source_blob": "b842dde014d7edab5f00785872482a78d83a582e",
+          "sha256": "d5663872ffa0681ad921e5347bb6d07afffbe51bc8d0e82334b8d479a10a962c",
+          "disposition": "identical to current main"
+        },
+        {
+          "path": "specs/features/2026-11-05-security-ci/evidence/pr-effective-permissions.json",
+          "source_blob": "73c2a69cf57abb4c274575cff9d2bd96ffa7b1e3",
+          "sha256": "79c39ccf8a4ebd59ddf41b03f356f4f98834a9c85946d4ecf1d15fb5a754a00f",
+          "disposition": "identical to current main"
+        },
+        {
+          "path": "specs/features/2026-11-05-security-ci/evidence/proposed-secret-exceptions.json",
+          "source_blob": "6daea38b518bcd98e5041292df312fb94ee01b91",
+          "sha256": "30998c4fb609c30617d232f7142fb6ecc07d57c2483ea2c32d9a3ba2d0155639",
+          "disposition": "identical to current main"
+        },
+        {
+          "path": "specs/features/2026-11-05-security-ci/evidence/refactor-validation.md",
+          "source_blob": "26bb0d8e023d7cbf4ba85f2cc49d21fd85290e2e",
+          "sha256": "961a91c4d2a1c772d74b68f5c3c8f55b841b4a368bd055a6d462386ca8ca42d9",
+          "disposition": "identical to current main"
+        },
+        {
+          "path": "specs/features/2026-11-05-security-ci/evidence/remote-candidate-manifests.json",
+          "source_blob": "4a49d622f3d0142b1e9328e2e5064bda3089e311",
+          "sha256": "767b5c23ed6f3ebe31a48ed627a7bc50f3371e490fc393089db512cbb7701bc9",
+          "disposition": "identical to current main"
+        },
+        {
+          "path": "specs/features/2026-11-05-security-ci/evidence/remote-compatibility.md",
+          "source_blob": "5ff36327efc334023e53329cd6fd164b159e4b38",
+          "sha256": "adeda9bfca5020f69e19e5b07fcf63dce53248bacb0ae37591662429866a08fd",
+          "disposition": "identical to current main"
+        },
+        {
+          "path": "specs/features/2026-11-05-security-ci/evidence/review-fixes.md",
+          "source_blob": "42c0c1423cfe18d81bfe43cc2df1ce4f11ee8a47",
+          "sha256": "659b8418e8284bef328f8de5ffe67301b401ce05a00a3d09ef9e81fda1ee6960",
+          "disposition": "identical to current main"
+        },
+        {
+          "path": "specs/features/2026-11-05-security-ci/evidence/secret-triage.md",
+          "source_blob": "e21a842af5472321f4d7a1564303f2f553e5bd1e",
+          "sha256": "a84a32ed35da6eafee3041e38b803086be17e75eb8404438a809d3cf22b22a6e",
+          "disposition": "identical to current main"
+        },
+        {
+          "path": "specs/features/2026-11-05-security-ci/plan.md",
+          "source_blob": "47f14264fe5350f13b2c0d5aca257aeae27f10ee",
+          "sha256": "afb44b527be808431a9582d323411e66a014ffd50d2c844fccc31945f4b98242",
+          "disposition": "retain current approved main version; old version historical"
+        },
+        {
+          "path": "specs/features/2026-11-05-security-ci/requirements-review.md",
+          "source_blob": "97704ab521602a7795e9da116f51eafc5e99c4dc",
+          "sha256": "cce6ccd46fce15f9db2b0fd8c41714fb9ce2b08cbea4ad7f8096379054cedd6c",
+          "disposition": "identical to current main"
+        },
+        {
+          "path": "specs/features/2026-11-05-security-ci/requirements.md",
+          "source_blob": "b200717f05ef1997ccf3e2da75b613230cffdf17",
+          "sha256": "e410af10338e86e6a3c00c895945278cba4a9ed1fc5215a2130c30f1a691cf7d",
+          "disposition": "retain current approved main version; old version historical"
+        },
+        {
+          "path": "specs/features/2026-11-05-security-ci/validation.md",
+          "source_blob": "b163b2b240534d959d436f388656aba856697529",
+          "sha256": "5375afb1e7174aef91c90f34b13667a21254f574ff7d6579be053f9a7d487810",
+          "disposition": "retain current approved main version; old version historical"
+        },
+        {
+          "path": "specs/features/2026-11-05-security-dependency-remediation/evidence/feature-candidate.md",
+          "source_blob": "e1085db06e683faec9d9abf2ed287da305ca2bb4",
+          "sha256": "84742ef888248df7501137e0f49a0aa62c528db319839c5e1b42a06e074c086a",
+          "disposition": "identical to current main"
+        },
+        {
+          "path": "specs/features/2026-11-05-security-dependency-remediation/evidence/post-merge.json",
+          "source_blob": "8b44b6465b5f3b6e801864a414dbc267db3e952b",
+          "sha256": "994a77a8e87b98c40946fa0acab4a6efec1e805ac11ab7761af4954218cd5650",
+          "disposition": "identical to current main"
+        },
+        {
+          "path": "specs/features/2026-11-05-security-dependency-remediation/evidence/post-merge.md",
+          "source_blob": "b35cb668240a358e09d67c30d6b653e6bc22a960",
+          "sha256": "323fa9eb076a11082f87f6fe16ed6083d5d5c175b36e0856018b2645c1544763",
+          "disposition": "identical to current main"
+        },
+        {
+          "path": "specs/features/2026-11-05-security-dependency-remediation/validation.md",
+          "source_blob": "bdbbd045ac25e8ec30ea42f51b1f74f2c45b0b8d",
+          "sha256": "34df2c02247a507b2bf28a312e95750b7415fa86ec25568776c24804341ded1e",
+          "disposition": "identical to current main"
+        },
+        {
+          "path": "specs/mission.md",
+          "source_blob": "484866071facb493fd9435a9398f0b700b04e37c",
+          "sha256": "6a0625b911490016429e80502b0b3fdaccf2159a50439278cf227cd49b3cdcd4",
+          "disposition": "retain current approved main version; old version historical"
+        },
+        {
+          "path": "specs/roadmap.md",
+          "source_blob": "836945ea76c64862d031117742f2fbaf09e88f0d",
+          "sha256": "058755a575a5bae06a37b08355c7d10be57d69110295ff717c144105929165f1",
+          "disposition": "retain current approved main version; old version historical"
+        },
+        {
+          "path": "tools/security/README.md",
+          "source_blob": "00eafcb2ebf42ec121833e1c2ab6a02b4fad198e",
+          "sha256": "d209ae39e48126b034e9ca17d9d055556334953aa41db5d754eb6717656bab29",
+          "disposition": "retain current approved main version; old version historical"
+        },
+        {
+          "path": "tools/security/__init__.py",
+          "source_blob": "250c39c1d70a3ad9789799d7a3ebd097f9526283",
+          "sha256": "9384fcdbcb64846a817b85c30e9e2ec8959ad75e2ecd8b27d2b35a20398b7db3",
+          "disposition": "identical to current main"
+        },
+        {
+          "path": "tools/security/cli.py",
+          "source_blob": "52d31807267a872802df5390ecf9f6a2d2d137ee",
+          "sha256": "1b86d83b7d35128a17f855455659a0f2d3b52248284590108da45367a39d677c",
+          "disposition": "retain current approved main version; old version historical"
+        },
+        {
+          "path": "tools/security/dependencies.py",
+          "source_blob": "f928fdbb84010c1da197690c9b312067053c7639",
+          "sha256": "d15e9f58b8188044f3d8a2ca6a590799c36401fcc20de418c65d140af7a04b65",
+          "disposition": "retain current approved main version; old version historical"
+        },
+        {
+          "path": "tools/security/model.py",
+          "source_blob": "76bc94508478464889870c2034a775431a6cda85",
+          "sha256": "41d1c078f60554b1c8ea91237c81517113529341c92486f66151090caae4942a",
+          "disposition": "identical to current main"
+        },
+        {
+          "path": "tools/security/reporting.py",
+          "source_blob": "2884be6fe0a0ee6689cefc29e88b415506fa8275",
+          "sha256": "d96b698845d9ebff903274ed6e0679397603d8be2b1f3ff097871572b1ecc991",
+          "disposition": "retain current approved main version; old version historical"
+        },
+        {
+          "path": "tools/security/sarif.py",
+          "source_blob": "cb4af85b0379efe53ce61b2c1fcbab428d7acbcb",
+          "sha256": "4f59602ca229cbd2fff9dcc454ebe54f07e7ab6be2775b5771f7c68a93272282",
+          "disposition": "identical to current main"
+        },
+        {
+          "path": "tools/security/scan.py",
+          "source_blob": "d8008a1083e203854df1245f7390251a633a01a3",
+          "sha256": "c0428edecce81f95d40ae8625c0cf57c3886a32c748c349a6dff94147083e8fe",
+          "disposition": "retain current approved main version; old version historical"
+        },
+        {
+          "path": "tools/security/secrets.py",
+          "source_blob": "4d9113d5574d86ab74dd27075f7f790cb2e6d2c9",
+          "sha256": "881e76dd50ecf27e3ab8a1c7e87cf845b81f980efd3f494d7536fb09a245b809",
+          "disposition": "retain current approved main version; old version historical"
+        },
+        {
+          "path": "tools/security/severity.py",
+          "source_blob": "81591d86120ae4ca5f184210a497554371b2a7ab",
+          "sha256": "5be29e872204b74fd2ed3e0ce3566a47b5a9e07083b979bd81226de80b0a97a5",
+          "disposition": "identical to current main"
+        },
+        {
+          "path": "tools/security/system.py",
+          "source_blob": "20473039854225259b47d05f6539d9b36e871685",
+          "sha256": "6e07e2b32d957d5e762f2e2c047a6b5458b70c801456d1c5206c9b4f19b34614",
+          "disposition": "retain current approved main version; old version historical"
+        },
+        {
+          "path": "tools/security/tests/test_adapters.py",
+          "source_blob": "d049ea692b4268aa133301ccdde242e082f7f1fb",
+          "sha256": "28e729abd1cbda84393e9b356728be8f3c4eee3f06172799b76d92d94055e415",
+          "disposition": "identical to current main"
+        },
+        {
+          "path": "tools/security/tests/test_contracts.py",
+          "source_blob": "ec9fdac928f9383bc19200dac773b37771c5ba51",
+          "sha256": "2eee5f254b4b06dde0c98d52d0f2c470d9c9318ae8c0e9801de2fd7a9695b0e9",
+          "disposition": "retain current approved main version; old version historical"
+        },
+        {
+          "path": "tools/security/tests/test_execution.py",
+          "source_blob": "fd53b4d2956a8054ca673acb4b9ac2c2d81fea7b",
+          "sha256": "c3391affe38002b8b44fcd6ab2d97f383932cf095adfa9b8f874a61ec9545f91",
+          "disposition": "retain current approved main version; old version historical"
+        },
+        {
+          "path": "tools/security/tests/test_policy.py",
+          "source_blob": "c52f204c067c3ed6e24f7356d13edea1086a6379",
+          "sha256": "c6f4b389b5673d1f18904eff2a8188c0a97cf9df3accad4b97bda685598b0056",
+          "disposition": "identical to current main"
+        },
+        {
+          "path": "tools/security/tests/test_review_fixes.py",
+          "source_blob": "0183dd7200d00a88b3027dad9fdd4940f432f776",
+          "sha256": "bfa737bf69b858d52f40a2b5e808457730f074fc91ee2b3a259bc1412c934bcc",
+          "disposition": "identical to current main"
+        },
+        {
+          "path": "validation/security/entry.js",
+          "source_blob": "858dd7df0b84e56edd8c37cb0efcb86540968a12",
+          "sha256": "c638c870e8ecbb669df67525e12487be808fec1d441c58f6830bd6a734994f64",
+          "disposition": "historical source retained in merged Git ancestry; not promoted to current filesystem"
+        },
+        {
+          "path": "validation/security/entry.py",
+          "source_blob": "8767dab769ae443097853d77b3a537553f0f8b22",
+          "sha256": "8368e3512d28c4ea0b0cb6143f26dfc5a94d65f260e395e9fbe144aa537091da",
+          "disposition": "historical source retained in merged Git ancestry; not promoted to current filesystem"
+        },
+        {
+          "path": "validation/security/package.json",
+          "source_blob": "c4ecb07d6d1e43894f45532065f726bd73a8463d",
+          "sha256": "0fb0550e232979376c47b227e7311ebff864d15f44f111aa633b29582936361b",
+          "disposition": "historical source retained in merged Git ancestry; not promoted to current filesystem"
+        },
+        {
+          "path": "validation/security/probe_guard.py",
+          "source_blob": "bfac3c43e5b549f93a1eaf387fcd03771ce35ca9",
+          "sha256": "29b8efdd0b544697cb135f19a974753e0198a9d922ef95eb95c104a070a3b7d2",
+          "disposition": "historical source retained in merged Git ancestry; not promoted to current filesystem"
+        },
+        {
+          "path": "validation/security/retention_probe.py",
+          "source_blob": "c1233951ade38b9b6d2b15060f3eba26b801ad10",
+          "sha256": "d63c6ad792434af3712c994dd6087b92e77badf6630bb3622a7b9f8d0833d270",
+          "disposition": "historical source retained in merged Git ancestry; not promoted to current filesystem"
+        },
+        {
+          "path": "validation/security/vulnerable.py",
+          "source_blob": "27869d80353a93694ea55ee8c954c273880e2c6f",
+          "sha256": "cad8b057c215628f3f1eee72f140dae5a9571c25a0a1a206b06851d2b9ddf3d4",
+          "disposition": "historical source retained in merged Git ancestry; not promoted to current filesystem"
+        }
+      ]
+    }
+  ]
+}

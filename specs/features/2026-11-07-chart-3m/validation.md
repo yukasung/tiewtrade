@@ -245,3 +245,16 @@ and PRAPI base remainsf15596d. V3-08 Passed with approved observer; V3-09 still 
 because Security gate lacks complete current-candidate scans. No policy weakening,
 branch refresh, extra CI or local activation. All started jobs completed. Await owner
 on ci-base-refresh-amendment.md; Release profiles remain Not Run/Pending Full Validation.
+
+## Owner-approved bounded E2E composition follow-up — 2026-11-19
+
+The pre-edit decision and owner approval are recorded in
+[the reconciliation amendment](../../maintenance/2026-11-19-history-reconciliation/chart3m-next-step-proposal.md).
+Existing production3m semantics remain unchanged. Reuse current fixture FakeVenue and
+ordinary ingestion only in the opt-in native3m browser producer. Real PostgreSQL proof
+shows stream-only missing-prior recovery cannot converge; actual REST ingestion repairs
+both BTC/ETH with exact native prices and end-qualified previous slots. Local original
+browser case Passed14.9s within unchanged30s; default/opt-in composition and four-timeframe
+reconnect checks Passed. Historical timeout causes are not retroactively declared solved.
+One new required CI round authorized; stop on failure before another hosted run. Existing
+merge/postmerge gates and F17 Pending Full Validation remain unchanged.

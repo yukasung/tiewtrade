@@ -1,0 +1,22 @@
+[
+  {
+    "merge_commit": "0f8ffafd8d53332999866283f6d8c5a784c71686",
+    "first_parent": "cde3cbf7cc23aa12317a7d9d274505dff1b373ac",
+    "source_head": "5054226a174b78eced8c5b3f76d9e2d2e983439a"
+  },
+  {
+    "merge_commit": "cde3cbf7cc23aa12317a7d9d274505dff1b373ac",
+    "first_parent": "20b77550fc2aabbd14d8d848e130195e962f110c",
+    "source_head": "0975c3f8efa46d58ae2e6cd9827c95583953c410"
+  },
+  {
+    "merge_commit": "20b77550fc2aabbd14d8d848e130195e962f110c",
+    "first_parent": "40f4bf8ca7375f988430da539716aa2c79e7196e",
+    "source_head": "267a6776a2f1e6b389d2e25c5715b5fe8ccb84d5"
+  },
+  {
+    "merge_commit": "40f4bf8ca7375f988430da539716aa2c79e7196e",
+    "first_parent": "61dbaa0e3878d93d979050fdd659c8800d5b14d8",
+    "source_head": "5699b20ebb048485f96d8e61308a0466c668216c"
+  }
+]

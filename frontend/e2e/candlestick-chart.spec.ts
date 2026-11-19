@@ -44,13 +44,13 @@ async function expectLiveStatus(page: Page, expected: string[]) {
   }).toBe(true);
 }
 
-function producer(script: string) {
+function producer(script: string, ...extraArgs: string[]) {
   const directory = mkdtempSync(join(tmpdir(), "tiewtrade-chart-"));
   const control = join(directory, "control");
   const mode = (value: string) => writeFileSync(control, value);
   mode("healthy");
   const worker = spawn(backendPython,
-    ["-B", script, "--control-file", control], { cwd: "../backend", env: e2eEnvironment(), stdio: "ignore" });
+    ["-B", script, "--control-file", control, ...extraArgs], { cwd: "../backend", env: e2eEnvironment(), stdio: "ignore" });
   const exited = new Promise<void>((resolve, reject) => {
     worker.once("exit", () => resolve());
     worker.once("error", () => reject(new Error("F12_BROWSER_PRODUCER_FAILED")));
@@ -493,7 +493,7 @@ test(native3mTitle, async ({ page }) => {
   page.on("request", request => {
     if (request.method() !== "GET" && /\/api\/(paper\/orders|live\/orders|trading-account)/.test(request.url())) mutations.push(request.url());
   });
-  const worker = producer("tests/e2e_candle_runner.py");
+  const worker = producer("tests/e2e_candle_runner.py", "--repair-native-3m");
   try {
     await registerAccount(page);
     const chart = page.getByTestId("candlestick-chart");

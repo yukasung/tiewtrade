@@ -1,0 +1,13 @@
+{
+  "branch": "feature/f37-supported-pairs-management",
+  "source_head": "5699b20ebb048485f96d8e61308a0466c668216c",
+  "purpose_and_resolution": "Oct21 supported-pairs proposal is superseded by specs/features/2026-10-24-supported-symbol-management. Preserve the approved current mission/roadmap and original proposal in reachable history; no product/risk rule is adopted from the earlier Proposed plan.",
+  "conflicts_resolved_to_current_approved_main": [
+    "specs/mission.md",
+    "specs/roadmap.md"
+  ],
+  "source_path_occurrences": 5,
+  "inventory": "source-inventory.json",
+  "original_bytes": "git show 5699b20ebb048485f96d8e61308a0466c668216c:<path>",
+  "scope": "Historical reconciliation; no claim retired branch tree is applied as current implementation"
+}

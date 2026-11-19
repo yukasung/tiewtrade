@@ -52,3 +52,10 @@ Required checks ต้อง 7/7 ก่อน merge และยังรอค�
 ทดลองเพิ่มเติม ห้ามเลือก resolver/proxy/image ใหม่เองหรือ rerun แบบเดิมอัตโนมัติ.
 
 อ้างอิง: [GitHub networking troubleshooting](https://docs.github.com/en/actions/how-tos/troubleshoot-workflows#networking-troubleshooting-suggestions).
+
+
+## Narrow owner-approved amendment — 2026-11-19
+
+The historical no-retry wording above is superseded only as defined in
+[bounded Ubuntu retry amendment](bounded-ubuntu-preflight-retry-proposal.md). Owner approved
+with “approve” before code. All other endpoints, contexts, gates and budgets remain exact.

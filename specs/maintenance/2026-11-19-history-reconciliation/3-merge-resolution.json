@@ -1,0 +1,10 @@
+{
+  "branch": "validation/ci-docs-only",
+  "source_head": "0975c3f8efa46d58ae2e6cd9827c95583953c410",
+  "purpose_and_resolution": "Disposable PR68 documentation/cancellation pilot is now incorporated as historical evidence. It is not an active fixture, requirement or repeated campaign.",
+  "conflicts_resolved_to_current_approved_main": [],
+  "source_path_occurrences": 1,
+  "inventory": "source-inventory.json",
+  "original_bytes": "git show 0975c3f8efa46d58ae2e6cd9827c95583953c410:<path>",
+  "scope": "Historical reconciliation; no claim retired branch tree is applied as current implementation"
+}

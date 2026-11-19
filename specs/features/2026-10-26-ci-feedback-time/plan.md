@@ -196,3 +196,24 @@ add bounded user/sudo DNS/HTTPS/proxy diagnostics before original Playwright ins
 This is the sole additional exception to execution-block preservation on baseline 754edcc.
 Reuse the existing standard-library test harness and required worker/verdict wiring.
 No unresolved clarification blocks this diagnostic scope. Review/refactor/Git/merge gates remain.
+
+
+## Owner-approved bounded Ubuntu preflight amendment — 2026-11-19
+
+See [bounded retry amendment](bounded-ubuntu-preflight-retry-proposal.md), approved with
+“approve” before implementation. Preserve the original no-retry contract as historical;
+only sudo canonical Ubuntu HTTPS timeout may receive two additional bounded probes.
+Reuse existing probe/status/sanitization and monotonic budget; retain existing failure
+receipts. Feature validation adds deterministic retry scope, terminal failure, budget and
+privileged child lifetime tests, then one new required CI round; stop/report on failure.
+No application behavior, security gate, global/per-command budget or CI selection change.
+
+
+## Owner-approved process-group timeout correction — 2026-11-19
+
+See [privileged group timeout amendment](privileged-process-group-timeout-proposal.md),
+approved with “approve” before source edit. Replace host timeout dependency with a bounded
+Python supervisor running in the appropriate user/sudo context, preserving all deadlines
+and failure gates. Actual descendant/lifecycle tests, sanitized internal protocol and
+privilege/error paths are Feature gates before the single approved new hosted round.
+Prior d2aefa1 CI44479026954 remains Failed before E2E.

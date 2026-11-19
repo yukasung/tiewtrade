@@ -1,0 +1,28 @@
+{
+  "branch": "validation/security-ci-rejection",
+  "source_head": "5054226a174b78eced8c5b3f76d9e2d2e983439a",
+  "purpose_and_resolution": "Original PR49 rejection/repair/nonexecution proof is historical. Current implementation already contains the approved security integration and later fixes; retain current policy/helpers/specs and keep disposable marker/lifecycle fixtures out of the active filesystem.",
+  "conflicts_resolved_to_current_approved_main": [
+    ".github/security/exceptions.json",
+    ".github/workflows/security.yml",
+    "specs/features/2026-11-05-security-ci/evidence/feature-candidate.md",
+    "specs/features/2026-11-05-security-ci/plan.md",
+    "specs/features/2026-11-05-security-ci/requirements.md",
+    "specs/features/2026-11-05-security-ci/validation.md",
+    "specs/mission.md",
+    "specs/roadmap.md",
+    "tools/security/README.md",
+    "tools/security/cli.py",
+    "tools/security/dependencies.py",
+    "tools/security/reporting.py",
+    "tools/security/scan.py",
+    "tools/security/secrets.py",
+    "tools/security/system.py",
+    "tools/security/tests/test_contracts.py",
+    "tools/security/tests/test_execution.py"
+  ],
+  "source_path_occurrences": 54,
+  "inventory": "source-inventory.json",
+  "original_bytes": "git show 5054226a174b78eced8c5b3f76d9e2d2e983439a:<path>",
+  "scope": "Historical reconciliation, not activation of retired fixture tree"
+}
