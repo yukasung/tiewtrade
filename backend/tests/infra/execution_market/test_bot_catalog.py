@@ -23,7 +23,7 @@ from tiewtrade.infra.platform import (
 from tiewtrade.infra.users import create_user
 from tiewtrade.services.engine.bot import run_bot_catalog_round
 
-pytestmark = pytest.mark.fresh_global_state
+pytestmark = [pytest.mark.fresh_global_state, pytest.mark.usefixtures("internal_database")]
 
 
 async def seed_catalog_run(

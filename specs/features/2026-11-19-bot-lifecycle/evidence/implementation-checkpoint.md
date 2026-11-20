@@ -874,3 +874,54 @@ Corrected browser config verified with the launcher authority variable explicitl
 unset: `env -u TIEWTRADE_TRADING_STOP_AUTHORITY_ENABLED npm run test:e2e:bots`
 passed both cases in 32.5s. The guarded config now supplies its own F-19 test flag.
 Production/UI code and owner-accepted appearance remain unchanged.
+
+## Fresh-state CI blocker - 2026-11-20
+
+Final source remains fc783f6f3f85fb4fd09277145fc57aeb341ae8cf, PR #83.
+CI https://github.com/yukasung/tiewtrade/actions/runs/44668993420 (attempt 2):
+main backend 5,766 passed / 2 skipped / 32 deselected in 897.02 seconds; backend
+fresh-state step failed six cases. Other required checks, including all 61 browser
+tests and Security/gate, passed on this SHA. No merge performed.
+
+Retain the earlier premature cancellation accurately: the prior fc783f6 attempt
+was progressing at 79%, without a new failing test, when the agent canceled it.
+That cancellation was too early; backend was resumed on the same source candidate.
+The latest actual blocker is shared fresh-state contamination: catalog removal
+affects later F-18 tests, and a destructive migration-refusal test leaves the
+shared schema below head, causing later SYSTEM-proof reads to fail.
+
+Prepared the exact three-file isolation patch in proposed-fresh-state-isolation.patch
+and amendment in plan, without applying source changes or starting a fourth
+validation attempt. Owner continuation is required by the three-round stop rule.
+Existing financial/protection/stop/secret assertions and production gates remain
+unchanged. Feature remains In Progress/CI Blocked; Batch/Release remain pending.
+
+## Approved fresh-state isolation verified - 2026-11-20
+
+Owner explicitly approved the proposed three-file isolation patch, affected
+fresh-state/static checks and one further candidate CI round. Applied the exact
+patch: F-20 catalog withdrawal uses its existing private database fixture; the
+single destructive F-19 platform downgrade test also uses that fixture through
+explicit reexports in trading_stops/conftest.py. All original financial, stop,
+replay, downgrade-message and version assertions are unchanged. Production code,
+activation, schema and security rules are unchanged.
+
+On disposable PostgreSQL16/Redis7, migrated base to head and ran the affected
+fresh-state group in its original order: `pytest -m fresh_global_state -v
+--tb=short`: **28 passed**, 5,843 deselected, 37.14s. This includes the three real
+F-18 worker cases, the F-19 populated refusal at 0062 and subsequent SYSTEM causes,
+and real F-20 catalog withdrawal/replay. No timed acceptance campaign/Live order
+or separate indicator campaign was run. Ruff check/format passed (841 files),
+mypy passed (763 source files), diff whitespace check passed.
+
+Reviewed the isolation diff and fixture dependency/teardown paths. Reuses existing
+role/RLS/template/clone machinery, no in-memory business authority or new
+abstraction. No additional code finding identified. Owner UI acceptance and
+previous unaffected runtime/static results remain applicable. Retain all earlier
+CI failures/cancellations, including the premature cancellation admitted above.
+
+Next: publish this correction and run the one approved candidate CI round. If
+all required Feature gates pass on its final SHA, expected-head merge and
+post-merge CI proceed under standing authorization. If validation still fails,
+stop/report without another attempt. No claim of merge-ready or Completed yet;
+Batch/Release remain Pending Full Validation/Dependencies.

@@ -636,3 +636,41 @@ is sufficient and does not impose a new budget on unrelated tests. Retain verbos
 test names/durations for useful CI diagnostics. The canceled run plus targeted
 reproduction replaces the speculative whole-suite timeout approach. No broad
 timeout modification was published.
+
+### Fresh-global-state isolation proposal - 2026-11-20 (pending owner continuation)
+
+Final backend attempt completed the main suite (5,766 passed, 2 skipped, 32
+deselected) and protection integration, but fresh-global-state failed six cases.
+Root causes are test isolation, not permission to weaken a safety assertion:
+
+1. F-20's real catalog-withdrawal test is marked fresh_global_state and removes
+   BTC in the shared fresh database. Later F-18 integration correctly rejects
+   the now-unsupported pair. Use its existing internal_database fixture so the
+   same real removal/replay assertions run on a private clean clone.
+2. The F-19 platform migration-refusal test intentionally downgrades the shared
+   database toward 0061. New F-20 history makes an earlier downgrade guard refuse,
+   after reversible later revisions have committed. It leaves bot_resume_proofs
+   absent for later tests. Run this one destructive guard test in its own clone
+   too, reusing/importing the existing fixtures in trading_stops/conftest.py,
+   retaining its exact 0062 refusal and financial/F-19 assertions. No production
+   migration, cleanup rule, profile duration or financial logic change.
+
+Prepared evidence/proposed-fresh-state-isolation.patch (three existing test files),
+without applying it or running another experiment. The three nonpassing CI
+attempts include the initial failed/canceled run, a prematurely canceled run while
+progressing (agent error, no new finding), and the latest fresh-state failure.
+AGENTS.md requires a stop/options before another attempt. Recommended after owner
+continuation: apply the exact isolation patch, run the real affected fresh-state
+cases together plus static checks, then one final candidate CI. If all gates pass,
+merge with expected head and follow post-merge CI under the standing Git rules.
+If the same validation still fails, stop and report rather than extending retries.
+Alternative: leave PR blocked with the exact failure evidence for owner review.
+Expected additional time: targeted checks a few minutes, candidate and post-merge
+CI about 40-60 minutes total. This would extend publication beyond the initial
+time estimate; required checks cannot be replaced by the earlier partial runs.
+
+Owner explicitly approved the prepared three-file isolation patch and one further
+candidate CI round on 2026-11-20. Apply that patch, run affected fresh-state cases
+and static checks, then publish one corrected candidate. If validation still
+fails, stop/report; if all pre-merge gates pass, expected-head merge and mandatory
+post-merge CI remain authorized. No criteria, financial logic or runtime change.
