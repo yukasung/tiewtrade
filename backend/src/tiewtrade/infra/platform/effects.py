@@ -14,6 +14,7 @@ class _Executor(Protocol):
 
 async def reconcile_removal_effects(session: _Executor) -> int:
     result = await session.execute("SELECT reconcile_supported_symbol_effects()")
+    await session.execute("SELECT reconcile_bot_catalog_stop_counts()")
     return int(result.scalar_one())
 
 

@@ -396,6 +396,12 @@ jobs:
         env:
           CI: "1"
 
+      - name: F-20 Paper bot lifecycle E2E
+        run: npm run test:e2e:bots
+        working-directory: frontend
+        env:
+          CI: "1"
+
       # Dedicated suites create durable append-only operators and stop history.
       # F-19 must prove bootstrap and stop behavior from its own clean boundary.
       - name: reset database for F-18/F-19 risk composition

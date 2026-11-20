@@ -100,7 +100,9 @@
 ยกเลิกการรองรับ sub-account และหลายกระเป๋า รวมเพดานหลัก1+ย่อย5ของขอบเขตเดิม
 
 ผู้ใช้เลือก **เทรดมือหรือบอททีละแบบ** บนบัญชีเดียวกัน ไม่ใช้พร้อมกัน
-คงสูงสุด1บอทต่อบัญชีในงานบอทภายหลัง; ไม่มีการรับรองว่าแยกเงินจริง/margin/การล้างพอร์ต
+เพดานบอทแยกโหมดต่อบัญชี: **Paper 1 บอท และ Live 1 บอท**
+(เจ้าของตัดสิน NC-F20-01 วันที่ 2026-11-19 แทนเพดานรวมเดิม);
+ไม่มีการรับรองว่าแยกเงินจริง/margin/การล้างพอร์ต
 ระหว่างวิธีเทรดภายในบัญชีเดียว ต้องใช้ single writer และกฎความเสี่ยงเดิม
 
 **หยุดบอทไม่เปลี่ยน BOT เป็น MANUAL** จึงไม่อนุญาตเปิดไม้ใหม่ด้วยมือในประเภท BOT
@@ -277,6 +279,7 @@ TiewTrade ไม่ใช่ UID หรือ API key ของ Binance TH
 
 | รหัส | เรื่อง | บล็อกอะไร |
 |---|---|---|
+| **NC-F20-01..04 — Closed (2026-11-19)** | เจ้าของยืนยัน Paper 1 บอท/Live 1 บอท, รวมหน้าสถานะ/ควบคุมใน F-20 (เลือกกลยุทธ์/พารามิเตอร์อยู่ F-21), run ใหม่เริ่มเมื่อไม่มี position/order ที่ระบบดูแล และ strategy failure หยุดเฉพาะ run คง position/protection เปิดกลับเมื่อมี proof และผู้ใช้รับทราบตาม F-19; ดู [requirements F-20](features/2026-11-19-bot-lifecycle/requirements.md) | เจ้าของอนุมัติ requirements ทั้งฉบับด้วย “approve” วันที่ 2026-11-19; plan/validation ฉบับหลังรีวิวได้รับอนุมัติ 2026-11-19 สำหรับ implementation ภายใต้ด่านเปิดใช้งานเดิม |
 | **NC-PRICES-01 — Closed (2026-11-07)** | เจ้าของตอบ “approve” อนุมัติ [ขอบเขตการถอดหน้า/เมนู/คำเตือนและ fallback ไปกราฟ](features/2026-11-07-remove-prices-page/requirements.md) โดยคงบริการราคาฝั่ง backend | requirements/plan/validation Approved; ไม่มี clarification ค้างของงานนี้ |
 | **NC-SET4-12 - Closed / Approved A (2026-11-06)** | Owner approved the [internal Paper profile](features/2026-11-02-tp-sl/internal-paper-acceptance-amendment.md):10 invited testers/20-account acceptance, unchanged financial/latency/duration criteria. | Authorizes scoped harness/checks and conditional campaign in section5; actual results,100-account gates, Completed and Git/deploy permissions remain binding. |
 | **NC-SET4-12 §13 — Closed / Approved A (2026-11-07)** | W1-20 stopped at60s cycle deadline; read-only query plan identifies a costly terminal-history lookup. [Scoped amendment§13](features/2026-11-02-tp-sl/internal-paper-acceptance-amendment.md) proposes an equivalent query using the existing index plus safety checks and conditional D20/W1 continuation. | Owner approved scoped query optimization, safety/static checks and one conditional D20→W1 sequence, then original passing-gate continuation. Preserve prior results and all original criteria/Git/deploy gates. |

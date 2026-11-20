@@ -436,7 +436,7 @@ production activation.
 
 | รหัส | งาน | สถานะ | หมายเหตุ |
 |---|---|---|---|
-| F-20 | ส่วนต่อประสานกลยุทธ์ + วงจรชีวิตบอท | Planned | |
+| F-20 | ส่วนต่อประสานกลยุทธ์ + วงจรชีวิตบอท | **In Progress - Code Review / Owner UI Accepted; CI Pending** | [requirements](features/2026-11-19-bot-lifecycle/requirements.md), [plan/validation](features/2026-11-19-bot-lifecycle/validation.md) Approved 2026-11-19; migrations 0067-0073; review fixes and targeted PostgreSQL faults/races/proof/feedback, API process restart + Redis loss and actual-API browser lifecycle/scope/responsive/locale/theme checks passed; Ready for Code Review announced, closure review found no new code finding. [Scenario matrix / UI artifacts](features/2026-11-19-bot-lifecycle/evidence/implementation-checkpoint.md#feature-validation-closure-and-owner-ui-checkpoint--2026-11-20). V-15 owner UI accepted 2026-11-20; V-18 final-SHA required CI pending; not merge-ready/Completed. V-19/20 Batch and V-21 Release dependencies retained; no production/Live activation. |
 | F-21 | กลยุทธ์สำเร็จรูปตัวแรก + ระบบปรับพารามิเตอร์ | Planned | (R-06) ยังไม่ได้ระบุว่ากลยุทธ์อะไร |
 
 ## ชุดที่ 7 — Live Trading

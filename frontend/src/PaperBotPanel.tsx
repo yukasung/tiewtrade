@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { BotRunStatus } from "./BotRunStatus";
 import { MarketValue } from "./components/MarketValue";
 import { Alert } from "./components/ui/Alert";
 import { Button } from "./components/ui/Button";
@@ -9,7 +10,8 @@ import { manualOrderText as t } from "./manualOrderMessages";
 import { paperBotText as bt } from "./paperBotMessages";
 
 /** Uses TailAdmin form controls; display-only draft, never an order or bot command. */
-export function PaperBotPanel({ available, loading }: {
+export function PaperBotPanel({ owner, available, loading }: {
+  owner: string;
   available: string | null;
   loading: boolean;
 }) {
@@ -22,6 +24,7 @@ export function PaperBotPanel({ available, loading }: {
     <h2 id="paper-bot-title" className="border-b border-gray-200 pb-3 text-sm font-semibold dark:border-gray-800">
       {bt("title")}
     </h2>
+    <BotRunStatus owner={owner} mode="PAPER"/>
     <div>
       <Label htmlFor="paper-bot-strategy">{bt("strategy")}</Label>
       <Select id="paper-bot-strategy" defaultValue="grid-close-system">

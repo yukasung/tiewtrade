@@ -7,6 +7,13 @@ from pathlib import Path
 
 SOURCE = Path(__file__).parents[2] / "src"
 PAPER_FILES = (
+    SOURCE / "tiewtrade/core/bots.py",
+    SOURCE / "tiewtrade/core/strategies.py",
+    *(SOURCE / "tiewtrade/infra/bots").glob("*.py"),
+    SOURCE / "tiewtrade/services/api/bot_models.py",
+    SOURCE / "tiewtrade/services/api/bot_routes.py",
+    SOURCE / "tiewtrade/services/engine/bot.py",
+    SOURCE / "tiewtrade/services/engine/bot_replacement.py",
     SOURCE / "tiewtrade/core/paper_wallet.py",
     SOURCE / "tiewtrade/core/manual_trading.py",
     SOURCE / "tiewtrade/core/orders.py",
@@ -56,6 +63,27 @@ FORBIDDEN_MARKERS = (
 )
 ALLOWED_INTERNAL_IMPORTS = frozenset(
     {
+        "tiewtrade.core.bots",
+        "tiewtrade.core.strategies",
+        "tiewtrade.core.indicators",
+        "tiewtrade.core.market_data",
+        "tiewtrade.infra.bots.inputs",
+        "tiewtrade.infra.indicators.prepared",
+        "tiewtrade.infra.indicators.read_contract",
+        "tiewtrade.infra.market_data.catalog",
+        "tiewtrade.infra.bots.authority",
+        "tiewtrade.infra.bots.catalog",
+        "tiewtrade.infra.bots.claims",
+        "tiewtrade.infra.bots.decisions",
+        "tiewtrade.infra.bots.evaluation",
+        "tiewtrade.infra.bots.feedback",
+        "tiewtrade.infra.bots.paper_admission",
+        "tiewtrade.infra.bots.requests",
+        "tiewtrade.infra.bots.start",
+        "tiewtrade.infra.bots.system_stop",
+        "tiewtrade.infra.trading_stops",
+        "tiewtrade.services.api.bot_models",
+        "tiewtrade.services.engine.bot_replacement",
         "tiewtrade.core.protections",
         "tiewtrade.infra.protections.codec",
         "tiewtrade.infra.protections.storage",

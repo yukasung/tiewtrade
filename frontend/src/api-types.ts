@@ -530,6 +530,74 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/live/bots/requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Request Start */
+        post: operations["request_start_live_bots_requests_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/live/bots/requests/by-key/{key}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Request By Key */
+        get: operations["request_by_key_live_bots_requests_by_key__key__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/live/bots/requests/{request_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Request By Id */
+        get: operations["request_by_id_live_bots_requests__request_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/live/bots/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Status */
+        get: operations["status_live_bots_status_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/live/kill-switch": {
         parameters: {
             query?: never;
@@ -951,6 +1019,74 @@ export interface paths {
         put?: never;
         /** Reset Paper Wallet */
         post: operations["reset_paper_wallet_paper_wallet_reset_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/paper/bots/requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Request Start */
+        post: operations["request_start_paper_bots_requests_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/paper/bots/requests/by-key/{key}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Request By Key */
+        get: operations["request_by_key_paper_bots_requests_by_key__key__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/paper/bots/requests/{request_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Request By Id */
+        get: operations["request_by_id_paper_bots_requests__request_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/paper/bots/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Status */
+        get: operations["status_paper_bots_status_get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1482,6 +1618,119 @@ export interface components {
             protection_allocated?: string | null;
             /** Reserved */
             reserved: string;
+        };
+        /** BotPositionView */
+        BotPositionView: {
+            /** Base */
+            base: string;
+            /** Quantity */
+            quantity: string;
+            /** Quote */
+            quote: string;
+        };
+        /** BotProtectionView */
+        BotProtectionView: {
+            /** Base */
+            base: string;
+            /** Conflicted */
+            conflicted: boolean;
+            /** Failure Code */
+            failure_code: string | null;
+            /**
+             * Protection Id
+             * Format: uuid
+             */
+            protection_id: string;
+            /** Quantity */
+            quantity: string;
+            state: components["schemas"]["ProtectionState"];
+        };
+        /** BotReceiptView */
+        BotReceiptView: {
+            /** Failure Code */
+            failure_code: string | null;
+            /**
+             * Key
+             * Format: uuid
+             */
+            key: string;
+            mode: components["schemas"]["TradingMode"];
+            /** Pending */
+            pending: boolean;
+            /**
+             * Request Id
+             * Format: uuid
+             */
+            request_id: string;
+            /** Run Id */
+            run_id: string | null;
+        };
+        /** BotReplacementInput */
+        BotReplacementInput: {
+            /** Reconciliation Revision */
+            reconciliation_revision: number;
+            /**
+             * Run Id
+             * Format: uuid
+             */
+            run_id: string;
+            /** Run Revision */
+            run_revision: number;
+            /** Stop Id */
+            stop_id?: string | null;
+            /** Stop Revision */
+            stop_revision?: number | null;
+            /** Summary Revision */
+            summary_revision: number;
+        };
+        /** BotStartInput */
+        BotStartInput: {
+            replacement?: components["schemas"]["BotReplacementInput"] | null;
+            /** Strategy Config Ref */
+            strategy_config_ref: string;
+        };
+        /**
+         * BotStatus
+         * @enum {string}
+         */
+        BotStatus: "STARTING" | "RUNNING" | "PAUSED" | "RECOVERING" | "STOPPED" | "RETIRED";
+        /** BotStatusView */
+        BotStatusView: {
+            /** Can Start */
+            can_start: boolean;
+            /** Configuration Version */
+            configuration_version: number | null;
+            /** Exposure Available */
+            exposure_available: boolean;
+            mode: components["schemas"]["TradingMode"];
+            /** Pending Request Id */
+            pending_request_id: string | null;
+            /** Positions */
+            positions: components["schemas"]["BotPositionView"][];
+            /** Protections */
+            protections: components["schemas"]["BotProtectionView"][];
+            /** Protections More */
+            protections_more: boolean;
+            /** Readiness Reason */
+            readiness_reason: string | null;
+            /** Revision */
+            revision: number | null;
+            /** Run Id */
+            run_id: string | null;
+            /**
+             * Snapshot At
+             * Format: date-time
+             */
+            snapshot_at: string;
+            status: components["schemas"]["BotStatus"] | null;
+            /** Stop Reason */
+            stop_reason: ("USER" | "SYSTEM" | "LOSS_LIMIT" | "PLATFORM" | "PROTECTION_SETUP_FAILED" | "CATALOG_REMOVED") | null;
+            /** Strategy Name */
+            strategy_name: string | null;
+            /** Strategy Version */
+            strategy_version: number | null;
+            /** Unavailable Reason */
+            unavailable_reason: string | null;
         };
         /**
          * CandleFinality
@@ -2812,6 +3061,11 @@ export interface components {
              */
             state: "PENDING" | "APPLIED" | "REJECTED";
         };
+        /**
+         * ProtectionState
+         * @enum {string}
+         */
+        ProtectionState: "WAITING_ENTRY" | "ARMING" | "ARMED" | "EXITING" | "CLOSED" | "CANCELED" | "FAILED";
         /** ProtectionView */
         ProtectionView: {
             /** Base */
@@ -3330,6 +3584,11 @@ export interface components {
             may_trade: false;
             use: components["schemas"]["AccountUse"] | null;
         };
+        /**
+         * TradingMode
+         * @enum {string}
+         */
+        TradingMode: "PAPER" | "LIVE";
         /** ValidationError */
         ValidationError: {
             /** Context */
@@ -4157,6 +4416,123 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Health"];
+                };
+            };
+        };
+    };
+    request_start_live_bots_requests_post: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BotStartInput"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BotReceiptView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    request_by_key_live_bots_requests_by_key__key__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                key: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BotReceiptView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    request_by_id_live_bots_requests__request_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BotReceiptView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    status_live_bots_status_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BotStatusView"];
                 };
             };
         };
@@ -5013,6 +5389,123 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    request_start_paper_bots_requests_post: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BotStartInput"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BotReceiptView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    request_by_key_paper_bots_requests_by_key__key__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                key: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BotReceiptView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    request_by_id_paper_bots_requests__request_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BotReceiptView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    status_paper_bots_status_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BotStatusView"];
                 };
             };
         };

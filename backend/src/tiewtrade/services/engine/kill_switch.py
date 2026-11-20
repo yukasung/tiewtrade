@@ -18,6 +18,8 @@ from tiewtrade.infra.audit import (
     TradingStopDetails,
     record_event,
 )
+from tiewtrade.infra.bots.resume_proofs import has_fresh_strategy_proof
+from tiewtrade.infra.bots.stop_projection import recover_after_owner_resume, stop_current_run
 from tiewtrade.infra.db import DatabaseRole, scan_session_bypassing_rls, user_session
 from tiewtrade.infra.db.errors import DatabaseTimeoutError
 from tiewtrade.infra.db.session import UserSession
@@ -163,6 +165,14 @@ async def _apply_stop(session: UserSession, request: Any) -> None:
             cause=str(request["cause"]),
             target_policy="ALL",
         )
+    if not platform:
+        await stop_current_run(
+            session,
+            mode=TradingMode(str(request["mode"])),
+            stop_id=UUID(str(request["id"])),
+            stop_cause=str(request["cause"]),
+            cutoff=request["recorded_at"],
+        )
     scope_key = "PLATFORM" if platform else f"{request['mode']}:{request['scope_owner_id']}"
     await session.execute(
         """INSERT INTO trading_stop_events
@@ -231,7 +241,9 @@ async def _resume_failure(session: UserSession, request: Any, code: str) -> None
     await _audit(session, request, AuditAction.RESUME_REJECTED, rejected=True)
 
 
-async def _apply_resume(session: UserSession, request: Any) -> None:
+async def apply_resume(
+    session: UserSession, request: Any, *, project_bot_recovery: bool = True
+) -> None:
     platform = request["cause"] == "PLATFORM"
     if platform:
         # Admission uses the shared form. Keep the exclusive form until the
@@ -295,6 +307,10 @@ async def _apply_resume(session: UserSession, request: Any) -> None:
             )
         ).first()
     elif request["mode"] == "PAPER":
+        system_ready = False
+        if request["cause"] == "SYSTEM":
+            await session.execute("SELECT risk_financial_fence()")
+            system_ready = await has_fresh_strategy_proof(session, UUID(str(cause.stop_id)))
         ready = (
             await session.execute(
                 """SELECT 1 FROM user_trading_preferences u WHERE u.user_id=:owner
@@ -306,7 +322,8 @@ async def _apply_resume(session: UserSession, request: Any) -> None:
               AND CAST(:reconciliation AS bigint)=coalesce((SELECT a.revision
                 FROM paper_wallet_state w LEFT JOIN paper_position_activity a
                   ON a.episode_id=w.active_episode_id WHERE w.user_id=:owner),0)
-              AND (:cause='USER' OR (:cause='LOSS_LIMIT' AND EXISTS(
+              AND (:cause='USER' OR (:cause='SYSTEM' AND :system_ready)
+                OR (:cause='LOSS_LIMIT' AND EXISTS(
                 SELECT 1 FROM risk_limit_settings s JOIN risk_limit_baselines b
                   ON b.id=s.baseline_id AND b.user_id=s.user_id
                 JOIN trading_stop_requests stopped ON stopped.id=:stop
@@ -323,6 +340,7 @@ async def _apply_resume(session: UserSession, request: Any) -> None:
                     "owner": session.user_id,
                     "summary": request["expected_summary_revision"],
                     "reconciliation": request["expected_reconciliation_revision"],
+                    "system_ready": system_ready,
                     "cause": request["cause"],
                 },
             )
@@ -367,6 +385,12 @@ async def _apply_resume(session: UserSession, request: Any) -> None:
             "revision": request["revision"],
         },
     )
+    if project_bot_recovery and not platform and request["mode"] == "PAPER":
+        await recover_after_owner_resume(
+            session,
+            stop_id=UUID(str(request["expected_stop_id"])),
+            resume_id=UUID(str(request["id"])),
+        )
     await _audit(session, request, AuditAction.RESUMED)
 
 
@@ -400,7 +424,7 @@ async def run_stop_request_round(
                 if request["action"] == "STOP":
                     await _apply_stop(session, request)
                 else:
-                    await _apply_resume(session, request)
+                    await apply_resume(session, request)
             processed += 1
         except Exception:
             deferred += 1
@@ -441,6 +465,13 @@ async def _create_platform_target(
         ).first()
         if exists is not None:
             return False
+        await stop_current_run(
+            session,
+            mode=TradingMode.PAPER,
+            stop_id=UUID(str(request["id"])),
+            stop_cause="PLATFORM",
+            cutoff=request["recorded_at"],
+        )
         job_id = uuid5(NAMESPACE_URL, f"tiewtrade:platform-stop:{request['id']}:{owner_id}")
         await session.execute(
             """INSERT INTO risk_stop_requests

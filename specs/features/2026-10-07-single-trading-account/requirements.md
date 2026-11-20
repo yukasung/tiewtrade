@@ -106,3 +106,11 @@ RQ-9/V-13: เมื่อ POST logout หรือ logout-all สำเร็�
 V-14: add/retry/delete key ต้องไม่แสดงข้อความสำเร็จก่อน owner queries ที่เกี่ยวข้อง
 refetchเสร็จและเป็นข้อมูลใหม่; เมื่อ refetchล้มเหลว/paused/ยังfetching ให้แสดงคำเตือน
 ไม่ส่ง mutation ซ้ำและไม่สะท้อน raw errors/credentials
+
+## Amendment RQ-7 — Approved 2026-11-19 (NC-F20-01)
+
+เจ้าของยืนยันเพดานบอทแยกโหมดต่อบัญชี: **Paper 1 บอท และ Live 1 บอท**
+แทนการตีความ RQ-7 เดิมเป็นเพดานรวมข้ามโหมด อ้างคำตัดสินใน
+[F-20 requirements](../2026-11-19-bot-lifecycle/requirements.md)
+ไม่เปลี่ยนกฎ MANUAL/BOT, single writer, การแยกโหมดหรือด่านเปิด Live
+และไม่ถือว่า F-08 มี runtime บอท หรืออนุมัติ requirements/plan/validation ของ F-20 ทั้งฉบับ

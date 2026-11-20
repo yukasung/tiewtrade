@@ -360,6 +360,7 @@ def advance_matching(
     catalog: CatalogSnapshot,
     market_constraints: OrderConstraints | None = None,
     risk: RiskExecutionContext | None = None,
+    blocked_openings: frozenset[UUID] = frozenset(),
 ) -> MatchingTransition:
     """Consume one durable input; caller supplies episode-wide sequence and fill identities."""
     aware(now)
@@ -373,6 +374,8 @@ def advance_matching(
     risk_setting = None if risk is None else risk.setting
 
     def risk_allows(order: OrderState) -> bool:
+        if order.intent.side is ExecutionSide.BUY and order.intent.order_id in blocked_openings:
+            return False
         if risk is None or order.intent.side is ExecutionSide.SELL:
             return True
         if risk.setting.limit is None:

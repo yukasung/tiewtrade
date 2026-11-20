@@ -2,9 +2,10 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState, type RefObject } from "react";
 import { Button } from "./components/ui/Button";
 import { Modal } from "./components/ui/Modal";
+import { MarketTime } from "./components/MarketValue";
 import { fetchStopEffects, fetchStopRequestById, fetchStopSummary, postResume, stopKey, type StopMode, type StopSummary } from "./killSwitch";
 import { clearJournal, clearJournalForKnownFailure, readJournal, updateJournalFromReceipt, writeJournal, type PendingJournal } from "./killSwitchJournal";
-import { killSwitchText as t } from "./killSwitchMessages";
+import { killSwitchI18n, killSwitchText as t } from "./killSwitchMessages";
 import { RiskStopEffects } from "./RiskStopEffects";
 
 export function StopSummaryModal({ owner, mode, stopId, open, onClose, returnFocusRef }: { owner: string; mode: StopMode; stopId: string | null; open: boolean; onClose: () => void; returnFocusRef: RefObject<HTMLButtonElement> }) {
@@ -47,7 +48,9 @@ export function StopSummaryModal({ owner, mode, stopId, open, onClose, returnFoc
     {summary.isLoading && <p role="status">{t("loading")}</p>}
     {summary.data && <>
       <p>{summary.data.status.progress ? t(summary.data.status.progress) : "—"} · {t("pending")}: {summary.data.status.pending_count} · {t("failed")}: {summary.data.status.failed_count}</p>
-      <p>{t("reconciledAt")}: {summary.data.reconciled_at ?? "—"}</p>
+      <p>{t("reconciledAt")}: {summary.data.reconciled_at
+        ? <MarketTime value={summary.data.reconciled_at} locale={killSwitchI18n.resolvedLanguage ?? "th"}/>
+        : "—"}</p>
       {mode === "LIVE" && <p role="status">{t("liveUnavailable")}</p>}
       <h3>{t("positions")}</h3>
       {summary.data.positions.length === 0 ? <p>{t("noPositions")}</p> : <ul>{summary.data.positions.map(position => <li key={`${position.base}-${position.quote}`}>{position.base}/{position.quote}: {position.quantity}</li>)}</ul>}

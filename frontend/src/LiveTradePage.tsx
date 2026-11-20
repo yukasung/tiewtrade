@@ -1,4 +1,5 @@
 import { useEffect, useMemo } from "react";
+import { BotRunStatus } from "./BotRunStatus";
 import { CandlestickChartPanel } from "./CandlestickChartPanel";
 import { ManualOrderForm } from "./ManualOrderForm";
 import { TradingWorkspace } from "./TradingWorkspace";
@@ -15,6 +16,7 @@ export function LiveTradePage({ owner }: { owner: string }) {
   const form = <section aria-labelledby="live-manual-form-heading" className="space-y-5">
     <div><h2 id="live-manual-form-heading" className="text-lg font-semibold">{t("form")}</h2>
       <p role="status" className="text-sm text-gray-500 dark:text-gray-400">{t("liveUnavailable")}</p></div>
+    <BotRunStatus owner={owner} mode="LIVE"/>
     <ManualOrderForm key={base} mode="LIVE" bases={bases} base={base} onBase={changeBase} showPairSelector={false}
       scope={null} disabled canSubmit={() => false} onSubmit={() => {}}/>
   </section>;

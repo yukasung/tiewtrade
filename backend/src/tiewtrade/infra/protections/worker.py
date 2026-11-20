@@ -41,6 +41,7 @@ from tiewtrade.core.protections import (
     replace_protection,
 )
 from tiewtrade.core.realtime_prices import Readiness, readiness
+from tiewtrade.infra.bots.system_stop import stop_for_protection_failure
 from tiewtrade.infra.db.session import UserSession
 from tiewtrade.infra.market_data.order_book_codec import canonical
 from tiewtrade.infra.market_data.order_book_storage import read_latest_book
@@ -149,16 +150,58 @@ async def manual_request(session: UserSession, command_id: UUID) -> ManualReques
     return None if row is None else decode_request(row)
 
 
+async def bot_bracket(
+    session: UserSession, intent: OrderIntent, command_id: UUID
+) -> ProtectionPrices | None:
+    if intent.origin is not OrderOrigin.BOT or intent.side is not ExecutionSide.BUY:
+        return None
+    result = await session.execute(
+        """SELECT bracket FROM bot_order_links WHERE command_id=:id AND order_id=:order
+           AND user_id=:owner AND episode_id=:episode""",
+        {
+            "id": command_id,
+            "order": intent.order_id,
+            "owner": session.user_id,
+            "episode": intent.scope.episode_id,
+        },
+    )
+    bracket = result.scalar_one_or_none()
+    return None if bracket is None else prices(intent.pair, object_payload(bracket))
+
+
+async def linked_protection_exit(
+    session: UserSession, intent: OrderIntent, command_id: UUID
+) -> UUID | None:
+    """Identify the immutable F-17 authority for this exact reducing command."""
+    if intent.side is not ExecutionSide.SELL or not isinstance(intent.size, BaseSize):
+        return None
+    result = await session.execute(
+        """SELECT protection_id FROM paper_protection_exits
+        WHERE command_id=:command AND order_id=:order AND user_id=:owner
+          AND episode_id=:episode AND quantity=:quantity""",
+        {
+            "command": command_id,
+            "order": intent.order_id,
+            "owner": session.user_id,
+            "episode": intent.scope.episode_id,
+            "quantity": intent.size.quantity.amount,
+        },
+    )
+    value = result.scalar_one_or_none()
+    return None if value is None else UUID(str(value))
+
+
 async def prepare_admission(
     session: UserSession, intent: OrderIntent, wallet_id: UUID, command_id: UUID, held: Quantity
 ) -> tuple[Quantity, tuple[tuple[StoredProtection, Protection], ...]]:
     request = await manual_request(session, command_id)
-    bracket = None if request is None else request.protection
+    levels = await bot_bracket(session, intent, command_id)
+    if request is not None and request.protection is not None:
+        levels = prices(intent.pair, request.protection)
     selections = () if request is None else request.protection_allocations
-    if (bracket is not None or selections) and not await enabled(session):
+    if (levels is not None or selections) and not await enabled(session):
         raise SafetyUnavailableError("protection protocol unavailable")
-    if bracket is not None:
-        levels = prices(intent.pair, bracket)
+    if levels is not None:
         levels.validate_creation((await market_evidence(session, intent.pair)).price)
     if intent.side is not ExecutionSide.SELL:
         return held, ()
@@ -253,17 +296,27 @@ async def commit_admission(
             disposed=before.disposed + before.value.quantity - after.quantity,
         )
     request = await manual_request(session, command_id)
+    levels = await bot_bracket(session, intent, command_id)
     if request is not None and request.protection is not None:
-        value = Protection(
-            uuid5(request.request_id, "bracket"),
+        levels = prices(intent.pair, request.protection)
+    if levels is not None:
+        manual_id = None if request is None else request.request_id
+        group = Protection(
+            uuid5(command_id if manual_id is None else manual_id, "bracket"),
             intent.scope,
             intent.origin,
-            prices(intent.pair, request.protection),
+            levels,
             Quantity.of(0, intent.pair.base),
             ProtectionState.WAITING_ENTRY,
             entry_order_id=intent.order_id,
         )
-        await create(session, value, wallet_id, entry_request_id=request.request_id)
+        await create(
+            session,
+            group,
+            wallet_id,
+            entry_request_id=manual_id,
+            entry_bot_command_id=command_id if manual_id is None else None,
+        )
 
 
 async def record_fill(session: UserSession, order_id: UUID, fact: ExecutionFact) -> None:
@@ -284,7 +337,17 @@ async def record_fill(session: UserSession, order_id: UUID, fact: ExecutionFact)
         delta = apply_execution(
             PositionState.empty(fact.pair), replace(fact, source_sequence=1)
         ).base_delta
-        triggered = value.trigger is not None
+        if value.setup_failed_exit and value.state is ProtectionState.FAILED:
+            await save(
+                session,
+                group,
+                replace(value, quantity=value.quantity + delta, revision=value.revision + 1),
+                kind="FILL",
+                acquired=group.acquired + delta,
+                failure_code=group.failure_code,
+            )
+            return
+        triggered = value.trigger is not None or value.setup_failed_exit
         updated = replace(
             value,
             quantity=value.quantity + delta,
@@ -369,6 +432,37 @@ async def queue_exit(session: UserSession, group: StoredProtection, quantity: Qu
             "episode": value.scope.episode_id,
             "quantity": quantity.as_parts()["quantity"],
         },
+    )
+
+
+async def _close_after_bot_setup_failure(
+    session: UserSession,
+    group: StoredProtection,
+    *,
+    reason: str,
+    permanent: bool,
+) -> None:
+    value = group.value
+    if value.entry_order_id is None:
+        raise OrderConflictError("BOT protection failure requires an entry order")
+    await stop_for_protection_failure(
+        session, entry_order_id=value.entry_order_id, protection_id=value.protection_id
+    )
+    # Keep a durable close allocation until the same F-17 market checks can
+    # size it. Permanent filter failures leave exposure visible for the owner.
+    await save(
+        session,
+        group,
+        replace(
+            value,
+            revision=value.revision + 1,
+            state=ProtectionState.FAILED if permanent else ProtectionState.EXITING,
+            setup_due_at=None,
+            setup_failed_exit=True,
+        ),
+        kind="FAIL",
+        extra_exit=Quantity.of(0, value.prices.pair.base) if permanent else value.quantity,
+        failure_code=reason,
     )
 
 
@@ -471,7 +565,12 @@ async def process_group(session: UserSession, group_id: UUID) -> None:
             LEFT JOIN paper_order_request_results t ON t.request_id=q.id
             LEFT JOIN paper_order_command_results r ON r.command_id=t.command_id
             LEFT JOIN paper_order_projections p ON p.order_id=q.order_id
-            WHERE q.order_id=:entry AND q.action='NEW'""",
+            WHERE q.order_id=:entry AND q.action='NEW'
+            UNION ALL
+            SELECT p.status,r.state FROM bot_order_links b
+            LEFT JOIN paper_order_command_results r ON r.command_id=b.command_id
+            LEFT JOIN paper_order_projections p ON p.order_id=b.order_id
+            WHERE b.order_id=:entry""",
                 {"entry": value.entry_order_id},
             )
         ).first()
@@ -516,6 +615,11 @@ async def process_group(session: UserSession, group_id: UUID) -> None:
             outcome=SetupOutcome.TRANSIENT_FAILURE,
             observed_at=now,
         )
+        if decision.action is SetupAction.CLOSE_AND_STOP:
+            await _close_after_bot_setup_failure(
+                session, group, reason="PROTECTION_SETUP_UNAVAILABLE", permanent=False
+            )
+            return
         retry = decision.action is SetupAction.RETRY
         await save(
             session,
@@ -532,6 +636,11 @@ async def process_group(session: UserSession, group_id: UUID) -> None:
         )
         return
     except (OrderError, MoneyError):
+        if value.origin is OrderOrigin.BOT and value.state is ProtectionState.ARMING:
+            await _close_after_bot_setup_failure(
+                session, group, reason="PROTECTION_SETUP_REJECTED", permanent=True
+            )
+            return
         await save(
             session,
             group,
