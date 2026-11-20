@@ -6,8 +6,10 @@ from uuid import UUID, uuid4
 import pytest
 from sqlalchemy.ext.asyncio import AsyncEngine
 
+from tests.infra.bots.order_fixture import submit_fixture_bot_order
 from tests.infra.execution_market.test_dispatch import intent
 from tests.infra.execution_market.test_worker import AllowPolicy, ready_public_sources
+from tests.infra.manual_orders.test_bridge import select_use
 from tests.infra.risk_limits.test_requests import seed_setting, submission
 from tiewtrade.core.money import Money
 from tiewtrade.core.orders import OrderOrigin, SafetyUnavailableError
@@ -195,6 +197,7 @@ async def test_active_remainder_cancels_via_f15_and_releases_reservations_once(
 
 
 async def test_platform_stop_cancels_active_bot_remainder_but_keeps_sent_manual_order(
+    api_engine: AsyncEngine,
     engine_engine: AsyncEngine,
     owner: UUID,
     wallet: PaperWalletSnapshot,
@@ -208,8 +211,13 @@ async def test_platform_stop_cancels_active_bot_remainder_but_keeps_sent_manual_
     try:
         accepted = []
         for value in (manual, bot):
+            if value.origin is OrderOrigin.BOT:
+                await select_use(api_engine, owner, "BOT")
             async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
-                command = await submit_order(session, wallet_id=wallet.wallet_id, intent=value)
+                submit = (
+                    submit_fixture_bot_order if value.origin is OrderOrigin.BOT else submit_order
+                )
+                command = await submit(session, wallet_id=wallet.wallet_id, intent=value)
                 due = (
                     await session.execute(
                         """UPDATE paper_order_dispatch SET next_attempt_at=clock_timestamp()

@@ -40,6 +40,11 @@ from tiewtrade.infra.audit import (
     SubjectKind,
     record_event,
 )
+from tiewtrade.infra.bots.authority import (
+    BotOrderAuthority,
+    blocked_paper_openings,
+    paper_bot_authority,
+)
 from tiewtrade.infra.db.session import UserSession, require_user_session
 from tiewtrade.infra.market_data.order_book_codec import canonical
 from tiewtrade.infra.market_data.order_book_storage import (
@@ -86,6 +91,7 @@ from tiewtrade.infra.positions import (
 from tiewtrade.infra.protections.worker import (
     commit_admission as commit_protection_admission,
 )
+from tiewtrade.infra.protections.worker import linked_protection_exit
 from tiewtrade.infra.protections.worker import (
     prepare_admission as prepare_protection_admission,
 )
@@ -215,6 +221,16 @@ async def _process_new(
     row = command
     payload = object_payload(row["payload"])
     intent = intent_from_payload(payload["intent"])
+    if row["result_state"] is None and intent.origin is OrderOrigin.BOT:
+        authority = await paper_bot_authority(
+            session, command_id=row["id"], episode_id=intent.scope.episode_id
+        )
+        if (
+            authority is BotOrderAuthority.UNLINKED
+            or (authority is BotOrderAuthority.BLOCKED and intent.side is ExecutionSide.BUY)
+        ) and (await linked_protection_exit(session, intent, row["id"]) is None):
+            await _reject(session, claim, row, "ORDER_SAFETY_UNAVAILABLE")
+            return
     admitted_revision_value = _catalog_revision(payload)
     invalidated = (
         intent.side is ExecutionSide.BUY
@@ -605,6 +621,17 @@ async def _apply_inputs(
 ) -> None:
     row = command
     pair_key = f"{state.pair.base}:{state.pair.quote}"
+    blocked_openings = await blocked_paper_openings(
+        session,
+        episode_id=state.scope.episode_id,
+        order_ids=tuple(
+            order.intent.order_id
+            for order in state.orders
+            if order.intent.origin is OrderOrigin.BOT
+            and order.intent.side is ExecutionSide.BUY
+            and not order.status.terminal
+        ),
+    )
     anchor = row["order_id"]
     rebased = False
     saved = None
@@ -674,6 +701,7 @@ async def _apply_inputs(
                 market_constraints=record.metadata.market,
                 catalog=catalog,
                 risk=risk,
+                blocked_openings=blocked_openings,
             )
         except (OrderError, MoneyError, PositionError):
             if risk_provider is None or fenced:
@@ -702,6 +730,7 @@ async def _apply_inputs(
                 market_constraints=record.metadata.market,
                 catalog=catalog,
                 risk=risk,
+                blocked_openings=blocked_openings,
             )
         assert transition is not None
         for index, (fact, order_id) in enumerate(
@@ -808,6 +837,7 @@ def _advance_matching_with_ids(
     market_constraints: OrderConstraints,
     catalog: CatalogSnapshot,
     risk: RiskExecutionContext | None,
+    blocked_openings: frozenset[UUID] = frozenset(),
 ) -> MatchingTransition:
     """Avoid unused identities; retry only the pure calculation if a fill needs IDs.
 
@@ -826,6 +856,7 @@ def _advance_matching_with_ids(
             execution_ids=values,
             catalog=catalog,
             risk=risk,
+            blocked_openings=blocked_openings,
         )
 
     try:

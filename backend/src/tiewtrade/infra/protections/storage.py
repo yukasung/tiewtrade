@@ -147,6 +147,7 @@ async def create(
     wallet_id: UUID,
     *,
     entry_request_id: UUID | None = None,
+    entry_bot_command_id: UUID | None = None,
 ) -> StoredProtection:
     if value.scope != OrderScope(
         UUID(str(session.user_id)), value.scope.episode_id, TradingMode.PAPER
@@ -156,9 +157,9 @@ async def create(
     await session.execute(
         """INSERT INTO paper_protections
         (id,user_id,wallet_id,episode_id,base,quote,state,revision,quantity,document,
-         entry_request_id,entry_order_id)
+         entry_request_id,entry_order_id,entry_bot_command_id)
         VALUES(:id,:owner,:wallet,:episode,:base,:quote,:state,:revision,
-               :quantity,CAST(:document AS jsonb),:request,:entry)""",
+               :quantity,CAST(:document AS jsonb),:request,:entry,:bot_command)""",
         {
             "id": value.protection_id,
             "owner": session.user_id,
@@ -172,6 +173,7 @@ async def create(
             "document": canonical(encode(value)),
             "request": entry_request_id,
             "entry": value.entry_order_id,
+            "bot_command": entry_bot_command_id,
         },
     )
     await event(session, value, "CREATE")

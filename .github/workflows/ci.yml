@@ -172,7 +172,7 @@ jobs:
       - name: pytest
         env:
           TIEWTRADE_TEST_SCHEDULER_LOCK_REPORT: ${{ runner.temp }}/scheduler-lock.json
-        run: uv run pytest --ignore=tests/infra/protections
+        run: uv run pytest -vv --durations=20 --ignore=tests/infra/protections
 
       # F-17 tests run the global protection/order workers. Retained fixtures from
       # other suites must not become inputs to those controlled integration runs.
@@ -392,6 +392,12 @@ jobs:
 
       - name: F-17 Paper protection E2E
         run: npm run test:e2e:protections
+        working-directory: frontend
+        env:
+          CI: "1"
+
+      - name: F-20 Paper bot lifecycle E2E
+        run: npm run test:e2e:bots
         working-directory: frontend
         env:
           CI: "1"

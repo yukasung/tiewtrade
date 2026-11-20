@@ -35,6 +35,7 @@ from sqlalchemy import event
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine
 from sqlalchemy.pool import QueuePool
 
+from tests.infra.bots.order_fixture import submit_fixture_bot_order
 from tests.infra.execution_market import profile_internal as internal
 from tests.infra.execution_market import profile_observer_prefix as prefix
 from tests.infra.execution_market import profile_publisher_recovery as clock_recovery
@@ -1820,9 +1821,10 @@ async def submit_new(
     with poll_gate.scope("submit_new", owner.user_id) if poll_gate else nullcontext():
         if sender is None:
             async with user_session(engine, owner.user_id, role=DatabaseRole.ENGINE) as session:
-                command = await submit_order(
-                    session, wallet_id=owner.wallet.wallet_id, intent=intent
+                submit = (
+                    submit_fixture_bot_order if intent.origin is OrderOrigin.BOT else submit_order
                 )
+                command = await submit(session, wallet_id=owner.wallet.wallet_id, intent=intent)
         else:
             command = await sender.submit(owner, intent)
     counters.admitted += 1

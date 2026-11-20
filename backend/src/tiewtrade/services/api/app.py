@@ -37,6 +37,7 @@ from tiewtrade.infra.realtime.notifications import RedisNotifications
 from tiewtrade.services.api.api_key_routes import router as api_key_router
 from tiewtrade.services.api.auth_routes import router as auth_router
 from tiewtrade.services.api.authentication import authenticate_request
+from tiewtrade.services.api.bot_routes import router as bot_router
 from tiewtrade.services.api.candle_routes import router as candle_router
 from tiewtrade.services.api.catalog_routes import router as catalog_router
 from tiewtrade.services.api.chart_routes import router as chart_router
@@ -258,6 +259,7 @@ app.include_router(manual_order_router)
 app.include_router(protection_router)
 app.include_router(risk_limit_router)
 app.include_router(kill_switch_router)
+app.include_router(bot_router)
 app.include_router(candle_router)
 app.include_router(chart_router)
 app.include_router(indicator_router)

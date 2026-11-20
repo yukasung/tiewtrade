@@ -41,6 +41,7 @@ def encode(value: Protection) -> dict[str, object]:
         "conflicted": value.conflicted,
         "setup_attempt": value.setup_attempt,
         "setup_due_at": None if value.setup_due_at is None else value.setup_due_at.isoformat(),
+        **({"setup_failed_exit": True} if value.setup_failed_exit else {}),
         "trigger": None
         if trigger is None
         else {
@@ -88,6 +89,7 @@ def decode(raw: Any) -> Protection:
         row["conflicted"],
         row["setup_attempt"],
         None if row["setup_due_at"] is None else datetime.fromisoformat(row["setup_due_at"]),
+        row.get("setup_failed_exit", False),
     )
     if row != encode(value):
         raise OrderConflictError("noncanonical protection document")

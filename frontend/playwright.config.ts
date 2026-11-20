@@ -11,7 +11,7 @@ const environment = e2eEnvironment();
 export default defineConfig({
   testDir: "./e2e",
   // These suites require test-only compositions started by their dedicated configs.
-  testIgnore: ["supported-symbols.spec.ts", "manual-orders.spec.ts", "risk-limits.spec.ts", "protections.spec.ts"],
+  testIgnore: ["supported-symbols.spec.ts", "manual-orders.spec.ts", "risk-limits.spec.ts", "protections.spec.ts", "bots.spec.ts"],
   // FakeVenue workers scan shared pending jobs; serialize with per-test DB throttle isolation.
   workers: 1,
   use: { baseURL: "http://localhost:5173" },

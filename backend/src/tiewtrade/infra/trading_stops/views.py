@@ -2,6 +2,7 @@
 
 from tiewtrade.core.orders import TradingMode
 from tiewtrade.core.trading_stops import StopCause, progress_for
+from tiewtrade.infra.bots.resume_proofs import has_fresh_strategy_proof
 from tiewtrade.infra.db.session import UserSession, require_user_session
 from tiewtrade.infra.trading_stops.records import StopStatus
 
@@ -76,6 +77,8 @@ async def read_status(session: UserSession, mode: TradingMode) -> StopStatus:
                 )
             ).first()
         )
+    if active is not None and active.cause == "SYSTEM" and mode is TradingMode.PAPER:
+        cause_ready = await has_fresh_strategy_proof(checked, active.id)
     complete = bool(
         mode is TradingMode.PAPER
         and active is not None

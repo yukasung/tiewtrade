@@ -520,6 +520,14 @@ def test_no_route_hands_back_the_secret(client: TestClient, ending: bool) -> Non
             }:
                 assert response.status_code == 404
                 assert response.json() == {"detail": "PROTECTION_NOT_FOUND"}
+            elif template in {
+                "/paper/bots/requests/by-key/{key}",
+                "/paper/bots/requests/{request_id}",
+                "/live/bots/requests/by-key/{key}",
+                "/live/bots/requests/{request_id}",
+            }:
+                assert response.status_code == 404
+                assert response.json() == {"detail": "BOT_REQUEST_NOT_FOUND"}
             elif template == "/paper/orders/{order_id}":
                 assert response.status_code == 404
                 assert response.json() == {"detail": "PAPER_ORDER_NOT_FOUND"}

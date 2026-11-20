@@ -171,6 +171,7 @@ class Protection:
     conflicted: bool = False
     setup_attempt: int = 1
     setup_due_at: datetime | None = None
+    setup_failed_exit: bool = False
 
     def __post_init__(self) -> None:
         if type(self.protection_id) is not UUID or not isinstance(self.scope, OrderScope):
@@ -204,6 +205,17 @@ class Protection:
             and self.quantity.amount != 0
         ):
             raise ProtectionError("terminal protection cannot retain allocated quantity")
+        if type(self.setup_failed_exit) is not bool or (
+            self.setup_failed_exit
+            and (
+                self.origin is not OrderOrigin.BOT
+                or self.entry_order_id is None
+                or self.trigger is not None
+                or self.state
+                not in (ProtectionState.EXITING, ProtectionState.CLOSED, ProtectionState.FAILED)
+            )
+        ):
+            raise ProtectionError("invalid BOT setup failure exit")
         if (self.winning_leg is None) != (self.trigger is None):
             raise ProtectionError("trigger evidence and winning leg must be linked")
         if self.trigger is not None:
@@ -219,7 +231,10 @@ class Protection:
                 ProtectionState.FAILED,
             ):
                 raise ProtectionError("triggered protection must be exiting or closed")
-        elif self.state in (ProtectionState.EXITING, ProtectionState.CLOSED):
+        elif (
+            self.state in (ProtectionState.EXITING, ProtectionState.CLOSED)
+            and not self.setup_failed_exit
+        ):
             raise ProtectionError("exit requires trigger evidence")
 
 

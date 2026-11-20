@@ -105,6 +105,401 @@
         "title": "BaseBalanceView",
         "type": "object"
       },
+      "BotPositionView": {
+        "properties": {
+          "base": {
+            "title": "Base",
+            "type": "string"
+          },
+          "quantity": {
+            "title": "Quantity",
+            "type": "string"
+          },
+          "quote": {
+            "title": "Quote",
+            "type": "string"
+          }
+        },
+        "required": [
+          "base",
+          "quote",
+          "quantity"
+        ],
+        "title": "BotPositionView",
+        "type": "object"
+      },
+      "BotProtectionView": {
+        "properties": {
+          "base": {
+            "title": "Base",
+            "type": "string"
+          },
+          "conflicted": {
+            "title": "Conflicted",
+            "type": "boolean"
+          },
+          "failure_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Failure Code"
+          },
+          "protection_id": {
+            "format": "uuid",
+            "title": "Protection Id",
+            "type": "string"
+          },
+          "quantity": {
+            "title": "Quantity",
+            "type": "string"
+          },
+          "state": {
+            "$ref": "#/components/schemas/ProtectionState"
+          }
+        },
+        "required": [
+          "protection_id",
+          "base",
+          "quantity",
+          "state",
+          "conflicted",
+          "failure_code"
+        ],
+        "title": "BotProtectionView",
+        "type": "object"
+      },
+      "BotReceiptView": {
+        "properties": {
+          "failure_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Failure Code"
+          },
+          "key": {
+            "format": "uuid",
+            "title": "Key",
+            "type": "string"
+          },
+          "mode": {
+            "$ref": "#/components/schemas/TradingMode"
+          },
+          "pending": {
+            "title": "Pending",
+            "type": "boolean"
+          },
+          "request_id": {
+            "format": "uuid",
+            "title": "Request Id",
+            "type": "string"
+          },
+          "run_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Run Id"
+          }
+        },
+        "required": [
+          "request_id",
+          "mode",
+          "key",
+          "run_id",
+          "failure_code",
+          "pending"
+        ],
+        "title": "BotReceiptView",
+        "type": "object"
+      },
+      "BotReplacementInput": {
+        "additionalProperties": false,
+        "properties": {
+          "reconciliation_revision": {
+            "minimum": 0.0,
+            "title": "Reconciliation Revision",
+            "type": "integer"
+          },
+          "run_id": {
+            "format": "uuid",
+            "title": "Run Id",
+            "type": "string"
+          },
+          "run_revision": {
+            "minimum": 1.0,
+            "title": "Run Revision",
+            "type": "integer"
+          },
+          "stop_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stop Id"
+          },
+          "stop_revision": {
+            "anyOf": [
+              {
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stop Revision"
+          },
+          "summary_revision": {
+            "minimum": 0.0,
+            "title": "Summary Revision",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "run_id",
+          "run_revision",
+          "summary_revision",
+          "reconciliation_revision"
+        ],
+        "title": "BotReplacementInput",
+        "type": "object"
+      },
+      "BotStartInput": {
+        "additionalProperties": false,
+        "properties": {
+          "replacement": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BotReplacementInput"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "strategy_config_ref": {
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Strategy Config Ref",
+            "type": "string"
+          }
+        },
+        "required": [
+          "strategy_config_ref"
+        ],
+        "title": "BotStartInput",
+        "type": "object"
+      },
+      "BotStatus": {
+        "enum": [
+          "STARTING",
+          "RUNNING",
+          "PAUSED",
+          "RECOVERING",
+          "STOPPED",
+          "RETIRED"
+        ],
+        "title": "BotStatus",
+        "type": "string"
+      },
+      "BotStatusView": {
+        "properties": {
+          "can_start": {
+            "title": "Can Start",
+            "type": "boolean"
+          },
+          "configuration_version": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Configuration Version"
+          },
+          "exposure_available": {
+            "title": "Exposure Available",
+            "type": "boolean"
+          },
+          "mode": {
+            "$ref": "#/components/schemas/TradingMode"
+          },
+          "pending_request_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pending Request Id"
+          },
+          "positions": {
+            "items": {
+              "$ref": "#/components/schemas/BotPositionView"
+            },
+            "title": "Positions",
+            "type": "array"
+          },
+          "protections": {
+            "items": {
+              "$ref": "#/components/schemas/BotProtectionView"
+            },
+            "title": "Protections",
+            "type": "array"
+          },
+          "protections_more": {
+            "title": "Protections More",
+            "type": "boolean"
+          },
+          "readiness_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Readiness Reason"
+          },
+          "revision": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revision"
+          },
+          "run_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Run Id"
+          },
+          "snapshot_at": {
+            "format": "date-time",
+            "title": "Snapshot At",
+            "type": "string"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BotStatus"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "stop_reason": {
+            "anyOf": [
+              {
+                "enum": [
+                  "USER",
+                  "SYSTEM",
+                  "LOSS_LIMIT",
+                  "PLATFORM",
+                  "PROTECTION_SETUP_FAILED",
+                  "CATALOG_REMOVED"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stop Reason"
+          },
+          "strategy_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Strategy Name"
+          },
+          "strategy_version": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Strategy Version"
+          },
+          "unavailable_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unavailable Reason"
+          }
+        },
+        "required": [
+          "mode",
+          "snapshot_at",
+          "pending_request_id",
+          "run_id",
+          "status",
+          "revision",
+          "strategy_name",
+          "strategy_version",
+          "configuration_version",
+          "stop_reason",
+          "can_start",
+          "unavailable_reason",
+          "exposure_available",
+          "positions",
+          "protections",
+          "protections_more",
+          "readiness_reason"
+        ],
+        "title": "BotStatusView",
+        "type": "object"
+      },
       "CandleFinality": {
         "enum": [
           "UNCONFIRMED",
@@ -3611,6 +4006,19 @@
         "title": "ProtectionRequestView",
         "type": "object"
       },
+      "ProtectionState": {
+        "enum": [
+          "WAITING_ENTRY",
+          "ARMING",
+          "ARMED",
+          "EXITING",
+          "CLOSED",
+          "CANCELED",
+          "FAILED"
+        ],
+        "title": "ProtectionState",
+        "type": "string"
+      },
       "ProtectionView": {
         "additionalProperties": false,
         "properties": {
@@ -5046,6 +5454,14 @@
         "title": "TradingAccountView",
         "type": "object"
       },
+      "TradingMode": {
+        "enum": [
+          "PAPER",
+          "LIVE"
+        ],
+        "title": "TradingMode",
+        "type": "string"
+      },
       "ValidationError": {
         "properties": {
           "ctx": {
@@ -6155,6 +6571,166 @@
           }
         },
         "summary": "Read Health"
+      }
+    },
+    "/live/bots/requests": {
+      "post": {
+        "operationId": "request_start_live_bots_requests_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Idempotency-Key",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BotStartInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BotReceiptView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Request Start",
+        "tags": [
+          "bots"
+        ]
+      }
+    },
+    "/live/bots/requests/by-key/{key}": {
+      "get": {
+        "operationId": "request_by_key_live_bots_requests_by_key__key__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "key",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Key",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BotReceiptView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Request By Key",
+        "tags": [
+          "bots"
+        ]
+      }
+    },
+    "/live/bots/requests/{request_id}": {
+      "get": {
+        "operationId": "request_by_id_live_bots_requests__request_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "request_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Request Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BotReceiptView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Request By Id",
+        "tags": [
+          "bots"
+        ]
+      }
+    },
+    "/live/bots/status": {
+      "get": {
+        "operationId": "status_live_bots_status_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BotStatusView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Status",
+        "tags": [
+          "bots"
+        ]
       }
     },
     "/live/kill-switch": {
@@ -7722,6 +8298,166 @@
         "summary": "Reset Paper Wallet",
         "tags": [
           "paper-wallet"
+        ]
+      }
+    },
+    "/paper/bots/requests": {
+      "post": {
+        "operationId": "request_start_paper_bots_requests_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Idempotency-Key",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BotStartInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BotReceiptView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Request Start",
+        "tags": [
+          "bots"
+        ]
+      }
+    },
+    "/paper/bots/requests/by-key/{key}": {
+      "get": {
+        "operationId": "request_by_key_paper_bots_requests_by_key__key__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "key",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Key",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BotReceiptView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Request By Key",
+        "tags": [
+          "bots"
+        ]
+      }
+    },
+    "/paper/bots/requests/{request_id}": {
+      "get": {
+        "operationId": "request_by_id_paper_bots_requests__request_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "request_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Request Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BotReceiptView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Request By Id",
+        "tags": [
+          "bots"
+        ]
+      }
+    },
+    "/paper/bots/status": {
+      "get": {
+        "operationId": "status_paper_bots_status_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BotStatusView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Status",
+        "tags": [
+          "bots"
         ]
       }
     },

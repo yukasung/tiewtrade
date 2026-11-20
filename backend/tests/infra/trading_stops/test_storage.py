@@ -761,6 +761,7 @@ async def test_paper_resume_requires_completed_snapshot_and_closes_only_expected
 
 
 @pytest.mark.asyncio
+@pytest.mark.usefixtures("internal_database")
 async def test_platform_fence_discovers_targets_and_owner_can_resume_exact_snapshot(
     api_engine: AsyncEngine,
     engine_engine: AsyncEngine,

@@ -109,7 +109,10 @@ it("renders the complete PROBLEMS snapshot and keeps resume unavailable", async 
   expect(await screen.findByText("failed-target")).toBeTruthy();
   expect(screen.getByText("canceled-target")).toBeTruthy();
   expect(screen.getByText("pending-target")).toBeTruthy();
-  expect(screen.getByText(`${t("reconciledAt")}: 2026-10-31T00:01:00Z`)).toBeTruthy();
+  const reconciled = screen.getByRole("dialog").querySelector('time[datetime="2026-10-31T00:01:00Z"]');
+  expect(reconciled).not.toBeNull();
+  expect(reconciled?.textContent).toContain("GMT+7");
+  expect(reconciled?.parentElement?.textContent).toContain(t("reconciledAt"));
   expect(screen.getByRole<HTMLButtonElement>("button", { name: t("resume") }).disabled).toBe(true);
   expect(screen.getByText(t("resumeUnavailable"))).toBeTruthy();
 });

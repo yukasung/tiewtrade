@@ -1,0 +1,34 @@
+--- a/backend/tests/infra/execution_market/test_bot_catalog.py
++++ b/backend/tests/infra/execution_market/test_bot_catalog.py
+@@ -23,7 +23,7 @@
+ from tiewtrade.infra.users import create_user
+ from tiewtrade.services.engine.bot import run_bot_catalog_round
+ 
+-pytestmark = pytest.mark.fresh_global_state
++pytestmark = [pytest.mark.fresh_global_state, pytest.mark.usefixtures("internal_database")]
+ 
+ 
+ async def seed_catalog_run(
+--- a/backend/tests/infra/trading_stops/conftest.py
++++ b/backend/tests/infra/trading_stops/conftest.py
+@@ -1,3 +1,10 @@
++from tests.infra.execution_market.conftest import (
++    _internal_database_template as _internal_database_template,
++)
++from tests.infra.execution_market.conftest import internal_database as internal_database
++from tests.infra.execution_market.conftest import (
++    internal_database_factory as internal_database_factory,
++)
+ from tests.infra.positions.conftest import owner as owner
+ from tests.infra.positions.conftest import production_wallet as wallet
+ 
+--- a/backend/tests/infra/trading_stops/test_storage.py
++++ b/backend/tests/infra/trading_stops/test_storage.py
+@@ -761,6 +761,7 @@
+ 
+ 
+ @pytest.mark.asyncio
++@pytest.mark.usefixtures("internal_database")
+ async def test_platform_fence_discovers_targets_and_owner_can_resume_exact_snapshot(
+     api_engine: AsyncEngine,
+     engine_engine: AsyncEngine,

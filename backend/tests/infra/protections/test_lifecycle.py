@@ -19,7 +19,14 @@ from tests.infra.execution_market.test_worker import (
 from tests.infra.manual_orders.test_bridge import select_use
 from tiewtrade.core.money import Money, Quantity
 from tiewtrade.core.order_book import BookState, MarketTrade
-from tiewtrade.core.orders import AdmissionPolicy, BaseSize, OrderIntent, OrderType, TimeInForce
+from tiewtrade.core.orders import (
+    AdmissionPolicy,
+    BaseSize,
+    OrderIntent,
+    OrderOrigin,
+    OrderType,
+    TimeInForce,
+)
 from tiewtrade.core.positions import ExecutionFact, ExecutionSide, PositionPair
 from tiewtrade.core.protections import ProtectionState
 from tiewtrade.infra.db import DatabaseRole, user_session
@@ -37,7 +44,7 @@ from tiewtrade.infra.paper_orders.requests import admit_new_request
 from tiewtrade.infra.paper_orders.worker import process_claimed_order
 from tiewtrade.infra.paper_wallet.records import PaperWalletSnapshot
 from tiewtrade.infra.positions.views import held_and_reserved
-from tiewtrade.infra.protections.storage import admit_request, free_quantity, groups, load
+from tiewtrade.infra.protections.storage import admit_request, free_quantity, groups, load, save
 from tiewtrade.infra.protections.worker import process_group, process_request
 
 PAIR = PositionPair("BTC", "USDT")
@@ -368,8 +375,14 @@ async def test_same_key_concurrent_intake_and_replay_apply_once(
 
 
 @pytest.mark.parametrize(
-    "liquid,step,initial_step",
-    [("10", None, False), ("0.1", None, False), ("10", "0.01", True), ("10", "0.01", False)],
+    "liquid,step,initial_step,bot",
+    [
+        ("10", None, False, False),
+        ("0.1", None, False, False),
+        ("10", "0.01", True, False),
+        ("10", "0.01", False, False),
+        pytest.param("10", None, False, True, id="bot-exit-after-loss-stop"),
+    ],
 )
 async def test_price_trigger_exit_replay_and_exact_financial_effects(
     api_engine: AsyncEngine,
@@ -380,6 +393,7 @@ async def test_price_trigger_exit_replay_and_exact_financial_effects(
     liquid: str,
     step: str | None,
     initial_step: bool,
+    bot: bool,
 ) -> None:
     from tiewtrade.core.realtime_prices import ObservationKind, QuoteObservation
     from tiewtrade.infra.market_data.realtime_storage import read_snapshot, write_price
@@ -395,6 +409,18 @@ async def test_price_trigger_exit_replay_and_exact_financial_effects(
         market_step=step if initial_step else None,
     )
     try:
+        if bot:
+            # Seed the origin of the protection being exercised. F-20 bracket
+            # intake is separate from this existing F-17 exit regression.
+            async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+                group = await load(session, group_id)
+                assert group is not None
+                await save(
+                    session,
+                    group,
+                    replace(group.value, origin=OrderOrigin.BOT, revision=group.value.revision + 1),
+                    kind="REPLACE",
+                )
         if step is not None:
             metadata = replace(
                 metadata, market=replace(metadata.market, quantity_step=Quantity.of(step, "BTC"))

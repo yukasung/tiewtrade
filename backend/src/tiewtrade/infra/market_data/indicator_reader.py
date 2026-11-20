@@ -25,8 +25,8 @@ from tiewtrade.core.market_data import (
 )
 from tiewtrade.core.moments import require_aware
 from tiewtrade.core.money import Money, Quantity
-from tiewtrade.infra.crypto.indicator_cursor import DatasetChangedError
 from tiewtrade.infra.db.session import UserSession
+from tiewtrade.infra.indicators.read_contract import DatasetChangedError
 from tiewtrade.infra.indicators.session import IndicatorSourceSession
 from tiewtrade.infra.market_data.catalog import SOURCE
 from tiewtrade.infra.market_data.records import StoredCandle

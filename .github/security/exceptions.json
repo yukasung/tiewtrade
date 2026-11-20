@@ -816,6 +816,14 @@
       "reason": "Public SHA256 checksum of dist/chunks/cli-api.CnMVyzaz.js from integrity-verified vitest4.1.11 npm archive in historical source_files_sha256 JSON; not a credential. Exact immutable historical occurrence only.",
       "approval": "Owner replied approve to the exact single-identity history-reconciliation checksum proposal on 2026-11-19; see specs/features/2026-11-05-security-ci/history-reconciliation-checksum-exception.md",
       "evidence": "specs/features/2026-11-05-security-ci/history-reconciliation-checksum-exception.md; specs/maintenance/2026-11-19-history-reconciliation/checksum-false-positive-proof.json"
+    },
+    {
+      "kind": "secret",
+      "identity": "38f59f54c402881bfb2d0d027dd95c57ac30530308ecbc92bc42237c01262836",
+      "resolution": "false_positive",
+      "reason": "Fixed synthetic F-37 withdrawal request idempotency marker in a test fixture, not authentication material. Used only by request_remove in the isolated database; no external API or credential path. Bound to generic-api-key occurrence at commit 8ad901f47a69663b9db9de9cd4440860355bed84, backend/tests/infra/execution_market/test_bot_catalog.py line 130.",
+      "approval": "Owner explicitly approved this one proposed false-positive occurrence in conversation on 2026-11-20; UI acceptance alone was not used as exception approval.",
+      "evidence": "specs/features/2026-11-19-bot-lifecycle/evidence/implementation-checkpoint.md#required-ci-secret-triage---2026-11-20"
     }
   ]
 }
