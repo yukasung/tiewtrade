@@ -1790,3 +1790,7 @@ V-18 original100-account/remaining integrated Release and V-19/V-20 dependencies
 Pending Full Validation; F-17 is not Completed. Next bounded checkpoint: prepare read-only
 current-candidate preview and obtain outstanding owner visual confirmation, then verify
 and seek explicit opening authority for an identified internal target before flag changes.
+
+### Protection domain refactor — 2026-11-21
+
+Core protection suite: 66 passed. Targeted PostgreSQL 16 Paper lifecycle cases: 8 passed (manual partial-fill cancellation, rejected SELL admission, concurrent idempotent replay and TP/SL exit financial effects). Ruff lint/format, strict mypy on the changed module, and diff whitespace checks passed. These results cover the refactor on the F-17 branch; candidate CI is pending.

@@ -317,3 +317,7 @@ release gates and publication approvals remain unchanged.
 Owner approved [single-row amendment/validation](single-row-activity-ui-amendment.md),
 superseding the two-level navigation layout only. One mixed table, distinct record
 semantics and current-episode all-symbol scope; no financial/API rule changes.
+
+### F-17 protection domain refactor — 2026-11-21
+
+Under the delegated engineering scope, reuse ProtectionPrices.triggered_leg for creation-time rejection since both paths validate the same quote and TP/SL boundaries. Retain the existing leg-specific errors. In prepare_manual_sale, update one local insertion-ordered protection index instead of copying the same index and then reconstructing its input order. Preserve the revision checks, rejection order, immutable input records and allocation arithmetic used by the admission writer. Check the domain and the actual Paper manual-sale/trigger paths.
