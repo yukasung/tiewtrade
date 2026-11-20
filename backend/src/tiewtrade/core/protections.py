@@ -90,18 +90,19 @@ class ProtectionPrices:
             raise ProtectionError("stop loss must be below take profit")
 
     def validate_creation(self, current: Money) -> None:
-        self._validate_market_price(current)
-        if self.take_profit is not None and not current < self.take_profit:
+        reached = self.triggered_leg(current)
+        if reached is ProtectionLeg.TAKE_PROFIT:
             raise ProtectionError("take profit already reached")
-        if self.stop_loss is not None and not self.stop_loss < current:
+        if reached is ProtectionLeg.STOP_LOSS:
             raise ProtectionError("stop loss already reached")
 
-    def _validate_market_price(self, price: Money) -> None:
-        if type(price) is not Money or price.currency != self.pair.quote or price.amount <= 0:
-            raise ProtectionError("positive quote last trade required")
-
     def triggered_leg(self, last_trade: Money) -> ProtectionLeg | None:
-        self._validate_market_price(last_trade)
+        if (
+            type(last_trade) is not Money
+            or last_trade.currency != self.pair.quote
+            or last_trade.amount <= 0
+        ):
+            raise ProtectionError("positive quote last trade required")
         if self.take_profit is not None and not last_trade < self.take_profit:
             return ProtectionLeg.TAKE_PROFIT
         if self.stop_loss is not None and not self.stop_loss < last_trade:
@@ -388,35 +389,33 @@ def prepare_manual_sale(
     )
     selected = Quantity.of(0, pair.base)
     used: set[UUID] = set()
-    changed = dict(by_id)
     for selection in selections:
         _quantity(selection.quantity, pair.base)
         if selection.protection_id in used:
             raise OrderConflictError("duplicate protection selection")
         used.add(selection.protection_id)
-        selected_item = by_id.get(selection.protection_id)
-        if selected_item is None:
+        protection = by_id.get(selection.protection_id)
+        if protection is None:
             raise OrderConflictError("selected protection is unavailable")
-        item = selected_item
-        _editable(item, selection.expected_revision)
-        if selection.quantity > item.quantity:
+        _editable(protection, selection.expected_revision)
+        if selection.quantity > protection.quantity:
             raise ProtectionError("selection exceeds protected quantity")
         selected += selection.quantity
-        remainder = item.quantity - selection.quantity
-        changed[item.protection_id] = replace(
-            item,
+        remainder = protection.quantity - selection.quantity
+        by_id[protection.protection_id] = replace(
+            protection,
             quantity=remainder,
-            state=ProtectionState.CANCELED if remainder.amount == 0 else item.state,
-            revision=item.revision + 1,
-            winning_leg=None if remainder.amount == 0 else item.winning_leg,
-            trigger=None if remainder.amount == 0 else item.trigger,
+            state=ProtectionState.CANCELED if remainder.amount == 0 else protection.state,
+            revision=protection.revision + 1,
+            winning_leg=None if remainder.amount == 0 else protection.winning_leg,
+            trigger=None if remainder.amount == 0 else protection.trigger,
         )
     # Unprotected assets are consumed first; reject excess selections instead of
     # silently choosing which protection to reduce by a smaller amount.
     required = quantity - min(quantity, free)
     if selected != required:
         raise ProtectionError("selected protection quantity must match sale shortfall")
-    return tuple(changed[item.protection_id] for item in protections)
+    return tuple(by_id.values())
 
 
 def evaluate_trigger(
