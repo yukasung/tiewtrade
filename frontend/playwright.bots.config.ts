@@ -1,6 +1,10 @@
 import { defineConfig } from "@playwright/test";
 import { e2eEnvironment } from "./e2e/helpers/environment";
-const environment = { ...e2eEnvironment(), API_URL: "http://127.0.0.1:18020" };
+const environment = {
+  ...e2eEnvironment(),
+  API_URL: "http://127.0.0.1:18020",
+  TIEWTRADE_TRADING_STOP_AUTHORITY_ENABLED: "1",
+};
 export default defineConfig({
   testDir: "./e2e", testMatch: "bots.spec.ts", workers: 1, timeout: 90_000,
   use: { baseURL: "http://127.0.0.1:15120", trace: "retain-on-failure", viewport: { width: 1440, height: 1000 } },

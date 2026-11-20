@@ -18,7 +18,7 @@ from sqlalchemy.ext.asyncio import AsyncEngine
 
 from tests.infra.execution_market import profile_workload as f15
 from tests.infra.execution_market.profile_parent_poll import ParentPollGate, validate_options
-from tiewtrade.core.orders import OrderIntent, OrderStatus
+from tiewtrade.core.orders import OrderIntent, OrderOrigin, OrderStatus
 from tiewtrade.infra.db import DatabaseRole, user_session
 from tiewtrade.infra.paper_orders.dispatch import OrderCommand
 
@@ -218,7 +218,7 @@ async def test_projection_required_before_completion_and_gate_wait_in_latency(
     projection = asyncio.Event()
     submitted = asyncio.Event()
     owner = SimpleNamespace(user_id=uuid4(), wallet=SimpleNamespace(wallet_id=uuid4()))
-    intent = SimpleNamespace(order_id=uuid4())
+    intent = SimpleNamespace(order_id=uuid4(), origin=OrderOrigin.MANUAL)
     command = OrderCommand(uuid4(), "SUCCEEDED")
 
     async def submit(*a: Any, **kw: Any) -> OrderCommand:
@@ -254,7 +254,7 @@ async def test_projection_required_before_completion_and_gate_wait_in_latency(
         )
     )
     try:
-        await submitted.wait()
+        await asyncio.wait_for(submitted.wait(), 3)
         await asyncio.sleep(0.02)
         assert counters.admitted == 1 and counters.completed == 0
         for _ in range(4):
@@ -263,7 +263,7 @@ async def test_projection_required_before_completion_and_gate_wait_in_latency(
         assert counters.completed == 0
     finally:
         projection.set()
-    await task
+        await asyncio.wait_for(task, 3)
     assert counters.completed == 1 and latencies[0] >= 0.02 and gate.active == 0
 
 

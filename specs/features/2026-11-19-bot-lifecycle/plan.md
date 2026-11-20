@@ -557,3 +557,82 @@ No new infrastructure/job or production configuration is introduced. Before UI
 captures, also wait for the existing five-second trade snapshot to show 9,900 USDT
 after the real 100 USDT fill (cash 10,000→9,900); retain independent status polling.
 This distinguishes normal query refresh timing from authoritative financial state.
+
+### Required CI secret triage - 2026-11-20
+
+First publication candidate 8ad901f has one new generic-api-key finding: the fixed
+synthetic F-37 idempotency marker at test_bot_catalog.py:130, occurrence identity
+38f59f54c402881bfb2d0d027dd95c57ac30530308ecbc92bc42237c01262836.
+It is only a request deduplication string in the isolated fixture, never a venue
+credential, authentication token or exported secret. The scanner's historical
+scan will retain it even if the current fixture changes. No force/rewrite is
+authorized or necessary.
+
+Prepared evidence/proposed-secret-exception.json for owner review, without changing
+the active security registry or scanner. Recommended change after approval: append
+this exact occurrence to the existing exceptions.json registry, retain all rules
+and gates, and rerun required CI on the resulting candidate. Alternative is to
+leave the PR blocked. Security plan section 5 requires owner approval/review tied
+to the exact occurrence; UI acceptance does not supply that exception approval.
+
+Owner approved the exact proposed occurrence on 2026-11-20. Apply only that
+registry row and retain the original failure; no scanner/gate/config change or
+broader exception. Run existing security policy/model tests before publishing
+the resulting candidate and require all remote checks again on its SHA.
+
+### CI-only F-19 test composition flag - 2026-11-20
+
+First remote F-20 browser suite returned 503 at the expected committed stop.
+Evidence: isolated config omitted TIEWTRADE_TRADING_STOP_AUTHORITY_ENABLED, while
+the local launcher supplied it; kill_switch_routes rejects stop/resume unless
+it is explicitly 1. Reuse the exact declaration in playwright.risk-limits.config.ts
+in the F-20 guarded test environment. Preserve 202/lost-ack/idempotency/financial
+assertions and production default closed. This is a harness correction within
+the approved engineering authority, not production activation or a relaxed gate.
+Check frontend lint/types and require the browser suite on corrected remote SHA.
+
+### Bounded CI stall diagnosis - 2026-11-20
+
+The first candidate is already nonmergeable (one approved false-positive and the
+test-only F-19 flag omission). Its backend pytest remained active beyond 30 minutes
+with logs unavailable until job completion; the same base's previous pytest took
+14m42s. New bot tests use finite barriers/claims, but an exact stalled test cannot
+be identified from the jobs API. Browser host is unavailable too.
+
+Under the delegated diagnostic authority, cancel the superseded first run and
+publish the prepared corrections with verbose pytest names/durations and a
+25-minute interrupt boundary (30-second kill grace) for the main pytest step, plus
+a 40-minute backend job budget. This is a failure/diagnostic boundary, not a
+passing correctness/SLA threshold, and does not skip a test, change assertion or
+turn an incomplete run into success. Existing base pytest fits within the budget
+with substantial margin. Preserve cancellation/failed history and require all
+checks on the new SHA. Stop and diagnose from the emitted last test/stack if
+this boundary is reached; do not blindly repeat or expand the campaign.
+
+### Canceled-run regression diagnosis - 2026-11-20
+
+Canceling released the first backend log: 2,232 completed tests, failures at
+collection positions 57/342/1630, then no progress after 38%. Matched the same
+5,768-test collection locally (collection only, no campaign):
+- secret canary lacks the new bot receipt routes' documented 404 expectation;
+- exact renewing-route oracle lacks the two new explicit user-action POST routes;
+- the fixed schema0066 checkpoint experiment's preflight test clones latest head
+  but its unchanged profile intentionally requires 0066; supply an empty 0066
+  clone in that test rather than retargeting the approved experiment;
+- within the next page, the parent-poll projection test passes a minimal intent
+  without origin into the changed submit_new helper. The child raises before its
+  submitted Event, and the parent waits forever. Add the explicit MANUAL origin,
+  bound only this in-memory handshake/task wait and preserve all gate/latency
+  assertions. No financial writer or production behavior changes.
+
+Use existing route-error patterns and migration helper. Verify the affected
+canary/route/preflight/parent-poll tests with disposable PostgreSQL/Redis and static
+checks before publishing. No experiment duration/workload/safety threshold change;
+no rerun of the original indicator campaign.
+
+Before publication, cancellation logs identified the stalled in-memory handshake.
+Remove the prepared broad 25m/40m CI timeout edits: the now-bounded unit-test wait
+is sufficient and does not impose a new budget on unrelated tests. Retain verbose
+test names/durations for useful CI diagnostics. The canceled run plus targeted
+reproduction replaces the speculative whole-suite timeout approach. No broad
+timeout modification was published.

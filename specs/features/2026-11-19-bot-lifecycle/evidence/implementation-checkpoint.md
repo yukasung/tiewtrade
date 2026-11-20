@@ -616,7 +616,7 @@ container; no other container or database was removed.
 
 ## Feature validation closure and owner UI checkpoint — 2026-11-20
 
-Candidate: `feature/f-20-bot-lifecycle`, base `31c9146ad73d45b9d323063e24140911d1ca1948`
+Candidate: `feature/f-20-bot-lifecycle`, base `31c9146ad73b45b9d323063e24140911d1ca1948`
 plus the working diff/untracked F-20 files. Amendments were recorded in plan before
 the engineering changes. This section supersedes the earlier unmapped aggregate
 Partial entries; it preserves their original failures and limitations above.
@@ -798,3 +798,79 @@ until publication completes. Batch/Release remain pending; no activation granted
 Proceed with scoped commit/push/PR, required CI and conditional expected-head merge
 under AGENTS.md's standing Git authorization. Retain all earlier failed/partial
 history; report CI with candidate SHA/run links rather than recursive docs commits.
+
+## Required CI secret triage - 2026-11-20
+
+PR #83: https://github.com/yukasung/tiewtrade/pull/83
+Candidate: 8ad901f47a69663b9db9de9cd4440860355bed84.
+CI run: https://github.com/yukasung/tiewtrade/actions/runs/44664792212
+Security run: https://github.com/yukasung/tiewtrade/actions/runs/44664792238
+
+Security/secrets failed on exactly one new generic-api-key occurrence at
+backend/tests/infra/execution_market/test_bot_catalog.py:130. It is the fixed
+synthetic request idempotency marker passed to F-37 request_remove in the isolated
+fixture, not authentication material. Identity:
+38f59f54c402881bfb2d0d027dd95c57ac30530308ecbc92bc42237c01262836.
+
+Source/callers confirm no credential/external API path. History scanning retains
+the occurrence even after a later textual change. Prepared the exact registry
+row in proposed-secret-exception.json; the active registry remains unchanged
+pending mandatory owner review under the approved Security CI plan. Scanner
+rules, historical scan, security thresholds and merge gates remain unchanged.
+
+At triage, API-contract/frontend/Docker and all three CodeQL languages/dependency/
+policy checks passed; backend and E2E still running. This is not an all-green
+required CI result. PR remains blocked and will not be merged without all gates.
+
+Owner explicitly approved the single proposed false-positive occurrence on
+2026-11-20. Added only identity
+38f59f54c402881bfb2d0d027dd95c57ac30530308ecbc92bc42237c01262836
+to the existing exact-occurrence registry. Retained its original commit/path/line
+binding and triage evidence; scanner configuration, history coverage and gates
+unchanged. The proposal file now records the actual owner approval. Corrected the
+full base-SHA transcription in this document (short base 31c9146 unchanged).
+
+First CI browser result: general/F-37/F-16/F-17 suites passed, F-20 scope case
+passed, F-20 lifecycle failed because stop returned 503 (expected 202). The F-20
+config inherited the flag from the local launcher but did not declare it itself;
+CI correctly retained production's default-closed F-19 authority. Added only the
+existing risk-E2E test-environment flag to playwright.bots.config.ts. Stop/lost-ack
+assertions and production activation rules unchanged. Owner-accepted runtime UI
+is unchanged. Backend first run still in progress at this correction.
+
+Security policy tests: initial invocation accidentally used macOS Python 3.9,
+which lacks tomllib (import errors). Canonical backend Python 3.12 invocation
+passed: 79 tests, 4 skipped. No policy assertions changed.
+
+Superseded first CI backend pytest was canceled after remaining active beyond
+30 minutes, rather than representing it as a pass. Previous base pytest took
+14m42s. Added bounded verbose diagnostics to the new candidate's required backend
+step (25m interrupt + 30s grace, 40m job budget); timeout remains a failure. No
+tests/assertions were removed. Failure details will determine any subsequent
+scoped fix; no blind rerun beyond the documented retry policy.
+
+The canceled backend log completed 2,232 tests before a stalled next page and
+contained three earlier failures. Matching its progress to the identical 5,768
+collected tests identified the secret-canary bot-404 oracle, explicit renewing
+route oracle and schema0066 preflight fixture. The next-page parent-poll fixture
+was missing MANUAL origin after the workload helper began selecting BOT lineage;
+its child raised before signaling submitted, leaving the parent Event unbounded.
+Corrected these test-only contracts, preserved all secret/financial/pool/latency
+assertions and bounded only the in-memory handshake/task wait. Kept the approved
+checkpoint experiment pinned to 0066 by downgrading its empty clone, not by
+changing the experiment's preflight or running a new campaign.
+
+Targeted PostgreSQL group passed 7 tests: both canary variants, the route-policy
+module, real pinned preflight and parent-poll projection/gate test. Ruff format/
+check, mypy (763 sources), corrected config ESLint/typecheck and YAML parsing
+passed. Reviewed this correction diff and callers: no additional finding.
+
+The broad CI timeout edits were prepared but removed before publication once
+the exact fixture stall was identified. The published correction will retain
+verbose pytest names/durations and the per-test bounded handshake only; existing
+whole-suite timing/acceptance criteria remain unchanged.
+
+Corrected browser config verified with the launcher authority variable explicitly
+unset: `env -u TIEWTRADE_TRADING_STOP_AUTHORITY_ENABLED npm run test:e2e:bots`
+passed both cases in 32.5s. The guarded config now supplies its own F-19 test flag.
+Production/UI code and owner-accepted appearance remain unchanged.

@@ -19,6 +19,7 @@ import pytest
 from sqlalchemy import event, make_url
 from sqlalchemy.ext.asyncio import AsyncEngine
 
+from tests.infra.db.test_migrations import _alembic
 from tests.infra.execution_market import profile_checkpoint_isolation as iso
 from tests.infra.execution_market.conftest import (
     CHECKPOINT_DATABASE_PREFIX,
@@ -356,6 +357,9 @@ async def test_real_preflight_verifies_all_roles_and_function(
                 patch.setenv(key, value)
             database = make_url(os.environ[DatabaseRole.MIGRATOR.url_variable]).database
             assert database is not None
+            # The approved checkpoint experiment is pinned to schema 0066.
+            # Its empty clone must match that boundary even after additive features.
+            _alembic("downgrade", "0066")
             result = await iso.verify_databases(database)
     assert all(
         result[role.name] == {"database": database, "role": role.value} for role in DatabaseRole
