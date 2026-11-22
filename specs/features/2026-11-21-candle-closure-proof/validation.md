@@ -463,3 +463,33 @@ No runtime/safety/timeout change. See evidence/publication-manual-draft-correcti
 Search found no remaining E2E references to that obsolete label or the corrected loose
 Timeframe/strategy-disabled expectations. Push the test-only fix and follow final-SHA CI;
 keep previous failures, owner/independent/public-fill gates and no-merge scope unchanged.
+
+
+### Owner-approved bounded E2E continuation —2026-11-22
+
+CI44988072782/c7cd1e4a: general browser36passed, catalog2passed, F16eightpassed,
+F17sevenpassed; F20onepassed/onefailed at stale pending Start expectation. Later suites
+not run by this CI. Backend still running when diagnosed. Security44988072777passed.
+Owner permits test-only corrections, isolated remaining-suite checks and one additional
+required CI candidate run. No owner acceptance, public campaign or merge waiver.
+
+
+Bounded local continuation results: F20two passed; F21actual five-candle financial
+case passed, initial two recovery races failed then both affected cases passed after
+waiting for unchanged request/receipt assertions; Paper Test TP/SLtwo passed;
+F18/F19risk/STOPsix passed. Scoped ESLint and frontend types passed. Test-only diff
+review confirms exact keys/counts, real receipt/run, balance, position/protection,
+STOP recovery and owner/mode isolation retained. No runtime change or timeout increase.
+See evidence/publication-remaining-e2e.txt. Temporary local configs/services are removed
+after validation. One new required CI candidate run is authorized; do not substitute
+these local checks for it or for outstanding owner/Feature/public-source evidence.
+
+
+Prior CI backend completed after this local E2E checkpoint:44988072782reports
+6031passed/1failed/2skipped/32deselected in1534.84s. Failure is the unchanged
+TOTP setup helper (test_totp_flow.py91) called before API-key retry-quota assertions;
+HTTP403invalid code. Previous-step code generation may cross a30s boundary; this is
+an inference, not a proven diagnosis. A single targeted real-PostgreSQL rerun of
+that unchanged retry-quota test passed on the correction candidate. No authentication,
+TOTP helper, test expectation or security window was changed. Preserve the CI failure;
+only the one authorized new CI run can establish its final-head outcome.

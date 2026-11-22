@@ -94,9 +94,9 @@ for (const committed of [false, true]) {
     });
     await panel.getByRole("button", { name: "เริ่มบอท", exact: true }).click();
     if (!committed) await expect(panel.getByRole("alert")).toBeVisible();
-    expect(keys).toHaveLength(1);
+    await expect.poll(() => keys).toHaveLength(1);
     const receiptPath = `/api/paper/bots/requests/by-key/${keys[0]}`;
-    expect((await page.request.get(receiptPath)).status()).toBe(committed ? 200 : 404);
+    await expect.poll(async () => (await page.request.get(receiptPath)).status()).toBe(committed ? 200 : 404);
     await page.reload();
     if (committed) {
       await expect(panel.getByRole("button", { name: "หยุดบอท", exact: true })).toBeVisible();
@@ -108,7 +108,7 @@ for (const committed of [false, true]) {
       await recover.click();
       expect((await lookup).status()).toBe(404);
     }
-    expect(keys.length).toBe(committed ? 1 : 2);
+    await expect.poll(() => keys.length).toBe(committed ? 1 : 2);
     await expect.poll(async () => (await (await page.request.get(receiptPath)).json()) as unknown).toMatchObject({
       pending: false, failure_code: null, run_id: expect.any(String),
     });

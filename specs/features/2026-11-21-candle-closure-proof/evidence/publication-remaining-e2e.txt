@@ -1,0 +1,40 @@
+Owner-approved bounded E2E continuation, 2026-11-22
+Parent candidate: c7cd1e4a3a3246910795255957c017d32dd6db6b
+Scope: test-only corrections in bots.spec.ts and strategy.spec.ts.
+No runtime/financial logic, timeout, admission or safety criterion changes.
+
+Local real-browser/API/PostgreSQL/Redis results:
+- F20 lifecycle/owner-mode isolation: 2 passed (33.7s).
+- F21 initial remaining-suite run: 1 passed / 2 failed (5.9m).
+  Actual five-candle entries and shared TP case passed (5.7m), including
+  quantities, balance, realized PnL, one winning trigger and no reservations.
+  Recovery failures: immediate request-count reads raced asynchronous routing.
+- F21 affected recovery cases after polling correction: 2 passed (15.4s).
+  Before commit repeats the identical key; after commit has only one request.
+  Both retain zero orders/executions and unchanged available balance.
+- Paper Test Entry: 2 passed (4.1m), actual TP and SL exits.
+- F18/F19 risk and STOP: 6 passed (1.1m).
+- Scoped ESLint bots/strategy and frontend tsc --noEmit: passed.
+- git diff --check for current correction: passed.
+
+Disposable PostgreSQL16.16 (track_commit_timestamp=on) and Redis7 used
+on dedicated local ports. Four separately bootstrapped E2E databases.
+F21/Paper Test frontends moved only in temporary local configs to15131/15132;
+owner preview15121 was untouched. Temporary configs removed after each run.
+Deferred DATABASE_TIMEOUT/protection-worker diagnostics occurred; all final
+assertions above passed without retrying or relaxing financial thresholds.
+Original failed results retained; historical CI is not relabeled Passed.
+CLI diagnostic: initial eslint invocation from repository root failed to find
+frontend config; rerun from frontend with the existing config passed.
+Required CI must still pass on the new Git head. Owner/public-source fill,
+remaining Feature matrices and Batch/Release gates remain unchanged.
+
+Prior CI backend subsequently finished: 6031 passed / 1 failed / 2 skipped /
+32 deselected. Failure: unchanged enable_totp helper returned403 before the
+retry-quota test reached its assertions. Same unchanged test passed once locally
+against a fresh disposable PostgreSQL database. No authentication/TOTP changes.
+A previous-step-code boundary race is plausible but unproven. Original CI stays Failed.
+Final-head required CI remains authoritative; no extra rerun beyond owner cap.
+Pinned full history/tree scan on the unpublished correction:379commits,
+zero blocked/needs-triage and48494exactly excepted occurrences. CI must rescan
+final publication head; this local diagnostic is not a GitHub Security attestation.

@@ -599,3 +599,31 @@ change, manual order UI restoration, safety/assertion/timeout relaxation. Search
 found no other obsolete budget label or matching strategy/Timeframe expectation remaining.
 Run only this failing real browser case locally on disposable E2E services (about1–2min),
 scoped ESLint/types, then final-candidate required CI under engineering delegation.
+
+
+## Bounded E2E continuation —2026-11-22 (owner approved, before edits)
+
+Owner approved correcting stale E2E presentation expectations, checking the remaining
+suites on isolated services, and exactly one further required CI candidate run after
+three consecutive E2E failures. No merge or further public-source campaign is authorized.
+CI44988072782 passed general browser36, catalog2, F16eight and F17seven cases;
+F20failed at bots.spec.ts51 expecting disabled Start during a pending request.
+Reuse existing role locators/API status helper: pending requires compact Stop and no
+Start; legacy F20 runs without pinned configuration retain the full status component.
+Paper PAUSED badge is intentionally hidden; assert PAUSED from the real API plus absence
+of that badge. After STOP the card now shows Start and its existing review-stop trigger;
+use that trigger for summary/resume/focus recovery. Preserve real filled quantities,
+protection state, balance, single durable STOP, unchanged exposure and owner/mode isolation.
+Do not change runtime, financial behavior, timeouts or safety assertions. Review remaining
+F21/Paper Test/risk E2E contracts; run these suites on disposable databases/Redis and
+alternate local frontend ports to avoid the owner preview. Preserve original failed CI.
+Run scoped ESLint/types, inspect final diff, push once, and monitor the one new CI run.
+
+
+Remaining-suite local evidence: F21 actual five-candle entry/shared-TP case passed;
+the two recovery cases raced route handling at immediate keys.length assertions
+(0before first intercepted POST /1before asynchronous retry POST). Use existing
+expect.poll pattern for unchanged exact request counts and receipt HTTP status, so the
+committed branch also waits for its route.fetch commit. Keep identical idempotency-key,
+receipt run/failure, zero orders/executions and balance assertions; no timeout increase.
+Rerun only those two cases after Paper Test/risk suites, retaining the first F21 failure.
