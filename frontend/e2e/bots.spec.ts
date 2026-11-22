@@ -37,7 +37,9 @@ async function language(page: Page, locale: string) {
     await manual.manualOrderI18n.changeLanguage(selected);
     await stops.killSwitchI18n.changeLanguage(selected);
   }, locale);
-  await page.locator(`${panelSelector} input`).fill(locale === "en" ? "100" : "101");
+  await expect(page.locator(panelSelector).getByRole("button", {
+    name: locale === "en" ? "Start bot" : "เริ่มบอท", exact: true,
+  })).toBeVisible();
 }
 
 test("real API lifecycle, exposure and stop recovery across responsive locales/themes", async ({ page }, info) => {
@@ -68,11 +70,15 @@ test("real API lifecycle, exposure and stop recovery across responsive locales/t
         await page.evaluate(value => document.documentElement.classList.toggle("dark", value === "dark"), theme);
         await expect(panel.getByRole("button", { name: locale === "th" ? "เริ่มบอท" : "Start bot", exact: true })).toBeDisabled();
         await expect(panel.getByText(locale === "th" ? "กำลังทำงาน" : "Running", { exact: true })).toBeVisible();
-        await panel.locator("input").focus();
-        await page.keyboard.press("Shift+Tab");
-        await expect(panel.getByRole("combobox")).toBeFocused();
+        await expect(panel.locator("#paper-bot-budget")).toBeDisabled();
+        await expect(panel.locator("#paper-bot-count")).toBeDisabled();
+        const stop = panel.getByRole("button", { name: locale === "th" ? "หยุดบอท Paper" : "Stop Paper bot", exact: true });
+        await stop.focus();
+        await expect(stop).toBeFocused();
         await page.keyboard.press("Tab");
-        await expect(panel.locator("input")).toBeFocused();
+        await expect(page.getByRole("button", { name: locale === "th" ? "ลด/ปิดสถานะ" : "Reduce / close holdings", exact: true })).toBeFocused();
+        await page.keyboard.press("Shift+Tab");
+        await expect(stop).toBeFocused();
         expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
         // Capture the real page from its top: a locator screenshot scrolls the
         // mobile panel beneath the existing sticky market toolbar and clips it.

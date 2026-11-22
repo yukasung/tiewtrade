@@ -1,5 +1,6 @@
 import asyncio
 from collections.abc import Mapping
+from dataclasses import replace
 from datetime import datetime, timedelta
 from typing import Any, Literal
 
@@ -66,6 +67,35 @@ async def require_active_pair(session: UserSession, base: str, quote: str) -> No
         raise UnsupportedSeriesError()
 
 
+async def closure_control(session: Session) -> RowMapping | None:
+    """Expand compatibility: old schemas and default-off deployments remain readable."""
+    if (
+        await session.execute("SELECT to_regclass('public.market_candle_closure_control')")
+    ).scalar_one_or_none() is None:
+        return None
+    return (
+        (await session.execute("SELECT * FROM market_candle_closure_control WHERE id=1"))
+        .mappings()
+        .one()
+    )
+
+
+async def unresolved_closures(
+    session: Session, params: dict[str, object]
+) -> dict[datetime, datetime]:
+    control = await closure_control(session)
+    if control is None or not control["enabled"]:
+        return {}
+    result = await session.execute(
+        """SELECT s.open_at,o.created_at FROM market_candle_closure_state s
+        JOIN market_candle_closure_observations o ON o.id=s.observation_id
+        WHERE s.source=:source AND s.base=:base AND s.quote=:quote AND s.timeframe=:timeframe
+          AND s.open_at>=:start AND s.open_at<:end AND s.status IN ('WAITING_REST','CONFLICT')""",
+        params,
+    )
+    return {row.open_at: row.created_at for row in result}
+
+
 async def database_now(session: Session) -> datetime:
     result = await _session(session).execute("SELECT clock_timestamp()")
     value: datetime = result.scalar_one()
@@ -123,9 +153,13 @@ async def stored_rows(
         params,
     )
     rows = tuple(result.mappings())
+    pending = await unresolved_closures(session, params)
 
     def convert() -> tuple[StoredCandle, ...]:
-        return tuple(_stored(row) for row in rows)
+        return tuple(
+            replace(_stored(row), closure_refresh_required=row["open_at"] in pending)
+            for row in rows
+        )
 
     return await asyncio.to_thread(convert) if offload_conversion else convert()
 
@@ -200,6 +234,8 @@ async def window_needs_work(
     timeframe: Timeframe,
     window: CandleWindow,
     as_of: datetime,
+    *,
+    include_closure: bool = True,
 ) -> tuple[bool, bool]:
     params = parameters(base, quote, timeframe) | {
         "start": window.start,
@@ -223,11 +259,14 @@ async def window_needs_work(
         .mappings()
         .one()
     )
-    return int(row["present"]) < slot_count(window, timeframe), bool(row["refresh"])
+    return int(row["present"]) < slot_count(window, timeframe), (
+        bool(row["refresh"])
+        or (include_closure and bool(await unresolved_closures(session, params)))
+    )
 
 
 def refresh_due(row: StoredCandle, as_of: datetime) -> bool:
-    return (
+    return row.closure_refresh_required or (
         row.candle.finality is not CandleFinality.CLOSED
         and row.fetch_started_at < row.candle.end_at
         and row.fetch_started_at < as_of
@@ -251,13 +290,25 @@ async def coalesce_demand(
     session = _session(session)
     now = await database_now(session)
     validate_window(window, now, timeframe)
-    missing, refresh = await window_needs_work(session, base, quote, timeframe, window, now)
+    missing, refresh = await window_needs_work(
+        session, base, quote, timeframe, window, now, include_closure=False
+    )
+    closure_pending = await unresolved_closures(
+        session,
+        parameters(base, quote, timeframe)
+        | {
+            "start": window.start,
+            "end": window.end,
+        },
+    )
+    requested = now if missing or refresh or not closure_pending else max(closure_pending.values())
+    refresh = refresh or bool(closure_pending)
     if not missing and not refresh:
         return False
     params = parameters(base, quote, timeframe) | {
         "start": window.start,
         "end": window.end,
-        "now": now,
+        "now": requested,
     }
     await session.execute(
         """INSERT INTO market_candle_demand
@@ -278,7 +329,19 @@ async def coalesce_demand(
         .mappings()
         .one()
     )
-    missing, refresh = await window_needs_work(session, base, quote, timeframe, window, now)
+    missing, refresh = await window_needs_work(
+        session, base, quote, timeframe, window, now, include_closure=False
+    )
+    closure_pending = await unresolved_closures(
+        session,
+        parameters(base, quote, timeframe)
+        | {
+            "start": window.start,
+            "end": window.end,
+        },
+    )
+    requested = now if missing or refresh or not closure_pending else max(closure_pending.values())
+    refresh = refresh or bool(closure_pending)
     if not missing and not refresh:
         return False
     end = max(row["desired_end"], window.end)
@@ -290,7 +353,7 @@ async def coalesce_demand(
         retention_cutoff(now, timeframe),
         duration_cutoff,
     )
-    params.update(start=start, end=end, refresh=now if refresh else None)
+    params.update(start=start, end=end, now=requested, refresh=requested if refresh else None)
     await session.execute(
         """UPDATE market_candle_demand SET desired_start=:start,
         desired_end=:end, requested_at=greatest(requested_at,:now),

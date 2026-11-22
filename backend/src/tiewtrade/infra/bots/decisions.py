@@ -7,7 +7,9 @@ from uuid import UUID
 
 from tiewtrade.core.bots import BotStatus
 from tiewtrade.core.orders import OrderIntent, OrderOrigin, TradingMode
+from tiewtrade.core.protections import EntryAtrProtection
 from tiewtrade.core.strategies import StrategyDecision, StrategyDocument, document_payload
+from tiewtrade.infra.bots.baskets import register_entry
 from tiewtrade.infra.bots.paper_admission import admit_paper_bot_intent
 from tiewtrade.infra.db.session import UserSession, require_user_session
 from tiewtrade.infra.risk_limits.dispatch import lock_risk_owner
@@ -120,10 +122,17 @@ async def record_paper_decision(
         for ordinal, intent in enumerate(intents):
             command_id = await admit(checked, run.wallet_id, intent)
             bracket = brackets.get(intent.order_id)
-            levels = (
-                None
-                if bracket is None
-                else json.dumps(
+            levels = None
+            if isinstance(bracket, EntryAtrProtection):
+                levels = json.dumps(
+                    {
+                        "version": 1,
+                        "kind": "ATR_FIRST_FILL",
+                        "atr": bracket.atr.as_parts()["amount"],
+                    }
+                )
+            elif bracket is not None:
+                levels = json.dumps(
                     {
                         "tp": None
                         if bracket.take_profit is None
@@ -133,7 +142,6 @@ async def record_paper_decision(
                         else bracket.stop_loss.as_parts()["amount"],
                     }
                 )
-            )
             await checked.execute(
                 """INSERT INTO bot_order_links(decision_id,run_id,user_id,mode,episode_id,
                         ordinal,command_id,order_id,bracket)
@@ -147,6 +155,13 @@ async def record_paper_decision(
                     "order": intent.order_id,
                     "levels": levels,
                 },
+            )
+            await register_entry(
+                checked,
+                run_id=evaluated.run_id,
+                command_id=command_id,
+                intent=intent,
+                provenance=evaluated.input_provenance,
             )
         await checked.execute(
             """UPDATE bot_runs SET revision=revision+1,strategy_state=CAST(:after AS jsonb),

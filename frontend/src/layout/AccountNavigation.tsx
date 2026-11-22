@@ -2,7 +2,6 @@ import { useCallback, useEffect, useId, useRef, useState, type MouseEvent } from
 import { accountText as t } from "../accountMessages";
 import { Button } from "../components/ui/Button";
 import { Dropdown } from "../components/ui/Dropdown";
-import { chartText } from "../chartMessages";
 import { navigateAccountPage, visibleAccountPages, type AccountPage } from "../accountNavigation";
 
 type TradingPage = "paper/trade" | "live/trade";
@@ -73,14 +72,14 @@ export function AccountNavigation({ page, group, isPlatformAdmin, onNavigate }: 
     }
   };
   return <nav className={`account-nav account-nav-${group}`} aria-label={t(group === "primary" ? "primaryNavigation" : "navigation")}>
-    {visibleAccountPages(group, import.meta.env.VITE_CHART_ENABLED === "1", isPlatformAdmin).map(item => {
+    {visibleAccountPages(group, isPlatformAdmin).map(item => {
       if (item === "paper/trade" || item === "live/trade") {
         return <MarketMenu key={item} destination={item} active={page === item} open={openMarket === item}
           onToggle={() => setOpenMarket(current => current === item ? null : item)} onClose={closeMarketPage} onNavigate={followLink}/>;
       }
       return <a key={item} href={`/${item}`} aria-current={page === item ? "page" : undefined} onClick={followLink}>
         <span className={`navigation-icon icon-${item}`} aria-hidden="true"/>
-        {item === "chart" ? chartText("heading") : t(item === "api-keys" ? "keys" : item === "trading-account" ? "trading" : item)}
+        {t(item === "api-keys" ? "keys" : item === "trading-account" ? "trading" : item)}
       </a>;
     })}
   </nav>;

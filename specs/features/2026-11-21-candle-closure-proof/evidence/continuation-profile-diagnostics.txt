@@ -1,0 +1,18 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.12.15, pytest-9.1.1, pluggy-1.6.0 -- /Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-candle-closure-proof/backend/.venv/bin/python
+cachedir: .pytest_cache
+hypothesis profile 'default'
+rootdir: /Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-candle-closure-proof/backend
+configfile: pyproject.toml
+plugins: asyncio-1.4.0, hypothesis-6.168.1, anyio-4.15.1
+asyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 6 items
+
+tests/services/market_data/test_closure_campaign.py::test_preparation_rechecks_real_authority_after_safe_outcomes[SUPERSEDED] PASSED [ 16%]
+tests/services/market_data/test_closure_campaign.py::test_preparation_rechecks_real_authority_after_safe_outcomes[NO_JOB] PASSED [ 33%]
+tests/services/market_data/test_closure_campaign.py::test_preparation_stops_on_ownership_or_numeric_failure[ORPHANED] PASSED [ 50%]
+tests/services/market_data/test_closure_campaign.py::test_preparation_stops_on_ownership_or_numeric_failure[FAILED_NUMERIC] PASSED [ 66%]
+tests/services/market_data/test_closure_campaign.py::test_api_rejection_keeps_status_without_response_secrets PASSED [ 83%]
+tests/services/market_data/test_closure_campaign.py::test_failure_report_is_safe_and_cannot_restart_attempt PASSED [100%]
+
+============================== 6 passed in 0.95s ===============================

@@ -1,0 +1,178 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.12.15, pytest-9.1.1, pluggy-1.6.0
+rootdir: /Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-candle-closure-proof/backend
+configfile: pyproject.toml
+testpaths: tests
+plugins: asyncio-1.4.0, hypothesis-6.168.1, anyio-4.15.1
+asyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collected 6047 items / 32 deselected / 6015 selected
+
+tests/infra/db/test_migrations.py .......                                [  0%]
+tests/infra/market_data/test_migration.py ...................            [  0%]
+tests/infra/market_data/test_realtime_migration.py .                     [  0%]
+tests/infra/market_data/test_supported_pairs_migration.py ..             [  0%]
+tests/infra/paper_wallet/test_migration.py .                             [  0%]
+tests/infra/risk_limits/test_monitor_price_hint.py .                     [  0%]
+tests/infra/risk_limits/test_same_pair_dispatch.py ..                    [  0%]
+tests/infra/risk_limits/test_source_resumption.py ..                     [  0%]
+tests/api/test_api_key_routes.py ......................F................ [  1%]
+.............                                                            [  1%]
+tests/api/test_auth_flow.py ..............                               [  1%]
+tests/api/test_bot_routes.py .....                                       [  1%]
+tests/api/test_candle_routes.py .........................                [  2%]
+tests/api/test_catalog_routes.py .....                                   [  2%]
+tests/api/test_chart_routes.py .......................................   [  2%]
+tests/api/test_failure_contracts.py ..........                           [  3%]
+tests/api/test_indicator_routes.py .....
+
+=================================== FAILURES ===================================
+__________________ test_no_route_hands_back_the_secret[False] __________________
+
+client = <starlette.testclient.TestClient object at 0x11406b800>, ending = False
+
+    @pytest.mark.parametrize("ending", [False, True])
+    def test_no_route_hands_back_the_secret(client: TestClient, ending: bool) -> None:
+        """V-4 — เดินทุกเส้นทางของ key แล้วต้องไม่มีคำตอบไหนพาความลับออกมา"""
+        email = register(client)
+        secret, recovery = enable_totp(client)
+        added = _add(client, secret)
+        key_id = added.json()["id"]
+    
+        import asyncio
+        import base64
+    
+        async def read_sealed() -> bytes:
+            engine = create_engine_for(DatabaseRole.ENGINE)
+            try:
+                async with user_session(engine, _user_id(client), role=DatabaseRole.ENGINE) as session:
+                    return bytes(
+                        (
+                            await session.execute(
+                                "SELECT secret_sealed FROM user_api_keys WHERE id = :id",
+                                {"id": UUID(key_id)},
+                            )
+                        ).scalar_one()
+                    )
+            finally:
+                await engine.dispose()
+    
+        sealed = asyncio.get_event_loop().run_until_complete(read_sealed())
+        forbidden = (SECRET, KEY, sealed.hex(), base64.b64encode(sealed).decode(), repr(sealed))
+        routes = {
+            item for item in route_keys() if (item[1] in {"/auth/logout", "/auth/logout-all"}) is ending
+        }
+        assert routes
+        for method, template in sorted(
+            routes,
+            key=lambda item: (
+                item[1] in {"/auth/logout", "/auth/logout-all"},
+                item[0] == "DELETE",
+                item,
+            ),
+        ):
+            if client.get("/auth/me").status_code != 200:
+                sign_in(client, email)
+                renewed = client.post(
+                    "/auth/totp/login",
+                    json={"recovery_code": recovery.pop()},
+                    headers=csrf_headers(client),
+                )
+                assert renewed.status_code == 200
+            assert client.get("/auth/me").status_code == 200
+            path = (
+                template.replace("{key_id}", key_id)
+                .replace("{command_id}", key_id)
+                .replace("{request_id}", key_id)
+                .replace("{order_id}", key_id)
+                .replace("{receipt_id}", key_id)
+                .replace("{stop_id}", key_id)
+                .replace("{protection_id}", key_id)
+                .replace("{key}", key_id)
+                .replace("{base}", "BTC")
+                .replace("{quote}", "USDT")
+            )
+            assert "{" not in path, f"missing canary path value for {template}"
+            if method == "WEBSOCKET":
+                with client.websocket_connect(
+                    path, headers={"origin": "http://localhost:5173"}
+                ) as socket:
+                    frame = socket.receive_text()
+                    for item in forbidden:
+                        assert item not in frame
+                continue
+            response = client.request(
+                method,
+                path,
+                headers=csrf_headers(client),
+                params={"base": "BTC", "quote": "USDT", "timeframe": "1m"}
+                if template
+                in {
+                    "/market-data/candles",
+                    "/market-data/candles/pages",
+                    "/market-data/indicators",
+                    "/market-data/chart/history",
+                    "/market-data/chart/live",
+                }
+                else {"action": "NEW"}
+                if template == "/paper/order-requests/by-key/{key}"
+                else {"action": "CREATE"}
+                if template == "/paper/protection-requests/by-key/{key}"
+                else {"action": "STOP"}
+                if "/kill-switch/requests/by-key/" in template
+                else {"episode_id": key_id}
+                if template in {"/paper/orders", "/paper/protections"}
+                else None,
+                **({"json": {}} if method == "POST" else {}),
+            )
+            if method == "GET":
+                if template.startswith("/admin/supported-symbols"):
+                    assert response.status_code == 403
+                    assert response.json() == {"detail": "CATALOG_NOT_AUTHORIZED"}
+                elif template.startswith("/admin/kill-switch"):
+                    assert response.status_code == 403
+                    assert response.json() == {"detail": "PLATFORM_NOT_AUTHORIZED"}
+                elif template.startswith("/market-data/chart/"):
+>                   assert (
+                        response.status_code == 404
+E                       assert 200 == 404
+E                        +  where 200 = <Response [200 OK]>.status_code
+
+tests/api/test_api_key_routes.py:505: AssertionError
+=============================== warnings summary ===============================
+.venv/lib/python3.12/site-packages/fastapi/testclient.py:1
+  /Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-candle-closure-proof/backend/.venv/lib/python3.12/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+tests/api/test_auth_flow.py::test_a_new_password_that_breaks_the_rules_is_refused[\u0e2a\u0e31\u0e49\u0e19\u0e40\u0e01\u0e34\u0e19-\u0e04\u0e27\u0e32\u0e21\u0e22\u0e32\u0e27]
+tests/api/test_auth_flow.py::test_a_new_password_that_breaks_the_rules_is_refused[password123456789-\u0e2d\u0e22\u0e39\u0e48\u0e43\u0e19\u0e23\u0e32\u0e22\u0e01\u0e32\u0e23\u0e17\u0e35\u0e48\u0e2b\u0e49\u0e32\u0e21]
+  /Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-candle-closure-proof/backend/src/tiewtrade/services/api/auth_routes.py:187: StarletteDeprecationWarning: 'HTTP_422_UNPROCESSABLE_ENTITY' is deprecated. Use 'HTTP_422_UNPROCESSABLE_CONTENT' instead.
+    password = _accepted_new_password(body.password)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+============================= slowest 20 durations =============================
+38.48s call     tests/infra/db/test_migrations.py::test_downgrade_then_upgrade_rebuilds_the_same_structure
+16.23s call     tests/infra/db/test_migrations.py::test_single_account_upgrade_refuses_multiple_keys_and_keeps_rows
+15.76s call     tests/infra/db/test_migrations.py::test_preferences_populated_downgrade_refuses_and_keeps_history
+13.71s call     tests/infra/db/test_migrations.py::test_downgrading_0003_restores_the_earlier_mechanism
+13.21s call     tests/infra/market_data/test_realtime_migration.py::test_upgrade_starts_durable_outage_before_first_producer
+12.80s call     tests/infra/market_data/test_supported_pairs_migration.py::test_catalog_migration_failure_rolls_back_every_change
+12.66s call     tests/infra/db/test_migrations.py::test_selected_use_audit_survives_allowed_downgrade
+12.51s call     tests/api/test_api_key_routes.py::test_no_route_hands_back_the_secret[False]
+12.17s call     tests/infra/market_data/test_migration.py::test_empty_upgrade_downgrade_replays_market_schema
+11.72s call     tests/infra/market_data/test_supported_pairs_migration.py::test_catalog_downgrade_uses_source_maintenance_for_protected_candles
+10.67s call     tests/infra/market_data/test_migration.py::test_populated_candle_downgrade_refuses_atomically[market_candles]
+10.64s call     tests/infra/market_data/test_migration.py::test_populated_candle_downgrade_refuses_atomically[market_candle_demand]
+8.53s call     tests/infra/risk_limits/test_same_pair_dispatch.py::test_projection_only_migration_roundtrip_preserves_facts_and_r8_default[r10]
+8.51s call     tests/infra/paper_wallet/test_migration.py::test_populated_downgrade_is_refused_without_deleting_command
+8.38s call     tests/infra/market_data/test_migration.py::test_week_month_upgrade_preserves_existing_candle_checksum
+4.66s call     tests/infra/risk_limits/test_same_pair_dispatch.py::test_projection_only_migration_roundtrip_preserves_facts_and_r8_default[r9]
+4.61s call     tests/infra/risk_limits/test_source_resumption.py::test_0056_default_off_roundtrip_preserves_schedule_and_does_not_rearm[True]
+4.48s call     tests/api/test_api_key_routes.py::test_add_quota_exhaustion_creates_no_worker_call
+4.35s call     tests/infra/risk_limits/test_monitor_price_hint.py::test_scanner_grants_are_narrow_and_roundtrip
+3.66s call     tests/infra/risk_limits/test_source_resumption.py::test_0056_default_off_roundtrip_preserves_schedule_and_does_not_rearm[False]
+=========================== short test summary info ============================
+FAILED tests/api/test_api_key_routes.py::test_no_route_hands_back_the_secret[False]
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! KeyboardInterrupt !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+/Users/chainarongjaykeaw/.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/threading.py:355: KeyboardInterrupt
+(to show a full traceback on KeyboardInterrupt use --full-trace)
+===== 1 failed, 189 passed, 32 deselected, 3 warnings in 429.34s (0:07:09) =====

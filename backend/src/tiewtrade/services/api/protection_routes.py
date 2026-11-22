@@ -167,6 +167,8 @@ async def page(
             rows = (
                 await session.execute(
                     """SELECT g.*,clock_timestamp() AS snapshot_at,
+                    EXISTS(SELECT 1 FROM bot_strategy_entries e
+                      WHERE e.order_id=g.entry_order_id) AS strategy_managed,
                     x.order_id AS exit_order_id,x.quantity AS exit_quantity,
                     x.accounted AS exit_filled_quantity,x.status AS exit_order_state,
                     x.command_state AS exit_command_state
@@ -233,6 +235,7 @@ async def page(
                         if value.prices.stop_loss is None
                         else value.prices.stop_loss.as_parts()["amount"],
                         entry_order_id=value.entry_order_id,
+                        strategy_managed=row.strategy_managed,
                         exit_order_id=row.exit_order_id,
                         exit_order_state=row.exit_order_state,
                         exit_command_state=row.exit_command_state,

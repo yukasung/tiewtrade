@@ -115,7 +115,10 @@ async def serve(
             ]
             if generation is not None:
                 tasks.append(asyncio.create_task(heartbeat()))
-            if os.environ.get("TIEWTRADE_CHART_ENABLED") == "1":
+            if (
+                os.environ.get("TIEWTRADE_CHART_ENABLED") == "1"
+                or os.environ.get("TIEWTRADE_CANDLE_CLOSURE_ENABLED") == "1"
+            ):
                 tasks.append(
                     asyncio.create_task(
                         CandleSupervisor(

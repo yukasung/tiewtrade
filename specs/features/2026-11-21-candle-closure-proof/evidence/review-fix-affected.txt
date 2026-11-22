@@ -1,0 +1,26 @@
+...F...........                                                          [100%]
+=================================== FAILURES ===================================
+__________ test_buy_decision_and_exit_fill_serialize[decision-first] ___________
+tests/infra/execution_market/test_strategy_exit_races.py:167: in test_buy_decision_and_exit_fill_serialize
+    assert (
+E   AssertionError: assert 'SUCCEEDED' == 'REJECTED'
+E     
+E     - REJECTED
+E     + SUCCEEDED
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED tests/infra/execution_market/test_candle_closure_proof.py::test_proof_to_prepared_indicators_strategy_and_paper_admission[accepted_sell]
+PASSED tests/infra/execution_market/test_candle_closure_proof.py::test_conflicting_open_to_close_never_publishes_a_tradable_proof[conflict]
+PASSED tests/infra/execution_market/test_candle_closure_proof.py::test_conflicting_open_to_close_never_publishes_a_tradable_proof[older]
+PASSED tests/infra/execution_market/test_strategy_exit_races.py::test_buy_decision_and_exit_fill_serialize[exit-first]
+PASSED tests/infra/execution_market/test_strategy_exit_races.py::test_delayed_buy_match_and_tp_share_one_winner[buy-fill-first]
+PASSED tests/infra/execution_market/test_strategy_exit_races.py::test_delayed_buy_match_and_tp_share_one_winner[tp-first]
+PASSED tests/infra/execution_market/test_strategy_exit_races.py::test_delayed_entry_price_correction_after_tp_close_replays_once
+PASSED tests/infra/execution_market/test_strategy_exit_races.py::test_partial_buy_feedback_delivered_after_tp_close_cannot_reopen_basket
+PASSED tests/infra/execution_market/test_strategy_exit_races.py::test_accepted_buy_vs_authority_change[True-risk]
+PASSED tests/infra/execution_market/test_strategy_exit_races.py::test_accepted_buy_vs_authority_change[True-takeover]
+PASSED tests/infra/execution_market/test_strategy_exit_races.py::test_accepted_buy_vs_authority_change[True-catalog]
+PASSED tests/infra/execution_market/test_strategy_exit_races.py::test_accepted_buy_vs_authority_change[False-risk]
+PASSED tests/infra/execution_market/test_strategy_exit_races.py::test_accepted_buy_vs_authority_change[False-takeover]
+PASSED tests/infra/execution_market/test_strategy_exit_races.py::test_accepted_buy_vs_authority_change[False-catalog]
+FAILED tests/infra/execution_market/test_strategy_exit_races.py::test_buy_decision_and_exit_fill_serialize[decision-first]

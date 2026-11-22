@@ -2,7 +2,7 @@ import { defineConfig } from "@playwright/test";
 import { e2eEnvironment } from "./e2e/helpers/environment";
 
 const environment = { ...e2eEnvironment(), API_URL: "http://127.0.0.1:18012",
-  TIEWTRADE_CHART_ENABLED: "1", VITE_CHART_ENABLED: "1",
+  TIEWTRADE_CHART_ENABLED: "1",
   TIEWTRADE_PRICE_ORIGINS: "http://localhost:18174,http://127.0.0.1:18174",
   PYTHONIOENCODING: "utf-8" };
 export default defineConfig({ testDir: "./e2e", testMatch: "candlestick-chart.spec.ts",

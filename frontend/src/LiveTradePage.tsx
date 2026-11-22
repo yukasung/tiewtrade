@@ -23,6 +23,6 @@ export function LiveTradePage({ owner }: { owner: string }) {
   return <TradingWorkspace mode="LIVE" bases={bases} base={base} onBase={changeBase}
     pairDisabled={catalog.isPending || catalog.isError}
     marketPrice={market?.price}
-    chart={<CandlestickChartPanel userId={owner} base={base} onBaseChange={changeBase} embedded
+    chart={<CandlestickChartPanel userId={owner} base={base} onBaseChange={changeBase}
       onMarketSnapshot={setMarketSnapshot}/>} form={form}/>;
 }

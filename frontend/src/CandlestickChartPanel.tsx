@@ -12,7 +12,6 @@ import { candleTimeline } from "./chart/candleTimeline";
 import { anchoredRange } from "./chart/viewport";
 import type { Series, Timeframe } from "./chart/api";
 import { activeBases, useMarketCatalog } from "./marketCatalog";
-import { TradeHistoryPlaceholder, TradingOrderPlaceholder } from "./TradingWorkspacePlaceholders";
 import "./CandlestickChartPanel.css";
 
 const timeframes: Timeframe[] = ["1m", "3m", "5m", "15m", "1h", "4h", "1d", "1w", "1M"];
@@ -30,18 +29,14 @@ const belongsToSeries = (value: Series | undefined, series: Series) => Boolean(v
 
 export type ChartMarketSnapshot = { base: string; price: string; observedAt: string };
 
-export function CandlestickChartPanel({ userId, base: controlledBase, onBaseChange, embedded = false,
+export function CandlestickChartPanel({ userId, base, onBaseChange,
   onMarketSnapshot }: {
   userId: string;
-  base?: string;
+  base: string;
   onBaseChange?: (base: string) => void;
-  embedded?: boolean;
   onMarketSnapshot?: (snapshot: ChartMarketSnapshot | null) => void;
 }) {
   const toolbarTarget = useContext(ChartToolbarTarget);
-  const [localBase, setLocalBase] = useState("BTC");
-  const base = controlledBase ?? localBase;
-  const setBase = onBaseChange ?? setLocalBase;
   const catalog = useMarketCatalog();
   const supportedBases = useMemo(() => activeBases(catalog.data), [catalog.data]);
   const [timeframe, setTimeframe] = useState<Timeframe>("1h");
@@ -89,10 +84,10 @@ export function CandlestickChartPanel({ userId, base: controlledBase, onBaseChan
 
   useEffect(() => {
     if (supportedBases.length && !supportedBases.includes(base)) {
-      setBase(supportedBases[0]!);
+      onBaseChange?.(supportedBases[0]!);
       setSelected(null);
     }
-  }, [base, supportedBases]);
+  }, [base, supportedBases, onBaseChange]);
 
   useEffect(() => {
     onMarketSnapshot?.(summaryPrice && summaryObservedAt ? {
@@ -163,9 +158,9 @@ export function CandlestickChartPanel({ userId, base: controlledBase, onBaseChan
     drawing.current = false;
   }, [displayed, base, timeframe, selectionTimes.length, history, timeline]);
 
-  const changeSeries = (base: string, timeframe: Timeframe) => {
+  const changeTimeframe = (timeframe: Timeframe) => {
     preservePageRange.current = false;
-    setBase(base); setTimeframe(timeframe); setSelected(null);
+    setTimeframe(timeframe); setSelected(null);
   };
   const resetViewport = () => {
     preservePageRange.current = false;
@@ -174,22 +169,16 @@ export function CandlestickChartPanel({ userId, base: controlledBase, onBaseChan
     renderer.current?.chart.timeScale().setVisibleLogicalRange(initialViewport(selectionTimes.length));
   };
   const controls = <div className="chart-controls">
-    {!embedded && <div><Select id="chart-pair" aria-label={t("pair")} value={base}
-      onChange={event => changeSeries(event.target.value, timeframe)}>
-        {supportedBases.map(pair => <option key={pair} value={pair}>{pair}/USDT</option>)}</Select></div>}
     <div><Select id="chart-timeframe" aria-label={t("timeframe")} value={timeframe}
-        onChange={event => changeSeries(base, event.target.value as Timeframe)}>
+        onChange={event => changeTimeframe(event.target.value as Timeframe)}>
         {timeframes.map(value => <option key={value}>{value}</option>)}</Select></div>
     <Button size="sm" className="chart-reset-button" onClick={resetViewport}
       disabled={!selectionTimes.length}>{t("reset")}</Button>
   </div>;
-  return <section className={`candlestick-panel ${embedded ? "candlestick-embedded" : "trading-workspace"}`} aria-label={t("heading")}
+  return <section className="candlestick-panel candlestick-embedded" aria-label={t("heading")}
     data-testid="candlestick-chart">
     {toolbarTarget && createPortal(controls, toolbarTarget)}
     {!toolbarTarget && <header className="trading-market-bar">
-      {!embedded && <div className="trading-market-identity">
-        <strong>{base}/USDT</strong><span>{t("market")}</span>
-      </div>}
       {controls}
     </header>}
     <div className="trading-chart-area">
@@ -219,7 +208,5 @@ export function CandlestickChartPanel({ userId, base: controlledBase, onBaseChan
           {" · "}{t(selectedGap ? "GAP" : selected !== null ? "selectionOutside" : "missing")}</p>
       </div>}
     </div>
-    {!embedded && <TradingOrderPlaceholder/>}
-    {!embedded && <TradeHistoryPlaceholder/>}
   </section>;
 }

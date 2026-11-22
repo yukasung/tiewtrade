@@ -67,6 +67,34 @@ class SetupAction(Enum):
 
 
 @dataclass(frozen=True, slots=True)
+class EntryAtrProtection:
+    """Immutable first-fill target instruction; never a guessed execution price."""
+
+    pair: PositionPair
+    atr: Money
+
+    def __post_init__(self) -> None:
+        if (
+            type(self.pair) is not PositionPair
+            or type(self.atr) is not Money
+            or self.atr.currency != self.pair.quote
+            or self.atr.amount <= 0
+        ):
+            raise ProtectionError("positive quote ATR required")
+
+    def resolve(self, price: Money, tick: Money) -> "ProtectionPrices":
+        from tiewtrade.core.money import basket_take_profit
+
+        return ProtectionPrices(
+            self.pair,
+            take_profit=basket_take_profit(
+                ((price, Quantity.of(1, self.pair.base)),), self.atr, tick
+            ),
+            stop_loss=price - (self.atr + self.atr + self.atr),
+        )
+
+
+@dataclass(frozen=True, slots=True)
 class ProtectionPrices:
     pair: PositionPair
     take_profit: Money | None = None

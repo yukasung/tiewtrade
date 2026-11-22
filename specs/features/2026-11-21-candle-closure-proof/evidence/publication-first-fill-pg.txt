@@ -1,0 +1,11 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.12.15, pytest-9.1.1, pluggy-1.6.0
+rootdir: /Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-candle-closure-proof/backend
+configfile: pyproject.toml
+plugins: asyncio-1.4.0, hypothesis-6.168.1, anyio-4.15.1
+asyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collected 10 items
+
+tests/infra/execution_market/test_paper_test_strategy.py ..........      [100%]
+
+============================= 10 passed in 22.15s ==============================

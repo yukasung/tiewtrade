@@ -437,7 +437,7 @@ production activation.
 | รหัส | งาน | สถานะ | หมายเหตุ |
 |---|---|---|---|
 | F-20 | ส่วนต่อประสานกลยุทธ์ + วงจรชีวิตบอท | **In Progress - Code Review / Owner UI Accepted; Fresh-State Isolation Verified** | [requirements](features/2026-11-19-bot-lifecycle/requirements.md), [plan/validation](features/2026-11-19-bot-lifecycle/validation.md) Approved 2026-11-19; migrations 0067-0073; review fixes and targeted PostgreSQL faults/races/proof/feedback, API process restart + Redis loss and actual-API browser lifecycle/scope/responsive/locale/theme checks passed; Ready for Code Review announced, closure review found no new code finding. [Scenario matrix / UI artifacts](features/2026-11-19-bot-lifecycle/evidence/implementation-checkpoint.md#feature-validation-closure-and-owner-ui-checkpoint--2026-11-20). V-15 owner UI accepted 2026-11-20; V-18 previous CI main backend passed 5766/2 skipped, fresh-state initially failed 6 shared-fixture cases; owner approved exact isolation patch plus one candidate CI round, all 28 fresh-state tests/static checks now passed locally; final-SHA CI pending; not merge-ready/Completed. V-19/20 Batch and V-21 Release dependencies retained; no production/Live activation. |
-| F-21 | กลยุทธ์สำเร็จรูปตัวแรก + ระบบปรับพารามิเตอร์ | Planned | (R-06) ยังไม่ได้ระบุว่ากลยุทธ์อะไร |
+| F-21 | กลยุทธ์สำเร็จรูปตัวแรก + ระบบปรับพารามิเตอร์ | **In Progress — Owner Acceptance / CI Preparation** | [requirements](features/2026-11-20-first-strategy/requirements.md) Approved 2026-11-20; RSI reset<30 + entry>60/EMA20>EMA50/แท่งเขียวปิดเหนือresetและEMAทั้งสอง, เงินต่อไม้, max_entries1–10/default10, ไม่มีcooldown, กลุ่มเดียวTPร่วม, BTC/ETH+timeframeWeb/default5m+250แท่ง ใช้indicator/matching/fee/protectionเดิมWeb; [plan](features/2026-11-20-first-strategy/plan.md) และ [validation](features/2026-11-20-first-strategy/validation.md) Approved 2026-11-20 ฉบับแก้deep-review F21-R01/R02: basket trigger/atomic retarget และ durable exit-candle guard พร้อม Feature tests; implementation/review และ local Feature correctness/safety validation ผ่านตาม combined evidence; V14/V17 รอ owner visual acceptance และ V18 รอ final-SHA required CI — Ready for Code Review แจ้งแล้วและreview/fixต่อแล้ว; actualAPI browser attempt6 Passed, affected safety checksผ่าน (ดูvalidation checkpoint), Batch/Release Pending Full Validation; ยังไม่พร้อมmerge; owner visual acceptance/required CI ค้าง และไม่เปิดproduction/Live |
 
 ## ชุดที่ 7 — Live Trading
 
@@ -2236,3 +2236,116 @@ explicit owner authority and effective signup/STOP/compatible-worker/source/DB-p
 proof before changing flags. Repository audit did not inspect or activate a deployment;
 internal20 is not an enforced user cap. Read-only preparation may continue under existing
 approved startup scope; owner visual confirmation/opening authority cannot be inferred.
+
+### งานเสริมตรวจรับ F-21 — Paper Test Entry (2026-11-21)
+
+สถานะ: **In Progress — Requirements / Plan / Validation Approved; implementation และ local validation แล้ว; owner acceptance / required CI ยังค้าง**
+
+เจ้าของขอกลยุทธ์ Paper เพิ่มเพื่อให้ตรวจ flow ได้เร็วขึ้น: CLOSED green, ATR14,
+TP/SL ±3×ATR ตรึงจาก first fill, ครั้งละหนึ่ง position เลือก timeframe ได้
+เป็นกลยุทธ์แยกและไม่แทนหลักฐานสัญญาณ RSI/EMA ของ F-21
+[requirements](features/2026-11-21-paper-test-strategy/requirements.md),
+[plan](features/2026-11-21-paper-test-strategy/plan.md),
+[validation](features/2026-11-21-paper-test-strategy/validation.md).
+Implementation อยู่ใน worktree `../TiewTrade-paper-test-entry`, branch `feature/paper-test-entry`
+รักษา WIP/preview F-21 เดิม; [checkpoint](features/2026-11-21-paper-test-strategy/evidence/checkpoint.md)
+คง owner acceptance/required CI ก่อน merge และ Pending Full Validation ระดับ Batch/Release
+ไม่เปิด production/Live
+
+Paper Test Entry NC-05 follow-up (2026-11-21): real-market entry blocked by original
+UNCONFIRMED finality; [requirements amendment proposal](features/2026-11-21-paper-test-strategy/real-market-candle-policy.md)
+prepared at owner's request, awaiting approval before plan/validation amendment and runtime.
+Approved original CLOSED-only policy and all owner/CI gates remain in force.
+
+Paper Test Entry NC-05 latest decision: Closed - use the same CLOSED/readiness/MARKET
+rules as RSI Step Grid; UNCONFIRMED exception Superseded. Current runtime matches.
+Real-source entry acceptance remains Blocked by missing CLOSED evidence. Owner/CI and
+Batch/Release gates remain pending; no new trading/Live scope.
+
+### Shared Candle Closure Proof — Implementation review checkpoint (2026-11-21)
+
+Requirements/plan/validation **Approved**. Implementation and scoped review/fixes are in
+`feature/candle-closure-proof`, based on the preserved local F21/Paper dependency candidate.
+[Requirements](features/2026-11-21-candle-closure-proof/requirements.md),
+[plan](features/2026-11-21-candle-closure-proof/plan.md),
+[validation](features/2026-11-21-candle-closure-proof/validation.md),
+[review/checkpoint](features/2026-11-21-candle-closure-proof/review.md).
+
+Durable native TH closure+exact post-end REST proof, atomic publication/invalidation,
+per-series conflict recovery, bounded F11 restore and decision/queued proof fencing are
+implemented. Targeted source/financial/authority regression149 passed; changed-file checks
+passed. Full repository mypy remains **Failed90 errors in10 unchanged dependency test files**.
+
+Authorized public attempt **Partial** during actual F11 preparation (READY/SUPERSEDED and
+book readiness unavailable); protocol remained OFF,0orders/positions/proofs. No repeat
+attempt was made. Final review added a CP06 correction after that attempt, so V17 has no
+passing evidence on the final runtime. Research BTC match/ETH conflict remains historical
+fixture evidence, not real entry acceptance.
+
+**Pending Feature Validation / not Completed or ready to merge**: final real-source entry
+acceptance, remaining Feature matrix, full type/required CI and owner/independent review
+gates. Batch/Release Pending Full Validation. Original real-source F21/Paper entry blocker
+is not closed. No owner-preview activation, owner-account trade or Live change; no
+publication/merge. Another bounded public campaign needs explicit owner authorization.
+
+
+Shared Candle Closure Proof — owner continuation checkpoint (2026-11-21): full strict
+mypy now Passed804 files; Ruff/format885 Passed. Local full backend6012passed/7failed,
+then all failed cases plus protection timing covered by focused16passed on isolated PG/
+Redis; historical failures retained. Four other isolated CI phases exited0. Campaign2
+Partial: actual BTC/ETH1m F11 READY and owned closure activation succeeded, but API setup
+failed before users/wallets/orders/positions; original cause not established. Harness now
+captures safe failure context (6tests Passed). No third campaign, owner-preview activation,
+Live, commit/push/PR/merge. Current evidence supersedes the earlier mypy blocker above;
+real-entry acceptance remains open. [Current checkpoint](features/2026-11-21-candle-closure-proof/validation.md).
+Pending Feature Validation / not Completed: another public attempt needs owner authorization,
+remaining matrices/owner and independent acceptance/required CI are still pending.
+Batch/Release Pending Full Validation.
+
+
+Shared Candle Closure Proof — latest code-review checkpoint (2026-11-21): **Ready for Code
+Review**, not Completed/merge-ready. Attempt3 identified RSI API payload422; harness now
+reuses existing input models. Fixed FORCE-RLS evidence filtering with guarded read-only
+owned-DB audit. Corrected facts supersede earlier counts: attempts2/3 each2users/2wallets/
+2capital ledger rows,0runs/orders/positions. Actual API/PG/harness14passed; final guard/
+harness9passed; strict mypy804 and lint/format Passed. Production runtime unchanged.
+Real-source entry acceptance remains Partial; three-attempt stop reached, awaiting owner's
+choice for another bounded attempt. Remaining Feature/owner/independent/required-CI gates
+open, Batch/Release Pending Full Validation. See current validation/review and completion
+candidate manifest. No owner-preview activation, Live, publication or merge.
+
+
+Shared Candle Closure Proof — authorized attempt4 (2026-11-21): **Partial**. Both API starts
+worked;8actual native/REST MATCHED proofs independently reverified,7decisions. Paper Test
+produced one100USDT BUY from a green closed candle in its next candle; command was rejected
+ORDER_SAFETY_UNAVAILABLE before fill. Commit timeline shows run PAUSED/INDICATOR_NOT_READY
+with newer revision before rejection; approximately43s dispatch/processing delay needs
+further diagnosis.0fills/positions/reservations, capital ledgers unchanged. No fifth attempt
+or owner-preview/Live action; no source changes this turn. Ready for Code Review remains;
+V17/owner/requiredCI and other Feature gates remain pending, not Completed/merge-ready.
+See current validation/review and attempt4 evidence. Batch/Release Pending Full Validation.
+
+### Candle closure review corrections —2026-11-22
+
+Corrected queued B-window expiry, accepted/SELL-driven closure-proof invalidation and
+native OPEN→close contradiction publication. Related existing exit guards now pin revision
+and share the native A/B lookup; accounting fixtures use actual CLOSED slots. Candidate
+51ab7d36; final targeted PG67passed, corrected basket/recovery4passed, units116passed,
+gates6passed, scoped types/lint/import checks passed (counts overlap). Prior failed and
+Partial evidence is preserved in the feature's validation/review. Required CI, owner/
+independent acceptance, remaining Feature matrices and actual public fill stay open;
+corrected-candidate public campaign Not Run. No owner preview/Live activation, extra
+campaign or publication. Pending Full Validation; not Completed or merge-ready.
+
+
+2026-11-22 Shared Candle Closure Proof local gate continuation: V08 pending-receipt
+pool restart and expired-writer takeover added; real PostgreSQL6passed, scoped static
+checks passed, production unchanged after refactor. Full recovery/public fill/owner/CI
+gates remain Partial or Not Run. Publication-only draft PR/CI exception requested, not
+assumed; no public attempt5 or merge. See feature validation.md/local-recovery evidence.
+
+
+2026-11-22 Shared Candle Closure Proof owner-authorized draft publication: main005ec483
+F17 refactor integrated; affected protection118unit +10PG tests and scoped static checks
+passed. Prepare combined draft candidate for required CI, without merge/public campaign5.
+Owner/independent/public-fill/other Partial Feature gates remain open; not Completed.

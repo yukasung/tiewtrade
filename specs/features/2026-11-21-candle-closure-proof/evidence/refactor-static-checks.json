@@ -1,0 +1,26 @@
+{
+  "candidate_fingerprint": "9d77fa16b8932916fee62483208db15b49e966b4697ff9d3c830403cfdab1860",
+  "scope": [
+    "backend/src/tiewtrade/infra/bots/authority.py",
+    "backend/src/tiewtrade/services/market_data/candle_realtime.py"
+  ],
+  "ruff": "Passed (2 files)",
+  "ruff_format": "Passed (2 files)",
+  "mypy": "Passed (2 source files)",
+  "import_contracts": "7 kept, 0 broken",
+  "diff_check": "Passed",
+  "required_CI": "Not Run",
+  "public_campaign": "Not Run; historical Partial remains unchanged",
+  "tests": {
+    "refactor-postgres-tests.txt": {
+      "passed": 53,
+      "failed": 0,
+      "exit_code": 0
+    },
+    "refactor-realtime-tests.txt": {
+      "passed": 15,
+      "failed": 0,
+      "exit_code": 0
+    }
+  }
+}

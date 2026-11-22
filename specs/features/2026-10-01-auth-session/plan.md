@@ -424,3 +424,7 @@ migration `0007_auth.py` — สามตาราง, policy ตามข้อ
 | 4 | **เพิ่ม `DuplicateValueError`** ใน `infra/db/errors.py` | SQLSTATE `23505` เดิมกลายเป็น `InfraError` ทั่วไป ซึ่งแยก "อีเมลนี้มีบัญชีแล้ว" จากข้อผิดพลาดอื่นไม่ได้ |
 | 5 | **ตัวตรวจแฮชดัก `UnicodeError` ด้วย** | ค่าที่เก็บไว้ซึ่งไม่ใช่แฮชของ argon2 เลยทำให้ไลบรารีโยนข้อผิดพลาดการเข้ารหัสอักขระก่อนจะได้ตรวจรูปแบบ — ถ้าไม่ดัก ข้อผิดพลาดนั้นหลุดสัญญาออกไป |
 | 6 | **เทสต์ล้างตัวนับอัตราการเรียกก่อนทุกข้อ** | โควตาการสมัคร 5 ครั้ง/ชั่วโมงต่อ IP เป็นกฎจริงที่คงไว้ แต่เทสต์ทุกข้อมาจาก IP เดียวกัน · ล้างสภาพเหมือนที่ล้างสภาพอื่นของฐานข้อมูล **ไม่ใช่ปิดกฎหรือเพิ่มเพดานให้หลวมตอนเทสต์** |
+
+### Owner-reported reload presentation fix — 2026-11-21
+
+AuthPanel initializes identity to null before the CSRF/session requests finish, which briefly renders the login form for an existing session. Under the delegated engineering authority, distinguish the initial session check from confirmed signed-out state. Render a neutral loading status until the existing requests settle, guard against stale/unmounted initialization effects and retain the existing login/logout/2FA behavior and httpOnly server session authority. Use the existing theme text/spacing patterns, adding no new layout or client session cache.

@@ -3,6 +3,7 @@ export const killSwitchI18n = createInstance();
 const en = {
   modeStatus: "{{mode}} stop status", settings: "Stop settings", noStopDetails: "No stop request to manage",
   checkingPrevious: "Checking previous stop request…",
+  loadError: "Unable to check stop status. Please try again.",
   storageUnavailable: "Browser storage is unavailable. Stop can still be requested; after reload, verify the server stop status before acting again.",
   paperStop: "Stop Paper bot", liveStop: "Stop Live bot", details: "View details", close: "Close", loading: "Checking stop status…",
   STOPPING: "Stopping", STOPPED: "Stopped", PROBLEMS: "Problems", pending: "pending", failed: "failed", reconciledAt: "Reconciled at",
@@ -15,6 +16,7 @@ const en = {
 const th: typeof en = {
   modeStatus: "สถานะหยุด {{mode}}", settings: "ตั้งค่าการหยุด", noStopDetails: "ยังไม่มีคำขอหยุดให้จัดการ",
   checkingPrevious: "กำลังตรวจคำขอหยุดเดิม…",
+  loadError: "ตรวจสถานะหยุดไม่ได้ กรุณาลองใหม่",
   storageUnavailable: "เบราว์เซอร์บันทึกคำขอไม่ได้ แต่ยังส่งคำขอหยุดได้ หลังโหลดหน้าใหม่ให้ตรวจสถานะจากระบบก่อนทำรายการต่อ",
   paperStop: "หยุดบอท Paper", liveStop: "หยุดบอท Live", details: "ดูรายละเอียด", close: "ปิด", loading: "กำลังตรวจสถานะหยุด…",
   STOPPING: "กำลังหยุด", STOPPED: "หยุดแล้ว", PROBLEMS: "หยุดแล้วแต่มีปัญหา", pending: "ค้าง", failed: "ล้มเหลว", reconciledAt: "กระทบยอดเมื่อ",

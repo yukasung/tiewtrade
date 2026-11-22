@@ -96,7 +96,7 @@ async def test_thousand_candles_write_with_scope_check_and_exact_values(
             async with market_data_session(engine) as market_session:
                 calls.clear()
                 await write_candles(market_session, claim, candles, now)
-            assert len(calls) == 6
+            assert len(calls) == 8  # Two bounded closure expand/control reads; no per-bar queries.
             assert "require_indicator_source_write" in calls[0]
         finally:
             event.remove(engine.sync_engine, "before_cursor_execute", before_execute)
@@ -217,7 +217,7 @@ async def test_batch_spanning_partitions_uses_one_partition_lookup(api_engine: A
             context: object,
             executemany: bool,
         ) -> None:
-            if "to_regclass" in statement:
+            if "to_regclass(name)" in statement:
                 lookups.append(statement)
 
         event.listen(engine.sync_engine, "before_cursor_execute", before_execute)

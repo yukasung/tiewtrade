@@ -5,6 +5,7 @@ import json
 from collections.abc import AsyncIterator, Mapping
 from contextlib import asynccontextmanager
 from dataclasses import dataclass, replace
+from datetime import datetime
 from typing import Any, NoReturn
 from uuid import UUID
 
@@ -62,7 +63,7 @@ class Runtime:
             )
             self.lease = await publish_input(session, self.lease, self.book, self.metadata)
 
-    async def price(self, amount: str) -> None:
+    async def price(self, amount: str, *, trade_time: datetime | None = None) -> None:
         async with market_data_session(self.market) as session:
             snapshot = await read_snapshot(session)
             assert snapshot.feed is not None
@@ -76,7 +77,7 @@ class Runtime:
                 "USDT",
                 Money.of(amount, "USDT"),
                 row.observation.trade_id + 1,
-                now,
+                now if trade_time is None else trade_time,
                 now,
                 ObservationKind.STREAM,
             )

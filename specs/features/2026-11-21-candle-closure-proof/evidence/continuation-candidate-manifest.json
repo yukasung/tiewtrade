@@ -1,0 +1,154 @@
+{
+  "base": "46841d394f4fe23f94626114619ef0c4c66438d1",
+  "fingerprint": "1cb730117f99db2f67fb7a35673131878aa7f1ae0e2cd76f0cebbd949ed6b319",
+  "files": [
+    {
+      "path": "backend/migrations/versions/0076_candle_closure_proof.py",
+      "sha256": "a5bf5d89082755d6f17987b959cbe533cd8c646ff2b2fadb3ce06bf166dd8af3"
+    },
+    {
+      "path": "backend/src/tiewtrade/core/candle_closure.py",
+      "sha256": "cfe48a1ac39ea442203b94f0f8de98ceb4df1628d0cdfa66b03c50aad9f6c333"
+    },
+    {
+      "path": "backend/src/tiewtrade/core/strategy_candles.py",
+      "sha256": "50c76d0097cf61766a877cdedc96aa0ee8d34ded7b03364d5ade6907c092d181"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/bots/authority.py",
+      "sha256": "6652468b859b9d7b4e665e6b1dcf8d62f5438eba9a80683419f9cab6285a8443"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/bots/candle_sources.py",
+      "sha256": "d3fc533b0149b334d1f3e88da55607f0290703a86a62822a74302f4de31cdbc8"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/bots/evaluation.py",
+      "sha256": "d15318fc67bb442f8d5696ed8dd7c2dd7497c3257c42fdf204d0a4ceb8a816ed"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/bots/indicator_tail.py",
+      "sha256": "d15c68cf677e1ea91fbdd0809a7e82d62ba95a7b047473cc64ff90a68bee2c86"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/bots/inputs.py",
+      "sha256": "a7d28c877016e3c06a969ecb22944c5e604020b241aa221d88584ea8b997f62f"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/indicators/prepared.py",
+      "sha256": "adeee8338d068990d8bf0c3413617d89f7305ea007445ecb2619fe718b7e1be4"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/market_data/candle_closure.py",
+      "sha256": "7472d63f6e0e43a1eb7b0726ff384c041771a1b9ae4a94bb87815b002632e2dd"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/market_data/claims.py",
+      "sha256": "a2ac35ac7a0c4fa69e06021b0662fb5aa7ebcaf36bfe5dbf25efd05d72a6eb86"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/market_data/records.py",
+      "sha256": "050a757445d5c0f8358d6eb613072819d7d41d102f770b972bdff8ead8f4fb2b"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/market_data/storage.py",
+      "sha256": "e053f20b83a99f604ae5b7a4b97ccad72096248207e2e04051d49b8978153cee"
+    },
+    {
+      "path": "backend/src/tiewtrade/services/market_data/candle_realtime.py",
+      "sha256": "4c789e695859c67d6874e967613479e6c7d75842a80b3b1eda457a417871bb73"
+    },
+    {
+      "path": "backend/src/tiewtrade/services/market_data/ingestion.py",
+      "sha256": "f1ff79dadd78522f47267367285061fb1fabc1ed32f782067dd817f4682a182a"
+    },
+    {
+      "path": "backend/src/tiewtrade/services/market_data/main.py",
+      "sha256": "f7b227565fc50c90e7998f8fecc1ce809d6c85c57d70bae7ba4a07d31449087c"
+    },
+    {
+      "path": "backend/tests/api/test_api_key_routes.py",
+      "sha256": "2aea0db7a141f7265d9794a057c4d10b17e8b745e44969f60819ffae7c4d70d4"
+    },
+    {
+      "path": "backend/tests/api/test_route_policy.py",
+      "sha256": "b481ca6b854b806ee39ca0a28434e4fa9c876d72361ab91d64025db98ce77da2"
+    },
+    {
+      "path": "backend/tests/api/test_strategy_configurations.py",
+      "sha256": "881d343dc065ef421986df0ea35da6dc85b2b4c0da0acddf40edf2cb93814a33"
+    },
+    {
+      "path": "backend/tests/api/test_strategy_status.py",
+      "sha256": "8aef2a0de7220c28267f850f22668f240c99bfeb76d6defa80e9c17a4700b9d9"
+    },
+    {
+      "path": "backend/tests/core/test_candle_closure.py",
+      "sha256": "5741424a8bc0294f3c895d7e680795de9e62e1c8ef52532850a36e1550ca5f77"
+    },
+    {
+      "path": "backend/tests/gates/test_paper_isolation.py",
+      "sha256": "8c502a6fdbce81570d49e450795b854a0925155ecd869e3b0e67fe5415e491f2"
+    },
+    {
+      "path": "backend/tests/infra/bots/test_candle_finality_reason.py",
+      "sha256": "a162c4efdb633e20519d1ef70cf99342b3ea3be2cf2ddd0c02545c7357d1d50e"
+    },
+    {
+      "path": "backend/tests/infra/bots/test_strategy_configurations.py",
+      "sha256": "82c398a7a7e6f840c9e16da9f94555f14ccbe12296e89a2961fbe0c37ab9a5c2"
+    },
+    {
+      "path": "backend/tests/infra/execution_market/profile_candle_closure.py",
+      "sha256": "f672cb49deb050ee6a18f2e90ccc9811c86141fb8085209504a4b5cf89bdb340"
+    },
+    {
+      "path": "backend/tests/infra/execution_market/test_candle_closure_proof.py",
+      "sha256": "2a43713f457e5213a9bde1b055ae465cda50078c5424142ba9292a9fdb38858e"
+    },
+    {
+      "path": "backend/tests/infra/execution_market/test_strategy_candle_inputs.py",
+      "sha256": "6af8b051525a6a1e9708e2940ed816adfe3f80dfab4cfd94fa2dad1b0ede4a68"
+    },
+    {
+      "path": "backend/tests/infra/execution_market/test_strategy_commit_fences.py",
+      "sha256": "2b5f1559055eeeb83b8b462cf8c1e7a891619d2fc3f9726e6194e81a459d0046"
+    },
+    {
+      "path": "backend/tests/infra/execution_market/test_strategy_exit_races.py",
+      "sha256": "9cd3771ef1720d9bb97f57ad6035e39f5f53b3974dff75890ee9e4163b2abfbe"
+    },
+    {
+      "path": "backend/tests/infra/execution_market/test_strategy_migration.py",
+      "sha256": "d28c7b067c1af6fd3ef706f66a6977026869a5e2eeadf890a1d222545c024ef5"
+    },
+    {
+      "path": "backend/tests/infra/execution_market/test_strategy_recovery.py",
+      "sha256": "34123b1bfb72c3da9fdabc9d366b49a87ef9a57b8359849180da39f110b8dc09"
+    },
+    {
+      "path": "backend/tests/infra/execution_market/test_strategy_tail_inputs.py",
+      "sha256": "ce30aadae06221a127696ae84ceb69b16078ca2d49fdea48dd7126908cdcab2e"
+    },
+    {
+      "path": "backend/tests/infra/market_data/test_batch_write.py",
+      "sha256": "6c3e8f94984d599735765838d16f7677b287ee1d90a1587ca53de429b8b11649"
+    },
+    {
+      "path": "backend/tests/services/market_data/test_candle_realtime.py",
+      "sha256": "07ce1f548641bfa98ce68b901eba931314bc7621d40c7382f1826149c3440294"
+    },
+    {
+      "path": "backend/tests/services/market_data/test_closure_campaign.py",
+      "sha256": "5f696acd892ad5af0cec4809f36b92dc218ea10ceda499e69a0a706962b0ea56"
+    },
+    {
+      "path": "backend/tests/strategies/test_basket_disposals.py",
+      "sha256": "3cd5b479f694f395e7df659c280c28861b673dd3edd6db8cb77c131c1086342a"
+    },
+    {
+      "path": "backend/tests/strategies/test_rsi_step_grid.py",
+      "sha256": "59466abab5302eae1f6a48a0a8e724041aa6ca0c76d7e94620ee12046ab468bc"
+    }
+  ]
+}

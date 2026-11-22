@@ -20,6 +20,7 @@ from tiewtrade.core.market_data import (
     next_open,
 )
 from tiewtrade.core.money import Money, Quantity
+from tiewtrade.infra.market_data import candle_closure
 from tiewtrade.infra.market_data.candle_preview import PreviewLease
 from tiewtrade.infra.platform import RuntimeSymbol
 from tiewtrade.infra.realtime.notifications import RedisNotifications
@@ -117,6 +118,12 @@ async def test_bootstrap_only_queues_each_series_before_completing_preview(
 
     monkeypatch.setattr(candle_realtime, "market_data_session", session)
     monkeypatch.setattr(candle_realtime, "bootstrap_series", bootstrap)
+
+    async def prepare(_session: object, *, acquire: bool = False) -> bool:
+        assert acquire
+        return False  # This unit test isolates subscription scheduling, not DB enforcement.
+
+    monkeypatch.setattr(candle_closure, "prepare_write", prepare)
     monkeypatch.setattr(candle_realtime, "complete_bootstrap", complete)
 
     await state._bootstrap(1)

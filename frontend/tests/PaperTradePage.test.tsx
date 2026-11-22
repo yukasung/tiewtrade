@@ -158,7 +158,7 @@ it("clears a previous pair's displayed market price before the next pair snapsho
   expect(screen.queryByText(t("marketStatus"))).toBeNull();
   expect(screen.queryByText(t("marketObserved"))).toBeNull();
   fireEvent.change(screen.getByLabelText(t("pair")), { target: { value: "ETH" } });
-  expect(latest.textContent).toContain(t("unavailable"));
+  expect(latest.textContent).toContain("—");
   expect(latest.textContent).not.toContain("100 USDT");
 });
 it("shows a latched risk stop beside the form without a risk-settings control", async () => {
@@ -487,7 +487,7 @@ it("keeps the balance node during refresh without relaxing SELL admission", asyn
   const amount = screen.getByText("10,000.000000000000000001 USDT");
   delay = true;
   act(() => { void queryClient.invalidateQueries({ queryKey: ["manual-orders", "owner", "PAPER", "trade", "BTC"] }); });
-  await screen.findByText(bt("updating"));
+  await waitFor(() => expect(resolveRefresh).toBeTypeOf("function"));
   expect(screen.getByText("10,000.000000000000000001 USDT")).toBe(amount);
   fireEvent.click(screen.getByRole("button", { name: bt("reduce") }));
   fireEvent.change(screen.getByLabelText(`${t("quantity")} (BTC)`), { target: { value: "1" } });
@@ -500,4 +500,19 @@ it("keeps the balance node during refresh without relaxing SELL admission", asyn
   });
   await screen.findByText("9,000 USDT");
   expect(screen.queryByText(bt("updating"))).toBeNull();
+});
+
+it("keeps Stop in the order-entry form card after start", async () => {
+  mount(url => url.endsWith("/paper/bots/status") ? Promise.resolve(answer({
+    mode: "PAPER", status: null, run_id: null, pending_request_id: "pending",
+    exposure_available: true, positions: [], protections: [],
+  })) : undefined);
+  const stop = await screen.findByRole("button", { name: bt("stopBot") });
+  await waitFor(() => expect(screen.getByRole("button", { name: bt("stopBot") }).closest(".trade-workspace-form")).toBeTruthy());
+  expect(stop.closest(".trade-workspace-bar")).toBeNull();
+  const sidebar = document.querySelector(".trade-workspace-form");
+  expect(sidebar?.hasAttribute("hidden")).toBe(false);
+  expect(sidebar?.contains(screen.getByRole("button", { name: bt("stopBot") }))).toBe(true);
+  expect(screen.getByLabelText<HTMLInputElement>(bt("budget")).disabled).toBe(true);
+  expect(screen.getByTestId("embedded-chart")).toBeTruthy();
 });

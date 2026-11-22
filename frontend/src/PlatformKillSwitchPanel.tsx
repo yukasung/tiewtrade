@@ -58,7 +58,9 @@ export function PlatformKillSwitchPanel({ owner, role }: { owner: string; role: 
   }, [client, receiptId, receiptState, resumeJournal, resumeRecovery?.requestId, stopJournal, stopRecovery?.requestId]);
   return <section className="component-card platform-kill-switch-panel">
     <h1>{t("adminTitle")}</h1>
-    <p>{status.data?.progress ?? "—"} · {t("pending")}: {status.data?.pending_count ?? 0} · {t("failed")}: {status.data?.failed_count ?? 0}</p>
+    {status.isPending && <p role="status">{t("loading")}</p>}
+    {status.isError && <p role="alert">{t("loadError")}</p>}
+    {status.data && <p>{status.data.progress ?? "—"} · {t("pending")}: {status.data.pending_count} · {t("failed")}: {status.data.failed_count}</p>}
     <Label htmlFor="platform-stop-reason">{t("reason")}</Label>
     <Input id="platform-stop-reason" value={reason} maxLength={500} onChange={event => setReason(event.target.value)} />
     <div className="kill-switch-modal-actions">

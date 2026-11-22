@@ -1,0 +1,7 @@
+....                                                                     [100%]
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED tests/infra/execution_market/test_strategy_baskets.py::test_exit_guard_rejects_stale_and_current_same_candle_intents_and_queued_buy[False]
+PASSED tests/infra/execution_market/test_strategy_baskets.py::test_exit_guard_rejects_stale_and_current_same_candle_intents_and_queued_buy[True]
+PASSED tests/infra/execution_market/test_strategy_recovery.py::test_restart_at_actual_sell_fill_preserves_remaining_exit_and_candle_guard[rollback]
+PASSED tests/infra/execution_market/test_strategy_recovery.py::test_restart_at_actual_sell_fill_preserves_remaining_exit_and_candle_guard[lost-commit-ack]

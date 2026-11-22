@@ -20,6 +20,7 @@ from tiewtrade.infra.audit import (
     record_event,
 )
 from tiewtrade.infra.audit.events import ProtectionDetails
+from tiewtrade.infra.bots.baskets import strategy_managed_protection
 from tiewtrade.infra.db.session import UserSession, require_user_session
 from tiewtrade.infra.market_data.order_book_codec import canonical
 from tiewtrade.infra.paper_orders.requests import (
@@ -341,6 +342,10 @@ async def admit_request(
         current = await load(session, protection_id) if protection_id is not None else None
         if current is None or current.value.scope.episode_id != episode_id:
             raise OrderConflictError("protection is unavailable")
+        if action == "REPLACE" and await strategy_managed_protection(
+            session, current.value.protection_id
+        ):
+            raise OrderConflictError("strategy-managed protection cannot be amended")
     group_id = uuid4() if action == "CREATE" else protection_id
     assert group_id is not None
     request_id = uuid4()

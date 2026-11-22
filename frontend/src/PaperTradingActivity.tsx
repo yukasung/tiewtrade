@@ -91,13 +91,13 @@ export function PaperTradingActivity({ owner, base, scope, rows, visible, disabl
           <TableCell className={cellClass}><div className="flex items-center gap-2">
             <Button size="sm" variant="outline" onClick={() => setSelection({ id: row.protection_id, scope: scopeKey })}>{t("details")}</Button>
             {!terminal(row) && <>
-              <Button size="sm" disabled={blocked || !enabled || row.state === "EXITING"} onClick={() => setDraft({ base: row.base, scope: scopeKey, target: row.protection_id, revision: row.revision, quantity: row.quantity, tp: row.take_profit_price ?? "", sl: row.stop_loss_price ?? "" })}>{t("edit")}</Button>
+              {row.strategy_managed ? <span className="text-xs text-gray-500 dark:text-gray-400">{t("strategyManaged")}</span> : <Button size="sm" disabled={blocked || !enabled || row.state === "EXITING"} onClick={() => setDraft({ base: row.base, scope: scopeKey, target: row.protection_id, revision: row.revision, quantity: row.quantity, tp: row.take_profit_price ?? "", sl: row.stop_loss_price ?? "" })}>{t("edit")}</Button>}
               <Button size="sm" variant="outline" disabled={blocked || row.state === "EXITING"} onClick={() => recovery.send({ version: 1, owner, mode: "PAPER", key: window.crypto.randomUUID(), action: "CANCEL", target: row.protection_id, payload: { ...scope, expected_revision: row.revision } })}>{t("cancel")}</Button>
             </>}
           </div></TableCell>
         </TableRow>)}
         {orderRows.length === 0 && visibleRows.length === 0 && complete && <TableRow><TableCell className="paper-order-empty" colSpan={8}>{t(view === "OPEN" ? "emptyActivity" : "emptyActivityHistory")}</TableCell></TableRow>}
-        {!complete && !error && !orders.query.isError && <TableRow><TableCell className={cellClass} colSpan={8}>{mo("incompleteResults")}</TableCell></TableRow>}
+        {orders.query.hasNextPage && !error && !orders.query.isError && <TableRow><TableCell className={cellClass} colSpan={8}>{mo("incompleteResults")}</TableCell></TableRow>}
       </TableBody></Table>
     </div>
     {orders.query.hasNextPage && <div className="paper-order-pagination"><Button size="sm" variant="outline" disabled={orders.query.isFetching} onClick={() => void orders.query.fetchNextPage()}>{mo("more")}</Button></div>}

@@ -13,6 +13,7 @@ from tiewtrade.core.candle_preview import CandleObservation, Progress, compare
 from tiewtrade.core.market_data import CandleFinality, CandleSeries, CandleWindow, Timeframe
 from tiewtrade.infra.db.errors import InfraError
 from tiewtrade.infra.db.session import market_data_session
+from tiewtrade.infra.market_data import candle_closure
 from tiewtrade.infra.market_data.candle_preview import (
     PreviewLease,
     PreviewLeaseLostError,
@@ -67,7 +68,9 @@ class CandleSupervisor:
             if self.lease is None:
                 raise PreviewLeaseLostError()
             async with market_data_session(self.engine) as session:
+                await candle_closure.prepare_write(session, acquire=True)
                 self.lease = await connection(session, self.lease, connected, failure)
+                await candle_closure.connection_changed(session)
             self.rows.clear()
             self.dirty.clear()
             self.demands.clear()
@@ -142,6 +145,7 @@ class CandleSupervisor:
                 async with market_data_session(self.engine) as session:
                     await session.execute("SET LOCAL statement_timeout='500ms'")
                     await session.execute("SET LOCAL lock_timeout='200ms'")
+                    await candle_closure.prepare_write(session, acquire=True)
                     await flush(session, self.lease, rows)
                     if demands:
                         await enqueue_ended(session, self.lease, demands)
@@ -183,6 +187,7 @@ class CandleSupervisor:
                         ):
                             await session.execute("SET LOCAL statement_timeout='500ms'")
                             await session.execute("SET LOCAL lock_timeout='200ms'")
+                            await candle_closure.prepare_write(session, acquire=True)
                             await bootstrap_series(session, lease, series)
                     break
                 except (InfraError, TimeoutError):
@@ -194,7 +199,53 @@ class CandleSupervisor:
             async with asyncio.timeout(4), market_data_session(self.engine) as session:
                 await session.execute("SET LOCAL statement_timeout='500ms'")
                 await session.execute("SET LOCAL lock_timeout='200ms'")
+                await candle_closure.prepare_write(session, acquire=True)
                 await complete_bootstrap(session, self.lease)
+
+    async def _persist_closure(self, event: FeedCandle) -> None:
+        # Persist actual native x=true before the next candle replaces the slot.
+        # Sticky display hints never enter this path.
+        if event.generation != self.epoch or self.lease is None:
+            return
+        native = event.observation
+        c = native.candle
+        previous = self.rows.get((c.base, c.quote, c.timeframe))
+        prior = previous[0] if previous is not None else None
+        same_slot = prior is not None and prior.candle.open_at == c.open_at
+        progression = compare(prior, native) if same_slot and prior is not None else None
+        conflicts = progression is Progress.CONFLICT or (
+            native.closed_hint
+            and prior is not None
+            and not prior.closed_hint
+            and progression is Progress.OLDER
+        )
+        contradicts = (
+            prior is not None
+            and prior.closed_hint
+            and same_slot
+            and progression in (Progress.NEWER, Progress.CONFLICT)
+        )
+        if native.closed_hint or contradicts:
+            async with market_data_session(self.engine) as session:
+                active = await candle_closure.prepare_write(session, acquire=True)
+                if active and contradicts:
+                    await fence(session, self.lease)
+                    await candle_closure.invalidate(
+                        session,
+                        c,
+                        fetch_started_at=native.received_at,
+                        reason="NATIVE_AFTER_CLOSE",
+                        native=native,
+                    )
+                elif active:
+                    await candle_closure.record_candidate(
+                        session,
+                        self.lease,
+                        native,
+                        conflicting_with=prior if conflicts else None,
+                    )
+            if active and (contradicts or conflicts):
+                raise CandleConflictError()
 
     async def _consume(self) -> None:
         async with aclosing(self.feed.events(self.series)) as events:
@@ -219,6 +270,7 @@ class CandleSupervisor:
                         self.epoch = None
                 else:
                     async with self.lock:
+                        await self._persist_closure(event)
                         self.observe(event)
 
     async def _catalog_changed(self) -> None:
@@ -236,6 +288,7 @@ class CandleSupervisor:
         while True:
             await self._reload_catalog()
             async with market_data_session(self.engine) as session:
+                await candle_closure.prepare_write(session, acquire=True)
                 self.lease = await acquire(session, owner)
             if self.lease is None:
                 await asyncio.sleep(5)
@@ -264,7 +317,9 @@ class CandleSupervisor:
                 if self.lease is not None:
                     try:
                         async with market_data_session(self.engine) as session:
+                            await candle_closure.prepare_write(session, acquire=True)
                             await fence(session, self.lease)
+                            await candle_closure.connection_changed(session)
                             await session.execute(
                                 """UPDATE market_candle_feed_state SET
                               connected=false,lease_until=clock_timestamp() WHERE source=:source""",

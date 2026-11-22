@@ -117,6 +117,7 @@ def test_routes_that_renew_the_session_are_declared_and_few() -> None:
                 ("POST", "/trading-account/use"),
                 ("POST", "/paper-wallet"),
                 ("POST", "/paper-wallet/reset"),
+                ("POST", "/paper/bots/configurations"),
                 ("POST", "/paper/bots/requests"),
                 ("POST", "/live/bots/requests"),
                 ("POST", "/paper/orders"),

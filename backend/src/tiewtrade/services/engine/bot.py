@@ -9,7 +9,20 @@ from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncEngine
 
 from tiewtrade.core.orders import OrderError, TradingMode
-from tiewtrade.core.strategies import Strategy, StrategyDecision, evaluate_strategy
+from tiewtrade.core.strategies import (
+    Strategy,
+    StrategyDecision,
+    StrategyDocument,
+    evaluate_strategy,
+)
+from tiewtrade.core.strategy_config import (
+    CANDLE_STRATEGIES,
+    PAPER_TEST_STRATEGY,
+    STRATEGY_NAME,
+    PaperTestConfig,
+    RsiStepGridConfig,
+    strategy_initial_state,
+)
 from tiewtrade.infra.bots.catalog import apply_catalog_stop, due_catalog_stops
 from tiewtrade.infra.bots.claims import (
     BotClaimLostError,
@@ -18,6 +31,7 @@ from tiewtrade.infra.bots.claims import (
     finish_control,
     require_control_claim,
 )
+from tiewtrade.infra.bots.configurations import read_configuration
 from tiewtrade.infra.bots.decisions import BotDecisionConflictError
 from tiewtrade.infra.bots.evaluation import (
     PreparedQuote,
@@ -25,10 +39,16 @@ from tiewtrade.infra.bots.evaluation import (
     evaluate_published_quote,
     pause_missing_inputs,
 )
-from tiewtrade.infra.bots.inputs import BotInputsUnavailableError, read_bot_indicators
+from tiewtrade.infra.bots.inputs import (
+    BotInputsUnavailableError,
+    read_bot_indicators,
+    strategy_candle_identity,
+)
 from tiewtrade.infra.bots.start import PublishedConfiguration, apply_paper_start
 from tiewtrade.infra.db import DatabaseRole, InfraError, scan_session_bypassing_rls, user_session
 from tiewtrade.services.engine.bot_replacement import clear_replacement_stop
+from tiewtrade.strategies.paper_test.strategy import PaperTestStrategy
+from tiewtrade.strategies.rsi_step_grid.strategy import RsiStepGridStrategy
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,11 +66,21 @@ class PublishedStrategy:
 class StrategyRegistry:
     """Immutable executable definitions. Runtime state always lives in PostgreSQL."""
 
-    def __init__(self, entries: tuple[PublishedStrategy, ...] = ()) -> None:
+    def __init__(
+        self,
+        entries: tuple[PublishedStrategy, ...] = (),
+        *,
+        enable_f21: bool = False,
+        enable_paper_test: bool = False,
+    ) -> None:
+        self.enable_f21 = enable_f21
+        self.enable_paper_test = enable_paper_test
         by_ref: dict[str, PublishedStrategy] = {}
         implementations: dict[tuple[str, int], Strategy] = {}
         for entry in entries:
             descriptor = entry.definition.descriptor
+            if descriptor.name == PAPER_TEST_STRATEGY and not enable_paper_test:
+                raise ValueError("Paper test strategy is not enabled")
             identity = (descriptor.name, descriptor.version)
             if entry.definition.reference in by_ref:
                 raise ValueError("duplicate published configuration reference")
@@ -82,6 +112,30 @@ class StrategyRegistry:
         ):
             return None
         return strategy
+
+    def configured_implementation(
+        self,
+        name: str,
+        version: int,
+        configuration_version: int,
+        state_version: int,
+        configuration: StrategyDocument,
+    ) -> Strategy | None:
+        if self.enable_f21 and (name, version, configuration_version, state_version) == (
+            STRATEGY_NAME,
+            1,
+            1,
+            1,
+        ):
+            return RsiStepGridStrategy(RsiStepGridConfig.from_document(configuration))
+        if self.enable_paper_test and (name, version, configuration_version, state_version) == (
+            PAPER_TEST_STRATEGY,
+            1,
+            1,
+            1,
+        ):
+            return PaperTestStrategy(PaperTestConfig.from_document(configuration))
+        return self.implementation(name, version, configuration_version, state_version)
 
 
 @dataclass(frozen=True, slots=True)
@@ -122,6 +176,28 @@ async def run_bot_control_round(
                     entry = (
                         registry.configuration(reference) if isinstance(reference, str) else None
                     )
+                    if (
+                        entry is None
+                        and isinstance(reference, str)
+                        and (registry.enable_f21 or registry.enable_paper_test)
+                    ):
+                        config = await read_configuration(session, reference)
+                        strategy: RsiStepGridStrategy | PaperTestStrategy | None = None
+                        if isinstance(config, RsiStepGridConfig) and registry.enable_f21:
+                            strategy = RsiStepGridStrategy(config)
+                        elif isinstance(config, PaperTestConfig) and registry.enable_paper_test:
+                            strategy = PaperTestStrategy(config)
+                        if strategy is not None and config is not None:
+                            entry = PublishedStrategy(
+                                PublishedConfiguration(
+                                    reference,
+                                    strategy.descriptor,
+                                    config.pair,
+                                    config.document(),
+                                    strategy_initial_state(strategy.descriptor.name),
+                                ),
+                                strategy,
+                            )
                     if entry is None:
                         await finish_control(
                             session, claim, failure_code="BOT_STRATEGY_UNAVAILABLE"
@@ -171,6 +247,7 @@ async def _evaluate_bot_input(
             session,
             run_id,
             resolve=registry.implementation,
+            resolve_configuration=registry.configured_implementation,
             worker_id=worker_id,
             probe_stop_id=probe_stop_id,
         )
@@ -178,18 +255,38 @@ async def _evaluate_bot_input(
         return prepared
     dependencies = None
     descriptor = prepared.strategy.descriptor
-    if descriptor.required_indicators or descriptor.timeframe is not None:
+    feedback_only = descriptor.name in CANDLE_STRATEGIES and prepared.snapshot.feedback is not None
+    if not feedback_only and (descriptor.required_indicators or descriptor.timeframe is not None):
         try:
             async with user_session(engine, owner, role=DatabaseRole.ENGINE) as session:
-                dependencies = await read_bot_indicators(session, descriptor, prepared.snapshot)
+                dependencies = await read_bot_indicators(
+                    session, descriptor, prepared.snapshot, prepared.state
+                )
             prepared = replace(
                 prepared,
                 snapshot=replace(
                     prepared.snapshot,
                     indicators=dependencies.values,
                     indicator_revision=dependencies.revision,
+                    candle_input=dependencies.candle_input,
                 ),
             )
+            if dependencies.candle_input is not None:
+                identity = strategy_candle_identity(dependencies.candle_input)
+                async with user_session(engine, owner, role=DatabaseRole.ENGINE) as session:
+                    previous = (
+                        await session.execute(
+                            "SELECT id FROM bot_decisions WHERE run_id=:run AND "
+                            "input_identity=:input",
+                            {"run": run_id, "input": identity},
+                        )
+                    ).scalar_one_or_none()
+                prepared = replace(
+                    prepared,
+                    input_identity=identity,
+                    snapshot=replace(prepared.snapshot, input_identity=identity),
+                    previous_decision=None if previous is None else UUID(str(previous)),
+                )
         except BotInputsUnavailableError as error:
             if probe_stop_id is None:
                 async with user_session(engine, owner, role=DatabaseRole.ENGINE) as session:
@@ -218,6 +315,7 @@ async def _evaluate_bot_input(
                 session,
                 run_id,
                 resolve=registry.implementation,
+                resolve_configuration=registry.configured_implementation,
                 worker_id=worker_id,
                 probe_stop_id=probe_stop_id,
                 evaluation=QuoteEvaluation(prepared, decision),

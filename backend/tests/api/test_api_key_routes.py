@@ -451,6 +451,7 @@ def test_no_route_hands_back_the_secret(client: TestClient, ending: bool) -> Non
         assert client.get("/auth/me").status_code == 200
         path = (
             template.replace("{key_id}", key_id)
+            .replace("{identity}", key_id)
             .replace("{command_id}", key_id)
             .replace("{request_id}", key_id)
             .replace("{order_id}", key_id)
@@ -505,6 +506,9 @@ def test_no_route_hands_back_the_secret(client: TestClient, ending: bool) -> Non
                 assert (
                     response.status_code == 404
                 )  # Disabled by default; refusal must also be secret-free.
+            elif template == "/paper/bots/configurations/{identity}":
+                assert response.status_code == 404
+                assert response.json() == {"detail": "BOT_CONFIGURATION_NOT_FOUND"}
             elif template == "/paper-wallet/commands/{command_id}":
                 assert response.status_code == 404
                 assert response.json() == {"detail": "PAPER_COMMAND_NOT_FOUND"}

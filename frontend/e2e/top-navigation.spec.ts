@@ -458,11 +458,11 @@ test("dense workspace fills the real chart and preserves it across breakpoints",
   await expect(paperSubmit).toBeInViewport();
   await expect(paperSubmit).toBeDisabled();
   await expect(amount).toHaveValue("123.45");
-  await (await navigationLink(page, "/chart")).click();
-  await expect(page.locator(".trading-workspace canvas").first()).toBeVisible();
-  const standalone = page.locator(".trading-workspace .trading-chart-area");
-  await expect(standalone).toHaveCSS("padding", "0px");
-  await expect.poll(async () => standalone.evaluate(element => {
+  await (await navigationLink(page, "/live/trade")).click();
+  await expect(page.locator(".candlestick-embedded canvas").first()).toBeVisible();
+  const liveChartArea = page.locator(".candlestick-embedded .trading-chart-area");
+  await expect(liveChartArea).toHaveCSS("padding", "0px");
+  await expect.poll(async () => liveChartArea.evaluate(element => {
     const bounds = element.getBoundingClientRect();
     const frame = element.querySelector(".chart-frame")!.getBoundingClientRect();
     return Math.abs(bounds.height - frame.height);

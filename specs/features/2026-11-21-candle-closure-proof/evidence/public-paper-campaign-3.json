@@ -1,0 +1,87 @@
+{
+  "candidate_fingerprint": "eb4381c112c58619fdbfd06462182800769d81676778722e58e0d8334e0ccceb",
+  "result": "PARTIAL",
+  "boot_started_at": "2026-11-21T09:29:50.462936+00:00",
+  "phase": "OWNED_API_SETUP",
+  "builds": [
+    "READY",
+    "READY"
+  ],
+  "stopped_at": "2026-11-21T09:31:23.827278+00:00",
+  "build_jobs": [
+    {
+      "base": "ETH",
+      "timeframe": "1m",
+      "status": "READY",
+      "attempts_used": 0,
+      "failure_reason": null,
+      "failure_category": null,
+      "availability_deadline": "2026-11-21 09:39:57.080722+00:00",
+      "retry_not_before": null
+    },
+    {
+      "base": "BTC",
+      "timeframe": "1m",
+      "status": "READY",
+      "attempts_used": 0,
+      "failure_reason": null,
+      "failure_category": null,
+      "availability_deadline": "2026-11-21 09:39:57.080722+00:00",
+      "retry_not_before": null
+    }
+  ],
+  "execution_sources": [
+    {
+      "base": "BTC",
+      "ready": false,
+      "failure_code": "FEED_DISCONNECTED",
+      "generation": 2,
+      "last_input_id": 2044,
+      "received_at": "2026-11-21 09:30:58.129118+00:00",
+      "verified_at": "2026-11-21 09:30:58.028710+00:00"
+    },
+    {
+      "base": "ETH",
+      "ready": false,
+      "failure_code": "FEED_DISCONNECTED",
+      "generation": 2,
+      "last_input_id": 1911,
+      "received_at": "2026-11-21 09:31:20.839532+00:00",
+      "verified_at": "2026-11-21 09:31:20.768923+00:00"
+    }
+  ],
+  "closure_states": [],
+  "closure_results": [],
+  "closure_observations": [],
+  "decisions": [],
+  "links": [],
+  "canonical": [],
+  "ledger": [],
+  "executions": [],
+  "orders": [],
+  "positions": [],
+  "reservations": [],
+  "anchors": [],
+  "failure_type": "ApiRejectedError",
+  "failure_frames": [
+    {
+      "file": "profile_candle_closure.py",
+      "function": "main",
+      "line": 429
+    },
+    {
+      "file": "profile_candle_closure.py",
+      "function": "campaign",
+      "line": 352
+    },
+    {
+      "file": "profile_candle_closure.py",
+      "function": "request",
+      "line": 109
+    }
+  ],
+  "api_rejection": {
+    "path": "/paper/bots/configurations",
+    "status": 422
+  }
+}

@@ -63,6 +63,22 @@ FORBIDDEN_MARKERS = (
 )
 ALLOWED_INTERNAL_IMPORTS = frozenset(
     {
+        # Approved F21/Paper/closure paths; recursive network/secret checks still apply.
+        "tiewtrade.core.basket_disposals",
+        "tiewtrade.core.strategy_candles",
+        "tiewtrade.core.strategy_config",
+        "tiewtrade.infra.bots.baskets",
+        "tiewtrade.infra.bots.candle_sources",
+        "tiewtrade.infra.bots.configurations",
+        "tiewtrade.infra.bots.indicator_tail",
+        "tiewtrade.infra.indicators.codec",
+        "tiewtrade.infra.indicators.source",
+        "tiewtrade.infra.market_data.candle_closure",
+        "tiewtrade.infra.market_data.storage",
+        "tiewtrade.infra.market_data.indicator_reader",
+        "tiewtrade.infra.protections.entry_anchor",
+        "tiewtrade.strategies.paper_test.strategy",
+        "tiewtrade.strategies.rsi_step_grid.strategy",
         "tiewtrade.core.bots",
         "tiewtrade.core.strategies",
         "tiewtrade.core.indicators",

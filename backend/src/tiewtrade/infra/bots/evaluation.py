@@ -3,6 +3,7 @@
 import json
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import cast
 from uuid import UUID, uuid5
 
 from tiewtrade.core.bots import BotStatus, BotTransition, transition_bot
@@ -18,6 +19,15 @@ from tiewtrade.core.strategies import (
     StrategyInput,
     document_from_payload,
 )
+from tiewtrade.core.strategy_config import (
+    CANDLE_STRATEGIES,
+    decode_strategy_config,
+)
+from tiewtrade.infra.bots.candle_sources import (
+    candle_source_state,
+    ensure_candles,
+    price_recovery_at,
+)
 from tiewtrade.infra.bots.catalog import CatalogStopHint, apply_catalog_stop
 from tiewtrade.infra.bots.decisions import EvaluatedDecision, record_paper_decision
 from tiewtrade.infra.bots.feedback import (
@@ -25,7 +35,12 @@ from tiewtrade.infra.bots.feedback import (
     restore_status_feedback,
     status_feedback_payload,
 )
-from tiewtrade.infra.bots.inputs import IndicatorInputs, require_current_indicators
+from tiewtrade.infra.bots.inputs import (
+    IndicatorInputs,
+    require_current_candle,
+    require_current_indicators,
+    strategy_candle_identity,
+)
 from tiewtrade.infra.bots.system_stop import request_system_stop
 from tiewtrade.infra.db.session import UserSession
 from tiewtrade.infra.paper_orders.storage import lock_pair_catalog
@@ -51,6 +66,7 @@ class PreparedQuote:
     snapshot: StrategyInput
     configuration: StrategyDocument
     state: StrategyDocument
+    risk_revision: int | None
     previous_decision: UUID | None = None
 
 
@@ -86,6 +102,26 @@ async def _write_status(
             "reason": reason,
         },
     )
+    if target in (BotStatus.PAUSED, BotStatus.RECOVERING):
+        name = (
+            await session.execute(
+                "SELECT strategy_name FROM bot_runs WHERE id=:run", {"run": run_id}
+            )
+        ).scalar_one()
+        indicator_wait = reason in (
+            "INDICATOR_NOT_READY",
+            "INDICATOR_SOURCE_CHANGED",
+            "BOT_CANDLE_WARM_UP",
+            "BOT_CANDLE_NOT_READY",
+            "BOT_CANDLE_AUTHORITY_CHANGED",
+        )
+        if name in CANDLE_STRATEGIES and (target is BotStatus.RECOVERING or not indicator_wait):
+            await session.execute(
+                "UPDATE bot_strategy_progress SET eligible_after=clock_timestamp(),"
+                "recovery_required=true "
+                "WHERE run_id=:run",
+                {"run": run_id},
+            )
 
 
 async def evaluate_published_quote(
@@ -97,6 +133,8 @@ async def evaluate_published_quote(
     probe_stop_id: UUID | None = None,
     evaluation: QuoteEvaluation | None = None,
     indicator_inputs: IndicatorInputs | None = None,
+    resolve_configuration: Callable[[str, int, int, int, StrategyDocument], Strategy | None]
+    | None = None,
 ) -> UUID | PreparedQuote | None:
     """Prepare or fence a declared quote/feedback input and its dependencies."""
     # asyncpg UUID subclasses must not leak into the strict pure contract.
@@ -208,6 +246,27 @@ async def evaluate_published_quote(
             )
 
     async def ready() -> int:
+        if run.strategy_name in CANDLE_STRATEGIES and indicator_inputs is not None:
+            pinned = decode_strategy_config(run.strategy_name, config)
+            source = await candle_source_state(session, pinned.pair, pinned.timeframe, lock=True)
+            price_recovered = await price_recovery_at(session)
+            if source.ready:
+                await session.execute(
+                    """UPDATE bot_strategy_progress SET eligible_after=clock_timestamp(),
+                    recovery_required=false,source_recovery_at=:recovered,
+                    price_recovery_at=:price_recovered,indicator_source_epoch=:epoch
+                    WHERE run_id=:run AND (recovery_required OR
+                      price_recovery_at IS DISTINCT FROM CAST(:price_recovered AS timestamptz) OR
+                      indicator_source_epoch IS DISTINCT FROM CAST(:epoch AS uuid) OR
+                      (CAST(:recovered AS timestamptz) IS NOT NULL AND
+                        (source_recovery_at IS NULL OR source_recovery_at<:recovered)))""",
+                    {
+                        "run": run_id,
+                        "recovered": source.recovery_at,
+                        "price_recovered": price_recovered,
+                        "epoch": indicator_inputs.generation["source_epoch"],
+                    },
+                )
         if status is BotStatus.RUNNING:
             return run_revision
         target = transition_bot(
@@ -220,6 +279,20 @@ async def evaluate_published_quote(
     strategy = resolve(
         run.strategy_name, run.strategy_version, run.configuration_version, run.state_version
     )
+    if resolve_configuration is not None and run.strategy_name in CANDLE_STRATEGIES:
+        try:
+            pinned = document_from_payload(
+                json.loads(run.configuration_text), expected_version=run.configuration_version
+            )
+            strategy = resolve_configuration(
+                run.strategy_name,
+                run.strategy_version,
+                run.configuration_version,
+                run.state_version,
+                pinned,
+            )
+        except (ValueError, TypeError):
+            strategy = None
     if strategy is None:
         if probe_stop_id is not None:
             return None
@@ -237,6 +310,8 @@ async def evaluate_published_quote(
         state = document_from_payload(
             json.loads(run.state_text), expected_version=run.state_version
         )
+        if run.strategy_name in CANDLE_STRATEGIES:
+            decode_strategy_config(run.strategy_name, config).validate_checkpoint(state)
     except Exception:
         if probe_stop_id is not None:
             return None
@@ -251,6 +326,10 @@ async def evaluate_published_quote(
         return None
     if not (strategy.descriptor.quote_trigger or strategy.descriptor.execution_feedback_trigger):
         return None
+    if strategy.descriptor.name in CANDLE_STRATEGIES:
+        from tiewtrade.infra.bots.baskets import finish_empty_baskets
+
+        await finish_empty_baskets(session, run_id)
     pair = next(
         (
             p
@@ -353,15 +432,31 @@ async def evaluate_published_quote(
                 )
             if feedback is None:
                 return None
+        elif failed_input.startswith("candle:") and strategy.descriptor.name in CANDLE_STRATEGIES:
+            # Preparation loads the candle. The final proof must include that dependency.
+            if evaluation is not None and (
+                indicator_inputs is None or indicator_inputs.candle_input is None
+            ):
+                return None
         elif not failed_input.startswith("quote:"):
             return None
     if feedback is None and not strategy.descriptor.quote_trigger and probe_stop_id is None:
         return None
+    strategy_candle = feedback is None and strategy.descriptor.name in CANDLE_STRATEGIES
+    if evaluation is None and strategy_candle:
+        pinned_config = decode_strategy_config(run.strategy_name, config)
+        await ensure_candles(session, pair, pinned_config.timeframe, observation.trade_time)
     input_identity = (
         f"quote:{observation.source}:{observation.trade_id}"
         if feedback is None
         else feedback.input_identity
     )
+    if (
+        feedback is None
+        and indicator_inputs is not None
+        and indicator_inputs.candle_input is not None
+    ):
+        input_identity = strategy_candle_identity(indicator_inputs.candle_input)
     previous = (
         await session.execute(
             "SELECT id FROM bot_decisions WHERE run_id=:run AND input_identity=:input",
@@ -370,7 +465,7 @@ async def evaluate_published_quote(
     ).scalar_one_or_none()
     needs_indicators = (
         bool(strategy.descriptor.required_indicators) or strategy.descriptor.timeframe is not None
-    )
+    ) and not (strategy.descriptor.name in CANDLE_STRATEGIES and feedback is not None)
     if previous is not None and probe_stop_id is None and not needs_indicators:
         await ready()
         return UUID(str(previous))
@@ -404,9 +499,11 @@ async def evaluate_published_quote(
         feedback=None if feedback is None else feedback.value,
         indicators=() if indicator_inputs is None else indicator_inputs.values,
         indicator_revision=None if indicator_inputs is None else indicator_inputs.revision,
+        candle_input=None if indicator_inputs is None else indicator_inputs.candle_input,
     )
     if needs_indicators and indicator_inputs is not None:
         await require_current_indicators(session, indicator_inputs)
+        await require_current_candle(session, snapshot, indicator_inputs)
     prepared = PreparedQuote(
         run_id,
         run_revision,
@@ -417,6 +514,7 @@ async def evaluate_published_quote(
         snapshot,
         config,
         state,
+        setting.revision if strategy_candle else None,
         None if previous is None else UUID(str(previous)),
     )
     if evaluation is None:
@@ -486,6 +584,49 @@ async def evaluate_published_quote(
                 "account_revision": snapshot.account_revision,
                 "observed_at": snapshot.observed_at.isoformat(),
                 "indicator_revision": snapshot.indicator_revision or "",
+                **(
+                    {
+                        "candle_open_at": snapshot.candle_input.candle.open_at.isoformat(),
+                        "guard_revision": snapshot.candle_input.guard_revision,
+                        "closure_proof_id": (
+                            ""
+                            if snapshot.candle_input.closure_proof is None
+                            else snapshot.candle_input.closure_proof[0]
+                        ),
+                        "closure_policy_version": (
+                            0
+                            if snapshot.candle_input.closure_proof is None
+                            else snapshot.candle_input.closure_proof[1]
+                        ),
+                        "closure_fingerprint": (
+                            ""
+                            if snapshot.candle_input.closure_proof is None
+                            else snapshot.candle_input.closure_proof[2]
+                        ),
+                        "indicator_generation": str(indicator_inputs.generation["id"]),
+                        "rollout_epoch": str(indicator_inputs.rollout_epoch),
+                        "source_fence": (
+                            indicator_inputs.tail.fence.revision
+                            if indicator_inputs.tail
+                            else int(indicator_inputs.generation["source_fence"])
+                        ),
+                        "indicator_prefix_end": (
+                            indicator_inputs.tail.prefix_end.isoformat()
+                            if indicator_inputs.tail is not None
+                            and indicator_inputs.tail.prefix_end is not None
+                            else ""
+                        ),
+                        "risk_revision": setting.revision,
+                        "lease_generation": generation,
+                        "signal_atr": cast(
+                            Money, dict(snapshot.indicators)["atr14"].value
+                        ).as_parts()["amount"],
+                    }
+                    if snapshot.candle_input is not None
+                    and indicator_inputs is not None
+                    and generation is not None
+                    else {}
+                ),
             },
         ),
     )

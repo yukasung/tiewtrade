@@ -1,0 +1,15 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.12.15, pytest-9.1.1, pluggy-1.6.0 -- /Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-candle-closure-proof/backend/.venv/bin/python
+cachedir: .pytest_cache
+hypothesis profile 'default'
+rootdir: /Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-candle-closure-proof/backend
+configfile: pyproject.toml
+plugins: asyncio-1.4.0, hypothesis-6.168.1, anyio-4.15.1
+asyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 3 items
+
+backend/tests/infra/realtime/test_notifications.py::test_subscribe_waits_for_server_acknowledgement PASSED [ 33%]
+backend/tests/infra/realtime/test_notifications.py::test_subscriber_requires_redis_pong_when_channel_is_idle PASSED [ 66%]
+backend/tests/infra/realtime/test_notifications.py::test_actual_redis_ack_idle_pong_and_public_invalidation PASSED [100%]
+
+============================== 3 passed in 3.39s ===============================

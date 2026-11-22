@@ -14,13 +14,11 @@ import {
 } from "./auth";
 import { TotpPanel } from "./TotpPanel";
 import { AccountSession } from "./AccountSession";
-import { CandlestickChartPanel } from "./CandlestickChartPanel";
 import { TradingAccountPanel } from "./TradingAccountPanel";
 import { AccountLayout } from "./layout/AccountLayout";
 import { PlatformKillSwitchPanel } from "./PlatformKillSwitchPanel";
 import { AccountPages } from "./AccountPages";
 import { SupportedSymbolPanel } from "./SupportedSymbolPanel";
-import { chartText } from "./chartMessages";
 import { ApiKeyPanel } from "./ApiKeyPanel";
 
 import { AuthLayout } from "./layout/AuthLayout";
@@ -41,6 +39,7 @@ type Mode = "login" | "register";
  */
 export function AuthPanel(): JSX.Element {
   const [identity, setIdentity] = useState<Me | null>(null);
+  const [checkingSession, setCheckingSession] = useState(true);
   const [mode, setMode] = useState<Mode>("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -53,12 +52,13 @@ export function AuthPanel(): JSX.Element {
   const [codesLeft, setCodesLeft] = useState<number | null>(null);
 
   useEffect(() => {
+    let current = true;
     void primeCsrfToken()
       .then(fetchIdentity)
-      .then(setIdentity)
-      .catch(() => {
-        setIdentity(null);
-      });
+      .then(found => { if (current) setIdentity(found); })
+      .catch(() => { if (current) setIdentity(null); })
+      .finally(() => { if (current) setCheckingSession(false); });
+    return () => { current = false; };
   }, []);
 
   async function run(action: () => Promise<unknown>): Promise<void> {
@@ -110,6 +110,10 @@ export function AuthPanel(): JSX.Element {
       setBusy(false);
     }
   }
+
+  if (checkingSession) return <div role="status" className="p-6 text-sm text-gray-500 dark:text-gray-400">
+    {t("checkingSession")}
+  </div>;
 
   if (secondStep && identity === null) {
     return (
@@ -225,9 +229,6 @@ export function AuthPanel(): JSX.Element {
             {page === "live/trade" && <LiveTradePage owner={identity.user_id}/>}
             {page === "supported-symbols" && <SupportedSymbolPanel />}
             {page === "system-safety" && identity.platform_role && <PlatformKillSwitchPanel owner={identity.user_id} role={identity.platform_role === "PLATFORM_OWNER" ? "PLATFORM_OWNER" : "PLATFORM_ADMIN"} />}
-            {page === "chart" && (import.meta.env.VITE_CHART_ENABLED === "1"
-              ? <CandlestickChartPanel userId={identity.user_id}/>
-              : <p role="status">{chartText("errors.CHART_DISABLED")}</p>)}
           </div>
         </AccountLayout>}</AccountPages>
       </AccountSession>

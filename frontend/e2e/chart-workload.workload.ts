@@ -102,18 +102,18 @@ test("F-12 V-17 controlled authenticated browser workload", async ({ browser }) 
     // Exercise cleanup before starting the concurrent workload. Repeatedly
     // remounting one client as fast as navigation permits is a lifecycle check,
     // not an extra source of unbounded traffic during the 20-client measurement.
-    await pages[0]!.goto("/chart");
+    await pages[0]!.goto("/live/trade");
     await expect(pages[0]!.getByTestId("candlestick-chart")).toBeVisible({ timeout: 30_000 });
     for (let cycle = 0; cycle < lifecycleCycles; cycle += 1) {
       await pages[0]!.goto("/account");
-      await pages[0]!.goto("/chart");
+      await pages[0]!.goto("/live/trade");
       await expect(pages[0]!.getByTestId("candlestick-chart")).toBeVisible();
     }
 
     // Mount the remaining clients one at a time so their independent 2-second
     // poll phases stay distributed instead of forming a synchronized startup herd.
     for (const page of pages.slice(1)) {
-      await page.goto("/chart");
+      await page.goto("/live/trade");
       await expect(page.getByTestId("candlestick-chart")).toBeVisible({ timeout: 30_000 });
       await page.waitForTimeout(100);
     }

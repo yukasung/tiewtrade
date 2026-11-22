@@ -1,0 +1,106 @@
+{
+  "original_report": "public-paper-campaign-3.json",
+  "original_sha256": "baf392acaab37d686c75464e2211eda254365b1ee9acc3def90919d1b6ebc010",
+  "recollected_at": "2026-11-21T09:34:17.263208+00:00",
+  "purpose": "Read-only corrected financial evidence; original migrator queries were filtered by FORCE RLS. This is not a new source/trading campaign.",
+  "users": [
+    {
+      "id": "a6295d22-1ee9-4826-86e4-f9febfce47a9"
+    },
+    {
+      "id": "167e2a21-a0e0-4627-abee-6e73501869e3"
+    }
+  ],
+  "wallets": [
+    {
+      "id": "bcb2a27d-c2dc-48fa-bc51-1c021e9b45a4",
+      "user_id": "a6295d22-1ee9-4826-86e4-f9febfce47a9"
+    },
+    {
+      "id": "ede77250-c988-44ac-88d9-aa3e2276b239",
+      "user_id": "167e2a21-a0e0-4627-abee-6e73501869e3"
+    }
+  ],
+  "runs": [],
+  "build_jobs": [
+    {
+      "base": "ETH",
+      "timeframe": "1m",
+      "status": "READY",
+      "attempts_used": 0,
+      "failure_reason": null,
+      "failure_category": null,
+      "availability_deadline": "2026-11-21 09:39:57.080722+00:00",
+      "retry_not_before": null
+    },
+    {
+      "base": "BTC",
+      "timeframe": "1m",
+      "status": "READY",
+      "attempts_used": 0,
+      "failure_reason": null,
+      "failure_category": null,
+      "availability_deadline": "2026-11-21 09:39:57.080722+00:00",
+      "retry_not_before": null
+    }
+  ],
+  "execution_sources": [
+    {
+      "base": "BTC",
+      "ready": false,
+      "failure_code": "FEED_DISCONNECTED",
+      "generation": 2,
+      "last_input_id": 2044,
+      "received_at": "2026-11-21 09:30:58.129118+00:00",
+      "verified_at": "2026-11-21 09:30:58.028710+00:00"
+    },
+    {
+      "base": "ETH",
+      "ready": false,
+      "failure_code": "FEED_DISCONNECTED",
+      "generation": 2,
+      "last_input_id": 1911,
+      "received_at": "2026-11-21 09:31:20.839532+00:00",
+      "verified_at": "2026-11-21 09:31:20.768923+00:00"
+    }
+  ],
+  "closure_states": [],
+  "closure_results": [],
+  "closure_observations": [],
+  "decisions": [],
+  "links": [],
+  "canonical": [],
+  "ledger": [
+    {
+      "id": "ede3b00c-5d51-43f3-89c1-66221f5fa869",
+      "user_id": "a6295d22-1ee9-4826-86e4-f9febfce47a9",
+      "wallet_id": "bcb2a27d-c2dc-48fa-bc51-1c021e9b45a4",
+      "episode_id": "76d11f52-3815-4b8d-978b-8214dd67cfa1",
+      "mode": "PAPER",
+      "kind": "EXTERNAL_CAPITAL",
+      "amount": "1E+4",
+      "currency": "USDT",
+      "source_command_id": "d89344ed-0ee9-419b-b861-b78f52f2a3e5",
+      "created_at": "2026-11-21 09:31:21.336649+00:00",
+      "source_position_event_id": null
+    },
+    {
+      "id": "e2da8873-80b2-47fc-95b9-e6ef222915b8",
+      "user_id": "167e2a21-a0e0-4627-abee-6e73501869e3",
+      "wallet_id": "ede77250-c988-44ac-88d9-aa3e2276b239",
+      "episode_id": "0f0f3403-4e09-41d7-bd2d-a1eb6ba3ed36",
+      "mode": "PAPER",
+      "kind": "EXTERNAL_CAPITAL",
+      "amount": "1E+4",
+      "currency": "USDT",
+      "source_command_id": "9d53289b-b684-4113-b5cf-bfbf173bf57c",
+      "created_at": "2026-11-21 09:31:23.031057+00:00",
+      "source_position_event_id": null
+    }
+  ],
+  "executions": [],
+  "orders": [],
+  "positions": [],
+  "reservations": [],
+  "anchors": []
+}

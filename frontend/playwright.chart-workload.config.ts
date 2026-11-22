@@ -17,7 +17,6 @@ export default defineConfig({
     env: {
       ...process.env,
       API_URL: process.env.CHART_WORKLOAD_API_URL ?? "",
-      VITE_CHART_ENABLED: "1",
     },
     reuseExistingServer: false,
   },

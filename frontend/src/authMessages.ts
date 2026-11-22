@@ -1,6 +1,7 @@
 import { createInstance } from "i18next";
 
 const th = {
+  checkingSession: "กำลังตรวจสอบการเข้าสู่ระบบ…",
   login: "เข้าสู่ระบบ",
   register: "สมัครใช้งาน",
   registerSubmit: "สมัคร",
@@ -52,6 +53,7 @@ const th = {
   error: "ผิดพลาด: {{message}}",
 };
 const en: typeof th = {
+  checkingSession: "Checking your session…",
   login: "Sign in",
   register: "Create account",
   registerSubmit: "Register",

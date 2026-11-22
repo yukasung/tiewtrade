@@ -43,6 +43,7 @@ from tiewtrade.infra.audit import (
 from tiewtrade.infra.bots.authority import (
     BotOrderAuthority,
     blocked_paper_openings,
+    invalidated_strategy_openings,
     paper_bot_authority,
 )
 from tiewtrade.infra.db.session import UserSession, require_user_session
@@ -62,6 +63,7 @@ from tiewtrade.infra.paper_orders.dispatch import (
     finish_claim,
     require_claim,
     reschedule_processed_orders,
+    submit_cancel,
 )
 from tiewtrade.infra.paper_orders.executions import execution_payload, stage_fill_cash
 from tiewtrade.infra.paper_orders.initialization import enable_financial_writer
@@ -256,6 +258,34 @@ async def _process_new(
         session, row["wallet_id"], checkpoint.state, catalog, latest_removed_revision
     )
     state = await cancel_stopped_remainders(session, row["wallet_id"], state)
+    invalid_strategy = await invalidated_strategy_openings(
+        session,
+        episode_id=intent.scope.episode_id,
+        order_ids=tuple(
+            order.intent.order_id
+            for order in state.orders
+            if order.intent.origin is OrderOrigin.BOT
+            and order.intent.side is ExecutionSide.BUY
+            and not order.status.terminal
+        ),
+    )
+    if invalid_strategy:
+        for order_id in sorted(invalid_strategy):
+            protection_id = (
+                await session.execute(
+                    "SELECT id FROM paper_protections WHERE entry_order_id=:order",
+                    {"order": order_id},
+                )
+            ).scalar_one_or_none()
+            if protection_id is None:
+                raise OrderWorkerIntegrityError("F-21 accepted entry protection is unavailable")
+            await submit_cancel(
+                session,
+                wallet_id=row["wallet_id"],
+                episode_id=intent.scope.episode_id,
+                order_id=order_id,
+                idempotency_key=uuid5(UUID(str(protection_id)), "cancel-entry"),
+            )
     result_exists = row["result_state"] is not None
     if (
         not result_exists
@@ -767,7 +797,9 @@ async def _apply_inputs(
                 )
             if result.status is not PositionWriteStatus.APPLIED:
                 raise OrderWorkerIntegrityError(f"fill {index} did not apply atomically")
-            await record_protection_fill(session, order_id, fact)
+            await record_protection_fill(
+                session, order_id, fact, tick=record.metadata.market.price_tick
+            )
         if transition.fills or not fenced:
             # BUY or SELL changes the authoritative book and may latch the
             # limit. The next input must resolve that new financial revision.

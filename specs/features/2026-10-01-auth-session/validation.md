@@ -177,3 +177,9 @@ uv run pytest
 
 และใน CI ต้องเขียวครบทุกงานของ `ci.yml`: `config`, `backend`, `api-contract`,
 `frontend`, `e2e`, `docker` ไม่มีข้อยกเว้น (`testing.md` หัวข้อ 1)
+
+### Reload session-check regression — 2026-11-21 (Feature)
+
+Delay the initial identity response for authenticated and unauthenticated users. The login form must remain absent until identity resolves. Verify the authenticated account appears directly, 401 shows login after the check, and existing logout/cache invalidation and second-step flows remain covered by the affected tests. Check React StrictMode/unmount handling and TypeScript/ESLint on the changed files.
+
+The six affected auth/session suites passed 30/30. The final App-only rerun passed 4/4 after synchronizing the delayed-session test with the actual pending identity request. TypeScript, targeted ESLint and diff checks passed. Authenticated Chromium page reload delayed the real /auth/me response by 1.5 seconds and watched DOM mutations from document initialization: the signed-out/login view never rendered before the authenticated page returned (/tmp/f05-session-browser.log). Server httpOnly cookies and PostgreSQL session authority remain unchanged. Required CI and owner acceptance remain pending.

@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
 import { PaperTradingActivity } from "../src/PaperTradingActivity";
 import { protectionText as pt } from "../src/protectionMessages";
@@ -51,7 +51,7 @@ it("renders orders and monitored conditions together without routing their cance
   const onCancelOrder = vi.fn();
   render(<QueryClientProvider client={client}><PaperTradingActivity owner="owner" base="BTC" scope={{ expected_wallet_id: "wallet", expected_episode_id: "episode" }}
     visible view="OPEN" onViewChange={() => {}} disabled={false} ready error={false} enabled available="0" ordersDisabled={false} onCancelOrder={onCancelOrder}
-    rows={[{ protection_id: "shared-id", wallet_id: "wallet", episode_id: "episode", mode: "PAPER", base: "ETH", quote: "USDT", quantity: "1.2345", protected_quantity: "1.23", executable_quantity: "1.23", step_residual_quantity: "0.0045", state: "ARMED", revision: 4, take_profit_price: "5000", stop_loss_price: "2500", conflicted: false, failure_code: null, market_ready: true, entry_order_id: null, snapshot_at: stamp }]}/></QueryClientProvider>);
+    rows={[{ protection_id: "shared-id", wallet_id: "wallet", episode_id: "episode", mode: "PAPER", base: "ETH", quote: "USDT", quantity: "1.2345", protected_quantity: "1.23", executable_quantity: "1.23", step_residual_quantity: "0.0045", state: "ARMED", revision: 4, take_profit_price: "5000", stop_loss_price: "2500", conflicted: false, failure_code: null, market_ready: true, strategy_managed: false, entry_order_id: null, snapshot_at: stamp }]}/></QueryClientProvider>);
   expect(await screen.findByText("BTC/USDT")).toBeTruthy();
   expect(screen.getByText("ETH/USDT")).toBeTruthy();
   expect(screen.getAllByRole("table")).toHaveLength(1);
@@ -63,5 +63,23 @@ it("renders orders and monitored conditions together without routing their cance
   fireEvent.click(screen.getByRole("button", { name: t("cancel") }));
   expect(onCancelOrder).toHaveBeenCalledTimes(1);
   expect(onCancelOrder).toHaveBeenCalledWith(order("ACCEPTED", "shared-id"));
+  client.clear();
+});
+
+
+it("waits for the first order page before claiming empty or more records", async () => {
+  let resolve!: (response: Response) => void;
+  vi.stubGlobal("fetch", vi.fn((url: string) => url.includes("/paper/orders?")
+    ? new Promise<Response>(done => { resolve = done; })
+    : Promise.resolve(new Response(JSON.stringify({ requests: [], next_cursor: null })))));
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  render(<QueryClientProvider client={client}><PaperTradingActivity owner="owner" base="BTC" scope={{ expected_wallet_id: "wallet", expected_episode_id: "episode" }}
+    visible view="OPEN" onViewChange={() => {}} disabled={false} ready error={false} enabled available="0" rows={[]} ordersDisabled={false} onCancelOrder={() => {}}/></QueryClientProvider>);
+  expect(screen.queryByText(t("incompleteResults"))).toBeNull();
+  expect(screen.queryByText(pt("emptyActivity"))).toBeNull();
+  await waitFor(() => expect(resolve).toBeTypeOf("function"));
+  await act(async () => { resolve(new Response(JSON.stringify({ orders: [], snapshot_at: stamp, next_cursor: null }))); await Promise.resolve(); });
+  expect(await screen.findByText(pt("emptyActivity"))).toBeTruthy();
+  expect(screen.queryByText(t("incompleteResults"))).toBeNull();
   client.clear();
 });

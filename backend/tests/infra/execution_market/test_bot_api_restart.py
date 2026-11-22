@@ -18,7 +18,7 @@ from tests.infra.positions.conftest import create_production_wallet
 from tests.infra.risk_limits.test_execution import runtime
 from tiewtrade.infra.db import DatabaseRole, user_session
 from tiewtrade.infra.paper_wallet import get_wallet
-from tiewtrade.services.engine.bot import run_bot_control_round
+from tiewtrade.services.engine.bot import StrategyRegistry, run_bot_control_round
 
 pytestmark = pytest.mark.usefixtures("internal_database")
 
@@ -26,11 +26,15 @@ CHILD = """
 import asyncio, sys
 import uvicorn
 from tiewtrade.services.api.app import app
+app.state.bot_f21_enabled = sys.argv[2] == 'f21'
 app.state.bot_paper_configurations = frozenset({'fixture-v1','unavailable-v1'})
 @app.middleware('http')
 async def hold_committed_ack(request, call_next):
+    start = request.url.path == '/paper/bots/requests'
+    if start and request.headers.get('X-Test-Hold-Before') == '1':
+        await asyncio.sleep(60)
     response = await call_next(request)
-    if request.url.path == '/paper/bots/requests' and request.headers.get('X-Test-Hold-Ack') == '1':
+    if start and request.headers.get('X-Test-Hold-Ack') == '1':
         await asyncio.sleep(60)
     return response
 uvicorn.run(app, host='127.0.0.1', port=int(sys.argv[1]), log_level='error')
@@ -38,12 +42,13 @@ uvicorn.run(app, host='127.0.0.1', port=int(sys.argv[1]), log_level='error')
 
 
 @asynccontextmanager
-async def api_process(port: int) -> AsyncIterator[None]:
+async def api_process(port: int, *, enable_f21: bool = False) -> AsyncIterator[None]:
     process = await asyncio.create_subprocess_exec(
         sys.executable,
         "-c",
         CHILD,
         str(port),
+        "f21" if enable_f21 else "f20",
         stdout=asyncio.subprocess.DEVNULL,
         stderr=asyncio.subprocess.DEVNULL,
     )
@@ -199,3 +204,107 @@ async def test_api_restart_recovers_committed_start_by_key_without_duplicate_run
                 ).scalar_one() == count
             current = await get_wallet(session)
             assert current is not None and current.balance == wallet.balance
+
+
+@pytest.mark.parametrize("after_commit", [False, True], ids=["before-commit", "after-commit"])
+async def test_f21_recovers_start_after_http_timeout(
+    api_engine: AsyncEngine,
+    engine_engine: AsyncEngine,
+    migrator_engine: AsyncEngine,
+    scan_engine: AsyncEngine,
+    after_commit: bool,
+) -> None:
+    with socket.socket() as listener:
+        listener.bind(("127.0.0.1", 0))
+        port = listener.getsockname()[1]
+    address = f"http://127.0.0.1:{port}"
+    config_key, start_key = uuid4(), uuid4()
+    config = {"base": "BTC", "capital_per_entry": "100", "max_entries": 3}
+    async with api_process(port, enable_f21=True), httpx.AsyncClient(base_url=address) as client:
+        await client.get("/auth/csrf")
+        auth = await client.post(
+            "/auth/register",
+            json={
+                "email": f"f21-{uuid4().hex}@example.com",
+                "password": "isolated-process-fixture-password",
+            },
+            headers={"X-CSRF-Token": client.cookies["tiewtrade_csrf"]},
+        )
+        assert auth.status_code == 201
+        owner = UUID((await client.get("/auth/me")).json()["user_id"])
+        cookies = dict(client.cookies)
+        headers = {"X-CSRF-Token": cookies["tiewtrade_csrf"]}
+        config_headers = {**headers, "Idempotency-Key": str(config_key)}
+        start_headers = {**headers, "Idempotency-Key": str(start_key)}
+        created = await client.post(
+            "/paper/bots/configurations", json=config, headers=config_headers
+        )
+        assert created.status_code == 200
+        ref = created.json()["reference"]
+    wallet = await create_production_wallet(api_engine, engine_engine, scan_engine, owner)
+    payload = {"strategy_config_ref": ref}
+    path = "/paper/bots/requests"
+    lookup = f"{path}/by-key/{start_key}"
+    async with runtime(
+        api_engine, engine_engine, migrator_engine, owner, wallet, limit="1000", account_use="BOT"
+    ) as source:
+        async with (
+            api_process(port, enable_f21=True),
+            httpx.AsyncClient(base_url=address, cookies=cookies) as client,
+        ):
+            hold = "X-Test-Hold-Ack" if after_commit else "X-Test-Hold-Before"
+            with pytest.raises(httpx.ReadTimeout):
+                await client.post(
+                    path, json=payload, headers={**start_headers, hold: "1"}, timeout=0.3
+                )
+            if after_commit:
+                # Verify commit before killing the API; an arbitrary slow request is insufficient.
+                for _ in range(50):
+                    recovered = await client.get(lookup)
+                    if recovered.status_code == 200:
+                        break
+                    await asyncio.sleep(0.05)
+                assert recovered.status_code == 200 and recovered.json()["pending"]
+        async with (
+            api_process(port, enable_f21=True),
+            httpx.AsyncClient(base_url=address, cookies=cookies) as client,
+        ):
+            stored = await client.get("/paper/bots/configurations/" + ref[4:])
+            assert stored.status_code == 200 and stored.json() == created.json()
+            replay = await client.post(
+                "/paper/bots/configurations", json=config, headers=config_headers
+            )
+            assert replay.status_code == 200 and replay.json() == created.json()
+            before = await client.get(lookup)
+            assert before.status_code == (200 if after_commit else 404)
+            retry = await client.post(path, json=payload, headers=start_headers)
+            assert retry.status_code in (200, 202) and retry.json()["pending"]
+            if after_commit:
+                assert retry.json() == recovered.json()
+            await source.price("100")
+            controls = await run_bot_control_round(
+                engine=engine_engine,
+                scan_engine=scan_engine,
+                registry=StrategyRegistry(enable_f21=True),
+            )
+            assert controls.applied == 1 and controls.refused == 0
+            receipt = await client.get(lookup)
+            assert (
+                receipt.status_code == 200
+                and receipt.json()["run_id"]
+                and not receipt.json()["pending"]
+            )
+            replay = await client.post(path, json=payload, headers=start_headers)
+            assert replay.status_code == 200 and replay.json() == receipt.json()
+        async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+            for table, count in (
+                ("bot_strategy_configurations", 1),
+                ("bot_control_requests", 1),
+                ("bot_control_results", 1),
+                ("bot_runs", 1),
+                ("paper_order_commands", 0),
+                ("paper_position_events", 0),
+            ):
+                assert (
+                    await session.execute(f"SELECT count(*) FROM {table}")
+                ).scalar_one() == count

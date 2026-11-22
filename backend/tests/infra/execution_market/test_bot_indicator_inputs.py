@@ -46,28 +46,128 @@ from tiewtrade.services.engine.bot import run_bot_quote
 pytestmark = pytest.mark.usefixtures("internal_database")
 
 
-async def seed_prepared(migrator: AsyncEngine, bars: int, reference: datetime) -> None:
+def fixture_candles(
+    start: datetime,
+    closes: tuple[Money, ...],
+    *,
+    spread: Money,
+    timeframe: Timeframe = Timeframe.M1,
+) -> tuple[Candle, ...]:
+    candles = []
+    previous = closes[0]
+    for index, close in enumerate(closes):
+        opened = advance(start, timeframe, index)
+        closed = advance(opened, timeframe, 1)
+        candles.append(
+            Candle(
+                "BTC",
+                "USDT",
+                timeframe,
+                opened,
+                closed,
+                previous,
+                max(previous, close) + spread,
+                min(previous, close) - spread,
+                close,
+                Quantity.of(10, "BTC"),
+                CandleFinality.CLOSED,
+                closed,
+            )
+        )
+        previous = close
+    return tuple(candles)
+
+
+async def append_recorded_candle(market: AsyncEngine, candle: Candle) -> None:
+    async with market_data_session(market) as session:
+        await begin_source_write(session)
+        await session.execute(
+            """INSERT INTO market_candles(source,base,quote,timeframe,open_at,end_at,
+            open,high,low,close,volume,finality,observed_at,fetch_started_at,
+            last_checked_at,ingestion_generation)
+            VALUES('primary_spot','BTC','USDT','1m',:start,:end,:open,:high,:low,:close,
+              10,:finality,:observed,:observed,clock_timestamp(),1)
+            ON CONFLICT(source,base,quote,timeframe,open_at) DO UPDATE SET
+              open=excluded.open,high=excluded.high,low=excluded.low,close=excluded.close,
+              finality=excluded.finality,observed_at=excluded.observed_at,
+              last_checked_at=excluded.last_checked_at""",
+            {
+                "start": candle.open_at,
+                "end": candle.end_at,
+                "observed": candle.observed_at,
+                "finality": candle.finality.value,
+                **{
+                    name: getattr(candle, name).as_parts()["amount"]
+                    for name in ("open", "high", "low", "close")
+                },
+            },
+        )
+
+
+async def seed_prepared(
+    migrator: AsyncEngine,
+    bars: int,
+    reference: datetime,
+    *,
+    timeframe: Timeframe = Timeframe.M1,
+    closes: tuple[Money, ...] | None = None,
+) -> None:
     """Reader fixture: real source journal and exact F-11 codec, no production activation."""
     market = create_engine_for(DatabaseRole.MARKET_DATA)
     try:
         async with market_data_session(market) as session:
             await begin_source_write(session)
             now: datetime = (await session.execute("SELECT clock_timestamp()")).scalar_one()
-            end = align_floor(reference, Timeframe.M1)
-            start = advance(end, Timeframe.M1, -bars)
+            end = align_floor(reference, timeframe)
+            start = advance(end, timeframe, -bars)
+            if closes is not None and len(closes) != bars:
+                raise ValueError("one close per completed candle required")
+            candles = fixture_candles(
+                start,
+                closes or (Money.of(100, "USDT"),) * bars,
+                timeframe=timeframe,
+                spread=Money.of(0 if closes is None else 10, "USDT"),
+            )
             await session.execute(
                 """INSERT INTO market_candles(source,base,quote,timeframe,open_at,end_at,
                    open,high,low,close,volume,finality,observed_at,fetch_started_at,
                    last_checked_at,ingestion_generation)
-                   SELECT 'primary_spot','BTC','USDT','1m',g,g+interval '1 minute',
-                   100,100,100,100,10,'CLOSED',g+interval '1 minute',g+interval '1 minute',:now,1
-                   FROM generate_series(CAST(:lo AS timestamptz),
-                     CAST(:hi AS timestamptz)-interval '1 minute',interval '1 minute') g""",
-                {"lo": start, "hi": end, "now": now},
+                   SELECT 'primary_spot','BTC','USDT',:tf,c.open_at,c.end_at,
+                     c.open,c.high,c.low,c.close,10,'CLOSED',c.end_at,c.end_at,:now,1
+                   FROM jsonb_to_recordset(CAST(:candles AS jsonb)) AS c(
+                     open_at timestamptz,end_at timestamptz,open numeric,high numeric,
+                     low numeric,close numeric)
+                   ON CONFLICT(source,base,quote,timeframe,open_at) DO UPDATE SET
+                     open=excluded.open,high=excluded.high,low=excluded.low,close=excluded.close,
+                     last_checked_at=excluded.last_checked_at""",
+                {
+                    "tf": timeframe.value,
+                    "candles": json.dumps(
+                        [
+                            {
+                                "open_at": c.open_at.isoformat(),
+                                "end_at": c.end_at.isoformat(),
+                                **{
+                                    name: getattr(c, name).as_parts()["amount"]
+                                    for name in ("open", "high", "low", "close")
+                                },
+                            }
+                            for c in candles
+                        ]
+                    ),
+                    "now": now,
+                },
+            )
+            await session.execute(
+                """INSERT INTO market_candle_demand(source,base,quote,timeframe,
+                desired_start,desired_end,leased_start,leased_end,cursor,status,checked_at)
+                VALUES('primary_spot','BTC','USDT',:tf,:lo,:hi,:lo,:hi,:hi,'COMPLETE',:now)
+                ON CONFLICT(source,base,quote,timeframe) DO NOTHING""",
+                {"tf": timeframe.value, "lo": start, "hi": end, "now": now},
             )
         identity = uuid4()
         calculation = CandleWindow(start, end)
-        stream = IndicatorStream("BTC", "USDT", Timeframe.M1, now)
+        stream = IndicatorStream("BTC", "USDT", timeframe, now)
         checkpoints = [
             (
                 start,
@@ -80,24 +180,8 @@ async def seed_prepared(migrator: AsyncEngine, bars: int, reference: datetime) -
                 ),
             )
         ]
-        for index in range(bars):
-            opened = advance(start, Timeframe.M1, index)
-            closed = advance(opened, Timeframe.M1, 1)
-            candle = Candle(
-                "BTC",
-                "USDT",
-                Timeframe.M1,
-                opened,
-                closed,
-                Money.of(100, "USDT"),
-                Money.of(100, "USDT"),
-                Money.of(100, "USDT"),
-                Money.of(100, "USDT"),
-                Quantity.of(10, "BTC"),
-                CandleFinality.CLOSED,
-                closed,
-            )
-            stream.feed(opened, candle, closed)
+        for candle in candles:
+            stream.feed(candle.open_at, candle, candle.end_at)
         checkpoints.append(
             (
                 end,
@@ -111,38 +195,49 @@ async def seed_prepared(migrator: AsyncEngine, bars: int, reference: datetime) -
             )
         )
         async with migrator.begin() as connection:
-            job: UUID = (
+            job = (
                 await connection.execute(
                     text(
                         """INSERT INTO indicator_build_jobs(
                    source,base,quote,timeframe,formula_version,
                    desired_start,desired_end,first_eligible_at,availability_deadline,generation_sequence)
-                   VALUES('primary_spot','BTC','USDT','1m',:formula,:lo,:hi,
+                   VALUES('primary_spot','BTC','USDT',:tf,:formula,:lo,:hi,
                      :now,CAST(:now AS timestamptz)+interval '600s',1)
-                   RETURNING id"""
+                   ON CONFLICT(source,base,quote,timeframe,formula_version) DO UPDATE SET
+                     desired_start=excluded.desired_start,desired_end=excluded.desired_end,
+                     generation_sequence=indicator_build_jobs.generation_sequence+1
+                   RETURNING id,generation_sequence"""
                     ),
-                    {"formula": FORMULA_VERSION, "lo": start, "hi": end, "now": now},
+                    {
+                        "tf": timeframe.value,
+                        "formula": FORMULA_VERSION,
+                        "lo": start,
+                        "hi": end,
+                        "now": now,
+                    },
                 )
-            ).scalar_one()
+            ).one()
             await connection.execute(
                 text(
                     """INSERT INTO indicator_generations(id,job_id,source,base,quote,timeframe,
                    formula_version,calculation_start,calculation_end,as_of,source_epoch,source_fence,
                    dataset_revision,checkpoint_count,codec_version,build_rollout_epoch,
                    candidate_sequence,claim_token,status,expires_at,prepared_at)
-                   SELECT :id,:job,'primary_spot','BTC','USDT','1m',:formula,:lo,:hi,:now,s.epoch,
-                     s.revision,repeat('a',64),2,2,c.rollout_epoch,1,:token,'READY',
+                   SELECT :id,:job,'primary_spot','BTC','USDT',:tf,:formula,:lo,:hi,:now,s.epoch,
+                     s.revision,repeat('a',64),2,2,c.rollout_epoch,:sequence,:token,'READY',
                      CAST(:now AS timestamptz)+interval '6 hours 10 minutes',:now
                    FROM indicator_source_guard s CROSS JOIN indicator_rollout_control c"""
                 ),
                 {
                     "id": identity,
-                    "job": job,
+                    "job": job.id,
+                    "sequence": job.generation_sequence,
                     "formula": FORMULA_VERSION,
                     "lo": start,
                     "hi": end,
                     "now": now,
                     "token": uuid4(),
+                    "tf": timeframe.value,
                 },
             )
             for moment, payload in checkpoints:
@@ -156,9 +251,11 @@ async def seed_prepared(migrator: AsyncEngine, bars: int, reference: datetime) -
             await connection.execute(
                 text(
                     """INSERT INTO indicator_heads
-                       VALUES('primary_spot','BTC','USDT','1m',:formula,:id)"""
+                       VALUES('primary_spot','BTC','USDT',:tf,:formula,:id)
+                       ON CONFLICT(source,base,quote,timeframe,formula_version)
+                       DO UPDATE SET generation_id=excluded.generation_id"""
                 ),
-                {"formula": FORMULA_VERSION, "id": identity},
+                {"tf": timeframe.value, "formula": FORMULA_VERSION, "id": identity},
             )
             await connection.execute(
                 text(
