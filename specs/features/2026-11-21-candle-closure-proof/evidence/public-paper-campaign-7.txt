@@ -1,0 +1,42 @@
+Public-source Paper attempt7 —2026-11-22: PARTIAL
+
+Owner said "เริ่มทำ" after the concrete one-attempt proposal: BTC/ETH 1m, Paper
+100 USDT per entry, new isolated database/accounts, preparation<=300s and capture
+<=360s. No owner account or Live action. Candidate ddcd469c275acb5beda2b07e20ebb59cab36eefa
+passed CI45035954903 and Security45035954851 before this attempt. Working backend
+source/test/migrations matched HEAD; the manifest contains365 source/migration/harness
+files, fingerprint e6ff283160794451bc224927e8e7e1b55653f2d8542392e285d2b8a638ba5608.
+
+Owned fresh PostgreSQL16/Redis containers used only loopback55427/56397 and database
+tiewtrade_e2e_closure_campaign_7. Bootstrap/migration completed. Existing campaign
+harness and safety guards were unchanged; external launcher changed only identity,
+paths and ports. Exclusive report marker was created once; no restart or extension.
+
+Boot started2026-11-22T15:42:38.384105+00:00, stopped15:43:01.093022+00:00
+(22.708917s); capture never started. In ACTUAL_F11_BUILD, one indicator attempt
+returned READY, then coalesce_jobs raised DatabaseTimeoutError. Sanitized frames
+identify coalesce_session -> public.coalesce_indicator_build_jobs() -> DB execute;
+PostgreSQL log records "canceling statement due to lock timeout". The live blocker
+transaction/relation was not captured, so its identity is unproven. This is a
+distinct observed failure from the execution bootstrap in attempt6; it does not
+prove the attempt6 child cause. Do not assume the 500ms statement deadline fired.
+
+Independent read-only PostgreSQL audit after cleanup:2001 actual-source 1m candles
+(BTC1000/ETH1001),0 users/wallets/closure proofs/decisions/orders/executions/ledger,
+0 other DB sessions. Two1m indicator jobs remained one READY and one QUEUED.
+Execution source rows were invalidated by cleanup; their FEED_DISCONNECTED code is
+not causal proof. No Paper BUY/fill/position or frozen TP/SL. Independent Money/Quantity
+proof verifier completed with0proofs/decisions and no positive proof claim; report
+SHA256 0665390686751c0f92335099969221f4632dac15dc684d5d6db575d26cf910a3.
+Manifest was independently rechecked after run. Four new JSON artifacts passed
+the existing scoped gitleaks scan (exit0/no findings). Both owned containers were
+stopped and retained for inspection. No retry, fabricated event or order occurred.
+
+Evidence: public-paper-campaign-7.json, -verification.json, -diagnostics.json and
+-candidate-manifest.json. V12/V15/V16/V17 remain Partial. Required CI/Security on
+ddcd469c remain Passed; owner, independent reviewer and deployment acceptance
+remain open, Batch/Release Pending Full Validation. After repeated failed public
+attempts5–7, stop before another public experiment under AGENTS.md's three-round
+rule. Next: inspect the lock contention offline and propose a bounded correction
+with the original safety/deadline requirements; no campaign8/CI retry/merge is
+authorized by this receipt.

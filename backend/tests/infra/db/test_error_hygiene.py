@@ -7,7 +7,9 @@
 
 from __future__ import annotations
 
+import asyncio
 import traceback
+from typing import Any
 from uuid import uuid4
 
 import pytest
@@ -25,7 +27,11 @@ from tiewtrade.infra.db import (
     database_url,
     user_session,
 )
-from tiewtrade.infra.db.errors import DatabaseTimeoutError, translate_database_error
+from tiewtrade.infra.db.errors import (
+    DatabaseLockTimeoutError,
+    DatabaseTimeoutError,
+    translate_database_error,
+)
 
 #: ค่าจำลองที่ต้องไม่โผล่ที่ไหนเลย
 FAKE_PASSWORD = "PASSWORD-THAT-MUST-NEVER-APPEAR"
@@ -134,3 +140,48 @@ async def test_server_side_logging_of_values_is_switched_off(api_engine: AsyncEn
                 await connection.execute(text("SELECT current_setting(:name)"), {"name": setting})
             ).scalar_one()
             assert actual == wanted, f"{setting} เป็น {actual!r} ไม่ใช่ {wanted!r}"
+
+
+@pytest.mark.parametrize(
+    "code,expected", [("55P03", DatabaseLockTimeoutError), ("57014", DatabaseTimeoutError)]
+)
+def test_lock_timeout_is_distinct_without_exposing_driver_text(
+    code: str,
+    expected: type[DatabaseTimeoutError],
+) -> None:
+    class DriverFailureError(Exception):
+        sqlstate = code
+
+    translated = translate_database_error(DriverFailureError(FAKE_SECRET))
+    assert type(translated) is expected
+    assert isinstance(translated, DatabaseTimeoutError)
+    assert translated.code == "DATABASE_TIMEOUT"
+    assert FAKE_SECRET not in str(translated)
+
+
+@pytest.mark.parametrize("strict", [False, True])
+@pytest.mark.parametrize("cancel", [False, True])
+async def test_rollback_mode_preserves_legacy_errors_and_cancellation(
+    api_engine: AsyncEngine,
+    monkeypatch: pytest.MonkeyPatch,
+    strict: bool,
+    cancel: bool,
+) -> None:
+    from tiewtrade.infra.db import session as db_session
+
+    original = db_session._bounded_cleanup
+
+    async def failed_cleanup(*args: Any, **kwargs: Any) -> None:
+        await original(*args, **kwargs)
+        raise DatabaseTimeoutError("controlled cleanup uncertainty")
+
+    monkeypatch.setattr(db_session, "_bounded_cleanup", failed_cleanup)
+    expected = (
+        asyncio.CancelledError if cancel else DatabaseTimeoutError if strict else RuntimeError
+    )
+    with pytest.raises(expected) as caught:
+        async with db_session._begin(api_engine, cleanup_seconds=2, strict_rollback=strict):
+            if cancel:
+                raise asyncio.CancelledError()
+            raise RuntimeError("original failure")
+    assert type(caught.value) is expected

@@ -13,7 +13,7 @@ from __future__ import annotations
 import asyncio
 import math
 from collections.abc import AsyncIterator, Mapping
-from contextlib import asynccontextmanager, suppress
+from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from typing import Any, Final
 from uuid import UUID
@@ -187,7 +187,7 @@ async def _assert_role(connection: AsyncConnection, expected: DatabaseRole) -> N
 
 @asynccontextmanager
 async def _begin(
-    engine: AsyncEngine, *, cleanup_seconds: float | None = None
+    engine: AsyncEngine, *, cleanup_seconds: float | None = None, strict_rollback: bool = False
 ) -> AsyncIterator[AsyncConnection]:
     """เปิด transaction แล้วแปลงข้อผิดพลาดทุกชนิดตอนต่อและตอนปิดให้เป็นชนิดของเรา
 
@@ -213,20 +213,23 @@ async def _begin(
     try:
         yield connection
     except BaseException as error:
-        # ปิด transaction ให้เรียบร้อยก่อนส่งข้อผิดพลาดของผู้เรียกต่อ
-        # ถ้าการ rollback ล้มเหลวด้วย ให้ข้อผิดพลาดตัวแรกชนะ เพราะมันบอกสาเหตุจริง
-        # ส่วนความล้มเหลวของ rollback เป็นผลพลอยได้ของสาเหตุนั้น
-        with suppress(SQLAlchemyError, OSError):
+        # Retry-capable callers require confirmed rollback; other callers preserve
+        # their original failure. Cancellation always retains its control signal.
+        try:
             if cleanup_seconds is None:
                 await transaction.__aexit__(type(error), error, error.__traceback__)
             else:
                 cleanup = asyncio.create_task(
                     transaction.__aexit__(type(error), error, error.__traceback__)
                 )
-                # Preserve the original failure, especially deadline cancellation.
-                with suppress(DatabaseTimeoutError):
-                    assert raw is not None
-                    await _bounded_cleanup(connection, raw, cleanup, cleanup_seconds)
+                assert raw is not None
+                await _bounded_cleanup(connection, raw, cleanup, cleanup_seconds)
+        except (SQLAlchemyError, OSError) as cleanup_error:
+            if strict_rollback and not isinstance(error, asyncio.CancelledError):
+                raise translate_database_error(cleanup_error) from None
+        except DatabaseTimeoutError:
+            if strict_rollback and not isinstance(error, asyncio.CancelledError):
+                raise
         raise
     try:
         if cleanup_seconds is None:

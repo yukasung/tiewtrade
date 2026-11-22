@@ -2476,3 +2476,32 @@ child cause remains unknown; public BUY/fill/protection and owner/deployment acc
 remain Partial. Required CI for this new local runtime diff is pending (94fcde33 CI
 covers the prior candidate). Next: authorized publication/CI and a separately bounded
 public campaign; no further campaign or merge performed. See closure-proof validation.
+
+### Final-candidate CI and public-source Paper attempt7 —2026-11-22
+
+ddcd469c passed required CI45035954903 and Security45035954851. Owner-authorized
+one isolated BTC/ETH1m Paper attempt (100USDT/entry, preparation<=300s,
+capture360s). It stopped after22.71s in ACTUAL_F11_BUILD: DatabaseTimeoutError
+from indicator coalescing; PostgreSQL logged a lock timeout. Independent audit found
+2001 market candles but0 users/wallets/proofs/decisions/orders/fills/ledger; no
+Paper account or Live action. Source manifest matched365 candidate files; proof
+verifier and scoped secret scan completed. Owned services stopped, no retry.
+[Receipt](features/2026-11-21-candle-closure-proof/evidence/public-paper-campaign-7.txt).
+V12/V15–17 remain Partial; owner/independent/deployment and Batch/Release gates
+remain open. Public attempts5–7 did not complete the fill proof. Stop before another
+public experiment per AGENTS.md three-round rule. Next: offline lock-contention
+diagnosis and owner choice for any bounded follow-up; no campaign8/merge authorized.
+
+
+### Offline coalescing lock recovery —2026-11-22
+
+Owner-approved offline plan implemented: source-guard/job-row lock blockers captured
+on real PG; only rolled-back coalescing contention defers to the existing poll.
+Other timeouts/cleanup uncertainty propagate, cancellation/STOP remain interruptible.
+278distinct targeted cases passed (274suite+4cleanup compatibility), scoped Ruff/mypy
+and7import contracts passed; scoped review findings fixed. Bounded evidence is in
+closure-proof/evidence/offline-coalescing-lock-recovery.json. Offline services stopped.
+Attempt7's exact blocker remains unproven; public BUY/fill/protection and owner/
+independent/deployment gates stay Partial. New local runtime diff needs required CI;
+ddcd469c's Passed CI is historical. Next: authorized publication/CI, then separately
+bounded public validation; no campaign8/CI/merge performed in this checkpoint.

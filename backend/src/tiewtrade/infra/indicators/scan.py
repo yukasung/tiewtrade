@@ -1,6 +1,7 @@
 """Bounded source scan; returns sealed STAGING only, never publishes READY."""
 
 import asyncio
+from contextlib import suppress
 from dataclasses import dataclass
 from datetime import datetime
 from time import monotonic
@@ -14,7 +15,7 @@ from tiewtrade.core.money import MoneyError
 from tiewtrade.infra.db.errors import IndicatorBuildOwnershipError
 from tiewtrade.infra.indicators.claims import BuildClaim
 from tiewtrade.infra.indicators.pinned import PinnedIndicatorWriter
-from tiewtrade.infra.indicators.scheduling import POLL_SECONDS
+from tiewtrade.infra.indicators.scheduling import POLL_SECONDS, CoalescingBusyError
 from tiewtrade.infra.indicators.session import indicator_source_session
 from tiewtrade.infra.indicators.staging import (
     StagingSnapshot,
@@ -74,7 +75,9 @@ async def scan_staging(
                     await writer.heartbeat()
                     next_heartbeat = monotonic() + HEARTBEAT_SECONDS
                 if scheduled:
-                    await writer.coalesce()
+                    # Metadata contention waits for the next poll after rollback.
+                    with suppress(CoalescingBusyError):
+                        await writer.coalesce()
         except asyncio.CancelledError:
             raise
         except BaseException as error:

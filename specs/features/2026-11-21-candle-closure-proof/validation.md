@@ -21,12 +21,12 @@
 | V11 | First-fill financial invariants CP12/13 | actualPaper matcher/ledger: partial/latefill, manualreduction, unknown/retry/TP/SL; proofcorrectionหลังfillไม่rewriteexecution/PnL/testATRfrozenlevels; quantities/reservations/balanceexact | Feature | Passed — scoped first-fill/PnL/protection regression and post-fill correction invariance |
 | V12 | Candle entry timing CP09–12 | Aclosedproof→BMarketwhenfresh, nointrabar/lookahead/backdatedopenfill;afterStart/recoverycutoff, exit-samecandle, revision/replayedhistoryไม่entryซ้ำ;lateproofหลังBต้องskip | Feature | Partial — corrected-candidate PG boundary/cross-boundary guards passed; parent attempt4 verified next-candle command only, no fill |
 | V13 | DB/schema/security CP07/15 | fresh/upgrade/emptydowngrade;historydowngraderefusal;unique/FK/check/domain/appendonly/grants;engine/API/indicatorrolecannotpromote/writeproof;publictablesไม่เปิดusersecret;retentionไม่ทำลายpinnedauditหรือบล็อกpartitionตลอดชีวิต | Feature | Passed — fresh/upgrade/downgrade refusal/roles/append-only/trigger inventory checks |
-| V14 | Migration/protocol compatibility CP15 | OFFpreservesoldbehavior;oldwriterrestart/missinginventory/proofguard/sourceproofnotREADY/unsupportedconsumerต้องactivationrejected;knowncompatiblemixedversionsมีหลักฐาน ไม่ยอมoldwriterเงียบskipcorrection | Feature | Partial — local typed-inventory/source readiness/subprocess OFF-legacy, ON-rejected-legacy and ON-v1/deactivation matrix passed; actual deployed inventory/old-binary compatibility and final-head CI pending |
-| V15 | Source costs/recovery CP05/10/14 | existingcoalescing/ratebudget/backoff underduplicateevents;noHTTPintransaction;pendingbounded;WSdisconnect/missingclose/REST429/5xx/timeoutsrepairไม่promoteหรือretryhotloop;resumeไม่replayentry | Feature | Partial — retry-exhaustion regression passed; public boot/source readiness incomplete |
+| V14 | Migration/protocol compatibility CP15 | OFFpreservesoldbehavior;oldwriterrestart/missinginventory/proofguard/sourceproofnotREADY/unsupportedconsumerต้องactivationrejected;knowncompatiblemixedversionsมีหลักฐาน ไม่ยอมoldwriterเงียบskipcorrection | Feature | Partial — local typed-inventory/source readiness/subprocess OFF-legacy, ON-rejected-legacy and ON-v1/deactivation matrix passed; final-candidate CI passed, actual deployed inventory/old-binary compatibility pending |
+| V15 | Source costs/recovery CP05/10/14 | existingcoalescing/ratebudget/backoff underduplicateevents;noHTTPintransaction;pendingbounded;WSdisconnect/missingclose/REST429/5xx/timeoutsrepairไม่promoteหรือretryhotloop;resumeไม่replayentry | Feature | Partial — retry-exhaustion regression passed; public attempt7 stopped on F11 coalescing lock timeout before source-to-trade proof |
 | V16 | End-to-end deterministic composition CP01–16 | rawactualadapterpayload→PGnativeproof→RESTpublication→F11→strategy→actualPaperBUY/protection;BTCpositive/ETHnegative plus syntheticedgefixtures clearlylabelled;RSIpositiveARM/FIREregressionและtestgreenoneposition | Feature | Partial — deterministic path passed; actual API/proof/strategy/command chain verified, actual fill/protection not reached |
-| V17 | Current-candidate real public-source campaign CP01–16 | oneboundedownedPapercampaignตามด้านล่าง actualWS+REST/PG/API/engine;closedproofchain+testgreenBUYจริงถ้าเกิดeligiblegreen;RSIevaluateตามactualconditions ไม่มีforceARM;noLive/useraccountorders | Feature | Partial — attempt6 on94fcde33 stopped during public boot with ExceptionGroup; no accounts/orders/fills; child cause unrecorded; authorized attempt consumed, no further public attempt authorized |
+| V17 | Current-candidate real public-source campaign CP01–16 | oneboundedownedPapercampaignตามด้านล่าง actualWS+REST/PG/API/engine;closedproofchain+testgreenBUYจริงถ้าเกิดeligiblegreen;RSIevaluateตามactualconditions ไม่มีforceARM;noLive/useraccountorders | Feature | Partial — attempt7 on ddcd469c stopped during F11 preparation after PostgreSQL lock timeout; no accounts/orders/fills; authorized attempt consumed |
 | V18 | Static/contracts/targeted regression | ruff/format/mypy/importcontracts, migrations/source-triggerinventory, APItypesเมื่อcontractเปลี่ยน;targetedF09/F11/F12/F20/F21/Paper/F17 dependencies;UIhiddenmessages/defaultsไม่เปลี่ยน | Feature | Passed — final full mypy804, Ruff/format885, import contracts7, unchanged API contract; prior90-error failure retained |
-| V19 | Stable candidate full regression/required CI | common sourceแก้หลายระบบ:fullbackendcorrectness/security/financial regressionและexistingfreshstate/migration/securityjobsที่บังคับบนfinalcandidate;candidateSHA/runlinks, noLocalแทนCI | Feature | Passed — required CI45008230541 and Security45008230494 on94fcde334363d52f136089cc20a6749e92282cb4;6065main backend, all isolated backend gates and66browser E2E passed; historical failures retained |
+| V19 | Stable candidate full regression/required CI | common sourceแก้หลายระบบ:fullbackendcorrectness/security/financial regressionและexistingfreshstate/migration/securityjobsที่บังคับบนfinalcandidate;candidateSHA/runlinks, noLocalแทนCI | Feature | Partial — prior ddcd469c required CI45035954903/Security45035954851 Passed; new offline coalescing-recovery runtime diff awaits final-candidate required CI |
 | V20 | Review/owner acceptance/rollout | ReadyforCodeReview→diff+callers+DB/financial/stateless/concurrencyreview→fix/refactor→affectedchecks;ownerตรวจscope/candidate/activationความหมายจริงก่อนmerge ไม่ใช้automatedreviewแทนowner | Feature | Partial — Ready for Code Review announced, review/fixes done; owner/independent acceptance pending |
 | V21 | Combined source/strategy cross-feature E2E | candidateรวมF09/F11/F12/F17/F20/F21/Paperที่นิ่ง พร้อมfullfront/cross-featureprofilesตามBatchscope ไม่รันซ้ำทุกpatch | Batch | Not Run — Pending Full Validation |
 | V22 | Production/Live/release gates | approvedrestore/deployment/rate/load/endurance/venuecontractcoverageที่เกี่ยวข้อง;ไม่activateproduction/Liveในงานนี้ ไม่เรียกCompletedก่อนReleasecriteriaครบ | Release | Not Run — Pending Full Validation |
@@ -871,3 +871,94 @@ on94fcde33 does not cover this new runtime diff; final-candidate required CI is 
 Next: publish/run CI and perform a separately authorized bounded public campaign before
 claiming corrected-source BUY/fill/protection acceptance. No publication, extra CI or
 public attempt was performed in this checkpoint. Historical failed evidence retained.
+
+## Required CI and public-source Paper attempt7 —2026-11-22
+
+Candidate ddcd469c275acb5beda2b07e20ebb59cab36eefa passed required CI45035954903
+and Security45035954851: backend/frontend/API contract/container/browser E2E and all
+security jobs completed successfully. This updates V19 to Passed on the new candidate;
+it does not prove live-source entry, owner acceptance or deployment compatibility.
+
+Owner replied "เริ่มทำ" to the explicit one-round Paper scope in plan.md. Used the
+unchanged campaign profile, actual BTC/ETH1m public adapters, isolated new accounts/
+database and 100USDT-per-entry settings, with preparation<=300s and capture360s.
+The owned PostgreSQL/Redis services were on loopback55427/56397 and new database
+tiewtrade_e2e_closure_campaign_7. Source/migration/profile manifest365files verified
+before and after, fingerprint e6ff283160794451bc224927e8e7e1b55653f2d8542392e285d2b8a638ba5608.
+Exclusive report marker prevented restarting the attempt.
+
+Result Partial: boot15:42:38.384105UTC, stop15:43:01.093022UTC (22.708917s), phase
+ACTUAL_F11_BUILD. After one READY build, `coalesce_jobs` raised DatabaseTimeoutError.
+Sanitized frames locate the failing call in coalesce_session; PostgreSQL logs confirm
+`canceling statement due to lock timeout`. No live blocker identity or lock graph was
+captured. Do not mislabel this as a 500ms statement timeout, an execution-feed defect,
+or the proven cause of attempt6. Capture and account creation did not begin.
+
+Independent read-only admin audit: BTC1000/ETH1001 real-source1m candles, one READY
+and one QUEUED1m build job,0 users/wallets/closure proofs/decisions/orders/executions/
+positions/reservations/anchors/ledger and0 other database sessions after cleanup.
+Money/Quantity proof verifier found0 proofs/decisions; no BUY/fill/TP/SL claim.
+Execution source FEED_DISCONNECTED states followed cleanup and are not root-cause
+evidence. Four new JSON artifacts and concise receipt are in evidence/; scoped
+gitleaks exited0/no findings. Both owned containers stopped and retained. No repeat,
+extension, synthetic market data, owner account or Live order.
+
+V12/V15/V16/V17 remain Partial; V19 Passed on ddcd469c; owner/independent reviewer,
+deployment inventory/drain/restart and V21/V22 Pending Full Validation remain open.
+Three public attempts5–7 did not complete the required fill proof. Under AGENTS.md's
+three-round rule, stop before any further public experiment and present choices.
+Next engineering work is an offline lock-contention diagnosis at the F11 coalescing
+boundary, with source-guard/job-row lock evidence and an unchanged fail-closed trading
+path. A campaign8 needs a new bounded owner decision after that diagnosis; do not
+publish a documentation-only commit/CI loop or merge based on this Partial result.
+
+
+## Offline coalescing lock recovery checkpoint —2026-11-22
+
+Owner approved the investigation/repair plan, including offline PG tests and scoped
+review, excluding public attempt8/publication/CI/merge. Before production edits,
+four real-PG source-guard/job-row × commit/rollback cases reproduced lock timeout,
+captured blocker links with the existing bounded read-only observer and proved
+unchanged job metadata after rollback. Source blocker used the actual MARKET_DATA
+write scope; job-row holder was a controlled MIGRATOR transaction (not a fabricated
+production claim). This proves contention paths, not the exact attempt7 blocker.
+
+Implementation: SQLSTATE55P03 has a backward-compatible DatabaseTimeoutError subtype;
+SQLSTATE57014/pool timeouts retain their prior type and public DATABASE_TIMEOUT code.
+Only the coalescing statement translates55P03 to CoalescingBusyError. Standalone
+coalescing opts into strict rollback: cleanup failure overrides the retry marker,
+while cancellation remains cancellation. Pinned rollback failure taints the writer;
+coalescing refuses reuse of tainted/invalidated ownership. Other session callers keep
+the previous default error policy. Scheduler and campaign preparation wait the existing
+10s poll after confirmed rollback and do not dispatch on the failed iteration.
+Scheduled scan defers only that coalescing operation to its next existing poll;
+heartbeat/source-fence/publication checks still execute. No new timeout budget,
+financial formula, schema, public API, privilege, infrastructure or persistent state.
+
+Validation:
+- Scheduler, claims, source, attempt, all infra/db and campaign tests:274passed in95.39s.
+- Added final default/strict rollback × ordinary-error/cancellation compatibility
+  matrix:4passed in0.32s. Total278distinct passing cases in this checkpoint.
+- Scheduled scan test now encounters three real source-scope lock timeouts before
+  recovering on the same physical writer; publication completes with the slot IDLE.
+  Existing source-invalidated-after-scan regression proves superseded inputs cannot
+  publish READY. Existing concurrent-engine coalescer, commit/rollback/cancellation,
+  ownership, trigger-damage, retry-counter and claim regressions remain passing.
+- Ordinary database timeouts and55P03 outside the coalescing statement are not retried;
+  STOP and task cancellation interrupt the wait; no dispatch occurs while waiting.
+- Scoped Ruff/format and mypy passed for11changed Python files;7import contracts kept.
+  Final four tests were lint/formatted/type-checked separately after addition.
+- Diff/callers/cleanup review identified and fixed two recovery hazards before this
+  checkpoint: retrying a non-statement lock error and treating uncertain rollback as
+  recoverable. Final focused review has no remaining findings. PostgreSQL remains
+  authoritative; existing connection-local taint is lifecycle state, not business data.
+- Bounded evidence offline-coalescing-lock-recovery.json contains before-fix blocker
+  samples and the final backend diff SHA256. Scoped gitleaks:exit0/no findings.
+  No remaining review DB sessions; owned offline review PG/Redis stopped.
+
+Current local patch has not run required CI or a public campaign. Prior attempt7
+remains Partial, its exact blocker unknown; V12/V15–17 and owner/independent/deployment
+acceptance remain open, V21/V22 Pending Full Validation. V19 now marks the new runtime
+diff pending rather than inheriting ddcd469c CI. Next: present the reviewed correction
+for one authorized publication/required-CI round, followed by a separately bounded
+public campaign only after that gate. No extra experiment/merge is inferred.

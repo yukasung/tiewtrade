@@ -7,7 +7,7 @@ from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncEngine
 
 from tiewtrade.infra.indicators.maintenance import collect
-from tiewtrade.infra.indicators.scheduling import POLL_SECONDS, coalesce_jobs
+from tiewtrade.infra.indicators.scheduling import POLL_SECONDS, CoalescingBusyError, coalesce_jobs
 from tiewtrade.services.indicator_builder.attempt import AttemptResult, AttemptStatus, run_attempt
 
 
@@ -18,13 +18,20 @@ async def run_scheduler(
 
     A stop signal drains the current attempt. Task cancellation instead invokes
     run_attempt's bounded cancellation protocol and propagates to the caller.
-    Database/configuration failures propagate with their existing fixed types.
+    Coalescing lock contention waits for the next poll after rollback.
+    Other database/configuration failures propagate with their existing fixed types.
     """
     if type(owner) is not UUID:
         raise ValueError("builder owner UUID required")
     while not stop.is_set():
         await collect(engine)
-        await coalesce_jobs(engine)
+        try:
+            await coalesce_jobs(engine)
+        except CoalescingBusyError:
+            # coalesce_jobs has rolled back; do not dispatch from incomplete metadata.
+            with suppress(TimeoutError):
+                await asyncio.wait_for(stop.wait(), POLL_SECONDS)
+            continue
         if stop.is_set():
             break
         result = await run_attempt(engine, owner, scheduled=True)

@@ -12,7 +12,8 @@ import pytest
 from sqlalchemy.ext.asyncio import AsyncEngine
 
 from tests.infra.execution_market import profile_candle_closure as profile
-from tiewtrade.infra.indicators.scheduling import POLL_SECONDS
+from tiewtrade.infra.db.errors import DatabaseLockTimeoutError, DatabaseTimeoutError
+from tiewtrade.infra.indicators.scheduling import POLL_SECONDS, CoalescingBusyError
 from tiewtrade.services.indicator_builder.attempt import AttemptResult, AttemptStatus
 
 
@@ -209,3 +210,31 @@ async def test_cancellation_propagates_and_keeps_exclusive_incomplete_marker(
     }
     with pytest.raises(FileExistsError):
         await profile.main(output, "a" * 64)
+
+
+async def test_preparation_waits_after_lock_contention_without_dispatch(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(profile, "fresh_heads", AsyncMock(side_effect=[False, True]))
+    coalesce = AsyncMock(side_effect=CoalescingBusyError())
+    attempt = AsyncMock()
+    sleep = AsyncMock()
+    monkeypatch.setattr(profile, "coalesce_jobs", coalesce)
+    monkeypatch.setattr(profile, "run_attempt", attempt)
+    monkeypatch.setattr(asyncio, "sleep", sleep)
+    await profile.prepare_heads(cast(AsyncEngine, None), cast(AsyncEngine, None), {})
+    sleep.assert_awaited_once_with(POLL_SECONDS)
+    attempt.assert_not_awaited()
+
+
+@pytest.mark.parametrize("failure", [DatabaseTimeoutError, DatabaseLockTimeoutError])
+async def test_preparation_does_not_retry_statement_or_pool_timeout(
+    monkeypatch: pytest.MonkeyPatch,
+    failure: type[DatabaseTimeoutError],
+) -> None:
+    monkeypatch.setattr(profile, "fresh_heads", AsyncMock(return_value=False))
+    coalesce = AsyncMock(side_effect=failure())
+    monkeypatch.setattr(profile, "coalesce_jobs", coalesce)
+    with pytest.raises(DatabaseTimeoutError):
+        await profile.prepare_heads(cast(AsyncEngine, None), cast(AsyncEngine, None), {})
+    coalesce.assert_awaited_once()

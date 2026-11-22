@@ -871,3 +871,67 @@ existing draft PR85; run one required-CI round on the resulting candidate. Prese
 owner/independent/deployment and public-fill gates. No merge or public attempt7 is
 included; the latter remains separately bounded and authorized. Report CI results
 with SHA/run links without a documentation-only publication loop.
+
+## Owner-authorized public-source Paper attempt7 —2026-11-22
+
+After CI45035954903 and Security45035954851 passed on ddcd469c, owner replied
+"เริ่มทำ" to the concrete proposal for exactly one further public Paper attempt:
+BTC/ETH 1m, 100 USDT per entry, new isolated Paper accounts/database, preparation
+at most 300 seconds and capture at most 360 seconds. This is campaign7 only; no
+extension, retry, owner-account/Live action, merge or additional CI round.
+
+Reuse the unchanged profile_candle_closure.py campaign harness and existing external
+attempt6 launcher, manifest, independent proof verifier and read-only admin audit.
+Change only external campaign identity, fresh loopback ports/database/output marker
+and reviewed commit; assert a clean runtime/test/migration tree before launch.
+Retain the exclusive report marker, exact source fingerprint and CI SHA. Stop only
+owned campaign7 services after cleanup. Report Partial if proof-to-BUY/fill/TP/SL
+does not complete within the approved bounds; preserve all existing owner,
+independent, deployment and Batch/Release gates.
+
+
+## Owner-approved offline contention investigation —2026-11-22
+
+Owner approved the proposed offline investigation/repair plan. Reuse real-role
+scheduler tests and scheduler_lock_diagnostic observer on the isolated review DB.
+Reproduce source-guard and job-row contention before editing production code; retain
+blocker evidence and metadata snapshots. Existing coalescer contention tests cover
+independent engines and rollback/commit/cancellation. Do not infer attempt7's exact
+blocker from an offline reproduction.
+
+If normal contention is confirmed, distinguish SQLSTATE55P03 with a backwards-
+compatible DatabaseTimeoutError subclass, retaining safe fixed messages/code. Handle
+only this subtype around coalescing after transaction rollback: scheduler/preparation
+wait the existing10s poll before dispatch, scheduled scan proceeds to its next normal
+poll while keeping heartbeat/publication guards. All other timeouts and ownership,
+configuration/connection errors propagate. No timeout increase, schema/API change,
+new infrastructure or order replay. Record validation and review before checkpoint;
+no new public campaign, CI round or publication is authorized.
+
+
+Offline evidence: four source/job blocker × commit/rollback cases captured PostgreSQL
+blocker links and unchanged job metadata before the fix. Initial121case regression
+passed. Review identified cleanup ambiguity: pinned rollback errors are suppressed
+and a generic55P03 could arise outside the coalescing statement. Narrow recovery to
+CoalescingBusyError raised only around that statement; cleanup errors must override
+it. Mark a pinned writer tainted on failed rollback and reject recovery from tainted/
+invalidated connections. Add rollback-failure regression before final validation.
+This is required to uphold the approved no-ambiguous-retry rule, not a new feature.
+
+
+Final cleanup audit also found shared _begin deliberately preserves the original
+error when rollback fails. Add an opt-in strict rollback mode used only by the
+standalone coalescing transaction; default behavior for existing callers remains.
+Strict cleanup failures override the retry marker with their safe database error,
+while task cancellation remains cancellation. Validate both standalone and pinned
+rollback-failure paths. No caller may treat an uncertain cleanup as a safe retry.
+
+
+## Owner-authorized coalescing recovery publication —2026-11-22
+
+Owner replied "เริ่มทำ" to the next commit/push and required-CI step. Publish the
+reviewed, fingerprint-matched offline coalescing correction,278case/static evidence
+and retained attempt7 artifacts together to existing draft PR85, then track one
+required-CI round on the resulting SHA. Public attempt8 remains separately bounded
+and unapproved. No merge or owner deployment activation. Preserve Partial acceptance
+gates; report CI links/SHA without a documentation-only publication loop.

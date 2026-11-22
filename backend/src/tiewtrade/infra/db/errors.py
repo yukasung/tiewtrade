@@ -86,6 +86,10 @@ class DatabaseTimeoutError(InfraError):
     code: ClassVar[str] = "DATABASE_TIMEOUT"
 
 
+class DatabaseLockTimeoutError(DatabaseTimeoutError):
+    """SQLSTATE55P03 only; callers still decide whether rollback permits retry."""
+
+
 class DatabaseRetryableError(InfraError):
     code: ClassVar[str] = "DATABASE_RETRYABLE"
 
@@ -145,7 +149,7 @@ SQLSTATE_UNIQUE_VIOLATION: Final[str] = "23505"
 _BY_SQLSTATE: Final[dict[str, type[InfraError]]] = {
     "40001": DatabaseRetryableError,
     "40P01": DatabaseRetryableError,
-    "55P03": DatabaseTimeoutError,
+    "55P03": DatabaseLockTimeoutError,
     "57014": DatabaseTimeoutError,
     "TT011": SourceWriteScopeError,
     "TT012": SourceMaintenanceScopeError,

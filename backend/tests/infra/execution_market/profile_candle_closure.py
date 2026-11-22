@@ -37,7 +37,7 @@ from tiewtrade.infra.db import DatabaseRole, InfraError, create_engine_for, user
 from tiewtrade.infra.db.session import market_data_session
 from tiewtrade.infra.indicators.pinned import pinned_indicator_writer
 from tiewtrade.infra.indicators.prepared import fresh_proof_valid, read_generation_authority
-from tiewtrade.infra.indicators.scheduling import POLL_SECONDS, coalesce_jobs
+from tiewtrade.infra.indicators.scheduling import POLL_SECONDS, CoalescingBusyError, coalesce_jobs
 from tiewtrade.infra.market_data.candle_closure import connection_ready
 from tiewtrade.infra.market_data.order_book_storage import read_latest_book
 from tiewtrade.infra.market_data.realtime_storage import read_snapshot
@@ -153,7 +153,11 @@ async def prepare_heads(builder: AsyncEngine, api: AsyncEngine, report: dict[str
     owner = uuid4()
     report.setdefault("builds", [])
     while not await fresh_heads(api):
-        await coalesce_jobs(builder)
+        try:
+            await coalesce_jobs(builder)
+        except CoalescingBusyError:
+            await asyncio.sleep(POLL_SECONDS)
+            continue
         built = await run_attempt(builder, owner)
         report["builds"].append(built.status.value)
         if built.status in (AttemptStatus.ORPHANED, AttemptStatus.FAILED_NUMERIC):
