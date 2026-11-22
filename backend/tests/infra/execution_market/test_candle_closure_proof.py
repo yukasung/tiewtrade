@@ -3,6 +3,7 @@
 import asyncio
 import json
 import os
+import sys
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from dataclasses import replace
@@ -18,6 +19,7 @@ from tests.core.test_candle_closure import recorded
 from tests.infra.execution_market.test_bot_decisions import (
     bot_bracket_protocol as bot_bracket_protocol,
 )
+from tests.infra.execution_market.test_process_recovery import marker
 from tiewtrade.core.candle_closure import ClosureCandidate
 from tiewtrade.core.market_data import Candle
 from tiewtrade.infra.bots.evaluation import PreparedQuote
@@ -43,6 +45,33 @@ INVENTORY = {
     "candidate_sha": "a" * 40,
     "paper_only": True,
 }
+
+PROCESS_PUBLICATION = """
+import asyncio, sys
+from uuid import UUID
+from tests.core.test_candle_closure import recorded
+from tiewtrade.infra.db import DatabaseRole, create_engine_for
+from tiewtrade.infra.db.session import market_data_session
+from tiewtrade.infra.market_data import candle_closure as closure
+from tiewtrade.infra.market_data.candle_preview import PreviewLease
+
+async def run():
+    engine = create_engine_for(DatabaseRole.MARKET_DATA)
+    lease = PreviewLease(UUID(sys.argv[1]), int(sys.argv[2]))
+    candidate, _, _ = recorded("BTCUSDT")
+    try:
+        async with market_data_session(engine) as session:
+            proof = await closure.record_candidate(session, lease, candidate.observation)
+            assert (proof is None) == (sys.argv[3] == "pending")
+            if sys.argv[4] == "before_commit":
+                print("BEFORE_COMMIT", flush=True)
+                await asyncio.Event().wait()
+        print("AFTER_COMMIT", flush=True)
+        await asyncio.Event().wait()
+    finally:
+        await engine.dispose()
+asyncio.run(run())
+"""
 
 
 async def test_campaign_audit_sees_real_ledger_hidden_from_migrator(
@@ -421,6 +450,134 @@ async def test_pending_close_survives_pool_restart_and_claimed_rest_completion(
                 assert row.finality == "CLOSED" and row.closure_proof_id == receipt["id"]
         finally:
             await recovered.dispose()
+
+
+@pytest.mark.parametrize("stage", ["pending", "published"])
+@pytest.mark.parametrize("boundary", ["before_commit", "after_commit"])
+async def test_process_death_preserves_atomic_closure_and_idempotent_recovery(
+    migrator_engine: AsyncEngine,
+    monkeypatch: pytest.MonkeyPatch,
+    stage: str,
+    boundary: str,
+) -> None:
+    from datetime import timedelta
+
+    from tiewtrade.infra.market_data.claims import claim_next, write_candles
+
+    async with ready(migrator_engine, monkeypatch) as (market, lease, candidate, c, started):
+        async with market_data_session(market) as session:
+            if stage == "pending":
+                await closure.prepare_write(session, acquire=True)
+                await session.execute(
+                    "UPDATE market_candles SET fetch_started_at=:before_end",
+                    {"before_end": c.end_at - timedelta(microseconds=1)},
+                )
+            before = tuple(
+                (await session.execute("SELECT epoch,revision FROM indicator_source_guard")).one()
+            )
+        process = await asyncio.create_subprocess_exec(
+            sys.executable,
+            "-c",
+            PROCESS_PUBLICATION,
+            str(lease.owner),
+            str(lease.epoch),
+            stage,
+            boundary,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+        try:
+            await marker(process, boundary.upper().encode())
+            process.kill()
+            await asyncio.wait_for(process.wait(), 5)
+            assert process.returncode != 0
+            async with market_data_session(market) as session:
+                row = (
+                    await session.execute(
+                        """SELECT finality,closure_proof_id,
+                        (SELECT count(*) FROM market_candle_closure_observations) AS observations,
+                        (SELECT count(*) FROM market_candle_closure_results) AS results
+                        FROM market_candles"""
+                    )
+                ).one()
+                committed = boundary == "after_commit"
+                published = committed and stage == "published"
+                assert row.observations == int(committed)
+                assert row.results == int(published)
+                assert row.finality == ("CLOSED" if published else "UNCONFIRMED")
+                assert (row.closure_proof_id is not None) == published
+                if not committed:
+                    assert (
+                        tuple(
+                            (
+                                await session.execute(
+                                    "SELECT epoch,revision FROM indicator_source_guard"
+                                )
+                            ).one()
+                        )
+                        == before
+                    )
+                    # REST cannot invent native evidence lost before commit.
+                    await closure.prepare_write(session, acquire=True)
+                    assert await closure.reconcile(session, c) is None
+                persisted_proof = row.closure_proof_id
+
+            if stage == "pending":
+                if not committed:
+                    async with market_data_session(market) as session:
+                        assert (
+                            await closure.record_candidate(session, lease, candidate.observation)
+                            is None
+                        )
+                async with market_data_session(market) as session:
+                    claim = await claim_next(session, "process-closure-recovery")
+                    assert claim is not None
+                async with market_data_session(market) as session:
+                    await begin_source_write(session)
+                    await write_candles(session, claim, (c,), started)
+            else:
+                async with market_data_session(market) as session:
+                    proof = await closure.record_candidate(session, lease, candidate.observation)
+                    assert proof is not None
+                    if committed:
+                        assert proof == persisted_proof
+
+            async with market_data_session(market) as session:
+                receipt = await closure.current_proof(session, c)
+                assert receipt is not None
+                revision = tuple(
+                    (
+                        await session.execute("SELECT epoch,revision FROM indicator_source_guard")
+                    ).one()
+                )
+                assert (
+                    await closure.record_candidate(session, lease, candidate.observation)
+                    == receipt["id"]
+                )
+                assert (
+                    tuple(
+                        (
+                            await session.execute(
+                                "SELECT epoch,revision FROM indicator_source_guard"
+                            )
+                        ).one()
+                    )
+                    == revision
+                )
+                row = (
+                    await session.execute(
+                        """SELECT finality,closure_proof_id,
+                        (SELECT count(*) FROM market_candle_closure_observations) AS observations,
+                        (SELECT count(*) FROM market_candle_closure_results) AS results
+                        FROM market_candles"""
+                    )
+                ).one()
+                assert row.finality == "CLOSED" and row.closure_proof_id == receipt["id"]
+                assert row.observations == row.results == 1
+        finally:
+            if process.returncode is None:
+                process.kill()
+            await asyncio.wait_for(process.wait(), 5)
 
 
 async def test_expired_writer_pending_close_requires_current_writer_evidence(

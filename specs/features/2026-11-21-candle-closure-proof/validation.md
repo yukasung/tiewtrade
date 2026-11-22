@@ -15,18 +15,18 @@
 | V05 | Closure-only metadata CP02/06/09 | OHLCV/progressเท่ากันแต่native xfalse→trueต้องpersistcandidate; exactduplicate/Eเปลี่ยนไม่publish/entryซ้ำ; stickypreviewhintหรือtime-derivedhintไม่ใช่nativeproof | Feature | Passed — metadata-only native close and duplicate PG tests |
 | V06 | Ordering/conflict CP06 | cumulativeNEWER/OLDER/DUPLICATE/CONFLICT, sameprogressdifferentOHLC, lateclose/reopen/oldbar, noE/arrival-price-tiebreaker; conflictต้องพักก่อนnewentry | Feature | Partial — progression/conflict targeted checks passed; complete late-event matrix pending CI |
 | V07 | Atomic publication CP07/09 | PGจริง faultหลังevent/proof insert, ก่อน/หลังcanonicalpromotion, ก่อน/หลังcommit/ackloss; proof/row/journalconsistent ไม่มีhalf-promotedCLOSED; retryหนึ่งlogicalresult | Feature | Passed — fault before/after promotion, rollback source fence, duplicate replay |
-| V08 | Multi-instance/lease CP02/07/09 | PGจริงtwo writers, samecandleclaims, stale/disconnectedepoch, heartbeat/claimexpiry, crash/takeover; noacceptedoldlease ไม่พึ่งmemory/Redis; durablependingหลังrestart | Feature | Partial — concurrent writers, committed pending-receipt pool restart and expired-writer takeover passed locally; full process-crash/deployment recovery matrix and CI pending |
+| V08 | Multi-instance/lease CP02/07/09 | PGจริงtwo writers, samecandleclaims, stale/disconnectedepoch, heartbeat/claimexpiry, crash/takeover; noacceptedoldlease ไม่พึ่งmemory/Redis; durablependingหลังrestart | Feature | Partial — concurrent writers, pool restart/takeover and four real process-kill commit boundaries passed; full deployment/failover matrix and CI for new tests pending |
 | V09 | Corrections/invalidation CP06/08/13 | RESTchangedvalueถึงrowCLOSEDต้องไม่ถูกskip; invalidation+demotion+sourcejournalatomic; before/aftercommitconsumer races, acceptedhistoryไม่ลบ;repairต้องnewproofครบ ไม่เลือกOHLCจากtimestamp | Feature | Passed — correction before CLOSED skip, blocked series and fresh matching repair |
 | V10 | Admission/queued BUY CP08/11/12 | PGจริงcorrection/invalidproof/STOP/risk/catalog/wallet/source/leaseเปลี่ยนระหว่างevaluate→commit→match;0unintendedBUY/duplicate/oversell;latestproof/fingerprintrechecked | Feature | Passed — queued window boundaries, accepted/SELL-driven proof invalidation, exit guard revisions and source/authority regressions |
 | V11 | First-fill financial invariants CP12/13 | actualPaper matcher/ledger: partial/latefill, manualreduction, unknown/retry/TP/SL; proofcorrectionหลังfillไม่rewriteexecution/PnL/testATRfrozenlevels; quantities/reservations/balanceexact | Feature | Passed — scoped first-fill/PnL/protection regression and post-fill correction invariance |
 | V12 | Candle entry timing CP09–12 | Aclosedproof→BMarketwhenfresh, nointrabar/lookahead/backdatedopenfill;afterStart/recoverycutoff, exit-samecandle, revision/replayedhistoryไม่entryซ้ำ;lateproofหลังBต้องskip | Feature | Partial — corrected-candidate PG boundary/cross-boundary guards passed; parent attempt4 verified next-candle command only, no fill |
 | V13 | DB/schema/security CP07/15 | fresh/upgrade/emptydowngrade;historydowngraderefusal;unique/FK/check/domain/appendonly/grants;engine/API/indicatorrolecannotpromote/writeproof;publictablesไม่เปิดusersecret;retentionไม่ทำลายpinnedauditหรือบล็อกpartitionตลอดชีวิต | Feature | Passed — fresh/upgrade/downgrade refusal/roles/append-only/trigger inventory checks |
-| V14 | Migration/protocol compatibility CP15 | OFFpreservesoldbehavior;oldwriterrestart/missinginventory/proofguard/sourceproofnotREADY/unsupportedconsumerต้องactivationrejected;knowncompatiblemixedversionsมีหลักฐาน ไม่ยอมoldwriterเงียบskipcorrection | Feature | Partial — OFF/inventory/guard/role checks passed; full mixed-process deployment gates pending |
+| V14 | Migration/protocol compatibility CP15 | OFFpreservesoldbehavior;oldwriterrestart/missinginventory/proofguard/sourceproofnotREADY/unsupportedconsumerต้องactivationrejected;knowncompatiblemixedversionsมีหลักฐาน ไม่ยอมoldwriterเงียบskipcorrection | Feature | Partial — local typed-inventory/source readiness/subprocess OFF-legacy, ON-rejected-legacy and ON-v1/deactivation matrix passed; actual deployed inventory/old-binary compatibility and final-head CI pending |
 | V15 | Source costs/recovery CP05/10/14 | existingcoalescing/ratebudget/backoff underduplicateevents;noHTTPintransaction;pendingbounded;WSdisconnect/missingclose/REST429/5xx/timeoutsrepairไม่promoteหรือretryhotloop;resumeไม่replayentry | Feature | Partial — retry-exhaustion regression passed; public boot/source readiness incomplete |
 | V16 | End-to-end deterministic composition CP01–16 | rawactualadapterpayload→PGnativeproof→RESTpublication→F11→strategy→actualPaperBUY/protection;BTCpositive/ETHnegative plus syntheticedgefixtures clearlylabelled;RSIpositiveARM/FIREregressionและtestgreenoneposition | Feature | Partial — deterministic path passed; actual API/proof/strategy/command chain verified, actual fill/protection not reached |
 | V17 | Current-candidate real public-source campaign CP01–16 | oneboundedownedPapercampaignตามด้านล่าง actualWS+REST/PG/API/engine;closedproofchain+testgreenBUYจริงถ้าเกิดeligiblegreen;RSIevaluateตามactualconditions ไม่มีforceARM;noLive/useraccountorders | Feature | Partial — parent attempt4:8 proofs/7 decisions, one green100USDT BUY command rejected; corrected candidate public campaign Not Run; no further attempt authorized |
 | V18 | Static/contracts/targeted regression | ruff/format/mypy/importcontracts, migrations/source-triggerinventory, APItypesเมื่อcontractเปลี่ยน;targetedF09/F11/F12/F20/F21/Paper/F17 dependencies;UIhiddenmessages/defaultsไม่เปลี่ยน | Feature | Passed — final full mypy804, Ruff/format885, import contracts7, unchanged API contract; prior90-error failure retained |
-| V19 | Stable candidate full regression/required CI | common sourceแก้หลายระบบ:fullbackendcorrectness/security/financial regressionและexistingfreshstate/migration/securityjobsที่บังคับบนfinalcandidate;candidateSHA/runlinks, noLocalแทนCI | Feature | Partial — historical full6012 passed/7 failed with focused16 passed; correction regression67 passed and four basket/recovery failures fixed/rerun; required CI Not Run on corrected candidate |
+| V19 | Stable candidate full regression/required CI | common sourceแก้หลายระบบ:fullbackendcorrectness/security/financial regressionและexistingfreshstate/migration/securityjobsที่บังคับบนfinalcandidate;candidateSHA/runlinks, noLocalแทนCI | Feature | Partial — required CI44990595087 and Security44990595105 Passed on e193fd32; later local process-crash tests not yet covered by final-head CI; historical failures retained |
 | V20 | Review/owner acceptance/rollout | ReadyforCodeReview→diff+callers+DB/financial/stateless/concurrencyreview→fix/refactor→affectedchecks;ownerตรวจscope/candidate/activationความหมายจริงก่อนmerge ไม่ใช้automatedreviewแทนowner | Feature | Partial — Ready for Code Review announced, review/fixes done; owner/independent acceptance pending |
 | V21 | Combined source/strategy cross-feature E2E | candidateรวมF09/F11/F12/F17/F20/F21/Paperที่นิ่ง พร้อมfullfront/cross-featureprofilesตามBatchscope ไม่รันซ้ำทุกpatch | Batch | Not Run — Pending Full Validation |
 | V22 | Production/Live/release gates | approvedrestore/deployment/rate/load/endurance/venuecontractcoverageที่เกี่ยวข้อง;ไม่activateproduction/Liveในงานนี้ ไม่เรียกCompletedก่อนReleasecriteriaครบ | Release | Not Run — Pending Full Validation |
@@ -493,3 +493,64 @@ an inference, not a proven diagnosis. A single targeted real-PostgreSQL rerun of
 that unchanged retry-quota test passed on the correction candidate. No authentication,
 TOTP helper, test expectation or security window was changed. Preserve the CI failure;
 only the one authorized new CI run can establish its final-head outcome.
+
+
+## Post-CI Feature recovery continuation —2026-11-22 (planned)
+
+Final runtime candidate e193fd3237a489f152a0643ff25105227c4e82f6 passed required
+CI44990595087 and Security44990595105, including66browser E2E cases. Historical failures
+remain Failed. V19 CI component is Passed on that SHA; other Feature gates are not waived.
+Next local work targets V08 real process death before/after pending/publication commit,
+reusing existing isolated-PG/subprocess patterns. V08 remains Partial pending results
+and uncovered deployment cases. No additional CI/public attempt or owner acceptance implied.
+
+
+## Local process-crash recovery checkpoint —2026-11-22
+
+Added four actual child-process kill cases using the existing marker/role/source-write
+patterns. First targeted run7passed/2failed due to a new harness call missing source
+scope; corrected all four affected cases passed. Five related existing concurrency,
+pool-restart/takeover and rollback cases passed in the initial run and were not rerun
+without impact. Source scope rejection is preserved; no production changes. Scoped
+Ruff/format and MYPYPATH=src mypy passed; the first440import-resolution errors are
+preserved as diagnostic failure. Evidence: evidence/process-crash-recovery-checks.txt.
+
+Review of the new diff found no remaining correctness/safety finding: tests use real
+PostgreSQL transactions/runtime roles, kill before/after commit, clean children in
+finally, and require exact durable proof/dedup/source-revision results. The test CHILD
+constant is a fixture only; PostgreSQL remains the business authority. V08 remains
+Partial for deployment/failover coverage. V06/V12/V14–17/V20 retain outstanding matrices,
+public-source fill and owner/independent acceptance. V19 passed only on published
+runtime head e193fd32; these new local tests have not been published or run in CI.
+Batch/Release remain Pending Full Validation. Not Completed or ready to merge.
+
+
+## Local deployment compatibility checkpoint —2026-11-22
+
+Owner authorized continuation of the remaining deployment/mixed-version matrix.
+Added21cases in test_candle_closure_compatibility.py; all passed with four related
+existing activation/default-OFF/roles/history-migration regressions (25selected).
+Rejections preserve activation state; separate runtime-role subprocesses distinguish
+OFF legacy-style writes, ON rejection and current v1 proof publication; deactivation
+retains evidence while consumers fail closed. Scoped Ruff/format and strict mypy
+passed2files. Initial one-line Ruff diagnostic corrected before tests. See
+ evidence/deployment-compatibility-checks.txt for matrix, fingerprints and limits.
+
+Review found no correctness/security/statelessness issue in the added tests. No runtime
+or approved business-rule change. V14 remains Partial because the legacy SQL fixture
+is not historical-binary certification and cannot prove actual deployed process
+inventory/drain/restart-disable policy. Existing process-crash tests and this matrix
+remain unpublished/local; e193fd32CI success does not cover these new files.
+No new CI or public campaign was run. Owner/independent acceptance, remaining Feature
+gates and public actual fill remain open. Batch/Release Pending Full Validation.
+
+
+### Authorized publication of local recovery/compatibility tests —2026-11-22
+
+Owner permits one commit/push and one additional required CI run for both reviewed local
+test batches. Fingerprints in process-crash-recovery-checks.txt and deployment-compatibility-
+checks.txt match the staged Python files. Prior e193fd32CI success remains historical;
+new candidate is not CI-Passed until its required workflows finish. No tests rerun merely
+for publication because source/test dependencies and environment contracts are unchanged.
+No merge, public campaign or owner acceptance waiver. Final CI result will be reported
+with SHA/run links; other Partial gates and Batch/Release stay unchanged.

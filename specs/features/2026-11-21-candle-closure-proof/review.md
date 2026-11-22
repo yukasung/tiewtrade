@@ -344,3 +344,37 @@ No runtime/safety/timeout change. See evidence/publication-manual-draft-correcti
 Search found no remaining E2E references to that obsolete label or the corrected loose
 Timeframe/strategy-disabled expectations. Push the test-only fix and follow final-SHA CI;
 keep previous failures, owner/independent/public-fill gates and no-merge scope unchanged.
+
+
+## Post-CI process-crash test review —2026-11-22
+
+Published runtime e193fd32passed required CI44990595087 and Security44990595105,
+including66browser cases. New local diff is only four parametrized real-process crash
+cases plus reuse of the existing subprocess marker/closure fixtures. Checked transaction
+boundary visibility, source scope, rollback revision, durable pending recovery, proof-ID
+and observation/result dedup, child cleanup and runtime role separation. The CHILD
+fixture stores no persistent business authority; PostgreSQL remains authoritative.
+Initial TT011 harness failures were corrected by acquiring the existing source scope;
+all four new cases then passed; five related existing regressions had already passed.
+Scoped lint/format/types passed after fixing mypy src resolution. No runtime, financial,
+strategy, session, privilege or Live change. No new review finding in this diff.
+
+See validation.md and process-crash-recovery-checks.txt. This self-review does not replace
+independent/owner acceptance. V08/full Feature matrices and public fill remain Partial.
+New tests are uncommitted/unpublished; no new CI or campaign was authorized this turn.
+
+
+## Local deployment compatibility test review —2026-11-22
+
+Added21tests (25with related regressions, all passed) for typed inventory, candidate
+identity, source proof readiness, separate runtime writer processes and deactivation.
+Reused ready/INVENTORY/marker; factored one rejection helper to compare unchanged
+activation state rather than repeating SQL across three tests. Checked runtime roles,
+source fencing, rollback visibility, child cleanup and PostgreSQL shared authority.
+No production/financial/session/Live change and no remaining finding in this diff.
+Ruff/format and strict mypy passed2files; evidence/deployment-compatibility-checks.txt.
+
+Positive compatibility claim is limited to current proof v1. Legacy-style SQL rejection
+is not proof of compatibility with an historical binary or actual deployed inventory.
+V14 remains Partial for owner deployment evidence; new tests have no final-head CI.
+No public campaign/preview activation/publication or merge occurred this turn.

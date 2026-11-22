@@ -627,3 +627,71 @@ expect.poll pattern for unchanged exact request counts and receipt HTTP status, 
 committed branch also waits for its route.fetch commit. Keep identical idempotency-key,
 receipt run/failure, zero orders/executions and balance assertions; no timeout increase.
 Rerun only those two cases after Paper Test/risk suites, retaining the first F21 failure.
+
+
+## Post-CI Feature recovery continuation —2026-11-22 (before edits)
+
+Owner instructed “เริ่มทำ” after the final publication checkpoint. Continue the
+remaining approved Feature checks locally; no additional public campaign, owner-preview
+activation, merge or CI rerun is inferred. PR85 head e193fd3237a489f152a0643ff25105227c4e82f6
+has required CI44990595087 and Security44990595105 Passed. Preserve these as the
+runtime candidate evidence; later test additions require their own final-head CI before merge.
+
+V08 currently proves pool recreation and expired-writer takeover, but not process death
+at actual transaction boundaries. Under engineering delegation add four targeted cases
+in tests/infra/execution_market/test_candle_closure_proof.py: kill a real child process
+before/after native pending commit and before/after atomic accepted-proof publication.
+Reuse ready/recorded fixtures, market_data_session, claim_next/write_candles and the
+stdout marker helper in test_process_recovery.py. No production code changes or new
+subprocess abstraction. Child processes use MARKET_DATA runtime role and inherited
+isolated database URLs. Verify rollback visibility, committed pending/proof durability,
+real claimed REST completion and exact observation/result/proof dedup after replay.
+Preserve source revision across rolled-back work and duplicate replay. Keep V08 Partial
+for deployment compatibility/failover cases not covered by these four process boundaries.
+Run the four cases and related pool/takeover/rollback cases on disposable PostgreSQL,
+plus scoped Ruff/format/mypy. Do not rerun full regression or publish test-only changes
+until the authorized checkpoint; independent/owner acceptance and V17 stay open.
+
+
+First local pass exposed a harness omission: the post-kill reconcile assertion must
+acquire the existing source-write scope, as production callers do; TT011 correctly
+rejected the unscoped call in the two pre-commit cases. Add prepare_write(acquire=True)
+without changing production enforcement or the no-proof assertion. Scoped mypy also
+needs MYPYPATH=src to inspect the local package rather than its untyped editable-install
+entry; preserve the initial440import-derived errors as a diagnostic failure, not a code pass.
+
+
+## Deployment compatibility matrix continuation —2026-11-22 (before edits)
+
+Owner instructed “เริ่มทำ” after the process-crash checkpoint. Continue V14 locally,
+with no public campaign, preview activation, CI rerun or publication inferred.
+Existing tests cover missing inventory and disabled trigger, but not each attestation
+field, source-proof PENDING, or a separate runtime process with/without writer capability.
+Use tests/infra/execution_market/test_candle_closure_compatibility.py, importing existing
+ready/INVENTORY and marker fixtures. Test boolean attestations missing/false/string,
+invalid candidate SHA, source proof PENDING rejection and unchanged activation state.
+Use subprocess runtime MARKET_DATA sessions for three supported matrix cells: protocol
+OFF with unmarked legacy-style SQL succeeds without promotion, ON with that exact old
+write path is rejected, ON with current v1 writer yields one valid proof. The legacy
+cell exercises the old SQL path, not a historical executable compatibility claim.
+After proof publication, deactivation requires admission_paused and proof becomes
+non-tradable while append-only evidence stays unchanged. No production implementation,
+new accepted version, deployment inventory architecture, security relaxation or money
+change. Use inherited isolated DB URLs and scoped subprocess cleanup. Actual deployed
+process inventory/drain/restart-disable evidence remains an owner deployment gate;
+synthetic attestation fixtures cannot certify it. V14 remains Partial for that evidence.
+Run only new matrix cases and related activation/default-OFF/role/migration regressions
+on disposable PostgreSQL; scoped Ruff/format/mypy and diff review. Keep the earlier
+process-crash changes and green runtime CI evidence distinct from these local additions.
+
+
+## Owner-authorized recovery/compatibility publication —2026-11-22
+
+Owner explicitly approved committing/pushing the reviewed recovery/compatibility tests
+to draft PR85 and exactly one additional required CI candidate run. Include both local
+test batches, existing plan/validation/review/roadmap updates and their fingerprinted
+evidence in one commit. No source/financial behavior change; no further public campaign,
+owner-preview activation or merge. Local evidence fingerprints were rechecked before
+staging. Required CI and Security must run on the new head; keep historical results and
+remaining Partial Feature/deployment/public-fill/acceptance gates unchanged. Report
+final SHA and workflow links in the PR/checkpoint without doc-only CI commit loops.

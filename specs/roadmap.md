@@ -2349,3 +2349,24 @@ assumed; no public attempt5 or merge. See feature validation.md/local-recovery e
 F17 refactor integrated; affected protection118unit +10PG tests and scoped static checks
 passed. Prepare combined draft candidate for required CI, without merge/public campaign5.
 Owner/independent/public-fill/other Partial Feature gates remain open; not Completed.
+
+
+2026-11-22 Shared Candle Closure Proof post-CI local recovery checkpoint: PR85runtime
+head e193fd32passed required CI44990595087 and Security44990595105 (66browser cases).
+Four additional real-process kill tests now prove pending/proof atomicity before/after
+commit and exact replay dedup locally; five related PG regressions passed. No runtime
+change. Initial harness/type-resolution failures and corrected passes are preserved in
+feature validation/evidence. New tests remain local; final-head CI is not implied.
+V08deployment/failover, other Partial Feature matrices, actual public fill and owner/
+independent acceptance remain open; no new campaign/preview activation/merge.
+Batch/Release Pending Full Validation; not Completed or merge-ready.
+
+
+2026-11-22 Shared Candle Closure Proof local deployment compatibility:21new matrix
+cases plus4existing regressions passed against isolated PostgreSQL; typed inventory,
+source readiness, separate OFF/legacy-v1 process behavior and deactivation covered.
+Scoped lint/format/types passed. Runtime unchanged; process-crash and compatibility
+tests remain local/unpublished, so prior green e193fd32CI is not their final-head CI.
+V14actual deployed inventory/historical-binary evidence, owner/independent acceptance,
+public actual fill and other Partial Feature gates remain open. No campaign5 or owner
+preview activation. Batch/Release Pending Full Validation; not Completed/merge-ready.
