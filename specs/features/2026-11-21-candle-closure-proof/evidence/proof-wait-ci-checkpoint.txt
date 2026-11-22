@@ -1,0 +1,39 @@
+Proof-wait patch publication checkpoint —2026-11-22
+Candidate: b538070b0feac4c41731c1b06fe3cd126b064f2a; draft PR85, no merge.
+Owner authorized one commit/push and one additional candidate CI round; consumed once.
+No additional CI rerun, public campaign, owner-preview activation or Live action.
+
+Required CI45003959474: Failed
+https://github.com/yukasung/tiewtrade/actions/runs/45003959474
+Main backend:6059passed,1failed,2skipped,32deselected,5warnings in1594.29s.
+Failure: tests/services/indicator_builder/test_scheduler.py::test_catalog_and_control_gate[PREPARING]
+DatabaseTimeoutError SQLSTATE55P03 at asyncio.gather of two coalesce_jobs calls;
+coalesce_session's existing200ms lock timeout/500ms statement timeout unchanged.
+Backend isolated gates after the main pytest step were not reached; no pass inferred.
+All3new proof-wait/RSI cases explicitly PASSED in verbose CI output.
+Browser E2E:66passed (36general,2catalog,8manual,7protection,2bot-lifecycle,
+3F21,2PaperTest,6risk). Frontend, API contract and container contexts passed.
+Security45003959519:all checks Passed, same candidate.
+https://github.com/yukasung/tiewtrade/actions/runs/45003959519
+
+Downloaded scheduler-lock-evidence artifact14748007409 (scheduler-lock.json).
+Allowlisted samples show coalescing builder PID13983 waiting on transactionid held by
+coalescing builder PID13984; no foreign blocker is observed in these bounded samples.
+PostgreSQL log confirms PID13983 lock timeout at09:07:41.401UTC. Samples are separate
+activity/lock views, not an atomic continuous trace. test_error=null in observer report
+is not a passing pytest result; authoritative pytest result is Failed. Exact reason
+why contention exceeded the deadline is not established; do not label runner slowness
+or flakiness proven and do not change timeouts/assertions to force success.
+
+Source comparison: scheduler test, diagnostic observer and scheduling.py are byte-for-byte
+unchanged from prior green f2418d29. One targeted rerun of the unchanged failing test
+against the owned isolated PostgreSQL database passed. No production/test source edit,
+mock, relaxed assertion, timeout change or new campaign. Local pass does not replace
+required CI failure. Owned diagnostic containers stopped afterward.
+
+Raw downloaded logs are retained outside the repo under /tmp/closure-proof-wait-ci-*,
+with download stderr separate to avoid exposing signed URLs. Final-head CI remains
+Failed. Review/correct the demonstrated scheduler contention before a separately
+owner-authorized new CI round. Existing owner/independent acceptance, actual corrected-
+candidate public fill and other Partial Feature gates remain open; Batch/Release
+Pending Full Validation. No Completed/merge-ready claim or document-only commit loop.

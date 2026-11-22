@@ -1,6 +1,7 @@
 """Actual-role coalescing, recovery evidence and scheduler/attempt integration."""
 
 import asyncio
+from contextlib import nullcontext
 from datetime import datetime, timedelta
 from typing import Any
 from uuid import uuid4
@@ -26,8 +27,8 @@ from tiewtrade.infra.db.session import market_data_session
 from tiewtrade.infra.indicators import scan as scanner
 from tiewtrade.infra.indicators.claims import AttemptOutcome
 from tiewtrade.infra.indicators.pinned import PinnedIndicatorWriter, pinned_indicator_writer
-from tiewtrade.infra.indicators.scheduling import coalesce_jobs
-from tiewtrade.infra.indicators.session import indicator_source_session
+from tiewtrade.infra.indicators.scheduling import coalesce_jobs, coalesce_session
+from tiewtrade.infra.indicators.session import indicator_source_session, indicator_writer_session
 from tiewtrade.infra.indicators.source import begin_source_write
 from tiewtrade.infra.indicators.staging import append_checkpoint, capture_snapshot, initialize
 from tiewtrade.services.indicator_builder import scheduler
@@ -110,6 +111,88 @@ async def test_catalog_and_control_gate(
         assert j["desired_end"] == align_floor(j["observed"], tf)
         assert j["attempts_used"] == 0 and j["last_served_round"] == 0
     assert (await slot(migrator_engine))["fence"] == 0
+
+
+@pytest.mark.parametrize("seeded", [False, True])
+@pytest.mark.parametrize("rollback", [False, True])
+async def test_concurrent_coalescer_does_not_wait_for_holder_transaction(
+    prepared: None,
+    builder_engine: AsyncEngine,
+    migrator_engine: AsyncEngine,
+    seeded: bool,
+    rollback: bool,
+) -> None:
+    if seeded:
+        await coalesce_jobs(builder_engine)
+    expected_rows = len(PAIRS) * len(Timeframe)
+    before = await slot(migrator_engine)
+    contender = create_engine_for(DatabaseRole.INDICATOR_BUILDER, pool_size=2, max_overflow=0)
+    try:
+        with pytest.raises(RuntimeError, match="rollback coalescer") if rollback else nullcontext():
+            async with indicator_writer_session(builder_engine) as holder:
+                await coalesce_session(holder)
+                # Hold real seed/update locks beyond SQL completion, without sleeping.
+                # Another instance must leave the in-flight transaction alone.
+                async with asyncio.timeout(2):
+                    assert await coalesce_jobs(contender) == 0
+                async with migrator_engine.connect() as observer:
+                    assert (
+                        await observer.execute(text("SELECT count(*) FROM indicator_build_jobs"))
+                    ).scalar_one() == (expected_rows if seeded else 0)
+                if rollback:
+                    raise RuntimeError("rollback coalescer")
+        # Commit and rollback both release the gate; a later normal poll does all work.
+        async with indicator_writer_session(contender) as session:
+            assert (await session.execute("SELECT pg_try_advisory_xact_lock(711,2)")).scalar_one()
+            await coalesce_session(session)
+        async with migrator_engine.connect() as observer:
+            jobs = (
+                (await observer.execute(text("SELECT * FROM indicator_build_jobs")))
+                .mappings()
+                .all()
+            )
+        assert len(jobs) == expected_rows
+        assert (
+            len({(j["source"], j["base"], j["quote"], j["timeframe"]) for j in jobs})
+            == expected_rows
+        )
+        assert all(j["attempts_used"] == 0 and j["last_served_round"] == 0 for j in jobs)
+        assert await slot(migrator_engine) == before
+    finally:
+        await contender.dispose()
+
+
+async def test_cancelled_coalescer_releases_transaction_gate(
+    prepared: None,
+    builder_engine: AsyncEngine,
+    migrator_engine: AsyncEngine,
+) -> None:
+    ready = asyncio.Event()
+
+    async def hold() -> None:
+        async with indicator_writer_session(builder_engine) as session:
+            await coalesce_session(session)
+            ready.set()
+            await asyncio.Event().wait()
+
+    task = asyncio.create_task(hold())
+    try:
+        async with asyncio.timeout(2):
+            await ready.wait()
+            assert await coalesce_jobs(builder_engine) == 0
+            task.cancel()
+            with pytest.raises(asyncio.CancelledError):
+                await task
+        # Rolled-back seed and the transaction lock cannot survive cancellation.
+        await coalesce_jobs(builder_engine)
+        async with migrator_engine.connect() as observer:
+            assert (
+                await observer.execute(text("SELECT count(*) FROM indicator_build_jobs"))
+            ).scalar_one() == len(PAIRS) * len(Timeframe)
+        assert (await slot(migrator_engine))["fence"] == 0
+    finally:
+        task.cancel()
+        await asyncio.gather(task, return_exceptions=True)
 
 
 async def test_pending_window_preserves_running_identity_and_queued_budget(

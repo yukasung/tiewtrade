@@ -398,3 +398,26 @@ files. The review does not certify market availability: corrected-candidate publ
 first-fill protection, final-SHA required CI and owner/independent acceptance remain open.
 Owner now permits one publication/CI round for this reviewed patch, with no merge or new
 public campaign. Keep this automated review distinct from independent human acceptance.
+
+
+## Scheduler contention correction review —2026-11-22
+
+Reviewed only the new coalesce gate/tests and affected scheduler, pinned writer/scan,
+restricted session/transaction cleanup, claims and SQL seed/coalescing callers.
+The PostgreSQL transaction-scoped, nonblocking key(711,2) is distinct from physical
+attempt ownership(711,1) and the bigint wallet key space. The losing caller performs
+no metadata mutation, does not retry a failed/ambiguous transaction and leaves later
+ordinary polling authoritative. Source/readiness/claim/publication/freshness checks,
+timeouts, attempt budgets, fairness, numerical suppression and role boundaries remain.
+Commit, rollback and task cancellation release the gate; no process-local session or
+business-data authority is added. No money/order quantity/PnL/risk/Live rules change.
+
+The deterministic pre-fix test failed55P03;85real-PG scheduler/claim cases passed after
+the fix, with lint/format/mypy2files and7import contracts. Kept original concurrent and
+negative assertions. No useful additional abstraction/refactor was identified for the
+five-line runtime change. No unresolved Critical/High/Medium/Low finding in this diff.
+
+Limits: original holder delay/internal SQL point still unproven; old binaries or direct
+privileged SQL bypass this application boundary, so deployment inventory/drain gates
+remain required. Local review is not independent acceptance or required CI. Published
+CI remains Failed; no publication/new CI/campaign/merge in this local checkpoint.

@@ -653,3 +653,67 @@ and Security must complete on the new SHA. Prior green f2418d29 results stay his
 No public attempt6, owner-preview activation, merge or owner/independent acceptance waiver.
 Other Partial Feature gates and Pending Full Validation remain unchanged. CI results will
 be reported with SHA/run links at the publication checkpoint, without a doc-only CI loop.
+
+
+## Published proof-wait candidate CI checkpoint —2026-11-22: Failed
+
+Committed/pushed b538070b0feac4c41731c1b06fe3cd126b064f2a to draft PR85 and consumed
+exactly the one authorized additional CI round. CI45003959474 failed only main backend
+pytest:6059passed/1failed/2skipped/32deselected; subsequent isolated backend gates were
+not reached. All3new wait/RSI cases passed. Browser E2E66passed; frontend/API/container
+and Security45003959519 passed. No rerun, public campaign or merge.
+
+Failure is unchanged test_catalog_and_control_gate[PREPARING], SQLSTATE55P03 at concurrent
+coalesce_jobs. Bounded read-only artifact shows one builder waiting on another builder's
+transaction lock, not a proven diagnosis of timing/resource cause. Scheduler source/test/
+observer match prior green candidate exactly. One local targeted real-PG rerun of the
+unchanged failing case passed; no timeout/assertion/runtime/test change. Preserve CI Failed,
+not Passed/flaky. See evidence/proof-wait-ci-checkpoint.txt and proof-wait-ci-scheduler-lock.json.
+The runtime patch remains reviewed, but V19 final-candidate required CI is Failed and
+owner/independent/public-fill gates remain open; Batch/Release Pending Full Validation.
+Next: diagnose/correct scheduler contention before a separately authorized new CI round.
+No documentation-only commit/CI loop; this blocker receipt stays for the next related work.
+
+
+## Local scheduler contention correction —2026-11-22: Passed locally / CI still Failed
+
+Owner instructed proceeding with the proposed local reproduction/fix/review checkpoint.
+Before the runtime change, the new independent-engine empty-catalog held-transaction
+case failed with DatabaseTimeoutError/55P03 at coalesce_jobs, matching the CI failure
+class. This does not establish why the original CI holder was delayed or which internal
+SQL statement it blocked on. No timeout, parallel assertion or safety criterion relaxed.
+
+Added a nonblocking PostgreSQL transaction gate(711,2) at shared coalesce_session.
+The losing caller leaves durable metadata unchanged; ordinary polling handles a holder
+rollback. No new automatic retries, process-local business state, migration or grants.
+Existing source/trigger failures still propagate when coalescing runs; existing200ms/
+500ms budgets, attempt ownership(711,1), recovery/backoff and financial behavior remain.
+
+Five new real-PG cases passed: empty/existing catalog crossed with commit/rollback,
+plus task cancellation. Independent engines, uncommitted visibility, gate reacquisition,
+complete unique catalog, untouched attempts/fairness and unchanged slot were checked.
+Combined scheduler38 + physical writer/claims47 =85cases passed, including original
+concurrent catalog/recovery, source-guard timeout/trigger damage, restricted API access,
+pool-two scheduled scan, dispatch/stop/cancellation and ownership recovery regressions.
+Ruff lint/format, strict mypy2files,7import contracts and git diff --check passed.
+Scoped diff/caller/transaction/multi-instance review found no unresolved finding.
+See evidence/scheduler-contention-fix.txt for commands, limits and fingerprints.
+
+This is not a final-candidate CI pass. Published b538070b CI45003959474 remains Failed;
+its later isolated backend gates were not reached. Source changes remain uncommitted;
+no push/new CI/public campaign/owner activation/merge occurred. Old binaries and direct
+privileged SQL do not participate in the new application gate; required deployment
+inventory/drain gates remain applicable. Public-fill/owner/independent/other Partial
+Feature gates remain open; Batch/Release Pending Full Validation.
+Next: include this reviewed correction and the existing blocker receipts in the next
+authorized candidate publication/required-CI round. No extra CI round is inferred.
+
+
+### Scheduler correction publication authorization —2026-11-22
+
+Owner now instructs commit/push and one new required-CI candidate round. Runtime/test
+fingerprints match scheduler-contention-fix.txt;85real-PG cases and scoped lint/format/
+type/import review remain applicable. Include the existing failed-CI receipts with
+the correction. Local pass does not predeclare CI success; report final SHA and runs.
+No merge/new public campaign/owner activation or acceptance waiver; remaining Partial
+Feature/deployment/public-fill gates and Pending Full Validation are unchanged.

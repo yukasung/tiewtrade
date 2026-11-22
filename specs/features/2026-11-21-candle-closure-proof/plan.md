@@ -741,3 +741,58 @@ merely for publication. This supersedes only the prior local/unpublished boundar
 this patch, not the public campaign limits, owner-preview activation or merge gates.
 No merge or public attempt6. Report final SHA/CI URLs and remaining gates without
 creating a documentation-only commit loop to record the resulting CI.
+
+
+## Required-CI scheduler contention correction —2026-11-22 (before edits)
+
+Owner instructed proceeding through deterministic PostgreSQL reproduction, a scoped
+fix, targeted checks and diff review; no push/CI round or public campaign is authorized.
+Required CI45003959474 failed in unchanged test_catalog_and_control_gate[PREPARING].
+Its two coalesce transactions contend on a transactionid lock (55P03); the bounded
+artifact does not identify the internal SQL statement or explain the holder's delay.
+A local unchanged rerun passed, so do not call this proven runner slowness or flakiness.
+
+Under AGENTS.md engineering delegation, first hold an actual builder-role coalescing
+transaction open after its SQL completes and call coalesce_jobs through a separate
+engine. Cover empty/pre-existing catalog and holder commit/rollback. This reproduces
+contention deterministically without sleeps or changing the200ms/500ms DB budgets.
+Keep the original concurrent catalog/recovery assertions and guard-timeout rejection.
+
+Reuse infra/indicators/scheduling.py::coalesce_session, indicator_writer_session and
+the PostgreSQL nonblocking transaction advisory-lock pattern already used by
+infra/paper_orders/request_dispatch.py::claim_request. Serialize only coalescing with
+the distinct two-integer key(711,2); (711,1) remains attempt session ownership, and
+the bigint wallet-lock namespace is separate. Both scheduler and pinned scan use
+coalesce_session. If another coalescer holds the transaction lock, return0 (no local
+metadata changes); existing durable jobs and next normal poll remain authoritative.
+No new retry loop, process-local mutex/cache, schema, privileges or infrastructure.
+The lock must survive SQL completion through commit/rollback and release automatically
+on transaction cancellation/connection loss. Genuine guard/database failures propagate.
+
+Alternatives rejected: increasing budgets hides contention and changes F11 limits;
+retrying arbitrary timeout risks replaying an ambiguous operation; an in-memory lock
+cannot protect multiple instances; migration/wrapping the restricted SQL function is
+unnecessary when all runtime coalescing calls already share this boundary. Direct
+privileged SQL/standalone seed helpers retain their existing behavior and timeout.
+Skipping a redundant in-flight coalescer may defer metadata to the next existing poll
+if the holder rolls back; freshness/source/claim/publication gates still reject stale
+inputs, no trading opportunity or readiness is fabricated and no counters reset.
+
+Validate actual PG independent-engine contention, commit/rollback lock release,
+uncommitted visibility and eventual complete catalog with no duplicates/claim changes;
+run existing scheduler, physical writer/claim and source-guard regressions, plus scoped
+Ruff/format/mypy/import checks. Preserve historical CI Failed and all Partial owner/
+deployment/public-fill gates; local results do not replace required CI.
+
+
+## Owner-authorized scheduler correction publication —2026-11-22
+
+Owner replied "เริ่มทำ" to the checkpoint proposing commit/push and exactly one new
+required-CI round for the reviewed scheduler correction. Publish the fingerprinted
+runtime/test change, its local85case/static/review evidence and the existing failed-CI
+blocker receipts together to draft PR85. No further source edits or repeated local
+tests are needed: the reviewed fingerprints remain unchanged. Track required CI and
+Security on the new SHA, report their run links/results, and preserve all remaining
+owner/independent/deployment/public-fill Feature gates and Batch/Release pending work.
+No merge, owner activation, extra public campaign or additional CI retry is authorized.
+Do not create a documentation-only commit/CI loop for the resulting checkpoint.

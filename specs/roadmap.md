@@ -2397,3 +2397,30 @@ Local/unpublished: final-candidate CI, owner/independent acceptance and actual c
 candidate public fill remain open. No attempt6, owner-preview activation or merge.
 Batch/Release Pending Full Validation. Next: review/publish final candidate for required
 CI; new public campaign remains separately bounded by owner approval.
+
+
+### Proof-wait publication CI checkpoint —2026-11-22: Failed
+
+Patch published on b538070b in draft PR85. CI45003959474:6059backend tests passed,
+1unchanged scheduler PREPARING test failed on55P03 lock timeout; all3new correction cases
+passed. E2E66, frontend/API/container and Security45003959519 passed. Targeted local rerun
+of unchanged scheduler case passed; no timeout/assertion/code change, no CI rerun/merge/
+public campaign. [Blocker evidence](features/2026-11-21-candle-closure-proof/evidence/proof-wait-ci-checkpoint.txt).
+Required CI remains Failed, other Feature/owner/public-fill gates remain open; Batch/Release
+Pending Full Validation. Next: diagnose/correct scheduler contention before a separately
+owner-authorized CI round. No document-only publication loop.
+
+
+### Scheduler contention local correction —2026-11-22
+
+Reproduced55P03 with a real held builder transaction and independent engine; added a
+nonblocking transaction gate at shared coalesce_session, preserving timeouts and all
+original parallel/safety assertions.85scheduler/physical-writer PostgreSQL tests passed
+(5new commit/rollback/cancellation cases), scoped Ruff/format/mypy and7import contracts
+passed; scoped review has no unresolved finding.
+[Evidence](features/2026-11-21-candle-closure-proof/evidence/scheduler-contention-fix.txt).
+Local/uncommitted, not CI-Passed: published b538070b required CI remains Failed and
+later isolated backend gates were not reached. No push/new CI/public campaign/activation/
+merge. Owner/independent/deployment/public-fill gates remain open; Batch/Release Pending
+Full Validation. Next: publish the reviewed correction and existing blocker receipts
+when a new required-CI round is authorized; do not infer that authorization here.
